@@ -1,0 +1,2 @@
+# Mesh-processing-library
+C++ library and several application programs that demonstrate mesh processing technologies published in research papers at ACM SIGGRAPH in 1992–1998: surface reconstruction (from unorganized, unoriented points), mesh optimization, subdivision surface fitting, mesh simplification, progressive meshes (level-of-detail representation), geomorphs (smooth transitions across LOD meshes), view-dependent mesh refinement, smooth terrain LOD, and progressive simplicial complexes.

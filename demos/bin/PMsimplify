@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Args: rootname.pm optional_args_to_MeshSimplify
+# Examples:
+#  PMsimplify v.pm       # v.pm -> v.new.pm
+
+function tname { echo "${1##*/}"; }
+function hname { echo "${1%$(tname "$1")}"; }  # or could use $(basename "$1")
+function ename { local t="$(tname "$1")"; [[ $t = *.* ]] && echo "${t##*.}" || echo ''; }
+function rname { echo "${1%.$(ename "$1")}"; }
+
+inroot="$1"; shift
+if [[ "$(ename "$inroot")" == gz ]]; then inroot="$(rname "$inroot")"; fi
+if [[ "$(ename "$inroot")" != pm ]]; then echo "$0 : first argument not *.pm" 1>&2; exit 1; fi
+inroot="$(rname "$inroot")"
+
+outroot="$inroot.new"
+echo "Run MeshSimplify: $inroot.pm --> $outroot.pm" 1>&2
+
+rm -f "$outroot.tmp" "$outroot.base.m" "$outroot.prog" "$outroot.rprog"
+
+FilterPM "$inroot.pm" -nf 0 -outmesh >"$outroot.tmp"
+
+MeshSimplify "$outroot.tmp" -prog "$outroot.prog" "$@" -simplify >"$outroot.base.m" || exit $?
+if true; then rm "$outroot.tmp"; fi
+reverselines "$outroot.prog" >"$outroot.rprog" || exit $?
+if true; then rm "$outroot.prog"; fi
+Filterprog -fbase "$outroot.base.m" -fprog "$outroot.rprog" -append_old_pm "$inroot.pm" -pm >"$outroot.pm" || exit $?
+# not '| gzip' because strips out all SHOWFF()
+
+if false; then gzip -f "$outroot.pm"; fi
+rm "$outroot.rprog" "$outroot.base.m"

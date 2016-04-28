@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+ <!-- Install: add as file to libHh.vcxproj so that it is recognized automatically by Visual Studio -->
+ <!-- However, for it to be recognized by ImageWatch it must additionally be copied to -->
+ <!--   Documents/Visual Studio 2015/Visualizers/libHh.natvis (VC14) -->
+ <!--   Documents/Visual Studio 2013/Visualizers/libHh.natvis (VC12) -->
+ <!-- using ../install_libHh_natvis.bat -->
+ 
+ <!-- see C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Packages\Debugger\Visualizers -->
+ <!-- see C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Packages\Debugger\Visualizers -->
+ <!-- see http://msdn.microsoft.com/en-us/library/jj620914.aspx -->
+ <!-- see format specifier ",sb" in http://msdn.microsoft.com/en-us/library/vstudio/75w45ekt.aspx -->
+ <!--  (was ,sub in VS2013) -->
+ <!-- http://research.microsoft.com/en-us/um/redmond/groups/ivm/imagewatchhelp/imagewatchhelp.htm -->
+ <!-- https://visualstudiogallery.msdn.microsoft.com/e682d542-7ef3-402c-b857-bbfba714f78d -->
+
+ <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"
+               MenuName="Add to Image Watch"/>
+
+ <Type Name="hh::CGridView&lt;2,*&gt;">
+  <AlternativeType Name="hh::GridView&lt;2,*&gt;"/>
+  <AlternativeType Name="hh::Grid&lt;2,*&gt;"/>
+  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
+ </Type>
+
+ <Type Name="hh::CGridView&lt;2,*&gt;">
+  <AlternativeType Name="hh::GridView&lt;2,*&gt;"/>
+  <AlternativeType Name="hh::Grid&lt;2,*&gt;"/>
+  <DisplayString>Matrix&lt;{"$T1",sb}&gt;(dims={_dims})</DisplayString>
+  <Expand>
+   <Item Name="[height]">_dims._a[0]</Item>
+   <Item Name="[width]">_dims._a[1]</Item>
+   <Item Name="[size]">size_t(_dims._a[1])*_dims._a[0]</Item>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","unsigned char" )==0'><DisplayString>UINT8</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","char"          )==0'><DisplayString>INT8</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","unsigned short")==0'><DisplayString>UINT16</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","short"         )==0'><DisplayString>INT16</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","int"           )==0'><DisplayString>INT32</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::half"      )==0'><DisplayString>FLOAT16</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","float"         )==0'><DisplayString>FLOAT32</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","double"        )==0'><DisplayString>FLOAT64</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Pixel"     )==0'><DisplayString>UINT8</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Vector4"   )==0'><DisplayString>FLOAT32</DisplayString></Synthetic>
+   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Vec&lt;unsigned char,2&gt;")==0'><DisplayString>UINT8</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","unsigned char" )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","unsigned short")==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","char"          )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","short"         )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","int"           )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::half"      )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","float"         )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","double"        )==0'><DisplayString>1</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Pixel"     )==0'><DisplayString>RGBA</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Vector4"   )==0'><DisplayString>4</DisplayString></Synthetic>
+   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Vec&lt;unsigned char,2&gt;")==0'><DisplayString>UV</DisplayString></Synthetic>
+   <Item Name="[stride]">(_dims._a[1])*sizeof($T1)</Item>
+   <Item Name="[data]">_a</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Image">
+  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
+ </Type>
+
+ <Type Name="hh::Image">
+  <DisplayString>Image(dims={_dims} nz={_attrib.zsize})</DisplayString>
+  <Expand>
+   <Item Name="[height]">_dims._a[0]</Item>
+   <Item Name="[width]">_dims._a[1]</Item>
+   <Item Name="[bands]">_attrib.zsize</Item>
+   <Item Name="[size]">size_t(_dims._a[1])*_dims._a[0]</Item>
+   <Synthetic Name="[channels]"><DisplayString>RGBA</DisplayString></Synthetic>
+   <Synthetic Name="[type]"><DisplayString>UINT8</DisplayString></Synthetic>
+   <Item Name="[stride]">(_dims._a[1])*4</Item>
+   <Item Name="[data]">_a</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Nv12">
+  <AlternativeType Name="hh::CNv12View"/>
+  <AlternativeType Name="hh::Nv12View"/>
+  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
+ </Type>
+
+ <Type Name="hh::Nv12">
+  <AlternativeType Name="hh::CNv12View"/>
+  <AlternativeType Name="hh::Nv12View"/>
+  <DisplayString>Nv12(dims={_mat_Y._dims})</DisplayString>
+  <Expand>
+   <Item Name="[height]">_mat_Y._dims._a[0]</Item>
+   <Item Name="[width]">_mat_Y._dims._a[1]</Item>
+   <Item Name="[Y]">_mat_Y</Item>
+   <Item Name="[UV]">_mat_UV</Item>
+   <Synthetic Name="[channels]"><DisplayString>NV12</DisplayString></Synthetic>
+   <Synthetic Name="[type]"><DisplayString>UINT8</DisplayString></Synthetic>
+   <Item Name="[stride]">(_mat_Y._dims._a[1])*1</Item>
+   <Item Name="[planes]">2</Item>
+   <Synthetic Name="[data]"><DisplayString>{(void*)_mat_Y._a}; {(void*)_mat_UV._a}</DisplayString></Synthetic>
+  </Expand>
+ </Type>
+
+
+ <Type Name="hh::CGridView&lt;*,*&gt;">
+  <DisplayString>Grid&lt;{$T1},{"$T2",sb}&gt;(dims={_dims})</DisplayString>
+  <Expand>
+   <Item Name="[data]">_a</Item>
+   <ArrayItems Condition="_a!=0">
+    <Rank>$T1</Rank>
+    <Size>_dims._a[$i]</Size>
+    <ValuePointer>_a</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Vec&lt;*,*&gt;">
+  <DisplayString>Vec&lt;{"$T1",sb},{$T2}&gt;</DisplayString>
+  <Expand>
+   <ArrayItems>
+    <Size>$T2</Size>
+    <ValuePointer>_a</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Vec&lt;*,1&gt;">
+  <DisplayString>[{_a[0]}]</DisplayString>
+  <Expand>
+   <Item Name="[0]">_a[0]</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Vec&lt;*,2&gt;">
+  <DisplayString>[{_a[0]}, {_a[1]}]</DisplayString>
+  <Expand>
+   <Item Name="[0]">_a[0]</Item>
+   <Item Name="[1]">_a[1]</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Vec&lt;*,3&gt;">
+  <DisplayString>[{_a[0]}, {_a[1]}, {_a[2]}]</DisplayString>
+  <Expand>
+   <Item Name="[0]">_a[0]</Item>
+   <Item Name="[1]">_a[1]</Item>
+   <Item Name="[2]">_a[2]</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Vec&lt;*,4&gt;">
+  <DisplayString>[{_a[0]}, {_a[1]}, {_a[2]}, {_a[3]}]</DisplayString>
+  <Expand>
+   <Item Name="[0]">_a[0]</Item>
+   <Item Name="[1]">_a[1]</Item>
+   <Item Name="[2]">_a[2]</Item>
+   <Item Name="[3]">_a[3]</Item>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Pixel">
+  <DisplayString>Pixel({int(_a[0])}, {int(_a[1])}, {int(_a[2])}, {int(_a[3])})</DisplayString>
+ </Type>
+
+ <Type Name="hh::Vector4">
+  <DisplayString>[{_c[0]}, {_c[1]}, {_c[2]}, {_c[3]}]</DisplayString>
+ </Type>
+
+ <Type Name="hh::Vector4i">
+  <DisplayString>[{_c[0]}, {_c[1]}, {_c[2]}, {_c[3]}]</DisplayString>
+ </Type>
+
+ <Type Name="hh::VectorF&lt;*&gt;">
+  <DisplayString>VectorF&lt;{$T1}&gt;</DisplayString>
+  <Expand>
+   <ArrayItems>
+    <Size>$T1</Size>
+    <ValuePointer>(float*)this</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::CArrayView&lt;*&gt;">
+  <DisplayString>Array(num={_n})</DisplayString>
+  <Expand>
+   <Item Name="[num]">_n</Item>
+   <Item Name="[data]">_a</Item>
+   <ArrayItems Condition="_a!=0">
+    <Size>_n</Size>
+    <ValuePointer>_a</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Array&lt;*&gt;">
+  <DisplayString>Array(num={_n})</DisplayString>
+  <Expand>
+   <Item Name="[num]">_n</Item>
+   <Item Name="[data]">_a</Item>
+   <Item Name="[capacity]">_cap</Item>
+   <ArrayItems Condition="_a!=0">
+    <Size>_n</Size>
+    <ValuePointer>_a</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::PArray&lt;*,*&gt;">
+  <DisplayString>PArray(num={_n})</DisplayString>
+  <Expand>
+   <Item Name="[num]">_n</Item>
+   <Item Name="[data]">_a</Item>
+   <Item Name="[capacity]">_cap</Item>
+   <ArrayItems Condition="_a!=0">
+    <Size>_n</Size>
+    <ValuePointer>_a</ValuePointer>
+   </ArrayItems>
+  </Expand>
+ </Type>
+
+ <Type Name="hh::Stat">
+  <DisplayString>Stat(name={_name} num={_n} [{_min},{_max}] avg={float(_sum/_n)}))</DisplayString>
+ </Type>
+
+</AutoVisualizer>

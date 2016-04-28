@@ -1,0 +1,21 @@
+audio1.nsamples() = 144000
+audio1.diagnostic_string() = nsamples=144000 nchannels=2 (48000 Hz) (wav) (256.00Ki bps)
+audio2.nsamples() = 144000
+audio2.diagnostic_string() = nsamples=144000 nchannels=2 (48000 Hz) (wav)
+audio2.dims() = [2, 144000]
+# Schan_diff:         (144000 )           0:0            av=0              sd=0
+# Senc_diff:          (288000 )           0:0            av=0              sd=0
+audio1[0].head(5) = Array<float>(5) {
+  0
+  0.052336
+  0.104528
+  0.156434
+  0.207912
+}
+audio2[1].head(5) = Array<float>(5) {
+  0
+  0.052336
+  0.104528
+  0.156434
+  0.207912
+}

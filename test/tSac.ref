@@ -1,0 +1,8 @@
+key_p = 0
+key_b = 12
+B allocation
+sac_access<Point>(a, key_p) = [1, 2, 3]
+sac_access<B>(a, key_b).dummy = 1
+sac_access<int>(a, key_i) = 3
+B deallocation
+dummy = 2

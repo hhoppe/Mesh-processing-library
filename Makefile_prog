@@ -1,0 +1,84 @@
+# For use as:
+#  HhRoot = ..
+#  include $(HhRoot)/Makefile_prog
+# or
+#  HhRoot = ..
+#  include $(HhRoot)/Makefile_defs
+#  some_redefinitions
+#  include $(HhRoot)/Makefile_prog
+# or
+#  HhRoot = /hh/src
+#  prog = name#  if different from containing directory
+#  exedir = .#  if not the default ./bin/$(CONFIG)
+#  include $(HhRoot)/Makefile_prog
+
+ifeq ($(defs_loaded),)
+  include $(HhRoot)/Makefile_defs
+endif
+
+ifneq ($(CONFIG),all)
+
+exedir ?= $(HhRoot)/bin/$(CONFIG)
+
+prog ?= $(notdir $(abspath .))
+exe ?= $(exedir)/$(prog)
+outputs = $(exe:%=%.ou)
+
+extraobjs +=#  this variable must be defined prior to use as a dependency
+
+all: progs
+
+depend $(make_dep):
+	$(cmd_makedep)
+
+ifeq ($(include_make_dep),1)
+  -include $(make_dep)
+endif
+
+lib:
+#	$(MAKE) -C $(HhRoot)/libHh
+# The separate "-C dir" commands are useful to follow symbolic links or relative paths (for pch under CONFIG=win).
+	$(MAKE) -C $(HhRoot) -C libHh
+
+progs: $(exe)
+
+$(exe): $(obj) $(extraobjs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))
+	$(CXX) $(TARGET_ARCH) $(call add_drive,$(obj) $(extraobjs) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+
+test: $(outputs)
+	@echo '** Summary of diffs'
+	@shopt -s nullglob && for i in *.diff; do echo "* $$i"; \
+	  if [[ `cat $$i | wc -l` -gt 100 ]]; then echo "Long diff **"; else cat $$i; fi \
+	done
+
+$(obj): built_ob.$(extobj).$(CONFIG)
+built_ob.$(extobj).$(CONFIG):
+	@rm -f $(obj) $(exe) $(CRUMBS) built_ob.$(extobj).*
+	@touch built_ob.$(extobj).$(CONFIG)
+
+$(outputs): built_ou.$(CONFIG)
+built_ou.$(CONFIG):
+	@rm -f $(outputs) $(outputs:%.ou=%.diff) built_ou.*
+	@touch built_ou.$(CONFIG)
+
+clean:
+	rm -f $(obj) built_ob.$(extobj).$(CONFIG) built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)
+deepclean: clean
+	rm -f $(exe) $(exe:%=%.ilk) $(exe:%=%.pdb) $(make_dep)
+
+# This fails because it does not prevent all the dependencies of "all" to be created before "clean" is invoked.
+# ifeq ($(MAKECMDGOALS),clean all)
+# all: clean
+# endif
+
+debug:
+	echo 'exe=$(exe) obj=$(obj) LDLIBS=$(LDLIBS) filter=$(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))'
+
+.PHONY: all depend lib progs test clean deepclean debug
+
+ifeq ($(CXX),cl)
+  # local *.pdb file; different from the final one created under ./bin
+  ccommon += -Fd$(prog).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
+endif
+
+endif  # ifneq ($(CONFIG),all)

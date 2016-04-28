@@ -1,0 +1,111 @@
+# Rules for filenames to exclude from the git repo.
+
+# Windows / Visual Studio build/temporary/user directories
+.vs/
+Debug/
+DebugMD/
+Release/
+ReleaseMD/
+x64/
+Win32/
+ipch/
+build/
+
+# Windows / Visual Studio build/temporary/user files (some of these may be old)
+.tfignore
+*.obj
+*.pdb
+*.lib
+*.ilk
+*.sdf
+*.pch
+*.exe
+*.dll
+*.manifest
+*.vcxproj.user
+*.sln.docstates
+*.idb
+*.vspscc
+*.vssscc
+*.VC.db
+*.VC.opendb
+# *.vsp
+# *.suo
+# *.ncb
+# *.opensdf
+# *.sdf
+# *.cachefile
+# I introduced the next one in hmake to expand environment variables before msbuild.exe
+*_eval_var.sln
+
+# Visual Studio profiler
+*.psess
+*.vsp
+*.vspx
+
+# MSTest test Results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# Backup & report files from converting an old project file to a newer Visual Studio version
+# _UpgradeReport_Files/
+# Backup*/
+# UpgradeLog*.XML
+# UpgradeLog*.htm
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+# Folder config file
+Desktop.ini
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+# Mac desktop service store files
+.DS_Store
+
+# Unix compilation
+*.o
+*.a
+*.asm
+*.gch
+
+# My intermediate files
+built_*
+Makefile.dep
+*.ou
+*.diff
+
+# PoliCheck output I generated
+policheck_*.xls
+policheck_*.xml
+
+# Emacs
+*~
+
+# RCS version control
+RCS/
+
+# Specific paths
+/TAGS
+/lib_src/
+/_old/
+/G3dOGL/other/
+/G3dOGL/render_perf/
+/gpuhash/*.zip
+/Htest/Old/
+/HTest/icons/
+/demos/Old/
+/include/*/
+/test/*/
+/_other/*.zip
+/bin/cygwin/bu_dll/
+/progtest/data/
+
+# /demos/data/
+
+# Do include some specific precompiled libraries (confirm using "git status -uall" or "git add -n .")
+# !/Filterterrain/ptclib/PTC_2012_64bit/*
+!/Filterterrain/ptclib/x64/
+!/Filterterrain/ptclib/x64/*
+!/Filterterrain/ptclib/Win32/
+!/Filterterrain/ptclib/Win32/*

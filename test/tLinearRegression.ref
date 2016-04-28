@@ -1,0 +1,15 @@
+ar = [4.1, 0.1]
+x=0  y=4  yfit=     4.1
+x=1  y=4  yfit=     4.2
+x=2  y=5  yfit=     4.3
+x=3  y=4  yfit=     4.4
+ar = [3.85, 0.85, -0.25]
+x=0  y=4  yfit=    3.85
+x=1  y=4  yfit=    4.45
+x=2  y=5  yfit=    4.55
+x=3  y=4  yfit=    4.15
+ar = [4, -1.5, 2, -0.5]
+x=0  y=4  yfit=       4
+x=1  y=4  yfit=       4
+x=2  y=5  yfit=       5
+x=3  y=4  yfit=       4

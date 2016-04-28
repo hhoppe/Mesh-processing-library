@@ -1,0 +1,81 @@
+# Note: this file sets up variables for Visual C++.
+# (It is included by Makefile_defs_win and Makefile_defs_clangcl.)
+
+# cl.exe uses environment variables CL and INCLUDE.
+# link.exe uses environment variables LINK, LIB, PATH, and TMP.
+
+ifeq ($(msvc),2015)
+
+  msvcmajor = 14
+  mscversion = 1900
+  cxxall += -FS#  serialize access to *.pdb files for parallel builds
+  export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\10\include\10.0.10150.0\ucrt;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\include\um;C:\Program Files (x86)\Windows Kits\8.1\include\shared;C:\Program Files (x86)\Windows Kits\8.1\include\um;C:\Program Files (x86)\Windows Kits\8.1\include\winrt;
+  ifeq ($(x64),1)
+    # see: %comspec% /s/c ""C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64 & env"
+    # PATH := C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files (x86)\MSBuild\14.0\bin\amd64;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN\amd64;C:\windows\Microsoft.NET\Framework64\v4.0.30319;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\VCPackages;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Performance Tools\x64;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Performance Tools;C:\Program Files (x86)\Windows Kits\8.1\bin\x64;C:\Program Files (x86)\Windows Kits\8.1\bin\x86;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\x64\;$(PATH)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x64)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Team Tools/Performance Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Team Tools/Performance Tools/x64)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/VCPackages)
+    PATH := $(call ppath,c:/Windows/Microsoft.NET/Framework64/v4.0.30319)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/BIN/amd64)
+    PATH := $(call ppath,c:/Program Files (x86)/MSBuild/14.0/bin/amd64)
+    export LIB := C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB\amd64;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB\amd64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10150.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x64;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64;#$(LIB)
+  else
+    # see: %comspec% /s/c ""C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" x86 & env"
+    # PATH := C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow;C:\Program Files (x86)\MSBuild\14.0\bin;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\BIN;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools;C:\windows\Microsoft.NET\Framework\v4.0.30319;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\VCPackages;C:\Program Files (x86)\HTML Help Workshop;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Team Tools\Performance Tools;C:\Program Files (x86)\Windows Kits\8.1\bin\x86;C:\Program Files (x86)\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6 Tools\;$(PATH)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Team Tools/Performance Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/VCPackages)
+    PATH := $(call ppath,c:/Windows/Microsoft.NET/Framework/v4.0.30319)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/BIN)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 14.0/Common7/IDE)
+    PATH := $(call ppath,c:/Program Files (x86)/MSBuild/14.0/bin)
+    export LIB := C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10150.0\ucrt\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x86;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x86;#$(LIB)
+  endif
+
+else ifeq ($(msvc),2013)
+
+  msvcmajor = 12
+  mscversion = 1800
+  cxxall += -FS#  serialize access to *.pdb files for parallel builds
+  export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\8.1\include\shared;C:\Program Files (x86)\Windows Kits\8.1\include\um;C:\Program Files (x86)\Windows Kits\8.1\include\winrt;
+  ifeq ($(x64),1)
+    # see c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin/amd64/vcvars64.bat
+    # PATH := \Program Files (x86)\MSBuild\12.0\bin\amd64:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\BIN\amd64:\Windows\Microsoft.NET\Framework64\v4.0.30319:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\VCPackages:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools:\Program Files (x86)\Microsoft Visual Studio 12.0\Team Tools\Performance Tools\x64:\Program Files (x86)\Microsoft Visual Studio 12.0\Team Tools\Performance Tools:\Program Files (x86)\Windows Kits\8.1\bin\x64:\Program Files (x86)\Windows Kits\8.1\bin\x86:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin\NETFX 4.5.1 Tools\x64\:$(PATH)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools/x64/)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x64)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Team Tools/Performance Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Team Tools/Performance Tools/x64)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/VCPackages)
+    PATH := $(call ppath,c:/Windows/Microsoft.NET/Framework64/v4.0.30319)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64)
+    PATH := $(call ppath,c:/Program Files (x86)/MSBuild/12.0/bin/amd64)
+    export LIB := \Program Files (x86)\Microsoft Visual Studio 12.0\VC\LIB\amd64;\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\LIB\amd64;\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64;#$(LIB)
+  else
+    # PATH := \Program Files (x86)\MSBuild\12.0\bin:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\BIN:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools:\Windows\Microsoft.NET\Framework\v4.0.30319:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\VCPackages:\Program Files (x86)\Windows Kits\8.1\bin\x86:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin\NETFX 4.5.1 Tools\:$(PATH)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/VCPackages)
+    PATH := $(call ppath,c:/Windows/Microsoft.NET/Framework/v4.0.30319)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/Tools)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN)
+    PATH := $(call ppath,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE)
+    PATH := $(call ppath,c:/Program Files (x86)/MSBuild/12.0/bin)
+    export LIB := C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\LIB;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\LIB;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x86;#$(LIB)
+  endif
+
+else
+
+  $(error msvc_unrecognized)
+
+endif

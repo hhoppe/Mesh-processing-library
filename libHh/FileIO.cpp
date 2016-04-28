@@ -1,0 +1,748 @@
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "FileIO.h"
+
+#include <fstream>              // std::ifstream, std::ofstream
+#include <cctype>               // std::isalnum()
+#include <atomic>
+#include <fcntl.h>              // O_NOINHERIT, O_BINARY
+#include <sys/stat.h>           // struct stat, struct _stat, stat()
+#include <cstring>              // std::memset()
+
+#if defined(_WIN32)
+
+#include <sys/utime.h>   // struct utimbuf, struct _utimbuf, utime(), _wutime()
+#include <io.h>          // _pipe(), dup(), close(), etc.
+#include <process.h>     // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
+// not #define WIN32_LEAN_AND_MEAN because need REFIID and Shellapi.h
+#include <windows.h>            // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
+// #include <Shellapi.h>           // SHFileOperation()
+
+#else
+
+#include <utime.h>              // struct utimbuf, struct _utimbuf, utime()
+#include <sys/wait.h>           // wait(), waidpid()
+#include <dirent.h>             // struct dirent, opendir(), readdir(), closedir()
+
+#endif  // defined(_WIN32)
+
+#include "Vec.h"
+#include "StringOp.h"
+#include "Locks.h"
+#include "RangeOp.h"            // contains()
+
+namespace hh {
+
+namespace {
+
+FILE* my_popen(const string& scmd, const string& mode);
+FILE* my_popen(CArrayView<string> scmd, const string& mode);
+int my_pclose(FILE* file);
+
+inline bool character_requires_quoting(char ch) {
+    // cmd special characters: space, &()[]{}^=;!'+,`~
+    return !std::isalnum(ch) && !contains(":/-@_.", ch); // removed + and ,
+}
+
+bool string_requires_quoting(const string& s) {
+    for_int(i, int(s.size())) {
+        if (character_requires_quoting(s[i])) return true;
+    }
+    return false;
+}
+
+string portable_simple_quote(const string& s) {
+    return string_requires_quoting(s) ? '"' + s + '"' : s;
+}
+
+} // namespace
+
+// *** RFile
+
+RFile::RFile(const string& filename) {
+    string sfor = get_canonical_path(filename);
+    const string mode = "r";
+    if (ends_with(filename, "|")) {
+        _file_ispipe = true;
+        _file = my_popen(filename.substr(0, filename.size()-1), mode); // no quoting at all
+    } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
+        _file_ispipe = true;
+        _file = my_popen(V<string>("gzip", "-d", "-c", sfor), mode); // gzip supports .Z (replacement for zcat)
+    } else if (filename=="-") {
+        // assertw(!isatty(0));
+        _file = stdin;
+        _is = &std::cin;
+    } else if (file_exists(sfor)) {
+        if (!assertw(!file_exists(sfor + ".Z")) || !assertw(!file_exists(sfor + ".gz")))
+            showdf("** Using uncompressed version of '%s'\n", sfor.c_str());
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+        _file = _wfopen(widen(sfor).c_str(), L"rb");
+#else
+        _file = fopen(sfor.c_str(), "rb");
+#endif
+    } else if (file_exists(sfor + ".gz")) {
+        _file_ispipe = true;
+        _file = my_popen(V<string>("gzip", "-d", "-c", sfor + ".gz"), mode);
+    } else if (file_exists(sfor + ".Z")) {
+        _file_ispipe = true;
+        _file = my_popen(V<string>("gzip", "-d", "-c", sfor + ".Z"), mode);
+    }
+    if (_file && !_is) {
+#if defined(__GNUC__)
+        _fb = make_unique<__gnu_cxx::stdio_filebuf<char>>(_file, std::ios_base::in);
+        _uis = make_unique<std::istream>(_fb.get());
+#else
+        _uis = make_unique<std::ifstream>(_file);
+#endif
+        _is = _uis.get();
+    }
+    if (!_is) throw std::runtime_error("Could not open file '" + filename + "' for reading");
+}
+
+RFile::~RFile() {
+    if (_uis) {
+#if defined(_WIN32)
+        // Avoids the "Broken pipe" error message, but takes too long for huge streams!
+        if (0) _is->ignore(INT_MAX);
+#endif
+        //
+        _uis.reset();
+#if defined(__GNUC__)
+        _fb.reset();
+#endif
+    }
+    if (_file) {
+        if (_file_ispipe) {
+            int ret = my_pclose(_file);
+            // PIPE signal may cause source process to return
+            // signal information, so ignore return value here.
+            if (0) assertw(!ret);
+        } else {
+            if (_file!=stdin) assertw(!fclose(_file));
+        }
+    }
+}
+
+
+// *** WFile
+
+WFile::WFile(const string& filename) {
+    assertx(filename!="");
+    string sfor = get_canonical_path(filename);
+    const string mode = "w";
+    if (filename[0]=='|') {
+        _file_ispipe = true;
+        _file = my_popen(filename.substr(1), mode); // no quoting at all
+    } else if (ends_with(filename, ".Z")) {
+        _file_ispipe = true;
+        _file = my_popen(("compress >" + portable_simple_quote(sfor)), mode);
+    } else if (ends_with(filename, ".gz")) {
+        _file_ispipe = true;
+        _file = my_popen(("gzip >" + portable_simple_quote(sfor)), mode);
+    } else if (filename=="-") {
+        _file = stdout;
+        _os = &std::cout;
+    } else {
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+        _file = _wfopen(widen(sfor).c_str(), L"wb");
+#else
+        _file = fopen(sfor.c_str(), "wb");
+#endif
+    }
+    if (_file && !_os) {
+#if defined(__GNUC__)
+        _fb = make_unique<__gnu_cxx::stdio_filebuf<char>>(_file, std::ios_base::out);
+        _uos = make_unique<std::ostream>(_fb.get());
+#else
+        _uos = make_unique<std::ofstream>(_file);
+#endif
+        _os = _uos.get();
+        if (0) {
+            // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
+            // Verify that the precision was unchanged from its default value of 6.
+            //  (similar code both in Hh.cpp and FileIO.cpp)
+            assertx(_os->precision(8)==6); // see discussion in Hh.cpp
+        }
+    }
+    if (!(_os && *_os)) throw std::runtime_error("Could not open file '" + filename + "' for writing");
+}
+
+WFile::~WFile() {
+    if (_os) _os->flush();
+    if (_uos) {
+        _uos.reset();
+#if defined(__GNUC__)
+        _fb.reset();
+#endif
+    }
+    if (_file) {
+        fflush(_file);
+        if (_file_ispipe) {
+            int ret = my_pclose(_file); assertw(!ret);
+        } else {
+            if (_file!=stdout) assertw(!fclose(_file));
+        }
+    }
+}
+
+
+// *** Misc
+
+bool file_exists(const string& name) {
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+    struct _stat fstat;
+    if (_wstat(widen(name).c_str(), &fstat)) return false;
+#else
+    struct stat fstat;
+    if (stat(name.c_str(), &fstat)) return false;
+#endif
+    if (fstat.st_mode&S_IFDIR) {
+        if (0) Warning("Found directory when expecting a file");
+        if (0) SHOW("found directory '" + name + "' when expecting a file");
+        return false;
+    }
+    return true;
+}
+
+bool directory_exists(const string& name) {
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+    struct _stat fstat;
+    if (_wstat(widen(name).c_str(), &fstat)) return false;
+#else
+    struct stat fstat;
+    if (stat(name.c_str(), &fstat)) return false;
+#endif
+    if (fstat.st_mode&S_IFDIR) return true; // directory
+    return false;
+}
+
+bool file_requires_pipe(const string& name) {
+    return (name=="-" || ends_with(name, ".Z") || ends_with(name, ".gz") ||
+            ends_with(name, "|") || begins_with(name, "|"));
+}
+
+// ret: 0 if error
+uint64_t get_path_modification_time(const string& name) {
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+    // https://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
+    struct _stat fstat;         // __time32_t st_mtime;
+    if (_wstat(widen(name).c_str(), &fstat)) return 0;
+    return fstat.st_mtime;
+#else
+    struct stat fstat;
+    if (stat(name.c_str(), &fstat)) return 0;
+    return fstat.st_mtime;
+#endif
+}
+
+// ret: success
+bool set_path_modification_time(const string& name, uint64_t time) {
+    // https://msdn.microsoft.com/en-us/library/4wacf567.aspx
+#if defined(_WIN32) && !defined(HH_NO_UTF8)
+    struct _utimbuf ut; ut.actime = time; ut.modtime = time;
+    return !_wutime(widen(name).c_str(), &ut);
+#else
+    struct utimbuf ut; ut.actime = time; ut.modtime = time;
+    return !utime(name.c_str(), &ut);
+#endif
+}
+
+namespace {
+enum class EType { files, directories };
+Array<string> get_in_directory(const string& directory, EType type) {
+    // http://stackoverflow.com/questions/306533/how-do-i-get-a-list-of-files-in-a-directory-in-c
+    // also http://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+    Array<string> ar_filenames;
+#if defined(_WIN32)
+    WIN32_FIND_DATAW file_data;
+    HANDLE dir = FindFirstFileW(widen(directory + "/*").c_str(), &file_data); {
+        if (dir==INVALID_HANDLE_VALUE) return {}; // No files found
+        do {
+            string file_name = narrow(file_data.cFileName);
+            const bool is_directory = !!(file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+            if ((type==EType::files && is_directory) || (type==EType::directories && !is_directory)) continue;
+            if (is_directory && (file_name=="." || file_name=="..")) continue;
+            ar_filenames.push(std::move(file_name));
+        } while (FindNextFileW(dir, &file_data));
+    } assertx(FindClose(dir));
+#else
+    DIR* dir = opendir(directory.c_str()); {
+        while (struct dirent* ent = readdir(dir)) {
+            string file_name = ent->d_name;
+            struct stat st;
+            if (stat(file_name.c_str(), &st) == -1) continue;
+            const bool is_directory = (st.st_mode & S_IFDIR) != 0;
+            if ((type==EType::files && is_directory) || (type==EType::directories && !is_directory)) continue;
+            if (is_directory && (file_name=="." || file_name=="..")) continue;
+            ar_filenames.push(std::move(file_name));
+        }
+    } assertx(!closedir(dir));
+#endif
+    return ar_filenames;
+}
+} // namespace
+
+Array<string> get_files_in_directory(const string& directory) {
+    return get_in_directory(directory, EType::files);
+}
+
+Array<string> get_directories_in_directory(const string& directory) {
+    return get_in_directory(directory, EType::directories);
+}
+
+bool command_exists_in_path(const string& name) {
+    string s = getenv_string("PATH");
+    const string pathsep = ";:";
+    string::size_type i = 0;
+    for (;;) {
+        auto j = s.find_first_of(pathsep, i); // may equal string::npos
+        string dir = s.substr(i, j-i);
+        if (file_exists(dir + '/' + name) ||
+            file_exists(dir + '/' + name + ".bat") ||
+            file_exists(dir + '/' + name + ".exe"))
+            return true;
+        if (j==string::npos) break;
+        i = j+1;
+    }
+    return false;
+}
+
+bool recycle_path(const string& pathname) {
+    // http://www.hardcoded.net/articles/send-files-to-trash-on-all-platforms.htm
+#if defined(_WIN32)
+    // https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164%28v=vs.85%29.aspx
+    // typedef struct _SHFILEOPSTRUCT {
+    //   HWND         hwnd;
+    //   UINT         wFunc;
+    //   PCZZTSTR     pFrom;
+    //   PCZZTSTR     pTo;
+    //   FILEOP_FLAGS fFlags;
+    //   BOOL         fAnyOperationsAborted;
+    //   LPVOID       hNameMappings;
+    //   PCTSTR       lpszProgressTitle;
+    // } SHFILEOPSTRUCT, *LPSHFILEOPSTRUCT;
+    assertx(is_path_absolute(pathname));
+    std::wstring wfilenames; {
+        string name = pathname;
+        for_int(i, int(name.size())) { if (name[i]=='/') name[i] = '\\'; }
+        wfilenames = widen(name);
+        wfilenames.push_back(0); // for double-null termination
+    }
+    SHFILEOPSTRUCTW op; std::memset(&op, '\0', sizeof(op));
+    op.hwnd = nullptr;          // hopefully this handle is not used when I specify FOF_NO_UI
+    op.wFunc = FO_DELETE;       // use Recycle Bin if possible
+    op.pFrom = wfilenames.data();
+    op.fFlags = FOF_ALLOWUNDO;
+    // FOF_NO_UI equivalent to FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR but not on clang
+    op.fFlags |= FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+    int ret = SHFileOperationW(&op);
+    if (1 && ret) SHOW("SHFileOperation failed", pathname, ret);
+    if (!ret) assertx(!op.fAnyOperationsAborted);
+    return !ret;
+#else
+    return !unlink(pathname.c_str());
+#endif
+}
+
+TmpFile::TmpFile(const string& suffix) {
+    static std::atomic<int> s_count{0};
+    for_int(i, 10000) {
+        int lcount = ++s_count;
+        _filename = sform("TmpFile.%d.%d%s%s", getpid(), lcount, (suffix=="" ? "" : "."), suffix.c_str());
+        if (!file_exists(_filename)) return;
+    }
+    assertnever("");
+}
+
+TmpFile::~TmpFile() {
+    if (!getenv_bool("TMPFILE_KEEP")) { assertx(!unlink(_filename.c_str())); }
+}
+
+
+// Notes on cygwin double-quote problem:
+//
+// It appears that the prefix (c:) of the command name affects the parsing of the arguments.
+//  (here sh == /cygwin/bin/sh)
+// sh -c ~/src/bin/win/HTest\ -showargs\ \\\"ab
+//  # Arg00='\ab'
+// sh -c c:/hh/src/bin/win/HTest\ -showargs\ \\\"ab
+//  # Arg00='\ab'
+// sh -c /hh/src/bin/win/HTest\ -showargs\ \\\"ab
+//  # Arg00='"ab'
+// sh -c /cygdrive/c/hh/src/bin/win/HTest\ -showargs\ \\\"ab\ c:/dummy
+//  # Arg00='"ab'
+//  # Arg01='c:/dummy'
+// (set path=(~/src/bin/win $path:q); sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
+//  # Arg00='"ab'
+//  # Arg01='c:/dummy'
+
+// When grep is invoked from Emacs, it appears as "c:\cygwin64\bin\grep -nH ..."
+
+
+// Backslash all non-ordinary characters.
+string quote_arg_for_sh(const string& s) {
+    std::ostringstream oss;
+    for_int(i, int(s.size())) {
+        char ch = s[i];
+        if (character_requires_quoting(s[i])) oss << '\\';
+        oss << ch;
+    }
+    return assertx(oss).str();
+}
+
+string quote_arg_for_shell(const string& s) {
+    // Double quotes is not as general but should work in many cases for all shells.
+    if (1) return portable_simple_quote(s);
+    return quote_arg_for_sh(s);  // correct for csh and sh
+}
+
+// On Win32, used to quote each argument of a spawn() command.
+static string windows_spawn_quote(const string& s) {
+    if (!string_requires_quoting(s)) return s;
+    std::ostringstream oss;
+    oss << '"';
+    for_int(i, int(s.size())) {
+        char ch = s[i];
+        if (ch=='"' || ch=='\\') { // for both " and \ , move outside double-quotes and backslash it
+            oss << '"' << '\\' << ch << '"';
+        } else {
+            oss << ch;
+        }
+    }
+    oss << '"';
+    if (0) SHOW("windows_spawn_quote", assertx(oss).str());
+    return assertx(oss).str();
+}
+
+// On cygwin, used to quote each argument of a spawn() command.
+static string cygwin_spawn_quote(const string& s) {
+    if (!string_requires_quoting(s)) return s;
+    std::ostringstream oss;
+    oss << '"';
+    for_int(i, int(s.size())) {
+        char ch = s[i];
+        if (ch=='"' || ch=='\\') { // for both " and \ , backslash it (without moving it outside double-quotes)
+            oss << '\\' << ch;
+        } else {
+            oss << ch;
+        }
+    }
+    oss << '"';
+    if (0) SHOW("cygwin_spawn_quote", assertx(oss).str());
+    return assertx(oss).str();
+}
+
+// Under Windows, must quote the arguments in spawn call so that they are properly parsed by client CRT.
+// Note that we do not know ahead of time if client uses cygwin or not.
+// I assume that "sh" is always a cygwin process, and launch everything else from within "sh -c".
+static string spawn_quote(const string& s, bool b_client_uses_cygwin) {
+    return b_client_uses_cygwin ? cygwin_spawn_quote(s) : windows_spawn_quote(s);
+}
+
+// Returns: -1 if spawn error, else exit_code (for wait==true) or pid (for wait==false).
+intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
+    dummy_use(spawn_quote);
+    assertx(sargv.num()); assertx(sargv[0]!="");
+    assertw(!contains(getenv_string("CYGWIN"), "noglob"));
+#if defined(_WIN32)
+    {
+        const int mode = wait ? P_WAIT : P_NOWAIT;
+        Array<std::wstring> nargv(sargv.num());
+        const bool b_client_uses_cygwin = sargv[0]=="sh"; // special processing for cygwin crt parsing
+        const bool b_client_cmd = sargv[0]=="cmd";
+        if (b_client_uses_cygwin) {
+            // 2015-11-20:
+            // "Cygwin uses UTF-8 by default. To use a different character set, you need to set
+            //   the LC_ALL, LC_CTYPE or LANG environment variables."
+            // Not very understandable: https://cygwin.com/cygwin-ug-net/setup-locale.html
+            // This next line seems to enable the launch of ffmpeg on /hh/data/video/braille_*HDbrink8h.mp4
+            if (1) my_setenv("LC_ALL", "en_US.CP437");
+        }
+        if (!b_client_cmd && begins_with(sargv[0], "cmd")) Warning("Unexpected cmd command");
+        if (b_client_cmd && !(sargv.num()==3 && sargv[1]=="/s/c")) { SHOW(sargv); Warning("Unexpected cmd args"); }
+        for_int(i, sargv.num()) {
+            const char dq = '"';
+            // Special flag "/s" in "cmd /s/c command" always expects outer quotes around command.
+            string str = (b_client_cmd ? (i<2 ? sargv[i] : (dq + sargv[i] + dq)) :
+                          spawn_quote(sargv[i], b_client_uses_cygwin));
+            if (0) SHOW(i, str);
+            nargv[i] = widen(str);
+        }
+        Array<const wchar_t*> argv(sargv.num()+1);
+        for_int(i, sargv.num()) { argv[i] = nargv[i].c_str(); }
+        argv.last() = nullptr;
+        // Adapted from crt/system.c; env==nullptr means inherit environment
+        return _wspawnvp(mode, widen(sargv[0]).c_str(), argv.data());
+    }
+// #elif 0 && defined(__CYGWIN__)  // omit?
+//     Array<const char*> argv(sargv.num()+1); argv.last() = nullptr;
+//     for_int(i, sargv.num()) { argv[i] = sargv[i].c_str(); }
+//     intptr_t exit_code = _spawnvp(P_WAIT, argv[0], argv.data());
+//     return int(exit_code);
+#else  // Unix (or cygwin)
+    {
+        Array<const char*> argv(sargv.num()+1); argv.last() = nullptr;
+        for_int(i, sargv.num()) { argv[i] = sargv[i].c_str(); }
+        if (wait) {
+            pid_t pid = fork(); assertx(pid>=0); // assert that fork() succeeded
+            if (!pid) {                          // child process
+                if (0) assertx(!close(0));       // no need to read from stdin?
+                execvp(argv[0], const_cast<char**>(argv.data()));
+                exit(127);              // exec() failed; report same exit code as failed system()
+            }
+            int status; assertx(waitpid(pid, &status, 0)==pid);
+            // TODO: determine which headers to use: sys/types.h  sys/wait.h?
+            if (!WIFEXITED(status)) return -1;       // could have been signal
+            if (WEXITSTATUS(status)==127) return -1; // exit code generated above for failed exec()
+            return WEXITSTATUS(status);
+        } else {
+            // Async spawn is tricky; note that system("(command &)") does not report whether command was found.
+            // Enhanced from http://lubutu.com/code/spawning-in-unix
+            int fd[2]; assertx(pipe(fd)!=-1);
+            pid_t pid = fork(); assertx(pid>=0); // assert that fork() succeeded  (else close(fd[0]), close(fd[1]))
+            if (!pid) {                          // child process
+                assertx(!close(fd[0]));          // no need to read from parent process
+                pid = fork();
+                if (pid>0) {
+                    int64_t t = pid; assertx(write(fd[1], &t, sizeof(t))==sizeof(t)); // grandchild pid back to parent
+                    exit(0);
+                }
+                if (!pid) {                                   // grandchild process
+                    if (fcntl(fd[1], F_SETFD, FD_CLOEXEC)==0) // (close pipe if exec succeeds)
+                        execvp(argv[0], const_cast<char**>(argv.data()));
+                }
+                // something failed: the most recent fork(), the fcntl(), or the exec().
+                assertx(errno>0);
+                int64_t t = -errno; assertx(write(fd[1], &t, sizeof(t))==sizeof(t));
+                exit(1);            // this exit code is not accessed by parent
+            }
+            ::wait(nullptr);        // (I don't understand the reason/need for this)
+            assertx(!close(fd[1])); // no need to write to child process
+            pid = -1;               // expect to read back a process id from child
+            for (;;) {              // outputs from child or grandchild may come in any order
+                int64_t t; int nread = read(fd[0], &t, sizeof(t)); assertx(nread>=0);
+                SHOW(t);            // ?
+                if (!nread) break;
+                if (t<0) errno = narrow_cast<int>(-t);
+                else pid = narrow_cast<pid_t>(t);
+            }
+            assertx(!close(fd[0]));
+            return pid;
+        }
+    }
+#endif
+}
+
+// Returns: -1 if spawn error, else exit_code (for wait==true) or pid (for wait==false).
+intptr_t my_sh(const string& scmd, bool wait) {
+    assertx(scmd!="");
+    const bool debug = getenv_bool("MY_SH_DEBUG");
+    intptr_t ret = -1;
+    if (debug) SHOW(scmd, getenv_string("PATH"));
+    // SH
+    if (ret<0) ret = my_spawn(V<string>("sh",  "-c", scmd), wait);
+    if (ret<0 && debug) Warning("Shell 'sh' not found");
+    // CSH
+    if (ret<0) ret = my_spawn(V<string>("csh", "-c", scmd), wait);
+    if (ret<0 && debug) Warning("Shell 'csh' not found");
+    if (ret<0) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
+    // CMD
+    if (0 && ret<0) SHOW(scmd);
+#if !defined(_WIN32)
+    if (ret<0) Warning("Failed to find sh/csh (outside WIN32); highly odd");
+#endif
+    if (ret<0) ret = my_spawn(V<string>("cmd", "/s/c", scmd), wait); // my_spawn() adds double-quotes for /s option
+    if (ret<0 && debug) Warning("Shell 'cmd' not found");
+    if (ret<0) Warning("Could not spawn shell command (sh/csh/cmd)");
+    return ret;
+}
+
+intptr_t my_sh(CArrayView<string> sargv, bool wait) {
+    assertx(sargv.num()>0);
+    string scmd;
+    for_int(i, sargv.num()) {
+        if (i) scmd += ' ';
+        scmd += quote_arg_for_sh(sargv[i]);
+    }
+    if (0) return my_sh(scmd, wait); // inferior path because would not adapt quoting to cmd
+    // Adapt the quoting of the arguments depending on which shell is invoked.
+    const bool debug = getenv_bool("MY_SH_DEBUG");
+    intptr_t ret = -1;
+    if (debug) SHOW(sargv, scmd, getenv_string("PATH"));
+    // SH
+    if (ret<0) {
+        ret = my_spawn(V<string>("sh",  "-c", scmd), wait);
+        if (ret<0 && debug) Warning("Shell 'sh' not found");
+    }
+    // CSH
+    if (ret<0) {
+        ret = my_spawn(V<string>("csh", "-c", scmd), wait);
+        if (ret<0 && debug) Warning("Shell 'csh' not found");
+    }
+    // CMD
+    // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; set path=(. ~/src/bin c:/windows/system32 c:/windows); Filtermesh ~/data/mesh/"complex file name.m" -stat)
+    if (ret<0) {
+        if (1) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
+        scmd = "";
+        for_int(i, sargv.num()) {
+            if (i) scmd += ' ';
+            scmd += windows_spawn_quote(sargv[i]); // unsure about this
+        }
+        if (0) SHOW(scmd);
+        ret = my_spawn(V<string>("cmd", "/s/c", scmd), wait); // my_spawn() adds double-quotes for /s option
+        if (ret<0 && debug) Warning("Shell 'cmd' not found");
+    }
+    if (ret<0) Warning("Could not spawn shell command (sh/csh/cmd)");
+    return ret;
+}
+
+namespace {
+
+template<typename Ch, typename Traits = std::char_traits<Ch> >
+struct basic_nullbuf : std::basic_streambuf<Ch, Traits> {
+    using base_type = std::basic_streambuf<Ch, Traits>;
+    using int_type = typename base_type::int_type;
+    using traits_type = typename base_type::traits_type;
+    virtual int_type overflow(int_type c) { return traits_type::not_eof(c); }
+};
+
+using nullbuf = basic_nullbuf<char>;
+nullbuf null_obj;
+
+} // namespace
+
+std::ostream cnull{&null_obj};
+
+
+namespace {
+
+// *** my_popen(), my_pclose()
+
+#if !defined(_WIN32)
+
+
+FILE* my_popen(const string& scmd, const string& mode) {
+    // CYGWIN might fail to find hardcoded "/bin/sh" unless cygwin1.dll is in c:/cygwin/bin
+    //  (see also http://cygwin.com/ml/cygwin/2003-06/msg00567.html )
+    FILE* f = popen(scmd.c_str(), mode.c_str());
+    // CYGWIN problem:
+    //  Invoking a Perl script prog using "#!" mechanism calls "c:/Perl/bin/perl /cygdrive/c/hh/.../prog",
+    //   and c:/Perl/bin/perl does not recognize /cygdrive/c
+    //  Therefore I should manually call "perl prog".
+    //  No, I fixed this using c:/cygwin/etc/fstab, so it calls "c:/Perl/bin/perl /hh/.../prog"
+    return f;
+}
+
+FILE* my_popen(CArrayView<string> sargv, const string& mode) {
+    string scmd;
+    for_int(i, sargv.num()) {
+        if (i) scmd += ' ';
+        scmd += quote_arg_for_sh(sargv[i]);
+    }
+    return my_popen(scmd, mode);
+}
+
+int my_pclose(FILE* file) {
+    return pclose(file);
+}
+
+
+#else  // defined(_WIN32)
+
+
+// Adapt popen() to use sh/csh if possible (rather than cmd) so that
+// - it works within UNC directories
+// - it uses '#!' convention for sh/bash/csh/perl scripts
+// Inspired from:
+// - MSDN "_pipe() example BeepFilter.Cpp"
+// - popen.c in vc98/crt/src
+// - MSDN "Creating a Child Process with Redirected Input and Output"
+
+// One cannot use any of the following characters in a file name:  \ / ? : * " > < |
+
+// From osfinfo.c, defined in io.h:
+//  intptr_t __cdecl _get_osfhandle(int fh);
+//  extern "C" int __cdecl _set_osfhnd(int fh, intptr_t value);
+
+const int tot_fd = 512;         // max of _NHANDLE_ in internal.h
+intptr_t* popen_pid = nullptr;
+
+template<typename Tcmd>         // const string& or CArrayView<string>
+FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
+    assertx(mode=="rb" || mode=="wb");
+    bool is_read = mode=="rb";
+    if (0) SHOW(getenv_string("PATH"));
+    fflush(stdout); fflush(stderr); std::cout.flush(); std::cerr.flush();
+    if (!popen_pid) popen_pid = new intptr_t[tot_fd]; // never deleted
+    int stdhdl = is_read ? 1 : 0;
+    const int bufsize = 1024;  // tried larger size for faster mp4 read in FF_RVideo_Implementation, but no effect
+    int pipes[2]; assertx(!_pipe(pipes, bufsize, O_BINARY | O_NOINHERIT));
+    assertx(pipes[0]>2 && pipes[0]<tot_fd && pipes[1]>2 && pipes[1]<tot_fd);
+    int new_stdhdl = pipes[is_read ? 1 : 0];
+    int pipehdl = pipes[is_read ? 0 : 1];
+    int bu_stdhdl = dup(stdhdl); assertx(bu_stdhdl>2);
+    if (0) {
+        SHOW(stdhdl, pipehdl, new_stdhdl, bu_stdhdl);
+        SHOW(_get_osfhandle(0), _get_osfhandle(1), _get_osfhandle(2));
+        SHOW(_get_osfhandle(pipes[0]), _get_osfhandle(pipes[1]));
+        SHOW(_get_osfhandle(new_stdhdl), _get_osfhandle(bu_stdhdl));
+    }
+    assertx(dup2(new_stdhdl, stdhdl)>=0); // success is either 0 or stdhdl depending on POSIX or Windows
+    // SetStdHandle(STD_INPUT_HANDLE & STD_OUTPUT_HANDLE) done automatically
+    //  by _set_osfhnd() called from dup2(), only for _CONSOLE_APP !
+    if (stdhdl==0) assertx(SetStdHandle(STD_INPUT_HANDLE,  HANDLE(_get_osfhandle(stdhdl))));
+    if (stdhdl==1) assertx(SetStdHandle(STD_OUTPUT_HANDLE, HANDLE(_get_osfhandle(stdhdl))));
+    assertx(!close(new_stdhdl));
+    if (0) {
+        SHOW(_get_osfhandle(0), _get_osfhandle(1), _get_osfhandle(2));
+        SHOW(_get_osfhandle(bu_stdhdl), _get_osfhandle(pipehdl));
+    }
+    // Ideally, child should not inherit bu_stdhdl;
+    //  no easy way to do that without directly using DuplicateHandle().
+    //  (pipehdl is not inherited by child process)
+    intptr_t pid = my_sh(tcmd, false);
+    if (pid<0) { SHOW("Could not launch shell (not in path?)"); return nullptr; }
+    popen_pid[pipehdl] = pid;
+    assertx(dup2(bu_stdhdl, stdhdl)>=0); // success is either 0 or stdhdl depending on posix or iso
+    // if (stdhdl==0) assertx(SetStdHandle(STD_INPUT_HANDLE,  HANDLE(_get_osfhandle(stdhdl))));
+    // if (stdhdl==1) assertx(SetStdHandle(STD_OUTPUT_HANDLE, HANDLE(_get_osfhandle(stdhdl))));
+    assertx(!close(bu_stdhdl));
+    return assertx(fdopen(pipehdl, mode.c_str())); // closed by fclose() in my_pclose_internal() below
+}
+
+int my_pclose_internal(FILE* file) {
+    int fd = fileno(file);
+    assertx(!fclose(file));
+    assertx(popen_pid);
+    intptr_t proc_handle = popen_pid[fd];
+    int termstat;
+    intptr_t handle = cwait(&termstat, proc_handle, WAIT_CHILD);
+    if (handle!=proc_handle) return -1;
+    return termstat;
+}
+
+FILE* my_popen(const string& scmd, const string& mode) {
+    string mode2 = mode + "b";    // always binary format
+    FILE* file;
+    HH_LOCK { file = my_popen_internal(scmd, mode2); }
+    return file;
+}
+
+FILE* my_popen(CArrayView<string> scmd, const string& mode) {
+    string mode2 = mode + "b";    // always binary format
+    FILE* file;
+    HH_LOCK { file = my_popen_internal(scmd, mode2); }
+    return file;
+}
+
+int my_pclose(FILE* file) {
+    int ret;
+    HH_LOCK { ret = my_pclose_internal(file); }
+    return ret;
+}
+
+
+#endif  // defined(_WIN32)
+
+} // namespace
+
+} // namespace hh

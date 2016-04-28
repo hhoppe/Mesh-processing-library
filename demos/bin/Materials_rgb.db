@@ -1,0 +1,133 @@
+## 3DS files
+# from Patrick Wilkinson: ship2; key, lghtbulb, banklamp
+"BLACK PLSTC BMP" "rgb=(.2 .2 .2)"
+"BLUE METAL" "rgb=(.1 .1 .7)"
+"GOLD (LIGHT)" "rgb=(.7 .7 .1)"
+"LIGHT?" "rgb=(.8 .8 .8)"
+"YELLOW GLASS" "rgb=(.8 .8 0)"
+"BRASS" "rgb=(.6 .4 .3)"
+"SILVER" "rgb=(.65 .65 .85)"
+"PITTED METAL" "rgb=(.1 .3 .7)"
+"WHITE GLASS" "rgb=(.9 .8 .9)"
+"GREEN GLASS" "rgb=(.2 .8 .3)"
+"GOLD 2 (LIGHT)" "rgb=(.7 .6 .4)"
+"GOLD 3(LIGHT)" "rgb=(.6 .7 .4)"
+"BLACK PLSTC" "rgb=(.3 .3 .3)"
+"RED PLASTIC" "rgb=(1. .2 .2)"
+"FLASHIGHT LIGHT" "rgb=(.9 .6 .8)"
+
+## Wavefront files
+# Viewpoint 5 free objects (Siggraph 94): pshuttll; ...
+"Glassy" "rgb=(.8 .8 .8)"
+# removed for chair5h below:  "bone" "rgb=(.6 .6 .8)"
+"br_dkgrey" "rgb=(.3 .3 .3)"
+"br_grey" "rgb=(.4 .4 .4)"
+"dullred" "rgb=(.5 .1 .1)"
+"fl_dkgrey" "rgb=(.2 .35 .25)"
+"pink" "rgb=(1 .5 .7)"
+"black" "rgb=(0 0 0)"
+"white" "rgb=(.9 .9 .9)"
+"purple" "rgb=(1 .2 .8)"
+"dkgreen" "rgb=(.6 0 0)"
+"flwhite" "rgb=(.9 .9 .9)"
+"flyellow" "rgb=(1 1 0)"
+"yellow" "rgb=(1 1 0)"
+"red" "rgb=(1 0 0)"
+"glass" "rgb=(.7 .7 .7)"
+"dkgrey" "rgb=(.3 .3 .3)"
+"green" "rgb=(0 .7 0)"
+"chrome1" "rgb=(.3 .3 .5)"
+"shblack" "rgb=(.1 .2 .2)"
+"goldchrome" "rgb=(.6 .6 .9)"
+
+## Viewpoint files without materials
+# Viewpoint 3 free objects
+# for gameguy
+"default wrap"		"rgb=(.5 .4 .2)"
+"default skin"		"rgb=(.7 .4 .4)"
+"default arm"		"rgb=(.6 .4 .4)"
+"default neck3"		"rgb=(.6 .5 .4)"
+"default chest"		"rgb=(.7 .6 .4)"
+"default chest2"	"rgb=(.6 .5 .3)"
+"default cloth"		"rgb=(.7 .7 .8)"
+"default belt"		"rgb=(.3 .2 .3)"
+# boot, shoe, boot2 should be same; bad Viewpoint data?
+"default boot"		"rgb=(.2 .2 .2)"
+"default shoe"		"rgb=(.2 .2 .2)"
+"default boot2"		"rgb=(.2 .2 .2)"
+"default boot3"		"rgb=(.2 .2 .2)"
+"default pupill"	"rgb=(0 0 0)"
+"default pupilr"	"rgb=(0 0 0)"
+"default irisl"		"rgb=(1 1 1)"
+"default irisr"		"rgb=(1 1 1)"
+"default eyel"		"rgb=(.5 .5 .5)"
+"default eyer"		"rgb=(.5 .5 .5)"
+"default hair"		"rgb=(0 .2 .2)"
+"default teeth"		"rgb=(1 1 1)"
+"default brows"		"rgb=(0 0 0)"
+"default hairbob"	"rgb=(1 0 0)"
+# for samuraisword
+"default blade"		"rgb=(.8 .7 .9)"
+"default metal"		"rgb=(.6 .6 .8)"
+"default handle"	"rgb=(.4 .3 .5)"
+"default diamonds"	"rgb=(.9 .9 .9)"
+"default wood"		"rgb=(.5 .6 .3)"
+
+# for sandal
+"strap01"		"rgb=(.6 .4 .3)"
+"strap02"		"rgb=(.6 .4 .3)"
+"buckle1"		"rgb=(.6 .6 .8)"
+"buckle2"		"rgb=(.6 .6 .8)"
+"sandle"		"rgb=(.2 .15 .15)"
+
+# for shark
+"body"			"rgb=(.2 .4 .8)"
+"tail"			"rgb=(.2 .4 .8)"
+"ffins"			"rgb=(.2 .4 .8)"
+"dorsal"		"rgb=(.2 .4 .8)"
+"fins"			"rgb=(.2 .4 .8)"
+"mouth"			"rgb=(.8 .7 .8)"
+"eyes"			"rgb=(.9 .9 .9)"
+
+# "" "rgb=()"
+
+## for unknown materials
+# "unknown" "rgb=(1 1 0)"
+# "nomaterial" "rgb=(.7 .7 .7)"
+"unknown" "rgb=(.7 .7 .7)"
+
+## For Viewpoint files 12/11/96
+
+# for rockingchair
+"bckframe"		"rgb=(.7 .6 .2)"
+"seat"			"rgb=(.7 .6 .2)"
+"seatweb"		"rgb=(.2 .2 .2)"
+"bckweb"		"rgb=(.2 .2 .2)"
+"frame"			"rgb=(.7 .6 .2)"
+"fixer"			"rgb=(.7 .6 .2)"
+
+# for chandelier
+"jetflame"		"rgb=(.7 .7 .1)"
+"brass"			"rgb=(.6 .4 .3)"
+
+# for chair5h
+"bone"			"rgb=(.6 .5 .1)"
+
+# for drumset
+"silver"		"rgb=(.65 .65 .85)"
+"legbrace"		"rgb=(.65 .65 .85)"
+"tribar2"		"rgb=(.65 .65 .85)"
+"bone1"			"rgb=(.8 .8 .8)"
+"gold"			"rgb=(.7 .7 .1)"
+
+# for foothelmet (not a very nice model??)
+"sidepad"		"rgb=(.2 .1 .7)"
+"backpad"		"rgb=(.2 .1 .7)"
+"helmet"		"rgb=(.2 .1 .7)"
+"inside"		"rgb=(.2 .2 .2)"
+"ear"			"rgb=(.2 .1 .7)"
+"facemask"		"rgb=(.65 .65 .85)"
+
+# for dunebuggy
+"flblack"		"rgb=(.2 .2 .2)"
+"orange"		"rgb=(.9 .6 .1)"

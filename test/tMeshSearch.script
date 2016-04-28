@@ -1,0 +1,4 @@
+#!/bin/bash
+
+tMeshSearch |& grep -v Sssncellsv
+exit 0

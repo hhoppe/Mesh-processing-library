@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- Note: this is a manually authored files that captures many common build settings across projects. -->
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_PropertySheetDisplayName>hhmain</_PropertySheetDisplayName>
+  </PropertyGroup>
+  <!-- See MSBuild Conditions: http://msdn.microsoft.com/en-us/library/7szfhaft.aspx -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+     <PreprocessorDefinitions>HH_FOR_DISTRIB;HH_NO_STACKWALKER;HH_NO_IMAGE_IO;HH_NO_MKL;HH_NO_SIMPLEX;HH_NO_VIDEO_LOOP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'false'=='true'">
+    <ClCompile>
+     <PreprocessorDefinitions>HH_IMAGE_IO_TOO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <PropertyGroup>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(HhRoot)'==''">
+   <HhRoot>..</HhRoot> <!-- default; most of my projects live in an immediate subfolder of HhRoot -->
+  </PropertyGroup>
+  <!-- base properties -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <AdditionalIncludeDirectories>$(HhRoot)\libHh;$(HhRoot)\libHWin;$(HhRoot)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HH_NO_LAPACK;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <OpenMPSupport>true</OpenMPSupport>
+      <UseFullPaths>true</UseFullPaths>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <TreatWarningAsError>true</TreatWarningAsError>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(HhRoot)\lib\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <!-- <AdditionalDependencies>libjpeg.lib;libpng.lib;libz.lib;librecipes.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
+      <!-- <AdditionalDependencies>liblapack.lib;libF77.lib;libI77.lib;libBLAS.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- x86 (32-bit) properties -->
+  <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
+    <ClCompile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- x64 (64-bit) properties -->
+  <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
+    <ClCompile>
+      <!-- Note that this option cannot be set explicitly to StreamingSIMDExtensions2 in x64 -->
+      <!-- The default (not set) on x64 is to use StreamingSIMDExtensions2 (SSE2), which is nicely portable -->
+      <!-- Setting to AdvancedVectorExtensions2 enables AVX+AVX2, but is less portable -->
+      <!-- <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet> -->
+    </ClCompile>
+    <Link>
+     <!-- #pragma referenced: mkl_intel_lp64_dll.lib mkl_intel_thread_dll.lib mkl_core_dll.lib libiomp5md.lib -->
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Release properties -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' OR '$(Configuration)'=='ReleaseMD'">
+    <ClCompile>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <Link>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+  <!-- Debug properties -->
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='DebugMD'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- dll (link to non-static libraries) properties -->
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'ReleaseMD'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'DebugMD'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <!-- extra -->
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32' OR '$(Configuration)|$(Platform)'=='DebugMD|Win32'">
+    <OutDir>$(HhRoot)\bin\Win32\debug\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64' OR '$(Configuration)|$(Platform)'=='DebugMD|x64'">
+    <OutDir>$(HhRoot)\bin\debug\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32' OR '$(Configuration)|$(Platform)'=='ReleaseMD|Win32'">
+    <OutDir>$(HhRoot)\bin\Win32\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' OR '$(Configuration)|$(Platform)'=='ReleaseMD|x64'">
+    <OutDir>$(HhRoot)\bin\</OutDir>
+  </PropertyGroup>
+  <!-- precompiled headers -->
+  <!-- I give up on using a shared precompiled header across multiple projects using msbuild
+  <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' OR '$(Configuration)' == 'ReleaseMD'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>$(HhRoot)\libHh\precompiled_libHh.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>$(HhRoot)\libHh\precompiled_libHh.h</ForcedIncludeFiles>
+      <- This still fails:
+           <AdditionalOptions>/Fp$(HhRoot)\libHh\$(IntDir)precompiled_libHh.pch</AdditionalOptions>
+           c:\hh\src\filtera3d\filtera3d.cpp : error C2859: c:\hh\src\filtera3d\x64\releasemd\vc120.pdb is not the pdb file that was used when this precompiled header was created, recreate the precompiled header. [c:\hh\src\Filtera3d\Filtera3d.vcxproj]
+      ->
+      <- When using this option, msbuild removes the libHh *.pch file before starting build of non-libHh projects
+           <PrecompiledHeaderOutputFile>$(HhRoot)\libHh\$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
+      ->
+    </ClCompile>
+  </ItemDefinitionGroup>
+  -->
+</Project>

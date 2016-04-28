@@ -1,0 +1,48 @@
+ar1 = [1, 2, 3, 4, 5]
+ar2 = [1, 2, 3, 4, 5]
+ar3 = [1, 2, 3, 4, 5]
+ar4 = [1, 2, 3, 4, 5]
+t5 = 5
+rest654 = [6, 5, 4]
+segment54 = [5, 4]
+dotslow = 26
+dot = 26
+iota5 = [0, 1, 2, 3, 4]
+reviota5 = [4, 3, 2, 1, 0]
+p = [1, 2]
+q = [8, 7]
+p-q = [-7, -5]
+p+q = [9, 9]
+dot(p, q) = 22
+p*q = [8, 14]
+mag(p) = 2.23607
+2.f*p+3.f*q = [26, 25]
+r = [9, 9]
+p = [8, 7]
+q = [1, 2]
+product(a1)=1 sum(a1)=3
+product(a2)=6 sum(a2)=6
+a1==ntimes<3>(1) = 1
+a1==ntimes<3>(2) = 0
+a2==ntimes<3>(1) = 0
+a2.rev() = [3, 1, 2]
+a2[2] = 3
+a[1] = 12
+a1 = [3, 4, 5]
+pp = [[3, 4], [5, 6]]
+(pp+V(10, 10)) = [[13, 14], [15, 16]]
+(Vec2<int>(10, 10)-pp) = [[7, 6], [5, 4]]
+-pp = [[-3, -4], [-5, -6]]
+v5 = 5
+triple6a=[6, 6, 6] type_name<decltype(triple6a)>()=hh::Vec<float,3>
+triple6b=[6, 6, 6] type_name<decltype(triple6b)>()=hh::Vec<int,3>
+triple6c=[6, 6, 6] type_name<decltype(triple6c)>()=hh::Vec<float,3>
+triple7 = [7, 7, 7]
+ntimes7 = [7, 7, 7]
+vonly3is2 = [0, 0, 0, 2, 0]
+ar = [0, 0, 0]
+ar.segment<3>(2) = [3, 4, 5]
+ar.head<3>() = [1, 2, 3]
+ar.tail<3>() = [3, 4, 5]
+ar0 = [3, 8, 13, 18, 23]
+ar2 = [10, 20, 30, 40, 50]

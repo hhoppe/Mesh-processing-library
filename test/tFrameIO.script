@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat tFrameIO.inp | tFrameIO | (FRAME_BINARY=1 tFrameIO ) | tFrameIO | ( FRAME_BINARY=0 tFrameIO )

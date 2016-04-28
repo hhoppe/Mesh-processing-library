@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugMD|Win32">
+      <Configuration>DebugMD</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugMD|x64">
+      <Configuration>DebugMD</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseMD|Win32">
+      <Configuration>ReleaseMD</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseMD|x64">
+      <Configuration>ReleaseMD</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{603DC1D8-0D14-40F0-9788-565F73D5DC54}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\hhmain.props" />
+  </ImportGroup>
+  <PropertyGroup>
+    <OutDir>$(Platform)\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <!-- Even in debug configuration, we can benefit from precompiled headers in this directory due to the shared pdb file.  Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='DebugMD'" -->
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precompiled_libHh.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>precompiled_libHh.h</ForcedIncludeFiles>
+      <PrecompiledHeaderOutputFile>$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="A3dStream.cpp" />
+    <ClCompile Include="Args.cpp" />
+    <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="BufferedA3dStream.cpp" />
+    <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="Filter.cpp" />
+    <ClCompile Include="FrameIO.cpp" />
+    <ClCompile Include="Geometry.cpp" />
+    <ClCompile Include="GeomOp.cpp" />
+    <ClCompile Include="GMesh.cpp" />
+    <ClCompile Include="HashFloat.cpp" />
+    <ClCompile Include="Hh.cpp" />
+    <ClCompile Include="Image.cpp">
+      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+    </ClCompile>
+    <ClCompile Include="Image_IO.cpp" />
+    <ClCompile Include="Image_wic.cpp" />
+    <ClCompile Include="LLS.cpp" />
+    <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="MeshOp.cpp" />
+    <ClCompile Include="MeshSearch.cpp" />
+    <ClCompile Include="Mk3d.cpp" />
+    <ClCompile Include="Mklib.cpp" />
+    <ClCompile Include="PMesh.cpp" />
+    <ClCompile Include="Polygon.cpp" />
+    <ClCompile Include="precompiled_libHh.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>precompiled_libHh.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+    <ClCompile Include="Principal.cpp" />
+    <ClCompile Include="Principal_em.cpp" />
+    <ClCompile Include="Random.cpp" />
+    <ClCompile Include="Spatial.cpp" />
+    <ClCompile Include="SRMesh.cpp" />
+    <ClCompile Include="Stat.cpp" />
+    <ClCompile Include="SubMesh.cpp" />
+    <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Video.cpp">
+      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="A3dStream.h" />
+    <ClInclude Include="Advanced.h" />
+    <ClInclude Include="Args.h" />
+    <ClInclude Include="Array.h" />
+    <ClInclude Include="ArrayOp.h" />
+    <ClInclude Include="Audio.h" />
+    <ClInclude Include="BufferedA3dStream.h" />
+    <ClInclude Include="Bbox.h" />
+    <ClInclude Include="BinaryIO.h" />
+    <ClInclude Include="BinarySearch.h" />
+    <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="Buffer.h" />
+    <ClInclude Include="Color_ramp.h" />
+    <ClInclude Include="Combination.h" />
+    <ClInclude Include="ConsoleProgress.h" />
+    <ClInclude Include="Contour.h" />
+    <ClInclude Include="EList.h" />
+    <ClInclude Include="Encoding.h" />
+    <ClInclude Include="Facedistance.h" />
+    <ClInclude Include="FileIO.h" />
+    <ClInclude Include="Filter.h" />
+    <ClInclude Include="Flags.h" />
+    <ClInclude Include="FrameIO.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="GeomOp.h" />
+    <ClInclude Include="GMesh.h" />
+    <ClInclude Include="Graph.h" />
+    <ClInclude Include="GraphOp.h" />
+    <ClInclude Include="Grid.h" />
+    <ClInclude Include="GridOp.h" />
+    <ClInclude Include="GridPixelOp.h" />
+    <ClInclude Include="HashFloat.h" />
+    <ClInclude Include="HashPoint.h" />
+    <ClInclude Include="HashTuple.h" />
+    <ClInclude Include="Hh.h" />
+    <ClInclude Include="Histogram.h" />
+    <ClInclude Include="HiddenLineRemoval.h" />
+    <ClInclude Include="Homogeneous.h" />
+    <ClInclude Include="Image.h" />
+    <ClInclude Include="Kdtree.h" />
+    <ClInclude Include="LinearFunc.h" />
+    <ClInclude Include="LinearRegression.h" />
+    <ClInclude Include="LLS.h" />
+    <ClInclude Include="Locks.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Materials.h" />
+    <ClInclude Include="MathOp.h" />
+    <ClInclude Include="Matrix.h" />
+    <ClInclude Include="MatrixOp.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshOp.h" />
+    <ClInclude Include="MeshSearch.h" />
+    <ClInclude Include="Mk3d.h" />
+    <ClInclude Include="Mklib.h" />
+    <ClInclude Include="Multigrid.h" />
+    <ClInclude Include="my_lapack.h" />
+    <ClInclude Include="NetworkOrder.h" />
+    <ClInclude Include="NonlinearOptimization.h" />
+    <ClInclude Include="Parallel.h" />
+    <ClInclude Include="ParallelCoords.h" />
+    <ClInclude Include="PArray.h" />
+    <ClInclude Include="Pixel.h" />
+    <ClInclude Include="PMesh.h" />
+    <ClInclude Include="Polygon.h" />
+    <ClInclude Include="PolygonSpatial.h" />
+    <ClInclude Include="Pool.h" />
+    <ClInclude Include="Postscript.h" />
+    <ClInclude Include="Pqueue.h" />
+    <ClInclude Include="precompiled_libHh.h" />
+    <ClInclude Include="Primes.h" />
+    <ClInclude Include="Principal.h" />
+    <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="Queue.h" />
+    <ClInclude Include="Random.h" />
+    <ClInclude Include="RangeOp.h" />
+    <ClInclude Include="Sac.h" />
+    <ClInclude Include="Set.h" />
+    <ClInclude Include="SGrid.h" />
+    <ClInclude Include="SimpleTimer.h" />
+    <ClInclude Include="Spatial.h" />
+    <ClInclude Include="SRMesh.h" />
+    <ClInclude Include="Stack.h" />
+    <ClInclude Include="Stat.h" />
+    <ClInclude Include="STree.h" />
+    <ClInclude Include="StridedArrayView.h" />
+    <ClInclude Include="StringOp.h" />
+    <ClInclude Include="SubMesh.h" />
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="UnionFind.h" />
+    <ClInclude Include="Univ.h" />
+    <ClInclude Include="VariadicMacros.h" />
+    <ClInclude Include="Vec.h" />
+    <ClInclude Include="Vector4.h" />
+    <ClInclude Include="Vector4i.h" />
+    <ClInclude Include="VectorF.h" />
+    <ClInclude Include="VertexCache.h" />
+    <ClInclude Include="Video.h" />
+    <ClInclude Include="windows_com.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="libHh.natvis">
+      <SubType>Designer</SubType>
+    </Natvis>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

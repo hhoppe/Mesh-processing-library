@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# Run a validation executable
+
+# set -x
+
+PATH=".:/perl/bin:/c/perl/bin:/cygdrive/c/perl/bin:$PATH" # Cygwin perl was not robust to "make -j" in ~/src/test
+# echo PATH=$PATH 1>&2
+
+for i in "$@"; do
+  i=${i%.exe}
+  e=$i
+  if [[ $i == *.script ]]; then
+    if [[ ! -e $i ]]; then
+      echo "script $i does not exist, skipping" 1>&2
+      continue
+    fi
+    i=${i%.script}
+  elif [[ -e "$e.script" ]]; then
+    : # all OK
+  elif [[ -f "$e.exe" ]]; then
+    e="$e.exe"
+  elif [[ ! -x "$e" ]]; then
+    echo "$e is not executable, skipping" 1>&2
+    continue
+  fi
+  ia="$i"; if [[ $i != /* ]]; then ia="$PWD/$i"; fi
+  old="$i.ref" new="$i.ou" diff="$i.diff"
+  tmp=v.$$  # was tmp=~/tmp/v$$
+  if [[ ! -e $old ]]; then
+    echo "no output to compare to, skipping" 1>&2
+    continue
+  fi
+  if [[ -e "$i.script" ]]; then
+    { "$i.script"; } >&"$tmp" || echo "$ia.script:1:1: error: test script exited with error ***" >>"$tmp"
+  else
+    # http://unix.stackexchange.com/questions/53289/does-segmentation-fault-message-come-under-stderr
+    { "$e"; } >&"$tmp" || echo "$ia.cpp:1:1: error: test executable exited with error ***" >>"$tmp"
+  fi
+  perl -S hcheck_aux <"$tmp" >"$new"
+  rm "$tmp"
+  if [[ ! -f $old ]]; then
+    cp -p "$new" "$old"
+  fi
+  if true; then
+    cmp -s "$new" "$old"
+    if [[ $? != 0 ]]; then	# different
+      echo "$ia.cpp.1:1: error: test output was different:"
+      diff "$old" "$new" | tee "$diff"
+    else
+      # rm "$new"
+      rm -f "$diff"
+    fi
+  fi
+done

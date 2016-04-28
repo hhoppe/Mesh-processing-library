@@ -1,0 +1,38 @@
+#!/bin/bash
+
+f=(perl -pe 'binmode(STDOUT); s@^  [^ ]*tArgs(\.exe)?$@  tArgs@; s@tArgs\.exe@tArgs@')
+
+echo '****'
+tArgs |& "${f[@]}"
+
+echo '****'
+tArgs -\? |& "${f[@]}"
+
+echo '****'
+tArgs -unkflag u1 u2 e.a3d e2.a3d -flag -val1 3 |& "${f[@]}"
+
+echo '****'
+tArgs -farc 2 3 -val2 234 e.av -flac |& "${f[@]}"
+
+echo '****'
+tArgs -flap -flag |& "${f[@]}"
+
+echo '****'
+tArgs -show1p1 |& "${f[@]}"
+
+
+echo '******'
+
+export TARGS_PHASE2=1
+
+echo '****'
+tArgs file file.vlp -flag -showar 0 -showar 1 -ar 1 2 file2 file2.vlp -showar 0 -showar 1 file.png |& "${f[@]}"
+
+echo '****'
+tArgs file file.vlp -unknown.string -showar 0 |& "${f[@]}"
+
+echo '****'
+tArgs file -- file.vlp -unknown.string -showar 0 |& "${f[@]}"
+
+echo '****'
+tArgs file -- file.vlp -unknown.string file2 |& "${f[@]}"

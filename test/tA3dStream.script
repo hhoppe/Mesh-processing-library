@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Sometimes hangs?  If so, just run it again...
+
+cat tA3dStream.inp | (BI=1 A3D_BINARY=1 tA3dStream) | (BO=1 BI=1 tA3dStream) | (A3D_BINARY=0 tA3dStream)
+
+cat tA3dStream.inp | (DEBUG=1 tA3dStream) >/dev/null
+
+# tA3dStream < tA3dStream.inp | tA3dStream | tA3dStream | grep -v Created

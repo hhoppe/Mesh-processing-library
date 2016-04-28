@@ -1,0 +1,97 @@
+// Microsoft Visual Studio "hint file" to help the IDE parse macro identifiers.
+// See https://msdn.microsoft.com/en-us/library/dd997977.aspx
+// (In addition to:  C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcpackages\cpp.hint )
+
+#define HH_POOL_ALLOCATION(x)
+#define HH_INITIALIZE_POOL(x)
+#define HH_ALLOCATE_POOL(x)
+#define HH_INITIALIZE_POOL_NESTED(x, y)
+
+#define HH_MAKE_SAC(T)
+#define HH_MAKE_POOLED_SAC(T)
+#define HH_SACABLE(T)
+#define HH_SAC_INITIALIZATION(T)
+#define HH_SAC_ALLOCATE_CD(sac, type)
+#define HH_SAC_ALLOCATE(sac, type)
+#define HH_SAC_ALLOCATE_FUNC(sac, type, accessfunc)
+#define HH_SAC_ALLOCATE_CD_FUNC(sac, type, accessfunc)
+
+#define HH_TIMER(x)
+#define HH_CTIMER(x)
+#define HH_DTIMER(x)
+#define HH_ATIMER(x)
+#define HH_STIMER(x)
+#define HH_PTIMER(x)
+#define HH_TIMER_END(x)
+
+#define HH_STAT(S) hh::Stat S(#S, true)
+#define HH_STATNP(S) hh::Stat S(#S, false)
+#define HH_SSTAT(S, v) do { static hh::Stat S(#S, true, true); S.enter(v); } while (false)
+#define HH_SSTAT_RMS(S, v) do { static hh::Stat S(#S, true, true); S.set_rms(); S.enter(v); } while (false)
+#define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false)
+#define HH_RSTAT_RMS(S, range) do { HH_STAT(S); S.set_rms(); for (auto e : range) { S.enter(e); } } while (false)
+
+// #define AS(x) x
+
+#define MAF_SCOPED(x)
+
+#define JPP(arglist) arglist  // Image_IO.cpp jpeglib.h
+#define E(x)  // MathOp.h and others
+
+#define bcase break; case
+#define ocase case
+#define bdefault break; default
+
+#define for_range_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
+#define for_range(T, i, lb, ub) for_range_aux(T, i, lb, ub, u)
+#define for_int(i, ub)      for_range(int, i, 0, ub)
+#define for_intL(i, lb, ub) for_range(int, i, lb, ub)
+#define for_size_t(i, ub)   for_range(size_t, i, 0, ub)
+
+#define omp_parallel_for_range(omp_args, T, i, lb, ub) for_range_aux(T, i, lb, u)
+#define parallel_for_range(T, i, lb, ub)         omp_parallel_for_range(, T, i, lb, ub)
+#define cond_parallel_for_range(c, T, i, lb, ub) omp_parallel_for_range(, T, i, lb, ub)
+#define parallel_for_int(i, ub)      parallel_for_range(int, i, 0, ub)
+#define parallel_for_intL(i, lb, ub) parallel_for_range(int, i, lb, ub)
+#define parallel_for_size_t(i, ub)   parallel_for_range(size_t, i, 0, ub)
+#define hh_parallel_for              for
+#define cond_parallel_for_int(c, i, ub)    cond_parallel_for_range(c, int, i, 0, ub)
+#define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_range(c, size_t, i, 0, ub)
+
+#define ForSCSimplex(K, dim, s)
+#define ForSCOrderedSimplex(K, dim, s)
+#define ForSCSimplexChildIndex(s, c, i)
+#define ForSCSimplexChild(s, c)
+#define ForSCSimplexFaces(s, c)
+#define ForSCSimplexParent(s, p)
+#define ForSCSimplexStar(s, p)
+#define ForSCVertexFace(v, f)
+#define ForAWVertexFace(mesh, v, f, ff)
+#define ForAWVertexVertex(mesh, v, f, vv, ff)
+
+#define HH_NORETURN
+
+#define HH_PRINTF_ATTRIBUTE(x)
+
+#define CONSTEXPR
+#define CONSTEXPR2
+
+#define SHOWL
+
+#define HH_DECLARE_OSTREAM_EOL(...)                                                             \
+    struct has_ostream_eol_aux<__VA_ARGS__> { static CONSTEXPR bool value() { return true; } }
+#define HH_DECLARE_OSTREAM_RANGE(...)
+
+// I cannot get this to work completely.  For now, it works only if SHOW has a single argument.
+// #undef SHOW
+// #define SHOW dummy_use
+// #define SHOW(x, y)
+// #define SHOW(...) ((void)(__VA_ARGS__))
+// #define SHOW(...) ((void)0)
+// #define SHOW(a, b, c, d, e, f)
+// #define SHOW()
+// #define SHOW printf
+// #define SHOW(x) ((void)0)
+// #define SHOW(x, y) ((void)0)
+#define SHOW(x)
+

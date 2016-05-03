@@ -1,11 +1,8 @@
 HhRoot = ..
-include $(HhRoot)/Makefile_defs
+include $(HhRoot)/make/Makefile_prog
 
-LDLIBS := $(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) $(LDLIBS)
+$(call prepend,LDLIBS,$(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
 cppinc += -I$(HhRoot)/lib$(HW)
-
 g3dogldir = $(HhRoot)/G3dOGL
 extraobjs = $(foreach n,G3d G3ddraw G3devent G3dio,$(g3dogldir)/$(n).$(extobj))
 cppinc += -I$(g3dogldir)#  for HB.h
-
-include $(HhRoot)/Makefile_prog

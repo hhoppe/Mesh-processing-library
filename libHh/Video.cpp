@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Video.h"
 
-// For make, this should instead be set in ~/src/Makefile_defs to get correct include and lib paths
+// For make, this should instead be set in ~/src/make/Makefile_defs to get correct include and lib paths
 // For msbuild:
 // #define HH_VIDEO_HAVE_VT
 
@@ -183,7 +183,7 @@ string video_suffix_for_magic_byte(uchar c) {
     //  *.avi: "RIFF"
     //  *.mov: "\000\000\000\030ftypqt   \a\t\000"
     switch (c) {
-     bcase u'\x00': return "mp4"; // or "mov"
+     bcase 0:       return "mp4"; // u'\x00'; or "mov"
      bcase '0':     return "wmv";
      bcase 'R':     return "avi";
      bdefault:      return "";

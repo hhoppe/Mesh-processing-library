@@ -1,5 +1,5 @@
 # Mesh-processing-library
-See README.html for details.
+See [README.html](README.html) for details.
 
 C++ library and programs that demonstrate mesh processing techniques in computer graphics
 published at ACM SIGGRAPH in 1992–1998:
@@ -14,3 +14,8 @@ published at ACM SIGGRAPH in 1992–1998:
 * smooth terrain LOD
 * progressive simplicial complexes
 
+[//]: # (This may be the most platform independent comment -- after a blank line)
+[//]: # (Preview using http://daringfireball.net/projects/markdown/dingus )
+[//]: # (See nice docs in http://daringfireball.net/projects/markdown/syntax )
+[//]: # ( or https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html )
+[//]: # (GitHub-specific: https://help.github.com/categories/writing-on-github/ )

@@ -1,2 +1,2 @@
 HhRoot = ..
-include $(HhRoot)/Makefile_prog
+include $(HhRoot)/make/Makefile_prog

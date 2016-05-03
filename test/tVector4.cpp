@@ -18,7 +18,7 @@ template<typename T> struct is_trivially_default_constructible : has_trivial_def
 using namespace hh;
 
 // Test Neon syntax:
-// modify Makefile_defs_clang to override cxxall, then
+// modify make/Makefile_defs_clang to override cxxall, then
 // make CONFIG=clang -C ~/src/test tVector4.o
 //  (It checks C++ syntax, then crashes with "ARM does not support Windows COFF format".)
 

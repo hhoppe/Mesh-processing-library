@@ -1,7 +1,7 @@
 HhRoot = ..
-include $(HhRoot)/Makefile_defs
+include $(HhRoot)/make/Makefile_prog
 
-LDLIBS := $(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) $(LDLIBS)
+# $(info 0 LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))
+$(call prepend,LDLIBS,$(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
 cppinc += -I$(HhRoot)/lib$(HW)
-
-include $(HhRoot)/Makefile_prog
+# $(info 1 LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))

@@ -2,9 +2,9 @@ HhRoot = ..
 
 # DEBUG_MAKE = 1
 
-include $(HhRoot)/Makefile_defs
+include $(HhRoot)/make/Makefile_prog
 
-LDLIBS := $(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) $(LDLIBS)
+$(call prepend,LDLIBS,$(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
 cppinc += -I$(HhRoot)/lib$(HW)
 
 # Creating a windows app (rather than console app) seems a bad idea as it disconects from shell
@@ -12,4 +12,3 @@ cppinc += -I$(HhRoot)/lib$(HW)
 # Instead, I use "ShowWindow(GetConsoleWindow(), SW_HIDE);" within libHWin/HW.cpp
 # LDFLAGS += -subsystem:windows -entry:mainCRTStartup
 
-include $(HhRoot)/Makefile_prog

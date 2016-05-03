@@ -6,7 +6,7 @@ HhRoot = ..
 
 new_all: test
 
-include $(HhRoot)/Makefile_progs
+include $(HhRoot)/make/Makefile_progs
 
 ifeq ($(gcc_base),1)
   # For the test programs in this directory, reduce floating-point imprecision issues.

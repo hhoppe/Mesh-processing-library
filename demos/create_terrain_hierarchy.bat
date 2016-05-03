@@ -4,7 +4,7 @@ setlocal
 cd "%~p0"
 call bin/_initdemos.bat
 
-echo Note: this next step requires that bash be installed on the system.
+echo Note: this next step requires that bash be installed on the system.  (For instance, using Cygwin.)
 
 bash -c ./create_terrain_hierarchy.sh
 

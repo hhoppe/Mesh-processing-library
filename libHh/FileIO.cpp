@@ -454,7 +454,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
             // "Cygwin uses UTF-8 by default. To use a different character set, you need to set
             //   the LC_ALL, LC_CTYPE or LANG environment variables."
             // Not very understandable: https://cygwin.com/cygwin-ug-net/setup-locale.html
-            // This next line seems to enable the launch of ffmpeg on /hh/data/video/braille_*HDbrink8h.mp4
+            // This next line seems to enable the launch of ffmpeg on ~/data/video/braille_*HDbrink8h.mp4
             if (1) my_setenv("LC_ALL", "en_US.CP437");
         }
         if (!b_client_cmd && begins_with(sargv[0], "cmd")) Warning("Unexpected cmd command");

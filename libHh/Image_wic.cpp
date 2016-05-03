@@ -102,6 +102,18 @@ HRESULT my_progress_callback(void* data, ULONG framenum, WICProgressOperation, d
 }
 #endif
 
+class my_HGLOBAL {
+ public:
+    ~my_HGLOBAL() { *this = nullptr; }
+    void operator=(HGLOBAL p) {
+        if (_hMem) assertx(!GlobalFree(_hMem));
+        _hMem = p;
+    }
+    operator HGLOBAL() const { return _hMem; }
+ private:
+    HGLOBAL _hMem {nullptr};
+};
+
 } // namespace
 
 void Image::read_file_wic(const string& filename, bool bgr) {
@@ -266,17 +278,6 @@ void Image::write_file_wic(const string& filename, bool bgr) const {
     const bool write_through_memory =
         file_requires_pipe(filename) ||
         (have_metadata && canonical_pathname(get_path_absolute(filename))==canonical_pathname(orig_filename));
-    class my_HGLOBAL {
-     public:
-        ~my_HGLOBAL() { *this = nullptr; }
-        void operator=(HGLOBAL p) {
-            if (_hMem) assertx(!GlobalFree(_hMem));
-            _hMem = p;
-        }
-        operator HGLOBAL() const { return _hMem; }
-     private:
-        HGLOBAL _hMem {nullptr};
-    };
     // HGLOBAL hMem = nullptr;
     my_HGLOBAL hMem;            // gets defined if write_through_memory
     com_ptr<IStream> output_stream;

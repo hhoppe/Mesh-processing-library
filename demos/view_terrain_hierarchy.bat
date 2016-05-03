@@ -4,6 +4,12 @@ setlocal
 cd "%~p0"
 call bin/_initdemos.bat
 
+if not exist data/gcanyon_sq129_b44.l2.pm (
+  echo The file data/gcanyon_sq129_b44.l2.pm was not found.
+  echo (Its creation by create_terrain_hierarchy.bat may have failed if the bash shell was absent.)
+  exit /b 1
+)
+
 echo .
 echo Move slider up/down to visualize hierarchical simplification.
 echo .

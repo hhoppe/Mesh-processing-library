@@ -1,5 +1,5 @@
 # Makefile (for GNU make, a.k.a. gmake).
-# Note: default CONFIG (set in ./Makefile_defs) is either "win" (Windows debug build) or "unix" (Unix release build),
+# Note: default CONFIG (set in make/Makefile_defs) is either "win" (Windows debug) or "unix" (Unix release),
 #  depending on the detected platform.
 # Setting "CONFIG=all" runs make successively on all available configurations.
 # Examples:
@@ -18,7 +18,7 @@
 
 HhRoot ?= .#  this current file is located in the root directory of the package
 
-include Makefile_defs
+include make/Makefile_defs
 
 ifneq ($(CONFIG),all)
 

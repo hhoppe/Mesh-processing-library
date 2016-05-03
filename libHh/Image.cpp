@@ -205,11 +205,11 @@ string image_suffix_for_magic_byte(uchar c) {
     // *.ppm: "P6\n", "P5\r\n"
     // *.png: "\211PNG\r\n"
     switch (c) {
-     bcase u'\x01': return "rgb";
-     bcase u'\xFF': return "jpg";
+     bcase 1: return "rgb";     // u'\x01'
+     bcase 255: return "jpg";   // u'\xFF'
      bcase 'B':     return "bmp";
      bcase 'P':     return "ppm";
-     bcase u'\x89': return "png";
+     bcase 137: return "png";   // u'\x89'
      bdefault:      return "";
     }
 }

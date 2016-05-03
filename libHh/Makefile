@@ -1,5 +1,5 @@
 HhRoot = ..
-include $(HhRoot)/Makefile_lib
+include $(HhRoot)/make/Makefile_lib
 
 # some_raw_c_file.$(extobj): cwarnings := $(no_warnings)
 
@@ -47,7 +47,7 @@ ifeq ($(CXX)-pch$(use_pch),clang++-pch1)
   $(abs_pch_file).pch : built_ob.$(extobj).$(CONFIG) $(pch_root).$(extobj)
   # Omit precompiled header when compiling precompiled header file
   # No, this misbehaves: it results in errors when compiling ./libImageIO/ImageIO.o
-  # Instead, I removed the *.h.pch using a "rm" in the "%.pch : %.h" rule of Makefile_defs_clang
+  # Instead, I removed the *.h.pch using a "rm" in the "%.pch : %.h" rule of make/Makefile_defs_clang
   # $(abs_pch_file).pch : cxxall := $(filter-out -include $(HhRoot)/libHh/precompiled_libHh.h,$(cxxall))
   # This is necessary because $(pch_root).$(extobj) gets built before $(abs_pch_file).pch
   $(pch_root).$(extobj) : cxxall := $(filter-out -include $(HhRoot)/libHh/precompiled_libHh.h,$(cxxall))

@@ -1,5 +1,5 @@
 HhRoot = ..
-include $(HhRoot)/Makefile_prog
+include $(HhRoot)/make/Makefile_prog
 
 gdloopdir = $(HhRoot)/VideoViewer
 extraobjs = $(foreach n,GradientDomainLoop,$(gdloopdir)/$(n).$(extobj))

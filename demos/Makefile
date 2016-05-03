@@ -1,17 +1,17 @@
 HhRoot = ..
 orig_CONFIG := $(CONFIG)#  it may be null, in which case we use the executables created by msbuild in $(HhRoot)/bin
-include $(HhRoot)/Makefile_defs
+include $(HhRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)
 
 ifeq ($(orig_CONFIG),)
 undefine CONFIG
-PATH := $(call ppath,$(HhRoot)/bin)
+$(call prepend_PATH,$(HhRoot)/bin)
 else
-PATH := $(call ppath,$(HhRoot)/bin/$(CONFIG))
+$(call prepend_PATH,$(HhRoot)/bin/$(CONFIG))
 endif
 
-PATH := $(call ppath,$(HhRoot)/demos)  # allow running bash scripts in local directory
+$(call prepend_PATH,$(HhRoot)/demos)  # allow running bash scripts in local directory
 
 create_scripts = \
   create_recon_cactus.sh \
@@ -75,7 +75,7 @@ view:
 	for i in $(view_scripts); do $$i; done
 
 clean:
-# (absolute pathname because ppath does not update PATH when make goal is clean)
+# (relative pathname because prepend_PATH does not update PATH when make goal is clean)
 	./all_demos_clean.sh
 
 debug:

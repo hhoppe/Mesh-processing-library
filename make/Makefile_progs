@@ -1,0 +1,58 @@
+# For use as:
+#  HhRoot = ..#  or /hh/src
+#  include $(HhRoot)/make/Makefile_prog
+
+# use_vs_libs = 1#  (optional, use libraries generated from Visual Studio using msbuild)
+
+ifeq ($(defs_loaded),)
+  include $(HhRoot)/make/Makefile_defs
+endif
+
+ifneq ($(CONFIG),all)
+
+exes = $(obj:%.$(extobj)=%)
+outputs = $(exes:%=%.ou)
+
+all: progs
+
+dot_quoted_target =#  no intermediate files produced, so target suffix is blank rather than .$(extobj)
+
+depend $(make_dep):
+	$(cmd_makedep)
+
+ifeq ($(include_make_dep),1)
+  -include $(make_dep)
+endif
+
+lib:
+# $(MAKE) -C $(HhRoot)/libHh
+# The separate "-C dir" commands are useful to follow symbolic links or relative paths (for pch under CONFIG=win).
+	$(MAKE) -C $(HhRoot) -C libHh
+
+progs: $(exes)
+
+test: $(outputs)
+	@echo '** Summary of diffs'
+	@shopt -s nullglob && for i in *.diff; do echo "* $$i"; \
+	  if [[ `cat $$i | wc -l` -gt 100 ]]; then echo "Long diff **"; else cat $$i; fi \
+	done
+
+$(exes): $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),)) built_ou.$(CONFIG)
+built_ou.$(CONFIG):
+	@rm -f $(obj) $(exe) $(CRUMBS) $(outputs) $(outputs:%.ou=%.diff) built_ou.*
+	@touch built_ou.$(CONFIG)
+
+clean:
+	rm -f $(obj) $(exes) built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)
+deepclean: clean
+	rm -f $(make_dep)
+
+debug:
+	@echo 'obj=$(obj) exes=$(exes) outputs=$(outputs) .DEFAULT_GOAL=$(.DEFAULT_GOAL)'
+	@if false; then which cl.exe; fi
+	@echo $(filter %.$(extlib),$(LDLIBS))
+	@echo PATH="$(PATH)"
+
+.PHONY: all depend lib progs test clean deepclean debug
+
+endif  # ifneq ($(CONFIG),all)

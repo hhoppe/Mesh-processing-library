@@ -1,0 +1,74 @@
+rel ?= 1#  0=debug or 1=release  (usually 1; debug has bug: "-g" on getline() causes crash)
+x64 = 1#   x86 is not supported by c:/cygwin64 (use CONFIG=cygwin32 for c:/cygwin32)
+
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
+
+cxxall += -Wno-sign-compare#  for rel==0
+
+gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
+
+
+# Stack dump: #  gdb --batch -ex run -ex where --args ~/src/bin/cygwin/HTest -dividebyzero
+# Program received signal SIGFPE, Arithmetic exception.
+# 0x0000000100401578 in (anonymous namespace)::do_dividebyzero () at c:/Hh/src/HTest/HTest.cpp:119
+# 119 SHOW(3/i);
+# #0  0x0000000100401578 in (anonymous namespace)::do_dividebyzero () at c:/Hh/src/HTest/HTest.cpp:119
+# #1  0x000000010042b9a6 in hh::ParseArgs::parse_internal (this=0x22a650) at c:/Hh/src/libHh/Args.cpp:320
+# #2  0x000000010042bb2f in hh::ParseArgs::parse (this=0x22a650) at c:/Hh/src/libHh/Args.cpp:335
+# #3  0x000000010040e0f9 in main (argc=2, argv=0x22aaf0) at c:/Hh/src/HTest/HTest.cpp:2095
+
+# gdb --batch -ex run -ex where --args ~/src/bin/cygwin/HTest -accessviolation
+# Program received signal SIGSEGV, Segmentation fault.
+# 0x0000000100490c02 in hh::SHOW_aux<int&> (str=..., val=@0x0: <error reading variable>, has_eol=false) at Hh.h:562
+# 562 Hh.h: No such file or directory.
+# #0  0x0000000100490c02 in hh::SHOW_aux<int&> (str=..., val=@0x0: <error reading variable>, has_eol=false) at Hh.h:562
+# #1  0x0000000100401503 in (anonymous namespace)::do_accessviolation () at c:/Hh/src/HTest/HTest.cpp:114
+# #2  0x000000010042b9a6 in hh::ParseArgs::parse_internal (this=0x22a650) at c:/Hh/src/libHh/Args.cpp:320
+# #3  0x000000010042bb2f in hh::ParseArgs::parse (this=0x22a650) at c:/Hh/src/libHh/Args.cpp:335
+# #4  0x000000010040e0f9 in main (argc=2, argv=0x22aaf0) at c:/Hh/src/HTest/HTest.cpp:2095
+
+
+# The default during compilation is to produce a console application. It you are writing a GUI program, you
+# should either compile with -mwindows as explained above, or add the string "-Wl,--subsystem,windows" to the
+# GCC command line.
+
+
+## OLD core dump / debug
+# http://stackoverflow.com/questions/320001/using-a-stackdump-from-cygwin-executable
+# You can instruct Cygwin to start your gdb debugger just in time when an fault occurs. To achieve this, add
+#  error_start=action to the Cygwin environment variable:
+# In bash: export CYGWIN="$CYGWIN error_start=gdb -nw %1 %2"
+# 
+# Else you can have Cygwin generate a real core dump.
+# In bash: export CYGWIN="$CYGWIN error_start=dumper -d %1 %2"
+
+## ~/bin/stackdump : script I wrote to parse the hex values in *.stackdump and gather info using gdb
+# (set path=(~/src/bin/cygwin $path:q); test_coredump)
+#   0 [main] test_coredump 74912 cygwin_exception::open_stackdumpfile: Dumping stack trace to test_coredump.exe.stackdump
+# stackdump
+# No symbol table is loaded.  Use the "file" command.
+# Breakpoint 1 (exit) pending.
+# test2() + 9 in section .text
+# test1() + 13 in section .text
+# main + 18 in section .text
+# No symbol matches 0x001800482D1.
+# No symbol matches 0x0018004619B.
+# No symbol matches 0x001800462F4.
+# cygwin_crt0 + 17 in section .text
+# mainCRTStartup + 16 in section .text
+# No symbol matches 0x00076F659ED.
+# No symbol matches 0x0007719BA01.
+
+## Using the "CYGWIN error_start=..." does not work well.
+# CYGWIN="$CYGWIN error_start=gdb --nw %1 %2" ~/src/bin/cygwin/HTest -dividebyzero
+# Reading symbols from /Hh/src/bin/cygwin/HTest.exe...done.
+# Attaching to program `/Hh/src/bin/cygwin/HTest.exe', process 30864
+# [New Thread 30864.0x988c]
+# [New Thread 30864.0xd68c]
+# [New Thread 30864.0xa678]
+# (gdb) where
+# #0  0x00000000771bf831 in ntdll!DbgBreakPoint ()
+#    from /windows/SYSTEM32/ntdll.dll
+# #1  0x0000000077267a58 in ntdll!DbgUiRemoteBreakin ()
+#    from /windows/SYSTEM32/ntdll.dll
+# #2  0x0000000000000000 in ? ()

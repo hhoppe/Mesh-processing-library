@@ -1,0 +1,153 @@
+# Note: this file sets up variables for gcc compiler (and clang compiler which has similar command-line arguments)
+# (It is included by ./Makefile_defs_mingw, ./Makefile_defs_cygwin, ./Makefile_defs_clang, and others.)
+
+use_pch ?= 1#  (usually 1; use_precompiled_headers)
+
+extobj = o
+extlib = a
+extasm = s
+CRUMBS ?= *.s *.stackdump *.h.gch *.h.pch#  gch for gcc compiler, pch for clang compiler
+LDOUTPUT ?= -o $@
+no_warnings = -w
+
+std_c++ ?= -std=c++14#  previously was -std=c++11
+
+gcc_base = 1#  also true for clang since it includes this file
+CXX ?= g++
+ifeq ($(CC),cc)
+  CC = gcc
+endif
+
+# Override the default compilation target to let code run on a greater variety of machines.
+#   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works
+# https://gcc.gnu.org/onlinedocs/gcc-5.2.0/gcc/x86-Options.html
+# machine_arch = $(if $(filter $(CONFIG),mingw32),-march=corei7,-march=native)
+machine_arch = -march=native#  fastest on local machine
+machine_arch = -march=corei7#  to be able to run on more machines, e.g. hhoppeh
+
+# Static linking: "-static" or "-Wl,-Bdynamic -lsomelibIwantshared -Wl,-Bstatic -lsomelibIwantstatic"
+#  http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
+
+ifeq ($(plain_compiler),)
+
+  cwarnings = -Werror -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization
+  cwarnings += -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls
+  cxxwarnings = -Woverloaded-virtual
+  #  -Winline -Wconversion
+  # -pedantic-errors == -Werror -Wpedantic
+  ccommon += -U__STRICT_ANSI__ $(machine_arch) -mfpmath=sse -ffast-math $(cwarnings)
+  # Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate
+  # (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E - -march=native |& sed -r '/cc1/\!d; s/(")|(^.* - )|( -mno-[^\ ]+)//g')
+  # or also:
+  #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -march=native -Q -v --help=target)
+  #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E -march=native ~/src/libHh/Hh.h |& cat)
+  # hhopped old: -march:native -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 \
+  #   --param l2-cache-size=8192 -mtune=core2)
+  # hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
+  # hhoppew: -march=haswell -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mmovbe -maes -mpclmul -mpopcnt -mabm -mfma -mbmi -mbmi2 -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrdrnd -mf16c -mfsgsbase -mfxsr -mxsave -mxsaveopt --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=20480 -mtune=haswell
+  cxxall += -fno-rtti
+  # not: -fno-exceptions  because I now use exceptions in FileIO, Image, Video, Audio
+  ifeq ($(CXX),g++)
+    cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance
+    cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast
+    #  -Wno-error=old-style-cast
+    #  -Wno-error=name  # Turn warning "name" into an warning even if -Werror is specified.
+    ccommon += -fopenmp
+    ifeq ($(filter $(CONFIG),mingw32 cygwin32),)
+      cxxwarnings += -Wno-literal-suffix -Wuseless-cast#  not recognized in gcc 4.7.2 mingw32 or gcc 4.7.3 cygwin32
+    endif
+    ifeq ($(filter $(CONFIG),mingw32 cygwin32 cygwin),)
+      cxxwarnings += -fsized-deallocation -Wsized-deallocation#  C++14 feature not recognized in earlier gcc
+    endif
+  endif
+  ifneq ($(filter $(CONFIG),mingw32),)
+    cwarnings += -Wno-format#  mingw32 does not recognize "%lld"
+    cxxwarnings += -Wno-old-style-cast#  header macro errors in FileIO.cpp HW.cpp Timer.cpp Hh.cpp
+  endif
+  cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
+  commonrel += -O3 -DNDEBUG
+  # (O3 enables -fomit-frame-pointer -finline-functions)
+  # -fno-trapping-math
+  commondbg += -g -D_GLIBCXX_DEBUG#  to enable checking of STL containers in libstdc++
+  # By itself, '-Wa,-a' defaults to '-ahls'. -h (high-level source requires "-g" debug compilation)
+  # See options in http://tigcc.ticalc.org/doc/gnuasm.html
+  # and http://stackoverflow.com/questions/1289881/using-gcc-to-produce-readable-assembly
+  cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
+  cxxexe +=
+  cxxrel += $(commonrel) $(cxxwarnings)
+  cxxdbg += $(commondbg) $(cxxwarnings)
+
+  ifeq ($(use_pch),1)
+    # Force-include the precompiled header into every *.cpp file.  Valid for clang as well.
+    # However, clang gets confused with "HhRoot = /hh/src" in ~/prevproj/2006/poissonrecon/PoissonRecon/Makefile .
+    # Even changing this to a relative path leaves it confused, so disable pch in that case.
+    ifeq ($(CXX)-$(filter-out /%,$(HhRoot)),clang++-)
+      $(info Disabling pch for clang with non-relative HhRoot=$(HhRoot))
+      # Note: it may also apply to directories that are not in expected ../ relative location?
+      # ifneq ($(HhRoot),..)
+      # $(info Disabling pch for this directory HhRoot=$(HhRoot))
+    else
+      cxxall += -include $(HhRoot)/libHh/precompiled_libHh.h
+      # cxxall += -include $(call add_drive,$(abspath $(HhRoot)/libHh/precompiled_libHh.h))
+    endif
+  endif
+
+endif  # $(plain_compiler)
+
+ccommon += $(if $(x64:0=),-m64,-m32)
+cxxall += $(std_c++) $(ccommon)
+call += -std=c11 $(ccommon)#  or -std=c99
+crel += $(commonrel)
+cdbg += $(commondbg)
+# OUTPUT_OPTION =  # default: -o $@
+
+# Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations)
+gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
+  -fsigned-zeros -ftrapping-math -fno-associative-math -fno-reciprocal-math
+# Cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
+# Note that -fexcess-precision=standard is undefined for C++
+
+last_libs += -lgomp#  GNU OpenMP library
+
+# Force use of C++ (rather than C) standard library by explicitly specifying g++.
+# % : %.o
+#	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
+% : %.o
+	g++ $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+
+# Use absolute pathnames for source files, to get these in warnings and errors.
+# %.o : %.cpp
+#	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
+%.o : %.cpp
+#	@echo $(CXX) $<
+#	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+
+# Use absolute pathnames for source files, to get these in warnings and errors.
+# %.o : %.c
+#	$(COMPILE.c) $(OUTPUT_OPTION) $<
+%.o : %.c
+#	@echo $(CXX) $<
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.c) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+
+# Eanble creation of assembly file if desired (as alternative to cxx_list_assembly_code)
+%.s : %.cpp
+# -S omits object file, but does not allow interleaving source code.
+#	$(filter-out -c,$(COMPILE.cpp)) -S -Wa,-achln -fverbose-asm -masm=intel -g $(@:$(extasm)=cpp)
+# -g is required to interleave source code; hopefully does not modify generated code too much.
+	$(filter-out ,$(COMPILE.cpp)) -g -Wa,-acdhln -fverbose-asm -masm=intel $(@:$(extasm)=cpp) -o v.$(@:$(extasm)=$(extobj)) >$(@:$(extasm)=$(extasm))
+	rm -f v.$(@:$(extasm)=$(extobj))
+
+ifeq ($(CXX),g++)
+  %.h.gch : %.h
+	@echo Making $(@) from $<
+	@$(COMPILE.cpp) $<
+endif
+
+
+# https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html 
+# This also works with -include. So yet another way to use precompiled headers, good for projects not designed
+# with precompiled header files in mind, is to simply take most of the header files used by a project, include
+# them from another header file, precompile that header file, and -include the precompiled header. If the
+# header files have guards against multiple inclusion, they are skipped because they've already been included
+# (in the precompiled header).

@@ -1,0 +1,222 @@
+rel ?= 0#  0=debug or 1=release (usually 0)
+x64 ?= 1#  0=32bit or 1=64bit   (almost always 1; occasionally test with x64=0)
+wholeopt ?= 0#  0 or 1          (almost always 0; only applies to rel=1)
+use_dll ?= 1#                   (usually 1: DLL_runtime (-MD or -MDd), versus 0: static_linking (-MT or -MTd))
+use_vs_libs ?= 0#  0 or 1       (usually 0; else use libraries generated from Visual Studio using msbuild)
+use_pch ?= 1#                   (usually 1; use_precompiled_headers)
+
+# msvc = 2013
+msvc = 2015
+# include $(patsubst %_$(CONFIG),%_vc,$(lastword $(MAKEFILE_LIST)))   # Makefile_defs_vc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_vc
+
+extobj = obj
+extlib = lib
+extasm = asm
+CRUMBS ?= *.ilk *.pdb *.asm *[A-Za-z_0-9]?.pch  # *.pch would also incorrectly include clang *.h.pch
+LDOUTPUT ?= -Fe$@
+no_warnings = -W0
+
+win_base = 1#  also true for CONFIG=w32
+CXX = cl
+CC = cl
+
+ccommon += -openmp -EHsc
+
+ifeq ($(plain_compiler),)
+  warningsinheaders = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
+  mydisabledwarnings = -wd4127 -wd4512 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
+  otherdisabled = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
+  ifeq ($(msvc),2013)
+    otherdisabled += -wd4062#  <ppltasks.h> from <future>
+  endif
+  ifeq ($(msvc),2015)
+    otherdisabled += -wd5026 -wd5027
+  endif
+  cxxthoroughwarnings = -Wall $(warningsinheaders) $(mydisabledwarnings) $(otherdisabled)
+  cxxnotneeded = -Zc:wchar_t -Zc.forScope -Gd -errorReport:queue
+  cwarnings = -W4 $(cxxthoroughwarnings)
+  ccommon += -nologo -WX -Oi -Gm- -Zc:rvalueCast -fp:fast -FC $(cwarnings)#  -Zc:inline in VS2003 CTP2
+  # cxxall += -GR-#  could disable RTTI
+  #   -Zc:strictStrings: "Note that when you are using this option in debug mode, the STL will not compile."
+  # cxxall += -showIncludes  # show all included header files
+  commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy $(if $(x64:0=),,-arch:SSE2) $(if $(wholeopt:0=),-GL,)
+  commondbg += -Od $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi   -RTC1
+  # (RTC1==RTCsu); was -RTCcsu (25% slower) but VS2015 update2 stops support for -RTCc in C++ standard library
+  # If I need to run debug on slow code, try the following settings (slower to compile, but faster to execute):
+  # cxxdbg += -Ob1 $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi
+  #  time tMultigrid 512 512 : compilation 1.9sec -> 2.5sec; runtime 7.7sec -> 2.6sec
+  # cxxdbg used to have "-D _ITERATOR_DEBUG_LEVEL=1" to avoid horribly slow unordered_map, but incompatible with VT
+  # -D "_UNICODE" -D "UNICODE"
+  # -GL : whole program optimization (use with /LTCG linker option if %:%.obj)
+  cxx_list_assembly_code ?= -FAs
+  # Avoid shared vc$(msvcmajor)0.pdb; required for parallel make if >1 exe in same directory.
+  cxxexe += -Fd$(@:%=%.pdb)#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
+  cxxrel += $(commonrel)
+  cxxdbg += $(commondbg)
+endif  # plain_compiler
+
+cxxall += $(ccommon)
+call += $(ccommon) -wd4255  # no function prototype given: converting '()' to '(void)'
+crel += $(commonrel)
+cdbg += $(commondbg)
+
+# cxxall += -EP  # Copies preprocessor output to standard output.
+
+# Define rules for *.obj
+# %.o : %.cpp
+#	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
+# echo "$$PATH"; cl
+%.obj : %.cpp
+#	@echo $(CXX) $<
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.cpp) -Fo$@ $<
+
+# %.o : %.c
+#	$(COMPILE.c) $(OUTPUT_OPTION) $<
+%.obj : %.c
+#	@echo $(CXX) $<
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.c) -Fo$@ $<
+
+%.asm : %.cpp
+	$(filter-out ,$(COMPILE.cpp)) -FAs -Fa$@ -Fov.$(@:$(extasm)=$(extobj)) $(@:$(extasm)=cpp)
+	rm -f v.$(@:$(extasm)=$(extobj))
+
+# Cancel the built-in rules
+% : %.o
+%.o : %.cpp
+%.o : %.c
+
+# Avoid filenames beginning with '/', replace by 'c:/'
+# % : %.o
+#	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
+% : %.obj
+	$(CC) $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+
+%.cso : %.cs
+	fxc -nologo -T cs_5_0 -E $(subst -,_,$(notdir $(basename $<))) -Fo$@ $<
+
+# If I wanted to embed a *.ICO icon resource into the executable, I would need rules to achieve the following:
+# Windows: http://stackoverflow.com/a/1208113/1190077
+#  resource.rc:
+#  101          ICON                    "my_icon.ico"
+#  rc -fo resource.res resource.rc
+#  cvtres -machine:ix86 -out:resource.obj resource.res
+#  and then link with resource.obj (or maybe link directly with resource.res?)
+# gcc: http://fragglet.livejournal.com/4448.html
+#  windres resource.rc resource.o
+#  %.o : %.rc
+#         windres $^ -o $@
+
+ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg,),)#  link-time code generation
+LDFLAGS += -link -nologo $(if $(rel:0=),-incremental:no -opt:ref -opt:icf,-debug) -dynamicbase:no $(ltcg) \
+  -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release
+# -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_staticlib
+# -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_lib
+# -libpath:$(HhRoot)/libNumeric/mkl_libs
+
+gfx_libs ?= user32.lib gdi32.lib
+# gfx_libs += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib shcore.lib advapi32.lib \
+#   shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
+# gfx_libs += d3dx9.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comdlg32.lib comctl32.lib d3d11.lib
+
+ifeq ($(win_base)-rel$(rel)-pch$(use_pch),1-rel1-pch1)  # CONFIG = win or w32
+  pch_root = $(HhRoot)/libHh/precompiled_libHh
+  abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
+  # Use the named precompiled header, and force-include it into every *.cpp file.
+  cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
+  # Recompile all files if the precompiled header changes
+  # $(filter-out $(pch_root).$(extobj),$(obj)) : $(pch_root).$(extobj)
+endif
+
+
+## Linking issues
+# ~/prevproj/2004/geomclipmap/Other/PTCV2_x64/:
+# was getting linker warning: LNK4099: PDB 'vc100.pdb' was not found with 'ptclib.lib(*)
+# Solution: modify -Fd (target pdb) to Release/ptclib.pdb Release/biplane.pdb, and copy these files with *.lib
+# Note: linker option "/ignore:4099" is no longer supported since VC 2005.
+#  http://connect.microsoft.com/VisualStudio/feedback/details/176188/can-not-disable-warning-lnk4099
+# In Visual Studio: C++ -> Output Files -> Program Database File Name:  $(OutDir)$(ProjectName).pdb
+#   default may be $(IntDir)vc$(PlatformToolsetVersion).pdb
+#
+# Because libNumeric has clapack,etc. compiled as Release, do this to avoid the following warning:
+#  "LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library"
+# LDFLAGS += -link -nodefaultlib:libcmt
+# LDFLAGS += -link -nodefaultlib:libc -nodefaultlib:libcd
+# No, instead compile all library code using "-Zl" flag to omit reference to standard library.
+# Verify using "dumpbin /all libNumeric/libNumeric.lib  | grep -i libc" that LIBCMT is not listed.
+
+
+## PDB files
+# When you compile a C++ project, Visual Studio generates two PDB files.
+# They are also used by the incremental link, this is why the PDB files are also generated in release mode.
+# 
+# VC$(msvcmajor)0.PDB is generated at compile time, when the compiler doesn't know the EXE file name.
+# It is located in the directory where the OBJ files reside.
+# It contains information about the types used in the C++ files.
+# It contains types and typedef definitions. It does not contain symbol information about the methods.
+# Each time a C++ file is compiled in an OBJ file, VC*.pdb is updated.
+# 
+# The other PDB file is generated at link time. It's name is <project>.PDB. It is located in the same directory
+# as the EXE file, which may not be the same directory as VC*.PDB.  All debug information is placed in this
+# PDB file, including symbol and debug information for methods and code.
+# 
+# Symbol information are generated by the compiler (types) and by the linker (methods) in two different files,
+# because they are generated by two different tools. They share the same extension because they both are used by
+# the debugger, but they don't contain the same kind of information.
+
+
+## Precompiled headers
+# Sharing precompiled headers between projects is difficult in debug configuration, so the only significant
+#  benefit in CONFIG=win is the faster compilation of libHh.
+# http://social.msdn.microsoft.com/Forums/vstudio/en-US/665d4183-f85c-481d-bada-03283b310099/shared-precompiled-header?forum=vclanguage
+# http://stackoverflow.com/questions/645747/sharing-precompiled-headers-between-projects-in-visual-studio?lq=1
+# 
+# http://msdn.microsoft.com/en-us/library/2yzw0wyd%28vs.71%29.aspx  (2003)
+# You can use one PCH to build another in a fairly simple way.
+#   cl -c -Yc"stuff.h" -Fplevel1.pch level1.cpp
+#   cl -c -Yu"stuff.h" -Fplevel1.pch -Yc level2.cpp
+# The level2.cpp file looks like this:
+#   #include "stuff.h"
+#   #include "morestuff.h"
+#   #pragma hdrstop("level2.pch")
+# The following command will build level2.pch, which can be used in further compiles:
+#   cl -c -Yu"morestuff.h" -Fplevel2.pch mysource.cpp
+# Note that you only need to put the #pragma hdrstop directive in the file that builds the second PCH; you don't have to put it in all .cpp files that use the PCH. Files that use the PCH can name the morestuff.h file in the command line (so you don't have to edit all your files to use this).
+# 
+# http://msdn.microsoft.com/en-us/library/szfdksca.aspx 
+# /Yc[filename] to create a precompiled header.
+# /Yu[filename] to use an existing precompiled header in the existing compilation
+# /Fp to provide an alternative name for the precompiled header.
+# /FIpathname     same effect as specifying the file with double quotation marks in an #include directive on the first line of every source file specified on the command line
+# 
+# Although you can use only one precompiled header (.pch) file per source file, you can use multiple .pch files in a project.
+# If the options /Ycfilename and /Yu (Use Precompiled Header File)filename occur on the same command line and both reference, or imply, the same file name, /Ycfilename takes precedence. This feature simplifies the writing of makefiles.
+# 
+# Sample makefile  http://msdn.microsoft.com/en-us/library/d9b6wk21.aspx
+
+# http://www.cygnus-software.com/papers/precompiledheaders.html 
+# 
+# I add some variation on this line to all copies of windows.h on my machine: 
+# #pragma message("Compiling windows.h - this should happen just once per project.\n")
+# 
+# The useful version of Microsoft's precompiled header system relies on a header file that contains all of the preprocessing that should be put into the .pch file. This file, typically called stdafx.h or precompiled.h, must be included by every file in your project, as the first preprocessor directive. Any code - including other #includes or defines - will be silently ignored if it comes before this include. Watch out for that. 
+# 
+# The precompiled header file should include the big header files which slow down your builds. The most obvious candidate is windows.h, the 800 lb gorilla of the header file world. Other possible candidates are STL header files. 
+# 
+# What you shouldn't put in here is header files from your project. Any file that is included from here will cause a total rebuild of your project when it is changed. Your own header files should be included from an absolute bare minimum of header files in order to reduce the number of files that rebuild when you change them. 
+# The one exception to this rule that I allow is my "core.h" file. This file defines a few types and macros that I like to have available in all of my projects, and putting it in the precompiled header file is a convenient way of doing this. This is an okay violation of the rule because I want all of my source code to have access to this file, and I very rarely change it. 
+# 
+# If you have small header files that don't include much, there is no advantage to putting them in the precompiled header file. If you have a large header file that is only included from a few places you shouldn't put it in your precompiled header file because this will cause more total rebuilds. Finally, if you have a large header file that is needed everywhere then you need to fix the physical design of your program - and you can't do that if you are including this file from your precompiled header file. 
+
+# http://www.codeproject.com/Articles/789703/StdAfx-h-for-Novices
+# 
+# The *.pch file is created as a result of the stdafx.cpp file's compilation. This file is built with the "/Yc" switch that is used specifically to tell the compiler to create precompiled headers. The stdafx.cpp file can contain one line: #include "stdafx.h".
+# 
+# Enable precompiled headers in all configurations for all *.cpp files. It can be done on the "Precompiled Header" tab: 
+# 1. Set the value "Use (/Yu)" for the "Precompiled Header" option.
+# 2. Set "stdafx.h" for the "Precompiled Header File" option.
+# 3. Set "$(IntDir)$(TargetName).pch" for the "Precompiled Header Output File" option.
+# The "stdafx.h" header must be the very first one to be included into the *.c/*.cpp file.
+# Instead:
+# Go to the "Advanced" settings tab. Select all configurations. In the field "Forced Included File" write the following text:
+# StdAfx.h;%(ForcedIncludeFiles)

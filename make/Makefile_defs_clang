@@ -1,0 +1,169 @@
+rel ?= 1#  0=debug or 1=release (usually 1)
+x64 = 0#  x64 is not supported by c:/mingw/ 32-bit version (nor by cygwin clang).
+
+# Note that clang finds c:/mingw/ automatically!  (at least for clang 3.5 and mingw 4.7.2).
+# However, it requires c:/mingw/bin to be in PATH for correct linking.
+
+# default is -target i686-pc-mingw32
+
+# I installed clang 3.4.2 under cygwin.  When I try to run it, it cannot find:
+#   "/usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++".
+# I suspect that I would have to install the entire 32-bit library and toolchain (ar, etc.) for g++.
+# I decided not to do this as it would be confusing to have multiple toolchains.
+#  Would have modified:  PATH, gfx_libs, openmp support.
+
+# 20150918 installing clang 3.7 from http://llvm.org/releases/download.html
+#  relevant: http://stackoverflow.com/questions/32239122/what-do-you-need-to-install-to-use-clang-on-windows-to-build-c14-for-64-bit
+# I selected: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.3/threads-posix/seh/x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z/download
+# then installed this into c:/mingw
+
+# clang 3.5 on hhopped ("SVN r203967")
+# $(call prepend_PATH,c:/Program Files (x86)/LLVM/bin)
+# $(call prepend_PATH,c:/mingw/bin)  # containing 4.7.2 installed how?
+# # set path=( c:/mingw/bin 'c:/program files (x86)/llvm/bin' $path:q); unhash
+
+# See http://clang.llvm.org/docs/UsersManual.html#clang-cl:
+#  Clang expects the GCC executable "gcc.exe" compiled for i686-w64-mingw32 (or x86_64-w64-mingw32)
+#   to be present on PATH.
+
+# clang 3.7 (64bit) on hhoppew (gave up)
+# $(call prepend_PATH,C:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/x86_64-w64-mingw32/bin)
+# $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin)
+# $(call prepend_PATH,C:/Program Files/mingw-w64/x86_64-4.9.1-posix-seh-rt_v3-rev0/mingw64/bin)
+# $(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/  # does not work
+# $(call prepend_PATH,c:/mingw64/bin)  # containing x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z
+# $(call prepend_PATH,c:/mingw/bin)  # link errors "C:\mingw32_old_4.7.2\bin\ld.exe: unrecognised emulation mode: i386pep   Supported emulations: i386pe"
+# $(call prepend_PATH,c:/Program Files/LLVM/bin)
+
+# clang 3.7 (32bit) on hhoppew
+$(call prepend_PATH,c:/Program Files (x86)/LLVM/bin)
+$(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.5-beta-20120426-1/  # same as used with clang 3.5
+# set path=( c:/mingw/bin 'c:/program files (x86)/llvm/bin' $path:q); unhash
+
+CXX = clang++
+CC = clang
+ifneq ($(is_mswin),)
+  LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)
+endif
+
+# This was helpful in ~/src/lib_src/CLAPACK/make.inc to define the constant _EM_DENORMAL from <float.h>
+#  used in ~/src/lib_src/CLAPACK/F2CLIBS/libf2c/uninit.c
+#  as hinted by http://mingw.5.n7.nabble.com/Problem-building-libf2c-with-mingw-get-setup-exe-td33596.html
+# Also avoided problems with "#define bool bool" and linker errors with "sincos()" and "sincosf()".
+CFLAGS += -isystem c:/MinGW/include
+
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
+
+# ccommon += -D__STRICT_ANSI__  # to fix "error: use of undeclared identifier '__float128'"
+# Instead, setting -std=gnu++11 disables __STRICT_ANSI__ (useful to get _exit, _fdopen, etc.) without
+#  introducing error about undeclared identifier '__float128'.
+# Instead, added "typedef struct { long double x, y; } __float128;" in libHh/Hh.h
+
+# cxxall += -stdlib=libc++#  http://stackoverflow.com/questions/24497956/is-codecvt-not-supported-by-clang-or-gcc
+
+ifeq ($(plain_compiler),)
+  cxxall += -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
+  cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
+  # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
+  cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
+    -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-sign-conversion \
+    -Wno-unused-macros -Wno-padded -Wno-shadow -Wno-source-uses-openmp \
+    -Wno-conversion -Wno-exit-time-destructors \
+    -Wno-float-equal -Wno-missing-prototypes -Wno-missing-noreturn -Wno-weak-vtables \
+    -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break \
+    -Wno-disabled-macro-expansion
+  #  -Wno-header-hygiene -Wno-format-nonliteral   -Wno-old-style-cast  -Wno-error=old-style-cast
+
+  # Try Neon on imaginary ARM target, to test Vector4.h using ./test/tVector4.ou
+  # cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall))  -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1
+
+  # cxxrel += -gline-tables-only
+  #
+  # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax
+  # cxx_list_assembly_code = -S -mllvm --x86-asm-syntax=intel
+  # Unfortunately, clang cannot emit *.s assembler output while also creating the *.o object file,
+  #  so for now I would have to do this manually by directly calling make on *.s using above.
+  cxx_list_assembly_code =
+endif
+
+%.s : %.cpp
+# I see no way to interleave source code in assembly listing; -g -fverbose-asm do not help, -Wa,-achln unrecognized
+	$(filter-out ,$(COMPILE.cpp)) -S -mllvm --x86-asm-syntax=intel $(@:$(extasm)=cpp)
+#	rm -f v.$(@:$(extasm)=$(extobj))
+
+gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32
+
+%.h.pch : %.h
+	@echo Making $(@) from $<
+	@rm -f $(@)  # because we actually "-include" itself to get the right path when building it.
+	@$(COMPILE.cpp) -x c++-header -o $@ $<
+
+
+
+## precompiled headers:
+# http://clang.llvm.org/docs/UsersManual.html#precompiled-headers 
+#  http://clang.llvm.org/docs/PCHInternals.html
+# 
+# clang test.h -o test.h.pch
+# clang -include test.h test.c -o test     # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
+
+
+## clang-modernize:
+# cp -rp ~/src ~/tmp
+# cd ~/tmp/src
+# foreach i (*/*.{cpp,h})
+# foreach i ({Filterterrain,G3dOGL,G3dVec}/*.{cpp,h} libHh/BinarySearch.h samplesphere/vec2_3.h Filtergim/rebin3.h)
+#  echo "** $i"
+#  if ($i =~ old/* || $i =~ other/*) continue
+#  c:/progra~2/llvm/bin/clang-modernize -summary "$i" -- -Ic:/hh/src/include -Ic:/hh/src/libHh -Ic:/hh/src/libHWin -Ic:/hh/src/G3dOGL -std=gnu++11 -x c++ -march=native -mfpmath=sse -w | grep -v " - Accepted: 0"
+#  tounix "$i" >&nul
+# end
+
+
+## clang-format:
+# c:/progra~2/llvm/bin/clang-format -style=google -dump-config
+# c:/progra~2/llvm/bin/clang-format -style="{BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 110}" GMesh.cpp >GMesh_google2.cpp
+#  Drawbacks:
+#   loses my 48-tab indents in *.h !
+#   bcase not recognized
+#   } EndFor   is broken up
+#   binary operators != == + - * /   too many spaces
+#   Vec<int, 3>   has space
+# 
+#   it breaks nicely parallel statements such as following into multiple lines:
+#       Vector scol(0.f, 0.f, 0.f); bool havecol = true;
+#       Vector snor(0.f, 0.f, 0.f); bool havenor = true;
+#
+#   always breaks for loops to multiple lines, even if short as in following:
+#        for (Face ff : faces(en)) { set_string(ff, fstring.get()); }
+#
+#  Inspiring:
+#   minimum 2 spaces before in-line comment is nice
+#   neat indenting of ternary operator ("?" and ":" are parallel):
+#       const char* send =
+#        (ch == '(' ? assertv(str_chr(_s + nch + 2, ')'))
+#                   : ch == '"' ? assertv(str_chr(_s + nch + 2, '"'))
+#                               : std::isalnum(ch) ? str_last_non_space(_s + nch + 2) : nullptr);
+#
+# set r = GMesh.cpp; cat $r | perl -pe 'binmode(STDOUT); s/\bbcase\b/break; case/g; s/\bbdefault\b/break; default/g' | c:/progra~2/llvm/bin/clang-format -style="{UseTab: Never, IndentWidth: 4, BreakBeforeBraces: Allman, AllowShortIfStatementsOnASingleLine: false, IndentCaseLabels: false, NamespaceIndentation: All, ColumnLimit: 110}" >~/tmp/$r
+#  It shows how much the code becomes longer.
+
+
+## sanitize/analyze:
+# clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc
+# clang -fsanitize=memory -fno-omit-frame-pointer -g -O2 umr.cc
+#
+# See ./test/native/test_sanitize_address.cpp and ~/src/test/native/Makefile
+# At this time, MemorySanitizer supports Linux x86_64 only.
+# 
+# Address sanitizer:
+# Be warned though that it only works so far on Linux and Mac. No luck for MinGW.
+#
+# Static analyzer: scan-build
+#  not found in c:/progra~2/llvm/
+#
+# clang --analyze
+#  doesn't seem to work; all indications is that this should be replaced by scan-build
+
+
+## See also notes in ./Makefile_defs_clangcl and ~/doc/computer/pc.txt

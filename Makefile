@@ -39,7 +39,7 @@ ifeq ($(win32),1)
 endif
 
 dirs = $(libdirs) $(progdirs)
-dirs+test = $(dirs) test
+dirs+test = $(dirs) test demos
 dirs+test+all = $(sort $(dirs+test) libHWin libHWX)#  sort to remove duplicates
 
 all: progs test
@@ -49,7 +49,6 @@ everything:
 	beep && beep
 
 demos: progs                    # run all demos (after building programs)
-	$(MAKE) -C demos
 
 progs: $(dirs)                  # build all programs
 
@@ -57,9 +56,8 @@ libs: $(libdirs)                # build all libraries
 
 test: $(libdirs)                # run all unit tests (after building libraries)
 
-progtest: progs                 # run all program tests (after building programs)
 
-$(dirs) test:          # build any subproject by running make in its subdirectory
+$(dirs) test demos:    # build any subproject by running make in its subdirectory
 	$(MAKE) -C $@
 
 $(progdirs): $(libdirs)         # building a program first requires building libraries
@@ -71,6 +69,7 @@ endif
 G3dVec: G3dOGL                  # compile shared files in G3dOGL first
 # (to make G3dVec without HH_OGLX, run "make -C ./G3dVec")
 
+Filtervideo: VideoViewer        # compile shared files in VideoViewer first
 
 clean_dirs = $(foreach n,$(dirs+test),clean_$(n))  # pseudo-dependency to allow "make -j clean" parallelism
 clean: $(clean_dirs)
@@ -135,7 +134,7 @@ timingtest: Filterimage Filtervideo
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo) |& grep '(_gdloop:'
 	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo |& grep '(_gdloop:'
 
-.PHONY: all everything demos progs libs $(dirs+test) clean $(clean_dirs) \
+.PHONY: all everything progs libs $(dirs+test) clean $(clean_dirs) \
   deepclean $(deepcleandirs) depend $(depend_dirs) TAGS tags debug timingtest
 
 endif  # ifneq ($(CONFIG),all)

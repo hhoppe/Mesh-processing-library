@@ -74,13 +74,13 @@ determine_approximation_error.sh: create_pm_club.sh
 view:
 	for i in $(view_scripts); do $$i; done
 
-clean:
+clean deepclean:
 # (relative pathname because prepend_PATH does not update PATH when make goal is clean)
 	./all_demos_clean.sh
 
 debug:
 	which Recon
 
-.PHONY: all create view clean $(create_scripts) $(view_scripts) debug
+.PHONY: all create view clean deepclean $(create_scripts) $(view_scripts) debug
 
 endif  # ifneq ($(CONFIG),all)

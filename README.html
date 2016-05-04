@@ -76,7 +76,7 @@
   
   <h3>Compiling using GNU <code>make</code></h3>
   <p>The <code>CONFIG</code> environment variable determines
-   which of the <code>Makefile_defs_*</code> configuration definitions are loaded.</p>
+   which of the <code>make/Makefile_defs_*</code> configuration definitions are loaded.</p>
   <p>For example, to build using the Microsoft <code>cl</code> compiler (Debug, with 8 parallel processes, placing <code>*.exe</code> into directory <code>bin/win</code>):</p>
   <div class="codeline"><code>make CONFIG=win -j8</code></div>
   <p>To build just the library using the <code>mingw gcc</code> compiler:</p>
@@ -90,9 +90,9 @@
   <p>To run unit tests under all configurations:</p>
   <div class="codeline"><code>make CONFIG=all -j test</code></div>
   <p>(Note that additional options such as debug/release, 32-bit/64-bit, and
-   compiler tool paths/parameters are set in the various <code>Makefile_defs*</code> files.
+   compiler tool paths/parameters are set in the various <code>make/Makefile_defs*</code> files.
    These need to be adjusted depending on the versions and installation paths of the tools.
-   For instance, the line &ldquo;<code>rel ?= 0</code>&rdquo; in <code>Makefile_defs_win</code> specifies a debug (non-release) build, and &ldquo;<code>PATH := </code>&rdquo; sets the compiler directory.)</p>
+   For instance, the line &ldquo;<code>rel ?= 0</code>&rdquo; in <code>make/Makefile_defs_win</code> specifies a debug (non-release) build, and &ldquo;<code>PATH := </code>&rdquo; sets the compiler directory.)</p>
   
   
   <h2>Publications and associated programs/demos</h2>

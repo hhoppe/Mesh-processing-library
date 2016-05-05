@@ -45,7 +45,7 @@ use_vs_libs ?= 0#  0 or 1       (usually 0; else use libraries generated from Vi
 
 # msvc = 2013
 msvc = 2015
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_vc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
 
 extobj = obj
 extlib = lib

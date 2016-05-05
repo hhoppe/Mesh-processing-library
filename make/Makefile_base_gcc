@@ -1,5 +1,5 @@
 # Note: this file sets up variables for gcc compiler (and clang compiler which has similar command-line arguments)
-# (It is included by ./Makefile_defs_mingw, ./Makefile_defs_cygwin, ./Makefile_defs_clang, and others.)
+# (It is included by ./Makefile_config_mingw, ./Makefile_config_cygwin, ./Makefile_config_clang, and others.)
 
 use_pch ?= 1#  (usually 1; use_precompiled_headers)
 
@@ -35,7 +35,11 @@ ifeq ($(plain_compiler),)
   cxxwarnings = -Woverloaded-virtual
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
-  ccommon += -U__STRICT_ANSI__ $(machine_arch) -mfpmath=sse -ffast-math $(cwarnings)
+  ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(cwarnings)
+  # ifneq ($(CXX),clang++)
+  ifneq ($(is_mac),1)
+    ccommon += -mfpmath=sse
+  endif
   # Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate
   # (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E - -march=native |& sed -r '/cc1/\!d; s/(")|(^.* - )|( -mno-[^\ ]+)//g')
   # or also:

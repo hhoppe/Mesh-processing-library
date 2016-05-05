@@ -102,7 +102,11 @@ typedef struct { long double x, y; } __float128;
 using namespace std; namespace hh { } using namespace hh;
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER<1900 // some C++11 keywords do not yet exist
+#if defined(__APPLE__)                   // ?? necessary for older Xcode 5.0
+#define constexpr const
+#define CONSTEXPR
+#define CONSTEXPR2
+#elif defined(_MSC_VER) && _MSC_VER<1900 // some C++11 keywords do not yet exist
 #define noexcept throw()
 #define constexpr const
 #define CONSTEXPR

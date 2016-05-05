@@ -12,6 +12,6 @@ $(call prepend_PATH,c:/cygwin32/bin)  # note that I make the default c:/cygwin b
 #include <ivec.h>
 #endif
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
 gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext

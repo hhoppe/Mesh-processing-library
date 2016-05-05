@@ -1,44 +1,3 @@
-rel ?= 1#  0=debug or 1=release (usually 1)
-x64 = 0#  x64 is not supported by c:/mingw/ 32-bit version (nor by cygwin clang).
-
-# Note that clang finds c:/mingw/ automatically!  (at least for clang 3.5 and mingw 4.7.2).
-# However, it requires c:/mingw/bin to be in PATH for correct linking.
-
-# default is -target i686-pc-mingw32
-
-# I installed clang 3.4.2 under cygwin.  When I try to run it, it cannot find:
-#   "/usr/lib/gcc/i686-pc-cygwin/4.8.3/include/c++".
-# I suspect that I would have to install the entire 32-bit library and toolchain (ar, etc.) for g++.
-# I decided not to do this as it would be confusing to have multiple toolchains.
-#  Would have modified:  PATH, gfx_libs, openmp support.
-
-# 20150918 installing clang 3.7 from http://llvm.org/releases/download.html
-#  relevant: http://stackoverflow.com/questions/32239122/what-do-you-need-to-install-to-use-clang-on-windows-to-build-c14-for-64-bit
-# I selected: http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/mingw-builds/4.9.3/threads-posix/seh/x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z/download
-# then installed this into c:/mingw
-
-# clang 3.5 on hhopped ("SVN r203967")
-# $(call prepend_PATH,c:/Program Files (x86)/LLVM/bin)
-# $(call prepend_PATH,c:/mingw/bin)  # containing 4.7.2 installed how?
-# # set path=( c:/mingw/bin 'c:/program files (x86)/llvm/bin' $path:q); unhash
-
-# See http://clang.llvm.org/docs/UsersManual.html#clang-cl:
-#  Clang expects the GCC executable "gcc.exe" compiled for i686-w64-mingw32 (or x86_64-w64-mingw32)
-#   to be present on PATH.
-
-# clang 3.7 (64bit) on hhoppew (gave up)
-# $(call prepend_PATH,C:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/x86_64-w64-mingw32/bin)
-# $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin)
-# $(call prepend_PATH,C:/Program Files/mingw-w64/x86_64-4.9.1-posix-seh-rt_v3-rev0/mingw64/bin)
-# $(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.6.2-beta-20131004-1/  # does not work
-# $(call prepend_PATH,c:/mingw64/bin)  # containing x86_64-4.9.3-release-posix-seh-rt_v4-rev1.7z
-# $(call prepend_PATH,c:/mingw/bin)  # link errors "C:\mingw32_old_4.7.2\bin\ld.exe: unrecognised emulation mode: i386pep   Supported emulations: i386pe"
-# $(call prepend_PATH,c:/Program Files/LLVM/bin)
-
-# clang 3.7 (32bit) on hhoppew
-$(call prepend_PATH,c:/Program Files (x86)/LLVM/bin)
-$(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files/Installer/mingw-get/mingw-get-0.5-beta-20120426-1/  # same as used with clang 3.5
-# set path=( c:/mingw/bin 'c:/program files (x86)/llvm/bin' $path:q); unhash
 
 CXX = clang++
 CC = clang
@@ -46,13 +5,11 @@ ifneq ($(is_mswin),)
   LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)
 endif
 
-# This was helpful in ~/src/lib_src/CLAPACK/make.inc to define the constant _EM_DENORMAL from <float.h>
-#  used in ~/src/lib_src/CLAPACK/F2CLIBS/libf2c/uninit.c
-#  as hinted by http://mingw.5.n7.nabble.com/Problem-building-libf2c-with-mingw-get-setup-exe-td33596.html
-# Also avoided problems with "#define bool bool" and linker errors with "sincos()" and "sincosf()".
-CFLAGS += -isystem c:/MinGW/include
+ifeq ($(plain_compiler),)
+  std_c++ ?= -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
+endif
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
 # ccommon += -D__STRICT_ANSI__  # to fix "error: use of undeclared identifier '__float128'"
 # Instead, setting -std=gnu++11 disables __STRICT_ANSI__ (useful to get _exit, _fdopen, etc.) without
@@ -62,16 +19,17 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
 # cxxall += -stdlib=libc++#  http://stackoverflow.com/questions/24497956/is-codecvt-not-supported-by-clang-or-gcc
 
 ifeq ($(plain_compiler),)
-  cxxall += -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
   cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
   cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
     -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-sign-conversion \
-    -Wno-unused-macros -Wno-padded -Wno-shadow -Wno-source-uses-openmp \
+    -Wno-unused-macros -Wno-padded -Wno-shadow \
     -Wno-conversion -Wno-exit-time-destructors \
     -Wno-float-equal -Wno-missing-prototypes -Wno-missing-noreturn -Wno-weak-vtables \
-    -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break \
     -Wno-disabled-macro-expansion
+  ifneq ($(is_mac),1)
+    cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
+  endif
   #  -Wno-header-hygiene -Wno-format-nonliteral   -Wno-old-style-cast  -Wno-error=old-style-cast
 
   # Try Neon on imaginary ARM target, to test Vector4.h using ./test/tVector4.ou
@@ -164,6 +122,3 @@ gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32
 #
 # clang --analyze
 #  doesn't seem to work; all indications is that this should be replaced by scan-build
-
-
-## See also notes in ./Makefile_defs_clangcl and ~/doc/computer/pc.txt

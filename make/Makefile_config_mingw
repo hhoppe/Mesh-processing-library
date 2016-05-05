@@ -1,7 +1,7 @@
 rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 1#  32-bit not supported by mingw64
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_gcc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
 ifeq ($(plain_compiler),)
    cwarnings += -Wshadow#  on the older gcc compilers (cygwin, mingw32) it gives too many false-positives

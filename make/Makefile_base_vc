@@ -1,5 +1,5 @@
 # Note: this file sets up variables for Visual C++.
-# (It is included by ./Makefile_defs_win and ./Makefile_defs_clangcl .)
+# (It is included by ./Makefile_config_win and ./Makefile_config_clangcl )
 
 # cl.exe uses environment variables CL and INCLUDE.
 # link.exe uses environment variables LINK, LIB, PATH, and TMP.

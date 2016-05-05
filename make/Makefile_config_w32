@@ -3,4 +3,4 @@ x64 ?= 0
 
 cppinc += -DHH_NO_VIDEO_LOOP  # because LoopAPILib/Win32/DebugMD/LoopAPILib.lib is unavailable
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_win
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_win

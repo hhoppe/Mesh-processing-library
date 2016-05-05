@@ -18,7 +18,7 @@ class Frame; struct Point;
 struct Vector : Vec3<float> {
     Vector()                                    = default;
     CONSTEXPR Vector(float x, float y, float z) : Vec3<float>(x, y, z) { }
-    CONSTEXPR Vector(Vec3<float> v)             : Vec3<float>(std::move(v)) { }
+    CONSTEXPR Vector(Vec3<float> v)             : Vec3<float>(v) { }
     bool normalize();
 };
 Vector operator*(const Vector& v, const Frame& f);
@@ -45,7 +45,7 @@ inline float mag(const Vector& v1)                      { return sqrt(mag2(v1));
 struct Point : Vec3<float> {
     Point()                                     = default;
     CONSTEXPR Point(float x, float y, float z)  : Vec3<float>(x, y, z) { }
-    CONSTEXPR Point(Vec3<float> p)              : Vec3<float>(std::move(p)) { }
+    CONSTEXPR Point(Vec3<float> p)              : Vec3<float>(p) { }
 };
 Point operator*(const Point& p, const Frame& f);
 inline Point& operator*=(Point& p, const Frame& f)                      { return p = p*f; }
@@ -78,7 +78,7 @@ class Frame : public SGrid<float, 4, 3> {
  public:
     Frame()                                     = default;
     CONSTEXPR Frame(Vector v0, Vector v1, Vector v2, Point q)
-        : base(V<Vec3<float>>(std::move(v0), std::move(v1), std::move(v2), std::move(q))) { }
+        : base(V<Vec3<float>>(v0, v1, v2, q)) { }
     Vector& v(int i)                    { HH_CHECK_BOUNDS(i, 3); return static_cast<Vector&>((*this)[i]); }
     const Vector& v(int i) const        { HH_CHECK_BOUNDS(i, 3); return static_cast<const Vector&>((*this)[i]); }
     Point& p()                                  { return static_cast<Point&>((*this)[3]); }
@@ -106,7 +106,7 @@ template<> HH_DECLARE_OSTREAM_EOL(Frame);
 struct Bary : Vec3<float> {
     Bary()                                      = default;
     CONSTEXPR Bary(float x, float y, float z)   : Vec3<float>(x, y, z) { }
-    CONSTEXPR Bary(Vec3<float> v)               : Vec3<float>(std::move(v)) { }
+    CONSTEXPR Bary(Vec3<float> v)               : Vec3<float>(v) { }
     bool is_convex() const;
 };
 
@@ -115,7 +115,7 @@ struct Bary : Vec3<float> {
 struct UV : Vec2<float> {
     UV()                                        = default;
     CONSTEXPR UV(float u, float v)              : Vec2<float>(u, v) { }
-    CONSTEXPR UV(Vec2<float> v)                 : Vec2<float>(std::move(v)) { }
+    CONSTEXPR UV(Vec2<float> v)                 : Vec2<float>(v) { }
 };
 
 // *** Misc operations

@@ -42,7 +42,10 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 // #define __STDC_WANT_LIB_EXT1__ 1 // http://en.cppreference.com/w/c/chrono/localtime  localtime_s() in C11; fails
 #include <ctime>      // gettimeofday(), struct timeval, time(), localtime(), localtime_r(), time_t, struct tm
 #include <sys/time.h> // gettimeofday(), struct timeval, time(), localtime(), localtime_r(), time_t, struct tm
+
+#if !defined(__APPLE__)
 #include <sys/sysinfo.h>        // struct sysinfo, sysinfo()
+#endif
 
 #endif  // defined(_WIN32)
 
@@ -1027,6 +1030,10 @@ size_t available_memory() {
     if (ldebug) SHOW("win32", physical_avail, virtual_avail);
     size_t ret = assert_narrow_cast<size_t>(min(physical_avail, virtual_avail));
     return ret;
+#elif defined(__APPLE__)
+    if (ldebug) SHOW("available_memory() not implemented");
+    // Perhaps could use https://developer.apple.com/library/ios/documentation/System/Conceptual/ManPages_iPhoneOS/man3/sysctlbyname.3.html
+    return 0;                   // ??
 #else
     // http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
     struct sysinfo sysi;

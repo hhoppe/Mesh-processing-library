@@ -11,6 +11,7 @@ defs_loaded = 1
 is_mswin ?= $(if $(WINDIR)$(windir),1,)#  check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows
 is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  running under Cygwin?
 is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  running under Msys?
+is_mac := $(if $(wildcard /Applications/Launchpad.app),1,)#  running on Mac OS?
 
 ifeq ($(HhRoot),)
   $(warning HhRoot variable not set; set to default value of "..")
@@ -141,7 +142,7 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
 
-include $(lastword $(MAKEFILE_LIST))_$(CONFIG)  # same as $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_defs_$(CONFIG)
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 
 *.exe:
 	@echo 'Avoid *.exe "$@" as makefile target; use "$(@:%.exe=%)" instead.' && exit 1
@@ -205,7 +206,7 @@ LDFLAGS +=
 
 ifeq ($(win_base),1)  # CONFIG = win or w32
   # For win, I use HH_REFERENCE_LIB() to request libraries.
-  # see -libpath in ./Makefile_defs_win
+  # see -libpath in ./Makefile_config_win
 else ifeq ($(CONFIG),clangcl)  # CONFIG = clangcl
   # same?
 else ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
@@ -221,7 +222,7 @@ else  # CONFIG = mingw, clang, mingw32, etc.
   LDLIBS += $(foreach n,$(loc_libs),$(if $(extlib:lib=),-l$(n),lib$(n).lib))
 endif
 
-LDLIBS += $(last_libs)#  optionally defined in ,/Makefile_defs_$(CONFIG)
+LDLIBS += $(last_libs)#  optionally defined in ,/Makefile_config_$(CONFIG)
 
 ifneq ($(have_lapack),)
 # <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/

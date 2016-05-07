@@ -25,10 +25,34 @@
 
 #endif  // defined(_WIN32)
 
+#if defined(IO_USE_FSTREAM) || defined(IO_USE_STDIO_FILEBUF) || defined(IO_USE_CFSTREAM)
+// use specified setting
+#elif 0                         // use to force for testing
+#define IO_USE_CFSTREAM
+#elif defined(_MSC_VER)
+#define IO_USE_FSTREAM
+#elif defined(__GNUC__) && !defined(__clang__) // perhaps only if defined(__APPLE__)
+#define IO_USE_STDIO_FILEBUF
+#else
+#define IO_USE_CFSTREAM
+#endif
+
+#if defined(IO_USE_STDIO_FILEBUF)
+#include <ext/stdio_filebuf.h>  // __gnu_cxx::stdio_filebuf<char>
+#endif
+
 #include "Vec.h"
 #include "StringOp.h"
 #include "Locks.h"
 #include "RangeOp.h"            // contains()
+
+// Note that RFile/WFile first construct a FILE* (which is accessible via cfile()), then a std::stream on top.
+// This is quite flexible.  I use this in:
+// - Image_IO.cpp so that libpng and libjpeg can work directly on FILE*; this could easily be worked around
+//    because these libraries support user-defined reader/writer functions, which could access std::stream.
+// - G3dio.cpp to create a RBuffer directly on the POSIX file descriptor fileno(cfile());
+//   It might be possible to implement RBuffer as a custom adaptively resizable std::streambuf
+//    but we would still require access to the POSIX fd to do non-blocking IO.
 
 namespace hh {
 
@@ -54,7 +78,203 @@ string portable_simple_quote(const string& s) {
     return string_requires_quoting(s) ? '"' + s + '"' : s;
 }
 
+
+#if defined(IO_USE_CFSTREAM)
+
+// Open fstream on (C stdio) FILE* or POSIX fd:
+// http://stackoverflow.com/questions/2746168/how-to-construct-a-c-fstream-from-a-posix-file-descriptor
+
+// related: http://stackoverflow.com/questions/10667543/creating-fstream-object-from-a-file-pointer
+
+// related: http://stackoverflow.com/questions/14734091/how-to-open-custom-i-o-streams-from-within-a-c-program
+//  solutions by Andy Prowl (unbuffered), James Kanze (buffered)
+
+// related: http://stackoverflow.com/questions/4151504/wrapping-file-with-custom-stdostream
+
+// http://www.josuttis.com/cppcode/fdstream.hpp   -- see ~/src/_other/fdstream.h
+
+// Also http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8cc-source.html and
+//   http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8h-source.html
+
+int seekdir_to_origin(std::ios_base::seekdir dir) {
+    switch (dir) {
+     bcase std::ios_base::beg: return SEEK_SET;
+     bcase std::ios_base::end: return SEEK_END;
+     bcase std::ios_base::cur: return SEEK_CUR;
+     bdefault: assertnever("");
+    }
+}
+
+// An implementation of streambuf that reads from a (C stdio) FILE* input stream using a small buffer.
+// Limitations: the FILE* cannot be simultaneously used for writing; the input data is buffered twice!
+class icfstreambuf : public std::streambuf {
+ public:
+    icfstreambuf(FILE* file) : _file(file), _buffer0(buffer+putback_size) {
+        setg(_buffer0, _buffer0, _buffer0); // set empty: eback()==beg, gptr()==cur, egptr()==end are all the same
+    }
+ protected:
+    FILE* _file;
+    static constexpr int putback_size = 4;
+    static constexpr int buffer_size = 4096;
+    char buffer[putback_size + buffer_size];
+    char* const _buffer0;
+    // base showmanyc() returns 0 to indicate we don't know how many characters are available
+    virtual int_type underflow() override { // add some characters to the buffer if empty
+        if (gptr()<egptr()) return traits_type::to_int_type(*gptr());
+        // copy up to putback_size previously read characters into putback buffer
+        int putback_num = 0;
+        if (1) {
+            putback_num = min(int(gptr()-eback()), possible_cast<int>(putback_size));
+            ASSERTX(putback_num>=0 && putback_num<=putback_size);
+            std::memmove(_buffer0-putback_num, gptr()-putback_num, putback_num); // ranges may overlap
+        }
+        size_t num = fread(_buffer0, sizeof(char), buffer_size, _file);
+        if (!num) return EOF;   // on failure we retain gptr()==egptr()
+        setg(_buffer0-putback_num, _buffer0, _buffer0+num);
+        return traits_type::to_int_type(*gptr());
+    }
+    virtual pos_type seekoff(off_type off, std::ios_base::seekdir dir, std::ios_base::openmode which) override {
+        Warning("untested");
+        assertx(!(which&std::ios_base::out));
+        if (which&std::ios_base::in) {
+            if (assertw(!fseek(_file, assert_narrow_cast<long>(off), seekdir_to_origin(dir))) &&
+                !(dir==std::ios_base::cur && off==0)) // don't clear buffer if called from tellg()
+                setg(_buffer0, _buffer0, _buffer0);   // only clear if successful
+        }
+        return ftell(_file);
+    }
+    virtual pos_type seekpos(pos_type pos, std::ios_base::openmode which) override {
+        Warning("untested");
+        assertx(!(which&std::ios_base::out));
+        if (which&std::ios_base::in) {
+            if (assertw(!fseek(_file, assert_narrow_cast<long>(pos), SEEK_SET)))
+                setg(_buffer0, _buffer0, _buffer0);
+        }
+        return ftell(_file);
+    }
+};
+
+// Create a std::fstream wrapper around a (C stdio) FILE* input stream (which is not closed upon destruction).
+class icfstream : public std::istream {
+  public:
+    icfstream(FILE* file) : std::istream(nullptr), _buf(file) {
+        rdbuf(&_buf);
+    }
+ protected:
+    icfstreambuf _buf;
+};
+
+// An implementation of streambuf that writes to a (C stdio) FILE* output stream.
+// Limitations: the FILE* cannot be simultaneously used for reading.
+class ocfstreambuf : public std::streambuf {
+ public:
+    ocfstreambuf(FILE* file) : _file(file) { }
+  protected:
+    FILE* _file;
+    virtual int_type overflow(int_type ch) override { // write one character
+        // setp() would set pbase()==beg, pptr()==cur, epptr()==end
+        return ch==EOF ? ch : fputc(ch, _file);
+    }
+    virtual std::streamsize xsputn (const char* s, std::streamsize count) override { // write multiple characters
+        return fwrite(s, sizeof(char), size_t(count), _file);
+    }
+    virtual pos_type seekoff(off_type off, std::ios_base::seekdir dir, std::ios_base::openmode which) override {
+        Warning("untested");
+        assertx(!(which&std::ios_base::in));
+        if (which&std::ios_base::out) {
+            assertw(!fseek(_file, assert_narrow_cast<long>(off), seekdir_to_origin(dir)));
+        }
+        return ftell(_file);
+    }
+    virtual pos_type seekpos(pos_type pos, std::ios_base::openmode which) override {
+        Warning("untested");
+        assertx(!(which&std::ios_base::in));
+        if (which&std::ios_base::out) {
+            assertw(!fseek(_file, assert_narrow_cast<long>(pos), SEEK_SET));
+        }
+        return ftell(_file);
+    }
+    virtual int sync() override {
+        return fflush(_file);
+    }
+};
+
+// Create a std::fstream wrapper around a (C stdio) FILE* output stream (which is not closed upon destruction).
+class ocfstream : public std::ostream {
+  public:
+    ocfstream(FILE* file) : std::ostream(nullptr), _buf(file) {
+        rdbuf(&_buf);
+    }
+ protected:
+    ocfstreambuf _buf;
+};
+
+#endif  // defined(IO_USE_CFSTREAM)
+
+
 } // namespace
+
+
+#if defined(IO_USE_FSTREAM)
+
+class RFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _ifstream(file) { } // non-standard extension in VS
+    operator std::istream*()                    { return &_ifstream; }
+ private:
+    std::ifstream _ifstream;
+};
+
+class WFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _ofstream(file) { } // non-standard extension in VS
+    operator std::ostream*()                    { return &_ofstream; }
+ private:
+    std::ofstream _ofstream;
+};
+
+#elif defined(IO_USE_STDIO_FILEBUF)
+
+class RFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _filebuf(file, std::ios_base::in), _istream(&_filebuf) { }
+    operator std::istream*()                    { return &_istream; }
+ private:
+    __gnu_cxx::stdio_filebuf<char> _filebuf; // gcc-specific
+    std::istream _istream;
+};
+
+class WFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _filebuf(file, std::ios_base::out), _ostream(&_filebuf) { }
+    operator std::ostream*()                    { return &_ostream; }
+ private:
+    __gnu_cxx::stdio_filebuf<char> _filebuf; // gcc-specific
+    std::ostream _ostream;
+};
+
+#elif defined(IO_USE_CFSTREAM)
+
+class RFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _icfstream(file) { }
+    operator std::istream*()                    { return &_icfstream; }
+ private:
+    icfstream _icfstream;       // cross-platform but less efficient due to extra buffering
+};
+
+class WFile::Implementation {
+ public:
+    Implementation(FILE* file)                  : _ocfstream(file) { }
+    operator std::ostream*()                    { return &_ocfstream; }
+ private:
+    ocfstream _ocfstream;       // cross-platform but slightly less efficient due to extra API layer
+};
+
+#else
+#error
+#endif
+
 
 // *** RFile
 
@@ -87,29 +307,20 @@ RFile::RFile(const string& filename) {
         _file = my_popen(V<string>("gzip", "-d", "-c", sfor + ".Z"), mode);
     }
     if (_file && !_is) {
-#if defined(__GNUC__)
-        _fb = make_unique<__gnu_cxx::stdio_filebuf<char>>(_file, std::ios_base::in);
-        _uis = make_unique<std::istream>(_fb.get());
-#else
-        _uis = make_unique<std::ifstream>(_file);
-#endif
-        _is = _uis.get();
+        _impl = make_unique<Implementation>(_file);
+        _is = *_impl;
     }
     if (!_is) throw std::runtime_error("Could not open file '" + filename + "' for reading");
 }
 
 RFile::~RFile() {
-    if (_uis) {
+    if (_file_ispipe) {
 #if defined(_WIN32)
         // Avoids the "Broken pipe" error message, but takes too long for huge streams!
         if (0) _is->ignore(INT_MAX);
 #endif
-        //
-        _uis.reset();
-#if defined(__GNUC__)
-        _fb.reset();
-#endif
     }
+    _impl.reset();
     if (_file) {
         if (_file_ispipe) {
             int ret = my_pclose(_file);
@@ -149,13 +360,8 @@ WFile::WFile(const string& filename) {
 #endif
     }
     if (_file && !_os) {
-#if defined(__GNUC__)
-        _fb = make_unique<__gnu_cxx::stdio_filebuf<char>>(_file, std::ios_base::out);
-        _uos = make_unique<std::ostream>(_fb.get());
-#else
-        _uos = make_unique<std::ofstream>(_file);
-#endif
-        _os = _uos.get();
+        _impl = make_unique<Implementation>(_file);
+        _os = *_impl;
         if (0) {
             // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
             // Verify that the precision was unchanged from its default value of 6.
@@ -168,12 +374,7 @@ WFile::WFile(const string& filename) {
 
 WFile::~WFile() {
     if (_os) _os->flush();
-    if (_uos) {
-        _uos.reset();
-#if defined(__GNUC__)
-        _fb.reset();
-#endif
-    }
+    _impl.reset();
     if (_file) {
         fflush(_file);
         if (_file_ispipe) {

@@ -36,7 +36,7 @@ ifeq ($(plain_compiler),)
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
   ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(cwarnings)
-  # ifneq ($(CXX),clang++)
+  # ifneq ($(CXX),clang++) #??
   ifneq ($(is_mac),1)
     ccommon += -mfpmath=sse
   endif

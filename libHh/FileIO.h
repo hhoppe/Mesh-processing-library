@@ -1,8 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #pragma once
-#if defined(__GNUC__)
-#include <ext/stdio_filebuf.h>  // __gnu_cxx::stdio_filebuf<char>
-#endif
 #include "Array.h"              // CArrayView
 
 namespace hh {
@@ -18,12 +15,8 @@ class RFile : noncopyable {
  private:
     bool _file_ispipe {false};
     FILE* _file {nullptr};
-#if defined(__GNUC__)
-    unique_ptr<__gnu_cxx::stdio_filebuf<char>> _fb;
-    unique_ptr<std::istream> _uis;
-#else
-    unique_ptr<std::ifstream> _uis;
-#endif
+    class Implementation;
+    unique_ptr<Implementation> _impl;
     std::istream* _is {nullptr};
 };
 
@@ -38,12 +31,8 @@ class WFile : noncopyable {
  private:
     bool _file_ispipe {false};
     FILE* _file {nullptr};
-#if defined(__GNUC__)
-    unique_ptr<__gnu_cxx::stdio_filebuf<char>> _fb;
-    unique_ptr<std::ostream> _uos;
-#else
-    unique_ptr<std::ofstream> _uos;
-#endif
+    class Implementation;
+    unique_ptr<Implementation> _impl;
     std::ostream* _os {nullptr};
 };
 

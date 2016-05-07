@@ -33,6 +33,8 @@ struct WavHeader {
     uint32_t    Subchunk2Size;
 };
 
+static_assert(sizeof(WavHeader)==44, "");
+
 } // namespace
 
 bool ffmpeg_command_exists() {

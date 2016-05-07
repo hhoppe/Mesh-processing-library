@@ -326,6 +326,8 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
     dummy_use(image, file);
     throw std::runtime_error("Library libjpeg is not installed.  See Readme.txt file.");
 #else
+    // Note that it would be possible to read from an istream instead of a FILE* as described in
+    //  http://stackoverflow.com/questions/6327784/how-to-use-libjpeg-to-read-a-jpeg-from-a-stdistream
     jpeg_decompress_struct cinfo;
     jpeg_error_mgr jerr;
 // Step 1: allocate and initialize JPEG decompression object
@@ -472,6 +474,8 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     dummy_use(image, file);
     throw std::runtime_error("Library libjpeg is not installed.  See Readme.txt file.");
 #else
+    // Note that it would be possible to write to an ostream instead of a FILE* as described in
+    //  http://svn.openscenegraph.org/osg/OpenSceneGraph/tags/OpenSceneGraph-2.9.2/src/osgPlugins/jpeg/ReaderWriterJPEG.cpp
     jpeg_compress_struct cinfo;
     jpeg_error_mgr jerr;
 // Step 1: allocate and initialize JPEG compression object
@@ -911,6 +915,8 @@ void ImageIO::write_ppm(const Image& image, FILE* file) {
 // *** PNG image
 
 void ImageIO::read_png(Image& image, FILE* file) {
+    // Note that it would be possible to read from an istream instead of a FILE* using png_set_read_fn() as
+    //   described in http://www.piko3d.net/tutorials/libpng-tutorial-loading-png-files-from-streams/
     // (PNG_LIBPNG_VER_STRING, png_voidp(user_error_ptr), user_error_fn, user_warning_fn)
     png_structp png_ptr = assertt(png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr));
     png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
@@ -1016,6 +1022,7 @@ void ImageIO::read_png(Image& image, FILE* file) {
 }
 
 void ImageIO::write_png(const Image& image, FILE* file) {
+    // Note that it would be possible to write to an ostream instead of a FILE* using png_set_write_fn().
     png_structp png_ptr = assertt(png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr));
     png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
     png_init_io(png_ptr, file);

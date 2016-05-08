@@ -173,7 +173,7 @@ class SRViewParams {
     //  screen_thresh*min(nxpixels, nypixels)*0.5f
     void set_screen_thresh(float screen_thresh); // default 0.f
  private:
-    Frame _frame {Vector(BIGFLOAT,0.f,0.f), Vector(0.f,0.f,0.f), Vector(0.f,0.f,0.f), Point(0.f,0.f,0.f)}; // bad num
+    Frame _frame {Vector(BIGFLOAT, 0.f, 0.f), Vector(0.f, 0.f, 0.f), Vector(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f)};
     Vec2<float> _zoomyx {twice(0.f)};
     bool _activate_lr_planes {true};
     bool _activate_bottom_plane {true};

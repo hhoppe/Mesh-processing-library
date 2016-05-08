@@ -57,7 +57,7 @@ int main() {
         SHOW(dot(v1, v3));
     }
     {
-        Frame f(Vector(0.f,0.f,2.f), Vector(3.f,0.f,0.f), Vector(0.f,1.f,1.f), Point(5.f,4.f,3.f));
+        Frame f(Vector(0.f, 0.f, 2.f), Vector(3.f, 0.f, 0.f), Vector(0.f, 1.f, 1.f), Point(5.f, 4.f, 3.f));
         SHOW(f);
         SGrid<float, 4, 4> hf = to_Matrix(f);
         SHOW(hf);
@@ -70,11 +70,11 @@ int main() {
         SHOW(mat_mul(p, hf.view()));
     }
     {
-        constexpr Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);
-        constexpr float d = dot(v1, v2); SHOW(d);
+        const Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);
+        const float d = dot(v1, v2); SHOW(d);
         const float m = mag(v1); SHOW(m);
-        constexpr Vector vcross = cross(v1, v2); SHOW(vcross);
-        CONSTEXPR2 Frame frame(v1, v1, v2, Point(10.f, 10.f, 10.f));
+        const Vector vcross = cross(v1, v2); SHOW(vcross);
+        const Frame frame(v1, v1, v2, Point(10.f, 10.f, 10.f));
         const Point origin = frame.p(); SHOW(origin);
     }
     {

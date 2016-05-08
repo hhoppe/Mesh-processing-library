@@ -112,7 +112,7 @@ Point object::center() {
 }
 
 const Bbox& object::bb() {
-    static constexpr Bbox k_bbempty(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
+    static const Bbox k_bbempty(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
     if (!_def) { Warning("Undefined bbox"); return k_bbempty; }
     return _bb;
 }

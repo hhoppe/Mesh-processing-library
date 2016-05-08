@@ -2320,7 +2320,7 @@ void do_procedure(Args& args) {
         const uchar cost_threshold = 3; // let the mask consist of the pixels whose temporal costs is >= threshold
         const int radius2_threshold = 4; // dilation squared radius
         const int radius2_max = 20;      // squared radius of maximum bread-first-search expansion
-        constexpr Pixel period_zero(128, 128, 255, 255);
+        const Pixel period_zero(128, 128, 255, 255);
         {
             Image image_initial_mask(image.dims(), Pixel::white());
             parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {

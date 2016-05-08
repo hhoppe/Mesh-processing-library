@@ -50,11 +50,11 @@ int main() {
         SHOW(gridn);
     }
     {
-        CONSTEXPR2 SGrid<int, 3, 2> grid32(V(V(20, 21), V(22, 23), V(24, 25)));
+        const SGrid<int, 3, 2> grid32(V(V(20, 21), V(22, 23), V(24, 25)));
         SHOW(grid32);
     }
     {
-        CONSTEXPR2 SGrid<int, 3, 2> grid32 { V(V(20, 21), V(22, 23), V(24, 25)) };
+        const SGrid<int, 3, 2> grid32 { V(V(20, 21), V(22, 23), V(24, 25)) };
         SHOW(grid32);
     }
     {

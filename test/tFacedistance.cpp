@@ -67,8 +67,8 @@ int main() {
         }
     }
     {
-        constexpr A3dVertexColor color(A3dColor(.1f, .2f, .3f), A3dColor(.4f, .5f, .6f), A3dColor(4.f, 0.f, 0.f));
-        constexpr A3dColor specular = color.s;
+        const A3dVertexColor color(A3dColor(.1f, .2f, .3f), A3dColor(.4f, .5f, .6f), A3dColor(4.f, 0.f, 0.f));
+        const A3dColor specular = color.s;
         SHOW(specular);
     }
 }

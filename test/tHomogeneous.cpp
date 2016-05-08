@@ -14,12 +14,12 @@ int main() {
         SHOW(to_Point((p+q)/2.f));
     }
     {
-        constexpr Homogeneous h1(1.f, 2.f, 3.f, 4.f); dummy_use(h1);
-        constexpr Homogeneous h2(h1); dummy_use(h2);
-        constexpr Vec4<float> v(0.f, 0.f, 0.f, 0.f); dummy_use(v);
+        const Homogeneous h1(1.f, 2.f, 3.f, 4.f); dummy_use(h1);
+        const Homogeneous h2(h1); dummy_use(h2);
+        const Vec4<float> v(0.f, 0.f, 0.f, 0.f); dummy_use(v);
 #if !(defined(_MSC_VER) && _MSC_VER<2000)
-        constexpr Homogeneous h3 = v; dummy_use(h3);
-        constexpr Homogeneous h4 = V(0.f, 0.f, 0.f, 0.f); dummy_use(h4);
+        const Homogeneous h3 = v; dummy_use(h3);
+        const Homogeneous h4 = V(0.f, 0.f, 0.f, 0.f); dummy_use(h4);
 #endif
     }
 }

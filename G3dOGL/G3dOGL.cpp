@@ -190,11 +190,12 @@ Pixel pix_sharpedgecolor;
 string bndedgecolor = "blue";   // was "#FFFF40"
 Pixel pix_bndedgecolor;
 Vec2<float> yx_pointer_old;
-CONSTEXPR2 Frame k_eye_to_gleye{Vector(0.f,0.f,-1.f), Vector(-1.f,0.f,0.f), Vector(0.f,1.f,0.f), Point(0.f,0.f,0.f)};
+const Frame k_eye_to_gleye{Vector(0.f, 0.f, -1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f),
+        Point(0.f, 0.f, 0.f)};
 bool ogl_normalize;
 constexpr float k_one_slider_left_thresh = 0.2f; // left area of screen for 1 slider
-constexpr Vector k_lightdir_eye0{-1.f, -.6f, .3f};
-constexpr Vector k_lightdir_eye1{+1.f, +.6f, -.3f};
+const Vector k_lightdir_eye0{-1.f, -.6f, .3f};
+const Vector k_lightdir_eye1{+1.f, +.6f, -.3f};
 
 struct Color {
     Pixel d;
@@ -248,18 +249,18 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, Vector, c_nor);
 const FlagMask mflag_uv = Mesh::allocate_flag();
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, UV, c_uv);
 
-constexpr Pixel k_color_invalid{0xCD, 0xAB, 0xFF, 0x00};
+const Pixel k_color_invalid{0xCD, 0xAB, 0xFF, 0x00};
 bool lmcad;                     // lmcolor() state
 Pixel curcol;                   // current color (for lines and points)
 Color matcol;                   // material color (for polygons)
 
 // default color for polygons  (was (.9f, .6f, .4f) before 20020117
 // const A3dVertexColor k_default_color{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
-constexpr A3dVertexColor k_default_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
+const A3dVertexColor k_default_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 
 // default color for polylines and points  (was 1.f, 1.f, 1.f,  0.f, 0.f, 0.f,  1.f, 0.f, 0.f)
-constexpr A3dVertexColor k_default_poly_color{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f),
-                                              A3dColor(1.f, 0.f, 0.f)};
+const A3dVertexColor k_default_poly_color{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f),
+        A3dColor(1.f, 0.f, 0.f)};
 
 // default color for mesh polygons (now defined in meshcold, meshcols, meshcolp, meshca)
 // const A3dVertexColor MESHCOL{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
@@ -2688,7 +2689,7 @@ void HB::set_camera(const Frame& p_real_t, float p_real_zoom, const Frame& p_vie
     real_zoom = p_real_zoom;
     view_zoom = p_view_zoom;
     if (uvtopos) {
-        tpos = Frame(Vector(0.f,0.f,-1.f), Vector(0.f,1.f,0.f), Vector(1.f,0.f,0.f), Point(0.5f,0.5f,2.5f));
+        tpos = Frame(Vector(0.f, 0.f, -1.f), Vector(0.f, 1.f, 0.f), Vector(1.f, 0.f, 0.f), Point(0.5f, 0.5f, 2.5f));
         real_zoom = 0.2f;
         tcam = tpos; view_zoom = real_zoom;
         hither = 0.1f;

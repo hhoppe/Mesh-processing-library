@@ -103,20 +103,14 @@ using namespace std; namespace hh { } using namespace hh;
 #endif
 
 #if defined(__APPLE__)                   // ?? necessary for older Xcode 5.0
-#define constexpr const
-#define CONSTEXPR
-#define CONSTEXPR2
-#elif defined(_MSC_VER) && _MSC_VER<1900 // some C++11 keywords do not yet exist
+// #define constexpr const
+#define CONSTEXPR constexpr
+#elif defined(_MSC_VER) && _MSC_VER<1900 // some C++11 keywords do not yet exist in VS2013
 #define noexcept throw()
 #define constexpr const
 #define CONSTEXPR
-#define CONSTEXPR2
-#elif defined(_MSC_VER) && _MSC_VER<2000 // Visual Studio 2015 still does not fully support constexpr
-#define CONSTEXPR constexpr
-#define CONSTEXPR2
 #else  // C++11
 #define CONSTEXPR constexpr
-#define CONSTEXPR2 constexpr
 #endif
 
 #if defined(__GNUC__) && !defined(__clang_)
@@ -656,7 +650,7 @@ template<typename T> CONSTEXPR T clamp(const T& v, const T& a, const T& b) {
     return (ASSERTXX(!(v<a && v>b)), v<a ? a : v>b ? b : v);
 }
 
-// Like clamp() but slightly less efficient and not constexpr; however works on values like Vector4.
+// Like clamp() but slightly less efficient and not constexpr until C++14; however works on values like Vector4.
 template<typename T> T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
 
 // Linearly interpolate between two values (f==1.f returns v1; f==0.f returns v2).
@@ -672,9 +666,11 @@ inline uchar clamp_to_uchar(int v) {
     v &= -(v>=0); return uchar(v | ((255-v)>>31));
 }
 
-namespace details { constexpr int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };  }
 // Returns j%3 (where j is in [0, 5]).
-inline CONSTEXPR int mod3(int j) { return (ASSERTX(j>=0 && j<6), details::ar_mod3[j]); }
+inline int mod3(int j) {
+    static const int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };
+    ASSERTX(j>=0 && j<6); return ar_mod3[j];
+}
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default fac==1e5f).
 template<typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v*fac+.5f)/fac; }

@@ -40,7 +40,7 @@ class Trig {
 };
 
 namespace details {
-inline CONSTEXPR int fix_mod(int ret, int b) {
+inline int fix_mod(int ret, int b) {
     return ret<0 ? ret+b : ret;
     // return ret+b*(ret<0);
     // b &= -(ret<0); return ret+b;
@@ -48,7 +48,7 @@ inline CONSTEXPR int fix_mod(int ret, int b) {
 } // namespace details
 
 // Modulo operation.  (The built-in C/C++ remainder operation (a%b) returns negative remainders if a<0).
-inline CONSTEXPR int my_mod(int a, int b) {
+inline int my_mod(int a, int b) {
     // http://stackoverflow.com/questions/4003232/
     // Note: given int a>=0, my_mod(a-1, n) is still not as fast as (a-1+n)%n.
     return (ASSERTX(b>0), details::fix_mod(a%b, b));

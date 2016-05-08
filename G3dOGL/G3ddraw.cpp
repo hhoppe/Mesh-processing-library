@@ -624,7 +624,8 @@ static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& fram
         frame_ellipse = Frame(v1, v2, v3, p);
     }
     if (object_up_y)
-        frame_ob_up = Frame(Vector(1.f,0.f,0.f), Vector(0.f,0.f,1.f), Vector(0.f,-1.f,0.f), Point(0.f,0.f,0.f));
+        frame_ob_up = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f), Vector(0.f, -1.f, 0.f),
+                            Point(0.f, 0.f, 0.f));
     frame = frame_ob_up*frame_ellipse;
     float flevel = .5f+.5f*sin(ang);
     get_lod(flevel, nlod, obi, finterp);
@@ -694,7 +695,7 @@ static void set_viewing() {
     // =~FrameMakeStdDir()
     Frame thead = tpos;         // view dir., after view offset, before aim
     if (is_view && auto_level)  // auto_level radar view
-        thead = Frame(Vector(1.f,0.f,0.f), Vector(0.f,1.f,0.f), Vector(0.f,0.f,1.f), tpos.p());
+        thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
     if (is_view) thead = tview*thead;
     Frame tcam = thead;         // final camera transform
     if (aiming) {

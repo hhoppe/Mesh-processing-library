@@ -158,7 +158,8 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
 }
 
 // Perform union of two simplicial complex where id's are meaningful withing *this SC.
-void SimplicialComplex::scUnion(const SimplicialComplex& K1, const SimplicialComplex& K2, SimplicialComplex& res) const {
+void SimplicialComplex::scUnion(const SimplicialComplex& K1, const SimplicialComplex& K2,
+                                SimplicialComplex& res) const {
     res.copy(K1);
 
     for_int(i, MAX_DIM+1) {

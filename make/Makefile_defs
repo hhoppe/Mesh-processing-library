@@ -53,23 +53,23 @@ space := $() $()
 # $(warning Have defined space=[$(space)])
 
 # http://stackoverflow.com/questions/35516996/gnu-make-prepend-a-recursively-expanded-variable/
+# Usage:
+# $(call prepend,VARIABLE,text)           # Prepend text to a recursively expanded $(VARIABLE).
+# $(call prepend,list,add some words )    # Remember to add any trailing separator character (e.g. space).
+# $(call prepend,PATH,$$(var1):$$(var2):) # Use $$ to defer any variable expansions.
 define prepend
 $(eval $(1) = $(2)$(value $(1)))
 endef
-# Usage:
-# $(call prepend,VARIABLE,string)         # Prepend a string to a recursively expanded $(VARIABLE).
-# $(call prepend,list,add some words )    # Remember to add any trailing separator character (e.g. space).
-# $(call prepend,PATH,$$(var1):$$(var2):) # Use $$ to defer any variable expansions.
 
 # Function to prepend a directory to the current PATH.  This complicated code verifies existence of the directory,
 #  removes drive letter, adds /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
+# e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
 define prepend_PATH =
   $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
     $(if $(wildcard $(subst $(space),\$(space),$(1))),, \
-     $(error Directory $(1) does not exist, so cannot be added to PATH))) \
-  $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive,)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):)
+      $(error Directory $(1) does not exist, so cannot be added to PATH)) \
+    $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive,)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):))
 endef
-# e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
 
 MAKEFLAGS += --no-print-directory#  print-directory is ugly and ineffective with "-j" (see main.el)
 

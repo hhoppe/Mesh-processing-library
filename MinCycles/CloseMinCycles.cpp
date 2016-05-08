@@ -58,7 +58,7 @@ const bool sdebug = false;
 // allow inexact would_be_nonseparating_cycle() -> lower bounds might be wrong, but fast.
 constexpr bool k_touch_approx = true;
 
-CONSTEXPR2 Point k_boundary_point_far_away = thrice(1e10f); // to topologically fill mesh boundaries
+const Point k_boundary_point_far_away = thrice(1e10f); // to topologically fill mesh boundaries
 
 // Remember to initialize these sacs, including in cycle closing operations.
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, float, v_dist); // distance from seed vertex during BFS, or BIGFLOAT if not reached

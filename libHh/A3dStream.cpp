@@ -13,7 +13,7 @@ namespace hh {
 
 namespace {
 
-constexpr A3dColor k_color_undefined{-1.f, 0.f, 0.f};
+const A3dColor k_color_undefined{-1.f, 0.f, 0.f};
 
 struct a3d_binary_buf {
     char magic[2];

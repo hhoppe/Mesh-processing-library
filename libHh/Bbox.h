@@ -8,8 +8,8 @@ namespace hh {
 // Axis-aligned bounding box in 3D.
 struct Bbox : Vec2<Point> {
     Bbox()                                      = default;
-    CONSTEXPR Bbox(const Point& pmin, const Point& pmax)        : Vec2<Point>(pmin, pmax) { }
-    CONSTEXPR Bbox(Vec2<Point> bb)                              : Vec2<Point>(std::move(bb)) { }
+    Bbox(const Point& pmin, const Point& pmax)  : Vec2<Point>(pmin, pmax) { }
+    Bbox(Vec2<Point> bb)                        : Vec2<Point>(std::move(bb)) { }
     void clear()                        { auto& self = *this; self[0] = thrice(+big()); self[1] = thrice(-big()); }
     void infinite()                     { auto& self = *this; self[0] = thrice(-big()); self[1] = thrice(+big()); }
     void union_with(const Bbox& bb) {

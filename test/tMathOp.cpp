@@ -149,7 +149,7 @@ int main() {
         //   (float)nan             0x7fffffff  F1 I0 N0
     }
     {
-        CONSTEXPR2 int vm4mod7 = my_mod(-4, 7); SHOW(vm4mod7);
+        const int vm4mod7 = my_mod(-4, 7); SHOW(vm4mod7);
         constexpr double vmid = smooth_step(.5); SHOW(vmid);
         constexpr double vfurther = smooth_step(2./3.); SHOW(vfurther);
         const float vfrac = frac(TAU); SHOW(vfrac);

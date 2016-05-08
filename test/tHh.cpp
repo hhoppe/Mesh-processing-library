@@ -401,7 +401,7 @@ line2)";
         constexpr auto vsignzd = signz(-D_TAU); SHOW(vsignzd, type_name<decltype(vsignzd)>());
         constexpr auto vsquare5 = square(5); SHOW(vsquare5);
         // constexpr auto vclamped10 = clamp(-11, 10, 20); SHOW(vclamped10);
-        CONSTEXPR2 auto v5mod3 = mod3(5); SHOW(v5mod3);
+        const int v5mod3 = mod3(5); SHOW(v5mod3);
         constexpr int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33);
     }
     {

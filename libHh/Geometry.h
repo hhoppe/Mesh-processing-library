@@ -17,14 +17,14 @@ class Frame; struct Point;
 // *** Vector (lives in 3D linear space; represents translation rather than position).
 struct Vector : Vec3<float> {
     Vector()                                    = default;
-    CONSTEXPR Vector(float x, float y, float z) : Vec3<float>(x, y, z) { }
-    CONSTEXPR Vector(Vec3<float> v)             : Vec3<float>(v) { }
+    Vector(float x, float y, float z)           : Vec3<float>(x, y, z) { }
+    Vector(Vec3<float> v)                       : Vec3<float>(v) { }
     bool normalize();
 };
 Vector operator*(const Vector& v, const Frame& f);
 Vector operator*(const Frame& f, const Vector& normal);
 inline Vector& operator*=(Vector& v, const Frame& f)    { return v = v*f; }
-CONSTEXPR Vector cross(const Vector& v1, const Vector& v2);
+Vector cross(const Vector& v1, const Vector& v2);
 inline Vector normalized(Vector v)                      { assertx(v.normalize()); return v; }
 inline Vector ok_normalized(Vector v)                   { v.normalize(); return v; }
 // Overload to have lower precision than RangeOp.h templates (which return double).
@@ -44,14 +44,14 @@ inline float mag(const Vector& v1)                      { return sqrt(mag2(v1));
 // *** Point (lives in 3D affine space; represents position rather than translation).
 struct Point : Vec3<float> {
     Point()                                     = default;
-    CONSTEXPR Point(float x, float y, float z)  : Vec3<float>(x, y, z) { }
-    CONSTEXPR Point(Vec3<float> p)              : Vec3<float>(p) { }
+    Point(float x, float y, float z)            : Vec3<float>(x, y, z) { }
+    Point(Vec3<float> p)                        : Vec3<float>(p) { }
 };
 Point operator*(const Point& p, const Frame& f);
-inline Point& operator*=(Point& p, const Frame& f)                      { return p = p*f; }
-inline CONSTEXPR Vector to_Vector(const Point& p)                       { return Vector(p[0], p[1], p[2]); }
-inline CONSTEXPR Point to_Point(const Vector& v)                        { return Point(v[0], v[1], v[2]); }
-inline CONSTEXPR float pvdot(const Point& p, const Vector& v)           { return dot(to_Vector(p), v); }
+inline Point& operator*=(Point& p, const Frame& f)      { return p = p*f; }
+inline Vector to_Vector(const Point& p)                 { return Vector(p[0], p[1], p[2]); }
+inline Point to_Point(const Vector& v)                  { return Point(v[0], v[1], v[2]); }
+inline float pvdot(const Point& p, const Vector& v)     { return dot(to_Vector(p), v); }
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
 float area2(const Point& p1, const Point& p2, const Point& p3);
 Point centroid(CArrayView<Point> pa);
@@ -77,8 +77,7 @@ class Frame : public SGrid<float, 4, 3> {
     using base = SGrid<float, 4, 3>;
  public:
     Frame()                                     = default;
-    CONSTEXPR Frame(Vector v0, Vector v1, Vector v2, Point q)
-        : base(V<Vec3<float>>(v0, v1, v2, q)) { }
+    Frame(Vector v0, Vector v1, Vector v2, Point q) : base(V<Vec3<float>>(v0, v1, v2, q)) { }
     Vector& v(int i)                    { HH_CHECK_BOUNDS(i, 3); return static_cast<Vector&>((*this)[i]); }
     const Vector& v(int i) const        { HH_CHECK_BOUNDS(i, 3); return static_cast<const Vector&>((*this)[i]); }
     Point& p()                                  { return static_cast<Point&>((*this)[3]); }
@@ -105,8 +104,8 @@ template<> HH_DECLARE_OSTREAM_EOL(Frame);
 //   or a Vector as a combination of 3 Vectors, but sums to 0.f when expressing a Vector as combination of 3 Points.
 struct Bary : Vec3<float> {
     Bary()                                      = default;
-    CONSTEXPR Bary(float x, float y, float z)   : Vec3<float>(x, y, z) { }
-    CONSTEXPR Bary(Vec3<float> v)               : Vec3<float>(v) { }
+    Bary(float x, float y, float z)             : Vec3<float>(x, y, z) { }
+    Bary(Vec3<float> v)                         : Vec3<float>(v) { }
     bool is_convex() const;
 };
 
@@ -114,8 +113,8 @@ struct Bary : Vec3<float> {
 //  Origin (0, 0) should be upper-left of an image although much code still assumes origin is at lower-left.
 struct UV : Vec2<float> {
     UV()                                        = default;
-    CONSTEXPR UV(float u, float v)              : Vec2<float>(u, v) { }
-    CONSTEXPR UV(Vec2<float> v)                 : Vec2<float>(v) { }
+    UV(float u, float v)                        : Vec2<float>(u, v) { }
+    UV(Vec2<float> v)                           : Vec2<float>(v) { }
 };
 
 // *** Misc operations
@@ -174,7 +173,7 @@ inline bool Vector::normalize() {
     v *= (1.f/sqrt(sum2)); return true;
 }
 
-inline CONSTEXPR Vector cross(const Vector& v1, const Vector& v2) {
+inline Vector cross(const Vector& v1, const Vector& v2) {
     return Vector(v1[1]*v2[2]-v1[2]*v2[1], v1[2]*v2[0]-v1[0]*v2[2], v1[0]*v2[1]-v1[1]*v2[0]);
 }
 

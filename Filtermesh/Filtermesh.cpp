@@ -43,8 +43,8 @@ namespace {
 
 WSA3dStream oa3d{std::cout};
 GMesh mesh;
-// constexpr A3dVertexColor k_surf_color{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(5.f, 0.f, 0.f)};
-constexpr A3dVertexColor k_surf_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
+// const A3dVertexColor k_surf_color{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(5.f, 0.f, 0.f)};
+const A3dVertexColor k_surf_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 constexpr float k_undefined_cosangle = -1e31f;
 
 bool alltriangulate = false;

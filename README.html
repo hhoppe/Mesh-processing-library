@@ -63,7 +63,7 @@
   <h2>Code compilation</h2>
   
   <h3>Compiling using the Microsoft Visual Studio IDE</h3>
-  <p>Open the <code>distrib.sln</code> file and build the solution (typically using the &ldquo;<code>ReleaseMD - x64</code>&rdquo; build configuration).
+  <p>Open the <code>distrib.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
    Executables are placed in the <code>bin</code>, <code>bin/debug</code>, <code>bin/Win32</code>, or <code>bin/Win32/debug</code> directory, depending on the build configuration (64-bit versus 32-bit, and release versus debug).</p>
   <p>The code should still be compatible with Visual Studio 2013;
    to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command:
@@ -81,21 +81,21 @@
   <p>The <code>CONFIG</code> environment variable determines
    which of the <code>make/Makefile_config_*</code> configuration definitions are loaded.</p>
   <p>For example, to build using the Microsoft <code>cl</code> compiler (Debug, with 8 parallel processes, placing <code>*.exe</code> into directory <code>bin/win</code>):</p>
-  <div class="codeline"><code>make CONFIG=win -j8</code></div>
+  <div class="codeline">make CONFIG=win -j8</div>
   <p>To build just the library using the <code>mingw gcc</code> compiler:</p>
-  <div class="codeline"><code>make CONFIG=mingw -j libHh</code></div>
+  <div class="codeline">make CONFIG=mingw -j libHh</div>
   <p>To build the library using the <code>clang</code> compiler and run the unit tests:</p>
-  <div class="codeline"><code>make CONFIG=clang -j test</code></div>
+  <div class="codeline">make CONFIG=clang -j test</div>
   <p>To build the <code>Filtermesh</code> program on a Unix environment (into the directory <code>bin/unix</code>):</p>
-  <div class="codeline"><code>make CONFIG=unix -j Filtermesh</code></div>
+  <div class="codeline">make CONFIG=unix -j Filtermesh</div>
   <p>To build all program and run all demos using the Cygwin <code>gcc</code> compiler:</p>
-  <div class="codeline"><code>make CONFIG=cygwin -j demos</code></div>
+  <div class="codeline">make CONFIG=cygwin -j demos</div>
   <p>To run unit tests under all configurations:</p>
-  <div class="codeline"><code>make CONFIG=all -j test</code></div>
+  <div class="codeline">make CONFIG=all -j test</div>
   <p>(Note that additional options such as debug/release, 32-bit/64-bit, and
    compiler tool paths/parameters are set in the various <code>make/Makefile_*</code> files.
    These need to be adjusted depending on the versions and installation paths of the tools.
-   For instance, the line &ldquo;<code>rel ?= 0</code>&rdquo; in <code>make/Makefile_config_win</code> specifies a debug (non-release) build, and &ldquo;<code>PATH := </code>&rdquo; sets the compiler directory.)</p>
+   For instance, the line <code>"rel ?= 0"</code> in <code>make/Makefile_config_win</code> specifies a debug (non-release) build, and <code>"$(call prepend_PATH,...)"</code> in <code>make/Makefile_base_vc</code> sets the compiler directory.)</p>
   
   
   <h2>Publications and associated programs/demos</h2>

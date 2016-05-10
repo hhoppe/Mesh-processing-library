@@ -55,9 +55,21 @@
   
   <p>The source code can be compiled with Microsoft Visual Studio 2015 from the included solution (<code>*.sln</code>) and project (<code>*.vcxproj</code>) files, using either the Integrated Development Environment (IDE) or the <code>msbuild</code> command.</p>
   
-  <p>The code can also be compiled using <code>gcc</code> and <code>clang</code> compilers (as well as the Microsoft Visual Studio <code>cl</code> compiler) using a set of <code>Makefiles</code> designed for GNU <code>make</code> (available in Unix and in the Windows Cygwin environment).</p>
-  
-  <p>On Microsoft Windows, the library reads/writes images and videos using Windows Imaging Component (WIC) and Windows Media Foundation (WMF), respectively.  Image I/O can also use the standard <code>libpng</code> and <code>libjpeg</code> libraries.  Alternatively, if the command <code>ffmpeg</code> is present in the <code>PATH</code>, that command is spawned in a piped subprocess to read/write both images and videos.</p>
+  <p>Across several platforms (including Unix, Linux, Mac OS, and Windows Cygwin),
+   the code can also be compiled using <code>gcc</code> and <code>clang</code> compilers
+   (and Visual Studio <code>cl</code> compiler)
+   using a set of <code>Makefiles</code> designed for GNU <code>make</code>.</p>
+
+  <p>Reading/writing images and videos is supported with several options.
+   If available, image I/O can use <code>libpng</code>/<code>libjpeg</code> or Windows Imaging Component (WIC).
+   Video I/O can use Windows Media Foundation (WMF).
+   Across all platforms, if the command <a href="https://ffmpeg.org/"><code>ffmpeg</code></a>
+   is present in the <code>PATH</code>,
+   it is spawned in a piped subprocess for both image and video I/O.</p>
+
+  <p>On Mac OS X, it is necessary to install
+   <a href="https://www.xquartz.org/"><code>XQuartz</code></a> for <code>X11</code> support, and
+   <a href="http://evermeet.cx/ffmpeg/"><code>ffmpeg</code></a> for image and video I/O.</p>
   
   
   <h2>Code compilation</h2>
@@ -65,9 +77,8 @@
   <h3>Compiling using the Microsoft Visual Studio IDE</h3>
   <p>Open the <code>distrib.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
    Executables are placed in the <code>bin</code>, <code>bin/debug</code>, <code>bin/Win32</code>, or <code>bin/Win32/debug</code> directory, depending on the build configuration (64-bit versus 32-bit, and release versus debug).</p>
-  <p>The code should still be compatible with Visual Studio 2013;
-   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command:
-  <div class="codeline">perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@<PlatformToolset>v140<@<PlatformToolset>v120<@' */*.vcxproj</div>
+  <p style="font-size:80%;">The code should still be compatible with Visual Studio 2013;
+   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command: <code>perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@<PlatformToolset>v140<@<PlatformToolset>v120<@' */*.vcxproj</code>
   
   <h3>Compiling using <code>msbuild</code></h3>
   <p>Set the appropriate environment variables and run <code>msbuild</code>, e.g.:</p>
@@ -79,23 +90,28 @@
   
   <h3>Compiling using GNU <code>make</code></h3>
   <p>The <code>CONFIG</code> environment variable determines
-   which of the <code>make/Makefile_config_*</code> configuration definitions are loaded.</p>
+   which <code>make/Makefile_config_*</code> definition file is loaded.
+   On Windows, <code>CONFIG</code> can be chosen among <code>{win, w32, cygwin, mingw, mingw32, clang}</code>,
+   defaulting to <code>win</code> if left unset.
+   On Unix-derived platforms (including Linux and Mac OS), <code>CONFIG=unix</code> is the unique and default setting.</p>
   <p>For example, to build using the Microsoft <code>cl</code> compiler (Debug, with 8 parallel processes, placing <code>*.exe</code> into directory <code>bin/win</code>):</p>
   <div class="codeline">make CONFIG=win -j8</div>
-  <p>To build just the library using the <code>mingw gcc</code> compiler:</p>
+  <p>To build the library on a Unix environment (into <code>bin/unix</code>) and run the unit tests:</p>
+  <div class="codeline">make CONFIG=unix -j test</div>
+  <p>To build just the library using the <code>mingw gcc</code> compiler (into the directory <code>bin/mingw</code>):</p>
   <div class="codeline">make CONFIG=mingw -j libHh</div>
-  <p>To build the library using the <code>clang</code> compiler and run the unit tests:</p>
-  <div class="codeline">make CONFIG=clang -j test</div>
-  <p>To build the <code>Filtermesh</code> program on a Unix environment (into the directory <code>bin/unix</code>):</p>
-  <div class="codeline">make CONFIG=unix -j Filtermesh</div>
+  <p>To build the <code>Filtermesh</code> program using the <code>clang</code> compiler:</p>
+  <div class="codeline">make CONFIG=clang -j Filtermesh</div>
   <p>To build all program and run all demos using the Cygwin <code>gcc</code> compiler:</p>
   <div class="codeline">make CONFIG=cygwin -j demos</div>
   <p>To run unit tests under all configurations:</p>
   <div class="codeline">make CONFIG=all -j test</div>
-  <p>(Note that additional options such as debug/release, 32-bit/64-bit, and
+  <p>Note that additional options such as debug/release, 32-bit/64-bit, and
    compiler tool paths/parameters are set in the various <code>make/Makefile_*</code> files.
    These need to be adjusted depending on the versions and installation paths of the tools.
-   For instance, the line <code>"rel ?= 0"</code> in <code>make/Makefile_config_win</code> specifies a debug (non-release) build, and <code>"$(call prepend_PATH,...)"</code> in <code>make/Makefile_base_vc</code> sets the compiler directory.)</p>
+   For instance, the line
+   <code>"rel ?= 0"</code> in <code>make/Makefile_config_win</code> specifies a debug (non-release) build, and
+   <code>"$(call prepend_PATH,...)"</code> in <code>make/Makefile_base_vc</code> sets the compiler directory.</p>
   
   
   <h2>Publications and associated programs/demos</h2>
@@ -252,11 +268,11 @@
   <div class="codeline"><b>demos/all_demos_create_results.bat</b></div>
   <div class="codeline"><b>demos/all_demos_view_results.bat</b></div>
   
-  <p>In Unix or Windows Cygwin, either run the <code>bash</code> scripts</p>
+  <p>In Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the <code>bash</code> scripts</p>
   <div class="codeline"><b>demos/all_demos_create_results.sh</b></div>
   <div class="codeline"><b>demos/all_demos_view_results.sh</b></div>
   <p>or alternatively (and faster), invoke <code>make</code> to create all results in parallel and then view them sequentially:</p>
-  <div class="codeline"><b>make</b> CONFIG=<em>config</em> -j demos &nbsp;&nbsp; #  <em>config</em>&nbsp;&isin;&nbsp{win, mingw, clang, cygwin, mingw32, w32, unix}</div>
+  <div class="codeline"><b>make</b> [CONFIG=<em>config</em>] -j demos &nbsp;&nbsp;# <em>config</em>&nbsp;&isin;&nbsp;{unix, win, w32, cygwin, mingw, mingw32, clang}</div>
   
   
   <h2>Filter programs</h2>

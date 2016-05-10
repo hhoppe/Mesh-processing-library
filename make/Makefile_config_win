@@ -7,7 +7,6 @@ use_pch ?= 1#                   (usually 1; use_precompiled_headers)
 
 # msvc = 2013
 msvc = 2015
-# include $(patsubst %_$(CONFIG),%_base_vc,$(lastword $(MAKEFILE_LIST)))   # Makefile_base_vc
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
 
 extobj = obj

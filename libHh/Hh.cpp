@@ -1035,7 +1035,7 @@ size_t available_memory() {
 #elif defined(__APPLE__)
     if (ldebug) SHOW("available_memory() not implemented");
     // Perhaps could use https://developer.apple.com/library/ios/documentation/System/Conceptual/ManPages_iPhoneOS/man3/sysctlbyname.3.html
-    return 0;                   // ??
+    return 0;
 #else
     // http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
     struct sysinfo sysi;

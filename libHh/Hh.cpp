@@ -1565,6 +1565,9 @@ string getenv_string(const string& varname) {
 
 string get_hostname() {
     string host;
+#if !defined(_WIN32)
+    { char hostname[100]; assertx(!gethostname(hostname, sizeof(hostname)-1)); host = hostname; }
+#endif
     if (host=="") host = getenv_string("HOSTNAME");
     if (host=="") host = getenv_string("COMPUTERNAME");
     if (host=="") host = getenv_string("HOST");

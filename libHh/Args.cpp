@@ -471,6 +471,7 @@ void ParseArgs::fversion(Args& args) {
 #if defined(__VERSION__)        // for __GNUC__
     str += " version=" __VERSION__;
 #endif
+    str += sform(" cplusplus=%d", int(__cplusplus));
 #if defined(_M_IX86_FP)
     str += sform(" IX86_FP=%d", _M_IX86_FP);
 #endif

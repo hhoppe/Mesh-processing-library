@@ -33,7 +33,13 @@ export G3DARGS="-geom 750x600"
 export G3DARGS="-geom 900x700 -bigfont"
 export G3DARGS="-geom 1100x850+50+50 -bigfont"
 export G3DARGS="-geom 1100x850+100+50 -bigfont"
+if [[ "${BASH_VERSINFO[5]}" == *-apple-* ]]; then
+export G3DARGS="-geom 1000x750+0+0 -bigfont"
+fi
 
 # For models with texture, use smaller window, depending on graphics memory.
 export TEXGEOMETRY="-geom 1000x800+50+50"
 export TEXGEOMETRY="-geom 1000x800+100+50"
+if [[ "${BASH_VERSINFO[5]}" == *-apple-* ]]; then
+export TEXGEOMETRY="-geom 1000x800+0+0"
+fi

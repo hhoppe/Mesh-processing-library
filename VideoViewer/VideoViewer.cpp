@@ -2248,6 +2248,8 @@ static const string glsl_shader_version = "#version 300 es\n"; // works everywhe
 // http://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
 static const string glsl_shader_version = "#version 120\n"
     "#error Mac OSX XQuartz only supports OpenGL 2.1, which is insufficient for this program (VideoViewer).\n";
+// For Mac OS X 10.5 - XQuartz 2.7.8: "2.1 INTEL-10.6.33"
+// Note: work around this by subsequently setting "use_modern_opengl = false".
 #else
 static const string glsl_shader_version = "#version 330\n"; // not supported on cygwin
 #endif
@@ -2545,7 +2547,7 @@ void render_image() {
     // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
     // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/src/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
-    const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0]>='2';
+    const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0]>='3'; // but "2.1" in Mac OS fails
 #endif
     if (use_modern_opengl) {
         // Note: this is not portable across Remote Desktop under Windows 7 (which has GL_VERSION 1.1).
@@ -2770,6 +2772,9 @@ void render_image() {
 void DerivedHW::draw_window(const Vec2<int>& dims) {
     // HH_TIMER(draw_window);
     g_win_dims = dims;
+    if (!assertw(!gl_report_errors())) {
+        if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
+    }
 #if !defined(HH_HAVE_BACKGROUND_THREAD)
     background_work(false);
 #endif

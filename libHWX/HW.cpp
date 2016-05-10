@@ -403,10 +403,10 @@ void HW::handle_event() {
              set_color_to_foreground();
 #endif
          } else if (_is_pixbuf) {
-             bool drawwasbbuf = _draw==_bbuf;
+             bool draw_was_bbuf = _draw==_bbuf;
              XFreePixmap(_display, _bbuf);
              _bbuf = XCreatePixmap(_display, _win, _win_dims[1], _win_dims[0], _depth);
-             if (drawwasbbuf) _draw = _bbuf;
+             if (draw_was_bbuf) _draw = _bbuf;
              XClearWindow(_display, _win);
          } else {
              XClearWindow(_display, _win);
@@ -785,11 +785,17 @@ void HW::resize_window(const Vec2<int>& yx) {
 }
 
 void HW::make_fullscreen(bool b) {
-    if (1) {
+#if defined(__APPLE__)
+    const bool use_change_property = false;
+#else
+    const bool use_change_property = true;
+#endif
+    if (use_change_property) {
         // http://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
         // http://fixunix.com/xwindows/91585-how-make-xlib-based-window-full-screen.html
         // http://standards.freedesktop.org/wm-spec/1.3/ar01s05.html
         // Under cygwin, it seems to detect _NET_WM_STATE_FULLSCREEN only the first time it is set.
+        // On Mac, it doesn't seem to do anything.
         static Vec2<int> bu_dims;
         const bool is_fullscreen = bu_dims[0]>0;
         if (b==is_fullscreen) return;
@@ -807,9 +813,12 @@ void HW::make_fullscreen(bool b) {
             resize_window(bu_dims);
             bu_dims = twice(0);
         }
-    } else {           // does not work under cygwin
+    } else {
         // http://boards.openpandora.org/topic/12280-x11-fullscreen-howto/  answer
         // then https://mail.gnome.org/archives/metacity-devel-list/2010-February/msg00000.html
+        // This does not work under cygwin.
+        // On Mac, it makes window fullscreen but leads to OpenGL error and shows black until later refresh
+        //  the first time fullscreen is invoked.
         XEvent event;
         event.xclient.display = _display;
         event.xclient.type          = ClientMessage;
@@ -818,7 +827,7 @@ void HW::make_fullscreen(bool b) {
         event.xclient.window        = _win;
         event.xclient.message_type  = XInternAtom( _display, "_NET_WM_STATE", False);
         event.xclient.format        = 32;
-        event.xclient.data.l[ 0 ]   = 1; // 0==unset, 1==set, 2==toggle
+        event.xclient.data.l[ 0 ]   = b ? 1 : 0; // 0==unset, 1==set, 2==toggle
         event.xclient.data.l[ 1 ]   = XInternAtom( _display, "_NET_WM_STATE_FULLSCREEN", False);
         event.xclient.data.l[ 2 ]   = 0;
         long mask = SubstructureRedirectMask | SubstructureNotifyMask;

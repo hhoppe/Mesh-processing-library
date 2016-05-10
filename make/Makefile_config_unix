@@ -8,7 +8,6 @@ ifeq ($(is_mac),1)
   cppinc += -I/opt/X11/include#   for XQuartz X11
   LDFLAGS += -L/opt/X11/lib#      for XQuartz X11
   cppinc += -Wno-variadic-macros# ignore warning in <X11/Xlib.h>
-  makedep_flags ?= -std=c++11#  to avoid errors about static_assert(), <atomic>
   std_c++ ?= -std=c++11#  override default -std=c++14; necessary for older Xcode versions (e.g. 5.0)
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else

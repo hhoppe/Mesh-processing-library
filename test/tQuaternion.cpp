@@ -28,7 +28,7 @@ int main() {
         Frame f = to_Frame(q1); SHOW(round(f));
         Frame fhalf = to_Frame(pow(q1, .5f)); SHOW(fhalf);
         SHOW(round(fhalf*fhalf));
-        SHOW(pow(f, .5f));
+        SHOW(round(pow(f, .5f)));
         Quaternion qq(pow(pow(f, .25f), 4.f)); // SHOW(qq); // rounding differences
         SHOW(qq.angle());
         SHOW(round_elements(clone(qq.axis())));

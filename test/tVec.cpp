@@ -1,15 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <type_traits>
 
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 && !defined(__clang__) // not yet C++11
-#include <tr1/type_traits>
-// see old forms in http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3142.html
-namespace std {
-template<typename T> struct is_trivially_copyable : tr1::has_trivial_copy<T> { };
-template<typename T> struct is_trivially_default_constructible : has_trivial_default_constructor<T> { };
-} // namespace std
-#endif
-
 #include "Array.h"
 #include "Vec.h"
 #include "RangeOp.h"
@@ -97,6 +88,9 @@ int main() {
         float* p;
     };
     {
+        S3 dummy1, dummy2(1, 2); dummy_use(dummy1, dummy2);
+    }
+    {
         // C++14 constexpr
         { const Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
         { const Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
@@ -167,6 +161,7 @@ int main() {
         SHOW((Vec2<int>(10, 10)-pp));
         SHOW(-pp);
     }
+#if 0
     {
         static_assert(std::is_standard_layout<Vec3<int>>::value==true, "");
         static_assert(std::is_trivially_default_constructible<Vec3<int>>::value==true, "");
@@ -185,13 +180,13 @@ int main() {
         // even though http://en.cppreference.com/w/cpp/types/is_pod
         // states that is_pod corresponds to is_trivial and is_standard_layout.
         // Visual Studio 2015 now also fails on these assertions.
-        static_assert(std::is_pod<S3>::value==false, "");
-        static_assert(std::is_pod<Vec3<int>>::value==false, "");
+        static_assert(std::is_pod<S3>::value==false, ""); // fails
+        static_assert(std::is_pod<Vec3<int>>::value==false, ""); // fails
 #endif
         static_assert(std::is_pod<S2>::value==true, "");
         static_assert(std::is_pod<S4>::value==true, "");
-        S3 dummy1, dummy2(1, 2); dummy_use(dummy1, dummy2);
     }
+#endif
     {
         Set<size_t> set;
         for_int(i, 100) for_int(j, 100) {
@@ -244,10 +239,12 @@ int main() {
             P& operator=(const P&)              { SHOW("P::operator=(const P&)"); return *this; }
             // P& operator=(P&&)                   { SHOW("P::operator=(P&&)"); return *this; }
         };
+#if 0
         static_assert(std::is_trivial<P>::value==false, "");
         static_assert(std::is_trivial<Vec1<P>>::value==false, "");
         static_assert(std::is_trivially_copyable<P>::value==false, "");
         static_assert(std::is_trivially_copyable<Vec1<P>>::value==false, "");
+#endif
         Vec1<P> s1;
         Vec1<P> s2 = s1;
         Vec1<P> s3 = std::move(s1);

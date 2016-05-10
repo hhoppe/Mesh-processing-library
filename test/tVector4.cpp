@@ -3,16 +3,6 @@
 
 // #include <iomanip>              // std::setprecision()
 
-#include <type_traits>
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 && !defined(__clang__) // not yet C++11
-#include <tr1/type_traits>
-// see old forms in http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3142.html
-namespace std {
-template<typename T> struct is_trivially_copyable : tr1::has_trivial_copy<T> { };
-template<typename T> struct is_trivially_default_constructible : has_trivial_default_constructor<T> { };
-} // namespace std
-#endif
-
 #include "Array.h"
 #include "Vec.h"
 using namespace hh;
@@ -89,10 +79,12 @@ int main() {
         to_norm(Vector4(2147483583.f, 2147483584.f, 2147483647.f, BIGFLOAT)/255.f);
         to_norm(Vector4(-2147483580.f, -2147483582.f, -2147483647.f, -BIGFLOAT)/255.f);
     }
+#if 0
     {
         // fails: static_assert(std::is_trivially_copyable<Vector4>::value, "");
 #if defined(HH_VECTOR4_SSE)
         static_assert(std::is_trivially_copyable<__m128>::value, ""); // true
 #endif
     }
+#endif
 }

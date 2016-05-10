@@ -742,6 +742,8 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, "int64 unsigned int", "unsigned int64");
 // *** clang
     s = replace_all(s, "hh::Map<string,string>", "hh::Map<std::string,std::string>");
+// *** Apple clang
+    s = replace_all(s, "std::__1::basic_string<char>", "std::string");
 // *** cygwin 64-bit
 #if defined(__LP64__)
     s = replace_all(s, "long int", "int64");

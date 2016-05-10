@@ -5,7 +5,9 @@ include $(HhRoot)/make/Makefile_defs
 ifneq ($(CONFIG),all)
 
 ifeq ($(orig_CONFIG),)
-undefine CONFIG
+# undefine CONFIG#  recent feature of make
+CONFIG:=
+unexport CONFIG
 $(call prepend_PATH,$(HhRoot)/bin)
 else
 $(call prepend_PATH,$(HhRoot)/bin/$(CONFIG))

@@ -48,4 +48,6 @@ $(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files
 # Also avoided problems with "#define bool bool" and linker errors with "sincos()" and "sincosf()".
 CFLAGS += -isystem c:/MinGW/include
 
+gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32
+
 ## See also notes in ./Makefile_config_clangcl and ~/doc/computer/pc.txt

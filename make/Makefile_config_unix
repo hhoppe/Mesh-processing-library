@@ -4,15 +4,18 @@ x64 = 1#  32-bit not supported
 # ccommon += -DHH_NO_SSE41
 
 ifeq ($(is_mac),1)
-  #??
-  std_c++ ?= -std=c++11#  override default -std=c++14
-  # std_c++ ?= -std=c++1y#  override default -std=c++14
+  cppinc += -DHH_NO_IMAGE_IO#   to avoid installing libjpeg and libpng; instead just use ffmpeg
+  cppinc += -I/opt/X11/include#   for XQuartz X11
+  LDFLAGS += -L/opt/X11/lib#      for XQuartz X11
+  cppinc += -Wno-variadic-macros# ignore warning in <X11/Xlib.h>
+  makedep_flags ?= -std=c++11#  to avoid errors about static_assert(), <atomic>
+  std_c++ ?= -std=c++11#  override default -std=c++14; necessary for older Xcode versions (e.g. 5.0)
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
 endif
 
 gfx_libs ?= -lGLU -lGL -lX11#  -lXext
 
 # Perhaps test for existence of library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0
-LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp

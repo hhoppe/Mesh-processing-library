@@ -2,23 +2,25 @@
 
 f=(perl -pe 'binmode(STDOUT); s@^  [^ ]*tArgs(\.exe)?$@  tArgs@; s@tArgs\.exe@tArgs@')
 
-echo '****'
-tArgs |& "${f[@]}"
+# pipe "|&" is only available in bash version 4; prior to that the supported equivalent is "2>&1 |"
 
 echo '****'
-tArgs -\? |& "${f[@]}"
+tArgs 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs -unkflag u1 u2 e.a3d e2.a3d -flag -val1 3 |& "${f[@]}"
+tArgs -\? 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs -farc 2 3 -val2 234 e.av -flac |& "${f[@]}"
+tArgs -unkflag u1 u2 e.a3d e2.a3d -flag -val1 3 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs -flap -flag |& "${f[@]}"
+tArgs -farc 2 3 -val2 234 e.av -flac 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs -show1p1 |& "${f[@]}"
+tArgs -flap -flag 2>&1 | "${f[@]}"
+
+echo '****'
+tArgs -show1p1 2>&1 | "${f[@]}"
 
 
 echo '******'
@@ -26,13 +28,13 @@ echo '******'
 export TARGS_PHASE2=1
 
 echo '****'
-tArgs file file.vlp -flag -showar 0 -showar 1 -ar 1 2 file2 file2.vlp -showar 0 -showar 1 file.png |& "${f[@]}"
+tArgs file file.vlp -flag -showar 0 -showar 1 -ar 1 2 file2 file2.vlp -showar 0 -showar 1 file.png 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs file file.vlp -unknown.string -showar 0 |& "${f[@]}"
+tArgs file file.vlp -unknown.string -showar 0 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs file -- file.vlp -unknown.string -showar 0 |& "${f[@]}"
+tArgs file -- file.vlp -unknown.string -showar 0 2>&1 | "${f[@]}"
 
 echo '****'
-tArgs file -- file.vlp -unknown.string file2 |& "${f[@]}"
+tArgs file -- file.vlp -unknown.string file2 2>&1 | "${f[@]}"

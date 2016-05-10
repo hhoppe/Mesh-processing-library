@@ -58,7 +58,7 @@ for x in {0..1}; do
       -step 1 -scalez 0.000694722 -removekinks -tofloats $rl.floats 2>>$log
     echo Simplifying stitched progressive mesh $rl.stitched.pm
     bin/PMsimplify $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 -no_simp_bnd -ter_grid $rl.floats 2>>$log
-    nf=`FilterPM $rl.stitched.pm -stat |& grep 'Basemesh' | sed 's/^.*nf=//'`
+    nf=`FilterPM $rl.stitched.pm -stat 2>&1 | grep 'Basemesh' | sed 's/^.*nf=//'`
     echo nf=$nf >>$log
     mv $rl{.stitched.new,.full}.pm
     rm -f $rl.floats $rl.x{0,1}.y{0,1}.pm $rl.stitched.pm

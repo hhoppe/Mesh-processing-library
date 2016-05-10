@@ -32,7 +32,7 @@ class Random : noncopyable {
     static constexpr result_type default_seed = 0;
  private:
     class Implementation; unique_ptr<Implementation> _impl;
-    template<typename T> T get_int();   // uint32_t and uint64_t
+    template<size_t size> std::conditional_t<size==4, uint32_t, uint64_t> get_int(); // size==4 or size==8
     template<typename T> T get_unif();  // float and double
     template<typename T> T get_gauss(); // float and double
     static int g_init();

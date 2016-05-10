@@ -4,7 +4,7 @@
 // #include <iomanip>              // std::setprecision()
 
 #include <type_traits>
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 // not yet C++11
+#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 && !defined(__clang__) // not yet C++11
 #include <tr1/type_traits>
 // see old forms in http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3142.html
 namespace std {

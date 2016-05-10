@@ -49,8 +49,6 @@ endif
 	$(filter-out ,$(COMPILE.cpp)) -S -mllvm --x86-asm-syntax=intel $(@:$(extasm)=cpp)
 #	rm -f v.$(@:$(extasm)=$(extobj))
 
-gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32
-
 %.h.pch : %.h
 	@echo Making $(@) from $<
 	@rm -f $(@)  # because we actually "-include" itself to get the right path when building it.

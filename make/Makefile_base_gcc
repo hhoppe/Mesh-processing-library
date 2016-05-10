@@ -111,7 +111,9 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 # Cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
 # Note that -fexcess-precision=standard is undefined for C++
 
+ifneq ($(is_mac),1)
 last_libs += -lgomp#  GNU OpenMP library
+endif
 
 # Force use of C++ (rather than C) standard library by explicitly specifying g++.
 # % : %.o

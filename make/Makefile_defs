@@ -64,7 +64,7 @@ endef
 # Function to prepend a directory to the current PATH.  This complicated code verifies existence of the directory,
 #  removes drive letter, adds /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
-define prepend_PATH =
+define prepend_PATH
   $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
     $(if $(wildcard $(subst $(space),\$(space),$(1))),, \
       $(error Directory $(1) does not exist, so cannot be added to PATH)) \
@@ -168,7 +168,7 @@ make_dep ?= Makefile.dep#   was Makefile_$(CONFIG).dep but now independent of CO
 # added "-D_CXX0X_WARNING_H" for mingw to ignore missing -std=c++11
 # added "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -march=native -D__GXX_EXPERIMENTAL_CXX0X__ -D_CXX0X_WARNING_H -D_M_IX86 -DHH_NO_SSE41 \
+  g++ $(makedep_flags) -MM -march=native -D__GXX_EXPERIMENTAL_CXX0X__ -D_CXX0X_WARNING_H -D_M_IX86 -DHH_NO_SSE41 \
     -DMAKEFILE_DEP $(CPPFLAGS) $(src) | \
  perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) || rm -f $(make.dep)
 

@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <type_traits>
 
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 // not yet C++11
+#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<410 && !defined(__clang__) // not yet C++11
 #include <tr1/type_traits>
 // see old forms in http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2010/n3142.html
 namespace std {
@@ -97,19 +97,20 @@ int main() {
         float* p;
     };
     {
-        { constexpr Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
-        { constexpr Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
-        { constexpr Vec<int,5> ar3 = concat(V(1, 2), V(3, 4), V(5)); SHOW(ar3); }
-        { constexpr Vec<int,5> ar4 = concat(V(1, 2, 3, 4, 5)); SHOW(ar4); }
+        // following are constexpr in C++14
+        { const Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
+        { const Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
+        { const Vec<int,5> ar3 = concat(V(1, 2), V(3, 4), V(5)); SHOW(ar3); }
+        { const Vec<int,5> ar4 = concat(V(1, 2, 3, 4, 5)); SHOW(ar4); }
     }
     {
-        { constexpr Vec<int,2> ar = V(4, 5); constexpr int t5 = ar[1]; SHOW(t5); }
-        { constexpr Vec<int,3> rest654 = V_rest(V(7, 6, 5, 4)); SHOW(rest654); }
-        { constexpr Vec<int,2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2); SHOW(segment54); }
-        { constexpr size_t dotslow = V_dot_slow(V(7, 5), V(3, 1)); SHOW(dotslow); }
-        { constexpr size_t dot = V_dot(V(7, 5), V(3, 1)); SHOW(dot); }
-        { constexpr Vec<int,5> iota5 = V_iota<5>(); SHOW(iota5); }
-        { constexpr Vec<int,5> reviota5 = V_rev_iota<5>(); SHOW(reviota5); }
+        { const Vec<int,2> ar = V(4, 5); const int t5 = ar[1]; SHOW(t5); }
+        { const Vec<int,3> rest654 = V_rest(V(7, 6, 5, 4)); SHOW(rest654); }
+        { const Vec<int,2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2); SHOW(segment54); }
+        { const size_t dotslow = V_dot_slow(V(7, 5), V(3, 1)); SHOW(dotslow); }
+        { const size_t dot = V_dot(V(7, 5), V(3, 1)); SHOW(dot); }
+        { const Vec<int,5> iota5 = V_iota<5>(); SHOW(iota5); }
+        { const Vec<int,5> reviota5 = V_rev_iota<5>(); SHOW(reviota5); }
     }
     {
         Vec<char,2> magic { 'B', 'M' }; static_assert(sizeof(magic)==2, "");
@@ -199,13 +200,13 @@ int main() {
         }
     }
     {
-        constexpr auto ar1 = V(4, 5, 6);
-        constexpr int v5 = ar1[1]; SHOW(v5);
-        constexpr auto triple6a = Vec3<float>::all(6); SHOW(triple6a, type_name<decltype(triple6a)>());
-        constexpr auto triple6b = ntimes<3>(6);        SHOW(triple6b, type_name<decltype(triple6b)>());
-        constexpr auto triple6c = ntimes<3>(6.f);      SHOW(triple6c, type_name<decltype(triple6c)>());
-        constexpr auto triple7 = thrice(7); SHOW(triple7);
-        constexpr auto ntimes7 = ntimes<3>(7); SHOW(ntimes7);
+        const auto ar1 = V(4, 5, 6);
+        const int v5 = ar1[1]; SHOW(v5);
+        const auto triple6a = Vec3<float>::all(6); SHOW(triple6a, type_name<decltype(triple6a)>());
+        const auto triple6b = ntimes<3>(6);        SHOW(triple6b, type_name<decltype(triple6b)>());
+        const auto triple6c = ntimes<3>(6.f);      SHOW(triple6c, type_name<decltype(triple6c)>());
+        const auto triple7 = thrice(7); SHOW(triple7);
+        const auto ntimes7 = ntimes<3>(7); SHOW(ntimes7);
         const auto vonly3is2 = ntimes<5>(0).with(3, 2); SHOW(vonly3is2);
     }
     {

@@ -58,7 +58,7 @@ Bndrule bndrule = Bndrule::reflected;
 FilterBnd filterb{Filter::get("spline"), bndrule};
 
 constexpr Bndrule k_reflected = Bndrule::reflected;
-constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected);
+const Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected); // C++14 constexpr
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
     assertx(s!="" && size);

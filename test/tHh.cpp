@@ -402,7 +402,7 @@ line2)";
         constexpr auto vsquare5 = square(5); SHOW(vsquare5);
         // constexpr auto vclamped10 = clamp(-11, 10, 20); SHOW(vclamped10);
         const int v5mod3 = mod3(5); SHOW(v5mod3);
-        constexpr int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33);
+        const int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33); // C++14 constexpr
     }
     {
         Array<uchar> buf(10);
@@ -520,7 +520,7 @@ line2)";
     }
     {
         // test std::forward in assertx()
-        constexpr int i = assertx(55); assertx(i==55);
+        const int i = assertx(55); assertx(i==55); // constexpr in C++14
         int j = 56;
         const int& j2 = assertx(j); assertx(&j2==&j); assertx(j2==56);
         int& j3 = assertx(j); assertx(&j3==&j); assertx(j3==56);

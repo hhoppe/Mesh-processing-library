@@ -131,8 +131,8 @@ timingtest: Filterimage Filtervideo
 #  mingw32, clang: out-of-memory may result in segmentation fault
 # See also HTest -timescaleimage
 	$(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo
-#	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo) |& grep '(_gdloop:'
-	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo |& grep '(_gdloop:'
+#	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo) 2>&1 | grep '(_gdloop:'
+	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
 .PHONY: all everything progs libs $(dirs+test) clean $(clean_dirs) \
   deepclean $(deepcleandirs) depend $(depend_dirs) TAGS tags debug timingtest

@@ -6,7 +6,7 @@ using namespace hh;
 
 static Frame round(Frame frame) {
     const int nrows = 3;        // or 4
-    for_int(row, nrows) { round_elements(frame[row]); }
+    for_int(row, nrows) { round_elements(frame[row], 1e4f); }
     return frame;
 }
 

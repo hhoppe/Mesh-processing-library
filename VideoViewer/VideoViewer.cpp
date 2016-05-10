@@ -2242,6 +2242,12 @@ void upload_image_to_texture() {
 #if defined(__CYGWIN__)
 static const string glsl_shader_version = "#version 300 es\n"; // works everywhere
 // static const string glsl_shader_version = "#version 130\n"; // last non-es version supported by cygwin; also works
+#elif defined(__APPLE__)
+// "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context)
+// "Apparently X11 doesn't support OpenGL higher than 2.1 on OS X.  As such I suggest you switch to GLFW."
+// http://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
+static const string glsl_shader_version = "#version 120\n"
+    "#error Mac OSX XQuartz only supports OpenGL 2.1, which is insufficient for this program (VideoViewer).\n";
 #else
 static const string glsl_shader_version = "#version 330\n"; // not supported on cygwin
 #endif
@@ -3085,7 +3091,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             ar.push(string() + "Status: " + (ob._unsaved ? "unsaved" : "saved"));
             if (1 && (ends_with(ob._filename, ".jpg") || ends_with(ob._filename, ".jpeg")) &&
                 command_exists_in_path("exif")) {
-                RFile fi("exif '" + ob._filename + "' |& cat |");
+                RFile fi("exif '" + ob._filename + "' 2>&1 |");
                 // EXIF tags in 'c:/hh/desktop/christmas_tmp/20151225_103357.jpg' ('Intel' byte order):
                 // --------------------+----------------------------------------------------------
                 // Tag                 |Value

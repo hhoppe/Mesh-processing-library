@@ -76,8 +76,8 @@ int main() {
         SHOW(grid_index(V(7, 5), V(3, 1)));
         SHOW(grid_index(V(3, 4, 5, 6), V(1, 0, 0, 0)));
         SHOW(grid_index(V(3, 4, 5, 6), V(1, 1, 1, 1)));
-        { constexpr size_t gi = grid_index(V(7, 5), V(3, 1)); SHOW(gi); }
-        { constexpr size_t gilist = grid_index_list(V(7, 5), 3, 1); SHOW(gilist); }
+        { const size_t gi = grid_index(V(7, 5), V(3, 1)); SHOW(gi); }           // C++14 constexpr
+        { const size_t gilist = grid_index_list(V(7, 5), 3, 1); SHOW(gilist); } // C++14 constexpr
     }
     {
         Grid<3,int> grid(thrice(3));

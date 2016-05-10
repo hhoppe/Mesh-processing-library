@@ -49,20 +49,22 @@ void Random::seed(uint32_t seedv) {
     _impl->seed(seedv);
 }
 
-template<> inline uint32_t Random::get_int<uint32_t>() {
+template<> inline uint32_t Random::get_int<4>() {
     return (*_impl)();
 }
 
-template<> inline uint64_t Random::get_int<uint64_t>() {
-    uint64_t v = get_int<uint32_t>();
-    return v | (uint64_t(get_int<uint32_t>())<<32);
+template<> inline uint64_t Random::get_int<8>() {
+    uint64_t v = get_int<4>();
+    return v | (uint64_t(get_int<4>())<<32);
 }
 
-unsigned Random::get_unsigned() { return get_int<unsigned>(); } // unsigned must be either uint32_t or uint64_t
-uint64_t Random::get_uint64()   { return get_int<uint64_t>(); }
-size_t   Random::get_size_t()   { return get_int<size_t>(); } // size_t must be either uint32_t or uint64_t
+// http://stackoverflow.com/questions/11603818/why-is-there-ambiguity-between-uint32-t-and-uint64-t-when-using-size-t-on-mac-os
+//  Mac: using uint32_t = unsigned int; using uint64_t = unsigned long long; using size_t = unsigned long;
+unsigned Random::get_unsigned() { return get_int<sizeof(unsigned)>(); }
+uint64_t Random::get_uint64()   { return get_int<sizeof(uint64_t)>(); }
+size_t   Random::get_size_t()   { return get_int<sizeof(size_t)>(); }
 
-Random::result_type Random::operator()() { return get_int<result_type>(); }
+Random::result_type Random::operator()() { return get_int<sizeof(result_type)>(); }
 
 unsigned Random::get_unsigned(unsigned ub) {
     ASSERTX(ub);
@@ -84,12 +86,12 @@ unsigned Random::get_unsigned(unsigned ub) {
 
 template<> inline float Random::get_unif<float>() {
     const float unif_factor = pow(2.f, -32.f);
-    return get_int<uint32_t>()*unif_factor + .5f*unif_factor;
+    return get_int<4>()*unif_factor + .5f*unif_factor;
 }
 
 template<> inline double Random::get_unif<double>() {
     const double unif_factor = pow(2., -64.);
-    return get_int<uint64_t>()*unif_factor + .5*unif_factor;
+    return get_int<8>()*unif_factor + .5*unif_factor;
 }
 
 float  Random::unif()  { return get_unif<float>(); }
@@ -124,7 +126,7 @@ float  Random::gauss()  { return get_gauss<float>(); }
 double Random::dgauss() { return get_gauss<double>(); }
 
 void Random::discard(uint64_t count) {
-    while (count--) get_int<uint32_t>();
+    while (count--) get_int<4>();
 }
 
 } // namespace hh

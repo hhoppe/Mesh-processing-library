@@ -69,6 +69,8 @@ $(create_scripts):
 $(view_scripts):
 	$(@)
 
+depend $(make_dep):
+
 # any build-order dependencies
 determine_approximation_error.sh: create_pm_club.sh
 
@@ -83,6 +85,6 @@ clean deepclean:
 debug:
 	which Recon
 
-.PHONY: all create view clean deepclean $(create_scripts) $(view_scripts) debug
+.PHONY: all create view clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
 
 endif  # ifneq ($(CONFIG),all)

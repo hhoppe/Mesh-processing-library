@@ -142,6 +142,10 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
 
+% : %.c
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CC) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 
 *.exe:
@@ -163,14 +167,12 @@ endif
 dot_quoted_target = .\$$(extobj)#  this variable is cleared in ./Makefile_progs (also included in ./test/Makefile)
 make_dep ?= Makefile.dep#   was Makefile_$(CONFIG).dep but now independent of CONFIG
 # need "-march=native" to enable include of <xmmintrin.h>
-# need "-D__GXX_EXPERIMENTAL_CXX0X__" to enable <unordered_map> (or "-std=c++0x" but incompatible with *.c)
 # need "-D_M_IX86" for vt_round.h
-# added "-D_CXX0X_WARNING_H" for mingw to ignore missing -std=c++11
 # added "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ $(makedep_flags) -MM -march=native -D__GXX_EXPERIMENTAL_CXX0X__ -D_CXX0X_WARNING_H -D_M_IX86 -DHH_NO_SSE41 \
-    -DMAKEFILE_DEP $(CPPFLAGS) $(src) | \
- perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) || rm -f $(make.dep)
+  g++ -MM -march=native -D_M_IX86 -DHH_NO_SSE41 -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++11 $(src_cpp) | \
+  perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
+  || rm -f $(make.dep)
 
 ifeq ($(plain_compiler),)
   cppinc += -I. -I$(HhRoot)/include -I$(HhRoot)/libHh

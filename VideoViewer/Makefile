@@ -2,7 +2,7 @@ HhRoot = ..
 
 # DEBUG_MAKE = 1
 
-include $(HhRoot)/make/Makefile_prog
+include $(HhRoot)/make/Makefile_defs
 
 $(call prepend,LDLIBS,$(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
 cppinc += -I$(HhRoot)/lib$(HW)
@@ -12,3 +12,4 @@ cppinc += -I$(HhRoot)/lib$(HW)
 # Instead, I use "ShowWindow(GetConsoleWindow(), SW_HIDE);" within libHWin/HW.cpp
 # LDFLAGS += -subsystem:windows -entry:mainCRTStartup
 
+include $(HhRoot)/make/Makefile_prog

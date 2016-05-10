@@ -97,13 +97,14 @@ int main() {
         float* p;
     };
     {
-        // following are constexpr in C++14
+        // C++14 constexpr
         { const Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
         { const Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
         { const Vec<int,5> ar3 = concat(V(1, 2), V(3, 4), V(5)); SHOW(ar3); }
         { const Vec<int,5> ar4 = concat(V(1, 2, 3, 4, 5)); SHOW(ar4); }
     }
     {
+        // C++14 constexpr
         { const Vec<int,2> ar = V(4, 5); const int t5 = ar[1]; SHOW(t5); }
         { const Vec<int,3> rest654 = V_rest(V(7, 6, 5, 4)); SHOW(rest654); }
         { const Vec<int,2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2); SHOW(segment54); }
@@ -200,6 +201,7 @@ int main() {
         }
     }
     {
+        // C++14 constexpr
         const auto ar1 = V(4, 5, 6);
         const int v5 = ar1[1]; SHOW(v5);
         const auto triple6a = Vec3<float>::all(6); SHOW(triple6a, type_name<decltype(triple6a)>());

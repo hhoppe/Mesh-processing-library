@@ -232,7 +232,8 @@ endif
 endif
 
 # Invokes $< which is the first prerequisite (either $(@:%.ou=%) in ./test or $(@:%.ou=%.script) in ./progtest)
-# GNU make version 3.81 cannot have an " =" at the end of the next line; strange.
+# Note: GNU make version 3.81 cannot have an " =" at the end of the next line; strange.
+# Also, generally it appears unsafe to embed comments within a define..endef definition.
 define cmd_hcheck
   @hcheck $< >/dev/null
   @if [ ! -e $(@:%.ou=%.diff) ]; then \

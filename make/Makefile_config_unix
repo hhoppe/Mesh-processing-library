@@ -13,9 +13,8 @@ ifeq ($(is_mac),1)
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  # Perhaps test for existence of library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0
   LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
 endif
 
 gfx_libs ?= -lGLU -lGL -lX11#  -lXext
-
-# Perhaps test for existence of library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0

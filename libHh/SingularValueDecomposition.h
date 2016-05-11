@@ -44,9 +44,9 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
             // SHOW(U, VT);
             TT a = TT(0), b = TT(0), c = TT(0);
             for_int(k, m) {     // construct 2*2 submatrix [ a, c; c, b ] of column inner products on U
-                a += square(U(k, i));
-                b += square(U(k, j));
-                c += U(k, i) * U(k, j);
+                a += square(TT(U(k, i)));
+                b += square(TT(U(k, j)));
+                c += TT(U(k, i)) * TT(U(k, j));
             }
             T e = T(abs(c)/sqrt(a*b)); max_e = max(max_e, e); // measure non-orthogonality of pair of columns
             // SHOW(iter, j, i, a, b, c, e);
@@ -55,7 +55,7 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
                 TT z = (b-a) / (TT(2)*c);
                 TT t = sign(z)/(abs(z) + hypot(TT(1), z)); // tan(theta); note that sign(z) is never zero
                 cs = T(1)/T(hypot(TT(1), t));
-                sn = T(cs*t);
+                sn = T(TT(cs)*t);
                 // SHOW(z, t, cs, sn);
             }
             for_int(k, m) {     // apply Jacobi rotation to U

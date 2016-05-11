@@ -654,7 +654,7 @@ template<typename T> T general_clamp(const T& v, const T& a, const T& b) { retur
 inline float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*v2; } // or v2 + (v1-v2)*f
 
 // Linearly interpolate between two values (f==1. returns v1; f==0. returns v2).
-inline double interp(double v1, double v2, double f = 0.5f) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
+inline double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
 
 // Returns v clamped to range [0, 255].
 inline uchar clamp_to_uchar(int v) {

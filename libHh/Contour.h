@@ -650,7 +650,7 @@ class Contour2D : public ContourBase<2> {
         }
         Vec2<float> v = poly[1]-poly[0];
         Vec2<float> normal(-v[1], v[0]); // 90 degree rotation
-        if (dot(normal, n2[0][0]->_p-n2[0][1]->_p)<0.f) std::swap(poly[0], poly[1]);
+        if (dot(normal, n2[0][0]->_p-n2[0][1]->_p)<0.) std::swap(poly[0], poly[1]);
         _contour(poly);
     }
 };

@@ -9,7 +9,7 @@ namespace hh {
 
 // Deduced from book: Coxeter "Geometry".
 float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
-    double a = dist(p0, p1), b = dist(p1, p2), c = dist(p2, p0);
+    double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0); // use double dist<>() rather than float dist()
     double s = (a+b+c)*.5;
     double d2 = s*(s-a)*(s-b)*(s-c);
     if (d2<=0.) { Warning("circum_radius degenerate"); return 1e10f; }
@@ -21,7 +21,7 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
     // r=d/s
     // d=sqrt(s(s-a)(s-b)(s-c))
     // s=(a+b+c)/2
-    double a = dist(p0, p1), b = dist(p1, p2), c = dist(p2, p0);
+    double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0);
     double s = (a+b+c)*.5;
     double d2 = s*(s-a)*(s-b)*(s-c);
     if (d2<=0.) { Warning("inscribed_radius degenerate"); return 0.f; }
@@ -30,7 +30,7 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
 
 // Should normalize to be 1 for an equilateral triangle?
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
-    double a = dist(p0, p1), b = dist(p1, p2), c = dist(p2, p0);
+    double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0);
     double s = (a+b+c)*.5;
     double d2 = s*(s-a)*(s-b)*(s-c);
     if (d2<=0.) { Warning("aspect_ratio degenerate"); return 1e10f; }

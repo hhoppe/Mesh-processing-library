@@ -352,7 +352,7 @@ template<typename T, int n> bool Qem<T,n>::compute_minp_constr_lf(float* minp, c
         // Note: at present only handle extremely restricted case.
         for_intL(i, 3, n) { assertx(lf[i]==0.f); }
         for_int(i, n-1) {
-            for_int(j, n) { zt[i][j] = 0.f; }
+            for_int(j, n) { zt[i][j] = 0.; }
         }
         Vec2<Vector> voa; {
             Vector vlf(lf[0], lf[1], lf[2]);
@@ -365,7 +365,7 @@ template<typename T, int n> bool Qem<T,n>::compute_minp_constr_lf(float* minp, c
         for_int(i, 2) {
             for_int(c, 3) { zt[i][c] = voa[i][c]; }
         }
-        for_intL(i, 3, n) { zt[i-1][i] = 1.f; }
+        for_intL(i, 3, n) { zt[i-1][i] = 1.; }
         if (0) print_matrix(zt);
     }
     static SvdDoubleLLS lls(n, n, 1);

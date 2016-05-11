@@ -139,7 +139,7 @@ class BSpatialSearch : noncopyable {
 
 inline int Spatial::float_to_index(float fd) const {
     float f = fd;
-    if (f<0) { ASSERTX(f>-.01); f = 0.f; }
+    if (f<0.f) { ASSERTX(f>-.01f); f = 0.f; }
     if (f>=.99999f) { ASSERTX(f<1.01f); f = .99999f; }
     return int(f*_gn);
 }
@@ -198,7 +198,7 @@ void ObjectSpatial<Approx2,Exact2>::pq_refine(Pqueue<Univ>& pq, const Point& pce
     //  in VC6 Release mode.
     if (newv-oldv<-1.f) Warning("something odd?");
     if (newv==oldv) return;
-    if (newv<oldv-1e-12 && Warning("newv<oldv")) { SHOW(oldv, newv); }
+    if (newv<oldv-1e-12f && Warning("newv<oldv")) { SHOW(oldv, newv); }
     assertx(pq.remove_min()==id);
     pq.enter(id, newv);
 }

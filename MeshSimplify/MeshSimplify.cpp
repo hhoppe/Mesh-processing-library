@@ -1212,13 +1212,13 @@ void parse_mesh() {
                 bbox.union_with(mesh.point(vv));
             }
             Point point = interp(bbox[0], bbox[1]);
-            double max_d2 = dist2(mesh.point(v), point);
+            float max_d2 = dist2(mesh.point(v), point);
             for (Vertex vv : mesh.vertices(v)) {
-                double d2 = dist2(mesh.point(vv), point);
+                float d2 = dist2(mesh.point(vv), point);
                 if (d2>max_d2) max_d2 = d2;
             }
             v_bsphere(v).point = point;
-            v_bsphere(v).radius = float(sqrt(max_d2));
+            v_bsphere(v).radius = sqrt(max_d2);
         }
     }
 }
@@ -3473,14 +3473,14 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     float spring = compute_spring(nn);
     double rssf;
     if (!relerror) {
-        rssf = 0.f;
+        rssf = 0.;
     } else if (minvolume) {
         rssf = compute_volume_before(e);
         if (hull && innerhull) rssf = -rssf;
     } else if (minarea) {
         rssf = compute_area_before(e);
     } else if (minedgelength) {
-        rssf = 0.f;
+        rssf = 0.;
     } else if (minvdist || terrain || minqem || minaps || minrandom) {
         assertnever("never use relerror");
     } else {
@@ -4428,7 +4428,7 @@ void optimize() {
             showff("Stop. No more good edge collapses.\n");
             {
                 assertx(pqecost.total_num()==0);
-                assertw(abs(pqecost.total_priority())<1e-6f);
+                assertw(abs(pqecost.total_priority())<1e-6);
             }
             break;
         }

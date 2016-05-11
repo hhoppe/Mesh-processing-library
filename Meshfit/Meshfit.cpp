@@ -240,32 +240,30 @@ float edge_dihedral_energy(Edge e) {
                                 mesh.point(vs1), mesh.point(vs2));
 }
 
-float get_edis() {
+double get_edis() {
     double edis = 0.; for_int(i, pt.co.num()) { edis += dist2(pt.co[i], pt.clp[i]); }
-    return float(edis);
+    return edis;
 }
 
-float get_espr() {
+double get_espr() {
     if (spring==0.f) return 0.f;
-    double espr = 0.f;
-    for (Edge e : mesh.edges()) { espr += spring_energy(e); }
-    return float(espr);
+    double espr = 0.; for (Edge e : mesh.edges()) { espr += spring_energy(e); }
+    return espr;
 }
 
-float get_edih() {
+double get_edih() {
     if (dihfac==0.f) return 0.f;
-    double edih = 0.f;
-    for (Edge e : mesh.edges()) { edih += edge_dihedral_energy(e); }
-    return float(edih);
+    double edih = 0.; for (Edge e : mesh.edges()) { edih += edge_dihedral_energy(e); }
+    return edih;
 }
 
-float get_erep() {
+double get_erep() {
     return crep*(mesh.num_vertices()+get_nbv()*(crbf-1));
 }
 
-float show_energies(const string& s) {
-    float edis = get_edis(), espr = get_espr(), edih = get_edih();
-    float etot = edis+espr+edih;
+double show_energies(const string& s) {
+    double edis = get_edis(), espr = get_espr(), edih = get_edih();
+    double etot = edis+espr+edih;
     if (s!="") {
         showdf("%s F=%-12g S=%-12g D=%-12g T=%-12g\n", s.c_str(), edis, espr, edih, etot);
     }
@@ -273,14 +271,14 @@ float show_energies(const string& s) {
 }
 
 void analyze_mesh(const string& s) {
-    float edis = get_edis(), espr = get_espr(), edih = get_edih();
-    float erep = get_erep();
-    float etot = edis+espr+edih+erep;
+    double edis = get_edis(), espr = get_espr(), edih = get_edih();
+    double erep = get_erep();
+    double etot = edis+espr+edih+erep;
     showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",
            s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
     showdf("  F=%g S=%g D=%g R=%g T=%g\n",
            edis, espr, edih, erep, etot);
-    float drms = my_sqrt(edis/pt.co.num())*xformi[0][0], dmax2 = 0.f;
+    float drms = float(sqrt(edis/pt.co.num())*xformi[0][0]), dmax2 = 0.f;
     for_int(i, pt.co.num()) { dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i])); }
     float dmax = my_sqrt(dmax2)*xformi[0][0];
     showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",
@@ -590,7 +588,7 @@ void do_gfit(Args& args) {
     if (verb>=2) showdf("\n");
     if (verb>=1) showdf("Beginning gfit, %d iterations, spr=%g\n", niter, spring);
     // constant simplicial complex
-    float etot = show_energies(verb>=2 ? "init   " : "");
+    double etot = show_energies(verb>=2 ? "init   " : "");
     int i;
     for (i = 0; !niter || i<niter; ) {
         if (!niter && i>=k_max_gfit_iter) break;
@@ -599,11 +597,11 @@ void do_gfit(Args& args) {
         { HH_STIMER(__glls); global_fit(); }
         { HH_STIMER(__gproject); global_project(); }
         if (sdebug) { pt.ok(); mesh.ok(); }
-        float oetot = etot;
+        double oetot = etot;
         etot = show_energies(verb>=3 ? sform("it%2d/%-2d", i, niter) : "");
-        float echange = etot-oetot;
+        double echange = etot-oetot;
         assertw(echange<0);
-        if (!niter && echange>-1e-4f) break;
+        if (!niter && echange>-1e-4) break;
     }
     if (verb>=2) {
         showdf("Finished gfit, did %d iterations\n", i);
@@ -631,7 +629,7 @@ void do_fgfit(Args& args) {
         Array<double> _x;           // linearized unknown vertex coordinates
         int _iter {0};
         int _niter;
-        float _etot {0.f};
+        double _etot {0.};
         FG() {
             for (Vertex v : mesh.vertices()) {
                 if (boundaryfixed && mesh.is_boundary(v)) continue;
@@ -664,10 +662,10 @@ void do_fgfit(Args& args) {
             if (restrictfproject==1 && _iter>=2) restrictfproject = 0;
             unpack_vertices();
             if (sdebug) { pt.ok(); mesh.ok(); }
-            float prev_etot = _etot;
+            double prev_etot = _etot;
             _etot = show_energies(verb>=3 ? sform("it%2d/%-2d", _iter, _niter) : "");
-            float echange = _etot-prev_etot;
-            assertw(echange<0);
+            double echange = _etot-prev_etot;
+            assertw(echange<0.);
             // Compute gradient.
             fill(ret_grad, 0.);
             // D edis
@@ -775,10 +773,10 @@ void UPointLLS::solve(double* prss0, double* prss1) {
         double newv = assertw(_vUtU[c]) ? _vUtb[c]/_vUtU[c] : _p[c];
         _p[c] = float(newv);
         double a = _btb[c]-_vUtU[c]*square(newv);
-        assertw(a>-1e-8f);
+        assertw(a>-1e-8);
         if (a>0) rss1 += a;
     }
-    assertw(rss1-_rss0<1e-13f);
+    assertw(rss1-_rss0<1e-13);
     if (prss0) *prss0 = _rss0;
     if (prss1) *prss1 = rss1;
 }
@@ -1160,7 +1158,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
     local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
     float mina = min_local_dihedral(wa, newp);
     if (mina<k_mincos && mina<minb) return R_dih; // change disallowed
-    double drss = rss1-rssf+(vo2 ? 1 : crbf)*double(crep);
+    double drss = rss1-rssf+(vo2 ? 1.f : crbf)*double(crep);
     edrss = float(drss);
     if (verb>=4) SHOW("espl:", rssf, rss1, drss);
     if (drss>=0) return R_energy; // energy function does not decrease

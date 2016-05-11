@@ -2635,7 +2635,7 @@ void do_compare(Args& args) {
             // float s = float((corr+c3)/(sdv1*sdv2+c3));
             const float c1 = square(0.01f*255.0f);
             const float c2 = square(0.03f*255.0f);
-            float ssim = float((2*mean1*mean2+c1)*(2*scorr+c2)/
+            float ssim = float((2.f*mean1*mean2+c1)*(2.f*scorr+c2)/
                                ((square(mean1)+square(mean2)+c1)*(var1+var2+c2)));
             // HH_SSTAT(Sssim, ssim);
             mssim += ssim;

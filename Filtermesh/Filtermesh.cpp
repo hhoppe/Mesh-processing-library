@@ -1136,14 +1136,17 @@ void do_silsubdiv() {
         }
         if (!nnew) continue;
         assertx(nnew==1 || nnew==3);
+        unique_ptr<char[]> fstring = mesh.extract_string(f); // may be nullptr
         mesh.destroy_face(f);
         if (nnew==1) {
             int i1 = mod3(i0+1), i2 = mod3(i0+2);
-            mesh.create_face(va[i0], vs[i0], va[i2]);
-            mesh.create_face(vs[i0], va[i1], va[i2]);
+            Face f1 = mesh.create_face(va[i0], vs[i0], va[i2]); mesh.set_string(f1, fstring.get());
+            Face f2 = mesh.create_face(vs[i0], va[i1], va[i2]); mesh.set_string(f2, fstring.get());
         } else {
-            for_int(i, 3) { mesh.create_face(va[i], vs[i], vs[mod3(i+2)]); }
-            mesh.create_face(vs[0], vs[1], vs[2]);
+            for_int(i, 3) {
+                Face fn = mesh.create_face(va[i], vs[i], vs[mod3(i+2)]); mesh.set_string(fn, fstring.get());
+            }
+            Face fn = mesh.create_face(vs[0], vs[1], vs[2]); mesh.set_string(fn, fstring.get());
         }
     }
     for_map_key_value(mvv_nvb, [&](const PairVV& vv, const Vb& nvb) {
@@ -2080,22 +2083,18 @@ int fix_vertex(Vertex v) {
         mesh.set_string(vnew, mesh.get_string(v));
         mesh.set_point(vnew, mesh.point(v));
         Array<Vertex> va;
+        Array<unique_ptr<char[]>> ar_s; // often nullptr's
         for (Face f : setf) {
             // assertx(mesh.substitute_face_vertex(f, v, vnew));
             // Loses flags
             mesh.get_vertices(f, va);
-            Array<unique_ptr<char[]>> ar_s; // often nullptr's
-            for (Vertex vv : va) {
-                ar_s.push(make_unique_c_string(mesh.get_string(mesh.corner(vv, f))));
-            }
-            unique_ptr<char[]> fstring = make_unique_c_string(mesh.get_string(f)); // often nullptr
+            ar_s.init(0); for (Vertex vv : va) ar_s.push(mesh.extract_string(mesh.corner(vv, f)));
+            unique_ptr<char[]> fstring = mesh.extract_string(f); // often nullptr
             mesh.destroy_face(f);
             for_int(i, va.num()) { if (va[i]==v) va[i] = vnew; }
             Face fnew = mesh.create_face(va);
-            mesh.set_string(fnew, fstring.get());
-            for_int(i, va.num()) {
-                mesh.set_string(mesh.corner(va[i], fnew), ar_s[i].get());
-            }
+            mesh.set_string(fnew, std::move(fstring));
+            for_int(i, va.num()) mesh.set_string(mesh.corner(va[i], fnew), std::move(ar_s[i]));
         }
     }
     return nrings;
@@ -3108,17 +3107,17 @@ void do_rmdiaguv() {
             for (Corner c : mesh.corners(f)) {
                 Vertex v = mesh.corner_vertex(c);
                 if (v!=mesh.vertex1(e) && v!=mesh.vertex2(e))
-                    mvs.enter(v, make_unique_c_string(mesh.get_string(c)));
+                    mvs.enter(v, mesh.extract_string(c));
             }
         }
         for (Vertex v : mesh.vertices(e)) {
             bool same = same_string(mesh.get_string(mesh.ccw_corner(v, e)), mesh.get_string(mesh.clw_corner(v, e)));
-            mvs.enter(v, same ? make_unique_c_string(mesh.get_string(mesh.ccw_corner(v, e))) : nullptr);
+            mvs.enter(v, same ? mesh.extract_string(mesh.ccw_corner(v, e)) : nullptr);
         }
         Face f = mesh.coalesce_faces(e);
         for (Corner c : mesh.corners(f)) {
             Vertex v = mesh.corner_vertex(c);
-            mesh.set_string(c, mvs.get(v).get());
+            mesh.set_string(c, std::move(mvs.get(v)));
         }
     }
 }

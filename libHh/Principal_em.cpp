@@ -85,7 +85,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
     // Orient eigenvectors canonically.
     Array<float> all1(n, 1.f);
     for_int(i, ne) {
-        if (dot(mo[i], all1)<0.f) mo[i] *= -1.f;
+        if (dot(mo[i], all1)<0.) mo[i] *= -1.f;
     }
     return true;
 }

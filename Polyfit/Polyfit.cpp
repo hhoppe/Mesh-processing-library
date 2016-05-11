@@ -525,7 +525,7 @@ void do_gfit(Args& args) {
             showdf(" change in energy=%g\n", echange);
         }
         if (a3d_spawn) output_poly(*a3d_spawn, true);
-        if (!niter && echange>-1e-4) break;
+        if (!niter && echange>-1e-4f) break;
         ecsc = necsc;
     }
     if (verb>=2) showdf("Finished gfit, did %d iterations\n", i);

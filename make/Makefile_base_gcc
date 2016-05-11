@@ -36,8 +36,7 @@ ifeq ($(plain_compiler),)
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
   ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(cwarnings)
-  # ifneq ($(CXX),clang++) #??
-  ifneq ($(is_mac),1)
+  ifneq ($(CXX),clang++)  # was ifneq ($(is_mac),1)
     ccommon += -mfpmath=sse
   endif
   # Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate
@@ -53,6 +52,7 @@ ifeq ($(plain_compiler),)
   # not: -fno-exceptions  because I now use exceptions in FileIO, Image, Video, Audio
   ifeq ($(CXX),g++)
     cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance
+    cwarnings += -Wno-double-promotion -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
     cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast
     #  -Wno-error=old-style-cast
     #  -Wno-error=name  # Turn warning "name" into an warning even if -Werror is specified.

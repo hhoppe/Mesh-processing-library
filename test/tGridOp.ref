@@ -62,19 +62,19 @@ stat = (100000 )           1:1            av=1              sd=0
 filter.name() = gaussian
 name = gaussian
 sum = 1
-stat = (100000 )     0.93503:1.06497      av=1              sd=0.045942377
+stat = (100000 )     0.93503:1.06497      av=1              sd=0.045942374
 filter.name() = lanczos6
 name = lanczos6
 sum = 0.997055
-stat = (100000 )    0.994299:1            av=0.99705535     sd=0.0020038057
+stat = (100000 )    0.994299:1            av=0.99705535     sd=0.002003931
 filter.name() = lanczos10
 name = lanczos10
 sum = 0.999353
-stat = (100000 )    0.998746:1            av=0.99935263     sd=0.00043905995
+stat = (100000 )    0.998746:1            av=0.99935263     sd=0.0004408033
 filter.name() = hamming6
 name = hamming6
 sum = 1.00188
-stat = (100000 )           1:1.00242      av=1.0018761      sd=0.00052908738
+stat = (100000 )           1:1.00242      av=1.0018761      sd=0.00052976125
 Filter::get("spline").func()(0.) = 0.666667
 Filter::get("spline").func()(1.) = 0.166667
 Filter::get("spline").func()(2.) = 0

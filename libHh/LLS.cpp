@@ -251,13 +251,13 @@ bool LudLLS::solve_aux() {
     for_int(j, _n) {
         for_int(i, j) {
             double s = a[i][j];
-            for_int(k, i) { s -= a[i][k]*a[k][j]; }
+            for_int(k, i) { s -= double(a[i][k])*a[k][j]; }
             a[i][j] = float(s);
         }
         float vmax = 0.f;
         for_intL(i, j, _n) {
             double s = a[i][j];
-            for_int(k, j) { s -= a[i][k]*a[k][j]; }
+            for_int(k, j) { s -= double(a[i][k])*a[k][j]; }
             a[i][j] = float(s);
             float v = t[i]*abs(a[i][j]);
             if (v>=vmax) { vmax = v; imax = i; }
@@ -285,7 +285,7 @@ bool LudLLS::solve_aux() {
             double s = t[ip];
             t[ip] = t[i];
             if (ii>=0) {
-                for_intL(j, ii, i) { s -= a[i][j]*t[j]; }
+                for_intL(j, ii, i) { s -= double(a[i][j])*t[j]; }
             } else if (s) {
                 ii = i;
             }
@@ -293,7 +293,7 @@ bool LudLLS::solve_aux() {
         }
         for (int i = _n-1; i>=0; --i) {
             double s = t[i];
-            for_intL(j, i+1, _n) { s -= a[i][j]*t[j]; }
+            for_intL(j, i+1, _n) { s -= double(a[i][j])*t[j]; }
             t[i] = float(s/a[i][i]);
         }
         for_int(j, _n) { _x[di][j] = t[j]; }

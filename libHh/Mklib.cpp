@@ -62,7 +62,7 @@ void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
             mk.point(0, ft4, 0);
             if (smooth()) mk.normal(ft5, ft4, ft1);
             mk.point((ft0-1)*ft5, ft4*ft0, ft3);
-            if (ft0>1e-6) {
+            if (ft0>1e-6f) {
                 if (smooth()) mk.normal(ft5, ft4, ft2);
                 mk.point((ft0-1)*ft5, -ft4*ft0, ft3);
                 if (smooth()) mk.normal(ft5, -ft4, ft2);

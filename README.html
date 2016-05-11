@@ -50,19 +50,19 @@
 
   
   <h2>Version history</h2>
-  <p>Version 1.0 &mdash; 2016-04-28.</p>
+  <p>2016-04-28 &mdash; initial release.</p>
   
   
   <h2>Requirements / dependencies</h2>
   
   <p>The source code can be compiled with Microsoft Visual Studio 2015 from the included solution (<code>*.sln</code>) and project (<code>*.vcxproj</code>) files, using either the Integrated Development Environment (IDE) or the <code>msbuild</code> command.</p>
   
-  <p>Across several platforms (including Unix, Linux, Mac OS, and Cygwin),
+  <p>On Unix-based platforms (including Linux, Mac OS, and Cygwin),
    the code can also be compiled using <code>gcc</code> and <code>clang</code> compilers
    (and Visual Studio <code>cl</code> compiler)
    using <code>Makefiles</code> designed for GNU <code>make</code>.</p>
 
-  <p>Reading/writing images and videos is enabled using several options.
+  <p>Reading/writing of images and videos is enabled using several options.
    If available, image I/O can use <code>libpng</code>/<code>libjpeg</code> or Windows Imaging Component (WIC).
    Video I/O can use Windows Media Foundation (WMF).
    Across all platforms, if the command <a href="https://ffmpeg.org/"><code>ffmpeg</code></a>
@@ -80,7 +80,7 @@
   <p>Open the <code>distrib.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
    Executables are placed in the <code>bin</code>, <code>bin/debug</code>, <code>bin/Win32</code>, or <code>bin/Win32/debug</code> directory, depending on the build configuration (64-bit versus 32-bit, and release versus debug).</p>
   <p style="font-size:80%;">The code should still be compatible with Visual Studio 2013;
-   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command: <code>perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@<PlatformToolset>v140<@<PlatformToolset>v120<@' */*.vcxproj</code>
+   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command: <code>perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@v140@v120@' */*.vcxproj</code>
   
   <h3>Compiling using <code>msbuild</code></h3>
   <p>Set the appropriate environment variables and run <code>msbuild</code>, e.g.:</p>
@@ -98,13 +98,13 @@
    On Unix-derived platforms (including Linux and Mac OS), <code>CONFIG=unix</code> is the unique and default setting.</p>
   <p>For example, to build using the Microsoft <code>cl</code> compiler (Debug, with 8 parallel processes, placing <code>*.exe</code> into directory <code>bin/win</code>):</p>
   <div class="codeline">make -j8</div>
-  <p>To build all programs (into <code>bin/unix</code>) and run all unit tests on a Unix environment:</p>
+  <p>To build all programs (into either <code>bin/unix</code> or <code>bin/win</code>) and run all unit tests:</p>
   <div class="codeline">make -j test</div>
-  <p>To build just the main library using the <code>mingw gcc</code> compiler:</p>
+  <p>To build just the main library using the <code>mingw gcc</code> compiler on Windows:</p>
   <div class="codeline">make CONFIG=mingw -j libHh</div>
-  <p>To build <code>bin/clang/Filtermesh</code> program using the <code>clang</code> compiler:</p>
+  <p>To build the <code>Filtermesh</code> program (into <code>bin/clang</code>) using the <code>clang</code> compiler on Windows:</p>
   <div class="codeline">make CONFIG=clang -j Filtermesh</div>
-  <p>To build all programs <code>bin/cygwin/*</code> and run all demos using the Cygwin <code>gcc</code> compiler:</p>
+  <p>To build all programs (into <code>bin/cygwin</code>) and run all demos using the <code>gcc</code> compiler under Cygwin:</p>
   <div class="codeline">make CONFIG=cygwin -j demos</div>
   <p>To clean up all files in all configurations:</p>
   <div class="codeline">make CONFIG=all -j deepclean</div>
@@ -271,12 +271,14 @@
   <div class="codeline"><b>demos/all_demos_view_results.bat</b></div>
   <div class="codeline"><b>demos/all_demos_clean.bat</b></div>
   
-  <p>In Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the <code>bash</code> scripts</p>
+  <p>On Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the <code>bash</code> scripts</p>
   <div class="codeline"><b>demos/all_demos_create_results.sh</b></div>
   <div class="codeline"><b>demos/all_demos_view_results.sh</b></div>
   <div class="codeline"><b>demos/all_demos_clean.sh</b></div>
   <p>or alternatively (and faster), invoke <code>make</code> to create all results in parallel and then view them sequentially:</p>
   <div class="codeline"><b>make</b> [CONFIG=<em>config</em>] -j demos &nbsp;&nbsp;# <em>config</em>&nbsp;&isin;&nbsp;{unix, win, w32, cygwin, mingw, mingw32, clang}</div>
+
+  <p>Note that pressing the <kbd>Esc</kbd> key closes any open program window.
   
   
   <h2>Filter programs</h2>
@@ -319,13 +321,14 @@
   </ul>
 
   <p>The command</p>
-  <div class="codeline" id="prog_Filtermesh"><b>FilterPM</b> demos/data/club.pm -nf 500 -outmesh | <br/>
-   <b>Filtermesh</b> -angle 37 -mark -silsubdiv -silsubdiv -mark | <br/>
-   <b>G3dOGL</b> -st demos/data/club.s3d -key DmDeDbJ--</div>
+  <div class="codeline" id="prog_Filtermesh"><b>FilterPM</b> demos/data/spheretext.pm -nf 2000 -outmesh | <br/>
+   <b>Filtermesh</b> -angle 35 -silsubdiv -silsubdiv -mark | <br/>
+   <b>G3dOGL</b> -key DmDeDbJ---- -st demos/data/spheretext.s3d</div>
   <ul>
-   <li>reads a 500-face mesh, marks all edges with dihedral angle greater than 37 degrees as sharp,</li>
+   <li>reads a 2000-face mesh, marks all edges with dihedral angle greater than 35 degrees as sharp,</li>
    <li>applies two steps of adaptive subdivision near these sharp edges, and</li>
-   <li>shows the result flat-shaded (<kbd>Dm</kbd>), with edges (<kbd>De</kbd>), without backface culling (<kbd>Db</kbd>), spinning (<kbd>J</kbd>) somewhat slowly (<kbd>--</kbd>).</li>
+   <li>shows the result flat-shaded (<kbd>Dm</kbd>), with edges (<kbd>De</kbd>), without backface culling (<kbd>Db</kbd>), spinning (<kbd>J</kbd>) somewhat slowly (<kbd>----</kbd>),</li>
+   <li>starting from the view parameters stored in the <code>spheretext.s3d</code> file.</li>
   </ul>
   
   <p>The command</p>
@@ -636,7 +639,9 @@
 
   <h2 id="prog_VideoViewer">Image/video viewer</h2>
   <p>The <code><b>VideoViewer</b></code> program enables interactive viewing and simple editing of both images and videos.
-   Again, the key <kbd>?</kbd> shows a list of available commands.</p>
+   Again, the key <kbd>?</kbd> shows a list of available commands.
+   Press <kbd>pageup</kbd>/<kbd>pagedown</kbd> to quickly browse through the videos and/or images in a directory.
+   Audio is not currently supported.</p>
 
 
   <h2>File formats</h2>

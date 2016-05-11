@@ -4,9 +4,9 @@
 
 // Return number of arguments.
 #define HH_NUM_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_NUM_ARGS_RSEQ_N()))
-#define HH_NUM_ARGS_(tuple) HH_NUM_ARGS__ tuple
+#define HH_NUM_ARGS_(tuple) HH_NUM_ARGS_B tuple
 #define HH_NUM_ARGS_RSEQ_N() 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0
-#define HH_NUM_ARGS__(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, N, ...) N
+#define HH_NUM_ARGS_B(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, N, ...) N
 #define HH_COMMA_SEQ_N()      1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  0,  0
 // http://efesx.com/2010/07/17/variadic-macro-to-count-number-of-arguments/  (VC needs extra level of indirection)
 // http://stackoverflow.com/questions/9183993/msvc-variadic-macro-expansion (VC treats __VA_ARGS__ as single token)

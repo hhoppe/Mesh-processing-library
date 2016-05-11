@@ -38,7 +38,7 @@ class HW : public HWbase {
     void resize_window(const Vec2<int>& yx) override;
     void make_fullscreen(bool b) override;
 // call within draw_window()
-    void clear_window();
+    void clear_window() override;
     void hard_flush() override;
 // call outside draw_window()
     void begin_draw_visible() override;

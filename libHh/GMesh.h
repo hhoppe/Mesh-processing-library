@@ -60,6 +60,10 @@ class GMesh : public Mesh {
     const char* get_string(Face f) const        { return f->_string.get(); }
     const char* get_string(Edge e) const        { return e->_string.get(); }
     const char* get_string(Corner c) const      { return c->_string.get(); }
+    unique_ptr<char[]> extract_string(Vertex v) { return std::move(v->_string); }
+    unique_ptr<char[]> extract_string(Face f)   { return std::move(f->_string); }
+    unique_ptr<char[]> extract_string(Edge e)   { return std::move(e->_string); }
+    unique_ptr<char[]> extract_string(Corner c) { return std::move(c->_string); }
     static bool string_has_key(const char* ss, const char* key);
     static const char* string_key(string& str, const char* ss, const char* key);
     const char* corner_key(string& str, Corner c, const char* key) const;            // Corner | Vertex
@@ -69,6 +73,10 @@ class GMesh : public Mesh {
     void set_string(Face f, const char* s)      { f->_string = make_unique_c_string(s); }
     void set_string(Edge e, const char* s)      { e->_string = make_unique_c_string(s); }
     void set_string(Corner c, const char* s)    { c->_string = make_unique_c_string(s); }
+    void set_string(Vertex v, unique_ptr<char[]> s)     { v->_string = std::move(s); }
+    void set_string(Face f, unique_ptr<char[]> s)       { f->_string = std::move(s); }
+    void set_string(Edge e, unique_ptr<char[]> s)       { e->_string = std::move(s); }
+    void set_string(Corner c, unique_ptr<char[]> s)     { c->_string = std::move(s); }
     static string string_update(const string& s, const char* key, const char* val);
     void update_string(Vertex v, const char* key, const char* val);
     void update_string(Face f, const char* key, const char* val);

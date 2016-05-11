@@ -127,7 +127,7 @@ struct Timers {
                 if (timer_info.sum_process_time) {
                     const int ncores = std_thread_hardware_concurrency();
                     // bool meaningful = stat.avg()>.04f;
-                    bool meaningful = timer_info.sum_process_time/stat.num()>.04f;
+                    bool meaningful = timer_info.sum_process_time/stat.num()>.04;
                     if (meaningful) {
                         if (ncores && timer_info.sum_process_time/stat_sum>ncores)
                             stat_sum = timer_info.sum_process_time/ncores;
@@ -147,7 +147,7 @@ struct Timers {
                        n>1 ? sform("%8.2f", stat.min()).c_str() : "        ",
                        n>1 ? sform("%-8.2f", stat.max()).c_str() : "        ",
                        stat_sum/n, stat_sum, sparallel.c_str(), timer_info.sum_real_time);
-                if (stat.num()>1000 && stat.num()*1e-6f>stat_sum) {
+                if (stat.num()>1000 && stat.num()*1e-6>stat_sum) {
                     showdf("**Timer '%s' created more overhead than measured!\n", stat.name().c_str());
                 }
             }

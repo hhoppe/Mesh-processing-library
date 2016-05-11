@@ -1054,7 +1054,7 @@ EResult try_esha(Edge eg, double& edrss) {
     HH_SSTAT(Seshasmv, smesh.mesh().num_vertices());
     update_local(smesh, mvcvih);
     local_all_project(smesh, setgoodf, setpts, setbadpts);
-    double threshrss = rssf-wcrep*feshaasym+(is_sharp ? 1 : -1)*wcsharp;
+    double threshrss = rssf-wcrep*feshaasym+(is_sharp ? 1. : -1.)*wcsharp;
     if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss))
         return R_energy;
     if (testdih) {

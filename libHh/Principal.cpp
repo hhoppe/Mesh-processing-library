@@ -209,7 +209,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
     // Orient eigenvectors canonically
     Array<float> all1(n, 1.f);
     for_int(i, n) {
-        if (dot(mo[i], all1)<0.f) mo[i] *= -1.f;
+        if (dot(mo[i], all1)<0.) mo[i] *= -1.f;
     }
 }
 
@@ -274,7 +274,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     Array<float> all1(n, 1.f);
     for_int(i, ne) {
         float recipnormj = 1.f/vnorm[i];
-        if (dot(mo[i], all1)<0.f) recipnormj *= -1;
+        if (dot(mo[i], all1)<0.) recipnormj *= -1.f;
         mo[i] *= recipnormj;
     }
     // Convert variances to standard deviations.

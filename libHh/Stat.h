@@ -93,14 +93,14 @@ template<typename R, typename> Stat::Stat(R&& range) : Stat{} {
 }
 
 inline void Stat::enter(float f) {
-    _n++; _sum += f; _sum2 += f*f;
+    _n++; _sum += double(f); _sum2 += square(double(f));
     if (f<_min) _min = f;
     if (f>_max) _max = f;
     if (_pofs) output(f);
 }
 
 inline void Stat::enter_multiple(float f, int fac) {
-    _n += fac; _sum += f*float(fac); _sum2 += f*f*float(fac);
+    _n += fac; _sum += double(f)*fac; _sum2 += square(double(f))*fac;
     if (f<_min) _min = f;
     if (f>_max) _max = f;
     if (_pofs) for_int(i, fac) { output(f); }

@@ -643,7 +643,7 @@ Vertex GMesh::center_split_face(Face f) {
     Map<Vertex, unique_ptr<char[]>> mvs;
     for (Corner c : corners(f)) {
         Vertex v = corner_vertex(c);
-        if (get_string(c)) mvs.enter(v, make_unique_c_string(get_string(c)));
+        if (get_string(c)) mvs.enter(v, extract_string(c));
     }
     Vector scol(0.f, 0.f, 0.f); bool have_col = true;
     Vector snor(0.f, 0.f, 0.f); bool have_nor = true;
@@ -669,7 +669,7 @@ Vertex GMesh::center_split_face(Face f) {
             for (Corner cc : corners(fn)) {
                 Vertex vv = corner_vertex(cc);
                 if (vv==vn) continue;
-                set_string(cc, mvs.retrieve(vv).get()); // may be nullptr
+                if (mvs.contains(vv)) set_string(cc, std::move(mvs.get(vv))); // may be nullptr
             }
         }
     }

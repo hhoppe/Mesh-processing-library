@@ -157,7 +157,7 @@ float spherical_triangle_area(const Vec3<Point>& pa) {
 
 bool get_bary(const Point& p, const Vec3<Point>& pa, Bary& bary) {
     Vector nor = cross(pa[1]-pa[0], pa[2]-pa[0]);
-    double area = mag(nor);
+    double area = mag<>(nor);
     if (area<=1e-10) {
         fill(bary, 1.f/3.f);
         return false;

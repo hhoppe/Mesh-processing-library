@@ -31,7 +31,9 @@
   <h1>Mesh Processing Library</h1>
   
   <h2>Overview</h2>
-  <p>This package contains a C++ library and several application programs that demonstrate mesh processing technologies published in research papers at ACM SIGGRAPH in 1992&ndash;1998:</p>
+  <p>This <a href="https://github.com/Microsoft/Mesh-processing-library">GitHub package</a>
+   contains a C++ library and several application programs that demonstrate mesh processing technologies
+   published in research papers at ACM SIGGRAPH in 1992&ndash;1998:</p>
   <ul>
    <li><em>surface reconstruction</em> (from unorganized, unoriented points)</li>
    <li><em>mesh optimization</em></li>
@@ -55,12 +57,12 @@
   
   <p>The source code can be compiled with Microsoft Visual Studio 2015 from the included solution (<code>*.sln</code>) and project (<code>*.vcxproj</code>) files, using either the Integrated Development Environment (IDE) or the <code>msbuild</code> command.</p>
   
-  <p>Across several platforms (including Unix, Linux, Mac OS, and Windows Cygwin),
+  <p>Across several platforms (including Unix, Linux, Mac OS, and Cygwin),
    the code can also be compiled using <code>gcc</code> and <code>clang</code> compilers
    (and Visual Studio <code>cl</code> compiler)
-   using a set of <code>Makefiles</code> designed for GNU <code>make</code>.</p>
+   using <code>Makefiles</code> designed for GNU <code>make</code>.</p>
 
-  <p>Reading/writing images and videos is supported with several options.
+  <p>Reading/writing images and videos is enabled using several options.
    If available, image I/O can use <code>libpng</code>/<code>libjpeg</code> or Windows Imaging Component (WIC).
    Video I/O can use Windows Media Foundation (WMF).
    Across all platforms, if the command <a href="https://ffmpeg.org/"><code>ffmpeg</code></a>
@@ -68,8 +70,8 @@
    it is spawned in a piped subprocess for both image and video I/O.</p>
 
   <p>On Mac OS X, it is necessary to install
-   <a href="https://www.xquartz.org/"><code>XQuartz</code></a> for <code>X11</code> support, and
-   <a href="http://evermeet.cx/ffmpeg/"><code>ffmpeg</code></a> for image and video I/O.</p>
+   <a href="https://www.xquartz.org/"><code>XQuartz</code></a> for <code>X11</code> support and
+   <a href="http://evermeet.cx/ffmpeg/"><code>ffmpeg</code></a> for image/video I/O.</p>
   
   
   <h2>Code compilation</h2>
@@ -92,20 +94,20 @@
   <p>The <code>CONFIG</code> environment variable determines
    which <code>make/Makefile_config_*</code> definition file is loaded.
    On Windows, <code>CONFIG</code> can be chosen among <code>{win, w32, cygwin, mingw, mingw32, clang}</code>,
-   defaulting to <code>win</code> if left unset.
+   defaulting to <code>win</code> if undefined.
    On Unix-derived platforms (including Linux and Mac OS), <code>CONFIG=unix</code> is the unique and default setting.</p>
   <p>For example, to build using the Microsoft <code>cl</code> compiler (Debug, with 8 parallel processes, placing <code>*.exe</code> into directory <code>bin/win</code>):</p>
-  <div class="codeline">make CONFIG=win -j8</div>
-  <p>To build the library on a Unix environment (into <code>bin/unix</code>) and run the unit tests:</p>
-  <div class="codeline">make CONFIG=unix -j test</div>
-  <p>To build just the library using the <code>mingw gcc</code> compiler (into the directory <code>bin/mingw</code>):</p>
+  <div class="codeline">make -j8</div>
+  <p>To build all programs (into <code>bin/unix</code>) and run all unit tests on a Unix environment:</p>
+  <div class="codeline">make -j test</div>
+  <p>To build just the main library using the <code>mingw gcc</code> compiler:</p>
   <div class="codeline">make CONFIG=mingw -j libHh</div>
-  <p>To build the <code>Filtermesh</code> program using the <code>clang</code> compiler:</p>
+  <p>To build <code>bin/clang/Filtermesh</code> program using the <code>clang</code> compiler:</p>
   <div class="codeline">make CONFIG=clang -j Filtermesh</div>
-  <p>To build all program and run all demos using the Cygwin <code>gcc</code> compiler:</p>
+  <p>To build all programs <code>bin/cygwin/*</code> and run all demos using the Cygwin <code>gcc</code> compiler:</p>
   <div class="codeline">make CONFIG=cygwin -j demos</div>
-  <p>To run unit tests under all configurations:</p>
-  <div class="codeline">make CONFIG=all -j test</div>
+  <p>To clean up all files in all configurations:</p>
+  <div class="codeline">make CONFIG=all -j deepclean</div>
   <p>Note that additional options such as debug/release, 32-bit/64-bit, and
    compiler tool paths/parameters are set in the various <code>make/Makefile_*</code> files.
    These need to be adjusted depending on the versions and installation paths of the tools.
@@ -264,13 +266,15 @@
   <h2>Demos</h2>
   
   <p>After the code is compiled, the demos can be run as follows.</p>
-  <p>In Windows, create and view all the results using the <code>batch</code> scripts</p>
+  <p>In Windows, create, view, and clean up all the results using the <code>batch</code> scripts</p>
   <div class="codeline"><b>demos/all_demos_create_results.bat</b></div>
   <div class="codeline"><b>demos/all_demos_view_results.bat</b></div>
+  <div class="codeline"><b>demos/all_demos_clean.bat</b></div>
   
   <p>In Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the <code>bash</code> scripts</p>
   <div class="codeline"><b>demos/all_demos_create_results.sh</b></div>
   <div class="codeline"><b>demos/all_demos_view_results.sh</b></div>
+  <div class="codeline"><b>demos/all_demos_clean.sh</b></div>
   <p>or alternatively (and faster), invoke <code>make</code> to create all results in parallel and then view them sequentially:</p>
   <div class="codeline"><b>make</b> [CONFIG=<em>config</em>] -j demos &nbsp;&nbsp;# <em>config</em>&nbsp;&isin;&nbsp;{unix, win, w32, cygwin, mingw, mingw32, clang}</div>
   
@@ -512,7 +516,7 @@
   
   <h2>Terrain level-of-detail control</h2>
 
-  <p>Within the demo <code>create_sr_terrain.</code><i>{sh,bat}</i>,</p>
+  <p>Within <code>demos/create_sr_terrain.</code><i>{sh,bat}</i>,</p>
   <div class="codeline">Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 -removekinks -tomesh | <br/>
    Filtermesh -assign_normals &gt;gcanyon_sq200.orig.m</div>
   <div class="codeline">demos/bin/meshtopm.<i>{sh,bat}</i> gcanyon_sq200.orig.m -vsgeom -terrain &gt;gcanyon_sq200.pm</div>
@@ -520,7 +524,7 @@
    <li>converts an elevation image to a smoothed terrain grid mesh, and</li>
    <li>simplifies it to create a selectively refinable mesh.</li>
   </ul>
-  <p>Then, within <code>view_sr_terrain.sh</code>,</p>
+  <p>Then, within <code>demos/view_sr_terrain.sh</code>,</p>
   <div class="codeline">(common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5"; \<br/>
    export G3D_REV_AUTO=1; \<br/>
    G3dOGL $common -geom 800x820+100+10 -key "&O" -key ,o----J | <br/>
@@ -534,12 +538,12 @@
    simplifying each tile independently to form a progressive mesh,
    stitching the progressive meshes together 2-by-2,
    and recursively simplifying and merging at coarser pyramid levels.</p>
-  <p>An example is presented in the demo <code>demos/create_terrain_hierarchy</code>.
+  <p>An example is presented in <code>demos/create_terrain_hierarchy</code>.
    It makes use of</p>
   <div class="codeline" id="prog_StitchPM"><b>StitchPM</b> -rootname terrain.level0 -blockx 2 -blocky 2 -blocks 32 -stitch &gt;terrain.level0.stitched.pm</div>
   <p>to assemble each 2-by-2 set of progressive mesh tiles <code>terrain.level0.x{0,1}.y{0,1}.pm</code> at the finest level.</p>
-  <p>The demo <code>view_gcanyon_interactive</code> shows an interactive flythrough over a precomputed terrain of resolution 4096&times;2048.</p>
-  <p>Alternatively, the demo <code>view_gcanyon_frames</code> shows a real-time flythrough using a pre-recorded flight path.</p>
+  <p>The script <code>demos/view_gcanyon_interactive</code> shows an interactive flythrough over a precomputed terrain of resolution 4096&times;2048.</p>
+  <p>Alternatively, <code>demos/view_gcanyon_frames</code> shows a real-time flythrough using a pre-recorded flight path.</p>
 
   
   <h2>Topology simplification</h2>
@@ -547,7 +551,7 @@
   <p>The program <code>MinCycles</code> removes topological noise from a mesh
    by iteratively pinching off the smallest nonseparating cycle of edges until a
    specified criterion (cycle length, number of cycle edges, number of cycles, or mesh genus) is reached.</p>
-  <p>For example, within the demo <code>create_topologically_simplified.</code><i>{sh,bat}</i>,</p>
+  <p>For example, within <code>demos/create_topologically_simplified.</code><i>{sh,bat}</i>,</p>
   <div class="codeline" id="prog_MinCycles">FilterPM demos/data/office.pm -nf 200000 -outmesh | <br/>
    <b>MinCycles</b> - -fraccyclelength 1.2 -maxcyclelen .10 -closecycles | <br/>
    G3dOGL -st demos/data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9</div>
@@ -563,7 +567,7 @@
   <!--h2>Optimized mesh traversal</h2>
   
   <p>The program <code>MeshReorder</code> reorders the triangle faces (and optionally vertices) within a mesh so as to exploit a GPU vertex cache to minimize memory bandwidth and shading cost.</p>
-<p>For example, within the demo <code>create_vertexcache_result</code>,</p>
+<p>For example, within <code>demos/create_vertexcache_result</code>,</p>
   <div class="codeline">Filtermesh demos/data/small_stell_dodecahedron4.nsub4.m -renumber -removeinfo | <br/>
    <b>MeshReorder</b> - -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze >small_stell_dodecahedron4.nsub4.vertexcache.m</div>
   <div class="codeline">G3dOGL small_stell_dodecahedron4.nsub4.vertexcache.m -key DmDe -lightambient .70 -lightsource .35</div>
@@ -587,7 +591,7 @@
    <li>simple <code>*.ply</code> files.</li>
   </ul>
   <p>Please see the many examples presented earlier.</p>
-  <p>It can take image snapshots (see <code>create_rendered_mechpart_image</code> and record videos (see <code>create_rendered_mechpart_video</code>).</p>
+  <p>It can take image snapshots (see <code>demos/create_rendered_mechpart_image</code> and record videos (see <code>demos/create_rendered_mechpart_video</code>).</p>
   <p>The mouse/keyboard controls include:</p>
   <pre>
    Mouse movements:
@@ -626,7 +630,7 @@
   <div class="codeline">VideoViewer output_video.mp4</div>
   
   <p>The related program <code><b>G3dVec</b></code> shows wireframe hidden-line-removed renderings of the first two
-   formats above.  It can write vector-based Postscript figures (see <code>view_hidden_line_removed</code>).</p>
+   formats above.  It can write vector-based Postscript figures (see <code>demos/view_hidden_line_removed</code>).</p>
   <p>Earlier versions of <code>G3d*</code> supported other rendering APIs including Xlib, IRIS GL, and Starbase.</p>
   <p>In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.</p>
 

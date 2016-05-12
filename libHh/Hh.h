@@ -224,15 +224,6 @@ using nullptr_t = fake_nullptr*;
 } // namespace std
 #endif
 
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(__CYGWIN__)
-namespace std {                 // workaround for current mingw32 4.7.2
-struct once_flag { int done{0}; };
-template<typename Callable, typename... Args> void call_once(std::once_flag& flag, Callable&& func, Args&&... args) {
-    if (!flag.done++) func(std::forward<Args>(args)...);
-}
-} // namespace std
-#endif
-
 
 // *** Add some easy C++14 features if not already present.
 

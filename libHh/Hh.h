@@ -204,30 +204,32 @@ using namespace std; namespace hh { } using namespace hh;
 
 // *** Add some potentially missing C++11 features.
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(HH_NO_DEFINE_STD_LOG2)
 namespace std {
 template<typename T> T log2(T v) { return std::log(v)/std::log(T(2)); }
 } // namespace std
 #endif
 
-#if defined(__CYGWIN__)
+#if defined(__CYGWIN__) && !defined(HH_NO_DEFINE_STD_HYPOT)
 namespace std {                 // missing hypot() functions
 inline float hypot(float a, float b) { return hypotf(a, b); }
 inline double hypot(double a, double b) { return ::hypot(a, b); }
 } // namespace std
 #endif
 
-#if !defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
-namespace std {                 // missing nullptr_t
-struct fake_nullptr { };
-using nullptr_t = fake_nullptr*;
+#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(HH_NO_DEFINE_STD_ONCE)
+namespace std {                 // workaround for current mingw32 4.7.2
+struct once_flag { int done{0}; };
+template<typename Callable, typename... Args> void call_once(std::once_flag& flag, Callable&& func, Args&&... args) {
+    if (!flag.done++) func(std::forward<Args>(args)...);
+}
 } // namespace std
 #endif
 
 
 // *** Add some easy C++14 features if not already present.
 
-#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L)
+#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14)
 namespace std {
 // C++14 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf
 template<typename T> using remove_const_t = typename remove_const<T>::type;
@@ -265,7 +267,7 @@ template<typename T> std::enable_if_t<std::is_array<T>::value, unique_ptr<T> > m
 } // namespace std
 #endif
 
-#if (defined(_MSC_VER) && _MSC_VER<1900) || (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L))
+#if ((defined(_MSC_VER) && _MSC_VER<1900) || (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L))) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE)
 namespace std {
 // C++14 http://en.cppreference.com/w/cpp/utility/integer_sequence
 // Useful template for creating and processing parameter packs.

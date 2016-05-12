@@ -18,7 +18,7 @@ namespace hh {
 template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimization : noncopyable {
  public:
     // renamed x to x_ because of VS2015 bug warning "C4459: declaration of 'x' hides global declaration"
-    NonlinearOptimization(ArrayView<double> x_) : NonlinearOptimization(x_, Eval()) { }
+    explicit NonlinearOptimization(ArrayView<double> x_) : NonlinearOptimization(x_, Eval()) { }
     NonlinearOptimization(ArrayView<double> x_, Eval eval)
         : NonlinearOptimization(nullptr, x_, eval) { _debug = getenv_int("NLOPT_DEBUG"); }
     void set_max_neval(int max_neval)           { _max_neval = max_neval; } // default is -1 which signifies infinity
@@ -54,7 +54,7 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
     Array<double> _alphak;     // used in the formula that computes H*g
     Matrix<double> _as;        // last _m search step          (s_k = x_k - x_{k-1})
     Matrix<double> _ay;        // last _m gradient differences (y_k = g_k - g_{k-1})
-    NonlinearOptimization(std::nullptr_t, ArrayView<double> px, Eval eval) :
+    NonlinearOptimization(void*, ArrayView<double> px, Eval eval) :
         _x(px), _n(_x.num()), _eval(eval),
         _g(_n), _tmp(_n), _xinit(_n), _rho(_m), _alphak(_m), _as(V(_m, _n)), _ay(V(_m, _n)) {
         assertx(_n>0 && _m>0);

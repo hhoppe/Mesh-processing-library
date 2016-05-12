@@ -44,7 +44,7 @@
    <li><em>view-dependent mesh refinement</em></li>
    <li><em>smooth terrain LOD</em></li>
    <li><em>progressive simplicial complexes</em></li>
-   <!--li><em>optimized mesh traversal</em> (for transparent vertex caching)</li-->
+   <!--<li><em>optimized mesh traversal</em> (for transparent vertex caching)</li>-->
   </ul>
   <p>The source code follows modern C++11 style and is designed for cross-platform use.</p>
 
@@ -80,12 +80,12 @@
   <p>Open the <code>distrib.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
    Executables are placed in the <code>bin</code>, <code>bin/debug</code>, <code>bin/Win32</code>, or <code>bin/Win32/debug</code> directory, depending on the build configuration (64-bit versus 32-bit, and release versus debug).</p>
   <p style="font-size:80%;">The code should still be compatible with Visual Studio 2013;
-   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command: <code>perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@v140@v120@' */*.vcxproj</code>
+   to compile using this older compiler, modify the <code>*.vcxproj</code> files using the following <code>Perl</code> command: <code>perl -i.vs2015 -pe 's@ToolsVersion="14.0"@ToolsVersion="12.0"@; s@v140@v120@' */*.vcxproj</code></p>
   
   <h3>Compiling using <code>msbuild</code></h3>
   <p>Set the appropriate environment variables and run <code>msbuild</code>, e.g.:</p>
   <div class="codeline">PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%</div>
-  <!--div class="codeline">VisualStudioVersion=14.0</div-->
+  <!--<div class="codeline">VisualStudioVersion=14.0</div>-->
   <div class="codeline">msbuild -nologo -verbosity:minimal distrib.sln -maxcpucount:4 -p:PlatformToolset=v140 -p:platform=x64 -p:configuration=ReleaseMD</div>
   <p>(Some alternatives are to set <code>platform</code> to <code>Win32</code>, or <code>configuration</code> to <code>DebugMD</code>, <code>Release</code>, or <code>Debug</code>; here <code>MD</code> stands for <a href="https://msdn.microsoft.com/en-us/library/aa278396%28v=vs.60%29.aspx">multithreaded DLL</a>.)
    Executables are placed in the same target directory as in the IDE.</p>
@@ -190,9 +190,9 @@
     </td>
    </tr>
    
-   <!--tr id="pub_newqem">
+   <!--<tr id="pub_newqem">
     <td class="lcell">
-     <img class="thumbnail" src="thumbnails/newqem.red.jpg" width="240" height="136" alt=""/>
+    <img class="thumbnail" src="thumbnails/newqem.red.jpg" width="240" height="136" alt=""/>
     </td>
     <td class="rcell">
      <div class="title"><a href="http://research.microsoft.com/~hoppe/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
@@ -202,7 +202,7 @@
      <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshSimplify">MeshSimplify</a></div>
      <div class="demos"><span class="sdemos">demos:</span> create_pm_gaudipark, view_pm_gaudipark</div>
     </td>
-   </tr-->
+   </tr>-->
    
    <tr id="pub_vdrpm">
     <td class="lcell">
@@ -246,7 +246,7 @@
     </td>
    </tr>
    
-   <!--tr id="pub_tvc">
+   <!--<tr id="pub_tvc">
     <td class="lcell">
      <img class="thumbnail" src="thumbnails/tvc.red.jpg" width="240" height="136" alt=""/>
     </td>
@@ -258,7 +258,7 @@
      <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshReorder">MeshReorder</a></div>
      <div class="demos"><span class="sdemos">demos:</span> create_vertexcache_result, view_vertexcache_result</div>
     </td>
-   </tr-->
+   </tr>-->
    
   </table>
   
@@ -278,7 +278,7 @@
   <p>or alternatively (and faster), invoke <code>make</code> to create all results in parallel and then view them sequentially:</p>
   <div class="codeline"><b>make</b> [CONFIG=<em>config</em>] -j demos &nbsp;&nbsp;# <em>config</em>&nbsp;&isin;&nbsp;{unix, win, w32, cygwin, mingw, mingw32, clang}</div>
 
-  <p>Note that pressing the <kbd>Esc</kbd> key closes any open program window.
+  <p>Note that pressing the <kbd>Esc</kbd> key closes any open program window.</p>
   
   
   <h2>Filter programs</h2>
@@ -372,7 +372,7 @@
    <li>fills and triangulates any hole bounded by 30 or fewer mesh edges,</li>
    <li>reports the genus of the modified mesh,</li>
    <li>saves it to a file, and</li>
-   <li>displays it interactively from a specified viewpoint, with flat-shaded faces (<kbd>Dm</kbd>)
+   <li>displays it interactively starting from a specified viewpoint, with flat-shaded faces (<kbd>Dm</kbd>)
     and mesh edges (<kbd>De</kbd>).</li>
   </ul>
   <p>To show the progression of the Marching Cubes algorithm,</p>
@@ -450,8 +450,8 @@
 
   <h3 id="prog_MeshDistance">MeshDistance</h3>
   <p>This program computes measures of differences between two meshes.
-   It samples a dense set of points from mesh1 and computes the
-   projections of each point onto the closest point on mesh2.</p>
+   It samples a dense set of points from a first mesh and computes the
+   projections of each point onto the closest point on a second mesh.</p>
   <div class="codeline"><b>MeshDistance</b> -mfile distcap.recon.m -mfile distcap.opt.m -bothdir 1 -maxerror 1 -distance</div>
   <ul>
    <li><code>MeshDistance</code> loads the earlier results of mesh reconstruction and mesh optimization,</li>
@@ -462,7 +462,8 @@
   
   <h2>Mesh simplification</h2>
   
-  <p>Given a mesh, <code>MeshSimplify</code> applies a sequence of <em>edge collapse</em> operations to simplify it to a coarse <em>base mesh</em> while trying to best preserve the appearance of the original model.  It supports many different simplification criteria, as well as face properties, edges tagged as sharp, and vertex and corner attributes (normals, colors, and texture <code>uv</code> coordinates).</p>
+  <p>Given a mesh, <code>MeshSimplify</code> applies a sequence of <em>edge collapse</em> operations to simplify it to a coarse <em>base mesh</em> while trying to best preserve the appearance of the original model.  It supports many different simplification criteria, as well as face properties, edges tagged as sharp, and vertex and corner attributes
+   (<var>n<sub>x</sub></var>,<var>n<sub>y</sub></var>,<var>n<sub>z</sub></var> normals, <var>r</var>,<var>g</var>,<var>b</var> colors, and <var>u</var>,<var>v</var> texture coordinates).</p>
   <p>For example,</p>
   <div class="codeline" id="prog_MeshSimplify"><b>MeshSimplify</b> demos/data/club.orig.m -prog club.prog -simplify &gt;club.base.m</div>
   <ul>
@@ -470,14 +471,18 @@
    <li>progressively simplifies it by examining point residual distances, while recording changes to a <code>*.prog</code> file, and</li>
    <li>writes the resulting base mesh.</li>
   </ul>
-  <p>The next step is to reverse the sequence of stored edge collapse steps, i.e. forming a sequence of <em>vertex splits</em>:</p>
+  <p>The next step is to reverse the sequence of stored edge collapses, i.e. forming a progressive sequence of <em>vertex splits</em>:</p>
   <div class="codeline" id="prog_reverselines"><b>reverselines</b> club.prog &gt;club.rprog</div>
-  <p>We construct a concise progressive mesh by encoding the base mesh together with the sequence of vertex splits that exactly recover the original mesh:</p>
+  <p>We construct a concise <em>progressive mesh</em> by encoding the base mesh together with the sequence of vertex splits that exactly recover the original mesh:</p>
   <div class="codeline" id="prog_Filterprog"><b>Filterprog</b> -fbase club.base.m -fprog club.rprog -pm_encode &gt;club.pm</div>
-  <p>The complete process from the original mesh to the progressive mesh <code>club.pm</code> is implemented by the script call</p>
+  <p>The complete process from the original mesh to the progressive mesh is implemented by the script call</p>
   <div class="codeline">demos/bin/<b>meshtopm.</b><i>{sh,bat}</i> demos/data/club.orig.m &gt;club.pm</div>
   <p>Given a progressive mesh, we can interactively traverse its continuous levels of detail:</p>
   <div class="codeline"><b>G3dOGL</b> -pm_mode club.pm -st demos/data/club.s3d -lightambient .4</div>
+  <ul>
+   <li>by dragging the left vertical slider using the left or right mouse button, and</li>
+   <li>toggling mesh edges using the <kbd>De</kbd> key sequence.</li>
+  </ul>
   <p>We can also define geomorphs between discrete levels of detail, e.g.</p>
   <div class="codeline"><b>FilterPM</b> club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 |<br/>
    <b>G3dOGL</b> -st demos/data/club.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - |
@@ -498,10 +503,10 @@
    <b>MeshSimplify</b> - -nfaces 4000 -simplify |<br/>
    G3dOGL -st demos/data/imageup.s3d -key De -lightambient 1 -lightsource 0</div>
   <ul>
-   <li>forms a planar grid mesh whose 200&times;200 vertices have colors sampled from an image,</li>
+   <li>forms a planar grid mesh whose 200&times;200 vertices have colors sampled from a downsampled image,</li>
    <li>simplifies the mesh to 4000 faces while minimizing color differences,</li>
-   <!--li>ignoring surface normals and giving high weight to boundary accuracy, and</li-->
-   <li>shows the result with edges (<kbd>De</kbd>) and only ambient lighting.</li>
+   <!--<li>ignoring surface normals and giving high weight to boundary accuracy, and</li>-->
+   <li>shows the result with mesh edges (<kbd>De</kbd>) and only ambient lighting.</li>
   </ul>
 
   
@@ -530,7 +535,7 @@
   <p>Then, within <code>demos/view_sr_terrain.sh</code>,</p>
   <div class="codeline">(common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5"; \<br/>
    export G3D_REV_AUTO=1; \<br/>
-   G3dOGL $common -geom 800x820+100+10 -key "&O" -key ,o----J | <br/>
+   G3dOGL $common -geom 800x820+100+10 -key "&amp;O" -key ,o----J | <br/>
    G3dOGL $common -geom 800x820+920+10 -async -killeof -input -key Dg)</div>
   <ul>
    <li>opens two synchronized side-by-side windows of the same texture mapped terrain,</li>
@@ -545,8 +550,9 @@
    It makes use of</p>
   <div class="codeline" id="prog_StitchPM"><b>StitchPM</b> -rootname terrain.level0 -blockx 2 -blocky 2 -blocks 32 -stitch &gt;terrain.level0.stitched.pm</div>
   <p>to assemble each 2-by-2 set of progressive mesh tiles <code>terrain.level0.x{0,1}.y{0,1}.pm</code> at the finest level.</p>
-  <p>The script <code>demos/view_gcanyon_interactive</code> shows an interactive flythrough over a precomputed terrain of resolution 4096&times;2048.</p>
-  <p>Alternatively, <code>demos/view_gcanyon_frames</code> shows a real-time flythrough using a pre-recorded flight path.</p>
+  <p>The script <code>demos/view_gcanyon_interactive</code> launches an interactive flythrough over a Grand Canyon terrain model,
+   using a progressive mesh precomputed from an original 4096&times;2048 height field.</p>
+  <p>Alternatively, <code>demos/view_gcanyon_frames</code> shows a real-time flythrough using a pre-recorded flight path, whereby keystroke commands embedded within the input stream automatically change viewing modes.</p>
 
   
   <h2>Topology simplification</h2>
@@ -567,7 +573,7 @@
   </ul>
 
 
-  <!--h2>Optimized mesh traversal</h2>
+  <!--<h2>Optimized mesh traversal</h2>
   
   <p>The program <code>MeshReorder</code> reorders the triangle faces (and optionally vertices) within a mesh so as to exploit a GPU vertex cache to minimize memory bandwidth and shading cost.</p>
 <p>For example, within <code>demos/create_vertexcache_result</code>,</p>
@@ -579,7 +585,7 @@
    <li>optimizes the triangle face ordering and re-simulates the cache behavior,</li>
    <li>writes the mesh with corner colors that identify cache misses,</li>
    <li>and finally views the result.</li>
-  </ul-->
+  </ul>-->
 
 
   <h2 id="prog_G3dOGL">Geometry viewer</h2>
@@ -593,9 +599,11 @@
    <li>progressive simplicial complexes (<code>*.psc</code>), or</li>
    <li>simple <code>*.ply</code> files.</li>
   </ul>
-  <p>Please see the many examples presented earlier.</p>
-  <p>It can take image snapshots (see <code>demos/create_rendered_mechpart_image</code> and record videos (see <code>demos/create_rendered_mechpart_video</code>).</p>
-  <p>The mouse/keyboard controls include:</p>
+  <p>Please see the many examples presented earlier.
+   The viewer can also read <code>*.frame</code> elements to position the viewer and the objects in world space.
+   Elements of <code>*.a3d</code>, <code>*.m</code>, and <code>*.frame</code> streams can all be interleaved in a single input stream.</p>
+  <p>The viewer can take image snapshots (see <code>demos/create_rendered_mechpart_image</code>) and record videos (see <code>demos/create_rendered_mechpart_video</code>).</p>
+  <p>The mouse/keyboard UI controls include:</p>
   <pre>
    Mouse movements:
    left mouse: rotate
@@ -632,14 +640,13 @@
   <div class="codeline">G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key iioJ -video 360 output_video.mp4</div>
   <div class="codeline">VideoViewer output_video.mp4</div>
   
-  <p>The related program <code><b>G3dVec</b></code> shows wireframe hidden-line-removed renderings of the first two
-   formats above.  It can write vector-based Postscript figures (see <code>demos/view_hidden_line_removed</code>).</p>
-  <p>Earlier versions of <code>G3d*</code> supported other rendering APIs including Xlib, IRIS GL, and Starbase.</p>
+  <p>The related program <code><b>G3dVec</b></code> shows wireframe hidden-line-removed renderings of <code>*.a3d</code> streams and <code>*.m</code> meshes.
+   It can write vector-based Postscript figures (see <code>demos/view_hidden_line_removed</code>).</p>
   <p>In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.</p>
 
   <h2 id="prog_VideoViewer">Image/video viewer</h2>
   <p>The <code><b>VideoViewer</b></code> program enables interactive viewing and simple editing of both images and videos.
-   Again, the key <kbd>?</kbd> shows a list of available commands.
+   Again, the key <kbd>?</kbd> shows a list of available keyboard commands.
    Press <kbd>pageup</kbd>/<kbd>pagedown</kbd> to quickly browse through the videos and/or images in a directory.
    Audio is not currently supported.</p>
 
@@ -658,13 +665,13 @@
 
   <h3>Geometry stream (<code>*.a3d, *.pts</code>)</h3>
   <p>See the documentation at the end of <code>libHh/A3dStream.h</code></p>
-  <p>The stream contains polygons, polylines, points, and control codes (like end of frame, end of input, change of object).  This is somewhat more general than a mesh.  However, unlike in a mesh, these primitives do not share vertices.</p>
+  <p>The stream contains polygons, polylines, points, and control codes (like end-of-frame, end-of-input, change-of-object).  Unlike in a mesh, these primitives do not share vertices.  The stream can be either text or binary.</p>
 
   <h3>Frame stream (<code>*.frame, *.s3d</code>)</h3>
   <p>See the documentation at the end of <code>libHh/FrameIO.h</code></p>
-  <p>This text or binary format encodes a 4*3 affine transformation (plus an object id and a scalar field-of-view zoom) as a text line.  This format is used to record default viewing configurations, and sequences
+  <p>This text or binary format encodes a 4&times;3 affine transformation (plus an object id and a scalar field-of-view zoom) as a text line.  This format is used to record default viewing configurations, and sequences
    of frames for flythroughs.
-   It typically represents the linear transform from object space (or eye space) to world space.</p>
+   It usually represents the linear transform from object space (or eye space) to world space.  The stream can be either text or binary.</p>
   
   <h3>Progressive mesh (<code>*.pm</code>)</h3>
   <p>This is a binary representation that consists of a coarse base mesh and a sequence of vertex split records.</p>

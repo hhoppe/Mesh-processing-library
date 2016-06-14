@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="en-us">
  <head>
@@ -47,7 +47,7 @@
    <!--<li><em>optimized mesh traversal</em> (for transparent vertex caching)</li>-->
   </ul>
   <p>The source code follows modern C++11 style and is designed for cross-platform use.</p>
-
+  
   
   <h2>Version history</h2>
   <p>2016-04-28 &mdash; initial release.</p>
@@ -61,14 +61,14 @@
    the code can also be compiled using <code>gcc</code> and <code>clang</code> compilers
    (and Visual Studio <code>cl</code> compiler)
    using <code>Makefiles</code> designed for GNU <code>make</code>.</p>
-
+  
   <p>Reading/writing of images and videos is enabled using several options.
    If available, image I/O can use <code>libpng</code>/<code>libjpeg</code> or Windows Imaging Component (WIC).
    Video I/O can use Windows Media Foundation (WMF).
    Across all platforms, if the command <a href="https://ffmpeg.org/"><code>ffmpeg</code></a>
    is present in the <code>PATH</code>,
    it is spawned in a piped subprocess for both image and video I/O.</p>
-
+  
   <p>On Mac OS X, it is necessary to install
    <a href="https://www.xquartz.org/"><code>XQuartz</code></a> for <code>X11</code> support and
    <a href="http://evermeet.cx/ffmpeg/"><code>ffmpeg</code></a> for image/video I/O.</p>
@@ -191,17 +191,17 @@
    </tr>
    
    <!--<tr id="pub_newqem">
-    <td class="lcell">
-    <img class="thumbnail" src="thumbnails/newqem.red.jpg" width="240" height="136" alt=""/>
-    </td>
-    <td class="rcell">
-     <div class="title"><a href="http://research.microsoft.com/~hoppe/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
-     <div class="authors">Hugues Hoppe.</div>
-     <div class="pub"><cite>IEEE Visualization 1999 Conference</cite>, 59-66.</div>
-     <div class="desc">Efficient simplification metric designed around correspondence in 3D space.</div>
-     <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshSimplify">MeshSimplify</a></div>
-     <div class="demos"><span class="sdemos">demos:</span> create_pm_gaudipark, view_pm_gaudipark</div>
-    </td>
+       <td class="lcell">
+        <img class="thumbnail" src="thumbnails/newqem.red.jpg" width="240" height="136" alt=""/>
+       </td>
+       <td class="rcell">
+        <div class="title"><a href="http://research.microsoft.com/~hoppe/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
+        <div class="authors">Hugues Hoppe.</div>
+        <div class="pub"><cite>IEEE Visualization 1999 Conference</cite>, 59-66.</div>
+        <div class="desc">Efficient simplification metric designed around correspondence in 3D space.</div>
+        <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshSimplify">MeshSimplify</a></div>
+        <div class="demos"><span class="sdemos">demos:</span> create_pm_gaudipark, view_pm_gaudipark</div>
+       </td>
    </tr>-->
    
    <tr id="pub_vdrpm">
@@ -247,17 +247,17 @@
    </tr>
    
    <!--<tr id="pub_tvc">
-    <td class="lcell">
-     <img class="thumbnail" src="thumbnails/tvc.red.jpg" width="240" height="136" alt=""/>
-    </td>
-    <td class="rcell">
-     <div class="title"><a href="http://research.microsoft.com/~hoppe/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
-     <div class="authors">Hugues Hoppe.</div>
-     <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>, 269-276.</div>
-     <div class="desc">Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</div>
-     <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshReorder">MeshReorder</a></div>
-     <div class="demos"><span class="sdemos">demos:</span> create_vertexcache_result, view_vertexcache_result</div>
-    </td>
+       <td class="lcell">
+        <img class="thumbnail" src="thumbnails/tvc.red.jpg" width="240" height="136" alt=""/>
+       </td>
+       <td class="rcell">
+        <div class="title"><a href="http://research.microsoft.com/~hoppe/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
+        <div class="authors">Hugues Hoppe.</div>
+        <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>, 269-276.</div>
+        <div class="desc">Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</div>
+        <div class="bins"><span class="sprogram">programs:</span> <a href="#prog_MeshReorder">MeshReorder</a></div>
+        <div class="demos"><span class="sdemos">demos:</span> create_vertexcache_result, view_vertexcache_result</div>
+       </td>
    </tr>-->
    
   </table>
@@ -277,7 +277,7 @@
   <div class="codeline"><b>demos/all_demos_clean.sh</b></div>
   <p>or alternatively (and faster), invoke <code>make</code> to create all results in parallel and then view them sequentially:</p>
   <div class="codeline"><b>make</b> [CONFIG=<em>config</em>] -j demos &nbsp;&nbsp;# <em>config</em>&nbsp;&isin;&nbsp;{unix, win, w32, cygwin, mingw, mingw32, clang}</div>
-
+  
   <p>Note that pressing the <kbd>Esc</kbd> key closes any open program window.</p>
   
   
@@ -319,7 +319,7 @@
    <li>shows the result in an interactive viewer using the specified view parameters,</li>
    <li>simulating keypresses <kbd>Dm</kbd> to enable flat shading and <kbd>De</kbd> to make mesh edges visible.</li>
   </ul>
-
+  
   <p>The command</p>
   <div class="codeline" id="prog_Filtermesh"><b>FilterPM</b> demos/data/spheretext.pm -nf 2000 -outmesh | <br/>
    <b>Filtermesh</b> -angle 35 -silsubdiv -silsubdiv -mark | <br/>
@@ -441,13 +441,13 @@
    <li>saves the resulting optimized base mesh to a file.  (The overall process takes a few minutes.)</li>
   </ul>
   <p>To view the result,</p>
-   <div class="codeline"><b>G3dOGL</b> distcap.sub0.m <b>"Subdivfit</b> -mf distcap.sub0.m -nsub 2 -outn |<b>"</b> -st demos/data/distcap.s3d -key NDmDe -hwdelay 5 -hwkey N</div>
+  <div class="codeline"><b>G3dOGL</b> distcap.sub0.m <b>"Subdivfit</b> -mf distcap.sub0.m -nsub 2 -outn |<b>"</b> -st demos/data/distcap.s3d -key NDmDe -hwdelay 5 -hwkey N</div>
   <ul>
    <li>reads the base mesh together with a second mesh obtained by applying two iterations of subdivision,</li>
    <li>shows the first mesh (<kbd>N</kbd>) with flat-shaded faces and edges (<kbd>DmDe</kbd>),</li>
    <li>waits for 5 seconds, and displays the second mesh (<kbd>N</kbd>) as a smooth surface without edges.</li>
   </ul>
-
+  
   <h3 id="prog_MeshDistance">MeshDistance</h3>
   <p>This program computes measures of differences between two meshes.
    It samples a dense set of points from a first mesh and computes the
@@ -458,7 +458,7 @@
    <li>computes correspondences from points sampled on each mesh to the other mesh (in both directions), and</li>
    <li>reports differences in geometric distance, color, and surface normals, using both L<sup>2</sup> (rms) and L<sup>&infin;</sup> (max) norms.</li>
   </ul>
-
+  
   
   <h2>Mesh simplification</h2>
   
@@ -508,10 +508,10 @@
    <!--<li>ignoring surface normals and giving high weight to boundary accuracy, and</li>-->
    <li>shows the result with mesh edges (<kbd>De</kbd>) and only ambient lighting.</li>
   </ul>
-
+  
   
   <h2>Selective view-dependent mesh refinement</h2>
-
+  
   <p>Within <code>demos/create_sr_office</code>, the script call</p>
   <div class="codeline">demos/bin/<b>meshtopm.</b><i>{sh,bat}</i> demos/data/office.nf80000.orig.m -vsgeom &gt;office.sr.pm</div>
   <p>creates a progressive mesh
@@ -523,7 +523,7 @@
   
   
   <h2>Terrain level-of-detail control</h2>
-
+  
   <p>Within <code>demos/create_sr_terrain.</code><i>{sh,bat}</i>,</p>
   <div class="codeline">Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 -removekinks -tomesh | <br/>
    Filtermesh -assign_normals &gt;gcanyon_sq200.orig.m</div>
@@ -553,10 +553,10 @@
   <p>The script <code>demos/view_gcanyon_interactive</code> launches an interactive flythrough over a Grand Canyon terrain model,
    using a progressive mesh precomputed from an original 4096&times;2048 height field.</p>
   <p>Alternatively, <code>demos/view_gcanyon_frames</code> shows a real-time flythrough using a pre-recorded flight path, whereby keystroke commands embedded within the input stream automatically change viewing modes.</p>
-
+  
   
   <h2>Topology simplification</h2>
-
+  
   <p>The program <code>MinCycles</code> removes topological noise from a mesh
    by iteratively pinching off the smallest nonseparating cycle of edges until a
    specified criterion (cycle length, number of cycle edges, number of cycles, or mesh genus) is reached.</p>
@@ -571,12 +571,12 @@
    <li>speeding up the process by identifying approximately shortest nonseparating cycles within a factor 1.2 of optimal, and</li>
    <li>shows the resulting closed edge cycles (tagged as sharp) in blue.</li>
   </ul>
-
-
-  <!--<h2>Optimized mesh traversal</h2>
   
-  <p>The program <code>MeshReorder</code> reorders the triangle faces (and optionally vertices) within a mesh so as to exploit a GPU vertex cache to minimize memory bandwidth and shading cost.</p>
-<p>For example, within <code>demos/create_vertexcache_result</code>,</p>
+  
+  <!--<h2>Optimized mesh traversal</h2>
+      
+      <p>The program <code>MeshReorder</code> reorders the triangle faces (and optionally vertices) within a mesh so as to exploit a GPU vertex cache to minimize memory bandwidth and shading cost.</p>
+  <p>For example, within <code>demos/create_vertexcache_result</code>,</p>
   <div class="codeline">Filtermesh demos/data/small_stell_dodecahedron4.nsub4.m -renumber -removeinfo | <br/>
    <b>MeshReorder</b> - -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze >small_stell_dodecahedron4.nsub4.vertexcache.m</div>
   <div class="codeline">G3dOGL small_stell_dodecahedron4.nsub4.vertexcache.m -key DmDe -lightambient .70 -lightsource .35</div>
@@ -586,8 +586,8 @@
    <li>writes the mesh with corner colors that identify cache misses,</li>
    <li>and finally views the result.</li>
   </ul>-->
-
-
+  
+  
   <h2 id="prog_G3dOGL">Geometry viewer</h2>
   <p>The <code><b>G3dOGL</b></code> program shows interactive rasterized renderings of 3D (and 2D) geometry,
    represented as</p>
@@ -606,16 +606,16 @@
   <p>The mouse/keyboard UI controls include:</p>
   <pre>
    Mouse movements:
-   left mouse: rotate
-   middle mouse: pan
-   right mouse: dolly
-   shift-left: pan
-   shift-middle mouse: roll
-   shift-right mouse: zoom
+   left mouse:          rotate
+   middle mouse:        pan
+   right mouse:         dolly
+   shift-left:          pan
+   shift-middle mouse:  roll
+   shift-right mouse:   zoom
    (mouse movements are with respect to current object; see '0-9' below)
-
+   
    Important key strokes:
-   ?: print complete list of keys
+   ? : print complete list of keys
    D?: print list of keys prefixed by 'D'
    De: toggle edges
    Ds: toggle shading of faces
@@ -623,18 +623,18 @@
    Dm: toggle Gouraud/flat shading
    DP: save current window as an image file
    DS: toggle show some sliders
-   S: toggle show some other sliders
-   j: jump to a default viewpoint
-   J: automatically rotate object
+   S : toggle show some other sliders
+   j : jump to a default viewpoint
+   J : automatically rotate object
    D/: edit viewpoint filename
-   ,: read the viewpoint
-   .: save the viewpoint
+   , : read the viewpoint
+   . : save the viewpoint
    0-9: select object (0=eye_frame, 1=first object, 2=second object...)
-   u: display/hide current object
-   N: select next object
-   P: select previous object
-   - =: decrease/increase the magnitude of all movements
-   f: toggle flying (usually with '0' eye selected)
+   u : display/hide current object
+   N : select next object
+   P : select previous object
+   -=: decrease/increase the magnitude of all movements
+   f : toggle flying (usually with '0' eye selected)
   </pre>
   <p>To record a 6-second (360-frame) video of a rotating mesh and then view the resulting video:</p>
   <div class="codeline">G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key iioJ -video 360 output_video.mp4</div>
@@ -643,16 +643,16 @@
   <p>The related program <code><b>G3dVec</b></code> shows wireframe hidden-line-removed renderings of <code>*.a3d</code> streams and <code>*.m</code> meshes.
    It can write vector-based Postscript figures (see <code>demos/view_hidden_line_removed</code>).</p>
   <p>In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.</p>
-
+  
   <h2 id="prog_VideoViewer">Image/video viewer</h2>
   <p>The <code><b>VideoViewer</b></code> program enables interactive viewing and simple editing of both images and videos.
    Again, the key <kbd>?</kbd> shows a list of available keyboard commands.
    Press <kbd>pageup</kbd>/<kbd>pagedown</kbd> to quickly browse through the videos and/or images in a directory.
    Audio is not currently supported.</p>
-
-
+  
+  
   <h2>File formats</h2>
-
+  
   <h3>Mesh (<code>*.m</code>)</h3>
   <p>See the documentation at the end of <code>libHh/GMesh.h</code></p>
   <p>A mesh is a set of vertices and faces.  These in turn also define edges and corners.
@@ -662,58 +662,59 @@
    See the several <code>demos/data/*.m</code> files for examples of the mesh format.
    Note that the indices of vertices and faces start at 1 instead of 0;
    in hindsight that was a poor choice.</p>
-
+  
   <h3>Geometry stream (<code>*.a3d, *.pts</code>)</h3>
   <p>See the documentation at the end of <code>libHh/A3dStream.h</code></p>
   <p>The stream contains polygons, polylines, points, and control codes (like end-of-frame, end-of-input, change-of-object).  Unlike in a mesh, these primitives do not share vertices.  The stream can be either text or binary.</p>
-
+  
   <h3>Frame stream (<code>*.frame, *.s3d</code>)</h3>
   <p>See the documentation at the end of <code>libHh/FrameIO.h</code></p>
-  <p>This text or binary format encodes a 4&times;3 affine transformation (plus an object id and a scalar field-of-view zoom) as a text line.  This format is used to record default viewing configurations, and sequences
-   of frames for flythroughs.
+  <p>This text or binary format encodes a 4&times;3 affine transformation (plus an object id and a scalar field-of-view zoom).
+   It is used to record default viewing configurations, and sequences of frames for flythroughs.
    It usually represents the linear transform from object space (or eye space) to world space.  The stream can be either text or binary.</p>
   
   <h3>Progressive mesh (<code>*.pm</code>)</h3>
   <p>This is a binary representation that consists of a coarse base mesh and a sequence of vertex split records.</p>
-
+  
   <h3>Edge collapse / vertex split records (<code>*.prog, *.rprog</code>)</h3>
   <p>These are temporary text files containing verbose information for a sequence of edge collapse / vertex split records used by MeshSimplify / reverselines / Filterprog to create a progressive mesh.</p>
-
+  
   <h2>Libraries</h2>
-
+  
   <p>The library <a href="./libHh"><code>libHh</code></a> contains the main reusable classes.
    All files include <code>Hh.h</code> which sets up a common cross-platform environment.</p>
-
+  
   <p>The libraries <a href="./libHWin"><code>libHWin</code></a> and
    <a href="./libHWX"><code>libHWX</code></a> define different implementations
    of a simple windowing interface (class <code>HW</code>),
    under <code>Win32</code> and <code>X Windows</code>, respectively.
    Both implementations support <code>OpenGL</code> rendering.</p>
-
-
+  
+  
   <h2>Code details</h2>
-
+  
   <p>The include file <code>libHh/<b>RangeOp</b>.h</code> defines many functions that act on <em>ranges</em>,
    which are containers or views for which <code>begin()</code> and <code>end()</code> are defined.
    For example, the function call <code>hh::fill(ar, 1.f)</code> assigns the value <code>1.f</code> to all
    elements in the array named <code>ar</code>,
    and the function call <code>hh::mean(matrix)</code> computes the average value of all entries in the
    named <code>matrix</code>.</p>
-
+  
   <p>The debugging macro <code><b>SHOW</b>(expr)</code> outputs <code>expr = ...</code> on <code>std::cerr</code>
    and also returns <code>expr</code>.
    It also accepts multiple arguments in which case it returns <code>void</code>.
    For example, <code>SHOW(min(1, 2), "hello", 3*2)</code> outputs the line <code>min(1, 2)=1 hello 3*2=6</code>.
    Note the special treatment of literal string values.</p>
-
+  
   <p>Unicode strings are stored using <b>UTF-8</b> encoding into ordinary <code>std::string</code> variables.
    The functions <code>hh::widen()</code> and <code>hh::narrow()</code> convert to and from the
    <code>std::wstring</code> UTF-16 encodings used in <code>Win32</code> system calls.</p>
-
+  
   <p>All files use end-of-line encodings based on Unix <code>'\n'</code> LF (rather than DOS <code>'\r\n'</code> CR+LF).  All streams are opened in binary mode.  This allows text and binary to coexist in the same file.</p>
-
+  
   <h2>License</h2>
   <p>See the file <a href="./license.txt"><code>./license.txt</code></a>.</p>
-
+  <!--<p>This project has adopted the <a href="http://microsoft.github.io/codeofconduct">Microsoft Open Source Code of Conduct</a>.  For more information see the <a href="http://microsoft.github.io/codeofconduct/faq.md">Code of Conduct FAQ</a> or contact <a href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> with any additional questions or comments.</p>-->
+  
  </body>
 </html>

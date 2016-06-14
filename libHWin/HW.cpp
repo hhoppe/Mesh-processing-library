@@ -117,7 +117,9 @@ bool HW::init_aux(Array<string>& aargs) {
 #if defined(_MSC_VER)
         // This program is taking care of DPI issues; Windows dwm should never rescale the window contents.
         // (default is PROCESS_DPI_UNAWARE; intermediate is PROCESS_SYSTEM_DPI_AWARE.)
-        assertx(SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE)==S_OK);
+        // assertx(SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE)==S_OK);
+        // E_ACCESSDENIED if already set by prior call or in *.exe manifest.
+        void(SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE));
 #else
         // assertx(SetProcessDPIAware()); // this older API is available; should be in user32.lib but not found
 #endif

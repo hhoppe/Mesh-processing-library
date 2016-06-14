@@ -31,9 +31,7 @@
 #define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false)
 #define HH_RSTAT_RMS(S, range) do { HH_STAT(S); S.set_rms(); for (auto e : range) { S.enter(e); } } while (false)
 
-// #define AS(x) x
-
-#define MAF_SCOPED(x)
+#define AS(x) x
 
 #define JPP(arglist) arglist  // Image_IO.cpp jpeglib.h
 #define E(x)  // MathOp.h and others
@@ -74,24 +72,10 @@
 #define HH_PRINTF_ATTRIBUTE(x)
 
 #define CONSTEXPR
-#define CONSTEXPR2
 
+#define SHOW(x)
 #define SHOWL
 
 #define HH_DECLARE_OSTREAM_EOL(...)                                                             \
     struct has_ostream_eol_aux<__VA_ARGS__> { static CONSTEXPR bool value() { return true; } }
 #define HH_DECLARE_OSTREAM_RANGE(...)
-
-// I cannot get this to work completely.  For now, it works only if SHOW has a single argument.
-// #undef SHOW
-// #define SHOW dummy_use
-// #define SHOW(x, y)
-// #define SHOW(...) ((void)(__VA_ARGS__))
-// #define SHOW(...) ((void)0)
-// #define SHOW(a, b, c, d, e, f)
-// #define SHOW()
-// #define SHOW printf
-// #define SHOW(x) ((void)0)
-// #define SHOW(x, y) ((void)0)
-#define SHOW(x)
-

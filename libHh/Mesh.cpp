@@ -211,9 +211,11 @@ int Mesh::num_boundaries(Vertex v) const {
 }
 
 bool Mesh::is_boundary(Vertex v) const {
-    assertx(herep(v));
+    if (!herep(v))
+        assertnever("Did not expect isolated vertex -- perhaps clean the input using \"Filtermesh -rmcomp 0\"");
     int nb = num_boundaries(v);
-    assertx(nb<2);              // is_nice(v)
+    if (nb>=2)                  // !is_nice(v)
+        assertnever("Did not expect non-nice vertex -- perhaps clean the input using \"Filtermesh -fixvertices\"");
     return nb>0;
 }
 
@@ -350,7 +352,7 @@ Array<Corner> Mesh::get_corners(Face f, Array<Corner>&& ca) const {
 
 Vertex Mesh::opp_vertex(Edge e, Face f) const {
     HEdge he = hedge_from_ef(e, f);
-    assertx(he->next->next->next==he);
+    if (he->next->next->next!=he) assertnever("mesh face is not triangle"); // cheaper than is_triangle(f)
     return he->next->vert;
 }
 

@@ -6,37 +6,35 @@
 {
     // critical section
     parallel_for_int(i, 100) { something(); HH_LOCK { something_synchronized(): } }
+    // alternate
+    std::mutex g_mutex;
+    parallel_for_int(i, 100) { something(); { std::lock_guard<std::mutex> lg(g_mutex); something_synchronized(); } }
 }
 #endif
 
-// #define HH_LOCK_USING_OPENMP    // use HH_PRAGMA(omp critical); else use std::mutex and std::lock_guard
-// No longer necessary since VC12 is happy with s_per_file_mutex.
-
-#if defined(__clang__) && defined(__GNUC__)
-#undef HH_LOCK_USING_OPENMP
-#endif
-
-#if defined(HH_LOCK_USING_OPENMP)
-#include <omp.h>                // OpenMP
+#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(HH_NO_DEFINE_STD_MUTEX)
+namespace std {                 // workaround for current mingw32 4.7.2: no locking
+struct mutex { };
+template<typename T> struct lock_guard { lock_guard(T&) { } };
+} // namespace std
 #else
-#include <mutex>                // std::mutex
+#include <mutex>                // mutex, lock_guard; C++11
 #endif
 
 namespace hh {
 
-
 //----------------------------------------------------------------------------
 // *** No support for locks.
-#if defined(__clang__) && defined(__GNUC__)
+#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(HH_NO_DEFINE_STD_MUTEX)
 
-// workaround: no locking.  clang does not support OpenMP, and mingw target used by clang does not support <mutex>.
 #define HH_LOCK
 
 
 //----------------------------------------------------------------------------
 // *** Use OpenMP for synchronization (its default is a globally defined mutex).
-#elif defined(HH_LOCK_USING_OPENMP)
+#elif 0
 
+#include <omp.h>                // OpenMP
 #define HH_LOCK HH_PRAGMA(omp critical)
 // A thread waits at the beginning of a critical region until no other thread is executing a critical region
 //  (anywhere in the program) with the same name.  All unnamed critical directives map to the same unspecified
@@ -67,13 +65,7 @@ class MyGlobalLock {
 #elif 1
 
 namespace {
-#if defined(_MSC_VER) && _MSC_VER<1900 // known bug with static std::mutex
-// otherwise causes crash on: ~/src/bin/win/G3dOGL -pm_mode ~/data/simplify/banklamp.pm
-//  (~RFile from static destruction of "unique_ptr<RFile> g_fi;")
-std::mutex& s_per_file_mutex = *new std::mutex(); // never deleted
-#else
 std::mutex s_per_file_mutex;
-#endif
 class MyPerFileLock {
  public:
     MyPerFileLock() : _lock_guard(s_per_file_mutex) { }
@@ -98,14 +90,6 @@ class MyPerFileLock {
 // *** Old paired macros (all critical sections use a separately defined mutex).
 #else
 
-// Apparently it is unsafe to do a static allocation of static std::mutex;
-//  tConsoleProgress crashes under Visual Studio VC11 and VC12.
-// However, it should be safe:
-//  http://stackoverflow.com/questions/14106653/are-function-local-static-mutexes-thread-safe
-// It should be fixed in future; see my bug report:
-//  https://connect.microsoft.com/VisualStudio/feedback/details/808030/runtime-crash-with-static-std-mutex
-// Also, <mutex> appears to not be supported in MSC /clr
-//  http://stackoverflow.com/questions/15821942/how-to-implement-a-unmanaged-thread-safe-collection-when-i-get-this-error-mute
 #error These paired macros are no longer supported.
 #define HH_BEGIN_LOCK { static std::mutex my_mutex1; std::lock_guard<std::mutex> HH_UNIQUE_ID(lock){my_mutex1};
 #define HH_END_LOCK } HH_EAT_SEMICOLON

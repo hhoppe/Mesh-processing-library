@@ -133,8 +133,9 @@ void Image::read_file_FF(const string& pfilename, bool bgr) {
         init(dims);
         if (scontainer=="mjpeg") scontainer = "jpg";
         if (scontainer=="sgi")   scontainer = "rgb";
-        if (get_path_extension(filename)!="" && get_path_extension(filename)!=scontainer) {
-            SHOW(get_path_extension(filename), scontainer);
+        string suf = to_lower(get_path_extension(filename));
+        if (suf!="" && suf!=scontainer) {
+            SHOW(suf, scontainer);
             Warning("Image read: encoded content does not match filename suffix");
         }
         set_suffix(scontainer);
@@ -158,7 +159,7 @@ void Image::write_file_FF(const string& pfilename, bool bgr) const {
     string filename = pfilename;
     const bool ldebug = getenv_bool("FF_DEBUG");
     assertx(product(dims()));
-    if (suffix()=="") const_cast<Image&>(*this).set_suffix(get_path_extension(filename)); // mutable
+    if (suffix()=="") const_cast<Image&>(*this).set_suffix(to_lower(get_path_extension(filename))); // mutable
     if (suffix()=="")
         throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
     if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to write image content");
@@ -205,12 +206,12 @@ string image_suffix_for_magic_byte(uchar c) {
     // *.ppm: "P6\n", "P5\r\n"
     // *.png: "\211PNG\r\n"
     switch (c) {
-     bcase 1: return "rgb";     // u'\x01'
+     bcase 1:   return "rgb";     // u'\x01'
      bcase 255: return "jpg";   // u'\xFF'
-     bcase 'B':     return "bmp";
-     bcase 'P':     return "ppm";
+     bcase 'B': return "bmp";
+     bcase 'P': return "ppm";
      bcase 137: return "png";   // u'\x89'
-     bdefault:      return "";
+     bdefault:  return "";
     }
 }
 

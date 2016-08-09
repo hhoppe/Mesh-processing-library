@@ -69,7 +69,7 @@ template<typename T> T my_mod(T a, T b) {
 float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
 
 // Evaluate a smooth-step function; x in [0, 1] -> ret: [0, 1]  (with zero derivatives at x==0 and x==1).
-template<typename T> CONSTEXPR T smooth_step(T x) {
+template<typename T> constexpr T smooth_step(T x) {
     static_assert(std::is_floating_point<T>::value, ""); return x * x * (T(3) - T(2) * x);
 }
 
@@ -105,7 +105,7 @@ template<typename T> T my_sqrt(T a) {
 }
 
 // Is the integer i an even power of two?
-inline CONSTEXPR bool is_pow2(unsigned i) {
+inline constexpr bool is_pow2(unsigned i) {
     return i>0 && (i&(i-1))==0;
 }
 

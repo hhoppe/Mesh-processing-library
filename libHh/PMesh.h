@@ -421,7 +421,7 @@ struct PMSVertexAttribG {
     int vertex;
     Vec2<PMSVertexAttrib> attribs;
 };
-#if defined(__GNUC__) /* || _MSC_VER>=1900 */ // makes VS2015 Intellisense unhappy
+#if defined(__GNUC__)           // else makes VS2015 Intellisense unhappy
 static_assert(std::is_pod<PMSVertexAttribG>::value, "");
 #endif
 

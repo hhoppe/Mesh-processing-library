@@ -18,8 +18,8 @@ template<int n> class VectorF : Vec<Vector4, n/4>, Vec<float, n%4> {
     VectorF()                                   = default; // was: { fill(0.f); }
     explicit VectorF(float v)                   { fill(v); }
     VectorF(const VectorF<n>&)                  = default;
-    CONSTEXPR int num() const                   { return n; }
-    CONSTEXPR size_t size() const               { return n; }
+    constexpr int num() const                   { return n; }
+    constexpr size_t size() const               { return n; }
     float& operator[](int i)                    { HH_CHECK_BOUNDS(i, n); return data()[i]; }
     const float& operator[](int i) const        { HH_CHECK_BOUNDS(i, n); return data()[i]; }
     static bool ok(int i)                       { return i>=0 && i<n; }
@@ -148,9 +148,9 @@ template<int n> class VectorF : Vec<Vector4, n/4>, Vec<float, n%4> {
     }
 #if !(defined(_M_X64) || defined(__x86_64))
     // "new type[size]" does not create aligned storage -- problem for Vector4 in 32-bit model
-    static void* operator new(size_t s)                 { return aligned_malloc(s, HH_ALIGNOF(type)); }
+    static void* operator new(size_t s)                 { return aligned_malloc(s, alignof(type)); }
     static void operator delete(void* pp, size_t)       { aligned_free(pp); }
-    static void* operator new[](size_t s)               { return aligned_malloc(s, HH_ALIGNOF(type)); }
+    static void* operator new[](size_t s)               { return aligned_malloc(s, alignof(type)); }
     static void operator delete[](void* pp, size_t)     { aligned_free(pp); }
 #endif
  private:

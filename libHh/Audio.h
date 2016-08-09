@@ -30,7 +30,7 @@ class Audio : public Grid<2,float> {
     using value_type = float;
     struct Attrib;
     explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); } // nchannels, nsamples
-    hh_explicit Audio(const Audio&)             = default;
+    explicit Audio(const Audio&)                = default;
     Audio(Audio&& v) noexcept                   { swap(*this, v); } // =default?
     Audio(base&& v) noexcept                    { swap(static_cast<base&>(*this), v); }
     ~Audio()                                    { }

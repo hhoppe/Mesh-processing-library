@@ -640,16 +640,7 @@ void solve_using_offsets(const Vec3<int>& odims,
                 }
             }
             for_int(f, onf) {
-                fake_use_for_vc12_bug_workaround(floor(f+.01f));
                 cprogress.update(float(f)/onf);
-                if (1) {        // workaround for VC12 compiler bug (only needed in Release config)
-                    // set d=~/proj/videoloops/data/test f=M4Kseacrowd.wmv; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150 $d/$f v1.$f:e && o v1.$f:e
-                    // SHOW(uintptr_t(frame.data()), frame.dims(), frame.dim(0), frame.dim(1));
-                    // SHOW(frame.dims(), filterb); // this was discovered to defeat the bug
-                    // fake_use_for_vc12_bug_workaround(frame.dims());
-                    fake_use_for_vc12_bug_workaround(filterb);
-                    fake_use_for_vc12_bug_workaround(hvideo.dims());
-                }
                 assertx(rvideo.read(frame));
                 const int DSh = DS/2; assertx(DS==1 || DSh*2==DS);
                 integrally_downscale_Nv12_to_Image(frame, hvideo[f]);
@@ -872,7 +863,6 @@ void solve_using_offsets(const Vec3<int>& odims,
     // TODO: use seek functionality of IMFSourceReader::SetCurrentPosition() method
     for_int(iloop, num_loops) {
         for_int(f, nnf) {
-            fake_use_for_vc12_bug_workaround(floor(f+.01f));
             cprogress.update(float(f)/nnf);
             if (verbose) showf("For output frame f=%d\n", f);
             // TODO: could let any read stream skip ahead if no content is used from it

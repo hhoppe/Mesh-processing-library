@@ -32,7 +32,7 @@ namespace hh {
 #define HH_POOL_ALLOCATION_2(T)                                                     \
     static hh::Pool pool;                                                           \
     struct PoolInit {                                                               \
-        PoolInit() { if (!count++) pool.construct(#T, sizeof(T), HH_ALIGNOF(T)); }  \
+        PoolInit() { if (!count++) pool.construct(#T, sizeof(T), alignof(T)); }     \
         ~PoolInit() { if (!--count) pool.destroy(); }                               \
         static int count;                                                           \
     }

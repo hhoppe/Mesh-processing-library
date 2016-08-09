@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Image.h"
+#include "StringOp.h"           // to_lower()
 
 #include <cstring>              // strlen(), std::memset()
 
@@ -69,14 +70,14 @@ const Array<ImageFiletype> k_image_filetypes = {
     { "png", u'\x89', ImageIO::read_png, ImageIO::write_png },
 };
 
-static const ImageFiletype* recognize_filetype(const string& filename) {
+static const ImageFiletype* recognize_filetype(const string& pfilename) {
+    string filename = to_lower(pfilename);
     assertx(filename!="");
     if (filename[0]=='|') return nullptr; // pipe can take any image type
     size_t imax = 0;
     const ImageFiletype* filetype = nullptr;
-    // supports rootname.bmp.gz
     for (auto& imagefiletype : k_image_filetypes) {
-        auto i = filename.rfind(string(".") + imagefiletype.suffix);
+        auto i = filename.rfind(string(".") + imagefiletype.suffix); // supports rootname.bmp.gz
         if (i!=string::npos && i>imax) { imax = i; filetype = &imagefiletype; }
     }
     return filetype;

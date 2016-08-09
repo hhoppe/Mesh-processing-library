@@ -2654,13 +2654,9 @@ void do_compare(Args& args) {
 
 // *** Pyramid  (see also Pyramid.cpp)
 
-constexpr int NCH = 3;                  // number of color channels
-using FImage = Vec<Matrix<float>, NCH>; // a floating-point image is 3 planes of float matrices
-// using FImage = std::array<Matrix<float>, NCH>; // does not help; VS2013 still does not define move operation
-// See discussion in tVec.cpp
-
-// Color-space conversion of a single pixel.
-inline Vec3<float> RGB_to_LAB(Vec3<float> v) {
+// Color-space conversion of a single pixel (each channel in range [0.f, 255.f]).
+inline Vector4 RGB_to_LAB(const Vector4& pv) {
+    Vector4 v = pv;
     const float eps = 0.008856f;
     const float k = 903.3f;
     for_int(i, 3) {
@@ -2680,14 +2676,12 @@ inline Vec3<float> RGB_to_LAB(Vec3<float> v) {
     X = (116.f*v[1])-16.f;
     Y = 500.f*(v[0]-v[1]);
     Z = 200.f*(v[1]-v[2]);
-    v[0] = X;
-    v[1] = Y;
-    v[2] = Z;
-    return v;
+    return Vector4(V(X, Y, Z, 0.f));
 }
 
-// Color-space conversion of a single pixel.
-inline Vec3<float> LAB_to_RGB(Vec3<float> v) {
+// Color-space conversion of a single pixel (each channel in range [0.f, 255.f]).
+inline Vector4 LAB_to_RGB(const Vector4& pv) {
+    Vector4 v = pv;
     float Y = (v[0]+16.f)/116.f;
     float X = (v[1]/500.f)+Y;
     float Z = Y-(v[2]/200.f);
@@ -2705,6 +2699,7 @@ inline Vec3<float> LAB_to_RGB(Vec3<float> v) {
     v[0] = X* 3.24071f + Y*-1.53726f + Z*-0.498571f;
     v[1] = X*-0.969258f+ Y* 1.87599f + Z* 0.0415557f;
     v[2] = X*0.0556352f+ Y*-0.203996f+ Z* 1.05707f;
+    v[3] = 255.f;
     for_int(i, 3) {
         if (v[i]>0.0031308f) v[i] = 1.055f*(pow(v[i], (1.0f/2.4f))) - 0.055f;
         else v[i] *= 12.92f;
@@ -2714,64 +2709,43 @@ inline Vec3<float> LAB_to_RGB(Vec3<float> v) {
 }
 
 // Color-space conversion of an image.
-FImage convert_to_LAB(const FImage& fimage_RGB) {
-    FImage fimage_LAB;
-    for_int(ch, 3) { fimage_LAB[ch].init(fimage_RGB[0].dims()); }
-    parallel_for_coords(fimage_RGB[0].dims(), [&](const Vec2<int>& yx) {
-        Vec3<float> v; for_int(ch, 3) { v[ch] = fimage_RGB[ch][yx]; }
-        v = RGB_to_LAB(v);
-        for_int(ch, 3) { fimage_LAB[ch][yx] = v[ch]; }
+Matrix<Vector4> convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
+    Matrix<Vector4> mat_LAB(mat_RGB.dims());
+    parallel_for_coords(mat_RGB.dims(), [&](const Vec2<int>& yx) {
+        mat_LAB[yx] = RGB_to_LAB(mat_RGB[yx]);
     }, 50);
-    return fimage_LAB;
+    return mat_LAB;
 }
 
 // Color-space conversion of an image.
-FImage convert_to_RGB(const FImage& fimage_LAB) {
-    FImage fimage_RGB;
-    for_int(ch, 3) { fimage_RGB[ch].init(fimage_LAB[0].dims()); }
-    parallel_for_coords(fimage_LAB[0].dims(), [&](const Vec2<int>& yx) {
-        Vec3<float> v; for_int(ch, 3) { v[ch] = fimage_LAB[ch][yx]; }
-        v = LAB_to_RGB(v);
-        for_int(ch, 3) { fimage_RGB[ch][yx] = v[ch]; }
+Matrix<Vector4> convert_to_RGB(CMatrixView<Vector4> mat_LAB) {
+    Matrix<Vector4> mat_RGB(mat_LAB.dims());
+    parallel_for_coords(mat_LAB.dims(), [&](const Vec2<int>& yx) {
+        mat_RGB[yx] = LAB_to_RGB(mat_LAB[yx]);
     }, 50);
-    return fimage_RGB;
+    return mat_RGB;
 }
 
-void convert_image_fimage(const Image& im, FImage& fimage) {
-    for_int(ch, NCH) {
-        fimage[ch].init(im.dims());
-        parallel_for_coords(im.dims(), [&](const Vec2<int>& yx) {
-            uchar v = im[yx][ch];
-            fimage[ch][yx] = float(v);
-        }, 2);
-    }
+Matrix<Vector4> convert_image_mat(CMatrixView<Pixel> im) {
+    Matrix<Vector4> mat(im.dims());
+    parallel_for_coords(im.dims(), [&](const Vec2<int>& yx) {
+        mat[yx] = to_Vector4_raw(im[yx].data()); // range [0.f, 255.f]
+    }, 5);
+    return mat;
 }
 
-#if 0
-FImage convert2_image_fimage(const Image& im) {
-    FImage fimage;
-    for_int(ch, NCH) {
-        fimage[ch].init(im.dims());
-        parallel_for_coords(im.dims(), [&](const Vec2<int>& yx) {
-            fimage[ch][yx] = float(im[yx][ch]);
-        }, 2);
-    }
-    return fimage;
-}
-#endif
-
-void convert_fimage_image(const FImage& fimage, Image& nimage) {
-    nimage.init(fimage[0].dims()); assertx(NCH==3);
-    for_int(ch, NCH) {
-        parallel_for_coords(nimage.dims(), [&](const Vec2<int>& yx) {
-            nimage[yx][ch] = clamp_to_uchar(int(fimage[ch][yx]+.5f));
-        }, 2);
-    }
+Matrix<Pixel> convert_mat_image(CMatrixView<Vector4> mat) {
+    Matrix<Pixel> im(mat.dims());
+    parallel_for_coords(mat.dims(), [&](const Vec2<int>& yx) {
+        im[yx] = general_clamp(mat[yx], Vector4(0.f), Vector4(255.99f)).raw_pixel();
+    }, 5);
+    return im;
 }
 
 // Downsample by one level, creating coarser image from finer image.
-void downsample_image(const FImage& fimage_F, FImage& fimage_C) {
-    assertx(fimage_F[0].dims()%2==V(0, 0));
+Matrix<Vector4> downsample_image(CMatrixView<Vector4> mat_F) {
+    assertx(mat_F.dims()%2==V(0, 0));
+    Matrix<Vector4> mat_C(mat_F.dims()/2);
     // downsampling weights: (-3 -9 29 111 111 29 -9 -3) / 256
     const int kn = 8;
     Array<float> fkernel(kn);
@@ -2780,42 +2754,36 @@ void downsample_image(const FImage& fimage_F, FImage& fimage_C) {
     fkernel[2] = fkernel[5] = 29.f/256.f;
     fkernel[3] = fkernel[4] = 111.f/256.f;
     if (0) { fill(fkernel, 0.f); fkernel[3] = fkernel[4] = 1.f; } // box filter
-    for_int(ch, NCH) {
-        fimage_C[ch].init(fimage_F[ch].dims()/2);
-        if (0) {                // slow implementation
-            parallel_for_coords(fimage_C[ch].dims(), [&](const Vec2<int>& yx) {
-                const Vec2<int> yxf0 = yx*2-kn/2+1;
-                float sum = 0.f;
-                for_int(iy, kn) for_int(ix, kn) {
-                    sum += fkernel[iy]*fkernel[ix]*fimage_F[ch].inside(yxf0+V(iy, ix), k_reflected2);
-                }
-                fimage_C[ch][yx] = sum;
-            }, kn*kn*10);
-        } else {                // faster: first downsample horizontally, then vertically
-            // Possible optimization: lift boundary testing outside of loops.
-            Matrix<float> mtmp(fimage_F[0].dims()/V(1, 2)); // non-square
-            parallel_for_coords(mtmp.dims(), [&](const Vec2<int>& yx) {
-                int xf0 = yx[1]*2-kn/2+1;
-                float sum = 0.f;
-                for_int(ix, kn) {
-                    sum += fkernel[ix]*fimage_F[ch].inside(V(yx[0], xf0+ix), k_reflected2);
-                }
-                mtmp[yx] = sum;
-            }, kn*8);
-            parallel_for_coords(fimage_C[ch].dims(), [&](const Vec2<int>& yx) {
-                int yf0 = yx[0]*2-kn/2+1;
-                float sum = 0.f;
-                for_int(iy, kn) {
-                    sum += fkernel[iy]*mtmp.inside(V(yf0+iy, yx[1]), k_reflected2);
-                }
-                fimage_C[ch][yx] = sum;
-            }, kn*8);
-        }
+    //
+    if (0) {                    // slow implementation
+        parallel_for_coords(mat_C.dims(), [&](const Vec2<int>& yx) {
+            const Vec2<int> yxf0 = yx*2-kn/2+1;
+            Vector4 sum(0.f);
+            for_int(iy, kn) for_int(ix, kn) {
+                sum += (fkernel[iy]*fkernel[ix])*mat_F.inside(yxf0+V(iy, ix), k_reflected2);
+            }
+            mat_C[yx] = sum;
+        }, kn*kn*10);
+    } else {                    // faster: first downsample horizontally, then vertically
+        // Possible optimization: lift boundary testing outside of loops.
+        Matrix<Vector4> mtmp(mat_F.dims()/V(1, 2)); // non-square
+        parallel_for_coords(mtmp.dims(), [&](const Vec2<int>& yx) {
+            int xf0 = yx[1]*2-kn/2+1;
+            Vector4 sum(0.f); for_int(ix, kn) { sum += fkernel[ix]*mat_F.inside(V(yx[0], xf0+ix), k_reflected2); }
+            mtmp[yx] = sum;
+        }, kn*8);
+        parallel_for_coords(mat_C.dims(), [&](const Vec2<int>& yx) {
+            int yf0 = yx[0]*2-kn/2+1;
+            Vector4 sum(0.f); for_int(iy, kn) { sum += fkernel[iy]*mtmp.inside(V(yf0+iy, yx[1]), k_reflected2); }
+            mat_C[yx] = sum;
+        }, kn*8);
     }
+    return mat_C;
 }
 
 // Upsample by one level, creating finer image from coarser image.
-void upsample_image(const FImage& fimage_C, FImage& fimage_F) {
+Matrix<Vector4> upsample_image(CMatrixView<Vector4> mat_C) {
+    Matrix<Vector4> mat_F(mat_C.dims()*2);
     // upsampling weights: (-9 111 29 -3) / 128  and (-3 29 111 -9) / 128  on alternating pixels
     const int kn = 4;
     Array<float> fkernel(kn);
@@ -2827,122 +2795,107 @@ void upsample_image(const FImage& fimage_C, FImage& fimage_F) {
     Vec2<Array<float>> fkernels;
     fkernels[0] = fkernel;
     fkernels[1] = reverse(clone(fkernel));
-    for_int(ch, NCH) {
-        fimage_F[ch].init(fimage_C[ch].dims()*2);
-        // Possible optimization: lift boundary testing outside of loops.
-        parallel_for_coords(fimage_F[ch].dims(), [&](const Vec2<int>& yx) {
-            const Vec2<int> yxc = (yx+1)/2, yxodd = (yx+1)-(yxc*2), yxc0 = yxc-kn/2;
-            float sum = 0.f;
-            for_int(iy, kn) for_int(ix, kn) {
-                sum += fkernels[yxodd[0]][iy]*fkernels[yxodd[1]][ix]*
-                    fimage_C[ch].inside(yxc0+V(iy, ix), k_reflected2);
-            }
-            fimage_F[ch][yx] = sum;
-        }, kn*kn*10);
-    }
+    // Possible optimization: lift boundary testing outside of loops.
+    parallel_for_coords(mat_F.dims(), [&](const Vec2<int>& yx) {
+        const Vec2<int> yxc = (yx+1)/2, yxodd = (yx+1)-(yxc*2), yxc0 = yxc-kn/2;
+        Vector4 sum(0.f);
+        for_int(iy, kn) for_int(ix, kn) {
+            sum += (fkernels[yxodd[0]][iy]*fkernels[yxodd[1]][ix])*mat_C.inside(yxc0+V(iy, ix), k_reflected2);
+        }
+        mat_F[yx] = sum;
+    }, kn*kn*10);
+    return mat_F;
 }
 
 // Precompute Gaussian window weights (in 1D).
-void compute_window_weights(Array<float>& fwindow) {
+Array<float> compute_window_weights() {
     // const int window_radius = 10; // for 21^2 window
     static const int window_radius = getenv_int("XFER_RADIUS", 10, true);
     const int window_diam = window_radius*2+1;
     // const float window_sdv = 4.0f; // standard deviation of Gaussian, in pixels.
     const float window_sdv = window_radius/2.5f;
-    fwindow.init(window_diam);
+    Array<float> fwindow(window_diam);
     for_int(x, fwindow.num()) { fwindow[x] = gaussian(float(x)-window_radius, window_sdv); }
     float vsum = float(sum(fwindow));
     if (0) SHOW(vsum);
     fwindow /= vsum;            // normalize the 1D window weights
     if (0) SHOW(fwindow);
+    return fwindow;
 }
 
-// Combine detail structure from fsimage and color from fcimage to form new image fout.
-// Also save the intermediate z-scores into fzscore for visualization.
-void structure_transfer_zscore(const FImage& fsimage, const FImage& fcimage, FImage& fout, FImage& fzscore) {
-    assertx(same_size(fsimage[0], fcimage[0]));
-    Array<float> fwindow; compute_window_weights(fwindow);
+// Combine detail structure from mat_s and color from mat_c to form new image mat_out.
+// Also save the intermediate z-scores into mat_zscore for visualization.
+void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0,
+                               Matrix<Vector4>& mat_out, Matrix<Vector4>& mat_zscore) {
+    assertx(same_size(mat_s0, mat_c0));
+    Array<float> fwindow = compute_window_weights();
     const int window_diam = fwindow.num(); const int window_radius = (window_diam-1)/2;
     // Convert both the color image and the structure image from RGB space to LAB space.
-    FImage fstruct = use_lab ? convert_to_LAB(fsimage) : fsimage;
-    FImage fcolor =  use_lab ? convert_to_LAB(fcimage) : fcimage;
+    assertw(use_lab);
+    Matrix<Vector4> mat_s(use_lab ? convert_to_LAB(mat_s0) : mat_s0);
+    Matrix<Vector4> mat_c(use_lab ? convert_to_LAB(mat_c0) : mat_c0);
     static const float zscore_scale = getenv_float("ZSCORE_SCALE", 1.f, true);
-    for_int(ch, NCH) {
-        fout[ch].init(fstruct[0].dims());
-        fzscore[ch].init(fstruct[0].dims());
-        float minsvar = 0.f;    // min structural variance; >0.f to avoid negative sqrt and division by zero.
-        if (1) {                // to remove blocking noise in jpg-compressed image
-            if (!use_lab) minsvar = square(5.f);
-            if (use_lab && ch==0) minsvar = square(200.f); // LAB luminance has wider range
-            if (use_lab && ch>0) minsvar = square(40.f);
+    mat_out.init(mat_s.dims());
+    mat_zscore.init(mat_s.dims());
+    Vector4 minsvar(0.f);       // min structural variance; >0.f to avoid negative sqrt and division by zero.
+    if (1) {                    // to remove blocking noise in jpg-compressed image
+        if (!use_lab) minsvar = Vector4(square(5.f));
+        // LAB luminance has wider range
+        if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
+    }
+    const bool optimized = true;
+    cond_parallel_for_int(mat_s.size()*2*window_radius*20, y, mat_s.ysize()) {
+        Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
+        Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
+        if (optimized) {
+            // HH_ATIMER(___rows);
+            fill(fscolsum, Vector4(0.f)); fill(fscolsum2, Vector4(0.f));
+            fill(fccolsum, Vector4(0.f)); fill(fccolsum2, Vector4(0.f));
+            for_int(iy, window_diam) {
+                float w = fwindow[iy];
+                int yy = y-window_radius+iy; assertx(map_boundaryrule_1D(yy, mat_s.ysize(), k_reflected));
+                for_int(x, mat_s.xsize()) {
+                    Vector4 sv = mat_s[yy][x]; fscolsum[x] += w*sv; fscolsum2[x] += w*square(sv);
+                    Vector4 cv = mat_c[yy][x]; fccolsum[x] += w*cv; fccolsum2[x] += w*square(cv);
+                }
+            }
         }
-        const bool optimized = true;
-        cond_parallel_for_int(fstruct[0].size()*2*window_radius*20, y, fstruct[0].ysize()) {
-            Array<float> fscolsum(fstruct[0].xsize()), fscolsum2(fstruct[0].xsize());
-            Array<float> fccolsum(fcimage[0].xsize()), fccolsum2(fcimage[0].xsize());
-            if (optimized) {
-                // HH_ATIMER(___rows);
-                fill(fscolsum, 0.f); fill(fscolsum2, 0.f); fill(fccolsum, 0.f); fill(fccolsum2, 0.f);
-                for_int(iy, window_diam) {
-                    float w = fwindow[iy];
-                    int yy = y-window_radius+iy; assertx(map_boundaryrule_1D(yy, fstruct[0].ysize(), k_reflected));
-                    if (0) {
-                        for_int(x, fstruct[0].xsize()) {
-                            float sv = fstruct[ch][yy][x]; fscolsum[x] += w*sv; fscolsum2[x] += w*square(sv);
-                            float cv = fcolor[ch][yy][x];  fccolsum[x] += w*cv; fccolsum2[x] += w*square(cv);
-                        }
-                    } else {
-                        const float* __restrict ps = fstruct[ch][yy].data();
-                        float* __restrict pss = fscolsum.data();
-                        float* __restrict ps2 = fscolsum2.data();
-                        for_int(x, fstruct[0].xsize()) {
-                            float sv = *ps++; *pss++ += w*sv; *ps2++ += w*square(sv);
-                        }
-                        const float* __restrict pc = fcolor[ch][yy].data();
-                        float* __restrict pcs = fccolsum.data();
-                        float* __restrict pc2 = fccolsum2.data();
-                        for_int(x, fstruct[0].xsize()) {
-                            float cv = *pc++; *pcs++ += w*cv; *pc2++ += w*square(cv); // OPT:1; wow, SIMD gcc & win!
-                        }
-                    }
+        // HH_ATIMER(___rest);
+        for_int(x, mat_s.xsize()) {
+            Vector4 ssum(0.f), ssum2(0.f); // structure sum and sum squared
+            Vector4 csum(0.f), csum2(0.f); // color sum and sum squared
+            if (!optimized) {
+                // Gather window statistics in structure image (downsampled fine image).
+                for_int(iy, window_diam) for_int(ix, window_diam) {
+                    Vector4 v = mat_s.inside(y-window_radius+iy, x-window_radius+ix, k_reflected); // pixel val
+                    float w = fwindow[iy]*fwindow[ix]; // weight
+                    ssum += w*v; ssum2 += w*square(v);
+                }
+                // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); } // note: LAB have broader range.
+                // Gather window statistics in color image (coarse image).
+                for_int(iy, window_diam) for_int(ix, window_diam) {
+                    Vector4 v = mat_c.inside(y-window_radius+iy, x-window_radius+ix, k_reflected); // pixel val
+                    float w = fwindow[iy]*fwindow[ix]; // weight
+                    csum += w*v; csum2 += w*square(v);
+                }
+            } else {
+                for_int(ix, window_diam) {
+                    float w = fwindow[ix];
+                    int xx = x-window_radius+ix;
+                    bool b = map_boundaryrule_1D(xx, mat_s.xsize(), k_reflected); ASSERTX(b);
+                    ssum += w*fscolsum[xx]; ssum2 += w*fscolsum2[xx];
+                    csum += w*fccolsum[xx]; csum2 += w*fccolsum2[xx];
                 }
             }
-            // HH_ATIMER(___rest);
-            for_int(x, fstruct[0].xsize()) {
-                float ssum = 0.f; float ssum2 = 0.f; // structure sum and sum squared
-                float csum = 0.f; float csum2 = 0.f; // color sum and sum squared
-                if (!optimized) {
-                    // Gather window statistics in structure image (downsampled fine image).
-                    for_int(iy, window_diam) for_int(ix, window_diam) {
-                        float v = fstruct[ch].inside(y-window_radius+iy, x-window_radius+ix, k_reflected); // pixel val
-                        float w = fwindow[iy]*fwindow[ix]; // weight
-                        ssum += w*v; ssum2 += w*square(v);
-                    }
-                    // if (0) { HH_SSTAT(Ssmean, smean); HH_SSTAT(Sssdv, ssdv); } // note: LAB have broader range.
-                    // Gather window statistics in color image (coarse image).
-                    for_int(iy, window_diam) for_int(ix, window_diam) {
-                        float v = fcolor[ch].inside(y-window_radius+iy, x-window_radius+ix, k_reflected); // pixel val
-                        float w = fwindow[iy]*fwindow[ix]; // weight
-                        csum += w*v; csum2 += w*square(v);
-                    }
-                } else {
-                    for_int(ix, window_diam) {
-                        float w = fwindow[ix];
-                        int xx = x-window_radius+ix;
-                        bool b = map_boundaryrule_1D(xx, fstruct[0].xsize(), k_reflected); ASSERTX(b);
-                        ssum += w*fscolsum[xx]; ssum2 += w*fscolsum2[xx];
-                        csum += w*fccolsum[xx]; csum2 += w*fccolsum2[xx];
-                    }
-                }
-                float smean = ssum; float ssdv = sqrt(max(ssum2-square(ssum), minsvar));
-                float cmean = csum; float csdv = sqrt(max(csum2-square(csum), 0.f));
-                float zscore = (fstruct[ch][y][x]-smean)/ssdv;
-                fout[ch][y][x] = cmean+zscore*csdv*zscore_scale;
-                fzscore[ch][y][x] = ch==0 ? 128.f+zscore*(255.0f/6.0f) : fzscore[0][y][x];
-            }
+            Vector4 smean = ssum; Vector4 ssdv = sqrt(max(ssum2-square(ssum), minsvar));
+            Vector4 cmean = csum; Vector4 csdv = sqrt(max(csum2-square(csum), Vector4(0.f)));
+            Vector4 zscore = (mat_s[y][x]-smean)/ssdv;
+            mat_out[y][x] = cmean+zscore*csdv*zscore_scale;
+            if (use_lab) zscore = Vector4(zscore[0]); // Z score based on luminance only
+            mat_zscore[y][x] = zscore*(255.0f/6.0f);
         }
     }
-    if (use_lab) fout = convert_to_RGB(fout);
+    if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 
 struct VXY {
@@ -2951,25 +2904,28 @@ struct VXY {
 bool operator<(const VXY &a, const VXY &b) { return a.v<b.v; }
 
 // Same but use rank rather than z-score.
-void structure_transfer_rank(const FImage& fsimage, const FImage& fcimage, FImage& fout, FImage& fzscore) {
-    assertx(same_size(fsimage[0], fcimage[0]));
-    Array<float> fwindow; compute_window_weights(fwindow);
+void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0,
+                             Matrix<Vector4>& mat_out, Matrix<Vector4>& mat_zscore) {
+    assertx(same_size(mat_s0, mat_c0));
+    Array<float> fwindow = compute_window_weights();
     const int window_diam = fwindow.num(); const int window_radius = (window_diam-1)/2;
     // Convert both the color image and the structure image from RGB space to LAB space.
-    FImage fstruct = use_lab ? convert_to_LAB(fsimage) : fsimage;
-    FImage fcolor =  use_lab ? convert_to_LAB(fcimage) : fcimage;
+    Matrix<Vector4> mat_s(use_lab ? convert_to_LAB(mat_s0) : mat_s0);
+    Matrix<Vector4> mat_c(use_lab ? convert_to_LAB(mat_c0) : mat_c0);
     Array<VXY> ar(square(window_diam));
+    mat_out.init(mat_s.dims());
+    mat_zscore.init(mat_s.dims());
+    assertw(use_lab);
+    const int NCH = 3;
     for_int(ch, NCH) {
-        fout[ch].init(fstruct[0].dims());
-        fzscore[ch].init(fstruct[0].dims());
-        parallel_for_coords(fstruct[0].dims(), [&](const Vec2<int>& yx) {
-            ar.init(0);                       // (initially unsorted) pdf of color image window
-            float scenterv = fstruct[ch][yx]; // value of center pixel in structure image
-            float scenterrank = 0.f;          // center pixel rank in structure image
+        parallel_for_coords(mat_s.dims(), [&](const Vec2<int>& yx) {
+            ar.init(0);                     // (initially unsorted) pdf of color image window
+            float scenterv = mat_s[yx][ch]; // value of center pixel in structure image
+            float scenterrank = 0.f;        // center pixel rank in structure image
             for (const auto& iyx : coords(twice(window_diam))) {
                 float w = fwindow[iyx[0]]*fwindow[iyx[1]];
-                float sv = fstruct[ch].inside(yx-window_radius+iyx, k_reflected2);
-                float cv = fcolor [ch].inside(yx-window_radius+iyx, k_reflected2);
+                float sv = mat_s.inside(yx-window_radius+iyx, k_reflected2)[ch];
+                float cv = mat_c.inside(yx-window_radius+iyx, k_reflected2)[ch];
                 if (sv<scenterv) scenterrank += w;
                 VXY vxy; vxy.v = cv; vxy.w = w;
                 ar.push(vxy);
@@ -2981,27 +2937,28 @@ void structure_transfer_rank(const FImage& fsimage, const FImage& fcimage, FImag
                 f -= ar[idx].w;
                 if (f<=0.f) { val = ar[idx].v; break; }
             }
-            fout[ch][yx] = val;
-            fzscore[ch][yx] = ch==0 ? scenterrank*255.f : fzscore[0][yx];
+            mat_out[yx][ch] = val;
+            mat_zscore[yx][ch] = ch==0 ? scenterrank*255.f : mat_zscore[yx][0];
         }, square(window_diam)*20);
     }
-    if (use_lab) fout = convert_to_RGB(fout);
+    if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 
-void structure_transfer(const FImage& fsimage, const FImage& fcimage, FImage& fout, FImage& fzscore) {
+void structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4>& mat_c,
+                        Matrix<Vector4>& mat_out, Matrix<Vector4>& mat_zscore) {
     HH_TIMER(__structure_transfer);
     if (getenv_bool("USE_RANK_TRANSFER")) { // results in grain artifacts
-        structure_transfer_rank(fsimage, fcimage, fout, fzscore);
+        structure_transfer_rank(mat_s, mat_c, mat_out, mat_zscore);
     } else if (getenv_bool("USE_NO_TRANSFER")) { // results in ghosting
-        fout = fcimage;
-        for_int(ch, NCH) { fill(fzscore[ch], 0.f); }
+        mat_out = mat_c;
+        fill(mat_zscore, Vector4(0.f));
     } else {                    // z-score transfer is best
-        structure_transfer_zscore(fsimage, fcimage, fout, fzscore);
+        structure_transfer_zscore(mat_s, mat_c, mat_out, mat_zscore);
     }
 }
 
-void output_image(const FImage& fimage, const string& filename) {
-    Image nimage; convert_fimage_image(fimage, nimage);
+void output_image(CMatrixView<Vector4> mat, const string& filename) {
+    Image nimage = convert_mat_image(mat);
     nimage.write_file(filename);
 }
 
@@ -3022,69 +2979,61 @@ void do_pyramid(Args& args) {
     const int lbase = 10;               // offset just for easily sortable file numbering
     int lf = lbase+ld;
     int lc = lbase+0;
-    Array<FImage> fgaussianf(lf+1); // Gaussian pyramid of fine-scale image; never re-allocated, so no FImage copy
+    Array<Matrix<Vector4>> mat_gaussianf(lf+1); // Gaussian pyramid of fine-scale image; never re-allocated
     // Convert the fine-scale image, and enter it into the appropriate level of the Gaussian pyramid.
-    convert_image_fimage(imagef, fgaussianf[lf]);
+    mat_gaussianf[lf] = convert_image_mat(imagef);
     // Create the Gaussian image pyramid of the fine-scale image.
     if (ld>0) {
         HH_TIMER(__pyramid_downsample);
         for (int l = lf-1; l>=lc; --l) {
-            downsample_image(fgaussianf[l+1], fgaussianf[l]);
+            mat_gaussianf[l] = downsample_image(mat_gaussianf[l+1]);
         }
     }
-    if (ld>0) output_image(fgaussianf[lc], rootname + ".down.png");
+    if (ld>0) output_image(mat_gaussianf[lc], rootname + ".down.png");
     // Convert the coarse-scale image.
-    FImage fimagec; convert_image_fimage(imagec, fimagec);
+    Matrix<Vector4> mat_c = convert_image_mat(imagec);
     // Perform structure transfer, combining detail of the downsampled fine image and color of the coarse image.
-    FImage fxfer, fzscore;
-    structure_transfer(fgaussianf[lc], fimagec, fxfer, fzscore);
-    if (getenv_bool("OUTPUT_ZSCORE")) output_image(fzscore, rootname + ".Z.png");
+    Matrix<Vector4> mat_xfer, mat_zscore; structure_transfer(mat_gaussianf[lc], mat_c, mat_xfer, mat_zscore);
+    if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, rootname + ".Z.png");
     // Downsample the structure-transferred image and output.
     if (ld>0) {
-        FImage ftmp1; downsample_image(fxfer, ftmp1);
-        FImage ftmp2; downsample_image(ftmp1, ftmp2);
-        output_image(ftmp2, sform("%s.out.%02d.png", rootname.c_str(), lbase-2));
-        output_image(ftmp1, sform("%s.out.%02d.png", rootname.c_str(), lbase-1));
-        output_image(fxfer, sform("%s.out.%02d.png", rootname.c_str(), lbase+0));
+        Matrix<Vector4> mat_tmp1 = downsample_image(mat_xfer);
+        Matrix<Vector4> mat_tmp2 = downsample_image(mat_tmp1);
+        output_image(mat_tmp2, sform("%s.out.%02d.png", rootname.c_str(), lbase-2));
+        output_image(mat_tmp1, sform("%s.out.%02d.png", rootname.c_str(), lbase-1));
+        output_image(mat_xfer, sform("%s.out.%02d.png", rootname.c_str(), lbase+0));
     } else {
-        output_image(fxfer, sform("%s.xfer.png", rootname.c_str()));
+        output_image(mat_xfer, sform("%s.xfer.png", rootname.c_str()));
     }
     // Iteratively upsample and blend the difference image.
     const int iskipfinest = 1;                // since will be unmodified
     if (getenv_bool("USE_LINEAR_BLENDING")) { // results in blurring
         for_intL(l, lc+1, lf-iskipfinest+1) {
-            FImage ftmp; upsample_image(fxfer, ftmp);
+            Matrix<Vector4> mat_tmp = upsample_image(mat_xfer);
             float alpha = (float(lf)-float(l))/(float(lf)-float(lc));
-            for_int(ch, NCH) {
-                parallel_for_coords(ftmp[0].dims(), [&](const Vec2<int>& yx) {
-                    fgaussianf[l][ch][yx] += (ftmp[ch][yx]-fgaussianf[l][ch][yx])*alpha;
-                }, 4);
-            }
-            if (l<lf-iskipfinest) fxfer = ftmp;
+            parallel_for_coords(mat_tmp.dims(), [&](const Vec2<int>& yx) {
+                mat_gaussianf[l][yx] += (mat_tmp[yx]-mat_gaussianf[l][yx])*alpha;
+            }, 4);
+            if (l<lf-iskipfinest) mat_xfer = mat_tmp;
         }
     } else {                    // Clipped Laplacian blending is best
         // Compute the coarse-scale difference image.
-        FImage fdiff;
-        for_int(ch, NCH) {
-            fdiff[ch].init(imagec.dims());
-            parallel_for_coords(imagec.dims(), [&](const Vec2<int>& yx) {
-                fdiff[ch][yx] = fxfer[ch][yx]-fgaussianf[lc][ch][yx];
-            }, 2);
-        }
+        Matrix<Vector4> mat_diff(imagec.dims());
+        parallel_for_coords(imagec.dims(), [&](const Vec2<int>& yx) {
+            mat_diff[yx] = mat_xfer[yx]-mat_gaussianf[lc][yx];
+        }, 2);
         HH_TIMER(__upsample_blend);
         for_intL(l, lc+1, lf-iskipfinest+1) {
-            FImage ftmp; upsample_image(fdiff, ftmp);
+            Matrix<Vector4> mat_tmp = upsample_image(mat_diff);
             float alpha = (float(lf)-float(l))/(float(lf)-float(lc));
-            for_int(ch, NCH) {
-                parallel_for_coords(ftmp[0].dims(), [&](const Vec2<int>& yx) {
-                    fgaussianf[l][ch][yx] += ftmp[ch][yx]*alpha;
-                }, 2);
-            }
-            if (l<lf-iskipfinest) for_int(ch, NCH) { fdiff[ch] = ftmp[ch]; }
+            parallel_for_coords(mat_tmp.dims(), [&](const Vec2<int>& yx) {
+                mat_gaussianf[l][yx] += mat_tmp[yx]*alpha;
+            }, 2);
+            if (l<lf-iskipfinest) mat_diff = mat_tmp;
         }
     }
     for_intL(l, lc+1, lf-iskipfinest+1) {
-        output_image(fgaussianf[l], sform("%s.out.%02d.png", rootname.c_str(), lbase+(l-lc)));
+        output_image(mat_gaussianf[l], sform("%s.out.%02d.png", rootname.c_str(), lbase+(l-lc)));
     }
     nooutput = true;
 }
@@ -3096,12 +3045,11 @@ void do_structuretransfer(Args& args) {
     string sfile = args.get_filename(); // argument is structure image
     Image& cimage = image;
     Image simage; simage.read_file(sfile);
-    FImage fcimage; convert_image_fimage(cimage, fcimage);
-    FImage fsimage; convert_image_fimage(simage, fsimage);
-    FImage fxfer, fzscore;
-    structure_transfer(fsimage, fcimage, fxfer, fzscore);
-    if (getenv_bool("OUTPUT_ZSCORE")) output_image(fzscore, "zscore.png");
-    convert_fimage_image(fxfer, image);
+    Matrix<Vector4> mat_c = convert_image_mat(cimage);
+    Matrix<Vector4> mat_s = convert_image_mat(simage);
+    Matrix<Vector4> mat_xfer, mat_zscore; structure_transfer(mat_s, mat_c, mat_xfer, mat_zscore);
+    if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, "zscore.png");
+    image = convert_mat_image(mat_xfer);
 }
 
 // (cd ~/proj/morph/data/quadmesh; Filterimage image2.png -filter k -boundaryrule r -resamplemesh 128_mesh2.m | G3d -lighta 1 -lights 0 -st imagenew)

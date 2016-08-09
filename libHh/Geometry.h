@@ -31,13 +31,13 @@ inline Vector ok_normalized(Vector v)                   { v.normalize(); return 
 // Must overload several versions to hide the influence of the template in RangeOp.h
 // #define E float(double(v1[0])*v2[0]+double(v1[1])*v2[1]+double(v1[2])*v2[2])
 #define E v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2]
-inline CONSTEXPR float dot(const Vec3<float>& v1, const Vec3<float>& v2) { return E; }
-inline CONSTEXPR float dot(const Vec3<float>& v1, const Vector& v2)      { return E; }
-inline CONSTEXPR float dot(const Vector& v1, const Vec3<float>& v2)      { return E; }
-inline CONSTEXPR float dot(const Vector& v1, const Vector& v2)           { return E; }
+inline constexpr float dot(const Vec3<float>& v1, const Vec3<float>& v2) { return E; }
+inline constexpr float dot(const Vec3<float>& v1, const Vector& v2)      { return E; }
+inline constexpr float dot(const Vector& v1, const Vec3<float>& v2)      { return E; }
+inline constexpr float dot(const Vector& v1, const Vector& v2)           { return E; }
 #undef E
-inline CONSTEXPR float mag2(const Vec3<float>& v1)      { return dot(v1, v1); }
-inline CONSTEXPR float mag2(const Vector& v1)           { return dot(v1, v1); }
+inline constexpr float mag2(const Vec3<float>& v1)      { return dot(v1, v1); }
+inline constexpr float mag2(const Vector& v1)           { return dot(v1, v1); }
 inline float mag(const Vec3<float>& v1)                 { return sqrt(mag2(v1)); }
 inline float mag(const Vector& v1)                      { return sqrt(mag2(v1)); }
 
@@ -153,12 +153,12 @@ Bary vector_bary(const Vec3<Point>& pa, const Vector& vec);
 Vector bary_vector(const Vec3<Point>& pa, const Bary& bary);
 
 // Convert degrees to radians.
-template<typename T> CONSTEXPR T to_rad(T deg) {
+template<typename T> constexpr T to_rad(T deg) {
     static_assert(std::is_floating_point<T>::value, ""); return deg*T(D_TAU/360);
 }
 
 // Convert radians to degrees.
-template<typename T> CONSTEXPR T to_deg(T rad) {
+template<typename T> constexpr T to_deg(T rad) {
     static_assert(std::is_floating_point<T>::value, ""); return rad*T(360/D_TAU);
 }
 

@@ -160,7 +160,7 @@ template<typename T> class Array : public ArrayView<T> {
     Array()                                     = default;
     explicit Array(int n)                       : base(n ? new T[size_t(n)] : nullptr, n), _cap(n) { ASSERTX(n>=0); }
     explicit Array(int n, const T& v)           : Array(n) { for_int(i, n) _a[i] = v; }
-    hh_explicit Array(const type& ar)           : Array(ar.num()) { base::assign(ar); }
+    explicit Array(const type& ar)              : Array(ar.num()) { base::assign(ar); }
     explicit Array(CArrayView<T> ar)            : Array(ar.num()) { base::assign(ar); }
     Array(std::initializer_list<T> l)           : Array(CArrayView<T>(l)) { }
     Array(type&& ar) noexcept                   : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr; }

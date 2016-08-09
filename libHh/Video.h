@@ -25,7 +25,7 @@ public:
     struct Attrib;
     explicit Video(const Vec3<int>& dims = V(0, 0, 0)) { init(dims); } // nframes, ysize, xsize
     explicit Video(int pnframes, const Vec2<int>& sdims) : Video(V(pnframes, sdims[0], sdims[1])) { }
-    hh_explicit Video(const Video&)             = default;
+    explicit Video(const Video&)                = default;
     explicit Video(const base& video)           : base(video.dims()) { base::assign(video); }
     Video(Video&& v) noexcept                   { swap(*this, v); } // =default?
     Video(base&& v) noexcept                    { swap(static_cast<base&>(*this), v); }
@@ -189,18 +189,6 @@ class WVideo {
     friend class VT_WVideo_Implementation;
     friend class FF_WVideo_Implementation;
 };
-
-
-//----------------------------------------------------------------------------
-
-// Workaround for VC12 compiler bug (which appears only in Release config, in loop calling RVideo::read())
-template<typename T> T fake_use_for_vc12_bug_workaround(T&& val) {
-#if defined(_MSC_VER) && _MSC_VER<1900
-    //  bizarre bug in VC12 -- test with: Filtervideo ~/proj/videoloops/data/test/M4Kseacrowd.wmv -noo
-    std::ostringstream oss; oss << val;
-#endif
-     return std::forward<T>(val);
-}
 
 
 //----------------------------------------------------------------------------

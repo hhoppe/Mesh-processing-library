@@ -12,7 +12,7 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
  public:
     PArray()                                    : base(_pa, 0) { }
     explicit PArray(int n)      : base(_pa, n) { ASSERTX(n>=0); if (n>pcap) { _a = new T[size_t(n)]; _cap = n; } }
-    hh_explicit PArray(const PArray<T,pcap>& ar) : PArray() { *this = ar; }
+    explicit PArray(const PArray<T,pcap>& ar)   : PArray() { *this = ar; }
     explicit PArray(CArrayView<T> ar)           : PArray() { *this = ar; }
     PArray(PArray<T,pcap>&& ar)                 : PArray() { *this = std::move(ar); }
     PArray(std::initializer_list<T> l)          : PArray(CArrayView<T>(l)) { }

@@ -93,7 +93,10 @@ inline string get_path_extension(const string& s) {
 
 // Change directory separator characters '\\' to '/'.
 inline string get_canonical_path(const string& s) {
-    return replace_all(s, "\\", "/");
+    string s2 = replace_all(s, "\\", "/");
+    if (s2[0] && s2[1]==':' && s2[2]=='/' && s2[0]>='A' && s2[0]<='Z')
+        s2[0] += 'a'-'A';
+    return s2;
 }
 
 inline bool is_path_absolute(const string& s) {

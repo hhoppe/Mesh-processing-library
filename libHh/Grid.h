@@ -65,13 +65,13 @@ template<int D> bool in_bounds(const Vec<int,D>& u, const Vec<int,D>& dims) {
 }
 
 // Given a coordinate u within a grid with dimensions dims, return the raster index in the linearized representation.
-template<int D> CONSTEXPR size_t grid_index(const Vec<int,D>& dims, const Vec<int,D>& u);
+template<int D> constexpr size_t grid_index(const Vec<int,D>& dims, const Vec<int,D>& u);
 
 // Given a raster index i within a grid with dimensions dims, return its grid coordinates.
 template<int D> Vec<int,D> grid_index_inv(const Vec<int,D>& dims, size_t i);
 
 // Do the same for a list of coordinates.
-template<int D, typename... A> CONSTEXPR size_t grid_index_list(const Vec<int,D>& dims, A... dd); // dd... are int
+template<int D, typename... A> constexpr size_t grid_index_list(const Vec<int,D>& dims, A... dd); // dd... are int
 
 // Find stride of dimension d in the raster grid.
 template<int D> size_t grid_stride(const Vec<int,D>& dims, int dim);
@@ -93,7 +93,7 @@ template<int D, typename T> class CGridView {
     // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
     void reinit(type g)                         { *this = g; }
     template<typename T2> friend bool same_size(type g1, CGridView<D,T2> g2) { return g1.dims()==g2.dims(); }
-    CONSTEXPR int order() const                 { return D; } // also called rank
+    constexpr int order() const                 { return D; } // also called rank
     const Vec<int,D>& dims() const              { return _dims; }
     int dim(int c) const                        { return _dims[c]; }
     size_t size() const                         { return product_dims<D>(_dims.data()); }
@@ -222,7 +222,7 @@ template<int D, typename T> class Grid : public GridView<D,T> {
     explicit Grid(const Vec<int,D>& dims)       { init(dims); }
     template<typename... A> explicit Grid(int d0, A... dr) { init(d0, dr...); }
     explicit Grid(const Vec<int,D>& dims, const T& v) { init(dims, v); }
-    hh_explicit Grid(const type& g)             : Grid(g.dims()) { base::assign(g); }
+    explicit Grid(const type& g)                : Grid(g.dims()) { base::assign(g); }
     explicit Grid(CGridView<D,T> g)             : Grid(g.dims()) { base::assign(g); }
     Grid(type&& g) noexcept                     { swap(*this, g); } // not default
     Grid(initializer_type l)                    : Grid() { *this = l; }
@@ -273,29 +273,29 @@ template<int D, typename T, typename Func> auto map(CGridView<D,T>& c, Func func
 //----------------------------------------------------------------------------
 
 namespace details {
-inline CONSTEXPR size_t grid_index_aux2(std::pair<int,int> p) { return p.second; }
-template<typename... P> CONSTEXPR size_t grid_index_aux2(std::pair<int,int> p0, P... ps) {
+inline constexpr size_t grid_index_aux2(std::pair<int,int> p) { return p.second; }
+template<typename... P> constexpr size_t grid_index_aux2(std::pair<int,int> p0, P... ps) {
     return (ASSERTXX(p0.second>=0 && p0.second<p0.first),
             grid_index_aux2(ps...)*p0.first+p0.second);
 }
 
 template<int D, size_t... Is>
-CONSTEXPR size_t grid_index_aux1(const Vec<int,D>& dims, const Vec<int,D>& u, std::index_sequence<Is...>) {
+constexpr size_t grid_index_aux1(const Vec<int,D>& dims, const Vec<int,D>& u, std::index_sequence<Is...>) {
     return grid_index_aux2(std::make_pair(dims[D-1-Is], u[D-1-Is])...);
 }
 } // namespace details
-template<int D> CONSTEXPR size_t grid_index(const Vec<int,D>& dims, const Vec<int,D>& u) {
+template<int D> constexpr size_t grid_index(const Vec<int,D>& dims, const Vec<int,D>& u) {
     return details::grid_index_aux1(dims, u, std::make_index_sequence<D>());
 }
-template<> inline CONSTEXPR size_t grid_index(const Vec3<int>& dims, const Vec3<int>& u) {
+template<> inline constexpr size_t grid_index(const Vec3<int>& dims, const Vec3<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]), HH_CHECK_BOUNDS(u[2], dims[2]),
             (size_t(u[0])*dims[1]+u[1])*dims[2]+u[2]);
 }
-template<> inline CONSTEXPR size_t grid_index(const Vec2<int>& dims, const Vec2<int>& u) {
+template<> inline constexpr size_t grid_index(const Vec2<int>& dims, const Vec2<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]),
             size_t(u[0])*dims[1]+u[1]);
 }
-template<> inline CONSTEXPR size_t grid_index(const Vec1<int>& dims, const Vec1<int>& u) {
+template<> inline constexpr size_t grid_index(const Vec1<int>& dims, const Vec1<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims), // dummy_use(dims) returns void so cannot be constexpr
             u[0]);
 }
@@ -314,43 +314,43 @@ template<int D> Vec<int,D> grid_index_inv(const Vec<int,D>& dims, size_t i) {
 
 namespace details {
 template<int D> struct grid_index_rec {
-    template<typename... A> CONSTEXPR size_t operator()(size_t v, const Vec<int,D>& dims, int d0, A... dd) const {
+    template<typename... A> constexpr size_t operator()(size_t v, const Vec<int,D>& dims, int d0, A... dd) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]),
                 grid_index_rec<D-1>()((v+d0)*dims[1], dims.template segment<D-1>(1), dd...));
     }
 };
 template<> struct grid_index_rec<1> {
-    CONSTEXPR size_t operator()(size_t v, const Vec<int,1>& dims, int d0) const {
+    constexpr size_t operator()(size_t v, const Vec<int,1>& dims, int d0) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), void(dims),
                 v+d0);
     }
 };
 template<int D> struct grid_index_list_aux {
-    template<typename... A> CONSTEXPR size_t operator()(const Vec<int,D>& dims, int d0, A... dd) const {
+    template<typename... A> constexpr size_t operator()(const Vec<int,D>& dims, int d0, A... dd) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]),
                 grid_index_rec<D-1>()(size_t(d0)*dims[1], dims.template segment<D-1>(1), dd...));
     }
 };
 template<> struct grid_index_list_aux<1> {
-    CONSTEXPR size_t operator()(const Vec1<int>& dims, int d0) const {
+    constexpr size_t operator()(const Vec1<int>& dims, int d0) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), void(dims),
                 d0);
     }
 };
 template<> struct grid_index_list_aux<2> {
-    CONSTEXPR size_t operator()(const Vec2<int>& dims, int d0, int d1) const {
+    constexpr size_t operator()(const Vec2<int>& dims, int d0, int d1) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]),
                 size_t(d0)*dims[1]+d1);
     }
 };
 template<> struct grid_index_list_aux<3> {
-    CONSTEXPR size_t operator()(const Vec3<int>& dims, int d0, int d1, int d2) const {
+    constexpr size_t operator()(const Vec3<int>& dims, int d0, int d1, int d2) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]), HH_CHECK_BOUNDS(d2, dims[2]),
                 (size_t(d0)*dims[1]+d1)*dims[2]+d2);
     }
 };
 } // namespace details
-template<int D, typename... A> CONSTEXPR size_t grid_index_list(const Vec<int,D>& dims, A... dd) {
+template<int D, typename... A> constexpr size_t grid_index_list(const Vec<int,D>& dims, A... dd) {
     return details::grid_index_list_aux<D>()(dims, dd...);
 }
 

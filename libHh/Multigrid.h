@@ -327,13 +327,9 @@ class Multigrid : noncopyable {
                 if (D>1) { int o = ar_interior_offsets[1]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
                 if (D>2) { int o = ar_interior_offsets[2]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
             } else {
-#if 1                           // at some point it was necessary to ifdef this out to get good optimization
                 unroll<2*D>([&](int j) {
                     int o = ar_interior_offsets[j]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o);
                 });
-#else
-                static_assert(D<=3, "");
-#endif
             }
             grid_result.raster(i) = T((vnei*wL-grid_rhs.raster(i))*rwLnum); // OPT:relax
         };

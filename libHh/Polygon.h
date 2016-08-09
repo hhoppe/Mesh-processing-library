@@ -12,7 +12,7 @@ struct Bbox;
 class Polygon : public PArray<Point,4> {
     using base = PArray<Point,4>;
  public:
-#if defined(_MSC_VER) && _MSC_VER<1900 || defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
+#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
     explicit Polygon(int nv = 0)                : base(nv) { }
     Polygon(CArrayView<Point> ar)               : base(ar) { }
 #else

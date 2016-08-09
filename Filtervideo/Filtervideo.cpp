@@ -118,7 +118,6 @@ void read_video(const string& filename, bool use_nv12) {
     {
         ConsoleProgress cprogress("Vread");
         for (;;) {
-            fake_use_for_vc12_bug_workaround(floor(nfread+.01f));
             if (trunc_begin+nf_read_expect) cprogress.update(float(nfread)/(trunc_begin+nf_read_expect));
             if (nfread-trunc_begin>=trunc_frames) break;
             if (nfread-trunc_begin>=nf_read_expect+padframes) break;
@@ -370,7 +369,7 @@ void do_bpp(Args& args) {
 }
 
 void do_to(Args& args) {
-    video.attrib().suffix = args.get_string();
+    video.attrib().suffix = to_lower(args.get_string());
 }
 
 void do_outfile(Args& args) {

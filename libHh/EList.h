@@ -3,12 +3,6 @@
 #include <cstddef>              // offsetof()
 #include "Hh.h"
 
-#if defined(_MSC_VER) && _MSC_VER<1900 // fix VS2013 Intellisense error in SRMesh_ogl.cpp
-#undef offsetof
-// #define offsetof(s, m) (size_t)&reinterpret_cast<const volatile char&>((((s*)0)->m)) // original __cplusplus defn
-#define offsetof(s, m) size_t(&(static_cast<s*>(0)->m)) // inspired by non __cplusplus defn
-#endif
-
 #if 0
 {
     struct SRAVertex { EListNode _active; bool ok {true}; ... };

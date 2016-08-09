@@ -51,7 +51,7 @@ template<typename T> class Sac : public BSac {
     template<typename T2> static int allocate() {
         unsigned s = sizeof(T2);
         int k = size;
-        int align = HH_ALIGNOF(T2);
+        int align = alignof(T2);
         max_align = max(max_align, align);
         k = int((k+align-1)/align)*align;
         if (0) SHOW(type_name<T>(), type_name<T2>(), s, size, align, max_align, k);
@@ -115,7 +115,7 @@ template<typename T> class Sac : public BSac {
 // size, cnum, and dnum intially zero
 #define HH_SAC_INITIALIZATION(T)                                              \
     template<> int hh::Sac<T>::size = 0;                                      \
-    template<> int hh::Sac<T>::max_align = HH_ALIGNOF(T);                     \
+    template<> int hh::Sac<T>::max_align = alignof(T);                        \
     template<> int hh::Sac<T>::cnum = 0;                                      \
     template<> int hh::Sac<T>::ckeys[k_max] = {};                             \
     template<> hh::BSac::Func hh::Sac<T>::cfuncs[k_max] = {};                 \

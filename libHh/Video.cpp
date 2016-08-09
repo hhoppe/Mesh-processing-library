@@ -138,7 +138,6 @@ void Video::read_file(const string& filename) {
         ConsoleProgress cprogress("Vread");
         int f = 0;
         for (;;) {
-            fake_use_for_vc12_bug_workaround(floor(f+.01f));
             if (nfexpect) cprogress.update(float(f)/(nfexpect));
             if (f>=nframes()) break;
             if (!rvideo.read((*this)[f])) break;
@@ -154,7 +153,7 @@ void Video::write_file(const string& filename) const {
     HH_TIMER(_write_video);
     assertx(size());
     verify_attrib(const_cast<Video&>(*this).attrib()); // mutable
-    string suffix = get_path_extension(filename);
+    string suffix = to_lower(get_path_extension(filename));
     if (suffix!="") const_cast<Video&>(*this).attrib().suffix = suffix; // mutable
     const bool use_nv12 = false;
     WVideo wvideo(filename, spatial_dims(), attrib(), use_nv12);
@@ -207,7 +206,6 @@ void VideoNv12::read_file(const string& filename, Video::Attrib* pattrib) {
         ConsoleProgress cprogress("Vread");
         int f = 0;
         for (;;) {
-            fake_use_for_vc12_bug_workaround(floor(f+.01f));
             if (nfexpect) cprogress.update(float(f)/(nfexpect));
             if (f>=_grid_Y.dim(0)) break;
             if (!rvideo.read((*this)[f])) break;
@@ -224,7 +222,7 @@ void VideoNv12::write_file(const string& filename, const Video::Attrib& pattrib)
     assertx(size());
     Video::Attrib attrib = pattrib;
     verify_attrib(attrib);
-    string suffix = get_path_extension(filename);
+    string suffix = to_lower(get_path_extension(filename));
     if (suffix!="") attrib.suffix = suffix;
     const bool use_nv12 = true;
     WVideo wvideo(filename, _grid_Y.dims().tail<2>(), attrib, use_nv12);
@@ -377,7 +375,7 @@ RVideo::RVideo(const string& filename, bool use_nv12) : _filename(filename), _us
         fi2() << fi().rdbuf();  // copy the entire input stream to the temporary file
     }
     if (!file_exists(_filename)) throw std::runtime_error("Video file '" + _filename + "' does not exist");
-    _attrib.suffix = get_path_extension(_filename);
+    _attrib.suffix = to_lower(get_path_extension(_filename));
     _impl = Implementation::make(*this);
     if (getenv_bool("VIDEO_DEBUG")) SHOW(_impl->name());
 }
@@ -392,7 +390,7 @@ bool RVideo::discard_frame()                    { return _impl->discard_frame();
 
 WVideo::WVideo(const string& filename, const Vec2<int>& spatial_dims, const Video::Attrib& attrib, bool use_nv12)
     : _filename(filename), _sdims(spatial_dims), _attrib(attrib), _use_nv12(use_nv12), _pfilename(filename) {
-    if (_attrib.suffix=="") _attrib.suffix = get_path_extension(_filename);
+    if (_attrib.suffix=="") _attrib.suffix = to_lower(get_path_extension(_filename));
     if (_attrib.suffix=="")
         throw std::runtime_error("Video '" + filename + "': no filename suffix specified for writing");
     if (file_requires_pipe(_filename)) {

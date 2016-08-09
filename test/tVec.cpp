@@ -10,63 +10,63 @@ using namespace hh;
 namespace hh {
 
 template<typename T, int N, size_t... Is>
-CONSTEXPR Vec<T, (N-1)> V_rest_aux(const Vec<T,N>& u, std::index_sequence<Is...>) {
+constexpr Vec<T, (N-1)> V_rest_aux(const Vec<T,N>& u, std::index_sequence<Is...>) {
     return Vec<T,N-1>(u[Is+1]...);
 }
 
 template<typename T, int N>
-CONSTEXPR Vec<T, (N-1)> V_rest(const Vec<T,N>& u) {
+constexpr Vec<T, (N-1)> V_rest(const Vec<T,N>& u) {
     return V_rest_aux(u, std::make_index_sequence<N-1>());
 }
 
 
 template<int n, typename T, int N, size_t... Is>
-CONSTEXPR Vec<T,n> V_segment_aux(const Vec<T,N>& u, int i, std::index_sequence<Is...>) {
+constexpr Vec<T,n> V_segment_aux(const Vec<T,N>& u, int i, std::index_sequence<Is...>) {
     return Vec<T,n>(u[Is+i]...);
 }
 
 template<int n, typename T, int N>
-CONSTEXPR Vec<T,n> V_segment(const Vec<T,N>& u, int i) {
+constexpr Vec<T,n> V_segment(const Vec<T,N>& u, int i) {
     return V_segment_aux<n, T, N>(u, i, std::make_index_sequence<n>());
 }
 
 
-template<int N> CONSTEXPR size_t V_dot_slow(const Vec<int,N>& u1, const Vec<int,N>& u2) {
+template<int N> constexpr size_t V_dot_slow(const Vec<int,N>& u1, const Vec<int,N>& u2) {
     return u1[0]*u2[0]+V_dot_slow(V_rest(u1), V_rest(u2));
 }
-template<> inline CONSTEXPR size_t V_dot_slow<1>(const Vec<int,1>& u1, const Vec<int,1>& u2) {
+template<> inline constexpr size_t V_dot_slow<1>(const Vec<int,1>& u1, const Vec<int,1>& u2) {
     return u1[0]*u2[0];
 }
 
 
-template<typename T> CONSTEXPR T list_sum(const T& t0) { return t0; }
-template<typename T, typename... U> CONSTEXPR T list_sum(const T& t0, U&&... ts) { return t0+list_sum(ts...); }
+template<typename T> constexpr T list_sum(const T& t0) { return t0; }
+template<typename T, typename... U> constexpr T list_sum(const T& t0, U&&... ts) { return t0+list_sum(ts...); }
 
 
 template<typename T, int N, size_t... Is>
-CONSTEXPR T V_dot_aux(const Vec<T,N>& u1, const Vec<T,N>& u2, std::index_sequence<Is...>) {
+constexpr T V_dot_aux(const Vec<T,N>& u1, const Vec<T,N>& u2, std::index_sequence<Is...>) {
     return list_sum(u1[Is]*u2[Is]...);
 }
 
-template<typename T, int N> CONSTEXPR T V_dot(const Vec<T,N>& u1, const Vec<T,N>& u2) {
+template<typename T, int N> constexpr T V_dot(const Vec<T,N>& u1, const Vec<T,N>& u2) {
     return V_dot_aux(u1, u2, std::make_index_sequence<N>());
 }
 
 
 namespace details {
-template<int N, size_t... Is> CONSTEXPR Vec<int,N> V_iota_aux(std::index_sequence<Is...>) {
+template<int N, size_t... Is> constexpr Vec<int,N> V_iota_aux(std::index_sequence<Is...>) {
     return Vec<int,N>(int(Is)...);
 }
-template<int N, size_t... Is> CONSTEXPR Vec<int,N> V_rev_iota_aux(std::index_sequence<Is...>) {
+template<int N, size_t... Is> constexpr Vec<int,N> V_rev_iota_aux(std::index_sequence<Is...>) {
     return Vec<int,N>(int(N-1-Is)...);
 }
 } // namespace details
 
-template<int N> CONSTEXPR Vec<int,N> V_iota() {
+template<int N> constexpr Vec<int,N> V_iota() {
     return details::V_iota_aux<N>(std::make_index_sequence<N>());
 }
 
-template<int N> CONSTEXPR Vec<int,N> V_rev_iota() {
+template<int N> constexpr Vec<int,N> V_rev_iota() {
     return details::V_rev_iota_aux<N>(std::make_index_sequence<N>());
 }
 
@@ -250,8 +250,6 @@ int main() {
         Vec1<P> s3 = std::move(s1);
     }
     {
-#if defined(_MSC_VER) && _MSC_VER<1900
-#else
         using SU2 = Vec2<unique_ptr<int>>;
         SU2 s1 = V(make_unique<int>(1), make_unique<int>(2));
         assertx(*s1[0]==1);
@@ -261,7 +259,6 @@ int main() {
         assertx(*s2[1]==2);
         assertx(!s1[0]);
         assertx(!s1[1]);
-#endif
     }
 }
 

@@ -34,7 +34,7 @@ class Image : public Matrix<Pixel> {
     struct Attrib;
     explicit Image(const Vec2<int>& pdims = V(0, 0));
     explicit Image(const Vec2<int>& pdims, Pixel pix) : Image(pdims) { fill(*this, pix); }
-    hh_explicit Image(const Image&)             = default;
+    explicit Image(const Image&)                = default;
     explicit Image(const base& image)           : base(image.dims()) { base::assign(image); }
     Image(Image&& m) noexcept                   { swap(*this, m); }                            // =default?
     Image(base&& m) noexcept                    { swap(static_cast<base&>(*this), m); }

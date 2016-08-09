@@ -1,14 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #pragma once
-#if defined(_MSC_VER) && _MSC_VER<1900
-#include <array>                // for VS2013 bug
-#endif
 #include "Array.h"              // ArrayView<>, CArrayView<>
-
-#if defined(_MSC_VER) && _MSC_VER<1900
-#pragma warning(push)
-#pragma warning(disable:4510)   // default constructor could not be generated (e.g. for Vec2<FilterBnd>)
-#endif
 
 namespace hh {
 
@@ -26,9 +18,9 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     Vec()                                       = default;
     Vec(CArrayView<T> ar)                       { assign(ar); }
     // Include arg0 to disambiguate from default constructor.  arg0 may be either const l-value or r-value reference.
-    template<typename... Args> CONSTEXPR Vec(const T& arg0, Args&&... args1) noexcept
+    template<typename... Args> constexpr Vec(const T& arg0, Args&&... args1) noexcept
         : base(nullptr, arg0,            std::forward<Args>(args1)...) { }
-    template<typename... Args> CONSTEXPR Vec(T&& arg0,      Args&&... args1) noexcept
+    template<typename... Args> constexpr Vec(T&& arg0,      Args&&... args1) noexcept
         : base(nullptr, std::move(arg0), std::forward<Args>(args1)...) { }
 // If I defined these operator=() functions, I would also have to define the default copy constructor, etc.
 //     type& operator=(const type& ar)             = default;
@@ -49,16 +41,16 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     // Vec(type&& ar)                           { for_int(i, n) { a()[i] = std::move(ar.a()[i]); } }
     // type& operator=(type&& ar)               { for_int(i, n) { a()[i] = std::move(ar.a()[i]); } return *this; }
 #endif
-    CONSTEXPR int num() const                   { return n; }
-    CONSTEXPR size_t size() const               { return n; }
+    constexpr int num() const                   { return n; }
+    constexpr size_t size() const               { return n; }
     T&                 operator[](int i)        { return (HH_CHECK_BOUNDS(i, n), base::operator[](i)); }
-    CONSTEXPR const T& operator[](int i) const  { return (HH_CHECK_BOUNDS(i, n), base::operator[](i)); }
+    constexpr const T& operator[](int i) const  { return (HH_CHECK_BOUNDS(i, n), base::operator[](i)); }
     T& last()                                   { return (*this)[n-1]; }
     const T& last() const                       { return (*this)[n-1]; }
     bool ok(int i) const                        { return i>=0 && i<n; }
     type with(int i, const T& e) const          { type ar(*this); ar[i] = e; return ar; }
     void assign(CArrayView<T> ar)               { assign_i(ar); }
-    CONSTEXPR type rev() const                  { return rev_aux(std::make_index_sequence<n>()); }
+    constexpr type rev() const                  { return rev_aux(std::make_index_sequence<n>()); }
     // type with(int i, T e) const { type ar(*this); ar[i] = std::move(e); return ar; } // align error on T=Vector4
     // type with(int i, T e) &&                    { operator[](i) = std::move(e); return *this; } // C++14
     bool operator==(const type& p) const        { for_int(i, n) { if (!(a()[i]==p[i])) return false; } return true; }
@@ -100,8 +92,8 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     const T* end() const                        { return a()+n; }
     T* data()                                   { return a(); }
     const T* data() const                       { return a(); }
-    static CONSTEXPR type all(const T& e)       { return all_aux(e, std::make_index_sequence<n>()); }
-    // static CONSTEXPR type all(const T& e)    { return create([=](int) { return e; }); } // no lambda in constexpr
+    static constexpr type all(const T& e)       { return all_aux(e, std::make_index_sequence<n>()); }
+    // static constexpr type all(const T& e)    { return create([=](int) { return e; }); } // no lambda in constexpr
     static constexpr int Num = n;
     template<typename Func = T(int)> static type create(Func func) {
         return create_aux(func, std::make_index_sequence<n>());
@@ -115,10 +107,10 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
         ASSERTX(ar.num()==n); std::copy(ar.data(), ar.data()+n, a());
     }
     bool check(int i, int s) const { if (i>=0 && s>=0 && i+s<=n) return true; SHOW(i, s, n); return false; }
-    template<size_t... Is> CONSTEXPR type rev_aux(std::index_sequence<Is...>) const {
+    template<size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const {
         return type(base::operator[](n-1-Is)...);
     }
-    template<size_t... Is> static CONSTEXPR type all_aux(const T& e, std::index_sequence<Is...>) {
+    template<size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) {
         return type((void(Is), e)...);
     }
     template<typename Func = T(int), size_t... Is> static type create_aux(Func func, std::index_sequence<Is...>) {
@@ -137,24 +129,24 @@ template<typename T> using Vec4 = Vec<T,4>;
 
 // Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
 template<typename T, typename... Ts>
-CONSTEXPR Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(const T& t, Ts... ts) {
+constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(const T& t, Ts... ts) {
     return Vec<std::decay_t<T>, 1+sizeof...(ts)>(t,            std::forward<Ts>(ts)...);
 }
 
 // Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
 template<typename T, typename... Ts>
-CONSTEXPR Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(T&& t,      Ts... ts) {
+constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(T&& t,      Ts... ts) {
     return Vec<std::decay_t<T>, 1+sizeof...(ts)>(std::move(t), std::forward<Ts>(ts)...);
 }
 
 // Construct an Vec with two identical elements, e.g. twice(v)==V(v, v).
-template<typename T> CONSTEXPR Vec2<T> twice(const T& v)     { return {v, v}; }
+template<typename T> constexpr Vec2<T> twice(const T& v)     { return {v, v}; }
 
 // Construct an Vec with three identical elements, e.g. thrice(v)==V(v, v, v).
-template<typename T> CONSTEXPR Vec3<T> thrice(const T& v)    { return {v, v, v}; }
+template<typename T> constexpr Vec3<T> thrice(const T& v)    { return {v, v, v}; }
 
 // Construct an Vec with identical elements, e.g. ntimes<4>(.5f)==V(.5f, .5f, .5f, .5f).
-template<int n, typename T> CONSTEXPR Vec<T,n> ntimes(const T& v) { return Vec<T,n>::all(v); }
+template<int n, typename T> constexpr Vec<T,n> ntimes(const T& v) { return Vec<T,n>::all(v); }
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template<typename T, int n, typename Func> auto map(const Vec<T,n>& c, Func func)
@@ -165,19 +157,19 @@ template<typename T, int n, typename Func> auto map(const Vec<T,n>& c, Func func
 namespace details {
 template<typename T, typename... A> struct concat_n { static constexpr int value = T::Num + concat_n<A...>::value; };
 template<typename T> struct concat_n<T> { static constexpr int value = T::Num; };
-template<typename T, int n1, int n2, size_t... Is> CONSTEXPR
+template<typename T, int n1, int n2, size_t... Is> constexpr
 Vec<T, (n1+n2)> concat_aux(const Vec<T,n1>& a1, const Vec<T,n2>& a2, std::index_sequence<Is...>) {
     return Vec<T,n1+n2>( (Is<n1 ? a1[Is] : a2[Is-n1])... );
 }
 } // namespace details
 
 // Concatenate several Vec's to create single Vec, e.g. concat(V(1, 2), V(3), V(4, 5))==V(1, 2, 3, 4, 5).
-template<typename T, int n1, int n2, typename... A> CONSTEXPR
+template<typename T, int n1, int n2, typename... A> constexpr
 Vec<T, (n1+details::concat_n<Vec<T,n2>, A...>::value)>
 concat(const Vec<T,n1>& a1, const Vec<T,n2>& a2, A... arr) {
     return concat(details::concat_aux(a1, a2, std::make_index_sequence<n1+n2>()), arr...);
 }
-template<typename T, int n1> CONSTEXPR Vec<T,n1> concat(const Vec<T,n1>& a1) { return a1; }
+template<typename T, int n1> constexpr Vec<T,n1> concat(const Vec<T,n1>& a1) { return a1; }
 
 
 //----------------------------------------------------------------------------
@@ -186,26 +178,13 @@ namespace details {
 
 template<typename T, int n> struct Vec_base { // allocates a member variable only if n>0.
     Vec_base()                                  = default;
-#if defined(_MSC_VER) && _MSC_VER<1900
-    // VS2013: _a{{std::move(arg0),  std::forward<Args>(args1)...}} causes internal compiler error,
-    //   so I instead disambiguate from default constructor by introducing a dummy first argument.
-    template<typename... Args> CONSTEXPR Vec_base(void*, Args&&... args) noexcept
-    // before VS2013update 3: : _a{{std::forward<Args>(args)...}} { static_assert(sizeof...(args)==n, "#args"); }
-    // then had Compiler Error C2797; see http://msdn.microsoft.com/en-us/library/dn793970.aspx
-    // and https://connect.microsoft.com/VisualStudio/feedback/details/917150/compiler-error-c2797-on-code-that-previously-worked
-        : _a(std::array<T,n>{std::forward<Args>(args)...}) { static_assert(sizeof...(args)==n, "#args"); }
-    std::array<T,n> _a;
-    // VS2013 bug in _a{...} initialization: error C2536: cannot specify explicit initializer for arrays (C arrays)
-    // see http://connect.microsoft.com/VisualStudio/feedback/details/802058/c-11-unified-initialization-fails-with-c-style-arrays
-#else
-    template<typename... Args> CONSTEXPR Vec_base(void*, Args&&... args) noexcept
+    template<typename... Args> constexpr Vec_base(void*, Args&&... args) noexcept
         : _a{std::forward<Args>(args)...} { static_assert(sizeof...(args)==n, "#args"); }
     T _a[n];
-#endif
     T* a() noexcept                             { return &_a[0]; }
     const T* a() const noexcept                 { return &_a[0]; }
     T&                 operator[](int i)        { return _a[i]; }
-    CONSTEXPR const T& operator[](int i) const  { return _a[i]; } // operator[] needed for constexpr
+    constexpr const T& operator[](int i) const  { return _a[i]; } // operator[] needed for constexpr
 };
 
 template<typename T> struct Vec_base<T,0> {
@@ -214,15 +193,11 @@ template<typename T> struct Vec_base<T,0> {
     T* a() noexcept                             { return nullptr; }
     const T* a() const noexcept                 { return nullptr; }
     T&                 operator[](int)          { return *static_cast<T*>(nullptr); }
-    CONSTEXPR const T& operator[](int) const    { return *static_cast<T*>(nullptr); }
+    constexpr const T& operator[](int) const    { return *static_cast<T*>(nullptr); }
     // No member variable at all.
 };
 
 } // namespace details
-
-#if defined(_MSC_VER) && _MSC_VER<1900
-#pragma warning(pop)
-#endif
 
 
 //----------------------------------------------------------------------------
@@ -240,7 +215,7 @@ template<typename T, int n> std::ostream& operator<<(std::ostream& os, const Vec
 }
 // Unlike would-be HH_DECLARE_OSTREAM_EOL(Vec<T,n>), it considers has_ostream_eol<T>.
 template<typename T, int n> struct has_ostream_eol_aux<Vec<T,n>> {
-    static CONSTEXPR bool value() { return has_ostream_eol<T>(); }
+    static constexpr bool value() { return has_ostream_eol<T>(); }
 };
 
 

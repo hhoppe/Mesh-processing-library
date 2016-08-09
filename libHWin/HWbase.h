@@ -85,11 +85,11 @@ class HWbase : noncopyable {
     virtual void wake_up()                      { } // called from an asynchronous client thread to force redraw
  private:
     friend class HW;            // grant access to HW but not to any DerivedHW
-    string _default_background = "white";
-    string _default_foreground = "black";
-    string _default_geometry = "200x200+100+0";
+    string _default_background {"white"};
+    string _default_foreground {"black"};
+    string _default_geometry {"200x200+100+0"};
     string _argv0;
-    string _window_title = "noname"; // C++11 {"noname"} except bug in VS2013update3; see other instances here
+    string _window_title {"noname"};
     bool _watch_fd0 {false};
     enum class EState { uninit, init, open } _state {EState::uninit};
     enum class EUpdate { nothing, quit, redrawlater, redrawnow } _update {EUpdate::nothing};

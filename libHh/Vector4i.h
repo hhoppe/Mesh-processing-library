@@ -75,9 +75,9 @@ class Vector4i {
     friend Vector4i abs(const Vector4i& l) { return _mm_abs_epi32(l._r); }
 #if !(defined(_M_X64) || defined(__x86_64))
     // "new type[size]" does not create aligned storage -- problem for Vector4i in 32-bit model
-    static void* operator new(size_t s)                 { return aligned_malloc(s, HH_ALIGNOF(type)); }
+    static void* operator new(size_t s)                 { return aligned_malloc(s, alignof(type)); }
     static void operator delete(void* p, size_t)        { aligned_free(p); }
-    static void* operator new[](size_t s)               { return aligned_malloc(s, HH_ALIGNOF(type)); }
+    static void* operator new[](size_t s)               { return aligned_malloc(s, alignof(type)); }
     static void operator delete[](void* p, size_t)      { aligned_free(p); }
 #endif
  private:

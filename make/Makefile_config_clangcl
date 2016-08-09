@@ -83,13 +83,14 @@ ccommon += -EHsc#  enable synchronous exception handling (this flag seems to be 
 # ccommon += -arch:avx2  # does not help enable SSE4.1 instruction set
 
 ifeq ($(plain_compiler),)
-  warningsinheaders = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350
-  mydisabledwarnings = -wd4127 -wd4512 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
-  otherdisabled = -wd4625 -wd4626 -wd4365 -wd4061 -wd4640 -wd4191 -wd4711 -wd4557
-  cxxthoroughwarnings = -Wall $(warningsinheaders) $(mydisabledwarnings) $(otherdisabled)
+  disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350
+  disable_my_warnings = -wd4127 -wd4512 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
+  disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4640 -wd4191 -wd4711 -wd4557
+  cxxthoroughwarnings = -Wall $(disable_warnings_in_headers) $(disable_my_warnings) $(disable_other_warnings)
   cxxnotneeded = -Zc:wchar_t -Zc.forScope -Gd -errorReport:queue
   cwarnings = -W4 $(cxxthoroughwarnings)
-  ccommon += -nologo -WX -Oi $(cwarnings)
+  ccommon += $(if $(ignore_compile_warnings:0=),,-WX)
+  ccommon += -nologo -Oi $(cwarnings)
   notrecognized = -Gm- -Zc:rvalueCast -fp:fast -FC
   #   -Zc:strictStrings: "Note that when you are using this option in debug mode, the STL will not compile."
   # cxxall += -showIncludes  # show all included header files

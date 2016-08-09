@@ -867,8 +867,11 @@ int my_pclose(FILE* file) {
 const int tot_fd = 512;         // max of _NHANDLE_ in internal.h
 intptr_t* popen_pid = nullptr;
 
+static std::mutex s_mutex;
+
 template<typename Tcmd>         // const string& or CArrayView<string>
 FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
+    std::lock_guard<std::mutex> lg(s_mutex);
     assertx(mode=="rb" || mode=="wb");
     bool is_read = mode=="rb";
     if (0) SHOW(getenv_string("PATH"));
@@ -911,6 +914,7 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
 }
 
 int my_pclose_internal(FILE* file) {
+    std::lock_guard<std::mutex> lg(s_mutex);
     int fd = fileno(file);
     assertx(!fclose(file));
     assertx(popen_pid);
@@ -923,22 +927,16 @@ int my_pclose_internal(FILE* file) {
 
 FILE* my_popen(const string& scmd, const string& mode) {
     string mode2 = mode + "b";    // always binary format
-    FILE* file;
-    HH_LOCK { file = my_popen_internal(scmd, mode2); }
-    return file;
+    return my_popen_internal(scmd, mode2);
 }
 
 FILE* my_popen(CArrayView<string> scmd, const string& mode) {
     string mode2 = mode + "b";    // always binary format
-    FILE* file;
-    HH_LOCK { file = my_popen_internal(scmd, mode2); }
-    return file;
+    return my_popen_internal(scmd, mode2);
 }
 
 int my_pclose(FILE* file) {
-    int ret;
-    HH_LOCK { ret = my_pclose_internal(file); }
-    return ret;
+    return my_pclose_internal(file);
 }
 
 

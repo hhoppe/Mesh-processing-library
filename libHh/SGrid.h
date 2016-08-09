@@ -32,16 +32,16 @@ template<typename T, int d0, int... od> class SGrid :
     SGrid()                                     = default;
     SGrid(const type&)                          = default;
     SGrid(initializer_type l)                   { *this = l; } // not constexpr, instead use = V(V(), V(), ...)
-    CONSTEXPR explicit SGrid(const base& g)     : base(g) { }
-    CONSTEXPR SGrid(base&& g)                   : base(std::move(g)) { } // added move 20140414; ok?
+    constexpr explicit SGrid(const base& g)     : base(g) { }
+    constexpr SGrid(base&& g)                   : base(std::move(g)) { } // added move 20140414; ok?
     SGrid(CGridView<D,T> g)                     { *this = g; }
     type& operator=(const type& g)              = default;
     type& operator=(initializer_type l)         { nested_retrieve()(*this, l); return *this; }
     type& operator=(CGridView<D,T> g)           { assign(g); return *this; }
-    CONSTEXPR int order() const                 { return D; } // also called rank
-    CONSTEXPR Vec<int,D> dims() const           { return Vec<int,D>(d0, od...); }
-    CONSTEXPR int dim(int c) const              { return dims()[c]; }
-    CONSTEXPR size_t size() const               { return vol; }
+    constexpr int order() const                 { return D; } // also called rank
+    constexpr Vec<int,D> dims() const           { return Vec<int,D>(d0, od...); }
+    constexpr int dim(int c) const              { return dims()[c]; }
+    constexpr size_t size() const               { return vol; }
     T&       operator[](const Vec<int,D>& u)         { return raster(grid_index(dims(), u)); }
     const T& operator[](const Vec<int,D>& u) const   { return raster(grid_index(dims(), u)); }
     slice&       operator[](int r)              { ASSERTXX(check(r)); return b()[r]; }

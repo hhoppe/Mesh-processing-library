@@ -97,6 +97,9 @@ endif
 # # cppinc += -DHH_NO_LIB_REFERENCES
 # # cppinc += -DHH_NO_HH_INIT
 
+ignore_compile_warnings := 1  # set for distrib
+less_pedantic := 1            # set for distrib
+
 ifneq ($(CONFIG),win)
 cppinc += -DHH_NO_VIDEO_LOOP#  because LoopAPILib is only compiled for CONFIG==win
 endif

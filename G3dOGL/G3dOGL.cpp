@@ -85,8 +85,8 @@ struct Slider { string name; float* val; };
 
 constexpr int k_max_object = 1024; // should be >= objects::MAX
 
-// const string k_default_geometry="600x600+0+0";
-// const string k_default_geometry="1000x1000+0+0";
+// const string k_default_geometry = "600x600+0+0";
+// const string k_default_geometry = "1000x1000+0+0";
 const string k_default_geometry = "1000x1000+150+0";
 constexpr float k_default_hither = .1f;
 constexpr float k_default_yonder = BIGFLOAT;

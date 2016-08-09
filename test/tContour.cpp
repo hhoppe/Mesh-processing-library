@@ -128,8 +128,8 @@ void do_densemonkey() {
 }
 
 void do_sphere() {
-    constexpr float k_radius = .4f;
-    auto func_sphere = [&](const Vec3<float>& p) { // [&] capture no longer necessary with C++11 constexpr
+    static constexpr float k_radius = .4f;
+    auto func_sphere = [](const Vec3<float>& p) {
         float r = dist(p, V(.5f, .5f, .5f));
         if (0) {
             return square(r)-square(k_radius);

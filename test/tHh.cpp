@@ -529,10 +529,10 @@ line2)";
         unique_ptr<int> p3 = assertx(std::move(p2)); assertx(*p3==57 && !p2);
     }
     if (0) {
-        SHOW(HH_ALIGNOF(ArrayView<char>)); // 8 on win, mingw
-        SHOW(sizeof(ArrayView<char>));     // 16 on win, mingw
-        SHOW(HH_ALIGNOF(Array<char>));     // 8 on win, mingw
-        SHOW(sizeof(Array<char>));         // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
+        SHOW(alignof(ArrayView<char>)); // 8 on win, mingw
+        SHOW(sizeof(ArrayView<char>));  // 16 on win, mingw
+        SHOW(alignof(Array<char>));     // 8 on win, mingw
+        SHOW(sizeof(Array<char>));      // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
         // see ~/src/test/native/bug_size.cpp
     }
 }

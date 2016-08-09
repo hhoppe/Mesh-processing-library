@@ -146,7 +146,7 @@ void Image::read_file_wic(const string& filename, bool bgr) {
     { unsigned frame_count; AS(decoder->GetFrameCount(&frame_count)); assertw(frame_count==1); }
     {
         GUID container_format; AS(decoder->GetContainerFormat(&container_format));
-        string filename_suffix = get_path_extension(filename);
+        string filename_suffix = to_lower(get_path_extension(filename));
         const GUID* expected_format = get_container_format(filename_suffix);
         if (expected_format && container_format!=*expected_format) {
             string container_suffix = get_suffix(&container_format);
@@ -253,7 +253,7 @@ string canonical_pathname(string s) {
 void Image::write_file_wic(const string& filename, bool bgr) const {
     string suf;
     // previously had: if (suffix()=="" && file_requires_pipe(filename)) suf = "bmp";
-    if (suf=="") suf = get_path_extension(filename);
+    if (suf=="") suf = to_lower(get_path_extension(filename));
     if (suf=="") suf = suffix();
     if (suf=="")
         throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");

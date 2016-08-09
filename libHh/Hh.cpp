@@ -430,7 +430,11 @@ static void hh_init_aux() {
 #endif
 #if !defined(HH_NO_EXCEPTION_HOOKS)
     if (!getenv_bool("HH_NO_EXCEPTION_HOOKS")) {
-        std::set_new_handler(&new_failed);
+        dummy_use(new_failed);
+#if defined(__CYGWIN__)
+        std::set_new_handler(&new_failed); // the default behavior is to throw std::bad_alloc
+        // else on Cygwin, no diagnostic is reported (other than nonzero exit code)
+#endif
 #if defined(_MSC_VER)
         if (!IsDebuggerPresent()) {
             // Because the "Just-in-time debugging" no longer seems to work.
@@ -511,12 +515,6 @@ static void hh_init_aux() {
     }
     if (1) {
         // Use standard format for float/double printf("%e"): 2 instead of 3 digits for exponent if possible.
-#if defined(_MSC_VER) && _MSC_VER<1900
-        // "The removal of _set_output_format in Visual Studio 2015 is by design.  The standards-conforming
-        //  two-digit exponent mode is now the default and the non-conforming, previously-default,
-        //  three-digit exponent format is no longer supported."
-        _set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
 #if defined(__MINGW32__)
         // For mingw32, using _set_output_format requires modifying __MSVCRT_VERSION__ on
         //   *all* compiled files (libpng.a etc.), and then getting a dependency on msvcr100.dll .
@@ -1165,9 +1163,7 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 0)) string vsform(const char* f
         } else {
             assertx(n==-1);
             // WIN32 unfortunately returns -1 for either format error or insufficient size.
-#if defined(_MSC_VER) && _MSC_VER<1800
-            if (size<500000) { size *= 4; n = 0; }
-#elif defined(_MSC_VER) && _MSC_VER>=1800
+#if defined(_MSC_VER)
             va_copy(ap2, ap);
             n = vsnprintf(nullptr, 0, format, ap2);
             va_end(ap2);
@@ -1202,9 +1198,7 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 0)) void vssform(string& str, c
         } else {
             assertx(n==-1);
             // WIN32 unfortunately returns -1 for either format error or insufficient size.
-#if defined(_MSC_VER) && _MSC_VER<1800
-            if (str.size()<500000) { str.resize(str.size()*4); n = 0; }
-#elif defined(_MSC_VER) && _MSC_VER>=1800
+#if defined(_MSC_VER)
             va_copy(ap2, ap);
             n = vsnprintf(nullptr, 0, format, ap2);
             va_end(ap2);

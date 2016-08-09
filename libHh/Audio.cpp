@@ -82,7 +82,7 @@ void Audio::read_file(const string& pfilename) {
         fi2() << fi().rdbuf();  // copy the entire stream
     }
     if (!file_exists(filename)) throw std::runtime_error("Audio file '" + filename + "' does not exist");
-    attrib().suffix = get_path_extension(filename);
+    attrib().suffix = to_lower(get_path_extension(filename));
     if (audio_test_codec) {
         if (ldebug) SHOWL;
         assertx(attrib().suffix=="wav");
@@ -236,7 +236,8 @@ void Audio::write_file(const string& pfilename) const {
         Warning("Setting a high audio bitrate");
         const_cast<Audio&>(*this).attrib().bitrate = 256*1000; // mutable
     }
-    if (attrib().suffix=="") const_cast<Audio&>(*this).attrib().suffix = get_path_extension(filename); // mutable
+    if (attrib().suffix=="")
+        const_cast<Audio&>(*this).attrib().suffix = to_lower(get_path_extension(filename)); // mutable
     if (attrib().suffix=="")
         throw std::runtime_error("Audio '" + filename + "': no filename suffix specified for writing");
     unique_ptr<TmpFile> tmpfile;

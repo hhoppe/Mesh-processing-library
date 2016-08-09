@@ -102,20 +102,6 @@ typedef struct { long double x, y; } __float128;
 using namespace std; namespace hh { } using namespace hh;
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER<1900 // some C++11 keywords do not yet exist in VS2013
-#define noexcept throw()
-#define constexpr const
-#define CONSTEXPR
-#else  // C++11
-#define CONSTEXPR constexpr
-#endif
-
-#if defined(__GNUC__) && !defined(__clang_)
-#define hh_explicit  // gcc unhappy creating copy constructor for Vec<T,n> if T has explicit copy constructor
-#else
-#define hh_explicit explicit
-#endif
-
 #define HH_EAT_SEMICOLON static_assert(true, "") // redundant declaration to swallow subsequent semicolon
 
 // Safest to indirect once through these.  http://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
@@ -130,18 +116,10 @@ using namespace std; namespace hh { } using namespace hh;
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__)) // C++11; http://stackoverflow.com/a/15864723
 #endif
 
-#if defined(_MSC_VER) && _MSC_VER<1900
-#define HH_ALIGNAS(num) __declspec(align(num))
-#elif defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
+#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
 #define HH_ALIGNAS(num) __attribute__((aligned(num)))
 #else
 #define HH_ALIGNAS(num) alignas(num) // C++11
-#endif
-
-#if defined(_MSC_VER) && _MSC_VER<1900
-#define HH_ALIGNOF(type) __alignof(type)
-#else
-#define HH_ALIGNOF(type) alignof(type) // C++11
 #endif
 
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
@@ -152,10 +130,8 @@ using namespace std; namespace hh { } using namespace hh;
 
 #if defined(__GNUC__)
 #define HH_ATTRIBUTE(...) __attribute__((__VA_ARGS__)) // see also __declspec(x)
-#elif _MSC_VER>=1900
-#define HH_ATTRIBUTE(...) [[__VA_ARGS__]]   // C++11
 #else
-#define HH_ATTRIBUTE(...) HH_PRAGMA(message("HH_ATTRIBUTE?"))
+#define HH_ATTRIBUTE(...) [[__VA_ARGS__]]   // C++11
 #endif
 
 #if defined(__GNUC__)
@@ -267,7 +243,7 @@ template<typename T> std::enable_if_t<std::is_array<T>::value, unique_ptr<T> > m
 } // namespace std
 #endif
 
-#if ((defined(_MSC_VER) && _MSC_VER<1900) || (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L))) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE)
+#if (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L)) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE)
 namespace std {
 // C++14 http://en.cppreference.com/w/cpp/utility/integer_sequence
 // Useful template for creating and processing parameter packs.
@@ -341,19 +317,11 @@ template<typename T> struct false_capture {
 };
 
 // Derive from this class to disable copy constructor and copy assignment.
-// In VS2013, it unfortunately disables move constructor and move assignment unless defined in the derived class.
 struct noncopyable {
  protected:
     noncopyable(const noncopyable&)                     = delete;
     noncopyable& operator=(const noncopyable&)          = delete;
-#if defined(_MSC_VER) && _MSC_VER<1900
-    noncopyable(noncopyable&&) {} // with VS2013, default move constructors are not automatically generated
-    noncopyable& operator=(noncopyable&&) { return *this; }
- public:      // public for VS2013 Intellisense bug
     noncopyable() = default;
-#else
-    noncopyable() = default;    // C++11
-#endif
 };
 
 // Specialize<i> is a dummy type for function specialization.
@@ -408,7 +376,7 @@ HH_NORETURN void assertnever_aux(const char* s);
 inline HH_NORETURN void assertnever_aux(const std::string& s) { assertnever_aux(s.c_str()); }
 bool assert_aux(bool b_assertx, const char* s);
 inline string add_fl(string s, const char* file_line) { return s + file_line; }
-template<typename T> CONSTEXPR T assertx_aux(T&& val, const char* s) {
+template<typename T> constexpr T assertx_aux(T&& val, const char* s) {
     return ((!val ? assertnever_aux(s) : void(0)), std::forward<T>(val));
 }
 } // namespace details
@@ -445,14 +413,14 @@ template<typename A, typename B> std::ostream& operator<<(std::ostream& os, cons
 }
 
 // By default, assume that types do not end their stream output with a newline character.
-template<typename T> struct has_ostream_eol_aux { static CONSTEXPR bool value() { return false; } };
+template<typename T> struct has_ostream_eol_aux { static constexpr bool value() { return false; } };
 
 // Declares that the specified type ends its stream output with a newline character; must be placed in namespace hh.
 #define HH_DECLARE_OSTREAM_EOL(...)                                                             \
-    struct has_ostream_eol_aux<__VA_ARGS__> { static CONSTEXPR bool value() { return true; } }
+    struct has_ostream_eol_aux<__VA_ARGS__> { static constexpr bool value() { return true; } }
 
 // Identifies if a type T ends its stream output (i.e. operator<<(std::ostream)) with a newline character "\n".
-template<typename T> CONSTEXPR bool has_ostream_eol() {
+template<typename T> constexpr bool has_ostream_eol() {
     // (function template cannot partially specialize, e.g. Array<T>)
     return has_ostream_eol_aux<std::remove_cv_t<std::remove_reference_t<T>>>::value();
 }
@@ -561,12 +529,12 @@ void aligned_free(void* p);
 
 // Allocate n elements of type T, with appropriate memory alignment based on T.
 template<typename T> T* aligned_new(size_t n) {
-    return HH_ALIGNOF(T)<=8 ? new T[n] : static_cast<T*>(aligned_malloc(n*sizeof(T), HH_ALIGNOF(T)));
+    return alignof(T)<=8 ? new T[n] : static_cast<T*>(aligned_malloc(n*sizeof(T), alignof(T)));
 }
 
 // Deallocate aligned memory.
 template<typename T> void aligned_delete(T* p) {
-    if (HH_ALIGNOF(T)<=8) delete[] p; else aligned_free(p);
+    if (alignof(T)<=8) delete[] p; else aligned_free(p);
 }
 
 // Read a line of input (trailing "\n" is discarded).
@@ -627,16 +595,16 @@ void ensure_utf8_encoding(int& argc, const char**& argv);
 // *** Inlines
 
 // Returns T(-1) or T(+1) based on sign of expression.
-template<typename T> CONSTEXPR T sign(const T& e)        { return e>=T(0) ? T(1) : T(-1); }
+template<typename T> constexpr T sign(const T& e)        { return e>=T(0) ? T(1) : T(-1); }
 
 // Returns { T(-1), T(0), T(+1) } based on sign of expression.
-template<typename T> CONSTEXPR T signz(const T& e)       { return e>T(0) ? T(1) : e<T(0) ? T(-1) : T(0); }
+template<typename T> constexpr T signz(const T& e)       { return e>T(0) ? T(1) : e<T(0) ? T(-1) : T(0); }
 
 // Returns a value times itself.
-template<typename T> CONSTEXPR T square(const T& e)      { return e*e; }
+template<typename T> constexpr T square(const T& e)      { return e*e; }
 
 // Returns v clamped to the range [a, b].
-template<typename T> CONSTEXPR T clamp(const T& v, const T& a, const T& b) {
+template<typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
     return (ASSERTXX(!(v<a && v>b)), v<a ? a : v>b ? b : v);
 }
 
@@ -675,7 +643,7 @@ template<> inline void my_zero(float& e) { e = 0.f; }
 template<> inline void my_zero(double& e) { e = 0.; }
 
 // Conversion with bounds-checking in Debug configuration.
-template<typename Target, typename Source> CONSTEXPR Target narrow_cast(Source v) {
+template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
@@ -689,7 +657,7 @@ template<typename Target, typename Source> CONSTEXPR Target narrow_cast(Source v
 }
 
 // Bounds-safe conversion, checked even in Release configuration.
-template<typename Target, typename Source> CONSTEXPR Target assert_narrow_cast(Source v) {
+template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
 #if defined(_MSC_VER)
 #pragma warning(suppress:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
 #endif
@@ -697,7 +665,7 @@ template<typename Target, typename Source> CONSTEXPR Target assert_narrow_cast(S
 }
 
 // Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
-template<typename Target, typename Source> CONSTEXPR Target possible_cast(Source v) {
+template<typename Target, typename Source> constexpr Target possible_cast(Source v) {
     return static_cast<Target>(v);
 }
 

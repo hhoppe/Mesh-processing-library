@@ -10,11 +10,13 @@ struct AreaData {
     float area;
 };
 
-class SplitRecord /* : noncopyable */ { // C++11 _MSC_VER>=1900 will permit this
+class SplitRecord {
  public:
     SplitRecord()                               { reset(); }
-    // SplitRecord(SplitRecord&&)                  = default; // C++11 _MSC_VER>=1900
-    // SplitRecord& operator=(SplitRecord&&)       = default;
+    SplitRecord(const SplitRecord&)             = delete;
+    SplitRecord& operator=(const SplitRecord&)  = delete;
+    SplitRecord(SplitRecord&&)                  = default;
+    SplitRecord& operator=(SplitRecord&&)       = default;
     bool read(std::istream& is);
     void write(std::ostream& os) const;
     void reset();

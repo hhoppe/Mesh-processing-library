@@ -124,14 +124,14 @@ struct SRVsplit {
 #if !defined(SR_NOR001)
     float uni_error_mag2;       // magnitude2 of uniform residual error
 #else
-    static const float uni_error_mag2; // always 0.f; constexpr in C++11
+    static const float uni_error_mag2; // always 0.f
 #endif
     float dir_error_mag2;       // magnitude2 of directional residual error
     float radius_neg;           // max radius of influence (negated)
 #if !defined(SR_NOR001)
     float sin2alpha;            // backface region, square(sin(alpha))
 #else
-    static const float sin2alpha; // always 0.f; constexpr in C++11
+    static const float sin2alpha; // always 0.f
 #endif
 };
 

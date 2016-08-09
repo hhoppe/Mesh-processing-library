@@ -40,6 +40,7 @@ class ConsoleProgress : noncopyable {
     bool _silent;
     void update_i(float f);
     static bool& s_f_silent();  // singleton pattern function
+    static std::mutex& s_f_global_mutex() { static std::mutex m; return m; } // singleton pattern function
 };
 
 class ConsoleProgressInc : public ConsoleProgress {
@@ -70,7 +71,8 @@ inline void ConsoleProgress::update_i(float f) {
     //            I modified emacs shell to delete backwards to the line beginning.
     int val = clamp(int(f*100.f), 0, 99);
     if (val<=_last_val) return;
-    HH_LOCK {                   // synchronize in case multiple threads are updating the object
+    {                 // synchronize in case multiple threads are updating the object or using ConsoleProgress
+        std::lock_guard<std::mutex> lg(s_f_global_mutex());
         if (!(val<=_last_val)) {
             // int old_val = val; std::swap(_last_val, old_val);
             int old_val = _last_val.exchange(val);
@@ -92,7 +94,8 @@ inline void ConsoleProgress::update_i(float f) {
 inline void ConsoleProgress::clear() {
     if (_silent) return;
     if (_last_val<0) return;
-    HH_LOCK {
+    {                           // synchronize in case multiple threads are using ConsoleProgress
+        std::lock_guard<std::mutex> lg(s_f_global_mutex());
         if (!(_last_val<0)) {
             _last_val = -1;
             string str;

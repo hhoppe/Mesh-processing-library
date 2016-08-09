@@ -23,19 +23,21 @@ CC = cl
 ccommon += -openmp -EHsc
 
 ifeq ($(plain_compiler),)
-  warningsinheaders = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
-  mydisabledwarnings = -wd4127 -wd4512 -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
-  otherdisabled = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
+  disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
+  disable_my_warnings = -wd4127 -wd4512
+  disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
   ifeq ($(msvc),2013)
-    otherdisabled += -wd4062#  <ppltasks.h> from <future>
+    disable_other_warnings += -wd4062#  <ppltasks.h> from <future>
   endif
   ifeq ($(msvc),2015)
-    otherdisabled += -wd5026 -wd5027
+    disable_other_warnings += -wd5026 -wd5027
   endif
-  cxxthoroughwarnings = -Wall $(warningsinheaders) $(mydisabledwarnings) $(otherdisabled)
+  cxxthoroughwarnings = -Wall $(disable_warnings_in_headers) $(disable_my_warnings) $(disable_other_warnings)
   cxxnotneeded = -Zc:wchar_t -Zc.forScope -Gd -errorReport:queue
   cwarnings = -W4 $(cxxthoroughwarnings)
-  ccommon += -nologo -WX -Oi -Gm- -Zc:rvalueCast -fp:fast -FC $(cwarnings)#  -Zc:inline in VS2003 CTP2
+  ccommon += $(if $(ignore_compile_warnings:0=),,-WX)
+  ccommon += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE
+  ccommon += -nologo -Oi -Gm- -Zc:rvalueCast -fp:fast -FC $(if $(less_pedantic:0=),,$(cwarnings))
   # cxxall += -GR-#  could disable RTTI
   #   -Zc:strictStrings: "Note that when you are using this option in debug mode, the STL will not compile."
   # cxxall += -showIncludes  # show all included header files

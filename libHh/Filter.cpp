@@ -331,11 +331,6 @@ struct Filter_hamming6 final : Filter {
 const Filter& Filter::get(const string& name) {
     assertx(name!="");
     // Careful: Filter::get() may be called by some static constructor.
-    {
-        // With VS2013 debug, the following created pointers to objects with uninitialized v-tables.
-        // static Array<const Filter*> filters { &g_Filter_impulse, &g_Filter_box, ... }
-        // SHOW(static_cast<Filter&>(g_Filter_impulse).radius()); // this would fail
-    }
     static Array<const Filter*> filters;
     static std::once_flag flag;
     std::call_once(flag, []() {

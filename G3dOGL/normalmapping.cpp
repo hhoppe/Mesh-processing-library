@@ -108,7 +108,6 @@ struct NormalMapping_ogl2 final : NormalMapping {
     //
     GLuint program_id;
     GLuint fragment_shader_id;
-    // const string unused_vertex_shader {1+R"( // C++11, but bug in VS2013update3
     const string unused_vertex_shader = (1+R"(
         void main() {
             gl_TexCoord[0] = gl_MultiTexCoord0;

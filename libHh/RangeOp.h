@@ -122,7 +122,7 @@ R sort(R&& range, Comp comp = Comp{}) {
 }
 // R sorted(const R& range) { return sort(clone(range)); }
 
-// Minimum value in a range (by default using less(a, b)).
+// Minimum value in a non-empty range (by default using less(a, b)).
 template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R> >
 iterator_t<R> min(const R& range, Comp comp = Comp{}) {
     using std::begin; using std::end;
@@ -133,7 +133,7 @@ iterator_t<R> min(const R& range, Comp comp = Comp{}) {
     // return v;
 }
 
-// Maximum value in a range (using less(a, b)).
+// Maximum value in a non-empty range (using less(a, b)).
 template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R> >
 iterator_t<R> max(const R& range, Comp comp = Comp{}) {
     using std::begin; using std::end;
@@ -183,7 +183,7 @@ template<typename T> struct factor_type {
 };
 template<typename T> using factor_type_t = typename factor_type<T>::type;
 
-// Minimum value in a range (using less(a, b)); store its index [0..size(range)-1] in *pi.
+// Minimum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> min_index(const R& range, int* pi) {
     using std::begin; using std::end;
     ASSERTX(pi); ASSERTX(begin(range)!=end(range));
@@ -192,7 +192,7 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> min_index(c
     return *p;
 }
 
-// Maximum value in a range (using less(a, b)); store its index [0..size(range)-1] in *pi.
+// Maximum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_index(const R& range, int* pi) {
     using std::begin; using std::end;
     ASSERTX(pi); ASSERTXX(begin(range)!=end(range));
@@ -201,7 +201,7 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_index(c
     return *p;
 }
 
-// Minimum over a range of values (using successive min(a, b) rather than less(a, b)).
+// Minimum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_min(const R& range) {
     using T = iterator_t<R>;
     using std::begin; using std::end;
@@ -210,7 +210,7 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_
     return v;
 }
 
-// Maximum over a range of values (using successive min(a, b) rather than less(a, b)).
+// Maximum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_max(const R& range) {
     using T = iterator_t<R>;
     using std::begin; using std::end;
@@ -219,7 +219,7 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_
     return v;
 }
 
-// Maximum absolute value in a range.
+// Maximum absolute value in a non-empty range.
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_abs_element(const R& range) {
     using T = iterator_t<R>;
     using std::begin; using std::end;
@@ -298,7 +298,7 @@ template<typename R, typename = enable_if_range_t<R> > mean_type_t<iterator_t<R>
     return max(MeanType((v2-v*v*(Factor(1)/num))*(Factor(1)/(num-Factor(1)))), zero);
 }
 
-// Product of values in a range.
+// Product of values in a non-empty range.
 template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> > product(const R& range) {
     using T = iterator_t<R>;
     using SumType = sum_type_t<T>;
@@ -315,7 +315,7 @@ template<typename R, typename = enable_if_range_t<R> > bool is_zero(const R& ran
     return true;
 }
 
-// Modify the range to have unit norm.
+// Modify the range to have unit norm (or die if input has zero norm).
 template<typename R, typename = enable_if_range_t<R> > R normalize(R&& range) {
     using T = iterator_t<R>;
     T v = static_cast<T>(T(1.f)/assertx(mag(range)));

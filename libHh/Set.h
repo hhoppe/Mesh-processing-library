@@ -45,8 +45,7 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
     using value_type = T;
     using iterator = typename base::iterator;
     using const_iterator = typename base::const_iterator;
-    // Set() = default; // would force instantiation of default constructor for Hashf on VS2013
-    Set()                                       { }
+    Set()                                       = default;
     explicit Set(Hashf hashf)                   : _s(0, hashf) { }
     explicit Set(Hashf hashf, Equalf equalf)    : _s(0, hashf, equalf) { }
     void clear()                                { _s.clear(); }

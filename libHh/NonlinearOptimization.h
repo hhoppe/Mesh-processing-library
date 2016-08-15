@@ -17,7 +17,7 @@ namespace hh {
 //  provided using set_max_neval().
 template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimization : noncopyable {
  public:
-    // renamed x to x_ because of VS2015 bug warning "C4459: declaration of 'x' hides global declaration"
+    // (renamed x to x_ due to VS2015 bug warning "C4459: declaration of 'x' hides global declaration")
     explicit NonlinearOptimization(ArrayView<double> x_) : NonlinearOptimization(x_, Eval()) { }
     NonlinearOptimization(ArrayView<double> x_, Eval eval)
         : NonlinearOptimization(nullptr, x_, eval) { _debug = getenv_int("NLOPT_DEBUG"); }

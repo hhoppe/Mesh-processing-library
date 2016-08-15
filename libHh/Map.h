@@ -36,8 +36,7 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
     class keys_range; class values_range; class cvalues_range;
     using Hashf = typename base::hasher;
     using Equalf = typename base::key_equal;
-    // Map() = default; // would force instantiation of default constructor for Hashf on VS2013
-    Map()                                       { }
+    Map()                                       = default;
     explicit Map(Hashf hashf)                   : _m(0, hashf) { }
     explicit Map(Hashf hashf, Equalf equalf)    : _m(0, hashf, equalf) { }
     void clear()                                { _m.clear(); }

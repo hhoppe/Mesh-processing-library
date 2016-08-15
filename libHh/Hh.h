@@ -364,8 +364,8 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define ASSERTXX(...) assertx(__VA_ARGS__) // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i>=0 && i<n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
-// Added "!!" for unique_ptr<> in VS2013; added "0" for clang use in constexpr
-#define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(!!(__VA_ARGS__)))
+// Added "0" for clang use in constexpr
+#define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
 // The next two became necessary for VC12 optimization of Vec::operator[] in GradientDomainLoop.cpp
 #define ASSERTXX(...) (void(0))
 #define HH_CHECK_BOUNDS(i, n) (void(0))

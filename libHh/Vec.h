@@ -22,18 +22,17 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
         : base(nullptr, arg0,            std::forward<Args>(args1)...) { }
     template<typename... Args> constexpr Vec(T&& arg0,      Args&&... args1) noexcept
         : base(nullptr, std::move(arg0), std::forward<Args>(args1)...) { }
-// If I defined these operator=() functions, I would also have to define the default copy constructor, etc.
-//     type& operator=(const type& ar)             = default;
-//     type& operator=(type&& ar)                  = default;
-//     type& operator=(CArrayView<T> ar)           { assign(ar); return *this; }
-//     type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
 #if 0
+    // If I defined these operator=() functions, I would also have to define the default copy constructor, etc.
+    // type& operator=(const type& ar)             = default;
+    // type& operator=(type&& ar)                  = default;
+    // type& operator=(CArrayView<T> ar)           { assign(ar); return *this; }
+    // type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
     // CONFIG=win : VS2013 does not create implicit move constructor and move assignment.
     //  I cannot define them =default, and if I define them, the class is no longer trivial.
     //  See SA in tVec.cpp
     // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
-    //  it is safest to not include any copy-constructor, even a default one.
-    //  Vec(const type&) = default;
+    //  it is safest to not include any copy-constructor, not even a default one.
     Vec(const type&)                            = default;
     type& operator=(const type& ar)             = default;
     Vec(type&&)                                 = default;

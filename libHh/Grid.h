@@ -187,7 +187,7 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     CArrayView<T> array_view() const            { return CArrayView<T>(data(), narrow_cast<int>(size())); }
     // For implementation of Matrix (D==2):
     T& inside(int y, int x, Bndrule bndrule1) {
-        // buggy VS2015 warning about shadowed variable
+        // (renamed bndrule to bndrule1 due to buggy VS2015 warning about shadowed variable)
         bool b = map_inside(y, x, bndrule1); ASSERTX(b); return (*this)[y][x];
     }
     const T& inside(int y, int x, Bndrule bndrule) const {
@@ -412,7 +412,7 @@ template<int D, typename T> template<typename... A> const T& CGridView<D,T>::ope
 }
 
 template<int D, typename T> bool CGridView<D,T>::map_inside(int& y, int& x, Bndrule bndrule1) const {
-    // buggy VS2015 warning about shadowed variable
+    // (renamed bndrule to bndrule1 due to buggy VS2015 warning about shadowed variable)
     static_assert(D==2, "");
     return map_boundaryrule_1D(y, ysize(), bndrule1) && map_boundaryrule_1D(x, xsize(), bndrule1);
 }

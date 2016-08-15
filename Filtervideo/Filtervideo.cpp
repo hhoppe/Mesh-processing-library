@@ -730,10 +730,10 @@ void do_makeloop(Args& args) {
                 }
             }
             if (1) multigrid.set_screening_weight(screening_weight);
-            if (1) multigrid.set_num_vcycles(3); // was 3 then 10
+            if (1) multigrid.set_num_vcycles(3); // was 3 then 10 then 3
             if (0) multigrid.set_verbose(true);
             multigrid.solve();
-            for_int(f, nf) for_int(y, ny) for_int(x, nx) {
+            parallel_for_int(f, nf) for_int(y, ny) for_int(x, nx) {
                 nvideo(f, y, x)[z] = clamp_to_uchar(int(to_float(video(fbeg+f, y, x)[z])+
                                                         multigrid.result()(f, y, x)+.5f));
             }

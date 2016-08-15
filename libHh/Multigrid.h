@@ -167,11 +167,8 @@ class Multigrid : noncopyable {
         float fac = 1.f/product(range);
         int largest_odd_size = 0, largest_other_size = 0;
         for (int d : dims) {
-            if (d%2==1 && d>largest_odd_size) {
-                largest_odd_size = d;
-            } else if (d>largest_other_size) {
-                largest_other_size = d;
-            }
+            if (d%2==1 && d>largest_odd_size) std::swap(d, largest_odd_size);
+            largest_other_size = max(largest_other_size, d);
         }
         T bordervalue; my_zero(bordervalue);
         // Easy inside part [0, dims/2-1]:
@@ -183,7 +180,7 @@ class Multigrid : noncopyable {
         // The optional D leftover hyperplanes [dims/2, ndims-1] for odd sizes
         Vec<Bndrule,D> bndrules;
         for_int(d, D) {         // emperically, I found this boundary rule to behave well
-            bndrules[d] = (_periodic(d) ? Bndrule::periodic :
+            bndrules[d] = (_periodic(d) ? Bndrule::border :
                            largest_odd_size>=largest_other_size ? Bndrule::border :
                            Bndrule::reflected);
         }
@@ -203,7 +200,7 @@ class Multigrid : noncopyable {
         const Vec<int,D> dims = grid.dims(); assertx(max(dims)>1);
         const Vec<int,D> ndims = (dims+1)/2;
         Grid<D,T> ngrid(ndims);
-        assertx(!_periodic(0) && !_periodic(1)); // not yet considered
+        assertx(!_periodic(0) && !_periodic(1)); // this case is handled by the non-specialized member function above
         if (ndims[0]==dims[0]) {
             for_int(y, ndims[0]) {
                 for_int(x, dims[1]/2) { ngrid[y][x] = T((grid[y][x*2+0]+grid[y][x*2+1])*.5f); }
@@ -585,7 +582,7 @@ class Multigrid : noncopyable {
         double max_abs_err = (!have_orig() ? 0 :
                               max_e(max_abs_element(_grid_result-_grid_orig+T(_mean_orig-mean_result))));
         string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result-_mean_desired));
-        showdf("%9s: mean=%-12g%s  rms_resid=%-12g  rms_err=%-12g  max_abs_err=%-12g\n",
+        showdf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",
                s.c_str(), mag_e(mean_result), smean_off.c_str(), rms_resid, rms_err, max_abs_err);
     }
     bool coarse_enough(CGridView<D,T> grid_rhs) {

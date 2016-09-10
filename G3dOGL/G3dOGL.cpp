@@ -2177,7 +2177,9 @@ void process_print() {
     // pixmode(); default 32 bit size fine, row order unimportant
     // drawmode(); NORMALDRAW is fine
     glPushAttrib(GL_PIXEL_MODE_BIT); { // save GL_READ_BUFFER
-        glReadBuffer(GL_FRONT);          // default is GL_BACK if doublebuffered
+        if (0) {          // 20160907 disabled because we do want most-recent rendering which is in backbuffer
+            glReadBuffer(GL_FRONT); // default is GL_BACK if doublebuffered
+        }
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         // glPixelStorei(GL_PACK_ROW_LENGTH, nxpix*3);
         if (nxpix<44) {

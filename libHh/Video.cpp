@@ -176,6 +176,7 @@ bool filename_is_video(const string& filename) {
 }
 
 string video_suffix_for_magic_byte(uchar c) {
+    // see also image_suffix_for_magic_byte() and audio_suffix_for_magic_byte()
     // Documentation on prefixes for various video containers:
     //  *.mp4: "\000\000\000\030ftypmp42", "\000\000\000 ftypisom", "\000\000\000\034ftypisom"
     //  *.wmv: "0&\262u"
@@ -1099,6 +1100,10 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             // I could look at ffprobe to see if it can output more information, or use exiftool.
             // Omitting "-hide_banner" because unrecognized by older version of ffmpeg.
             // Option "-nostdin" is also unrecognized by older versions, but it can continue nonetheless.
+            // Input #0, gif, from 'image4.gif':
+            //   Duration: N/A, bitrate: N/A
+            //     Stream #0:0: Video: gif, bgra, 960x720, 1 fps, 1 tbr, 100 tbn, 100 tbc
+            //  (unfortunately, no way to know that there are 8 frames -- would have to read until EOF)
             RFile fi("ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |");
             Vec3<int> dims{0, 0, 0};
             double duration = -1., total_bitrate = -1.;

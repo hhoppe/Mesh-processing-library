@@ -765,7 +765,9 @@ void ShowInfo() {
                   (info!=2 ? "" :
                    sform(" [%5.2f] x%12g y%12g z%12g a%+4.0f b%+4.0f p%+4.0f",
                          zoom, p[0], p[1], p[2], to_deg(ang[0]), to_deg(ang[1]), to_deg(ang[2])).c_str()));
-        if (HB::get_font_dims()[1]>9)
+        static const bool show_fps = getenv_bool("G3D_SHOW_FPS");
+        // if (HB::get_font_dims()[1]>9 ...)
+        if (show_fps)
             s = sform("[fps%2d]", screenrate);
         HB::draw_row_col_text(V(0, 0), s);
     }

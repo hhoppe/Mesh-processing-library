@@ -492,7 +492,7 @@ Array<string> get_directories_in_directory(const string& directory) {
 
 bool command_exists_in_path(const string& name) {
     string s = getenv_string("PATH");
-    const string pathsep = ";:";
+    const char pathsep = contains(s, ';') || contains(s, '\\') ? ';' : ':';
     string::size_type i = 0;
     for (;;) {
         auto j = s.find_first_of(pathsep, i); // may equal string::npos

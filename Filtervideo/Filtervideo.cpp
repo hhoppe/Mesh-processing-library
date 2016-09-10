@@ -341,12 +341,14 @@ void do_fromimages(Args& args) {
 void do_framerate(Args& args) {
     string s = args.get_string();
     double& framerate = video.attrib().framerate;
+    const double old_framerate = framerate;
     if (remove_at_end(s, "%")) {
         framerate *= Args::parse_double(s)/100.;
     } else {
         framerate = Args::parse_double(s);
     }
     assertx(framerate>0.);
+    if (old_framerate) video.attrib().bitrate = int(video.attrib().bitrate*(framerate/old_framerate)+.5);
 }
 
 void do_bitrate(Args& args) {

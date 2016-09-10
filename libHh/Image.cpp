@@ -193,24 +193,28 @@ void Image::write_file_FF(const string& pfilename, bool bgr) const {
 bool filename_is_image(const string& filename) {
     static const Array<string> k_extensions = {
         "jpg", "jpeg", "png", "bmp", "rgb", "ppm", "pgm", "pbm", "tif", "tiff", "gif",
-        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2"
+        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw"
     };
     return k_extensions.index(to_lower(get_path_extension(filename)))>=0;
 }
 
 string image_suffix_for_magic_byte(uchar c) {
+    // see also video_suffix_for_magic_byte() and audio_suffix_for_magic_byte()
+    // also redundant information in k_image_filetypes
     // Documentation on prefixes for various image containers:
     // *.rgb: "\001"
     // *.jpg: "\377\330\377\341I\005Exif", "\377\330\377\340\000\020JFIF"
     // *.bmp: "BM"
     // *.ppm: "P6\n", "P5\r\n"
     // *.png: "\211PNG\r\n"
+    // *.arw: "II*\000" (Sony alpha raw)
     switch (c) {
-     bcase 1:   return "rgb";     // u'\x01'
+     bcase 1:   return "rgb";   // u'\x01'
      bcase 255: return "jpg";   // u'\xFF'
      bcase 'B': return "bmp";
      bcase 'P': return "ppm";
      bcase 137: return "png";   // u'\x89'
+     bcase 'I': return "arw";
      bdefault:  return "";
     }
 }

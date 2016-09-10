@@ -305,6 +305,7 @@ bool filename_is_audio(const string& filename) {
 }
 
 string audio_suffix_for_magic_byte(uchar c) {
+    // see also image_suffix_for_magic_byte() and video_suffix_for_magic_byte()
     // Documentation on prefixes for various image containers:
     // *.wav: "RIFF"
     // *.mp3: "ID3\003\000", "\377\373\220D"   (ID3 is a metadata container often used in conjunction with MP3)

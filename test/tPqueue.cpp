@@ -93,6 +93,39 @@ int main() {
         }
     }
     {
+        std::default_random_engine dre;
+        for_int(itest, 500) {
+            const int n = itest<30 ? itest : 30+dre()%400;
+            HPqueue<int> pq;
+            for_int(i, n) { pq.enter_unsorted(i, float(dre())); }
+            pq.sort();
+            float a = 0.f;
+            while (!pq.empty()) {
+                float b = pq.min_priority();
+                assertx(b>=a);
+                a = b;
+                pq.remove_min();
+            }
+        }
+    }
+    {
+        std::default_random_engine dre;
+        for_int(itest, 100) {
+            const int n = 70;
+            HPqueue<int> pq;
+            for_int(i, n) { pq.enter_unsorted(i, float(dre())); }
+            pq.sort();
+            for_int(i, n*3) { pq.update(i, float(dre())); }
+            float a = 0.f;
+            while (!pq.empty()) {
+                float b = pq.min_priority();
+                assertx(b>=a);
+                a = b;
+                pq.remove_min();
+            }
+        }
+    }
+    {
         for_int(k, 500) {
             int n = 30;
             HPqueue<int> pq; pq.reserve(n);

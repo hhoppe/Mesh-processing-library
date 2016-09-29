@@ -33,7 +33,7 @@ void perform_in() {
             rb.extract(1);
             continue;
         }
-        std::cerr << "Buffer empty, try fill:";
+        std::cerr << "RBuffer empty, try fill:";
         auto ret = rb.refill();
         std::cerr << "now contains " << rb.num() << " bytes\n";
         if (ret==RBuffer::ERefill::no) { SHOW("blocked"); my_sleep(0.14); continue; }

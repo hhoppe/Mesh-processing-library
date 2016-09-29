@@ -34,10 +34,9 @@ template<typename T> class Pqueue : noncopyable {
     void enter_unsorted(const T& e, float pri)  { ASSERTX(pri>=0); _ar.push(Node(e, pri)); }
     void enter_unsorted(T&& e, float pri)       { ASSERTX(pri>=0); _ar.push(Node(std::move(e), pri)); }
     void sort()                                 { sort_i(); }
- protected:
+ private:
     using Node = details::PQ::Node<T>;
     Array<Node> _ar;
- private:
     void nmove(int n1, int n2) {
         _ar[n1]._e = std::move(_ar[n2]._e);
         _ar[n1]._pri = _ar[n2]._pri;

@@ -55,10 +55,9 @@ class BPointSpatial : public Spatial {
     void enter(Univ id, const Point* pp);  // note: pp not copied, no ownership taken
     void remove(Univ id, const Point* pp); // must exist, else die
     void shrink_to_fit();                  // often just fragments memory
- protected:
+ private:
     void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
     Univ pq_id(Univ pqe) const override;
- private:
     struct Node {
         Node()                                  = default;
         Node(Univ pid, const Point* pp)         : id(pid), p(pp) { }
@@ -74,10 +73,9 @@ class IPointSpatial : public Spatial {
     IPointSpatial(int gn, CArrayView<Point> arp);
     ~IPointSpatial()                            { clear(); }
     void clear() override;
- protected:
+ private:
     void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
     Univ pq_id(Univ pqe) const override;
- private:
     const Point* _pp;
     Map<int, Array<int>> _map;  // encoded cube index -> Array of point indices
 };
@@ -98,12 +96,11 @@ class ObjectSpatial : public Spatial {
     // However, once should_stop is set (ftest's return), the procedure
     // will keep calling ftest with all objects that could be closer.
     template<typename Func = bool(Univ)> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
- protected:
+ private:
+    Map<int, Array<Univ>> _map; // encoded cube index -> vector
     void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
     void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const override;
     Univ pq_id(Univ pqe) const override         { return pqe; }
- private:
-    Map<int, Array<Univ>> _map; // encoded cube index -> vector
 };
 
 // Search for nearest element(s) from a given query point.

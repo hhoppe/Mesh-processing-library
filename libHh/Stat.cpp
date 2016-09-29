@@ -86,10 +86,10 @@ void Stat::zero() {
 void Stat::add(const Stat& st) {
     assertw(!_pofs);            // just a warning
     _n += st._n;
-    if (st._min<_min) _min = st._min;
-    if (st._max>_max) _max = st._max;
     _sum += st._sum;
     _sum2 += st._sum2;
+    if (st._min<_min) _min = st._min;
+    if (st._max>_max) _max = st._max;
 }
 
 string Stat::short_string() const {

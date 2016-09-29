@@ -967,7 +967,9 @@ double get_precise_time() {
 void my_sleep(double sec) {
     if (sec<0.) { SHOW("my_sleep", sec); sec = 0.; } // sometimes get -5.8985e+307 in background thread of VideoViewer
     assertx(sec>=0.);
-#if defined(_WIN32)
+#if 0                        // C++11
+    std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec}); // test??
+#elif defined(_WIN32)
     if (!sec) {
         // The aim is likely to give up time slice to another thread.
         SleepEx(0, TRUE);       // milliseconds; allow wake up for events

@@ -53,8 +53,8 @@ using namespace hh;
 
 namespace {
 
-const bool k_use_nv12 = 1;      // read videos using NV12 format to save memory and improve speed
-const bool k_use_bgr = 1;       // read images using BGR channel order to improve speed
+const bool k_prefer_nv12 = 1;   // read videos using NV12 format (if even dimensions) to save memory and improve speed
+const bool k_use_bgr = 1;       // read images using BGR (rather than RGB) channel order to improve speed
 const Pixel k_background_color = Pixel::black();
 const Array<double> k_speeds = { // video playback speed factors
     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,  1.,  1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.
@@ -230,6 +230,7 @@ struct S_Selected {             // during drag operation
     Vec2<int> yx_pressed;       // location where button was initially pressed
     Vec2<int> yx_last;          // previous location during a drag operation
     int axis_constraint;        // 0 or 1, or -1 if none
+    bool on_timeline;           // button was pressed on timeline
 } g_selected;
 
 struct S_LoopingParameters {
@@ -318,15 +319,6 @@ CArrayView<string> get_directory_media_filenames(const string& filename) {
 
 // Forward declaration
 void background_work(bool asynchronous);
-
-// Show a message on the window for a given duration.
-void message(const string& s, double duration = 1.5) {
-    std::lock_guard<std::mutex> lg(g_mutex_messages);
-    if (1) g_messages.clear();  // immediately erase any old messages
-    g_messages.push(Message{s, get_precise_time()+duration});
-    hw.redraw_later();
-    hw.wake_up();               // in case this is called from a background thread
-}
 
 bool view_has_rotation() {
     return g_view[0][1] || g_view[1][0];
@@ -481,10 +473,16 @@ Object& verify_video() {
 unique_ptr<Object> object_reading_video(string filename) {
     try {
         if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
-        unique_ptr<RVideo> prvideo = make_unique<RVideo>(filename, k_use_nv12); // may throw
+        bool use_nv12 = k_prefer_nv12;
+        unique_ptr<RVideo> prvideo = make_unique<RVideo>(filename, use_nv12); // may throw
         Vec3<int> dims = prvideo->dims(); // should allocate extra padframes?
-        Video video(!k_use_nv12 ? dims : thrice(0));
-        VideoNv12 video_nv12(k_use_nv12 ? dims : thrice(0));
+        if (use_nv12 && !is_zero(dims.tail<2>()%2)) {
+            use_nv12 = false;
+            prvideo.reset();
+            prvideo = make_unique<RVideo>(filename, use_nv12); // may throw
+        }
+        Video video(!use_nv12 ? dims : thrice(0));
+        VideoNv12 video_nv12(use_nv12 ? dims : thrice(0));
         video.attrib() = prvideo->attrib();
         const bool unsaved = false;
         return make_unique<Object>(std::move(video), std::move(video_nv12), std::move(prvideo),
@@ -566,6 +564,25 @@ void app_draw_text(const Vec2<int>& yx, const string& s, bool wrap = true) {
     }
 }
 
+// Show a message on the window for a given duration.
+void message(const string& s, double duration = 1.5) {
+    std::lock_guard<std::mutex> lg(g_mutex_messages);
+    if (1) g_messages.clear();  // immediately erase any old messages
+    g_messages.push(Message{s, get_precise_time()+duration});
+    hw.redraw_later();
+    hw.wake_up();               // in case this is called from a background thread
+}
+
+// Show a message immediately in the foreground (visible) window buffer.
+void immediate_message(const string& s) {
+    const int font_height = hw.get_font_dims()[0];
+    hw.begin_draw_visible();
+    app_draw_text(V(2*(font_height+4), 6), s);
+    hw.end_draw_visible();
+    hw.hard_flush();
+    hw.redraw_later();
+}
+
 Vec2<int> determine_default_window_dims(Vec2<int> frame_dims) {
     if (!product(frame_dims)) frame_dims = k_default_window_dims;
     auto max_dims = hw.get_max_window_dims();
@@ -591,7 +608,7 @@ void fully_visible_image_rectangle(Vec2<int>& yxL, Vec2<int>& yxU) {
 bool image_is_fully_visible() {
     assertx(!view_has_rotation());
     Vec2<int> yxL, yxU; fully_visible_image_rectangle(yxL, yxU);
-    return yxL==twice(0) && yxU==getob().spatial_dims();
+    return is_zero(yxL) && yxU==getob().spatial_dims();
 }
 
 void app_set_window_title() {
@@ -699,6 +716,17 @@ string get_szoom() {
     const bool isotropic = arzoom[0]==arzoom[1];      // was abs(arzoom[1]/arzoom[0]-1.f)<.01f;
     return sform("%s%d%%", (isotropic ? "" : "~"), int(vzoom*100.f+.5f));
 }
+
+// Select filter for spatial resampling operations.
+const Filter& get_resampling_filter() {
+    return (g_kernel==EKernel::nearest ?   Filter::get("impulse") :
+            g_kernel==EKernel::linear ?    Filter::get("triangle") :
+            g_kernel==EKernel::keys ?      Filter::get("spline") : // higher quality than "keys"
+            g_kernel==EKernel::lanczos6  ? Filter::get("lanczos6") :
+            g_kernel==EKernel::lanczos10 ? Filter::get("lanczos10") :
+            (assertnever_ret(""), Filter::get("impulse")));
+}
+
 
 // Change zooom while holding window dimensions constant and keeping same content at cursor.
 void perform_zoom_at_cursor(float fac_zoom, Vec2<int> yx) {
@@ -1465,13 +1493,7 @@ bool DerivedHW::key_press(string skey) {
                  bool force = is_shift;
                  string filename = query_save_filename(cur_filename, force);
                  if (filename=="") throw string("");
-                 if (1) {
-                     const int font_height = get_font_dims()[0];
-                     hw.begin_draw_visible();
-                     app_draw_text(V(2*(font_height+4), 6), "Writing to file " + filename + " ...");
-                     hw.end_draw_visible();
-                     hw.hard_flush();
-                 }
+                 immediate_message("Writing to file " + filename + " ...");
                  try {
                      uint64_t time = 0;
                      if (is_shift) time = get_path_modification_time(filename);
@@ -1541,7 +1563,8 @@ bool DerivedHW::key_press(string skey) {
                      // frame maps from/to [-0.5, +0.5]^2 whereas g_view maps from/to pixel/texel coordinates
                      Frame frame = Frame::translation(thrice(.5f)) * Frame::scaling(scale_win) * ~g_view *
                          ~Frame::scaling(scale_frame) * ~Frame::translation(thrice(.5f));
-                     const FilterBnd filterb(Filter::get("spline"), Bndrule::reflected);
+                     const FilterBnd filterb(get_resampling_filter(), Bndrule::reflected);
+                     immediate_message("Resampling rotated object...");
                      Video nvideo;
                      VideoNv12 nvideo_nv12;
                      if (ob._video.size()) {
@@ -1583,6 +1606,7 @@ bool DerivedHW::key_press(string skey) {
                          throw string("cropping has no effect since entire image is visible");
                      if (!product(nsdims))
                          throw string("cropping to this view would result in zero-sized image");
+                     immediate_message("Applying spatial cropping...");
                      Video nvideo;
                      VideoNv12 nvideo_nv12;
                      const Vec2<int> cL = yxL, cU = ob.spatial_dims()-yxU;
@@ -1615,17 +1639,24 @@ bool DerivedHW::key_press(string skey) {
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_object();
                  if (max_abs_element(V(g_view[0][1], g_view[1][0]))>0.f) throw ob.stype() + " is rotated";
-                 Vec2<int> ndims = convert<int>(convert<float>(g_frame_dims)*V(g_view[0][0], g_view[1][1]));
+                 Vec2<int> ndims;
+                 if (abs(g_view[0][0]-g_view[1][1])>1e-6f) { // anisotropic window fit
+                     ndims = convert<int>(convert<float>(g_frame_dims)*V(g_view[0][0], g_view[1][1]));
+                 } else {
+                     string s = sform("%g", g_view[0][0]);
+                     if (!query(V(20, 10), "Scale by spatial factor: ", s)) throw string("");
+                     if (!Args::check_float(s)) throw string("spatial factor is not a float");
+                     float fac = Args::parse_float(s);
+                     ndims = convert<int>(convert<float>(g_frame_dims)*twice(fac));
+                 }
                  if (!ob.is_image()) {
                      ndims = (ndims+2)/4*4; // video should have dims that are multiples of 4
                  } else {
                      if (0) ndims = (ndims+1)/2*2; // no need to round images to even sizes
                  }
                  Vec2<float> syx = convert<float>(ndims)/convert<float>(g_frame_dims);
-                 const Filter& filter = (g_kernel==EKernel::nearest ? Filter::get("impulse") :
-                                         g_kernel==EKernel::linear ? Filter::get("triangle") :
-                                         Filter::get("spline"));
-                 const auto filterbs = twice(FilterBnd(filter, Bndrule::reflected));
+                 const auto filterbs = twice(FilterBnd(get_resampling_filter(), Bndrule::reflected));
+                 immediate_message("Spatially rescaling object...");
                  Video nvideo;
                  VideoNv12 nvideo_nv12;
                  if (ob._video.size()) { // includes the case of ob.is_image()
@@ -1704,12 +1735,13 @@ bool DerivedHW::key_press(string skey) {
                  if (n<2) throw string("must have at least one next same-size image to create a video");
                  string filename = get_path_root(ob._filename) + ".mp4";
                  Video video(n, ob.spatial_dims());
-                 parallel_for_int(f, video.nframes()) {
+                 parallel_for_int(f, n) {
                      video[f].assign(g_obs[ibeg+f]->_video[0]);
-                     if (g_obs[f]->_image_is_bgra) swap_rgb_bgr(video[f]);
+                     if (g_obs[ibeg+f]->_image_is_bgra) swap_rgb_bgr(video[f]);
                  }
                  VideoNv12 video_nv12;
-                 if (k_use_nv12) {
+                 const bool use_nv12 = k_prefer_nv12 && is_zero(video.spatial_dims()%2);
+                 if (use_nv12) {
                      video_nv12.init(video.dims());
                      convert_Video_to_VideoNv12(video, video_nv12);
                      video.clear();
@@ -1719,7 +1751,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(make_unique<Object>(std::move(video), std::move(video_nv12),
                                                 nullptr, std::move(filename)));
                  set_video_frame(g_cob, new_cur_frame);
-                 message(sform("Concatenated %d images to create this video", n), 4.);
+                 g_obs.erase(g_cob-n, n); // unload the n images
+                 g_cob -= n;
+                 message(sform("Concatenated %d images to create this video", n), 6.);
              }
              bcase '#': {       // convert image sequence (incrementing current image name) to a video
                  // VideoViewer ~/proj/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F00001.png -key '#'
@@ -1731,22 +1765,17 @@ bool DerivedHW::key_press(string skey) {
                  Array<string> filenames = get_image_sequence(ob._filename);
                  int nframes = filenames.num();
                  if (nframes<2) throw string("cannot find an image sequence with >=2 frames");
-                 if (1) {
-                     const int font_height = get_font_dims()[0];
-                     hw.begin_draw_visible();
-                     app_draw_text(V(2*(font_height+4), 6), sform("Reading %d image frames...", nframes));
-                     hw.end_draw_visible();
-                     hw.hard_flush();
-                 }
+                 immediate_message(sform("Reading %d image frames...", nframes));
                  const Vec3<int> dims = concat(V(nframes), ob.spatial_dims());
-                 Video nvideo(!k_use_nv12 ? dims : thrice(0));
-                 VideoNv12 nvideo_nv12(k_use_nv12 ? dims : thrice(0));
+                 const bool use_nv12 = k_prefer_nv12 && is_zero(dims.tail<2>()%2);
+                 Video nvideo(!use_nv12 ? dims : thrice(0));
+                 VideoNv12 nvideo_nv12(use_nv12 ? dims : thrice(0));
                  std::atomic<bool> ok{true};
                  parallel_for_int(f, nframes) {
                      if (!ok) continue;
                      Image image; image.read_file(filenames[f]); // not bgr
                      if (image.dims()!=dims.tail<2>()) { ok = false; continue; }
-                     if (!k_use_nv12) {
+                     if (!use_nv12) {
                          nvideo[f].assign(image);
                      } else {
                          convert_Image_to_Nv12(image, nvideo_nv12[f]);
@@ -1872,7 +1901,7 @@ bool DerivedHW::key_press(string skey) {
                  g_cob--;
                  message("Here is the second part of the split video; use <&> to undo.", 6.);
              }
-             bcase '&': {       // create new video by merging (appending) current video with previous one
+             bcase '&': {       // create new video by merging (concatenating) current video with previous one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob2 = check_loaded_video();
                  if (g_cob==0) throw string("no previous video object to append to");
@@ -1949,6 +1978,7 @@ bool DerivedHW::key_press(string skey) {
                  const int nnf = int(ob.nframes()*fac+0.5);
                  const int new_cur_frame = int(g_framenum/fac);
                  Vec3<int> ndims = concat(V(nnf), ob.spatial_dims());
+                 immediate_message("Temporally rescampling the video...");
                  Video nvideo;
                  VideoNv12 nvideo_nv12;
                  if (ob._video.size()) {
@@ -1985,6 +2015,7 @@ bool DerivedHW::key_press(string skey) {
                      g_use_sliders = false;
                      Video nvideo;
                      VideoNv12 nvideo_nv12;
+                     immediate_message("Applying brightness/color changes to object...");
                      const float brightness_term = get_brightness_term();
                      const float contrast_fac = get_contrast_fac();
                      const float saturation_fac = get_saturation_fac();
@@ -2199,11 +2230,13 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
             g_selected.yx_pressed = yx;
             g_selected.yx_last = yx;
             g_selected.axis_constraint = -1;
+            g_selected.on_timeline = false;
         }
         switch (butnum) {
          bcase 1: {
              if (timeline_shown() && g_timeline.is_on_timeline(convert<float>(yx)/convert<float>(g_win_dims))) {
                  // start drag along timeline
+                 g_selected.on_timeline = true;
                  act_timeline(yx);
              } else if (g_use_sliders) {
                  redraw_later();         // start drag for slider
@@ -2223,11 +2256,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                          if (!g_fullscreen) {
                              set_window_title(s);
                          } else {
-                             const int font_height = get_font_dims()[0];
-                             hw.begin_draw_visible();
-                             app_draw_text(V(3*(font_height+4), 6), s + "     ");
-                             hw.end_draw_visible();
-                             hw.hard_flush();
+                             immediate_message(s + "     ");
                          }
                          prev_yxi = yxi;
                      }
@@ -3119,7 +3148,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         Vec2<int> win_pos = window_position_yx();
         if (g_verbose>=2) SHOW("draw", g_win_dims, win_pos, g_cob, getobnum(), product(g_frame_dims),
                                g_framenum, g_refresh_texture);
-        if (g_prev_win_dims==twice(0)) {
+        if (is_zero(g_prev_win_dims)) {
             if (1) {
                 // Make sure the entire window is visible.
                 g_prev_win_pos = win_pos;
@@ -3173,7 +3202,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         bool alt_pressed     = get_key_modifier(HW::EModifier::alt);
         switch (g_selected.button_active) {
          bcase 1: {             // either sliders or timeline
-             if (g_use_sliders) {
+             if (g_selected.on_timeline) {
+                 act_timeline(yx);
+             } else if (g_use_sliders) {
                  int i = int(g_selected.yx_pressed[1]/float(g_win_dims[1])*g_sliders.num()*.9999f);
                  assertx(i>=0 && i<g_sliders.num());
                  float dval;
@@ -3185,8 +3216,6 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                  if (alt_pressed) dval = pow(dval, .2f);
                  *g_sliders[i].pval *= dval;
                  redraw_later();
-             } else {
-                 act_timeline(yx);
              }
          }
          bcase 2: {                               // zoom or rotate
@@ -3527,7 +3556,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
             const int videoloops_maxh = getenv_int("VIDEOLOOPS_MAXH", 350, false); // default value used in Loopers
             Vec2<int> tdims = sdims;
             while (tdims[0]>videoloops_maxh) {
-                if (!((tdims/2)%2==twice(0))) {
+                if (!is_zero((tdims/2)%2)) {
                     SHOW("Stopping coarsening to even dims", sdims, tdims, videoloops_maxh, DS); break;
                 }
                 tdims /= 2;
@@ -3536,7 +3565,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
         }
         if (1 && DS>1) DS /= 2; // Loopers::PipeAPI expects twice the spatial resolution to get good smoothing cost
         if (0) SHOW(DS);
-        assertx(V(ny, nx)%DS==twice(0));
+        assertx(is_zero(V(ny, nx)%DS));
         const int hnf = onf/DT;
         if (0) assertx(onf%DT==0); // No, we allow arbitrary number of frames, but truncate to a multiple of DT.
         assertx(hnf>0);
@@ -3616,7 +3645,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
             Loopers::PipeAPI pipe_api;
             pipe_api.SetConfig(config);
             assertx(pipe_api.Optimize(hvideo, g_lp.mat_period, g_lp.mat_start)); // multilabel graph cut
-            assertw(hdims%g_lp.mat_start.dims()==twice(0));
+            assertw(is_zero(hdims%g_lp.mat_start.dims()));
             if (0) SHOW(pipe_api.GetConfig().m_MinPeriodSrc, pipe_api.GetConfig().m_MinPeriod);
             for (int& period : g_lp.mat_period) { period = period<=1 ? 1 : period*DT; }
             for (int& start : g_lp.mat_start) { start *= DT; }
@@ -3681,7 +3710,7 @@ void background_work(bool asynchronous) {
                 auto& ob = *pob;
                 assertx(ob._prvideo);
                 if (ob._nframes_loaded<ob.nframes()) {
-                    bool success = (!k_use_nv12 ?
+                    bool success = (ob._video.size() ?
                                     ob._prvideo->read(ob._video[ob._nframes_loaded]) :
                                     ob._prvideo->read(ob._video_nv12[ob._nframes_loaded]));
                     if (g_verbose>=2) SHOW("background", is_cob, g_framenum, ob._nframes_loaded, success);
@@ -3690,8 +3719,11 @@ void background_work(bool asynchronous) {
                     } else {
                         if (0) SHOW("Premature video end: failed to load video frame", ob._nframes_loaded);
                         // Hopefully reducing the number of frames does not confuse the foregound thread anywhere.
-                        if (!k_use_nv12) ob._video.special_reduce_dim0(ob._nframes_loaded);
-                        else ob._video_nv12.special_reduce_dim0(ob._nframes_loaded);
+                        if (ob._video.size()) {
+                            ob._video.special_reduce_dim0(ob._nframes_loaded);
+                        } else {
+                            ob._video_nv12.special_reduce_dim0(ob._nframes_loaded);
+                        }
                         ob._dims[0] = ob._nframes_loaded;
                         ob._frameou1 = min(ob._frameou1, ob.nframes());
                     }
@@ -3976,7 +4008,8 @@ void do_stripe(Args& args) {
     // SHOW(int(RGB_to_Y(stripe_color)), int(RGB_to_U(stripe_color)), int(RGB_to_V(stripe_color)));
     Video video;
     VideoNv12 video_nv12;
-    if (!k_use_nv12) {
+    const bool use_nv12 = k_prefer_nv12 && is_zero(dims.tail<2>()%2);
+    if (!use_nv12) {
         video.init(dims); fill(video, back_color);
         for_int(f, nframes) {
             const int stripe_width = 2;

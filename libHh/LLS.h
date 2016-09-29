@@ -89,7 +89,7 @@ class FullLLS : public LLS {
 class LudLLS : public FullLLS {
  public:
     LudLLS(int m, int n, int nd)                : FullLLS(m, n, nd) { }
- protected:
+ private:
     bool solve_aux() override;
 };
 
@@ -97,7 +97,7 @@ class LudLLS : public FullLLS {
 class GivensLLS : public FullLLS {
  public:
     GivensLLS(int m, int n, int nd)             : FullLLS(m, n, nd) { }
- protected:
+ private:
     bool solve_aux() override;
 };
 
@@ -105,7 +105,7 @@ class GivensLLS : public FullLLS {
 class SvdLLS : public FullLLS {
  public:
     SvdLLS(int m, int n, int nd);
- protected:
+ private:
     bool solve_aux() override;
     Array<float> _fa, _fb, _s, _work;
     Matrix<float> _mU; Array<float> _mS; Matrix<float> _mVT;
@@ -115,7 +115,7 @@ class SvdLLS : public FullLLS {
 class SvdDoubleLLS : public FullLLS {
  public:
     SvdDoubleLLS(int m, int n, int nd);
- protected:
+ private:
     bool solve_aux() override;
     Array<double> _fa, _fb, _s, _work;
     Matrix<double> _mU; Array<double> _mS; Matrix<double> _mVT;
@@ -125,7 +125,7 @@ class SvdDoubleLLS : public FullLLS {
 class QrdLLS : public FullLLS {
  public:
     QrdLLS(int m, int n, int nd);
- protected:
+ private:
     bool solve_aux() override;
     Array<float> _fa, _fb, _work;
     Matrix<float> _mU; Array<float> _mS; Matrix<float> _mVT;

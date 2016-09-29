@@ -73,17 +73,6 @@ void A3dElem::get_polygon(Polygon& poly) const {
     for_int(i, num()) { poly[i] = (*this)[i].p; }
 }
 
-// *** A3dStream
-
-void A3dStream::set_current_color(char ctype, const Vec3<float>& f) {
-    switch (ctype) {
-     bcase 'd': _curcol.d = A3dColor(f);
-     bcase 's': _curcol.s = A3dColor(f);
-     bcase 'g': _curcol.g = A3dColor(f);
-     bdefault: assertnever("");
-    }
-}
-
 // *** RA3dStream
 
 void RA3dStream::read(A3dElem& el) {
@@ -151,6 +140,15 @@ void RA3dStream::read(A3dElem& el) {
     }
 }
 
+void RA3dStream::set_current_color(char ctype, const Vec3<float>& f) {
+    switch (ctype) {
+     bcase 'd': _curcol.d = A3dColor(f);
+     bcase 's': _curcol.s = A3dColor(f);
+     bcase 'g': _curcol.g = A3dColor(f);
+     bdefault: assertnever("");
+    }
+}
+
 // *** RSA3dStream
 
 bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) {
@@ -160,7 +158,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     if (_is.peek()<0) return false;
     assertx(_is);
     ch = char(_is.peek());
-    binary = ch==A3dStream::k_binary_code;
+    binary = ch==k_a3d_binary_code;
     if (binary) {
         a3d_binary_buf buf;
         assertx(read_binary_raw(_is, ArView(buf)));
@@ -197,7 +195,6 @@ void WA3dStream::write(const A3dElem& el) {
         _curcol.d = _curcol.s = _curcol.g = k_color_undefined;
         _force_choice_binary = !!getenv("A3D_BINARY"); // dynamically updated by my_setenv() in Filtera3d
         if (_force_choice_binary) _choice_binary = getenv_bool("A3D_BINARY");
-        _oldformat = getenv_bool("A3D_OLD"); // dynamically updated by my_setenv()
         write_comment(" Created by WA3dStream on " + get_current_datetime());
     }
     if (_force_choice_binary) binary = _choice_binary;
@@ -219,7 +216,6 @@ void WA3dStream::write(const A3dElem& el) {
     if (type==A3dElem::EType::polygon) assertx(el.num()>=3);
     else if (type==A3dElem::EType::polyline) assertx(el.num()>=2);
     else if (type==A3dElem::EType::point) assertx(el.num()==1);
-    if (_oldformat) { write_old_format(el); return; }
     if (type==A3dElem::EType::polygon || type==A3dElem::EType::polyline) {
         if (!binary && !_pblank) blank_line();
         output(binary, char(type), V(0.f, 0.f, 0.f));
@@ -252,35 +248,6 @@ void WA3dStream::write(const A3dElem& el) {
     if (type==A3dElem::EType::polygon || type==A3dElem::EType::polyline) {
         output(binary, 'E', V(0.f, 0.f, 0.f));
         if (!binary) { blank_line(); _pblank = true; }
-    }
-}
-
-void WA3dStream::write_old_format(const A3dElem& el) {
-    bool binary = el.binary();
-    A3dElem::EType type = el.type();
-    for_int(i, el.num()) {
-        if (_curcol.d!=el[i].c.d) {
-            _curcol.d = el[i].c.d;
-            output(binary, 'd', _curcol.d);
-        }
-        if (_curcol.s!=el[i].c.s) {
-            _curcol.s = el[i].c.s;
-            output(binary, 's', _curcol.s);
-        }
-        if (_curcol.g!=el[i].c.g) {
-            _curcol.g = el[i].c.g;
-            output(binary, 'p', _curcol.g);
-        }
-        output(binary, type==A3dElem::EType::point ? 'P' : type==A3dElem::EType::polygon ? (i?'l':'m') : (i?'1':'0'),
-               el[i].p);
-        Vector nl = el[i].n;
-        if (mag2(nl)>.99f) {
-            for_int(c, 3) {
-                if (nl[c] && abs(nl[c])<1e-5f) nl[c] = 0.f;
-            }
-        }
-        if (!is_zero(nl))
-            output(binary, 'n', nl);
     }
 }
 
@@ -325,18 +292,14 @@ void WA3dStream::write_end_frame(bool binary) {
 void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     if (binary) {
         a3d_binary_buf buf;
-        buf.magic[0] = A3dStream::k_binary_code;
+        buf.magic[0] = k_a3d_binary_code;
         buf.magic[1] = 0;
         buf.utype = ushort(ctype); to_std(&buf.utype);
         for_int(c, 3) { buf.f[c] = f[c]; to_std(&buf.f[c]); }
         write_binary_raw(_os, ArView(buf));
     } else {
         // precision determined by that in WFile::WFile()
-        if (_oldformat) {
-            _os << f[0] << " " << f[1] << " " << f[2] << " " << ctype << '\n';
-        } else {
-            _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';
-        }
+        _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';
     }
     assertx(_os);
 }
@@ -346,7 +309,6 @@ void WSA3dStream::output_comment(const string& s) {
 }
 
 void WSA3dStream::blank_line() {
-    if (_oldformat) return;
     assertx(_os << '\n');
 }
 

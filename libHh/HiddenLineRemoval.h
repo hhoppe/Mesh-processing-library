@@ -43,10 +43,8 @@ class HiddenLineRemoval {
     static constexpr int k_max_intersections = 20; // max # times a polygon can split a segment
     Vec<HlrSegment,k_max_intersections> _gsa;
     Vec<HlrSegment,k_max_intersections> _gsret;
-    // constexpr float k_epsilon_a = 1e-6f; // http://stackoverflow.com/questions/2454019/
-    // constexpr float k_epsilon_b = 1e-12f;
-    static float k_epsilon_a() { return 1e-6f; }
-    static float k_epsilon_b() { return 1e-12f; }
+    static constexpr float k_epsilon_a = 1e-6f;
+    static constexpr float k_epsilon_b = 1e-12f;
     void init() {
         _kd.allow_duplication(1.0f); // value found empirically (on knot108s.m)
     }
@@ -59,7 +57,7 @@ class HiddenLineRemoval {
         p.p = std::move(poly);
         p.n = nor;
         p.d = p.p.get_planec(p.n);
-        p.tol = max(p.p.get_tolerance(p.n, p.d), k_epsilon_a())*1.02f;
+        p.tol = max(p.p.get_tolerance(p.n, p.d), float(k_epsilon_a))*1.02f; // cast to avoid reference of constexpr
         p.p.get_bbox(p.bb);
         // enter coordinates [1..2] into Kdtree<int,2>
         _kd.enter(pn, p.bb[0].tail<2>(), p.bb[1].tail<2>());
@@ -149,11 +147,11 @@ class HiddenLineRemoval {
             if (e>0 || e<f) return false;
         }
         float g = d/f;
-        if (g<k_epsilon_a() || g>1-k_epsilon_a()) return false;
+        if (g<k_epsilon_a || g>1.f-k_epsilon_a) return false;
         float x5, y5;
         Point newp(s.p[0][0]+g*(s.p[1][0]-s.p[0][0]), x5 = x1+g*Ax, y5 = y1+g*Ay);
-        if (square(x1-x5)+square(y1-y5)<k_epsilon_b()) return false;
-        if (square(x2-x5)+square(y2-y5)<k_epsilon_b()) return false;
+        if (square(x1-x5)+square(y1-y5)<k_epsilon_b) return false;
+        if (square(x2-x5)+square(y2-y5)<k_epsilon_b) return false;
         news.p[0] = newp;
         news.p[1] = s.p[1];
         s.p[1] = newp;
@@ -222,11 +220,11 @@ class HiddenLineRemoval {
         if (nsi==1) {               // only handle common case
             orient_segment(_gsret[0]);
             orient_segment(s);
-            if (dist2(_gsret[0].p[0], s.p[1])<k_epsilon_b()) {
+            if (dist2(_gsret[0].p[0], s.p[1])<k_epsilon_b) {
                 _gsret[0].p[0] = s.p[0];
                 return nsi;         // (nsi==1)
             }
-            if (dist2(_gsret[0].p[1], s.p[0])<k_epsilon_b()) {
+            if (dist2(_gsret[0].p[1], s.p[0])<k_epsilon_b) {
                 _gsret[0].p[1] = s.p[1];
                 return nsi;         // (nsi==1)
             }

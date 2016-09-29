@@ -10,8 +10,8 @@ struct Bbox : Vec2<Point> {
     Bbox()                                      = default;
     Bbox(const Point& pmin, const Point& pmax)  : Vec2<Point>(pmin, pmax) { }
     Bbox(Vec2<Point> bb)                        : Vec2<Point>(std::move(bb)) { }
-    void clear()                        { auto& self = *this; self[0] = thrice(+big()); self[1] = thrice(-big()); }
-    void infinite()                     { auto& self = *this; self[0] = thrice(-big()); self[1] = thrice(+big()); }
+    void clear()                        { auto& self = *this; self[0] = thrice(+big); self[1] = thrice(-big); }
+    void infinite()                     { auto& self = *this; self[0] = thrice(-big); self[1] = thrice(+big); }
     void union_with(const Bbox& bb) {
         auto& self = *this;
         for_int(c, 3) {
@@ -89,7 +89,7 @@ struct Bbox : Vec2<Point> {
         return os << "Bbox{" << bb[0] << ", " << bb[1] << "}";
     }
  private:
-    static float big()                          { return BIGFLOAT; }
+    static constexpr float big = BIGFLOAT;
 };
 
 } // namespace hh

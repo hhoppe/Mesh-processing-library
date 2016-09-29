@@ -45,7 +45,7 @@ class ConsoleProgress : noncopyable {
 
 class ConsoleProgressInc : public ConsoleProgress {
  public:
-    ConsoleProgressInc(int count, string taskname = "") : ConsoleProgress(std::move(taskname)), _total(count) { }
+    ConsoleProgressInc(int total, string taskname = "") : ConsoleProgress(std::move(taskname)), _total(total) { }
     void increment()                            { update(float(_counter++)/float(_total)); }
  private:
     int _total;

@@ -17,7 +17,7 @@ bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, st
         }
         if (i) _buf.extract(i);
     }
-    binary = _buf[0]==A3dStream::k_binary_code;
+    binary = _buf[0]==k_a3d_binary_code;
     if (binary) {
         assertx(_buf.num()>=16);
         ctype = narrow_cast<char>(_buf.get_short(2));
@@ -47,7 +47,7 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
         char ch = _buf[i];
         bool have_space = i+1<_buf.num() && _buf[i+1]==' ';
         A3dElem::EType ct = A3dElem::EType(ch);
-        if (!(ct==A3dElem::EType::comment || ch==A3dStream::k_binary_code ||
+        if (!(ct==A3dElem::EType::comment || ch==k_a3d_binary_code ||
               (have_space && (A3dElem::command_type(ct) || ct==A3dElem::EType::point ||
                              ct==A3dElem::EType::polygon || ct==A3dElem::EType::polyline ||
                              A3dElem::status_type(ct) || ch=='n')))) return ERecognize::no;
@@ -56,7 +56,7 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
         if (i>=_buf.num()) return ERecognize::partial;
         char ch = _buf[i];
         if (ch=='\n') { i++; continue; }
-        if (ch==A3dStream::k_binary_code) { // binary record
+        if (ch==k_a3d_binary_code) { // binary record
             if (i+16>_buf.num()) return ERecognize::partial;
             ch = narrow_cast<char>(_buf.get_short(i+2));
             i += 16;
@@ -79,15 +79,12 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
 
 void WBufferedA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     if (binary) {
-        _buf.put(char(A3dStream::k_binary_code));
+        _buf.put(char(k_a3d_binary_code));
         _buf.put('\0');
         _buf.put(short(ctype));
         _buf.put(f[0]); _buf.put(f[1]); _buf.put(f[2]);
     } else {
-        if (_oldformat)
-            ssform(_stmp, "%g %g %g %c\n", f[0], f[1], f[2], ctype);
-        else
-            ssform(_stmp, "%c %g %g %g\n", ctype, f[0], f[1], f[2]);
+        ssform(_stmp, "%c %g %g %g\n", ctype, f[0], f[1], f[2]);
         _buf.put(_stmp.c_str(), int(_stmp.size()));
     }
 }
@@ -99,7 +96,6 @@ void WBufferedA3dStream::output_comment(const string& s) {
 }
 
 void WBufferedA3dStream::blank_line() {
-    if (_oldformat) return;
     _buf.put('\n');
 }
 

@@ -1564,7 +1564,7 @@ void perhaps_initialize() {
     analyze_mesh("INITIAL");
     assertx(!pqecost.num());
     bool boundaries_first; dummy_init(boundaries_first);
-    assertx(grid_dims==twice(0) || product(grid_dims));
+    assertx(is_zero(grid_dims) || product(grid_dims));
     for (;;) {
         if (ter_grid!="" || product(grid_dims)) break;
         int max_vid = 0;

@@ -12,7 +12,7 @@ namespace hh {
 //  where each vertex has position, normal, and color.
 // Color consists of diffuse, specular, and Phong components.
 // An A3dStream can be read/written from a std::stream using RSA3dStream/WSA3dStream or
-//  from a Buffer using BufferedA3dStream.h .
+//  from a RBuffer/WBuffer using BufferedA3dStream.h .
 // In either case, the format can be text or binary.
 
 struct A3dColor : Vec3<float> {
@@ -109,37 +109,29 @@ class A3dElem {
     }
 };
 
-class A3dStream : noncopyable {
- protected:
-    virtual ~A3dStream()                        { } // not =default because gcc "looser throw specifier" in derived
-    A3dVertexColor curcolor() const             { return _curcol; }
-    void set_current_color(char ctype, const Vec3<float>& f);
-    static constexpr int k_binary_code = 3;
- protected:
-    A3dVertexColor _curcol {A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
-};
-
-
-class RA3dStream : public A3dStream {
+class RA3dStream : noncopyable {
  public:
     void read(A3dElem& el);
+    virtual ~RA3dStream()                       = default;
  protected:
     RA3dStream()                                = default;
     virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0; // ret success
+ private:
+    A3dVertexColor _curcol {A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
+    void set_current_color(char ctype, const Vec3<float>& f);
 };
 
 class RSA3dStream : public RA3dStream { // Read from stream
  public:
     explicit RSA3dStream(std::istream& pis)     : _is(pis) { }
     std::istream& is()                          { return _is; }
- protected:
-    bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) override;
  private:
     std::istream& _is;
+    bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) override;
 };
 
 
-class WA3dStream : public A3dStream {
+class WA3dStream : noncopyable {
  public:
     void write(const A3dElem& el);
     void write_comment(const string& str); // can contain newlines
@@ -147,18 +139,18 @@ class WA3dStream : public A3dStream {
     void write_clear_object(bool binary = false, float f0 = 1.f, float f1 = 0.f);
     void write_end_frame(bool binary = false);
     virtual void flush() = 0;
+    virtual ~WA3dStream()                       = default;
  protected:
     WA3dStream()                                = default;
-    bool _oldformat;            // old a3d format
     virtual void output(bool binary, char type, const Vec3<float>& f) = 0;
     virtual void output_comment(const string& s) = 0;
     virtual void blank_line() = 0;
  private:
     bool _first {true};         // first write
+    A3dVertexColor _curcol;
     bool _force_choice_binary;  // force choice one way or the other
     bool _choice_binary;        // which way is forced
     bool _pblank {false};       // previous element left a blank line
-    void write_old_format(const A3dElem& el);
 };
 
 class WSA3dStream : public WA3dStream { // Write to stream
@@ -167,13 +159,14 @@ class WSA3dStream : public WA3dStream { // Write to stream
     ~WSA3dStream()                              { flush(); }
     void flush() override                       { _os.flush(); }
     std::ostream& os()                          { return _os; }
- protected:
+ private:
+    std::ostream& _os;
     void output(bool binary, char type, const Vec3<float>& f) override;
     void output_comment(const string& s) override;
     void blank_line() override;
- private:
-    std::ostream& _os;
 };
+
+constexpr int k_a3d_binary_code = 3;
 
 
 //----------------------------------------------------------------------------

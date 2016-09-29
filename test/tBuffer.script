@@ -1,3 +1,3 @@
 #!/bin/bash
 
-tBuffer -out 1 -bsize 23 | tBuffer -out 0 2>&1 | grep -v '^Buffer' | grep -v '^blocked'
+tBuffer -out 1 -bsize 23 | tBuffer -out 0 2>&1 | grep -v '^RBuffer empty' | grep -v '^blocked'

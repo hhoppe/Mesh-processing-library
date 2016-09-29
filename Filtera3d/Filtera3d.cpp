@@ -59,7 +59,6 @@ double frdelay = 0.;
 double eldelay = 0.;
 bool toasciit = false;          // "toascii" seems to be a reserved identifier in Win32
 bool tobinary = false;
-bool toold = false;
 int minverts = 0;
 
 int ndegen = 0;
@@ -785,7 +784,6 @@ int main(int argc, const char** argv) {
     ARGSP(eldelay,              "fsec : pause after each element");
     ARGSF(toasciit,             ": make output be ascii text");
     ARGSF(tobinary,             ": make output be binary");
-    ARGSF(toold,                ": convert to old a3d format");
     string arg0 = args.num() ? args.peek_string() : "";
     string filename = "-"; if (args.num() && (arg0=="-" || arg0[0]!='-')) filename = args.get_filename();
     RFile is(filename);
@@ -824,7 +822,6 @@ int main(int argc, const char** argv) {
     assertx(!(toasciit && tobinary));
     if (toasciit) my_setenv("A3D_BINARY", "0");
     if (tobinary) my_setenv("A3D_BINARY", "1");
-    if (toold) my_setenv("A3D_OLD", "1");
     process(ia3d);
     hh_clean_up();
     return 0;

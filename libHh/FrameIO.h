@@ -8,14 +8,14 @@ class RBuffer; class WBuffer;
 
 namespace FrameIO {
 
-// Read Frame objects from std::stream or Buffer.
+// Read Frame objects from std::stream or RBuffer.
 enum class ERecognize { parse_error, no, partial, yes };
 ERecognize recognize(RBuffer& b);
 bool read(std::istream& is, Frame& f, int& obn, float& zoom, bool& bin); // ret is_success
 bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin);       // ret is_success
 Frame parse_frame(const string& s);
 
-// Write Frame objects to std::stream or Buffer.
+// Write Frame objects to std::stream or WBuffer.
 bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin); // ret is_success
 bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin);       // ret is_success
 string create_string(const Frame& f, int obn, float zoom);

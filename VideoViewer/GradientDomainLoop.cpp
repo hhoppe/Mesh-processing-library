@@ -394,7 +394,7 @@ void compute_gdloop_aux2(CGridView<3,Pixel> video, CMatrixView<int> mat_start, C
 
 Matrix<int> possibly_rescale(CMatrixView<int> mat, const Vec2<int>& sdims) {
     assertx(min(mat.dims())>0);
-    assertx(mat.dims()%sdims==twice(0) || sdims%mat.dims()==twice(0));
+    assertx(is_zero(mat.dims()%sdims) || is_zero(sdims%mat.dims()));
     Matrix<int> nmat = mat.dims()==sdims ? Matrix<int>(mat) : scale_filter_nearest(mat, sdims);
     return nmat;
 }
@@ -601,7 +601,7 @@ void solve_using_offsets(const Vec3<int>& odims,
     const int DS = odims[1] / mat_start.dim(0);
     if (verbose) showdf("Spatial downsampling factor is %d\n", DS);
     if (0) SHOW(odims, mat_start.dims(), sdims, DS);
-    assertx(sdims%DS==twice(0));
+    assertx(is_zero(sdims%DS));
     const int DT = 1;           // temporal downsampling factor
     assertx(onf%DT==0);
     // The problem with DT>1 is that temporal discontinuities generally occur at all frames in fine-scale video
@@ -616,8 +616,8 @@ void solve_using_offsets(const Vec3<int>& odims,
         assertx(max_abs_element(scale_filter_nearest(hmat_start, mat_start.dims())-mat_start)==0);
         assertx(max_abs_element(scale_filter_nearest(hmat_period, mat_period.dims())-mat_period)==0);
     }
-    assertx(hdims%hmat_start.dims()==twice(0));
-    assertx(hdims%hmat_period.dims()==twice(0));
+    assertx(is_zero(hdims%hmat_start.dims()));
+    assertx(is_zero(hdims%hmat_period.dims()));
     Grid<3,Pixel> hvideo(onf/DT, hny, hnx); { // reduced (maybe "half") resolution
         HH_TIMER(__scale_down);
         assertx(DT==1);

@@ -112,7 +112,7 @@ class icfstreambuf : public std::streambuf {
     icfstreambuf(FILE* file) : _file(file), _buffer0(buffer+putback_size) {
         setg(_buffer0, _buffer0, _buffer0); // set empty: eback()==beg, gptr()==cur, egptr()==end are all the same
     }
- protected:
+ private:
     FILE* _file;
     static constexpr int putback_size = 4;
     static constexpr int buffer_size = 4096;
@@ -156,11 +156,11 @@ class icfstreambuf : public std::streambuf {
 
 // Create a std::fstream wrapper around a (C stdio) FILE* input stream (which is not closed upon destruction).
 class icfstream : public std::istream {
-  public:
+ public:
     icfstream(FILE* file) : std::istream(nullptr), _buf(file) {
         rdbuf(&_buf);
     }
- protected:
+ private:
     icfstreambuf _buf;
 };
 
@@ -169,7 +169,7 @@ class icfstream : public std::istream {
 class ocfstreambuf : public std::streambuf {
  public:
     ocfstreambuf(FILE* file) : _file(file) { }
-  protected:
+ private:
     FILE* _file;
     virtual int_type overflow(int_type ch) override { // write one character
         // setp() would set pbase()==beg, pptr()==cur, epptr()==end
@@ -201,11 +201,11 @@ class ocfstreambuf : public std::streambuf {
 
 // Create a std::fstream wrapper around a (C stdio) FILE* output stream (which is not closed upon destruction).
 class ocfstream : public std::ostream {
-  public:
+ public:
     ocfstream(FILE* file) : std::ostream(nullptr), _buf(file) {
         rdbuf(&_buf);
     }
- protected:
+ private:
     ocfstreambuf _buf;
 };
 

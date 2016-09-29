@@ -54,8 +54,7 @@ template<int D, typename VertexData = Vec0<int>> class ContourBase {
         _vertex_tol = getenv_float("CONTOUR_VERTEX_TOL", _vertex_tol, true); // override
     }
  protected:
-    // static constexpr float k_not_yet_evaled = BIGFLOAT;
-    static float k_not_yet_evaled() { return BIGFLOAT; }
+    static constexpr float k_not_yet_evaled = BIGFLOAT;
     using DPoint = Vec<float,D>; // domain point
     using IPoint = Vec<int,D>;   // grid point
     static_assert(D==2 || D==3, "");
@@ -91,7 +90,7 @@ template<int D, typename VertexData = Vec0<int>> class ContourBase {
         enum class ECubestate { nothing, queued, visited };
         unsigned _en;                                // encoded vertex index
         ECubestate _cubestate {ECubestate::nothing}; // cube info
-        float _val {k_not_yet_evaled()};             // vertex value
+        float _val {k_not_yet_evaled};               // vertex value
         DPoint _p;                                   // vertex point position in grid
         // Note that for 3D, base class contains Vec3<Vertex> _verts.
     };
@@ -264,7 +263,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
             unsigned en = encode(ci);
             bool is_new; Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
             na[i][j][k] = n;
-            if (n->_val==k_not_yet_evaled()) {
+            if (n->_val==k_not_yet_evaled) {
                 n->_p = get_point(ci);
                 n->_val = _eval(n->_p);
                 _nvevaled++;
@@ -288,7 +287,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
             for (cd[d1] = 0; cd[d1]<2; cd[d1]++) {
                 for (cd[d2] = 0; cd[d2]<2; cd[d2]++) {
                     float v = na[cd[0]][cd[1]][cd[2]]->_val;
-                    ASSERTX(v!=k_not_yet_evaled());
+                    ASSERTX(v!=k_not_yet_evaled);
                     if (v<vmin) vmin = v;
                     if (v>vmax) vmax = v;
                 }
@@ -575,7 +574,7 @@ class Contour2D : public ContourBase<2> {
                     unsigned en = encode(ci);
                     bool is_new; Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
                     na[cd[0]][cd[1]] = n;
-                    if (n->_val==k_not_yet_evaled()) {
+                    if (n->_val==k_not_yet_evaled) {
                         n->_p = get_point(ci);
                         n->_val = _eval(n->_p);
                         _nvevaled++;
@@ -600,7 +599,7 @@ class Contour2D : public ContourBase<2> {
             float vmin = BIGFLOAT, vmax = -BIGFLOAT;
             for (cd[d1] = 0; cd[d1]<2; cd[d1]++) {
                 float v = na[cd[0]][cd[1]]->_val;
-                ASSERTX(v!=k_not_yet_evaled());
+                ASSERTX(v!=k_not_yet_evaled);
                 if (v<vmin) vmin = v;
                 if (v>vmax) vmax = v;
             }

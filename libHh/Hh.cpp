@@ -968,7 +968,8 @@ void my_sleep(double sec) {
     if (sec<0.) { SHOW("my_sleep", sec); sec = 0.; } // sometimes get -5.8985e+307 in background thread of VideoViewer
     assertx(sec>=0.);
 #if 0                        // C++11
-    std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec}); // test??
+    // On Windows, only precise up to 1/60 sec.
+    std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec});
 #elif defined(_WIN32)
     if (!sec) {
         // The aim is likely to give up time slice to another thread.

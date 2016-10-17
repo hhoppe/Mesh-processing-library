@@ -186,7 +186,7 @@ template<typename T> T log2(T v) { return std::log(v)/std::log(T(2)); }
 } // namespace std
 #endif
 
-#if defined(__CYGWIN__) && !defined(HH_NO_DEFINE_STD_HYPOT)
+#if defined(__CYGWIN__) && __GNUC__*100+__GNUC_MINOR__<500 && !defined(HH_NO_DEFINE_STD_HYPOT)
 namespace std {                 // missing hypot() functions
 inline float hypot(float a, float b) { return hypotf(a, b); }
 inline double hypot(double a, double b) { return ::hypot(a, b); }

@@ -978,6 +978,23 @@ void do_gridcrop(Args& args) {
     assemble_videos(videos);
 }
 
+void do_replace(Args& args) {
+    Pixel newcolor;
+    for_int(i, 3) {
+        int v = args.get_int(); assertx(v>=0 && v<=255);
+        newcolor[i] = uchar(v);
+    }
+    newcolor[3] = 255;
+    int count = 0;
+    for (Pixel& pix : video) {
+        if (equal(pix, gcolor, nz)^g_not) {
+            count++;
+            pix = newcolor;
+        }
+    }
+    showf("Replaced %d pixels\n", count);
+}
+
 void do_gamma(Args& args) {
     float gamma = args.get_float();
     Vec<uchar,256> transf; for_int(i, 256) { transf[i] = uchar(255.f*pow(i/255.f, gamma)+0.5f); }
@@ -2101,6 +2118,7 @@ int main(int argc, const char** argv) {
     ARGSD(disassemble,          "tilex tiley rootname : break up into multiple video files of this size");
     ARGSD(gridcrop,             "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
     ARGSC("",                   ":");
+    ARGSD(replace,              "r g b : replace all pixels matching specified color with this color");
     ARGSD(gamma,                "v : gammawarp video");
     ARGSC("",                   ":");
     ARGSD(loadpj,               "file.pj{o,r} : read progressive video project file");

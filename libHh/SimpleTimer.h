@@ -52,6 +52,7 @@ class SimpleTimer : noncopyable {
 #include <windows.h>           // winbase.h: LARGE_INTEGER, QueryPerformanceCounter, QueryPerformanceFrequency
 #else
 #include <ctime>                // gettimeofday(), struct timeval, struct timezone
+#include <sys/time.h>           // gettimeofday(), struct timeval, struct timezone
 #endif
 
 inline int64_t SimpleTimer::get_precise_counter() {

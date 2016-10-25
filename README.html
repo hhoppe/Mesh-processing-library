@@ -98,6 +98,8 @@
   <div class="codeline">make -j8</div>
   <p>To build all programs (into either <code>bin/unix</code> or <code>bin/win</code>) and run all unit tests:</p>
   <div class="codeline">make -j test</div>
+  <p>To build on Unix, forcing the use of the <code>gcc</code> compiler (the alternative is <code>clang</code>):</p>
+  <div class="codeline">make CC=gcc -j</div>
   <p>To build just the main library using the <code>mingw gcc</code> compiler on Windows:</p>
   <div class="codeline">make CONFIG=mingw -j libHh</div>
   <p>To build the <code>Filtermesh</code> program (into <code>bin/clang</code>) using the <code>clang</code> compiler on Windows:</p>

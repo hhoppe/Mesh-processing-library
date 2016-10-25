@@ -18,7 +18,7 @@
     // Row-column origin is at upper-left corner!
     //  (This is consistent with *.jpg, *.png, *.ppm, DirectX.)
     //  (In contrast, *.rgb, *.bmp, OpenGL glTexImage2D() have image origin at lower-left.)
-    // bgr==true -> BGR or BGRA channel-ordering.
+    // bgra==true -> BGR or BGRA channel-ordering.
     // Image read/write is performed using: Windows Imaging Component (WIC), libpng+libjpeg+.. (IO), or ffmpeg (FF).
 }
 #endif
@@ -54,10 +54,10 @@ class Image : public Matrix<Pixel> {
     void set_silent_io_progress(bool b)         { _silent_io_progress = b; }
     // filename may be "-" for std::cin;  may throw std::runtime_error
     void read_file(const string& filename)      { read_file_i(filename, false); }
-    void read_file_bgr(const string& filename)  { read_file_i(filename, true); }
+    void read_file_bgra(const string& filename) { read_file_i(filename, true); }
    // filename may be "-" for std::cout; may throw std::runtime_error; suffix() is mutable
     void write_file(const string& filename) const       { write_file_i(filename, false); }
-    void write_file_bgr(const string& filename) const   { write_file_i(filename, true); }
+    void write_file_bgra(const string& filename) const  { write_file_i(filename, true); }
 // Misc
     void to_bw();
     void to_color();
@@ -75,15 +75,15 @@ class Image : public Matrix<Pixel> {
  private:
     Attrib _attrib;
     bool _silent_io_progress {false};
-    void read_file_i(const string& filename, bool bgr);
-    void write_file_i(const string& filename, bool bgr) const;
+    void read_file_i(const string& filename, bool bgra);
+    void write_file_i(const string& filename, bool bgra) const;
     friend details::ImageIO;
-    void read_file_IO(const string& filename, bool bgr);
-    void write_file_IO(const string& filename, bool bgr) const;
-    void read_file_wic(const string& filename, bool bgr);
-    void write_file_wic(const string& filename, bool bgr) const;
-    void read_file_FF(const string& filename, bool bgr);
-    void write_file_FF(const string& filename, bool bgr) const;
+    void read_file_IO(const string& filename, bool bgra);
+    void write_file_IO(const string& filename, bool bgra) const;
+    void read_file_wic(const string& filename, bool bgra);
+    void write_file_wic(const string& filename, bool bgra) const;
+    void read_file_FF(const string& filename, bool bgra);
+    void write_file_FF(const string& filename, bool bgra) const;
 };
 
 // Whether filename suffix identifies it as an image.

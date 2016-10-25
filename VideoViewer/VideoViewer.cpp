@@ -54,7 +54,7 @@ using namespace hh;
 namespace {
 
 const bool k_prefer_nv12 = 1;   // read videos using NV12 format (if even dimensions) to save memory and improve speed
-const bool k_use_bgr = 1;       // read images using BGR (rather than RGB) channel order to improve speed
+const bool k_use_bgra = 1;      // read images using BGRA (rather than RGBA) channel order to improve speed
 const Pixel k_background_color = Pixel::black();
 const Array<double> k_speeds = { // video playback speed factors
     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,  1.,  1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.
@@ -108,13 +108,13 @@ struct Object {
         ok();
     }
     // Create an image object.
-    Object(Image&& image, string filename, bool bgr, bool unsaved = true)
+    Object(Image&& image, string filename, bool bgra, bool unsaved = true)
         : _dims(concat(V(1), image.dims())), _is_image(true),
           _video(),
           _nframes_loaded(1), _filename(std::move(filename)), _orig_filename(_filename),
           _frameou1(_dims[0]), _unsaved(unsaved),
           _file_modification_time(get_path_modification_time(_filename)) {
-        _image_is_bgra = bgr;
+        _image_is_bgra = bgra;
         _image_attrib = image.attrib();
         _video = increase_grid_rank(std::move(image));
         // _video[0].assign(image);
@@ -259,7 +259,7 @@ struct S_Timeline {
 struct PrefetchImage {
     string filename;
     uint64_t file_modification_time {0}; // 0==load_never_attempted
-    unique_ptr<Image> pimage;            // nullptr could indicate a load error; bgr format iff k_use_bgr
+    unique_ptr<Image> pimage;            // nullptr could indicate a load error; bgra format iff k_use_bgra
 };
 SArray<PrefetchImage,2> g_prefetch_image; // {0==next, 1==prev}
 std::mutex g_mutex_prefetch;
@@ -473,7 +473,7 @@ Object& verify_video() {
 unique_ptr<Object> object_reading_video(string filename) {
     try {
         if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
-        bool use_nv12 = k_prefer_nv12;
+        bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi");
         unique_ptr<RVideo> prvideo = make_unique<RVideo>(filename, use_nv12); // may throw
         Vec3<int> dims = prvideo->dims(); // should allocate extra padframes?
         if (use_nv12 && !is_zero(dims.tail<2>()%2)) {
@@ -494,8 +494,8 @@ unique_ptr<Object> object_reading_video(string filename) {
 }
 
 void read_image(Image& image, const string& filename) {
-    if (k_use_bgr) {
-        image.read_file_bgr(filename); // may throw
+    if (k_use_bgra) {
+        image.read_file_bgra(filename); // may throw
     } else {
         image.read_file(filename); // may throw
     }
@@ -506,7 +506,7 @@ unique_ptr<Object> object_reading_image(string filename) {
     Image image;
     HH_CTIMER(_read_image, g_verbose>=1);
     // about 0.20sec for 5472x3648 using WIC; 0.40sec using Image_IO libjpeg; 0.08sec using Pixel::gray
-    bool bgr = false, unsaved = false;
+    bool bgra = false, unsaved = false;
     if (0) {                    // test the response time without any loading delay
         static uchar uc = 40; uc = uchar(40 + my_mod(uc+40, 180)); // not thread-safe
         HH_TIMER(_read_init);
@@ -522,12 +522,12 @@ unique_ptr<Object> object_reading_image(string filename) {
         p.file_modification_time = 0;
         image = std::move(*p.pimage.get());
         p.pimage.reset();
-        bgr = k_use_bgr;
+        bgra = k_use_bgra;
     } else {
         read_image(image, filename); // may throw
-        bgr = k_use_bgr;
+        bgra = k_use_bgra;
     }
-    return make_unique<Object>(std::move(image), std::move(filename), bgr, unsaved);
+    return make_unique<Object>(std::move(image), std::move(filename), bgra, unsaved);
 }
 
 unique_ptr<Object> object_reading_file(string filename) { // may throw
@@ -897,7 +897,8 @@ bool replace_with_other_object_in_directory(int increment) {
                 Object& ob = getob();
                 Image image = reduce_grid_rank(std::move(ob._video));
                 image.attrib() = ob._image_attrib;
-                if (ob._image_is_bgra ^ k_use_bgr) swap_rgb_bgr(image);
+                if (!ob._image_is_bgra && k_use_bgra) convert_rgba_bgra(image);
+                if (ob._image_is_bgra && !k_use_bgra) convert_bgra_rgba(image);
                 int ii = increment==1 ? 1 : 0;
                 if (g_verbose>=1) SHOW("saving_to_prefetch", ii, ob._filename);
                 std::lock_guard<std::mutex> lg(g_mutex_prefetch);
@@ -1501,7 +1502,7 @@ bool DerivedHW::key_press(string skey) {
                          Image image = reduce_grid_rank(std::move(ob._video));
                          image.attrib() = ob._image_attrib;
                          if (ob._image_is_bgra) {
-                             image.write_file_bgr(filename);
+                             image.write_file_bgra(filename);
                          } else {
                              image.write_file(filename);
                          }
@@ -1649,7 +1650,7 @@ bool DerivedHW::key_press(string skey) {
                      float fac = Args::parse_float(s);
                      ndims = convert<int>(convert<float>(g_frame_dims)*twice(fac));
                  }
-                 if (!ob.is_image()) {
+                 if (!ob.is_image() && ob._video.attrib().suffix!="avi") {
                      ndims = (ndims+2)/4*4; // video should have dims that are multiples of 4
                  } else {
                      if (0) ndims = (ndims+1)/2*2; // no need to round images to even sizes
@@ -1737,7 +1738,7 @@ bool DerivedHW::key_press(string skey) {
                  Video video(n, ob.spatial_dims());
                  parallel_for_int(f, n) {
                      video[f].assign(g_obs[ibeg+f]->_video[0]);
-                     if (g_obs[ibeg+f]->_image_is_bgra) swap_rgb_bgr(video[f]);
+                     if (g_obs[ibeg+f]->_image_is_bgra) convert_bgra_rgba(video[f]);
                  }
                  VideoNv12 video_nv12;
                  const bool use_nv12 = k_prefer_nv12 && is_zero(video.spatial_dims()%2);
@@ -1773,7 +1774,7 @@ bool DerivedHW::key_press(string skey) {
                  std::atomic<bool> ok{true};
                  parallel_for_int(f, nframes) {
                      if (!ok) continue;
-                     Image image; image.read_file(filenames[f]); // not bgr
+                     Image image; image.read_file(filenames[f]); // not bgra
                      if (image.dims()!=dims.tail<2>()) { ok = false; continue; }
                      if (!use_nv12) {
                          nvideo[f].assign(image);
@@ -2021,10 +2022,10 @@ bool DerivedHW::key_press(string skey) {
                      const float saturation_fac = get_saturation_fac();
                      if (ob._video.size()) {
                          nvideo.init(ob._video.dims());
-                         const bool bgr = ob.is_image() && ob._image_is_bgra;
+                         const bool bgra = ob.is_image() && ob._image_is_bgra;
                          parallel_for_size_t(i, ob._video.size()) {
                              Pixel pix = ob._video.raster(i);
-                             if (bgr) std::swap(pix[0], pix[2]);
+                             if (bgra) std::swap(pix[0], pix[2]);
                              Pixel yuv = RGB_to_YUV_Pixel(pix[0], pix[1], pix[2]);
                              float y = yuv[0]/255.f;
                              y = pow(y, g_gamma);
@@ -2033,7 +2034,7 @@ bool DerivedHW::key_press(string skey) {
                              yuv[0] = clamp_to_uchar(int(y*255.f+.5f));
                              for_intL(c, 1, 3) { yuv[c] = clamp_to_uchar(int(128.5f+(yuv[c]-128.f)*saturation_fac)); }
                              pix = YUV_to_RGB_Pixel(yuv[0], yuv[1], yuv[2]);
-                             if (bgr) std::swap(pix[0], pix[2]);
+                             if (bgra) std::swap(pix[0], pix[2]);
                              nvideo.raster(i) = pix;
                          }
                      } else {
@@ -2111,16 +2112,20 @@ bool DerivedHW::key_press(string skey) {
                  const Object& ob = check_loaded_video();
                  if (g_framenum<0) throw string("no current video frame");
                  Image image(ob.spatial_dims());
-                 bool bgr = true;
+                 bool bgra = false;
                  if (ob._video_nv12.size()) {
                      convert_Nv12_to_Image_BGRA(ob._video_nv12[g_framenum], image);
+                     bgra = true;
                  } else {
                      image = ob._video[g_framenum];
-                     bgr = ob.is_image() && ob._image_is_bgra;
+                     if (ob.is_image()) {
+                         bgra = ob._image_is_bgra;
+                         image.attrib() = ob._image_attrib;
+                     }
                  }
                  string filename = append_to_filename(ob._filename, sform("_frame%d", g_framenum+0));
                  filename = get_path_root(filename) + ".png";
-                 g_obs.push(make_unique<Object>(std::move(image), filename, bgr));
+                 g_obs.push(make_unique<Object>(std::move(image), filename, bgra));
                  message("Saved current frame as new image");
              }
              bcase 'F': {       // set framerate
@@ -2151,6 +2156,34 @@ bool DerivedHW::key_press(string skey) {
                  ob._video.attrib().bitrate = int(bitrate+.5);
                  redraw_later();
              }
+             bcase 'C'-64: {    // C-c: copy image or frame to clipboard
+                 std::lock_guard<std::mutex> lg(g_mutex_obs);
+                 Object& ob = check_object();
+                 if (g_framenum<0) throw string("no current video frame");
+                 Image image(ob.spatial_dims());
+                 bool bgra = false;
+                 if (ob._video_nv12.size()) {
+                     convert_Nv12_to_Image(ob._video_nv12[g_framenum], image);
+                 } else {
+                     image = ob._video[g_framenum];
+                     if (ob.is_image()) {
+                         bgra = ob._image_is_bgra;
+                         image.attrib() = ob._image_attrib;
+                     }
+                 }
+                 if (bgra) convert_bgra_rgba(image);
+                 if (!copy_image_to_clipboard(image)) throw string("could not copy image/frame to clipboard");
+             }
+             bcase 'V'-64: {    // C-v: paste clipboard image as new object
+                 std::lock_guard<std::mutex> lg(g_mutex_obs);
+                 Image image;
+                 if (!copy_clipboard_to_image(image)) throw string("could not copy an image from clipboard");
+                 const bool bgra = false; const bool unsaved = true;
+                 string filename = get_current_directory() + "/v1.png";
+                 g_obs.push(make_unique<Object>(std::move(image), filename, bgra, unsaved));
+                 set_video_frame(getobnum()-1, k_before_start);
+                 resize_window(determine_default_window_dims(g_frame_dims));
+             }
              bcase 'i': {       // info
                  g_show_info = !g_show_info;
                  redraw_later();
@@ -2176,9 +2209,12 @@ bool DerivedHW::key_press(string skey) {
                      if (g_cob>=0) {
                          const Object& ob = getob();
                          SHOW(g_cob, ob._filename);
-                         SHOW(ob._dims, ob._nframes_loaded, ob._framenum, ob._framein, ob._frameou1, ob._unsaved);
+                         SHOW(ob._dims, ob._nframes_loaded, ob._framenum, ob._framein, ob._frameou1);
+                         SHOW(ob._unsaved, ob._file_modification_time);
+                         if (ob.is_image()) SHOW(ob._image_is_bgra, ob._image_attrib.zsize);
                      }
                  }
+                 if (1) g_refresh_texture = true;
                  redraw_later();
              }
              bcase '/': {       // no-op operation, for "-key /"
@@ -2573,10 +2609,12 @@ void upload_image_to_texture() {
                 // frame.assign(getob()._video[g_framenum]);
                 CMatrixView<Pixel> vframe(getob()._video[g_framenum]);
                 std::copy(vframe.begin(), vframe.end(), frame.data());
-                if (!getob().is_image())
+                if (!getob().is_image() || !getob()._image_is_bgra) {
                     frame_format = GL_RGBA;
-                else if (getob()._image_is_bgra && !supports_BGRA)
-                    swap_rgb_bgr(frame);
+                } else if (!supports_BGRA) {
+                    convert_bgra_rgba(frame);
+                    frame_format = GL_RGBA;
+                }
             }
             return frame_format;
         });
@@ -3553,8 +3591,8 @@ void background_work(bool asynchronous) {
                         if (is_masked) pix = Pixel::white();
                         image_vlp[yx] = pix;
                     });
-                    const bool bgr = false;
-                    g_vlp_ready_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgr);
+                    const bool bgra = false;
+                    g_vlp_ready_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgra);
                 }
                 {
                     string filename = append_to_filename(getob()._filename, "_loop");
@@ -3810,8 +3848,8 @@ void do_zonal(Args& args) {
     }
     {
         std::lock_guard<std::mutex> lg(g_mutex_obs);
-        const bool bgr = false; const bool unsaved = true;
-        g_obs.push(make_unique<Object>(std::move(image), get_current_directory() + "/zonal_plate.png", bgr, unsaved));
+        const bool bgra = false; const bool unsaved = true;
+        g_obs.push(make_unique<Object>(std::move(image), get_current_directory() + "/zonal_plate.png", bgra, unsaved));
     }
 }
 

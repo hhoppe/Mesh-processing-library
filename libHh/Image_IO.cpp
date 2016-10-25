@@ -636,8 +636,8 @@ void ImageIO::read_bmp(Image& image, FILE* file) {
     for_int(i, int(bmih.biClrUsed)) {
         Vec4<char> buf;
         assertt(read_raw(file, buf.view()));
-        colormap[i][0] = buf[2]; colormap[i][1] = buf[1]; colormap[i][2] = buf[0]; // BGR to RGB
-        colormap[i][3] = buf[3];
+        colormap[i][0] = buf[2]; colormap[i][1] = buf[1]; colormap[i][2] = buf[0];
+        colormap[i][3] = buf[3]; // BGRA to RGBA
         if (all_gray && !is_gray(colormap[i])) all_gray = false;
     }
     if (0) SHOW(bmfh.bfOffBits, k_size_BITMAPFILEHEADER, bmih.biSize, bmih.biClrUsed,
@@ -1096,7 +1096,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
 
 using namespace details;
 
-void Image::read_file_IO(const string& filename, bool bgr) {
+void Image::read_file_IO(const string& filename, bool bgra) {
     RFile fi(filename);
     FILE* file = fi.cfile();
     int c = getc(file);
@@ -1115,10 +1115,10 @@ void Image::read_file_IO(const string& filename, bool bgr) {
         Warning("Image read: encoded content does not match filename suffix");
     }
     filetype->read_func(*this, file);
-    if (bgr && zsize()>=3) swap_rgb_bgr(*this);
+    if (bgra && zsize()>=3) convert_rgba_bgra(*this);
 }
 
-void Image::write_file_IO(const string& filename, bool bgr) const {
+void Image::write_file_IO(const string& filename, bool bgra) const {
     if (const ImageFiletype* filetype = recognize_filetype(filename)) {
         const_cast<Image&>(*this).set_suffix(filetype->suffix); // mutable
     }
@@ -1132,9 +1132,9 @@ void Image::write_file_IO(const string& filename, bool bgr) const {
     }
     if (!filetype)
         throw std::runtime_error("Image: unrecognized suffix '" + suffix() + "' when writing '" + filename + "'");
-    if (bgr && zsize()>=3) {
+    if (bgra && zsize()>=3) {
         Image timage(*this);    // make a copy because write_func() below could throw exception
-        swap_rgb_bgr(timage);
+        convert_rgba_bgra(timage);
         filetype->write_func(timage, file);
     } else {
         filetype->write_func(*this, file);

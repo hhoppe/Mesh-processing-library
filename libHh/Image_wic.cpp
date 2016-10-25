@@ -116,7 +116,7 @@ class my_HGLOBAL {
 
 } // namespace
 
-void Image::read_file_wic(const string& filename, bool bgr) {
+void Image::read_file_wic(const string& filename, bool bgra) {
     wic_init();
     Array<uchar> buffer;
     com_ptr<IStream> input_stream;
@@ -187,7 +187,7 @@ void Image::read_file_wic(const string& filename, bool bgr) {
         //   is that UINT RGB and grayscale formats use the standard RGB color space (sRGB), while fixed-point and
         //   floating-point RGB and grayscale formats use the extended RGB color space (scRGB). The CMYK color
         //   model uses an RWOP color space."
-        WICPixelFormatGUID pixel_format2 = bgr ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
+        WICPixelFormatGUID pixel_format2 = bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
         AS(converter->Initialize(frame_decode,
                                  pixel_format2,
                                  WICBitmapDitherTypeNone,
@@ -250,7 +250,7 @@ string canonical_pathname(string s) {
     return s;
 }
 
-void Image::write_file_wic(const string& filename, bool bgr) const {
+void Image::write_file_wic(const string& filename, bool bgra) const {
     string suf;
     // previously had: if (suffix()=="" && file_requires_pipe(filename)) suf = "bmp";
     if (suf=="") suf = to_lower(get_path_extension(filename));
@@ -374,7 +374,8 @@ void Image::write_file_wic(const string& filename, bool bgr) const {
         com_ptr<IWICBitmap> bitmap; {
             // If image lacks alpha channel, use RGBA (with non-premultiplied alpha) so that encoder can ignore
             //  the undefined alpha data, and in any case does not need to perform a division by alpha.
-            WICPixelFormatGUID bitmap_pixel_format = bgr ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
+            WICPixelFormatGUID bitmap_pixel_format =
+                bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
             unsigned stride = xsize()*sizeof(Pixel);
             // Note: problem for huge images; no workaround using WIC.
             unsigned buffer_size = assert_narrow_cast<unsigned>(size()*sizeof(Pixel));

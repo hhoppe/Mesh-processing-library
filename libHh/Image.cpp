@@ -69,7 +69,7 @@ void Image::to_color() {
 
 // *** ffmpeg IO
 
-void Image::read_file_FF(const string& pfilename, bool bgr) {
+void Image::read_file_FF(const string& pfilename, bool bgra) {
     string filename = pfilename;
     const bool ldebug = getenv_bool("FF_DEBUG");
     if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to read image content");
@@ -145,7 +145,7 @@ void Image::read_file_FF(const string& pfilename, bool bgr) {
         // Another option is the separate tool "exifutil".
     }
     {
-        string spixfmt = bgr ? "bgra" : "rgba";
+        string spixfmt = bgra ? "bgra" : "rgba";
         string scmd = ("ffmpeg -loglevel panic -nostdin -i " + quote_arg_for_shell(filename) +
                        " -f image2pipe -pix_fmt " + spixfmt + " -vcodec rawvideo - |");
         if (ldebug) SHOW(scmd);
@@ -155,7 +155,7 @@ void Image::read_file_FF(const string& pfilename, bool bgr) {
     }
 }
 
-void Image::write_file_FF(const string& pfilename, bool bgr) const {
+void Image::write_file_FF(const string& pfilename, bool bgra) const {
     string filename = pfilename;
     const bool ldebug = getenv_bool("FF_DEBUG");
     assertx(product(dims()));
@@ -169,8 +169,10 @@ void Image::write_file_FF(const string& pfilename, bool bgr) const {
         filename = tmpfile->filename();
     }
     if (attrib().exif_data.num()) Warning("Image EXIF data lost in image_write_file_FF");
+    if (zsize()==4 && (suffix()=="bmp" || suffix()=="jpg"))
+        Warning("Image format likely does not support alpha channel");
     {
-        string spixfmt = bgr ? "bgra" : "rgba";
+        string spixfmt = bgra ? "bgra" : "rgba";
         string sopixfmt = zsize()==4 ? "rgba" : "rgb24";
         string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + spixfmt +
                        sform(" -s %dx%d", xsize(), ysize()) +
@@ -262,7 +264,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
 
 // *** Input-Output
 
-void Image::read_file_i(const string& filename, bool bgr) {
+void Image::read_file_i(const string& filename, bool bgra) {
     {
         // Problem of reading correct JPG image orientation based on EXIF image tag:
         // e.g. vv ~/data/image/jpg/20151225_160800_exif_rotated.jpg
@@ -279,58 +281,58 @@ void Image::read_file_i(const string& filename, bool bgr) {
     if (implementation!="") Warning("RImage I/O implementation overriden");
     if (implementation=="WIC") {
 #if defined(HH_IMAGE_HAVE_WIC)
-        read_file_wic(filename, bgr); return;
+        read_file_wic(filename, bgra); return;
 #else
         assertnever("Image_WIC not enabled");
 #endif
     }
     if (implementation=="IO") {
 #if defined(HH_IMAGE_HAVE_IO)
-        read_file_IO(filename, bgr); return;
+        read_file_IO(filename, bgra); return;
 #else
         assertnever("Image_IO not enabled");
 #endif
     }
     if (implementation=="FF") {
-        read_file_FF(filename, bgr); return;
+        read_file_FF(filename, bgra); return;
     }
 #if defined(HH_IMAGE_HAVE_WIC)
-    read_file_wic(filename, bgr);
+    read_file_wic(filename, bgra);
 #elif defined(HH_IMAGE_HAVE_IO)
-    read_file_IO(filename, bgr);
+    read_file_IO(filename, bgra);
 #else
-    read_file_FF(filename, bgr);
+    read_file_FF(filename, bgra);
 #endif
 }
 
-void Image::write_file_i(const string& filename, bool bgr) const {
+void Image::write_file_i(const string& filename, bool bgra) const {
     if (filename=="-") my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
     string implementation = getenv_string("WIMAGE_IMPLEMENTATION");
     if (implementation=="") implementation = getenv_string("IMAGE_IMPLEMENTATION");
     if (implementation!="") Warning("WImage I/O implementation overriden");
     if (implementation=="WIC") {
 #if defined(HH_IMAGE_HAVE_WIC)
-        write_file_wic(filename, bgr); return;
+        write_file_wic(filename, bgra); return;
 #else
         assertnever("Image_WIC not enabled");
 #endif
     }
     if (implementation=="IO") {
 #if defined(HH_IMAGE_HAVE_IO)
-        write_file_IO(filename, bgr); return;
+        write_file_IO(filename, bgra); return;
 #else
         assertnever("Image_IO not enabled");
 #endif
     }
     if (implementation=="FF") {
-        write_file_FF(filename, bgr); return;
+        write_file_FF(filename, bgra); return;
     }
 #if defined(HH_IMAGE_HAVE_WIC)
-    write_file_wic(filename, bgr);
+    write_file_wic(filename, bgra);
 #elif defined(HH_IMAGE_HAVE_IO)
-    write_file_IO(filename, bgr);
+    write_file_IO(filename, bgra);
 #else
-    write_file_FF(filename, bgr);
+    write_file_FF(filename, bgra);
 #endif
 }
 

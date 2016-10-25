@@ -1,10 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Video.h"
 
-// For make, this should instead be set in ~/src/make/Makefile_defs to get correct include and lib paths
-// For msbuild:
-// #define HH_VIDEO_HAVE_VT
-
 // I actually get better read/write performance by directly calling Media Foundation, at least in Windows 7.
 // Generally, I prefer ffmpeg for its portability and quality.
 
@@ -12,35 +8,8 @@
 #define HH_VIDEO_HAVE_FFMPEG    // always as fallback
 
 #if !defined(_MSC_VER) || defined(__clang__)
-#undef HH_VIDEO_HAVE_VT
 #undef HH_VIDEO_HAVE_MF
 #endif
-
-
-//----------------------------------------------------------------------------
-
-#if defined(HH_VIDEO_HAVE_VT)
-
-#pragma warning(push)
-#pragma warning(disable:4265)   // class has virtual functions, but destructor is not virtual
-#pragma warning(disable:4263)   // member function does not override any base class virtual member function
-#pragma warning(disable:4264)   // no override available for virtual member function from base
-#pragma warning(disable:4555)   // expression has no effect; expected expression with side-effect
-#include "vtcore.h"
-// #include "vtfileio.h"           // vt::VtCreateVideoSrc(); no longer exists
-#include "../src/fileio/MFVideoSrc.h" // vt::CMFVideoSrc and vt::CMFVideoDst
-#include "windows_com.h"        // com_ptr<>
-
-#pragma warning(pop)
-// using namespace vt; // be careful with "vt::vector"
-// VT in VS2012 uses the solution "AdditionalLibraryDirectories" (in hhdebug.props and hhrelease.props)
-HH_REFERENCE_LIB("core.lib");
-HH_REFERENCE_LIB("fileio.lib");
-HH_REFERENCE_LIB("common.lib");
-HH_REFERENCE_LIB("numerics.lib");
-
-#endif  // defined(HH_VIDEO_HAVE_VT)
-
 
 //----------------------------------------------------------------------------
 
@@ -92,6 +61,27 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 
 
 //----------------------------------------------------------------------------
+
+// Notes on uncompressed/lossless video formats:
+// http://superuser.com/questions/347433/how-to-create-an-uncompressed-avi-from-a-series-of-1000s-of-png-images-using-ff
+// Consider 1280x720p 24fps Big Buck Bunny movie:
+// - uncompressed (V308 is the 8 bpc variant of V410; not supported in many viewers)  518 Mbps
+//   ffmpeg ...  -c:v v308 output.mov
+// - compressed but lossless (Apple QuickTime Animation which is trivial RLE scheme)  165 Mbps
+//   ffmpeg ...  -c:v qtrle -pix_fmt rgb24    output.mov
+// - effectively lossless  (NV12 is 4:2:0)  133 Mbps
+//   ffmpeg ...  -c:v ffvhuff -pix_fmt yuv420p output.avi
+// - lossless H.264 (libx264-only)  (default pix_fmt is yuv444p or rgb24?) ("-preset ultrafast" for faster encoding)
+//                    29 Mbps for yuv422p, 43 Mbps with ultrafast
+//   ffmpeg ...  -c:v libx264 -qp 0 -pix_fmt yuv420p -f mp4 output.mp4
+
+// I choose "-c:v ffvhuff" because it allows a unique container suffix ("avi") that is distinct from the others.
+// I could use "-c:v ffvhuff -pix_fmt yuv420p" because it is compact and translates trivially to/from Nv12Video.
+// However, it is lossy like NV12.
+// Instead, I prefer "-c:v ffvhuff -pix_fmt yuv444p" which is lossless.
+
+// An alternative would be to use lossless x264, still in an avi container?
+
 
 namespace hh {
 
@@ -256,7 +246,7 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
     Video newvideo = &pnewvideo==&video ? Video() : std::move(pnewvideo);
     assertx(min(syx)>=0.f);
     Vec2<int> newdims = convert<int>(convert<float>(video.spatial_dims())*syx+.5f);
-    if (1) newdims = (newdims+1)/2*2; // make sizes be even integers
+    if (video.attrib().suffix!="avi") newdims = (newdims+1)/2*2; // make sizes be even integers
     if (!product(newdims)) {
         Warning("scaling to zero-sized frame");
         if (0) fill(newdims, 0);
@@ -370,6 +360,7 @@ RVideo::RVideo(const string& filename, bool use_nv12) : _filename(filename), _us
         if (_attrib.suffix=="")
             throw std::runtime_error(sform("Peeked video format (c=%d) in pipe '%s' is not recognized",
                                            c, _filename.c_str()));
+        // if (_attrib.suffix=="avi") _use_nv12 = false; // must be done in caller
         _tmpfile = make_unique<TmpFile>(_attrib.suffix);
         _filename = _tmpfile->filename();
         WFile fi2(_filename);
@@ -421,203 +412,6 @@ void WVideo::write(CNv12View frame)             { assertw(_use_nv12); _impl->wri
 // *** Video I/O
 
 #define AS(expr) assertx(SUCCEEDED(expr))
-
-
-//----------------------------------------------------------------------------
-// **** using Vision Tools
-#if defined(HH_VIDEO_HAVE_VT)
-
-// ~/git/CompPhoto/ClassLibs/VisionTools/src/core/vt_video.h : IVideoSrc
-// ~/git/CompPhoto/ClassLibs/VisionTools/src/fileio/MFVideoSrc.h : CMFVideoSrc:IVideoSrc
-
-// In Vision Tools:
-// CNV12VideoImg is just a container that wraps the memory block in a CLumaByteImg for the luma channel, and a
-//  CUVByteImg for the chroma channels.
-// The fast NV12 to RGB converter is VtConvertImageNV12ToRGBA, or CConvertImageNV12toRGBATransform for the
-//  Transform version (which has a form that you can run directly from the Luma/Chroma to a CRGBAByteImg, so
-//  you don't need to use the image cache or instantiate a reader/writer).
-
-class VT_RVideo_Implementation : public RVideo::Implementation {
- public:
-    VT_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
-        // AS(vt::VtCreateVideoSrc(&_pvideosrc, nullptr));
-        _pvideosrc = make_unique<vt::CMFVideoSrc>();
-        vt::VideoFormat format = vt::VideoFormat::RGB32;
-        if (_impl_nv12) format = vt::VideoFormat::NV12;
-        bool success = false;
-        if (SUCCEEDED(_pvideosrc->OpenFile(widen(_rvideo._filename).c_str(), format))) {
-            success = true;
-        } else if (format==vt::VideoFormat::NV12) {
-            format = vt::VideoFormat::RGB32;
-            if (SUCCEEDED(_pvideosrc->OpenFile(widen(_rvideo._filename).c_str(), format))) success = true;
-        }
-        if (!success) throw std::runtime_error("Could not open video in file '" + _rvideo._filename + "'");
-        {
-            int nframes; AS(_pvideosrc->GetFrameCount(nframes)); // possibly an under-estimate (see vt_video.h)
-            int ysize, xsize; AS(_pvideosrc->GetFrameSize(xsize, ysize));
-            _rvideo._dims = V(nframes, ysize, xsize);
-            double fr; AS(_pvideosrc->GetFrameRate(fr));
-            _rvideo._attrib.framerate = fr;
-        }
-        if (0) {
-            float bits_per_pixel; AS(_pvideosrc->GetBitrate(bits_per_pixel));
-            // VT was buggy: used width*width rather than width*height
-            assertx(bits_per_pixel<1e5f);
-            const int nx = _rvideo.xsize();
-            _rvideo._attrib.bitrate = int(bits_per_pixel*nx*nx); // [sic] - not *ny*nx
-        } else {                // Mike Toelle's fix  (note that, later, output bitrate is in megabits/sec)
-            float bits_per_pixel; AS(_pvideosrc->GetBitrate(bits_per_pixel));
-            assertx(bits_per_pixel<100.f);
-            _rvideo._attrib.bitrate = int(bits_per_pixel*_rvideo.xsize()*_rvideo.ysize());
-        }
-    }
-    ~VT_RVideo_Implementation() { }
-    virtual string name() const { return "VT"; }
-    bool read(MatrixView<Pixel> frame) override {
-        const Vec2<int> sdims = _rvideo.spatial_dims();
-        assertx(frame.dims()==sdims);
-        vt::CRGBAByteImg frame_img(frame.data()->data(), frame.xsize(), frame.ysize(), frame.xsize()*sizeof(Pixel));
-        vt::CImgReaderWriter<vt::CRGBAByteImg> scratchReaderRGB32;
-        frame_img.Share(scratchReaderRGB32);
-        HRESULT hr = _pvideosrc->GetNextFrame(&scratchReaderRGB32);
-        if (hr==FIO_VIDEO_E_END_OF_STREAM) return false;
-        AS(hr);
-        for (Pixel& pix: frame) {
-            std::swap(pix[0], pix[2]); pix[3] = 255; // BGRA to RGBA
-        }
-        return true;
-    }
-    bool read_nv12(Nv12View frame) override {
-        const Vec2<int> sdims = _rvideo.spatial_dims();
-        assertx(frame.get_Y().dims()==sdims);
-        if (1) { // otherwise I see a crash in CTransformTaskTraverse::InitializeNodeSrc()
-            assertx(_impl_nv12);
-            assertx(_pvideosrc->GetVideoFormat()==vt::VideoFormat::NV12);
-        }
-        vt::CLumaByteImg frameY_img(frame.get_Y().data(), frame.get_Y().xsize(),
-                                    frame.get_Y().ysize(), frame.get_Y().xsize()*1);
-        vt::CUVByteImg frameUV_img(frame.get_UV().data()->data(), frame.get_UV().xsize(),
-                                   frame.get_UV().ysize(), frame.get_UV().xsize()*sizeof(vt::UVPix));
-        vt::CImgReaderWriter<vt::CLumaByteImg> scratchReaderY; AS(frameY_img.Share(scratchReaderY));
-        vt::CImgReaderWriter<vt::CUVByteImg> scratchReaderUV;  AS(frameUV_img.Share(scratchReaderUV));
-        HRESULT hr = _pvideosrc->GetNextFrame(&scratchReaderY, &scratchReaderUV);
-        if (hr==FIO_VIDEO_E_END_OF_STREAM) return false;
-        AS(hr);
-        return true;
-    }
-
-    bool discard_frame() override {
-        const Vec2<int> sdims = _rvideo.spatial_dims();
-        // There may be a way to perform IMFSourceReader::ReadSample() without the vt::CopySampleToReturnBuffer().
-        assertx(_impl_nv12);
-        vt::CNV12VideoImg& nv12 = _scratch_nv12;
-        if (nv12.GetYImg().Height()==0) AS(nv12.Create(sdims[1], sdims[0]));
-        HRESULT hr = _pvideosrc->GetNextFrame(nv12);
-        if (hr==FIO_VIDEO_E_END_OF_STREAM) return false;
-        AS(hr);
-        return true;
-    }
-    static bool supported() { return true; }
- private:
-    // com_ptr<vt::IVideoSrc> _pvideosrc;
-    unique_ptr<vt::IVideoSrc> _pvideosrc;
-    vt::CNV12VideoImg _scratch_nv12;
-    const bool _impl_nv12 {true};
-};
-
-
-class VT_WVideo_Implementation : public WVideo::Implementation {
- public:
-    VT_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
-        const int ny = _wvideo.ysize(), nx = _wvideo.xsize();
-        const auto& attrib = _wvideo._attrib;
-        if (attrib.audio.size()) Warning("VT_WVideo does not currently support audio");
-        // AS(vt::VtCreateVideoDst(&_pvideodst));
-        _pvideodst = make_unique<vt::CMFVideoDst>();
-        _workaround = attrib.suffix=="mp4";
-        // The extension determines the type of video format and encoding;
-        //  H.264 encoder for ".mp4", ".mov", or ".3gp", and VC1 encoder for ".wmv".
-        vt::VideoFormat video_format = vt::CIMG; if (_workaround) video_format = vt::RGB32;
-        int frames_per_sec = int(attrib.framerate+0.5);
-        if (0 && double(frames_per_sec)!=attrib.framerate)
-            SHOW(frames_per_sec, attrib.framerate, frames_per_sec-attrib.framerate);
-        // ~/src/bin/win/Filtervideo ~/data/video/fewpalms.mp4 >vt.mp4
-        // frames_per_sec=30 attrib.framerate=30 frames_per_sec-attrib.framerate=-3e-05
-        float vt_bitrate;
-        if (0) {                                                    // VT was buggy
-            float bits_per_pixel = (float(attrib.bitrate)/nx/nx); // [sic] - not /ny/nx
-            vt_bitrate = bits_per_pixel;
-        } else {                // Now output bitrate is specified in megabit/second !
-            vt_bitrate = attrib.bitrate/1e6f;
-        }
-        if (FAILED(_pvideodst->OpenFile(widen(_wvideo._filename).c_str(), nx, ny,
-                                        video_format, frames_per_sec, vt_bitrate)))
-            throw std::runtime_error("Could not write video to file '" + _wvideo._filename + "'");
-        AS(_vtimg.Create(nx, ny));
-        // no exceptions in constructor, so commit
-    }
-    ~VT_WVideo_Implementation() {
-        if (_pvideodst) AS(_pvideodst->Close());
-    }
-    virtual string name() const { return "VT"; }
-    void write(CMatrixView<Pixel> frame) override {
-        const Vec2<int> sdims = _wvideo.spatial_dims();
-        assertx(product(_wvideo.spatial_dims())); assertx(frame.dims()==sdims);
-        vt::CRGBAImg& vtimg = _vtimg;
-        for_int(y, sdims[0]) {
-            auto framey = frame[y];
-            uchar* vtrow = &vtimg(0, y, 0);
-            for_int(x, sdims[1]) {
-                const Pixel& pix = framey[x];
-                for_int(z, 3) { *vtrow++ = pix[2-z]; } // RGBA to BGRA
-                *vtrow++ = 255;
-            }
-        }
-        if (_workaround) {
-            // Media Foundation MP4 encoding under Win 7 may have poor quality; it is independent of this workaround.
-            vt::CRGB32VideoImg vtimg2;
-            AS(vtimg2.Create(vtimg.BytePtr(), vtimg.Width(), vtimg.Height(), vtimg.StrideBytes()));
-            AS(_pvideodst->WriteFrame(vtimg2));
-        } else {
-            AS(_pvideodst->WriteFrame(vtimg));
-        }
-    }
-    void write_nv12(CNv12View nv12v) override {
-        const Vec2<int> sdims = _wvideo.spatial_dims();
-        assertx(product(_wvideo.spatial_dims())); assertx(nv12v.get_Y().dims()==sdims);
-        vt::CLumaByteImg nv12vY_img(const_cast<uchar*>(nv12v.get_Y().data()), nv12v.get_Y().xsize(),
-                                    nv12v.get_Y().ysize(), nv12v.get_Y().xsize()*1);
-        vt::CUVByteImg nv12vUV_img(const_cast<uchar*>(nv12v.get_UV().data()->data()), nv12v.get_UV().xsize(),
-                                   nv12v.get_UV().ysize(), nv12v.get_UV().xsize()*sizeof(vt::UVPix));
-        // Unfortunately, CNV12VideoImg assumes that Y and UV are contiguous (I do not), so I must copy.
-        vt::CNV12VideoImg nv12; nv12.Create(nv12v.get_Y().xsize(), nv12v.get_Y().ysize());
-        nv12vY_img.CopyTo(nv12.GetYImg());
-        nv12vUV_img.CopyTo(nv12.GetUVImg());
-        AS(_pvideodst->WriteFrame(nv12));
-    }
-    static bool supported() { return true; }
- private:
-    // com_ptr<vt::IVideoDst> _pvideodst;
-    unique_ptr<vt::IVideoDst> _pvideodst;
-    vt::CRGBAImg _vtimg;
-    bool _workaround;
-};
-
-#else
-
-class VT_RVideo_Implementation : public Unsupported_RVideo_Implementation {
- public:
-    VT_RVideo_Implementation(RVideo& rvideo) : Unsupported_RVideo_Implementation(rvideo) { }
-    static bool supported() { return false; }
-};
-class VT_WVideo_Implementation : public Unsupported_WVideo_Implementation {
- public:
-    VT_WVideo_Implementation(WVideo& wvideo) : Unsupported_WVideo_Implementation(wvideo) { }
-    static bool supported() { return false; }
-};
-
-#endif  // defined(HH_VIDEO_HAVE_VT)
-
 
 //----------------------------------------------------------------------------
 // **** using Media Foundation
@@ -887,6 +681,9 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
         else if (attrib.suffix=="mp4") videoOutputFormat = MFVideoFormat_H264;
         else if (attrib.suffix=="mov") videoOutputFormat = MFVideoFormat_H264;
         else if (attrib.suffix=="wmv") videoOutputFormat = MFVideoFormat_WVC1;
+        // Note that Media Foundation does not support *.avi as an output format;
+        //  see: https://msdn.microsoft.com/en-us/library/dd757927(VS.85).aspx
+        else if (0 && attrib.suffix=="avi") videoOutputFormat = MFVideoFormat_420O; // 8bpc planar YUV 4:2:0
         else throw std::runtime_error("Video: encoder suffix '" + attrib.suffix + "' not recognized");
         // See Tutorial: Using the Sink Writer to Encode Video (Windows)
         //  http://msdn.microsoft.com/en-us/library/windows/desktop/ff819477%28v=vs.85%29.aspx
@@ -1108,6 +905,7 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             Vec3<int> dims{0, 0, 0};
             double duration = -1., total_bitrate = -1.;
             double video_bitrate = -1., framerate = -1.;
+            bool yuv444p = false;
             int nlines = 0;
             string sline;
             while (my_getline(fi(), sline, false)) {
@@ -1148,6 +946,8 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
                     // Stream #0:0(eng): Video: vc1 (Advanced) (WVC1 / 0x31435657), yuv420p, 3840x2160 [SAR 1:1 DAR 16:9], 100000 kb/s, 30 tbr, 1k tbn, 60 tbc
                     // Stream #0:1(eng): Video: wmv3 (Main) (WMV3 / 0x33564D57), yuv420p, 640x480, 768 kb/s, SAR 1:1 DAR 4:3, 30 fps, 30 tbr, 1k tbn, 1k tbc
                     // Stream #0:0: Video: rawvideo, bgr24, 768x1024, 2 fps, 2 tbr, 2 tbn, 2 tbc
+                    // Stream #0:0: Video: ffvhuff (FFVH / 0x48564646), yuv444p, 960x540, 155182 kb/s, 30 fps, 30 tbr, 30 tbn, 30 tbc  [*.avi]
+
                     for (string::size_type i = 0; ; ) {
                         i = sline.find(',', i+1); assertx(i!=string::npos);
                         if (sscanf(sline.c_str()+i, ", %dx%d", &dims[2], &dims[1])==2) break;
@@ -1170,7 +970,8 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
                         i = sline.rfind(", ", i); assertx(i!=string::npos);
                         assertx(sscanf(sline.c_str()+i, ", %lg tb%c", &framerate, &vch)==2 && vch=='r');
                     }
-                    if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate);
+                    if (sline.find("yuv444p")!=string::npos) yuv444p = true;
+                    if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
                 }
                 if (contains(sline, "Stream #0:") && contains(sline, ": Audio:") && contains(sline, "kb/s"))
                     expect_audio = true;
@@ -1185,6 +986,12 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             _rvideo._dims = dims;
             _rvideo._attrib.bitrate = int(video_bitrate);
             _rvideo._attrib.framerate = framerate;
+            if (yuv444p && _rvideo._use_nv12) {
+                // must be fixed in caller
+                if (0) Warning("Switching video read away from NV12 because video encoding is yuv444p");
+                if (0) _rvideo._use_nv12 = false;
+                Warning("Reading NV12 from a Video encoded with yuv444p");
+            }
         }
         if (expect_audio) {
             try {
@@ -1270,7 +1077,10 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
             // if (attrib.suffix=="mp4") sfilecontainer = " -f avi";
             // Setting container should be unnecessary because it is derived automatically based on file suffix.
         }
-        string scodec = "";
+        string ipixfmt = _wvideo._use_nv12 ? "nv12" : "rgba"; // was rgb24
+        string str_audio = " -an"; // default no audio
+        string ocodec = "";
+        string opixfmt = "yuv420p";
         // ffmpeg -hide_banner -codecs | grep '^..E'
         // ffmpeg -hide_banner -encoders
         // hevc : H.265 (libx265)
@@ -1283,10 +1093,13 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
         //  wmv: msmpeg4v3 (MP43 / 0x3334504D), yuv420p // (wmv2 inferior; wmv3 & vc1 encoders missing)
         // Note: Windows Media Player in Win7 cannot play back msmpeg4v3 4K video in real time!
         if (attrib.suffix=="wmv") Warning("FF_WVideo_Implementation uses msmpeg4v3 (not vc1) for *.wmv");
-        if (0 && attrib.suffix=="mp4") scodec = " -vcodec h264";
-        if (0 && attrib.suffix=="mov") scodec = " -vcodec h264";
-        string pixfmt = _wvideo._use_nv12 ? "nv12" : "rgba"; // was rgb24
-        string str_audio = " -an"; // default no audio
+        if (0 && attrib.suffix=="mp4") ocodec = " -vcodec h264";
+        if (0 && attrib.suffix=="mov") ocodec = " -vcodec h264";
+        if (attrib.suffix=="avi") {
+            ocodec = " -c:v ffvhuff";  // "effectively lossless"
+            opixfmt = "yuv444p";       // lossless (not NV12 like "yuv420p")
+            if (_wvideo._use_nv12) Warning("Using NV12 to write to a *.avi Video with yuv444p encoding");
+        }
         Audio& audio = attrib.audio;
         if (audio.size()) {
             if (ldebug) SHOW("previously", audio.attrib().suffix);
@@ -1302,9 +1115,9 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
             }
         }
         // Note: "-hide_banner" unnecessary with "-loglevel panic" and "-i some_input".
-        string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + pixfmt +
+        string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + ipixfmt +
                        sform(" -s %dx%d -r %g", sdims[1], sdims[0], attrib.framerate) +
-                       " -i -" + str_audio + sfilecontainer + scodec + " -pix_fmt yuv420p" +
+                       " -i -" + str_audio + sfilecontainer + ocodec + " -pix_fmt " + opixfmt +
                        sform(" -vb %d", attrib.bitrate) + " -y " + quote_arg_for_shell(filename));
         if (ldebug) SHOW(scmd);
         _pfi = make_unique<WFile>(scmd);
@@ -1355,13 +1168,11 @@ unique_ptr<RVideo::Implementation> RVideo::Implementation::make(RVideo& rvideo) 
     //   e.g.:  RVIDEO_IMPLEMENTATION=MF Filtervideo ~/data/video/fewpalms.mp4 -stat
     string implementation = getenv_string("RVIDEO_IMPLEMENTATION");
     if (implementation=="") implementation = getenv_string("VIDEO_IMPLEMENTATION");
-    if (implementation=="VT") return make_unique<VT_RVideo_Implementation>(rvideo);
     if (implementation=="MF") return make_unique<MF_RVideo_Implementation>(rvideo);
     if (implementation=="FF") return make_unique<FF_RVideo_Implementation>(rvideo);
     if (implementation!="") throw std::runtime_error("RVideo implementation '" + implementation + "' not recognized");
     if (FF_RVideo_Implementation::supported()) return make_unique<FF_RVideo_Implementation>(rvideo);
     if (MF_RVideo_Implementation::supported()) return make_unique<MF_RVideo_Implementation>(rvideo);
-    if (VT_RVideo_Implementation::supported()) return make_unique<VT_RVideo_Implementation>(rvideo);
     throw std::runtime_error("Video I/O not implemented");
 }
 
@@ -1372,7 +1183,6 @@ unique_ptr<WVideo::Implementation> WVideo::Implementation::make(WVideo& wvideo) 
     // - ffmpeg: cannot write *.wmv using VC1 codec (instead resorts to msmpeg4v3).
     string implementation = getenv_string("WVIDEO_IMPLEMENTATION");
     if (implementation=="") implementation = getenv_string("VIDEO_IMPLEMENTATION");
-    if (implementation=="VT") return make_unique<VT_WVideo_Implementation>(wvideo);
     if (implementation=="MF") return make_unique<MF_WVideo_Implementation>(wvideo);
     if (implementation=="FF") return make_unique<FF_WVideo_Implementation>(wvideo);
     if (implementation!="") throw std::runtime_error("WVideo implementation '" + implementation + "' not recognized");
@@ -1381,7 +1191,6 @@ unique_ptr<WVideo::Implementation> WVideo::Implementation::make(WVideo& wvideo) 
         return make_unique<MF_WVideo_Implementation>(wvideo);
     if (FF_WVideo_Implementation::supported()) return make_unique<FF_WVideo_Implementation>(wvideo);
     if (MF_WVideo_Implementation::supported()) return make_unique<MF_WVideo_Implementation>(wvideo);
-    if (VT_WVideo_Implementation::supported()) return make_unique<VT_WVideo_Implementation>(wvideo);
     throw std::runtime_error("Video I/O not implemented");
 }
 

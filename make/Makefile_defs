@@ -84,7 +84,6 @@ cppinc += -D_UNICODE -DUNICODE  # (useful for alternative testing since my msbui
 # cppinc += -DHH_NO_SSE41
 # cppinc += -DHH_NO_IMAGE_WIC   # only matters for CONFIG=win/w32
 # cppinc += -DHH_IMAGE_IO_TOO   # only matters for CONFIG=win/w32 (default is to just use WIC)
-# cppinc += -DHH_VIDEO_HAVE_VT  # only matters for CONFIG=win/w32
 cppinc += -DHH_FOR_DISTRIB    # set for distrib
 cppinc += -DHH_NO_VECTOR4_VECTORIZATION # set for distrib (otherwise require Intel SSE instructions)
 cppinc += -DHH_NO_STACKWALKER # set for distrib

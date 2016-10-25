@@ -3,11 +3,11 @@
 
 #include "Array.h"
 #include "Vec.h"
-#include "Pixel.h"
 #include "Vector4.h"
 #include "StringOp.h"
 #include "RangeOp.h"
 #include "FileIO.h"             // file_exists()
+#include "Image.h"
 
 #if defined(GL_VERSION)         // OpenGL
 #if defined(_WIN32)
@@ -83,6 +83,9 @@ class HWbase : noncopyable {
     virtual void begin_draw_visible() = 0; // force update to visible buffer
     virtual void end_draw_visible() = 0;
     virtual void wake_up()                      { } // called from an asynchronous client thread to force redraw
+// clipboard
+    virtual bool copy_image_to_clipboard(const Image&) { Warning("clipboard not implemented"); return false; }
+    virtual bool copy_clipboard_to_image(Image&) { Warning("clipboard not implemented"); return false; }
  private:
     friend class HW;            // grant access to HW but not to any DerivedHW
     string _default_background {"white"};

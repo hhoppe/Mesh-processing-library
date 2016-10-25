@@ -45,6 +45,9 @@ class HW : public HWbase {
     void begin_draw_visible() override;
     void end_draw_visible() override;
     void wake_up() override;
+// clipboard
+    bool copy_image_to_clipboard(const Image& image) override;
+    bool copy_clipboard_to_image(Image& image) override;
  private:
     MMRESULT _sk_timerID {0};
     UINT _sk_timerResolution {0}; // Max tolerable error in timer delay (mSec)

@@ -26,9 +26,13 @@ struct Pixel : Vec4<uchar> {
     }
 };
 
-template<typename R, typename = enable_if_range_t<R> > void swap_rgb_bgr(R&& range) {
+template<typename R, typename = enable_if_range_t<R> > void convert_rgba_bgra(R&& range) {
     static_assert(std::is_same<iterator_t<R>, Pixel>::value, "");
     for (Pixel& p : range) std::swap(p[0], p[2]);
+}
+
+template<typename R, typename = enable_if_range_t<R> > void convert_bgra_rgba(R&& range) {
+    convert_rgba_bgra(std::forward<R>(range)); // same implementation
 }
 
 

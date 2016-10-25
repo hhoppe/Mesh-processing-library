@@ -11,7 +11,7 @@
     Video video(nframes, V(ysize, xsize)), video2(video.dims()), video3(video.nframes()*2, video.spatial_dims());
     Pixel& pix = video(f, y, x); // as in Image, [y=0][x=0] is at upper-left corner of each image frame
     uchar c = video(f, y, x)[z]; // z=[0..2]
-    // Video read/write is performed using: Windows Media Foundation (MF), Vision Tools (VT), or ffmpeg (FF).
+    // Video read/write is performed using: Windows Media Foundation (MF) or ffmpeg (FF).
 }
 #endif
 
@@ -138,7 +138,7 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
 VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
                 VideoNv12&& pnewvideo_nv12 = VideoNv12());
 
-// Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF, MF, or VT.
+// Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
 class RVideo {
  public:
     explicit RVideo(const string& filename, bool use_nv12 = false); // may throw std::runtime_error
@@ -161,11 +161,10 @@ class RVideo {
     unique_ptr<TmpFile> _tmpfile;
     unique_ptr<Implementation> _impl;
     friend class MF_RVideo_Implementation;
-    friend class VT_RVideo_Implementation;
     friend class FF_RVideo_Implementation;
 };
 
-// Write a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF, MF, or VT.
+// Write a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
 class WVideo {
  public:
     explicit WVideo(const string& filename, const Vec2<int>& spatial_dims, const Video::Attrib& attrib,
@@ -186,7 +185,6 @@ class WVideo {
     unique_ptr<TmpFile> _tmpfile;
     unique_ptr<Implementation> _impl;
     friend class MF_WVideo_Implementation;
-    friend class VT_WVideo_Implementation;
     friend class FF_WVideo_Implementation;
 };
 

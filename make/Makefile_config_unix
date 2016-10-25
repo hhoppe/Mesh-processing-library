@@ -9,9 +9,14 @@ ifeq ($(is_mac),1)
   LDFLAGS += -L/opt/X11/lib#      for XQuartz X11
   cppinc += -Wno-variadic-macros# ignore warning in <X11/Xlib.h>
   std_c++ ?= -std=c++11#  override default -std=c++14; necessary for older Xcode versions (e.g. 5.0)
-  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+  CC ?= clang#  set default choice of compiler (clang or gcc)
 else
-  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  CC ?= gcc#  set default choice of compiler (clang or gcc)
+endif
+
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
+
+ifeq ($(CC),gcc)
   # Perhaps test for existence of library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0
   LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
 endif

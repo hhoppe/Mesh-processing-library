@@ -165,6 +165,7 @@ double g_initial_time = 0.;                // requested initial time in video (i
 double g_frametime = k_before_start; // continous time in units of frame; <0. means show first frame next
 std::atomic<int> g_framenum{-1};     // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded-1) or -1
 Vec2<int> g_frame_dims;              // spatial dimensions in pixels of current video or image object
+bool g_frame_has_transparency;       // true if png image with some partially transparent pixel(s)
 bool g_refresh_texture = false;      // image has changed since uploaded as texture
 struct Message { string s; double time; };
 Array<Message> g_messages;
@@ -643,6 +644,8 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
     g_framenum = nframenum;
     o._framenum = g_framenum;
     g_frame_dims = o.spatial_dims();
+    g_frame_has_transparency = 1 && o.is_image() && ends_with(o._filename, ".png") &&
+        find_if(o._video[0], [](const Pixel& pix) { return pix[3]!=255; });
     if (0 && o.is_image()) g_playing = false;
     g_refresh_texture = true;
     if (1 && o.is_image() && !file_requires_pipe(o._filename)) {
@@ -1078,7 +1081,7 @@ bool DerivedHW::key_press(string skey) {
     bool is_shift =   get_key_modifier(HW::EModifier::shift);
     bool is_control = get_key_modifier(HW::EModifier::control);
     // bool is_alt =     get_key_modifier(HW::EModifier::alt);
-    if (0) SHOW(keycode);
+    if (0) SHOW(skey, keycode, is_shift, is_control);
     if (g_cob>=0 && getob().is_image()) {
         if (skey=="<left>")  skey = "<prior>";
         if (skey=="<right>") skey = "<next>";
@@ -1254,6 +1257,11 @@ bool DerivedHW::key_press(string skey) {
             g_dir_media_filenames.invalidate();
         } else if (skey=="<esc>") { // exit, from -key "<esc>" or -hwdelay 2 -hwkey '<enter><esc>'; see also '\033'
             quit();
+        } else if (skey.size()==1 && keycode>='1' && keycode<='9' && is_control) { // C-1 ... C-9: select object
+            int ob = keycode-'1';
+            if (ob<getobnum()) {
+                func_switch_ob(ob);
+            } else beep();
         } else if (skey.size()!=1) {
             recognized = false;
         } else {
@@ -1433,10 +1441,10 @@ bool DerivedHW::key_press(string skey) {
                      }
                  }
              }
-             bcase '=': ocase '+': { // increase window zoom
+             bcase '=': ocase '+': { // increase window size or zoom
                  perform_window_zoom(k_key_zoom_fac);
              }
-             bcase '-': {       // decrease window zoom
+             bcase '-': {       // decrease window size or zoom
                  perform_window_zoom(1.f/k_key_zoom_fac);
              }
              bcase '\r': {      // <enter>/<ret>/C-M key (== uchar(13) == 'M'-64),  toggle fullscreen
@@ -1877,7 +1885,6 @@ bool DerivedHW::key_press(string skey) {
                  const Object& ob = check_loaded_video();
                  const int nf = ob.nframes();
                  if (g_framenum<1) throw string("splitting requires selecting frame number >=1");
-                 if (g_framenum==nf) throw string("cannot split at last frame");
                  Video nvideo1, nvideo2;
                  VideoNv12 nvideo1_nv12, nvideo2_nv12;
                  if (ob._video.size()) {
@@ -2735,16 +2742,18 @@ void render_image() {
         USE_GL_EXT(glUniform4fv, PFNGLUNIFORM4FVPROC);
         USE_GL_EXT(glUniform1i, PFNGLUNIFORM1IPROC);
         USE_GL_EXT(glUniform1f, PFNGLUNIFORM1FPROC);
+        USE_GL_EXT(glUniform2fv, PFNGLUNIFORM2FVPROC);
         static GLuint vertex_shader_id;
         static GLuint fragment_shader_id;
         static GLuint program_id;
         static int h_vertex;
+        static int h_tex;
         static int h_kernel_id;
         static int h_brightness_term;
         static int h_contrast_fac;
         static int h_gamma;
         static int h_saturation_fac;
-        static int h_tex;
+        static int h_checker_offset;
         static GLuint buf_p;
         static GLuint buf_i;
         static bool is_init = false;
@@ -2809,12 +2818,13 @@ void render_image() {
                 assertx(glIsProgram(program_id));
             }
             h_vertex = glGetAttribLocation(program_id, "vertex"); assertx(h_vertex>=0);
+            h_tex = glGetUniformLocation(program_id, "tex"); assertx(h_tex>=0);
             h_kernel_id = glGetUniformLocation(program_id, "kernel_id"); assertx(h_kernel_id>=0);
             h_brightness_term = glGetUniformLocation(program_id, "brightness_term"); assertx(h_brightness_term>=0);
             h_contrast_fac = glGetUniformLocation(program_id, "contrast_fac"); assertx(h_contrast_fac>=0);
             h_gamma = glGetUniformLocation(program_id, "gamma"); assertx(h_gamma>=0);
             h_saturation_fac = glGetUniformLocation(program_id, "saturation_fac"); assertx(h_saturation_fac>=0);
-            h_tex = glGetUniformLocation(program_id, "tex"); assertx(h_tex>=0);
+            h_checker_offset = glGetUniformLocation(program_id, "checker_offset"); assertx(h_checker_offset>=0);
             glGenBuffers(1, &buf_p);
             glGenBuffers(1, &buf_i);
             assertx(!gl_report_errors());
@@ -2828,6 +2838,14 @@ void render_image() {
             glUniform1f(h_contrast_fac, get_contrast_fac());
             glUniform1f(h_gamma, g_gamma);
             glUniform1f(h_saturation_fac, get_saturation_fac());
+            {
+                static int s_frame_num = 0;
+                s_frame_num++;
+                const float motion_radius = 5.f;
+                const double angular_velocity = .1;
+                const float ang = float(my_mod(double(s_frame_num)*angular_velocity, D_TAU));
+                glUniform2fv(h_checker_offset, 1, (motion_radius*V(cos(ang), sin(ang))).data());
+            }
             if (0) {
                 int h_somematrix = glGetUniformLocation(program_id, "somematrix");
                 glUniformMatrix4fv(h_somematrix, 1, GL_FALSE, SGrid<float, 4, 4>{}.data());
@@ -3225,8 +3243,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             "Keys:  <r>eset_all",
             " <=>enlarge   <->shrink   <0>100%   <enter>fullscreen   <f>it_stretch   <w>indow_fit   <A>spectratio",
             " <k>ernel_filter   <b>rightness_controls",
-            " <n>ext_object   <p>rev   <P>first   <N>last   <c>lone   <x>exchange_prev   <X>exchange_next",
-            " <C-d>unload_object   <C-k>eep_only_cur",
+            " <n>ext_object   <p>rev   <C-1>,<P>first   <N>last   <c>lone   <x>exchange_prev   <X>exchange_next",
+            " <C-d>unload_object   <C-k>eep_only_cur   <C-c>copy   <C-v>paste",
             " <pgdn>next_file   <pgup>prev_file   <s>ort_order   <C-o>pen   <C-s>ave   <C-S-s>overwrite",
             " <f2>rename   <f5>reload   <f7>move   <f8>copy   <C-n>ew_window   <d>irectory",
             " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <W>hite_crop",
@@ -3235,8 +3253,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             " <spc>play/pause   <l>oop   <a>ll_loop   <m>irror_loop",
             " <left>frame-1   <right>frame+1   <home>first   <end>last",
             " <[>slower   <]>faster   <1>normal   <2>twice   <5>half   <F>ramerate   <B>itrate",
-            " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split",
-            " <&>merge   <M>irror   <R>esample_temporally   <g>en_seamless_loop   <C-g>high-quality   <L>oop",
+            " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split    <&>merge   <M>irror",
+            " <R>esample_temporally   <g>en_seamless_loop   <C-g>high-quality_loop   <L>oop",
             " <I>mage_from_frame   <V>ideo_from_images   <#>from_image_files%03d",
         };
         for_int(i, ar.num())
@@ -3323,6 +3341,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
 #endif
     }
     assertx(!gl_report_errors());
+    if (g_frame_has_transparency) redraw_later();
 }
 
 // For video (either Video or VideoNv12) in object ob, with specified trim frames, compute looping parameters

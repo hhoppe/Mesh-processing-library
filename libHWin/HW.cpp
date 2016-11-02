@@ -525,6 +525,7 @@ void HW::end_hwkey() {
 
 void HW::handle_key(int why_called, WPARAM key_data) {
     string s;
+    // SHOW(why_called, why_called==WM_KEYDOWN, int(key_data));
     if (why_called==WM_KEYDOWN) {
         int virt_key = int(key_data);
         if (virt_key>=VK_F1 && virt_key<=VK_F12) {
@@ -542,7 +543,13 @@ void HW::handle_key(int why_called, WPARAM key_data) {
              bcase VK_INSERT:   s = "<insert>";
              bcase VK_DELETE:   s = "<delete>";
              bdefault:
-                return;             // we don't care about this key, or it will be handled later (by WM_CHAR)
+                if (get_key_modifier(EModifier::control) && virt_key>='0' && virt_key<='9') {
+                    // control-numbers (C-0 .. C-9) do not produce any subsequent WM_CHAR message, so handle now.
+                    char ch = assert_narrow_cast<char>(virt_key);
+                    s = ch;
+                } else {
+                    return;     // we don't care about this key, or it will be handled later (by WM_CHAR)
+                }
             }
         }
     } else {

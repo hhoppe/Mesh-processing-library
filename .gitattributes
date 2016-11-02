@@ -1,0 +1,5 @@
+# Mark the *.m data files as documentation so that GitHub does not mislabel
+#  them as linguist-languate=Mercury or linguist-languate=Mathematica.
+# Similarly mark *.obj to make it clear that the file is not win32 object code.
+demos/data/*.m linguist-documentation
+demos/data/*.obj linguist-documentation

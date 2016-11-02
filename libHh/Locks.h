@@ -14,6 +14,8 @@
 
 #if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(HH_NO_DEFINE_STD_MUTEX)
 namespace std {                 // workaround for current mingw32 4.7.2: no locking
+// If there is a compilation error here, e.g. "reference to 'mutex' is ambiguous",
+//  use "make HH_NO_DEFINE_STD_MUTEX=1".
 struct mutex { };
 template<typename T> struct lock_guard { lock_guard(T&) { } };
 } // namespace std

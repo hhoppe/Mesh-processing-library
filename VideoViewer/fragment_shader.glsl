@@ -19,6 +19,7 @@ uniform float brightness_term;
 uniform float contrast_fac;
 uniform float gamma;
 uniform float saturation_fac;
+uniform vec2 checker_offset;
 
 in vec2 frag_uv;                // called 'varying' in #version 130
 out vec4 frag_color;            // implicitly 'gl_FragColor' in #version 130
@@ -221,10 +222,24 @@ void main() {
         vec2 range = vec2(0.0f, 1.0f);
         color = eval_general(frag_uv, kernel_id, tex, range);
     }
-    bool over_background_color = true;
-    vec4 background_color = vec4(255.f, 150.f, 150.f, 255.f)/255.f; // pink
-    if (over_background_color) {
-        color = color + (1.f-color.a)*background_color;
+    vec4 backcolor;
+    if (true) {                    // checkerboard pattern; e.g.: vv ~/data/image/dancer_charts.png
+        backcolor = vec4(1.f, 1.f, 1.f, 1.f); // white
+        vec4 coord = gl_FragCoord;            // center of the lower-left pixel is (0.5, 0.5)
+        int checker_size = 6;
+        // Bad mod at left and bottom (where coordinates cross into negative):
+        // ivec2 coord2 = ivec2(floor(coord.xy+checker_offset))/checker_size;
+        // int evenodd = (coord2.x+coord2.y)%2;
+        // Correct mod even for negative numbers:
+        vec2 coord2 = floor((coord.xy+checker_offset)/checker_size);
+        float evenodd = mod(coord2.x+coord2.y, 2.f);
+        backcolor = vec4(backcolor.rgb*evenodd, 1.f);
+    } else {
+        backcolor = vec4(255.f, 150.f, 150.f, 255.f)/255.f; // pink
+        backcolor.rg += checker_offset*1e-30f; // keep variable active
+    }
+    if (true) {                 // OVER background color
+        color = color + (1.f-color.a)*backcolor;
     }
     if (false) color = vec4(1.f, 1.f, 0.f, 1.f); // yellow
     if (brightness_term!=0.f || contrast_fac!=1.f || gamma!=1.f || saturation_fac!=1.f) {

@@ -644,7 +644,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
     g_framenum = nframenum;
     o._framenum = g_framenum;
     g_frame_dims = o.spatial_dims();
-    g_frame_has_transparency = 1 && o.is_image() && ends_with(o._filename, ".png") &&
+    g_frame_has_transparency = 1 && o.is_image() && o._image_attrib.zsize==4 &&
         find_if(o._video[0], [](const Pixel& pix) { return pix[3]!=255; });
     if (0 && o.is_image()) g_playing = false;
     g_refresh_texture = true;
@@ -739,6 +739,12 @@ void perform_zoom_at_cursor(float fac_zoom, Vec2<int> yx) {
     set_view(g_view * Frame::translation(-pcenter) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pcenter));
 }
 
+// Resize the window and reset the view.
+void reset_window(const Vec2<int>& ndims) {
+    hw.resize_window(ndims);
+    g_fit_view_to_window = true;
+}
+
 // Change zooom of window; if fullscreen, zoom about window center, else resize window dimensions.
 void perform_window_zoom(float fac_zoom) {
     g_win_dims = hw.get_window_dims();           // for -key "=="
@@ -754,9 +760,8 @@ void perform_window_zoom(float fac_zoom) {
             if (0) SHOW(zoom, ndims, g_win_dims);
             if (max(ndims, g_win_dims)==g_win_dims) {
                 if (0) SHOW(ndims);
-                hw.resize_window(ndims);
+                reset_window(ndims);
                 set_view(Frame::scaling(thrice(zoom))); // remove translation
-                g_fit_view_to_window = true;
             }
         }
         message("Zoom set to: " + get_szoom());
@@ -780,7 +785,7 @@ void perform_window_zoom(float fac_zoom) {
         // if (ndims[1]>=min_windows7_window_width)
         if (0) SHOW(ndims);
         if (product(ndims)) {
-            hw.resize_window(ndims);
+            reset_window(ndims);
             message("Zooming window");
         }
     }
@@ -971,7 +976,7 @@ void unload_current_object() {
     } else {
         g_cob = -1;
         if (min(g_win_dims, k_default_window_dims)!=k_default_window_dims)
-            hw.resize_window(k_default_window_dims);
+            reset_window(k_default_window_dims);
         hw.redraw_later();
     }
 }
@@ -1127,7 +1132,7 @@ bool DerivedHW::key_press(string skey) {
             message("Reloading " + ob.stype() + " " + get_path_tail(filename));
             set_video_frame(g_cob, k_before_start, k_force_refresh);
             ob._filename = filename;
-            if (ob.spatial_dims()!=osdims) resize_window(determine_default_window_dims(g_frame_dims));
+            if (ob.spatial_dims()!=osdims) reset_window(determine_default_window_dims(g_frame_dims));
         } else if (skey=="<f7>") { // move file
             std::lock_guard<std::mutex> lg(g_mutex_obs);
             check_loaded_saved_object();
@@ -1277,10 +1282,10 @@ bool DerivedHW::key_press(string skey) {
                      if (0 && g_cob>=0) set_video_frame(0, k_before_start);
                      g_looping = k_default_looping;
                      g_mirror_state_forward = true;
-                     set_fullscreen(false); // OK to subsequently call resize_window() below before a draw_window()?
+                     set_fullscreen(false); // OK to subsequently call reset_window() below before a draw_window()?
                      g_speed = 1.;
                      g_fit = k_default_fit;
-                     g_fit_view_to_window = true;
+                     g_fit_view_to_window = true; // also set by reset_window()
                      g_kernel = k_default_kernel;
                      g_show_info = k_default_info;
                      g_other_show_info = false;
@@ -1291,7 +1296,7 @@ bool DerivedHW::key_press(string skey) {
                          ob._framein = 0;
                          ob._frameou1 = ob._dims[0];
                      }
-                     resize_window(determine_default_window_dims(g_frame_dims));
+                     reset_window(determine_default_window_dims(g_frame_dims));
                      message("All parameters reset to defaults", 5.);
                  }
              }
@@ -1426,10 +1431,9 @@ bool DerivedHW::key_press(string skey) {
                      else
                          message("Zoom set to 100%; press <f> to see entire frame", 5.);
                  } else {
-                     g_fit_view_to_window = true;
                      Vec2<int> owin_dims = g_win_dims;
                      Vec2<int> win_dims = determine_default_window_dims(dims);
-                     resize_window(win_dims); // (does not immediately update g_win_dims)
+                     reset_window(win_dims); // (does not immediately update g_win_dims)
                      if (win_dims==dims) {
                          message("Zoom set to 100%");
                      } else if (win_dims!=owin_dims) {
@@ -1484,7 +1488,7 @@ bool DerivedHW::key_press(string skey) {
                  }
                  if (first_cob_loaded>=0) {
                      set_video_frame(first_cob_loaded, k_before_start);
-                     resize_window(determine_default_window_dims(g_frame_dims));
+                     reset_window(determine_default_window_dims(g_frame_dims));
                  }
                  if (smess!="") throw smess;
              }
@@ -1600,7 +1604,7 @@ bool DerivedHW::key_press(string skey) {
                                                     append_to_filename(ob._filename, "_resampled")));
                      g_fit_view_to_window = true;
                      message("Resampled " + ob.stype());
-                     // if (nsdims!=osdims) resize_window(determine_default_window_dims(g_frame_dims));
+                     // if (nsdims!=osdims) reset_window(determine_default_window_dims(g_frame_dims));
                  } else {       // no rotation, so crop without resampling
                      Vec2<int> yxL, yxU; fully_visible_image_rectangle(yxL, yxU);
                      if (!ob.is_image()) {
@@ -1675,8 +1679,7 @@ bool DerivedHW::key_press(string skey) {
                  }
                  add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                                 append_to_filename(ob._filename, "_scaled")));
-                 g_fit_view_to_window = true;
-                 resize_window(determine_default_window_dims(g_frame_dims));
+                 reset_window(determine_default_window_dims(g_frame_dims));
                  message("Rescaled " + ob.stype());
              }
              bcase 'A': {       // select window aspect ratio
@@ -1695,17 +1698,20 @@ bool DerivedHW::key_press(string skey) {
                  Vec2<int> ndims = determine_default_window_dims(V(nlarge, int(nlarge*ratio+.5f)));
                  resize_window(ndims);
                  g_fit_view_to_window = false;
-                 Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
-                 Frame view = Frame::scaling(V(arzoom[0], arzoom[1], 1.f));
-                 int cmax = arzoom[0]>arzoom[1] ? 0 : 1;
-                 view[1-cmax][1-cmax] = arzoom[cmax];
-                 view[3][1-cmax] = (ndims[1-cmax]-g_frame_dims[1-cmax]*arzoom[cmax])/2.f;
+                 Frame view; {
+                     Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
+                     const int cmax = arzoom[0]>arzoom[1] ? 0 : 1;
+                     view = Frame::scaling(concat(twice(arzoom[cmax]), V(1.f)));
+                     view[3][1-cmax] = (ndims[1-cmax]-g_frame_dims[1-cmax]*arzoom[cmax])/2.f;
+                     // align window edge with pixel edge using fmod()
+                     view[3][1-cmax] = view[3][1-cmax] - fmod(view[3][1-cmax], arzoom[cmax]);
+                 }
                  set_view(view);
                  g_prev_win_dims = ndims; // do not look to translate image
              }
              bcase 'L'-64: ocase 'R'-64: { // C-S-l, C-S-r: rotate content 90-degrees left (ccw) or right (clw)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
-                 int rot_degrees = keycode=='L'-64 ? 90 : -90;
+                 const int rot_degrees = keycode=='L'-64 ? 90 : -90;
                  Object& ob = check_loaded_object();
                  if (ob._video.size()) { // includes the case of ob.is_image()
                      ob._video = rotate_ccw(ob._video, rot_degrees);
@@ -1724,8 +1730,8 @@ bool DerivedHW::key_press(string skey) {
                      ob._unsaved = cur!=2 || !file_exists(ob._filename);
                  }
                  if (!g_fullscreen) {
-                     resize_window(determine_default_window_dims(ob.spatial_dims()));
-                     // if (g_fit_view_to_window) resize_window(g_win_dims.rev());
+                     reset_window(determine_default_window_dims(ob.spatial_dims()));
+                     // if (g_fit_view_to_window) reset_window(g_win_dims.rev());
                  }
                  g_fit_view_to_window = true;
                  set_video_frame(g_cob, g_framenum, k_force_refresh);
@@ -2189,7 +2195,7 @@ bool DerivedHW::key_press(string skey) {
                  string filename = get_current_directory() + "/v1.png";
                  g_obs.push(make_unique<Object>(std::move(image), filename, bgra, unsaved));
                  set_video_frame(getobnum()-1, k_before_start);
-                 resize_window(determine_default_window_dims(g_frame_dims));
+                 reset_window(determine_default_window_dims(g_frame_dims));
              }
              bcase 'i': {       // info
                  g_show_info = !g_show_info;
@@ -3894,7 +3900,7 @@ void DerivedHW::drag_and_drop(CArrayView<string> filenames) {
         }
         if (nread) set_video_frame(getobnum()-nread, k_before_start);
         if (g_cob>=0 && (1 || g_cob==0)) { // resize window appropriately
-            resize_window(determine_default_window_dims(g_frame_dims));
+            reset_window(determine_default_window_dims(g_frame_dims));
         }
     }
 }

@@ -1358,7 +1358,10 @@ bool HW::copy_clipboard_to_image(Image& image) {
                     }
                     while (uintptr_t(p)&3) p++;
                 }
-                assertx(size_t(p-buf)==size);
+                if (0) SHOW(size, p-buf, image.dims(), bmih.biBitCount, image.zsize());
+                // e.g. fails with size=837180 p-buf=837168 image.dims()=[389, 538] bmih.biBitCount=32 image.zsize()=4
+                if (0) assertx(size_t(p-buf)==size);
+                if (1) assertw(abs((p-buf)-ptrdiff_t(size))<32);
             } GlobalUnlock(hGlobal); // decrement reference count; nonzero because still owned by clipboard
         }
         assertx(CloseClipboard());

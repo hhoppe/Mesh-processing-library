@@ -5,7 +5,6 @@ use_dll ?= 1#                   (usually 1: DLL_runtime (-MD or -MDd), versus 0:
 use_vs_libs ?= 0#  0 or 1       (usually 0; else use libraries generated from Visual Studio using msbuild)
 use_pch ?= 1#                   (usually 1; use_precompiled_headers)
 
-# msvc = 2013
 msvc = 2015
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
 
@@ -26,12 +25,9 @@ ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
   disable_my_warnings = -wd4127 -wd4512
   disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
-  ifeq ($(msvc),2013)
-    disable_other_warnings += -wd4062#  <ppltasks.h> from <future>
-  endif
-  ifeq ($(msvc),2015)
-    disable_other_warnings += -wd5026 -wd5027
-  endif
+  disable_other_warnings += -wd5026 -wd5027# VS 2015
+  # Next one because of "cppinc += -I$(HhRoot)/lib$(HW)" in some of the projects, with VS 2015 update 3.
+  disable_other_warnings += -wd4599# "command line argument number ... does not match precompiled header"
   cxxthoroughwarnings = -Wall $(disable_warnings_in_headers) $(disable_my_warnings) $(disable_other_warnings)
   cxxnotneeded = -Zc:wchar_t -Zc.forScope -Gd -errorReport:queue
   cwarnings = -W4 $(cxxthoroughwarnings)

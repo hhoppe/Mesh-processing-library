@@ -38,38 +38,6 @@ ifeq ($(msvc),2015)
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\LIB;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\ATLMFC\LIB;C:\Program Files (x86)\Windows Kits\10\lib\10.0.10150.0\ucrt\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6\lib\um\x86;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x86;#$(LIB)
   endif
 
-else ifeq ($(msvc),2013)
-
-  msvcmajor = 12
-  mscversion = 1800
-  cxxall += -FS#  serialize access to *.pdb files for parallel builds
-  export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\INCLUDE;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\INCLUDE;C:\Program Files (x86)\Windows Kits\8.1\include\shared;C:\Program Files (x86)\Windows Kits\8.1\include\um;C:\Program Files (x86)\Windows Kits\8.1\include\winrt;
-  ifeq ($(x64),1)
-    # see c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/bin/amd64/vcvars64.bat
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools/x64/)
-    $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
-    $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/8.1/bin/x64)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Team Tools/Performance Tools)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Team Tools/Performance Tools/x64)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/Tools)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/VCPackages)
-    $(call prepend_PATH,c:/Windows/Microsoft.NET/Framework64/v4.0.30319)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN/amd64)
-    $(call prepend_PATH,c:/Program Files (x86)/MSBuild/12.0/bin/amd64)
-    export LIB := \Program Files (x86)\Microsoft Visual Studio 12.0\VC\LIB\amd64;\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\LIB\amd64;\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x64;#$(LIB)
-  else
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools)
-    $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/8.1/bin/x86)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/VCPackages)
-    $(call prepend_PATH,c:/Windows/Microsoft.NET/Framework/v4.0.30319)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/Tools)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/VC/BIN)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio 12.0/Common7/IDE)
-    $(call prepend_PATH,c:/Program Files (x86)/MSBuild/12.0/bin)
-    export LIB := C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\LIB;C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\ATLMFC\LIB;C:\Program Files (x86)\Windows Kits\8.1\lib\winv6.3\um\x86;#$(LIB)
-  endif
-
 else
 
   $(error msvc_unrecognized)

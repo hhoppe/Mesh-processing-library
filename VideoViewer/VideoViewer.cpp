@@ -1385,7 +1385,7 @@ bool DerivedHW::key_press(string skey) {
              bcase 'X': {       // exchange object with next one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  check_object();
-                 if (g_cob==getobnum()) throw string("no next object to exchange with");
+                 if (g_cob==getobnum()-1) throw string("no next object to exchange with");
                  std::swap(g_obs[g_cob], g_obs[g_cob+1]);
                  g_cob++;
                  if (0) set_video_frame(g_cob, g_framenum); // would force unnecessary texture refresh

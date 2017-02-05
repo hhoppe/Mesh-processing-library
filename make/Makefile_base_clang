@@ -6,7 +6,7 @@ ifneq ($(is_mswin),)
 endif
 
 ifeq ($(plain_compiler),)
-  std_c++ ?= -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
+  STD_CXX ?= -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc

@@ -2,7 +2,7 @@ rel ?= 0#  0=debug or 1=release (to contrast with mingw, I changed this to 0 on 
 x64 = 0#  x64 is not supported by mingw32
 
 # gcc 4.8.1 does not yet support -std=c++14
-std_c++ = -std=c++11
+STD_CXX = -std=c++11
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 

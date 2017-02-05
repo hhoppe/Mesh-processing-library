@@ -1,5 +1,7 @@
 # Rules for filenames to exclude from the git repo.
 
+BUILD
+
 # Windows / Visual Studio build/temporary/user directories
 .vs/
 Debug/

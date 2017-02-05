@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #pragma once
 #include "Array.h"
+#include "Vec.h"                // Vec2<>
 #include "RangeOp.h"            // sort()
 #include "Advanced.h"           // do_in_order
 

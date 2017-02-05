@@ -45,7 +45,7 @@
 
 // http://stackoverflow.com/questions/13525774/clang-and-float128-bug-error
 // https://llvm.org/bugs/show_bug.cgi?id=13530#c3
-#if defined(__clang__)
+#if defined(__clang__) && !defined(HH_NO_CLANG_DEFINE_FLOAT128)
 typedef struct { long double x, y; } __float128;
 #endif
 

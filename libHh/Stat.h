@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #pragma once
 #include <fstream>              // std::ofstream
-#include "Hh.h"
+#include "Range.h"              // enable_if_range_t<>
 
 #if 0
 {

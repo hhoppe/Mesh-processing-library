@@ -45,7 +45,7 @@
 
 // http://stackoverflow.com/questions/13525774/clang-and-float128-bug-error
 // https://llvm.org/bugs/show_bug.cgi?id=13530#c3
-#if defined(__clang__) && !defined(HH_NO_CLANG_DEFINE_FLOAT128)
+#if defined(__clang__) && !defined(HH_NO_DEFINE_FLOAT128)
 typedef struct { long double x, y; } __float128;
 #endif
 
@@ -283,8 +283,10 @@ namespace hh {
 
 // *** Import some frequently used standard C++ names into the hh namespace.
 
-using std::size_t;                             // (it seems to be already defined)
+#if !defined(HH_NO_USING_STD_STRING)
 using std::string;                             // almost a new fundamental type
+#endif // !defined(HH_NO_USING_STD_STRING)
+using std::size_t;                             // (it seems to be already defined)
 using std::unique_ptr; using std::make_unique; // very useful
 using std::min; using std::max;                // very useful
 using std::abs; // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5)==1 is scary).

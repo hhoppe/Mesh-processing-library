@@ -1,6 +1,7 @@
 # Rules for filenames to exclude from the git repo.
 
 BUILD
+*.bzl
 
 # Windows / Visual Studio build/temporary/user directories
 .vs/

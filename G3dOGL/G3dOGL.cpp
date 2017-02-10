@@ -960,6 +960,27 @@ void load_texturemap() {
             internal_format = GL_RGB5;
         }
     }
+    if (1) {
+        int max_texture_size;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+        if (max(itexture.dims())>max_texture_size) {
+            showf("texture too large (maxsize=%d), so downsampling\n", max_texture_size);
+            itexture.scale(twice(min(twice(float(max_texture_size))/convert<float>(itexture.dims()))),
+                           twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
+        }
+    }
+#if 1                                   // use modern approach with glGenerateMipmap()
+    {
+        glEnable(GL_TEXTURE_2D);        // may need to come before glGenerateMipmap on old AMD drivers
+        const int level = 0, border = 0;
+        glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border,
+                     GL_RGBA, GL_UNSIGNED_BYTE, itexture.data());
+        USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
+        if (glGenerateMipmap) {
+            glGenerateMipmap(GL_TEXTURE_2D); // not supported on Remote Desktop
+        }
+    }
+#else
     bool use_glubuildmipmaps = false;
     if (getenv_bool("USE_GLUBUILDMIPMAPS")) { showdf("USE_GLUBUILDMIPMAPS\n"); use_glubuildmipmaps = true; }
     if (!is_pow2(itexture.ysize()) || !is_pow2(itexture.xsize())) {
@@ -1001,6 +1022,7 @@ void load_texturemap() {
             itexture.scale(twice(.5f), twice(FilterBnd(Filter::get("box"), Bndrule::reflected)));
         }
     }
+#endif
     {
         int w, h, r, g, b, a;
         glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
@@ -1127,8 +1149,18 @@ void load_texturemap() {
         } else {
             Image etexture;
             etexture.read_file("ramp1.png");
+#if 1
+            const int level = 0, border = 0;
+            glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border,
+                         GL_RGBA, GL_UNSIGNED_BYTE, etexture.data());
+            USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
+            if (glGenerateMipmap) {
+                glGenerateMipmap(GL_TEXTURE_1D); // not supported on Remote Desktop
+            }
+#else
             assertx(gluBuild1DMipmaps(GL_TEXTURE_1D, internal_format2, etexture.xsize(),
                                       GL_RGBA, GL_UNSIGNED_BYTE, etexture.data())==0);
+#endif
             // To map it to elevation (in meters) use
             //   z = 10 x - 7995
             // where z is the elevation and x is the horizontal index of the
@@ -1954,6 +1986,7 @@ void draw_mesh(GMesh& mesh) {
             glShadeModel(GL_SMOOTH);
             initialize_lit();
             update_mat_color(cuspcolor);
+#if !defined(HH_NO_GLU)
             unique_ptr<GLUquadricObj, decltype(&gluDeleteQuadric)> quadric{gluNewQuadric(), gluDeleteQuadric};
             for (Vertex v : mesh.vertices()) {
                 if (!mesh.flags(v).flag(GMesh::vflag_cusp)) continue;
@@ -1964,6 +1997,7 @@ void draw_mesh(GMesh& mesh) {
                     gluSphere(quadric.get(), sphereradius*mesh_radius, nslices, nstacks);
                 } glPopMatrix();
             }
+#endif
         }
         set_thickness(thicka3d);
     }
@@ -4250,6 +4284,8 @@ inline float projected_area(float area, const Point& x) {
 }
 
 void draw_point(const Point& vp, float area) {
+    dummy_use(vp, area);
+#if !defined(HH_NO_GLU)
     float sphererad = sqrt(area/(TAU*2));
     unique_ptr<GLUquadricObj, decltype(&gluDeleteQuadric)> quadric{gluNewQuadric(), gluDeleteQuadric};
     glPushMatrix(); {
@@ -4265,6 +4301,7 @@ void draw_point(const Point& vp, float area) {
         }
         gluSphere(quadric.get(), sphererad, complexity, complexity);
     } glPopMatrix();
+#endif
 }
 
 void draw_sc() {

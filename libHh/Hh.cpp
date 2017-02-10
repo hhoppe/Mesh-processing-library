@@ -725,7 +725,7 @@ static string cleanup_type_name(string s) {
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
 #if defined(HH_HAVE_REGEX)
     // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
-    s = std::regex_replace(s, std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
+    s = std::regex_replace(s.c_str(), std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
 #endif
     s = replace_all(s, "* __ptr64", "*");
     s = replace_all(s, "__int64", "int64");

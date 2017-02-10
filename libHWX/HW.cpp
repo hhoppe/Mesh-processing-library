@@ -396,7 +396,7 @@ void HW::handle_event() {
          if (_oglx) {
 #if defined(HH_OGLX)
              glViewport(0, 0, _win_dims[1], _win_dims[0]);
-             { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 0.f); }
+             { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 1.f); }
              glDrawBuffer(GL_FRONT_AND_BACK);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              if (_is_glx_dbuf) glDrawBuffer(GL_BACK);

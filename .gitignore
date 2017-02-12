@@ -43,6 +43,13 @@ build/
 *.vsp
 *.vspx
 
+# Google
+/BUILD
+/*.bzl
+/LICENSE
+/METADATA
+/OWNERS
+
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*

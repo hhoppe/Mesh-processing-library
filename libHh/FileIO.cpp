@@ -469,8 +469,9 @@ Array<string> get_in_directory(const string& directory, EType type) {
     DIR* dir = opendir(directory.c_str()); {
         while (struct dirent* ent = readdir(dir)) {
             string file_name = ent->d_name;
+            string path_name = directory + "/" + file_name;
             struct stat st;
-            if (stat(file_name.c_str(), &st) == -1) continue;
+            if (stat(path_name.c_str(), &st) == -1) continue;
             const bool is_directory = (st.st_mode & S_IFDIR) != 0;
             if ((type==EType::files && is_directory) || (type==EType::directories && !is_directory)) continue;
             if (is_directory && (file_name=="." || file_name=="..")) continue;

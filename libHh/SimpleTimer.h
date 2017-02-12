@@ -37,6 +37,8 @@ class SimpleTimer : noncopyable {
     static double get_seconds_per_counter();
 };
 
+} // namespace hh
+
 
 //----------------------------------------------------------------------------
 
@@ -54,6 +56,8 @@ class SimpleTimer : noncopyable {
 #include <ctime>                // gettimeofday(), struct timeval, struct timezone
 #include <sys/time.h>           // gettimeofday(), struct timeval, struct timezone
 #endif
+
+namespace hh {
 
 inline int64_t SimpleTimer::get_precise_counter() {
 #if defined(HH_USE_HIGH_RESOLUTION_CLOCK)

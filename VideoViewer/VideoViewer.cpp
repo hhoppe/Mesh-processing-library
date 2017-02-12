@@ -2672,7 +2672,7 @@ static const string glsl_shader_version = "#version 330\n"; // not supported on 
 #endif
 
 static const string vertex_shader = glsl_shader_version + (
-    #include "vertex_shader.glsl"
+#include "vertex_shader.glsl"
     );
 
 

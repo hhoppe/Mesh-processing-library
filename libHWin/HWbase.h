@@ -514,7 +514,7 @@ inline void HWbase::clear_window_ogl() {
     glViewport(0, 0, _win_dims[1], _win_dims[0]);
     if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
     if (_first_draw) { _first_draw = false; glDrawBuffer(GL_FRONT_AND_BACK); }
-    { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 0.f); }
+    { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 1.f); }
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
     else glDrawBuffer(GL_FRONT);

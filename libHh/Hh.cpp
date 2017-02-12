@@ -725,7 +725,7 @@ static string cleanup_type_name(string s) {
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
 #if defined(HH_HAVE_REGEX)
     // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
-    s = std::regex_replace(s, std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
+    s = std::regex_replace(s.c_str(), std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
 #endif
     s = replace_all(s, "* __ptr64", "*");
     s = replace_all(s, "__int64", "int64");
@@ -804,22 +804,28 @@ void hh_clean_up() {
 
 namespace {
 
-struct Warnings {
+class Warnings {
+ public:
+    Warnings()                                  { }
     ~Warnings()                                 { flush(); }
+    int increment_count(const char* s)          { return ++_m[s]; }
     void flush() {
         if (_m.empty()) return;
         struct ltstr {              // lexicographic comparison; deterministic, unlike pointer comparison
-            bool operator()(const char* s1, const char* s2) const { return strcmp(s1, s2)<0; }
+            bool operator()(const void* s1, const void* s2) const {
+                return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2))<0;
+            }
         };
-        std::map<const char*, int, ltstr> sorted_map(_m.begin(), _m.end());
+        std::map<const void*, int, ltstr> sorted_map(_m.begin(), _m.end());
         showdf("Summary of warnings:\n");
         for (auto& kv : sorted_map) {
-            const char* s = kv.first; int n = kv.second;
+            const char* s = static_cast<const char*>(kv.first); int n = kv.second;
             showdf(" %5d '%s'\n", n, s);
         }
         _m.clear();
     }
-    std::unordered_map<const char*, int> _m; // warning char* -> number of times printed
+ private:
+    std::unordered_map<const void*, int> _m; // warning char* -> number of times printed
 };
 
 class Warnings_init {
@@ -853,7 +859,7 @@ bool details::assert_aux(bool b_assertx, const char* s) {
     if (!b_assertx) {
         static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
         if (Warnings* pwarnings = g_pwarnings.get()) {
-            int count = ++pwarnings->_m[s];
+            int count = pwarnings->increment_count(s);
             if (count>1 && warn_just_once) return false;
         } else {
             static int count = 0;

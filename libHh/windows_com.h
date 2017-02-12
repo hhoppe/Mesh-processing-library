@@ -1,5 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #pragma once
+
+#if defined(_WIN32)
+
 #include <combaseapi.h>
 #include "Hh.h"
 
@@ -38,3 +41,5 @@ template<typename T> void** IID_PPV_ARGS_Helper(com_ptr_ref<T>&& p) throw() {
 }
 
 } // namespace hh
+
+#endif // defined(_WIN32)

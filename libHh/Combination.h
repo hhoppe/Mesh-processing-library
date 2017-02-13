@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_COMBINATION_H_
+#define MESH_PROCESSING_LIBHH_COMBINATION_H_
+
 #include "Map.h"
 
 #if 0
@@ -30,3 +32,5 @@ void for_combination(const Combination<T>& comb, Func func) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_COMBINATION_H_

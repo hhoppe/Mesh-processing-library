@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_SCGEOMORPH_H_
+#define MESH_PROCESSING_G3DOGL_SCGEOMORPH_H_
+
 #include "SimplicialComplex.h"
 #include "Map.h"
 #include "Geometry.h"
@@ -57,3 +59,5 @@ inline void SCGeomorph::clear() {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_G3DOGL_SCGEOMORPH_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HOMOGENEOUS_H_
+#define MESH_PROCESSING_LIBHH_HOMOGENEOUS_H_
+
 #include "Geometry.h"
 
 namespace hh {
@@ -34,3 +36,5 @@ inline Vector to_Vector(const Homogeneous& h) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_HOMOGENEOUS_H_

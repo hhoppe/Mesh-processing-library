@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_NETWORKORDER_H_
+#define MESH_PROCESSING_LIBHH_NETWORKORDER_H_
+
 #include "Hh.h"
 
 namespace hh {
@@ -112,3 +114,5 @@ template<typename T> void to_dos(T* p) {
 template<typename T> void from_dos(T* p) { to_dos(p); }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_NETWORKORDER_H_

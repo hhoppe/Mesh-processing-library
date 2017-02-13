@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHWIN_HW_H_
+#define MESH_PROCESSING_LIBHWIN_HW_H_
+
 
 extern "C" {
 // #define WIN32_LEAN_AND_MEAN // not possible
@@ -91,3 +93,5 @@ class HW : public HWbase {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHWIN_HW_H_

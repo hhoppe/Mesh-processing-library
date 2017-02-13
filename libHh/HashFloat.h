@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HASHFLOAT_H_
+#define MESH_PROCESSING_LIBHH_HASHFLOAT_H_
+
 #include "Map.h"
 
 namespace hh {
@@ -24,3 +26,5 @@ class HashFloat : noncopyable {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_HASHFLOAT_H_

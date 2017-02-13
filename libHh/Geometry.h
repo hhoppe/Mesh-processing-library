@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GEOMETRY_H_
+#define MESH_PROCESSING_LIBHH_GEOMETRY_H_
+
 #include "Vec.h"
 #include "SGrid.h"
 
@@ -222,3 +224,5 @@ template<typename T, int n> Vec<T,n> bilerp(const Vec<T,n>& a0, const Vec<T,n>& 
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GEOMETRY_H_

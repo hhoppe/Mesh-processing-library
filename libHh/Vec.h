@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VEC_H_
+#define MESH_PROCESSING_LIBHH_VEC_H_
+
 #include "Array.h"              // ArrayView<>, CArrayView<>
 
 namespace hh {
@@ -304,3 +306,5 @@ template<typename T, int n> struct hash<hh::Vec<T,n>> {
     }
 };
 } // namespace std
+
+#endif // MESH_PROCESSING_LIBHH_VEC_H_

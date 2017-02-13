@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SAC_H_
+#define MESH_PROCESSING_LIBHH_SAC_H_
+
 #include "Pool.h"
 
 // A Sac reserves space at the end of a structure for additional storage requested by other program components.
@@ -153,3 +155,5 @@ template<typename T, typename T2> T& sac_access(T2& ob, int key) {
     HH_EAT_SEMICOLON
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SAC_H_

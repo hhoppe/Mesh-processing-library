@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VECTORF_H_
+#define MESH_PROCESSING_LIBHH_VECTORF_H_
+
 #include "Vector4.h"
 #include "Array.h"
 #include "Vec.h"
@@ -191,3 +193,5 @@ template<int n> std::ostream& operator<<(std::ostream& os, const VectorF<n>& v) 
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_VECTORF_H_

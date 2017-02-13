@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_FILEIO_H_
+#define MESH_PROCESSING_LIBHH_FILEIO_H_
+
 #include "Array.h"              // CArrayView
 
 namespace hh {
@@ -98,3 +100,5 @@ intptr_t my_sh(CArrayView<string> sargv, bool wait = true);
 extern std::ostream cnull;
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_FILEIO_H_

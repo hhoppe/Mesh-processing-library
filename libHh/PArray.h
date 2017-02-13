@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PARRAY_H_
+#define MESH_PROCESSING_LIBHH_PARRAY_H_
+
 #include "Array.h"              // ArrayView
 
 namespace hh {
@@ -144,3 +146,5 @@ template<typename T, int pcap, typename Func> auto map(const PArray<T,pcap>& c, 
 template<typename T, int pcap> HH_DECLARE_OSTREAM_EOL(PArray<T,pcap>); // implemented by CArrayView<T>
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PARRAY_H_

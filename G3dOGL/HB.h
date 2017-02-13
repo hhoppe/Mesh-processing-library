@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_HB_H_
+#define MESH_PROCESSING_G3DOGL_HB_H_
+
 #include "Array.h"
 #include "Geometry.h"
 #include "Flags.h"
@@ -65,3 +67,5 @@ void* escape(void* code, void* data);
 } // namespace HB
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_G3DOGL_HB_H_

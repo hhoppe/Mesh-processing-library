@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_KDTREE_H_
+#define MESH_PROCESSING_LIBHH_KDTREE_H_
+
 #include "Stack.h"
 #include "Stat.h"
 #include "Array.h"
@@ -189,3 +191,5 @@ template<typename T, int D> class Kdtree : noncopyable {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_KDTREE_H_

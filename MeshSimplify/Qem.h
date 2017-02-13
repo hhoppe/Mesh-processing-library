@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_MESHSIMPLIFY_QEM_H_
+#define MESH_PROCESSING_MESHSIMPLIFY_QEM_H_
+
 #include "Array.h"
 #include "Matrix.h"
 
@@ -57,3 +59,5 @@ template<typename T, int n> class Qem {
 template<typename T, int n> HH_DECLARE_OSTREAM_EOL(Qem<T,n>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_MESHSIMPLIFY_QEM_H_

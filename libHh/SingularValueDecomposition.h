@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SINGULARVALUEDECOMPOSITION_H_
+#define MESH_PROCESSING_LIBHH_SINGULARVALUEDECOMPOSITION_H_
+
 #include "Matrix.h"
 #include "RangeOp.h"            // fill()
 #include "GridOp.h"             // column()
@@ -111,3 +113,5 @@ template<typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S, 
 // therefore A = U * [diag(s); 0] * V^T  as desired.
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SINGULARVALUEDECOMPOSITION_H_

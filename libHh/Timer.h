@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_TIMER_H_
+#define MESH_PROCESSING_LIBHH_TIMER_H_
+
 #include "Hh.h"
 
 #if 0
@@ -80,3 +82,5 @@ class Timer : noncopyable {
 #endif  // !defined(HH_NO_TIMERS)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_TIMER_H_

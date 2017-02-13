@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_POOL_H_
+#define MESH_PROCESSING_LIBHH_POOL_H_
+
 #include "Hh.h"
 
 #if 0
@@ -170,3 +172,5 @@ class Pool : noncopyable {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_POOL_H_

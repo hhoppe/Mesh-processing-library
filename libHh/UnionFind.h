@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_UNIONFIND_H_
+#define MESH_PROCESSING_LIBHH_UNIONFIND_H_
+
 #include "Map.h"
 
 namespace hh {
@@ -57,3 +59,5 @@ template<typename T> T UnionFind<T>::get_label(T e) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_UNIONFIND_H_

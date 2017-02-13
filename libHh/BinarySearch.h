@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_BINARYSEARCH_H_
+#define MESH_PROCESSING_LIBHH_BINARYSEARCH_H_
+
 #include "Array.h"
 
 namespace hh {
@@ -63,3 +65,5 @@ int discrete_binary_search(CArrayView<T> ar, int xl, int xh, T y_desired) {
 //  bool std::binary_search(iterator ibegin, iterator iend, const T& elem);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_BINARYSEARCH_H_

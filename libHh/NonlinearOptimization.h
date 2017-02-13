@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
+#define MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
+
 #include "Array.h"
 #include "Matrix.h"
 #include "MathOp.h"             // my_mod()
@@ -127,3 +129,5 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MATRIXOP_H_
+#define MESH_PROCESSING_LIBHH_MATRIXOP_H_
+
 #include "Matrix.h"
 #include "GridOp.h"
 #include "Geometry.h"           // Frame
@@ -311,3 +313,5 @@ template<typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MATRIXOP_H_

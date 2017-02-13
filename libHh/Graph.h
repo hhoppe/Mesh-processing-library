@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GRAPH_H_
+#define MESH_PROCESSING_LIBHH_GRAPH_H_
+
 #include "Map.h"
 #include "Array.h"
 
@@ -80,3 +82,5 @@ template<typename T> void Graph<T>::add(const Graph& g) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GRAPH_H_

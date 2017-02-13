@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MESHOP_H_
+#define MESH_PROCESSING_LIBHH_MESHOP_H_
+
 #include "GMesh.h"
 #include "Stat.h"
 #include "Set.h"
@@ -123,3 +125,5 @@ class Vnors {
 float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp, bool fast);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MESHOP_H_

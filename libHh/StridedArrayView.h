@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_STRIDEDARRAYVIEW_H_
+#define MESH_PROCESSING_LIBHH_STRIDEDARRAYVIEW_H_
+
 #include <cstddef>              // ptrdiff_t
 #include "Hh.h"
 
@@ -116,3 +118,5 @@ template<typename T> HH_DECLARE_OSTREAM_EOL(CStridedArrayView<T>);
 template<typename T> HH_DECLARE_OSTREAM_EOL(StridedArrayView<T>); // implemented by CStridedArrayView<T>
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_STRIDEDARRAYVIEW_H_

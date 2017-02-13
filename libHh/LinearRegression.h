@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
+#define MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
+
 #include "LLS.h"
 
 #if 0
@@ -50,3 +52,5 @@ template<int N, int D, typename Eval = Vec<float,N>(const Vec<float,D>&)> class 
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_

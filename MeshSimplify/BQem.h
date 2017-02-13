@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
+#define MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
+
 #include "Qem.h"
 #include "PArray.h"
 
@@ -82,3 +84,5 @@ template<typename T> HH_DECLARE_OSTREAM_EOL(BQem<T>);
 template<typename T, int n> HH_DECLARE_OSTREAM_EOL(DQem<T,n>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_

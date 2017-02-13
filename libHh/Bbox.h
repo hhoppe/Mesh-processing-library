@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_BBOX_H_
+#define MESH_PROCESSING_LIBHH_BBOX_H_
+
 #include "Geometry.h"
 #include "RangeOp.h"
 
@@ -93,3 +95,5 @@ struct Bbox : Vec2<Point> {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_BBOX_H_

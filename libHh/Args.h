@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ARGS_H_
+#define MESH_PROCESSING_LIBHH_ARGS_H_
+
 #include "Vec.h"
 #include "Array.h"
 
@@ -151,3 +153,5 @@ class ParseArgs : public Args {
 #define ARGSC(comment1, com2) args.c(comment1, com2)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ARGS_H_

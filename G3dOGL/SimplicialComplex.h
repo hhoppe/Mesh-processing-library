@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
+#define MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
+
 #include "Map.h"
 #include "Pqueue.h"
 #include "GMesh.h"
@@ -428,3 +430,5 @@ inline bool SimplicialComplex::valid(Simplex s) const {
 }
 
 }
+
+#endif // MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_

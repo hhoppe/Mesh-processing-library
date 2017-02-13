@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_CONTOUR_H_
+#define MESH_PROCESSING_LIBHH_CONTOUR_H_
+
 #include "GMesh.h"
 #include "Set.h"
 #include "Queue.h"
@@ -655,3 +657,5 @@ class Contour2D : public ContourBase<2> {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_CONTOUR_H_

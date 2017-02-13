@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_WINDOWS_COM_H_
+#define MESH_PROCESSING_LIBHH_WINDOWS_COM_H_
+
 
 #if defined(_WIN32)
 
@@ -43,3 +45,5 @@ template<typename T> void** IID_PPV_ARGS_Helper(com_ptr_ref<T>&& p) throw() {
 } // namespace hh
 
 #endif // defined(_WIN32)
+
+#endif // MESH_PROCESSING_LIBHH_WINDOWS_COM_H_

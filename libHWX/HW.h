@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHWX_HW_H_
+#define MESH_PROCESSING_LIBHWX_HW_H_
+
 
 #define HH_OGLX
 
@@ -86,3 +88,5 @@ class HW : public HWbase {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHWX_HW_H_

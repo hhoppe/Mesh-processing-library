@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MATHOP_H_
+#define MESH_PROCESSING_LIBHH_MATHOP_H_
+
 #include "Array.h"
 #include "SGrid.h"
 
@@ -174,3 +176,5 @@ inline float eval_uniform_bspline(CArrayView<float> ar, int deg, float t) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MATHOP_H_

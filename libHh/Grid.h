@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GRID_H_
+#define MESH_PROCESSING_LIBHH_GRID_H_
+
 #include "Vec.h"
 #include "RangeOp.h"
 #include "Parallel.h"
@@ -755,3 +757,5 @@ TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
 #undef TT
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GRID_H_

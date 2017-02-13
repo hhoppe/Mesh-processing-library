@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HIDDENLINEREMOVAL_H_
+#define MESH_PROCESSING_LIBHH_HIDDENLINEREMOVAL_H_
+
 #include "Polygon.h"
 #include "Kdtree.h"
 #include "Array.h"
@@ -265,3 +267,5 @@ class HiddenLineRemoval {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_HIDDENLINEREMOVAL_H_

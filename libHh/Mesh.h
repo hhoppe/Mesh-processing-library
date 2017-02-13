@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MESH_H_
+#define MESH_PROCESSING_LIBHH_MESH_H_
+
 #include "Map.h"
 #include "Geometry.h"           // because of Point, too bad.
 #include "Array.h"
@@ -614,3 +616,5 @@ inline void Mesh::triangle_vertices(Face f, Vec3<Vertex>& va) const {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MESH_H_

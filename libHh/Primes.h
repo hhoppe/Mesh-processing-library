@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PRIMES_H_
+#define MESH_PROCESSING_LIBHH_PRIMES_H_
+
 #include "Array.h"
 #include "Random.h"
 #include "BinarySearch.h"
@@ -84,3 +86,5 @@ inline int least_common_multiple(int i1, int i2) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PRIMES_H_

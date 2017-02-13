@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_QUEUE_H_
+#define MESH_PROCESSING_LIBHH_QUEUE_H_
+
 #include <deque>
 #include "Hh.h"
 
@@ -47,3 +49,5 @@ template<typename T> HH_DECLARE_OSTREAM_RANGE(Queue<T>);
 template<typename T> HH_DECLARE_OSTREAM_EOL(Queue<T>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_QUEUE_H_

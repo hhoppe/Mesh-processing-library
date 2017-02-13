@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_NORMALMAPPING_H_
+#define MESH_PROCESSING_G3DOGL_NORMALMAPPING_H_
+
 #include "Geometry.h"
 #include "Pixel.h"
 
@@ -19,3 +21,5 @@ class NormalMapping {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_G3DOGL_NORMALMAPPING_H_

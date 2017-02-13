@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_
+#define MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_
+
 #include "Parallel.h"
 #include "Grid.h"               // grid_index()
 
@@ -228,3 +230,5 @@ void parallel_d0_for_coordsL_interior(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D>
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_

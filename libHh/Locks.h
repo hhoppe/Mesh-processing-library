@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_LOCKS_H_
+#define MESH_PROCESSING_LIBHH_LOCKS_H_
+
 #include "Hh.h"
 
 #if 0
@@ -144,3 +146,5 @@ class MyPerFileLock {
 // It works for x+=, x-=, x*=, x&=, etc., and --x and ++x.
 // Better yet, use std::atomic<T>.
 // Possibly could use atomic_operate() defined in AtomicOperate.h
+
+#endif // MESH_PROCESSING_LIBHH_LOCKS_H_

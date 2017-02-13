@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GEOMOP_H_
+#define MESH_PROCESSING_LIBHH_GEOMOP_H_
+
 #include "Geometry.h"
 #include "Polygon.h"
 
@@ -62,3 +64,5 @@ void frame_make_horiz(Frame& f);
 void widen_triangle(ArrayView<Point> poly, float eps);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GEOMOP_H_

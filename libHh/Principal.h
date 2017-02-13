@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PRINCIPAL_H_
+#define MESH_PROCESSING_LIBHH_PRINCIPAL_H_
+
 #include "Geometry.h"
 #include "Matrix.h"
 
@@ -36,3 +38,5 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
 void subtract_mean(MatrixView<float> mi);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PRINCIPAL_H_

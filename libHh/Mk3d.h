@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MK3D_H_
+#define MESH_PROCESSING_LIBHH_MK3D_H_
+
 #include "A3dStream.h"
 #include "Stack.h"
 
@@ -83,3 +85,5 @@ struct MkSaveColor {            // save and restore the current color transform
 #define mk_save_color hh::MkSaveColor HH_UNIQUE_ID(mksavecolor)(mk)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MK3D_H_

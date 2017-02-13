@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ADVANCED_H_
+#define MESH_PROCESSING_LIBHH_ADVANCED_H_
+
 #include "Hh.h"
 
 namespace hh {
@@ -63,3 +65,5 @@ struct do_in_order {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ADVANCED_H_

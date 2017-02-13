@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_CONSOLEPROGRESS_H_
+#define MESH_PROCESSING_LIBHH_CONSOLEPROGRESS_H_
+
 #include <atomic>
 #include "Hh.h"
 #include "Locks.h"
@@ -128,3 +130,5 @@ inline bool& ConsoleProgress::s_f_silent() {
 //  without name: .012sec in cmd.exe, .032sec in tcsh.exe.
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_CONSOLEPROGRESS_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SET_H_
+#define MESH_PROCESSING_LIBHH_SET_H_
+
 #include <unordered_set>
 #include "Random.h"
 
@@ -109,3 +111,5 @@ template<typename T> HH_DECLARE_OSTREAM_RANGE(Set<T>);
 template<typename T> HH_DECLARE_OSTREAM_EOL(Set<T>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SET_H_

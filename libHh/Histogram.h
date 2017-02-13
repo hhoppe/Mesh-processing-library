@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HISTOGRAM_H_
+#define MESH_PROCESSING_LIBHH_HISTOGRAM_H_
+
 #include "Stat.h"
 #include "Array.h"
 #include "FileIO.h"
@@ -49,3 +51,5 @@ class Histogram : noncopyable {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_HISTOGRAM_H_

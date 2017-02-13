@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_STRINGOP_H_
+#define MESH_PROCESSING_LIBHH_STRINGOP_H_
+
 #include "Hh.h"
 
 namespace hh {
@@ -113,3 +115,5 @@ inline string get_path_absolute(const string& s) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_STRINGOP_H_

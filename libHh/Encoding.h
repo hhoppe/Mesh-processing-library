@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ENCODING_H_
+#define MESH_PROCESSING_LIBHH_ENCODING_H_
+
 #include "Map.h"
 #include "Geometry.h"
 #include "Array.h"
@@ -227,3 +229,5 @@ class DeltaEncoding {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ENCODING_H_

@@ -177,8 +177,6 @@ RCS/
 /test/tVector4i
 /test/tVectorF
 
-# /demos/data/
-
 /demos/data/cactus.recon.m
 /demos/data/cactus.opt.m
 /demos/data/cactus.sub0.m

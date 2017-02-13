@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_QUATERNION_H_
+#define MESH_PROCESSING_LIBHH_QUATERNION_H_
+
 #include "Geometry.h"
 #include "MathOp.h"
 
@@ -281,3 +283,5 @@ inline std::ostream& operator<<(std::ostream& os, const Quaternion& q) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_QUATERNION_H_

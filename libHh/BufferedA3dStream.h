@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_BUFFEREDA3DSTREAM_H_
+#define MESH_PROCESSING_LIBHH_BUFFEREDA3DSTREAM_H_
+
 #include "A3dStream.h"
 #include "Buffer.h"
 
@@ -31,3 +33,5 @@ class WBufferedA3dStream : public WA3dStream { // Write to WBuffer
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_BUFFEREDA3DSTREAM_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VECTOR4I_H_
+#define MESH_PROCESSING_LIBHH_VECTOR4I_H_
+
 #include "Vector4.h"
 
 // SSE4.1: _mm_cvtepu8_epi32(), _mm_mullo_epi32()
@@ -216,3 +218,5 @@ inline Vector4i& operator*=(Vector4i& l, int i)                 { return l = l*i
 template<> inline void my_zero(Vector4i& v)                     { v = Vector4i(0); }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_VECTOR4I_H_

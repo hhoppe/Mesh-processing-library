@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VIDEO_H_
+#define MESH_PROCESSING_LIBHH_VIDEO_H_
+
 #include "Grid.h"
 #include "Audio.h"
 #include "Filter.h"             // FilterBnd
@@ -200,3 +202,5 @@ inline void swap(VideoNv12& l, VideoNv12& r) noexcept {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_VIDEO_H_

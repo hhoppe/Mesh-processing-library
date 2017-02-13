@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_STREE_H_
+#define MESH_PROCESSING_LIBHH_STREE_H_
+
 #include <set>
 #include "Hh.h"
 
@@ -50,3 +52,5 @@ template<typename T> HH_DECLARE_OSTREAM_RANGE(STree<T>);
 template<typename T> HH_DECLARE_OSTREAM_EOL(STree<T>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_STREE_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_RANGE_H_
+#define MESH_PROCESSING_LIBHH_RANGE_H_
+
 #include "Hh.h"
 
 // Introduce structures to facilitate the processing of "ranges", containers or views whose elements can be
@@ -48,3 +50,5 @@ template<typename T> struct range_elem {
 } // namespace details
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_RANGE_H_

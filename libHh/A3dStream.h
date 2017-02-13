@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_A3DSTREAM_H_
+#define MESH_PROCESSING_LIBHH_A3DSTREAM_H_
+
 #include "Geometry.h"
 #include "PArray.h"
 #include "Pixel.h"
@@ -227,3 +229,5 @@ constexpr int k_a3d_binary_code = 3;
 //    # object before replacing its definition.
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_A3DSTREAM_H_

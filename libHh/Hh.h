@@ -1,7 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 //       1         2         3         4         5         6         7         8         9        10        11
 //345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HH_H_
+#define MESH_PROCESSING_LIBHH_HH_H_
+
 
 
 // *** Pre-header
@@ -739,3 +741,5 @@ template<typename C> class stream_range {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_HH_H_

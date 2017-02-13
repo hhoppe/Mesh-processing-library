@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SPATIAL_H_
+#define MESH_PROCESSING_LIBHH_SPATIAL_H_
+
 #include "Geometry.h"
 #include "Array.h"
 #include "Map.h"
@@ -264,3 +266,5 @@ void ObjectSpatial<Approx2,Exact2>::search_segment(const Point& p1, const Point&
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SPATIAL_H_

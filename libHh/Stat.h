@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_STAT_H_
+#define MESH_PROCESSING_LIBHH_STAT_H_
+
 #include <fstream>              // std::ofstream
 #include "Range.h"              // enable_if_range_t<>
 
@@ -142,3 +144,5 @@ template<typename R, typename> R standardize_rms(R&& range) {
 // R standardized_rms(const R& range) { return standardize_rms(clone(range)); }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_STAT_H_

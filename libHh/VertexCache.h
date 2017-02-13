@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VERTEXCACHE_H_
+#define MESH_PROCESSING_LIBHH_VERTEXCACHE_H_
+
 #include "Array.h"
 #include "EList.h"
 #include "RangeOp.h"
@@ -327,3 +329,5 @@ inline std::ostream& operator<<(std::ostream& os, const VertexCache& vc) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_VERTEXCACHE_H_

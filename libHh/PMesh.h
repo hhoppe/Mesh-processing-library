@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PMESH_H_
+#define MESH_PROCESSING_LIBHH_PMESH_H_
+
 #include "Geometry.h"           // Point, Vector
 #include "A3dStream.h"          // A3dColor
 #include "Array.h"
@@ -487,3 +489,5 @@ inline int AWMesh::get_wvf(int v, int f) const {
 #endif  // defined(HH_DEBUG)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PMESH_H_

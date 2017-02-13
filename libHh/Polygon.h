@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_POLYGON_H_
+#define MESH_PROCESSING_LIBHH_POLYGON_H_
+
 #include "Geometry.h"
 #include "PArray.h"
 #include "Pool.h"
@@ -60,3 +62,5 @@ Vector orthogonal_vector(const Vector& v);
 void vector_standard_direction(Vector& v);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_POLYGON_H_

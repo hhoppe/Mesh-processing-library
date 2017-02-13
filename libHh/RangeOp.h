@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_RANGEOP_H_
+#define MESH_PROCESSING_LIBHH_RANGEOP_H_
+
 #include "Range.h"
 
 namespace hh {
@@ -416,3 +418,5 @@ template<typename U, typename R, typename = enable_if_range_t<R> > auto narrow_c
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_RANGEOP_H_

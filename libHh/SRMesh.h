@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SRMESH_H_
+#define MESH_PROCESSING_LIBHH_SRMESH_H_
+
 #include "Bbox.h"
 #include "EList.h"
 #include "LinearFunc.h"
@@ -340,3 +342,5 @@ inline SRAFace*& SRMesh::get_fnei(SRAFace* f, SRAFace* fn) const {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SRMESH_H_

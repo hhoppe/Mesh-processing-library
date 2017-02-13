@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MATRIX_H_
+#define MESH_PROCESSING_LIBHH_MATRIX_H_
+
 #include "Grid.h"
 
 #if 0
@@ -24,3 +26,5 @@ template<typename T> Matrix<T> transpose(CMatrixView<T> m1) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MATRIX_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GRIDPIXELOP_H_
+#define MESH_PROCESSING_LIBHH_GRIDPIXELOP_H_
+
 #include "MatrixOp.h"
 #include "GridOp.h"
 
@@ -107,3 +109,5 @@ inline void spatially_scale_Grid3_Pixel(CGridView<3,Pixel> gridp, const Vec2<Fil
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GRIDPIXELOP_H_

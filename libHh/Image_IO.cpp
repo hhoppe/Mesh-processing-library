@@ -333,6 +333,11 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
     jpeg_error_mgr jerr;
 // Step 1: allocate and initialize JPEG decompression object
     cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = [](j_common_ptr cinfo) {
+        char jpegLastErrorMsg[JMSG_LENGTH_MAX];
+        cinfo->err->format_message(cinfo, jpegLastErrorMsg);
+        throw std::runtime_error(string("libjpeg read error: ") + jpegLastErrorMsg);
+    };
     jpeg_create_decompress(&cinfo);
 // Step 2: specify data source (eg, a file)
     jpeg_stdio_src(&cinfo, file);
@@ -481,6 +486,11 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     jpeg_error_mgr jerr;
 // Step 1: allocate and initialize JPEG compression object
     cinfo.err = jpeg_std_error(&jerr);
+    jerr.error_exit = [](j_common_ptr cinfo) {
+        char jpegLastErrorMsg[JMSG_LENGTH_MAX];
+        cinfo->err->format_message(cinfo, jpegLastErrorMsg);
+        throw std::runtime_error(string("libjpeg write error: ") + jpegLastErrorMsg);
+    };
     jpeg_create_compress(&cinfo);
 // Step 2: specify data destination (eg, a file)
     // Note: steps 2 and 3 can be done in either order.
@@ -915,11 +925,22 @@ void ImageIO::write_ppm(const Image& image, FILE* file) {
 
 // *** PNG image
 
+static void my_png_user_error_fn(png_structp png_ptr, png_const_charp error_msg) {
+    dummy_use(png_ptr);
+    throw std::runtime_error(string("PNG lib error: ") + error_msg);
+}
+
+static void my_png_user_warning_fn(png_structp png_ptr, png_const_charp warning_msg) {
+    dummy_use(png_ptr);
+    showf("PNG lib warning : %s", warning_msg);
+}
+
 void ImageIO::read_png(Image& image, FILE* file) {
     // Note that it would be possible to read from an istream instead of a FILE* using png_set_read_fn() as
     //   described in http://www.piko3d.net/tutorials/libpng-tutorial-loading-png-files-from-streams/
     // (PNG_LIBPNG_VER_STRING, png_voidp(user_error_ptr), user_error_fn, user_warning_fn)
     png_structp png_ptr = assertt(png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr));
+    png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), my_png_user_error_fn, my_png_user_warning_fn);
     png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
     png_infop end_info = assertt(png_create_info_struct(png_ptr));
     png_init_io(png_ptr, file);
@@ -1025,6 +1046,7 @@ void ImageIO::read_png(Image& image, FILE* file) {
 void ImageIO::write_png(const Image& image, FILE* file) {
     // Note that it would be possible to write to an ostream instead of a FILE* using png_set_write_fn().
     png_structp png_ptr = assertt(png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr));
+    png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), my_png_user_error_fn, my_png_user_warning_fn);
     png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
     png_init_io(png_ptr, file);
     // turn off compression or set another filter

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MATERIALS_H_
+#define MESH_PROCESSING_LIBHH_MATERIALS_H_
+
 #include "Array.h"
 
 #include <cstdio>               // sscanf()
@@ -51,3 +53,5 @@ class Materials {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MATERIALS_H_

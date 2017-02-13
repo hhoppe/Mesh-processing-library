@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_AUDIO_H_
+#define MESH_PROCESSING_LIBHH_AUDIO_H_
+
 #include "Grid.h"
 
 #if 0
@@ -74,3 +76,5 @@ inline void swap(Audio& l, Audio& r) noexcept {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_AUDIO_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ELIST_H_
+#define MESH_PROCESSING_LIBHH_ELIST_H_
+
 #include <cstddef>              // offsetof()
 #include "Hh.h"
 
@@ -158,3 +160,5 @@ inline void EListNode::relink_before(EListNode* n) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ELIST_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_POLYGONSPATIAL_H_
+#define MESH_PROCESSING_LIBHH_POLYGONSPATIAL_H_
+
 #include "Spatial.h"
 #include "Polygon.h"
 #include "Facedistance.h"
@@ -65,3 +67,5 @@ class PolygonSpatial : public ObjectSpatial<details::polygon_approx_distance2, d
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_POLYGONSPATIAL_H_

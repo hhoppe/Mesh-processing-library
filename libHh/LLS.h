@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_LLS_H_
+#define MESH_PROCESSING_LIBHH_LLS_H_
+
 #include "Array.h"
 #include "Matrix.h"
 
@@ -132,3 +134,5 @@ class QrdLLS : public FullLLS {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_LLS_H_

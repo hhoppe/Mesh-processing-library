@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ATOMICOPERATE_H_
+#define MESH_PROCESSING_LIBHH_ATOMICOPERATE_H_
+
 #include "Hh.h"
 
 #if 0
@@ -69,3 +71,5 @@ template<typename T, typename Func> void atomic_operate(volatile T* ptr, Func fu
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ATOMICOPERATE_H_

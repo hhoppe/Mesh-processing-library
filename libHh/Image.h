@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_IMAGE_H_
+#define MESH_PROCESSING_LIBHH_IMAGE_H_
+
 #include "Matrix.h"
 #include "MatrixOp.h"
 #include "Array.h"
@@ -299,3 +301,5 @@ inline void swap(Image& l, Image& r) noexcept {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_IMAGE_H_

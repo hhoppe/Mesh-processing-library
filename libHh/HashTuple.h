@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_HASHTUPLE_H_
+#define MESH_PROCESSING_LIBHH_HASHTUPLE_H_
+
 #include <memory>               // _WIN32 bug: must appear before <tuple> to avoid warning 4548
 #include <tuple>                // std::tuple
 #include "Advanced.h"           // hash_combine()
@@ -59,3 +61,5 @@ template<typename... Types> std::ostream& operator<<(std::ostream& os, const std
     os << "tuple<"; hh::details::tuple_write<std::tuple<Types...>>()(os, tu); os << ">"; return os;
 }
 } // namespace std
+
+#endif // MESH_PROCESSING_LIBHH_HASHTUPLE_H_

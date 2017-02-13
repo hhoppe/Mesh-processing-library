@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MULTIGRID_H_
+#define MESH_PROCESSING_LIBHH_MULTIGRID_H_
+
 #include "Grid.h"
 #include "Timer.h"
 #include "ParallelCoords.h"
@@ -643,3 +645,5 @@ class Multigrid : noncopyable {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MULTIGRID_H_

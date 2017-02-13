@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_LINEARFUNC_H_
+#define MESH_PROCESSING_LIBHH_LINEARFUNC_H_
+
 #include "Geometry.h"
 
 namespace hh {
@@ -18,3 +20,5 @@ struct LinearFunc {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_LINEARFUNC_H_

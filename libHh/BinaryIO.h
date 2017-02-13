@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_BINARYIO_H_
+#define MESH_PROCESSING_LIBHH_BINARYIO_H_
+
 #include "Array.h"
 #include "NetworkOrder.h"
 
@@ -47,3 +49,5 @@ template<typename T> bool write_raw(FILE* file, CArrayView<T> ar) {
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_BINARYIO_H_

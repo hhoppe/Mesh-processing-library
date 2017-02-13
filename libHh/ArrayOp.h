@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ARRAYOP_H_
+#define MESH_PROCESSING_LIBHH_ARRAYOP_H_
+
 #include "Array.h"
 #include "Vec.h"                // Vec2<>
 #include "RangeOp.h"            // sort()
@@ -69,3 +71,5 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> rankf_eleme
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ARRAYOP_H_

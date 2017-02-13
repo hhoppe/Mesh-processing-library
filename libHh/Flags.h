@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_FLAGS_H_
+#define MESH_PROCESSING_LIBHH_FLAGS_H_
+
 #include "MathOp.h"             // is_pow2()
 
 namespace hh {
@@ -48,3 +50,5 @@ class Flag {
 inline Flag Flags::flag(FlagMask fmask) { return Flag(*this, fmask); }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_FLAGS_H_

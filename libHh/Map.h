@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MAP_H_
+#define MESH_PROCESSING_LIBHH_MAP_H_
+
 #include <unordered_map>
 #include "Random.h"
 
@@ -181,3 +183,5 @@ template<typename K, typename V> HH_DECLARE_OSTREAM_RANGE(Map<K,V>);
 template<typename K, typename V> HH_DECLARE_OSTREAM_EOL(Map<K,V>);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_MAP_H_

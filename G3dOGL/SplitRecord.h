@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_SPLITRECORD_H_
+#define MESH_PROCESSING_G3DOGL_SPLITRECORD_H_
+
 #include "SimplicialComplex.h"
 
 namespace hh {
@@ -81,3 +83,5 @@ inline const Array<AreaData>& SplitRecord::getAreas() {
 }
 
 } //namespace hh
+
+#endif // MESH_PROCESSING_G3DOGL_SPLITRECORD_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GMESH_H_
+#define MESH_PROCESSING_LIBHH_GMESH_H_
+
 #include <cstring>              // std::memcpy()
 #include "Mesh.h"
 #include "Polygon.h"
@@ -223,3 +225,5 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
 /// (For exact specifications, refer to GMesh.cpp)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GMESH_H_

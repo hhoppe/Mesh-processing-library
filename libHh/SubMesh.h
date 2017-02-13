@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SUBMESH_H_
+#define MESH_PROCESSING_LIBHH_SUBMESH_H_
+
 #include "GMesh.h"
 #include "Combination.h"
 #include "Homogeneous.h"
@@ -99,3 +101,5 @@ class SubMesh {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SUBMESH_H_

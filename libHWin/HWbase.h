@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHWIN_HWBASE_H_
+#define MESH_PROCESSING_LIBHWIN_HWBASE_H_
+
 
 #include "Array.h"
 #include "Vec.h"
@@ -569,3 +571,5 @@ inline void HWbase::flush_point_ogl() {
 #endif  // defined(GL_VERSION)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHWIN_HWBASE_H_

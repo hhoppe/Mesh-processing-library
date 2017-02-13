@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PARALLEL_H_
+#define MESH_PROCESSING_LIBHH_PARALLEL_H_
+
 
 #include "Hh.h"
 
@@ -120,3 +122,5 @@ const int k_omp_min_iterations = 8;              // sufficient number of loop it
 #endif
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PARALLEL_H_

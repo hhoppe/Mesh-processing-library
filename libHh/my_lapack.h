@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_MY_LAPACK_H_
+#define MESH_PROCESSING_LIBHH_MY_LAPACK_H_
+
 #include "Hh.h"
 
 
@@ -174,3 +176,5 @@ void LAPACK_sgelss( lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a,
                     lapack_int* lwork, lapack_int *info );
 
 #endif
+
+#endif // MESH_PROCESSING_LIBHH_MY_LAPACK_H_

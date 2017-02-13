@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_PIXEL_H_
+#define MESH_PROCESSING_LIBHH_PIXEL_H_
+
 #include "Vec.h"
 
 namespace hh {
@@ -47,3 +49,5 @@ inline bool operator==(const Pixel& pix1, const Pixel& pix2) {
 inline bool operator!=(const Pixel& pix1, const Pixel& pix2) { return !(pix1==pix2); }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_PIXEL_H_

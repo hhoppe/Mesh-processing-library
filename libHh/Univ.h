@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_UNIV_H_
+#define MESH_PROCESSING_LIBHH_UNIV_H_
+
 #include "Hh.h"
 
 namespace hh {
@@ -36,3 +38,5 @@ template<> struct Conv<float> {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_UNIV_H_

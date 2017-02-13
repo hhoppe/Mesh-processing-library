@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_ARRAY_H_
+#define MESH_PROCESSING_LIBHH_ARRAY_H_
+
 // #include <vector>
 // #include <array>
 #include "Range.h"
@@ -447,3 +449,5 @@ TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
 #undef TT
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_ARRAY_H_

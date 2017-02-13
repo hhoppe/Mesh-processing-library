@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_FRAMEIO_H_
+#define MESH_PROCESSING_LIBHH_FRAMEIO_H_
+
 #include "Geometry.h"
 
 namespace hh {
@@ -63,3 +65,5 @@ void create_not_a_frame(Frame& f);
 //   F 0  0.43794 -0.0692833 -0.896331  -0.893573 0.0759494 -0.442457  0.0987296 0.994707 -0.0286471  -0.207925 0.15072 0.389383  0.224572
 //   Note that all 3 direction vectors have unit norm, and that for a square window the zoom==0.224572 corresponds to a
 //   horizontal field-of-view of 25.31 degrees.
+
+#endif // MESH_PROCESSING_LIBHH_FRAMEIO_H_

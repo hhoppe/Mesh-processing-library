@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_G3DOGL_G3D_H_
+#define MESH_PROCESSING_G3DOGL_G3D_H_
+
 #include "Array.h"
 #include "Geometry.h"
 #include "Stat.h"
@@ -178,3 +180,5 @@ void CloseIfOpen();
 void WriteOutput();
 
 } // namespace g3d
+
+#endif // MESH_PROCESSING_G3DOGL_G3D_H_

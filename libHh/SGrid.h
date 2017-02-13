@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_SGRID_H_
+#define MESH_PROCESSING_LIBHH_SGRID_H_
+
 #include "Grid.h"
 
 namespace hh {
@@ -162,3 +164,5 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 #undef TT
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_SGRID_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_FACEDISTANCE_H_
+#define MESH_PROCESSING_LIBHH_FACEDISTANCE_H_
+
 #include "Geometry.h"
 #include "Bbox.h"
 
@@ -209,3 +211,5 @@ inline float project_point_seg2(const Point& p, const Point& p1, const Point& p2
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_FACEDISTANCE_H_

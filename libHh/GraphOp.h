@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_GRAPHOP_H_
+#define MESH_PROCESSING_LIBHH_GRAPHOP_H_
+
 #include "Graph.h"
 #include "Pqueue.h"
 #include "Set.h"
@@ -274,3 +276,5 @@ template<typename T> int graph_color(const Graph<T>& graph, Map<T,int>& ret_colo
 }
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_GRAPHOP_H_

@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
+#define MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
+
 #include "GMesh.h"
 #include "Array.h"
 #include "Map.h"
@@ -33,3 +35,5 @@ class CloseMinCycles {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_

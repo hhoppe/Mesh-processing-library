@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VECTOR4_H_
+#define MESH_PROCESSING_LIBHH_VECTOR4_H_
+
 #include "Pixel.h"
 
 #if 0      // Note: sandbox/server machines like msr-sandbox-031.redmond.corp.microsoft.com lack this feature.
@@ -341,3 +343,5 @@ inline void Vector4::norm_to_byte4(uchar p[4]) const {
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_VECTOR4_H_

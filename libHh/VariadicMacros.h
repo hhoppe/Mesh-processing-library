@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#pragma once
+#ifndef MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
+#define MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
+
 // included from Hh.h
 
 // Return number of arguments.
@@ -66,3 +68,5 @@
     m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11)
 #define HH_APPLY_12(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)                   \
     m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11), m(x12)
+
+#endif // MESH_PROCESSING_LIBHH_VARIADICMACROS_H_

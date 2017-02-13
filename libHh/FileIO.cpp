@@ -672,6 +672,10 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         for_int(i, sargv.num()) { argv[i] = nargv[i].c_str(); }
         argv.last() = nullptr;
         // Adapted from crt/system.c; env==nullptr means inherit environment
+        // One problem is that there is no way to hide the resulting console window
+        //  (created if the current process does not already have a console window)
+        //  because CreateProcess() call is hidden within CRT/dospawn.c and its StartupInfo structure
+        //  does not specify ".wShowWindow = SW_HIDE" (http://stackoverflow.com/questions/4743559/).
         return _wspawnvp(mode, widen(sargv[0]).c_str(), argv.data());
     }
 // #elif 0 && defined(__CYGWIN__)  // omit?

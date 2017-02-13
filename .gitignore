@@ -108,6 +108,8 @@ RCS/
 /_other/*.zip
 /bin/cygwin/bu_dll/
 /progtest/data/
+/libHh/StackWalker.cpp
+/libHh/StackWalker.h
 
 /bin/unix/*
 !/bin/unix/.gitignore

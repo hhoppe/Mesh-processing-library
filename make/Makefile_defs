@@ -86,7 +86,9 @@ cppinc += -D_UNICODE -DUNICODE  # (useful for alternative testing since my msbui
 # cppinc += -DHH_IMAGE_IO_TOO   # only matters for CONFIG=win/w32 (default is to just use WIC)
 cppinc += -DHH_FOR_DISTRIB    # set for distrib
 cppinc += -DHH_NO_VECTOR4_VECTORIZATION # set for distrib (otherwise require Intel SSE instructions)
+ifeq ($(wildcard $(HhRoot)/libHh/StackWalker.h),)
 cppinc += -DHH_NO_STACKWALKER # set for distrib
+endif
 cppinc += -DHH_NO_MKL         # set for distrib (only matters for CONFIG=win/w32)
 cppinc += -DHH_NO_SIMPLEX     # set for distrib
 cppinc += -DHH_NO_VIDEO_LOOP  # set for distrib

@@ -1,8 +1,5 @@
 # Rules for filenames to exclude from the git repo.
 
-BUILD
-*.bzl
-
 # Windows / Visual Studio build/temporary/user directories
 .vs/
 Debug/
@@ -45,6 +42,13 @@ build/
 *.psess
 *.vsp
 *.vspx
+
+# Google
+/BUILD
+/*.bzl
+/LICENSE
+/METADATA
+/OWNERS
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

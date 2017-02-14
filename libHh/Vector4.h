@@ -21,7 +21,7 @@
 #elif _M_IX86_FP>=2 || defined(_M_X64) || defined(__SSE2__) // (_M_IX86_FP is undefined for x64)
 #define HH_VECTOR4_SSE
 #else
-#error untested
+#pragma message("warning: untested")
 #endif
 // http://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Vector-Extensions.html
 // typedef int v4si __attribute__((vector_size (16)));

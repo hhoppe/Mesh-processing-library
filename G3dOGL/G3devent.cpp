@@ -986,7 +986,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
             if (ob_next()) HB::redraw_now();
             return;
         } else if (butnum>3) {
-            assertnever("");
+            SHOW(butnum); return;
         }
         if (flightmode==EFlightmode::automatic) { // added 20020501
             flightmode = EFlightmode::none;

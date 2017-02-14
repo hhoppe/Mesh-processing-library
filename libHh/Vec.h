@@ -160,7 +160,7 @@ template<typename T, typename... A> struct concat_n { static constexpr int value
 template<typename T> struct concat_n<T> { static constexpr int value = T::Num; };
 template<typename T, int n1, int n2, size_t... Is> constexpr
 Vec<T, (n1+n2)> concat_aux(const Vec<T,n1>& a1, const Vec<T,n2>& a2, std::index_sequence<Is...>) {
-    return Vec<T,n1+n2>( (Is<n1 ? a1[Is] : a2[Is-n1])... );
+    return Vec<T,n1+n2>( (int(Is)<n1 ? a1[int(Is)] : a2[int(Is)-n1])... );
 }
 } // namespace details
 

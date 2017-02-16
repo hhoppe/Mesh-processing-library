@@ -747,6 +747,7 @@ void HW::make_fullscreen(bool b) {
     // http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
     if (b==is_fullscreen()) return;
     static WINDOWPLACEMENT g_wp_prev; g_wp_prev.length = sizeof(g_wp_prev);
+    DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
     if (b) {                    // go full screen
         MONITORINFO mi; mi.cbSize = sizeof(mi);
         if (GetWindowPlacement(_hwnd, &g_wp_prev) &&

@@ -102,6 +102,7 @@
     <ClCompile Include="Video.cpp">
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
     </ClCompile>
+    <ClCompile Include="StackWalker.cpp" Condition="Exists('StackWalker.cpp')" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="A3dStream.h" />
@@ -202,6 +203,7 @@
     <ClInclude Include="VertexCache.h" />
     <ClInclude Include="Video.h" />
     <ClInclude Include="windows_com.h" />
+    <ClInclude Include="StackWalker.h" Condition="Exists('StackWalker.h')" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="libHh.natvis">

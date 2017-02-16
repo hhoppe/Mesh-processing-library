@@ -119,37 +119,43 @@ void HW::open() {
     if (_oglx) {
         // static const int multisample = getenv_int("GLX_MULTISAMPLE");
         _multisample = getenv_int("MULTISAMPLE", 4, true);
-        Array<int> attributelist = {
-            GLX_RGBA,           // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
-            GLX_RED_SIZE, 8,    // could be just "1"
-            GLX_DEPTH_SIZE, 24  // could be just "1"; 24 is arbitrary
-        };
-        if (_hwdebug) SHOW("hw: open", _is_glx_dbuf);
-        if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
-        if (_multisample) {
-            // Warning("Turning on GLX_SAMPLES_SGIS");
-            assertw(_multisample==4 || _multisample==8 || _multisample==16);
-            attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
-            // then becomes enabled by default.
-            // Note: inf_reality balrog has _multisample<=8.
-            // Note: may want to disable multisampling manually before
-            //  drawing anti-aliased lines.  Actually anti-aliased lines look
-            //  rather poor on inf_reality (too thick);
-            //  I prefer multisampled aliased lines.
-            // Note: do I need glEnable(GL_POLYGON_SMOOTH)? No, it seems that
-            //  it is an old way of anti-aliasing using alpha planes.
+        XVisualInfo* visinfo;
+        for (;;) {
+            Array<int> attributelist = {
+                GLX_RGBA,           // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
+                GLX_RED_SIZE, 8,    // could be just "1"
+                GLX_DEPTH_SIZE, 24  // could be just "1"; 24 is arbitrary
+            };
+            if (_hwdebug) SHOW("hw: open", _is_glx_dbuf);
+            if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
+            if (_multisample>1) {
+                // Warning("Turning on GLX_SAMPLES_SGIS");
+                assertw(_multisample==4 || _multisample==8 || _multisample==16);
+                attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
+                // then becomes enabled by default.
+                // Note: inf_reality balrog has _multisample<=8.
+                // Note: may want to disable multisampling manually before
+                //  drawing anti-aliased lines.  Actually anti-aliased lines look
+                //  rather poor on inf_reality (too thick);
+                //  I prefer multisampled aliased lines.
+                // Note: do I need glEnable(GL_POLYGON_SMOOTH)? No, it seems that
+                //  it is an old way of anti-aliasing using alpha planes.
+            }
+            attributelist.push(None);
+            // Note: on my Octane, this chooses VisualId 0x37: `glxinfo`:
+            //     visual  x  bf lv rg d st  r  g  b a  ax dp st accum buffs  ms
+            //   id dep cl sp sz l  ci b ro sz sz sz sz bf th cl  r  g  b  a ns b
+            //  0x37 24 tc  . 36  . r  y  . 12 12 12  .  . 24  8 16 16 16 16  . .
+            // which has 12bits/channel (even though I only asked for 4; not bad.
+            // Note: on cygwin, it selects: VisualId 396 (0x18c)
+            //     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
+            //   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
+            // 0x18c 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  0 16 16 16 16  0 0 None
+            visinfo = glXChooseVisual(_display, _screen, attributelist.data());
+            if (visinfo) break;
+            if (_multisample>1) { Warning("Downgrading to MULTISAMPLE=1"); _multisample = 1; continue; }
+            assertnever("Could not successfully call glXChooseVisual()");
         }
-        attributelist.push(None);
-        // Note: on my Octane, this chooses VisualId 0x37: `glxinfo`:
-        //     visual  x  bf lv rg d st  r  g  b a  ax dp st accum buffs  ms
-        //   id dep cl sp sz l  ci b ro sz sz sz sz bf th cl  r  g  b  a ns b
-        //  0x37 24 tc  . 36  . r  y  . 12 12 12  .  . 24  8 16 16 16 16  . .
-        // which has 12bits/channel (even though I only asked for 4; not bad.
-        // Note: on cygwin, it selects: VisualId 396 (0x18c)
-        //     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
-        //   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
-        // 0x18c 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  0 16 16 16 16  0 0 None
-        XVisualInfo* visinfo = assertx(glXChooseVisual(_display, _screen, attributelist.data()));
         _depth = visinfo->depth;
         _screen = visinfo->screen;
         visual = visinfo->visual;
@@ -297,7 +303,7 @@ void HW::open() {
                 _font_dims = V(28, 16); // reduce line-spacing
             }
         }
-        if (1 && _multisample) {         // may be unnecessary
+        if (1 && _multisample>1) { // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
             glEnable(GL_MULTISAMPLE);
             assertx(!gl_report_errors());
             if (_hwdebug) {

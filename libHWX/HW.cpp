@@ -47,6 +47,7 @@ bool HW::init_aux(Array<string>& aargs) {
     _state = EState::init;
     string displayname = "";
     bool iconic = false;
+    bool minimize = false;
     ParseArgs args(aargs, "HW");
     args.p("-disp[lay", displayname,            "name : set DISPLAY");
     args.p("-geom[etry", _user_geometry,        "geom : set window geometry (e.g. 640x480)");
@@ -57,17 +58,22 @@ bool HW::init_aux(Array<string>& aargs) {
     args.p("-hwkey", _hwkey,                    "string : simulate keys");
     args.p("-hwdelay", _hwdelay,                "secs : delay between keys");
     args.f("-bigfont", _bigfont,                ": use larger font");
+    args.f("-minimize", minimize,               ": same as -iconic");
+    args.f("-maximize", _maximize,              ": set initial window state");
+    args.f("-fullscreen", _fullscreen,          ": set initial window state");
     args.p("-offscreen", _offscreen,            "imagefilename : save image");
     args.other_args_ok(); args.other_options_ok(); args.disallow_prefixes();
     if (!args.parse_and_extract(aargs)) { _state = EState::uninit; return false; }
     assertx(aargs.num()); _argv0 = aargs[0];
+    if (minimize) iconic = true;
+    if (_offscreen!="") iconic = true;  // less distracting; ideally window would be invisible
     pHW = this;
     //
-    pwmhints = assertx(XAllocWMHints()); // never freed using XFree()
-    // pwmhints->flags = 0; // unnecessary
+    _pwmhints = assertx(XAllocWMHints()); // never freed using XFree()
+    // _pwmhints->flags = 0; // unnecessary
     if (iconic) {
-        pwmhints->initial_state = IconicState;
-        pwmhints->flags |= StateHint;
+        _pwmhints->initial_state = IconicState;
+        _pwmhints->flags |= StateHint;
     }
     if (!(_display = XOpenDisplay(to_nullptr_or_cstring(displayname)))) {
         showf("HW: cannot connect to X server '%s'\n", XDisplayName(to_nullptr_or_cstring(displayname)));
@@ -111,8 +117,8 @@ void HW::open() {
 #if defined(HH_OGLX)
     GLXContext glcx; dummy_init(glcx);
     if (_oglx) {
-        static const int multisample = getenv_int("GLX_MULTISAMPLE");
-        assertw(!multisample);
+        // static const int multisample = getenv_int("GLX_MULTISAMPLE");
+        _multisample = getenv_int("MULTISAMPLE", 4, true);
         Array<int> attributelist = {
             GLX_RGBA,           // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
             GLX_RED_SIZE, 8,    // could be just "1"
@@ -120,12 +126,12 @@ void HW::open() {
         };
         if (_hwdebug) SHOW("hw: open", _is_glx_dbuf);
         if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
-        if (multisample) {
-            Warning("Turning on GLX_SAMPLES_SGIS");
-            assertw(multisample==4 || multisample==8 || multisample==16);
-            attributelist.push_array(V(GLX_SAMPLES_SGIS, multisample));
+        if (_multisample) {
+            // Warning("Turning on GLX_SAMPLES_SGIS");
+            assertw(_multisample==4 || _multisample==8 || _multisample==16);
+            attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
             // then becomes enabled by default.
-            // Note: inf_reality balrog has multisample<=8.
+            // Note: inf_reality balrog has _multisample<=8.
             // Note: may want to disable multisampling manually before
             //  drawing anti-aliased lines.  Actually anti-aliased lines look
             //  rather poor on inf_reality (too thick);
@@ -156,12 +162,14 @@ void HW::open() {
         // ? XSetErrorHandler(0);
     }
 #endif  // defined(HH_OGLX)
-    if (_backcolor=="") _backcolor = from_nullptr_or_cstring(XGetDefault(_display, _argv0.c_str(), "background"));
-    if (_backcolor=="") _backcolor = _default_background;
-    if (_forecolor=="") _forecolor = from_nullptr_or_cstring(XGetDefault(_display, _argv0.c_str(), "foreground"));
-    if (_forecolor=="") _forecolor = _default_foreground;
-    get_color(_backcolor, _pixel_background, _color_background);
-    get_color(_forecolor, _pixel_foreground, _color_foreground);
+    {
+        if (_backcolor=="") _backcolor = from_nullptr_or_cstring(XGetDefault(_display, _argv0.c_str(), "background"));
+        if (_backcolor=="") _backcolor = _default_background;
+        if (_forecolor=="") _forecolor = from_nullptr_or_cstring(XGetDefault(_display, _argv0.c_str(), "foreground"));
+        if (_forecolor=="") _forecolor = _default_foreground;
+        get_color(_backcolor, _pixel_background, _color_background);
+        get_color(_forecolor, _pixel_foreground, _color_foreground);
+    }
     Pixel dummy_color_border;
     get_color("black", _pixel_border, dummy_color_border);
     if (_user_geometry=="")
@@ -203,15 +211,15 @@ void HW::open() {
                              visual, CWColormap | CWBorderPixel | CWBackPixel, &swa);
     }
     Pixmap icon_pixmap = assertx(XCreateBitmapFromData(_display, _win, hw_bits, hw_width, hw_height));
-    pwmhints->flags |= IconPixmapHint;
-    pwmhints->icon_pixmap = icon_pixmap;
+    _pwmhints->flags |= IconPixmapHint;
+    _pwmhints->icon_pixmap = icon_pixmap;
     XClassHint* pxclasshint = assertx(XAllocClassHint()); // never freed using XFree()
     pxclasshint->res_name = const_cast<char*>(_argv0.c_str());
     pxclasshint->res_class = const_cast<char*>("HW");
     Vec2<const char*> largv = { _argv0.c_str(), nullptr }; const int largc = 1;
     string icon_name = _argv0;
     XmbSetWMProperties(_display, _win, _window_title.c_str(), icon_name.c_str(),
-                       const_cast<char**>(largv.data()), largc, pxsh, pwmhints, pxclasshint);
+                       const_cast<char**>(largv.data()), largc, pxsh, _pwmhints, pxclasshint);
     XStoreName(_display, _win, _window_title.c_str()); // necessary to set window title in CYGWIN
     Cursor cursor = XCreateFontCursor(_display, XC_crosshair);
     XDefineCursor(_display, _win, cursor);
@@ -230,7 +238,25 @@ void HW::open() {
         XSetBackground(_display, _gc, _pixel_background);
         XSetForeground(_display, _gc, _pixel_foreground);
     }
-    if (_offscreen=="") XMapWindow(_display, _win);
+    if (1 || _offscreen=="") XMapWindow(_display, _win); // window must be mapped to obtain an image
+    if (_maximize) {
+        _maximize = false;
+        // (Note that make_fullscreen(true) is different from maximize.)
+        XEvent event;
+        event.type = ClientMessage;
+        event.xclient.display       = _display;
+        event.xclient.window        = _win;
+        event.xclient.message_type  = XInternAtom(_display, "_NET_WM_STATE", False);
+        event.xclient.format        = 32;
+        event.xclient.data.l[ 0 ]   = 1; // _NET_WM_STATE_ADD
+        event.xclient.data.l[ 1 ]   = XInternAtom(_display, "_NET_WM_STATE_MAXIMIZED_HORZ", False);
+        event.xclient.data.l[ 2 ]   = XInternAtom(_display, "_NET_WM_STATE_MAXIMIZED_VERT", False);
+        assertx(XSendEvent(_display, XDefaultRootWindow(_display), False, SubstructureNotifyMask, &event));
+    }
+    if (_fullscreen) {
+        _fullscreen = false;
+        make_fullscreen(true);
+    }
     if (_oglx) {
 #if defined(HH_OGLX)
         glXMakeCurrent(_display, _win, glcx);
@@ -269,6 +295,14 @@ void HW::open() {
             } else {
                 _font_dims = V(38, 16); // 16x38 from CourierBold20 of IrisGL fm.
                 _font_dims = V(28, 16); // reduce line-spacing
+            }
+        }
+        if (1 && _multisample) {         // may be unnecessary
+            glEnable(GL_MULTISAMPLE);
+            assertx(!gl_report_errors());
+            if (_hwdebug) {
+                int sample_buffers; glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers); SHOW(sample_buffers);
+                int samples; glGetIntegerv(GL_SAMPLES, &samples); SHOW(samples);
             }
         }
 #endif
@@ -784,11 +818,17 @@ void HW::resize_window(const Vec2<int>& yx) {
     // XMoveResizeWindow(_display, _win, new_left, new_top, yx[1], yx[0])
 }
 
+bool HW::is_fullscreen() {
+    return _is_fullscreen;
+}
+
 void HW::make_fullscreen(bool b) {
-#if defined(__APPLE__)
-    const bool use_change_property = false;
-#else
+    if (b==_is_fullscreen) return;
+    _is_fullscreen = b;
+#if defined(__cygwin__)
     const bool use_change_property = true;
+#else
+    const bool use_change_property = false; // (defined(__APPLE__) or Linux
 #endif
     if (use_change_property) {
         // http://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
@@ -797,8 +837,6 @@ void HW::make_fullscreen(bool b) {
         // Under cygwin, it seems to detect _NET_WM_STATE_FULLSCREEN only the first time it is set.
         // On Mac, it doesn't seem to do anything.
         static Vec2<int> bu_dims;
-        const bool is_fullscreen = bu_dims[0]>0;
-        if (b==is_fullscreen) return;
         if (b) {
             bu_dims = _win_dims;
             Vec1<Atom> atoms = { XInternAtom(_display, "_NET_WM_STATE_FULLSCREEN", False) };
@@ -820,19 +858,17 @@ void HW::make_fullscreen(bool b) {
         // On Mac, it makes window fullscreen but leads to OpenGL error and shows black until later refresh
         //  the first time fullscreen is invoked.
         XEvent event;
-        event.xclient.display = _display;
-        event.xclient.type          = ClientMessage;
-        event.xclient.serial        = 0;
-        event.xclient.send_event    = True;
+        event.type = ClientMessage;
+        event.xclient.display       = _display;
         event.xclient.window        = _win;
-        event.xclient.message_type  = XInternAtom( _display, "_NET_WM_STATE", False);
+        // event.xclient.serial        = 0;
+        // event.xclient.send_event    = True;
+        event.xclient.message_type  = XInternAtom(_display, "_NET_WM_STATE", False);
         event.xclient.format        = 32;
         event.xclient.data.l[ 0 ]   = b ? 1 : 0; // 0==unset, 1==set, 2==toggle
-        event.xclient.data.l[ 1 ]   = XInternAtom( _display, "_NET_WM_STATE_FULLSCREEN", False);
+        event.xclient.data.l[ 1 ]   = XInternAtom(_display, "_NET_WM_STATE_FULLSCREEN", False);
         event.xclient.data.l[ 2 ]   = 0;
         long mask = SubstructureRedirectMask | SubstructureNotifyMask;
-        // long mask = StructureNotifyMask | ResizeRedirectMask;
-        // long mask = 0;
         assertx(XSendEvent(_display, XDefaultRootWindow(_display), False, mask, &event));
         XFlush(_display);
     }

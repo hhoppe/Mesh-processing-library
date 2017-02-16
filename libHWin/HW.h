@@ -36,6 +36,7 @@ class HW : public HWbase {
     void fill_polygon(CArrayView<Vec2<float>> points) override;
     Vec2<int> get_max_window_dims() override;
     void resize_window(const Vec2<int>& yx) override;
+    bool is_fullscreen() override;
     void make_fullscreen(bool b) override;
     void grab_focus() override;
 // call within draw_window()
@@ -54,7 +55,8 @@ class HW : public HWbase {
     MMRESULT _sk_timerID {0};
     UINT _sk_timerResolution {0}; // Max tolerable error in timer delay (mSec)
     bool _iconic {false};
-    bool _maximize {false};
+    bool _maximize {false};             // command-line desire
+    bool _fullscreen {false};           // command-line desire
     int _scr_bpp {24};
     int _scr_zbufbits {24};     // was previously 16
     int _scr_stencilbits {0};

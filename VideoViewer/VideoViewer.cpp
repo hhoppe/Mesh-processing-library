@@ -182,7 +182,6 @@ bool g_mirror_state_forward = true; // true if currently advancing forward in mi
 enum class ESort { name, date };
 const ESort k_default_sort = ESort::name;
 ESort g_sort = k_default_sort;
-bool g_fullscreen = false;
 double g_speed = 1.;            // play speed factor relative to real time; usually k_speeds.index(g_speed)>=0
 enum class EFit { isotropic, anisotropic };
 const EFit k_default_fit = EFit::isotropic; // do not distort aspect ratio to fit image/video to window
@@ -320,6 +319,10 @@ CArrayView<string> get_directory_media_filenames(const string& filename) {
 
 // Forward declaration
 void background_work(bool asynchronous);
+
+bool is_fullscreen() {
+    return hw.is_fullscreen();
+}
 
 bool view_has_rotation() {
     return g_view[0][1] || g_view[1][0];
@@ -748,11 +751,11 @@ void reset_window(const Vec2<int>& ndims) {
 // Change zooom of window; if fullscreen, zoom about window center, else resize window dimensions.
 void perform_window_zoom(float fac_zoom) {
     g_win_dims = hw.get_window_dims();           // for -key "=="
-    if (g_fullscreen || !g_fit_view_to_window) { // zoom the view relative to window center
+    if (is_fullscreen() || !g_fit_view_to_window) { // zoom the view relative to window center
         g_fit_view_to_window = false;
         Vec3<float> pc = concat(convert<float>(g_win_dims), V(0.f))/2.f; // no .5f adjustment
         set_view(g_view * Frame::translation(-pc) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pc));
-        if (!g_fullscreen && product(g_frame_dims) && !view_has_rotation()) {
+        if (!is_fullscreen() && product(g_frame_dims) && !view_has_rotation()) {
             // tighten window if entire image can be made visible
             assertx(var(get_zooms())<1e-10f); // zoom must be isotropic if !g_fit_view_to_window
             const float zoom = get_zooms()[0];
@@ -814,8 +817,7 @@ void set_speed(double speed) {
 }
 
 void set_fullscreen(bool v) {
-    if (v!=g_fullscreen) std::swap(g_show_info, g_other_show_info);
-    g_fullscreen = v;
+    if (v!=is_fullscreen()) std::swap(g_show_info, g_other_show_info);
     hw.make_fullscreen(v);
 }
 
@@ -1423,7 +1425,7 @@ bool DerivedHW::key_press(string skey) {
              }
              bcase '0': {       // 100% zoom
                  const Vec2<int> dims = product(g_frame_dims) ? g_frame_dims : k_default_window_dims;
-                 if (g_fullscreen) {
+                 if (is_fullscreen()) {
                      g_fit_view_to_window = false;
                      set_view(Frame::translation(concat(convert<float>(g_win_dims-dims), V(0.f))/2.f));
                      if (g_win_dims==dims)
@@ -1451,9 +1453,11 @@ bool DerivedHW::key_press(string skey) {
              bcase '-': {       // decrease window size or zoom
                  perform_window_zoom(1.f/k_key_zoom_fac);
              }
-             bcase '\r': {      // <enter>/<ret>/C-M key (== uchar(13) == 'M'-64),  toggle fullscreen
+             bcase '\r':                // <enter>/<ret>/C-M key (== uchar(13) == 'M'-64),  toggle fullscreen
+             ocase '\n':                // G3d -key $'\n'
+             {
                  g_fit_view_to_window = true;
-                 set_fullscreen(!g_fullscreen);
+                 set_fullscreen(!is_fullscreen());
              }
              bcase 'k': {       // rotate among reconstruction kernels
                  g_kernel = EKernel(my_mod(int(g_kernel)+1, int(EKernel::last)));
@@ -1729,7 +1733,7 @@ bool DerivedHW::key_press(string skey) {
                      ob._filename = sroot + ar[my_mod(cur+(rot_degrees/90), 4)] + "." + sext;
                      ob._unsaved = cur!=2 || !file_exists(ob._filename);
                  }
-                 if (!g_fullscreen) {
+                 if (!is_fullscreen()) {
                      reset_window(determine_default_window_dims(ob.spatial_dims()));
                      // if (g_fit_view_to_window) reset_window(g_win_dims.rev());
                  }
@@ -2302,7 +2306,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                              Vec4<int> p = convert<int>(pix);
                              s += sform("RGB:(%d, %d, %d), HTML:(#%02X%02X%02X)", p[0], p[1], p[2], p[0], p[1], p[2]);
                          }
-                         if (!g_fullscreen) {
+                         if (!is_fullscreen()) {
                              set_window_title(s);
                          } else {
                              immediate_message(s + "     ");
@@ -2949,6 +2953,11 @@ void render_image() {
 
 void DerivedHW::draw_window(const Vec2<int>& dims) {
     // HH_TIMER(draw_window);
+    static bool first = true;
+    if (first) {
+        first = false;
+        if (is_fullscreen()) std::swap(g_show_info, g_other_show_info);
+    }
     g_win_dims = dims;
     if (!assertw(!gl_report_errors())) {
         if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
@@ -3221,7 +3230,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                                            g_looping==ELooping::mirror ? "m" : " ")));
             }
             string sname; {
-                if (g_fullscreen) sname = " " + getob()._filename;
+                if (is_fullscreen()) sname = " " + getob()._filename;
             }
             string sbitrate; {
                 const int bitrate = ob._video.attrib().bitrate;

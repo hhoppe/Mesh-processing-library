@@ -2970,6 +2970,7 @@ bool HB::special_keypress(char ch) {
         invalidate_dls();
         hw.redraw_now();
      bcase '\r':                // <enter>/<ret> key (== uchar(13) == 'M'-64)
+     ocase '\n':                // G3d -key $'\n'
         static bool g_fullscreen;
         g_fullscreen = !g_fullscreen;
         hw.make_fullscreen(g_fullscreen);

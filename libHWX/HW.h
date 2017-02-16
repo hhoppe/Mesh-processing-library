@@ -38,6 +38,7 @@ class HW : public HWbase {
     void fill_polygon(CArrayView<Vec2<float>> points) override;
     Vec2<int> get_max_window_dims() override;
     void resize_window(const Vec2<int>& yx) override;
+    bool is_fullscreen() override;
     void make_fullscreen(bool b) override;
 // call within draw_window()
     void clear_window() override;
@@ -47,13 +48,17 @@ class HW : public HWbase {
     void end_draw_visible() override;
     void wake_up() override;
  private:
+    bool _maximize {false};             // command-line desire
+    bool _fullscreen {false};           // command-line desire
+    bool _is_fullscreen {false};
+    int _multisample {0};
     unsigned long _pixel_background; // XWindows pixel id
     unsigned long _pixel_foreground;
     unsigned long _pixel_border;
     bool _need_toggle_buffering {false};
     bool _is_pixbuf {false};
     bool _oglx {false};
-    XWMHints* pwmhints {nullptr};
+    XWMHints* _pwmhints {nullptr};
     Display* _display {nullptr};
     Window _win;
     GC _gc;

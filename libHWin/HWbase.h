@@ -69,6 +69,7 @@ class HWbase : noncopyable {
     Vec2<int> window_position_yx() const        { return _win_pos; }
     virtual Vec2<int> get_max_window_dims() = 0;         // (ny, nx)
     virtual void resize_window(const Vec2<int>& yx) = 0; // resize to new width and height
+    virtual bool is_fullscreen() = 0;
     virtual void make_fullscreen(bool b) = 0;            // make the window fullscreen if b
     virtual void grab_focus()                   { }
 // call within draw_window()

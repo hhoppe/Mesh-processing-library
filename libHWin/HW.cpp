@@ -80,9 +80,10 @@ bool HW::init_aux(Array<string>& aargs) {
     args.p("-hwkey", _hwkey,                    "string : simulate keys");
     args.p("-hwdelay", _hwdelay,                "secs : delay between keys");
     args.f("-bigfont", _bigfont,                ": use larger font");
-    args.f("-minimize", minimize,               ": set initial window state");
+    args.f("-minimize", minimize,               ": same as -iconic");
     args.f("-maximize", _maximize,              ": set initial window state");
-    args.p("-offscreen", _offscreen,            "imagefile : save image");
+    args.f("-fullscreen", _fullscreen,          ": set initial window state");
+    args.p("-offscreen", _offscreen,            "imagefilename : save image");
     args.other_args_ok(); args.other_options_ok(); args.disallow_prefixes();
     if (!args.parse_and_extract(aargs)) { _state = EState::uninit; return false; }
     assertx(aargs.num()); _argv0 = aargs[0];
@@ -737,12 +738,15 @@ void HW::resize_window(const Vec2<int>& yx) {
     //  (approximately 102 pixels) (for the buttons above it).
 }
 
+bool HW::is_fullscreen() {
+    DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
+    return !(style & WS_OVERLAPPEDWINDOW);
+}
+
 void HW::make_fullscreen(bool b) {
     // http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
+    if (b==is_fullscreen()) return;
     static WINDOWPLACEMENT g_wp_prev; g_wp_prev.length = sizeof(g_wp_prev);
-    DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
-    const bool is_fullscreen = !(style & WS_OVERLAPPEDWINDOW);
-    if (b==is_fullscreen) return;
     if (b) {                    // go full screen
         MONITORINFO mi; mi.cbSize = sizeof(mi);
         if (GetWindowPlacement(_hwnd, &g_wp_prev) &&
@@ -1064,6 +1068,10 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
         if (!_iconic) assertx(SetFocus(_hwnd));
     }
     //
+    if (_fullscreen) {
+        _fullscreen = false;
+        make_fullscreen(true);
+    }
     if (_offscreen!="" && !_pbuffer) {
         assertx(!_is_glx_dbuf);
         BITMAPINFOHEADER bmih;

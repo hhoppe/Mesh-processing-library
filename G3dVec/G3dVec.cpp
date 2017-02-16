@@ -1109,9 +1109,8 @@ bool HB::special_keypress(char ch) {
          if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
      }
      bcase '\r':                // <enter>/<ret> key (== uchar(13) == 'M'-64)
-        static bool g_fullscreen;
-        g_fullscreen = !g_fullscreen;
-        hw.make_fullscreen(g_fullscreen);
+     ocase '\n':                // G3d -key $'\n'
+        hw.make_fullscreen(!hw.is_fullscreen());
      bcase '?': {
          const string s = 1+R"(
 Device commands:

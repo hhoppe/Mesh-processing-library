@@ -244,7 +244,8 @@ void HW::open() {
         XSetBackground(_display, _gc, _pixel_background);
         XSetForeground(_display, _gc, _pixel_foreground);
     }
-    if (1 || _offscreen=="") XMapWindow(_display, _win); // window must be mapped to obtain an image
+    // if (_offscreen=="")
+    XMapWindow(_display, _win); // window must be mapped to obtain an image
     if (_maximize) {
         _maximize = false;
         // (Note that make_fullscreen(true) is different from maximize.)
@@ -303,7 +304,7 @@ void HW::open() {
                 _font_dims = V(28, 16); // reduce line-spacing
             }
         }
-        if (1 && _multisample>1) { // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
+        if (_multisample>1) { // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
             glEnable(GL_MULTISAMPLE);
             assertx(!gl_report_errors());
             if (_hwdebug) {

@@ -69,6 +69,7 @@ class HW : public HWbase {
     Pixmap _bbuf;
     int _screen;
     int _depth;
+    Atom _wmDeleteMessage;
 
     bool init_aux(Array<string>& aargs) override;
     void start_hwkey() override;

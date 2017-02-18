@@ -92,7 +92,8 @@ bool HW::init_aux(Array<string>& aargs) {
 
 static int my_io_error_handler(Display* display) {
     dummy_use(display);
-    SHOW("X server connection is lost");
+    // This handler is called when the window close button is pressed, so there is nothing unusual.
+    // SHOW("X server connection is lost");
     _exit(0);                   // IE error handler is unfortunately required to exit
     // Ideally, CYGWIN would send a DestroyWindow event when user clicks "X" button, but it does not seem to.
     return 0;
@@ -244,6 +245,10 @@ void HW::open() {
         XSetBackground(_display, _gc, _pixel_background);
         XSetForeground(_display, _gc, _pixel_foreground);
     }
+    if (0) { // This fails With Cinnamon: it prevents window close and I don't receive any ClientMessage event.
+        _wmDeleteMessage = XInternAtom(_display, "WM_DELETE_WINDOW", False);
+        XSetWMProtocols(_display, _win, &_wmDeleteMessage, 1);
+    }
     // if (_offscreen=="")
     XMapWindow(_display, _win); // window must be mapped to obtain an image
     if (_maximize) {
@@ -321,6 +326,8 @@ void HW::open() {
     force_first_draws = 3;      // For some unknown reason, first couple draws are corrupt on __CYGWIN__
 #endif
     if (1) {
+        // Avoid error message upon pressing close window button, e.g.:
+        //  XIO:  fatal IO error 11 (Resource temporarily unavailable) on X server ":0"
         XSetIOErrorHandler(my_io_error_handler);
     }
     if (_offscreen=="") {
@@ -475,6 +482,13 @@ void HW::handle_event() {
      bcase MappingNotify:
         if (_hwdebug) SHOW("MappingNotify");
         XRefreshKeyboardMapping(reinterpret_cast<XMappingEvent*>(&_event));
+     // bcase ClientMessage:
+     //    SHOWL;
+     //    if (_event.xclient.data.l[0] == _wmDeleteMessage) {
+     //        SHOWL;
+     //        // Receive message from window manager before it kills the window.
+     //        _update = EUpdate::quit;
+     //    }
      bdefault:
         if (_hwdebug) SHOW("ignoring unknown event");
         void();

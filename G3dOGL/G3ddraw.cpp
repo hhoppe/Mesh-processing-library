@@ -703,7 +703,10 @@ static void set_viewing() {
         frame_aim_at(tcam, v);
     }
     float vzoom = zoom;
-    if (is_view) vzoom = 0.2f;
+    if (is_view) {
+        const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f); // 2017-02-21
+        if (g3d_view_zoom) vzoom = g3d_view_zoom;                       // was 0.2f
+    }
     if (g_g3d_demofly && obview!=0) vzoom = 0.2f;
     // HB::set_camera(tpos, zoom, tcam, vzoom);
     HB::set_camera(g_obs[0].t(), zoom, tcam, vzoom);

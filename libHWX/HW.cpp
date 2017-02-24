@@ -601,7 +601,8 @@ void HW::draw_it() {
     } else {
         // 2014-12-13
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); // 2017-02-23; source is assumed to have premultiplied alpha
         glMatrixMode(GL_PROJECTION); glLoadIdentity(); // glLoadMatrixf(to_Matrix(Frame::identity()).data());
         if (0) {
             glOrtho(-.5, _win_dims[1]-.5, _win_dims[0]-.5, -.5, -1., 1.); // multiplies GL_PROJECTION; reverse y

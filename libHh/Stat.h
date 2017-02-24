@@ -35,6 +35,7 @@ class Stat {
     void enter(int f)                           { enter(float(f)); }
     void enter(unsigned f)                      { enter(float(f)); }
     void enter_multiple(float f, int fac); // fac could be negative
+    void remove(float f)                        { enter_multiple(f, -1); }
     void add(const Stat& st);
     const string& name() const                  { return _name; }
     int64_t num() const                         { return _n; }
@@ -42,8 +43,9 @@ class Stat {
     float min() const                           { return _min; }
     float max() const                           { return _max; }
     float avg() const   { if (_n) return float(_sum/double(_n)); Warning("avg() of empty"); return 0.f; }
-    float var() const;
+    float var() const;                  // sample variance (rather than population variance)
     float sdv() const                           { return sqrt(var()); }
+    float ssd() const                           { return float(std::max(_sum2-_sum*_sum/double(_n), 0.)); }
     float sum() const                           { return float(_sum); }
     float rms() const   { if (_n) return sqrt(float(_sum2/double(_n))); Warning("rms() of empty"); return 0.f; }
     float max_abs() const                       { return std::max(abs(min()), abs(max())); }
@@ -110,7 +112,7 @@ inline void Stat::enter_multiple(float f, int fac) {
 
 inline float Stat::var() const {
     if (_n<2) { Warning("Stat::var() of fewer than 2 elements"); return 0.f; }
-    return float(std::max((_sum2-_sum*_sum/double(_n))/(double(_n-1)), 0.));
+    return ssd()/(_n-1);
 }
 
 template<typename R, typename> Stat range_stat(const R& range) {

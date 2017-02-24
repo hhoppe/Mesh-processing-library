@@ -1340,16 +1340,17 @@ static bool isafile(int fd) {
 }
 
 // Scenarios:
-//   command-line                       isatty1 isatty2 1==2    cout    cerr
-//   app                                1       1               0       1
-//   app >file                          0       1               1       1
-//   app | app2                         0       1               1       1
-//   app 2>file                         1       0               1       1
-//   app >&file                         0       0       1       0       1
-//   app |& grep                        0       0       1       0       1
-//   (app | app2) |& grep               0       0       0       1       1
-//   (app >file) |& grep                0       0       0       1       1
-//   (app >file) >&file2                0       0       0       1       1
+//   command-line                       isatty1 isatty2 1==2    isf1    isf2    cout    cerr
+//   app                                1       1               0       0       0       1
+//   app >file                          0       1               1       0       1       1
+//   app | app2                         0       1               0       0       1       1
+//   app 2>file                         1       0               0       1       1       1
+//   app >&file                         0       0       1       1       1       0       1
+//   app |& grep                        0       0       1       0       0       0       1
+//   (app | app2) |& grep               0       0       0       0       0       1       1
+//   (app >file) |& grep                0       0       0       1       0       1       1
+//   (app >file) >&file2                0       0       0       1       1       1       1
+//   blaze run app                      0       0       0       0       0       0       1
 
 static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
     bool need_cout, need_cerr;
@@ -1407,6 +1408,8 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
         need_cout = true;
     } else if (same_cout_cerr) {
         need_cout = false;
+    } else if (!isafile(1) && !isafile(2)) { // 20170222 for blaze run
+        need_cout = false;
     } else {
         need_cout = true;
     }
@@ -1415,7 +1418,7 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
     if (getenv_bool("NO_DIAGNOSTICS_IN_STDOUT"))
         need_cout = false;
     if (getenv_bool("SHOW_NEED_COUT")) {
-        SHOW(isatty1, isatty2, isafile(1), isafile(2), same_cout_cerr, need_cout, need_cerr);
+        SHOW(isatty1, isatty2, same_cout_cerr, isafile(1), isafile(2), need_cout, need_cerr);
     }
     pneed_cout = need_cout; pneed_cerr = need_cerr;
 }

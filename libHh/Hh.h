@@ -364,7 +364,7 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 
 // Reports string expr as warning once.  Return true if this is the first time the warning is reported.
 #define Warning(...) hh::details::assert_aux(false, __VA_ARGS__ HH_FL)
-    
+
 #if defined(HH_DEBUG)
 #define ASSERTX(...) assertx(__VA_ARGS__)  // In release, do not evaluate expression
 #define ASSERTXX(...) assertx(__VA_ARGS__) // In release, do not even see expression -- maximum optimization
@@ -683,6 +683,38 @@ template<typename T> struct sum_type {
                                                                           uint64_t> > >;
 };
 template<typename T> using sum_type_t = typename sum_type<T>::type;
+
+namespace details {
+// Range of integral elements defined as in Python range(lb, ub), where step is 1 and ub is not included.
+template<typename T> class Range {
+    static_assert(std::is_integral<T>::value, ""); // must have exact arithmetic for equality testing
+    class Iterator : public std::iterator<std::forward_iterator_tag, const T> {
+        using type = Iterator;
+     public:
+        Iterator(T lb, T ub)                    : _v(lb), _ub(ub) { }
+        Iterator(const type& iter)              = default;
+        bool operator==(const type& rhs) const  { return _v==rhs._v; }
+        bool operator!=(const type& rhs) const  { return !(*this==rhs); }
+        T operator*() const                     { ASSERTX(active()); return _v; }
+        type& operator++()                      { ASSERTX(active()); _v += T(1); return *this; }
+     private:
+        T _v, _ub;
+        bool _end;
+        bool active() const                     { return _v<_ub; }
+    };
+ public:
+    Range(T ub)                                 : Range(T(0), ub) { }
+    Range(T lb, T ub)                           : _lb(lb), _ub(ub) { }
+    Iterator begin() const                      { return Iterator(_lb, _ub); }
+    Iterator end() const                        { return Iterator(_ub, _ub); }
+ private:
+    T _lb, _ub;
+};
+} // namespace details
+
+// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub); }
+template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
 
 
 //----------------------------------------------------------------------------

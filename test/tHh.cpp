@@ -257,6 +257,28 @@ void test_exceptions() {
 
 
 int main() {
+    if (1) {
+        {
+            Array<int> ar;
+            for (int e : range(2)) { ar.push(e); }
+            assertx(ar==V(0, 1));
+        }
+        {
+            Array<uchar> ar;
+            for (uchar e : range(uchar(4), uchar(5))) { ar.push(e); }
+            assertx(ar==V(uchar(4)));
+        }
+        {
+            Array<short> ar;
+            for (short e : range<short>(-2, 2)) { ar.push(e); }
+            assertx(ar==convert<short>(V(-2, -1, 0, 1)));
+        }
+        {
+            Array<uint64_t> ar;
+            for (uint64_t e : range(3ull)) { ar.push(e); }
+            assertx(ar==V<uint64_t>(0u, 1u, 2u));
+        }
+    }
     if (0) { test_spawn2(); return 0; }
     if (1) {
         test_spawn();

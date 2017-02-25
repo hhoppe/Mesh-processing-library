@@ -112,7 +112,7 @@ inline void Stat::enter_multiple(float f, int fac) {
 
 inline float Stat::var() const {
     if (_n<2) { Warning("Stat::var() of fewer than 2 elements"); return 0.f; }
-    return ssd()/(_n-1);
+    return float(std::max((_sum2-_sum*_sum/double(_n))/(_n-1.), 0.));
 }
 
 template<typename R, typename> Stat range_stat(const R& range) {

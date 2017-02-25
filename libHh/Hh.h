@@ -695,16 +695,14 @@ template<typename T> class Range {
         Iterator(const type& iter)              = default;
         bool operator==(const type& rhs) const  { return _v==rhs._v; }
         bool operator!=(const type& rhs) const  { return !(*this==rhs); }
-        T operator*() const                     { ASSERTX(active()); return _v; }
-        type& operator++()                      { ASSERTX(active()); _v += T(1); return *this; }
+        T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
+        type& operator++()                      { ASSERTXX(_v<_ub); _v += T(1); return *this; }
      private:
         T _v, _ub;
-        bool _end;
-        bool active() const                     { return _v<_ub; }
     };
  public:
     Range(T ub)                                 : Range(T(0), ub) { }
-    Range(T lb, T ub)                           : _lb(lb), _ub(ub) { }
+    Range(T lb, T ub)                           : _lb(min(lb, ub)), _ub(ub) { }
     Iterator begin() const                      { return Iterator(_lb, _ub); }
     Iterator end() const                        { return Iterator(_ub, _ub); }
  private:
@@ -712,8 +710,10 @@ template<typename T> class Range {
 };
 } // namespace details
 
-// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+// Range of integral elements as in Python range(ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
 template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub); }
+
+// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
 
 

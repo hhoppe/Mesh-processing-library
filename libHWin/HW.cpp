@@ -368,7 +368,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          //  http://stackoverflow.com/questions/9786218/drawing-in-window-while-resizing-leaves-unpainted-border
          if (0) {
              // This clears the new window completely, which makes the problem somewhat worse.
-             { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 0.f); }
+             { Vector4 v(_color_background); glClearColor(v[0], v[1], v[2], 1.f); }
              glDrawBuffer(GL_FRONT_AND_BACK);
              glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
              if (_is_glx_dbuf) glDrawBuffer(GL_BACK);

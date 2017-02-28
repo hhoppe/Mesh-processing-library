@@ -183,6 +183,8 @@ enum class ESort { name, date };
 const ESort k_default_sort = ESort::name;
 ESort g_sort = k_default_sort;
 double g_speed = 1.;            // play speed factor relative to real time; usually k_speeds.index(g_speed)>=0
+Pixel g_through_color;          // color visible through partially transparent pixels
+bool g_checker;                 // use moving black-white checker as alternative to g_through_color
 enum class EFit { isotropic, anisotropic };
 const EFit k_default_fit = EFit::isotropic; // do not distort aspect ratio to fit image/video to window
 EFit g_fit = k_default_fit;
@@ -2538,7 +2540,7 @@ void upload_image_to_texture() {
         }
         if (g_verbose>=1) SHOW(max_texture_size, supports_non_power_of_two_textures, supports_pbuffer, supports_BGRA,
                                supports_texture_edge_clamp, supports_filter_anisotropic);
-        // Note: on Remote Desktop: non_power_of_two_textures=0 pbuffer=0 BGRA=1 texture_edge_clamp=0 anisotropic=0
+        // On Windows Remote Desktop: non_power_of_two_textures=0 pbuffer=0 BGRA=1 texture_edge_clamp=0 anisotropic=0
         if (!supports_texture_edge_clamp) g_background_padding_width = k_usual_tex_padding_width;
         unsigned texname0; glGenTextures(1, &texname0);
         glBindTexture(GL_TEXTURE_2D, texname0);
@@ -2636,12 +2638,9 @@ void upload_image_to_texture() {
             return frame_format;
         });
     }
+    g_generated_mipmap = false;
     {
-        g_generated_mipmap = false;
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    }
-    {
-        // GL_REPLACE is the same as GL_DECAL except it does the "right thing" on texture with alphas.
+        // GL_DECAL is the same as GL_REPLACE except it does the "right thing" on texture with alphas.
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
     }
     if (supports_filter_anisotropic) {
@@ -2695,14 +2694,17 @@ void render_image() {
         if (mipmap_enabled && min_zoom<1.f && glGenerateMipmap && !g_generated_mipmap) {
             // Ideally, for highest quality filtering modes, I should manually construct the coarser mipmap levels.
             // test on:  VideoViewer ~/data/video/M4Kseacrowd.mp4 -key -
-            glGenerateMipmap(GL_TEXTURE_2D); // not supported on Remote Desktop
+            glGenerateMipmap(GL_TEXTURE_2D); // not supported on Windows Remote Desktop
             g_generated_mipmap = true;
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            g_render_kernel==EKernel::nearest ? GL_NEAREST : GL_LINEAR_MIPMAP_LINEAR);
             if (0) SHOW("generated mimap");
         }
     }
     {
+        // Settings for !use_modern_opengl
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        (g_render_kernel==EKernel::nearest ? GL_NEAREST :
+                         g_generated_mipmap ? GL_LINEAR_MIPMAP_LINEAR :
+                         GL_LINEAR));
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                         g_render_kernel==EKernel::nearest ? GL_NEAREST : GL_LINEAR);
     }
@@ -2718,10 +2720,12 @@ void render_image() {
     // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
     // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/src/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
-    const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0]>='3'; // but "2.1" in Mac OS fails
+    // "//third_party/GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
+    // Mac OS is currently "2.1" which is insufficient.
+    const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0]>='3';
 #endif
     if (use_modern_opengl) {
-        // Note: this is not portable across Remote Desktop under Windows 7 (which has GL_VERSION 1.1).
+        // Note: this is not portable across Windows Remote Desktop under Windows 7 (which has GL_VERSION 1.1).
         // See [Gortler book] page 47, page 252.
         // See http://www.3dgraphicsfoundations.com/code.html
         // See http://www.cg.tuwien.ac.at/courses/CG23/slides/tutorials/CG2LU_OpenGL_3.x_Introduction_pt_1.pdf
@@ -2764,6 +2768,7 @@ void render_image() {
         static int h_gamma;
         static int h_saturation_fac;
         static int h_checker_offset;
+        static int h_through_color;
         static GLuint buf_p;
         static GLuint buf_i;
         static bool is_init = false;
@@ -2835,6 +2840,7 @@ void render_image() {
             h_gamma = glGetUniformLocation(program_id, "gamma"); assertx(h_gamma>=0);
             h_saturation_fac = glGetUniformLocation(program_id, "saturation_fac"); assertx(h_saturation_fac>=0);
             h_checker_offset = glGetUniformLocation(program_id, "checker_offset"); assertx(h_checker_offset>=0);
+            h_through_color = glGetUniformLocation(program_id, "through_color"); assertx(h_through_color>=0);
             glGenBuffers(1, &buf_p);
             glGenBuffers(1, &buf_i);
             assertx(!gl_report_errors());
@@ -2855,6 +2861,8 @@ void render_image() {
                 const double angular_velocity = .1;
                 const float ang = float(my_mod(double(s_frame_num)*angular_velocity, D_TAU));
                 glUniform2fv(h_checker_offset, 1, (motion_radius*V(cos(ang), sin(ang))).data());
+                glUniform4fv(h_through_color, 1, (g_checker ? V(-1.f, 0.f, 0.f, 0.f).data() :
+                                                  Vector4(g_through_color).data()));
             }
             if (0) {
                 int h_somematrix = glGetUniformLocation(program_id, "somematrix");
@@ -2903,6 +2911,7 @@ void render_image() {
         }
     } else {
         {
+            hw.set_color(g_through_color);
             glBegin(GL_QUADS);
             for_int(i, 4) {
                 Vec2<float> uv = (convert<float>(g_background_padding_width+yxi[i]*g_tex_active_dims)/
@@ -3952,6 +3961,8 @@ int main(int argc, const char** argv) {
     bool hw_success = hw.init(aargs);
     double speed = 1.;
     double time = 0.;
+    string through_color = "#FF9696";   // pink
+    bool checker = true;
     ParseArgs args(aargs);
     ARGSD(video,                "file : load input video");
     args.p("*.mp4", do_video,   ": load input video");
@@ -3981,6 +3992,8 @@ int main(int argc, const char** argv) {
     ARGSD(key,                  "keystring : simulate key presses (e.g. -key 'a2<enter>kk')");
     ARGSP(speed,                "fac : set fractional speedup factor");
     ARGSP(time,                 "sec : set initial frame time");
+    ARGSP(through_color,        "#RRGGBB : for partially transparent images");
+    ARGSP(checker,              "b : for partially transparent images");
     args.p("-verbose", g_verbose, "b : debug verbosity (0=none, 1=some, 2=more");
     try {
         if (!args.parse() || !hw_success) return 1;
@@ -3992,6 +4005,8 @@ int main(int argc, const char** argv) {
     if (b_help) return 0;
     assertx(speed>0.); g_speed = speed;
     assertx(time>=0.); if (time) g_initial_time = time;
+    g_through_color = parse_color(through_color);
+    g_checker = checker;
     assertx(g_cob<getobnum());  // g_cob is initialized to -1, so always true
 #if defined(HH_HAVE_BACKGROUND_THREAD)
     {

@@ -125,7 +125,10 @@ void HW::open() {
             Array<int> attributelist = {
                 GLX_RGBA,           // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
                 GLX_RED_SIZE, 8,    // could be just "1"
-                GLX_DEPTH_SIZE, 24  // could be just "1"; 24 is arbitrary
+                GLX_DEPTH_SIZE, 24, // could be just "1"; 24 is arbitrary
+                // Found necessary for Chrome Remote Desktop and "//third_party/GL",
+                //  else ALPHA_SIZE==0 and somehow the rendered window is mostly transparent.
+                GLX_ALPHA_SIZE, 8
             };
             if (_hwdebug) SHOW("hw: open", _is_glx_dbuf);
             if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
@@ -154,16 +157,31 @@ void HW::open() {
             // 0x18c 24 tc  0  32  0 r  y .   8  8  8  8 .  .  0 24  0 16 16 16 16  0 0 None
             visinfo = glXChooseVisual(_display, _screen, attributelist.data());
             if (visinfo) break;
-            if (_multisample>1) { Warning("Downgrading to MULTISAMPLE=1"); _multisample = 1; continue; }
+            if (_multisample>1) {
+                if (_hwdebug) Warning("Downgrading to MULTISAMPLE=1");
+                _multisample = 1;
+                continue;
+            }
             assertnever("Could not successfully call glXChooseVisual()");
         }
-        _depth = visinfo->depth;
+        _depth = visinfo->depth;        // (number of bits in RGBA; unrelated to GLX_DEPTH_SIZE)
         _screen = visinfo->screen;
         visual = visinfo->visual;
-        if (_hwdebug) SHOW(_depth, _screen, visinfo->visualid);
+        if (_hwdebug) {
+            SHOW(_depth, _screen, visinfo->visualid, visinfo->bits_per_rgb);
+#define T(attrib) { int value; assertx(!glXGetConfig(_display, visinfo, attrib, &value)); SHOW(#attrib, value); }
+            T(GLX_USE_GL); T(GLX_BUFFER_SIZE); T(GLX_LEVEL); T(GLX_RGBA); T(GLX_DOUBLEBUFFER); T(GLX_STEREO);
+            T(GLX_RED_SIZE); T(GLX_ALPHA_SIZE); T(GLX_DEPTH_SIZE); T(GLX_STENCIL_SIZE);
+            T(GLX_ACCUM_RED_SIZE); T(GLX_ACCUM_ALPHA_SIZE);
+#undef T
+        }
         // If glXCreateContext fails when launching client over "ssh -Y", it may be because X server
         //  was launched without "+iglx" option.
-        glcx = assertx(glXCreateContext(_display, visinfo, nullptr, 1));
+        GLXContext share_list = nullptr; // no shared display lists
+        Bool direct = 1;                 // direct connection to graphics system if possible
+        // Note: "It may not be possible to render to a GLX pixmap with a direct rendering context"
+        glcx = assertx(glXCreateContext(_display, visinfo, share_list, direct));
+        if (_hwdebug) SHOW(glXIsDirect(_display, glcx));
         _cmap = XCreateColormap(_display, RootWindow(_display, _screen), visual, AllocNone);
         border_width = 0;
         // ? XSetErrorHandler(0);
@@ -674,7 +692,7 @@ void HW::clear_window() {
 }
 
 void HW::toggle_buffering() {
-    assertx(!_async && _state==EState::open);
+    assertx(!_async && _state==EState::open && !_oglx);
     if (!_is_pixbuf) {
         allocate_buf();
     } else {

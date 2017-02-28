@@ -595,7 +595,7 @@ v       edit view offset        V       reset view offset to null
 FLIGHT Modes (toggles, mutually exclusive)
 f       fly                     J       auto-rotate
 DISPLACEMENT Modes (mutually exclusive):
-p       position        m       motion          s       step
+p       position        m       motion          s       step      $ expo
 MOUSE BUTTON DRAG:
 left:           yaw & pitch (z&y rotation)
 middle:         pan (left/right/up/down translation)

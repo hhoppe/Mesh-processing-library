@@ -488,11 +488,9 @@ void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
         destroy_face(he2->face);
     }
     // Change remaining faces around vt to have vs instead
-    Array<Face> arf; for (Face f : faces(vt)) { arf.push(f); }
-    for (Face f : arf) {
-        // used to be substitute_face_vertex(f, vt, vs)
+    Array<Corner> arc; for (HEdge he : corners(vt)) { arc.push(he); }
+    for (HEdge he : arc) {
         // ends up deleting and recreating MEdge structures, which is great.
-        HEdge he = get_hedge(vt, f);
         remove_hedge(he, he->prev->vert); remove_hedge(he->next, he->vert);
         he->vert = vs;
         enter_hedge(he, he->prev->vert); enter_hedge(he->next, he->vert);

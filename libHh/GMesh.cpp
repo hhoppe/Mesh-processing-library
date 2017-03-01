@@ -440,6 +440,10 @@ void GMesh::read_line(char* sline) {
         int vi, vs1i, vs2i, vni;
         assertx(sscanf(sline, "Vspl %d %d %d %d", &vi, &vs1i, &vs2i, &vni)==4);
         split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
+    } else if (!strncmp(sline, "Vmerge ", 7)) {
+        int vi1, vi2;
+        assertx(sscanf(sline, "Vmerge %d %d", &vi1, &vi2)==2);
+        merge_vertices(id_vertex(vi1), id_vertex(vi2));
     } else {
         if (Warning("GMesh::read: cannot parse line")) SHOW(sline);
     }
@@ -637,6 +641,11 @@ Vertex GMesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
     return vn;
 }
 
+void GMesh::merge_vertices(Vertex vs, Vertex vt) {
+    if (_os) { *_os << "Vmerge " << vertex_id(vs) << ' ' << vertex_id(vt) << '\n'; }
+    Mesh::merge_vertices(vs, vt);
+}
+
 Vertex GMesh::center_split_face(Face f) {
     Polygon poly; polygon(f, poly);
     unique_ptr<char[]> fstring = make_unique_c_string(get_string(f)); // often nullptr
@@ -721,5 +730,45 @@ Edge GMesh::remove_vertex_between_edges(Vertex vr) {
     // lose strings
     return Mesh::remove_vertex_between_edges(vr);
 }
+
+int GMesh::fix_vertex(Vertex v) {
+    int nrings = 0;
+    Set<Face> setallf; for (Face f : faces(v)) { setallf.enter(f); }
+    for (;;) {
+        nrings++;
+        Face frep = setallf.get_one();
+        Set<Face> setf;
+        setf.enter(frep);
+        for (Face f = frep; ; ) {
+            f = clw_face(v, f);
+            if (!f || !setf.add(f)) break;
+        }
+        for (Face f = frep; ; ) {
+            f = ccw_face(v, f);
+            if (!f || !setf.add(f)) break;
+        }
+        for (Face f : setf) { assertx(setallf.remove(f)); }
+        if (setallf.empty()) break; // is now a nice vertex
+        Vertex vnew = create_vertex();
+        flags(vnew) = flags(v);
+        set_string(vnew, get_string(v));
+        set_point(vnew, point(v));
+        Array<Vertex> va;
+        Array<unique_ptr<char[]>> ar_s; // often nullptr's
+        for (Face f : setf) {
+            // Loses flags
+            get_vertices(f, va);
+            ar_s.init(0); for (Vertex vv : va) ar_s.push(extract_string(corner(vv, f)));
+            unique_ptr<char[]> fstring = extract_string(f); // often nullptr
+            destroy_face(f);
+            for_int(i, va.num()) { if (va[i]==v) va[i] = vnew; }
+            Face fnew = create_face(va);
+            set_string(fnew, std::move(fstring));
+            for_int(i, va.num()) set_string(corner(va[i], fnew), std::move(ar_s[i]));
+        }
+    }
+    return nrings;
+}
+
 
 } // namespace hh

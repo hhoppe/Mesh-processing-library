@@ -44,11 +44,14 @@ class GMesh : public Mesh {
     Edge swap_edge(Edge e) override;
     //
     Vertex split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) override;
+    void merge_vertices(Vertex vs, Vertex vt) override;
     Vertex center_split_face(Face f) override;
     Edge split_face(Face f, Vertex v1, Vertex v2) override;
     Face coalesce_faces(Edge e) override;
     Vertex insert_vertex_on_edge(Edge e) override;
     Edge remove_vertex_between_edges(Vertex vr) override;
+    // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings.
+    int fix_vertex(Vertex v);           // return the number of rings the old vertex had.
 // Geometry
     const Point& point(Vertex v) const          { return v->point; }
     void set_point(Vertex v, const Point& p);

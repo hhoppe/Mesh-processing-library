@@ -573,6 +573,28 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
     return v2;
 }
 
+bool Mesh::legal_vertex_merge(Vertex vs, Vertex vt) {
+    for (HEdge he : corners(vt)) {
+        if (query_hedge(he->prev->vert, vs)) return false;
+        if (query_hedge(vs, he->next->vert)) return false;
+    }
+    return true;
+}
+
+void Mesh::merge_vertices(Vertex vs, Vertex vt) {
+    assertx(legal_vertex_merge(vs, vt));
+    // We cannot introduce bogus hedges, because we intend to merge boundary edges together.
+    // Change faces around vt to instead use vs.
+    Array<Corner> arc; for (HEdge he : corners(vt)) { arc.push(he); }
+    for (HEdge he : arc) {
+        ASSERTX(he->vert==vt);
+        remove_hedge(he, he->prev->vert); remove_hedge(he->next, he->vert);
+        he->vert = vs;
+        enter_hedge(he, he->prev->vert); enter_hedge(he->next, he->vert);
+    }
+    destroy_vertex(vt);
+}
+
 Vertex Mesh::center_split_face(Face f) {
     if (sdebug>=1) valid(f);
     Array<Vertex> va; get_vertices(f, va);

@@ -196,6 +196,9 @@ class Mesh : noncopyable {
 // More mesh operations
     // vs2 can be nullptr, returns v2, leaves hole
     virtual Vertex split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i);
+    // replace (vt, {*}) by (vs, {*})
+    bool legal_vertex_merge(Vertex vs, Vertex vt);
+    virtual void merge_vertices(Vertex vs, Vertex vt); // die if !legal
     // introduce one center vertex and triangulate face
     virtual Vertex center_split_face(Face f); // always legal
     // introduce an edge to split face on (v1, v2)

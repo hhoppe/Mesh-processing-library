@@ -2059,52 +2059,11 @@ void do_flip() {
     mesh.renumber();            // compact the vertex indices; why?
 }
 
-// Return the number of rings the old vertex had.
-int fix_vertex(Vertex v) {
-    int nrings = 0;
-    Set<Face> setallf; for (Face f : mesh.faces(v)) { setallf.enter(f); }
-    for (;;) {
-        nrings++;
-        Face frep = setallf.get_one();
-        Set<Face> setf;
-        setf.enter(frep);
-        for (Face f = frep; ; ) {
-            f = mesh.clw_face(v, f);
-            if (!f || !setf.add(f)) break;
-        }
-        for (Face f = frep; ; ) {
-            f = mesh.ccw_face(v, f);
-            if (!f || !setf.add(f)) break;
-        }
-        for (Face f : setf) { assertx(setallf.remove(f)); }
-        if (setallf.empty()) break; // is now a nice vertex
-        Vertex vnew = mesh.create_vertex();
-        mesh.flags(vnew) = mesh.flags(v);
-        mesh.set_string(vnew, mesh.get_string(v));
-        mesh.set_point(vnew, mesh.point(v));
-        Array<Vertex> va;
-        Array<unique_ptr<char[]>> ar_s; // often nullptr's
-        for (Face f : setf) {
-            // assertx(mesh.substitute_face_vertex(f, v, vnew));
-            // Loses flags
-            mesh.get_vertices(f, va);
-            ar_s.init(0); for (Vertex vv : va) ar_s.push(mesh.extract_string(mesh.corner(vv, f)));
-            unique_ptr<char[]> fstring = mesh.extract_string(f); // often nullptr
-            mesh.destroy_face(f);
-            for_int(i, va.num()) { if (va[i]==v) va[i] = vnew; }
-            Face fnew = mesh.create_face(va);
-            mesh.set_string(fnew, std::move(fstring));
-            for_int(i, va.num()) mesh.set_string(mesh.corner(va[i], fnew), std::move(ar_s[i]));
-        }
-    }
-    return nrings;
-}
-
 void do_fixvertices() {
     Array<Vertex> arv; for (Vertex v : mesh.vertices()) { if (!mesh.is_nice(v)) arv.push(v); }
     HH_STAT(Svnrings);
     for (Vertex v : arv) {
-        Svnrings.enter(fix_vertex(v));
+        Svnrings.enter(mesh.fix_vertex(v));
     }
     showdf("Fixed %d vertices\n", Svnrings.inum());
 }

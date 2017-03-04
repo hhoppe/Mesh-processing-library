@@ -171,12 +171,31 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
     if (attrib().exif_data.num()) Warning("Image EXIF data lost in image_write_file_FF");
     if (zsize()==4 && (suffix()=="bmp" || suffix()=="jpg"))
         Warning("Image format likely does not support alpha channel");
+    string scompression;
+    if (suffix()=="jpg") {
+        int quality = getenv_int("JPG_QUALITY", 95, true); // 0--100 (default 75)
+        assertt(quality>0 && quality<=100);
+        // Nonlinear mapping; see http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
+        int qscale = quality>=95 ? 0 : quality>=90 ? 1 : quality>=80 ? 2 : quality>=75 ? 3 : quality>=65 ? 4 :
+            quality>=60 ? 5 : quality>=50 ? 6 : quality>=45 ? 7 : quality>=40 ? 8 : quality>=35 ? 9 :
+            quality>=30 ? 11 : quality>=25 ? 13 : quality>=20 ? 16 : quality>=15 ? 21 : 32;
+        // Note: it appears that we cannot approach jpeg_set_quality() with quality>93 or quality<13.
+        scompression = sform(" -qscale:v %d", qscale);
+    }
+    if (suffix()=="png" && getenv("PNG_COMPRESSION_LEVEL")) {
+        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6, true); //  0-9; 0=none
+        assertt(level>=0 && level<=9);
+        level = clamp(level*17, 0, 100); // default 6 should map to ffmpeg default 100
+        // Note: it appears that we cannot approach the high compression ratio of
+        //  png_set_compression_level(png_ptr, level) with level>6.
+        scompression = sform(" -compression_level %d", level);
+    }
     {
         string spixfmt = bgra ? "bgra" : "rgba";
         string sopixfmt = zsize()==4 ? "rgba" : "rgb24";
         string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + spixfmt +
                        sform(" -s %dx%d", xsize(), ysize()) +
-                       " -i - -pix_fmt " + sopixfmt + " -y " + quote_arg_for_shell(filename));
+                       " -i - -pix_fmt " + sopixfmt + scompression + " -y " + quote_arg_for_shell(filename));
         if (ldebug) SHOW(scmd);
         WFile fi(scmd);
         if (!write_binary_raw(fi(), array_view()))

@@ -1067,6 +1067,11 @@ void ImageIO::write_png(const Image& image, FILE* file) {
         int srgb_intent = PNG_sRGB_INTENT_PERCEPTUAL;
         png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, srgb_intent);
     }
+    if (1) {
+        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6, true); //  0-9; 0=none
+        assertt(level>=0 && level<=9);
+        png_set_compression_level(png_ptr, level);
+    }
     if (1) {                    // 20100103 to get consistent import size into Word
         // png_set_pHYs(png_ptr, info_ptr, res_x, res_y, unit_type);
         // res_x       - pixels/unit physical resolution in x direction

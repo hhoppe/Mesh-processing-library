@@ -836,16 +836,20 @@ void view_externally() {
     }
     const Array<string> programs = {
         "cygstart",
+        "xdg-open",
     };
     const Array<string> image_programs = {
         "irfan",
         "c:/Program Files/IrfanView/i_view64.exe", // difficulty: only works with backslash-delimited arg pathnames
         "c:/Program Files (x86)/IrfanView/i_view32.exe", // same problem
+        "eog",                                           // Gnome image viewer
+        "display",                                       // ImageMagick
     };
     const Array<string> video_programs = {
         "vlc",
         "c:/Program Files/VideoLAN/VLC/vlc.exe",
         "c:/Program Files (x86)/VideoLAN/VLC/vlc.exe",
+        "totem",                        // default program for "Videos" on Gnome
     };
     const bool is_image = getob().is_image();
     for (const string& program : concat(programs, is_image ? image_programs : video_programs)) {

@@ -40,7 +40,7 @@ class WFile : noncopyable {
 
 // Return true if we have read to the end-of-file.
 inline bool reached_eof(std::istream& is) { char ch; is.get(ch); return !is; }
-            
+
 // Checks if a file already exists.
 bool file_exists(const string& name);
 

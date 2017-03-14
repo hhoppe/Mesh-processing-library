@@ -6,7 +6,9 @@
 #include "Stat.h"
 
 #include <vector>
+#if !defined(__clang__)        // mingw target used by my version of clang does not support <mutex> / <future>
 #include <future>
+#endif
 
 using namespace hh;
 

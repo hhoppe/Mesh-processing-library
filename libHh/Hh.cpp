@@ -743,14 +743,23 @@ static string cleanup_type_name(string s) {
 // *** Apple clang
     s = replace_all(s, "std::__1::basic_string<char>", "std::string");
 // *** cygwin 64-bit
-#if defined(__LP64__)
-    s = replace_all(s, "long int", "int64");
-    s = replace_all(s, "long unsigned int", "unsigned int64");
-#endif
+    if (sizeof(long)==8) {              // defined(__LP64__)
+        s = replace_all(s, "long unsigned int", "unsigned int64");
+        s = replace_all(s, "long int", "int64");
+    }
+// *** Google
+    s = replace_all(s, "basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
+// *** Google Forge
+    if (sizeof(long)==8) {
+        s = replace_all(s, "unsigned long", "unsigned int64");
+        s = replace_all(s, "long", "int64");
+    }
 // *** all
-    // s = replace_all(s, "std::", "");
-    // s = replace_all(s, "hh::", "");
-    // s = replace_all(s, "std::string", "string");
+    if (0) {
+        s = replace_all(s, "std::", "");
+        s = replace_all(s, "hh::", "");
+        s = replace_all(s, "std::string", "string");
+    }
     return s;
 }
 

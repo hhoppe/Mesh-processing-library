@@ -5,7 +5,14 @@
 #include "Hh.h"
 
 
-#if !(defined(_WIN32) || defined(__CYGWIN__)) && !defined(HH_NO_INCLUDE_LAPACKE) // unix
+#if defined(HH_USE_LAPACK_INTEGER)      // Google
+
+
+#include <lapack.h>
+using lapack_int = lapack::integer;
+
+
+#elif !(defined(_WIN32) || defined(__CYGWIN__)) // unix
 
 
 #if defined(__GNUC__)

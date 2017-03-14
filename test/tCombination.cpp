@@ -21,7 +21,7 @@ int main() {
 
 namespace hh {
 template class Combination<unsigned>;
-template class Combination<std::tuple<char*,bool>>;
+template class Combination<std::tuple<void*,bool>>;
 
 using U = unique_ptr<int>;
 template<> void Combination<U>::shrink_to_fit() const { } // definition illegal for U

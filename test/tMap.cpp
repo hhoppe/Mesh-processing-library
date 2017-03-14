@@ -148,6 +148,6 @@ using U = unique_ptr<int>;
 template<> U Map<int,U>::replace(const int&, const U&) { return U(); } // definition illegal
 template<> void Map<int,U>::enter(const int&, const U&) { }            // definition illegal
 template<> void Map<int,U>::enter(int&&, const U&) { }                 // definition illegal
-template<> U& Map<int,U>::enter(const int&, const U&, bool&) { return *static_cast<U*>(nullptr); }
+template<> U& Map<int,U>::enter(const int&, const U&, bool&) { static U u; return u; }
 template class Map<int,U>;
 } // namespace hh

@@ -49,6 +49,7 @@ build/
 /LICENSE
 /METADATA
 /OWNERS
+/run_test.sh
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

@@ -163,7 +163,7 @@ A destruct
 6
 type_name<sum_type_t<float>>() = double
 type_name<sum_type_t<double>>() = double
-type_name<sum_type_t<char>>() = int64
+type_name<sum_type_t<signed char>>() = int64
 type_name<sum_type_t<uchar>>() = unsigned int64
 type_name<sum_type_t<short>>() = int64
 type_name<sum_type_t<ushort>>() = unsigned int64

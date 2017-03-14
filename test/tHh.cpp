@@ -411,7 +411,7 @@ line2)";
     {
         SHOW(type_name<sum_type_t<float>>());
         SHOW(type_name<sum_type_t<double>>());
-        SHOW(type_name<sum_type_t<char>>());
+        SHOW(type_name<sum_type_t<signed char>>()); // sign of regular char is platform-dependent
         SHOW(type_name<sum_type_t<uchar>>());
         SHOW(type_name<sum_type_t<short>>());
         SHOW(type_name<sum_type_t<ushort>>());

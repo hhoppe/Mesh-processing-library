@@ -109,7 +109,7 @@ template<typename T> class Pqueue : noncopyable {
 };
 
 // Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in Pqueue!
-template<typename T> class HPqueue : noncopyable {
+template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> class HPqueue : noncopyable {
  public:
     void clear()                                { _ar.clear(); _m.clear(); }
     void enter(const T& e, float pri)           { ASSERTX(pri>=0); enter_i(e, pri); }
@@ -132,7 +132,7 @@ template<typename T> class HPqueue : noncopyable {
  private:
     using Node = details::PQ::Node<T>;
     Array<Node> _ar;
-    Map<T,int> _m;              // element -> index in array
+    Map<T, int, Hash, Equal> _m;        // element -> index in array
     void consider_shrink() {
         if (0 && num()<_ar.capacity()*.4f && _ar.capacity()>100) reserve(_ar.capacity()/2);
     }

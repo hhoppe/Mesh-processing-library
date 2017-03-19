@@ -10,9 +10,11 @@
 #include "StringOp.h"
 #include "MathOp.h"
 
-#if defined(_MSC_VER)
-#include <ShellScalingAPI.h>    // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
+#include <ShellScalingAPI.h>      // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
+#include <shellapi.h>             // DragAcceptFiles()
+#include <commdlg.h>              // GetOpenFileNameW()
 
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("glu32.lib");
@@ -115,7 +117,7 @@ bool HW::init_aux(Array<string>& aargs) {
     }
     //
     if (1) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
         // This program is taking care of DPI issues; Windows dwm should never rescale the window contents.
         // (default is PROCESS_DPI_UNAWARE; intermediate is PROCESS_SYSTEM_DPI_AWARE.)
         // assertx(SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE)==S_OK);

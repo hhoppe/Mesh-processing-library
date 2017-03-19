@@ -1,3 +1,7 @@
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#ifndef MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
+#define MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
+
 #include "Pixel.h"
 #include "Array.h"
 
@@ -263,3 +267,5 @@ static const Array<Pixel> k_color_ramp = {
 };
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_LIBHH_COLOR_RAMP_H_

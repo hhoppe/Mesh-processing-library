@@ -690,7 +690,10 @@ Pixel get_frame_pix(const Vec2<int>& yx) {
         const Vec2<uchar>& uv = nv12v.get_UV()[yx/2];
         return YUV_to_RGB_Pixel(y, uv[0], uv[1]);
     } else {
-        return getob()._video[g_framenum][yx];
+        Pixel pix = getob()._video[g_framenum][yx];
+        const bool bgra = getob().is_image() && getob()._image_is_bgra;
+        if (bgra) std::swap(pix[0], pix[2]);
+        return pix;
     }
 }
 
@@ -1090,15 +1093,16 @@ bool DerivedHW::key_press(string skey) {
         set_video_frame(obi, float(getob(obi)._framenum));
         message("Switched to " + getob().stype() + " " + get_path_tail(getob()._filename));
     };
-    int keycode = skey[0];
     bool is_shift =   get_key_modifier(HW::EModifier::shift);
     bool is_control = get_key_modifier(HW::EModifier::control);
     // bool is_alt =     get_key_modifier(HW::EModifier::alt);
-    if (0) SHOW(skey, keycode, is_shift, is_control);
+    if (0) SHOW(skey, int(skey[0]), is_shift, is_control);
     if (g_cob>=0 && getob().is_image()) {
         if (skey=="<left>")  skey = "<prior>";
         if (skey=="<right>") skey = "<next>";
     }
+    if ((skey=="/" || skey=="\x1F") && is_control) skey = "?"; // control-/ is also help
+    int keycode = skey[0];
     try {
         if (0) {
         } else if (skey=="<f1>") { // help
@@ -2215,6 +2219,10 @@ bool DerivedHW::key_press(string skey) {
                  g_show_exif = !g_show_exif;
                  redraw_later();
              }
+             bcase 'H': {       // checker
+                 g_checker = !g_checker;
+                 redraw_later();
+             }
              bcase 'h': ocase '?': { // help
                  g_show_help = !g_show_help;
                  redraw_later();
@@ -3276,7 +3284,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             " <pgdn>next_file   <pgup>prev_file   <s>ort_order   <C-o>pen   <C-s>ave   <C-S-s>overwrite",
             " <f2>rename   <f5>reload   <f7>move   <f8>copy   <C-n>ew_window   <d>irectory",
             " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <W>hite_crop",
-            " <v>iew_externally   <i>nfo   <e>xif   <~>console   <esc>quit",
+            " <v>iew_externally   <i>nfo   <e>xif   <H>checker   <~>console   <esc>quit",
             "Video:",
             " <spc>play/pause   <l>oop   <a>ll_loop   <m>irror_loop",
             " <left>frame-1   <right>frame+1   <home>first   <end>last",

@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHWIN_HWBASE_H_
 #define MESH_PROCESSING_LIBHWIN_HWBASE_H_
 
-
 #include "Array.h"
 #include "Vec.h"
 #include "Vector4.h"
@@ -13,7 +12,7 @@
 
 #if defined(GL_VERSION)         // OpenGL
 #if defined(_WIN32)
-#include "glext.h"              // use local file because Windows does not come with it.
+#include "GL/glext.h"           // possibly use local file because Windows does not come with it.
 #else  // Unix
 // #define GL_GLEXT_PROTOTYPES 1 // would obviate need for USE_GL_EXT() except to test presence of extension
 #include <GL/glext.h>

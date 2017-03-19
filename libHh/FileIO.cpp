@@ -15,7 +15,7 @@
 #include <process.h>     // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
 // not #define WIN32_LEAN_AND_MEAN because need REFIID and Shellapi.h
 #include <windows.h>            // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
-// #include <Shellapi.h>           // SHFileOperation()
+#include <shellapi.h>           // SHFileOperation(), SHFILEOPSTRUCTW
 
 #else
 

@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_WINDOWS_COM_H_
 #define MESH_PROCESSING_LIBHH_WINDOWS_COM_H_
 
-
 #if defined(_WIN32)
 
 #include <combaseapi.h>

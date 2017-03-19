@@ -33,6 +33,7 @@
 #include <io.h>                   // isatty(), setmode(), get_osfhandle()
 // #define WIN32_LEAN_AND_MEAN // must omit to include CommandLineToArgvW()
 #include <windows.h>              // QueryPerformanceCounter(), QueryPerformanceFrequency()
+#include <shellapi.h>             // CommandLineToArgvW()
 HH_REFERENCE_LIB("advapi32.lib"); // for GetUserName() here and in StackWalker
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 #define snprintf _snprintf
@@ -785,6 +786,11 @@ string extract_function_type_name(string s) {
         remove_at_end(s, " ");  // possible space for complex types
     } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) { // GNUC
         if (!remove_at_end(s, "; std::string = std::basic_string<char>]")) { SHOW(s); assertnever(""); }
+    } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) { // Google opt
+        auto i = s.find("; ");
+        if (i==string::npos) { SHOW(s); assertnever(""); }
+        s.erase(i);
+        remove_at_end(s, " ");  // possible space
     } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<")) { // clang
         auto i = s.find(">::name() [T = ");
         if (i==string::npos) { SHOW(s); assertnever(""); }

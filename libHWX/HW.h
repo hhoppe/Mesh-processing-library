@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHWX_HW_H_
 #define MESH_PROCESSING_LIBHWX_HW_H_
 
-
 #define HH_OGLX
 
 extern "C" {

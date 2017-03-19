@@ -125,9 +125,9 @@ template<typename T> class Sac : public BSac {
     template<> int hh::Sac<T>::dkeys[k_max] = {};                             \
     template<> hh::BSac::Func hh::Sac<T>::dfuncs[k_max] = {}
 
-#define HH_SACABLE(T)                                                                   \
-    static void sac_construct_##T(void* p) { new(p)T; }                                 \
-    static void sac_destruct_##T(void* p) { dummy_use(p); static_cast<T*>(p)->~T(); }   \
+#define HH_SACABLE(T)                                                                       \
+    static void sac_construct_##T(void* p) { new(p)T; }                                     \
+    static void sac_destruct_##T(void* p) { hh::dummy_use(p); static_cast<T*>(p)->~T(); }   \
     HH_EAT_SEMICOLON
 
 template<typename T, typename T2> T& sac_access(T2& ob, int key) {

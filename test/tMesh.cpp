@@ -105,6 +105,7 @@ int main() {
         SHOW("face: 5 3 1");
         Array<Vertex> va; mesh.get_vertices(f, va); assertx(va.num()==3);
         for_int(i, 3) { SHOW(mesh.vertex_id(va[i])); }
+        for_int(i, 3) assertx(va[i]==mesh.vertex(f, i));
         Face fo = mesh.opp_face(f, mesh.edge(v1, v5));
         assertx(fo==mesh.face(v1, v4/*, v5*/));
         SHOW("face vertex: 5 3 1");

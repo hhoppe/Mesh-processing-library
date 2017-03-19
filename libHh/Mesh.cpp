@@ -343,6 +343,16 @@ void Mesh::get_vertices(Face f, Array<Vertex>& va) const {
     va.init(0); for (Vertex v : vertices(f)) { va.push(v); }
 }
 
+Vertex Mesh::vertex(Face f, int i) const {
+    assertx(i>=0);
+    int j = 0;
+    for (Vertex v : vertices(f)) {
+        if (j++ == i) return v;
+    }
+    SHOW(i, num_vertices(f));
+    assertnever("Face has too few vertices");
+}
+
 Array<Corner> Mesh::get_corners(Face f, Array<Corner>&& ca) const {
     ca.init(0); for (Corner c : corners(f)) { ca.push(c); }
     return std::move(ca);

@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_PARALLEL_H_
 #define MESH_PROCESSING_LIBHH_PARALLEL_H_
 
-
 #include "Hh.h"
 
 // This macro can be set here, in Makefile, or at the top of any source file (if careful with precompiled headers).

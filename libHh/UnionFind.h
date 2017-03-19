@@ -6,7 +6,6 @@
 
 namespace hh {
 
-
 // Union-find is an efficient technique for tracking equivalence classes as pairs of elements are
 //   incrementally unified into the same class.
 // Uses path compression but without weight-balancing  -> worst case O(nlogn), good case O(n)

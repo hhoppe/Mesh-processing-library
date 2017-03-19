@@ -1076,7 +1076,8 @@ void load_texturemap() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                         define_mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR); // default is NEAREST_MIPMAP_LINEAR
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);     // default is GL_LINEAR
-        if (0) glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // show pixels blocks.
+        if (getenv_bool("G3D_TEX_NEAREST"))
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // show pixels blocks.
     }
     if (texturescale && texturescale!=1.f) {
         // Matrix4 m1; m1.ident();
@@ -1796,7 +1797,12 @@ void draw_mesh(GMesh& mesh) {
             int nquads = 0;
             for (Face f : mesh.ordered_faces()) {
                 if (ii) { if (!--ii) ii = quicki; else continue; }
-                switch (mesh.num_vertices(f)) {
+                int nv = mesh.num_vertices(f);
+                // It appears that on some platforms, use of GL_QUADS results in GL_INVALID_OPERATION even
+                // though the rendering succeeds.  Instead we use GL_POLYGON to be safe.
+                const bool replace_quads_by_polygons = true;
+                if (replace_quads_by_polygons && nv==4) nv = -1;
+                switch (nv) {
                  bcase 3:
                     if (nquads) { glEnd(); nquads = 0; }
                     if (ntriangles==buffer_ntriangles) { glEnd(); ntriangles = 0; }
@@ -2849,7 +2855,7 @@ void HB::draw_space() {
     } else {
         wrap_draw(true);
     }
-    ASSERTX(!gl_report_errors());
+    assertw(!gl_report_errors());
 }
 
 bool HB::special_keypress(char ch) {

@@ -48,14 +48,14 @@ void GMesh::copy(const GMesh& m) {
 void GMesh::merge(const GMesh& mo, Map<Vertex,Vertex>* pmvvn) {
     unique_ptr<Map<Vertex,Vertex>> tmvvn = !pmvvn ? make_unique<Map<Vertex,Vertex>>() : nullptr;
     Map<Vertex,Vertex>& mvvn = pmvvn ? *pmvvn : *tmvvn;
-    for (Vertex vo : mo.vertices()) {
+    for (Vertex vo : mo.ordered_vertices()) {
         Vertex vn = create_vertex(); mvvn.enter(vo, vn);
         flags(vn) = mo.flags(vo);
         set_string(vn, mo.get_string(vo));
         set_point(vn, mo.point(vo));
     }
     Array<Vertex> van;
-    for (Face fo : mo.faces()) {
+    for (Face fo : mo.ordered_faces()) {
         van.init(0);
         for (Vertex vo : mo.vertices(fo)) { van.push(mvvn.get(vo)); }
         Face fn = create_face(van);

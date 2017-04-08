@@ -114,6 +114,20 @@ template<typename T> class Sac : public BSac {
     static void operator delete[](void*, size_t) = delete;                              \
     HH_POOL_ALLOCATION_3(T)
 
+#if defined(_MSC_VER)
+#define HH_SAC_DECLARATION(T)
+#else
+#define HH_SAC_DECLARATION(T)                                                 \
+    template<> int hh::Sac<T>::size;                                          \
+    template<> int hh::Sac<T>::max_align;                                     \
+    template<> int hh::Sac<T>::cnum;                                          \
+    template<> int hh::Sac<T>::ckeys[k_max];                                  \
+    template<> hh::BSac::Func hh::Sac<T>::cfuncs[k_max];                      \
+    template<> int hh::Sac<T>::dnum;                                          \
+    template<> int hh::Sac<T>::dkeys[k_max];                                  \
+    template<> hh::BSac::Func hh::Sac<T>::dfuncs[k_max]
+#endif
+
 // size, cnum, and dnum intially zero
 #define HH_SAC_INITIALIZATION(T)                                              \
     template<> int hh::Sac<T>::size = 0;                                      \

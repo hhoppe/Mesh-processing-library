@@ -36,7 +36,6 @@
 #include <shellapi.h>             // CommandLineToArgvW()
 HH_REFERENCE_LIB("advapi32.lib"); // for GetUserName() here and in StackWalker
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
-#define snprintf _snprintf
 
 #else
 
@@ -1183,26 +1182,15 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 0)) string vsform(const char* f
         if (n>=0) {
             // if (n<size) SHOW(string(buf, n));
             if (n<size) return string(buf, n); // it fit
-            size = n+1; promised = true;       // BSD/GCC provide precise desired size
+            size = n+1;
+            promised = true;
         } else {
             assertx(n==-1);
-            // WIN32 unfortunately returns -1 for either format error or insufficient size.
-#if defined(_MSC_VER)
-            va_copy(ap2, ap);
-            n = vsnprintf(nullptr, 0, format, ap2);
-            va_end(ap2);
-            if (n>=0) { assertx(n>size); size = n+1; promised = true; }
-            // I would like to preallocate string(n, '\0') and directly write into it.
-            // However, with VS2015, snprintf() sometimes erroneously truncates string and includes '\0' as
-            //  last char in buffer; however, i cannot reproduce this dependably.
-            // Letting size be n+1 avoids this, but prevents use of string as buffer.
-#endif
-            if (n<0) assertnever(string() + "vsform: likely a format error in '" + format + "'");
+            assertnever(string() + "vsform: likely a format error in '" + format + "'");
         }
         vecbuf.resize(size);
         buf = vecbuf.data();
     }
-    // va_end(ap); // unclear if wanted/needed
 }
 
 // Inspired from vinsertf() in http://stackoverflow.com/a/2552973/1190077
@@ -1218,20 +1206,13 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 0)) void vssform(string& str, c
         if (promised) assertx(n==int(str.size())-1);
         if (n>=0) {
             if (n<int(str.size())) { str.resize(n); return; } // it fit
-            str.resize(n+1); promised = true;                 // BSD/GCC provide precise desired size
+            str.resize(n+1);
+            promised = true;
         } else {
             assertx(n==-1);
-            // WIN32 unfortunately returns -1 for either format error or insufficient size.
-#if defined(_MSC_VER)
-            va_copy(ap2, ap);
-            n = vsnprintf(nullptr, 0, format, ap2);
-            va_end(ap2);
-            if (n>=0) { assertx(n>=int(str.size())); str.resize(n+1); promised = true; }
-#endif
-            if (n<0) assertnever(string() + "ssform: likely a format error in '" + format + "'");
+            assertnever(string() + "ssform: likely a format error in '" + format + "'");
         }
     }
-    // va_end(ap); // unclear if wanted/needed
 }
 
 HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) string sform(const char* format, ...) {

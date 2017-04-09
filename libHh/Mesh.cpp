@@ -14,11 +14,6 @@ HH_ALLOCATE_POOL(Mesh::MFace);
 HH_ALLOCATE_POOL(Mesh::MEdge);
 HH_ALLOCATE_POOL(Mesh::MHEdge);
 
-HH_SAC_INITIALIZATION(Mesh::MVertex);
-HH_SAC_INITIALIZATION(Mesh::MFace);
-HH_SAC_INITIALIZATION(Mesh::MEdge);
-HH_SAC_INITIALIZATION(Mesh::MHEdge);
-
 // *** MISC
 
 // Analysis of memory requirement:

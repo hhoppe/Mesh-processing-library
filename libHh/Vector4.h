@@ -28,9 +28,8 @@
 
 #if defined(HH_VECTOR4_SSE)
 #include <xmmintrin.h>          // __m128, _mm_add_ps(), etc
-#if (defined(__GNUC__) || defined(__clang__)) && !defined(HH_NO_SSE41)
+#include <emmintrin.h>          // __m128i (needed in VS2017 ??)
 #include <smmintrin.h>          // _mm_dp_ps(), _mm_cvtepu8_epi32(), etc
-#endif
 #elif defined(HH_VECTOR4_NEON)
 #include <arm_neon.h>
 #endif

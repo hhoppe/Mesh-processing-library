@@ -36,9 +36,9 @@ template<typename T> class CStridedArrayView {
         const T* operator->() const                     { return _p; }
         iterator& operator++()                          { _p += _stride; return *this; }
         iterator& operator--()                          { _p -= _stride; return *this; }
-        iterator operator+(int i)                       { return iterator(_p+i*_stride, _stride); }
-        iterator operator-(int i)                       { return iterator(_p-i*_stride, _stride); }
-        const T& operator[](int i) const                { return _p[i*_stride]; }
+        iterator operator+(std::ptrdiff_t i)            { return iterator(_p+i*_stride, _stride); }
+        iterator operator-(std::ptrdiff_t i)            { return iterator(_p-i*_stride, _stride); }
+        const T& operator[](std::ptrdiff_t i) const     { return _p[i*_stride]; }
         std::ptrdiff_t operator-(const iterator& it) const {
             ASSERTXX((_p-it._p)%_stride==0); return (_p-it._p)/_stride;
         }
@@ -82,9 +82,9 @@ template<typename T> class StridedArrayView : public CStridedArrayView<T> {
         T* operator->() const                           { return _p; }
         iterator& operator++()                          { _p += _stride; return *this; }
         iterator& operator--()                          { _p -= _stride; return *this; }
-        iterator operator+(int i)                       { return iterator(_p+i*_stride, _stride); }
-        iterator operator-(int i)                       { return iterator(_p-i*_stride, _stride); }
-        T& operator[](int i) const                      { return _p[i*_stride]; }
+        iterator operator+(std::ptrdiff_t i)            { return iterator(_p+i*_stride, _stride); }
+        iterator operator-(std::ptrdiff_t i)            { return iterator(_p-i*_stride, _stride); }
+        T& operator[](std::ptrdiff_t i) const           { return _p[i*_stride]; }
         std::ptrdiff_t operator-(const iterator& it) const {
             ASSERTXX((_p-it._p)%_stride==0); return (_p-it._p)/_stride;
         }

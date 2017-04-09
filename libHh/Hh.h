@@ -111,7 +111,7 @@ using namespace std; namespace hh { } using namespace hh;
 #define HH_CAT(a, b) a ## b
 #define HH_CAT2(a, b) HH_CAT(a, b)
 
-#if defined(_MSC_VER) && _MSC_VER<2000 // _Pragma() still not defined in Visual Studio 2015
+#if defined(_MSC_VER)           // _Pragma() still not defined in Visual Studio 2017 (_MSC_VER==1910)
 #define HH_PRAGMA(...) __pragma(__VA_ARGS__)
 #else
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__)) // C++11; http://stackoverflow.com/a/15864723
@@ -649,21 +649,21 @@ template<> inline void my_zero(double& e) { e = 0.; }
 
 // Conversion with bounds-checking in Debug configuration.
 template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER<1910
 #pragma warning(push)
 #pragma warning(disable:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
 #pragma warning(disable:6319) // Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects.
 #endif
     // auto r = static_cast<Target>(v); ASSERTXX(static_cast<Source>(r)==v); return r;
     return (ASSERTXX(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER<1910
 #pragma warning(pop)
 #endif
 }
 
 // Bounds-safe conversion, checked even in Release configuration.
 template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER<1910
 #pragma warning(suppress:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
 #endif
     return (assertx(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));

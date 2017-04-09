@@ -30,11 +30,6 @@ HH_INITIALIZE_POOL(A2);
 
 } // namespace
 
-namespace hh {
-HH_SAC_INITIALIZATION(A);
-HH_SAC_INITIALIZATION(A2);
-} // namespace hh
-
 int main() {
     {
         int key_p = HH_SAC_ALLOCATE(A, Point);

@@ -13,7 +13,6 @@
      public:
         HH_MAKE_SAC(MVertex);   // must be last entry of class!
     };
-    namespace hh { HH_SAC_INITIALIZATION(MVertex); }
     //
     HH_SAC_ALLOCATE_FUNC(MVertex, Point, v_point);
     v_point(v) = Point(1.f, 2.f, 3.f); SHOW(v_point(v));
@@ -91,6 +90,15 @@ template<typename T> class Sac : public BSac {
     static Func dfuncs[k_max];
 };
 
+template<typename T> int Sac<T>::size = 0;
+template<typename T> int Sac<T>::max_align = alignof(T);
+template<typename T> int Sac<T>::cnum = 0;
+template<typename T> int Sac<T>::ckeys[k_max] = {};
+template<typename T> BSac::Func Sac<T>::cfuncs[k_max] = {};
+template<typename T> int Sac<T>::dnum = 0;
+template<typename T> int Sac<T>::dkeys[k_max] = {};
+template<typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
+
 #define HH_MAKE_SAC(T)                                                                          \
     static void* operator new(size_t s) {                                                       \
         ASSERTX(s==sizeof(T));                                                                  \
@@ -113,31 +121,6 @@ template<typename T> class Sac : public BSac {
     static void* operator new[](size_t) = delete;                                       \
     static void operator delete[](void*, size_t) = delete;                              \
     HH_POOL_ALLOCATION_3(T)
-
-#if defined(_MSC_VER)
-#define HH_SAC_DECLARATION(T)
-#else
-#define HH_SAC_DECLARATION(T)                                                 \
-    template<> int hh::Sac<T>::size;                                          \
-    template<> int hh::Sac<T>::max_align;                                     \
-    template<> int hh::Sac<T>::cnum;                                          \
-    template<> int hh::Sac<T>::ckeys[k_max];                                  \
-    template<> hh::BSac::Func hh::Sac<T>::cfuncs[k_max];                      \
-    template<> int hh::Sac<T>::dnum;                                          \
-    template<> int hh::Sac<T>::dkeys[k_max];                                  \
-    template<> hh::BSac::Func hh::Sac<T>::dfuncs[k_max]
-#endif
-
-// size, cnum, and dnum intially zero
-#define HH_SAC_INITIALIZATION(T)                                              \
-    template<> int hh::Sac<T>::size = 0;                                      \
-    template<> int hh::Sac<T>::max_align = alignof(T);                        \
-    template<> int hh::Sac<T>::cnum = 0;                                      \
-    template<> int hh::Sac<T>::ckeys[k_max] = {};                             \
-    template<> hh::BSac::Func hh::Sac<T>::cfuncs[k_max] = {};                 \
-    template<> int hh::Sac<T>::dnum = 0;                                      \
-    template<> int hh::Sac<T>::dkeys[k_max] = {};                             \
-    template<> hh::BSac::Func hh::Sac<T>::dfuncs[k_max] = {}
 
 #define HH_SACABLE(T)                                                                       \
     static void sac_construct_##T(void* p) { new(p)T; }                                     \

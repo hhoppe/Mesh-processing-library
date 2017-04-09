@@ -619,11 +619,6 @@ inline void Mesh::triangle_vertices(Face f, Vec3<Vertex>& va) const {
     assertx(he==he0);           // is_triangle()
 }
 
-HH_SAC_DECLARATION(Mesh::MVertex);
-HH_SAC_DECLARATION(Mesh::MFace);
-HH_SAC_DECLARATION(Mesh::MEdge);
-HH_SAC_DECLARATION(Mesh::MHEdge);
-
 } // namespace hh
 
 #endif // MESH_PROCESSING_LIBHH_MESH_H_

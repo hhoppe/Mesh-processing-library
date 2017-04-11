@@ -104,7 +104,7 @@ template<typename T> T Random::get_gauss() {
         const double gauss_factor = sqrt(12.)/sqrt(double(k_ngauss));
         double acc = 0.; for_int(i, k_ngauss) { acc += get_unif<T>(); }
         return T((acc-k_ngauss*.5)*gauss_factor);
-#if 0                           // buggy warning on std::normal_distribution<float> in VS 2017
+#if !(defined(_MSC_VER) && _MSC_VER==1910) // buggy warning on std::normal_distribution<float> in VS 2017
     } else if (0) {             // unfortunately, implementation-dependent
         static std::normal_distribution<T> distrib(T(0), T(1));
         return distrib(*this);

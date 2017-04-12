@@ -194,7 +194,7 @@ inline double hypot(double a, double b) { return ::hypot(a, b); }
 } // namespace std
 #endif
 
-#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(HH_NO_DEFINE_STD_ONCE)
+#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(__APPLE_CC__) && !defined(HH_NO_DEFINE_STD_ONCE)
 namespace std {                 // workaround for current mingw32 4.7.2
 struct once_flag { int done{0}; };
 // If there is a compilation error here, e.g. "reference to 'once_flag' is ambiguous",

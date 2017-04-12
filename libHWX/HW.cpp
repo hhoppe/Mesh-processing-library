@@ -865,10 +865,10 @@ bool HW::is_fullscreen() {
 void HW::make_fullscreen(bool b) {
     if (b==_is_fullscreen) return;
     _is_fullscreen = b;
-#if defined(__cygwin__)
+#if defined(__cygwin__) || defined(__APPLE__)
     const bool use_change_property = true;
 #else
-    const bool use_change_property = false; // (defined(__APPLE__) or Linux
+    const bool use_change_property = false; // Linux
 #endif
     if (use_change_property) {
         // http://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
@@ -896,7 +896,7 @@ void HW::make_fullscreen(bool b) {
         // then https://mail.gnome.org/archives/metacity-devel-list/2010-February/msg00000.html
         // This does not work under cygwin.
         // On Mac, it makes window fullscreen but leads to OpenGL error and shows black until later refresh
-        //  the first time fullscreen is invoked.
+        //  the first time fullscreen is invoked.  Now on Sierra 10.12.4 XQuartz 2.7.11 it hangs badly.
         XEvent event;
         event.type = ClientMessage;
         event.xclient.display       = _display;

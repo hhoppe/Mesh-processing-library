@@ -838,8 +838,9 @@ void view_externally() {
         return;                 // success
     }
     const Array<string> programs = {
-        "cygstart",
-        "xdg-open",
+        "cygstart",             // Cygwin
+        "xdg-open",             // Linux
+        "open",                 // Mac
     };
     const Array<string> image_programs = {
         "irfan",

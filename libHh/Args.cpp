@@ -73,7 +73,8 @@ bool Args::check_filename(const string& s) {
     if (s[0]=='-' && s!="-") return false;
     if (begins_with(s, "|") || ends_with(s, "|")) return true; // for my WFile and RFile pipes
     if (s.find_first_of("*?\"<>|")!=string::npos) return false;
-    auto i = s.rfind(':'); if (i!=string::npos && i!=1) return false;
+    // Note in Linux: "$HOME/Pictures/Screenshot\ from\ 2017-01-24\ 11:03:05.png"
+    auto i = s.rfind(':'); if (0 && i!=string::npos && i!=1) return false;
     return true;
 }
 

@@ -130,13 +130,13 @@ template<typename T> using Vec4 = Vec<T,4>;
 
 // Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
 template<typename T, typename... Ts>
-constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(const T& t, Ts... ts) {
+constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(const T& t, Ts&&... ts) {
     return Vec<std::decay_t<T>, 1+sizeof...(ts)>(t,            std::forward<Ts>(ts)...);
 }
 
 // Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
 template<typename T, typename... Ts>
-constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(T&& t,      Ts... ts) {
+constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(T&& t,      Ts&&... ts) {
     return Vec<std::decay_t<T>, 1+sizeof...(ts)>(std::move(t), std::forward<Ts>(ts)...);
 }
 

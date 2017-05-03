@@ -1015,7 +1015,6 @@ void ImageIO::read_png(Image& image, FILE* file) {
             assertt(bit_depth==16);
             showf("Reading 16-bit png image\n");
         }
-        // assertw(color_type!=PNG_COLOR_TYPE_PALETTE);
         if (color_type==PNG_COLOR_TYPE_PALETTE) {
             png_set_palette_to_rgb(png_ptr);
             assertw(ncomp==1);

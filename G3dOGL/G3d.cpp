@@ -32,6 +32,7 @@ bool mode_centroid = true;
 int want_jump = 0;
 bool auto_hither = true;
 int timingtest_nframes = 0;
+bool play = false;
 int obview = 0;
 bool aiming = false;
 int ob_aim = 1;

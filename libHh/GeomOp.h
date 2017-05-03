@@ -54,11 +54,11 @@ void euler_angles_to_frame(const Vec3<float>& ang, Frame& f);
 // f.p() is ignored and unchanged.
 void frame_aim_at(Frame& f, const Vector& v);
 
-// Modify f so that its y axis lies in the xy plane
-void frame_make_level(Frame& f);
+// Modify frame so that its y axis lies in the xy plane.
+Frame make_level(const Frame& f);
 
 // Modify f so that its x and y axes lie in the xy plane.
-void frame_make_horiz(Frame& f);
+Frame make_horiz(const Frame& f);
 
 // Affinely broaden the triangle (in all directions) by the factor 1.f+eps*.5f .
 void widen_triangle(ArrayView<Point> poly, float eps);

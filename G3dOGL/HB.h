@@ -59,6 +59,7 @@ void close_segment();
 void segment_attach_mesh(int segn, GMesh* mesh);
 void make_segment_link(int oldsegn, int newsegn);
 void segment_morph_mesh(int segn, float finterp);
+void reload_textures();
 void flush();
 void beep();
 int id();

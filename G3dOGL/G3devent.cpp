@@ -619,6 +619,7 @@ I       toggle use_input        {       toggle asynchronous input
 O       output current frame    !       output single frame
 &       toggle output binary/ascii
 *       keep motion through button release
+B       bobble motion           @       object cycling (movie)
 < ,     read s3d file           > .     save all frames in s3d file
 '       record current point    \"       compute distance to recorded point
 ctrl-C  quit
@@ -798,6 +799,10 @@ bool KeyPressed(const string& ps) {
         flightmode = flightmode==EFlightmode::automatic ? EFlightmode::none : EFlightmode::automatic;
         button_active = 0;
         HB::redraw_now();
+     bcase 'B':
+        flightmode = flightmode==EFlightmode::bobble ? EFlightmode::none : EFlightmode::bobble;
+        button_active = 0;
+        HB::redraw_now();
      bcase 'S':
         sizemode = !sizemode;
         HB::redraw_later();
@@ -828,10 +833,10 @@ bool KeyPressed(const string& ps) {
         HB::redraw_later();
         if (auto_level) HB::redraw_now();
      bcase 'L':
-        frame_make_level(g_obs[cob].tm());
+        g_obs[obview].tm() = make_level(g_obs[obview].t());
         HB::redraw_now();
      bcase 'H':
-        frame_make_horiz(g_obs[cob].tm());
+        g_obs[obview].tm() = make_horiz(g_obs[obview].t());
         HB::redraw_now();
      bcase '|':
         rotate_around();
@@ -877,6 +882,7 @@ bool KeyPressed(const string& ps) {
         HB::draw_row_col_text(V(2, 0), "Reading...");
         HB::flush();
         ReadFiles(false);
+        HB::reload_textures();
         HB::redraw_now();
      bcase 'z':
         g_obs[cob].tm() = Frame::identity();
@@ -957,6 +963,9 @@ bool KeyPressed(const string& ps) {
         } else {
             HB::beep();
         }
+     bcase '@':
+        play = !play;
+        HB::redraw_now();
      bdefault:
         if (!std::isdigit(ch)) { understood = false; break; }
         if (lastch=='w') {

@@ -137,8 +137,7 @@ Vec3<float> backfacec;
 float fdisplacepolygon = 1.f;
 float flinewidth = 1.f;
 float sphereradius = 0.f;       // was .005
-string texturemap;
-string texturedetail;           // no longer used
+Array<string> texturemaps;
 bool texturenormal;
 bool texture_lit;
 float texturescale = 0.f;       // 0 == no wrapping
@@ -182,6 +181,7 @@ bool ledges;
 bool lcullface;
 int button_active;
 int num_concave;
+bool textures_loaded;
 bool texture_active;
 int strip_lines;                 // 0..2
 string edgecolor = "black";
@@ -295,6 +295,12 @@ struct NodePoint : Node {
     Point p;
     Pixel color;
 };
+
+struct Texture {
+    GLuint texname;
+};
+
+Array<Texture> g_textures;
 
 class GXobject {
  public:
@@ -570,6 +576,11 @@ void do_video(Args& args) {
     movie_cprogress = make_unique<ConsoleProgress>();
     movie_desire_video = true;
     if (0) use_dl = false;
+}
+
+void do_texturemap(Args& args) {
+    const string filename = args.get_filename();
+    texturemaps.push(filename);
 }
 
 // *** HW callback functions
@@ -896,11 +907,12 @@ void set_light_ambient(float lambient) {
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, a.data());
 }
 
-void load_texturemap() {
+void load_texturemaps() {
     static const bool debug = getenv_bool("TEXTURE_DEBUG");
     if (debug) display_texture_size_info();
     // HH_TIMER(_load_texturemap);
-    if (texturemap=="") {
+    textures_loaded = true;
+    if (!texturemaps.num()) {
         string name = g3d::g_filename;
         if (name=="") {
             Warning("No name for texture map");
@@ -926,265 +938,204 @@ void load_texturemap() {
             texture_active = false; return;
         }
         if (contains(s, ".nor")) texturenormal = true;
-        texturemap = s;
+        texturemaps.push(s);
     }
-    GLuint texname0; glGenTextures(1, &texname0);
-    glBindTexture(GL_TEXTURE_2D, texname0);
-    Image itexture;
-    itexture.read_file(texturemap);
-    if (1) itexture.reverse_y(); // because glTexImage2D() has image origin at lower-left
-    int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    // On ATI, default GL_RGB is in fact GL_RGB5.
-    GLenum internal_format = GL_RGBA8; // was GL_RGB8
-    bool define_mipmap = true;
-    if (getenv_bool("NO_MIPMAP")) { showdf("NO_MIPMAP\n"); define_mipmap = false; }
-    if (itexture.zsize()==4) internal_format = GL_RGBA8;
-    if (0 && itexture.xsize()>=4096 && itexture.ysize()>=4096 && define_mipmap) {
-        // Default texture format is too big for video memory.
-        if (0 && contains(gl_extensions_string(), "GL_ARB_texture_compression")) {
-            Warning("Huge texture, so using GL_COMPRESSED_RGB");
-            internal_format = GL_COMPRESSED_RGB;
-            // internal_format = GL_COMPRESSED_LUMINANCE; // doesn't work.
-            // internal_format = GL_COMPRESSED_INTENSITY; // doesn't work.
-            if (1) {
-                for_int(y, itexture.ysize()) {
-                    for_int(x, itexture.xsize()) {
-                        itexture[y][x][0] = (itexture[y][x][0]&0xF8)|0x04;
-                        itexture[y][x][1] = (itexture[y][x][1]&0xFC)|0x02;
-                        itexture[y][x][2] = (itexture[y][x][2]&0xF8)|0x04;
-                    }
-                }
+    assertx(!g_textures.num());
+    g_textures.init(texturemaps.num());
+    for_int(i, texturemaps.num()) {
+        if (debug) SHOW("defining texture", i);
+        glGenTextures(1, &g_textures[i].texname);
+        glBindTexture(GL_TEXTURE_2D, g_textures[i].texname);
+        Image itexture;
+        const string filename = texturemaps[i];
+        itexture.read_file(filename);
+        if (1) itexture.reverse_y(); // because glTexImage2D() has image origin at lower-left
+        int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        // On ATI, default GL_RGB is in fact GL_RGB5.
+        GLenum internal_format = GL_RGBA8; // was GL_RGB8
+        bool define_mipmap = true;
+        if (getenv_bool("NO_MIPMAP")) { showdf("NO_MIPMAP\n"); define_mipmap = false; }
+        if (itexture.zsize()==4) internal_format = GL_RGBA8;
+        if (1) {
+            int max_texture_size;
+            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+            if (max(itexture.dims())>max_texture_size) {
+                showf("texture too large (maxsize=%d), so downsampling\n", max_texture_size);
+                itexture.scale(twice(min(twice(float(max_texture_size))/convert<float>(itexture.dims()))),
+                               twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
             }
-        } else {
-            Warning("Huge texture, so using GL_RGB5");
-            internal_format = GL_RGB5;
         }
-    }
-    if (1) {
-        int max_texture_size;
-        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-        if (max(itexture.dims())>max_texture_size) {
-            showf("texture too large (maxsize=%d), so downsampling\n", max_texture_size);
-            itexture.scale(twice(min(twice(float(max_texture_size))/convert<float>(itexture.dims()))),
-                           twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
-        }
-    }
-#if 1                                   // use modern approach with glGenerateMipmap()
-    {
-        glEnable(GL_TEXTURE_2D);        // may need to come before glGenerateMipmap on old AMD drivers
-        const int level = 0, border = 0;
-        glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border,
-                     GL_RGBA, GL_UNSIGNED_BYTE, itexture.data());
-        USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
-        if (glGenerateMipmap) {
-            glGenerateMipmap(GL_TEXTURE_2D); // not supported on Remote Desktop
-        }
-    }
-#else
-    bool use_glubuildmipmaps = false;
-    if (getenv_bool("USE_GLUBUILDMIPMAPS")) { showdf("USE_GLUBUILDMIPMAPS\n"); use_glubuildmipmaps = true; }
-    if (!is_pow2(itexture.ysize()) || !is_pow2(itexture.xsize())) {
-        if (debug) Warning("Texture sizes not power of 2, so using gluBuild2DMipmaps");
-        use_glubuildmipmaps = true;
-    }
-    if (use_glubuildmipmaps) {
-        assertx(itexture.zsize()>=3);
-        assertx(gluBuild2DMipmaps(GL_TEXTURE_2D, internal_format, itexture.xsize(), itexture.ysize(),
-                                  GL_RGBA, GL_UNSIGNED_BYTE, itexture.data())==0);
-        // deprecated; instead should use GL_GENERATE_MIPMAP (requires GL 1.4) or
-        //   the glGenerateMipmap function (requires GL 3.0).
-    } else {
-        assertx(is_pow2(itexture.xsize()) && is_pow2(itexture.ysize()));
-        Vec2<int> max_yx; {
-            Vec2<int> aspyx = twice(1);
-            int border = 0;
-            if (itexture.xsize()==itexture.ysize()) void();
-            else if (itexture.xsize()==itexture.ysize()*2) aspyx[1] = 2;
-            else if (itexture.ysize()==itexture.xsize()*2) aspyx[0] = 2;
-            else assertnever("");
-            max_yx = find_max_texture(internal_format, aspyx, border, (define_mipmap ? INT_MAX : 0));
-            if (!assertw(product(max_yx))) max_yx = twice(1024); // bug on squeal (SGI Impact)
-        }
-        if (debug) SHOW(max_yx);
-        while (itexture.ysize()>max_yx[0]) {
-            showf("texture maxsize %dx%d, so downsampling!\n", max_yx[1], max_yx[0]);
-            itexture.scale(twice(.5f), twice(FilterBnd(Filter::get("box"), Bndrule::reflected)));
-        }
-        int level = 0;
-        for (;;) {
-            // HH_ATIMER(__loadt_one_mmap);
-            assertx(itexture.zsize()>=3);
-            const int border = 0;
+        // Use modern approach with glGenerateMipmap().
+        {
+            glEnable(GL_TEXTURE_2D);        // may need to come before glGenerateMipmap on old AMD drivers
+            const int level = 0, border = 0;
             glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border,
                          GL_RGBA, GL_UNSIGNED_BYTE, itexture.data());
-            if (!define_mipmap || (itexture.xsize()==1 && itexture.ysize()==1)) break;
-            level++;
-            itexture.scale(twice(.5f), twice(FilterBnd(Filter::get("box"), Bndrule::reflected)));
-        }
-    }
-#endif
-    {
-        int w, h, r, g, b, a;
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_RED_SIZE, &r);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_GREEN_SIZE, &g);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_BLUE_SIZE, &b);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &a);
-        showf("Loaded texture '%s' (%dx%d) [%d,%d,%d,%d]\n", texturemap.c_str(), w, h, r, g, b, a);
-    }
-    {
-        // GL_REPLACE is the same as GL_DECAL except it does the "right thing" on texture with alphas.
-        glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        texture_lit = false;     // compatible with old
-        if (getenv_bool("G3D_TEXTURE_LIT")) texture_lit = true;
-        if (texturenormal) texture_lit = false;
-        if (texture_lit) {
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            // and must later set material color to white.
-            if (1) {
-                // more expensive: apply specular highlight post texture.
-                //  (default: GL_SINGLE_COLOR)
-                glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
-                // remember to set "-meshcols 0 0 0" if you don't want the white specular lights.
-            }
-        }
-        {
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-            glTexGenfv(GL_S, GL_OBJECT_PLANE, V((orig_ysize>orig_xsize ? 2.f : 1.f), 0.f, 0.f, 0.f).data());
-        }
-        {
-            glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-            glTexGenfv(GL_T, GL_OBJECT_PLANE, V(0.f, (orig_ysize<orig_xsize ? 2.f : 1.f), 0.f, 0.f).data());
-        }
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // default
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // default
-        if (getenv_bool("G3D_TEX_CLAMP")) {
-            Warning("G3D_TEX_CLAMP now obsolete; enabled by -texturescale 0");
-        }
-        if (!texturescale) {
-            // showf("Setting texture clamp mode\n");
-            unsigned wrap_mode = GL_CLAMP_TO_EDGE;
-            if (!contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp")) {
-                Warning("No texture_edge_clamp extension!"); // it could be due to Remote Desktop
-                wrap_mode = GL_CLAMP; // (obsolete; uses border texels; seems to work though)
-            }
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
-        }
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        define_mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR); // default is NEAREST_MIPMAP_LINEAR
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);     // default is GL_LINEAR
-        if (getenv_bool("G3D_TEX_NEAREST"))
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // show pixels blocks.
-    }
-    if (texturescale && texturescale!=1.f) {
-        // Matrix4 m1; m1.ident();
-        SGrid<float, 4, 4> m1;
-        for_int(y, 4) for_int(x, 4) { m1[y][x] = x==y ? 1.f : 0.f; }
-        m1[0][0] = texturescale;
-        m1[1][1] = texturescale;
-        glMatrixMode(GL_TEXTURE); glLoadMatrixf(m1.data());
-        glMatrixMode(GL_MODELVIEW);
-    }
-    //
-    anisotropy = INT_MAX;
-    if (getenv_bool("NO_ANISO")) { showdf("NO_ANISO\n"); anisotropy = 1; }
-    anisotropy = getenv_int("ANISOTROPY", anisotropy);
-    set_anisotropy();
-    //
-    if (texturenormal) {
-        if (!normalmap_init()) {
-            Warning("Normal mapping unsupported -> texturenormal=false");
-            texturenormal = false;
-        }
-    }
-    //
-    bool texture_elev = getenv_bool("TEXTURE_ELEV");
-    if (texture_elev && !contains(gl_extensions_string(), "GL_ARB_multitexture")) {
-        Warning("GL_ARB_multitexture unsupported -> texture_elev=false");
-        texture_elev = false;
-    }
-    if (texture_elev) {
-        showf("Defining texture_elev\n");
-#if defined(_WIN32)
-        USE_GL_EXT(glActiveTexture, PFNGLACTIVETEXTUREPROC);
-#endif
-        GLint max_texture_units; glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_units);
-        if (0) SHOW(max_texture_units);
-        assertx(max_texture_units>=2);
-        glActiveTexture(GL_TEXTURE1);
-        glEnable(GL_TEXTURE_1D);
-        GLuint texname1; glGenTextures(1, &texname1);
-        glBindTexture(GL_TEXTURE_1D, texname1);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        GLenum internal_format2 = GL_RGBA8;
-        if (0) {
-            const int n = 128;
-            int level = 0, nl = n;
-            for (;;) {
-                Image etexture(V(1, nl));
-                for_int(x, nl) {
-                    uchar v = 255;
-                    if (level==1) {
-                        if (x<2) v = 0;
-                        else if (x%(nl/4)<1) v = 0;
-                    } else if (level==2) {
-                        if (x<1) v = 0;
-                        else if (x%(nl/4)<1) v = 128;
-                    } else if (level==3) {
-                        if (x<1) v = 128;
-                    }
-                    etexture[0][x] = Pixel::gray(v);
-                }
-                int border = 0;
-                glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border,
-                             GL_RGBA, GL_UNSIGNED_BYTE, etexture.data());
-                if (etexture.xsize()==1) break;
-                level++;
-                nl /= 2;
-            }
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-            glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 1000.f, 0.f).data());
-            glEnable(GL_TEXTURE_GEN_S);
-        } else {
-            Image etexture;
-            etexture.read_file("ramp1.png");
-#if 1
-            const int level = 0, border = 0;
-            glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border,
-                         GL_RGBA, GL_UNSIGNED_BYTE, etexture.data());
             USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
             if (glGenerateMipmap) {
-                glGenerateMipmap(GL_TEXTURE_1D); // not supported on Remote Desktop
+                glGenerateMipmap(GL_TEXTURE_2D); // not supported on Remote Desktop
             }
-#else
-            assertx(gluBuild1DMipmaps(GL_TEXTURE_1D, internal_format2, etexture.xsize(),
-                                      GL_RGBA, GL_UNSIGNED_BYTE, etexture.data())==0);
-#endif
-            // To map it to elevation (in meters) use
-            //   z = 10 x - 7995
-            // where z is the elevation and x is the horizontal index of the
-            // texture, with the leftmost pixel being centered at x = 0.
-            //
-            // Horizontal spacing is 10m -> 16385 samples span 163'840m
-            //  x = 799.5 + z * 0.10
-            //  x' in [0, 1]:  x' = x / 1600  [shift by 0.5?]
-            //  z' in world_units:  z' = z / 163840
-            //  1600 * x' = 799.5 + z' * 163840 * 0.10
-            //  x' = 0.5 + z' * 10.24
-            glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
-            glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 10.24f, 0.5f).data());
-            glEnable(GL_TEXTURE_GEN_S);
         }
         {
-            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            int w, h, r, g, b, a;
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_RED_SIZE, &r);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_GREEN_SIZE, &g);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_BLUE_SIZE, &b);
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &a);
+            showf("Loaded texture '%s' (%dx%d) [%d,%d,%d,%d]\n", filename.c_str(), w, h, r, g, b, a);
         }
-        glActiveTexture(GL_TEXTURE0);
+        {
+            // GL_REPLACE is the same as GL_DECAL except it does the "right thing" on texture with alphas.
+            glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+            texture_lit = false;     // compatible with old
+            if (getenv_bool("G3D_TEXTURE_LIT")) texture_lit = true;
+            if (texturenormal) texture_lit = false;
+            if (texture_lit) {
+                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+                // and must later set material color to white.
+                if (1) {
+                    // more expensive: apply specular highlight post texture.
+                    //  (default: GL_SINGLE_COLOR)
+                    glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
+                    // remember to set "-meshcols 0 0 0" if you don't want the white specular lights.
+                }
+            }
+            {
+                glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+                glTexGenfv(GL_S, GL_OBJECT_PLANE, V((orig_ysize>orig_xsize ? 2.f : 1.f), 0.f, 0.f, 0.f).data());
+            }
+            {
+                glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+                glTexGenfv(GL_T, GL_OBJECT_PLANE, V(0.f, (orig_ysize<orig_xsize ? 2.f : 1.f), 0.f, 0.f).data());
+            }
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // default
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // default
+            glEnable(GL_ALPHA_TEST);
+            glAlphaFunc(GL_GREATER, 0.0); // discard fragments with zero alpha if partially transparent texture
+            if (getenv_bool("G3D_TEX_CLAMP")) {
+                Warning("G3D_TEX_CLAMP now obsolete; enabled by -texturescale 0");
+            }
+            if (!texturescale) {
+                // showf("Setting texture clamp mode\n");
+                unsigned wrap_mode = GL_CLAMP_TO_EDGE;
+                if (!contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp")) {
+                    Warning("No texture_edge_clamp extension!"); // it could be due to Remote Desktop
+                    wrap_mode = GL_CLAMP; // (obsolete; uses border texels; seems to work though)
+                }
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
+            }
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                            define_mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR); // default is NEAREST_MIPMAP_LINEAR
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);     // default is GL_LINEAR
+            if (getenv_bool("G3D_TEX_NEAREST"))
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST); // show pixels blocks.
+        }
+        if (texturescale && texturescale!=1.f) {
+            // Matrix4 m1; m1.ident();
+            SGrid<float, 4, 4> m1;
+            for_int(y, 4) for_int(x, 4) { m1[y][x] = x==y ? 1.f : 0.f; }
+            m1[0][0] = texturescale;
+            m1[1][1] = texturescale;
+            glMatrixMode(GL_TEXTURE); glLoadMatrixf(m1.data());
+            glMatrixMode(GL_MODELVIEW);
+        }
+        //
+        anisotropy = INT_MAX;
+        if (getenv_bool("NO_ANISO")) { showdf("NO_ANISO\n"); anisotropy = 1; }
+        anisotropy = getenv_int("ANISOTROPY", anisotropy);
+        set_anisotropy();
+        //
+        if (texturenormal) {
+            if (!normalmap_init()) {
+                Warning("Normal mapping unsupported -> texturenormal=false");
+                texturenormal = false;
+            }
+        }
+        //
+        bool texture_elev = getenv_bool("TEXTURE_ELEV");
+        if (texture_elev && !contains(gl_extensions_string(), "GL_ARB_multitexture")) {
+            Warning("GL_ARB_multitexture unsupported -> texture_elev=false");
+            texture_elev = false;
+        }
+        if (texture_elev) {
+            showf("Defining texture_elev\n");
+#if defined(_WIN32)
+            USE_GL_EXT(glActiveTexture, PFNGLACTIVETEXTUREPROC);
+#endif
+            GLint max_texture_units; glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_units);
+            if (0) SHOW(max_texture_units);
+            assertx(max_texture_units>=2);
+            glActiveTexture(GL_TEXTURE1);
+            glEnable(GL_TEXTURE_1D);
+            GLuint texname1; glGenTextures(1, &texname1);
+            glBindTexture(GL_TEXTURE_1D, texname1);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            GLenum internal_format2 = GL_RGBA8;
+            if (0) {
+                const int n = 128;
+                int level = 0, nl = n;
+                for (;;) {
+                    Image etexture(V(1, nl));
+                    for_int(x, nl) {
+                        uchar v = 255;
+                        if (level==1) {
+                            if (x<2) v = 0;
+                            else if (x%(nl/4)<1) v = 0;
+                        } else if (level==2) {
+                            if (x<1) v = 0;
+                            else if (x%(nl/4)<1) v = 128;
+                        } else if (level==3) {
+                            if (x<1) v = 128;
+                        }
+                        etexture[0][x] = Pixel::gray(v);
+                    }
+                    int border = 0;
+                    glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border,
+                                 GL_RGBA, GL_UNSIGNED_BYTE, etexture.data());
+                    if (etexture.xsize()==1) break;
+                    level++;
+                    nl /= 2;
+                }
+                glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+                glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 1000.f, 0.f).data());
+                glEnable(GL_TEXTURE_GEN_S);
+            } else {
+                Image etexture;
+                etexture.read_file("ramp1.png");
+                const int level = 0, border = 0;
+                glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border,
+                             GL_RGBA, GL_UNSIGNED_BYTE, etexture.data());
+                USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
+                if (glGenerateMipmap) {
+                    glGenerateMipmap(GL_TEXTURE_1D); // not supported on Remote Desktop
+                }
+                // To map it to elevation (in meters) use
+                //   z = 10 x - 7995
+                // where z is the elevation and x is the horizontal index of the
+                // texture, with the leftmost pixel being centered at x = 0.
+                //
+                // Horizontal spacing is 10m -> 16385 samples span 163'840m
+                //  x = 799.5 + z * 0.10
+                //  x' in [0, 1]:  x' = x / 1600  [shift by 0.5?]
+                //  z' in world_units:  z' = z / 163840
+                //  1600 * x' = 799.5 + z' * 163840 * 0.10
+                //  x' = 0.5 + z' * 10.24
+                glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
+                glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 10.24f, 0.5f).data());
+                glEnable(GL_TEXTURE_GEN_S);
+            }
+            {
+                glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+            glActiveTexture(GL_TEXTURE0);
+        }
     }
 }
 
@@ -1282,9 +1233,8 @@ void gl_init() {
         if (num_concave)
             Warning("Have concave polygons");
     }
-    static int count = 0;
-    if (texture_active && (!count++ || texturemap==""))
-        load_texturemap();
+    if (texture_active && !textures_loaded)
+        load_texturemaps();
     static const bool depthfunc_lequal = getenv_bool("DEPTHFUNC_LEQUAL");
     if (depthfunc_lequal) glDepthFunc(GL_LEQUAL);
 }
@@ -1331,7 +1281,8 @@ bool setup_ob(int i) {
     // my +y -> GL -x
     // my +z -> GL +y
     Frame fmodeltoworld = g_xobs.t[i];
-    if (!i) {
+    static const bool g3d_radar = getenv_bool("G3D_RADAR");
+    if (!i && g3d_radar) {
         // scale view_object so if frustum it looks good (for radar view).
         fmodeltoworld.v(1) *= real_zoom*float(win_dims[1])/min(win_dims);
         fmodeltoworld.v(2) *= real_zoom*float(win_dims[0])/min(win_dims);
@@ -1382,7 +1333,9 @@ bool setup_ob(int i) {
     }
     glPolygonMode(GL_FRONT_AND_BACK, lshading ? GL_FILL : GL_LINE);
     static const bool all_textured = getenv_bool("G3D_ALL_TEXTURED");
-    if (texture_active && (i==1 || all_textured)) {
+    const int texture_id = i-1;
+    if (texture_active && texture_id>=0 && (texture_id<g_textures.num() || all_textured)) {
+        glBindTexture(GL_TEXTURE_2D, g_textures[texture_id].texname);
         glEnable(GL_TEXTURE_2D);
         glEnable(GL_TEXTURE_GEN_S);
         glEnable(GL_TEXTURE_GEN_T);
@@ -2592,8 +2545,7 @@ bool HB::init(Array<string>& aargs,
     ARGSP(meshcols,                             "r g b : mesh color specular");
     ARGSP(meshcolp,                             "c 0 0 : mesh color phong coef");
     ARGSP(meshcola,                             "a : mesh color alpha");
-    ARGSP(texturemap,                           "image_filename : load texture map");
-    ARGSP(texturedetail,                        "image_filename : obsolete");
+    ARGSD(texturemap,                           "image_filename : load texture map");
     ARGSP(texturenormal,                        "bool : normal (not bump) map");
     ARGSP(texturescale,                         "fac : scale texture coordinates (0=no_wrap)");
     args.p("-pm_mode", pm_filename,             "file.pm : progressive mesh mode");
@@ -3082,6 +3034,13 @@ void HB::segment_morph_mesh(int segn, float finterp) {
     g_xobs[segn].morph(finterp);
 }
 
+void HB::reload_textures() {
+    for_int(i, g_textures.num()) {
+        glDeleteTextures(1, &g_textures[i].texname);
+    }
+    g_textures.clear();
+    textures_loaded = false;
+}
 
 void HB::flush() {
     hw.hard_flush();

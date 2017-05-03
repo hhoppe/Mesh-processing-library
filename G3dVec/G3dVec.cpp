@@ -1202,6 +1202,9 @@ void HB::segment_morph_mesh(int segn, float finterp) {
     dummy_use(segn, finterp);
 }
 
+void HB::reload_textures() {
+}
+
 void HB::flush() {
     hw.hard_flush();
 }

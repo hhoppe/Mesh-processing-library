@@ -16,7 +16,7 @@ using namespace hh;
 // mode of control
 enum class ERatemode { move, position, step };
 extern ERatemode ratemode;
-enum class EFlightmode { none, fly, flight, automatic };
+enum class EFlightmode { none, fly, flight, automatic, bobble };
 extern EFlightmode flightmode;
 extern int cob;                 // current object to transform
 extern bool eye_move;            // move eyepoint instead of object
@@ -34,6 +34,7 @@ extern bool mode_centroid;      // use centroid instead of origin
 extern int want_jump;           // keep doing 'j' if appending object (0, 1, 2)
 extern bool auto_hither;        // set hither dist automatically
 extern int timingtest_nframes;  // count down
+extern bool play;               // cycle through loaded objects
 
 constexpr int full_timingtest_nframes = 100;
 

@@ -590,6 +590,14 @@ static void act_auto() {
     sizemode = osizemode;
 }
 
+static void act_bobble() {
+    // Make the tview frame origin (e.g. left eye offset) orbit about the yz plane (perpendicular to view direction).
+    const int axis = 0;                 // +X is forward
+    const float bobble_speed = getenv_float("G3D_BOBBLE_SPEED", 1.0f); // cycles per second
+    const float angle = TAU * bobble_speed * fchange;
+    tview.p() = tview.p() * Frame::rotation(axis, angle);
+}
+
 static void g3d_michael1() {
     float d = dist(g_obs[0].t().p(), g_obs[1].center());
     float relsize = g_obs[1].radius()/zoom/d;
@@ -679,6 +687,9 @@ static void change_frames() {
     } else if (flightmode==EFlightmode::automatic) {
         act_auto();
         if (button_active) act_button();
+    } else if (flightmode==EFlightmode::bobble) {
+        act_bobble();
+        if (button_active) act_button();
     } else if (button_active) {
         act_button();
     }
@@ -689,12 +700,13 @@ static void change_frames() {
 
 static void set_viewing() {
     bool is_view = !tview.is_ident();
-    if (auto_level) frame_make_level(g_obs[cob].tm());
+    if (auto_level) g_obs[obview].tm() = make_level(g_obs[obview].t());
     // while (obview && !g_obs[obview].visible()) --obview;
     Frame tpos = g_obs[obview].t(); // original frame
     // =~FrameMakeStdDir()
     Frame thead = tpos;         // view dir., after view offset, before aim
-    if (is_view && auto_level)  // auto_level radar view
+    static const bool g3d_radar = getenv_bool("G3D_RADAR");
+    if (g3d_radar && is_view && auto_level)  // auto_level radar view
         thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
     if (is_view) thead = tview*thead;
     Frame tcam = thead;         // final camera transform
@@ -751,6 +763,7 @@ void ShowInfo() {
                    flightmode==EFlightmode::fly ? 'f' :
                    flightmode==EFlightmode::flight ? 'F' :
                    flightmode==EFlightmode::automatic ? 'J' :
+                   flightmode==EFlightmode::bobble ? 'B' :
                    '?'),
                   object_mode ? 'o' : ' ',
                   eye_move ? 'e' : ' ',
@@ -908,6 +921,19 @@ void Draw() {
     get_time();
     cumtime += fchange;
     change_frames();
+    if (play) {
+        static float play_last = 0.f;
+        const float play_fps = 10.f;
+        if (g_obs.last>1 && cob>0 && cumtime>=play_last+1.f/play_fps) {
+            play_last = cumtime;
+            g_obs[cob].set_vis(false);
+            cob++;
+            if (cob>g_obs.last) cob = 1;
+            g_obs[cob].set_vis(true);
+            HB::set_current_object(cob);
+        }
+        HB::redraw_later();
+    }
     if (output) WriteOutput();
     set_viewing();
     update_segs();

@@ -225,17 +225,31 @@ void frame_aim_at(Frame& f, const Vector& v) {
     euler_angles_to_frame(ang, f);
 }
 
-void frame_make_level(Frame& f) {
-    Vec3<float> ang = frame_to_euler_angles(f);
+Frame make_level(const Frame& f) {
+    Frame fnew = f;
+    static const bool world_zxy = getenv_bool("WORLD_ZXY"); // z forward, -x left, -y up
+    const Frame from_zxy = Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f),
+                                 Point(0.f, 0.f, 0.f));
+    if (world_zxy) fnew *= ~from_zxy;
+    Vec3<float> ang = frame_to_euler_angles(fnew);
     ang[2] = 0.f;
-    euler_angles_to_frame(ang, f);
+    euler_angles_to_frame(ang, fnew);
+    if (world_zxy) { fnew *= from_zxy; fnew.p() = f.p(); }
+    return fnew;
 }
 
-void frame_make_horiz(Frame& f) {
-    Vec3<float> ang = frame_to_euler_angles(f);
+Frame make_horiz(const Frame& f) {
+    Frame fnew = f;
+    static const bool world_zxy = getenv_bool("WORLD_ZXY"); // z forward, -x left, -y up
+    const Frame from_zxy = Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f),
+                                 Point(0.f, 0.f, 0.f));
+    if (world_zxy) fnew *= ~from_zxy;
+    Vec3<float> ang = frame_to_euler_angles(fnew);
     ang[1] = 0.f;
     ang[2] = 0.f;
-    euler_angles_to_frame(ang, f);
+    euler_angles_to_frame(ang, fnew);
+    if (world_zxy) { fnew *= from_zxy; fnew.p() = f.p(); }
+    return fnew;
 }
 
 void widen_triangle(ArrayView<Point> poly, float eps) {

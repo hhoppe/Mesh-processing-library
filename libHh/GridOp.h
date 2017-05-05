@@ -45,7 +45,7 @@ template<int D, typename T> Grid<D,T> crop(CGridView<D,T> grid, const Vec<int,D>
 template<int D, typename U, typename T = typename U::value_type> Grid<D,T> assemble(CGridView<D,U> grids);
 
 // Recast a grid view as a next-higher-dimensional grid view with just a single slice in dimension zero.
-template<int D, typename T> CGridView<(D+1), T> raise_grid_rank(CGridView<D,T> grid);
+template<int D, typename T> CGridView<D+1,T> raise_grid_rank(CGridView<D,T> grid);
 
 // Convert a grid of uchar pixel values into float values.
 template<int D> void convert(CGridView<D,Pixel> gridu, GridView<D,Vector4> gridf);
@@ -191,9 +191,9 @@ template<int D, typename U, typename T> Grid<D,T> assemble(CGridView<D,U> grids)
     return grid;
 }
 
-template<int D, typename T> CGridView<(D+1), T> raise_grid_rank(CGridView<D,T> grid) {
+template<int D, typename T> CGridView<D+1,T> raise_grid_rank(CGridView<D,T> grid) {
     Vec<int,D+1> dims; dims[0] = 1; for_int(d, D) { dims[1+d] = grid.dim(d); }
-    return CGridView<(D+1), T>(grid.data(), dims);
+    return CGridView<D+1,T>(grid.data(), dims);
 }
 
 static const bool b_image_linear_filter = getenv_bool("IMAGE_LINEAR_FILTER"); // expand gamma

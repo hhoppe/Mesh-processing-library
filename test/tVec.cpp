@@ -260,6 +260,11 @@ int main() {
         assertx(!s1[0]);
         assertx(!s1[1]);
     }
+    {
+        Vec<int,0> v0;
+        SHOW(v0);
+        SHOW(V<int>());
+    }
 }
 
 namespace hh {

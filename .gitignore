@@ -51,6 +51,7 @@ build/
 /OWNERS
 /test/google_run_test.sh
 /mesh_processing.blueprint
+/google_disable_tcmalloc_large_alloc_warning.cc
 
 # MSTest test Results
 [Tt]est[Rr]esult*/

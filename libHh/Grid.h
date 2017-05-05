@@ -38,8 +38,14 @@ template<int D, typename T> struct Grid_aux      { using CRet = CGridView<D-1,T>
 template<typename T>        struct Grid_aux<1,T> { using CRet = const T&;         using Ret = T&; };
 template<typename T>        struct Grid_aux<2,T> { using CRet = CArrayView<T>;    using Ret = ArrayView<T>; };
 template<int D, typename T> struct Grid_get {
-    static CGridView<(D-1), T> cget(const T* a, const int* dims, int r);
-    static  GridView<(D-1), T>  get(      T* a, const int* dims, int r);
+    static CGridView<D-1,T> cget(const T* a, const int* dims, int r);
+    static  GridView<D-1,T>  get(      T* a, const int* dims, int r);
+};
+template<int DD, typename T> struct Grid_get2 {
+    template<int n> static typename details::Grid_aux<DD+1,T>::CRet
+    cget2(const T* a, const Vec<int,n+DD>& dims, const Vec<int,n>& u);
+    template<int n> static typename details::Grid_aux<DD+1,T>::Ret
+    get2(       T* a, const Vec<int,n+DD>& dims, const Vec<int,n>& u);
 };
 
 template<int D, typename T> struct nested_initializer_list {
@@ -100,7 +106,7 @@ template<int D, typename T> class CGridView {
     int dim(int c) const                        { return _dims[c]; }
     size_t size() const                         { return product_dims<D>(_dims.data()); }
     typename details::Grid_aux<D,T>::CRet operator[](int r) const;
-    const T& operator[](const Vec<int,D>& u) const;
+    template<int n> typename details::Grid_aux<D-n+1,T>::CRet operator[](const Vec<int,n>& u) const;
     template<typename... A> const T& operator()(A... dd) const; // dd... are int
     const T& raster(size_t i) const             { ASSERTXX(i<size()); return _a[i]; }
     bool ok(const Vec<int,D>& u) const {
@@ -156,8 +162,8 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     using base::size;
     typename details::Grid_aux<D,T>::Ret  operator[](int r);
     typename details::Grid_aux<D,T>::CRet operator[](int r) const { return base::operator[](r); }
-    T&       operator[](const Vec<int,D>& u);
-    const T& operator[](const Vec<int,D>& u) const;
+    template<int n> typename details::Grid_aux<D-n+1,T>::Ret  operator[](const Vec<int,n>& u);
+    template<int n> typename details::Grid_aux<D-n+1,T>::CRet operator[](const Vec<int,n>& u) const;
     template<typename... A> T& operator()(A... dd); // dd... are int
     template<typename... A> const T& operator()(A... dd) const;
     T&       raster(size_t i)                   { ASSERTXX(i<size()); return _a[i]; }
@@ -250,8 +256,8 @@ template<int D, typename T> class Grid : public GridView<D,T> {
     friend void swap(Grid& l, Grid& r) noexcept { using std::swap; swap(l._a, r._a); swap(l._dims, r._dims); }
     void special_reduce_dim0(int i)             { assertx(i>=0 && i<=_dims[0]); _dims[0] = i; }
     // (must declare template parameters because these functions access private _a of <D-1,T> and <D+1,T>)
-    template<int DD, typename TT> friend Grid<(DD-1), TT> reduce_grid_rank(Grid<DD,TT>&& grid);
-    template<int DD, typename TT> friend Grid<(DD+1), TT> increase_grid_rank(Grid<DD,TT>&& grid);
+    template<int DD, typename TT> friend Grid<DD-1,TT> reduce_grid_rank(Grid<DD,TT>&& grid);
+    template<int DD, typename TT> friend Grid<DD+1,TT> increase_grid_rank(Grid<DD,TT>&& grid);
  private:
     using base::_a; using base::_dims;
     using base::reinit;         // hide it
@@ -300,6 +306,9 @@ template<> inline constexpr size_t grid_index(const Vec2<int>& dims, const Vec2<
 template<> inline constexpr size_t grid_index(const Vec1<int>& dims, const Vec1<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims), // dummy_use(dims) returns void so cannot be constexpr
             u[0]);
+}
+template<> inline constexpr size_t grid_index(const Vec<int,0>& dims, const Vec<int,0>& u) {
+    return (void(dims), void(u), 0);    // used in GridView[V()]
 }
 
 template<int D> Vec<int,D> grid_index_inv(const Vec<int,D>& dims, size_t i) {
@@ -368,9 +377,9 @@ template<int D> size_t grid_stride(const Vec<int,D>& dims, int dim) {
 namespace details {
 template<typename T> struct Grid_get<1,T> {
     static const T& cget(const T* a, const int*, int r) { return a[r]; }
-    static       T&  get(T* a, const int*, int r)       { return a[r]; }
+    static       T&  get(      T* a, const int*, int r) { return a[r]; }
 };
-template<typename T> struct Grid_get<2,T> { // specialization for speedup
+template<typename T> struct Grid_get<2,T> {
     static CArrayView<T> cget(const T* a, const int* dims, int r) {
         return CArrayView<T>(a+size_t(r)*dims[1], dims[1]);
     }
@@ -386,16 +395,45 @@ template<typename T> struct Grid_get<3,T> { // specialization for speedup
         return  GridView<2,T>(a+size_t(r)*dims[1]*dims[2], Vec2<int>(dims[1], dims[2]));
     }
 };
-
-template<int D, typename T> CGridView<(D-1), T> details::Grid_get<D,T>::cget(const T* a, const int* dims, int r) {
+template<int D, typename T> CGridView<D-1,T> details::Grid_get<D,T>::cget(const T* a, const int* dims, int r) {
     static_assert(D>=4, "");
-    return CGridView<(D-1), T>(a+r*product_dims<D-1>(&dims[1]), CArrayView<int>(dims+1, D-1));
+    return CGridView<D-1,T>(a+r*product_dims<D-1>(&dims[1]), CArrayView<int>(dims+1, D-1));
+}
+//
+template<int D, typename T> GridView<D-1,T> details::Grid_get<D,T>::get(T* a, const int* dims, int r) {
+    static_assert(D>=4, "");
+    return  GridView<D-1,T>(a+r*product_dims<D-1>(&dims[1]), CArrayView<int>(dims+1, D-1));
 }
 
-template<int D, typename T> GridView<(D-1), T> details::Grid_get<D,T>::get(T* a, const int* dims, int r) {
-    static_assert(D>=4, "");
-    return  GridView<(D-1), T>(a+r*product_dims<D-1>(&dims[1]), CArrayView<int>(dims+1, D-1));
+template<typename T> struct Grid_get2<0,T> {
+    template<int n> static const T& cget2(const T* a, const Vec<int,n>& dims, const Vec<int,n>& u) {
+        return a[grid_index(dims, u)];
+    }
+    template<int n> static       T&  get2(      T* a, const Vec<int,n>& dims, const Vec<int,n>& u) {
+        return a[grid_index(dims, u)];
+    }
+};
+template<typename T> struct Grid_get2<1,T> {
+    template<int n> static CArrayView<T> cget2(const T* a, const Vec<int,n+1>& dims, const Vec<int,n>& u) {
+        return CArrayView<T>(a+grid_index(dims.template head<n>(), u)*dims[n], dims[n]);
+    }
+    template<int n> static  ArrayView<T>  get2(      T* a, const Vec<int,n+1>& dims, const Vec<int,n>& u) {
+        return ArrayView<T>(a+grid_index(dims.template head<n>(), u)*dims[n], dims[n]);
+    }
+};
+template<int DD, typename T> template<int n> typename details::Grid_aux<DD+1,T>::CRet
+details::Grid_get2<DD,T>::cget2(const T* a, const Vec<int,n+DD>& dims, const Vec<int,n>& u) {
+    using T2 = typename details::Grid_aux<DD+1,T>::CRet; // Grid dimension D = n+DD;
+    return T2(a+grid_index(dims.template head<n>(), u)*product_dims<DD>(dims.data()+n),
+              CArrayView<int>(dims.data()+n, DD));
 }
+template<int DD, typename T> template<int n> typename details::Grid_aux<DD+1,T>::Ret
+details::Grid_get2<DD,T>::get2(T* a, const Vec<int,n+DD>& dims, const Vec<int,n>& u) {
+    using T2 = typename details::Grid_aux<DD+1,T>::Ret; // Grid dimension D = n+DD;
+    return T2(a+grid_index(dims.template head<n>(), u)*product_dims<DD>(dims.data()+n),
+              CArrayView<int>(dims.data()+n, DD));
+}
+
 } // namespace details
 
 
@@ -405,8 +443,10 @@ template<int D, typename T> typename details::Grid_aux<D,T>::CRet CGridView<D,T>
     ASSERTXX(check(r)); return details::Grid_get<D,T>::cget(_a, _dims.data(), r);
 }
 
-template<int D, typename T> const T& CGridView<D,T>::operator[](const Vec<int,D>& u) const {
-    return _a[grid_index(_dims, u)];
+template<int D, typename T> template<int n>
+typename details::Grid_aux<D-n+1,T>::CRet CGridView<D,T>::operator[](const Vec<int,n>& u) const {
+    static_assert(n>=0 && n<=D, "");
+    return details::Grid_get2<D-n,T>::template cget2<n>(_a, _dims, u);
 }
 
 template<int D, typename T> template<typename... A> const T& CGridView<D,T>::operator()(A... dd) const {
@@ -432,12 +472,16 @@ template<int D, typename T> typename details::Grid_aux<D,T>::Ret GridView<D,T>::
     ASSERTXX(check(r)); return details::Grid_get<D,T>::get(_a, _dims.data(), r);
 }
 
-template<int D, typename T> T& GridView<D,T>::operator[](const Vec<int,D>& u) {
-    return _a[grid_index(_dims, u)];
+template<int D, typename T> template<int n>
+typename details::Grid_aux<D-n+1,T>::Ret GridView<D,T>::operator[](const Vec<int,n>& u) {
+    static_assert(n>=0 && n<=D, "");
+    return details::Grid_get2<D-n,T>::template get2<n>(_a, _dims, u);
 }
 
-template<int D, typename T> const T& GridView<D,T>::operator[](const Vec<int,D>& u) const {
-    return _a[grid_index(_dims, u)];
+template<int D, typename T> template<int n>
+typename details::Grid_aux<D-n+1,T>::CRet GridView<D,T>::operator[](const Vec<int,n>& u) const {
+    static_assert(n>=0 && n<=D, "");
+    return details::Grid_get2<D-n,T>::template cget2<n>(_a, _dims, u);
 }
 
 template<int D, typename T> template<typename... A> T& GridView<D,T>::operator()(A... dd) {
@@ -462,16 +506,16 @@ template<int D, typename T> void GridView<D,T>::assign(CGridView<D,T> g) {
     if (_a) std::copy(g.begin(), g.end(), _a);
 }
 
-template<int D, typename T> Grid<(D-1), T> reduce_grid_rank(Grid<D,T>&& grid) {
+template<int D, typename T> Grid<D-1,T> reduce_grid_rank(Grid<D,T>&& grid) {
     assertx(grid.dim(0)==1); // perhaps could be <=1
-    Grid<(D-1), T> ngrid;
+    Grid<D-1,T> ngrid;
     using std::swap; swap(ngrid._a, grid._a);
     ngrid._dims = grid._dims.template tail<D-1>(); grid._dims = ntimes<D>(0);
     return ngrid;
 }
 
-template<int D, typename T> Grid<(D+1), T> increase_grid_rank(Grid<D,T>&& grid) {
-    Grid<(D+1), T> ngrid;
+template<int D, typename T> Grid<D+1,T> increase_grid_rank(Grid<D,T>&& grid) {
+    Grid<D+1,T> ngrid;
     using std::swap; swap(ngrid._a, grid._a);
     ngrid._dims = concat(V(1), grid._dims); grid._dims = ntimes<D>(0);
     return ngrid;

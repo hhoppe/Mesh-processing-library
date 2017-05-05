@@ -13,7 +13,7 @@ int main() {
     {
         Grid<3,float> grid(3, 4, 2);
         fill(grid, 2.f);
-        grid[{0, 0, 1}] = 3.f;
+        grid[V(0, 0, 1)] = 3.f;
         grid[V(1, 0, 0)] = 4.f;
         grid(2, 3, 0) = 5.f;
         SHOW(grid.dims());
@@ -97,6 +97,36 @@ int main() {
         // SHOW(grid[V(0, 0)]);
         SHOW(grid[0][V(0, 0)]);
         SHOW(grid[0][V(0, 0)][0]);
+    }
+    {
+        {
+            Grid<2,int> grid{ {1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12} };
+            SHOW(grid);
+            SHOW(grid[V<int>()]);
+            SHOW(grid[1]);
+            SHOW(grid[V(1)]);
+            SHOW(grid[1][2]);
+            SHOW(grid(1, 2));
+            SHOW(grid[V(1, 2)]);
+        }
+        {
+            Grid<4,int> grid{
+                { { {1, 2}, {3, 4} }, { {5, 6}, {7, 8} } },
+                { { {11, 12}, {13, 14} }, { {15, 16}, {17, 18} } }
+            };
+            SHOW(grid);
+            SHOW(grid[1]);
+            SHOW(grid[V(1)]);
+            SHOW(grid[V(1, 1)]);
+            SHOW(grid[V(1, 1, 1)]);
+            SHOW(grid[V(1, 1, 1, 1)]);
+            SHOW(grid[V<int>()][V(1, 1, 1, 1)]);
+            SHOW(grid(1, 1, 1, 1));
+            SHOW(grid[1][V(1, 1)][1]);
+            SHOW(grid[V(1, 1, 1)][1]);
+            SHOW(grid[1][V(1, 1, 1)]);
+            SHOW(grid[V(1, 1)][V(1, 1)]);
+        }
     }
 }
 

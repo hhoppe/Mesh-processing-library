@@ -75,10 +75,10 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
         static_assert(i>=0 && s>=0 && i+s<=n, ""); return *reinterpret_cast<const Vec<T,s>*>(a()+i);
     }
     template<int s> Vec<T,s>& segment(int i) { // V(1, 2, 3, 4).segment<2>(1)==V(2, 3)
-        static_assert(s>0 && s<=n, ""); ASSERTXX(check(i, s)); return *reinterpret_cast<Vec<T,s>*>(a()+i);
+        static_assert(s>=0 && s<=n, ""); ASSERTXX(check(i, s)); return *reinterpret_cast<Vec<T,s>*>(a()+i);
     }
     template<int s> const Vec<T,s>& segment(int i) const {
-        static_assert(s>0 && s<=n, ""); ASSERTXX(check(i, s)); return *reinterpret_cast<const Vec<T,s>*>(a()+i);
+        static_assert(s>=0 && s<=n, ""); ASSERTXX(check(i, s)); return *reinterpret_cast<const Vec<T,s>*>(a()+i);
     }
     ArrayView<T> segment(int i, int s)          { ASSERTXX(check(i, s)); return  ArrayView<T>(a()+i, s); }
     CArrayView<T> segment(int i, int s) const   { ASSERTXX(check(i, s)); return CArrayView<T>(a()+i, s); }
@@ -139,6 +139,9 @@ template<typename T, typename... Ts>
 constexpr Vec<std::decay_t<T>, (1+sizeof...(Ts))> V(T&& t,      Ts... ts) {
     return Vec<std::decay_t<T>, 1+sizeof...(ts)>(std::move(t), std::forward<Ts>(ts)...);
 }
+
+// Construct a zero-length Vec.
+template<typename T> constexpr Vec<T,0> V() { return Vec<T,0>(); }
 
 // Construct an Vec with two identical elements, e.g. twice(v)==V(v, v).
 template<typename T> constexpr Vec2<T> twice(const T& v)     { return {v, v}; }

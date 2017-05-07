@@ -9,7 +9,7 @@ namespace hh {
 
 using KernelFunc = double (*)(double);
 
-class Filter {
+class Filter : noncopyable {
  public:
     Filter(string pname, KernelFunc pfunc, double pradius)
         : _name(std::move(pname)), _func(pfunc), _radius(pradius) { }

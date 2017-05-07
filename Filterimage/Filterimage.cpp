@@ -53,9 +53,9 @@ int g_niter = 1;
 bool use_lab = true;
 bool nooutput = false;
 Pixel gcolor{255, 255, 255, 255};
-Bndrule bndrule = Bndrule::reflected;
-
-FilterBnd filterb{Filter::get("spline"), bndrule};
+Vec2<Bndrule> g_bndrules = twice(Bndrule::reflected);
+Vec2<FilterBnd> g_filterbs = V(FilterBnd(Filter::get("spline"), g_bndrules[0]),
+                               FilterBnd(Filter::get("spline"), g_bndrules[1]));
 
 constexpr Bndrule k_reflected = Bndrule::reflected;
 const Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected); // C++14 constexpr
@@ -379,8 +379,21 @@ void do_getcolorxy(Args& args) {
 }
 
 void do_boundaryrule(Args& args) {
-    bndrule = parse_boundaryrule(args.get_string());
-    filterb.set_bndrule(bndrule);
+    const Bndrule bndrule = parse_boundaryrule(args.get_string());
+    g_bndrules = twice(bndrule);
+    for_int(i, 2) g_filterbs[i].set_bndrule(bndrule);
+}
+
+void do_hboundaryrule(Args& args) {
+    const Bndrule bndrule = parse_boundaryrule(args.get_string());
+    g_bndrules[1] = bndrule;
+    g_filterbs[1].set_bndrule(bndrule);
+}
+
+void do_vboundaryrule(Args& args) {
+    const Bndrule bndrule = parse_boundaryrule(args.get_string());
+    g_bndrules[0] = bndrule;
+    g_filterbs[0].set_bndrule(bndrule);
 }
 
 void do_cropsides(Args& args) {
@@ -389,37 +402,37 @@ void do_cropsides(Args& args) {
     int vt = parse_size(args.get_string(), image.ysize(), false);
     int vb = parse_size(args.get_string(), image.ysize(), false);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(vt, vl), V(vb, vr), twice(bndrule), &gcolor);
+    grid = crop(grid, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
 }
 
 void do_cropl(Args& args) {
     int v = parse_size(args.get_string(), image.xsize(), false);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(0, v), V(0, 0), twice(bndrule), &gcolor);
+    grid = crop(grid, V(0, v), V(0, 0), g_bndrules, &gcolor);
 }
 
 void do_cropr(Args& args) {
     int v = parse_size(args.get_string(), image.xsize(), false);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(0, 0), V(0, v), twice(bndrule), &gcolor);
+    grid = crop(grid, V(0, 0), V(0, v), g_bndrules, &gcolor);
 }
 
 void do_cropt(Args& args) {
     int v = parse_size(args.get_string(), image.ysize(), false);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(v, 0), V(0, 0), twice(bndrule), &gcolor);
+    grid = crop(grid, V(v, 0), V(0, 0), g_bndrules, &gcolor);
 }
 
 void do_cropb(Args& args) {
     int v = parse_size(args.get_string(), image.ysize(), false);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(0, 0), V(v, 0), twice(bndrule), &gcolor);
+    grid = crop(grid, V(0, 0), V(v, 0), g_bndrules, &gcolor);
 }
 
 void do_cropall(Args& args) {
     int v = image.ysize()==image.xsize() ? parse_size(args.get_string(), image.ysize(), false) : args.get_int();
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(v, v), V(v, v), twice(bndrule), &gcolor);
+    grid = crop(grid, V(v, v), V(v, v), g_bndrules, &gcolor);
 }
 
 void do_cropsquare(Args& args) {
@@ -428,7 +441,7 @@ void do_cropsquare(Args& args) {
     int s = image.ysize()==image.xsize() ? parse_size(args.get_string(), image.ysize(), false) : args.get_int();
     const Vec2<int> p(y, x), p0 = p-(s/2);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, p0, image.dims()-p0-s, twice(bndrule), &gcolor);
+    grid = crop(grid, p0, image.dims()-p0-s, g_bndrules, &gcolor);
 }
 
 void do_croprectangle(Args& args) {
@@ -438,7 +451,7 @@ void do_croprectangle(Args& args) {
     int sy = parse_size(args.get_string(), image.ysize(), false);
     const Vec2<int> p(y, x), s(sy, sx), p0 = p-s/2;
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, p0, image.dims()-p0-s, twice(bndrule), &gcolor);
+    grid = crop(grid, p0, image.dims()-p0-s, g_bndrules, &gcolor);
 }
 
 void do_cropcoord(Args& args) {
@@ -448,7 +461,7 @@ void do_cropcoord(Args& args) {
     int y1 = parse_size(args.get_string(), image.ysize(), true);
     const Vec2<int> p0(y0, x0), p1(y1, x1);
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, p0, image.dims()-p1, twice(bndrule), &gcolor);
+    grid = crop(grid, p0, image.dims()-p1, g_bndrules, &gcolor);
 }
 
 void do_croptodims(Args& args) {
@@ -457,7 +470,7 @@ void do_croptodims(Args& args) {
     auto yx0 = (image.dims()-ndims)/2;
     auto yx1 = image.dims()-ndims-yx0;
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, yx0, yx1, twice(bndrule), &gcolor);
+    grid = crop(grid, yx0, yx1, g_bndrules, &gcolor);
 }
 
 void do_cropmatte() {
@@ -484,7 +497,7 @@ void do_cropmatte() {
         if (!ok) break;
     }
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(t, l), V(b, r), twice(bndrule), &gcolor);
+    grid = crop(grid, V(t, l), V(b, r), g_bndrules, &gcolor);
 }
 
 void do_overlayimage(Args& args) {
@@ -511,46 +524,57 @@ void do_drawrectangle(Args& args) {
 // *** scale
 
 void do_filter(Args& args) {
-    filterb.set_filter(Filter::get(args.get_string()));
+    const Filter& filter = Filter::get(args.get_string());
+    for_int(i, 2) g_filterbs[i].set_filter(filter);
+}
+
+void do_hfilter(Args& args) {
+    const Filter& filter = Filter::get(args.get_string());
+    g_filterbs[1].set_filter(filter);
+}
+
+void do_vfilter(Args& args) {
+    const Filter& filter = Filter::get(args.get_string());
+    g_filterbs[0].set_filter(filter);
 }
 
 void do_scaleunif(Args& args) {
     HH_TIMER(_scale);
     float s = args.get_float();
-    image.scale(twice(s), twice(filterb));
+    image.scale(twice(s), g_filterbs);
 }
 
 void do_scalenonunif(Args& args) {
     HH_TIMER(_scale);
     float sx = args.get_float(), sy = args.get_float();
-    image.scale(V(sy, sx), twice(filterb));
+    image.scale(V(sy, sx), g_filterbs);
 }
 
 void do_scaletox(Args& args) {
     HH_TIMER(_scale);
     int nx = parse_size(args.get_string(), image.xsize(), false); assertx(nx>0);
     float s = float(nx)/assertx(image.xsize());
-    image.scale(twice(s), twice(filterb));
+    image.scale(twice(s), g_filterbs);
 }
 
 void do_scaletoy(Args& args) {
     HH_TIMER(_scale);
     int ny = parse_size(args.get_string(), image.ysize(), false); assertx(ny>0);
     float s = float(ny)/assertx(image.ysize());
-    image.scale(twice(s), twice(filterb));
+    image.scale(twice(s), g_filterbs);
 }
 
 void do_scaletodims(Args& args) {
     HH_TIMER(_scale);
     int nx = args.get_int(), ny = args.get_int(); assertx(nx>0 && ny>0);
     auto syx = convert<float>(V(ny, nx))/convert<float>(image.dims());
-    image.scale(syx, twice(filterb));
+    image.scale(syx, g_filterbs);
 }
 
 void do_scaleinside(Args& args) {
     HH_TIMER(_scale);
     int nx = args.get_int(), ny = args.get_int(); assertx(nx>0 && ny>0);
-    image.scale(twice(min(convert<float>(V(ny, nx))/convert<float>(image.dims()))), twice(filterb));
+    image.scale(twice(min(convert<float>(V(ny, nx))/convert<float>(image.dims()))), g_filterbs);
 }
 
 void do_scalehalf2n1() {
@@ -692,7 +716,7 @@ void do_rot180() {
 void apply_frame(const Frame& frame) {
     HH_STIMER(_apply_frame);
     Matrix<Vector4> matv(image.dims()); convert(image, matv);
-    Matrix<Vector4> nmatv(image.dims()); transform(matv, frame, twice(filterb), nmatv);
+    Matrix<Vector4> nmatv(image.dims()); transform(matv, frame, g_filterbs, nmatv);
     convert(nmatv, image);
 }
 
@@ -787,7 +811,7 @@ void do_blur(Args& args) {
         parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
             Vector4 vec(0.f);
             for_coordsL(twice(-r), twice(r+1), [&](const Vec2<int>& dyx) {
-                vec += ar_gauss[dyx[0]+r]*ar_gauss[dyx[1]+r]*grid.inside(yx+dyx, twice(bndrule));
+                vec += ar_gauss[dyx[0]+r]*ar_gauss[dyx[1]+r]*grid.inside(yx+dyx, g_bndrules);
             });
             image[yx] = vec.pixel();
         }, 1000);
@@ -819,7 +843,7 @@ void apply_as_operations(Grid<2,Pixel>& im, const Vec2<int>& yx, const Vec2<int>
             const float vscale = min(convert<float>(as_fit_dims)/convert<float>(im.dims()));
             Vec2<int> newdims = convert<int>(convert<float>(im.dims())*vscale+.5f);
             Grid<2,Pixel> newim(newdims);
-            scale_Matrix_Pixel(im, twice(filterb), newim);
+            scale_Matrix_Pixel(im, g_filterbs, newim);
             im = std::move(newim);
         }
         Vec2<int> side0 = (as_fit_dims - im.dims())/2;
@@ -850,16 +874,19 @@ void do_assemble(Args& args) {
     // Filterimage -assemble 2 2 rootname.{0.0,1.0,0.1,1.1}.png >lake.same.png
     /// Filterimage -as_fit 480 320 -as_cropsides -8 -8 -8 -8 -assemble 2 2 ~/data/image/lake.png{,,,} | vv -
     // (cd $HOMEPATH/Dropbox/Pictures/2014/india; Filterimage -nostdin -color 0 0 0 255 -as_fit 640 640 -as_cropsides -4 -4 -4 -4 -assemble -1 -1 2*.jpg | vv -)
-    int nx = args.get_int(), ny = args.get_int(); assertx((nx>0 && ny>=0) || (nx==-1 && ny==-1));
-    if (ny>0) args.ensure_at_least(nx*ny);
+    int nx = args.get_int(), ny = args.get_int();
+    assertx((nx>0 && ny>=0) || (ny>0 && nx>=0) || (nx==-1 && ny==-1));
+    if (nx>0 && ny>0) args.ensure_at_least(nx*ny);
     Array<string> lfilenames;
     while (args.num() && args.peek_string()[0]!='-') lfilenames.push(args.get_filename());
     if (nx==-1 && ny==-1) {
         ny = max(int(ceil(sqrt(float(lfilenames.num())))), 1);
         nx = ny;
-    } else if (!ny) {
+    } else if (nx && !ny) {
         ny = (lfilenames.num()-1)/nx+1;
-    }
+    } else if (ny && !nx) {
+        nx = (lfilenames.num()-1)/ny+1;
+    } else { assertnever(""); }
     Matrix<Image> images(V(ny, nx));
     assertx(images.size()>=lfilenames.size());
     Matrix<string> filenames(images.dims());
@@ -942,7 +969,7 @@ void do_gridcrop(Args& args) {
         int vb = image.ysize()-vt-sy;
         if (0) showf("vl=%d vt=%d  vr=%d vb=%d\n", vl, vt, vr, vb);
         Grid<2,Pixel>& im = images[yx];
-        im = crop(image, V(vt, vl), V(vb, vr), twice(bndrule), &gcolor);
+        im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
         apply_as_operations(im, yx, images.dims());
     }, sy*sx*4);
     assemble_images(images);
@@ -1664,7 +1691,7 @@ void do_superresolution(Args& args) {
     for (const auto& yx : coords(image.dims())) { mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0]; }
     // Apply ordinary magnification (using any chosen scaling filter).
     Image oimage = std::move(image);
-    image = scale(oimage, twice(fac), twice(filterb));
+    image = scale(oimage, twice(fac), g_filterbs);
     // Now add super-res adaptive sharpening.
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         auto fyx = (convert<float>(yx)+.5f)*convert<float>(oimage.dims())/convert<float>(image.dims())-.5f;
@@ -1930,7 +1957,7 @@ void output_contour(int gn, float contour_value) {
     // Pixels are at locations [ 0.5/imagesize, (imagesize-.5)/imagesize ], consistent with sample_domain()
     Matrix<float> matrix(image.dims());
     for (const auto& yx : coords(image.dims())) { matrix[yx] = float(image[yx][0]); } // red channel
-    Vec2<FilterBnd> filterbs = twice(filterb);
+    Vec2<FilterBnd> filterbs = g_filterbs;
     if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
         filterbs = inverse_convolution(matrix, filterbs);
     auto func_eval = [&](const Vec2<float>& p) -> float {
@@ -2203,7 +2230,7 @@ void do_procedure(Args& args) {
         const float s = 1.01f;
         for_int(i, 10) {
             // HH_TIMER(__scale);
-            image.scale(twice(s), twice(filterb));
+            image.scale(twice(s), g_filterbs);
         }
     } else if (name=="mark_dark") {
         const int thresh = args.get_int();
@@ -2219,7 +2246,7 @@ void do_procedure(Args& args) {
         string filename2 = args.get_filename();
         Image image2; image2.read_file(filename2); assertx(same_size(image, image2));
         Matrix<Vector4> image2v(image.dims()); convert(image2, image2v);
-        Vec2<FilterBnd> filterbs = twice(filterb);
+        Vec2<FilterBnd> filterbs = g_filterbs;
         if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
             filterbs = inverse_convolution(image2v, filterbs);
         GMesh mesh;
@@ -2417,7 +2444,7 @@ void do_procedure(Args& args) {
                 limage.set_silent_io_progress(true);
                 limage.read_file(imagenames[i]);
                 // Downscale to maximum size.
-                limage.scale(twice(float(size)/assertx(max(limage.dims()))), twice(filterb));
+                limage.scale(twice(float(size)/assertx(max(limage.dims()))), g_filterbs);
                 // Fill to square.
                 Grid<2,Pixel>& grid = limage;
                 int vt = -(size-limage.ysize())/2, vb = -(size-limage.ysize()+vt);
@@ -3058,7 +3085,7 @@ void do_resamplemesh(Args& args) {
     assertx(min(image.dims())>=2);
     GMesh mesh; { RFile fi(mfile); mesh.read(fi()); }
     Matrix<Vector4> imagev(image.dims()); convert(image, imagev);
-    Vec2<FilterBnd> filterbs = twice(filterb);
+    Vec2<FilterBnd> filterbs = g_filterbs;
     if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
         filterbs = inverse_convolution(imagev, filterbs);
     string str;
@@ -3099,6 +3126,8 @@ int main(int argc, const char** argv) {
     ARGSD(not,                  ": negate test for color selection");
     ARGSD(getcolorxy,           "x y : get color from pixel ((x=0, y=0) = (left, top))");
     ARGSD(boundaryrule,         "c : reflected/periodic/clamped/border");
+    ARGSD(hboundaryrule,        "c : set just horizontal boundary rule");
+    ARGSD(vboundaryrule,        "c : set just vertical boundary rule");
     ARGSC("",                   ":");
     ARGSD(cropsides,            "l r t b : crop image (introduce specified color if negative)");
     ARGSD(cropl,                "l : crop image");
@@ -3113,6 +3142,8 @@ int main(int argc, const char** argv) {
     ARGSD(cropmatte,            ": crop all sides matching the set color");
     ARGSC("",                   ":");
     ARGSD(filter,               "c : imp/box/tri/quad/mitchell/keys/spline/omoms/gauss/preprocess/justspline");
+    ARGSD(hfilter,              "c : set just horizontal filter");
+    ARGSD(vfilter,              "c : set just vertical filter");
     ARGSD(scaleunif,            "fac : zoom image (upsample and/or downsample)");
     ARGSD(scalenonunif,         "facx facy : zoom image");
     ARGSD(scaletox,             "x : uniform scale to x width");

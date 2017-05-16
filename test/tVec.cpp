@@ -268,10 +268,18 @@ int main() {
 }
 
 namespace hh {
+
 template class Vec<int,4>;
 template class Vec<double,1>;
 template class Vec<float,2>;
 template class Vec<ushort,3>;
-template class Vec<Vec<unsigned,2>, 2>;
+
+using U = Vec<unsigned,2>;
+constexpr int n = 3;
+template<> bool Vec<U,n>::in_range(const Vec<U,n>&) const { return false; }  // default definition illegal
+template<> bool Vec<U,n>::in_range(const Vec<U,n>&, const Vec<U,n>&) const { return false; }
+template class Vec<U,n>;
+
 template class Vec<void*,3>;
+
 } // namespace hh

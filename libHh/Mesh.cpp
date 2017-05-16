@@ -101,8 +101,8 @@ Vertex Mesh::create_vertex_private(int id) {
 
 void Mesh::destroy_vertex(Vertex v) {
     assertx(!herep(v));
-    assertx(_id2vertex.remove(v->id));
-    if (_vertexnum-1==v->id) --_vertexnum;
+    assertx(_id2vertex.remove(v->_id));
+    if (_vertexnum-1==v->_id) --_vertexnum;
     delete v;
 }
 
@@ -135,25 +135,25 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
     for_int(i, nv) {
         Vertex v2 = va[i+1==nv ? 0 : i+1];
         HEdge he = new MHEdge;
-        he->prev = hep;
-        // he->next is set below
-        he->vert = v2;
+        he->_prev = hep;
+        // he->_next is set below
+        he->_vert = v2;
         enter_hedge(he, va[i]);
-        // he->sym and he->edge were set in enter_hedge
-        he->face = f;
+        // he->_sym and he->_edge were set in enter_hedge
+        he->_face = f;
         hep = he;
     }
     assertx(hep);               // HH_ASSUME(hep);
     HEdge helast = hep;
     for (;;) {
-        HEdge hepp = hep->prev;
+        HEdge hepp = hep->_prev;
         if (!hepp) break;
-        hepp->next = hep;
+        hepp->_next = hep;
         hep = hepp;
     }
-    hep->prev = helast;
-    helast->next = hep;
-    f->herep = helast;          // such that f->herep->vert==va[0]
+    hep->_prev = helast;
+    helast->_next = hep;
+    f->_herep = helast;         // such that f->herep->_vert==va[0]
     _facenum = max(_facenum, id+1);
     if (sdebug>=3) ok();
     return f;
@@ -162,18 +162,18 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
 void Mesh::destroy_face(Face f) {
     {
         HEdge he = assertx(herep(f)), hef = he;
-        Vertex v1 = he->prev->vert;
+        Vertex v1 = he->_prev->_vert;
         for (;;) {
-            HEdge hen = he->next;
-            Vertex v1n = he->vert;
+            HEdge hen = he->_next;
+            Vertex v1n = he->_vert;
             remove_hedge(he, v1);
             delete he; he = hen;
             v1 = v1n;
             if (he==hef) break;
         }
     }
-    assertx(_id2face.remove(f->id));
-    if (_facenum-1==f->id) --_facenum;
+    assertx(_id2face.remove(f->_id));
+    if (_facenum-1==f->_id) --_facenum;
     delete f;
     if (sdebug>=3) ok();
 }
@@ -216,7 +216,7 @@ bool Mesh::is_boundary(Vertex v) const {
 
 Edge Mesh::opp_edge(Vertex v, Face f) const {
     assertx(is_triangle(f));
-    return get_hedge(v, f)->prev->edge;
+    return get_hedge(v, f)->_prev->_edge;
 }
 
 Vertex Mesh::opp_vertex(Vertex v, Edge e) const {
@@ -228,34 +228,34 @@ Vertex Mesh::opp_vertex(Vertex v, Edge e) const {
 
 Vertex Mesh::most_clw_vertex(Vertex v) const {
     HEdge he = most_clw_hedge(v);
-    return he ? he->next->vert : nullptr;
+    return he ? he->_next->_vert : nullptr;
 }
 
 Vertex Mesh::most_ccw_vertex(Vertex v) const {
     HEdge he = most_ccw_hedge(v);
-    return he ? he->prev->vert : nullptr;
+    return he ? he->_prev->_vert : nullptr;
 }
 
 Vertex Mesh::clw_vertex(Vertex v, Vertex vext) const {
-    HEdge he = query_hedge(vext, v); if (he) return he->next->vert;
+    HEdge he = query_hedge(vext, v); if (he) return he->_next->_vert;
     if (sdebug>=1) assertx(query_hedge(v, vext));
     return nullptr;
 }
 
 Vertex Mesh::ccw_vertex(Vertex v, Vertex vext) const {
-    HEdge he = query_hedge(v, vext); if (he) return he->prev->prev->vert;
+    HEdge he = query_hedge(v, vext); if (he) return he->_prev->_prev->_vert;
     if (sdebug>=1) assertx(query_hedge(vext, v));
     return nullptr;
 }
 
 Face Mesh::most_clw_face(Vertex v) const {
     HEdge he = most_clw_hedge(v);
-    return he ? he->face : nullptr;
+    return he ? he->_face : nullptr;
 }
 
 Face Mesh::most_ccw_face(Vertex v) const {
     HEdge he = most_ccw_hedge(v);
-    return he ? he->face : nullptr;
+    return he ? he->_face : nullptr;
 }
 
 Face Mesh::clw_face(Vertex v, Face f) const {
@@ -268,22 +268,22 @@ Face Mesh::ccw_face(Vertex v, Face f) const {
 
 Edge Mesh::most_clw_edge(Vertex v) const {
     HEdge he = most_clw_hedge(v);
-    return he ? he->next->edge : nullptr;
+    return he ? he->_next->_edge : nullptr;
 }
 
 Edge Mesh::most_ccw_edge(Vertex v) const {
     HEdge he = most_ccw_hedge(v);
-    return he ? he->edge : nullptr;
+    return he ? he->_edge : nullptr;
 }
 
 Edge Mesh::clw_edge(Vertex v, Edge e) const {
     HEdge he = hedge_from_ev2(e, v);
-    return he ? he->next->edge : nullptr;
+    return he ? he->_next->_edge : nullptr;
 }
 
 Edge Mesh::ccw_edge(Vertex v, Edge e) const {
     HEdge he = hedge_from_ev1(e, v);
-    return he ? he->prev->edge : nullptr;
+    return he ? he->_prev->_edge : nullptr;
 }
 
 Face Mesh::ccw_face(Vertex v, Edge e) const {
@@ -357,21 +357,21 @@ Array<Corner> Mesh::get_corners(Face f, Array<Corner>&& ca) const {
 
 Vertex Mesh::opp_vertex(Edge e, Face f) const {
     HEdge he = hedge_from_ef(e, f);
-    if (he->next->next->next!=he) assertnever("mesh face is not triangle"); // cheaper than is_triangle(f)
-    return he->next->vert;
+    if (he->_next->_next->_next!=he) assertnever("mesh face is not triangle"); // cheaper than is_triangle(f)
+    return he->_next->_vert;
 }
 
 Edge Mesh::opp_boundary(Edge e, Vertex v) const {
     HEdge he = herep(e);
     assertx(is_boundary(he));
-    if (he->vert==v) {
+    if (he->_vert==v) {
         while (HEdge hen = clw_hedge(he)) he = hen;
-        return he->next->edge;
+        return he->_next->_edge;
     }
-    if (he->prev->vert==v) {
-        he = he->prev;
+    if (he->_prev->_vert==v) {
+        he = he->_prev;
         while (HEdge hen = ccw_hedge(he)) he = hen;
-        return he->edge;
+        return he->_edge;
     }
     assertnever("Vertex not on Edge");
 }
@@ -386,15 +386,15 @@ Vertex Mesh::vertex_between_edges(Edge e1, Edge e2) {
 
 Edge Mesh::query_edge(Vertex v, Vertex w) const {
     HEdge he;
-    he = query_hedge(v, w); if (he) return he->edge;
-    he = query_hedge(w, v); if (he) return he->edge;
+    he = query_hedge(v, w); if (he) return he->_edge;
+    he = query_hedge(w, v); if (he) return he->_edge;
     return nullptr;
 }
 
 Edge Mesh::ordered_edge(Vertex v1, Vertex v2) const {
     HEdge he = assertx(query_hedge(v1, v2));
-    Edge e = he->edge;
-    assertx(e->herep==he);
+    Edge e = he->_edge;
+    assertx(e->_herep==he);
     return e;
 }
 
@@ -417,7 +417,7 @@ Edge Mesh::random_edge(Random& r) const {
     for (HEdge he : corners(f)) {
         if (!vi--) { hef = he; break; }
     }
-    return assertx(hef)->edge;
+    return assertx(hef)->_edge;
 }
 
 // *** Mesh operations
@@ -477,28 +477,28 @@ void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
     assertx(legal_edge_collapse(e));
     HEdge he1 = hedge_from_ev1(e, vs);
     HEdge he2 = hedge_from_ev2(e, vs);
-    Vertex vt = he1 ? he1->vert : assertx(he2)->prev->vert;
+    Vertex vt = he1 ? he1->_vert : assertx(he2)->_prev->_vert;
     assertx(vt==opp_vertex(vs, e)); // optional
     // Create bogus hedges if boundaries
     Array<HEdge> ar_he;
-    if (he1) ar_he.push(he1->prev);
-    if (he2) ar_he.push(he2->next);
+    if (he1) ar_he.push(he1->_prev);
+    if (he2) ar_he.push(he2->_next);
     create_bogus_hedges(ar_he);
     if (he1) {
-        assertx(is_triangle(he1->face));
-        destroy_face(he1->face);
+        assertx(is_triangle(he1->_face));
+        destroy_face(he1->_face);
     }
     if (he2) {
-        assertx(is_triangle(he2->face));
-        destroy_face(he2->face);
+        assertx(is_triangle(he2->_face));
+        destroy_face(he2->_face);
     }
     // Change remaining faces around vt to have vs instead
     Array<Corner> arc; for (HEdge he : corners(vt)) { arc.push(he); }
     for (HEdge he : arc) {
         // ends up deleting and recreating MEdge structures, which is great.
-        remove_hedge(he, he->prev->vert); remove_hedge(he->next, he->vert);
-        he->vert = vs;
-        enter_hedge(he, he->prev->vert); enter_hedge(he->next, he->vert);
+        remove_hedge(he, he->_prev->_vert); remove_hedge(he->_next, he->_vert);
+        he->_vert = vs;
+        enter_hedge(he, he->_prev->_vert); enter_hedge(he->_next, he->_vert);
     }
     // Destroy vertex vt
     destroy_vertex(vt);
@@ -516,7 +516,7 @@ Vertex Mesh::split_edge(Edge e, int id) {
     Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e); // implies triangles
     // Create bogus hedges if boundaries
     Array<HEdge> ar_he; for (Face f : faces(e)) {
-        for (HEdge he : corners(f)) { if (he->edge!=e) ar_he.push(he); }
+        for (HEdge he : corners(f)) { if (he->_edge!=e) ar_he.push(he); }
     } create_bogus_hedges(ar_he); // note: temporarily causes mesh.ok() to fail
     // Destroy faces
     destroy_face(f1);
@@ -570,9 +570,9 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
     for (Corner cc : stackc) {
         // ends up deleting and recreating MEdge structures, which is great.
         HEdge he = cc;
-        remove_hedge(he, he->prev->vert); remove_hedge(he->next, he->vert);
-        he->vert = v2;
-        enter_hedge(he, he->prev->vert); enter_hedge(he->next, he->vert);
+        remove_hedge(he, he->_prev->_vert); remove_hedge(he->_next, he->_vert);
+        he->_vert = v2;
+        enter_hedge(he, he->_prev->_vert); enter_hedge(he->_next, he->_vert);
     }
     // info on edges around v1 still valid; edges on v2 all new
     return v2;
@@ -580,8 +580,8 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
 
 bool Mesh::legal_vertex_merge(Vertex vs, Vertex vt) {
     for (HEdge he : corners(vt)) {
-        if (query_hedge(he->prev->vert, vs)) return false;
-        if (query_hedge(vs, he->next->vert)) return false;
+        if (query_hedge(he->_prev->_vert, vs)) return false;
+        if (query_hedge(vs, he->_next->_vert)) return false;
     }
     return true;
 }
@@ -592,10 +592,10 @@ void Mesh::merge_vertices(Vertex vs, Vertex vt) {
     // Change faces around vt to instead use vs.
     Array<Corner> arc; for (HEdge he : corners(vt)) { arc.push(he); }
     for (HEdge he : arc) {
-        ASSERTX(he->vert==vt);
-        remove_hedge(he, he->prev->vert); remove_hedge(he->next, he->vert);
-        he->vert = vs;
-        enter_hedge(he, he->prev->vert); enter_hedge(he->next, he->vert);
+        ASSERTX(he->_vert==vt);
+        remove_hedge(he, he->_prev->_vert); remove_hedge(he->_next, he->_vert);
+        he->_vert = vs;
+        enter_hedge(he, he->_prev->_vert); enter_hedge(he->_next, he->_vert);
     }
     destroy_vertex(vt);
 }
@@ -780,10 +780,10 @@ void Mesh::renumber() {
     int id = 1;
     // self-change to mesh is OK since ordered iterator creates copy of verts.
     for (Vertex v : ordered_vertices()) {
-        ASSERTX(v->id>=id);
-        if (v->id!=id) {
-            assertx(_id2vertex.remove(v->id)==v);
-            v->id = id;
+        ASSERTX(v->_id>=id);
+        if (v->_id!=id) {
+            assertx(_id2vertex.remove(v->_id)==v);
+            v->_id = id;
             _id2vertex.enter(id, v);
         }
         id++;
@@ -791,10 +791,10 @@ void Mesh::renumber() {
     id = 1;
     // self-change to mesh is OK since ordered iterator creates copy of faces.
     for (Face f : ordered_faces()) {
-        ASSERTX(f->id>=id);
-        if (f->id!=id) {
-            assertx(_id2face.remove(f->id)==f);
-            f->id = id;
+        ASSERTX(f->_id>=id);
+        if (f->_id!=id) {
+            assertx(_id2face.remove(f->_id)==f);
+            f->_id = id;
             _id2face.enter(id, f);
         }
         id++;
@@ -802,17 +802,17 @@ void Mesh::renumber() {
 }
 
 void Mesh::vertex_renumber_id_private(Vertex v, int newid) {
-    if (v->id==newid) return;
-    assertx(_id2vertex.remove(v->id)==v);
-    v->id = newid;
+    if (v->_id==newid) return;
+    assertx(_id2vertex.remove(v->_id)==v);
+    v->_id = newid;
     _id2vertex.enter(newid, v);
     _vertexnum = max(_vertexnum, newid+1);
 }
 
 void Mesh::face_renumber_id_private(Face f, int newid) {
-    if (f->id==newid) return;
-    assertx(_id2face.remove(f->id)==f);
-    f->id = newid;
+    if (f->_id==newid) return;
+    assertx(_id2face.remove(f->_id)==f);
+    f->_id = newid;
     _id2face.enter(newid, f);
     _facenum = max(_facenum, newid+1);
 }
@@ -821,54 +821,54 @@ void Mesh::ok() const {
     // Check consistency of id2x (one way)
     for_map_key_value(_id2vertex, [&](int id, Vertex v) {
         valid(v);
-        assertx(v->id==id);
+        assertx(v->_id==id);
     });
     for_map_key_value(_id2face, [&](int id, Face f) {
         valid(f);
-        assertx(f->id==id);
+        assertx(f->_id==id);
     });
     // Look over Vertices
     Set<HEdge> sethe;
     for (Vertex v1 : vertices()) {
-        assertx(_id2vertex.get(v1->id)==v1);
+        assertx(_id2vertex.get(v1->_id)==v1);
         Set<Vertex> set;
         for (HEdge he : v1->_arhe) {
             // Check that HEdges are valid
             valid(he);
-            assertx(he->prev->vert==v1);
-            Vertex v2 = he->vert;
+            assertx(he->_prev->_vert==v1);
+            Vertex v2 = he->_vert;
             // Check that v2's are not duplicated
             assertx(set.add(v2));
             // Check that sym matches that in _arhe
-            assertx(query_hedge(v2, v1)==he->sym);
+            assertx(query_hedge(v2, v1)==he->_sym);
             // Check that HEdge sym is valid
-            if (he->sym) {
-                valid(he->sym);
-                assertx(he->sym->edge==he->edge);
-                assertx(he->sym->sym==he);
-                assertx(he->sym->vert==he->prev->vert);
-                assertx(he->sym->prev->vert==he->vert);
+            if (he->_sym) {
+                valid(he->_sym);
+                assertx(he->_sym->_edge==he->_edge);
+                assertx(he->_sym->_sym==he);
+                assertx(he->_sym->_vert==he->_prev->_vert);
+                assertx(he->_sym->_prev->_vert==he->_vert);
             }
             // Check that hedges are unique, and one-to-one with ste (1)
             assertx(sethe.add(he));
             // Check that Faces reachable from Edges are valid
-            valid(he->face);
+            valid(he->_face);
             // Check that each HEdge appears in its face
             bool found = false;
-            for (HEdge hee : corners(he->face)) {
+            for (HEdge hee : corners(he->_face)) {
                 if (hee==he) { found = true; break; }
             }
             assertx(found);
             // Check that Edge is valid
-            valid(he->edge);
+            valid(he->_edge);
         }
     }
     // Look over Faces
     for (Face f : faces()) {
-        assertx(_id2face.get(f->id)==f);
+        assertx(_id2face.get(f->_id)==f);
         // Check that Face has valid erep
-        assertx(herep(f)->face==f);
-        valid(herep(f)->edge);
+        assertx(herep(f)->_face==f);
+        valid(herep(f)->_edge);
         Set<Vertex> set;
         for (Vertex v : vertices(f)) {
             // Check Face contains no duplicate Vertices
@@ -879,7 +879,7 @@ void Mesh::ok() const {
         assertx(set.num()>=3);
         // Check Edges in Faces are one-to-one with _arhe (2)
         for (HEdge he : corners(f)) {
-            assertx(he->face==f);
+            assertx(he->_face==f);
             assertx(sethe.remove(he));
         }
     }
@@ -914,9 +914,9 @@ bool Mesh::valid(Edge e) const {
 
 bool Mesh::valid(Corner c) const {
     HEdge he = c;               // they are equivalent
-    assertx(he && he->next && he->prev && he->face && he->vert); HH_ASSUME(he);
-    Edge e = assertx(he->edge);
-    assertx(hedge_from_ev2(e, he->vert)==he);
+    assertx(he && he->_next && he->_prev && he->_face && he->_vert); HH_ASSUME(he);
+    Edge e = assertx(he->_edge);
+    assertx(hedge_from_ev2(e, he->_vert)==he);
     return true;
 }
 
@@ -962,14 +962,14 @@ Mesh::HEdge Mesh::most_ccw_hedge(Vertex v) const {
 
 Mesh::HEdge Mesh::get_hedge(Vertex v, Face f) const {
     for (Corner he : corners(v)) {
-        if (he->face==f) { return he; }
+        if (he->_face==f) { return he; }
     }
     assertnever("Face not adjacent to Vertex");
 }
 
 Mesh::HEdge Mesh::query_hedge(Vertex v1, Vertex v2) const {
     for (HEdge he : v1->_arhe) {
-        if (he->vert==v2) return he;
+        if (he->_vert==v2) return he;
     }
     return nullptr;
 }
@@ -978,49 +978,49 @@ Mesh::HEdge Mesh::query_hedge(Vertex v1, Vertex v2) const {
 // Defines:             sym, edge
 // Must define elsewhere: next, prev, face, edge
 void Mesh::enter_hedge(HEdge he, Vertex v1) {
-    Vertex v2 = he->vert;
+    Vertex v2 = he->_vert;
     if (sdebug>=1) {
         valid(v1); valid(v2);
         assertx(!query_hedge(v1, v2) && !v1->_arhe.contains(he));
     }
     v1->_arhe.push(he);
-    HEdge hes = he->sym = query_hedge(v2, v1);
+    HEdge hes = he->_sym = query_hedge(v2, v1);
     if (hes) {
-        assertx(!hes->sym);
-        hes->sym = he;
-        Edge e = hes->edge;
-        he->edge = e;
-        if (he->vert->id>hes->vert->id) e->herep = he;
+        assertx(!hes->_sym);
+        hes->_sym = he;
+        Edge e = hes->_edge;
+        he->_edge = e;
+        if (he->_vert->_id>hes->_vert->_id) e->_herep = he;
     } else {
         _nedges++;
         Edge e = new MEdge(he);
-        he->edge = e;
+        he->_edge = e;
     }
 }
 
 // Must have:           vert, sym, edge
 // Must do later:       delete he
-// Note: must be careful: could have he==herep(he->face) ! :
+// Note: must be careful: could have he==herep(he->_face) ! :
 //   destroy_face() : deletes face -> ok.
 //   substitute_face_vertex() : reintroduces edge -> ok.
 void Mesh::remove_hedge(HEdge he, Vertex v1) {
-    Vertex v2 = he->vert;
+    Vertex v2 = he->_vert;
     if (sdebug>=1) {
         valid(v1); valid(v2);
         assertx(he==query_hedge(v1, v2));
-        assertx(he->sym==query_hedge(v2, v1));
+        assertx(he->_sym==query_hedge(v2, v1));
     }
-    Edge e = he->edge;
-    HEdge hes = he->sym;
+    Edge e = he->_edge;
+    HEdge hes = he->_sym;
     if (hes) {
-        hes->sym = nullptr;
-        if (e->herep==he) e->herep = hes;
+        hes->_sym = nullptr;
+        if (e->_herep==he) e->_herep = hes;
     } else {
         --_nedges;
         // e->herep = nullptr;     // optional
         delete e;
     }
-    // he->edge = nullptr;         // optional
+    // he->_edge = nullptr;         // optional
     assertx(v1->_arhe.remove_unordered(he)); // slow, shucks
 }
 
@@ -1029,13 +1029,13 @@ void Mesh::create_bogus_hedges(ArrayView<HEdge> ar_he) {
         HEdge& he = ar_he[i];
         if (is_boundary(he)) {
             HEdge heo = he;
-            Vertex v1 = heo->vert;
+            Vertex v1 = heo->_vert;
             he = new MHEdge;
-            HH_ASSUME(heo->prev);
-            he->vert = heo->prev->vert;
-            he->prev = nullptr; // note: temporarily causes mesh.ok() to fail
-            he->next = nullptr;
-            he->face = reinterpret_cast<Face>(v1); // temporary overload
+            HH_ASSUME(heo->_prev);
+            he->_vert = heo->_prev->_vert;
+            he->_prev = nullptr; // note: temporarily causes mesh.ok() to fail
+            he->_next = nullptr;
+            he->_face = reinterpret_cast<Face>(v1); // temporary overload
             enter_hedge(he, v1);
         } else {
             he = nullptr;
@@ -1046,7 +1046,7 @@ void Mesh::create_bogus_hedges(ArrayView<HEdge> ar_he) {
 void Mesh::remove_bogus_hedges(CArrayView<HEdge> ar_he) {
     for (HEdge he : ar_he) {
         if (!he) continue;
-        Vertex v1 = reinterpret_cast<Vertex>(he->face); // temporary overload
+        Vertex v1 = reinterpret_cast<Vertex>(he->_face); // temporary overload
         remove_hedge(he, v1);
         delete he;
     }

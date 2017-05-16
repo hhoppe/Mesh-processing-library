@@ -111,7 +111,7 @@ template<int D, typename VertexData = Vec0<int>> class ContourBase {
     int _nedegen {0};
     Array<DPoint> _tmp_poly;
     //
-    bool cube_inbounds(const IPoint& ci) const { return in_bounds(ci, ntimes<D>(_gn)); }
+    bool cube_inbounds(const IPoint& ci) const { return ci.in_range(ntimes<D>(_gn)); }
     DPoint get_point(const IPoint& ci) const {
         // Note: less strict than cube_inbounds() because ci[c]==_gn is OK for a vertex.
         // DPoint dp; for_int(c, D) { ASSERTX(ci[c]>=0 && ci[c]<=_gn); dp[c] = min(ci[c]*_gni, 1.f); }

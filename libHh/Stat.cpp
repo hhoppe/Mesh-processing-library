@@ -80,7 +80,7 @@ void Stat::zero() {
     _n = 0;
     _sum = _sum2 = 0.;
     _min = BIGFLOAT;    // could be std::numeric_limits<float>::max() or std::numeric_limits<float>::infinity()
-    _max = -BIGFLOAT;   // could be std::numeric_limits<float>::min() or -std::numeric_limits<float>::infinity()
+    _max = -BIGFLOAT;   // could be std::numeric_limits<float>::lowest() or -std::numeric_limits<float>::infinity()
 }
 
 void Stat::add(const Stat& st) {

@@ -179,7 +179,7 @@ void parallel_tiled_for_coordsL(Vec<int,D> uL, Vec<int,D> uU, Func func,
 template<int D, typename FuncRaster = void(size_t)>
 void for_coordsL_raster(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D> uU, FuncRaster func_raster) {
     if (min(uU-uL)<1) return; // to allow uL[c]==uU[c]==dims[c]
-    ASSERTX(in_bounds(uL, dims) && in_bounds(uU, dims+1));
+    ASSERTX(uL.in_range(dims) && uU.in_range(dims+1));
     if (D==1) {
         for_intL(d0, uL[0], uU[0]) { func_raster(d0); }
     } else if (D==2) {
@@ -205,7 +205,7 @@ template<int D, typename Func = void(const Vec<int,D>&), typename FuncInterior =
 void for_coordsL_interior(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D> uU,
                           Func func, FuncInterior func_interior) {
     if (min(uU-uL)<1) return; // to allow uL[c]==uU[c]==dims[c]
-    ASSERTX(in_bounds(uL, dims) && in_bounds(uU, dims+1));
+    ASSERTX(uL.in_range(dims) && uU.in_range(dims+1));
     // Note: not the same traversal order as for_coordsL() !
     for_int(c, D) {
         if (uL[c]==0       && uL[c]<uU[c]) { for_coordsL(uL, uU.with(c, 1),         func); uL[c] = 1; }
@@ -218,7 +218,7 @@ template<int D, typename Func = void(const Vec<int,D>&), typename FuncInterior =
 void parallel_d0_for_coordsL_interior(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D> uU,
                                       Func func, FuncInterior func_interior) {
     if (min(uU-uL)<1) return; // to allow uL[c]==uU[c]==dims[c]
-    ASSERTX(in_bounds(uL, dims) && in_bounds(uU, dims+1));
+    ASSERTX(uL.in_range(dims) && uU.in_range(dims+1));
     int nthreads = omp_get_max_threads(), ny = uU[0]-uL[0], ychunk = (ny-1)/nthreads+1;
     nthreads = (ny+ychunk-1)/ychunk;
     parallel_for_int(thread, nthreads) { // allows better inlining in win than parallel_for_int(y)

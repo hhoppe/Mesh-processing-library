@@ -52,8 +52,9 @@ class GMesh : public Mesh {
     Edge remove_vertex_between_edges(Vertex vr) override;
     // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings.
     int fix_vertex(Vertex v);           // return the number of rings the old vertex had.
+    int fix_vertex(Vertex v, Array<Vertex>& new_vertices);
 // Geometry
-    const Point& point(Vertex v) const          { return v->point; }
+    const Point& point(Vertex v) const          { return v->_point; }
     void set_point(Vertex v, const Point& p);
     void polygon(Face f, Polygon& poly) const;
     float length2(Edge e) const;

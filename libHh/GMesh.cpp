@@ -77,7 +77,7 @@ void GMesh::merge(const GMesh& mo, Map<Vertex,Vertex>* pmvvn) {
 }
 
 void GMesh::set_point(Vertex v, const Point& pp) {
-    v->point = pp;
+    v->_point = pp;
     if (_os) *_os << sform("MVertex %d  %g %g %g\n", vertex_id(v), pp[0], pp[1], pp[2]);
 }
 
@@ -732,7 +732,13 @@ Edge GMesh::remove_vertex_between_edges(Vertex vr) {
 }
 
 int GMesh::fix_vertex(Vertex v) {
+  Array<Vertex> new_vertices;
+  return fix_vertex(v, new_vertices);
+}
+
+int GMesh::fix_vertex(Vertex v, Array<Vertex>& new_vertices) {
     int nrings = 0;
+    new_vertices.init(0);
     Set<Face> setallf; for (Face f : faces(v)) { setallf.enter(f); }
     for (;;) {
         nrings++;
@@ -750,6 +756,7 @@ int GMesh::fix_vertex(Vertex v) {
         for (Face f : setf) { assertx(setallf.remove(f)); }
         if (setallf.empty()) break; // is now a nice vertex
         Vertex vnew = create_vertex();
+        new_vertices.push(vnew);
         flags(vnew) = flags(v);
         set_string(vnew, get_string(v));
         set_point(vnew, point(v));

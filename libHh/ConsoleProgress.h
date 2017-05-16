@@ -80,7 +80,14 @@ inline void ConsoleProgress::update_i(float f) {
             int old_val = _last_val.exchange(val);
             string str;
             if (_task_name!="") {
-                if (old_val>=0) str += "\r";
+                if (old_val>=0) {
+                    if (0) {
+                        str += "\r";    // bad because it could erase shell prompt
+                    } else {
+                        const int n = int(_task_name.size())+6;
+                        for_int(i, n) { str += '\b'; }
+                    }
+                }
                 str += "#" + _task_name + ":" + sform("%02d%% ", val);
             } else {
                 if (old_val<0) str += "#";
@@ -102,8 +109,12 @@ inline void ConsoleProgress::clear() {
             _last_val = -1;
             string str;
             if (_task_name!="") {
-                str += "\r";
-                const int n = 1+int(_task_name.size())+2+4;
+                const int n = int(_task_name.size())+6;
+                if (0) {
+                    str += "\r";
+                } else {
+                    for_int(i, n) { str += '\b'; }
+                }
                 // For cmd.exe console, must erase remainder of line.
                 for_int(i, n) { str += ' '; }
                 for_int(i, n) { str += '\b'; }

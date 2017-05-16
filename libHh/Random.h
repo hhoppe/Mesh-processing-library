@@ -29,6 +29,7 @@ class Random : noncopyable {
 // http://en.cppreference.com/w/cpp/concept/UniformRandomNumberGenerator (std::*_engine classes):
     using result_type = uint32_t;
     result_type operator()();
+    static_assert(std::is_integral<result_type>::value, "");
     static constexpr result_type min()          { return std::numeric_limits<result_type>::min(); }
     static constexpr result_type max()          { return std::numeric_limits<result_type>::max(); }
     static constexpr result_type default_seed = 0;

@@ -141,7 +141,7 @@ class object {
 
 class objects {
  public:
-    static constexpr int MAX = 1024;
+    static constexpr int MAX = 2048;
     objects()                                   { for_int(i, MAX) _ob[i]._obn = i; }
     bool legal(int obn)                         { return obn>=0 && obn<MAX; }
     object& operator[](int obn)                 { assertx(legal(obn)); return _ob[obn]; }

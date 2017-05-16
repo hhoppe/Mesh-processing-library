@@ -2314,7 +2314,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                      auto yxi = get_image_yx(convert<float>(yx)+.5f);
                      if (prev_yxi!=yxi) {
                          string s = sform("XY:(%d, %d) - ", yxi[1], yxi[0]);
-                         if (!in_bounds(yxi, g_frame_dims)) {
+                         if (!yxi.in_range(g_frame_dims)) {
                              s += "outside image bounds";
                          } else {
                              Pixel pix = get_frame_pix(yxi);
@@ -3167,7 +3167,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         const Vec2<Vec2<int>> yxminmax =
             bbox_minmax(map(minmax_corners(V(twice(-eps), convert<float>(g_win_dims)+eps)), &get_image_yx).view());
         for (Vec2<int> tex_yx : coordsL(yxminmax[0], yxminmax[1]+1)) {
-            if (!in_bounds(tex_yx, g_frame_dims)) continue;
+            if (!tex_yx.in_range(g_frame_dims)) continue;
             const Pixel pix = get_frame_pix(tex_yx);
             const Vec2<int> win_yx = get_win_yx(convert<float>(tex_yx)+.5f);
             if (show_4x1rgba_yx) {

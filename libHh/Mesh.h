@@ -100,7 +100,7 @@ class Mesh : noncopyable {
 // Face
     bool is_nice(Face f) const;
     int num_vertices(Face f) const;
-    bool is_triangle(Face f) const              { HEdge he = herep(f); return he->next->next->next==he; }
+    bool is_triangle(Face f) const              { HEdge he = herep(f); return he->_next->_next->_next==he; }
     bool is_boundary(Face f) const;        // == has a boundary vertex
     Face opp_face(Face f, Edge e) const;   // ret nullptr if is_boundary(e)
     Face opp_face(Vertex v, Face f) const; // is_triangle(f); ret nullptr if none
@@ -110,19 +110,19 @@ class Mesh : noncopyable {
     Vertex vertex(Face f, int i) const; // die if i>=num_vertices(f)
     Array<Corner> get_corners(Face f, Array<Corner>&& ca = Array<Corner>()) const;
     // move about a face
-    Edge clw_edge(Face f, Edge e) const         { return hedge_from_ef(e, f)->prev->edge; }
-    Edge ccw_edge(Face f, Edge e) const         { return hedge_from_ef(e, f)->next->edge; }
-    Vertex clw_vertex(Face f, Vertex v) const   { return get_hedge(v, f)->prev->vert; } // slow
-    Vertex ccw_vertex(Face f, Vertex v) const   { return get_hedge(v, f)->next->vert; } // slow
-    Edge clw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->edge; }       // slow
-    Edge ccw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->next->edge; } // slow
+    Edge clw_edge(Face f, Edge e) const         { return hedge_from_ef(e, f)->_prev->_edge; }
+    Edge ccw_edge(Face f, Edge e) const         { return hedge_from_ef(e, f)->_next->_edge; }
+    Vertex clw_vertex(Face f, Vertex v) const   { return get_hedge(v, f)->_prev->_vert; } // slow
+    Vertex ccw_vertex(Face f, Vertex v) const   { return get_hedge(v, f)->_next->_vert; } // slow
+    Edge clw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->_edge; }       // slow
+    Edge ccw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->_next->_edge; } // slow
 // Edge
-    bool is_boundary(Edge e) const              { return !herep(e)->sym; }
-    Vertex vertex1(Edge e) const                { return herep(e)->prev->vert; }
-    Vertex vertex2(Edge e) const                { return herep(e)->vert; }
+    bool is_boundary(Edge e) const              { return !herep(e)->_sym; }
+    Vertex vertex1(Edge e) const                { return herep(e)->_prev->_vert; }
+    Vertex vertex2(Edge e) const                { return herep(e)->_vert; }
     Vertex vertex(Edge e, int i) const          { ASSERTX(i==0 || i==1); return i==0 ? vertex1(e) : vertex2(e); }
-    Face face1(Edge e) const                    { return herep(e)->face; }
-    Face face2(Edge e) const                    { HEdge he = herep(e); return he->sym ? he->sym->face : nullptr; }
+    Face face1(Edge e) const                    { return herep(e)->_face; }
+    Face face2(Edge e) const                    { HEdge he = herep(e); return he->_sym ? he->_sym->_face : nullptr; }
     Face face(Edge e, int i) const              { ASSERTX(i==0 || i==1); return i==0 ? face1(e) : face2(e); }
 // i==0 or i==1; ret nullptr if i==1 && is_boundary(e)
     Vertex side_vertex1(Edge e) const           { return opp_vertex(e, face1(e)); } // is_triangle(face1())
@@ -135,16 +135,16 @@ class Mesh : noncopyable {
     Vertex vertex_between_edges(Edge e1, Edge e2);
 // Corner
     Corner corner(Vertex v, Face f) const       { return get_hedge(v, f); }
-    Vertex corner_vertex(Corner c) const        { return c->vert; }
-    Face corner_face(Corner c) const            { return c->face; }
-    Corner ccw_corner(Corner c) const           { return c->sym ? c->sym->prev : nullptr; } // around vertex
-    Corner clw_corner(Corner c) const           { return c->next->sym; }                    // around vertex
-    Corner ccw_face_corner(Corner c) const      { return c->next; }                         // around face
-    Corner clw_face_corner(Corner c) const      { return c->prev; }                         // around face
-    Corner ccw_corner(Vertex v, Edge e) const   { HEdge he = hedge_from_ev1(e, v); return he ? he->prev : nullptr; }
+    Vertex corner_vertex(Corner c) const        { return c->_vert; }
+    Face corner_face(Corner c) const            { return c->_face; }
+    Corner ccw_corner(Corner c) const           { return c->_sym ? c->_sym->_prev : nullptr; } // around vertex
+    Corner clw_corner(Corner c) const           { return c->_next->_sym; }  // around vertex
+    Corner ccw_face_corner(Corner c) const      { return c->_next; }        // around face
+    Corner clw_face_corner(Corner c) const      { return c->_prev; }        // around face
+    Corner ccw_corner(Vertex v, Edge e) const   { HEdge he = hedge_from_ev1(e, v); return he ? he->_prev : nullptr; }
     Corner clw_corner(Vertex v, Edge e) const   { return hedge_from_ev2(e, v); }
-    Edge ccw_face_edge(Corner c) const          { return c->next->edge; }
-    Edge clw_face_edge(Corner c) const          { return c->edge; } // (fastest)
+    Edge ccw_face_edge(Corner c) const          { return c->_next->_edge; }
+    Edge clw_face_edge(Corner c) const          { return c->_edge; } // (fastest)
 // Other associations
     // obtain edge from vertices
     Edge query_edge(Vertex v, Vertex w) const;
@@ -212,9 +212,9 @@ class Mesh : noncopyable {
     virtual Edge remove_vertex_between_edges(Vertex vr);
 // Mesh
     Vertex id_vertex(int i) const               { return _id2vertex.get(i); }
-    int vertex_id(Vertex v) const               { return v->id; }
+    int vertex_id(Vertex v) const               { return v->_id; }
     Face id_face(int i) const                   { return _id2face.get(i); }
-    int face_id(Face f) const                   { return f->id; }
+    int face_id(Face f) const                   { return f->_id; }
     Vertex id_retrieve_vertex(int i) const      { return _id2vertex.retrieve(i); }
     Face id_retrieve_face(int i) const          { return _id2face.retrieve(i); }
     bool is_nice() const;
@@ -262,7 +262,7 @@ class Mesh : noncopyable {
             next();
         }
         bool operator!=(const Edges_iterator& rhs) const { return _hcur!=rhs._hcur || _vcur!=rhs._vcur; }
-        Edge operator*() const                  { ASSERTX(_hcur!=_hend); return (*_hcur)->edge; }
+        Edge operator*() const                  { ASSERTX(_hcur!=_hend); return (*_hcur)->_edge; }
         Edges_iterator& operator++()            { ASSERTX(_hcur!=_hend); ++_hcur; next(); return *this; }
      private:
         CArrayView<HEdge>::iterator _hcur {nullptr} , _hend {nullptr}; // _hcur points at current element
@@ -270,7 +270,7 @@ class Mesh : noncopyable {
         void next() {
             for (;;) {
                 if (_hcur!=_hend) {
-                    if ((*_hcur)->edge->herep!=*_hcur) { ++_hcur; continue; }
+                    if ((*_hcur)->_edge->_herep!=*_hcur) { ++_hcur; continue; }
                     return;
                 }
                 if (_vcur==_vend) break;
@@ -304,10 +304,10 @@ class Mesh : noncopyable {
      public:
         VV_iterator(CArrayView<HEdge>::iterator it) : _it(it) { }
         bool operator!=(const VV_iterator& rhs) const { ASSERTX(!rhs._extrav); return _extrav || _it!=rhs._it; }
-        Vertex operator*() const                { return _extrav ? _extrav : (*_it)->vert; }
+        Vertex operator*() const                { return _extrav ? _extrav : (*_it)->_vert; }
         VV_iterator& operator++() {
             if (_extrav) { _extrav = nullptr; return *this; }
-            if (!(*_it)->prev->sym) _extrav = (*_it)->prev->prev->vert;
+            if (!(*_it)->_prev->_sym) _extrav = (*_it)->_prev->_prev->_vert;
             ++_it;
             return *this;
         }
@@ -325,7 +325,7 @@ class Mesh : noncopyable {
      public:
         VF_iterator(CArrayView<HEdge>::iterator it) : _it(it) { }
         bool operator!=(const VF_iterator& rhs) const { return _it!=rhs._it; }
-        Face operator*() const                  { return (*_it)->face; }
+        Face operator*() const                  { return (*_it)->_face; }
         VF_iterator& operator++()               { ++_it; return *this; }
      private:
         CArrayView<HEdge>::iterator _it;
@@ -340,10 +340,10 @@ class Mesh : noncopyable {
      public:
         VE_iterator(CArrayView<HEdge>::iterator it) : _it(it) { }
         bool operator!=(const VE_iterator& rhs) const { ASSERTX(!rhs._extrae); return _extrae || _it!=rhs._it; }
-        Edge operator*() const                  { return _extrae ? _extrae : (*_it)->edge; }
+        Edge operator*() const                  { return _extrae ? _extrae : (*_it)->_edge; }
         VE_iterator& operator++() {
             if (_extrae) { _extrae = nullptr; return *this; }
-            if (!(*_it)->prev->sym) _extrae = (*_it)->prev->edge;
+            if (!(*_it)->_prev->_sym) _extrae = (*_it)->_prev->_edge;
             ++_it;
             return *this;
         }
@@ -361,7 +361,7 @@ class Mesh : noncopyable {
      public:
         VC_iterator(CArrayView<HEdge>::iterator it) : _it(it) { }
         bool operator!=(const VC_iterator& rhs) const { return _it!=rhs._it; }
-        Corner operator*() const                { return (*_it)->prev; }
+        Corner operator*() const                { return (*_it)->_prev; }
         VC_iterator& operator++()               { ++_it; return *this; }
      private:
         CArrayView<HEdge>::iterator _it;
@@ -377,8 +377,8 @@ class Mesh : noncopyable {
      public:
         FV_iterator(HEdge he, bool beg)         : _it(he), _beg(beg) { }
         bool operator!=(const FV_iterator& rhs) const { ASSERTX(!rhs._beg); return _beg || _it!=rhs._it; }
-        Vertex operator*() const                { return _it->vert; }
-        FV_iterator& operator++()               { _beg = false; _it = _it->next; return *this; }
+        Vertex operator*() const                { return _it->_vert; }
+        FV_iterator& operator++()               { _beg = false; _it = _it->_next; return *this; }
      private:
         HEdge _it;
         bool _beg;
@@ -393,19 +393,19 @@ class Mesh : noncopyable {
      public:
         FF_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {
             for (;;) {
-                if (_it->sym) break;
-                _it = _it->next;
+                if (_it->_sym) break;
+                _it = _it->_next;
                 if (_it==he) { _beg = false; break; }
             }
         }
         bool operator!=(const FF_iterator& rhs) const { ASSERTX(!rhs._beg); return _beg || _it!=rhs._it; }
-        Face operator*() const                  { return _it->sym->face; }
+        Face operator*() const                  { return _it->_sym->_face; }
         FF_iterator& operator++() {
             HEdge bu = _beg ? nullptr : _it;
             _beg = false;
             for (;;) {
-                _it = _it->next;
-                if (_it->sym) break;
+                _it = _it->_next;
+                if (_it->_sym) break;
                 ASSERTX(_it!=bu);
             }
             return *this;
@@ -424,8 +424,8 @@ class Mesh : noncopyable {
      public:
         FE_iterator(HEdge he, bool beg)         : _it(he), _beg(beg) { }
         bool operator!=(const FE_iterator& rhs) const { ASSERTX(!rhs._beg); return _beg || _it!=rhs._it; }
-        Edge operator*() const                  { return _it->edge; }
-        FE_iterator& operator++()               { _beg = false; _it = _it->next; return *this; }
+        Edge operator*() const                  { return _it->_edge; }
+        FE_iterator& operator++()               { _beg = false; _it = _it->_next; return *this; }
      private:
         HEdge _it;
         bool _beg;
@@ -441,7 +441,7 @@ class Mesh : noncopyable {
         FC_iterator(HEdge he, bool beg)         : _it(he), _beg(beg) { }
         bool operator!=(const FC_iterator& rhs) const { ASSERTX(!rhs._beg); return _beg || _it!=rhs._it; }
         Corner operator*() const                { return _it; }
-        FC_iterator& operator++()               { _beg = false; _it = _it->next; return *this; }
+        FC_iterator& operator++()               { _beg = false; _it = _it->_next; return *this; }
      private:
         HEdge _it;
         bool _beg;
@@ -456,15 +456,15 @@ class Mesh : noncopyable {
     struct EV_range : Vec2<Vertex> { // always 2 vertices
         EV_range(const Mesh& m, Edge e) {
             HEdge he = m.herep(e);
-            (*this)[0] = he->vert;
-            (*this)[1] = he->prev->vert;
+            (*this)[0] = he->_vert;
+            (*this)[1] = he->_prev->_vert;
         }
     };
     struct EF_range : PArray<Face,2> { // 0 or 1 face
         EF_range(const Mesh& m, Edge e) {
             HEdge he = m.herep(e);
-            push(he->face);
-            if (he->sym) push(he->sym->face);
+            push(he->_face);
+            if (he->_sym) push(he->_sym->_face);
         }
     };
     // ccw Vertex Iter
@@ -472,8 +472,8 @@ class Mesh : noncopyable {
         WV_range(const Mesh& m, Vertex v) {
             HEdge he = m.most_clw_hedge(v), hef = he; // return HEdges pointing to v
             while (he) {
-                push(he->next->vert);
-                if (!he->sym) push(he->prev->vert);
+                push(he->_next->_vert);
+                if (!he->_sym) push(he->_prev->_vert);
                 he = m.ccw_hedge(he);
                 if (he==hef) break;
             }
@@ -483,7 +483,7 @@ class Mesh : noncopyable {
         WF_range(const Mesh& m, Vertex v) {
             HEdge he = m.most_clw_hedge(v), hef = he;
             while (he) {
-                push(he->face);
+                push(he->_face);
                 he = m.ccw_hedge(he);
                 if (he==hef) break;
             }
@@ -493,8 +493,8 @@ class Mesh : noncopyable {
         WE_range(const Mesh& m, Vertex v) {
             HEdge he = m.most_clw_hedge(v), hef = he;
             while (he) {
-                push(he->next->edge);
-                if (!he->sym) push(he->edge);
+                push(he->_next->_edge);
+                if (!he->_sym) push(he->_edge);
                 he = m.ccw_hedge(he);
                 if (he==hef) break;
             }
@@ -512,36 +512,36 @@ class Mesh : noncopyable {
     };
  public:                        // should be private but uses Pool
     struct MEdge {
-        HEdge herep;
+        HEdge _herep;
         Flags _flags;
         unique_ptr<char[]> _string;
-        MEdge(HEdge pherep)                     : herep(pherep) { }
+        MEdge(HEdge herep)                      : _herep(herep) { }
         HH_MAKE_POOLED_SAC(Mesh::MEdge); // must be last entry of class!
     };
     struct MVertex {
-        PArray<HEdge,8> _arhe;  // hedges he such that he->prev->vert==this
-        int id;
+        PArray<HEdge,8> _arhe;  // hedges he such that he->_prev->_vert==this
+        int _id;
         Flags _flags;
         unique_ptr<char[]> _string;
-        Point point;
-        MVertex(int pid)                        : id(pid) { }
+        Point _point;
+        MVertex(int id)                         : _id(id) { }
         HH_MAKE_POOLED_SAC(Mesh::MVertex); // must be last entry of class!
     };
     struct MFace {
-        HEdge herep;
-        int id;
+        HEdge _herep;
+        int _id;
         Flags _flags;
         unique_ptr<char[]> _string;
-        MFace(int pid)                          : id(pid) { }
+        MFace(int id)                           : _id(id) { }
         HH_MAKE_POOLED_SAC(MFace);  // must be last entry of class!
     };
     struct MHEdge {
-        HEdge prev;             // previous HEdge in ring around face
-        HEdge next;             // next HEdge in ring around face
-        HEdge sym;              // pointer to symmetric HEdge (or 0)
-        Vertex vert;            // Vertex to which this HEdge is pointing
-        Face face;              // Face on which this HEdge belongs
-        Edge edge;              // Edge to which this HEdge belongs
+        HEdge _prev;            // previous HEdge in ring around face
+        HEdge _next;            // next HEdge in ring around face
+        HEdge _sym;             // pointer to symmetric HEdge (or 0)
+        Vertex _vert;           // Vertex to which this HEdge is pointing
+        Face _face;             // Face on which this HEdge belongs
+        Edge _edge;             // Edge to which this HEdge belongs
         unique_ptr<char[]> _string;
         MHEdge()                                = default;
         HH_MAKE_POOLED_SAC(MHEdge); // must be last entry of class!
@@ -563,25 +563,25 @@ class Mesh : noncopyable {
     //
     HEdge most_clw_hedge(Vertex v) const; // is_nice(v), may return nullptr
     HEdge most_ccw_hedge(Vertex v) const; // is_nice(v), may return nullptr
-    HEdge clw_hedge(HEdge he) const             { return he->next->sym; } // may return nullptr
-    HEdge ccw_hedge(HEdge he) const             { return he->sym ? he->sym->prev : nullptr; }
-    HEdge herep(Vertex v) const                 { return !v->_arhe.num() ? nullptr : v->_arhe[0]->prev; }
-    HEdge herep(Face f) const                   { return f->herep; }
-    HEdge herep(Edge e) const                   { return e->herep; }
-    bool is_boundary(HEdge he) const            { return !he->sym; }
+    HEdge clw_hedge(HEdge he) const             { return he->_next->_sym; } // may return nullptr
+    HEdge ccw_hedge(HEdge he) const             { return he->_sym ? he->_sym->_prev : nullptr; }
+    HEdge herep(Vertex v) const                 { return !v->_arhe.num() ? nullptr : v->_arhe[0]->_prev; }
+    HEdge herep(Face f) const                   { return f->_herep; }
+    HEdge herep(Edge e) const                   { return e->_herep; }
+    bool is_boundary(HEdge he) const            { return !he->_sym; }
     HEdge hedge_from_ev1(Edge e, Vertex v) const { // may return nullptr
         if (vertex1(e)==v) return herep(e);
-        if (vertex2(e)==v) return herep(e)->sym;
+        if (vertex2(e)==v) return herep(e)->_sym;
         assertnever("Vertex not on Edge");
     }
     HEdge hedge_from_ev2(Edge e, Vertex v) const { // may return nullptr
-        if (vertex1(e)==v) return herep(e)->sym;
+        if (vertex1(e)==v) return herep(e)->_sym;
         if (vertex2(e)==v) return herep(e);
         assertnever("Vertex not on Edge");
     }
     HEdge hedge_from_ef(Edge e, Face f) const { // may return nullptr
         if (face1(e)==f) return herep(e);
-        if (face2(e)==f) return herep(e)->sym;
+        if (face2(e)==f) return herep(e)->_sym;
         assertnever("Face not adjacent to edge");
     }
     HEdge get_hedge(Vertex v, Face f) const;      // slow; on f pointing to v
@@ -613,9 +613,9 @@ inline void swap(Mesh& l, Mesh& r) noexcept {
 
 inline void Mesh::triangle_vertices(Face f, Vec3<Vertex>& va) const {
     HEdge he = herep(f), he0 = he;
-    va[0] = he->vert; he = he->next;
-    va[1] = he->vert; he = he->next;
-    va[2] = he->vert; he = he->next;
+    va[0] = he->_vert; he = he->_next;
+    va[1] = he->_vert; he = he->_next;
+    va[2] = he->_vert; he = he->_next;
     assertx(he==he0);           // is_triangle()
 }
 

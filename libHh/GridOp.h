@@ -140,8 +140,8 @@ template<int D, typename T> Grid<D,T> crop(CGridView<D,T> grid, const Vec<int,D>
         if (0) newdims = ntimes<D>(0);
     }
     Grid<D,T> newgrid(newdims);
-    if (in_bounds(dL, grid.dims()) && in_bounds(dU, grid.dims())) { // faster path: no negative crop
-        if (is_zero(dL.with(0, 0)) && is_zero(dU.with(0, 0))) {     // crop only in dim0
+    if (dL.in_range(grid.dims()) && dU.in_range(grid.dims())) {  // faster path: no negative crop
+        if (is_zero(dL.with(0, 0)) && is_zero(dU.with(0, 0))) {  // crop only in dim0
             if (0) {
                 newgrid = grid.slice(dL[0], grid.dim(0)-dU[0]);
             } else {

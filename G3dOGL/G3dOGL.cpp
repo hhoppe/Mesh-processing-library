@@ -83,7 +83,7 @@ namespace {
 
 struct Slider { string name; float* val; };
 
-constexpr int k_max_object = 1024; // should be >= objects::MAX
+constexpr int k_max_object = 2048; // should be >= objects::MAX
 
 // const string k_default_geometry = "600x600+0+0";
 // const string k_default_geometry = "1000x1000+0+0";
@@ -2444,6 +2444,7 @@ void GXobjects::clear(int segn) {
     assertx(_segn==-1); assertx(_link.ok(segn));
     _link[segn] = 0;
     _ob[segn].reset();
+    svalid_dl.remove(segn);
     // I could update _imin, _imax here
 }
 

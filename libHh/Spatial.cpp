@@ -173,7 +173,7 @@ void BSpatialSearch::expand_search_space() {
     _ssi[_dir][_axis] += _dir ? 1 : -1;
     bi[0][_axis] = bi[1][_axis] = _ssi[_dir][_axis];
     // consider the layer whose axis's value is _ssi[_dir][_axis]
-    for (const Ind& cit : coordsL(bi[0], bi[1]+1)) { consider(cit); }
+    for (const Ind& cit : range(bi[0], bi[1]+1)) { consider(cit); }
     get_closest_next_cell();
 }
 

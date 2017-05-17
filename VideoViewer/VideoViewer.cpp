@@ -2944,7 +2944,7 @@ void render_image() {
             if (1) {
                 glBegin(GL_LINES);
                 SGrid<Point, 2, 2> gridp;
-                for (const auto& u : coords(gridp.dims())) {
+                for (const auto& u : range(gridp.dims())) {
                     gridp[u] = Point(concat(convert<float>(u*g_frame_dims), V(0.f))) * g_view;
                     gridp[u].head<2>() += convert<float>(u*2-1)*1.f; // move points outwards by 1 window pixel
                 }
@@ -3166,7 +3166,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         const float eps = .01f;
         const Vec2<Vec2<int>> yxminmax =
             bbox_minmax(map(minmax_corners(V(twice(-eps), convert<float>(g_win_dims)+eps)), &get_image_yx).view());
-        for (Vec2<int> tex_yx : coordsL(yxminmax[0], yxminmax[1]+1)) {
+        for (Vec2<int> tex_yx : range(yxminmax[0], yxminmax[1]+1)) {
             if (!tex_yx.in_range(g_frame_dims)) continue;
             const Pixel pix = get_frame_pix(tex_yx);
             const Vec2<int> win_yx = get_win_yx(convert<float>(tex_yx)+.5f);
@@ -3504,7 +3504,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
         if (0 || getenv_bool("OUTPUT_LOOP_PARAMETERS")) {
             Image image(g_lp.mat_start.dims()); // size may be different from hdims
             const int K = 4;
-            for (const auto& yx : coords(image.dims())) {
+            for (const auto& yx : range(image.dims())) {
                 uchar static_frame = '\0';
                 int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
                 if (!(start%K==0 && (period%K==0 || period==1))) SHOW(yx, start, period);
@@ -3759,7 +3759,7 @@ void do_vlp(Args& args) {
     g_lp.mat_activation.init(image.dims());
     const int K = 4;
     const int static_frame_offset = 2;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         g_lp.mat_static[yx] = image[yx][0]*K + static_frame_offset;
         g_lp.mat_start[yx] = image[yx][1]*K;
         g_lp.mat_period[yx] = image[yx][2]*K;

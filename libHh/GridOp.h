@@ -184,7 +184,7 @@ template<int D, typename U, typename T> Grid<D,T> assemble(CGridView<D,U> grids)
         if (agrid.dims()!=expected_dims) {
             SHOW(ugrid, expected_dims, agrid.dims()); assertnever("inconsistent grid size");
         }
-        for (Vec<int,D> u : coords(agrid.dims())) {
+        for (Vec<int,D> u : range(agrid.dims())) {
             grid[uL+u] = agrid[u];
         }
     });
@@ -419,10 +419,10 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
             for (T& e : ogrid) { e = T(.5f) + (e-T(.5f))*expand_value_range; }
             for (T& e : gr) { e = general_clamp(e, T(0.f), T(1.f)); }
             for_int(iter, 5) {  // 10 Gauss-Seidel iterations a tiny bit better; 100 no different
-                for (const auto& u : coords(dims)) {
+                for (const auto& u : range(dims)) {
                     // if (gr[u]==0.f || gr[u]==1.f) continue; // constrained forever at limit, if T is scalar
                     T newv = ogrid[u]; float wcenter = 0.f;
-                    for (const auto& ud : coordsL(ntimes<D>(-1), ntimes<D>(+2))) { // [-1, 0, +1]^D
+                    for (const auto& ud : range(ntimes<D>(-1), ntimes<D>(+2))) { // [-1, 0, +1]^D
                         Vec<int,D> uu = u+ud; assertx(gr.map_inside(uu, bndrules));
                         float w = 1.f; for_int(d, D) { w *= (ud[d]==0 ? (4.f/6.f) : (1.f/6.f)); }
                         if (uu==u) { wcenter += w; } else { newv -= w*gr[uu]; }
@@ -579,7 +579,7 @@ template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& 
     Vec<Bndrule,D> bndrules; for_int(d, D) bndrules[d] = filterbs[d].bndrule();
     T val; my_zero(val);
     double sumw = 0.;
-    for (const Vec<int,D>& u : coordsL(uL, uU)) {
+    for (const Vec<int,D>& u : range(uL, uU)) {
         float w = 1.f;
         for_int(d, D) w *= matw[d][u[d]-uL[d]];
         sumw += w;

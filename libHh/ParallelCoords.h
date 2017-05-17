@@ -59,7 +59,7 @@ void parallel_for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncIn
 
 template<int D, typename Func = void(const Vec<int,D>&)>
 void for_coordsL(Vec<int,D> uL, Vec<int,D> uU, Func func) {
-    for (const auto& u : coordsL(uL, uU)) { func(u); }
+    for (const auto& u : range(uL, uU)) { func(u); }
 }
 
 template<typename Func = void(const Vec1<int>&)>
@@ -197,7 +197,7 @@ void for_coordsL_raster(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D> uU, FuncRaste
             for_intL(d2, uL[2], uU[2]) { func_raster(i0+d2); }
         }
     } else {                    // this generic case is already quite fast
-        for (const auto& u : coordsL(uL, uU)) { func_raster(grid_index(dims, u)); }
+        for (const auto& u : range(uL, uU)) { func_raster(grid_index(dims, u)); }
     }
 }
 

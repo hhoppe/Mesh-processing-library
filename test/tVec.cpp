@@ -73,6 +73,12 @@ template<int N> constexpr Vec<int,N> V_rev_iota() {
 } // namespace hh
 
 int main() {
+    {
+        Vec3<int> a1; fill(a1, 1);
+        Vec3<int> a2 { 2, 1, 3 };
+        SHOW(a1); for (const auto& u : range(a1)) { SHOW(u); }
+        SHOW(a2); for (const auto& u : range(a2)) { SHOW(u); }
+    }
     struct S : Vec2<int> {
         // void f() const { SHOW(*this); }
     };
@@ -91,21 +97,19 @@ int main() {
         S3 dummy1, dummy2(1, 2); dummy_use(dummy1, dummy2);
     }
     {
-        // C++14 constexpr
-        { const Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
-        { const Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
-        { const Vec<int,5> ar3 = concat(V(1, 2), V(3, 4), V(5)); SHOW(ar3); }
-        { const Vec<int,5> ar4 = concat(V(1, 2, 3, 4, 5)); SHOW(ar4); }
+        { constexpr Vec<int,5> ar1 = concat(V(1), V(2), V(3, 4, 5)); SHOW(ar1); }
+        { constexpr Vec<int,5> ar2 = concat(V(1, 2), V(3, 4, 5)); SHOW(ar2); }
+        { constexpr Vec<int,5> ar3 = concat(V(1, 2), V(3, 4), V(5)); SHOW(ar3); }
+        { constexpr Vec<int,5> ar4 = concat(V(1, 2, 3, 4, 5)); SHOW(ar4); }
     }
     {
-        // C++14 constexpr
-        { const Vec<int,2> ar = V(4, 5); const int t5 = ar[1]; SHOW(t5); }
-        { const Vec<int,3> rest654 = V_rest(V(7, 6, 5, 4)); SHOW(rest654); }
-        { const Vec<int,2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2); SHOW(segment54); }
-        { const size_t dotslow = V_dot_slow(V(7, 5), V(3, 1)); SHOW(dotslow); }
-        { const size_t dot = V_dot(V(7, 5), V(3, 1)); SHOW(dot); }
-        { const Vec<int,5> iota5 = V_iota<5>(); SHOW(iota5); }
-        { const Vec<int,5> reviota5 = V_rev_iota<5>(); SHOW(reviota5); }
+        { constexpr Vec<int,2> ar = V(4, 5); constexpr int t5 = ar[1]; SHOW(t5); }
+        { constexpr Vec<int,3> rest654 = V_rest(V(7, 6, 5, 4)); SHOW(rest654); }
+        { constexpr Vec<int,2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2); SHOW(segment54); }
+        { constexpr size_t dotslow = V_dot_slow(V(7, 5), V(3, 1)); SHOW(dotslow); }
+        { constexpr size_t dot = V_dot(V(7, 5), V(3, 1)); SHOW(dot); }
+        { constexpr Vec<int,5> iota5 = V_iota<5>(); SHOW(iota5); }
+        { constexpr Vec<int,5> reviota5 = V_rev_iota<5>(); SHOW(reviota5); }
     }
     {
         Vec<char,2> magic { 'B', 'M' }; static_assert(sizeof(magic)==2, "");
@@ -196,14 +200,13 @@ int main() {
         }
     }
     {
-        // C++14 constexpr
-        const auto ar1 = V(4, 5, 6);
-        const int v5 = ar1[1]; SHOW(v5);
-        const auto triple6a = Vec3<float>::all(6); SHOW(triple6a, type_name<decltype(triple6a)>());
-        const auto triple6b = ntimes<3>(6);        SHOW(triple6b, type_name<decltype(triple6b)>());
-        const auto triple6c = ntimes<3>(6.f);      SHOW(triple6c, type_name<decltype(triple6c)>());
-        const auto triple7 = thrice(7); SHOW(triple7);
-        const auto ntimes7 = ntimes<3>(7); SHOW(ntimes7);
+        constexpr auto ar1 = V(4, 5, 6);
+        constexpr int v5 = ar1[1]; SHOW(v5);
+        constexpr auto triple6a = Vec3<float>::all(6); SHOW(triple6a, type_name<decltype(triple6a)>());
+        constexpr auto triple6b = ntimes<3>(6);        SHOW(triple6b, type_name<decltype(triple6b)>());
+        constexpr auto triple6c = ntimes<3>(6.f);      SHOW(triple6c, type_name<decltype(triple6c)>());
+        constexpr auto triple7 = thrice(7); SHOW(triple7);
+        constexpr auto ntimes7 = ntimes<3>(7); SHOW(ntimes7);
         const auto vonly3is2 = ntimes<5>(0).with(3, 2); SHOW(vonly3is2);
     }
     {
@@ -276,7 +279,7 @@ template class Vec<ushort,3>;
 
 using U = Vec<unsigned,2>;
 constexpr int n = 3;
-template<> bool Vec<U,n>::in_range(const Vec<U,n>&) const { return false; }  // default definition illegal
+template<> bool Vec<U,n>::in_range(const Vec<U,n>&) const { return false; }  // because default definition is illegal
 template<> bool Vec<U,n>::in_range(const Vec<U,n>&, const Vec<U,n>&) const { return false; }
 template class Vec<U,n>;
 

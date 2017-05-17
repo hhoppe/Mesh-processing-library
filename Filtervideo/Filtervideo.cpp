@@ -238,8 +238,8 @@ void apply_as_operations(Grid<3,Pixel>& vid, const Vec2<int>& yx, const Vec2<int
 //  (Not CMatrixView because the videos can get padded with extra frames.)
 void assemble_videos(MatrixView<Video> videos) {
     int maxframes = 0;
-    for (const auto& yx : coords(videos.dims())) { maxframes = max(maxframes, videos[yx].nframes()); }
-    for (const auto& yx : coords(videos.dims())) {
+    for (const auto& yx : range(videos.dims())) { maxframes = max(maxframes, videos[yx].nframes()); }
+    for (const auto& yx : range(videos.dims())) {
         assertx(videos[yx].ysize()==videos[yx[0]][0].ysize());
         assertx(videos[yx].xsize()==videos[0][yx[1]].xsize());
         Video& vid = videos[yx];
@@ -253,7 +253,7 @@ void assemble_videos(MatrixView<Video> videos) {
         assertx(videos[yx].nframes()==videos[0][0].nframes());
     }
     CGridView<3,Video> gvideos = raise_grid_rank(videos); // 3D grid of Videos
-    if (0) { for (Vec3<int> ugrid : coords(gvideos.dims())) { SHOW(ugrid, gvideos[ugrid].dims()); } }
+    if (0) { for (Vec3<int> ugrid : range(gvideos.dims())) { SHOW(ugrid, gvideos[ugrid].dims()); } }
     video = assemble(gvideos);
 }
 
@@ -275,7 +275,7 @@ void do_assemble(Args& args) {
     assertx(videos.size()>=lfilenames.size());
     bool prev_silent = ConsoleProgress::set_all_silent(true);
     Matrix<string> filenames(videos.dims());
-    for (const auto& yx : coords(filenames.dims())) {
+    for (const auto& yx : range(filenames.dims())) {
         if (!lfilenames.num()) continue;
         string filename = lfilenames.shift();
         filenames[yx] = filename;
@@ -287,9 +287,9 @@ void do_assemble(Args& args) {
         videos[yx].read_file(filenames[yx]);
         apply_as_operations(videos[yx], yx, videos.dims());
     }); // we can assume that parallelism is justified
-    if (0) { for (const auto& yx : coords(videos.dims())) { SHOW(yx, filenames[yx], videos[yx].nframes()); } }
+    if (0) { for (const auto& yx : range(videos.dims())) { SHOW(yx, filenames[yx], videos[yx].nframes()); } }
     ConsoleProgress::set_all_silent(prev_silent);
-    for (const auto& yx : coords(videos.dims())) {
+    for (const auto& yx : range(videos.dims())) {
         if (filenames[yx]=="") {
             // Let it be OK if fewer images than nx.
             int width = yx[0]==0 ? 0 : videos[0][yx[1]].xsize();
@@ -398,7 +398,7 @@ void do_append(Args& args) {
             nvideo[f].assign(video2[f2]);
         } else {
             float alpha = (f2+.5f)/(2*tradius);
-            for (const auto& yx: coords(video.spatial_dims())) {
+            for (const auto& yx: range(video.spatial_dims())) {
                 for_int(z, nz) {
                     nvideo[f][yx][z] = uchar((1.f-alpha)*video[f][yx][z]+
                                              (    alpha)*video2[f2][yx][z]+.5f);
@@ -439,13 +439,13 @@ void do_info() {
           video.attrib().audio.size() ? (" (audio: " + video.attrib().audio.diagnostic_string() + ")").c_str() : "");
     Array<Stat> stat_pixels; for_int(z, nz) { stat_pixels.push(Stat(sform("Component%d", z))); }
     if (0) {
-        for (const auto& fyx : coords(video.dims())) {
+        for (const auto& fyx : range(video.dims())) {
             const Pixel& pix = video[fyx];
             for_int(z, nz) { stat_pixels[z].enter(pix[z]); }
         }
     } else {
         Matrix<Stat> framestats(video.nframes(), nz);
-        parallel_for_int(f, video.nframes()) for (const auto& yx : coords(video.spatial_dims())) {
+        parallel_for_int(f, video.nframes()) for (const auto& yx : range(video.spatial_dims())) {
             const Pixel& pix = video[f][yx];
             for_int(z, nz) { framestats[f][z].enter(pix[z]); } // OPT_info
         }
@@ -645,7 +645,7 @@ void do_tcrossfade(Args& args) {
             }
         } else {                // good code with gcc
             auto videofbc = video[fbc], videofec = video[fbc];
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 for_int(z, nz) {
                     tvideo[i][yx][z] = uchar((1.f-alpha)*videofbc[yx][z]+
                                              (    alpha)*videofec[yx][z]+.5f);
@@ -951,7 +951,7 @@ void do_disassemble(Args& args) {
     if (video.attrib().audio.size()) Warning("Duplicating audio");
     parallel_for_coords(atiles, [&](const Vec2<int>& tyx) {
         Video nvideo(video.nframes(), tiledims); nvideo.attrib() = video.attrib();
-        for_int(f, video.nframes()) for (const auto& yx : coords(tiledims)) {
+        for_int(f, video.nframes()) for (const auto& yx : range(tiledims)) {
             nvideo[f][yx] = video[f][tyx*tiledims+yx];
         }
         nvideo.write_file(sform_nonliteral("%s.%d.%d.%s", rootname.c_str(), tyx[1], tyx[0], suffix.c_str()));
@@ -1115,7 +1115,7 @@ void do_loadvlp(Args& args) {
     g_lp.mat_activation.init(image.dims());
     const int K = 4;
     const int static_frame_offset = 2;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         g_lp.mat_static[yx] = image[yx][0]*K + static_frame_offset;
         g_lp.mat_start[yx] = image[yx][1]*K;
         g_lp.mat_period[yx] = image[yx][2]*K;
@@ -1180,7 +1180,7 @@ void do_savestaticloop(Args& args) {
     possibly_rescale_loop_parameters();
     string filename = args.get_filename();
     Image image(video.spatial_dims());
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         int istatic = g_lp.mat_static[yx];
         bool defined = istatic>=0 && istatic<video.nframes();
         image[yx] = defined ? video[istatic][yx] : Pixel::pink();
@@ -1292,7 +1292,7 @@ void compute_looping_regions() {
             image.write_file("image_scost.png");
         } else { // form regions based on period equality and overlapping time intervals (and optionally activation)
             assertx(max(g_lp.mat_start)>0); // input time intervals are lost if video is already remapped
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 for_int(axis, 2) {
                     Vec2<int> yx1 = yx;
                     if (++yx1[axis]==video.dim(axis)) continue;
@@ -1309,7 +1309,7 @@ void compute_looping_regions() {
         g_lp.mat_iregion.init(video.spatial_dims());
         {
             Map<Vec2<int>, int> mpii;
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 const Vec2<int>& pi = uf.get_label(yx);
                 bool is_new; int iregion = mpii.enter(pi, g_lp.region_color.num(), is_new);
                 if (is_new) g_lp.region_color.add(1); // initialized later
@@ -1320,21 +1320,21 @@ void compute_looping_regions() {
     for (auto& pix : g_lp.region_color) { pix = random_color(Random::G); }
     if (getenv_bool("LOOPING_REGIONS_IMAGE")) {
         Image image(video.spatial_dims());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             image[yx] = g_lp.region_color[g_lp.mat_iregion[yx]];
         }
         image.write_file("looping_regions.png");
     }
     {
         Array<Homogeneous> arh(g_lp.region_color.num());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             arh[g_lp.mat_iregion[yx]] += Point(float(yx[0]), float(yx[1]), 0.f);
         }
         for (const Homogeneous& h : arh) { g_lp.region_centroid.push(to_Point(normalized(h))); }
     }
     if (getenv_bool("LOOPING_REGIONS_DIST_IMAGE")) {
         Image image(video.spatial_dims());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             int iregion = g_lp.mat_iregion[yx];
             Pixel pix = g_lp.region_color[iregion];
             const Point& pcentroid = g_lp.region_centroid[iregion];
@@ -1452,7 +1452,7 @@ void do_render_loops(Args& args) {
     //  have zero effect on the spatial and temporal consistency.
     if (!no_stretch_shrink) {
         Matrix<float> mat_deltatime(video.spatial_dims());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             int period = g_lp.mat_period[yx];
             float deltatime = get_deltatime(period, nnf);
             HH_SSTAT(Sdeltatime, deltatime);
@@ -1502,14 +1502,14 @@ void do_render_harmonize(Args& args) {
     if (1) as_image(1.f-standardize_rms(clone(mat_avgdyn))/3.f).write_file("image_pixel_avgdyn.png");
     Array<Stat> region_avgdyn(g_lp.region_color.num()); // for each region, build statistic of dynamism of its pixels
     HH_STAT(Ssumdyn);                                      // average dynamism of all non-static pixels
-    for (const auto& yx : coords(video.spatial_dims())) {
+    for (const auto& yx : range(video.spatial_dims())) {
         int iregion = g_lp.mat_iregion[yx];
         region_avgdyn[iregion].enter(mat_avgdyn[yx]);
         if (mat_avgdyn[yx]) Ssumdyn.enter(mat_avgdyn[yx]);
     }
     if (1) {                    // find the average dynamim for each region
         Matrix<float> mat_region_avgdyn(video.spatial_dims());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             int iregion = g_lp.mat_iregion[yx];
             mat_region_avgdyn[yx] = region_avgdyn[iregion].avg();
         }
@@ -1629,7 +1629,7 @@ void do_gdlooperr(Args& args) {
                    nullptr, videoloop, dummy_vnv12,
                    1);
     // (Unfortunately, we are comparing data after it has already been quantized to 8-bit.)
-    for_int(f, videoloop.nframes()) for (const auto& yx : coords(videoloop.spatial_dims())) {
+    for_int(f, videoloop.nframes()) for (const auto& yx : range(videoloop.spatial_dims())) {
         for_int(c, 3) { HH_SSTAT_RMS(Serr, videoloop[f][yx][c]-videoloop_exact[f][yx][c]); }
     }
     nooutput = 1;
@@ -1641,7 +1641,7 @@ void do_saveloopframe(Args& args) {
     const int f = parse_nframes(args.get_string(), true);
     string filename = args.get_filename();
     Image image(video.spatial_dims());
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         int fi = get_framei(float(f), g_lp.mat_start[yx], g_lp.mat_period[yx]);
         HH_SSTAT(Sfi, fi);
         image[yx] = video[fi][yx];
@@ -1671,7 +1671,7 @@ void process_gen(Args& args) {
         float speriod = 100.f;  // was 20.f then 50.f
         float tperiod = 20.f;   // was 20.f then 60.f
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float v = cos((yx[1]/speriod-f/tperiod)*TAU)*.5f+.5f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
@@ -1680,7 +1680,7 @@ void process_gen(Args& args) {
         float speriod = 100.f;  // was 20.f then 50.f
         float tperiod = 20.f;   // was 20.f then 60.f
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float v = (frac(yx[0]/speriod-f/tperiod)>.5f ? 1.f : 0.f);
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
@@ -1699,7 +1699,7 @@ void process_gen(Args& args) {
         parallel_for_int(f, video.nframes()) {
             fill(video[f], Pixel::black());
             if (name=="checker3") fill(video[f], Pixel::gray(uchar(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 auto p = (convert<float>(yx)+V(sin(f/tperiod*TAU), cos(f/tperiod*TAU))*motion_amplitude)/speriod;
                 auto pf = p-floor(p);
                 auto pi = convert<int>(floor(p));
@@ -1714,7 +1714,7 @@ void process_gen(Args& args) {
         float speriod = 40.f;
         float tperiod = 45.f;
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[1])/video.xsize()-f/tperiod)<speriod/video.xsize() ? 1.f : 0.f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
@@ -1723,7 +1723,7 @@ void process_gen(Args& args) {
         float speriod = 80.f;
         float tperiod = 45.f;
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[0])/video.ysize()+f/tperiod)<speriod/video.ysize() ? 1.f : 0.f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
@@ -1734,7 +1734,7 @@ void process_gen(Args& args) {
         float tperiod = 18.f;
         float rotperiod = 90.f;
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float t = float(yx[0]);
                 if (name=="slits4")
                     t = (yx[0]-video.ysize()/2.f)*cos(f/rotperiod*TAU)-(yx[1]-video.xsize()/2.f)*sin(f/rotperiod*TAU);
@@ -1798,7 +1798,7 @@ void process_gen(Args& args) {
                 }
             }
             euclidean_distance_map(mvec);
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 float v = float(mag(mvec[yx]));
                 if (v>radius) continue;
                 auto yxo = convert<int>(convert<float>(yx)+mvec[yx]+.5f);
@@ -1808,7 +1808,7 @@ void process_gen(Args& args) {
     } else if (name=="dot1") {
         float radius = 8.f;
         parallel_for_int(f, video.nframes()) {
-            for (const auto& yx : coords(video.spatial_dims())) {
+            for (const auto& yx : range(video.spatial_dims())) {
                 auto pc = V((.2f+.6f*f/float(video.nframes()))*video.xsize(), .5f*video.ysize());
                 float r = float(dist(convert<float>(yx), pc));
                 video[f][yx] = Pixel::gray(r<radius ? 255 : 0);
@@ -1878,7 +1878,7 @@ void do_procedure(Args& args) {
         g_lp.mat_start.init(video.spatial_dims());
         g_lp.mat_period.init(video.spatial_dims());
         g_lp.mat_static.init(video.spatial_dims());
-        for (const auto& yx : coords(video.spatial_dims())) {
+        for (const auto& yx : range(video.spatial_dims())) {
             g_lp.mat_start[yx] = 1;
             g_lp.mat_period[yx] = video.nframes()-2;
             g_lp.mat_static[yx] = g_lp.mat_start[yx];

@@ -8,6 +8,8 @@ namespace hh {
 
 namespace details {
 template<typename T, int n> struct Vec_base;
+template<int D> class Vec_range;
+template<int D> class VecL_range;
 } // namespace details
 
 // Allocated fixed-size 1D array with n elements of type T.
@@ -24,24 +26,8 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
         : base(nullptr, arg0,            std::forward<Args>(args1)...) { }
     template<typename... Args> constexpr Vec(T&& arg0,      Args&&... args1) noexcept
         : base(nullptr, std::move(arg0), std::forward<Args>(args1)...) { }
-#if 0
-    // If I defined these operator=() functions, I would also have to define the default copy constructor, etc.
-    // type& operator=(const type& ar)             = default;
-    // type& operator=(type&& ar)                  = default;
-    // type& operator=(CArrayView<T> ar)           { assign(ar); return *this; }
-    // type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
-    // CONFIG=win : VS2013 does not create implicit move constructor and move assignment.
-    //  I cannot define them =default, and if I define them, the class is no longer trivial.
-    //  See SA in tVec.cpp
     // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
     //  it is safest to not include any copy-constructor, not even a default one.
-    Vec(const type&)                            = default;
-    type& operator=(const type& ar)             = default;
-    Vec(type&&)                                 = default;
-    type& operator=(type&&)                     = default;
-    // Vec(type&& ar)                           { for_int(i, n) { a()[i] = std::move(ar.a()[i]); } }
-    // type& operator=(type&& ar)               { for_int(i, n) { a()[i] = std::move(ar.a()[i]); } return *this; }
-#endif
     constexpr int num() const                   { return n; }
     constexpr size_t size() const               { return n; }
     T&                 operator[](int i)        { return (HH_CHECK_BOUNDS(i, n), base::operator[](i)); }
@@ -160,6 +146,13 @@ template<typename T, int n, typename Func> auto map(const Vec<T,n>& c, Func func
     Vec<decltype(func(T{})), n> nc; for_int(i, n) { nc[i] = func(c[i]); } return nc;
 }
 
+// Range of coordinates: Vec<int,D>: 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
+//  e.g.: for (const auto& p : range(grid.dims())) { grid[p] = func(p); }
+template<int D> details::Vec_range<D>  range(const Vec<int,D>& uU);
+
+// Range of coordinates: Vec<int,D>: uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
+template<int D> details::VecL_range<D> range(const Vec<int,D>& uL, const Vec<int,D>& uU);
+
 namespace details {
 template<typename T, typename... A> struct concat_n { static constexpr int value = T::Num + concat_n<A...>::value; };
 template<typename T> struct concat_n<T> { static constexpr int value = T::Num; };
@@ -204,6 +197,108 @@ template<typename T> struct Vec_base<T,0> {
 };
 
 } // namespace details
+
+
+//----------------------------------------------------------------------------
+
+namespace details {
+
+// Iterator for traversing coordinates: 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
+template<int D> class Vec_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
+    using type = Vec_iterator<D>;
+ public:
+    Vec_iterator(const Vec<int,D>& u, const Vec<int,D>& uU) : _u(u), _uU(uU) { }
+    Vec_iterator(const type& iter)              = default;
+    bool operator!=(const type& rhs) const {
+        dummy_use(rhs);
+        ASSERTXX(rhs._uU==_uU);
+        ASSERTXX(rhs._u[0]==_uU[0]);
+        return _u[0]<_uU[0];    // quick check against usual end()
+    }
+    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
+    type& operator++() {
+        static_assert(D>0, "");
+        ASSERTXX(_u[0]<_uU[0]);
+        if (D==1) {
+            _u[0]++; return *this;
+        } else if (D==2) {             // else VC12 does not unroll this tiny loop
+            if (++_u[1]<_uU[1]) return *this;
+            _u[1] = 0; ++_u[0]; return *this;
+        } else {
+            int c = D-1; // here to avoid warning about loop condition in VC14 code analysis
+            for (; c>0; --c) {
+                if (++_u[c]<_uU[c]) return *this;
+                _u[c] = 0;
+            }
+            _u[0]++; return *this;
+        }
+    }
+ private:
+    Vec<int,D> _u, _uU;
+};
+
+// Range of coordinates 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
+template<int D> class Vec_range {
+ public:
+    Vec_range(const Vec<int,D>& uU)             : _uU(uU) { }
+    Vec_iterator<D> begin() const               { return Vec_iterator<D>(ntimes<D>(0), _uU); }
+    Vec_iterator<D> end() const                 { return Vec_iterator<D>(_uU, _uU); }
+ private:
+    Vec<int,D> _uU;
+};
+
+// Iterator for traversing coordinates: uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
+template<int D> class VecL_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
+    using type = VecL_iterator<D>;
+ public:
+    VecL_iterator(const Vec<int,D>& uL, const Vec<int,D>& uU) : _u(uL), _uL(uL), _uU(uU) { }
+    VecL_iterator(const type& iter)           = default;
+    bool operator!=(const type& rhs) const {
+        ASSERTX(rhs._uU==_uU);
+        ASSERTX(rhs._u[0]==_uU[0]);
+        return _u[0]<_uU[0];    // quick check against usual end()
+    }
+    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
+    type& operator++() {
+        ASSERTX(_u[0]<_uU[0]);
+        for (int c = D-1; c>0; --c) {
+            _u[c]++;
+            if (_u[c]<_uU[c]) return *this;
+            _u[c] = _uL[c];
+        }
+        _u[0]++;
+        return *this;
+    }
+ private:
+    Vec<int,D> _u, _uL, _uU;
+};
+
+// Range of coordinates uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
+template<int D> class VecL_range {
+ public:
+    VecL_range(const Vec<int,D>& uL, const Vec<int,D>& uU) : _uL(uL), _uU(uU) { }
+    VecL_iterator<D> begin() const              { return VecL_iterator<D>(_uL, _uU); }
+    VecL_iterator<D> end() const                { return VecL_iterator<D>(_uU, _uU); }
+ private:
+    Vec<int,D> _uL, _uU;
+};
+
+} // namespace details
+
+template<int D> details::Vec_range<D> range(const Vec<int,D>& uU) {
+    for_int(c, D) { if (uU[c]<=0) return details::Vec_range<D>(ntimes<D>(0)); }
+    return details::Vec_range<D>(uU);
+}
+
+template<int D> details::VecL_range<D> range(const Vec<int,D>& uL, const Vec<int,D>& uU) {
+    for_int(c, D) { if (uU[c]<=uL[c]) return details::VecL_range<D>(uU, uU); }
+    return details::VecL_range<D>(uL, uU);
+}
+
+// Backwards compatibility; deprecated.
+template<int D> details::Vec_range<D>  coords(const Vec<int,D>& uU) { return range(uU); }
+// Backwards compatibility; deprecated.
+template<int D> details::VecL_range<D> coordsL(const Vec<int,D>& uL, const Vec<int,D>& uU) { return range(uL, uU); }
 
 
 //----------------------------------------------------------------------------

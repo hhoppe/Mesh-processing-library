@@ -425,9 +425,10 @@ line2)";
         constexpr auto vsignd = sign(-D_TAU); SHOW(vsignd, type_name<decltype(vsignd)>());
         constexpr auto vsignzd = signz(-D_TAU); SHOW(vsignzd, type_name<decltype(vsignzd)>());
         constexpr auto vsquare5 = square(5); SHOW(vsquare5);
-        // constexpr auto vclamped10 = clamp(-11, 10, 20); SHOW(vclamped10);
+        constexpr auto vclamped10 = clamp(-11, 10, 20); SHOW(vclamped10);
+        const auto vclamped30 = general_clamp(30, 10, 20); SHOW(vclamped30);
         const int v5mod3 = mod3(5); SHOW(v5mod3);
-        const int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33); // C++14 constexpr
+        constexpr int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33); // C++14 constexpr
     }
     {
         Array<uchar> buf(10);
@@ -545,7 +546,7 @@ line2)";
     }
     {
         // test std::forward in assertx()
-        const int i = assertx(55); assertx(i==55); // constexpr in C++14
+        constexpr int i = assertx(55); assertx(i==55);
         int j = 56;
         const int& j2 = assertx(j); assertx(&j2==&j); assertx(j2==56);
         int& j3 = assertx(j); assertx(&j3==&j); assertx(j3==56);

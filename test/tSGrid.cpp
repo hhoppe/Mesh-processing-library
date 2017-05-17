@@ -9,8 +9,8 @@ int main() {
         SHOW(grid.dims());
         SHOW(grid.dim(2));
         {
-            const auto grid_dims = grid.dims(); SHOW(grid_dims); // C++14 constexpr
-            const auto dim2 = grid_dims[2]; SHOW(dim2);          // C++14 constexpr
+            constexpr auto grid_dims = grid.dims(); SHOW(grid_dims);
+            constexpr auto dim2 = grid_dims[2]; SHOW(dim2);
         }
         SHOW(grid.size());
         fill(grid, 0);

@@ -307,7 +307,7 @@ using ushort = unsigned short;
 //  or to an explicit HhRoot environment variable that does not match the current tree.
 
 // Avoid warnings of unused variables
-template<typename... A> void dummy_use(const A&...) { } // C++14: "constexpr void dummy_use(" becomes OK
+template<typename... A> constexpr void dummy_use(const A&...) { }
 
 // Avoid warnings of uninitialized variables
 template<typename T> void dummy_init(T& v) { v = T(); }
@@ -613,7 +613,7 @@ template<typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
     return (ASSERTXX(!(v<a && v>b)), v<a ? a : v>b ? b : v);
 }
 
-// Like clamp() but slightly less efficient and not constexpr until C++14; however works on values like Vector4.
+// Like clamp() but slightly less efficient; however works on values like Vector4.  (min() is constexpr in C++14)
 template<typename T> T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
 
 // Linearly interpolate between two values (f==1.f returns v1; f==0.f returns v2).

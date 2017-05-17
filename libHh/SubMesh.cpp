@@ -498,10 +498,10 @@ namespace {
 
 // Central weight for the subdivision masks at a cone, as function of n
 
-const auto k_table_cone_subd = // C++14 constexpr
+constexpr auto k_table_cone_subd =
     V(0.f, 0.f, 0.f, .625f, .75f, .827254f, .875f, .905872f, .926777f, .941511f, .952254f);
 
-const auto k_table_cone_limit = // C++14 constexpr
+constexpr auto k_table_cone_limit =
     V(0.f, 0.f, 0.f, .5f, .6f, .684624f, .75f, .799356f, .836637f, .865074f, .887058f);
 
 } // namespace

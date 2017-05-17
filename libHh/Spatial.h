@@ -12,7 +12,6 @@
 #include "Stat.h"
 #include "Bbox.h"
 #include "Vec.h"
-#include "Grid.h"               // coordsL()
 
 namespace hh {
 
@@ -222,7 +221,7 @@ void ObjectSpatial<Approx2,Exact2>::enter(Univ id, const Point& startp, Func fco
             ncubes++;
         }
         Vec2<Ind> bi; for_int(c, 3) { bi[0][c] = max(ci[c]-1, 0); bi[1][c] = min(ci[c]+1, _gn-1); }
-        for (const Ind& cit : coordsL(bi[0], bi[1]+1)) {
+        for (const Ind& cit : range(bi[0], bi[1]+1)) {
             int enc = encode(cit);
             if (set.add(enc)) queue.enqueue(enc);
         }
@@ -248,7 +247,7 @@ void ObjectSpatial<Approx2,Exact2>::search_segment(const Point& p1, const Point&
         Ind cci = point_to_indices(p);
         ASSERTX(indices_inbounds(cci));
         Vec2<Ind> bi; for_int(c, 3) { bi[0][c] = min(cci[c], pci[c]); bi[1][c] = max(cci[c], pci[c]); }
-        for (const Ind& cit : coordsL(bi[0], bi[1]+1)) {
+        for (const Ind& cit : range(bi[0], bi[1]+1)) {
             int en = encode(cit);
             if (en==pen) continue;
             bool present; auto& cell = _map.retrieve(en, present);

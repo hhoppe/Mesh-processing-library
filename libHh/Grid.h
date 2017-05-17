@@ -21,7 +21,7 @@
     grid[18][5] = 1; grid(18, 6) = 2; grid[{18, 7}] = 3;
     grid.raster(grid_index(grid.dims(), V(18, 8))) = 4;
     for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) { grid[y][x] *= 2; } // iterate using individual coordinates
-    for (const auto& u : coords(grid.dims())) { grid[u] *= 2; }          // iterate using array of coordinate indices
+    for (const auto& u : range(grid.dims())) { grid[u] *= 2; }           // iterate using array of coordinate indices
     for_size_t(i, grid.size()) { grid.raster(i) *= 2; }                  // iterate using raster order (fastest)
     for (auto& e : grid) { e *= 2; }                                     // iterate over elements (also fastest)
 }
@@ -56,9 +56,6 @@ template<int D, typename T> using nested_initializer_list_t = typename nested_in
 
 template<int D, typename T> struct nested_list_dims;
 template<int D, typename T> struct nested_list_retrieve;
-
-template<int D> class Coord_range;
-template<int D> class CoordL_range;
 
 } // namespace details
 
@@ -252,13 +249,6 @@ template<int D, typename T> class Grid : public GridView<D,T> {
     using base::_a; using base::_dims;
     using base::reinit;         // hide it
 };
-
-// Range of grid coordinates: Vec<int,D>: 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
-//  e.g.: for (const auto& p : coords(grid.dims())) { grid[p] = func(p); }
-template<int D> details::Coord_range<D>  coords(const Vec<int,D>& uU);
-
-// Range of grid coordinates: Vec<int,D>: uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
-template<int D> details::CoordL_range<D> coordsL(const Vec<int,D>& uL, const Vec<int,D>& uU);
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template<int D, typename T, typename Func> auto map(CGridView<D,T>& c, Func func)
@@ -546,139 +536,12 @@ template<typename T> struct nested_list_retrieve<0,T> {
 //----------------------------------------------------------------------------
 
 namespace details {
-
-// Iterator for traversing the coordinates of a grid. 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
-template<int D> class Coord_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
-    using type = Coord_iterator<D>;
- public:
-    Coord_iterator(const Vec<int,D>& u, const Vec<int,D>& uU) : _u(u), _uU(uU) { }
-    Coord_iterator(const type& iter)            = default;
-    bool operator!=(const type& rhs) const {
-        dummy_use(rhs);
-        ASSERTXX(rhs._uU==_uU);
-        ASSERTXX(rhs._u[0]==_uU[0]);
-        return _u[0]<_uU[0];    // quick check against usual end()
-    }
-    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
-    type& operator++() {
-        static_assert(D>0, "");
-        ASSERTXX(_u[0]<_uU[0]);
-        if (D==1) {
-            _u[0]++; return *this;
-        } else if (D==2) {             // else VC12 does not unroll this tiny loop
-            if (++_u[1]<_uU[1]) return *this;
-            _u[1] = 0; ++_u[0]; return *this;
-        } else {
-            int c = D-1; // here to avoid warning about loop condition in VC14 code analysis
-            for (; c>0; --c) {
-                if (++_u[c]<_uU[c]) return *this;
-                _u[c] = 0;
-            }
-            _u[0]++; return *this;
-        }
-    }
- private:
-    Vec<int,D> _u, _uU;
-};
-
-#if 0
-// Extra version to try for optimal code (gcc is already optimal without it).
-// VC12 still allocates one Vec in memory.
-template<> class Coord_iterator<2> {
-    static const int D = 2;
-    using type = Coord_iterator<D>;
- public:
-    Coord_iterator(const Vec<int,D>& u, const Vec<int,D>& uU) : _y(u[0]), _x(u[1]), _yn(uU[0]), _xn(uU[1]) { }
-    Coord_iterator(const type& iter)            = default;
-    bool operator!=(const type&) const          { return !_done; }
-    Vec<int,D> operator*() const                { return V(_y, _x); }
-    type& operator++() {
-        if (++_x<_xn) return *this;
-        _x = 0; if (++_y>=_yn) _done = true;
-        return *this;
-    }
- private:
-    bool _done {false};
-    int _y, _x, _yn, _xn;
-};
-#endif
-
-// Range of grid coordinates 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
-template<int D> class Coord_range {
- public:
-    Coord_range(const Vec<int,D>& uU)           : _uU(uU) { }
-    Coord_iterator<D> begin() const             { return Coord_iterator<D>(ntimes<D>(0), _uU); }
-    Coord_iterator<D> end() const               { return Coord_iterator<D>(_uU, _uU); }
- private:
-    Vec<int,D> _uU;
-};
-
-// Iterator for traversing the coordinates of a grid. uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
-template<int D> class CoordL_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
-    using type = CoordL_iterator<D>;
- public:
-    CoordL_iterator(const Vec<int,D>& uL, const Vec<int,D>& uU) : _u(uL), _uL(uL), _uU(uU) { }
-    CoordL_iterator(const type& iter)           = default;
-    bool operator!=(const type& rhs) const {
-        ASSERTX(rhs._uU==_uU);
-        ASSERTX(rhs._u[0]==_uU[0]);
-        return _u[0]<_uU[0];    // quick check against usual end()
-    }
-    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
-    type& operator++() {
-        ASSERTX(_u[0]<_uU[0]);
-        for (int c = D-1; c>0; --c) {
-            _u[c]++;
-            if (_u[c]<_uU[c]) return *this;
-            _u[c] = _uL[c];
-        }
-        _u[0]++;
-        return *this;
-    }
- private:
-    Vec<int,D> _u, _uL, _uU;
-};
-
-// Range of grid coordinates uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
-template<int D> class CoordL_range {
- public:
-    CoordL_range(const Vec<int,D>& uL, const Vec<int,D>& uU) : _uL(uL), _uU(uU) { }
-    CoordL_iterator<D> begin() const              { return CoordL_iterator<D>(_uL, _uU); }
-    CoordL_iterator<D> end() const                { return CoordL_iterator<D>(_uU, _uU); }
- private:
-    Vec<int,D> _uL, _uU;
-};
-
-} // namespace details
-
-// Construct a grid coordinate range.   e.g.: for (const auto& p : coords(grid.dims())) { grid[p] = func(p); }
-template<int D> details::Coord_range<D> coords(const Vec<int,D>& uU) {
-    for_int(c, D) { if (uU[c]<=0) return details::Coord_range<D>(ntimes<D>(0)); }
-    return details::Coord_range<D>(uU);
-}
-
-#if 0 && defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wstrict-overflow" // warning in CoordsL, from tMultigrid.cpp or Filterimage.cpp
-// "assuming signed overflow does not occur when assuming that (X + c) < X is always false"
-// diagnostic push/pop does not seem to work correctly
-#endif
-
-// Construct a grid coordinate range.   e.g.: for (const auto& p : coords(uL, uU)) { grid[p] = func(p); }
-template<int D> details::CoordL_range<D> coordsL(const Vec<int,D>& uL, const Vec<int,D>& uU) {
-    for_int(c, D) { if (uU[c]<=uL[c]) return details::CoordL_range<D>(uU, uU); }
-    return details::CoordL_range<D>(uL, uU);
-}
-
-
-//----------------------------------------------------------------------------
-
-namespace details {
 template<int D, typename T> struct grid_output {
     std::ostream& operator()(std::ostream& os, CGridView<D,T> g) const {
         os << "Grid<" << type_name<T>() << ">(";
         for_int(i, g.dims().num()) { os << (i ? ", " : "") << g.dims()[i]; }
         os << ") {\n";
-        for (const auto& p : coords(g.dims())) {
+        for (const auto& p : range(g.dims())) {
             os << "  " << p << " = " << g[p] << (has_ostream_eol<T>() ? "" : "\n");
         }
         return os << "}\n";

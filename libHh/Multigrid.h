@@ -20,7 +20,7 @@
     fill(multigrid.initial_estimate(), 0.f);
     multigrid.set_desired_mean(mean(value));
     setup_rhs(grid_orig, multigrid.rhs());
-    if (optional) for (const auto& u : coords(dims)) multigrid.initial_estimate()[u] = some_value;
+    if (optional) for (const auto& u : range(dims)) multigrid.initial_estimate()[u] = some_value;
     // Grid<2,float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig); // for convergence analysis
     multigrid.solve();
     CGridView<2,float> grid_result = multigrid.result();
@@ -164,9 +164,9 @@ class Multigrid : noncopyable {
         const Vec<int,D> ndims = (dims+1)/2;
         Grid<D,T> ngrid(ndims);
         // uses box filter of width 2, except filter has extent 1 along dimensions whose size is already 1.
-        Vec<int,D> range; for_int(c, D) { range[c] = dims[c]>1 ? 2 : 1; }
-        assertx(product(range)>1);
-        float fac = 1.f/product(range);
+        Vec<int,D> vrange; for_int(c, D) { vrange[c] = dims[c]>1 ? 2 : 1; }
+        assertx(product(vrange)>1);
+        float fac = 1.f/product(vrange);
         int largest_odd_size = 0, largest_other_size = 0;
         for (int d : dims) {
             if (d%2==1 && d>largest_odd_size) std::swap(d, largest_odd_size);
@@ -176,9 +176,9 @@ class Multigrid : noncopyable {
         // Easy inside part [0, dims/2-1]:
         parallel_for_coords(dims/2, [&](const Vec<int,D>& u) {
             T v; my_zero(v);
-            for (const auto& ut : coordsL(u*2, u*2+range)) { v += grid[ut]; }
+            for (const auto& ut : range(u*2, u*2+vrange)) { v += grid[ut]; }
             ngrid[u] = T(v*fac);
-        }, product(range)*2);
+        }, product(vrange)*2);
         // The optional D leftover hyperplanes [dims/2, ndims-1] for odd sizes
         Vec<Bndrule,D> bndrules;
         for_int(d, D) {         // emperically, I found this boundary rule to behave well
@@ -189,9 +189,9 @@ class Multigrid : noncopyable {
         for_int(c, D) {
             const Vec<int,D> uL = ntimes<D>(0).with(c, dims[c]/2);
             const Vec<int,D> uU = ndims;
-            for (const auto& u : coordsL(uL, uU)) {
+            for (const auto& u : range(uL, uU)) {
                 T v; my_zero(v);
-                for (const auto& ut : coordsL(u*2, u*2+range)) { v += grid.inside(ut, bndrules, &bordervalue); }
+                for (const auto& ut : range(u*2, u*2+vrange)) { v += grid.inside(ut, bndrules, &bordervalue); }
                 ngrid[u] = T(v*fac);
             }
         }
@@ -249,7 +249,7 @@ class Multigrid : noncopyable {
         for_int(c, D) { assertx(ndims[c]==dims[c]*2 || ndims[c]==dims[c]*2-1); }
         Grid<D,T> ngrid(ndims);
         // transpose of box filter
-        // for (const auto& u : coords(ndims)) { ngrid[u] = grid[u/2]; }
+        // for (const auto& u : range(ndims)) { ngrid[u] = grid[u/2]; }
         parallel_for_coords(ndims, [&](const Vec<int,D>& u) { ngrid[u] = grid[u/2]; });
         return ngrid;
     }
@@ -337,7 +337,7 @@ class Multigrid : noncopyable {
                 if (1 && b_default_metric) {
                     for_coordsL_interior(dims, ntimes<D>(0), dims, func_update, func_update_interior);
                 } else {
-                    for (const auto& u : coords(dims)) func_update(u);
+                    for (const auto& u : range(dims)) func_update(u);
                 }
             } else if (1 && D>=2 && D<=4) { // even-odd parallelism on dim0; hypercolumns on dim>0; fast
                 assertx(D<=4);             // large D would make col_dims too small
@@ -357,7 +357,7 @@ class Multigrid : noncopyable {
                 col_dims = ((dims-1)/num_col_pairs+1-1)/even_odd+1; // adjust col_dims for most uniform partition
                 // SHOW(dims, col_dims, even_odd, num_col_pairs);
                 const bool local_iter = true;
-                for (const auto& eo : coords(even_odd)) {          // { 0|1, 0, 0, ... }
+                for (const auto& eo : range(even_odd)) {          // { 0|1, 0, 0, ... }
                     // SHOW(eo);
                     auto func_relax_column = [&](const Vec<int,D>& coli) {
                         Vec<int,D> uL = general_clamp((coli*even_odd+eo+0)*col_dims-voverlap, ntimes<D>(0), dims);
@@ -382,18 +382,18 @@ class Multigrid : noncopyable {
                         // HH_LOCK { SHOW(dims, uL, uU); }
                         for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
                     } else {
-                        for (const auto& u : coordsL(uL, uU)) func_update(u);
+                        for (const auto& u : range(uL, uU)) func_update(u);
                     }
                 }
                 parallel_for_int(thread, nthreads) { // parallel is useful for small dimension likes video frames
                     const int overlap = 0;           // ={1, 2} does not seem to help much over =0
                     const Vec<int,D> uL = ntimes<D>(0).with(0, min((thread+1)*d0chunk, dim0)-sync_rows);
                     const Vec<int,D> uU = dims.with(0, min((thread+1)*d0chunk+overlap, dim0));
-                    // for (const auto& u : coordsL(uL, uU)) func_update(u);
+                    // for (const auto& u : range(uL, uU)) func_update(u);
                     if (b_default_metric) {
                         for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
                     } else {
-                        for (const auto& u : coordsL(uL, uU)) func_update(u);
+                        for (const auto& u : range(uL, uU)) func_update(u);
                     }
                 }
             }
@@ -411,7 +411,7 @@ class Multigrid : noncopyable {
                         if (b_default_metric) {
                             for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
                         } else {
-                            for (const auto& u : coordsL(uL, uU)) func_update(u);
+                            for (const auto& u : range(uL, uU)) func_update(u);
                         }
                     }
                 }
@@ -526,7 +526,7 @@ class Multigrid : noncopyable {
             float vnum = _screening_weight+wL*(2.f*D);
             grid_residual.raster(i) = T(grid_rhs.raster(i)-(wL*vnei-vnum*grid_result.raster(i))); // OPT:resid
         };
-        if (0) for (const auto& u : coords(dims)) func(u);
+        if (0) for (const auto& u : range(dims)) func(u);
         if (1 && b_default_metric) {
             parallel_d0_for_coordsL_interior(dims, ntimes<D>(0), dims, func, func_interior);
         } else {

@@ -58,7 +58,7 @@ Vec2<FilterBnd> g_filterbs = V(FilterBnd(Filter::get("spline"), g_bndrules[0]),
                                FilterBnd(Filter::get("spline"), g_bndrules[1]));
 
 constexpr Bndrule k_reflected = Bndrule::reflected;
-const Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected); // C++14 constexpr
+constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected);
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
     assertx(s!="" && size);
@@ -276,7 +276,7 @@ void do_tofloats(Args& args) {
     auto numyx = (endyx1-begyx-1)/step+1;
     showdf("Writing floats file of size (%dx%d)\n", numyx[1], numyx[0]);
     assertx(write_binary_std(fi(), convert<float>(numyx.rev()).view()));
-    for (const auto& iyx : coords(numyx)) {
+    for (const auto& iyx : range(numyx)) {
         auto yx = begyx+iyx*step;
         float elev = get_filtered_pixel_value(yx)*scalezaxis+offsetzaxis;
         assertx(write_binary_std(fi(), ArView(elev)));
@@ -320,7 +320,7 @@ void do_info() {
           image.xsize(), image.ysize(), image.zsize(), image.suffix()==""?"unk":image.suffix().c_str());
     Array<Stat> stat_pixels; for_int(z, image.zsize()) { stat_pixels.push(Stat(sform("Component%d", z))); }
     int na0 = 0, na255 = 0;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) { stat_pixels[z].enter(image[yx][z]); }
         if (image.zsize()==4) {
             na0 += image[yx][3]==0;
@@ -334,7 +334,7 @@ void do_info() {
     }
     if (0) {
         Stat stat("ch0"); stat.set_rms();
-        for (const auto& yx : coords(image.dims())) { stat.enter(image[yx][0]); }
+        for (const auto& yx : range(image.dims())) { stat.enter(image[yx][0]); }
         showf("%s", stat.name_string().c_str());
         SHOW(stat.rms());
         const float maxv = 255.f;
@@ -507,7 +507,7 @@ void do_overlayimage(Args& args) {
     string imagename = args.get_string();
     Image image2; image2.read_file(imagename);
     assertx(image.ok(yx0+image2.dims()-1));
-    for (const auto& yx : coords(image2.dims())) { image[yx0+yx] = image2[yx]; }
+    for (const auto& yx : range(image2.dims())) { image[yx0+yx] = image2[yx]; }
 }
 
 void do_drawrectangle(Args& args) {
@@ -585,7 +585,7 @@ void do_scalehalf2n1() {
     assertx((newdims-1)*2+1==image.dims());
     Image timage(image);
     image.init(newdims);
-    for (const auto& yx : coords(image.dims())) { image[yx] = timage[yx*2]; }
+    for (const auto& yx : range(image.dims())) { image[yx] = timage[yx*2]; }
 }
 
 
@@ -683,7 +683,7 @@ void do_tops() {
         std::cout << sform("  false %d\n", cz);
         std::cout << sform("  colorimage\n");
         column_ps = 0;
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             for_int(z, cz) { output_hex_byte(image[yx][z]); } // ? test bw image
         }
         if (column_ps) std::cout << "\n";
@@ -777,7 +777,7 @@ void do_randomizeRGB() {
 
 void do_noisegaussian(Args& args) {
     float sd = args.get_float();
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) {
             image[yx][z] = clamp_to_uchar(int(float(image[yx][z])+Random::G.gauss()*sd+.5f));
         }
@@ -864,7 +864,7 @@ void apply_as_operations(Grid<2,Pixel>& im, const Vec2<int>& yx, const Vec2<int>
 }
 
 void assemble_images(CMatrixView<Image> images) {
-    for (const auto& yx : coords(images.dims())) { assertx(images[yx].zsize()==images[0][0].zsize()); }
+    for (const auto& yx : range(images.dims())) { assertx(images[yx].zsize()==images[0][0].zsize()); }
     image.init(V(0, 0)); image.set_zsize(images[0][0].zsize()); // attributes copied outside this function
     image = assemble(images);
 }
@@ -890,7 +890,7 @@ void do_assemble(Args& args) {
     Matrix<Image> images(V(ny, nx));
     assertx(images.size()>=lfilenames.size());
     Matrix<string> filenames(images.dims());
-    for (const auto& yx : coords(filenames.dims())) {
+    for (const auto& yx : range(filenames.dims())) {
         if (!lfilenames.num()) continue;
         string filename = lfilenames.shift();
         filenames[yx] = filename;
@@ -903,7 +903,7 @@ void do_assemble(Args& args) {
         images[yx].read_file(filenames[yx]);
         apply_as_operations(images[yx], yx, images.dims());
     });                         // we can assume that parallelism is justified
-    for (const auto& yx : coords(images.dims())) {
+    for (const auto& yx : range(images.dims())) {
         if (filenames[yx]=="") {
             // Let it be OK if fewer images than nx.
             int width = yx[0]==0 ? 0 : images[0][yx[1]].xsize();
@@ -923,7 +923,7 @@ void do_fromtxt(Args& args) {
     image.init(V(ny, nx)); image.set_zsize(nch);
     RFile fi(filename);
     Array<float> aval; aval.reserve(ny*nx*nch);
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(c, nch) {
             dummy_use(yx);
             float val; assertx(fi() >> val);
@@ -933,7 +933,7 @@ void do_fromtxt(Args& args) {
     if (1) { float dummy_val; fi() >> dummy_val; assertw(!fi()); }
     if (0) SHOW(aval[0], aval.last());
     const float* pval = aval.data();
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(c, nch) { float val = *pval++; image[yx][c] = uchar(clamp(val, 0.f, 1.f)*255.f+.5f); }
     }
 }
@@ -986,7 +986,7 @@ void do_disassemble(Args& args) {
     string suffix = image.suffix(); assertx(suffix!="");
     parallel_for_coords(atiles, [&](const Vec2<int>& yx) {
         Image nimage(tiledims); nimage.attrib() = image.attrib();
-        for (const auto& yxd : coords(tiledims)) {
+        for (const auto& yxd : range(tiledims)) {
             nimage[yxd] = image[yx*tiledims+yxd];
         }
         nimage.set_silent_io_progress(true);
@@ -1001,7 +1001,7 @@ void do_tile(Args& args) {
     Image timage(image);
     image.init(timage.dims()*atiles);
     parallel_for_coords(atiles, [&](const Vec2<int>& yx) {
-        for (const auto& yxd : coords(timage.dims())) {
+        for (const auto& yxd : range(timage.dims())) {
             image[yx*timage.dims()+yxd] = timage[yxd];
         }
     }, product(timage.dims())*4);
@@ -1014,7 +1014,7 @@ void do_replace(Args& args) {
         newcolor[i] = uchar(v);
     }
     int count = 0;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         if (equal(image[yx], gcolor, image.zsize())^g_not) {
             count++;
             image[yx] = newcolor;
@@ -1132,9 +1132,9 @@ template<int D> void quad_pullpush(GridView<D,Pixel> grid) {
         return;
     }
     Grid<D,Pixel> hgrid((grid.dims()+1)/2);
-    for (const auto& hu : coords(hgrid.dims())) {
+    for (const auto& hu : range(hgrid.dims())) {
         Vec3<int> accum(0, 0, 0); int num_def = 0;
-        for (const auto& ud : coords(ntimes<D>(2))) {
+        for (const auto& ud : range(ntimes<D>(2))) {
             Vec<int,D> u = hu*2+ud;
             if (!grid.ok(u)) continue;
             const Pixel& pix = grid[u];
@@ -1152,8 +1152,8 @@ template<int D> void quad_pullpush(GridView<D,Pixel> grid) {
     }
     quad_pullpush(hgrid);       // recursive call
     ASSERTX(count_undef(hgrid)==0);
-    for (const auto& hu : coords(hgrid.dims())) {
-        for (const auto& ud : coords(ntimes<D>(2))) {
+    for (const auto& hu : range(hgrid.dims())) {
+        for (const auto& ud : range(ntimes<D>(2))) {
             Vec<int,D> u = hu*2+ud;
             if (!grid.ok(u)) continue;
             Pixel& pix = grid[u];
@@ -1167,7 +1167,7 @@ template<int D> void quad_pullpush(GridView<D,Pixel> grid) {
 // Filterimage ~/data/image/texture256.input.png -color 255 0 0 255 -info -quadpullpush -info | imgv
 void do_quadpullpush() {
     assertx(image.zsize()==3);  // no alpha
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         bool is_undef = rgb_equal(image[yx], gcolor)^g_not;
         image[yx][3] = is_undef ? 0 : 255;
     }
@@ -1215,7 +1215,7 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
     Grid<D,Vector4> hgrid;      // half-resolution grid
     {                           // pull step
         // clamp weights prior to downscaling
-        for (const auto& u : coords(dims)) {
+        for (const auto& u : range(dims)) {
             grid[u] *= 1.f/max(grid[u][3], 1.f); // make weight at most 1.f
         }
         if (!primal) {
@@ -1256,7 +1256,7 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
     new_pullpush(hgrid);
     {                           // push step
         // clamp weights prior to upscaling
-        for (const auto& u : coords(hdims)) {
+        for (const auto& u : range(hdims)) {
             hgrid[u] *= 1.f/max(hgrid[u][3], 1.f); // make weight at most 1.f
         }
         Grid<D,Vector4> gridu;
@@ -1275,7 +1275,7 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
             gridu = crop(gridu, ntimes<D>(0), gridu.dims()-grid.dims()); // crop any extra
         }
         assertx(gridu.dims()==grid.dims());
-        for (const auto& u : coords(dims)) {
+        for (const auto& u : range(dims)) {
             // composite grid over gridu==upsample(hgrid)
             // C_new = C_f + (1-alpha_f)*C_b
             const float w = grid[u][3];
@@ -1292,13 +1292,13 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
 // Filterimage ~/data/image/texture256.input.png -color 255 0 0 255 -info -softpullpush -info >v.png
 void do_softpullpush() {
     Matrix<Vector4> mat(image.dims());
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         bool is_undef = rgb_equal(image[yx], gcolor)^g_not;
         mat[yx] = is_undef ? Vector4(0.f) : Vector4(image[yx]);
         // HH_SSTAT(Sa, mat[yx][3]);
     }
     new_pullpush(mat);
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         assertx(mat[yx][3]>0.f);
         image[yx] = (mat[yx]/mat[yx][3]).pixel();
     }
@@ -1314,7 +1314,7 @@ void do_voronoidilate() {
     if (image.suffix()=="jpg") assertnever("euclidean_distance_map not useful on jpg image");
     Matrix<Vec2<int>> mvec(image.dims(), image.dims());
     int num_undef = 0;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         bool is_undef = rgb_equal(image[yx], gcolor)^g_not;
         if (!is_undef) mvec[yx] = V(0, 0);
         num_undef += is_undef;
@@ -1322,7 +1322,7 @@ void do_voronoidilate() {
     showf("voronoidilate: filling in %d undefined pixels\n", num_undef);
     euclidean_distance_map(mvec);
     // Fill in unfilled pixels
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         if (mag2(mvec[yx])==0) continue;
         assertx(mvec[yx][0]<image.ysize()); // no more large (undefined) values
         HH_SSTAT(Svoronoidist, mag(mvec[yx]));
@@ -1333,12 +1333,12 @@ void do_voronoidilate() {
 void do_featureoffsets() {
     if (image.suffix()=="jpg") assertnever("euclidean_distance_map not useful on jpg image");
     Matrix<Vec2<int>> mvec(image.dims(), image.dims()); // (mvec is initialized with large values image.dims())
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         bool is_undef = rgb_equal(image[yx], gcolor)^g_not;
         if (!is_undef) mvec[yx] = V(0, 0);
     }
     euclidean_distance_map(mvec);
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         assertx(mvec[yx][0]<image.ysize()); // no more large (undefined) values
         HH_SSTAT(Svoronoidist, mag(mvec[yx]));
         if (1) {
@@ -1368,7 +1368,7 @@ void do_featureoffsets() {
 
 void do_normalizenor() {
     assertx(image.zsize()==3);  // no alpha
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         Pixel& pix = image[yx];
         Vector v;
         for_int(c, 3) {
@@ -1385,7 +1385,7 @@ void do_shadenor(Args& args) {
     Vector lightdir; for_int(c, 3) { lightdir[c] = args.get_float(); }
     assertx(image.zsize()==3);  // no alpha
     const bool twolights = getenv_bool("G3D_TWOLIGHTS");
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         Pixel& pix = image[yx];
         Vector vnor;
         for_int(c, 3) {
@@ -1416,7 +1416,7 @@ void do_shadefancy(Args& args) {
     ld.push(Vector(-.1f, -.9f, +.0f)); lc.push(Vector(.9f, .1f, .1f)); li.push(0.6f); ls.push(4.f);
     ld.push(Vector(+.1f, +.0f, +.9f)); lc.push(Vector(.6f, .5f, .1f)); li.push(0.6f); ls.push(4.f);
     for_int(i, ld.num()) { ld[i].normalize(); ld[i] *= frame; }
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         Pixel& pix = image[yx];
         Vector vnor;
         for_int(c, 3) {
@@ -1435,11 +1435,11 @@ void do_shadefancy(Args& args) {
 
 void do_cycle(Args& args) {
     int ncycle = args.get_int(); assertx(ncycle>0);
-    // const int low = 40, high = 190, offset = low, range = high-low;
-    const int low = 0, high = 255, offset = low, range = high-low;
+    // const int low = 40, high = 190, offset = low, vrange = high-low;
+    const int low = 0, high = 255, offset = low, vrange = high-low;
     // use "-cycle 5" to see all the detail.
-    int term = range/ncycle;
-    for (const auto& yx : coords(image.dims())) {
+    int term = vrange/ncycle;
+    for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) {
             image[yx][z] = uchar(offset+(image[yx][z]%ncycle)*term);
         }
@@ -1473,7 +1473,7 @@ void do_composite(Args& args) {
     if (op<0) assertnever("composite operation '" + opname + "' unrecognized");
     Image bimage;
     bimage.read_file(bfilename); assertx(same_size(bimage, image)); assertx(bimage.zsize()==image.zsize());
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) {
             float vf = image[yx][z]/255.f;
             float vb = bimage[yx][z]/255.f;
@@ -1509,7 +1509,7 @@ void do_composite(Args& args) {
 
 void do_genpattern(Args& args) {
     string pattern = args.get_string();
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         const int y = yx[0], x = yx[1];
         const char* p = pattern.c_str(); // inefficient re-parsing but OK.
         float v;
@@ -1604,7 +1604,7 @@ void do_homogenize(Args& args) {
         for_int(z, image.zsize()) {
             Matrix<double> ar(V(n, n), 0.);
             // TODO: parallelize by allocating Matrix ar per-thread, and then summing them.
-            for (const auto& yx : coords(image.dims())) {
+            for (const auto& yx : range(image.dims())) {
                 for_int(ky, n) for_int(kx, n) { ar[ky][kx] += table[0][ky][yx[0]]*table[1][kx][yx[1]]*image[yx][z]; }
             }
             ar[0][0] = 0.0;     // do not project out the DC term
@@ -1618,7 +1618,7 @@ void do_homogenize(Args& args) {
         }
     } else {                    // version with alpha-channel cropping
         const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             assertx(image[yx][3]==0 || image[yx][3]==255); // no fractional alpha values
         }
         // Derivation:
@@ -1640,7 +1640,7 @@ void do_homogenize(Args& args) {
         Matrix<double> bb(V(n2, n2), 0.); // B*B^T
         {                 // TODO: parallelize by allocating bb (and arw) per-thread, and then summing the bb.
             Array<double> arw(n2); // column of matrix B
-            for (const auto& yx : coords(image.dims())) {
+            for (const auto& yx : range(image.dims())) {
                 if (!image[yx][3]) continue;
                 for_int(ky, n) for_int(kx, n) { arw[ky*n+kx] = table[0][ky][yx[0]]*table[1][kx][yx[1]]; }
                 for_int(i, n2) for_int(j, i+1) { bb[i][j] += arw[i]*arw[j]; } // sum into lower triangular matrix
@@ -1651,7 +1651,7 @@ void do_homogenize(Args& args) {
         for_int(z, image.zsize()) {
             Array<double> bx(n2, 0.); // B*x
             // TODO: parallelize by allocating bx per-thread, and then summing them.
-            for (const auto& yx : coords(image.dims())) {
+            for (const auto& yx : range(image.dims())) {
                 if (!image[yx][3]) continue;
                 double v = image[yx][z];
                 for_int(ky, n) for_int(kx, n) { bx[ky*n+kx] += table[0][ky][yx[0]]*table[1][kx][yx[1]]*v; }
@@ -1688,7 +1688,7 @@ void do_superresolution(Args& args) {
     const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
     // Precompute pixel luminance values (in range [0.f, 255.f]).
     Matrix<float> mlum(image.dims());
-    for (const auto& yx : coords(image.dims())) { mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0]; }
+    for (const auto& yx : range(image.dims())) { mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0]; }
     // Apply ordinary magnification (using any chosen scaling filter).
     Image oimage = std::move(image);
     image = scale(oimage, twice(fac), g_filterbs);
@@ -1956,7 +1956,7 @@ void output_contour(int gn, float contour_value) {
     WSA3dStream wcontour(std::cout);
     // Pixels are at locations [ 0.5/imagesize, (imagesize-.5)/imagesize ], consistent with sample_domain()
     Matrix<float> matrix(image.dims());
-    for (const auto& yx : coords(image.dims())) { matrix[yx] = float(image[yx][0]); } // red channel
+    for (const auto& yx : range(image.dims())) { matrix[yx] = float(image[yx][0]); } // red channel
     Vec2<FilterBnd> filterbs = g_filterbs;
     if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
         filterbs = inverse_convolution(matrix, filterbs);
@@ -1974,7 +1974,7 @@ void output_contour(int gn, float contour_value) {
     };
     Contour2D<decltype(func_eval), decltype(func_contour)> contour(gn, func_eval, func_contour);
     contour.set_vertex_tolerance(.0001f);
-    for (const auto& yx : coords(twice(gn-1))) {               // visit all contour cells
+    for (const auto& yx : range(twice(gn-1))) {               // visit all contour cells
         contour.march_from((convert<float>(yx)+1.f)*(1.f/gn)); // center of contour cell
     }
     nooutput = true;
@@ -2015,10 +2015,10 @@ void do_poisson() {
                      ((maxn-image.dim(0))/2.f+yx[0])/(maxn-1.f),
                      0.f);
     };
-    float vmean = 0.f; for (const auto& yx : coords(image.dims())) { vmean += float(image[yx][0]); }
+    float vmean = 0.f; for (const auto& yx : range(image.dims())) { vmean += float(image[yx][0]); }
     vmean /= float(image.size());
     Matrix<Point> matp(image.dims());
-    for (const auto& yx : coords(image.dims())) { matp[yx] = func_default_pos(yx); }
+    for (const auto& yx : range(image.dims())) { matp[yx] = func_default_pos(yx); }
     Matrix<float> matw(image.dims()-1, 1.f);
     for_int(iter, g_niter) {
         // Solve a sparse linear-least-squares system;
@@ -2074,7 +2074,7 @@ void do_poisson() {
                 if (iter>0) {
                     Matrix<float> matconf(ny-1, nx-1); double a = 0.;
                     HH_STAT(stat);
-                    for (const auto& yx : coords(image.dims()-1)) {
+                    for (const auto& yx : range(image.dims()-1)) {
                         matconf[yx] = (square(matp[yx+V(0, 1)][0]-matp[yx][0]+matp[yx][1]-matp[yx+V(1, 0)][1])+
                                        square(matp[yx+V(0, 1)][1]-matp[yx][1]-matp[yx][0]+matp[yx+V(1, 0)][0]));
                         a += log(matconf[yx]);
@@ -2083,7 +2083,7 @@ void do_poisson() {
                     float gmean = exp(float(a)/ny/nx);
                     SHOW(gmean);
                     gmean = stat.avg(); // !
-                    for (const auto& yx : coords(image.dims()-1)) {
+                    for (const auto& yx : range(image.dims()-1)) {
                         float mag2 = (square(matp[yx+V(0, 1)][0]-matp[yx][0]+matp[yx][1]-matp[yx+V(1, 0)][1])+
                                       square(matp[yx+V(0, 1)][1]-matp[yx][1]-matp[yx][0]+matp[yx+V(1, 0)][0]));
                         if (mag2>gmean) matw[yx] *= pow(mag2/gmean, .25f);
@@ -2165,7 +2165,7 @@ void do_poisson() {
         GMesh mesh;
         Matrix<Vertex> matv(image.dims());
         string str;
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             Vertex v = mesh.create_vertex();
             matv[yx] = v;
             mesh.set_point(v, matp[yx]);
@@ -2176,7 +2176,7 @@ void do_poisson() {
                 Point opos = func_default_pos(yx); mesh.update_string(v, "Opos", csform_vec(str, opos));
             }
         }
-        for (const auto& yx : coords(image.dims()-1)) {
+        for (const auto& yx : range(image.dims()-1)) {
             mesh.create_face(V(matv[yx+V(0, 0)], matv[yx+V(0, 1)], matv[yx+V(1, 1)], matv[yx+V(1, 0)]));
         }
         // WFile fi("mesh.m"); mesh.write(fi());
@@ -2199,13 +2199,13 @@ void do_procedure(Args& args) {
         Image image1(image);
         Image image2; image2.read_file(args.get_filename());
         assertx(same_size(image1, image2));
-        for (const auto& yx : coords(image.dims())) { image[yx] = yx[1]%2==0 ? image1[yx] : image2[yx]; }
+        for (const auto& yx : range(image.dims())) { image[yx] = yx[1]%2==0 ? image1[yx] : image2[yx]; }
     } else if (name=="stereo_purple") {
         const int n = 800; const int nobj = 8; const int r = 25; const int rg = 180;
         Image image1(V(n, n), Pixel::white());
         Image image2(V(n, n), Pixel::white());
-        for (const auto& oyx : coords(twice(nobj))) {
-            for (const auto& yx : coordsL(oyx*100+50-r, oyx*100+50+r)) {
+        for (const auto& oyx : range(twice(nobj))) {
+            for (const auto& yx : range(oyx*100+50-r, oyx*100+50+r)) {
                 int kind = (oyx[0]*nobj+oyx[1])%3;
                 switch (kind) {
                  bcase 0:
@@ -2235,7 +2235,7 @@ void do_procedure(Args& args) {
     } else if (name=="mark_dark") {
         const int thresh = args.get_int();
         if (image.zsize()<4) { assertx(image.zsize()==3); image.set_zsize(4); }
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             int lum = image[yx][0]+image[yx][1]+image[yx][2];
             image[yx][3] = lum>thresh ? 0 : 255;
         }
@@ -2252,7 +2252,7 @@ void do_procedure(Args& args) {
         GMesh mesh;
         Matrix<Vertex> matv(image.dims());
         string str;
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             Vertex v = mesh.create_vertex();
             matv[yx] = v;
             Point p(yx[1]/(image.dim(1)-1.f), yx[0]/(image.dim(0)-1.f), 0.f);
@@ -2274,7 +2274,7 @@ void do_procedure(Args& args) {
             mesh.update_string(v, "rgb", csform_vec(str, nvrgb));
             mesh.update_string(v, "Orgb", csform_vec(str, vrgb));
         }
-        for (const auto& yx : coords(image.dims()-1)) {
+        for (const auto& yx : range(image.dims()-1)) {
             mesh.create_face(V(matv[yx], matv[yx+V(0, 1)], matv[yx+V(1, 1)], matv[yx+V(1, 0)]));
         }
         hh_clean_up();
@@ -2283,8 +2283,8 @@ void do_procedure(Args& args) {
         // Filterimage -create 128 128 -proc checkers4 | imgv
         const int n = image.ysize()/2;
         assertx(image.dims()==twice(n*2));
-        for (const auto& yxi : coords(twice(2))) {
-            for (const auto& yx : coords(twice(n))) {
+        for (const auto& yxi : range(twice(2))) {
+            for (const auto& yx : range(twice(n))) {
                 const int beat = 8;
                 const uchar greyv = 60;
                 Pixel pix(greyv, greyv, greyv, 255);
@@ -2305,7 +2305,7 @@ void do_procedure(Args& args) {
         int gridn = args.get_int(); assertx(gridn>=1);
         int size = max(image.dims());
         const Pixel pixel_gray(235, 235, 235, 255);
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             const Vec2<float> yxf = (convert<float>(yx)+.5f)/float(size);
             const Vec2<int> yxi = convert<int>(yxf*float(gridn));
             const bool is_on = sum(yxi)%2==1;
@@ -2315,7 +2315,7 @@ void do_procedure(Args& args) {
     } else if (name=="fix_agarwala") {
         // streaming multigrid: fix Aseem Agarwala labels file
         // Filterimage labels.png -proc fix_agarwala >labels.fixed.png
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             int l = image[yx][0];
             uchar v; uchar a = 255;
             if (l==255) {
@@ -2330,7 +2330,7 @@ void do_procedure(Args& args) {
         }
     } else if (name=="red_green_ramp") {
         // Filterimage -create 512 512 -procedure red_green_ramp -to png >~/data/image/ramp_red_green.png
-        for (const auto& yx : coords(image.dims())) {
+        for (const auto& yx : range(image.dims())) {
             image[yx].head<2>() = convert<uchar>(convert<float>(yx)/(convert<float>(image.dims())-1.f)*255.f+.5f);
             image[yx][2] = 0;
             image[yx][3] = 255;
@@ -2356,7 +2356,7 @@ void do_procedure(Args& args) {
             image_initial_mask.write_file("mask_initial.png");
         }
         if (1) {                // check for pixels that are static (period0) but have nonzero temporal cost
-            for (const auto& yx : coords(image.dims())) {
+            for (const auto& yx : range(image.dims())) {
                 if (image_periods[yx]==period_zero) { HH_SSTAT(Sp0tcost, image[yx][0]); }
                 // # Sp0tcost:           (79313  )          0:255         av=8.1941299      sd=35.532955
             }
@@ -2582,7 +2582,7 @@ void do_maxdiff(Args& args) {
     assertx(same_size(image, image2) && image.zsize()==image2.zsize());
     const int nz = image.zsize();
     int maxdiff = 0;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, nz) { maxdiff = max(maxdiff, abs(int(image[yx][z])-int(image2[yx][z]))); }
     }
     if (maxdiff>thresh) { SHOW(maxdiff, thresh); assertnever("maxdiff threshold exceeded"); }
@@ -2595,7 +2595,7 @@ void do_maxrmsdiff(Args& args) {
     assertx(same_size(image, image2) && image.zsize()==image2.zsize());
     const int nz = image.zsize();
     Stat stat;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, nz) { stat.enter(int(image[yx][z])-int(image2[yx][z])); }
     }
     if (0 || getenv_int("SHOW_MAX_RMS_DIFF")) SHOW(stat.rms());
@@ -2626,7 +2626,7 @@ void do_compare(Args& args) {
         showf("Effective spatial standard deviation of windowed Gaussian is %f\n", sqrt(var));
     }
     double allerr2 = 0., allmssim = 0.; int allmax = 0;
-    for (const auto& yx : coords(image.dims())) {
+    for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) { allmax = max(allmax, abs(image1[yx][z]-image2[yx][z])); }
     }
     for_int(z, image.zsize()) {
@@ -2642,7 +2642,7 @@ void do_compare(Args& args) {
             err2 += square(err);
             double mean1 = 0.;
             double mean2 = 0.;
-            for (const auto& yxd : coordsL(twice(-r), twice(r+1))) {
+            for (const auto& yxd : range(twice(-r), twice(r+1))) {
                 double w = ar_gauss[yxd[0]+r]*ar_gauss[yxd[1]+r];
                 mean1 += image1.inside(yx+yxd, k_reflected2)[z]*w;
                 mean2 += image2.inside(yx+yxd, k_reflected2)[z]*w;
@@ -2650,7 +2650,7 @@ void do_compare(Args& args) {
             double var1 = 0.;
             double var2 = 0.;
             double corr = 0.;
-            for (const auto& yxd : coordsL(twice(-r), twice(r+1))) {
+            for (const auto& yxd : range(twice(-r), twice(r+1))) {
                 double w = ar_gauss[yxd[0]+r]*ar_gauss[yxd[1]+r];
                 double v1 = image1.inside(yx+yxd, k_reflected2)[z];
                 double v2 = image2.inside(yx+yxd, k_reflected2)[z];
@@ -2949,7 +2949,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
             ar.init(0);                     // (initially unsorted) pdf of color image window
             float scenterv = mat_s[yx][ch]; // value of center pixel in structure image
             float scenterrank = 0.f;        // center pixel rank in structure image
-            for (const auto& iyx : coords(twice(window_diam))) {
+            for (const auto& iyx : range(twice(window_diam))) {
                 float w = fwindow[iyx[0]]*fwindow[iyx[1]];
                 float sv = mat_s.inside(yx-window_radius+iyx, k_reflected2)[ch];
                 float cv = mat_c.inside(yx-window_radius+iyx, k_reflected2)[ch];

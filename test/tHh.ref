@@ -175,6 +175,8 @@ vsignz=-1 type_name<decltype(vsignz)>()=float
 vsignd=-1 type_name<decltype(vsignd)>()=double
 vsignzd=-1 type_name<decltype(vsignzd)>()=double
 vsquare5 = 25
+vclamped10 = 10
+vclamped30 = 20
 v5mod3 = 2
 vint33 = 33
 sizeof(buf[0]) = 1

@@ -307,7 +307,7 @@ using ushort = unsigned short;
 //  or to an explicit HhRoot environment variable that does not match the current tree.
 
 // Avoid warnings of unused variables
-template<typename... A> constexpr void dummy_use(const A&...) { }
+template<typename... A> void dummy_use(const A&...) { }  // constexpr in C++14
 
 // Avoid warnings of uninitialized variables
 template<typename T> void dummy_init(T& v) { v = T(); }

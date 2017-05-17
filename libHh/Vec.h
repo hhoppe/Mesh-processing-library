@@ -52,7 +52,7 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     type with(int i, const T& e) const          { type ar(*this); ar[i] = e; return ar; }
     void assign(CArrayView<T> ar)               { assign_i(ar); }
     constexpr type rev() const                  { return rev_aux(std::make_index_sequence<n>()); }
-    bool in_range(const type& dims) const;               // == in_range(ntimes<n>(0), dims);
+    bool in_range(const type& dims) const       { return in_range(type::all(0), dims); }
     bool in_range(const type& uL, const type& uU) const;  // true if uL[c] <= [c] < uU[c] for all c in [0, n-1]
     // type with(int i, T e) const { type ar(*this); ar[i] = std::move(e); return ar; } // align error on T=Vector4
     // type with(int i, T e) &&                    { operator[](i) = std::move(e); return *this; } // C++14
@@ -207,10 +207,6 @@ template<typename T> struct Vec_base<T,0> {
 
 
 //----------------------------------------------------------------------------
-
-template<typename T, int n> bool Vec<T,n>::in_range(const Vec<T,n>& dims) const {
-    return in_range(ntimes<n>(T{}), dims);
-}
 
 template<typename T, int n> bool Vec<T,n>::in_range(const Vec<T,n>& uL, const Vec<T,n>& uU) const {
     for_int(c, n) {

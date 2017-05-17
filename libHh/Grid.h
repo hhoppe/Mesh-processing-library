@@ -62,17 +62,6 @@ template<int D> class CoordL_range;
 
 } // namespace details
 
-// Determine if a coordinate u lies within the bounds [uL, uU] on each dimension; deprecated.
-template<int D> bool in_bounds(const Vec<int,D>& u, const Vec<int,D>& uL, const Vec<int,D>& uU) {
-    // for_int(c, D) { if (u[c]<uL[c] || u[c]>=uU[c]) return false; } return true;
-    return u.in_range(uL, uU);
-}
-
-// Determine if a coordinate u lies within the bounds [0, dims); deprecated.
-template<int D> bool in_bounds(const Vec<int,D>& u, const Vec<int,D>& dims) {
-    return u.in_range(dims);
-}
-
 // Given a coordinate u within a grid with dimensions dims, return the raster index in the linearized representation.
 template<int D> constexpr size_t grid_index(const Vec<int,D>& dims, const Vec<int,D>& u);
 

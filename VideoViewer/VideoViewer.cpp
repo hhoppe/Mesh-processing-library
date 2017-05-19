@@ -1446,6 +1446,7 @@ bool DerivedHW::key_press(string skey) {
                  } else {
                      Vec2<int> owin_dims = g_win_dims;
                      Vec2<int> win_dims = determine_default_window_dims(dims);
+                     // SHOW(dims, win_dims, owin_dims, get_max_window_dims());
                      reset_window(win_dims); // (does not immediately update g_win_dims)
                      if (win_dims==dims) {
                          message("Zoom set to 100%");

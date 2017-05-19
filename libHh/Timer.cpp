@@ -15,6 +15,8 @@
 #else
 
 #include <sys/times.h>          // times(), struct tms
+#include <time.h>               // clock_gettime()
+#include <unistd.h>             // sysconf()
 
 #endif  // defined(_WIN32)
 
@@ -118,6 +120,7 @@ struct Timers {
         }
         if (_have_some_mult || Timer::show_times()>0) {
             showdf("Summary of timers (%s):\n", timing_host().c_str());
+            const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // num fractional decimal digits
             for (const auto& timer_info : _vec_timer_info) {
                 const Stat& stat = timer_info.stat;
                 double stat_sum = stat.sum();
@@ -141,12 +144,13 @@ struct Timers {
                 }
                 int64_t n = stat.num();
                 long long ln = n;   // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
-                showdf(" %-20.20s(%-6lld)%s:%s av=%9.2f   sum=%9.2f%s %9.2f\n",
+                showdf(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",
                        sform("%.19s:", stat.name().c_str()).c_str(),
                        ln,
-                       n>1 ? sform("%8.2f", stat.min()).c_str() : "        ",
-                       n>1 ? sform("%-8.2f", stat.max()).c_str() : "        ",
-                       stat_sum/n, stat_sum, sparallel.c_str(), timer_info.sum_real_time);
+                       n>1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ",
+                       n>1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ",
+                       precision, stat_sum/n, precision, stat_sum, sparallel.c_str(),
+                       precision, timer_info.sum_real_time);
                 if (stat.num()>1000 && stat.num()*1e-6>stat_sum) {
                     showdf("**Timer '%s' created more overhead than measured!\n", stat.name().c_str());
                 }
@@ -255,9 +259,10 @@ void Timer::terminate() {
             if (_process_cpu_time>u) u = _process_cpu_time;
         }
     }
-    string s = sform(" (%-20.20s %8.2f%s %8.2f)\n",
+    const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // num fractional decimal digits
+    string s = sform(" (%-20.20s %8.*f%s %8.*f)\n",
                      sform("%.19s:", _name.c_str()).c_str(),
-                     u, sparallel.c_str(), real());
+                     precision, u, sparallel.c_str(), precision, real());
     if (cmode==EMode::normal) {
         showdf("%s", s.c_str());
     } else {
@@ -281,6 +286,8 @@ static inline double to_seconds(const FILETIME& ft) {
     const double high_to_sec = low_to_sec*4294967296.0;
     return ft.dwLowDateTime*low_to_sec+ft.dwHighDateTime*high_to_sec;
 }
+#else
+const double clocks_per_sec = double(sysconf(_SC_CLK_TCK));  // was set incorrectly to CLOCKS_PER_SEC
 #endif
 
 void Timer::start() {
@@ -305,8 +312,13 @@ void Timer::start() {
     }
 #endif
 #else
-    struct tms buf2; times(&buf2);
-    _thread_cpu_time -= (double(buf2.tms_utime)+double(buf2.tms_stime))/CLOCKS_PER_SEC;
+    if (0) {
+        struct tms buf2; times(&buf2);
+        _thread_cpu_time -= (double(buf2.tms_utime)+double(buf2.tms_stime))/clocks_per_sec;
+    } else {
+        struct timespec ti; assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
+        _thread_cpu_time -= double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
+    }
 #endif  // defined(_WIN32)
     _real_counter -= get_precise_counter();
 }
@@ -318,7 +330,6 @@ void Timer::stop() {
     HANDLE cur_process = GetCurrentProcess();
     FILETIME tcreat, texit, tkernel, tuser;
     assertx(GetThreadTimes(cur_thread, &tcreat, &texit, &tkernel, &tuser));
-    // const int cl = 10000000/CLOCKS_PER_SEC; // (v/100ns)/(ticks/sec)==v/ticks
     _thread_cpu_time += to_seconds(tuser)+to_seconds(tkernel);
     assertx(GetProcessTimes(cur_process, &tcreat, &texit, &tkernel, &tuser));
     _process_cpu_time += to_seconds(tuser)+to_seconds(tkernel);
@@ -330,8 +341,14 @@ void Timer::stop() {
     }
 #endif
 #else
-    struct tms buf2; times(&buf2);
-    _thread_cpu_time += (double(buf2.tms_utime)+double(buf2.tms_stime))/CLOCKS_PER_SEC;
+    if (0) {
+        struct tms buf2; times(&buf2);
+        _thread_cpu_time += (double(buf2.tms_utime)+double(buf2.tms_stime))/clocks_per_sec;
+        // SHOW(clocks_per_sec, CLOCKS_PER_SEC); // e.g. 100, 1000000
+    } else {
+        struct timespec ti; assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
+        _thread_cpu_time += double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
+    }
 #endif  // defined(_WIN32)
     _real_counter += get_precise_counter();
 }

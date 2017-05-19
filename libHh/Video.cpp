@@ -7,7 +7,7 @@
 #define HH_VIDEO_HAVE_MF        // unless disabled below
 #define HH_VIDEO_HAVE_FFMPEG    // always as fallback
 
-#if !defined(_MSC_VER) || defined(__clang__) || defined(HH_NO_MF)
+#if !defined(_MSC_VER) || defined(__clang__) || defined(HH_NO_WINDOWS_MEDIA_FOUNDATION)
 #undef HH_VIDEO_HAVE_MF
 #endif
 

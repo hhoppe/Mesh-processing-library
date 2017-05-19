@@ -55,8 +55,7 @@ class SimpleTimer : noncopyable {
 #define NOGDI                  // avoid name collision on symbol Polygon
 #include <windows.h>           // winbase.h: LARGE_INTEGER, QueryPerformanceCounter, QueryPerformanceFrequency
 #else
-#include <ctime>                // gettimeofday(), struct timeval, struct timezone
-#include <sys/time.h>           // gettimeofday(), struct timeval, struct timezone
+#include <time.h>               // clock_gettime()
 #endif
 
 namespace hh {
@@ -69,9 +68,9 @@ inline int64_t SimpleTimer::get_precise_counter() {
     QueryPerformanceCounter(&l);
     return l.QuadPart;
 #else
-    struct timeval ti;
-    assertx(!gettimeofday(&ti, static_cast<struct timezone*>(nullptr)));
-    return ti.tv_sec*1000000+ti.tv_usec;
+    struct timespec ti;
+    assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
+    return int64_t(ti.tv_sec)*(1000*1000*1000)+ti.tv_nsec;
 #endif
 }
 
@@ -88,7 +87,7 @@ inline double SimpleTimer::get_seconds_per_counter() {
     }
     return v;
 #else
-    return 1e-6;
+    return 1e-9;
 #endif
 }
 

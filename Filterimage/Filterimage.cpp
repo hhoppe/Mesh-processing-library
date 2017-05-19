@@ -886,6 +886,7 @@ void do_assemble(Args& args) {
         ny = (lfilenames.num()-1)/nx+1;
     } else if (ny && !nx) {
         nx = (lfilenames.num()-1)/ny+1;
+    } else if (ny && nx) {
     } else { assertnever(""); }
     Matrix<Image> images(V(ny, nx));
     assertx(images.size()>=lfilenames.size());

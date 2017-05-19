@@ -3,6 +3,17 @@ x64 = 0#  x64 is not supported by c:/mingw/ 32-bit version (nor by cygwin clang)
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 
+# Some workarounds having to do with 32-bit version in c:/Program Files (x86)/LLVM/bin :
+
+# http://stackoverflow.com/questions/13525774/clang-and-float128-bug-error
+# https://llvm.org/bugs/show_bug.cgi?id=13530#c3
+cppinc += -DHH_DEFINE_FLOAT128
+
+cppinc += -DHH_DEFINE_STD_ONCE
+
+cppinc += -DHH_DEFINE_STD_MUTEX
+
+
 # Note that clang finds c:/mingw/ automatically!  (at least for clang 3.5 and mingw 4.7.2).
 # However, it requires c:/mingw/bin to be in PATH for correct linking.
 

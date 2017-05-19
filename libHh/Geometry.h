@@ -19,14 +19,14 @@ class Frame; struct Point;
 // *** Vector (lives in 3D linear space; represents translation rather than position).
 struct Vector : Vec3<float> {
     Vector()                                    = default;
-    Vector(float x, float y, float z)           : Vec3<float>(x, y, z) { }
-    Vector(Vec3<float> v)                       : Vec3<float>(v) { }
+    constexpr Vector(float x, float y, float z) : Vec3<float>(x, y, z) { }
+    constexpr Vector(Vec3<float> v)             : Vec3<float>(v) { }
     bool normalize();
 };
 Vector operator*(const Vector& v, const Frame& f);
 Vector operator*(const Frame& f, const Vector& normal);
 inline Vector& operator*=(Vector& v, const Frame& f)    { return v = v*f; }
-Vector cross(const Vector& v1, const Vector& v2);
+constexpr Vector cross(const Vector& v1, const Vector& v2);
 inline Vector normalized(Vector v)                      { assertx(v.normalize()); return v; }
 inline Vector ok_normalized(Vector v)                   { v.normalize(); return v; }
 // Overload to have lower precision than RangeOp.h templates (which return double).
@@ -46,8 +46,8 @@ inline float mag(const Vector& v1)                      { return sqrt(mag2(v1));
 // *** Point (lives in 3D affine space; represents position rather than translation).
 struct Point : Vec3<float> {
     Point()                                     = default;
-    Point(float x, float y, float z)            : Vec3<float>(x, y, z) { }
-    Point(Vec3<float> p)                        : Vec3<float>(p) { }
+    constexpr Point(float x, float y, float z)  : Vec3<float>(x, y, z) { }
+    constexpr Point(Vec3<float> p)              : Vec3<float>(p) { }
 };
 Point operator*(const Point& p, const Frame& f);
 inline Point& operator*=(Point& p, const Frame& f)      { return p = p*f; }
@@ -106,8 +106,8 @@ template<> HH_DECLARE_OSTREAM_EOL(Frame);
 //   or a Vector as a combination of 3 Vectors, but sums to 0.f when expressing a Vector as combination of 3 Points.
 struct Bary : Vec3<float> {
     Bary()                                      = default;
-    Bary(float x, float y, float z)             : Vec3<float>(x, y, z) { }
-    Bary(Vec3<float> v)                         : Vec3<float>(v) { }
+    constexpr Bary(float x, float y, float z)   : Vec3<float>(x, y, z) { }
+    constexpr Bary(Vec3<float> v)               : Vec3<float>(v) { }
     bool is_convex() const;
 };
 
@@ -115,8 +115,8 @@ struct Bary : Vec3<float> {
 //  Origin (0, 0) should be upper-left of an image although much code still assumes origin is at lower-left.
 struct UV : Vec2<float> {
     UV()                                        = default;
-    UV(float u, float v)                        : Vec2<float>(u, v) { }
-    UV(Vec2<float> v)                           : Vec2<float>(v) { }
+    constexpr UV(float u, float v)              : Vec2<float>(u, v) { }
+    constexpr UV(Vec2<float> v)                 : Vec2<float>(v) { }
 };
 
 // *** Misc operations
@@ -175,7 +175,7 @@ inline bool Vector::normalize() {
     v *= (1.f/sqrt(sum2)); return true;
 }
 
-inline Vector cross(const Vector& v1, const Vector& v2) {
+inline constexpr Vector cross(const Vector& v1, const Vector& v2) {
     return Vector(v1[1]*v2[2]-v1[2]*v2[1], v1[2]*v2[0]-v1[0]*v2[2], v1[0]*v2[1]-v1[1]*v2[0]);
 }
 

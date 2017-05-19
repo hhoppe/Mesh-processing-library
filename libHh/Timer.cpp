@@ -14,9 +14,7 @@
 
 #else
 
-#include <sys/times.h>          // times(), struct tms
 #include <time.h>               // clock_gettime()
-#include <unistd.h>             // sysconf()
 
 #endif  // defined(_WIN32)
 
@@ -245,7 +243,6 @@ void Timer::terminate() {
     }
 #endif  // !defined(HH_NO_TIMERS_CLASS)
     string sparallel = "       ";
-    // if (0 && _thread_cycles) sparallel = sform("  x%-4.1f", double(_process_cycles)/_thread_cycles);
     // With GNU libc++, u is sometimes around -5.55112e-17 or  1.11022e-16, so I cannot test against zero.
     // bool meaningful = u>1e-8;
     // Moreover, all *cpu* times are quantized to 16 milliseconds, so need a minimum to make any sense.
@@ -276,8 +273,6 @@ void Timer::zero() {
     _thread_cpu_time = 0.;
     _process_cpu_time = 0.;
     _real_counter = 0;
-    // _thread_cycles = 0;
-    // _process_cycles = 0;
 }
 
 #if defined(_WIN32)
@@ -286,8 +281,6 @@ static inline double to_seconds(const FILETIME& ft) {
     const double high_to_sec = low_to_sec*4294967296.0;
     return ft.dwLowDateTime*low_to_sec+ft.dwHighDateTime*high_to_sec;
 }
-#else
-const double clocks_per_sec = double(sysconf(_SC_CLK_TCK));  // was set incorrectly to CLOCKS_PER_SEC
 #endif
 
 void Timer::start() {
@@ -301,24 +294,15 @@ void Timer::start() {
     _thread_cpu_time -= to_seconds(tuser)+to_seconds(tkernel);
     assertx(GetProcessTimes(cur_process, &tcreat, &texit, &tkernel, &tuser));
     _process_cpu_time -= to_seconds(tuser)+to_seconds(tkernel);
-#if 0
-    if (0) {
-        // http://stackoverflow.com/questions/5532046/c-getthreadtimes-but-with-a-better-resolution
-        // Replace GetThreadTimes() by QueryThreadCycleTime(), it counts cpu cycles.
-        // However, CPU frequency can change dynamically!
-        uint64_t cycles;
-        assertx(QueryThreadCycleTime(cur_thread, &cycles));   _thread_cycles -= cycles;
-        assertx(QueryProcessCycleTime(cur_process, &cycles)); _process_cycles -= cycles;
-    }
-#endif
+    // http://stackoverflow.com/questions/5532046/c-getthreadtimes-but-with-a-better-resolution
+    // Replace GetThreadTimes() by QueryThreadCycleTime(), it counts cpu cycles.
+    // However, CPU frequency can change dynamically!
 #else
-    if (0) {
-        struct tms buf2; times(&buf2);
-        _thread_cpu_time -= (double(buf2.tms_utime)+double(buf2.tms_stime))/clocks_per_sec;
-    } else {
-        struct timespec ti; assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
-        _thread_cpu_time -= double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
-    }
+    struct timespec ti;
+    assertx(!clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ti));
+    _thread_cpu_time -= double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
+    assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
+    _process_cpu_time -= double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
 #endif  // defined(_WIN32)
     _real_counter -= get_precise_counter();
 }
@@ -333,22 +317,12 @@ void Timer::stop() {
     _thread_cpu_time += to_seconds(tuser)+to_seconds(tkernel);
     assertx(GetProcessTimes(cur_process, &tcreat, &texit, &tkernel, &tuser));
     _process_cpu_time += to_seconds(tuser)+to_seconds(tkernel);
-#if 0
-    if (0) {
-        uint64_t cycles;
-        assertx(QueryThreadCycleTime(cur_thread, &cycles));   _thread_cycles += cycles;
-        assertx(QueryProcessCycleTime(cur_process, &cycles)); _process_cycles += cycles;
-    }
-#endif
 #else
-    if (0) {
-        struct tms buf2; times(&buf2);
-        _thread_cpu_time += (double(buf2.tms_utime)+double(buf2.tms_stime))/clocks_per_sec;
-        // SHOW(clocks_per_sec, CLOCKS_PER_SEC); // e.g. 100, 1000000
-    } else {
-        struct timespec ti; assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
-        _thread_cpu_time += double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
-    }
+    struct timespec ti;
+    assertx(!clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ti));
+    _thread_cpu_time += double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
+    assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
+    _process_cpu_time += double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
 #endif  // defined(_WIN32)
     _real_counter += get_precise_counter();
 }

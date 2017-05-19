@@ -70,10 +70,10 @@ int main() {
         SHOW(mat_mul(p, hf.view()));
     }
     {
-        const Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);
-        const float d = dot(v1, v2); SHOW(d);
+        constexpr Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);
+        constexpr float d = dot(v1, v2); SHOW(d);
         const float m = mag(v1); SHOW(m);
-        const Vector vcross = cross(v1, v2); SHOW(vcross);
+        constexpr Vector vcross = cross(v1, v2); SHOW(vcross);
         const Frame frame(v1, v1, v2, Point(10.f, 10.f, 10.f));
         const Point origin = frame.p(); SHOW(origin);
     }

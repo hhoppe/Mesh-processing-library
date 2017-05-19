@@ -18,16 +18,16 @@ namespace hh {
 // In either case, the format can be text or binary.
 
 struct A3dColor : Vec3<float> {
-    A3dColor()                                  = default;
-    A3dColor(float r, float g, float b)         : Vec3<float>(r, g, b) { }
-    A3dColor(Vec3<float> a)                     : Vec3<float>(a) { }
+    A3dColor()                                      = default;
+    constexpr A3dColor(float r, float g, float b)   : Vec3<float>(r, g, b) { }
+    constexpr A3dColor(Vec3<float> a)               : Vec3<float>(a) { }
 };
 
 struct A3dVertexColor {
-    A3dVertexColor()                            = default;
-    A3dVertexColor(A3dColor pd)                 : d(pd), s(1.f, 1.f, 1.f), g(1.f, 0.f, 0.f) { }
-    A3dVertexColor(const Pixel& pix)    : A3dVertexColor(A3dColor(pix[0]/255.f, pix[1]/255.f, pix[2]/255.f)) { }
-    A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) { }
+    A3dVertexColor()                           = default;
+    constexpr A3dVertexColor(A3dColor pd)      : d(pd), s(1.f, 1.f, 1.f), g(1.f, 0.f, 0.f) { }
+    constexpr A3dVertexColor(const Pixel& pix) : A3dVertexColor(A3dColor(pix[0]/255.f, pix[1]/255.f, pix[2]/255.f)) { }
+    constexpr A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) { }
     A3dColor d;                 // diffuse
     A3dColor s;                 // specular
     A3dColor g;                 // g[0] is Phong coefficient; other channels unused
@@ -35,7 +35,7 @@ struct A3dVertexColor {
 
 struct A3dVertex {
     A3dVertex()                                 = default;
-    A3dVertex(Point pp, Vector pn, A3dVertexColor pc) : p(pp), n(pn), c(pc) { }
+    constexpr A3dVertex(Point pp, Vector pn, A3dVertexColor pc) : p(pp), n(pn), c(pc) { }
     Point p;
     Vector n;
     A3dVertexColor c;

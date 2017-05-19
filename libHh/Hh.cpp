@@ -40,13 +40,7 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 #else
 
 // #define __STDC_WANT_LIB_EXT1__ 1 // http://en.cppreference.com/w/c/chrono/localtime  localtime_s() in C11; fails
-#include <ctime>      // gettimeofday(), struct timeval, time(), localtime(), localtime_r(), time_t, struct tm
-#include <sys/time.h> // gettimeofday(), struct timeval, time(), localtime(), localtime_r(), time_t, struct tm
-
-#define HH_USE_CLOCK_GETTIME 1
-#if defined(HH_USE_CLOCK_GETTIME)
 #include <time.h>               // clock_gettime()
-#endif
 
 #if !defined(__APPLE__)
 #include <sys/sysinfo.h>        // struct sysinfo, sysinfo()
@@ -948,14 +942,10 @@ int64_t get_precise_counter() {
     LARGE_INTEGER l;
     assertx(QueryPerformanceCounter(&l));
     return l.QuadPart;
-#elif defined(HH_USE_CLOCK_GETTIME)
+#else
     struct timespec ti;
     assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
     return int64_t(ti.tv_sec)*(1000*1000*1000)+ti.tv_nsec;
-#else
-    struct timeval ti;
-    assertx(!gettimeofday(&ti, static_cast<struct timezone*>(nullptr)));
-    return ti.tv_sec*(1000*1000)+ti.tv_usec;
 #endif
 }
 
@@ -976,10 +966,8 @@ double get_seconds_per_counter() {
         v = 1./assertx(double(l.QuadPart));
     });
     return v;                   // 3.01874e-07 (based on ACPI Power Management pmtimer)
-#elif defined(HH_USE_CLOCK_GETTIME)
-    return 1e-9;
 #else
-    return 1e-6;
+    return 1e-9;
 #endif
 }
 
@@ -988,14 +976,10 @@ double get_precise_time() {
     LARGE_INTEGER l;
     assertx(QueryPerformanceCounter(&l));
     return double(l.QuadPart)*get_seconds_per_counter();
-#elif 1
+#else
     struct timespec ti;
     assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
     return double(ti.tv_sec)+double(ti.tv_nsec)*1e-9;
-#else
-    struct timeval ti;
-    assertx(!gettimeofday(&ti, static_cast<struct timezone*>(nullptr)));  // bad: affected by time changes
-    return double(ti.tv_sec)+double(ti.tv_usec)*1e-6;
 #endif
 }
 

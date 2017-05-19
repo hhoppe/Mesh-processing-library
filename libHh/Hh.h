@@ -44,9 +44,7 @@
 #pragma warning(disable:6286)   // (<non-zero constant> || <expression>) is always a non-zero constant
 #endif
 
-// http://stackoverflow.com/questions/13525774/clang-and-float128-bug-error
-// https://llvm.org/bugs/show_bug.cgi?id=13530#c3
-#if defined(__clang__) && !defined(HH_NO_DEFINE_FLOAT128)
+#if defined(HH_DEFINE_FLOAT128)  // workaround for current clang with mingw32 4.7.2
 typedef struct { long double x, y; } __float128;
 #endif
 
@@ -181,29 +179,25 @@ using namespace std; namespace hh { } using namespace hh;
 
 // *** Add some potentially missing C++11 features.
 
-#if !defined(_WIN32) && !defined(HH_NO_DEFINE_STD_LOG2)
 namespace std {
+
+#if !defined(_WIN32) && !defined(HH_NO_DEFINE_STD_LOG2)
 template<typename T> T log2(T v) { return std::log(v)/std::log(T(2)); }
-} // namespace std
 #endif
 
 #if defined(__CYGWIN__) && __GNUC__*100+__GNUC_MINOR__<500 && !defined(HH_NO_DEFINE_STD_HYPOT)
-namespace std {                 // missing hypot() functions
 inline float hypot(float a, float b) { return hypotf(a, b); }
 inline double hypot(double a, double b) { return ::hypot(a, b); }
-} // namespace std
 #endif
 
-#if defined(__clang__) && defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408 && !defined(__APPLE_CC__) && !defined(HH_NO_DEFINE_STD_ONCE)
-namespace std {                 // workaround for current mingw32 4.7.2
+#if defined(HH_DEFINE_STD_ONCE)  // workaround for current clang with mingw32 4.7.2
 struct once_flag { int done{0}; };
-// If there is a compilation error here, e.g. "reference to 'once_flag' is ambiguous",
-//  use "make HH_NO_DEFINE_STD_ONCE=1".
 template<typename Callable, typename... Args> void call_once(std::once_flag& flag, Callable&& func, Args&&... args) {
     if (!flag.done++) func(std::forward<Args>(args)...);
 }
-} // namespace std
 #endif
+
+} // namespace std
 
 
 // *** Add some easy C++14 features if not already present.

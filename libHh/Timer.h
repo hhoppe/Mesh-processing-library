@@ -51,8 +51,6 @@ class Timer : noncopyable {
     double _thread_cpu_time;    // thread  user+system time
     double _process_cpu_time;   // process user+system time
     int64_t _real_counter;
-    // int64_t _thread_cycles;     // thread  user+system cycles
-    // int64_t _process_cycles;    // process user+system cycles
     static int _s_show;
     void zero();
 };

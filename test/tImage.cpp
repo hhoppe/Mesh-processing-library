@@ -5,6 +5,12 @@ using namespace hh;
 
 
 int main() {
+    {
+        constexpr Pixel red{255, 0, 0, 255};
+        constexpr Pixel green{0, 255, 0};
+        constexpr Vec4<uchar> v{uchar(0), uchar(0), uchar(255), uchar(255)};
+        const Pixel blue{v};    // constexpr fails in VS 2015
+    }
     if (1) {
         Image image(V(20, 20), Pixel(65, 66, 67, 72));
         Bndrule bndrule = Bndrule::reflected;

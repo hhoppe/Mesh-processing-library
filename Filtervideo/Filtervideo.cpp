@@ -51,7 +51,7 @@ template<int D> Vec<float,D> MultigridMetricAnisotropic<D>::_metricw;
 
 inline Pixel random_color(Random& random) {
     Pixel pix; pix[3] = 255;
-    for_int(c, 3) { pix[c] = uchar(80.f+random.unif()*150.f+.5f); }
+    for_int(c, 3) { pix[c] = static_cast<uchar>(80.f+random.unif()*150.f+.5f); }
     return pix;
 }
 
@@ -203,7 +203,7 @@ void apply_as_operations(Grid<3,Pixel>& vid, const Vec2<int>& yx, const Vec2<int
             const float vscale = min(convert<float>(as_fit_dims)/convert<float>(vid.dims().tail<2>()));
             Vec2<int> newdims = convert<int>(convert<float>(vid.dims().tail<2>())*vscale+.5f);
             Grid<3,Pixel> newvid(concat(V(vid.dim(0)), newdims));
-            spatially_scale_Grid3_Pixel(vid, twice(filterb), newvid);
+            spatially_scale_Grid3_Pixel(vid, twice(filterb), &gcolor, newvid);
             vid = std::move(newvid);
         }
         Vec2<int> side0 = (as_fit_dims - vid.dims().tail<2>())/2;
@@ -868,7 +868,7 @@ void do_filter(Args& args) {
 }
 
 static void apply_scale(const Vec2<float>& v) {
-    video.scale(v, twice(filterb));
+    video.scale(v, twice(filterb), &gcolor);
     if (max(v)<1.f) {
         video.attrib().bitrate = int(video.attrib().bitrate*pow(float(product(v)), .8f)+.5f);
         showf("Reducing bitrate after scaling: %s\n", Video::diagnostic_string(video.dims(), video.attrib()).c_str());
@@ -997,7 +997,7 @@ void do_replace(Args& args) {
 
 void do_gamma(Args& args) {
     float gamma = args.get_float();
-    Vec<uchar,256> transf; for_int(i, 256) { transf[i] = uchar(255.f*pow(i/255.f, gamma)+0.5f); }
+    Vec<uchar,256> transf; for_int(i, 256) { transf[i] = static_cast<uchar>(255.f*pow(i/255.f, gamma)+0.5f); }
     if (1) {
         cond_parallel_for_size_t(video.size()*10, i, video.size()) {
             for_int(z, nz) { video.raster(i)[z] = transf[video.raster(i)[z]]; } // fastest
@@ -1045,7 +1045,7 @@ static void possibly_rescale_loop_parameters() {
     func_scale_Matrix_int(g_lp.mat_start);
     func_scale_Matrix_int(g_lp.mat_period);
     g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), twice(tfilterb),
-                                std::move(g_lp.mat_activation));
+                                implicit_cast<float*>(nullptr), std::move(g_lp.mat_activation));
 }
 
 void verify_loop_parameters() {
@@ -1770,7 +1770,7 @@ void process_gen(Args& args) {
             auto& pix = ar_color[i];
             if (0) {
                 for (;;) {
-                    for_int(c, 3) pix[c] = uchar(20.f+Random::G.unif()*235.f+.5f);
+                    for_int(c, 3) pix[c] = static_cast<uchar>(20.f+Random::G.unif()*235.f+.5f);
                     if (mag(pix)>350 && max(pix)>150 && min(pix)<100) break;
                 }
             } else {

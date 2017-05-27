@@ -111,8 +111,8 @@ string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
     return s;
 }
 
-void Video::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs) {
-    *this = hh::scale(*this, syx, filterbs, std::move(*this));
+void Video::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
+    *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
 }
 
 void Video::read_file(const string& filename) {
@@ -241,7 +241,8 @@ void convert_Video_to_VideoNv12(CGridView<3,Pixel> video, VideoNv12View vnv12) {
 
 //----------------------------------------------------------------------------
 
-Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, Video&& pnewvideo) {
+Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+            const Pixel* bordervalue, Video&& pnewvideo) {
     // With Grid<3,Pixel> rather than Array<Matrix<Pixel>>, we cannot directly overwrite video in-place.
     Video newvideo = &pnewvideo==&video ? Video() : std::move(pnewvideo);
     assertx(min(syx)>=0.f);
@@ -253,12 +254,12 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
     }
     newvideo.init(video.nframes(), newdims); newvideo.attrib() = video.attrib();
     if (!product(newdims)) return newvideo;
-    spatially_scale_Grid3_Pixel(video, filterbs, newvideo);
+    spatially_scale_Grid3_Pixel(video, filterbs, bordervalue, newvideo);
     return newvideo;
 }
 
 VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-                VideoNv12&& pnewvideo_nv12) {
+                const Pixel* bordervalue, VideoNv12&& pnewvideo_nv12) {
     VideoNv12 newvideo_nv12 = &pnewvideo_nv12==&video_nv12 ? VideoNv12() : std::move(pnewvideo_nv12);
     assertx(min(syx)>=0.f);
     const Vec2<int> sdims = video_nv12.get_Y().dims().tail<2>();
@@ -270,14 +271,22 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
     }
     newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
     if (!product(newdims)) return newvideo_nv12;
+    float borderY;
+    Vector4 borderUV;
+    if (bordervalue) {
+        uchar borderYt = RGB_to_Y(*bordervalue);
+        convert(CGrid1View(borderYt), Grid1View(borderY));
+        Vec2<uchar> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
+        convert(CGrid1View(borderUVt), Grid1View(borderUV));
+    }
     parallel_for_int(f, newvideo_nv12.nframes()) {
         Matrix<float> mat(sdims); convert(video_nv12.get_Y()[f], mat);
-        Matrix<float> mat2 = scale(mat, newdims, filterbs);
+        Matrix<float> mat2 = scale(mat, newdims, filterbs, bordervalue ? &borderY : nullptr);
         convert(mat2, newvideo_nv12.get_Y()[f]);
     }
     parallel_for_int(f, newvideo_nv12.nframes()) {
         Matrix<Vector4> mat(sdims/2); convert(video_nv12.get_UV()[f], mat);
-        Matrix<Vector4> mat2 = scale(mat, newdims/2, filterbs);
+        Matrix<Vector4> mat2 = scale(mat, newdims/2, filterbs, bordervalue ? &borderUV : nullptr);
         convert(mat2, newvideo_nv12.get_UV()[f]);
     }
     return newvideo_nv12;

@@ -268,8 +268,8 @@ int main() {
         { Array<int> ar; for (int e : range(2, 0)) { ar.push(e); } assertx(ar.num()==0); }
         {
             Array<uchar> ar;
-            for (uchar e : range(uchar(4), uchar(6))) { ar.push(e); }
-            assertx(ar==V(uchar(4), uchar(5)));
+            for (uchar e : range(uchar{4}, uchar{6})) { ar.push(e); }
+            assertx(ar==V(uchar{4}, uchar{5}));
         }
         {
             Array<short> ar;
@@ -278,7 +278,7 @@ int main() {
         }
         {
             Array<uint64_t> ar;
-            for (uint64_t e : range(uint64_t(3))) { ar.push(e); }
+            for (uint64_t e : range(uint64_t{3})) { ar.push(e); }
             assertx(ar==V<uint64_t>(0u, 1u, 2u));
         }
     }

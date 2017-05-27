@@ -620,7 +620,7 @@ inline double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f
 inline uchar clamp_to_uchar(int v) {
     // return clamp(v, 0, 255);
     // http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
-    v &= -(v>=0); return uchar(v | ((255-v)>>31));
+    v &= -(v>=0); return static_cast<uchar>(v | ((255-v)>>31));
 }
 
 // Returns j%3 (where j is in [0, 5]).
@@ -640,6 +640,18 @@ template<typename T> void my_zero(T& e) {
 }
 template<> inline void my_zero(float& e) { e = 0.f; }
 template<> inline void my_zero(double& e) { e = 0.; }
+
+namespace details {
+template<typename T> struct identity { using type = T; };
+}  // namespace details
+// For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
+template<typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
+
+// For use in downcasting to a derived class.
+template<typename Dest, typename Src> Dest down_cast(Src* f) {
+    static_assert(std::is_base_of<Src, typename std::remove_pointer<Dest>::type>::value, "");
+    return static_cast<Dest>(f);
+}
 
 // Conversion with bounds-checking in Debug configuration.
 template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {

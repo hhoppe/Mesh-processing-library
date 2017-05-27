@@ -63,7 +63,7 @@ class Image : public Matrix<Pixel> {
 // Misc
     void to_bw();
     void to_color();
-    void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs);
+    void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
     struct Attrib {
         int zsize {3};  // number of components per pixel; must be either 1, 3, or 4
         string suffix;  // e.g. "rgb"; "" if unknown; to identify format of read_file("-") and write_file("-")
@@ -96,7 +96,7 @@ string image_suffix_for_magic_byte(uchar c);
 
 // &image==&newimage is OK
 Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-            Image&& newimage = Image());
+            const Pixel* bordervalue = nullptr, Image&& newimage = Image());
 
 inline bool equal(const Pixel& pix1, const Pixel& pix2, int nz) {
     ASSERTX(nz>=3);

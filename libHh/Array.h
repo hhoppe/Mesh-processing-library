@@ -52,7 +52,7 @@ template<typename T> class CArrayView {
     template<typename T2> friend bool same_size(type ar1, CArrayView<T2> ar2) { return ar1.num()==ar2.num(); }
     void reinit(type a)                         { *this = a; }
     int num() const                             { return _n; }
-    size_t size() const                         { return size_t(_n); }
+    size_t size() const                         { return narrow_cast<size_t>(_n); }
     const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
     const T& last() const                       { return (*this)[_n-1]; }
     bool ok(int i) const                        { return i>=0 && i<_n; }
@@ -160,7 +160,7 @@ template<typename T> class Array : public ArrayView<T> {
     using type = Array<T>;
  public:
     Array()                                     = default;
-    explicit Array(int n)                       : base(n ? new T[size_t(n)] : nullptr, n), _cap(n) { ASSERTX(n>=0); }
+    explicit Array(int n) : base(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) { ASSERTX(n>=0); }
     explicit Array(int n, const T& v)           : Array(n) { for_int(i, n) _a[i] = v; }
     explicit Array(const type& ar)              : Array(ar.num()) { base::assign(ar); }
     explicit Array(CArrayView<T> ar)            : Array(ar.num()) { base::assign(ar); }
@@ -321,7 +321,7 @@ template<typename T> template<typename R, typename> Array<T>::Array(R&& range)
 
 template<typename T> void Array<T>::init(int n) {
     ASSERTX(n>=0);
-    if (n>_cap) { delete[] _a; _a = new T[size_t(n)]; _cap = n; }
+    if (n>_cap) { delete[] _a; _a = new T[narrow_cast<size_t>(n)]; _cap = n; }
     _n = n;
 }
 
@@ -341,7 +341,7 @@ template<typename T> void Array<T>::access(int i) {
 template<typename T> void Array<T>::set_capacity(int ncap) {
     _cap = ncap;
     ASSERTX(_n<=_cap);
-    T* na = _cap ? new T[size_t(_cap)] : nullptr;
+    T* na = _cap ? new T[narrow_cast<size_t>(_cap)] : nullptr;
     if (na) std::move(_a, _a+_n, na);
     delete[] _a; _a = na;
 }

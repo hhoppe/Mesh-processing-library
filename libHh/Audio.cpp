@@ -252,8 +252,8 @@ void Audio::write_file(const string& pfilename) const {
         WavHeader h;
         h.ChunkSize = 36 + nsamples()*nchannels()*sizeof(float);
         h.NumChannels = narrow_cast<uint16_t>(nchannels());
-        h.SampleRate = uint32_t(attrib().samplerate+.5);
-        h.ByteRate = uint32_t(attrib().samplerate*nchannels()*sizeof(float));
+        h.SampleRate = static_cast<uint32_t>(attrib().samplerate+.5);
+        h.ByteRate = static_cast<uint32_t>(attrib().samplerate*nchannels()*sizeof(float));
         h.BlockAlign = narrow_cast<uint16_t>(nchannels()*sizeof(float));
         h.Subchunk2Size = nsamples()*nchannels()*sizeof(float);
         to_dos(&h.ChunkSize); to_dos(&h.Subchunk1Size); to_dos(&h.AudioFormat); to_dos(&h.NumChannels);

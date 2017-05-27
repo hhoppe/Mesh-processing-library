@@ -278,7 +278,7 @@ struct Filter_justomoms final : Filter {
 
 struct Filter_gaussian final : Filter {
     using type = Filter_gaussian;
-    Filter_gaussian() : Filter("gaussian", sfunc, 4.) { // (radius==4. is sufficiently large approximation)
+    Filter_gaussian() : Filter("gaussian", sfunc, 4.) { // (radius==4. is sufficiently large for good approximation)
         _is_interpolating = false;
         _is_partition_of_unity = false; // 0.93503:1.06497  av=1  sd=0.0459422
     }
@@ -380,7 +380,7 @@ const LUfactorization& FilterBnd::lu_factorization() const {
         Warning("Clamped boundary only approximated by Reflected boundary; could pad data first");
         return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
      bcase Bndrule::border:
-        assertnever("Bndrule::border not supported in scale operation; could pad data first");
+        assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
      bdefault: assertnever("");
     }
 }

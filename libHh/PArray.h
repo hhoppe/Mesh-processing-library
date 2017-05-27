@@ -13,7 +13,9 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
     using type = PArray<T,pcap>;
  public:
     PArray()                                    : base(_pa, 0) { }
-    explicit PArray(int n)      : base(_pa, n) { ASSERTX(n>=0); if (n>pcap) { _a = new T[size_t(n)]; _cap = n; } }
+    explicit PArray(int n) : base(_pa, n) {
+        ASSERTX(n>=0); if (n>pcap) { _a = new T[narrow_cast<size_t>(n)]; _cap = n; }
+    }
     explicit PArray(const PArray<T,pcap>& ar)   : PArray() { *this = ar; }
     explicit PArray(CArrayView<T> ar)           : PArray() { *this = ar; }
     PArray(PArray<T,pcap>&& ar)                 : PArray() { *this = std::move(ar); }
@@ -43,7 +45,7 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
         ASSERTX(n>=0);
         if (n>_cap) {
             if (_cap!=pcap) { delete[] _a; _cap = pcap; }
-            _a = new T[size_t(n)]; _cap = n;
+            _a = new T[narrow_cast<size_t>(n)]; _cap = n;
         }
         _n = n;
     }
@@ -117,7 +119,7 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
             std::move(_a, _a+_n, _pa);
             delete[] _a; _a = _pa; _cap = pcap;
         } else {
-            T* na = new T[size_t(ncap)];
+            T* na = new T[narrow_cast<size_t>(ncap)];
             std::move(_a, _a+_n, na);
             if (_cap!=pcap) delete[] _a;
             _a = na; _cap = ncap;

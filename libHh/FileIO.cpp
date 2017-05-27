@@ -176,7 +176,7 @@ class ocfstreambuf : public std::streambuf {
         return ch==EOF ? ch : fputc(ch, _file);
     }
     virtual std::streamsize xsputn (const char* s, std::streamsize count) override { // write multiple characters
-        return fwrite(s, sizeof(char), size_t(count), _file);
+        return fwrite(s, sizeof(char), assert_narrow_cast<size_t>(count), _file);
     }
     virtual pos_type seekoff(off_type off, std::ios_base::seekdir dir, std::ios_base::openmode which) override {
         Warning("untested");

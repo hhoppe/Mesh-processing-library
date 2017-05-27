@@ -113,7 +113,7 @@ int main() {
     }
     {
         Vec<char,2> magic { 'B', 'M' }; static_assert(sizeof(magic)==2, "");
-        Vec<uchar,4> buf2 { uchar(0), uchar(0), uchar(0), uchar(0) }; static_assert(sizeof(buf2)==4, "");
+        Vec<uchar,4> buf2 { uchar{0}, uchar{0}, uchar{0}, uchar{0} }; static_assert(sizeof(buf2)==4, "");
     }
     {
         Vec2<float> p(1.f, 2.f), q(8.f, 7.f), r;

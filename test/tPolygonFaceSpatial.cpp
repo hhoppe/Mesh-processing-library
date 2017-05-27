@@ -16,7 +16,7 @@ void test2(int pspn) {
             Point p; for_int(c, 3) { p[c] = .1f+.8f*Random::G.unif(); }
             poly.push(p);
         }
-        ar_polyface.push(PolygonFace(std::move(poly), Face(intptr_t(i))));
+        ar_polyface.push(PolygonFace(std::move(poly), Face(intptr_t{i})));
     }
     PolygonFaceSpatial psp(pspn);
     for (PolygonFace& polyface : ar_polyface) { psp.enter(&polyface); }
@@ -25,7 +25,7 @@ void test2(int pspn) {
         Point p; for_int(c, 3) { p[c] = .1f+.8f*Random::G.unif(); }
         SpatialSearch<PolygonFace*> ss(psp, p);
         float dis2; PolygonFace& polyface = *ss.next(&dis2);
-        int found_i = int(intptr_t(polyface.face));
+        int found_i = int(reinterpret_cast<intptr_t>(polyface.face));
         assertx(found_i==&polyface-ar_polyface.data());
         Polygon& poly1 = polyface.poly;
         float rdis2 = dist_point_triangle2(p, poly1[0], poly1[1], poly1[2]);
@@ -45,8 +45,8 @@ void test2(int pspn) {
 } // namespace
 
 int main() {
-    Face f1 = Face(intptr_t(1));
-    Face f2 = Face(intptr_t(1));
+    Face f1 = Face(intptr_t{1});
+    Face f2 = Face(intptr_t{1});
     const Vec2<PolygonFace> ar_polyface = V(
         PolygonFace(Polygon(V(Point(.2f, .2f, .2f), Point(.2f, .8f, .8f), Point(.2f, .8f, .2f))), f1 ),
         PolygonFace(Polygon(V(Point(.8f, .2f, .2f), Point(.8f, .8f, .8f), Point(.8f, .8f, .2f))), f2 )

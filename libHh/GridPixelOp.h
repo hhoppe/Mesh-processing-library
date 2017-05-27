@@ -14,7 +14,7 @@ namespace hh {
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
 inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>& filterbs,
-                               MatrixView<Pixel> nmatrixp) {
+                               const Pixel* bordervalue, MatrixView<Pixel> nmatrixp) {
     static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY"); // also in Image.cpp
     assertx(matrixp.data()!=nmatrixp.data());
     if (matrixp.dims()==nmatrixp.dims() && !g_test_scale_accuracy &&
@@ -92,7 +92,9 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
         }
     }
     Matrix<Vector4> matrix(matrixp.dims()); convert(matrixp, matrix);
-    matrix = scale(matrix, nmatrixp.dims(), filterbs, std::move(matrix));
+    Vector4 vborder;
+    if (bordervalue) convert(CGrid1View(*bordervalue), Grid1View(vborder));
+    matrix = scale(matrix, nmatrixp.dims(), filterbs, bordervalue ? &vborder : nullptr, std::move(matrix));
     convert(matrix, nmatrixp);
 }
 
@@ -100,11 +102,11 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
 //  views gridp and ngridp must be distinct.
 // Was previously in GridOp.cpp
 inline void spatially_scale_Grid3_Pixel(CGridView<3,Pixel> gridp, const Vec2<FilterBnd>& filterbs,
-                                        GridView<3,Pixel> ngridp) {
+                                        const Pixel* bordervalue, GridView<3,Pixel> ngridp) {
     assertx(gridp.dim(0)==ngridp.dim(0)); // only scale dimensions 1 and 2
     assertx(gridp.dim(1)>0 && gridp.dim(2)>0 && ngridp.dim(1)>0 && ngridp.dim(2)>0);
     for_int(f, gridp.dim(0)) {
-        scale_Matrix_Pixel(gridp[f], filterbs, ngridp[f]);
+        scale_Matrix_Pixel(gridp[f], filterbs, bordervalue, ngridp[f]);
     }
 }
 

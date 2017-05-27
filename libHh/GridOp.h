@@ -67,14 +67,15 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uchar>
 
 // Rescale a grid to have new dimensions ndims (e.g., V(ny, nx) in 2D); assumes samples of old and new grids
 //  lie at locations [.5/dim(0)...(dim(0)-.5)/dim(0)]...[.5/dim(D-1)...(dim(D-1)-.5)/dim(D-1)].
-// If using Bndrule::border, assumes bordervalue==T(0).
 template<int D, typename T> Grid<D,T> scale(CGridView<D,T> grid, const Vec<int,D>& ndims,
-                                            const Vec<FilterBnd,D>& filterbs, Grid<D,T>&& gr = Grid<D,T>());
+                                            const Vec<FilterBnd,D>& filterbs, const T* bordervalue = nullptr,
+                                            Grid<D,T>&& gr = Grid<D,T>());
 
 // Same as scale() but assumes that samples of old and new grids
 //  lie at locations [0., 1./(dim(0)-1), ..., (dim(0)-1)/(dim(0)-1)==1.] on each dimension.
 template<int D, typename T> Grid<D,T> scale_primal(CGridView<D,T> grid, const Vec<int,D>& ndims,
-                                                   const Vec<FilterBnd,D>& filterbs, Grid<D,T>&& gr = Grid<D,T>());
+                                                   const Vec<FilterBnd,D>& filterbs, const T* bordervalue = nullptr,
+                                                   Grid<D,T>&& gr = Grid<D,T>());
 
 // Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
 //  even those that are non-interpolable.
@@ -87,17 +88,17 @@ template<int D, typename T> Vec<FilterBnd,D> inverse_convolution(GridView<D,T> g
 
 // Evaluate the filter at point p of grid g, where grid samples lie at integers ([0, dim(0)-1], ..., [0, dim(D-1)-1]).
 template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& p,
-                                          const Vec<FilterBnd,D>& filterbs);
+                                          const Vec<FilterBnd,D>& filterbs, const T* bordervalue = nullptr);
 
 // Evaluate the filter at point p of grid g, where grid domain is [0, 1]^D, and thus
 //  grid samples lie at locations [.5/dim(0)...(dim(0)-.5)/dim(0)]...[.5/dim(D-1)...(dim(D-1)-.5)/dim(D-1)].
 template<int D, typename T> T sample_domain(CGridView<D,T> g, const Vec<float,D>& p,
-                                            const Vec<FilterBnd,D>& filterbs);
+                                            const Vec<FilterBnd,D>& filterbs, const T* bordervalue = nullptr);
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
-// If using Bndrule::border, assumes bordervalue==T(0).
 template<int D, bool parallel = true> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid, int d,
-                                                               CArrayView<float> kernel, Bndrule bndrule);
+                                                               CArrayView<float> kernel, Bndrule bndrule,
+                                                               const Pixel* bordervalue = nullptr);
 
 
 //----------------------------------------------------------------------------
@@ -130,7 +131,7 @@ template<int D, typename T> Grid<D,T> crop(CGridView<D,T> grid, const Vec<int,D>
                                            Vec<Bndrule,D> bndrules, const T* bordervalue) {
     for_int(i, D) {
         if (bndrules[i]==Bndrule::undefined) assertx(dL[i]>=0 && dU[i]>=0); // no negative crop
-        assertx(!(bndrules[i]==Bndrule::border && bordervalue==nullptr));
+        if (bndrules[i]==Bndrule::border) assertx(bordervalue);
         if (grid.size()==0) assertx(bndrules[i]!=Bndrule::reflected && bndrules[i]!=Bndrule::periodic &&
                                     bndrules[i]!=Bndrule::clamped);
     }
@@ -319,7 +320,8 @@ template<int D, typename T> void inverse_convolution_d(GridView<D,T> grid, const
 }
 
 template<int D, typename T> Grid<D,T> evaluate_kernel_d(CGridView<D,T> grid, int d, CArrayView<int> ar_pixelindex0,
-                                                        CMatrixView<float> mat_weights, Bndrule bndrule) {
+                                                        CMatrixView<float> mat_weights, Bndrule bndrule,
+                                                        const T* bordervalue) {
     HH_GRIDOP_TIMER(__evaluate);
     const Vec<int,D>& dims = grid.dims();
     int cx = dims[d];
@@ -339,8 +341,8 @@ template<int D, typename T> Grid<D,T> evaluate_kernel_d(CGridView<D,T> grid, int
         T v; my_zero(v);
         for_int(k, nk) {
             int ii = ar_pixelindex0[x]+k;
-            if (!map_boundaryrule_1D(ii, cx, bndrule)) continue; // Bndrule::border assumes bordervalue==T(0)
-            v += mat_weights[x][k]*grid[u.with(d, ii)];
+            const T& value = map_boundaryrule_1D(ii, cx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
+            v += mat_weights[x][k]*value;
         }
         ngrid[u] = v;
     };
@@ -370,7 +372,7 @@ template<int D, typename T> Grid<D,T> evaluate_kernel_d(CGridView<D,T> grid, int
 
 // Rescale grid such that dimension d has new size nx.
 template<int D, typename T> Grid<D,T> scale_d(CGridView<D,T> grid, int d, int nx, const FilterBnd& filterb,
-                                              bool primal, Grid<D,T>&& gr = Grid<D,T>()) {
+                                              const T* bordervalue, bool primal, Grid<D,T>&& gr = Grid<D,T>()) {
     const Vec<int,D>& dims = grid.dims();
     int cx = dims[d];
     if (nx==cx && filterb.filter().is_interpolating()) {
@@ -383,20 +385,22 @@ template<int D, typename T> Grid<D,T> scale_d(CGridView<D,T> grid, int d, int nx
         if (filterb.filter().has_inv_convolution()) {
             if (grid.data()!=gr.data()) { gr = grid; } // else directly modify temporary input buffer
             details::inverse_convolution_d(gr, filterb, d);
-            return details::evaluate_kernel_d(gr,   d, ar_pixelindex0, mat_weights, filterb.bndrule());
+            return details::evaluate_kernel_d(gr,   d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
         } else {
-            return details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule());
+            return details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
         }
     } else {                    // minification
-        gr = details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule());
+        gr = details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
         if (filterb.filter().has_inv_convolution()) details::inverse_convolution_d(gr, filterb, d);
         return std::move(gr);
     }
 }
 
 template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int,D>& ndims,
-                                              const Vec<FilterBnd,D>& filterbs, Grid<D,T>&& gr, bool primal) {
+                                              const Vec<FilterBnd,D>& filterbs, const T* bordervalue,
+                                              Grid<D,T>&& gr, bool primal) {
     HH_GRIDOP_TIMER(__scale);
+    if (any_of(filterbs, [](const FilterBnd& fb){ return fb.bndrule()==Bndrule::border; })) assertx(bordervalue);
     const Vec<int,D>& dims = grid.dims();
     int npreprocess = 0; for_int(d, D) { if (filterbs[d].filter().is_preprocess()) npreprocess++; }
     assertx(npreprocess==0 || npreprocess==D);
@@ -453,7 +457,8 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
     CGridView<D,T> gridref(grid); // (becomes gr after first iteration)
     for (const Tup& tup : ar) {
         int d = tup.dim; // SHOW(d);
-        gr = details::scale_d(gridref, d, ndims[d], filterbs[d], primal, std::move(gr)); gridref.reinit(gr);
+        gr = details::scale_d(gridref, d, ndims[d], filterbs[d], bordervalue, primal, std::move(gr));
+        gridref.reinit(gr);
     }
     assertx(gridref.data()==gr.data());
     if (njustspline) {
@@ -480,13 +485,14 @@ template<int D, typename T> Vec<FilterBnd,D> inverse_convolution(GridView<D,T> g
 }
 
 template<int D, typename T> Grid<D,T> scale(CGridView<D,T> grid, const Vec<int,D>& ndims,
-                                            const Vec<FilterBnd,D>& filterbs, Grid<D,T>&& gr) {
-    return details::scale_i(grid, ndims, filterbs, std::move(gr), false);
+                                            const Vec<FilterBnd,D>& filterbs, const T* bordervalue, Grid<D,T>&& gr) {
+    return details::scale_i(grid, ndims, filterbs, bordervalue, std::move(gr), false);
 }
 
 template<int D, typename T> Grid<D,T> scale_primal(CGridView<D,T> grid, const Vec<int,D>& ndims,
-                                                   const Vec<FilterBnd,D>& filterbs, Grid<D,T>&& gr) {
-    return details::scale_i(grid, ndims, filterbs, std::move(gr), true);
+                                                   const Vec<FilterBnd,D>& filterbs, const T* bordervalue,
+                                                   Grid<D,T>&& gr) {
+    return details::scale_i(grid, ndims, filterbs, bordervalue, std::move(gr), true);
 }
 
 namespace details {
@@ -565,10 +571,11 @@ template<int D, typename T> Grid<D,T> scale_filter_nearest(CGridView<D,T> grid, 
 }
 
 template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& p,
-                                          const Vec<FilterBnd,D>& filterbs) {
+                                          const Vec<FilterBnd,D>& filterbs, const T* bordervalue) {
     Vec<int,D> uL, uU;
     Vec<PArray<float,10>, D> matw;
     for_int(d, D) {
+        if (filterbs[d].bndrule()==Bndrule::border) assertx(bordervalue);
         assertx(!filterbs[d].filter().has_inv_convolution());
         KernelFunc func = assertx(filterbs[d].filter().func());
         double kernel_radius = filterbs[d].filter().radius();
@@ -583,20 +590,21 @@ template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& 
         float w = 1.f;
         for_int(d, D) w *= matw[d][u[d]-uL[d]];
         sumw += w;
-        val += w*g.inside(u, bndrules);
+        val += w*g.inside(u, bndrules, bordervalue);
     }
     return val/assertx(float(sumw));
 }
 
 template<int D, typename T> T sample_domain(CGridView<D,T> g, const Vec<float,D>& p,
-                                            const Vec<FilterBnd,D>& filterbs) {
+                                            const Vec<FilterBnd,D>& filterbs, const T* bordervalue) {
     Vec<float,D> pp; for_int(d, D) pp[d] = p[d]*g.dim(d)-.5f;
-    return sample_grid(g, pp, filterbs);
+    return sample_grid(g, pp, filterbs, bordervalue);
 }
 
-template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid, int d,
-                                                        CArrayView<float> kernel, Bndrule bndrule) {
+template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid, int d, CArrayView<float> kernel,
+                                                        Bndrule bndrule, const Pixel* bordervalue) {
     // HH_TIMER(__convolve_d);
+    if (bndrule==Bndrule::border) assertx(bordervalue);
     const Vec<int,D>& dims = grid.dims();
     const int nx = dims[d];
     const int nk = kernel.num(), r = (nk-1)/2;
@@ -619,8 +627,8 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
         Vector4i v(0);
         for_int(k, nk) {
             int ii = x-r+k;
-            if (!map_boundaryrule_1D(ii, nx, bndrule)) continue; // Bndrule::border assumes bordervalue==T(0)
-            v += kerneli[k]*Vector4i(grid[u.with(d, ii)]);
+            const Pixel& value = map_boundaryrule_1D(ii, nx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
+            v += kerneli[k]*Vector4i(value);
         }
         ngrid[u] = ((v+fach)>>ishift).pixel();
     };

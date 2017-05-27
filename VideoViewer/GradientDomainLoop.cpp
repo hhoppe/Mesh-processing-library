@@ -53,7 +53,8 @@ Grid<3,short> compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime,
     int nnf = dims[0], ny = dims[1], nx = dims[2];
     Vec2<int> sdims = dims.tail<2>(); assertx(sdims==mat_start.dims()); assertx(sdims==mat_period.dims());
     for_int(f, nnf) parallel_for_int(y, ny) for_int(x, nx) {
-        grid_framei(f, y, x) = short(get_framei(f*mat_deltatime(y, x), mat_start(y, x), mat_period(y, x)));
+        grid_framei(f, y, x) =
+            narrow_cast<short>(get_framei(f*mat_deltatime(y, x), mat_start(y, x), mat_period(y, x)));
     }
     return grid_framei;
 }
@@ -123,7 +124,8 @@ void compute_gdloop_fast_relax(GridView<3,Pixel> videoloop, CGridView<3,Pixel> v
         { HH_STIMER(_fast_relax1); // compute the input frame mat_framei for all pixels at output frame f
             CMatrixView<int> lmat_start(mat_start); CMatrixView<int> lmat_period(mat_period);
             parallel_for_int(y, ny) for_int(x, nx) {
-                mat_framei(y, x) = short(get_framei(lmat_deltatime(y, x)*f, lmat_start(y, x), lmat_period(y, x)));
+                mat_framei(y, x) =
+                    narrow_cast<short>(get_framei(lmat_deltatime(y, x)*f, lmat_start(y, x), lmat_period(y, x)));
             }
         }
         { HH_STIMER(_fast_relax2); // compute the right-hand-side of the multigrid system for the output frame f
@@ -622,7 +624,7 @@ void solve_using_offsets(const Vec3<int>& odims,
         HH_TIMER(__scale_down);
         assertx(DT==1);
         if (video.size()) {
-            spatially_scale_Grid3_Pixel(video, twice(filterb), hvideo);
+            spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
         } else if (video_nv12.size()) {
             for_int(f, onf) {
                 integrally_downscale_Nv12_to_Image(video_nv12[f], hvideo[f]);
@@ -1230,7 +1232,7 @@ void compute_gdloop(const Vec3<int>& videodims,
             const bool debug = false;
             HH_TIMER(_gdloop1);
             Grid<3,Pixel> hvideo(video.dim(0), ((video.dim(1)+3)/4)*2, ((video.dim(2)+3)/4)*2); // half-resolution
-            { HH_TIMER(__scale_down); spatially_scale_Grid3_Pixel(video, twice(filterb), hvideo); }
+            { HH_TIMER(__scale_down); spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo); }
             if (debug) write_video(hvideo, "hvideo.mp4");
             const Vec2<int> hdims = hvideo.dims().tail<2>();
             Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);   // half-resolution
@@ -1241,7 +1243,7 @@ void compute_gdloop(const Vec3<int>& videodims,
             { HH_TIMER(_gdloop2); compute_gdloop_aux1<false>(hvideo, hmat_start, hmat_period, hvideoloop, b_exact); }
             if (debug) write_video(hvideoloop, "hvideoloop.mp4");
             HH_TIMER(_gdloop3);
-            { HH_TIMER(__scale_up); spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), videoloop); }
+            { HH_TIMER(__scale_up); spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), nullptr, videoloop); }
             if (debug) write_video(videoloop, "videoloop.mp4");
             if (1) {            // visually excellent, but actual rms numbers are poor
                 compute_gdloop_fast_relax(videoloop, video, mat_start_highres, mat_period_highres);

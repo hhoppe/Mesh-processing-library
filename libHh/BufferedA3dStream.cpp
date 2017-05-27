@@ -79,9 +79,9 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
 
 void WBufferedA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     if (binary) {
-        _buf.put(char(k_a3d_binary_code));
+        _buf.put(char{k_a3d_binary_code});
         _buf.put('\0');
-        _buf.put(short(ctype));
+        _buf.put(short{ctype});
         _buf.put(f[0]); _buf.put(f[1]); _buf.put(f[2]);
     } else {
         ssform(_stmp, "%c %g %g %g\n", ctype, f[0], f[1], f[2]);

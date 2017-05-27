@@ -28,7 +28,7 @@ inline uint32_t swap_4bytes(uint32_t v) { return __builtin_bswap32(v); }
 #if __GNUC__*100+__GNUC_MINOR__>=408
 inline uint16_t swap_2bytes(uint16_t v) { return __builtin_bswap16(v); }
 #else
-inline uint16_t swap_2bytes(uint16_t v) { return uint16_t((v>>8) | (v<<8)); }
+inline uint16_t swap_2bytes(uint16_t v) { return static_cast<uint16_t>((v>>8) | (v<<8)); }
 #endif
 
 #elif defined(_MSC_VER)

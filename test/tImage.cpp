@@ -8,7 +8,7 @@ int main() {
     {
         constexpr Pixel red{255, 0, 0, 255};
         constexpr Pixel green{0, 255, 0};
-        constexpr Vec4<uchar> v{uchar(0), uchar(0), uchar(255), uchar(255)};
+        constexpr Vec4<uchar> v{uchar{0}, uchar{0}, uchar{255}, uchar{255}};
         const Pixel blue{v};    // constexpr fails in VS 2015
     }
     if (1) {

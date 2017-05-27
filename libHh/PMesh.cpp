@@ -1116,7 +1116,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
     int jjl = jlclw, jjr = jrccw;
     int* pwwl; dummy_init(pwwl);
     if (ffl>=0) pwwl = &_faces[ffl].wedges[jjl];
-    else if (k_debug) pwwl = reinterpret_cast<int*>(intptr_t(k_undefined));
+    else if (k_debug) pwwl = reinterpret_cast<int*>(intptr_t{k_undefined});
     if (thru_l) {               // first go clw
         ASSERTX(*pwwl==wlclw);
         ASSERTX(wlccw>=0);

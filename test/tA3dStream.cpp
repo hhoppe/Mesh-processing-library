@@ -28,7 +28,7 @@ int main() {
     A3dElem el;
     for (;;) {
         if (is_bi) {
-            RBufferedA3dStream::ERecognize st = static_cast<RBufferedA3dStream*>(pia3d.get())->recognize();
+            RBufferedA3dStream::ERecognize st = down_cast<RBufferedA3dStream*>(pia3d.get())->recognize();
             assertx(st!=RBufferedA3dStream::ERecognize::parse_error);
             if (st!=RBufferedA3dStream::ERecognize::yes) {
                 RBuffer::ERefill ret = pbi->refill();

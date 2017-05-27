@@ -58,7 +58,7 @@ static bool win_started_from_console_aux() {
 } // namespace details
 static bool win_started_from_console() { return details::win_started_from_console_aux(); }
 
-const HWND k_bogus_hwnd = HWND(intptr_t(-7)); // clang: reinterpret_cast is not allowed in a constexpr
+const HWND k_bogus_hwnd = HWND(intptr_t{-7});
 
 extern HANDLE g_buf_event_data_available; // from Buffer.cpp
 
@@ -194,7 +194,7 @@ void HW::open() {
                 for_int(x, image.xsize()) {
                     for_int(z, 3) { image[y][x][2-z] = *p++; } // BGR to RGB
                 }
-                while ((uintptr_t(p)&3)!=0) p++;
+                while ((reinterpret_cast<uintptr_t>(p)&3)!=0) p++;
             }
         } else {
             Vec2<int> tdims = image.dims();
@@ -567,7 +567,7 @@ void HW::handle_key(int why_called, WPARAM key_data) {
             query_keypress(s);
         } else if (key_press(s)) {
             // client has handled key press
-        } else if (s=="\033") { // <esc> key (==uchar(27)
+        } else if (s=="\033") { // <esc> key (==uchar{27}
             quit();
         } else if (s=="~") {    // toggle console window
             if (!win_started_from_console()) {
@@ -1244,7 +1244,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
         // strncpy(lf.lfFaceName, face_name, LF_FACESIZE-1)); lf.lfFaceName[LF_FACESIZE-1] = '\0';
         const wchar_t* face_name = L"Courier New";
         assertx(wcslen(face_name)<LF_FACESIZE);
-        wcsncpy(lf.lfFaceName, face_name, LF_FACESIZE-1); lf.lfFaceName[LF_FACESIZE-1] = wchar_t(0);
+        wcsncpy(lf.lfFaceName, face_name, LF_FACESIZE-1); lf.lfFaceName[LF_FACESIZE-1] = wchar_t{0};
         HFONT handle_font = assertx(CreateFontIndirectW(&lf));
         assertx(SelectObject(_hRenderDC, handle_font));
     } else {
@@ -1327,7 +1327,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
                     *p++ = pix[2]; *p++ = pix[1]; *p++ = pix[0]; // RGBA to BGRA
                     if (ncomp==4) *p++ = pix[3];
                 }
-                while (uintptr_t(p)&3) *p++ = uchar(0);
+                while (reinterpret_cast<uintptr_t>(p)&3) *p++ = uchar{0};
             }
             assertx(int(p-buf)==size);
         } assertx(!GlobalUnlock(hGlobal));
@@ -1368,12 +1368,12 @@ bool HW::copy_clipboard_to_image(Image& image) {
                         if (ncomp==4) pix[3] = *p++;
                         else pix[3] = 255;
                     }
-                    while (uintptr_t(p)&3) p++;
+                    while (reinterpret_cast<uintptr_t>(p)&3) p++;
                 }
                 if (0) SHOW(size, p-buf, image.dims(), bmih.biBitCount, image.zsize());
                 // e.g. fails with size=837180 p-buf=837168 image.dims()=[389, 538] bmih.biBitCount=32 image.zsize()=4
-                if (0) assertx(size_t(p-buf)==size);
-                if (1) assertw(abs((p-buf)-ptrdiff_t(size))<32);
+                if (0) assertx(narrow_cast<size_t>(p-buf)==size);
+                if (1) assertw(abs((p-buf)-static_cast<ptrdiff_t>(size))<32);
             } GlobalUnlock(hGlobal); // decrement reference count; nonzero because still owned by clipboard
         }
         assertx(CloseClipboard());

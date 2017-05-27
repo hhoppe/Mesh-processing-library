@@ -142,8 +142,8 @@ template<int n, typename T> constexpr Vec<T,n> ntimes(const T& v) { return Vec<T
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template<typename T, int n, typename Func> auto map(const Vec<T,n>& c, Func func)
-    -> Vec<decltype(func(T{})), n> {
-    Vec<decltype(func(T{})), n> nc; for_int(i, n) { nc[i] = func(c[i]); } return nc;
+    -> Vec<decltype(func(std::declval<T>())), n> {
+    Vec<decltype(func(std::declval<T>())), n> nc; for_int(i, n) { nc[i] = func(c[i]); } return nc;
 }
 
 // Range of coordinates: Vec<int,D>: 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
@@ -191,8 +191,8 @@ template<typename T> struct Vec_base<T,0> {
     template<typename... Args> Vec_base(void*, Args&&... args) noexcept = delete;
     T* a() noexcept                             { return nullptr; }
     const T* a() const noexcept                 { return nullptr; }
-    T&                 operator[](int)          { return *static_cast<T*>(nullptr); }
-    constexpr const T& operator[](int) const    { return *static_cast<T*>(nullptr); }
+    T&                 operator[](int)          { return *implicit_cast<T*>(nullptr); }
+    constexpr const T& operator[](int) const    { return *implicit_cast<T*>(nullptr); }
     // No member variable at all.
 };
 

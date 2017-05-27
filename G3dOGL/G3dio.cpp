@@ -74,7 +74,7 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
          bcase A3dElem::EType::polygon: total_gons++;
          bcase A3dElem::EType::polyline: total_lines++;
          bcase A3dElem::EType::point: total_points++;
-         bdefault: assertnever(string() + "unknown type '" + char(elt) + "'");
+         bdefault: assertnever(string() + "unknown type '" + narrow_cast<char>(elt) + "'");
         }
         for_int(i, el.num()) {
             g_obs[robn].enter_point(el[i].p);

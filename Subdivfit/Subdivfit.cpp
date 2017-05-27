@@ -84,7 +84,7 @@ SGrid<int, OP_NUM, R_NUM> opstat;
 
 struct hash_edge {
     size_t operator()(Edge e) const {
-        return gmesh.vertex_id(gmesh.vertex1(e))+size_t(gmesh.vertex_id(gmesh.vertex2(e)))*76541;
+        return gmesh.vertex_id(gmesh.vertex1(e))+intptr_t{gmesh.vertex_id(gmesh.vertex2(e))}*76541;
     }
 };
 Set<Edge,hash_edge> ecand;      // Set of candidate edges in stoc; hash without pointers for portable random.

@@ -161,28 +161,153 @@ inline Frame to_Frame(CMatrixView<float> m) {
     return f;
 }
 
+// Transform a 2D vector by a frame.
+inline Vec2<float> linear_transform(const Vec2<float>& vec, const Frame& frame) {
+    ASSERTX(!frame[0][2]); ASSERTX(!frame[1][2]); ASSERTX(!frame[3][2]);
+    ASSERTX(!frame[2][0]); ASSERTX(!frame[2][1]); ASSERTX(frame[2][2]==1.f);
+    if (0) return (Vector(concat(vec, V(0.f))) * frame).head<2>();
+    return V(vec[0]*frame[0][0] + vec[1]*frame[1][0],
+             vec[0]*frame[0][1] + vec[1]*frame[1][1]);
+}
+
+// Transform a 2D point by a frame.
+inline Vec2<float> affine_transform(const Vec2<float>& vec, const Frame& frame) {
+    ASSERTX(!frame[0][2]); ASSERTX(!frame[1][2]); ASSERTX(!frame[3][2]);
+    ASSERTX(!frame[2][0]); ASSERTX(!frame[2][1]); ASSERTX(frame[2][2]==1.f);
+    if (0) return (Point(concat(vec, V(0.f))) * frame).head<2>();
+    return V(vec[0]*frame[0][0] + vec[1]*frame[1][0] + frame[3][0],
+             vec[0]*frame[0][1] + vec[1]*frame[1][1] + frame[3][1]);
+}
+
+// Given p in the unit square, apply the 2D frame transformation defined about the square center.
+inline Vec2<float> transform_about_center(Vec2<float> p, const Frame& frame) {
+    const bool center = true;
+    if (center) p = p - .5f;
+    Vec2<float> tp = affine_transform(p, frame);
+    if (center) tp = tp + .5f;
+    return tp;
+}
+
 // Compute a new matrix nm by transforming input matrix m according to frame,
 //  where frame maps from destination pixel (y, x, 0) to source pixel (y, x, 0);
-//  both have (possibly rectangular) domain [-0.5, +0.5]^2.
+//  both have domain [-0.5, +0.5]^2 (even if rectangular in pixel dimensions).
 template<typename T> void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs,
-                                    MatrixView<T> nm) {
-    if (0 && max(mag(frame.v(0)), mag(frame.v(1)))>1.3f)
-        Warning("Image transform: minification could result in aliasing"); // fails to account for unequal image sizes
+                                    MatrixView<T> nm, const T* bordervalue = nullptr) {
+    assertx(frame[2][2]==1.f);
+    const Frame frame_inv = inverse(frame);
+    float max_shrinkage; {
+        // Determine vectors in source pixels for y and x destination unit pixel spacings (i.e. inverse Jacobian).
+        SGrid<float, 2, 2> src_vecs;
+        for_int(i, 2) {
+            src_vecs[i] = affine_transform(twice(0.f).with(i, 1.f) / convert<float>(m.dims()), frame) *
+                convert<float>(nm.dims());
+        }
+        max_shrinkage = max_abs_element(src_vecs);
+        // SHOW(src_vecs, max_shrinkage);
+    }
+    const float transform_minification_threshold = getenv_float("TRANSFORM_MINIFICATION_THRESHOLD", 1.3f, true);
+    const bool minification_case = max_shrinkage > transform_minification_threshold;
+    const bool has_inv_convolution =
+        any_of(filterbs, [](const FilterBnd& f){ return f.filter().has_inv_convolution(); });
+    if (minification_case && !has_inv_convolution) {
+        // Special slow case to do accurate minification.
+        const Vec2<KernelFunc> kernels = map(filterbs, [](const FilterBnd& f){ return f.filter().func(); });
+        const Vec2<Bndrule> bndrules   = map(filterbs, [](const FilterBnd& f){ return f.bndrule(); });
+        const Vec2<float> kernel_radii = map(filterbs, [](const FilterBnd& f){ return float(f.filter().radius()); });
+        const bool transform_filter_expensive = getenv_bool("TRANSFORM_FILTER_EXPENSIVE");
+        const bool transform_filter_radial = getenv_bool("TRANSFORM_FILTER_RADIAL");
+        if (!transform_filter_expensive) {
+            // Approach 1: find conservative rectangular box in source image and compute sum of source samples
+            //  weighted by filter kernel.
+            Vec2<float> src_kernel_radii = twice(0.f); {  // conservative radii in source image (in pixels)
+                for_int(i, 2) {
+                    Vec2<float> dst_vec = kernel_radii;
+                    if (i==1) dst_vec[1] *= -1.f;  // opposite diagonal
+                    Vec2<float> src_vec = affine_transform(dst_vec / convert<float>(m.dims()), frame) *
+                        convert<float>(nm.dims());
+                    for_int(c, 2) src_kernel_radii[c] = max(src_kernel_radii[c], abs(src_vec[c]));
+                }
+                // SHOW(src_kernel_radii);
+            }
+            cond_parallel_for_int(nm.size()*10000, y, nm.ysize()) for_int(x, nm.xsize()) {
+                Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // in [0,1]^2
+                Vec2<float> tp = transform_about_center(p, frame);
+                Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // in coordinates [0..m.dims()-1]
+                int num = 0;
+                T val; my_zero(val);
+                double sumw = 0.;
+                for (Vec2<int> yx : range(convert<int>(floor(psrc-src_kernel_radii)),
+                                          convert<int>( ceil(psrc+src_kernel_radii))+1)) {
+                    Vec2<float> dyx = convert<float>(yx) - psrc;
+                    Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
+                    float w = 1.f;
+                    if (!transform_filter_radial) {  // normal tensor-product of kernels
+                        for_int(c, 2) w *= kernels[c](dst_dyx[c]);
+                    } else {                // single kernel based on radial distance
+                        w = kernels[0](mag(dst_dyx));
+                    }
+                    // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
+                    if (!w) continue;
+                    val += w*m.inside(yx, bndrules, bordervalue);
+                    sumw += w;
+                    num++;
+                }
+                // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
+                nm[y][x] = val/assertx(float(sumw));
+                // SHOW(num, sumw, nm[y][x]); assertnever("");
+            }
+        } else {
+            // Approach 2: supersample uniformly in kernel window of destination image, evaluating reconstruction
+            //  kernels at corresponding points in source image (expensive!).
+            const Vec2<int> super_sampling = twice(8);         // samples/pixel on each axis
+            const Filter& recon_kernel = Filter::get("keys");  // bicubic reconstruction kernel
+            const Vec2<int> num_samples = convert<int>(convert<float>(super_sampling) * kernel_radii + .5f);
+            const Vec2<FilterBnd> fb_reconstruction = V(FilterBnd(recon_kernel, filterbs[0].bndrule()),
+                                                        FilterBnd(recon_kernel, filterbs[1].bndrule()));
+            // for (const Vec2<int>& yx : range(nm.dims())) {
+            // { const int y = 500, x = 400;
+            cond_parallel_for_int(nm.size()*10000, y, nm.ysize()) for_int(x, nm.xsize()) {
+                const Vec2<int> yx = V(y, x);
+                int num = 0;
+                T val; my_zero(val);
+                double sumw = 0.;
+                for (const Vec2<int>& sample_yx : range(num_samples)) {
+                    const Vec2<float> sample_offset =
+                        ((convert<float>(sample_yx)+.5f)/convert<float>(num_samples)*2.f-1.f)*kernel_radii;  // pixels
+                    float w = 1.f;
+                    if (!transform_filter_radial) {  // normal tensor-product of kernels
+                        for_int(c, 2) w *= kernels[c](sample_offset[c]);
+                    } else {                // single kernel based on radial distance
+                        w = kernels[0](mag(sample_offset));
+                    }
+                    Vec2<float> p = (convert<float>(yx)+.5f+sample_offset) / convert<float>(nm.dims());  // [0,1]^2
+                    Vec2<float> tp = transform_about_center(p, frame);
+                    val += w*sample_domain(m, tp, fb_reconstruction, bordervalue);
+                    // SHOW(yx, sample_yx, w, p, tp, sample_offset);
+                    sumw += w;
+                    num++;
+                }
+                // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
+                nm[yx] = val/assertx(float(sumw));
+                // SHOW(num, sumw, nm[yx]); assertnever("");
+            }
+        }
+        return;
+    }
+    if (minification_case) Warning("Image transform: minification could result in aliasing");
     Vec2<FilterBnd> tfilterbs = filterbs;
     CMatrixView<T> mr(m);
     Matrix<T> tm;
-    if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution()) {
+    if (has_inv_convolution) {
         tm = m;
         tfilterbs = inverse_convolution(tm, filterbs);
         mr.reinit(tm);
     }
     cond_parallel_for_int(nm.size()*500, y, nm.ysize()) for_int(x, nm.xsize()) {
-        Point p((y+0.5f)/nm.ysize(), (x+0.5f)/nm.xsize(), 0.f); // y, x, 0
-        bool center = true;
-        if (center) p = p-Vector(0.5f, 0.5f, 0.f);
-        Point tp = p*frame;     // y, x, 0
-        if (center) tp = tp+Vector(0.5f, 0.5f, 0.f);
-        nm[y][x] = sample_domain(mr, V(tp[0], tp[1]), tfilterbs);
+        const Vec2<int> yx = V(y, x);
+        Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // in [0,1]^2
+        Vec2<float> tp = transform_about_center(p, frame);
+        nm[y][x] = sample_domain(mr, tp, tfilterbs, bordervalue);
     }
 }
 

@@ -42,7 +42,7 @@ unique_ptr<LLS> LLS::make(int m, int n, int nd, float nonzerofrac) {
         Warning("Using QrdLLS");
         return make_unique<QrdLLS>(m, n, nd);
     }
-    int64_t size = int64_t(m)*n;
+    int64_t size = int64_t{m}*n;
     if (size<1000*40) {         // small system
         return make_unique<QrdLLS>(m, n, nd);
     } else {                    // large system

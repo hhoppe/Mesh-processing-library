@@ -138,7 +138,8 @@ int main() {
         // Matrix<Vector4> mn = scale(m, 5, 5, twice(FilterBnd(Filter::get("impulse"), Bndrule::reflected)));
         Matrix<Vector4> mn = scale(m, V(5, 5), twice(FilterBnd(Filter::get("box"), Bndrule::periodic)));
         SHOW(mean(mn));
-        mn = scale(mn, V(10, 10), twice(FilterBnd(Filter::get("impulse"), Bndrule::periodic)), std::move(mn));
+        mn = scale(mn, V(10, 10), twice(FilterBnd(Filter::get("impulse"), Bndrule::periodic)),
+                   implicit_cast<Vector4*>(nullptr), std::move(mn));
         SHOW(mean(mn));
     }
     {

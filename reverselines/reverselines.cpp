@@ -42,7 +42,7 @@ int main(int argc, const char** argv) {
     }
     CArrayView<char> buf(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, off)),
                          len);
-    assertx(buf.data()!=reinterpret_cast<void*>(intptr_t(-1)));
+    assertx(buf.data()!=reinterpret_cast<void*>(intptr_t{-1}));
     for (;;) {
         if (!i) break;
         assertx(buf[i-1]=='\n');
@@ -62,7 +62,7 @@ int main(int argc, const char** argv) {
             i += segsize;
             buf.reinit(CArrayView<char>(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, off)),
                                         len));
-            assertx(buf.data()!=reinterpret_cast<void*>(intptr_t(-1)));
+            assertx(buf.data()!=reinterpret_cast<void*>(intptr_t{-1}));
         }
     }
     assertx(off==0);

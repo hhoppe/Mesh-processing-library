@@ -112,7 +112,9 @@ struct segment {
 };
 
 struct hash_segment {
-    size_t operator()(const segment& s) const { return uintptr_t(s.c1)+uintptr_t(s.c2)*761; }
+    size_t operator()(const segment& s) const {
+        return reinterpret_cast<uintptr_t>(s.c1)+reinterpret_cast<uintptr_t>(s.c2)*761;
+    }
 };
 
 struct equal_segment {
@@ -484,7 +486,7 @@ void draw_segment(coord* c1, coord* c2) {
 void draw_node(const Node* un) {
     switch (un->_type) {
      bcase Node::EType::polygon: {
-         auto n = static_cast<const NodePolygon*>(un);
+         auto n = down_cast<const NodePolygon*>(un);
          if (!(cullface && is_cull(n->repc->p, n->pnor))) {
              for (segment* s : n->ars) {
                  if (s->frame==frame) continue;
@@ -495,7 +497,7 @@ void draw_node(const Node* un) {
          }
      }
      bcase Node::EType::linenor: {
-         auto n = static_cast<const NodeLineNor*>(un);
+         auto n = down_cast<const NodeLineNor*>(un);
          segment* s = n->s;
          if (s->frame!=frame &&
              !((culledge==1 && (is_cull(s->c1->p, n->nor[0]) && is_cull(s->c2->p, n->nor[1]))) ||
@@ -506,7 +508,7 @@ void draw_node(const Node* un) {
          }
      }
      bcase Node::EType::line: {
-         auto n = static_cast<const NodeLine*>(un);
+         auto n = down_cast<const NodeLine*>(un);
          segment* s = n->s;
          if (s->frame!=frame) {
              s->frame = frame;
@@ -515,12 +517,12 @@ void draw_node(const Node* un) {
          }
      }
      bcase Node::EType::pointnor: {
-         auto n = static_cast<const NodePointNor*>(un);
+         auto n = down_cast<const NodePointNor*>(un);
          if (!is_cull(n->p->p, n->nor))
              draw_point(n->p);
      }
      bcase Node::EType::point: {
-         auto n = static_cast<const NodePoint*>(un);
+         auto n = down_cast<const NodePoint*>(un);
          draw_point(n->p);
      }
      bdefault: assertnever("");
@@ -575,7 +577,7 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
         if (i%interval_check_stop==0 && !postscript && hw.suggests_stop()) break;
         Node* un = arn[i].get();
         if (un->_type==Node::EType::polygon) {
-            auto n = static_cast<NodePolygon*>(un);
+            auto n = down_cast<NodePolygon*>(un);
             if (cullface && is_cull(n->repc->p, n->pnor)) continue;
             poly.init(0);
             int andcodes = CCH | CCY | CCR | CCL | CCD | CCU, orcodes = 0;
@@ -846,14 +848,14 @@ void GXobject::close() {
     for_int(i, _arnc.num()) {
         Node* un = _arnc[i].get();
         if (un->_type==Node::EType::polygon) {
-            auto n = static_cast<NodePolygon*>(un);
+            auto n = down_cast<NodePolygon*>(un);
             for (segment* s : n->ars) { s->c1->count++; s->c2->count++; }
         }
     }
     for_int(i, _arnc.num()) {
         Node* un = _arnc[i].get();
         if (un->_type==Node::EType::polygon) {
-            auto n = static_cast<NodePolygon*>(un);
+            auto n = down_cast<NodePolygon*>(un);
             coord* maxc = nullptr;
             int maxn = -1;
             for (segment* s : n->ars) {
@@ -1108,7 +1110,7 @@ bool HB::special_keypress(char ch) {
          string s = g3d::statefile;
          if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
      }
-     bcase '\r':                // <enter>/<ret> key (== uchar(13) == 'M'-64)
+     bcase '\r':                // <enter>/<ret> key (== uchar{13} == 'M'-64)
      ocase '\n':                // G3d -key $'\n'
         hw.make_fullscreen(!hw.is_fullscreen());
      bcase '?': {

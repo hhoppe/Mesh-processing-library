@@ -22,7 +22,7 @@ namespace {
 struct hash_edge {
     hash_edge(const GMesh& mesh) : _mesh(mesh) { }
     size_t operator()(Edge e) const {
-        return _mesh.vertex_id(_mesh.vertex1(e))+size_t(_mesh.vertex_id(_mesh.vertex2(e)))*76541;
+        return _mesh.vertex_id(_mesh.vertex1(e))+intptr_t{_mesh.vertex_id(_mesh.vertex2(e))}*76541;
     }
     const GMesh& _mesh;
 };

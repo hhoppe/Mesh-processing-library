@@ -53,7 +53,7 @@ int main() {
         SHOW(reinterpret_cast<char*>(&va[1])-reinterpret_cast<char*>(&va[0]));
     }
     {
-        Vec<uchar,8> ar {uchar(23), uchar(37), uchar(45), uchar(255), uchar(12), uchar(31), uchar(37), uchar(0)};
+        Vec<uchar,8> ar {uchar{23}, uchar{37}, uchar{45}, uchar{255}, uchar{12}, uchar{31}, uchar{37}, uchar{0}};
         SHOW(to_Vector4_raw(ar.data()));
         SHOW(to_Vector4_raw(&ar[4]));
         SHOW(to_Vector4_norm(ar.data()));

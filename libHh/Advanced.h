@@ -9,7 +9,7 @@ namespace hh {
 // Return a reference to a unique pointer object.  This reference may be invalid if the pointer is null!
 // auto up_p = b ? make_unique<Point>(1.f, 2.f, 3.f) : nullptr;  Point& p = optional_reference(up_p);
 template<typename T> T& optional_reference(const std::unique_ptr<T>& up) {
-    return up ? *up : *static_cast<T*>(nullptr);
+    return up ? *up : *implicit_cast<T*>(nullptr);
 }
 
 // Create a copy; make sure not to call on CArrayView, ArrayView, *View, etc. --- instead use Array<T>(v), etc.

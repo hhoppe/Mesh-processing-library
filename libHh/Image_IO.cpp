@@ -266,7 +266,7 @@ void ImageIO::write_rgb(const Image& image, FILE* file) {
                     int count = x-xs;
                     while (count) {
                         int n = count>126 ? 126 : count;
-                        count -= n; buf.push(uchar(0x80 | n));
+                        count -= n; buf.push(narrow_cast<uchar>(0x80 | n));
                         while (n--) buf.push(row[xs++]);
                     }
                     xs = x;
@@ -832,19 +832,19 @@ void ImageIO::write_bmp(const Image& image, FILE* file) {
         assertt(write_raw(file, ArView(bmfh)));
         assertt(write_raw(file, ArView(bmih)));
         for_int(i, 256) {
-            Vec4<uchar> buf2 { uchar(i), uchar(i), uchar(i), uchar(255) };
+            Vec4<uchar> buf2 { uchar(i), uchar(i), uchar(i), uchar{255} };
             assertt(write_raw(file, buf2.view()));
         }
         assertt(write_raw(file, buf));
     } else {
         bmfh.bfOffBits = headers2size; to_dos(&bmfh.bfOffBits);
         int rowsize = image.xsize()*ncomp; while ((rowsize&3)!=0) rowsize++;
-        assertw(uint64_t(rowsize)*image.ysize()<(1ull<<32));
+        assertw(int64_t{rowsize}*image.ysize()<(1ull<<32));
         bmfh.bfSize = headers2size+rowsize*image.ysize(); to_dos(&bmfh.bfSize);
         bmih.biSizeImage = rowsize*image.ysize(); to_dos(&bmih.biSizeImage);
         assertt(write_raw(file, ArView(bmfh)));
         assertt(write_raw(file, ArView(bmih)));
-        Array<uchar> row(rowsize, uchar(0)); // make sure any padding region is initialized to zero
+        Array<uchar> row(rowsize, uchar{0}); // make sure any padding region is initialized to zero
         ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
         assertt(ncomp==3 || ncomp==4);
         for_int(y, image.ysize()) {

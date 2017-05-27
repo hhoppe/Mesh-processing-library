@@ -489,7 +489,7 @@ static void hh_init_aux() {
                 SHOW(b);
             }
             if (0) {
-                // *static_cast<int*>(nullptr) = 1; // error: access violation; CYGWIN+release just crashes
+                // *implicit_cast<int*>(nullptr) = 1; // error: access violation; CYGWIN+release just crashes
             }
             if (0) {
                 throw 0;        // unhandled exception
@@ -649,7 +649,7 @@ std::wstring widen(const std::string& str) {
     // By specifying str.size()+1, we include the null-terminating character in nwchars.
     int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size()+1), nullptr, 0);
     assertx(nwchars>0);
-    std::wstring wstr(nwchars-1, wchar_t(0));
+    std::wstring wstr(nwchars-1, wchar_t{0});
     assertx(MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size()+1), &wstr[0], nwchars));
     return wstr;
 #endif
@@ -668,7 +668,7 @@ std::string narrow(const std::wstring& wstr) {
 
 std::wstring widen(const std::string& str) {
     const std::locale& loc = std::locale();
-    std::wstring wstr(str.size(), wchar_t(0));
+    std::wstring wstr(str.size(), wchar_t{0});
     std::use_facet<std::ctype<wchar_t>>(loc).widen(str.data(), str.data()+str.size(), &wstr[0]);
     return wstr;
 }
@@ -945,7 +945,7 @@ int64_t get_precise_counter() {
 #else
     struct timespec ti;
     assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
-    return int64_t(ti.tv_sec)*(1000*1000*1000)+ti.tv_nsec;
+    return int64_t{ti.tv_sec}*(1000*1000*1000)+ti.tv_nsec;
 #endif
 }
 
@@ -1023,21 +1023,21 @@ void my_sleep(double sec) {
         }
     }
 #else
-    assertx(!usleep(useconds_t(sec*1e6))); // in <unistd.h>
-#endif                                     // defined(_WIN32)
+    assertx(!usleep(static_cast<useconds_t>(sec*1e6)));  // in <unistd.h>
+#endif  // defined(_WIN32)
 }
 
 size_t available_memory() {
 #if 0
     if (1) {
-        size_t max_size_t{size_t(-1)}; // potential size of virtual address space
+        size_t max_size_t{static_cast<size_t>(-1)};  // potential size of virtual address space
         SHOW(max_size_t);
     }
     if (1) {
         // This approach to estimating available memory fails,
         // because on most platforms (e.g. win and mingw), pair.second==0 when allocation fails.
-        auto pair = std::get_temporary_buffer<uchar>(size_t(-1));
-        SHOW(size_t(pair.first));
+        auto pair = std::get_temporary_buffer<uchar>(static_cast<size_t>(-1));
+        SHOW(static_cast<size_t>(pair.first));
         SHOW(pair.second);
         std::return_temporary_buffer<uchar>(pair.first);
     }
@@ -1062,7 +1062,7 @@ size_t available_memory() {
     assertx(!sysinfo(&sysi));   // http://linux.die.net/man/2/sysinfo
     uint64_t unit = sysi.mem_unit;
     uint64_t physical_avail = sysi.freeram*unit;
-    uint64_t virtual_avail = size_t(-1);
+    uint64_t virtual_avail = static_cast<size_t>(-1);
     if (ldebug) SHOW("sysinfo", physical_avail, virtual_avail);
     size_t ret = min(physical_avail, virtual_avail);
     return ret;
@@ -1287,7 +1287,7 @@ static bool isafile(int fd) {
     if (1) {
         DWORD state = 0, cur_instances = 0, max_collection_count = 0;
         DWORD collect_data_timeout = 0;
-        std::array<wchar_t,200> username; username[0] = wchar_t(0);
+        std::array<wchar_t,200> username; username[0] = wchar_t{0};
         int suc = GetNamedPipeHandleStateW(handle, &state, &cur_instances, &max_collection_count,
                                            &collect_data_timeout, username.data(), username.size()-1);
         SHOW(suc, state, cur_instances, max_collection_count, collect_data_timeout, narrow(username.data()));
@@ -1595,7 +1595,7 @@ string get_current_datetime() {
         minute = system_time.wMinute;
         second = system_time.wSecond;
 #else
-        time_t ti = time(static_cast<time_t*>(nullptr));
+        time_t ti = time(implicit_cast<time_t*>(nullptr));
 #if 0
         struct tm& ptm = *assertx(localtime(&ti)); // not thread-safe
 #elif defined(_WIN32)
@@ -1672,8 +1672,8 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
             using type = const char*;
             assertx(argc>0);
             // Replace original argv array by a new one which contains UTF8-encoded arguments.
-            argv = new type[size_t(argc)+1]; // never deleted
-            argv[argc] = nullptr;            // extra nullptr is safest
+            argv = new type[intptr_t{argc+1}];  // never deleted
+            argv[argc] = nullptr;               // extra nullptr is safest
             for_int(i, argc) {
                 argv[i] = make_unique_c_string(narrow(wargv[i]).c_str()).release(); // never deleted
             }

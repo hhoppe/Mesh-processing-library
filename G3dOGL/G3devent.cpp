@@ -943,7 +943,7 @@ bool KeyPressed(const string& ps) {
         asynchronousinput = !asynchronousinput;
      bcase '$':
         expo = !expo;
-     bcase 'L'-64:              // C-l  (== uchar(12))
+     bcase 'L'-64:              // C-l  (== uchar{12})
         reinit();
      bcase 'G':
         geomorph = !geomorph;

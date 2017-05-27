@@ -155,9 +155,10 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     // _is >> std::ws; // commented 20121211
     char ch;
     if (_is.peek()=='\n') _is.get(ch); // there may be a blank line between elements
-    if (_is.peek()<0) return false;
+    int vpeek = _is.peek();
+    if (vpeek<0) return false;
     assertx(_is);
-    ch = char(_is.peek());
+    ch = static_cast<char>(vpeek);
     binary = ch==k_a3d_binary_code;
     if (binary) {
         a3d_binary_buf buf;
@@ -202,7 +203,7 @@ void WA3dStream::write(const A3dElem& el) {
         // common case, skip for now
     } else if (A3dElem::command_type(type)) {
         if (!binary && !_pblank) blank_line();
-        output(binary, char(type), el.f());
+        output(binary, static_cast<char>(type), el.f());
         if (!binary) { blank_line(); _pblank = true; }
         _curcol.d = _curcol.s = _curcol.g = k_color_undefined;
         flush();
@@ -211,14 +212,14 @@ void WA3dStream::write(const A3dElem& el) {
         output_comment(el.comment()); _pblank = false;
         return;
     } else {
-        assertnever(sform("Unrecognized type '%c'", char(type)));
+        assertnever(sform("Unrecognized type '%c'", static_cast<char>(type)));
     }
     if (type==A3dElem::EType::polygon) assertx(el.num()>=3);
     else if (type==A3dElem::EType::polyline) assertx(el.num()>=2);
     else if (type==A3dElem::EType::point) assertx(el.num()==1);
     if (type==A3dElem::EType::polygon || type==A3dElem::EType::polyline) {
         if (!binary && !_pblank) blank_line();
-        output(binary, char(type), V(0.f, 0.f, 0.f));
+        output(binary, static_cast<char>(type), V(0.f, 0.f, 0.f));
     }
     for_int(i, el.num()) {
         if (_curcol.d!=el[i].c.d) {
@@ -294,7 +295,7 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
         a3d_binary_buf buf;
         buf.magic[0] = k_a3d_binary_code;
         buf.magic[1] = 0;
-        buf.utype = ushort(ctype); to_std(&buf.utype);
+        buf.utype = narrow_cast<ushort>(ctype); to_std(&buf.utype);
         for_int(c, 3) { buf.f[c] = f[c]; to_std(&buf.f[c]); }
         write_binary_raw(_os, ArView(buf));
     } else {

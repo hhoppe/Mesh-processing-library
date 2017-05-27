@@ -48,7 +48,7 @@ public:
     void read_file(const string& filename); // filename may be "-" for std::cin;  may throw std::runtime_error
     void write_file(const string& filename) const; // filename may be "-" for std::cout; may throw std::runtime_error
 // Misc
-    void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs);
+    void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
     struct Attrib {
         string suffix;          // e.g. "mp4"; "" if unknown; to identify format of read_file("-") and write_file("-")
         double framerate {0.};  // frames/sec
@@ -136,9 +136,9 @@ void convert_Video_to_VideoNv12(CGridView<3,Pixel> video, VideoNv12View vnv12);
 
 // &video==&newvideo is OK
 Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-            Video&& newvideo = Video());
+            const Pixel* bordervalue = nullptr, Video&& newvideo = Video());
 VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-                VideoNv12&& pnewvideo_nv12 = VideoNv12());
+                const Pixel* bordervalue = nullptr, VideoNv12&& pnewvideo_nv12 = VideoNv12());
 
 // Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
 class RVideo {

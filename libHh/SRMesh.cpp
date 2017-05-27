@@ -489,7 +489,7 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
     Array<short> f_matid(full_nfaces); // temporary back-up
     f_matid.init(0);
     for_int(fi, _base_faces.num()) {
-        f_matid.push(short(_faces[fi].aface->matid));
+        f_matid.push(narrow_cast<short>(_faces[fi].aface->matid));
         _faces[fi].aface->matid = fi; // in the next section, matid is temporarily used to store face indices?
     }
     //
@@ -567,11 +567,11 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
         vgeoms[_base_vertices.num()+2*vspli+1] = vspl->vu_vgeom;
 #endif  // !defined(SR_NO_VSGEOM)
 #if !defined(SR_PREDICT_MATID)
-        vspl->fl_matid = short((code&Vsplit::FLN_MASK) ? pm_vspl.fl_matid :
-                               f_matid[vspl->fn[1]->aface->matid]);
-        vspl->fr_matid = short(!cr2faces ? -1 :
-                               (code&Vsplit::FRN_MASK) ? pm_vspl.fr_matid :
-                               f_matid[vspl->fn[3]->aface->matid]);
+        vspl->fl_matid = narrow_cast<short>((code&Vsplit::FLN_MASK) ? pm_vspl.fl_matid :
+                                            f_matid[vspl->fn[1]->aface->matid]);
+        vspl->fr_matid = narrow_cast<short>(!cr2faces ? -1 :
+                                            (code&Vsplit::FRN_MASK) ? pm_vspl.fr_matid :
+                                            f_matid[vspl->fn[3]->aface->matid]);
 #else
         assertx(!(code&Vsplit::FLN_MASK));
         assertx(!cr2faces || !(code&Vsplit::FRN_MASK));
@@ -596,7 +596,7 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
                 if (0) assertw(_materials.ok(matid));
             }
             // 20121212 added mask (_isolated_aface.matid==k_illegal_matid or bad matid)
-            f_matid.push(short(matid&0xFFFF));
+            f_matid.push(static_cast<short>(matid&0xFFFF));
             if (!i || cr2faces)
                 (fl+i)->aface->matid = _base_faces.num()+2*vspli+i;
             if (!i || cr2faces)
@@ -850,11 +850,11 @@ void SRMesh::write_srm(std::ostream& os) const {
             write_binary_std(os, ArView(fni));
         }
 #if !defined(SR_PREDICT_MATID)
-        write_binary_std(os, ArView(ushort(vspl->fl_matid&~k_Face_visited_mask)));
-        write_binary_std(os, ArView(ushort(vspl->fr_matid&~k_Face_visited_mask)));
+        write_binary_std(os, ArView(narrow_cast<ushort>(vspl->fl_matid&~k_Face_visited_mask)));
+        write_binary_std(os, ArView(narrow_cast<ushort>(vspl->fr_matid&~k_Face_visited_mask)));
 #else
-        write_binary_std(os, ArView(ushort(0)));
-        write_binary_std(os, ArView(ushort(0)));
+        write_binary_std(os, ArView(ushort{0}));
+        write_binary_std(os, ArView(ushort{0}));
 #endif
         write_binary_std(os, ArView(vspl->uni_error_mag2));
         write_binary_std(os, ArView(vspl->dir_error_mag2));
@@ -1127,7 +1127,7 @@ void SRMesh::apply_vspl(SRVertex* vs, EListNode*& pn) {
         SRVertexMorph* vm = vua->vmorph.get();
         vm->coarsening = false;
         int time = _refine_morph_time;
-        vm->time = short(time-1);
+        vm->time = static_cast<short>(time-1);
         float frac = 1.f/time;
         // vm->vgrefined = vspl->vu_vgeom;
         // vua->vgeom = vta->vgeom;
@@ -1600,7 +1600,7 @@ void SRMesh::adapt_refinement(int pnvtraverse) {
     // too slow. HH_ATIMER(____adapt_ref_f);
     _ar_tobevisible.init(0);
     uintptr_t left_child_mask = lsb_mask(sizeof(SRVertex));
-    uintptr_t left_child_result = uintptr_t(_quick_first_vt)&left_child_mask;
+    uintptr_t left_child_result = reinterpret_cast<uintptr_t>(_quick_first_vt)&left_child_mask;
     int nvtraverse = pnvtraverse;
     bool is_modified = false;
     EListNode* ndelim = _active_vertices.delim();
@@ -1638,7 +1638,7 @@ void SRMesh::adapt_refinement(int pnvtraverse) {
         SRVertex* vsp = vs->parent;
         // if (!vsp || get_vt(vsp->vspli)!=vs || !ecol_legal(vs)) continue;
         if (!vsp) continue;
-        if ((uintptr_t(vs)&left_child_mask)!=left_child_result)
+        if ((reinterpret_cast<uintptr_t>(vs)&left_child_mask)!=left_child_result)
             continue;
         ASSERTX(!(vsa->vmorph && vsa->vmorph->coarsening) || ecol_legal(vs));
         if (!is_active_v(vs+1)) continue;
@@ -1742,7 +1742,7 @@ void SRMesh::start_coarsen_morphing(SRVertex* vt) {
         }
         vm->coarsening = true;
         int time = _coarsen_morph_time;
-        vm->time = short(time-1);
+        vm->time = static_cast<short>(time-1);
         float frac = 1.f/time;
         vm->vginc.point = to_Point((coarsened_vg->point-va->vgeom.point)*frac);
         if (!b_nor001) vm->vginc.vnormal = (coarsened_vg->vnormal-va->vgeom.vnormal)*frac;
@@ -1765,7 +1765,7 @@ void SRMesh::abort_coarsen_morphing(SRVertex* vc) {
         // Now set the vertex to refine-morph to its desired position.
         vm->coarsening = false;
         int time = _refine_morph_time;
-        vm->time = short(time-1);
+        vm->time = static_cast<short>(time-1);
         float frac = 1.f/time;
         vm->vginc.point = to_Point((vm->vgrefined.point-va->vgeom.point)*frac);
         if (!b_nor001) vm->vginc.vnormal = (vm->vgrefined.vnormal-va->vgeom.vnormal)*frac;

@@ -166,7 +166,7 @@ inline void HWbase::redraw_now() {
 inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style,
                               const Pixel& back_color, bool wrap) {
     if (!s.size()) return;
-    // use uchar(127) to render all non-ascii characters.
+    // use uchar{127} to render all non-ascii characters.
     auto func_is_nonascii = [](const string& ss) {
         for_size_t(i, ss.size()) { if (!(uchar(ss[i])>=32 && uchar(ss[i])<=127)) return true; }
         return false;
@@ -299,7 +299,7 @@ inline void HWbase::process_keystring(string& keystring) {
 inline void HWbase::query_keypress(string s) {
     if (s=="<left>") s = "\b";
     char ch = s[0];
-    if (ch=='\b') { // <backspace>/C-h key (== uchar(8) == 'H'-64)
+    if (ch=='\b') { // <backspace>/C-h key (== uchar{8} == 'H'-64)
         if (get_key_modifier(EModifier::control)) { // C-<backspace> deletes word
             if (_query_buffer!="" && _query_buffer.back()=='/') _query_buffer.pop_back();
             while (_query_buffer!="" && _query_buffer.back()==' ') _query_buffer.pop_back();
@@ -308,13 +308,13 @@ inline void HWbase::query_keypress(string s) {
             if (_query_buffer!="") _query_buffer.pop_back();
         }
         redraw_later();
-    } else if (ch=='\033') {    // <esc> key (== uchar(27))
+    } else if (ch=='\033') {    // <esc> key (== uchar{27})
         _query = false;
         redraw_later();
     } else if (ch=='U'-64) {    // C-u deletes entire line
         _query_buffer = "";
         redraw_later();
-    } else if (ch=='\r') {      // <enter>/<ret> key (== uchar(13) == 'M'-64)
+    } else if (ch=='\r') {      // <enter>/<ret> key (== uchar{13} == 'M'-64)
         _query = false;
         _query_success = true;
         redraw_later();
@@ -378,11 +378,11 @@ inline string HWbase::query_save_filename(const string& hint_filename, bool forc
 // Convert a hexadecimal digit to an integer (0..15).
 inline uchar parse_hexa_nibble(char ch) {
     if (ch>='0' && ch<='9') {   // or std::isdigit()
-        return uchar(ch-'0');
+        return narrow_cast<uchar>(ch-'0');
     } else if (ch>='A' && ch<='F') {
-        return uchar(10+(ch-'A'));
+        return narrow_cast<uchar>(10+(ch-'A'));
     } else if (ch>='a' && ch<='f') {
-        return uchar(10+(ch-'a'));
+        return narrow_cast<uchar>(10+(ch-'a'));
     } else {
         assertnever(sform("Character '%c' is not hexadecimal (int(ch)=%d)", ch, int(ch)));
     }

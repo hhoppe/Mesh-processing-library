@@ -120,7 +120,7 @@ struct Object {
         // _video[0].assign(image);
         ok();
     }
-    size_t size() const                         { return size_t(product(_dims)); }
+    size_t size() const                         { return narrow_cast<size_t>(product(_dims)); }
     int nframes() const                         { return _dims[0]; }
     bool is_image() const                       { return _is_image; }
     const Vec2<int>& spatial_dims() const       { return _dims.tail<2>(); }
@@ -200,6 +200,7 @@ bool g_other_show_info = false;    // show information in non-curent window conf
 bool g_show_exif = false;          // show additional information, included content metadata
 bool g_show_help = false;          // show overlaid help text
 Vec2<int> g_win_dims;              // window dimensions (y, x)
+Vec2<int> g_desired_dims {-1, -1}; // if waiting for window resize
 Vec2<int> g_tex_dims;              // allocated texture buffer dimensions (y, x)
 Vec2<int> g_tex_active_dims;       // dimension of region of texture that is currently used for media content
 Vec2<int> g_prev_win_pos;          // to detect window boundary motions
@@ -514,7 +515,7 @@ unique_ptr<Object> object_reading_image(string filename) {
     // about 0.20sec for 5472x3648 using WIC; 0.40sec using Image_IO libjpeg; 0.08sec using Pixel::gray
     bool bgra = false, unsaved = false;
     if (0) {                    // test the response time without any loading delay
-        static uchar uc = 40; uc = uchar(40 + my_mod(uc+40, 180)); // not thread-safe
+        static uchar uc = 40; uc = narrow_cast<uchar>(40 + my_mod(uc+40, 180)); // not thread-safe
         HH_TIMER(_read_init);
         image.init(V(3648, 5472), Pixel::gray(uc));
     } else if (PrefetchImage* pp = find_if(g_prefetch_image, [&](const PrefetchImage& p) {
@@ -750,6 +751,7 @@ void perform_zoom_at_cursor(float fac_zoom, Vec2<int> yx) {
 // Resize the window and reset the view.
 void reset_window(const Vec2<int>& ndims) {
     hw.resize_window(ndims);
+    g_desired_dims = ndims;
     g_fit_view_to_window = true;
 }
 
@@ -774,13 +776,20 @@ void perform_window_zoom(float fac_zoom) {
         }
         message("Zoom set to: " + get_szoom());
     } else {                    // zoom by resizing the window
-        Vec2<int> ndims = convert<int>(convert<float>(g_win_dims)*fac_zoom);
-        if (max(ndims-hw.get_max_window_dims())>0) {
-            ndims = hw.get_max_window_dims();
-            g_fit_view_to_window = false;
-            Vec3<float> pc0 = concat(convert<float>(g_win_dims), V(0.f))/2.f;
+        Vec2<int> cur_dims = g_win_dims;
+        if (g_desired_dims[0]>=0) cur_dims = g_desired_dims;
+        Vec2<int> ndims = convert<int>(convert<float>(cur_dims)*fac_zoom);
+        {
+            Vec3<float> pc0 = concat(convert<float>(cur_dims), V(0.f))/2.f;
             Vec3<float> pc1 = concat(convert<float>(ndims), V(0.f))/2.f;
             set_view(g_view * Frame::translation(-pc0) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pc1));
+        }
+        if (max(ndims-hw.get_max_window_dims())>0) {  // window would be too large for screen
+            ndims = hw.get_max_window_dims();
+            g_fit_view_to_window = false;
+            message("Zooming window");
+            hw.resize_window(ndims);
+            g_desired_dims = ndims;
         } else if (product(g_frame_dims)) {
             ndims = round_dims(ndims, g_frame_dims);
             if (g_fit==EFit::isotropic) { // tighten the window dimensions for isotropic fit
@@ -788,13 +797,10 @@ void perform_window_zoom(float fac_zoom) {
                 int cmax = arzoom[0]>arzoom[1] ? 0 : 1;
                 ndims[cmax] = int(g_frame_dims[cmax]*arzoom[1-cmax]+.5f);
             }
-        }
-        // const int min_windows7_window_width = 102;
-        // if (ndims[1]>=min_windows7_window_width)
-        if (0) SHOW(ndims);
-        if (product(ndims)) {
-            reset_window(ndims);
-            message("Zooming window");
+            if (product(ndims)) {
+                message("Zooming window");
+                reset_window(ndims);
+            }
         }
     }
 }
@@ -1361,7 +1367,7 @@ bool DerivedHW::key_press(string skey) {
              bcase '5': {       // .5x speed
                  set_speed(.5);
              }
-             bcase '\t': {       // <tab> == C-i (== uchar(9) == 'I'-64),   previous/next object
+             bcase '\t': {       // <tab> == C-i (== uchar{9} == 'I'-64),   previous/next object
                  if (is_shift) { // previous object
                      return key_press("p");
                  } else {       // next object
@@ -1465,7 +1471,7 @@ bool DerivedHW::key_press(string skey) {
              bcase '-': {       // decrease window size or zoom
                  perform_window_zoom(1.f/k_key_zoom_fac);
              }
-             bcase '\r':                // <enter>/<ret>/C-M key (== uchar(13) == 'M'-64),  toggle fullscreen
+             bcase '\r':                // <enter>/<ret>/C-M key (== uchar{13} == 'M'-64),  toggle fullscreen
              ocase '\n':                // G3d -key $'\n'
              {
                  g_fit_view_to_window = true;
@@ -2232,7 +2238,7 @@ bool DerivedHW::key_press(string skey) {
              bcase '@': {       // redraw window (for testing) and output some diagnostics
                  if (0) {
                      string s;
-                     for_intL(i, 1, 256) s += char(i);
+                     for_intL(i, 1, 256) s += narrow_cast<char>(i);
                      message("Chars:" + s, 1000.);
                  }
                  if (1) {
@@ -2253,7 +2259,7 @@ bool DerivedHW::key_press(string skey) {
              bcase '/': {       // no-op operation, for "-key /"
                  void();
              }
-             bcase '\033': {    // exit; <esc> key (== uchar(27)); see also "<esc>"
+             bcase '\033': {    // exit; <esc> key (== uchar{27}); see also "<esc>"
                  if (0 && getobnum()>1 && prev_skey2!="\033") {
                      message("More than one file is open, press <esc> again to confirm quit", 10.);
                  } else {
@@ -2527,7 +2533,7 @@ static void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<in
         assertx(!gl_report_errors());
         if (0) SHOW(level, offset, dims, frame_format);
         glTexSubImage2D(GL_TEXTURE_2D, level, offset[1], offset[0], dims[1], dims[0],
-                        frame_format, GL_UNSIGNED_BYTE, static_cast<char*>(nullptr));
+                        frame_format, GL_UNSIGNED_BYTE, implicit_cast<char*>(nullptr));
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     }
 }
@@ -2982,6 +2988,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         if (is_fullscreen()) std::swap(g_show_info, g_other_show_info);
     }
     g_win_dims = dims;
+    g_desired_dims = twice(-1);         // reset
     if (!assertw(!gl_report_errors())) {
         if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
     }
@@ -3238,8 +3245,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             if (!ob.is_image()) {
                 const double video_framerate = ob._video.attrib().framerate ? ob._video.attrib().framerate : 30.;
                 double dtime = g_framenum/video_framerate;
-                int nmin = int(uint64_t(dtime)/60);
-                int nsec = int(uint64_t(dtime)%60);
+                int nmin = narrow_cast<int>(static_cast<uint64_t>(dtime)/60);
+                int nsec = narrow_cast<int>(static_cast<uint64_t>(dtime)%60);
                 int nmsec = int((dtime-floor(dtime))*1000.);
                 string stime = sform("%d:%02d.%03d", nmin, nsec, nmsec);
                 const int iframerate = int(video_framerate+.5);
@@ -3420,7 +3427,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
         Grid<3,Pixel> hvideo1(concat(V(onf), hdims)); { // reduced (maybe "half") resolution
             HH_TIMER(__scale_spatially);
             if (ovideo.size()) {
-                spatially_scale_Grid3_Pixel(ovideo, twice(filterb), hvideo1);
+                spatially_scale_Grid3_Pixel(ovideo, twice(filterb), nullptr, hvideo1);
             } else if (ovideo_nv12.size()) {
                 for_int(f, onf) {
                     integrally_downscale_Nv12_to_Image(ovideo_nv12[f], hvideo1[f]);
@@ -3868,7 +3875,7 @@ void do_stripe(Args& args) {
         }
     } else {
         video_nv12.init(dims); fill(video_nv12.get_Y(), RGB_to_Y(back_color));
-        fill(video_nv12.get_UV(), twice(uchar(128))); // both Pixel::black() and Pixel::white() have this UV
+        fill(video_nv12.get_UV(), twice(uchar{128})); // both Pixel::black() and Pixel::white() have this UV
         for_int(f, nframes) {
             const int stripe_width = 2;
             int x0 = int(float(f)/max(nframes-1, 1)*(xsize-stripe_width)+.5f);

@@ -1363,7 +1363,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         const Node* un = arn[i].get();
         switch (un->_type) {
          bcase Node::EType::polygon: {
-             auto n = static_cast<const NodePolygon*>(un);
+             auto n = down_cast<const NodePolygon*>(un);
              if (ledges && !lshading) continue;
              initialize_lit();
              // OpenGL seems to have problem culling polygons, even if planar and convex.
@@ -1391,14 +1391,14 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
                  }
                  if (n->poly.num()!=3) break;
                  if (i+1==arn.num()) break;
-                 n = static_cast<const NodePolygon*>(arn[i+1].get()); // Node* but not necessarily NodePolygon*
+                 n = down_cast<const NodePolygon*>(arn[i+1].get()); // Node* but not necessarily NodePolygon*
                  if (n->_type!=Node::EType::polygon || n->poly.num()!=3 || ++j>=buffer_ntriangles) break;
                  i++;
              }
              glEnd();
          }
          bcase Node::EType::line: {
-             auto n = static_cast<const NodeLine*>(un);
+             auto n = down_cast<const NodeLine*>(un);
              initialize_unlit();
              if (n->pa.num()==2) {
                  glBegin(GL_LINES);
@@ -1408,7 +1408,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
                          glVertex3fv(n->pa[vi].data());
                      }
                      if (i+1==arn.num()) break;
-                     n = static_cast<const NodeLine*>(arn[i+1].get()); // Node* but not necessarily NodeLine*
+                     n = down_cast<const NodeLine*>(arn[i+1].get()); // Node* but not necessarily NodeLine*
                      if (n->_type!=Node::EType::line || ++j>=buffer_nedges || n->pa.num()!=2) break;
                      i++;
                  }
@@ -1423,14 +1423,14 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
              }
          }
          bcase Node::EType::point: {
-             auto n = static_cast<const NodePoint*>(un);
+             auto n = down_cast<const NodePoint*>(un);
              initialize_unlit();
              glBegin(GL_POINTS);
              for (int j = 0; ; ) {
                  update_cur_color(n->color);
                  glVertex3fv(n->p.data());
                  if (i+1==arn.num()) break;
-                 n = static_cast<const NodePoint*>(arn[i+1].get()); // Node* but not necessarily NodePoint*
+                 n = down_cast<const NodePoint*>(arn[i+1].get()); // Node* but not necessarily NodePoint*
                  if (n->_type!=Node::EType::point || ++j>=buffer_npoints) break;
                  i++;
              }
@@ -1449,7 +1449,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
             if (ii) { if (!--ii) ii = quicki; else continue; }
             const Node* un = arn[i].get();
             if (un->_type==Node::EType::polygon) {
-                auto n = static_cast<const NodePolygon*>(un);
+                auto n = down_cast<const NodePolygon*>(un);
                 const Polygon& poly = n->poly;
                 j += poly.num();
                 if (j>buffer_nedges) { glEnd(); glBegin(GL_LINES); }
@@ -2324,7 +2324,7 @@ void GXobject::add(const A3dElem& el) {
          n->color = pack_color(el[0].c.g[0] ? el[0].c.d : k_default_poly_color.d);
          append(std::move(n));
      }
-     bdefault: assertnever(string() + "unknown type '" + char(el.type()) + "'");
+     bdefault: assertnever(string() + "unknown type '" + narrow_cast<char>(el.type()) + "'");
     }
 }
 
@@ -2929,7 +2929,7 @@ bool HB::special_keypress(char ch) {
         all_reset();
         invalidate_dls();
         hw.redraw_now();
-     bcase '\r':                // <enter>/<ret> key (== uchar(13) == 'M'-64)
+     bcase '\r':                // <enter>/<ret> key (== uchar{13} == 'M'-64)
      ocase '\n':                // G3d -key $'\n'
         static bool g_fullscreen;
         g_fullscreen = !g_fullscreen;
@@ -3056,7 +3056,7 @@ int HB::id() {
 }
 
 void* HB::escape(void* code, void* data) {
-    int icode = narrow_cast<int>(intptr_t(code));
+    int icode = narrow_cast<int>(reinterpret_cast<intptr_t>(code));
     float fdata = *static_cast<float*>(data);
     dummy_use(fdata);
     switch (icode) {

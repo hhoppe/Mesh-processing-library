@@ -407,7 +407,7 @@ bool HW::loop() {
             if (_watch_fd0) FD_SET(0, &fdr);
             struct timeval tv; tv.tv_sec = 0; tv.tv_usec = 30000; // .03sec; introduced to support wake_up()
             struct timeval* ptv = 1 ? &tv : nullptr;
-            if (select(fd+1, &fdr, static_cast<fd_set*>(nullptr), static_cast<fd_set*>(nullptr), ptv)==-1) {
+            if (select(fd+1, &fdr, implicit_cast<fd_set*>(nullptr), implicit_cast<fd_set*>(nullptr), ptv)==-1) {
                 if (errno==EBADF) {
                     assertx(_watch_fd0);
                     _watch_fd0 = false;
@@ -545,7 +545,7 @@ void HW::start_hwkey() {
     tv.tv_usec = int(usec%1000000);
     ti.it_value = tv;
     ti.it_interval = tv;
-    if (setitimer(ITIMER_REAL, &ti, static_cast<struct itimerval*>(nullptr)))
+    if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
         perror("HW: setitimer");
 }
 
@@ -556,7 +556,7 @@ void HW::end_hwkey() {
     tv.tv_usec = 0;
     ti.it_value = tv;
     ti.it_interval = tv;
-    if (setitimer(ITIMER_REAL, &ti, static_cast<struct itimerval*>(nullptr)))
+    if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
         perror("HW: setitimer2");
     // SIGALRM not reset to SIG_DFL just to be sure
     // signal(SIGALRM, SIG_DFL);
@@ -567,12 +567,15 @@ void HW::handle_key() {
         Vec<char,20> buf;
         KeySym keysym;
         int nchar = XLookupString(reinterpret_cast<XKeyEvent*>(&_event), buf.data(), buf.num()-1, &keysym,
-                                  static_cast<XComposeStatus*>(nullptr));
+                                  implicit_cast<XComposeStatus*>(nullptr));
         assertx(buf.ok(nchar));
         buf[nchar] = 0;
         s = buf.data();
         if (keysym>=XK_F1 && keysym<=XK_F12) {
             s = sform("<f%d>", int(keysym-XK_F1+1));
+        } else if (keysym>=XK_0 && keysym<=XK_9) {  // so that control-2, .. control-9 are interpreted correctly
+            assertx(XK_0=='0');
+            s = sform("%c", narrow_cast<char>(keysym));
         } else {
             switch (keysym) {
              bcase XK_Left:     s = "<left>";
@@ -589,15 +592,15 @@ void HW::handle_key() {
                 void();
             }
         }
+        if (_hwdebug) { SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size())))); }
     }
-    if (0) { SHOW(s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size())))); }
     // (keysym>=XK_space && keysym<=XK_asciitilde)
     if (s=="") return;          // e.g. 'shift' key
     if (_query) {
         query_keypress(s);
     } else if (key_press(s)) {
         // client has handled key press
-    } else if (s=="\033") {     // <esc> key (== uchar(27))
+    } else if (s=="\033") {     // <esc> key (== uchar{27})
         quit();
     } else {
         beep();

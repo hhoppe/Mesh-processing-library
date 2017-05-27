@@ -186,8 +186,8 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     using base::_queue; using base::_m; using base::_tmp_poly;
     using base::_ncvisited; using base::_ncundef; using base::_ncnothing;
     using base::_nvevaled; using base::_nvzero; using base::_nvundef;
-    Derived& derived() { return *static_cast<Derived*>(this); }
-    const Derived& derived() const { return *static_cast<const Derived*>(this); }
+    Derived& derived() { return *down_cast<Derived*>(this); }
+    const Derived& derived() const { return *down_cast<const Derived*>(this); }
  public:
     Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) { }
     ~Contour3DBase()                            { }

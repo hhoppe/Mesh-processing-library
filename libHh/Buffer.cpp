@@ -45,7 +45,7 @@ void Buffer::shift() {
 
 void Buffer::expand() {
     assertw(!_beg);             // not necessary, current implementation
-    _ar.resize(assert_narrow_cast<int>(!_ar.num() ? k_initial_size : int64_t(_ar.num())*2));
+    _ar.resize(assert_narrow_cast<int>(!_ar.num() ? k_initial_size : int64_t{_ar.num()}*2));
 }
 
 
@@ -197,7 +197,7 @@ void RBuffer::wait_for_input() {
     fd_set fdr;
     FD_ZERO(&fdr);
     FD_SET(0, &fdr);
-    select(1, &fdr, static_cast<fd_set*>(nullptr), static_cast<fd_set*>(nullptr), nullptr);
+    select(1, &fdr, implicit_cast<fd_set*>(nullptr), implicit_cast<fd_set*>(nullptr), nullptr);
 #endif
 }
 

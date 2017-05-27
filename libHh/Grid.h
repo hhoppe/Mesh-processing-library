@@ -204,6 +204,12 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     type& operator=(const type&)                = default;
 };
 
+// Create a CGridView<1,T> referencing the single specified element.
+template<typename T> CGridView<1,T> CGrid1View(const T& e) { return CGridView<1,T>(&e, V(1)); }
+
+// Create an GridView<1,T> referencing the single specified element.
+template<typename T> GridView<1,T> Grid1View(T& e) { return GridView<1,T>(&e, V(1)); }
+
 // Heap-allocated D-dimensional contiguous grid.  Any or all of the dimensions may be zero.
 // Grid(10, 20) or Grid(V(10, 20)) both create a 10x20 grid, whereas Grid({10, 20}) creates a 1x2 grid.
 template<int D, typename T> class Grid : public GridView<D,T> {
@@ -277,11 +283,11 @@ template<int D> constexpr size_t grid_index(const Vec<int,D>& dims, const Vec<in
 }
 template<> inline constexpr size_t grid_index(const Vec3<int>& dims, const Vec3<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]), HH_CHECK_BOUNDS(u[2], dims[2]),
-            (size_t(u[0])*dims[1]+u[1])*dims[2]+u[2]);
+            (intptr_t{u[0]}*dims[1]+u[1])*dims[2]+u[2]);
 }
 template<> inline constexpr size_t grid_index(const Vec2<int>& dims, const Vec2<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]),
-            size_t(u[0])*dims[1]+u[1]);
+            intptr_t{u[0]}*dims[1]+u[1]);
 }
 template<> inline constexpr size_t grid_index(const Vec1<int>& dims, const Vec1<int>& u) {
     return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims), // dummy_use(dims) returns void so cannot be constexpr
@@ -319,7 +325,7 @@ template<> struct grid_index_rec<1> {
 template<int D> struct grid_index_list_aux {
     template<typename... A> constexpr size_t operator()(const Vec<int,D>& dims, int d0, A... dd) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]),
-                grid_index_rec<D-1>()(size_t(d0)*dims[1], dims.template segment<D-1>(1), dd...));
+                grid_index_rec<D-1>()(intptr_t{d0}*dims[1], dims.template segment<D-1>(1), dd...));
     }
 };
 template<> struct grid_index_list_aux<1> {
@@ -331,13 +337,13 @@ template<> struct grid_index_list_aux<1> {
 template<> struct grid_index_list_aux<2> {
     constexpr size_t operator()(const Vec2<int>& dims, int d0, int d1) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]),
-                size_t(d0)*dims[1]+d1);
+                intptr_t{d0}*dims[1]+d1);
     }
 };
 template<> struct grid_index_list_aux<3> {
     constexpr size_t operator()(const Vec3<int>& dims, int d0, int d1, int d2) const {
         return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]), HH_CHECK_BOUNDS(d2, dims[2]),
-                (size_t(d0)*dims[1]+d1)*dims[2]+d2);
+                (intptr_t{d0}*dims[1]+d1)*dims[2]+d2);
     }
 };
 } // namespace details
@@ -361,18 +367,18 @@ template<typename T> struct Grid_get<1,T> {
 };
 template<typename T> struct Grid_get<2,T> {
     static CArrayView<T> cget(const T* a, const int* dims, int r) {
-        return CArrayView<T>(a+size_t(r)*dims[1], dims[1]);
+        return CArrayView<T>(a+intptr_t{r}*dims[1], dims[1]);
     }
     static  ArrayView<T>  get(T* a, const int* dims, int r) {
-        return  ArrayView<T>(a+size_t(r)*dims[1], dims[1]);
+        return  ArrayView<T>(a+intptr_t{r}*dims[1], dims[1]);
     }
 };
 template<typename T> struct Grid_get<3,T> { // specialization for speedup
     static CGridView<2,T> cget(const T* a, const int* dims, int r) {
-        return CGridView<2,T>(a+size_t(r)*dims[1]*dims[2], Vec2<int>(dims[1], dims[2]));
+        return CGridView<2,T>(a+intptr_t{r}*dims[1]*dims[2], Vec2<int>(dims[1], dims[2]));
     }
     static  GridView<2,T>  get(T* a, const int* dims, int r) {
-        return  GridView<2,T>(a+size_t(r)*dims[1]*dims[2], Vec2<int>(dims[1], dims[2]));
+        return  GridView<2,T>(a+intptr_t{r}*dims[1]*dims[2], Vec2<int>(dims[1], dims[2]));
     }
 };
 template<int D, typename T> CGridView<D-1,T> details::Grid_get<D,T>::cget(const T* a, const int* dims, int r) {

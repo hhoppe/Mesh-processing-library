@@ -70,7 +70,7 @@ inline int64_t SimpleTimer::get_precise_counter() {
 #else
     struct timespec ti;
     assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
-    return int64_t(ti.tv_sec)*(1000*1000*1000)+ti.tv_nsec;
+    return int64_t{ti.tv_sec}*(1000*1000*1000)+ti.tv_nsec;
 #endif
 }
 

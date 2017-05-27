@@ -101,7 +101,7 @@ Array<Frame> pctrans;           // defined if ioo
 void close_mk(unique_ptr<Mk3d>& pmk) {
     if (!pmk) return;
     auto pfi = assertx(g_map_mk3d_wfile.remove(pmk.get()));
-    WSA3dStream* oa3d = static_cast<WSA3dStream*>(&pmk->oa3d());
+    WSA3dStream* oa3d = down_cast<WSA3dStream*>(&pmk->oa3d());
     pmk.reset();                // destruct Mk3d
     delete oa3d;                // destruct WSA3dStream
     pfi.reset();                // destruct WFile
@@ -710,7 +710,7 @@ int main(int argc, const char** argv) {
             mesh.set_point(v, mesh.point(v)*xformi);
         }
         // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os()); // note: would require RTTI
-        mesh.write(static_cast<WSA3dStream*>(&iom->oa3d())->os());
+        mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
     }
     close_mk(iom);
     return 0;

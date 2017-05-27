@@ -360,7 +360,7 @@ void do_sizes() {
 void do_color(Args& args) {
     for_int(i, 4) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        gcolor[i] = uchar(v);
+        gcolor[i] = narrow_cast<uchar>(v);
     }
 }
 
@@ -430,9 +430,10 @@ void do_cropb(Args& args) {
 }
 
 void do_cropall(Args& args) {
-    int v = image.ysize()==image.xsize() ? parse_size(args.get_string(), image.ysize(), false) : args.get_int();
+    string s = args.get_string();
+    Vec2<int> sides = V(parse_size(s, image.ysize(), false), parse_size(s, image.xsize(), false));
     Grid<2,Pixel>& grid = image;
-    grid = crop(grid, V(v, v), V(v, v), g_bndrules, &gcolor);
+    grid = crop(grid, sides, sides, g_bndrules, &gcolor);
 }
 
 void do_cropsquare(Args& args) {
@@ -541,40 +542,40 @@ void do_vfilter(Args& args) {
 void do_scaleunif(Args& args) {
     HH_TIMER(_scale);
     float s = args.get_float();
-    image.scale(twice(s), g_filterbs);
+    image.scale(twice(s), g_filterbs, &gcolor);
 }
 
 void do_scalenonunif(Args& args) {
     HH_TIMER(_scale);
     float sx = args.get_float(), sy = args.get_float();
-    image.scale(V(sy, sx), g_filterbs);
+    image.scale(V(sy, sx), g_filterbs, &gcolor);
 }
 
 void do_scaletox(Args& args) {
     HH_TIMER(_scale);
     int nx = parse_size(args.get_string(), image.xsize(), false); assertx(nx>0);
     float s = float(nx)/assertx(image.xsize());
-    image.scale(twice(s), g_filterbs);
+    image.scale(twice(s), g_filterbs, &gcolor);
 }
 
 void do_scaletoy(Args& args) {
     HH_TIMER(_scale);
     int ny = parse_size(args.get_string(), image.ysize(), false); assertx(ny>0);
     float s = float(ny)/assertx(image.ysize());
-    image.scale(twice(s), g_filterbs);
+    image.scale(twice(s), g_filterbs, &gcolor);
 }
 
 void do_scaletodims(Args& args) {
     HH_TIMER(_scale);
     int nx = args.get_int(), ny = args.get_int(); assertx(nx>0 && ny>0);
     auto syx = convert<float>(V(ny, nx))/convert<float>(image.dims());
-    image.scale(syx, g_filterbs);
+    image.scale(syx, g_filterbs, &gcolor);
 }
 
 void do_scaleinside(Args& args) {
     HH_TIMER(_scale);
     int nx = args.get_int(), ny = args.get_int(); assertx(nx>0 && ny>0);
-    image.scale(twice(min(convert<float>(V(ny, nx))/convert<float>(image.dims()))), g_filterbs);
+    image.scale(twice(min(convert<float>(V(ny, nx))/convert<float>(image.dims()))), g_filterbs, &gcolor);
 }
 
 void do_scalehalf2n1() {
@@ -715,8 +716,9 @@ void do_rot180() {
 //  both have (possibly rectangular) domain [-0.5, +0.5]^2
 void apply_frame(const Frame& frame) {
     HH_STIMER(_apply_frame);
+    Vector4 vgcolor; convert(CGrid1View(gcolor), Grid1View(vgcolor));
     Matrix<Vector4> matv(image.dims()); convert(image, matv);
-    Matrix<Vector4> nmatv(image.dims()); transform(matv, frame, g_filterbs, nmatv);
+    Matrix<Vector4> nmatv(image.dims()); transform(matv, frame, g_filterbs, nmatv, &vgcolor);
     convert(nmatv, image);
 }
 
@@ -771,7 +773,9 @@ void do_randomizeRGB() {
         unsigned v = unsigned(image[yx][0]*(53+113*256+ 43*65536)+
                               image[yx][1]*(97+ 89*256+107*65536)+
                               image[yx][2]*(11+ 61*256+ 47*65536))%16777216;
-        image[yx] = Pixel(uchar((v>>0)&255), uchar((v>>8)&255), uchar((v>>16)&255));
+        image[yx] = Pixel(narrow_cast<uchar>((v>>0)&255),
+                          narrow_cast<uchar>((v>>8)&255),
+                          narrow_cast<uchar>((v>>16)&255));
     }, 20);
 }
 
@@ -843,7 +847,7 @@ void apply_as_operations(Grid<2,Pixel>& im, const Vec2<int>& yx, const Vec2<int>
             const float vscale = min(convert<float>(as_fit_dims)/convert<float>(im.dims()));
             Vec2<int> newdims = convert<int>(convert<float>(im.dims())*vscale+.5f);
             Grid<2,Pixel> newim(newdims);
-            scale_Matrix_Pixel(im, g_filterbs, newim);
+            scale_Matrix_Pixel(im, g_filterbs, &gcolor, newim);
             im = std::move(newim);
         }
         Vec2<int> side0 = (as_fit_dims - im.dims())/2;
@@ -1012,7 +1016,7 @@ void do_replace(Args& args) {
     Pixel newcolor;
     for_int(i, 4) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        newcolor[i] = uchar(v);
+        newcolor[i] = narrow_cast<uchar>(v);
     }
     int count = 0;
     for (const auto& yx : range(image.dims())) {
@@ -1211,6 +1215,7 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
         assertx(grid[ntimes<D>(0)][3]>0.f); // at least one defined value in grid
         return;
     }
+    const Vector4 vzero(0.f);
     const Vec<int,D> dims = grid.dims();
     const Vec<int,D> hdims = (dims+1)/2;
     Grid<D,Vector4> hgrid;      // half-resolution grid
@@ -1224,24 +1229,24 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
             //    because it doesn't shift the content off the right/bottom boundaries at coarse levels.
             // - It is important to use Bndrule::border to avoid introducing excessive confidence at coarse levels.
             // - Filter "triangle" is nicer overall than original lumigraph although it introduces a bit of ringing.
-            const Vector4 vzero(0.f); // expand to even dimensions
+            // expand to even dimensions
             Grid<D,Vector4> grid2 = crop(grid, ntimes<D>(0), -dims%2, ntimes<D>(Bndrule::border), &vzero);
             // Using filter "triangle" (with weights (1/4, 3/4, 3/4, 1/4)/2) is dual to
             //  the upscaling "triangle" kernel (with alternating weights (3/4, 1/4) and (1/4, 3/4)).
             // It introduces a little bit of undesirable ringing.  "box" has no ringing but inferior.
             const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-            hgrid = scale(grid2, hdims, downscaling_kernel); // spatially downscale
+            hgrid = scale(grid2, hdims, downscaling_kernel, &vzero); // spatially downscale
             const float adjust_weight = pow(2.f, float(D));  // somewhat arbitrary
             for (auto& e : hgrid) e *= adjust_weight;
         } else {
             // - Somehow the coarse-scale content is getting shifted right/bottom unlike in the original Lumigraph
             //   implementation; I don't know what is causing the difference.
-            const Vector4 vzero(0.f); // expand to odd dimensions
+            // expand to odd dimensions
             Grid<D,Vector4> grid2 = crop(grid, ntimes<D>(0), -(ntimes<D>(1)-dims%2),
                                          ntimes<D>(Bndrule::border), &vzero);
             assertx(grid2.dims()%2==ntimes<D>(1));
             const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-            hgrid = scale_primal(grid2, (grid2.dims()-1)/2+1, downscaling_kernel); // spatially downscale
+            hgrid = scale_primal(grid2, (grid2.dims()-1)/2+1, downscaling_kernel, &vzero); // spatially downscale
             if (0) SHOW(grid.dims(), grid2.dims(), hgrid.dims(), hdims, hgrid.dims()-hdims);
             if (hgrid.size()>=grid.size() || 0)
                 hgrid = crop(hgrid, ntimes<D>(0), hgrid.dims()-hdims); // optionally crop extra
@@ -1264,14 +1269,14 @@ template<int D> void new_pullpush(GridView<D,Vector4> grid) {
         if (!primal) {
             const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border)); // bilinear
             // This bilinear prolongation has weights (3/4, 1/4) and (1/4, 3/4) on alternating entries.
-            gridu = scale(hgrid, hdims*2, upscaling_kernel); // spatially upscale
+            gridu = scale(hgrid, hdims*2, upscaling_kernel, &vzero); // spatially upscale
             gridu = crop(gridu, ntimes<D>(0), dims%2); // crop any extra expanded dimensions
         } else {
             const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border)); // bilinear
-            const Vector4 vzero(0.f); // expand if original dimension was even
+            // expand if original dimension was even
             Grid<D,Vector4> grid2 = crop(hgrid, ntimes<D>(0), -(ntimes<D>(1)-dims%2),
                                          ntimes<D>(Bndrule::border), &vzero);
-            gridu = scale(grid2, (grid2.dims()-1)*2+1, upscaling_kernel); // spatially upscale
+            gridu = scale(grid2, (grid2.dims()-1)*2+1, upscaling_kernel, &vzero); // spatially upscale
             if (0) SHOW(hgrid.dims(), grid2.dims(), gridu.dims(), grid.dims(), gridu.dims()-grid.dims());
             gridu = crop(gridu, ntimes<D>(0), gridu.dims()-grid.dims()); // crop any extra
         }
@@ -1692,7 +1697,7 @@ void do_superresolution(Args& args) {
     for (const auto& yx : range(image.dims())) { mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0]; }
     // Apply ordinary magnification (using any chosen scaling filter).
     Image oimage = std::move(image);
-    image = scale(oimage, twice(fac), g_filterbs);
+    image = scale(oimage, twice(fac), g_filterbs, &gcolor);
     // Now add super-res adaptive sharpening.
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         auto fyx = (convert<float>(yx)+.5f)*convert<float>(oimage.dims())/convert<float>(image.dims())-.5f;
@@ -2231,7 +2236,7 @@ void do_procedure(Args& args) {
         const float s = 1.01f;
         for_int(i, 10) {
             // HH_TIMER(__scale);
-            image.scale(twice(s), g_filterbs);
+            image.scale(twice(s), g_filterbs, &gcolor);
         }
     } else if (name=="mark_dark") {
         const int thresh = args.get_int();
@@ -2445,7 +2450,7 @@ void do_procedure(Args& args) {
                 limage.set_silent_io_progress(true);
                 limage.read_file(imagenames[i]);
                 // Downscale to maximum size.
-                limage.scale(twice(float(size)/assertx(max(limage.dims()))), g_filterbs);
+                limage.scale(twice(float(size)/assertx(max(limage.dims()))), g_filterbs, &gcolor);
                 // Fill to square.
                 Grid<2,Pixel>& grid = limage;
                 int vt = -(size-limage.ysize())/2, vb = -(size-limage.ysize()+vt);

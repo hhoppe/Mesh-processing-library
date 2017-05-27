@@ -60,7 +60,7 @@ class A3dElem {
     EType type() const                                   { return _type; }
     void set_binary(bool b)                             { _binary = b; }
     bool binary() const                                 { return _binary; }
-    static bool status_type(EType type)                 { char ch = char(type); return ch=='d' || ch=='s' || ch=='g'; }
+    static bool status_type(EType type) { char ch = static_cast<char>(type); return ch=='d' || ch=='s' || ch=='g'; }
     static bool command_type(EType type)                { return command_type_i(type); }
 // for EType::polygon || EType::polyline || EType::point:
     int num() const                                     { return _v.num(); }

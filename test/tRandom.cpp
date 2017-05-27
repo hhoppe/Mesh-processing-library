@@ -14,10 +14,16 @@ int main() {
         SHOW(r1.get_unsigned());
     }
     const int num = 0 ? 10*1000*1000 : 1000*1000; // 10M takes too long in debug
-    for_int(i, num) {
-        HH_SSTAT(Sint, double(r1.get_unsigned()));
-        HH_SSTAT(Sunif, r1.unif());
-        HH_SSTAT(Sgauss, r1.gauss());
+    {
+        Stat Sgauss;
+        for_int(i, num) {
+            HH_SSTAT(Sint, double(r1.get_unsigned()));
+            HH_SSTAT(Sunif, r1.unif());
+            // HH_SSTAT(Sgauss, r1.gauss());
+            Sgauss.enter(r1.gauss());
+        }
+        SHOW(round_fraction_digits(Sgauss.avg(), 1e10f));
+        SHOW(round_fraction_digits(Sgauss.sdv(), 1e7f));
     }
     SHOW(0.5f);                 // mean of uniform [0, 1] distribution
     SHOW(0.5f*pow(2.f, 32.f));

@@ -3407,7 +3407,7 @@ void do_signeddistbmp(Args& args) {
                     const float amplify = 10.f;
                     sdist *= amplify;
                     if (abs(sdist)>1.f) sdist = 1.f*sign(sdist);
-                    uc = uchar(128.f-sdist*126.f);
+                    uc = static_cast<uchar>(128.f-sdist*126.f);
                 }
                 image[ix][iy] = Pixel::gray(uc);
             }

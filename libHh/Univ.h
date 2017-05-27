@@ -23,13 +23,13 @@ template<typename T> struct Conv<T*> {
 };
 
 template<> struct Conv<int> {
-    static Univ e(int v) { return Univ(intptr_t(v)); }
-    static int d(Univ v) { return narrow_cast<int>(intptr_t(v)); }
+    static Univ e(int v) { return Univ(intptr_t{v}); }
+    static int d(Univ v) { return narrow_cast<int>(reinterpret_cast<intptr_t>(v)); }
 };
 
 template<> struct Conv<unsigned> {
-    static Univ e(unsigned v) { return Univ(uintptr_t(v)); }
-    static unsigned d(Univ v) { return narrow_cast<unsigned>(uintptr_t(v)); }
+    static Univ e(unsigned v) { return Univ(uintptr_t{v}); }
+    static unsigned d(Univ v) { return narrow_cast<unsigned>(reinterpret_cast<uintptr_t>(v)); }
 };
 
 template<> struct Conv<float> {

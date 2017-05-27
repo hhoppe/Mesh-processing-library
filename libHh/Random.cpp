@@ -55,7 +55,7 @@ template<> inline uint32_t Random::get_int<4>() {
 
 template<> inline uint64_t Random::get_int<8>() {
     uint64_t v = get_int<4>();
-    return v | (uint64_t(get_int<4>())<<32);
+    return v | (static_cast<uint64_t>(get_int<4>())<<32);
 }
 
 // http://stackoverflow.com/questions/11603818/why-is-there-ambiguity-between-uint32-t-and-uint64-t-when-using-size-t-on-mac-os

@@ -53,11 +53,12 @@ inline float  max_e(const Vector4& e)   { return max(e); }
 template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_type_t<T> > mean(CGridView<D,T> g) {
     using MeanType = mean_type_t<T>;
     MeanType v; my_zero(v);
-    if (!g.size()) { Warning("Zero-size grid"); return v; }
-    omp_parallel_for_range(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, intptr_t(g.size())) {
+    intptr_t size = g.size();
+    if (!size) { Warning("Zero-size grid"); return v; }
+    omp_parallel_for_range(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) {
         v += g.raster(i);
     }
-    return v*(1./g.size());
+    return v*(1./size);
 }
 template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_type_t<T> > mean(GridView<D,T> g) {
     return mean(static_cast<CGridView<D,T>>(g));
@@ -464,7 +465,7 @@ class Multigrid : noncopyable {
                     // mingw 4096 4096: for_intL:0.58sec* for_2DL_interior:0.64sec  for_2DL:0.83sec
                     // win   4096 4096: for_intL:1.84sec  for_2DL_interior:1.19sec* for_2DL:1.83sec
                 }
-                cond_parallel_for_int(nx*size_t(sync_rows)*10, thread, nthreads) {
+                cond_parallel_for_int(nx*size_t{sync_rows}*10, thread, nthreads) {
                     const int overlap = 0; // ={1, 2} does not seem to help much over =0
                     int y0 = min((thread+1)*ychunk, ny)-sync_rows, yn = min((thread+1)*ychunk+overlap, ny);
                     for_2DL(y0, yn, 0, nx, func_update);

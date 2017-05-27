@@ -246,11 +246,12 @@ string image_suffix_for_magic_byte(uchar c) {
 
 static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY"); // also in MatrixOp.h
 
-void Image::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs) {
-    *this = hh::scale(*this, syx, filterbs, std::move(*this));
+void Image::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
+    *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
 }
 
-Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, Image&& pnewimage) {
+Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+            const Pixel* bordervalue, Image&& pnewimage) {
     Image newimage = &pnewimage==&image ? Image() : std::move(pnewimage);
     assertx(min(syx)>=0.f);
     Vec2<int> newdims = convert<int>(convert<float>(image.dims())*syx+.5f);
@@ -267,8 +268,9 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
             matrix[y][x][z] = Random::G.unif(); // matrix of noise
         }
         Matrix<Vector4> omatrix(matrix);
+        assertx(!bordervalue);
         for_int(i, g_test_scale_accuracy) {
-            matrix = scale(matrix, matrix.dims(), filterbs, std::move(matrix));
+            matrix = scale(matrix, matrix.dims(), filterbs, implicit_cast<Vector4*>(nullptr), std::move(matrix));
         }
         assertx(same_size(omatrix, matrix));
         for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
@@ -277,7 +279,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
         }
         exit(0);
     }
-    scale_Matrix_Pixel(image, filterbs, newimage);
+    scale_Matrix_Pixel(image, filterbs, bordervalue, newimage);
     return newimage;
 }
 
@@ -362,7 +364,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     const uchar* bufY = nv12v.get_Y().data();
     const uchar* bufUV = nv12v.get_UV().data()->data();
     Pixel* bufP = frame.data();
-    assertx(uintptr_t(bufP)%4==0);
+    assertx(reinterpret_cast<uintptr_t>(bufP)%4==0);
     // Filtervideo ~/proj/videoloops/data/test/HDbrink8h.mp4 -stat   _read_video times for routines below:
     // 0.27 sec (no conversion), 1.00 sec, 0.70 sec, 0.55 sec, 0.48 sec, 0.34 sec
     auto clamp_4 = [](int a, int b, int c, int d) {
@@ -448,7 +450,7 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
     const uchar* bufY = nv12v.get_Y().data();
     const uchar* bufUV = nv12v.get_UV().data()->data();
     Pixel* bufP = frame.data();
-    assertx(uintptr_t(bufP)%4==0);
+    assertx(reinterpret_cast<uintptr_t>(bufP)%4==0);
     const int rowlen = frame.xsize();
     for_int(y, frame.ysize()/2) {
         for_int(x, frame.xsize()/2) {
@@ -474,7 +476,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     assertx(same_size(nv12v.get_Y(), frame));
     uchar* __restrict bufY = nv12v.get_Y().data();
     uchar* __restrict bufUV = nv12v.get_UV().data()->data();
-    assertx(uintptr_t(bufUV)%4==0); assertx(uintptr_t(bufY)%4==0);
+    assertx(reinterpret_cast<uintptr_t>(bufUV)%4==0); assertx(reinterpret_cast<uintptr_t>(bufY)%4==0);
     // I tried optimizing this, but all implementations take about the same elapsed time.
     if (0) {
         for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *bufY++ = RGB_to_Y(frame[y][x]); }
@@ -495,7 +497,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         // for_size_t(i, frame.size()) { *bufY++ = RGB_to_Y(frame.raster(i)); }
         {
             const uchar* p = frame.data()->data();
-            assertx(uintptr_t(p)%4==0);
+            assertx(reinterpret_cast<uintptr_t>(p)%4==0);
             auto func_enc_Y = [](const uchar* pp) {
                 return uchar(((66*int(pp[0]) + 129*int(pp[1]) + 25*int(pp[2]) + 128) >> 8) + 16);
             };

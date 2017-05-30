@@ -104,7 +104,7 @@ void SimplicialComplex::ok() const {
                     }
                 } EndFor;
             } EndFor;
-            if (num_identical != int(si->_parent.size())) {
+            if (num_identical != narrow_cast<int>(si->_parent.size())) {
                 std::cerr << "Simplex " << si->getDim() << " " << si->getId() << " has duplicate parents.\n";
             }
         } EndFor;

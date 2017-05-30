@@ -50,7 +50,7 @@ class FifoVertexCache : public VertexCache {
         if (_vinqueue.num()!=nverts1 || _queuev.num()!=cs) {
             assertx(!_vinqueue.num());
             _vinqueue.init(nverts1, -1);
-            _queuev.init(cs, int(k_no_entry)); // int() cast to avoid taking (const int&) on the constexpr, for clang.
+            _queuev.init(cs, int{k_no_entry}); // int{} cast to avoid taking (const int&) on the constexpr, for clang.
         } else {
             int* q = _queuev.data();
             for_int(qi, _queuev.num()) {

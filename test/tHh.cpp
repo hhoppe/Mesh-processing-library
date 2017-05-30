@@ -99,7 +99,7 @@ void test_spawn() {
             const int len = 20;
             string str(len, ' ');
             for_int(i, len) {
-                str[i] = arcands[Random::G.get_unsigned(unsigned(arcands.size()))];
+                str[i] = arcands[Random::G.get_unsigned(narrow_cast<unsigned>(arcands.size()))];
             }
             try_it(str);
         }

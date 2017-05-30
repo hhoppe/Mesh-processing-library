@@ -182,7 +182,7 @@ using namespace std; namespace hh { } using namespace hh;
 namespace std {
 
 #if !defined(_WIN32) && !defined(HH_NO_DEFINE_STD_LOG2)
-template<typename T> T log2(T v) { return std::log(v)/std::log(T(2)); }
+template<typename T> T log2(T v) { return std::log(v)/std::log(T{2}); }
 #endif
 
 #if defined(__CYGWIN__) && __GNUC__*100+__GNUC_MINOR__<500 && !defined(HH_NO_DEFINE_STD_HYPOT)
@@ -305,7 +305,7 @@ template<typename... A> void dummy_use(const A&...) { }  // constexpr in C++14
 
 // Avoid warnings of uninitialized variables
 template<typename T> void dummy_init(T& v) { v = T(); }
-template<typename T, typename... A> void dummy_init(T& v, A&... a) { v = T(); dummy_init(a...); }
+template<typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}; dummy_init(a...); }
 
 // Evaluates to false in boolean context for "if (false_capture<int> i = ub) { HH_UNREACHABLE; } else" within macros.
 template<typename T> struct false_capture {
@@ -593,11 +593,11 @@ void ensure_utf8_encoding(int& argc, const char**& argv);
 
 // *** Inlines
 
-// Returns T(-1) or T(+1) based on sign of expression.
-template<typename T> constexpr T sign(const T& e)        { return e>=T(0) ? T(1) : T(-1); }
+// Returns T{-1} or T{+1} based on sign of expression.
+template<typename T> constexpr T sign(const T& e)        { return e>=T{0} ? T{1} : T{-1}; }
 
-// Returns { T(-1), T(0), T(+1) } based on sign of expression.
-template<typename T> constexpr T signz(const T& e)       { return e>T(0) ? T(1) : e<T(0) ? T(-1) : T(0); }
+// Returns { T{-1}, T{0}, T{+1} } based on sign of expression.
+template<typename T> constexpr T signz(const T& e)       { return e>T{0} ? T{1} : e<T{0} ? T{-1} : T{0}; }
 
 // Returns a value times itself.
 template<typename T> constexpr T square(const T& e)      { return e*e; }
@@ -701,12 +701,12 @@ template<typename T> class Range {
         bool operator==(const type& rhs) const  { return _v==rhs._v; }
         bool operator!=(const type& rhs) const  { return !(*this==rhs); }
         T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
-        type& operator++()                      { ASSERTXX(_v<_ub); _v += T(1); return *this; }
+        type& operator++()                      { ASSERTXX(_v<_ub); _v += T{1}; return *this; }
      private:
         T _v, _ub;
     };
  public:
-    Range(T ub)                                 : Range(T(0), ub) { }
+    Range(T ub)                                 : Range(T{0}, ub) { }
     Range(T lb, T ub)                           : _lb(min(lb, ub)), _ub(ub) { }
     Iterator begin() const                      { return Iterator(_lb, _ub); }
     Iterator end() const                        { return Iterator(_ub, _ub); }

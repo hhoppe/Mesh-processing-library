@@ -513,24 +513,24 @@ template<int D, typename T> Grid<D+1,T> increase_grid_rank(Grid<D,T>&& grid) {
 namespace details {
 template<int D, typename T> struct nested_list_dims {
     Vec<int,D> operator()(nested_initializer_list_t<D,T> l) const {
-        Vec<int,D> dims; dims[0] = int(l.size()); assertx(dims[0]>0);
+        Vec<int,D> dims; dims[0] = narrow_cast<int>(l.size()); assertx(dims[0]>0);
         dims.template segment<D-1>(1) = nested_list_dims<D-1,T>()(l.begin()[0]);
         return dims;
     }
 };
 template<typename T> struct nested_list_dims<1,T> {
-    Vec<int,1> operator()(std::initializer_list<T> l) const { return V(int(l.size())); }
+    Vec<int,1> operator()(std::initializer_list<T> l) const { return V(narrow_cast<int>(l.size())); }
 };
 
 template<int D, typename T> struct nested_list_retrieve {
     void operator()(GridView<D,T> grid, nested_initializer_list_t<D,T> l) const {
-        assertx(grid.dim(0)==int(l.size()));
-        for_int(i, int(l.size()))
+        assertx(grid.dim(0)==narrow_cast<int>(l.size()));
+        for_int(i, narrow_cast<int>(l.size()))
             nested_list_retrieve<D-1,T>()(grid[i], l.begin()[i]);
     }
     void operator()(ArrayView<T> grid, nested_initializer_list_t<1,T> l) const { // ArrayView<T>!=GridView<1,T>
-        assertx(grid.num()==int(l.size()));
-        for_int(i, int(l.size())) grid[i] = l.begin()[i];
+        assertx(grid.num()==narrow_cast<int>(l.size()));
+        for_int(i, narrow_cast<int>(l.size())) grid[i] = l.begin()[i];
     }
 };
 template<typename T> struct nested_list_retrieve<0,T> {

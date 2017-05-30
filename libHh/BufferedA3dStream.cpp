@@ -85,13 +85,13 @@ void WBufferedA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
         _buf.put(f[0]); _buf.put(f[1]); _buf.put(f[2]);
     } else {
         ssform(_stmp, "%c %g %g %g\n", ctype, f[0], f[1], f[2]);
-        _buf.put(_stmp.c_str(), int(_stmp.size()));
+        _buf.put(_stmp.c_str(), narrow_cast<int>(_stmp.size()));
     }
 }
 
 void WBufferedA3dStream::output_comment(const string& s) {
     _buf.put("#", 1);
-    _buf.put(s.c_str(), int(s.size()));
+    _buf.put(s.c_str(), narrow_cast<int>(s.size()));
     _buf.put("\n", 1);
 }
 

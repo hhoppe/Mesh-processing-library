@@ -1170,7 +1170,7 @@ void HB::draw_row_col_text(const Vec2<int>& yx, const string& s) {
     auto fdims = HB::get_font_dims();
     hw.draw_text(V((yx[0]<0 ? win_dims[0]+yx[0]*fdims[0] :
                     yx[0]*fdims[0]),
-                   (yx[1]==INT_MAX ? (win_dims[1]-int(s.size())*fdims[1])/2 :
+                   (yx[1]==INT_MAX ? (win_dims[1]-narrow_cast<int>(s.size())*fdims[1])/2 :
                     yx[1]<0       ? win_dims[1]+yx[1]*fdims[1]-2 :
                     yx[1]*fdims[1]+2)),
                  s);

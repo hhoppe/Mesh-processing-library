@@ -86,7 +86,8 @@ string timing_host() {
                     while (*p==' ') p++;           // skip initial whitespace (optional)
                     while (!std::isdigit(*p)) p++; // go right to CPU speed
                     rev = p;
-                    for_int(i, int(rev.size())) { if (rev[i]==' ') rev[i] = '_'; } // replace spaces by '_'
+                    // replace spaces by '_'
+                    for_int(i, narrow_cast<int>(rev.size())) { if (rev[i]==' ') rev[i] = '_'; }
                 }
             }
             assertx(!RegCloseKey(hkey));
@@ -215,11 +216,11 @@ void Timer::terminate() {
 #if !defined(HH_NO_TIMERS_CLASS)
     if (Timers* ptimers = g_ptimers.get()) {
         bool is_new; int i;
-        // i = ptimers->_map.enter(_name, int(ptimers->_vec_timer_info.size()), is_new); // for hh::Map
+        // i = ptimers->_map.enter(_name, narrow_cast<int>(ptimers->_vec_timer_info.size()), is_new); // for hh::Map
         {
             using value_type = std::unordered_map<string,int>::value_type;
             // Note: not thread-safe.  (I assume that the timers are created outside multi-threading sections.)
-            auto p = ptimers->_map.insert(value_type(_name, int(ptimers->_vec_timer_info.size())));
+            auto p = ptimers->_map.insert(value_type(_name, narrow_cast<int>(ptimers->_vec_timer_info.size())));
             is_new = p.second; i = p.first->second;
         }
         if (is_new) {

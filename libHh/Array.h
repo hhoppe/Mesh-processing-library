@@ -43,12 +43,10 @@ template<typename T> class CArrayView {
  public:
     CArrayView(const T* a, int n)               : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n>=0); }
     CArrayView(const type& a)                   = default;
-    CArrayView(std::initializer_list<T> l)      : CArrayView(l.begin(), int(l.size())) { }
-    template<size_t n> CArrayView(const T(&a)[n]) : CArrayView(a, int(n)) { } // for: const T a[n];
-    template<size_t n> CArrayView(T(&a)[n])       : CArrayView(a, int(n)) { } // for: T a[n];
+    CArrayView(std::initializer_list<T> l)      : CArrayView(l.begin(), narrow_cast<int>(l.size())) { }
+    template<size_t n> CArrayView(const T(&a)[n]) : CArrayView(a, narrow_cast<int>(n)) { } // for: const T a[n];
+    template<size_t n> CArrayView(T(&a)[n])       : CArrayView(a, narrow_cast<int>(n)) { } // for: T a[n];
     // template<int n> CArrayView(const Vec<T,n>&); // implemented as conversion operator in Vec
-    // CArrayView(const std::vector<T>& a) : _a(a.size() ? const_cast<T*>(a.data()) : nullptr), _n(int(a.size())) { }
-    // template<size_t n> CArrayView(const std::array<T,n>& a) : CArrayView(a.data(), int(n)) { }
     template<typename T2> friend bool same_size(type ar1, CArrayView<T2> ar2) { return ar1.num()==ar2.num(); }
     void reinit(type a)                         { *this = a; }
     int num() const                             { return _n; }
@@ -142,10 +140,10 @@ template<typename T> CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e,
 template<typename T> ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
 
 // Construct a CArrayView<T> using a bounded C-array; for use on arguments to help template function deduction.
-template<typename T, size_t n> CArrayView<T> ArView(const T(&a)[n]) { return CArrayView<T>(a, int(n)); }
+template<typename T, size_t n> CArrayView<T> ArView(const T(&a)[n]) { return CArrayView<T>(a, narrow_cast<int>(n)); }
 
 // Construct an ArrayView<T> using a bounded C-array; for use on arguments to help template function deduction.
-template<typename T, size_t n> ArrayView<T> ArView(T(&a)[n]) { return ArrayView<T>(a, int(n)); }
+template<typename T, size_t n> ArrayView<T> ArView(T(&a)[n]) { return ArrayView<T>(a, narrow_cast<int>(n)); }
 
 // Determine if two views have any overlap (to avoid aliasing issues).
 template<typename T> bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
@@ -210,7 +208,7 @@ template<typename T> class Array : public ArrayView<T> {
     using base::_a; using base::_n;
     int _cap {0};
     void set_capacity(int ncap);
-    void grow_to_at_least(int n)        { set_capacity(max(_n+int(_n/2)+3, n)); }
+    void grow_to_at_least(int n)        { set_capacity(max(_n+(_n/2)+3, n)); }
     void insert_i(int i, int n)         { add(n); for (int j = _n-n-1; j>=i; --j) _a[j+n] = std::move(_a[j]); }
     void erase_i(int i, int n)          { for_intL(j, i, _n-n) { _a[j] = std::move(_a[j+n]); } sub(n); }
     using base::reinit;         // hide it

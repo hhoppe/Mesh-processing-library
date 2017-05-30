@@ -178,7 +178,7 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3) {
 namespace {
 
 template<typename T> T my_atan2(T y, T x) {
-    return !y && !x ? T(0) : atan2(y, x);
+    return !y && !x ? T{0} : atan2(y, x);
 }
 
 } // namespace

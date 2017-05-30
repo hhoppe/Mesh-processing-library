@@ -91,9 +91,9 @@ class ParseArgs : public Args {
     void p(string str, float* argp,  int narg,  string doc = "");
     void p(string str, double* argp, int narg,  string doc = "");
     template<typename T, int narg>
-    void p(string str, Vec<T,narg>& arg,     string doc = "") { p(str, arg.data(), int(narg), doc); }
+    void p(string str, Vec<T,narg>& arg,        string doc = "") { p(str, arg.data(), narrow_cast<int>(narg), doc); }
     template<typename T, size_t narg>
-    void p(string str, T(&arg)[narg],           string doc = "") { p(str, arg, int(narg), doc); }
+    void p(string str, T(&arg)[narg],           string doc = "") { p(str, arg, narrow_cast<int>(narg), doc); }
     void c(string str = "",                     string doc = ""); // add a comment in the options list
     void p(string str, PARSEF parsef,           string doc = ""); // parsing function taking args
     void p(string str, PARSEF0 parsef0,         string doc = ""); // parsing function without args

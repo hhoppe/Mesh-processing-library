@@ -19,8 +19,8 @@ namespace hh {
 class Spatial : noncopyable { // abstract class
     static constexpr int k_max_gn = 1023; // 10 bits per coordinate
  public:
-    explicit Spatial(int gn)                    : _gn(gn) { assertx(_gn<=k_max_gn); _gni = 1.f/float(_gn); }
-    virtual ~Spatial()                          { } // not =default because gcc "looser throw specified" in derived
+    explicit Spatial(int gn)            : _gn(gn) { assertx(_gn<=k_max_gn); _gni = 1.f/static_cast<float>(_gn); }
+    virtual ~Spatial()                  { } // not =default because gcc "looser throw specified" in derived
     virtual void clear() = 0;
  protected:
     friend class BSpatialSearch;
@@ -139,7 +139,7 @@ inline int Spatial::float_to_index(float fd) const {
     float f = fd;
     if (f<0.f) { ASSERTX(f>-.01f); f = 0.f; }
     if (f>=.99999f) { ASSERTX(f<1.01f); f = .99999f; }
-    return int(f*_gn);
+    return static_cast<int>(f*_gn);
 }
 
 inline Bbox Spatial::indices_to_bbox(const Ind& ci) const {
@@ -239,7 +239,7 @@ void ObjectSpatial<Approx2,Exact2>::search_segment(const Point& p1, const Point&
     }
     float maxe = max_abs_element(p2-p1);
     int ni = float_to_index(maxe)+2; // 2 there just to be safe
-    Vector v = (p2-p1)*((1.f+1e-7f)/float(ni));
+    Vector v = (p2-p1)*((1.f+1e-7f)/static_cast<float>(ni));
     Point p = p1;
     Ind pci = point_to_indices(p);
     int pen = -1;

@@ -281,12 +281,12 @@ void compute_gdloop_aux2(CGridView<3,Pixel> video, CMatrixView<int> mat_start, C
                 const int fm1 = f>0 ? f-1 : nnf-1;
                 const int fp1 = f<nnf-1 ? f+1 : 0;
                 Array<EType> apix0(nx), apix1(nx), asy0(nx), asy1(nx), asx(nx+1);
-                asx[0] = asx[nx] = EType(0);
+                asx[0] = asx[nx] = EType{0};
                 const int xwidth = 0 ? 600 : 100000; // breaking up into swaths is actually detrimental
                 for (BoundedIntervals bi(nx, xwidth); *bi; ++bi)  {
                     int xl = bi.l(), xu = bi.u();
                     for_intL(x, xl, min(xu+1, nx)) { apix0[x] = MG::get(video(grid_frameif(0, x), 0, x), z); }
-                    for_intL(x, xl, xu) { asy0[x] = EType(0); }
+                    for_intL(x, xl, xu) { asy0[x] = EType{0}; }
                     for_int(y, ny) { // update [y][x]; apix0 has [y]; asy0 has [y]-[y-1]
                         int y1 = y+1;
                         if (y1<ny) apix1[xl] = MG::get(video(grid_frameif(y1, xl), y1, xl), z);
@@ -312,7 +312,7 @@ void compute_gdloop_aux2(CGridView<3,Pixel> video, CMatrixView<int> mat_start, C
                                            (apix1[x]-MG::get(video(fi10, y, x), z)+
                                             MG::get(video(fi, y1, x), z)-apix0[x])*.5f);
                             } else {
-                                asy1[x] = EType(0);
+                                asy1[x] = EType{0};
                             }
                             // update pixel [y][x] using asy0, asy1, asx, apix0
                             EType pixv = apix0[x];
@@ -438,7 +438,7 @@ void solve_using_offsets_aux(CGridView<3,Pixel> video, CMatrixView<int> mat_star
             parallel_for_int(f, nnf) {
                 CMatrixView<short> grid_frameif = grid_framei[f];
                 MatrixView<EType> mrhs = multigrid.rhs()[f];
-                fill(multigrid.initial_estimate()[f], EType(0));
+                fill(multigrid.initial_estimate()[f], EType{0});
                 const int fm1 = f>0 ? f-1 : nnf-1;
                 const int fp1 = f<nnf-1 ? f+1 : 0;
                 for_int(y, ny) for_int(x, nx) {
@@ -477,8 +477,8 @@ void solve_using_offsets_aux(CGridView<3,Pixel> video, CMatrixView<int> mat_star
             }
         } else {                // Speed up the above by instead traversing just the discontinuities.
             // This initialization of mest is actually slower than computing the rhs!
-            parallel_for_int(f, nnf) { fill(multigrid.initial_estimate()[f], EType(0)); } // OPT:fill
-            parallel_for_int(f, nnf) { fill(multigrid.rhs()[f], EType(0)); }
+            parallel_for_int(f, nnf) { fill(multigrid.initial_estimate()[f], EType{0}); } // OPT:fill
+            parallel_for_int(f, nnf) { fill(multigrid.rhs()[f], EType{0}); }
             // Find temporal discontinuities.
             const int nphase = nnf%2 ? 3 : 2; // run in phases to avoid race condition
             for_int(iphase, nphase) {
@@ -540,7 +540,7 @@ void solve_using_offsets_aux(CGridView<3,Pixel> video, CMatrixView<int> mat_star
             }
         }
         HH_TIMER_END(__setup_rhs);
-        if (0) multigrid.set_desired_mean(EType(0));      // use screening_weight instead
+        if (0) multigrid.set_desired_mean(EType{0});      // use screening_weight instead
         multigrid.set_screening_weight(screening_weight); // small errors on brink2s loop with screening==0
         if (1) multigrid.set_num_vcycles(1);
         if (verbose>=2) multigrid.set_verbose(true);

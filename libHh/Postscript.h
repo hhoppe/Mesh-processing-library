@@ -71,7 +71,7 @@ class Postscript : noncopyable {
         constexpr float k_py = 10.5f;
         float rpx = !landscape ? k_px : k_py;
         float rpy = !landscape ? k_py : k_px;
-        Frame f = (rpy/rpx>float(_nypix)/_nxpix
+        Frame f = (rpy/rpx>static_cast<float>(_nypix)/_nxpix
                    ? (Frame::translation(V(0.f, (rpy/rpx*_nxpix/_nypix-1.f)*k_max, 0.f))*
                       Frame::scaling(V(72.f*rpx/(k_max*2), 72.f*rpx/(k_max*2.f)*_nypix/_nxpix, 1.f)))
                    : (Frame::translation(V((rpx/rpy*_nypix/_nxpix-1.f)*k_max, 0.f, 0.f))*
@@ -161,10 +161,10 @@ class Postscript : noncopyable {
         _os << px << " " << py << " p\n";
     }
     void convert(float x, float y, int& px, int& py) {
-        px = k_max+int(k_max*x+.5f);
-        py = k_max+int(k_max*y+.5f);
-        Point p = Point(float(px), float(py), 0.f)*_ctm;
-        int ix = int(p[0]+.5f), iy = int(p[1]+.5f);
+        px = k_max+static_cast<int>(k_max*x+.5f);
+        py = k_max+static_cast<int>(k_max*y+.5f);
+        Point p = Point(static_cast<float>(px), static_cast<float>(py), 0.f)*_ctm;
+        int ix = static_cast<int>(p[0]+.5f), iy = static_cast<int>(p[1]+.5f);
         _bbx0 = min(_bbx0, ix); _bbx1 = max(_bbx1, ix);
         _bby0 = min(_bby0, iy); _bby1 = max(_bby1, iy);
     }

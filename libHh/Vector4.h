@@ -333,10 +333,10 @@ inline Vector4 to_Vector4_raw(const uchar p[4]) {
     return Vector4(p[0], p[1], p[2], p[3]);
 }
 inline void Vector4::raw_to_byte4(uchar p[4]) const {
-    for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); p[c] = uchar(_c[c]); }
+    for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); p[c] = static_cast<uchar>(_c[c]); }
 }
 inline void Vector4::norm_to_byte4(uchar p[4]) const {
-    for_int(c, 4) { p[c] = uchar(clamp(_c[c], 0.f, 1.f)*255.f+.5f); }
+    for_int(c, 4) { p[c] = static_cast<uchar>(clamp(_c[c], 0.f, 1.f)*255.f+.5f); }
 }
 
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)

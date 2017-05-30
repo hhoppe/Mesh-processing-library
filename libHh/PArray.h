@@ -125,7 +125,7 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
             _a = na; _cap = ncap;
         }
     }
-    void grow_to_at_least(int n)        { set_capacity(max(_n+int(_n/2)+3, n)); }
+    void grow_to_at_least(int n)        { set_capacity(max(_n+(_n/2)+3, n)); }
     void insert_i(int i, int n)         { add(n); for (int j = _n-n-1; j>=i; --j) _a[j+n] = std::move(_a[j]); }
     void erase_i(int i, int n)          { for_intL(j, i, _n-n) { _a[j] = std::move(_a[j+n]); } sub(n); }
     void ok() const {

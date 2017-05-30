@@ -30,7 +30,7 @@ template<typename T> class Queue {
     void insert_first(const T& e)               { _dq.push_front(e); }
     void insert_first(T&& e)                    { _dq.push_front(std::move(e)); }
     bool empty() const                          { return _dq.empty(); }
-    int length() const                          { return int(_dq.size()); }
+    int length() const                          { return narrow_cast<int>(_dq.size()); }
     bool contains(const T& e) const             { for (const T& v : *this) { if (v==e) return true; } return false; }
     void add_to_end(Queue<T>& q)                { while (!q.empty()) enqueue(q.dequeue()); }
     using value_type = T;

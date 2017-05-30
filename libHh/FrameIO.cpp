@@ -141,7 +141,7 @@ bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin) {
         b.put(zoom);
     } else {
         string s = create_string(f, obn, zoom);
-        b.put(s.c_str(), int(s.size()));
+        b.put(s.c_str(), narrow_cast<int>(s.size()));
     }
     return true;
 }

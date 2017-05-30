@@ -24,7 +24,7 @@ struct Pixel : Vec4<uchar> {
     static Pixel pink()                         { return Pixel(255, 150, 150); }
     static Pixel yellow()                       { return Pixel(255, 255, 0); }
     friend std::ostream& operator<<(std::ostream& os, const Pixel& p) { // otherwise prints uchars
-        return os << "Pixel(" << int(p[0]) << ", " << int(p[1]) << ", " << int(p[2]) << ", " << int(p[3]) << ")";
+        return os << "Pixel(" << int{p[0]} << ", " << int{p[1]} << ", " << int{p[2]} << ", " << int{p[3]} << ")";
     }
 };
 

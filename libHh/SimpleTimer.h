@@ -83,7 +83,7 @@ inline double SimpleTimer::get_seconds_per_counter() {
     static double v = 0.;
     if (!v) {
         LARGE_INTEGER l; QueryPerformanceFrequency(&l);
-        v = 1./double(l.QuadPart);
+        v = 1./static_cast<double>(l.QuadPart);
     }
     return v;
 #else

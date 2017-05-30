@@ -39,7 +39,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
         USE_GL_EXT(glValidateProgram, PFNGLVALIDATEPROGRAMPROC);
         USE_GL_EXT(glIsProgram, PFNGLISPROGRAMPROC);
         fragment_shader_id = assertx(glCreateShader(GL_FRAGMENT_SHADER));
-        const GLint len = GLint(fragment_shader.size());
+        const GLint len = narrow_cast<GLint>(fragment_shader.size());
         const char* pprogram = fragment_shader.c_str();
         glShaderSource(fragment_shader_id, 1, &pprogram, &len);
         glCompileShader(fragment_shader_id); {
@@ -152,7 +152,7 @@ struct NormalMapping_frag1 final : NormalMapping {
         USE_GL_EXT(glIsProgramARB, PFNGLISPROGRAMARBPROC);
         glGenProgramsARB(1, &program_id); assertx(program_id);
         // Setup the program string
-        GLuint len = int(fragment_shader.size());
+        GLuint len = narrow_cast<int>(fragment_shader.size());
         glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
         glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len,
                            reinterpret_cast<const GLubyte*>(fragment_shader.c_str()));

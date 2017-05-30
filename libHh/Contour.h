@@ -167,7 +167,7 @@ struct Contour3D_NoBorder { // special type to indicate that no border ouput is 
 };
 
 struct VertexData3DMesh {
-    Vec3<Vertex> _verts {ntimes<3>(Vertex(nullptr))};
+    Vec3<Vertex> _verts {ntimes<3>(implicit_cast<Vertex>(nullptr))};
 };
 
 template<typename VertexData = Vec0<int>,
@@ -208,19 +208,21 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     }
     IPoint decode(unsigned en) const {
         static_assert(k_max_gn<=1024, "");
-        return IPoint(int(en>>20), int((en>>10)&((1u<<10)-1)), int(en&((1u<<10)-1)));
+        return IPoint(narrow_cast<int>(en>>20),
+                      narrow_cast<int>((en>>10)&((1u<<10)-1)),
+                      narrow_cast<int>(en&((1u<<10)-1)));
     }
     void check_ok()                             { /* assertx(!(_pmesh && _contour)); */ }
     int march_from_i(const DPoint& startp) {
         check_ok();
         for_int(d, D) ASSERTX(startp[d]>=0.f && startp[d]<=1.f);
-        IPoint cc; for_int(d, D) { cc[d] = min(int(startp[d]*_gn), _gn-1); }
+        IPoint cc; for_int(d, D) { cc[d] = min(static_cast<int>(startp[d]*_gn), _gn-1); }
         return march_from_aux(cc);
     }
     int march_near_i(const DPoint& startp) {
         check_ok();
         for_int(d, D) ASSERTX(startp[d]>=0.f && startp[d]<=1.f);
-        IPoint cc; for_int(d, D) { cc[d] = min(int(startp[d]*_gn), _gn-1); }
+        IPoint cc; for_int(d, D) { cc[d] = min(static_cast<int>(startp[d]*_gn), _gn-1); }
         int ret = 0;
         IPoint ci;
         for_intL(i, -1, 2) {
@@ -522,19 +524,19 @@ class Contour2D : public ContourBase<2> {
     }
     IPoint decode(unsigned en) const {
         static_assert(k_max_gn<=65536, "");
-        return IPoint(int(en>>16), int(en&((1u<<16)-1)));
+        return IPoint(narrow_cast<int>(en>>16), narrow_cast<int>(en&((1u<<16)-1)));
     }
     void check_ok()                             { }
     int march_from_i(const DPoint& startp) {
         check_ok();
         for_int(d, D) ASSERTX(startp[d]>=0.f && startp[d]<=1.f);
-        IPoint cc; for_int(d, D) { cc[d] = min(int(startp[d]*_gn), _gn-1); }
+        IPoint cc; for_int(d, D) { cc[d] = min(static_cast<int>(startp[d]*_gn), _gn-1); }
         return march_from_aux(cc);
     }
     int march_near_i(const DPoint& startp) {
         check_ok();
         for_int(d, D) ASSERTX(startp[d]>=0.f && startp[d]<=1.f);
-        IPoint cc; for_int(d, D) { cc[d] = min(int(startp[d]*_gn), _gn-1); }
+        IPoint cc; for_int(d, D) { cc[d] = min(static_cast<int>(startp[d]*_gn), _gn-1); }
         int ret = 0;
         IPoint ci;
         for_intL(i, -1, 2) {

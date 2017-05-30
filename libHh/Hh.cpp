@@ -1074,11 +1074,11 @@ string get_user_name() {
 #if defined(_WIN32)
     {
 #if !defined(HH_NO_UTF8)
-        std::vector<wchar_t> buf(2000); unsigned long size = unsigned(buf.size());
+        std::vector<wchar_t> buf(2000); unsigned long size = narrow_cast<unsigned>(buf.size());
         assertx(GetUserNameW(buf.data(), &size));
         if (buf[0]) return narrow(buf.data());
 #else
-        std::vector<char> buf(2000); unsigned long size = unsigned(buf.size());
+        std::vector<char> buf(2000); unsigned long size = narrow_cast<unsigned>(buf.size());
         assertx(GetUserNameA(buf.data(), &size));
         if (buf[0]) return buf.data();
 #endif
@@ -1202,9 +1202,9 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 0)) void vssform(string& str, c
         va_copy(ap2, ap);
         int n = vsnprintf(&str[0], str.size(), format, ap2); // string::data() returns const char*
         va_end(ap2);
-        if (promised) assertx(n==int(str.size())-1);
+        if (promised) assertx(n==narrow_cast<int>(str.size())-1);
         if (n>=0) {
-            if (n<int(str.size())) { str.resize(n); return; } // it fit
+            if (n<narrow_cast<int>(str.size())) { str.resize(n); return; } // it fit
             str.resize(n+1);
             promised = true;
         } else {

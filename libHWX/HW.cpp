@@ -795,7 +795,7 @@ void HW::draw_text_internal(const Vec2<int>& yx, const string& s) {
     if (_oglx) {
         draw_text_ogl(yx, s);
     } else {
-        XDrawImageString(_display, _draw, _gc, yx[1], yx[0], s.c_str(), int(s.size()));
+        XDrawImageString(_display, _draw, _gc, yx[1], yx[0], s.c_str(), narrow_cast<int>(s.size()));
     }
 }
 

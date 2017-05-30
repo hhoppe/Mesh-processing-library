@@ -10,7 +10,7 @@ namespace hh {
 
 inline int smallest_factor_gt1(int i) {
     assertx(i>1);
-    int isqr = int(sqrt(float(i)));
+    int isqr = static_cast<int>(sqrt(static_cast<float>(i)));
     for_intL(j, 2, isqr+1) {
         if (i%j==0) return j;
     }

@@ -64,7 +64,7 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
         auto i = _m.find(k); if (i==end()) return V(); V vo = i->second; i->second = v; return vo;
     }
     // omit "V replace(const K& k, V&& v)" because v could be lost if !present
-    int num() const                             { return int(_m.size()); }
+    int num() const                             { return narrow_cast<int>(_m.size()); }
     size_t size() const                         { return _m.size(); }
     bool empty() const                          { return _m.empty(); }
     V& operator[](const K& k)                   { return _m[k]; } // introduced for Combination

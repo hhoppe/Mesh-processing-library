@@ -168,21 +168,28 @@ inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     if (!s.size()) return;
     // use uchar{127} to render all non-ascii characters.
     auto func_is_nonascii = [](const string& ss) {
-        for_size_t(i, ss.size()) { if (!(uchar(ss[i])>=32 && uchar(ss[i])<=127)) return true; }
+        for_size_t(i, ss.size()) {
+            uchar ch = static_cast<uchar>(ss[i]);
+            if (!(ch>=32 && ch<=127)) return true;
+        }
         return false;
     };
     if (func_is_nonascii(s)) {
         Warning("Non-ASCII characters present in string will not be displayed properly in window");
-        string s2; for_size_t(i, s.size()) { s2 += uchar(uchar(s[i])>=32 && uchar(s[i])<=126 ? s[i] : 127); }
+        string s2;
+        for_size_t(i, s.size()) {
+            uchar ch = static_cast<uchar>(s[i]);
+            s2 += static_cast<uchar>(ch>=32 && ch<=126 ? s[i] : 127);
+        }
         return draw_text(yx, s2, style, back_color, wrap);
     }
     if (wrap) {
         assertx(_font_dims[1]>0); assertx(_win_dims[1]>0);
-        if (yx[1]+int(s.size())*_font_dims[1]>_win_dims[1]) {
+        if (yx[1]+narrow_cast<int>(s.size())*_font_dims[1]>_win_dims[1]) {
             int nch = (_win_dims[1]-yx[1])/_font_dims[1];
             if (nch>0) {
                 draw_text(yx, s.substr(0, nch), style, back_color, wrap);
-                assertx(nch<int(s.size()));
+                assertx(nch<narrow_cast<int>(s.size()));
                 draw_text(V(yx[0]+_font_dims[0], 0), s.substr(nch), style, back_color, wrap);
             }
             return;
@@ -197,7 +204,7 @@ inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     } else if (style==EStyle::boxed) {
         set_color(back_color);
         fill_rectangle(convert<float>(yx+V(4, -2)),
-                       convert<float>(yx+_font_dims*V(1, int(s.size()))+V(4, 2)));
+                       convert<float>(yx+_font_dims*V(1, narrow_cast<int>(s.size()))+V(4, 2)));
         set_color_to_foreground();
     }
     draw_text_internal(yx, s);
@@ -318,7 +325,7 @@ inline void HWbase::query_keypress(string s) {
         _query = false;
         _query_success = true;
         redraw_later();
-    } else if (s.size()>1 || !(uchar(ch)>=32 && uchar(ch)<=127)) {
+    } else if (s.size()>1 || !(static_cast<uchar>(ch)>=32 && static_cast<uchar>(ch)<=127)) {
         beep();
     } else {
         _query_buffer += ch;
@@ -344,7 +351,7 @@ inline bool HWbase::query(const Vec2<int>& yx, string prompt, string& buffer) {
 inline bool HWbase::query(const Vec2<int>& yx, string prompt, float& f) {
     string s = sform("%g", f);
     bool success = query(yx, std::move(prompt), s);
-    if (success) f = float(atof(s.c_str()));
+    if (success) f = static_cast<float>(atof(s.c_str()));
     return success;
 }
 
@@ -384,7 +391,7 @@ inline uchar parse_hexa_nibble(char ch) {
     } else if (ch>='a' && ch<='f') {
         return narrow_cast<uchar>(10+(ch-'a'));
     } else {
-        assertnever(sform("Character '%c' is not hexadecimal (int(ch)=%d)", ch, int(ch)));
+        assertnever(sform("Character '%c' is not hexadecimal (int{ch}=%d)", ch, int{ch}));
     }
 }
 
@@ -531,10 +538,10 @@ inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
 #endif
     if (glWindowPos2i) {
         glWindowPos2i(yx[1], _win_dims[0]-yx[0]-_font_dims[0]); // reverse y; not clip-tested, so raster position valid
-        glCallLists(int(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
+        glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
     } else {
         glRasterPos2i(yx[1], yx[0]+_font_dims[0]); // clipped, so raster position may be invalid
-        glCallLists(int(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
+        glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
     }
 }
 

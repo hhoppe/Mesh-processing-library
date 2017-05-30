@@ -68,7 +68,7 @@ inline bool character_requires_quoting(char ch) {
 }
 
 bool string_requires_quoting(const string& s) {
-    for_int(i, int(s.size())) {
+    for_int(i, narrow_cast<int>(s.size())) {
         if (character_requires_quoting(s[i])) return true;
     }
     return false;
@@ -525,7 +525,7 @@ bool recycle_path(const string& pathname) {
     assertx(is_path_absolute(pathname));
     std::wstring wfilenames; {
         string name = pathname;
-        for_int(i, int(name.size())) { if (name[i]=='/') name[i] = '\\'; }
+        for_int(i, narrow_cast<int>(name.size())) { if (name[i]=='/') name[i] = '\\'; }
         wfilenames = widen(name);
         wfilenames.push_back(0); // for double-null termination
     }
@@ -583,7 +583,7 @@ TmpFile::~TmpFile() {
 // Backslash all non-ordinary characters.
 string quote_arg_for_sh(const string& s) {
     std::ostringstream oss;
-    for_int(i, int(s.size())) {
+    for_int(i, narrow_cast<int>(s.size())) {
         char ch = s[i];
         if (character_requires_quoting(s[i])) oss << '\\';
         oss << ch;
@@ -602,7 +602,7 @@ static string windows_spawn_quote(const string& s) {
     if (!string_requires_quoting(s)) return s;
     std::ostringstream oss;
     oss << '"';
-    for_int(i, int(s.size())) {
+    for_int(i, narrow_cast<int>(s.size())) {
         char ch = s[i];
         if (ch=='"' || ch=='\\') { // for both " and \ , move outside double-quotes and backslash it
             oss << '"' << '\\' << ch << '"';
@@ -620,7 +620,7 @@ static string cygwin_spawn_quote(const string& s) {
     if (!string_requires_quoting(s)) return s;
     std::ostringstream oss;
     oss << '"';
-    for_int(i, int(s.size())) {
+    for_int(i, narrow_cast<int>(s.size())) {
         char ch = s[i];
         if (ch=='"' || ch=='\\') { // for both " and \ , backslash it (without moving it outside double-quotes)
             oss << '\\' << ch;

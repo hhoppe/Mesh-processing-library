@@ -59,7 +59,7 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
     // omit "bool add(T&& e)" because e could be lost if !is_new
     bool remove(const T& e)                     { return remove_i(e); } // ret: was_found
     bool contains(const T& e) const             { return _s.find(e)!=end(); }
-    int num() const                             { return int(_s.size()); }
+    int num() const                             { return narrow_cast<int>(_s.size()); }
     size_t size() const                         { return _s.size(); }
     bool empty() const                          { return _s.empty(); }
     const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
@@ -75,7 +75,7 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
     const_iterator end() const                  { return _s.end(); }
  private:
     base _s;
-    static const T& def()                       { static const T k_default = T(); return k_default; }
+    static const T& def()                       { static const T k_default = T{}; return k_default; }
     const T& retrieve_i(const T& e, bool& present) const {
         auto i = _s.find(e); present = i!=end(); return present ? *i : def();
     }

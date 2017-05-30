@@ -26,7 +26,7 @@ template<typename T, typename Less = std::less<T> > class STree : noncopyable {
  public:
     void clear()                                { _s.clear(); }
     bool empty() const                          { return _s.empty(); }
-    // To avoid ambiguity, e should not equal T().
+    // To avoid ambiguity, e should not equal T{}.
     bool enter(const T& e)                      { auto p = _s.insert(e); return !!p.second; } // ret: is_new
     const T& retrieve(const T& e) const         { auto i = _s.find(e); return i!=end() ? *i : def(); } // or ret=T{}
     bool remove(const T& e)                     { return _s.erase(e)>0; }
@@ -45,7 +45,7 @@ template<typename T, typename Less = std::less<T> > class STree : noncopyable {
     const_iterator end() const                  { return _s.end(); }
  private:
     base _s;
-    static const T& def()                       { static const T k_default = T(); return k_default; }
+    static const T& def()                       { static const T k_default = T{}; return k_default; }
 };
 
 template<typename T> HH_DECLARE_OSTREAM_RANGE(STree<T>);

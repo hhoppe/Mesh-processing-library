@@ -316,7 +316,7 @@ void SRMesh::ogl_show_radii() {
         glRasterPos3fv(p.data());
         float radius = -get_radiusneg(v);
         string s = sform("%g", radius);
-        glCallLists(int(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
+        glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
     }
 }
 

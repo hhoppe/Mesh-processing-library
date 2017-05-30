@@ -3185,7 +3185,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                     app_draw_text(yx, sform("%02X", pix[c]), k_no_text_wrap);
                 }
                 string s = sform("%d,%d", tex_yx[1], tex_yx[0]);
-                auto yx = win_yx + V(yxsep[0]/2, -fdims[1]*int(s.size())/2) + V(-3, -1);
+                auto yx = win_yx + V(yxsep[0]/2, -fdims[1]*narrow_cast<int>(s.size())/2) + V(-3, -1);
                 app_draw_text(yx, s, k_no_text_wrap);
             } else {
                 for_int(c, 4) {

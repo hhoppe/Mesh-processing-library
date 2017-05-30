@@ -54,7 +54,7 @@ template<typename T> class Sac : public BSac {
         int k = size;
         int align = alignof(T2);
         max_align = max(max_align, align);
-        k = int((k+align-1)/align)*align;
+        k = ((k+align-1)/align)*align;
         if (0) SHOW(type_name<T>(), type_name<T2>(), s, size, align, max_align, k);
         size = k+s;
         return k;

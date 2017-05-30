@@ -50,7 +50,7 @@ bool Args::check_char(const string& s) {
 
 bool Args::check_int(const string& s) {
     if (s.empty()) return false;
-    for_int(i, int(s.size())) {
+    for_int(i, narrow_cast<int>(s.size())) {
         char ch = s[i];
         if (i==0 && (ch=='-' || ch=='+')) continue;
         if (std::isdigit(ch)) continue;
@@ -294,7 +294,7 @@ void ParseArgs::iadd(option o) {
 auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
     option* omatch = nullptr;
     int nmatches = 0, minlfound = INT_MAX;
-    int ls = int(s.size());
+    int ls = narrow_cast<int>(s.size());
     for (option& o : _aroptions) {
         if (!o.parsef) continue;
         if (begins_with(o.str, "*") && (s[0]!='-' || skip_options)) {
@@ -307,9 +307,9 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
         }
         if (o.str[0]=='-' && skip_options) continue;
         if (o.str=="-" && s!="-") continue; // require exact match of "-"
-        int lo = int(o.str.size());
+        int lo = narrow_cast<int>(o.str.size());
         auto i = o.str.find('[');
-        int minfit = i!=string::npos ? int(i) : _disallow_prefixes ? int(o.str.size()) : 0;
+        int minfit = i!=string::npos ? narrow_cast<int>(i) : _disallow_prefixes ? narrow_cast<int>(o.str.size()) : 0;
         int nchar = clamp(ls, 2, lo);
         if (minfit) nchar = minfit;
         if (!o.str.compare(0, nchar, s, 0, nchar)) {
@@ -500,8 +500,11 @@ string ParseArgs::header() {
     string s = g_comment_prefix_string;
     for_int(i, 1+_args.num()) {
         const string& arg = !i ? _argv0 : _args[i-1];
-        len += int(arg.size())+1;
-        if (i && len>thresh_line_len) { s = s + "\n" + g_comment_prefix_string + " "; len = int(arg.size())+1; }
+        len += narrow_cast<int>(arg.size())+1;
+        if (i && len>thresh_line_len) {
+            s = s + "\n" + g_comment_prefix_string + " ";
+            len = narrow_cast<int>(arg.size())+1;
+        }
         s = s + " " + arg;
     }
     s = s + "\n";

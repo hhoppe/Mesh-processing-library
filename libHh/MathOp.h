@@ -59,10 +59,10 @@ inline int my_mod(int a, int b) {
 // Modulo operation on floating-point values.  (In contrast, std::fmod(a, b) returns negative remainders if a<0.f).
 template<typename T> T my_mod(T a, T b) {
     static_assert(std::is_floating_point<T>::value, "");
-    ASSERTX(b>T(0));
+    ASSERTX(b>T{0});
     T ret = std::fmod(a, b);
-    if (ret<T(0)) ret += b;
-    ASSERTX(ret>=T(0) && ret<b);
+    if (ret<T{0}) ret += b;
+    ASSERTX(ret>=T{0} && ret<b);
     return ret;
 }
 
@@ -72,7 +72,7 @@ float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
 
 // Evaluate a smooth-step function; x in [0, 1] -> ret: [0, 1]  (with zero derivatives at x==0 and x==1).
 template<typename T> constexpr T smooth_step(T x) {
-    static_assert(std::is_floating_point<T>::value, ""); return x * x * (T(3) - T(2) * x);
+    static_assert(std::is_floating_point<T>::value, ""); return x * x * (T{3} - T{2} * x);
 }
 
 // Compute fractional part (as in HLSL).
@@ -81,29 +81,30 @@ template<typename T> T frac(T f) {
 }
 
 // Evaluate a Gaussian function.
-template<typename T> T gaussian(T x, T sdv = T(1)) {
-    static_assert(std::is_floating_point<T>::value, ""); return exp(-square(x/sdv)/T(2))/(sqrt(T(D_TAU))*sdv);
+template<typename T> T gaussian(T x, T sdv = T{1}) {
+    static_assert(std::is_floating_point<T>::value, "");
+    return exp(-square(x/sdv)/T{2})/(sqrt(static_cast<T>(D_TAU))*sdv);
 }
 
 // Like std::acos() but prevent NaN's from appearing due to roundoff errors.
 // my_acos() is discouraged due to poor accuracy for small angles! see angle_between_unit_vectors().
 template<typename T> T my_acos(T a) {
-    return (a<T(-1) ? (assertw(a>T(-1.001f)), acos(T(-1))) :
-            a>T(+1) ? (assertw(a<T(+1.001f)), acos(T(+1))) :
+    return (a<T{-1} ? (assertw(a>T{-1.001f}), acos(T{-1})) :
+            a>T{+1} ? (assertw(a<T{+1.001f}), acos(T{+1})) :
             acos(a));
 }
 
 // Like std::asin() but prevent NaN's from appearing due to roundoff errors.
 template<typename T> T my_asin(T a) {
-    return (a<T(-1) ? (assertw(a>T(-1.001f)), asin(T(-1))) :
-            a>T(+1) ? (assertw(a<T(+1.001f)), asin(T(+1))) :
+    return (a<T{-1} ? (assertw(a>T{-1.001f}), asin(T{-1})) :
+            a>T{+1} ? (assertw(a<T{+1.001f}), asin(T{+1})) :
             asin(a));
 }
 
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.
 template<typename T> T my_sqrt(T a) {
     static_assert(std::is_floating_point<T>::value, "");
-    return a<T(0) ? (assertx(a>( sizeof(T)==sizeof(float) ? T(-1e-5) : T(-1e-10))), T(0)) : sqrt(a);
+    return a<T{0} ? (assertx(a>( sizeof(T)==sizeof(float) ? T{-1e-5f} : T{-1e-10f})), T{0}) : sqrt(a);
 }
 
 // Is the integer i an even power of two?
@@ -111,7 +112,7 @@ inline constexpr bool is_pow2(unsigned i) {
     return i>0 && (i&(i-1))==0;
 }
 
-// Fast version of int(floor(log2(x))).
+// Fast version of static_cast<int>(floor(log2(x))).
 inline int int_floor_log2(unsigned x) {
     int a = 0;
     while (x >>= 1) a++;

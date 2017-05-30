@@ -719,11 +719,11 @@ void do_makeloop(Args& args) {
             using EType = float;
             MultigridType multigrid(nvideo.dims()); {
                 HH_STIMER(__setup_rhs);
-                parallel_for_int(f, nf) { fill(multigrid.initial_estimate()[f], EType(0)); }
-                parallel_for_int(f, nf) { fill(multigrid.rhs()[f], EType(0)); }
+                parallel_for_int(f, nf) { fill(multigrid.initial_estimate()[f], EType{0}); }
+                parallel_for_int(f, nf) { fill(multigrid.rhs()[f], EType{0}); }
                 GridView<3,EType> mrhs = multigrid.rhs();
                 for_int(y, ny) for_int(x, nx) {
-                    int count = 0; EType change(0);
+                    int count = 0; EType change{0};
                     if (fend<video.nframes()) { count++; change += video(fend, y, x)[z] - video(fbeg, y, x)[z]; }
                     if (fbeg>0)               { count++; change += video(fend-1, y, x)[z] - video(fbeg-1, y, x)[z]; }
                     if (count==2) change *= .5f;

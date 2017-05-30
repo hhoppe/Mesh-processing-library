@@ -222,7 +222,7 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu
 template<int D> void convert(CGridView<D,uchar> gridu, GridView<D,float> gridf) {
     assertx(same_size(gridu, gridf));
     cond_parallel_for_size_t(gridu.size()*1, i, gridu.size()) {
-        float v = float(gridu.raster(i));
+        float v = static_cast<float>(gridu.raster(i));
         if (b_image_linear_filter) v = square(v);
         gridf.raster(i) = v;
     }
@@ -234,7 +234,7 @@ template<int D> void convert(CGridView<D,float> gridf, GridView<D,uchar> gridu) 
     cond_parallel_for_size_t(gridf.size()*1, i, gridf.size()) {
         float v = gridf.raster(i);
         if (b_image_linear_filter) v = sqrt(v);
-        gridu.raster(i) = clamp_to_uchar(int(v));
+        gridu.raster(i) = clamp_to_uchar(static_cast<int>(v));
     }
 }
 
@@ -416,12 +416,12 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
         Grid<D,T> ogrid; if (!no_constrained_optimization) ogrid = grid; // backup of original grid
         gr = grid;                                                       // no-op if gr.data()==grid.data()
         inverse_convolution(gr, filterbs);
-        for (T& e : gr) { e = T(.5f) + (e-T(.5f))*expand_value_range; } // shrink range
+        for (T& e : gr) { e = T{.5f} + (e-T{.5f})*expand_value_range; } // shrink range
         if (!no_constrained_optimization) {
             // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
             Vec<Bndrule,D> bndrules; for_int(d, D) bndrules[d] = filterbs[d].bndrule();
-            for (T& e : ogrid) { e = T(.5f) + (e-T(.5f))*expand_value_range; }
-            for (T& e : gr) { e = general_clamp(e, T(0.f), T(1.f)); }
+            for (T& e : ogrid) { e = T{.5f} + (e-T{.5f})*expand_value_range; }
+            for (T& e : gr) { e = general_clamp(e, T{0.f}, T{1.f}); }
             for_int(iter, 5) {  // 10 Gauss-Seidel iterations a tiny bit better; 100 no different
                 for (const auto& u : range(dims)) {
                     // if (gr[u]==0.f || gr[u]==1.f) continue; // constrained forever at limit, if T is scalar
@@ -431,14 +431,14 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
                         float w = 1.f; for_int(d, D) { w *= (ud[d]==0 ? (4.f/6.f) : (1.f/6.f)); }
                         if (uu==u) { wcenter += w; } else { newv -= w*gr[uu]; }
                     }
-                    gr[u] = general_clamp(newv/wcenter, T(0.f), T(1.f));
+                    gr[u] = general_clamp(newv/wcenter, T{0.f}, T{1.f});
                 }
             }
         }
         return std::move(gr);
     }
     struct Tup { int dim; float scaling; };
-    Array<Tup> ar; for_int(d, D) ar.push(Tup{d, float(ndims[d])/assertx(dims[d])});
+    Array<Tup> ar; for_int(d, D) ar.push(Tup{d, static_cast<float>(ndims[d])/assertx(dims[d])});
     // Sort dimensions for quickest domain size reduction (or slowest domain size increase).
     // However, operating on last dimension is most efficient due to memory layout.
     // Therefore, if identical downsampling on multiple dimensions, we prefer to do last dimension first.
@@ -462,7 +462,7 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
     }
     assertx(gridref.data()==gr.data());
     if (njustspline) {
-        for (T& e : gr) { e = T(.5f) + (e-T(.5f))*expand_value_range; } // expand rage
+        for (T& e : gr) { e = T{.5f} + (e-T{.5f})*expand_value_range; } // expand rage
     }
     return std::move(gr);
 }
@@ -515,7 +515,7 @@ void scale_filter_nearest_aux(Specialize<1>, CGridView<D,T> grid, GridView<D,T> 
     const Vec<int,D> dims = grid.dims();
     const Vec<int,D> ndims = ngrid.dims();
     cond_parallel_for_int(ngrid.size()*3, i, ndims[0]) {
-        int ii = int((i+.5f)/ndims[0]*dims[0]-1e-4f);
+        int ii = static_cast<int>((i+.5f)/ndims[0]*dims[0]-1e-4f);
         ngrid(i) = grid(ii);
     }
 }
@@ -562,7 +562,7 @@ template<int D, typename T> Grid<D,T> scale_filter_nearest(CGridView<D,T> grid, 
             Array<int>& map = maps[d];
             map.init(ndims[d]);
             for_int(i, ndims[d]) {
-                map[i] = int((i+.5f)/ndims[d]*dims[d]-1e-4f); ASSERTX(map[i]>=0 && map[i]<dims[d]);
+                map[i] = static_cast<int>((i+.5f)/ndims[d]*dims[d]-1e-4f); ASSERTX(map[i]>=0 && map[i]<dims[d]);
             }
         }
     }
@@ -579,9 +579,9 @@ template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& 
         assertx(!filterbs[d].filter().has_inv_convolution());
         KernelFunc func = assertx(filterbs[d].filter().func());
         double kernel_radius = filterbs[d].filter().radius();
-        uL[d] = int(floor(p[d]-kernel_radius));
-        uU[d] = int( ceil(p[d]+kernel_radius))+1;
-        for_intL(i, uL[d], uU[d]) { matw[d].push(float(func(float(i)-p[d]))); }
+        uL[d] = static_cast<int>(floor(p[d]-kernel_radius));
+        uU[d] = static_cast<int>( ceil(p[d]+kernel_radius))+1;
+        for_intL(i, uL[d], uU[d]) { matw[d].push(static_cast<float>(func(static_cast<float>(i)-p[d]))); }
     }
     Vec<Bndrule,D> bndrules; for_int(d, D) bndrules[d] = filterbs[d].bndrule();
     T val; my_zero(val);
@@ -592,7 +592,7 @@ template<int D, typename T> T sample_grid(CGridView<D,T> g, const Vec<float,D>& 
         sumw += w;
         val += w*g.inside(u, bndrules, bordervalue);
     }
-    return val/assertx(float(sumw));
+    return val/assertx(static_cast<float>(sumw));
 }
 
 template<int D, typename T> T sample_domain(CGridView<D,T> g, const Vec<float,D>& p,
@@ -614,8 +614,8 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
     assertx(abs(sum(kernel)-1.)<1e-6); // kernel is expected to have unit integral
     const int ishift = 16, fac = 1<<ishift, fach = 1<<(ishift-1);
     Array<int> kerneli; {
-        kerneli = convert<int>(kernel*float(fac)+.5f);                // (all >=0.f so no need for floor())
-        int excess = int(sum(kerneli)-fac); assertx(abs(excess)<=nk); // sanity check
+        kerneli = convert<int>(kernel*static_cast<float>(fac)+.5f);                // (all >=0.f so no need for floor())
+        int excess = narrow_cast<int>(sum(kerneli)-fac); assertx(abs(excess)<=nk); // sanity check
         kerneli[r] -= excess; // adjust center weight to make the quantized sum correct
     }
     Grid<D,Pixel> ngrid(dims);
@@ -624,7 +624,7 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
     assertx(0<=ioutmin && ioutmin<=ioutmax && ioutmax<=nx);
     auto func = [&](const Vec<int,D>& u) {
         int x = u[d];
-        Vector4i v(0);
+        Vector4i v{0};
         for_int(k, nk) {
             int ii = x-r+k;
             const Pixel& value = map_boundaryrule_1D(ii, nx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
@@ -636,7 +636,7 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
         int x = u[d];
         const Vec<int,D> u0 = u.with(d, x-r);
         size_t i0 = grid_index(dims, u0);
-        Vector4i v(0);
+        Vector4i v{0};
         for_int(k, nk) { v += kerneli[k]*Vector4i(grid.raster(i0+k*stride)); } // OPT:blur
         ngrid[u] = ((v+fach)>>ishift).pixel();
     };

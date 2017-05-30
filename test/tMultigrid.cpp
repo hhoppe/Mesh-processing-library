@@ -21,7 +21,7 @@ template<int D, typename T> void read_image(Image& image, Grid<D,T>& grid_orig) 
     image.to_bw();
     grid_orig.init(image.dims());
     parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-        grid_orig[y][x] = T(image[y][x][0]/255.);
+        grid_orig[y][x] = T{image[y][x][0]/255.f};
     }
     if (0) HH_RSTAT(Sorig, grid_orig);
 }
@@ -50,7 +50,7 @@ void setup_rhs(CGridView<D,T> grid_orig, Multigrid<D, T, Periodic, Metric>& mult
             if (u[c]<dims[c]-1)   { vrhs += grid_orig[u.with(c, u[c]+1)]   -grid_orig[u]; }
             else if (periodic(c)) { vrhs += grid_orig[u.with(c, 0)]        -grid_orig[u]; }
         }
-        grid_rhs[u] = T(vrhs);
+        grid_rhs[u] = vrhs;
     }, D*25);
 }
 
@@ -65,7 +65,7 @@ template<typename T> void setup_rhs2(CGridView<2,T> grid_orig, GridView<2,T> gri
         if (y<ny-1) { vrhs += (grid_orig[y+1][x]-grid_orig[y][x])*gradient_sharpening; }
         if (x>0   ) { vrhs += (grid_orig[y][x-1]-grid_orig[y][x])*gradient_sharpening; }
         if (x<nx-1) { vrhs += (grid_orig[y][x+1]-grid_orig[y][x])*gradient_sharpening; }
-        grid_rhs[y][x] = T(vrhs);
+        grid_rhs[y][x] = vrhs;
     }
 }
 
@@ -76,9 +76,9 @@ template<int D> void test_random(Args& args) {
     using FType = double;
     // using FType = Vector4; // must disable HH_RSTAT calls below
     Grid<D,FType> grid_orig(dims);
-    for (auto& e : grid_orig) { e = FType(Random::G.unif()); }
+    for (auto& e : grid_orig) { e = FType{Random::G.unif()}; }
     Multigrid<D,FType> multigrid(dims);
-    fill(multigrid.initial_estimate(), FType(0));
+    fill(multigrid.initial_estimate(), FType{0});
     if (1) {
         multigrid.set_original(grid_orig);
     } else {
@@ -89,14 +89,14 @@ template<int D> void test_random(Args& args) {
         CGridView<D,FType> grid_rhs = multigrid.rhs();
         HH_RSTAT_RMS(Srhs, grid_rhs);
         HH_RSTAT(S0, standardize_rms(Grid<D,FType>(grid_rhs)));
-        HH_RSTAT(Sstandardized, FType(.5f)+standardize_rms(Grid<D,FType>(grid_rhs))*FType(.15f));
+        HH_RSTAT(Sstandardized, FType{.5f}+standardize_rms(Grid<D,FType>(grid_rhs))*FType{.15f});
     }
     multigrid.solve();
     CGridView<D,FType> grid_result = multigrid.result();
     if (1) HH_RSTAT(Sresult, grid_result);
     HH_RSTAT(Serr, grid_result-grid_orig);
     // as_image(grid_result).write_file("image_result.bmp");
-    // as_image(FType(.5f)+standardize_rms(grid_result-grid_orig)*FType(.1f)).write_file("image_err.bmp");
+    // as_image(FType{.5f}+standardize_rms(grid_result-grid_orig)*FType{.1f}).write_file("image_err.bmp");
 }
 
 // Reconstruct a grid of random numbers from their Laplacian.
@@ -104,9 +104,9 @@ template<int D, typename T, typename Periodic = MultigridPeriodicNone<D> >
 void test(GridView<D,T> grid_orig, Periodic = Periodic{}) {
     const Vec<int,D> dims = grid_orig.dims();
     SHOW(dims);
-    for (auto& e : grid_orig) { e = T(Random::G.unif()); }
+    for (auto& e : grid_orig) { e = T{Random::G.unif()}; }
     Multigrid<D, T, Periodic> multigrid(dims);
-    fill(multigrid.initial_estimate(), T(0));
+    fill(multigrid.initial_estimate(), T{0});
     multigrid.set_desired_mean(mean(grid_orig));
     if (1) multigrid.set_original(grid_orig);
     setup_rhs(grid_orig, multigrid);
@@ -117,7 +117,7 @@ void test(GridView<D,T> grid_orig, Periodic = Periodic{}) {
     auto result_rms_err = max_e(rms(grid_result-grid_orig));
     bool has_an_odd_dim = any_of(dims, [](int i){ return i>1 && i%2; } );
     const float fudge = has_an_odd_dim ? 2.f : 1.f;
-    auto expected_rms_err = max(dims)*10.f*fudge*(std::is_same<decltype(max_e(T())), float>::value ? 1e-7 : 1e-16);
+    auto expected_rms_err = max(dims)*10.f*fudge*(std::is_same<decltype(max_e(T{})), float>::value ? 1e-7 : 1e-16);
     if (0) SHOW(expected_rms_err, result_rms_err);
     if (result_rms_err>=expected_rms_err) { SHOW(expected_rms_err, result_rms_err); if (0) assertnever(""); }
 }

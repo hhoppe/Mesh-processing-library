@@ -35,7 +35,7 @@ class Histogram : noncopyable {
         float recip_bucket_size = 1.f/bucket_size;
         Array<int> buckets(_nbuckets, 0);
         for (float f : _ar_val) {
-            int bi = clamp(int((f-min)*recip_bucket_size), 0, _nbuckets-1);
+            int bi = clamp(static_cast<int>((f-min)*recip_bucket_size), 0, _nbuckets-1);
             buckets[bi]++;
         }
         showdf("Hist(%s): %s\n", _filename.c_str(), stat.short_string().c_str());

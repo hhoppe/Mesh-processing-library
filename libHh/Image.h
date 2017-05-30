@@ -108,7 +108,7 @@ inline bool rgb_equal(const Pixel& pix1, const Pixel& pix2) {
 }
 
 inline int rgb_dist2(const Pixel& pix1, const Pixel& pix2) {
-    return square(int(pix1[0])-pix2[0])+square(int(pix1[1])-pix2[1])+square(int(pix1[2])-pix2[2]);
+    return square(int{pix1[0]}-pix2[0])+square(int{pix1[1]}-pix2[1])+square(int{pix1[2]}-pix2[2]);
 }
 
 // Convert float/double matrix (with 0.f==black, 1.f==white) to an image.
@@ -117,7 +117,7 @@ template<typename T> Image as_image(CMatrixView<T> matrix) {
     // (renamed image to image1 due to buggy VS2015 warning about shadowed variable)
     Image image1(matrix.dims());
     parallel_for_int(y, image1.ysize()) for_int(x, image1.xsize()) {
-        image1[y][x] = Pixel::gray(uchar(clamp(matrix[y][x], T(0), T(1))*255.f+.5f));
+        image1[y][x] = Pixel::gray(narrow_cast<uchar>(clamp(matrix[y][x], T{0}, T{1})*255.f+.5f));
     }
     return image1;
 }
@@ -206,17 +206,17 @@ class CNv12View {
 
 // Convert RGB Pixel to luminance Y value.
 inline uchar RGB_to_Y(const Pixel& pix) { // LumaFromRGB_CCIR601YCbCr
-    return uchar((66*int(pix[0]) + 129*int(pix[1]) + 25*int(pix[2]) + 128+16*256) >> 8);
+    return narrow_cast<uchar>((66*int{pix[0]} + 129*int{pix[1]} + 25*int{pix[2]} + 128+16*256) >> 8);
 }
 
 // Convert RGB Pixel to chroma U value.
 inline uchar RGB_to_U(const Pixel& pix) { // CbFromRGB_CCIR601YCbCr
-    return uchar((-38*pix[0] - 74*pix[1] + 112*pix[2] + 128+128*256) >> 8);
+    return narrow_cast<uchar>((-38*pix[0] - 74*pix[1] + 112*pix[2] + 128+128*256) >> 8);
 }
 
 // Convert RGB Pixel to chroma V value.
 inline uchar RGB_to_V(const Pixel& pix) { // CrFromRGB_CCIR601YCbCr
-    return uchar((112*pix[0] - 94*pix[1] - 18*pix[2] + 128+128*256) >> 8);
+    return narrow_cast<uchar>((112*pix[0] - 94*pix[1] - 18*pix[2] + 128+128*256) >> 8);
 }
 
 // Convert {R, G, B} values to YUV Vector4i.
@@ -231,7 +231,8 @@ inline Vector4i RGB_to_YUV_Vector4i(int r, int g, int b) {
 inline Pixel RGB_to_YUV_Pixel(int r, int g, int b) {
     if (0) {
         ASSERTX(r>=0 && r<=255 && g>=0 && g<=255 && b>=0 && b<=255);
-        Pixel pix{uchar(r), uchar(g), uchar(b)}; return Pixel(RGB_to_Y(pix), RGB_to_U(pix), RGB_to_V(pix), 255);
+        Pixel pix{narrow_cast<uchar>(r), narrow_cast<uchar>(g), narrow_cast<uchar>(b)};
+        return Pixel(RGB_to_Y(pix), RGB_to_U(pix), RGB_to_V(pix), 255);
     } else {
         return RGB_to_YUV_Vector4i(r, g, b).pixel();
     }

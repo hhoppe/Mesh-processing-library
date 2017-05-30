@@ -1514,8 +1514,7 @@ void do_fillholes(Args& args) {
             }
         }
         for (Face f : setf) {
-            if (0)
-                showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
+            if (0) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
         }
     }
     showdf("Filled in %d holes\n", Sbndlen.inum());

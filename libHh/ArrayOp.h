@@ -13,8 +13,8 @@ namespace hh {
 template<typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... arr) {
     Array<T> ar;
     int i = ar1.num(); do_in_order { i += arr.num() ... }; ar.reserve(i);
-    // ar.reserve(ar1.num()+int(sum(CArrayView<int>{arr.num()...}))); // requires sum()
-    // Vec<int, sizeof...(arr)> t(arr.num()...); ar.reserve(ar1.num()+int(sum(t)));
+    // ar.reserve(ar1.num()+narrow_cast<int>(sum(CArrayView<int>{arr.num()...}))); // requires sum()
+    // Vec<int, sizeof...(arr)> t(arr.num()...); ar.reserve(ar1.num()+narrow_cast<int>(sum(t)));
     ar.push_array(ar1);
     do_in_order { (ar.push_array(arr), 0)... };
     return ar;
@@ -64,8 +64,8 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> rank_elemen
 // Return element with fractional ranking within range (where 0. <= rankf <= 1. and rankf==0. is mininum element).
 template<typename R, typename = enable_if_range_t<R> > iterator_t<R> rankf_element(const R& range, double rankf) {
     assertx(rankf>=0. && rankf<=1.);
-    int num = int(distance(range));
-    int rank = int(floor(rankf*num));
+    int num = narrow_cast<int>(distance(range));
+    int rank = static_cast<int>(floor(rankf*num));
     if (rank==num) rank--;
     return rank_element(range, rank);
 }

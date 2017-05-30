@@ -46,7 +46,8 @@ T1 discrete_binary_search_func(Func feval, T1 xl, T1 xh, T2 y_desired) {
 // Given xl<xh, ar[xl]<=y_desired<ar[xh], Find x such that ar[x]<=y_desired<ar[x+1] .
 template<typename T>
 int discrete_binary_search(CArrayView<T> ar, int xl, int xh, T y_desired) {
-    if (0) showdf("xl=%d xh=%d f(xl)=%.9g f(xh)=%.9g\n", xl, xh, double(ar[xl]), double(ar[xh]));
+    if (0) showdf("xl=%d xh=%d f(xl)=%.9g f(xh)=%.9g\n", xl, xh,
+                  static_cast<double>(ar[xl]), static_cast<double>(ar[xh]));
     assertx(xl<xh);
     assertx(ar[xl]<=y_desired && y_desired<ar[xh]);
     // if (1) return std::lower_bound(&ar[xl], &ar[xh]+1, y_desired)-ar.data(); // untested

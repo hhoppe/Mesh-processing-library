@@ -26,7 +26,7 @@ template<typename T> class UnionFind : noncopyable {
 template<typename T> T UnionFind<T>::irep(T e, bool& present) {
     // Possible optimization: build up PArray<T*,10> of pointers into Map nodes
     T r = _m.retrieve(e, present);
-    if (!present) return T();   // alone, ret anything
+    if (!present) return T{};   // alone, ret anything
     T t = e;
     while (r!=t) r = _m.get(t = r);
     while (e!=r) e = _m.replace(e, r);

@@ -227,9 +227,9 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_abs_ele
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
     // return abs(*std::max_element(ibeg, iend, [](T l, T r) { return abs(l)<abs(r); }));
-    T v = T(abs(*iter)); ++iter; for (; iter!=itend; ++iter) { v = max(v, T(abs(*iter))); }
-    // auto iter_max = iter; T v = T(abs(*iter)); ++iter;
-    // for (; iter!=itend; ++iter) { T vt = T(abs(*iter)); if (vt>v) { v = vt; iter_max = iter; } }
+    T v = static_cast<T>(abs(*iter)); ++iter; for (; iter!=itend; ++iter) { v = max(v, static_cast<T>(abs(*iter))); }
+    // auto iter_max = iter; T v = static_cast<T>(abs(*iter)); ++iter;
+    // for (; iter!=itend; ++iter) { T vt = static_cast<T>(abs(*iter)); if (vt>v) { v = vt; iter_max = iter; } }
     // if (pi) *pi = narrow_cast<int>(std::distance(begin(range), iter_max));
     return v;
 }
@@ -320,7 +320,7 @@ template<typename R, typename = enable_if_range_t<R> > bool is_zero(const R& ran
 // Modify the range to have unit norm (or die if input has zero norm).
 template<typename R, typename = enable_if_range_t<R> > R normalize(R&& range) {
     using T = iterator_t<R>;
-    T v = static_cast<T>(T(1.f)/assertx(mag(range)));
+    T v = static_cast<T>(T{1.f}/assertx(mag(range)));
     for (auto& e : range) { e = static_cast<T>(e*v); }
     return std::forward<R>(range);
 }
@@ -408,7 +408,7 @@ template<typename R, typename = enable_if_range_t<R> > bool contains(const R& ra
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.
 template<typename U, typename R, typename = enable_if_range_t<R> > auto convert(R&& c)
     -> decltype(map(c, std::declval<U(*)(const iterator_t<R>&)>())) {
-    return map(c, [](const iterator_t<R>& e) { return U(e); });
+    return map(c, [](const iterator_t<R>& e) { return static_cast<U>(e); });
 }
 
 // Convert all elements of the container with runtime checking, e.g. narrow_convert<int>(V(1.f, 2.f))==V(1, 2).

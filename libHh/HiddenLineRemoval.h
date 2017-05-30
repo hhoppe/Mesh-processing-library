@@ -59,7 +59,7 @@ class HiddenLineRemoval {
         p.p = std::move(poly);
         p.n = nor;
         p.d = p.p.get_planec(p.n);
-        p.tol = max(p.p.get_tolerance(p.n, p.d), float(k_epsilon_a))*1.02f; // cast to avoid reference of constexpr
+        p.tol = max(p.p.get_tolerance(p.n, p.d), float{k_epsilon_a})*1.02f; // cast to avoid reference of constexpr
         p.p.get_bbox(p.bb);
         // enter coordinates [1..2] into Kdtree<int,2>
         _kd.enter(pn, p.bb[0].tail<2>(), p.bb[1].tail<2>());

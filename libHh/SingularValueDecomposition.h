@@ -33,31 +33,31 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
     assertx(n>=1); assertx(m>=n); assertx(U.dims()==V(m, n)); assertx(S.num()==n); assertx(VT.dims()==V(n, n));
     using TT = mean_type_t<T>;
     U.assign(A);
-    fill(VT, T(0)); for_int(i, n) VT(i, i) = T(1);
+    fill(VT, T{0}); for_int(i, n) VT(i, i) = T{1};
     T eps; {                    // compute a factor of machine-precision epsilon
-        volatile T v1 = T(1);   // otherwise produces eps==0 on gcc due to compiler optimizations
-        eps = T(1); while (eps+v1>v1) eps *= T(0.5);
-        assertx(eps>T(0));
-        eps *= T(8);
+        volatile T v1 = T{1};   // otherwise produces eps==0 on gcc due to compiler optimizations
+        eps = T{1}; while (eps+v1>v1) eps *= T{0.5};
+        assertx(eps>T{0});
+        eps *= T{8};
     }
     for_int(iter, INT_MAX) {
-        T max_e = T(0);
+        T max_e = T{0};
         for_intL(j, 1, n) for_int(i, j) {       // for indices i<j of columns of U
             // SHOW(U, VT);
-            TT a = TT(0), b = TT(0), c = TT(0);
+            TT a = TT{0}, b = TT{0}, c = TT{0};
             for_int(k, m) {     // construct 2*2 submatrix [ a, c; c, b ] of column inner products on U
-                a += square(TT(U(k, i)));
-                b += square(TT(U(k, j)));
-                c += TT(U(k, i)) * TT(U(k, j));
+                a += square(TT{U(k, i)});
+                b += square(TT{U(k, j)});
+                c += TT{U(k, i)} * TT{U(k, j)};
             }
-            T e = T(abs(c)/sqrt(a*b)); max_e = max(max_e, e); // measure non-orthogonality of pair of columns
+            T e = abs(c)/sqrt(a*b); max_e = max(max_e, e); // measure non-orthogonality of pair of columns
             // SHOW(iter, j, i, a, b, c, e);
-            if (c==TT(0)) continue; // columns are already orthogonal
+            if (c==TT{0}) continue; // columns are already orthogonal
             T cs, sn; {             // compute Jacobi rotation parameters: cos(theta), sin(theta)
-                TT z = (b-a) / (TT(2)*c);
-                TT t = sign(z)/(abs(z) + hypot(TT(1), z)); // tan(theta); note that sign(z) is never zero
-                cs = T(1)/T(hypot(TT(1), t));
-                sn = T(TT(cs)*t);
+                TT z = (b-a) / (TT{2}*c);
+                TT t = sign(z)/(abs(z) + hypot(TT{1}, z)); // tan(theta); note that sign(z) is never zero
+                cs = T{1}/static_cast<T>(hypot(TT{1}, t));
+                sn = static_cast<T>(TT{cs}*t);
                 // SHOW(z, t, cs, sn);
             }
             for_int(k, m) {     // apply Jacobi rotation to U
@@ -83,8 +83,8 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
         }
     }
     for_int(i, n) {
-        S[i] = T(mag(column(U, i))); // singular value is norm of column vector of U
-        if (S[i]) { T recip = T(1)/S[i]; for_int(j, m) U(j, i) *= recip; } // normalize the column vector
+        S[i] = static_cast<T>(mag(column(U, i))); // singular value is norm of column vector of U
+        if (S[i]) { T recip = T{1}/S[i]; for_int(j, m) U(j, i) *= recip; } // normalize the column vector
     }
     return true;
 }

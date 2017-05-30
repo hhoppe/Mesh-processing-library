@@ -31,7 +31,7 @@ inline Vector normalized(Vector v)                      { assertx(v.normalize())
 inline Vector ok_normalized(Vector v)                   { v.normalize(); return v; }
 // Overload to have lower precision than RangeOp.h templates (which return double).
 // Must overload several versions to hide the influence of the template in RangeOp.h
-// #define E float(double(v1[0])*v2[0]+double(v1[1])*v2[1]+double(v1[2])*v2[2])
+// #define E static_cast<float>(double{v1[0]}*v2[0]+double{v1[1]}*v2[1]+double{v1[2]}*v2[2])
 #define E v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2]
 inline constexpr float dot(const Vec3<float>& v1, const Vec3<float>& v2) { return E; }
 inline constexpr float dot(const Vec3<float>& v1, const Vector& v2)      { return E; }
@@ -156,12 +156,12 @@ Vector bary_vector(const Vec3<Point>& pa, const Bary& bary);
 
 // Convert degrees to radians.
 template<typename T> constexpr T to_rad(T deg) {
-    static_assert(std::is_floating_point<T>::value, ""); return deg*T(D_TAU/360);
+    static_assert(std::is_floating_point<T>::value, ""); return deg*static_cast<T>(D_TAU/360);
 }
 
 // Convert radians to degrees.
 template<typename T> constexpr T to_deg(T rad) {
-    static_assert(std::is_floating_point<T>::value, ""); return rad*T(360/D_TAU);
+    static_assert(std::is_floating_point<T>::value, ""); return rad*static_cast<T>(360/D_TAU);
 }
 
 

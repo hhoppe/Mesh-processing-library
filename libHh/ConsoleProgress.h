@@ -11,7 +11,7 @@
     ConsoleProgress cprogress;  // or cprogress("Processing");
     const int n = 10000;
     for_int(i, n) {
-        cprogress.update(float(i)/n);
+        cprogress.update(static_cast<float>(i)/n);
         process(i);
     }
 }
@@ -32,10 +32,10 @@ namespace hh {
 class ConsoleProgress : noncopyable {
  public:
     explicit ConsoleProgress(string task_name = "", bool set_silent = false);
-    ~ConsoleProgress()                          { clear(); }
-    void update(float f)                        { if (!_silent && min(int(f*100.f), 99)>_last_val) update_i(f); }
+    ~ConsoleProgress()                  { clear(); }
+    void update(float f)                { if (!_silent && min(static_cast<int>(f*100.f), 99)>_last_val) update_i(f); }
     void clear();
-    static bool set_all_silent(bool v)          { return std::exchange(s_f_silent(), v); }
+    static bool set_all_silent(bool v)  { return std::exchange(s_f_silent(), v); }
  private:
     std::atomic<int> _last_val {-1}; // -1 if not yet printed
     string _task_name;
@@ -48,7 +48,7 @@ class ConsoleProgress : noncopyable {
 class ConsoleProgressInc : public ConsoleProgress {
  public:
     ConsoleProgressInc(int total, string taskname = "") : ConsoleProgress(std::move(taskname)), _total(total) { }
-    void increment()                            { update(float(_counter++)/float(_total)); }
+    void increment()                            { update(static_cast<float>(_counter++)/_total); }
  private:
     int _total;
     std::atomic<int> _counter {0};
@@ -71,7 +71,7 @@ inline void ConsoleProgress::update_i(float f) {
     // - "\b" (8) erases the last character; I modified emacs shell to do the same.
     // - "\r" (13) moves cursor to beginning of line, but does *not* clear the line contents;
     //            I modified emacs shell to delete backwards to the line beginning.
-    int val = clamp(int(f*100.f), 0, 99);
+    int val = clamp(static_cast<int>(f*100.f), 0, 99);
     if (val<=_last_val) return;
     {                 // synchronize in case multiple threads are updating the object or using ConsoleProgress
         std::lock_guard<std::mutex> lg(s_f_global_mutex());
@@ -84,7 +84,7 @@ inline void ConsoleProgress::update_i(float f) {
                     if (0) {
                         str += "\r";    // bad because it could erase shell prompt
                     } else {
-                        const int n = int(_task_name.size())+6;
+                        const int n = narrow_cast<int>(_task_name.size())+6;
                         for_int(i, n) { str += '\b'; }
                     }
                 }
@@ -109,7 +109,7 @@ inline void ConsoleProgress::clear() {
             _last_val = -1;
             string str;
             if (_task_name!="") {
-                const int n = int(_task_name.size())+6;
+                const int n = narrow_cast<int>(_task_name.size())+6;
                 if (0) {
                     str += "\r";
                 } else {

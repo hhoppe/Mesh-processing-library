@@ -29,9 +29,9 @@ template<typename T, int n1, int n2> void qem_add_submatrix(Qem<T,n1>& q1, const
 }
 
 template<typename T, int n> void Qem<T,n>::set_zero() {
-    for_int(i, (n*(n+1))/2) { _a[i] = T(0); }
-    for_int(i, n) { _b[i] = T(0); }
-    _c = T(0);
+    for_int(i, (n*(n+1))/2) { _a[i] = T{0}; }
+    for_int(i, n) { _b[i] = T{0}; }
+    _c = T{0};
 }
 
 template<typename T, int n> void Qem<T,n>::add(const Qem<T,n>& qem) {
@@ -54,11 +54,11 @@ template<typename T, int n> void Qem<T,n>::set_d2_from_plane(const float* dir, f
     {
         T* pa = _a.data();
         for_int(i, n) {
-            for_intL(j, i, n) { *pa++ = T(dir[i])*dir[j]; }
+            for_intL(j, i, n) { *pa++ = T{dir[i]}*dir[j]; }
         }
     }
-    for_int(i, n) { _b[i] = T(d)*dir[i]; }
-    _c = square(T(d));
+    for_int(i, n) { _b[i] = T{d}*dir[i]; }
+    _c = square(T{d});
 }
 
 template<typename T, int n> void Qem<T,n>::set_d2_from_point(const float* p0) {
@@ -69,12 +69,12 @@ template<typename T, int n> void Qem<T,n>::set_d2_from_point(const float* p0) {
     {
         T* pa = _a.data();
         for_int(i, n) {
-            *pa++ = T(1);
-            for_intL(j, i+1, n) { *pa++ = T(0); }
+            *pa++ = T{1};
+            for_intL(j, i+1, n) { *pa++ = T{0}; }
         }
     }
-    for_int(i, n) { _b[i] = -T(p0[i]); }
-    T a = T(0); for_int(i, n) { a += square(p0[i]); }
+    for_int(i, n) { _b[i] = -T{p0[i]}; }
+    T a = T{0}; for_int(i, n) { a += square(p0[i]); }
     _c = a;
 }
 
@@ -82,22 +82,22 @@ template<typename T, int n> void Qem<T,n>::set_distance_gh98(const float* p0, co
     T e1[n], e2[n];
     // e1=p1-p0,  e2=p2-p0
     for_int(i, n) {
-        e1[i] = T(p1[i])-p0[i];
-        e2[i] = T(p2[i])-p0[i];
+        e1[i] = T{p1[i]}-p0[i];
+        e2[i] = T{p2[i]}-p0[i];
     }
     // Now orthonormalize {e1, e2}.
     {
         // e1_nor = e1.normalize()
         T a;
-        a = T(0); for_int(c, n) { a += square(e1[c]); }
+        a = T{0}; for_int(c, n) { a += square(e1[c]); }
         if (!assertw(a)) { set_zero(); return; }
-        a = T(1)/sqrt(a); for_int(c, n) { e1[c] *= a; }
+        a = T{1}/sqrt(a); for_int(c, n) { e1[c] *= a; }
         // e2_nor = (e2-dot(e2, e1_nor)*e1).normalize()
-        a = T(0); for_int(c, n) { a += e1[c]*e2[c]; }
+        a = T{0}; for_int(c, n) { a += e1[c]*e2[c]; }
         for_int(c, n) { e2[c] -= a*e1[c]; }
-        a = T(0); for_int(c, n) { a += square(e2[c]); }
+        a = T{0}; for_int(c, n) { a += square(e2[c]); }
         if (!assertw(a)) { set_zero(); return; }
-        a = T(1)/sqrt(a); for_int(c, n) { e2[c] *= a; }
+        a = T{1}/sqrt(a); for_int(c, n) { e2[c] *= a; }
     }
     // From Garland & Heckbert paper in Visualization 98 [G&H98]:
     // A = I - e1*e1^T - e2*e2^T
@@ -106,18 +106,18 @@ template<typename T, int n> void Qem<T,n>::set_distance_gh98(const float* p0, co
     {
         T* pa = _a.data();
         for_int(i, n) {
-            *pa++ = T(1) - e1[i]*e1[i] - e2[i]*e2[i];
+            *pa++ = T{1} - e1[i]*e1[i] - e2[i]*e2[i];
             for_intL(j, i+1, n) {
-                *pa++ = T(0) - e1[i]*e1[j] - e2[i]*e2[j];
+                *pa++ = T{0} - e1[i]*e1[j] - e2[i]*e2[j];
             }
         }
     }
     const float* p = p0;
-    T dot_p_e1 = T(0), dot_p_e2 = T(0), dot_p_p = T(0);
+    T dot_p_e1 = T{0}, dot_p_e2 = T{0}, dot_p_p = T{0};
     for_int(i, n) {
         dot_p_e1 += p[i]*e1[i];
         dot_p_e2 += p[i]*e2[i];
-        dot_p_p += square(T(p[i]));
+        dot_p_p += square(T{p[i]});
     }
     for_int(i, n) {
         _b[i] = dot_p_e1*e1[i] + dot_p_e2*e2[i] - p[i];
@@ -141,7 +141,7 @@ template<typename T, int n> void Qem<T,n>::set_distance_hh99(const float* p0, co
         nor[2] = v1x*v2y-v1y*v2x;
         T sum2 = square(nor[0])+square(nor[1])+square(nor[2]);
         if (!assertw(sum2)) { set_zero(); return; }
-        T fac = T(1)/sqrt(sum2);
+        T fac = T{1}/sqrt(sum2);
         nor[0] *= fac; nor[1] *= fac; nor[2] *= fac;
     }
     // Introduce the geometric error quadric component
@@ -192,12 +192,12 @@ template<typename T, int n> void Qem<T,n>::set_distance_hh99(const float* p0, co
                     T* pa = _a.data();
                     for_int(i, n) {
                         for_intL(j, i, n) {
-                            if (j==ngeom+si) *pa = T(0);
+                            if (j==ngeom+si) *pa = T{0};
                             pa++;
                         }
                     }
                 }
-                _b[ngeom+si] = T(0);
+                _b[ngeom+si] = T{0};
             }
             return;
         }
@@ -214,8 +214,8 @@ template<typename T, int n> void Qem<T,n>::set_distance_hh99(const float* p0, co
                             *pa += g_s[i]*g_s[j];
                         } else if (j==ngeom+si) {
                             if (i<ngeom) *pa = -g_s[i];
-                            else if (i==ngeom+si) *pa = T(1);
-                            else *pa = T(0);
+                            else if (i==ngeom+si) *pa = T{1};
+                            else *pa = T{0};
                         }
                         pa++;
                     }
@@ -230,13 +230,13 @@ template<typename T, int n> void Qem<T,n>::set_distance_hh99(const float* p0, co
 
 template<typename T, int n> float Qem<T,n>::evaluate(const float* p) const {
     // evaluation = v^T*A*v + 2*b^T*v + c
-    T sum1 = T(0), sum2 = T(0); {
+    T sum1 = T{0}, sum2 = T{0}; {
         const T* pa = _a.data();
         for_int(i, n) {
-            sum1 += *pa * square(T(p[i]));
+            sum1 += *pa * square(T{p[i]});
             pa++;
             for_intL(j, i+1, n) {
-                sum2 += *pa * T(p[i])*p[j];
+                sum2 += *pa * T{p[i]}*p[j];
                 pa++;
             }
         }

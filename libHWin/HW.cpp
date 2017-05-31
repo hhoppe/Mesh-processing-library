@@ -58,7 +58,7 @@ static bool win_started_from_console_aux() {
 } // namespace details
 static bool win_started_from_console() { return details::win_started_from_console_aux(); }
 
-const HWND k_bogus_hwnd = HWND(intptr_t{-7});
+const HWND k_bogus_hwnd = HWND(intptr_t{-7}); // clang: reinterpret_cast<HWND>() is not allowed in a constexpr
 
 extern HANDLE g_buf_event_data_available; // from Buffer.cpp
 

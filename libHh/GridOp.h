@@ -614,7 +614,7 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
     assertx(abs(sum(kernel)-1.)<1e-6); // kernel is expected to have unit integral
     const int ishift = 16, fac = 1<<ishift, fach = 1<<(ishift-1);
     Array<int> kerneli; {
-        kerneli = convert<int>(kernel*static_cast<float>(fac)+.5f);                // (all >=0.f so no need for floor())
+        kerneli = convert<int>(kernel*static_cast<float>(fac)+.5f);  // (all >=0.f so no need for floor())
         int excess = narrow_cast<int>(sum(kerneli)-fac); assertx(abs(excess)<=nk); // sanity check
         kerneli[r] -= excess; // adjust center weight to make the quantized sum correct
     }

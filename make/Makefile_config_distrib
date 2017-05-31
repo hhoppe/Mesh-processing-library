@@ -1,5 +1,4 @@
 ifeq (1,1) # simulate distrib
-cppinc += -DHH_FOR_DISTRIB
 cppinc += -DHH_NO_VECTOR4_VECTORIZATION
 cppinc += -DHH_NO_STACKWALKER
 cppinc += -DHH_NO_MKL

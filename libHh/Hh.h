@@ -181,15 +181,6 @@ using namespace std; namespace hh { } using namespace hh;
 
 namespace std {
 
-#if !defined(_WIN32) && !defined(HH_NO_DEFINE_STD_LOG2)
-template<typename T> T log2(T v) { return std::log(v)/std::log(T{2}); }
-#endif
-
-#if defined(__CYGWIN__) && __GNUC__*100+__GNUC_MINOR__<500 && !defined(HH_NO_DEFINE_STD_HYPOT)
-inline float hypot(float a, float b) { return hypotf(a, b); }
-inline double hypot(double a, double b) { return ::hypot(a, b); }
-#endif
-
 #if defined(HH_DEFINE_STD_ONCE)  // workaround for current clang with mingw32 4.7.2
 struct once_flag { int done{0}; };
 template<typename Callable, typename... Args> void call_once(std::once_flag& flag, Callable&& func, Args&&... args) {

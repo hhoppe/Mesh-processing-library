@@ -47,6 +47,10 @@ inline int fix_mod(int ret, int b) {
     // return ret+b*(ret<0);
     // b &= -(ret<0); return ret+b;
 }
+template<typename T> bool my_mod_check(T ret, T b) {
+    if (!(ret>=T{0} && ret<b)) { SHOW(ret, b); assertnever(""); }
+    return true;
+}
 } // namespace details
 
 // Modulo operation.  (The built-in C/C++ remainder operation (a%b) returns negative remainders if a<0).
@@ -62,7 +66,7 @@ template<typename T> T my_mod(T a, T b) {
     ASSERTX(b>T{0});
     T ret = std::fmod(a, b);
     if (ret<T{0}) ret += b;
-    ASSERTX(ret>=T{0} && ret<b);
+    ASSERTX(details::my_mod_check(ret, b));
     return ret;
 }
 

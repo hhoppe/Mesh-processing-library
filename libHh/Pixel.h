@@ -13,16 +13,16 @@ struct Pixel : Vec4<uchar> {
     constexpr Pixel(uchar r, uchar g, uchar b, uchar a) : Vec4<uchar>(r, g, b, a) { }
     constexpr Pixel(uchar r, uchar g, uchar b)          : Pixel(r, g, b, 255) { }
     constexpr Pixel(Vec4<uchar> p)                      : Vec4<uchar>(p) { }
-    Pixel to_BGRA() const                       { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
-    Pixel from_BGRA() const                     { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
-    static Pixel gray(uchar v)                  { return Pixel(v, v, v); }
-    static Pixel white()                        { return Pixel::gray(255); }
-    static Pixel black()                        { return Pixel::gray(0); }
-    static Pixel red()                          { return Pixel(255, 0, 0); }
-    static Pixel green()                        { return Pixel(0, 255, 0); }
-    static Pixel blue()                         { return Pixel(0, 0, 255); }
-    static Pixel pink()                         { return Pixel(255, 150, 150); }
-    static Pixel yellow()                       { return Pixel(255, 255, 0); }
+    constexpr Pixel to_BGRA() const             { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
+    constexpr Pixel from_BGRA() const           { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
+    static constexpr Pixel gray(uchar v)        { return Pixel(v, v, v); }
+    static constexpr Pixel white()              { return Pixel::gray(255); }
+    static constexpr Pixel black()              { return Pixel::gray(0); }
+    static constexpr Pixel red()                { return Pixel(255, 0, 0); }
+    static constexpr Pixel green()              { return Pixel(0, 255, 0); }
+    static constexpr Pixel blue()               { return Pixel(0, 0, 255); }
+    static constexpr Pixel pink()               { return Pixel(255, 150, 150); }
+    static constexpr Pixel yellow()             { return Pixel(255, 255, 0); }
     friend std::ostream& operator<<(std::ostream& os, const Pixel& p) { // otherwise prints uchars
         return os << "Pixel(" << int{p[0]} << ", " << int{p[1]} << ", " << int{p[2]} << ", " << int{p[3]} << ")";
     }

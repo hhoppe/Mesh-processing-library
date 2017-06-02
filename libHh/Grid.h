@@ -85,6 +85,7 @@ template<int D, typename T> class CGridView {
  public:
     CGridView(const T* a, const Vec<int,D>& dims) : _a(const_cast<T*>(a)), _dims(dims) { }
     CGridView(const type&)                      = default;
+    explicit CGridView(CArrayView<T> ar)        : CGridView(ar.data(), V(ar.num())) { static_assert(D==1, ""); }
     // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
     void reinit(type g)                         { *this = g; }
     template<typename T2> friend bool same_size(type g1, CGridView<D,T2> g2) { return g1.dims()==g2.dims(); }
@@ -145,6 +146,7 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
  public:
     GridView(T* a, const Vec<int,D>& dims)      : base(a, dims) { } // stop recursion if ArrayView==GridView
     GridView(const type&)                       = default;          // because it has explicit copy assignment
+    explicit GridView(ArrayView<T> ar)          : GridView(ar.data(), V(ar.num())) { static_assert(D==1, ""); }
     void reinit(type g)                         { *this = g; }
     using base::size;
     typename details::Grid_aux<D,T>::Ret  operator[](int r);

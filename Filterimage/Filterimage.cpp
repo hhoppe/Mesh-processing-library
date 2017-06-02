@@ -2563,8 +2563,11 @@ void do_procedure(Args& args) {
         std::cout << encoding.norm_entropy() << "\n";
         nooutput = true;
     } else if (name=="color_ramp") {
+        Grid<1,Vector4> color_ramp(V(k_color_ramp.num())); convert(CGridView<1,Pixel>(k_color_ramp), color_ramp);
+        Vector4 vgcolor; convert(CGrid1View(gcolor), Grid1View(vgcolor));
         for_coords(image.dims(), [&](const Vec2<int>& yx) {
-            image[yx] = k_color_ramp[int((yx[1]+.5f)/image.xsize()*256.f)];
+            image[yx] = sample_domain(color_ramp, V((yx[1]+.5f)/image.xsize()),
+                                      g_filterbs.head<1>(), &vgcolor).pixel();
         });
     } else {
         args.problem("procedure '" + name + "' unrecognized");

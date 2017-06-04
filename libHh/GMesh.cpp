@@ -269,7 +269,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     for_cstring_key_value_ptr(sso, [&](const char* kb, int kl, const char* vb, int vl) {
         nkeys2++;
         if (fkb && !frb) { frb = kb; if (!k_debug) return true; } // found remainder of string; parsed enough.
-        bool found = intptr_t{kl}==keyl && !strncmp(kb, key, kl);
+        bool found = static_cast<size_t>(kl)==keyl && !strncmp(kb, key, kl);
         if (found) {
             if (fkb) { SHOW(sso, kb, kl, vb, vl, key, val); assertnever("dup key"); }
             fkb = kb; fvl = vl;

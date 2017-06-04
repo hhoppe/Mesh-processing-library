@@ -243,9 +243,9 @@ template<typename T> void transform(CMatrixView<T> m, const Frame& frame, const 
                     Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
                     float w = 1.f;
                     if (!transform_filter_radial) {  // normal tensor-product of kernels
-                        for_int(c, 2) w *= kernels[c](dst_dyx[c]);
+                        for_int(c, 2) w *= static_cast<float>(kernels[c](dst_dyx[c]));
                     } else {                // single kernel based on radial distance
-                        w = kernels[0](mag(dst_dyx));
+                        w = static_cast<float>(kernels[0](mag(dst_dyx)));
                     }
                     // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
                     if (!w) continue;
@@ -277,9 +277,9 @@ template<typename T> void transform(CMatrixView<T> m, const Frame& frame, const 
                         ((convert<float>(sample_yx)+.5f)/convert<float>(num_samples)*2.f-1.f)*kernel_radii;  // pixels
                     float w = 1.f;
                     if (!transform_filter_radial) {  // normal tensor-product of kernels
-                        for_int(c, 2) w *= kernels[c](sample_offset[c]);
+                        for_int(c, 2) w *= static_cast<float>(kernels[c](sample_offset[c]));
                     } else {                // single kernel based on radial distance
-                        w = kernels[0](mag(sample_offset));
+                        w = static_cast<float>(kernels[0](mag(sample_offset)));
                     }
                     Vec2<float> p = (convert<float>(yx)+.5f+sample_offset) / convert<float>(nm.dims());  // [0,1]^2
                     Vec2<float> tp = transform_about_center(p, frame);

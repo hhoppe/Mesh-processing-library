@@ -50,7 +50,8 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
                 b += square(TT{U(k, j)});
                 c += TT{U(k, i)} * TT{U(k, j)};
             }
-            T e = abs(c)/sqrt(a*b); max_e = max(max_e, e); // measure non-orthogonality of pair of columns
+            T e = static_cast<T>(abs(c)/sqrt(a*b));
+            max_e = max(max_e, e); // measure non-orthogonality of pair of columns
             // SHOW(iter, j, i, a, b, c, e);
             if (c==TT{0}) continue; // columns are already orthogonal
             T cs, sn; {             // compute Jacobi rotation parameters: cos(theta), sin(theta)

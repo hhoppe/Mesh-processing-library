@@ -520,7 +520,7 @@ void set_recpoint() {
     if (!select_face(yx, obn, mesh, f)) {
         if (!mode_centroid) {
             rec_point = Point(0.f, 0.f, 0.f);
-            mode_centroid = true; // turn off mode
+            mode_centroid = true; // turn on mode
         } else {
             HB::beep();
         }

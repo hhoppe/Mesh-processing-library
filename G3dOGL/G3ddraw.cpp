@@ -279,7 +279,7 @@ void Dolly(const Vec2<float>& yxq) {
 
 static void pan(const Vec2<float>& yxq) {
     Vector v(0.f, yxq[1]*ddistance, yxq[0]*ddistance);
-    if (cob!=obview) {
+    if (cob!=obview && mode_centroid) {
         float d = (viewmode
                    ? dist(tview.p(), Point(0.f, 0.f, 0.f))
                    : dist(g_obs[obview].t().p(), g_obs[cob].center()*g_obs[cob].t()));
@@ -923,7 +923,7 @@ void Draw() {
     change_frames();
     if (play) {
         static float play_last = 0.f;
-        const float play_fps = 10.f;
+        static const float play_fps = getenv_float("G3D_PLAY_FPS", 30.f);
         if (g_obs.last>1 && cob>0 && cumtime>=play_last+1.f/play_fps) {
             play_last = cumtime;
             g_obs[cob].set_vis(false);

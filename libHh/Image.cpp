@@ -173,7 +173,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
         Warning("Image format likely does not support alpha channel");
     string scompression;
     if (suffix()=="jpg") {
-        int quality = getenv_int("JPG_QUALITY", 95, true); // 0--100 (default 75)
+        int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
         assertt(quality>0 && quality<=100);
         // Nonlinear mapping; see http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
         int qscale = quality>=95 ? 0 : quality>=90 ? 1 : quality>=80 ? 2 : quality>=75 ? 3 : quality>=65 ? 4 :
@@ -183,7 +183,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
         scompression = sform(" -qscale:v %d", qscale);
     }
     if (suffix()=="png" && getenv("PNG_COMPRESSION_LEVEL")) {
-        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6, true); //  0-9; 0=none
+        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  // 0-9; 0=none
         assertt(level>=0 && level<=9);
         level = clamp(level*17, 0, 100); // default 6 should map to ffmpeg default 100
         // Note: it appears that we cannot approach the high compression ratio of

@@ -524,7 +524,7 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     // Now you can set any non-default parameters you wish to.
     // Here we just illustrate the use of quality (quantization table) scaling:
     if (1) {
-        int quality = getenv_int("JPG_QUALITY", 95, true); // 0--100 (default 75)
+        int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
         assertt(quality>0 && quality<=100);
         jpeg_set_quality(&cinfo, quality, TRUE);
     }
@@ -1071,7 +1071,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
         png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, srgb_intent);
     }
     if (1) {
-        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6, true); //  0-9; 0=none
+        int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  //  0-9; 0=none
         assertt(level>=0 && level<=9);
         png_set_compression_level(png_ptr, level);
     }

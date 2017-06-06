@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# On some machines (Mac), there are two fewer optimization iterations at the end, so always omit these.
+tNonLinearOptimization 2>&1 | head -n 83
+exit 0

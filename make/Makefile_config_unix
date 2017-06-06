@@ -8,7 +8,9 @@ ifeq ($(is_mac),1)
   cppinc += -I/opt/X11/include#   for XQuartz X11
   LDFLAGS += -L/opt/X11/lib#      for XQuartz X11
   cppinc += -Wno-variadic-macros# ignore warning in <X11/Xlib.h>
-  STD_CXX ?= -std=c++11#  override default -std=c++14; necessary for older Xcode versions (e.g. 5.0)
+  STD_CXX ?= -std=c++14
+  cppinc += -DHH_NO_DEFINE_STD_CXX14
+  cppinc += -DHH_NO_DEFINE_STD_INDEX_SEQUENCE
   CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=new ..."
 else
   CC = gcc#  set default choice of compiler (clang or gcc); override using "make CC=new ..."

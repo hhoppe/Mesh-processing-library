@@ -1,5 +1,5 @@
 #!/bin/bash
 
 # On some machines (Mac), there are two fewer optimization iterations at the end, so always omit these.
-tNonLinearOptimization 2>&1 | grep -v 'Running debug version.' | head -n 83
+tNonlinearOptimization 2>&1 | grep -v 'Running debug version.' | head -n 83
 exit 0

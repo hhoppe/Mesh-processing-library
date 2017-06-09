@@ -214,7 +214,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
 bool filename_is_image(const string& filename) {
     static const Array<string> k_extensions = {
         "jpg", "jpeg", "png", "bmp", "rgb", "ppm", "pgm", "pbm", "tif", "tiff", "gif",
-        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw"
+        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr"
     };
     return k_extensions.index(to_lower(get_path_extension(filename)))>=0;
 }
@@ -229,6 +229,7 @@ string image_suffix_for_magic_byte(uchar c) {
     // *.ppm: "P6\n", "P5\r\n"
     // *.png: "\211PNG\r\n"
     // *.arw: "II*\000" (Sony alpha raw)
+    // *.exr: "v/1\001\002\0\0\0channels"
     switch (c) {
      bcase 1:   return "rgb";   // u'\x01'
      bcase 255: return "jpg";   // u'\xFF'
@@ -236,6 +237,7 @@ string image_suffix_for_magic_byte(uchar c) {
      bcase 'P': return "ppm";
      bcase 137: return "png";   // u'\x89'
      bcase 'I': return "arw";
+     bcase 'v': return "exr";   // 118
      bdefault:  return "";
     }
 }

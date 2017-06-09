@@ -4004,7 +4004,8 @@ int main(int argc, const char** argv) {
     args.p("*.JPEG", do_image,  ": load input image");
     args.p("*.PNG",  do_image,  ": load input image");
     args.p("*.BMP",  do_image,  ": load input image");
-    args.p("*.arw",  do_image,  ": load input image");
+    args.p("*.arw",  do_image,  ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
+    args.p("*.exr",  do_image,  ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
     ARGSD(vlp,                  "file.vlp : load looping parameters");
     args.p("*.vlp", do_vlp,     ": load looping parameters");
     ARGSD(batch_create_loop,    "input_video.mp4 output_loop.mp4 : create loop without opening any window");

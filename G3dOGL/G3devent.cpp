@@ -457,6 +457,38 @@ void destroy_face() {
     HB::redraw_later();
 }
 
+void print_info_mesh_elements() {
+    Vec2<float> yx; if (!HB::get_pointer(yx)) { HB::beep(); return; }
+    SHOW("Retrieving info:");
+    int obn; GMesh* pmesh;
+    Vertex v; Face f; Edge e; Point point;
+    if (select_vertex(yx, obn, pmesh, v)) {
+        const GMesh& mesh = *pmesh;
+        SHOW(mesh.vertex_id(v), mesh.point(v), mesh.get_string(v));
+    }
+    if (select_edge(yx, obn, pmesh, e, point)) {
+        const GMesh& mesh = *pmesh;
+        const int v1 = mesh.vertex_id(mesh.vertex1(e));
+        const int v2 = mesh.vertex_id(mesh.vertex2(e));
+        SHOW("On edge", v1, v2, point, mesh.get_string(e));
+    }
+    if (select_face(yx, obn, pmesh, f)) {
+        const GMesh& mesh = *pmesh;
+        SHOW(mesh.face_id(f), mesh.get_string(f));
+    }
+    if (v && f) {
+        // It is possible that v is in a different mesh, or that v and f are not adjacent.
+        const GMesh& mesh = *pmesh;
+        Array<Vertex> vertices; mesh.get_vertices(f, vertices);
+        if (vertices.contains(v)) {
+            Corner c = mesh.corner(v, f);
+            SHOW(mesh.get_string(c));
+        } else {
+            SHOW("Vertex is not adjacent to face");
+        }
+    }
+}
+
 void crop_mesh_to_view() {
     GMesh& mesh = *g_obs[cob].get_mesh();
     if (!assertw(mesh.num_faces())) { HB::beep(); return; }
@@ -739,6 +771,8 @@ bool KeyPressed(const string& ps) {
             destroy_face(); thisch = ch = 0;
          bcase 'C':
             crop_mesh_to_view(); thisch = ch = 0;
+         bcase 'p':
+            print_info_mesh_elements(); thisch = ch = 0;
          bcase '@':
             ch = 0;
             if (!assertw(cob>=g_obs.first)) return true;

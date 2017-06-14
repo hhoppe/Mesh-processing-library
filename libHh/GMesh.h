@@ -50,9 +50,7 @@ class GMesh : public Mesh {
     Face coalesce_faces(Edge e) override;
     Vertex insert_vertex_on_edge(Edge e) override;
     Edge remove_vertex_between_edges(Vertex vr) override;
-    // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings.
-    int fix_vertex(Vertex v);           // return the number of rings the old vertex had.
-    int fix_vertex(Vertex v, Array<Vertex>& new_vertices);
+    Array<Vertex> fix_vertex(Vertex v) override;
 // Geometry
     const Point& point(Vertex v) const          { return v->_point; }
     void set_point(Vertex v, const Point& p);

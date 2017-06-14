@@ -210,6 +210,8 @@ class Mesh : noncopyable {
     virtual Face coalesce_faces(Edge e); // die if !legal
     virtual Vertex insert_vertex_on_edge(Edge e);
     virtual Edge remove_vertex_between_edges(Vertex vr);
+    // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings; return new vertices.
+    virtual Array<Vertex> fix_vertex(Vertex v);
 // Mesh
     Vertex id_vertex(int i) const               { return _id2vertex.get(i); }
     int vertex_id(Vertex v) const               { return v->_id; }
@@ -517,6 +519,7 @@ class Mesh : noncopyable {
         unique_ptr<char[]> _string;
         MEdge(HEdge herep)                      : _herep(herep) { }
         HH_MAKE_POOLED_SAC(Mesh::MEdge); // must be last entry of class!
+        friend std::ostream& operator<<(std::ostream& os, Edge e);
     };
     struct MVertex {
         PArray<HEdge,8> _arhe;  // hedges he such that he->_prev->_vert==this
@@ -526,7 +529,8 @@ class Mesh : noncopyable {
         Point _point;
         MVertex(int id)                         : _id(id) { }
         HH_MAKE_POOLED_SAC(Mesh::MVertex); // must be last entry of class!
-    };
+        friend std::ostream& operator<<(std::ostream& os, Vertex v);
+};
     struct MFace {
         HEdge _herep;
         int _id;
@@ -534,6 +538,7 @@ class Mesh : noncopyable {
         unique_ptr<char[]> _string;
         MFace(int id)                           : _id(id) { }
         HH_MAKE_POOLED_SAC(MFace);  // must be last entry of class!
+        friend std::ostream& operator<<(std::ostream& os, Face f);
     };
     struct MHEdge {
         HEdge _prev;            // previous HEdge in ring around face
@@ -545,6 +550,7 @@ class Mesh : noncopyable {
         unique_ptr<char[]> _string;
         MHEdge()                                = default;
         HH_MAKE_POOLED_SAC(MHEdge); // must be last entry of class!
+        friend std::ostream& operator<<(std::ostream& os, HEdge he);
     };
  public:                                                       // Discouraged:
     virtual Vertex create_vertex_private(int id);              // die if id is already used
@@ -597,6 +603,30 @@ using Vertex = Mesh::Vertex;
 using Face = Mesh::Face;
 using Corner = Mesh::Corner;
 using Edge = Mesh::Edge;
+
+inline std::ostream& operator<<(std::ostream& os, Vertex v) {
+    return os << sform("Vertex{%d}", v->_id);
+}
+
+inline std::ostream& operator<<(std::ostream& os, Face f) {
+    os << sform("Face{%d}=[", f->_id);
+    Mesh::HEdge herep = f->_herep;
+    for (Mesh::HEdge he = herep; ; ) {
+        os << sform("%d", he->_vert->_id);
+        he = he->_next;
+        if (!he || he==herep) break;
+        os << ' ';
+    }
+    return os << ']';
+}
+
+inline std::ostream& operator<<(std::ostream& os, Edge e) {
+    return os << sform("Edge{%d, %d}", e->_herep->_prev->_vert->_id, e->_herep->_vert->_id);  // v1, v2
+}
+
+inline std::ostream& operator<<(std::ostream& os, Corner he) {
+    return os << sform("Corner{v=%d, f=%d}", he->_prev->_vert->_id, he->_face->_id);
+}
 
 
 //----------------------------------------------------------------------------

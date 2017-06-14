@@ -771,8 +771,6 @@ bool KeyPressed(const string& ps) {
             destroy_face(); thisch = ch = 0;
          bcase 'C':
             crop_mesh_to_view(); thisch = ch = 0;
-         bcase 'p':
-            print_info_mesh_elements(); thisch = ch = 0;
          bcase '@':
             ch = 0;
             if (!assertw(cob>=g_obs.first)) return true;
@@ -1000,6 +998,8 @@ bool KeyPressed(const string& ps) {
      bcase '@':
         play = !play;
         HB::redraw_now();
+     bcase '%':
+        print_info_mesh_elements();
      bdefault:
         if (!std::isdigit(ch)) { understood = false; break; }
         if (lastch=='w') {

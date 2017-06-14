@@ -731,51 +731,13 @@ Edge GMesh::remove_vertex_between_edges(Vertex vr) {
     return Mesh::remove_vertex_between_edges(vr);
 }
 
-int GMesh::fix_vertex(Vertex v) {
-  Array<Vertex> new_vertices;
-  return fix_vertex(v, new_vertices);
-}
-
-int GMesh::fix_vertex(Vertex v, Array<Vertex>& new_vertices) {
-    int nrings = 0;
-    new_vertices.init(0);
-    Set<Face> setallf; for (Face f : faces(v)) { setallf.enter(f); }
-    for (;;) {
-        nrings++;
-        Face frep = setallf.get_one();
-        Set<Face> setf;
-        setf.enter(frep);
-        for (Face f = frep; ; ) {
-            f = clw_face(v, f);
-            if (!f || !setf.add(f)) break;
-        }
-        for (Face f = frep; ; ) {
-            f = ccw_face(v, f);
-            if (!f || !setf.add(f)) break;
-        }
-        for (Face f : setf) { assertx(setallf.remove(f)); }
-        if (setallf.empty()) break; // is now a nice vertex
-        Vertex vnew = create_vertex();
-        new_vertices.push(vnew);
-        flags(vnew) = flags(v);
+Array<Vertex> GMesh::fix_vertex(Vertex v) {
+    Array<Vertex> new_vertices = Mesh::fix_vertex(v);
+    for (Vertex vnew : new_vertices) {
         set_string(vnew, get_string(v));
         set_point(vnew, point(v));
-        Array<Vertex> va;
-        Array<unique_ptr<char[]>> ar_s; // often nullptr's
-        for (Face f : setf) {
-            // Loses flags
-            get_vertices(f, va);
-            ar_s.init(0); for (Vertex vv : va) ar_s.push(extract_string(corner(vv, f)));
-            unique_ptr<char[]> fstring = extract_string(f); // often nullptr
-            destroy_face(f);
-            for_int(i, va.num()) { if (va[i]==v) va[i] = vnew; }
-            Face fnew = create_face(va);
-            set_string(fnew, std::move(fstring));
-            for_int(i, va.num()) set_string(corner(va[i], fnew), std::move(ar_s[i]));
-        }
     }
-    return nrings;
+    return new_vertices;
 }
-
 
 } // namespace hh

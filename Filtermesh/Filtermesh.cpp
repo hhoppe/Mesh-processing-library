@@ -2062,7 +2062,8 @@ void do_fixvertices() {
     Array<Vertex> arv; for (Vertex v : mesh.vertices()) { if (!mesh.is_nice(v)) arv.push(v); }
     HH_STAT(Svnrings);
     for (Vertex v : arv) {
-        Svnrings.enter(mesh.fix_vertex(v));
+        Array<Vertex> new_vertices = mesh.fix_vertex(v);
+        Svnrings.enter(new_vertices.num() + 1);
     }
     showdf("Fixed %d vertices\n", Svnrings.inum());
 }

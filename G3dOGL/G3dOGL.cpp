@@ -973,7 +973,7 @@ void load_texturemaps() {
             glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border,
                          GL_RGBA, GL_UNSIGNED_BYTE, itexture.data());
             USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
-            if (glGenerateMipmap) {
+            if (glGenerateMipmap && define_mipmap) {
                 glGenerateMipmap(GL_TEXTURE_2D); // not supported on Remote Desktop
             }
         }

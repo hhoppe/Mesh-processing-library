@@ -770,6 +770,42 @@ Edge Mesh::remove_vertex_between_edges(Vertex vr) {
     return edge(va[0][0], va[0].last());
 }
 
+Array<Vertex> Mesh::fix_vertex(Vertex v) {
+    Array<Vertex> new_vertices;
+    PArray<HEdge,8> hedges; for (HEdge he : v->_arhe) hedges.push(he->_prev);
+    for (HEdge he : hedges) assertx(he->_vert==v);
+    int num_he_processed = 0;
+    PArray<HEdge,8> component;
+    for (HEdge herep : hedges) {
+        if (herep->_vert!=v) continue;  // half-edge already moved to a new vertex
+        component.init(0);
+        component.push(herep);
+        for (HEdge he = herep; ; ) {
+            he = clw_hedge(he);
+            if (!he || he==herep) break;
+            component.push(he);
+        }
+        for (HEdge he = herep; ; ) {
+            he = ccw_hedge(he);
+            if (!he || he==herep) break;
+            component.push(he);
+        }
+        if (num_he_processed + component.num() == hedges.num()) break;  // do not fix last component
+        Vertex vnew = create_vertex();
+        new_vertices.push(vnew);
+        flags(vnew) = flags(v);         // it is reasonable to copy all vertex attributes
+        for (HEdge he : component) {
+            assertx(he->_vert==v);
+            remove_hedge(he, he->_prev->_vert); remove_hedge(he->_next, he->_vert);
+            he->_vert = vnew;
+            enter_hedge(he, he->_prev->_vert); enter_hedge(he->_next, he->_vert);
+        }
+        num_he_processed += component.num();
+    }
+    ASSERTX(is_nice(v));
+    return new_vertices;
+}
+
 bool Mesh::is_nice() const {
     for (Vertex v : vertices()) { if (!is_nice(v)) return false; }
     for (Face f : faces()) { if (!is_nice(f)) return false; }

@@ -927,8 +927,24 @@ void Draw() {
         if (g_obs.last>1 && cob>0 && cumtime>=play_last+1.f/play_fps) {
             play_last = cumtime;
             g_obs[cob].set_vis(false);
-            cob++;
-            if (cob>g_obs.last) cob = 1;
+            static bool backwards = false;
+            static const bool mirror_loop = !getenv_bool("G3D_ORDINARY_LOOP");
+            cob += backwards ? -1 : +1;
+            if (cob>g_obs.last) {
+                if (mirror_loop) {
+                    cob = g_obs.last;   // repeat the last object a second time
+                    backwards = true;
+                } else {
+                    cob = 1;
+                }
+            } else if (cob<1) {
+                if (mirror_loop) {
+                    cob = 1;            // repeat the first object a second time
+                    backwards = false;
+                } else {
+                    cob = g_obs.last;
+                }
+            }
             g_obs[cob].set_vis(true);
             HB::set_current_object(cob);
         }

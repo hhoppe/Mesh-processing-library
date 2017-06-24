@@ -41,7 +41,7 @@ ifeq ($(CXX),cl)  # (was: ifeq ($(extobj),obj))
   call += $(if $(CONFIG:clangcl=),-Zl,)
 
   $(tlib): $(obj)
-	lib -nologo $(if $(wildcard $(tlib)),$@ $?,-out:$@ $^) $(ltcg)
+	lib -nologo $(if $(call file_exists,$(tlib)),$@ $?,-out:$@ $^) $(ltcg)
   # Above version only rebuilds from scratch if library does not exist.
   #	@echo obj=$(obj) mod=$?
   #	lib -nologo -out:$@ $^

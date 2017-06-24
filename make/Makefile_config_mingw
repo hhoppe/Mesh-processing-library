@@ -8,9 +8,24 @@ ifeq ($(plain_compiler),)
 endif
 
 # $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-4.9.1-posix-seh-rt_v3-rev0/mingw64/bin)
+
+
+ifneq ($(call file_exists,c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin),)
+
 $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin)
 # set path=('c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); unhash; which g++
 # PATH="/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin:$PATH" which g++
+
+else ifneq ($(call file_exists,c:/Program Files/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin),)
+
+$(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin)
+
+else 
+
+$(error Did not find mingw-w64 directory.)
+
+endif
+
 
 gfx_libs = -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 

@@ -7,11 +7,19 @@ ifneq ($(defs_loaded),)   # include guard; should be checked to avoid loading th
 endif
 defs_loaded = 1
 
+# From http://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
+space := $() $()
+# $(warning Have defined space=[$(space)])
+
+define file_exists
+$(if $(wildcard $(subst $(space),\$(space),$(1))),1,)
+endef
+
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1,)#  check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows
 is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  running under Cygwin?
 is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  running under Msys?
-is_mac := $(if $(wildcard /Applications/Launchpad.app),1,)#  running on Mac OS?
+is_mac := $(call file_exists,/Applications/Launchpad.app)#  running on Mac OS?
 
 ifeq ($(HhRoot),)
   $(warning HhRoot variable not set; set to default value of "..")
@@ -48,10 +56,6 @@ endif
 # $(info VER=$(MAKE_VERSION) goals=$(MAKECMDGOALS) is_mswin=$(is_mswin) is_cygwin=$(is_cygwin) is_msys=$(is_msys) win32=$(win32) CONFIG=$(CONFIG) PATH=$(PATH) .VARIABLES=$(.VARIABLES))
 # $(info VER=$(MAKE_VERSION) goals=$(MAKECMDGOALS) is_mswin=$(is_mswin) is_cygwin=$(is_cygwin) is_msys=$(is_msys) win32=$(win32) CONFIG=$(CONFIG) PATH=$(PATH))
 
-# From http://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html
-space := $() $()
-# $(warning Have defined space=[$(space)])
-
 # http://stackoverflow.com/questions/35516996/gnu-make-prepend-a-recursively-expanded-variable/
 # Usage:
 # $(call prepend,VARIABLE,text)           # Prepend text to a recursively expanded $(VARIABLE).
@@ -66,7 +70,7 @@ endef
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
 define prepend_PATH
   $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
-    $(if $(wildcard $(subst $(space),\$(space),$(1))),, \
+    $(if $(call file_exists,$(1)),, \
       $(error Directory $(1) does not exist, so cannot be added to PATH)) \
     $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive,)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):))
 endef
@@ -85,7 +89,7 @@ cppinc += -D_UNICODE -DUNICODE  # (useful for alternative testing since my msbui
 # cppinc += -DHH_NO_IMAGE_WIC   # only matters for CONFIG=win/w32
 # cppinc += -DHH_IMAGE_IO_TOO   # only matters for CONFIG=win/w32 (default is to just use WIC)
 # cppinc += -DHH_NO_VECTOR4_VECTORIZATION  # otherwise enable SSE / NEON instructions
-ifeq ($(wildcard $(HhRoot)/libHh/StackWalker.h),)
+ifeq ($(call file_exists,$(HhRoot)/libHh/StackWalker.h),)
 cppinc += -DHH_NO_STACKWALKER # set for distrib
 endif
 cppinc += -DHH_NO_MKL         # set for distrib (only matters for CONFIG=win/w32)
@@ -231,7 +235,7 @@ LDLIBS += $(last_libs)#  optionally defined in ,/Makefile_config_$(CONFIG)
 
 ifneq ($(have_lapack),)
 # <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/
-ifneq ($(wildcard /usr/include/lapacke),)
+ifneq ($(call file_exists,/usr/include/lapacke),)
 cppinc += -I/usr/include/lapacke
 endif
 endif

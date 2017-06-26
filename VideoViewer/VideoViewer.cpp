@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <atomic>
 #include <thread>
+#include <functional>           // function<>
 #if defined(_WIN32)
 #include <io.h>                 // close(), dup2()
 #endif

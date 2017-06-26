@@ -2139,7 +2139,7 @@ bool DerivedHW::key_press(string skey) {
                  VideoNv12 nvideo_nv12(Grid<3,uchar>(ob._video_nv12.get_Y()),
                                        Grid<3, Vec2<uchar>>(ob._video_nv12.get_UV()));
                  add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12), ob._filename));
-                 if (0) getob()._unsaved = ob._unsaved;
+                 getob()._unsaved = ob._unsaved;
                  message("This is the cloned " + ob.stype());
              }
              bcase 'I': {       // copy current frame as a new image object

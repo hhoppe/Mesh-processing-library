@@ -136,7 +136,6 @@ void all_reset() {
     sizemode = false;
     ddistance = 1.f;
     auto_level = false;
-    aiming = false;
     viewmode = false;
     editmode = false;
     mode_centroid = true;
@@ -153,7 +152,6 @@ void all_reset() {
     expo = true;
     geomorph = true;
     timingtest_nframes = 0;
-    ob_aim = 1;
     assertw(HB::special_keypress('Z'));
     if (b_g3d_demofly) {
         press_keys(",eoDe0------lDtDrDbDrDb");
@@ -170,6 +168,7 @@ void aim_towards(const Point& p) {
     frame_aim_at(g_obs[obview].tm(), p-g_obs[obview].t().p());
 }
 
+#if 0
 void enter_aim() {
     int obn = cob!=obview ? cob : 1;
     Point paim = g_obs[obn].center()*g_obs[obn].t();
@@ -184,19 +183,10 @@ void enter_aim() {
     frame *= to_Frame(rot);
     frame.p() = pt;
 }
+#endif
 
 void rotate_around() {
     Applyq(Frame::rotation(2, TAU/2));
-}
-
-void toggle_aiming() {
-    static float aimzoom = 1.f, oldzoom;
-    aiming = !aiming;
-    if (aiming) {
-        oldzoom = zoom; zoom = aimzoom;
-    } else {
-        aimzoom = zoom; zoom = oldzoom;
-    }
 }
 
 // (area is determ/2)
@@ -580,7 +570,7 @@ void show_all_info() {
     }
     SHOW("Viewing offset:");
     assertw(FrameIO::write(std::cerr, tview, -1, 0.f, false));
-    SHOW(ddistance, expo, keep_active, mode_centroid, want_jump, ob_aim, obinary, keystring);
+    SHOW(ddistance, expo, keep_active, mode_centroid, want_jump, obinary, keystring);
     SHOW(g_obs.first, g_obs.last, HB::get_hither(), HB::get_yonder(), obview, cob);
 }
 
@@ -624,6 +614,7 @@ E       toggle mesh edit mode
 S       size mode (translation resizes)  (left button sets hither/yonder)
 w       set eyeobject           W       reset eyeobject to 0
 v       edit view offset        V       reset view offset to null
+a       set object visible
 FLIGHT Modes (toggles, mutually exclusive)
 f       fly                     J       auto-rotate
 DISPLACEMENT Modes (mutually exclusive):
@@ -641,8 +632,7 @@ OTHER KEYS:
 |       reverse 180 about xy    H       level horizon (roll & pitch)
 l       toggle auto_level       L       level roll
 y       set hither/yonder       Y       clear hither/yonder
-c       set object to aim at    j       'jump' to good viewing location
-a       toggle aiming mode      A       turn to aim at object
+j       'jump' to good viewing location
 r       reread data             u       toggle current object visibility
 N       next object             P       previous object
 z       zero current frame      Z       zero all frames
@@ -876,12 +866,6 @@ bool KeyPressed(const string& ps) {
      bcase 'i':
         info = (info+1)%3;      // 0..2
         HB::redraw_later();
-     bcase 'a':
-        toggle_aiming();
-        HB::redraw_now();
-     bcase 'A':
-        enter_aim();
-        HB::redraw_now();
      bcase 'v':
         viewmode = !viewmode;
         HB::redraw_later();
@@ -894,7 +878,7 @@ bool KeyPressed(const string& ps) {
      bcase '?':
         show_help();
         HB::draw_row_col_text(V(3, 0), "G3d C++");
-     bcase 'c':
+     bcase 'a':
         // prefix code
      bcase 'C':
         mode_centroid = !mode_centroid;
@@ -1005,11 +989,16 @@ bool KeyPressed(const string& ps) {
         if (lastch=='w') {
             thisch = 'w';
             obview = ch-'0';
-        } else if (lastch=='c') {
-            thisch = 'c';
-            ob_aim = ch-'0';
+        } else if (lastch=='a') {
+            thisch = 'a';
+            cob = clamp(ch-'0', 0, g_obs.last);
+            for_intL(ob, g_obs.first, g_obs.last+1) {
+                g_obs[ob].set_vis(ob == cob);
+                g_obs[ob].update();
+            }
+            HB::redraw_now();
         } else {
-            cob = ch-'0';
+            cob = clamp(ch-'0', 0, g_obs.last);
             HB::set_current_object(cob);
         }
         HB::redraw_now();

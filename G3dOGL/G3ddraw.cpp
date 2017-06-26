@@ -710,10 +710,6 @@ static void set_viewing() {
         thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
     if (is_view) thead = tview*thead;
     Frame tcam = thead;         // final camera transform
-    if (aiming) {
-        Vector v = g_obs[ob_aim].center()*g_obs[ob_aim].t()-thead.p();
-        frame_aim_at(tcam, v);
-    }
     float vzoom = zoom;
     if (is_view) {
         const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f); // 2017-02-21
@@ -753,7 +749,7 @@ void ShowInfo() {
         Vec3<float> ang = frame_to_euler_angles(g_obs[obview].t());
         const Point& p = g_obs[obview].t().p();
         string s;
-        s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",
+        s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",
                   cob,
                   (ratemode==ERatemode::position ? 'p' :
                    ratemode==ERatemode::move ? 'm' :
@@ -772,7 +768,6 @@ void ShowInfo() {
                   (viewmode ? 'v' : !tview.is_ident() ? 'V' : ' '),
                   editmode ? 'E' : ' ',
                   obview ? '0'+obview : ' ',
-                  aiming ? 'a' : ' ',
                   auto_level ? 'l' : ' ',
                   input ? 'I' : ' ',
                   output ? 'O' : ' ',
@@ -833,7 +828,7 @@ static void show_caption() {
 }
 
 static void show_cross() {
-    if (!info || aiming || HB::get_font_dims()[1]>9) return;
+    if (!info || HB::get_font_dims()[1]>9) return;
     float r = .01f;
     HB::draw_segment(V(.5f-r, .5f-r), V(.5f+r, .5f+r));
     HB::draw_segment(V(.5f+r, .5f-r), V(.5f-r, .5f+r));

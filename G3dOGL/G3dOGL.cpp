@@ -1022,7 +1022,7 @@ void load_texturemaps() {
                 // showf("Setting texture clamp mode\n");
                 unsigned wrap_mode = GL_CLAMP_TO_EDGE;
                 if (!contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp")) {
-                    Warning("No texture_edge_clamp extension!"); // it could be due to Remote Desktop
+                    // Warning("No texture_edge_clamp extension!");  // it could be due to Remote Desktop, or Apple
                     wrap_mode = GL_CLAMP; // (obsolete; uses border texels; seems to work though)
                 }
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);

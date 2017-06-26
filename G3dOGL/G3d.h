@@ -40,8 +40,6 @@ constexpr int full_timingtest_nframes = 100;
 
 // mode of display
 extern int obview;              // object frame to use for view
-extern bool aiming;             // look towards object
-extern int ob_aim;              // which object to aim on
 extern int info;                // infoline (1=small, 2=verbose)
 
 // mode of stream input

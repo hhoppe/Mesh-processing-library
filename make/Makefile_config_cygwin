@@ -9,6 +9,9 @@ cppinc += -DHH_DEFINE_FLOAT128
 cppinc += -D__float128=dummy_name_float128  # to avoid the built-in typename
 cppinc += -DHH_NO_DEFINE_STD_CXX14
 cppinc += -DHH_NO_DEFINE_STD_INDEX_SEQUENCE
+# OpenMP seems still unsupported in Cygwin clang 3.7.1: <omp.h> not found
+# cppinc += -fopenmp -I/lib/gcc/x86_64-pc-cygwin/5.4.0/include  # omp.h file for gcc only
+# cppinc += -fopenmp=libiomp5  # https://stackoverflow.com/questions/33357029/
 
 else                            # default is gcc compiler
 

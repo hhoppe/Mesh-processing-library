@@ -9,17 +9,6 @@
 {
     Set<Edge> sete; for (Edge e : set) { consider(e); }
     //
-    Set<Point> set;        // default uses std::hash<Point>and std::equal_to<Point> (which tries operator==())
-    //
-    namespace std {
-    template<> struct hash<Point> {
-        size_t operator()(const Point& p) const { return std::hash<Vec3<float>>(p); }
-    };
-    template<> struct equal_to<Point> { // it is preferable to define operator==()
-        bool operator()(const Point& p1, const Point& p2) const { return !compare(p1, p2, 1e-4f); }
-    };
-    } // namespace std
-    //
     struct mypair { unsigned _v1, _v2; };
     struct hash_mypair {
         size_t operator()(const mypair& e) const { return hash_combine(my_hash(e._v1), e._v2); }

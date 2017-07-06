@@ -910,6 +910,7 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             //   Duration: N/A, bitrate: N/A
             //     Stream #0:0: Video: gif, bgra, 960x720, 1 fps, 1 tbr, 100 tbn, 100 tbc
             //  (unfortunately, no way to know that there are 8 frames -- would have to read until EOF)
+            //  (could get number of frames using: "ffmpeg -i input.gif -map 0:v:0 -c copy -f null -y /dev/null 2>&1 | grep -Eo 'frame= *[0-9]+ *' | grep -Eo '[0-9]+' | tail -n 1")
             RFile fi("ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |");
             Vec3<int> dims{0, 0, 0};
             double duration = -1., total_bitrate = -1.;

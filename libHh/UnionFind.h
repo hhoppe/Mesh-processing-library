@@ -15,6 +15,7 @@ template<typename T> class UnionFind : noncopyable {
     bool unify(T e1, T e2);     // put these two elements in the same class; returns: were_different
     bool equal(T e1, T e2);     // are two elements in the same equivalence class?
     T get_label(T e);           // only valid until next unify()
+    void promote(T e);          // ensure that e becomes the label for its equivalence class
  private:
     Map<T,T> _m;
     T irep(T e, bool& present);
@@ -55,6 +56,13 @@ template<typename T> T UnionFind<T>::get_label(T e) {
     bool present; T r = irep(e, present);
     if (!present) return e;
     return r;
+}
+
+template<typename T> void UnionFind<T>::promote(T e) {
+    bool present;
+    T r = irep(e, present); if (!present || r==e) return;
+    _m.replace(e, e);
+    _m.replace(r, e);
 }
 
 } // namespace hh

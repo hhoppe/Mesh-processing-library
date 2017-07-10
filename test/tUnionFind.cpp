@@ -46,6 +46,38 @@ int main() {
         SHOW(uf.unify(13, 7));
         SHOW(uf.unify( 1, 2));
     }
+    {
+        UnionFind<int> uf;
+        SHOW(uf.get_label(5));
+        uf.unify(1, 2);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+        uf.promote(1);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+        uf.promote(2);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+
+        uf.unify(3, 4);
+        SHOW(uf.get_label(3));
+        SHOW(uf.get_label(4));
+        uf.unify(1, 3);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+        SHOW(uf.get_label(3));
+        SHOW(uf.get_label(4));
+        uf.promote(3);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+        SHOW(uf.get_label(3));
+        SHOW(uf.get_label(4));
+        uf.promote(1);
+        SHOW(uf.get_label(1));
+        SHOW(uf.get_label(2));
+        SHOW(uf.get_label(3));
+        SHOW(uf.get_label(4));
+    }
 }
 
 template class hh::UnionFind<unsigned>;

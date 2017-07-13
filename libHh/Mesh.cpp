@@ -102,7 +102,7 @@ Vertex Mesh::create_vertex_private(int id) {
 void Mesh::destroy_vertex(Vertex v) {
     assertx(!herep(v));
     assertx(_id2vertex.remove(v->_id));
-    if (_vertexnum-1==v->_id) --_vertexnum;
+    if (0 && _vertexnum-1==v->_id) --_vertexnum;  // intermittent reuse of vertex id might be unsafe
     delete v;
 }
 
@@ -173,7 +173,7 @@ void Mesh::destroy_face(Face f) {
         }
     }
     assertx(_id2face.remove(f->_id));
-    if (_facenum-1==f->_id) --_facenum;
+    if (0 && _facenum-1==f->_id) --_facenum;  // intermittent reuse of face id might be unsafe
     delete f;
     if (sdebug>=3) ok();
 }

@@ -93,19 +93,27 @@ inline double sinc_abs(double x) {
     return x<1e-9 ? 1. : sin(x)/x;
 }
 
+// normalized sinc function
+inline double sinc_norm_abs(double x) {
+    // SincNorm[x]  where here I assume that x>=0
+    ASSERTX(x>=0.);
+    x *= D_TAU/2;
+    return sinc_abs(x);
+}
+
 inline double lanczos(double x, double R) { // a = W = 2*R
     // dirichlet[x_, a_] := If[x < -a/2, 0, If[x < a/2, Sinc[Pi x], 0]]
     // Sinc[z] = Sin[z]/z for z!=0, but is 1 for z=0.
     // lanczos[x_, a_] := dirichlet[x, a] Sinc[2 Pi x/a]
     // lanczos[x_, r_] := dirichlet[x, 2*r] Sinc[2 Pi x/(2*r)]
     x = abs(x);
-    return x<R ? sinc_abs((D_TAU/2)*x) * sinc_abs(((D_TAU/2)/R)*x) : 0.;
+    return x<R ? sinc_norm_abs(x) * sinc_norm_abs(x/R) : 0.;
 }
 
 inline double hamming(double x, double R) { // a = W = 2*R
     // hamming[x_, a_] := dirichlet[x, a] (0.54 + 0.46 Cos[2 Pi x/a])
     x = abs(x);
-    return x<R ? sinc_abs((D_TAU/2)*x) * (0.54 + 0.46*cos(((D_TAU/2)/R)*x)) : 0.;
+    return x<R ? sinc_norm_abs(x) * (0.54 + 0.46*cos(x/R)) : 0.;
 }
 
 

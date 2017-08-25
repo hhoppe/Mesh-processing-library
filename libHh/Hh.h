@@ -697,7 +697,7 @@ template<typename T> class Range {
         T _v, _ub;
     };
  public:
-    Range(T ub)                                 : Range(T{0}, ub) { }
+    explicit Range(T ub)                        : Range(T{0}, ub) { }
     Range(T lb, T ub)                           : _lb(min(lb, ub)), _ub(ub) { }
     Iterator begin() const                      { return Iterator(_lb, _ub); }
     Iterator end() const                        { return Iterator(_ub, _ub); }

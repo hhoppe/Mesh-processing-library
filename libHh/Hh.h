@@ -684,23 +684,38 @@ namespace details {
 // Range of integral elements defined as in Python range(lb, ub), where step is 1 and ub is not included.
 template<typename T> class Range {
     static_assert(std::is_integral<T>::value, ""); // must have exact arithmetic for equality testing
-    class Iterator : public std::iterator<std::forward_iterator_tag, const T> {
+    class Iterator {
         using type = Iterator;
      public:
+        using value_type = T;
+        using reference = T&;
+        using pointer = T*;
+        using difference_type = int64_t;
+        using iterator_category = std::random_access_iterator_tag;
         Iterator(T lb, T ub)                    : _v(lb), _ub(ub) { }
         Iterator(const type& iter)              = default;
         bool operator==(const type& rhs) const  { return _v==rhs._v; }
         bool operator!=(const type& rhs) const  { return !(*this==rhs); }
+        difference_type operator-(const type& rhs) const { return _v - rhs._v; }
+        type& operator+=(difference_type n)     { ASSERTXX(_v<_ub); _v += n; ASSERTXX(_v<=_ub); return *this; }
         T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
         type& operator++()                      { ASSERTXX(_v<_ub); _v += T{1}; return *this; }
      private:
         T _v, _ub;
     };
  public:
+    using value_type = T;
+    using iterator = Iterator;
+    using const_iterator = Iterator;
+    using size_type = size_t;
     explicit Range(T ub)                        : Range(T{0}, ub) { }
     Range(T lb, T ub)                           : _lb(min(lb, ub)), _ub(ub) { }
     Iterator begin() const                      { return Iterator(_lb, _ub); }
     Iterator end() const                        { return Iterator(_ub, _ub); }
+    Iterator cbegin() const                     { return Iterator(_lb, _ub); }
+    Iterator cend() const                       { return Iterator(_ub, _ub); }
+    size_t size() const                         { return _ub-_lb; }
+    bool empty() const                          { return _ub==_lb; }
  private:
     T _lb, _ub;
 };

@@ -400,7 +400,7 @@ template<int D, typename T> Grid<D,T> scale_i(CGridView<D,T> grid, const Vec<int
                                               const Vec<FilterBnd,D>& filterbs, const T* bordervalue,
                                               Grid<D,T>&& gr, bool primal) {
     HH_GRIDOP_TIMER(__scale);
-    if (any_of(filterbs, [](const FilterBnd& fb){ return fb.bndrule()==Bndrule::border; })) assertx(bordervalue);
+    if (any_of(filterbs, [](const FilterBnd& fb) { return fb.bndrule()==Bndrule::border; })) assertx(bordervalue);
     const Vec<int,D>& dims = grid.dims();
     int npreprocess = 0; for_int(d, D) { if (filterbs[d].filter().is_preprocess()) npreprocess++; }
     assertx(npreprocess==0 || npreprocess==D);

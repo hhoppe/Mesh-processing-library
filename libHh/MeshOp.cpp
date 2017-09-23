@@ -491,7 +491,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     }
     static EType default_nor_type;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         default_nor_type = (getenv_bool("SUM_NOR") ? EType::sum :
                             getenv_bool("AREA_NOR") ? EType::area :
                             getenv_bool("SLOAN_NOR") ? EType::sloan :

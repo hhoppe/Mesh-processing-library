@@ -168,7 +168,7 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
     // If resulting components of !e_joined edges starting from
     //  left and right sides of e12 is connected, then we have a non-separating cycle.
     // To quickly detect small dead-ends, perform two simultaneous BFS.
-    bool connected = false;
+    bool connected;
     {
         Vec2<Queue<Corner>> queues; // initialized with two opposing half-edges
         queues[0].enqueue(_mesh.corner(_mesh.vertex2(e12), _mesh.face1(e12)));
@@ -176,33 +176,34 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
         static std::atomic<int> g_bfsnum{0}; // thread-safe
         int bfsnum = (++g_bfsnum)*2;
         Vec2<Set<Edge>> sets;   // for slower algorithm
-        bool done = false;
         int count = 0;
-        while (!done) {   // we quickly terminate if either of the queues is empty, declaring connected==false
-            ++count;
-            const int thresh_count = 50;
-            dummy_use(exact);
-            if (k_touch_approx && !exact && count>thresh_count) { connected = true; done = true; continue; }
-            for_int(i, 2) {
-                if (queues[i].empty()) { done = true; break; }
-                Corner cc = queues[i].dequeue();
-                // Consider the two opposite edges of the face
-                for (Corner c : {_mesh.clw_corner(cc), _mesh.clw_corner(_mesh.ccw_face_corner(cc))}) {
-                    Edge e = _mesh.clw_face_edge(c);
-                    if (1) {    // about 3X faster
-                        if (e_joined(e)) { ASSERTX(e_bfsnum(e)!=bfsnum+0 && e_bfsnum(e)!=bfsnum+1); continue; }
-                        if (e_bfsnum(e)==bfsnum+i) continue;
-                        if (e_bfsnum(e)==bfsnum+(1-i)) { connected = true; done = true; break; }
-                        e_bfsnum(e) = bfsnum+i;
-                    } else {
-                        if (e_joined(e)) { ASSERTX(!sets[0].contains(e) && !sets[1].contains(e)); continue; }
-                        if (!sets[i].add(e)) continue;
-                        if (sets[1-i].contains(e)) { sets[i].remove(e); connected = true; done = true; break; }
+        connected = [&]{
+            for (;;) {
+                const int thresh_count = 50;
+                dummy_use(exact);
+                if (k_touch_approx && !exact && count>thresh_count) return true;  // from lambda
+                for_int(i, 2) {
+                    // We quickly terminate if either of the queues is empty, declaring connected==false.
+                    if (queues[i].empty()) return false;  // from lambda
+                    Corner cc = queues[i].dequeue();
+                    // Consider the two opposite edges of the face
+                    for (Corner c : {_mesh.clw_corner(cc), _mesh.clw_corner(_mesh.ccw_face_corner(cc))}) {
+                        Edge e = _mesh.clw_face_edge(c);
+                        if (1) {    // about 3X faster
+                            if (e_joined(e)) { ASSERTX(e_bfsnum(e)!=bfsnum+0 && e_bfsnum(e)!=bfsnum+1); continue; }
+                            if (e_bfsnum(e)==bfsnum+i) continue;
+                            if (e_bfsnum(e)==bfsnum+(1-i)) return true;  // from lambda
+                            e_bfsnum(e) = bfsnum+i;
+                        } else {
+                            if (e_joined(e)) { ASSERTX(!sets[0].contains(e) && !sets[1].contains(e)); continue; }
+                            if (!sets[i].add(e)) continue;
+                            if (sets[1-i].contains(e)) return true;  // from lambda
+                        }
+                        queues[i].enqueue(c);
                     }
-                    queues[i].enqueue(c);
                 }
             }
-        }
+        }();
         HH_SSTAT(Scount, count);
         if (0) {
             Vertex v1 = _mesh.vertex1(e12), v2 = _mesh.vertex2(e12);

@@ -43,7 +43,7 @@ static BOOL CALLBACK find_win_by_procid(HWND hwnd, LPARAM lp) {
 static bool win_started_from_console_aux() {
     static bool result;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         // the result seems to be only correct the first time it is run
         result = false;
         fwbp_pid = GetCurrentProcessId();

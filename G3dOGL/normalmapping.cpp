@@ -459,7 +459,7 @@ struct NormalMapping_nvrc final : NormalMapping {
 NormalMapping* NormalMapping::get() {
     static Array<NormalMapping*> normalmappings;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         normalmappings.push(&NormalMapping_ogl2::s_f_get());
         normalmappings.push(&NormalMapping_frag1::s_f_get());
         normalmappings.push(&NormalMapping_nvrc::s_f_get());

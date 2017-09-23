@@ -115,7 +115,7 @@ void test(GridView<D,T> grid_orig, Periodic = Periodic{}) {
     multigrid.solve();
     CGridView<D,T> grid_result = multigrid.result();
     auto result_rms_err = max_e(rms(grid_result-grid_orig));
-    bool has_an_odd_dim = any_of(dims, [](int i){ return i>1 && i%2; } );
+    bool has_an_odd_dim = any_of(dims, [](int i) { return i>1 && i%2; } );
     const float fudge = has_an_odd_dim ? 2.f : 1.f;
     auto expected_rms_err = max(dims)*10.f*fudge*(std::is_same<decltype(max_e(T{})), float>::value ? 1e-7 : 1e-16);
     if (0) SHOW(expected_rms_err, result_rms_err);

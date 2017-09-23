@@ -960,7 +960,7 @@ double get_seconds_per_counter() {
 #elif defined(_WIN32)
     static double v;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         LARGE_INTEGER l;
         assertx(QueryPerformanceFrequency(&l));
         v = 1./assertx(double(l.QuadPart));
@@ -1000,7 +1000,7 @@ void my_sleep(double sec) {
         const bool use_1ms_time_resolution = false;
         if (use_1ms_time_resolution) {
             static std::once_flag flag;
-            std::call_once(flag, []() {
+            std::call_once(flag, [] {
                 assertnever("");    // requires another library
 #if 0
                 timeBeginPeriod(1); // reduce Sleep/timer resolution from 16ms to <2ms (note: applies system-wide)

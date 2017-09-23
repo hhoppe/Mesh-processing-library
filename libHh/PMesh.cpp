@@ -1728,10 +1728,10 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
         }
      bcase EWant::nfaces:
         assertx(num>=pmi._faces.num());
-        if (!pmi.goto_nfaces_ancestry(num, &ancestry)) { ret = false; break; }
+        if (!pmi.goto_nfaces_ancestry(num, &ancestry)) ret = false;
      bcase EWant::nvertices:
         assertx(num>=pmi._vertices.num());
-        if (!pmi.goto_nvertices_ancestry(num, &ancestry)) { ret = false; break; }
+        if (!pmi.goto_nvertices_ancestry(num, &ancestry)) ret = false;
      bdefault: assertnever("");
     }
     // Grab final mesh

@@ -218,9 +218,8 @@ void Timer::terminate() {
         bool is_new; int i;
         // i = ptimers->_map.enter(_name, narrow_cast<int>(ptimers->_vec_timer_info.size()), is_new); // for hh::Map
         {
-            using value_type = std::unordered_map<string,int>::value_type;
             // Note: not thread-safe.  (I assume that the timers are created outside multi-threading sections.)
-            auto p = ptimers->_map.insert(value_type(_name, narrow_cast<int>(ptimers->_vec_timer_info.size())));
+            auto p = ptimers->_map.emplace(_name, narrow_cast<int>(ptimers->_vec_timer_info.size()));
             is_new = p.second; i = p.first->second;
         }
         if (is_new) {
@@ -234,7 +233,7 @@ void Timer::terminate() {
         if (cmode==EMode::abbrev && timer_info.stat.num()>1) return;
         if (cmode==EMode::summary) { ptimers->_have_some_mult = true; return; }
         static std::once_flag flag;
-        std::call_once(flag, []() {
+        std::call_once(flag, [] {
             if (!getenv_bool("NO_DIAGNOSTICS_IN_STDOUT"))
                 showff("(Timing on %s)\n", timing_host().c_str());
         });

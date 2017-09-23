@@ -208,13 +208,13 @@ template<typename T> void transform(CMatrixView<T> m, const Frame& frame, const 
     const float transform_minification_threshold = getenv_float("TRANSFORM_MINIFICATION_THRESHOLD", 1.3f, true);
     const bool minification_case = max_shrinkage > transform_minification_threshold;
     const bool has_inv_convolution =
-        any_of(filterbs, [](const FilterBnd& f){ return f.filter().has_inv_convolution(); });
+        any_of(filterbs, [](const FilterBnd& f) { return f.filter().has_inv_convolution(); });
     if (minification_case && !has_inv_convolution) {
         // Special slow case to do accurate minification.
-        const Vec2<KernelFunc> kernels = map(filterbs, [](const FilterBnd& f){ return f.filter().func(); });
-        const Vec2<Bndrule> bndrules   = map(filterbs, [](const FilterBnd& f){ return f.bndrule(); });
+        const Vec2<KernelFunc> kernels = map(filterbs, [](const FilterBnd& f) { return f.filter().func(); });
+        const Vec2<Bndrule> bndrules   = map(filterbs, [](const FilterBnd& f) { return f.bndrule(); });
         const Vec2<float> kernel_radii =
-            map(filterbs, [](const FilterBnd& f){ return static_cast<float>(f.filter().radius()); });
+            map(filterbs, [](const FilterBnd& f) { return static_cast<float>(f.filter().radius()); });
         const bool transform_filter_expensive = getenv_bool("TRANSFORM_FILTER_EXPENSIVE");
         const bool transform_filter_radial = getenv_bool("TRANSFORM_FILTER_RADIAL");
         if (!transform_filter_expensive) {

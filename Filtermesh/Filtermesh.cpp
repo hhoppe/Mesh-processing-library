@@ -1933,12 +1933,12 @@ void do_slowcornermerge() {
             if (1) break;       // "if (1)" to avoid warning about unreachable code
         }
         for_cstring_key_value(s.c_str(), key, val, [&] {
-            bool allsame = true;
+            bool all_same = true;
             for (Corner c : mesh.corners(v)) {
                 const char* s2 = GMesh::string_key(str, mesh.get_string(c), key.data());
-                if (!s2 || strcmp(val.data(), s2)) { allsame = false; break; }
+                if (!s2 || strcmp(val.data(), s2)) { all_same = false; break; }
             }
-            if (!allsame) return;
+            if (!all_same) return;
             assertx(!GMesh::string_has_key(mesh.get_string(v), key.data()));
             nmerge++;
             mesh.update_string(v, key.data(), val.data());
@@ -3544,19 +3544,21 @@ Point compute_hull_point(Vertex v, float offset) {
                 }
             }
         }
-        bool bad = false;
-        for_int(c, 3) {
-            assertw(pnew[c]>=-1e-4f);
-            if (pnew[c]<.01f) {
-                Warning("hull point outside border_min");
-                bad = true; break;
+        bool good = [&]{
+            for_int(c, 3) {
+                assertw(pnew[c]>=-1e-4f);
+                if (pnew[c]<.01f) {
+                    Warning("hull point outside border_min");
+                    return false;
+                }
+                if (pnew[c]>transf_border*2+transf_size) {
+                    Warning("hull point outside border_max");
+                    return false;
+                }
             }
-            if (pnew[c]>transf_border*2+transf_size) {
-                Warning("hull point outside border_max");
-                bad = true; break;
-            }
+            return true;
         }
-        if (!bad) {
+        if (good) {
             newpoint = to_Point(to_Vector(pnew-translate)*(1.f/scale));
             ret = true;
         }

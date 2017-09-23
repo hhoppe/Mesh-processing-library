@@ -765,7 +765,7 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
         assertnever("untested");
         static IWICImagingFactory* wic_factory;
         static std::once_flag flag;
-        std::call_once(flag, []() {
+        std::call_once(flag, [] {
             AS(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wic_factory)));
         });
         assertx(wic_factory);

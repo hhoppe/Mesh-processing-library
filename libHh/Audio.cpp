@@ -40,7 +40,7 @@ static_assert(sizeof(WavHeader)==44, "");
 bool ffmpeg_command_exists() {
     static bool s_ret;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         s_ret = command_exists_in_path("ffmpeg");
         if (getenv_bool("AUDIO_DEBUG")) SHOW("ffmpeg_command_exists returns", s_ret);
     });

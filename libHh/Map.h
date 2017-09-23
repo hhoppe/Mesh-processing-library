@@ -42,12 +42,12 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
     explicit Map(Hashf hashf)                   : _m(0, hashf) { }
     explicit Map(Hashf hashf, Equalf equalf)    : _m(0, hashf, equalf) { }
     void clear()                                { _m.clear(); }
-    void enter(const K& k, const V& v)          { auto p = _m.insert(value_type(k, v)); ASSERTX(p.second); } // k new!
-    void enter(K&& k, const V& v)               { auto p = _m.insert(value_type(std::move(k), v)); ASSERTX(p.second); }
-    void enter(const K& k, V&& v)               { auto p = _m.insert(value_type(k, std::move(v))); ASSERTX(p.second); }
+    void enter(const K& k, const V& v)          { auto p = _m.emplace(k, v); ASSERTX(p.second); } // k new!
+    void enter(K&& k, const V& v)               { auto p = _m.emplace(std::move(k), v); ASSERTX(p.second); }
+    void enter(const K& k, V&& v)               { auto p = _m.emplace(k, std::move(v)); ASSERTX(p.second); }
     void enter(K&& k, V&& v)                    { auto p = _m.emplace(std::move(k), std::move(v)); ASSERTX(p.second); }
     V& enter(const K& k, const V& v, bool& is_new) { // does not modify element if it already exists
-        auto p = _m.insert(value_type(k, v)); is_new = p.second; return p.first->second;
+        auto p = _m.emplace(k, v); is_new = p.second; return p.first->second;
     }
     // omit "V& enter(const K& k, V&& v, bool& is_new)" because v could be lost if !is_new
     // note: force enter using: { map[k] = std::move(v); }

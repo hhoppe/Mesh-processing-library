@@ -126,7 +126,7 @@ inline int int_floor_log2(unsigned x) {
 // Generalize some scalar operations on Vec.
 #define E(op)                                                                 \
     template<typename T, int n> Vec<T,n> op(const Vec<T,n>& ar) {             \
-        return map(ar, [](T e){ return std::op(e); });                        \
+        return map(ar, [](T e) { return std::op(e); });                        \
     } HH_EAT_SEMICOLON
 E(floor); E(ceil); E(abs);
 #undef E

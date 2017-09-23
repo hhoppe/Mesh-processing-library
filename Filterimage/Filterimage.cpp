@@ -1205,8 +1205,8 @@ template<typename Container> auto just_alpha(Container&& c)
 template<int D> void new_pullpush(GridView<D,Vector4> grid) {
     if (!grid.size()) return;
     if (0) {
-        int64_t num_undef = count_if(grid, [](const Vector4& v){ return v[3]==0.f; });
-        int64_t num_def =   count_if(grid, [](const Vector4& v){ return v[3]==1.f; });
+        int64_t num_undef = count_if(grid, [](const Vector4& v) { return v[3]==0.f; });
+        int64_t num_def =   count_if(grid, [](const Vector4& v) { return v[3]==1.f; });
         int64_t n = grid.size();
         SHOW(n, num_def, num_undef, n-num_def-num_undef);
     }

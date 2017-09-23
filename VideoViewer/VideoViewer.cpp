@@ -286,7 +286,7 @@ class DirMediaFilenames {
         if (cur_time>s.time_updated+k_max_time_before_refresh || !file_found) {
             s.time_updated = cur_time;
             s.filenames = sort_dir(directory, get_files_in_directory(directory));
-            auto func_not_media = [](const string& s2){ return !filename_is_media(s2); };
+            auto func_not_media = [](const string& s2) { return !filename_is_media(s2); };
             s.filenames.erase(std::remove_if(s.filenames.begin(), s.filenames.end(), func_not_media),
                               s.filenames.end());
         }
@@ -662,7 +662,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
             if (filename=="") continue;
             int i = (1-increment)/2; // 0==next, 1==prev
             std::lock_guard<std::mutex> lg(g_mutex_prefetch);
-            if (none_of(g_prefetch_image, [&](const PrefetchImage& p){ return p.filename==filename; })) {
+            if (none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename==filename; })) {
                 if (g_verbose>=1) SHOW("requesting_prefetch", i, filename);
                 g_prefetch_image[i].filename = filename;
                 g_prefetch_image[i].file_modification_time = 0; // zero means request prefetch

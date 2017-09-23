@@ -346,7 +346,7 @@ const Filter& Filter::get(const string& name) {
     // Careful: Filter::get() may be called by some static constructor.
     static Array<const Filter*> filters;
     static std::once_flag flag;
-    std::call_once(flag, []() {
+    std::call_once(flag, [] {
         filters.push(&Filter_impulse::s_f_get());
         filters.push(&Filter_box::s_f_get());
         filters.push(&Filter_triangle::s_f_get());

@@ -795,31 +795,29 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
             int nwid = nn.ar_nwid[fi];
             nn.ar_wq[nwid]->add(ql);
         }
-        // Now consider f1 & f2.  Try all neighboring corners with
-        //  same wedge id to see if any survive.
+        // Now consider f1 & f2.  Try all neighboring corners with same wedge id to see if any survive.
         for (Face f : mesh.faces(e)) {
-            bool found = false;
-            int nwid; dummy_init(nwid);
-            for (Vertex v : mesh.vertices(e)) {
-                Corner ci = mesh.corner(v, f);
-                assertx(retrieve_nwid(nn, ci)<0);
-                int wid = c_wedge_id(ci);
-                for (Corner c = ci; ; ) { // try ccw
-                    c = mesh.ccw_corner(c); assertx(c!=ci);
-                    if (!c || c_wedge_id(c)!=wid) break;
-                    nwid = retrieve_nwid(nn, c);
-                    if (nwid>=0) { found = true; break; }
+            int nwid = [&]{
+                for (Vertex v : mesh.vertices(e)) {
+                    Corner ci = mesh.corner(v, f);
+                    assertx(retrieve_nwid(nn, ci)<0);
+                    int wid = c_wedge_id(ci);
+                    for (Corner c = ci; ; ) { // try ccw
+                        c = mesh.ccw_corner(c); assertx(c!=ci);
+                        if (!c || c_wedge_id(c)!=wid) break;
+                        int nwid = retrieve_nwid(nn, c);
+                        if (nwid>=0) return nwid;
+                    }
+                    for (Corner c = ci; ; ) { // try clw
+                        c = mesh.clw_corner(c); assertx(c!=ci);
+                        if (!c || c_wedge_id(c)!=wid) break;
+                        int nwid = retrieve_nwid(nn, c);
+                        if (nwid>=0) return nwid;
+                    }
                 }
-                if (found) break;
-                for (Corner c = ci; ; ) { // try clw
-                    c = mesh.clw_corner(c); assertx(c!=ci);
-                    if (!c || c_wedge_id(c)!=wid) break;
-                    nwid = retrieve_nwid(nn, c);
-                    if (nwid>=0) { found = true; break; }
-                }
-                if (found) break;
-            }
-            if (!found) {
+                return -1;
+            }();
+            if (nwid<0) {
                 if (verb>=2) Warning("Qem: lose a wedge");
                 continue;
             }
@@ -3022,19 +3020,21 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
                 }
             }
         }
-        bool bad = false;
-        for_int(c, 3) {
-            assertw(pnew[c]>=-1e-4f);
-            if (pnew[c]<.01f) {
-                Warning("hull point outside border_min");
-                bad = true; break;
+        bool good = [&]{
+            for_int(c, 3) {
+                assertw(pnew[c]>=-1e-4f);
+                if (pnew[c]<.01f) {
+                    Warning("hull point outside border_min");
+                    return false;
+                }
+                if (pnew[c]>transf_border*2+transf_size) {
+                    Warning("hull point outside border_max");
+                    return false;
+                }
             }
-            if (pnew[c]>transf_border*2+transf_size) {
-                Warning("hull point outside border_max");
-                bad = true; break;
-            }
+            return true;
         }
-        if (!bad) {
+        if (good) {
             newpoint = to_Point(to_Vector(pnew-translate)*(1.f/scale));
             ret = true;
         }
@@ -3627,8 +3627,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
             Vertex tv1 = v1, tv2 = v2;
             if (ii==0) std::swap(tv1, tv2);
             // tv1 is kept, tv2 is lost
-            {
-                bool bad = false;
+            bool ok = [&]{
                 for (Face f : mesh.faces(e)) {
                     Vertex vv = mesh.opp_vertex(e, f); // side_vertex1|2
                     Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
@@ -3640,11 +3639,8 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
                     Face fnei0 = mesh.opp_face(fc, mesh.edge(tv2, vvv));
                     Face fnei1 = mesh.opp_face(fc, mesh.edge(vv, vvv));
                     Face fnei2 = mesh.opp_face(f, mesh.edge(tv1, vv));
-                    if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) {
-                        bad = true; break;
-                    }
+                    if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) return false;  // from lambda
                 }
-                if (bad) continue;
                 // Gather materials adjacent to v1
                 Set<int> v1mats;
                 for (Face f : mesh.faces(tv1)) {
@@ -3659,15 +3655,13 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
                     int imat = f_matid(mesh.face1(ee));
                     if (mesh.face2(ee) && f_matid(mesh.face2(ee)) == imat) {
                         for (Face f : mesh.faces(v)) {
-                            if (f_matid(f)!=imat && v1mats.contains(f_matid(f))) {
-                                bad = true; break;
-                            }
+                            if (f_matid(f)!=imat && v1mats.contains(f_matid(f))) return false;  // from lambda
                         }
                     }
-                    if (bad) break;
                 }
-                if (bad) continue;
-            }
+                return true;            // from lambda
+            }();
+            if (!ok) continue;
         }
         if (keepuvcorners) {
             if (is_uv_corner(mesh.corner(v1, f1)) && ii!=2) continue;
@@ -3676,15 +3670,15 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         if (sphericalparam) {
             assertx(minii2);
             // See if new faces are all valid on sphere.
-            bool bad = false;
+            bool ok = true;
             Polygon poly(3); Vertex tv1 = ii==2 ? v1 : v2;
             for_int(i, nn.va.num()-1) {
                 poly[0] = v_sph(nn.va[i]);
                 poly[1] = v_sph(nn.va[i+1]);
                 poly[2] = v_sph(tv1);
-                if (spherical_triangle_area(poly)>=TAU) { bad = true; break; }
+                if (spherical_triangle_area(poly)>=TAU) { ok = false; break; }
             }
-            if (bad) continue;
+            if (!ok) continue;
         }
         Point newp = interp(mesh.point(v1), mesh.point(v2), ii*.5f);
         Array<WedgeInfo> ar_wi; // indexed by nn.ar_nwid
@@ -3703,16 +3697,16 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
             if (dihpenalty==BIGFLOAT) continue;
         }
         if (poszfacenormal) {
-            bool bad = false;
+            bool ok = true;
             Polygon poly(3);
             for_int(i, nn.va.num()-1) {
                 poly[0] = mesh.point(nn.va[i]);
                 poly[1] = mesh.point(nn.va[i+1]);
                 poly[2] = newp;
                 Vector normaldir = poly.get_normal_dir();
-                if (normaldir[2]<0.f) { bad = true; break; }
+                if (normaldir[2]<0.f) { ok = false; break; }
             }
-            if (bad) continue;
+            if (!ok) continue;
         }
         float dir_error = 0.f;
         double rssa;

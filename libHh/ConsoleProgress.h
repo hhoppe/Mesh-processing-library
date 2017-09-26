@@ -42,7 +42,7 @@ class ConsoleProgress : noncopyable {
     bool _silent;
     void update_i(float f);
     static bool& s_f_silent();  // singleton pattern function
-    static std::mutex& s_f_global_mutex() { static std::mutex m; return m; } // singleton pattern function
+    static std::mutex& s_f_global_mutex() { static auto m = new std::mutex; return *m; }  // singleton pattern function
 };
 
 class ConsoleProgressInc : public ConsoleProgress {

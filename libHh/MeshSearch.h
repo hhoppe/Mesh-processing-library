@@ -8,7 +8,7 @@
 
 #if 0
 {
-    MeshSearch msearch(mesh);
+    MeshSearch msearch(&mesh);
     msearch.allow_local_project(true);
     { HH_TIMER(_spatial_create); msearch.build_spatial(); }
     Bary bary; Point clp; float d2;
@@ -63,7 +63,7 @@ class PolygonFaceSpatial :
 // walking over the mesh from that prior result.
 class MeshSearch {
  public:
-    MeshSearch(const GMesh& mesh, bool allow_local_project);
+    MeshSearch(const GMesh* mesh, bool allow_local_project);
     void allow_internal_boundaries(bool b)      { _allow_internal_boundaries = b; }
     void allow_off_surface(bool b)              { _allow_off_surface = b; }
     // search() is thread-safe (except for Random::G?)

@@ -136,7 +136,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
             gl_FragColor.a = 1.;
         }
     )");
-    static type& s_f_get() { static type f; return f; } // singleton pattern function
+    static type& s_f_get() { static type* f = new type; return *f; }  // singleton pattern function
 };
 
 struct NormalMapping_frag1 final : NormalMapping {
@@ -230,7 +230,7 @@ struct NormalMapping_frag1 final : NormalMapping {
         MOV     result.color.a, 1.;
         END
     )");
-    static type& s_f_get() { static type f; return f; }
+    static type& s_f_get() { static type* f = new type; return *f; }
 };
 
 // *** ENV_DOT3 extension
@@ -333,7 +333,7 @@ struct NormalMapping_dot3 final : NormalMapping {
         }
         return buffer;
     }
-    static type& s_f_get() { static type f; return f; }
+    static type& s_f_get() { static type* f = new type; return *f; }
 };
 
 struct NormalMapping_nvrc final : NormalMapping {
@@ -453,7 +453,7 @@ struct NormalMapping_nvrc final : NormalMapping {
         }
         return buffer;
     }
-    static type& s_f_get() { static type f; return f; }
+    static type& s_f_get() { static type* f = new type; return *f; }
 };
 
 NormalMapping* NormalMapping::get() {

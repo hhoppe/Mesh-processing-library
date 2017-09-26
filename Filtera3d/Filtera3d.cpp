@@ -347,7 +347,7 @@ bool compute_mindis(const Point& p) {
     static int pn = 1;
     static unique_ptr<PointSpatial<int>> SPp;
     if (!SPp) SPp = make_unique<PointSpatial<int>>(30);
-    SpatialSearch<int> ss(*SPp, p, mindis); // look no farther than mindis
+    SpatialSearch<int> ss(SPp.get(), p, mindis);  // look no farther than mindis
     if (!ss.done()) {
         float dis2; ss.next(&dis2);
         if (dis2<square(mindis)) return true;
@@ -655,7 +655,7 @@ void compute_outlier() {
     }
     int num_outliers = 0;
     for_int(i, g_outlier.pa.num()) {
-        SpatialSearch<int> ss(SPp, g_outlier.pa[i]);
+        SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
         float dis2; dummy_init(dis2);
         for_int(j, outliern+1) { // +1 to include this point
             assertx(!ss.done());

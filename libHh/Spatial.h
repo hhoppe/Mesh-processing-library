@@ -108,7 +108,7 @@ class ObjectSpatial : public Spatial {
 class BSpatialSearch : noncopyable {
  public:
     // pmaxdis is only a request, you may get objects that lie farther
-    BSpatialSearch(const Spatial& sp, const Point& p, float maxdis = 10.f);
+    BSpatialSearch(const Spatial* sp, const Point& p, float maxdis = 10.f);
     ~BSpatialSearch();
     bool done();
     Univ next(float* dis2 = nullptr); // ret id
@@ -169,7 +169,7 @@ template<typename T> class PointSpatial : public BPointSpatial {
 
 template<typename T> class SpatialSearch : public BSpatialSearch {
  public:
-    SpatialSearch(const Spatial& psp, const Point& pp, float pmaxdis = 10.f) : BSpatialSearch(psp, pp, pmaxdis) { }
+    SpatialSearch(const Spatial* psp, const Point& pp, float pmaxdis = 10.f) : BSpatialSearch(psp, pp, pmaxdis) { }
     T next(float* dis2 = nullptr)               { return Conv<T>::d(BSpatialSearch::next(dis2)); }
 };
 

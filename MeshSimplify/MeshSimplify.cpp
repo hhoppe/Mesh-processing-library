@@ -3020,19 +3020,17 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
                 }
             }
         }
-        bool good = [&]{
-            for_int(c, 3) {
-                assertw(pnew[c]>=-1e-4f);
-                if (pnew[c]<.01f) {
-                    Warning("hull point outside border_min");
-                    return false;
-                }
-                if (pnew[c]>transf_border*2+transf_size) {
-                    Warning("hull point outside border_max");
-                    return false;
-                }
+        bool good = true;
+        for_int(c, 3) {
+            assertw(pnew[c]>=-1e-4f);
+            if (pnew[c]<.01f) {
+                Warning("hull point outside border_min");
+                good = false; break;
             }
-            return true;
+            if (pnew[c]>transf_border*2+transf_size) {
+                Warning("hull point outside border_max");
+                good = false; break;
+            }
         }
         if (good) {
             newpoint = to_Point(to_Vector(pnew-translate)*(1.f/scale));

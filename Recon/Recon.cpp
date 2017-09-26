@@ -182,7 +182,7 @@ void init_output() {
 
 void compute_tp(int i, int& n, Frame& f) {
     PArray<Point,40> pa;
-    SpatialSearch<int> ss(*SPp, co[i]);
+    SpatialSearch<int> ss(SPp.get(), co[i]);
     for (;;) {
         assertx(!ss.done());
         float dis2; int pi = ss.next(&dis2);
@@ -477,7 +477,7 @@ void orient_tp() {
 
 // Find the unsigned distance to the centroid of the k nearest data points.
 float compute_unsigned(const Point& p, Point& proj) {
-    SpatialSearch<int> ss(*SPp, p);
+    SpatialSearch<int> ss(SPp.get(), p);
     Homogeneous h;
     const int k = 1;            // make a parameter?
     for_int(i, k) {
@@ -495,7 +495,7 @@ float compute_unsigned(const Point& p, Point& proj) {
 float compute_signed(const Point& p, Point& proj) {
     int tpi;
     {
-        SpatialSearch<int> ss(*SPpc, p);
+        SpatialSearch<int> ss(SPpc.get(), p);
         tpi = ss.next();
     }
     Vector vptopc = p-pcorg[tpi];
@@ -506,13 +506,13 @@ float compute_signed(const Point& p, Point& proj) {
         return k_Contour_undefined;
     if (1) {
         // check that projected point is close to a data point
-        SpatialSearch<int> ss(*SPp, proj);
+        SpatialSearch<int> ss(SPp.get(), proj);
         float dis2; ss.next(&dis2);
         if (dis2>square(samplingd)) return k_Contour_undefined;
     }
     if (prop) {
         // check that grid point is close to a data point
-        SpatialSearch<int> ss(*SPp, p);
+        SpatialSearch<int> ss(SPp.get(), p);
         float dis2; ss.next(&dis2);
         float grid_diagonal2 = square(1.f/gridsize)*3.f;
         const float fudge = 1.2f;

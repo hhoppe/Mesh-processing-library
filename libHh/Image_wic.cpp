@@ -76,7 +76,7 @@ const GUID* get_container_format(const string& suffix) {
 
 const string& get_suffix(const GUID* container_format) {
     for (const auto& p : k_ar_suffix_container) { if (*p.guid==*container_format) return p.suffix; }
-    static const string k_snull = ""; return k_snull;
+    static const string* k_snull = new string; return *k_snull;
 }
 
 const Array<WICPixelFormatGUID> k_pixel_formats_with_alpha = {

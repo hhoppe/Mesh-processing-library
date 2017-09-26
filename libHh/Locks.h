@@ -57,7 +57,7 @@ class MyGlobalLock {
     MyGlobalLock() : _lock_guard(s_f_global_mutex()) { }
  private:
     std::lock_guard<std::mutex> _lock_guard;
-    static std::mutex& s_f_global_mutex() { static std::mutex m; return m; } // singleton pattern function
+    static std::mutex& s_f_global_mutex() { static auto m = new std::mutex; return *m; }  // singleton pattern function
 };
 #define HH_LOCK if (hh::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
 

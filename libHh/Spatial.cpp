@@ -100,8 +100,8 @@ Univ IPointSpatial::pq_id(Univ id) const {
 
 // *** SpatialSearch
 
-BSpatialSearch::BSpatialSearch(const Spatial& sp, const Point& p, float maxdis)
-    : _sp(sp), _pcenter(p), _maxdis(maxdis) {
+BSpatialSearch::BSpatialSearch(const Spatial* sp, const Point& p, float maxdis)
+    : _sp(*assertx(sp)), _pcenter(p), _maxdis(maxdis) {
     // SHOW("search", p, maxdis);
     Ind ci = _sp.point_to_indices(_pcenter);
     assertx(_sp.indices_inbounds(ci));

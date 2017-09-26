@@ -44,8 +44,8 @@ bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2,
 }
 
 
-MeshSearch::MeshSearch(const GMesh& mesh, bool allow_local_project)
-    : _mesh(mesh), _allow_local_project(allow_local_project), _ar_polyface(_mesh.num_faces()) {
+MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
+    : _mesh(*assertx(mesh)), _allow_local_project(allow_local_project), _ar_polyface(_mesh.num_faces()) {
     if (getenv_bool("NO_LOCAL_PROJECT")) { Warning("MeshSearch NO_LOCAL_PROJECT"); _allow_local_project = false; }
     int psp_size = int(sqrt(_mesh.num_faces()*.05f));
     if (_allow_local_project) psp_size /= 2;
@@ -56,7 +56,7 @@ MeshSearch::MeshSearch(const GMesh& mesh, bool allow_local_project)
     _ftospatial = bbox.get_frame_to_small_cube();
     int fi = 0;
     for (Face f : _mesh.faces()) {
-        Polygon poly(3); mesh.polygon(f, poly); assertx(poly.num()==3);
+        Polygon poly(3); _mesh.polygon(f, poly); assertx(poly.num()==3);
         for_int(i, 3) { poly[i] *= _ftospatial; }
         _ar_polyface[fi] = PolygonFace(std::move(poly), f);
         fi++;
@@ -121,7 +121,7 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
     HH_SSTAT(Sms_loc, !!f);
     if (!f) {
         Point pbb = p*_ftospatial;
-        SpatialSearch<PolygonFace*> ss(*_ppsp, pbb);
+        SpatialSearch<PolygonFace*> ss(_ppsp.get(), pbb);
         const PolygonFace& polyface = *assertx(ss.next());
         f = polyface.face;
         _mesh.polygon(f, poly); assertx(poly.num()==3);

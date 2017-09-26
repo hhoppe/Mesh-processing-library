@@ -23,7 +23,7 @@ void test2(int pspn) {
     const int ns = 100;
     for_int(j, ns) {
         Point p; for_int(c, 3) { p[c] = .1f+.8f*Random::G.unif(); }
-        SpatialSearch<PolygonFace*> ss(psp, p);
+        SpatialSearch<PolygonFace*> ss(&psp, p);
         float dis2; PolygonFace& polyface = *ss.next(&dis2);
         int found_i = int(reinterpret_cast<intptr_t>(polyface.face));
         assertx(found_i==&polyface-ar_polyface.data());
@@ -70,7 +70,7 @@ int main() {
         if (ret) { SHOW(pint); std::cerr << polyface->poly; }
     }
     {
-        SpatialSearch<PolygonFace*> ss(psp, Point(.4f, .3f, .3f));
+        SpatialSearch<PolygonFace*> ss(&psp, Point(.4f, .3f, .3f));
         for (;;) {
             if (ss.done()) break;
             float dis2; PolygonFace* polyface = ss.next(&dis2);

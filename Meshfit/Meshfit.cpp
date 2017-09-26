@@ -383,7 +383,7 @@ float project_point_neighb(const Point& p, Face& cf, Bary& ret_bary, Point& ret_
 
 void global_project_aux() {
     if (!have_quads) {
-        MeshSearch msearch(mesh, false);
+        MeshSearch msearch(&mesh, false);
         if (1) {
             Face hintf = nullptr;
             for_int(i, pt.co.num()) {
@@ -434,7 +434,7 @@ void global_project_aux() {
         PolygonFaceSpatial psp(nv<10000 ? 15 : nv<30000 ? 25 : 35);
         for (PolygonFace& polyface : ar_polyface) { psp.enter(&polyface); }
         for_int(i, pt.co.num()) {
-            SpatialSearch<PolygonFace*> ss(psp, pt.co[i]);
+            SpatialSearch<PolygonFace*> ss(&psp, pt.co[i]);
             PolygonFace* polyface = ss.next();
             Face f = polyface->face;
             point_change_face(i, f);

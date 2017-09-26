@@ -16,7 +16,7 @@ int main() {
         Face f1 = mesh.create_face(v1, v2, v3); SHOW(mesh.face_id(f1));
         Face f2 = mesh.create_face(v1, v3, v4); SHOW(mesh.face_id(f2));
         bool allow_local_project = false;
-        MeshSearch msearch(mesh, allow_local_project);
+        MeshSearch msearch(&mesh, allow_local_project);
         Face hintf = nullptr;
         {
             Bary bary; Point clp; float d2;
@@ -44,7 +44,7 @@ int main() {
         }
         SHOW(mesh_genus_string(mesh));
         bool allow_local_project = true;
-        MeshSearch msearch(mesh, allow_local_project);
+        MeshSearch msearch(&mesh, allow_local_project);
         Face hintf = nullptr;
         for_int(i, 8) {
             Point p; for_int(c, 3) { p[c] = Random::G.unif(); }

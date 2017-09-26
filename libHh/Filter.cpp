@@ -124,7 +124,7 @@ struct Filter_impulse final : Filter {
         _is_trivial_magnify = true;
         _is_impulse = true;
     }
-    static const type& s_f_get() { static type f; return f; } // singleton pattern function
+    static const type& s_f_get() { static auto f = new type; return *f; }  // singleton pattern function
 };
 
 struct Filter_box final : Filter {
@@ -138,7 +138,7 @@ struct Filter_box final : Filter {
         // Discontinuous functions must be treated specially to create half-open intervals.
         return x<-.5 ? 0. : x<.5 ? 1. : 0.; // 1 over interval [-.5, .5)
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_triangle final : Filter {
@@ -149,7 +149,7 @@ struct Filter_triangle final : Filter {
         x = abs(x);
         return x<1. ? -x+1. : 0.;
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_quadratic final : Filter {
@@ -173,7 +173,7 @@ struct Filter_quadratic final : Filter {
             return -x*x+1.;
         }
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_mitchell final : Filter {
@@ -194,7 +194,7 @@ struct Filter_mitchell final : Filter {
             return (((7/6.)*x-2.)*x)*x+8/9.;
         }
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_keys final : Filter { // also known as Catmull-Rom spline
@@ -213,7 +213,7 @@ struct Filter_keys final : Filter { // also known as Catmull-Rom spline
             return ((1.5*x-2.5)*x)*x+1.;
         }
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_spline final : Filter { // cubic B-spline
@@ -233,7 +233,7 @@ struct Filter_spline final : Filter { // cubic B-spline
             return ((0.5*x-1.)*x)*x+2/3.;
         }
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_omoms final : Filter { // cubic OMOMS
@@ -254,7 +254,7 @@ struct Filter_omoms final : Filter { // cubic OMOMS
             return ((0.5*x-1.)*x+3/42.)*x+26/42.;
         }
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_preprocess final : Filter {
@@ -264,7 +264,7 @@ struct Filter_preprocess final : Filter {
         _is_interpolating = false;
         _is_preprocess = true;
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_justspline final : Filter {
@@ -272,7 +272,7 @@ struct Filter_justspline final : Filter {
     Filter_justspline() : Filter("justspline", Filter_spline::sfunc, 2.) {
         _is_interpolating = false;
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_justomoms final : Filter {
@@ -281,7 +281,7 @@ struct Filter_justomoms final : Filter {
         _is_interpolating = false;
         _is_omoms = true;
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_gaussian final : Filter {
@@ -297,7 +297,7 @@ struct Filter_gaussian final : Filter {
         //   0.93503:1.06497     av=1           sd=0.0459424
         return gaussian(x, sdv);
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_lanczos6 final : Filter {
@@ -310,7 +310,7 @@ struct Filter_lanczos6 final : Filter {
         // lanczos[x, 6]
         return lanczos(x, 3.);
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_lanczos10 final : Filter {
@@ -323,7 +323,7 @@ struct Filter_lanczos10 final : Filter {
         // lanczos[x, 10]
         return lanczos(x, 5.);
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 struct Filter_hamming6 final : Filter {
@@ -336,7 +336,7 @@ struct Filter_hamming6 final : Filter {
         // hamming[x, 6]
         return hamming(x, 3.);
     }
-    static const type& s_f_get() { static type f; return f; }
+    static const type& s_f_get() { static auto f = new type; return *f; }
 };
 
 } // namespace

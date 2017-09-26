@@ -3359,7 +3359,7 @@ void do_signeddistcontour(Args& args) {
     PolygonFaceSpatial psp(30);
     for (PolygonFace& polyface : ar_polyface) { psp.enter(&polyface); }
     auto func_mesh_signed_distance = [&](const Vec3<float>& p) {
-        SpatialSearch<PolygonFace*> ss(psp, p);
+        SpatialSearch<PolygonFace*> ss(&psp, p);
         PolygonFace* polyface = ss.next();
         Face f = polyface->face;
         return signed_distance(p, f);
@@ -3395,7 +3395,7 @@ void do_signeddistbmp(Args& args) {
         for_int(ix, grid) {
             for_int(iy, grid) {
                 Point p((ix+.5f)/grid, (iy+.5f)/grid, (iz+.5f)/grid);
-                SpatialSearch<PolygonFace*> ss(psp, p);
+                SpatialSearch<PolygonFace*> ss(&psp, p);
                 PolygonFace* polyface = ss.next();
                 Face f = polyface->face;
                 float sdist = signed_distance(p, f);
@@ -3544,19 +3544,17 @@ Point compute_hull_point(Vertex v, float offset) {
                 }
             }
         }
-        bool good = [&]{
-            for_int(c, 3) {
-                assertw(pnew[c]>=-1e-4f);
-                if (pnew[c]<.01f) {
-                    Warning("hull point outside border_min");
-                    return false;
-                }
-                if (pnew[c]>transf_border*2+transf_size) {
-                    Warning("hull point outside border_max");
-                    return false;
-                }
+        bool good = true;
+        for_int(c, 3) {
+            assertw(pnew[c]>=-1e-4f);
+            if (pnew[c]<.01f) {
+                Warning("hull point outside border_min");
+                good = false; break;
             }
-            return true;
+            if (pnew[c]>transf_border*2+transf_size) {
+                Warning("hull point outside border_max");
+                good = false; break;
+            }
         }
         if (good) {
             newpoint = to_Point(to_Vector(pnew-translate)*(1.f/scale));
@@ -4168,7 +4166,7 @@ void do_trimpts(Args& args) {
             Point pc = interp(poly[0], poly[1], poly[2]); // BUG: not true circumcenter!
             float circumd = dist(pc, poly[0]);
             float maxd = circumd*dtrim*xform[0][0];
-            SpatialSearch<int> ss(psp, pc*xform, maxd);
+            SpatialSearch<int> ss(&psp, pc*xform, maxd);
             float dis2;
             if (ss.done() || (ss.next(&dis2), dis2>square(maxd)))
                 dfaces.push(f);
@@ -4182,7 +4180,7 @@ void do_trimpts(Args& args) {
         for (Vertex v : mesh.vertices()) {
             Point p = mesh.point(v)*xform;
             assertx(p[0]>0 && p[0]<1 && p[1]>0 && p[1]<1 && p[2]>0 && p[2]<1);
-            SpatialSearch<int> ss(psp, p, maxd);
+            SpatialSearch<int> ss(&psp, p, maxd);
             float dis2;
             if (ss.done() || (ss.next(&dis2), dis2>square(maxd))) {
                 nvtoofar++;

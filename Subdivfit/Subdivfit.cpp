@@ -266,7 +266,7 @@ void analyze_mesh(const string& s) {
 void global_all_project(const SubMesh& smesh) {
     HH_STIMER(___gallproject);
     const GMesh& mesh = smesh.mesh();
-    MeshSearch msearch(mesh, false);
+    MeshSearch msearch(&mesh, false);
     Face hintf = nullptr;
     for_int(i, co.num()) {
         Bary bary; Point clp; float d2;
@@ -723,7 +723,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf,
     HH_STIMER(____lspatialproject);
     for (int i : setpts) {
         if (setbadpts.contains(i)) {
-            SpatialSearch<PolygonFace*> ss(psp, co[i]*xform);
+            SpatialSearch<PolygonFace*> ss(&psp, co[i]*xform);
             PolygonFace* polyface = ss.next();
             gscmf[i] = polyface->face;
         } else {

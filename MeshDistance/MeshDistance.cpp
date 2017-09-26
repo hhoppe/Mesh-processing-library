@@ -74,7 +74,7 @@ struct PStats {
 
 void project_point(GMesh& meshs, const Point& ps, const A3dColor& pscol, const Vector& psnor,
                    const GMesh& meshd, const PolygonFaceSpatial& psp, Vertex vv, PStats& pstats) {
-    SpatialSearch<PolygonFace*> ss(psp, ps*xform);
+    SpatialSearch<PolygonFace*> ss(&psp, ps*xform);
     PolygonFace* polyface = ss.next();
     Face fd = polyface->face;
     Array<Corner> cad = meshd.get_corners(fd);

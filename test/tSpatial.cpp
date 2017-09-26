@@ -17,13 +17,13 @@ int main() {
         for (int i = 8; i<pa.num(); i += 7) {
             sp.remove(i, &pa[i]);
         }
-        SpatialSearch<int> ss(sp, Point(.7f, .2f, .8f));
+        SpatialSearch<int> ss(&sp, Point(.7f, .2f, .8f));
         while (!ss.done()) {
             float dis2; int i = ss.next(&dis2);
             std::cerr << sform("Found p%-3d at dis2 %-9g  : ", i, dis2) << pa[i] << "\n";
         }
         {
-            SpatialSearch<int> ss1(sp, Point(.72f, .55f, .33f));
+            SpatialSearch<int> ss1(&sp, Point(.72f, .55f, .33f));
             for_int(i, 2) {
                 float dis2;
                 SHOW(ss1.next(&dis2));
@@ -40,7 +40,7 @@ int main() {
             arpts.push(p);
             sp.enter(i, &arpts.last());
         }
-        SpatialSearch<int> ss(sp, Point(1.f/7.f, .87f, .12f));
+        SpatialSearch<int> ss(&sp, Point(1.f/7.f, .87f, .12f));
         float od2 = 0.f;
         int i;
         for (i = 0; ; i++) {

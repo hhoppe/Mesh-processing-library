@@ -126,7 +126,7 @@ void HW::open() {
                 GLX_RGBA,           // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
                 GLX_RED_SIZE, 8,    // could be just "1"
                 GLX_DEPTH_SIZE, 24, // could be just "1"; 24 is arbitrary
-                // Found necessary for Chrome Remote Desktop and "//third_party/GL",
+                // Found necessary for Chrome Remote Desktop and "//third_party/mesa:GL",
                 //  else ALPHA_SIZE==0 and somehow the rendered window is mostly transparent.
                 GLX_ALPHA_SIZE, 8
             };

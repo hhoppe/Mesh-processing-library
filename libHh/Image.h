@@ -49,7 +49,7 @@ class Image : public Matrix<Pixel> {
     void clear()                                { init(twice(0)); }
     const Attrib& attrib() const                { return _attrib; }
     Attrib& attrib()                            { return _attrib; }
-    void set_zsize(int n)                       { assertx(n==1 || n==3 || n==4); attrib().zsize = n; }
+    void set_zsize(int n);
     int zsize() const                           { return attrib().zsize; }
     void set_suffix(string suffix)              { attrib().suffix = std::move(suffix); } // e.g. "jpg"; for writing '-'
     const string& suffix() const                { return attrib().suffix; } // e.g. "rgb"; used for reading '-'

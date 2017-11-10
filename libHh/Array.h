@@ -19,10 +19,12 @@
 namespace hh {
 
 // Define behavior beyond boundary of 1D range.
-//  (REFLECTED = Matlab:symmetric / Mathematica:reversed / DirectX:Mirror)
-enum class Bndrule { reflected, periodic, clamped, border, undefined };
+//  (reflected = Matlab:symmetric / Mathematica:reversed / DirectX:Mirror)
+//  (reflected101 == OpenCV BORDER_REFLECT_101)
+enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefined };
 
-// Convert a string ("reflected", "periodic", "clamped", "border") to a boundary rule by examining first letter.
+// Convert a string ("reflected", "periodic", "clamped", "border", "101reflected") to a boundary rule by examining
+// first letter.
 Bndrule parse_boundaryrule(const string& s);
 
 // Convert a boundary rule to a string.
@@ -236,6 +238,7 @@ inline Bndrule parse_boundaryrule(const string& s) {
      bcase 'p': bndrule = Bndrule::periodic;
      bcase 'c': bndrule = Bndrule::clamped;
      bcase 'b': bndrule = Bndrule::border;
+     bcase '1': bndrule = Bndrule::reflected101;
      bdefault: assertnever(string() + "Boundary rule '" + s + "' not recognized");
     }
     if (s.size()>1) assertx(s==boundaryrule_name(bndrule));
@@ -248,6 +251,7 @@ inline string boundaryrule_name(Bndrule bndrule) {
      bcase Bndrule::periodic:           return "periodic";
      bcase Bndrule::clamped:            return "clamped";
      bcase Bndrule::border:             return "border";
+     bcase Bndrule::reflected101:       return "101reflected";
      bcase Bndrule::undefined:          return "undefined";
      bdefault: assertnever("");
     }
@@ -268,6 +272,11 @@ inline bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
         if (i<0) i = 0; else if (i>=n) i = n-1;
      bcase Bndrule::border:
         if (i<0 || i>=n) return false;
+     bcase Bndrule::reflected101:
+        if (n==1) { i = 0; break; }
+        for (;;) {
+            if (i<0) i = -i; else if (i>=n) i = 2*n-i-2; else break;
+        }
      bdefault: assertnever("");
     }
     return true;

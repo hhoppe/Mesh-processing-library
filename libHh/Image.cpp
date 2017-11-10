@@ -36,6 +36,11 @@ void Image::init(const Vec2<int>& pdims, Pixel pix) {
     }
 }
 
+void Image::set_zsize(int n) {
+    if (!(n==1 || n==3 || n==4)) { SHOW(n); assertnever("Unexpected number of channels in image"); }
+    attrib().zsize = n;
+}
+
 // *** MISC
 
 void Image::to_bw() {

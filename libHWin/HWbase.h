@@ -80,6 +80,7 @@ class HWbase : noncopyable {
     bool query(const Vec2<int>& yx, string prompt, int& i);
     virtual Array<string> query_open_filenames(const string& hint_filename);
     virtual string query_save_filename(const string& hint_filename, bool force = false); // ret: "" if canceled
+    bool within_query() const                   { return _within_query; }
 // buffering
     virtual void hard_flush() = 0;         // synchronize screen
     virtual void begin_draw_visible() = 0; // force update to visible buffer
@@ -115,6 +116,7 @@ class HWbase : noncopyable {
     string _query_prompt;
     string _query_buffer;
     bool _query_success;
+    bool _within_query;
     int _hwdebug {0};
     string _user_geometry;
     string _backcolor;
@@ -340,10 +342,12 @@ inline bool HWbase::query(const Vec2<int>& yx, string prompt, string& buffer) {
     _query_prompt = std::move(prompt);
     _query_buffer = buffer;
     _query_success = false;
+    _within_query = true;
     redraw_later();
     while (_query) {
         if (loop()) break;
     }
+    _within_query = false;
     buffer = _query_buffer;
     return _query_success;
 }

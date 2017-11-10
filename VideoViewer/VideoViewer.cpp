@@ -1132,27 +1132,34 @@ bool DerivedHW::key_press(string skey) {
             g_dir_media_filenames.invalidate();
         } else if (skey=="<f5>") { // reload from file
             std::lock_guard<std::mutex> lg(g_mutex_obs);
-            Object& ob0 = check_object();
-            string filename = ob0._filename;
-            Vec2<int> osdims = ob0.spatial_dims();
-            for (;;) {
-                if (file_requires_pipe(filename) || file_exists(filename)) break;
-                string sroot = get_path_root(filename);
-                auto i = sroot.rfind('_');
-                if (i==string::npos) throw "cannot find file for " + ob0._filename;
-                filename = sroot.substr(0, i) + "." + get_path_extension(filename);
+            const bool reload_all = is_shift;
+            for_int(obi, getobnum()) {
+                if (!reload_all && obi!=g_cob) continue;
+                Object& ob0 = getob(obi);
+                if (!is_unlocked(ob0)) throw ob0.stype() + " is locked due to background processing";
+                string filename = ob0._filename;
+                Vec2<int> osdims = ob0.spatial_dims();
+                for (;;) {
+                    if (file_requires_pipe(filename) || file_exists(filename)) break;
+                    string sroot = get_path_root(filename);
+                    auto i = sroot.rfind('_');
+                    if (i==string::npos) throw "cannot find file for " + ob0._filename;
+                    filename = sroot.substr(0, i) + "." + get_path_extension(filename);
+                }
+                try {
+                    g_obs[obi] = ob0._is_image ? object_reading_image(filename) : object_reading_video(filename);
+                }
+                catch (std::runtime_error& ex) {
+                    throw "while re-reading " + getob().stype() + " from " + filename + " : " + ex.what();
+                }
+                Object& ob = getob(obi);
+                message("Reloading " + ob.stype() + " " + get_path_tail(filename));
+                ob._filename = filename;
+                if (obi==g_cob) {
+                    set_video_frame(g_cob, k_before_start, k_force_refresh);
+                    if (ob.spatial_dims()!=osdims) reset_window(determine_default_window_dims(g_frame_dims));
+                }
             }
-            try {
-                g_obs[g_cob] = ob0._is_image ? object_reading_image(filename) : object_reading_video(filename);
-            }
-            catch (std::runtime_error& ex) {
-                throw "while re-reading " + getob().stype() + " from " + filename + " : " + ex.what();
-            }
-            Object& ob = getob();
-            message("Reloading " + ob.stype() + " " + get_path_tail(filename));
-            set_video_frame(g_cob, k_before_start, k_force_refresh);
-            ob._filename = filename;
-            if (ob.spatial_dims()!=osdims) reset_window(determine_default_window_dims(g_frame_dims));
         } else if (skey=="<f7>") { // move file
             std::lock_guard<std::mutex> lg(g_mutex_obs);
             check_loaded_saved_object();
@@ -1707,29 +1714,37 @@ bool DerivedHW::key_press(string skey) {
              }
              bcase 'A': {       // select window aspect ratio
                  string s;
-                 if (!query(V(20, 10), "Window aspect ratio (e.g. 1.5 or 16:9): ", s)) throw string("");
-                 float ratio = -1.f;
+                 if (!query(V(20, 10), "Window aspect or dims (e.g. 1.5, 16:9, 200x100): ", s)) throw string("");
+                 Vec2<int> ndims;
                  float v1, v2;
-                 if (sscanf(s.c_str(), "%g:%g", &v1, &v2)==2) {
-                     if (v1>0.f && v2>0.f) ratio = v1/v2;
-                 } else if (sscanf(s.c_str(), "%g", &v1)==1) {
-                     if (v1>0.f) ratio = v1;
+                 if (sscanf(s.c_str(), "%gx%g", &v1, &v2)==2) {
+                     ndims = convert<int>(V(v2, v1));
+                     if (min(ndims)<1) throw "invalid dimensions";
+                     resize_window(ndims);
+                     g_fit_view_to_window = false;
+                 } else {
+                     float ratio = -1.f;
+                     if (sscanf(s.c_str(), "%g:%g", &v1, &v2)==2) {
+                         if (v1>0.f && v2>0.f) ratio = v1/v2;
+                     } else if (sscanf(s.c_str(), "%g", &v1)==1) {
+                         if (v1>0.f) ratio = v1;
+                     }
+                     if (ratio<=0.f) throw string("invalid aspect ratio");
+                     set_fullscreen(false); // OK to subsequently call resize_window() below before a draw_window()?
+                     const int nlarge = 1000000;
+                     ndims = determine_default_window_dims(V(nlarge, int(nlarge*ratio+.5f)));
+                     resize_window(ndims);
+                     g_fit_view_to_window = false;
+                     Frame view; {
+                         Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
+                         const int cmax = arzoom[0]>arzoom[1] ? 0 : 1;
+                         view = Frame::scaling(concat(twice(arzoom[cmax]), V(1.f)));
+                         view[3][1-cmax] = (ndims[1-cmax]-g_frame_dims[1-cmax]*arzoom[cmax])/2.f;
+                         // align window edge with pixel edge using fmod()
+                         view[3][1-cmax] = view[3][1-cmax] - fmod(view[3][1-cmax], arzoom[cmax]);
+                     }
+                     set_view(view);
                  }
-                 if (ratio<=0.f) throw string("invalid aspect ratio");
-                 set_fullscreen(false); // OK to subsequently call resize_window() below before a draw_window()?
-                 const int nlarge = 1000000;
-                 Vec2<int> ndims = determine_default_window_dims(V(nlarge, int(nlarge*ratio+.5f)));
-                 resize_window(ndims);
-                 g_fit_view_to_window = false;
-                 Frame view; {
-                     Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
-                     const int cmax = arzoom[0]>arzoom[1] ? 0 : 1;
-                     view = Frame::scaling(concat(twice(arzoom[cmax]), V(1.f)));
-                     view[3][1-cmax] = (ndims[1-cmax]-g_frame_dims[1-cmax]*arzoom[cmax])/2.f;
-                     // align window edge with pixel edge using fmod()
-                     view[3][1-cmax] = view[3][1-cmax] - fmod(view[3][1-cmax], arzoom[cmax]);
-                 }
-                 set_view(view);
                  g_prev_win_dims = ndims; // do not look to translate image
              }
              bcase 'L'-64: ocase 'R'-64: { // C-S-l, C-S-r: rotate content 90-degrees left (ccw) or right (clw)
@@ -2254,6 +2269,10 @@ bool DerivedHW::key_press(string skey) {
                          if (ob.is_image()) SHOW(ob._image_is_bgra, ob._image_attrib.zsize);
                      }
                  }
+                 if (1) {
+                     Vec2<int> yxL, yxU; fully_visible_image_rectangle(yxL, yxU);
+                     showf("Filterimage -cropcoord %d %d %d %d\n", yxL[1], yxL[0], yxU[1], yxU[0]);
+                 }
                  if (1) g_refresh_texture = true;
                  redraw_later();
              }
@@ -2741,7 +2760,7 @@ void render_image() {
     // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
     // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/src/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
-    // "//third_party/GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
+    // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
     // Mac OS is currently "2.1" which is insufficient.
     const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0]>='3';
 #endif
@@ -2994,7 +3013,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
     }
 #if !defined(HH_HAVE_BACKGROUND_THREAD)
-    background_work(false);
+    if (!hw.within_query()) background_work(false);
 #endif
     if (1) {               // adjust the view if the window moved due to being resized, to facilitate cropping
         Vec2<int> win_pos = window_position_yx();

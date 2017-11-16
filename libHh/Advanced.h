@@ -59,7 +59,10 @@ template<typename T> size_t hash_combine(size_t seed, const T& v) {
     return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2));
 }
 
-// Nice syntax for in-order expansion of parameter packs; example: do_in_order { process(args)... };
+// Nice syntax for in-order expansion of parameter packs.
+//  examples: do_in_order { (process(args), 0)... };
+//            do_in_order { i += args.num() ... };
+// In C++17, replace by fold expression with comma operator; http://en.cppreference.com/w/cpp/language/fold
 struct do_in_order {
     template<typename T> do_in_order(std::initializer_list<T>&&) { }
 };

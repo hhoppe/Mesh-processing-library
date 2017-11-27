@@ -1430,7 +1430,7 @@ bool DerivedHW::key_press(string skey) {
                  }
              }
 // Window controls
-             bcase 'f': {       // fit anisotropically
+             bcase ':': {       // fit anisotropically
                  if (!g_fit_view_to_window) {
                      g_fit_view_to_window = true;
                      message("View scaling set to fit window");
@@ -1456,7 +1456,7 @@ bool DerivedHW::key_press(string skey) {
                      if (g_win_dims==dims)
                          message("Zoom set to 100%");
                      else
-                         message("Zoom set to 100%; press <f> to see entire frame", 5.);
+                         message("Zoom set to 100%; press <w> to see entire frame", 5.);
                  } else {
                      Vec2<int> owin_dims = g_win_dims;
                      Vec2<int> win_dims = determine_default_window_dims(dims);
@@ -1469,7 +1469,7 @@ bool DerivedHW::key_press(string skey) {
                      } else {
                          g_fit_view_to_window = false;
                          set_view(Frame::translation(concat(convert<float>(win_dims-dims), V(0.f))/2.f));
-                         message("Zoom set to 100%; press <f> to see entire frame", 5.);
+                         message("Zoom set to 100%; press <w> to see entire frame", 5.);
                      }
                  }
              }
@@ -1479,7 +1479,8 @@ bool DerivedHW::key_press(string skey) {
              bcase '-': {       // decrease window size or zoom
                  perform_window_zoom(1.f/k_key_zoom_fac);
              }
-             bcase '\r':                // <enter>/<ret>/C-M key (== uchar{13} == 'M'-64),  toggle fullscreen
+             bcase 'f':                 // or <enter> / <ret> / C-M key (== uchar{13} == 'M'-64),  toggle fullscreen
+             ocase '\r':
              ocase '\n':                // G3d -key $'\n'
              {
                  g_fit_view_to_window = true;
@@ -3306,7 +3307,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             "<h>,<?>,<f1>: Toggle this help   (S=shift, C=control)",
             "Mouse:  <Left>select   <Mid>zoom   <S-Mid>rotate   <Right>pan",
             "Keys:  <r>eset_all",
-            " <=>enlarge   <->shrink   <0>100%   <enter>fullscreen   <f>it_stretch   <w>indow_fit   <A>spectratio",
+            " <=>enlarge   <->shrink   <0>100%   <f>ullscreen   <w>indow_fit   <A>spectratio   <:>anisotropic",
             " <k>ernel_filter   <b>rightness_controls",
             " <n>ext_object   <p>rev   <C-1>,<P>first   <N>last   <c>lone   <x>exchange_prev   <X>exchange_next",
             " <C-d>unload_object   <C-k>eep_only_cur   <C-c>copy   <C-v>paste",
@@ -3391,14 +3392,14 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         app_draw_text(V((2+0)*(font_height+4), 6), "Waiting for first video frame...");
         redraw_later();
     } else if (image_is_not_visible()) {
-        app_draw_text(V((2+0)*(font_height+4), 6), "Lost track of the image?  <f> to reset the view");
+        app_draw_text(V((2+0)*(font_height+4), 6), "Lost track of the image?  <w> to reset the view");
     } else if (g_selected.button_active==2) {
         app_draw_text(V((2+0)*(font_height+4), 6),
                       "Drag up/down to zoom  (<shift>:rotate)"
-                      " (<f> to reset view, <h> for help)");
+                      " (<w> to reset view, <h> for help)");
     } else if (g_selected.button_active==3) {
         app_draw_text(V((2+0)*(font_height+4), 6),
-                      "Drag to pan  (<shift>:constraints) (<f> to reset view, <h> for help)");
+                      "Drag to pan  (<shift>:constraints) (<w> to reset view, <h> for help)");
     } else {
 #if !defined(HH_NO_VIDEO_LOOP)
         if (0 && getobnum()==1 && g_cob>=0 && !getob().is_image() && !getenv_bool("HH_NO_LOOP_MESSAGE"))

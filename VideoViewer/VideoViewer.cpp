@@ -2347,7 +2347,8 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                          } else {
                              Pixel pix = get_frame_pix(yxi);
                              Vec4<int> p = convert<int>(pix);
-                             s += sform("RGB:(%d, %d, %d), HTML:(#%02X%02X%02X)", p[0], p[1], p[2], p[0], p[1], p[2]);
+                             s += sform("RGB:(%d, %d, %d, %d), HTML:(#%02X%02X%02X%02X)",
+                                        p[0], p[1], p[2], p[3], p[0], p[1], p[2], p[3]);
                          }
                          if (!is_fullscreen()) {
                              set_window_title(s);

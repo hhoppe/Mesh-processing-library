@@ -245,7 +245,7 @@ endif
 # Also, generally it appears unsafe to embed comments within a define..endef definition.
 define cmd_hcheck
   @hcheck $< >/devnull; status=$$?; if [[ $$status -ne 0 ]]; then echo "$@:1:1: error: hcheck $< exit $$status"; fi; \
-  if [ ! -e $(@:%.ou=%.diff) ]; then \
+  @if [ ! -e $(@:%.ou=%.diff) ]; then \
     echo "$@"; \
   else \
     echo "$@:1:1: error: test output differs:  ediff $(@:%.ou=%).{ref,ou}"; \
@@ -254,8 +254,7 @@ define cmd_hcheck
     elif [[ -e $@ ]] && [[ `cat $@ | wc -l` -le 30 ]]; then \
       cat $@; \
     fi; \
-  fi; \
-  # exit $$status
+  fi;
 endef
 
 # Test the program % by saving its output into %.ou and then comparing it with the reference output in %.ref

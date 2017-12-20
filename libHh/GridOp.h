@@ -133,7 +133,7 @@ template<int D, typename T> Grid<D,T> crop(CGridView<D,T> grid, const Vec<int,D>
         if (bndrules[i]==Bndrule::undefined) assertx(dL[i]>=0 && dU[i]>=0); // no negative crop
         if (bndrules[i]==Bndrule::border) assertx(bordervalue);
         if (grid.size()==0) assertx(bndrules[i]!=Bndrule::reflected && bndrules[i]!=Bndrule::periodic &&
-                                    bndrules[i]!=Bndrule::clamped);
+                                    bndrules[i]!=Bndrule::clamped && bndrules[i]!=Bndrule::reflected101);
     }
     Vec<int,D> newdims = max(grid.dims()-dL-dU, ntimes<D>(0));
     if (product(newdims)==0) {

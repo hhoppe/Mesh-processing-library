@@ -67,12 +67,13 @@ template<int D> void test(const Vec<int,D>& dims, const Vec<int,D>& ndims) {
             const Filter& ofilter = *pfilter;
             if (ofilter.is_impulse()) continue; // cannot be used in sample_domain()
             if (!ofilter.is_interpolating()) continue; // (skip mitchell)
-            for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
+            for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::reflected101}) {
                 Grid<D,float> grid(ogrid);
                 auto filterbs = ntimes<D>(FilterBnd(ofilter, bndrule));
                 if (0) SHOW(filterbs[0].filter().name(), ofilter.name());
                 if (ofilter.has_inv_convolution()) {
-                    if (!(bndrule==Bndrule::reflected || bndrule==Bndrule::periodic)) continue;
+                    if (!(bndrule==Bndrule::reflected || bndrule==Bndrule::periodic ||
+                          bndrule==Bndrule::reflected101)) continue;
                     filterbs = inverse_convolution(grid, filterbs);
                 }
                 for (Vec<int,D> u : range(ogrid.dims())) {

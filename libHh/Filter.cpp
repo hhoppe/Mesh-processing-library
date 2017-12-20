@@ -389,6 +389,8 @@ const LUfactorization& FilterBnd::lu_factorization() const {
         return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
      bcase Bndrule::border:
         assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
+     bcase Bndrule::reflected101:
+        assertnever("Bndrule::reflecte101 not supported in generalized-filter scale operation");
      bdefault: assertnever("");
     }
 }

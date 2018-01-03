@@ -244,7 +244,7 @@ endif
 # Note: GNU make version 3.81 cannot have an " =" at the end of the next line; strange.
 # Also, generally it appears unsafe to embed comments within a define..endef definition.
 define cmd_hcheck
-  @hcheck $< >/devnull; status=$$?; if [[ $$status -ne 0 ]]; then echo "$@:1:1: error: hcheck $< exit $$status"; fi; \
+  @hcheck $< >/dev/null; status=$$?; if [[ $$status -ne 0 ]]; then echo "$@:1:1: error: hcheck $< exit $$status"; fi; \
   if [ ! -e $(@:%.ou=%.diff) ]; then \
     echo "$@"; \
   else \

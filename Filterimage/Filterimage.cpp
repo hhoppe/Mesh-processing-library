@@ -2678,11 +2678,13 @@ void do_compare(Args& args) {
         }
         err2 /= image1.size();
         mssim /= image1.size();
-        showf("channel%d: RMSE[0,255]=%f  MSSIM[0,1]=%f\n", z, my_sqrt(err2), mssim);
+        const double psnr = 20. * log10(255. / my_sqrt(err2));
+        showf("channel%d: RMSE[0,255]=%f PSNR=%f MSSIM[0,1]=%f\n", z, my_sqrt(err2), psnr, mssim);
         allerr2 += err2; allmssim += mssim;
     }
     allerr2 /= image.zsize(); allmssim /= image.zsize();
-    showf("all: RMSE=%f MAXE=%d MSSIM=%f\n", allerr2, allmax, allmssim);
+    const double psnr = 20. * log10(255. / my_sqrt(allerr2));
+    showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
     nooutput = true;
 }
 

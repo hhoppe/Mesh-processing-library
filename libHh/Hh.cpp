@@ -1023,7 +1023,10 @@ void my_sleep(double sec) {
         }
     }
 #else
-    assertx(!usleep(static_cast<useconds_t>(sec*1e6)));  // in <unistd.h>
+    // in <unistd.h>
+    if (assertw(!usleep(static_cast<useconds_t>(sec*1e6)))) {
+        assertx(errno==EINTR);           // possibly might be interrupted by a signal?
+    }
 #endif  // defined(_WIN32)
 }
 

@@ -189,9 +189,9 @@ struct Filter_mitchell final : Filter {
         if (x>=2.) {
             return 0.;
         } else if (x>=1.) {
-            return (((-7/18.)*x+2.)*x-10/3.)*x+16/9.;
+            return (((-7./18.)*x+2.)*x-10./3.)*x+16./9.;
         } else {
-            return (((7/6.)*x-2.)*x)*x+8/9.;
+            return (((7./6.)*x-2.)*x)*x+8./9.;
         }
     }
     static const type& s_f_get() { static auto f = new type; return *f; }
@@ -230,7 +230,7 @@ struct Filter_spline final : Filter { // cubic B-spline
         } else if (x>=1.) {
             double t = (x-2.); return (-1./6.)*t*t*t;
         } else {
-            return ((0.5*x-1.)*x)*x+2/3.;
+            return ((0.5*x-1.)*x)*x+2./3.;
         }
     }
     static const type& s_f_get() { static auto f = new type; return *f; }
@@ -249,9 +249,9 @@ struct Filter_omoms final : Filter { // cubic OMOMS
         if (x>=2.) {
             return 0.;
         } else if (x>=1.) {
-            return (((-7/42.)*x+1.)*x-85/42.)*x+58/42.;
+            return (((-7./42.)*x+1.)*x-85./42.)*x+58./42.;
         } else {
-            return ((0.5*x-1.)*x+3/42.)*x+26/42.;
+            return ((0.5*x-1.)*x+3./42.)*x+26./42.;
         }
     }
     static const type& s_f_get() { static auto f = new type; return *f; }

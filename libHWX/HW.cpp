@@ -851,7 +851,8 @@ Vec2<int> HW::get_max_window_dims() {
     // cygwin: ignores taskbar and returns V(1600, 2560).
     // SHOW(attribs.x, attribs.y, attribs.height, attribs.width);
     // SHOW(DisplayWidth(_display, _screen), DisplayHeight(_display, _screen)); // same
-    Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Ubuntu Cinnamon V(55, 0)
+    // Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Ubuntu Cinnamon
+    Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Debian Linux Cinnamon (Window borders Albatross)
     return V(attribs.height, attribs.width) - window_borders;
 }
 

@@ -663,8 +663,8 @@ int main(int argc, const char** argv) {
     analyze_poly(0, "FINAL");
     HH_TIMER_END(Polyfit);
     if (file_spawn) {
-        a3d_spawn.reset();
-        file_spawn.reset();
+        a3d_spawn = nullptr;
+        file_spawn = nullptr;
     }
     hh_clean_up();
     if (!nooutput) output_poly(g_oa3d);

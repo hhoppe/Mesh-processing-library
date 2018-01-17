@@ -2443,7 +2443,7 @@ GXobjects::GXobjects() {
 void GXobjects::clear(int segn) {
     assertx(_segn==-1); assertx(_link.ok(segn));
     _link[segn] = 0;
-    _ob[segn].reset();
+    _ob[segn] = nullptr;
     svalid_dl.remove(segn);
     // I could update _imin, _imax here
 }
@@ -2790,11 +2790,11 @@ void HB::draw_space() {
                 movie_frame++;
                 movie_cprogress->update(float(movie_frame)/(movie_nframes-1));
             } else {
-                movie_cprogress.reset();
+                movie_cprogress = nullptr;
                 inpicture = false;
                 if (movie_video) {
                     movie_video->write_file(movie_rootname);
-                    movie_video.reset();
+                    movie_video = nullptr;
                 }
                 HB::quit();
             }

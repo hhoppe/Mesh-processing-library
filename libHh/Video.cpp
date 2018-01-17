@@ -382,7 +382,7 @@ RVideo::RVideo(const string& filename, bool use_nv12) : _filename(filename), _us
 }
 
 RVideo::~RVideo() {
-    _impl.reset();
+    _impl = nullptr;
 }
 
 bool RVideo::read(MatrixView<Pixel> frame)      { assertw(!_use_nv12); return _impl->read(frame); }
@@ -405,7 +405,7 @@ WVideo::WVideo(const string& filename, const Vec2<int>& spatial_dims, const Vide
 }
 
 WVideo::~WVideo() {
-    _impl.reset();
+    _impl = nullptr;
     if (_tmpfile) {
         WFile fi(_pfilename);
         RFile fi2(_filename);

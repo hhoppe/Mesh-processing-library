@@ -888,7 +888,7 @@ GXobjects::GXobjects() : _ob(k_max_object) {
 void GXobjects::clear(int segn) {
     assertx(_segn==-1); assertx(_link.ok(segn));
     _link[segn] = 0;
-    _ob[segn].reset();
+    _ob[segn] = nullptr;
     // I could update _imin, _imax here
 }
 
@@ -1056,8 +1056,8 @@ void HB::draw_space() {
     }
     draw_all();
     if (postscript) {
-        postscript.reset();
-        pwf.reset();
+        postscript = nullptr;
+        pwf = nullptr;
         SHOW("...plot finished");
     }
 }

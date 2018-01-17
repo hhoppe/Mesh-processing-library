@@ -24,7 +24,7 @@ class Stat {
     Stat(Stat&& s) noexcept                     : _print(false) { swap(*this, s); } // not default
     template<typename R, typename = enable_if_range_t<R> > explicit Stat(R&& range);
     ~Stat()                                     { terminate(); }
-    Stat& operator=(Stat&& s) noexcept          { _pofs.reset(); _print = false; swap(*this, s); return *this; }
+    Stat& operator=(Stat&& s) noexcept          { _pofs = nullptr; _print = false; swap(*this, s); return *this; }
     void set_name(string pname)                 { _name = std::move(pname); }
     void set_print(bool pprint)                 { _print = pprint; }
     void set_rms()                              { _setrms = true; } // show rms instead of sdv

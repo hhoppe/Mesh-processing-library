@@ -390,7 +390,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     }
     AS(encoder->Commit());
     { HRESULT hr = output_stream->Commit(STGC_DEFAULT); assertx(hr==S_OK || hr==E_NOTIMPL); }
-    encoder.reset();            // early Release just to be safe
+    encoder = nullptr;                  // early Release just to be safe
     if (write_through_memory) {
         WFile fi(filename);
         size_t size = assertx(GlobalSize(assertx(hMem)));

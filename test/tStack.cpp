@@ -80,7 +80,7 @@ int main() {
         stack.push(make_unique<ST>(5));
         stack.push(make_unique<ST>(6));
         for (auto& e : stack) { SHOW(e->_i); }
-        for (auto& e : stack) { e.reset(); } // otherwise, ~Stack() may destroy elements in unknown order
+        for (auto& e : stack) { e = nullptr; }  // otherwise, ~Stack() may destroy elements in unknown order
         SHOW("end");
     }
 }

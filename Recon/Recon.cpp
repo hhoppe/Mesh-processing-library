@@ -102,9 +102,9 @@ void close_mk(unique_ptr<Mk3d>& pmk) {
     if (!pmk) return;
     auto pfi = assertx(g_map_mk3d_wfile.remove(pmk.get()));
     WSA3dStream* oa3d = down_cast<WSA3dStream*>(&pmk->oa3d());
-    pmk.reset();                // destruct Mk3d
-    delete oa3d;                // destruct WSA3dStream
-    pfi.reset();                // destruct WFile
+    pmk = nullptr;                      // destruct Mk3d
+    delete oa3d;                        // destruct WSA3dStream
+    pfi = nullptr;                      // destruct WFile
 }
 
 void process_read() {
@@ -382,7 +382,7 @@ void orient_set(const Set<int>& nodes) {
     int nextlink = gpcpath->out_degree(num);
     if (nextlink>1) showdf(" num_exteriorlinks_used=%d\n", nextlink);
     propagate_along_path(num);
-    gpcpath.reset();
+    gpcpath = nullptr;
     remove_exterior_orientation();
 }
 
@@ -462,7 +462,7 @@ void orient_tp() {
         }
         pScorr = make_unique<Stat>("Scorr", true);
         orient_set(nodes);
-        pScorr.reset();
+        pScorr = nullptr;
     }
     for_int(i, num) { assertx(pciso[i]); }
     close_mk(iop);
@@ -677,12 +677,12 @@ void process() {
             for_int(i, num) { SPpc->enter(i, &pcorg[i]); }
         }
         orient_tp();
-        gpcpseudo.reset();
+        gpcpseudo = nullptr;
     }
     if (iol || ioc || iom) process_contour();
     if (iom && is_3D) showdf("%s\n", mesh_genus_string(mesh).c_str());
-    SPp.reset();
-    SPpc.reset();
+    SPp = nullptr;
+    SPpc = nullptr;
 }
 
 } // namespace

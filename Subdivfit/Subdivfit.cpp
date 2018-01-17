@@ -1399,7 +1399,7 @@ int main(int argc, const char** argv) {
     }
     if (wf_record) {
         gmesh.record_changes(nullptr);
-        wf_record.reset();
+        wf_record = nullptr;
     }
     return 0;
 }

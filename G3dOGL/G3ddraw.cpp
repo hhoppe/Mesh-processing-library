@@ -568,7 +568,7 @@ static void act_auto() {
         if (!timingtest_nframes) {
             flightmode = EFlightmode::none;
             showf("Timing:%s\n", pstat->short_string().c_str());
-            pstat.reset();
+            pstat = nullptr;
             return;
         }
         ch = TAU*ddistance/full_timingtest_nframes;
@@ -968,7 +968,7 @@ void Draw() {
 }
 
 void ClearSubMesh() {
-    smesh.reset();
+    smesh = nullptr;
     g_obs[2].override_mesh(nullptr);
 }
 

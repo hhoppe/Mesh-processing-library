@@ -474,7 +474,7 @@ bool extraordinary_crease_vertex(const GMesh& mesh, Vertex v) {
 } // namespace
 
 void Vnors::clear() {
-    _mfnor.reset();
+    _mfnor = nullptr;
 }
 
 static const bool b_ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");

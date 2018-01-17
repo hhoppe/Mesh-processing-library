@@ -273,7 +273,7 @@ inline const SRVertexGeometry* SRMesh::refined_vg(const SRAVertex* va) const {
 
 inline void SRMesh::finish_vmorph(SRAVertex* va) {
     va->vgeom = va->vmorph->vgrefined;
-    va->vmorph.reset();
+    va->vmorph = nullptr;
 }
 
 SRMesh::SRMesh() {

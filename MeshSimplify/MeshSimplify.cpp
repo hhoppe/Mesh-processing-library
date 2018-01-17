@@ -4098,7 +4098,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
                 assertx(rwid==(!bswap ? nn.ar_rwid_v1[i] : nn.ar_rwid_v2[i]));
                 int orwid = !bswap ? nn.ar_rwid_v2[i] : nn.ar_rwid_v1[i];
                 if (orwid!=rwid) {
-                    gwq[orwid].reset();
+                    gwq[orwid] = nullptr;
                 }
             }
             // remaining affected gwq are updated after edge collapse
@@ -4743,7 +4743,7 @@ int main(int argc, const char** argv) {
     HH_TIMER_END(MeshSimplify);
     hh_clean_up();
     if (!nooutput) write_mesh(std::cout);
-    wfile_prog.reset();
+    wfile_prog = nullptr;
     gwinfo.clear();
     return 0;
 }

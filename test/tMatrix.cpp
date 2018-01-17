@@ -28,7 +28,7 @@ int main() {
         SHOW(ar.num());
         ar.shrink_to_fit();
         SHOW(ar.num());
-        ar[0].reset();
+        ar[0] = nullptr;
         SHOW("after 0 reset");
         // Array<unique_ptr<A>> ar2; ar2 = ar; // compile error as expected
         ar.clear();

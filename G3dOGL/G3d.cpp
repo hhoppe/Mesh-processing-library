@@ -78,7 +78,7 @@ void object::clear() {
     _def = false;
     for_int(c, 3) { _stat_coord[c].zero(); }
     if (_mesh) {
-        _mesh.reset();
+        _mesh = nullptr;
         HB::segment_attach_mesh(_obn, nullptr);
     }
 }

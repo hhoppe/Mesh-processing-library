@@ -1566,8 +1566,8 @@ int main(int argc, const char** argv) {
         ensure_pm_loaded();
         pmesh.write(std::cout);
     }
-    pmi.reset();
-    pmrs.reset();
+    pmi = nullptr;
+    pmrs = nullptr;
     hh_clean_up();
     return 0;
 }

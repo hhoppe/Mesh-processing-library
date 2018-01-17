@@ -486,7 +486,7 @@ unique_ptr<Object> object_reading_video(string filename) {
         Vec3<int> dims = prvideo->dims(); // should allocate extra padframes?
         if (use_nv12 && !is_zero(dims.tail<2>()%2)) {
             use_nv12 = false;
-            prvideo.reset();
+            prvideo = nullptr;
             prvideo = make_unique<RVideo>(filename, use_nv12); // may throw
         }
         Video video(!use_nv12 ? dims : thrice(0));
@@ -529,7 +529,7 @@ unique_ptr<Object> object_reading_image(string filename) {
         p.filename = "";
         p.file_modification_time = 0;
         image = std::move(*p.pimage.get());
-        p.pimage.reset();
+        p.pimage = nullptr;
         bgra = k_use_bgra;
     } else {
         read_image(image, filename); // may throw
@@ -666,7 +666,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
                 if (g_verbose>=1) SHOW("requesting_prefetch", i, filename);
                 g_prefetch_image[i].filename = filename;
                 g_prefetch_image[i].file_modification_time = 0; // zero means request prefetch
-                g_prefetch_image[i].pimage.reset();
+                g_prefetch_image[i].pimage = nullptr;
             }
         }
     }
@@ -3611,7 +3611,7 @@ void background_work(bool asynchronous) {
                         }
                     }
                 }
-                if (ob._nframes_loaded==ob.nframes()) ob._prvideo.reset(); // free up read stream
+                if (ob._nframes_loaded==ob.nframes()) ob._prvideo = nullptr;  // free up read stream
                 ob._locked_by_background_thread = false;
                 continue;
             }

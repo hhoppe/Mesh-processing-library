@@ -1463,7 +1463,7 @@ int main(int argc, const char** argv) {
     // HH_TIMER(Filterprog);
     g_header = args.header();
     args.parse();
-    pfi_prog.reset();
+    pfi_prog = nullptr;
     hh_clean_up();
     return 0;
 }

@@ -320,7 +320,7 @@ RFile::~RFile() {
         if (0) _is->ignore(INT_MAX);
 #endif
     }
-    _impl.reset();
+    _impl = nullptr;
     if (_file) {
         if (_file_ispipe) {
             int ret = my_pclose(_file);
@@ -374,7 +374,7 @@ WFile::WFile(const string& filename) {
 
 WFile::~WFile() {
     if (_os) _os->flush();
-    _impl.reset();
+    _impl = nullptr;
     if (_file) {
         fflush(_file);
         if (_file_ispipe) {

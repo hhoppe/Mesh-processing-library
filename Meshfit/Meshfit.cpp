@@ -1470,6 +1470,6 @@ int main(int argc, const char** argv) {
     HH_TIMER_END(Meshfit);
     hh_clean_up();
     if (!nooutput) { mesh_transform(xformi); mark_mesh(); mesh.write(std::cout); }
-    file_spawn.reset();
+    file_spawn = nullptr;
     return 0;
 }

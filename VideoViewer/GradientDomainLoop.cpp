@@ -886,7 +886,7 @@ void solve_using_offsets(const Vec3<int>& odims,
                         fi = -1;
                         if (prvideos[si]) {
                             if (verbose) showf(" closing stream\n");
-                            prvideos[si].reset();
+                            prvideos[si] = nullptr;
                             rvideo_fi[si] = INT_MAX;
                         }
                     }

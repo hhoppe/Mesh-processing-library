@@ -39,13 +39,10 @@ float miplod(vec2 p) {
 #extension GL_ARB_texture_query_lod : require
     return textureQueryLOD(tex, p).x; // extension; note different capitalization than OpenGL 4.00 feature
 #endif
-    if (true) {
-        ivec2 texdim = textureSize(tex, 0);
-        vec2 ftexdim = vec2(texdim);
-        float v2 = max(len2(dFdx(p*ftexdim)), len2(dFdy(p*ftexdim)));
-        return log2(v2)*0.5f;
-    }
-    return 0.f;
+    ivec2 texdim = textureSize(tex, 0);
+    vec2 ftexdim = vec2(texdim);
+    float v2 = max(len2(dFdx(p*ftexdim)), len2(dFdy(p*ftexdim)));
+    return log2(v2)*0.5f;
 }
 
 // blinear has support [-1, +1]
@@ -121,7 +118,7 @@ float eval_basis(float x, int basis_id) {
     else { return -1.f; }
 }
 
-vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture, vec2 range) {
+vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture) {
     float l = miplod(p);
     bool is_magnification = l<0.001f;
     // Because I do not manually construct good minified levels, do not use expensive lanczos kernels when minifying.
@@ -135,27 +132,14 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture, vec2 range) {
         l = 0.f;
         vec4 tcolor = vec4(0.f, 0.f, 0.f, 0.f);
         float tw = 0.f;
-        if (true) {
-            vec2 ps = p*lidim-0.5f; // scaled and offset by 1/2 cell to account for dual sampling of texels
-            vec2 pfr = fract(ps); vec2 pfl = ps-pfr;
-            vec2 pbase = 1.f-pfr-float(r);
-            for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
-                float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
-                // tcolor += texture(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim) * w;
-                tcolor += textureLod(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim, 0.f) * w;
-                tw += w;
-            }
-        } else {
-            vec2 ps = p*lidim-0.5f; // scaled and offset by 1/2 cell to account for dual sampling of texels
-            vec2 pfr = fract(ps); ivec2 pfl = ivec2(floor(ps));
-            vec2 pbase = 1.f-pfr-float(r);
-            ivec2 pbase2 = pfl-r+1;
-            for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
-                float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
-                // Note: correctly matches GL_CLAMP / GL_CLAMP_TO_EDGE (Bndrule::clamped)
-                tcolor += texelFetch(ptexture, clamp(pbase2+ivec2(x, y), ivec2(0), ivec2(lidim)-1), 0) * w;
-                tw += w;
-            }
+        vec2 ps = p*lidim-0.5f; // scaled and offset by 1/2 cell to account for dual sampling of texels
+        vec2 pfr = fract(ps); vec2 pfl = ps-pfr;
+        vec2 pbase = 1.f-pfr-float(r);
+        for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
+            float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
+            // tcolor += texture(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim) * w;
+            tcolor += textureLod(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim, 0.f) * w;
+            tw += w;
         }
         if (basis_id>=2) tcolor /= tw; // lanczos6 and lanczos10 need renormalization
         // Note that because they are truncated windowed sync approximations, lanczos6 and lanczos10 may
@@ -166,7 +150,7 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture, vec2 range) {
         float lfr = fract(l); float lfl = l-lfr;
         vec4 t0color = vec4(0.f);
         {
-            vec2 dim = true ? vec2(textureSize(tex, int(lfl))) : lidim/pow(2.f, lfl+0.f);
+            vec2 dim = vec2(textureSize(tex, int(lfl)));
             vec2 ps = p*dim-0.5f;
             vec2 pfr = fract(ps); vec2 pfl = ps-pfr;
             vec2 pbase = 1.f-pfr-float(r);
@@ -180,7 +164,7 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture, vec2 range) {
         }
         vec4 t1color = vec4(0.f);
         {
-            vec2 dim = true ? vec2(textureSize(tex, int(lfl)+1)) : lidim/pow(2.f, lfl+1.f);
+            vec2 dim = vec2(textureSize(tex, int(lfl)+1));
             vec2 ps = p*dim-0.5f;
             vec2 pfr = fract(ps); vec2 pfl = ps-pfr;
             vec2 pbase = 1.f-pfr-float(r);
@@ -194,7 +178,6 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture, vec2 range) {
         }
         color = lerp(t0color, t1color, lfr);
     }
-    color = color*(range[1]-range[0])+range[0];
     return color;
 }
 
@@ -220,8 +203,7 @@ void main() {
     if (kernel_id==0 || kernel_id==4) { // linear, nearest
         color = texture(tex, frag_uv);
     } else {
-        vec2 range = vec2(0.0f, 1.0f);
-        color = eval_general(frag_uv, kernel_id, tex, range);
+        color = eval_general(frag_uv, kernel_id, tex);
     }
     vec4 backcolor = through_color;
     if (backcolor[0]<0.f) {                   // use checkerboard pattern; e.g.: vv ~/data/image/dancer_charts.png

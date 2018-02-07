@@ -110,21 +110,21 @@ float lanczos6(float x) { return lanczos(x, 3.f); }
 // lanczos10 has support [-5, +5]
 float lanczos10(float x) { return lanczos(x, 5.f); }
 
-float eval_basis(float x, int basis_id) {
+float eval_kernel(float x, int kernel_id) {
     if (false) { }
-    else if (basis_id==1) { return keys(x); }
-    else if (basis_id==2) { return lanczos6(x); }
-    else if (basis_id==3) { return lanczos10(x); }
+    else if (kernel_id==1) { return keys(x); }
+    else if (kernel_id==2) { return lanczos6(x); }
+    else if (kernel_id==3) { return lanczos10(x); }
     else { return -1.f; }
 }
 
-vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture) {
+vec4 eval_general(vec2 p, int kernel_id, sampler2D ptexture) {
     float l = miplod(p);
     bool is_magnification = l<0.001f;
     // Because I do not manually construct good minified levels, do not use expensive lanczos kernels when minifying.
-    if (!is_magnification && basis_id>=2) basis_id = 1;
-    // basis support: keys [-2, +2], lanczos6 [-3, +3], lanczos10 [-5, +5]
-    int r = basis_id==1 ? 2 : basis_id==2 ? 3 : basis_id==3 ? 5 : -1;
+    if (!is_magnification && kernel_id>=2) kernel_id = 1;
+    // kernel support: keys [-2, +2], lanczos6 [-3, +3], lanczos10 [-5, +5]
+    int r = kernel_id==1 ? 2 : kernel_id==2 ? 3 : kernel_id==3 ? 5 : -1;
     ivec2 tdim = textureSize(tex, 0);
     vec2 lidim = vec2(tdim);
     vec4 color;
@@ -136,12 +136,12 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture) {
         vec2 pfr = fract(ps); vec2 pfl = ps-pfr;
         vec2 pbase = 1.f-pfr-float(r);
         for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
-            float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
+            float w = eval_kernel(pbase[0]+float(x), kernel_id) * eval_kernel(pbase[1]+float(y), kernel_id);
             // tcolor += texture(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim) * w;
             tcolor += textureLod(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/lidim, 0.f) * w;
             tw += w;
         }
-        if (basis_id>=2) tcolor /= tw; // lanczos6 and lanczos10 need renormalization
+        if (kernel_id>=2) tcolor /= tw; // lanczos6 and lanczos10 need renormalization
         // Note that because they are truncated windowed sync approximations, lanczos6 and lanczos10 may
         //   suffer from well known ringing artifacts,
         //   e.g.: VideoViewer ~/data/image/genpattern/rhhhs.bmp -key kk====
@@ -156,11 +156,11 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture) {
             vec2 pbase = 1.f-pfr-float(r);
             float tw = 0.f;
             for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
-                float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
+                float w = eval_kernel(pbase[0]+float(x), kernel_id) * eval_kernel(pbase[1]+float(y), kernel_id);
                 t0color += textureLod(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/dim, lfl+0.f) * w;
                 tw += w;
             }
-            if (basis_id>=2) t0color /= tw; // lanczos6 and lanczos10 need renormalization
+            if (kernel_id>=2) t0color /= tw; // lanczos6 and lanczos10 need renormalization
         }
         vec4 t1color = vec4(0.f);
         {
@@ -170,11 +170,11 @@ vec4 eval_general(vec2 p, int basis_id, sampler2D ptexture) {
             vec2 pbase = 1.f-pfr-float(r);
             float tw = 0.f;
             for (int x = 0; x<2*r; x++) for (int y = 0; y<2*r; y++) {
-                float w = eval_basis(pbase[0]+float(x), basis_id) * eval_basis(pbase[1]+float(y), basis_id);
+                float w = eval_kernel(pbase[0]+float(x), kernel_id) * eval_kernel(pbase[1]+float(y), kernel_id);
                 t1color += textureLod(ptexture, (pfl-float(r)+1.5f+vec2(float(x), float(y)))/dim, lfl+1.f) * w;
                 tw += w;
             }
-            if (basis_id>=2) t1color /= tw; // lanczos6 and lanczos10 need renormalization
+            if (kernel_id>=2) t1color /= tw; // lanczos6 and lanczos10 need renormalization
         }
         color = lerp(t0color, t1color, lfr);
     }

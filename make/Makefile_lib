@@ -38,7 +38,7 @@ ifeq ($(CXX),cl)  # (was: ifeq ($(extobj),obj))
     ccommon += -Fd$(troot).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
   endif
   # Compile library C code using "-Zl" flag to omit reference to standard C (rather than C++) library,
-  call += $(if $(CONFIG:clangcl=),-Zl,)
+  c-all += $(if $(CONFIG:clangcl=),-Zl,)
 
   $(tlib): $(obj)
 	lib -nologo $(if $(call file_exists,$(tlib)),$@ $?,-out:$@ $^) $(ltcg)

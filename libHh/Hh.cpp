@@ -455,7 +455,7 @@ static void hh_init_aux() {
             // LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(
             //   _In_  LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
             LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);
-            if (0) SHOW(v);
+            if (0) SHOW(reinterpret_cast<uint64_t>(v));
             // 0x0041DE18 -- already is an exception filter.  what did it do?
         }
 #endif

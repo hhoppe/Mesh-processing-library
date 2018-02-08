@@ -108,7 +108,7 @@ ifeq ($(plain_compiler),)
 endif  # plain_compiler
 
 cxxall += $(ccommon)
-call += $(ccommon)
+c-all += $(ccommon)
 crel += $(commonrel)
 cdbg += $(commondbg)
 

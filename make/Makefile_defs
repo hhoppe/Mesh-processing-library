@@ -200,7 +200,7 @@ obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
 
 CPPFLAGS = $(cppinc)
 CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
-CFLAGS = $(strip $(call) $(if $(rel:0=),$(crel),$(cdbg)))
+CFLAGS = $(strip $(c-all) $(if $(rel:0=),$(crel),$(cdbg)))
 
 # lib$(HW) must be added as prefix to LDLIBS because lib$(HW)/HW.cpp references Image and Buffer in libHh
 ifeq ($(win32),1)

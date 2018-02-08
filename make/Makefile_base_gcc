@@ -101,7 +101,7 @@ endif  # $(plain_compiler)
 
 ccommon += $(if $(x64:0=),-m64,-m32)
 cxxall += $(STD_CXX) $(ccommon)
-call += -std=c11 $(ccommon)#  or -std=c99
+c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)
 cdbg += $(commondbg)
 # OUTPUT_OPTION =  # default: -o $@
@@ -112,7 +112,7 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 # Cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
 # Note that -fexcess-precision=standard is undefined for C++
 
-ifneq ($(is_mac),1)
+ifneq ($(CXX),clang++) # was ifneq ($(is_mac),1)
 last_libs += -lgomp#  GNU OpenMP library
 endif
 

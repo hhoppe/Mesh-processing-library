@@ -3180,8 +3180,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     const float min_zoom = min(get_zooms());
     const float k_min_zoom_for_2x2rgba = 45.f;
     const float k_min_zoom_for_4x1rgba_yx = 100.f;
-    const bool show_2x2rgba = min_zoom>k_min_zoom_for_2x2rgba;
-    const bool show_4x1rgba_yx = min_zoom>k_min_zoom_for_4x1rgba_yx;
+    const bool show_2x2rgba = g_show_info && min_zoom>k_min_zoom_for_2x2rgba;
+    const bool show_4x1rgba_yx = g_show_info && min_zoom>k_min_zoom_for_4x1rgba_yx;
     g_render_kernel = show_2x2rgba ? EKernel::nearest : g_kernel;
     clear_window();             // not needed if we overwrite framebuffer completely; even so, recommended.
     if (g_cob>=0) {             // render the current image
@@ -3190,7 +3190,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         render_image();
     }
     app_set_window_title();
-    if (g_cob>=0 && g_framenum>=0 && min_zoom>k_min_zoom_for_2x2rgba && !g_show_help) {
+    if (g_show_info && g_cob>=0 && g_framenum>=0 && min_zoom>k_min_zoom_for_2x2rgba && !g_show_help) {
         // show RGBA values and coordinates as text
         const Vec2<int> fdims = get_font_dims();
         const float eps = .01f;

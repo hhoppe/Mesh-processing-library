@@ -16,7 +16,6 @@
 
 #if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
 #define _SCL_SECURE_NO_WARNINGS // allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*)
-// avoiding warning C4996 http://msdn.microsoft.com/en-us/library/ttcz0bys.aspx
 #endif
 
 #if defined(_MSC_VER)

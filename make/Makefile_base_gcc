@@ -40,7 +40,7 @@ ifeq ($(plain_compiler),)
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
   ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(if $(less_pedantic:0=),,$(cwarnings))
-  ifneq ($(CXX),clang++)  # was ifneq ($(is_mac),1)
+  ifneq ($(CXX),clang++)
     ccommon += -mfpmath=sse
   endif
   # Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate

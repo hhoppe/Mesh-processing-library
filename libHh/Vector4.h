@@ -18,6 +18,9 @@
 #define HH_VECTOR4_NEON
 #elif _M_IX86_FP>=2 || defined(_M_X64) || defined(__SSE2__) // (_M_IX86_FP is undefined for x64)
 #define HH_VECTOR4_SSE
+# if (defined(__GNUC__) || defined(__clang__)) && !defined(__SSE4_1__)
+# define HH_NO_SSE41
+# endif
 #elif defined(__powerpc__) || defined(__ppc__)  // maybe __powerpc64__
 #else
 #pragma message("warning: untested")

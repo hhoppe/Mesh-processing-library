@@ -64,7 +64,13 @@ class Vector4i {
     }
     friend Vector4i operator+(const Vector4i& v, int i) { return _mm_add_epi32(v._r, _mm_set1_epi32(i)); }
     friend Vector4i operator-(const Vector4i& v, int i) { return _mm_sub_epi32(v._r, _mm_set1_epi32(i)); }
-    friend Vector4i operator*(const Vector4i& v, int i) { return _mm_mullo_epi32(v._r, _mm_set1_epi32(i)); }
+    friend Vector4i operator*(const Vector4i& v, int i) {
+#if defined(HH_NO_SSE41)
+        return Vector4i(v[0]*i, v[1]*i, v[2]*i, v[3]*i);
+#else
+        return _mm_mullo_epi32(v._r, _mm_set1_epi32(i));
+#endif
+    }
     Vector4i& operator=(const Vector4i& r)              { _r = r._r; return *this; }
     void fill(int v)                                    { _r = _mm_set1_epi32(v); }
     friend Vector4i min(const Vector4i& l, const Vector4i& r) { return _mm_min_epi32(l._r, r._r); }

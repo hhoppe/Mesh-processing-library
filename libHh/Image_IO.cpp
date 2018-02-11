@@ -27,7 +27,7 @@ extern "C" {
 #include "BinaryIO.h"           // read_raw(), write_raw()
 using namespace hh;
 
-#if defined(__GNUC__) && !defined(_MSC_VER)
+#if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wold-style-cast" // for (size_t) cast in two macros in jpeglib.h
 #endif
 

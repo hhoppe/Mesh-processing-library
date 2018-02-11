@@ -297,7 +297,7 @@ void ReadFiles(bool during_init) {
             continue;
         }
         RFile is(filename);
-        read_file(fileno(is.cfile()), during_init);
+        read_file(HH_POSIX(fileno)(is.cfile()), during_init);
         if (anglethresh>=0) RecomputeSharpEdges(*g_obs[robn].get_mesh());
         robn++;
     }

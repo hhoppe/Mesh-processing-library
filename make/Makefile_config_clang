@@ -1,3 +1,43 @@
+ifeq (1,1)  ## clang5.0.1 64_bit on Windows  (defines _MSC_VER and not __GNUC__)
+
+rel ?= 1#  0=debug or 1=release (usually 1)
+x64 = 1
+
+use_pch = 0#  After installing VS2017 update 15.5.6, clang 5.0.1 crashes with precompiled headers
+
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+
+# Bug: <functional> requires "-frtti"; workaround in https://stackoverflow.com/questions/47950690 no longer works.
+cxxall += -frtti
+
+cxxall += -D_CRT_SECURE_NO_WARNINGS -Wno-constant-logical-operand
+
+ccommon += -fopenmp
+
+# Note that I required HH_POSIX(fdopen)... because the non-underscore versions do not exist in clang library.
+
+# 20180206 LLVM 5.0.1
+# http://releases.llvm.org/5.0.1/LLVM-5.0.1-win64.exe
+# installed into C:\Program Files\LLVM
+# c:/Program\ Files/LLVM/bin/clang --version
+# clang version 5.0.1 (tags/RELEASE_501/final)
+# Target: x86_64-pc-windows-msvc
+# Thread model: posix
+# InstalledDir: c:\Program Files\LLVM\bin
+$(call prepend_PATH,c:/Program Files/LLVM/bin)
+
+# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning
+ccommon += -Xclang -flto-visibility-public-std
+
+LDFLAGS += -Lc:/Progra~1/LLVM/lib#  this should not be necessary
+last_libs += -llibomp
+
+gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
+
+
+
+else  ## clang 3.7 32_bit Windows  (defines __GNUC__)
+
 rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 0#  x64 is not supported by c:/mingw/ 32-bit version (nor by cygwin clang).
 
@@ -10,7 +50,6 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 cppinc += -DHH_DEFINE_FLOAT128
 cppinc += -DHH_DEFINE_STD_ONCE
 cppinc += -DHH_DEFINE_STD_MUTEX
-
 
 # Note that clang finds c:/mingw/ automatically!  (at least for clang 3.5 and mingw 4.7.2).
 # However, it requires c:/mingw/bin to be in PATH for correct linking.
@@ -60,45 +99,11 @@ $(call prepend_PATH,c:/mingw/bin)  # http://sourceforge.net/projects/mingw/files
 #  as hinted by http://mingw.5.n7.nabble.com/Problem-building-libf2c-with-mingw-get-setup-exe-td33596.html
 # Also avoided problems with "#define bool bool" and linker errors with "sincos()" and "sincosf()".
 CFLAGS += -isystem c:/MinGW/include
-last_libs += -lgomp#  GNU OpenMP library (not needed in Clang 5.0.1)
+
+last_libs += -lgomp#  GNU OpenMP library
 
 gfx_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32
 
-## See also notes in ./Makefile_config_clangcl and ~/doc/computer/pc.txt
+## See also notes in ~/doc/computer/pc.txt
 
-# 20180206 LLVM 5.0.1
-# http://releases.llvm.org/5.0.1/LLVM-5.0.1-win64.exe
-# installed into C:\Program Files\LLVM
-# c:/Program\ Files/LLVM/bin/clang --version
-# clang version 5.0.1 (tags/RELEASE_501/final)
-# Target: x86_64-pc-windows-msvc
-# Thread model: posix
-# InstalledDir: c:\Program Files\LLVM\bin
-# $(call prepend_PATH,c:/Program Files (x86)/LLVM/bin)
-# $(call prepend_PATH,c:/Program Files/LLVM/bin)
-
-# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning
-# ccommon += -Xclang -flto-visibility-public-std
-
-# In win32 version:
-# libHh.a(Hh.o) : error LNK2019: unresolved external symbol _setmode referenced in function "int __cdecl hh::details::hh_init(void)" (?hh_init@details@hh@@YAHXZ)
-# libHh.a(Hh.o) : error LNK2019: unresolved external symbol _isatty referenced in function "int `void __cdecl hh::showdf(char const *,...)'::`1'::dtor$63" (?dtor$63@?0??showdf@hh@@YAXPBDZZ@4HA)
-# libHh.a(Hh.o) : error LNK2019: unresolved external symbol _putenv referenced in function "void __cdecl hh::my_setenv(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &,class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (?my_setenv@hh@@YAXABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@0@Z)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _fileno referenced in function "int `public: __thiscall hh::RFile::~RFile(void)'::`1'::dtor$16" (?dtor$16@?0???1RFile@hh@@QAE@XZ@4HA)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _cwait referenced in function "int `public: __thiscall hh::RFile::~RFile(void)'::`1'::dtor$16" (?dtor$16@?0???1RFile@hh@@QAE@XZ@4HA)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _getpid referenced in function "public: __thiscall hh::TmpFile::TmpFile(class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > const &)" (??0TmpFile@hh@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _unlink referenced in function "public: __thiscall hh::TmpFile::~TmpFile(void)" (??1TmpFile@hh@@QAE@XZ)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _dup referenced in function "public: virtual int __thiscall hh::`anonymous namespace'::basic_nullbuf<char,struct std::char_traits<char> >::overflow(int)" (?overflow@?$basic_nullbuf@DU?$char_traits@D@std@@@?A@hh@@UAEHH@Z)
-# libHh.a(Buffer.o) : error LNK2001: unresolved external symbol _dup
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _dup2 referenced in function "public: virtual int __thiscall hh::`anonymous namespace'::basic_nullbuf<char,struct std::char_traits<char> >::overflow(int)" (?overflow@?$basic_nullbuf@DU?$char_traits@D@std@@@?A@hh@@UAEHH@Z)
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _close referenced in function "public: virtual int __thiscall hh::`anonymous namespace'::basic_nullbuf<char,struct std::char_traits<char> >::overflow(int)" (?overflow@?$basic_nullbuf@DU?$char_traits@D@std@@@?A@hh@@UAEHH@Z)
-# libHh.a(Buffer.o) : error LNK2001: unresolved external symbol _close
-# libHh.a(FileIO.o) : error LNK2019: unresolved external symbol _fdopen referenced in function "public: virtual int __thiscall hh::`anonymous namespace'::basic_nullbuf<char,struct std::char_traits<char> >::overflow(int)" (?overflow@?$basic_nullbuf@DU?$char_traits@D@std@@@?A@hh@@UAEHH@Z)
-# libHh.a(Buffer.o) : error LNK2019: unresolved external symbol _open referenced in function "public: __thiscall hh::RBuffer::RBuffer(int)" (??0RBuffer@hh@@QAE@H@Z)
-# libHh.a(Buffer.o) : error LNK2019: unresolved external symbol _read referenced in function "int `public: __thiscall hh::RBuffer::RBuffer(int)'::`1'::dtor$29" (?dtor$29@?0???0RBuffer@hh@@QAE@H@Z@4HA)
-# libHh.a(Buffer.o) : error LNK2019: unresolved external symbol _write referenced in function "public: enum hh::WBuffer::EFlush __thiscall hh::WBuffer::flush(int)" (?flush@WBuffer@hh@@QAE?AW4EFlush@12@H@Z)
-# ../bin/clang/Filtermesh.exe : fatal error LNK1120: 14 unresolved externals
-
-# In win64 version, same but without leading underscore.
-
-# After installing VS2017 update 15.5.6, clang 5.0.1 crashes.
+endif

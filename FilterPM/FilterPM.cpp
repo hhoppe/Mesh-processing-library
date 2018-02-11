@@ -652,7 +652,7 @@ void do_compression() {
             RFile fi("v.FilterPM");
             assertx(fi() >> nbytes);
         }
-        assertx(!unlink("v.FilterPM"));
+        assertx(!HH_POSIX(unlink)("v.FilterPM"));
         bits_g_mesh = nbytes*8.f/full_nv;
         if (verb>=2) showf("Gzipped Mesh: %.1f bits/vertex\n", bits_g_mesh);
     }
@@ -676,7 +676,7 @@ void do_compression() {
             RFile fi("v.FilterPM");
             assertx(fi() >> nbytes);
         }
-        assertx(!unlink("v.FilterPM"));
+        assertx(!HH_POSIX(unlink)("v.FilterPM"));
         bits_g_pmesh = nbytes*8.f/full_nv;
         if (verb>=2) showf("Gzipped PMesh: %.1f bits/vertex\n", bits_g_pmesh);
     }

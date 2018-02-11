@@ -56,6 +56,6 @@ int main() {
                 if (abs(diff)>thresh) { SHOW(i, diff); assertnever("?"); }
             }
         }
-        unlink("tAudio.wav");
+        HH_POSIX(unlink)("tAudio.wav");
     }
 }

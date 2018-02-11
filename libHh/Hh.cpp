@@ -51,7 +51,7 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 // This has no associated *.cpp files.
 #include "StringOp.h" // replace_all(), remove_at_beginning(), remove_at_end(), get_canonical_path(), to_lower()
 
-#if (!defined(_MSC_VER) || defined(__clang__)) && !defined(HH_NO_STACKWALKER)
+#if !defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
 #define HH_NO_STACKWALKER
 #endif
 
@@ -524,9 +524,9 @@ static void hh_init_aux() {
 #if defined(_WIN32)
     {
         _fmode = O_BINARY;                // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
-        assertx(setmode(0, O_BINARY)>=0); // stdin
-        assertx(setmode(1, O_BINARY)>=0); // stdout
-        assertx(setmode(2, O_BINARY)>=0); // stderr
+        assertx(HH_POSIX(setmode)(0, O_BINARY)>=0); // stdin
+        assertx(HH_POSIX(setmode)(1, O_BINARY)>=0); // stdout
+        assertx(HH_POSIX(setmode)(2, O_BINARY)>=0); // stderr
         // There is no global variable for default iostream binary mode.
         // With new iostream, it appears that std::cin, std::cout, std::cerr adjust
         //  (fortunately) to the settings of stdin, stdout, stderr.
@@ -694,7 +694,7 @@ bool set_fd_no_delay(int fd, bool nodelay) {
     dummy_use(fd, nodelay);
 #if defined(__sgi)
     // on SGI, setting nodelay on terminal fd may cause window closure
-    if (nodelay) assertx(!isatty(fd));
+    if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
     // 20140704 CYGWIN64 this no longer works.  See also ~/src/native/test_cygwin_nonblocking_read.cpp .
     // 20140826 G3dcmp works again now.
@@ -789,17 +789,14 @@ string extract_function_type_name(string s) {
         if (i==string::npos) { SHOW(s); assertnever(""); }
         s.erase(i);
         remove_at_end(s, " ");  // possible space
-    } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<")) { // clang
+    } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<") ||
+               remove_at_beginning(s, "static string hh::details::TypeNameAux<")) { // both clang
         auto i = s.find(">::name() [T = ");
         if (i==string::npos) { SHOW(s); assertnever(""); }
         s.erase(i);
         remove_at_end(s, " ");  // possible space for complex types
     } else if (s=="name") {
-#if defined(_MSC_VER) && defined(__clang__)
-        s = "Unknown";
-#else
         SHOW(s); assertnever("");
-#endif
     }
     s = cleanup_type_name(s);
     return s;
@@ -1333,7 +1330,7 @@ static bool isafile(int fd) {
 #else  // cygwin or Unix
     struct stat statbuf;
     assertx(!fstat(fd, &statbuf));
-    return !isatty(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
+    return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
 #endif  // defined(_WIN32)
 }
 
@@ -1353,7 +1350,7 @@ static bool isafile(int fd) {
 static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
     bool need_cout, need_cerr;
     // _WIN32: isatty() often returns 64
-    bool isatty1 = !!isatty(1), isatty2 = !!isatty(2);
+    bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);
     bool same_cout_cerr;
 #if defined(_WIN32)
     {
@@ -1443,7 +1440,7 @@ HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showff(const char* format, ..
         // Problem: this does not work if "app | pipe..."
         return isafile(1);
 #else
-        return !isatty(1);
+        return !HH_POSIX(isatty)(1);
 #endif
     };
     std::call_once(flag, [&](bool& b) { b = func_want_cout(); }, std::ref(want_cout));
@@ -1504,7 +1501,7 @@ int to_int(const char* s) {
 
 static void unsetenv(const char* name) {
     // Note: In Unix, deletion would use sform("%s", name).
-    assertx(!putenv(make_unique_c_string(sform("%s=", name).c_str()).release())); // never deleted
+    assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=", name).c_str()).release())); // never deleted
 }
 
 static void setenv(const char* name, const char* value, int change_flag) {
@@ -1513,7 +1510,8 @@ static void setenv(const char* name, const char* value, int change_flag) {
         // Note: In Unix, deletion would use sform("%s", name).
         unsetenv(name);
     } else {
-        assertx(!putenv(make_unique_c_string(sform("%s=%s", name, value).c_str()).release())); // never deleted
+        // never deleted
+        assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=%s", name, value).c_str()).release()));
     }
 }
 
@@ -1627,11 +1625,11 @@ string get_header_info() {
     string host = get_hostname();
     // Number of cores: std_thread_hardware_concurrency()
     string config;
-#if defined(_MSC_VER)
-    config += sform("msc%d", _MSC_VER);
-#elif defined(__clang__)
+#if defined(__clang__)
     // string __clang_version__ is longer and has space(s).
     config += sform("clang%d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
+#elif defined(_MSC_VER)
+    config += sform("msc%d", _MSC_VER);
 #elif defined(__GNUC__)
     config += "gcc" __VERSION__;
 #else

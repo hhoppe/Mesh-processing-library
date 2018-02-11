@@ -7,7 +7,7 @@
 #define HH_VIDEO_HAVE_MF        // unless disabled below
 #define HH_VIDEO_HAVE_FFMPEG    // always as fallback
 
-#if !defined(_MSC_VER) || defined(__clang__) || defined(HH_NO_WINDOWS_MEDIA_FOUNDATION)
+#if !defined(_MSC_VER) || defined(HH_NO_WINDOWS_MEDIA_FOUNDATION)
 #undef HH_VIDEO_HAVE_MF
 #endif
 
@@ -580,7 +580,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
     ~MF_RVideo_Implementation() {
         // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
     }
-    virtual string name() const { return "MF"; }
+    virtual string name() const override { return "MF"; }
     bool read(MatrixView<Pixel> frame) override {
         const Vec2<int> sdims = _rvideo.spatial_dims();
         assertx(frame.dims()==sdims);
@@ -757,7 +757,7 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
         if (_pSinkWriter) AS(_pSinkWriter->Finalize());
         // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
     }
-    virtual string name() const { return "MF"; }
+    virtual string name() const override { return "MF"; }
     void write(CMatrixView<Pixel> frame) override {
         const Vec2<int> sdims = _wvideo.spatial_dims();
         assertx(product(_wvideo.spatial_dims())); assertx(frame.dims()==_wvideo.spatial_dims());

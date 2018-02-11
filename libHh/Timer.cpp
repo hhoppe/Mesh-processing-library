@@ -27,12 +27,12 @@
 
 // Return the effective number of cores (or 0 if unknown).
 inline unsigned std_thread_hardware_concurrency() {
-#if !defined(__MINGW32__) && !defined(__clang__)
+#if defined(__MINGW32__) || (defined(__clang__) && __clang_major__ < 5)
+    return 0;
+#else
     // _GLIBCXX_HAS_GTHREADS disabled for now on mingw32
     // http://stackoverflow.com/questions/5930826/how-to-enable-experimental-c11-concurrency-features-in-mingw
     return std::thread::hardware_concurrency();
-#else
-    return 0;
 #endif
 }
 

@@ -34,11 +34,9 @@ deepclean: clean
 
 ifeq ($(CXX),cl)  # (was: ifeq ($(extobj),obj))
 
-  ifneq ($(CONFIG),clangcl)
-    ccommon += -Fd$(troot).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
-  endif
+  ccommon += -Fd$(troot).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
   # Compile library C code using "-Zl" flag to omit reference to standard C (rather than C++) library,
-  c-all += $(if $(CONFIG:clangcl=),-Zl,)
+  c-all += -Zl
 
   $(tlib): $(obj)
 	lib -nologo $(if $(call file_exists,$(tlib)),$@ $?,-out:$@ $^) $(ltcg)

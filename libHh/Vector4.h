@@ -14,8 +14,6 @@
 
 #if defined(HH_NO_VECTOR4_VECTORIZATION)
 // If so, do not enable vectorization.
-#elif defined(_MSC_VER) && defined(__clang__)
-// It seems that SSE4.1 is not supported, so just skip HH_VECTOR4_SSE for now
 #elif defined(_M_ARM) && _M_ARM_FP>=40 || defined(__ARM_NEON__) // from win and clang respectively; maybe __aarch64__
 #define HH_VECTOR4_NEON
 #elif _M_IX86_FP>=2 || defined(_M_X64) || defined(__SSE2__) // (_M_IX86_FP is undefined for x64)

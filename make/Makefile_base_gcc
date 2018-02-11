@@ -28,6 +28,9 @@ machine_arch = -march=corei7#  to be able to run on more machines, e.g. hhoppeh
 # Static linking: "-static" or "-Wl,-Bdynamic -lsomelibIwantshared -Wl,-Bstatic -lsomelibIwantstatic"
 #  http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw
 
+# For debugging, echo complete compiler commands:
+# ccommon += -v
+
 ifeq ($(plain_compiler),)
 
   cwarnings = $(if $(ignore_compile_warnings:0=),,-Werror)

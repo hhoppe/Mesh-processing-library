@@ -6,7 +6,9 @@
 #include "Stat.h"
 
 #include <vector>
-#if !defined(__clang__)        // mingw target used by my version of clang does not support <mutex> / <future>
+
+// mingw target used by Windows clang3.7 does not support <mutex> / <future>
+#if !(defined(__clang__) && __clang_major__ < 5)
 #include <future>
 #endif
 
@@ -15,7 +17,7 @@ using namespace hh;
 // Occasionally, this program stops responding, especially in CONFIG=mingw32.
 
 int main() {
-#if !defined(__clang__)        // mingw target used by my version of clang does not support <mutex> / <future>
+#if !(defined(__clang__) && __clang_major__ < 5)
     if (1) {
         int process_id = -1;
         int counter = 0;

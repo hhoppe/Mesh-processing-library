@@ -38,7 +38,7 @@
 #endif
 
 #define HH_HAVE_BACKGROUND_THREAD
-#if defined(__clang__)
+#if defined(__clang__) && __clang_major__ < 5
 #undef HH_HAVE_BACKGROUND_THREAD
 #endif
 
@@ -3996,8 +3996,10 @@ int main(int argc, const char** argv) {
     Array<string> aargs(argv, argv+argc);
     g_argv0 = get_canonical_path(aargs[0]);
     if (!contains(aargs, "-")) {
-        if (0) assertx(!close(0)); // close stdin unless we need it, for Windows app started from emacs shell
-        if (1) assertx(dup2(1, 0)>=0); // close stdin, but do not leave fd0 empty in case we open another file
+        // Close stdin unless we need it, for Windows app started from emacs shell.
+        if (0) assertx(!HH_POSIX(close)(0));
+        // Close stdin, but do not leave fd0 empty in case we open another file.
+        if (1) assertx(HH_POSIX(dup2)(1, 0)>=0);
     }
     bool b_help = aargs.num()==2 && ParseArgs::special_arg(aargs[1]);
     if (0) { test(); return 0; }

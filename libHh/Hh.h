@@ -19,8 +19,10 @@
 // avoiding warning C4996 http://msdn.microsoft.com/en-us/library/ttcz0bys.aspx
 #endif
 
-#if defined(_MSC_VER) && !defined(_CRT_NONSTDC_NO_DEPRECATE)
-#define _CRT_NONSTDC_NO_DEPRECATE // allow POSIX calls open(), read() rather than non-standard _open(), _read()
+#if defined(_MSC_VER)
+#define HH_POSIX(x) _ ## x
+#else
+#define HH_POSIX(x) x
 #endif
 
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
@@ -98,7 +100,9 @@ typedef struct { long double x, y; } __float128;
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif
-using namespace std; namespace hh { } using namespace hh;
+using namespace std;
+namespace hh { }
+using namespace hh;
 #endif
 
 #define HH_EAT_SEMICOLON static_assert(true, "") // redundant declaration to swallow subsequent semicolon
@@ -157,7 +161,7 @@ using namespace std; namespace hh { } using namespace hh;
 #define HH_NORETURN HH_ATTRIBUTE(noreturn)
 #endif
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(_MSC_VER)
 #define HH_UNREACHABLE __assume(0)    // this path is never taken
 #else
 #define HH_UNREACHABLE __builtin_unreachable()
@@ -473,7 +477,7 @@ template<typename T> string type_name() { return details::demangle_type_name(typ
 namespace details {
 string extract_function_type_name(string s);
 template<typename T> struct TypeNameAux {
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     // http://shaderop.com/2010/09/uniquely-identifying-types-in-c-without-using-rtti/
     // http://www.gamedev.net/topic/608203-c-get-type-name-without-rtti/
     // http://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func

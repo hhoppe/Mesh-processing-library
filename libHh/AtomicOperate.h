@@ -21,7 +21,7 @@ template<typename T, typename Func = T(T)> void atomic_operate(volatile T* ptr, 
 
 namespace hh {
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 
 #define sync_val_compare_and_swap __sync_val_compare_and_swap
 

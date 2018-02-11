@@ -3,8 +3,6 @@ ifeq (1,1)  ## clang5.0.1 64_bit on Windows  (defines _MSC_VER and not __GNUC__)
 rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 1
 
-use_pch = 0#  After installing VS2017 update 15.5.6, clang 5.0.1 crashes with precompiled headers
-
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 
 # Bug: <functional> requires "-frtti"; workaround in https://stackoverflow.com/questions/47950690 no longer works.

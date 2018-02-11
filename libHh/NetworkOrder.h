@@ -21,7 +21,7 @@ namespace hh {
 // I also use it for grid access (matrix[y][x]==matrix[yx]; matrix.dims()==V(matrix.ysize(), matrix.xsize())) and
 //   for screen coordinates (const Vec2<int>& yx).
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 
 inline uint64_t swap_8bytes(uint64_t v) { return __builtin_bswap64(v); }
 inline uint32_t swap_4bytes(uint32_t v) { return __builtin_bswap32(v); }

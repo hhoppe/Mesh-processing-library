@@ -351,7 +351,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 HH_NORETURN void my_terminate () {
     // The function shall not return and shall terminate the program.
     if (0) { fprintf(stderr, "my_terminate\n"); fflush(stderr); } // here, trust stderr more than std::cerr
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
     // http://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
     // This works on mingw, mingw32, clang

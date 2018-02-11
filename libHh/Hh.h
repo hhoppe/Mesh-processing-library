@@ -131,13 +131,13 @@ using namespace hh;
 #define HH_REFERENCE_LIB(libstring) HH_EAT_SEMICOLON
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define HH_ATTRIBUTE(...) __attribute__((__VA_ARGS__)) // see also __declspec(x)
 #else
 #define HH_ATTRIBUTE(...) [[__VA_ARGS__]]   // C++11
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define HH_PRINTF_ATTRIBUTE(...) __attribute__((__VA_ARGS__))
 #else
 #define HH_PRINTF_ATTRIBUTE(...)
@@ -167,7 +167,7 @@ using namespace hh;
 #define HH_UNREACHABLE __builtin_unreachable()
 #endif
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define HH_UNUSED HH_ATTRIBUTE(unused)
 #else
 #define HH_UNUSED

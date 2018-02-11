@@ -10,7 +10,7 @@
 // Thus we can omit the contents if defined(PRECOMPILED_LIBHH_CPP) from precompiled_libHh.cpp and !defined(_MSC_VER)
 //  and !defined(MAKEFILE_DEP).
 
-#if defined(PRECOMPILED_LIBHH_CPP) && !defined(_MSC_VER) && !defined(MAKEFILE_DEP)
+#if defined(PRECOMPILED_LIBHH_CPP) && !defined(_MSC_VER) && !defined(MAKEFILE_DEP) || defined(__clang__)
 
 // no content
 

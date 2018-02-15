@@ -8,6 +8,7 @@
 #include "RangeOp.h"            // fill()
 #include "Vector4.h"
 #include "Vector4i.h"
+#include "ParallelCoords.h"
 
 #if 0
 {
@@ -116,36 +117,38 @@ template<typename T> Image as_image(CMatrixView<T> matrix) {
     static_assert(std::is_floating_point<T>::value, "T must be float/double");
     // (renamed image to image1 due to buggy VS2015 warning about shadowed variable)
     Image image1(matrix.dims());
-    parallel_for_int(y, image1.ysize()) for_int(x, image1.xsize()) {
-        image1[y][x] = Pixel::gray(narrow_cast<uchar>(clamp(matrix[y][x], T{0}, T{1})*255.f+.5f));
-    }
+    parallel_for_each(range(image1.ysize()), [&](const int y) {
+        for_int(x, image1.xsize()) {
+            image1[y][x] = Pixel::gray(narrow_cast<uchar>(clamp(matrix[y][x], T{0}, T{1})*255.f+.5f));
+        }
+    });
     return image1;
 }
 
 // Specialize as_image() to grid of Vector4.
 inline Image as_image(CMatrixView<Vector4> grid) {
     Image image(grid.dims());
-    parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-        image[y][x] = grid[y][x].pixel();
-        if (0) image[y][x][3] = 255;
-        if (image[y][x][3]!=255) image.set_zsize(4);
-    }
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+        image[yx] = grid[yx].pixel();
+        if (0) image[yx][3] = 255;
+        if (image[yx][3]!=255) image.set_zsize(4);
+    }, 10);
     return image;
 }
 
 // Specialize as_image() to grid of Vec3<float>.
 inline Image as_image(CMatrixView<Vec3<float>> grid) {
     Image image(grid.dims());
-    parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-        image[y][x] = Vector4(concat(grid[y][x], V(1.f))).pixel();
-    }
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+        image[yx] = Vector4(concat(grid[yx], V(1.f))).pixel();
+    }, 10);
     return image;
 }
 
 // Specialize as_image() to grid of pixels.
 inline Image as_image(CMatrixView<Pixel> grid) {
     Image image(grid.dims());
-    parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) { image[y][x] = grid[y][x]; }
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid[yx]; });
     return image;
 }
 

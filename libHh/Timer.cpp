@@ -27,7 +27,7 @@
 
 // Return the effective number of cores (or 0 if unknown).
 inline unsigned std_thread_hardware_concurrency() {
-#if defined(__MINGW32__) || (defined(__clang__) && __clang_major__ < 5)
+#if defined(__MINGW32__)
     return 0;
 #else
     // _GLIBCXX_HAS_GTHREADS disabled for now on mingw32

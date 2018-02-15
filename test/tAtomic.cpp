@@ -15,9 +15,9 @@ int main() {
         auto func_oper = [](float v) { return v*2.f+1.f; };
         Array<float> ar1(num, 1.f); {
             // HH_TIMER(_ar1);
-            parallel_for_int(iter, niter) {
+            parallel_for_each(range(niter), [&](const int iter) {
                 atomic_operate(&ar1[func_hash(iter)], func_oper);
-            }
+            });
         }
         Array<float> ar2(num, 1.f); {
             // HH_TIMER(_ar2);
@@ -35,9 +35,9 @@ int main() {
         auto func_oper = [](uchar v) { return uchar((v*97+31)%256); };
         Array<uchar> ar1(num, uchar{1}); {
             // HH_TIMER(_ar1);
-            parallel_for_int(iter, niter) {
+            parallel_for_each(range(niter), [&](const int iter) {
                 atomic_operate(&ar1[func_hash(iter)], func_oper);
-            }
+            });
         }
         Array<uchar> ar2(num, uchar{1}); {
             // HH_TIMER(_ar2);

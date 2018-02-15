@@ -38,31 +38,31 @@ template<typename R, typename Func, typename = enable_if_range_t<R> > Func for_e
 }
 
 // Return the address of the first element satisfying condition, or nullptr if none.
-template<typename R, typename Pred, typename = enable_if_range_t<R> > auto find_if(R&& range, Pred p)
-    -> iterator_t<R>* {
+template<typename R, typename Pred, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator* find_if(R&& range, Pred p) {
     using std::begin; using std::end;
     auto iter = std::find_if(begin(range), end(range), p);
     return iter==end(range) ? nullptr : &*iter;
 }
 
 // Return the address of the first element not satisfying condition, or nullptr if none.
-template<typename R, typename Pred, typename = enable_if_range_t<R> > auto find_if_not(R&& range, Pred p)
-    -> iterator_t<R>* {
+template<typename R, typename Pred, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator* find_if_not(R&& range, Pred p) {
     using std::begin; using std::end;
     auto iter = std::find_if_not(begin(range), end(range), p);
     return iter==end(range) ? nullptr : &*iter;
 }
 
 // Count the number of elements equal to specified one.
-template<typename R, typename = enable_if_range_t<R> > auto count(const R& range, const iterator_t<R>& elem)
-    -> std::ptrdiff_t {         // should return auto
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+std::ptrdiff_t count(const R& range, const Iterator& elem) {
     using std::begin; using std::end;
     return std::count(begin(range), end(range), elem);
 }
 
 // Count the number of elements matching predicate.
-template<typename R, typename Pred, typename = enable_if_range_t<R> > auto count_if(const R& range, Pred p)
-    -> std::ptrdiff_t {         // should return auto
+template<typename R, typename Pred, typename = enable_if_range_t<R> >
+std::ptrdiff_t count_if(const R& range, Pred p) {
     using std::begin; using std::end;
     return std::count_if(begin(range), end(range), p);
 }
@@ -91,7 +91,8 @@ void swap_ranges(R&& range1, R2&& range2) {
 }
 
 // Assign the same value to all elements in a range.
-template<typename R, typename = enable_if_range_t<R> > R fill(R&& range, const iterator_t<R>& v) {
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+R fill(R&& range, const Iterator& v) {
     // using std::begin; using std::end; std::fill(begin(range), end(range), v);
     for (auto& e : range) { e = v; }
     return std::forward<R>(range);
@@ -110,7 +111,8 @@ template<typename R, typename = enable_if_range_t<R> > R reverse(R&& range) {
 // R reversed(const R& range) { return reverse(clone(range)); }
 
 // Rotate the elements in a randomly accessible range such that element middle becomes the new first element.
-template<typename R, typename = enable_if_range_t<R> > R rotate(R&& range, iterator_t<R>& middle) {
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+R rotate(R&& range, Iterator& middle) {
     using std::begin; using std::end;
     std::rotate(begin(range), &middle, end(range));
     return std::forward<R>(range);
@@ -126,8 +128,9 @@ R sort(R&& range, Comp comp = Comp{}) {
 // R sorted(const R& range) { return sort(clone(range)); }
 
 // Minimum value in a non-empty range (by default using less(a, b)).
-template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R> >
-iterator_t<R> min(const R& range, Comp comp = Comp{}) {
+template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R>,
+         typename Iterator = iterator_t<R> >
+Iterator min(const R& range, Comp comp = Comp{}) {
     using std::begin; using std::end;
     ASSERTXX(begin(range)!=end(range));
     return *std::min_element(begin(range), end(range), comp);
@@ -137,8 +140,9 @@ iterator_t<R> min(const R& range, Comp comp = Comp{}) {
 }
 
 // Maximum value in a non-empty range (using less(a, b)).
-template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R> >
-iterator_t<R> max(const R& range, Comp comp = Comp{}) {
+template<typename R, typename Comp = std::less<iterator_t<R> >, typename = enable_if_range_t<R>,
+         typename Iterator = iterator_t<R> >
+Iterator max(const R& range, Comp comp = Comp{}) {
     using std::begin; using std::end;
     ASSERTXX(begin(range)!=end(range));
     return *std::max_element(begin(range), end(range), comp);
@@ -187,7 +191,8 @@ template<typename T> struct factor_type {
 template<typename T> using factor_type_t = typename factor_type<T>::type;
 
 // Minimum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
-template<typename R, typename = enable_if_range_t<R> > iterator_t<R> min_index(const R& range, int* pi) {
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator min_index(const R& range, int* pi) {
     using std::begin; using std::end;
     ASSERTX(pi); ASSERTX(begin(range)!=end(range));
     auto p = std::min_element(begin(range), end(range));
@@ -196,7 +201,8 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> min_index(c
 }
 
 // Maximum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
-template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_index(const R& range, int* pi) {
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator max_index(const R& range, int* pi) {
     using std::begin; using std::end;
     ASSERTX(pi); ASSERTXX(begin(range)!=end(range));
     auto p = std::max_element(begin(range), end(range));
@@ -205,40 +211,38 @@ template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_index(c
 }
 
 // Minimum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
-template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_min(const R& range) {
-    using T = iterator_t<R>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator transitive_min(const R& range) {
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
-    T v = *iter; ++iter; for (; iter!=itend; ++iter) { v = min(v, *iter); }
+    Iterator v = *iter; ++iter; for (; iter!=itend; ++iter) { v = min(v, *iter); }
     return v;
 }
 
 // Maximum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
-template<typename R, typename = enable_if_range_t<R> > iterator_t<R> transitive_max(const R& range) {
-    using T = iterator_t<R>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator transitive_max(const R& range) {
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
-    T v = *iter; ++iter; for (; iter!=itend; ++iter) { v = max(v, *iter); }
+    Iterator v = *iter; ++iter; for (; iter!=itend; ++iter) { v = max(v, *iter); }
     return v;
 }
 
 // Maximum absolute value in a non-empty range.
-template<typename R, typename = enable_if_range_t<R> > iterator_t<R> max_abs_element(const R& range) {
-    using T = iterator_t<R>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+Iterator max_abs_element(const R& range) {
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
-    // return abs(*std::max_element(ibeg, iend, [](T l, T r) { return abs(l)<abs(r); }));
-    T v = static_cast<T>(abs(*iter)); ++iter; for (; iter!=itend; ++iter) { v = max(v, static_cast<T>(abs(*iter))); }
-    // auto iter_max = iter; T v = static_cast<T>(abs(*iter)); ++iter;
-    // for (; iter!=itend; ++iter) { T vt = static_cast<T>(abs(*iter)); if (vt>v) { v = vt; iter_max = iter; } }
-    // if (pi) *pi = narrow_cast<int>(std::distance(begin(range), iter_max));
+    // return abs(*std::max_element(ibeg, iend, [](Iterator l, Iterator r) { return abs(l)<abs(r); }));
+    Iterator v = static_cast<Iterator>(abs(*iter));
+    for (++iter; iter!=itend; ++iter) { v = max(v, static_cast<Iterator>(abs(*iter))); }
     return v;
 }
 
 // Sum of values in a range.
-template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> > sum(const R& range) {
-    using T = iterator_t<R>;
-    using SumType = sum_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+sum_type_t<Iterator> sum(const R& range) {
+    using SumType = sum_type_t<Iterator>;
     using std::begin; using std::end;
     // return std::accumulate(begin(range), end(range), SumType{});
     auto iter = begin(range), itend = end(range);
@@ -248,24 +252,24 @@ template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> 
 }
 
 // Average of values in a range.
-template<typename R, typename = enable_if_range_t<R> > mean_type_t<iterator_t<R> > mean(const R& range) {
-    using T = iterator_t<R>;
-    using MeanType = mean_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+mean_type_t<Iterator> mean(const R& range) {
+    using MeanType = mean_type_t<Iterator>;
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range);
     if (iter==itend) { Warning("mean"); MeanType v; my_zero(v); return v; }
     MeanType v = *iter; size_t num = 1; ++iter; for (; iter!=itend; ++iter) { v += *iter; num++; }
-    using Factor = factor_type_t<iterator_t<R>>;
+    using Factor = factor_type_t<Iterator>;
     return MeanType(v*(Factor(1)/num));
 }
 
 // Sum of squared values in a range (or zero if empty).
-template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> > mag2(const R& range) {
-    using T = iterator_t<R>;
-    using SumType = sum_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+sum_type_t<Iterator> mag2(const R& range) {
+    using SumType = sum_type_t<Iterator>;
     using std::begin; using std::end;
     // return std::accumulate(begin(range), end(range), SumType{},
-    //                        [](const SumType& l, const T& r) { return l+square(r); });
+    //                        [](const SumType& l, const Iterator& r) { return l+square(r); });
     auto iter = begin(range), itend = end(range);
     if (iter==itend) { SumType v; my_zero(v); return v; }
     SumType v = square(SumType(*iter)); ++iter; for (; iter!=itend; ++iter) { v += square(SumType(*iter)); }
@@ -273,41 +277,42 @@ template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> 
 }
 
 // Root sum of squared values in a range.
-template<typename R, typename = enable_if_range_t<R> > mean_type_t<iterator_t<R> > mag(const R& range) {
-    using T = iterator_t<R>;
-    using MeanType = mean_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+mean_type_t<Iterator> mag(const R& range) {
+    using MeanType = mean_type_t<Iterator>;
     return sqrt(MeanType(mag2(range)));
 }
 
 // Root mean square of values in a range.
-template<typename R, typename = enable_if_range_t<R> > mean_type_t<iterator_t<R> > rms(const R& range) {
-    using T = iterator_t<R>;
-    using MeanType = mean_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+mean_type_t<Iterator> rms(const R& range) {
+    using MeanType = mean_type_t<Iterator>;
     MeanType v; my_zero(v); size_t num = 0;
     for (const auto& e : range) { v += square(MeanType(e)); num++; }
     if (!num) { Warning("rms() of empty range"); return v; }
-    using Factor = factor_type_t<iterator_t<R>>;
+    using Factor = factor_type_t<Iterator>;
     return sqrt(MeanType(v*(Factor(1)/num)));
 }
 
 // Variance of values in a range.
-template<typename R, typename = enable_if_range_t<R> > mean_type_t<iterator_t<R> > var(const R& range) {
-    using T = iterator_t<R>;
-    using MeanType = mean_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+mean_type_t<Iterator> var(const R& range) {
+    using MeanType = mean_type_t<Iterator>;
     MeanType zero, v, v2; my_zero(zero); my_zero(v); my_zero(v2); size_t num = 0;
     for (const auto& e : range) { v += e; v2 += square(MeanType(e)); num++; }
     if (num<2) { Warning("var() of fewer than 2 elements"); return zero; }
-    using Factor = factor_type_t<iterator_t<R>>;
+    using Factor = factor_type_t<Iterator>;
     return max(MeanType((v2-v*v*(Factor(1)/num))*(Factor(1)/(num-Factor(1)))), zero);
 }
 
 // Product of values in a non-empty range.
-template<typename R, typename = enable_if_range_t<R> > sum_type_t<iterator_t<R> > product(const R& range) {
-    using T = iterator_t<R>;
-    using SumType = sum_type_t<T>;
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+sum_type_t<Iterator> product(const R& range) {
+    using SumType = sum_type_t<Iterator>;
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
-    // return std::accumulate(begin(range), end(range), SumType{1}, [](const SumType& l, const T& r) { return l*r; });
+    // return std::accumulate(begin(range), end(range), SumType{1},
+    //                        [](const SumType& l, const Iterator& r) { return l*r; });
     SumType v = *iter; ++iter; for (; iter!=itend; ++iter) { v *= *iter; }
     return v;
 }
@@ -319,27 +324,27 @@ template<typename R, typename = enable_if_range_t<R> > bool is_zero(const R& ran
 }
 
 // Modify the range to have unit norm (or die if input has zero norm).
-template<typename R, typename = enable_if_range_t<R> > R normalize(R&& range) {
-    using T = iterator_t<R>;
-    T v = static_cast<T>(T{1.f}/assertx(mag(range)));
-    for (auto& e : range) { e = static_cast<T>(e*v); }
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+R normalize(R&& range) {
+    Iterator v = static_cast<Iterator>(Iterator{1.f}/assertx(mag(range)));
+    for (auto& e : range) { e = static_cast<Iterator>(e*v); }
     return std::forward<R>(range);
 }
 // R normalized(const R& range) { return normalize(clone(range)); }
 
 // Round the values in a range to the nearest 1/fac increment (by default fac==1e5f).
-template<typename R, typename = enable_if_range_t<R> > R round_elements(R&& range, iterator_t<R> fac = 1e5f) {
-    using T = iterator_t<R>;
-    static_assert(std::is_floating_point<T>::value, "");
+template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+R round_elements(R&& range, Iterator fac = 1e5f) {
+    static_assert(std::is_floating_point<Iterator>::value, "");
     for (auto& e : range) { e = round_fraction_digits(e, fac); }
     return std::forward<R>(range);
 }
 
 // Compute the sum of squared differences of corresponding elements of two ranges.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-sum_type_t<iterator_t<R> > dist2(const R& range1, const R2& range2) {
-    using T = iterator_t<R>;
-    using SumType = sum_type_t<T>;
+template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
+         typename Iterator = iterator_t<R> >
+sum_type_t<Iterator> dist2(const R& range1, const R2& range2) {
+    using SumType = sum_type_t<Iterator>;
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -350,18 +355,18 @@ sum_type_t<iterator_t<R> > dist2(const R& range1, const R2& range2) {
 }
 
 // Compute the Euclidean distance between two ranges interpreted as vectors.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-mean_type_t<iterator_t<R> > dist(const R& range1, const R2& range2) {
-    using T = iterator_t<R>;
-    using MeanType = mean_type_t<T>;
+template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
+         typename Iterator = iterator_t<R> >
+mean_type_t<Iterator> dist(const R& range1, const R2& range2) {
+    using MeanType = mean_type_t<Iterator>;
     return sqrt(MeanType(dist2(range1, range2)));
 }
 
 // Compute the inner product of two ranges.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-sum_type_t<iterator_t<R> > dot(const R& range1, const R2& range2) {
-    using T = iterator_t<R>;
-    using SumType = sum_type_t<T>;
+template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
+         typename Iterator = iterator_t<R> >
+sum_type_t<Iterator> dot(const R& range1, const R2& range2) {
+    using SumType = sum_type_t<Iterator>;
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -385,8 +390,9 @@ int compare(const R& range1, const R2& range2) {
 }
 
 // Similar comparison, but ignore differences smaller than tolerance.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-int compare(const R& range1, const R2& range2, const iterator_t<R>& tolerance) {
+template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
+         typename Iterator = iterator_t<R> >
+int compare(const R& range1, const R2& range2, const Iterator& tolerance) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -407,15 +413,15 @@ template<typename R, typename = enable_if_range_t<R> > bool contains(const R& ra
 
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2))==V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.
-template<typename U, typename R, typename = enable_if_range_t<R> > auto convert(R&& c)
-    -> decltype(map(c, std::declval<U(*)(const iterator_t<R>&)>())) {
-    return map(c, [](const iterator_t<R>& e) { return static_cast<U>(e); });
+template<typename U, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+auto convert(R&& c) -> decltype(map(c, std::declval<U(*)(const Iterator&)>())) {
+    return map(c, [](const Iterator& e) { return static_cast<U>(e); });
 }
 
 // Convert all elements of the container with runtime checking, e.g. narrow_convert<int>(V(1.f, 2.f))==V(1, 2).
-template<typename U, typename R, typename = enable_if_range_t<R> > auto narrow_convert(const R& c)
-    -> decltype(map(c, std::declval<U(*)(const iterator_t<R>&)>())) {
-    return map(c, [](const iterator_t<R>& e) { return narrow_cast<U>(e); });
+template<typename U, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
+auto narrow_convert(const R& c) -> decltype(map(c, std::declval<U(*)(const Iterator&)>())) {
+    return map(c, [](const Iterator& e) { return narrow_cast<U>(e); });
 }
 
 } // namespace hh

@@ -37,11 +37,6 @@
 #include "mafTime.h"
 #endif
 
-#define HH_HAVE_BACKGROUND_THREAD
-#if defined(__clang__) && __clang_major__ < 5
-#undef HH_HAVE_BACKGROUND_THREAD
-#endif
-
 using namespace hh;
 
 // TODO:
@@ -883,7 +878,7 @@ template<typename T> Grid<3,T> rotate_ccw(CGridView<3,T> grid, int rot_degrees) 
     const Vec2<int> sdims = grid.dims().template tail<2>();
     const Vec2<int> nsdims = my_mod(rot_degrees, 180)==0 ? sdims : sdims.rev();
     Grid<3,T> ngrid(concat(V(grid.dim(0)), nsdims));
-    parallel_for_int(i, grid.dim(0)) { rotate_ccw(grid[i], rot_degrees, ngrid[i]); }
+    parallel_for_each(range(grid.dim(0)), [&](const int i) { rotate_ccw(grid[i], rot_degrees, ngrid[i]); });
     return ngrid;
 }
 
@@ -1613,23 +1608,23 @@ bool DerivedHW::key_press(string skey) {
                      VideoNv12 nvideo_nv12;
                      if (ob._video.size()) {
                          nvideo.init(concat(V(ob.nframes()), nsdims));
-                         parallel_for_int(f, ob.nframes()) {
+                         parallel_for_each(range(ob.nframes()), [&](const int f) {
                              Matrix<Vector4> matv(osdims); convert(ob._video[f], matv);
                              Matrix<Vector4> nmatv(nsdims); transform(matv, frame, twice(filterb), nmatv);
                              convert(nmatv, nvideo[f]);
-                         }
+                         });
                      } else {
                          nvideo_nv12.init(concat(V(ob.nframes()), nsdims));
-                         parallel_for_int(f, ob.nframes()) {
+                         parallel_for_each(range(ob.nframes()), [&](const int f) {
                              Matrix<float> matv(osdims); convert(ob._video_nv12.get_Y()[f], matv);
                              Matrix<float> nmatv(nsdims); transform(matv, frame, twice(filterb), nmatv);
                              convert(nmatv, nvideo_nv12.get_Y()[f]);
-                         }
-                         parallel_for_int(f, ob.nframes()) {
+                         });
+                         parallel_for_each(range(ob.nframes()), [&](const int f) {
                              Matrix<Vector4> matv(osdims/2); convert(ob._video_nv12.get_UV()[f], matv);
                              Matrix<Vector4> nmatv(nsdims/2); transform(matv, frame, twice(filterb), nmatv);
                              convert(nmatv, nvideo_nv12.get_UV()[f]);
-                         }
+                         });
                      }
                      add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                                     append_to_filename(ob._filename, "_resampled")));
@@ -1789,10 +1784,10 @@ bool DerivedHW::key_press(string skey) {
                  if (n<2) throw string("must have at least one next same-size image to create a video");
                  string filename = get_path_root(ob._filename) + ".mp4";
                  Video video(n, ob.spatial_dims());
-                 parallel_for_int(f, n) {
+                 parallel_for_each(range(n), [&](const int f) {
                      video[f].assign(g_obs[ibeg+f]->_video[0]);
                      if (g_obs[ibeg+f]->_image_is_bgra) convert_bgra_rgba(video[f]);
-                 }
+                 });
                  VideoNv12 video_nv12;
                  const bool use_nv12 = k_prefer_nv12 && is_zero(video.spatial_dims()%2);
                  if (use_nv12) {
@@ -1825,16 +1820,16 @@ bool DerivedHW::key_press(string skey) {
                  Video nvideo(!use_nv12 ? dims : thrice(0));
                  VideoNv12 nvideo_nv12(use_nv12 ? dims : thrice(0));
                  std::atomic<bool> ok{true};
-                 parallel_for_int(f, nframes) {
-                     if (!ok) continue;
+                 parallel_for_each(range(nframes), [&](const int f) {
+                     if (!ok) return;
                      Image image; image.read_file(filenames[f]); // not bgra
-                     if (image.dims()!=dims.tail<2>()) { ok = false; continue; }
+                     if (image.dims()!=dims.tail<2>()) { ok = false; return; }
                      if (!use_nv12) {
                          nvideo[f].assign(image);
                      } else {
                          convert_Image_to_Nv12(image, nvideo_nv12[f]);
                      }
-                 }
+                 });
                  if (!ok) throw string("images have differing dimensions");
                  add_object(make_unique<Object>(std::move(nvideo), std::move(nvideo_nv12),
                                                 nullptr, std::move(filename)));
@@ -2002,13 +1997,15 @@ bool DerivedHW::key_press(string skey) {
                  VideoNv12 nvideo_nv12;
                  if (ob._video.size()) {
                      nvideo.init(ob._dims);
-                     parallel_for_int(f, ob.nframes()) { nvideo[f].assign(ob._video[ob.nframes()-1-f]); }
+                     parallel_for_each(range(ob.nframes()), [&](const int f) {
+                         nvideo[f].assign(ob._video[ob.nframes()-1-f]);
+                     });
                  } else if (ob._video_nv12.size()) {
                      nvideo_nv12.init(ob._dims);
-                     parallel_for_int(f, ob.nframes()) {
+                     parallel_for_each(range(ob.nframes()), [&](const int f) {
                          nvideo_nv12.get_Y()[f].assign(ob._video_nv12.get_Y()[ob.nframes()-1-f]);
                          nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[ob.nframes()-1-f]);
-                     }
+                     });
                  } else assertnever("");
                  const int new_cur_frame = g_framenum;
                  unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
@@ -2036,17 +2033,17 @@ bool DerivedHW::key_press(string skey) {
                  VideoNv12 nvideo_nv12;
                  if (ob._video.size()) {
                      nvideo.init(ndims);
-                     parallel_for_int(f, nnf) {
+                     parallel_for_each(range(nnf), [&](const int f) {
                          int of = int(f/fac);    // not +.5f !
                          nvideo[f].assign(ob._video[of]);
-                     }
+                     });
                  } else {
                      nvideo_nv12.init(ndims);
-                     parallel_for_int(f, nnf) {
+                     parallel_for_each(range(nnf), [&](const int f) {
                          int of = int(f/fac);    // not +.5f !
                          nvideo_nv12.get_Y()[f].assign(ob._video_nv12.get_Y()[of]);
                          nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[of]);
-                     }
+                     });
                  }
                  unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                                                 append_to_filename(ob._filename, "_rate"));
@@ -2075,7 +2072,7 @@ bool DerivedHW::key_press(string skey) {
                      if (ob._video.size()) {
                          nvideo.init(ob._video.dims());
                          const bool bgra = ob.is_image() && ob._image_is_bgra;
-                         parallel_for_size_t(i, ob._video.size()) {
+                         parallel_for_each(range(ob._video.size()), [&](const size_t i) {
                              Pixel pix = ob._video.raster(i);
                              if (bgra) std::swap(pix[0], pix[2]);
                              Pixel yuv = RGB_to_YUV_Pixel(pix[0], pix[1], pix[2]);
@@ -2088,21 +2085,23 @@ bool DerivedHW::key_press(string skey) {
                              pix = YUV_to_RGB_Pixel(yuv[0], yuv[1], yuv[2]);
                              if (bgra) std::swap(pix[0], pix[2]);
                              nvideo.raster(i) = pix;
-                         }
+                         });
                      } else {
                          nvideo_nv12.init(ob._video_nv12.get_Y().dims());
-                         parallel_for_size_t(i, ob._video_nv12.get_Y().size()) {
+                         parallel_for_each(range(ob._video_nv12.get_Y().size()), [&](const size_t i) {
                              float y = ob._video_nv12.get_Y().raster(i)/255.f;
                              y = pow(y, g_gamma);
                              y *= contrast_fac;
                              y += brightness_term;
                              nvideo_nv12.get_Y().raster(i) = clamp_to_uchar(int(y*255.f+.5f));
-                         }
-                         parallel_for_size_t(i, ob._video_nv12.get_UV().size()) for_int(c, 2) {
-                             nvideo_nv12.get_UV().raster(i)[c] =
-                                 clamp_to_uchar(int(128.5f+(ob._video_nv12.get_UV().raster(i)[c]-128.f)*
-                                                    saturation_fac));
-                         }
+                         });
+                         parallel_for_each(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
+                             for_int(c, 2) {
+                                 nvideo_nv12.get_UV().raster(i)[c] =
+                                     clamp_to_uchar(int(128.5f+(ob._video_nv12.get_UV().raster(i)[c]-128.f)*
+                                                        saturation_fac));
+                             }
+                         });
                      }
                      string s;
                      for (const Slider& slider: g_sliders) {
@@ -3014,9 +3013,6 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     if (!assertw(!gl_report_errors())) {
         if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
     }
-#if !defined(HH_HAVE_BACKGROUND_THREAD)
-    if (!hw.within_query()) background_work(false);
-#endif
     if (1) {               // adjust the view if the window moved due to being resized, to facilitate cropping
         Vec2<int> win_pos = window_position_yx();
         if (g_verbose>=2) SHOW("draw", g_win_dims, win_pos, g_cob, getobnum(), product(g_frame_dims),
@@ -3459,13 +3455,13 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
         hvideo.init(concat(V(hnf), hdims));
         {
             HH_TIMER(__scale_temporally);
-            parallel_for_int(f, hnf) {
+            parallel_for_each(range(hnf), [&](const int f) {
                 for_int(y, hdims[0]) for_int(x, hdims[1]) {
                     Vector4i v(0);
                     for_int(df, DT) { v += Vector4i(hvideo1(f*DT+df, y, x)); } // OPT:DT
                     hvideo(f, y, x) = (v>>log2DT).pixel();
                 }
-            }
+            });
         }
     }
     const Vec2<int> hdims = hvideo.dims().tail<2>();
@@ -4054,7 +4050,6 @@ int main(int argc, const char** argv) {
     g_through_color = parse_color(through_color);
     g_checker = checker;
     assertx(g_cob<getobnum());  // g_cob is initialized to -1, so always true
-#if defined(HH_HAVE_BACKGROUND_THREAD)
     {
         // Launch asynchronous background thread
         std::thread th{background_work, true};
@@ -4066,7 +4061,6 @@ int main(int argc, const char** argv) {
         if (0) assertx(SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS));
 #endif
     }
-#endif
     hw.set_window_title("VideoViewer");
     Vec2<int> win_dims = (getobnum() ? determine_default_window_dims(getob(0).spatial_dims()) :
                           k_default_window_dims); // window geometry when no video is yet loaded

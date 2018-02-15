@@ -146,7 +146,9 @@ template<int D, typename T> Grid<D,T> crop(CGridView<D,T> grid, const Vec<int,D>
             if (0) {
                 newgrid = grid.slice(dL[0], grid.dim(0)-dU[0]);
             } else {
-                cond_parallel_for_int(newgrid.size(), d0, newgrid.dim(0)) { newgrid[d0].assign(grid[d0+dL[0]]); }
+                parallel_for_each(range(newgrid.dim(0)), [&](const int d0) {
+                    newgrid[d0].assign(grid[d0+dL[0]]);
+                }, product(newgrid.dims().template tail<D-1>()));
             }
         } else {
             parallel_for_coords(newdims, [&](const Vec<int,D>& u) {
@@ -202,61 +204,61 @@ static const bool b_image_linear_filter = getenv_bool("IMAGE_LINEAR_FILTER"); //
 template<int D> void convert(CGridView<D,Pixel> gridu, GridView<D,Vector4> gridf) {
     HH_GRIDOP_TIMER(__convert1);
     assertx(same_size(gridu, gridf));
-    cond_parallel_for_size_t(gridu.size()*4, i, gridu.size()) {
+    parallel_for_each(range(gridu.size()), [&](const size_t i) {
         Vector4 v = Vector4(gridu.raster(i));
         if (b_image_linear_filter) v = square(v); // assumes gamma=2.0 rather than SRGB 2.2
         gridf.raster(i) = v;
-    }
+    }, 4);
 }
 
 template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu) {
     HH_GRIDOP_TIMER(__convert2);
     assertx(same_size(gridf, gridu));
-    cond_parallel_for_size_t(gridf.size()*4, i, gridf.size()) {
+    parallel_for_each(range(gridf.size()), [&](const size_t i) {
         Vector4 v = gridf.raster(i);
         if (b_image_linear_filter) v = sqrt(v); // assumes gamma=2.0 rather than SRGB 2.2
         gridu.raster(i) = v.pixel();
-    }
+    }, 4);
 }
 
 template<int D> void convert(CGridView<D,uchar> gridu, GridView<D,float> gridf) {
     assertx(same_size(gridu, gridf));
-    cond_parallel_for_size_t(gridu.size()*1, i, gridu.size()) {
+    parallel_for_each(range(gridu.size()), [&](const size_t i) {
         float v = static_cast<float>(gridu.raster(i));
         if (b_image_linear_filter) v = square(v);
         gridf.raster(i) = v;
-    }
+    }, 1);
 }
 
 
 template<int D> void convert(CGridView<D,float> gridf, GridView<D,uchar> gridu) {
     assertx(same_size(gridf, gridu));
-    cond_parallel_for_size_t(gridf.size()*1, i, gridf.size()) {
+    parallel_for_each(range(gridf.size()), [&](const size_t i) {
         float v = gridf.raster(i);
         if (b_image_linear_filter) v = sqrt(v);
         gridu.raster(i) = clamp_to_uchar(static_cast<int>(v));
-    }
+    }, 1);
 }
 
 
 template<int D> void convert(CGridView<D, Vec2<uchar>> gridu, GridView<D,Vector4> gridf) {
     assertx(same_size(gridu, gridf));
-    cond_parallel_for_size_t(gridu.size()*4, i, gridu.size()) {
+    parallel_for_each(range(gridu.size()), [&](const size_t i) {
         const auto& uv = gridu.raster(i);
         Vector4 v = Vector4(Pixel(uv[0], uv[1], 0, 0));
         if (b_image_linear_filter) v = square(v);
         gridf.raster(i) = v;
-    }
+    }, 4);
 }
 
 template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uchar>> gridu) {
     assertx(same_size(gridf, gridu));
-    cond_parallel_for_size_t(gridf.size()*4, i, gridf.size()) {
+    parallel_for_each(range(gridf.size()), [&](const size_t i) {
         Vector4 v = gridf.raster(i);
         if (b_image_linear_filter) v = sqrt(v);
         Pixel p = v.pixel();
         gridu.raster(i) = V(p[0], p[1]);
-    }
+    }, 4);
 }
 
 
@@ -514,28 +516,28 @@ void scale_filter_nearest_aux(Specialize<1>, CGridView<D,T> grid, GridView<D,T> 
     ASSERTX(!maps[0].num());
     const Vec<int,D> dims = grid.dims();
     const Vec<int,D> ndims = ngrid.dims();
-    cond_parallel_for_int(ngrid.size()*3, i, ndims[0]) {
+    parallel_for_each(range(ndims[0]), [&](const int i) {
         int ii = static_cast<int>((i+.5f)/ndims[0]*dims[0]-1e-4f);
         ngrid(i) = grid(ii);
-    }
+    }, 3);
 }
 
 template<int D, typename T> void scale_filter_nearest_aux(Specialize<2>, CGridView<D,T> grid,
                                                           GridView<D,T> ngrid, const Vec<Array<int>, D>& maps) {
     const Vec<int,D> ndims = ngrid.dims();
-    cond_parallel_for_int(ngrid.size()*3, y, ndims[0]) {
+    parallel_for_each(range(ndims[0]), [&](const int y) {
         int yy = maps[0][y];
         for_int(x, ndims[1]) {
             int xx = maps[1][x];
             ngrid(y, x) = grid(yy, xx);
         }
-    }
+    }, ndims[1]*3);
 }
 
 template<int D, typename T> void scale_filter_nearest_aux(Specialize<3>, CGridView<D,T> grid,
                                                           GridView<D,T> ngrid, const Vec<Array<int>, D>& maps) {
     const Vec<int,D> ndims = ngrid.dims();
-    cond_parallel_for_int(ngrid.size()*3, z, ndims[0]) {
+    parallel_for_each(range(ndims[0]), [&](const int z) {
         int zz = maps[0][z];
         for_int(y, ndims[1]) {
             int yy = maps[1][y];
@@ -544,7 +546,7 @@ template<int D, typename T> void scale_filter_nearest_aux(Specialize<3>, CGridVi
                 ngrid(z, y, x) = grid(zz, yy, xx);
             }
         }
-    }
+    }, ndims[1]*ndims[2]*3);
 }
 
 } // namespace details

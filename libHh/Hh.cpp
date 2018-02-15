@@ -402,7 +402,7 @@ void possibly_sleep() {
 int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
     // The heap may be corrupt, so cannot do any dynamic allocation here.
     std::cerr << "my_CrtDbgHook with no debugger present\n";
-    std::cerr << "szMsg:" << szMsg;
+    std::cerr << "Failure message: " << szMsg << "\n";
     if (1) {
         // I used to often get "Segmentation fault" due to corrupt heap,
         //  but now StackWalker has its own local memory buffer.
@@ -790,7 +790,7 @@ string extract_function_type_name(string s) {
         s.erase(i);
         remove_at_end(s, " ");  // possible space
     } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<") ||
-               remove_at_beginning(s, "static string hh::details::TypeNameAux<")) { // both clang
+               remove_at_beginning(s, "static string hh::details::TypeNameAux<")) { // clang
         auto i = s.find(">::name() [T = ");
         if (i==string::npos) { SHOW(s); assertnever(""); }
         s.erase(i);

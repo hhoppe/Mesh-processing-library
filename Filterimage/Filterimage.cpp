@@ -1921,15 +1921,9 @@ void do_gdfill() {
         multigrid.set_num_vcycles(1); // default 5, then was 2
         multigrid.solve();
         auto grid_result = multigrid.result();
-        if (0) {
-            parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-                image[yx] = grid_result[yx].pixel(); // alpha mask is overwritten with 1
-            }, 10);
-        } else {
-            parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-                image[y][x] = grid_result[y][x].pixel();
-            }
-        }
+        parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+            image[yx] = grid_result[yx].pixel(); // alpha mask is overwritten with 1
+        }, 10);
     } else { // instead solve for offsets; rhs becomes sparse; so does residual; TODO: perhaps avoid storing residual
         fill(multigrid.initial_estimate(), Vector4(0.f));
         multigrid.set_desired_mean(Vector4(0.f));
@@ -2443,8 +2437,7 @@ void do_procedure(Args& args) {
         Array<Image> ar_thumbnails(imagenames.num()); {
             ConsoleProgress cprogress;
             std::atomic<int> count{0};
-            if (1) { omp_set_dynamic(true); } // this seems to have no effect?
-            parallel_for_int(i, imagenames.num()) {
+            parallel_for_each(range(imagenames.num()), [&](const int i) {
                 cprogress.update(float(count++)/imagenames.num());
                 Image& limage = ar_thumbnails[i];
                 limage.set_silent_io_progress(true);
@@ -2456,7 +2449,7 @@ void do_procedure(Args& args) {
                 int vt = -(size-limage.ysize())/2, vb = -(size-limage.ysize()+vt);
                 int vl = -(size-limage.xsize())/2, vr = -(size-limage.xsize()+vl);
                 grid = crop(grid, V(vt, vl), V(vb, vr), twice(Bndrule::border), &gcolor);
-            }
+            });
         }
         Matrix<Image> grid_thumbnails; {
             int ncol = int(sqrt(imagenames.num()-1))+1; // number of columns
@@ -2634,16 +2627,14 @@ void do_compare(Args& args) {
         assertx(abs(sum-1.)<1e-6);
         showf("Effective spatial standard deviation of windowed Gaussian is %f\n", sqrt(var));
     }
-    double allerr2 = 0., allmssim = 0.; int allmax = 0;
+    int allmax = 0;
     for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) { allmax = max(allmax, abs(image1[yx][z]-image2[yx][z])); }
     }
-    for_int(z, image.zsize()) {
+    Array<double> ar_err2(image.zsize()), ar_mssim(image.zsize());
+    parallel_for_each(range(image.zsize()), [&](const int z) {
         double err2 = 0.;
         double mssim = 0.;
-        // ...reduction(+:err2, mssim) reduction(max:allmax)) // no max reduction in OpenMP 2.0 of VS2013 or VS2015
-        // The following causes an internal error in VS2015 both Release and Debug.
-        // omp_parallel_for_range(reduction(+:err2, mssim), int, y, 0, image1.ysize())
         for_int(y, image1.ysize())
             for_int(x, image1.xsize()) {
             const Vec2<int> yx(y, x);
@@ -2676,8 +2667,13 @@ void do_compare(Args& args) {
             // HH_SSTAT(Sssim, ssim);
             mssim += ssim;
         }
-        err2 /= image1.size();
-        mssim /= image1.size();
+        ar_err2[z] = err2 / image1.size();
+        ar_mssim[z] = mssim / image1.size();
+    });
+    double allerr2 = 0., allmssim = 0.;
+    for_int(z, image.zsize()) {
+        double err2 = ar_err2[z];
+        double mssim = ar_mssim[z];
         const double psnr = 20. * log10(255. / my_sqrt(err2));
         showf("channel%d: RMSE[0,255]=%f PSNR=%f MSSIM[0,1]=%f\n", z, my_sqrt(err2), psnr, mssim);
         allerr2 += err2; allmssim += mssim;
@@ -2687,7 +2683,6 @@ void do_compare(Args& args) {
     showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
     nooutput = true;
 }
-
 
 
 // *** Pyramid  (see also Pyramid.cpp)
@@ -2882,7 +2877,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
         if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
     }
     const bool optimized = true;
-    cond_parallel_for_int(mat_s.size()*2*window_radius*20, y, mat_s.ysize()) {
+    parallel_for_each(range(mat_s.ysize()), [&](const int y) {
         Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
         Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
         if (optimized) {
@@ -2932,7 +2927,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
             if (use_lab) zscore = Vector4(zscore[0]); // Z score based on luminance only
             mat_zscore[y][x] = zscore*(255.0f/6.0f);
         }
-    }
+    }, mat_s.xsize()*2*window_radius*20);
     if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 

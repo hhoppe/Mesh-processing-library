@@ -26,13 +26,13 @@ void Image::init(const Vec2<int>& pdims, Pixel pix) {
     if (0) {
         fill(*this, pix);
     } else if (0) {
-        parallel_for_size_t(i, size()) { raster(i) = pix; }
+        parallel_for_each(range(size()), [&](const size_t i) { raster(i) = pix; }, 4);
     } else {
         const uint32_t upix = reinterpret_cast<uint32_t&>(pix);
         uint32_t* p = reinterpret_cast<uint32_t*>(data());
         for_size_t(i, size()) { p[i] = upix; }
         // Generates "rep stosd" which is like 32-bit std::memset(), but no faster than fill() because memory-limited.
-        // (Note that OpenMP parallel_for_size_t overhead would actually make this slower.)
+        // (Note that parallelism overhead would actually make this slower.)
     }
 }
 
@@ -46,8 +46,8 @@ void Image::set_zsize(int n) {
 void Image::to_bw() {
     if (zsize()==1) return;
     assertx(zsize()>=3);
-    cond_parallel_for_int(size()*10, y, ysize()) for_int(x, xsize()) {
-        Pixel& pix = (*this)[y][x];
+    parallel_for_coords(dims(), [&](const Vec2<int>& yx) {
+        Pixel& pix = (*this)[yx];
         if (0) {
             // equivalent to 0.3086, 0.6094, 0.0820
             pix[0] = ((pix[0]*79+pix[1]*156+pix[2]*21) >> 8);
@@ -58,17 +58,17 @@ void Image::to_bw() {
             pix[0] = clamp_to_uchar(int(pow(gray, 1.f/gamma)+.5f));
         }
         pix[1] = pix[2] = pix[0]; pix[3] = 255;
-    }
+    }, 10);
     set_zsize(1);
 }
 
 void Image::to_color() {
     if (zsize()>=3) return;
     assertx(zsize()==1);
-    cond_parallel_for_int(size()*1, y, ysize()) for_int(x, xsize()) {
-        Pixel& pix = (*this)[y][x];
+    parallel_for_coords(dims(), [&](const Vec2<int>& yx) {
+        Pixel& pix = (*this)[yx];
         pix[1] = pix[2] = pix[0];
-    }
+    }, 1);
     set_zsize(3);
 }
 

@@ -404,11 +404,11 @@ void global_project_aux() {
             //  is it possible to remove FORCE_GLOBAL_PROJECT ?
             //  try fgfit?
             Array<Face> ar_face(pt.co.num()); Array<Point> ar_clp(pt.co.num());
-            parallel_for_int(i, pt.co.num()) {
+            parallel_for_each(range(pt.co.num()), [&](const int i) {
                 Bary bary; float d2;
                 Face hintf = pt.cmf[i]; // different semantics now
                 ar_face[i] = msearch.search(pt.co[i], hintf, bary, ar_clp[i], d2);
-            }
+            });
             for_int(i, pt.co.num()) {
                 point_change_face(i, ar_face[i]);
                 pt.clp[i] = ar_clp[i];

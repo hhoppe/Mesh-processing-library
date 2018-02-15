@@ -25,19 +25,19 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
     if (filterbs[0].filter().is_trivial_magnify() && filterbs[1].filter().is_trivial_magnify() &&
         nmatrixp.dims()==matrixp.dims()*2) {
         const int cx = matrixp.xsize();
-        parallel_for_int(y, nmatrixp.ysize()) {
+        parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
             // for_int(x, nx) { nmatrixp(y, x) = matrixp(y/2, x/2); }
             Pixel* __restrict an = nmatrixp[y].data();
             const Pixel* __restrict ao = matrixp[y/2].data();
             for_int(x, cx) { *an++ = *ao; *an++ = *ao++; }
-        }
+        });
         return;
     }
     if (filterbs[0].filter().is_trivial_minify() && filterbs[1].filter().is_trivial_minify() && nmatrixp.size()) {
         if (nmatrixp.dims()*2==matrixp.dims()) {
             constexpr int DS = 2, DS2 = DS*DS; // square(DS);
             const int nx = nmatrixp.xsize();
-            parallel_for_int(y, nmatrixp.ysize()) {
+            parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
                 Pixel* __restrict an = nmatrixp[y].data();
                 const Pixel* __restrict ao0 = matrixp[y*DS+0].data();
                 const Pixel* __restrict ao1 = matrixp[y*DS+1].data();
@@ -47,13 +47,13 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                     }
                     an += 1; ao0 += DS; ao1 += DS; // OPT:DS==2
                 }
-            }
+            });
             return;
         }
         if (nmatrixp.dims()*4==matrixp.dims()) {
             constexpr int DS = 4, DS2 = DS*DS; // square(DS)
             const int nx = nmatrixp.xsize();
-            parallel_for_int(y, nmatrixp.ysize()) {
+            parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
                 Pixel* __restrict an = nmatrixp[y].data();
                 const Pixel* __restrict ao0 = matrixp[y*DS+0].data();
                 const Pixel* __restrict ao1 = matrixp[y*DS+1].data();
@@ -69,13 +69,13 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                     }
                     an += 1; ao0 += DS; ao1 += DS; ao2 += DS; ao3 += DS; // OPT:DS==4
                 }
-            }
+            });
             return;
         }
         Vec2<int> Dyx = matrixp.dims()/nmatrixp.dims();
         if (nmatrixp.dims()*Dyx==matrixp.dims()) {
             const int Dyx2 = Dyx[0]*Dyx[1], nx = nmatrixp.xsize();
-            parallel_for_int(y, nmatrixp.ysize()) {
+            parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
                 for_int(x, nx) {
                     Vec4<int> sums = ntimes<4>(Dyx2/2);
                     for_int(dy, Dyx[0]) {
@@ -90,7 +90,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                     auto& nmatrixpyx = nmatrixp[y][x];
                     for_int(z, 4) { nmatrixpyx[z] = narrow_cast<uchar>(sums[z]/Dyx2); }
                 }
-            }
+            });
             return;
         }
     }

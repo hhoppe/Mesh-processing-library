@@ -154,10 +154,10 @@ void do_create(Args& args) {
     if (0) {
         fill(video, gcolor);    // slower
     } else {
-        cond_parallel_for_int(video.size()*4, f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             MatrixView<Pixel> frame = video[f];
             fill(frame, gcolor); // white by default
-        }
+        }, video.ysize()*video.xsize()*4);
     }
     // video.set_filename() is not called, so no default file extension.
 }
@@ -329,13 +329,13 @@ void do_fromimages(Args& args) {
         assertx(image.zsize()>=nz); assertw(image.zsize()!=4);
         video[0].assign(image);
     }
-    parallel_for_int(f1, nframes-1) {
+    parallel_for_each(range(nframes-1), [&](const int f1) {
         string fname = sform_nonliteral(rootname.c_str(), first_named_file+1+f1);
         Image image; image.set_silent_io_progress(true); image.read_file(fname);
         assertx(same_size(image, video[0]));
         assertx(image.zsize()>=nz); assertw(image.zsize()!=4);
         video[1+f1].assign(image);
-    }
+    });
 }
 
 void do_framerate(Args& args) {
@@ -390,7 +390,7 @@ void do_append(Args& args) {
     int nnf = nf1+nf2-tradius*2;
     showf("Appending video '%s' (%d frames) new_nframes=%d\n", filename.c_str(), nf2, nnf);
     Video nvideo(nnf, video.spatial_dims()); nvideo.attrib() = video.attrib();
-    parallel_for_int(f, nnf) {
+    parallel_for_each(range(nnf), [&](const int f) {
         int f2 = f-(nf1-tradius*2); // frame from video2
         if (f<nf1-tradius*2) {
             nvideo[f].assign(video[f]);
@@ -405,7 +405,7 @@ void do_append(Args& args) {
                 }
             }
         }
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -413,12 +413,12 @@ void do_toimages(Args& args) {
     string rootname = args.get_filename();
     assertx(contains(rootname, '%'));                                           // rootname.%03d.png
     assertx(!file_exists(sform_nonliteral(rootname.c_str(), video.nframes()))); // last+1 should not exist
-    parallel_for_int(f, video.nframes()) {
+    parallel_for_each(range(video.nframes()), [&](const int f) {
         Image image(video.spatial_dims());
         image.set_silent_io_progress(true);
         image = video[f];
         image.write_file(sform_nonliteral(rootname.c_str(), f));
-    }
+    });
     nooutput = true;
 }
 
@@ -445,10 +445,12 @@ void do_info() {
         }
     } else {
         Matrix<Stat> framestats(video.nframes(), nz);
-        parallel_for_int(f, video.nframes()) for (const auto& yx : range(video.spatial_dims())) {
-            const Pixel& pix = video[f][yx];
-            for_int(z, nz) { framestats[f][z].enter(pix[z]); } // OPT_info
-        }
+        parallel_for_each(range(video.nframes()), [&](const int f) {
+            for (const auto& yx : range(video.spatial_dims())) {
+                const Pixel& pix = video[f][yx];
+                for_int(z, nz) { framestats[f][z].enter(pix[z]); } // OPT_info
+            }
+        });
         for_int(f, video.nframes()) for_int(z, nz) {
             stat_pixels[z].add(framestats[f][z]);
         }
@@ -477,11 +479,11 @@ void do_tscale(Args& args) {
     Video nvideo(nnf, video.spatial_dims()); nvideo.attrib() = video.attrib();
     if (nvideo.attrib().audio.size()) { Warning("Clearing audio"); nvideo.attrib().audio.clear(); }
     showf("Time-scaling video from %d to %d frames.\n", video.nframes(), nvideo.nframes());
-    parallel_for_int(f, nnf) {
+    parallel_for_each(range(nnf), [&](const int f) {
         int of = int(f/fac);    // not +.5f !
         assertx(of>=0 && of<video.nframes());
         nvideo[f].assign(video[of]);
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -493,11 +495,11 @@ void do_tnframes(Args& args) {
     Video nvideo(nnf, video.spatial_dims()); nvideo.attrib() = video.attrib();
     if (nvideo.attrib().audio.size()) { Warning("Clearing audio"); nvideo.attrib().audio.clear(); }
     showf("Time-scaling video from %d to %d frames.\n", video.nframes(), nvideo.nframes());
-    parallel_for_int(f, nnf) {
+    parallel_for_each(range(nnf), [&](const int f) {
         int of = int(f/fac);    // not +.5f !
         assertx(of>=0 && of<video.nframes());
         nvideo[f].assign(video[of]);
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -582,9 +584,9 @@ void do_loop(Args& args) {
     const int onf = video.nframes();
     Video nvideo(ninst*onf, video.spatial_dims()); nvideo.attrib() = video.attrib();
     if (nvideo.attrib().audio.size()) { Warning("Clearing audio"); nvideo.attrib().audio.clear(); } // TODO
-    parallel_for_int(f, nvideo.nframes()) {
+    parallel_for_each(range(nvideo.nframes()), [&](const int f) {
         nvideo[f].assign(video[f%onf]);
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -594,11 +596,11 @@ void do_mirror(Args& args) {
     const int onf = video.nframes();
     Video nvideo(ninst*onf, video.spatial_dims()); nvideo.attrib() = video.attrib();
     if (nvideo.attrib().audio.size()) { Warning("Clearing audio"); nvideo.attrib().audio.clear(); } // TODO
-    parallel_for_int(f, nvideo.nframes()) {
+    parallel_for_each(range(nvideo.nframes()), [&](const int f) {
         int inst = f/onf, fi = f%onf;
         int of = inst%2==0 ? fi : onf-1-fi;
         nvideo[f].assign(video[of]);
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -616,9 +618,9 @@ void do_phaseoffset(Args& args) {
     // rotate(video, video[fbeg]); // make fbeg the new frame 0 (using old Array<Matrix<Pixel>> representation)
     Video nvideo(nframes, video.spatial_dims()); nvideo.attrib() = video.attrib();
     if (nvideo.attrib().audio.size()) { Warning("Clearing audio"); nvideo.attrib().audio.clear(); } // TODO
-    parallel_for_int(f, nvideo.nframes()) {
+    parallel_for_each(range(nvideo.nframes()), [&](const int f) {
         nvideo[f].assign(video[(fbeg+f)%nframes]);
-    }
+    });
     video = std::move(nvideo);
 }
 
@@ -630,7 +632,7 @@ void do_tcrossfade(Args& args) {
     int nframes = video.nframes();
     assertw(fbeg-tradius>=0 && fend+tradius<nframes); assertx(fbeg+tradius-1<fend-tradius);
     Video tvideo(2*tradius, video.spatial_dims()); // necessary if clamping on {fb, fe} occurs below
-    parallel_for_int(i, 2*tradius) {
+    parallel_for_each(range(2*tradius), [&](const int i) {
         int fb = fbeg-tradius+i;
         int fe = fend-tradius+i;
         int fdst = fb>=fbeg ? fb : fe;
@@ -652,9 +654,9 @@ void do_tcrossfade(Args& args) {
                 }
             }
         }
-    }
-    parallel_for_int(i, tradius) { video[fbeg+i].assign(tvideo[tradius+i]); }
-    parallel_for_int(i, tradius) { video[fend-tradius+i].assign(tvideo[i]); }
+    });
+    parallel_for_each(range(tradius), [&](const int i) { video[fbeg+i].assign(tvideo[tradius+i]); });
+    parallel_for_each(range(tradius), [&](const int i) { video[fend-tradius+i].assign(tvideo[i]); });
 }
 
 // Filtervideo ~/data/video/HDbrink8hb.mp4 -makeloop 1 53 >HDbrink8hb.makeloop.mp4
@@ -684,27 +686,29 @@ void do_makeloop(Args& args) {
 #endif
             MultigridType multigrid(nvideo.dims()); {
                 HH_STIMER(__setup_rhs);
-                parallel_for_int(f, nf) for_int(y, ny) for_int(x, nx) {
-                    int fi = fbeg+f;
-                    float pixv = to_float(video(fi, y, x)[z]);
-                    float vrhs = 0.f;
-                    if (1) {
-                        float v = to_float(video(fi-1, y, x)[z])-pixv;
-                        if (f==0   ) v = (v+to_float(video(fend-1, y, x)[z])-to_float(video(fend, y, x)[z]))*.5f;
-                        vrhs += v*wtemporal;
+                parallel_for_each(range(nf), [&](const int f) {
+                    for_int(y, ny) for_int(x, nx) {
+                        int fi = fbeg+f;
+                        float pixv = to_float(video(fi, y, x)[z]);
+                        float vrhs = 0.f;
+                        if (1) {
+                            float v = to_float(video(fi-1, y, x)[z])-pixv;
+                            if (f==0   ) v = (v+to_float(video(fend-1, y, x)[z])-to_float(video(fend, y, x)[z]))*.5f;
+                            vrhs += v*wtemporal;
+                        }
+                        if (1) {
+                            float v = to_float(video(fi+1, y, x)[z])-pixv;
+                            if (f==nf-1) v = (v+to_float(video(fbeg, y, x)[z])-to_float(video(fbeg-1, y, x)[z]))*.5f;
+                            vrhs += v*wtemporal;
+                        }
+                        if (y>0   ) vrhs += (to_float(video(fi, y-1, x)[z])-pixv);
+                        if (y<ny-1) vrhs += (to_float(video(fi, y+1, x)[z])-pixv);
+                        if (x>0   ) vrhs += (to_float(video(fi, y, x-1)[z])-pixv);
+                        if (x<nx-1) vrhs += (to_float(video(fi, y, x+1)[z])-pixv);
+                        multigrid.rhs()(f, y, x) = vrhs;
+                        multigrid.initial_estimate()(f, y, x) = pixv;
                     }
-                    if (1) {
-                        float v = to_float(video(fi+1, y, x)[z])-pixv;
-                        if (f==nf-1) v = (v+to_float(video(fbeg, y, x)[z])-to_float(video(fbeg-1, y, x)[z]))*.5f;
-                        vrhs += v*wtemporal;
-                    }
-                    if (y>0   ) vrhs += (to_float(video(fi, y-1, x)[z])-pixv);
-                    if (y<ny-1) vrhs += (to_float(video(fi, y+1, x)[z])-pixv);
-                    if (x>0   ) vrhs += (to_float(video(fi, y, x-1)[z])-pixv);
-                    if (x<nx-1) vrhs += (to_float(video(fi, y, x+1)[z])-pixv);
-                    multigrid.rhs()(f, y, x) = vrhs;
-                    multigrid.initial_estimate()(f, y, x) = pixv;
-                }
+                });
             }
             multigrid.set_desired_mean(mean(multigrid.initial_estimate()));
             if (1) multigrid.set_num_vcycles(10); // was 3
@@ -719,8 +723,8 @@ void do_makeloop(Args& args) {
             using EType = float;
             MultigridType multigrid(nvideo.dims()); {
                 HH_STIMER(__setup_rhs);
-                parallel_for_int(f, nf) { fill(multigrid.initial_estimate()[f], EType{0}); }
-                parallel_for_int(f, nf) { fill(multigrid.rhs()[f], EType{0}); }
+                parallel_for_each(range(nf), [&](const int f) { fill(multigrid.initial_estimate()[f], EType{0}); });
+                parallel_for_each(range(nf), [&](const int f) { fill(multigrid.rhs()[f], EType{0}); });
                 GridView<3,EType> mrhs = multigrid.rhs();
                 for_int(y, ny) for_int(x, nx) {
                     int count = 0; EType change{0};
@@ -735,10 +739,12 @@ void do_makeloop(Args& args) {
             if (1) multigrid.set_num_vcycles(3); // was 3 then 10 then 3
             if (0) multigrid.set_verbose(true);
             multigrid.solve();
-            parallel_for_int(f, nf) for_int(y, ny) for_int(x, nx) {
-                nvideo(f, y, x)[z] = clamp_to_uchar(int(to_float(video(fbeg+f, y, x)[z])+
-                                                        multigrid.result()(f, y, x)+.5f));
-            }
+            parallel_for_each(range(nf), [&](const int f) {
+                for_int(y, ny) for_int(x, nx) {
+                    nvideo(f, y, x)[z] = clamp_to_uchar(int(to_float(video(fbeg+f, y, x)[z])+
+                                                            multigrid.result()(f, y, x)+.5f));
+                }
+            });
         }
     }
     if (0) nvideo.attrib().bitrate = video.attrib().bitrate*2;
@@ -925,15 +931,17 @@ void do_scaleinside(Args& args) {
 // *** misc
 
 void do_flipvertical() {
-    parallel_for_int(f, video.nframes()) for_int(y, video.ysize()/2) {
-        swap_ranges(video[f][y], video[f][video.ysize()-1-y]);
-    }
+    parallel_for_each(range(video.nframes()), [&](const int f) {
+        for_int(y, video.ysize()/2) {
+            swap_ranges(video[f][y], video[f][video.ysize()-1-y]);
+        }
+    });
 }
 
 void do_fliphorizontal() {
-    parallel_for_int(f, video.nframes()) for_int(y, video.ysize()) {
-        reverse(video[f][y]);
-    }
+    parallel_for_each(range(video.nframes()), [&](const int f) {
+        for_int(y, video.ysize()) { reverse(video[f][y]); }
+    });
 }
 
 void do_disassemble(Args& args) {
@@ -999,17 +1007,19 @@ void do_gamma(Args& args) {
     float gamma = args.get_float();
     Vec<uchar,256> transf; for_int(i, 256) { transf[i] = static_cast<uchar>(255.f*pow(i/255.f, gamma)+0.5f); }
     if (1) {
-        cond_parallel_for_size_t(video.size()*10, i, video.size()) {
+        parallel_for_each(range(video.size()), [&](const size_t i) {
             for_int(z, nz) { video.raster(i)[z] = transf[video.raster(i)[z]]; } // fastest
-        }
+        }, 10);
     } else if (0) {
         parallel_for_coords(video.dims(), [&](const Vec3<int>& fyx) {
             for_int(z, nz) { video[fyx][z] = transf[video[fyx][z]]; }
         }, 10);
     } else {
-        parallel_for_int(f, video.nframes()) for_int(y, video.ysize()) for_int(x, video.xsize()) {
-            for_int(z, nz) { video(f, y, x)[z] = transf[video(f, y, x)[z]]; }
-        }
+        parallel_for_each(range(video.nframes()), [&](const int f) {
+            for_int(y, video.ysize()) for_int(x, video.xsize()) {
+                for_int(z, nz) { video(f, y, x)[z] = transf[video(f, y, x)[z]]; }
+            }
+        });
     }
 }
 
@@ -1670,21 +1680,21 @@ void process_gen(Args& args) {
     if (name=="cos_x") {
         float speriod = 100.f;  // was 20.f then 50.f
         float tperiod = 20.f;   // was 20.f then 60.f
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = cos((yx[1]/speriod-f/tperiod)*TAU)*.5f+.5f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
-        }
+        });
     } else if (name=="box_y") {
         float speriod = 100.f;  // was 20.f then 50.f
         float tperiod = 20.f;   // was 20.f then 60.f
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = (frac(yx[0]/speriod-f/tperiod)>.5f ? 1.f : 0.f);
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
-        }
+        });
     } else if (begins_with(name, "checker")) {
         float speriod = 100.f;  // was 20.f then 50.f
         float tperiod = 45.f;
@@ -1696,7 +1706,7 @@ void process_gen(Args& args) {
         else assertnever("");
         int mode; assertx(sscanf(name.c_str(), "checker%d", &mode)==1);
         float motion_amplitude = speriod*1.5f;
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             fill(video[f], Pixel::black());
             if (name=="checker3") fill(video[f], Pixel::gray(uchar(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
             for (const auto& yx : range(video.spatial_dims())) {
@@ -1709,31 +1719,31 @@ void process_gen(Args& args) {
                 if (mode==2 && r<sradius) pix = Pixel::white();
                 if (mode==3 && r<sradius) pix = func_get_color(pi[0]+pi[1]*37);
             }
-        }
+        });
     } else if (name=="slit1_x") {
         float speriod = 40.f;
         float tperiod = 45.f;
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[1])/video.xsize()-f/tperiod)<speriod/video.xsize() ? 1.f : 0.f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
-        }
+        });
     } else if (name=="slit1_y") {
         float speriod = 80.f;
         float tperiod = 45.f;
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[0])/video.ysize()+f/tperiod)<speriod/video.ysize() ? 1.f : 0.f;
                 video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
             }
-        }
+        });
     } else if (begins_with(name, "slits")) {
         float nsperiods = 3.f;
         float fsperiod = .25f;
         float tperiod = 18.f;
         float rotperiod = 90.f;
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float t = float(yx[0]);
                 if (name=="slits4")
@@ -1747,7 +1757,7 @@ void process_gen(Args& args) {
                     else pix = func_get_color(i);
                 }
             }
-        }
+        });
     } else if (begins_with(name, "stars")) {
         int n;                  // number of stars
         float radius;           // in pixels
@@ -1777,7 +1787,7 @@ void process_gen(Args& args) {
                 pix = func_get_color(i);
             }
         }
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             Matrix<F2> mvec(video.spatial_dims(), twice(1e10f));
             Matrix<Pixel> mpixel(video.spatial_dims(), Pixel::pink());
             if (name=="stars4") fill(video[f], Pixel::gray(uchar(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
@@ -1804,16 +1814,16 @@ void process_gen(Args& args) {
                 auto yxo = convert<int>(convert<float>(yx)+mvec[yx]+.5f);
                 video[f][yx] = mpixel[yxo];
             }
-        }
+        });
     } else if (name=="dot1") {
         float radius = 8.f;
-        parallel_for_int(f, video.nframes()) {
+        parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 auto pc = V((.2f+.6f*f/float(video.nframes()))*video.xsize(), .5f*video.ysize());
                 float r = float(dist(convert<float>(yx), pc));
                 video[f][yx] = Pixel::gray(r<radius ? 255 : 0);
             }
-        }
+        });
     } else if (name=="list") {
         for (string s : {"cos_x", "box_y", "checker1", "checker2", "checker3",
                     "slit1_x", "slit1_y", "slits1", "slits2", "slits3", "slits4",
@@ -1893,7 +1903,7 @@ void do_procedure(Args& args) {
         process_gen(args);
     } else if (name=="black_to_red") {
         // Combination of omp and lambda capture causes internal error in VS2015, in both Debug and Release.
-        // parallel_for_int(f, video.nframes()) {
+        // parallel_for_each(range(video.nframes()), [&](const int f) {
         for_int(f, video.nframes()) {
             Matrix<bool> mask = get_black_border_mask(video[f]);
             for_coords(video.spatial_dims(), [&](const Vec2<int>& yx) {
@@ -1933,14 +1943,16 @@ void do_procedure(Args& args) {
                         vrhs += gridf[y1][x1] - gridf[y0][x0];
                 };
                 const int ny = dims[0], nx = dims[1];
-                parallel_for_int(y, ny) for_int(x, nx) {
-                    Vector4 vrhs = -screening_weight*(mask[y][x] ? grid0 : gridf)[y][x];
-                    if (y>0   ) { func_stitch(y, x, y-1, x+0, vrhs); }
-                    if (y<ny-1) { func_stitch(y, x, y+1, x+0, vrhs); }
-                    if (x>0   ) { func_stitch(y, x, y+0, x-1, vrhs); }
-                    if (x<nx-1) { func_stitch(y, x, y+0, x+1, vrhs); }
-                    multigrid.rhs()[y][x] = vrhs;
-                }
+                parallel_for_each(range(ny), [&](const int y) {
+                    for_int(x, nx) {
+                        Vector4 vrhs = -screening_weight*(mask[y][x] ? grid0 : gridf)[y][x];
+                        if (y>0   ) { func_stitch(y, x, y-1, x+0, vrhs); }
+                        if (y<ny-1) { func_stitch(y, x, y+1, x+0, vrhs); }
+                        if (x>0   ) { func_stitch(y, x, y+0, x-1, vrhs); }
+                        if (x<nx-1) { func_stitch(y, x, y+0, x+1, vrhs); }
+                        multigrid.rhs()[y][x] = vrhs;
+                    }
+                });
             }
             Vector4 vmean(0.f); {
                 MatrixView<Vector4> mest = multigrid.initial_estimate();
@@ -1978,11 +1990,13 @@ void do_diff(Args& args) {
 
 void do_transf(Args& args) {
     Frame frame = FrameIO::parse_frame(args.get_string());
-    parallel_for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
-        Point p(0.f, 0.f, 0.f); for_int(z, nz) { p[z] = pix[z]/255.f; }
-        p *= frame;
-        for_int(z, nz) { pix[z] = uchar(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
-    }
+    parallel_for_each(range(video.nframes()), [&](const int f) {
+        for (Pixel& pix : video[f]) {
+            Point p(0.f, 0.f, 0.f); for_int(z, nz) { p[z] = pix[z]/255.f; }
+            p *= frame;
+            for_int(z, nz) { pix[z] = uchar(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
+        }
+    });
 }
 
 void do_noisegaussian(Args& args) {

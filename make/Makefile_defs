@@ -28,7 +28,7 @@ endif
 
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
-  build_configs ?= win mingw clang cygwin mingw32 w32 clang32#  default set for "make makeall" or "make CONFIG=all"
+  build_configs ?= win mingw clang cygwin mingw32 w32#  default set for "make makeall" or "make CONFIG=all"
   nondefault_configs = cygwin32 distrib
   configs ?=       $(build_configs) $(nondefault_configs) $(nonworking_configs)
 else
@@ -219,7 +219,7 @@ else ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
   loc_libs = $(strip $(if $(have_recipes),recipes,) $(if ,lbfgsf))
   sys_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_lapack),lapack,))
   LDLIBS += $(foreach n,$(loc_libs),$(HhRoot)/lib/$(CONFIG)/lib$(n).a) $(foreach n,$(sys_libs),-l$(n))
-else  # CONFIG = mingw, clang, clang32, mingw32, etc.
+else  # CONFIG = mingw, clang, mingw32, etc.
   loc_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_recipes),recipes,) \
     $(if ,lbfgsf) \
     $(if $(have_lapack),lapack blas f2c,))

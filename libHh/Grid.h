@@ -193,11 +193,13 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const;
     void reverse_y() {
         static_assert(D==2, ""); const int ny = this->ysize();
-        cond_parallel_for_int(size()*2, y, ny/2) { swap_ranges((*this)[y], (*this)[ny-1-y]); }
+        parallel_for_each(range(ny/2), [&](const int y) {
+            swap_ranges((*this)[y], (*this)[ny-1-y]);
+        }, this->xsize()*2);
     }
     void reverse_x() {
         static_assert(D==2, ""); const int ny = this->ysize();
-        cond_parallel_for_int(size()*2, y, ny) { reverse((*this)[y]); }
+        parallel_for_each(range(ny), [&](const int y) { reverse((*this)[y]); }, this->xsize()*2);
     }
  protected:
     using base::_a; using base::_dims;
@@ -241,7 +243,7 @@ template<int D, typename T> class Grid : public GridView<D,T> {
         assertx(min(dims)>=0);
         size_t vol = product_dims<D>(dims.data());
         // VS2013 may have small timing cost in delete[] on wildly irregular allocations
-        // CONFIG=mingw32 or clang: out-of-memory may result in segmentation fault on next line
+        // CONFIG=mingw32: out-of-memory may result in segmentation fault on next line
         if (vol!=size()) { delete[] _a; _a = vol ? new T[vol] : nullptr; }
         // if (vol!=size()) { aligned_delete<T>(_a); _a = vol ? aligned_new<T>(vol) : nullptr; }
         _dims = dims;
@@ -599,7 +601,7 @@ template<int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D,T>);     // implemente
 #define CG CGridView<D,T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for_size_t(i, g.size())
-#define PF(g) cond_parallel_for_size_t(g.size()*1, i, g.size())
+#define PF(g, code) parallel_for_each(range(g.size()), [&](const size_t i) { code; }, 1)
 
 TT G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.raster(i) = g1.raster(i)+g2.raster(i); } return g; }
 TT G operator-(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.raster(i) = g1.raster(i)-g2.raster(i); } return g; }
@@ -621,13 +623,12 @@ TT G operator%(const T& e, CG g1) { G g(g1.dims()); F(g) { g.raster(i) = e%g1.ra
 
 // Parallelized and optimized, for Multigrid<>.
 TT GridView<D,T> operator+=(GridView<D,T> g1, CG g2) {
-    SS; T* a = g1.data(); const T* b = g2.data(); PF(g1) { a[i] += b[i]; } return g1;
+    SS; T* a = g1.data(); const T* b = g2.data(); PF(g1, a[i] += b[i]); return g1;
 }
-// TT GridView<D,T> operator+=(GridView<D,T> g1, CG g2) { SS; PF(g1) { g1.raster(i) += g2.raster(i); } return g1; }
-TT GridView<D,T> operator-=(GridView<D,T> g1, CG g2) { SS;  F(g1) { g1.raster(i) -= g2.raster(i); } return g1; }
-TT GridView<D,T> operator*=(GridView<D,T> g1, CG g2) { SS; PF(g1) { g1.raster(i) *= g2.raster(i); } return g1; }
-TT GridView<D,T> operator/=(GridView<D,T> g1, CG g2) { SS;  F(g1) { g1.raster(i) /= g2.raster(i); } return g1; }
-TT GridView<D,T> operator%=(GridView<D,T> g1, CG g2) { SS;  F(g1) { g1.raster(i) %= g2.raster(i); } return g1; }
+TT GridView<D,T> operator-=(GridView<D,T> g1, CG g2) { SS; F(g1) { g1.raster(i) -= g2.raster(i); } return g1; }
+TT GridView<D,T> operator*=(GridView<D,T> g1, CG g2) { SS; PF(g1, g1.raster(i) *= g2.raster(i)); return g1; }
+TT GridView<D,T> operator/=(GridView<D,T> g1, CG g2) { SS; F(g1) { g1.raster(i) /= g2.raster(i); } return g1; }
+TT GridView<D,T> operator%=(GridView<D,T> g1, CG g2) { SS; F(g1) { g1.raster(i) %= g2.raster(i); } return g1; }
 
 TT GridView<D,T> operator+=(GridView<D,T> g1, const T& e) { F(g1) { g1.raster(i) += e; } return g1; }
 TT GridView<D,T> operator-=(GridView<D,T> g1, const T& e) { F(g1) { g1.raster(i) -= e; } return g1; }

@@ -6,18 +6,13 @@
 #include "Stat.h"
 
 #include <vector>
-
-// mingw target used by Windows clang3.7 does not support <mutex> / <future>
-#if !(defined(__clang__) && __clang_major__ < 5)
 #include <future>
-#endif
 
 using namespace hh;
 
 // Occasionally, this program stops responding, especially in CONFIG=mingw32.
 
 int main() {
-#if !(defined(__clang__) && __clang_major__ < 5)
     if (1) {
         int process_id = -1;
         int counter = 0;
@@ -52,5 +47,4 @@ int main() {
         assertx(counter==niter*nprocess);
         assertx(vsum==(niter*nprocess)*(niter*nprocess-1)/2);
     }
-#endif
 }

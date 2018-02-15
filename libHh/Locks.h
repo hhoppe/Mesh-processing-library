@@ -7,21 +7,20 @@
 #if 0
 {
     // critical section
-    parallel_for_int(i, 100) { something(); HH_LOCK { something_synchronized(): } }
+    parallel_for_each(range(100), [&](const int i) {
+        something();
+        HH_LOCK { something_synchronized(): }
+    });
     // alternate
     std::mutex g_mutex;
-    parallel_for_int(i, 100) { something(); { std::lock_guard<std::mutex> lg(g_mutex); something_synchronized(); } }
+    parallel_for_each(range(100), [&](const int i) {
+        something();
+        { std::lock_guard<std::mutex> lg(g_mutex); something_synchronized(); }
+    });
 }
 #endif
 
-#if defined(HH_DEFINE_STD_MUTEX)  // workaround for current clang with mingw32 4.7.2: no locking
-namespace std {
-struct mutex { };
-template<typename T> struct lock_guard { lock_guard(T&) { } };
-} // namespace std
-#else
 #include <mutex>                // mutex, lock_guard; C++11
-#endif
 
 namespace hh {
 

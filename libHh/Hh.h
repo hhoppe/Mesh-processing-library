@@ -45,10 +45,6 @@
 #pragma warning(disable:6286)   // (<non-zero constant> || <expression>) is always a non-zero constant
 #endif
 
-#if defined(HH_DEFINE_FLOAT128)  // workaround for current clang with mingw32 4.7.2
-typedef struct { long double x, y; } __float128;
-#endif
-
 #if defined(_WIN32)
 // If later include <windef.h>, disable macros min and max, e.g. which interfere with std::numeric_limits<T>::max().
 // If already defined, undefine them.
@@ -180,20 +176,6 @@ using namespace hh;
 #endif
 
 
-// *** Add some potentially missing C++11 features.
-
-namespace std {
-
-#if defined(HH_DEFINE_STD_ONCE)  // workaround for current clang with mingw32 4.7.2
-struct once_flag { int done{0}; };
-template<typename Callable, typename... Args> void call_once(std::once_flag& flag, Callable&& func, Args&&... args) {
-    if (!flag.done++) func(std::forward<Args>(args)...);
-}
-#endif
-
-} // namespace std
-
-
 // *** Add some easy C++14 features if not already present.
 
 #if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14)
@@ -258,11 +240,11 @@ template<typename T, typename U> T exchange(T& obj, U&& new_value) {
 #define ocase case
 #define bdefault break; default
 
-#define for_range_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
-#define for_range(T, i, lb, ub) for_range_aux(T, i, lb, ub, HH_UNIQUE_ID(u))
-#define for_int(i, ub)      for_range(int, i, 0, ub)
-#define for_intL(i, lb, ub) for_range(int, i, lb, ub)
-#define for_size_t(i, ub)   for_range(std::size_t, i, 0, ub)
+#define for_T_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
+#define for_T(T, i, lb, ub) for_T_aux(T, i, lb, ub, HH_UNIQUE_ID(u))
+#define for_int(i, ub)      for_T(int, i, 0, ub)
+#define for_intL(i, lb, ub) for_T(int, i, lb, ub)
+#define for_size_t(i, ub)   for_T(std::size_t, i, 0, ub)
 
 
 // *** Begin namespace
@@ -699,10 +681,15 @@ template<typename T> class Range {
         Iterator(const type& iter)              = default;
         bool operator==(const type& rhs) const  { return _v==rhs._v; }
         bool operator!=(const type& rhs) const  { return !(*this==rhs); }
+        bool operator<(const type& rhs) const   { return _v<rhs._v; }
+        bool operator<=(const type& rhs) const  { return _v<=rhs._v; }
+        bool operator>(const type& rhs) const   { return _v>rhs._v; }
+        bool operator>=(const type& rhs) const  { return _v>=rhs._v; }
         difference_type operator-(const type& rhs) const { return _v - rhs._v; }
         type& operator+=(difference_type n)     { ASSERTXX(_v<_ub); _v += n; ASSERTXX(_v<=_ub); return *this; }
         T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
         type& operator++()                      { ASSERTXX(_v<_ub); _v += T{1}; return *this; }
+        T operator[](size_t i) const            { ASSERTXX(T(_v+i)<_ub); return T(_v+i); }
      private:
         T _v, _ub;
     };

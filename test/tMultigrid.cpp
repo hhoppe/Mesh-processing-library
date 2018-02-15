@@ -20,18 +20,18 @@ template<int D, typename T> void read_image(Image& image, Grid<D,T>& grid_orig) 
     static_assert(D==2, "image only valid in 2D");
     image.to_bw();
     grid_orig.init(image.dims());
-    parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-        grid_orig[y][x] = T{image[y][x][0]/255.f};
-    }
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+        grid_orig[yx] = T{image[yx][0]/255.f};
+    });
     if (0) HH_RSTAT(Sorig, grid_orig);
 }
 
 void read_image(Image& image, Grid<2,Vector4>& grid_orig) {
     assertx(image.zsize()==3);
     grid_orig.init(image.dims());
-    parallel_for_int(y, image.ysize()) for_int(x, image.xsize()) {
-        grid_orig[y][x] = Vector4(image[y][x]);
-    }
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+        grid_orig[yx] = Vector4(image[yx]);
+    });
 }
 
 // Compute the Laplacian of the given original grid.
@@ -59,14 +59,16 @@ template<typename T> void setup_rhs2(CGridView<2,T> grid_orig, GridView<2,T> gri
     // HH_TIMER(_setup_rhs2);
     assertx(same_size(grid_orig, grid_rhs));
     int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
-    cond_parallel_for_int(grid_rhs.size()*10, y, ny) for_int(x, nx) {
-        T vrhs = -screening_weight*grid_orig[y][x];
-        if (y>0   ) { vrhs += (grid_orig[y-1][x]-grid_orig[y][x])*gradient_sharpening; }
-        if (y<ny-1) { vrhs += (grid_orig[y+1][x]-grid_orig[y][x])*gradient_sharpening; }
-        if (x>0   ) { vrhs += (grid_orig[y][x-1]-grid_orig[y][x])*gradient_sharpening; }
-        if (x<nx-1) { vrhs += (grid_orig[y][x+1]-grid_orig[y][x])*gradient_sharpening; }
-        grid_rhs[y][x] = vrhs;
-    }
+    parallel_for_each(range(ny), [&](const int y) {
+        for_int(x, nx) {
+            T vrhs = -screening_weight*grid_orig[y][x];
+            if (y>0   ) { vrhs += (grid_orig[y-1][x]-grid_orig[y][x])*gradient_sharpening; }
+            if (y<ny-1) { vrhs += (grid_orig[y+1][x]-grid_orig[y][x])*gradient_sharpening; }
+            if (x>0   ) { vrhs += (grid_orig[y][x-1]-grid_orig[y][x])*gradient_sharpening; }
+            if (x<nx-1) { vrhs += (grid_orig[y][x+1]-grid_orig[y][x])*gradient_sharpening; }
+            grid_rhs[y][x] = vrhs;
+        }
+    }, nx*10);
 }
 
 // Perform a test of reconstructing a grid of random numbers from their Laplacian.
@@ -272,11 +274,11 @@ int main(int argc, const char** argv) {
         const Vec2<int> dims = grids[0].dims();
         grids[2].init(dims, mean(grids[0]));
         Grid<2,int> grid_labels(dims);
-        parallel_for_int(y, grid_labels.dim(0)) for_int(x, grid_labels.dim(1)) {
-            if (0) grid_labels[y][x] = x<int(grids[0].dim(0)*.4f) ? 0 : 1;
-            if (1) grid_labels[y][x] = x*.7f/grids[0].dim(1)+y*.2f/grids[0].dim(0)<0.45f ? 0 : 1;
-            if (1 && square(y-500)+square(x-500)<square(300)) grid_labels[y][x] = 2;
-        }
+        parallel_for_coords(grid_labels.dims(), [&](const Vec2<int>& yx) {
+            if (0) grid_labels[yx] = yx[1]<int(grids[0].dim(0)*.4f) ? 0 : 1;
+            if (1) grid_labels[yx] = yx[1]*.7f/grids[0].dim(1)+yx[0]*.2f/grids[0].dim(0)<0.45f ? 0 : 1;
+            if (1 && square(yx[0]-500)+square(yx[1]-500)<square(300)) grid_labels[yx] = 2;
+        });
         float screening_weight; // 2048: 1e-5f good; 1e-6f weak; 1e-4f strong; 3e-5 good too; 1e-7f or 0.f none
         // 256: 1e-4f good
         screening_weight = product(dims)>=square(1024) ? 1e-5f : 1e-4f;
@@ -290,20 +292,32 @@ int main(int argc, const char** argv) {
                     if (1) vrhs += (grids[label0][y1][x1][c]-grids[label0][y0][x0][c])*.5f;
                     if (1) vrhs += (grids[label1][y1][x1][c]-grids[label1][y0][x0][c])*.5f; // necessary!
                 };
-                parallel_for_int(y, dims[0]) for_int(x, dims[1]) {
-                    int label = grid_labels[y][x];
-                    double vrhs = -screening_weight*grids[label][y][x][c];
-                    if (y>0        ) { func_stitch(y, x, y-1, x+0, vrhs); }
-                    if (y<dims[0]-1) { func_stitch(y, x, y+1, x+0, vrhs); }
-                    if (x>0        ) { func_stitch(y, x, y+0, x-1, vrhs); }
-                    if (x<dims[1]-1) { func_stitch(y, x, y+0, x+1, vrhs); }
-                    multigrid.rhs()[y][x] = float(vrhs);
+                parallel_for_each(range(dims[0]), [&](const int y) {
+                    for_int(x, dims[1]) {
+                        int label = grid_labels[y][x];
+                        double vrhs = -screening_weight*grids[label][y][x][c];
+                        if (y>0        ) { func_stitch(y, x, y-1, x+0, vrhs); }
+                        if (y<dims[0]-1) { func_stitch(y, x, y+1, x+0, vrhs); }
+                        if (x>0        ) { func_stitch(y, x, y+0, x-1, vrhs); }
+                        if (x<dims[1]-1) { func_stitch(y, x, y+0, x+1, vrhs); }
+                        multigrid.rhs()[y][x] = float(vrhs);
+                    }
+                });
+                double vsum(0.f);
+                if (0) {
+                    omp_parallel_for_T(reduction(+:vsum), int, y, 0, dims[0]) for_int(x, dims[1]) {
+                        vsum += grids[grid_labels[y][x]][y][x][c];
+                    }
+                } else {
+                    Array<double> sums(dims[0], 0.);
+                    parallel_for_each(range(dims[0]), [&](const int y) {
+                        double sum = 0.f;
+                        for_int(x, dims[1]) sum +=  grids[grid_labels[y][x]][y][x][c];
+                        sums[y] = sum;
+                    });
+                    vsum = sum(sums);
                 }
-                double vmean(0.f);
-                omp_parallel_for_range(reduction(+:vmean), int, y, 0, dims[0]) for_int(x, dims[1]) {
-                    vmean += grids[grid_labels[y][x]][y][x][c];
-                }
-                mean_orig = vmean*(1.f/grid_labels.size());
+                mean_orig = vsum*(1.f/grid_labels.size());
             }
             multigrid.set_desired_mean(mean_orig);
             fill(multigrid.initial_estimate(), 0.f);

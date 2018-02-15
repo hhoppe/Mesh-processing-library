@@ -230,12 +230,12 @@ void VideoNv12::write_file(const string& filename, const Video::Attrib& pattrib)
 
 void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3,Pixel> video) {
     assertx(vnv12.nframes()==video.dim(0));
-    parallel_for_int(f, video.dim(0)) { convert_Nv12_to_Image(vnv12[f], video[f]); }
+    parallel_for_each(range(video.dim(0)), [&](const int f) { convert_Nv12_to_Image(vnv12[f], video[f]); });
 }
 
 void convert_Video_to_VideoNv12(CGridView<3,Pixel> video, VideoNv12View vnv12) {
     assertx(vnv12.nframes()==video.dim(0));
-    parallel_for_int(f, video.dim(0)) { convert_Image_to_Nv12(video[f], vnv12[f]); }
+    parallel_for_each(range(video.dim(0)), [&](const int f) { convert_Image_to_Nv12(video[f], vnv12[f]); });
 }
 
 
@@ -279,16 +279,16 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
         Vec2<uchar> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
         convert(CGrid1View(borderUVt), Grid1View(borderUV));
     }
-    parallel_for_int(f, newvideo_nv12.nframes()) {
+    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
         Matrix<float> mat(sdims); convert(video_nv12.get_Y()[f], mat);
         Matrix<float> mat2 = scale(mat, newdims, filterbs, bordervalue ? &borderY : nullptr);
         convert(mat2, newvideo_nv12.get_Y()[f]);
-    }
-    parallel_for_int(f, newvideo_nv12.nframes()) {
+    });
+    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
         Matrix<Vector4> mat(sdims/2); convert(video_nv12.get_UV()[f], mat);
         Matrix<Vector4> mat2 = scale(mat, newdims/2, filterbs, bordervalue ? &borderUV : nullptr);
         convert(mat2, newvideo_nv12.get_UV()[f]);
-    }
+    });
     return newvideo_nv12;
 }
 

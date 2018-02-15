@@ -1843,7 +1843,7 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
     Vertex cv = (mesh.is_boundary(e) ? v2 : // current vertex for rotation
                  !mesh.is_boundary(v1) ? v2 :
                  !mesh.is_boundary(v2) ? v1 :
-                 (assertnever(""), implicit_cast<Vertex>(nullptr)));
+                 (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
     Vertex ov = mesh.opp_vertex(cv, e); // other vertex of rotation (v1 or v2)
     Vertex w = assertx(mesh.most_clw_vertex(cv));
     if (!mesh.is_boundary(cv)) {
@@ -2130,7 +2130,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
         Vertex cv = (mesh.is_boundary(e) ? v2 :
                      !mesh.is_boundary(v1) ? v2 :
                      !mesh.is_boundary(v2) ? v1 :
-                     (assertnever(""), implicit_cast<Vertex>(nullptr)));
+                     (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
         Vertex ov = mesh.opp_vertex(cv, e); // other vertex of rotation (v1 or v2)
         Vertex w = assertx(mesh.most_clw_vertex(cv));
         if (!mesh.is_boundary(cv)) {

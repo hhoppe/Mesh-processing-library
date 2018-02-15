@@ -195,11 +195,9 @@ void ImageIO::read_rgb(Image& image, FILE* file) {
         }
     }
     if (image.zsize()==1) {
-        parallel_for_int(y, image.ysize()) {
-            for_int(x, image.xsize()) {
-                image[y][x][2] = image[y][x][1] = image[y][x][0];
-            }
-        }
+        parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+            image[yx][2] = image[yx][1] = image[yx][0];
+        });
     }
     if (image.zsize()<4) { for (Pixel& pix : image) { pix[3] = 255; } }
     if (1) image.reverse_y();   // because *.rgb format has image origin at lower-left
@@ -969,7 +967,7 @@ void ImageIO::read_png(Image& image, FILE* file) {
         image.init(V(height, width)); image.set_zsize(ncomp);
         png_bytep* row_pointers; // [height]
         row_pointers = png_get_rows(png_ptr, info_ptr);
-        parallel_for_int(y, image.ysize()) {
+        parallel_for_each(range(image.ysize()), [&](const int y) {
             uchar* buf = row_pointers[y];
             for_int(x, image.xsize()) {
                 Pixel& pix = image[y][x];
@@ -977,7 +975,7 @@ void ImageIO::read_png(Image& image, FILE* file) {
                 if (ncomp==1) pix[2] = pix[1] = pix[0];
                 if (ncomp<4) pix[3] = 255;
             }
-        }
+        });
     } else {                    // lower-level read, directly into image.
         png_read_info(png_ptr, info_ptr);
         if (0) {
@@ -1089,7 +1087,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
     if (0) {                     // high-level write
         Matrix<uchar> matrix(V(image.ysize(), image.xsize()*image.zsize()));
         Array<png_bytep> row_pointers(image.ysize());
-        parallel_for_int(y, image.ysize()) {
+        parallel_for_each(range(image.ysize()), [&](const int y) {
             row_pointers[y] = matrix[y].data();
             uchar* buf = matrix[y].data();
             for_int(x, image.xsize()) {
@@ -1097,7 +1095,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
                     *buf++ = image[y][x][z];
                 }
             }
-        }
+        });
         png_set_rows(png_ptr, info_ptr, row_pointers.data());
         int png_transforms = 0;
         png_write_png(png_ptr, info_ptr, png_transforms, nullptr);

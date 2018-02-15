@@ -55,8 +55,19 @@ template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_
     MeanType v; my_zero(v);
     intptr_t size = g.size();
     if (!size) { Warning("Zero-size grid"); return v; }
-    omp_parallel_for_range(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) {
-        v += g.raster(i);
+    if (0 || g.size()*1<k_omp_thresh) {
+        omp_parallel_for_T(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) { v += g.raster(i); }
+    } else {
+        const int num_threads = get_max_threads();
+        const intptr_t chunk_size = (size+num_threads-1)/num_threads;
+        Array<MeanType> means(num_threads);
+        parallel_for_each(range(num_threads), [&](const int thread_index) {
+            MeanType v; my_zero(v);
+            for_each(range(thread_index*chunk_size, std::min((thread_index+1)*chunk_size, size)),
+                     [&](const intptr_t i) { v += g.raster(i); });
+            means[thread_index] = v;
+        });
+        for_int(thread_index, num_threads) v += means[thread_index];
     }
     return v*(1./size);
 }
@@ -217,10 +228,12 @@ class Multigrid : noncopyable {
         } else {
             // Note: bug in VS2015 update 1 - x64 DebugMD due to OpenMP;
             //  tMultigrid; ngrid.dims=[17, 17] but appears as [0, 17] within loop.
-            cond_parallel_for_int(ngrid.size()*4, y, dims[0]/2) for_int(x, dims[1]/2) {
-                ngrid[y][x] = ((grid[y*2+0][x*2+0]+grid[y*2+0][x*2+1]+
-                                grid[y*2+1][x*2+0]+grid[y*2+1][x*2+1])*.25f);
-            }
+            parallel_for_each(range(dims[0]/2), [&](const int y) {
+                for_int(x, dims[1]/2) {
+                    ngrid[y][x] = ((grid[y*2+0][x*2+0]+grid[y*2+0][x*2+1]+
+                                    grid[y*2+1][x*2+0]+grid[y*2+1][x*2+1])*.25f);
+                }
+            }, dims[1]*4);
             if (dims[0]%2==1) {
                 int y = ndims[0]-1;
                 float fac = dims[0]>=dims[1] ? .25f : .5f; // border-zero or reflected
@@ -262,9 +275,11 @@ class Multigrid : noncopyable {
         assertx(ndims[1]==dims[1]*2 || ndims[1]==dims[1]*2-1);
         Grid<D,T> ngrid(ndims);
         // transpose of box filter: tensor({(1 0), (0 1)})
-        cond_parallel_for_int(ngrid.size()*1, y, ndims[0]) for_int(x, ndims[1]) {
-            ngrid[y][x] = grid[y/2][x/2];
-        }
+        parallel_for_each(range(ndims[0]), [&](const int y) {
+            for_int(x, ndims[1]) {
+                ngrid[y][x] = grid[y/2][x/2];
+            }
+        }, ndims[1]*1);
         return ngrid;
     }
     // Return the Laplacian weight at the given grid resolution.
@@ -354,7 +369,7 @@ class Multigrid : noncopyable {
                 }
                 // even-odd in just first dimension
                 const Vec<int,D> even_odd = ntimes<D>(1).with(0, 2); // { 2, 1, 1, ... }
-                int nthreads = omp_get_max_threads();
+                int nthreads = get_max_threads();
                 col_dims[0] = max((dims[0]-1)/(nthreads*2)+1, 1);
                 Vec<int,D> num_col_pairs = (dims-1)/(col_dims*even_odd)+1;
                 col_dims = ((dims-1)/num_col_pairs+1-1)/even_odd+1; // adjust col_dims for most uniform partition
@@ -374,11 +389,11 @@ class Multigrid : noncopyable {
                 }
                 if (local_iter) break;
             } else {      // parallelism across dim0 blocks; two-stage synchronization to preserve determinism
-                int nthreads = omp_get_max_threads();
+                int nthreads = get_max_threads();
                 const int sync_rows = 1; // rows per chunk to omit in first pass to avoid synchronization issues
                 int dim0 = dims[0], d0chunk = max((dims[0]-1)/nthreads+1, sync_rows*2);
                 nthreads = (dim0+d0chunk-1)/d0chunk;
-                parallel_for_int(thread, nthreads) { // k_omp_thresh already tested above
+                parallel_for_each(range(nthreads), [&](const int thread) { // k_omp_thresh already tested above
                     const Vec<int,D> uL = ntimes<D>(0).with(0, thread*d0chunk);
                     const Vec<int,D> uU = dims.with(0, min((thread+1)*d0chunk, dim0)-sync_rows);
                     if (1 && b_default_metric) {
@@ -387,8 +402,9 @@ class Multigrid : noncopyable {
                     } else {
                         for (const auto& u : range(uL, uU)) func_update(u);
                     }
-                }
-                parallel_for_int(thread, nthreads) { // parallel is useful for small dimension likes video frames
+                });
+                // parallel is useful for small dimension likes video frames
+                parallel_for_each(range(nthreads), [&](const int thread) {
                     const int overlap = 0;           // ={1, 2} does not seem to help much over =0
                     const Vec<int,D> uL = ntimes<D>(0).with(0, min((thread+1)*d0chunk, dim0)-sync_rows);
                     const Vec<int,D> uU = dims.with(0, min((thread+1)*d0chunk+overlap, dim0));
@@ -398,7 +414,7 @@ class Multigrid : noncopyable {
                     } else {
                         for (const auto& u : range(uL, uU)) func_update(u);
                     }
-                }
+                });
             }
         }
         if (extra && 1) {   // perform additional relaxations near ends of dimensions with odd sizes
@@ -452,11 +468,11 @@ class Multigrid : noncopyable {
             if (0 || (grid_rhs.size()*10<k_omp_thresh && 1)) { // simple sequential version
                 for_int(y, ny) for_int(x, nx) func_update(y, x);
             } else {            // two-stage row-based synchronization to preserve determinism
-                int nthreads = omp_get_max_threads();
+                int nthreads = get_max_threads();
                 const int sync_rows = 1; // rows per chunk to omit in first pass to avoid synchronization issues
                 int ychunk = max((ny-1)/nthreads+1, sync_rows*2);
                 nthreads = (ny+ychunk-1)/ychunk;
-                parallel_for_int(thread, nthreads) {
+                parallel_for_each(range(nthreads), [&](const int thread) {
                     const int y0 = thread*ychunk, yn = min((thread+1)*ychunk, ny)-sync_rows;
                     if (0) for_intL(y, y0, yn) for_int(x, nx) func_update(y, x);
                     if (1 && b_default_metric) {
@@ -466,12 +482,12 @@ class Multigrid : noncopyable {
                     }
                     // mingw 4096 4096: for_intL:0.58sec* for_2DL_interior:0.64sec  for_2DL:0.83sec
                     // win   4096 4096: for_intL:1.84sec  for_2DL_interior:1.19sec* for_2DL:1.83sec
-                }
-                cond_parallel_for_int(nx*size_t{sync_rows}*10, thread, nthreads) {
+                });
+                parallel_for_each(range(nthreads), [&](const int thread) {
                     const int overlap = 0; // ={1, 2} does not seem to help much over =0
                     int y0 = min((thread+1)*ychunk, ny)-sync_rows, yn = min((thread+1)*ychunk+overlap, ny);
                     for_2DL(y0, yn, 0, nx, func_update);
-                }
+                }, nx*size_t{sync_rows}*10/nthreads);
             }
             if (extra && 1) {   // perform additional relaxations near ends of dimensions with odd sizes
                 const int extra_niter = 30; const int extra_size = 6;
@@ -566,7 +582,7 @@ class Multigrid : noncopyable {
         dummy_use(func_interior);
         // VS2012: does not inline lambda in any case; all similar; first choice is slightly better.
         // gcc4.8.1: always produces good code (even creating func_interior() automatically).
-        if (1) cond_parallel_for_int(grid_rhs.size()*10, y, ny) for_int(x, nx) func(y, x);
+        if (1) parallel_for_each(range(ny), [&](const int y) { for_int(x, nx) func(y, x); }, nx*10);
         if (0) parallel_for_2DL(0, ny, 0, nx, func);
         if (0) parallel_for_2DL_interior(0, ny, 0, nx, func, func_interior);
         return grid_residual;

@@ -18,10 +18,10 @@
 {
     const int n = 1000;
     ConsoleProgressInc cprogress(n, "Computing");
-    parallel_for_int(i, n) {
+    parallel_for_each(range(n), [&](const int i) {
         cprogress.increment();
         process(i);
-    }
+    });
 }
 #endif
 

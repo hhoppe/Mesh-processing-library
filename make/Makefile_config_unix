@@ -12,6 +12,7 @@ ifeq ($(is_mac),1)
   cppinc += -DHH_NO_DEFINE_STD_CXX14
   cppinc += -DHH_NO_DEFINE_STD_INDEX_SEQUENCE
   CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=new ..."
+  omit_omp = 1
 else
   CC = gcc#  set default choice of compiler (clang or gcc); override using "make CC=new ..."
   STD_CXX ?= -std=c++11#  override default -std=c++14; more portable

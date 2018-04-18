@@ -55,6 +55,7 @@ view_scripts = \
   view_hidden_line_removed.sh \
 
 all:
+	Filterimage --version   # show build information
 	$(MAKE) create
 	ls -alt data
 	$(MAKE) view

@@ -55,7 +55,8 @@ template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_
     MeanType v; my_zero(v);
     intptr_t size = g.size();
     if (!size) { Warning("Zero-size grid"); return v; }
-    if (0 || g.size()*1<k_omp_thresh) {
+    constexpr bool avoid_threadpool = false;
+    if (avoid_threadpool || g.size()*1<k_omp_thresh) {
         omp_parallel_for_T(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) { v += g.raster(i); }
     } else {
         const int num_threads = get_max_threads();

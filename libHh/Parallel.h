@@ -136,8 +136,12 @@ class ThreadPoolIndexedTask : noncopyable {
     ~ThreadPoolIndexedTask() {
         {
             std::unique_lock<std::mutex> lock(_mutex);
+            assertx(_running);
             assertx(!_num_remaining_tasks);
+            assertx(_task_index==_num_tasks);
             _running = false;
+            _task_index = 0;
+            _num_tasks = 1;
             _condition_variable_worker.notify_all();
         }
         for (auto& thread : _threads) thread.join();
@@ -155,7 +159,7 @@ class ThreadPoolIndexedTask : noncopyable {
             _num_remaining_tasks = num_tasks;
             _task_index = 0;
             _condition_variable_worker.notify_all();
-            while (_num_remaining_tasks) _condition_variable_master.wait(lock);
+            _condition_variable_master.wait(lock, [this] { return !_num_remaining_tasks; });
         }
     }
     static ThreadPoolIndexedTask& default_threadpool() {
@@ -164,15 +168,15 @@ class ThreadPoolIndexedTask : noncopyable {
         if (!thread_pool) thread_pool = make_unique<ThreadPoolIndexedTask>();
         return *thread_pool;
     }
-    
+
  private:
     std::mutex _mutex;
     bool _running = true;
     std::vector<std::thread> _threads;
     Task _task_function;
-    int _num_tasks;
+    int _num_tasks = 0;
     int _num_remaining_tasks = 0;
-    int _task_index;
+    int _task_index = 0;
     std::condition_variable _condition_variable_worker;
     std::condition_variable _condition_variable_master;
 
@@ -180,15 +184,15 @@ class ThreadPoolIndexedTask : noncopyable {
         std::unique_lock<std::mutex> lock(_mutex);
         // Consider: https://stackoverflow.com/questions/233127/how-can-i-propagate-exceptions-between-threads
         // However, rethrowing the exception in the main thread loses the stack state, so not useful for debugging.
-        while (_running) {
-            // _condition_variable_worker.wait(lock, [this]() { return _task_index<_num_tasks || !_running; });
-            _condition_variable_worker.wait(lock);
-            for (;;) {
-                if (_task_index==_num_tasks) break;
+        for (;;) {
+            _condition_variable_worker.wait(lock, [this] { return _task_index < _num_tasks; });
+            if (!_running) break;
+            while (_task_index < _num_tasks) {
                 int i = _task_index++;
                 lock.unlock();
                 _task_function(i);
                 lock.lock();
+                assertx(_num_remaining_tasks>0);
                 if (!--_num_remaining_tasks) _condition_variable_master.notify_all();
             }
         }

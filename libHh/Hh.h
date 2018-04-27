@@ -178,7 +178,7 @@ using namespace hh;
 
 // *** Add some easy C++14 features if not already present.
 
-#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14)
+#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_transformation_trait_aliases)
 namespace std {
 // C++14 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf
 template<typename T> using remove_const_t = typename remove_const<T>::type;
@@ -202,6 +202,11 @@ template<bool b, typename T, typename F>        using conditional_t = typename c
 template<typename... T>                         using common_type_t = typename common_type<T...>::type;
 template<typename T>                            using underlying_type_t = typename underlying_type<T>::type;
 template<typename F, typename... ArgTypes>      using result_of_t = typename result_of<F(ArgTypes...)>::type;
+}
+#endif
+
+#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_make_unique)
+namespace std {
 // C++14
 // http://stackoverflow.com/questions/13883824/make-unique-does-not-compile
 // http://stackoverflow.com/questions/10149840/c-arrays-and-make-unique
@@ -216,7 +221,7 @@ template<typename T> std::enable_if_t<std::is_array<T>::value, unique_ptr<T> > m
 } // namespace std
 #endif
 
-#if (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L)) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE)
+#if (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L)) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE) && !defined(__cpp_lib_integer_sequence)
 namespace std {
 // C++14 http://en.cppreference.com/w/cpp/utility/integer_sequence
 // Useful template for creating and processing parameter packs.

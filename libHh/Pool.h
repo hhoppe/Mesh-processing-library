@@ -24,11 +24,11 @@ namespace hh {
     HH_POOL_ALLOCATION_2(T)
 
 // Reason to check size_t in new and delete: class may be derived and may not provide its own new/delete operators.
-#define HH_POOL_ALLOCATION_1(T)                                                                     \
-    static void* operator new(size_t s) { ASSERTX(s==sizeof(T)); return pool.alloc(); }             \
-    static void* operator new(size_t, void* p) { return p; }                                        \
-    static void operator delete(void* p, size_t s) { ASSERTX(s==sizeof(T)); if (p) pool.free(p); }  \
-    static void* operator new[](size_t s) { return ::operator new(s); }                             \
+#define HH_POOL_ALLOCATION_1(T)                                                             \
+    static void* operator new(size_t s) { ASSERTX(s==sizeof(T)); return pool.alloc(); }     \
+    static void* operator new(size_t, void* p) { return p; }                                \
+    static void operator delete(void* p, size_t s) { ASSERTX(s==sizeof(T)); pool.free(p); } \
+    static void* operator new[](size_t s) { return ::operator new(s); }                     \
     static void operator delete[](void* p, size_t) { ::operator delete(p); }
 
 #define HH_POOL_ALLOCATION_2(T)                                                     \
@@ -105,6 +105,7 @@ class Pool : noncopyable {
         Link* p = _h; _h = p->next; return p;
     }
     void free(void* pp) {
+        if (!pp) return;
         Link* p = static_cast<Link*>(pp); p->next = _h; _h = p;
     }
     // allocate based on size of first alloc_size() call
@@ -116,6 +117,7 @@ class Pool : noncopyable {
     void free_size(void* pp, size_t s) {
         dummy_use(s);
         // Pool::free(pp);
+        if (!pp) return;
         Link* p = static_cast<Link*>(pp); p->next = _h; _h = p;
     }
  private:

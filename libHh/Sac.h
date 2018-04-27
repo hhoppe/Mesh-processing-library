@@ -105,21 +105,21 @@ template<typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
         return assertx(hh::aligned_malloc(sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size(),   \
                                           hh::Sac<T>::get_max_align()));                        \
     }                                                                                           \
-    static void operator delete(void* p, size_t) { if (p) hh::aligned_free(p); }                \
+    static void operator delete(void* p, size_t) { hh::aligned_free(p); }                       \
     hh::Sac<T> sac
 
-#define HH_MAKE_POOLED_SAC(T)                                                           \
-    hh::Sac<T> sac;                                                                     \
-    static void* operator new(size_t s) {                                               \
-        ASSERTX(s==sizeof(T));                                                          \
-        return pool.alloc_size(sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size(),      \
-                               hh::Sac<T>::get_max_align());                            \
-    }                                                                                   \
-    static void operator delete(void* p, size_t) {                                      \
-        if (p) pool.free_size(p, sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size());   \
-    }                                                                                   \
-    static void* operator new[](size_t) = delete;                                       \
-    static void operator delete[](void*, size_t) = delete;                              \
+#define HH_MAKE_POOLED_SAC(T)                                                       \
+    hh::Sac<T> sac;                                                                 \
+    static void* operator new(size_t s) {                                           \
+        ASSERTX(s==sizeof(T));                                                      \
+        return pool.alloc_size(sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size(),  \
+                               hh::Sac<T>::get_max_align());                        \
+    }                                                                               \
+    static void operator delete(void* p, size_t) {                                  \
+        pool.free_size(p, sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size());      \
+    }                                                                               \
+    static void* operator new[](size_t) = delete;                                   \
+    static void operator delete[](void*, size_t) = delete;                          \
     HH_POOL_ALLOCATION_3(T)
 
 #define HH_SACABLE(T)                                                                       \

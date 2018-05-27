@@ -241,10 +241,6 @@ template<typename T, typename U> T exchange(T& obj, U&& new_value) {
 
 // *** Syntactic sugar
 
-#define bcase break; case
-#define ocase case
-#define bdefault break; default
-
 #define for_T_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
 #define for_T(T, i, lb, ub) for_T_aux(T, i, lb, ub, HH_UNIQUE_ID(u))
 #define for_int(i, ub)      for_T(int, i, 0, ub)

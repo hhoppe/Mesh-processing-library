@@ -29,13 +29,16 @@ void A3dElem::init(EType type, bool binary, int nv) {
     _type = type;
     _binary = binary;
     switch (_type) {
-     bcase EType::polygon: ocase EType::polyline: ocase EType::point:
+     case EType::polygon: case EType::polyline: case EType::point:
         _v.init(nv);
-     bcase EType::comment:
+        break;
+     case EType::comment:
         _comment = "";
-     bcase EType::editobject: ocase EType::endfile: ocase EType::endframe: ocase EType::endobject:
+        break;
+     case EType::editobject: case EType::endfile: case EType::endframe: case EType::endobject:
         fill(_f, 0.f);
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
 }
 
@@ -134,18 +137,18 @@ void RA3dStream::read(A3dElem& el) {
     }
     assertx(is_zero(normal));
     switch (el.type()) {
-     bcase A3dElem::EType::polygon: assertx(nv>=3);
-     bcase A3dElem::EType::polyline: assertx(nv>=2);
-     bdefault: assertnever("");
+     case A3dElem::EType::polygon: assertx(nv>=3); break;
+     case A3dElem::EType::polyline: assertx(nv>=2); break;
+     default: assertnever("");
     }
 }
 
 void RA3dStream::set_current_color(char ctype, const Vec3<float>& f) {
     switch (ctype) {
-     bcase 'd': _curcol.d = A3dColor(f);
-     bcase 's': _curcol.s = A3dColor(f);
-     bcase 'g': _curcol.g = A3dColor(f);
-     bdefault: assertnever("");
+     case 'd': _curcol.d = A3dColor(f); break;
+     case 's': _curcol.s = A3dColor(f); break;
+     case 'g': _curcol.g = A3dColor(f); break;
+     default: assertnever("");
     }
 }
 

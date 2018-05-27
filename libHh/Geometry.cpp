@@ -115,13 +115,16 @@ Frame Frame::rotation(int axis, float angle) {
     if (abs(c)<1e-6f) c = 0.f;
     if (abs(s)<1e-6f) s = 0.f;
     switch (axis) {
-     bcase 0:
+     case 0:
         f[0][0] = 1.f; f[1][1] = c; f[1][2] = s; f[2][1] = -s; f[2][2] = c;
-     bcase 1:
+        break;
+     case 1:
         f[1][1] = 1.f; f[2][2] = c; f[2][0] = s; f[0][2] = -s; f[0][0] = c;
-     bcase 2:
+        break;
+     case 2:
         f[2][2] = 1.f; f[0][0] = c; f[0][1] = s; f[1][0] = -s; f[1][1] = c;
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     return f;
 }

@@ -173,10 +173,10 @@ string video_suffix_for_magic_byte(uchar c) {
     //  *.avi: "RIFF"
     //  *.mov: "\000\000\000\030ftypqt   \a\t\000"
     switch (c) {
-     bcase 0:       return "mp4"; // u'\x00'; or "mov"
-     bcase '0':     return "wmv";
-     bcase 'R':     return "avi";
-     bdefault:      return "";
+     case 0:        return "mp4";  // u'\x00'; or "mov"
+     case '0':      return "wmv";
+     case 'R':      return "avi";
+     default:       return "";
     }
 }
 

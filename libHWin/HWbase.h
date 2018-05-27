@@ -482,13 +482,13 @@ inline bool gl_report_errors() {
         string s; {
             // GL_INVALID_FRAMEBUFFER_OPERATION is absent in early OpenGL
             switch (v) {
-             bcase GL_INVALID_ENUM: s = "GL_INVALID_ENUM";
-             bcase GL_INVALID_VALUE: s = "GL_INVALID_VALUE";
-             bcase GL_INVALID_OPERATION: s = "GL_INVALID_OPERATION";
-             bcase GL_STACK_OVERFLOW: s = "GL_STACK_OVERFLOW";
-             bcase GL_STACK_UNDERFLOW: s = "GL_STACK_UNDERFLOW";
-             bcase GL_OUT_OF_MEMORY: s = "GL_OUT_OF_MEMORY";
-             bdefault: s = "unknown error";
+             case GL_INVALID_ENUM: s = "GL_INVALID_ENUM"; break;
+             case GL_INVALID_VALUE: s = "GL_INVALID_VALUE"; break;
+             case GL_INVALID_OPERATION: s = "GL_INVALID_OPERATION"; break;
+             case GL_STACK_OVERFLOW: s = "GL_STACK_OVERFLOW"; break;
+             case GL_STACK_UNDERFLOW: s = "GL_STACK_UNDERFLOW"; break;
+             case GL_OUT_OF_MEMORY: s = "GL_OUT_OF_MEMORY"; break;
+             default: s = "unknown error";
             }
         }
         showf("OpenGL error: %s\n", s.c_str());

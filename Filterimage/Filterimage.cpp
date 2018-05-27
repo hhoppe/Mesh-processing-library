@@ -1524,52 +1524,63 @@ void do_genpattern(Args& args) {
             float xf = float(x)/(image.xsize()-1.f);
             float yf = float(y)/(image.ysize()-1.f);
             switch (*p++) {
-             bcase 'd': {       // diagonal, black at (0, 0), (1, 1)
+             case 'd': {        // diagonal, black at (0, 0), (1, 1)
                  const float vA = 0.f, vB = 1.f, vC = 0.f, vD = 1.f;
                  v = (1-yf)*((1-xf)*vA+(xf)*vB)+(yf)*((1-xf)*vD+(xf)*vC);
+                 break;
              }
-             bcase '3': {       // only one white corner
+             case '3': {        // only one white corner
                  const float vA = 1.f, vB = 0.f, vC = 0.f, vD = 0.f;
                  v = (1-yf)*((1-xf)*vA+(xf)*vB)+(yf)*((1-xf)*vD+(xf)*vC);
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
         } else {
             float r;
             switch (*p++) {
-             bcase 'x':
+             case 'x':
                 r = float(x)/(image.xsize()-1.f);
-             bcase 'y':
+                break;
+             case 'y':
                 r = float(y)/(image.ysize()-1.f);
-             bcase 'd':         // diagonal
+                break;
+             case 'd':          // diagonal
                 r = float(x+y)/(image.xsize()-1.f+image.ysize()-1.f);
-             bcase '2': {       // 20-degree diagonal
+                break;
+             case '2': {        // 20-degree diagonal
                  const float ang = 20.f*(TAU/360);
                  auto vrot = V(cos(ang), sin(ang));
                  r = float(dot(V(y, x), vrot)/dot(convert<float>(image.dims()-1), vrot));
+                break;
              }
-             bcase 'r': {                                           // radius
-                 float xf = (float(x)/(image.xsize()-1.f))*2.f-1.f; // -1..1
+             case 'r': {                                             // radius
+                 float xf = (float(x)/(image.xsize()-1.f))*2.f-1.f;  // -1..1
                  float yf = (float(y)/(image.ysize()-1.f))*2.f-1.f;
                  r = min(sqrt(xf*xf+yf*yf), 1.f);
+                 break;
              }
-             bdefault: assertnever("error parsing genpattern name");
+             default: assertnever("error parsing genpattern name");
             }
             while (*p=='h') {   // hat
                 p++;
                 r = r<=.5f ? r*2.f : 1.f-(r-.5f)*2.f;
             }
             switch (*p++) {
-             bcase 's':         // step
+             case 's':          // step
                 v = r<.5f ? 0.f : 1.f;
-             bcase 'l':         // linear
+                break;
+             case 'l':          // linear
                 v = r;
-             bcase 'q':         // some quadratic
+                break;
+             case 'q':          // some quadratic
                 v = square(r);
-             bcase 'c':         // some cubic
+                break;
+             case 'c':          // some cubic
                 // cubic is symmetric and has zero 1st derivatives at 0 and 1
                 v = -2.f*r*r*r + 3.f*r*r;
-             bdefault: assertnever("error parsing genpattern name2");
+                break;
+             default: assertnever("error parsing genpattern name2");
             }
         }
         assertw(v>=0.f && v<=1.f);
@@ -2208,16 +2219,19 @@ void do_procedure(Args& args) {
             for (const auto& yx : range(oyx*100+50-r, oyx*100+50+r)) {
                 int kind = (oyx[0]*nobj+oyx[1])%3;
                 switch (kind) {
-                 bcase 0:
+                 case 0:
                     image1[yx] = Pixel(rg, 0, rg);
                     image2[yx] = Pixel(rg, 0, rg);
-                 bcase 1:
+                    break;
+                 case 1:
                     image1[yx] = Pixel::red();
                     image2[yx] = Pixel::blue();
-                 bcase 2:
+                    break;
+                 case 2:
                     image1[yx] = Pixel::blue();
                     image2[yx] = Pixel::red();
-                 bdefault: assertnever("");
+                    break;
+                 default: assertnever("");
                 }
             }
         }

@@ -380,18 +380,18 @@ const LUfactorization& FilterBnd::lu_factorization() const {
     assertx(filter().has_inv_convolution());
     bool is_bspline = !filter().is_omoms() || filter().is_preprocess();
     switch (bndrule()) {
-     bcase Bndrule::reflected:
+     case Bndrule::reflected:
         return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
-     bcase Bndrule::periodic:
+     case Bndrule::periodic:
         return is_bspline ? g_periodic_spline_lu_factorization  : g_periodic_omoms_lu_factorization;
-     bcase Bndrule::clamped:
+     case Bndrule::clamped:
         Warning("Clamped boundary only approximated by Reflected boundary; could pad data first");
         return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
-     bcase Bndrule::border:
+     case Bndrule::border:
         assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
-     bcase Bndrule::reflected101:
+     case Bndrule::reflected101:
         assertnever("Bndrule::reflecte101 not supported in generalized-filter scale operation");
-     bdefault: assertnever("");
+     default: assertnever("");
     }
 }
 

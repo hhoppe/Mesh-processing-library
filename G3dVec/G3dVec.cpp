@@ -485,7 +485,7 @@ void draw_segment(coord* c1, coord* c2) {
 
 void draw_node(const Node* un) {
     switch (un->_type) {
-     bcase Node::EType::polygon: {
+     case Node::EType::polygon: {
          auto n = down_cast<const NodePolygon*>(un);
          if (!(cullface && is_cull(n->repc->p, n->pnor))) {
              for (segment* s : n->ars) {
@@ -495,8 +495,9 @@ void draw_node(const Node* un) {
                  draw_segment(s->c1, s->c2);
              }
          }
+         break;
      }
-     bcase Node::EType::linenor: {
+     case Node::EType::linenor: {
          auto n = down_cast<const NodeLineNor*>(un);
          segment* s = n->s;
          if (s->frame!=frame &&
@@ -506,8 +507,9 @@ void draw_node(const Node* un) {
              transf(s->c1); transf(s->c2);
              draw_segment(s->c1, s->c2);
          }
+         break;
      }
-     bcase Node::EType::line: {
+     case Node::EType::line: {
          auto n = down_cast<const NodeLine*>(un);
          segment* s = n->s;
          if (s->frame!=frame) {
@@ -515,17 +517,20 @@ void draw_node(const Node* un) {
              transf(s->c1); transf(s->c2);
              draw_segment(s->c1, s->c2);
          }
+         break;
      }
-     bcase Node::EType::pointnor: {
+     case Node::EType::pointnor: {
          auto n = down_cast<const NodePointNor*>(un);
          if (!is_cull(n->p->p, n->nor))
              draw_point(n->p);
+         break;
      }
-     bcase Node::EType::point: {
+     case Node::EType::point: {
          auto n = down_cast<const NodePoint*>(un);
          draw_point(n->p);
+         break;
      }
-     bdefault: assertnever("");
+     default: assertnever("");
     }
 }
 
@@ -778,7 +783,7 @@ void GXobject::add(const A3dElem& el) {
     assertx(_opened);
     assertx(el.num());
     switch (el.type()) {
-     bcase A3dElem::EType::polygon: {
+     case A3dElem::EType::polygon: {
          auto n = make_unique<NodePolygon>();
          n->pnor = el.pnormal(); assertw(!is_zero(n->pnor));
          coord* cl = add_coord(el[el.num()-1].p);
@@ -789,14 +794,16 @@ void GXobject::add(const A3dElem& el) {
          }
          n->repc = cl;           // pick an arbitrary vertex for now
          append(std::move(n));
+         break;
      }
-     bcase A3dElem::EType::point: {
+     case A3dElem::EType::point: {
          if (is_zero(el[0].n))
              append(make_unique<NodePoint>(add_coord(el[0].p)));
          else
              append(make_unique<NodePointNor>(add_coord(el[0].p), el[0].n));
+         break;
      }
-     bcase A3dElem::EType::polyline: {
+     case A3dElem::EType::polyline: {
          coord* cl = add_coord(el[0].p);
          for_intL(i, 1, el.num()) {
              coord* cc = add_coord(el[i].p);
@@ -806,8 +813,9 @@ void GXobject::add(const A3dElem& el) {
                  append(make_unique<NodeLineNor>(add_segment(cl, cc), el[i-1].n, el[i].n));
              cl = cc;
          }
+         break;
      }
-     bdefault: assertnever("");
+     default: assertnever("");
     }
 }
 
@@ -1064,56 +1072,72 @@ void HB::draw_space() {
 
 bool HB::special_keypress(char ch) {
     switch (ch) {
-     bcase 'b':
+     case 'b':
         toggle_attribute(g_xobs.cullface);
         hw.redraw_now();
-     bcase 'l':
+        break;
+     case 'l':
         toggle_attribute(g_xobs.culledge, 3);
         hw.redraw_now();
-     bcase 'r':
+        break;
+     case 'r':
         toggle_attribute(g_xobs.reverse_cull);
         hw.redraw_now();
-     bcase 'v':
+        break;
+     case 'v':
         toggle_attribute(g_xobs.highlight_vertices);
         hw.redraw_now();
-     bcase 'e':
+        break;
+     case 'e':
         toggle_attribute(g_xobs.show_sharp);
         hw.redraw_now();
-     bcase 'f':
+        break;
+     case 'f':
         fisheye = !fisheye;
         hw.redraw_now();
-     bcase 'P':
+        break;
+     case 'P':
         want_plot = true;
         hw.redraw_now();
-     bcase 'Q':
+        break;
+     case 'Q':
         butquick = !butquick; quickmode = false; buthlr = false;
         hw.redraw_now();
-     bcase 'H':
+        break;
+     case 'H':
         buthlr = !buthlr; butquick = false;
         hw.redraw_now();
-     bcase 'q':
+        break;
+     case 'q':
         quickmode = !quickmode; butquick = false;
         hw.redraw_now();
-     bcase ']':
+        break;
+     case ']':
         quicki *= 2;
         if (quickmode || butquick || fisheye) hw.redraw_now();
-     bcase '[':
+        break;
+     case '[':
         quicki /= 2;
         if (!quicki) quicki = 1;
         if (quickmode || butquick || fisheye) hw.redraw_now();
-     bcase 'd':
+        break;
+     case 'd':
         hw.set_double_buffering(dbuffer = !dbuffer);
-     bcase 'h':
+        break;
+     case 'h':
         hlrmode = !hlrmode;
         hw.redraw_now();
-     bcase '/': {
+        break;
+     case '/': {
          string s = g3d::statefile;
          if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
+         break;
      }
-     bcase '\r':                // <enter>/<ret> key (== uchar{13} == 'M'-64)
-     ocase '\n':                // G3d -key $'\n'
+     case '\r':                 // <enter>/<ret> key (== uchar{13} == 'M'-64)
+     case '\n':                 // G3d -key $'\n'
         hw.make_fullscreen(!hw.is_fullscreen());
-     bcase '?': {
+        break;
+     case '?': {
          const string s = 1+R"(
 Device commands:
   Per object:
@@ -1126,8 +1150,9 @@ highlight<v>ertices  show_sharp<e>dges
 </>setstatefile  <cntrl-C>quit
 )";
          std::cerr << s;
+         break;
      }
-     bdefault:
+     default:
         return false;
     }
     return true;

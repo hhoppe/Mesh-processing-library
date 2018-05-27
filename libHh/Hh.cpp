@@ -221,7 +221,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     unsigned ExceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
     if (0) SHOW("have", ExceptionCode);
     switch (ExceptionCode) {
-#define E(x) bcase EXCEPTION_##x: std::cerr << "Exception error: " #x "\n"
+#define E(x) case EXCEPTION_##x: std::cerr << "Exception error: " #x "\n"; break
         E(ACCESS_VIOLATION);
         E(DATATYPE_MISALIGNMENT);
         // E(BREAKPOINT);
@@ -245,9 +245,10 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
         E(GUARD_PAGE);
         E(INVALID_HANDLE);
 #undef E
-     bcase EXCEPTION_BREAKPOINT:
+     case EXCEPTION_BREAKPOINT:
         // No need to show a message since an assertion error was likely already reported.
-     bcase MSFT_CPP_EXCEPT: {  // uncaught c++ exception
+        break;
+     case MSFT_CPP_EXCEPT: {    // uncaught c++ exception
          EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
          if (0) {
              SHOW(er.ExceptionCode, er.ExceptionFlags, er.ExceptionAddress, er.NumberParameters);
@@ -305,8 +306,9 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
              }
          }
 #endif
+         break;
      }
-     bdefault:
+     default:
         showf("Unrecognized exception code %u (0x%X)\n", ExceptionCode, ExceptionCode);
     }
     if (errno) perror("possible error");

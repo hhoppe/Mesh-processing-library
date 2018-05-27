@@ -432,13 +432,16 @@ int Vsplit::expected_wad_num(const PMeshInfo& pminfo) const {
         } else {
             int ii = (code&II_MASK)>>II_SHIFT;
             switch (ii) {
-             bcase 2:
+             case 2:
                 if (!(code&T_CSAME)) nwa++;
-             bcase 0:
+                break;
+             case 0:
                 if (!(code&S_CSAME)) nwa++;
-             bcase 1:
+                break;
+             case 1:
                 if (!(code&T_CSAME) || !(code&S_CSAME)) nwa++;
-             bdefault: assertnever("");
+                break;
+             default: assertnever("");
             }
         }
     }
@@ -654,42 +657,52 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     if (!isr) {
         wvtfr = k_undefined;
         switch (code&Vsplit::T_MASK) {
-         bcase Vsplit::T_LSAME | Vsplit::T_RSAME:
+         case Vsplit::T_LSAME | Vsplit::T_RSAME:
             wvtfl = wlclw;
-         bcase Vsplit::T_RSAME:
+            break;
+         case Vsplit::T_RSAME:
             wvtfl = _wedges.add(1); _wedges[wvtfl].vertex = vt;
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
         ASSERTX(wvtfl>=0);
     } else {
         switch (code&Vsplit::T_MASK) {
-         bcase Vsplit::T_LSAME | Vsplit::T_RSAME | Vsplit::T_CSAME:
+         case Vsplit::T_LSAME | Vsplit::T_RSAME | Vsplit::T_CSAME:
             wvtfl = wlclw;
             wvtfr = wrccw;
             ASSERTX(wvtfl==wvtfr);
-         bcase Vsplit::T_LSAME | Vsplit::T_RSAME:
+            break;
+         case Vsplit::T_LSAME | Vsplit::T_RSAME:
             wvtfl = wlclw;
             wvtfr = wrccw;
             ASSERTX(wvtfl!=wvtfr);
-         bcase Vsplit::T_LSAME | Vsplit::T_CSAME:
+            break;
+         case Vsplit::T_LSAME | Vsplit::T_CSAME:
             wvtfl = wlclw;
             wvtfr = wvtfl;
-         bcase Vsplit::T_RSAME | Vsplit::T_CSAME:
+            break;
+         case Vsplit::T_RSAME | Vsplit::T_CSAME:
             wvtfl = wrccw;
             wvtfr = wvtfl;
-         bcase Vsplit::T_LSAME:
+            break;
+         case Vsplit::T_LSAME:
             wvtfl = wlclw;
             wvtfr = _wedges.add(1); _wedges[wvtfr].vertex = vt;
-         bcase Vsplit::T_RSAME:
+            break;
+         case Vsplit::T_RSAME:
             wvtfl = _wedges.add(1); _wedges[wvtfl].vertex = vt;
             wvtfr = wrccw;
-         bcase Vsplit::T_CSAME:
+            break;
+         case Vsplit::T_CSAME:
             wvtfl = _wedges.add(1); _wedges[wvtfl].vertex = vt;
             wvtfr = wvtfl;
-         bcase 0:
+            break;
+         case 0:
             wvtfl = _wedges.add(1); _wedges[wvtfl].vertex = vt;
             wvtfr = _wedges.add(1); _wedges[wvtfr].vertex = vt;
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
         ASSERTX(wvtfl>=0 && wvtfr>=0);
     }
@@ -697,78 +710,92 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     if (!isr) {
         wvsfr = k_undefined;
         switch (code&Vsplit::S_MASK) {
-         bcase Vsplit::S_LSAME | Vsplit::S_RSAME:
+         case Vsplit::S_LSAME | Vsplit::S_RSAME:
             wvsfl = wlccw;
-         bcase Vsplit::S_RSAME:
+            break;
+         case Vsplit::S_RSAME:
             wvsfl = _wedges.add(1); _wedges[wvsfl].vertex = vs;
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
         ASSERTX(wvsfl>=0);
     } else {
         switch (code&Vsplit::S_MASK) {
-         bcase Vsplit::S_LSAME | Vsplit::S_RSAME | Vsplit::S_CSAME:
+         case Vsplit::S_LSAME | Vsplit::S_RSAME | Vsplit::S_CSAME:
             wvsfl = wlccw;
             wvsfr = wrclw;
             ASSERTX(wvsfl==wvsfr);
-         bcase Vsplit::S_LSAME | Vsplit::S_RSAME:
+            break;
+         case Vsplit::S_LSAME | Vsplit::S_RSAME:
             wvsfl = wlccw;
             wvsfr = wrclw;
             ASSERTX(wvsfl!=wvsfr);
-         bcase Vsplit::S_LSAME | Vsplit::S_CSAME:
+            break;
+         case Vsplit::S_LSAME | Vsplit::S_CSAME:
             wvsfl = wlccw;
             wvsfr = wvsfl;
-         bcase Vsplit::S_RSAME | Vsplit::S_CSAME:
+            break;
+         case Vsplit::S_RSAME | Vsplit::S_CSAME:
             wvsfl = wrclw;
             wvsfr = wvsfl;
-         bcase Vsplit::S_LSAME:
+            break;
+         case Vsplit::S_LSAME:
             wvsfl = wlccw;
             wvsfr = _wedges.add(1); _wedges[wvsfr].vertex = vs;
-         bcase Vsplit::S_RSAME:
+            break;
+         case Vsplit::S_RSAME:
             wvsfl = _wedges.add(1); _wedges[wvsfl].vertex = vs;
             wvsfr = wrclw;
-         bcase Vsplit::S_CSAME:
+            break;
+         case Vsplit::S_CSAME:
             wvsfl = _wedges.add(1); _wedges[wvsfl].vertex = vs;
             wvsfr = wvsfl;
-         bcase 0:
+            break;
+         case 0:
             wvsfl = _wedges.add(1); _wedges[wvsfl].vertex = vs;
             wvsfr = _wedges.add(1); _wedges[wvsfr].vertex = vs;
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
         ASSERTX(wvsfl>=0 && wvsfr>=0);
     }
     int wvlfl, wvrfr;
     if (isl) {
         switch (code&Vsplit::L_MASK) {
-         bcase Vsplit::L_ABOVE:
+         case Vsplit::L_ABOVE:
             wvlfl = _faces[flclw].wedges[mod3(jlclw+2)];
-         bcase Vsplit::L_BELOW:
+            break;
+         case Vsplit::L_BELOW:
             wvlfl = _faces[flccw].wedges[mod3(jlccw+1)];
-         bcase Vsplit::L_NEW:
-         {
+            break;
+         case Vsplit::L_NEW: {
              wvlfl = _wedges.add(1);
              int vl = _wedges[(flclw>=0
                                ? _faces[flclw].wedges[mod3(jlclw+2)]
                                : _faces[flccw].wedges[mod3(jlccw+1)])].vertex;
              _wedges[wvlfl].vertex = vl;
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
     }
     if (!isr) {
         wvrfr = k_undefined;
     } else {
         switch (code&Vsplit::R_MASK) {
-         bcase Vsplit::R_ABOVE:
+         case Vsplit::R_ABOVE:
             wvrfr = _faces[frccw].wedges[mod3(jrccw+1)];
-         bcase Vsplit::R_BELOW:
+            break;
+         case Vsplit::R_BELOW:
             wvrfr = _faces[frclw].wedges[mod3(jrclw+2)];
-         bcase Vsplit::R_NEW:
-         {
+            break;
+         case Vsplit::R_NEW: {
              wvrfr = _wedges.add(1);
              int vr = _wedges[_faces[frccw].wedges[mod3(jrccw+1)]].vertex;
              _wedges[wvrfr].vertex = vr;
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
     }
     // Add 1 or 2 faces, and update adjacency information.
@@ -822,20 +849,22 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
         PMVertexAttrib& vas = _vertices[vs].attrib;
         PMVertexAttrib& vat = _vertices[vt].attrib;
         switch (ii) {
-         bcase 2:
+         case 2:
             add(vat, vas, vspl.vad_large);
             add(vas, vas, vspl.vad_small);
-         bcase 0:
+            break;
+         case 0:
             add(vat, vas, vspl.vad_small);
             add(vas, vas, vspl.vad_large);
-         bcase 1:
-         {
+            break;
+         case 1: {
              PMVertexAttrib vam;
              add(vam, vas, vspl.vad_small);
              add(vat, vam, vspl.vad_large);
              sub(vas, vam, vspl.vad_large);
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
     }
     // Update wedge attributes.
@@ -862,15 +891,16 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
             add_zero(_wedges[wvsfl].attrib, vspl.ar_wad[lnum++]);
         } else {
             switch (ii) {
-             bcase 2:
+             case 2:
                 if (ns) _wedges[wvsfl].attrib = _wedges[wvtfl].attrib;
                 // remove !ns?: test below?
                 add(_wedges[wvtfl].attrib, _wedges[!ns ? wvsfl : wvtfl].attrib, vspl.ar_wad[lnum++]);
-             bcase 0:
+                break;
+             case 0:
                 if (nt) _wedges[wvtfl].attrib = _wedges[wvsfl].attrib;
                 add(_wedges[wvsfl].attrib, _wedges[!nt ? wvtfl : wvsfl].attrib, vspl.ar_wad[lnum++]);
-             bcase 1:
-             {
+                break;
+             case 1: {
                  const PMWedgeAttribD& wad = vspl.ar_wad[lnum];
                  if (!ns) {
                      const PMWedgeAttrib& wabase = _wedges[wvsfl].attrib;
@@ -882,8 +912,9 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
                      add(_wedges[wvtfl].attrib, wabase, wad);
                  }
                  lnum++;
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
         }
     }
@@ -897,14 +928,15 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
             if (us) add_zero(_wedges[wvsfr].attrib, vspl.ar_wad[lnum++]);
         } else {
             switch (ii) {
-             bcase 2:
+             case 2:
                 if (us && ns) _wedges[wvsfr].attrib = awvtfr;
                 if (ut) add(_wedges[wvtfr].attrib, (!ns ? awvsfr : awvtfr), vspl.ar_wad[lnum++]);
-             bcase 0:
+                break;
+             case 0:
                 if (ut && nt) _wedges[wvtfr].attrib = awvsfr;
                 if (us) add(_wedges[wvsfr].attrib, (!nt ? awvtfr : awvsfr), vspl.ar_wad[lnum++]);
-             bcase 1:
-             {
+                break;
+             case 1: {
                  if (!ns) {
                      const PMWedgeAttrib& wabase = awvsfr;
                      if (ut) add(_wedges[wvtfr].attrib, wabase, vspl.ar_wad[lnum]);
@@ -915,8 +947,9 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
                      if (ut) add(_wedges[wvtfr].attrib, wabase, vspl.ar_wad[lnum]);
                  }
                  if (ut || us) lnum++;
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
         }
     }
@@ -1172,11 +1205,13 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
         PMVertexAttrib& vas = _vertices[vs].attrib;
         PMVertexAttrib& vat = _vertices[vt].attrib;
         switch (ii) {
-         bcase 2:
+         case 2:
             sub(vas, vas, vspl.vad_small);
-         bcase 0:
+            break;
+         case 0:
             sub(vas, vat, vspl.vad_small);
-         bcase 1:
+            break;
+         case 1:
             if (0) {
                 PMVertexAttrib vam;
                 interp(vam, vas, vat, 0.5f);
@@ -1186,7 +1221,8 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
                 sub(vas, vat, vspl.vad_large);
                 sub(vas, vas, vspl.vad_small);
             }
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
     }
     // Udpate wedge attributes.
@@ -1210,12 +1246,13 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
             problem = true;
         } else {
             switch (ii) {
-             bcase 2:
+             case 2:
                 if (!thru_l) _wedges[wvtfl].attrib = _wedges[wvsfl].attrib;
-             bcase 0:
+                break;
+             case 0:
                 _wedges[wvsfl].attrib = _wedges[wvtfl].attrib;
-             bcase 1:
-             {
+                break;
+             case 1: {
                  PMWedgeAttrib wa;
                  if (0) {
                      interp(wa, _wedges[wvsfl].attrib, _wedges[wvtfl].attrib, 0.5f);
@@ -1227,8 +1264,9 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
                  }
                  _wedges[wvsfl].attrib = wa;
                  if (!thru_l) _wedges[wvtfl].attrib = wa;
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
         }
     }
@@ -1239,23 +1277,25 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
         bool us = !(code&Vsplit::S_CSAME);
         if (problem || us || ut) {
             switch (ii) {
-             bcase 2:
+             case 2:
                 // If thru_r, then wvtfr & wrccw no longer exist.
                 // This may be duplicating some work already done for isl.
                 if (!nt && !thru_r)
                     _wedges[wvtfr].attrib = awvsfr;
-             bcase 0:
+                break;
+             case 0:
                 // This may be duplicating some work already done for isl.
                 if (!ns)
                     _wedges[wvsfr].attrib = awvtfr;
-             bcase 1:
-             {
+                break;
+             case 1: {
                  PMWedgeAttrib wa;
                  interp(wa, awvsfr, awvtfr, 0.5f);
                  if (!ns) _wedges[wvsfr].attrib = wa;
                  if (!nt && !thru_r) _wedges[wvtfr].attrib = wa;
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
         }
     }
@@ -1722,17 +1762,20 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
     }
     // Perform vsplits.
     switch (want) {
-     bcase EWant::vsplits:
+     case EWant::vsplits:
         for_int(i, num) {
             if (!pmi.next_ancestry(&ancestry)) { ret = false; break; }
         }
-     bcase EWant::nfaces:
+        break;
+     case EWant::nfaces:
         assertx(num>=pmi._faces.num());
         if (!pmi.goto_nfaces_ancestry(num, &ancestry)) ret = false;
-     bcase EWant::nvertices:
+        break;
+     case EWant::nvertices:
         assertx(num>=pmi._vertices.num());
         if (!pmi.goto_nvertices_ancestry(num, &ancestry)) ret = false;
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     // Grab final mesh
     static_cast<WMesh&>(*this) = pmi; // copy pmi::AWMesh to this->WMesh

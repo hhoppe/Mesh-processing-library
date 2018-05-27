@@ -838,17 +838,20 @@ void do_zero_vadsmall() {
         const PMVertexAttrib& vas = pmi->_vertices[vs].attrib;
         const PMVertexAttrib& vat = pmi->_vertices[vt].attrib;
         switch (ii) {
-         bcase 2:
+         case 2:
             diff(vspl.vad_large, vat, vas);
             diff(vspl.vad_small, vas, vas); // set to zero.
-         bcase 0:
+            break;
+         case 0:
             diff(vspl.vad_large, vas, vat);
             diff(vspl.vad_small, vas, vas); // set to zero.
-         bcase 1: {
+            break;
+         case 1: {
              PMVertexAttrib vam; interp(vam, vas, vat, 0.5f); diff(vspl.vad_large, vat, vam);
+             diff(vspl.vad_small, vas, vas); // set to zero.
+             break;
          }
-         diff(vspl.vad_small, vas, vas); // set to zero.
-         bdefault: assertnever("");
+         default: assertnever("");
         }
         assertx(pmi->prev());
     }

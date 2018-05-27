@@ -94,7 +94,7 @@ class A3dElem {
     friend std::ostream& operator<<(std::ostream& os, const A3dElem& el) {
         os << "A3dElem{ type='" << assert_narrow_cast<char>(el.type()) << "' binary=" << el.binary();
         switch (el.type()) {
-         bcase A3dElem::EType::polygon: ocase A3dElem::EType::polyline: ocase A3dElem::EType::point:
+         case A3dElem::EType::polygon: case A3dElem::EType::polyline: case A3dElem::EType::point:
             if (el.type()==A3dElem::EType::polygon)
                 os << " pnormal=" << el.pnormal();
             os << " num=" << el.num() << " {\n";
@@ -102,9 +102,11 @@ class A3dElem {
                 os << "  [" << i << "] = {p=" << el[i].p << ", d=" << el[i].c.d << ", s=" <<
                     el[i].c.s << ", g=" << el[i].c.g << ", n=" << el[i].n << "}\n";;
             }
-         bcase A3dElem::EType::comment:
+            break;
+         case A3dElem::EType::comment:
             os << " comment='" << el.comment() << "'";
-         bdefault:
+            break;
+         default:
             os << " f=" << el.f();
         }
         return os << "}\n";

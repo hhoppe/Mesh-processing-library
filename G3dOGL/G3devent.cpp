@@ -580,23 +580,27 @@ void do_g3d_demofly() {
     static float bu_ambient;
     demofly_mode++;
     switch (demofly_mode) {
-     bcase 1:                   // turn off texture, showing edges
+     case 1:                    // turn off texture, showing edges
         press_keys("Dt");
-     bcase 2:                   // zoom out
+        break;
+     case 2:                    // zoom out
         press_keys("Do");
-     bcase 3:                   // go to upper view
+        break;
+     case 3:                    // go to upper view
         press_keys("Do");
         obview = 2;
         // zoom is taken care of in set_viewing()
         bu_hither = HB::get_hither(); HB::set_hither(.05f);
         bu_ambient = ambient; ambient = .3f;
-     bcase 4:                   // back to normal view
+        break;
+     case 4:                    // back to normal view
         demofly_mode = 0;
         press_keys("Dt");
         obview = 0;
         HB::set_hither(bu_hither);
         ambient = bu_ambient;
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
 }
 
@@ -745,23 +749,31 @@ bool KeyPressed(const string& ps) {
     }
     if (editmode) {
         switch (ch) {
-         bcase 'w':
+         case 'w':
             swap_edge(); thisch = ch = 0;
-         bcase 's':
+            break;
+         case 's':
             split_edge(); thisch = ch = 0;
-         bcase 'c':
+            break;
+         case 'c':
             collapse_edge(false); thisch = ch = 0;
-         bcase 'v':
+            break;
+         case 'v':
             collapse_edge(true); thisch = ch = 0;
-         bcase 't':
+            break;
+         case 't':
             toggle_tag(); thisch = ch = 0;
-         bcase 'u':
+            break;
+         case 'u':
             untag_cut(); thisch = ch = 0;
-         bcase 'f':
+            break;
+         case 'f':
             destroy_face(); thisch = ch = 0;
-         bcase 'C':
+            break;
+         case 'C':
             crop_mesh_to_view(); thisch = ch = 0;
-         bcase '@':
+            break;
+         case '@':
             ch = 0;
             if (!assertw(cob>=g_obs.first)) return true;
             if (!g_obs[cob].get_mesh()->num_vertices()) {
@@ -778,57 +790,70 @@ bool KeyPressed(const string& ps) {
                 break;
             }
             write_mesh(*g_obs[cob].get_mesh());
-         bdefault:
+            break;
+         default:
             void();
         }
     }
     bool understood = true;
     switch (ch) {
-     bcase 0:
-        void();                 // previously processed
-     bcase 'o':
+     case 0:
+        // previously processed
+        break;
+     case 'o':
         object_mode = !object_mode;
         button_active = 0;
         HB::redraw_later();
-     bcase 'e':
+        break;
+     case 'e':
         eye_move = !eye_move;
         button_active = 0;
         HB::redraw_later();
-     bcase 'p':
+        break;
+     case 'p':
         ratemode = ERatemode::position;
         button_active = 0;
         HB::redraw_later();
-     bcase 'm':
+        break;
+     case 'm':
         ratemode = ERatemode::move;
         button_active = 0;
         HB::redraw_later();
-     bcase 's':
+        break;
+     case 's':
         ratemode = ERatemode::step;
         button_active = 0;
         HB::redraw_later();
-     bcase 'g':
+        break;
+     case 'g':
         globemode = !globemode;
         HB::redraw_now();
-     bcase 'f':
+        break;
+     case 'f':
         flightmode = flightmode==EFlightmode::fly ? EFlightmode::none : EFlightmode::fly;
         button_active = 0;
         HB::redraw_now();
-     bcase 'F':
+        break;
+     case 'F':
         flightmode = flightmode==EFlightmode::flight ? EFlightmode::none : EFlightmode::flight;
         button_active = 0;
         HB::redraw_now();
-     bcase 'J':
+        break;
+     case 'J':
         flightmode = flightmode==EFlightmode::automatic ? EFlightmode::none : EFlightmode::automatic;
         button_active = 0;
         HB::redraw_now();
-     bcase 'B':
+        break;
+     case 'B':
         flightmode = flightmode==EFlightmode::bobble ? EFlightmode::none : EFlightmode::bobble;
         button_active = 0;
         HB::redraw_now();
-     bcase 'S':
+        break;
+     case 'S':
         sizemode = !sizemode;
         HB::redraw_later();
-     bcase '-':
+        break;
+     case '-':
         if (lastch=='w') {
             thisch = 'w';
             while (obview)
@@ -837,7 +862,8 @@ bool KeyPressed(const string& ps) {
         } else {
             ddistance *= .5f;
         }
-     bcase '=':
+        break;
+     case '=':
         if (lastch=='w') {
             thisch = 'w';
             for (;;)
@@ -846,145 +872,194 @@ bool KeyPressed(const string& ps) {
         } else {
             ddistance *= 2.f;
         }
-     bcase '_':
+        break;
+     case '_':
         ddistance *= .1f;
-     bcase '+':
+        break;
+     case '+':
         ddistance *= 10.f;
-     bcase 'l':
+        break;
+     case 'l':
         auto_level = !auto_level;
         HB::redraw_later();
         if (auto_level) HB::redraw_now();
-     bcase 'L':
+        break;
+     case 'L':
         g_obs[obview].tm() = make_level(g_obs[obview].t());
         HB::redraw_now();
-     bcase 'H':
+        break;
+     case 'H':
         g_obs[obview].tm() = make_horiz(g_obs[obview].t());
         HB::redraw_now();
-     bcase '|':
+        break;
+     case '|':
         rotate_around();
         HB::redraw_now();
-     bcase 'i':
+        break;
+     case 'i':
         info = (info+1)%3;      // 0..2
         HB::redraw_later();
-     bcase 'v':
+        break;
+     case 'v':
         viewmode = !viewmode;
         HB::redraw_later();
-     bcase 'E':
+        break;
+     case 'E':
         editmode = !editmode;
         HB::redraw_later();
-     bcase 'V':
+        break;
+     case 'V':
         tview = Frame::identity();
         HB::redraw_now();
-     bcase '?':
+        break;
+     case '?':
         show_help();
         HB::draw_row_col_text(V(3, 0), "G3d C++");
-     bcase 'a':
+        break;
+     case 'a':
         // prefix code
-     bcase 'C':
+        break;
+     case 'C':
         mode_centroid = !mode_centroid;
         HB::redraw_now();
-     bcase '*':
+        break;
+     case '*':
         keep_active = !keep_active;
         if (!keep_active) button_active = 0;
-     bcase 'I':
+        break;
+     case 'I':
         input = !input; HB::watch_fd0(input ? InputArrived : nullptr);
         HB::redraw_later();
-     bcase '!':
+        break;
+     case '!':
         WriteOutput();
-     bcase 'O':
+        break;
+     case 'O':
         output = !output;
         HB::redraw_later();
-     bcase 'r':
+        break;
+     case 'r':
         HB::draw_row_col_text(V(2, 0), "Reading...");
         HB::flush();
         ReadFiles(false);
         HB::reload_textures();
         HB::redraw_now();
-     bcase 'z':
+        break;
+     case 'z':
         g_obs[cob].tm() = Frame::identity();
         HB::redraw_now();
-     bcase 'Z':
+        break;
+     case 'Z':
         all_reset();
         HB::redraw_now();
-     bcase '<': ocase ',':
+        break;
+     case '<':
+     case ',':
         read_state();
         HB::redraw_now();
-     bcase '.': ocase '>':
+        break;
+     case '.':
+     case '>':
         if (0 && b_g3d_demofly) break;
         save_state();
-     bcase '&':
+        break;
+     case '&':
         obinary = !obinary;
-     bcase '#':
+        break;
+     case '#':
         show_all_info();
-     bcase '^':
+        break;
+     case '^':
         keylock = !keylock;
-     bcase 'y':
+        break;
+     case 'y':
         set_hither_yonder();
         HB::redraw_now();
-     bcase 'Y':
+        break;
+     case 'Y':
         reset_hither_yonder();
         HB::redraw_now();
-     bcase ' ':
+        break;
+     case ' ':
         if (spacekill) HB::quit();
         if (b_g3d_demofly) {
             do_g3d_demofly();
             HB::redraw_now();
         }
-     bcase 'w':
+        break;
+     case 'w':
         // prefix code
-     bcase 'W':
+        break;
+     case 'W':
         obview = 0;
         HB::redraw_now();
-     bcase 'N':
+        break;
+     case 'N':
         if (ob_next()) HB::redraw_now();
-     bcase 'P':
+        break;
+     case 'P':
         if (ob_prev()) HB::redraw_now();
-     bcase 'D':
+        break;
+     case 'D':
         // prefix code
-     bcase 'u':
+        break;
+     case 'u':
         g_obs[cob].set_vis(!g_obs[cob].visible());
         g_obs[cob].update();
         HB::redraw_now();
-     bcase 'j':
+        break;
+     case 'j':
         if (++want_jump==3) want_jump = 0;
         DoJump();
         HB::redraw_now();
-     bcase '\'':
+        break;
+     case '\'':
         rec_point = g_obs[obview].t().p();
         SHOW(rec_point);
-     bcase '"':
+        break;
+     case '"':
         SHOW(g_obs[obview].t().p());
         SHOW(dist(rec_point, g_obs[obview].t().p()));
-     bcase '{':
+        break;
+     case '{':
         asynchronousinput = !asynchronousinput;
-     bcase '$':
+        break;
+     case '$':
         expo = !expo;
-     bcase 'L'-64:              // C-l  (== uchar{12})
+        break;
+     case 'L'-64:               // C-l  (== uchar{12})
         reinit();
-     bcase 'G':
+        break;
+     case 'G':
         geomorph = !geomorph;
-     bcase ':':
+        break;
+     case ':':
         flightmode = flightmode==EFlightmode::automatic ? EFlightmode::none : EFlightmode::automatic;
         button_active = 0;
         if (flightmode==EFlightmode::automatic)
             timingtest_nframes = full_timingtest_nframes+1;
         HB::redraw_now();
-     bcase 'x':
+        break;
+     case 'x':
         set_recpoint();
         HB::redraw_later();
-     bcase 'X':
+        break;
+     case 'X':
         if (!mode_centroid) {
             rec_point = Point(0.f, 0.f, 0.f);
             mode_centroid = true; // turn off mode
         } else {
             HB::beep();
         }
-     bcase '@':
+        break;
+     case '@':
         play = !play;
         HB::redraw_now();
-     bcase '%':
+        break;
+     case '%':
         print_info_mesh_elements();
-     bdefault:
+        break;
+     default:
         if (!std::isdigit(ch)) { understood = false; break; }
         if (lastch=='w') {
             thisch = 'w';

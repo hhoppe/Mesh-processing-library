@@ -51,13 +51,16 @@ void open_if_closed() {
 int decode_obn(const A3dElem& el) {
     int obn = robn;
     switch (int(el.f()[0])) {
-     bcase 0:
+     case 0:
         obn = int(el.f()[1]+.5f);
-     bcase 1:
+        break;
+     case 1:
         obn += int(el.f()[1]+.5f);
-     bcase 2:
+        break;
+     case 2:
         obn = int(g_obs.last-el.f()[1]+.5f);
-     bdefault:
+        break;
+     default:
         obn = 1;
         if (Warning("bad object number code")) SHOW(int(el.f()[0]));
     }
@@ -71,10 +74,10 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
     if (elt==A3dElem::EType::polygon || elt==A3dElem::EType::polyline || elt==A3dElem::EType::point) {
         open_if_closed();
         switch (elt) {
-         bcase A3dElem::EType::polygon: total_gons++;
-         bcase A3dElem::EType::polyline: total_lines++;
-         bcase A3dElem::EType::point: total_points++;
-         bdefault: assertnever(string() + "unknown type '" + narrow_cast<char>(elt) + "'");
+         case A3dElem::EType::polygon: total_gons++; break;
+         case A3dElem::EType::polyline: total_lines++; break;
+         case A3dElem::EType::point: total_points++; break;
+         default: assertnever(string() + "unknown type '" + narrow_cast<char>(elt) + "'");
         }
         for_int(i, el.num()) {
             g_obs[robn].enter_point(el[i].p);
@@ -174,27 +177,28 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     int i;
     // try A3d
     switch (ra3d.recognize()) {
-     bcase RBufferedA3dStream::ERecognize::parse_error:
+     case RBufferedA3dStream::ERecognize::parse_error:
         assertnever("");
-     bcase RBufferedA3dStream::ERecognize::partial:
-        return ETryInput::nothing; // partial a3d
-     bcase RBufferedA3dStream::ERecognize::yes: {
+     case RBufferedA3dStream::ERecognize::partial:
+        return ETryInput::nothing;  // partial a3d
+     case RBufferedA3dStream::ERecognize::yes: {
          A3dElem::EType rr = read_a3delem(ra3d);
          if (rr==A3dElem::EType::endfile) return ETryInput::eof;
          if (rr==A3dElem::EType::endframe) return ETryInput::success_frame;
          return ETryInput::success;
      }
-     bcase RBufferedA3dStream::ERecognize::no:
-        ;                       // fall-out
-     bdefault: assertnever("");
+     case RBufferedA3dStream::ERecognize::no:
+        // fall-out
+        break;
+     default: assertnever("");
     }
     // try Frame
     switch (FrameIO::recognize(buf)) {
-     bcase FrameIO::ERecognize::parse_error:
+     case FrameIO::ERecognize::parse_error:
         assertnever("");
-     bcase FrameIO::ERecognize::partial:
+     case FrameIO::ERecognize::partial:
         return ETryInput::nothing; // partial frame
-     bcase FrameIO::ERecognize::yes: {
+     case FrameIO::ERecognize::yes: {
          Frame f; int obn; float z; bool bin;
          i = FrameIO::read(buf, f, obn, z, bin);
          if (!assertw(i)) return ETryInput::success;
@@ -202,9 +206,10 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
          num_input_frames++;
          return ETryInput::success;
      }
-     bcase FrameIO::ERecognize::no:
-        ;                       // fall-out
-     bdefault: assertnever("");
+     case FrameIO::ERecognize::no:
+        // fall-out
+        break;
+     default: assertnever("");
     }
     if (!buf.extract_line(str)) return ETryInput::nothing; // partial something
     // 20121211: now trailing '\n' has been removed; all still OK?

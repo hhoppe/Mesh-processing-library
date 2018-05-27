@@ -1656,23 +1656,26 @@ void triangulate_quads(ETriType type) {
         Vertex va0 = va[0], va2 = va[2];
         bool other_diag;
         switch (type) {
-         bcase ETriType::dshort: { // Use GIM rule to select shorter diagonal.
+         case ETriType::dshort: {  // Use GIM rule to select shorter diagonal.
              const float gim_diagonal_factor = 1.0f;
              other_diag = (dist2(mesh.point(va[0]), mesh.point(va[2])) >
                            dist2(mesh.point(va[1]), mesh.point(va[3]))*square(gim_diagonal_factor));
+             break;
          }
-         bcase ETriType::dlong: { // Use opposite rule
+         case ETriType::dlong: {  // Use opposite rule
              const float gim_diagonal_factor = 1.0f;
              other_diag = (dist2(mesh.point(va[0]), mesh.point(va[2])) <=
                            dist2(mesh.point(va[1]), mesh.point(va[3]))*square(gim_diagonal_factor));
+             break;
          }
-         bcase ETriType::alternating: { // Use alternating diagonals
+         case ETriType::alternating: {  // Use alternating diagonals
              int fid = mesh.face_id(f)-1;
              int iy = fid/sqrt_nfaces;
              int ix = fid-iy*sqrt_nfaces;
              other_diag = (ix+iy)%2==1;
+             break;
          }
-         bcase ETriType::xuvdiag: { // Use X shaped diagonal pattern on [0..1][0..1] domain
+         case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1][0..1] domain
              float maxv = -BIGFLOAT; int maxi = -1;
              for_int(i, 4) {
                  UV uv = get_uv(va[i]);
@@ -1680,8 +1683,9 @@ void triangulate_quads(ETriType type) {
                  if (v>maxv) { maxv = v; maxi = i; }
              }
              other_diag = maxi==1 || maxi==3;
+             break;
          }
-         bcase ETriType::duvdiag: { // Use diamond shaped diagonal pattern on [0..1][0..1] domain
+         case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1][0..1] domain
              float maxv = -BIGFLOAT; int maxi = -1;
              for_int(i, 4) {
                  UV uv = get_uv(va[i]);
@@ -1689,14 +1693,16 @@ void triangulate_quads(ETriType type) {
                  if (v>maxv) { maxv = v; maxi = i; }
              }
              other_diag = maxi==0 || maxi==2;
+             break;
          }
-         bcase ETriType::odddiag: { // Create odd-valence vertices
+         case ETriType::odddiag: {  // Create odd-valence vertices
              int fid = mesh.face_id(f)-1;
              int iy = fid/sqrt_nfaces;
              int ix = fid-iy*sqrt_nfaces;
              other_diag = (iy%2)==1 && (ix%2)==1;
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
         if (other_diag) {
             va0 = va[1]; va2 = va[3];
@@ -2899,19 +2905,22 @@ void do_colorbizarre() {
             a = (a-lfb[i][0])/(lfb[i][1]-lfb[i][0]);
             float c;
             switch (i) {
-             bcase 0:
+             case 0:
                 c = (a<.25f ? 0.f+a*4.f :
                      a<.50f ? 0.f :
                      /**/     1.f-square(a-.75f)*16.f);
-             bcase 1:
+                break;
+             case 1:
                 c = (a<.25f ? 0.f+a*4.f :
                      a<.50f ? 1.f :
                      a<.75f ? 1.f-(a-.5f)*4.f :
                      /**/     0.f);
-             bcase 2:
+                break;
+             case 2:
                 c = (a<.25f ? 1.f-a*4.f :
                      /**/     1.f-(a-.25f)*1.33333f);
-             bdefault: assertnever("");
+                break;
+             default: assertnever("");
             }
             if (0) assertx(c>=0.f && c<=1.f);
             sum += c;
@@ -3309,11 +3318,11 @@ float signed_distance(const Point& p, Face f) {
         if (bary[j]==0.f) { nzero++; jzero = j; } else { jpos = j; }
     }
     switch (nzero) {
-     bcase 0: {                 // triangle interior
+     case 0: {                  // triangle interior
          // == dot(poly.get_normal(), p-clp)
          return sqrt(d2)*sign(dot(poly.get_normal_dir(), p-clp));
      }
-     bcase 1: {                 // edge
+     case 1: {                  // edge
          Vec3<Vertex> va; mesh.triangle_vertices(f, va);
          Edge e = mesh.edge(va[mod3(jzero+1)], va[mod3(jzero+2)]);
          if (mesh.is_boundary(e))
@@ -3323,7 +3332,7 @@ float signed_distance(const Point& p, Face f) {
          nor += poly.get_normal();
          return sqrt(d2)*sign(dot(nor, p-clp));
      }
-     bcase 2: {                 // vertex
+     case 2: {                  // vertex
          Vec3<Vertex> va; mesh.triangle_vertices(f, va);
          Vertex v = va[jpos];
          if (mesh.is_boundary(v))
@@ -3335,7 +3344,7 @@ float signed_distance(const Point& p, Face f) {
          }
          return sqrt(d2)*sign(dot(nor, p-clp));
      }
-     bdefault: assertnever("");
+     default: assertnever("");
     }
     return 0.f;                 // only necessary for gcc debug
 }

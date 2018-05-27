@@ -625,10 +625,10 @@ int retrieve_nwid(const NewMeshNei& nn, Corner c) {
 
 unique_ptr<BQemT> make_qem() {
     switch (qems) {
-     bcase 3: return make_unique<DQem<L_QEM_T,3>>();
-     bcase 6: return make_unique<DQem<L_QEM_T,6>>();
-     bcase 9: return make_unique<DQem<L_QEM_T,9>>();
-     bdefault: assertnever("");
+     case 3: return make_unique<DQem<L_QEM_T,3>>();
+     case 6: return make_unique<DQem<L_QEM_T,6>>();
+     case 9: return make_unique<DQem<L_QEM_T,9>>();
+     default: assertnever("");
     }
 }
 

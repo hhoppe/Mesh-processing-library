@@ -311,9 +311,9 @@ string audio_suffix_for_magic_byte(uchar c) {
     // *.mp3: "ID3\003\000", "\377\373\220D"   (ID3 is a metadata container often used in conjunction with MP3)
     switch (c) {
         // u'\xFF' for "mp3" would be ambiguous with "jpg"
-     bcase 'R':     return "wav";
-     bcase 'I':     return "mp3";
-     bdefault:      return "";
+     case 'R':      return "wav";
+     case 'I':      return "mp3";
+     default:       return "";
     }
 }
 

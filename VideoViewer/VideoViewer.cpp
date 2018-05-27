@@ -299,14 +299,16 @@ class DirMediaFilenames {
     Map<string, S> _map;        // directory -> filenames_in_that_directory
     static Array<string> sort_dir(const string& directory, Array<string> filenames) {
         switch (g_sort) {
-         bcase ESort::name:
+         case ESort::name:
             sort(filenames);
-         bcase ESort::date:
+            break;
+         case ESort::date:
             sort(filenames, [&](const string& s1, const string& s2) {
                 return (get_path_modification_time(directory + '/' + s1) <
                         get_path_modification_time(directory + '/' + s2));
             });
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
         return filenames;
     }
@@ -1294,7 +1296,7 @@ bool DerivedHW::key_press(string skey) {
         } else {
             switch (keycode) {
 // Object/play controls
-             bcase 'r': {       // reset sliders or reset all parameters
+             case 'r': {        // reset sliders or reset all parameters
                  if (g_use_sliders) {
                      reset_sliders();
                      // message("Reset sliders");
@@ -1321,8 +1323,9 @@ bool DerivedHW::key_press(string skey) {
                      reset_window(determine_default_window_dims(g_frame_dims));
                      message("All parameters reset to defaults", 5.);
                  }
+                 break;
              }
-             bcase ' ': {       // run (toggle play/pause video)
+             case ' ': {        // run (toggle play/pause video)
                  if (g_cob>=0 && !g_playing) {
                      if (g_frametime>=getob()._nframes_loaded-1. ||
                          g_frametime>=getob()._frameou1-1.)
@@ -1330,72 +1333,87 @@ bool DerivedHW::key_press(string skey) {
                  }
                  g_playing = !g_playing;
                  if (g_playing) redraw_later();
+                 break;
              }
-             bcase 'l': {       // loop one
+             case 'l': {        // loop one
                  set_looping(g_looping==ELooping::one ? ELooping::off : ELooping::one);
+                 break;
              }
-             bcase 'a': {       // loop all
+             case 'a': {        // loop all
                  set_looping(g_looping==ELooping::all ? ELooping::off : ELooping::all);
+                 break;
              }
-             bcase 'm': {       // loop mirror
+             case 'm': {        // loop mirror
                  set_looping(g_looping==ELooping::mirror ? ELooping::off : ELooping::mirror);
                  g_mirror_state_forward = true;
+                 break;
              }
-             bcase '[': {       // slow down video by 2x
+             case '[': {        // slow down video by 2x
                  set_speed(g_speed*.5);
+                 break;
              }
-             bcase ']': {       // speed up video by 2x
+             case ']': {        // speed up video by 2x
                  set_speed(g_speed*2.);
+                 break;
              }
-             bcase '{': {       // slow down video among preselected speeds
+             case '{': {        // slow down video among preselected speeds
                  if (0) set_speed(k_speeds.inside(k_speeds.index(g_speed)-1, Bndrule::clamped));
                  int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())),
                                                     0, k_speeds.num(),
                                                     clamp(g_speed*.999999f, k_speeds[0], k_speeds.last()));
                  set_speed(k_speeds.inside(index+0, Bndrule::clamped));
+                 break;
              }
-             bcase '}': {       // speed up video among preselected speeds
+             case '}': {        // speed up video among preselected speeds
                  if (0) set_speed(k_speeds.inside(k_speeds.index(g_speed)+1, Bndrule::clamped));
                  int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())),
                                                     0, k_speeds.num(),
                                                     clamp(g_speed, k_speeds[0], k_speeds.last()));
                  set_speed(k_speeds.inside(index+1, Bndrule::clamped));
+                 break;
              }
-             bcase '1': ocase '\\': { // 1x speed
+             case '1': case '\\': {  // 1x speed
                  set_speed(1.);
+                 break;
              }
-             bcase '2': {       // 2x speed
+             case '2': {        // 2x speed
                  set_speed(2.);
+                 break;
              }
-             bcase '5': {       // .5x speed
+             case '5': {        // .5x speed
                  set_speed(.5);
+                 break;
              }
-             bcase '\t': {       // <tab> == C-i (== uchar{9} == 'I'-64),   previous/next object
-                 if (is_shift) { // previous object
+             case '\t': {         // <tab> == C-i (== uchar{9} == 'I'-64),   previous/next object
+                 if (is_shift) {  // previous object
                      return key_press("p");
                  } else {       // next object
                      return key_press("n");
                  }
              }
-             bcase 'p': {       // previous object
+             case 'p': {        // previous object
                  if (g_cob>0) func_switch_ob(g_cob-1);
                  else if (g_cob>=0 && g_looping==ELooping::all) func_switch_ob(getobnum()-1);
                  else beep();
+                 break;
              }
-             bcase 'n': {       // next object
+             case 'n': {        // next object
                  if (g_cob<getobnum()-1) func_switch_ob(g_cob+1);
                  else if (g_cob>=0 && g_looping==ELooping::all) func_switch_ob(0);
                  else beep();
+                 break;
              }
-             bcase 'P': {       // first object
+             case 'P': {        // first object
                  if (g_cob>=0) func_switch_ob(0);
                  else beep();
+                 break;
              }
-             bcase 'N': {       // last object
+             case 'N': {        // last object
                  if (g_cob>=0) func_switch_ob(getobnum()-1);
                  else beep();
+                 break;
              }
-             bcase 'x': {       // exchange object with previous one
+             case 'x': {        // exchange object with previous one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  check_object();
                  if (g_cob<1) throw string("no prior object to exchange with");
@@ -1403,8 +1421,9 @@ bool DerivedHW::key_press(string skey) {
                  g_cob--;
                  if (0) set_video_frame(g_cob, g_framenum); // would force unnecessary texture refresh
                  message("Moved object earlier than " + g_obs[g_cob+1]->_filename);
+                 break;
              }
-             bcase 'X': {       // exchange object with next one
+             case 'X': {        // exchange object with next one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  check_object();
                  if (g_cob==getobnum()-1) throw string("no next object to exchange with");
@@ -1412,20 +1431,24 @@ bool DerivedHW::key_press(string skey) {
                  g_cob++;
                  if (0) set_video_frame(g_cob, g_framenum); // would force unnecessary texture refresh
                  message("Moved object later than " + g_obs[g_cob-1]->_filename);
+                 break;
              }
-             bcase 's': {       // change directory sort type
+             case 's': {        // change directory sort type
                  switch (g_sort) {
-                  bcase ESort::name:
+                  case ESort::name:
                      g_sort = ESort::date; message("Directory sort for <pgdn>,<pgup> set to 'date'", 5.);
                      g_dir_media_filenames.invalidate();
-                  bcase ESort::date:
+                     break;
+                  case ESort::date:
                      g_sort = ESort::name; message("Directory sort for <pgdn>,<pgup> set to 'name'", 5.);
                      g_dir_media_filenames.invalidate();
-                  bdefault: assertnever("");
+                     break;
+                  default: assertnever("");
                  }
+                 break;
              }
 // Window controls
-             bcase ':': {       // fit anisotropically
+             case ':': {        // fit anisotropically
                  if (!g_fit_view_to_window) {
                      g_fit_view_to_window = true;
                      message("View scaling set to fit window");
@@ -1436,14 +1459,16 @@ bool DerivedHW::key_press(string skey) {
                      g_fit = EFit::isotropic;
                      message("View scaling set to isotropic");
                  } else assertnever("");
+                 break;
              }
-             bcase 'w': {       // window fit
+             case 'w': {        // window fit
                  g_fit_view_to_window = !g_fit_view_to_window;
                  message(g_fit_view_to_window ?
                          "Zoom set to adjust to window" :
                          "Zoom set to be independent of window");
+                 break;
              }
-             bcase '0': {       // 100% zoom
+             case '0': {        // 100% zoom
                  const Vec2<int> dims = product(g_frame_dims) ? g_frame_dims : k_default_window_dims;
                  if (is_fullscreen()) {
                      g_fit_view_to_window = false;
@@ -1467,30 +1492,36 @@ bool DerivedHW::key_press(string skey) {
                          message("Zoom set to 100%; press <w> to see entire frame", 5.);
                      }
                  }
+                 break;
              }
-             bcase '=': ocase '+': { // increase window size or zoom
+             case '=': case '+': {  // increase window size or zoom
                  perform_window_zoom(k_key_zoom_fac);
+                 break;
              }
-             bcase '-': {       // decrease window size or zoom
+             case '-': {        // decrease window size or zoom
                  perform_window_zoom(1.f/k_key_zoom_fac);
+                 break;
              }
-             bcase 'f':                 // or <enter> / <ret> / C-M key (== uchar{13} == 'M'-64),  toggle fullscreen
-             ocase '\r':
-             ocase '\n':                // G3d -key $'\n'
+             case 'f':          // or <enter> / <ret> / C-M key (== uchar{13} == 'M'-64),  toggle fullscreen
+             case '\r':
+             case '\n':         // G3d -key $'\n'
              {
                  g_fit_view_to_window = true;
                  set_fullscreen(!is_fullscreen());
+                 break;
              }
-             bcase 'k': {       // rotate among reconstruction kernels
+             case 'k': {        // rotate among reconstruction kernels
                  g_kernel = EKernel(my_mod(int(g_kernel)+1, int(EKernel::last)));
                  message(string() + "Reconstruction kernel set to: " + k_kernel_string[int(g_kernel)]);
+                 break;
              }
-             bcase 'K': {       // rotate among reconstruction kernels
+             case 'K': {        // rotate among reconstruction kernels
                  g_kernel = EKernel(my_mod(int(g_kernel)-1, int(EKernel::last)));
                  message(string() + "Reconstruction kernel set to: " + k_kernel_string[int(g_kernel)]);
+                 break;
              }
 // Other
-             bcase 'O'-64: {    // C-o: open an existing video/image file
+             case 'O'-64: {     // C-o: open an existing video/image file
                  string cur_filename = (g_cob>=0 && !file_requires_pipe(getob()._filename) ? getob()._filename :
                                         get_current_directory() + '/');
                  Array<string> filenames = query_open_filenames(cur_filename);
@@ -1517,8 +1548,9 @@ bool DerivedHW::key_press(string skey) {
                      reset_window(determine_default_window_dims(g_frame_dims));
                  }
                  if (smess!="") throw smess;
+                 break;
              }
-             bcase 'S'-64: {    // C-s: save video/image to file;  C-S-s: overwrite original file
+             case 'S'-64: {     // C-s: save video/image to file;  C-S-s: overwrite original file
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Object& ob = check_loaded_object();
                  if (g_use_sliders) throw string("close sliders first before saving file");
@@ -1560,18 +1592,21 @@ bool DerivedHW::key_press(string skey) {
                  catch (const std::runtime_error& ex) {
                      throw "while writing file " + filename + " : " + ex.what();
                  }
+                 break;
              }
-             bcase 'v': {       // view externally (using default "start" association)
+             case 'v': {        // view externally (using default "start" association)
                  if (g_cob<0) throw string("no loaded objects");
                  view_externally();
+                 break;
              }
-             bcase 'D'-64: {    // C-d: unload current image/video from viewer
+             case 'D'-64: {     // C-d: unload current image/video from viewer
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Object& ob = check_object();
                  message("Unloaded " + ob.stype() + " " + get_path_tail(ob._filename), 4.);
                  unload_current_object();
+                 break;
              }
-             bcase 'K'-64: {    // C-k: unload all objects except current one
+             case 'K'-64: {     // C-k: unload all objects except current one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  check_object();
                  check_all_objects();
@@ -1580,16 +1615,18 @@ bool DerivedHW::key_press(string skey) {
                  g_cob = 0;
                  if (0) set_video_frame(g_cob, g_framenum); // would force unnecessary texture refresh
                  message("Unloaded all but current object", 4.);
+                 break;
              }
-             bcase 'N'-64: {    // C-n: open new VideoViewer window on same file
+             case 'N'-64: {     // C-n: open new VideoViewer window on same file
                  if (g_cob<0) throw string("no loaded object");
                  string filename = getob()._filename;
                  if (filename=="") throw getob().stype() + " has no filename";
                  if (my_spawn(V<string>(g_argv0, filename), false))
                      throw "failed to create new VideoViewer window on '" + filename + "'";
                  if (g_verbose) SHOW("spawned new window", g_argv0, filename);
+                 break;
              }
-             bcase 'C': {       // crop to view (and resample content if view includes a rotation)
+             case 'C': {        // crop to view (and resample content if view includes a rotation)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_object();
                  if (view_has_rotation()) {            // view includes a rotation
@@ -1661,8 +1698,9 @@ bool DerivedHW::key_press(string skey) {
                      g_fit_view_to_window = true;
                      message("Cropped " + ob.stype());
                  }
+                 break;
              }
-             bcase 'W': {
+             case 'W': {
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_image();
                  assertx(ob._video.size());
@@ -1673,8 +1711,9 @@ bool DerivedHW::key_press(string skey) {
                                                 append_to_filename(ob._filename, "_wcrop")));
                  g_fit_view_to_window = true;
                  message("Cropped the white borders from image");
+                 break;
              }
-             bcase 'S': {       // scale (resample content to current view resolution)
+             case 'S': {        // scale (resample content to current view resolution)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_object();
                  if (max_abs_element(V(g_view[0][1], g_view[1][0]))>0.f) throw ob.stype() + " is rotated";
@@ -1707,8 +1746,9 @@ bool DerivedHW::key_press(string skey) {
                                                 append_to_filename(ob._filename, "_scaled")));
                  reset_window(determine_default_window_dims(g_frame_dims));
                  message("Rescaled " + ob.stype());
+                 break;
              }
-             bcase 'A': {       // select window aspect ratio
+             case 'A': {        // select window aspect ratio
                  string s;
                  if (!query(V(20, 10), "Window aspect or dims (e.g. 1.5, 16:9, 200x100): ", s)) throw string("");
                  Vec2<int> ndims;
@@ -1742,8 +1782,9 @@ bool DerivedHW::key_press(string skey) {
                      set_view(view);
                  }
                  g_prev_win_dims = ndims; // do not look to translate image
+                 break;
              }
-             bcase 'L'-64: ocase 'R'-64: { // C-S-l, C-S-r: rotate content 90-degrees left (ccw) or right (clw)
+             case 'L'-64: case 'R'-64: {  // C-S-l, C-S-r: rotate content 90-degrees left (ccw) or right (clw)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const int rot_degrees = keycode=='L'-64 ? 90 : -90;
                  Object& ob = check_loaded_object();
@@ -1770,8 +1811,9 @@ bool DerivedHW::key_press(string skey) {
                  g_fit_view_to_window = true;
                  set_video_frame(g_cob, g_framenum, k_force_refresh);
                  message("Rotated " + ob.stype());
+                 break;
              }
-             bcase 'V': {       // convert sequence of images (starting from current) to a video
+             case 'V': {        // convert sequence of images (starting from current) to a video
                  // vv ~/prevproj/2016/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F*.png -key 'V'
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_image();
@@ -1803,8 +1845,9 @@ bool DerivedHW::key_press(string skey) {
                  g_obs.erase(g_cob-n, n); // unload the n images
                  g_cob -= n;
                  message(sform("Concatenated %d images to create this video", n), 6.);
+                 break;
              }
-             bcase '#': {       // convert image sequence (incrementing current image name) to a video
+             case '#': {        // convert image sequence (incrementing current image name) to a video
                  // VideoViewer ~/proj/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F00001.png -key '#'
                  // vv d:/Other/2015_06_12_HuguesH_Take2/Output_V1/Frames/view.F00001.png -key '#'
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
@@ -1834,36 +1877,41 @@ bool DerivedHW::key_press(string skey) {
                  add_object(make_unique<Object>(std::move(nvideo), std::move(nvideo_nv12),
                                                 nullptr, std::move(filename)));
                  message("Created video from image sequence -- set <F>ramerate and <B>itrate", 6.);
+                 break;
              }
-             bcase 'd': {       // open directory containing current object
+             case 'd': {        // open directory containing current object
                  string s = get_current_directory();
                  if (g_cob>=0 && directory_exists(get_path_head(getob()._filename)))
                      s = get_path_head(getob()._filename);
                  if (my_sh(V<string>("start", s)) &&
                      my_sh(V<string>("cygstart", s)))
                      throw "Could not launch directory window on " + s;
+                 break;
              }
-             bcase '<': ocase ',': { // set IN frame
+             case '<': case ',': {  // set IN frame
                  Object& ob = verify_video();
                  if (g_framenum<0) throw string("no current frame");
                  ob._framein = g_framenum;
                  if (ob._frameou1<=ob._framein) ob._frameou1 = ob.nframes();
                  message("Beginning frame of trim is now set");
+                 break;
              }
-             bcase '>': ocase '.': { // set OUT frame
+             case '>': case '.': {  // set OUT frame
                  Object& ob = verify_video();
                  if (g_framenum<0) throw string("no current frame");
                  ob._frameou1 = g_framenum+1;
                  if (ob._framein>=ob._frameou1) ob._framein = 0;
                  message("End frame of trim is now set");
+                 break;
              }
-             bcase 'u': {       // unmark (remove IN and OUT frames)
+             case 'u': {        // unmark (remove IN and OUT frames)
                  Object& ob = verify_video();
                  ob._framein = 0;
                  ob._frameou1 = ob.nframes();
                  message("Unmarked beginning and end trim frames");
+                 break;
              }
-             bcase 'T': {       // temporal exterior video trim (shift-t)
+             case 'T': {        // temporal exterior video trim (shift-t)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
                  if (ob._framein==0 && ob._frameou1==ob.nframes())
@@ -1886,8 +1934,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(std::move(newob));
                  set_video_frame(g_cob, new_cur_frame);
                  message("Trimmed video");
+                 break;
              }
-             bcase 'T'-64: {    // temporal interior video cut (control-shift-t)
+             case 'T'-64: {     // temporal interior video cut (control-shift-t)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  if (!is_shift) { beep(); throw string(""); }
                  const Object& ob = check_loaded_video();
@@ -1919,8 +1968,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(std::move(newob));
                  set_video_frame(g_cob, new_cur_frame);
                  message("Cut video");
+                 break;
              }
-             bcase '|': { // split current video into two, where current frame becomes first frame of second part
+             case '|': {  // split current video into two, where current frame becomes first frame of second part
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
                  const int nf = ob.nframes();
@@ -1948,8 +1998,9 @@ bool DerivedHW::key_press(string skey) {
                  g_obs.erase(g_cob-2, 1);    // unload the old video
                  g_cob--;
                  message("Here is the second part of the split video; use <&> to undo.", 6.);
+                 break;
              }
-             bcase '&': {       // create new video by merging (concatenating) current video with previous one
+             case '&': {        // create new video by merging (concatenating) current video with previous one
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob2 = check_loaded_video();
                  if (g_cob==0) throw string("no previous video object to append to");
@@ -1989,8 +2040,9 @@ bool DerivedHW::key_press(string skey) {
                  } else {
                      message("Here is the merged video; use <|> to undo.", 6.);
                  }
+                 break;
              }
-             bcase 'M': {       // mirror: reverse the frames of a video
+             case 'M': {        // mirror: reverse the frames of a video
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
                  Video nvideo;
@@ -2014,8 +2066,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(std::move(newob));
                  set_video_frame(g_cob, new_cur_frame);
                  message("Here is the time-mirrored video; use <&> to append to the original video.", 6.);
+                 break;
              }
-             bcase 'R': {       // resample temporal rate
+             case 'R': {        // resample temporal rate
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
                  string s;
@@ -2051,8 +2104,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(std::move(newob));
                  set_video_frame(g_cob, new_cur_frame);
                  message("Here is the time-scaled video.", 6.);
+                 break;
              }
-             bcase 'b': {       // brightness controls
+             case 'b': {        // brightness controls
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  redraw_later();
                  if (!g_use_sliders) {
@@ -2112,8 +2166,9 @@ bool DerivedHW::key_press(string skey) {
                      reset_sliders();
                      message("Created modified " + ob.stype());
                  }
+                 break;
              }
-             bcase 'L': {       // create an unoptimized loop (synchronously)
+             case 'L': {        // create an unoptimized loop (synchronously)
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
@@ -2124,31 +2179,35 @@ bool DerivedHW::key_press(string skey) {
                  message("Waiting for gradient-domain loop creation");
                  g_request_loop_synchronously = true;
                  initiate_loop_request();
+                 break;
              }
-             bcase 'g': {       // generate optimized seamless loop
+             case 'g': {        // generate optimized seamless loop
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
                  g_request_loop_synchronously = false;
                  initiate_loop_request();
+                 break;
              }
-             bcase 'G'-64: {    // generate high-quality optimized seamless loop
+             case 'G'-64: {     // generate high-quality optimized seamless loop
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
                  g_request_loop_synchronously = false;
                  g_high_quality_loop = true;
                  initiate_loop_request();
+                 break;
              }
-             bcase 'G': {       // generate optimized seamless loop synchronously
+             case 'G': {        // generate optimized seamless loop synchronously
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
                  message("Waiting for seamless loop creation");
                  g_request_loop_synchronously = true;
                  initiate_loop_request();
+                 break;
              }
-             bcase 'c': {       // clone
+             case 'c': {        // clone
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_object();
                  Video nvideo(ob._video);
@@ -2157,8 +2216,9 @@ bool DerivedHW::key_press(string skey) {
                  add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12), ob._filename));
                  getob()._unsaved = ob._unsaved;
                  message("This is the cloned " + ob.stype());
+                 break;
              }
-             bcase 'I': {       // copy current frame as a new image object
+             case 'I': {        // copy current frame as a new image object
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
                  if (g_framenum<0) throw string("no current video frame");
@@ -2178,8 +2238,9 @@ bool DerivedHW::key_press(string skey) {
                  filename = get_path_root(filename) + ".png";
                  g_obs.push(make_unique<Object>(std::move(image), filename, bgra));
                  message("Saved current frame as new image");
+                 break;
              }
-             bcase 'F': {       // set framerate
+             case 'F': {        // set framerate
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Object& ob = check_loaded_video();
                  string s = sform("%g", ob._video.attrib().framerate);
@@ -2187,8 +2248,9 @@ bool DerivedHW::key_press(string skey) {
                  if (!Args::check_double(s)) throw string("framerate not a float");
                  ob._video.attrib().framerate = Args::parse_double(s);
                  redraw_later();
+                 break;
              }
-             bcase 'B': {       // set bitrate
+             case 'B': {        // set bitrate
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Object& ob = check_loaded_video();
                  double bitrate = double(ob._video.attrib().bitrate);
@@ -2206,8 +2268,9 @@ bool DerivedHW::key_press(string skey) {
                      throw string("bitrate is not positive integer");
                  ob._video.attrib().bitrate = int(bitrate+.5);
                  redraw_later();
+                 break;
              }
-             bcase 'C'-64: {    // C-c: copy image or frame to clipboard
+             case 'C'-64: {     // C-c: copy image or frame to clipboard
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Object& ob = check_object();
                  if (g_framenum<0) throw string("no current video frame");
@@ -2224,8 +2287,9 @@ bool DerivedHW::key_press(string skey) {
                  }
                  if (bgra) convert_bgra_rgba(image);
                  if (!copy_image_to_clipboard(image)) throw string("could not copy image/frame to clipboard");
+                 break;
              }
-             bcase 'V'-64: {    // C-v: paste clipboard image as new object
+             case 'V'-64: {     // C-v: paste clipboard image as new object
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  Image image;
                  if (!copy_clipboard_to_image(image)) throw string("could not copy an image from clipboard");
@@ -2234,24 +2298,29 @@ bool DerivedHW::key_press(string skey) {
                  g_obs.push(make_unique<Object>(std::move(image), filename, bgra, unsaved));
                  set_video_frame(getobnum()-1, k_before_start);
                  reset_window(determine_default_window_dims(g_frame_dims));
+                 break;
              }
-             bcase 'i': {       // info
+             case 'i': {        // info
                  g_show_info = !g_show_info;
                  redraw_later();
+                 break;
              }
-             bcase 'e': {       // exif
+             case 'e': {        // exif
                  g_show_exif = !g_show_exif;
                  redraw_later();
+                 break;
              }
-             bcase 'H': {       // checker
+             case 'H': {        // checker
                  g_checker = !g_checker;
                  redraw_later();
+                 break;
              }
-             bcase 'h': ocase '?': { // help
+             case 'h': case '?': {  // help
                  g_show_help = !g_show_help;
                  redraw_later();
+                 break;
              }
-             bcase '@': {       // redraw window (for testing) and output some diagnostics
+             case '@': {        // redraw window (for testing) and output some diagnostics
                  if (0) {
                      string s;
                      for_intL(i, 1, 256) s += narrow_cast<char>(i);
@@ -2275,18 +2344,20 @@ bool DerivedHW::key_press(string skey) {
                  }
                  if (1) g_refresh_texture = true;
                  redraw_later();
+                 break;
              }
-             bcase '/': {       // no-op operation, for "-key /"
-                 void();
+             case '/': {        // no-op operation, for "-key /"
+                 break;
              }
-             bcase '\033': {    // exit; <esc> key (== uchar{27}); see also "<esc>"
+             case '\033': {     // exit; <esc> key (== uchar{27}); see also "<esc>"
                  if (0 && getobnum()>1 && prev_skey2!="\033") {
                      message("More than one file is open, press <esc> again to confirm quit", 10.);
                  } else {
                      quit();
                  }
+                 break;
              }
-             bdefault:          // unrecognized key
+             default:           // unrecognized key
                 recognized = false;
             }
         }
@@ -2328,7 +2399,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
             g_selected.on_timeline = false;
         }
         switch (butnum) {
-         bcase 1: {
+         case 1: {
              if (timeline_shown() && g_timeline.is_on_timeline(convert<float>(yx)/convert<float>(g_win_dims))) {
                  // start drag along timeline
                  g_selected.on_timeline = true;
@@ -2361,24 +2432,29 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                  g_selected.button_active = 0;
                  app_set_window_title();
              } else beep();
+             break;
          }
-         bcase 2: {
+         case 2: {
              redraw_later();    // start drag for zoom or rotate
+             break;
          }
-         bcase 3: {
+         case 3: {
              redraw_later();    // start drag for pan
+             break;
          }
-         bcase 4: {             // back button
+         case 4: {              // back button
              if (g_cob>0) set_video_frame(g_cob-1, k_before_start);
              else if (g_cob>=0 && g_looping==ELooping::all) set_video_frame(getobnum()-1, k_before_start);
              else beep();
+             break;
          }
-         bcase 5: {             // forward button
+         case 5: {              // forward button
              if (g_cob<getobnum()-1) set_video_frame(g_cob+1, k_before_start);
              else if (g_cob>=0 && g_looping==ELooping::all) set_video_frame(0, k_before_start);
              else beep();
+             break;
          }
-         bdefault:
+         default:
             beep();
         }
     } else {
@@ -3070,7 +3146,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         bool shift_pressed   = get_key_modifier(HW::EModifier::shift);
         bool alt_pressed     = get_key_modifier(HW::EModifier::alt);
         switch (g_selected.button_active) {
-         bcase 1: {             // either sliders or timeline
+         case 1: {              // either sliders or timeline
              if (g_selected.on_timeline) {
                  act_timeline(yx);
              } else if (g_use_sliders) {
@@ -3086,8 +3162,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                  *g_sliders[i].pval *= dval;
                  redraw_later();
              }
+             break;
          }
-         bcase 2: {                               // zoom or rotate
+         case 2: {                                 // zoom or rotate
              if (!g_selected.shift_was_pressed) { // zoom
                  float fac_zoom;
                  if (!g_selected.control_was_pressed) { // pointer position determines value
@@ -3103,8 +3180,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                  perform_window_rotation(vrotate);
              }
              redraw_later();
+             break;
          }
-         bcase 3: {             // pan
+         case 3: {              // pan
              Vec2<float> yxd;
              if (!g_selected.control_was_pressed) { // pointer position determines value
                  yxd = convert<float>(yx-g_selected.yx_last);
@@ -3154,8 +3232,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                  if (g_view!=old_view) g_fit_view_to_window = false;
              }
              redraw_later();
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
         g_selected.yx_last = yx;
     }

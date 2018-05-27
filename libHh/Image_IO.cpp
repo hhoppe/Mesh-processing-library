@@ -629,14 +629,17 @@ void ImageIO::read_bmp(Image& image, FILE* file) {
         assertt(bmih.biCompression<=1); // RLE8 on 8bit allowed
     }
     switch (bmih.biBitCount) {
-     bcase 24: ocase 32:
+     case 24: case 32:
         assertw(!bmih.biClrUsed);
-     bcase 1:
+        break;
+     case 1:
         if (!assertw(bmih.biClrUsed)) { bmih.biClrUsed = 2; } // I do not remember what this is for
         assertt(bmih.biClrUsed==2);
-     bcase 8:
+        break;
+     case 8:
         if (!bmih.biClrUsed) bmih.biClrUsed = 256;
-     bdefault:
+        break;
+     default:
         SHOW(bmih.biBitCount); throw std::runtime_error("Such RGB image is not supported");
     }
     discard_bytes(file, bmih.biSize-sizeof(bmih));
@@ -675,35 +678,39 @@ void ImageIO::read_bmp(Image& image, FILE* file) {
             assertt(read_raw(file, row));
             uchar* p = row.data();
             switch (bmih.biBitCount) {
-             bcase 32:
+             case 32:
                 for_int(x, image.xsize()) {
                     Pixel& pix = image[y][x];
                     // convert BGRA to RGBA
                     for_int(z, 3) { pix[2-z] = *p++; }
                     pix[3] = *p++;
                 }
-             bcase 24:
+                break;
+             case 24:
                 for_int(x, image.xsize()) {
                     Pixel& pix = image[y][x];
                     // convert BGR to RGB
                     for_int(z, 3) { pix[2-z] = *p++; }
                     pix[3] = 255;
                 }
-             bcase 1: {
+                break;
+             case 1: {
                  uchar bits8; dummy_init(bits8);
                  for_int(x, image.xsize()) {
                      if ((x&0x7)==0) bits8 = *p++;
                      bool is_on = (bits8>>7)&1; bits8 <<= 1;
                      image[y][x] = colormap[is_on];
                  }
+                 break;
              }
-             bcase 8:
+             case 8:
                 for_int(x, image.xsize()) {
                     int index = *p++;
                     assertt(index<colormap.num());
                     image[y][x] = colormap[index];
                 }
-             bdefault: assertt(false);
+                break;
+             default: assertt(false);
             }
         }
         if (bmfh.bfSize) {

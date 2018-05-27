@@ -357,22 +357,28 @@ static void act_button() {
     selected.yxfo = yxf;
     Vec2<float> yxq;
     switch (ratemode) {
-     bcase ERatemode::position:
+     case ERatemode::position:
         yxq = yxfd;
-     bcase ERatemode::move:
+        break;
+     case ERatemode::move:
         yxq = yxf*fchange;
-     bcase ERatemode::step:
+        break;
+     case ERatemode::step:
         yxq = yxf;
-     bdefault: assertnever(""); // yxq=twice(0.f);
+        break;
+     default: assertnever("");  // yxq=twice(0.f);
     }
     switch (button_active) {
-     bcase 1:
+     case 1:
         globemode ? act_globe(yxi, yxi_d) : act_button1(yxq);
-     bcase 2:
+        break;
+     case 2:
         act_button2(yxq);
-     bcase 3:
+        break;
+     case 3:
         act_button3(yxq);
-     bdefault:
+        break;
+     default:
         Warning("unrecognized button");
     }
     if (ratemode==ERatemode::step) button_active = 0;

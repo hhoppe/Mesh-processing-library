@@ -236,14 +236,14 @@ string image_suffix_for_magic_byte(uchar c) {
     // *.arw: "II*\000" (Sony alpha raw)
     // *.exr: "v/1\001\002\0\0\0channels"
     switch (c) {
-     bcase 1:   return "rgb";   // u'\x01'
-     bcase 255: return "jpg";   // u'\xFF'
-     bcase 'B': return "bmp";
-     bcase 'P': return "ppm";
-     bcase 137: return "png";   // u'\x89'
-     bcase 'I': return "arw";
-     bcase 'v': return "exr";   // 118
-     bdefault:  return "";
+     case 1:   return "rgb";    // u'\x01'
+     case 255: return "jpg";    // u'\xFF'
+     case 'B': return "bmp";
+     case 'P': return "ppm";
+     case 137: return "png";    // u'\x89'
+     case 'I': return "arw";
+     case 'v': return "exr";    // 118
+     default:  return "";
     }
 }
 

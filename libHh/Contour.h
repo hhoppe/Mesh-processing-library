@@ -466,14 +466,17 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
             i++; --j;
         }
         switch (nposi) {
-         bcase 1:
+         case 1:
             output_triangle(V(V(n4[0], n4[1]), V(n4[0], n4[2]), V(n4[0], n4[3])));
-         bcase 2:
+            break;
+         case 2:
             output_triangle(V(V(n4[0], n4[2]), V(n4[0], n4[3]), V(n4[1], n4[3])));
             output_triangle(V(V(n4[0], n4[2]), V(n4[1], n4[3]), V(n4[1], n4[2])));
-         bcase 3:
+            break;
+         case 3:
             output_triangle(V(V(n4[0], n4[3]), V(n4[1], n4[3]), V(n4[2], n4[3])));
-         bdefault: assertnever("");
+            break;
+         default: assertnever("");
         }
     }
     void output_triangle(const SGrid<Node*, 3, 2>& n3) {
@@ -640,9 +643,9 @@ class Contour2D : public ContourBase<2> {
             i++; --j;
         }
         switch (nposi) {
-         bcase 1: output_line(V(V(n3[0], n3[1]), V(n3[0], n3[2])));
-         bcase 2: output_line(V(V(n3[0], n3[2]), V(n3[1], n3[2])));
-         bdefault: assertnever("");
+         case 1: output_line(V(V(n3[0], n3[1]), V(n3[0], n3[2]))); break;
+         case 2: output_line(V(V(n3[0], n3[2]), V(n3[1], n3[2]))); break;
+         default: assertnever("");
         }
     }
     void output_line(const Node22& n2) {

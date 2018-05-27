@@ -8,8 +8,10 @@ ifeq ($(msvc),2017)
 
   msvcmajor = 15
   mscversion = 1912
+  # msvcbuild = 14.12.25827
+  msvcbuild = 14.13.26128
   cxxall += -FS#  serialize access to *.pdb files for parallel builds
-  export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt;
+  export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\ucrt;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\shared;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\um;C:\Program Files (x86)\Windows Kits\10\include\10.0.16299.0\winrt;
   ifeq ($(x64),1)
     # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/Tools/)
@@ -19,8 +21,8 @@ ifeq ($(msvc),2017)
     $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/10.0.16299.0/x64)
     $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/x64)
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/VC/VCPackages)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64)
-    export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\um\x64;
+    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
+    export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\um\x64;
   else
     # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat"
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/Tools/)
@@ -30,9 +32,9 @@ ifeq ($(msvc),2017)
     $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/10.0.16299.0/x64)
     $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/x64)
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/VC/VCPackages)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/bin/HostX64/x64)
-    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/bin/HostX64/x86)
-    export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\14.12.25827\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\um\x86;
+    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
+    $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
+    export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\10.0.16299.0\um\x86;
   endif
 
 else ifeq ($(msvc),2015)

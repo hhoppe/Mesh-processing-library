@@ -185,11 +185,6 @@ ArView(a) = Array<int>(5) {
   16
   16
 }
-CArrayView<int>(a) = Array<int>(3) {
-  10
-  11
-  12
-}
 a.view() = Array<int>(3) {
   10
   11

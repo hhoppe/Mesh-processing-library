@@ -278,15 +278,17 @@ float pc_corr(int i, int j) {
     if (have_normals) assertx(prop==2);
     float vdot, corr;
     switch (prop) {
-     bcase 0:
+     case 0:
         corr = 1.f;             // any path is ok
-     bcase 1:
+        break;
+     case 1:
         if (i==num) {
             corr = 0.f;         // single exterior link
         } else {
             corr = dist2(pcorg[i], pcorg[j]);
         }
-     bcase 2:
+        break;
+     case 2:
         if (i==num) {
             if (have_normals) {
                 assertx(!is_zero(nor[j]));
@@ -298,7 +300,8 @@ float pc_corr(int i, int j) {
             vdot = dot(pcnor[i], pcnor[j]);
         }
         corr = 2.f-abs(vdot);
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     return corr;
 }

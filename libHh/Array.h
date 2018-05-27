@@ -234,12 +234,12 @@ inline Bndrule parse_boundaryrule(const string& s) {
     // assertx(s.size()==1);
     char ch = s[0];
     switch (ch) {
-     bcase 'r': bndrule = Bndrule::reflected;
-     bcase 'p': bndrule = Bndrule::periodic;
-     bcase 'c': bndrule = Bndrule::clamped;
-     bcase 'b': bndrule = Bndrule::border;
-     bcase '1': bndrule = Bndrule::reflected101;
-     bdefault: assertnever(string() + "Boundary rule '" + s + "' not recognized");
+     case 'r': bndrule = Bndrule::reflected; break;
+     case 'p': bndrule = Bndrule::periodic; break;
+     case 'c': bndrule = Bndrule::clamped; break;
+     case 'b': bndrule = Bndrule::border; break;
+     case '1': bndrule = Bndrule::reflected101; break;
+     default: assertnever(string() + "Boundary rule '" + s + "' not recognized");
     }
     if (s.size()>1) assertx(s==boundaryrule_name(bndrule));
     return bndrule;
@@ -247,37 +247,42 @@ inline Bndrule parse_boundaryrule(const string& s) {
 
 inline string boundaryrule_name(Bndrule bndrule) {
     switch (bndrule) {
-     bcase Bndrule::reflected:          return "reflected";
-     bcase Bndrule::periodic:           return "periodic";
-     bcase Bndrule::clamped:            return "clamped";
-     bcase Bndrule::border:             return "border";
-     bcase Bndrule::reflected101:       return "101reflected";
-     bcase Bndrule::undefined:          return "undefined";
-     bdefault: assertnever("");
+     case Bndrule::reflected:          return "reflected";
+     case Bndrule::periodic:           return "periodic";
+     case Bndrule::clamped:            return "clamped";
+     case Bndrule::border:             return "border";
+     case Bndrule::reflected101:       return "101reflected";
+     case Bndrule::undefined:          return "undefined";
+     default: assertnever("");
     }
 }
 
 inline bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
     ASSERTX(n>=1);
     switch (bndrule) {
-     bcase Bndrule::reflected:
+     case Bndrule::reflected:
         for (;;) {
             if (i<0) i = -i-1; else if (i>=n) i = 2*n-i-1; else break;
         }
-     bcase Bndrule::periodic:
+        break;
+     case Bndrule::periodic:
         for (;;) {
             if (i<0) i += n; else if (i>=n) i -= n; else break;
         }
-     bcase Bndrule::clamped:
+        break;
+     case Bndrule::clamped:
         if (i<0) i = 0; else if (i>=n) i = n-1;
-     bcase Bndrule::border:
+        break;
+     case Bndrule::border:
         if (i<0 || i>=n) return false;
-     bcase Bndrule::reflected101:
+        break;
+     case Bndrule::reflected101:
         if (n==1) { i = 0; break; }
         for (;;) {
             if (i<0) i = -i; else if (i>=n) i = 2*n-i-2; else break;
         }
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     return true;
 }

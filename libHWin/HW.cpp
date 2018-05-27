@@ -299,20 +299,20 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
     if (_hwdebug) SHOW("wndProc", iMsg);
     static PAINTSTRUCT ps;      // always zero
     switch (iMsg) {
-     bcase WM_ERASEBKGND:
+     case WM_ERASEBKGND:
         // http://www.opengl.org/pipeline/article/vol003_7/
         // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
         // (this will avoid GDI clearing the OpenGL windows background).
         // HH: I found this unnecessary so far.
         return 1;               // introduced 20141203
-     bcase WM_CREATE:
+     case WM_CREATE:
         // On window creation, send a WM_SHOWWINDOW msg,
         //  since that msg doesn't get sent when ShowWindow() is called, in certain situations.
         if (_hwdebug) SHOW("WM_CREATE");
         assertx(PostMessage(_hwnd, WM_SHOWWINDOW, TRUE, 0));
         DragAcceptFiles(_hwnd, TRUE);
         return 0;
-     bcase WM_SHOWWINDOW: {
+     case WM_SHOWWINDOW: {
          BOOL fShow = BOOL(wParam);
          if (_hwdebug) SHOW("WM_SHOWWINDOW", fShow);
          if (fShow) {
@@ -328,7 +328,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          }
          return 0;
      }
-     bcase WM_PAINT: {
+     case WM_PAINT: {
          // (Part of) window requires repaint (like X-windows Expose)
          if (_hwdebug) SHOW("WM_PAINT");
          if (!_exposed) assertnever("");
@@ -342,7 +342,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          redraw_now();
          return 0;
      }
-     bcase WM_SIZE: {
+     case WM_SIZE: {
          // Window size has changed (like X-windows ConfigureNotify).
          // Might want to do some tricks (for efficiency only) to see if we _really_ need to resize the window, like:
          //  if (wParam==SIZE_MAXHIDE || wParam==SIZE_MAXHIDE)...
@@ -387,47 +387,48 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          }
          return 0;
      }
-     bcase WM_MOVE: {
+     case WM_MOVE: {
          _win_pos = convert<int>(V(HIWORD(lParam), LOWORD(lParam))); // y, x
          if (_hwdebug) SHOW("WM_MOVE", _win_pos);
          return 0;
      }
-     bcase WM_KEYDOWN: ocase WM_CHAR:
+     case WM_KEYDOWN:
+     case WM_CHAR:
         if (_hwdebug) SHOW("WM_KEYDOWN/WM_CHAR", wParam);
         handle_key(iMsg, wParam);
         return 0;
-     bcase WM_LBUTTONDOWN: ocase WM_LBUTTONUP: ocase WM_MBUTTONDOWN: ocase WM_MBUTTONUP:
-        /**/ ocase WM_RBUTTONDOWN: ocase WM_RBUTTONUP: ocase WM_XBUTTONDOWN: ocase WM_XBUTTONUP: {
+     case WM_LBUTTONDOWN: case WM_LBUTTONUP: case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+        /**/ case WM_RBUTTONDOWN: case WM_RBUTTONUP: case WM_XBUTTONDOWN: case WM_XBUTTONUP: {
          // cursor relative to upper-left of client area
          const Vec2<int> yx = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));
          const bool shift = (wParam&MK_SHIFT)!=0; dummy_use(shift);
          int butnum;
          switch (iMsg) {
-          bcase WM_LBUTTONDOWN: ocase WM_LBUTTONUP: butnum = 1;
-          bcase WM_MBUTTONDOWN: ocase WM_MBUTTONUP: butnum = 2;
-          bcase WM_RBUTTONDOWN: ocase WM_RBUTTONUP: butnum = 3;
-          bcase WM_XBUTTONDOWN: ocase WM_XBUTTONUP: butnum = 3+HIWORD(wParam); // thus 4 or 5
-          bdefault: assertnever("");
+          case WM_LBUTTONDOWN: case WM_LBUTTONUP: butnum = 1; break;
+          case WM_MBUTTONDOWN: case WM_MBUTTONUP: butnum = 2; break;
+          case WM_RBUTTONDOWN: case WM_RBUTTONUP: butnum = 3; break;
+          case WM_XBUTTONDOWN: case WM_XBUTTONUP: butnum = 3+HIWORD(wParam); break;  // thus 4 or 5
+          default: assertnever("");
          }
          bool pressed;
          switch (iMsg) {
-          bcase WM_LBUTTONDOWN: ocase WM_MBUTTONDOWN: ocase WM_RBUTTONDOWN: ocase WM_XBUTTONDOWN: pressed = true;
-          bcase WM_LBUTTONUP: ocase WM_MBUTTONUP: ocase WM_RBUTTONUP: ocase WM_XBUTTONUP: pressed = false;
-          bdefault: assertnever("");
+          case WM_LBUTTONDOWN: case WM_MBUTTONDOWN: case WM_RBUTTONDOWN: case WM_XBUTTONDOWN: pressed = true; break;
+          case WM_LBUTTONUP: case WM_MBUTTONUP: case WM_RBUTTONUP: case WM_XBUTTONUP: pressed = false; break;
+          default: assertnever("");
          }
          if (_hwdebug) SHOW("WM_BUTTON", butnum, pressed, yx);
          if (pressed) SetCapture(_hwnd); else assertw(ReleaseCapture());
          button_press(butnum, pressed, yx);
          return 0;
      }
-     bcase WM_MOUSEWHEEL: {
+     case WM_MOUSEWHEEL: {
          bool shift = (wParam&MK_SHIFT)!=0; dummy_use(shift);
          int wheel_motion = HIWORD(wParam); if (wheel_motion>=(1<<15)) wheel_motion = wheel_motion - (1<<16);
          if (_hwdebug) SHOW("WM_MOUSEWHEEL", wheel_motion);
          wheel_turn(wheel_motion/120.f); // wheel_motion==120 for one click turn
          return 0;
      }
-     bcase WM_DROPFILES: {
+     case WM_DROPFILES: {
          // See http://www.codeproject.com/Articles/840/How-to-Implement-Drag-and-Drop-Between-Your-Progra
          Array<string> filenames; {
              HDROP hdrop = HDROP(wParam);
@@ -447,14 +448,15 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          grab_focus();
          return 0;
      }
-     bcase WM_CLOSE:
+     case WM_CLOSE:
         if (_hwdebug) SHOW("WM_CLOSE");
         quit();
         return 0;
-     bcase WM_DESTROY:
+     case WM_DESTROY:
         if (_hwdebug) SHOW("WM_DESTROY");
         DragAcceptFiles(_hwnd, FALSE);
-     bcase WM_GETMINMAXINFO: {
+        break;
+     case WM_GETMINMAXINFO: {
          // Try to override the smallest width to <104 interior pixels.
          //  (GetSystemMetrics(SM_CXMIN)=112  - 2*4==104).
          // The fix below seems to allow small geometry from command-line,
@@ -465,9 +467,10 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
          if (_hwdebug) SHOW("WM_GETMINMAXINFO");
          return 0;
      }
-        // bcase WM_DPICHANGED:
+        // case WM_DPICHANGED:
         // do nothing currently
-     bdefault:
+        // break;
+     default:
         void();
         // unrecognized message, pass through
     }   // end switch
@@ -535,17 +538,17 @@ void HW::handle_key(int why_called, WPARAM key_data) {
             s = sform("<f%d>", virt_key-VK_F1+1);
         } else {
             switch (virt_key) {
-             bcase VK_LEFT:     s = "<left>";
-             bcase VK_RIGHT:    s = "<right>";
-             bcase VK_UP:       s = "<up>";
-             bcase VK_DOWN:     s = "<down>";
-             bcase VK_HOME:     s = "<home>";
-             bcase VK_END:      s = "<end>";
-             bcase VK_PRIOR:    s = "<prior>";
-             bcase VK_NEXT:     s = "<next>";
-             bcase VK_INSERT:   s = "<insert>";
-             bcase VK_DELETE:   s = "<delete>";
-             bdefault:
+             case VK_LEFT:     s = "<left>"; break;
+             case VK_RIGHT:    s = "<right>"; break;
+             case VK_UP:       s = "<up>"; break;
+             case VK_DOWN:     s = "<down>"; break;
+             case VK_HOME:     s = "<home>"; break;
+             case VK_END:      s = "<end>"; break;
+             case VK_PRIOR:    s = "<prior>"; break;
+             case VK_NEXT:     s = "<next>"; break;
+             case VK_INSERT:   s = "<insert>"; break;
+             case VK_DELETE:   s = "<delete>"; break;
+             default:
                 if (get_key_modifier(EModifier::control) && virt_key>='0' && virt_key<='9') {
                     // control-numbers (C-0 .. C-9) do not produce any subsequent WM_CHAR message, so handle now.
                     char ch = assert_narrow_cast<char>(virt_key);
@@ -660,10 +663,10 @@ bool HW::get_pointer(Vec2<int>& yx) {
 
 bool HW::get_key_modifier(EModifier modifier) {
     int virt_key; switch (modifier) {
-     bcase EModifier::shift:    virt_key = VK_SHIFT;
-     bcase EModifier::control:  virt_key = VK_CONTROL;
-     bcase EModifier::alt:      virt_key = VK_MENU;
-     bdefault: assertnever("");
+     case EModifier::shift:     virt_key = VK_SHIFT; break;
+     case EModifier::control:   virt_key = VK_CONTROL; break;
+     case EModifier::alt:       virt_key = VK_MENU; break;
+     default: assertnever("");
     }
     short v = GetKeyState(virt_key);
     return !!(v&(1<<15)); // high-order bit indicates key down, low-order bit is odd "toggle" state for caps_lock

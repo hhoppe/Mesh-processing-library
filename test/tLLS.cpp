@@ -144,9 +144,13 @@ int main() {
                     if (m<n) continue;
                     Matrix<Real> A(m, n);
                     switch (imode) {
-                     bcase 0: for (Real& v : A) { v = possible_cast<Real>(Random::G.dunif()); }
-                     bcase 1: identity_mat(A);
-                     bdefault: assertnever("");
+                     case 0:
+                        for (Real& v : A) { v = possible_cast<Real>(Random::G.dunif()); }
+                        break;
+                     case 1:
+                        identity_mat(A);
+                        break;
+                     default: assertnever("");
                     }
                     if (inormalize) for_int(i, n) normalize(column(A, i)); // possibly normalize the columns
                     if (1) {

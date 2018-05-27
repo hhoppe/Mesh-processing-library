@@ -1362,7 +1362,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         if (ii) { if (!--ii) ii = quicki; else continue; }
         const Node* un = arn[i].get();
         switch (un->_type) {
-         bcase Node::EType::polygon: {
+         case Node::EType::polygon: {
              auto n = down_cast<const NodePolygon*>(un);
              if (ledges && !lshading) continue;
              initialize_lit();
@@ -1396,8 +1396,9 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
                  i++;
              }
              glEnd();
+             break;
          }
-         bcase Node::EType::line: {
+         case Node::EType::line: {
              auto n = down_cast<const NodeLine*>(un);
              initialize_unlit();
              if (n->pa.num()==2) {
@@ -1421,8 +1422,9 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
                  }
                  glEnd();
              }
+             break;
          }
-         bcase Node::EType::point: {
+         case Node::EType::point: {
              auto n = down_cast<const NodePoint*>(un);
              initialize_unlit();
              glBegin(GL_POINTS);
@@ -1435,8 +1437,9 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
                  i++;
              }
              glEnd();
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
     }
     if (ledges) {
@@ -1756,17 +1759,19 @@ void draw_mesh(GMesh& mesh) {
                 const bool replace_quads_by_polygons = true;
                 if (replace_quads_by_polygons && nv==4) nv = -1;
                 switch (nv) {
-                 bcase 3:
+                 case 3:
                     if (nquads) { glEnd(); nquads = 0; }
                     if (ntriangles==buffer_ntriangles) { glEnd(); ntriangles = 0; }
                     if (!ntriangles) glBegin(GL_TRIANGLES);
                     ntriangles++;
-                 bcase 4:
+                    break;
+                 case 4:
                     if (ntriangles) { glEnd(); ntriangles = 0; }
                     if (nquads==buffer_nquads) { glEnd(); nquads = 0; }
                     glBegin(GL_QUADS);
                     nquads++;
-                 bdefault:
+                    break;
+                 default:
                     if (ntriangles) { glEnd(); ntriangles = 0; }
                     if (nquads) { glEnd(); nquads = 0; }
                     glBegin(GL_POLYGON);
@@ -2272,7 +2277,7 @@ void GXobject::add(const A3dElem& el) {
     assertx(_opened);
     assertx(el.num());
     switch (el.type()) {
-     bcase A3dElem::EType::polygon: {
+     case A3dElem::EType::polygon: {
          auto n = make_unique<NodePolygon>();
          bool hasvnors = false, hascolors = false;
          for_int(i, el.num()) {
@@ -2294,8 +2299,9 @@ void GXobject::add(const A3dElem& el) {
          if (!n->poly.is_convex() && !num_concave++ && s_idraw)
              Warning("Have concave polygons in a3d");
          append(std::move(n));
+         break;
      }
-     bcase A3dElem::EType::polyline: {
+     case A3dElem::EType::polyline: {
          if (0 && el.num()==2 && el[0].p==el[1].p) {
              // because zero-length lines don't show up under GL
              // but, confuses OpenGL display list optimizer
@@ -2317,14 +2323,16 @@ void GXobject::add(const A3dElem& el) {
          if (0 && el.num()==2 && el[0].p==el[1].p)
              n->pa[1] += Vector(1e-4f, 0.f, 0.f);
          append(std::move(n));
+         break;
      }
-     bcase A3dElem::EType::point: {
+     case A3dElem::EType::point: {
          auto n = make_unique<NodePoint>();
          n->p = el[0].p;
          n->color = pack_color(el[0].c.g[0] ? el[0].c.d : k_default_poly_color.d);
          append(std::move(n));
+         break;
      }
-     bdefault: assertnever(string() + "unknown type '" + narrow_cast<char>(el.type()) + "'");
+     default: assertnever(string() + "unknown type '" + narrow_cast<char>(el.type()) + "'");
     }
 }
 
@@ -2822,119 +2830,142 @@ bool HB::special_keypress(char ch) {
     if (psc_mode && psc_key_press(ch)) return true;
 #endif
     switch (ch) {
-     bcase 'b':
+     case 'b':
         toggle_attribute(g_xobs.cullface);
         invalidate_dls();
         hw.redraw_now();
-     bcase 'r':
+        break;
+     case 'r':
         toggle_attribute(g_xobs.reverse_cull);
         invalidate_dls();
         hw.redraw_now();
-     bcase 's':
+        break;
+     case 's':
         toggle_attribute(g_xobs.shading);
         invalidate_dls();
         hw.redraw_now();
-     bcase 'm':
+        break;
+     case 'm':
         toggle_attribute(g_xobs.smooth);
         invalidate_dls();
         hw.redraw_now();
-     bcase 'e':
+        break;
+     case 'e':
         toggle_attribute(g_xobs.edges);
         invalidate_dls();
         hw.redraw_now();
-     bcase 'u':
+        break;
+     case 'u':
         mdepthcue = !mdepthcue;
         hw.redraw_now();
-     bcase 'a':
+        break;
+     case 'a':
         antialiasing = !antialiasing;
         invalidate_dls();
         hw.redraw_now();
-     bcase 'n':
+        break;
+     case 'n':
         nice_rendering = !nice_rendering;
         invalidate_dls();
         hw.redraw_now();
-     bcase 'p':
+        break;
+     case 'p':
         perspec = !perspec;
         hw.redraw_now();
-     bcase 'S':
+        break;
+     case 'S':
         slidermode = !slidermode;
         if (slidermode) use_dl = false;
         hw.redraw_now();
-     bcase 'o':
+        break;
+     case 'o':
         outside_frustum = !outside_frustum;
         hw.redraw_now();
-     bcase 'Q':
+        break;
+     case 'Q':
         butquick = !butquick; quickmode = false;
         invalidate_dls();
         hw.redraw_now();
-     bcase 'q':
+        break;
+     case 'q':
         quickmode = !quickmode; butquick = false;
         invalidate_dls();
         hw.redraw_now();
-     bcase 't':
+        break;
+     case 't':
         texture_active = !texture_active;
         invalidate_dls();
         hw.redraw_now();
-     bcase 'y':
+        break;
+     case 'y':
         update_anisotropy();
         hw.redraw_now();
-     bcase 'U':
+        break;
+     case 'U':
         uvtopos = !uvtopos;
         special_keypress('s');
         special_keypress('e');
         invalidate_dls();
         hw.redraw_now();
-     bcase 'C':
+        break;
+     case 'C':
         use_dl = !use_dl;
         invalidate_dls();
         was_using_dl = false;
         hw.redraw_now();
-     bcase 'T':
+        break;
+     case 'T':
         strip_lines = (strip_lines+1)%3; // 0..2
         invalidate_dls();
         hw.redraw_now();
-     bcase ']':
+        break;
+     case ']':
         quicki *= 2;
         invalidate_dls();
         if (quickmode || butquick) hw.redraw_now();
-     bcase '[':
+        break;
+     case '[':
         quicki /= 2;
         if (!quicki) quicki = 1;
         invalidate_dls();
         if (quickmode || butquick) hw.redraw_now();
-     bcase 'E':
-     {
+        break;
+     case 'E': {
          static int bu_thicknormal = 1;
          if (thicknormal) {
              bu_thicknormal = thicknormal; thicknormal = 0;
          } else {
              thicknormal = bu_thicknormal;
          }
+         invalidate_dls();
+         hw.redraw_now();
+         break;
      }
-     invalidate_dls();
-     hw.redraw_now();
-     bcase '/':
-     {
+     case '/': {
          string s = g3d::statefile;
          if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
+         break;
      }
-     bcase 'R':
-     {
+     case 'R': {
          string s = imagefilename;
          if (hw.query(V(30, 2), "imagefilename:", s)) imagefilename = s;
+         break;
      }
-     bcase 'P':
+     case 'P':
         process_print();
-     bcase 'Z':
+        break;
+     case 'Z':
         all_reset();
         invalidate_dls();
         hw.redraw_now();
-     bcase '\r':                // <enter>/<ret> key (== uchar{13} == 'M'-64)
-     ocase '\n':                // G3d -key $'\n'
+        break;
+     case '\r':                 // <enter>/<ret> key (== uchar{13} == 'M'-64)
+     case '\n':                 // G3d -key $'\n'
         static bool g_fullscreen;
         g_fullscreen = !g_fullscreen;
         hw.make_fullscreen(g_fullscreen);
-     bcase '?': {
+        break;
+     case '?': {
          const string s = 1+R"(
 Device commands (prefixed by 'D'):
    Per object:
@@ -2945,8 +2976,9 @@ depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 </>statefile  set<R>enderedimage  <P>rint_image  <cntrl-C>quit
 )";
          std::cerr << s;
+         break;
      }
-     bdefault:
+     default:
         return false;
     }
     return true;
@@ -3060,27 +3092,30 @@ void* HB::escape(void* code, void* data) {
     float fdata = *static_cast<float*>(data);
     dummy_use(fdata);
     switch (icode) {
-     bcase 1:
-        if (fdata<0.f) {
-            if (g3d::output) { std::cout << "lod " << "-1\n"; std::cout.flush(); }
-            if (!use_dl) use_dl = was_using_dl;
-        } else {
-            if (use_dl) {
-                was_using_dl = use_dl; use_dl = false;
-            }
+     case 1: {
+         if (fdata<0.f) {
+             if (g3d::output) { std::cout << "lod " << "-1\n"; std::cout.flush(); }
+             if (!use_dl) use_dl = was_using_dl;
+         } else {
+             if (use_dl) {
+                 was_using_dl = use_dl; use_dl = false;
+             }
 #if defined(DEF_PM)
-            if (pm_mode) pm_set_lod(fdata);
+             if (pm_mode) pm_set_lod(fdata);
 #endif
 #if defined(DEF_SC)
-            if (psc_mode) psc_set_lod(fdata);
-            if (sc_gm_mode) sc_gm_set_lod(fdata);
+             if (psc_mode) psc_set_lod(fdata);
+             if (sc_gm_mode) sc_gm_set_lod(fdata);
 #endif
-        }
-     bcase 2:
+         }
+         break;
+     }
+     case 2:
 #if defined(DEF_SR)
         if (sr_mode) sr_screen_thresh = fdata;
 #endif
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     return nullptr;
 }
@@ -3134,21 +3169,24 @@ void pm_wrap_draw(bool show) {
             Vec2<float> yxf; assertx(HB::get_pointer(yxf));
             float oldval = pm_lod_level;
             switch (button_active) {
-             bcase 1: {
+             case 1: {
                  pm_lod_level = 1.1f-(yxf[0])*1.2f;
+                 break;
              }
-             bcase 2: {
+             case 2: {
                  float a = (yxf[0]-0.5f)*-3.f;
                  float a2 = pow(abs(a), 4.f)*sign(a)*g3d::fchange*1.f;
                  pm_lod_level += a2;
+                 break;
              }
-             bcase 3: {
+             case 3: {
                  const float factor = 5.f;
                  float val = 1.1f-(yxf[0])*1.2f;
                  val = max(val, 0.f);
                  pm_lod_level = (exp(factor*val)-1.0f)/(exp(factor)-1.0f);
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
             pm_lod_level = clamp(pm_lod_level, 0.f, 1.f);
             if (pm_lod_level!=oldval)
@@ -3254,17 +3292,19 @@ void draw_pm() {
 
 bool pm_key_press(char ch) {
     switch (ch) {
-     bcase 'c':
+     case 'c':
         pm_lod_level = 0.f;
         pm_update_lod();
         if (g3d::output) { std::cout << "lod " << "-1\n"; std::cout.flush(); }
         hw.redraw_now();
-     bcase 'a':
+        break;
+     case 'a':
         pm_lod_level = 1.f;
         pm_update_lod();
         if (g3d::output) { std::cout << "lod " << "-1\n"; std::cout.flush(); }
         hw.redraw_now();
-     bdefault:
+        break;
+     default:
         return false;
     }
     return true;
@@ -3566,28 +3606,32 @@ void sr_update_morph_times() {
 
 bool sr_key_press(char ch) {
     switch (ch) {
-     bcase 'f':
+     case 'f':
         sr_freeze = !sr_freeze;
         hw.redraw_now();
-     bcase 'a':
+        break;
+     case 'a':
         srmesh.fully_refine();
         sr_freeze = true;
         hw.redraw_now();
-     bcase 'c':
+        break;
+     case 'c':
         srmesh.fully_coarsen();
         sr_freeze = true;
         hw.redraw_now();
-     bcase 'g':
+        break;
+     case 'g':
         sr_morph_active = !sr_morph_active;
         sr_update_morph_times();
         hw.redraw_now();
-     bcase 'G':
+        break;
+     case 'G':
         if (sr_gtime==256) sr_gtime = 2;
         else sr_gtime *= 2;
         sr_update_morph_times();
         hw.redraw_now();
-     bcase 'T':
-     {
+        break;
+     case 'T': {
          static bool striplines_old_edges;
          static bool striplines_old_shading;
          static bool striplines_old_textureactive;
@@ -3604,17 +3648,18 @@ bool sr_key_press(char ch) {
              g_xobs.shading[1] = striplines_old_shading;
              texture_active = striplines_old_textureactive;
          }
+        hw.redraw_now();
+        break;
      }
-     hw.redraw_now();
-     bcase 'R':
+     case 'R':
         if (!sr_regulatenf) {
             sr_regulatenf = float(srmesh.num_active_faces());
         } else {
             sr_regulatenf = 0.f;
         }
         hw.redraw_now();
-     bcase 'r':
-     {
+        break;
+     case 'r': {
          Frame sr_tview;
          if (0) sr_tview = Frame(Vector(0.43588989f, 0.f, -0.9f),
                                  Vector(0.f, 1.f, 0.f),
@@ -3660,19 +3705,21 @@ bool sr_key_press(char ch) {
              if (g_xobs.min_segn()==0 && g_xobs.defined(0)) g_xobs.vis[0] = false;
              outside_frustum = radar_old_outside_frustum;
          }
+         hw.redraw_now();
+         break;
      }
-     hw.redraw_now();
-     bcase 'O':
+     case 'O':
         // Traverse all data structures to force into memory.
         srmesh.ok();
-     bcase 'K':                 // was 13 <enter>
+        break;
+     case 'K':                  // was 13 <enter>
         if (!sr_freeze) {
             assertx(sr_key_press('c'));
         } else {
             assertx(sr_key_press('f'));
         }
         return true;
-     bdefault:
+     default:
         return false;
     }
     return true;
@@ -4152,21 +4199,24 @@ void psc_wrap_draw(bool show) {
             float oldval = psc_lod_level;
             Vec2<float> yxf; assertx(HB::get_pointer(yxf));
             switch (button_active) {
-             bcase 1: {
+             case 1: {
                  psc_lod_level = 1.1f-(yxf[0])*1.2f;
+                 break;
              }
-             bcase 2: {
+             case 2: {
                  float a = ((yxf[0])-0.5f)*-3.f;
                  float a2 = pow(abs(a), 4.f)*sign(a)*g3d::fchange*1.f;
                  psc_lod_level += a2;
+                 break;
              }
-             bcase 3: {
+             case 3: {
                  const float factor = 5.f;
                  float val = 1.1f-(yxf[0])*1.2f;
                  val = max(val, 0.f);
                  psc_lod_level = (exp(factor*val)-1.0f) /(exp(factor)-1.0f);
+                 break;
              }
-             bdefault: assertnever("");
+             default: assertnever("");
             }
             psc_lod_level = clamp(psc_lod_level, 0.f, 1.f);
             if (psc_lod_level!=oldval)
@@ -4438,17 +4488,19 @@ void sc_gm_wrap_draw(bool show) {
             float oldval = sc_gm_lod_level;
             Vec2<float> yxf; assertx(HB::get_pointer(yxf));
             switch (button_active) {
-             bcase 1: {
+             case 1: {
                  sc_gm_lod_level = 1.1f-(yxf[0])*1.2f;
+                 break;
              }
-             bcase 2: {
+             case 2: {
                  float a = ((yxf[0])-0.5f)*-3.f;
                  float a2 = pow(abs(a), 4.f)*sign(a)*g3d::fchange*1.f;
                  sc_gm_lod_level += a2;
+                 break;
              }
-             bcase 3:
-                void();
-             bdefault: assertnever("");
+             case 3:
+                break;
+             default: assertnever("");
             }
             sc_gm_lod_level = clamp(sc_gm_lod_level, 0.f, 1.f);
             if (sc_gm_lod_level!=oldval) {
@@ -4696,15 +4748,17 @@ void Cylinder::draw(const Point& p1, const Point& p2, float r) {
 
 bool psc_key_press(char ch) {
     switch (ch) {
-     bcase 'c':
+     case 'c':
         psc_lod_level = 0.f;
         psc_update_lod();
         hw.redraw_now();
-     bcase 'a':
+        break;
+     case 'a':
         psc_lod_level = 1.f;
         psc_update_lod();
         hw.redraw_now();
-     bdefault:
+        break;
+     default:
         return false;
     }
     return true;

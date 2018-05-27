@@ -110,7 +110,7 @@ int main() {
     }
     {
         Vec3<int> a(10, 11, 12);
-        SHOW(CArrayView<int>(a));
+        // SHOW(CArrayView<int>(a));  // internal compiler error in MSVC 2017
         SHOW(a.view());
         CArrayView<int> ar(a);
         SHOW(var(ar));

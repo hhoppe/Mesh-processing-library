@@ -146,19 +146,23 @@ inline const char* str_chr(const char* s, char ch) {
 bool parse_aux(const char* s, ArrayView<float> ar) {
     float a, b, c, d; char ch;
     switch (ar.num()) {
-     bcase 1:
+     case 1:
         if (!assertw(sscanf(s, "(%g%c", &a, &ch)==2 && ch==')')) return false;
         ar[0] = a;
-     bcase 2:
+        break;
+     case 2:
         if (!assertw(sscanf(s, "(%g %g%c", &a, &b, &ch)==3 && ch==')')) return false;
         ar[0] = a; ar[1] = b;
-     bcase 3:
+        break;
+     case 3:
         if (!assertw(sscanf(s, "(%g %g %g%c", &a, &b, &c, &ch)==4 && ch==')')) return false;
         ar[0] = a; ar[1] = b; ar[2] = c;
-     bcase 4:
+        break;
+     case 4:
         if (!assertw(sscanf(s, "(%g %g %g %g%c", &a, &b, &c, &d, &ch)==5 && ch==')')) return false;
         ar[0] = a; ar[1] = b; ar[2] = c; ar[3] = d;
-     bdefault: assertnever("");
+        break;
+     default: assertnever("");
     }
     return true;
 }
@@ -216,11 +220,11 @@ const char* GMesh::string_key(string& str, const char* ss, const char* key) {
 
 const char* csform_vec(string& str, CArrayView<float> ar) {
     switch (ar.num()) {
-     bcase 1: return csform(str, "(%g)", ar[0]);
-     bcase 2: return csform(str, "(%g %g)", ar[0], ar[1]);
-     bcase 3: return csform(str, "(%g %g %g)", ar[0], ar[1], ar[2]);
-     bcase 4: return csform(str, "(%g %g %g %g)", ar[0], ar[1], ar[2], ar[3]);
-     bdefault: assertnever("");
+     case 1: return csform(str, "(%g)", ar[0]);
+     case 2: return csform(str, "(%g %g)", ar[0], ar[1]);
+     case 3: return csform(str, "(%g %g %g)", ar[0], ar[1], ar[2]);
+     case 4: return csform(str, "(%g %g %g %g)", ar[0], ar[1], ar[2], ar[3]);
+     default: assertnever("");
     }
 }
 

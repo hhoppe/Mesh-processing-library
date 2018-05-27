@@ -435,22 +435,25 @@ void HW::handle_event() {
     _gotevent = false;
     if (_hwdebug) SHOW(_event.type);
     switch (_event.type) {
-     bcase MapNotify:
+     case MapNotify:
         if (_hwdebug) SHOW("MapNotify");
         if (!_exposed) {
             _exposed = true;
             if (_hwdebug) SHOW("window now exposed");
             if (_hwkey!="") start_hwkey();
         }
-     bcase UnmapNotify:
+        break;
+     case UnmapNotify:
         if (_hwdebug) SHOW("UnmapNotify");
         // I could perhaps somehow force the redraws to stop
-     bcase Expose:
+        break;
+     case Expose:
         if (_hwdebug) SHOW("Expose", _exposed);
         if (!_exposed) return;
         while (XCheckTypedEvent(_display, Expose, &_event)) { }
         redraw_now();
-     bcase ConfigureNotify: {
+        break;
+     case ConfigureNotify: {
          _win_pos = V(_event.xconfigure.y, _event.xconfigure.x);
          _win_dims = V(_event.xconfigure.height, _event.xconfigure.width);
          bool send_event = _event.xconfigure.send_event;
@@ -478,11 +481,13 @@ void HW::handle_event() {
              XClearWindow(_display, _win);
          }
          while (XCheckTypedEvent(_display, Expose, &_event)) { }
+         break;
      }
-     bcase KeyPress:
+     case KeyPress:
         if (_hwdebug) SHOW("KeyPress");
         handle_key();
-     bcase ButtonPress: ocase ButtonRelease: {
+        break;
+     case ButtonPress: case ButtonRelease: {
         if (_hwdebug) SHOW("Button");
          int butnum = _event.xbutton.button;
          const bool pressed = _event.type==ButtonPress;
@@ -496,20 +501,22 @@ void HW::handle_event() {
              if (butnum==9) butnum = 5; // Forward button
              button_press(butnum, pressed, V(_event.xbutton.y, _event.xbutton.x));
          }
+         break;
      }
-     bcase MappingNotify:
+     case MappingNotify:
         if (_hwdebug) SHOW("MappingNotify");
         XRefreshKeyboardMapping(reinterpret_cast<XMappingEvent*>(&_event));
-     // bcase ClientMessage:
+        break;
+     // case ClientMessage:
      //    SHOWL;
      //    if (_event.xclient.data.l[0] == _wmDeleteMessage) {
      //        SHOWL;
      //        // Receive message from window manager before it kills the window.
      //        _update = EUpdate::quit;
      //    }
-     bdefault:
+     //    break;
+     default:
         if (_hwdebug) SHOW("ignoring unknown event");
-        void();
     }
 }
 
@@ -578,18 +585,17 @@ void HW::handle_key() {
             s = sform("%c", narrow_cast<char>(keysym));
         } else {
             switch (keysym) {
-             bcase XK_Left:     s = "<left>";
-             bcase XK_Right:    s = "<right>";
-             bcase XK_Up:       s = "<up>";
-             bcase XK_Down:     s = "<down>";
-             bcase XK_Home:     s = "<home>";
-             bcase XK_End:      s = "<end>";
-             bcase XK_Prior:    s = "<prior>";
-             bcase XK_Next:     s = "<next>";
-             bcase XK_Insert:   s = "<insert>";
-             bcase XK_Delete:   s = "<delete>";
-             bdefault:
-                void();
+             case XK_Left:     s = "<left>"; break;
+             case XK_Right:    s = "<right>"; break;
+             case XK_Up:       s = "<up>"; break;
+             case XK_Down:     s = "<down>"; break;
+             case XK_Home:     s = "<home>"; break;
+             case XK_End:      s = "<end>"; break;
+             case XK_Prior:    s = "<prior>"; break;
+             case XK_Next:     s = "<next>"; break;
+             case XK_Insert:   s = "<insert>"; break;
+             case XK_Delete:   s = "<delete>"; break;
+             default: void();
             }
         }
         if (_hwdebug) { SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size())))); }
@@ -757,10 +763,10 @@ bool HW::get_key_modifier(EModifier modifier) {
         return !!(keys[keycode/8]&(1<<(keycode%8)));
     };
     switch (modifier) {
-     bcase EModifier::shift:    return key_pressed(XK_Shift_L) || key_pressed(XK_Shift_R);
-     bcase EModifier::control:  return key_pressed(XK_Control_L) || key_pressed(XK_Control_R);
-     bcase EModifier::alt:      return key_pressed(XK_Alt_L) || key_pressed(XK_Alt_R);
-     bdefault: assertnever("");
+     case EModifier::shift:    return key_pressed(XK_Shift_L) || key_pressed(XK_Shift_R);
+     case EModifier::control:  return key_pressed(XK_Control_L) || key_pressed(XK_Control_R);
+     case EModifier::alt:      return key_pressed(XK_Alt_L) || key_pressed(XK_Alt_R);
+     default: assertnever("");
     }
 }
 

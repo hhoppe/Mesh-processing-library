@@ -975,19 +975,21 @@ void process_vsplit() {
         PMVertexAttrib vas; vas.point = mesh.point(save.vs);
         PMVertexAttrib vat; vat.point = mesh.point(save.vt);
         switch (save.ii) {
-         bcase 2:
+         case 2:
             diff(vspl.vad_large, vat, save.vaovs);
             diff(vspl.vad_small, vas, save.vaovs);
-         bcase 0:
+            break;
+         case 0:
             diff(vspl.vad_large, vas, save.vaovs);
             diff(vspl.vad_small, vat, save.vaovs);
-         bcase 1:
-         {
+            break;
+         case 1: {
              PMVertexAttrib vam; interp(vam, vas, vat, 0.5f);
              diff(vspl.vad_large, vat, vam);
              diff(vspl.vad_small, vam, save.vaovs);
+             break;
          }
-         bdefault: assertnever("");
+         default: assertnever("");
         }
     }
     // Encode wedge attributes.
@@ -1005,15 +1007,17 @@ void process_vsplit() {
             const PMWedgeAttrib& waovsfl = (code&Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
             const PMWedgeAttrib& waovtfl = (code&Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
             switch (save.ii) {
-             bcase 2:
+             case 2:
                 vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl));
                 if (verify_reflection)
                     assertx(!compare(get_wattrib(mesh.corner(save.vs, fl)), !nt ? waovtfl : waovsfl, tolerance));
-             bcase 0:
+                break;
+             case 0:
                 vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vs, fl)), !nt ? waovtfl : waovsfl));
                 if (verify_reflection)
                     assertx(!compare(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl, tolerance));
-             bcase 1:
+                break;
+             case 1:
                 // Added check on ns to deal with (ws=5 wt=6) case.
                 vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl));
                 if (verify_reflection) {
@@ -1021,7 +1025,8 @@ void process_vsplit() {
                     sub_reflect(wat, !ns ? waovsfl : waovtfl, vspl.ar_wad.last());
                     assertx(!compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance));
                 }
-             bdefault: assertnever("");
+                break;
+             default: assertnever("");
             }
         }
     }
@@ -1039,17 +1044,20 @@ void process_vsplit() {
             const PMWedgeAttrib& waovsfr = (code&Vsplit::S_RSAME) ? save.wavsfro : save.wavsflo;
             const PMWedgeAttrib& waovtfr = (code&Vsplit::T_RSAME) ? save.wavtfro : save.wavtflo;
             switch (save.ii) {
-             bcase 2:
+             case 2:
                 if (ut)
                     vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fr)), !ns ? waovsfr : waovtfr));
-             bcase 0:
+                break;
+             case 0:
                 if (us)
                     vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vs, fr)), !nt ? waovtfr : waovsfr));
-             bcase 1:
+                break;
+             case 1:
                 // Added check on ns only for symmetry with above.
                 if (us || ut)
                     vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fr)), !ns ? waovsfr : waovtfr));
-             bdefault: assertnever("");
+                break;
+             default: assertnever("");
             }
         }
     }

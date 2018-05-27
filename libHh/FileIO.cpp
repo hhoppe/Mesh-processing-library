@@ -98,10 +98,10 @@ string portable_simple_quote(const string& s) {
 
 int seekdir_to_origin(std::ios_base::seekdir dir) {
     switch (dir) {
-     bcase std::ios_base::beg: return SEEK_SET;
-     bcase std::ios_base::end: return SEEK_END;
-     bcase std::ios_base::cur: return SEEK_CUR;
-     bdefault: assertnever("");
+     case std::ios_base::beg: return SEEK_SET;
+     case std::ios_base::end: return SEEK_END;
+     case std::ios_base::cur: return SEEK_CUR;
+     default: assertnever("");
     }
 }
 

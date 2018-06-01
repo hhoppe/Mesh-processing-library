@@ -858,61 +858,55 @@ void flush_warnings() { }
 
 #endif  // !defined(HH_NO_WARNINGS_CLASS)
 
-void details::assertnever_aux(const char* s) {
-    assert_aux(true, s);
-    abort();                    // never reached
-}
-
-// I use "const char*" rather than "string" for efficiency of warnings creation
-// Ret: true if this is the first time the warning message is printed.
-bool details::assert_aux(bool b_assertx, const char* s) {
-    if (!s) s = "?";
-#if !defined(HH_NO_WARNINGS_CLASS)
-    if (!b_assertx) {
-        static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
-        if (Warnings* pwarnings = g_pwarnings.get()) {
-            int count = pwarnings->increment_count(s);
-            if (count>1 && warn_just_once) return false;
-        } else {
-            static int count = 0;
-            if (++count>2) return false;
-            showf("Assertion warning beyond lifetime of Warnings\n");
-        }
+void details::assertx_aux2(const char* s) {
+    showf("Fatal assertion error: %s\n", s);
+    if (errno) perror("possible error");
+    report_possible_win32_error();
+#if defined(_MSC_VER) || defined(__MINGW32__)
+    if (1) {
+        show_call_stack();
     }
 #endif
-    showf("%s: %s\n", (b_assertx ? "Fatal assertion error" : "assertion warning"), s);
-    bool want_abort = false;
+#if defined(_WIN32)
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
+    possibly_sleep();
+#endif
     bool assertx_always_aborts = false;
 #if defined(_WIN32)
     if (k_debug) assertx_always_aborts = true;
 #endif
-    if (getenv_bool("ASSERT_ABORT") ||
-        (!b_assertx && getenv_bool("ASSERTW_ABORT")) ||
-        (b_assertx && (getenv_bool("ASSERTX_ABORT") || assertx_always_aborts))) {
-        want_abort = true;
-    }
-    if (b_assertx || want_abort) {
-        if (errno) perror("possible error");
-        report_possible_win32_error();
-#if defined(_MSC_VER) || defined(__MINGW32__)
-        if (1) {
-            show_call_stack();
-        }
-#endif
-#if defined(_WIN32)
-        if (IsDebuggerPresent()) {
-            DebugBreak();
-        }
-        possibly_sleep();
-#endif
-        if (want_abort) {
+    bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT") || assertx_always_aborts;
+    if (want_abort) {
 #if !defined(_WIN32)
-            abort();
+        abort();
 #else
-            // DebugBreak(); // commented 20120326
+        // DebugBreak(); // commented 20120326
 #endif
-        }
-        _exit(1);
+    }
+    _exit(1);
+}
+
+// I use "const char*" rather than "string" for efficiency of warnings creation.
+// Ret: true if this is the first time the warning message is printed.
+bool details::assertw_aux2(const char* s) {
+#if !defined(HH_NO_WARNINGS_CLASS)
+    static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
+    if (Warnings* pwarnings = g_pwarnings.get()) {
+        int count = pwarnings->increment_count(s);
+        if (count>1 && warn_just_once) return false;
+    } else {
+        static int count = 0;
+        if (++count>2) return false;
+        showf("Assertion warning beyond lifetime of Warnings\n");
+    }
+#endif
+    showf("assertion warning: %s\n", s);
+    static const bool assertw_abort = getenv_bool("ASSERTW_ABORT") || getenv_bool("ASSERT_ABORT");
+    if (assertw_abort) {
+        my_setenv("ASSERT_ABORT", "1");
+        assertx_aux2(s);
     }
     return true;
 }

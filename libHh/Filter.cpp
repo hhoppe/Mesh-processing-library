@@ -3,9 +3,7 @@
 
 #include <mutex>                // std::once_flag, std::call_once()
 
-#include "Stat.h"
 #include "MathOp.h"             // gaussian()
-#include "StringOp.h"
 
 namespace hh {
 
@@ -426,7 +424,7 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal,
             mat_weights[x][k] = float(v);
             sum += v;
         }
-        if (0) { HH_SSTAT(Ssum, sum); }
+        // HH_SSTAT(Ssum, sum);
         if (0) SHOW(ar_pixelindex0[x], mat_weights[x]);
         if (0 && k_debug) {
             bool discontinuous = filter().is_discontinuous();

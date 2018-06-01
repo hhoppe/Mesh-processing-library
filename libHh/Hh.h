@@ -317,11 +317,11 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define HH_FL " in line " HH_STR2(__LINE__) " of file " __FILE__
 
 // Always abort.
-#define assertnever(...) hh::details::assertnever_aux(hh::details::add_fl((__VA_ARGS__), HH_FL))
+#define assertnever(...) hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL))
 
 // Always abort; omit warning about any subsequent unreachable code.
 #define assertnever_ret(...) (hh::g_unoptimized_zero ? void() :                 \
-                              hh::details::assertnever_aux(hh::details::add_fl((__VA_ARGS__), HH_FL)))
+                              hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL)))
 
 // if !expr, exit program (abort); otherwise return expr.
 #define assertx(...) hh::details::assertx_aux((__VA_ARGS__), "assertx(" #__VA_ARGS__ ")" HH_FL)
@@ -333,7 +333,7 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define assertw(...) hh::details::assertw_aux((__VA_ARGS__), "assertw(" #__VA_ARGS__ ")" HH_FL)
 
 // Reports string expr as warning once.  Return true if this is the first time the warning is reported.
-#define Warning(...) hh::details::assert_aux(false, __VA_ARGS__ HH_FL)
+#define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
 #if defined(HH_DEBUG)
 #define ASSERTX(...) assertx(__VA_ARGS__)  // In release, do not evaluate expression
@@ -348,12 +348,12 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #endif  // defined(HH_DEBUG)
 
 namespace details {
-HH_NORETURN void assertnever_aux(const char* s);
-inline HH_NORETURN void assertnever_aux(const std::string& s) { assertnever_aux(s.c_str()); }
-bool assert_aux(bool b_assertx, const char* s);
+HH_NORETURN void assertx_aux2(const char* s);
+inline HH_NORETURN void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
+bool assertw_aux2(const char* s);
 inline string add_fl(string s, const char* file_line) { return s + file_line; }
 template<typename T> constexpr T assertx_aux(T&& val, const char* s) {
-    return ((!val ? assertnever_aux(s) : void(0)), std::forward<T>(val));
+    return ((!val ? assertx_aux2(s) : void(0)), std::forward<T>(val));
 }
 } // namespace details
 
@@ -738,7 +738,7 @@ template<typename T> T assertt_aux(T&& val, const char* s) {
 }
 
 template<typename T> T assertw_aux(T&& val, const char* s) {
-    return ((!val ? void(hh::details::assert_aux(false, s)) : void(0)), std::forward<T>(val));
+    return ((!val ? void(hh::details::assertw_aux2(s)) : void(0)), std::forward<T>(val));
 }
 
 #define HH_SHOW_0(sargs, prec, arg1) hh::details::SHOW_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)

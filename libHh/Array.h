@@ -43,7 +43,7 @@ bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
 template<typename T> class CArrayView {
     using type = CArrayView<T>;
  public:
-    CArrayView(const T* a, int n)               : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n>=0); }
+    explicit CArrayView(const T* a, int n)      : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n>=0); }
     CArrayView(const type& a)                   = default;
     CArrayView(std::initializer_list<T> l)      : CArrayView(l.begin(), narrow_cast<int>(l.size())) { }
     template<size_t n> CArrayView(const T(&a)[n]) : CArrayView(a, narrow_cast<int>(n)) { } // for: const T a[n];
@@ -88,7 +88,7 @@ template<typename T> class ArrayView : public CArrayView<T> {
     using base = CArrayView<T>;
     using type = ArrayView<T>;
  public:
-    ArrayView(T* a, int n)                      : base(a, n) { }
+    explicit ArrayView(T* a, int n)             : base(a, n) { }
     template<size_t n> ArrayView(T(&a)[n])      : base(a, n) { } // for: T a[n];
     ArrayView(const type&)                      = default;       // because it has explicit copy assignment
     // template<int n> ArrayView(Vec<T,n>&); // implemented as conversion operator in Vec
@@ -166,7 +166,7 @@ template<typename T> class Array : public ArrayView<T> {
     explicit Array(CArrayView<T> ar)            : Array(ar.num()) { base::assign(ar); }
     Array(std::initializer_list<T> l)           : Array(CArrayView<T>(l)) { }
     Array(type&& ar) noexcept                   : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr; }
-    template<typename I> Array(I b, I e)        : Array() { for (; b!=e; ++b) push(*b); }
+    template<typename I> explicit Array(I b, I e) : Array() { for (; b!=e; ++b) push(*b); }
     template<typename R, typename = enable_if_range_t<R> > explicit Array(R&& range);
     ~Array()                                    { delete[] _a; if (0) _a = nullptr; }
     type& operator=(CArrayView<T> ar)           { init(ar.num()); base::assign(ar); return *this; }

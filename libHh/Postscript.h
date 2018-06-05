@@ -9,7 +9,7 @@ namespace hh {
 // Output Postscript graphics with lines and points.
 class Postscript : noncopyable {
  public:
-    Postscript(std::ostream& os, int nxpix, int nypix) : _os(os), _nxpix(nxpix), _nypix(nypix) { init(); }
+    explicit Postscript(std::ostream& os, int nxpix, int nypix) : _os(os), _nxpix(nxpix), _nypix(nypix) { init(); }
     ~Postscript()                               { clear(); }
     // All parameters x, y are in range [0, 1] in postscript coordinate system: (x=0, y=0) at left bottom.
     // Note that this is different from hps.c which had y reversed.

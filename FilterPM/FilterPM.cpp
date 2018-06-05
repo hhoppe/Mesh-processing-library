@@ -1385,7 +1385,7 @@ void do_polystream() {
             int w = pmi->_faces[f].wedges[j];
             int v = pmi->_wedges[w].vertex;
             el.push(A3dVertex(pmi->_vertices[v].attrib.point,
-                              pmi->_wedges[w].attrib.normal, pmi->_wedges[w].attrib.rgb));
+                              pmi->_wedges[w].attrib.normal, A3dVertexColor(pmi->_wedges[w].attrib.rgb)));
         }
         ws.write(el);
     }
@@ -1416,7 +1416,7 @@ void do_polystream() {
                         int w = pmi->_faces[f].wedges[j];
                         int v = pmi->_wedges[w].vertex;
                         el.push(A3dVertex(pmi->_vertices[v].attrib.point,
-                                          pmi->_wedges[w].attrib.normal, pmi->_wedges[w].attrib.rgb));
+                                          pmi->_wedges[w].attrib.normal, A3dVertexColor(pmi->_wedges[w].attrib.rgb)));
                     }
                     ws.write(el);
                 }

@@ -61,7 +61,7 @@ template<int D, typename VertexData = Vec0<int>> class ContourBase {
     using IPoint = Vec<int,D>;   // grid point
     static_assert(D==2 || D==3, "");
     static constexpr int k_max_gn = D==3 ? 1024 : 65536; // bits/coordinate==10 for 3D, 16 for 2D (max 32 bits total)
-    ContourBase(int gn) : _gn(gn), _gni(1.f/gn) {
+    explicit ContourBase(int gn) : _gn(gn), _gni(1.f/gn) {
         assertx(_gn>0);
         assertx(_gn<k_max_gn);  // must leave room for [0.._gn] inclusive
         set_vertex_tolerance(_vertex_tol);
@@ -189,7 +189,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     Derived& derived() { return *down_cast<Derived*>(this); }
     const Derived& derived() const { return *down_cast<const Derived*>(this); }
  public:
-    Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) { }
+    explicit Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) { }
     ~Contour3DBase()                            { }
     // ret number of new cubes visited: 0=revisit_cube, 1=no_surf, >1=new
     int march_from(const DPoint& startp)        { return march_from_i(startp); }
@@ -325,7 +325,7 @@ template<typename Eval = float(const Vec3<float>&),
 class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval, Border>, Eval, Border> {
     using base = Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval, Border>, Eval, Border>;
  public:
-    Contour3DMesh(int gn, GMesh* pmesh, Eval eval = Eval(), Border border = Border())
+    explicit Contour3DMesh(int gn, GMesh* pmesh, Eval eval = Eval(), Border border = Border())
         : base(gn, eval, border), _pmesh(pmesh) {
         assertx(_pmesh);
     }
@@ -433,7 +433,7 @@ template<typename Eval = float(const Vec3<float>&),
 class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border> {
     using base = Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border>;
  public:
-    Contour3D(int gn, Contour contour = Contour(), Eval eval = Eval(), Border border = Border())
+    explicit Contour3D(int gn, Contour contour = Contour(), Eval eval = Eval(), Border border = Border())
         : base(gn, eval, border), _contour(contour) {
     }
  private:
@@ -506,7 +506,7 @@ class Contour2D : public ContourBase<2> {
     static constexpr int D = 2;
     using base = ContourBase<D>;
  public:
-    Contour2D(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
+    explicit Contour2D(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
         : base(gn), _eval(eval), _contour(contour), _border(border) { }
     ~Contour2D()                                { }
     // ret number of new cubes visited: 0=revisit_cube, 1=no_surf, >1=new

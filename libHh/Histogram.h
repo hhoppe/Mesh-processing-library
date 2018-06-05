@@ -12,7 +12,7 @@ namespace hh {
 // Accumulate a set of values, and upon destruction, write a histogram of these value into a text file.
 class Histogram : noncopyable {
  public:
-    Histogram(string filename, int nbuckets)    : _filename(std::move(filename)), _nbuckets(nbuckets) { }
+    explicit Histogram(string filename, int nbuckets) : _filename(std::move(filename)), _nbuckets(nbuckets) { }
     void clear()                                { _ar_val.clear(); }
     void add(float val)                         { _ar_val.push(val); }
     ~Histogram() {

@@ -11,8 +11,8 @@ namespace details {
 namespace PQ {
 template<typename T> struct Node {
     Node()                                  = default;
-    Node(const T& e, float pri)             : _e(e), _pri(pri) { }
-    Node(T&& e, float pri)                  : _e(std::move(e)), _pri(pri) { }
+    explicit Node(const T& e, float pri)    : _e(e), _pri(pri) { }
+    explicit Node(T&& e, float pri)         : _e(std::move(e)), _pri(pri) { }
     Node& operator=(Node&& n) noexcept      { _e = std::move(n._e); _pri = n._pri; return *this; }
     T _e;
     float _pri;

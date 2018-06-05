@@ -11,7 +11,7 @@ using KernelFunc = double (*)(double);
 
 class Filter : noncopyable {
  public:
-    Filter(string pname, KernelFunc pfunc, double pradius)
+    explicit Filter(string pname, KernelFunc pfunc, double pradius)
         : _name(std::move(pname)), _func(pfunc), _radius(pradius) { }
     virtual ~Filter()                           { }
     string name() const                         { return _name; }
@@ -68,7 +68,7 @@ struct LUfactorization;
 
 class FilterBnd {
  public:
-    FilterBnd(const Filter& pfilter, Bndrule pbndrule) : _filter(&pfilter) { set_bndrule(pbndrule); }
+    explicit FilterBnd(const Filter& pfilter, Bndrule pbndrule) : _filter(&pfilter) { set_bndrule(pbndrule); }
     const Filter& filter() const                { return *_filter; }
     Bndrule bndrule() const                     { return _bndrule; }
     void set_filter(const Filter& pfilter)      { _filter = &pfilter; }
@@ -91,7 +91,7 @@ class FilterBnd {
 // LU factorization of inverse convolution matrix for a generalized sampling filter.
 struct LUfactorization {
     using AF = Array<float>;
-    LUfactorization(AF a1, AF a2, AF a3, AF a4, AF a5, AF a6, AF a7, float f)
+    explicit LUfactorization(AF a1, AF a2, AF a3, AF a4, AF a5, AF a6, AF a7, float f)
         : Llower(std::move(a1)), Llastrow(std::move(a2)), LlastrowPen(std::move(a3)), Uidiag(std::move(a4)),
           UidiagLast(std::move(a5)), Ulastcol(std::move(a6)), UlastcolPen(std::move(a7)), Uupper(f) { validate(); }
     Array<float> Llower;      // lower off-diagonal of L (except last row)

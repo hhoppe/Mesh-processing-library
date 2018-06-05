@@ -74,7 +74,7 @@ public:
     explicit VideoNv12(const Vec3<int>& dims)   { init(dims); }
     VideoNv12(VideoNv12&& vnv12)                { swap(*this, vnv12); } // =default?
     VideoNv12& operator=(VideoNv12&& v) noexcept { clear(); swap(*this, v); return *this; } // =default?
-    VideoNv12(Grid<3,uchar>&& grid_Y, Grid<3, Vec2<uchar>>&& grid_UV)
+    explicit VideoNv12(Grid<3,uchar>&& grid_Y, Grid<3, Vec2<uchar>>&& grid_UV)
         : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) { ok(); }
     void init(const Vec3<int>& dims) {
         _grid_Y.init(dims); _grid_UV.init(dims/V(1, 2, 2)); ok();
@@ -100,7 +100,7 @@ public:
 // View of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12View {
  public:
-    VideoNv12View(GridView<3,uchar> grid_Y, GridView<3, Vec2<uchar>> grid_UV)
+    explicit VideoNv12View(GridView<3,uchar> grid_Y, GridView<3, Vec2<uchar>> grid_UV)
         : _grid_Y(grid_Y), _grid_UV(grid_UV) { assertx(_grid_Y.dims()==_grid_UV.dims()*V(1, 2, 2)); }
     VideoNv12View(VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) { }
     int nframes() const                         { return _grid_Y.dim(0); }
@@ -118,7 +118,7 @@ class VideoNv12View {
 // Constant view of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class CVideoNv12View {
  public:
-    CVideoNv12View(CGridView<3,uchar> grid_Y, CGridView<3, Vec2<uchar>> grid_UV)
+    explicit CVideoNv12View(CGridView<3,uchar> grid_Y, CGridView<3, Vec2<uchar>> grid_UV)
         : _grid_Y(grid_Y), _grid_UV(grid_UV) { assertx(_grid_Y.dims()==_grid_UV.dims()*V(1, 2, 2)); }
     CVideoNv12View(const VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) { }
     int nframes() const                         { return _grid_Y.dim(0); }

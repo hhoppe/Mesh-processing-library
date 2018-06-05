@@ -39,7 +39,7 @@ class VertexCache : noncopyable {
 
 class FifoVertexCache : public VertexCache {
  public:
-    FifoVertexCache(int nverts1, int cs) {
+    explicit FifoVertexCache(int nverts1, int cs) {
         init(nverts1, cs);
     }
     EType type() const override {
@@ -175,7 +175,7 @@ class FifoVertexCache : public VertexCache {
 
 class LruVertexCache : public VertexCache {
  public:
-    LruVertexCache(int nverts1, int cs) {
+    explicit LruVertexCache(int nverts1, int cs) {
         init(nverts1, cs);
     }
     ~LruVertexCache() {

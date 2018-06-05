@@ -19,7 +19,7 @@ template<typename T> class StridedArrayView;
 template<typename T> class CStridedArrayView {
     using type = CStridedArrayView<T>;
  public:
-    CStridedArrayView(const T* a, int n, size_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) { }
+    explicit CStridedArrayView(const T* a, int n, size_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) { }
     CStridedArrayView(const type& a)            = default;
     int num() const                             { return _n; }
     size_t size() const                         { return _n; }
@@ -67,7 +67,7 @@ template<typename T> class StridedArrayView : public CStridedArrayView<T> {
     using base = CStridedArrayView<T>;
     using type = StridedArrayView<T>;
  public:
-    StridedArrayView(T* a, int n, size_t stride) : base(a, n, stride) { }
+    explicit StridedArrayView(T* a, int n, size_t stride) : base(a, n, stride) { }
     StridedArrayView(const type& a)             = default;
     T& operator[](int i)                        { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }
     const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }

@@ -71,7 +71,7 @@ class BPointSpatial : public Spatial {
 // Spatial data structure for point elements indexed by an integer.
 class IPointSpatial : public Spatial {
  public:
-    IPointSpatial(int gn, CArrayView<Point> arp);
+    explicit IPointSpatial(int gn, CArrayView<Point> arp);
     ~IPointSpatial()                            { clear(); }
     void clear() override;
  private:
@@ -85,7 +85,7 @@ class IPointSpatial : public Spatial {
 template<typename Approx2 = float(const Point& p, Univ id), typename Exact2 = float(const Point& p, Univ id)>
 class ObjectSpatial : public Spatial {
  public:
-    ObjectSpatial(int gn)                       : Spatial(gn) { }
+    explicit ObjectSpatial(int gn)              : Spatial(gn) { }
     ~ObjectSpatial()                            { clear(); }
     void clear() override               { for (auto& cell : _map.values()) { HH_SSTAT(Sospcelln, cell.num()); } }
     // id!=0
@@ -108,7 +108,7 @@ class ObjectSpatial : public Spatial {
 class BSpatialSearch : noncopyable {
  public:
     // pmaxdis is only a request, you may get objects that lie farther
-    BSpatialSearch(const Spatial* sp, const Point& p, float maxdis = 10.f);
+    explicit BSpatialSearch(const Spatial* sp, const Point& p, float maxdis = 10.f);
     ~BSpatialSearch();
     bool done();
     Univ next(float* dis2 = nullptr); // ret id

@@ -21,7 +21,7 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
  public:
     // (renamed x to x_ due to VS2015 bug warning "C4459: declaration of 'x' hides global declaration")
     explicit NonlinearOptimization(ArrayView<double> x_) : NonlinearOptimization(x_, Eval()) { }
-    NonlinearOptimization(ArrayView<double> x_, Eval eval)
+    explicit NonlinearOptimization(ArrayView<double> x_, Eval eval)
         : NonlinearOptimization(nullptr, x_, eval) { _debug = getenv_int("NLOPT_DEBUG"); }
     void set_max_neval(int max_neval)           { _max_neval = max_neval; } // default is -1 which signifies infinity
     bool solve()                                { return solve_i(); }       // ret: success

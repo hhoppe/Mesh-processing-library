@@ -15,8 +15,8 @@ class Quaternion {
     Quaternion()                                { zero(); }
     Quaternion(const Quaternion& q)             = default;
     explicit Quaternion(const Frame& f); // mapping from Frame::identity() to f; Frame origin f.p() is ignored
-    Quaternion(const Vector& axis, float angle);
-    Quaternion(const Vector& vf, const Vector& vt); // resulting quaternion is 2 times rotation from vf to vt!
+    explicit Quaternion(const Vector& axis, float angle);
+    explicit Quaternion(const Vector& vf, const Vector& vt); // resulting quaternion is 2 times rotation from vf to vt!
     Quaternion& operator=(const Quaternion&)    = default;
     void zero()                                 { _c[0] = _c[1] = _c[2] = 0.f; _c[3] = 1.f; }
     // extraction

@@ -132,7 +132,7 @@ bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar);
 
 class StringKeyIter {
  public:
-    StringKeyIter(const char* str)              : _str(str), _s(str) { }
+    explicit StringKeyIter(const char* str)     : _str(str), _s(str) { }
     bool next(const char*& kb, int& kl, const char*& vb, int& vl);
  private:
     const char* _str;
@@ -161,7 +161,7 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
         return false;
     });
 }
-        
+
 
 //----------------------------------------------------------------------------
 

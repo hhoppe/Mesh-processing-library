@@ -44,7 +44,7 @@ class LLS : noncopyable {
 // Sparse conjugate-gradient approach.
 class SparseLLS : public LLS {
  public:
-    SparseLLS(int m, int n, int nd)             : LLS(m, n, nd), _rows(m), _cols(n), _tolerance(square(8e-7f)*m) { }
+    explicit SparseLLS(int m, int n, int nd) : LLS(m, n, nd), _rows(m), _cols(n), _tolerance(square(8e-7f)*m) { }
     void clear() override;
     void enter_a_rc(int r, int c, float val) override;
     void enter_a_r(int r, CArrayView<float> ar) override;
@@ -74,7 +74,7 @@ class SparseLLS : public LLS {
 // Base class for full (non-sparse) approaches.
 class FullLLS : public LLS {
  public:
-    FullLLS(int m, int n, int nd)               : LLS(m, n, nd), _a(m, n) { clear(); }
+    explicit FullLLS(int m, int n, int nd) : LLS(m, n, nd), _a(m, n) { clear(); }
     void clear() override;
     void enter_a_rc(int r, int c, float val) override { _a[r][c] = val; }
     void enter_a_r(int r, CArrayView<float> ar) override { ASSERTX(ar.num()==_n); for_int(c, _n) _a[r][c] = ar[c]; }
@@ -90,7 +90,7 @@ class FullLLS : public LLS {
 // LU decomposition on A^t*A=A^t*b (slow).
 class LudLLS : public FullLLS {
  public:
-    LudLLS(int m, int n, int nd)                : FullLLS(m, n, nd) { }
+    explicit LudLLS(int m, int n, int nd) : FullLLS(m, n, nd) { }
  private:
     bool solve_aux() override;
 };
@@ -98,7 +98,7 @@ class LudLLS : public FullLLS {
 // Givens substitution approach.
 class GivensLLS : public FullLLS {
  public:
-    GivensLLS(int m, int n, int nd)             : FullLLS(m, n, nd) { }
+    explicit GivensLLS(int m, int n, int nd) : FullLLS(m, n, nd) { }
  private:
     bool solve_aux() override;
 };
@@ -106,7 +106,7 @@ class GivensLLS : public FullLLS {
 // Singular value decomposition.
 class SvdLLS : public FullLLS {
  public:
-    SvdLLS(int m, int n, int nd);
+    explicit SvdLLS(int m, int n, int nd);
  private:
     bool solve_aux() override;
     Array<float> _fa, _fb, _s, _work;
@@ -116,7 +116,7 @@ class SvdLLS : public FullLLS {
 // Double-precision version of SVD.
 class SvdDoubleLLS : public FullLLS {
  public:
-    SvdDoubleLLS(int m, int n, int nd);
+    explicit SvdDoubleLLS(int m, int n, int nd);
  private:
     bool solve_aux() override;
     Array<double> _fa, _fb, _s, _work;
@@ -126,7 +126,7 @@ class SvdDoubleLLS : public FullLLS {
 // QR decomposition.
 class QrdLLS : public FullLLS {
  public:
-    QrdLLS(int m, int n, int nd);
+    explicit QrdLLS(int m, int n, int nd);
  private:
     bool solve_aux() override;
     Array<float> _fa, _fb, _work;

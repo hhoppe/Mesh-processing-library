@@ -20,7 +20,7 @@ namespace hh {
 
 struct PolygonFace {
     PolygonFace()                               = default;
-    PolygonFace(Polygon p, Face f)              : poly(std::move(p)), face(f) { }
+    explicit PolygonFace(Polygon p, Face f)     : poly(std::move(p)), face(f) { }
     Polygon poly;
     Face face;
 };
@@ -63,7 +63,7 @@ class PolygonFaceSpatial :
 // walking over the mesh from that prior result.
 class MeshSearch {
  public:
-    MeshSearch(const GMesh* mesh, bool allow_local_project);
+    explicit MeshSearch(const GMesh* mesh, bool allow_local_project);
     void allow_internal_boundaries(bool b)      { _allow_internal_boundaries = b; }
     void allow_off_surface(bool b)              { _allow_off_surface = b; }
     // search() is thread-safe (except for Random::G?)

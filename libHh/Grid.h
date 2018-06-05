@@ -83,7 +83,7 @@ template<int D, typename T> class CGridView {
     using type = CGridView<D,T>;
     static_assert(D>=1, "dimension problem");
  public:
-    CGridView(const T* a, const Vec<int,D>& dims) : _a(const_cast<T*>(a)), _dims(dims) { }
+    explicit CGridView(const T* a, const Vec<int,D>& dims) : _a(const_cast<T*>(a)), _dims(dims) { }
     CGridView(const type&)                      = default;
     explicit CGridView(CArrayView<T> ar)        : CGridView(ar.data(), V(ar.num())) { static_assert(D==1, ""); }
     // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
@@ -144,7 +144,7 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     using type = GridView<D,T>;
     using base = CGridView<D,T>;
  public:
-    GridView(T* a, const Vec<int,D>& dims)      : base(a, dims) { } // stop recursion if ArrayView==GridView
+    explicit GridView(T* a, const Vec<int,D>& dims) : base(a, dims) { } // stop recursion if ArrayView==GridView
     GridView(const type&)                       = default;          // because it has explicit copy assignment
     explicit GridView(ArrayView<T> ar)          : GridView(ar.data(), V(ar.num())) { static_assert(D==1, ""); }
     void reinit(type g)                         { *this = g; }

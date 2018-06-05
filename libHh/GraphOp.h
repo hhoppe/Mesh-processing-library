@@ -28,7 +28,7 @@ template<typename T> void graph_symmetric_closure(Graph<T>& g) {
 // (Vertex vs itself is returned on first invocation of next().)
 template<typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
  public:
-    Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
+    explicit Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
         _pq.enter(vs, 0.f);
     }
     bool done()                                 { return _pq.empty(); }
@@ -215,7 +215,7 @@ inline Graph<int> graph_euclidean_k_closest(CArrayView<Point> pa, int kcl, const
 // next() returns a representative vertex of each component.
 template<typename T> class GraphComponent : noncopyable {
  public:
-    GraphComponent(const Graph<T>* g) : _g(*assertx(g)) {
+    explicit GraphComponent(const Graph<T>* g) : _g(*assertx(g)) {
         auto&& r = _g.vertices(); _vcur = r.begin(); _vend = r.end();
     }
     explicit operator bool() const              { return _vcur!=_vend; }

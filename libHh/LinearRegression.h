@@ -32,7 +32,7 @@ template<int N> struct LinearRegressionPolynomialOrder {
 // The goal is to find c by least-squares minimization.
 template<int N, int D, typename Eval = Vec<float,N>(const Vec<float,D>&)> class LinearRegression {
  public:
-    LinearRegression(int m)                     : _lls(m, N, 1) { }
+    explicit LinearRegression(int m)            : _lls(m, N, 1) { }
     void enter(const Vec<float,D>& p, float val) {
         assertx(_row<_lls.num_rows());
         Vec<float,N> ar = _eval(p);

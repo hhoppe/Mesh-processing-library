@@ -63,7 +63,7 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
     }
     // Backtracking line search to find approximate minimum of f=_eval() along direction p,
     //  with initial step size alpha.  Updates number of evaluations neval.  Ret: success.
-    bool line_search(double& f, CArrayView<double> p, double& alpha, int &neval, int iter) {
+    bool line_search(double& f, CArrayView<double> p, double& alpha, int& neval, int iter) {
         // https://en.wikipedia.org/wiki/Backtracking_line_search
         const double finit = f; // initial f
         _xinit.assign(_x);      // initial _x

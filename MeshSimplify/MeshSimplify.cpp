@@ -3271,7 +3271,7 @@ bool try_ecol_legal(Edge e, Vertex v1, Vertex v2, int v1nse, int v2nse) {
     return true;
 }
 
-bool intersect_lines(Point p1, Point p2, Point p3, Point p4, float &ia, float &ib) {
+bool intersect_lines(Point p1, Point p2, Point p3, Point p4, float& ia, float& ib) {
     p1[2] = p2[2] = p3[2] = p4[2] = 1.f;
     Point pi = to_Point(cross(cross(to_Vector(p1), to_Vector(p2)),
                               cross(to_Vector(p3), to_Vector(p4))));

@@ -2948,7 +2948,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
 struct VXY {
     float v, w;
 };
-bool operator<(const VXY &a, const VXY &b) { return a.v<b.v; }
+bool operator<(const VXY& a, const VXY& b) { return a.v<b.v; }
 
 // Same but use rank rather than z-score.
 void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0,

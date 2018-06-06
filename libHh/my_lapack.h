@@ -41,7 +41,7 @@ using lapack_int = lapack::integer;
 // void LAPACK_sgelss( lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a,
 //                     lapack_int* lda, float* b, lapack_int* ldb, float* s,
 //                     float* rcond, lapack_int* rank, float* work,
-//                     lapack_int* lwork, lapack_int *info );
+//                     lapack_int* lwork, lapack_int* info );
 
 //  c:/cygwin/usr/src/lapack-3.5.0.tgz!lapack-3.5.0/lapacke/example/example_DGELS_colmajor.c
 // #include <lapacke.h>
@@ -88,7 +88,7 @@ extern "C" {
 // http://www.netlib.org/lapack/explore-html/dc/db6/sgelsy_8f.html
     lapack_int sgelsy_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda,
                        float* b, lapack_int* ldb, lapack_int* jpvt, float* rcond, lapack_int* irank,
-                       float* work, lapack_int* lwork, lapack_int *info);
+                       float* work, lapack_int* lwork, lapack_int* info);
     
 // http://www.netlib.org/lapack/explore-html/d4/dca/group__real_g_esing.html
 // subroutine SGESVD (JOBU, JOBVT, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, INFO)
@@ -180,7 +180,7 @@ lapack_int LAPACKE_sgelss( int matrix_order, lapack_int m, lapack_int n,
 void LAPACK_sgelss( lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a,
                     lapack_int* lda, float* b, lapack_int* ldb, float* s,
                     float* rcond, lapack_int* rank, float* work,
-                    lapack_int* lwork, lapack_int *info );
+                    lapack_int* lwork, lapack_int* info );
 
 #endif
 

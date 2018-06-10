@@ -143,7 +143,7 @@ class Vector4i {
     friend Vector4i abs(const Vector4i& l) {
         return Vector4i(abs(l[0]), abs(l[1]), abs(l[2]), abs(l[3]));
     }
-private:
+ private:
     Vector4i(int32x4_t v)                                 : _r(v) { }
     Vector4i& operator=(const int32x4_t& r)               { _r = r; return *this; }
     union {

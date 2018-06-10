@@ -23,7 +23,7 @@ namespace hh {
 class Video : public Grid<3,Pixel> {
     using base = Grid<3,Pixel>;
     friend void swap(Video& l, Video& r) noexcept;
-public:
+ public:
     struct Attrib;
     explicit Video(const Vec3<int>& dims = V(0, 0, 0)) { init(dims); } // nframes, ysize, xsize
     explicit Video(int pnframes, const Vec2<int>& sdims) : Video(V(pnframes, sdims[0], sdims[1])) { }
@@ -69,7 +69,7 @@ string video_suffix_for_magic_byte(uchar c);
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12 : noncopyable {
     friend void swap(VideoNv12& l, VideoNv12& r) noexcept;
-public:
+ public:
     VideoNv12()                                 = default;
     explicit VideoNv12(const Vec3<int>& dims)   { init(dims); }
     VideoNv12(VideoNv12&& vnv12)                { swap(*this, vnv12); } // =default?

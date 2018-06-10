@@ -530,7 +530,7 @@ class Mesh : noncopyable {
         MVertex(int id)                         : _id(id) { }
         HH_MAKE_POOLED_SAC(Mesh::MVertex); // must be last entry of class!
         friend std::ostream& operator<<(std::ostream& os, Vertex v);
-};
+    };
     struct MFace {
         HEdge _herep;
         int _id;

@@ -57,7 +57,7 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     ArrayView<T> tail(int s)                    { return segment(n-s, s); }
     CArrayView<T> tail(int s) const             { return segment(n-s, s); }
     template<int i, int s> Vec<T,s>& segment() { // V(1, 2, 3, 4).segment<2,1>==V(2, 3)
-         static_assert(i>=0 && s>=0 && i+s<=n, ""); return *reinterpret_cast<Vec<T,s>*>(a()+i);
+        static_assert(i>=0 && s>=0 && i+s<=n, ""); return *reinterpret_cast<Vec<T,s>*>(a()+i);
     }
     template<int i, int s> const Vec<T,s>& segment() const {
         static_assert(i>=0 && s>=0 && i+s<=n, ""); return *reinterpret_cast<const Vec<T,s>*>(a()+i);

@@ -58,7 +58,7 @@ class Image : public Matrix<Pixel> {
     // filename may be "-" for std::cin;  may throw std::runtime_error
     void read_file(const string& filename)      { read_file_i(filename, false); }
     void read_file_bgra(const string& filename) { read_file_i(filename, true); }
-   // filename may be "-" for std::cout; may throw std::runtime_error; suffix() is mutable
+    // filename may be "-" for std::cout; may throw std::runtime_error; suffix() is mutable
     void write_file(const string& filename) const       { write_file_i(filename, false); }
     void write_file_bgra(const string& filename) const  { write_file_i(filename, true); }
 // Misc

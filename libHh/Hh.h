@@ -178,7 +178,7 @@ using namespace hh;
 
 // *** Add some easy C++14 features if not already present.
 
-#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_transformation_trait_aliases)
+#if defined(__GNUC__) && ((__GNUC__*100+__GNUC_MINOR__)<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_transformation_trait_aliases)
 namespace std {
 // C++14 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf
 template<typename T> using remove_const_t = typename remove_const<T>::type;

@@ -1015,10 +1015,10 @@ void ImageIO::read_png(Image& image, FILE* file) {
         int color_type = png_get_color_type(png_ptr, info_ptr);
         assertt(width>0 && height>0);
         assertt(ncomp>=1 && ncomp<=4);
-        if (bit_depth!=8 && bit_depth!=16) SHOW(bit_depth);
+        if (bit_depth!=1 && bit_depth!=8 && bit_depth!=16) SHOW(bit_depth);
         if (bit_depth>8) {
             assertt(bit_depth==16);
-            showf("Reading 16-bit png image\n");
+            Warning("Reading 16-bit png image\n");
         }
         if (color_type==PNG_COLOR_TYPE_PALETTE) {
             png_set_palette_to_rgb(png_ptr);

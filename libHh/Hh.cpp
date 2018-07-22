@@ -197,6 +197,18 @@ void report_possible_win32_error() {
 }
 
 #if defined(_WIN32)
+void possibly_sleep() {
+    if (getenv_bool("ASSERT_SLEEP")) {
+        std::cerr << "Now doing my_sleep(60.)\n";
+        my_sleep(60.);
+        // Give myself time to enter in a different window:
+        //  vsjitdebugger -p `ps | grep FilterPM | perl -ane 'print "$F[0]\n"; last;'`
+        // or open Visual Studio and then Debug -> Attach to Process.
+    }
+}
+#endif
+
+#if defined(_WIN32)
 
 // For SetUnhandledExceptionFilter(my_top_level_exception_filter);
 // Note: This custom filter for unhandled exceptions is not called when running under debugger.
@@ -350,14 +362,14 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 #endif  // defined(_WIN32)
 
 
-HH_NORETURN void my_terminate () {
+HH_NORETURN void my_terminate_handler () {
     // The function shall not return and shall terminate the program.
-    if (0) { fprintf(stderr, "my_terminate\n"); fflush(stderr); } // here, trust stderr more than std::cerr
+    if (0) { fprintf(stderr, "my_terminate_handler\n"); fflush(stderr); } // here, trust stderr more than std::cerr
 #if defined(__GNUC__) || defined(__clang__)
     // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
     // http://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
     // This works on mingw, mingw32, clang
-    // On cygwin, my_terminate() is never called (bug).  http://stackoverflow.com/questions/24402412
+    // On cygwin, my_terminate_handler() is never called (bug).  http://stackoverflow.com/questions/24402412
     // On win, SetUnhandledExceptionFilter(my_top_level_exception_filter) is called instead.
     try { throw; }
     catch (const std::exception& ex) {
@@ -367,16 +379,39 @@ HH_NORETURN void my_terminate () {
 #endif
     if (errno) perror("possible error");
     report_possible_win32_error();
-    assertnever("my_terminate");
+    assertnever("my_terminate_handler");
+}
+
+HH_NORETURN void my_abort_handler(int signal_num) {
+    dummy_use(signal_num);
+#if defined(_MSC_VER) || defined(__MINGW32__)
+    if (1) {
+        show_call_stack();
+    }
+#endif
+#if defined(_WIN32)
+    if (IsDebuggerPresent()) {
+        DebugBreak();
+    }
+    possibly_sleep();
+#else
+    bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");
+    if (want_abort) {
+        showf("Signaling true abort\n");
+        signal(SIGABRT, SIG_IGN);
+        abort();
+#endif
+    }
+    _exit(1);
 }
 
 // #include <execinfo.h> // backtrace()
-HH_NORETURN void my_signal_handler(int signal) {
+HH_NORETURN void my_signal_handler(int signal_num) {
     // Avoid issuing low-level or STDIO.H I/O routines (such as printf and fread).
     // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
     // Avoid any function that generates a system call (e.g., getcwd(), time()).
     // _exit(213); // does not show up at all.
-    SHOW(signal);
+    SHOW(signal_num);
     if (0) {
         // http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
         // unfortunately, cygwin does not have backtrace/execinfo:  http://comments.gmane.org/gmane.os.cygwin/91196
@@ -387,18 +422,6 @@ HH_NORETURN void my_signal_handler(int signal) {
     }
     assertnever("my_signal_handler");
 }
-
-#if defined(_WIN32)
-void possibly_sleep() {
-    if (getenv_bool("ASSERT_SLEEP")) {
-        std::cerr << "Now doing my_sleep(60.)\n";
-        my_sleep(60.);
-        // Give myself time to enter in a different window:
-        //  vsjitdebugger -p `ps | grep FilterPM | perl -ane 'print "$F[0]\n"; last;'`
-        // or open Visual Studio and then Debug -> Attach to Process.
-    }
-}
-#endif
 
 #if defined(_MSC_VER)
 int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
@@ -411,7 +434,7 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
         show_call_stack();
     }
     std::cerr << "Now after show_call_stack()\n";
-    if (0) SHOW(nReportType);   // may fail due to heap use
+    if (0) std::cerr << "nReportType=" << nReportType << "\n";
     dummy_use(pnRet);
     possibly_sleep();
     if (0) assertnever("my_CrtDbgHook with !IsDebuggerPresent()");
@@ -425,7 +448,7 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
 } // namespace
 
 static void hh_init_aux() {
-    dummy_use(show_call_stack, new_failed, my_terminate, my_signal_handler);
+    dummy_use(show_call_stack, new_failed, my_terminate_handler, my_signal_handler);
 #if defined(_WIN32)
     dummy_use(my_top_level_exception_filter);
 #endif
@@ -462,8 +485,11 @@ static void hh_init_aux() {
         }
 #endif
         if (1) {
-            std::set_terminate(my_terminate);
+            std::set_terminate(my_terminate_handler);
             // std::set_unexpected(my_unexpected); // deprecated in C++11
+        }
+        if (1) {
+            signal(SIGABRT, my_abort_handler);
         }
         if (0) {
             // using SignalHandlerPointer = void (*)(int);
@@ -862,30 +888,7 @@ void details::assertx_aux2(const char* s) {
     showf("Fatal assertion error: %s\n", s);
     if (errno) perror("possible error");
     report_possible_win32_error();
-#if defined(_MSC_VER) || defined(__MINGW32__)
-    if (1) {
-        show_call_stack();
-    }
-#endif
-#if defined(_WIN32)
-    if (IsDebuggerPresent()) {
-        DebugBreak();
-    }
-    possibly_sleep();
-#endif
-    bool assertx_always_aborts = false;
-#if defined(_WIN32)
-    if (k_debug) assertx_always_aborts = true;
-#endif
-    bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT") || assertx_always_aborts;
-    if (want_abort) {
-#if !defined(_WIN32)
-        abort();
-#else
-        // DebugBreak(); // commented 20120326
-#endif
-    }
-    _exit(1);
+    abort();
 }
 
 // I use "const char*" rather than "string" for efficiency of warnings creation.

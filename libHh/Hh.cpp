@@ -400,8 +400,8 @@ HH_NORETURN void my_abort_handler(int signal_num) {
         showf("Signaling true abort\n");
         signal(SIGABRT, SIG_IGN);
         abort();
-#endif
     }
+#endif
     _exit(1);
 }
 

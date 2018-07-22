@@ -1227,9 +1227,13 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
     if (_hwdebug) SHOW(gl_extensions_string());
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     if (1) {
+        // const int height =_bigfont ? -20 : -15;
+        const int height = -MulDiv((_bigfont ? 15 : 11), GetDeviceCaps(_hDC, LOGPIXELSY), 72);
+        SHOW(GetDeviceCaps(_hDC, LOGPIXELSY), height);
+        // GetDeviceCaps(_hDC, LOGPIXELSY)=96, height=-15
         LOGFONTW lf;
         std::memset(&lf, 0, sizeof(lf));
-        lf.lfHeight        = _bigfont ? -20 : -15;
+        lf.lfHeight        = height;
         lf.lfWidth         = 0; // default aspect ratio
         lf.lfEscapement    = 0;
         lf.lfOrientation   = 0;

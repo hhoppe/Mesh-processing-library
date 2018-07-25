@@ -189,7 +189,7 @@ void HW::open() {
         Image image(_win_dims);
         if (!_pbuffer) {
             assertx(!_is_glx_dbuf);
-            uchar* p = static_cast<uchar*>(_bitmap_data);
+            uint8_t* p = static_cast<uint8_t*>(_bitmap_data);
             for_int(y, image.ysize()) {
                 for_int(x, image.xsize()) {
                     for_int(z, 3) { image[y][x][2-z] = *p++; } // BGR to RGB
@@ -1315,7 +1315,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
     int size = sizeof(bmp_BITMAPINFOHEADER)+rowsize*image.ysize();
     HANDLE hGlobal = assertx(GlobalAlloc(GHND | GMEM_SHARE, size));
     {
-        uchar* buf = static_cast<uchar*>(assertx(GlobalLock(hGlobal))); {
+        uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal))); {
             bmp_BITMAPINFOHEADER bmih; static_assert(sizeof(bmih)==40, "");
             std::memset(&bmih, 0, sizeof(bmih));
             bmih.biSize = sizeof(bmih);
@@ -1326,7 +1326,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
             bmih.biCompression = 0;
             bmih.biSizeImage = rowsize*image.ysize();
             *reinterpret_cast<bmp_BITMAPINFOHEADER*>(buf) = bmih;
-            uchar* p = buf+sizeof(bmih);
+            uint8_t* p = buf+sizeof(bmih);
             for_int(y, image.ysize()) {
                 int yy = image.ysize()-1-y; // because bmp has image origin at lower-left
                 for_int(x, image.xsize()) {
@@ -1334,7 +1334,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
                     *p++ = pix[2]; *p++ = pix[1]; *p++ = pix[0]; // RGBA to BGRA
                     if (ncomp==4) *p++ = pix[3];
                 }
-                while (reinterpret_cast<uintptr_t>(p)&3) *p++ = uchar{0};
+                while (reinterpret_cast<uintptr_t>(p)&3) *p++ = uint8_t{0};
             }
             assertx(int(p-buf)==size);
         } assertx(!GlobalUnlock(hGlobal));
@@ -1359,14 +1359,14 @@ bool HW::copy_clipboard_to_image(Image& image) {
         size_t size = assertx(GlobalSize(hGlobal));
         assertx(size>=sizeof(bmp_BITMAPINFOHEADER));
         {
-            uchar* buf = static_cast<uchar*>(assertx(GlobalLock(hGlobal))); {
+            uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal))); {
                 bmp_BITMAPINFOHEADER& bmih = *reinterpret_cast<bmp_BITMAPINFOHEADER*>(buf);
                 assertx(bmih.biSize==40);
                 image.init(V(bmih.biHeight, bmih.biWidth));
                 assertx(bmih.biBitCount==8 || bmih.biBitCount==24 || bmih.biBitCount==32);
                 const int ncomp = bmih.biBitCount/8;
                 image.set_zsize(ncomp);
-                uchar* p = buf+bmih.biSize;
+                uint8_t* p = buf+bmih.biSize;
                 for_int(y, image.ysize()) {
                     int yy = image.ysize()-1-y; // flip vertically
                     for_int(x, image.xsize()) {

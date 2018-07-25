@@ -32,14 +32,14 @@ int main() {
         const int num = 100;
         const int niter = 1*1000*1000;
         auto func_hash = [=](int i) { return narrow_cast<int>((int64_t{i}*97)%num); };
-        auto func_oper = [](uchar v) { return uchar((v*97+31)%256); };
-        Array<uchar> ar1(num, uchar{1}); {
+        auto func_oper = [](uint8_t v) { return uint8_t((v*97+31)%256); };
+        Array<uint8_t> ar1(num, uint8_t{1}); {
             // HH_TIMER(_ar1);
             parallel_for_each(range(niter), [&](const int iter) {
                 atomic_operate(&ar1[func_hash(iter)], func_oper);
             });
         }
-        Array<uchar> ar2(num, uchar{1}); {
+        Array<uint8_t> ar2(num, uint8_t{1}); {
             // HH_TIMER(_ar2);
             for_int(iter, niter) {
                 int i = func_hash(iter);

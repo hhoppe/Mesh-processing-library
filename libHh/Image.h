@@ -13,7 +13,7 @@
 #if 0
 {
     Image image(V(ysize, xsize)), image2(image.dims(), Pixel(65, 66, 67, 200)); image2.set_zsize(4);
-    Pixel& pix = image[y][x]; uchar c = image(y, x)[z];
+    Pixel& pix = image[y][x]; uint8_t c = image(y, x)[z];
     // ysize()==#rows, xsize()==#columns, zsize()==#channels
     // Valid values for zsize(): 1: grayscale image: Red==Green==Blue  (Alpha is undefined)
     //                           3: RGB image  (default)  (Alpha is undefined)
@@ -119,7 +119,7 @@ template<typename T> Image as_image(CMatrixView<T> matrix) {
     Image image1(matrix.dims());
     parallel_for_each(range(image1.ysize()), [&](const int y) {
         for_int(x, image1.xsize()) {
-            image1[y][x] = Pixel::gray(narrow_cast<uchar>(clamp(matrix[y][x], T{0}, T{1})*255.f+.5f));
+            image1[y][x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y][x], T{0}, T{1})*255.f+.5f));
         }
     });
     return image1;
@@ -162,44 +162,44 @@ class Nv12 {
     void init(const Vec2<int>& dims) {
         _mat_Y.init(dims); _mat_UV.init(dims/2); assertx(_mat_Y.dims()==_mat_UV.dims()*2);
     }
-    MatrixView<uchar> get_Y()                   { return _mat_Y; }
-    CMatrixView<uchar> get_Y() const            { return _mat_Y; }
-    MatrixView<Vec2<uchar>> get_UV()            { return _mat_UV; }
-    CMatrixView<Vec2<uchar>> get_UV() const     { return _mat_UV; }
+    MatrixView<uint8_t> get_Y()                 { return _mat_Y; }
+    CMatrixView<uint8_t> get_Y() const          { return _mat_Y; }
+    MatrixView<Vec2<uint8_t>> get_UV()          { return _mat_UV; }
+    CMatrixView<Vec2<uint8_t>> get_UV() const   { return _mat_UV; }
  private:
-    Matrix<uchar> _mat_Y;            // luminance
-    Matrix<Vec2<uchar>> _mat_UV;     // chroma at half the spatial resolution
+    Matrix<uint8_t> _mat_Y;         // luminance
+    Matrix<Vec2<uint8_t>> _mat_UV;  // chroma at half the spatial resolution
 };
 
 // View of an image consisting of an 8-bit luminance matrix and 2*8-bit chroma at half spatial resolution.
 class Nv12View {
  public:
-    Nv12View(MatrixView<uchar> mat_Y, MatrixView<Vec2<uchar>> mat_UV) : _mat_Y(mat_Y), _mat_UV(mat_UV) {
+    Nv12View(MatrixView<uint8_t> mat_Y, MatrixView<Vec2<uint8_t>> mat_UV) : _mat_Y(mat_Y), _mat_UV(mat_UV) {
         assertx(_mat_Y.dims()==_mat_UV.dims()*2);
     }
     Nv12View(Nv12& nv12)                        : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) { }
-    MatrixView<uchar> get_Y()                   { return _mat_Y; }
-    CMatrixView<uchar> get_Y() const            { return _mat_Y; }
-    MatrixView<Vec2<uchar>> get_UV()            { return _mat_UV; }
-    CMatrixView<Vec2<uchar>> get_UV() const     { return _mat_UV; }
+    MatrixView<uint8_t> get_Y()                 { return _mat_Y; }
+    CMatrixView<uint8_t> get_Y() const          { return _mat_Y; }
+    MatrixView<Vec2<uint8_t>> get_UV()          { return _mat_UV; }
+    CMatrixView<Vec2<uint8_t>> get_UV() const   { return _mat_UV; }
  private:
-    MatrixView<uchar> _mat_Y;            // luminance
-    MatrixView<Vec2<uchar>> _mat_UV;     // chroma at half the spatial resolution
+    MatrixView<uint8_t> _mat_Y;         // luminance
+    MatrixView<Vec2<uint8_t>> _mat_UV;  // chroma at half the spatial resolution
 };
 
 // Constant view of an image consisting of an 8-bit luminance matrix and 2*8-bit chroma at half spatial resolution.
 class CNv12View {
  public:
-    CNv12View(CMatrixView<uchar> mat_Y, CMatrixView<Vec2<uchar>> mat_UV) : _mat_Y(mat_Y), _mat_UV(mat_UV) {
+    CNv12View(CMatrixView<uint8_t> mat_Y, CMatrixView<Vec2<uint8_t>> mat_UV) : _mat_Y(mat_Y), _mat_UV(mat_UV) {
         assertx(_mat_Y.dims()==_mat_UV.dims()*2);
     }
     CNv12View(const Nv12& nv12)                 : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) { }
     CNv12View(const Nv12View& nv12v)            : _mat_Y(nv12v.get_Y()), _mat_UV(nv12v.get_UV()) { }
-    CMatrixView<uchar> get_Y() const            { return _mat_Y; }
-    CMatrixView<Vec2<uchar>> get_UV() const     { return _mat_UV; }
+    CMatrixView<uint8_t> get_Y() const          { return _mat_Y; }
+    CMatrixView<Vec2<uint8_t>> get_UV() const   { return _mat_UV; }
  private:
-    CMatrixView<uchar> _mat_Y;            // luminance
-    CMatrixView<Vec2<uchar>> _mat_UV;     // chroma at half the spatial resolution
+    CMatrixView<uint8_t> _mat_Y;         // luminance
+    CMatrixView<Vec2<uint8_t>> _mat_UV;  // chroma at half the spatial resolution
 };
 
 // Listed as "numerical approximations" on http://en.wikipedia.org/wiki/YUV
@@ -208,18 +208,18 @@ class CNv12View {
 // Also, it condenses Y to range [16, 235]; strange.  Thus RGB_to_Y(Pixel::gray(128))==126.
 
 // Convert RGB Pixel to luminance Y value.
-inline uchar RGB_to_Y(const Pixel& pix) { // LumaFromRGB_CCIR601YCbCr
-    return narrow_cast<uchar>((66*int{pix[0]} + 129*int{pix[1]} + 25*int{pix[2]} + 128+16*256) >> 8);
+inline uint8_t RGB_to_Y(const Pixel& pix) { // LumaFromRGB_CCIR601YCbCr
+    return narrow_cast<uint8_t>((66*int{pix[0]} + 129*int{pix[1]} + 25*int{pix[2]} + 128+16*256) >> 8);
 }
 
 // Convert RGB Pixel to chroma U value.
-inline uchar RGB_to_U(const Pixel& pix) { // CbFromRGB_CCIR601YCbCr
-    return narrow_cast<uchar>((-38*pix[0] - 74*pix[1] + 112*pix[2] + 128+128*256) >> 8);
+inline uint8_t RGB_to_U(const Pixel& pix) { // CbFromRGB_CCIR601YCbCr
+    return narrow_cast<uint8_t>((-38*pix[0] - 74*pix[1] + 112*pix[2] + 128+128*256) >> 8);
 }
 
 // Convert RGB Pixel to chroma V value.
-inline uchar RGB_to_V(const Pixel& pix) { // CrFromRGB_CCIR601YCbCr
-    return narrow_cast<uchar>((112*pix[0] - 94*pix[1] - 18*pix[2] + 128+128*256) >> 8);
+inline uint8_t RGB_to_V(const Pixel& pix) { // CrFromRGB_CCIR601YCbCr
+    return narrow_cast<uint8_t>((112*pix[0] - 94*pix[1] - 18*pix[2] + 128+128*256) >> 8);
 }
 
 // Convert {R, G, B} values to YUV Vector4i.
@@ -234,7 +234,7 @@ inline Vector4i RGB_to_YUV_Vector4i(int r, int g, int b) {
 inline Pixel RGB_to_YUV_Pixel(int r, int g, int b) {
     if (0) {
         ASSERTX(r>=0 && r<=255 && g>=0 && g<=255 && b>=0 && b<=255);
-        Pixel pix{narrow_cast<uchar>(r), narrow_cast<uchar>(g), narrow_cast<uchar>(b)};
+        Pixel pix{narrow_cast<uint8_t>(r), narrow_cast<uint8_t>(g), narrow_cast<uint8_t>(b)};
         return Pixel(RGB_to_Y(pix), RGB_to_U(pix), RGB_to_V(pix), 255);
     } else {
         return RGB_to_YUV_Vector4i(r, g, b).pixel();
@@ -252,9 +252,9 @@ inline Vector4i YUV_to_RGB_Vector4i(int y, int u, int v) {
 // Convert {Y, U, V} values to RGB Pixel.
 inline Pixel YUV_to_RGB_Pixel(int y, int u, int v) {
     if (0) {
-        uchar r = clamp_to_uchar((298*y         + 409*v + 128 -298*16           - 409*128) >> 8);
-        uchar g = clamp_to_uchar((298*y - 100*u - 208*v + 128 -298*16 + 100*128 + 208*128) >> 8);
-        uchar b = clamp_to_uchar((298*y + 516*u         + 128 -298*16 - 516*128          ) >> 8);
+        uint8_t r = clamp_to_uint8((298*y         + 409*v + 128 -298*16           - 409*128) >> 8);
+        uint8_t g = clamp_to_uint8((298*y - 100*u - 208*v + 128 -298*16 + 100*128 + 208*128) >> 8);
+        uint8_t b = clamp_to_uint8((298*y + 516*u         + 128 -298*16 - 516*128          ) >> 8);
         return Pixel(r, g, b, 255);
     } else {
         return YUV_to_RGB_Vector4i(y, u, v).pixel();

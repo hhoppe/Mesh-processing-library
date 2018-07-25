@@ -195,7 +195,7 @@ void Audio::read_file(const string& pfilename) {
         }
         {                           // read data
             if (ldebug) SHOW(diagnostic_string());
-            // f32be is Big Endian which is standard network order (also s16be==int16_t and u8be==uchar)
+            // f32be is Big Endian which is standard network order (also s16be==int16_t and u8be==uint8_t)
             string scmd = ("ffmpeg -loglevel panic -nostdin -i " + quote_arg_for_shell(filename) +
                            " -f f32be -acodec pcm_f32be" +
                            sform(" -af atrim=end_sample=%d", nsamples()) + " - |");

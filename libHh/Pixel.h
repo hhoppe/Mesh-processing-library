@@ -8,14 +8,14 @@ namespace hh {
 
 // A pixel using unsigned char for each of four channels: red, green, blue, alpha.
 // It is most often used in conjunction with class Image.
-struct Pixel : Vec4<uchar> {
+struct Pixel : Vec4<uint8_t> {
     Pixel()                                             = default;
-    constexpr Pixel(uchar r, uchar g, uchar b, uchar a) : Vec4<uchar>(r, g, b, a) { }
-    constexpr Pixel(uchar r, uchar g, uchar b)          : Pixel(r, g, b, 255) { }
-    constexpr Pixel(Vec4<uchar> p)                      : Vec4<uchar>(p) { }
+    constexpr Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : Vec4<uint8_t>(r, g, b, a) { }
+    constexpr Pixel(uint8_t r, uint8_t g, uint8_t b)            : Pixel(r, g, b, 255) { }
+    constexpr Pixel(Vec4<uint8_t> p)                            : Vec4<uint8_t>(p) { }
     constexpr Pixel to_BGRA() const             { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
     constexpr Pixel from_BGRA() const           { return Pixel((*this)[2], (*this)[1], (*this)[0], (*this)[3]); }
-    static constexpr Pixel gray(uchar v)        { return Pixel(v, v, v); }
+    static constexpr Pixel gray(uint8_t v)      { return Pixel(v, v, v); }
     static constexpr Pixel white()              { return Pixel::gray(255); }
     static constexpr Pixel black()              { return Pixel::gray(0); }
     static constexpr Pixel red()                { return Pixel(255, 0, 0); }

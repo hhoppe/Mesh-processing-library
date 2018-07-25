@@ -387,20 +387,20 @@ inline string HWbase::query_save_filename(const string& hint_filename, bool forc
 }
 
 // Convert a hexadecimal digit to an integer (0..15).
-inline uchar parse_hexa_nibble(char ch) {
+inline uint8_t parse_hexa_nibble(char ch) {
     if (ch>='0' && ch<='9') {   // or std::isdigit()
-        return narrow_cast<uchar>(ch-'0');
+        return narrow_cast<uint8_t>(ch-'0');
     } else if (ch>='A' && ch<='F') {
-        return narrow_cast<uchar>(10+(ch-'A'));
+        return narrow_cast<uint8_t>(10+(ch-'A'));
     } else if (ch>='a' && ch<='f') {
-        return narrow_cast<uchar>(10+(ch-'a'));
+        return narrow_cast<uint8_t>(10+(ch-'a'));
     } else {
         assertnever(sform("Character '%c' is not hexadecimal (int{ch}=%d)", ch, int{ch}));
     }
 }
 
 // Convert a nibble (pair of hexadecimal digits) to an integer (0..255).
-inline uchar parse_hexa_nibble_pair(const char* sbyte) {
+inline uint8_t parse_hexa_nibble_pair(const char* sbyte) {
     return parse_hexa_nibble(sbyte[0])*16u + parse_hexa_nibble(sbyte[1]);
 }
 

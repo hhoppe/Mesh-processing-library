@@ -82,29 +82,29 @@ int main() {
         { struct S : SGrid<int, 1, 0> { int a; }; SHOW(sizeof(S)); }
         { struct S : SGrid<int, 0, 1> { int a; }; SHOW(sizeof(S)); } // SGrid takes zero space
         { struct S : SGrid<int, 1, 1> { int a; }; SHOW(sizeof(S)); }
-        SHOW(sizeof(Vec<uchar,0>));
-        SHOW(sizeof(SGrid<uchar,0>));
-        SHOW(sizeof(SGrid<uchar,1>));
-        SHOW(sizeof(SGrid<uchar,2>));
-        SHOW(sizeof(SGrid<uchar,3>));
-        SHOW(sizeof(SGrid<uchar, 0, 0>));
-        SHOW(sizeof(SGrid<uchar, 0, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 0>));
-        SHOW(sizeof(SGrid<uchar, 1, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 2>));
-        SHOW(sizeof(SGrid<uchar, 2, 1>));
-        SHOW(sizeof(SGrid<uchar, 2, 2>));
-        SHOW(sizeof(SGrid<uchar, 1, 1, 1>));
-        SHOW(sizeof(SGrid<uchar, 2, 1, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 2, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 1, 2>));
-        SHOW(sizeof(SGrid<uchar, 3, 1, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 3, 1>));
-        SHOW(sizeof(SGrid<uchar, 1, 1, 3>));
-        { struct S : SGrid<uchar,0>     { uchar a; }; SHOW(sizeof(S)); } // SGrid takes zero space
-        { struct S : SGrid<uchar, 1, 0> { uchar a; }; SHOW(sizeof(S)); }
-        { struct S : SGrid<uchar, 0, 1> { uchar a; }; SHOW(sizeof(S)); } // SGrid takes zero space
-        { struct S : SGrid<uchar, 1, 1> { uchar a; }; SHOW(sizeof(S)); }
+        SHOW(sizeof(Vec<uint8_t,0>));
+        SHOW(sizeof(SGrid<uint8_t,0>));
+        SHOW(sizeof(SGrid<uint8_t,1>));
+        SHOW(sizeof(SGrid<uint8_t,2>));
+        SHOW(sizeof(SGrid<uint8_t,3>));
+        SHOW(sizeof(SGrid<uint8_t, 0, 0>));
+        SHOW(sizeof(SGrid<uint8_t, 0, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 0>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 2>));
+        SHOW(sizeof(SGrid<uint8_t, 2, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 2, 2>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 1, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 2, 1, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 2, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 1, 2>));
+        SHOW(sizeof(SGrid<uint8_t, 3, 1, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 3, 1>));
+        SHOW(sizeof(SGrid<uint8_t, 1, 1, 3>));
+        { struct S : SGrid<uint8_t,0>     { uint8_t a; }; SHOW(sizeof(S)); } // SGrid takes zero space
+        { struct S : SGrid<uint8_t, 1, 0> { uint8_t a; }; SHOW(sizeof(S)); }
+        { struct S : SGrid<uint8_t, 0, 1> { uint8_t a; }; SHOW(sizeof(S)); } // SGrid takes zero space
+        { struct S : SGrid<uint8_t, 1, 1> { uint8_t a; }; SHOW(sizeof(S)); }
     }
     {
 #if 0

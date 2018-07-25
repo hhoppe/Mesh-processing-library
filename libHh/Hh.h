@@ -259,6 +259,7 @@ namespace hh {
 using std::string;                             // almost a new fundamental type
 #endif // !defined(HH_NO_USING_STD_STRING)
 using std::size_t;                             // (it seems to be already defined)
+using std::uint8_t;
 using std::unique_ptr; using std::make_unique; // very useful
 using std::min; using std::max;                // very useful
 using std::abs; // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5)==1 is scary).
@@ -594,10 +595,10 @@ inline float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*
 inline double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
 
 // Returns v clamped to range [0, 255].
-inline uchar clamp_to_uchar(int v) {
+inline uint8_t clamp_to_uint8(int v) {
     // return clamp(v, 0, 255);
     // http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
-    v &= -(v>=0); return static_cast<uchar>(v | ((255-v)>>31));
+    v &= -(v>=0); return static_cast<uint8_t>(v | ((255-v)>>31));
 }
 
 // Returns j%3 (where j is in [0, 5]).

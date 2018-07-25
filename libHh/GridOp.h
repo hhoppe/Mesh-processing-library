@@ -47,23 +47,23 @@ template<int D, typename U, typename T = typename U::value_type> Grid<D,T> assem
 // Recast a grid view as a next-higher-dimensional grid view with just a single slice in dimension zero.
 template<int D, typename T> CGridView<D+1,T> raise_grid_rank(CGridView<D,T> grid);
 
-// Convert a grid of uchar pixel values into float values.
+// Convert a grid of uint8_t pixel values into float values.
 template<int D> void convert(CGridView<D,Pixel> gridu, GridView<D,Vector4> gridf);
 
-// Convert a grid of float pixel values into uchar pixel values.
+// Convert a grid of float pixel values into uint8_t pixel values.
 template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu);
 
-// Convert a grid of uchar values into float values.
-template<int D> void convert(CGridView<D,uchar> gridu, GridView<D,float> gridf);
+// Convert a grid of uint8_t values into float values.
+template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf);
 
-// Convert a grid of float values into uchar values.
-template<int D> void convert(CGridView<D,float> gridf, GridView<D,uchar> gridu);
+// Convert a grid of float values into uint8_t values.
+template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu);
 
-// Convert a grid of Vec2<uchar> values into Vector4 values.
-template<int D> void convert(CGridView<D, Vec2<uchar>> gridu, GridView<D,Vector4> gridf);
+// Convert a grid of Vec2<uint8_t> values into Vector4 values.
+template<int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D,Vector4> gridf);
 
-// Convert a grid of Vector4 values into Vec2<uchar> values.
-template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uchar>> gridu);
+// Convert a grid of Vector4 values into Vec2<uint8_t> values.
+template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu);
 
 // Rescale a grid to have new dimensions ndims (e.g., V(ny, nx) in 2D); assumes samples of old and new grids
 //  lie at locations [.5/dim(0)...(dim(0)-.5)/dim(0)]...[.5/dim(D-1)...(dim(D-1)-.5)/dim(D-1)].
@@ -221,7 +221,7 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu
     }, 4);
 }
 
-template<int D> void convert(CGridView<D,uchar> gridu, GridView<D,float> gridf) {
+template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf) {
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
         float v = static_cast<float>(gridu.raster(i));
@@ -231,17 +231,17 @@ template<int D> void convert(CGridView<D,uchar> gridu, GridView<D,float> gridf) 
 }
 
 
-template<int D> void convert(CGridView<D,float> gridf, GridView<D,uchar> gridu) {
+template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu) {
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
         float v = gridf.raster(i);
         if (b_image_linear_filter) v = sqrt(v);
-        gridu.raster(i) = clamp_to_uchar(static_cast<int>(v));
+        gridu.raster(i) = clamp_to_uint8(static_cast<int>(v));
     }, 1);
 }
 
 
-template<int D> void convert(CGridView<D, Vec2<uchar>> gridu, GridView<D,Vector4> gridf) {
+template<int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D,Vector4> gridf) {
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
         const auto& uv = gridu.raster(i);
@@ -251,7 +251,7 @@ template<int D> void convert(CGridView<D, Vec2<uchar>> gridu, GridView<D,Vector4
     }, 4);
 }
 
-template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uchar>> gridu) {
+template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu) {
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
         Vector4 v = gridf.raster(i);

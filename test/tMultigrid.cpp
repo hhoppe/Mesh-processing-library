@@ -324,7 +324,7 @@ int main(int argc, const char** argv) {
             multigrid.set_screening_weight(screening_weight);
             multigrid.solve();
             for_int(y, dims[0]) for_int(x, dims[1]) {
-                image_result[y][x][c] = uchar(clamp(multigrid.result()[y][x], 0.f, 1.f)*255.f+.5f);
+                image_result[y][x][c] = uint8_t(clamp(multigrid.result()[y][x], 0.f, 1.f)*255.f+.5f);
             }
         }
         image_result.write_file("image_result.bmp");

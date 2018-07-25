@@ -55,7 +55,7 @@ void Image::to_bw() {
             const float gamma = 2.2f;
             Vec3<float> af; for_int(z, 3) { af[z] = pow(pix[z]+0.5f, gamma); }
             float gray = af[0]*.30f+af[1]*.59f+af[2]*.11f;
-            pix[0] = clamp_to_uchar(int(pow(gray, 1.f/gamma)+.5f));
+            pix[0] = clamp_to_uint8(int(pow(gray, 1.f/gamma)+.5f));
         }
         pix[1] = pix[2] = pix[0]; pix[3] = 255;
     }, 10);
@@ -368,14 +368,14 @@ void Image::write_file_i(const string& filename, bool bgra) const {
 
 void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     assertx(same_size(nv12v.get_Y(), frame));
-    const uchar* bufY = nv12v.get_Y().data();
-    const uchar* bufUV = nv12v.get_UV().data()->data();
+    const uint8_t* bufY = nv12v.get_Y().data();
+    const uint8_t* bufUV = nv12v.get_UV().data()->data();
     Pixel* bufP = frame.data();
     assertx(reinterpret_cast<uintptr_t>(bufP)%4==0);
     // Filtervideo ~/proj/videoloops/data/test/HDbrink8h.mp4 -stat   _read_video times for routines below:
     // 0.27 sec (no conversion), 1.00 sec, 0.70 sec, 0.55 sec, 0.48 sec, 0.34 sec
     auto clamp_4 = [](int a, int b, int c, int d) {
-        return ((clamp_to_uchar(a)<<0) | (clamp_to_uchar(b)<<8) | (clamp_to_uchar(c)<<16) | (clamp_to_uchar(d)<<24));
+        return ((clamp_to_uint8(a)<<0) | (clamp_to_uint8(b)<<8) | (clamp_to_uint8(c)<<16) | (clamp_to_uint8(d)<<24));
     };
     if (0) {
         for_int(y, frame.ysize()) {
@@ -389,7 +389,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
         for_int(y, frame.ysize()) {
             if (y%2) bufUV -= frame.xsize(); // reuse UV row on odd lines
             for_int(x, frame.xsize()/2) {
-                uchar u = bufUV[0], v = bufUV[1];
+                uint8_t u = bufUV[0], v = bufUV[1];
                 bufP[0] = YUV_to_RGB_Pixel(bufY[0], u, v); // OPT:YUV1
                 bufP[1] = YUV_to_RGB_Pixel(bufY[1], u, v);
                 bufP += 2; bufY += 2; bufUV += 2;
@@ -454,8 +454,8 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
 
 void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
     assertx(same_size(nv12v.get_Y(), frame));
-    const uchar* bufY = nv12v.get_Y().data();
-    const uchar* bufUV = nv12v.get_UV().data()->data();
+    const uint8_t* bufY = nv12v.get_Y().data();
+    const uint8_t* bufUV = nv12v.get_UV().data()->data();
     Pixel* bufP = frame.data();
     assertx(reinterpret_cast<uintptr_t>(bufP)%4==0);
     const int rowlen = frame.xsize();
@@ -481,8 +481,8 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
 
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     assertx(same_size(nv12v.get_Y(), frame));
-    uchar* __restrict bufY = nv12v.get_Y().data();
-    uchar* __restrict bufUV = nv12v.get_UV().data()->data();
+    uint8_t* __restrict bufY = nv12v.get_Y().data();
+    uint8_t* __restrict bufUV = nv12v.get_UV().data()->data();
     assertx(reinterpret_cast<uintptr_t>(bufUV)%4==0); assertx(reinterpret_cast<uintptr_t>(bufY)%4==0);
     // I tried optimizing this, but all implementations take about the same elapsed time.
     if (0) {
@@ -494,7 +494,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
                 Pixel avg;
                 for_int(z, 3) {
                     int sum = 0; for_int(yi, 2) for_int(xi, 2) { sum += frame[y+yi][x+xi][z]; }
-                    avg[z] = uchar((sum+2)/4);
+                    avg[z] = uint8_t((sum+2)/4);
                 }
                 *bufUV++ = RGB_to_U(avg);
                 *bufUV++ = RGB_to_V(avg);
@@ -503,10 +503,10 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     } else if (0) {
         // for_size_t(i, frame.size()) { *bufY++ = RGB_to_Y(frame.raster(i)); }
         {
-            const uchar* p = frame.data()->data();
+            const uint8_t* p = frame.data()->data();
             assertx(reinterpret_cast<uintptr_t>(p)%4==0);
-            auto func_enc_Y = [](const uchar* pp) {
-                return uchar(((66*int(pp[0]) + 129*int(pp[1]) + 25*int(pp[2]) + 128) >> 8) + 16);
+            auto func_enc_Y = [](const uint8_t* pp) {
+                return uint8_t(((66*int(pp[0]) + 129*int(pp[1]) + 25*int(pp[2]) + 128) >> 8) + 16);
             };
             for_int(i, frame.ysize()*frame.xsize()/4) {
                 *reinterpret_cast<uint32_t*>(bufY) = ((func_enc_Y(p+0)<<0) |
@@ -523,7 +523,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
                 Pixel avg;
                 for_int(z, 3) {
                     int sum = 0; for_int(yi, 2) for_int(xi, 2) { sum += frame[y+yi][x+xi][z]; }
-                    avg[z] = uchar((sum+2)/4);
+                    avg[z] = uint8_t((sum+2)/4);
                 }
                 *bufUV++ = RGB_to_U(avg);
                 *bufUV++ = RGB_to_V(avg);
@@ -531,45 +531,45 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         }
     } else if (1) {
         for_int(y, frame.ysize()/2) {
-            const uchar* __restrict bufP0 = frame[y*2+0].data()->data();
-            uchar* __restrict bufY0 = nv12v.get_Y()[y*2+0].data();
+            const uint8_t* __restrict bufP0 = frame[y*2+0].data()->data();
+            uint8_t* __restrict bufY0 = nv12v.get_Y()[y*2+0].data();
             const int hnx = frame.xsize()/2;
             for_int(x, hnx) {
                 int r00 = bufP0[0], g00 = bufP0[1], b00 = bufP0[2];
-                uchar y00 = uchar((66*r00 + 129*g00 + 25*b00 + 128+16*256) >> 8);
+                uint8_t y00 = uint8_t((66*r00 + 129*g00 + 25*b00 + 128+16*256) >> 8);
                 int r01 = bufP0[4], g01 = bufP0[5], b01 = bufP0[6];
                 r00 += r01; g00 += g01; b00 += b01;
-                uchar y01 = uchar((66*r01 + 129*g01 + 25*b01 + 128+16*256) >> 8);
-                const uchar* __restrict bufP1 = bufP0+hnx*8;
+                uint8_t y01 = uint8_t((66*r01 + 129*g01 + 25*b01 + 128+16*256) >> 8);
+                const uint8_t* __restrict bufP1 = bufP0+hnx*8;
                 int r10 = bufP1[0], g10 = bufP1[1], b10 = bufP1[2];
                 r00 += r10; g00 += g10; b00 += b10;
-                uchar y10 = uchar((66*r10 + 129*g10 + 25*b10 + 128+16*256) >> 8);
+                uint8_t y10 = uint8_t((66*r10 + 129*g10 + 25*b10 + 128+16*256) >> 8);
                 int r11 = bufP1[4], g11 = bufP1[5], b11 = bufP1[6];
                 r00 += r11; g00 += g11; b00 += b11;
-                uchar y11 = uchar((66*r11 + 129*g11 + 25*b11 + 128+16*256) >> 8); // OPT:to_YUV
+                uint8_t y11 = uint8_t((66*r11 + 129*g11 + 25*b11 + 128+16*256) >> 8); // OPT:to_YUV
                 bufY0[0] = y00;
                 bufY0[1] = y01;
                 bufY0[2*hnx+0] = y10;
                 bufY0[2*hnx+1] = y11;
                 // (more accurate than other implementations in this function)
-                *bufUV++ = uchar((-38*r00 - 74*g00 + 112*b00 + 128*4 + 2*(-38-74+112) + 128*1024) >> 10); // U
-                *bufUV++ = uchar((112*r00 - 94*g00 -  18*b00 + 128*4 + 2*(112-94-18)  + 128*1024) >> 10); // V
+                *bufUV++ = uint8_t((-38*r00 - 74*g00 + 112*b00 + 128*4 + 2*(-38-74+112) + 128*1024) >> 10); // U
+                *bufUV++ = uint8_t((112*r00 - 94*g00 -  18*b00 + 128*4 + 2*(112-94-18)  + 128*1024) >> 10); // V
                 bufP0 += 8;
                 bufY0 += 2;
             }
         }
     } else if (0) {
-        auto func_enc_Y = [](int r, int g, int b) { return uchar(((66*r + 129*g + 25*b + 128) >> 8) + 16); };
+        auto func_enc_Y = [](int r, int g, int b) { return uint8_t(((66*r + 129*g + 25*b + 128) >> 8) + 16); };
         for_int(y, frame.ysize()/2) {
-            const uchar* bufP0 = frame[y*2+0].data()->data();
-            const uchar* bufP1 = frame[y*2+1].data()->data();
-            uchar* bufY0 = nv12v.get_Y()[y*2+0].data();
-            uchar* bufY1 = nv12v.get_Y()[y*2+1].data();
+            const uint8_t* bufP0 = frame[y*2+0].data()->data();
+            const uint8_t* bufP1 = frame[y*2+1].data()->data();
+            uint8_t* bufY0 = nv12v.get_Y()[y*2+0].data();
+            uint8_t* bufY1 = nv12v.get_Y()[y*2+1].data();
             for_int(x, frame.xsize()/2) {
-                uchar r00 = bufP0[0], g00 = bufP0[1], b00 = bufP0[2];
-                uchar r01 = bufP0[4], g01 = bufP0[5], b01 = bufP0[6];
-                uchar r10 = bufP1[0], g10 = bufP1[1], b10 = bufP1[2];
-                uchar r11 = bufP1[4], g11 = bufP1[5], b11 = bufP1[6];
+                uint8_t r00 = bufP0[0], g00 = bufP0[1], b00 = bufP0[2];
+                uint8_t r01 = bufP0[4], g01 = bufP0[5], b01 = bufP0[6];
+                uint8_t r10 = bufP1[0], g10 = bufP1[1], b10 = bufP1[2];
+                uint8_t r11 = bufP1[4], g11 = bufP1[5], b11 = bufP1[6];
                 bufP0 += 8; bufP1 += 8;
                 bufY0[0] = func_enc_Y(r00, g00, b00);
                 bufY0[1] = func_enc_Y(r01, g01, b01);
@@ -580,8 +580,8 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
                 // bufUV[0] = RGB_to_U(avg);
                 // bufUV[1] = RGB_to_V(avg);
                 int ravg = (r00+r01+r10+r11+2)/4, gavg = (g00+g01+g10+g11+2)/4, bavg = (b00+b01+b10+b11+2)/4;
-                auto enc_U = [](int r, int g, int b) { return uchar(((-38*r - 74*g + 112*b + 128) >> 8) + 128); };
-                auto enc_V = [](int r, int g, int b) { return uchar(((112*r - 94*g -  18*b + 128) >> 8) + 128); };
+                auto enc_U = [](int r, int g, int b) { return uint8_t(((-38*r - 74*g + 112*b + 128) >> 8) + 128); };
+                auto enc_V = [](int r, int g, int b) { return uint8_t(((112*r - 94*g -  18*b + 128) >> 8) + 128); };
                 bufUV[0] = enc_U(ravg, gavg, bavg);
                 bufUV[1] = enc_V(ravg, gavg, bavg);
                 bufUV += 2;

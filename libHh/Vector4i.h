@@ -100,7 +100,7 @@ class Vector4i {
     Vector4i(const Vector4i& v)                         { for_int(c, 4) { _c[c] = v._c[c]; } }
     Vector4i(int x, int y, int z, int w)                { _c[0] = x; _c[1] = y; _c[2] = z; _c[3] = w; }
     explicit Vector4i(const Pixel& pix)                 { for_int(c, 4) { _c[c] = pix[c]; } }
-    Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uchar(_c[c]); } return v; }
+    Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uint8(_c[c]); } return v; }
     void load_unaligned(const int* pSrc)                { for_int(c, 4) { _c[c] = pSrc[c]; } }
     void store_unaligned(int* pDst) const               { for_int(c, 4) { pDst[c] = _c[c]; } }
     void load_aligned(const int* pSrc)                  { for_int(c, 4) { _c[c] = pSrc[c]; } }
@@ -155,7 +155,7 @@ class Vector4i {
     Vector4i(const Vector4i& v)                         { for_int(c, 4) { _c[c] = v._c[c]; } }
     Vector4i(int x, int y, int z, int w)                { _c[0] = x; _c[1] = y; _c[2] = z; _c[3] = w; }
     explicit Vector4i(const Pixel& pix)                 { for_int(c, 4) { _c[c] = pix[c]; } }
-    Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uchar(_c[c]); } return v; }
+    Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uint8(_c[c]); } return v; }
     void load_unaligned(const int* pSrc)                { for_int(c, 4) { _c[c] = pSrc[c]; } }
     void store_unaligned(int* pDst) const               { for_int(c, 4) { pDst[c] = _c[c]; } }
     void load_aligned(const int* pSrc)                  { for_int(c, 4) { _c[c] = pSrc[c]; } }

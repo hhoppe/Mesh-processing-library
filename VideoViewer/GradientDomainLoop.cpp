@@ -78,7 +78,7 @@ template<> struct MG_sample<false> {
     using EType = float;
     static constexpr int nz = 3;
     static EType get(const Pixel& pix, int z) { return to_float(pix[z]); }
-    static void put(Pixel& pix, int z, const EType& result) { pix[z] = clamp_to_uchar(int(result+.5f)); }
+    static void put(Pixel& pix, int z, const EType& result) { pix[z] = clamp_to_uint8(int(result+.5f)); }
     static const float k_offset_zero;
 };
 const float MG_sample<false>::k_offset_zero = k_vec_zero_offset*255.f;
@@ -389,7 +389,7 @@ void compute_gdloop_aux2(CGridView<3,Pixel> video, CMatrixView<int> mat_start, C
                 int fi = grid_framei(f, y, x);
                 ref_video(f, y, x) = video(fi, y, x);
                 for_int(z, 3) {
-                    diff_video(f, y, x)[z] = clamp_to_uchar(128+(videoloop(f, y, x)[z]-ref_video(f, y, x)[z])*5);
+                    diff_video(f, y, x)[z] = clamp_to_uint8(128+(videoloop(f, y, x)[z]-ref_video(f, y, x)[z])*5);
                 }
             }
         });
@@ -800,10 +800,10 @@ void solve_using_offsets(const Vec3<int>& odims,
                                 Vector4i offset_YUV = RGB_to_YUV_Vector4i(poff[0], poff[1], poff[2])-YUV_zero_offset;
                                 for_intL(y, hy*DS, hy*DS+DS) for_intL(x, hx*DS, hx*DS+DS) {
                                     nframe.get_Y()(y, x) =
-                                        clamp_to_uchar(video_nv12.get_Y()(fi, y, x) + offset_YUV[0]);
+                                        clamp_to_uint8(video_nv12.get_Y()(fi, y, x) + offset_YUV[0]);
                                 }
                                 for_intL(y, hy*DSh, hy*DSh+DSh) for_intL(x, hx*DSh, hx*DSh+DSh) for_int(c, 2) {
-                                    nframe.get_UV()(y, x)[c] = clamp_to_uchar(video_nv12.get_UV()(fi, y, x)[c]+
+                                    nframe.get_UV()(y, x)[c] = clamp_to_uint8(video_nv12.get_UV()(fi, y, x)[c]+
                                                                               offset_YUV[1+c]);
                                 }
                             }
@@ -825,7 +825,7 @@ void solve_using_offsets(const Vec3<int>& odims,
                                     auto nframeYy = nframe.get_Y()[y].data();
                                     auto video_nv12_Yy = video_nv12_Yfi[y].data();
                                     for_intL(x, hx*DS, hx*DS+DS) {
-                                        nframeYy[x] = clamp_to_uchar(video_nv12_Yy[x] + offset_YUV[0]); // OPT:nv12Y
+                                        nframeYy[x] = clamp_to_uint8(video_nv12_Yy[x] + offset_YUV[0]); // OPT:nv12Y
                                     }
                                 }
                                 auto video_nv12_UVfi = lvideo_nv12_UV[fi];
@@ -833,8 +833,8 @@ void solve_using_offsets(const Vec3<int>& odims,
                                     auto nframeUVy = nframe.get_UV()[y].data();
                                     auto video_nv12_UVy = video_nv12_UVfi[y].data();
                                     for_intL(x, hx*DSh, hx*DSh+DSh) {
-                                        nframeUVy[x][0] = clamp_to_uchar(video_nv12_UVy[x][0]+offset_YUV[1]);
-                                        nframeUVy[x][1] = clamp_to_uchar(video_nv12_UVy[x][1]+offset_YUV[2]);
+                                        nframeUVy[x][0] = clamp_to_uint8(video_nv12_UVy[x][0]+offset_YUV[1]);
+                                        nframeUVy[x][1] = clamp_to_uint8(video_nv12_UVy[x][1]+offset_YUV[2]);
                                     }
                                 }
                             }
@@ -955,22 +955,22 @@ void solve_using_offsets(const Vec3<int>& odims,
                         }
                     }
                     const Pixel& hpix = hvideo_offset(f/DT, hy, hx);
-                    MatrixView<uchar> nframeY = nframe.get_Y();
-                    MatrixView<Vec2<uchar>> nframeUV = nframe.get_UV();
+                    MatrixView<uint8_t> nframeY = nframe.get_Y();
+                    MatrixView<Vec2<uint8_t>> nframeUV = nframe.get_UV();
                     const CNv12View videofi(si<0 ? static_frame : rvideoframes[si]);
                     const Vector4i offset_YUV = RGB_to_YUV_Vector4i(hpix[0], hpix[1], hpix[2])-YUV_zero_offset;
                     for_intL(y, hy*DS, hy*DS+DS) for_intL(x, hx*DS, hx*DS+DS) {
-                        nframeY(y, x) = clamp_to_uchar(videofi.get_Y()(y, x)+offset_YUV[0]); // OPT:reconY
+                        nframeY(y, x) = clamp_to_uint8(videofi.get_Y()(y, x)+offset_YUV[0]); // OPT:reconY
                     }
                     if (DS>1) {
                         for_intL(y, hy*DSh, hy*DSh+DSh) for_intL(x, hx*DSh, hx*DSh+DSh) {
-                            nframeUV(y, x) = V(clamp_to_uchar(videofi.get_UV()(y, x)[0]+offset_YUV[1]),
-                                               clamp_to_uchar(videofi.get_UV()(y, x)[1]+offset_YUV[2])); // OPT:reconU
+                            nframeUV(y, x) = V(clamp_to_uint8(videofi.get_UV()(y, x)[0]+offset_YUV[1]),
+                                               clamp_to_uint8(videofi.get_UV()(y, x)[1]+offset_YUV[2])); // OPT:reconU
                         }
                     } else {
                         if (hy%2+hx%2==0)
-                            nframeUV(hy/2, hx/2) = V(clamp_to_uchar(videofi.get_UV()(hy/2, hx/2)[0]+offset_YUV[1]),
-                                                     clamp_to_uchar(videofi.get_UV()(hy/2, hx/2)[1]+offset_YUV[2]));
+                            nframeUV(hy/2, hx/2) = V(clamp_to_uint8(videofi.get_UV()(hy/2, hx/2)[0]+offset_YUV[1]),
+                                                     clamp_to_uint8(videofi.get_UV()(hy/2, hx/2)[1]+offset_YUV[2]));
                     }
                 }
             });
@@ -1026,7 +1026,7 @@ void show_spatial_cost(CGridView<3,Pixel> video, CMatrixView<int> mat_start, CMa
             const float c1 = .12f, c2 = 1.f, gamma = .5f;
             float v = pow(clamp(1.f-log(cost)*c1+c2, 0.f, 1.f), gamma)*255.f;
             HH_SSTAT(Sv, v);
-            image(y, x) = Pixel::gray(clamp_to_uchar(int(v)));
+            image(y, x) = Pixel::gray(clamp_to_uint8(int(v)));
         }
     });
     image.write_file("image_scost.png");

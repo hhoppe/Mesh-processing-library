@@ -51,7 +51,7 @@ template<int D> Vec<float,D> MultigridMetricAnisotropic<D>::_metricw;
 
 inline Pixel random_color(Random& random) {
     Pixel pix; pix[3] = 255;
-    for_int(c, 3) { pix[c] = static_cast<uchar>(80.f+random.unif()*150.f+.5f); }
+    for_int(c, 3) { pix[c] = static_cast<uint8_t>(80.f+random.unif()*150.f+.5f); }
     return pix;
 }
 
@@ -400,8 +400,8 @@ void do_append(Args& args) {
             float alpha = (f2+.5f)/(2*tradius);
             for (const auto& yx: range(video.spatial_dims())) {
                 for_int(z, nz) {
-                    nvideo[f][yx][z] = uchar((1.f-alpha)*video[f][yx][z]+
-                                             (    alpha)*video2[f2][yx][z]+.5f);
+                    nvideo[f][yx][z] = uint8_t((1.f-alpha)*video[f][yx][z]+
+                                               (    alpha)*video2[f2][yx][z]+.5f);
                 }
             }
         }
@@ -642,15 +642,15 @@ void do_tcrossfade(Args& args) {
         int fec = clamp(fe, 0, nframes-1);
         if (1) {                // good code always
             for_int(y, video.ysize()) for_int(x, video.xsize()) for_int(z, nz) {
-                tvideo(i, y, x)[z] = uchar((1.f-alpha)*video(fbc, y, x)[z]+
-                                           (    alpha)*video(fec, y, x)[z]+.5f);
+                tvideo(i, y, x)[z] = uint8_t((1.f-alpha)*video(fbc, y, x)[z]+
+                                             (    alpha)*video(fec, y, x)[z]+.5f);
             }
         } else {                // good code with gcc
             auto videofbc = video[fbc], videofec = video[fbc];
             for (const auto& yx : range(video.spatial_dims())) {
                 for_int(z, nz) {
-                    tvideo[i][yx][z] = uchar((1.f-alpha)*videofbc[yx][z]+
-                                             (    alpha)*videofec[yx][z]+.5f);
+                    tvideo[i][yx][z] = uint8_t((1.f-alpha)*videofbc[yx][z]+
+                                               (    alpha)*videofec[yx][z]+.5f);
                 }
             }
         }
@@ -715,7 +715,7 @@ void do_makeloop(Args& args) {
             if (1) multigrid.set_verbose(true);
             multigrid.solve();
             for_int(f, nf) for_int(y, ny) for_int(x, nx) {
-                nvideo(f, y, x)[z] = clamp_to_uchar(int(multigrid.result()(f, y, x)+.5f));
+                nvideo(f, y, x)[z] = clamp_to_uint8(int(multigrid.result()(f, y, x)+.5f));
             }
         } else {                // solve for offsets instead of colors themselves
             const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true); // weak screening
@@ -741,7 +741,7 @@ void do_makeloop(Args& args) {
             multigrid.solve();
             parallel_for_each(range(nf), [&](const int f) {
                 for_int(y, ny) for_int(x, nx) {
-                    nvideo(f, y, x)[z] = clamp_to_uchar(int(to_float(video(fbeg+f, y, x)[z])+
+                    nvideo(f, y, x)[z] = clamp_to_uint8(int(to_float(video(fbeg+f, y, x)[z])+
                                                             multigrid.result()(f, y, x)+.5f));
                 }
             });
@@ -757,7 +757,7 @@ void do_makeloop(Args& args) {
 void do_color(Args& args) {
     for_int(i, 3) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        gcolor[i] = uchar(v);
+        gcolor[i] = uint8_t(v);
     }
 }
 
@@ -990,7 +990,7 @@ void do_replace(Args& args) {
     Pixel newcolor;
     for_int(i, 3) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        newcolor[i] = uchar(v);
+        newcolor[i] = uint8_t(v);
     }
     newcolor[3] = 255;
     int count = 0;
@@ -1005,7 +1005,7 @@ void do_replace(Args& args) {
 
 void do_gamma(Args& args) {
     float gamma = args.get_float();
-    Vec<uchar,256> transf; for_int(i, 256) { transf[i] = static_cast<uchar>(255.f*pow(i/255.f, gamma)+0.5f); }
+    Vec<uint8_t,256> transf; for_int(i, 256) { transf[i] = static_cast<uint8_t>(255.f*pow(i/255.f, gamma)+0.5f); }
     if (1) {
         parallel_for_each(range(video.size()), [&](const size_t i) {
             for_int(z, nz) { video.raster(i)[z] = transf[video.raster(i)[z]]; } // fastest
@@ -1205,8 +1205,8 @@ void do_pjcompression() {
         int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx], staticf = g_lp.mat_static[yx];
         float activation = g_lp.mat_activation[yx];
         assertx(start<=255); assertx(period<=255); assertx(staticf<=255);
-        uchar uc_activation = clamp_to_uchar(int(activation*255.f+.5f));
-        image[yx] = Pixel(uchar(start), uchar(period), uchar(staticf), uc_activation);
+        uint8_t uc_activation = clamp_to_uint8(int(activation*255.f+.5f));
+        image[yx] = Pixel(uint8_t(start), uint8_t(period), uint8_t(staticf), uc_activation);
     }, 30);
     image.write_file("pjcompression.png");
 }
@@ -1294,7 +1294,7 @@ void compute_looping_regions() {
                         scost2 += vtot[0]+vtot[1]+vtot[2];
                     }
                     HH_SSTAT(Sscost2, scost2);
-                    image[y+y1][x+x1] = Pixel::gray(clamp_to_uchar(int(255.5f-scost2*.01f)));
+                    image[y+y1][x+x1] = Pixel::gray(clamp_to_uint8(int(255.5f-scost2*.01f)));
                     bool both_static = g_lp.mat_period[y][x]==1 && g_lp.mat_period[y1][x1]==1;
                     if (scost2>6000.f || both_static) uf.unify(V(y, x), V(y1, x1)); // 6000.f good?
                 }
@@ -1349,7 +1349,7 @@ void compute_looping_regions() {
             Pixel pix = g_lp.region_color[iregion];
             const Point& pcentroid = g_lp.region_centroid[iregion];
             float fac = clamp(dist(Point(float(yx[0]), float(yx[1]), 0.f), pcentroid)*.1f, 0.f, 1.f);
-            for_int(c, 3) pix[c] = uchar(pix[c]*fac);
+            for_int(c, 3) pix[c] = uint8_t(pix[c]*fac);
             image[yx] = pix;
         }
         image.write_file("looping_regions_dist.png");
@@ -1407,8 +1407,8 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
                 for_int(z, nz) {
                     int fi1 = fi0+1<start+period ? fi0+1 : start;
                     // (run do_remap() as preprocess if temporal crossfading is desired)
-                    nvideo[f][yx][z] = uchar((1.f-frfi)*to_float(video[fi0][yx][z])+
-                                             (    frfi)*to_float(video[fi1][yx][z])+0.5f);
+                    nvideo[f][yx][z] = uint8_t((1.f-frfi)*to_float(video[fi0][yx][z])+
+                                               (    frfi)*to_float(video[fi1][yx][z])+0.5f);
                 }
             } else {
                 int fi = get_framei(float(f), start, period);
@@ -1429,8 +1429,8 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
                     }
                     if (0 && sum(yx)==0) SHOW(f, fi, fio, alpha);
                     for_int(z, nz) {
-                        nvideo[f][yx][z] = uchar((1.f-alpha)*video[fi                              ][yx][z]+
-                                                 (    alpha)*video[clamp(fio, 0, video.nframes()-1)][yx][z]+.5f);
+                        nvideo[f][yx][z] = uint8_t((1.f-alpha)*video[fi                              ][yx][z]+
+                                                   (    alpha)*video[clamp(fio, 0, video.nframes()-1)][yx][z]+.5f);
                     }
                 }
             }
@@ -1683,7 +1683,7 @@ void process_gen(Args& args) {
         parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = cos((yx[1]/speriod-f/tperiod)*TAU)*.5f+.5f;
-                video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
+                video[f][yx] = Pixel::gray(uint8_t(v*255.f+.5f));
             }
         });
     } else if (name=="box_y") {
@@ -1692,7 +1692,7 @@ void process_gen(Args& args) {
         parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = (frac(yx[0]/speriod-f/tperiod)>.5f ? 1.f : 0.f);
-                video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
+                video[f][yx] = Pixel::gray(uint8_t(v*255.f+.5f));
             }
         });
     } else if (begins_with(name, "checker")) {
@@ -1708,7 +1708,7 @@ void process_gen(Args& args) {
         float motion_amplitude = speriod*1.5f;
         parallel_for_each(range(video.nframes()), [&](const int f) {
             fill(video[f], Pixel::black());
-            if (name=="checker3") fill(video[f], Pixel::gray(uchar(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
+            if (name=="checker3") fill(video[f], Pixel::gray(uint8_t(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
             for (const auto& yx : range(video.spatial_dims())) {
                 auto p = (convert<float>(yx)+V(sin(f/tperiod*TAU), cos(f/tperiod*TAU))*motion_amplitude)/speriod;
                 auto pf = p-floor(p);
@@ -1726,7 +1726,7 @@ void process_gen(Args& args) {
         parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[1])/video.xsize()-f/tperiod)<speriod/video.xsize() ? 1.f : 0.f;
-                video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
+                video[f][yx] = Pixel::gray(uint8_t(v*255.f+.5f));
             }
         });
     } else if (name=="slit1_y") {
@@ -1735,7 +1735,7 @@ void process_gen(Args& args) {
         parallel_for_each(range(video.nframes()), [&](const int f) {
             for (const auto& yx : range(video.spatial_dims())) {
                 float v = frac(float(yx[0])/video.ysize()+f/tperiod)<speriod/video.ysize() ? 1.f : 0.f;
-                video[f][yx] = Pixel::gray(uchar(v*255.f+.5f));
+                video[f][yx] = Pixel::gray(uint8_t(v*255.f+.5f));
             }
         });
     } else if (begins_with(name, "slits")) {
@@ -1780,7 +1780,7 @@ void process_gen(Args& args) {
             auto& pix = ar_color[i];
             if (0) {
                 for (;;) {
-                    for_int(c, 3) pix[c] = static_cast<uchar>(20.f+Random::G.unif()*235.f+.5f);
+                    for_int(c, 3) pix[c] = static_cast<uint8_t>(20.f+Random::G.unif()*235.f+.5f);
                     if (mag(pix)>350 && max(pix)>150 && min(pix)<100) break;
                 }
             } else {
@@ -1790,9 +1790,9 @@ void process_gen(Args& args) {
         parallel_for_each(range(video.nframes()), [&](const int f) {
             Matrix<F2> mvec(video.spatial_dims(), twice(1e10f));
             Matrix<Pixel> mpixel(video.spatial_dims(), Pixel::pink());
-            if (name=="stars4") fill(video[f], Pixel::gray(uchar(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
+            if (name=="stars4") fill(video[f], Pixel::gray(uint8_t(abs(float(f)/video.nframes()-.5)*2.f*255.f+.5f)));
             if (name=="stars5")
-                fill(video[f], Pixel::gray(uchar(max(1.f-abs(frac(f*4.f/video.nframes())-.5f)*4.f, 0.f)*255.f+.5f)));
+                fill(video[f], Pixel::gray(uint8_t(max(1.f-abs(frac(f*4.f/video.nframes())-.5f)*4.f, 0.f)*255.f+.5f)));
             for_int(i, n) {
                 F2 p = ar_point0[i]+ar_velocity[i]*float(f);
                 for_int(c, 2) p[c] = frac(p[c]); // periodic boundaries
@@ -1867,7 +1867,7 @@ void do_procedure(Args& args) {
                 float finterior = 1.f-bx-by+3.f*bx*by;
                 bool even = (int(flx)+int(fly))%2==0;
                 if (!even) finterior = 1.f-finterior;
-                video[f][yx] = Pixel::gray(uchar(finterior*255.f+.5f));
+                video[f][yx] = Pixel::gray(uint8_t(finterior*255.f+.5f));
             }, 50);
         }
     } else if (name=="slow_value_drift") {
@@ -1879,7 +1879,7 @@ void do_procedure(Args& args) {
                 float d = float(mag(convert<float>(yx)-convert<float>(video.spatial_dims())*.5f));
                 float vdrift = sin(f/period*TAU)*magnitude*smooth_step(clamp(1.f-d/sradius, 0.f, 1.f));
                 for_int(z, nz) {
-                    video[f][yx][z] = clamp_to_uchar(int(video[f][yx][z]+vdrift+.5f));
+                    video[f][yx][z] = clamp_to_uint8(int(video[f][yx][z]+vdrift+.5f));
                 }
             }, 20);
         }
@@ -1984,7 +1984,7 @@ void do_diff(Args& args) {
     Video video2; video2.read_file(filename);
     assertx(same_size(video, video2));
     parallel_for_coords(video.dims(), [&](const Vec3<int>& fyx) {
-        for_int(z, nz) { video[fyx][z] = clamp_to_uchar(128+int(video[fyx][z])-int(video2[fyx][z])); }
+        for_int(z, nz) { video[fyx][z] = clamp_to_uint8(128+int(video[fyx][z])-int(video2[fyx][z])); }
     }, 20);
 }
 
@@ -1994,7 +1994,7 @@ void do_transf(Args& args) {
         for (Pixel& pix : video[f]) {
             Point p(0.f, 0.f, 0.f); for_int(z, nz) { p[z] = pix[z]/255.f; }
             p *= frame;
-            for_int(z, nz) { pix[z] = uchar(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
+            for_int(z, nz) { pix[z] = uint8_t(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
         }
     });
 }
@@ -2002,7 +2002,7 @@ void do_transf(Args& args) {
 void do_noisegaussian(Args& args) {
     float sd = args.get_float();
     for (Pixel& pix : video) {
-        for_int(z, nz) { pix[z] = clamp_to_uchar(int(to_float(pix[z])+Random::G.gauss()*sd+.5f)); }
+        for_int(z, nz) { pix[z] = clamp_to_uint8(int(to_float(pix[z])+Random::G.gauss()*sd+.5f)); }
     }
 }
 
@@ -2030,7 +2030,7 @@ void do_equalizemedians() {
     SHOW(mean_of_medians);
     for (auto& vec : ar_medians) { vec -= mean_of_medians; }
     for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
-        for_int(z, nz) { pix[z] = clamp_to_uchar(int(pix[z]-ar_medians[f][z]+.5f)); }
+        for_int(z, nz) { pix[z] = clamp_to_uint8(int(pix[z]-ar_medians[f][z]+.5f)); }
     }
 }
 
@@ -2040,7 +2040,7 @@ void do_equalizemeans() {
     SHOW(mean_of_means);
     for (auto& vec : ar_means) { vec -= mean_of_means; }
     for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
-        for_int(z, nz) { pix[z] = clamp_to_uchar(int(pix[z]-ar_means[f][z]+.5f)); }
+        for_int(z, nz) { pix[z] = clamp_to_uint8(int(pix[z]-ar_means[f][z]+.5f)); }
     }
 }
 

@@ -12,7 +12,7 @@
 {
     Video video(nframes, V(ysize, xsize)), video2(video.dims()), video3(video.nframes()*2, video.spatial_dims());
     Pixel& pix = video(f, y, x); // as in Image, [y=0][x=0] is at upper-left corner of each image frame
-    uchar c = video(f, y, x)[z]; // z=[0..2]
+    uint8_t c = video(f, y, x)[z]; // z=[0..2]
     // Video read/write is performed using: Windows Media Foundation (MF) or ffmpeg (FF).
 }
 #endif
@@ -74,7 +74,7 @@ class VideoNv12 : noncopyable {
     explicit VideoNv12(const Vec3<int>& dims)   { init(dims); }
     VideoNv12(VideoNv12&& vnv12)                { swap(*this, vnv12); } // =default?
     VideoNv12& operator=(VideoNv12&& v) noexcept { clear(); swap(*this, v); return *this; } // =default?
-    explicit VideoNv12(Grid<3,uchar>&& grid_Y, Grid<3, Vec2<uchar>>&& grid_UV)
+    explicit VideoNv12(Grid<3,uint8_t>&& grid_Y, Grid<3, Vec2<uint8_t>>&& grid_UV)
         : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) { ok(); }
     void init(const Vec3<int>& dims) {
         _grid_Y.init(dims); _grid_UV.init(dims/V(1, 2, 2)); ok();
@@ -84,51 +84,51 @@ class VideoNv12 : noncopyable {
     size_t size() const                         { return _grid_Y.size(); }
     CNv12View operator[](int f) const           { return CNv12View(_grid_Y[f], _grid_UV[f]); }
     Nv12View operator[](int f)                  { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-    GridView<3,uchar> get_Y()                   { return _grid_Y; }
-    CGridView<3,uchar> get_Y() const            { return _grid_Y; }
-    GridView<3, Vec2<uchar>> get_UV()           { return _grid_UV; }
-    CGridView<3, Vec2<uchar>> get_UV() const    { return _grid_UV; }
+    GridView<3,uint8_t> get_Y()                 { return _grid_Y; }
+    CGridView<3,uint8_t> get_Y() const          { return _grid_Y; }
+    GridView<3, Vec2<uint8_t>> get_UV()         { return _grid_UV; }
+    CGridView<3, Vec2<uint8_t>> get_UV() const  { return _grid_UV; }
     void read_file(const string& filename, Video::Attrib* pattrib = nullptr); // may throw std::runtime_error
     void write_file(const string& filename, const Video::Attrib& attrib) const; // may throw std::runtime_error
     void special_reduce_dim0(int i)             { _grid_Y.special_reduce_dim0(i); _grid_UV.special_reduce_dim0(i); }
  private:
-    Grid<3,uchar> _grid_Y;             // luminance
-    Grid<3, Vec2<uchar>> _grid_UV;     // chroma at half the spatial resolution
+    Grid<3,uint8_t> _grid_Y;             // luminance
+    Grid<3, Vec2<uint8_t>> _grid_UV;     // chroma at half the spatial resolution
     void ok() const                             { assertx(_grid_Y.dims()==_grid_UV.dims()*V(1, 2, 2)); }
 };
 
 // View of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12View {
  public:
-    explicit VideoNv12View(GridView<3,uchar> grid_Y, GridView<3, Vec2<uchar>> grid_UV)
+    explicit VideoNv12View(GridView<3,uint8_t> grid_Y, GridView<3, Vec2<uint8_t>> grid_UV)
         : _grid_Y(grid_Y), _grid_UV(grid_UV) { assertx(_grid_Y.dims()==_grid_UV.dims()*V(1, 2, 2)); }
     VideoNv12View(VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) { }
     int nframes() const                         { return _grid_Y.dim(0); }
     size_t size() const                         { return _grid_Y.size(); }
     Nv12View operator[](int f)                  { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-    GridView<3,uchar> get_Y()                   { return _grid_Y; }
-    CGridView<3,uchar> get_Y() const            { return _grid_Y; }
-    GridView<3, Vec2<uchar>> get_UV()           { return _grid_UV; }
-    CGridView<3, Vec2<uchar>> get_UV() const    { return _grid_UV; }
+    GridView<3,uint8_t> get_Y()                 { return _grid_Y; }
+    CGridView<3,uint8_t> get_Y() const          { return _grid_Y; }
+    GridView<3, Vec2<uint8_t>> get_UV()         { return _grid_UV; }
+    CGridView<3, Vec2<uint8_t>> get_UV() const  { return _grid_UV; }
  private:
-    GridView<3,uchar> _grid_Y;             // luminance
-    GridView<3, Vec2<uchar>> _grid_UV;     // chroma at half the spatial resolution
+    GridView<3,uint8_t> _grid_Y;             // luminance
+    GridView<3, Vec2<uint8_t>> _grid_UV;     // chroma at half the spatial resolution
 };
 
 // Constant view of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class CVideoNv12View {
  public:
-    explicit CVideoNv12View(CGridView<3,uchar> grid_Y, CGridView<3, Vec2<uchar>> grid_UV)
+    explicit CVideoNv12View(CGridView<3,uint8_t> grid_Y, CGridView<3, Vec2<uint8_t>> grid_UV)
         : _grid_Y(grid_Y), _grid_UV(grid_UV) { assertx(_grid_Y.dims()==_grid_UV.dims()*V(1, 2, 2)); }
     CVideoNv12View(const VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) { }
     int nframes() const                         { return _grid_Y.dim(0); }
     size_t size() const                         { return _grid_Y.size(); }
     CNv12View operator[](int f) const           { return CNv12View(_grid_Y[f], _grid_UV[f]); }
-    CGridView<3,uchar> get_Y() const            { return _grid_Y; }
-    CGridView<3, Vec2<uchar>> get_UV() const    { return _grid_UV; }
+    CGridView<3,uint8_t> get_Y() const          { return _grid_Y; }
+    CGridView<3, Vec2<uint8_t>> get_UV() const  { return _grid_UV; }
  private:
-    CGridView<3,uchar> _grid_Y;             // luminance
-    CGridView<3, Vec2<uchar>> _grid_UV;     // chroma at half the spatial resolution
+    CGridView<3,uint8_t> _grid_Y;             // luminance
+    CGridView<3, Vec2<uint8_t>> _grid_UV;     // chroma at half the spatial resolution
 };
 
 void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3,Pixel> video);

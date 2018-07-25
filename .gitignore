@@ -88,8 +88,6 @@ RCS/
 
 # Specific paths
 /TAGS
-/libHh/StackWalker.cpp
-/libHh/StackWalker.h
 
 /bin/unix/*
 !/bin/unix/.gitignore

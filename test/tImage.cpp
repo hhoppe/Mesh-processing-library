@@ -10,7 +10,7 @@ int main() {
         (void)red; // Avoid unused variable warning
         constexpr Pixel green{0, 255, 0};
         (void)green; // Avoid unused variable warning
-        constexpr Vec4<uchar> v{uchar{0}, uchar{0}, uchar{255}, uchar{255}};
+        constexpr Vec4<uint8_t> v{uint8_t{0}, uint8_t{0}, uint8_t{255}, uint8_t{255}};
         const Pixel blue{v};    // constexpr fails in VS 2015
         (void)blue; // Avoid unused variable warning
     }

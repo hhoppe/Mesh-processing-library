@@ -501,7 +501,7 @@ bool normalmap_init() {
     if (pnormalmap->name()=="dot3") {
         Warning("Resorting to 'dot3' for normal-mapping");
         if (1) {                // make material brighter
-            uchar meshca = meshcolor.d[3];
+            uint8_t meshca = meshcolor.d[3];
             A3dColor material; for_int(c, 3) material[c] = meshcolor.d[c]/255.f;
             float maxv = assertx(max(material));
             material /= maxv;
@@ -1081,7 +1081,7 @@ void load_texturemaps() {
                 for (;;) {
                     Image etexture(V(1, nl));
                     for_int(x, nl) {
-                        uchar v = 255;
+                        uint8_t v = 255;
                         if (level==1) {
                             if (x<2) v = 0;
                             else if (x%(nl/4)<1) v = 0;
@@ -2588,7 +2588,7 @@ bool HB::init(Array<string>& aargs,
                                               A3dColor(meshcolp[0], meshcolp[1], meshcolp[2])));
     int mesha = int(meshcola[0]*255.f+.5f);
     assertx(mesha>=0 && mesha<=255);
-    meshcolor.d[3] = uchar(mesha);
+    meshcolor.d[3] = uint8_t(mesha);
     if (picture) nice_rendering = true;
     if (pm_filename!="") {
 #if defined(DEF_PM)

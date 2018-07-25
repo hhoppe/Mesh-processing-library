@@ -360,7 +360,7 @@ void do_sizes() {
 void do_color(Args& args) {
     for_int(i, 4) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        gcolor[i] = narrow_cast<uchar>(v);
+        gcolor[i] = narrow_cast<uint8_t>(v);
     }
 }
 
@@ -594,11 +594,11 @@ void do_scalehalf2n1() {
 
 int column_ps;
 
-inline void output_hex_nibble(uchar c) {
+inline void output_hex_nibble(uint8_t c) {
     std::cout.put("0123456789abcdef"[c]);
 }
 
-inline void output_hex_byte(uchar c) {
+inline void output_hex_byte(uint8_t c) {
     // std::cout << sform("%02x", c);
     output_hex_nibble(c>>4);
     output_hex_nibble(c&0xF);
@@ -670,7 +670,7 @@ void do_tops() {
             image.write_file(filename);
             RFile fi(filename);
             for (;;) {
-                uchar byte; if (!read_binary_raw(fi(), ArView(byte))) break;
+                uint8_t byte; if (!read_binary_raw(fi(), ArView(byte))) break;
                 output_hex_byte(byte);
             }
         }
@@ -762,7 +762,7 @@ void do_permutecolors() {
     // drawback: considers each channel separately, so if red is all zero, it remains that way.
     //   perl -e 'binmode(STDOUT); for (0..255) { printf "%03d\n", ($_*53)%256; }'
     //   factors 53
-    Vec<uchar,256> lookup; for_int(i, 256) { lookup[i] = (i*53)%256; }
+    Vec<uint8_t,256> lookup; for_int(i, 256) { lookup[i] = (i*53)%256; }
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         for_int(z, image.zsize()) { image[yx][z] = lookup[image[yx][z]]; }
     }, 10);
@@ -773,9 +773,9 @@ void do_randomizeRGB() {
         unsigned v = unsigned(image[yx][0]*(53+113*256+ 43*65536)+
                               image[yx][1]*(97+ 89*256+107*65536)+
                               image[yx][2]*(11+ 61*256+ 47*65536))%16777216;
-        image[yx] = Pixel(narrow_cast<uchar>((v>>0)&255),
-                          narrow_cast<uchar>((v>>8)&255),
-                          narrow_cast<uchar>((v>>16)&255));
+        image[yx] = Pixel(narrow_cast<uint8_t>((v>>0)&255),
+                          narrow_cast<uint8_t>((v>>8)&255),
+                          narrow_cast<uint8_t>((v>>16)&255));
     }, 20);
 }
 
@@ -783,7 +783,7 @@ void do_noisegaussian(Args& args) {
     float sd = args.get_float();
     for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) {
-            image[yx][z] = clamp_to_uchar(int(float(image[yx][z])+Random::G.gauss()*sd+.5f));
+            image[yx][z] = clamp_to_uint8(int(float(image[yx][z])+Random::G.gauss()*sd+.5f));
         }
     }
 }
@@ -939,7 +939,7 @@ void do_fromtxt(Args& args) {
     if (0) SHOW(aval[0], aval.last());
     const float* pval = aval.data();
     for (const auto& yx : range(image.dims())) {
-        for_int(c, nch) { float val = *pval++; image[yx][c] = uchar(clamp(val, 0.f, 1.f)*255.f+.5f); }
+        for_int(c, nch) { float val = *pval++; image[yx][c] = uint8_t(clamp(val, 0.f, 1.f)*255.f+.5f); }
     }
 }
 
@@ -1016,7 +1016,7 @@ void do_replace(Args& args) {
     Pixel newcolor;
     for_int(i, 4) {
         int v = args.get_int(); assertx(v>=0 && v<=255);
-        newcolor[i] = narrow_cast<uchar>(v);
+        newcolor[i] = narrow_cast<uint8_t>(v);
     }
     int count = 0;
     for (const auto& yx : range(image.dims())) {
@@ -1030,7 +1030,7 @@ void do_replace(Args& args) {
 
 void do_gamma(Args& args) {
     float gamma = args.get_float();
-    Vec<uchar,256> transf; for_int(i, 256) { transf[i] = uchar(clamp(pow(i/255.f, gamma), 0.f, 1.f)*255.f+.5f); }
+    Vec<uint8_t,256> transf; for_int(i, 256) { transf[i] = uint8_t(clamp(pow(i/255.f, gamma), 0.f, 1.f)*255.f+.5f); }
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         for_int(z, image.zsize()) { image[yx][z] = transf[image[yx][z]]; }
     }, 10);
@@ -1058,7 +1058,7 @@ void do_hue() {
         for_int(z, 3) { af[z] = pow(image[yx][z]+0.5f, gamma); }
         float gray = af[0]*.30f+af[1]*.59f+af[2]*.11f;
         for_int(z, 3) { af[z] = af[z]*pow(128.f, gamma)/gray; }
-        for_int(z, 3) { image[yx][z] = clamp_to_uchar(int(pow(af[z], 1.f/gamma)+.5f)); }
+        for_int(z, 3) { image[yx][z] = clamp_to_uint8(int(pow(af[z], 1.f/gamma)+.5f)); }
     }, 50);
 }
 
@@ -1084,7 +1084,7 @@ void do_undoalpha() {
         parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
             for_int(z, 3) {
                 // C_new = C_f*alpha_f + C_b*alpha_b*(1-alpha_f)
-                image[yx][z] = clamp_to_uchar(int(image[yx][z]+(1.f-image[yx][3]/255.f)*gcolor[z]));
+                image[yx][z] = clamp_to_uint8(int(image[yx][z]+(1.f-image[yx][3]/255.f)*gcolor[z]));
             }
         }, 30);
     }
@@ -1097,7 +1097,7 @@ void do_readalpha(Args& args) {
     Image ialpha; ialpha.read_file(filename); assertx(same_size(ialpha, image));
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         image[yx][3] = ialpha[yx][0];
-        for_int(c, 3) { image[yx][c] = uchar(float(image[yx][c])*image[yx][3]/255.f+.5f); } // premultiplied alpha
+        for_int(c, 3) { image[yx][c] = uint8_t(float(image[yx][c])*image[yx][3]/255.f+.5f); } // premultiplied alpha
     }, 10);
 }
 
@@ -1105,7 +1105,7 @@ void do_setalpha(Args& args) {
     int av = args.get_int(); assertx(av>=0 && av<=255);
     if (image.zsize()!=4) { assertx(image.zsize()==3); image.set_zsize(4); }
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-        image[yx][3] = uchar(av);
+        image[yx][3] = uint8_t(av);
     }, 1);
 }
 
@@ -1149,7 +1149,7 @@ template<int D> void quad_pullpush(GridView<D,Pixel> grid) {
             }
         }
         if (num_def) {
-            for_int(c, 3) { hgrid[hu][c] = uchar(accum[c]/num_def); }
+            for_int(c, 3) { hgrid[hu][c] = uint8_t(accum[c]/num_def); }
             hgrid[hu][3] = 255;
         } else {
             hgrid[hu][3] = 0;
@@ -1359,13 +1359,13 @@ void do_featureoffsets() {
                     i = int(f+.5f);
                 }
                 assertw(i>=0 && i<=255);
-                image[yx][c] = uchar(i);
+                image[yx][c] = uint8_t(i);
             }
         } else {                // scalar arctan
             float f = float(mag(mvec[yx]));
             f = 0.f+150.f*atan2(f, 1.f);
             int i = int(f+.5f); assertx(i>=0 && i<=255);
-            image[yx][0] = uchar(i);
+            image[yx][0] = uint8_t(i);
             image[yx][1] = 0;
         }
         image[yx][2] = 0;
@@ -1382,7 +1382,7 @@ void do_normalizenor() {
         }
         assertw(v.normalize());
         for_int(c, 3) {
-            pix[c] = uchar((v[c]+1.f)/2.f*255.f+.5f);
+            pix[c] = uint8_t((v[c]+1.f)/2.f*255.f+.5f);
         }
     }
 }
@@ -1403,7 +1403,7 @@ void do_shadenor(Args& args) {
             float vdot = dot(vnor, lightdir);
             if (twolights && vdot<0.f) vdot = -vdot;
             vdot = clamp(vdot, .05f, 1.f);
-            for_int(c, 3) { pix[c] = uchar(vdot*255.f+.5f); }
+            for_int(c, 3) { pix[c] = uint8_t(vdot*255.f+.5f); }
         }
     }
 }
@@ -1435,7 +1435,7 @@ void do_shadefancy(Args& args) {
             vdot = pow(vdot, ls[i]);
             vcol += vdot*li[i]*lc[i];
         }
-        for_int(c, 3) { pix[c] = uchar(clamp(vcol[c], 0.f, 1.f)*255.f+.5f); }
+        for_int(c, 3) { pix[c] = uint8_t(clamp(vcol[c], 0.f, 1.f)*255.f+.5f); }
     }
 }
 
@@ -1447,7 +1447,7 @@ void do_cycle(Args& args) {
     int term = vrange/ncycle;
     for (const auto& yx : range(image.dims())) {
         for_int(z, image.zsize()) {
-            image[yx][z] = uchar(offset+(image[yx][z]%ncycle)*term);
+            image[yx][z] = uint8_t(offset+(image[yx][z]%ncycle)*term);
         }
     }
 }
@@ -1457,7 +1457,7 @@ void do_transf(Args& args) {
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         Point p(0.f, 0.f, 0.f); for_int(z, image.zsize()) { p[z] = image[yx][z]/255.f; }
         p *= frame;
-        for_int(z, image.zsize()) { image[yx][z] = uchar(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
+        for_int(z, image.zsize()) { image[yx][z] = uint8_t(clamp(p[z], 0.f, 1.f)*255.f+.5f); }
     }, 30);
 }
 
@@ -1508,7 +1508,7 @@ void do_composite(Args& args) {
             } else if (op==Op_unblend) {
                 vr = max(vf, vb);
             } else assertnever("");
-            image[yx][z] = uchar(clamp(vr, 0.f, 1.f)*255.f+.5f);
+            image[yx][z] = uint8_t(clamp(vr, 0.f, 1.f)*255.f+.5f);
         }
     }
 }
@@ -1585,7 +1585,7 @@ void do_genpattern(Args& args) {
         }
         assertw(v>=0.f && v<=1.f);
         for_int(z, image.zsize()) {
-            image[yx][z] = uchar(clamp(v, 0.f, 1.f)*255.f+.5f);
+            image[yx][z] = uint8_t(clamp(v, 0.f, 1.f)*255.f+.5f);
         }
     }
 }
@@ -1630,7 +1630,7 @@ void do_homogenize(Args& args) {
                 double fitval = 0.;
                 for_int(ky, n) for_int(kx, n) { fitval += ar[ky][kx]*table[0][ky][yx[0]]*table[1][kx][yx[1]]; }
                 double newval = oldval-fitval;
-                image[yx][z] = clamp_to_uchar(int(newval+.5));
+                image[yx][z] = clamp_to_uint8(int(newval+.5));
             }, n*n*4);
         }
     } else {                    // version with alpha-channel cropping
@@ -1680,7 +1680,7 @@ void do_homogenize(Args& args) {
                 double v = image[yx][z];
                 for_int(ky, n) for_int(kx, n) { v -= table[0][ky][yx[0]]*table[1][kx][yx[1]]*arn[ky*n+kx]; }
                 v += dc;        // reintroduce DC term
-                image[yx][z] = clamp_to_uchar(int(v+.5));
+                image[yx][z] = clamp_to_uint8(int(v+.5));
             }, n*n*3);
         }
     }
@@ -1774,12 +1774,12 @@ void do_istoroidal() {
             for_int(ix, matrix.xsize()) {
                 float err2 = 0.f;
                 for_int(z, image.zsize()) {
-                    uchar v1 = matrix[i1][ix][z];
-                    uchar v0a = matrix[i0][ix][z];
-                    uchar v0b = matrix[i0][clamp(ix-1, 0, matrix.xsize()-1)][z];
-                    uchar v0c = matrix[i0][clamp(ix+1, 0, matrix.xsize()-1)][z];
-                    uchar v0min = min({v0a, v0b, v0c});
-                    uchar v0max = max({v0a, v0b, v0c});
+                    uint8_t v1 = matrix[i1][ix][z];
+                    uint8_t v0a = matrix[i0][ix][z];
+                    uint8_t v0b = matrix[i0][clamp(ix-1, 0, matrix.xsize()-1)][z];
+                    uint8_t v0c = matrix[i0][clamp(ix+1, 0, matrix.xsize()-1)][z];
+                    uint8_t v0min = min({v0a, v0b, v0c});
+                    uint8_t v0max = max({v0a, v0b, v0c});
                     int d = v1<v0min ? v0min-v1 : v1>v0max ? v1-v0max : 0;
                     err2 += square(d);
                 }
@@ -2300,7 +2300,7 @@ void do_procedure(Args& args) {
         for (const auto& yxi : range(twice(2))) {
             for (const auto& yx : range(twice(n))) {
                 const int beat = 8;
-                const uchar greyv = 60;
+                const uint8_t greyv = 60;
                 Pixel pix(greyv, greyv, greyv, 255);
                 bool is_on = ((yx[1]/beat)+(yx[0]/beat))%2==1;
                 if (is_on) {
@@ -2323,7 +2323,7 @@ void do_procedure(Args& args) {
             const Vec2<float> yxf = (convert<float>(yx)+.5f)/float(size);
             const Vec2<int> yxi = convert<int>(yxf*float(gridn));
             const bool is_on = sum(yxi)%2==1;
-            Pixel pix = !is_on ? pixel_gray : Pixel(uchar(yxf[0]*255.f+.5f), uchar((1.f-yxf[0])*255.f+.5f), 0);
+            Pixel pix = !is_on ? pixel_gray : Pixel(uint8_t(yxf[0]*255.f+.5f), uint8_t((1.f-yxf[0])*255.f+.5f), 0);
             image[yx] = pix;
         }
     } else if (name=="fix_agarwala") {
@@ -2331,13 +2331,13 @@ void do_procedure(Args& args) {
         // Filterimage labels.png -proc fix_agarwala >labels.fixed.png
         for (const auto& yx : range(image.dims())) {
             int l = image[yx][0];
-            uchar v; uchar a = 255;
+            uint8_t v; uint8_t a = 255;
             if (l==255) {
                 v = 255;        // v=0; a=0;
             } else if (l%20==0) {
-                v = uchar(l/20);
+                v = uint8_t(l/20);
             } else if ((l+256)%20==0) {
-                v = uchar((l+256)/20);
+                v = uint8_t((l+256)/20);
             } else { SHOW(l); assertnever(""); }
             for_int(z, 3) { image[yx][z] = v; }
             image[yx][3] = a;
@@ -2345,7 +2345,7 @@ void do_procedure(Args& args) {
     } else if (name=="red_green_ramp") {
         // Filterimage -create 512 512 -procedure red_green_ramp -to png >~/data/image/ramp_red_green.png
         for (const auto& yx : range(image.dims())) {
-            image[yx].head<2>() = convert<uchar>(convert<float>(yx)/(convert<float>(image.dims())-1.f)*255.f+.5f);
+            image[yx].head<2>() = convert<uint8_t>(convert<float>(yx)/(convert<float>(image.dims())-1.f)*255.f+.5f);
             image[yx][2] = 0;
             image[yx][3] = 255;
         }
@@ -2358,7 +2358,7 @@ void do_procedure(Args& args) {
             // image_periods.read_file("periods.png"); // period0: 0, 0, 0 but 480x270
             assertx(image_periods.dims()==image.dims());
         }
-        const uchar cost_threshold = 3; // let the mask consist of the pixels whose temporal costs is >= threshold
+        const uint8_t cost_threshold = 3; // let the mask consist of the pixels whose temporal costs is >= threshold
         const int radius2_threshold = 4; // dilation squared radius
         const int radius2_max = 20;      // squared radius of maximum bread-first-search expansion
         const Pixel period_zero(128, 128, 255, 255);
@@ -2522,8 +2522,8 @@ void do_procedure(Args& args) {
             Image image2(image.dims());
             parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
                 bool is_static = (z==2 || z==3) && image[yx][2]==0;
-                uchar val = image[yx][z];
-                if (z<3) val = clamp_to_uchar(int(val*255.f/(est_num_input_frames-1)+.5f));
+                uint8_t val = image[yx][z];
+                if (z<3) val = clamp_to_uint8(int(val*255.f/(est_num_input_frames-1)+.5f));
                 image2[yx] = is_static ? Pixel::gray(230) : k_color_ramp[val];
             });
             image2.write_file(rootname + "." + channel_name[z] + ".png");
@@ -2550,8 +2550,8 @@ void do_procedure(Args& args) {
             int period = timage[yx][2];
             float fstart = float(start)/(est_num_input_frames-period-1);
             float fperiod = float(period)/(est_num_input_frames-1);
-            Pixel pix = k_color_ramp[clamp_to_uchar(int(fperiod*255.f+.5f))];
-            for_int(c, 3) { pix[c] = clamp_to_uchar(int(pix[c]*(.4f+.6f*fstart))); }
+            Pixel pix = k_color_ramp[clamp_to_uint8(int(fperiod*255.f+.5f))];
+            for_int(c, 3) { pix[c] = clamp_to_uint8(int(pix[c]*(.4f+.6f*fstart))); }
             if (is_static) pix = Pixel::gray(have_mask ? 180 : 230); // there are so few, make them more prominent
             if (is_masked) pix = Pixel::white();
             image[yx] = pix;
@@ -2587,7 +2587,7 @@ void do_diff(Args& args) {
     assertx(same_size(image, image2) && image.zsize()==image2.zsize());
     const int nz = image.zsize();
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-        for_int(z, nz) { image[yx][z] = clamp_to_uchar(128+int(image[yx][z])-int(image2[yx][z])); }
+        for_int(z, nz) { image[yx][z] = clamp_to_uint8(128+int(image[yx][z])-int(image2[yx][z])); }
     }, 20);
 }
 

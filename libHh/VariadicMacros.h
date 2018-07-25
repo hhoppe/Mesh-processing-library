@@ -27,7 +27,7 @@
 // #define F(...) HH_MAP_REDUCE((F_EACH, +, __VA_ARGS__))
 #define HH_MAP_REDUCE(tuple) HH_MAP_REDUCE_ tuple
 #define HH_MAP_REDUCE_(macro, reduction, ...)                                                   \
-  HH_PRIMITIVE_CAT((HH_MAP_REDUCE_, HH_NUM_ARGS(__VA_ARGS__)))(macro, reduction, __VA_ARGS__)
+    HH_PRIMITIVE_CAT((HH_MAP_REDUCE_, HH_NUM_ARGS(__VA_ARGS__)))(macro, reduction, __VA_ARGS__)
 #define HH_MAP_REDUCE_1(m, r, x1) m(x1)
 #define HH_MAP_REDUCE_2(m, r, x1, x2) m(x1) r m(x2)
 #define HH_MAP_REDUCE_3(m, r, x1, x2, x3) m(x1) r m(x2) r m(x3)

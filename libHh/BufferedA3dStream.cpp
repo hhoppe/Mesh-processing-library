@@ -49,8 +49,8 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
         A3dElem::EType ct = A3dElem::EType(ch);
         if (!(ct==A3dElem::EType::comment || ch==k_a3d_binary_code ||
               (have_space && (A3dElem::command_type(ct) || ct==A3dElem::EType::point ||
-                             ct==A3dElem::EType::polygon || ct==A3dElem::EType::polyline ||
-                             A3dElem::status_type(ct) || ch=='n')))) return ERecognize::no;
+                              ct==A3dElem::EType::polygon || ct==A3dElem::EType::polyline ||
+                              A3dElem::status_type(ct) || ch=='n')))) return ERecognize::no;
     }
     for (;;) {
         if (i>=_buf.num()) return ERecognize::partial;

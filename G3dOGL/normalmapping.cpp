@@ -319,8 +319,8 @@ struct NormalMapping_dot3 final : NormalMapping {
     void deactivate() override {
         glEnable(GL_BLEND);
     }
-    Array<uchar> fill_buffer_rgb8(const Image& image) {
-        Array<uchar> buffer;
+    Array<uint8_t> fill_buffer_rgb8(const Image& image) {
+        Array<uint8_t> buffer;
         buffer.reserve(assert_narrow_cast<int>(product(image.dims())*3));
         for_int(y, image.ysize()) {
             for_int(x, image.xsize()) {
@@ -439,8 +439,8 @@ struct NormalMapping_nvrc final : NormalMapping {
         // const int GL_REGISTER_COMBINERS_NV = 0x8522;
         glDisable(GL_REGISTER_COMBINERS_NV);
     }
-    Array<uchar> fill_buffer_rgb8(const Image& image) {
-        Array<uchar> buffer;
+    Array<uint8_t> fill_buffer_rgb8(const Image& image) {
+        Array<uint8_t> buffer;
         buffer.reserve(assert_narrow_cast<int>(product(image.dims())*3));
         for_int(y, image.ysize()) {
             for_int(x, image.xsize()) {

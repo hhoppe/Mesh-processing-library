@@ -272,6 +272,11 @@ int main() {
             assertx(ar==V(uchar{4}, uchar{5}));
         }
         {
+            Array<uint8_t> ar;
+            for (uint8_t e : range(uint8_t{4}, uint8_t{6})) { ar.push(e); }
+            assertx(ar==V(uint8_t{4}, uint8_t{5}));
+        }
+        {
             Array<short> ar;
             for (short e : range<short>(-2, 2)) { ar.push(e); }
             assertx(ar==convert<short>(V(-2, -1, 0, 1)));
@@ -413,6 +418,7 @@ line2)";
         SHOW(type_name<sum_type_t<double>>());
         SHOW(type_name<sum_type_t<signed char>>()); // sign of regular char is platform-dependent
         SHOW(type_name<sum_type_t<uchar>>());
+        SHOW(type_name<sum_type_t<uint8_t>>());
         SHOW(type_name<sum_type_t<short>>());
         SHOW(type_name<sum_type_t<ushort>>());
         SHOW(type_name<sum_type_t<int>>());
@@ -496,7 +502,7 @@ line2)";
     }
     {
         for (int i : {INT_MIN, INT_MIN+1, -257, -256, -255, -1, 0, 1, 2, 127, 254, 255, 256, 257, INT_MAX}) {
-            SHOW(i, int(clamp_to_uchar(i)));
+            SHOW(i, int(clamp_to_uint8(i)));
         }
     }
     {
@@ -511,11 +517,11 @@ line2)";
     }
     {
         unsigned col = 12345+g_unoptimized_zero;
-        func1(// uchar(col>>0), // Run-Time Check Failure #1 - A cast to a smaller data type has caused a loss of data.
-              uchar((col>>0 )&0xFF),
-              uchar((col>>8 )&0xFF),
-              uchar((col>>16)&0xFF),
-              uchar((col>>24)));
+        func1(// uint8_t(col>>0), Run-Time Check Failure #1 - A cast to a smaller data type has caused a loss of data.
+            uint8_t((col>>0 )&0xFF),
+            uint8_t((col>>8 )&0xFF),
+            uint8_t((col>>16)&0xFF),
+            uint8_t((col>>24)));
     }
     test_exceptions();
     if (1) {

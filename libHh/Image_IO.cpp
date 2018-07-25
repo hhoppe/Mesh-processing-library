@@ -653,7 +653,7 @@ void ImageIO::read_bmp(Image& image, FILE* file) {
         if (all_gray && !is_gray(colormap[i])) all_gray = false;
     }
     if (0) SHOW(bmfh.bfOffBits, k_size_BITMAPFILEHEADER, bmih.biSize, bmih.biClrUsed,
-                 k_size_BITMAPFILEHEADER+bmih.biSize+bmih.biClrUsed*4);
+                k_size_BITMAPFILEHEADER+bmih.biSize+bmih.biClrUsed*4);
     assertt(bmfh.bfOffBits==k_size_BITMAPFILEHEADER+bmih.biSize+bmih.biClrUsed*4);
     int ncomp = bmih.biBitCount==32 ? 4 : 3;
     if (bmih.biBitCount<=8 && all_gray)

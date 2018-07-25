@@ -450,7 +450,7 @@ template<int D, typename T> bool CGridView<D,T>::map_inside(int& y, int& x, Bndr
 }
 
 template<int D, typename T> const T& CGridView<D,T>::inside(int y, int x, Bndrule bndrule,
-                                                                   const T* bordervalue) const {
+                                                            const T* bordervalue) const {
     if (!map_inside(y, x, bndrule)) { ASSERTX(bordervalue); return *bordervalue; }
     return (*this)[y][x];
 }
@@ -483,7 +483,7 @@ template<int D, typename T> template<typename... A> const T& GridView<D,T>::oper
 }
 
 template<int D, typename T> const T& GridView<D,T>::inside(int y, int x, Bndrule bndrule,
-                                                                  const T* bordervalue) const {
+                                                           const T* bordervalue) const {
     if (!map_inside(y, x, bndrule)) { ASSERTX(bordervalue); return *bordervalue; }
     return (*this)[y][x];
 }

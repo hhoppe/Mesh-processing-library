@@ -3408,7 +3408,7 @@ void do_signeddistbmp(Args& args) {
                 PolygonFace* polyface = ss.next();
                 Face f = polyface->face;
                 float sdist = signed_distance(p, f);
-                uchar uc;
+                uint8_t uc;
                 if (sdist==k_Contour_undefined) {
                     uc = 255;
                 } else {
@@ -3416,7 +3416,7 @@ void do_signeddistbmp(Args& args) {
                     const float amplify = 10.f;
                     sdist *= amplify;
                     if (abs(sdist)>1.f) sdist = 1.f*sign(sdist);
-                    uc = static_cast<uchar>(128.f-sdist*126.f);
+                    uc = static_cast<uint8_t>(128.f-sdist*126.f);
                 }
                 image[ix][iy] = Pixel::gray(uc);
             }

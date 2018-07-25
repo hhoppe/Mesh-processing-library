@@ -39,8 +39,8 @@
 namespace hh {
 
 class Vector4;
-Vector4 to_Vector4_norm(const uchar p[4]); // converts each uchar [0, 255] to [0.f, 1.f]; used in Vector4(Pixel)
-Vector4 to_Vector4_raw(const uchar p[4]);  // converts each uchar [0, 255] to [0.f, 255.f]
+Vector4 to_Vector4_norm(const uint8_t p[4]); // converts each uint8_t [0, 255] to [0.f, 1.f]; used in Vector4(Pixel)
+Vector4 to_Vector4_raw(const uint8_t p[4]);  // converts each uint8_t [0, 255] to [0.f, 255.f]
 
 // Abstraction of a 4-float vector, hopefully accelerated by vectorized CPU instructions.
 // See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel:
@@ -59,8 +59,8 @@ class Vector4 {
     float& operator[](int i)                            { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
     const float& operator[](int i) const                { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
     Vector4 with(int i, float f) const          { HH_CHECK_BOUNDS(i, 4); Vector4 v = *this; v[i] = f; return v; }
-    void raw_to_byte4(uchar p[4]) const;  // maps from [0.f, 255.999f] to uchar using truncation and without clamping
-    void norm_to_byte4(uchar p[4]) const; // maps from [0.f, 1.f]      to uchar using rounding and clamping
+    void raw_to_byte4(uint8_t p[4]) const;  // maps from [0.f, 255.999f] to uint8 using truncation, without clamping
+    void norm_to_byte4(uint8_t p[4]) const;  // maps from [0.f, 1.f]     to uint8 using rounding and clamping
     Pixel raw_pixel() const                             { Pixel pixel; raw_to_byte4(pixel.data()); return pixel; }
     Pixel pixel() const                                 { Pixel pixel; norm_to_byte4(pixel.data()); return pixel; }
     friend float mag2(const Vector4& v)                 { return dot(v, v); }
@@ -78,7 +78,7 @@ class Vector4 {
         return os << "Vector4(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
     }
     static bool ok(int i)                               { return i>=0 && i<4; }
-    friend Vector4 to_Vector4_raw(const uchar p[4]);
+    friend Vector4 to_Vector4_raw(const uint8_t p[4]);
 #if !(defined(_M_X64) || defined(__x86_64))
     // "new type[size]" does not create aligned storage -- problem for Vector4 in 32-bit model
     static void* operator new(size_t s)                 { return aligned_malloc(s, alignof(type)); }
@@ -228,7 +228,7 @@ class Vector4 {
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)
 };
 
-inline Vector4 to_Vector4_norm(const uchar p[4]) { return to_Vector4_raw(p)*(1.f/255.f); }
+inline Vector4 to_Vector4_norm(const uint8_t p[4]) { return to_Vector4_raw(p)*(1.f/255.f); }
 inline Vector4 to_Vector4_raw(const Pixel& pixel) { return to_Vector4_raw(pixel.data()); }
 float mag2(const Vector4& v);
 float dist2(const Vector4& l, const Vector4& r);
@@ -264,21 +264,21 @@ inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { re
 // _mm_packs_epi16   : pack the 16 signed 16-bit integers from a and b into 8-bit integers and saturate.
 // _mm_cvtepu8_epi32 : expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
 
-inline Vector4 to_Vector4_raw(const uchar p[4]) {
+inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
     // avoids a shuffle, unlike _mm_set1_epi32(*reinterpret_cast<const int*>(p))
     __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p)));
     __m128i t1 = _mm_cvtepu8_epi32(in); // expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
     __m128 t2 = _mm_cvtepi32_ps(t1);    // convert four signed 32-bit to floats.
     return t2;
 }
-inline void Vector4::raw_to_byte4(uchar p[4]) const {
+inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
     for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); }
     __m128i t1 = _mm_cvttps_epi32(_r); // 4 float -> 4 signed 32-bit int (truncation)  (or cvtps for rounding)
     __m128i t2 = _mm_packs_epi32(t1, t1);  // 8 signed 32-bit -> 8 signed 16-bit (saturation)
     __m128i t3 = _mm_packus_epi16(t2, t2); // 16 signed 16-bit -> 16 unsigned 8-bit (saturation)
     _mm_store_ss(reinterpret_cast<float*>(p), _mm_castsi128_ps(t3));
 }
-inline void Vector4::norm_to_byte4(uchar p[4]) const {
+inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
     Vector4 t = *this*255.f;
     for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see tVector4.h
     __m128i t1 = _mm_cvtps_epi32(t._r); // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation)
@@ -289,7 +289,7 @@ inline void Vector4::norm_to_byte4(uchar p[4]) const {
 
 #elif defined(HH_VECTOR4_NEON)
 
-inline Vector4 to_Vector4_raw(const uchar p[4]) {
+inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
     // See http://stackoverflow.com/a/14506159/1190077
     //  vmovl.u8       q3, d2    // Expand to 16-bit
     //  vmovl.u16      q10, d6   // Expand to 32-bit
@@ -309,7 +309,7 @@ inline Vector4 to_Vector4_raw(const uchar p[4]) {
     float32x4_t  f = vcvtq_f32_u32(d); // float32x4_t vcvtq_f32_u32(uint32x4_t a); // VCVT.F32.U32 q0, q0
     return f;
 }
-inline void Vector4::raw_to_byte4(uchar p[4]) const {
+inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
     for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); }
     uint32x4_t a = vcvtq_u32_f32(_r); // uint32x4_t vcvt_u32_f32(float32x4_t a); // VCVT.U32.F32 q0, q0 // truncate
     uint16x4_t b = vqmovn_u32(a);    // uint16x4_t vqmovn_u32(uint32x4_t a); // VQMOVN.I32 d0, q0 // saturation
@@ -318,7 +318,7 @@ inline void Vector4::raw_to_byte4(uchar p[4]) const {
     uint32x2_t e = vreinterpret_u32_u8(d);              // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
     vst1_lane_u32(reinterpret_cast<uint32_t*>(p), e, 0); // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
 }
-inline void Vector4::norm_to_byte4(uchar p[4]) const {
+inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
     Vector4 t = *this*255.f;
     for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see tVector4.h
     uint32x4_t a = vcvtq_u32_f32(t._r); // uint32x4_t vcvtq_u32_f32(float32x4_t a); // VCVT.U32.F32 q0, q0 // round
@@ -331,14 +331,14 @@ inline void Vector4::norm_to_byte4(uchar p[4]) const {
 
 #else  // neither SSE nor NEON
 
-inline Vector4 to_Vector4_raw(const uchar p[4]) {
+inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
     return Vector4(p[0], p[1], p[2], p[3]);
 }
-inline void Vector4::raw_to_byte4(uchar p[4]) const {
-    for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); p[c] = static_cast<uchar>(_c[c]); }
+inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
+    for_int(c, 4) { ASSERTX(_c[c]>=0.f && _c[c]<255.999f); p[c] = static_cast<uint8_t>(_c[c]); }
 }
-inline void Vector4::norm_to_byte4(uchar p[4]) const {
-    for_int(c, 4) { p[c] = static_cast<uchar>(clamp(_c[c], 0.f, 1.f)*255.f+.5f); }
+inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
+    for_int(c, 4) { p[c] = static_cast<uint8_t>(clamp(_c[c], 0.f, 1.f)*255.f+.5f); }
 }
 
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)

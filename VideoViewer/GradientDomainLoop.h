@@ -16,8 +16,8 @@ inline int get_framei(float t, int start, int period) {
     return start+my_mod(static_cast<int>(t+.5f)-start, period);
 }
 
-// Fast conversion from uchar to float
-inline float to_float(uchar uc) {
+// Fast conversion from uint8_t to float
+inline float to_float(uint8_t uc) {
 #if 0
     static const Vec<float,256> ar =
         [] { Vec<float,256> ar; for_int(i, 256) ar[i] = static_cast<float>(i); return ar; }();

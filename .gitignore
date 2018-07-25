@@ -57,12 +57,6 @@ build/
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
 
-# Backup & report files from converting an old project file to a newer Visual Studio version
-# _UpgradeReport_Files/
-# Backup*/
-# UpgradeLog*.XML
-# UpgradeLog*.htm
-
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
@@ -85,10 +79,6 @@ Makefile.dep
 *.ou
 *.diff
 
-# PoliCheck output I generated
-policheck_*.xls
-policheck_*.xml
-
 # Emacs
 *~
 \#*\#
@@ -98,21 +88,6 @@ RCS/
 
 # Specific paths
 /TAGS
-/lib_src/
-/_old/
-/G3dOGL/other/
-/G3dOGL/render_perf/
-/gpuhash/*.zip
-/Htest/Old/
-/HTest/icons/
-/demos/Old/
-/include/*/
-/test/*/
-/_other/*.zip
-/bin/cygwin/bu_dll/
-/progtest/data/
-/libHh/StackWalker.cpp
-/libHh/StackWalker.h
 
 /bin/unix/*
 !/bin/unix/.gitignore
@@ -225,10 +200,3 @@ RCS/
 /demos/data/2dvectest.visual_offset.png
 /demos/data/2dvectest.reconstructed.png
 /demos/data/palmtrees_small_loop.mp4
-
-# Do include some specific precompiled libraries (confirm using "git status -uall" or "git add -n .")
-# !/Filterterrain/ptclib/PTC_2012_64bit/*
-!/Filterterrain/ptclib/x64/
-!/Filterterrain/ptclib/x64/*
-!/Filterterrain/ptclib/Win32/
-!/Filterterrain/ptclib/Win32/*

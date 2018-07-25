@@ -274,9 +274,9 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
     float borderY;
     Vector4 borderUV;
     if (bordervalue) {
-        uchar borderYt = RGB_to_Y(*bordervalue);
+        uint8_t borderYt = RGB_to_Y(*bordervalue);
         convert(CGrid1View(borderYt), Grid1View(borderY));
-        Vec2<uchar> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
+        Vec2<uint8_t> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
         convert(CGrid1View(borderUVt), Grid1View(borderUV));
     }
     parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
@@ -463,17 +463,17 @@ class LockIMFMediaBuffer {
         AS(_buffer->Lock(&_pData, nullptr, nullptr));
     }
     ~LockIMFMediaBuffer()                       { assertx(_pData); AS(_buffer->Unlock()); }
-    uchar* operator()() const                   { return _pData; }
+    uint8_t* operator()() const                 { return _pData; }
  private:
     IMFMediaBuffer* _buffer;
-    uchar* _pData {nullptr};
+    uint8_t* _pData {nullptr};
 };
 
-static void retrieve_strided_BGRA(const uchar* pData, int stride, MatrixView<Pixel> frame) {
+static void retrieve_strided_BGRA(const uint8_t* pData, int stride, MatrixView<Pixel> frame) {
     const int ny = frame.ysize(), nx = frame.xsize();
-    uchar* pd = frame.data()->data();
+    uint8_t* pd = frame.data()->data();
     for_int(y, ny) {
-        const uchar* ps = pData+y*stride;
+        const uint8_t* ps = pData+y*stride;
         for_int(x, nx) {
             pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 255; // BGRA to RGBA
             pd += 4; ps += 4;
@@ -481,7 +481,7 @@ static void retrieve_strided_BGRA(const uchar* pData, int stride, MatrixView<Pix
     }
 }
 
-static void retrieve_strided_Nv12(const uchar* pData, int stride, int offsetUV, Nv12View nv12v) {
+static void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12View nv12v) {
     const int ny = nv12v.get_Y().ysize(), nx = nv12v.get_Y().xsize();
     // This is a bottleneck, so worth optimizing.
     if (stride==nv12v.get_Y().xsize()) {
@@ -495,14 +495,14 @@ static void retrieve_strided_Nv12(const uchar* pData, int stride, int offsetUV, 
             std::memcpy(nv12v.get_UV()[y].data(), pData+offsetUV+y*stride, nx);
         }
     } else {
-        uchar* pd = nv12v.get_Y().data();
+        uint8_t* pd = nv12v.get_Y().data();
         for_int(y, ny) {
-            const uchar* ps = pData+y*stride;
+            const uint8_t* ps = pData+y*stride;
             for_int(x, nx) { *pd++ = *ps++; }
         }
         pd = nv12v.get_UV().data()->data();
         for_int(y, ny/2) {
-            const uchar* ps = pData+offsetUV+y*stride;
+            const uint8_t* ps = pData+offsetUV+y*stride;
             for_int(x, nx) { *pd++ = *ps++; }
         }
     }
@@ -590,7 +590,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
         com_ptr<IMFMediaBuffer> pBuffer; AS(pSample->ConvertToContiguousBuffer(&pBuffer));
         {
             LockIMFMediaBuffer lock(pBuffer);
-            const uchar* pData = lock();
+            const uint8_t* pData = lock();
             // The following fails on the mp4 I tried!
             // com_ptr<IMF2DBuffer> p2Dbuf; AS(pBuffer->QueryInterface(IID_PPV_ARGS(&p2Dbuf)));
             // BYTE* pData; LONG lstride; AS(p2Dbuf->Lock2D(&pData, &lstride)); {
@@ -599,8 +599,8 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
             } else {
                 int offset = _mf_ny*stride;
                 if (stride==sdims[1]*1) {
-                    CMatrixView<uchar> matY(pData, sdims);
-                    CMatrixView<Vec2<uchar>> matUV(reinterpret_cast<const Vec2<uchar>*>(pData+offset), sdims/2);
+                    CMatrixView<uint8_t> matY(pData, sdims);
+                    CMatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<const Vec2<uint8_t>*>(pData+offset), sdims/2);
                     convert_Nv12_to_Image(CNv12View(matY, matUV), frame);
                 } else {
                     Nv12 nv12(sdims); retrieve_strided_Nv12(pData, stride, offset, nv12); // slow path
@@ -620,12 +620,12 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
         com_ptr<IMFMediaBuffer> pBuffer; AS(pSample->ConvertToContiguousBuffer(&pBuffer));
         {
             LockIMFMediaBuffer lock(pBuffer);
-            const uchar* pData = lock();
+            const uint8_t* pData = lock();
             if (_impl_nv12) {
                 retrieve_strided_Nv12(pData, stride, _mf_ny*stride, nv12v);
             } else {
                 if (stride==sdims[1]*4) {
-                    MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uchar*>(pData)), sdims);
+                    MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uint8_t*>(pData)), sdims);
                     for (Pixel& pix : mat) std::swap(pix[0], pix[2]); // BGRA to RGBA
                     convert_Image_to_Nv12(mat, nv12v);
                 } else {
@@ -774,7 +774,7 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
             unsigned stride = sdims[1]*sizeof(Pixel);
             // Note: problem for huge images; no workaround using WIC.
             unsigned buffer_size = assert_narrow_cast<unsigned>(sdims[0]*sdims[1]*sizeof(Pixel));
-            uchar* buf = const_cast<uchar*>(frame.data()->data());
+            uint8_t* buf = const_cast<uint8_t*>(frame.data()->data());
             AS(wic_factory->CreateBitmapFromMemory(sdims[1], sdims[0], bitmap_pixel_format,
                                                    stride, buffer_size, buf, &bitmap));
         }
@@ -785,10 +785,10 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
         com_ptr<IMFMediaBuffer> pBuffer; AS(MFCreateAlignedMemoryBuffer(cbBuffer, MF_16_BYTE_ALIGNMENT, &pBuffer));
         {
             LockIMFMediaBuffer lock(pBuffer);
-            uchar* pData = lock();
+            uint8_t* pData = lock();
             if (!_impl_nv12) {
-                uchar* pd = pData;
-                const uchar* ps = frame.data()->data();
+                uint8_t* pd = pData;
+                const uint8_t* ps = frame.data()->data();
                 for_int(y, sdims[0]) {
                     for_int(x, sdims[1]) {
                         pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 0; // RGBA to BGRA
@@ -797,9 +797,9 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
                 }
             } else {
                 // Media Foundation MP4 encoding under Win7 may have poor quality -- independent of this workaround.
-                MatrixView<uchar> matY(pData, _wvideo.spatial_dims());
-                MatrixView<Vec2<uchar>> matUV(reinterpret_cast<Vec2<uchar>*>(pData+sdims[0]*sdims[1]),
-                                              _wvideo.spatial_dims()/2);
+                MatrixView<uint8_t> matY(pData, _wvideo.spatial_dims());
+                MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData+sdims[0]*sdims[1]),
+                                                _wvideo.spatial_dims()/2);
                 convert_Image_to_Nv12(frame, Nv12View(matY, matUV));
             }
         }
@@ -819,12 +819,12 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
         com_ptr<IMFMediaBuffer> pBuffer; AS(MFCreateAlignedMemoryBuffer(cbBuffer, MF_16_BYTE_ALIGNMENT, &pBuffer));
         {
             LockIMFMediaBuffer lock(pBuffer);
-            uchar* pData = lock();
+            uint8_t* pData = lock();
             if (_impl_nv12) {
                 // Media Foundation MP4 encoding under Win7 may have poor quality; it is independent of this workaround
-                MatrixView<uchar> matY(pData, _wvideo.spatial_dims());
-                MatrixView<Vec2<uchar>> matUV(reinterpret_cast<Vec2<uchar>*>(pData+sdims[0]*sdims[1]),
-                                              _wvideo.spatial_dims()/2);
+                MatrixView<uint8_t> matY(pData, _wvideo.spatial_dims());
+                MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData+sdims[0]*sdims[1]),
+                                                _wvideo.spatial_dims()/2);
                 matY.assign(nv12v.get_Y());
                 matUV.assign(nv12v.get_UV());
             } else {
@@ -1032,9 +1032,9 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
         } else {
             _ar_tmp.init(assert_narrow_cast<int>(product(sdims)+product(sdims)/2)); // NV12
             if (!read_binary_raw((*_pfi)(), _ar_tmp)) return false;
-            CMatrixView<uchar> matY(_ar_tmp.data(), sdims);
-            CMatrixView<Vec2<uchar>> matUV(reinterpret_cast<const Vec2<uchar>*>(_ar_tmp.data()+product(sdims)),
-                                           sdims/2);
+            CMatrixView<uint8_t> matY(_ar_tmp.data(), sdims);
+            CMatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<const Vec2<uint8_t>*>(_ar_tmp.data()+product(sdims)),
+                                             sdims/2);
             convert_Nv12_to_Image(CNv12View(matY, matUV), frame);
         }
         return true;
@@ -1064,7 +1064,7 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
     static bool supported() { return ffmpeg_command_exists(); }
  private:
     unique_ptr<RFile> _pfi;
-    Array<uchar> _ar_tmp;
+    Array<uint8_t> _ar_tmp;
     Matrix<Pixel> _frame_rgb_tmp;
 };
 

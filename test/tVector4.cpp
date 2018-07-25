@@ -53,12 +53,13 @@ int main() {
         SHOW(reinterpret_cast<char*>(&va[1])-reinterpret_cast<char*>(&va[0]));
     }
     {
-        Vec<uchar,8> ar {uchar{23}, uchar{37}, uchar{45}, uchar{255}, uchar{12}, uchar{31}, uchar{37}, uchar{0}};
+        Vec<uint8_t,8> ar {uint8_t{23}, uint8_t{37}, uint8_t{45}, uint8_t{255}, uint8_t{12}, uint8_t{31},
+                           uint8_t{37}, uint8_t{0}};
         SHOW(to_Vector4_raw(ar.data()));
         SHOW(to_Vector4_raw(&ar[4]));
         SHOW(to_Vector4_norm(ar.data()));
         SHOW(to_Vector4_norm(&ar[4]));
-        Vec4<uchar> ar2;
+        Vec4<uint8_t> ar2;
         Vector4 v1 = to_Vector4_raw(ar.data());
         // v1.raw_to_byte4(ar2.data());
         ar2 = v1.raw_pixel();

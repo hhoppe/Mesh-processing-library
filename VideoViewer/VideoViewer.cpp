@@ -562,7 +562,7 @@ string next_image_in_directory(const string& filename, int increment) {
 void app_draw_text(const Vec2<int>& yx, const string& s, bool wrap = true) {
     if (s=="") return;
     if (1) {
-        const uchar alpha_transparency = 150;
+        const uint8_t alpha_transparency = 150;
         hw.draw_text(yx, s, HW::EStyle::boxed, g_text_shadow_color.with(3, alpha_transparency), wrap);
     } else {
         hw.draw_text(yx, s, HW::EStyle::shadowed, g_text_shadow_color, wrap);
@@ -685,8 +685,8 @@ Pixel get_frame_pix(const Vec2<int>& yx) {
     assertx(g_cob>=0 && g_framenum>=0);
     if (getob()._video_nv12.size()) {
         CNv12View nv12v = getob()._video_nv12[g_framenum];
-        uchar y = nv12v.get_Y()[yx];
-        const Vec2<uchar>& uv = nv12v.get_UV()[yx/2];
+        uint8_t y = nv12v.get_Y()[yx];
+        const Vec2<uint8_t>& uv = nv12v.get_UV()[yx/2];
         return YUV_to_RGB_Pixel(y, uv[0], uv[1]);
     } else {
         Pixel pix = getob()._video[g_framenum][yx];
@@ -2134,8 +2134,8 @@ bool DerivedHW::key_press(string skey) {
                              y = pow(y, g_gamma);
                              y *= contrast_fac;
                              y += brightness_term;
-                             yuv[0] = clamp_to_uchar(int(y*255.f+.5f));
-                             for_intL(c, 1, 3) { yuv[c] = clamp_to_uchar(int(128.5f+(yuv[c]-128.f)*saturation_fac)); }
+                             yuv[0] = clamp_to_uint8(int(y*255.f+.5f));
+                             for_intL(c, 1, 3) { yuv[c] = clamp_to_uint8(int(128.5f+(yuv[c]-128.f)*saturation_fac)); }
                              pix = YUV_to_RGB_Pixel(yuv[0], yuv[1], yuv[2]);
                              if (bgra) std::swap(pix[0], pix[2]);
                              nvideo.raster(i) = pix;
@@ -2147,12 +2147,12 @@ bool DerivedHW::key_press(string skey) {
                              y = pow(y, g_gamma);
                              y *= contrast_fac;
                              y += brightness_term;
-                             nvideo_nv12.get_Y().raster(i) = clamp_to_uchar(int(y*255.f+.5f));
+                             nvideo_nv12.get_Y().raster(i) = clamp_to_uint8(int(y*255.f+.5f));
                          });
                          parallel_for_each(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
                              for_int(c, 2) {
                                  nvideo_nv12.get_UV().raster(i)[c] =
-                                     clamp_to_uchar(int(128.5f+(ob._video_nv12.get_UV().raster(i)[c]-128.f)*
+                                     clamp_to_uint8(int(128.5f+(ob._video_nv12.get_UV().raster(i)[c]-128.f)*
                                                         saturation_fac));
                              }
                          });
@@ -2211,8 +2211,8 @@ bool DerivedHW::key_press(string skey) {
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_object();
                  Video nvideo(ob._video);
-                 VideoNv12 nvideo_nv12(Grid<3,uchar>(ob._video_nv12.get_Y()),
-                                       Grid<3, Vec2<uchar>>(ob._video_nv12.get_UV()));
+                 VideoNv12 nvideo_nv12(Grid<3,uint8_t>(ob._video_nv12.get_Y()),
+                                       Grid<3, Vec2<uint8_t>>(ob._video_nv12.get_UV()));
                  add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12), ob._filename));
                  getob()._unsaved = ob._unsaved;
                  message("This is the cloned " + ob.stype());
@@ -3610,11 +3610,11 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
             Image image(g_lp.mat_start.dims()); // size may be different from hdims
             const int K = 4;
             for (const auto& yx : range(image.dims())) {
-                uchar static_frame = '\0';
+                uint8_t static_frame = '\0';
                 int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
                 if (!(start%K==0 && (period%K==0 || period==1))) SHOW(yx, start, period);
                 assertx(start%K==0 && (period%K==0 || period==1));
-                image[yx] = Pixel(static_frame, narrow_cast<uchar>(start/K), narrow_cast<uchar>(period/K), 255);
+                image[yx] = Pixel(static_frame, narrow_cast<uint8_t>(start/K), narrow_cast<uint8_t>(period/K), 255);
             }
             image.write_file("output_loop_parameters.vlp.png");
         }
@@ -3744,8 +3744,8 @@ void background_work(bool asynchronous) {
                         int period = g_lp.mat_period[yx];
                         float fstart = float(start)/(num_input_frames-period-1);
                         float fperiod = float(period)/(num_input_frames-1);
-                        Pixel pix = k_color_ramp[clamp_to_uchar(int(fperiod*255.f+.5f))];
-                        for_int(c, 3) { pix[c] = clamp_to_uchar(int(pix[c]*(.4f+.6f*fstart))); }
+                        Pixel pix = k_color_ramp[clamp_to_uint8(int(fperiod*255.f+.5f))];
+                        for_int(c, 3) { pix[c] = clamp_to_uint8(int(pix[c]*(.4f+.6f*fstart))); }
                         const bool have_mask = false;
                         const bool is_masked = false;
                         if (period==1) pix = Pixel::gray(have_mask ? 180 : 230);
@@ -3972,7 +3972,7 @@ void do_stripe(Args& args) {
         }
     } else {
         video_nv12.init(dims); fill(video_nv12.get_Y(), RGB_to_Y(back_color));
-        fill(video_nv12.get_UV(), twice(uchar{128})); // both Pixel::black() and Pixel::white() have this UV
+        fill(video_nv12.get_UV(), twice(uint8_t{128})); // both Pixel::black() and Pixel::white() have this UV
         for_int(f, nframes) {
             const int stripe_width = 2;
             int x0 = int(float(f)/max(nframes-1, 1)*(xsize-stripe_width)+.5f);
@@ -3998,13 +3998,13 @@ void do_zonal(Args& args) {
     if (0) {
         const float scale = 25.f/float(mean(image.dims()));
         parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-            image[yx] = Pixel::gray(uchar((cos(square((ysize-1-yx[0])*scale)+square(yx[1]*scale))*.499f+.5f)*256.f));
+            image[yx] = Pixel::gray(uint8_t((cos(square((ysize-1-yx[0])*scale)+square(yx[1]*scale))*.499f+.5f)*256.f));
         });
     } else {
         // from resample/supersampling/zonal.cpp
         const float scale = TAU/float(sum(image.dims()));
         parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-            image[yx] = Pixel::gray(uchar((cos((square(ysize-1-yx[0])+square(yx[1]))*scale)*.45f+.5f)*256.f));
+            image[yx] = Pixel::gray(uint8_t((cos((square(ysize-1-yx[0])+square(yx[1]))*scale)*.45f+.5f)*256.f));
         });
     }
     {

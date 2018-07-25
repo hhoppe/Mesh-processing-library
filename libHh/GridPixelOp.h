@@ -43,7 +43,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                 const Pixel* __restrict ao1 = matrixp[y*DS+1].data();
                 for_int(x, nx) {
                     for_int(z, 4) {
-                        an[0][z] = narrow_cast<uchar>((ao0[0][z]+ao0[1][z]+ao1[0][z]+ao1[1][z]+(DS2/2))/DS2);
+                        an[0][z] = narrow_cast<uint8_t>((ao0[0][z]+ao0[1][z]+ao1[0][z]+ao1[1][z]+(DS2/2))/DS2);
                     }
                     an += 1; ao0 += DS; ao1 += DS; // OPT:DS==2
                 }
@@ -61,7 +61,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                 const Pixel* __restrict ao3 = matrixp[y*DS+3].data();
                 for_int(x, nx) {
                     for_int(z, 4) {
-                        an[0][z] = narrow_cast<uchar>((ao0[0][z]+ao0[1][z]+ao0[2][z]+ao0[3][z]+
+                        an[0][z] = narrow_cast<uint8_t>((ao0[0][z]+ao0[1][z]+ao0[2][z]+ao0[3][z]+
                                                        ao1[0][z]+ao1[1][z]+ao1[2][z]+ao1[3][z]+
                                                        ao2[0][z]+ao2[1][z]+ao2[2][z]+ao2[3][z]+
                                                        ao3[0][z]+ao3[1][z]+ao3[2][z]+ao3[3][z]+
@@ -86,9 +86,9 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
                             }
                         }
                     }
-                    // for_int(z, 4) { nmatrixp[y][x][z] = narrow_cast<uchar>(sums[z]/Dyx2); }
+                    // for_int(z, 4) { nmatrixp[y][x][z] = narrow_cast<uint8_t>(sums[z]/Dyx2); }
                     auto& nmatrixpyx = nmatrixp[y][x];
-                    for_int(z, 4) { nmatrixpyx[z] = narrow_cast<uchar>(sums[z]/Dyx2); }
+                    for_int(z, 4) { nmatrixpyx[z] = narrow_cast<uint8_t>(sums[z]/Dyx2); }
                 }
             });
             return;

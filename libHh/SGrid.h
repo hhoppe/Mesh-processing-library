@@ -74,7 +74,7 @@ template<typename T, int d0, int... od> class SGrid :
     const T* end() const                        { return data()+vol; }
     T* data()                                   { return reinterpret_cast<T*>(b().data()); }
     const T* data() const                       { return reinterpret_cast<const T*>(b().data()); }
-private:
+ private:
     base& b()                                   { return *this; }
     const base& b() const                       { return *this; }
     slice* p(int i)                             { return b().data()+i; }

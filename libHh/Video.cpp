@@ -160,7 +160,7 @@ void Video::write_file(const string& filename) const {
 bool filename_is_video(const string& filename) {
     static const auto* k_extensions = new Array<string>{
         "mpg", "mpeg", "mpe", "mpv", "mp2", "mpeg2", "mp4", "mpeg4", "mov", "avi", "wmv", "flv",
-        "m2v", "m4v", "webm", "ogv", "3gp", "mts"
+        "m2v", "m4v", "webm", "ogv", "3gp", "mts",
     };
     return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
 }

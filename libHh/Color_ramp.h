@@ -263,7 +263,7 @@ static const Array<Pixel> k_color_ramp = {
     Pixel(255, 6, 249, 255),
     Pixel(255, 4, 251, 255),
     Pixel(255, 2, 253, 255),
-    Pixel(255, 0, 255, 255)
+    Pixel(255, 0, 255, 255),
 };
 
 } // namespace hh

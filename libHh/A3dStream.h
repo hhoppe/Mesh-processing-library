@@ -50,7 +50,7 @@ class A3dElem {
  public:
     enum class EType {
         polygon = 'P', polyline = 'L', point = 'p',
-        comment = '#', endobject = 'o', endframe = 'f', endfile = 'q', editobject = 'O'
+        comment = '#', endobject = 'o', endframe = 'f', endfile = 'q', editobject = 'O',
     };
     // also reserved: 'v', 'E', 'n', 'd', 's', 'g'
     A3dElem()                                           = default;

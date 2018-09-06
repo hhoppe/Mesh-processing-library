@@ -128,7 +128,7 @@ void HW::open() {
                 GLX_DEPTH_SIZE, 24, // could be just "1"; 24 is arbitrary
                 // Found necessary for Chrome Remote Desktop and "//third_party/mesa:GL",
                 //  else ALPHA_SIZE==0 and somehow the rendered window is mostly transparent.
-                GLX_ALPHA_SIZE, 8
+                GLX_ALPHA_SIZE, 8,
             };
             if (_hwdebug) SHOW("hw: open", _is_glx_dbuf);
             if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);

@@ -219,7 +219,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
 bool filename_is_image(const string& filename) {
     static const auto* k_extensions = new Array<string>{
         "jpg", "jpeg", "png", "bmp", "rgb", "ppm", "pgm", "pbm", "tif", "tiff", "gif",
-        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr"
+        "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr",
     };
     return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
 }

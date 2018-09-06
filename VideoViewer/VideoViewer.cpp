@@ -53,7 +53,7 @@ const bool k_prefer_nv12 = 1;   // read videos using NV12 format (if even dimens
 const bool k_use_bgra = 1;      // read images using BGRA (rather than RGBA) channel order to improve speed
 const Pixel k_background_color = Pixel::black();
 const Array<double> k_speeds = { // video playback speed factors
-    0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,  1.,  1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.
+    0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,  1.,  1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.,
 };
 const float k_key_zoom_fac = 2.f;                 // spatial zoom factor for each UI keypress
 const float k_wheel_zoom_fac = sqrt(2.f);         // spatial zoom factor for each UI mouse wheel step

@@ -120,7 +120,7 @@ struct Vsplit {
         B_LRMASK = 0x0003,
         B_ABOVE = 0x0000,
         B_BELOW = 0x0001,
-        B_NEW  = 0x0002         // must be on separate bit.
+        B_NEW  = 0x0002,                // must be on separate bit.
     };
     enum EMask : unsigned {
         VSINDEX_SHIFT = 0,
@@ -157,7 +157,7 @@ struct Vsplit {
         FLN_MASK = (1u<<FLN_SHIFT),
         //
         FRN_SHIFT = 15,
-        FRN_MASK = (1u<<FRN_SHIFT)
+        FRN_MASK = (1u<<FRN_SHIFT),
     };
     // *** Documentation:
     // vs_index: 0..2: index of vs within flace flclw

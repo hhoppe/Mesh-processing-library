@@ -1,9 +1,13 @@
-# clang5.0.1 64_bit on Windows  (defines _MSC_VER and not __GNUC__)
+# clang 64_bit on Windows  (defines _MSC_VER and not __GNUC__)
 
 rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 1
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+
+# 20180911 LLVM 6.0.1
+# LLVM-6.0.1-win64.exe from http://releases.llvm.org/download.html#6.0.1 Windows (64-bit)
+$(call prepend_PATH,c:/Program Files/LLVM/bin)
 
 # Bug: MSVC <functional> requires "-frtti"; workaround in https://stackoverflow.com/questions/47950690 no longer works.
 cxxall += -frtti
@@ -12,17 +16,7 @@ cxxall += -D_CRT_SECURE_NO_WARNINGS
 
 # Note that I required HH_POSIX(fdopen)... because the non-underscore versions do not exist in clang library.
 
-# 20180206 LLVM 5.0.1
-# http://releases.llvm.org/5.0.1/LLVM-5.0.1-win64.exe
-# installed into C:\Program Files\LLVM
-# c:/Program\ Files/LLVM/bin/clang --version
-# clang version 5.0.1 (tags/RELEASE_501/final)
-# Target: x86_64-pc-windows-msvc
-# Thread model: posix
-# InstalledDir: c:\Program Files\LLVM\bin
-$(call prepend_PATH,c:/Program Files/LLVM/bin)
-
-# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning
+# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning; still needed in clang 6.0.1
 ccommon += -Xclang -flto-visibility-public-std
 
 LDFLAGS += -Lc:/Progra~1/LLVM/lib#  LLVM bug; this should not be necessary; for -llibomp

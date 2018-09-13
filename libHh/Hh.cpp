@@ -14,6 +14,7 @@
 #include <vector>
 #include <mutex>                // std::once_flag, std::call_once()
 #include <chrono>
+#include <locale>
 
 #if defined(HH_HAVE_REGEX)
 #include <regex>
@@ -88,31 +89,6 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 #include <unordered_map>        // avoids creating a depencency on my Map class
 #include <map>                  // avoids creating a depencency on my Map class
 #endif
-
-
-// *** UTF8 handling
-
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
-
-// http://stackoverflow.com/questions/24497956/is-codecvt-not-supported-by-clang-or-gcc
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<500
-#if !defined(WC_ERR_INVALID_CHARS)
-#define WC_ERR_INVALID_CHARS 0x00000080 // undefined prior to Vista, so not yet in MINGW header file
-#endif
-#else
-#define HAVE_CODECVT_UTF8       // C++11
-#endif
-
-#if defined(HAVE_CODECVT_UTF8)
-#include <codecvt>              // std::wstring_convert<std::codecvt_utf8<>>  C++11
-#endif
-
-#elif defined(_WIN32) && defined(HH_NO_UTF8)
-
-#include <locale>
-
-#endif  // end of UTF8 handling
-
 
 namespace hh {
 
@@ -622,15 +598,6 @@ static void hh_init_aux() {
 
 // Convert Windows UTF-16 std::wstring to UTF-8 std::string.
 std::string narrow(const std::wstring& wstr) {
-#if defined(HAVE_CODECVT_UTF8)
-    static_assert(sizeof(wchar_t)==2, "");
-    // See http://www.cplusplus.com/reference/codecvt/codecvt_utf8_utf16/
-    // std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> utf8conv;
-    constexpr unsigned long max_code = 0x10ffffUL; // default
-    constexpr std::codecvt_mode cvt_mode = std::codecvt_mode::little_endian; // default is big-endian
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t, max_code, cvt_mode>, wchar_t> utf8conv; // C++11
-    return utf8conv.to_bytes(wstr);
-#else  // how ironic to use Windows API
     // int WideCharToMultiByte(
     //     _In_       UINT CodePage,
     //     _In_       DWORD dwFlags,
@@ -650,21 +617,10 @@ std::string narrow(const std::wstring& wstr) {
     //  http://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers
     assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), nchars, &str[0], nchars, nullptr, nullptr));
     return str;
-#endif
 }
 
 // Convert UTF-8 std::string to Windows UTF-16 std::wstring.
 std::wstring widen(const std::string& str) {
-#if defined(HAVE_CODECVT_UTF8)
-    static_assert(sizeof(wchar_t)==2, "");
-    // Without std::codecvt_mode::little_endian, the result is wrong on CONFIG=mingw (see test_codecvt.cpp).
-    // See http://www.cplusplus.com/reference/codecvt/codecvt_utf8_utf16/
-    // std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> utf16conv;
-    constexpr unsigned long max_code = 0x10ffffUL; // default
-    constexpr std::codecvt_mode cvt_mode = std::codecvt_mode::little_endian; // default is big-endian
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t, max_code, cvt_mode>, wchar_t> utf16conv; // C++11
-    return utf16conv.from_bytes(str);
-#else
     // int MultiByteToWideChar(
     //     _In_       UINT CodePage,
     //     _In_       DWORD dwFlags,
@@ -680,7 +636,6 @@ std::wstring widen(const std::string& str) {
     std::wstring wstr(nwchars-1, wchar_t{0});
     assertx(MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size()+1), &wstr[0], nwchars));
     return wstr;
-#endif
 }
 
 #elif defined(_WIN32) && defined(HH_NO_UTF8)

@@ -108,13 +108,13 @@ struct NormalMapping_ogl2 final : NormalMapping {
     //
     GLuint program_id;
     GLuint fragment_shader_id;
-    const string unused_vertex_shader = (1+R"(
+    const string unused_vertex_shader = &R"(
         void main() {
             gl_TexCoord[0] = gl_MultiTexCoord0;
             gl_Position = ftransform();
         }
-    )");
-    const string fragment_shader = (1+R"(
+    )"[1];
+    const string fragment_shader = &R"(
         uniform vec3 vlight;
         uniform vec3 vhalf;
         uniform float ambient;
@@ -135,7 +135,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
                             gl_FrontMaterial.specular*adjustment2*pow(vdot, 4.));
             gl_FragColor.a = 1.;
         }
-    )");
+    )"[1];
     static type& s_f_get() { static type* f = new type; return *f; }  // singleton pattern function
 };
 
@@ -205,7 +205,7 @@ struct NormalMapping_frag1 final : NormalMapping {
     // # OUTPUT oCol = result.color;
     // http://en.wikipedia.org/wiki/ARB_assembly_language
     // https://www.opengl.org/registry/specs/ARB/fragment_program.txt
-    const string fragment_shader = (0+R"(!!ARBfp1.0
+    const string fragment_shader = R"(!!ARBfp1.0
         TEMP    norm, light, vhalf, ndotl, ndoth, diffuse;
         ATTRIB  norm_tc = fragment.texcoord[0];
         ATTRIB  color = fragment.color.primary;
@@ -229,7 +229,7 @@ struct NormalMapping_frag1 final : NormalMapping {
         MAD     result.color.xyz, ndotl.a, color, ndoth.a;
         MOV     result.color.a, 1.;
         END
-    )");
+    )";
     static type& s_f_get() { static type* f = new type; return *f; }
 };
 

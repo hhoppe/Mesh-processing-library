@@ -605,7 +605,7 @@ void do_g3d_demofly() {
 }
 
 void show_help() {
-    const string s = 1+R"(
+    const string s = &R"(
    Commands:
 OBJECT FOCUS:
         select using digits 0-9, 0==eyepoint
@@ -651,7 +651,7 @@ B       bobble motion           @       object cycling (movie)
 ctrl-C  quit
 DEVICE COMMANDS:
 D       device prefix           D ?     list device commands
-)";
+)"[1];
     std::cerr << s;
 }
 

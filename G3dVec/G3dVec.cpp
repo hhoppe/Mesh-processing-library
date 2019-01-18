@@ -1138,7 +1138,7 @@ bool HB::special_keypress(char ch) {
         hw.make_fullscreen(!hw.is_fullscreen());
         break;
      case '?': {
-         const string s = 1+R"(
+         const string s = &R"(
 Device commands:
   Per object:
 <b>ackfacecull  back<l>inecull  <r>eversecull
@@ -1148,7 +1148,7 @@ highlight<v>ertices  show_sharp<e>dges
 <h>lr_mode  button<H>lr  <q>uickmode  button<Q>uick  <[>, <]>:change_quicki
 <P>sg3d  <d>oublebuffer
 </>setstatefile  <cntrl-C>quit
-)";
+)"[1];
          std::cerr << s;
          break;
      }

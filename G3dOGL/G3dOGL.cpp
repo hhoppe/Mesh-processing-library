@@ -1063,9 +1063,7 @@ void load_texturemaps() {
         }
         if (texture_elev) {
             showf("Defining texture_elev\n");
-#if defined(_WIN32)
             USE_GL_EXT(glActiveTexture, PFNGLACTIVETEXTUREPROC);
-#endif
             GLint max_texture_units; glGetIntegerv(GL_MAX_TEXTURE_UNITS, &max_texture_units);
             if (0) SHOW(max_texture_units);
             assertx(max_texture_units>=2);
@@ -2966,7 +2964,7 @@ bool HB::special_keypress(char ch) {
         hw.make_fullscreen(g_fullscreen);
         break;
      case '?': {
-         const string s = 1+R"(
+         const string s = &R"(
 Device commands (prefixed by 'D'):
    Per object:
 <b>ackfacecull  <r>eversecull  <s>hading  s<m>ooth_shading  <e>dges
@@ -2974,7 +2972,7 @@ Device commands (prefixed by 'D'):
 depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 <q>uickmode  button<Q>uick   <[>, <]>:change_quicki
 </>statefile  set<R>enderedimage  <P>rint_image  <cntrl-C>quit
-)";
+)"[1];
          std::cerr << s;
          break;
      }

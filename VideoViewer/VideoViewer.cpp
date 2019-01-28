@@ -192,6 +192,7 @@ EKernel g_kernel = k_default_kernel;            // desired image reconstruction 
 EKernel g_render_kernel;                        // filter in use
 const bool k_default_info = true;
 bool g_show_info = k_default_info; // show information in window (including timeline)
+bool g_show_grid = false;          // show horizontal and vertical lines
 bool g_other_show_info = false;    // show information in non-curent window config (e.g. fullscreen if not)
 bool g_show_exif = false;          // show additional information, included content metadata
 bool g_show_help = false;          // show overlaid help text
@@ -1312,6 +1313,7 @@ bool DerivedHW::key_press(string skey) {
                      g_fit_view_to_window = true; // also set by reset_window()
                      g_kernel = k_default_kernel;
                      g_show_info = k_default_info;
+                     g_show_grid = false;
                      g_other_show_info = false;
                      g_show_exif = false;
                      if (0) g_show_help = false;
@@ -2181,7 +2183,7 @@ bool DerivedHW::key_press(string skey) {
                  initiate_loop_request();
                  break;
              }
-             case 'g': {        // generate optimized seamless loop
+             case 'G': {        // generate optimized seamless loop
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
@@ -2198,7 +2200,7 @@ bool DerivedHW::key_press(string skey) {
                  initiate_loop_request();
                  break;
              }
-             case 'G': {        // generate optimized seamless loop synchronously
+             case 'G'+256: {    // generate optimized seamless loop synchronously; disabled
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_object();
                  if (ob.nframes()<4) throw string("too few video frames");
@@ -2302,6 +2304,11 @@ bool DerivedHW::key_press(string skey) {
              }
              case 'i': {        // info
                  g_show_info = !g_show_info;
+                 redraw_later();
+                 break;
+             }
+             case 'g': {        // grid
+                 g_show_grid = !g_show_grid;
                  redraw_later();
                  break;
              }
@@ -2886,6 +2893,7 @@ void render_image() {
         static int h_saturation_fac;
         static int h_checker_offset;
         static int h_through_color;
+        static int h_enable_grid;
         static GLuint buf_p;
         static GLuint buf_i;
         static bool is_init = false;
@@ -2958,6 +2966,7 @@ void render_image() {
             h_saturation_fac = glGetUniformLocation(program_id, "saturation_fac"); assertx(h_saturation_fac>=0);
             h_checker_offset = glGetUniformLocation(program_id, "checker_offset"); assertx(h_checker_offset>=0);
             h_through_color = glGetUniformLocation(program_id, "through_color"); assertx(h_through_color>=0);
+            h_enable_grid = glGetUniformLocation(program_id, "enable_grid"); assertx(h_enable_grid>=0);
             glGenBuffers(1, &buf_p);
             glGenBuffers(1, &buf_i);
             assertx(!gl_report_errors());
@@ -2981,6 +2990,7 @@ void render_image() {
                 glUniform4fv(h_through_color, 1, (g_checker ? V(-1.f, 0.f, 0.f, 0.f).data() :
                                                   Vector4(g_through_color).data()));
             }
+            glUniform1i(h_enable_grid, g_show_grid);
             if (0) {
                 int h_somematrix = glGetUniformLocation(program_id, "somematrix");
                 glUniformMatrix4fv(h_somematrix, 1, GL_FALSE, SGrid<float, 4, 4>{}.data());
@@ -3178,6 +3188,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                  float vrotate = -(yx[0]-g_selected.yx_pressed[0])*.0001f;
                  if (alt_pressed) vrotate *= .1f;
                  perform_window_rotation(vrotate);
+                 g_show_grid = true;
              }
              redraw_later();
              break;
@@ -3390,13 +3401,13 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             " <pgdn>next_file   <pgup>prev_file   <s>ort_order   <C-o>pen   <C-s>ave   <C-S-s>overwrite",
             " <f2>rename   <f5>reload   <f7>move   <f8>copy   <C-n>ew_window   <d>irectory",
             " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <W>hite_crop",
-            " <v>iew_externally   <i>nfo   <e>xif   <H>checker   <~>console   <esc>quit",
+            " <v>iew_externally   <i>nfo   <g>rid  <e>xif   <H>checker   <~>console   <esc>quit",
             "Video:",
             " <spc>play/pause   <l>oop   <a>ll_loop   <m>irror_loop",
             " <left>frame-1   <right>frame+1   <home>first   <end>last",
             " <[>slower   <]>faster   <1>normal   <2>twice   <5>half   <F>ramerate   <B>itrate",
             " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split    <&>merge   <M>irror",
-            " <R>esample_temporally   <g>en_seamless_loop   <C-g>high-quality_loop   <L>oop",
+            " <R>esample_temporally   <G>en_seamless_loop   <C-g>high-quality_loop   <L>oop",
             " <I>mage_from_frame   <V>ideo_from_images   <#>from_image_files%03d",
         };
         for_int(i, ar.num())
@@ -3479,7 +3490,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     } else {
 #if !defined(HH_NO_VIDEO_LOOP)
         if (0 && getobnum()==1 && g_cob>=0 && !getob().is_image() && !getenv_bool("HH_NO_LOOP_MESSAGE"))
-            app_draw_text(V((2+0)*(font_height+4), 6), "To generate a loop, press the <g> key");
+            app_draw_text(V((2+0)*(font_height+4), 6), "To generate a loop, press the <G> key");
 #endif
     }
     assertx(!gl_report_errors());

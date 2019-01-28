@@ -56,13 +56,17 @@ endif
 # $(info .VARIABLES=$(.VARIABLES))
 
 # http://stackoverflow.com/questions/35516996/gnu-make-prepend-a-recursively-expanded-variable/
+# Expand a variable, properly escaping '$' characters.
+expand = $(if $(findstring simple,$(flavor $1)),$(subst $$,$$$$,$($1)),$(value $1))
+
+# Prepend to a variable, preserving flavor.
 # Usage:
 # $(call prepend,VARIABLE,text)           # Prepend text to a recursively expanded $(VARIABLE).
 # $(call prepend,list,add some words )    # Remember to add any trailing separator character (e.g. space).
-# $(call prepend,PATH,$$(var1):$$(var2):) # Use $$ to defer any variable expansions.
-define prepend
-$(eval $(1) = $(2)$(value $(1)))
-endef
+prepend = \
+  $(if $(findstring simple,$(flavor $1)), \
+    $(eval $1 := $2$(call expand,$1)), \
+    $(eval $1 = $2$(call expand,$1)))
 
 # Function to prepend a directory to the current PATH.  This complicated code verifies existence of the directory,
 #  removes drive letter, adds /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".

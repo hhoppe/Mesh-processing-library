@@ -21,6 +21,7 @@ uniform float gamma;
 uniform float saturation_fac;
 uniform vec2 checker_offset;
 uniform vec4 through_color;  // use checker if through_color[0]<0.f
+uniform bool enable_grid;
 
 in vec2 frag_uv;                // called 'varying' in #version 130
 out vec4 frag_color;            // implicitly 'gl_FragColor' in #version 130
@@ -232,6 +233,11 @@ void main() {
         yuv[0] = y;
         for (int c = 1; c<3; c++) yuv[c] = .5f+(yuv[c]-.5f)*saturation_fac;
         color = YUV_to_RGB(yuv);
+    }
+    if (enable_grid) {
+        const float grid_spacing = 100.f;
+        vec2 fr = fract(gl_FragCoord.xy / grid_spacing);
+        if (max(fr.x, fr.y) > 1.f-1.f/grid_spacing) color.xyz = 1.f - color.xyz;
     }
     frag_color = color;
 }

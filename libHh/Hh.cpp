@@ -702,6 +702,11 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, " >", ">");
     s = replace_all(s, ", ", ",");
     s = replace_all(s, " *", "*");
+#if defined(HH_HAVE_REGEX)
+    s = std::regex_replace(s.c_str(), std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
+#else
+    s = replace_all(s, "std::__g::", "std::");
+#endif
 // *** win
     s = replace_all(s, "std::basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
@@ -762,6 +767,8 @@ string extract_function_type_name(string s) {
     // See experiments in ~/src/test/misc/test_compile_time_type_name.cpp
     // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
     s = replace_all(s, "std::__cxx11::", "std::"); // GNUC 5.2; e.g. std::__cx11::string
+    s = replace_all(s, "std::__1::", "std::"); // GOOGLE3: libc++
+    s = replace_all(s, "std::__g::", "std::"); // GOOGLE3: versioned libstdc++
     if (remove_at_beginning(s, "hh::details::TypeNameAux<")) { // VC
         if (!remove_at_end(s, ">::name")) { SHOW(s); assertnever(""); }
         remove_at_end(s, " ");  // possible space for complex types

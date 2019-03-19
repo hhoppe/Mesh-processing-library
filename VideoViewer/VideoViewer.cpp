@@ -1,7 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <atomic>
+#include <cmath>
+#include <functional>  // function<>
 #include <thread>
-#include <functional>           // function<>
 #if defined(_WIN32)
 #include <io.h>                 // close(), dup2()
 #endif
@@ -1779,7 +1780,7 @@ bool DerivedHW::key_press(string skey) {
                          view = Frame::scaling(concat(twice(arzoom[cmax]), V(1.f)));
                          view[3][1-cmax] = (ndims[1-cmax]-g_frame_dims[1-cmax]*arzoom[cmax])/2.f;
                          // align window edge with pixel edge using fmod()
-                         view[3][1-cmax] = view[3][1-cmax] - fmod(view[3][1-cmax], arzoom[cmax]);
+                         view[3][1-cmax] = view[3][1-cmax] - std::fmod(view[3][1-cmax], arzoom[cmax]);
                      }
                      set_view(view);
                  }

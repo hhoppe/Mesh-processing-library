@@ -34,6 +34,7 @@ bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
 Bndrule bndrule = Bndrule::reflected;
 FilterBnd filterb{Filter::get("spline"), bndrule};
+int startframe = 0;
 int tradius = 0;                // was 4
 bool nooutput = false;
 int trunc_begin = 0;            // skip the first trunc_begin frames
@@ -312,7 +313,8 @@ void do_assemble(Args& args) {
 void do_fromimages(Args& args) {
     string rootname = args.get_filename();
     assertx(contains(rootname, '%')); // rootname.%03d.png
-    int nframes = 0, first_named_file = 0; {
+    int first_named_file = startframe;
+    int nframes = 0; {
         for (;;) {
             string s = sform_nonliteral(rootname.c_str(), first_named_file+nframes);
             if (file_exists(s)) { nframes++; continue; }
@@ -2070,6 +2072,7 @@ int main(int argc, const char** argv) {
     ARGSD(as_cropsides,         "l r t b : when assembling, crop each frame");
     ARGSD(as_tnframes,          "nf : when assembling, temporally scale to specified number of frames");
     ARGSD(assemble,             "nx ny videos_lr_bt_order : concatenate grid of videos");
+    ARGSP(startframe,           "i : start %d numbering at i");
     ARGSD(fromimages,           "rootname.%03d.png : read frame images");
     ARGSC("",                   ":");
     ARGSD(framerate,            "fps : set video frame rate");
@@ -2169,7 +2172,7 @@ int main(int argc, const char** argv) {
     }
     string arg0 = args.num() ? args.peek_string() : "";
     if (!ParseArgs::special_arg(arg0) && arg0!="-nostdin" && arg0!="-create" && !begins_with(arg0, "-as") &&
-        arg0!="-fromimages" && arg0!="-readnv12") {
+        arg0!="-startframe" && arg0!="-fromimages" && arg0!="-readnv12") {
         string filename = "-"; if (args.num() && (arg0=="-" || arg0[0]!='-')) filename = args.get_filename();
         read_video(filename, false);
     }

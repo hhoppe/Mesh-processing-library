@@ -26,7 +26,10 @@ struct subvertexinfo {
 };
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, subvertexinfo, vinfo);
 
-const bool sdebug = getenv_bool("SUBMESH_DEBUG");
+bool debug() {
+    static const bool value = getenv_bool("SUBMESH_DEBUG");
+    return value;
+}
 
 // *** helper
 
@@ -107,7 +110,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
             assertw(comb.c[v]==1.f);
         } else {
             Combvh ncomb = compose_c(comb);
-            if (sdebug) assertx(ncomb.is_combination());
+            if (debug()) assertx(ncomb.is_combination());
             nthis.enter(v, std::move(ncomb));
         }
     });
@@ -487,7 +490,7 @@ void SubMesh::create_conv(Mvcvh& mconv, FVMASK fsubdivision) {
         (this->*fsubdivision)(v, comb);
         assertx(is_zero(comb.h));
         if (comb.c.empty()) continue;
-        if (sdebug) assertx(comb.is_combination());
+        if (debug()) assertx(comb.is_combination());
         mconv.enter(v, std::move(comb));
     }
 }

@@ -34,12 +34,13 @@ class BSac : noncopyable { // noncopyable for safety -- could be removed if care
     using Func = void (*)(void*);
     static constexpr int k_dummy = 4;
 // per-object
-    void* access(int k) { return _a+k; }
+    // We use reinterpret_cast to disable runtime bounds checking.
+    void* access(int k) { return reinterpret_cast<uint8_t*>(_a)+k; }
  protected:
     void call_funcs(int num, int akeys[], Func afuncs[]) {
         for_int(i, num) {
             // SHOW(i, uintptr_t(_a), akeys[i]);
-            afuncs[i](_a+akeys[i]);
+            afuncs[i](access(akeys[i]));
         }
     }
     HH_ALIGNAS(16) char _a[k_dummy];

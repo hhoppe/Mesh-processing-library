@@ -132,7 +132,8 @@ inline bool& ConsoleProgress::s_f_silent() {
     // Singleton pattern;
     //  http://stackoverflow.com/a/18032418/1190077
     //  http://stackoverflow.com/questions/1661529/is-meyers-implementation-of-singleton-pattern-thread-safe
-    static bool silent = getenv_bool("NO_CONSOLE_PROGRESS"); return silent;
+    static bool silent = getenv_bool("NO_CONSOLE_PROGRESS");
+    return silent;
 }
 
 // From HTest -quick:

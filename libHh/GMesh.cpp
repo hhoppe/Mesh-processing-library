@@ -347,7 +347,7 @@ void GMesh::read(std::istream& is) {
     for (string sline; my_getline(is, sline); ) {
         read_line(const_cast<char*>(sline.c_str()));
     }
-    if (sdebug>=1) ok();
+    if (debug()>=1) ok();
 }
 
 void GMesh::read_line(char* sline) {
@@ -563,7 +563,7 @@ void GMesh::destroy_face(Face f) {
 }
 
 void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     std::ostream* tos = _os; _os = nullptr;
     Vertex vt = opp_vertex(vs, e);
     int ids = vertex_id(vs), idt = vertex_id(vt);
@@ -593,7 +593,7 @@ void GMesh::collapse_edge(Edge e) {
 }
 
 Vertex GMesh::split_edge(Edge e, int id) {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     std::ostream* tos = _os; _os = nullptr;
     Vertex v1 = vertex1(e), v2 = vertex2(e);
     Face f1 = face1(e), f2 = face2(e);
@@ -616,7 +616,7 @@ Vertex GMesh::split_edge(Edge e, int id) {
 }
 
 Edge GMesh::swap_edge(Edge e) {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     std::ostream* tos = _os; _os = nullptr;
     Vertex v1 = vertex1(e), v2 = vertex2(e);
     Face f1 = face1(e), f2 = face2(e);

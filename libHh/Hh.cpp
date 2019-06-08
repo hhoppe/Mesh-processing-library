@@ -769,6 +769,7 @@ string extract_function_type_name(string s) {
     s = replace_all(s, "std::__cxx11::", "std::"); // GNUC 5.2; e.g. std::__cx11::string
     s = replace_all(s, "std::__1::", "std::"); // GOOGLE3: libc++
     s = replace_all(s, "std::__g::", "std::"); // GOOGLE3: versioned libstdc++
+    s = replace_all(s, "std::__u::", "std::"); // GOOGLE3: new libc++
     if (remove_at_beginning(s, "hh::details::TypeNameAux<")) { // VC
         if (!remove_at_end(s, ">::name")) { SHOW(s); assertnever(""); }
         remove_at_end(s, " ");  // possible space for complex types

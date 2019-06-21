@@ -703,7 +703,7 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, ", ", ",");
     s = replace_all(s, " *", "*");
 #if defined(HH_HAVE_REGEX)
-    s = std::regex_replace(s.c_str(), std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
+    s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
 #else
     s = replace_all(s, "std::__g::", "std::");
 #endif
@@ -712,7 +712,7 @@ static string cleanup_type_name(string s) {
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
 #if defined(HH_HAVE_REGEX)
     // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
-    s = std::regex_replace(s.c_str(), std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
+    s = std::regex_replace(s, std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
 #endif
     s = replace_all(s, "* __ptr64", "*");
     s = replace_all(s, "__int64", "int64");
@@ -767,9 +767,10 @@ string extract_function_type_name(string s) {
     // See experiments in ~/src/test/misc/test_compile_time_type_name.cpp
     // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
     s = replace_all(s, "std::__cxx11::", "std::"); // GNUC 5.2; e.g. std::__cx11::string
-    s = replace_all(s, "std::__1::", "std::"); // GOOGLE3: libc++
-    s = replace_all(s, "std::__g::", "std::"); // GOOGLE3: versioned libstdc++
-    s = replace_all(s, "std::__u::", "std::"); // GOOGLE3: new libc++
+#if defined(HH_HAVE_REGEX)
+    // GOOGLE3: versioned libstdc++ or libc++
+    s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
+#endif
     if (remove_at_beginning(s, "hh::details::TypeNameAux<")) { // VC
         if (!remove_at_end(s, ">::name")) { SHOW(s); assertnever(""); }
         remove_at_end(s, " ");  // possible space for complex types

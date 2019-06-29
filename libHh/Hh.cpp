@@ -615,7 +615,7 @@ std::string narrow(const std::wstring& wstr) {
     string str(nchars-1, '\0');    // does allocate space for an extra null-terminating character
     // Writing into std::string using &str[0] is arguably legal in C++11; see discussion at
     //  http://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers
-    assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), nchars, &str[0], nchars, nullptr, nullptr));
+    assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, &str[0], nchars, nullptr, nullptr));
     return str;
 }
 

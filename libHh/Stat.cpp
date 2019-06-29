@@ -36,11 +36,10 @@ class Stats_init {
 
 void flush_stats() { if (Stats* pstats = g_pstats.get()) pstats->flush(); }
 
-static const bool b_stat_files = getenv_bool("STAT_FILES");
-
 Stat::Stat(string pname, bool pprint, bool is_static) : _name(std::move(pname)), _print(pprint) {
     zero();
-    if (_name!="" && b_stat_files) {
+    static const bool stat_files = getenv_bool("STAT_FILES");
+    if (_name!="" && stat_files) {
         Warning("Creating Stat.* files");
         string filename = "Stat." + _name; // the name is assumed ASCII; no need to worry about UTF-8.
         _pofs = make_unique<std::ofstream>(filename);

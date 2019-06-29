@@ -312,7 +312,10 @@ void ImageIO::write_rgb(const Image& image, FILE* file) {
 
 // *** JPG image   (row 0 is at top of image)
 
-static const bool g_jpg_debug = getenv_bool("JPG_DEBUG");
+static bool env_jpg_debug() {
+    static const bool value = getenv_bool("JPG_DEBUG");
+    return value;
+}
 
 // From jpeg-8d/install.txt:
 //  You might want to tweak the RGB_xxx macros in jmorecfg.h so that the library
@@ -387,17 +390,17 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
 // Step 7: Finish decompression
     if (1) {
         for (jpeg_saved_marker_ptr marker = cinfo.marker_list; marker; marker = marker->next) {
-            if (g_jpg_debug) SHOW(int(marker->marker));
+            if (env_jpg_debug()) SHOW(int(marker->marker));
             // My camera photo has two APP1 markers, one with "Exif" and one with "http:ns.adobe.com/xap/1.0/".
             if (marker->marker==JPEG_APP0+1) {
                 assertt(marker->data_length>=2);
                 if (marker->data[0]=='E' && marker->data[1]=='x') {
-                    if (g_jpg_debug) SHOWL;
+                    if (env_jpg_debug()) SHOWL;
                     image.attrib().exif_data = ArView(marker->data, marker->data_length); // copy the data
                 }
             }
         }
-        if (g_jpg_debug) {
+        if (env_jpg_debug()) {
             SHOW(image.attrib().exif_data.num());
             SHOW(convert<int>(image.attrib().exif_data.head(min(image._attrib.exif_data.num(), 2))));
         }
@@ -531,7 +534,7 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     // Pass TRUE unless you are very sure of what you are doing.
     jpeg_start_compress(&cinfo, TRUE);
     if (image.attrib().exif_data.num()) {
-        if (g_jpg_debug) { SHOWL; SHOW(image.attrib().exif_data.num()); }
+        if (env_jpg_debug()) { SHOWL; SHOW(image.attrib().exif_data.num()); }
         jpeg_write_marker(&cinfo, JPEG_APP0+1, image.attrib().exif_data.data(), image.attrib().exif_data.num());
     }
 // Step 5: while (scan lines remain to be written) jpeg_write_scanlines(...);

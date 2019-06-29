@@ -558,7 +558,7 @@ class Mesh : noncopyable {
     void vertex_renumber_id_private(Vertex v, int newid);
     void face_renumber_id_private(Face f, int newid);
  protected:
-    static const int sdebug;    // 0=no, 1=min, 2=max
+    static int debug();         // 0=no, 1=min, 2=max
  private:
     Flags _flags;
     Map<int,Vertex> _id2vertex; // also acts as set of vertices

@@ -56,6 +56,11 @@ namespace hh {
     hh::Pool T::pool;                                                         \
     int T::PoolInit::count
 
+#if defined(__clang__) || defined (__GNUC__)
+#define HH_ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#else
+#define HH_ATTRIBUTE_NO_SANITIZE_ADDRESS
+#endif
 
 //----------------------------------------------------------------------------
 
@@ -68,7 +73,7 @@ class Pool : noncopyable {
     ~Pool() {
         // do nothing here, wait for other destruction means
     }
-    void construct(const char* name, unsigned esize, int ealign) {
+    HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void construct(const char* name, unsigned esize, int ealign) {
         if (1) {
             // initialized to zero by static initialization
             assertx(!_name && !_esize && !_ealign && !_h && !_nalloc && !_chunkh);
@@ -135,7 +140,7 @@ class Pool : noncopyable {
     int _nalloc;
     int _offset;
     //
-    void init() {
+    HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void init() {
         // make allocated size a multiple of sizeof(Link)!
         _esize = ((_esize+sizeof(Link)-1)/sizeof(Link))*sizeof(Link);
         assertx(_esize>=sizeof(Link) && (_esize%sizeof(Link))==0);

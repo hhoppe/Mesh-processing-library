@@ -48,14 +48,17 @@ HH_ALLOCATE_POOL(Mesh::MHEdge);
 
 // *** Mesh
 
-const int Mesh::sdebug = getenv_int("MESH_DEBUG"); // 0, 1, or 3
+int Mesh::debug() {
+    static const int value = getenv_int("MESH_DEBUG");  // 0, 1, or 3
+    return value;
+}
 
 Mesh::Mesh() {
-    assertw(!sdebug);
+    assertw(debug()==0);
 }
 
 void Mesh::clear() {
-    if (sdebug>=1) ok();
+    if (debug()>=1) ok();
     while (num_faces()) {
         destroy_face(_id2face.get_one_value());
     }
@@ -108,7 +111,7 @@ void Mesh::destroy_vertex(Vertex v) {
 
 bool Mesh::legal_create_face(CArrayView<Vertex> va) const {
     assertx(va.num()>=3);
-    if (sdebug>=1) { for (Vertex v : va) valid(v); }
+    if (debug()>=1) { for (Vertex v : va) valid(v); }
     if (va.num()==3) {          // cheap check
         if (va[0]==va[1] || va[1]==va[2] || va[0]==va[2]) return false;
     } else {
@@ -126,7 +129,7 @@ bool Mesh::legal_create_face(CArrayView<Vertex> va) const {
 Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
     assertx(id>=1);
     assertx(va.num()>=3);
-    if (sdebug>=1) assertx(legal_create_face(va));
+    if (debug()>=1) assertx(legal_create_face(va));
     Face f = new MFace(id);
     // f->herep defined below
     _id2face.enter(id, f);
@@ -155,7 +158,7 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
     helast->_next = hep;
     f->_herep = helast;         // such that f->herep->_vert==va[0]
     _facenum = max(_facenum, id+1);
-    if (sdebug>=3) ok();
+    if (debug()>=3) ok();
     return f;
 }
 
@@ -175,7 +178,7 @@ void Mesh::destroy_face(Face f) {
     assertx(_id2face.remove(f->_id));
     if (0 && _facenum-1==f->_id) --_facenum;  // intermittent reuse of face id might be unsafe
     delete f;
-    if (sdebug>=3) ok();
+    if (debug()>=3) ok();
 }
 
 // *** Vertex
@@ -238,13 +241,13 @@ Vertex Mesh::most_ccw_vertex(Vertex v) const {
 
 Vertex Mesh::clw_vertex(Vertex v, Vertex vext) const {
     HEdge he = query_hedge(vext, v); if (he) return he->_next->_vert;
-    if (sdebug>=1) assertx(query_hedge(v, vext));
+    if (debug()>=1) assertx(query_hedge(v, vext));
     return nullptr;
 }
 
 Vertex Mesh::ccw_vertex(Vertex v, Vertex vext) const {
     HEdge he = query_hedge(v, vext); if (he) return he->_prev->_prev->_vert;
-    if (sdebug>=1) assertx(query_hedge(vext, v));
+    if (debug()>=1) assertx(query_hedge(vext, v));
     return nullptr;
 }
 
@@ -423,7 +426,7 @@ Edge Mesh::random_edge(Random& r) const {
 // *** Mesh operations
 
 bool Mesh::legal_edge_collapse(Edge e) const {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     Vertex v1 = vertex1(e), v2 = vertex2(e);
     Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e); // vo2 may be nullptr
     // Check that substituting v2 to v1 will not duplicate an edge in any
@@ -438,13 +441,13 @@ bool Mesh::legal_edge_collapse(Edge e) const {
 }
 
 bool Mesh::nice_edge_collapse(Edge e) const {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     if (!legal_edge_collapse(e)) return false;
     Vertex v1 = vertex1(e), v2 = vertex2(e);
     Face f1 = face1(e), f2 = face2(e);
     assertx(is_triangle(f1));
     if (f2) assertx(is_triangle(f2));
-    if (sdebug>=1) assertx(is_nice(v1) && is_nice(v2));
+    if (debug()>=1) assertx(is_nice(v1) && is_nice(v2));
     // Requirements:
     // * 1 - If v1 and v2 are both boundary, (v1, v2) is a boundary edge
     if (!is_boundary(e) && is_boundary(v1) && is_boundary(v2)) return false;
@@ -466,7 +469,7 @@ bool Mesh::nice_edge_collapse(Edge e) const {
 }
 
 bool Mesh::legal_edge_swap(Edge e) const {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     if (is_boundary(e)) return false;
     // illegal if cross edge already exists (as in tetrahedron)
     if (query_edge(side_vertex1(e), side_vertex2(e))) return false;
@@ -510,7 +513,7 @@ void Mesh::collapse_edge(Edge e) {
 }
 
 Vertex Mesh::split_edge(Edge e, int id) {
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     Vertex v1 = vertex1(e), v2 = vertex2(e);
     Face f1 = face1(e), f2 = face2(e);                   // f2 could be nullptr
     Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e); // implies triangles
@@ -601,7 +604,7 @@ void Mesh::merge_vertices(Vertex vs, Vertex vt) {
 }
 
 Vertex Mesh::center_split_face(Face f) {
-    if (sdebug>=1) valid(f);
+    if (debug()>=1) valid(f);
     Array<Vertex> va; get_vertices(f, va);
     // Create bogus hedges if boundaries
     Array<HEdge> ar_he; for (HEdge he : corners(f)) { ar_he.push(he); }
@@ -618,7 +621,7 @@ Vertex Mesh::center_split_face(Face f) {
 }
 
 Edge Mesh::split_face(Face f, Vertex v1, Vertex v2) {
-    if (sdebug>=1) valid(v1), valid(v2);
+    if (debug()>=1) valid(v1), valid(v2);
     assertx(!query_edge(v1, v2));
     Array<Vertex> va1, va2;
     for (Vertex v = v1; ; ) { va1.push(v); if (v==v2) break; v = ccw_vertex(f, v); }
@@ -629,7 +632,7 @@ Edge Mesh::split_face(Face f, Vertex v1, Vertex v2) {
     // Destroy face
     destroy_face(f);
     // Create new faces
-    if (sdebug>=1) assertx(legal_create_face(va1) && legal_create_face(va2));
+    if (debug()>=1) assertx(legal_create_face(va1) && legal_create_face(va2));
     create_face(va1); create_face(va2);
     remove_bogus_hedges(ar_he);
     return edge(v1, v2);
@@ -697,7 +700,7 @@ bool Mesh::legal_coalesce_faces(Edge e) {
 }
 
 Face Mesh::coalesce_faces(Edge e) {
-    if (sdebug>=1) assertx(legal_coalesce_faces(e));
+    if (debug()>=1) assertx(legal_coalesce_faces(e));
     Face f1 = face1(e), f2 = face2(e);
     Array<Vertex> va = gather_edge_coalesce_vertices(e);
     // See if any vertices can be deleted
@@ -712,20 +715,20 @@ Face Mesh::coalesce_faces(Edge e) {
     destroy_face(f1);
     destroy_face(f2);
     // Create new face
-    if (sdebug>=1) assertx(legal_create_face(va));
+    if (debug()>=1) assertx(legal_create_face(va));
     Face fn = create_face(va);
     remove_bogus_hedges(ar_he);
     // Delete any isolated vertices
     for (Vertex v : va) { vbefore.remove(v); }
     for (Vertex v : vbefore) { destroy_vertex(v); }
-    if (sdebug>=3) ok();
+    if (debug()>=3) ok();
     return fn;
 }
 
 Vertex Mesh::insert_vertex_on_edge(Edge e) {
     // If >1 edge shared between f1 and f2, other shared edges will be
     //  destroyed and recreated -> will lose attributes.
-    if (sdebug>=1) valid(e);
+    if (debug()>=1) valid(e);
     // Create bogus hedges if boundaries
     Array<HEdge> ar_he; for (Face f : faces(e)) {
         for (HEdge he : corners(f)) { ar_he.push(he); }
@@ -1015,7 +1018,7 @@ Mesh::HEdge Mesh::query_hedge(Vertex v1, Vertex v2) const {
 // Must define elsewhere: next, prev, face, edge
 void Mesh::enter_hedge(HEdge he, Vertex v1) {
     Vertex v2 = he->_vert;
-    if (sdebug>=1) {
+    if (debug()>=1) {
         valid(v1); valid(v2);
         assertx(!query_hedge(v1, v2) && !v1->_arhe.contains(he));
     }
@@ -1041,7 +1044,7 @@ void Mesh::enter_hedge(HEdge he, Vertex v1) {
 //   substitute_face_vertex() : reintroduces edge -> ok.
 void Mesh::remove_hedge(HEdge he, Vertex v1) {
     Vertex v2 = he->_vert;
-    if (sdebug>=1) {
+    if (debug()>=1) {
         valid(v1); valid(v2);
         assertx(he==query_hedge(v1, v2));
         assertx(he->_sym==query_hedge(v2, v1));

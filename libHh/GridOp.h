@@ -199,14 +199,17 @@ template<int D, typename T> CGridView<D+1,T> raise_grid_rank(CGridView<D,T> grid
     return CGridView<D+1,T>(grid.data(), dims);
 }
 
-static const bool b_image_linear_filter = getenv_bool("IMAGE_LINEAR_FILTER"); // expand gamma
+inline bool env_image_linear_filter() {
+    static const bool value = getenv_bool("IMAGE_LINEAR_FILTER");  // expand gamma
+    return value;
+}
 
 template<int D> void convert(CGridView<D,Pixel> gridu, GridView<D,Vector4> gridf) {
     HH_GRIDOP_TIMER(__convert1);
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
         Vector4 v = Vector4(gridu.raster(i));
-        if (b_image_linear_filter) v = square(v); // assumes gamma=2.0 rather than SRGB 2.2
+        if (env_image_linear_filter()) v = square(v); // assumes gamma=2.0 rather than SRGB 2.2
         gridf.raster(i) = v;
     }, 4);
 }
@@ -216,7 +219,7 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
         Vector4 v = gridf.raster(i);
-        if (b_image_linear_filter) v = sqrt(v); // assumes gamma=2.0 rather than SRGB 2.2
+        if (env_image_linear_filter()) v = sqrt(v); // assumes gamma=2.0 rather than SRGB 2.2
         gridu.raster(i) = v.pixel();
     }, 4);
 }
@@ -225,7 +228,7 @@ template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
         float v = static_cast<float>(gridu.raster(i));
-        if (b_image_linear_filter) v = square(v);
+        if (env_image_linear_filter()) v = square(v);
         gridf.raster(i) = v;
     }, 1);
 }
@@ -235,7 +238,7 @@ template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
         float v = gridf.raster(i);
-        if (b_image_linear_filter) v = sqrt(v);
+        if (env_image_linear_filter()) v = sqrt(v);
         gridu.raster(i) = clamp_to_uint8(static_cast<int>(v));
     }, 1);
 }
@@ -246,7 +249,7 @@ template<int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D,Vecto
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
         const auto& uv = gridu.raster(i);
         Vector4 v = Vector4(Pixel(uv[0], uv[1], 0, 0));
-        if (b_image_linear_filter) v = square(v);
+        if (env_image_linear_filter()) v = square(v);
         gridf.raster(i) = v;
     }, 4);
 }
@@ -255,7 +258,7 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uint8_
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
         Vector4 v = gridf.raster(i);
-        if (b_image_linear_filter) v = sqrt(v);
+        if (env_image_linear_filter()) v = sqrt(v);
         Pixel p = v.pixel();
         gridu.raster(i) = V(p[0], p[1]);
     }, 4);

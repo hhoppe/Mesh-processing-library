@@ -477,15 +477,14 @@ void Vnors::clear() {
     _mfnor = nullptr;
 }
 
-static const bool b_ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
-
 void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     Vector vnor(0.f, 0.f, 0.f); bool hasvnor; int ncnor = 0; {
         hasvnor = parse_key_vec(mesh.get_string(v), "normal", vnor);
         for (Corner c : mesh.corners(v)) {
             if (GMesh::string_has_key(mesh.get_string(c), "normal")) ncnor++;
         }
-        if (b_ignore_mesh_normals) { hasvnor = false; ncnor = 0; }
+        static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
+        if (ignore_mesh_normals) { hasvnor = false; ncnor = 0; }
         if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
         if (hasvnor && !ncnor) { clear(); _nor = vnor; return; }
     }
@@ -688,11 +687,10 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
 
 // *** Project Point near face
 
-static const bool b_slow_project = getenv_bool("SLOW_PROJECT");
-
 float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp, bool fast) {
-    assertw(!b_slow_project);
-    if (b_slow_project) fast = false;
+    static const bool slow_project = getenv_bool("SLOW_PROJECT");
+    assertw(!slow_project);
+    if (slow_project) fast = false;
     bool pfsmooth = fast;
     for (Edge e : mesh.edges(pf)) {
         if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;

@@ -795,9 +795,9 @@ void HW::hard_flush() {
 }
 
 #define VIDEO_EXTS L"*.mpg;*.mpeg;*.mpe;*.mpv;*.mp2;*.mpeg2;*.mp4;*.mpeg4;*.mov;*.avi;" \
-        L"*.wmv;*.flv;*.m2v;*.m4v;*.webm;*.ogv;*.3gp;*.mts"
+        L"*.wmv;*.flv;*.m2v;*.m4v;*.webm;*.ogv;*.3gp;*.mts;*.gif"
 #define IMAGE_EXTS L"*.jpg;*.jpeg;*.png;*.bmp;*.rgb;*.ppm;*.pgm;*.pbm;*.tif;*.tiff;"    \
-        L"*.gif;*.jxr;*.hdp;*.wdp;*.wmp;*.webp;*.bpg;*.jp2"
+        L"*.jxr;*.hdp;*.wdp;*.wmp;*.webp;*.bpg;*.jp2"
 
 Array<string> HW::query_open_filenames(const string& hint_filename) {
     // http://www.winprog.org/tutorial/app_two.html

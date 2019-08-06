@@ -196,7 +196,7 @@ void Audio::read_file(const string& pfilename) {
         {                           // read data
             if (ldebug) SHOW(diagnostic_string());
             // f32be is Big Endian which is standard network order (also s16be==int16_t and u8be==uint8_t)
-            string scmd = ("ffmpeg -loglevel panic -nostdin -i " + quote_arg_for_shell(filename) +
+            string scmd = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) +
                            " -f f32be -acodec pcm_f32be" +
                            sform(" -af atrim=end_sample=%d", nsamples()) + " - |");
             if (ldebug) SHOW(scmd);
@@ -273,7 +273,7 @@ void Audio::write_file(const string& pfilename) const {
                 if (0) scodec = " -acodec pcm_s16le"; // ffmpeg default int16_t encoding for *.wav container
                 if (1) scodec = " -acodec pcm_f32le"; // lossless float representation
             }
-            string scmd = ("| ffmpeg -loglevel panic -f f32be" +
+            string scmd = ("| ffmpeg -v panic -f f32be" +
                            sform(" -ar %g -ac %d -i - -ab %d",
                                  attrib().samplerate, nchannels(), attrib().bitrate) +
                            scodec + " -y " + quote_arg_for_shell(filename));

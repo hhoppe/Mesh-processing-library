@@ -151,7 +151,7 @@ void Image::read_file_FF(const string& pfilename, bool bgra) {
     }
     {
         string spixfmt = bgra ? "bgra" : "rgba";
-        string scmd = ("ffmpeg -loglevel panic -nostdin -i " + quote_arg_for_shell(filename) +
+        string scmd = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) +
                        " -f image2pipe -pix_fmt " + spixfmt + " -vcodec rawvideo - |");
         if (ldebug) SHOW(scmd);
         RFile fi(scmd);
@@ -198,7 +198,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
     {
         string spixfmt = bgra ? "bgra" : "rgba";
         string sopixfmt = zsize()==4 ? "rgba" : "rgb24";
-        string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + spixfmt +
+        string scmd = ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + spixfmt +
                        sform(" -s %dx%d", xsize(), ysize()) +
                        " -i - -pix_fmt " + sopixfmt + scompression + " -y " + quote_arg_for_shell(filename));
         if (ldebug) SHOW(scmd);
@@ -218,7 +218,7 @@ void Image::write_file_FF(const string& pfilename, bool bgra) const {
 
 bool filename_is_image(const string& filename) {
     static const auto* k_extensions = new Array<string>{
-        "jpg", "jpeg", "png", "bmp", "rgb", "ppm", "pgm", "pbm", "tif", "tiff", "gif",
+        "jpg", "jpeg", "png", "bmp", "rgb", "ppm", "pgm", "pbm", "tif", "tiff",
         "jxr", "hdp", "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr",
     };
     return k_extensions->index(to_lower(get_path_extension(filename)))>=0;

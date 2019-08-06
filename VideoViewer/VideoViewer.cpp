@@ -4101,6 +4101,7 @@ int main(int argc, const char** argv) {
     args.p("*.wmv", do_video,   ": load input video");
     args.p("*.avi", do_video,   ": load input video");
     args.p("*.mov", do_video,   ": load input video");
+    args.p("*.gif", do_video,   ": load input video");
     args.p("*.MP4", do_video,   ": load input video");
     args.p("*.WMV", do_video,   ": load input video");
     args.p("*.AVI", do_video,   ": load input video");

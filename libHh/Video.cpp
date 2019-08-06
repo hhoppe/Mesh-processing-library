@@ -160,7 +160,7 @@ void Video::write_file(const string& filename) const {
 bool filename_is_video(const string& filename) {
     static const auto* k_extensions = new Array<string>{
         "mpg", "mpeg", "mpe", "mpv", "mp2", "mpeg2", "mp4", "mpeg4", "mov", "avi", "wmv", "flv",
-        "m2v", "m4v", "webm", "ogv", "3gp", "mts",
+        "m2v", "m4v", "webm", "ogv", "3gp", "mts", "gif", "vob", "qt", "asf", "3g2",
     };
     return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
 }
@@ -176,6 +176,7 @@ string video_suffix_for_magic_byte(uchar c) {
      case 0:        return "mp4";  // u'\x00'; or "mov"
      case '0':      return "wmv";
      case 'R':      return "avi";
+     case 'G':      return "gif";
      default:       return "";
     }
 }
@@ -881,6 +882,8 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
         const bool ldebug = getenv_bool("FF_DEBUG");
         const string& filename = _rvideo._filename;
         bool expect_audio = false;
+        // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
+        string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
         {                       // read header for dimensions and attributes (ignore video and audio data)
             // 2>&1 works on both Unix bash shell and Windows cmd shell: http://stackoverflow.com/questions/1420965/
             // Ideally, <nul and/or </dev/null so that "vv ~/proj/fastloops/data/assembled_all_loops_uhd.mp4" does
@@ -904,17 +907,15 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             // encoder=Lavf56.4.101
             // Conclusion: not useful because already given in regular stdout of ffmpeg
             // I could look at ffprobe to see if it can output more information, or use exiftool.
-            // Omitting "-hide_banner" because unrecognized by older version of ffmpeg.
-            // Option "-nostdin" is also unrecognized by older versions, but it can continue nonetheless.
-            // Input #0, gif, from 'image4.gif':
-            //   Duration: N/A, bitrate: N/A
-            //     Stream #0:0: Video: gif, bgra, 960x720, 1 fps, 1 tbr, 100 tbn, 100 tbc
-            //  (unfortunately, no way to know that there are 8 frames -- would have to read until EOF)
-            //  (could get number of frames using: "ffmpeg -i input.gif -map 0:v:0 -c copy -f null -y /dev/null 2>&1 | grep -Eo 'frame= *[0-9]+ *' | grep -Eo '[0-9]+' | tail -n 1")
-            RFile fi("ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |");
+            // Option "-nostdin" is unrecognized by older versions, but it can continue nonetheless.
+            string s = "ffmpeg -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
+                " -acodec copy -vcodec copy -f null - 2>&1 |";
+            if (ldebug) SHOW(s);
+            RFile fi(s);
             Vec3<int> dims{0, 0, 0};
-            double duration = -1., total_bitrate = -1.;
-            double video_bitrate = -1., framerate = -1.;
+            double total_bitrate = 1000000.;  // a default value of 1Mbps
+            double video_bitrate = -1.;
+            double framerate = -1.;
             bool yuv444p = false;
             int nlines = 0;
             string sline;
@@ -926,82 +927,61 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
                     Warning("Version of external program 'ffmpeg' may be too old");
                     continue;
                 }
-                if (contains(sline, "Duration:")) {
-                    //  Duration: 00:00:05.00, start: 0.000000, bitrate: 32842 kb/s (some mp4 files)
-                    //  Duration: 00:00:05.03, bitrate: 100505 kb/s
-                    //  Duration: N/A, bitrate: N/A  (invalid.mp4)
-                    if (contains(sline, "Duration: N/A"))
-                        throw std::runtime_error("Invalid video in file '" + filename + "'");
-                    {
-                        int vh, vm, vs, vcs;
-                        assertx(sscanf(sline.c_str(), " Duration: %d:%d:%d.%d%c",
-                                       &vh, &vm, &vs, &vcs, &vch)==5 && vch==',');
-                        duration = vh*3600. + vm*60. + vs + vcs*.01;
-                        if (ldebug) SHOW(vh, vm, vs, vcs, duration);
-                    }
-                    {
-                        auto i = sline.find(", bitrate:"); assertx(i!=string::npos);
+                {
+                    auto i = sline.find(", bitrate:");
+                    if (i!=string::npos && !begins_with(sline.substr(i), ", bitrate: N/A")) {
                         assertx(sscanf(sline.c_str()+i, ", bitrate: %lg kb/%c", &total_bitrate, &vch)==2 && vch=='s');
                         total_bitrate *= 1000.;
-                        if (ldebug) SHOW(total_bitrate);
                     }
                 }
-                if (contains(sline, "Stream #0:") && contains(sline, ": Video:")) {
-                    // Stream #0:0(eng): Video: mpeg4 (Simple Profile) (mp4v / 0x7634706D), yuv420p, 960x540 [SAR 1:1 DAR 16:9], 32840 kb/s, 30 fps, 30 tbr, 30 tbn, 30 tbc (default)
-                    // Stream #0:0: Video: msmpeg4v3 (MP43 / 0x3334504D), yuv420p, 960x540, 30 fps, 30 tbr, 1k tbn, 1k tbc
-                    // Stream #0:0: Video: h264 (High) (H264 / 0x34363248), yuv420p, 960x540, 68071 kb/s, 30 fps, 30 tbr, 30 tbn, 60 tbc
-                    // Stream #0:0(eng): Video: vc1 (Advanced) (WVC1 / 0x31435657), yuv420p, 3840x2160, 100000 kb/s, SAR 1:1 DAR 16:9, 30 fps, 30 tbr, 1k tbn, 1k tbc
-                    // Stream #0:0(und): Video: h264 (Baseline) (avc1 / 0x31637661), yuv420p(tv, bt709), 1280x720, 10734 kb/s, 29.97 fps, 29.97 tbr, 600 tbn, 1200 tbc (default)
-                    // Stream #0:0(eng): Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709), 3840x2160 [SAR 1:1 DAR 16:9], 59969 kb/s, 29.97 fps, 29.97 tbr, 30k tbn, 59.94 tbc (default)
-                    // Stream #0:0(eng): Video: vc1 (Advanced) (WVC1 / 0x31435657), yuv420p, 3840x2160 [SAR 1:1 DAR 16:9], 100000 kb/s, 30 tbr, 1k tbn, 60 tbc
-                    // Stream #0:1(eng): Video: wmv3 (Main) (WMV3 / 0x33564D57), yuv420p, 640x480, 768 kb/s, SAR 1:1 DAR 4:3, 30 fps, 30 tbr, 1k tbn, 1k tbc
-                    // Stream #0:0: Video: rawvideo, bgr24, 768x1024, 2 fps, 2 tbr, 2 tbn, 2 tbc
-                    // Stream #0:0: Video: ffvhuff (FFVH / 0x48564646), yuv444p, 960x540, 155182 kb/s, 30 fps, 30 tbr, 30 tbn, 30 tbc  [*.avi]
-
-                    for (string::size_type i = 0; ; ) {
-                        i = sline.find(',', i+1); assertx(i!=string::npos);
-                        if (sscanf(sline.c_str()+i, ", %dx%d", &dims[2], &dims[1])==2) break;
-                    }
-                    string::size_type i = sline.find(" kb/s");
-                    if (i!=string::npos) {
-                        if (video_bitrate>=0.) assertnever("Multiple video streams inside media container");
-                        i = sline.rfind(", ", i);
-                        if (i!=string::npos) {
-                            assertx(sscanf(sline.c_str()+i, ", %lg kb/%c", &video_bitrate, &vch)==2 && vch=='s');
-                            video_bitrate *= 1000.;
+                if (contains(sline, "Stream #0:")) {
+                    if (contains(sline, ": Video:") && !dims[2]) {
+                        for (string::size_type i = 0; ; ) {
+                            i = sline.find(',', i+1); assertx(i!=string::npos);
+                            if (sscanf(sline.c_str()+i, ", %dx%d", &dims[2], &dims[1])==2) break;
                         }
+                        string::size_type i = sline.find(" kb/s");
+                        if (i!=string::npos) {
+                            i = sline.rfind(", ", i);
+                            if (i!=string::npos) {
+                                assertx(sscanf(sline.c_str()+i, ", %lg kb/%c", &video_bitrate, &vch)==2 && vch=='s');
+                                video_bitrate *= 1000.;
+                            }
+                        }
+                        i = sline.find(" fps");
+                        if (i!=string::npos) {
+                            i = sline.rfind(", ", i); assertx(i!=string::npos);
+                            assertx(sscanf(sline.c_str()+i, ", %lg fp%c", &framerate, &vch)==2 && vch=='s');
+                        } else {
+                            i = sline.find(" tbr"); assertx(i!=string::npos);
+                            i = sline.rfind(", ", i); assertx(i!=string::npos);
+                            assertx(sscanf(sline.c_str()+i, ", %lg tb%c", &framerate, &vch)==2 && vch=='r');
+                        }
+                        if (sline.find("yuv444p")!=string::npos) yuv444p = true;
+                        if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
                     }
-                    i = sline.find(" fps");
-                    if (i!=string::npos) {
-                        i = sline.rfind(", ", i); assertx(i!=string::npos);
-                        assertx(sscanf(sline.c_str()+i, ", %lg fp%c", &framerate, &vch)==2 && vch=='s');
-                    } else {
-                        i = sline.find(" tbr"); assertx(i!=string::npos);
-                        i = sline.rfind(", ", i); assertx(i!=string::npos);
-                        assertx(sscanf(sline.c_str()+i, ", %lg tb%c", &framerate, &vch)==2 && vch=='r');
+                    if (contains(sline, ": Audio:") && contains(sline, "kb/s")) {
+                        expect_audio = true;
                     }
-                    if (sline.find("yuv444p")!=string::npos) yuv444p = true;
-                    if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
                 }
-                if (contains(sline, "Stream #0:") && contains(sline, ": Audio:") && contains(sline, "kb/s"))
-                    expect_audio = true;
+                {
+                    string::size_type i = sline.rfind("frame=");
+                    if (i!=string::npos)
+                        assertx(sscanf(sline.c_str()+i, "frame=%d%c", &dims[0], &vch)==2 && vch==' ');
+                }
             }
             if (!nlines) throw std::runtime_error("ffmpeg is unable to read video file '" + filename + "'");
+            if (!dims[0]) throw std::runtime_error("found zero frames in video file '" + filename + "'");
+            if (!dims[1] || !dims[2]) throw std::runtime_error("no video stream in video file '" + filename + "'");
+            if (framerate<0.) throw std::runtime_error("no framerate in video file '" + filename + "'");
+            if (ends_with(filename, ".gif") && framerate>=21. && framerate <=29.) framerate=60.;
             if (video_bitrate<0.) video_bitrate = total_bitrate;
-            if (ldebug) SHOW(duration, total_bitrate, video_bitrate, framerate);
-            if (!(duration>0. && total_bitrate>0. && video_bitrate>0. && framerate>0.))
-                throw std::runtime_error("ffmpeg is unable to parse video in file '" + filename + "'");
-            dims[0] = int(duration*framerate+.5);
+            if (ldebug) SHOW(dims, total_bitrate, video_bitrate, framerate);
             assertx(product(dims)>0);
             _rvideo._dims = dims;
             _rvideo._attrib.bitrate = int(video_bitrate);
             _rvideo._attrib.framerate = framerate;
-            if (yuv444p && _rvideo._use_nv12) {
-                // must be fixed in caller
-                if (0) Warning("Switching video read away from NV12 because video encoding is yuv444p");
-                if (0) _rvideo._use_nv12 = false;
-                Warning("Reading NV12 from a Video encoded with yuv444p");
-            }
+            if (yuv444p && _rvideo._use_nv12) Warning("Reading NV12 from a Video encoded with yuv444p");
         }
         if (expect_audio) {
             try {
@@ -1014,14 +994,12 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
             }
         }
         string pixfmt = _rvideo._use_nv12 ? "nv12" : "rgba"; // was rgb24
-        // Note: -hide_banner unnecessary with "-loglevel panic" if using "-i some_input".
-        string scmd = ("ffmpeg -loglevel panic -nostdin -i " + quote_arg_for_shell(filename) +
+        string scmd = ("ffmpeg -v panic -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
                        " -f image2pipe -pix_fmt " + pixfmt + " -vcodec rawvideo - |");
         if (ldebug) SHOW(scmd);
         _pfi = make_unique<RFile>(scmd);
     }
-    ~FF_RVideo_Implementation() {
-    }
+    ~FF_RVideo_Implementation() { }
     virtual string name() const override { return "FF"; }
     bool read(MatrixView<Pixel> frame) override {
         const Vec2<int> sdims = _rvideo.spatial_dims();
@@ -1124,16 +1102,14 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
                 SHOW("Failed to write audio within video", ex.what());
             }
         }
-        // Note: "-hide_banner" unnecessary with "-loglevel panic" and "-i some_input".
-        string scmd = ("| ffmpeg -loglevel panic -f rawvideo -vcodec rawvideo -pix_fmt " + ipixfmt +
+        string scmd = ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + ipixfmt +
                        sform(" -s %dx%d -r %g", sdims[1], sdims[0], attrib.framerate) +
                        " -i -" + str_audio + sfilecontainer + ocodec + " -pix_fmt " + opixfmt +
                        sform(" -vb %d", attrib.bitrate) + " -y " + quote_arg_for_shell(filename));
         if (ldebug) SHOW(scmd);
         _pfi = make_unique<WFile>(scmd);
     }
-    ~FF_WVideo_Implementation() {
-    }
+    ~FF_WVideo_Implementation() { }
     virtual string name() const override { return "FF"; }
     void write(CMatrixView<Pixel> frame) override {
         const Vec2<int> sdims = _wvideo.spatial_dims();

@@ -431,7 +431,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
         const GMesh& _mesh;
     };
     struct equal_Svv {          // : std::equal_to<Svv>
-        bool operator()(const Svv& s1, const Svv& s2) const { return s1._v1==s2._v1 && s2._v2==s2._v2; }
+        bool operator()(const Svv& s1, const Svv& s2) const { return s1._v1==s2._v1 && s1._v2==s2._v2; }
     };
     hash_Svv hashf(&_m);
     Map<Svv, Snvf, hash_Svv, equal_Svv> mvvnewv(hashf);

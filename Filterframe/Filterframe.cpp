@@ -48,10 +48,10 @@ void do_induce_roll(Frame& t) {
     p2[2] = 0;                  // set elevations to zero
     icount1++;
     if (icount1<3) return;
-    double v1x = p1[0]-p0[0];
-    double v1y = p1[1]-p0[1];
-    double v2x = p2[0]-p0[0];
-    double v2y = p2[1]-p0[1];
+    double v1x = double(p1[0])-p0[0];
+    double v1y = double(p1[1])-p0[1];
+    double v2x = double(p2[0])-p0[0];
+    double v2y = double(p2[1])-p0[1];
     float sarea = float(v1y*v2x-v1x*v2y);
     const int num = 5;
     static Vec<float,num> sa;

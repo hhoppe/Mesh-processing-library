@@ -37,6 +37,7 @@ build/
 # *.cachefile
 # I introduced the next one in hmake to expand environment variables before msbuild.exe
 *_eval_var.sln
+*.lastcodeanalysissucceeded
 
 # Visual Studio profiler
 *.psess

@@ -33,16 +33,20 @@
 #if defined(_MSC_VER)
 // Disable some nitpicky level4 warnings (for -W4).
 #pragma warning(disable:4127)   // conditional expression is constant, e.g. "if (0)", "if (1)"
+#pragma warning(disable:4464)   // #include paths containing ".." relative folders (e.g. "../libHh/Video.h")
 #pragma warning(disable:4512)   // in Release config: assignment operator could not be generated
 #pragma warning(disable:4592)   // bug in VS2015 update 1; http://stackoverflow.com/questions/34013930/
-#pragma warning(disable:4464)   // #include paths containing ".." relative folders (e.g. "../libHh/Video.h")
 // Workarounds for warning 4702 (unreachable code) (pragma would have to appear before function body):
 //  for (; ; ++iter) { f(); break; }    // replace "break;" by "if (1) break;"
 //  { assertnever("abandonned"); f(); } // use "assertnever_ret(..);"
 // Code analysis
-#pragma warning(disable:6993)   // Code analysis ignores OpenMP constructs; analyzing single-threaded code
 #pragma warning(disable:6237)   // (<zero> && <expression>) is always zero
 #pragma warning(disable:6286)   // (<non-zero constant> || <expression>) is always a non-zero constant
+#pragma warning(disable:6993)   // Code analysis ignores OpenMP constructs; analyzing single-threaded code
+#pragma warning(disable:26439)  // (declare a function noexcept)
+#pragma warning(disable:26444)  // (Avoid unnamed objects with custom construction and destruction)
+#pragma warning(disable:26451)  // (Using operator on a 4 byte value and then casting the result to a 8 byte value)
+#pragma warning(disable:26495)  // (always initialize a member variable)
 #endif
 
 #if defined(_WIN32)
@@ -604,7 +608,11 @@ inline uint8_t clamp_to_uint8(int v) {
 // Returns j%3 (where j is in [0, 5]).
 inline int mod3(int j) {
     static const int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };
-    ASSERTX(j>=0 && j<6); return ar_mod3[j];
+    ASSERTX(j>=0 && j<6);
+#if defined(_MSC_VER)
+    #pragma warning(suppress:6385)
+#endif
+    return ar_mod3[j];
 }
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default fac==1e5f).

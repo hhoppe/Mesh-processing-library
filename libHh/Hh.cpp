@@ -1446,7 +1446,8 @@ static bool check_float(const char* s) {
 }
 
 int to_int(const char* s) {
-    if (!s || !check_int(s)) assertnever(string() + "'" + s + "' not int");
+    assertx(s);
+    if (!check_int(s)) assertnever(string() + "'" + s + "' not int");
     return atoi(s);
 }
 

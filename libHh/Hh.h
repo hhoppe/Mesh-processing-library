@@ -687,7 +687,7 @@ template<typename T> class Range {
         bool operator<=(const type& rhs) const  { return _v<=rhs._v; }
         bool operator>(const type& rhs) const   { return _v>rhs._v; }
         bool operator>=(const type& rhs) const  { return _v>=rhs._v; }
-        difference_type operator-(const type& rhs) const { return _v - rhs._v; }
+        difference_type operator-(const type& rhs) const { return difference_type(_v) - rhs._v; }
         type& operator+=(difference_type n)     { ASSERTXX(_v<_ub); _v += n; ASSERTXX(_v<=_ub); return *this; }
         T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
         type& operator++()                      { ASSERTXX(_v<_ub); _v += T{1}; return *this; }

@@ -3,6 +3,7 @@ x64 ?= 0
 
 cppinc += -DHH_NO_VIDEO_LOOP  # because LoopAPILib/Win32/DebugMD/LoopAPILib.lib is unavailable
 
-msvc = 2015
+# msvc = 2015
+msvc = 2019
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_win

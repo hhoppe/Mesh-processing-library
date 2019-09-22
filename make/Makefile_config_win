@@ -6,7 +6,8 @@ use_vs_libs ?= 0#  0 or 1       (usually 0; else use libraries generated from Vi
 use_pch ?= 1#                   (usually 1; use_precompiled_headers)
 
 # msvc ?= 2015
-msvc ?= 2017
+# msvc ?= 2017
+msvc ?= 2019
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
 
 extobj = obj
@@ -48,7 +49,7 @@ ifeq ($(plain_compiler),)
   # -D "_UNICODE" -D "UNICODE"
   # -GL : whole program optimization (use with /LTCG linker option if %:%.obj)
   cxx_list_assembly_code ?= -FAs
-  # Avoid shared vc$(msvcmajor)0.pdb; required for parallel make if >1 exe in same directory.
+  # Avoid shared e.g. vc140.pdb; required for parallel make if >1 exe in same directory.
   cxxexe += -Fd$(@:%=%.pdb)#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
   cxxrel += $(commonrel)
   cxxdbg += $(commondbg)
@@ -148,7 +149,7 @@ endif
 # When you compile a C++ project, Visual Studio generates two PDB files.
 # They are also used by the incremental link, this is why the PDB files are also generated in release mode.
 # 
-# VC$(msvcmajor)0.PDB is generated at compile time, when the compiler doesn't know the EXE file name.
+# VC140.PDB (or similar) is generated at compile time, when the compiler doesn't know the EXE file name.
 # It is located in the directory where the OBJ files reside.
 # It contains information about the types used in the C++ files.
 # It contains types and typedef definitions. It does not contain symbol information about the methods.

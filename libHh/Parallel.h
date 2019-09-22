@@ -242,7 +242,7 @@ void parallel_for_each(const Range& range, const Function& function,
             const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
             thread_pool->execute(num_threads, [begin_range, num_elements, chunk_size, &function](int thread_index) {
                 size_t index_start = thread_index * chunk_size;
-                size_t index_stop = std::min((thread_index + 1) * chunk_size, num_elements);
+                size_t index_stop = std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
                 for (size_t index = index_start; index < index_stop; ++index) {
                     function(begin_range[index]);
                 }

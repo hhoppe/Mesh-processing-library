@@ -590,4 +590,29 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     }
 }
 
+void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue, Nv12View new_nv12) {
+    assertx(nv12.get_Y().data()!=new_nv12.get_Y().data());
+    assertx(nv12.get_UV().data()!=new_nv12.get_UV().data());
+    if (nv12.get_Y().dims()==new_nv12.get_Y().dims()) return;
+    if (!product(new_nv12.get_Y().dims())) return;
+    float borderY;
+    Vector4 borderUV;
+    if (bordervalue) {
+        uint8_t borderYt = RGB_to_Y(*bordervalue);
+        convert(CGrid1View(borderYt), Grid1View(borderY));
+        Vec2<uint8_t> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
+        convert(CGrid1View(borderUVt), Grid1View(borderUV));
+    }
+    {
+        Matrix<float> mat(nv12.get_Y().dims()); convert(nv12.get_Y(), mat);
+        Matrix<float> mat2 = scale(mat, new_nv12.get_Y().dims(), filterbs, bordervalue ? &borderY : nullptr);
+        convert(mat2, new_nv12.get_Y());
+    }
+    {
+        Matrix<Vector4> mat(nv12.get_UV().dims()); convert(nv12.get_UV(), mat);
+        Matrix<Vector4> mat2 = scale(mat, new_nv12.get_UV().dims(), filterbs, bordervalue ? &borderUV : nullptr);
+        convert(mat2, new_nv12.get_UV());
+    }
+}
+
 } // namespace hh

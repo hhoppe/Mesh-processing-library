@@ -195,6 +195,7 @@ class CNv12View {
     }
     CNv12View(const Nv12& nv12)                 : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) { }
     CNv12View(const Nv12View& nv12v)            : _mat_Y(nv12v.get_Y()), _mat_UV(nv12v.get_UV()) { }
+    void reinit(CNv12View nv12v)                { _mat_Y.reinit(nv12v.get_Y()); _mat_UV.reinit(nv12v.get_UV()); }
     CMatrixView<uint8_t> get_Y() const          { return _mat_Y; }
     CMatrixView<Vec2<uint8_t>> get_UV() const   { return _mat_UV; }
  private:
@@ -269,6 +270,8 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame);
 
 // Convert RGBA image to 8-bit luminance plus half-spatial resolution UV chroma.
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v);
+
+void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue, Nv12View new_nv12);
 
 // *** Image IO
 

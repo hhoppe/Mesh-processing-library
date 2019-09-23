@@ -271,25 +271,11 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
         if (0) fill(newdims, 0);
     }
     newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
-    if (!product(newdims)) return newvideo_nv12;
-    float borderY;
-    Vector4 borderUV;
-    if (bordervalue) {
-        uint8_t borderYt = RGB_to_Y(*bordervalue);
-        convert(CGrid1View(borderYt), Grid1View(borderY));
-        Vec2<uint8_t> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
-        convert(CGrid1View(borderUVt), Grid1View(borderUV));
+    if (product(newdims)) {
+        parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
+            scale(video_nv12[f], filterbs, bordervalue, newvideo_nv12[f]);
+        });
     }
-    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
-        Matrix<float> mat(sdims); convert(video_nv12.get_Y()[f], mat);
-        Matrix<float> mat2 = scale(mat, newdims, filterbs, bordervalue ? &borderY : nullptr);
-        convert(mat2, newvideo_nv12.get_Y()[f]);
-    });
-    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {
-        Matrix<Vector4> mat(sdims/2); convert(video_nv12.get_UV()[f], mat);
-        Matrix<Vector4> mat2 = scale(mat, newdims/2, filterbs, bordervalue ? &borderUV : nullptr);
-        convert(mat2, newvideo_nv12.get_UV()[f]);
-    });
     return newvideo_nv12;
 }
 

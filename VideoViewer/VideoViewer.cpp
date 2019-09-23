@@ -2652,6 +2652,8 @@ void upload_image_to_texture() {
         is_init1 = true;
         if (g_verbose>=2) SHOW(gl_extensions_string());
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+        assertx(max_texture_size>=1024);
+        assertx(is_pow2(max_texture_size));
         // USE_GL_EXT_MAYBE(glMapBuffer, PFNGLMAPBUFFERPROC);
         // supports_pbuffer = !!glMapBuffer; // returns address on cygwin yet is not implemented
         supports_non_power_of_two_textures = contains(gl_extensions_string(), "GL_ARB_texture_non_power_of_two");
@@ -2671,16 +2673,19 @@ void upload_image_to_texture() {
         glBindTexture(GL_TEXTURE_2D, texname0);
     }
     g_tex_active_dims = g_frame_dims;
-    Vec2<int> desired_dims = g_frame_dims+g_background_padding_width*2;
-    if (!supports_non_power_of_two_textures) for_int(c, 2) { while (!is_pow2(desired_dims[c])) desired_dims[c]++; }
-    bool tex_size_exceeded = max(desired_dims)>max_texture_size;
-    if (tex_size_exceeded) {
-        if (g_verbose) SHOW(g_frame_dims, desired_dims, max_texture_size);
-        message(sform("Size exceeds supported texture dimension %d", max_texture_size), 5.);
-        const int k_fallback_size = 512;
-        assertx(k_fallback_size<=max_texture_size);
-        desired_dims = twice(k_fallback_size);
-        g_tex_active_dims = desired_dims-g_background_padding_width*2;
+    auto get_desired_dims = [&]{
+        Vec2<int> dims = g_tex_active_dims+g_background_padding_width*2;
+        if (!supports_non_power_of_two_textures) for_int(c, 2) { while (!is_pow2(dims[c])) dims[c]++; }
+        return dims;
+    };
+    Vec2<int> desired_dims = get_desired_dims();
+    if (max(desired_dims)>max_texture_size) {
+        float scale = min(convert<float>(twice(max_texture_size)-g_background_padding_width*2)/
+                          convert<float>(g_frame_dims));
+        g_tex_active_dims = convert<int>(convert<float>(g_frame_dims)*scale+.5f);
+        desired_dims = get_desired_dims();
+        if (g_verbose>=1) SHOW(scale, g_tex_active_dims, desired_dims);
+        assertx(max(desired_dims)==max_texture_size);
     }
     const int level = 0;
     const GLenum format = supports_BGRA ? GL_BGRA : GL_RGBA;
@@ -2690,7 +2695,8 @@ void upload_image_to_texture() {
     if (!getob().is_image()) best_boundaries = true; // tighten boundaries for better video playback performance
     if (best_boundaries && desired_dims!=g_tex_dims) g_tex_dims = twice(0); // force use of tight dimensions
     if (max(desired_dims, g_tex_dims)!=g_tex_dims) {
-        if (g_verbose>=1) SHOW(g_frame_dims, desired_dims, g_tex_dims, max(desired_dims, g_tex_dims));
+        if (g_verbose>=1)
+            SHOW(g_frame_dims, g_tex_active_dims, desired_dims, g_tex_dims, max(desired_dims, g_tex_dims));
         g_tex_dims = max(desired_dims, g_tex_dims);
         // glPixelStorei(GL_UNPACK_ALIGNMENT, 1); // default 4 is good
         const bool fill_all = false;
@@ -2734,25 +2740,31 @@ void upload_image_to_texture() {
             });
         }
     }
-    if (tex_size_exceeded) {    // fill the texture interior with pink color (denoting undefined content)
+    {                           // upload the texture data
         Vec2<int> offset = twice(g_background_padding_width);
-        Pixel color = Pixel::pink(); if (supports_BGRA) color = color.to_BGRA();
-        const Vec2<int> dims = g_tex_active_dims;
-        if (g_verbose) SHOW("pink", offset, dims, g_tex_dims);
-        upload_sub_texture(level, offset, dims, [&](MatrixView<Pixel> frame) {
-            fill(frame, color); return format;
-        });
-    } else {                    // upload the texture data
-        Vec2<int> offset = twice(g_background_padding_width);
-        upload_sub_texture(level, offset, g_frame_dims, [&](MatrixView<Pixel> frame) {
+        const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
+        upload_sub_texture(level, offset, g_tex_active_dims, [&](MatrixView<Pixel> frame) {
             GLenum frame_format = format;
             if (getob()._video_nv12.size()) {
-                if (supports_BGRA) convert_Nv12_to_Image_BGRA(getob()._video_nv12[g_framenum], frame);
-                else               convert_Nv12_to_Image     (getob()._video_nv12[g_framenum], frame);
+                CNv12View view = getob()._video_nv12[g_framenum];
+                Nv12 nv12_tmp;
+                if (g_frame_dims!=g_tex_active_dims) {
+                    nv12_tmp.init(g_tex_active_dims);
+                    scale(view, filterbs, nullptr, nv12_tmp);
+                    view.reinit(nv12_tmp);
+                }
+                if (supports_BGRA) convert_Nv12_to_Image_BGRA(view, frame);
+                else               convert_Nv12_to_Image     (view, frame);
             } else {
                 // frame.assign(getob()._video[g_framenum]);
-                CMatrixView<Pixel> vframe(getob()._video[g_framenum]);
-                std::copy(vframe.begin(), vframe.end(), frame.data());
+                CMatrixView<Pixel> view(getob()._video[g_framenum]);
+                Matrix<Pixel> image_tmp;
+                if (g_frame_dims!=g_tex_active_dims) {
+                    image_tmp.init(g_tex_active_dims);
+                    scale_Matrix_Pixel(view, filterbs, nullptr, image_tmp);
+                    view.reinit(image_tmp);
+                }
+                std::copy(view.begin(), view.end(), frame.data());
                 if (!getob().is_image() || !getob()._image_is_bgra) {
                     frame_format = GL_RGBA;
                 } else if (!supports_BGRA) {

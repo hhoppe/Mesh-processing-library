@@ -137,6 +137,7 @@ void Image::read_file_FF(const string& pfilename, bool bgra) {
         assertt(scontainer!="");
         init(dims);
         if (scontainer=="mjpeg") scontainer = "jpg";
+        if (scontainer=="mjpeg (Baseline)") scontainer = "jpg";
         if (scontainer=="sgi")   scontainer = "rgb";
         string suf = to_lower(get_path_extension(filename));
         if (suf!="" && suf!=scontainer) {

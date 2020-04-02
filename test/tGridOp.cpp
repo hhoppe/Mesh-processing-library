@@ -11,7 +11,8 @@ using namespace hh;
 
 template<int D> void test(const Vec<int,D>& dims, const Vec<int,D>& ndims) {
     Array<const Filter*> filters; // not: "gaussian", "preprocess", "justspline", "justomoms"
-    for (string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"}) {
+    for (const string& s : {"impulse", "box", "triangle", "quadratic",
+                "mitchell", "keys", "spline", "omoms"}) {
         filters.push(&Filter::get(s));
     }
     {                           // inverse convolution is partition-of-unity
@@ -48,14 +49,16 @@ template<int D> void test(const Vec<int,D>& dims, const Vec<int,D>& ndims) {
     }
     {                           // random samples of unity field all reproduce unity
         for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic}) {
-            for (string filtername : {"spline", "omoms"}) {
+            for (const string& filtername : {"spline", "omoms"}) {
                 const Filter& filter = Filter::get(filtername);
-                Grid<D,float> grid(dims, 1.f);
-                Vec<FilterBnd,D> nfilterbs = inverse_convolution(grid, ntimes<D>(FilterBnd(filter, bndrule)));
+                Grid<D, float> grid(dims, 1.f);
+                Vec<FilterBnd, D> nfilterbs = inverse_convolution(
+                    grid, ntimes<D>(FilterBnd(filter, bndrule)));
                 // SHOW(Stat(grid));
                 for_int(i, 10) {
-                    Vec<float,D> p; for_int(d, D) p[d] = Random::G.unif();
-                    assertx(abs(sample_domain(grid, p, nfilterbs)-1.f)<1e-6f);
+                    Vec<float, D> p;
+                    for_int(d, D) p[d] = Random::G.unif();
+                    assertx(abs(sample_domain(grid, p, nfilterbs) - 1.f) < 1e-6f);
                 }
             }
         }

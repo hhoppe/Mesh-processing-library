@@ -160,7 +160,7 @@ void Video::write_file(const string& filename) const {
 bool filename_is_video(const string& filename) {
     static const auto* k_extensions = new Array<string>{
         "mpg", "mpeg", "mpe", "mpv", "mp2", "mpeg2", "mp4", "mpeg4", "mov", "avi", "wmv", "flv",
-        "m2v", "m4v", "webm", "ogv", "3gp", "mts", "gif", "vob", "qt", "asf", "3g2",
+        "m2v", "m4v", "webm", "ogv", "3gp", "mts", "gif", "vob", "qt", "asf", "3g2", "webm",
     };
     return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
 }
@@ -172,11 +172,14 @@ string video_suffix_for_magic_byte(uchar c) {
     //  *.wmv: "0&\262u"
     //  *.avi: "RIFF"
     //  *.mov: "\000\000\000\030ftypqt   \a\t\000"
+    //  *.webm: \0x1a\0x45\0xdf\0xa3
+    // see https://en.wikipedia.org/wiki/List_of_file_signatures
     switch (c) {
      case 0:        return "mp4";  // u'\x00'; or "mov"
      case '0':      return "wmv";
      case 'R':      return "avi";
      case 'G':      return "gif";
+     case '\x1a':   return "webm";
      default:       return "";
     }
 }

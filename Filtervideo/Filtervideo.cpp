@@ -1827,9 +1827,9 @@ void process_gen(Args& args) {
             }
         });
     } else if (name=="list") {
-        for (string s : {"cos_x", "box_y", "checker1", "checker2", "checker3",
-                    "slit1_x", "slit1_y", "slits1", "slits2", "slits3", "slits4",
-                    "stars1", "stars2", "stars3", "stars4", "stars5", "dot1"})
+        for (const string& s : {"cos_x", "box_y", "checker1", "checker2", "checker3", "slit1_x",
+                    "slit1_y", "slits1", "slits2", "slits3", "slits4", "stars1",
+                    "stars2", "stars3", "stars4", "stars5", "dot1"})
             std::cout << s << "\n";
     } else assertnever("");
 }

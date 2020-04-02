@@ -122,6 +122,7 @@ struct Object {
     bool is_image() const                       { return _is_image; }
     const Vec2<int>& spatial_dims() const       { return _dims.tail<2>(); }
     string stype() const                        { return is_image() ? "image" : "video"; }
+    bool loaded() const                         { return _nframes_loaded==nframes(); }
     Vec3<int> _dims;            // _dims[0] is the number of frames, which is always 1 for an image
     bool _is_image;
     Video _video;               // if is_image(), contains a single frame which is the image
@@ -435,7 +436,7 @@ Object& check_object() {
 
 Object& check_loaded_object() {
     Object& ob = check_object();
-    if (ob._nframes_loaded!=ob.nframes()) throw string("video is not finished loading");
+    if (!ob.loaded()) throw string("video is not finished loading");
     return ob;
 }
 
@@ -1097,7 +1098,9 @@ bool DerivedHW::key_press(string skey) {
     bool recognized = true;
     static string prev_skey1, prev_skey2;  prev_skey2 = prev_skey1; prev_skey1 = skey;
     auto func_switch_ob = [&](int obi) {
-        set_video_frame(obi, float(getob(obi)._framenum));
+        int framenum = getob(obi)._framenum;
+        if (getob(obi)._dims==getob()._dims) framenum = g_framenum;  // stay synchronized
+        set_video_frame(obi, float(framenum));
         message("Switched to " + getob().stype() + " " + get_path_tail(getob()._filename));
     };
     bool is_shift =   get_key_modifier(HW::EModifier::shift);
@@ -1703,7 +1706,7 @@ bool DerivedHW::key_press(string skey) {
                  }
                  break;
              }
-             case 'W': {
+             case 'W': {        // crop white borders
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_image();
                  assertx(ob._video.size());
@@ -2045,6 +2048,52 @@ bool DerivedHW::key_press(string skey) {
                  }
                  break;
              }
+             case 'D': {  // create a new video by differencing the current video from the previous video
+                 std::lock_guard<std::mutex> lg(g_mutex_obs);
+                 const Object& ob2 = check_loaded_video();
+                 if (g_cob==0) throw string("no previous video object to difference from");
+                 const Object& ob1 = *g_obs[g_cob-1];
+                 if (ob1.is_image()) throw string("previous object is not a video");
+                 if (!ob1.loaded()) throw string("previous object not finished loading");
+                 if (ob1._dims!=ob2._dims) throw string("previous and current video have different dimensions");
+                 assertx(!!ob1._video.size()==!!ob2._video.size());
+                 Video nvideo;
+                 VideoNv12 nvideo_nv12;
+                 const float contrast = getenv_float("DIFFERENCE_CONTRAST", 4.f);
+                 auto difference = [contrast](uint8_t a, uint8_t b) {
+                     return clamp_to_uint8(int((a-b)*contrast)+128);
+                 };
+                 if (ob1._video.size()) {
+                     nvideo.init(ob1._video.dims());
+                     parallel_for_each(range(nvideo.size()), [&](const size_t i) {
+                         for_int(c, 3) {
+                             nvideo.raster(i)[c] = difference(ob1._video.raster(i)[c], ob2._video.raster(i)[c]);
+                         }
+                     });
+                 } else if (ob1._video_nv12.size()) {
+                     nvideo_nv12.init(ob1._video_nv12.get_Y().dims());
+                     // Here we compute the (128-biased) difference within each of the YUV channels, which is
+                     // different from differences in RGB space but still useful.
+                     parallel_for_each(range(nvideo_nv12.get_Y().size()), [&](const size_t i) {
+                         nvideo_nv12.get_Y().raster(i) = difference(ob1._video_nv12.get_Y().raster(i),
+                                                                    ob2._video_nv12.get_Y().raster(i));
+                     });
+                     parallel_for_each(range(nvideo_nv12.get_UV().size()), [&](const size_t i) {
+                         for_int(c, 2) {
+                             nvideo_nv12.get_UV().raster(i)[c] = difference(ob1._video_nv12.get_UV().raster(i)[c],
+                                                                            ob2._video_nv12.get_UV().raster(i)[c]);
+                         }
+                     });
+                 } else assertnever("");
+                 const int new_cur_frame = g_framenum;
+                 const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
+                 unique_ptr<Object> newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
+                                                                append_to_filename(ob1._filename, "_diff"));
+                 add_object(std::move(newob));
+                 set_video_frame(g_cob, new_cur_frame);
+                 message("Here is the difference video.", 6.);
+                 break;
+             }
              case 'M': {        // mirror: reverse the frames of a video
                  std::lock_guard<std::mutex> lg(g_mutex_obs);
                  const Object& ob = check_loaded_video();
@@ -2356,6 +2405,9 @@ bool DerivedHW::key_press(string skey) {
              }
              case '/': {        // no-op operation, for "-key /"
                  break;
+             }
+             case '~': {        // wait until all objects are loaded
+                 break;         // already handled
              }
              case '\033': {     // exit; <esc> key (== uchar{27}); see also "<esc>"
                  if (0 && getobnum()>1 && prev_skey2!="\033") {
@@ -3147,7 +3199,11 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             g_initial_time = 0.; // reset this setting
         }
     }
-    process_keystring(g_keystring);
+    if (g_keystring[0]=='~' && !all_of(g_obs, [](const auto& ob){ return ob->loaded(); })) {
+        // wait until all objects are loaded)
+    } else {
+        process_keystring(g_keystring);
+    }
     if (!product(g_win_dims)) return;
     if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation) {
         while (!g_videoloop_ready_obj) my_sleep(.1);
@@ -3420,6 +3476,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
             " <left>frame-1   <right>frame+1   <home>first   <end>last",
             " <[>slower   <]>faster   <1>normal   <2>twice   <5>half   <F>ramerate   <B>itrate",
             " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split    <&>merge   <M>irror",
+            " <D>ifference",
             " <R>esample_temporally   <G>en_seamless_loop   <C-g>high-quality_loop   <L>oop",
             " <I>mage_from_frame   <V>ideo_from_images   <#>from_image_files%03d",
         };
@@ -3867,7 +3924,6 @@ void do_stdin(Args& args) {
         do_video(args);
     else
         do_image(args);
-    
 }
 
 // Read a *.vlp file containing video looping parameters, to create a seamless video loop.
@@ -4114,6 +4170,7 @@ int main(int argc, const char** argv) {
     args.p("*.avi", do_video,   ": load input video");
     args.p("*.mov", do_video,   ": load input video");
     args.p("*.gif", do_video,   ": load input video");
+    args.p("*.webm", do_video,  ": load input video");
     args.p("*.MP4", do_video,   ": load input video");
     args.p("*.WMV", do_video,   ": load input video");
     args.p("*.AVI", do_video,   ": load input video");

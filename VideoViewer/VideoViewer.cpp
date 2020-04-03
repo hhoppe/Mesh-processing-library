@@ -3458,6 +3458,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         app_draw_text(V(0, left), s, k_no_text_wrap);
     }
     const int font_height = get_font_dims()[0];
+    const int font_width = get_font_dims()[1];
     if (g_show_help) {          // show overlaid help text
         Array<string> ar = {
             "<h>,<?>,<f1>: Toggle this help   (S=shift, C=control)",
@@ -3514,8 +3515,17 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                 ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
             }
         }
-        for_int(i, ar.num())
-            app_draw_text(V((4+i)*(font_height+4), 6), ar[i], k_no_text_wrap);
+        int top_rows = 4;
+        int left_pixels = 6;
+        int num_rows = max(g_win_dims[0] / (font_height+4) - top_rows, 1);
+        int num_columns = (ar.num() + num_rows - 1) / num_rows;
+        int column_width = (g_win_dims[1]-left_pixels) / font_width / num_columns;
+        for_int(i, ar.num()) {
+            int column = i / num_rows;
+            int row = i % num_rows;
+            app_draw_text(V((top_rows+row)*(font_height+4), left_pixels+column*column_width*font_width),
+                          ar[i], k_no_text_wrap);
+        }
     }
     if (g_use_sliders) {
         app_draw_text(V((2+1)*(font_height+4), 6), "Brightness sliders (<b>ake/exit   <r>eset   <control>vary)");

@@ -3225,6 +3225,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         bool shift_pressed   = get_key_modifier(HW::EModifier::shift);
         bool alt_pressed     = get_key_modifier(HW::EModifier::alt);
         switch (g_selected.button_active) {
+         case 0:
+            break;
          case 1: {              // either sliders or timeline
              if (g_selected.on_timeline) {
                  act_timeline(yx);

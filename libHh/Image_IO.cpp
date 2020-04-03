@@ -335,6 +335,7 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
 // Step 1: allocate and initialize JPEG decompression object
     cinfo.err = jpeg_std_error(&jerr);
     // Intercepting warning messages ("Premature end of JPEG file") would require modifying jerr.output_message .
+    // (Note that "Premature end" may appear in VideoViewer due to the prefetch reading of another image.)
     jerr.error_exit = [](j_common_ptr cinfo) {
         char jpegLastErrorMsg[JMSG_LENGTH_MAX];
         cinfo->err->format_message(cinfo, jpegLastErrorMsg);

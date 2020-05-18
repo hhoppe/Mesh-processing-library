@@ -208,9 +208,9 @@ template<int D> void convert(CGridView<D,Pixel> gridu, GridView<D,Vector4> gridf
     HH_GRIDOP_TIMER(__convert1);
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
-        Vector4 v = Vector4(gridu.raster(i));
+        Vector4 v = Vector4(gridu.flat(i));
         if (env_image_linear_filter()) v = square(v); // assumes gamma=2.0 rather than SRGB 2.2
-        gridf.raster(i) = v;
+        gridf.flat(i) = v;
     }, 4);
 }
 
@@ -218,18 +218,18 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D,Pixel> gridu
     HH_GRIDOP_TIMER(__convert2);
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
-        Vector4 v = gridf.raster(i);
+        Vector4 v = gridf.flat(i);
         if (env_image_linear_filter()) v = sqrt(v); // assumes gamma=2.0 rather than SRGB 2.2
-        gridu.raster(i) = v.pixel();
+        gridu.flat(i) = v.pixel();
     }, 4);
 }
 
 template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf) {
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
-        float v = static_cast<float>(gridu.raster(i));
+        float v = static_cast<float>(gridu.flat(i));
         if (env_image_linear_filter()) v = square(v);
-        gridf.raster(i) = v;
+        gridf.flat(i) = v;
     }, 1);
 }
 
@@ -237,9 +237,9 @@ template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf
 template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu) {
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
-        float v = gridf.raster(i);
+        float v = gridf.flat(i);
         if (env_image_linear_filter()) v = sqrt(v);
-        gridu.raster(i) = clamp_to_uint8(static_cast<int>(v));
+        gridu.flat(i) = clamp_to_uint8(static_cast<int>(v));
     }, 1);
 }
 
@@ -247,20 +247,20 @@ template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu
 template<int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D,Vector4> gridf) {
     assertx(same_size(gridu, gridf));
     parallel_for_each(range(gridu.size()), [&](const size_t i) {
-        const auto& uv = gridu.raster(i);
+        const auto& uv = gridu.flat(i);
         Vector4 v = Vector4(Pixel(uv[0], uv[1], 0, 0));
         if (env_image_linear_filter()) v = square(v);
-        gridf.raster(i) = v;
+        gridf.flat(i) = v;
     }, 4);
 }
 
 template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu) {
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
-        Vector4 v = gridf.raster(i);
+        Vector4 v = gridf.flat(i);
         if (env_image_linear_filter()) v = sqrt(v);
         Pixel p = v.pixel();
-        gridu.raster(i) = V(p[0], p[1]);
+        gridu.flat(i) = V(p[0], p[1]);
     }, 4);
 }
 
@@ -354,9 +354,9 @@ template<int D, typename T> Grid<D,T> evaluate_kernel_d(CGridView<D,T> grid, int
     auto func_interior = [&](const Vec<int,D>& u) {
         int x = u[d];
         const Vec<int,D> u0 = u.with(d, ar_pixelindex0[x]);
-        size_t i0 = grid_index(dims, u0);
+        size_t i0 = ravel_index(dims, u0);
         T v; my_zero(v);
-        for_int(k, nk) { v += mat_weights[x][k]*grid.raster(i0+k*stride); }
+        for_int(k, nk) { v += mat_weights[x][k]*grid.flat(i0+k*stride); }
         ngrid[u] = v;
     };
     // TODO: use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.
@@ -640,9 +640,9 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
     auto func_interior = [&](const Vec<int,D>& u) {
         int x = u[d];
         const Vec<int,D> u0 = u.with(d, x-r);
-        size_t i0 = grid_index(dims, u0);
+        size_t i0 = ravel_index(dims, u0);
         Vector4i v{0};
-        for_int(k, nk) { v += kerneli[k]*Vector4i(grid.raster(i0+k*stride)); } // OPT:blur
+        for_int(k, nk) { v += kerneli[k]*Vector4i(grid.flat(i0+k*stride)); } // OPT:blur
         ngrid[u] = ((v+fach)>>ishift).pixel();
     };
     // TODO: use 2D tiling approach so that both grid and kernel fit in cache for wide grids.

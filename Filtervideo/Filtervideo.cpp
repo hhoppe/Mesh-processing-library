@@ -1010,7 +1010,7 @@ void do_gamma(Args& args) {
     Vec<uint8_t,256> transf; for_int(i, 256) { transf[i] = static_cast<uint8_t>(255.f*pow(i/255.f, gamma)+0.5f); }
     if (1) {
         parallel_for_each(range(video.size()), [&](const size_t i) {
-            for_int(z, nz) { video.raster(i)[z] = transf[video.raster(i)[z]]; } // fastest
+            for_int(z, nz) { video.flat(i)[z] = transf[video.flat(i)[z]]; } // fastest
         }, 10);
     } else if (0) {
         parallel_for_coords(video.dims(), [&](const Vec3<int>& fyx) {
@@ -1070,7 +1070,7 @@ void verify_loop_parameters() {
         {
             HH_STAT(Send);
             for_size_t(i, g_lp.mat_start.size()) {
-                Send.enter(g_lp.mat_start.raster(i)+g_lp.mat_period.raster(i));
+                Send.enter(g_lp.mat_start.flat(i)+g_lp.mat_period.flat(i));
             }
             if (video.nframes() && int(Send.max())>video.nframes())
                 Warning("Some loop ends extend beyond the video length");

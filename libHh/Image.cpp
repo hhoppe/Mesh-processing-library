@@ -26,7 +26,7 @@ void Image::init(const Vec2<int>& pdims, Pixel pix) {
     if (0) {
         fill(*this, pix);
     } else if (0) {
-        parallel_for_each(range(size()), [&](const size_t i) { raster(i) = pix; }, 4);
+        parallel_for_each(range(size()), [&](const size_t i) { flat(i) = pix; }, 4);
     } else {
         const uint32_t upix = reinterpret_cast<uint32_t&>(pix);
         uint32_t* p = reinterpret_cast<uint32_t*>(data());
@@ -502,7 +502,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
             }
         }
     } else if (0) {
-        // for_size_t(i, frame.size()) { *bufY++ = RGB_to_Y(frame.raster(i)); }
+        // for_size_t(i, frame.size()) { *bufY++ = RGB_to_Y(frame.flat(i)); }
         {
             const uint8_t* p = frame.data()->data();
             assertx(reinterpret_cast<uintptr_t>(p)%4==0);

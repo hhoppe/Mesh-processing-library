@@ -57,7 +57,7 @@ template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_
     if (!size) { Warning("Zero-size grid"); return v; }
     constexpr bool avoid_threadpool = false;
     if (avoid_threadpool || g.size()*1<k_omp_thresh) {
-        omp_parallel_for_T(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) { v += g.raster(i); }
+        omp_parallel_for_T(reduction(+:v) if(g.size()*1>=k_omp_thresh), intptr_t, i, 0, size) { v += g.flat(i); }
     } else {
         const int num_threads = get_max_threads();
         const intptr_t chunk_size = (size+num_threads-1)/num_threads;
@@ -65,7 +65,7 @@ template<int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_
         parallel_for_each(range(num_threads), [&](const int thread_index) {
             MeanType v; my_zero(v);
             for_each(range(thread_index*chunk_size, std::min((thread_index+1)*chunk_size, size)),
-                     [&](const intptr_t i) { v += g.raster(i); });
+                     [&](const intptr_t i) { v += g.flat(i); });
             means[thread_index] = v;
         });
         for_int(thread_index, num_threads) v += means[thread_index];
@@ -336,18 +336,18 @@ class Multigrid : noncopyable {
             // ++g_nfast;
             T vnei; my_zero(vnei);
             if (0) {
-                for (int o : ar_interior_offsets) { vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
+                for (int o : ar_interior_offsets) { vnei += grid_result.flat(i+o)+grid_result.flat(i-o); }
             } else if (D<=3) {
                 // get rid of &vnei lambda capture which forces stack allocation on VS2013
-                if (D>0) { int o = ar_interior_offsets[0]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
-                if (D>1) { int o = ar_interior_offsets[1]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
-                if (D>2) { int o = ar_interior_offsets[2]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
+                if (D>0) { int o = ar_interior_offsets[0]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o); }
+                if (D>1) { int o = ar_interior_offsets[1]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o); }
+                if (D>2) { int o = ar_interior_offsets[2]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o); }
             } else {
                 unroll<2*D>([&](int j) {
-                    int o = ar_interior_offsets[j]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o);
+                    int o = ar_interior_offsets[j]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o);
                 });
             }
-            grid_result.raster(i) = (vnei*wL-grid_rhs.raster(i))*rwLnum; // OPT:relax
+            grid_result.flat(i) = (vnei*wL-grid_rhs.flat(i))*rwLnum; // OPT:relax
         };
         for_int(iter, niter) {
             if (0 || (grid_rhs.size()*10<k_omp_thresh && 1)) {
@@ -530,21 +530,21 @@ class Multigrid : noncopyable {
             if (1) ASSERTX(true && b_default_metric);
             T vnei; my_zero(vnei);
             if (0) {
-                for (int o : ar_interior_offsets) { vnei += grid_result.raster(i+o)+grid_result.raster(i-o); }
+                for (int o : ar_interior_offsets) { vnei += grid_result.flat(i+o)+grid_result.flat(i-o); }
             } else {
                 if (D>0) {
-                    int o = ar_interior_offsets[0]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o);
+                    int o = ar_interior_offsets[0]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o);
                 }
                 if (D>1) {
-                    int o = ar_interior_offsets[1]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o);
+                    int o = ar_interior_offsets[1]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o);
                 }
                 if (D>2) {
-                    int o = ar_interior_offsets[2]; vnei += grid_result.raster(i+o)+grid_result.raster(i-o);
+                    int o = ar_interior_offsets[2]; vnei += grid_result.flat(i+o)+grid_result.flat(i-o);
                 }
                 static_assert(D<=3, "");
             }
             float vnum = _screening_weight+wL*(2.f*D);
-            grid_residual.raster(i) = grid_rhs.raster(i)-(wL*vnei-vnum*grid_result.raster(i)); // OPT:resid
+            grid_residual.flat(i) = grid_rhs.flat(i)-(wL*vnei-vnum*grid_result.flat(i)); // OPT:resid
         };
         if (0) for (const auto& u : range(dims)) func(u);
         if (1 && b_default_metric) {

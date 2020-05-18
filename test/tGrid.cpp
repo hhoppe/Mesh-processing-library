@@ -15,7 +15,7 @@ int main() {
         SHOW(grid_stride(grid.dims(), 0));
         SHOW(grid_stride(grid.dims(), 1));
         SHOW(grid_stride(grid.dims(), 2));
-        for_size_t(i, grid.size()) { SHOW(grid.raster(i)); }
+        for_size_t(i, grid.size()) { SHOW(grid.flat(i)); }
         for (const auto& u : range(grid.dims())) { SHOW(u, grid[u]); }
         SHOW(grid(0, 0, 1));
         SHOW(grid(1, 0, 0));
@@ -47,17 +47,17 @@ int main() {
     }
     {
         Grid<1,int> grid1(256);
-        SHOW(grid_index_list(grid1.dims(), 7));
-        SHOW(grid_index_inv(grid1.dims(), grid_index_list(grid1.dims(), 7)));
+        SHOW(ravel_index_list(grid1.dims(), 7));
+        SHOW(unravel_index(grid1.dims(), ravel_index_list(grid1.dims(), 7)));
         Grid<2,int> grid2(100, 1000);
-        SHOW(grid_index_list(grid2.dims(), 3, 7));
-        SHOW(grid_index_inv(grid2.dims(), grid_index_list(grid2.dims(), 3, 7)));
+        SHOW(ravel_index_list(grid2.dims(), 3, 7));
+        SHOW(unravel_index(grid2.dims(), ravel_index_list(grid2.dims(), 3, 7)));
         Grid<3,int> grid3(V(10, 100, 1000));
-        SHOW(grid_index_list(grid3.dims(), 3, 4, 5));
-        SHOW(grid_index_inv(grid3.dims(), grid_index_list(grid3.dims(), 3, 4, 5)));
+        SHOW(ravel_index_list(grid3.dims(), 3, 4, 5));
+        SHOW(unravel_index(grid3.dims(), ravel_index_list(grid3.dims(), 3, 4, 5)));
         Grid<4,int> grid4(4, 10, 100, 1000);
-        SHOW(grid_index_list(grid4.dims(), 3, 4, 5, 6));
-        SHOW(grid_index_inv(grid4.dims(), grid_index_list(grid4.dims(), 3, 4, 5, 6)));
+        SHOW(ravel_index_list(grid4.dims(), 3, 4, 5, 6));
+        SHOW(unravel_index(grid4.dims(), ravel_index_list(grid4.dims(), 3, 4, 5, 6)));
     }
     {
         SHOW((has_ostream_eol<Grid<2,int>>()));
@@ -65,17 +65,17 @@ int main() {
         constexpr bool b = has_ostream_eol<Vec<int,5>>(); SHOW(b);
     }
     {
-        SHOW(grid_index(V(7, 5), V(2, 1)));
-        SHOW(grid_index(V(7, 5), V(2, 2)));
-        SHOW(grid_index(V(7, 5), V(3, 1)));
-        SHOW(grid_index(V(3, 4, 5, 6), V(1, 0, 0, 0)));
-        SHOW(grid_index(V(3, 4, 5, 6), V(1, 1, 1, 1)));
-        { constexpr size_t gi = grid_index(V(7, 5), V(3, 1)); SHOW(gi); }
-        { constexpr size_t gilist = grid_index_list(V(7, 5), 3, 1); SHOW(gilist); }
+        SHOW(ravel_index(V(7, 5), V(2, 1)));
+        SHOW(ravel_index(V(7, 5), V(2, 2)));
+        SHOW(ravel_index(V(7, 5), V(3, 1)));
+        SHOW(ravel_index(V(3, 4, 5, 6), V(1, 0, 0, 0)));
+        SHOW(ravel_index(V(3, 4, 5, 6), V(1, 1, 1, 1)));
+        { constexpr size_t gi = ravel_index(V(7, 5), V(3, 1)); SHOW(gi); }
+        { constexpr size_t gilist = ravel_index_list(V(7, 5), 3, 1); SHOW(gilist); }
     }
     {
         Grid<3,int> grid(thrice(3));
-        for_size_t(i, grid.size()) { grid.raster(i) = int(i); }
+        for_size_t(i, grid.size()) { grid.flat(i) = int(i); }
         SHOW(grid[0]);
         SHOW(grid[0][0]);
         SHOW(grid[0][0][0]);
@@ -84,7 +84,7 @@ int main() {
     }
     {
         Grid<3, Vec2<int>> grid(thrice(3));
-        for_size_t(i, grid.size()) { grid.raster(i) = V(int(i*10), int(i*10+1)); }
+        for_size_t(i, grid.size()) { grid.flat(i) = V(int(i*10), int(i*10+1)); }
         SHOW(grid[0]);
         SHOW(grid[0][0]);
         SHOW(grid[0][0][0]);

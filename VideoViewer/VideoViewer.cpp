@@ -2067,7 +2067,7 @@ bool DerivedHW::key_press(string skey) {
                      nvideo.init(ob1._video.dims());
                      parallel_for_each(range(nvideo.size()), [&](const size_t i) {
                          for_int(c, 3) {
-                             nvideo.raster(i)[c] = difference(ob1._video.raster(i)[c], ob2._video.raster(i)[c]);
+                             nvideo.flat(i)[c] = difference(ob1._video.flat(i)[c], ob2._video.flat(i)[c]);
                          }
                      });
                  } else if (ob1._video_nv12.size()) {
@@ -2075,13 +2075,13 @@ bool DerivedHW::key_press(string skey) {
                      // Here we compute the (128-biased) difference within each of the YUV channels, which is
                      // different from differences in RGB space but still useful.
                      parallel_for_each(range(nvideo_nv12.get_Y().size()), [&](const size_t i) {
-                         nvideo_nv12.get_Y().raster(i) = difference(ob1._video_nv12.get_Y().raster(i),
-                                                                    ob2._video_nv12.get_Y().raster(i));
+                         nvideo_nv12.get_Y().flat(i) = difference(ob1._video_nv12.get_Y().flat(i),
+                                                                  ob2._video_nv12.get_Y().flat(i));
                      });
                      parallel_for_each(range(nvideo_nv12.get_UV().size()), [&](const size_t i) {
                          for_int(c, 2) {
-                             nvideo_nv12.get_UV().raster(i)[c] = difference(ob1._video_nv12.get_UV().raster(i)[c],
-                                                                            ob2._video_nv12.get_UV().raster(i)[c]);
+                             nvideo_nv12.get_UV().flat(i)[c] = difference(ob1._video_nv12.get_UV().flat(i)[c],
+                                                                          ob2._video_nv12.get_UV().flat(i)[c]);
                          }
                      });
                  } else assertnever("");
@@ -2179,7 +2179,7 @@ bool DerivedHW::key_press(string skey) {
                          nvideo.init(ob._video.dims());
                          const bool bgra = ob.is_image() && ob._image_is_bgra;
                          parallel_for_each(range(ob._video.size()), [&](const size_t i) {
-                             Pixel pix = ob._video.raster(i);
+                             Pixel pix = ob._video.flat(i);
                              if (bgra) std::swap(pix[0], pix[2]);
                              Pixel yuv = RGB_to_YUV_Pixel(pix[0], pix[1], pix[2]);
                              float y = yuv[0]/255.f;
@@ -2190,21 +2190,21 @@ bool DerivedHW::key_press(string skey) {
                              for_intL(c, 1, 3) { yuv[c] = clamp_to_uint8(int(128.5f+(yuv[c]-128.f)*saturation_fac)); }
                              pix = YUV_to_RGB_Pixel(yuv[0], yuv[1], yuv[2]);
                              if (bgra) std::swap(pix[0], pix[2]);
-                             nvideo.raster(i) = pix;
+                             nvideo.flat(i) = pix;
                          });
                      } else {
                          nvideo_nv12.init(ob._video_nv12.get_Y().dims());
                          parallel_for_each(range(ob._video_nv12.get_Y().size()), [&](const size_t i) {
-                             float y = ob._video_nv12.get_Y().raster(i)/255.f;
+                             float y = ob._video_nv12.get_Y().flat(i)/255.f;
                              y = pow(y, g_gamma);
                              y *= contrast_fac;
                              y += brightness_term;
-                             nvideo_nv12.get_Y().raster(i) = clamp_to_uint8(int(y*255.f+.5f));
+                             nvideo_nv12.get_Y().flat(i) = clamp_to_uint8(int(y*255.f+.5f));
                          });
                          parallel_for_each(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
                              for_int(c, 2) {
-                                 nvideo_nv12.get_UV().raster(i)[c] =
-                                     clamp_to_uint8(int(128.5f+(ob._video_nv12.get_UV().raster(i)[c]-128.f)*
+                                 nvideo_nv12.get_UV().flat(i)[c] =
+                                     clamp_to_uint8(int(128.5f+(ob._video_nv12.get_UV().flat(i)[c]-128.f)*
                                                         saturation_fac));
                              }
                          });

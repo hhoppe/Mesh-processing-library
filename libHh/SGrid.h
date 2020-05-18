@@ -20,7 +20,7 @@ template<typename T, int d0>                    struct SGrid_sslice<T, d0> { usi
 } // namespace details
 
 // Self-contained fixed-size multidimensional grid with elements of type T.
-// A small benefit compared to Vec<Vec<...>> is the introduction of dims(), data(), raster(), view().
+// A small benefit compared to Vec<Vec<...>> is the introduction of dims(), data(), flat(), view().
 template<typename T, int d0, int... od> class SGrid :
         public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0> {
     static constexpr int D = 1+sizeof...(od);
@@ -40,19 +40,19 @@ template<typename T, int d0, int... od> class SGrid :
     type& operator=(const type& g)              = default;
     type& operator=(initializer_type l)         { nested_retrieve()(*this, l); return *this; }
     type& operator=(CGridView<D,T> g)           { assign(g); return *this; }
-    constexpr int order() const                 { return D; } // also called rank
+    constexpr int ndim() const                  { return D; }
     constexpr Vec<int,D> dims() const           { return Vec<int,D>(d0, od...); }
     constexpr int dim(int c) const              { return dims()[c]; }
     constexpr size_t size() const               { return vol; }
-    T&       operator[](const Vec<int,D>& u)         { return raster(grid_index(dims(), u)); }
-    const T& operator[](const Vec<int,D>& u) const   { return raster(grid_index(dims(), u)); }
+    T&       operator[](const Vec<int,D>& u)         { return flat(ravel_index(dims(), u)); }
+    const T& operator[](const Vec<int,D>& u) const   { return flat(ravel_index(dims(), u)); }
     slice&       operator[](int r)              { ASSERTXX(check(r)); return b()[r]; }
     const slice& operator[](int r) const        { ASSERTXX(check(r)); return b()[r]; }
-    T&       raster(size_t i)                   { ASSERTXX(i<vol); return data()[i]; }
-    const T& raster(size_t i) const             { ASSERTXX(i<vol); return data()[i]; }
+    T&       flat(size_t i)                     { ASSERTXX(i<vol); return data()[i]; }
+    const T& flat(size_t i) const               { ASSERTXX(i<vol); return data()[i]; }
     bool operator==(const type& p) const;
     bool operator!=(const type& p) const        { return !(*this==p); }
-    static type all(const T& e)                 { type g; for_size_t(i, vol) { g.raster(i) = e; } return g; }
+    static type all(const T& e)                 { type g; for_size_t(i, vol) { g.flat(i) = e; } return g; }
     operator GridView<D,T>()                    { return view(); }
     operator CGridView<D,T>() const             { return view(); }
     GridView<D,T>  view()                       { return  GridView<D,T>(data(), dims()); }
@@ -81,13 +81,13 @@ template<typename T, int d0, int... od> class SGrid :
     const slice* p(int i) const                 { return b().data()+i; }
     bool check(int r) const             { if (r>=0 && r<d0) return true; SHOW(r, dims()); return false; }
     bool check(int i, int s) const      { if (i>=0 && s>=0 && i+s<=d0) return true; SHOW(i, s, dims()); return false; }
-    void assign(CGridView<D,T> g)       { ASSERTX(dims()==g.dims());  for_size_t(i, vol) raster(i) = g.raster(i); }
+    void assign(CGridView<D,T> g)       { ASSERTX(dims()==g.dims()); for_size_t(i, vol) flat(i) = g.flat(i); }
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template<typename Func, typename T, int d0, int... od> auto map(const SGrid<T, d0, od...>& c, Func func)
     -> SGrid<decltype(func(T{})), d0, od...> {
-    SGrid<decltype(func(T{})), d0, od...> nc; for_size_t(i, c.size()) { nc.raster(i) = func(c.raster(i)); }
+    SGrid<decltype(func(T{})), d0, od...> nc; for_size_t(i, c.size()) { nc.flat(i) = func(c.flat(i)); }
     return nc;
 }
 
@@ -95,7 +95,7 @@ template<typename Func, typename T, int d0, int... od> auto map(const SGrid<T, d
 //----------------------------------------------------------------------------
 
 template<typename T, int d0, int... od> bool SGrid<T, d0, od...>::operator==(const type& p) const {
-    for_size_t(i, vol) { if (raster(i)!=p.raster(i)) return false; } return true;
+    for_size_t(i, vol) { if (flat(i)!=p.flat(i)) return false; } return true;
 }
 
 template<typename T, int d0, int... od> std::ostream& operator<<(std::ostream& os, const SGrid<T, d0, od...>& g) {
@@ -113,50 +113,50 @@ template<typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od..
 #define G SGrid<T, d0, od...>
 #define F for_size_t(i, g1.size())
 
-TT G operator+(const G& g1, const G& g2) { G g; F { g.raster(i) = g1.raster(i)+g2.raster(i); } return g; }
-TT G operator-(const G& g1, const G& g2) { G g; F { g.raster(i) = g1.raster(i)-g2.raster(i); } return g; }
-TT G operator*(const G& g1, const G& g2) { G g; F { g.raster(i) = g1.raster(i)*g2.raster(i); } return g; }
-TT G operator/(const G& g1, const G& g2) { G g; F { g.raster(i) = g1.raster(i)/g2.raster(i); } return g; }
-TT G operator%(const G& g1, const G& g2) { G g; F { g.raster(i) = g1.raster(i)%g2.raster(i); } return g; }
+TT G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)+g2.flat(i); } return g; }
+TT G operator-(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)-g2.flat(i); } return g; }
+TT G operator*(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)*g2.flat(i); } return g; }
+TT G operator/(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)/g2.flat(i); } return g; }
+TT G operator%(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)%g2.flat(i); } return g; }
 
-TT G operator+(const G& g1, T v) { G g; F { g.raster(i) = g1.raster(i)+v; } return g; }
-TT G operator-(const G& g1, T v) { G g; F { g.raster(i) = g1.raster(i)-v; } return g; }
-TT G operator*(const G& g1, T v) { G g; F { g.raster(i) = g1.raster(i)*v; } return g; }
-TT G operator/(const G& g1, T v) { G g; F { g.raster(i) = g1.raster(i)/v; } return g; }
-TT G operator%(const G& g1, T v) { G g; F { g.raster(i) = g1.raster(i)%v; } return g; }
+TT G operator+(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)+v; } return g; }
+TT G operator-(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)-v; } return g; }
+TT G operator*(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)*v; } return g; }
+TT G operator/(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)/v; } return g; }
+TT G operator%(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)%v; } return g; }
 
-TT G operator+(T v, const G& g1) { G g; F { g.raster(i) = v+g1.raster(i); } return g; }
-TT G operator-(T v, const G& g1) { G g; F { g.raster(i) = v-g1.raster(i); } return g; }
-TT G operator*(T v, const G& g1) { G g; F { g.raster(i) = v*g1.raster(i); } return g; }
-TT G operator/(T v, const G& g1) { G g; F { g.raster(i) = v/g1.raster(i); } return g; }
-TT G operator%(T v, const G& g1) { G g; F { g.raster(i) = v%g1.raster(i); } return g; }
+TT G operator+(T v, const G& g1) { G g; F { g.flat(i) = v+g1.flat(i); } return g; }
+TT G operator-(T v, const G& g1) { G g; F { g.flat(i) = v-g1.flat(i); } return g; }
+TT G operator*(T v, const G& g1) { G g; F { g.flat(i) = v*g1.flat(i); } return g; }
+TT G operator/(T v, const G& g1) { G g; F { g.flat(i) = v/g1.flat(i); } return g; }
+TT G operator%(T v, const G& g1) { G g; F { g.flat(i) = v%g1.flat(i); } return g; }
 
-TT G& operator+=(G& g1, const G& g2) { F { g1.raster(i) += g2.raster(i); } return g1; }
-TT G& operator-=(G& g1, const G& g2) { F { g1.raster(i) -= g2.raster(i); } return g1; }
-TT G& operator*=(G& g1, const G& g2) { F { g1.raster(i) *= g2.raster(i); } return g1; }
-TT G& operator/=(G& g1, const G& g2) { F { g1.raster(i) /= g2.raster(i); } return g1; }
-TT G& operator%=(G& g1, const G& g2) { F { g1.raster(i) %= g2.raster(i); } return g1; }
+TT G& operator+=(G& g1, const G& g2) { F { g1.flat(i) += g2.flat(i); } return g1; }
+TT G& operator-=(G& g1, const G& g2) { F { g1.flat(i) -= g2.flat(i); } return g1; }
+TT G& operator*=(G& g1, const G& g2) { F { g1.flat(i) *= g2.flat(i); } return g1; }
+TT G& operator/=(G& g1, const G& g2) { F { g1.flat(i) /= g2.flat(i); } return g1; }
+TT G& operator%=(G& g1, const G& g2) { F { g1.flat(i) %= g2.flat(i); } return g1; }
 
-TT G& operator+=(G& g1, const T& v) { F { g1.raster(i) += v; } return g1; }
-TT G& operator-=(G& g1, const T& v) { F { g1.raster(i) -= v; } return g1; }
-TT G& operator*=(G& g1, const T& v) { F { g1.raster(i) *= v; } return g1; }
-TT G& operator/=(G& g1, const T& v) { F { g1.raster(i) /= v; } return g1; }
-TT G& operator%=(G& g1, const T& v) { F { g1.raster(i) %= v; } return g1; }
+TT G& operator+=(G& g1, const T& v) { F { g1.flat(i) += v; } return g1; }
+TT G& operator-=(G& g1, const T& v) { F { g1.flat(i) -= v; } return g1; }
+TT G& operator*=(G& g1, const T& v) { F { g1.flat(i) *= v; } return g1; }
+TT G& operator/=(G& g1, const T& v) { F { g1.flat(i) /= v; } return g1; }
+TT G& operator%=(G& g1, const T& v) { F { g1.flat(i) %= v; } return g1; }
 
-TT G operator-(const G& g1) { G g; F { g.raster(i) = -g1.raster(i); } return g; }
+TT G operator-(const G& g1) { G g; F { g.flat(i) = -g1.flat(i); } return g; }
 
-TT G min(const G& g1, const G& g2) { G g; F { g.raster(i) = min(g1.raster(i), g2.raster(i)); } return g; }
-TT G max(const G& g1, const G& g2) { G g; F { g.raster(i) = max(g1.raster(i), g2.raster(i)); } return g; }
+TT G min(const G& g1, const G& g2) { G g; F { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
+TT G max(const G& g1, const G& g2) { G g; F { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
 
 TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
-    G g; F { g.raster(i) = f1*g1.raster(i)+(1.f-f1)*g2.raster(i); } return g;
+    G g; F { g.flat(i) = f1*g1.flat(i)+(1.f-f1)*g2.flat(i); } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
-    G g; F { g.raster(i) = f1*g1.raster(i)+f2*g2.raster(i)+(1.f-f1-f2)*g3.raster(i); } return g;
+    G g; F { g.flat(i) = f1*g1.flat(i)+f2*g2.flat(i)+(1.f-f1-f2)*g3.flat(i); } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
     // Vec3<float> == Bary;   may have bary[0]+bary[1]+bary[2]!=1.f
-    G g; F { g.raster(i) = bary[0]*g1.raster(i)+bary[1]*g2.raster(i)+bary[2]*g3.raster(i); } return g;
+    G g; F { g.flat(i) = bary[0]*g1.flat(i)+bary[1]*g2.flat(i)+bary[2]*g3.flat(i); } return g;
 }
 
 #undef F

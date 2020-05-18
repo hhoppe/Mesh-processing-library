@@ -502,22 +502,22 @@ void solve_using_offsets_aux(CGridView<3,Pixel> video, CMatrixView<int> mat_star
                     MatrixView<EType> mrhs1 = multigrid.rhs()[f1];
                     for_int(y, ny) for_int(x, nx) {
                         int yxi = y*nx+x;
-                        int fi0 = grid_frameif0.raster(yxi);
-                        int fi1 = grid_frameif1.raster(yxi);
+                        int fi0 = grid_frameif0.flat(yxi);
+                        int fi1 = grid_frameif1.flat(yxi);
                         if (fi1>=fi0) continue;
-                        const int period = mat_period.raster(yxi); // OPT:rhs_temporal
+                        const int period = mat_period.flat(yxi); // OPT:rhs_temporal
                         int count = 0; EType change(0.f);
                         if (fi1+period<onf) {
                             count++;
-                            change += MG::get(video[fi1+period].raster(yxi), z)-MG::get(video[fi1].raster(yxi), z);
+                            change += MG::get(video[fi1+period].flat(yxi), z)-MG::get(video[fi1].flat(yxi), z);
                         }
                         if (fi0-period>=0) {
                             count++;
-                            change += MG::get(video[fi0].raster(yxi), z)-MG::get(video[fi0-period].raster(yxi), z);
+                            change += MG::get(video[fi0].flat(yxi), z)-MG::get(video[fi0-period].flat(yxi), z);
                         }
                         assertx(count>0); if (count==2) change *= .5f;
-                        mrhs0.raster(yxi) += change;
-                        mrhs1.raster(yxi) -= change;
+                        mrhs0.flat(yxi) += change;
+                        mrhs1.flat(yxi) -= change;
                     }
                 });
             }

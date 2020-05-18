@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_
 
 #include "Parallel.h"
-#include "Grid.h"               // grid_index()
+#include "Grid.h"               // ravel_index()
 
 namespace hh {
 
@@ -91,7 +91,7 @@ void parallel_for_coordsL(Vec<int,D> uL, Vec<int,D> uU, Func func,
     const Vec<int,D> dims = uU-uL;
     if (est_cycles_per_elem>=k_omp_many_cycles_per_elem) {
         parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
-            func(uL+grid_index_inv(dims, i)); // most parallelism but with higher overhead
+            func(uL+unravel_index(dims, i)); // most parallelism but with higher overhead
         });
     } else if (product(dims)*est_cycles_per_elem>=k_omp_thresh) {
         parallel_for_each(range(uL[0], uU[0]), [&](const int r) {
@@ -119,7 +119,7 @@ void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func,
     const Vec2<int> dims = uU-uL;
     if (est_cycles_per_elem>=k_omp_many_cycles_per_elem) {
         parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
-            func(uL+grid_index_inv(dims, i)); // most parallelism but with higher overhead
+            func(uL+unravel_index(dims, i)); // most parallelism but with higher overhead
         });
     } else if (dims[0]>=k_omp_min_iterations && product(dims)*est_cycles_per_elem>=k_omp_thresh) {
         parallel_for_each(range(uL[0], uU[0]), [&](const int y) {
@@ -141,7 +141,7 @@ void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func,
     const Vec3<int> dims = uU-uL;
     if (est_cycles_per_elem>=k_omp_many_cycles_per_elem) {
         parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
-            func(uL+grid_index_inv(dims, i)); // most parallelism but with higher overhead
+            func(uL+unravel_index(dims, i)); // most parallelism but with higher overhead
         });
     } else if (dims[0]>=k_omp_min_iterations && product(dims)*est_cycles_per_elem>=k_omp_thresh) {
         parallel_for_each(range(uL[0], uU[0]), [&](const int z) {
@@ -191,15 +191,15 @@ void for_coordsL_raster(Vec<int,D> dims, Vec<int,D> uL, Vec<int,D> uU, FuncRaste
         }
     } else if (D==3) {          // speed does not increase much
         for_intL(d0, uL[0], uU[0]) for_intL(d1, uL[1], uU[1]) {
-            // "size_t ib = grid_index_list(dims, d0, d1, uL[2]);" fails for D!=3
-            // "size_t ib = grid_index<D>(dims, {d0, d1, uL[2]});" fails for D!=3
-            // size_t ib = grid_index<D>(dims, V(d0, d1, uL[2]).view()); // .view() for compilation of D!=3
+            // "size_t ib = ravel_index_list(dims, d0, d1, uL[2]);" fails for D!=3
+            // "size_t ib = ravel_index<D>(dims, {d0, d1, uL[2]});" fails for D!=3
+            // size_t ib = ravel_index<D>(dims, V(d0, d1, uL[2]).view()); // .view() for compilation of D!=3
             // for_int(id, uU[2]-uL[2]) { func_raster(ib+id); }
             size_t i0 = (d0*dims[1]+d1)*dims[2];
             for_intL(d2, uL[2], uU[2]) { func_raster(i0+d2); }
         }
     } else {                    // this generic case is already quite fast
-        for (const auto& u : range(uL, uU)) { func_raster(grid_index(dims, u)); }
+        for (const auto& u : range(uL, uU)) { func_raster(ravel_index(dims, u)); }
     }
 }
 

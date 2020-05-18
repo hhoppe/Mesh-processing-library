@@ -16,7 +16,7 @@ int main() {
         fill(grid, 0);
         grid[1][0][3] = 103;
         grid[0][2][3] = 23;
-        SHOW(grid.raster(11));
+        SHOW(grid.flat(11));
         SHOW(grid);
         SHOW(grid[1]);
         SHOW(grid[1][0]);
@@ -25,7 +25,7 @@ int main() {
         fill(grid[1][2], 12);
         SHOW(grid);
         SHOW(grid==grid);
-        for_size_t(i, grid.size()) { grid.raster(i) = int(i); }
+        for_size_t(i, grid.size()) { grid.flat(i) = int(i); }
         SHOW(grid);
     }
     {

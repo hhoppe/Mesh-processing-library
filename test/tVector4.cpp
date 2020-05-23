@@ -38,8 +38,7 @@ int main() {
         SHOW(sum(v2));
         SHOW(min(v1, v2));
         SHOW(max(v1, v2));
-        // float ar1[4];           // unaligned matrix does cause ACCESS_VIOLATION
-        HH_ALIGNAS(16) float ar1[4];
+        alignas(16) float ar1[4];
         v1.store_aligned(ar1);
         SHOW(ar1[0], ar1[3]);
         Vector4 v3; v3.load_aligned(ar1);

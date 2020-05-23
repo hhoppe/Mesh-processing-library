@@ -13,8 +13,9 @@ int main(int argc, char**) {
             if (el.type()==A3dElem::EType::endfile) break;
             if (el.type()==A3dElem::EType::polygon || el.type()==A3dElem::EType::polyline) {
                 for_int(i, el.num()) {
-                    round_elements(el[i].p);
-                    round_elements(el[i].n);
+                    const float fac = 1e4f;
+                    round_elements(el[i].p, fac);
+                    round_elements(el[i].n, fac);
                 }
             }
             oa3d.write(el);

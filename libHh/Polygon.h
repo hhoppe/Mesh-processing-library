@@ -14,12 +14,7 @@ struct Bbox;
 class Polygon : public PArray<Point,4> {
     using base = PArray<Point,4>;
  public:
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
-    explicit Polygon(int nv = 0)                : base(nv) { }
-    Polygon(CArrayView<Point> ar)               : base(ar) { }
-#else
     using base::base;           // C++11 inherit constructors
-#endif
     void get_bbox(Bbox& bb) const;
     Vector get_normal_dir() const; // non-normalized normal
     Vector get_normal() const;     // user should check !is_zero()

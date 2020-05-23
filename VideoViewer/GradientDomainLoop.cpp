@@ -1289,14 +1289,9 @@ void compute_gdloop(const Vec3<int>& videodims,
     }
     if (getenv_bool("VIDEOLOOP_SHOW_SPATIAL_COST")) {
         assertx(video.size());
-#if defined(__GNUC__) && defined(HH_NO_OPENMP) && __GNUC__*100+__GNUC_MINOR__<409
-        assertnever("");    // bizarre; the function call (below) causes an internal compiler error in gcc
-        dummy_use(show_spatial_cost);
-#else
         Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
         Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
         show_spatial_cost(video, mat_start_highres, mat_period_highres, nnf);
-#endif
     }
     if (getenv_bool("VIDEOLOOP_COMPUTE_COSTS")) {
         assertx(video.size() && videoloop.size()); // it does not implement streaming video read, write, or nv12

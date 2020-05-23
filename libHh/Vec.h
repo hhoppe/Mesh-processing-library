@@ -35,13 +35,13 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     T& last()                                   { return (*this)[n-1]; }
     const T& last() const                       { return (*this)[n-1]; }
     bool ok(int i) const                        { return i>=0 && i<n; }
-    type with(int i, const T& e) const          { type ar(*this); ar[i] = e; return ar; }
     void assign(CArrayView<T> ar)               { assign_i(ar); }
     constexpr type rev() const                  { return rev_aux(std::make_index_sequence<n>()); }
     bool in_range(const type& dims) const       { return in_range(type::all(0), dims); }
     bool in_range(const type& uL, const type& uU) const;  // true if uL[c] <= [c] < uU[c] for all c in [0, n-1]
-    // type with(int i, T e) const { type ar(*this); ar[i] = std::move(e); return ar; } // align error on T=Vector4
-    // type with(int i, T e) &&                    { operator[](i) = std::move(e); return *this; } // C++14
+    // type with(int i, const T& e) const&         { type ar(*this); ar[i] = e; return ar; }
+    type with(int i, T e) const& { type ar(*this); ar[i] = std::move(e); return ar; } // align error on T=Vector4??
+    type with(int i, T e) &&                    { operator[](i) = std::move(e); return *this; }
     bool operator==(const type& p) const        { for_int(i, n) { if (!(a()[i]==p[i])) return false; } return true; }
     bool operator!=(const type& p) const        { return !(*this==p); }
     operator ArrayView<T>()                     { return view(); }
@@ -351,8 +351,6 @@ Vec<RT,n> operator+(const Vec<T,n>& a1, const Vec<T2,n>& a2) {
 #define TT template<typename T, int n>
 #define G Vec<T,n>
 #define F for_int(i, n)
-
-// C++14 make all these constexpr
 
 TT G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i]+g2[i]; } return g; }
 TT G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i]-g2[i]; } return g; }

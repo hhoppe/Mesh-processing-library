@@ -227,7 +227,7 @@ void HW::open() {
     }
     _win_dims = V(pxsh->height, pxsh->width);
     {
-        static XSetWindowAttributes swa; // non-static {} in C++11, but buggy on old cygwin gcc 4.7.2
+        XSetWindowAttributes swa = {};
         swa.colormap = _cmap;
         swa.border_pixel = _pixel_border;
         swa.background_pixel = _pixel_background;

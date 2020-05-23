@@ -344,9 +344,9 @@ int main() {
             SHOW(2.f*v);
         }
         SHOW(1.f/3.f);
-        SHOWP(1.f/3.f);
+        SHOW_PRECISE(1.f/3.f);
         SHOW(1.f/3.f, "string", 4.f/7.f);
-        SHOWP(1.f/3.f, "string", 4.f/7.f);
+        SHOW_PRECISE(1.f/3.f, "string", 4.f/7.f);
     }
     test_implicit_default_virtual_destructor();
     {
@@ -434,7 +434,7 @@ line2)";
         constexpr auto vclamped10 = clamp(-11, 10, 20); SHOW(vclamped10);
         const auto vclamped30 = general_clamp(30, 10, 20); SHOW(vclamped30);
         const int v5mod3 = mod3(5); SHOW(v5mod3);
-        constexpr int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33); // C++14 constexpr
+        constexpr int vint33 = assert_narrow_cast<int>(33ll); SHOW(vint33);
     }
     {
         Array<uchar> buf(10);
@@ -567,4 +567,5 @@ line2)";
         SHOW(sizeof(Array<char>));      // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
         // see ~/src/test/native/bug_size.cpp
     }
+    hh_clean_up();
 }

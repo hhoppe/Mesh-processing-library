@@ -23,7 +23,3 @@ endif
 #    under all $(HhRoot) directories
 # - win is too difficult; it would not work with multiple executables in the same directory, each requiring its
 #    own pdb file.
-
-
-# For CONFIG=mingw32:
-# (set path=('/Program Files (x86)/mingw-builds/x32-4.8.1-posix-dwarf-rev5/mingw32/bin' $path:q); gdb --batch -ex run -ex where --args tMultigrid)

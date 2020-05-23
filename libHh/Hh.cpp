@@ -1,24 +1,20 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Hh.h"
 
-#include <new>                  // set_new_handler()
-#include <cerrno>               // errno
-#include <cstdarg>              // va_list
-#include <csignal>              // signal()
-#include <sys/stat.h>           // struct stat and fstat()
-#include <fcntl.h>              // O_BINARY, fcntl()
-#include <cctype>               // std::isdigit()
-#include <locale>               // std::use_facet<>, std::locale()
-#include <cstring>              // std::memcpy(), strlen(), std::memset()
 #include <array>
-#include <vector>
-#include <mutex>                // std::once_flag, std::call_once()
+#include <cctype>               // std::isdigit()
+#include <cerrno>               // errno
 #include <chrono>
-#include <locale>
-
-#if defined(HH_HAVE_REGEX)
+#include <csignal>              // signal()
+#include <cstdarg>              // va_list
+#include <cstring>              // std::memcpy(), strlen(), std::memset()
+#include <fcntl.h>              // O_BINARY, fcntl()
+#include <locale>               // std::use_facet<>, std::locale()
+#include <mutex>                // std::once_flag, std::call_once()
+#include <new>                  // set_new_handler()
 #include <regex>
-#endif
+#include <sys/stat.h>           // struct stat and fstat()
+#include <vector>
 
 #if defined(__MINGW32__)
 #include <malloc.h>             // __mingw_aligned_malloc()
@@ -85,10 +81,8 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 #include "StackWalker.h"
 #endif  // !defined(HH_NO_STACKWALKER)
 
-#if !defined(HH_NO_WARNINGS_CLASS)
 #include <unordered_map>        // avoids creating a depencency on my Map class
 #include <map>                  // avoids creating a depencency on my Map class
-#endif
 
 namespace hh {
 
@@ -421,9 +415,7 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
 }
 #endif
 
-} // namespace
-
-static void hh_init_aux() {
+void hh_init_aux() {
     dummy_use(show_call_stack, new_failed, my_terminate_handler, my_signal_handler);
 #if defined(_WIN32)
     dummy_use(my_top_level_exception_filter);
@@ -593,6 +585,7 @@ static void hh_init_aux() {
 #endif
 }
 
+} // namespace
 
 #if defined(_WIN32) && !defined(HH_NO_UTF8)
 
@@ -702,18 +695,12 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, " >", ">");
     s = replace_all(s, ", ", ",");
     s = replace_all(s, " *", "*");
-#if defined(HH_HAVE_REGEX)
     s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
-#else
-    s = replace_all(s, "std::__g::", "std::");
-#endif
 // *** win
     s = replace_all(s, "std::basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
-#if defined(HH_HAVE_REGEX)
     // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
     s = std::regex_replace(s, std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
-#endif
     s = replace_all(s, "* __ptr64", "*");
     s = replace_all(s, "__int64", "int64");
     s = replace_all(s, "char const", "const char");
@@ -752,25 +739,12 @@ static string cleanup_type_name(string s) {
 
 namespace details {
 
-#if defined(HH_USE_RTTI)
-string demangle_type_name(string s) {
-#if defined(__GNUC__)
-    int status; char* realname = abi::__cxa_demangle(s.c_str(), nullptr, nullptr, &status); assertx(!status);
-    s = realname;
-    free(realname);
-#endif
-    return cleanup_type_name(s);
-}
-#endif
-
 string extract_function_type_name(string s) {
     // See experiments in ~/src/test/misc/test_compile_time_type_name.cpp
     // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
     s = replace_all(s, "std::__cxx11::", "std::"); // GNUC 5.2; e.g. std::__cx11::string
-#if defined(HH_HAVE_REGEX)
     // GOOGLE3: versioned libstdc++ or libc++
     s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
-#endif
     if (remove_at_beginning(s, "hh::details::TypeNameAux<")) { // VC
         if (!remove_at_end(s, ">::name")) { SHOW(s); assertnever(""); }
         remove_at_end(s, " ");  // possible space for complex types
@@ -802,51 +776,34 @@ void hh_clean_up() {
     flush_warnings();
 }
 
-#if !defined(HH_NO_WARNINGS_CLASS)
-
 namespace {
 
 class Warnings {
  public:
-    Warnings()                                  { }
-    ~Warnings()                                 { flush(); }
+    static Warnings& instance()                 { static Warnings& warnings = *new Warnings; return warnings; }
     int increment_count(const char* s)          { return ++_m[s]; }
     void flush() {
         if (_m.empty()) return;
-        struct ltstr {              // lexicographic comparison; deterministic, unlike pointer comparison
-            bool operator()(const void* s1, const void* s2) const {
-                return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2))<0;
-            }
+        struct string_less {              // lexicographic comparison; deterministic, unlike pointer comparison
+            bool operator()(const char* s1, const char* s2) const { return strcmp(s1, s2) < 0; }
         };
-        std::map<const void*, int, ltstr> sorted_map(_m.begin(), _m.end());
+        std::map<const char*, int, string_less> sorted_map(_m.begin(), _m.end());
         showdf("Summary of warnings:\n");
         for (auto& kv : sorted_map) {
-            const char* s = static_cast<const char*>(kv.first); int n = kv.second;
+            const char* s = kv.first;
+            int n = kv.second;
             showdf(" %5d '%s'\n", n, s);
         }
         _m.clear();
     }
  private:
-    std::unordered_map<const void*, int> _m; // warning char* -> number of times printed
+    std::unordered_map<const char*, int> _m;  // warning char* -> number of times printed
+    Warnings()                                  { }
 };
-
-class Warnings_init {
-    Warnings* _ptr;
-    bool _post_destruct;
- public:
-    Warnings* get()                             { return !_ptr && !_post_destruct ? (_ptr = new Warnings) : _ptr; }
-    ~Warnings_init()                            { delete _ptr; _ptr = nullptr; _post_destruct = true; }
-} g_pwarnings;
 
 } // namespace
 
-void flush_warnings() { if (Warnings* pwarnings = g_pwarnings.get()) pwarnings->flush(); }
-
-#else
-
-void flush_warnings() { }
-
-#endif  // !defined(HH_NO_WARNINGS_CLASS)
+void flush_warnings() { Warnings::instance().flush(); }
 
 void details::assertx_aux2(const char* s) {
     showf("Fatal assertion error: %s\n", s);
@@ -858,17 +815,9 @@ void details::assertx_aux2(const char* s) {
 // I use "const char*" rather than "string" for efficiency of warnings creation.
 // Ret: true if this is the first time the warning message is printed.
 bool details::assertw_aux2(const char* s) {
-#if !defined(HH_NO_WARNINGS_CLASS)
     static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
-    if (Warnings* pwarnings = g_pwarnings.get()) {
-        int count = pwarnings->increment_count(s);
-        if (count>1 && warn_just_once) return false;
-    } else {
-        static int count = 0;
-        if (++count>2) return false;
-        showf("Assertion warning beyond lifetime of Warnings\n");
-    }
-#endif
+    int count = Warnings::instance().increment_count(s);
+    if (count>1 && warn_just_once) return false;
     showf("assertion warning: %s\n", s);
     static const bool assertw_abort = getenv_bool("ASSERTW_ABORT") || getenv_bool("ASSERT_ABORT");
     if (assertw_abort) {
@@ -1073,7 +1022,7 @@ void* aligned_malloc(size_t size, int alignment) {
 #elif defined(__MINGW32__)
     return __mingw_aligned_malloc(size, alignment);
 #else
-    //  posix_memalign(void **memptr, size_t alignment, size_t size)
+    // Use: posix_memalign(void **memptr, size_t alignment, size_t size)
     void* p = nullptr;
     const int min_alignment = 8; // else get EINVAL on Unix gcc 4.8.1
     if (alignment<min_alignment) { alignment = min_alignment; size = ((size-1)/alignment+1)*alignment; }
@@ -1122,7 +1071,7 @@ void show_cerr_and_debug(const string& s) {
 //  see: http://stackoverflow.com/questions/222195/are-there-gotchas-using-varargs-with-reference-parameters
 // Varargs callee must have two versions:
 //  see: http://www.c-faq.com/varargs/handoff.html   http://www.tin.org/bin/man.cgi?section=3&topic=vsnprintf
-static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 0)) string vsform(const char* format, va_list ap) {
+static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, va_list ap) {
     // Adapted from http://stackoverflow.com/questions/2342162/stdstring-formating-like-sprintf
     //  and http://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
     // asprintf() supported only on BSD/GCC
@@ -1156,7 +1105,7 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 0)) string vsform(const char* f
 }
 
 // Inspired from vinsertf() in http://stackoverflow.com/a/2552973/1190077
-static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 0)) void vssform(string& str, const char* format, va_list ap) {
+static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, va_list ap) {
     const size_t minsize = 40;
     if (str.size()<minsize) str.resize(minsize);
     bool promised = false;      // precise size was promised
@@ -1177,7 +1126,7 @@ static HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 0)) void vssform(string& str, c
     }
 }
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) string sform(const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...) {
     va_list ap; va_start(ap, format);
     string s = vsform(format, ap);
     va_end(ap);
@@ -1200,14 +1149,14 @@ string sform_nonliteral(const char* format, ...) {
     return s;
 }
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 3)) const string& ssform(string& str, const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, ...) {
     va_list ap; va_start(ap, format);
     vssform(str, format, ap);
     va_end(ap);
     return str;
 }
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 3)) const char* csform(string& str, const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ...) {
     va_list ap; va_start(ap, format);
     vssform(str, format, ap);
     va_end(ap);
@@ -1217,7 +1166,7 @@ HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 3)) const char* csform(string& str, co
 // Problem from http://stackoverflow.com/questions/3366978/what-is-wrong-with-this-recursive-va-arg-code ?
 // See http://www.c-faq.com/varargs/handoff.html
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showf(const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...) {
     va_list ap; va_start(ap, format);
     string s = vsform(format, ap);
     va_end(ap);
@@ -1381,7 +1330,7 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
     pneed_cout = need_cout; pneed_cerr = need_cerr;
 }
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showdf(const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
     static bool need_cout, need_cerr;
     static std::once_flag flag;
     std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr));
@@ -1395,7 +1344,7 @@ HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showdf(const char* format, ..
 #endif
 }
 
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showff(const char* format, ...) {
+HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
     static bool want_cout;
     static std::once_flag flag;
     auto func_want_cout = [] {

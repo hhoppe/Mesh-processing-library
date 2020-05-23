@@ -12,8 +12,8 @@ void Image_IO_dummy_function_to_avoid_linkage_warnings() { }
 #else
 
 extern "C" {
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__>=408 && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wuseless-cast" // for (size_t) cast in two macros in jpeglib.h
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wuseless-cast"  // for (size_t) cast in two macros in jpeglib.h
 #endif
 #include "jpeglib.h"
 #include "png.h"

@@ -20,7 +20,7 @@
 }
 #endif
 
-#include <mutex>                // mutex, lock_guard; C++11
+#include <mutex>                // mutex, lock_guard
 
 namespace hh {
 
@@ -58,7 +58,7 @@ class MyGlobalLock {
     std::lock_guard<std::mutex> _lock_guard;
     static std::mutex& s_f_global_mutex() { static auto m = new std::mutex; return *m; }  // singleton pattern function
 };
-#define HH_LOCK if (hh::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
+#define HH_LOCK if (hh::details::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
 
 
 //----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ class MyPerFileLock {
     std::lock_guard<std::mutex> _lock_guard;
 };
 } // namespace
-#define HH_LOCK if (hh::false_capture<hh::MyPerFileLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
+#define HH_LOCK if (hh::details::false_capture<hh::MyPerFileLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
 
 
 //----------------------------------------------------------------------------

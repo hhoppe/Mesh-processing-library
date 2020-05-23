@@ -3260,8 +3260,8 @@ int main(int argc, const char** argv) {
     }
     g_parseargs = &args;
     args.parse();
+    hh_clean_up();
     if (!nooutput) image.write_file("-");
-    if (1) flush_stats();       // may help avoid destruction bug in mingw
     return 0;
 }
 

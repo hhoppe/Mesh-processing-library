@@ -43,7 +43,7 @@ class BSac : noncopyable { // noncopyable for safety -- could be removed if care
             afuncs[i](access(akeys[i]));
         }
     }
-    HH_ALIGNAS(16) char _a[k_dummy];
+    alignas(16) char _a[k_dummy];
 };
 
 template<typename T> class Sac : public BSac {

@@ -242,8 +242,6 @@ template<int D, typename T> class Grid : public GridView<D,T> {
         if (dims==_dims) return;
         assertx(min(dims)>=0);
         size_t vol = product_dims<D>(dims.data());
-        // VS2013 may have small timing cost in delete[] on wildly irregular allocations
-        // CONFIG=mingw32: out-of-memory may result in segmentation fault on next line
         if (vol!=size()) { delete[] _a; _a = vol ? new T[vol] : nullptr; }
         // if (vol!=size()) { aligned_delete<T>(_a); _a = vol ? aligned_new<T>(vol) : nullptr; }
         _dims = dims;

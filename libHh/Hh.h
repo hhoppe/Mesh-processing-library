@@ -18,12 +18,6 @@
 #define _SCL_SECURE_NO_WARNINGS // allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*)
 #endif
 
-#if defined(_MSC_VER)
-#define HH_POSIX(x) _ ## x
-#else
-#define HH_POSIX(x) x
-#endif
-
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 // "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__
 // For <windows.h>; e.g. 0x0501==WinXP; 0x0601==WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__
@@ -58,32 +52,23 @@
 #define NOMINMAX 1              // prevent min() and max() macros in <windows.h>
 #endif
 
-// Examine _DEBUG if _MSC_VER, or DEBUG if __APPLE__, else !NDEBUG
 #if defined(_DEBUG) || defined(DEBUG) || (!defined(_MSC_VER) && !defined(NDEBUG))
-//#pragma message "HH_DEBUG enabled"
 #define HH_DEBUG
 #endif
 
 
-// *** Variadic macros
-
-#include "VariadicMacros.h"     // HH_MAP_REDUCE()
-
-
 // *** Standard headers
 
-#include <cmath>                // sqrt(), cos(), pow(), etc.
-#include <iostream>             // ostream, cout, operator<<(ostream&), etc.
-#include <string>               // string
-#include <memory>               // unique_ptr<>
-#include <cstdint>              // int64_t, uint64_t, int32_t, etc.
 #include <algorithm>            // min(), max()
+#include <climits>              // INT_MAX       (already included except with __clang__)
+#include <cmath>                // sqrt(), cos(), pow(), etc.
+#include <cstdint>              // int64_t, uint64_t, int32_t, etc.
+#include <iostream>             // ostream, cout, operator<<(ostream&), etc.
+#include <memory>               // unique_ptr<>
 #include <sstream>              // stringstream
 #include <stdexcept>            // runtime_error (already included except with __clang__)
-#include <climits>              // INT_MAX       (already included except with __clang__)
-
-// Already included from above:
-// #include <utility>           // swap(), forward(), move(), declval(), pair<>, index_sequence<>
+#include <string>               // string
+#include <utility>              // swap(), forward(), move(), declval(), pair<>, index_sequence<>
 
 
 // *** Non-standard headers
@@ -93,16 +78,12 @@
 #endif
 
 
-// *** Language portability
+// *** Variadic macros
 
-#if 0                      // temporarily test that my identifiers do not conflict with those in std namespace
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wheader-hygiene"
-#endif
-using namespace std;
-namespace hh { }
-using namespace hh;
-#endif
+#include "VariadicMacros.h"     // HH_MAP_REDUCE()
+
+
+// *** Language portability
 
 #define HH_EAT_SEMICOLON static_assert(true, "") // redundant declaration to swallow subsequent semicolon
 
@@ -112,16 +93,16 @@ using namespace hh;
 #define HH_CAT(a, b) a ## b
 #define HH_CAT2(a, b) HH_CAT(a, b)
 
-#if defined(_MSC_VER)           // _Pragma() still not defined in Visual Studio 2017 (_MSC_VER==1910)
+#if defined(_MSC_VER)           // _Pragma() is still not defined in Visual Studio 2017 (_MSC_VER==1910)
 #define HH_PRAGMA(...) __pragma(__VA_ARGS__)
 #else
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__)) // C++11; http://stackoverflow.com/a/15864723
 #endif
 
-#if defined(__GNUC__) && __GNUC__*100+__GNUC_MINOR__<408
-#define HH_ALIGNAS(num) __attribute__((aligned(num)))
+#if defined(_MSC_VER)
+#define HH_POSIX(x) _ ## x
 #else
-#define HH_ALIGNAS(num) alignas(num) // C++11
+#define HH_POSIX(x) x
 #endif
 
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
@@ -136,22 +117,20 @@ using namespace hh;
 #define HH_ATTRIBUTE(...) [[__VA_ARGS__]]   // C++11
 #endif
 
-#if defined(__GNUC__) || defined(__clang__)
-#define HH_PRINTF_ATTRIBUTE(...) __attribute__((__VA_ARGS__))
+#if defined(__clang__)
+#define HH_PRINTF_ATTRIBUTE(...) __attribute__((format(printf, __VA_ARGS__)))
+#elif  defined(__GNUC__)
+#define HH_PRINTF_ATTRIBUTE(...) __attribute__((format(gnu_printf, __VA_ARGS__)))
 #else
 #define HH_PRINTF_ATTRIBUTE(...)
 #endif
 
 #if defined(_MSC_VER) && !defined(__clang__)
-#define HH_ASSUME(...) __assume(__VA_ARGS__) // implies __analysis_assume() but is expression rather than statement
+#define HH_ASSUME(...) __assume(__VA_ARGS__)  // implies __analysis_assume() but is expression rather than statement
 #else
-// #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false) // gcc
+// #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // gcc
 // #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // gcc; weaker
 #define HH_ASSUME(...) (void(0))
-#endif
-
-#if defined(_MSC_VER) || __GNUC__*100+__GNUC_MINOR__>=409
-#define HH_HAVE_REGEX           // C++11
 #endif
 
 #if defined(_WIN32)
@@ -175,71 +154,16 @@ using namespace hh;
 #define HH_ID(x) HH_CAT(_hh_id_, x) // private identifier in a macro definition
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
+
+// *** Check for identifier conflicts
+
+#if 0                      // temporarily test that my identifiers do not conflict with those in std namespace
 #if defined(__clang__)
-#define gnu_printf printf       // for use in HH_PRINTF_ATTRIBUTE(format(gnu_printf, x, y))
+#pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif
-
-
-// *** Add some easy C++14 features if not already present.
-
-#if defined(__GNUC__) && ((__GNUC__*100+__GNUC_MINOR__)<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_transformation_trait_aliases)
-namespace std {
-// C++14 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3546.pdf
-template<typename T> using remove_const_t = typename remove_const<T>::type;
-template<typename T> using remove_volatile_t = typename remove_volatile<T>::type;
-template<typename T> using remove_cv_t = typename remove_cv<T>::type;
-template<typename T> using add_const_t = typename add_const<T>::type;
-template<typename T> using add_volatile_t = typename add_volatile<T>::type;
-template<typename T> using add_cv_t = typename add_cv<T>::type;
-template<typename T> using remove_reference_t = typename remove_reference<T>::type;
-template<typename T> using add_lvalue_reference_t = typename add_lvalue_reference<T>::type;
-template<typename T> using add_rvalue_reference_t = typename add_rvalue_reference<T>::type;
-template<typename T> using make_signed_t = typename make_signed<T>::type;
-template<typename T> using make_unsigned_t = typename make_unsigned<T>::type;
-template<typename T> using remove_extent_t = typename remove_extent<T>::type;
-template<typename T> using remove_all_extents_t = typename remove_all_extents<T>::type;
-template<typename T> using remove_pointer_t = typename remove_pointer<T>::type;
-template<typename T> using add_pointer_t = typename add_pointer<T>::type;
-template<typename T> using decay_t = typename decay<T>::type;
-template<bool b, typename T = void>             using enable_if_t = typename enable_if<b,T>::type;
-template<bool b, typename T, typename F>        using conditional_t = typename conditional<b, T, F>::type;
-template<typename... T>                         using common_type_t = typename common_type<T...>::type;
-template<typename T>                            using underlying_type_t = typename underlying_type<T>::type;
-template<typename F, typename... ArgTypes>      using result_of_t = typename result_of<F(ArgTypes...)>::type;
-}
-#endif
-
-#if defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L) && !defined(HH_NO_DEFINE_STD_CXX14) && !defined(__cpp_lib_make_unique)
-namespace std {
-// C++14
-// http://stackoverflow.com/questions/13883824/make-unique-does-not-compile
-// http://stackoverflow.com/questions/10149840/c-arrays-and-make-unique
-template<typename T, typename... Args> std::enable_if_t<!std::is_array<T>::value, unique_ptr<T> >
-make_unique(Args&&... args) {
-    return unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-template<typename T> std::enable_if_t<std::is_array<T>::value, unique_ptr<T> > make_unique(std::size_t n) {
-    using RT = std::remove_extent_t<T>;
-    return unique_ptr<T>(new RT[n]);
-}
-} // namespace std
-#endif
-
-#if (defined(__GNUC__) && (__GNUC__*100+__GNUC_MINOR__<409 || __cplusplus<201300L)) && !defined(HH_NO_DEFINE_STD_INDEX_SEQUENCE) && !defined(__cpp_lib_integer_sequence)
-namespace std {
-// C++14 http://en.cppreference.com/w/cpp/utility/integer_sequence
-// Useful template for creating and processing parameter packs.
-// http://stackoverflow.com/questions/20966264/templated-array-of-duplicate-elements-without-default-constructor
-template<std::size_t... N> struct index_sequence { };
-//
-// Usage: make_index_sequence<4> gives <3,3> -> <2,2,3> -> <1,1,2,3> -> <0,0,1,2,3> -> index_sequence<0,1,2,3>
-template<std::size_t I, std::size_t... Is> struct make_index_sequence : make_index_sequence<I-1, I-1, Is...> { };
-template<std::size_t... Is> struct make_index_sequence<0, Is...> : index_sequence<Is...> { };
-// C++14 http://en.cppreference.com/w/cpp/utility/exchange
-template<typename T, typename U> T exchange(T& obj, U&& new_value) {
-    T old_value = std::move(obj); obj = std::forward<U>(new_value); return old_value;
-}
-} // namespace std
+using namespace std;
+namespace hh { }
+using namespace hh;
 #endif
 
 
@@ -259,9 +183,7 @@ namespace hh {
 
 // *** Import some frequently used standard C++ names into the hh namespace.
 
-#if !defined(HH_NO_USING_STD_STRING)
 using std::string;                             // almost a new fundamental type
-#endif // !defined(HH_NO_USING_STD_STRING)
 using std::size_t;                             // (it seems to be already defined)
 using std::uint8_t;
 using std::unique_ptr; using std::make_unique; // very useful
@@ -278,32 +200,31 @@ using std::floor; using std::ceil;
 using uchar = unsigned char;
 using ushort = unsigned short;
 
+
+// *** Forward declarations of details.
+
+namespace details {
+template<typename T> struct identity { using type = T; };
+template<typename T> struct sum_type;
+template<typename T> class Range;
+}  // namespace details
+
+
+// *** Utility classes.
+
 // Note: if I get compilation errors about redefinition of dummy_use(), etc. on MS VS,
 //  it may be due to current directory being different from that in precompiled header due to symbol links,
 //  or to an explicit HhRoot environment variable that does not match the current tree.
 
 // Avoid warnings of unused variables
-template<typename... A> void dummy_use(const A&...) { }  // constexpr in C++14
+template<typename... A> void dummy_use(const A&...) { }
 
 // Avoid warnings of uninitialized variables
 template<typename T> void dummy_init(T& v) { v = T(); }
 template<typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}; dummy_init(a...); }
 
-// Evaluates to false in boolean context for "if (false_capture<int> i = ub) { HH_UNREACHABLE; } else" within macros.
-template<typename T> struct false_capture {
-    template<typename... Args> false_capture(Args&&... args) : _e(args...) { }
-    operator bool() const { return false; }
-    const T& operator()() const { return _e; }
-    T _e;
-};
-
 // Derive from this class to disable copy constructor and copy assignment.
-struct noncopyable {
- protected:
-    noncopyable(const noncopyable&)                     = delete;
-    noncopyable& operator=(const noncopyable&)          = delete;
-    noncopyable() = default;
-};
+struct noncopyable;
 
 // Specialize<i> is a dummy type for function specialization.
 template<int> struct Specialize { };
@@ -352,41 +273,29 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define HH_CHECK_BOUNDS(i, n) (void(0))
 #endif  // defined(HH_DEBUG)
 
-namespace details {
-HH_NORETURN void assertx_aux2(const char* s);
-inline HH_NORETURN void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
-bool assertw_aux2(const char* s);
-inline string add_fl(string s, const char* file_line) { return s + file_line; }
-template<typename T> constexpr T assertx_aux(T&& val, const char* s) {
-    return ((!val ? assertx_aux2(s) : void(0)), std::forward<T>(val));
-}
-} // namespace details
-
 
 // *** Output functions
 
 // showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
 // os << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
 // SHOW(x, y, x*y);
-// SHOWP(point+vector); // show with greater precision
+// SHOW_PRECISE(point+vector); // show with greater precision
 // SHOWL; // show current file and line
 
 // Write formatted string to std::cerr.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showf(const char* format, ...);
+HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...);
 
 // Write formatted string (prefixed with g_comment_prefix_string=="# ") to std::cerr, and to std::cout if it is a file.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showdf(const char* format, ...);
+HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...);
 
 // Write formatted string (prefixed with g_comment_prefix_string=="# ") to std::cout only if it is a file.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) void showff(const char* format, ...);
+HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...);
 
 // C-string prefix for formatted output in showdf() and showff(); default is "# ".
 extern const char* g_comment_prefix_string;
 
 // Override "char*" output to detect nullptr in C-string.
-inline std::ostream& operator<<(std::ostream& os, const char* s) {
-    return std::operator<<(os, s ? s : "<nullptr>");
-}
+inline std::ostream& operator<<(std::ostream& os, const char* s);
 
 // Nice formatted output of a std::pair<> of objects.
 template<typename A, typename B> std::ostream& operator<<(std::ostream& os, const std::pair<A,B>& p) {
@@ -417,7 +326,7 @@ template<typename T> constexpr bool has_ostream_eol() {
 #define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
 // Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
-#define SHOWP(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number.
 #define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
@@ -429,72 +338,41 @@ constexpr float    BIGFLOAT = 1e30f;                  // note: different from FL
 constexpr float    TAU      = 6.2831853071795864769f; // Mathematica: N[2 Pi, 20] ;  see http://tauday.com/
 constexpr double   D_TAU    = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20] ;  see http://tauday.com/
 // #undef PI // instead, use TAU/2
-// constexpr float    PI = 3.14159265358979323846f; (==float(M_PI) if "#define _USE_MATH_DEFINES" before <cmath>)
-// constexpr double D_PI = 3.14159265358979323846;  (==M_PI)
 
 
 // *** Hh.cpp
 
-// Print summaries of timers, statistics, and warnings now, rather than at exit(), perhaps before program output.
+// Print summaries of timers, statistics, and warnings, perhaps before program output.
 void flush_timers();
 void flush_stats();
 void flush_warnings();
 void hh_clean_up();
 
-
 #if defined(_WIN32)
 // Convert Windows UTF-16 std::wstring to UTF-8 std::string (or encoding based on locale if defined(HH_NO_UTF8))
 std::string narrow(const std::wstring& wstr);
+
 // Convert UTF-8 std::string (or encoding based on locale if defined(HH_NO_UTF8)) to Windows UTF-16 std::wstring.
 std::wstring widen(const std::string& str);
 #endif
 
-
 // e.g. SHOW(type_name<T>());
-#if defined(HH_USE_RTTI) // not default; best to avoid taking dependency on run-time type information (RTTI).
-
-namespace details {
-// e.g. convert 5QueueI5PointE to Queue<Point>
-string demangle_type_name(string tname);
-} // namespace details
-template<typename T> string type_name() { return details::demangle_type_name(typeid(T).name()); }
-
-#else  // !defined(HH_USE_RTTI); this is best
-
-namespace details {
-string extract_function_type_name(string s);
-template<typename T> struct TypeNameAux {
-#if defined(__GNUC__) || defined(__clang__)
-    // http://shaderop.com/2010/09/uniquely-identifying-types-in-c-without-using-rtti/
-    // http://www.gamedev.net/topic/608203-c-get-type-name-without-rtti/
-    // http://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
-    static string name() { return extract_function_type_name(__PRETTY_FUNCTION__); }
-#elif defined(_MSC_VER)
-    static string name() { return extract_function_type_name(__FUNCTION__); } // also __FUNCSIG__, __FUNCDNAME__
-#else
-    static string name() { return extract_function_type_name(__func__); } // C++11 (C99); unadorned so likely to fail!
-#endif
-};
-} // namespace details
-template<typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
-
-#endif
-
+template<typename T> string type_name();
 
 // Write an object e to its string representation using operator<<(ostream&, const T&).
-template<typename T> string make_string(const T& e) { std::ostringstream oss; oss << e; return assertx(oss).str(); }
+template<typename T> string make_string(const T& e);
 
 // Format a string like sprintf() but directly return an adaptively-sized std::string.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 1, 2)) string sform(const char* format, ...);
+HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...);
 
 // Format a string like sform() but disable warnings concerning a non-literal format string.
 string sform_nonliteral(const char* format, ...);
 
 // Format a string like sprintf() but directly to a reused adaptively-resized output buffer named str.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 3)) const string& ssform(string& str, const char* format, ...);
+HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, ...);
 
 // Shortcut for ssform(str, format, ...).c_str(); like sprintf() but using an adaptively resized buffer str.
-HH_PRINTF_ATTRIBUTE(format(gnu_printf, 2, 3)) const char* csform(string& str, const char* format, ...);
+HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ...);
 
 // Allocate a duplicate of a C "char*" string, using make_unique<char[]>.
 unique_ptr<char[]> make_unique_c_string(const char* s);
@@ -509,14 +387,10 @@ void* aligned_malloc(size_t size, int alignment);
 void aligned_free(void* p);
 
 // Allocate n elements of type T, with appropriate memory alignment based on T.
-template<typename T> T* aligned_new(size_t n) {
-    return alignof(T)<=8 ? new T[n] : static_cast<T*>(aligned_malloc(n*sizeof(T), alignof(T)));
-}
+template<typename T> T* aligned_new(size_t n);
 
 // Deallocate aligned memory.
-template<typename T> void aligned_delete(T* p) {
-    if (alignof(T)<=8) delete[] p; else aligned_free(p);
-}
+template<typename T> void aligned_delete(T* p);
 
 // Read a line of input (trailing "\n" is discarded).
 std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings = true);
@@ -585,35 +459,22 @@ template<typename T> constexpr T signz(const T& e)       { return e>T{0} ? T{1} 
 template<typename T> constexpr T square(const T& e)      { return e*e; }
 
 // Returns v clamped to the range [a, b].
-template<typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
-    return (ASSERTXX(!(v<a && v>b)), v<a ? a : v>b ? b : v);
-}
+template<typename T> constexpr T clamp(const T& v, const T& a, const T& b);
 
-// Like clamp() but slightly less efficient; however works on values like Vector4.  (min() is constexpr in C++14)
-template<typename T> T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
+// Like clamp() but slightly less efficient; however works on values like Vector4.
+template<typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
 
 // Linearly interpolate between two values (f==1.f returns v1; f==0.f returns v2).
-inline float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*v2; } // or v2 + (v1-v2)*f
+inline constexpr float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*v2; } // or v2 + (v1-v2)*f
 
 // Linearly interpolate between two values (f==1. returns v1; f==0. returns v2).
-inline double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
+inline constexpr double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
 
 // Returns v clamped to range [0, 255].
-inline uint8_t clamp_to_uint8(int v) {
-    // return clamp(v, 0, 255);
-    // http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
-    v &= -(v>=0); return static_cast<uint8_t>(v | ((255-v)>>31));
-}
+inline uint8_t clamp_to_uint8(int v);
 
 // Returns j%3 (where j is in [0, 5]).
-inline int mod3(int j) {
-    static const int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };
-    ASSERTX(j>=0 && j<6);
-#if defined(_MSC_VER)
-    #pragma warning(suppress:6385)
-#endif
-    return ar_mod3[j];
-}
+inline int mod3(int j);
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default fac==1e5f).
 template<typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v*fac+.5f)/fac; }
@@ -627,9 +488,6 @@ template<typename T> void my_zero(T& e) {
 template<> inline void my_zero(float& e) { e = 0.f; }
 template<> inline void my_zero(double& e) { e = 0.; }
 
-namespace details {
-template<typename T> struct identity { using type = T; };
-}  // namespace details
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
 template<typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
 
@@ -640,26 +498,10 @@ template<typename Dest, typename Src> Dest down_cast(Src* f) {
 }
 
 // Conversion with bounds-checking in Debug configuration.
-template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(push)
-#pragma warning(disable:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable:6319) // Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects.
-#endif
-    // auto r = static_cast<Target>(v); ASSERTXX(static_cast<Source>(r)==v); return r;
-    return (ASSERTXX(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(pop)
-#endif
-}
+template<typename Target, typename Source> constexpr Target narrow_cast(Source v);
 
 // Bounds-safe conversion, checked even in Release configuration.
-template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(suppress:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#endif
-    return (assertx(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
-}
+template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v);
 
 // Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
 template<typename Target, typename Source> constexpr Target possible_cast(Source v) {
@@ -667,15 +509,98 @@ template<typename Target, typename Source> constexpr Target possible_cast(Source
 }
 
 // Higher-precision type to represent the sum of a set of elements.
+template<typename T> using sum_type_t = typename details::sum_type<T>::type;
+
+// Range of integral elements as in Python range(ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub); }
+
+// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
+template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
+
+
+//----------------------------------------------------------------------------
+
+// HH_REFERENCE_LIB("libHh.lib");
+
+namespace details {
+
+#if !defined(HH_NO_HH_INIT)
+int hh_init();
+static HH_UNUSED int dummy_init_hh = hh_init();
+#endif
+
+// Evaluates to false in boolean context for use in macro as:
+// "if (details::false_capture<int> i = ub) { HH_UNREACHABLE; } else".
+template<typename T> struct false_capture {
+    template<typename... Args> false_capture(Args&&... args) : _e(args...) { }
+    operator bool() const { return false; }
+    const T& operator()() const { return _e; }
+    T _e;
+};
+
+HH_NORETURN void assertx_aux2(const char* s);
+
+inline HH_NORETURN void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
+
+bool assertw_aux2(const char* s);
+
+inline string add_fl(string s, const char* file_line) { return s + file_line; }
+
+template<typename T> constexpr T assertx_aux(T&& val, const char* s) {
+    return ((!val ? assertx_aux2(s) : void(0)), std::forward<T>(val));
+}
+
+template<typename T> T assertt_aux(T&& val, const char* s) {
+    if (!val) throw std::runtime_error(s);
+    return std::forward<T>(val);
+}
+
+template<typename T> T assertw_aux(T&& val, const char* s) {
+    return ((!val ? void(assertw_aux2(s)) : void(0)), std::forward<T>(val));
+}
+
+void show_cerr_and_debug(const string& s);
+
+#define HH_SHOW_0(sargs, prec, arg1) hh::details::SHOW_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
+
+#define HH_SHOW_1(sargs, prec, ...) do { std::ostringstream HH_ID(oss);            \
+        if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
+        HH_ID(oss) << HH_MAP_REDUCE((HH_SHOWM_,  << " " <<,  __VA_ARGS__)) << "\n"; \
+        hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str()); } while (false)
+
+#define HH_SHOWM_(x) (#x[0]=='"' ? "" : #x "=") << (x)
+
+template<typename T> T SHOW_aux(string str, T&& val, bool has_eol, bool high_precision) {
+    std::ostringstream oss;
+    if (high_precision) oss.precision(std::numeric_limits<double>::max_digits10);
+    oss << (str[0]=='"' ? "" : str + " = ") << val << (has_eol ? "" : "\n");
+    // Single write for better behavior under parallelism.  For guaranteed atomic write, use HH_LOCK { SHOW(...); }
+    show_cerr_and_debug(assertx(oss).str());
+    return std::forward<T>(val);
+}
+
+string extract_function_type_name(string s);
+
+template<typename T> struct TypeNameAux {
+#if defined(__GNUC__) || defined(__clang__)
+    // http://shaderop.com/2010/09/uniquely-identifying-types-in-c-without-using-rtti/
+    // http://www.gamedev.net/topic/608203-c-get-type-name-without-rtti/
+    // http://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
+    static string name() { return extract_function_type_name(__PRETTY_FUNCTION__); }
+#elif defined(_MSC_VER)
+    static string name() { return extract_function_type_name(__FUNCTION__); } // also __FUNCSIG__, __FUNCDNAME__
+#else
+    static string name() { return extract_function_type_name(__func__); } // C++11 (C99); unadorned so likely to fail!
+#endif
+};
+
 template<typename T> struct sum_type {
     using type = std::conditional_t<!std::is_arithmetic<T>::value, T,
                                     std::conditional_t<std::is_floating_point<T>::value, double,
                                                        std::conditional_t<std::is_signed<T>::value, int64_t,
                                                                           uint64_t> > >;
 };
-template<typename T> using sum_type_t = typename sum_type<T>::type;
 
-namespace details {
 // Range of integral elements defined as in Python range(lb, ub), where step is 1 and ub is not included.
 template<typename T> class Range {
     static_assert(std::is_integral<T>::value, ""); // must have exact arithmetic for equality testing
@@ -719,54 +644,19 @@ template<typename T> class Range {
  private:
     T _lb, _ub;
 };
-} // namespace details
-
-// Range of integral elements as in Python range(ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
-template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub); }
-
-// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
-template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
-
-
-//----------------------------------------------------------------------------
-
-// HH_REFERENCE_LIB("libHh.lib");
-
-namespace details {
-
-#if !defined(HH_NO_HH_INIT)
-int hh_init();
-static HH_UNUSED int dummy_init_hh = hh_init();
-#endif
-
-void show_cerr_and_debug(const string& s);
-
-template<typename T> T assertt_aux(T&& val, const char* s) {
-    if (!val) throw std::runtime_error(s);
-    return std::forward<T>(val);
-}
-
-template<typename T> T assertw_aux(T&& val, const char* s) {
-    return ((!val ? void(hh::details::assertw_aux2(s)) : void(0)), std::forward<T>(val));
-}
-
-#define HH_SHOW_0(sargs, prec, arg1) hh::details::SHOW_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
-#define HH_SHOW_1(sargs, prec, ...) do { std::ostringstream HH_ID(oss);            \
-        if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-        HH_ID(oss) << HH_MAP_REDUCE((HH_SHOWM_,  << " " <<,  __VA_ARGS__)) << "\n"; \
-        hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str()); } while (false)
-#define HH_SHOWM_(x) (#x[0]=='"' ? "" : #x "=") << (x)
-
-template<typename T> T SHOW_aux(string str, T&& val, bool has_eol, bool high_precision) {
-    std::ostringstream oss;
-    if (high_precision) oss.precision(std::numeric_limits<double>::max_digits10);
-    oss << (str[0]=='"' ? "" : str + " = ") << val << (has_eol ? "" : "\n");
-    // Single write for better behavior under parallelism.  For guaranteed atomic write, use HH_LOCK { SHOW(...); }
-    show_cerr_and_debug(assertx(oss).str());
-    return std::forward<T>(val);
-}
 
 } // namespace details
+
+struct noncopyable {
+ protected:
+    noncopyable(const noncopyable&)                     = delete;
+    noncopyable& operator=(const noncopyable&)          = delete;
+    noncopyable() = default;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const char* s) {
+    return std::operator<<(os, s ? s : "<nullptr>");
+}
 
 // User-defined ostream manipulator, which is constructed from a container and writes out its elements.
 template<typename C> class stream_range {
@@ -782,6 +672,58 @@ template<typename C> class stream_range {
  private:
     const C& _c;
 };
+
+template<typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
+
+template<typename T> string make_string(const T& e) { std::ostringstream oss; oss << e; return assertx(oss).str(); }
+
+template<typename T> T* aligned_new(size_t n) {
+    return alignof(T)<=8 ? new T[n] : static_cast<T*>(aligned_malloc(n*sizeof(T), alignof(T)));
+}
+
+// Deallocate aligned memory.
+template<typename T> void aligned_delete(T* p) {
+    if (alignof(T)<=8) delete[] p; else aligned_free(p);
+}
+
+template<typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
+    return (ASSERTXX(!(v<a && v>b)), v<a ? a : v>b ? b : v);
+}
+
+inline uint8_t clamp_to_uint8(int v) {
+    // return clamp(v, 0, 255);
+    // http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
+    v &= -(v>=0); return static_cast<uint8_t>(v | ((255-v)>>31));
+}
+
+inline int mod3(int j) {
+    static const int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };
+    ASSERTX(j>=0 && j<6);
+#if defined(_MSC_VER)
+    #pragma warning(suppress:6385)
+#endif
+    return ar_mod3[j];
+}
+
+template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {
+#if defined(_MSC_VER) && _MSC_VER<1910
+#pragma warning(push)
+#pragma warning(disable:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+#pragma warning(disable:6319) // Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects.
+#endif
+    // auto r = static_cast<Target>(v); ASSERTXX(static_cast<Source>(r)==v); return r;
+    return (ASSERTXX(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
+#if defined(_MSC_VER) && _MSC_VER<1910
+#pragma warning(pop)
+#endif
+}
+
+template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
+#if defined(_MSC_VER) && _MSC_VER<1910
+#pragma warning(suppress:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+#endif
+    return (assertx(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
+}
 
 } // namespace hh
 

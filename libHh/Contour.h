@@ -242,11 +242,10 @@ class Contour3DBase : public ContourBase<3, VertexData> {
         {
             unsigned en = encode(cc);
             bool is_new; Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new)); // un-const OK if not modify n->_en
-            // "base::" required when accessing ECubestate for mingw32 gcc 4.8.1
-            if (n->_cubestate==base::Node::ECubestate::visited) return 0;
-            ASSERTX(n->_cubestate==base::Node::ECubestate::nothing);
+            if (n->_cubestate==Node::ECubestate::visited) return 0;
+            ASSERTX(n->_cubestate==Node::ECubestate::nothing);
             _queue.enqueue(en);
-            n->_cubestate = base::Node::ECubestate::queued;
+            n->_cubestate = Node::ECubestate::queued;
         }
         while (!_queue.empty()) {
             unsigned en = _queue.dequeue();
@@ -277,8 +276,8 @@ class Contour3DBase : public ContourBase<3, VertexData> {
             if (n->_val==k_Contour_undefined) cundef = true;
         }
         Node* n = na[0][0][0];
-        ASSERTX(n->_cubestate==base::Node::ECubestate::queued);
-        n->_cubestate = base::Node::ECubestate::visited;
+        ASSERTX(n->_cubestate==Node::ECubestate::queued);
+        n->_cubestate = Node::ECubestate::visited;
         if (cundef) {
             _ncundef++;
         } else {
@@ -303,8 +302,8 @@ class Contour3DBase : public ContourBase<3, VertexData> {
             if (vmax!=k_Contour_undefined && vmin<0 && vmax>=0 && cube_inbounds(ci)) {
                 unsigned en = encode(ci);
                 bool is_new; Node* n2 = const_cast<Node*>(&_m.enter(Node(en), is_new));
-                if (n2->_cubestate==base::Node::ECubestate::nothing) {
-                    n2->_cubestate = base::Node::ECubestate::queued;
+                if (n2->_cubestate==Node::ECubestate::nothing) {
+                    n2->_cubestate = Node::ECubestate::queued;
                     _queue.enqueue(en);
                 }
             } else if (!b_no_border) { // output boundary

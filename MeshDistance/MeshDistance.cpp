@@ -281,6 +281,7 @@ int main(int argc, const char** argv) {
     HH_TIMER(MeshDistance);
     args.parse();
     if (errmesh) meshes[0].write(std::cout);
+    hh_clean_up();
     return 0;
     // Run as:
     //  MeshDistance -mf mesh1.m -mf mesh2.m -maxerror 1 -distance

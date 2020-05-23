@@ -68,10 +68,6 @@ ifeq ($(plain_compiler),)
       cxxwarnings += -fsized-deallocation -Wsized-deallocation#  C++14 feature not recognized in earlier gcc
     endif
   endif
-  ifneq ($(filter $(CONFIG),mingw32),)
-    cwarnings += -Wno-format#  mingw32 does not recognize "%lld"
-    cxxwarnings += -Wno-old-style-cast#  header macro errors in FileIO.cpp HW.cpp Timer.cpp Hh.cpp
-  endif
   cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
   commonrel += -O3 -DNDEBUG
   # (O3 enables -fomit-frame-pointer -finline-functions)

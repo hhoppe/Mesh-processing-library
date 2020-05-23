@@ -2386,7 +2386,7 @@ bool DerivedHW::key_press(string skey) {
                  if (1) {
                      SHOW(g_win_dims, g_tex_dims, g_tex_active_dims);
                      SHOW(get_max_window_dims());
-                     SHOWP(g_view);
+                     SHOW_PRECISE(g_view);
                      if (g_cob>=0) {
                          const Object& ob = getob();
                          SHOW(g_cob, ob._filename);
@@ -3303,12 +3303,12 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
                          if (0) {
                              SHOW(c, g_view[3][c], g_win_dims[c], g_frame_dims[c], g_view[c][c],
                                   g_win_dims[c]-g_frame_dims[c]*g_view[c][c]);
-                             SHOWP(g_view[c][c]); SHOWP(g_view[3][c]);
-                             SHOWP(float(g_win_dims[c]-double(g_frame_dims[c])*g_view[c][c]));
+                             SHOW_PRECISE(g_view[c][c]); SHOW_PRECISE(g_view[3][c]);
+                             SHOW_PRECISE(float(g_win_dims[c]-double(g_frame_dims[c])*g_view[c][c]));
                          }
                          g_view[3][c] = clamp(g_view[3][c],
                                               float(g_win_dims[c]-double(g_frame_dims[c])*g_view[c][c]), 0.f);
-                         if (0) SHOWP(g_view[3][c]);
+                         if (0) SHOW_PRECISE(g_view[3][c]);
                      }
                  }
                  if (g_view!=old_view) g_fit_view_to_window = false;

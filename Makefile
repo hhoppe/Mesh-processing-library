@@ -132,7 +132,6 @@ timingtest: Filterimage Filtervideo
 # hhoppeh mingw: expect 0.9 sec, 27 sec
 # hhoppeh mingw: expect 0.7 sec, 17 sec (now threadpool rather than OpenMP)
 # hhoppeh clang: expect 0.7 sec, 18 sec
-#  mingw32: out-of-memory may result in segmentation fault
 # See also HTest -timescaleimage
 	$(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo) 2>&1 | grep '(_gdloop:'

@@ -223,7 +223,7 @@ class Vector4 {
     }
 //     friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1*v2+v3; }
  private:
-    HH_ALIGNAS(16)  // since no __mm128 element to induce 16-byte alignment
+    alignas(16)                 // since no __mm128 element to induce 16-byte alignment
     float _c[4];
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)
 };

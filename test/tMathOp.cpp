@@ -83,7 +83,7 @@ int main() {
         a = create_nanf(0x00000002); func_show_float(a);
         a = create_nanf(0x003fffff); func_show_float(a);
         SHOW(std::isfinite(0.f/g_float_zero));
-        // Note: with gcc (mingw, mingw32, cygwin), isinf() and isnan() always report false, and
+        // Note: with gcc (mingw, cygwin), isinf() and isnan() always report false, and
         //  isfinite() always reports true,
         //  This is due to the compilation flag "-ffast-math".
         //  It might work with "-fno-finite-math-only" but then some optimizations might be disabled.

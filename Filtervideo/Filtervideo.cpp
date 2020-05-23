@@ -2177,6 +2177,7 @@ int main(int argc, const char** argv) {
         read_video(filename, false);
     }
     args.parse();
+    hh_clean_up();
     if (!nooutput) {
         if (video.size()) video.write_file("-");
         else if (video_nv12.size()) video_nv12.write_file("-", video.attrib());

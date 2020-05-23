@@ -48,8 +48,8 @@ void perform_in() {
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
     bool out = false;
-    ARGSP(out,                  "bool : 0=in, 1=out");
-    ARGSP(bsize,                "bytes : size of transmission");
+    HH_ARGSP(out,               "bool : 0=in, 1=out");
+    HH_ARGSP(bsize,             "bytes : size of transmission");
     args.parse();
     if (out) perform_out(); else perform_in();
     return 0;

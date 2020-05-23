@@ -16,12 +16,12 @@ void do_outfile(Args& args) { string filename = args.get_filename(); ...; }
 } // namespace
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSC("",                   ":Comment : Directly set parameters:");
-    ARGSF(nooutput,             ": do not output final image on stdout");
-    ARGSP(niter,                "n : number of iterations");
-    ARGSC("",                   ":Comment : Directly call functions:");
-    ARGSD(png,                  ": set output format");
-    ARGSD(outfile,              "filename : output an intermediate image");
+    HH_ARGSC("",                ":Comment : Directly set parameters:");
+    HH_ARGSF(nooutput,          ": do not output final image on stdout");
+    HH_ARGSP(niter,             "n : number of iterations");
+    HH_ARGSC("",                ":Comment : Directly call functions:");
+    HH_ARGSD(png,               ": set output format");
+    HH_ARGSD(outfile,           "filename : output an intermediate image");
     args.parse();
     if (!nooutput) { ...; }
 }
@@ -148,10 +148,10 @@ class ParseArgs : public Args {
     ParseArgs(const ParseArgs&)                 = delete;  // not noncopyable because operator=() is defined above
 };
 
-#define ARGSF(var, comment)   args.f("-" #var, var, comment)
-#define ARGSP(var, comment)   args.p("-" #var, var, comment)
-#define ARGSD(var, comment)   args.p("-" #var, do_##var, comment)
-#define ARGSC(comment1, com2) args.c(comment1, com2)
+#define HH_ARGSF(var, comment)   args.f("-" #var, var, comment)
+#define HH_ARGSP(var, comment)   args.p("-" #var, var, comment)
+#define HH_ARGSD(var, comment)   args.p("-" #var, do_##var, comment)
+#define HH_ARGSC(header_comment, comment) args.c(header_comment, comment)
 
 } // namespace hh
 

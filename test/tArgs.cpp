@@ -28,16 +28,16 @@ int main(int argc, const char** argv) {
         float fa[2] = {0.f, 0.f};   // test C-array
         Vec2<float> fb = {0.f, 0.f};
         Vec2<float> fc = {0.f, 0.f};
-        ARGSF(flag,                     ": enable flag");
-        ARGSF(flap,                     ": turn on the flaps");
+        HH_ARGSF(flag,                  ": enable flag");
+        HH_ARGSF(flap,                  ": turn on the flaps");
         args.f("-flac", flac,           ": send out flacs");
         args.p("-val1", val1,           "f : set value1 coefficient");
-        ARGSP(val2,                     "i : comment");
+        HH_ARGSP(val2,                  "i : comment");
         args.p("-farr", fa, 2,          "f1 f2 : sets two element array");
-        ARGSC("",                       ":");
-        ARGSP(fb,                       "a b : set variables");
-        ARGSP(fc,                       "c1 c2 : set the fc variables");
-        ARGSD(show1p1,                  ": comment");
+        HH_ARGSC("",                    ":");
+        HH_ARGSP(fb,                    "a b : set variables");
+        HH_ARGSP(fc,                    "c1 c2 : set the fc variables");
+        HH_ARGSD(show1p1,               ": comment");
         args.other_args_ok(); args.other_options_ok();
         Array<string> ar_unrecog;
         bool optsparse = args.parse_and_extract(ar_unrecog);
@@ -53,9 +53,9 @@ int main(int argc, const char** argv) {
         auto do_string = [](Args& args) { SHOW("string", args.get_string(), ar); };
         SHOW(ArView(argv, argc));
         ParseArgs args(argc, argv);
-        ARGSF(flag2,                    ": enable flag");
-        ARGSP(ar,                       "i1 i2 : set two coefficients");
-        ARGSD(showar,                   "i : show coefficient indexed i");
+        HH_ARGSF(flag2,                 ": enable flag");
+        HH_ARGSP(ar,                    "i1 i2 : set two coefficients");
+        HH_ARGSD(showar,                "i : show coefficient indexed i");
         args.p("*.vlp", do_vlp,         "file.vlp : read the file");
         args.p("*", do_file,            "file : read any other file type");
         args.p("*.string", do_string,   "string : print string");

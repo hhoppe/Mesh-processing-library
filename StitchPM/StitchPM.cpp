@@ -210,11 +210,11 @@ void do_stitch() {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSP(rootname,             "rootname : prefix of PM files (*.x0.y0.pm)");
-    ARGSP(blockx,               "nx : number of blocks along x axis");
-    ARGSP(blocky,               "ny : number of blocks along y axis");
-    ARGSP(blocks,               "n : block size (num_vertices-1/side)");
-    ARGSD(stitch,               ": stitch the PM's together");
+    HH_ARGSP(rootname,          "rootname : prefix of PM files (*.x0.y0.pm)");
+    HH_ARGSP(blockx,            "nx : number of blocks along x axis");
+    HH_ARGSP(blocky,            "ny : number of blocks along y axis");
+    HH_ARGSP(blocks,            "n : block size (num_vertices-1/side)");
+    HH_ARGSD(stitch,            ": stitch the PM's together");
     showdf("%s", args.header().c_str());
     HH_TIMER(StitchPM);
     args.parse();

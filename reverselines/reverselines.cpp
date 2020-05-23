@@ -14,7 +14,7 @@ using namespace hh;
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSC("",                   "filename : output the lines in file in reverse order");
+    HH_ARGSC("",                "filename : output the lines in file in reverse order");
     args.other_args_ok();
     args.parse();
     string filename = args.get_filename();
@@ -87,7 +87,7 @@ int main(int argc, const char** argv) {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSC("",                   "filename : output the lines in file in reverse order");
+    HH_ARGSC("",                "filename : output the lines in file in reverse order");
     args.other_args_ok();
     args.parse();
     string filename = args.get_filename();
@@ -140,7 +140,7 @@ int main(int argc, const char** argv) {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSC("",                   "filename : output the lines in file in reverse order");
+    HH_ARGSC("",                "filename : output the lines in file in reverse order");
     args.other_args_ok();
     args.parse();
     string filename = args.get_filename();

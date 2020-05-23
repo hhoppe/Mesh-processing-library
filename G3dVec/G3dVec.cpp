@@ -967,12 +967,12 @@ bool HB::init(Array<string>& aargs,
     hither = k_default_hither;
     bool hw_success = hw.init(aargs);
     ParseArgs args(aargs, "HB_X");
-    ARGSF(datastat,                             ": geometric hashing stats");
-    ARGSP(psfile,                               "file.ps : set postscript output");
-    ARGSF(nohash,                               ": turn off vertex hashing");
+    HH_ARGSF(datastat,                          ": geometric hashing stats");
+    HH_ARGSP(psfile,                            "file.ps : set postscript output");
+    HH_ARGSF(nohash,                            ": turn off vertex hashing");
     args.p("-thicks[harp]", thicksharp,         "f : width of sharp edges");
     args.p("-thickn[ormal]", thicknormal,       "f : width of edges");
-    ARGSF(silhouette,                           ": in hidden-line, draw only silh.");
+    HH_ARGSF(silhouette,                        ": in hidden-line, draw only silh.");
     args.other_args_ok(); args.other_options_ok(); args.disallow_prefixes();
     if (!args.parse_and_extract(aargs) || !hw_success) return false;
     return true;

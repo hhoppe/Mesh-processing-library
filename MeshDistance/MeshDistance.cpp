@@ -268,16 +268,16 @@ void do_distance() {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSD(mfile,                "filename : read a mesh file");
-    ARGSP(bothdir,              "bool : also compute dist(mesh2, mesh1)");
-    ARGSP(nptfac,               "fac : random points samples");
-    ARGSP(vertexpts,            "bool : also project vertices");
-    ARGSP(errmesh,              "bool : output mesh with error");
-    ARGSP(verb,                 "int : verbosity level");
-    ARGSP(unitcube0,            "bool : normalize distance by mesh0 bbox side");
-    ARGSP(unitdiag0,            "bool : normalize distance by mesh0 bbox diag");
-    ARGSP(maxerror,             "bool : include Linf norm");
-    ARGSD(distance,             ": compute inter-mesh distances");
+    HH_ARGSD(mfile,             "filename : read a mesh file");
+    HH_ARGSP(bothdir,           "bool : also compute dist(mesh2, mesh1)");
+    HH_ARGSP(nptfac,            "fac : random points samples");
+    HH_ARGSP(vertexpts,         "bool : also project vertices");
+    HH_ARGSP(errmesh,           "bool : output mesh with error");
+    HH_ARGSP(verb,              "int : verbosity level");
+    HH_ARGSP(unitcube0,         "bool : normalize distance by mesh0 bbox side");
+    HH_ARGSP(unitdiag0,         "bool : normalize distance by mesh0 bbox diag");
+    HH_ARGSP(maxerror,          "bool : include Linf norm");
+    HH_ARGSD(distance,          ": compute inter-mesh distances");
     HH_TIMER(MeshDistance);
     args.parse();
     if (errmesh) meshes[0].write(std::cout);

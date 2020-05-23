@@ -692,15 +692,15 @@ void process() {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSP(rootname,             "string : name for output files (optional)");
-    ARGSP(what,                 "string : output codes 'dbufgpohlcm' (default mesh 'm')");
-    ARGSP(samplingd,            "f : sampling density + noise (delta+rho)");
-    ARGSP(gridsize,             "n : contouring # grid cells (opt.)");
-    ARGSP(maxkintp,             "k : max # points in tp");
-    ARGSP(minkintp,             "k : min # points in tp");
-    ARGSP(unsigneddis,          "f : use unsigned distance, set value");
-    ARGSP(prop,                 "i : orient. prop. (0=naive, 1=emst, 2=mst)");
-    ARGSP(usenormals,           "i : use data normals (1=orient_opt, 2=orient, 3=exact)");
+    HH_ARGSP(rootname,          "string : name for output files (optional)");
+    HH_ARGSP(what,              "string : output codes 'dbufgpohlcm' (default mesh 'm')");
+    HH_ARGSP(samplingd,         "f : sampling density + noise (delta+rho)");
+    HH_ARGSP(gridsize,          "n : contouring # grid cells (opt.)");
+    HH_ARGSP(maxkintp,          "k : max # points in tp");
+    HH_ARGSP(minkintp,          "k : min # points in tp");
+    HH_ARGSP(unsigneddis,       "f : use unsigned distance, set value");
+    HH_ARGSP(prop,              "i : orient. prop. (0=naive, 1=emst, 2=mst)");
+    HH_ARGSP(usenormals,        "i : use data normals (1=orient_opt, 2=orient, 3=exact)");
     args.parse();
     assertx(samplingd);
     g_header = args.header();

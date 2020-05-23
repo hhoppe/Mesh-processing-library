@@ -4176,7 +4176,7 @@ int main(int argc, const char** argv) {
     string through_color = "#FF9696";   // pink
     bool checker = true;
     ParseArgs args(aargs);
-    ARGSD(video,                "file : load input video");
+    HH_ARGSD(video,             "file : load input video");
     args.p("*.mp4", do_video,   ": load input video");
     args.p("*.wmv", do_video,   ": load input video");
     args.p("*.avi", do_video,   ": load input video");
@@ -4188,7 +4188,7 @@ int main(int argc, const char** argv) {
     args.p("*.AVI", do_video,   ": load input video");
     args.p("*.MOV", do_video,   ": load input video");
     args.p("-",     do_stdin,   ": load input image or video");
-    ARGSD(image,                "file : load input image");
+    HH_ARGSD(image,             "file : load input image");
     args.p("*.jpg",  do_image,  ": load input image");
     args.p("*.jpeg", do_image,  ": load input image");
     args.p("*.png",  do_image,  ": load input image");
@@ -4199,16 +4199,16 @@ int main(int argc, const char** argv) {
     args.p("*.BMP",  do_image,  ": load input image");
     args.p("*.arw",  do_image,  ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
     args.p("*.exr",  do_image,  ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
-    ARGSD(vlp,                  "file.vlp : load looping parameters");
+    HH_ARGSD(vlp,               "file.vlp : load looping parameters");
     args.p("*.vlp", do_vlp,     ": load looping parameters");
-    ARGSD(batch_create_loop,    "input_video.mp4 output_loop.mp4 : create loop without opening any window");
-    ARGSD(stripe,               "nf nx ny rate: create procedual video (e.g. 150 640 480 60)");
-    ARGSD(zonal,                "nx ny : create zonal-plate procedural image (e.g. 1024 1024)");
-    ARGSD(key,                  "keystring : simulate key presses (e.g. -key 'a2<enter>kk')");
-    ARGSP(speed,                "fac : set fractional speedup factor");
-    ARGSP(time,                 "sec : set initial frame time");
-    ARGSP(through_color,        "#RRGGBB : for partially transparent images");
-    ARGSP(checker,              "b : for partially transparent images");
+    HH_ARGSD(batch_create_loop, "input_video.mp4 output_loop.mp4 : create loop without opening any window");
+    HH_ARGSD(stripe,            "nf nx ny rate: create procedual video (e.g. 150 640 480 60)");
+    HH_ARGSD(zonal,             "nx ny : create zonal-plate procedural image (e.g. 1024 1024)");
+    HH_ARGSD(key,               "keystring : simulate key presses (e.g. -key 'a2<enter>kk')");
+    HH_ARGSP(speed,             "fac : set fractional speedup factor");
+    HH_ARGSP(time,              "sec : set initial frame time");
+    HH_ARGSP(through_color,     "#RRGGBB : for partially transparent images");
+    HH_ARGSP(checker,           "b : for partially transparent images");
     args.p("-verbose", g_verbose, "b : debug verbosity (0=none, 1=some, 2=more");
     try {
         if (!args.parse() || !hw_success) return 1;

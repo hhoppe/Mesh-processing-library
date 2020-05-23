@@ -30,16 +30,16 @@ void do_closecycles() {
 
 int main(int argc, const char** argv) {
     ParseArgs args(argc, argv);
-    ARGSC("",                   ":* Criteria for stopping topological simplification:");
-    ARGSP(maxcyclelength,       "len : when smallest cycle exceeds specified length");
-    ARGSP(maxcyclenedges,       "n : when smallest cycle has >n edges");
-    ARGSP(ncycles,              "n : after removing this number of cycles");
-    ARGSP(genus,                "g : when mesh genus <=g");
-    ARGSC("",                   ":*");
-    ARGSP(fraccyclelength,      "frac>=1 : allow finding cycles with length fractionally greater than minimal");
-    ARGSC("",                   ":*");
-    ARGSD(closecycles,          ": perform topological simplification");
-    ARGSF(nooutput,             ": do not print mesh at program end");
+    HH_ARGSC("",                ":* Criteria for stopping topological simplification:");
+    HH_ARGSP(maxcyclelength,    "len : when smallest cycle exceeds specified length");
+    HH_ARGSP(maxcyclenedges,    "n : when smallest cycle has >n edges");
+    HH_ARGSP(ncycles,           "n : after removing this number of cycles");
+    HH_ARGSP(genus,             "g : when mesh genus <=g");
+    HH_ARGSC("",                ":*");
+    HH_ARGSP(fraccyclelength,   "frac>=1 : allow finding cycles with length fractionally greater than minimal");
+    HH_ARGSC("",                ":*");
+    HH_ARGSD(closecycles,       ": perform topological simplification");
+    HH_ARGSF(nooutput,          ": do not print mesh at program end");
     HH_TIMER(main);
     string arg0 = args.num() ? args.peek_string() : "";
     if (!ParseArgs::special_arg(arg0)) {

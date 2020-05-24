@@ -72,7 +72,7 @@ DWORD WINAPI buf_thread_func(void*) {
         assertx(buf_buffern==0);
         int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
         buf_buffern = nread;
-        if (nread<0) perror("buffer_read");
+        if (nread<0) assertnever("buffer_read");
         assertx(SetEvent(g_buf_event_data_available));
         if (nread<=0) break;
         assertx(WaitForSingleObject(buf_event_data_copied, INFINITE)==WAIT_OBJECT_0);
@@ -219,7 +219,6 @@ WBuffer::EFlush WBuffer::flush(int nb) {
             if (errno==EWOULDBLOCK || errno==EAGAIN) {
                 return EFlush::part;
             }
-            // perror("WBuffer:write:");
             _err = true;
             return EFlush::other;
         }

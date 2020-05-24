@@ -604,8 +604,8 @@ class Multigrid : noncopyable {
         double max_abs_err = (!have_orig() ? 0 :
                               max_e(max_abs_element(_grid_result-_grid_orig+static_cast<T>(_mean_orig-mean_result))));
         string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result-_mean_desired));
-        showdf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",
-               s.c_str(), mag_e(mean_result), smean_off.c_str(), rms_resid, rms_err, max_abs_err);
+        showf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",
+              s.c_str(), mag_e(mean_result), smean_off.c_str(), rms_resid, rms_err, max_abs_err);
     }
     bool coarse_enough(CGridView<D,T> grid_rhs) {
         return max(grid_rhs.dims())<=k_direct_solver_resolution;

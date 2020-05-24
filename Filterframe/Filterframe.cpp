@@ -134,9 +134,9 @@ void process() {
         if (loop()) break;
     }
     if (!std::cin.good() && !std::cin.eof()) {
-        perror("read");
+        assertnever("Read error");
     } else if (!std::cout.good()) {
-        perror("write");
+        assertnever("Write error");
     } else if (!icount) {
         SHOW("warning: no frames read");
     }

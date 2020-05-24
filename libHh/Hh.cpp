@@ -7,7 +7,7 @@
 #include <chrono>
 #include <csignal>              // signal()
 #include <cstdarg>              // va_list
-#include <cstring>              // std::memcpy(), strlen(), std::memset()
+#include <cstring>              // std::memcpy(), strlen(), std::memset(), std::strerror()
 #include <fcntl.h>              // O_BINARY, fcntl()
 #include <locale>               // std::use_facet<>, std::locale()
 #include <mutex>                // std::once_flag, std::call_once()
@@ -86,6 +86,15 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 
 namespace hh {
 
+// Compilation-time tests for assumptions present in my C++ code
+static_assert(sizeof(int)>=4, "");
+static_assert(sizeof(char)==1, "");
+static_assert(sizeof(uchar)==1, "");
+static_assert(sizeof(short)==2, "");
+static_assert(sizeof(ushort)==2, "");
+static_assert(sizeof(int64_t)==8, "");
+static_assert(sizeof(uint64_t)==8, "");
+
 const char* g_comment_prefix_string = "# "; // not string because cannot be destroyed before Timers destruction
 
 int g_unoptimized_zero = 0;
@@ -133,7 +142,7 @@ void show_call_stack() {
 
 #endif  // !defined(HH_NO_STACKWALKER)
 
-HH_NORETURN void new_failed() {
+HH_NORETURN void my_new_handler() {
     assertnever("new is out of memory");
 }
 
@@ -293,7 +302,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
      default:
         showf("Unrecognized exception code %u (0x%X)\n", ExceptionCode, ExceptionCode);
     }
-    if (errno) perror("possible error");
+    if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
     report_possible_win32_error();
     // want to report assertion errors from C++ standard library (dialog box pops up, and reach here on "Retry")
     if (k_debug && ExceptionCode==EXCEPTION_BREAKPOINT && !IsDebuggerPresent()) {
@@ -347,7 +356,7 @@ HH_NORETURN void my_terminate_handler () {
     }
     catch (...) { }
 #endif
-    if (errno) perror("possible error");
+    if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
     report_possible_win32_error();
     assertnever("my_terminate_handler");
 }
@@ -415,177 +424,192 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
 }
 #endif
 
-void hh_init_aux() {
-    dummy_use(show_call_stack, new_failed, my_terminate_handler, my_signal_handler);
+void assign_my_signal_handler() {
+    // using SignalHandlerPointer = void (*)(int);
+    // c:/cygwin/usr/include/sys/signal.h
+    // This does not seem to work under CYGWIN
+    // And it does not seem to work under WIN32; cannot catch "Segmentation fault" $status=140
+    //
+    // The SIGILL, SIGSEGV, and SIGTERM signals are not generated under Windows NT. They are included
+    // for ANSI compatibility. ... you can also explicitly generate these signals by calling raise.
+    SHOWL;
+    // signal(SIGFPE, my_signal_handler);
+    signal(SIGILL , my_signal_handler);
+    signal(SIGSEGV, my_signal_handler);
+    // signal(SIGTRAP, my_signal_handler);
+}
+
+void setup_exception_hooks() {
+    dummy_use(show_call_stack, my_new_handler, my_terminate_handler, my_signal_handler);
 #if defined(_WIN32)
     dummy_use(my_top_level_exception_filter);
 #endif
 #if !defined(HH_NO_EXCEPTION_HOOKS)
-    if (!getenv_bool("HH_NO_EXCEPTION_HOOKS")) {
-        dummy_use(new_failed);
+    if (getenv_bool("HH_NO_EXCEPTION_HOOKS")) return;
 #if defined(__CYGWIN__)
-        std::set_new_handler(&new_failed); // the default behavior is to throw std::bad_alloc
-        // else on Cygwin, no diagnostic is reported (other than nonzero exit code)
+    std::set_new_handler(&my_new_handler);  // the default behavior is to throw std::bad_alloc
+    // else on Cygwin, no diagnostic is reported (other than nonzero exit code)
 #endif
 #if defined(_MSC_VER)
-        if (!IsDebuggerPresent()) {
-            // Because the "Just-in-time debugging" no longer seems to work.
-            _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, my_CrtDbgHook); // only in Debug
-            dummy_use(&my_CrtDbgHook);                               // otherwise unreferenced in Release
-        }
+    if (!IsDebuggerPresent()) {
+        // Because the "Just-in-time debugging" no longer seems to work.
+        _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, my_CrtDbgHook);  // only in Debug
+        dummy_use(&my_CrtDbgHook);                                // otherwise unreferenced in Release
+    }
 #endif
 #if defined(_WIN32)
-        if (1) {
-            // SEM_FAILCRITICALERRORS      0x0001
-            // unsigned v = SetErrorMode(SEM_FAILCRITICALERRORS); dummy_use(v);
-            // assertx(v==SEM_FAILCRITICALERRORS); // already default!
-            if (1) SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
-            // It is not default for Windows apps?
-            // Also consider from http://stackoverflow.com/a/467652/1190077 :
-            if (1) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX); // yes, useful e.g. for mingw32
-        }
-        if (1) {
-            // LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(
-            //   _In_  LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
-            LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);
-            if (0) SHOW(reinterpret_cast<uint64_t>(v));
-            // 0x0041DE18 -- already is an exception filter.  what did it do?
-        }
-#endif
-        if (1) {
-            std::set_terminate(my_terminate_handler);
-            // std::set_unexpected(my_unexpected); // deprecated in C++11
-        }
-        if (1) {
-            signal(SIGABRT, my_abort_handler);
-        }
-        if (0) {
-            // using SignalHandlerPointer = void (*)(int);
-            // c:/cygwin/usr/include/sys/signal.h
-            // This does not seem to work under CYGWIN
-            // And it does not seem to work under WIN32; cannot catch "Segmentation fault" $status=140
-            //
-            // The SIGILL, SIGSEGV, and SIGTERM signals are not generated under Windows NT. They are included
-            // for ANSI compatibility. ... you can also explicitly generate these signals by calling raise.
-            SHOWL;
-            // signal(SIGFPE, my_signal_handler);
-            signal(SIGILL , my_signal_handler);
-            signal(SIGSEGV, my_signal_handler);
-            // signal(SIGTRAP, my_signal_handler);
-        }
-        if (0) {                // exercise errors
-            SHOWL;
-            if (0) {
-                float b = 1.f/float(g_unoptimized_zero); // silently produces infinity
-                SHOW(b);
-            }
-            if (0) {
-                int a = 123456789;
-                int b = a*a;    // silently overflows
-                SHOW(b);
-            }
-            if (0) {
-                // *implicit_cast<int*>(nullptr) = 1; // error: access violation; CYGWIN+release just crashes
-            }
-            if (0) {
-                throw 0;        // unhandled exception
-            }
-            if (0) {
-                int b = 1/g_unoptimized_zero; // error: integer division by zero
-                SHOW(b);
-            }
-            exit(0);
-        }
-    }
-#endif  // !defined(HH_NO_EXCEPTION_HOOKS)
-    {
-        // Compilation-time tests for assumptions present in my C++ code
-        static_assert(sizeof(int)>=4, "");
-        static_assert(sizeof(char)==1, "");
-        static_assert(sizeof(uchar)==1, "");
-        static_assert(sizeof(short)==2, "");
-        static_assert(sizeof(ushort)==2, "");
-        static_assert(sizeof(int64_t)==8, "");
-        static_assert(sizeof(uint64_t)==8, "");
+    if (1) {
+        // SEM_FAILCRITICALERRORS      0x0001
+        // unsigned v = SetErrorMode(SEM_FAILCRITICALERRORS); dummy_use(v);
+        // assertx(v==SEM_FAILCRITICALERRORS); // already default!
+        if (1) SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
+        // It is not the default for Windows apps?
+        // Also consider from http://stackoverflow.com/a/467652/1190077 :
+        if (1) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);  // yes, useful e.g. for mingw32
     }
     if (1) {
-        // Use standard format for float/double printf("%e"): 2 instead of 3 digits for exponent if possible.
+        // LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(
+        //   _In_  LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
+        LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);
+        if (0) SHOW(reinterpret_cast<uint64_t>(v));
+        // 0x0041DE18 -- already is an exception filter.  what did it do?
+    }
+#endif
+    if (1) std::set_terminate(my_terminate_handler);
+    if (1) signal(SIGABRT, my_abort_handler);
+    if (0) assign_my_signal_handler();
+#endif  // !defined(HH_NO_EXCEPTION_HOOKS)
+}
+
+void use_standard_exponent_format_in_io() {
+    // Use standard format for float/double printf("%e"): 2 instead of 3 digits for exponent if possible.
 #if defined(__MINGW32__)
-        // For mingw32, using _set_output_format requires modifying __MSVCRT_VERSION__ on
-        //   *all* compiled files (libpng.a etc.), and then getting a dependency on msvcr100.dll .
-        // Instead, the my_setenv() works even with the old standard msvcrt.dll .
-        my_setenv("PRINTF_EXPONENT_DIGITS", "2");
+    // For mingw32, using _set_output_format requires modifying __MSVCRT_VERSION__ on
+    //   *all* compiled files (libpng.a etc.), and then getting a dependency on msvcr100.dll .
+    // Instead, the my_setenv() works even with the old standard msvcrt.dll .
+    my_setenv("PRINTF_EXPONENT_DIGITS", "2");
 #endif
-    }
+}
+
+void use_binary_io() {
 #if defined(_WIN32)
-    {
-        _fmode = O_BINARY;                // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
-        assertx(HH_POSIX(setmode)(0, O_BINARY)>=0); // stdin
-        assertx(HH_POSIX(setmode)(1, O_BINARY)>=0); // stdout
-        assertx(HH_POSIX(setmode)(2, O_BINARY)>=0); // stderr
-        // There is no global variable for default iostream binary mode.
-        // With new iostream, it appears that std::cin, std::cout, std::cerr adjust
-        //  (fortunately) to the settings of stdin, stdout, stderr.
-    }
+    _fmode = O_BINARY;                           // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
+    assertx(HH_POSIX(setmode)(0, O_BINARY)>=0);  // stdin
+    assertx(HH_POSIX(setmode)(1, O_BINARY)>=0);  // stdout
+    assertx(HH_POSIX(setmode)(2, O_BINARY)>=0);  // stderr
+    // There is no global variable for default iostream binary mode.
+    // With new iostream, it appears that std::cin, std::cout, std::cerr adjust
+    //  (fortunately) to the settings of stdin, stdout, stderr.
 #endif
-    if (0) {
-        // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
-        // Verify that the precision was unchanged from its default value of 6.
-        //  (similar code both in Hh.cpp and FileIO.cpp)
-        assertx(std::cout.precision(8)==6);
-        assertx(std::cerr.precision(8)==6);
-        // This is an interesting idea.
-        // However, it results in many nice round numbers like "0.18" being approximated by many digits,
-        //  such as "0.18000001", which just looks ugly.  Similarly "0.090000004" and "0.059999999".
-        // This is likely the motivation for the default precision of 6.
-        //  == std::numeric_limits<T>::digits10, the number of digits reliably encoded/decoded as float.
-        //
-        // See experiments in ~/src/test/misc/test_float_discrepancy.cpp
-        //
-        // See my answer at http://stackoverflow.com/a/23437425/1190077
-        //  to the question of the precision necessary to exactly save and retrieve floating-point numbers :
-        //
-        // See the nice detailed discussion in
-        //  http://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
-        // 
-        // The short answer is that the minimum precision is the following:
-        // 
-        // printf("%1.8e", d);  // Round-trippable float, always with an exponent
-        // printf("%.9g", d);   // Round-trippable float, shortest possible
-        // printf("%1.16e", d); // Round-trippable double, always with an exponent
-        // printf("%.17g", d);  // Round-trippable double, shortest possible
-        // 
-        // Or equivalently, with a std::ostream& os:
-        // 
-        // os << scientific << setprecision(8) << d;    // float; always with an exponent
-        // os << defaultfloat << setprecision(9) << d;  // float; shortest possible
-        // os << scientific << setprecision(16) << d;   // double; always with an exponent
-        // os << defaultfloat << setprecision(17) << d; // double; shortest possible
-        //
-        // os << defaultfloat << setprecision(std::numeric_limits<T>::max_digits10) << d; // 9 or 17
-        //
-        // I feel that the difference between 8 and 9 digits of precision (mainly for numbers between 1000 and 1023)
-        //  is not worth it.
-        //
-        // See also:
-        //  http://stackoverflow.com/questions/10357192/printf-rounding-behavior-for-doubles
-        //  http://www.exploringbinary.com/inconsistent-rounding-of-printed-floating-point-numbers/
-        // Visual C++ uses the round-half-away-from-zero rule,
-        //  and gcc (actually, glibc) uses the round-half-to-even rule, also known as bankers' rounding.
-        // glibc printf() has been updated to take the current IEEE rounding mode into account. This was done
-        //  in version 2.17; I just tested it on version 2.18. In doing it this way of course,
-        //  round-to-nearest/round-half-away-from-zero is still not an option, so this doesn't help you make its
-        //  output consistent with other platforms.
-        // 
-        // MinGW gcc uses the Microsoft C runtime, so it's not really going to show any different results than
-        //  MSVC as far as printf() is concerned.  (It may be using an older version of the runtime.)
-    }
+}
+
+void change_default_io_precision() {
+    // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
+    // Verify that the precision was unchanged from its default value of 6.
+    //  (similar code both in Hh.cpp and FileIO.cpp)
+    assertx(std::cout.precision(8)==6);
+    assertx(std::cerr.precision(8)==6);
+    // This is an interesting idea.
+    // However, it results in many nice round numbers like "0.18" being approximated by many digits,
+    //  such as "0.18000001", which just looks ugly.  Similarly "0.090000004" and "0.059999999".
+    // This is likely the motivation for the default precision of 6.
+    //  == std::numeric_limits<T>::digits10, the number of digits reliably encoded/decoded as float.
+    //
+    // See experiments in ~/src/test/misc/test_float_discrepancy.cpp
+    //
+    // See my answer at http://stackoverflow.com/a/23437425/1190077
+    //  to the question of the precision necessary to exactly save and retrieve floating-point numbers :
+    //
+    // See the nice detailed discussion in
+    //  http://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
+    // 
+    // The short answer is that the minimum precision is the following:
+    // 
+    // printf("%1.8e", d);  // Round-trippable float, always with an exponent
+    // printf("%.9g", d);   // Round-trippable float, shortest possible
+    // printf("%1.16e", d); // Round-trippable double, always with an exponent
+    // printf("%.17g", d);  // Round-trippable double, shortest possible
+    // 
+    // Or equivalently, with a std::ostream& os:
+    // 
+    // os << scientific << setprecision(8) << d;    // float; always with an exponent
+    // os << defaultfloat << setprecision(9) << d;  // float; shortest possible
+    // os << scientific << setprecision(16) << d;   // double; always with an exponent
+    // os << defaultfloat << setprecision(17) << d; // double; shortest possible
+    //
+    // os << defaultfloat << setprecision(std::numeric_limits<T>::max_digits10) << d; // 9 or 17
+    //
+    // I feel that the difference between 8 and 9 digits of precision (mainly for numbers between 1000 and 1023)
+    //  is not worth it.
+    //
+    // See also:
+    //  http://stackoverflow.com/questions/10357192/printf-rounding-behavior-for-doubles
+    //  http://www.exploringbinary.com/inconsistent-rounding-of-printed-floating-point-numbers/
+    // Visual C++ uses the round-half-away-from-zero rule,
+    //  and gcc (actually, glibc) uses the round-half-to-even rule, also known as bankers' rounding.
+    // glibc printf() has been updated to take the current IEEE rounding mode into account. This was done
+    //  in version 2.17; I just tested it on version 2.18. In doing it this way of course,
+    //  round-to-nearest/round-half-away-from-zero is still not an option, so this doesn't help you make its
+    //  output consistent with other platforms.
+    // 
+    // MinGW gcc uses the Microsoft C runtime, so it's not really going to show any different results than
+    //  MSVC as far as printf() is concerned.  (It may be using an older version of the runtime.)
+}
+
+void warn_if_running_debug_version() {
 #if defined(_MSC_VER)
     if (k_debug) showf("Running debug version.\n");
 #endif
 }
 
+void excercise_errors() {
+    SHOWL;
+    if (0) {
+        float b = 1.f/float(g_unoptimized_zero);  // silently produces infinity
+        SHOW(b);
+    }
+    if (0) {
+        int a = 123456789;
+        int b = a*a;            // silently overflows
+        SHOW(b);
+    }
+    if (0) {
+        // *implicit_cast<int*>(nullptr) = 1; // error: access violation; CYGWIN+release just crashes
+    }
+    if (0) {
+        throw 0;                // unhandled exception
+    }
+    if (0) {
+        int b = 1/g_unoptimized_zero;  // error: integer division by zero
+        SHOW(b);
+    }
+    exit(0);
+}
+
+void hh_init_aux() {
+    setup_exception_hooks();
+    use_standard_exponent_format_in_io();
+    use_binary_io();
+    if (0) change_default_io_precision();
+    warn_if_running_debug_version();
+    if (0) excercise_errors();
+}
+
 } // namespace
+
+namespace details {
+// ret: bogus integer
+int hh_init() {
+    if (0) {
+        // This fails intermittently in "reverselines" on Unix gcc 4.8.2;
+        //  it is likely not intended for use in static initialization (of dummy_init_hh).
+        static std::once_flag flag; std::call_once(flag, hh_init_aux);
+    } else {
+        static bool is_init = false; if (!is_init) { is_init = true; hh_init_aux(); }
+    }
+    return 0;
+}
+}  // namespace details
 
 #if defined(_WIN32) && !defined(HH_NO_UTF8)
 
@@ -650,21 +674,6 @@ std::wstring widen(const std::string& str) {
 }
 
 #endif // end of UTF8 handling
-
-
-namespace details {
-// ret: bogus integer
-int hh_init() {
-    if (0) {
-        // This fails intermittently in "reverselines" on Unix gcc 4.8.2;
-        //  it is likely not intended for use in static initialization (of dummy_init_hh).
-        static std::once_flag flag; std::call_once(flag, hh_init_aux);
-    } else {
-        static bool is_init = false; if (!is_init) { is_init = true; hh_init_aux(); }
-    }
-    return 0;
-}
-} // namespace
 
 bool set_fd_no_delay(int fd, bool nodelay) {
     dummy_use(fd, nodelay);
@@ -807,7 +816,7 @@ void flush_warnings() { Warnings::instance().flush(); }
 
 void details::assertx_aux2(const char* s) {
     showf("Fatal assertion error: %s\n", s);
-    if (errno) perror("possible error");
+    if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
     report_possible_win32_error();
     abort();
 }
@@ -980,28 +989,6 @@ size_t available_memory() {
     return ret;
 #endif
     // if all fails, return 0;
-}
-
-string get_user_name() {
-#if defined(_WIN32)
-    {
-#if !defined(HH_NO_UTF8)
-        std::vector<wchar_t> buf(2000); unsigned long size = narrow_cast<unsigned>(buf.size());
-        assertx(GetUserNameW(buf.data(), &size));
-        if (buf[0]) return narrow(buf.data());
-#else
-        std::vector<char> buf(2000); unsigned long size = narrow_cast<unsigned>(buf.size());
-        assertx(GetUserNameA(buf.data(), &size));
-        if (buf[0]) return buf.data();
-#endif
-    }
-#endif
-    // getlogin() may return "root" if I have suid's in another window? IRIX6.4
-    string str;
-    str = getenv_string("USERNAME"); if (str!="") return str;
-    str = getenv_string("LOGNAME"); if (str!="") return str;
-    str = getenv_string("USER"); if (str!="") return str;
-    return "nobody";
 }
 
 string get_current_directory() {
@@ -1510,18 +1497,8 @@ string get_current_datetime() {
         second = system_time.wSecond;
 #else
         time_t ti = time(implicit_cast<time_t*>(nullptr));
-#if 0
-        struct tm& ptm = *assertx(localtime(&ti)); // not thread-safe
-#elif defined(_WIN32)
         struct tm tm_result;
-        struct tm& ptm = *assertx(localtime_s(&tm_result, &ti)); // Microsoft CRT security feature
-#elif 0
-        struct tm tm_result;
-        struct tm& ptm = *assertx(localtime_s(&ti, &tm_result)); // C11; not in C++11
-#else
-        struct tm tm_result;
-        struct tm& ptm = *assertx(localtime_r(&ti, &tm_result)); // POSIX
-#endif
+        struct tm& ptm = *assertx(localtime_r(&ti, &tm_result));  // POSIX
         year = ptm.tm_year+1900;
         month = ptm.tm_mon+1;
         day = ptm.tm_mday;

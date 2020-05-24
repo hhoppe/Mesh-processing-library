@@ -44,7 +44,6 @@ class Postscript : noncopyable {
         _os << "%%DocumentFonts:\n";
         _os << "%%Creator: hps\n";
         _os << "%%CreationDate: " << get_current_datetime() << "\n";
-        _os << "%%For: " << get_user_name() << "\n";
         _os << "%%LanguageLevel: 1\n";
         _os << "%%Pages: 1\n";
         // (10.5-7.8)/2*72+15==112 +7.8*72==674

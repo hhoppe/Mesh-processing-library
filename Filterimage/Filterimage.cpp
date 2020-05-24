@@ -631,7 +631,6 @@ void do_tops() {
     std::cout << "%%Orientation: Portrait\n";
     std::cout << "%%Creator: Filterimage -tops\n";
     std::cout << "%%CreationDate: " << get_current_datetime() << "\n";
-    std::cout << "%%For: " << get_user_name() << "\n";
     std::cout << "%%LanguageLevel: 1\n";
     std::cout << "%%EndComments\n";
     if (1) {

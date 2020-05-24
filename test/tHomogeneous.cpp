@@ -17,10 +17,7 @@ int main() {
         const Homogeneous h1(1.f, 2.f, 3.f, 4.f); dummy_use(h1);
         const Homogeneous h2(h1); dummy_use(h2);
         const Vec4<float> v(0.f, 0.f, 0.f, 0.f); dummy_use(v);
-#if defined(_MSC_VER) && _MSC_VER<1910
-#else
         const Homogeneous h3 = v; dummy_use(h3);
         const Homogeneous h4 = V(0.f, 0.f, 0.f, 0.f); dummy_use(h4);
-#endif
     }
 }

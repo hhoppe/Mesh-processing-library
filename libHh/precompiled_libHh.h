@@ -1,5 +1,4 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-// #pragma once
 
 // The contents are used for several purposes:
 // (1) With the _MSC_VER compiler,  to build precompiled_libHh.pch during the compilation of precompiled_libHh.cpp

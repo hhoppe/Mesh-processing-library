@@ -33,8 +33,8 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
     int _max_neval {-1};        // -1 is infinity
     int _debug;                 // 0==no_output, 1==show_final, 2==show_each_iteration
     void show_debug(const string& s, int iter, int neval, double f, double magg) {
-        showdf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(),
-               iter, neval, f, magg);
+        showf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(),
+              iter, neval, f, magg);
     }
 // Approach-dependent:
     // Simple version of Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm.

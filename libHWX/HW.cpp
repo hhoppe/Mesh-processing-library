@@ -4,9 +4,8 @@
 #include <cerrno>
 #include <ctime>                // setitimer(), struct itimerval, struct timeval
 #include <csignal>              // signal()
-#include <cstdio>               // perror()
 #include <sys/select.h>         // fd_set, select()
-#include <cstring>              // strlen(), std::memset()
+#include <cstring>              // strlen(), std::memset(), std::strerror()
 
 extern "C" {
 #include <X11/Xos.h>
@@ -414,7 +413,7 @@ bool HW::loop() {
                     continue;
                 }
                 if (errno==EINTR) continue;
-                perror("HW: select");
+                std::cerr << "HW: error in select(): " << std::strerror(errno) << "\n";
                 return true;
             }
             if (_watch_fd0 && FD_ISSET(0, &fdr)) input_received();
@@ -553,7 +552,7 @@ void HW::start_hwkey() {
     ti.it_value = tv;
     ti.it_interval = tv;
     if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
-        perror("HW: setitimer");
+        std::cerr << "HW: setitimer: " << std::strerror(errno) << "\n";
 }
 
 void HW::end_hwkey() {
@@ -564,7 +563,7 @@ void HW::end_hwkey() {
     ti.it_value = tv;
     ti.it_interval = tv;
     if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
-        perror("HW: setitimer2");
+        std::cerr << "HW: setitimer2: " << std::strerror(errno) << "\n";
     // SIGALRM not reset to SIG_DFL just to be sure
     // signal(SIGALRM, SIG_DFL);
 }

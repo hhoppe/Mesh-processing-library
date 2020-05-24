@@ -431,9 +431,6 @@ void my_sleep(double sec);
 // Get number of bytes of available memory (min of free virtual and physical space), or 0 if unavailable.
 size_t available_memory();
 
-// Return user login name.
-string get_user_name();
-
 // Return current directory.
 string get_current_directory();
 
@@ -706,22 +703,10 @@ inline int mod3(int j) {
 }
 
 template<typename Target, typename Source> constexpr Target narrow_cast(Source v) {
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(push)
-#pragma warning(disable:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#pragma warning(disable:6319) // Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects.
-#endif
-    // auto r = static_cast<Target>(v); ASSERTXX(static_cast<Source>(r)==v); return r;
     return (ASSERTXX(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(pop)
-#endif
 }
 
 template<typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
-#if defined(_MSC_VER) && _MSC_VER<1910
-#pragma warning(suppress:4800) // C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
-#endif
     return (assertx(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
 }
 

@@ -3,8 +3,7 @@
 #define MESH_PROCESSING_LIBHH_MATERIALS_H_
 
 #include "Array.h"
-
-#include <cstdio>               // sscanf()
+#include "StringOp.h"
 
 namespace hh {
 
@@ -22,7 +21,8 @@ class Materials {
         assertx(!_matstrings.num());
         int nmaterials; {
             string sline; assertx(my_getline(is, sline));
-            assertx(sscanf(sline.c_str(), "nmaterials=%d", &nmaterials)==1);
+            assertx(remove_at_beginning(sline, "nmaterials="));
+            nmaterials = to_int(sline);
         }
         _matstrings.init(nmaterials);
         for_int(matid, nmaterials) {

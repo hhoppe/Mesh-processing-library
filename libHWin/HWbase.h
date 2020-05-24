@@ -362,7 +362,7 @@ inline bool HWbase::query(const Vec2<int>& yx, string prompt, float& f) {
 inline bool HWbase::query(const Vec2<int>& yx, string prompt, int& i) {
     string s = sform("%d", i);
     bool success = query(yx, std::move(prompt), s);
-    if (success) i = to_int(s.c_str());
+    if (success) i = to_int(s);
     return success;
 }
 

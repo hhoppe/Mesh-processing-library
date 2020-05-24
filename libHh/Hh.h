@@ -380,6 +380,9 @@ unique_ptr<char[]> make_unique_c_string(const char* s);
 // Convert string to integer value, or crash if invalid.
 int to_int(const char* s);
 
+// Convert string to integer value, or crash if invalid.
+inline int to_int(const string& s) { return to_int(s.c_str()); }
+
 // Allocate an aligned memory block (returns nullptr if fails).
 void* aligned_malloc(size_t size, int alignment);
 

@@ -298,7 +298,7 @@ void ReadFiles(bool during_init) {
     for_int(i, g_aargs1.num()) {
         filename = g_aargs1[i];
         if (filename[0]=='+') {
-            add_extra(to_int(filename.substr(1).c_str()));
+            add_extra(to_int(filename.substr(1)));
             continue;
         }
         RFile is(filename);

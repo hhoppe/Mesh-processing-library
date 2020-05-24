@@ -826,7 +826,7 @@ static void show_caption() {
     int loc = -1;
     string s = caption;
     if (s[0]=='-') {
-        loc = to_int(s.c_str());
+        loc = to_int(s);
         if (!contains(s, ' ')) return;
         s.erase(0, s.find(' ')+1);
     }

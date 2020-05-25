@@ -11,17 +11,17 @@
 //  so instead one should adjust project/makefile build settings.
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS // do not suggest use of *_s() secure function calls
+#define _CRT_SECURE_NO_WARNINGS  // do not suggest use of *_s() secure function calls
 #endif
 
 #if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
-#define _SCL_SECURE_NO_WARNINGS // allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*)
+#define _SCL_SECURE_NO_WARNINGS  // allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*)
 #endif
 
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 // "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__
 // For <windows.h>; e.g. 0x0501==WinXP; 0x0601==WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__
-#define _WIN32_WINNT 0x0603 // ==_WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHWin/HW.cpp
+#define _WIN32_WINNT 0x0603  // ==_WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHWin/HW.cpp
 #endif
 
 #if defined(_MSC_VER)
@@ -32,7 +32,7 @@
 #pragma warning(disable:4592)   // bug in VS2015 update 1; http://stackoverflow.com/questions/34013930/
 // Workarounds for warning 4702 (unreachable code) (pragma would have to appear before function body):
 //  for (; ; ++iter) { f(); break; }    // replace "break;" by "if (1) break;"
-//  { assertnever("abandonned"); f(); } // use "assertnever_ret(..);"
+//  { assertnever("abandonned"); f(); }  // use "assertnever_ret(..);"
 // Code analysis
 #pragma warning(disable:6237)   // (<zero> && <expression>) is always zero
 #pragma warning(disable:6286)   // (<non-zero constant> || <expression>) is always a non-zero constant
@@ -81,7 +81,7 @@
 
 // *** Language portability
 
-#define HH_EAT_SEMICOLON static_assert(true, "") // redundant declaration to swallow subsequent semicolon
+#define HH_EAT_SEMICOLON static_assert(true, "")  // redundant declaration to swallow subsequent semicolon
 
 // Safest to indirect once through these.  http://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
 #define HH_STR(e) #e
@@ -92,7 +92,7 @@
 #if defined(_MSC_VER)           // _Pragma() is still not defined in Visual Studio 2017 (_MSC_VER==1910)
 #define HH_PRAGMA(...) __pragma(__VA_ARGS__)
 #else
-#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__)) // C++11; http://stackoverflow.com/a/15864723
+#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; http://stackoverflow.com/a/15864723
 #endif
 
 #if defined(_MSC_VER)
@@ -102,13 +102,13 @@
 #endif
 
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
-#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring)) // e.g.: HH_REFERENCE_LIB("user32.lib");
+#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // e.g.: HH_REFERENCE_LIB("user32.lib");
 #else
 #define HH_REFERENCE_LIB(libstring) HH_EAT_SEMICOLON
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define HH_ATTRIBUTE(...) __attribute__((__VA_ARGS__)) // see also __declspec(x)
+#define HH_ATTRIBUTE(...) __attribute__((__VA_ARGS__))  // see also __declspec(x)
 #else
 #define HH_ATTRIBUTE(...) [[__VA_ARGS__]]   // C++11
 #endif
@@ -130,7 +130,7 @@
 #endif
 
 #if defined(_WIN32)
-#define HH_NORETURN __declspec(noreturn) // it gets converted to __attribute__((noreturn)) under __GNUC__
+#define HH_NORETURN __declspec(noreturn)  // it gets converted to __attribute__((noreturn)) under __GNUC__
 #else
 #define HH_NORETURN HH_ATTRIBUTE(noreturn)
 #endif
@@ -147,7 +147,7 @@
 #define HH_UNUSED
 #endif
 
-#define HH_ID(x) HH_CAT(_hh_id_, x) // private identifier in a macro definition
+#define HH_ID(x) HH_CAT(_hh_id_, x)  // private identifier in a macro definition
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
 // *** Check for identifier conflicts
@@ -163,11 +163,11 @@ using namespace hh;
 
 // *** Syntactic sugar
 
-#define for_T_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
-#define for_T(T, i, lb, ub) for_T_aux(T, i, lb, ub, HH_UNIQUE_ID(u))
-#define for_int(i, ub)      for_T(int, i, 0, ub)
-#define for_intL(i, lb, ub) for_T(int, i, lb, ub)
-#define for_size_t(i, ub)   for_T(std::size_t, i, 0, ub)
+#define for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
+#define for_T(T, i, start, stop) for_T_aux(T, i, start, stop, HH_UNIQUE_ID(stop_var))
+#define for_int(i, stop) for_T(int, i, 0, stop)
+#define for_intL(i, start, stop) for_T(int, i, start, stop)
+#define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
 
 // *** Begin namespace
 
@@ -180,7 +180,7 @@ using std::size_t;                             // (it seems to be already define
 using std::uint8_t;
 using std::unique_ptr; using std::make_unique;
 using std::min; using std::max;
-using std::abs; // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5)==1 is scary).
+using std::abs;  // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5)==1 is scary).
 // Use the following templated functions; else defined only for double (performance overhead).
 using std::sqrt; using std::pow; using std::exp; using std::log; using std::log2; using std::log10;
 using std::sin; using std::cos; using std::tan; using std::asin; using std::acos; using std::atan;
@@ -224,7 +224,7 @@ template<int> struct Specialize { };
 #if defined(HH_DEBUG)
 constexpr bool k_debug = true;  // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
 #else
-constexpr bool k_debug = false; // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
+constexpr bool k_debug = false;  // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
 #endif
 
 extern int g_unoptimized_zero;  // always zero, but the compiler does not know; used to disable optimizations.
@@ -235,7 +235,7 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define assertnever(...) hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL))
 
 // Always abort; omit warning about any subsequent unreachable code.
-#define assertnever_ret(...) (hh::g_unoptimized_zero ? void() :                 \
+#define assertnever_ret(...) (hh::g_unoptimized_zero ? void() :                                     \
                               hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL)))
 
 // if !expr, exit program (abort); otherwise return expr.
@@ -252,7 +252,7 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 
 #if defined(HH_DEBUG)
 #define ASSERTX(...) assertx(__VA_ARGS__)  // In release, do not evaluate expression
-#define ASSERTXX(...) assertx(__VA_ARGS__) // In release, do not even see expression -- maximum optimization
+#define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i>=0 && i<n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
 // Added "0" for clang use in constexpr
@@ -267,8 +267,8 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 // showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
 // os << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
 // SHOW(x, y, x*y);
-// SHOW_PRECISE(point+vector); // show with greater precision
-// SHOWL; // show current file and line
+// SHOW_PRECISE(point+vector);  // show with greater precision
+// SHOWL;  // show current file and line
 
 // Write formatted string to std::cerr.
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...);
@@ -322,7 +322,7 @@ template<typename T> constexpr bool has_ostream_eol() {
 // *** Constants
 
 constexpr float    BIGFLOAT = 1e30f;                  // note: different from FLT_MAX or (INFINITY==HUGE_VALF)
-constexpr float    TAU      = 6.2831853071795864769f; // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+constexpr float    TAU      = 6.2831853071795864769f;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
 constexpr double   D_TAU    = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
 // #undef PI  // instead, use TAU/2
 
@@ -450,10 +450,10 @@ template<typename T> constexpr T clamp(const T& v, const T& a, const T& b);
 template<typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
 
 // Linearly interpolate between two values (f==1.f returns v1; f==0.f returns v2).
-inline constexpr float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*v2; } // or v2 + (v1-v2)*f
+inline constexpr float interp(float v1, float v2, float f = 0.5f) { return f*v1 + (1.f-f)*v2; }  // or v2 + (v1-v2)*f
 
 // Linearly interpolate between two values (f==1. returns v1; f==0. returns v2).
-inline constexpr double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; } // or v2 + (v1-v2)*f
+inline constexpr double interp(double v1, double v2, double f = 0.5) { return f*v1 + (1.-f)*v2; }  // or v2 + (v1-v2)*f
 
 // Returns v clamped to range [0, 255].
 inline uint8_t clamp_to_uint8(int v);
@@ -466,7 +466,7 @@ template<typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v
 
 // Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
 template<typename T> void my_zero(T& e) {
-    // e = T{}; // bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4
+    // e = T{};  // bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4
     static constexpr T k_dummy_zero_object{};
     e = k_dummy_zero_object;
 }
@@ -499,11 +499,11 @@ template<typename T> T& as_lvalue(T&& e) { return e; }
 // Higher-precision type to represent the sum of a set of elements.
 template<typename T> using sum_type_t = typename details::sum_type<T>::type;
 
-// Range of integral elements as in Python range(ub):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
-template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub); }
+// Range of integers as in Python range(stop):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+template<typename T> details::Range<T> range(T stop) { return details::Range<T>(stop); }
 
-// Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
-template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
+// Range of integers as in Python range(start, stop):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
+template<typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
 
 //----------------------------------------------------------------------------
 
@@ -517,7 +517,7 @@ static HH_UNUSED int dummy_init_hh = hh_init();
 #endif
 
 // Evaluates to false in boolean context for use in macro as:
-// "if (details::false_capture<int> i = ub) { HH_UNREACHABLE; } else".
+// "if (details::false_capture<int> i = stop) { HH_UNREACHABLE; } else".
 template<typename T> struct false_capture {
     template<typename... Args> false_capture(Args&&... args) : _e(args...) { }
     operator bool() const { return false; }
@@ -550,9 +550,9 @@ void show_cerr_and_debug(const string& s);
 
 #define HH_SHOW_0(sargs, prec, arg1) hh::details::SHOW_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
-#define HH_SHOW_1(sargs, prec, ...) do { std::ostringstream HH_ID(oss);            \
-        if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-        HH_ID(oss) << HH_MAP_REDUCE((HH_SHOWM_,  << " " <<,  __VA_ARGS__)) << "\n"; \
+#define HH_SHOW_1(sargs, prec, ...) do { std::ostringstream HH_ID(oss);                 \
+        if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10);      \
+        HH_ID(oss) << HH_MAP_REDUCE((HH_SHOWM_,  << " " <<,  __VA_ARGS__)) << "\n";     \
         hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str()); } while (false)
 
 #define HH_SHOWM_(x) (#x[0]=='"' ? "" : #x "=") << (x)
@@ -575,9 +575,9 @@ template<typename T> struct TypeNameAux {
     // http://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
     static string name() { return extract_function_type_name(__PRETTY_FUNCTION__); }
 #elif defined(_MSC_VER)
-    static string name() { return extract_function_type_name(__FUNCTION__); } // also __FUNCSIG__, __FUNCDNAME__
+    static string name() { return extract_function_type_name(__FUNCTION__); }  // also __FUNCSIG__, __FUNCDNAME__
 #else
-    static string name() { return extract_function_type_name(__func__); } // C++11 (C99); unadorned so likely to fail!
+    static string name() { return extract_function_type_name(__func__); }  // C++11 (C99); unadorned so likely to fail!
 #endif
 };
 
@@ -588,9 +588,9 @@ template<typename T> struct sum_type {
                                                                           uint64_t> > >;
 };
 
-// Range of integral elements defined as in Python range(lb, ub), where step is 1 and ub is not included.
+// Range of integral elements defined as in Python range(start, stop), where step is 1 and stop is not included.
 template<typename T> class Range {
-    static_assert(std::is_integral<T>::value, ""); // must have exact arithmetic for equality testing
+    static_assert(std::is_integral<T>::value, "");  // must have exact arithmetic for equality testing
     class Iterator {
         using type = Iterator;
      public:
@@ -599,7 +599,7 @@ template<typename T> class Range {
         using pointer = T*;
         using difference_type = int64_t;
         using iterator_category = std::random_access_iterator_tag;
-        Iterator(T lb, T ub)                    : _v(lb), _ub(ub) { }
+        Iterator(T start, T stop)               : _v(start), _stop(stop) { }
         Iterator(const type& iter)              = default;
         bool operator==(const type& rhs) const  { return _v==rhs._v; }
         bool operator!=(const type& rhs) const  { return !(*this==rhs); }
@@ -608,31 +608,31 @@ template<typename T> class Range {
         bool operator>(const type& rhs) const   { return _v>rhs._v; }
         bool operator>=(const type& rhs) const  { return _v>=rhs._v; }
         difference_type operator-(const type& rhs) const { return difference_type(_v) - rhs._v; }
-        type& operator+=(difference_type n)     { ASSERTXX(_v<_ub); _v += n; ASSERTXX(_v<=_ub); return *this; }
-        T operator*() const                     { ASSERTXX(_v<_ub); return _v; }
-        type& operator++()                      { ASSERTXX(_v<_ub); _v += T{1}; return *this; }
-        T operator[](size_t i) const            { ASSERTXX(T(_v+i)<_ub); return T(_v+i); }
+        type& operator+=(difference_type n)     { ASSERTXX(_v<_stop); _v += n; ASSERTXX(_v<=_stop); return *this; }
+        T operator*() const                     { ASSERTXX(_v<_stop); return _v; }
+        type& operator++()                      { ASSERTXX(_v<_stop); _v += T{1}; return *this; }
+        T operator[](size_t i) const            { ASSERTXX(T(_v+i)<_stop); return T(_v+i); }
      private:
-        T _v, _ub;
+        T _v, _stop;
     };
  public:
     using value_type = T;
     using iterator = Iterator;
     using const_iterator = Iterator;
     using size_type = size_t;
-    explicit Range(T ub)                        : Range(T{0}, ub) { }
-    Range(T lb, T ub)                           : _lb(min(lb, ub)), _ub(ub) { }
-    Iterator begin() const                      { return Iterator(_lb, _ub); }
-    Iterator end() const                        { return Iterator(_ub, _ub); }
-    Iterator cbegin() const                     { return Iterator(_lb, _ub); }
-    Iterator cend() const                       { return Iterator(_ub, _ub); }
-    size_t size() const                         { return _ub-_lb; }
-    bool empty() const                          { return _ub==_lb; }
+    explicit Range(T stop)                      : Range(T{0}, stop) { }
+    Range(T start, T stop)                      : _start(min(start, stop)), _stop(stop) { }
+    Iterator begin() const                      { return Iterator(_start, _stop); }
+    Iterator end() const                        { return Iterator(_stop, _stop); }
+    Iterator cbegin() const                     { return Iterator(_start, _stop); }
+    Iterator cend() const                       { return Iterator(_stop, _stop); }
+    size_t size() const                         { return _stop-_start; }
+    bool empty() const                          { return _stop==_start; }
  private:
-    T _lb, _ub;
+    T _start, _stop;
 };
 
-} // namespace details
+}  // namespace details
 
 struct noncopyable {
  protected:
@@ -687,7 +687,7 @@ inline int mod3(int j) {
     static const int ar_mod3[6] = { 0, 1, 2, 0, 1, 2 };
     ASSERTX(j>=0 && j<6);
 #if defined(_MSC_VER)
-    #pragma warning(suppress:6385)
+#pragma warning(suppress:6385)
 #endif
     return ar_mod3[j];
 }
@@ -700,6 +700,6 @@ template<typename Target, typename Source> constexpr Target assert_narrow_cast(S
     return (assertx(static_cast<Source>(static_cast<Target>(v))==v), static_cast<Target>(v));
 }
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_HH_H_
+#endif  // MESH_PROCESSING_LIBHH_HH_H_

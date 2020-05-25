@@ -14,7 +14,7 @@
 #include <sys/select.h>         // select(), fd_set
 #endif
 
-#if defined(_WIN32) && !defined(EWOULDBLOCK) // undefined in __MINGW32__; was undefined until Visual Studio 2010
+#if defined(_WIN32) && !defined(EWOULDBLOCK)  // undefined in __MINGW32__; was undefined until Visual Studio 2010
 #define EWOULDBLOCK EAGAIN
 #endif
 

@@ -15,16 +15,17 @@
 
 #if 0
 {
-    Vec2<int> dims {ny, nx};
-    Multigrid<2,float> multigrid(dims);
-    fill(multigrid.initial_estimate(), 0.f);
-    multigrid.set_desired_mean(mean(value));
-    setup_rhs(grid_orig, multigrid.rhs());
-    if (optional) for (const auto& u : range(dims)) multigrid.initial_estimate()[u] = some_value;
-    // Grid<2,float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig); // for convergence analysis
-    multigrid.solve();
-    CGridView<2,float> grid_result = multigrid.result();
-    if (1) HH_RSTAT(Sresult, grid_result);
+  Vec2<int> dims{ny, nx};
+  Multigrid<2, float> multigrid(dims);
+  fill(multigrid.initial_estimate(), 0.f);
+  multigrid.set_desired_mean(mean(value));
+  setup_rhs(grid_orig, multigrid.rhs());
+  if (optional)
+    for (const auto& u : range(dims)) multigrid.initial_estimate()[u] = some_value;
+  // Grid<2,float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig); // for convergence analysis
+  multigrid.solve();
+  CGridView<2, float> grid_result = multigrid.result();
+  if (1) HH_RSTAT(Sresult, grid_result);
 }
 #endif
 
@@ -331,8 +332,7 @@ class Multigrid : noncopyable {
         const Vec<int,D> ar_interior_offsets = generate_interior_offsets(dims);
         auto func_update_interior = [&](size_t i) {
             // added "if (1)" to avoid warnings about unreachable code
-            // added "true &&" for mingw32 where variable reference leads to instantiation even when "static const"
-            if (1) ASSERTX(true && b_default_metric);
+            if (1) ASSERTX(b_default_metric);
             // ++g_nfast;
             T vnei; my_zero(vnei);
             if (0) {

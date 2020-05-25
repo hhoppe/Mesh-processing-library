@@ -6,17 +6,20 @@
 
 #if 0
 {
-    // critical section
-    parallel_for_each(range(100), [&](const int i) {
-        something();
-        HH_LOCK { something_synchronized(): }
-    });
-    // alternate
-    std::mutex g_mutex;
-    parallel_for_each(range(100), [&](const int i) {
-        something();
-        { std::lock_guard<std::mutex> lg(g_mutex); something_synchronized(); }
-    });
+  // critical section
+  parallel_for_each(range(100), [&](const int i) {
+    something();
+    HH_LOCK { something_synchronized() : }
+  });
+  // alternate
+  std::mutex g_mutex;
+  parallel_for_each(range(100), [&](const int i) {
+    something();
+    {
+      std::lock_guard<std::mutex> lg(g_mutex);
+      something_synchronized();
+    }
+  });
 }
 #endif
 

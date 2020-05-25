@@ -26,7 +26,7 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
     void set_max_neval(int max_neval)           { _max_neval = max_neval; } // default is -1 which signifies infinity
     bool solve()                                { return solve_i(); }       // ret: success
  private:
-// Approach-independent:
+    // ** Approach-independent:
     ArrayView<double> _x;       // view of user-supplied vector; stores initial estimate and final solution
     const int _n;               // _x.num()
     const Eval _eval;           // callback function to evaluate both the value f and gradient _grad at _x
@@ -36,7 +36,8 @@ template<typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimizat
         showf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(),
               iter, neval, f, magg);
     }
-// Approach-dependent:
+    
+    // ** Approach-dependent:
     // Simple version of Limited-memory Broyden-Fletcher-Goldfarb-Shanno algorithm.
     // See: https://en.wikipedia.org/wiki/Limited-memory_BFGS
     // Liu, D. C.; Nocedal, J. (1989). "On the limited memory method for large scale optimization".

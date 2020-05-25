@@ -1,3 +1,5 @@
+args.get_string() = string
+args.get_int() = 3
 ****
 ArView(argv, argc) = Array<const char*>(1) {
   tArgs

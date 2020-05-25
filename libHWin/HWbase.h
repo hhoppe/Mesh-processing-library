@@ -29,19 +29,22 @@ class HWbase : noncopyable {
     HWbase()                                    { }
     virtual ~HWbase()                           { }
     bool init(Array<string>& aargs)             { return init_aux(aargs); } // ret: success
-// Callbacks
+
+    // Callbacks:
     virtual bool key_press(string s) = 0;                                  // ret: handled
     virtual void button_press(int butnum, bool pressed, const Vec2<int>& yx) = 0; // 1=L, 2=M, 3=R, 4=B, 5=F
     virtual void wheel_turn(float v)            { dummy_use(v); } // abs(v)==1.f for one click turn
     virtual void draw_window(const Vec2<int>& dims) = 0; // must late-call clear_window() before drawing
     virtual void drag_and_drop(CArrayView<string> filenames) { dummy_use(filenames); }
     virtual void input_received()               { }
-// call after init() but before open()
+
+    // call after init() but before open():
     void set_default_background(string s)       { assertx(_state==EState::init); _default_background = std::move(s); }
     void set_default_foreground(string s)       { assertx(_state==EState::init); _default_foreground = std::move(s); }
     void set_default_geometry(string s)         { assertx(_state==EState::init); _default_geometry = std::move(s); }
     virtual void set_double_buffering(bool newstate) = 0; // (also allowed after open() in HWX without HH_OGLX)
-// call anytime after init()
+
+    // call anytime after init():
     virtual void set_window_title(string s) = 0; // set text for window title bar
     virtual void beep() = 0;
     void watch_fd0(bool b)                      { assertx(_state!=EState::uninit); _watch_fd0 = b; }
@@ -49,7 +52,8 @@ class HWbase : noncopyable {
     void redraw_now();
     void quit()                                 { _update = EUpdate::quit; }
     virtual void open() = 0;
-// call after open()
+
+    // call after open():
     virtual bool suggests_stop() = 0;            // ret: HW requests program to stop drawing
     virtual bool get_pointer(Vec2<int>& yx) = 0; // ret success
     enum class EModifier { shift, control, alt };
@@ -71,22 +75,26 @@ class HWbase : noncopyable {
     virtual bool is_fullscreen() = 0;
     virtual void make_fullscreen(bool b) = 0;            // make the window fullscreen if b
     virtual void grab_focus()                   { }
-// call within draw_window()
+
+    // call within draw_window():
     virtual void clear_window() = 0;
     void process_keystring(string& keystring); // makes calls to key_press() and clears keystring
-// query user for values
+
+    // query user for values:
     bool query(const Vec2<int>& yx, string prompt, string& buffer); // ret: true with <enter>, false with <esc>
     bool query(const Vec2<int>& yx, string prompt, float& f);
     bool query(const Vec2<int>& yx, string prompt, int& i);
     virtual Array<string> query_open_filenames(const string& hint_filename);
     virtual string query_save_filename(const string& hint_filename, bool force = false); // ret: "" if canceled
     bool within_query() const                   { return _within_query; }
-// buffering
+
+    // buffering:
     virtual void hard_flush() = 0;         // synchronize screen
     virtual void begin_draw_visible() = 0; // force update to visible buffer
     virtual void end_draw_visible() = 0;
     virtual void wake_up()                      { } // called from an asynchronous client thread to force redraw
-// clipboard
+
+    // clipboard:
     virtual bool copy_image_to_clipboard(const Image&) { Warning("clipboard not implemented"); return false; }
     virtual bool copy_clipboard_to_image(Image&) { Warning("clipboard not implemented"); return false; }
  private:
@@ -537,9 +545,6 @@ inline void HWbase::clear_window_ogl() {
 inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
     glListBase(_listbase_font);
     USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC); // not supported on Remote Desktop
-#if defined(__CYGWIN32__)
-    glWindowPos2i = nullptr;    // broken on cygwin32 (text appears at lower right on first frame only)
-#endif
     if (glWindowPos2i) {
         glWindowPos2i(yx[1], _win_dims[0]-yx[0]-_font_dims[0]); // reverse y; not clip-tested, so raster position valid
         glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));

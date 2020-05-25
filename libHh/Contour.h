@@ -12,22 +12,23 @@
 
 #if 0
 {
-    auto func_eval = [](const Vec3<float>& p) {
-        return p[0]<.3f ? k_Contour_undefined : dist(p, Point(.6f, .6f, .6f))-.4f;
+  auto func_eval = [](const Vec3<float>& p) {
+    return p[0] < .3f ? k_Contour_undefined : dist(p, Point(.6f, .6f, .6f)) - .4f;
+  };
+  if (1) {
+    GMesh mesh;
+    Contour3DMesh<decltype(func_eval)> contour(50, &mesh, func_eval);
+    contour.march_near(Point(.9f, .6f, .6f));
+    mesh.write(std::cout);
+  } else {
+    struct func_contour {
+      void operator()(const Array<Vec3<float>>&){...};
     };
-    if (1) {
-        GMesh mesh; {
-            Contour3DMesh<decltype(func_eval)> contour(50, &mesh, func_eval);
-            contour.march_near(Point(.9f, .6f, .6f));
-        }
-        mesh.write(std::cout);
-    } else {
-        struct func_contour { void operator()(const Array<Vec3<float>>&) { ... }; };
-        auto func_border = [](const Array<Vec3<float>>&) { ... };
-        Contour3D<decltype(func_eval), func_contour, decltype(func_border)>
-            contour(50, func_eval, func_contour(), func_border);
-        contour.march_from(Point(.9f, .6f, .6f));
-    }
+    auto func_border = [](const Array<Vec3<float>>&) { ... };
+    Contour3D<decltype(func_eval), func_contour, decltype(func_border)> contour(50, func_eval, func_contour(),
+                                                                                func_border);
+    contour.march_from(Point(.9f, .6f, .6f));
+  }
 }
 #endif
 

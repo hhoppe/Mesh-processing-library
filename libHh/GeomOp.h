@@ -7,8 +7,8 @@
 
 #if 0
 {
-    Vec3<float> ang = frame_to_euler_angles(f);
-    euler_angles_to_frame(ang, f);
+  Vec3<float> ang = frame_to_euler_angles(f);
+  euler_angles_to_frame(ang, f);
 }
 #endif
 

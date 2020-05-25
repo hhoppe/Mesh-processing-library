@@ -347,7 +347,7 @@ HH_NORETURN void my_terminate_handler () {
 #if defined(__GNUC__) || defined(__clang__)
     // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
     // http://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
-    // This works on mingw, mingw32, clang
+    // This works on mingw, clang.
     // On cygwin, my_terminate_handler() is never called (bug).  http://stackoverflow.com/questions/24402412
     // On win, SetUnhandledExceptionFilter(my_top_level_exception_filter) is called instead.
     try { throw; }
@@ -698,14 +698,14 @@ bool set_fd_no_delay(int fd, bool nodelay) {
 
 static string cleanup_type_name(string s) {
     // SHOW(s);
-// *** general
+    // ** general:
     s = replace_all(s, "class ", "");
     s = replace_all(s, "struct ", "");
     s = replace_all(s, " >", ">");
     s = replace_all(s, ", ", ",");
     s = replace_all(s, " *", "*");
     s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
-// *** win
+    // ** win:
     s = replace_all(s, "std::basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
     // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
     // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
@@ -713,7 +713,7 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, "* __ptr64", "*");
     s = replace_all(s, "__int64", "int64");
     s = replace_all(s, "char const", "const char");
-// *** gcc
+    // ** gcc:
     s = replace_all(s, "std::__cxx11::", "std::"); // GNUC 5.2; e.g. std::__cx11::string
     s = replace_all(s, "std::basic_string<char>", "std::string");
     s = replace_all(s, ",std::hash<int>,std::equal_to<int>>", ">");
@@ -721,23 +721,23 @@ static string cleanup_type_name(string s) {
     s = replace_all(s, "long long", "int64");
     s = replace_all(s, "int64 int", "int64");
     s = replace_all(s, "int64 unsigned int", "unsigned int64");
-// *** clang
+    // ** clang:
     s = replace_all(s, "hh::Map<string,string>", "hh::Map<std::string,std::string>");
-// *** Apple clang
+    // ** Apple clang:
     s = replace_all(s, "std::__1::basic_string<char>", "std::string");
-// *** cygwin 64-bit
+    // ** cygwin 64-bit:
     if (sizeof(long)==8) {              // defined(__LP64__)
         s = replace_all(s, "long unsigned int", "unsigned int64");
         s = replace_all(s, "long int", "int64");
     }
-// *** Google
+    // ** Google:
     s = replace_all(s, "basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
-// *** Google Forge
+    // ** Google Forge:
     if (sizeof(long)==8) {
         s = replace_all(s, "unsigned long", "unsigned int64");
         s = replace_all(s, "long", "int64");
     }
-// *** all
+    // ** all:
     if (0) {
         s = replace_all(s, "std::", "");
         s = replace_all(s, "hh::", "");

@@ -117,7 +117,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
 
     res.clear();
     // commented primarily for unify record reasons
-//    res._material_strings = _material_strings;
+    // res._material_strings = _material_strings;
 
     // note: it cycles through lower dimension parents first
     ForSCSimplexStar(s, curr) {

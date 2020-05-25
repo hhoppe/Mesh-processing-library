@@ -6,11 +6,12 @@
 
 #if 0
 {
-    // atomic operation
-    Array<float> ar(100, 1.f);
-    parallel_for_each(range(1000), [&](const int iter) {
-        int i = func(iter); atomic_operate(ar[i], [](float v) { return v*.5f+.33f; });
-    });
+  // atomic operation
+  Array<float> ar(100, 1.f);
+  parallel_for_each(range(1000), [&](const int iter) {
+    int i = func(iter);
+    atomic_operate(ar[i], [](float v) { return v * .5f + .33f; });
+  });
 }
 #endif
 

@@ -1295,12 +1295,12 @@ bool DerivedHW::key_press(string skey) {
             int ob = keycode-'1';
             if (ob<getobnum()) {
                 func_switch_ob(ob);
-            } else beep();
+            } else { beep(); }
         } else if (skey.size()!=1) {
             recognized = false;
         } else {
             switch (keycode) {
-// Object/play controls
+                // ** Object/play controls
              case 'r': {        // reset sliders or reset all parameters
                  if (g_use_sliders) {
                      reset_sliders();
@@ -1453,7 +1453,8 @@ bool DerivedHW::key_press(string skey) {
                  }
                  break;
              }
-// Window controls
+                
+                // ** Window controls:
              case ':': {        // fit anisotropically
                  if (!g_fit_view_to_window) {
                      g_fit_view_to_window = true;
@@ -1464,7 +1465,7 @@ bool DerivedHW::key_press(string skey) {
                  } else if (g_fit==EFit::anisotropic) {
                      g_fit = EFit::isotropic;
                      message("View scaling set to isotropic");
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  break;
              }
              case 'w': {        // window fit
@@ -1526,7 +1527,8 @@ bool DerivedHW::key_press(string skey) {
                  message(string() + "Reconstruction kernel set to: " + k_kernel_string[int(g_kernel)]);
                  break;
              }
-// Other
+                
+                // ** Other:
              case 'O'-64: {     // C-o: open an existing video/image file
                  string cur_filename = (g_cob>=0 && !file_requires_pipe(getob()._filename) ? getob()._filename :
                                         get_current_directory() + '/');
@@ -1588,7 +1590,7 @@ bool DerivedHW::key_press(string skey) {
                          ob._video.write_file(filename);
                      } else if (ob._video_nv12.size()) {
                          ob._video_nv12.write_file(filename, ob._video.attrib());
-                     } else assertnever("");
+                     } else { assertnever(""); }
                      message("Done writing '" + get_path_tail(filename) + "'", 4.);
                      ob._unsaved = false;
                      ob._filename = filename;
@@ -1932,7 +1934,7 @@ bool DerivedHW::key_press(string skey) {
                  } else if (ob._video_nv12.size()) {
                      nvideo_nv12 = VideoNv12(crop(ob._video_nv12.get_Y(),  V(trimbeg, 0, 0), V(trimend, 0, 0)),
                                              crop(ob._video_nv12.get_UV(), V(trimbeg, 0, 0), V(trimend, 0, 0)));
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  const int new_cur_frame = g_framenum-trimbeg;
                  unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                                                 append_to_filename(ob._filename, "_trim"));
@@ -1964,7 +1966,7 @@ bool DerivedHW::key_press(string skey) {
                      nUV.slice(0, ob._framein).assign(oUV.slice(0, ob._framein));
                      nYY.slice(ob._framein, ndims[0]).assign(oYY.slice(ob._frameou1, ob._dims[0]));
                      nUV.slice(ob._framein, ndims[0]).assign(oUV.slice(ob._frameou1, ob._dims[0]));
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  const int new_cur_frame = (g_framenum<ob._framein ? int(g_framenum) :
                                             g_framenum>=ob._frameou1 ? g_framenum-ncut :
                                             ob._framein);
@@ -1991,7 +1993,7 @@ bool DerivedHW::key_press(string skey) {
                                               crop(ob._video_nv12.get_UV(), V(0, 0, 0), V(nf-g_framenum, 0, 0)));
                      nvideo2_nv12 = VideoNv12(crop(ob._video_nv12.get_Y(),  V(int(g_framenum), 0, 0), V(0, 0, 0)),
                                               crop(ob._video_nv12.get_UV(), V(int(g_framenum), 0, 0), V(0, 0, 0)));
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  unique_ptr<Object> newob1 = make_unique<Object>(ob, std::move(nvideo1), std::move(nvideo1_nv12),
                                                                  append_to_filename(ob._filename, "_split1"));
                  newob1->_video.attrib().audio.clear(); // TODO
@@ -2028,7 +2030,7 @@ bool DerivedHW::key_press(string skey) {
                      nvideo_nv12.get_Y().slice(ob1.nframes(), ndims[0]).assign(ob2._video_nv12.get_Y());
                      nvideo_nv12.get_UV().slice(0, ob1.nframes()).assign(ob1._video_nv12.get_UV());
                      nvideo_nv12.get_UV().slice(ob1.nframes(), ndims[0]).assign(ob2._video_nv12.get_UV());
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  const int new_cur_frame = ob1.nframes()+g_framenum;
                  const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
                  unique_ptr<Object> newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
@@ -2084,7 +2086,7 @@ bool DerivedHW::key_press(string skey) {
                                                                           ob2._video_nv12.get_UV().flat(i)[c]);
                          }
                      });
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  const int new_cur_frame = g_framenum;
                  const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
                  unique_ptr<Object> newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
@@ -2110,7 +2112,7 @@ bool DerivedHW::key_press(string skey) {
                          nvideo_nv12.get_Y()[f].assign(ob._video_nv12.get_Y()[ob.nframes()-1-f]);
                          nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[ob.nframes()-1-f]);
                      });
-                 } else assertnever("");
+                 } else { assertnever(""); }
                  const int new_cur_frame = g_framenum;
                  unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                                                 append_to_filename(ob._filename, "_mirror"));
@@ -2491,7 +2493,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
                  }
                  g_selected.button_active = 0;
                  app_set_window_title();
-             } else beep();
+             } else { beep(); }
              break;
          }
          case 2: {
@@ -2981,9 +2983,7 @@ void render_image() {
                     _exit(1);
                 };
                 auto func_compile_shader = [&](GLuint shader_id, string shader_string, GLenum shaderType) {
-                    glShaderSource(shader_id, 1,
-                                   // const_cast from "const char*const*" necessary on cygwin32 gcc4.7
-                                   const_cast<const char**>(ArView(shader_string.c_str()).data()),
+                    glShaderSource(shader_id, 1, ArView(shader_string.c_str()).data(),
                                    ArView(GLint(shader_string.size())).data());
                     glCompileShader(shader_id);
                     GLint params; glGetShaderiv(shader_id, GL_COMPILE_STATUS, &params);
@@ -3622,7 +3622,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3,Pixel> ovide
                 for_int(f, onf) {
                     integrally_downscale_Nv12_to_Image(ovideo_nv12[f], hvideo1[f]);
                 }
-            } else assertnever("");
+            } else { assertnever(""); }
         }
         hvideo.init(concat(V(hnf), hdims));
         {
@@ -4109,7 +4109,7 @@ void do_zonal(Args& args) {
 void DerivedHW::drag_and_drop(CArrayView<string> filenames) {
     if (g_verbose>=1) SHOW(filenames);
     if (filenames.num()==1 && ends_with(filenames[0], ".vlp")) {
-        { Args args{filenames[0]}; do_vlp(args); }
+        do_vlp(as_lvalue(Args{filenames[0]}));
     } else {
         int nread = 0;
         for (auto& filename : filenames) {

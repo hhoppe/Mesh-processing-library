@@ -9,17 +9,27 @@
 
 #if 0
 {
-    procedure() {
-        HH_SIMPLE_TIMER(_proc);                               // timing for entire procedure
-        if (something) { HH_SIMPLE_TIMER(__step1); step1(); } // sub-timings for substeps
-        if (1) { HH_SIMPLE_TIMER(__step2); step2(); }
-        double tot_step2 = 0.;
-        for (;;) {
-            step1();
-            { SimpleTimer timer; step2(); tot_step2 += timer.elapsed(); }
-        }
-        std::cout << tot_step2 << "\n";
+  procedure() {
+    HH_SIMPLE_TIMER(_proc);  // timing for entire procedure
+    if (something) {
+      HH_SIMPLE_TIMER(__step1);
+      step1();
+    }  // sub-timings for substeps
+    if (1) {
+      HH_SIMPLE_TIMER(__step2);
+      step2();
     }
+    double tot_step2 = 0.;
+    for (;;) {
+      step1();
+      {
+        SimpleTimer timer;
+        step2();
+        tot_step2 += timer.elapsed();
+      }
+    }
+    std::cout << tot_step2 << "\n";
+  }
 }
 #endif
 

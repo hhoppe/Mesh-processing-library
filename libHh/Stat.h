@@ -7,10 +7,13 @@
 
 #if 0
 {
-    { HH_STAT(Svdeg); for_int(i, 10) Svdeg.enter(vdeg[i]); }
-    HH_SSTAT(Svanum, va.num());
-    SHOW(Stat(V(1., 4., 5., 6.)).sdv());
-    // getenv_bool("STAT_FILES") -> store all data values in files.
+  {
+    HH_STAT(Svdeg);
+    for_int(i, 10) Svdeg.enter(vdeg[i]);
+  }
+  HH_SSTAT(Svanum, va.num());
+  SHOW(Stat(V(1., 4., 5., 6.)).sdv());
+  // getenv_bool("STAT_FILES") -> store all data values in files.
 }
 #endif
 

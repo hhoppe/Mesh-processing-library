@@ -13,14 +13,17 @@ template<typename T, int n> class Qem {
     void set_zero();
     void add(const Qem<T,n>& qem);
     void scale(float f);
-// Create
+
+    // Create:
     void set_d2_from_plane(const float* dir, float d); // dir*p+d==0 !
     void set_d2_from_point(const float* p0);
     void set_distance_gh98(const float* p0, const float* p1, const float* p2);
     void set_distance_hh99(const float* p0, const float* p1, const float* p2);
-// Evaluate
+
+    // Evaluate:
     float evaluate(const float* p) const;
-// Find min.  All these return "success"; minp unchanged if unsuccessful
+
+    // Find min.  All these return "success"; minp unchanged if unsuccessful:
     // regular version
     bool compute_minp(float* minp) const;
     // First nfixed variables are fixed as given; solve for remainder.
@@ -29,13 +32,15 @@ template<typename T, int n> class Qem {
     bool compute_minp_constr_lf(float* minp, const float* lf) const;
     // Sparse version w/ independent attribs and lf constr only on geom
     bool fast_minp_constr_lf(float* minp, const float* lf) const;
-// Special versions for wedge-based mesh simplification.
+
+    // Special versions for wedge-based mesh simplification:
     // They take multiple quadrics (*this==ar_q[0]) and assume that the
     //  first 3 rows of matrix variables are shared.
     // regular version
     bool ar_compute_minp(CArrayView<Qem<T,n>*> ar_q, MatrixView<float> minp) const;
     // linear functional constraint must be volumetric!
     bool ar_compute_minp_constr_lf(CArrayView<Qem<T,n>*> ar_q, MatrixView<float> minp, const float* lf) const;
+
     friend std::ostream& operator<<(std::ostream& os, const Qem<T,n>& qem) {
         os << "Qem{\n a={\n";
         const T* pa = qem._a.data();

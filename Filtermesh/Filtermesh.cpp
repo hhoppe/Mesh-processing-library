@@ -221,7 +221,7 @@ void do_createobject(Args& args) {
         if (obname=="torus1") {
         } else if (obname=="torus2") {
             rx_major = 1.f;
-        } else assertnever("");
+        } else { assertnever(""); }
         for_int(y, ny) for_int(x, nx) {
             Vertex v = mesh.create_vertex(); matv[y][x] = v;
             float ang_major = x/(nx-1.f)*TAU, ang_minor = y/(ny-1.f)*TAU;
@@ -231,7 +231,7 @@ void do_createobject(Args& args) {
             float zc = y_minor;
             mesh.set_point(v, Point(xc, yc, zc));
         }
-    } else assertnever("");
+    } else { assertnever(""); }
     if (matv.size()) {
         const int ny = matv.ysize(), nx = matv.xsize();
         const int mody = closed ? ny-1 : ny, modx = closed ? nx-1 : nx;
@@ -1068,10 +1068,10 @@ void do_trisubdiv() {
             vs[i] = menewv.get(e);
         }
         Face ff;
-        ff = mesh.create_face(vs[1], vs[2], vs[0]); mesh.set_string(ff, mesh.get_string(f)); // center
-        ff = mesh.create_face(va[0], vs[0], vs[2]); mesh.set_string(ff, mesh.get_string(f));
-        ff = mesh.create_face(vs[0], va[1], vs[1]); mesh.set_string(ff, mesh.get_string(f));
-        ff = mesh.create_face(vs[2], vs[1], va[2]); mesh.set_string(ff, mesh.get_string(f));
+        ff = mesh.create_face(vs[1], vs[2], vs[0]), mesh.set_string(ff, mesh.get_string(f));  // center
+        ff = mesh.create_face(va[0], vs[0], vs[2]), mesh.set_string(ff, mesh.get_string(f));
+        ff = mesh.create_face(vs[0], va[1], vs[1]), mesh.set_string(ff, mesh.get_string(f));
+        ff = mesh.create_face(vs[2], vs[1], va[2]), mesh.set_string(ff, mesh.get_string(f));
     }
     // Update sharp edges.
     for (Edge e : are) {
@@ -1362,7 +1362,9 @@ void do_lscm() {
     int n = mesh.num_vertices()*2;
     Array<Vertex> a_v; Map<Vertex,int> m_vi;
     for (Vertex v : mesh.vertices()) { m_vi.enter(v, a_v.num()); a_v.push(v); }
-    SparseLLS lls(m, n, 1); lls.set_verbose(1); // lls.set_tolerance(1e-8f);
+    SparseLLS lls(m, n, 1);
+    lls.set_verbose(1);
+    // lls.set_tolerance(1e-8f);
     Vec2<Vertex> vb = find_diameter_of_boundary_vertices();
     {
         float w = sqrt(mesh_area());
@@ -1419,7 +1421,9 @@ void do_poissonparam() {
     int n = mesh.num_vertices()*2;
     Array<Vertex> a_v; Map<Vertex,int> m_vi;
     for (Vertex v : mesh.vertices()) { m_vi.enter(v, a_v.num()); a_v.push(v); }
-    SparseLLS lls(m, n, 1); lls.set_verbose(1); // lls.set_tolerance(1e-8f);
+    SparseLLS lls(m, n, 1);
+    lls.set_verbose(1);
+    // lls.set_tolerance(1e-8f);
     Vertex v0; UV uv0; dummy_init(v0); {
         float minval = BIGFLOAT;
         for (Vertex v : mesh.vertices()) {
@@ -1488,7 +1492,7 @@ void do_poissonparam() {
 void do_fillholes(Args& args) {
     HH_TIMER(_fillholes);
     int maxnume = args.get_int(); // ==maxnumv
-    Set<Edge> setbe; for (Edge e : mesh.edges()) { if (mesh.is_boundary(e)) setbe.enter(e); } // boundary edges
+    Set<Edge> setbe; for (Edge e : mesh.edges()) { if (mesh.is_boundary(e)) setbe.enter(e); }
     HH_STAT(Sbndlen); HH_STAT(Sbndsub);
     while (!setbe.empty()) {
         Edge e = setbe.get_one();
@@ -2666,9 +2670,12 @@ void do_randpts(Args& args) {
     nooutput = true;
     int npoints = args.get_int();
     int nf = mesh.num_faces();
-    Array<Face> fface; fface.reserve(nf);      // Face of this index
-    Array<float> farea; farea.reserve(nf);     // area of face
-    Array<float> fcarea; fcarea.reserve(nf+1); // cumulative area
+    Array<Face> fface;          // Face of this index
+    fface.reserve(nf);
+    Array<float> farea;         // area of face
+    farea.reserve(nf);
+    Array<float> fcarea;        // cumulative area
+    fcarea.reserve(nf + 1);
     for (Face f : mesh.faces()) {
         if (!assertw(mesh.is_triangle(f))) continue;
         fface.push(f);
@@ -4084,11 +4091,11 @@ void do_fromObj(Args& args) {
                     assertx(sscanf(line+n, " %d/%d/%d %n", &i, &j, &k, &n1)==4);
                     n += n1;
                     Corner c = mesh.corner(mesh.id_vertex(i), f);
-                    --k; --j;   // arrays are 0-based
+                    --k, --j;   // arrays are 0-based
                     if (k<nor.num()) mesh.update_string(c, "normal", csform_vec(str, nor[k]));
                     if (j<uv.num()) mesh.update_string(c, "uv", csform_vec(str, uv[j]));
                 }
-            } else Warning("Illegal face");
+            } else { Warning("Illegal face"); }
         } else if (strncmp(line, "s ", 2)==0) {
             gid++; if (flip) convex_group_flip_faces(group); group.clear();
         }

@@ -6,15 +6,26 @@
 
 #if 0
 {
-    procedure() {
-        HH_TIMER(_proc);                               // timing for entire procedure
-        if (something) { HH_TIMER(__step1); step1(); } // sub-timings for substeps
-        if (1) { HH_TIMER(__step2); step2(); }
+  procedure() {
+    HH_TIMER(_proc);  // timing for entire procedure
+    if (something) {
+      HH_TIMER(__step1);
+      step1();
+    }  // sub-timings for substeps
+    if (1) {
+      HH_TIMER(__step2);
+      step2();
     }
-    { HH_TIMER(atimer2); statements; HH_TIMER_END(atimer2); more_statements; }
-    // getenv_int("SHOW_TIMES")==-1 : all -> noprint
-    // getenv_int("SHOW_TIMES")==1  : all but noprint -> normal
-    Timer::set_show_times(-1);  // disable printing of all timers
+  }
+  {
+    HH_TIMER(atimer2);
+    statements;
+    HH_TIMER_END(atimer2);
+    more_statements;
+  }
+  // getenv_int("SHOW_TIMES")==-1 : all -> noprint
+  // getenv_int("SHOW_TIMES")==1  : all but noprint -> normal
+  Timer::set_show_times(-1);  // disable printing of all timers
 }
 #endif
 

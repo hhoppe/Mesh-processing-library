@@ -7,9 +7,14 @@
 
 #if 0
 {
-    Array<ushort> ar1(20); write_binary_std(std::cout, ar1);
-    Vec<float,8> ar2; read_binary_raw(std::cin, ar2);
-    Grid<2,int> grid(V(3, 2)); write_binary_std(std::cout, grid.array_view());
+  Array<ushort> ar1(20);
+  write_binary_std(std::cout, ar1);
+
+  Vec<float, 8> ar2;
+  read_binary_raw(std::cin, ar2);
+
+  Grid<2, int> grid(V(3, 2));
+  write_binary_std(std::cout, grid.array_view());
 }
 #endif
 

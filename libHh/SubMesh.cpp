@@ -544,7 +544,7 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
         return;
     } else if (nesharp>=3) {    // corner vertex held constant
         return;
-    } else assertnever("");
+    } else { assertnever(""); }
     float wc = (1-wa)/ne;
     if (wa==1) return;
     if (wa) comb.c[v] = wa;
@@ -661,7 +661,7 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
             float w = sharp(e) ? wb : wc;
             if (w) comb.c[_m.opp_vertex(v, e)] = w;
         }
-    } else assertnever("");
+    } else { assertnever(""); }
 }
 
 void SubMesh::triangulate_quads(Mvcvh& mconv) {

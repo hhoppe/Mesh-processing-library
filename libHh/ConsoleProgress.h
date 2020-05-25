@@ -8,20 +8,20 @@
 
 #if 0
 {
-    ConsoleProgress cprogress;  // or cprogress("Processing");
-    const int n = 10000;
-    for_int(i, n) {
-        cprogress.update(static_cast<float>(i)/n);
-        process(i);
-    }
+  ConsoleProgress cprogress;  // or cprogress("Processing");
+  const int n = 10000;
+  for_int(i, n) {
+    cprogress.update(static_cast<float>(i) / n);
+    process(i);
+  }
 }
 {
-    const int n = 1000;
-    ConsoleProgressInc cprogress(n, "Computing");
-    parallel_for_each(range(n), [&](const int i) {
-        cprogress.increment();
-        process(i);
-    });
+  const int n = 1000;
+  ConsoleProgressInc cprogress(n, "Computing");
+  parallel_for_each(range(n), [&](const int i) {
+    cprogress.increment();
+    process(i);
+  });
 }
 #endif
 

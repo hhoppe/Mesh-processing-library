@@ -679,11 +679,6 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         //  does not specify ".wShowWindow = SW_HIDE" (http://stackoverflow.com/questions/4743559/).
         return _wspawnvp(mode, widen(sargv[0]).c_str(), argv.data());
     }
-// #elif 0 && defined(__CYGWIN__)  // omit?
-//     Array<const char*> argv(sargv.num()+1); argv.last() = nullptr;
-//     for_int(i, sargv.num()) { argv[i] = sargv[i].c_str(); }
-//     intptr_t exit_code = _spawnvp(P_WAIT, argv[0], argv.data());
-//     return int(exit_code);
 #else  // Unix (or cygwin)
     {
         Array<const char*> argv(sargv.num()+1); argv.last() = nullptr;

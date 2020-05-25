@@ -7,7 +7,9 @@
 
 #if 0
 {
-    Array<int> ar(100); StridedArrayView ar10(ar.data(), 10); assertx(&ar10[3]==&ar[30]);
+  Array<int> ar(100);
+  StridedArrayView ar10(ar.data(), 10);
+  assertx(&ar10[3] == &ar[30]);
 }
 #endif
 

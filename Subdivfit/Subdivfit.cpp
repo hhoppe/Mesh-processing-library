@@ -1304,20 +1304,20 @@ void do_reconstruct() {
     showdf("Starting reconstruction sequence\n");
     showdf(" crep=%g, csharp=%g\n", crep, csharp);
     initialize();
-    // { Args args { "20" }; do_gfit(args); }             // -gfit 20
-    // { Args args { "40" }; do_fgfit(args); }            // -fgfit 40
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
-    ecol = true; do_stoc();                            // -ecol -stoc
-    // { Args args { "10" }; do_fgfit(args); }            // -fgfit 10
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
-    esha = true; do_stoc();                            // -esha -stoc
-    // { Args args { "10" }; do_fgfit(args); }            // -fgfit 10
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
-    gecol = true; esha = true; eswa = true; do_stoc(); // -gecol -esha -eswa -stoc
-    // { Args args { "10" }; do_fgfit(args); }            // -fgfit 10
-    { Args args {  "6" }; do_gfit(args); }             // -gfit 6
+    // do_gfit(as_lvalue(Args{"20"}));  // -gfit 20
+    // do_fgfit(as_lvalue(Args{"40"}));  // -fgfit 40
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
+    ecol = true; do_stoc();         // -ecol -stoc
+    // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
+    esha = true; do_stoc();         // -esha -stoc
+    // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
+    do_gfit(as_lvalue(Args{"6"}));                      // -gfit 6
+    gecol = true; esha = true; eswa = true; do_stoc();  // -gecol -esha -eswa -stoc
+    // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
 }
 
 void do_outmesh(Args& args) {

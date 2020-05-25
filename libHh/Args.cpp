@@ -157,7 +157,8 @@ ParseArgs::ParseArgs(int& argc, const char**& argv) : _name("") {
     _argv0 = assertx(argv[0]);
     _args.init(argc-1); for_int(i, argc-1) { _args[i] = assertx(argv[1+i]); }
     common_construction();
-    argc = 0; argv = nullptr;   // we have taken ownership
+    // we have taken ownership
+    argc = 0; argv = nullptr;
 }
 
 ParseArgs::ParseArgs(CArrayView<string> aargs, const string& name) : _name(name) {
@@ -375,7 +376,8 @@ bool ParseArgs::parse_internal() {
 
 bool ParseArgs::parse() {
     if (!parse_internal()) return false;
-    _args = std::move(_unrecognized_args); _iarg = 0; // ready to get_*() any leftover arguments
+    // ready to get_*() any leftover arguments
+    _args = std::move(_unrecognized_args); _iarg = 0;
     return true;
 }
 

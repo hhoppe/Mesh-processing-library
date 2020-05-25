@@ -9,8 +9,16 @@
 
 #if 0
 {
-    Array<int> ar; for (auto e : C) { ar.init(e.num()); }
-    Array<Point> ar; ar.push(Point(1.f, 2.f, 3.f)); SHOW(ar.pop());
+  Array<int> ar;
+  for (auto element : container) {
+    ar.init(element.size());
+    process(element, ar);
+  }
+}
+{
+  Array<Point> ar;
+  ar.push(Point(1.f, 2.f, 3.f));
+  SHOW(ar.pop());
 }
 #endif
 
@@ -94,7 +102,7 @@ template<typename T> class ArrayView : public CArrayView<T> {
     // template<size_t n> ArrayView(std::array<T,n>& a) : base(a) { }
     void reinit(type a)                         { *this = a; }
     T& operator[](int i)                        { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
-    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i]; } // base::operator[](i);
+    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
     T& last()                                   { return (*this)[_n-1]; }
     const T& last() const                       { return base::last(); }
     T& inside(int i, Bndrule bndrule)             { assertx(map_inside(i, bndrule)); return (*this)[i]; }

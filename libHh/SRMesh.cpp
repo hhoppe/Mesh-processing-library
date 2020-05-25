@@ -1746,10 +1746,10 @@ void SRMesh::start_coarsen_morphing(SRVertex* vt) {
         float frac = 1.f/time;
         vm->vginc.point = to_Point((coarsened_vg->point-va->vgeom.point)*frac);
         if (!b_nor001) vm->vginc.vnormal = (coarsened_vg->vnormal-va->vgeom.vnormal)*frac;
-//         const float* cp = va->vgeom.point.data();
-//         const float* gp = coarsened_vg->point.data();
-//         float* ip = vm->vginc.point.data();
-//         for_int(c, 6-3*b_nor001) { ip[c] = (gp[c]-cp[c])*frac; }
+        // const float* cp = va->vgeom.point.data();
+        // const float* gp = coarsened_vg->point.data();
+        // float* ip = vm->vginc.point.data();
+        // for_int(c, 6-3*b_nor001) { ip[c] = (gp[c]-cp[c])*frac; }
     }
 }
 
@@ -1769,10 +1769,10 @@ void SRMesh::abort_coarsen_morphing(SRVertex* vc) {
         float frac = 1.f/time;
         vm->vginc.point = to_Point((vm->vgrefined.point-va->vgeom.point)*frac);
         if (!b_nor001) vm->vginc.vnormal = (vm->vgrefined.vnormal-va->vgeom.vnormal)*frac;
-//         const float* cp = va->vgeom.point.data();
-//         const float* gp = vm->vgrefined.point.data();
-//         float* ip = vm->vginc.point.data();
-//         for_int(c, 6-3*b_nor001) { ip[c] = (gp[c]-cp[c])*frac; }
+        // const float* cp = va->vgeom.point.data();
+        // const float* gp = vm->vgrefined.point.data();
+        // float* ip = vm->vginc.point.data();
+        // for_int(c, 6-3*b_nor001) { ip[c] = (gp[c]-cp[c])*frac; }
     }
 }
 

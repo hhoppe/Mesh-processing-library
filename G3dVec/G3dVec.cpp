@@ -323,7 +323,7 @@ void inbound(coord* c, const coord* c2) {
         border = hither;
     } else if (cc&CCY) {
         border = yonder;
-    } else assertnever("");
+    } else { assertnever(""); }
     float ratio = (border-c->pt[0])/(c2->pt[0]-c->pt[0]);
     c->pt[0] = border;
     c->pt[1] = c->pt[1]+(c2->pt[1]-c->pt[1])*ratio;

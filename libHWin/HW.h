@@ -24,13 +24,16 @@ namespace hh {
 class HW : public HWbase {
  public:
     HW();
-// call anytime after init() before open()
+
+    // call anytime after init() before open():
     void set_double_buffering(bool newstate) override;
     void open() override;
-// call anytime after init()
+
+    // call anytime after init():
     void set_window_title(string s) override;
     void beep() override;
-// call after open()
+
+    // call after open():
     bool suggests_stop() override;
     bool get_pointer(Vec2<int>& yx) override;
     bool get_key_modifier(EModifier modifier) override;
@@ -42,16 +45,19 @@ class HW : public HWbase {
     bool is_fullscreen() override;
     void make_fullscreen(bool b) override;
     void grab_focus() override;
-// call within draw_window()
+
+    // call within draw_window():
     void clear_window() override;
     void hard_flush() override;
-// call outside draw_window()
+
+    // call outside draw_window():
     Array<string> query_open_filenames(const string& hint_filename) override;
     string query_save_filename(const string& hint_filename, bool force) override;
     void begin_draw_visible() override;
     void end_draw_visible() override;
     void wake_up() override;
-// clipboard
+
+    // clipboard:
     bool copy_image_to_clipboard(const Image& image) override;
     bool copy_clipboard_to_image(Image& image) override;
  private:

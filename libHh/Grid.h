@@ -8,22 +8,24 @@
 
 #if 0
 {
-    Grid<2,int> grid(V(20, 10), -1);       // dimensions (ny = 20, nx = 10), and optional initial value
-    int y, x;                              // individual coordinates
-    Vec2<int> u = V(y, x);                 // array of coordinates (in Big Endian order)
-    size_t i = ravel_index(grid.dims(), u);  // index into "vectorized" raster view of grid
-    assertx(&grid[y][x]==&grid[u]);
-    assertx(&grid(y, x)==&grid[u]);
-    assertx(&grid.flat(i)==&grid[u]);
-    assertx(i==ravel_index_list(grid.dims(), y, x));
-    assertx(unravel_index(grid.dims(), i)==u);
-    //
-    grid[18][5] = 1; grid(18, 6) = 2; grid[{18, 7}] = 3;
-    grid.flat(ravel_index(grid.dims(), V(18, 8))) = 4;
-    for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) { grid[y][x] *= 2; } // iterate using individual coordinates
-    for (const auto& u : range(grid.dims())) { grid[u] *= 2; }           // iterate using array of coordinate indices
-    for_size_t(i, grid.size()) { grid.flat(i) *= 2; }                    // iterate using raster order (fastest)
-    for (auto& e : grid) { e *= 2; }                                     // iterate over elements (also fastest)
+  Grid<2, int> grid(V(20, 10), -1);        // dimensions (ny = 20, nx = 10), and optional initial value
+  int y, x;                                // individual coordinates
+  Vec2<int> u = V(y, x);                   // array of coordinates (in Big Endian order)
+  size_t i = ravel_index(grid.dims(), u);  // index into "vectorized" flat view of grid
+  assertx(&grid[y][x] == &grid[u]);
+  assertx(&grid(y, x) == &grid[u]);
+  assertx(&grid.flat(i) == &grid[u]);
+  assertx(i == ravel_index_list(grid.dims(), y, x));
+  assertx(unravel_index(grid.dims(), i) == u);
+  //
+  grid[18][5] = 1;
+  grid(18, 6) = 2;
+  grid[{18, 7}] = 3;
+  grid.flat(ravel_index(grid.dims(), V(18, 8))) = 4;
+  for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y][x] *= 2;  // iterate using individual coordinates
+  for (const auto& u : range(grid.dims())) grid[u] *= 2;            // iterate using array of coordinate indices
+  for_size_t(i, grid.size()) grid.flat(i) *= 2;                     // iterate using raster order (fastest)
+  for (auto& e : grid) e *= 2;                                      // iterate over elements (also fastest)
 }
 #endif
 
@@ -59,16 +61,16 @@ template<int D, typename T> struct nested_list_retrieve;
 
 } // namespace details
 
-// Given a coordinate u within a grid with dimensions dims, return the raster index in the linearized representation.
+// Given a coordinate u within a grid with dimensions dims, return the flat index in the linearized representation.
 template<int D> constexpr size_t ravel_index(const Vec<int,D>& dims, const Vec<int,D>& u);
 
-// Given a raster index i within a grid with dimensions dims, return its grid coordinates.
+// Given a flat index i within a grid with dimensions dims, return its grid coordinates.
 template<int D> Vec<int,D> unravel_index(const Vec<int,D>& dims, size_t i);
 
 // Do the same for a list of coordinates.
 template<int D, typename... A> constexpr size_t ravel_index_list(const Vec<int,D>& dims, A... dd); // dd... are int
 
-// Find stride of dimension d in the raster grid.
+// Find stride (in number of elements) of dimension d in the grid.
 template<int D> size_t grid_stride(const Vec<int,D>& dims, int dim);
 
 // Compute the size_t product of a small fixed set of numbers.

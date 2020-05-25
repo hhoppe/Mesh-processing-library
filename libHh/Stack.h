@@ -7,9 +7,9 @@
 
 #if 0
 {
-    Stack<Edge> stack;
-    while (!stack.empty()) process(stack.pop());
-    for (const Point& p : stackp) { consider(p); }
+  Stack<Edge> stack;
+  while (!stack.empty()) process(stack.pop());
+  for (const Point& p : stackp) consider(p);
 }
 #endif
 

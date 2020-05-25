@@ -40,9 +40,6 @@ void read_pms() {
             const AWMesh& bmeshxy = pmxy._base_mesh;
             // Assert all vertices have one wedge.
             for_int(wi, bmeshxy._wedges.num()) {
-//                 if (bmeshxy._wedges[wi].vertex!=wi) {
-//                     SHOW(bx, by, wi, bmeshxy._wedges[wi].vertex);
-//                 }
                 assertx(bmeshxy._wedges[wi].vertex==wi);
             }
             // Assert that we have all info.
@@ -72,7 +69,7 @@ int compute_nvi(int bx, int by, int vi) {
             return (by+(y==blocks))*(blockx*blocks+1)+(bx*blocks+x);
         } else if (x==0 || x==blocks) {
             return (blocky+1)*(blockx*blocks+1) + (bx+(x==blocks))*(blocky*(blocks-1)) + by*(blocks-1)+(y-1);
-        } else assertnever("");
+        } else { assertnever(""); }
     } else {
         // new scheme that numbers outer boundary first.
         if (0) ASSERTX(((blockx*blocks+1)*2 + (blocky*blocks-1)*2 + (blocky-1)*(blockx*blocks-1) +
@@ -91,7 +88,7 @@ int compute_nvi(int bx, int by, int vi) {
         } else if (x==0 || x==blocks) {
             return (blockx*blocks+1)*2 + (blocky*blocks-1)*2 + (blocky-1)*(blockx*blocks-1) +
                 (bx+(x==blocks)-1)*(blocky*(blocks-1))+ (by*(blocks-1)+(y-1));
-        } else assertnever("");
+        } else { assertnever(""); }
     }
 }
 

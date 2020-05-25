@@ -16,7 +16,4 @@ ReflowComments: false                       # default is true
 # StatementMacros: ['Q_UNUSED', 'QT_REQUIRE_VERSION']
 # MaxEmptyLinesToKeep: 1
 
-# Fix all the "// comment" currently artifically locked in column 0.
-# Fix all the "#if 0 {... } #endif" code-block examples.
 # Look for comment that applies to series of statements: ';.*;.*//'
-# '} else [A-z]'

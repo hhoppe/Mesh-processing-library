@@ -871,7 +871,7 @@ void do_zero_normal() {
     for_int(w, pmesh._base_mesh._wedges.num()) {
         pmesh._base_mesh._wedges[w].attrib.normal = Vector(0.f, 0.f, 0.f);
     }
-    static_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
+    implicit_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
 }
 
 void do_zero_uvrgb() {
@@ -888,7 +888,7 @@ void do_zero_uvrgb() {
         pmesh._base_mesh._wedges[w].attrib.rgb = A3dColor(0.f, 0.f, 0.f);
         pmesh._base_mesh._wedges[w].attrib.uv = UV(0.f, 0.f);
     }
-    static_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
+    implicit_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
     pmesh._info._has_rgb = false;
     pmesh._info._has_uv = false;
 }
@@ -970,7 +970,7 @@ void do_transf(Args& args) {
     for_int(v, pmesh._base_mesh._vertices.num()) {
         pmesh._base_mesh._vertices[v].attrib.point *= frame;
     }
-    static_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
+    implicit_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
     pmesh._info._full_bbox[0] *= frame; // only valid for non-rotations
     pmesh._info._full_bbox[1] *= frame;
 }
@@ -1159,7 +1159,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
             }
             pmi->apply_vsplit_private(new_vspl, pmesh._info, nullptr);
         }
-        static_cast<AWMesh&>(*pmi) = temp_mesh; // since PMeshRStream not advanced!
+        implicit_cast<AWMesh&>(*pmi) = temp_mesh; // since PMeshRStream not advanced!
     }
     assertx(new_vsplits.num()==pmesh._vsplits.num());
     pmesh._vsplits = new_vsplits;

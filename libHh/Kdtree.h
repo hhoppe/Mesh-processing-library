@@ -121,7 +121,7 @@ template<typename T, int D> class Kdtree : noncopyable {
             } else if (want_h) {
                 if (_arnode[ni]._h<0) _arnode[ni]._h = _arnode.num();
                 ni = _arnode[ni]._h; aval[axis] += inc;
-            } else assertnever("");
+            } else { assertnever(""); }
             axis = axis<D-1 ? axis+1 : 0;
         }
         _arnode[ni]._stackei.push(ei);

@@ -183,7 +183,8 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
             assertx(sscanf(sline.c_str(), "%g %g %g", &f[0], &f[1], &f[2])==3); // 20131220 added assertx()
         } else {
             assertx(_is >> f[0] >> f[1] >> f[2]);
-            _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); assertx(_is); // likely needed
+            _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // likely needed
+            assertx(_is);
         }
     }
     return true;

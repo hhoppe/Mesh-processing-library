@@ -7,11 +7,16 @@
 
 #if 0
 {
-    struct SRAVertex { EListNode _active; bool ok {true}; ... };
-    EList list_activev;
-    SRAVertex* v = new SRAVertex; v->_active.link_after(list_activev.delim());
-    for (EListNode* n : list_activev) { assertx(n->linked()); }
-    for (SRAVertex* v : EList_outer_range(list, SRAVertex, _active)) { assertx(v->ok); }
+  struct SRAVertex {
+    EListNode _active;
+    bool ok{true};
+    ...
+  };
+  EList list_activev;
+  SRAVertex* v = new SRAVertex;
+  v->_active.link_after(list_activev.delim());
+  for (EListNode* n : list_activev) assertx(n->linked());
+  for (SRAVertex* v : EList_outer_range(list, SRAVertex, _active)) assertx(v->ok);
 }
 #endif
 

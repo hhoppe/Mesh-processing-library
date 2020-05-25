@@ -109,7 +109,7 @@ void test_spawn() {
 
 void test_spawn2() {
 #if defined(_WIN32)
-#define E SHOW("*", s); SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data())) // or "-vc"
+#define E(str) s = str;  SHOW("*", s); SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data())) // or "-vc"
     // echo 'a'\''b' // a'b
     // csh -c 'echo '\''a'\''\'\'''\''b'\''' // a'b
     // sh -c  'echo '\''a'\''\'\'''\''b'\''' // a'b
@@ -120,53 +120,53 @@ void test_spawn2() {
         shell = "csh"; shell0 = shell; SHOW("**", shell, shell0);
         if (0) shell0 = "sh";       // Then it behaves differently; it parses args more like cygwin bash!
         //
-        s = R"(echo a b)"; E;       // echo         null
-        s = R"('echo a b')"; E;     // 'echo        Unmatched '.
-        s = R"("echo a b")"; E;     // echo a b     a b
-        s = R"("echo 'a b'")"; E;   // echo 'a b'   a b
-        s = R"('echo "a b"')"; E;   // 'echo        Unmatched '.
-        s = R"(echo\ \'a b\')"; E;  // Argument for -c ends in backslash.
-        s = R"(echo" "\"a b\")"; E; // echo "a      Unmatched ".
-        s = R"('echo \"a b\"')"; E; // 'echo        Unmatched '.
+        E(R"(echo a b)");        // echo         null
+        E(R"('echo a b')");      // 'echo        Unmatched '.
+        E(R"("echo a b")");      // echo a b     a b
+        E(R"("echo 'a b'")");    // echo 'a b'   a b
+        E(R"('echo "a b"')");    // 'echo        Unmatched '.
+        E(R"(echo\ \'a b\')");   // Argument for -c ends in backslash.
+        E(R"(echo" "\"a b\")");  // echo "a      Unmatched ".
+        E(R"('echo \"a b\"')");  // 'echo        Unmatched '.
         // The outer double quotes (parsed by Windows) allow backslash of inner double quotes, just like csh/tcsh.
-        s = R"("echo \\\"a b\\\"")"; E; // echo \"a b\"      "a b"
-        s = R"("echo \'a b\'")"; E;     // echo \'a b\'      'a b'
+        E(R"("echo \\\"a b\\\"")");  // echo \"a b\"      "a b"
+        E(R"("echo \'a b\'")");      // echo \'a b\'      'a b'
         // The outer single quotes (parsed by Windows) prefer backslash of inner single quotes (\')
         //  whereas the inner single quotes (parsed by sh/csh) require exiting to backslash inner quote ('\'').
-        s = R"('echo '\''a'\''\'\'''\''b'\''')"; E; // 'echo        Unmatched '.
-        s = R"('echo \''a'\''\'\'''\''b'\''')"; E;  // 'echo        Unmatched '.
-        s = R"('echo \'a\'\\\'\'b\'')"; E;          // 'echo        Unmatched '.
+        E(R"('echo '\''a'\''\'\'''\''b'\''')");  // 'echo        Unmatched '.
+        E(R"('echo \''a'\''\'\'''\''b'\''')");   // 'echo        Unmatched '.
+        E(R"('echo \'a\'\\\'\'b\'')");           // 'echo        Unmatched '.
         // Try using double-quotes with "\"" for inner double quotes
-        s = R"("echo "\""a b"\""")"; E;                 // echo "a b"       a b
+        E(R"("echo "\""a b"\""")");                  // echo "a b"       a b
         //  echo\ \"a\ b\"
-        s = R"("echo"\\" "\\""\""a"\\" b"\\""\\"")"; E; // echo\ \"a\ b\\   echo "a b\: Command not found.
+        E(R"("echo"\\" "\\""\""a"\\" b"\\""\\"")");  // echo\ \"a\ b\\   echo "a b\: Command not found.
     }
     if (1) {
         // cygwin sh does not use windows crt, so has its own scheme for parsing command
         shell = "sh"; shell0 = shell; SHOW("**", shell, shell0);
-        s = R"(echo a b)"; E;       // echo             null
-        s = R"('echo a b')"; E;     // echo a b         a b
-        s = R"("echo a b")"; E;     // echo a b         a b
-        s = R"("echo 'a b'")"; E;   // echo 'a b'       a b
-        s = R"('echo "a b"')"; E;   // echo "a b"       a b
-        s = R"(echo\ \'a b\')"; E;  // echo\            null
-        s = R"(echo" "\"a b\")"; E; // echo \a b"       err
-        s = R"('echo \"a b\"')"; E; // echo \"a b\"     "a b"
+        E(R"(echo a b)");        // echo             null
+        E(R"('echo a b')");      // echo a b         a b
+        E(R"("echo a b")");      // echo a b         a b
+        E(R"("echo 'a b'")");    // echo 'a b'       a b
+        E(R"('echo "a b"')");    // echo "a b"       a b
+        E(R"(echo\ \'a b\')");   // echo\            null
+        E(R"(echo" "\"a b\")");  // echo \a b"       err
+        E(R"('echo \"a b\"')");  // echo \"a b\"     "a b"
         // The outer double quotes (parsed by Windows) allow backslash of inner double quotes, just like csh/tcsh.
-        s = R"("echo \\\"a b\\\"")"; E; // echo \"a b\"      "a b"
-        s = R"("echo \'a b\'")"; E;     // echo \'a b\'      'a b'
+        E(R"("echo \\\"a b\\\"")");  // echo \"a b\"      "a b"
+        E(R"("echo \'a b\'")");      // echo \'a b\'      'a b'
         // The outer single quotes (parsed by Windows) prefer backslash of inner single quotes (\')
         //  whereas the inner single quotes (parsed by sh/csh) require exiting to backslash inner quote ('\'').
-        s = R"('echo '\''a'\''\'\'''\''b'\''')"; E; // echo a'\''b'      a\b   unexpected
-        s = R"('echo \''a'\''\'\'''\''b'\''')"; E;  // echo 'a'\''b'     a'b   enexpected; works
-        s = R"('echo \'a\'\\\'\'b\'')"; E;          // echo 'a'\''b'     a'b   unexpected; works
+        E(R"('echo '\''a'\''\'\'''\''b'\''')");  // echo a'\''b'      a\b   unexpected
+        E(R"('echo \''a'\''\'\'''\''b'\''')");   // echo 'a'\''b'     a'b   enexpected; works
+        E(R"('echo \'a\'\\\'\'b\'')");           // echo 'a'\''b'     a'b   unexpected; works
         // Try using double-quotes with "\"" for inner double quotes
-        s = R"("echo "\""a b"\""")"; E;                 // echo a    a    unexpected
+        E(R"("echo "\""a b"\""")");  // echo a    a    unexpected
         // Instead backslash inner double quotes
-        s = R"("echo \"a b\"")"; E; // echo "a b"       a b     works
-        s = R"("echo \"a b\"")"; E; // echo "a b"       a b     works  (just backslash inner double-quotes)
-        s = R"("echo '\"'")"; E;    // echo '"'         "       works
-        s = R"("echo \\\"")"; E;    // echo \"          "       works
+        E(R"("echo \"a b\"")");  // echo "a b"       a b     works
+        E(R"("echo \"a b\"")");  // echo "a b"       a b     works  (just backslash inner double-quotes)
+        E(R"("echo '\"'")");     // echo '"'         "       works
+        E(R"("echo \\\"")");     // echo \"          "       works
     }
 #undef E
 #endif

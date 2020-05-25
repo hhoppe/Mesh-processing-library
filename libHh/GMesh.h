@@ -8,12 +8,19 @@
 
 #if 0
 {
-    Mesh mesh;
-    Vertex v1 = mesh.create_vertex(); mesh.set_point(v1, Point(1.f, 2.f, 3.f));
-    Vertex v2 = mesh.create_vertex(); mesh.set_point(v2, Point(1.f, 4.f, 5.f));
-    Vertex v3 = mesh.create_vertex(); mesh.set_point(v3, Point(1.f, 6.f, 7.f));
-    Face f1 = mesh.create_face(v1, v2, v3);
-    for (Face f : mesh.ordered_faces()) { for (Vertex v : mesh.vertices(f)) { process(f, mesh.point(v)); } }
+  Mesh mesh;
+  Vertex v1 = mesh.create_vertex();
+  mesh.set_point(v1, Point(1.f, 2.f, 3.f));
+  Vertex v2 = mesh.create_vertex();
+  mesh.set_point(v2, Point(1.f, 4.f, 5.f));
+  Vertex v3 = mesh.create_vertex();
+  mesh.set_point(v3, Point(1.f, 6.f, 7.f));
+  Face f1 = mesh.create_face(v1, v2, v3);
+  for (Face f : mesh.ordered_faces()) {
+    for (Vertex v : mesh.vertices(f)) {
+      process(f, mesh.point(v));
+    }
+  }
 }
 #endif
 
@@ -32,7 +39,8 @@ class GMesh : public Mesh {
     GMesh(GMesh&& m) noexcept                   { swap(*this, m); } // =default?
     ~GMesh()                                    = default;
     GMesh& operator=(GMesh&& m) noexcept        { clear(); swap(*this, m); return *this; } // =default?
-// Extend functionality
+
+    // ** Extend functionality:
     void copy(const GMesh& m);  // carries flags (but not sac fields), hence not named operator=().
     void merge(const GMesh& mo, Map<Vertex,Vertex>* mvvn = nullptr);
     void destroy_vertex(Vertex v) override;
@@ -51,7 +59,8 @@ class GMesh : public Mesh {
     Vertex insert_vertex_on_edge(Edge e) override;
     Edge remove_vertex_between_edges(Vertex vr) override;
     Array<Vertex> fix_vertex(Vertex v) override;
-// Geometry
+    
+    // ** Geometry:
     const Point& point(Vertex v) const          { return v->_point; }
     void set_point(Vertex v, const Point& p);
     void polygon(Face f, Polygon& poly) const;
@@ -59,7 +68,8 @@ class GMesh : public Mesh {
     float length(Edge e) const;
     float area(Face f) const;
     void transform(const Frame& frame);
-// Strings
+
+    // ** Strings:
     const char* get_string(Vertex v) const      { return v->_string.get(); }
     const char* get_string(Face f) const        { return f->_string.get(); }
     const char* get_string(Edge e) const        { return e->_string.get(); }
@@ -87,7 +97,8 @@ class GMesh : public Mesh {
     void update_string(Edge e, const char* key, const char* val);
     void update_string(Corner c, const char* key, const char* val);
     static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
-// Standard I/O for my meshes (see format below)
+
+    // ** Standard I/O for my meshes (see format below):
     void read(std::istream& is); // read a whole mesh, discard comments
     void read_line(char* s);     // no '\n' required
     static bool recognize_line(const char* s);
@@ -95,14 +106,17 @@ class GMesh : public Mesh {
     void write(WA3dStream& oa3d, const A3dVertexColor& col) const;
     void write_face(WA3dStream& oa3d, A3dElem& el, const A3dVertexColor& col, Face f) const;
     std::ostream* record_changes(std::ostream* pos); // pos may be nullptr, ret old
-// Flag bits
+
+    // ** Flag bits:
     // Predefined {Vertex, Face, Edge} flag bits; vflag_cusp and eflag_sharp are parsed when reading a mesh.
     static const FlagMask vflag_cusp;  // "cusp" on Vertex
     static const FlagMask eflag_sharp; // "sharp" on Edge
-// Discouraged:
+
+    // ** Discouraged:
     Vertex create_vertex_private(int id) override;
     Face create_face_private(int id, CArrayView<Vertex> va) override; // or die
-// Misc
+
+    // ** Misc:
     friend void swap(GMesh& l, GMesh& r) noexcept;
  private:
     std::ostream* _os {nullptr}; // for record_changes

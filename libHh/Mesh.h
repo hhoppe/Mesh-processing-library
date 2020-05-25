@@ -12,10 +12,14 @@
 
 #if 0
 {
-    Mesh mesh;
-    Vertex v1 = mesh.create_vertex(), v2 = mesh.create_vertex(), v3 = mesh.create_vertex();
-    Face f1 = mesh.create_face(v1, v2, v3);
-    for (Face f : mesh.ordered_faces()) { for (Vertex v : mesh.vertices(f)) { process(f, v); } }
+  Mesh mesh;
+  Vertex v1 = mesh.create_vertex(), v2 = mesh.create_vertex(), v3 = mesh.create_vertex();
+  Face f1 = mesh.create_face(v1, v2, v3);
+  for (Face f : mesh.ordered_faces()) {
+    for (Vertex v : mesh.vertices(f)) {
+      process(f, v);
+    }
+  }
 }
 #endif
 
@@ -59,7 +63,8 @@ class Mesh : noncopyable {
     Mesh& operator=(Mesh&& m) noexcept          { clear(); swap(*this, m); return *this; } // =default?
     void clear();
     void copy(const Mesh& m); // not a GMesh!  carries flags (but not sac fields), hence not named operator=().
-// Raw manipulation functions, may lead to non-nice Meshes.
+
+    // ** Raw manipulation functions, may lead to non-nice Meshes:
     // always legal
     Vertex create_vertex()                      { return create_vertex_private(_vertexnum); }
     // die if degree(v)>0
@@ -71,7 +76,8 @@ class Mesh : noncopyable {
     Face create_face(Vertex v1, Vertex v2, Vertex v3) { return create_face(V(v1, v2, v3)); }
     // always legal
     virtual void destroy_face(Face f);
-// Vertex
+
+    // ** Vertex:
     bool is_nice(Vertex v) const;
     int degree(Vertex v) const;            // == number of adjacent vertices/edges
     int num_boundaries(Vertex v) const;    // 0/1 for a nice vertex
@@ -97,7 +103,8 @@ class Mesh : noncopyable {
     // get face relative to vertex
     Face ccw_face(Vertex v, Edge e) const; // may return nullptr
     Face clw_face(Vertex v, Edge e) const; // may return nullptr
-// Face
+
+    // ** Face:
     bool is_nice(Face f) const;
     int num_vertices(Face f) const;
     bool is_triangle(Face f) const              { HEdge he = herep(f); return he->_next->_next->_next==he; }
@@ -116,7 +123,8 @@ class Mesh : noncopyable {
     Vertex ccw_vertex(Face f, Vertex v) const   { return get_hedge(v, f)->_next->_vert; } // slow
     Edge clw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->_edge; }       // slow
     Edge ccw_edge(Face f, Vertex v) const       { return get_hedge(v, f)->_next->_edge; } // slow
-// Edge
+
+    // ** Edge:
     bool is_boundary(Edge e) const              { return !herep(e)->_sym; }
     Vertex vertex1(Edge e) const                { return herep(e)->_prev->_vert; }
     Vertex vertex2(Edge e) const                { return herep(e)->_vert; }
@@ -124,7 +132,7 @@ class Mesh : noncopyable {
     Face face1(Edge e) const                    { return herep(e)->_face; }
     Face face2(Edge e) const                    { HEdge he = herep(e); return he->_sym ? he->_sym->_face : nullptr; }
     Face face(Edge e, int i) const              { ASSERTX(i==0 || i==1); return i==0 ? face1(e) : face2(e); }
-// i==0 or i==1; ret nullptr if i==1 && is_boundary(e)
+    // i==0 or i==1; ret nullptr if i==1 && is_boundary(e)
     Vertex side_vertex1(Edge e) const           { return opp_vertex(e, face1(e)); } // is_triangle(face1())
     Vertex side_vertex2(Edge e) const           { return face2(e) ? opp_vertex(e, face2(e)) : nullptr; }
     Vertex side_vertex(Edge e, int i) const { ASSERTX(i==0 || i==1); return !i ? side_vertex1(e) : side_vertex2(e); }
@@ -133,7 +141,8 @@ class Mesh : noncopyable {
     Edge clw_boundary(Edge e) const             { return opp_boundary(e, vertex2(e)); } // is_boundary(e)
     Edge ccw_boundary(Edge e) const             { return opp_boundary(e, vertex1(e)); } // is_boundary(e)
     Vertex vertex_between_edges(Edge e1, Edge e2);
-// Corner
+
+    // ** Corner:
     Corner corner(Vertex v, Face f) const       { return get_hedge(v, f); }
     Vertex corner_vertex(Corner c) const        { return c->_vert; }
     Face corner_face(Corner c) const            { return c->_face; }
@@ -145,22 +154,26 @@ class Mesh : noncopyable {
     Corner clw_corner(Vertex v, Edge e) const   { return hedge_from_ev2(e, v); }
     Edge ccw_face_edge(Corner c) const          { return c->_next->_edge; }
     Edge clw_face_edge(Corner c) const          { return c->_edge; } // (fastest)
-// Other associations
+
+    // ** Other associations:
     // obtain edge from vertices
     Edge query_edge(Vertex v, Vertex w) const;
     Edge edge(Vertex v, Vertex w) const         { return assertx(query_edge(v, w)); }
     Edge ordered_edge(Vertex v1, Vertex v2) const; // asserts it exists, oriented
     // get face from 2 consecutive vertices (ccw order)
     Face face(Vertex v, Vertex vccw) const      { return clw_face(vccw, edge(v, vccw)); } // may return nullptr
-// Counting routines (fast)
+
+    // ** Counting routines (fast):
     int num_vertices() const                    { return _id2vertex.num(); }
     int num_faces() const                       { return _id2face.num(); }
     int num_edges() const                       { return _nedges; }
-// Random access (fast), assert there exist at least one
+
+    // ** Random access (fast), assert there exist at least one:
     Vertex random_vertex(Random& r) const;
     Face random_face(Random& r) const;
     Edge random_edge(Random& r) const; // unbiased for a closed triangle mesh
-// Flags
+
+    // ** Flags:
     static FlagMask allocate_flag()             { static int s_counter; return Flags::allocate(s_counter); }
     static FlagMask allocate_Vertex_flag()      { static int s_counter; return Flags::allocate(s_counter); }
     static FlagMask allocate_Face_flag()        { static int s_counter; return Flags::allocate(s_counter); }
@@ -173,7 +186,8 @@ class Mesh : noncopyable {
     const Flags& flags(Face f) const            { return f->_flags; }
     Flags& flags(Edge e)                        { return e->_flags; }
     const Flags& flags(Edge e) const            { return e->_flags; }
-// Triangular mesh operations (die if not triangular!)
+
+    // ** Triangular mesh operations (die if not triangular!):
     // would collapse be legal?
     bool legal_edge_collapse(Edge e) const;
     // would collapse preserve a nice mesh?
@@ -194,7 +208,8 @@ class Mesh : noncopyable {
     // remove f1, f2, (v1, v2)
     // add 2 faces, (vo1, vo2)
     virtual Edge swap_edge(Edge e);
-// More mesh operations
+
+    // ** More mesh operations:
     // vs2 can be nullptr, returns v2, leaves hole
     virtual Vertex split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i);
     // replace (vt, {*}) by (vs, {*})
@@ -212,7 +227,8 @@ class Mesh : noncopyable {
     virtual Edge remove_vertex_between_edges(Vertex vr);
     // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings; return new vertices.
     virtual Array<Vertex> fix_vertex(Vertex v);
-// Mesh
+
+    // ** Mesh:
     Vertex id_vertex(int i) const               { return _id2vertex.get(i); }
     int vertex_id(Vertex v) const               { return v->_id; }
     Face id_face(int i) const                   { return _id2face.get(i); }
@@ -221,13 +237,15 @@ class Mesh : noncopyable {
     Face id_retrieve_face(int i) const          { return _id2face.retrieve(i); }
     bool is_nice() const;
     void renumber();            // renumber vertices and faces
-// Misc
+
+    // ** Misc:
     void ok() const;            // die if problem
     bool valid(Vertex v) const; // die if invalid
     bool valid(Face f) const;   // die if invalid
     bool valid(Edge e) const;   // die if invalid
     bool valid(Corner c) const; // die if invalid
-// Iterators; can crash if continued after any change in the Mesh.
+
+    // ** Iterators; can crash if continued after any change in the Mesh:
     // These mesh iterators do not define an order.
     Vertices_range vertices() const             { return _id2vertex.values(); }
     Faces_range faces() const                   { return _id2face.values(); }

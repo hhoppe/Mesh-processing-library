@@ -22,13 +22,16 @@ namespace hh {
 class HW : public HWbase {
  public:
     HW();
-// call after init() before open()
+    
+    // call after init() before open():
     void set_double_buffering(bool newstate) override;
     void open() override;
-// call anytime after init()
+
+    // call anytime after init():
     void set_window_title(string s) override;
     void beep() override;
-// call after open()
+
+    // call after open():
     bool suggests_stop() override;
     bool get_pointer(Vec2<int>& yx) override;
     bool get_key_modifier(EModifier modifier) override;
@@ -39,10 +42,12 @@ class HW : public HWbase {
     void resize_window(const Vec2<int>& yx) override;
     bool is_fullscreen() override;
     void make_fullscreen(bool b) override;
-// call within draw_window()
+
+    // call within draw_window():
     void clear_window() override;
     void hard_flush() override;
-// call outside draw_window()
+
+    // call outside draw_window():
     void begin_draw_visible() override;
     void end_draw_visible() override;
     void wake_up() override;

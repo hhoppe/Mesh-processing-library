@@ -26,12 +26,15 @@ bool init(Array<string>& aargs,
           void (*pfbutp)(int butnum, bool pressed, bool shift, const Vec2<float>& yx),
           void (*pfwheel)(float v),
           void (*pfdraw)()); // ret: success
-// call after init() and before open()
+
+// call after init() and before open():
 void set_window_title(string s);
 void open();
-// call after init()
+
+// call after init():
 void watch_fd0(void (*pfinpu)());
-// call after open()
+
+// call after open():
 void quit();         // user requests open() to return
 void redraw_later();
 void redraw_now();

@@ -16,11 +16,11 @@
 
 #if 0
 {
-    parallel_for_each(range(n), [&](const int i) { func(i); });
-    parallel_for_int(i, n) { func(i); }
-    cond_parallel_for_int(n*1000, i, n) { func_1000_instruction_cycles(i); } // only parallelize if beneficial
-    int sum = 0; omp_parallel_for_T(reduction(+:sum) if(ar.num()>k_omp_thresh), int, i, 0, ar.num()) sum += ar[i];
-
+  parallel_for_each(range(n), [&](const int i) { func(i); });
+  parallel_for_int(i, n) func(i);
+  cond_parallel_for_int(n * 1000, i, n) func_1000_instruction_cycles(i);  // only parallelize if beneficial
+  int sum = 0;
+  omp_parallel_for_T(reduction(+ : sum) if (ar.num() > k_omp_thresh), int, i, 0, ar.num()) sum += ar[i];
 }
 #endif
 

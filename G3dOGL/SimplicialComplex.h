@@ -96,7 +96,7 @@ class ISimplex : noncopyable {
     // 2-simplices
     void vertices(Simplex va[3]);
     Simplex opp_edge(Simplex v);
-//    Simplex opp_vertex(Simplex e);
+    // Simplex opp_vertex(Simplex e);
 
     // 1-simplices
     Simplex opp_vertex(Simplex v);

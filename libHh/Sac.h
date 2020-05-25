@@ -8,22 +8,24 @@
 
 #if 0
 {
-    class MVertex {
-        ...;
-     public:
-        HH_MAKE_SAC(MVertex);   // must be last entry of class!
-    };
-    //
-    HH_SAC_ALLOCATE_FUNC(MVertex, Point, v_point);
-    v_point(v) = Point(1.f, 2.f, 3.f); SHOW(v_point(v));
-    //
-    using ArrayInt = Array<int>;
-    HH_SACABLE(ArrayInt);
-    HH_SAC_ALLOCATE_CD_FUNC(MVertex, ArrayInt, v_ar); // CD means call constructor and destructor
-    v_ar(v).push(7);
-    //
-    static int key_a = HH_SAC_ALLOCATE_CD(MVertex, A);
-    sac_access<A>(v, key_a).b = 3;
+  class MVertex {
+    ...;
+
+   public:
+    HH_MAKE_SAC(MVertex);  // must be last entry of class!
+  };
+  //
+  HH_SAC_ALLOCATE_FUNC(MVertex, Point, v_point);
+  v_point(v) = Point(1.f, 2.f, 3.f);
+  SHOW(v_point(v));
+  //
+  using ArrayInt = Array<int>;
+  HH_SACABLE(ArrayInt);
+  HH_SAC_ALLOCATE_CD_FUNC(MVertex, ArrayInt, v_ar);  // CD means call constructor and destructor
+  v_ar(v).push(7);
+  //
+  static int key_a = HH_SAC_ALLOCATE_CD(MVertex, A);
+  sac_access<A>(v, key_a).b = 3;
 }
 #endif
 
@@ -33,7 +35,7 @@ class BSac : noncopyable { // noncopyable for safety -- could be removed if care
  public:
     using Func = void (*)(void*);
     static constexpr int k_dummy = 4;
-// per-object
+    // ** per-object
     // We use reinterpret_cast to disable runtime bounds checking.
     void* access(int k) { return reinterpret_cast<uint8_t*>(_a)+k; }
  protected:
@@ -49,7 +51,7 @@ class BSac : noncopyable { // noncopyable for safety -- could be removed if care
 template<typename T> class Sac : public BSac {
     static constexpr int k_max = 50;
  public:
-// static
+    // ** static
     template<typename T2> static int allocate() {
         unsigned s = sizeof(T2);
         int k = size;
@@ -76,7 +78,8 @@ template<typename T> class Sac : public BSac {
     }
     static int get_size()                       { return size; }
     static int get_max_align()                  { return max_align; }
-// per-object
+
+    // ** per-object
     Sac()                                       { if (cnum) call_funcs(cnum, ckeys, cfuncs); }
     ~Sac()                                      { if (dnum) call_funcs(dnum, dkeys, dfuncs); }
  private:

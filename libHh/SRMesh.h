@@ -213,7 +213,8 @@ class SRMesh {
     int num_active_faces() const                { return _num_active_faces; }
     void ok() const;
     const Bbox& get_bbox() const { return _bbox; }
-// Interface: Rendering using OpenGL
+
+    // Interface: Rendering using OpenGL:
     void ogl_render_faces_individually(bool unlit_texture);
     void ogl_render_faces_strips(bool unlit_texture);
     int ogl_render_striplines(); // return number of strips
@@ -243,21 +244,26 @@ class SRMesh {
     int _num_vertices_coarsen_morphing {0};
     bool _was_modified {false};
     int _cache_time {1};
-// Temporary structs
+
+    // Temporary structs:
     Array<SRVertex*> _ar_tobevisible;
-// Static structs
+
+    // Static structs:
     // Properties: aface==&_isolated_aface
     static SRFace _isolated_face;   // fn[*] when no expected neighbor
     // Properties: matid==illegal, fnei[*]==&_isolated_aface
     static SRAFace _isolated_aface; // fr->activef when !creates_2faces
-// Refinement parameters
+
+    // Refinement parameters:
     SRViewParams _view_params;
     SRRefineParams _refp;
-// Rendering: common code and data
+
+    // Rendering: common code and data:
     static constexpr int k_Face_visited_mask = 1<<30; // high bit of matid
     static constexpr int k_illegal_matid = -1;
     int _cur_frame_mask {0};    // 0 or k_Face_visited_mask
-// Rendering: accessor functions
+
+    // Rendering: accessor functions:
     // main ones
     const Point& get_point(const SRAVertex* va) const   { return va->vgeom.point; }
     const Vector& get_normal(const SRAVertex* va) const { return va->vgeom.vnormal; }
@@ -267,7 +273,8 @@ class SRMesh {
     float get_dir_error_mag2(const SRAVertex* va) const { return _vsplits[va->vertex->vspli].dir_error_mag2; }
     float get_radiusneg(const SRAVertex* va) const      { return _vsplits[va->vertex->vspli].radius_neg; }
     float get_sin2alpha(const SRAVertex* va) const      { return _vsplits[va->vertex->vspli].sin2alpha; }
-// Rendering using OpenGL
+
+    // Rendering using OpenGL:
     Array<Pixel> _ogl_mat_byte_rgba; // size is _materials.num()
     void ogl_process_materials();
     void draw_vertex(const SRAVertex* v, bool use_texture) const;

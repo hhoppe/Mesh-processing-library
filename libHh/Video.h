@@ -10,10 +10,11 @@
 
 #if 0
 {
-    Video video(nframes, V(ysize, xsize)), video2(video.dims()), video3(video.nframes()*2, video.spatial_dims());
-    Pixel& pix = video(f, y, x); // as in Image, [y=0][x=0] is at upper-left corner of each image frame
-    uint8_t c = video(f, y, x)[z]; // z=[0..2]
-    // Video read/write is performed using: Windows Media Foundation (MF) or ffmpeg (FF).
+  Video video(nframes, V(ysize, xsize)), video2(video.dims()), video3(video.nframes() * 2, video.spatial_dims());
+  Pixel& pix = video(f, y, x);    // as in Image, [y=0][x=0] is at upper-left corner of each image frame
+  uint8_t c = video(f, y, x)[z];  // z=[0..2]
+
+  // Video read/write is performed using: Windows Media Foundation (MF) or ffmpeg (FF).
 }
 #endif
 
@@ -30,10 +31,10 @@ class Video : public Grid<3,Pixel> {
     explicit Video(const Video&)                = default;
     explicit Video(const base& video)           : base(video.dims()) { base::assign(video); }
     Video(Video&& v) noexcept                   { swap(*this, v); } // =default?
-    Video(base&& v) noexcept                    { swap(static_cast<base&>(*this), v); }
+    Video(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
     ~Video()                                    { }
     Video& operator=(Video&& v) noexcept        { clear(); swap(*this, v); return *this; } // =default?
-    void operator=(base&& v)                    { clear(); swap(static_cast<base&>(*this), v); }
+    void operator=(base&& v)                    { clear(); swap(implicit_cast<base&>(*this), v); }
     Video& operator=(const Video&)              = default;
     void operator=(CGridView<3,Pixel> video)    { base::assign(video); }
     void init(const Vec3<int>& dims);
@@ -47,7 +48,8 @@ class Video : public Grid<3,Pixel> {
     Attrib& attrib()                            { return _attrib; }
     void read_file(const string& filename); // filename may be "-" for std::cin;  may throw std::runtime_error
     void write_file(const string& filename) const; // filename may be "-" for std::cout; may throw std::runtime_error
-// Misc
+
+    // Misc:
     void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
     struct Attrib {
         string suffix;          // e.g. "mp4"; "" if unknown; to identify format of read_file("-") and write_file("-")
@@ -194,7 +196,7 @@ class WVideo {
 //----------------------------------------------------------------------------
 
 inline void swap(Video& l, Video& r) noexcept {
-    using std::swap; swap(static_cast<Video::base&>(l), static_cast<Video::base&>(r)); swap(l._attrib, r._attrib);
+    using std::swap; swap(implicit_cast<Video::base&>(l), implicit_cast<Video::base&>(r)); swap(l._attrib, r._attrib);
 }
 
 inline void swap(VideoNv12& l, VideoNv12& r) noexcept {

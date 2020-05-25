@@ -1115,7 +1115,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
                     vspl.vlr_offset1 = 1; // special code
                 } else if (mesh.ccw_face(vs, esl)) {
                     vspl.vlr_offset1 = 0; // special code; flclw does not exist!
-                } else assertnever("");
+                } else { assertnever(""); }
             } else {
                 // Find number of CLW rotations from vl to vr.
                 Vertex v = vl;
@@ -1183,7 +1183,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
                 voffset = 2; va[1] = va[2]; va[2] = va[0]; va[0] = save.vs;
             } else if (va[2]==save.vs) {
                 voffset = 1; va[2] = va[1]; va[1] = va[0]; va[0] = save.vs;
-            } else assertnever("");
+            } else { assertnever(""); }
         } else if (va.contains(save.vr)) {
             is_face2 = true;
             if (va[0]==save.vs) {
@@ -1192,8 +1192,8 @@ bool parse_line2(char* sline, bool& after_vsplit) {
                 voffset = 2; va[1] = va[2]; va[2] = va[0]; va[0] = save.vs;
             } else if (va[2]==save.vs) {
                 voffset = 1; va[2] = va[1]; va[1] = va[0]; va[0] = save.vs;
-            } else assertnever("");
-        } else assertnever("");
+            } else { assertnever(""); }
+        } else { assertnever(""); }
         assertx(mesh.legal_create_face(va));
         assertx(fi>=1);
         Face f = mesh.create_face_private(fi, va);

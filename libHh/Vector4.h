@@ -126,10 +126,10 @@ class Vector4 {
         // static const __m128 k_sign_mask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000)); // not constexpr
         return _mm_andnot_ps(k_sign_mask, v._r);
     }
-//     friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { // v1*v2+v3
-//         return _mm_macc_ps(v1._r, v2._r, v3._r); } // AVX FMA4 XMM instruction vfmaddps
-//         // Intel plans to implement FMA3 in processors using its Haswell microarchitecture, due in 2013
-//     }
+    // friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { // v1*v2+v3
+    //     return _mm_macc_ps(v1._r, v2._r, v3._r); } // AVX FMA4 XMM instruction vfmaddps
+    //     // Intel plans to implement FMA3 in processors using its Haswell microarchitecture, due in 2013
+    // }
  private:
     Vector4(__m128 v)                                   : _r(v) { }
     Vector4& operator=(const __m128& r)                 { _r = r; return *this; }
@@ -221,7 +221,7 @@ class Vector4 {
     friend Vector4 abs(const Vector4& v) {
         using std::abs; return Vector4(abs(v[0]), abs(v[1]), abs(v[2]), abs(v[3]));
     }
-//     friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1*v2+v3; }
+    // friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1*v2+v3; }
  private:
     alignas(16)                 // since no __mm128 element to induce 16-byte alignment
     float _c[4];

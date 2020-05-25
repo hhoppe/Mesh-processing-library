@@ -10,11 +10,12 @@
 //  draft N4560 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 #if 0
 {
-    // Count the number of elements equal to specified one; see RangeOp.h for other examples.
-    template<typename R, typename = enable_if_range_t<R> > size_t count(R&& range, const iterator_t<R>& elem) {
-        using std::begin; using std::end;
-        return std::count(begin(range), end(range), elem);
-    }
+  // Count the number of elements equal to specified one; see RangeOp.h for other examples.
+  template <typename R, typename = enable_if_range_t<R> > size_t count(R && range, const iterator_t<R>& elem) {
+    using std::begin;
+    using std::end;
+    return std::count(begin(range), end(range), elem);
+  }
 }
 #endif
 

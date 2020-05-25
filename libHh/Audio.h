@@ -6,18 +6,19 @@
 
 #if 0
 {
-    // 400Hz tone for 3sec at 48KHz sampling in stereo
-    const double freq = 400., duration = 3., samplerate = 48*1000.; const int nchannels = 2;
-    const int nsamples = static_cast<int>(duration*samplerate+.5);
-    Audio audio(V(nchannels, nsamples));
-    audio.attrib().samplerate = samplerate;
-    for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {
-        float t = i/samplerate; // time in seconds
-        audio(ch, i) = sin(t*freq*TAU);
-    }
-    audio.attrib().bitrate = 256*1000; // 256Kbps
-    audio.write_file("file.mp3");
-    // Audio read/write is performed using ffmpeg.
+  // 400Hz tone for 3sec at 48KHz sampling in stereo
+  const double freq = 400., duration = 3., samplerate = 48 * 1000.;
+  const int nchannels = 2;
+  const int nsamples = static_cast<int>(duration * samplerate + .5);
+  Audio audio(V(nchannels, nsamples));
+  audio.attrib().samplerate = samplerate;
+  for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {
+    float t = i / samplerate;  // time in seconds
+    audio(ch, i) = sin(t * freq * TAU);
+  }
+  audio.attrib().bitrate = 256 * 1000;  // 256Kbps
+  audio.write_file("file.mp3");
+  // Audio read/write is performed using ffmpeg.
 }
 #endif
 
@@ -34,10 +35,10 @@ class Audio : public Grid<2,float> {
     explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); } // nchannels, nsamples
     explicit Audio(const Audio&)                = default;
     Audio(Audio&& v) noexcept                   { swap(*this, v); } // =default?
-    Audio(base&& v) noexcept                    { swap(static_cast<base&>(*this), v); }
+    Audio(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
     ~Audio()                                    { }
     Audio& operator=(Audio&& v) noexcept        { clear(); swap(*this, v); return *this; } // =default?
-    void operator=(base&& v)                    { clear(); swap(static_cast<base&>(*this), v); }
+    void operator=(base&& v)                    { clear(); swap(implicit_cast<base&>(*this), v); }
     Audio& operator=(const Audio&)              = default;
     void operator=(CGridView<2,float> audio)    { base::assign(audio); }
     void init(const Vec2<int>& dims)            { base::init(dims); }
@@ -49,7 +50,8 @@ class Audio : public Grid<2,float> {
     void read_file(const string& filename); // filename may be "-" for std::cin;  may throw std::runtime_error
     void write_file(const string& filename) const; // filename may be "-" for std::cout; may throw std::runtime_error
     string diagnostic_string() const;
-// Misc
+
+    // Misc:
     struct Attrib {
         string suffix;  // e.g. "wav"; "" if unknown; to identify format of read_file("-") and write_file("-")
         double samplerate {0.}; // samples/sec (Hz)
@@ -72,7 +74,7 @@ string audio_suffix_for_magic_byte(uchar c);
 bool ffmpeg_command_exists();
 
 inline void swap(Audio& l, Audio& r) noexcept {
-    using std::swap; swap(static_cast<Audio::base&>(l), static_cast<Audio::base&>(r)); swap(l._attrib, r._attrib);
+    using std::swap; swap(implicit_cast<Audio::base&>(l), implicit_cast<Audio::base&>(r)); swap(l._attrib, r._attrib);
 }
 
 } // namespace hh

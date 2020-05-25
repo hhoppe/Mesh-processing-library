@@ -332,7 +332,8 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
     //  http://stackoverflow.com/questions/6327784/how-to-use-libjpeg-to-read-a-jpeg-from-a-stdistream
     jpeg_decompress_struct cinfo;
     jpeg_error_mgr jerr;
-// Step 1: allocate and initialize JPEG decompression object
+
+    // Step 1: allocate and initialize JPEG decompression object:
     cinfo.err = jpeg_std_error(&jerr);
     // Intercepting warning messages ("Premature end of JPEG file") would require modifying jerr.output_message .
     // (Note that "Premature end" may appear in VideoViewer due to the prefetch reading of another image.)
@@ -342,23 +343,27 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
         throw std::runtime_error(string("libjpeg read error: ") + jpegLastErrorMsg);
     };
     jpeg_create_decompress(&cinfo);
-// Step 2: specify data source (eg, a file)
+    
+    // Step 2: specify data source (eg, a file):
     jpeg_stdio_src(&cinfo, file);
-// Step 3: read file parameters with jpeg_read_header()
+
+    // Step 3: read file parameters with jpeg_read_header():
     jpeg_save_markers(&cinfo, JPEG_APP0+1, 0xFFFF); // marker_code (APP1=Exif), length_limit (64 KiB max)
     jpeg_read_header(&cinfo, TRUE);
     // We can ignore the return value from jpeg_read_header since
     //   (a) suspension is not possible with the stdio data source, and
     //   (b) we passed TRUE to reject a tables-only JPEG file as an error.
     // See libjpeg.doc for more info.
-// Step 4: set parameters for decompression
+
+    // Step 4: set parameters for decompression:
     // No change to any of the defaults set by jpeg_read_header().
     if (cinfo.output_components==3) {
         assertw(cinfo.jpeg_color_space==JCS_YCbCr);
         assertw(cinfo.out_color_space==JCS_RGB);
         cinfo.out_color_space = JCS_RGB; // just in case it is JCS_YCbCr
     }
-// Step 5: Start decompressor
+    
+    // Step 5: Start decompressor:
     jpeg_start_decompress(&cinfo);
     // We can ignore the return value since suspension is not possible
     // with the stdio data source.
@@ -368,7 +373,8 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
     // if we asked for color quantization.
     image.init(V(int(cinfo.output_height), int(cinfo.output_width)));
     image.set_zsize(cinfo.output_components);
-// Step 6: while (scan lines remain to be read) jpeg_read_scanlines(...);
+
+    // Step 6: while (scan lines remain to be read) jpeg_read_scanlines(...):
     Array<uchar> row(image.xsize()*image.zsize());
     ConsoleProgress cprogress("Iread", image._silent_io_progress);
     while (cinfo.output_scanline<cinfo.output_height) {
@@ -388,7 +394,8 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
             if (image.zsize()<4) pix[3] = 255;
         }
     }
-// Step 7: Finish decompression
+    
+    // Step 7: Finish decompression:
     if (1) {
         for (jpeg_saved_marker_ptr marker = cinfo.marker_list; marker; marker = marker->next) {
             if (env_jpg_debug()) SHOW(int(marker->marker));
@@ -409,7 +416,8 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
     jpeg_finish_decompress(&cinfo);
     // We can ignore the return value since suspension is not possible
     // with the stdio data source.
-// Step 8: Release JPEG decompression object
+    
+    // Step 8: Release JPEG decompression object:
     jpeg_destroy_decompress(&cinfo);
     // assertx(!fclose(infile));
     // At this point you may want to check to see whether any corrupt-data
@@ -487,7 +495,8 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     //  http://svn.openscenegraph.org/osg/OpenSceneGraph/tags/OpenSceneGraph-2.9.2/src/osgPlugins/jpeg/ReaderWriterJPEG.cpp
     jpeg_compress_struct cinfo;
     jpeg_error_mgr jerr;
-// Step 1: allocate and initialize JPEG compression object
+
+    // Step 1: allocate and initialize JPEG compression object:
     cinfo.err = jpeg_std_error(&jerr);
     jerr.error_exit = [](j_common_ptr cinfo) {
         char jpegLastErrorMsg[JMSG_LENGTH_MAX];
@@ -495,10 +504,12 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
         throw std::runtime_error(string("libjpeg write error: ") + jpegLastErrorMsg);
     };
     jpeg_create_compress(&cinfo);
-// Step 2: specify data destination (eg, a file)
+    
+    // Step 2: specify data destination (eg, a file):
     // Note: steps 2 and 3 can be done in either order.
     jpeg_stdio_dest(&cinfo, file);
-// Step 3: set parameters for compression
+    
+    // Step 3: set parameters for compression:
     // First we supply a description of the input image.
     // Four fields of the cinfo struct must be filled in:
     cinfo.image_width = image.xsize();
@@ -530,7 +541,8 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
         assertt(quality>0 && quality<=100);
         jpeg_set_quality(&cinfo, quality, TRUE);
     }
-// Step 4: Start compressor
+    
+    // Step 4: Start compressor:
     // TRUE ensures that we will write a complete interchange-JPEG file.
     // Pass TRUE unless you are very sure of what you are doing.
     jpeg_start_compress(&cinfo, TRUE);
@@ -538,13 +550,14 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
         if (env_jpg_debug()) { SHOWL; SHOW(image.attrib().exif_data.num()); }
         jpeg_write_marker(&cinfo, JPEG_APP0+1, image.attrib().exif_data.data(), image.attrib().exif_data.num());
     }
-// Step 5: while (scan lines remain to be written) jpeg_write_scanlines(...);
-// The standard input image format is a rectangular array of pixels, with
-// each pixel having the same number of "component" values (color channels).
-// Each pixel row is an array of JSAMPLEs (which typically are uchars).
-// If you are working with color data, then the color values for each pixel
-// must be adjacent in the row; for example, R, G, B, R, G, B, R, G, B, ... for 24-bit
-// RGB color.
+    
+    // Step 5: while (scan lines remain to be written) jpeg_write_scanlines(...):
+    // The standard input image format is a rectangular array of pixels, with
+    // each pixel having the same number of "component" values (color channels).
+    // Each pixel row is an array of JSAMPLEs (which typically are uchars).
+    // If you are working with color data, then the color values for each pixel
+    // must be adjacent in the row; for example, R, G, B, R, G, B, R, G, B, ... for 24-bit
+    // RGB color.
     Array<uchar> row(image.xsize()*image.zsize());
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     while (cinfo.next_scanline<cinfo.image_height) {
@@ -561,10 +574,12 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
         row_pointer[0] = row.data();
         assertt(jpeg_write_scanlines(&cinfo, row_pointer, 1)==1);
     }
-// Step 6: Finish compression
+    
+    // Step 6: Finish compression:
     jpeg_finish_compress(&cinfo);
     // assertx(!fclose(outfile));
-// Step 7: release JPEG compression object
+    
+    // Step 7: release JPEG compression object:
     jpeg_destroy_compress(&cinfo);
 #endif  // defined(JPEG_LIBRARY_NOT_INSTALLED)
 }

@@ -7,9 +7,9 @@
 
 #if 0
 {
-    Queue<Vertex> queuev;
-    while (!queue.empty()) process(queue.dequeue());
-    for (const Point& p : queuep) { consider(p); }
+  Queue<Vertex> queuev;
+  while (!queue.empty()) process(queue.dequeue());
+  for (const Point& p : queuep) consider(p);
 }
 #endif
 

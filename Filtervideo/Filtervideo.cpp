@@ -1277,7 +1277,7 @@ void compute_looping_regions() {
                     }
                     float scost2 = 0.f;
                     for_int(edge_direction, 2) { // two parts (at adjacent pixels x and z) of the spatial cost term
-                        std::swap(y, y1); std::swap(x, x1); // isn't swap dangerous here?
+                        std::swap(y, y1), std::swap(x, x1); // isn't swap dangerous here?
                         int start0 = g_lp.mat_start[y][x],   period0 = g_lp.mat_period[y][x];
                         int start1 = g_lp.mat_start[y1][x1], period1 = g_lp.mat_period[y1][x1];
                         Vector p0sum(0.f, 0.f, 0.f), p0sum2(0.f, 0.f, 0.f);
@@ -1831,7 +1831,7 @@ void process_gen(Args& args) {
                     "slit1_y", "slits1", "slits2", "slits3", "slits4", "stars1",
                     "stars2", "stars3", "stars4", "stars5", "dot1"})
             std::cout << s << "\n";
-    } else assertnever("");
+    } else { assertnever(""); }
 }
 
 Matrix<bool> get_black_border_mask(CMatrixView<Pixel> image) {

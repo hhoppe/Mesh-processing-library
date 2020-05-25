@@ -29,7 +29,7 @@ endif
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
   build_configs ?= win mingw clang cygwin w32#  default set for "make makeall" or "make CONFIG=all"
-  nondefault_configs = cygwin32 distrib
+  nondefault_configs = distrib
   configs ?=       $(build_configs) $(nondefault_configs) $(nonworking_configs)
 else
   build_configs ?= unix
@@ -39,7 +39,7 @@ endif
 export CONFIG ?= $(word 1,$(build_configs))
 $(if $(filter $(CONFIG),all $(configs)),,$(error CONFIG=$(CONFIG) is not recognized among [all $(configs)]))
 
-win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin cygwin32,$(CONFIG))),1,)#  hopefully equivalent to defined(_WIN32)
+win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1,)#  hopefully equivalent to defined(_WIN32)
 
 SHELL = bash#   sh is standard ("for i in $var; do; done"); bash is necessary for "shopt nullglob", [[ ]], etc.
 

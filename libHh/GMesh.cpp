@@ -17,7 +17,7 @@ const FlagMask GMesh::vflag_cusp = Mesh::allocate_Vertex_flag();
 const FlagMask GMesh::eflag_sharp = Mesh::allocate_Edge_flag();
 
 void swap(GMesh& l, GMesh& r) noexcept {
-    using std::swap; swap(static_cast<Mesh&>(l), static_cast<Mesh&>(r)); swap(l._os, r._os);
+    using std::swap; swap(implicit_cast<Mesh&>(l), implicit_cast<Mesh&>(r)); swap(l._os, r._os);
 }
 
 void GMesh::copy(const GMesh& m) {

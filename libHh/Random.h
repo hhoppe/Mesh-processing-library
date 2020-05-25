@@ -26,7 +26,7 @@ class Random : noncopyable {
     float gauss();                      // avg = 0.f, sdv = 1.f
     double dgauss();                    // avg = 0.,  sdv = 1.
     void discard(uint64_t count);
-// http://en.cppreference.com/w/cpp/concept/UniformRandomNumberGenerator (std::*_engine classes):
+    // http://en.cppreference.com/w/cpp/concept/UniformRandomNumberGenerator (std::*_engine classes):
     using result_type = uint32_t;
     result_type operator()();
     static_assert(std::is_integral<result_type>::value, "");

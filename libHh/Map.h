@@ -7,20 +7,22 @@
 
 #if 0
 {
-    Map<Edge,Vertex> mev;       // default uses std::hash<K>and std::equal_to<K> (which tries operator==)
-    for_map_key_value(mev, [&](Edge e, Vertex v) { func(e, v); });
-    for (Edge e : mev.keys()) { func(e); }
-    for (Vertex v : mev.values()) { func(v); }
-    //
-    struct mypair { unsigned _v1, _v2; };
-    struct hash_mypair {
-        size_t operator()(const mypair& e) const { return e._v1+e._v2*761; }
-    };
-    struct equal_mypair {
-        bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1==e2._v1 && e1._v2==e2._v2; }
-    };
-    Map<mypair, int, hash_mypair, equal_mypair> map;
-    // See Set.h for other examples using std::hash<> and explicit hash functional constructor
+  Map<Edge, Vertex> mev;  // default uses std::hash<K>and std::equal_to<K> (which tries operator==)
+  for_map_key_value(mev, [&](Edge e, Vertex v) { func(e, v); });
+  for (Edge e : mev.keys()) func(e);
+  for (Vertex v : mev.values()) func(v);
+  //
+  struct mypair {
+    unsigned _v1, _v2;
+  };
+  struct hash_mypair {
+    size_t operator()(const mypair& e) const { return e._v1 + e._v2 * 761; }
+  };
+  struct equal_mypair {
+    bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1 == e2._v1 && e1._v2 == e2._v2; }
+  };
+  Map<mypair, int, hash_mypair, equal_mypair> map;
+  // See Set.h for other examples using std::hash<> and explicit hash functional constructor
 }
 #endif
 

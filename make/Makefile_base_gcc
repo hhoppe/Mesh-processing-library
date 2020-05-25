@@ -21,7 +21,6 @@ endif
 # Override the default compilation target to let code run on a greater variety of machines.
 #   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works
 # https://gcc.gnu.org/onlinedocs/gcc-5.2.0/gcc/x86-Options.html
-# machine_arch = $(if $(filter $(CONFIG),mingw32),-march=corei7,-march=native)
 machine_arch = -march=native#  fastest on local machine
 machine_arch = -march=corei7#  to be able to run on more machines, e.g. hhoppeh
 
@@ -57,14 +56,11 @@ ifeq ($(plain_compiler),)
   ifeq ($(CXX),g++)
     cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance
     cwarnings += -Wno-double-promotion -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
-    cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast
+    cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wno-literal-suffix -Wuseless-cast
     #  -Wno-error=old-style-cast
     #  -Wno-error=name  # Turn warning "name" into an warning even if -Werror is specified.
     ccommon += -fopenmp
-    ifeq ($(filter $(CONFIG),mingw32 cygwin32),)
-      cxxwarnings += -Wno-literal-suffix -Wuseless-cast#  not recognized in gcc 4.7.2 mingw32 or gcc 4.7.3 cygwin32
-    endif
-    ifeq ($(filter $(CONFIG),mingw32 cygwin32 cygwin),)
+    ifeq ($(filter $(CONFIG),cygwin),)
       cxxwarnings += -fsized-deallocation -Wsized-deallocation#  C++14 feature not recognized in earlier gcc
     endif
   endif

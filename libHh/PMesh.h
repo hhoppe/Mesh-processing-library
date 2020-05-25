@@ -100,7 +100,8 @@ struct Vsplit {
     // - maximum number of faces: 1ull<<32
     // - maximum vertex valence:  1u<<16
     // - maximum number of materials: 1u<<16
-// Encoding of vertices vs, vl, vr.
+
+    // ** Encoding of vertices vs, vl, vr:
     // Face flclw is the face just CLW of vl from vs.
     //  vs is the vs_index\'th vertex of flclw
     //  (vl is the (vs_index+2)%3\'th vertex of face flclw)
@@ -191,22 +192,26 @@ struct Vsplit {
     // Note: wl, wr, ws, wt are correlated since scalar half-edge
     //  discontinuities usually match up at both ends of edges.
     // -> do entropy coding on (ii, wl, wr, ws, wt) symbol as a whole.
-// Face attribute values (usually predicted correctly)
+
+    // ** Face attribute values (usually predicted correctly)
     // these are defined only if {L,R}NF respectively
     //  otherwise for now they are set to 0
     ushort fl_matid;
     ushort fr_matid;
-// Vertex attribute deltas
+
+    // ** Vertex attribute deltas
     // for ii==2: vad_large=new_vt-old_vs, vad_small=new_vs-old_vs
     // for ii==0: vad_large=new_vs-old_vs, vad_small=new_vt-old_vs
     // for ii==1: vad_large=new_vt-new_i,  vad_small=new_i-old_vs
     //    where new_i=interp(new_vt, new_vs)
     PMVertexAttribD vad_large;
     PMVertexAttribD vad_small;  // is zero if "MeshSimplify -nofitgeom"
-// Wedge attribute deltas (size 1--6)
+
+    // ** Wedge attribute deltas (size 1--6)
     Array<PMWedgeAttribD> ar_wad;
     // Order: [(wvtfl, wvsfl), [(wvtfr, wvsfr)], wvlfl, [wvrfr]]
-// Residual information
+
+    // ** Residual information:
     float resid_uni;
     float resid_dir;
     int expected_wad_num(const PMeshInfo& pminfo) const;
@@ -226,15 +231,15 @@ class AWMesh : public WMesh {
     void ok() const;
     void rotate_ccw(int v, int& w, int& f) const;
     void rotate_clw(int v, int& w, int& f) const;
-// Rendering: common code and data
+
+    // Rendering: common code and data
     static constexpr int k_Face_visited_mask = 1<<30; // high bit of matid
     int _cur_frame_mask {0};                          // 0 or k_Face_visited_mask
-// Rendering using OpenGL
+
+    // Rendering using OpenGL
     void ogl_render_faces_individually(const PMeshInfo& pminfo, int usetexture);
     void ogl_render_faces_strips(const PMeshInfo& pminfo, int usetexture);
     void ogl_render_edges();
-// Rendering using Direct3D
-    // to be defined
  public:
     Array<PMFaceNeighbors> _fnei; // must be same size as _faces!
  public:
@@ -248,11 +253,9 @@ class AWMesh : public WMesh {
     void construct_adjacency();
     void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code,
                                int wvlfl, int wvrfr, int wvsfl, int wvsfr, int wvtfl, int wvtfr);
-// Rendering using OpenGL
+    // Rendering using OpenGL
     Array<Pixel> _ogl_mat_byte_rgba; // size is _materials.num()
     void ogl_process_materials();
-// Rendering using Direct3D
-    // to be defined
  protected:
     void apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry* ancestry = nullptr);
     void undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo);
@@ -368,7 +371,7 @@ struct PMWedgeAttribG {
 // It is created by applying a sequence of vsplits to a PM iterator.
 class Geomorph : public WMesh {
  public:
-// Construction
+    // ** Construction:
     // Create a geomorph from pmi's current mesh to the mesh obtained after applying n vsplits to pmi.
     // Note side-effect on pmi!
     // Ret: was_able_to_go_all_the_way; die if !empty
@@ -379,7 +382,8 @@ class Geomorph : public WMesh {
     // Same up to nfaces (or nfaces-1)
     // Ret: success
     bool construct_goto_nfaces(PMeshIter& pmi, int nfaces);
-// Evaluation
+
+    // ** Evaluation:
     // Modify each vertex and wedge attributes of this mesh by linearly
     //  interpolating between attribs[0] and attribs[1].
     // Could optimize this by:

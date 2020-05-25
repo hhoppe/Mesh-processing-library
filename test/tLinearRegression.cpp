@@ -57,10 +57,8 @@ int main() {
             float z = float(mag(xy-V(n/2.f, n/2.f)));
             xyzdata.push(concat(xy.view(), ArView(z)));
         }
-#if 0 && !(defined(__CYGWIN__) && defined(__CYGWIN32__)) // internal compiler error in cygwin32 gcc 4.7.3
         try_xyz<2>(xyzdata);
         try_xyz<3>(xyzdata);
-#endif
     }
 }
 

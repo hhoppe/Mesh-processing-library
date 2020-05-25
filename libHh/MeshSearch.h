@@ -8,11 +8,16 @@
 
 #if 0
 {
-    MeshSearch msearch(&mesh);
-    msearch.allow_local_project(true);
-    { HH_TIMER(_spatial_create); msearch.build_spatial(); }
-    Bary bary; Point clp; float d2;
-    Face f = msearch(p, bary, clp, d2);
+  MeshSearch msearch(&mesh);
+  msearch.allow_local_project(true);
+  {
+    HH_TIMER(_spatial_create);
+    msearch.build_spatial();
+  }
+  Bary bary;
+  Point clp;
+  float d2;
+  Face f = msearch(p, bary, clp, d2);
 }
 #endif
 

@@ -1506,7 +1506,7 @@ void do_composite(Args& args) {
                 vr = clamp(vf-vb, 0.f, 1.f);
             } else if (op==Op_unblend) {
                 vr = max(vf, vb);
-            } else assertnever("");
+            } else { assertnever(""); }
             image[yx][z] = uint8_t(clamp(vr, 0.f, 1.f)*255.f+.5f);
         }
     }
@@ -2158,7 +2158,7 @@ void do_poisson() {
                 lls.enter_b_rc(row, 0, bigf*p[0]);
                 row++;
             }
-        } else assertnever("");
+        } else { assertnever(""); }
         assertx(row==lls.num_rows());
         for_int(y, ny) for_int(x, nx) {
             lls.enter_xest_rc((y*nx+x)*2+0, 0, matp[y][x][0]);
@@ -2799,7 +2799,9 @@ Matrix<Vector4> downsample_image(CMatrixView<Vector4> mat_F) {
     fkernel[1] = fkernel[6] = -9.f/256.f;
     fkernel[2] = fkernel[5] = 29.f/256.f;
     fkernel[3] = fkernel[4] = 111.f/256.f;
-    if (0) { fill(fkernel, 0.f); fkernel[3] = fkernel[4] = 1.f; } // box filter
+    if (0) {                    // box filter
+        fill(fkernel, 0.f); fkernel[3] = fkernel[4] = 1.f;
+    }
     //
     if (0) {                    // slow implementation
         parallel_for_coords(mat_C.dims(), [&](const Vec2<int>& yx) {
@@ -2837,7 +2839,9 @@ Matrix<Vector4> upsample_image(CMatrixView<Vector4> mat_C) {
     fkernel[1] = 111.f/128.f;
     fkernel[2] = 29.f/128.f;
     fkernel[3] = -3.f/128.f;
-    if (0) { fill(fkernel, 0.f); fkernel[1] = 1.f; } // box filter
+    if (0) {                    // box filter
+        fill(fkernel, 0.f); fkernel[1] = 1.f;
+    }
     Vec2<Array<float>> fkernels;
     fkernels[0] = fkernel;
     fkernels[1] = reverse(clone(fkernel));
@@ -2917,7 +2921,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
                     float w = fwindow[iy]*fwindow[ix]; // weight
                     ssum += w*v; ssum2 += w*square(v);
                 }
-                // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); } // note: LAB have broader range.
+                // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); }  // note: LAB have broader range.
                 // Gather window statistics in color image (coarse image).
                 for_int(iy, window_diam) for_int(ix, window_diam) {
                     Vector4 v = mat_c.inside(y-window_radius+iy, x-window_radius+ix, k_reflected); // pixel val

@@ -142,7 +142,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
                 e->setChild(0, vt);
             } else if (e->getChild(1)==vs) {
                 e->setChild(1, vt);
-            } else assertnever("");
+            } else { assertnever(""); }
         } else if (outcome == SplitRecord::E_VSVT || outcome == SplitRecord::E_F) { // create simplex to vt
             Simplex splite = K.createSimplex(1);
             Simplex oppv = e->opp_vertex(vs);
@@ -291,7 +291,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
                 e->setChild(0, vt);
             } else if (e->getChild(1)==vs) {
                 e->setChild(1, vt);
-            } else assertnever("");
+            } else { assertnever(""); }
         } else if (outcome == SplitRecord::E_VSVT || outcome == SplitRecord::E_F) { // create simplex to vt
             Simplex splite = K.createSimplex(1);
             Simplex oppv = e->opp_vertex(vs);
@@ -445,7 +445,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
                 e->setChild(0, vt);
             } else if (e->getChild(1)==vs) {
                 e->setChild(1, vt);
-            } else assertnever("");
+            } else { assertnever(""); }
         } else if (outcome == SplitRecord::E_VSVT || outcome == SplitRecord::E_F) { // create simplex to vt
             Simplex splite = K.createSimplex(1);
             new_simplices.push_back(splite);

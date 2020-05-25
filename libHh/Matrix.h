@@ -6,8 +6,8 @@
 
 #if 0
 {
-    Matrix<float> mat(ysize, xsize);
-    for_int(y, mat.ysize()) for_int(x, mat.xsize()) { float e = mat[y][x]; }
+  Matrix<float> mat(ysize, xsize);
+  for_int(y, mat.ysize()) for_int(x, mat.xsize()) { float e = mat[y][x]; }
 }
 #endif
 

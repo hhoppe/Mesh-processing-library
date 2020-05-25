@@ -380,11 +380,11 @@ void SCGeomorph::update(float alpha, Array<Vector>& corner_nors) { // alpha==1.f
     assertx(corner_nors.num()>=nnew.num());
     for_int(i, nnew.num()) {
         const Vector& on = nold[i];
-//      if (on[0]==-2.f && on[1]==-2.f && on[2]==-2.f) {
-//          corner_nors[i] = nnew[i];
-//      } else {
-//          corner_nors[i] = on;
-//      }
+        // if (on[0]==-2.f && on[1]==-2.f && on[2]==-2.f) {
+        //     corner_nors[i] = nnew[i];
+        // } else {
+        //     corner_nors[i] = on;
+        // }
 
         if (on[0]==-2.f && on[1]==-2.f && on[2]==-2.f) {
             corner_nors[i] = nnew[i];

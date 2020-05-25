@@ -508,6 +508,9 @@ template<typename Target, typename Source> constexpr Target possible_cast(Source
     return static_cast<Target>(v);
 }
 
+// Cast a temporary as an lvalue; only use when safe.
+template<typename T> T& as_lvalue(T&& e) { return e; }
+
 // Higher-precision type to represent the sum of a set of elements.
 template<typename T> using sum_type_t = typename details::sum_type<T>::type;
 

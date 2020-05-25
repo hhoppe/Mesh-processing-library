@@ -1495,7 +1495,7 @@ void sample_pts() {
                 Edge e = eedge[ei];
                 add_edge_point(e, Random::G.unif());
             }
-        } else assertnever("");
+        } else { assertnever(""); }
         showff("Created %d points on sharp edges\n", epts.num());
         // Assign points to sets.
         for_int(i, epts.num()) {
@@ -3589,7 +3589,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
                 if (ii!=0) continue;
             } else if (mesh.vertex_id(v2)==mesh.num_vertices()) {
                 if (ii!=2) continue;
-            } else assertnever("");
+            } else { assertnever(""); }
         }
         if (!edge_sharp(e)) {
             if (v1nse>=1 && v2nse>=1) {

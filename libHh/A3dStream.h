@@ -63,19 +63,23 @@ class A3dElem {
     bool binary() const                                 { return _binary; }
     static bool status_type(EType type) { char ch = static_cast<char>(type); return ch=='d' || ch=='s' || ch=='g'; }
     static bool command_type(EType type)                { return command_type_i(type); }
-// for EType::polygon || EType::polyline || EType::point:
+
+    // For EType::polygon || EType::polyline || EType::point:
     int num() const                                     { return _v.num(); }
     size_t size() const                                 { return _v.size(); }
     void push(const A3dVertex& vertex)                  { push_i(vertex); }
     A3dVertex& operator[](int i)                        { return _v[i]; }
     const A3dVertex& operator[](int i) const            { return _v[i]; }
-// for EType::polygon
+
+    // For EType::polygon:
     Vector pnormal() const;     // may be degenerate (zero)!
     void get_polygon(Polygon& poly) const;
-// for TComment:
+
+    // For TComment:
     void set_comment(string str); // str may start with ' '
     const string& comment() const;
-// for command_type():
+
+    // For command_type():
     Vec3<float>& f()                                    { assertx(command_type(_type)); return _f; }
     const Vec3<float>& f() const                        { assertx(command_type(_type)); return _f; }
  private:

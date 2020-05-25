@@ -47,7 +47,9 @@ class Args {
     double        get_double();
     const string& get_string();
     string get_filename(); // check for legal characters; translate '\'; may not begin with '-' (unless equal to "-")
-// For misc use:
+
+    // For misc use:
+    Args& use() && { return *this; }
     static bool check_bool  (const string& s);
     static bool check_char  (const string& s);
     static bool check_int   (const string& s);
@@ -80,7 +82,8 @@ class ParseArgs : public Args {
     // takes ownership; sets argc=0, argv=nullptr; ensure_utf8_encoding()
     explicit ParseArgs(int& argc, const char**& argv);
     explicit ParseArgs(CArrayView<string> aargs, const string& name = "");
-// Define options: (any prefix of string str is recognized unless it contains a '[' or disallow_prefixes() is set)
+
+    // Define options: (any prefix of string str is recognized unless it contains a '[' or disallow_prefixes() is set):
     void f(string str, bool&        arg,        string doc = ""); // sets flag to true
     void p(string str, bool&        arg,        string doc = ""); // reads one parameter
     void p(string str, char&        arg,        string doc = "");
@@ -105,7 +108,8 @@ class ParseArgs : public Args {
     // Note: usually, other_options_ok() implies that disallow_prefixes() should be set too.
     static bool special_arg(const string& s); // true if "-?" or "--help" or "--version"
     void print_help();
-// Perform argument parsing:
+
+    // Perform argument parsing:
     bool parse();               // main function; returns success (false if "-?" is found)
     bool parse_and_extract(Array<string>& aargs);
     void copy_parse(const ParseArgs& pa);

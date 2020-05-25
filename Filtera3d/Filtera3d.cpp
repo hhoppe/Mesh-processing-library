@@ -321,7 +321,8 @@ void show_normals(const A3dElem& el) {
     if (el.num()<2) {
         c = 1.;
     } else {
-        Array<Point> pa; for_int(i, el.num()) { pa.push(el[i].p); } // el not necessarily Type::polygon
+        // el is not necessarily Type::polygon
+        Array<Point> pa; for_int(i, el.num()) { pa.push(el[i].p); }
         Point pavg = centroid(pa);
         for_int(i, el.num()) { c += dist(pa[i], pavg); }
         c /= el.num();
@@ -456,11 +457,11 @@ bool loop(A3dElem& el) {
             float c = (el[i].p[2]-colorheight[0])/(colorheight[1]-colorheight[0]);
             c = clamp(c, 0.f, 1.f);
             el[i].c.d = A3dColor(c, c, c);
-//             // from lum.h in ~4Dgifts/iristools
-//             const float RLUM = .3086f, GLUM = .6094f, BLUM = .0820f;
-//             el[i].c.d = A3dColor(min(1.f, max(0.f, c/RLUM/3)),
-//                                  min(1.f, max(0.f, c/RLUM/3)),
-//                                  min(1.f, max(0.f, c/RLUM/3)));
+            // From lum.h in ~4Dgifts/iristools:
+            // const float RLUM = .3086f, GLUM = .6094f, BLUM = .0820f;
+            // el[i].c.d = A3dColor(min(1.f, max(0.f, c/RLUM/3)),
+            //                      min(1.f, max(0.f, c/RLUM/3)),
+            //                      min(1.f, max(0.f, c/RLUM/3)));
         }
         if (is_transf) {
             el[i].p *= ctransf;

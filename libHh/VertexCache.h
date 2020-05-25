@@ -14,7 +14,7 @@ class VertexCache : noncopyable {
     enum class EType { notype, fifo, lru };
     static string type_string(EType type);
     static unique_ptr<VertexCache> make(EType type, int nverts1, int cs); // vertex ids begin at 1
-//
+    
     virtual ~VertexCache()                      { }
     virtual EType type() const = 0;
     virtual void init(int nverts1, int cs) = 0;   // vertex ids begin at 1

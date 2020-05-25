@@ -198,11 +198,11 @@ bool try_finding_it(const string& name) {
     //  but now solved using c:/cygwin/etc/fstab .
     // Added "<$nul" so that "G3dOGL ~/data/mesh/cat.m &" does not freeze.  (Nowadays I use "G3d ~/data/mesh".)
     // However, it still seems to freeze.  Added "close(STDIN)" inside s3dname.
-// #if 0 && defined(_WIN32)
-//     const string snul = "nul";
-// #else
-//     const string snul = "/dev/null";
-// #endif
+    // #if 0 && defined(_WIN32)
+    //     const string snul = "nul";
+    // #else
+    //     const string snul = "/dev/null";
+    // #endif
     // bash:  0<&- or <&-  close stdin.
     // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + snul + " |";
     string com = "s3dname -s " + quote_arg_for_shell(name) + " |";

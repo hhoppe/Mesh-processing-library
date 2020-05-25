@@ -592,16 +592,16 @@ void do_lfit(Args& args) {
 
 void apply_schedule() {
     while (spring>spring_sched[0]) {
-        { Args args { "2", "3" }; do_lfit(args); } // -lfit 2 3
-        do_stoc();                                 // -stoc
-        { Args args { "2", "3" }; do_lfit(args); } // -lfit 2 3
-        spring *= .1f;
+        do_lfit(as_lvalue(Args{ "2", "3" }));  // -lfit 2 3
+        do_stoc();                             // -stoc
+        do_lfit(as_lvalue(Args{ "2", "3" }));  // -lfit 2 3
+        spring *= .1f;                         // -spring f
     }
     for (float spr : spring_sched) {
-        spring = spr;                              // -spring f
-        { Args args { "2", "3" }; do_lfit(args); } // -lfit 2 3
-        do_stoc();                                 // -stoc
-        { Args args { "2", "3" }; do_lfit(args); } // -lfit 2 3
+        spring = spr;                          // -spring f
+        do_lfit(as_lvalue(Args{ "2", "3" }));  // -lfit 2 3
+        do_stoc();                             // -stoc
+        do_lfit(as_lvalue(Args{ "2", "3" }));  // -lfit 2 3
     }
 }
 
@@ -609,7 +609,7 @@ void do_reconstruct() {
     HH_TIMER(_reconstruct);
     if (!spring) spring = spring_sched[0];
     perhaps_initialize();
-    { Args args { "0" }; do_gfit(args); }
+    do_gfit(as_lvalue(Args{"0"}));
     apply_schedule();
 }
 

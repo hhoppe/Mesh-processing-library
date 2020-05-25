@@ -5,6 +5,15 @@ using namespace hh;
 
 namespace {
 
+void echo_args(Args& args) {
+    SHOW(args.get_string());
+    SHOW(args.get_int());
+}
+
+void phase0() {
+    echo_args(as_lvalue(Args{"string", "3"}));
+}
+
 void do_show1p1() { SHOW(1+1); }
 
 bool flag2 = false;
@@ -59,10 +68,11 @@ void phase2(int argc, const char** argv) {
 } // namespace
 
 int main(int argc, const char** argv) {
-    if (!getenv_bool("TARGS_PHASE2")) {
-        phase1(argc, argv);
-    } else {
-        phase2(argc, argv);
+    switch (getenv_int("TARGS_PHASE", 0)) {
+     case 0: phase0(); break;
+     case 1: phase1(argc, argv); break;
+     case 2: phase2(argc, argv); break;
+     default: assertnever("");
     }
     return 0;
 }

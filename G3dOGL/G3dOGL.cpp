@@ -49,7 +49,6 @@ bool g_is_ati = false;
 extern float ambient;           // used in G3devent.cpp
 float ambient;
 
-// #if defined(__MINGW32__)
 #if defined(_WIN32) && !defined(_WIN64)
 // Problem: with __MINGW32__, restarting GL_TRIANGLES seems to require reinitializing some color state.
 //   Same problem with Win32 build.  e.g.:
@@ -1189,7 +1188,10 @@ void gl_init() {
             Vector lightdireyegl = k_lightdir_eye1*k_eye_to_gleye;
             glLightfv(GL_LIGHT1, GL_POSITION, concat(lightdireyegl, V(0.f)).data());
             Vec4<float> color = concat(thrice(lightsource), V(1.f));
-            if (g_twolights>1) { color[0] *= 0.5f; color[1] *= 0.7f; color[2] *= 1.5f; } // make rear light blue
+            if (g_twolights>1) {
+                // make rear light blue
+                color[0] *= 0.5f; color[1] *= 0.7f; color[2] *= 1.5f;
+            }
             glLightfv(GL_LIGHT1, GL_DIFFUSE, color.data());
             glLightfv(GL_LIGHT1, GL_SPECULAR, color.data());
             glEnable(GL_LIGHT1);
@@ -2509,7 +2511,7 @@ bool HB::init(Array<string>& aargs,
     // had ambient=.60 lightsource=.75 on PC
     // changed to high-contrast default on 20020117
     //  (I liked the contrast of the old normal-map images.)
-    // ambient = .25f; lightsource = .85f; // before 20120502
+    // ambient = .25f; lightsource = .85f;  // before 20120502
     ambient = .30f;             // was .60f
     lightsource = .65f;         // was .75f then .72f
     backfacec = {.15f, .5f, .15f};

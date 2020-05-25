@@ -1778,7 +1778,7 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
      default: assertnever("");
     }
     // Grab final mesh
-    static_cast<WMesh&>(*this) = pmi; // copy pmi::AWMesh to this->WMesh
+    implicit_cast<WMesh&>(*this) = pmi; // copy pmi::AWMesh to this->WMesh
     ASSERTX(_vertices.num()==ancestry._vancestry.num());
     ASSERTX(_wedges.num()==ancestry._wancestry.num());
     // Fill attribute arrays _vattribs and _wattribs.

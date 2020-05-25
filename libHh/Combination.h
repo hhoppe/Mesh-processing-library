@@ -6,8 +6,8 @@
 
 #if 0
 {
-    Combination<Vertex> comb;
-    for_combination(comb, [&](Vertex v, float val) { func(v, val); });
+  Combination<Vertex> comb;
+  for_combination(comb, [&](Vertex v, float val) { func(v, val); });
 }
 #endif
 

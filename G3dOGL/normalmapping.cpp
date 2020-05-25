@@ -136,7 +136,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
             gl_FragColor.a = 1.;
         }
     )"[1];
-    static type& s_f_get() { static type* f = new type; return *f; }  // singleton pattern function
+    static type& s_f_get() { static type& f = *new type; return f; }
 };
 
 struct NormalMapping_frag1 final : NormalMapping {
@@ -180,8 +180,10 @@ struct NormalMapping_frag1 final : NormalMapping {
         USE_GL_EXT(glBindProgramARB, PFNGLBINDPROGRAMARBPROC);
         USE_GL_EXT(glProgramLocalParameter4fvARB, PFNGLPROGRAMLOCALPARAMETER4FVARBPROC);
         glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
-        Vec4<float> light2 = normalizef(scaled_light); light2[3] = ambient; // C0 = light_vector, scalar_ambient
-        Vec4<float> vhalf2 = normalizef(scaled_vhalf);                      // C1 = vhalf_vector, 0.f
+        // C0 = light_vector, scalar_ambient
+        Vec4<float> light2 = normalizef(scaled_light); light2[3] = ambient;
+        // C1 = vhalf_vector, 0.f
+        Vec4<float> vhalf2 = normalizef(scaled_vhalf);
         glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 0, light2.data());
         glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 1, vhalf2.data());
         assertx(!gl_report_errors());

@@ -7,12 +7,10 @@
 
 #if 0
 {
-    Graph<int> g;
-    for (int v1 : g) {
-        for (int v2 : g.edges(v1)) {
-            process_edge(v1, v2);
-        }
-    }
+  Graph<int> g;
+  for (int v1 : g) {
+    for (int v2 : g.edges(v1)) process_edge(v1, v2);
+  }
 }
 #endif
 

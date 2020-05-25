@@ -42,38 +42,49 @@ class SubMesh {
     const GMesh& mesh() const { return _m; }
     GMesh& orig_mesh() { return _omesh; }
     const GMesh& orig_mesh() const { return _omesh; }
-// subdivide (makes use of refine(), create_conv(), convolve_self(), ...)
+
+    // subdivide (makes use of refine(), create_conv(), convolve_self(), ...):
     void subdivide(float cosang = 1.f);
     void subdivide_n(int nsubdiv, int limit, float cosang = 1.f, bool triang = true);
-// Combinations
+
+    // combinations:
     // get a combination (expressing v of mesh() in terms of orig_mesh())
     const Combvh& combination(Vertex v) const;
     // Compose c1 with _cmvcvh to get combination in terms of orig. verts.
     Combvh compose_c_mvcvh(const Combvh& ci) const;
-// update vertex positions on mesh() according to its mask
+
+    // Update vertex positions on mesh() according to its mask:
     void update_vertex_position(Vertex v);
     void update_vertex_positions();
-// misc
+
+    // misc:
     void mask_parameters(bool ps222, float pweighta) { _s222 = ps222; _weighta = pweighta; }
-// omesh to and from mesh
+
+    // omesh to and from mesh:
     Face orig_face(Face f) const;
     void orig_face_index(Face fi, Face& fo, int& pindex) const;
     Face get_face(Face of, int index) const;
-// split and compute splitting masks
+
+    // split and compute splitting masks:
     void refine(Mvcvh& mconv);  // 1to4 split at edge midpoints
     // refine near creases, and refine edges with cosdihedral <cosang
     void selectively_refine(Mvcvh& mconv, float cosang);
-// compute averaging masks
+
+    // compute averaging masks:
     using FVMASK = void (SubMesh::*)(Vertex v, Combvh& comb) const;
     void create_conv(Mvcvh& mconv, FVMASK f); // use a subdivision mask
-// the masks
+
+    // the masks:
     void averaging_mask(Vertex v, Combvh& comb) const;
     void limit_mask(Vertex v, Combvh& comb) const;
-// triangulate
+
+    // triangulate:
     void triangulate_quads(Mvcvh& mconv);   // 1to4 split at centroids
-// apply a convolution
+    
+    // apply a convolution:
     void convolve_self(const Mvcvh& mconv); // _cmvcvh=mconv*_cmvcvh
-// debug
+
+    // debug:
     void show_mvcvh(const Mvcvh& mvcvh) const;
     void show_cmvcvh() const;
  private:

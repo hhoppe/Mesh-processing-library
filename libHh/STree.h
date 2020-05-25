@@ -7,13 +7,12 @@
 
 #if 0
 {
-    STree<int> stree;
-}
-{
-    struct less_astruct {
-        bool operator()(const astruct& s1, const astruct& s2) const { return compare_astruct(s1, s2)<0; }
-    };
-    STree<astruct,less_astruct> stree;
+  STree<int> stree1;
+
+  struct less_astruct {
+    bool operator()(const astruct& s1, const astruct& s2) const { return compare_astruct(s1, s2) < 0; }
+  };
+  STree<astruct, less_astruct> stree2;
 }
 #endif
 

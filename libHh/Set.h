@@ -7,20 +7,25 @@
 
 #if 0
 {
-    Set<Edge> sete; for (Edge e : set) { consider(e); }
-    //
-    struct mypair { unsigned _v1, _v2; };
-    struct hash_mypair {
-        size_t operator()(const mypair& e) const { return hash_combine(my_hash(e._v1), e._v2); }
-    };
-    struct equal_mypair {
-        bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1==e2._v1 && e1._v2==e2._v2; }
-    };
-    Set<mypair, hash_mypair, equal_mypair> setpairs;
-    //
-    struct hash_edge { ... const GMesh& _mesh; } // from MeshOp.cpp
-    hash_edge he(mesh);
-    Set<Edge,hash_edge> sete(he);
+  Set<Edge> sete;
+  for (Edge e : set) consider(e);
+  //
+  struct mypair {
+    unsigned _v1, _v2;
+  };
+  struct hash_mypair {
+    size_t operator()(const mypair& e) const { return hash_combine(my_hash(e._v1), e._v2); }
+  };
+  struct equal_mypair {
+    bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1 == e2._v1 && e1._v2 == e2._v2; }
+  };
+  Set<mypair, hash_mypair, equal_mypair> setpairs;
+  //
+  struct hash_edge {
+    ... const GMesh& _mesh;
+  }  // from MeshOp.cpp
+  hash_edge he(mesh);
+  Set<Edge, hash_edge> sete(he);
 }
 #endif
 

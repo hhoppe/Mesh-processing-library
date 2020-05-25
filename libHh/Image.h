@@ -12,17 +12,19 @@
 
 #if 0
 {
-    Image image(V(ysize, xsize)), image2(image.dims(), Pixel(65, 66, 67, 200)); image2.set_zsize(4);
-    Pixel& pix = image[y][x]; uint8_t c = image(y, x)[z];
-    // ysize()==#rows, xsize()==#columns, zsize()==#channels
-    // Valid values for zsize(): 1: grayscale image: Red==Green==Blue  (Alpha is undefined)
-    //                           3: RGB image  (default)  (Alpha is undefined)
-    //                           4: RGBA image
-    // Row-column origin is at upper-left corner!
-    //  (This is consistent with *.jpg, *.png, *.ppm, DirectX.)
-    //  (In contrast, *.rgb, *.bmp, OpenGL glTexImage2D() have image origin at lower-left.)
-    // bgra==true -> BGR or BGRA channel-ordering.
-    // Image read/write is performed using: Windows Imaging Component (WIC), libpng+libjpeg+.. (IO), or ffmpeg (FF).
+  Image image(V(ysize, xsize)), image2(image.dims(), Pixel(65, 66, 67, 200));
+  image2.set_zsize(4);
+  Pixel& pix = image[y][x];
+  uint8_t c = image(y, x)[z];
+  // ysize()==#rows, xsize()==#columns, zsize()==#channels
+  // Valid values for zsize(): 1: grayscale image: Red==Green==Blue  (Alpha is undefined)
+  //                           3: RGB image  (default)  (Alpha is undefined)
+  //                           4: RGBA image
+  // Row-column origin is at upper-left corner!
+  //  (This is consistent with *.jpg, *.png, *.ppm, DirectX.)
+  //  (In contrast, *.rgb, *.bmp, OpenGL glTexImage2D() have image origin at lower-left.)
+  // bgra==true -> BGR or BGRA channel-ordering.
+  // Image read/write is performed using: Windows Imaging Component (WIC), libpng+libjpeg+.. (IO), or ffmpeg (FF).
 }
 #endif
 
@@ -40,9 +42,9 @@ class Image : public Matrix<Pixel> {
     explicit Image(const Image&)                = default;
     explicit Image(const base& image)           : base(image.dims()) { base::assign(image); }
     Image(Image&& m) noexcept                   { swap(*this, m); }                            // =default?
-    Image(base&& m) noexcept                    { swap(static_cast<base&>(*this), m); }
+    Image(base&& m) noexcept                    { swap(implicit_cast<base&>(*this), m); }
     Image& operator=(Image&& image) noexcept    { clear(); swap(*this, image); return *this; } // =default?
-    void operator=(base&& image)                { clear(); swap(static_cast<base&>(*this), image); }
+    void operator=(base&& image)                { clear(); swap(implicit_cast<base&>(*this), image); }
     Image& operator=(const Image&)              = default;
     void operator=(CMatrixView<Pixel> image)    { base::assign(image); }
     void init(const Vec2<int>& pdims)           { base::init(pdims); }
@@ -61,7 +63,8 @@ class Image : public Matrix<Pixel> {
     // filename may be "-" for std::cout; may throw std::runtime_error; suffix() is mutable
     void write_file(const string& filename) const       { write_file_i(filename, false); }
     void write_file_bgra(const string& filename) const  { write_file_i(filename, true); }
-// Misc
+
+    // Misc:
     void to_bw();
     void to_color();
     void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
@@ -303,7 +306,7 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 //----------------------------------------------------------------------------
 
 inline void swap(Image& l, Image& r) noexcept {
-    using std::swap; swap(static_cast<Image::base&>(l), static_cast<Image::base&>(r));
+    using std::swap; swap(implicit_cast<Image::base&>(l), implicit_cast<Image::base&>(r));
     swap(l._attrib, r._attrib); swap(l._silent_io_progress, r._silent_io_progress);
 }
 

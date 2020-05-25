@@ -37,23 +37,23 @@ class Mklib : noncopyable {
     // transformation on object: (-.5, -.5, -.5)<>(.5, .5, .5) with primary axis +x, secondary axis +y ("O")
     //                        -->  (-.5, -.5, 0)<>(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
     template<typename Func = void(int)> void OtoU(Func func, int n) {
-        mk_save; mk.rotate(1, TAU/4); mk.rotate(0, -TAU/4); mk.translate(.5f, 0, 0); func(n);
+        MkSave mk_save(mk); mk.rotate(1, TAU/4); mk.rotate(0, -TAU/4); mk.translate(.5f, 0, 0); func(n);
     }
     // radius 1 along +x axis, calls func with +x axis normal to circle;  s = sin(TAU/2/n) h = cos(TAU/2/n);
     //  scaled to touch at (0, -s, 0) & (0, +s, 0) and center of circle at (-h, 0, 0).
     template<typename Func = void(int)> void circle_of(Func func, int n) {
         float a = TAU/n, h = cos(a*.5f);
-        mk_save; mk.rotate(1, TAU/4); mk.rotate(2, TAU/4); mk.rotate(2, a*.5f);
+        MkSave mk_save(mk); mk.rotate(1, TAU/4); mk.rotate(2, TAU/4); mk.rotate(2, a*.5f);
         for_int(i, n) {
-            { mk_save; mk.translate(h, 0, 0); func(i); }
+            { MkSave mk_save2(mk); mk.translate(h, 0, 0); func(i); }
             mk.rotate(2, a);
         }
     }
     template<typename Func = void(int)> void circle_ofU(Func func, int n) {
         float a = TAU/n, h = cos(a*.5f);
-        mk_save; mk.rotate(2, a*.5f);
+        MkSave mk_save(mk); mk.rotate(2, a*.5f);
         for_int(i, n) {
-            { mk_save; mk.translate(h, 0, 0); func(i); }
+            { MkSave mk_save2(mk); mk.translate(h, 0, 0); func(i); }
             mk.rotate(2, a);
         }
     }
@@ -61,9 +61,9 @@ class Mklib : noncopyable {
     //  not scaled -> center of circle @(-1, 0, 0).
     template<typename Func = void(int)> void radius_ofU(Func func, int n) {
         float a = TAU/n;
-        mk_save;
+        MkSave mk_save(mk);
         for_int(i, n) {
-            { mk_save; mk.translate(1, 0, 0); func(i); }
+            { MkSave mk_save2(mk); mk.translate(1, 0, 0); func(i); }
             mk.rotate(2, a);
         }
     }

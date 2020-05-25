@@ -153,7 +153,6 @@ struct hash_edge {
 };
 Set<Edge,hash_edge> ecand;      // Set of candidate edges in stoc; hash without pointers for portable random.
 
-
 // *** DataPts
 
 float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp);

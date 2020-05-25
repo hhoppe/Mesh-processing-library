@@ -43,7 +43,6 @@ bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2,
     return foundint;
 }
 
-
 MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
     : _mesh(*assertx(mesh)), _allow_local_project(allow_local_project), _ar_polyface(_mesh.num_faces()) {
     if (getenv_bool("NO_LOCAL_PROJECT")) { Warning("MeshSearch NO_LOCAL_PROJECT"); _allow_local_project = false; }
@@ -77,7 +76,10 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
             d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, clp);
             float dfrac = sqrt(d2)*_ftospatial[0][0];
             // if (!count) { HH_SSTAT(Sms_dfrac0, dfrac); }
-            if (dfrac>2e-2f) { f = nullptr; break; } // failure
+            if (dfrac>2e-2f) {  // failure
+                f = nullptr;
+                break;
+            }
             if (dfrac<1e-6f) break; // success
             Vec3<Vertex> va; _mesh.triangle_vertices(f, va);
             int side = -1;
@@ -105,7 +107,10 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
                 }
                 if (side<0) {
                     if (_allow_off_surface) break; // success
-                    if (_allow_internal_boundaries) { f = nullptr; break; } // failure
+                    if (_allow_internal_boundaries) { // failure
+                        f = nullptr;
+                        break;
+                    }
                 }
             }
             if (side>=0)
@@ -114,7 +119,10 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
                 if (!_allow_internal_boundaries) assertnever("MeshSearch has hit surface boundary");
                 break;          // failure
             }
-            if (++count==10) { f = nullptr; break; } // failure
+            if (++count==10) {  // failure
+                f = nullptr;
+                break;
+            }
         }
         // HH_SSTAT(Sms_locn, count);
     }

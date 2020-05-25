@@ -171,7 +171,7 @@ template<typename R, typename = enable_if_range_t<R> > std::ptrdiff_t distance(c
 
 #endif  // "Ranges" TS, draft N4560
 
-
+// ***
 
 // Higher-precision type to represent the mean of a set of elements.
 template<typename T> struct mean_type {

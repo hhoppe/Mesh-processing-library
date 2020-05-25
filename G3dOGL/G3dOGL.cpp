@@ -405,7 +405,6 @@ int sc_gm_num = -1;
 bool psc_key_press(char ch);
 #endif
 
-
 // *** PLY stuff
 
 bool ply_mode;
@@ -524,6 +523,7 @@ void normalmap_deactivate() {
     assertx(pnormalmap)->deactivate();
 }
 
+// ***
 
 bool bigfont() {
     return HB::get_font_dims()[1]>9;
@@ -554,7 +554,7 @@ inline Pixel interp_color(const Pixel& c1, const Pixel& c2, int f1, int f2) {
     return ((Vector4i(c1)*f1+Vector4i(c2)*f2+128) >> 8).pixel();
 }
 
-// ****
+// ***
 
 void do_movie(Args& args) {
     picture = true;
@@ -837,7 +837,6 @@ const Array<glt_format> k_glt_formats = {
 // GL_LUMINANCE4        1:1 (1024x1024) [0,0,0,0] mipmap
 // GL_RGB_FLOAT32_ATI   1:1 (   0x   0) [0,0,0,0] mipmap
 // GL_RGB_FLOAT16_ATI   1:1 (   0x   0) [0,0,0,0] mipmap
-
 
 void display_texture_size_info() {
     const bool detailed = true;
@@ -1908,7 +1907,8 @@ void draw_mesh(GMesh& mesh) {
             }
             if (!ithick) continue;
             if (ithick!=g_pthick && nedges) {
-                glEnd(); nedges = 0; // change of state
+                glEnd();
+                nedges = 0; // change of state
             }
             set_thickness(ithick);
             if (nedges==buffer_nedges) { glEnd(); nedges = 0; }
@@ -2069,7 +2069,7 @@ void draw_all() {
                 defining_dl = true;
                 // glNewList(dlnum, GL_COMPILE_AND_EXECUTE); // bad(slow)!
                 glNewList(dlnum, GL_COMPILE);
-                initialize_lit(); initialize_unlit(); // force state record
+                initialize_lit(), initialize_unlit(); // force state record
             } else {
                 glCallList(dlnum);
                 continue;
@@ -3122,7 +3122,6 @@ void* HB::escape(void* code, void* data) {
 
 namespace {
 
-
 // *** PM mode
 
 #if defined(DEF_PM)
@@ -3272,7 +3271,7 @@ void draw_pm() {
         } else {
             wmesh.ogl_render_faces_strips(pmesh._info, texture_active);
         }
-        initialize_unlit(); initialize_lit(); // re-synchronize
+        initialize_unlit(), initialize_lit(); // re-synchronize
     }
     if (texture_active) {
         glDisable(GL_TEXTURE_2D);
@@ -3470,7 +3469,7 @@ void draw_sr() {
         } else {
             srmesh.ogl_render_faces_tvc(texture_active && !texture_lit);
         }
-        initialize_unlit(); initialize_lit(); // re-synchronize
+        initialize_unlit(), initialize_lit(); // re-synchronize
     }
     if (texture_active) {
         glDisable(GL_TEXTURE_2D);
@@ -3726,7 +3725,6 @@ bool sr_key_press(char ch) {
 }
 
 #endif  // defined(DEF_SR)
-
 
 // *** SC mode
 
@@ -4766,7 +4764,6 @@ bool psc_key_press(char ch) {
 
 #endif  // defined(DEF_SC)
 
-
 // *** PLY mode
 
 #if defined(DEF_PLY)
@@ -5002,7 +4999,7 @@ void draw_ply() {
             }
             glEnd();
         }
-        initialize_unlit(); initialize_lit(); // re-synchronize
+        initialize_unlit(), initialize_lit(); // re-synchronize
     }
     if (texture_active) {
         glDisable(GL_TEXTURE_2D);

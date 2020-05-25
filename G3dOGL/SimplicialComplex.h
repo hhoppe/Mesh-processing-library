@@ -325,7 +325,6 @@ inline bool ISimplex::isManifold() const {
     return _parent.size()==2;
 }
 
-
 inline void ISimplex::setPosition(const Point& pos) {
     assertx(_dim == 0);
     _position = pos;
@@ -352,7 +351,6 @@ inline float ISimplex::getArea() const {
     return _area;
 }
 
-
 // inline const Point& ISimplex::getColor() const {
 //     string str;
 //     const char* s = assertx(GMesh::string_key(str, getVAttribute(), "rgb"));
@@ -368,7 +366,6 @@ inline float ISimplex::length2() const {
     assertx(getDim() == 1);
     return dist2(getChild(0)->getPosition(), getChild(1)->getPosition());
 }
-
 
 inline float ISimplex::length() const {
     return sqrt(length2());

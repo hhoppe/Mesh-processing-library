@@ -340,10 +340,10 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 
 #endif  // defined(_WIN32)
 
-
 HH_NORETURN void my_terminate_handler () {
     // The function shall not return and shall terminate the program.
-    if (0) { fprintf(stderr, "my_terminate_handler\n"); fflush(stderr); } // here, trust stderr more than std::cerr
+    // Here, trust stderr more than std::cerr.
+    if (0) { fprintf(stderr, "my_terminate_handler\n"); fflush(stderr); }
 #if defined(__GNUC__) || defined(__clang__)
     // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
     // http://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
@@ -902,8 +902,8 @@ double get_precise_time() {
 }
 
 void my_sleep(double sec) {
-    if (sec<0.) { SHOW("my_sleep", sec); sec = 0.; } // sometimes get -5.8985e+307 in background thread of VideoViewer
-    assertx(sec>=0.);
+    // We sometimes get -5.8985e+307 in background thread of VideoViewer.
+    if (sec<0.) { SHOW("my_sleep", sec); sec = 0.; }
 #if 0                        // C++11
     // On Windows, only precise up to 1/60 sec.
     std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec});
@@ -1103,7 +1103,10 @@ static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, v
         va_end(ap2);
         if (promised) assertx(n==narrow_cast<int>(str.size())-1);
         if (n>=0) {
-            if (n<narrow_cast<int>(str.size())) { str.resize(n); return; } // it fit
+            if (n<narrow_cast<int>(str.size())) {  // It fit.
+                str.resize(n);
+                return;
+            }
             str.resize(n+1);
             promised = true;
         } else {

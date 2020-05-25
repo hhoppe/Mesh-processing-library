@@ -32,7 +32,6 @@ constexpr int k_initial_size = 4096;
 constexpr int k_read_size = 1024;
 constexpr int k_write_size = 8192;
 
-
 //----------------------------------------------------------------------------
 // *** Buffer
 
@@ -47,7 +46,6 @@ void Buffer::expand() {
     assertw(!_beg);             // not necessary, current implementation
     _ar.resize(assert_narrow_cast<int>(!_ar.num() ? k_initial_size : int64_t{_ar.num()}*2));
 }
-
 
 //----------------------------------------------------------------------------
 // *** RBuffer
@@ -200,7 +198,6 @@ void RBuffer::wait_for_input() {
     select(1, &fdr, implicit_cast<fd_set*>(nullptr), implicit_cast<fd_set*>(nullptr), nullptr);
 #endif
 }
-
 
 //----------------------------------------------------------------------------
 // *** WBuffer

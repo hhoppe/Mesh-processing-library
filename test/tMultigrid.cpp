@@ -206,11 +206,11 @@ int main(int argc, const char** argv) {
     }
     if (0) {                    // gradient sharpening
         float gradient_sharpening, screening_weight;
-        gradient_sharpening = 10.f; screening_weight = 1e8f; // original
-        gradient_sharpening = 1.f; screening_weight = 0.f;   // original
-        gradient_sharpening = 3.f; screening_weight = 10.f;  // good gradient amplification
-        gradient_sharpening = .7f; screening_weight = 1.f;   // good gradient attenuation
-        gradient_sharpening = 1.5f; screening_weight = 1.f;  // good gradient amplification
+        gradient_sharpening = 10.f, screening_weight = 1e8f; // original
+        gradient_sharpening = 1.f, screening_weight = 0.f;   // original
+        gradient_sharpening = 3.f, screening_weight = 10.f;  // good gradient amplification
+        gradient_sharpening = .7f, screening_weight = 1.f;   // good gradient attenuation
+        gradient_sharpening = 1.5f, screening_weight = 1.f;  // good gradient amplification
         string imagename;
         imagename = "multigrid/rampart256.png";
         imagename = "multigrid/rampart2048.png";

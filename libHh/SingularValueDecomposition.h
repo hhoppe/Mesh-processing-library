@@ -18,13 +18,10 @@ namespace hh {
 template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
                                                        MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT);
 
-
 // Modify the singular value decomposition U*diag(S)*VT^T such that the singular values in S are in decreasing order.
 template<typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT);
 
-
 //----------------------------------------------------------------------------
-
 
 template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
                                                        MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT) {
@@ -85,7 +82,8 @@ template<typename T> bool singular_value_decomposition(CMatrixView<T> A,
     }
     for_int(i, n) {
         S[i] = static_cast<T>(mag(column(U, i))); // singular value is norm of column vector of U
-        if (S[i]) { T recip = T{1}/S[i]; for_int(j, m) U(j, i) *= recip; } // normalize the column vector
+        // normalize the column vector
+        if (S[i]) { T recip = T{1}/S[i]; for_int(j, m) U(j, i) *= recip; }
     }
     return true;
 }

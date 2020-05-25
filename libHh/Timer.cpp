@@ -45,7 +45,6 @@ inline unsigned std_thread_hardware_concurrency() {
 //  on Core i7 3.2Gz Win7 (but debug!) (and now with GetProcessTimes()):
 //           timer off by +0.5e-6 sec, overhead is 4.4e-6 sec
 
-
 namespace hh {
 
 #if !defined(HH_NO_TIMERS_CLASS)

@@ -29,8 +29,8 @@ class Trig {
  private:
     static constexpr int k_size = 13;
     using Table = SGrid<float, k_size, k_size-1>;
-    static Table& s_f_cos_table() { static auto t = new Table; return *t; }  // singleton pattern function
-    static Table& s_f_sin_table() { static auto t = new Table; return *t; }  // singleton pattern function
+    static Table& s_f_cos_table() { static auto& t = *new Table; return t; }
+    static Table& s_f_sin_table() { static auto& t = *new Table; return t; }
     static void init() {
         for_intL(j, 1, k_size) {
             for_int(i, j) {
@@ -130,7 +130,6 @@ inline int int_floor_log2(unsigned x) {
     } HH_EAT_SEMICOLON
 E(floor); E(ceil); E(abs);
 #undef E
-
 
 //----------------------------------------------------------------------------
 

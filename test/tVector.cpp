@@ -136,9 +136,9 @@ void test_list() {
     for_intL(i, -2, 6) { assertw(list_contains(l, i)==(i>=0 && i<4)); }
     assertw(l.front()==0);
     assertw(l.back()==3);
-    assertw(l.front()==0); l.pop_front(); // was HList::shift()
+    assertw(l.front()==0); l.pop_front();
     assertw(l.front()==1); l.pop_front();
-    assertw(l.back()==3); l.pop_back(); // was HList::pop()
+    assertw(l.back()==3); l.pop_back();
     assertw(l.back()==2); l.pop_back();
     assertw(l.empty());
     assertw(l.size()==0);

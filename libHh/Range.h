@@ -32,7 +32,6 @@ template<typename R> using enable_if_range_t = std::enable_if_t<is_range<R>::val
 // Identify the type of element in given range type (see also ~/src/test/native/container_element3.cpp).
 template<typename R> using iterator_t = typename details::range_elem<R>::type;
 
-
 //----------------------------------------------------------------------------
 
 namespace details {

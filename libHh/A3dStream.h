@@ -118,6 +118,8 @@ class A3dElem {
     }
 };
 
+// *** Reading
+
 class RA3dStream : noncopyable {
  public:
     void read(A3dElem& el);
@@ -139,6 +141,7 @@ class RSA3dStream : public RA3dStream { // Read from stream
     bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) override;
 };
 
+// *** Writing
 
 class WA3dStream : noncopyable {
  public:
@@ -176,7 +179,6 @@ class WSA3dStream : public WA3dStream { // Write to stream
 };
 
 constexpr int k_a3d_binary_code = 3;
-
 
 //----------------------------------------------------------------------------
 //

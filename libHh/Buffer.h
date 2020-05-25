@@ -61,7 +61,6 @@ class WBuffer : public Buffer {
     void put(float f);
 };
 
-
 //----------------------------------------------------------------------------
 
 inline bool Buffer::eof() const { return _eof; }

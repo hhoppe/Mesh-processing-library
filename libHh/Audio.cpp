@@ -293,16 +293,15 @@ void Audio::write_file(const string& pfilename) const {
     }
 }
 
-
 //----------------------------------------------------------------------------
 
 bool filename_is_audio(const string& filename) {
-    static const auto* k_extensions = new Array<string>{
+    static const auto& k_extensions = *new Array<string>{
         "wav",
         "mp3",
         // "pcm",
     };
-    return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
+    return k_extensions.index(to_lower(get_path_extension(filename)))>=0;
 }
 
 string audio_suffix_for_magic_byte(uchar c) {

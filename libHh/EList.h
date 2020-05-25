@@ -107,7 +107,6 @@ class EList {
     EListNode _delim;
 };
 
-
 //----------------------------------------------------------------------------
 
 inline void EListNode::unlink() {

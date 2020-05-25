@@ -4,25 +4,19 @@
 
 #include "Hh.h"
 
-
 #if defined(HH_USE_LAPACK_INTEGER)      // Google
-
 
 #include <lapack.h>
 using lapack_int = lapack::integer;
 
-
 #elif !(defined(_WIN32) || defined(__CYGWIN__)) // unix
-
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wredundant-decls"
 #endif
 #include <lapacke.h>            // in either /usr/include/ or /usr/include/lapacke/
 
-
 #else  // cygwin or WIN32
-
 
 #if defined(__CYGWIN__)
 
@@ -141,11 +135,9 @@ HH_REFERENCE_LIB("libI77.lib");
 #endif  // defined(_WIN64) && !defined(HH_NO_MKL)
 #endif  // defined(_MSC_VER)
 
-
 #endif  // !(defined(_WIN32) || defined(__CYGWIN__))
 
-
-
+// *** Old
 
 #if 0
 // from mkl_lapack.h:

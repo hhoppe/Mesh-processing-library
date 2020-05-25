@@ -167,7 +167,8 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
             auto li = _m.begin(bn);
             while (nskip--) { ASSERTXX(li!=_m.end(bn)); ++li; }
             ASSERTXX(li!=_m.end(bn));
-            auto i = _m.find(li->first); ASSERTXX(i!=end()); // convert from const_local_iterator to const_iterator
+            // convert from const_local_iterator to const_iterator
+            auto i = _m.find(li->first); ASSERTXX(i!=end());
             return i;
         }
     }

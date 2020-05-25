@@ -458,7 +458,6 @@ class SGeomorph : public SMesh {
     // Default operator=() and copy_constructor are safe.
 };
 
-
 //----------------------------------------------------------------------------
 
 inline bool Vsplit::adds_two_faces() const {

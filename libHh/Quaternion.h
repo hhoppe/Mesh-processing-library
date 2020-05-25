@@ -74,7 +74,6 @@ Quaternion squadseg(const Quaternion* qb, const Quaternion& q0, const Quaternion
 
 std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
-
 //----------------------------------------------------------------------------
 
 // Frame origin f.p() is ignored

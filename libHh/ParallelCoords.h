@@ -124,7 +124,10 @@ void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func,
     } else if (dims[0]>=k_omp_min_iterations && product(dims)*est_cycles_per_elem>=k_omp_thresh) {
         parallel_for_each(range(uL[0], uU[0]), [&](const int y) {
             Vec2<int> yx; yx[0] = y;
-            for_intL(x, uL[1], uU[1]) { yx[1] = x; func(yx); } // efficient parallelism in first dimension
+            for_intL(x, uL[1], uU[1]) {  // efficient parallelism in first dimension
+                yx[1] = x;
+                func(yx);
+            }
         });
     } else if (dims[1]*est_cycles_per_elem>=k_omp_thresh) {
         for_intL(y, uL[0], uU[0]) {

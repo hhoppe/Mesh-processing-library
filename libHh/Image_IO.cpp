@@ -96,7 +96,6 @@ inline float frac_zy(int z, int y, const Image& image) {
     return (z*image.ysize()+y)/float(image.zsize()*image.ysize());
 }
 
-
 // *** RGB (SGI) image
 
 struct rgb_IMAGE {              // stuff saved on disk
@@ -584,7 +583,6 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
 #endif  // defined(JPEG_LIBRARY_NOT_INSTALLED)
 }
 
-
 // *** BMP image
 
 struct bmp_BITMAPFILEHEADER_HH { // size 2+12 would be 14, but
@@ -848,9 +846,9 @@ void ImageIO::write_bmp(const Image& image, FILE* file) {
                     x += count-1;
                 }
             }
-            buf.push(0); buf.push(0); // end of row
+            buf.push(0), buf.push(0); // end of row
         }
-        buf.push(0); buf.push(1); // end of image
+        buf.push(0), buf.push(1); // end of image
         bmfh.bfSize = headers2size+256*4+buf.num(); to_dos(&bmfh.bfSize);
         bmih.biSizeImage = buf.num(); to_dos(&bmih.biSizeImage);
         assertt(write_raw(file, ArView(bmfh)));
@@ -885,7 +883,6 @@ void ImageIO::write_bmp(const Image& image, FILE* file) {
         }
     }
 }
-
 
 // *** PPM image
 
@@ -946,7 +943,6 @@ void ImageIO::write_ppm(const Image& image, FILE* file) {
         assertt(write_raw(file, row));
     }
 }
-
 
 // *** PNG image
 

@@ -43,7 +43,7 @@ int main() {
         SHOW((Grid<3,int>{ { {1, 2, 3}, {4, 5, 6} }, { {1, 2, 3}, {4, 5, 6} } }));
     }
     {
-        // Grid<3,float> grid(3, 4.f, 2); SHOW(grid); // correctly fails to compile
+        // Grid<3,float> grid(3, 4.f, 2); SHOW(grid);  // correctly fails to compile
     }
     {
         Grid<1,int> grid1(256);

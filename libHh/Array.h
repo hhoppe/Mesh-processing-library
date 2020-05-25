@@ -43,7 +43,6 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
 // Modify index i to be within domain [0, n-1] using boundary rule; ret false if bndrule==Border and i is outside.
 bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
 
-
 // View of a variable-sized 1D array with constant data of type T; e.g. refers to a const C-array,
 //  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], initializer_list<T>, etc.
 template<typename T> class CArrayView {
@@ -178,7 +177,7 @@ template<typename T> class Array : public ArrayView<T> {
     type& operator=(CArrayView<T> ar)           { init(ar.num()); base::assign(ar); return *this; }
     type& operator=(const type& ar)             { init(ar.num()); base::assign(ar); return *this; }
     type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
-    type& operator=(type&& ar) noexcept         { clear(); swap(*this, ar); return *this; } // not default
+    type& operator=(type&& ar) noexcept         { clear(); swap(*this, ar); return *this; }
     void clear()                                { if (_a) { delete[] _a; _a = nullptr; _n = 0; _cap = 0; } }
     void init(int n);           // allocate n, DISCARD old values if too small
     void init(int n, const T& v)                { init(n); for_int(i, n) _a[i] = v; }
@@ -231,7 +230,6 @@ template<typename T, typename Func> auto map(CArrayView<T>& c, Func func)
     Array<decltype(func(T{}))> nc(c.num()); for_int(i, c.num()) { nc[i] = func(c[i]); }
     return nc;
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -293,7 +291,6 @@ inline bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
     return true;
 }
 
-
 //----------------------------------------------------------------------------
 
 template<typename T> bool CArrayView<T>::map_inside(int& i, Bndrule bndrule) const {
@@ -310,7 +307,6 @@ template<typename T> bool CArrayView<T>::operator==(type o) const {
     for_int(i, _n) { if (_a[i]!=o._a[i]) return false; }
     return true;
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -330,7 +326,6 @@ template<typename T> void ArrayView<T>::assign(base ar) {
     //  see http://stackoverflow.com/questions/19480609/
     if (_a) std::copy(ar.begin(), ar.end(), _a);
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -391,7 +386,6 @@ template<typename T> Array<T> Array<T>::pop(int n) {
     sub(n); return ar;
 }
 
-
 //----------------------------------------------------------------------------
 
 template<typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a) {
@@ -404,7 +398,6 @@ template<typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a)
 template<typename T> HH_DECLARE_OSTREAM_EOL(CArrayView<T>);
 template<typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>); // implemented by CArrayView<T>
 template<typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);     // implemented by CArrayView<T>
-
 
 //----------------------------------------------------------------------------
 

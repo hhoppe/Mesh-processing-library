@@ -148,7 +148,6 @@ void Args::problem(const string& s) {
     assertnever(mes);
 }
 
-
 //----------------------------------------------------------------------------
 
 ParseArgs::ParseArgs(int& argc, const char**& argv) : _name("") {

@@ -473,7 +473,8 @@ template<typename T, int n> bool Qem<T,n>::ar_compute_minp(CArrayView<Qem<T,n>*>
     assertx(minp.ysize()>=nw && minp.xsize()>=n);
     const int ngeom = 3, nattrib = n-ngeom; assertx(nattrib>=0);
     const int msize = ngeom+nattrib*nw;
-    static unique_ptr<SvdDoubleLLS> plls; static int psize; // cache previous size
+    // cache previous size
+    static unique_ptr<SvdDoubleLLS> plls; static int psize;
     if (msize!=psize) {
         plls = make_unique<SvdDoubleLLS>(msize, msize, 1);
         psize = msize;
@@ -571,7 +572,8 @@ bool Qem<T,n>::ar_compute_minp_constr_lf(CArrayView<Qem<T,n>*> ar_q, MatrixView<
 #else
     const int msize1 = msize;
 #endif
-    static unique_ptr<SvdDoubleLLS> plls; static int psize1; // cache previous size
+    // cache previous size
+    static unique_ptr<SvdDoubleLLS> plls; static int psize1;
     if (msize1!=psize1) {
         plls = make_unique<SvdDoubleLLS>(msize1, msize1, 1);
         psize1 = msize1;

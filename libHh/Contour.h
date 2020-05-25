@@ -492,8 +492,6 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
     }
 };
 
-
-
 // *** Contour2D
 
 struct Contour2D_NoBorder { // special type to indicate that no border ouput is desired

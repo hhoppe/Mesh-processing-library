@@ -160,7 +160,6 @@ class HWbase : noncopyable {
 // Return Pixel given string of the form "#RRGGBB" or "#RRGGBBAA" in hexadecimal.
 Pixel parse_color(const string& scolor);
 
-
 //----------------------------------------------------------------------------
 
 inline void HWbase::redraw_later() {
@@ -442,7 +441,6 @@ inline Pixel parse_color(const string& scolor) {
         assertnever("Cannot parse color '" + scolor + "'");
     }
 }
-
 
 //----------------------------------------------------------------------------
 

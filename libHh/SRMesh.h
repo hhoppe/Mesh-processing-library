@@ -11,23 +11,28 @@
 #include "Pixel.h"
 
 #if 0
-// Selectively refined mesh usage:
 {
-    SRMesh srmesh; srmesh.read_srm(std::cin); // or read_pm()
-    srmesh.set_refine_morph_time(32);
-    srmesh.set_coarsen_morph_time(16);
-    for (;;) {
-        SRViewParams vp; srmesh.set_view_params(vp);
-        if (0) {
-            SRGeomorphInfo geoinfo; srmesh.construct_geomorph(geoinfo);
-            GMesh gmesh; extract_gmesh(gmesh, geoinfo);
-        }
-        srmesh.adapt_refinement();
-        srmesh.ogl_render_faces_tvc(false); // ogl_render_*();
-        if (0) { GMesh gmesh; srmesh.extract_gmesh(gmesh); }
-        if (!(srmesh.is_still_morphing() || srmesh.is_still_adapting()))
-            pause_for_input();
+  SRMesh srmesh;
+  srmesh.read_srm(std::cin);  // or read_pm()
+  srmesh.set_refine_morph_time(32);
+  srmesh.set_coarsen_morph_time(16);
+  for (;;) {
+    SRViewParams vp;
+    srmesh.set_view_params(vp);
+    if (0) {
+      SRGeomorphInfo geoinfo;
+      srmesh.construct_geomorph(geoinfo);
+      GMesh gmesh;
+      extract_gmesh(gmesh, geoinfo);
     }
+    srmesh.adapt_refinement();
+    srmesh.ogl_render_faces_tvc(false);  // ogl_render_*();
+    if (0) {
+      GMesh gmesh;
+      srmesh.extract_gmesh(gmesh);
+    }
+    if (!(srmesh.is_still_morphing() || srmesh.is_still_adapting())) pause_for_input();
+  }
 }
 #endif
 
@@ -324,7 +329,6 @@ class SRMesh {
     void refine_in_best_dflclw_order();
 #endif
 };
-
 
 //----------------------------------------------------------------------------
 

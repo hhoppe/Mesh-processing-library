@@ -3,7 +3,6 @@
 #include "Stat.h"
 using namespace hh;
 
-
 int main() {
     {
         constexpr Pixel red{255, 0, 0, 255};

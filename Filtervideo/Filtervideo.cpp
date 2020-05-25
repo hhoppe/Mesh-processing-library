@@ -40,7 +40,7 @@ bool nooutput = false;
 int trunc_begin = 0;            // skip the first trunc_begin frames
 int trunc_frames = INT_MAX;      // read at most trunc_frames frames
 
-// ********
+// ***
 
 template<int D> struct MultigridMetricAnisotropic {
     float operator()(float v, int d) const { return v*_metricw[d]; }
@@ -48,7 +48,7 @@ template<int D> struct MultigridMetricAnisotropic {
 };
 template<int D> Vec<float,D> MultigridMetricAnisotropic<D>::_metricw;
 
-// ********
+// ***
 
 inline Pixel random_color(Random& random) {
     Pixel pix; pix[3] = 255;
@@ -56,7 +56,7 @@ inline Pixel random_color(Random& random) {
     return pix;
 }
 
-// ********
+// ***
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
     assertx(s!="" && size);
@@ -868,7 +868,6 @@ void do_cropmult(Args& args) {
     grid = hh::crop(grid, concat(V(0), yx0), concat(V(0), yx1), thrice(bndrule), &gcolor);
 }
 
-
 // *** scale
 
 void do_filter(Args& args) {
@@ -1025,7 +1024,7 @@ void do_gamma(Args& args) {
     }
 }
 
-// ******** looping videos
+// *** looping videos
 
 constexpr bool use_activation = true; // setting to "false" speeds up the loading of pjo/pjr files
 
@@ -1403,7 +1402,8 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
                 float fi = my_mod(ftime-start, float(period));
                 ASSERTX(fi>=float(start) && fi<float(start)+period);
                 // SHOW(ftime, fi, start, period); assertnever("");
-                float flfi = floor(fi); float frfi = fi-flfi; // weight for linear interpolation over time
+                float flfi = floor(fi);
+                float frfi = fi-flfi; // weight for linear interpolation over time
                 int fi0 = int(flfi);
                 // Note: no spatial crossfading
                 for_int(z, nz) {
@@ -1662,7 +1662,7 @@ void do_saveloopframe(Args& args) {
     nooutput = true;
 }
 
-// ********
+// ***
 
 void process_gen(Args& args) {
     HH_TIMER(_gen);

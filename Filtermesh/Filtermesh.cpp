@@ -60,7 +60,6 @@ float maxcrit = 1e20f;
 enum class EReduceCriterion { undefined, length, inscribed, volume, qem };
 EReduceCriterion reducecrit = EReduceCriterion::undefined;
 
-
 // *** helper
 
 bool sharp(Edge e) {
@@ -172,6 +171,7 @@ void do_frompointgrid(Args& args) {
     }
 }
 
+// *** createobject
 
 inline float lerp(float a, float b, float f) { return (1.f-f)*a+(f)*b; }
 
@@ -682,7 +682,6 @@ void do_solidangle(Args& args) {
 void do_setb3d() {
     my_setenv("A3D_BINARY", "1");
 }
-
 
 // *** toa3d, tob3d
 
@@ -1641,6 +1640,7 @@ void do_splitbnd2valence() {
     }
 }
 
+// *** triangulate_quads
 
 int sqrt_nfaces;
 

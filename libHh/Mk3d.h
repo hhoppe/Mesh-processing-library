@@ -81,9 +81,6 @@ struct MkSaveColor {            // save and restore the current color transform
     Mk3d& _mk;
 };
 
-#define mk_save hh::MkSave HH_UNIQUE_ID(mksave)(mk)
-#define mk_save_color hh::MkSaveColor HH_UNIQUE_ID(mksavecolor)(mk)
-
 } // namespace hh
 
 #endif // MESH_PROCESSING_LIBHH_MK3D_H_

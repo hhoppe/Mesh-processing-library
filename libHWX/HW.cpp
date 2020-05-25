@@ -206,7 +206,7 @@ void HW::open() {
     XSizeHints* pxsh = assertx(XAllocSizeHints()); // never freed using XFree()
     {
         pxsh->flags = PPosition | PSize | PMinSize;
-        pxsh->x = 0; pxsh->y = 0;   // (the x, y, width, and height members are now obsolete)
+        pxsh->x = 0, pxsh->y = 0;   // (the x, y, width, and height members are now obsolete)
         pxsh->width = _win_dims[1]; pxsh->height = _win_dims[0];
         pxsh->min_width = 0; pxsh->min_height = 0;
     }

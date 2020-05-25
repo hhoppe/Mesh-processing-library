@@ -19,7 +19,6 @@ namespace hh {
 template<typename T, typename Func = T(T)> void atomic_operate(volatile T* ptr, Func func);
 } // namespace hh
 
-
 //----------------------------------------------------------------------------
 
 namespace hh {

@@ -1309,13 +1309,18 @@ void do_reconstruct() {
     do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
     do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
     do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
-    ecol = true; do_stoc();         // -ecol -stoc
+    ecol = true;                    // -ecol
+    do_stoc();                      // -stoc
     // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
     do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
-    esha = true; do_stoc();         // -esha -stoc
+    esha = true;                    // -esha
+    do_stoc();                      // -stoc
     // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
-    do_gfit(as_lvalue(Args{"6"}));                      // -gfit 6
-    gecol = true; esha = true; eswa = true; do_stoc();  // -gecol -esha -eswa -stoc
+    do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
+    gecol = true;                   // -gecol
+    esha = true;                    // -esha
+    eswa = true;                    // -eswa
+    do_stoc();                      // -stoc
     // do_fgfit(as_lvalue(Args{"10"}));  // -fgfit 10
     do_gfit(as_lvalue(Args{"6"}));  // -gfit 6
 }

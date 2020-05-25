@@ -357,7 +357,6 @@ void SRMesh::ogl_show_residuals(bool uniform_too) {
     glEnd();
 }
 
-
 // *** TVC
 
 constexpr int k_cache_size = 16;

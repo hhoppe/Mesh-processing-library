@@ -740,7 +740,6 @@ const Filter& get_resampling_filter() {
             (assertnever_ret(""), Filter::get("impulse")));
 }
 
-
 // Change zooom while holding window dimensions constant and keeping same content at cursor.
 void perform_zoom_at_cursor(float fac_zoom, Vec2<int> yx) {
     if (fac_zoom==1.f) return;
@@ -899,7 +898,10 @@ bool replace_with_other_object_in_directory(int increment) {
     int i0 = filenames.index(filename0_tail); // i0 is -1 if g_cob<0 or if ob0 is somehow an unsaved object.
     if (g_verbose>=1) SHOW(directory, filename0_tail, i0);
     bool skip_first_advance = false;
-    if (i0<0) { skip_first_advance = true; i0 = 0; } // cannot find file, so select first file in directory
+    if (i0<0) {                 // cannot find file, so select first file in directory
+        skip_first_advance = true;
+        i0 = 0;
+    }
     if (increment==-INT_MAX) { increment = +1; skip_first_advance = true; i0 = 0; }
     if (increment==+INT_MAX) { increment = -1; skip_first_advance = true; i0 = filenames.num()-1; }
     string smess;
@@ -1091,7 +1093,6 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
     }
     return image;
 }
-
 
 bool DerivedHW::key_press(string skey) {
     // HH_TIMER(key_press);
@@ -2869,11 +2870,9 @@ static const string vertex_shader = glsl_shader_version + (
 #include "vertex_shader.glsl"
     );
 
-
 static const string fragment_shader = glsl_shader_version + (
 #include "fragment_shader.glsl"
     );
-
 
 void render_image() {
     // HH_TIMER(_render_image);
@@ -3162,7 +3161,11 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     g_win_dims = dims;
     g_desired_dims = twice(-1);         // reset
     if (!assertw(!gl_report_errors())) {
-        if (0) { redraw_later(); return; } // failed attempt to refresh window after <enter>fullscreen on Mac
+        if (0) {
+            // failed attempt to refresh window after <enter>fullscreen on Mac
+            redraw_later();
+            return;
+        }
     }
     if (1) {               // adjust the view if the window moved due to being resized, to facilitate cropping
         Vec2<int> win_pos = window_position_yx();
@@ -4241,8 +4244,8 @@ int main(int argc, const char** argv) {
     hw.set_default_background("black"); // not used since OpenGL rendering completely covers it
     if (1) {
         hw.set_default_foreground("yellow"); g_text_shadow_color = Pixel::black();
-    } else {
-        hw.set_default_foreground("black");  g_text_shadow_color = Pixel::white(); // does not look as nice
+    } else {                    // does not look as nice
+        hw.set_default_foreground("black");  g_text_shadow_color = Pixel::white();
     }
     hw.open();
     return 0;

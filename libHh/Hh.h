@@ -56,7 +56,6 @@
 #define HH_DEBUG
 #endif
 
-
 // *** Standard headers
 
 #include <algorithm>            // min(), max()
@@ -70,18 +69,15 @@
 #include <string>               // string
 #include <utility>              // swap(), forward(), move(), declval(), pair<>, index_sequence<>
 
-
 // *** Non-standard headers
 
 #if !defined(_WIN32)
 #include <unistd.h>             // read(), write(), _exit(), etc.
 #endif
 
-
 // *** Variadic macros
 
 #include "VariadicMacros.h"     // HH_MAP_REDUCE()
-
 
 // *** Language portability
 
@@ -154,7 +150,6 @@
 #define HH_ID(x) HH_CAT(_hh_id_, x) // private identifier in a macro definition
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
-
 // *** Check for identifier conflicts
 
 #if 0                      // temporarily test that my identifiers do not conflict with those in std namespace
@@ -166,7 +161,6 @@ namespace hh { }
 using namespace hh;
 #endif
 
-
 // *** Syntactic sugar
 
 #define for_T_aux(T, i, lb, ub, u) for (T u = ub, i = lb; i<u; i++)
@@ -175,19 +169,17 @@ using namespace hh;
 #define for_intL(i, lb, ub) for_T(int, i, lb, ub)
 #define for_size_t(i, ub)   for_T(std::size_t, i, 0, ub)
 
-
 // *** Begin namespace
 
 namespace hh {
-
 
 // *** Import some frequently used standard C++ names into the hh namespace.
 
 using std::string;                             // almost a new fundamental type
 using std::size_t;                             // (it seems to be already defined)
 using std::uint8_t;
-using std::unique_ptr; using std::make_unique; // very useful
-using std::min; using std::max;                // very useful
+using std::unique_ptr; using std::make_unique;
+using std::min; using std::max;
 using std::abs; // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5)==1 is scary).
 // Use the following templated functions; else defined only for double (performance overhead).
 using std::sqrt; using std::pow; using std::exp; using std::log; using std::log2; using std::log10;
@@ -200,7 +192,6 @@ using std::floor; using std::ceil;
 using uchar = unsigned char;
 using ushort = unsigned short;
 
-
 // *** Forward declarations of details.
 
 namespace details {
@@ -208,7 +199,6 @@ template<typename T> struct identity { using type = T; };
 template<typename T> struct sum_type;
 template<typename T> class Range;
 }  // namespace details
-
 
 // *** Utility classes.
 
@@ -228,7 +218,6 @@ struct noncopyable;
 
 // Specialize<i> is a dummy type for function specialization.
 template<int> struct Specialize { };
-
 
 // *** Assertions, warnings, errors, debug
 
@@ -272,7 +261,6 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define ASSERTXX(...) (void(0))
 #define HH_CHECK_BOUNDS(i, n) (void(0))
 #endif  // defined(HH_DEBUG)
-
 
 // *** Output functions
 
@@ -331,14 +319,12 @@ template<typename T> constexpr bool has_ostream_eol() {
 // Show current file and line number.
 #define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
 
-
 // *** Constants
 
 constexpr float    BIGFLOAT = 1e30f;                  // note: different from FLT_MAX or (INFINITY==HUGE_VALF)
-constexpr float    TAU      = 6.2831853071795864769f; // Mathematica: N[2 Pi, 20] ;  see http://tauday.com/
-constexpr double   D_TAU    = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20] ;  see http://tauday.com/
-// #undef PI // instead, use TAU/2
-
+constexpr float    TAU      = 6.2831853071795864769f; // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+constexpr double   D_TAU    = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+// #undef PI  // instead, use TAU/2
 
 // *** Hh.cpp
 
@@ -446,7 +432,6 @@ string get_header_info();
 // On Windows, replace the command-line argv with a new one that contains UTF-8 encoded strings; else do nothing.
 void ensure_utf8_encoding(int& argc, const char**& argv);
 
-
 // *** Inlines
 
 // Returns T{-1} or T{+1} based on sign of expression.
@@ -519,7 +504,6 @@ template<typename T> details::Range<T> range(T ub) { return details::Range<T>(ub
 
 // Range of integral elements as in Python range(lb, ub):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template<typename T> details::Range<T> range(T lb, T ub) { return details::Range<T>(lb, ub); }
-
 
 //----------------------------------------------------------------------------
 

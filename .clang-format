@@ -15,5 +15,3 @@ ReflowComments: false                       # default is true
 
 # StatementMacros: ['Q_UNUSED', 'QT_REQUIRE_VERSION']
 # MaxEmptyLinesToKeep: 1
-
-# Look for comment that applies to series of statements: ';.*;.*//'

@@ -52,7 +52,7 @@ template<int n> class VectorF : Vec<Vector4, n/4>, Vec<float, n%4> {
     const float* data() const                   { return reinterpret_cast<const float*>(this); }
     void zero()                                 { fill(0.f); }
     void fill(float v) {
-        unroll_max<m,max_unroll>([&](int j) { this->a()[j] = Vector4(v); }); // "this->" required for gcc <4.8
+        unroll_max<m,max_unroll>([&](int j) { a()[j] = Vector4(v); });
         for_int(k, p) { b()[k] = v; }
     }
     friend VectorF<n> min(const VectorF<n>& l, const VectorF<n>& r) {
@@ -68,7 +68,7 @@ template<int n> class VectorF : Vec<Vector4, n/4>, Vec<float, n%4> {
         return v;
     }
     VectorF<n>& operator=(const VectorF<n>& v) {
-        unroll_max<m,max_unroll>([&](int j) { this->a()[j] = v.a()[j]; }); // "this->" required for gcc <4.8
+        unroll_max<m,max_unroll>([&](int j) { a()[j] = v.a()[j]; });
         for_int(k, p) { b()[k] = v.b()[k]; }
         return *this;
     }
@@ -182,7 +182,6 @@ template<int n> float mag2(const VectorF<n>& v);
 template<int n> float dist2(const VectorF<n>& l, const VectorF<n>& r);
 template<int n> float sum(const VectorF<n>& v);
 template<int n> VectorF<n> operator*(float f, const VectorF<n>& v)         { return v*f; }
-
 
 //----------------------------------------------------------------------------
 

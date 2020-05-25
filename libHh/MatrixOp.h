@@ -405,7 +405,6 @@ template<typename T> Matrix<T> rotate_ccw(CMatrixView<T> mat, int rot_degrees) {
     return nmat;
 }
 
-
 //----------------------------------------------------------------------------
 
 // T may be any signed arithmetic type.

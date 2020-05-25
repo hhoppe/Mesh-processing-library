@@ -19,7 +19,6 @@ constexpr Vec<T, (N-1)> V_rest(const Vec<T,N>& u) {
     return V_rest_aux(u, std::make_index_sequence<N-1>());
 }
 
-
 template<int n, typename T, int N, size_t... Is>
 constexpr Vec<T,n> V_segment_aux(const Vec<T,N>& u, int i, std::index_sequence<Is...>) {
     return Vec<T,n>(u[Is+i]...);
@@ -30,7 +29,6 @@ constexpr Vec<T,n> V_segment(const Vec<T,N>& u, int i) {
     return V_segment_aux<n, T, N>(u, i, std::make_index_sequence<n>());
 }
 
-
 template<int N> constexpr size_t V_dot_slow(const Vec<int,N>& u1, const Vec<int,N>& u2) {
     return u1[0]*u2[0]+V_dot_slow(V_rest(u1), V_rest(u2));
 }
@@ -38,10 +36,8 @@ template<> inline constexpr size_t V_dot_slow<1>(const Vec<int,1>& u1, const Vec
     return u1[0]*u2[0];
 }
 
-
 template<typename T> constexpr T list_sum(const T& t0) { return t0; }
 template<typename T, typename... U> constexpr T list_sum(const T& t0, U&&... ts) { return t0+list_sum(ts...); }
-
 
 template<typename T, int N, size_t... Is>
 constexpr T V_dot_aux(const Vec<T,N>& u1, const Vec<T,N>& u2, std::index_sequence<Is...>) {
@@ -51,7 +47,6 @@ constexpr T V_dot_aux(const Vec<T,N>& u1, const Vec<T,N>& u2, std::index_sequenc
 template<typename T, int N> constexpr T V_dot(const Vec<T,N>& u1, const Vec<T,N>& u2) {
     return V_dot_aux(u1, u2, std::make_index_sequence<N>());
 }
-
 
 namespace details {
 template<int N, size_t... Is> constexpr Vec<int,N> V_iota_aux(std::index_sequence<Is...>) {

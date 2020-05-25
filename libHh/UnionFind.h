@@ -23,7 +23,6 @@ template<typename T> class UnionFind {
     T irep(T e, bool& present) const;
 };
 
-
 //----------------------------------------------------------------------------
 
 template<typename T> T UnionFind<T>::irep(T e, bool& present) const {

@@ -352,9 +352,7 @@ constexpr float k_float_cond_max = 1e5f;
 constexpr double k_double_cond_warning = 1e8;
 constexpr double k_double_cond_max = 1e12;
 
-
 #if defined(HH_NO_LAPACK)
-
 
 // *** SvdLLS
 
@@ -411,9 +409,9 @@ bool QrdLLS::solve_aux() {
     return true;
 }
 
-
 #else  // defined(HH_NO_LAPACK)
 
+// *** NO_LAPACK
 
 namespace {
 
@@ -517,8 +515,6 @@ bool QrdLLS::solve_aux() {
     return true;
 }
 
-
 #endif  // defined(HH_NO_LAPACK)
-
 
 } // namespace hh

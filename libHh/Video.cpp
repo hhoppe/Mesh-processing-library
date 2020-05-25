@@ -39,7 +39,6 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 
 #endif  // defined(HH_VIDEO_HAVE_MF)
 
-
 //----------------------------------------------------------------------------
 
 #if defined(HH_VIDEO_HAVE_FFMPEG)
@@ -47,7 +46,6 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 #include "BinaryIO.h"
 
 #endif  // defined(HH_VIDEO_HAVE_FFMPEG)
-
 
 //----------------------------------------------------------------------------
 
@@ -58,7 +56,6 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 #include "ConsoleProgress.h"
 #include "StringOp.h"           // get_path_extension()
 #include <cstring>              // std::memcpy()
-
 
 //----------------------------------------------------------------------------
 
@@ -81,7 +78,6 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 // Instead, I prefer "-c:v ffvhuff -pix_fmt yuv444p" which is lossless.
 
 // An alternative would be to use lossless x264, still in an avi container?
-
 
 namespace hh {
 
@@ -154,15 +150,14 @@ void Video::write_file(const string& filename) const {
     }
 }
 
-
 //----------------------------------------------------------------------------
 
 bool filename_is_video(const string& filename) {
-    static const auto* k_extensions = new Array<string>{
+    static const auto& k_extensions = *new Array<string>{
         "mpg", "mpeg", "mpe", "mpv", "mp2", "mpeg2", "mp4", "mpeg4", "mov", "avi", "wmv", "flv",
         "m2v", "m4v", "webm", "ogv", "3gp", "mts", "gif", "vob", "qt", "asf", "3g2", "webm",
     };
-    return k_extensions->index(to_lower(get_path_extension(filename)))>=0;
+    return k_extensions.index(to_lower(get_path_extension(filename)))>=0;
 }
 
 string video_suffix_for_magic_byte(uchar c) {
@@ -183,7 +178,6 @@ string video_suffix_for_magic_byte(uchar c) {
      default:       return "";
     }
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -229,7 +223,6 @@ void VideoNv12::write_file(const string& filename, const Video::Attrib& pattrib)
     }
 }
 
-
 //----------------------------------------------------------------------------
 
 void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3,Pixel> video) {
@@ -241,7 +234,6 @@ void convert_Video_to_VideoNv12(CGridView<3,Pixel> video, VideoNv12View vnv12) {
     assertx(vnv12.nframes()==video.dim(0));
     parallel_for_each(range(video.dim(0)), [&](const int f) { convert_Image_to_Nv12(video[f], vnv12[f]); });
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -281,7 +273,6 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
     }
     return newvideo_nv12;
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -347,7 +338,6 @@ class Unsupported_WVideo_Implementation : public WVideo::Implementation {
     void write(CMatrixView<Pixel> frame) override       { dummy_use(frame); assertnever("?"); }
 };
 
-
 //----------------------------------------------------------------------------
 
 RVideo::RVideo(const string& filename, bool use_nv12) : _filename(filename), _use_nv12(use_nv12) {
@@ -406,14 +396,13 @@ WVideo::~WVideo() {
 void WVideo::write(CMatrixView<Pixel> frame)    { assertw(!_use_nv12); _impl->write(frame); }
 void WVideo::write(CNv12View frame)             { assertw(_use_nv12); _impl->write_nv12(frame); }
 
-
 //----------------------------------------------------------------------------
 // *** Video I/O
 
 #define AS(expr) assertx(SUCCEEDED(expr))
 
 //----------------------------------------------------------------------------
-// **** using Media Foundation
+// *** using Media Foundation
 #if defined(HH_VIDEO_HAVE_MF)
 
 // Supported Media Formats in Media Foundation
@@ -465,7 +454,8 @@ static void retrieve_strided_BGRA(const uint8_t* pData, int stride, MatrixView<P
     for_int(y, ny) {
         const uint8_t* ps = pData+y*stride;
         for_int(x, nx) {
-            pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 255; // BGRA to RGBA
+            // BGRA to RGBA
+            pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 255;
             pd += 4; ps += 4;
         }
     }
@@ -558,8 +548,8 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
             Vec3<int>& dims = _rvideo._dims;
             dims[0] = int(_rvideo._attrib.framerate*duration+.5); // set nframes
             UINT32 tx = 0; UINT32 ty = 0; AS(MFGetAttributeSize(pType, MF_MT_FRAME_SIZE, &tx, &ty));
-            dims[1] = int(ty); dims[2] = int(tx); // set ysize, xsize
-            _mf_ny = dims[1]; _mf_nx = dims[2];   // initial settings
+            dims[1] = int(ty), dims[2] = int(tx);  // set ysize, xsize
+            _mf_ny = dims[1], _mf_nx = dims[2];   // initial settings
             UINT32 bitrate = 0; if (!SUCCEEDED(pType->GetUINT32(MF_MT_AVG_BITRATE, &bitrate))) bitrate = 0;
             _rvideo._attrib.bitrate = int(bitrate);
             UINT32 tstride = 0; AS(pType->GetUINT32(MF_MT_DEFAULT_STRIDE, &tstride));
@@ -592,8 +582,8 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
                     CMatrixView<uint8_t> matY(pData, sdims);
                     CMatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<const Vec2<uint8_t>*>(pData+offset), sdims/2);
                     convert_Nv12_to_Image(CNv12View(matY, matUV), frame);
-                } else {
-                    Nv12 nv12(sdims); retrieve_strided_Nv12(pData, stride, offset, nv12); // slow path
+                } else { // slow path
+                    Nv12 nv12(sdims); retrieve_strided_Nv12(pData, stride, offset, nv12);
                     convert_Nv12_to_Image(nv12, frame);
                 }
             }
@@ -618,8 +608,8 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
                     MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uint8_t*>(pData)), sdims);
                     for (Pixel& pix : mat) std::swap(pix[0], pix[2]); // BGRA to RGBA
                     convert_Image_to_Nv12(mat, nv12v);
-                } else {
-                    Matrix<Pixel> mat(sdims); retrieve_strided_BGRA(pData, stride, mat); // slower path
+                } else {        // slower path
+                    Matrix<Pixel> mat(sdims); retrieve_strided_BGRA(pData, stride, mat);
                     convert_Image_to_Nv12(mat, nv12v);
                 }
             }
@@ -781,7 +771,8 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
                 const uint8_t* ps = frame.data()->data();
                 for_int(y, sdims[0]) {
                     for_int(x, sdims[1]) {
-                        pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 0; // RGBA to BGRA
+                        // RGBA to BGRA
+                        pd[0] = ps[2]; pd[1] = ps[1]; pd[2] = ps[0]; pd[3] = 0;
                         pd += 4; ps += 4;
                     }
                 }
@@ -857,9 +848,8 @@ class MF_WVideo_Implementation : public Unsupported_WVideo_Implementation {
 
 #endif  // defined(HH_VIDEO_HAVE_MF)
 
-
 //----------------------------------------------------------------------------
-// **** using ffmpeg
+// *** using ffmpeg
 #if defined(HH_VIDEO_HAVE_FFMPEG)
 
 class FF_RVideo_Implementation : public RVideo::Implementation {
@@ -1133,7 +1123,6 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
 };
 
 #endif  // defined(HH_VIDEO_HAVE_FFMPEG)
-
 
 //----------------------------------------------------------------------------
 

@@ -24,7 +24,8 @@ template<int D> void test(const Vec<int,D>& dims, const Vec<int,D>& ndims) {
     }
     {                           // inverse convolution has unit integral
         Grid<D,float> grid(dims, 0.f);
-        Vec<int,D> p; for_int(c, D) { p[c] = min(c, dims[c]-1); } // e.g. V(0, 1, 2) for D==3
+        Vec<int,D> p;
+        for_int(c, D) p[c] = min(c, dims[c]-1);  // e.g. V(0, 1, 2) for D==3
         grid[p] = 1.f;
         // SHOW(grid);
         inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflected)));

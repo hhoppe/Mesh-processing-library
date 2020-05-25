@@ -178,7 +178,8 @@ void initialize_poly(const Polygon& poly) {
         vl = v;
         if (!vf) vf = v;
     }
-    assertx(vf); assertx(vl);   // HH_ASSUME(vf); HH_ASSUME(vl);
+    assertx(vf); assertx(vl);
+    // HH_ASSUME(vf); HH_ASSUME(vl);
     vf->v[0] = closed ? vl : nullptr;
     vl->v[1] = closed ? vf : nullptr;
     showdf("created %s poly structure with %d vertices\n", (closed ? "closed" : "open"), num);

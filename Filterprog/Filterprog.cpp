@@ -109,8 +109,7 @@ void LivingAncestor::set_descendant(int vnew, int vold) {
 
 LivingAncestor vlineage;        // closest living ancestor relation
 
-
-// Beginning of app functions.
+// *** Beginning of app functions.
 
 void clear_vertex_corner_strings(Vertex v) {
     mesh.set_string(v, nullptr);
@@ -783,9 +782,6 @@ void do_animateto(Args& args) {
         record_changes = false;
     }
 }
-
-
-
 
 // *** PM Encoding
 

@@ -34,7 +34,6 @@ class VertexCache : noncopyable {
     friend std::ostream& operator<<(std::ostream& os, const VertexCache& vc);
 };
 
-
 //----------------------------------------------------------------------------
 
 class FifoVertexCache : public VertexCache {
@@ -302,7 +301,6 @@ class LruVertexCache : public VertexCache {
     EList _list;
     Array<Node*> _vinlist;      // _vinlist[k_no_entry=0] is trash
 };
-
 
 //----------------------------------------------------------------------------
 

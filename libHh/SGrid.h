@@ -91,7 +91,6 @@ template<typename Func, typename T, int d0, int... od> auto map(const SGrid<T, d
     return nc;
 }
 
-
 //----------------------------------------------------------------------------
 
 template<typename T, int d0, int... od> bool SGrid<T, d0, od...>::operator==(const type& p) const {
@@ -103,7 +102,6 @@ template<typename T, int d0, int... od> std::ostream& operator<<(std::ostream& o
     return os << CGridView<D,T>(g);
 }
 template<typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od...>);
-
 
 //----------------------------------------------------------------------------
 

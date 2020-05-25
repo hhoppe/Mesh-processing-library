@@ -44,7 +44,6 @@ class Flag {
     friend Flags;
 };
 
-
 //----------------------------------------------------------------------------
 
 inline Flag Flags::flag(FlagMask fmask) { return Flag(*this, fmask); }

@@ -44,8 +44,9 @@ class Random;
 // MVertex, MFace, MEdge, MHEdge allocate space for string, also used in GMesh.
 
 class Mesh : noncopyable {
+ public:                        // for use by Sac
+    struct MHEdge; struct MVertex; struct MFace; using MCorner = MHEdge; struct MEdge;
  public:
-    struct MHEdge; struct MVertex; struct MFace; using MCorner = MHEdge; struct MEdge; // private
     using HEdge = MHEdge*; using Vertex = MVertex*; using Face = MFace*; using Corner = HEdge; using Edge = MEdge*;
     friend void swap(Mesh& l, Mesh& r) noexcept;
  private:
@@ -58,9 +59,9 @@ class Mesh : noncopyable {
     struct WV_range; struct WF_range; struct WE_range; struct WC_range;
  public:
     Mesh();
-    Mesh(Mesh&& m) noexcept                     { swap(*this, m); } // =default?
+    Mesh(Mesh&& m) noexcept                     { swap(*this, m); }
     virtual ~Mesh()                             { clear(); }
-    Mesh& operator=(Mesh&& m) noexcept          { clear(); swap(*this, m); return *this; } // =default?
+    Mesh& operator=(Mesh&& m) noexcept          { clear(); swap(*this, m); return *this; }
     void clear();
     void copy(const Mesh& m); // not a GMesh!  carries flags (but not sac fields), hence not named operator=().
 
@@ -645,7 +646,6 @@ inline std::ostream& operator<<(std::ostream& os, Edge e) {
 inline std::ostream& operator<<(std::ostream& os, Corner he) {
     return os << sform("Corner{v=%d, f=%d}", he->_prev->_vert->_id, he->_face->_id);
 }
-
 
 //----------------------------------------------------------------------------
 

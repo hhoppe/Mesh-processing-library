@@ -94,7 +94,8 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
             auto li = _s.begin(bn);
             while (nskip--) { ASSERTXX(li!=_s.end(bn)); ++li; }
             ASSERTXX(li!=_s.end(bn));
-            auto i = _s.find(*li); ASSERTXX(i!=_s.end()); // convert from const_local_iterator to const_iterator
+            // convert from const_local_iterator to const_iterator
+            auto i = _s.find(*li); ASSERTXX(i!=_s.end());
             return i;
         }
     }

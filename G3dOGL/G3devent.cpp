@@ -355,7 +355,6 @@ void collapse_edge(bool tovertex) {
     HB::redraw_later();
 }
 
-
 bool try_toggle_vertex() {
     Vec2<float> yx; if (!HB::get_pointer(yx)) return false;
     int obn; GMesh* mesh; Vertex v;
@@ -419,7 +418,8 @@ void untag_cut() {
             Edge ee = er; Vertex v = mesh->vertex1(ee);
             for (;;) {
                 are = get_sharp_edges(*mesh, v); if (are.num()!=1) break;
-                ee = are[0]; if (ee==er) return; // have loop!
+                ee = are[0];
+                if (ee==er) return; // have loop!
                 untag(*mesh, ee); v = mesh->opp_vertex(v, ee);
             }
         }
@@ -573,7 +573,6 @@ void show_all_info() {
     SHOW(ddistance, expo, keep_active, mode_centroid, want_jump, obinary, keystring);
     SHOW(g_obs.first, g_obs.last, HB::get_hither(), HB::get_yonder(), obview, cob);
 }
-
 
 void do_g3d_demofly() {
     static float bu_hither;

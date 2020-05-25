@@ -25,7 +25,6 @@ float dist_point_triangle2(const Point& p, const Point& p1, const Point& p2, con
 //  (in range [0, 1]) of the closest point interp(p1, p2, cba) within the segment.
 float project_point_seg2(const Point& p, const Point& p1, const Point& p2, float* ret_cba = nullptr);
 
-
 //----------------------------------------------------------------------------
 
 inline float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3) {

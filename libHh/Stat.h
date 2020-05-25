@@ -92,7 +92,6 @@ template<typename R, typename = enable_if_range_t<R> > R standardize_rms(R&& ran
 #define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false) // range Stat
 #define HH_RSTAT_RMS(S, range) do { HH_STAT(S); S.set_rms(); for (auto e : range) { S.enter(e); } } while (false)
 
-
 //----------------------------------------------------------------------------
 
 template<typename R, typename> Stat::Stat(R&& range) : Stat{} {

@@ -40,7 +40,7 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     bool in_range(const type& dims) const       { return in_range(type::all(0), dims); }
     bool in_range(const type& uL, const type& uU) const;  // true if uL[c] <= [c] < uU[c] for all c in [0, n-1]
     // type with(int i, const T& e) const&         { type ar(*this); ar[i] = e; return ar; }
-    type with(int i, T e) const& { type ar(*this); ar[i] = std::move(e); return ar; } // align error on T=Vector4??
+    type with(int i, T e) const& { type ar(*this); ar[i] = std::move(e); return ar; }
     type with(int i, T e) &&                    { operator[](i) = std::move(e); return *this; }
     bool operator==(const type& p) const        { for_int(i, n) { if (!(a()[i]==p[i])) return false; } return true; }
     bool operator!=(const type& p) const        { return !(*this==p); }
@@ -85,7 +85,6 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     T* data()                                   { return a(); }
     const T* data() const                       { return a(); }
     static constexpr type all(const T& e)       { return all_aux(e, std::make_index_sequence<n>()); }
-    // static constexpr type all(const T& e)    { return create([=](int) { return e; }); } // no lambda in constexpr
     static constexpr int Num = n;
     template<typename Func = T(int)> static type create(Func func) {
         return create_aux(func, std::make_index_sequence<n>());
@@ -173,7 +172,6 @@ concat(const Vec<T,n1>& a1, const Vec<T,n2>& a2, A... arr) {
 }
 template<typename T, int n1> constexpr Vec<T,n1> concat(const Vec<T,n1>& a1) { return a1; }
 
-
 //----------------------------------------------------------------------------
 
 namespace details {
@@ -200,7 +198,6 @@ template<typename T> struct Vec_base<T,0> {
 };
 
 } // namespace details
-
 
 //----------------------------------------------------------------------------
 
@@ -303,7 +300,6 @@ template<int D> details::Vec_range<D>  coords(const Vec<int,D>& uU) { return ran
 // Backwards compatibility; deprecated.
 template<int D> details::VecL_range<D> coordsL(const Vec<int,D>& uL, const Vec<int,D>& uU) { return range(uL, uU); }
 
-
 //----------------------------------------------------------------------------
 
 template<typename T, int n> bool Vec<T,n>::in_range(const Vec<T,n>& uL, const Vec<T,n>& uU) const {
@@ -328,7 +324,6 @@ template<typename T, int n> std::ostream& operator<<(std::ostream& os, const Vec
 template<typename T, int n> struct has_ostream_eol_aux<Vec<T,n>> {
     static constexpr bool value() { return has_ostream_eol<T>(); }
 };
-
 
 //----------------------------------------------------------------------------
 
@@ -405,7 +400,6 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 #undef TT
 
 } // namespace hh
-
 
 //----------------------------------------------------------------------------
 

@@ -99,11 +99,10 @@ void principal_components(CArrayView<Vector>va, Frame& f, Vec3<float>& eimag) {
     principal_components(CArrayView<Vec3<float>>(va.data(), va.num()), Point(0.f, 0.f, 0.f), f, eimag);
 }
 
-
 void subtract_mean(MatrixView<float> mi) {
     const int m = mi.ysize(), n = mi.xsize(); assertx(m>=2 && n>0);
     for_int(j, n) {
-        double sum = 0.; for_int(i, m) { sum += mi[i][j]; } // sum across columns
+        double sum = 0.; for_int(i, m) sum += mi[i][j]; // sum across columns
         float avg = float(sum/m);
         for_int(i, m) { mi[i][j] -= avg; }
     }
@@ -212,7 +211,6 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
         if (dot(mo[i], all1)<0.) mo[i] *= -1.f;
     }
 }
-
 
 // *** incr_principal_components
 

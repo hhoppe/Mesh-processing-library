@@ -354,7 +354,6 @@ void do_sizes() {
     nooutput = true;
 }
 
-
 // *** cropping
 
 void do_color(Args& args) {
@@ -589,7 +588,6 @@ void do_scalehalf2n1() {
     for (const auto& yx : range(image.dims())) { image[yx] = timage[yx*2]; }
 }
 
-
 // *** tops (to postscript)
 
 int column_ps;
@@ -694,7 +692,6 @@ void do_tops() {
     std::cout << "%%EOF\n";
     nooutput = true;
 }
-
 
 // *** misc
 
@@ -2696,7 +2693,6 @@ void do_compare(Args& args) {
     showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
     nooutput = true;
 }
-
 
 // *** Pyramid  (see also Pyramid.cpp)
 

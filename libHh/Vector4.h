@@ -112,7 +112,7 @@ class Vector4 {
         __m128 r = _mm_dp_ps(v1._r, v2._r, 0xFF); // SSE4.1 DPPS instruction (dot product)
         return _mm_cvtss_f32(r); // extracts the lower order floating point value from the parameter
         // return r.m128_f32[0]; // less portable
-        // float f; _mm_store_ss(&f, r); return f; // requires stack store and load on VC11
+        // float f; _mm_store_ss(&f, r); return f;  // requires stack store and load on VC11
         // http://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-float-vector-sum-on-x86
 #endif
     }
@@ -254,7 +254,6 @@ inline Vector4& operator/=(Vector4& l, float f)          { return l = l/f; }
 template<> inline void my_zero(Vector4& v)              { v = Vector4(0.f); }
 inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { return f1*v1+(1.f-f1)*v2; }
 
-
 //----------------------------------------------------------------------------
 
 #if defined(HH_VECTOR4_SSE) && !defined(HH_NO_SSE41)
@@ -296,7 +295,7 @@ inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
     //  vmovl.u16      q11, d7
     //  vcvt.f32.u32   q10, q10  // Convert to float
     //  vcvt.f32.u32   q11, q11
-    // uint8x8x2_t a = vld2_u8(p); // uint8x8x2_t vld2_u8(uint8_t const * ptr); //VLD2.8 {d0, d1}, [r0]
+    // uint8x8x2_t a = vld2_u8(p); // uint8x8x2_t vld2_u8(uint8_t const * ptr); // VLD2.8 {d0, d1}, [r0]
     // uint8x8_t a0 = a.val[0];
     // This initialization of variable "a" may be optional.
     uint32x2_t a = vcreate_u32(0); // uint32x2_t vcreate_u32(uint64_t a);  // VMOV d0, r0, r0

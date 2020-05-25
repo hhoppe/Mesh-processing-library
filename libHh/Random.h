@@ -45,12 +45,11 @@ class Random : noncopyable {
 // Randomly shuffle the elements in an array view.
 template<typename T> void shuffle(ArrayView<T> ar, Random& r);
 
-
 //----------------------------------------------------------------------------
 
 template<typename T> void shuffle(ArrayView<T> ar, Random& r) {
-    // std::default_random_engine e; std::shuffle(ar.begin(), ar.end(), e); // implementation-dependent
-    // std::mt19937_64 e;            std::shuffle(ar.begin(), ar.end(), e); // implementation-dependent
+    // std::default_random_engine e; std::shuffle(ar.begin(), ar.end(), e);  // implementation-dependent
+    // std::mt19937_64 e;            std::shuffle(ar.begin(), ar.end(), e);  // implementation-dependent
     const int n = ar.num();
     for_int(i, n-1) {
         int j = i+r.get_unsigned(n-i);

@@ -48,7 +48,6 @@
 //    (version 3.0 allows unsigned types),
 //    so for now I must override the macros for parallel_for_size_t() on VS.
 
-
 namespace hh {
 
 inline int get_max_threads() { return max(int(std::thread::hardware_concurrency()), 1); }
@@ -92,6 +91,7 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 
 #endif  // defined(HH_NO_OPENMP)
 
+// ***
 
 #define parallel_for_T(T, i, lb, ub)         omp_parallel_for_T(, T, i, lb, ub)
 #define cond_parallel_for_T(c, T, i, lb, ub) omp_parallel_for_T(if((c)>=hh::k_omp_thresh), T, i, lb, ub)
@@ -119,6 +119,7 @@ const int k_omp_min_iterations = 8;              // sufficient number of loop it
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, intptr_t, i, 0, static_cast<intptr_t>(ub))
 #endif
 
+// ***
 
 // Launches a set of threads whose number matches the hardware parallelism, and terminates these threads upon
 // destruction.  The member function execute(num_tasks, task_function) allows parallel execution of an indexed task,

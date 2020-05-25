@@ -2,7 +2,6 @@
 #include "MathOp.h"
 using namespace hh;
 
-
 // (float)0., -0.      0x00000000
 // (float)1            0x3f800000
 // (float)3            0x40400000

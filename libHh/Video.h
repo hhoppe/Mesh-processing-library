@@ -33,7 +33,7 @@ class Video : public Grid<3,Pixel> {
     Video(Video&& v) noexcept                   { swap(*this, v); } // =default?
     Video(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
     ~Video()                                    { }
-    Video& operator=(Video&& v) noexcept        { clear(); swap(*this, v); return *this; } // =default?
+    Video& operator=(Video&& v) noexcept        { clear(); swap(*this, v); return *this; }
     void operator=(base&& v)                    { clear(); swap(implicit_cast<base&>(*this), v); }
     Video& operator=(const Video&)              = default;
     void operator=(CGridView<3,Pixel> video)    { base::assign(video); }
@@ -75,7 +75,7 @@ class VideoNv12 : noncopyable {
     VideoNv12()                                 = default;
     explicit VideoNv12(const Vec3<int>& dims)   { init(dims); }
     VideoNv12(VideoNv12&& vnv12)                { swap(*this, vnv12); } // =default?
-    VideoNv12& operator=(VideoNv12&& v) noexcept { clear(); swap(*this, v); return *this; } // =default?
+    VideoNv12& operator=(VideoNv12&& v) noexcept { clear(); swap(*this, v); return *this; }
     explicit VideoNv12(Grid<3,uint8_t>&& grid_Y, Grid<3, Vec2<uint8_t>>&& grid_UV)
         : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) { ok(); }
     void init(const Vec3<int>& dims) {
@@ -191,7 +191,6 @@ class WVideo {
     friend class MF_WVideo_Implementation;
     friend class FF_WVideo_Implementation;
 };
-
 
 //----------------------------------------------------------------------------
 

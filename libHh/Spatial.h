@@ -132,7 +132,6 @@ class BSpatialSearch : noncopyable {
     void consider(const Ind& ci);
 };
 
-
 //----------------------------------------------------------------------------
 
 inline int Spatial::float_to_index(float fd) const {

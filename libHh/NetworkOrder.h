@@ -60,7 +60,6 @@ inline uint16_t swap_2bytes(uint16_t v) {
 
 #endif
 
-
 // See http://stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine
 // #define HH_LITTLE_ENDIAN 0x41424344UL
 // #define HH_BIG_ENDIAN    0x44434241UL

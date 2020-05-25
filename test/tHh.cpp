@@ -94,7 +94,7 @@ void test_spawn() {
         try_it("%^&*()");
     }
     {
-        const string arcands = "abcdefgh       `~!@#$%^&*()-_=+[{]}\\|;:'\"\",<.>/?"; // double '"' frequency
+        const string arcands = "abcdefgh       `~!@#$%^&*()-_=+[{]}\\|;:'\"\",<.>/?";  // double '"' frequency
         for_int(itry, 10) {         // tried up to 10000
             const int len = 20;
             string str(len, ' ');
@@ -109,7 +109,7 @@ void test_spawn() {
 
 void test_spawn2() {
 #if defined(_WIN32)
-#define E(str) s = str;  SHOW("*", s); SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data())) // or "-vc"
+#define E(str) s = str;  SHOW("*", s); SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data()))  // or "-vc"
     // echo 'a'\''b' // a'b
     // csh -c 'echo '\''a'\''\'\'''\''b'\''' // a'b
     // sh -c  'echo '\''a'\''\'\'''\''b'\''' // a'b
@@ -225,7 +225,10 @@ void func4() {
         string _s;
     };
     struct SS {
-        SS() { _s1._s = "s1"; _s2._s = "s2"; func2(); } // see if _s1 and _s2 are destructed; yes they are.
+        SS() {
+             // see if _s1 and _s2 are destructed; yes they are.
+            _s1._s = "s1"; _s2._s = "s2"; func2();
+        }
         ~SS() { SHOW("~SS never"); }
         S _s1, _s2, _s3, _s4;
     };
@@ -254,7 +257,6 @@ void test_exceptions() {
 }
 
 } // namespace
-
 
 int main() {
     if (1) {
@@ -391,7 +393,7 @@ line2)";
         SHOW(sort(ar));
         SHOW(ar);
 #if 0
-        ArrayView<int> arv(ar); auto arv2 = clone(arv); dummy_use(arv2); // correctly fails static_assert
+        ArrayView<int> arv(ar); auto arv2 = clone(arv); dummy_use(arv2);  // correctly fails static_assert
 #endif
     }
     {

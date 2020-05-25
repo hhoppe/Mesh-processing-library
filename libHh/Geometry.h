@@ -164,7 +164,6 @@ template<typename T> constexpr T to_deg(T rad) {
     static_assert(std::is_floating_point<T>::value, ""); return rad*static_cast<T>(360/D_TAU);
 }
 
-
 //----------------------------------------------------------------------------
 
 // *** Vector

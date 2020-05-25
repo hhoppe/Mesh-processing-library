@@ -41,9 +41,9 @@ class Image : public Matrix<Pixel> {
     explicit Image(const Vec2<int>& pdims, Pixel pix) : Image(pdims) { fill(*this, pix); }
     explicit Image(const Image&)                = default;
     explicit Image(const base& image)           : base(image.dims()) { base::assign(image); }
-    Image(Image&& m) noexcept                   { swap(*this, m); }                            // =default?
+    Image(Image&& m) noexcept                   { swap(*this, m); }
     Image(base&& m) noexcept                    { swap(implicit_cast<base&>(*this), m); }
-    Image& operator=(Image&& image) noexcept    { clear(); swap(*this, image); return *this; } // =default?
+    Image& operator=(Image&& image) noexcept    { clear(); swap(*this, image); return *this; }
     void operator=(base&& image)                { clear(); swap(implicit_cast<base&>(*this), image); }
     Image& operator=(const Image&)              = default;
     void operator=(CMatrixView<Pixel> image)    { base::assign(image); }
@@ -301,7 +301,6 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 #if !defined(HH_NO_IMAGE_IO)
 #define HH_IMAGE_HAVE_IO
 #endif
-
 
 //----------------------------------------------------------------------------
 

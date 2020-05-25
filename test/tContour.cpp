@@ -96,7 +96,6 @@ void testmesh() {
     mesh.write(fmesh());
 }
 
-
 struct fmonkey {
     float operator()(const Point& p) const {
         // Monkey saddle, z=x^3-3y^2x

@@ -237,7 +237,7 @@ template<int D, typename T> class Grid : public GridView<D,T> {
     type& operator=(CGridView<D,T> g)           { init(g.dims()); base::assign(g); return *this; }
     type& operator=(const type& g)              { init(g.dims()); base::assign(g); return *this; }
     type& operator=(initializer_type l)         { init(nested_dims()(l)); nested_retrieve()(*this, l); return *this; }
-    type& operator=(type&& g) noexcept          { clear(); swap(*this, g); return *this; } // not default
+    type& operator=(type&& g) noexcept          { clear(); swap(*this, g); return *this; }
     template<typename... A> void init(int d0, A... dr) { init(Vec<int,D>(d0, dr...)); }
     using base::size;
     void init(const Vec<int,D>& dims) {
@@ -266,7 +266,6 @@ template<int D, typename T, typename Func> auto map(CGridView<D,T>& c, Func func
     Grid<D, decltype(func(T{}))> nc(c.dims()); for_size_t(i, c.size()) { nc.flat(i) = func(c.flat(i)); }
     return nc;
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -361,7 +360,6 @@ template<int D> size_t grid_stride(const Vec<int,D>& dims, int dim) {
     size_t i = dims[dim+1]; for_intL(d, dim+2, D) { i *= dims[d]; } return i;
 }
 
-
 //----------------------------------------------------------------------------
 
 namespace details {
@@ -426,7 +424,6 @@ details::Grid_get2<DD,T>::get2(T* a, const Vec<int,n+DD>& dims, const Vec<int,n>
 
 } // namespace details
 
-
 //----------------------------------------------------------------------------
 
 template<int D, typename T> typename details::Grid_aux<D,T>::CRet CGridView<D,T>::operator[](int r) const {
@@ -454,7 +451,6 @@ template<int D, typename T> const T& CGridView<D,T>::inside(int y, int x, Bndrul
     if (!map_inside(y, x, bndrule)) { ASSERTX(bordervalue); return *bordervalue; }
     return (*this)[y][x];
 }
-
 
 //----------------------------------------------------------------------------
 
@@ -511,7 +507,6 @@ template<int D, typename T> Grid<D+1,T> increase_grid_rank(Grid<D,T>&& grid) {
     return ngrid;
 }
 
-
 //----------------------------------------------------------------------------
 
 namespace details {
@@ -541,7 +536,6 @@ template<typename T> struct nested_list_retrieve<0,T> {
     void operator()(T& gridv, const T& lv) const { gridv = lv; }
 };
 } // namespace details
-
 
 //----------------------------------------------------------------------------
 
@@ -590,7 +584,6 @@ template<int D, typename T> std::ostream& operator<<(std::ostream& os, CGridView
 template<int D, typename T> HH_DECLARE_OSTREAM_EOL(CGridView<D,T>);
 template<int D, typename T> HH_DECLARE_OSTREAM_EOL(GridView<D,T>); // implemented by CGridView<D,T>
 template<int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D,T>);     // implemented by CGridView<D,T>
-
 
 //----------------------------------------------------------------------------
 

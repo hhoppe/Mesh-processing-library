@@ -34,10 +34,10 @@ class Audio : public Grid<2,float> {
     struct Attrib;
     explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); } // nchannels, nsamples
     explicit Audio(const Audio&)                = default;
-    Audio(Audio&& v) noexcept                   { swap(*this, v); } // =default?
+    Audio(Audio&& v) noexcept                   { swap(*this, v); }
     Audio(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
     ~Audio()                                    { }
-    Audio& operator=(Audio&& v) noexcept        { clear(); swap(*this, v); return *this; } // =default?
+    Audio& operator=(Audio&& v) noexcept        { clear(); swap(*this, v); return *this; }
     void operator=(base&& v)                    { clear(); swap(implicit_cast<base&>(*this), v); }
     Audio& operator=(const Audio&)              = default;
     void operator=(CGridView<2,float> audio)    { base::assign(audio); }
@@ -66,7 +66,6 @@ bool filename_is_audio(const string& filename);
 
 // Return predicted audio suffix given first byte of file, or "" if unrecognized.
 string audio_suffix_for_magic_byte(uchar c);
-
 
 //----------------------------------------------------------------------------
 

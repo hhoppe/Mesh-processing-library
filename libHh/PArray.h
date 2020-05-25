@@ -93,7 +93,8 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
     friend void swap(PArray<T,pcap>& l, PArray<T,pcap>& r) noexcept {
         if (l._cap>pcap) {
             if (r._cap>pcap) {
-                std::swap(l._a, r._a); std::swap(l._cap, r._cap); std::swap(l._n, r._n); // _pa undefined in both
+                std::swap(l._a, r._a); std::swap(l._cap, r._cap); std::swap(l._n, r._n);
+                // _pa undefined in both
             } else {
                 std::move(r._pa, r._pa+r._n, l._pa);
                 r._a = l._a; l._a = l._pa; std::swap(l._n, r._n); std::swap(l._cap, r._cap);
@@ -103,7 +104,8 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
                 std::move(l._pa, l._pa+l._n, r._pa);
                 l._a = r._a; r._a = r._pa; std::swap(l._n, r._n); std::swap(l._cap, r._cap);
             } else {
-                std::swap_ranges(l._pa, l._pa+max(l._n, r._n), r._pa); std::swap(l._n, r._n); // _a and _cap unchanged
+                std::swap_ranges(l._pa, l._pa+max(l._n, r._n), r._pa); std::swap(l._n, r._n);
+                // _a and _cap unchanged
             }
         }
     }

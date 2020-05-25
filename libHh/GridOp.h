@@ -100,7 +100,6 @@ template<int D, bool parallel = true> Grid<D,Pixel> convolve_d(CGridView<D,Pixel
                                                                CArrayView<float> kernel, Bndrule bndrule,
                                                                const Pixel* bordervalue = nullptr);
 
-
 //----------------------------------------------------------------------------
 
 template<int COL_D, int D, typename T> CStridedArrayView<T> grid_column(CGridView<D,T> grid, const Vec<int,D>& u0) {
@@ -233,7 +232,6 @@ template<int D> void convert(CGridView<D,uint8_t> gridu, GridView<D,float> gridf
     }, 1);
 }
 
-
 template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu) {
     assertx(same_size(gridf, gridu));
     parallel_for_each(range(gridf.size()), [&](const size_t i) {
@@ -242,7 +240,6 @@ template<int D> void convert(CGridView<D,float> gridf, GridView<D,uint8_t> gridu
         gridu.flat(i) = clamp_to_uint8(static_cast<int>(v));
     }, 1);
 }
-
 
 template<int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D,Vector4> gridf) {
     assertx(same_size(gridu, gridf));
@@ -264,7 +261,6 @@ template<int D> void convert(CGridView<D,Vector4> gridf, GridView<D, Vec2<uint8_
     }, 4);
 }
 
-
 //----------------------------------------------------------------------------
 
 namespace details {
@@ -273,12 +269,12 @@ namespace details {
 template<int D, typename T> void inverse_convolution_d(GridView<D,T> grid, const FilterBnd& filterb, int d) {
     HH_GRIDOP_TIMER(__inv_convol);
     const LUfactorization& lu = filterb.lu_factorization();
-    bool lastspecial = lu.Llastrow.num()>0; // making this const makes GNU gcc <4.8 fail
+    const bool lastspecial = lu.Llastrow.num()>0;
     const Vec<int,D>& dims = grid.dims();
     // TODO: always process a coherent swath of the last dimension together for better cache performance.
-    int cx = grid.dim(d);                 // making this const makes GNU gcc <4.8 fail
+    const int cx = grid.dim(d);
     if (cx==1) return;                    // inverse convolution is identity
-    size_t stride = grid_stride(dims, d); // making this const makes GNU gcc <4.8 fail
+    const size_t stride = grid_stride(dims, d);
     const Vec<int,D> rows = grid.dims().with(d, 1);
     parallel_for_coords(rows, [&](const Vec<int,D>& urow) { // nice
         // Preprocess (inverse convolution L U x = z)
@@ -334,7 +330,7 @@ template<int D, typename T> Grid<D,T> evaluate_kernel_d(CGridView<D,T> grid, int
     int nk = mat_weights.xsize();
     const Vec<int,D> ndims = dims.with(d, nx);
     Grid<D,T> ngrid(ndims);
-    size_t stride = grid_stride(dims, d); // making this "const" makes GNU gcc <4.8 compiler fail: "uninitialized"
+    const size_t stride = grid_stride(dims, d);
     // SHOW(dims, cx, nx, nk, ndims, stride);
     // SHOW(ar_pixelindex0); SHOW(mat_weights); SHOW(grid);
     assertx(stride==grid_stride(ndims, d)); // same stride in new grid (other dims unchanged)
@@ -614,7 +610,7 @@ template<int D, bool parallel> Grid<D,Pixel> convolve_d(CGridView<D,Pixel> grid,
     const int nx = dims[d];
     const int nk = kernel.num(), r = (nk-1)/2;
     assertx(r*2+1==nk);                // kernel must have odd size to be symmetric about each sample
-    size_t stride = grid_stride(dims, d); // making this "const" makes GNU gcc <4.8 compiler fail: "uninitialized"
+    const size_t stride = grid_stride(dims, d);
     // SHOW(dims, nx, nk, stride); SHOW(kernel);
     assertx(abs(sum(kernel)-1.)<1e-6); // kernel is expected to have unit integral
     const int ishift = 16, fac = 1<<ishift, fach = 1<<(ishift-1);

@@ -253,7 +253,6 @@ bool SimplicialComplex::equal(Simplex s1, Simplex s2) const {
     return false;
 }
 
-
 // Lisp like eq comparison: two simplices eq if they are identical or their children are identical eq.
 // Note: children must be distinct for this to work i.e. no degenerate simplices allowed.
 // Note: no duplicate simplices allowed.
@@ -409,7 +408,6 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
             Sarea_dropped.enter(cmp_area);
             vs->setArea(0.f);
         }
-
 
     }
     
@@ -675,7 +673,6 @@ void SimplicialComplex::readLine(const char* psline) {
         // default
     }
 }
-
 
 void SimplicialComplex::attrReadLine(const char* sline) {
     if (sline[0]=='#') return;
@@ -945,7 +942,6 @@ Simplex SimplexVertexFaceIter::next() {
     if (_index == _sq.num()) return nullptr;
     return _sq[_index++];
 }
-
 
 SimplexStarIter::SimplexStarIter(Simplex s) {
     _sq.push(s);

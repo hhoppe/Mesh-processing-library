@@ -173,10 +173,10 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
     if (!_s || !*_s) return false;
     int nch = str_key_nchars(_s);
     if (!assertw(nch)) { SHOW(_str, _s); return false; }
-    kb = _s; kl = nch;
+    kb = _s, kl = nch;
     if (_s[nch]!='=') {
         assertx(_s[nch]==0 || _s[nch]==' ');
-        vb = kb+kl; vl = 0;     // null string ""
+        vb = kb+kl, vl = 0;     // null string ""
         _s += nch; if (_s[0]==' ') _s++;
         return true;
     }
@@ -192,7 +192,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
         if (Warning("Cannot parse StringKey value")) SHOW(_str, _s+nch+1);
         return false;
     }
-    vb = _s+nch+1; vl = narrow_cast<int>(send-(_s+nch));
+    vb = _s+nch+1, vl = narrow_cast<int>(send-(_s+nch));
     _s = send+1; if (_s[0]==' ') _s++;
     return true;
 }
@@ -272,7 +272,10 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     const char* frb = nullptr;  // remainder of string after matching key
     for_cstring_key_value_ptr(sso, [&](const char* kb, int kl, const char* vb, int vl) {
         nkeys2++;
-        if (fkb && !frb) { frb = kb; if (!k_debug) return true; } // found remainder of string; parsed enough.
+        if (fkb && !frb) {      // found remainder of string; parsed enough.
+            frb = kb;
+            if (!k_debug) return true; 
+        }
         bool found = static_cast<size_t>(kl)==keyl && !strncmp(kb, key, kl);
         if (found) {
             if (fkb) { SHOW(sso, kb, kl, vb, vl, key, val); assertnever("dup key"); }

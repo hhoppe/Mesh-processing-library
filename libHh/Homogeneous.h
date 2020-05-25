@@ -20,7 +20,6 @@ Vector to_Vector(const Homogeneous& h);
 inline Homogeneous& operator+=(Homogeneous& h, const Point& p) { h += Homogeneous(p); return h; }
 inline Homogeneous normalized(const Homogeneous& h)            { return h/assertx(h[3]); }
 
-
 //----------------------------------------------------------------------------
 
 inline Point to_Point(const Homogeneous& h) {

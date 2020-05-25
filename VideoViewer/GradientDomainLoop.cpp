@@ -399,14 +399,12 @@ void compute_gdloop_aux2(CGridView<3,Pixel> video, CMatrixView<int> mat_start, C
     }
 }
 
-
 Matrix<int> possibly_rescale(CMatrixView<int> mat, const Vec2<int>& sdims) {
     assertx(min(mat.dims())>0);
     assertx(is_zero(mat.dims()%sdims) || is_zero(sdims%mat.dims()));
     Matrix<int> nmat = mat.dims()==sdims ? Matrix<int>(mat) : scale_filter_nearest(mat, sdims);
     return nmat;
 }
-
 
 // Given input video (and looping parameters mat_start, mat_period), compute a videoloop using multigrid.
 // Solve for offsets rather than final colors.
@@ -898,7 +896,10 @@ void solve_using_offsets(const Vec3<int>& odims,
             // TODO: could let any read stream skip ahead if no content is used from it
             Array<int> ar_fi0(periods.num()); // input frame for first stream of each period
             for_int(pi, periods.num()) {
-                if (pi==0) { assertx(periods[pi]==1); continue; } // static frame is handled separately
+                if (pi==0) {
+                    assertx(periods[pi]==1);
+                    continue;   // static frame is handled separately
+                }
                 int period = periods[pi];
                 int wrap = (onf_actual+period-1)/period*period;
                 int nstreams = ar_nstreams[pi];
@@ -1169,9 +1170,11 @@ void compute_gdloop(const Vec3<int>& videodims,
                     CMatrixView<int> mat_start, CMatrixView<int> mat_period, EGDLoopScheme scheme, int nnf,
                     WVideo* pwvideo, GridView<3,Pixel> videoloop, VideoNv12View videoloop_nv12,
                     int num_loops) {
-    const Vec3<int> odims = videodims;                          // original (input) dimensions;
-    Vec2<int> sdims = odims.tail<2>(); assertx(product(sdims)); // spatial dimensions (for both input and loop)
-    const int onf = odims[0]; assertx(onf>0);                   // number of input frames
+    const Vec3<int> odims = videodims;  // original (input) dimensions;
+    Vec2<int> sdims = odims.tail<2>();  // spatial dimensions (for both input and loop)
+    assertx(product(sdims));
+    const int onf = odims[0];   // number of input frames
+    assertx(onf>0);
     assertx((video_filename!="") + !!video.size() + !!video_nv12.size() == 1); // exactly one of 3 input types
     if (video_filename!="") assertx(file_requires_pipe(video_filename) || file_exists(video_filename));
     if (video.size()) assertx(video.dims()==odims);

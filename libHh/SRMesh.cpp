@@ -1084,6 +1084,7 @@ inline bool SRMesh::big_error(const SRVertexGeometry* vg, const SRVsplit* vspl) 
 #endif
 }
 
+// ***
 
 bool SRMesh::qrefine(const SRVertex* vs) const {
     ASSERTX(is_splitable(vs) && is_active_v(vs));

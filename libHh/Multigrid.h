@@ -22,7 +22,7 @@
   setup_rhs(grid_orig, multigrid.rhs());
   if (optional)
     for (const auto& u : range(dims)) multigrid.initial_estimate()[u] = some_value;
-  // Grid<2,float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig); // for convergence analysis
+  // Grid<2,float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig);  // for convergence analysis
   multigrid.solve();
   CGridView<2, float> grid_result = multigrid.result();
   if (1) HH_RSTAT(Sresult, grid_result);
@@ -422,7 +422,9 @@ class Multigrid : noncopyable {
             // I tried custom relaxation kernels near end boundaries but it did not work.
             for_int(iter, 3) {
                 int extra_niter = 30, extra_size = 6;
-                if (D==3) { extra_niter = 5; extra_size = 3; } // reduce computational cost on Video
+                if (D==3) {     // reduce computational cost on Video
+                    extra_niter = 5; extra_size = 3;
+                }
                 for_int(c, D) {
                     if (!(dims[c]>1 && dims[c]%2==1)) continue;
                     for_int(extra_iter, extra_niter) {

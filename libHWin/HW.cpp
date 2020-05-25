@@ -228,7 +228,6 @@ void HW::open() {
     assertx(DestroyWindow(_hwnd));
 }
 
-
 bool HW::loop() {
     for (;;) {
         // handle all possible types of events
@@ -1331,7 +1330,8 @@ bool HW::copy_image_to_clipboard(const Image& image) {
                 int yy = image.ysize()-1-y; // because bmp has image origin at lower-left
                 for_int(x, image.xsize()) {
                     const Pixel& pix = image[yy][x];
-                    *p++ = pix[2]; *p++ = pix[1]; *p++ = pix[0]; // RGBA to BGRA
+                    // RGBA to BGRA
+                    *p++ = pix[2]; *p++ = pix[1]; *p++ = pix[0];
                     if (ncomp==4) *p++ = pix[3];
                 }
                 while (reinterpret_cast<uintptr_t>(p)&3) *p++ = uint8_t{0};
@@ -1371,7 +1371,8 @@ bool HW::copy_clipboard_to_image(Image& image) {
                     int yy = image.ysize()-1-y; // flip vertically
                     for_int(x, image.xsize()) {
                         Pixel& pix = image[yy][x];
-                        pix[2] = *p++; pix[1] = *p++; pix[0] = *p++; // BGRA to RGBA
+                        // BGRA to RGBA
+                        pix[2] = *p++; pix[1] = *p++; pix[0] = *p++;
                         if (ncomp==4) pix[3] = *p++;
                         else pix[3] = 255;
                     }

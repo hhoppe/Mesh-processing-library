@@ -33,7 +33,6 @@ namespace hh {
 
 #define HH_LOCK
 
-
 //----------------------------------------------------------------------------
 // *** Use OpenMP for synchronization (its default is a globally defined mutex).
 #elif 0
@@ -49,7 +48,6 @@ namespace hh {
 //  - cannot leave scope with exception (e.g. gcc does implicit catch and reports error)!
 //  - cannot use a separate lock guard per-task in a thread-safe function (rare need).
 
-
 //----------------------------------------------------------------------------
 // *** All critical sections across the program share the same globally defined mutex -- like OpenMP default.
 #elif 0
@@ -59,10 +57,9 @@ class MyGlobalLock {
     MyGlobalLock() : _lock_guard(s_f_global_mutex()) { }
  private:
     std::lock_guard<std::mutex> _lock_guard;
-    static std::mutex& s_f_global_mutex() { static auto m = new std::mutex; return *m; }  // singleton pattern function
+    static std::mutex& s_f_global_mutex() { static auto& m = *new std::mutex; return m; }
 };
 #define HH_LOCK if (hh::details::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
-
 
 //----------------------------------------------------------------------------
 // *** The critical sections in each compilation unit (*.cpp file) share the same mutex.
@@ -79,7 +76,6 @@ class MyPerFileLock {
 } // namespace
 #define HH_LOCK if (hh::details::false_capture<hh::MyPerFileLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
 
-
 //----------------------------------------------------------------------------
 // *** Each critical section has its own mutex.
 #elif 0
@@ -88,7 +84,6 @@ class MyPerFileLock {
 //  because there is no way to declare/allocate a static variable in the middle of a statement.
 // Maybe use a false_capture of a templated class with template argument based on __COUNTER__
 //  (and singleton pattern function)?
-
 
 //----------------------------------------------------------------------------
 // *** Old paired macros (all critical sections use a separately defined mutex).
@@ -100,9 +95,7 @@ class MyPerFileLock {
 
 #endif
 
-
 } // namespace hh
-
 
 //----------------------------------------------------------------------------
 

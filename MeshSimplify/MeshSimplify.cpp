@@ -54,6 +54,7 @@ namespace {
 //  (usually undefined)
 // #define ENABLE_TVC
 
+// ***
 
 #define SSTATV2(Svar, v) do { static Stat Svar(#Svar, verb>=2, true); Svar.enter(v); } while (false)
 
@@ -245,6 +246,7 @@ inline Set<eptinfo*>& e_setpts(Edge e)          { return func_e_setpts(e).setpts
 Set<eptinfo*>& e_setpts(Edge)                   { static Set<eptinfo*> t; return t; }
 #endif
 
+// ***
 
 #if defined(QEM_DOUBLE)
 #define L_QEM_T double
@@ -263,6 +265,7 @@ upBQemT& f_qem_p(Face)                          { assertnever_ret(""); static up
 #endif
 BQemT& f_qem(Face f)                            { return *f_qem_p(f); }
 
+// ***
 
 Array<string> material_strings;
 
@@ -462,6 +465,7 @@ LHPqueue pqecost;               // conservative estimate of cost of ecol
 Matrix<float> g_gridf;          // if terrain, grid of height values
 Matrix<ushort> g_gridu;         // if -gridushorts
 
+// ***
 
 #if defined(ENABLE_TVC)
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_tvc_owid); // original wedge id of mesh corner
@@ -490,6 +494,7 @@ constexpr float tvc_max_improvement = 6.f;
 constexpr int tvc_maxcare = 0;  // could be 3
 int tvc_ncachemiss = 0;
 
+// ***
 
 // Result of a possible edge collapse.
 enum EResult { R_success, R_dih, R_illegal, R_NUM };
@@ -1833,6 +1838,7 @@ void ULLS::solve(double& prss1) {
     prss1 = rss1;
 }
 
+// ***
 
 void gather_nn_1(Edge e, NewMeshNei& nn) {
     // modified gather_edge_ring()
@@ -2369,7 +2375,6 @@ double evaluate_geom(const NewMeshNei& nn, const Param& param, float spring, con
     }
     return rss1;
 }
-
 
 double evaluate_maxerr(const NewMeshNei& nn, const Param& param, const Point& newp) {
     float rss1 = 0.;
@@ -4026,7 +4031,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     ret_min_ii = min_ii;
     ret_vs = vs;
     CArrayView<int> ar_rwid = !bswap ? nn.ar_rwid_v1 : nn.ar_rwid_v2;
-    // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr; // now undefined
+    // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // now undefined
     for (eptinfo* pept : nn.ar_epts) { point_change_edge(pept, nullptr); }
     for (eptinfo* pept : nn.ar_eptretire) {
         point_change_edge(pept, nullptr);
@@ -4515,7 +4520,7 @@ void optimize() {
         showdf("Operations successful: %d/%d  (%.1f%%)\n",
                nsuccess, ntested, float(nsuccess)/max(ntested, 1)*100.f);
     if (tvcfac) showdf("Number of cache misses: %d\n", tvc_ncachemiss);
-    nfaces = 0; nvertices = 0;  // default for next '-simplify'
+    nfaces = 0, nvertices = 0;  // default for next '-simplify'
 }
 
 // Simplify the mesh until it has <=nfaces or <=nvertices.

@@ -196,7 +196,8 @@ void compute_tp(int i, int& n, Frame& f) {
 }
 
 void draw_pc_extent(Mk3d& mk) {
-    mk_save; mk.scale(2);
+    MkSave mk_save(mk);
+    mk.scale(2);
     Mklib mklib(mk);
     // frame is defined in terms of principal frame!
     if (is_3D) {
@@ -208,8 +209,10 @@ void draw_pc_extent(Mk3d& mk) {
 
 void draw_pc_linear(Mk3d& mk) {
     if (is_3D) {
+        MkSave mksave(mk);
+        mk.scale(2);
         Mklib mklib(mk);
-        mk_save; mk.scale(2); mklib.squareU();
+        mklib.squareU();
     } else {
         mk.point(+1.f, 0.f, 0.f);
         mk.point(-1.f, 0.f, 0.f);

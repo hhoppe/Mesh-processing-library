@@ -38,8 +38,8 @@ class GMesh : public Mesh {
     GMesh()                                     = default;
     GMesh(GMesh&& m) noexcept                   { swap(*this, m); } // =default?
     ~GMesh()                                    = default;
-    GMesh& operator=(GMesh&& m) noexcept        { clear(); swap(*this, m); return *this; } // =default?
-
+    GMesh& operator=(GMesh&& m) noexcept        { clear(); swap(*this, m); return *this; }
+    
     // ** Extend functionality:
     void copy(const GMesh& m);  // carries flags (but not sac fields), hence not named operator=().
     void merge(const GMesh& mo, Map<Vertex,Vertex>* mvvn = nullptr);
@@ -175,7 +175,6 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
         return false;
     });
 }
-
 
 //----------------------------------------------------------------------------
 

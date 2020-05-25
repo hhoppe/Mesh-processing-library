@@ -78,6 +78,7 @@ string portable_simple_quote(const string& s) {
     return string_requires_quoting(s) ? '"' + s + '"' : s;
 }
 
+// ***
 
 #if defined(IO_USE_CFSTREAM)
 
@@ -211,9 +212,9 @@ class ocfstream : public std::ostream {
 
 #endif  // defined(IO_USE_CFSTREAM)
 
-
 } // namespace
 
+// *** RFile::Implementation and WFile::Implementation
 
 #if defined(IO_USE_FSTREAM)
 
@@ -275,7 +276,6 @@ class WFile::Implementation {
 #error
 #endif
 
-
 // *** RFile
 
 RFile::RFile(const string& filename) {
@@ -333,7 +333,6 @@ RFile::~RFile() {
     }
 }
 
-
 // *** WFile
 
 WFile::WFile(const string& filename) {
@@ -384,7 +383,6 @@ WFile::~WFile() {
         }
     }
 }
-
 
 // *** Misc
 
@@ -559,6 +557,7 @@ TmpFile::~TmpFile() {
     if (!getenv_bool("TMPFILE_KEEP")) { assertx(!HH_POSIX(unlink)(_filename.c_str())); }
 }
 
+// *** Quoting
 
 // Notes on cygwin double-quote problem:
 //
@@ -578,7 +577,6 @@ TmpFile::~TmpFile() {
 //  # Arg01='c:/dummy'
 
 // When grep is invoked from Emacs, it appears as "c:\cygwin64\bin\grep -nH ..."
-
 
 // Backslash all non-ordinary characters.
 string quote_arg_for_sh(const string& s) {
@@ -814,13 +812,11 @@ nullbuf null_obj;
 
 std::ostream cnull{&null_obj};
 
-
 namespace {
 
 // *** my_popen(), my_pclose()
 
 #if !defined(_WIN32)
-
 
 FILE* my_popen(const string& scmd, const string& mode) {
     // CYGWIN might fail to find hardcoded "/bin/sh" unless cygwin1.dll is in c:/cygwin/bin
@@ -847,9 +843,7 @@ int my_pclose(FILE* file) {
     return pclose(file);
 }
 
-
 #else  // defined(_WIN32)
-
 
 // Adapt popen() to use sh/csh if possible (rather than cmd) so that
 // - it works within UNC directories
@@ -939,7 +933,6 @@ FILE* my_popen(CArrayView<string> scmd, const string& mode) {
 int my_pclose(FILE* file) {
     return my_pclose_internal(file);
 }
-
 
 #endif  // defined(_WIN32)
 

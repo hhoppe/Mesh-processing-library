@@ -134,7 +134,6 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
         assertx(outcome==8);
         outcome = getNextOutcome();
 
-
         if (outcome == SplitRecord::E_VT) { // map e from vs to vt
             vs->removeParent(e);
             vt->addParent(e);
@@ -282,7 +281,6 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
         // debug
         assertx(outcome==8);
         outcome = getNextOutcome();
-
 
         if (outcome == SplitRecord::E_VT) { // map e from vs to vt
             vs->removeParent(e);
@@ -436,7 +434,6 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
         // debug
         assertx(outcome==8);
         outcome = getNextOutcome();
-
 
         if (outcome == SplitRecord::E_VT) { // map e from vs to vt
             vs->removeParent(e);

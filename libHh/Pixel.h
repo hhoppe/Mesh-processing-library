@@ -37,7 +37,6 @@ template<typename R, typename = enable_if_range_t<R> > void convert_bgra_rgba(R&
     convert_rgba_bgra(std::forward<R>(range)); // same implementation
 }
 
-
 //----------------------------------------------------------------------------
 
 // Faster, specialized version of Vec<>::operator==().

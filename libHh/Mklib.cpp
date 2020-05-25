@@ -3,6 +3,9 @@
 
 namespace hh {
 
+#define mk_save hh::MkSave HH_UNIQUE_ID(mksave)(mk)
+#define mk_save_color hh::MkSaveColor HH_UNIQUE_ID(mksavecolor)(mk)
+
 void Mklib::squareO() {
     mk.point(0, -.5f, -.5f);
     mk.point(0, +.5f, -.5f);

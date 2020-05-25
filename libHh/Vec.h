@@ -349,26 +349,27 @@ Vec<RT,n> operator+(const Vec<T,n>& a1, const Vec<T2,n>& a2) {
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 // See also floor(), ceil(), abs() generalized to Vec<> in MathOp.h
 #define TT template<typename T, int n>
-#define G Vec<T,n>
+#define G Vec<T, n>
 #define F for_int(i, n)
+// clang-format off
 
-TT G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i]+g2[i]; } return g; }
-TT G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i]-g2[i]; } return g; }
-TT G operator*(const G& g1, const G& g2) { G g; F { g[i] = g1[i]*g2[i]; } return g; }
-TT G operator/(const G& g1, const G& g2) { G g; F { g[i] = g1[i]/g2[i]; } return g; }
-TT G operator%(const G& g1, const G& g2) { G g; F { g[i] = g1[i]%g2[i]; } return g; }
+TT G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i] + g2[i]; } return g; }
+TT G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i] - g2[i]; } return g; }
+TT G operator*(const G& g1, const G& g2) { G g; F { g[i] = g1[i] * g2[i]; } return g; }
+TT G operator/(const G& g1, const G& g2) { G g; F { g[i] = g1[i] / g2[i]; } return g; }
+TT G operator%(const G& g1, const G& g2) { G g; F { g[i] = g1[i] % g2[i]; } return g; }
 
-TT G operator+(const G& g1, T v) { G g; F { g[i] = g1[i]+v; } return g; }
-TT G operator-(const G& g1, T v) { G g; F { g[i] = g1[i]-v; } return g; }
-TT G operator*(const G& g1, T v) { G g; F { g[i] = g1[i]*v; } return g; }
-TT G operator/(const G& g1, T v) { G g; F { g[i] = g1[i]/v; } return g; }
-TT G operator%(const G& g1, T v) { G g; F { g[i] = g1[i]%v; } return g; }
+TT G operator+(const G& g1, T v) { G g; F { g[i] = g1[i] + v; } return g; }
+TT G operator-(const G& g1, T v) { G g; F { g[i] = g1[i] - v; } return g; }
+TT G operator*(const G& g1, T v) { G g; F { g[i] = g1[i] * v; } return g; }
+TT G operator/(const G& g1, T v) { G g; F { g[i] = g1[i] / v; } return g; }
+TT G operator%(const G& g1, T v) { G g; F { g[i] = g1[i] % v; } return g; }
 
-TT G operator+(T v, const G& g1) { G g; F { g[i] = v+g1[i]; } return g; }
-TT G operator-(T v, const G& g1) { G g; F { g[i] = v-g1[i]; } return g; }
-TT G operator*(T v, const G& g1) { G g; F { g[i] = v*g1[i]; } return g; }
-TT G operator/(T v, const G& g1) { G g; F { g[i] = v/g1[i]; } return g; }
-TT G operator%(T v, const G& g1) { G g; F { g[i] = v%g1[i]; } return g; }
+TT G operator+(T v, const G& g1) { G g; F { g[i] = v + g1[i]; } return g; }
+TT G operator-(T v, const G& g1) { G g; F { g[i] = v - g1[i]; } return g; }
+TT G operator*(T v, const G& g1) { G g; F { g[i] = v * g1[i]; } return g; }
+TT G operator/(T v, const G& g1) { G g; F { g[i] = v / g1[i]; } return g; }
+TT G operator%(T v, const G& g1) { G g; F { g[i] = v % g1[i]; } return g; }
 
 TT G& operator+=(G& g1, const G& g2) { F { g1[i] += g2[i]; } return g1; }
 TT G& operator-=(G& g1, const G& g2) { F { g1[i] -= g2[i]; } return g1; }
@@ -388,16 +389,17 @@ TT G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return
 TT G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
 
 TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
-    G g; F { g[i] = f1*g1[i]+(1.f-f1)*g2[i]; } return g;
+  G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
-    G g; F { g[i] = f1*g1[i]+f2*g2[i]+(1.f-f1-f2)*g3[i]; } return g;
+TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+  G g; F { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
-    // Vec3<float> == Bary;  may have bary[0]+bary[1]+bary[2]!=1.f
-    G g; F { g[i] = bary[0]*g1[i]+bary[1]*g2[i]+bary[2]*g3[i]; } return g;
+  // Vec3<float> == Bary;  may have bary[0] + bary[1] + bary[2] != 1.f
+  G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;
 }
 
+// clang-format on
 #undef F
 #undef G
 #undef TT

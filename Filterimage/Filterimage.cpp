@@ -1799,7 +1799,7 @@ void do_istoroidal() {
             float diff = func_diff_rows(i1, i0);
             stat_rnd.enter(diff);
         }
-        if (0) { SHOW(stat_int); SHOW(stat_bnd); SHOW(stat_rnd); }
+        if (0) SHOW(stat_int, stat_bnd, stat_rnd);
         zaconsec[dir] = (stat_bnd.avg()-stat_int.avg())/stat_int.sdv();
         zarandom[dir] = (stat_bnd.avg()-stat_rnd.avg())/stat_rnd.sdv();
     }
@@ -1879,10 +1879,10 @@ void do_gradientsharpen(Args& args) {
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         const int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
         Vector4 vrhs = -screening_weight*grid_orig[yx];
-        if (yx[0]>0   ) { vrhs += (grid_orig[yx+V(-1, 0)]-grid_orig[yx])*gradient_sharpening; }
-        if (yx[0]<ny-1) { vrhs += (grid_orig[yx+V(+1, 0)]-grid_orig[yx])*gradient_sharpening; }
-        if (yx[1]>0   ) { vrhs += (grid_orig[yx+V(0, -1)]-grid_orig[yx])*gradient_sharpening; }
-        if (yx[1]<nx-1) { vrhs += (grid_orig[yx+V(0, +1)]-grid_orig[yx])*gradient_sharpening; }
+        if (yx[0]>0   ) vrhs += (grid_orig[yx+V(-1, 0)]-grid_orig[yx])*gradient_sharpening;
+        if (yx[0]<ny-1) vrhs += (grid_orig[yx+V(+1, 0)]-grid_orig[yx])*gradient_sharpening;
+        if (yx[1]>0   ) vrhs += (grid_orig[yx+V(0, -1)]-grid_orig[yx])*gradient_sharpening;
+        if (yx[1]<nx-1) vrhs += (grid_orig[yx+V(0, +1)]-grid_orig[yx])*gradient_sharpening;
         multigrid.rhs()[yx] = vrhs;
     }, 30);
     if (0) multigrid.set_verbose(true);

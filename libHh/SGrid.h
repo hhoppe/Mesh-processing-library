@@ -112,24 +112,25 @@ template<typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od..
 #define TT template<typename T, int d0, int... od>
 #define G SGrid<T, d0, od...>
 #define F for_size_t(i, g1.size())
+// clang-format off
 
-TT G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)+g2.flat(i); } return g; }
-TT G operator-(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)-g2.flat(i); } return g; }
-TT G operator*(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)*g2.flat(i); } return g; }
-TT G operator/(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)/g2.flat(i); } return g; }
-TT G operator%(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i)%g2.flat(i); } return g; }
+TT G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }
+TT G operator-(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) - g2.flat(i); } return g; }
+TT G operator*(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) * g2.flat(i); } return g; }
+TT G operator/(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) / g2.flat(i); } return g; }
+TT G operator%(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) % g2.flat(i); } return g; }
 
-TT G operator+(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)+v; } return g; }
-TT G operator-(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)-v; } return g; }
-TT G operator*(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)*v; } return g; }
-TT G operator/(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)/v; } return g; }
-TT G operator%(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i)%v; } return g; }
+TT G operator+(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) + v; } return g; }
+TT G operator-(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) - v; } return g; }
+TT G operator*(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) * v; } return g; }
+TT G operator/(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) / v; } return g; }
+TT G operator%(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) % v; } return g; }
 
-TT G operator+(T v, const G& g1) { G g; F { g.flat(i) = v+g1.flat(i); } return g; }
-TT G operator-(T v, const G& g1) { G g; F { g.flat(i) = v-g1.flat(i); } return g; }
-TT G operator*(T v, const G& g1) { G g; F { g.flat(i) = v*g1.flat(i); } return g; }
-TT G operator/(T v, const G& g1) { G g; F { g.flat(i) = v/g1.flat(i); } return g; }
-TT G operator%(T v, const G& g1) { G g; F { g.flat(i) = v%g1.flat(i); } return g; }
+TT G operator+(T v, const G& g1) { G g; F { g.flat(i) = v + g1.flat(i); } return g; }
+TT G operator-(T v, const G& g1) { G g; F { g.flat(i) = v - g1.flat(i); } return g; }
+TT G operator*(T v, const G& g1) { G g; F { g.flat(i) = v * g1.flat(i); } return g; }
+TT G operator/(T v, const G& g1) { G g; F { g.flat(i) = v / g1.flat(i); } return g; }
+TT G operator%(T v, const G& g1) { G g; F { g.flat(i) = v % g1.flat(i); } return g; }
 
 TT G& operator+=(G& g1, const G& g2) { F { g1.flat(i) += g2.flat(i); } return g1; }
 TT G& operator-=(G& g1, const G& g2) { F { g1.flat(i) -= g2.flat(i); } return g1; }
@@ -149,16 +150,17 @@ TT G min(const G& g1, const G& g2) { G g; F { g.flat(i) = min(g1.flat(i), g2.fla
 TT G max(const G& g1, const G& g2) { G g; F { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
 
 TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
-    G g; F { g.flat(i) = f1*g1.flat(i)+(1.f-f1)*g2.flat(i); } return g;
+  G g; F { g.flat(i) = f1 * g1.flat(i) + (1.f - f1) * g2.flat(i); } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
-    G g; F { g.flat(i) = f1*g1.flat(i)+f2*g2.flat(i)+(1.f-f1-f2)*g3.flat(i); } return g;
+  G g; F { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
-    // Vec3<float> == Bary;   may have bary[0]+bary[1]+bary[2]!=1.f
-    G g; F { g.flat(i) = bary[0]*g1.flat(i)+bary[1]*g2.flat(i)+bary[2]*g3.flat(i); } return g;
+  // Vec3<float> == Bary;   may have bary[0] + bary[1] + bary[2] != 1.f
+  G g; F { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); } return g;
 }
 
+// clang-format on
 #undef F
 #undef G
 #undef TT

@@ -595,29 +595,30 @@ template<int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D,T>);     // implemente
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template<int D, typename T>
-#define G Grid<D,T>
-#define CG CGridView<D,T>
+#define G Grid<D, T>
+#define CG CGridView<D, T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for_size_t(i, g.size())
 #define PF(g, code) parallel_for_each(range(g.size()), [&](const size_t i) { code; }, 1)
+// clang-format off
 
-TT G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)+g2.flat(i); } return g; }
-TT G operator-(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)-g2.flat(i); } return g; }
-TT G operator*(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)*g2.flat(i); } return g; }
-TT G operator/(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)/g2.flat(i); } return g; }
-TT G operator%(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)%g2.flat(i); } return g; }
+TT G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }
+TT G operator-(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) - g2.flat(i); } return g; }
+TT G operator*(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) * g2.flat(i); } return g; }
+TT G operator/(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) / g2.flat(i); } return g; }
+TT G operator%(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) % g2.flat(i); } return g; }
 
-TT G operator+(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)+e; } return g; }
-TT G operator-(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)-e; } return g; }
-TT G operator*(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)*e; } return g; }
-TT G operator/(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)/e; } return g; }
-TT G operator%(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i)%e; } return g; }
+TT G operator+(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + e; } return g; }
+TT G operator-(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) - e; } return g; }
+TT G operator*(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) * e; } return g; }
+TT G operator/(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) / e; } return g; }
+TT G operator%(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) % e; } return g; }
 
-TT G operator+(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e+g1.flat(i); } return g; }
-TT G operator-(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e-g1.flat(i); } return g; }
-TT G operator*(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e*g1.flat(i); } return g; }
-TT G operator/(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e/g1.flat(i); } return g; }
-TT G operator%(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e%g1.flat(i); } return g; }
+TT G operator+(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e + g1.flat(i); } return g; }
+TT G operator-(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e - g1.flat(i); } return g; }
+TT G operator*(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e * g1.flat(i); } return g; }
+TT G operator/(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e / g1.flat(i); } return g; }
+TT G operator%(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e % g1.flat(i); } return g; }
 
 // Parallelized and optimized, for Multigrid<>.
 TT GridView<D,T> operator+=(GridView<D,T> g1, CG g2) {
@@ -640,19 +641,20 @@ TT G min(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = min(g1.flat(i), 
 TT G max(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
 
 TT G interp(CG g1, CG g2, float f1 = 0.5f) {
-    SS; G g(g1.dims()); F(g) { g.flat(i) = f1*g1.flat(i)+(1.f-f1)*g2.flat(i); } return g;
+  SS; G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + (1.f - f1) * g2.flat(i); } return g;
 }
-TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
-    ASSERTX(same_size(g1, g2) && same_size(g1, g3));
-    G g(g1.dims()); F(g) { g.flat(i) = f1*g1.flat(i)+f2*g2.flat(i)+(1.f-f1-f2)*g3.flat(i); } return g;
+TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+  G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
 TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
-    // Vec3<float> == Bary;   may have bary[0]+bary[1]+bary[2]!=1.f
-    ASSERTX(same_size(g1, g2) && same_size(g1, g3));
-    G g(g1.dims()); F(g) { g.flat(i) = bary[0]*g1.flat(i)+bary[1]*g2.flat(i)+bary[2]*g3.flat(i); }
-    return g;
+  // Vec3<float> == Bary;   may have bary[0] + bary[1] + bary[2] != 1.f
+  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+  G g(g1.dims()); F(g) { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); }
+  return g;
 }
 
+// clang-format on
 #undef PF
 #undef F
 #undef SS

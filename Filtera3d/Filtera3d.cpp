@@ -423,8 +423,8 @@ bool loop(A3dElem& el) {
             ar_sharp.init(0);
             for_int(i, el.num()) {
                 if (!closed && (i==0 || i==el.num()-1)) { ar_sharp.push(true); continue; }
-                int i0 = i-1; if (i0<0) i0 = el.num()-2;
-                int i1 = i+1; if (i1==el.num()) i1 = 1;
+                int i0 = i>=1 ? i-1 : el.num()-2;
+                int i1 = i<=el.num()-2 ? i+1 : 1;
                 Vector n1 = el[i0].p-el[i].p;
                 Vector n2 = el[i].p-el[i1].p;
                 ar_sharp.push((n1.normalize() && n2.normalize() &&
@@ -433,8 +433,8 @@ bool loop(A3dElem& el) {
             }
             for_int(i, el.num()) {
                 if (ar_sharp[i]) { ar_p[i] = el[i].p; continue; }
-                int i0 = i-1; if (i0<0) i0 = el.num()-2;
-                int i1 = i+1; if (i1==el.num()) i1 = 1;
+                int i0 = i>=1 ? i-1 : el.num()-2;
+                int i1 = i<=el.num()-2 ? i+1 : 1;
                 Vector disp = interp(el[i0].p, el[i1].p)-el[i].p;
                 float fac = even ? .65f : -.65f;
                 ar_p[i] = el[i].p+disp*fac;

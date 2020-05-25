@@ -643,9 +643,9 @@ inline void swap(Mesh& l, Mesh& r) noexcept {
 
 inline void Mesh::triangle_vertices(Face f, Vec3<Vertex>& va) const {
     HEdge he = herep(f), he0 = he;
-    va[0] = he->_vert; he = he->_next;
-    va[1] = he->_vert; he = he->_next;
-    va[2] = he->_vert; he = he->_next;
+    va[0] = he->_vert, he = he->_next;
+    va[1] = he->_vert, he = he->_next;
+    va[2] = he->_vert, he = he->_next;
     assertx(he==he0);           // is_triangle()
 }
 

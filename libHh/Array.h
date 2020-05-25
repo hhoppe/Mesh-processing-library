@@ -407,24 +407,25 @@ template<typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);     // implemented by CAr
 #define CG CArrayView<T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for_int(i, g.num())
+// clang-format off
 
-TT G operator+(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i]+g2[i]; } return g; }
-TT G operator-(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i]-g2[i]; } return g; }
-TT G operator*(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i]*g2[i]; } return g; }
-TT G operator/(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i]/g2[i]; } return g; }
-TT G operator%(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i]%g2[i]; } return g; }
+TT G operator+(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] + g2[i]; } return g; }
+TT G operator-(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] - g2[i]; } return g; }
+TT G operator*(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] * g2[i]; } return g; }
+TT G operator/(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] / g2[i]; } return g; }
+TT G operator%(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] % g2[i]; } return g; }
 
-TT G operator+(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i]+v; } return g; }
-TT G operator-(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i]-v; } return g; }
-TT G operator*(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i]*v; } return g; }
-TT G operator/(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i]/v; } return g; }
-TT G operator%(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i]%v; } return g; }
+TT G operator+(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] + v; } return g; }
+TT G operator-(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] - v; } return g; }
+TT G operator*(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] * v; } return g; }
+TT G operator/(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] / v; } return g; }
+TT G operator%(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] % v; } return g; }
 
-TT G operator+(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v+g1[i]; } return g; }
-TT G operator-(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v-g1[i]; } return g; }
-TT G operator*(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v*g1[i]; } return g; }
-TT G operator/(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v/g1[i]; } return g; }
-TT G operator%(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v%g1[i]; } return g; }
+TT G operator+(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v + g1[i]; } return g; }
+TT G operator-(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v - g1[i]; } return g; }
+TT G operator*(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v * g1[i]; } return g; }
+TT G operator/(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v / g1[i]; } return g; }
+TT G operator%(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v % g1[i]; } return g; }
 
 TT ArrayView<T> operator+=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] += g2[i]; } return g1; }
 TT ArrayView<T> operator-=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] -= g2[i]; } return g1; }
@@ -444,14 +445,15 @@ TT G min(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = min(g1[i], g2[i]); } r
 TT G max(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = max(g1[i], g2[i]); } return g; }
 
 TT G interp(CG g1, CG g2, float f1 = 0.5f) {
-    SS; G g(g1.num()); F(g) { g[i] = f1*g1[i]+(1.f-f1)*g2[i]; } return g;
+  SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f/3.f, float f2 = 1.f/3.f) {
-    ASSERTX(same_size(g1, g2) && same_size(g1, g3));
-    SS; G g(g1.num()); F(g) { g[i] = f1*g1[i]+f2*g2[i]+(1.f-f1-f2)*g3[i]; } return g;
+TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+  SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) // avoid dependency on Vec
+// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // avoid dependency on Vec
 
+// clang-format on
 #undef F
 #undef SS
 #undef CG

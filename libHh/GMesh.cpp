@@ -152,15 +152,15 @@ bool parse_aux(const char* s, ArrayView<float> ar) {
         break;
      case 2:
         if (!assertw(sscanf(s, "(%g %g%c", &a, &b, &ch)==3 && ch==')')) return false;
-        ar[0] = a; ar[1] = b;
+        ar[0] = a, ar[1] = b;
         break;
      case 3:
         if (!assertw(sscanf(s, "(%g %g %g%c", &a, &b, &c, &ch)==4 && ch==')')) return false;
-        ar[0] = a; ar[1] = b; ar[2] = c;
+        ar[0] = a, ar[1] = b, ar[2] = c;
         break;
      case 4:
         if (!assertw(sscanf(s, "(%g %g %g %g%c", &a, &b, &c, &d, &ch)==5 && ch==')')) return false;
-        ar[0] = a; ar[1] = b; ar[2] = c; ar[3] = d;
+        ar[0] = a, ar[1] = b, ar[2] = c, ar[3] = d;
         break;
      default: assertnever("");
     }

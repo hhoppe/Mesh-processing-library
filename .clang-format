@@ -1,0 +1,22 @@
+# See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: Google
+ColumnLimit: 119  # default is 80
+
+Language: Cpp
+AlwaysBreakTemplateDeclarations: MultiLine  # default is Yes
+AllowShortCaseLabelsOnASingleLine: true     # default is false
+DerivePointerAlignment: false               # default is true
+ReflowComments: false                       # default is true
+
+# AllowShortFunctionsOnASingleLine: Inline  # default is All
+# CommentPragmas: '^///'                    # default is '^ IWYU pragma:'; however, it still indents it.
+# ForEachMacros: ['for_int']                # default is ['foreach', 'Q_FOREACH', 'BOOST_FOREACH']
+
+# StatementMacros: ['Q_UNUSED', 'QT_REQUIRE_VERSION']
+# MaxEmptyLinesToKeep: 1
+
+# Fix all the "// comment" currently artifically locked in column 0.
+# Fix all the "#if 0 {... } #endif" code-block examples.
+# Look for comment that applies to series of statements: ';.*;.*//'
+# '} else [A-z]'

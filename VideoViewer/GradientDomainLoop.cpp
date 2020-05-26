@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "GradientDomainLoop.h"
+
 #include "GridOp.h"             // scale_filter_nearest(), scale()
 #include "GridPixelOp.h"        // spatially_scale_Grid3_Pixel()
 #include "Timer.h"

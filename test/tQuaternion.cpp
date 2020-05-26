@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Quaternion.h"
+
 #include "RangeOp.h"            // round_elements()
 #include "Advanced.h"           // clone()
 using namespace hh;

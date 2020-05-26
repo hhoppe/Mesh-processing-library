@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Array.h"
 #include "RangeOp.h"
+
+#include "Array.h"
 #include "Advanced.h"           // clone()
 using namespace hh;
 

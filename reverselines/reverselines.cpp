@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+
 #include "Array.h"
 #include "Args.h"
 #include "BinaryIO.h"           // write_raw()

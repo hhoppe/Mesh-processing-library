@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Mesh.h"
+
 #include "Array.h"
 using namespace hh;
 

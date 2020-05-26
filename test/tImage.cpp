@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Image.h"
+
 #include "Stat.h"
 using namespace hh;
 

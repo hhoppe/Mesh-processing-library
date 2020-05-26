@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Image.h"
-#include "StringOp.h"           // to_lower()
 
-#include <cstring>              // strlen(), std::memset()
+#include "Image.h"              // HH_IMAGE_HAVE_IO
 
 #if !defined(HH_IMAGE_HAVE_IO)
 
@@ -10,6 +8,8 @@ extern void Image_IO_dummy_function_to_avoid_linkage_warnings();
 void Image_IO_dummy_function_to_avoid_linkage_warnings() { }
 
 #else
+
+#include <cstring>              // strlen(), std::memset()
 
 extern "C" {
 #if defined(__GNUC__) && !defined(__clang__)
@@ -19,6 +19,7 @@ extern "C" {
 #include "png.h"
 }
 
+#include "StringOp.h"           // to_lower()
 #include "FileIO.h"
 #include "NetworkOrder.h"
 #include "Array.h"

@@ -2,14 +2,14 @@
 #ifndef MESH_PROCESSING_LIBHH_PARALLEL_H_
 #define MESH_PROCESSING_LIBHH_PARALLEL_H_
 
-#include "Hh.h"
-
 #include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <mutex>
 #include <thread>
 #include <vector>
+
+#include "Hh.h"
 
 // This macro can be set here, in Makefile, or at the top of any source file (if careful with precompiled headers).
 // #define HH_NO_OPENMP

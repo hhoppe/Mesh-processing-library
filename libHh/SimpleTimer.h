@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_SIMPLETIMER_H_
 
 #include <cstdio>               // for fprintf() standalone pretty formatting
+
 #include "Hh.h"
 
 // Simple precise timer; standalone for portability.

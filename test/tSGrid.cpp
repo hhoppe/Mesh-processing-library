@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "SGrid.h"
+
 #include "RangeOp.h"
 using namespace hh;
 

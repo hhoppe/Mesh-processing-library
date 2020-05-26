@@ -1,4 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "Hh.h"
+
+#if defined(_WIN32)
+#include <process.h>       // _spawnvp()
+#endif
+
 #include "Random.h"
 #include "Array.h"
 #include "Geometry.h"
@@ -7,10 +13,6 @@
 #include "RangeOp.h"            // reverse(), sort()
 #include "StringOp.h"
 using namespace hh;
-
-#if defined(_WIN32)
-#include <process.h>       // _spawnvp()
-#endif
 
 namespace {
 

@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_STREE_H_
 
 #include <set>
+
 #include "Hh.h"
 
 #if 0

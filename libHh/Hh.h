@@ -328,10 +328,10 @@ constexpr double   D_TAU    = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20
 
 // *** Hh.cpp
 
-// Print summaries of timers, statistics, and warnings, perhaps before program output.
-void flush_timers();
-void flush_stats();
-void flush_warnings();
+// Register a function to be called by hh_clean_up(); used by timers, statistics, and warnings.
+void hh_at_clean_up(void (*function)());
+
+// Flush summaries of timers, statistics, and warnings before program termination -- perhaps before output.
 void hh_clean_up();
 
 #if defined(_WIN32)

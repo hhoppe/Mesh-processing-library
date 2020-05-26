@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Facedistance.h"
+
 #include "A3dStream.h"
 #include "Random.h"
 #include "RangeOp.h"            // round_elements()

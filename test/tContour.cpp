@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Contour.h"
+
 #include "A3dStream.h"
 #include "FileIO.h"
 #include "MathOp.h"

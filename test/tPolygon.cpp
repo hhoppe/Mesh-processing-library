@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Polygon.h"
+
 #include "GeomOp.h"
 #include "RangeOp.h"            // round_elements()
 using namespace hh;

@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+
 #include <atomic>
 #include <cmath>
 #include <functional>  // function<>
@@ -28,7 +29,6 @@
 #include "BinarySearch.h"       // discrete_binary_search()
 #include "GridOp.h"             // crop()
 #include "Map.h"
-
 #include "GradientDomainLoop.h"
 
 #if !defined(HH_NO_VIDEO_LOOP)

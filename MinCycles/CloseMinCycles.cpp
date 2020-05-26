@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "CloseMinCycles.h"
 
+#include <atomic>
+
 #include "Queue.h"
 #include "Stat.h"
 #include "Timer.h"
@@ -9,7 +11,6 @@
 #include "MeshOp.h"             // gather_boundary(), edge_signed_dihedral_angle(), etc.
 #include "Set.h"
 #include "RangeOp.h"            // reverse()
-#include <atomic>
 
 namespace hh {
 

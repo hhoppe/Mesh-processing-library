@@ -4,6 +4,7 @@
 
 #include <memory>               // _WIN32 bug: must appear before <tuple> to avoid warning 4548
 #include <tuple>                // std::tuple
+
 #include "Advanced.h"           // hash_combine()
 
 // Define hash functions for std::pair<> and std::tuple<>.

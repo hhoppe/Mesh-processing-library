@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Combination.h"
+
 #include "HashTuple.h"
 using namespace hh;
 

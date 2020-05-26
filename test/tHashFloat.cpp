@@ -2,6 +2,7 @@
 #include "HashFloat.h"
 
 #include <iomanip>              // std::setprecision()
+
 #include "RangeOp.h"            // sum()
 #include "ArrayOp.h"            // concat()
 using namespace hh;

@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_VECTOR4_H_
 #define MESH_PROCESSING_LIBHH_VECTOR4_H_
 
-#include "Pixel.h"
-
 #if 0      // Note: sandbox/server machines like msr-sandbox-031.redmond.corp.microsoft.com lack this feature.
 #define HH_NO_SSE41
 #endif
@@ -35,6 +33,8 @@
 #elif defined(HH_VECTOR4_NEON)
 #include <arm_neon.h>
 #endif
+
+#include "Pixel.h"
 
 namespace hh {
 

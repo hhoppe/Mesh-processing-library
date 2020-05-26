@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Array.h"
+
 #include "Vec.h"
 #include "RangeOp.h"
 #include "ArrayOp.h"

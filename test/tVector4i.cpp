@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Vector4i.h"
+
 #include "Array.h"
 #include "RangeOp.h"            // sum()
 using namespace hh;

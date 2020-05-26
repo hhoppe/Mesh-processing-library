@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_GMESH_H_
 
 #include <cstring>              // std::memcpy()
+
 #include "Mesh.h"
 #include "Polygon.h"
 

@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "HashTuple.h"          // for std::hash<std::tuple<...>>
+
 #include "Set.h"
 using namespace hh;
 

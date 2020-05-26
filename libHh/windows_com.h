@@ -5,6 +5,7 @@
 #if defined(_WIN32)
 
 #include <combaseapi.h>
+
 #include "Hh.h"
 
 namespace hh {

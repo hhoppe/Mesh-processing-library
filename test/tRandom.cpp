@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Random.h"
+
 #include "Stat.h"
 using namespace hh;
 

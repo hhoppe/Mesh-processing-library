@@ -63,6 +63,7 @@ class Timer : noncopyable {
     double _process_cpu_time;   // process user+system time
     int64_t _real_counter;
     static int _s_show;
+    friend class Timers;
     void zero();
 };
 

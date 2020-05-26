@@ -1,8 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "Vec.h"
+
 #include <type_traits>
 
 #include "Array.h"
-#include "Vec.h"
 #include "RangeOp.h"
 #include "Set.h"
 using namespace hh;

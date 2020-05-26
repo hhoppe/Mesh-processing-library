@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "GraphOp.h"
+
 #include "Spatial.h"
 #include "Stat.h"
 #include "Vec.h"

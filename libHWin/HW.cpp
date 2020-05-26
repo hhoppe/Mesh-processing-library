@@ -4,17 +4,17 @@
 #include <mutex>                // std::once_flag, std::call_once()
 #include <cstring>              // std::memset()
 
-#include "Array.h"
-#include "Args.h"
-#include "Image.h"
-#include "StringOp.h"
-#include "MathOp.h"
-
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
 #include <ShellScalingAPI.h>      // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
 #include <shellapi.h>             // DragAcceptFiles()
 #include <commdlg.h>              // GetOpenFileNameW()
+
+#include "Array.h"
+#include "Args.h"
+#include "Image.h"
+#include "StringOp.h"
+#include "MathOp.h"
 
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("glu32.lib");

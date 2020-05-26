@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_STAT_H_
 
 #include <fstream>              // std::ofstream
+
 #include "Range.h"              // enable_if_range_t<>
 
 #if 0

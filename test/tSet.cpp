@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Set.h"
+
 #include "Random.h"
 #include "Array.h"
 #include "Geometry.h"

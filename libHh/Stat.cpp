@@ -5,36 +5,26 @@
 
 namespace hh {
 
-class Stats {                   // friend of Stat
+class Stats {
  public:
-    ~Stats()                                    { if (0) flush(); } // unlikely to come before all static ~Stat()
-    void flush() {
-        if (_vecstat.empty()) return;
+    static void add(Stat* stat) { instance()._vec.push_back(stat); }
+    static void flush() { instance().flush_internal(); }
+ private:
+    static Stats& instance() { static Stats& stats = *new Stats; return stats; }
+    Stats() { hh_at_clean_up(Stats::flush); }
+    ~Stats() = delete;
+    void flush_internal() {
+        if (_vec.empty()) return;
         int ntoprint = 0;
-        for (Stat* stat : _vecstat) {
+        for (Stat* stat : _vec) {
             if (stat->_print && stat->num()) ntoprint++;
         }
         if (ntoprint) showdf("Summary of statistics:\n");
-        for (Stat* stat : _vecstat) { stat->terminate(); }
-        _vecstat.clear();
+        for (Stat* stat : _vec) { stat->terminate(); }
+        _vec.clear();
     }
-    std::vector<Stat*> _vecstat; // do not take dependency on Array.h
+    std::vector<Stat*> _vec;
 };
-
-namespace {
-
-class Stats_init {
-    Stats* _ptr;                // statically initialized to nullptr
-    bool _post_destruct;        // statically initialized to false
- public:
-    // Unusual constructors and destructors to be robust even before or after static lifetime.
-    Stats* get()                                { return !_ptr && !_post_destruct ? (_ptr = new Stats) : _ptr; }
-    ~Stats_init()                               { delete _ptr; _ptr = nullptr; _post_destruct = true; }
-} g_pstats;
-
-} // namespace
-
-void flush_stats() { if (Stats* pstats = g_pstats.get()) pstats->flush(); }
 
 Stat::Stat(string pname, bool pprint, bool is_static) : _name(std::move(pname)), _print(pprint) {
     zero();
@@ -44,14 +34,7 @@ Stat::Stat(string pname, bool pprint, bool is_static) : _name(std::move(pname)),
         string filename = "Stat." + _name; // the name is assumed ASCII; no need to worry about UTF-8.
         _pofs = make_unique<std::ofstream>(filename);
     }
-    if (is_static) {
-        if (Stats* pstats = g_pstats.get()) {
-            pstats->_vecstat.push_back(this);
-        } else {
-            static int count = 0;
-            if (++count<=2) showf("Stat '%s' terminating beyond lifetime of Stats\n", _name.c_str());
-        }
-    }
+    if (is_static) Stats::add(this);
 }
 
 Stat::Stat(const char* pname, bool pprint, bool is_static) : Stat(string(pname ? pname : ""), pprint, is_static) { }

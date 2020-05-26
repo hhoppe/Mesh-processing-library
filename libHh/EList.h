@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_ELIST_H_
 
 #include <cstddef>              // offsetof()
+
 #include "Hh.h"
 
 #if 0

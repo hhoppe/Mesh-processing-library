@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "HiddenLineRemoval.h"
+
 #include "Polygon.h"
 using namespace hh;
 

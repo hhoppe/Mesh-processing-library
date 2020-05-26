@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "AtomicOperate.h"
+
 #include "Parallel.h"
 #include "Array.h"
 #include "Timer.h"

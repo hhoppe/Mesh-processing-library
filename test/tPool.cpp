@@ -1,7 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "Pool.h"
+
 #include <cstdlib>              // malloc(), free()
 
-#include "Pool.h"
 using namespace hh;
 
 namespace {

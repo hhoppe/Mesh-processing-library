@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Parallel.h"
 #include "Locks.h"
+
+#include "Parallel.h"
 #include "Vec.h"
 #include "RangeOp.h"            // sum()
 #include "Stat.h"

@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
 #define MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
 
-// included from Hh.h
+// This file is included from Hh.h
 
 // Return number of arguments.
 #define HH_NUM_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_NUM_ARGS_RSEQ_N()))

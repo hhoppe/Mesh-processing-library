@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#define HH_MULTIGRID_TIMER(x)
-
+#define HH_MULTIGRID_TIMER(x)   // override before "Multigrid.h"
 #include "Multigrid.h"
+
 #include "Image.h"
 #include "ParallelCoords.h"
 #include "Stat.h"

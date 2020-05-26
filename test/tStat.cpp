@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Stat.h"
+
 #include "Array.h"
 #include "Vec.h"
 using namespace hh;

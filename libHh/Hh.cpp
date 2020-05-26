@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+
 #include "Hh.h"
 
 #include <array>
@@ -779,40 +780,51 @@ string extract_function_type_name(string s) {
 
 } // namespace details
 
-void hh_clean_up() {
-    flush_timers();
-    flush_stats();
-    flush_warnings();
-}
-
 namespace {
+
+// Maintains a set of functions, which are called upon program termination or when hh_clean_up() is called.
+class CleanUp {
+ public:
+    using Function = void(*)();
+    static void register_function(Function function) { instance()._functions.push_back(function); }
+    static void flush() { for (auto function : instance()._functions) function(); }
+ private:
+    static CleanUp& instance() { static CleanUp& object = *new CleanUp; return object; }
+    CleanUp() { std::atexit(flush); }
+    ~CleanUp() = delete;
+    std::vector<Function> _functions;
+};
 
 class Warnings {
  public:
     static Warnings& instance()                 { static Warnings& warnings = *new Warnings; return warnings; }
-    int increment_count(const char* s)          { return ++_m[s]; }
-    void flush() {
-        if (_m.empty()) return;
+    int increment_count(const char* s)          { return ++_map[s]; }
+    static void flush() { instance().flush_internal(); }
+    void flush_internal() {
+        if (_map.empty()) return;
         struct string_less {              // lexicographic comparison; deterministic, unlike pointer comparison
             bool operator()(const char* s1, const char* s2) const { return strcmp(s1, s2) < 0; }
         };
-        std::map<const char*, int, string_less> sorted_map(_m.begin(), _m.end());
+        std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
         showdf("Summary of warnings:\n");
         for (auto& kv : sorted_map) {
             const char* s = kv.first;
             int n = kv.second;
             showdf(" %5d '%s'\n", n, s);
         }
-        _m.clear();
+        _map.clear();
     }
  private:
-    std::unordered_map<const char*, int> _m;  // warning char* -> number of times printed
-    Warnings()                                  { }
+    Warnings() { hh_at_clean_up(Warnings::flush); }
+    ~Warnings() = delete;
+    std::unordered_map<const char*, int> _map;  // warning char* -> number of times printed
 };
 
 } // namespace
 
-void flush_warnings() { Warnings::instance().flush(); }
+void hh_at_clean_up(void (*function)()) { CleanUp::register_function(function); }
+
+void hh_clean_up() { CleanUp::flush(); }
 
 void details::assertx_aux2(const char* s) {
     showf("Fatal assertion error: %s\n", s);

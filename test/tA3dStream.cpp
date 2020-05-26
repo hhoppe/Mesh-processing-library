@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "BufferedA3dStream.h"
+
 #include "RangeOp.h"            // is_zero()
 using namespace hh;
 

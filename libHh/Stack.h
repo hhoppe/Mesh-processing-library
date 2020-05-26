@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_STACK_H_
 
 #include <vector>
+
 #include "Hh.h"
 
 #if 0

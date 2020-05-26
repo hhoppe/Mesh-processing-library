@@ -1,4 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+
+#include <random>               // std::default_random_engine
+
 #include "Args.h"
 #include "GMesh.h"
 #include "MeshOp.h"             // Vnors
@@ -28,7 +31,6 @@
 #if !defined(HH_NO_SIMPLEX)
 #include "recipes.h"
 #endif
-#include <random>               // std::default_random_engine
 using namespace hh;
 
 namespace {

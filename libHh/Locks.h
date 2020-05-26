@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_LOCKS_H_
 #define MESH_PROCESSING_LIBHH_LOCKS_H_
 
+#include <mutex>                // mutex, lock_guard
+
 #include "Hh.h"
 
 #if 0
@@ -22,8 +24,6 @@
   });
 }
 #endif
-
-#include <mutex>                // mutex, lock_guard
 
 namespace hh {
 

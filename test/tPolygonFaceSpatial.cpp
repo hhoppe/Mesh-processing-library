@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "MeshSearch.h"         // PolygonFaceSpatial
+
 #include "Random.h"
 #include "Facedistance.h"
 #include "Array.h"

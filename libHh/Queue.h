@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_QUEUE_H_
 
 #include <deque>
+
 #include "Hh.h"
 
 #if 0

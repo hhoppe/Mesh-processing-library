@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Image.h"
+
+#include "Image.h"              // HH_IMAGE_HAVE_WIC
 
 #if !defined(HH_IMAGE_HAVE_WIC)
 

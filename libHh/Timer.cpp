@@ -6,22 +6,16 @@
 #include <array>
 #include <thread>               // std::thread::hardware_concurrency()
 #include <mutex>                // std::once_flag, std::call_once()
+#include <unordered_map>
 
 #if defined(_WIN32)
-
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>            // GetThreadTimes(), GetProcessTimes(), FILETIME
-
 #else
-
 #include <time.h>               // clock_gettime()
-
 #endif  // defined(_WIN32)
 
-#include "Hh.h"
 #if !defined(HH_NO_TIMERS_CLASS)
-// #include "Map.h" // use std::unordered_map to avoid dependency on Map.h
-#include <unordered_map>
 #include "Stat.h"
 #endif
 
@@ -103,9 +97,40 @@ string timing_host() {
     return "cpu=" + cpu + " host=" + host;
 }
 
-struct Timers {
-    ~Timers()                                   { flush(); }
-    void flush() {
+} // namespace
+
+class Timers {
+ public:
+    static bool record(const Timer& timer, Timer::EMode cmode) {
+        bool is_new; int i;
+        {
+            // Note: not thread-safe.  (I assume that the timers are created outside multi-threading sections.)
+            auto p = instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
+            is_new = p.second; i = p.first->second;
+        }
+        if (is_new) {
+            instance()._vec_timer_info.emplace_back(Timers::TimerInfo(timer._name));
+        }
+        Timers::TimerInfo& timer_info = instance()._vec_timer_info[i];
+        timer_info.stat.enter(float(timer.cpu()));
+        timer_info.sum_process_time += timer._process_cpu_time;
+        if (0) SHOW(timer._name, timer_info.sum_real_time, timer.real());
+        timer_info.sum_real_time += timer.real();
+        if (cmode==Timer::EMode::abbrev && timer_info.stat.num()>1) return true;
+        if (cmode==Timer::EMode::summary) { instance()._have_some_mult = true; return true; }
+        static std::once_flag flag;
+        std::call_once(flag, [] {
+            if (!getenv_bool("NO_DIAGNOSTICS_IN_STDOUT"))
+                showff("(Timing on %s)\n", timing_host().c_str());
+        });
+        return false;
+    }
+    static void flush() { instance().flush_internal(); }    
+ private:
+    static Timers& instance() { static Timers& stats = *new Timers; return stats; }
+    Timers() { hh_at_clean_up(Timers::flush); }
+    ~Timers() = delete;
+    void flush_internal() {
         if (_vec_timer_info.empty()) return;
         for (const auto& timer_info : _vec_timer_info) {
             if (timer_info.stat.num()>1) _have_some_mult = true;
@@ -152,7 +177,6 @@ struct Timers {
         _map.clear();
         _vec_timer_info.clear();
     }
-    // Map<string,int> _map; // avoid dependency on Map.h
     std::unordered_map<string,int> _map;
     struct TimerInfo {
         TimerInfo(string name) : stat(std::move(name), false) { }
@@ -165,23 +189,6 @@ struct Timers {
     std::vector<TimerInfo> _vec_timer_info; // in order encountered at runtime; avoid dependency on Array.h
     bool _have_some_mult {false};
 };
-
-class Timers_init {
-    Timers* _ptr;
-    bool _post_destruct;
- public:
-    // Unusual constructors and destructors to be robust even before or after static lifetime.
-    Timers* get()                               { return !_ptr && !_post_destruct ? (_ptr = new Timers) : _ptr; }
-    ~Timers_init()                              { delete _ptr; _ptr = nullptr; _post_destruct = true; }
-} g_ptimers;
-
-} // namespace
-
-void flush_timers() { if (Timers* ptimers = g_ptimers.get()) ptimers->flush(); }
-
-#else
-
-void flush_timers() { }
 
 #endif  // !defined(HH_NO_TIMERS_CLASS)
 
@@ -205,36 +212,10 @@ void Timer::terminate() {
     } else {
         stop();
     }
-    double u = cpu();
 #if !defined(HH_NO_TIMERS_CLASS)
-    if (Timers* ptimers = g_ptimers.get()) {
-        bool is_new; int i;
-        // i = ptimers->_map.enter(_name, narrow_cast<int>(ptimers->_vec_timer_info.size()), is_new); // for hh::Map
-        {
-            // Note: not thread-safe.  (I assume that the timers are created outside multi-threading sections.)
-            auto p = ptimers->_map.emplace(_name, narrow_cast<int>(ptimers->_vec_timer_info.size()));
-            is_new = p.second; i = p.first->second;
-        }
-        if (is_new) {
-            ptimers->_vec_timer_info.emplace_back(Timers::TimerInfo(_name));
-        }
-        Timers::TimerInfo& timer_info = ptimers->_vec_timer_info[i];
-        timer_info.stat.enter(float(u));
-        timer_info.sum_process_time += _process_cpu_time;
-        if (0) SHOW(_name, timer_info.sum_real_time, real());
-        timer_info.sum_real_time += real();
-        if (cmode==EMode::abbrev && timer_info.stat.num()>1) return;
-        if (cmode==EMode::summary) { ptimers->_have_some_mult = true; return; }
-        static std::once_flag flag;
-        std::call_once(flag, [] {
-            if (!getenv_bool("NO_DIAGNOSTICS_IN_STDOUT"))
-                showff("(Timing on %s)\n", timing_host().c_str());
-        });
-    } else {
-        static int count = 0;
-        if (++count<=5) showf("Timer '%s' terminating beyond lifetime of Timers\n", _name.c_str());
-    }
-#endif  // !defined(HH_NO_TIMERS_CLASS)
+    if (Timers::record(*this, cmode)) return;
+#endif
+    double u = cpu();
     string sparallel = "       ";
     // With GNU libc++, u is sometimes around -5.55112e-17 or  1.11022e-16, so I cannot test against zero.
     // bool meaningful = u>1e-8;

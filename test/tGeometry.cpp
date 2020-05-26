@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "Geometry.h"
+
 #include "MatrixOp.h"
 #include "RangeOp.h"
 #include "SGrid.h"

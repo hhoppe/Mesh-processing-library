@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_CONSOLEPROGRESS_H_
 
 #include <atomic>
-#include "Hh.h"
+
 #include "Locks.h"
 
 #if 0

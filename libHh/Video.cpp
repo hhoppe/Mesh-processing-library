@@ -42,9 +42,7 @@ HH_REFERENCE_LIB("mfuuid.lib");      // MF_MT_DEFAULT_STRIDE
 //----------------------------------------------------------------------------
 
 #if defined(HH_VIDEO_HAVE_FFMPEG)
-
 #include "BinaryIO.h"
-
 #endif  // defined(HH_VIDEO_HAVE_FFMPEG)
 
 //----------------------------------------------------------------------------

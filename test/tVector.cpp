@@ -1,8 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "Stack.h"              // vec_contains()
+
 #include <list>
 #include <deque>
 
-#include "Stack.h"              // vec_contains()
 using namespace hh;
 
 namespace {

@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_SET_H_
 
 #include <unordered_set>
+
 #include "Random.h"
 
 #if 0

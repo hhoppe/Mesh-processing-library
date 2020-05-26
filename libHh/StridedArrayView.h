@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_STRIDEDARRAYVIEW_H_
 
 #include <cstddef>              // ptrdiff_t
+
 #include "Hh.h"
 
 #if 0

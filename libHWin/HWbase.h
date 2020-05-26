@@ -2,14 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHWIN_HWBASE_H_
 #define MESH_PROCESSING_LIBHWIN_HWBASE_H_
 
-#include "Array.h"
-#include "Vec.h"
-#include "Vector4.h"
-#include "StringOp.h"
-#include "RangeOp.h"
-#include "FileIO.h"             // file_exists()
-#include "Image.h"
-
 #if defined(GL_VERSION)         // OpenGL
 #if defined(_WIN32)
 #include "GL/glext.h"           // possibly use local file because Windows does not come with it.
@@ -19,6 +11,14 @@
 #include <GL/glx.h>             // glXGetProcAddress()
 #endif
 #endif // defined(GL_VERSION)
+
+#include "Array.h"
+#include "Vec.h"
+#include "Vector4.h"
+#include "StringOp.h"
+#include "RangeOp.h"
+#include "FileIO.h"             // file_exists()
+#include "Image.h"
 
 namespace hh {
 

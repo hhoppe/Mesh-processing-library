@@ -1,3 +1,7 @@
+// -*- C++ -*-
+#ifndef MESH_PROCESSING_VIDEOVIEWER_GRADIENTDOMAINLOOP_H_
+#define MESH_PROCESSING_VIDEOVIEWER_GRADIENTDOMAINLOOP_H_
+
 #include "Hh.h"
 #include "Grid.h"               // CGridView<>, GridView<>, Grid<>
 #include "Pixel.h"              // Pixel
@@ -64,3 +68,5 @@ void compute_gdloop(const Vec3<int>& videodims,
                     int num_loops);
 
 } // namespace hh
+
+#endif // MESH_PROCESSING_VIDEOVIEWER_GRADIENTDOMAINLOOP_H_

@@ -1,7 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "NetworkOrder.h"
+
 #include "FileIO.h"
 #include "BinaryIO.h"
-#include "NetworkOrder.h"
 #include "Matrix.h"
 #include "Array.h"
 #include "Stat.h"

@@ -615,8 +615,8 @@ class Multigrid : noncopyable {
     // Recursively perform a multigrid V-cyce.
     void rec_vcycle(CGridView<D,T> grid_rhs, GridView<D,T> grid_result) {
         assertx(same_size(grid_rhs, grid_result));
-        static Set<size_t> set;
-        if (0 && set.add(grid_rhs.size())) showf("rec_vcycle dims=%s\n", make_string(grid_rhs.dims()).c_str());
+        static Set<size_t> set_debug;
+        if (0 && set_debug.add(grid_rhs.size())) showf("rec_vcycle dims=%s\n", make_string(grid_rhs.dims()).c_str());
         const bool vverbose = 0;
         if (coarse_enough(grid_rhs)) {
             run_direct_solver(grid_rhs, grid_result);

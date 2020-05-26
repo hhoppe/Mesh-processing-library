@@ -23,14 +23,14 @@ namespace hh {
 // Accumulate statistics for a stream of arithmetic values.
 class Stat {
  public:
-    explicit Stat(string pname = "", bool pprint = false, bool is_static = false);
-    explicit Stat(const char* pname, bool pprint = false, bool is_static = false);
+    explicit Stat(string pname = "", bool print = false, bool is_static = false);
+    explicit Stat(const char* pname, bool print = false, bool is_static = false);
     Stat(Stat&& s) noexcept                     : _print(false) { swap(*this, s); } // not default
     template<typename R, typename = enable_if_range_t<R> > explicit Stat(R&& range);
-    ~Stat()                                     { terminate(); }
+    ~Stat();
     Stat& operator=(Stat&& s) noexcept          { _pofs = nullptr; _print = false; swap(*this, s); return *this; }
     void set_name(string pname)                 { _name = std::move(pname); }
-    void set_print(bool pprint)                 { _print = pprint; }
+    void set_print(bool print)                  { _print = print; }
     void set_rms()                              { _setrms = true; } // show rms instead of sdv
     void zero();
     void terminate();
@@ -88,9 +88,15 @@ template<typename R, typename = enable_if_range_t<R> > R standardize_rms(R&& ran
 
 #define HH_STAT(S) hh::Stat S{#S, true}
 #define HH_STATNP(S) hh::Stat S{#S, false} // no print
-#define HH_SSTAT(S, v) do { static hh::Stat S(#S, true, true); S.enter(v); } while (false) // static Stat
-#define HH_SSTAT_RMS(S, v) do { static hh::Stat S(#S, true, true); S.set_rms(); S.enter(v); } while (false)
-#define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false) // range Stat
+
+// static Stat
+#define HH_SSTAT(S, v)                                                                  \
+    do { static hh::Stat& S = *new Stat(#S, true, true); S.enter(v); } while (false)
+#define HH_SSTAT_RMS(S, v)                                                                          \
+    do { static hh::Stat& S = *new Stat(#S, true, true); S.set_rms(); S.enter(v); } while (false)
+
+// range Stat
+#define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false)
 #define HH_RSTAT_RMS(S, range) do { HH_STAT(S); S.set_rms(); for (auto e : range) { S.enter(e); } } while (false)
 
 //----------------------------------------------------------------------------

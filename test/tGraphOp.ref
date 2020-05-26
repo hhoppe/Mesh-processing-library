@@ -191,6 +191,7 @@ Graph: edges {
  edge (19, 17)
  edge (19, 18)
 }  (cost=500)
-# Spspcelln:          (13     )           1:4            av=1.5384616      sd=0.9674179
-# Sssnelemsv:         (46     )           3:14           av=8.5            sd=2.8343136
+# Summary of statistics:
 # Sssncellsv:         (46     )           8:294          av=61.304348      sd=59.549744
+# Sssnelemsv:         (46     )           3:14           av=8.5            sd=2.8343136
+# Spspcelln:          (13     )           1:4            av=1.5384616      sd=0.9674179

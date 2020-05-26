@@ -26,7 +26,7 @@ class Stats {
     std::vector<Stat*> _vec;
 };
 
-Stat::Stat(string pname, bool pprint, bool is_static) : _name(std::move(pname)), _print(pprint) {
+Stat::Stat(string pname, bool print, bool is_static) : _name(std::move(pname)), _print(print)  {
     zero();
     static const bool stat_files = getenv_bool("STAT_FILES");
     if (_name!="" && stat_files) {
@@ -37,7 +37,11 @@ Stat::Stat(string pname, bool pprint, bool is_static) : _name(std::move(pname)),
     if (is_static) Stats::add(this);
 }
 
-Stat::Stat(const char* pname, bool pprint, bool is_static) : Stat(string(pname ? pname : ""), pprint, is_static) { }
+Stat::Stat(const char* pname, bool print, bool is_static) : Stat(string(pname ? pname : ""), print, is_static) { }
+
+Stat::~Stat() {
+    terminate();
+}
 
 void swap(Stat& l, Stat& r) noexcept {
     using std::swap;

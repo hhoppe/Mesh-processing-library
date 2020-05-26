@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # introduced 3 grep filters to ignore differences between win and mingw
-tContour 2>&1 | grep -v SContneval
+tContour 2>&1 | grep -v SContneval | grep -v 'Summary of statistics'
 
 # cat tContour.{2D,2Dborder,3D,3Dborder,m}
 cat tContour.{2D,2Dborder,m} | perl -ne 'binmode(STDOUT); print unless /^Vertex (\d+) / && $1=~/^(9|29|37|151|13|31|185|188|7|70|72|74|86|131|168|205|246|252|260|266)$/ || /^Face /;'

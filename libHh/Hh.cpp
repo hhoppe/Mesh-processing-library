@@ -500,6 +500,22 @@ void use_binary_io() {
 #endif
 }
 
+void unsynchronize_stream_and_stdio() {
+    // We expect no interleaved unbuffered use of iostream and FILE stdio.
+    std::ios_base::sync_with_stdio(false);
+}
+
+void untie_cin_and_cout() {
+    // We expect no use of std::cin without first explicitly flushing any unbuffered std::cout.
+    std::cin.tie(nullptr);
+}
+
+void warn_if_running_debug_version() {
+#if defined(_MSC_VER)
+    if (k_debug) showf("Running debug version.\n");
+#endif
+}
+
 void change_default_io_precision() {
     // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
     // Verify that the precision was unchanged from its default value of 6.
@@ -553,12 +569,6 @@ void change_default_io_precision() {
     //  MSVC as far as printf() is concerned.  (It may be using an older version of the runtime.)
 }
 
-void warn_if_running_debug_version() {
-#if defined(_MSC_VER)
-    if (k_debug) showf("Running debug version.\n");
-#endif
-}
-
 void excercise_errors() {
     SHOWL;
     if (0) {
@@ -587,8 +597,10 @@ void hh_init_aux() {
     setup_exception_hooks();
     use_standard_exponent_format_in_io();
     use_binary_io();
-    if (0) change_default_io_precision();
+    unsynchronize_stream_and_stdio();
+    untie_cin_and_cout();
     warn_if_running_debug_version();
+    if (0) change_default_io_precision();
     if (0) excercise_errors();
 }
 

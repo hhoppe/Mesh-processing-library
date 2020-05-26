@@ -49,5 +49,4 @@ int main() {
         SHOW(Stat(V(1., 4., 5., 6.)).short_string());
         SHOW(Stat(V(1., 4., 5., 6.)).sdv());
     }
-    hh_clean_up();
 }

@@ -1571,6 +1571,5 @@ int main(int argc, const char** argv) {
     }
     pmi = nullptr;
     pmrs = nullptr;
-    hh_clean_up();
     return 0;
 }

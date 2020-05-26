@@ -179,6 +179,5 @@ int main(int argc, const char** argv) {
     statistics = stat;
     b_frame = frame;
     if (!noinput) process();
-    hh_clean_up();
     return 0;
 }

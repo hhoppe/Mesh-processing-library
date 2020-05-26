@@ -710,7 +710,7 @@ int main(int argc, const char** argv) {
     showdf("%s", g_header.c_str());
     process();
     hh_clean_up();
-    // iom closed here so mesh comes after everything else in file
+    // We close iom here so that the mesh comes after everything else in the file.
     if (iom && is_3D) {
         for (Vertex v : mesh.vertices()) {
             mesh.set_point(v, mesh.point(v)*xformi);

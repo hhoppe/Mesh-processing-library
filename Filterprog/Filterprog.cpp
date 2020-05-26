@@ -1468,6 +1468,5 @@ int main(int argc, const char** argv) {
     g_header = args.header();
     args.parse();
     pfi_prog = nullptr;
-    hh_clean_up();
     return 0;
 }

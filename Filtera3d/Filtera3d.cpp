@@ -824,6 +824,5 @@ int main(int argc, const char** argv) {
     if (toasciit) my_setenv("A3D_BINARY", "0");
     if (tobinary) my_setenv("A3D_BINARY", "1");
     process(ia3d);
-    hh_clean_up();
     return 0;
 }

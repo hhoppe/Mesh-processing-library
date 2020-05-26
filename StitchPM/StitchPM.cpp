@@ -215,6 +215,5 @@ int main(int argc, const char** argv) {
     showdf("%s", args.header().c_str());
     HH_TIMER(StitchPM);
     args.parse();
-    hh_clean_up();
     return 0;
 }

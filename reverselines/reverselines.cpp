@@ -69,7 +69,6 @@ int main(int argc, const char** argv) {
     assertx(off==0);
     assertx(!munmap(const_cast<char*>(buf.data()), len));
     assertx(!HH_POSIX(close)(fd));
-    hh_clean_up();
     return 0;
 }
 
@@ -129,8 +128,6 @@ int main(int argc, const char** argv) {
     }
     assertx(off==0);
     assertx(!HH_POSIX(close)(fd));
-    fflush(stdout);
-    hh_clean_up();
     return 0;
 }
 
@@ -202,8 +199,6 @@ int main(int argc, const char** argv) {
     assertx(UnmapViewOfFile(buf.data()));
     assertx(CloseHandle(h_fmapping));
     assertx(CloseHandle(h_file));
-    fflush(stdout);
-    hh_clean_up();
     return 0;
 }
 

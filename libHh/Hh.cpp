@@ -21,10 +21,6 @@
 #include <malloc.h>             // __mingw_aligned_malloc()
 #endif
 
-#if defined(__GNUC__)
-#include <cxxabi.h>             // abi::__cxa_demangle()
-#endif
-
 #if defined(_WIN32)
 
 #include <direct.h>               // getcwd()
@@ -697,7 +693,7 @@ bool set_fd_no_delay(int fd, bool nodelay) {
 #endif
 }
 
-static string cleanup_type_name(string s) {
+static string beautify_type_name(string s) {
     // SHOW(s);
     // ** general:
     s = replace_all(s, "class ", "");
@@ -774,7 +770,7 @@ string extract_function_type_name(string s) {
     } else if (s=="name") {
         SHOW(s); assertnever("");
     }
-    s = cleanup_type_name(s);
+    s = beautify_type_name(s);
     return s;
 }
 

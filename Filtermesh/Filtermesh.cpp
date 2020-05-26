@@ -3924,17 +3924,6 @@ void do_transferkeysfrom(Args& args) {
         assertx(i==arv.num());  // no two vertices should have same position
         arv.push(v);
     }
-    if (0) {
-        hh_clean_up();
-        my_setenv("DEBUG", "1");
-        {
-            Vertex v = mesh.id_vertex(7833); SHOW(mesh.point(v)*xform);
-            SHOW(hp.enter(omesh.point(v)*xform));
-            Vertex ov = omesh.id_vertex(13681); SHOW(omesh.point(ov)*xform);
-            SHOW(hp.enter(omesh.point(ov)*xform));
-        }
-        my_setenv("DEBUG", "");
-    }
     Array<char> key, val;
     Map<Vertex,Vertex> movv;
     for (Vertex ov : omesh.vertices()) {

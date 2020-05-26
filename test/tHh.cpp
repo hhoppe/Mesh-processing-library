@@ -571,5 +571,4 @@ line2)";
         SHOW(sizeof(Array<char>));      // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
         // see ~/src/test/native/bug_size.cpp
     }
-    hh_clean_up();
 }

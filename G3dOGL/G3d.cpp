@@ -344,6 +344,5 @@ int main(int argc, const char** argv) {
         g_obs[i].clear();
         HB::clear_segment(i);
     }
-    hh_clean_up();
     return 0;
 }

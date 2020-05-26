@@ -12,7 +12,7 @@ class Trig {
  public:
     // compute cos(i*TAU/j)
     static float cos(int i, int j) {
-        Table& table = s_f_cos_table();
+        Table& table = cos_table_instance();
         if (!table[1][0]) init();
         int ia = abs(i); ASSERTX(ia<j);
         float v = j<k_size ? table[j][ia] : std::cos(ia*TAU/j);
@@ -20,7 +20,7 @@ class Trig {
     }
     // compute sin(i*TAU/j)
     static float sin(int i, int j) {
-        Table& table = s_f_sin_table();
+        Table& table = sin_table_instance();
         if (!table[1][0]) init();
         int ia = abs(i); ASSERTX(ia<j);
         float v = j<k_size ? table[j][ia] : std::sin(ia*TAU/j);
@@ -29,13 +29,13 @@ class Trig {
  private:
     static constexpr int k_size = 13;
     using Table = SGrid<float, k_size, k_size-1>;
-    static Table& s_f_cos_table() { static auto& t = *new Table; return t; }
-    static Table& s_f_sin_table() { static auto& t = *new Table; return t; }
+    static Table& cos_table_instance() { static auto& t = *new Table; return t; }
+    static Table& sin_table_instance() { static auto& t = *new Table; return t; }
     static void init() {
         for_intL(j, 1, k_size) {
             for_int(i, j) {
-                s_f_cos_table()[j][i] = std::cos(i*TAU/j);
-                s_f_sin_table()[j][i] = std::sin(i*TAU/j);
+                cos_table_instance()[j][i] = std::cos(i*TAU/j);
+                sin_table_instance()[j][i] = std::sin(i*TAU/j);
             }
         }
     }

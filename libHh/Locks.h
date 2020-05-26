@@ -54,10 +54,10 @@ namespace hh {
 
 class MyGlobalLock {
  public:
-    MyGlobalLock() : _lock_guard(s_f_global_mutex()) { }
+    MyGlobalLock() : _lock_guard(global_mutex_instance()) { }
  private:
     std::lock_guard<std::mutex> _lock_guard;
-    static std::mutex& s_f_global_mutex() { static auto& m = *new std::mutex; return m; }
+    static std::mutex& global_mutex_instance() { static auto& m = *new std::mutex; return m; }
 };
 #define HH_LOCK if (hh::details::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
 

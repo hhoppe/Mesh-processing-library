@@ -35,6 +35,7 @@ ifeq ($(plain_compiler),)
   cwarnings = $(if $(ignore_compile_warnings:0=),,-Werror)
   cwarnings += -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization
   cwarnings += -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls
+  cwarnings += -Wshadow
   cxxwarnings = -Woverloaded-virtual
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
@@ -57,12 +58,10 @@ ifeq ($(plain_compiler),)
     cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance
     cwarnings += -Wno-double-promotion -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
     cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wno-literal-suffix -Wuseless-cast
+    cxxwarnings += -fsized-deallocation -Wsized-deallocation
     #  -Wno-error=old-style-cast
     #  -Wno-error=name  # Turn warning "name" into an warning even if -Werror is specified.
     ccommon += -fopenmp
-    ifeq ($(filter $(CONFIG),cygwin),)
-      cxxwarnings += -fsized-deallocation -Wsized-deallocation#  C++14 feature not recognized in earlier gcc
-    endif
   endif
   cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
   commonrel += -O3 -DNDEBUG

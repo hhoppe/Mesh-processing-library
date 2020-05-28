@@ -66,8 +66,8 @@ template<typename T> T roundtrip(T v, int digits = -1) {
     if (digits>=0) {
         if (0) {
             assertx(ss << std::setprecision(digits));
-            std::setprecision(std::numeric_limits<T>::digits10);     // 6 for float; 15 for double
-            std::setprecision(std::numeric_limits<T>::max_digits10); // 9 for float; 17 for double
+            // std::setprecision(std::numeric_limits<T>::digits10);      // 6 for float; 15 for double
+            // std::setprecision(std::numeric_limits<T>::max_digits10);  // 9 for float; 17 for double
         }
         auto old_precision = ss.precision(digits);
         assertx(old_precision==6);

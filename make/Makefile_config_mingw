@@ -3,10 +3,6 @@ x64 = 1#  32-bit not supported by mingw64
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
-ifeq ($(plain_compiler),)
-   cwarnings += -Wshadow#  on the older gcc compilers (cygwin, mingw32) it gives too many false-positives
-endif
-
 # $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-4.9.1-posix-seh-rt_v3-rev0/mingw64/bin)
 
 

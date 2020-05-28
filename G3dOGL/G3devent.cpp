@@ -697,9 +697,9 @@ void DoJump() {
     Point centerbb = bb[0]+diag/2.f;
     if (!object_mode) {
         zoom = .2f;
-        int minc; float mind = min_index(diag, &minc);
-        int maxc; float maxd = max_index(diag, &maxc);
-        dummy_use(maxc);
+        int minc = arg_min(diag);
+        float mind = diag[minc];
+        float maxd = max(diag);
         Point newvp = centerbb;
         float a = mind*.5f+maxd*.5f/zoom*1.1f;
         newvp[minc] += (minc==2 ? 1 : -1)*a;

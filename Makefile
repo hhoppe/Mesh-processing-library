@@ -1,15 +1,17 @@
 # Makefile (for GNU make, a.k.a. gmake).
 # Note: default CONFIG (set in make/Makefile_defs) is either "win" (Windows debug) or "unix" (Unix release),
 #  depending on the detected platform.
-# Setting "CONFIG=all" runs make successively on all available configurations.
+# Setting "CONFIG=all" runs the make process successively on all available configurations.
 # Examples:
-#  make CONFIG=win -j Filtermesh
+#  make -j Filtermesh  # builds single program using default CONFIG (either "win" or "unix")
 #  make -j4  # limit parallelism to 4 cores; important on a Virtual Machine
 #  make CONFIG=mingw -j demos
 #  make makeall   # run all CONFIG   (same as "make CONFIG=all -j")
 #  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j deepclean")
 #  make everything  # makeall plus progtest
-#  make CONFIG=mingw -C ~/src -j8 -t libs  # touch all files
+#  make CONFIG=win -C ~/src -j8 -t libs  # touch all files
+#  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
+#  make CONFIG=clang STD_CXX=-std=c++2a -j  # test code compatibility with future C++20
 
 # Test various implementations of gmake:
 #  c:/cygwin/bin/make CONFIG=clang -C ~/src -j
@@ -18,13 +20,14 @@
 
 HhRoot ?= .#  this current file is located in the root directory of the package
 
-include make/Makefile_defs
+include $(HhRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)
 
 libdirs = \
   libHh \
   lib$(HW)
+
 progdirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
   MeshSimplify reverselines Filterprog FilterPM StitchPM \
@@ -57,7 +60,7 @@ libs: $(libdirs)                # build all libraries
 test: $(libdirs)                # run all unit tests (after building libraries)
 
 
-$(dirs) test demos:    # build any subproject by running make in its subdirectory
+$(dirs+test):    # build any subproject by running make in its subdirectory
 	$(MAKE) -C $@
 
 $(progdirs): $(libdirs)         # building a program first requires building libraries

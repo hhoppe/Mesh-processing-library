@@ -117,7 +117,8 @@ template<typename Func = float(int, int)> Graph<int> graph_mst(int num, Func fdi
     }
     for_intL(i, 1, num) {
         const int offset = 1;
-        int minj; float minf = min_index(lowcost.slice(offset, num), &minj); minj += offset;
+        int minj = arg_min(lowcost.slice(offset, num)) + offset;
+        float minf = lowcost[minj];
         assertx(minf<k_inf);
         gnew.enter_undirected(minj, closest[minj]);
         lowcost[minj] = k_inf;

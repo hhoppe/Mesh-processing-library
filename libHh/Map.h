@@ -84,8 +84,13 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
     bciter begin() const                        { return _m.begin(); }
     bciter end() const                          { return _m.end(); }
  public:
-    class keys_iterator : public std::iterator<std::forward_iterator_tag, const K> {
+    class keys_iterator {
      public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = K;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         keys_iterator()                                         = default;
         keys_iterator(bciter it)                                : _it(it) { }
         bool operator!=(const keys_iterator& rhs) const         { return _it!=rhs._it; }
@@ -103,8 +108,13 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
      private:
         const type& _t;
     };
-    class cvalues_iterator : public std::iterator<std::forward_iterator_tag, const V> {
+    class cvalues_iterator {
      public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = V;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         cvalues_iterator()                                      = default;
         cvalues_iterator(bciter it)                             : _it(it) { }
         bool operator!=(const cvalues_iterator& rhs) const      { return _it!=rhs._it; }
@@ -122,8 +132,13 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
      private:
         const type& _t;
     };
-    class values_iterator : public std::iterator<std::forward_iterator_tag,V> {
+    class values_iterator {
      public:
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = V;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         values_iterator()                                       = default;
         values_iterator(biter it)                               : _it(it) { }
         bool operator!=(const values_iterator& rhs) const       { return _it!=rhs._it; }

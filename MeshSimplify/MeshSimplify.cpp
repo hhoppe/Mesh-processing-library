@@ -2295,7 +2295,8 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
         float min_d2 = BIGFLOAT; int min_i = -1; Bary min_bary; dummy_init(min_bary);
         for (;;) {
             // For X3.m, had nproj=2.16 -> (2.16+1)*50*7*9*1.9==~18900 (23%)
-            int tmin_i; float tmin_d2 = min_index(ar_d2, &tmin_i);
+            int tmin_i = arg_min(ar_d2);
+            float tmin_d2 = ar_d2[tmin_i];
             if (tmin_d2>=min_d2) break;
             assertx(tmin_d2!=BIGFLOAT);
             ar_d2[tmin_i] = BIGFLOAT;
@@ -2791,7 +2792,8 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
             }
             float min_d2 = BIGFLOAT; Face min_f = nullptr; Bary min_bary(0.f, 0.f, 0.f);
             for (;;) {
-                int tmin_i; float tmin_d2 = min_index(ar_d2, &tmin_i);
+                int tmin_i = arg_min(ar_d2);
+                float tmin_d2 = ar_d2[tmin_i];
                 if (tmin_d2>=min_d2) break;
                 assertx(tmin_d2!=BIGFLOAT);
                 ar_d2[tmin_i] = BIGFLOAT;

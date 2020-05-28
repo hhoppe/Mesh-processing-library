@@ -30,8 +30,13 @@ template<typename T> class CStridedArrayView {
     const T& last() const                       { return (*this)[_n-1]; }
     bool ok(int i) const                        { return i>=0 && i<_n; }
     using value_type = T;
-    class iterator : public std::iterator<std::random_access_iterator_tag, const T> {
+    class iterator {
      public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type =  T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         iterator()                                      = default;
         bool operator==(const iterator& it) const       { return _p==it._p; }
         bool operator!=(const iterator& it) const       { return _p!=it._p; }
@@ -76,8 +81,13 @@ template<typename T> class StridedArrayView : public CStridedArrayView<T> {
     const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }
     T& last()                                   { return (*this)[_n-1]; }
     const T& last() const                       { return base::last(); }
-    class iterator : public std::iterator<std::random_access_iterator_tag, T> {
+    class iterator {
      public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type =  T;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         iterator()                                      = default;
         bool operator==(const iterator& it) const       { return _p==it._p; }
         bool operator!=(const iterator& it) const       { return _p!=it._p; }

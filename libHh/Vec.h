@@ -204,9 +204,14 @@ template<typename T> struct Vec_base<T,0> {
 namespace details {
 
 // Iterator for traversing coordinates: 0<=[0]<uU[0], 0<=[1]<uU[1], ..., 0<=[D-1]<uU[D-1].
-template<int D> class Vec_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
+template<int D> class Vec_iterator {
     using type = Vec_iterator<D>;
  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type =  Vec<int,D>;
+    using difference_type = void;
+    using pointer = value_type*;
+    using reference = value_type&;
     Vec_iterator(const Vec<int,D>& u, const Vec<int,D>& uU) : _u(u), _uU(uU) { }
     Vec_iterator(const type& iter)              = default;
     bool operator!=(const type& rhs) const {
@@ -248,9 +253,14 @@ template<int D> class Vec_range {
 };
 
 // Iterator for traversing coordinates: uL[0]<=[0]<uU[0], ..., uL[D-1]<=[D-1]<uU[D-1].
-template<int D> class VecL_iterator : public std::iterator<std::forward_iterator_tag, const Vec<int,D>> {
+template<int D> class VecL_iterator {
     using type = VecL_iterator<D>;
  public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type =  Vec<int,D>;
+    using difference_type = void;
+    using pointer = value_type*;
+    using reference = value_type&;
     VecL_iterator(const Vec<int,D>& uL, const Vec<int,D>& uU) : _u(uL), _uL(uL), _uU(uU) { }
     VecL_iterator(const type& iter)           = default;
     bool operator!=(const type& rhs) const {

@@ -331,8 +331,9 @@ class Multigrid : noncopyable {
         };
         const Vec<int,D> ar_interior_offsets = generate_interior_offsets(dims);
         auto func_update_interior = [&](size_t i) {
+            // added "true &&" to prevent taking a reference to the constexpr
             // added "if (1)" to avoid warnings about unreachable code
-            if (1) ASSERTX(b_default_metric);
+            if (1) ASSERTX(true && b_default_metric);
             // ++g_nfast;
             T vnei; my_zero(vnei);
             if (0) {

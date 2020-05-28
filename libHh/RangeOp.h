@@ -190,24 +190,22 @@ template<typename T> struct factor_type {
 };
 template<typename T> using factor_type_t = typename factor_type<T>::type;
 
-// Minimum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
+// Index of minimum value in a non-empty range (using less(a, b)).
 template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-Iterator min_index(const R& range, int* pi) {
+int arg_min(const R& range) {
     using std::begin; using std::end;
-    ASSERTX(pi); ASSERTX(begin(range)!=end(range));
+    ASSERTX(begin(range)!=end(range));
     auto p = std::min_element(begin(range), end(range));
-    *pi = narrow_cast<int>(std::distance(begin(range), p));
-    return *p;
+    return narrow_cast<int>(std::distance(begin(range), p));
 }
 
-// Maximum value in a non-empty range (using less(a, b)); store its index [0..size(range)-1] in *pi.
+// Index of maximum value in a non-empty range (using less(a, b)).
 template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-Iterator max_index(const R& range, int* pi) {
+int arg_max(const R& range) {
     using std::begin; using std::end;
-    ASSERTX(pi); ASSERTXX(begin(range)!=end(range));
+    ASSERTXX(begin(range)!=end(range));
     auto p = std::max_element(begin(range), end(range));
-    *pi = narrow_cast<int>(std::distance(begin(range), p));
-    return *p;
+    return narrow_cast<int>(std::distance(begin(range), p));
 }
 
 // Minimum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).

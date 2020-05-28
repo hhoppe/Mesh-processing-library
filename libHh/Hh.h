@@ -594,11 +594,11 @@ template<typename T> class Range {
     class Iterator {
         using type = Iterator;
      public:
-        using value_type = T;
-        using reference = T&;
-        using pointer = T*;
-        using difference_type = int64_t;
         using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = int64_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         Iterator(T start, T stop)               : _v(start), _stop(stop) { }
         Iterator(const type& iter)              = default;
         bool operator==(const type& rhs) const  { return _v==rhs._v; }

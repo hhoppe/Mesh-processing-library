@@ -797,7 +797,8 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
         }
         float mind2 = BIGFLOAT; Face minf = nullptr;
         for (;;) {
-            int tmini; float tmind2 = min_index(ar_d2, &tmini);
+            int tmini = arg_min(ar_d2);
+            float tmind2 = ar_d2[tmini];
             if (tmind2==BIGFLOAT) break; // ok, no more triangles to consider
             if (tmind2>=mind2) break;
             ar_d2[tmini] = BIGFLOAT;
@@ -852,7 +853,8 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa,
             int nproj = 0;
             float mind2 = BIGFLOAT; int mini = -1; Bary minbary; dummy_init(minbary);
             for (;;) {
-                int tmini; float tmind2 = min_index(ar_d2, &tmini);
+                int tmini = arg_min(ar_d2);
+                float tmind2 = ar_d2[tmini];
                 if (tmind2==BIGFLOAT) break; // ok, no more triangles to consider
                 if (tmind2>=mind2) break;
                 ar_d2[tmini] = BIGFLOAT;

@@ -2,23 +2,17 @@ rel ?= 1#  0=debug or 1=release  (usually 1; debug has bug: "-g" on getline() ca
 x64 = 1
 
 
-# ifeq ($(CC),clang)              # use clang (and clang++) instead of gcc
-# 
-# include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
-# cppinc += -DHH_DEFINE_FLOAT128
-# cppinc += -D__float128=dummy_name_float128  # to avoid the built-in typename
-# cppinc += -DHH_NO_DEFINE_STD_CXX14
-# cppinc += -DHH_NO_DEFINE_STD_INDEX_SEQUENCE
-# # OpenMP seems still unsupported in Cygwin clang 3.7.1: <omp.h> not found
-# # cppinc += -fopenmp -I/lib/gcc/x86_64-pc-cygwin/5.4.0/include  # omp.h file for gcc only
-# # cppinc += -fopenmp=libiomp5  # https://stackoverflow.com/questions/33357029/
-# 
-# else                            # default is gcc compiler
+ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
+
+omit_omp = 1                    # <omp.h> is missing
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+
+else                            # default is gcc compiler
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 cxxall += -Wno-sign-compare#  for rel==0
 
-# endif
+endif
 
 
 gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext

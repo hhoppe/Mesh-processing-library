@@ -3277,7 +3277,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
              if (alt_pressed) yxd *= .1f;
              if (shift_pressed) {
                  if (g_selected.axis_constraint<0 && g_selected.yx_last==g_selected.yx_pressed && mag2(yxd)) {
-                     max_index(abs(yxd), &g_selected.axis_constraint);
+                     g_selected.axis_constraint = arg_max(abs(yxd));
                      if (g_verbose>=3) SHOW(abs(yxd), g_selected.axis_constraint);
                  }
                  if (g_selected.axis_constraint>=0)

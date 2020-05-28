@@ -93,8 +93,9 @@ template<typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S, 
     const int m = U.ysize(), n = U.xsize();
     assertx(n>=1); assertx(m>=n); assertx(S.num()==n); assertx(VT.dims()==V(n, n));
     // Insertion sort
+    if (n<2) return;            // avoid gcc warning "-Waggressive-loop-optimizations"
     for_int(i0, n-1) {
-        int i1; max_index(S.slice(i0, n), &i1); i1 += i0;
+        int i1 = arg_max(S.slice(i0, n)) + i0;
         if (i0==i1) continue;
         std::swap(S[i0], S[i1]);
         swap_ranges(column(U,  i0), column(U,  i1));

@@ -62,8 +62,13 @@ class EList {
     bool empty() const                          { return delim()->next()==delim(); }
     // Use n->link_before(elist.delim()) as in: Array::push(), Queue::enqueue(), or std::vector::push_back().
     // Use n->link_after(elist.delim())  as in: Array::unshift() or Stack::push().
-    class Iter : public std::iterator<std::bidirectional_iterator_tag,EListNode> {
+    class Iter {
      public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type =  EListNode;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         Iter(EListNode* node)                           : _node(node) { }
         bool operator!=(const Iter& rhs) const          { return _node!=rhs._node; }
         EListNode* operator*() const                    { return _node; }
@@ -72,8 +77,13 @@ class EList {
      private:
         EListNode* _node;
     };
-    class ConstIter : public std::iterator<std::bidirectional_iterator_tag, const EListNode> {
+    class ConstIter {
      public:
+        using iterator_category = std::bidirectional_iterator_tag;
+        using value_type =  EListNode;
+        using difference_type = std::ptrdiff_t;
+        using pointer = value_type*;
+        using reference = value_type&;
         ConstIter(const EListNode* node)                : _node(node) { }
         bool operator!=(const ConstIter& rhs) const     { return _node!=rhs._node; }
         const EListNode* operator*() const              { return _node; }

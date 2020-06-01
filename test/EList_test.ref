@@ -1,0 +1,10 @@
+count = 2
+2
+pa->_i = 1
+pa->_i = 2
+relink a2
+pa->_i = 2
+pa->_i = 1
+unlink a1
+pa->_i = 2
+unlink a2

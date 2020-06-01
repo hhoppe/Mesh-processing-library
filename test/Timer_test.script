@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# was: (Timer_test <$nul 2>&1 | ...)
+# (Timer_test 2>&1 | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9]*//g')
+# (Timer_test 2>&1 | tee Timer_test.raw | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9].*$//')
+# (Timer_test 2>&1 | grep -v 'Summary of timers' | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9].*$//')
+
+Timer_test 2>&1 | grep -v 'Summary of timers' | grep -v 'Timing on' | perl -pe 'binmode(STDOUT); s/[0-9]\.[0-9].*$//'

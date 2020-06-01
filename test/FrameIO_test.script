@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat FrameIO_test.inp | FrameIO_test | (FRAME_BINARY=1 FrameIO_test ) | FrameIO_test | ( FRAME_BINARY=0 FrameIO_test )

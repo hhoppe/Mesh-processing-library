@@ -1,0 +1,33 @@
+Graph: vertices {
+}, edges {
+}
+Graph: vertices {
+  vertex 1
+  vertex 2
+  vertex 3
+  vertex 4
+  vertex 5
+  vertex 6
+  vertex 7
+}, edges {
+ edge (1, 4)
+ edge (1, 6)
+ edge (1, 7)
+ edge (3, 2)
+ edge (4, 5)
+ edge (6, 2)
+}
+Graph: vertices {
+  vertex 1
+  vertex 2
+  vertex 3
+  vertex 4
+  vertex 5
+  vertex 6
+  vertex 7
+}, edges {
+ edge (1, 6)
+ edge (3, 2)
+ edge (4, 5)
+ edge (6, 2)
+}

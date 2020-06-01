@@ -1,8 +1,0 @@
-hp.enter(Point(1.f, 1.f, 1.f)) = 0
-hp.enter(Point(1.f, 1.f, 2.f)) = 1
-hp.enter(Point(1.f, 2.f, 1.f)) = 2
-hp.enter(Point(1.f, 1.f, 1.00001f)) = 0
-hp.enter(Point(1.f, 1.f, 2.01f)) = 3
-hp.enter(Point(1.f, 1.f, 2.00001f)) = 1
-hp.enter(Point(0.850299f, 0.453924f, 0.0222916f)) = 4
-hp.enter(Point(0.850299f, 0.453923f, 0.0222920f)) = 4

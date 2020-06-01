@@ -76,9 +76,9 @@ inline uint16_t swap_2bytes(uint16_t v) {
 template<typename T> void my_swap_bytes(T* p) {
     static_assert(sizeof(T)==8 || sizeof(T)==4 || sizeof(T)==2, "");
     // The "union" are required for gcc 4.8.1; otherwise it changes value in memory but not in register
-    //  -- see tNetworkOrder.cpp
+    //  -- see NetworkOrder_test.cpp
     // I first tried making "T* p" be volatile, but that hit another compiler bug in FrameIO.cpp
-    //  exposed in tFrameIO.cpp (the zoom variable is incorrect) and tA3dStream.cpp .
+    //  exposed in FrameIO_test.cpp (the zoom variable is incorrect) and A3dStream_test.cpp .
     if (sizeof(T)==8) {
         union { uint64_t ui; T t; } u; u.t = *p; u.ui = swap_8bytes(u.ui); *p = u.t;
     }

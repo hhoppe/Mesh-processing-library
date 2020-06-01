@@ -277,7 +277,7 @@ inline Quaternion squadseg(const Quaternion* qb, const Quaternion& q0, const Qua
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Quaternion& q) {
-    if (0) ASSERTXX(q.is_unit()); // coefficients may have been rounded, e.g. in tQuaternion.cpp
+    if (0) ASSERTXX(q.is_unit()); // coefficients may have been rounded, e.g. in Quaternion_test.cpp
     return os << "Quaternion(" << q[0] << ", " << q[1] << ", " << q[2] << ", " << q[3] << ")";
 }
 

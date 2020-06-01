@@ -44,7 +44,7 @@ ifeq ($(plain_compiler),)
   # (RTC1==RTCsu); was -RTCcsu (25% slower) but VS2015 update2 stops support for -RTCc in C++ standard library
   # If I need to run debug on slow code, try the following settings (slower to compile, but faster to execute):
   # cxxdbg += -Ob1 $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi
-  #  time tMultigrid 512 512 : compilation 1.9sec -> 2.5sec; runtime 7.7sec -> 2.6sec
+  #  time Multigrid_test 512 512 : compilation 1.9sec -> 2.5sec; runtime 7.7sec -> 2.6sec
   # cxxdbg used to have "-D _ITERATOR_DEBUG_LEVEL=1" to avoid horribly slow unordered_map, but incompatible with VT
   # -D "_UNICODE" -D "UNICODE"
   # -GL : whole program optimization (use with /LTCG linker option if %:%.obj)

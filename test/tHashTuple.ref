@@ -1,5 +1,0 @@
-tu1 = tuple<1, 2, 1>
-tu2 = tuple<3>
-std::make_tuple(1, 2.f, false, 5.) = tuple<1, 2, 0, 5>
-std::make_pair(1, 2.f) = [1, 2]
-p = [5, 1]

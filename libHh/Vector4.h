@@ -279,7 +279,7 @@ inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
 }
 inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
     Vector4 t = *this*255.f;
-    for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see tVector4.h
+    for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see Vector4_test.h
     __m128i t1 = _mm_cvtps_epi32(t._r); // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation)
     __m128i t2 = _mm_packs_epi32(t1, t1);  // 8 signed 32-bit -> 8 signed 16-bit (saturation)
     __m128i t3 = _mm_packus_epi16(t2, t2); // 16 signed 16-bit -> 16 unsigned 8-bit (saturation)
@@ -319,7 +319,7 @@ inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
 }
 inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
     Vector4 t = *this*255.f;
-    for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see tVector4.h
+    for_int(c, 4) { ASSERTX(t[c]<=2147480000.f); } // see Vector4_test.h
     uint32x4_t a = vcvtq_u32_f32(t._r); // uint32x4_t vcvtq_u32_f32(float32x4_t a); // VCVT.U32.F32 q0, q0 // round
     uint16x4_t b = vqmovn_u32(a);  // uint16x4_t vqmovn_u32(uint32x4_t a); // VQMOVN.I32 d0, q0 // saturation
     uint16x8_t c = vcombine_u16(b, b); // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);

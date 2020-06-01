@@ -1,7 +1,0 @@
-m.get(std::make_tuple(2.f, 3.f)) = 4
-sum(m.values()) = 12
-s=ab m[s]=14
-s=abcd m[s]=113
-m = hh::Map<std::string,std::string>={
-  [abcd, 113]
-}

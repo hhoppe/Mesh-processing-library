@@ -25,7 +25,7 @@ inline unsigned std_thread_hardware_concurrency() {
 }
 
 // Overhead for use of Timer:
-// (setenv TTIMER_COUNT 1000000; tTimer); look at oneabbrev and abbrev
+// (setenv TTIMER_COUNT 1000000; Timer_test); look at oneabbrev and abbrev
 //  on mips R?3000/20Mhz Ultrix:
 //           timer off by +82e-6  sec, overhead is 168e-6 sec
 //  on sgi R4400/150Mhz Irix 5.2:

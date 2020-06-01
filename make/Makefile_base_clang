@@ -32,7 +32,7 @@ ifeq ($(plain_compiler),)
   endif
   #  -Wno-header-hygiene -Wno-format-nonliteral   -Wno-old-style-cast  -Wno-error=old-style-cast
 
-  # Try Neon on imaginary ARM target, to test Vector4.h using ./test/tVector4.ou
+  # Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou
   # cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1
 
   # cxxrel += -gline-tables-only

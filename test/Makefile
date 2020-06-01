@@ -1,6 +1,6 @@
 # Use make (GNU gmake), e.g.:
 #  make CONFIG=win -j8
-#  make clean tStack.ou
+#  make clean Stack_test.ou
 
 HhRoot = ..
 
@@ -14,9 +14,9 @@ ifeq ($(gcc_base),1)
 endif
 
 # for assembly code, use ./test/opt/ instead
-# tMap: cxxall += $(cxx_list_assembly_code)
-# tVector4: cxxall += $(cxx_list_assembly_code)
-# tNetworkOrder: cxxall += $(cxx_list_assembly_code)
+# Map_test: cxxall += $(cxx_list_assembly_code)
+# Vector4_test: cxxall += $(cxx_list_assembly_code)
+# NetworkOrder_test: cxxall += $(cxx_list_assembly_code)
 
 # Precompiled headers:
 # - gcc and clang already benefit from "cxxall += -include $(HhRoot)/libHh/precompiled_libHh.h"

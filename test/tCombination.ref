@@ -1,5 +1,0 @@
-comb[1] = 0
-comb[2] = 0.5
-comb[3] = 0
-comb[4] = 0.25
-comb.sum() = 1.25

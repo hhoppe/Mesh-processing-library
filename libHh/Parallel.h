@@ -26,8 +26,8 @@
 
 #if defined(_MSC_VER) && defined(HH_DEBUG) && !defined(HH_NO_OPENMP)
 // Bug in Visual Studio 2015 update 1; compilation creates buggy code in x64-Debug with OpenMP in:
-//  MatrixOp.h: invert(CMatrixView<T> mi, MatrixView<T> mo)  (from Frame::invert() from tGeom.cpp);
-//  Multigrid.h: dual_downsample_aux(Specialize<2>, CGridView<D,T> grid)  (from tMultigrid.cpp);
+//  MatrixOp.h: invert(CMatrixView<T> mi, MatrixView<T> mo)  (from Frame::invert() from Geom_test.cpp);
+//  Multigrid.h: dual_downsample_aux(Specialize<2>, CGridView<D,T> grid)  (from Multigrid_test.cpp);
 #define HH_NO_OPENMP
 #endif
 

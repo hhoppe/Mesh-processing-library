@@ -229,7 +229,7 @@ class Multigrid : noncopyable {
             }
         } else {
             // Note: bug in VS2015 update 1 - x64 DebugMD due to OpenMP;
-            //  tMultigrid; ngrid.dims=[17, 17] but appears as [0, 17] within loop.
+            //  Multigrid_test; ngrid.dims=[17, 17] but appears as [0, 17] within loop.
             parallel_for_each(range(dims[0]/2), [&](const int y) {
                 for_int(x, dims[1]/2) {
                     ngrid[y][x] = ((grid[y*2+0][x*2+0]+grid[y*2+0][x*2+1]+

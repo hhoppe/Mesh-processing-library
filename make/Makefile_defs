@@ -148,12 +148,12 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 # The prefix '@' character (which hides the executed command line) is optional.
 # (Use 'make -n' to see these hidden '@' command lines.)
 % : %.cpp
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
-	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 % : %.c
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CC) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
-	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 

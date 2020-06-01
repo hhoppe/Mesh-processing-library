@@ -38,7 +38,7 @@ lib:
 progs: $(exe)
 
 $(exe): $(obj) $(extraobjs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))
-	$(CXX) $(TARGET_ARCH) $(call add_drive,$(obj) $(extraobjs) $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+	$(CXX) $(LDOUTPUT) $(TARGET_ARCH) $(call add_drive,$(obj) $(extraobjs) $(LDLIBS)) $(LDFLAGS)
 
 test: $(outputs)
 	@echo '** Summary of diffs'

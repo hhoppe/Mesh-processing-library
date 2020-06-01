@@ -110,11 +110,11 @@ ifneq ($(CXX),clang++) # was ifneq ($(is_mac),1)
 last_libs += -lgomp#  GNU OpenMP library
 endif
 
-# Force use of C++ (rather than C) standard library by explicitly specifying g++.
+# Force use of C++ (rather than C) standard library by explicitly specifying CXX.
 # % : %.o
 #	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 % : %.o
-	g++ $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+	$(CXX) $(LDOUTPUT) $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDFLAGS)
 
 # Use absolute pathnames for source files, to get these in warnings and errors.
 # %.o : %.cpp

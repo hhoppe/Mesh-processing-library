@@ -48,10 +48,10 @@ template<typename T> class CStridedArrayView {
         iterator operator-(std::ptrdiff_t i)            { return iterator(_p-i*_stride, _stride); }
         const T& operator[](std::ptrdiff_t i) const     { return _p[i*_stride]; }
         std::ptrdiff_t operator-(const iterator& it) const {
-            ASSERTXX((_p-it._p)%_stride==0); return (_p-it._p)/_stride;
+            return (ASSERTXX((_p-it._p)%_stride==0), (_p-it._p)/_stride);
         }
-        bool operator<(const iterator& it) const        { ASSERTXX((_p-it._p)%_stride==0); return _p<it._p; }
-        bool operator<=(const iterator& it) const       { ASSERTXX((_p-it._p)%_stride==0); return _p<=it._p; }
+        bool operator<(const iterator& it) const        { return (ASSERTXX((_p-it._p)%_stride==0), _p<it._p); }
+        bool operator<=(const iterator& it) const       { return (ASSERTXX((_p-it._p)%_stride==0), _p<=it._p); }
      private:
         const T* _p;
         size_t _stride;
@@ -99,10 +99,10 @@ template<typename T> class StridedArrayView : public CStridedArrayView<T> {
         iterator operator-(std::ptrdiff_t i)            { return iterator(_p-i*_stride, _stride); }
         T& operator[](std::ptrdiff_t i) const           { return _p[i*_stride]; }
         std::ptrdiff_t operator-(const iterator& it) const {
-            ASSERTXX((_p-it._p)%_stride==0); return (_p-it._p)/_stride;
+            return (ASSERTXX((_p-it._p)%_stride==0), (_p-it._p)/_stride);
         }
-        bool operator<(const iterator& it) const        { ASSERTXX((_p-it._p)%_stride==0); return _p<it._p; }
-        bool operator<=(const iterator& it) const       { ASSERTXX((_p-it._p)%_stride==0); return _p<=it._p; }
+        bool operator<(const iterator& it) const        { return (ASSERTXX((_p-it._p)%_stride==0), _p<it._p); }
+        bool operator<=(const iterator& it) const       { return (ASSERTXX((_p-it._p)%_stride==0), _p<=it._p); }
      private:
         T* _p;
         size_t _stride;

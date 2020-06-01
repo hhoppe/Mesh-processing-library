@@ -46,10 +46,10 @@ template<typename T, int d0, int... od> class SGrid :
     constexpr size_t size() const               { return vol; }
     T&       operator[](const Vec<int,D>& u)         { return flat(ravel_index(dims(), u)); }
     const T& operator[](const Vec<int,D>& u) const   { return flat(ravel_index(dims(), u)); }
-    slice&       operator[](int r)              { ASSERTXX(check(r)); return b()[r]; }
-    const slice& operator[](int r) const        { ASSERTXX(check(r)); return b()[r]; }
-    T&       flat(size_t i)                     { ASSERTXX(i<vol); return data()[i]; }
-    const T& flat(size_t i) const               { ASSERTXX(i<vol); return data()[i]; }
+    slice&       operator[](int r)              { return (ASSERTXX(check(r)), b()[r]); }
+    const slice& operator[](int r) const        { return (ASSERTXX(check(r)), b()[r]); }
+    T&       flat(size_t i)                     { return (ASSERTXX(i<vol), data()[i]); }
+    const T& flat(size_t i) const               { return (ASSERTXX(i<vol), data()[i]); }
     bool operator==(const type& p) const;
     bool operator!=(const type& p) const        { return !(*this==p); }
     static type all(const T& e)                 { type g; for_size_t(i, vol) { g.flat(i) = e; } return g; }
@@ -60,10 +60,10 @@ template<typename T, int d0, int... od> class SGrid :
     ArrayView<T> array_view()                   { return ArrayView<T>(data(), narrow_cast<int>(size())); }
     CArrayView<T> array_view() const            { return CArrayView<T>(data(), narrow_cast<int>(size())); }
     template<int s> SGrid<T, s, od...>& segment(int i) {
-        ASSERTXX(check(i, s)); return *reinterpret_cast<SGrid<T, s, od...>*>(p(i));
+        return (ASSERTXX(check(i, s)), *reinterpret_cast<SGrid<T, s, od...>*>(p(i)));
     }
     template<int s> const SGrid<T, s, od...>& segment(int i) const {
-        ASSERTXX(check(i, s)); return *reinterpret_cast<const SGrid<T, s, od...>*>(p(i));
+        return (ASSERTXX(check(i, s)), *reinterpret_cast<const SGrid<T, s, od...>*>(p(i)));
     }
     using value_type = T;
     using iterator = T*;

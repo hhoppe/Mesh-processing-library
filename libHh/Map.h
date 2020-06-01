@@ -72,8 +72,8 @@ template<typename K, typename V, typename Hash = std::hash<K>, typename Equal = 
     bool empty() const                          { return _m.empty(); }
     V& operator[](const K& k)                   { return _m[k]; } // introduced for Combination
     const V& operator[](const K& k) const       { auto i = _m.find(k); return i!=end() ? i->second : def(); }
-    const K& get_one_key() const                { ASSERTXX(!empty()); return begin()->first; }
-    const V& get_one_value() const              { ASSERTXX(!empty()); return begin()->second; }
+    const K& get_one_key() const                { return (ASSERTXX(!empty()), begin()->first); }
+    const V& get_one_value() const              { return (ASSERTXX(!empty()), begin()->second); }
     const K& get_random_key(Random& r) const    { auto i = crand(r); return i->first; }
     const V& get_random_value(Random& r) const  { auto i = crand(r); return i->second; }
     keys_range keys() const                     { return keys_range(*this); } // keys are always constant

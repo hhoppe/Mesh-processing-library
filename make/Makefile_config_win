@@ -89,7 +89,7 @@ cdbg += $(commondbg)
 # % : %.o
 #	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
 % : %.obj
-	$(CC) $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDOUTPUT) $(LDFLAGS)
+	$(CC) $(LDOUTPUT) $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDFLAGS)
 
 %.cso : %.cs
 	fxc -nologo -T cs_5_0 -E $(subst -,_,$(notdir $(basename $<))) -Fo$@ $<

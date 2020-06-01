@@ -68,8 +68,8 @@ template<typename T, int n> class Vec : details::Vec_base<T,n> {
     template<int s> const Vec<T,s>& segment(int i) const {
         static_assert(s>=0 && s<=n, ""); ASSERTXX(check(i, s)); return *reinterpret_cast<const Vec<T,s>*>(a()+i);
     }
-    ArrayView<T> segment(int i, int s)          { ASSERTXX(check(i, s)); return  ArrayView<T>(a()+i, s); }
-    CArrayView<T> segment(int i, int s) const   { ASSERTXX(check(i, s)); return CArrayView<T>(a()+i, s); }
+    ArrayView<T> segment(int i, int s)          { return (ASSERTXX(check(i, s)),  ArrayView<T>(a()+i, s)); }
+    CArrayView<T> segment(int i, int s) const   { return (ASSERTXX(check(i, s)), CArrayView<T>(a()+i, s)); }
     ArrayView<T>  slice(int ib, int ie)         { return segment(ib, ie-ib); }
     CArrayView<T> slice(int ib, int ie) const   { return segment(ib, ie-ib); }
     template<typename U> Vec<U,n> cast() const {

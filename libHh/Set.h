@@ -60,7 +60,7 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
     const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
     const T& retrieve(const T& e) const         { auto i = _s.find(e); return i!=end() ? *i : def(); }
     const T& get(const T& e) const              { auto i = _s.find(e); ASSERTXX(i!=end()); return *i; }
-    const T& get_one() const                    { ASSERTXX(!empty()); return *begin(); }
+    const T& get_one() const                    { return (ASSERTXX(!empty()), *begin()); }
     const T& get_random(Random& r) const        { auto i = crand(r); return *i; }
     T remove_one()              { ASSERTXX(!empty()); T e = std::move(*begin()); _s.erase(begin()); return e; }
     T remove_random(Random& r)                  { auto i = crand(r); T e = std::move(*i); _s.erase(i); return e; }

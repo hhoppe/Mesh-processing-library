@@ -58,20 +58,20 @@ template<typename T> class CArrayView {
     void reinit(type a)                         { *this = a; }
     int num() const                             { return _n; }
     size_t size() const                         { return narrow_cast<size_t>(_n); }
-    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
+    const T& operator[](int i) const            { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
     const T& last() const                       { return (*this)[_n-1]; }
     bool ok(int i) const                        { return i>=0 && i<_n; }
     bool ok(const T* e) const                   { return ok(narrow_cast<int>(e-_a)); }
     bool map_inside(int& i, Bndrule bndrule) const; // ret: false if bndrule==Border and i is outside
-    const T& inside(int i, Bndrule bndrule) const { assertx(map_inside(i, bndrule)); return (*this)[i]; }
+    const T& inside(int i, Bndrule bndrule) const { return assertx(map_inside(i, bndrule)), (*this)[i]; }
     const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
-    bool contains(const T& e) const             { for_int(i, _n) { if (_a[i]==e) return true; } return false; }
-    int index(const T& e) const                 { for_int(i, _n) { if (_a[i]==e) return i; } return -1; }
+    bool contains(const T& e) const;
+    int index(const T& e) const;  // or -1 if not found
     bool operator==(type o) const;
     bool operator!=(type o) const               { return !(*this==o); }
     type head(int n) const                      { return segment(0, n); }
     type tail(int n) const                      { return segment(_n-n, n); }
-    type segment(int i, int s) const            { ASSERTXX(check(i, s)); return type(_a+i, s); }
+    type segment(int i, int s) const            { return (ASSERTXX(check(i, s)), type(_a+i, s)); }
     type slice(int ib, int ie) const            { return segment(ib, ie-ib); }
     using value_type = T;
     using iterator = const T*;
@@ -80,7 +80,7 @@ template<typename T> class CArrayView {
     const T* end() const                        { return _a+_n; }
     const T* data() const                       { return _a; }
  protected:
-    bool check(int i, int s) const { if (i>=0 && s>=0 && i+s<=_n) return true; SHOW(i, s, _n); return false; }
+    bool check(int i, int s) const;
     T* _a {nullptr};
     int _n {0};
     CArrayView()                                { }
@@ -100,19 +100,19 @@ template<typename T> class ArrayView : public CArrayView<T> {
     // ArrayView(std::vector<T>& a)             : base(a) { }
     // template<size_t n> ArrayView(std::array<T,n>& a) : base(a) { }
     void reinit(type a)                         { *this = a; }
-    T& operator[](int i)                        { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
-    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i]; }
+    T& operator[](int i)                        { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
+    const T& operator[](int i) const            { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
     T& last()                                   { return (*this)[_n-1]; }
     const T& last() const                       { return base::last(); }
-    T& inside(int i, Bndrule bndrule)             { assertx(map_inside(i, bndrule)); return (*this)[i]; }
-    const T& inside(int i, Bndrule bndrule) const { assertx(map_inside(i, bndrule)); return (*this)[i]; }
+    T& inside(int i, Bndrule bndrule)             { return assertx(map_inside(i, bndrule)), (*this)[i]; }
+    const T& inside(int i, Bndrule bndrule) const { return assertx(map_inside(i, bndrule)), (*this)[i]; }
     const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
     void assign(base ar);
     type head(int n)                            { return segment(0, n); }
     base head(int n) const                      { return base::head(n); }
     type tail(int n)                            { return segment(_n-n, n); }
     base tail(int n) const                      { return base::tail(n); }
-    type segment(int i, int n)                  { ASSERTXX(check(i, n)); return type(_a+i, n); }
+    type segment(int i, int n)                  { return (ASSERTXX(check(i, n)), type(_a+i, n)); }
     base segment(int i, int n) const            { return base::segment(i, n); }
     type slice(int ib, int ie)                  { return segment(ib, ie-ib); }
     base slice(int ib, int ie) const            { return base::slice(ib, ie); }
@@ -302,10 +302,25 @@ template<typename T> const T& CArrayView<T>::inside(int i, Bndrule bndrule, cons
     return (*this)[i];
 }
 
+template<typename T> bool CArrayView<T>::contains(const T& e) const {
+    for_int(i, _n) { if (_a[i]==e) return true; }
+    return false;
+}
+
+template<typename T> int CArrayView<T>::index(const T& e) const {
+    for_int(i, _n) { if (_a[i]==e) return i; }
+    return -1;
+}
+
 template<typename T> bool CArrayView<T>::operator==(type o) const {
     ASSERTX(_n==o._n);
     for_int(i, _n) { if (_a[i]!=o._a[i]) return false; }
     return true;
+}
+
+template<typename T> bool CArrayView<T>::check(int i, int s) const {
+    if (i>=0 && s>=0 && i+s<=_n) return true; SHOW(i, s, _n);
+    return false;
 }
 
 //----------------------------------------------------------------------------

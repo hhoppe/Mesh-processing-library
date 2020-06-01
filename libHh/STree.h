@@ -34,8 +34,8 @@ template<typename T, typename Less = std::less<T> > class STree : noncopyable {
     const T& succ(const T& e) const             { auto i = _s.upper_bound(e); return i!=end() ? *i : def(); }
     const T& pred_eq(const T& e) const          { auto i = _s.upper_bound(e); return i!=begin() ? *--i : def(); }
     const T& succ_eq(const T& e) const          { auto i = _s.lower_bound(e); return i!=end() ? *i : def(); }
-    const T& min() const                        { ASSERTXX(!empty()); return *begin(); }
-    const T& max() const                        { ASSERTXX(!empty()); return *--end(); }
+    const T& min() const                        { return (ASSERTXX(!empty()), *begin()); }
+    const T& max() const                        { return (ASSERTXX(!empty()), *--end()); }
     using value_type = T;
     using iterator = typename base::iterator;
     using const_iterator = typename base::const_iterator;

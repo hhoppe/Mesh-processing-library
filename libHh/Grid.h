@@ -98,7 +98,7 @@ template<int D, typename T> class CGridView {
     typename details::Grid_aux<D,T>::CRet operator[](int r) const;
     template<int n> typename details::Grid_aux<D-n+1,T>::CRet operator[](const Vec<int,n>& u) const;
     template<typename... A> const T& operator()(A... dd) const; // dd... are int
-    const T& flat(size_t i) const               { ASSERTXX(i<size()); return _a[i]; }
+    const T& flat(size_t i) const               { return (ASSERTXX(i<size()), _a[i]); }
     bool ok(const Vec<int,D>& u) const {
         for_int(c, D) { if (u[c]<0 || u[c]>=_dims[c]) return false; } return true;
     }
@@ -157,7 +157,7 @@ template<int D, typename T> class GridView : public CGridView<D,T> {
     template<int n> typename details::Grid_aux<D-n+1,T>::CRet operator[](const Vec<int,n>& u) const;
     template<typename... A> T& operator()(A... dd); // dd... are int
     template<typename... A> const T& operator()(A... dd) const;
-    T&       flat(size_t i)                     { ASSERTXX(i<size()); return _a[i]; }
+    T&       flat(size_t i)                     { return (ASSERTXX(i<size()), _a[i]); }
     const T& flat(size_t i) const               { return base::flat(i); }
     using base::map_inside;
     T& inside(const Vec<int,D>& u, const Vec<Bndrule,D>& bndrules) {
@@ -272,8 +272,7 @@ template<int D, typename T, typename Func> auto map(CGridView<D,T>& c, Func func
 namespace details {
 inline constexpr size_t ravel_index_aux2(std::pair<int,int> p) { return p.second; }
 template<typename... P> constexpr size_t ravel_index_aux2(std::pair<int,int> p0, P... ps) {
-    return (ASSERTXX(p0.second>=0 && p0.second<p0.first),
-            ravel_index_aux2(ps...)*p0.first+p0.second);
+    return (ASSERTXX(p0.second>=0 && p0.second<p0.first), ravel_index_aux2(ps...)*p0.first+p0.second);
 }
 
 template<int D, size_t... Is>

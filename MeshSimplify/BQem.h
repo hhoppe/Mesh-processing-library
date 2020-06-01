@@ -39,8 +39,8 @@ template<typename T, int n> class DQem : public BQem<T> {
     using base = BQem<T>;
  public:
     void set_zero() override { _q.set_zero(); }
-    void copy(const base& qem) override         { ASSERTXX(check(qem)); _q = static_cast<const type&>(qem)._q; }
-    void add(const base& qem) override          { ASSERTXX(check(qem)); _q.add(static_cast<const type&>(qem)._q); }
+    void copy(const base& qem) override         { ASSERTXX(check(qem)), _q = static_cast<const type&>(qem)._q; }
+    void add(const base& qem) override          { ASSERTXX(check(qem)), _q.add(static_cast<const type&>(qem)._q); }
     void scale(float f) override                { _q.scale(f); }
     void set_d2_from_plane(const float* dir, float d) override { _q.set_d2_from_plane(dir, d); }
     void set_d2_from_point(const float* p0) override { _q.set_d2_from_point(p0); }

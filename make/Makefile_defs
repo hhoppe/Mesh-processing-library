@@ -19,7 +19,7 @@ endef
 is_mswin ?= $(if $(WINDIR)$(windir),1,)#  check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows
 is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  running under Cygwin?
 is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  running under Msys?
-is_mac := $(call file_exists,/Applications/Launchpad.app)#  running on Mac OS?
+is_mac := $(call file_exists,/.DS_Store)#  running on Mac OS?
 
 ifeq ($(HhRoot),)
   $(warning HhRoot variable not set; set to default value of "..")

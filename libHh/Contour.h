@@ -339,7 +339,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
     using base::D; using base::compute_point; using base::_eval; using base::decode;
     GMesh* _pmesh;
     bool _big_mesh_faces {false};
-    static int mod4(int j)                      { ASSERTX(j>=0); return j&0x3; }
+    static int mod4(int j)                      { return (ASSERTX(j>=0), j&0x3); }
     void contour_cube(const IPoint& cc, const Node222& na) {
         // Based on Wyvill et al.
         dummy_use(cc);

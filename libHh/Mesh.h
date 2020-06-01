@@ -129,14 +129,14 @@ class Mesh : noncopyable {
     bool is_boundary(Edge e) const              { return !herep(e)->_sym; }
     Vertex vertex1(Edge e) const                { return herep(e)->_prev->_vert; }
     Vertex vertex2(Edge e) const                { return herep(e)->_vert; }
-    Vertex vertex(Edge e, int i) const          { ASSERTX(i==0 || i==1); return i==0 ? vertex1(e) : vertex2(e); }
+    Vertex vertex(Edge e, int i) const          { return (ASSERTX(i==0 || i==1), i==0 ? vertex1(e) : vertex2(e)); }
     Face face1(Edge e) const                    { return herep(e)->_face; }
     Face face2(Edge e) const                    { HEdge he = herep(e); return he->_sym ? he->_sym->_face : nullptr; }
-    Face face(Edge e, int i) const              { ASSERTX(i==0 || i==1); return i==0 ? face1(e) : face2(e); }
+    Face face(Edge e, int i) const              { return (ASSERTX(i==0 || i==1), i==0 ? face1(e) : face2(e)); }
     // i==0 or i==1; ret nullptr if i==1 && is_boundary(e)
     Vertex side_vertex1(Edge e) const           { return opp_vertex(e, face1(e)); } // is_triangle(face1())
     Vertex side_vertex2(Edge e) const           { return face2(e) ? opp_vertex(e, face2(e)) : nullptr; }
-    Vertex side_vertex(Edge e, int i) const { ASSERTX(i==0 || i==1); return !i ? side_vertex1(e) : side_vertex2(e); }
+    Vertex side_vertex(Edge e, int i) const { return (ASSERTX(i==0 || i==1), !i ? side_vertex1(e) : side_vertex2(e)); }
     Vertex opp_vertex(Edge e, Face f) const;   // is_triangle(f)
     Edge opp_boundary(Edge e, Vertex v) const; // is_boundary(e)
     Edge clw_boundary(Edge e) const             { return opp_boundary(e, vertex2(e)); } // is_boundary(e)
@@ -288,7 +288,7 @@ class Mesh : noncopyable {
             next();
         }
         bool operator!=(const Edges_iterator& rhs) const { return _hcur!=rhs._hcur || _vcur!=rhs._vcur; }
-        Edge operator*() const                  { ASSERTX(_hcur!=_hend); return (*_hcur)->_edge; }
+        Edge operator*() const                  { return (ASSERTX(_hcur!=_hend), (*_hcur)->_edge); }
         Edges_iterator& operator++()            { ASSERTX(_hcur!=_hend); ++_hcur; next(); return *this; }
      private:
         CArrayView<HEdge>::iterator _hcur {nullptr} , _hend {nullptr}; // _hcur points at current element

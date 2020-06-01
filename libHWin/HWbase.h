@@ -39,15 +39,15 @@ class HWbase : noncopyable {
     virtual void input_received()               { }
 
     // call after init() but before open():
-    void set_default_background(string s)       { assertx(_state==EState::init); _default_background = std::move(s); }
-    void set_default_foreground(string s)       { assertx(_state==EState::init); _default_foreground = std::move(s); }
-    void set_default_geometry(string s)         { assertx(_state==EState::init); _default_geometry = std::move(s); }
+    void set_default_background(string s)       { assertx(_state==EState::init), _default_background = std::move(s); }
+    void set_default_foreground(string s)       { assertx(_state==EState::init), _default_foreground = std::move(s); }
+    void set_default_geometry(string s)         { assertx(_state==EState::init), _default_geometry = std::move(s); }
     virtual void set_double_buffering(bool newstate) = 0; // (also allowed after open() in HWX without HH_OGLX)
 
     // call anytime after init():
     virtual void set_window_title(string s) = 0; // set text for window title bar
     virtual void beep() = 0;
-    void watch_fd0(bool b)                      { assertx(_state!=EState::uninit); _watch_fd0 = b; }
+    void watch_fd0(bool b)                      { assertx(_state!=EState::uninit), _watch_fd0 = b; }
     void redraw_later();
     void redraw_now();
     void quit()                                 { _update = EUpdate::quit; }

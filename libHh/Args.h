@@ -39,7 +39,7 @@ class Args {
     size_t size() const                         { return _args.size()-_iarg; }
     void restart()                              { _iarg = 0; }
     void ensure_at_least(int n); // assert num()>=n
-    const string& peek_string() const           { assertx(num()>0); return _args[_iarg]; }
+    const string& peek_string() const           { return (assertx(num()>0), _args[_iarg]); }
     bool          get_bool();
     char          get_char();
     int           get_int();
@@ -66,7 +66,7 @@ class Args {
     friend class ParseArgs;
     Array<string> _args;        // (_args[0] corresponds to argv[1])
     int _iarg {0};              // next argument in _args
-    const string& shift_args()                  { assertx(num()>0); return _args[_iarg++]; }
+    const string& shift_args()                  { return (assertx(num()>0), _args[_iarg++]); }
     Args& operator=(const Args&)                = default; // used in friend ParseArgs: copy_parse()
     Args()                                      = default; // used in friend ParseArgs
     Args(const Args&)                           = delete;  // not noncopyable because operator=() is defined above

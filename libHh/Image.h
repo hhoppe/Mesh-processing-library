@@ -44,7 +44,7 @@ class Image : public Matrix<Pixel> {
     Image(Image&& m) noexcept                   { swap(*this, m); }
     Image(base&& m) noexcept                    { swap(implicit_cast<base&>(*this), m); }
     Image& operator=(Image&& image) noexcept    { clear(); swap(*this, image); return *this; }
-    void operator=(base&& image)                { clear(); swap(implicit_cast<base&>(*this), image); }
+    void operator=(base&& image)                { clear(), swap(implicit_cast<base&>(*this), image); }
     Image& operator=(const Image&)              = default;
     void operator=(CMatrixView<Pixel> image)    { base::assign(image); }
     void init(const Vec2<int>& pdims)           { base::init(pdims); }
@@ -198,7 +198,7 @@ class CNv12View {
     }
     CNv12View(const Nv12& nv12)                 : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) { }
     CNv12View(const Nv12View& nv12v)            : _mat_Y(nv12v.get_Y()), _mat_UV(nv12v.get_UV()) { }
-    void reinit(CNv12View nv12v)                { _mat_Y.reinit(nv12v.get_Y()); _mat_UV.reinit(nv12v.get_UV()); }
+    void reinit(CNv12View nv12v)                { _mat_Y.reinit(nv12v.get_Y()), _mat_UV.reinit(nv12v.get_UV()); }
     CMatrixView<uint8_t> get_Y() const          { return _mat_Y; }
     CMatrixView<Vec2<uint8_t>> get_UV() const   { return _mat_UV; }
  private:

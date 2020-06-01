@@ -18,7 +18,7 @@ class Quaternion {
     explicit Quaternion(const Vector& axis, float angle);
     explicit Quaternion(const Vector& vf, const Vector& vt); // resulting quaternion is 2 times rotation from vf to vt!
     Quaternion& operator=(const Quaternion&)    = default;
-    void zero()                                 { _c[0] = _c[1] = _c[2] = 0.f; _c[3] = 1.f; }
+    void zero()                                 { _c[0] = _c[1] = _c[2] = 0.f, _c[3] = 1.f; }
     // extraction
     void angle_axis(float& angle, Vector& axis) const;
     float angle() const;

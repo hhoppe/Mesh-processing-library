@@ -63,7 +63,7 @@ template<typename T> class CArrayView {
     bool ok(int i) const                        { return i>=0 && i<_n; }
     bool ok(const T* e) const                   { return ok(narrow_cast<int>(e-_a)); }
     bool map_inside(int& i, Bndrule bndrule) const; // ret: false if bndrule==Border and i is outside
-    const T& inside(int i, Bndrule bndrule) const { return assertx(map_inside(i, bndrule)), (*this)[i]; }
+    const T& inside(int i, Bndrule bndrule) const { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
     const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
     bool contains(const T& e) const;
     int index(const T& e) const;  // or -1 if not found
@@ -104,8 +104,8 @@ template<typename T> class ArrayView : public CArrayView<T> {
     const T& operator[](int i) const            { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
     T& last()                                   { return (*this)[_n-1]; }
     const T& last() const                       { return base::last(); }
-    T& inside(int i, Bndrule bndrule)             { return assertx(map_inside(i, bndrule)), (*this)[i]; }
-    const T& inside(int i, Bndrule bndrule) const { return assertx(map_inside(i, bndrule)), (*this)[i]; }
+    T& inside(int i, Bndrule bndrule)             { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
+    const T& inside(int i, Bndrule bndrule) const { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
     const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
     void assign(base ar);
     type head(int n)                            { return segment(0, n); }
@@ -173,12 +173,12 @@ template<typename T> class Array : public ArrayView<T> {
     Array(type&& ar) noexcept                   : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr; }
     template<typename I> explicit Array(I b, I e) : Array() { for (; b!=e; ++b) push(*b); }
     template<typename R, typename = enable_if_range_t<R> > explicit Array(R&& range);
-    ~Array()                                    { delete[] _a; if (0) _a = nullptr; }
+    ~Array()                                    { delete[] _a; }
     type& operator=(CArrayView<T> ar)           { init(ar.num()); base::assign(ar); return *this; }
     type& operator=(const type& ar)             { init(ar.num()); base::assign(ar); return *this; }
     type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
     type& operator=(type&& ar) noexcept         { clear(); swap(*this, ar); return *this; }
-    void clear()                                { if (_a) { delete[] _a; _a = nullptr; _n = 0; _cap = 0; } }
+    void clear()                                { if (_a) { delete[] _a; _a = nullptr, _n = 0, _cap = 0; } }
     void init(int n);           // allocate n, DISCARD old values if too small
     void init(int n, const T& v)                { init(n); for_int(i, n) _a[i] = v; }
     void resize(int n);         // allocate n, RETAIN old values (using move if too small)
@@ -188,8 +188,8 @@ template<typename T> class Array : public ArrayView<T> {
     void shrink_to_fit()                        { if (_n<_cap) set_capacity(_n); }
     void reserve(int s)                         { ASSERTX(s>=0); if (_cap<s) set_capacity(s); }
     int capacity() const                        { return _cap; }
-    void insert(int i, int n)                   { ASSERTX(i>=0 && i<=_n); insert_i(i, n); }
-    void erase(int i, int n)                    { ASSERTX(i>=0 && n>=0 && i+n<=_n); erase_i(i, n); }
+    void insert(int i, int n)                   { ASSERTX(i>=0 && i<=_n), insert_i(i, n); }
+    void erase(int i, int n)                    { ASSERTX(i>=0 && n>=0 && i+n<=_n), erase_i(i, n); }
     void erase(T* b, T* e)                      { erase(narrow_cast<int>(b-base::begin()), narrow_cast<int>(e-b)); }
     bool remove_ordered(const T& e);   // ret: was there
     bool remove_unordered(const T& e); // ret: was there
@@ -202,8 +202,8 @@ template<typename T> class Array : public ArrayView<T> {
     void push_array(std::initializer_list<T> l) { push_array(CArrayView<T>(l)); }
     T shift()                                   { ASSERTX(_n); T e = std::move(_a[0]); erase_i(0, 1); return e; }
     type shift(int n);
-    void unshift(const T& e)            { insert_i(0, 1); _a[0] = e; }
-    void unshift(T&& e)                 { insert_i(0, 1); _a[0] = std::move(e); }
+    void unshift(const T& e)            { insert_i(0, 1), _a[0] = e; }
+    void unshift(T&& e)                 { insert_i(0, 1), _a[0] = std::move(e); }
     void unshift(CArrayView<T> ar)      { int n = ar.num(); insert_i(0, n); for_int(i, n) _a[i] = ar[i]; }
     void unshift(type&& ar)             { int n = ar.num(); insert_i(0, n); for_int(i, n) _a[i] = std::move(ar[i]); }
     friend void swap(Array& l, Array& r) noexcept {

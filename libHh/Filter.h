@@ -72,7 +72,7 @@ class FilterBnd {
     const Filter& filter() const                { return *_filter; }
     Bndrule bndrule() const                     { return _bndrule; }
     void set_filter(const Filter& pfilter)      { _filter = &pfilter; }
-    void set_bndrule(Bndrule pbndrule)          { _bndrule = pbndrule; assertx(_bndrule!=Bndrule::undefined); }
+    void set_bndrule(Bndrule pbndrule)          { _bndrule = pbndrule, assertx(_bndrule!=Bndrule::undefined); }
     // Given a filtertype, return an evaluation function and its support radius (centered about origin).
     const LUfactorization& lu_factorization() const;
     // Given old size cx and new size cx, for each new index i compute the interval of weights on old values

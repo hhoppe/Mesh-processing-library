@@ -38,7 +38,7 @@ class Audio : public Grid<2,float> {
     Audio(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
     ~Audio()                                    { }
     Audio& operator=(Audio&& v) noexcept        { clear(); swap(*this, v); return *this; }
-    void operator=(base&& v)                    { clear(); swap(implicit_cast<base&>(*this), v); }
+    void operator=(base&& v)                    { clear(), swap(implicit_cast<base&>(*this), v); }
     Audio& operator=(const Audio&)              = default;
     void operator=(CGridView<2,float> audio)    { base::assign(audio); }
     void init(const Vec2<int>& dims)            { base::init(dims); }

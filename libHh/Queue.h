@@ -24,10 +24,10 @@ template<typename T> class Queue {
     void enqueue(const T& e)                    { _dq.push_back(e); }
     void enqueue(T&& e)                         { _dq.push_back(std::move(e)); }
     T dequeue()                                 { T e = std::move(front()); _dq.pop_front(); return e; }
-    T& front()                                  { ASSERTX(!empty()); return _dq.front(); }
-    const T& front() const                      { ASSERTX(!empty()); return _dq.front(); }
-    T& rear()                                   { ASSERTX(!empty()); return _dq.back(); }
-    const T& rear() const                       { ASSERTX(!empty()); return _dq.back(); }
+    T& front()                                  { return (ASSERTX(!empty()), _dq.front()); }
+    const T& front() const                      { return (ASSERTX(!empty()), _dq.front()); }
+    T& rear()                                   { return (ASSERTX(!empty()), _dq.back()); }
+    const T& rear() const                       { return (ASSERTX(!empty()), _dq.back()); }
     void insert_first(const T& e)               { _dq.push_front(e); }
     void insert_first(T&& e)                    { _dq.push_front(std::move(e)); }
     bool empty() const                          { return _dq.empty(); }

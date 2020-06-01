@@ -24,7 +24,7 @@ class HiddenLineRemoval {
     bool draw_point(const Point& p)                     { return draw_point_i(p); }   // ret: is_visible
     void set_draw_seg_cb(draw_seg_type func)            { _func_draw_seg_cb = func; } // could be templated
     void draw_segment(const Point& p1, const Point& p2) { HlrSegment s(p1, p2); render_seg_kd(s, 0); }
-    void clear()                                        { _polygons.clear(); _kd.clear(); }
+    void clear()                                        { _polygons.clear(), _kd.clear(); }
  private:
     struct HlrPolygon {
         Polygon p;

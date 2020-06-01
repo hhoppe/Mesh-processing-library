@@ -20,7 +20,7 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
     explicit PArray(CArrayView<T> ar)           : PArray() { *this = ar; }
     PArray(PArray<T,pcap>&& ar)                 : PArray() { *this = std::move(ar); }
     PArray(std::initializer_list<T> l)          : PArray(CArrayView<T>(l)) { }
-    ~PArray()                                   { if (_cap!=pcap) { delete[] _a; if (0) _a = nullptr; } }
+    ~PArray()                                   { if (_cap!=pcap) { delete[] _a; } }
     PArray<T,pcap>& operator=(CArrayView<T> ar) {
         if (!(ar.data()==_a && ar.num()==_n)) {
             init(ar.num()); std::copy(ar.begin(), ar.end(), _a);
@@ -65,8 +65,8 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
     void shrink_to_fit()                { if (_n<_cap) set_capacity(_n); }
     void reserve(int s)                 { ASSERTX(s>=0); if (_cap<s) set_capacity(s); }
     int capacity() const                { return _cap; }
-    void insert(int i, int n)           { ASSERTX(i>=0 && i<=_n); insert_i(i, n); }
-    void erase(int i, int n)            { ASSERTX(i>=0 && n>=0 && i+n<=_n); erase_i(i, n); }
+    void insert(int i, int n)           { ASSERTX(i>=0 && i<=_n), insert_i(i, n); }
+    void erase(int i, int n)            { ASSERTX(i>=0 && n>=0 && i+n<=_n), erase_i(i, n); }
     bool remove_ordered(const T& e) { // ret: was there
         for_int(i, _n) { if (_a[i]==e) { erase(i, 1); return true; } }
         return false;
@@ -86,8 +86,8 @@ template<typename T, int pcap> class PArray : public ArrayView<T> { // Pre-alloc
     void push(CArrayView<T> ar)         { int n = ar.num(); add(n); for_int(i, n) _a[_n-n+i] = ar[i]; }
     void push(type&& ar)                { int n = ar.num(); add(n); for_int(i, n) _a[_n-n+i] = std::move(ar[i]); }
     T shift()                           { ASSERTX(_n); T e = std::move(_a[0]); erase_i(0, 1); return e; }
-    void unshift(const T& e)            { insert_i(0, 1); _a[0] = e; }
-    void unshift(T&& e)                 { insert_i(0, 1); _a[0] = std::move(e); }
+    void unshift(const T& e)            { insert_i(0, 1), _a[0] = e; }
+    void unshift(T&& e)                 { insert_i(0, 1), _a[0] = std::move(e); }
     void unshift(CArrayView<T> ar)      { int n = ar.num(); insert_i(0, n); for_int(i, n) _a[i] = ar[i]; }
     void unshift(type&& ar)             { int n = ar.num(); insert_i(0, n); for_int(i, n) _a[i] = std::move(ar[i]); }
     friend void swap(PArray<T,pcap>& l, PArray<T,pcap>& r) noexcept {

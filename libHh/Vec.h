@@ -220,7 +220,7 @@ template<int D> class Vec_iterator {
         ASSERTXX(rhs._u[0]==_uU[0]);
         return _u[0]<_uU[0];    // quick check against usual end()
     }
-    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
+    const Vec<int,D>& operator*() const         { return (ASSERTX(_u[0]<_uU[0]), _u); }
     type& operator++() {
         static_assert(D>0, "");
         ASSERTXX(_u[0]<_uU[0]);
@@ -268,7 +268,7 @@ template<int D> class VecL_iterator {
         ASSERTX(rhs._u[0]==_uU[0]);
         return _u[0]<_uU[0];    // quick check against usual end()
     }
-    const Vec<int,D>& operator*() const         { ASSERTX(_u[0]<_uU[0]); return _u; }
+    const Vec<int,D>& operator*() const         { return (ASSERTX(_u[0]<_uU[0]), _u); }
     type& operator++() {
         ASSERTX(_u[0]<_uU[0]);
         for (int c = D-1; c>0; --c) {

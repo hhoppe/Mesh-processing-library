@@ -108,8 +108,8 @@ class Vnors {
     enum class EType { unspecified, angle, sum, area, sloan, subdiv };
     void compute(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
     bool is_unique() const                      { return !_mfnor; }
-    const Vector& unique_nor() const            { ASSERTX(is_unique()); return _nor; }
-    const Vector& face_nor(Face f) const        { ASSERTX(!is_unique()); return _mfnor->get(f); }
+    const Vector& unique_nor() const            { return (ASSERTX(is_unique()), _nor); }
+    const Vector& face_nor(Face f) const        { return (ASSERTX(!is_unique()), _mfnor->get(f)); }
     const Vector& get_nor(Face f) const         { return _mfnor ? _mfnor->get(f) : _nor; } // in any case
     void clear();
  private:

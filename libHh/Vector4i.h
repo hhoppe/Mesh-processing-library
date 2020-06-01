@@ -14,8 +14,8 @@ class Vector4i {
  public:
     Vector4i()                                          = default; // could be: { fill(0); }
     explicit Vector4i(int j)                            { fill(j); }
-    int& operator[](int i)                              { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
-    const int& operator[](int i) const                  { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
+    int& operator[](int i)                              { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
+    const int& operator[](int i) const                  { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
     Vector4i with(int i, int j) const           { HH_CHECK_BOUNDS(i, 4); Vector4i v = *this; v[i] = j; return v; }
     friend Vector4i operator-(const Vector4i& l)        { return Vector4i(0)-l; }
     using value_type = int;
@@ -98,7 +98,7 @@ class Vector4i {
 #elif defined(HH_VECTOR4_NEON)
     // TODO: implement these as Neon intrinsics.
     Vector4i(const Vector4i& v)                         { for_int(c, 4) { _c[c] = v._c[c]; } }
-    Vector4i(int x, int y, int z, int w)                { _c[0] = x; _c[1] = y; _c[2] = z; _c[3] = w; }
+    Vector4i(int x, int y, int z, int w)                { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
     explicit Vector4i(const Pixel& pix)                 { for_int(c, 4) { _c[c] = pix[c]; } }
     Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uint8(_c[c]); } return v; }
     void load_unaligned(const int* pSrc)                { for_int(c, 4) { _c[c] = pSrc[c]; } }
@@ -153,7 +153,7 @@ class Vector4i {
     
 #else  // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
     Vector4i(const Vector4i& v)                         { for_int(c, 4) { _c[c] = v._c[c]; } }
-    Vector4i(int x, int y, int z, int w)                { _c[0] = x; _c[1] = y; _c[2] = z; _c[3] = w; }
+    Vector4i(int x, int y, int z, int w)                { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
     explicit Vector4i(const Pixel& pix)                 { for_int(c, 4) { _c[c] = pix[c]; } }
     Pixel pixel() const                         { Pixel v; for_int(c, 4) { v[c] = clamp_to_uint8(_c[c]); } return v; }
     void load_unaligned(const int* pSrc)                { for_int(c, 4) { _c[c] = pSrc[c]; } }

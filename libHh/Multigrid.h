@@ -129,7 +129,7 @@ class Multigrid : noncopyable {
         _mean_orig = mean(grid_orig);
         set_desired_mean(_mean_orig);
     }
-    void set_desired_mean(const Precise& v)     { _mean_desired = v; _have_mean_desired = true; }
+    void set_desired_mean(const Precise& v)     { _mean_desired = v, _have_mean_desired = true; }
     void set_num_vcycles(int v)                 { _num_vcycles = v; }
     GridView<D,T>& rhs()                        { return _grid_rhs; } // set right-hand-side constraints
     GridView<D,T>& initial_estimate()           { return _grid_result; } // should be set!

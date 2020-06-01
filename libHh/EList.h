@@ -55,7 +55,7 @@ class EListNode : noncopyable {
 //  but then the EListNode by itself does not provide an efficient way to detect to which list the node belongs.
 class EList {
  public:
-    EList()                                     { _delim._prev = &_delim; _delim._next = &_delim; }
+    EList()                                     { _delim._prev = &_delim, _delim._next = &_delim; }
     ~EList()                                    { if (delim()->next()!=delim()) Warning("~EList(): not empty"); }
     EListNode* delim()                          { return &_delim; }
     const EListNode* delim() const              { return &_delim; }

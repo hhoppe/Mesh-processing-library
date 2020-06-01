@@ -251,7 +251,7 @@ template<int D, typename T> class Grid : public GridView<D,T> {
     void init(const Vec<int,D>& dims, const T& v) { init(dims); fill(*this, v); }
     void clear()                                { if (_a) init(ntimes<D>(0)); }
     friend void swap(Grid& l, Grid& r) noexcept { using std::swap; swap(l._a, r._a); swap(l._dims, r._dims); }
-    void special_reduce_dim0(int i)             { assertx(i>=0 && i<=_dims[0]); _dims[0] = i; }
+    void special_reduce_dim0(int i)             { assertx(i>=0 && i<=_dims[0]), _dims[0] = i; }
     // (must declare template parameters because these functions access private _a of <D-1,T> and <D+1,T>)
     template<int DD, typename TT> friend Grid<DD-1,TT> reduce_grid_rank(Grid<DD,TT>&& grid);
     template<int DD, typename TT> friend Grid<DD+1,TT> increase_grid_rank(Grid<DD,TT>&& grid);

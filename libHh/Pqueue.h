@@ -120,7 +120,7 @@ template<typename T, typename Hash = std::hash<T>, typename Equal = std::equal_t
     const T& min() const                        { return (ASSERTXX(!empty()), _ar[0]._e); }
     float min_priority() const                  { return (ASSERTXX(!empty()), _ar[0]._pri); }
     T remove_min()                              { return (ASSERTXX(!empty()), remove_min_i()); }
-    void enter_unsorted(const T& e, float pri)  { ASSERTX(pri>=0); _m.enter(e, num()); _ar.push(Node(e, pri)); }
+    void enter_unsorted(const T& e, float pri)  { ASSERTX(pri>=0), _m.enter(e, num()), _ar.push(Node(e, pri)); }
     void sort()                                 { return sort_i(); }
     bool contains(const T& e) const             { return _m.contains(e); }
     float retrieve(const T& e) const            { bool b; int i = _m.retrieve(e, b); return b ? _ar[i]._pri : -1.f; }

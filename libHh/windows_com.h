@@ -16,7 +16,7 @@ template<typename T> class com_ptr;
 template<typename T> class com_ptr_ref {
  public:
     com_ptr_ref(com_ptr<T>& cp)                 : _cp(cp) { assertx(!_cp); }
-    ~com_ptr_ref()                              { assertx(!_cp); _cp.reset(_p); }
+    ~com_ptr_ref()                              { assertx(!_cp), _cp.reset(_p); }
     operator T**()                              { assertx(!_num++); assertx(!_p); return &_p; }
  private:
     com_ptr<T>& _cp;

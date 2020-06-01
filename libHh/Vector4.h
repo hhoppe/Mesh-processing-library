@@ -56,8 +56,8 @@ class Vector4 {
     explicit Vector4(float v)                           { fill(v); }
     explicit Vector4(const Pixel& pix)                  { *this = to_Vector4_norm(pix.data()); }
     explicit Vector4(const Vec4<float>& a)              { load_unaligned(a.data()); }
-    float& operator[](int i)                            { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
-    const float& operator[](int i) const                { HH_CHECK_BOUNDS(i, 4); return _c[i]; }
+    float& operator[](int i)                            { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
+    const float& operator[](int i) const                { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
     Vector4 with(int i, float f) const          { HH_CHECK_BOUNDS(i, 4); Vector4 v = *this; v[i] = f; return v; }
     void raw_to_byte4(uint8_t p[4]) const;  // maps from [0.f, 255.999f] to uint8 using truncation, without clamping
     void norm_to_byte4(uint8_t p[4]) const;  // maps from [0.f, 1.f]     to uint8 using rounding and clamping
@@ -184,7 +184,7 @@ class Vector4 {
     }
 #else  // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
     Vector4(const Vector4& v)                           { for_int(c, 4) { _c[c] = v._c[c]; } }
-    Vector4(float x, float y, float z, float w)         { _c[0] = x; _c[1] = y; _c[2] = z; _c[3] = w; }
+    Vector4(float x, float y, float z, float w)         { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
     void load_unaligned(const float* pSrc)              { for_int(c, 4) { _c[c] = pSrc[c]; } }
     void store_unaligned(float* pDst) const             { for_int(c, 4) { pDst[c] = _c[c]; } }
     void load_aligned(const float* pSrc)                { for_int(c, 4) { _c[c] = pSrc[c]; } }

@@ -21,7 +21,7 @@ class Postscript : noncopyable {
         set_state(EState::undef); set_state(EState::line);
         _os << sform("wline%s setlinewidth\n", _curw==1.f ? "" : sform(" %g mul", _curw).c_str());
     }
-    void flush_write(const string& s)           { set_state(EState::undef); _os << s; } // include linefeeds in s
+    void flush_write(const string& s)           { set_state(EState::undef), _os << s; } // include linefeeds in s
  private:
     static constexpr int k_max = 15000;
     std::ostream& _os;

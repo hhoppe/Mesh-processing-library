@@ -22,8 +22,8 @@ template<int n> class VectorF : Vec<Vector4, n/4>, Vec<float, n%4> {
     VectorF(const VectorF<n>&)                  = default;
     constexpr int num() const                   { return n; }
     constexpr size_t size() const               { return n; }
-    float& operator[](int i)                    { HH_CHECK_BOUNDS(i, n); return data()[i]; }
-    const float& operator[](int i) const        { HH_CHECK_BOUNDS(i, n); return data()[i]; }
+    float& operator[](int i)                    { return (HH_CHECK_BOUNDS(i, n), data()[i]); }
+    const float& operator[](int i) const        { return (HH_CHECK_BOUNDS(i, n), data()[i]); }
     static bool ok(int i)                       { return i>=0 && i<n; }
     void load_unaligned(const float* pSrc) {
         for_int(j, m) for_int(c, 4) { a()[j][c] = *pSrc++; }

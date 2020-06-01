@@ -92,7 +92,7 @@ class VideoNv12 : noncopyable {
     CGridView<3, Vec2<uint8_t>> get_UV() const  { return _grid_UV; }
     void read_file(const string& filename, Video::Attrib* pattrib = nullptr); // may throw std::runtime_error
     void write_file(const string& filename, const Video::Attrib& attrib) const; // may throw std::runtime_error
-    void special_reduce_dim0(int i)             { _grid_Y.special_reduce_dim0(i); _grid_UV.special_reduce_dim0(i); }
+    void special_reduce_dim0(int i)             { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
  private:
     Grid<3,uint8_t> _grid_Y;             // luminance
     Grid<3, Vec2<uint8_t>> _grid_UV;     // chroma at half the spatial resolution

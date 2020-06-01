@@ -23,7 +23,7 @@ class Flags {
     Flag flag(FlagMask fmask);
     bool flag(FlagMask fmask) const             { return (_flags&fmask)!=0; }
     friend void swap(Flags& l, Flags& r) noexcept { std::swap(l._flags, r._flags); }
-    static FlagMask allocate(int& counter)      { assertx(counter<max_nflags); return 1u<<(counter++); }
+    static FlagMask allocate(int& counter)      { return (assertx(counter<max_nflags), 1u<<(counter++)); }
  private:
     type _flags {0};
     friend Flag;

@@ -142,7 +142,7 @@ class objects {
     static constexpr int MAX = 2048;
     objects()                                   { for_int(i, MAX) _ob[i]._obn = i; }
     bool legal(int obn)                         { return obn>=0 && obn<MAX; }
-    object& operator[](int obn)                 { assertx(legal(obn)); return _ob[obn]; }
+    object& operator[](int obn)                 { return (assertx(legal(obn)), _ob[obn]); }
     void copy(int obf, int obt);
     int first {1};              // 0 if object 0 is defined using -eyeob
     int last {0};               // last object number defined

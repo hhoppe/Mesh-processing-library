@@ -26,7 +26,7 @@ template<typename T> class CStridedArrayView {
     CStridedArrayView(const type& a)            = default;
     int num() const                             { return _n; }
     size_t size() const                         { return _n; }
-    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }
+    const T& operator[](int i) const            { return (HH_CHECK_BOUNDS(i, _n), _a[i*_stride]); }
     const T& last() const                       { return (*this)[_n-1]; }
     bool ok(int i) const                        { return i>=0 && i<_n; }
     using value_type = T;
@@ -77,8 +77,8 @@ template<typename T> class StridedArrayView : public CStridedArrayView<T> {
  public:
     explicit StridedArrayView(T* a, int n, size_t stride) : base(a, n, stride) { }
     StridedArrayView(const type& a)             = default;
-    T& operator[](int i)                        { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }
-    const T& operator[](int i) const            { HH_CHECK_BOUNDS(i, _n); return _a[i*_stride]; }
+    T& operator[](int i)                        { return (HH_CHECK_BOUNDS(i, _n), _a[i*_stride]); }
+    const T& operator[](int i) const            { return (HH_CHECK_BOUNDS(i, _n), _a[i*_stride]); }
     T& last()                                   { return (*this)[_n-1]; }
     const T& last() const                       { return base::last(); }
     class iterator {

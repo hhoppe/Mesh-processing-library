@@ -13,8 +13,8 @@ class Mk3d : noncopyable {
     explicit Mk3d(WA3dStream& pos);
     ~Mk3d();
     WA3dStream& oa3d()                          { return _os; }
-    void push()                                 { _stack_frame.push(_ctm); _stack_framei.push(_ctmi); }
-    void pop()                                  {_ctm = _stack_frame.pop(); _ctmi = _stack_framei.pop();}
+    void push()                                 { _stack_frame.push(_ctm), _stack_framei.push(_ctmi); }
+    void pop()                                  { _ctm = _stack_frame.pop(), _ctmi = _stack_framei.pop();}
     template<typename Func> void save(Func func) { push(); func(); pop(); }
     void translate(float x, float y, float z)   { translate(Vector(x, y, z)); }
     void translate(const Vector& v)             { apply(Frame::translation(v)); }
@@ -22,12 +22,12 @@ class Mk3d : noncopyable {
     void rotate(int axis, float angle)          { apply(Frame::rotation(axis, angle)); }
     void scale(float x, float y, float z);
     void scale(float v)                         { scale(v, v, v); }
-    void apply(const Frame& t)                  { _ctm = t*_ctm; _ctmi = inverse(_ctm); }
+    void apply(const Frame& t)                  { _ctm = t*_ctm, _ctmi = inverse(_ctm); }
     Point transform(const Point& point)         { return point*_ctm; }
     Vector transform(const Vector& normal)      { return _ctmi*normal; }
     void push_color()                           { _stack_color.push(_cc); }
-    void pop_color()                            { assertx(!_stack_color.empty()); _cc = _stack_color.pop(); }
-    template<typename Func> void save_color(Func func) { push_color(); func(); pop_color(); }
+    void pop_color()                            { assertx(!_stack_color.empty()), _cc = _stack_color.pop(); }
+    template<typename Func> void save_color(Func func) { push_color(), func(), pop_color(); }
     void diffuse(float r, float g, float b)     { _cc.d = A3dColor(r, g, b); }
     void diffuse(const A3dColor& col)           { _cc.d = col; }
     void specular(float r, float g, float b)    { _cc.s = A3dColor(r, g, b); }
@@ -39,9 +39,9 @@ class Mk3d : noncopyable {
     void point(const Point& p)                  { _el.push(A3dVertex(transform(p), Vector(0.f, 0.f, 0.f), _cc)); }
     void normal(float x, float y, float z)      { normal(Vector(x, y, z)); }
     void normal(const Vector& normal);
-    void begin_force_polyline(bool b)           { _stack_force_polyline.push(_force_polyline); _force_polyline = b; }
+    void begin_force_polyline(bool b)           { _stack_force_polyline.push(_force_polyline), _force_polyline = b; }
     void end_force_polyline()                   { _force_polyline = _stack_force_polyline.pop(); }
-    void begin_force_flip(bool b)               { _stack_force_flip.push(_force_flip); _force_flip = b; }
+    void begin_force_flip(bool b)               { _stack_force_flip.push(_force_flip), _force_flip = b; }
     void end_force_flip()                       { _force_flip = _stack_force_flip.pop(); }
     void end_polygon();
     void end_2polygon();        // two-sided polygon

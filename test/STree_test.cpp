@@ -3,6 +3,7 @@
 
 #include "Random.h"
 #include "Set.h"
+#include "RangeOp.h"
 using namespace hh;
 
 int main() {
@@ -30,8 +31,7 @@ int main() {
         assertx(stree.remove(24));
         assertx(!stree.remove(33));
         assertx(!stree.remove(24));
-        int vsum = 0; for (auto& i : stree) { vsum += i; }
-        assertx(vsum==(1+29)*29/2*2+88-24);
+        assertx(sum(stree)==(1+29)*29/2*2+88-24);
         for (int i = 2; i<60; i += 2) {
             assertx(stree.remove(i)==(i!=24));
         }

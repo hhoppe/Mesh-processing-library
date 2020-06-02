@@ -209,8 +209,7 @@ bool ok_sharp_edge_change(Edge e) {
 }
 
 double get_edis() {
-    double sum = 0.; for_int(i, co.num()) { sum += gdis2[i]; }
-    return sum;
+    return sum(gdis2);
 }
 
 double get_espr() {

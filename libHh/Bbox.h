@@ -12,8 +12,8 @@ struct Bbox : Vec2<Point> {
     Bbox()                                               = default;
     constexpr Bbox(const Point& pmin, const Point& pmax) : Vec2<Point>(pmin, pmax) { }
     constexpr Bbox(Vec2<Point> bb)                       : Vec2<Point>(std::move(bb)) { }
-    void clear()                        { auto& self = *this; self[0] = thrice(+big); self[1] = thrice(-big); }
-    void infinite()                     { auto& self = *this; self[0] = thrice(-big); self[1] = thrice(+big); }
+    void clear()                        { (*this)[0] = thrice(+big), (*this)[1] = thrice(-big); }
+    void infinite()                     { (*this)[0] = thrice(-big), (*this)[1] = thrice(+big); }
     void union_with(const Bbox& bb) {
         auto& self = *this;
         for_int(c, 3) {

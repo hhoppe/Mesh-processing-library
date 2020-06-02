@@ -70,7 +70,7 @@ template<typename T> class Encoding : noncopyable {
         return sum;
     }
     float entropy() const {
-        double tot_prob = 0.; for (float prob : _map.values()) { tot_prob += prob; }
+        double tot_prob = sum(_map.values());
         if (!assertw(tot_prob)) tot_prob = 1.;
         // Previously there was bug that 1.f/tot_prob is precomputed outside loop;
         //  thus for map.num()==1 and tot_prob==24586.f, prob/tot_prop==0.99999994f results in nonzero entropy.
@@ -80,7 +80,7 @@ template<typename T> class Encoding : noncopyable {
     }
     // normalized entropy (entropy()/tot_prob)
     float norm_entropy() const {
-        double tot_prob = 0.; for (float prob : _map.values()) { tot_prob += prob; }
+        double tot_prob = sum(_map.values());
         if (!assertw(tot_prob)) tot_prob = 1.;
         if (_map.num()<=1) return 0.f;
         double sum = 0.; for (float prob : _map.values()) { sum += prob*(-log2(prob/tot_prob)); }
@@ -101,7 +101,7 @@ template<typename T> class Encoding : noncopyable {
     }
     template<typename Func = string(const T&)>
     void print_top_entries(const string& name, int ntop, Func cb_entry_name) const {
-        float tot_prob = 0.f; for (float prob : _map.values()) { tot_prob += prob; }
+        float tot_prob = sum<float>(_map.values());
         showdf("Encoding: %s (nunique=%d, tot_prob=%g) {\n", name.c_str(), _map.num(), tot_prob);
         if (0) {
             Pqueue<T> pq; pq.reserve(_map.num());

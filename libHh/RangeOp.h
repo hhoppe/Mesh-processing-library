@@ -76,8 +76,8 @@ bool equal(const R1& range1, const R2& range2, Pred p = Pred{}) {
 }
 
 // Swap the contents of two ranges.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-void swap_ranges(R&& range1, R2&& range2) {
+template<typename R1, typename R2, typename = enable_if_range_t<R1>, typename = enable_if_range_t<R2> >
+void swap_ranges(R1&& range1, R2&& range2) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -238,9 +238,10 @@ Iterator max_abs_element(const R& range) {
 }
 
 // Sum of values in a range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-sum_type_t<Iterator> sum(const R& range) {
-    using SumType = sum_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                               sum_type_t<Iterator>, DesiredType>>
+SumType sum(const R& range) {
     using std::begin; using std::end;
     // return std::accumulate(begin(range), end(range), SumType{});
     auto iter = begin(range), itend = end(range);
@@ -250,9 +251,10 @@ sum_type_t<Iterator> sum(const R& range) {
 }
 
 // Average of values in a range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-mean_type_t<Iterator> mean(const R& range) {
-    using MeanType = mean_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                                 mean_type_t<Iterator>, DesiredType>>
+MeanType mean(const R& range) {
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range);
     if (iter==itend) { Warning("mean"); MeanType v; my_zero(v); return v; }
@@ -262,9 +264,10 @@ mean_type_t<Iterator> mean(const R& range) {
 }
 
 // Sum of squared values in a range (or zero if empty).
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-sum_type_t<Iterator> mag2(const R& range) {
-    using SumType = sum_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                               sum_type_t<Iterator>, DesiredType>>
+SumType mag2(const R& range) {
     using std::begin; using std::end;
     // return std::accumulate(begin(range), end(range), SumType{},
     //                        [](const SumType& l, const Iterator& r) { return l+square(r); });
@@ -275,16 +278,18 @@ sum_type_t<Iterator> mag2(const R& range) {
 }
 
 // Root sum of squared values in a range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-mean_type_t<Iterator> mag(const R& range) {
-    using MeanType = mean_type_t<Iterator>;
-    return sqrt(MeanType(mag2(range)));
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                                 mean_type_t<Iterator>, DesiredType>>
+MeanType mag(const R& range) {
+    return sqrt(mag2<MeanType>(range));
 }
 
 // Root mean square of values in a range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-mean_type_t<Iterator> rms(const R& range) {
-    using MeanType = mean_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                                 mean_type_t<Iterator>, DesiredType>>
+MeanType rms(const R& range) {
     MeanType v; my_zero(v); size_t num = 0;
     for (const auto& e : range) { v += square(MeanType(e)); num++; }
     if (!num) { Warning("rms() of empty range"); return v; }
@@ -293,9 +298,10 @@ mean_type_t<Iterator> rms(const R& range) {
 }
 
 // Variance of values in a range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-mean_type_t<Iterator> var(const R& range) {
-    using MeanType = mean_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                                 mean_type_t<Iterator>, DesiredType>>
+MeanType var(const R& range) {
     MeanType zero, v, v2; my_zero(zero); my_zero(v); my_zero(v2); size_t num = 0;
     for (const auto& e : range) { v += e; v2 += square(MeanType(e)); num++; }
     if (num<2) { Warning("var() of fewer than 2 elements"); return zero; }
@@ -304,9 +310,10 @@ mean_type_t<Iterator> var(const R& range) {
 }
 
 // Product of values in a non-empty range.
-template<typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R> >
-sum_type_t<Iterator> product(const R& range) {
-    using SumType = sum_type_t<Iterator>;
+template<typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+         typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                               sum_type_t<Iterator>, DesiredType>>
+SumType product(const R& range) {
     using std::begin; using std::end;
     auto iter = begin(range), itend = end(range); ASSERTX(iter!=itend);
     // return std::accumulate(begin(range), end(range), SumType{1},
@@ -339,10 +346,11 @@ R round_elements(R&& range, Iterator fac = 1e5f) {
 }
 
 // Compute the sum of squared differences of corresponding elements of two ranges.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
-         typename Iterator = iterator_t<R> >
-sum_type_t<Iterator> dist2(const R& range1, const R2& range2) {
-    using SumType = sum_type_t<Iterator>;
+template<typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
+         typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
+         typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                               sum_type_t<Iterator>, DesiredType>>
+SumType dist2(const R1& range1, const R2& range2) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -353,18 +361,20 @@ sum_type_t<Iterator> dist2(const R& range1, const R2& range2) {
 }
 
 // Compute the Euclidean distance between two ranges interpreted as vectors.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
-         typename Iterator = iterator_t<R> >
-mean_type_t<Iterator> dist(const R& range1, const R2& range2) {
-    using MeanType = mean_type_t<Iterator>;
+template<typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
+         typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
+         typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                                mean_type_t<Iterator>, DesiredType>>
+MeanType dist(const R1& range1, const R2& range2) {
     return sqrt(MeanType(dist2(range1, range2)));
 }
 
 // Compute the inner product of two ranges.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
-         typename Iterator = iterator_t<R> >
-sum_type_t<Iterator> dot(const R& range1, const R2& range2) {
-    using SumType = sum_type_t<Iterator>;
+template<typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
+         typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
+         typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value,
+                                               sum_type_t<Iterator>, DesiredType>>
+SumType dot(const R1& range1, const R2& range2) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -375,8 +385,8 @@ sum_type_t<Iterator> dot(const R& range1, const R2& range2) {
 }
 
 // Compare two ranges of algebraic types lexicographically; ret -1, 0, 1 based on sign of range1-range2.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2> >
-int compare(const R& range1, const R2& range2) {
+template<typename R1, typename R2, typename = enable_if_range_t<R1>, typename = enable_if_range_t<R2> >
+int compare(const R1& range1, const R2& range2) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);
@@ -388,9 +398,9 @@ int compare(const R& range1, const R2& range2) {
 }
 
 // Similar comparison, but ignore differences smaller than tolerance.
-template<typename R, typename R2, typename = enable_if_range_t<R>, typename = enable_if_range_t<R2>,
-         typename Iterator = iterator_t<R> >
-int compare(const R& range1, const R2& range2, const Iterator& tolerance) {
+template<typename R1, typename R2, typename = enable_if_range_t<R1>, typename = enable_if_range_t<R2>,
+         typename Iterator = iterator_t<R1> >
+int compare(const R1& range1, const R2& range2, const Iterator& tolerance) {
     using std::begin; using std::end;
     auto iter1 = begin(range1), itend1 = end(range1);
     auto iter2 = begin(range2), itend2 = end(range2);

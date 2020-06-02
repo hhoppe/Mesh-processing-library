@@ -71,7 +71,7 @@ void test_em() {
     Matrix<float> mo1(n, n); Array<float> eimag1(n);
     { HH_TIMER(_pc1); principal_components(mi, mo1, eimag1); }
     float sum = float(mag2(eimag1));
-    float sumact = 0.f; for_int(i, ne) { sumact += square(eimag1[i]); }
+    float sumact = float(mag2(eimag1.head(ne)));
     Matrix<float> mo2(ne, n); Array<float> eimag2(ne);
     { HH_TIMER(_pc2); assertx(em_principal_components(mi, mo2, eimag2, 10)); }
     float sumest = float(mag2(eimag2));

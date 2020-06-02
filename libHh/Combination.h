@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_COMBINATION_H_
 
 #include "Map.h"
+#include "RangeOp.h"
 
 #if 0
 {
@@ -17,7 +18,7 @@ namespace hh {
 template<typename T> class Combination : public Map<T,float> {
     using base = Map<T,float>;
  public:
-    float sum() const                           { float t = 0.f; for (float v : values()) { t += v; } return t; }
+    float sum() const                           { return hh::sum<float>(values()); }
     void shrink_to_fit() const { // remove elements with zero weights
         Combination& var_self = const_cast<Combination&>(*this);
         Array<T> ar; for_map_key_value(*this, [&](const T& e, float v) { if (!v) ar.push(e); });

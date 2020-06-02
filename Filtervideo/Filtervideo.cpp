@@ -1932,7 +1932,7 @@ void do_procedure(Args& args) {
             Matrix<bool> mask = get_black_border_mask(videof);
             // Matrix<bool> mask(dims);
             // parallel_for_coords(dims, [&](const Vec2<int>& yx) { mask[yx] = videof[yx]==Pixel::black(); });
-            int nmask = 0; for_coords(dims, [&](const Vec2<int>& yx) { nmask += mask[yx]; }); if (0) SHOW(nmask);
+            SHOW(sum(mask));
             if (f==0) {
                 grid0 = gridf;
                 continue; // frame 0 is assumed to contain no black border

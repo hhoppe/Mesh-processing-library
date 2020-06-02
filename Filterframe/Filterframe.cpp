@@ -4,6 +4,7 @@
 #include "Stat.h"
 #include "Quaternion.h"         // pow(Frame, float)
 #include "GeomOp.h"             // euler_angles_to_frame()
+#include "RangeOp.h"
 using namespace hh;
 
 namespace {
@@ -57,7 +58,7 @@ void do_induce_roll(Frame& t) {
     static Vec<float,num> sa;
     for_int(i, num-1) { sa[i] = sa[i+1]; }
     sa[num-1] = sarea;
-    float s = 0.f; for_int(i, num) { s += sa[i]; }
+    float s = float(sum(sa));
     s /= num;
     float bank = s*induce_roll;
     t = Frame::rotation(0, bank)*t;

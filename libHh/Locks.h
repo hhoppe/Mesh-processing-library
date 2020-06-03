@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_LOCKS_H_
 #define MESH_PROCESSING_LIBHH_LOCKS_H_
 
-#include <mutex>                // mutex, lock_guard
+#include <mutex>  // mutex, lock_guard
 
 #include "Hh.h"
 
@@ -11,7 +11,7 @@
   // critical section
   parallel_for_each(range(100), [&](const int i) {
     something();
-    HH_LOCK { something_synchronized() : }
+    HH_LOCK { something_synchronized(); }
   });
   // alternate
   std::mutex g_mutex;
@@ -37,7 +37,7 @@ namespace hh {
 // *** Use OpenMP for synchronization (its default is a globally defined mutex).
 #elif 0
 
-#include <omp.h>                // OpenMP
+#include <omp.h>  // OpenMP
 #define HH_LOCK HH_PRAGMA(omp critical)
 // A thread waits at the beginning of a critical region until no other thread is executing a critical region
 //  (anywhere in the program) with the same name.  All unnamed critical directives map to the same unspecified
@@ -54,12 +54,19 @@ namespace hh {
 
 class MyGlobalLock {
  public:
-    MyGlobalLock() : _lock_guard(global_mutex_instance()) { }
+  MyGlobalLock() : _lock_guard(global_mutex_instance()) {}
+
  private:
-    std::lock_guard<std::mutex> _lock_guard;
-    static std::mutex& global_mutex_instance() { static auto& m = *new std::mutex; return m; }
+  std::lock_guard<std::mutex> _lock_guard;
+  static std::mutex& global_mutex_instance() {
+    static auto& m = *new std::mutex;
+    return m;
+  }
 };
-#define HH_LOCK if (hh::details::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
+#define HH_LOCK                                                            \
+  if (hh::details::false_capture<hh::MyGlobalLock> HH_UNIQUE_ID(lock){}) { \
+    HH_UNREACHABLE;                                                        \
+  } else
 
 //----------------------------------------------------------------------------
 // *** The critical sections in each compilation unit (*.cpp file) share the same mutex.
@@ -69,12 +76,16 @@ namespace {
 std::mutex s_per_file_mutex;
 class MyPerFileLock {
  public:
-    MyPerFileLock() : _lock_guard(s_per_file_mutex) { }
+  MyPerFileLock() : _lock_guard(s_per_file_mutex) {}
+
  private:
-    std::lock_guard<std::mutex> _lock_guard;
+  std::lock_guard<std::mutex> _lock_guard;
 };
-} // namespace
-#define HH_LOCK if (hh::details::false_capture<hh::MyPerFileLock> HH_UNIQUE_ID(lock){}) { HH_UNREACHABLE; } else
+}  // namespace
+#define HH_LOCK                                                             \
+  if (hh::details::false_capture<hh::MyPerFileLock> HH_UNIQUE_ID(lock){}) { \
+    HH_UNREACHABLE;                                                         \
+  } else
 
 //----------------------------------------------------------------------------
 // *** Each critical section has its own mutex.
@@ -90,12 +101,17 @@ class MyPerFileLock {
 #else
 
 #error These paired macros are no longer supported.
-#define HH_BEGIN_LOCK { static std::mutex my_mutex1; std::lock_guard<std::mutex> HH_UNIQUE_ID(lock){my_mutex1};
-#define HH_END_LOCK } HH_EAT_SEMICOLON
+#define HH_BEGIN_LOCK            \
+  {                              \
+    static std::mutex my_mutex1; \
+    std::lock_guard<std::mutex> HH_UNIQUE_ID(lock){my_mutex1};
+#define HH_END_LOCK \
+  }                 \
+  HH_EAT_SEMICOLON
 
 #endif
 
-} // namespace hh
+}  // namespace hh
 
 //----------------------------------------------------------------------------
 
@@ -136,8 +152,8 @@ class MyPerFileLock {
 
 // Also use the following, which is faster than a critical section:
 //  HH_PRAGMA(omp atomic) g_nslow++;
-// It works for x+=, x-=, x*=, x&=, etc., and --x and ++x.
+// It works for x += y, x -= y, x *= y, x &=  y, etc., and --x and ++x.
 // Better yet, use std::atomic<T>.
 // Possibly could use atomic_operate() defined in AtomicOperate.h
 
-#endif // MESH_PROCESSING_LIBHH_LOCKS_H_
+#endif  // MESH_PROCESSING_LIBHH_LOCKS_H_

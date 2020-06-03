@@ -27,16 +27,16 @@
 #if defined(_MSC_VER) && defined(HH_DEBUG) && !defined(HH_NO_OPENMP)
 // Bug in Visual Studio 2015 update 1; compilation creates buggy code in x64-Debug with OpenMP in:
 //  MatrixOp.h: invert(CMatrixView<T> mi, MatrixView<T> mo)  (from Frame::invert() from Geom_test.cpp);
-//  Multigrid.h: dual_downsample_aux(Specialize<2>, CGridView<D,T> grid)  (from Multigrid_test.cpp);
+//  Multigrid.h: dual_downsample_aux(Specialize<2>, CGridView<D, T> grid)  (from Multigrid_test.cpp);
 #define HH_NO_OPENMP
 #endif
 
-#if !defined(_OPENMP) && !defined(HH_NO_OPENMP) // if compiler feature is absent,  we disable the macros as well
+#if !defined(_OPENMP) && !defined(HH_NO_OPENMP)  // if compiler feature is absent,  we disable the macros as well
 #define HH_NO_OPENMP
 #endif
 
 #if !defined(HH_NO_OPENMP)
-#include <omp.h>                // OpenMP
+#include <omp.h>  // OpenMP
 #endif
 
 // Notes on using OpenMP:
@@ -53,7 +53,7 @@ namespace hh {
 inline int get_max_threads() { return max(int(std::thread::hardware_concurrency()), 1); }
 
 #if defined(HH_NO_OPENMP)
- 
+
 #define HH_PRAGMA_OMP(...)
 #define omp_parallel_for_T(omp_args, T, i, lb, ub) for_T(T, i, lb, ub)
 
@@ -61,9 +61,9 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 
 #define HH_PRAGMA_OMP(...) HH_PRAGMA(omp __VA_ARGS__)
 
-#if defined(HH_DEBUG) && 1      // allows more warnings but does not pre-evaluate the upper-bound ub
+#if defined(HH_DEBUG) && 1  // allows more warnings but does not pre-evaluate the upper-bound ub
 
-#define omp_parallel_for_T(omp_args, T, i, lb, ub)                            \
+#define omp_parallel_for_T(omp_args, T, i, lb, ub) \
     HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<(ub); i++)
 
 #else
@@ -73,18 +73,17 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #define HH_OMP_PUSH_WARNINGS HH_PRAGMA(clang diagnostic push) HH_PRAGMA(clang diagnostic ignored "-Wdangling-else")
 #define HH_OMP_POP_WARNINGS HH_PRAGMA(clang diagnostic pop)
 #elif defined(__GNUC__)
-#define HH_OMP_PUSH_WARNINGS HH_PRAGMA(GCC diagnostic ignored "-Wparentheses") // "suggest explicit braces"
-#define HH_OMP_POP_WARNINGS // With gcc, the pop would have to occur later outside the macro.
-#pragma GCC diagnostic ignored "-Wparentheses" // strange; this alone does not work in a precompiled header
+#define HH_OMP_PUSH_WARNINGS HH_PRAGMA(GCC diagnostic ignored "-Wparentheses")  // "suggest explicit braces"
+#define HH_OMP_POP_WARNINGS                     // With gcc, the pop would have to occur later outside the macro.
+#pragma GCC diagnostic ignored "-Wparentheses"  // strange; this alone does not work in a precompiled header
 #else
 #define HH_OMP_PUSH_WARNINGS
 #define HH_OMP_POP_WARNINGS
-#pragma warning(disable:4701)   // "potentially uninitialized local variable 'xx' used"
+#pragma warning(disable : 4701)  // "potentially uninitialized local variable 'xx' used"
 #endif
-#define omp_parallel_for_T(omp_args, T, i, lb, ub)                            \
-    omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
+#define omp_parallel_for_T(omp_args, T, i, lb, ub) omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
 #define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                   \
-    HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u = ub) { HH_UNREACHABLE; } else \
+  HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u = ub) { HH_UNREACHABLE; } else \
         HH_OMP_POP_WARNINGS HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<u(); i++)
 
 #endif  // defined(HH_DEBUG)
@@ -93,28 +92,28 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 
 // ***
 
-#define parallel_for_T(T, i, lb, ub)         omp_parallel_for_T(, T, i, lb, ub)
-#define cond_parallel_for_T(c, T, i, lb, ub) omp_parallel_for_T(if((c)>=hh::k_omp_thresh), T, i, lb, ub)
+#define parallel_for_T(T, i, lb, ub) omp_parallel_for_T(, T, i, lb, ub)
+#define cond_parallel_for_T(c, T, i, lb, ub) omp_parallel_for_T(if ((c) >= hh::k_omp_thresh), T, i, lb, ub)
 
-#define parallel_for_int(i, ub)      parallel_for_T(int, i, 0, ub)
+#define parallel_for_int(i, ub) parallel_for_T(int, i, 0, ub)
 #define parallel_for_intL(i, lb, ub) parallel_for_T(int, i, lb, ub)
-#define parallel_for_size_t(i, ub)   parallel_for_T(size_t, i, 0, ub)
+#define parallel_for_size_t(i, ub) parallel_for_T(size_t, i, 0, ub)
 
 // (Note: name parallel_for() conflicts with that in VC <ppl.h> )
 #define hh_parallel_for(...) HH_PRAGMA_OMP(parallel for) for (__VA_ARGS__)
 
-#define cond_parallel_for_int(c, i, ub)    cond_parallel_for_T(c, int, i, 0, ub)
+#define cond_parallel_for_int(c, i, ub) cond_parallel_for_T(c, int, i, 0, ub)
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, size_t, i, 0, ub)
 
-const uint64_t k_omp_thresh = 100*1000; // number of instruction cycles above which a loop should be parallelized
-const uint64_t k_omp_many_cycles_per_elem = 400; // number of instruction cycles for larger-overhead parallelism
-const int k_omp_min_iterations = 8;              // sufficient number of loop iterations for parallelism
+const uint64_t k_omp_thresh = 100 * 1000;  // number of instruction cycles above which a loop should be parallelized
+const uint64_t k_omp_many_cycles_per_elem = 400;  // number of instruction cycles for larger-overhead parallelism
+const int k_omp_min_iterations = 8;               // sufficient number of loop iterations for parallelism
 
-#if _OPENMP<200805 // (2.0==200203; 3.0==200805; 4.0==201307; VS2015 is still 2.0)
+#if _OPENMP < 200805  // (2.0 == 200203; 3.0 == 200805; 4.0 == 201307; VS2015 is still 2.0)
 // http://dautovri.blogspot.com/2015/04/check-your-openmp-version.html
 // Loop variable cannot be unsigned, so use a signed one instead.
 #undef parallel_for_size_t
-#define parallel_for_size_t(i, ub)  parallel_for_T(intptr_t, i, 0, static_cast<intptr_t>(ub))
+#define parallel_for_size_t(i, ub) parallel_for_T(intptr_t, i, 0, static_cast<intptr_t>(ub))
 #undef cond_parallel_for_size_t
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, intptr_t, i, 0, static_cast<intptr_t>(ub))
 #endif
@@ -128,76 +127,76 @@ const int k_omp_min_iterations = 8;              // sufficient number of loop it
 // same set of threads.
 class ThreadPoolIndexedTask : noncopyable {
  public:
-    using Task = std::function<void(int)>;
-    ThreadPoolIndexedTask() {
-        const int num_threads = get_max_threads();
-        _threads.reserve(num_threads);
-        for_int(i, num_threads) _threads.emplace_back(&ThreadPoolIndexedTask::worker_main, this);
+  using Task = std::function<void(int)>;
+  ThreadPoolIndexedTask() {
+    const int num_threads = get_max_threads();
+    _threads.reserve(num_threads);
+    for_int(i, num_threads) _threads.emplace_back(&ThreadPoolIndexedTask::worker_main, this);
+  }
+  ~ThreadPoolIndexedTask() {
+    {
+      std::unique_lock<std::mutex> lock(_mutex);
+      assertx(_running);
+      assertx(!_num_remaining_tasks);
+      assertx(_task_index == _num_tasks);
+      _running = false;
+      _task_index = 0;
+      _num_tasks = 1;
+      _condition_variable_worker.notify_all();
     }
-    ~ThreadPoolIndexedTask() {
-        {
-            std::unique_lock<std::mutex> lock(_mutex);
-            assertx(_running);
-            assertx(!_num_remaining_tasks);
-            assertx(_task_index==_num_tasks);
-            _running = false;
-            _task_index = 0;
-            _num_tasks = 1;
-            _condition_variable_worker.notify_all();
-        }
-        for (auto& thread : _threads) thread.join();
+    for (auto& thread : _threads) thread.join();
+  }
+  int num_threads() const { return int(_threads.size()); }
+  bool already_active() const { return _num_remaining_tasks != 0; }  // detect nested execution
+  void execute(int num_tasks, const Task& task_function) {
+    if (already_active()) {
+      Warning("Nested execution of ThreadPoolIndexedTask is run serially");
+      for_int(i, num_tasks) task_function(i);
+    } else {
+      std::unique_lock<std::mutex> lock(_mutex);
+      _task_function = task_function;
+      _num_tasks = num_tasks;
+      _num_remaining_tasks = num_tasks;
+      _task_index = 0;
+      _condition_variable_worker.notify_all();
+      _condition_variable_master.wait(lock, [this] { return !_num_remaining_tasks; });
     }
-    int num_threads() const                 { return int(_threads.size()); }
-    bool already_active() const             { return _num_remaining_tasks != 0; }  // detect nested execution
-    void execute(int num_tasks, const Task& task_function) {
-        if (already_active()) {
-            Warning("Nested execution of ThreadPoolIndexedTask is run serially");
-            for_int(i, num_tasks) task_function(i);
-        } else {
-            std::unique_lock<std::mutex> lock(_mutex);
-            _task_function = task_function;
-            _num_tasks = num_tasks;
-            _num_remaining_tasks = num_tasks;
-            _task_index = 0;
-            _condition_variable_worker.notify_all();
-            _condition_variable_master.wait(lock, [this] { return !_num_remaining_tasks; });
-        }
-    }
-    static ThreadPoolIndexedTask& default_threadpool() {
-        static unique_ptr<ThreadPoolIndexedTask> thread_pool;
-        // This is safe because thread_pool is nullptr only in the main thread before any other thread is launched.
-        if (!thread_pool) thread_pool = make_unique<ThreadPoolIndexedTask>();
-        return *thread_pool;
-    }
+  }
+  static ThreadPoolIndexedTask& default_threadpool() {
+    static unique_ptr<ThreadPoolIndexedTask> thread_pool;
+    // This is safe because thread_pool is nullptr only in the main thread before any other thread is launched.
+    if (!thread_pool) thread_pool = make_unique<ThreadPoolIndexedTask>();
+    return *thread_pool;
+  }
 
  private:
-    std::mutex _mutex;
-    bool _running = true;
-    std::vector<std::thread> _threads;
-    Task _task_function;
-    int _num_tasks = 0;
-    int _num_remaining_tasks = 0;
-    int _task_index = 0;
-    std::condition_variable _condition_variable_worker;
-    std::condition_variable _condition_variable_master;
+  std::mutex _mutex;
+  bool _running = true;
+  std::vector<std::thread> _threads;
+  Task _task_function;
+  int _num_tasks = 0;
+  int _num_remaining_tasks = 0;
+  int _task_index = 0;
+  std::condition_variable _condition_variable_worker;
+  std::condition_variable _condition_variable_master;
 
-    void worker_main() {
-        std::unique_lock<std::mutex> lock(_mutex);
-        // Consider: https://stackoverflow.com/questions/233127/how-can-i-propagate-exceptions-between-threads
-        // However, rethrowing the exception in the main thread loses the stack state, so not useful for debugging.
-        for (;;) {
-            _condition_variable_worker.wait(lock, [this] { return _task_index < _num_tasks; });
-            if (!_running) break;
-            while (_task_index < _num_tasks) {
-                int i = _task_index++;
-                lock.unlock();
-                _task_function(i);
-                lock.lock();
-                assertx(_num_remaining_tasks>0);
-                if (!--_num_remaining_tasks) _condition_variable_master.notify_all();
-            }
-        }
+  void worker_main() {
+    std::unique_lock<std::mutex> lock(_mutex);
+    // Consider: https://stackoverflow.com/questions/233127/how-can-i-propagate-exceptions-between-threads
+    // However, rethrowing the exception in the main thread loses the stack state, so not useful for debugging.
+    for (;;) {
+      _condition_variable_worker.wait(lock, [this] { return _task_index < _num_tasks; });
+      if (!_running) break;
+      while (_task_index < _num_tasks) {
+        int i = _task_index++;
+        lock.unlock();
+        _task_function(i);
+        lock.lock();
+        assertx(_num_remaining_tasks > 0);
+        if (!--_num_remaining_tasks) _condition_variable_master.notify_all();
+      }
     }
+  }
 };
 
 constexpr uint64_t k_parallelism_always = k_omp_thresh;
@@ -212,46 +211,44 @@ constexpr uint64_t k_parallelism_always = k_omp_thresh;
 template <typename Range, typename Function = void(size_t)>
 void parallel_for_each(const Range& range, const Function& function,
                        uint64_t estimated_cycles_per_element = k_parallelism_always) {
-    // using std::size; const size_t num_elements = size(range);  // C++17
-    using std::begin;
-    using std::end;
-    const auto begin_range = begin(range);
-    const auto end_range = end(range);
-    const size_t num_elements = size_t(end_range - begin_range);
-    using iterator_category = typename std::iterator_traits<decltype(begin_range)>::iterator_category;
-    static_assert(std::is_same<iterator_category, std::random_access_iterator_tag >::value,
-                  "Range iterator is not random-access");
-    uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
-    constexpr bool use_omp = false;  // OpenMP seems to never be faster, so there is no reason to use it here.
-    if (use_omp) {
-        cond_parallel_for_size_t(total_num_cycles, index, num_elements) {
-            function(begin_range[index]);
-        }
+  // using std::size; const size_t num_elements = size(range);  // C++17
+  using std::begin;
+  using std::end;
+  const auto begin_range = begin(range);
+  const auto end_range = end(range);
+  const size_t num_elements = size_t(end_range - begin_range);
+  using iterator_category = typename std::iterator_traits<decltype(begin_range)>::iterator_category;
+  static_assert(std::is_same<iterator_category, std::random_access_iterator_tag>::value,
+                "Range iterator is not random-access");
+  uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
+  constexpr bool use_omp = false;  // OpenMP seems to never be faster, so there is no reason to use it here.
+  if (use_omp) {
+    cond_parallel_for_size_t(total_num_cycles, index, num_elements) { function(begin_range[index]); }
+  } else {
+    const int max_num_threads = get_max_threads();
+    const int num_threads = int(min<size_t>(max_num_threads, num_elements));
+    const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
+    ThreadPoolIndexedTask* const thread_pool =
+        desire_parallelism ? &ThreadPoolIndexedTask::default_threadpool() : nullptr;
+    if (!thread_pool || thread_pool->already_active()) {
+      // Traverse the range elements sequentially.
+      for (size_t index = 0; index < num_elements; ++index) {
+        function(begin_range[index]);
+      }
     } else {
-        const int max_num_threads = get_max_threads();
-        const int num_threads = int(min<size_t>(max_num_threads, num_elements));
-        const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
-        ThreadPoolIndexedTask* const thread_pool =
-            desire_parallelism ? &ThreadPoolIndexedTask::default_threadpool() : nullptr;
-        if (!thread_pool || thread_pool->already_active()) {
-            // Traverse the range elements sequentially.
-            for (size_t index = 0; index < num_elements; ++index) {
-                function(begin_range[index]);
-            }
-        } else {
-            // Traverse the range elements in parallel.
-            const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
-            thread_pool->execute(num_threads, [begin_range, num_elements, chunk_size, &function](int thread_index) {
-                size_t index_start = thread_index * chunk_size;
-                size_t index_stop = std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
-                for (size_t index = index_start; index < index_stop; ++index) {
-                    function(begin_range[index]);
-                }
-            });
+      // Traverse the range elements in parallel.
+      const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
+      thread_pool->execute(num_threads, [begin_range, num_elements, chunk_size, &function](int thread_index) {
+        size_t index_start = thread_index * chunk_size;
+        size_t index_stop = std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
+        for (size_t index = index_start; index < index_stop; ++index) {
+          function(begin_range[index]);
         }
+      });
     }
+  }
 }
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_PARALLEL_H_
+#endif  // MESH_PROCESSING_LIBHH_PARALLEL_H_

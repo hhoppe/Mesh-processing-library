@@ -105,12 +105,12 @@ grid = Matrix<int>(4, 2) {
   5 6
   7 8
 }
-(Grid<1,int>{ 1, 2, 3 }) = Array<int>(3) {
+(Grid<1, int>{1, 2, 3}) = Array<int>(3) {
   1
   2
   3
 }
-(Grid<3,int>{ { {1, 2, 3}, {4, 5, 6} } }) = Grid<int>(1, 2, 3) {
+(Grid<3, int>{{{1, 2, 3}, {4, 5, 6}}}) = Grid<int>(1, 2, 3) {
   [0, 0, 0] = 1
   [0, 0, 1] = 2
   [0, 0, 2] = 3
@@ -118,7 +118,7 @@ grid = Matrix<int>(4, 2) {
   [0, 1, 1] = 5
   [0, 1, 2] = 6
 }
-(Grid<3,int>{ { {1, 2, 3}, {4, 5, 6} }, { {1, 2, 3}, {4, 5, 6} } }) = Grid<int>(2, 2, 3) {
+(Grid<3, int>{{{1, 2, 3}, {4, 5, 6}}, {{1, 2, 3}, {4, 5, 6}}}) = Grid<int>(2, 2, 3) {
   [0, 0, 0] = 1
   [0, 0, 1] = 2
   [0, 0, 2] = 3
@@ -140,8 +140,8 @@ ravel_index_list(grid3.dims(), 3, 4, 5) = 304005
 unravel_index(grid3.dims(), ravel_index_list(grid3.dims(), 3, 4, 5)) = [3, 4, 5]
 ravel_index_list(grid4.dims(), 3, 4, 5, 6) = 3405006
 unravel_index(grid4.dims(), ravel_index_list(grid4.dims(), 3, 4, 5, 6)) = [3, 4, 5, 6]
-(has_ostream_eol<Grid<2,int>>()) = 1
-(has_ostream_eol<Vec<int,5>>()) = 0
+(has_ostream_eol<Grid<2, int>>()) = 1
+(has_ostream_eol<Vec<int, 5>>()) = 0
 b = 0
 ravel_index(V(7, 5), V(2, 1)) = 11
 ravel_index(V(7, 5), V(2, 2)) = 12

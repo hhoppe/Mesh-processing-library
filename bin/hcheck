@@ -29,9 +29,9 @@ for i in "$@"; do
     continue
   fi
   ia="$i"; if [[ $i != /* ]]; then ia="$PWD/$i"; fi
-  old="$i.ref" new="$i.ou" diff="$i.diff"
+  ref="$i.ref" new="$i.ou" diff="$i.diff"
   tmp=v.$$  # was tmp=~/tmp/v$$
-  if [[ ! -e $old ]]; then
+  if [[ ! -e $ref ]]; then
     echo "no output to compare to, skipping" 1>&2
     status=1
     continue
@@ -50,14 +50,14 @@ for i in "$@"; do
   fi
   perl -S hcheck_aux <"$tmp" >"$new"
   rm "$tmp"
-  if [[ ! -f $old ]]; then
-    cp -p "$new" "$old"
+  if [[ ! -f $ref ]]; then
+    cp -p "$new" "$ref"
   fi
   if true; then
-    cmp -s "$new" "$old"
+    cmp -s "$new" "$ref"
     if [[ $? != 0 ]]; then	# different
       echo "$ia.cpp.1:1: error: test output was different:"
-      diff "$old" "$new" | tee "$diff"
+      diff "$ref" "$new" | tee "$diff"
       status=1
     else
       # rm "$new"

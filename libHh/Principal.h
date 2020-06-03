@@ -37,6 +37,6 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
 // Subtract out the mean of the rows.
 void subtract_mean(MatrixView<float> mi);
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_PRINCIPAL_H_
+#endif  // MESH_PROCESSING_LIBHH_PRINCIPAL_H_

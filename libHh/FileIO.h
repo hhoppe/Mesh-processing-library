@@ -2,44 +2,50 @@
 #ifndef MESH_PROCESSING_LIBHH_FILEIO_H_
 #define MESH_PROCESSING_LIBHH_FILEIO_H_
 
-#include "Array.h"              // CArrayView
+#include "Array.h"  // CArrayView
 
 namespace hh {
 
 // Create a read stream from a file (FILE and/or istream); supports file decompression and input pipe commands.
 class RFile : noncopyable {
  public:
-    // supports "-", ".Z", ".gz", "command args... |"  (in most cases, try to close stdin within "command |")
-    explicit RFile(const string& filename);
-    ~RFile();
-    std::istream& operator()() const            { return *_is; }
-    FILE* cfile()                               { return _file; }
+  // supports "-", ".Z", ".gz", "command args... |"  (in most cases, try to close stdin within "command |")
+  explicit RFile(const string& filename);
+  ~RFile();
+  std::istream& operator()() const { return *_is; }
+  FILE* cfile() { return _file; }
+
  private:
-    bool _file_ispipe {false};
-    FILE* _file {nullptr};
-    class Implementation;
-    unique_ptr<Implementation> _impl;
-    std::istream* _is {nullptr};
+  bool _file_ispipe{false};
+  FILE* _file{nullptr};
+  class Implementation;
+  unique_ptr<Implementation> _impl;
+  std::istream* _is{nullptr};
 };
 
 // Create a write stream to a file (FILE and/or ostream); supports file compression and output pipe commands.
 class WFile : noncopyable {
  public:
-    // supports "-", ".Z", ".gz", "| command args..."
-    explicit WFile(const string& filename);
-    ~WFile();
-    std::ostream& operator()() const            { return *_os; }
-    FILE* cfile()                               { return _file; }
+  // supports "-", ".Z", ".gz", "| command args..."
+  explicit WFile(const string& filename);
+  ~WFile();
+  std::ostream& operator()() const { return *_os; }
+  FILE* cfile() { return _file; }
+
  private:
-    bool _file_ispipe {false};
-    FILE* _file {nullptr};
-    class Implementation;
-    unique_ptr<Implementation> _impl;
-    std::ostream* _os {nullptr};
+  bool _file_ispipe{false};
+  FILE* _file{nullptr};
+  class Implementation;
+  unique_ptr<Implementation> _impl;
+  std::ostream* _os{nullptr};
 };
 
 // Return true if we have read to the end-of-file.
-inline bool reached_eof(std::istream& is) { char ch; is.get(ch); return !is; }
+inline bool reached_eof(std::istream& is) {
+  char ch;
+  is.get(ch);
+  return !is;
+}
 
 // Checks if a file already exists.
 bool file_exists(const string& name);
@@ -71,11 +77,12 @@ bool recycle_path(const string& pathname);
 // Creates the name for a temporary file, and deletes the file when going out of scope.
 class TmpFile : noncopyable {
  public:
-    TmpFile(const string& suffix = "");
-    ~TmpFile();
-    string filename() const                     { return _filename; }
+  TmpFile(const string& suffix = "");
+  ~TmpFile();
+  string filename() const { return _filename; }
+
  private:
-    string _filename;
+  string _filename;
 };
 
 // For sh/csh argument.
@@ -84,21 +91,21 @@ string quote_arg_for_sh(const string& s);
 // For sh/csh/cmd argument.
 string quote_arg_for_shell(const string& s);
 
-// Returns: -1 if spawn error, else exit_code (for wait==true) or pid (for wait==false).
+// Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait);
 
 // Run command s (already properly quoted) using shell sh or csh or cmd, in that order.
 // (The quoting in s may be fragile if we must resort to shell cmd.)
-// Returns: -1 if spawn error, else exit_code (for wait==true) or pid (for wait==false).
+// Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_sh(const string& scmd, bool wait = true);
 
 // Run command words sargv (after quoting them) using shell sh or csh or cmd, in that order.
-// Returns: -1 if spawn error, else exit_code (for wait==true) or pid (for wait==false).
+// Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_sh(CArrayView<string> sargv, bool wait = true);
 
 // Null output stream (which silently gobbles up all output).
 extern std::ostream cnull;
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_FILEIO_H_
+#endif  // MESH_PROCESSING_LIBHH_FILEIO_H_

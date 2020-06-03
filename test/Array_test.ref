@@ -142,7 +142,7 @@ ArView(a) = Array<int>(5) {
 }
 var(ar) = 2.5
 sqrt(var(ar)) = 1.58114
-rms(ar-12) = 1.41421
+rms(ar - 12) = 1.41421
 reverse(ArView(a)) = Array<int>(5) {
   14
   13
@@ -192,7 +192,7 @@ a.view() = Array<int>(3) {
 }
 var(ar) = 1
 sqrt(var(ar)) = 1
-rms(ar-12) = 1.29099
+rms(ar - 12) = 1.29099
 sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10).view()) = Array<int>(5) {
   9
   10
@@ -202,10 +202,10 @@ sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10).view()) = Array<int>(5) {
 }
 median(V(10, 13, 12, 13, 9, 12, 15, 10)) = 12.5
 median(V(8, 7, 6, 5, 4, 9, 10)) = 7
-median2(V(10, 13, 12, 13, 9, 12, 15, 10)) = [12, 13]
-mean(median2(V(10, 13, 12, 13, 9, 12, 15, 10))) = 12.5
-median2(V(8, 7, 6, 5, 4, 9, 10)) = [7, 7]
-mean(median2(V(8, 7, 6, 5, 4, 9, 10))) = 7
+median_two(V(10, 13, 12, 13, 9, 12, 15, 10)) = [12, 13]
+mean(median_two(V(10, 13, 12, 13, 9, 12, 15, 10))) = 12.5
+median_two(V(8, 7, 6, 5, 4, 9, 10)) = [7, 7]
+mean(median_two(V(8, 7, 6, 5, 4, 9, 10))) = 7
 i=0 rank_element(ar, i)=4
 i=1 rank_element(ar, i)=5
 i=2 rank_element(ar, i)=6
@@ -224,6 +224,6 @@ rankf=0.7 rankf_element(ar, rankf)=8
 rankf=0.8 rankf_element(ar, rankf)=9
 rankf=0.9 rankf_element(ar, rankf)=10
 rankf=1 rankf_element(ar, rankf)=10
-ar1==V(1, 1+1) = 1
-ar1==V(1, 2, 3) = 0
-ar1==V(1, 3) = 0
+ar1 == V(1, 1 + 1) = 1
+ar1 == V(1, 2, 3) = 0
+ar1 == V(1, 3) = 0

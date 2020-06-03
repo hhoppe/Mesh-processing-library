@@ -60,7 +60,7 @@ grid = Grid<int>(2, 3, 4) {
   [1, 2, 2] = 12
   [1, 2, 3] = 12
 }
-grid==grid = 1
+grid == grid = 1
 grid = Grid<int>(2, 3, 4) {
   [0, 0, 0] = 0
   [0, 0, 1] = 1
@@ -143,11 +143,11 @@ grid32 = Matrix<int>(3, 2) {
   22 23
   24 25
 }
-sizeof(Vec<int,0>) = 1
-sizeof(SGrid<int,0>) = 1
-sizeof(SGrid<int,1>) = 4
-sizeof(SGrid<int,2>) = 8
-sizeof(SGrid<int,3>) = 12
+sizeof(Vec<int, 0>) = 1
+sizeof(SGrid<int, 0>) = 1
+sizeof(SGrid<int, 1>) = 4
+sizeof(SGrid<int, 2>) = 8
+sizeof(SGrid<int, 3>) = 12
 sizeof(SGrid<int, 0, 0>) = 1
 sizeof(SGrid<int, 0, 1>) = 1
 sizeof(SGrid<int, 1, 0>) = 1
@@ -166,11 +166,11 @@ sizeof(S) = 4
 sizeof(S) = 8
 sizeof(S) = 4
 sizeof(S) = 8
-sizeof(Vec<uint8_t,0>) = 1
-sizeof(SGrid<uint8_t,0>) = 1
-sizeof(SGrid<uint8_t,1>) = 1
-sizeof(SGrid<uint8_t,2>) = 2
-sizeof(SGrid<uint8_t,3>) = 3
+sizeof(Vec<uint8_t, 0>) = 1
+sizeof(SGrid<uint8_t, 0>) = 1
+sizeof(SGrid<uint8_t, 1>) = 1
+sizeof(SGrid<uint8_t, 2>) = 2
+sizeof(SGrid<uint8_t, 3>) = 3
 sizeof(SGrid<uint8_t, 0, 0>) = 1
 sizeof(SGrid<uint8_t, 0, 1>) = 1
 sizeof(SGrid<uint8_t, 1, 0>) = 1

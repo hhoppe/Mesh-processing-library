@@ -25,40 +25,46 @@
 namespace hh {
 
 // Audio contains a sequence of audio samples for one or more channels; values should be in the range [-1.f, +1.f].
-class Audio : public Grid<2,float> {
-    // Corresponds to pcm_f32be or pcm_f32le depending on native byte ordering.
-    using base = Grid<2,float>;
-    friend void swap(Audio& l, Audio& r) noexcept;
- public:
-    using value_type = float;
-    struct Attrib;
-    explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); } // nchannels, nsamples
-    explicit Audio(const Audio&)                = default;
-    Audio(Audio&& v) noexcept                   { swap(*this, v); }
-    Audio(base&& v) noexcept                    { swap(implicit_cast<base&>(*this), v); }
-    ~Audio()                                    { }
-    Audio& operator=(Audio&& v) noexcept        { clear(); swap(*this, v); return *this; }
-    void operator=(base&& v)                    { clear(), swap(implicit_cast<base&>(*this), v); }
-    Audio& operator=(const Audio&)              = default;
-    void operator=(CGridView<2,float> audio)    { base::assign(audio); }
-    void init(const Vec2<int>& dims)            { base::init(dims); }
-    void clear()                                { init(twice(0)); }
-    int nchannels() const                       { return base::dim(0); }
-    int nsamples() const                        { return base::dim(1); }
-    const Attrib& attrib() const                { return _attrib; }
-    Attrib& attrib()                            { return _attrib; }
-    void read_file(const string& filename); // filename may be "-" for std::cin;  may throw std::runtime_error
-    void write_file(const string& filename) const; // filename may be "-" for std::cout; may throw std::runtime_error
-    string diagnostic_string() const;
+class Audio : public Grid<2, float> {
+  // Corresponds to pcm_f32be or pcm_f32le depending on native byte ordering.
+  using base = Grid<2, float>;
+  friend void swap(Audio& l, Audio& r) noexcept;
 
-    // Misc:
-    struct Attrib {
-        string suffix;  // e.g. "wav"; "" if unknown; to identify format of read_file("-") and write_file("-")
-        double samplerate {0.}; // samples/sec (Hz)
-        int bitrate {0};        // bits/sec
-    };
+ public:
+  using value_type = float;
+  struct Attrib;
+  explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); }  // nchannels, nsamples
+  explicit Audio(const Audio&) = default;
+  Audio(Audio&& v) noexcept { swap(*this, v); }
+  Audio(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
+  ~Audio() {}
+  Audio& operator=(Audio&& v) noexcept {
+    clear();
+    swap(*this, v);
+    return *this;
+  }
+  void operator=(base&& v) { clear(), swap(implicit_cast<base&>(*this), v); }
+  Audio& operator=(const Audio&) = default;
+  void operator=(CGridView<2, float> audio) { base::assign(audio); }
+  void init(const Vec2<int>& dims) { base::init(dims); }
+  void clear() { init(twice(0)); }
+  int nchannels() const { return base::dim(0); }
+  int nsamples() const { return base::dim(1); }
+  const Attrib& attrib() const { return _attrib; }
+  Attrib& attrib() { return _attrib; }
+  void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error
+  void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
+  string diagnostic_string() const;
+
+  // Misc:
+  struct Attrib {
+    string suffix;          // e.g. "wav"; "" if unknown; to identify format of read_file("-") and write_file("-")
+    double samplerate{0.};  // samples / sec (Hz)
+    int bitrate{0};         // bits / sec
+  };
+
  private:
-    Attrib _attrib;
+  Attrib _attrib;
 };
 
 // Whether filename suffix identifies it as audio.
@@ -73,9 +79,11 @@ string audio_suffix_for_magic_byte(uchar c);
 bool ffmpeg_command_exists();
 
 inline void swap(Audio& l, Audio& r) noexcept {
-    using std::swap; swap(implicit_cast<Audio::base&>(l), implicit_cast<Audio::base&>(r)); swap(l._attrib, r._attrib);
+  using std::swap;
+  swap(implicit_cast<Audio::base&>(l), implicit_cast<Audio::base&>(r));
+  swap(l._attrib, r._attrib);
 }
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_AUDIO_H_
+#endif  // MESH_PROCESSING_LIBHH_AUDIO_H_

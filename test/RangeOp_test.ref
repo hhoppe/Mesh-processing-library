@@ -1,5 +1,5 @@
 mag2(ar1) = 104594
-square(rms(ar1))*ar1.num() = 104594
+square(rms(ar1)) * ar1.num() = 104594
 mag(ar2) = 8.83176
 sqrt(var(ar1)) = 116.428
 dist2(ar1, ar2) = 104516
@@ -15,12 +15,12 @@ compare(ar1, ar2) = 1
 compare(ar2, ar1) = -1
 compare(ar1, ar1) = 0
 compare(ar2, ar2) = 0
-ar1==ar2 = 0
-ar2==ar1 = 0
-ar1==ar1 = 1
-ar2==ar2 = 1
+ar1 == ar2 = 0
+ar2 == ar1 = 0
+ar1 == ar1 = 1
+ar2 == ar2 = 1
 is_zero(ar1) = 0
-is_zero(ar1-ar1) = 1
+is_zero(ar1 - ar1) = 1
 count(ar2, 0) = 2
 count(ar2, 3) = 1
 count(ar2, 99) = 0
@@ -60,10 +60,10 @@ compare(ar1, ar2) = -1
 compare(ar2, ar1) = 1
 compare(ar1, ar1) = 0
 compare(ar2, ar2) = 0
-ar1==ar2 = 0
-ar2==ar1 = 0
-ar1==ar1 = 1
-ar2==ar2 = 1
+ar1 == ar2 = 0
+ar2 == ar1 = 0
+ar1 == ar1 = 1
+ar2 == ar2 = 1
 compare(ar1, ar2, tol) = 0
 compare(ar2, ar1, tol) = 0
 compare(ar1, ar1, tol) = 0

@@ -10,13 +10,13 @@ r1.get_unsigned() = 3890346734
 round_fraction_digits(Sgauss.avg(), 1e10f) = 0.000111956
 round_fraction_digits(Sgauss.sdv(), 1e7f) = 1.00079
 0.5f = 0.5
-0.5f*pow(2.f, 32.f) = 2.14748e+09
-0.5f*pow(2.f, 64.f) = 9.22337e+18
-sqrt(1.f/12.f) = 0.288675
-sqrt(1.f/12.f)*pow(2.f, 32.f) = 1.23985e+09
-sqrt(1.f/12.f)*pow(2.f, 64.f) = 5.32512e+18
+0.5f * pow(2.f, 32.f) = 2.14748e+09
+0.5f * pow(2.f, 64.f) = 9.22337e+18
+sqrt(1.f / 12.f) = 0.288675
+sqrt(1.f / 12.f) * pow(2.f, 32.f) = 1.23985e+09
+sqrt(1.f / 12.f) * pow(2.f, 64.f) = 5.32512e+18
 vmin=10012 vmax=4294965080
-vmin=1.40971e-06 vmax=0.999999 1.-vmax=5.15884e-07
+vmin=1.40971e-06 vmax=0.999999 1. - vmax=5.15884e-07
 Random::G.get_unsigned() = 3499211612
 r1.get_uint64() = 1367418248335452822
 ar = Array<int>(6) {

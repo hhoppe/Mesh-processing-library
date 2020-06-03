@@ -5,6 +5,7 @@
 #include "Geometry.h"
 #include "PArray.h"
 #include "Pixel.h"
+#include "RangeOp.h"
 
 namespace hh {
 
@@ -18,28 +19,28 @@ namespace hh {
 // In either case, the format can be text or binary.
 
 struct A3dColor : Vec3<float> {
-    A3dColor()                                      = default;
-    constexpr A3dColor(float r, float g, float b)   : Vec3<float>(r, g, b) { }
-    constexpr A3dColor(Vec3<float> a)               : Vec3<float>(a) { }
+  A3dColor() = default;
+  constexpr A3dColor(float r, float g, float b) : Vec3<float>(r, g, b) {}
+  constexpr A3dColor(Vec3<float> a) : Vec3<float>(a) {}
 };
 
 struct A3dVertexColor {
-    A3dVertexColor()                           = default;
-    constexpr explicit A3dVertexColor(A3dColor pd) : d(pd), s(1.f, 1.f, 1.f), g(1.f, 0.f, 0.f) { }
-    constexpr explicit A3dVertexColor(const Pixel& pix)
-        : A3dVertexColor(A3dColor(pix[0]/255.f, pix[1]/255.f, pix[2]/255.f)) { }
-    constexpr A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) { }
-    A3dColor d;                 // diffuse
-    A3dColor s;                 // specular
-    A3dColor g;                 // g[0] is Phong coefficient; other channels unused
+  A3dVertexColor() = default;
+  constexpr explicit A3dVertexColor(A3dColor pd) : d(pd), s(1.f, 1.f, 1.f), g(1.f, 0.f, 0.f) {}
+  constexpr explicit A3dVertexColor(const Pixel& pix)
+      : A3dVertexColor(A3dColor(pix[0] / 255.f, pix[1] / 255.f, pix[2] / 255.f)) {}
+  constexpr A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) {}
+  A3dColor d;  // diffuse
+  A3dColor s;  // specular
+  A3dColor g;  // g[0] is Phong coefficient; other channels unused
 };
 
 struct A3dVertex {
-    A3dVertex()                                 = default;
-    constexpr A3dVertex(Point pp, Vector pn, A3dVertexColor pc) : p(pp), n(pn), c(pc) { }
-    Point p;
-    Vector n;
-    A3dVertexColor c;
+  A3dVertex() = default;
+  constexpr A3dVertex(Point pp, Vector pn, A3dVertexColor pc) : p(pp), n(pn), c(pc) {}
+  Point p;
+  Vector n;
+  A3dVertexColor c;
 };
 
 class Polygon;
@@ -48,134 +49,144 @@ class Polygon;
 //  but thought it would be too inefficient to allocate/deallocate every time.
 class A3dElem {
  public:
-    enum class EType {
-        polygon = 'P', polyline = 'L', point = 'p',
-        comment = '#', endobject = 'o', endframe = 'f', endfile = 'q', editobject = 'O',
-    };
-    // also reserved: 'v', 'E', 'n', 'd', 's', 'g'
-    A3dElem()                                           = default;
-    explicit A3dElem(EType type, bool binary = false, int nv = 0) { init(type, binary, nv); } // allocates AND init()
-    // both A3dElem(..nv) and init() allocate and initialize for nv
-    void init(EType type, bool binary = false, int nv = 0);
-    void update(EType type, bool binary = false); // polygon<>polyline<>point
-    EType type() const                                   { return _type; }
-    void set_binary(bool b)                             { _binary = b; }
-    bool binary() const                                 { return _binary; }
-    static bool status_type(EType type) { char ch = static_cast<char>(type); return ch=='d' || ch=='s' || ch=='g'; }
-    static bool command_type(EType type)                { return command_type_i(type); }
+  enum class EType {
+    polygon = 'P',
+    polyline = 'L',
+    point = 'p',
+    comment = '#',
+    endobject = 'o',
+    endframe = 'f',
+    endfile = 'q',
+    editobject = 'O',
+  };
+  // also reserved: 'v', 'E', 'n', 'd', 's', 'g'
+  A3dElem() = default;
+  explicit A3dElem(EType type, bool binary = false, int nv = 0) { init(type, binary, nv); }  // allocates AND init()
+  // both A3dElem(..., nv) and init() allocate and initialize for nv
+  void init(EType type, bool binary = false, int nv = 0);
+  void update(EType type, bool binary = false);  // polygon<>polyline<>point
+  EType type() const { return _type; }
+  void set_binary(bool b) { _binary = b; }
+  bool binary() const { return _binary; }
+  static bool status_type(EType type) { return contains("dsg", static_cast<char>(type)); }
+  static bool command_type(EType type) {
+    return type == EType::endobject || type == EType::endframe || type == EType::endfile || type == EType::editobject;
+  }
 
-    // For EType::polygon || EType::polyline || EType::point:
-    int num() const                                     { return _v.num(); }
-    size_t size() const                                 { return _v.size(); }
-    void push(const A3dVertex& vertex)                  { push_i(vertex); }
-    A3dVertex& operator[](int i)                        { return _v[i]; }
-    const A3dVertex& operator[](int i) const            { return _v[i]; }
+  // For EType::polygon || EType::polyline || EType::point:
+  int num() const { return _v.num(); }
+  size_t size() const { return _v.size(); }
+  void push(const A3dVertex& vertex) { push_i(vertex); }
+  A3dVertex& operator[](int i) { return _v[i]; }
+  const A3dVertex& operator[](int i) const { return _v[i]; }
 
-    // For EType::polygon:
-    Vector pnormal() const;     // may be degenerate (zero)!
-    void get_polygon(Polygon& poly) const;
+  // For EType::polygon:
+  Vector pnormal() const;  // may be degenerate (zero)!
+  void get_polygon(Polygon& poly) const;
 
-    // For TComment:
-    void set_comment(string str); // str may start with ' '
-    const string& comment() const;
+  // For TComment:
+  void set_comment(string str);  // str may start with ' '
+  const string& comment() const;
 
-    // For command_type():
-    Vec3<float>& f()                                    { return (assertx(command_type(_type)), _f); }
-    const Vec3<float>& f() const                        { return (assertx(command_type(_type)), _f); }
+  // For command_type():
+  Vec3<float>& f() { return (assertx(command_type(_type)), _f); }
+  const Vec3<float>& f() const { return (assertx(command_type(_type)), _f); }
+
  private:
-    EType _type {EType::polygon};
-    bool _binary {false};
-    PArray<A3dVertex,8> _v;     // for EType::polygon, EType::polyline, EType::point
-    string _comment;            // for EType::comment
-    Vec3<float> _f;             // for comamnd_type()
-    static bool command_type_i(EType type) {
-        return type==EType::endobject || type==EType::endframe || type==EType::endfile || type==EType::editobject;
-    }
-    void push_i(const A3dVertex& vertex) {
-        assertx(_type==EType::polygon || _type==EType::polyline || _type==EType::point);
-        if (_type==EType::point) assertx(!num());
-        _v.push(vertex);
-    }
-    friend std::ostream& operator<<(std::ostream& os, const A3dElem& el) {
-        os << "A3dElem{ type='" << assert_narrow_cast<char>(el.type()) << "' binary=" << el.binary();
-        switch (el.type()) {
-         case A3dElem::EType::polygon: case A3dElem::EType::polyline: case A3dElem::EType::point:
-            if (el.type()==A3dElem::EType::polygon)
-                os << " pnormal=" << el.pnormal();
-            os << " num=" << el.num() << " {\n";
-            for_int(i, el.num()) {
-                os << "  [" << i << "] = {p=" << el[i].p << ", d=" << el[i].c.d << ", s=" <<
-                    el[i].c.s << ", g=" << el[i].c.g << ", n=" << el[i].n << "}\n";;
-            }
-            break;
-         case A3dElem::EType::comment:
-            os << " comment='" << el.comment() << "'";
-            break;
-         default:
-            os << " f=" << el.f();
+  EType _type{EType::polygon};
+  bool _binary{false};
+  PArray<A3dVertex, 8> _v;  // for EType::polygon, EType::polyline, EType::point
+  string _comment;          // for EType::comment
+  Vec3<float> _f;           // for comamnd_type()
+  void push_i(const A3dVertex& vertex) {
+    assertx(_type == EType::polygon || _type == EType::polyline || _type == EType::point);
+    if (_type == EType::point) assertx(!num());
+    _v.push(vertex);
+  }
+  friend std::ostream& operator<<(std::ostream& os, const A3dElem& el) {
+    os << "A3dElem{ type='" << assert_narrow_cast<char>(el.type()) << "' binary=" << el.binary();
+    switch (el.type()) {
+      case A3dElem::EType::polygon:
+      case A3dElem::EType::polyline:
+      case A3dElem::EType::point:
+        if (el.type() == A3dElem::EType::polygon) os << " pnormal=" << el.pnormal();
+        os << " num=" << el.num() << " {\n";
+        for_int(i, el.num()) {
+          os << "  [" << i << "] = {p=" << el[i].p << ", d=" << el[i].c.d << ", s=" << el[i].c.s << ", g=" << el[i].c.g
+             << ", n=" << el[i].n << "}\n";
+          ;
         }
-        return os << "}\n";
+        break;
+      case A3dElem::EType::comment: os << " comment='" << el.comment() << "'"; break;
+      default: os << " f=" << el.f();
     }
+    return os << "}\n";
+  }
 };
 
 // *** Reading
 
 class RA3dStream : noncopyable {
  public:
-    void read(A3dElem& el);
-    virtual ~RA3dStream()                       = default;
+  void read(A3dElem& el);
+  virtual ~RA3dStream() = default;
+
  protected:
-    RA3dStream()                                = default;
-    virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0; // ret success
+  RA3dStream() = default;
+  virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0;  // ret success
  private:
-    A3dVertexColor _curcol {A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
-    void set_current_color(char ctype, const Vec3<float>& f);
+  A3dVertexColor _curcol{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
+  void set_current_color(char ctype, const Vec3<float>& f);
 };
 
-class RSA3dStream : public RA3dStream { // Read from stream
+class RSA3dStream : public RA3dStream {  // Read from stream
  public:
-    explicit RSA3dStream(std::istream& pis)     : _is(pis) { }
-    std::istream& is()                          { return _is; }
+  explicit RSA3dStream(std::istream& pis) : _is(pis) {}
+  std::istream& is() { return _is; }
+
  private:
-    std::istream& _is;
-    bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) override;
+  std::istream& _is;
+  bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) override;
 };
 
 // *** Writing
 
 class WA3dStream : noncopyable {
  public:
-    void write(const A3dElem& el);
-    void write_comment(const string& str); // can contain newlines
-    void write_end_object(bool binary = false, float f0 = 1.f, float f1 = 1.f);
-    void write_clear_object(bool binary = false, float f0 = 1.f, float f1 = 0.f);
-    void write_end_frame(bool binary = false);
-    virtual void flush() = 0;
-    virtual ~WA3dStream()                       = default;
+  void write(const A3dElem& el);
+  void write_comment(const string& str);  // can contain newlines
+  void write_end_object(bool binary = false, float f0 = 1.f, float f1 = 1.f);
+  void write_clear_object(bool binary = false, float f0 = 1.f, float f1 = 0.f);
+  void write_end_frame(bool binary = false);
+  virtual void flush() = 0;
+  virtual ~WA3dStream() = default;
+
  protected:
-    WA3dStream()                                = default;
-    virtual void output(bool binary, char type, const Vec3<float>& f) = 0;
-    virtual void output_comment(const string& s) = 0;
-    virtual void blank_line() = 0;
+  WA3dStream() = default;
+  virtual void output(bool binary, char type, const Vec3<float>& f) = 0;
+  virtual void output_comment(const string& s) = 0;
+  virtual void blank_line() = 0;
+
  private:
-    bool _first {true};         // first write
-    A3dVertexColor _curcol;
-    bool _force_choice_binary;  // force choice one way or the other
-    bool _choice_binary;        // which way is forced
-    bool _pblank {false};       // previous element left a blank line
+  bool _first{true};  // first write
+  A3dVertexColor _curcol;
+  bool _force_choice_binary;  // force choice one way or the other
+  bool _choice_binary;        // which way is forced
+  bool _pblank{false};        // previous element left a blank line
 };
 
-class WSA3dStream : public WA3dStream { // Write to stream
+class WSA3dStream : public WA3dStream {  // Write to stream
  public:
-    explicit WSA3dStream(std::ostream& pos)     : _os(pos) { }
-    ~WSA3dStream()                              { flush(); }
-    void flush() override                       { _os.flush(); }
-    std::ostream& os()                          { return _os; }
+  explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
+  ~WSA3dStream() { flush(); }
+  void flush() override { _os.flush(); }
+  std::ostream& os() { return _os; }
+
  private:
-    std::ostream& _os;
-    void output(bool binary, char type, const Vec3<float>& f) override;
-    void output_comment(const string& s) override;
-    void blank_line() override;
+  std::ostream& _os;
+  void output(bool binary, char type, const Vec3<float>& f) override;
+  void output_comment(const string& s) override;
+  void blank_line() override;
 };
 
 constexpr int k_a3d_binary_code = 3;
@@ -224,7 +235,7 @@ constexpr int k_a3d_binary_code = 3;
 //
 //    # Special commands (for advanced use)
 //    #  EndObject: ends current object and selects a new object number
-//    #  (works like seek(2): int_code=0 -> beg, int_code=1 -> relative, ...)
+//    #  (works like seek(2): int_code == 0 -> beg; int_code == 1 -> relative, ...)
 //    #  (ex.: 'o 1 1 0' select next object, 'o 0 3 0' select object 3)
 //    o int_code int_disp 0
 //    #  EndFrame (used by viewer to determine when to update screen)
@@ -237,6 +248,6 @@ constexpr int k_a3d_binary_code = 3;
 //    # Use EndObject to select a different object, and EditObject to clear an
 //    # object before replacing its definition.
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_A3DSTREAM_H_
+#endif  // MESH_PROCESSING_LIBHH_A3DSTREAM_H_

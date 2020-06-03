@@ -31,130 +31,137 @@
 
 namespace hh {
 
-class BSac : noncopyable { // noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable
+class BSac : noncopyable {  // noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable
  public:
-    using Func = void (*)(void*);
-    static constexpr int k_dummy = 4;
-    // ** per-object
-    // We use reinterpret_cast to disable runtime bounds checking.
-    void* access(int k) { return reinterpret_cast<uint8_t*>(_a)+k; }
+  using Func = void (*)(void*);
+  static constexpr int k_dummy = 4;
+  // ** per-object
+  // We use reinterpret_cast to disable runtime bounds checking.
+  void* access(int k) { return reinterpret_cast<uint8_t*>(_a) + k; }
+
  protected:
-    void call_funcs(int num, int akeys[], Func afuncs[]) {
-        for_int(i, num) {
-            // SHOW(i, uintptr_t(_a), akeys[i]);
-            afuncs[i](access(akeys[i]));
-        }
+  void call_funcs(int num, int akeys[], Func afuncs[]) {
+    for_int(i, num) {
+      // SHOW(i, uintptr_t(_a), akeys[i]);
+      afuncs[i](access(akeys[i]));
     }
-    alignas(16) char _a[k_dummy];
+  }
+  alignas(16) char _a[k_dummy];
 };
 
-template<typename T> class Sac : public BSac {
-    static constexpr int k_max = 50;
+template <typename T> class Sac : public BSac {
+  static constexpr int k_max = 50;
+
  public:
-    // ** static
-    template<typename T2> static int allocate() {
-        unsigned s = sizeof(T2);
-        int k = size;
-        int align = alignof(T2);
-        max_align = max(max_align, align);
-        k = ((k+align-1)/align)*align;
-        if (0) SHOW(type_name<T>(), type_name<T2>(), s, size, align, max_align, k);
-        size = k+s;
-        return k;
+  // ** static
+  template <typename T2> static int allocate() {
+    unsigned s = sizeof(T2);
+    int k = size;
+    int align = alignof(T2);
+    max_align = max(max_align, align);
+    k = ((k + align - 1) / align) * align;
+    if (0) SHOW(type_name<T>(), type_name<T2>(), s, size, align, max_align, k);
+    size = k + s;
+    return k;
+  }
+  template <typename T2> static int allocate_cd(Func fcons, Func fdest) {
+    int k = allocate<T2>();
+    if (fcons) {
+      assertx(cnum < k_max);
+      HH_ASSUME(cnum < k_max);
+      ckeys[cnum] = k;
+      cfuncs[cnum] = fcons;
+      cnum++;
     }
-    template<typename T2> static int allocate_cd(Func fcons, Func fdest) {
-        int k = allocate<T2>();
-        if (fcons) {
-            assertx(cnum<k_max); HH_ASSUME(cnum<k_max);
-            ckeys[cnum] = k; cfuncs[cnum] = fcons;
-            cnum++;
-        }
-        if (fdest) {
-            assertx(dnum<k_max); HH_ASSUME(dnum<k_max);
-            dkeys[dnum] = k; dfuncs[dnum] = fdest;
-            dnum++;
-        }
-        return k;
+    if (fdest) {
+      assertx(dnum < k_max);
+      HH_ASSUME(dnum < k_max);
+      dkeys[dnum] = k;
+      dfuncs[dnum] = fdest;
+      dnum++;
     }
-    static int get_size()                       { return size; }
-    static int get_max_align()                  { return max_align; }
+    return k;
+  }
+  static int get_size() { return size; }
+  static int get_max_align() { return max_align; }
 
-    // ** per-object
-    Sac()                                       { if (cnum) call_funcs(cnum, ckeys, cfuncs); }
-    ~Sac()                                      { if (dnum) call_funcs(dnum, dkeys, dfuncs); }
+  // ** per-object
+  Sac() {
+    if (cnum) call_funcs(cnum, ckeys, cfuncs);
+  }
+  ~Sac() {
+    if (dnum) call_funcs(dnum, dkeys, dfuncs);
+  }
+
  private:
-    static int size;
-    static int max_align;
-    // Cannot use Arrays here because their constructors might not yet be called at initialization time!
-    static int cnum;
-    static int ckeys[k_max];
-    static Func cfuncs[k_max];
-    static int dnum;
-    static int dkeys[k_max];
-    static Func dfuncs[k_max];
+  static int size;
+  static int max_align;
+  // Cannot use Arrays here because their constructors might not yet be called at initialization time!
+  static int cnum;
+  static int ckeys[k_max];
+  static Func cfuncs[k_max];
+  static int dnum;
+  static int dkeys[k_max];
+  static Func dfuncs[k_max];
 };
 
-template<typename T> int Sac<T>::size = 0;
-template<typename T> int Sac<T>::max_align = alignof(T);
-template<typename T> int Sac<T>::cnum = 0;
-template<typename T> int Sac<T>::ckeys[k_max] = {};
-template<typename T> BSac::Func Sac<T>::cfuncs[k_max] = {};
-template<typename T> int Sac<T>::dnum = 0;
-template<typename T> int Sac<T>::dkeys[k_max] = {};
-template<typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
+template <typename T> int Sac<T>::size = 0;
+template <typename T> int Sac<T>::max_align = alignof(T);
+template <typename T> int Sac<T>::cnum = 0;
+template <typename T> int Sac<T>::ckeys[k_max] = {};
+template <typename T> BSac::Func Sac<T>::cfuncs[k_max] = {};
+template <typename T> int Sac<T>::dnum = 0;
+template <typename T> int Sac<T>::dkeys[k_max] = {};
+template <typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
 
-#define HH_MAKE_SAC(T)                                                                          \
-    static void* operator new(size_t s) {                                                       \
-        ASSERTX(s==sizeof(T));                                                                  \
-        return assertx(hh::aligned_malloc(sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size(),   \
-                                          hh::Sac<T>::get_max_align()));                        \
-    }                                                                                           \
-    static void operator delete(void* p, size_t) { hh::aligned_free(p); }                       \
-    hh::Sac<T> sac
+#define HH_MAKE_SAC(T)                                                                                            \
+  static void* operator new(size_t s) {                                                                           \
+    ASSERTX(s == sizeof(T));                                                                                      \
+    return assertx(                                                                                               \
+        hh::aligned_malloc(sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size(), hh::Sac<T>::get_max_align())); \
+  }                                                                                                               \
+  static void operator delete(void* p, size_t) { hh::aligned_free(p); }                                           \
+  hh::Sac<T> sac
 
-#define HH_MAKE_POOLED_SAC(T)                                                       \
-    hh::Sac<T> sac;                                                                 \
-    static void* operator new(size_t s) {                                           \
-        ASSERTX(s==sizeof(T));                                                      \
-        return pool.alloc_size(sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size(),  \
-                               hh::Sac<T>::get_max_align());                        \
-    }                                                                               \
-    static void operator delete(void* p, size_t) {                                  \
-        pool.free_size(p, sizeof(T)-hh::BSac::k_dummy+hh::Sac<T>::get_size());      \
-    }                                                                               \
-    static void* operator new[](size_t) = delete;                                   \
-    static void operator delete[](void*, size_t) = delete;                          \
-    HH_POOL_ALLOCATION_3(T)
+#define HH_MAKE_POOLED_SAC(T)                                                                                    \
+  hh::Sac<T> sac;                                                                                                \
+  static void* operator new(size_t s) {                                                                          \
+    ASSERTX(s == sizeof(T));                                                                                     \
+    return pool.alloc_size(sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size(), hh::Sac<T>::get_max_align()); \
+  }                                                                                                              \
+  static void operator delete(void* p, size_t) {                                                                 \
+    pool.free_size(p, sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size());                                   \
+  }                                                                                                              \
+  static void* operator new[](size_t) = delete;                                                                  \
+  static void operator delete[](void*, size_t) = delete;                                                         \
+  HH_POOL_ALLOCATION_3(T)
 
-#define HH_SACABLE(T)                                                                       \
-    static void sac_construct_##T(void* p) { new(p)T; }                                     \
-    static void sac_destruct_##T(void* p) { hh::dummy_use(p); static_cast<T*>(p)->~T(); }   \
-    HH_EAT_SEMICOLON
+#define HH_SACABLE(T)                                   \
+  static void sac_construct_##T(void* p) { new (p) T; } \
+  static void sac_destruct_##T(void* p) {               \
+    hh::dummy_use(p);                                   \
+    static_cast<T*>(p)->~T();                           \
+  }                                                     \
+  HH_EAT_SEMICOLON
 
-template<typename T, typename T2> T& sac_access(T2& ob, int key) {
-    return *reinterpret_cast<T*>(ob->sac.access(key));
+template <typename T, typename T2> T& sac_access(T2& ob, int key) {
+  return *reinterpret_cast<T*>(ob->sac.access(key));
 }
 
-#define HH_SAC_ALLOCATE_CD(sac, type)                                               \
-    hh::Sac<sac>::allocate_cd<type>(&sac_construct_##type, &sac_destruct_##type)
+#define HH_SAC_ALLOCATE_CD(sac, type) hh::Sac<sac>::allocate_cd<type>(&sac_construct_##type, &sac_destruct_##type)
 
-#define HH_SAC_ALLOCATE(sac, type)                                            \
-    hh::Sac<sac>::allocate<type>()
+#define HH_SAC_ALLOCATE(sac, type) hh::Sac<sac>::allocate<type>()
 
-#define HH_SAC_ALLOCATE_FUNC(sac, type, accessfunc)                           \
-    static int HH_ID(accessfunc) = HH_SAC_ALLOCATE(sac, type);                \
-    type& accessfunc(sac* e) {                                                \
-        return hh::sac_access<type>(e, HH_ID(accessfunc));                    \
-    }                                                                         \
-    HH_EAT_SEMICOLON
+#define HH_SAC_ALLOCATE_FUNC(sac, type, accessfunc)                               \
+  static int HH_ID(accessfunc) = HH_SAC_ALLOCATE(sac, type);                      \
+  type& accessfunc(sac* e) { return hh::sac_access<type>(e, HH_ID(accessfunc)); } \
+  HH_EAT_SEMICOLON
 
-#define HH_SAC_ALLOCATE_CD_FUNC(sac, type, accessfunc)                        \
-    static int HH_ID(accessfunc) = HH_SAC_ALLOCATE_CD(sac, type);             \
-    type& accessfunc(sac* e) {                                                \
-        return hh::sac_access<type>(e, HH_ID(accessfunc));                    \
-    }                                                                         \
-    HH_EAT_SEMICOLON
+#define HH_SAC_ALLOCATE_CD_FUNC(sac, type, accessfunc)                            \
+  static int HH_ID(accessfunc) = HH_SAC_ALLOCATE_CD(sac, type);                   \
+  type& accessfunc(sac* e) { return hh::sac_access<type>(e, HH_ID(accessfunc)); } \
+  HH_EAT_SEMICOLON
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_SAC_H_
+#endif  // MESH_PROCESSING_LIBHH_SAC_H_

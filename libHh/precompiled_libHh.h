@@ -9,27 +9,28 @@
 // Thus we can omit the contents if defined(PRECOMPILED_LIBHH_CPP) from precompiled_libHh.cpp and !defined(_MSC_VER)
 //  and !defined(MAKEFILE_DEP).
 
-#if !defined(MAKEFILE_DEP) && (defined(PRECOMPILED_LIBHH_CPP) && !defined(_MSC_VER) || (defined(__clang__) && defined(_MSC_VER)))
+#if !defined(MAKEFILE_DEP) && \
+    (defined(PRECOMPILED_LIBHH_CPP) && !defined(_MSC_VER) || (defined(__clang__) && defined(_MSC_VER)))
 
 // no content
 
 #else
 
-#include "Hh.h"
 #include "Array.h"
-#include "Vec.h"
+#include "Geometry.h"
+#include "Hh.h"
 #include "RangeOp.h"
 #include "Stat.h"
-#include "Geometry.h"
+#include "Vec.h"
 
 #if 0
-#include "FileIO.h"
 #include "Args.h"
-#include "Matrix.h"
+#include "FileIO.h"
 #include "GMesh.h"
+#include "Matrix.h"
+#include "Set.h"
 #include "StringOp.h"
 #include "Timer.h"
-#include "Set.h"
 #endif
 
 #if 0

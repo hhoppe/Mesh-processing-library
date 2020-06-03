@@ -8,17 +8,17 @@ namespace hh {
 
 // Linear function in 3D, represented as a vector and scalar offset.
 struct LinearFunc {
-    Vector v;
-    float offset {0.f};
-    LinearFunc()                                = default;
-    LinearFunc(Vector pv, const Point& pp)      : v(std::move(pv)), offset(-dot(to_Vector(pp), v)) { }
-    float eval(const Point& p) const            { return dot(to_Vector(p), v)+offset; }
-    void add(const LinearFunc& lf)              { v += lf.v, offset += lf.offset; }
-    friend std::ostream& operator<<(std::ostream& os, const LinearFunc& lf) {
-        return os << "LinearFunc(v=" << lf.v << ", offset=" << lf.offset << ")";
-    }
+  Vector v;
+  float offset{0.f};
+  LinearFunc() = default;
+  LinearFunc(Vector pv, const Point& pp) : v(std::move(pv)), offset(-dot(to_Vector(pp), v)) {}
+  float eval(const Point& p) const { return dot(to_Vector(p), v) + offset; }
+  void add(const LinearFunc& lf) { v += lf.v, offset += lf.offset; }
+  friend std::ostream& operator<<(std::ostream& os, const LinearFunc& lf) {
+    return os << "LinearFunc(v=" << lf.v << ", offset=" << lf.offset << ")";
+  }
 };
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_LINEARFUNC_H_
+#endif  // MESH_PROCESSING_LIBHH_LINEARFUNC_H_

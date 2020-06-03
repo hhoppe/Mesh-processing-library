@@ -6,34 +6,35 @@
 
 namespace hh {
 
-class RBuffer; class WBuffer;
+class RBuffer;
+class WBuffer;
 
 namespace FrameIO {
 
 // Read Frame objects from std::stream or RBuffer.
 enum class ERecognize { parse_error, no, partial, yes };
 ERecognize recognize(RBuffer& b);
-bool read(std::istream& is, Frame& f, int& obn, float& zoom, bool& bin); // ret is_success
-bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin);       // ret is_success
+bool read(std::istream& is, Frame& f, int& obn, float& zoom, bool& bin);  // ret is_success
+bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin);        // ret is_success
 Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.
-bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin); // ret is_success
-bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin);       // ret is_success
+bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin);  // ret is_success
+bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin);        // ret is_success
 string create_string(const Frame& f, int obn, float zoom);
 
 // Detect special frames.
 bool is_not_a_frame(const Frame& f);
 void create_not_a_frame(Frame& f);
 
-} // namespace FrameIO
+}  // namespace FrameIO
 
-} // namespace hh
+}  // namespace hh
 
 //----------------------------------------------------------------------------
 //
 // NAME
-//   Frame - ascii representation of a 4*3 affine transformation (plus a field-of-view scalar).
+//   Frame - ascii representation of a 4 * 3 affine transformation (plus a field-of-view scalar).
 //
 // DESCRIPTION
 //   A frame is stored as a single-line beginning with 'F' and consisting of 1 integer and 13 float numbers:
@@ -49,7 +50,7 @@ void create_not_a_frame(Frame& f);
 //
 //   The final floating-point value is the "zoom" factor.  It is equal to tan(half_angle) where half_angle is
 //   the angle between the front vector and the nearest edge of the viewport.
-//   Thus, zoom==1.f for a square window corresponds to a horizontal field-of-view of 90 degrees.
+//   Thus, zoom == 1.f for a square window corresponds to a horizontal field-of-view of 90 degrees.
 //   The zoom value is typically used only for object 0 (the eye frame).
 //
 //   In many contexts, I associate the X, Y, Z world axes with "forward", "left", and "up" directions,
@@ -57,12 +58,12 @@ void create_not_a_frame(Frame& f);
 //
 //   The identify frame is
 //   F 0  1 0 0  0 1 0  0 0 1  0 0 0  1
-//   where the object_id==0 and zoom==1 values are often unused.
+//   where the object_id == 0 and zoom == 1 values are often unused.
 //
 //   For example, the eye-to-world frame that forms a good viewpoint for the demos/data/dragon.pm model is stored
 //   in demos/data/dragon.s3d :
 //   F 0  0.43794 -0.0692833 -0.896331  -0.893573 0.0759494 -0.442457  0.0987296 0.994707 -0.0286471  -0.207925 0.15072 0.389383  0.224572
-//   Note that all 3 direction vectors have unit norm, and that for a square window the zoom==0.224572 corresponds to a
-//   horizontal field-of-view of 25.31 degrees.
+//   Note that all 3 direction vectors have unit norm, and that for a square window the zoom == 0.224572 corresponds
+//   to a horizontal field-of-view of 25.31 degrees.
 
-#endif // MESH_PROCESSING_LIBHH_FRAMEIO_H_
+#endif  // MESH_PROCESSING_LIBHH_FRAMEIO_H_

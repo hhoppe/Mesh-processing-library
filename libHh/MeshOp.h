@@ -3,11 +3,11 @@
 #define MESH_PROCESSING_LIBHH_MESHOP_H_
 
 #include "GMesh.h"
-#include "Stat.h"
-#include "Set.h"
 #include "Map.h"
-#include "Queue.h"
 #include "Polygon.h"
+#include "Queue.h"
+#include "Set.h"
+#include "Stat.h"
 
 namespace hh {
 
@@ -34,11 +34,11 @@ float mesh_genus(const Mesh& mesh);
 // Return string giving basic topological characteristics of mesh.
 string mesh_genus_string(const Mesh& mesh);
 
-// For faces with >3 sides, find a good triangulation of the vertices.
+// For faces with > 3 sides, find a good triangulation of the vertices.
 // Return: success (may fail if some edges already exist).
 bool triangulate_face(GMesh& mesh, Face f);
 
-// ret: cosf of signed angle away from "flattness" (==exterior angle)
+// ret: cosf of signed angle away from "flattness" (== exterior angle)
 // range -1..1  (or -2 if a triangle is degenerate)
 // For non-triangles, looks at average of immediate neighbors on either side.
 float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
@@ -68,23 +68,21 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep);
 using EDGEF = bool (*)(const GMesh& m, Edge e);
 
 // For all Mesh Edge e,
-//  if dihedral angle cosf of faces both before and after is >mincos,
-//   and if (fdoswap(e)) then
+//  if dihedral angle cosf of faces both before and after is > mincos, and if (fdoswap(e)) then
 //    call fdel(e), swap the edge, and call fadd(newedge).
 // Consider all affect edges again.
 // Return number of edges swapped.
-int retriangulate_all(GMesh& mesh, float mincos,
-                      EDGEF fdoswap, EDGEF fdel = nullptr, EDGEF fadd = nullptr);
+int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr, EDGEF fadd = nullptr);
 
 // Consider only Edge e and recursively, all affected edges.  (e cannot be boundary edge!)
 // Return number of edges swapped.
-int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos,
-                            EDGEF fdoswap, EDGEF fdel = nullptr, EDGEF fadd = nullptr);
+int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr,
+                            EDGEF fadd = nullptr);
 
 // Consider swapping Edge e. (e cannot be boundary edge!)
 // Return number of edges swapped (0 or 1).
-int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos,
-                           EDGEF fdoswap, EDGEF fdel = nullptr, EDGEF fadd = nullptr);
+int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr,
+                           EDGEF fadd = nullptr);
 
 // Two EDGEF functions to determine which edges to swap in retriangulate functions above.
 bool circum_radius_swap_criterion(const GMesh& mesh, Edge e);
@@ -103,27 +101,28 @@ bool diagonal_distance_swap_criterion(const GMesh& mesh, Edge e);
 // If string(v) contains normal information, use that instead.
 class Vnors {
  public:
-    Vnors()                                     = default;
-    Vnors(Vnors&& v)                            : _mfnor(std::move(v._mfnor)), _nor(v._nor) { } // =default
-    enum class EType { unspecified, angle, sum, area, sloan, subdiv };
-    void compute(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
-    bool is_unique() const                      { return !_mfnor; }
-    const Vector& unique_nor() const            { return (ASSERTX(is_unique()), _nor); }
-    const Vector& face_nor(Face f) const        { return (ASSERTX(!is_unique()), _mfnor->get(f)); }
-    const Vector& get_nor(Face f) const         { return _mfnor ? _mfnor->get(f) : _nor; } // in any case
-    void clear();
+  Vnors() = default;
+  Vnors(Vnors&& v) : _mfnor(std::move(v._mfnor)), _nor(v._nor) {}  // = default
+  enum class EType { unspecified, angle, sum, area, sloan, subdiv };
+  void compute(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
+  bool is_unique() const { return !_mfnor; }
+  const Vector& unique_nor() const { return (ASSERTX(is_unique()), _nor); }
+  const Vector& face_nor(Face f) const { return (ASSERTX(!is_unique()), _mfnor->get(f)); }
+  const Vector& get_nor(Face f) const { return _mfnor ? _mfnor->get(f) : _nor; }  // in any case
+  void clear();
+
  private:
-    unique_ptr<Map<Face,Vector>> _mfnor; // if !_mfnor, common normal is stored in _nor
-    Vector _nor;
-    Polygon _tmp_poly;
+  unique_ptr<Map<Face, Vector>> _mfnor;  // if !_mfnor, common normal is stored in _nor
+  Vector _nor;
+  Polygon _tmp_poly;
 };
 
 // *** Projection onto mesh
 
-// If fast!=0 and point p projects within interior of face and edges of face are not sharp,
+// If fast != 0 and point p projects within interior of face and edges of face are not sharp,
 //   do not consider neighboring faces.
 float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp, bool fast);
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_MESHOP_H_
+#endif  // MESH_PROCESSING_LIBHH_MESHOP_H_

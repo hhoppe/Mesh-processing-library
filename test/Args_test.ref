@@ -105,7 +105,7 @@ ArView(argv, argc) = Array<const char*>(2) {
   Args_test
   -show1p1
 }
-1+1 = 2
+1 + 1 = 2
 optsparse=1 ar_unrecog=Array<std::string>(1) {
   Args_test
 }

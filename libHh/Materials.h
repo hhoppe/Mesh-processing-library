@@ -17,41 +17,40 @@ namespace hh {
 //  may contain 'groups="%s"'    (the model to which this face belongs)
 class Materials {
  public:
-    void read(std::istream& is) { // must be empty
-        assertx(!_matstrings.num());
-        int nmaterials; {
-            string sline; assertx(my_getline(is, sline));
-            assertx(remove_at_beginning(sline, "nmaterials="));
-            nmaterials = to_int(sline);
-        }
-        _matstrings.init(nmaterials);
-        for_int(matid, nmaterials) {
-            assertx(my_getline(is, _matstrings[matid]));
-        }
+  void read(std::istream& is) {  // must be empty
+    assertx(!_matstrings.num());
+    int nmaterials;
+    {
+      string sline;
+      assertx(my_getline(is, sline));
+      assertx(remove_at_beginning(sline, "nmaterials="));
+      nmaterials = to_int(sline);
     }
-    void write(std::ostream& os) const {
-        os << "nmaterials=" << _matstrings.num() << '\n';
-        for_int(matid, _matstrings.num()) {
-            os << _matstrings[matid] << '\n';
-        }
-    }
-    void set(int matid, string matstring) {
-        _matstrings.access(matid);
-        _matstrings[matid] = std::move(matstring);
-    }
-    const string& get(int matid) const {
-        assertx(_matstrings.ok(matid));
-        assertx(_matstrings[matid]!="");
-        return _matstrings[matid];
-    }
-    int num() const                             { return _matstrings.num(); }
-    size_t size() const                         { return _matstrings.size(); }
-    bool ok(int i) const                        { return _matstrings.ok(i); }
+    _matstrings.init(nmaterials);
+    for_int(matid, nmaterials) assertx(my_getline(is, _matstrings[matid]));
+  }
+  void write(std::ostream& os) const {
+    os << "nmaterials=" << _matstrings.num() << '\n';
+    for_int(matid, _matstrings.num()) os << _matstrings[matid] << '\n';
+  }
+  void set(int matid, string matstring) {
+    _matstrings.access(matid);
+    _matstrings[matid] = std::move(matstring);
+  }
+  const string& get(int matid) const {
+    assertx(_matstrings.ok(matid));
+    assertx(_matstrings[matid] != "");
+    return _matstrings[matid];
+  }
+  int num() const { return _matstrings.num(); }
+  size_t size() const { return _matstrings.size(); }
+  bool ok(int i) const { return _matstrings.ok(i); }
+
  private:
-    Array<string> _matstrings;
-    // Default operator=() and copy_constructor are safe.
+  Array<string> _matstrings;
+  // Default operator=() and copy_constructor are safe.
 };
 
-} // namespace hh
+}  // namespace hh
 
-#endif // MESH_PROCESSING_LIBHH_MATERIALS_H_
+#endif  // MESH_PROCESSING_LIBHH_MATERIALS_H_

@@ -483,10 +483,8 @@ int compare(const R1& range1, const R2& range2, const Iterator& tolerance) {
   auto iter2 = begin(range2), itend2 = end(range2);
   for (; iter1 != itend1; ++iter1, ++iter2) {
     auto d = *iter1 - *iter2;
-    if (d < -tolerance)
-      return -1;
-    if (d > tolerance)
-      return +1;
+    if (d < -tolerance) return -1;
+    if (d > tolerance) return +1;
   }
   ASSERTX(iter2 == itend2);  // verify they have the same number of elements
   return 0;

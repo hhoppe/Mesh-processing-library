@@ -778,11 +778,7 @@ void do_permutecolors() {
   Vec<uint8_t, 256> lookup;
   for_int(i, 256) lookup[i] = (i * 53) % 256;
   parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        for_int(z, image.zsize()) image[yx][z] = lookup[image[yx][z]];
-      },
-      10);
+      image.dims(), [&](const Vec2<int>& yx) { for_int(z, image.zsize()) image[yx][z] = lookup[image[yx][z]]; }, 10);
 }
 
 void do_randomizeRGB() {
@@ -1084,11 +1080,7 @@ void do_gamma(Args& args) {
   Vec<uint8_t, 256> transf;
   for_int(i, 256) transf[i] = uint8_t(clamp(pow(i / 255.f, gamma), 0.f, 1.f) * 255.f + .5f);
   parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        for_int(z, image.zsize()) image[yx][z] = transf[image[yx][z]];
-      },
-      10);
+      image.dims(), [&](const Vec2<int>& yx) { for_int(z, image.zsize()) image[yx][z] = transf[image[yx][z]]; }, 10);
 }
 
 void do_tobw() { image.to_bw(); }
@@ -1755,8 +1747,8 @@ void do_homogenize(Args& args) {
         for_int(i, n2) for_int(j, i + 1) bb[i][j] += arw[i] * arw[j];  // sum into lower triangular matrix
       }
     }
-    for_int(i, n2) for_intL(j, i + 1, n2) bb[i][j] = bb[j][i];      // complete the symmetric matrix
-    Matrix<double> invbb = inverse(bb);                             // (B * B^T)^-1
+    for_int(i, n2) for_intL(j, i + 1, n2) bb[i][j] = bb[j][i];  // complete the symmetric matrix
+    Matrix<double> invbb = inverse(bb);                         // (B * B^T)^-1
     for_int(z, image.zsize()) {
       Array<double> bx(n2, 0.);  // B * x
       // TODO: parallelize by allocating bx per-thread, and then summing them.

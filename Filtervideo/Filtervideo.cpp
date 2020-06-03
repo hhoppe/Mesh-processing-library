@@ -1021,9 +1021,7 @@ void do_flipvertical() {
 }
 
 void do_fliphorizontal() {
-  parallel_for_each(range(video.nframes()), [&](const int f) {
-    for_int(y, video.ysize()) reverse(video[f][y]);
-  });
+  parallel_for_each(range(video.nframes()), [&](const int f) { for_int(y, video.ysize()) reverse(video[f][y]); });
 }
 
 void do_disassemble(Args& args) {
@@ -1109,11 +1107,7 @@ void do_gamma(Args& args) {
         10);
   } else if (0) {
     parallel_for_coords(
-        video.dims(),
-        [&](const Vec3<int>& fyx) {
-          for_int(z, nz) video[fyx][z] = transf[video[fyx][z]];
-        },
-        10);
+        video.dims(), [&](const Vec3<int>& fyx) { for_int(z, nz) video[fyx][z] = transf[video[fyx][z]]; }, 10);
   } else {
     parallel_for_each(range(video.nframes()), [&](const int f) {
       for_int(y, video.ysize()) for_int(x, video.xsize()) {

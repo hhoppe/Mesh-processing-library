@@ -346,11 +346,12 @@ void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
     fr_matid = 0;
   }
   const int max_nwa = 6;
+  const int max_buf_size = 6 + max_nwa * (3 + 3 + 2) + 2;
   int nwa = expected_wad_num(pminfo);
   ASSERTX(nwa <= max_nwa);
   const int nrgb = pminfo._has_rgb * 3 + pminfo._has_uv * 2;
   int wadlength = 3 + nrgb;
-  Vec<float, 6 + max_nwa * (3 + 3 + 2) + 2> buf;
+  Vec<float, max_buf_size> buf;
   const int bufn = 6 + nwa * wadlength + 2 * pminfo._has_resid;
   assertx(bufn <= buf.num());
   assertx(read_binary_std(is, buf.head(bufn)));

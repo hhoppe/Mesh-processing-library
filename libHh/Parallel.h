@@ -82,7 +82,7 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #pragma warning(disable : 4701)  // "potentially uninitialized local variable 'xx' used"
 #endif
 #define omp_parallel_for_T(omp_args, T, i, lb, ub) omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
-#define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                   \
+#define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                 \
   HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u = ub) { HH_UNREACHABLE; } else \
         HH_OMP_POP_WARNINGS HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<u(); i++)
 

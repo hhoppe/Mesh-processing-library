@@ -1732,9 +1732,7 @@ void perhaps_initialize() {
           for_intL(x, 1, grid_dims[1] - 1) g_gridf[y][x] = mesh.point(mesh.id_vertex(i++))[2];
         }
       } else {
-        for_int(y, grid_dims[0]) {
-          for_int(x, grid_dims[1]) g_gridf[y][x] = mesh.point(mesh.id_vertex(i++))[2];
-        }
+        for_int(y, grid_dims[0]) for_int(x, grid_dims[1]) g_gridf[y][x] = mesh.point(mesh.id_vertex(i++))[2];
       }
       assertx(i == mesh.num_vertices() + 1);
     }

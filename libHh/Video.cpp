@@ -15,7 +15,7 @@
 
 #if defined(HH_VIDEO_HAVE_MF)
 
-#include <mutex>             // std::once_flag, std::call_once()
+#include <mutex>  // std::once_flag, std::call_once()
 
 // #undef _WIN32_WINNT
 // #define _WIN32_WINNT _WIN32_WINNT_WIN7
@@ -557,8 +557,9 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
     }
     {
       _impl_nv12 = _rvideo._use_nv12;
-      if (1 || !IsWindows8OrGreater()) _impl_nv12 = true;  // It may be ~3.5x faster on Windows 7
-                                                           // Actually it is still 5x faster on Windows 10
+      if (1 || !IsWindows8OrGreater())
+        _impl_nv12 = true;  // It may be ~3.5x faster on Windows 7
+                            // Actually it is still 5x faster on Windows 10
     }
     {
       com_ptr<IMFMediaType> pType;

@@ -1307,9 +1307,8 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       for_int(iloop, num_loops) {
         for_int(f, nnf) {
           auto frame = videoloop.size() ? videoloop[f] : sframe;
-          parallel_for_each(range(ny), [&](const int y) {
-            for_int(x, nx) frame(y, x) = video(grid_framei(f, y, x), y, x);
-          });
+          parallel_for_each(range(ny),
+                            [&](const int y) { for_int(x, nx) frame(y, x) = video(grid_framei(f, y, x), y, x); });
           if (pwvideo) pwvideo->write(sframe);
           if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
         }

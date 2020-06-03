@@ -3854,18 +3854,14 @@ Matrix<Point> smoothgim_subdiv(CMatrixView<Point> opoints) {
   // averaging step
   nn = nn * 2;
   Matrix<Point> tpoints(nn + 1, nn + 1);
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
-  }
+  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
       npoints[y][x] = avg_cubic(x > 0 ? tpoints[y][x - 1] : tpoints[nn - y][x + 1], tpoints[y][x],
                                 x < nn ? tpoints[y][x + 1] : tpoints[nn - y][x - 1]);
     }
   }
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
-  }
+  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
       npoints[y][x] = avg_cubic(y > 0 ? tpoints[y - 1][x] : tpoints[y + 1][nn - x], tpoints[y][x],

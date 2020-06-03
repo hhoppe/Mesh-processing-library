@@ -371,9 +371,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     assertx(n >= 3);
     // Note: at present only handle extremely restricted case.
     for_intL(i, 3, n) assertx(lf[i] == 0.f);
-    for_int(i, n - 1) {
-      for_int(j, n) zt[i][j] = 0.;
-    }
+    for_int(i, n - 1) for_int(j, n) zt[i][j] = 0.;
     Vec2<Vector> voa;
     {
       Vector vlf(lf[0], lf[1], lf[2]);
@@ -383,9 +381,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
     }
-    for_int(i, 2) {
-      for_int(c, 3) zt[i][c] = voa[i][c];
-    }
+    for_int(i, 2) for_int(c, 3) zt[i][c] = voa[i][c];
     for_intL(i, 3, n) zt[i - 1][i] = 1.;
     if (0) print_matrix(zt);
   }
@@ -546,9 +542,7 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
     for_int(i, ngeom) vsum[i] += qem._b[i];
     for_intL(i, ngeom, n) lls.enter_b_rc(inc + i, 0, float(-qem._b[i]));
   }
-  for_int(i, ngeom) {
-    for_int(j, ngeom) lls.enter_a_rc(i, j, float(msum[i][j]));
-  }
+  for_int(i, ngeom) for_int(j, ngeom) lls.enter_a_rc(i, j, float(msum[i][j]));
   for_int(i, ngeom) lls.enter_b_rc(i, 0, float(-vsum[i]));
   if (!lls.solve()) return false;
   for_int(wi, nw) {
@@ -623,9 +617,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   SvdDoubleLLS& lls = *plls;
   lls.clear();
 #if defined(DEF_LAGRANGE)
-  for_int(i, msize) {
-    for_int(j, msize) lls.enter_a_rc(i, j, float(a[i][j]));
-  }
+  for_int(i, msize) for_int(j, msize) lls.enter_a_rc(i, j, float(a[i][j]));
   for_int(i, msize) lls.enter_b_rc(i, 0, float(-b[i]));
   // At present only handle extremely restricted case.
   for_intL(i, 3, n) assertx(lf[i] == 0.f);
@@ -638,9 +630,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   {
     // Note: at present only handle extremely restricted case.
     for_intL(i, 3, n) assertx(lf[i] == 0.f);
-    for_int(i, msize - 1) {
-      for_int(j, msize) zt[i][j] = 0.f;
-    }
+    for_int(i, msize - 1) for_int(j, msize) zt[i][j] = 0.f;
     Vec2<Vector> voa;
     {
       Vector vlf(lf[0], lf[1], lf[2]);
@@ -650,9 +640,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
     }
-    for_int(i, 2) {
-      for_int(c, 3) zt[i][c] = voa[i][c];
-    }
+    for_int(i, 2) for_int(c, 3) zt[i][c] = voa[i][c];
     for_intL(i, 3, msize) zt[i - 1][i] = 1.f;
   }
   for_int(i, msize - 1) {

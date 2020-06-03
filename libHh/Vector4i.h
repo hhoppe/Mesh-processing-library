@@ -109,30 +109,18 @@ class Vector4i {
   };
 #elif defined(HH_VECTOR4_NEON)
   // TODO: implement these as Neon intrinsics.
-  Vector4i(const Vector4i& v) {
-    for_int(c, 4) _c[c] = v._c[c];
-  }
+  Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
-  explicit Vector4i(const Pixel& pix) {
-    for_int(c, 4) _c[c] = pix[c];
-  }
+  explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }
   Pixel pixel() const {
     Pixel v;
     for_int(c, 4) v[c] = clamp_to_uint8(_c[c]);
     return v;
   }
-  void load_unaligned(const int* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_unaligned(int* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
-  void load_aligned(const int* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_aligned(int* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
+  void load_unaligned(const int* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_unaligned(int* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
+  void load_aligned(const int* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_aligned(int* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
   friend Vector4i operator+(const Vector4i& l, const Vector4i& r) {
     return Vector4i(l[0] + r[0], l[1] + r[1], l[2] + r[2], l[3] + r[3]);
   }
@@ -149,9 +137,7 @@ class Vector4i {
     for_int(c, 4) _c[c] = r._c[c];
     return *this;
   }
-  void fill(int v) {
-    for_int(c, 4) _c[c] = v;
-  }
+  void fill(int v) { for_int(c, 4) _c[c] = v; }
   friend Vector4i min(const Vector4i& l, const Vector4i& r) {
     return Vector4i(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
   }
@@ -183,30 +169,18 @@ class Vector4i {
   };
 
 #else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
-  Vector4i(const Vector4i& v) {
-    for_int(c, 4) _c[c] = v._c[c];
-  }
+  Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
-  explicit Vector4i(const Pixel& pix) {
-    for_int(c, 4) _c[c] = pix[c];
-  }
+  explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }
   Pixel pixel() const {
     Pixel v;
     for_int(c, 4) v[c] = clamp_to_uint8(_c[c]);
     return v;
   }
-  void load_unaligned(const int* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_unaligned(int* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
-  void load_aligned(const int* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_aligned(int* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
+  void load_unaligned(const int* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_unaligned(int* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
+  void load_aligned(const int* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_aligned(int* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
   friend Vector4i operator+(const Vector4i& l, const Vector4i& r) {
     return Vector4i(l[0] + r[0], l[1] + r[1], l[2] + r[2], l[3] + r[3]);
   }
@@ -223,9 +197,7 @@ class Vector4i {
     for_int(c, 4) _c[c] = r._c[c];
     return *this;
   }
-  void fill(int v) {
-    for_int(c, 4) _c[c] = v;
-  }
+  void fill(int v) { for_int(c, 4) _c[c] = v; }
   friend Vector4i min(const Vector4i& l, const Vector4i& r) {
     return Vector4i(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
   }

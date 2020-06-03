@@ -512,7 +512,7 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
       (vt + i)->vspli = -1;
     }
     SRFace* fl = get_fl(vspli);
-    for_int(i, 2) (fl + i)->aface = &_isolated_aface;
+    for_int(i, 2) { (fl + i)->aface = &_isolated_aface; }
     bool cr2faces = creates_2faces(vspl);
 #if !defined(SR_NO_VSGEOM)
     vspl->vu_vgeom.point = vsa->vgeom.point + pm_vspl.vad_large.dpoint;
@@ -972,7 +972,7 @@ void SRMesh::read_srm(std::istream& is) {
       (vt + i)->vspli = -1;
     }
     SRFace* fl = get_fl(vspli);
-    for_int(i, 2) (fl + i)->aface = &_isolated_aface;
+    for_int(i, 2) { (fl + i)->aface = &_isolated_aface; }
   }
   display_hierarchy_height();
   if (k_debug) ok();

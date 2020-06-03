@@ -86,9 +86,7 @@ void do_nfaces(Args& args) {
 
 int count_nedges(const AWMesh& mesh) {
   int nedges_t2 = 0;  // twice the number of edges
-  for_int(i, mesh._faces.num()) {
-    for_int(j, 3) nedges_t2 += mesh._fnei[i].faces[j] >= 0 ? 1 : 2;
-  }
+  for_int(i, mesh._faces.num()) for_int(j, 3) nedges_t2 += mesh._fnei[i].faces[j] >= 0 ? 1 : 2;
   assertx(nedges_t2 % 2 == 0);
   return nedges_t2 / 2;
 }

@@ -224,22 +224,12 @@ class Vector4 {
     return estimate;
   }
 #else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
-  Vector4(const Vector4& v) {
-    for_int(c, 4) _c[c] = v._c[c];
-  }
+  Vector4(const Vector4& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4(float x, float y, float z, float w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
-  void load_unaligned(const float* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_unaligned(float* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
-  void load_aligned(const float* pSrc) {
-    for_int(c, 4) _c[c] = pSrc[c];
-  }
-  void store_aligned(float* pDst) const {
-    for_int(c, 4) pDst[c] = _c[c];
-  }
+  void load_unaligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_unaligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
+  void load_aligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
+  void store_aligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
   friend Vector4 operator+(const Vector4& l, const Vector4& r) {
     return Vector4(l[0] + r[0], l[1] + r[1], l[2] + r[2], l[3] + r[3]);
   }
@@ -260,9 +250,7 @@ class Vector4 {
     for_int(c, 4) _c[c] = r._c[c];
     return *this;
   }
-  void fill(float v) {
-    for_int(c, 4) _c[c] = v;
-  }
+  void fill(float v) { for_int(c, 4) _c[c] = v; }
   friend Vector4 min(const Vector4& l, const Vector4& r) {
     return Vector4(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
   }
@@ -371,11 +359,11 @@ inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
 }
 inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
   for_int(c, 4) ASSERTX(_c[c] >= 0.f && _c[c] < 255.999f);
-  uint32x4_t a = vcvtq_u32_f32(_r);       // uint32x4_t vcvt_u32_f32(float32x4_t a);  // VCVT.U32.F32 q0, q0 // truncate
-  uint16x4_t b = vqmovn_u32(a);           // uint16x4_t vqmovn_u32(uint32x4_t a);  // VQMOVN.I32 d0, q0 // saturation
-  uint16x8_t c = vcombine_u16(b, b);      // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
-  uint8x8_t d = vqmovn_u16(c);            // uint8x8_t vqmovn_u16(uint16x8_t a);  // VQMOVN.I16 d0, q0
-  uint32x2_t e = vreinterpret_u32_u8(d);  // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
+  uint32x4_t a = vcvtq_u32_f32(_r);   // uint32x4_t vcvt_u32_f32(float32x4_t a);  // VCVT.U32.F32 q0, q0 // truncate
+  uint16x4_t b = vqmovn_u32(a);       // uint16x4_t vqmovn_u32(uint32x4_t a);  // VQMOVN.I32 d0, q0 // saturation
+  uint16x8_t c = vcombine_u16(b, b);  // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
+  uint8x8_t d = vqmovn_u16(c);        // uint8x8_t vqmovn_u16(uint16x8_t a);  // VQMOVN.I16 d0, q0
+  uint32x2_t e = vreinterpret_u32_u8(d);                // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
   vst1_lane_u32(reinterpret_cast<uint32_t*>(p), e, 0);  // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
 }
 inline void Vector4::norm_to_byte4(uint8_t p[4]) const {

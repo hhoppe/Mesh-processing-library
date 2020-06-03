@@ -308,11 +308,7 @@ class Multigrid : noncopyable {
     Grid<D, T> ngrid(ndims);
     // transpose of box filter: tensor({(1 0), (0 1)})
     parallel_for_each(
-        range(ndims[0]),
-        [&](const int y) {
-          for_int(x, ndims[1]) ngrid[y][x] = grid[y / 2][x / 2];
-        },
-        ndims[1] * 1);
+        range(ndims[0]), [&](const int y) { for_int(x, ndims[1]) ngrid[y][x] = grid[y / 2][x / 2]; }, ndims[1] * 1);
     return ngrid;
   }
   // Return the Laplacian weight at the given grid resolution.

@@ -48,6 +48,7 @@ class Flag {
     *this = bset;
     return t;
   }
+
  private:
   Flag(Flags& flags, FlagMask fmask) : _flags(flags), _fmask(fmask) { ASSERTX(is_pow2(_fmask)); }
   Flags& _flags;

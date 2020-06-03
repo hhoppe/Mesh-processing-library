@@ -56,10 +56,10 @@ int Mesh::debug() {
 Mesh::Mesh() { assertw(debug() == 0); }
 
 Mesh& Mesh::operator=(Mesh&& m) noexcept {
-    clear();
-    swap(*this, m);
-    return *this;
-  }
+  clear();
+  swap(*this, m);
+  return *this;
+}
 
 void Mesh::clear() {
   if (debug() >= 1) ok();

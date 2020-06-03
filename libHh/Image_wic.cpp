@@ -9,10 +9,10 @@ void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 
 #else
 
-#include <cctype>         // std::isalnum(), std::toupper()
+#include <cctype>  // std::isalnum(), std::toupper()
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>      // required by WIC; must appear before other headers.
+#include <windows.h>  // required by WIC; must appear before other headers.
 
 #include <shlwapi.h>      // SHCreateMemStream()
 #include <wincodec.h>     // WIC

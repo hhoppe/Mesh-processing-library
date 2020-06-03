@@ -53,7 +53,7 @@ void test(int nignore, float small) {
     try_it(hf, 0.9990000f);
   }
   {
-    for_int(i, 20) try_it(hf, i * 1e-5f);
+    for_int(i, 20) try_it(hf, i * 1e-5f);  //
   }
   if (0) {
     try_it(hf, 0.0222916f);

@@ -24,7 +24,7 @@
 #if defined(_WIN32)
 
 // #define WIN32_LEAN_AND_MEAN // must omit to include CommandLineToArgvW(); must appear before <shellapi.h>
-#include <windows.h>               // QueryPerformanceCounter(), QueryPerformanceFrequency()
+#include <windows.h>  // QueryPerformanceCounter(), QueryPerformanceFrequency()
 
 #include <direct.h>                // getcwd()
 #include <io.h>                    // isatty(), setmode(), get_osfhandle()

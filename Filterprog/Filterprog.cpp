@@ -612,7 +612,7 @@ bool next_morph(int nfaces) {
   gowinfo.clear();
   for (Vertex v : mesh.vertices()) {
     v_opos(v) = Point(k_undefined, k_undefined, k_undefined);  // optional
-    for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;  // optional
+    for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;      // optional
   }
   return !!is;
 }

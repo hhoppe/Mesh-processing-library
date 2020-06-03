@@ -61,9 +61,7 @@ void BPointSpatial::remove(Univ id, const Point* pp) {
 }
 
 void BPointSpatial::shrink_to_fit() {
-  for (auto& cell : _map.values()) {
-    cell.shrink_to_fit();
-  }
+  for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
 void BPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>&) const {
@@ -93,9 +91,7 @@ IPointSpatial::IPointSpatial(int gn, CArrayView<Point> arp) : Spatial(gn), _pp(a
     _map[en].push(i);  //  first creates empty Array<int> if not present
   }
   if (0)
-    for (auto& cell : _map.values()) {
-      cell.shrink_to_fit();
-    }
+    for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
 void IPointSpatial::clear() {
@@ -110,9 +106,7 @@ void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcent
   bool present;
   auto& cell = _map.retrieve(en, present);
   if (!present) return;
-  for (int i : cell) {
-    pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
-  }
+  for (int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
 }
 
 Univ IPointSpatial::pq_id(Univ id) const { return id; }
@@ -200,9 +194,7 @@ void BSpatialSearch::expand_search_space() {
   _ssi[_dir][_axis] += _dir ? 1 : -1;
   bi[0][_axis] = bi[1][_axis] = _ssi[_dir][_axis];
   // consider the layer whose axis's value is _ssi[_dir][_axis]
-  for (const Ind& cit : range(bi[0], bi[1] + 1)) {
-    consider(cit);
-  }
+  for (const Ind& cit : range(bi[0], bi[1] + 1)) consider(cit);
   get_closest_next_cell();
 }
 

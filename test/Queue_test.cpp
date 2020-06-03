@@ -19,9 +19,7 @@ int main() {
     assertx(q.dequeue() == 1);
     {
       int i = 0;
-      for (int j : q) {
-        assertx(j == 2 + i++);
-      }
+      for (int j : q) assertx(j == 2 + i++);
     }
     assertx(!q.contains(1));
     q.insert_first(5);

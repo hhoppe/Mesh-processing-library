@@ -91,9 +91,7 @@ bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin) {
   if (bin) {  // binary
     if (b.num() < 14 * 4) return false;
     obn = b.get_short(2);
-    for_int(i, 4) {
-      for_int(j, 3) f[i][j] = b.get_float((1 + (i * 3) + j) * 4);
-    }
+    for_int(i, 4) for_int(j, 3) f[i][j] = b.get_float((1 + (i * 3) + j) * 4);
     zoom = b.get_float(13 * 4);
     b.extract(14 * 4);
     return true;
@@ -135,9 +133,7 @@ bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin) {
     b.put(char{k_binary_code});
     b.put('\0');
     b.put(narrow_cast<short>(obn));
-    for_int(i, 4) {
-      for_int(j, 3) b.put(f[i][j]);
-    }
+    for_int(i, 4) for_int(j, 3) b.put(f[i][j]);
     b.put(zoom);
   } else {
     string s = create_string(f, obn, zoom);

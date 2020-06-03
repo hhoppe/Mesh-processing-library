@@ -9,9 +9,7 @@ namespace {
 template <int N> void try_xy(CArrayView<Vec2<float>> xydata) {
   using Eval = LinearRegressionPolynomialOrder<N>;
   LinearRegression<N, 1, Eval> regression(xydata.num());
-  for (auto xy : xydata) {
-    regression.enter(ArView(xy[0]), xy[1]);
-  }
+  for (auto xy : xydata) regression.enter(ArView(xy[0]), xy[1]);
   auto ar = regression.get_solution();
   SHOW(ar);
   for (auto xy : xydata) {
@@ -46,9 +44,7 @@ template <int N> void try_xyz(CArrayView<Vec3<float>> xyzdata) {
     }
   };
   LinearRegression<N2, 2, Eval> regression(xyzdata.num());
-  for (auto xyz : xyzdata) {
-    regression.enter(xyz.head<2>(), xyz[2]);
-  }
+  for (auto xyz : xyzdata) regression.enter(xyz.head<2>(), xyz[2]);
   auto ar = regression.get_solution();
   SHOW(ar);
   for (auto xyz : xyzdata) {

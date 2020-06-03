@@ -86,9 +86,7 @@ int main() {
     SHOW(matrix3 + matrix4);  // OPT1
     SHOW(matrix3);
     SHOW(matrix4);
-    for (auto f : matrix4) {
-      SHOW(f);
-    }
+    for (auto f : matrix4) SHOW(f);
     SHOW(2.f * matrix3);
     SHOW(2.f * matrix3 + 3.f * matrix4);
     SHOW(mag2(matrix3));

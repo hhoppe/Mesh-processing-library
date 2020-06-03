@@ -54,18 +54,14 @@ template <typename T> class Encoding : noncopyable {
     for_map_key_value(_map, [&](const T& e, float prob) { ar.push(P{prob, make_string(e)}); });
     sort(ar, [](const P& p1, const P& p2) { return p1.prob < p2.prob || (p1.prob == p2.prob && p1.str < p2.str); });
     showdf("Encoding {\n");
-    for (const P& p : ar) {
-      showdf(" %s %g\n", p.str.c_str(), p.prob);
-    }
+    for (const P& p : ar) showdf(" %s %g\n", p.str.c_str(), p.prob);
     showdf("}\n");
   }
   // Return sum of prob to encode binary tree.
   float huffman_cost() const {
     Pqueue<int> pq;
     pq.reserve(_map.num());
-    for (float prob : _map.values()) {
-      pq.enter_unsorted(0, prob);
-    }
+    for (float prob : _map.values()) pq.enter_unsorted(0, prob);
     pq.sort();
     assertw(pq.num() >= 2);
     float sum = 0.f;
@@ -88,9 +84,7 @@ template <typename T> class Encoding : noncopyable {
     //  thus for map.num() == 1 and tot_prob == 24586.f, prob / tot_prop == 0.99999994f results in nonzero entropy.
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) {
-      sum += prob * (-log2(prob / tot_prob));
-    }
+    for (float prob : _map.values()) sum += prob * (-log2(prob / tot_prob));
     return static_cast<float>(sum);
   }
   // Return normalized entropy (entropy() / tot_prob).
@@ -99,9 +93,7 @@ template <typename T> class Encoding : noncopyable {
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) {
-      sum += prob * (-log2(prob / tot_prob));
-    }
+    for (float prob : _map.values()) sum += prob * (-log2(prob / tot_prob));
     return static_cast<float>(sum / tot_prob);
   }
   // include probability table
@@ -124,9 +116,7 @@ template <typename T> class Encoding : noncopyable {
       Pqueue<T> pq;
       pq.reserve(_map.num());
       float max_prob = 0.f;
-      for (float prob : _map.values()) {
-        max_prob = max(max_prob, prob);
-      }
+      for (float prob : _map.values()) max_prob = max(max_prob, prob);
       for_map_key_value(_map, [&](const T& e, float prob) { pq.enter_unsorted(e, max_prob - prob); });
       pq.sort();
       if (!assertw(tot_prob)) tot_prob = 1.f;

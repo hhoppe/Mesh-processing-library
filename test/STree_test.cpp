@@ -9,9 +9,7 @@ using namespace hh;
 int main() {
   {
     STree<int> stree;
-    for (int i = 2; i < 60; i += 2) {
-      stree.enter(i);
-    }
+    for (int i = 2; i < 60; i += 2) stree.enter(i);
     assertx(stree.succ(1) == 2);
     assertx(stree.succ(2) == 4);
     assertx(stree.succ(18) == 20);
@@ -32,9 +30,7 @@ int main() {
     assertx(!stree.remove(33));
     assertx(!stree.remove(24));
     assertx(sum(stree) == (1 + 29) * 29 / 2 * 2 + 88 - 24);
-    for (int i = 2; i < 60; i += 2) {
-      assertx(stree.remove(i) == (i != 24));
-    }
+    for (int i = 2; i < 60; i += 2) assertx(stree.remove(i) == (i != 24));
     for (int i = 2; i < 60; i += 2) assertx(!stree.remove(i));
     assertx(stree.remove(88));
   }

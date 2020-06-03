@@ -12,9 +12,7 @@ static Frame round(Frame frame) {
 }
 
 static Quaternion round(Quaternion q) {
-  for (float& f : q.access_private()) {
-    f = round_fraction_digits(f);
-  }
+  for (float& f : q.access_private()) f = round_fraction_digits(f);
   return q;
 }
 

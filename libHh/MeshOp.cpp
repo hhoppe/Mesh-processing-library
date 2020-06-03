@@ -44,9 +44,7 @@ int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, 
     if (!fdoswap(mesh, e)) continue;
     if (fdel) fdel(mesh, e);
     for (Face f : mesh.faces(e)) {
-      for (Edge ee : mesh.edges(f)) {
-        sete.remove(ee);
-      }
+      for (Edge ee : mesh.edges(f)) sete.remove(ee);
     }
     Edge ne = mesh.swap_edge(e);
     // e = nullptr;  // now undefined
@@ -117,9 +115,7 @@ Stat mesh_stat_boundaries(const Mesh& mesh) {
     if (!mesh.is_boundary(e)) continue;
     if (setevis.contains(e)) continue;
     Queue<Edge> queuee = gather_boundary(mesh, e);
-    for (Edge ee : queuee) {
-      setevis.enter(ee);
-    }
+    for (Edge ee : queuee) setevis.enter(ee);
     Sbound.enter(queuee.length());
   }
   return Sbound;
@@ -131,9 +127,7 @@ Stat mesh_stat_components(const Mesh& mesh) {
   for (Face f : mesh.faces()) {
     if (setfvis.contains(f)) continue;
     Set<Face> setf = gather_component(mesh, f);
-    for (Face ff : setf) {
-      setfvis.enter(ff);
-    }
+    for (Face ff : setf) setfvis.enter(ff);
     Scompf.enter(setf.num());
   }
   return Scompf;
@@ -233,9 +227,7 @@ float vertex_solid_angle(const GMesh& mesh, Vertex v) {
   int np = mesh.degree(v), i = np;
   Array<Point> pa(np);
   // Really want clockwise order so that solid angle points toward inside of mesh.
-  for (Vertex vv : mesh.ccw_vertices(v)) {
-    pa[--i] = mesh.point(vv);
-  }
+  for (Vertex vv : mesh.ccw_vertices(v)) pa[--i] = mesh.point(vv);
   return solid_angle(mesh.point(v), pa);
 }
 
@@ -393,9 +385,7 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
     {
       Array<Vertex> va;
       // vertex1(e) ok but slower
-      for (Edge e : qc) {
-        va.push(mesh.vertex2(e));
-      }
+      for (Edge e : qc) va.push(mesh.vertex2(e));
       Face fn = mesh.create_face(va);
       ret_setf.enter(fn);
     }
@@ -686,9 +676,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     }
     if (!_mfnor) {
       _mfnor = make_unique<Map<Face, Vector>>();
-      for (Face ff : mesh.faces(v)) {
-        _mfnor->enter(ff, Vector());
-      }
+      for (Face ff : mesh.faces(v)) _mfnor->enter(ff, Vector());
     }
     for (Face ff : af) {
       setfvis.push(ff);
@@ -699,9 +687,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     if (hasvnor) _nor = vnor;
     if (!_mfnor) {
       _mfnor = make_unique<Map<Face, Vector>>();
-      for (Face f : mesh.faces(v)) {
-        _mfnor->enter(f, Vector());
-      }
+      for (Face f : mesh.faces(v)) _mfnor->enter(f, Vector());
     }
     for (Corner c : mesh.corners(v)) {
       Vector nor;
@@ -789,9 +775,7 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
       }
     }
     if (setfvis.contains(pf)) break;
-    for (Face f : setf) {
-      setfvis.enter(f);
-    }
+    for (Face f : setf) setfvis.enter(f);
   }
   HH_SSTAT(Sprojnei, ni);
   HH_SSTAT(Sprojf, nvis);

@@ -94,9 +94,7 @@ int main() {
     assertw(s.contains(2));
     assertw(!s.contains(100));
     int se = 0;
-    for (int i : s) {
-      se += i;
-    }
+    for (int i : s) se += i;
     assertw(se == (0 + 99) * (100 / 2));
     assertw(!s.remove(101));
     for_int(i, 50) assertw(s.remove(i));

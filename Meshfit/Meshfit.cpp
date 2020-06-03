@@ -183,18 +183,14 @@ void DataPts::ok() const {
 // *** utility
 
 void mesh_transform(const Frame& f) {
-  for (Vertex v : mesh.vertices()) {
-    mesh.set_point(v, mesh.point(v) * f);
-  }
+  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * f);
 }
 
 void compute_xform() {
   Bbox bb;
   bb.clear();
   for_int(i, pt.co.num()) bb.union_with(pt.co[i]);
-  for (Vertex v : mesh.vertices()) {
-    bb.union_with(mesh.point(v));
-  }
+  for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
   gdiam = bb.max_side();
   xform = bb.get_frame_to_small_cube();
   if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
@@ -259,18 +255,14 @@ double get_edis() {
 double get_espr() {
   if (spring == 0.f) return 0.f;
   double espr = 0.;
-  for (Edge e : mesh.edges()) {
-    espr += spring_energy(e);
-  }
+  for (Edge e : mesh.edges()) espr += spring_energy(e);
   return espr;
 }
 
 double get_edih() {
   if (dihfac == 0.f) return 0.f;
   double edih = 0.;
-  for (Edge e : mesh.edges()) {
-    edih += edge_dihedral_energy(e);
-  }
+  for (Edge e : mesh.edges()) edih += edge_dihedral_energy(e);
   return edih;
 }
 
@@ -301,9 +293,7 @@ void analyze_mesh(const string& s) {
 
 void push_face_points(Face f, Array<int>& ar_pts) {
   // Note: appends to existing ar_pts array.
-  for (int pi : f_setpts(f)) {
-    ar_pts.push(pi);
-  }
+  for (int pi : f_setpts(f)) ar_pts.push(pi);
 }
 
 void point_change_face(int i, Face newf) {
@@ -466,9 +456,7 @@ void global_project_aux() {
       }
     }
     PolygonFaceSpatial psp(nv < 10000 ? 15 : nv < 30000 ? 25 : 35);
-    for (PolygonFace& polyface : ar_polyface) {
-      psp.enter(&polyface);
-    }
+    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
     for_int(i, pt.co.num()) {
       SpatialSearch<PolygonFace*> ss(&psp, pt.co[i]);
       PolygonFace* polyface = ss.next();
@@ -569,9 +557,7 @@ void do_outlierdelete(Args& args) {
   showdf("Removing %d outlier points (dist>%g): #pts reduced from %d to %d\n", pt.co.num() - ar_pt.num(), vdist,
          pt.co.num(), ar_pt.num());
   pt.clear();
-  for (const Point& p : ar_pt) {
-    pt.enter(p);
-  }
+  for (const Point& p : ar_pt) pt.enter(p);
   initial_projection();
   // TODO: perform outlier removal during initial projection,
   //   where vdist is used to set the maximum spatial search radius.
@@ -863,9 +849,7 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
     Face f = ar_faces[i];
     Bbox& bb = ar_bb[i];
     bb.clear();
-    for (Vertex v : mesh.vertices(f)) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices(f)) bb.union_with(mesh.point(v));
   }
   Polygon poly;
   for (int pi : ar_pts) {
@@ -984,9 +968,7 @@ void fit_ring(Vertex v, int niter) {
   Array<const Point*> wa = gather_vertex_ring(mesh, v);
   for (Face f : mesh.faces(v)) {
     ar_faces.push(f);
-    for (int pi : f_setpts(f)) {
-      ar_pts.push(pi);
-    }
+    for (int pi : f_setpts(f)) ar_pts.push(pi);
   }
   Point newp = mesh.point(v);
   float minb = min_local_dihedral(wa, newp);
@@ -1000,9 +982,7 @@ void fit_ring(Vertex v, int niter) {
 
 void cleanup_neighborhood(Vertex v, int nri) {
   if (nri) {
-    for (Vertex w : mesh.vertices(v)) {
-      fit_ring(w, nri);
-    }
+    for (Vertex w : mesh.vertices(v)) fit_ring(w, nri);
     fit_ring(v, nri);
   }
 }
@@ -1015,9 +995,7 @@ void do_lfit(Args& args) {
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning lfit, %d iters (nli=%d), spr=%g\n", ni, nli, spring);
   for_int(i, ni) {
-    for (Vertex v : mesh.vertices()) {
-      fit_ring(v, nli);
-    }
+    for (Vertex v : mesh.vertices()) fit_ring(v, nli);
   }
   if (verb >= 2) showdf("Finished lfit\n");
   if (verb >= 2) analyze_mesh("after_lfit");
@@ -1028,13 +1006,9 @@ void do_four1split() {
   perhaps_initialize();
   HH_TIMER(_four1split);
   Array<Edge> are;
-  for (Edge e : mesh.edges()) {
-    are.push(e);
-  }
+  for (Edge e : mesh.edges()) are.push(e);
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
-    arf.push(f);
-  }
+  for (Face f : mesh.faces()) arf.push(f);
   Map<Edge, Vertex> menewv;  // old Edge -> Vertex
   // Create new vertices and compute their positions
   for (Edge e : are) {
@@ -1063,9 +1037,7 @@ void do_four1split() {
     reproject_locally(ar_pts, ar_faces);
     assertx(f_setpts(f).empty());
   }
-  for (Face f : arf) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : arf) mesh.destroy_face(f);
   if (sdebug) pt.ok(), assertx(mesh.is_nice());
 }
 
@@ -1165,12 +1137,8 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     push_face_points(f, ar_pts);
     ar_faces.push(f);
   }
-  for (int pi : ar_pts) {
-    rssf += dist2(pt.co[pi], pt.clp[pi]);
-  }
-  for (Vertex v : mesh.vertices(v1)) {
-    rssf += spring_energy(v1, v);
-  }
+  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
+  for (Vertex v : mesh.vertices(v1)) rssf += spring_energy(v1, v);
   for (Vertex v : mesh.vertices(v2)) {
     if (v != v1) rssf += spring_energy(v2, v);
   }
@@ -1239,20 +1207,14 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     }
   }
   for (Vertex v : mesh.vertices(e)) {
-    for (Edge ee : mesh.edges(v)) {
-      ecand.remove(ee);
-    }
+    for (Edge ee : mesh.edges(v)) ecand.remove(ee);
   }
   remove_face(f1);
   if (f2) remove_face(f2);
   mesh.collapse_edge(e);  // v1 kept
   // add about 12 to 16 edges
-  for (Edge ee : mesh.edges(v1)) {
-    ecand.add(ee);
-  }
-  for (Face f : mesh.faces(v1)) {
-    ecand.add(mesh.opp_edge(v1, f));
-  }
+  for (Edge ee : mesh.edges(v1)) ecand.add(ee);
+  for (Face f : mesh.faces(v1)) ecand.add(mesh.opp_edge(v1, f));
   if (sdebug >= 2) assertx(mesh.is_nice());
   mesh.set_point(v1, minp);
   reproject_locally(ar_pts, ar_faces);
@@ -1270,12 +1232,8 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   float minb = vo2 ? edge_dihedral_angle_cos(mesh, e) : 2;
   double rssf = spring_energy(e);
   Array<int> ar_pts;
-  for (Face f : mesh.faces(e)) {
-    push_face_points(f, ar_pts);
-  }
-  for (int pi : ar_pts) {
-    rssf += dist2(pt.co[pi], pt.clp[pi]);
-  }
+  for (Face f : mesh.faces(e)) push_face_points(f, ar_pts);
+  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
   Point newp = interp(*wa[0], *wa[2]);
   double rss0, rss1;
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
@@ -1334,12 +1292,8 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   push_face_points(f1, ar_pts);
   push_face_points(f2, ar_pts);
   double rssf = 0.;
-  for (int pi : ar_pts) {
-    rssf += dist2(pt.co[pi], pt.clp[pi]);
-  }
-  for (Vertex v : mesh.vertices(vo1)) {
-    rssf += spring_energy(vo1, v);
-  }
+  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
+  for (Vertex v : mesh.vertices(vo1)) rssf += spring_energy(vo1, v);
   rssf += spring_energy(e);
   Point newp = mesh.point(vo1);
   float minb = min(min_dihedral_about_vertex(mesh, vo1), edge_dihedral_angle_cos(mesh, e));
@@ -1373,12 +1327,8 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   // add about 9 edges
   ecand.add(mesh.edge(vo2, v1));
   ecand.add(mesh.edge(vo2, v2));
-  for (Edge ee : mesh.edges(vo1)) {
-    ecand.add(ee);
-  }
-  for (Face f : mesh.faces(enew)) {
-    ar_faces.push(f);
-  }
+  for (Edge ee : mesh.edges(vo1)) ecand.add(ee);
+  for (Face f : mesh.faces(enew)) ar_faces.push(f);
   reproject_locally(ar_pts, ar_faces);
   if (nri) {
     fit_ring(vo2, nri);
@@ -1447,9 +1397,7 @@ void do_stoc() {
   fill(opstat.nor, 0);
   opstat.notswaps = 0;
   int ni = 0, nbad = 0, lecol = 0, lespl = 0, leswa = 0;
-  for (Edge e : mesh.edges()) {
-    ecand.enter(e);
-  }
+  for (Edge e : mesh.edges()) ecand.enter(e);
   while (!ecand.empty()) {
     ni++;
     Edge e = ecand.remove_random(Random::G);

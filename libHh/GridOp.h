@@ -202,9 +202,7 @@ template <int D, typename U, typename T> Grid<D, T> assemble(CGridView<D, U> gri
       SHOW(ugrid, expected_dims, agrid.dims());
       assertnever("inconsistent grid size");
     }
-    for (Vec<int, D> u : range(agrid.dims())) {
-      grid[uL + u] = agrid[u];
-    }
+    for (Vec<int, D> u : range(agrid.dims())) grid[uL + u] = agrid[u];
   });
   return grid;
 }
@@ -471,12 +469,8 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
       // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
       Vec<Bndrule, D> bndrules;
       for_int(d, D) bndrules[d] = filterbs[d].bndrule();
-      for (T& e : ogrid) {
-        e = T{.5f} + (e - T{.5f}) * expand_value_range;
-      }
-      for (T& e : gr) {
-        e = general_clamp(e, T{0.f}, T{1.f});
-      }
+      for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
+      for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
       for_int(iter, 5) {  // 10 Gauss-Seidel iterations a tiny bit better; 100 no different
         for (const auto& u : range(dims)) {
           // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // constrained forever at limit, if T is scalar

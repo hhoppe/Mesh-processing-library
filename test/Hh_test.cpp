@@ -268,86 +268,62 @@ int main() {
   if (1) {
     {
       Array<int> ar;
-      for (int e : range(2)) {
-        ar.push(e);
-      }
+      for (int e : range(2)) ar.push(e);
       assertx(ar == V(0, 1));
     }
     {
       Array<int> ar;
-      for (int e : range(1, 4)) {
-        ar.push(e);
-      }
+      for (int e : range(1, 4)) ar.push(e);
       assertx(ar == V(1, 2, 3));
     }
     {
       Array<int> ar;
-      for (int e : range(0)) {
-        ar.push(e);
-      }
+      for (int e : range(0)) ar.push(e);
       assertx(ar.num() == 0);
     }
     {
       Array<int> ar;
-      for (int e : range(-1)) {
-        ar.push(e);
-      }
+      for (int e : range(-1)) ar.push(e);
       assertx(ar.num() == 0);
     }
     {
       Array<int> ar;
-      for (int e : range(-2, 0)) {
-        ar.push(e);
-      }
+      for (int e : range(-2, 0)) ar.push(e);
       assertx(ar == V(-2, -1));
     }
     {
       Array<int> ar;
-      for (int e : range(-2, -2)) {
-        ar.push(e);
-      }
+      for (int e : range(-2, -2)) ar.push(e);
       assertx(ar.num() == 0);
     }
     {
       Array<int> ar;
-      for (int e : range(0, 0)) {
-        ar.push(e);
-      }
+      for (int e : range(0, 0)) ar.push(e);
       assertx(ar.num() == 0);
     }
     {
       Array<int> ar;
-      for (int e : range(2, 0)) {
-        ar.push(e);
-      }
+      for (int e : range(2, 0)) ar.push(e);
       assertx(ar.num() == 0);
     }
     {
       Array<uchar> ar;
-      for (uchar e : range(uchar{4}, uchar{6})) {
-        ar.push(e);
-      }
+      for (uchar e : range(uchar{4}, uchar{6})) ar.push(e);
       assertx(ar == V(uchar{4}, uchar{5}));
     }
     {
       Array<uint8_t> ar;
-      for (uint8_t e : range(uint8_t{4}, uint8_t{6})) {
-        ar.push(e);
-      }
+      for (uint8_t e : range(uint8_t{4}, uint8_t{6})) ar.push(e);
       assertx(ar == V(uint8_t{4}, uint8_t{5}));
     }
     {
       Array<short> ar;
-      for (short e : range<short>(-2, 2)) {
-        ar.push(e);
-      }
+      for (short e : range<short>(-2, 2)) ar.push(e);
       assertx(ar == convert<short>(V(-2, -1, 0, 1)));
     }
     {
       Array<uint64_t> ar;
-      for (uint64_t e : range(uint64_t{3})) {
-        ar.push(e);
-      }
+      for (uint64_t e : range(uint64_t{3})) ar.push(e);
       assertx(ar == V<uint64_t>(0u, 1u, 2u));
     }
   }

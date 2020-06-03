@@ -83,9 +83,7 @@ void assign_normals() {
     if (vnors.is_unique()) {
       const Vector& nor = vnors.unique_nor();
       mesh.update_string(v, "normal", csform_vec(str, nor));
-      for (Corner c : mesh.corners(v)) {
-        mesh.update_string(c, "normal", nullptr);
-      }
+      for (Corner c : mesh.corners(v)) mesh.update_string(c, "normal", nullptr);
     } else {
       mesh.update_string(v, "normal", nullptr);
       for (Corner c : mesh.corners(v)) {
@@ -105,9 +103,7 @@ UV get_uv(Vertex v) {
 
 float mesh_area() {
   double sumarea = 0.;
-  for (Face f : mesh.faces()) {
-    sumarea += mesh.area(f);
-  }
+  for (Face f : mesh.faces()) sumarea += mesh.area(f);
   return float(sumarea);
 }
 
@@ -346,9 +342,7 @@ void normalize_arrayv(Array<Vertex>& ar) {
   }
   Array<Vertex> art;
   art.reserve(ar.num());
-  for (Vertex v : ar) {
-    art.push(v);
-  }
+  for (Vertex v : ar) art.push(v);
   for_int(i, ar.num()) ar[i] = art[(mini + i) % ar.num()];
 }
 
@@ -364,9 +358,7 @@ GMesh geometric_merge(const GMesh& mo) {
   {
     Bbox bb;
     bb.clear();
-    for (Vertex v : mesh.vertices()) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
     xform = bb.get_frame_to_small_cube();
   }
   GMesh mn;
@@ -407,9 +399,7 @@ GMesh geometric_merge(const GMesh& mo) {
     struct hash_ArrayVertex {
       size_t operator()(const Array<Vertex>& ar) const {
         size_t h = 0;
-        for (Vertex v : ar) {
-          h = h * 13 + mesh.vertex_id(v);
-        }
+        for (Vertex v : ar) h = h * 13 + mesh.vertex_id(v);
         return h;
       }
     };
@@ -418,9 +408,7 @@ GMesh geometric_merge(const GMesh& mo) {
     Array<Vertex> van;
     for (Face fo : mo.ordered_faces()) {
       van.init(0);
-      for (Vertex vo : mo.vertices(fo)) {
-        van.push(mvvn.get(vo));
-      }
+      for (Vertex vo : mo.vertices(fo)) van.push(mvvn.get(vo));
       normalize_arrayv(van);
       if (!setarraynv.add(van)) {
         Warning("Eliminating duplicate face");
@@ -430,9 +418,7 @@ GMesh geometric_merge(const GMesh& mo) {
     for (Face fo : mo.faces()) {
       if (setbadof.contains(fo)) continue;
       van.init(0);
-      for (Vertex vo : mo.vertices(fo)) {
-        van.push(mvvn.get(vo));
-      }
+      for (Vertex vo : mo.vertices(fo)) van.push(mvvn.get(vo));
       reverse(van);
       normalize_arrayv(van);
       if (setarraynv.contains(van)) {
@@ -477,12 +463,8 @@ GMesh geometric_merge(const GMesh& mo) {
   // Remove info from merged vertices.
   Map<Vertex, int> mvnn;
   {
-    for (Vertex vn : mn.vertices()) {
-      mvnn.enter(vn, 0);
-    }
-    for (Vertex vn : mvvn.values()) {
-      mvnn.replace(vn, mvnn.get(vn) + 1);
-    }
+    for (Vertex vn : mn.vertices()) mvnn.enter(vn, 0);
+    for (Vertex vn : mvvn.values()) mvnn.replace(vn, mvnn.get(vn) + 1);
     for (Vertex vn : mn.vertices()) {
       assertx(mvnn.get(vn) > 0);
       if (mvnn.get(vn) > 1) mn.set_string(vn, nullptr);
@@ -607,9 +589,7 @@ GMesh split_corners(const GMesh& mo, bool split_matbnd) {
   }
   for (Face fo : mo.ordered_faces()) {
     Array<Vertex> van;
-    for (Corner co : mo.corners(fo)) {
-      van.push(mcv.get(co));
-    }
+    for (Corner co : mo.corners(fo)) van.push(mcv.get(co));
     Face fn = mn.create_face(van);
     if (split_matbnd) {
       // Corners attributes within new vertex may be non-unique
@@ -772,15 +752,11 @@ void do_renumber() {
 void do_nidrenumberv() {
   HH_TIMER(_nidrenumberv);
   Set<Vertex> setv;
-  for (Vertex v : mesh.vertices()) {
-    setv.enter(v);
-  }
+  for (Vertex v : mesh.vertices()) setv.enter(v);
   const int large = INT_MAX / 2;
   {
     int i = large;
-    for (Vertex v : setv) {
-      mesh.vertex_renumber_id_private(v, i++);
-    }
+    for (Vertex v : setv) mesh.vertex_renumber_id_private(v, i++);
   }
   string str;
   for (Vertex v : setv) {
@@ -788,9 +764,7 @@ void do_nidrenumberv() {
     assertx(nid > 0 && nid < large);
     mesh.vertex_renumber_id_private(v, nid);
   }
-  for (Vertex v : mesh.vertices()) {
-    mesh.update_string(v, "Nid", nullptr);
-  }
+  for (Vertex v : mesh.vertices()) mesh.update_string(v, "Nid", nullptr);
 }
 
 void do_merge(Args& args) {
@@ -990,9 +964,7 @@ void do_recordsegments() {
   Array<Face> arepf;
   gather_segments(mfseg, arepf);
   showdf("Detected %d segments\n", arepf.num());
-  for (Face f : arepf) {
-    record_segment(f, mfseg);
-  }
+  for (Face f : arepf) record_segment(f, mfseg);
   assertx(mfseg.empty());
 }
 
@@ -1093,17 +1065,11 @@ void do_trisubdiv() {
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER(_trisubdiv);
   Array<Vertex> arv;
-  for (Vertex v : mesh.vertices()) {
-    arv.push(v);
-  }
+  for (Vertex v : mesh.vertices()) arv.push(v);
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
-    arf.push(f);
-  }
+  for (Face f : mesh.faces()) arf.push(f);
   Array<Edge> are;
-  for (Edge e : mesh.edges()) {
-    are.push(e);
-  }
+  for (Edge e : mesh.edges()) are.push(e);
   Map<Edge, Vertex> menewv;
   // Create new vertices and compute their positions.
   string str;
@@ -1177,9 +1143,7 @@ void do_trisubdiv() {
     mesh.flags(mesh.edge(vnew, mesh.vertex2(e))).flag(GMesh::eflag_sharp) = true;
   }
   // Remove old triangulation.
-  for (Face f : arf) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : arf) mesh.destroy_face(f);
 }
 
 // *** silsubdiv
@@ -1189,18 +1153,14 @@ void do_silsubdiv() {
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER(_silsubdiv);
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
-    arf.push(f);
-  }
+  for (Face f : mesh.faces()) arf.push(f);
   // Determine which edges will be subdivided.
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : mesh.edges()) {
     if (sharp(e)) subde.enter(e);
   }
   Queue<Face> queuef;
-  for (Face f : arf) {
-    queuef.enqueue(f);
-  }
+  for (Face f : arf) queuef.enqueue(f);
   while (!queuef.empty()) {
     Face f = queuef.dequeue();
     int nnew = 0;
@@ -1312,9 +1272,7 @@ void do_taubinsmooth(Args& args) {
   }
   if (nnewv) Warning("Only smoothing new vertices");
   Map<Vertex, Point> mvp;
-  for (Vertex v : mesh.vertices()) {
-    mvp.enter(v, Point());
-  }
+  for (Vertex v : mesh.vertices()) mvp.enter(v, Point());
   // HH: introduced the factor * 2 on niter on 1999-01-04.
   for_int(i, niter * 2) {
     float disp = i % 2 == 0 ? lambda : mu;
@@ -1333,9 +1291,7 @@ void do_taubinsmooth(Args& args) {
       Point p = mesh.point(v) + vec;
       mvp.get(v) = p;
     }
-    for (Vertex v : mesh.vertices()) {
-      mesh.set_point(v, mvp.get(v));
-    }
+    for (Vertex v : mesh.vertices()) mesh.set_point(v, mvp.get(v));
   }
 }
 
@@ -1377,9 +1333,7 @@ void do_desbrunsmooth(Args& args) {
       continue;
     }
     float sum_area = 0.f;
-    for (Face f : mesh.faces(v)) {
-      sum_area += mesh.area(f);
-    }
+    for (Face f : mesh.faces(v)) sum_area += mesh.area(f);
     assertx(sum_area > 0.f);
     float sum_w = 0.f;
     nei_vi.init(0);
@@ -1684,29 +1638,21 @@ void do_fillholes(Args& args) {
     Edge e = setbe.get_one();
     const char* es = mesh.get_string(mesh.face1(e));
     Queue<Edge> queuee = gather_boundary(mesh, e);
-    for (Edge ee : queuee) {
-      assertx(setbe.remove(ee));
-    }
+    for (Edge ee : queuee) assertx(setbe.remove(ee));
     int ne = queuee.length();
     if (ne > maxnume) continue;
     Sbndlen.enter(ne);
     Set<Face> setf = mesh_remove_boundary(mesh, e);
     Sbndsub.enter(setf.num());
     if (1) {
-      for (Face f : setf) {
-        mesh.set_string(f, es);
-      }
+      for (Face f : setf) mesh.set_string(f, es);
     }
     if (getenv_bool("WRITE_HOLE")) {
-      for (Face f : setf) {
-        mesh.update_string(f, "hole", "");
-      }
+      for (Face f : setf) mesh.update_string(f, "hole", "");
     }
     if (getenv_bool("HOLE_SHARP")) {
       for (Face f : setf) {
-        for (Edge ee : mesh.edges(f)) {
-          mesh.update_string(ee, "sharp", "");
-        }
+        for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
       }
     }
     for (Face f : setf) {
@@ -1784,9 +1730,7 @@ void do_splitvalence(Args& args) {
       }
     }
     Array<Vertex> va;
-    for (Vertex vv : mesh.ccw_vertices(v)) {
-      va.push(vv);
-    }
+    for (Vertex vv : mesh.ccw_vertices(v)) va.push(vv);
     Vector vec(0.f, 0.f, 0.f);
     for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * sin(float(i) / va.num() * TAU);
     Vertex vs1 = va[0];
@@ -1795,9 +1739,7 @@ void do_splitvalence(Args& args) {
     mesh.create_face(v, vn, vs1);
     mesh.create_face(v, vs2, vn);
     if (is_hole) {
-      for (Face f : mesh.faces(mesh.edge(v, vn))) {
-        mesh.update_string(f, "hole", "");
-      }
+      for (Face f : mesh.faces(mesh.edge(v, vn))) mesh.update_string(f, "hole", "");
     }
     mesh.set_point(vn, mesh.point(v) - vec * 1e-3f);
     mesh.update_string(vn, "newvertex", "");
@@ -1958,9 +1900,7 @@ void do_quadodddiag() {
 int remove_component(const Set<Face>& setf) {
   Set<Vertex> setv;
   for (Face f : setf) {
-    for (Vertex v : mesh.vertices(f)) {
-      setv.add(v);  // may already be there
-    }
+    for (Vertex v : mesh.vertices(f)) setv.add(v);  // may already be there
     mesh.destroy_face(f);
   }
   int nvrem = 0;
@@ -1985,9 +1925,7 @@ void do_rmcomp(Args& args) {
       for (Face f : mesh.faces()) {
         if (setfvis.contains(f)) continue;
         Set<Face> setf = gather_component(mesh, f);
-        for (Face ff : setf) {
-          setfvis.enter(ff);
-        }
+        for (Face ff : setf) setfvis.enter(ff);
         int nf = setf.num();
         if (nf > maxnumf) continue;
         Sfacesrem.enter(nf);
@@ -2002,26 +1940,20 @@ void do_rmcomp(Args& args) {
     for (Face f : mesh.faces()) {
       if (setfvis.contains(f)) continue;
       Set<Face> setf = gather_component(mesh, f);
-      for (Face ff : setf) {
-        setfvis.enter(ff);
-      }
+      for (Face ff : setf) setfvis.enter(ff);
       int nf = setf.num();
       if (nf > maxnumf) continue;
       ar_setf.push(std::move(setf));
       Sfacesrem.enter(nf);
     }
-    for (Set<Face>& setf : ar_setf) {
-      Svertsrem.enter(remove_component(setf));
-    }
+    for (Set<Face>& setf : ar_setf) Svertsrem.enter(remove_component(setf));
   }
   showdf("Removed %d mesh components\n", Sfacesrem.inum());
   Set<Vertex> vdestroy;
   for (Vertex v : mesh.vertices()) {
     if (!mesh.degree(v)) vdestroy.enter(v);
   }
-  for (Vertex v : vdestroy) {
-    mesh.destroy_vertex(v);
-  }
+  for (Vertex v : vdestroy) mesh.destroy_vertex(v);
   if (vdestroy.num()) showdf("Removed %d isolated vertices\n", vdestroy.num());
 }
 
@@ -2033,9 +1965,7 @@ float try_coalesce(Edge e) {
   if (!mesh.legal_coalesce_faces(e)) return BIGFLOAT;
   Array<Point> pa;
   for (Face f : mesh.faces(e)) {
-    for (Vertex v : mesh.vertices(f)) {
-      pa.push(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices(f)) pa.push(mesh.point(v));
   }
   Frame frame;
   Vec3<float> eimag;
@@ -2053,9 +1983,7 @@ void do_coalesce(Args& args) {
   float fcrit = args.get_float();
   int nerem = 0;
   Set<Edge> sete;
-  for (Edge e : mesh.edges()) {
-    sete.enter(e);
-  }
+  for (Edge e : mesh.edges()) sete.enter(e);
   while (!sete.empty()) {
     Edge e = sete.remove_one();
     {
@@ -2066,16 +1994,12 @@ void do_coalesce(Args& args) {
     // Neighboring edges may change, so remove them from sete
     //  (especially if > 1 common edges between 2 faces!).
     for (Face f : mesh.faces(e)) {
-      for (Edge ee : mesh.edges(f)) {
-        sete.remove(ee);
-      }
+      for (Edge ee : mesh.edges(f)) sete.remove(ee);
     }
     Face fnew = mesh.coalesce_faces(e);
     nerem++;
     // Reenter affected edges.
-    for (Edge ee : mesh.edges(fnew)) {
-      assertx(sete.add(ee));
-    }
+    for (Edge ee : mesh.edges(fnew)) assertx(sete.add(ee));
   }
   showdf("Removed %d edges\n", nerem);
 }
@@ -2110,9 +2034,7 @@ void do_makequads(Args& args) {
     // All systems go.
     // Remove neighboring edges from pqe.
     for (Face f : mesh.faces(e)) {
-      for (Edge ee : mesh.edges(f)) {
-        pqe.remove(ee);
-      }
+      for (Edge ee : mesh.edges(f)) pqe.remove(ee);
     }
     // Coalesce faces into new face fnew.
     Face fnew = mesh.coalesce_faces(e);
@@ -2145,9 +2067,7 @@ void do_cornermerge() {
       assertx(!GMesh::string_has_key(mesh.get_string(v), key.data()));
       mesh.update_string(v, key.data(), val.data());
     });
-    for (Corner c : mesh.corners(v)) {
-      mesh.set_string(c, nullptr);
-    }
+    for (Corner c : mesh.corners(v)) mesh.set_string(c, nullptr);
   }
   showdf("at %d/%d vertices, merged corner strings\n", nmerge, mesh.num_vertices());
 }
@@ -2178,9 +2098,7 @@ void do_slowcornermerge() {
       assertx(!GMesh::string_has_key(mesh.get_string(v), key.data()));
       nmerge++;
       mesh.update_string(v, key.data(), val.data());
-      for (Corner c : mesh.corners(v)) {
-        mesh.update_string(c, key.data(), nullptr);
-      }
+      for (Corner c : mesh.corners(v)) mesh.update_string(c, key.data(), nullptr);
     });
   }
   showdf("slowcornermerge merged %d keys\n", nmerge);
@@ -2221,9 +2139,7 @@ void do_rgbvertexmerge() {
     if (!s) continue;
     nmerge++;
     mesh.update_string(v, "rgb", s);
-    for (Corner c : mesh.corners(v)) {
-      mesh.update_string(c, "rgb", nullptr);
-    }
+    for (Corner c : mesh.corners(v)) mesh.update_string(c, "rgb", nullptr);
   }
   showdf("at %d/%d vertices, merged rgb strings\n", nmerge, mesh.num_vertices());
 }
@@ -2248,9 +2164,7 @@ void do_facemerge() {
     if (!s) continue;
     nmerge++;
     mesh.set_string(f, s);
-    for (Corner c : mesh.corners(f)) {
-      mesh.set_string(c, nullptr);
-    }
+    for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
   }
   showdf("at %d/%d faces, merged corner strings\n", nmerge, mesh.num_faces());
 }
@@ -2276,9 +2190,7 @@ void do_rgbfacemerge() {
     if (!s) continue;
     nmerge++;
     mesh.update_string(f, "rgb", s);
-    for (Corner c : mesh.corners(f)) {
-      mesh.update_string(c, "rgb", nullptr);
-    }
+    for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", nullptr);
   }
   showdf("at %d/%d faces, merged rgb strings\n", nmerge, mesh.num_faces());
 }
@@ -2297,12 +2209,8 @@ void do_flip() {
   }
   {
     Array<Face> arf;
-    for (Face f : mesh.faces()) {
-      arf.push(f);
-    }
-    for (Face f : arf) {
-      mesh.destroy_face(f);
-    }
+    for (Face f : mesh.faces()) arf.push(f);
+    for (Face f : arf) mesh.destroy_face(f);
   }
   Array<Vertex> vnew;
   for (Array<Vertex>& va : arva) {
@@ -2349,9 +2257,7 @@ void do_smootha3d() {
 void do_bbox() {
   Bbox bbox;
   bbox.clear();
-  for (Vertex v : mesh.vertices()) {
-    bbox.union_with(mesh.point(v));
-  }
+  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   nooutput = true;
 }
@@ -2359,14 +2265,10 @@ void do_bbox() {
 void do_tobbox() {
   Bbox bbox;
   bbox.clear();
-  for (Vertex v : mesh.vertices()) {
-    bbox.union_with(mesh.point(v));
-  }
+  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   Frame xform = bbox.get_frame_to_cube();
   showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
-  for (Vertex v : mesh.vertices()) {
-    mesh.set_point(v, mesh.point(v) * xform);
-  }
+  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
 }
 
 void do_genus() { showdf("%s\n", mesh_genus_string(mesh).c_str()); }
@@ -2385,38 +2287,24 @@ void do_removeinfo() {
     mesh.flags(e) = 0;
   }
   for (Face f : mesh.faces()) {
-    for (Corner c : mesh.corners(f)) {
-      mesh.set_string(c, nullptr);
-    }
+    for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
   }
 }
 
 void do_removekey(Args& args) {
   string skey = args.get_string();
   const char* key = skey.c_str();
-  for (Vertex v : mesh.vertices()) {
-    mesh.update_string(v, key, nullptr);
-  }
+  for (Vertex v : mesh.vertices()) mesh.update_string(v, key, nullptr);
+  for (Face f : mesh.faces()) mesh.update_string(f, key, nullptr);
+  for (Edge e : mesh.edges()) mesh.update_string(e, key, nullptr);
   for (Face f : mesh.faces()) {
-    mesh.update_string(f, key, nullptr);
-  }
-  for (Edge e : mesh.edges()) {
-    mesh.update_string(e, key, nullptr);
-  }
-  for (Face f : mesh.faces()) {
-    for (Corner c : mesh.corners(f)) {
-      mesh.update_string(c, key, nullptr);
-    }
+    for (Corner c : mesh.corners(f)) mesh.update_string(c, key, nullptr);
   }
   if (!strcmp(key, "sharp")) {
-    for (Edge e : mesh.edges()) {
-      mesh.flags(e).flag(GMesh::eflag_sharp) = false;
-    }
+    for (Edge e : mesh.edges()) mesh.flags(e).flag(GMesh::eflag_sharp) = false;
   }
   if (!strcmp(key, "cusp")) {
-    for (Edge v : mesh.edges()) {
-      mesh.flags(v).flag(GMesh::vflag_cusp) = false;
-    }
+    for (Edge v : mesh.edges()) mesh.flags(v).flag(GMesh::vflag_cusp) = false;
   }
 }
 
@@ -2489,25 +2377,17 @@ void do_copykey(Args& args) {
   const char* nkey = snkey.c_str();
   string str;
   if (contains(elems, 'v')) {
-    for (Vertex v : mesh.vertices()) {
-      mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
-    }
+    for (Vertex v : mesh.vertices()) mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
   }
   if (contains(elems, 'f')) {
-    for (Face f : mesh.faces()) {
-      mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
-    }
+    for (Face f : mesh.faces()) mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
   }
   if (contains(elems, 'e')) {
-    for (Edge e : mesh.edges()) {
-      mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
-    }
+    for (Edge e : mesh.edges()) mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
   }
   if (contains(elems, 'c')) {
     for (Face f : mesh.faces()) {
-      for (Corner c : mesh.corners(f)) {
-        mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
-      }
+      for (Corner c : mesh.corners(f)) mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
     }
   }
 }
@@ -2520,25 +2400,17 @@ void do_assignkey(Args& args) {
   string svalue = args.get_string();
   const char* value = svalue.c_str();
   if (contains(elems, 'v')) {
-    for (Vertex v : mesh.vertices()) {
-      mesh.update_string(v, key, value);
-    }
+    for (Vertex v : mesh.vertices()) mesh.update_string(v, key, value);
   }
   if (contains(elems, 'f')) {
-    for (Face f : mesh.faces()) {
-      mesh.update_string(f, key, value);
-    }
+    for (Face f : mesh.faces()) mesh.update_string(f, key, value);
   }
   if (contains(elems, 'e')) {
-    for (Edge e : mesh.edges()) {
-      mesh.update_string(e, key, value);
-    }
+    for (Edge e : mesh.edges()) mesh.update_string(e, key, value);
   }
   if (contains(elems, 'c')) {
     for (Face f : mesh.faces()) {
-      for (Corner c : mesh.corners(f)) {
-        mesh.update_string(c, key, value);
-      }
+      for (Corner c : mesh.corners(f)) mesh.update_string(c, key, value);
     }
   }
 }
@@ -2558,13 +2430,9 @@ const char* copy_normal_to_rgb(string& str, const char* s) {
 
 void do_copynormaltorgb() {
   string str;
-  for (Vertex v : mesh.vertices()) {
-    mesh.update_string(v, "rgb", copy_normal_to_rgb(str, mesh.get_string(v)));
-  }
+  for (Vertex v : mesh.vertices()) mesh.update_string(v, "rgb", copy_normal_to_rgb(str, mesh.get_string(v)));
   for (Face f : mesh.faces()) {
-    for (Corner c : mesh.corners(f)) {
-      mesh.update_string(c, "rgb", copy_normal_to_rgb(str, mesh.get_string(c)));
-    }
+    for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", copy_normal_to_rgb(str, mesh.get_string(c)));
   }
 }
 
@@ -2590,22 +2458,16 @@ void do_info() {
   }
   {
     HH_STAT(Sfacearea);
-    for (Face f : mesh.faces()) {
-      Sfacearea.enter(mesh.area(f));
-    }
+    for (Face f : mesh.faces()) Sfacearea.enter(mesh.area(f));
     showdf("Area is %g\n", Sfacearea.sum());
   }
   {
     HH_STAT(Selen);
-    for (Edge e : mesh.edges()) {
-      Selen.enter(mesh.length(e));
-    }
+    for (Edge e : mesh.edges()) Selen.enter(mesh.length(e));
   }
   {
     HH_STAT(Sfvertices);
-    for (Face f : mesh.faces()) {
-      Sfvertices.enter(mesh.num_vertices(f));
-    }
+    for (Face f : mesh.faces()) Sfvertices.enter(mesh.num_vertices(f));
   }
   {
     HH_STAT(Sbvalence);
@@ -2627,9 +2489,7 @@ void do_info() {
     Point centroid(0.f, 0.f, 0.f);
     if (mesh.num_vertices()) {
       Homogeneous h;
-      for (Vertex v : mesh.vertices()) {
-        h += mesh.point(v);
-      }
+      for (Vertex v : mesh.vertices()) h += mesh.point(v);
       centroid = to_Point(normalized(h));
     }
     Polygon poly;
@@ -2650,9 +2510,7 @@ void do_info() {
   {
     Bbox bbox;
     bbox.clear();
-    for (Vertex v : mesh.vertices()) {
-      bbox.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
     showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   }
   {
@@ -2692,18 +2550,14 @@ void do_obtusesplit() {
     }
   }
   float maxelen = 0.f;
-  for (Edge e : mesh.edges()) {
-    maxelen = max(maxelen, mesh.length(e));
-  }
+  for (Edge e : mesh.edges()) maxelen = max(maxelen, mesh.length(e));
   maxelen *= 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
   const float thresh_ang = to_rad(135.f);  // TAU * (3.f / 8.f)
   HPqueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
-  for (Edge e : mesh.edges()) {
-    pqe.enter_unsorted(e, maxelen - mesh.length(e));
-  }
+  for (Edge e : mesh.edges()) pqe.enter_unsorted(e, maxelen - mesh.length(e));
   int nsplit = 0;
   pqe.sort();
   string str;
@@ -2733,9 +2587,7 @@ void do_obtusesplit() {
     // ALL GO.
     Vec2<Vertex> va{mesh.vertex1(e), mesh.vertex2(e)};
     for (Face f : mesh.faces(e)) {
-      for (Edge ee : mesh.edges(f)) {
-        pqe.remove(ee);
-      }
+      for (Edge ee : mesh.edges(f)) pqe.remove(ee);
     }
     Vertex vnew = mesh.split_edge(e);
     e = nullptr;
@@ -2921,9 +2773,7 @@ void do_reduce() {
     if (!mesh.nice_edge_collapse(e)) continue;
     // Do edge collapse.
     for (Vertex v : mesh.vertices(e)) {
-      for (Edge e2 : mesh.edges(v)) {
-        pqe.remove(e2);
-      }
+      for (Edge e2 : mesh.edges(v)) pqe.remove(e2);
     }
     int nfcol = mesh.face2(e) ? 2 : 1;
     nf -= nfcol;
@@ -2939,18 +2789,14 @@ void do_reduce() {
     }
     mesh.collapse_edge(e);
     if (reducecrit == EReduceCriterion::qem) mesh.set_point(vkept, newp);
-    for (Edge ee : mesh.edges(vkept)) {
-      pqe.enter_update(e, reduce_criterion(ee));
-    }
+    for (Edge ee : mesh.edges(vkept)) pqe.enter_update(e, reduce_criterion(ee));
     for (Face f : mesh.faces(vkept)) {
       Edge ee = mesh.opp_edge(vkept, f);
       pqe.enter_update(e, reduce_criterion(ee));
     }
     if (reducecrit == EReduceCriterion::qem) {
       for (Vertex v2 : mesh.vertices(vkept)) {
-        for (Edge ee : mesh.edges(v2)) {
-          pqe.enter_update(ee, reduce_criterion(ee));
-        }
+        for (Edge ee : mesh.edges(v2)) pqe.enter_update(ee, reduce_criterion(ee));
       }
     }
   }
@@ -3100,9 +2946,7 @@ void do_norgroup() {
     for (Face fff : mesh.faces()) {
       if (setfff.contains(fff)) continue;
       Set<Face> setff = gather_component_v(mesh, fff);
-      for (Face ff : setff) {
-        setfff.enter(ff);
-      }
+      for (Face ff : setff) setfff.enter(ff);
       int norgroup = 0;
       for (Face ff : setff) {
         if (mapfg.contains(ff)) continue;
@@ -3161,9 +3005,7 @@ void do_transf(Args& args) {
     if (!invert(frame, frameinv)) showdf("Warning: uninvertible frame, normals lost\n");
   }
   showdf("Applying transform; normals (if any) may be wrong\n");
-  for (Vertex v : mesh.vertices()) {
-    mesh.set_point(v, mesh.point(v) * frame);
-  }
+  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * frame);
 }
 
 void do_keepsphere(Args& args) {
@@ -3181,16 +3023,12 @@ void do_keepsphere(Args& args) {
     }
     if (!keep) setfrem.enter(f);
   }
-  for (Face f : setfrem) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : setfrem) mesh.destroy_face(f);
   Set<Vertex> vdestroy;
   for (Vertex v : mesh.vertices()) {
     if (!mesh.degree(v)) vdestroy.enter(v);
   }
-  for (Vertex v : vdestroy) {
-    mesh.destroy_vertex(v);
-  }
+  for (Vertex v : vdestroy) mesh.destroy_vertex(v);
 }
 
 void do_colorheight(Args& args) {
@@ -3322,9 +3160,7 @@ void do_rmfarea(Args& args) {
     if (mesh.area(f) < area) arf.push(f);
   }
   showdf("Removing %d faces with area <%g\n", arf.num(), area);
-  for (Face f : arf) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : arf) mesh.destroy_face(f);
 }
 
 void do_rmflarea(Args& args) {
@@ -3334,9 +3170,7 @@ void do_rmflarea(Args& args) {
     if (mesh.area(f) > area) arf.push(f);
   }
   showdf("Removing %d faces with area >%g\n", arf.num(), area);
-  for (Face f : arf) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : arf) mesh.destroy_face(f);
 }
 
 void do_keepfmatid(Args& args) {
@@ -3349,9 +3183,7 @@ void do_keepfmatid(Args& args) {
     if (!s || to_int(s) != keepid) arf.push(f);
   }
   showdf("Keeping %d out of %d faces\n", mesh.num_faces() - arf.num(), mesh.num_faces());
-  for (Face f : arf) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : arf) mesh.destroy_face(f);
 }
 
 void do_uvtopos() {
@@ -3379,9 +3211,7 @@ void do_splitdiaguv() {
   for (Edge e : mesh.edges()) {
     if (mesh.is_boundary(e)) continue;
     uvs.init(0);
-    for (Vertex v : mesh.vertices(e)) {
-      uvs.push(get_uv(v));
-    }
+    for (Vertex v : mesh.vertices(e)) uvs.push(get_uv(v));
     if (abs(uvs[0][0] - uvs[1][0]) > 1e-4f && abs(uvs[0][1] - uvs[1][1]) > 1e-4f) esplit.push(e);
   }
   showdf("removing %d diagonals\n", esplit.num());
@@ -3473,9 +3303,7 @@ void do_quantizeverts(Args& args) {
   assertx(nbits >= 1 && nbits <= 32);
   Bbox bbox;
   bbox.clear();
-  for (Vertex v : mesh.vertices()) {
-    bbox.union_with(mesh.point(v));
-  }
+  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
   const float scale = pow(2.f, float(nbits));
   const float eps = 1e-6f;
@@ -3506,25 +3334,17 @@ void do_procedure(Args& args) {
       if (!parse_key_vec(mesh.get_string(v), "rgb", col)) continue;
       if (col == Vector(1.f, 1.f, 0.f)) {
         setv.enter(v);
-        for (Face f : mesh.faces(v)) {
-          setf.add(f);
-        }
+        for (Face f : mesh.faces(v)) setf.add(f);
       }
     }
-    for (Face f : setf) {
-      mesh.destroy_face(f);
-    }
-    for (Vertex v : setv) {
-      mesh.destroy_vertex(v);
-    }
+    for (Face f : setf) mesh.destroy_face(f);
+    for (Vertex v : setv) mesh.destroy_vertex(v);
   } else if (name == "mark_hole_on_david_mesh") {
     // mark hole at base of David mesh
     for (Vertex v : mesh.vertices()) {
       if (mesh.degree(v) < 100) continue;  // was 50
       Warning("Marking faces around a vertex");
-      for (Face f : mesh.faces(v)) {
-        mesh.update_string(f, "hole", "");
-      }
+      for (Face f : mesh.faces(v)) mesh.update_string(f, "hole", "");
     }
   } else if (name == "remove_stmatface_genus_5") {
     Set<Face> setfrem;
@@ -3539,16 +3359,12 @@ void do_procedure(Args& args) {
       }
       if (!keep) setfrem.enter(f);
     }
-    for (Face f : setfrem) {
-      mesh.destroy_face(f);
-    }
+    for (Face f : setfrem) mesh.destroy_face(f);
     Set<Vertex> vdestroy;
     for (Vertex v : mesh.vertices()) {
       if (!mesh.degree(v)) vdestroy.enter(v);
     }
-    for (Vertex v : vdestroy) {
-      mesh.destroy_vertex(v);
-    }
+    for (Vertex v : vdestroy) mesh.destroy_vertex(v);
   } else if (name == "create_sphere") {
     assertx(!mesh.num_vertices());
     const int nlat = 31, nlon = 60;
@@ -3643,9 +3459,7 @@ void do_procedure(Args& args) {
       if (1) vec.normalize();
       Point pc = mesh.point(v);
       Stat stat;
-      for (Vertex vv : mesh.vertices(v)) {
-        stat.enter(dist(pc, mesh.point(vv)));
-      }
+      for (Vertex vv : mesh.vertices(v)) stat.enter(dist(pc, mesh.point(vv)));
       if (1) vec *= stat.avg() * 0.5f;
       pc += nor * stat.avg() * 1e-2f;
       el.init(A3dElem::EType::polyline);
@@ -3723,14 +3537,10 @@ void do_signeddistcontour(Args& args) {
   {
     Bbox bb;
     bb.clear();
-    for (Vertex v : mesh.vertices()) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
     Frame xform = bb.get_frame_to_small_cube();
     showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
-    for (Vertex v : mesh.vertices()) {
-      mesh.set_point(v, mesh.point(v) * xform);
-    }
+    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(mesh.num_faces());
@@ -3741,9 +3551,7 @@ void do_signeddistcontour(Args& args) {
     ar_polyface.push(PolygonFace(std::move(poly), f));
   }
   PolygonFaceSpatial psp(30);
-  for (PolygonFace& polyface : ar_polyface) {
-    psp.enter(&polyface);
-  }
+  for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   auto func_mesh_signed_distance = [&](const Vec3<float>& p) {
     SpatialSearch<PolygonFace*> ss(&psp, p);
     PolygonFace* polyface = ss.next();
@@ -3754,9 +3562,7 @@ void do_signeddistcontour(Args& args) {
   {
     Contour3DMesh<decltype(func_mesh_signed_distance)> contour(grid, &nmesh, func_mesh_signed_distance);
     contour.set_ostream(&std::cout);
-    for (Vertex v : mesh.vertices()) {
-      contour.march_from(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) contour.march_from(mesh.point(v));
   }
   mesh.copy(nmesh);
 }
@@ -3767,14 +3573,10 @@ void do_signeddistbmp(Args& args) {
   {
     Bbox bb;
     bb.clear();
-    for (Vertex v : mesh.vertices()) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
     Frame xform = bb.get_frame_to_small_cube();
     showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
-    for (Vertex v : mesh.vertices()) {
-      mesh.set_point(v, mesh.point(v) * xform);
-    }
+    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(mesh.num_faces());
@@ -3785,9 +3587,7 @@ void do_signeddistbmp(Args& args) {
     ar_polyface.push(PolygonFace(std::move(poly), f));
   }
   PolygonFaceSpatial psp(20);
-  for (PolygonFace& polyface : ar_polyface) {
-    psp.enter(&polyface);
-  }
+  for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   for_int(iz, grid) {
     Image image(V(grid, grid));
     for_int(ix, grid) {
@@ -3835,9 +3635,7 @@ Point compute_hull_point(Vertex v, float offset) {
     Bbox bbox;
     bbox.clear();
     bbox.union_with(mesh.point(v));
-    for (Vertex vv : mesh.vertices(v)) {
-      bbox.union_with(mesh.point(vv));
-    }
+    for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
     bbox[1] += Vector(abs(offset), abs(offset), abs(offset));
     assertx(bbox.max_side());
@@ -3868,9 +3666,7 @@ Point compute_hull_point(Vertex v, float offset) {
   Vector link_normal;
   {
     Polygon poly;
-    for (Vertex vv : mesh.ccw_vertices(v)) {
-      poly.push(mesh.point(vv));
-    }
+    for (Vertex vv : mesh.ccw_vertices(v)) poly.push(mesh.point(vv));
     link_normal = poly.get_normal_dir();
     // Normalize for numerical precision in simplx.
     assertx(link_normal.normalize());
@@ -3988,9 +3784,7 @@ void do_hull(Args& args) {
     Point p = compute_hull_point(v, offset);
     mapvp.enter(v, p);
   }
-  for (Vertex v : mesh.vertices()) {
-    mesh.set_point(v, mapvp.get(v));
-  }
+  for (Vertex v : mesh.vertices()) mesh.set_point(v, mapvp.get(v));
 }
 
 // Output frame to rigidly transform from one mesh to another presumably
@@ -4021,14 +3815,10 @@ void do_alignmentframe(Args& args) {
   assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
   Bbox cbb;
   cbb.clear();
-  for (Vertex v : cmesh.vertices()) {
-    cbb.union_with(cmesh.point(v));
-  }
+  for (Vertex v : cmesh.vertices()) cbb.union_with(cmesh.point(v));
   Bbox nbb;
   nbb.clear();
-  for (Vertex v : nmesh.vertices()) {
-    nbb.union_with(nmesh.point(v));
-  }
+  for (Vertex v : nmesh.vertices()) nbb.union_with(nmesh.point(v));
   // Point corig = cbb[0];
   // Point norig = nbb[0];
   Point corig = interp(cbb[0], cbb[1]);  // align centroids
@@ -4053,9 +3843,7 @@ Matrix<Point> smoothgim_subdiv(CMatrixView<Point> opoints) {
   int nn = opoints.ysize() - 1;
   Matrix<Point> npoints(nn * 2 + 1, nn * 2 + 1);
   // copy old points
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) npoints[y * 2][x * 2] = opoints[y][x];
-  }
+  for_int(y, nn + 1) for_int(x, nn + 1) npoints[y * 2][x * 2] = opoints[y][x];
   // splitting step
   for_int(y, nn + 1) {
     for_int(x, nn) npoints[y * 2][x * 2 + 1] = interp(npoints[y * 2][x * 2 + 0], npoints[y * 2][x * 2 + 2]);
@@ -4094,9 +3882,7 @@ void do_smoothgim(Args& args) {
   assertx(square(nn + 1) == mesh.num_vertices());
   Matrix<Point> points(nn + 1, nn + 1);
   // extract mesh points
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) points[y][x] = mesh.point(mesh.id_vertex(y * (nn + 1) + x + 1));
-  }
+  for_int(y, nn + 1) for_int(x, nn + 1) points[y][x] = mesh.point(mesh.id_vertex(y * (nn + 1) + x + 1));
   // respect C2 rule at side (cut) vertices
   if (1) {
     if (nn >= 4) {
@@ -4124,9 +3910,7 @@ void do_smoothgim(Args& args) {
     nn = tpoints.ysize() - 1;
     points.init(0, 0);
     points.init(nn + 1, nn + 1);
-    for_int(y, nn + 1) {
-      for_int(x, nn + 1) points[y][x] = tpoints[y][x];
-    }
+    for_int(y, nn + 1) for_int(x, nn + 1) points[y][x] = tpoints[y][x];
   }
   // recreate mesh
   mesh.clear();
@@ -4207,12 +3991,8 @@ void do_shootrays(Args& args) {
   }
   Bbox bb;
   bb.clear();
-  for (Vertex v : mesh.vertices()) {
-    bb.union_with(mesh.point(v));
-  }
-  for (Vertex v : omesh.vertices()) {
-    bb.union_with(omesh.point(v));
-  }
+  for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
+  for (Vertex v : omesh.vertices()) bb.union_with(omesh.point(v));
   Frame xform = bb.get_frame_to_small_cube(0.5f);
   Frame xformi = ~xform;
   Array<PolygonFace> ar_polyface;
@@ -4233,9 +4013,7 @@ void do_shootrays(Args& args) {
         if (omesh.corner_key(str, c, "blendi")) has_blend = true;
       }
     }
-    for (PolygonFace& polyface : ar_polyface) {
-      psp.enter(&polyface);
-    }
+    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
   {
     HH_TIMER(__shoot_rays);
@@ -4333,18 +4111,12 @@ void do_transferkeysfrom(Args& args) {
   {
     Bbox bb;
     bb.clear();
-    for (Vertex v : mesh.vertices()) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
     xform = bb.get_frame_to_small_cube();
   }
   if (1) {
-    for (Vertex v : mesh.vertices()) {
-      hp.pre_consider(mesh.point(v) * xform);
-    }
-    for (Vertex ov : omesh.vertices()) {
-      hp.pre_consider(omesh.point(ov) * xform);
-    }
+    for (Vertex v : mesh.vertices()) hp.pre_consider(mesh.point(v) * xform);
+    for (Vertex ov : omesh.vertices()) hp.pre_consider(omesh.point(ov) * xform);
   }
   for (Vertex v : mesh.ordered_vertices()) {
     Point p = mesh.point(v) * xform;
@@ -4428,9 +4200,7 @@ void convex_group_flip_faces(const Set<Face>& group) {
   int vote_flip = 0, vote_keep = 0;
   for (Face f : group) {
     Vector toctr(0.f, 0.f, 0.f);
-    for (Vertex v : mesh.vertices(f)) {
-      toctr += ctr - mesh.point(v);
-    }
+    for (Vertex v : mesh.vertices(f)) toctr += ctr - mesh.point(v);
     Polygon poly;
     mesh.polygon(f, poly);
     if (dot(toctr, poly.get_normal()) > 0)
@@ -4578,9 +4348,7 @@ void do_trim(Args& args) {
       dfaces.push(f);
   }
   showdf("Destroying %d faces\n", dfaces.num());
-  for (Face f : dfaces) {
-    mesh.destroy_face(f);
-  }
+  for (Face f : dfaces) mesh.destroy_face(f);
 }
 
 void do_trimpts(Args& args) {
@@ -4591,9 +4359,7 @@ void do_trimpts(Args& args) {
   {
     Bbox bb;
     bb.clear();
-    for (Vertex v : mesh.vertices()) {
-      bb.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
     xform = bb.get_frame_to_small_cube();
   }
   PointSpatial<int> psp(800);
@@ -4637,9 +4403,7 @@ void do_trimpts(Args& args) {
       if (ss.done() || (ss.next(&dis2), dis2 > square(maxd))) dfaces.push(f);
     }
     showdf("Destroying %d faces\n", dfaces.num());
-    for (Face f : dfaces) {
-      mesh.destroy_face(f);
-    }
+    for (Face f : dfaces) mesh.destroy_face(f);
   } else {
     const FlagMask vflag_toofar = Mesh::allocate_Vertex_flag();
     int nvtoofar = 0;
@@ -4667,17 +4431,13 @@ void do_trimpts(Args& args) {
       if (toofar) dfaces.push(f);
     }
     showdf("Destroying %d faces\n", dfaces.num());
-    for (Face f : dfaces) {
-      mesh.destroy_face(f);
-    }
+    for (Face f : dfaces) mesh.destroy_face(f);
   }
 }
 
 void do_assignwids() {
   string str;
-  for (Vertex v : mesh.vertices()) {
-    mesh.update_string(v, "wid", csform(str, "%d", mesh.vertex_id(v)));
-  }
+  for (Vertex v : mesh.vertices()) mesh.update_string(v, "wid", csform(str, "%d", mesh.vertex_id(v)));
 }
 
 }  // namespace

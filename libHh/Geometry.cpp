@@ -51,9 +51,7 @@ float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * m
 Point centroid(CArrayView<Point> pa) {
   assertx(pa.num());
   Vec3<float> v(0.f, 0.f, 0.f);
-  for (const Point& p : pa) {
-    v += p;
-  }
+  for (const Point& p : pa) v += p;
   return v / float(pa.num());
 }
 

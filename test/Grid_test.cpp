@@ -17,36 +17,22 @@ int main() {
     SHOW(grid_stride(grid.dims(), 1));
     SHOW(grid_stride(grid.dims(), 2));
     for_size_t(i, grid.size()) SHOW(grid.flat(i));
-    for (const auto& u : range(grid.dims())) {
-      SHOW(u, grid[u]);
-    }
+    for (const auto& u : range(grid.dims())) SHOW(u, grid[u]);
     SHOW(grid(0, 0, 1));
     SHOW(grid(1, 0, 0));
     SHOW(grid(2, 3, 0));
     SHOW(grid);
-    for (const auto& u : range(V(3, 4, 2), V(5, 5, 6))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(3, 4, 2), V(5, 5, 6))) SHOW(u);
     SHOW(1);
-    for (const auto& u : range(V(16, 0), V(16, 16))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(16, 0), V(16, 16))) SHOW(u);
     SHOW(2);
-    for (const auto& u : range(V(0, 16), V(16, 16))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(0, 16), V(16, 16))) SHOW(u);
     SHOW(3);
-    for (const auto& u : range(V(0, 7), V(1, 8))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(0, 7), V(1, 8))) SHOW(u);
     SHOW(4);
-    for (const auto& u : range(V(0, 7), V(1, 7))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(0, 7), V(1, 7))) SHOW(u);
     SHOW(5);
-    for (const auto& u : range(V(0, 7), V(0, 7))) {
-      SHOW(u);
-    }
+    for (const auto& u : range(V(0, 7), V(0, 7))) SHOW(u);
   }
   {
     Grid<2, int> grid({256, 8}, 2);

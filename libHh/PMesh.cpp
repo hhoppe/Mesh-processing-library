@@ -1223,9 +1223,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   }
   ASSERTX(ffl < 0 && ffr < 0);
   // Update wedge vertices to vs.
-  for (int w : ar_wmodif) {
-    _wedges[w].vertex = vs;
-  }
+  for (int w : ar_wmodif) _wedges[w].vertex = vs;
   // Update vertex attributes.
   {
     PMVertexAttrib& vas = _vertices[vs].attrib;

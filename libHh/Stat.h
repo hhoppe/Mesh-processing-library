@@ -198,9 +198,7 @@ template <typename R, typename> R standardize(R&& range) {
     Warning("standardize() of range with zero sdv");
   } else {
     const float avg = stat.avg(), rsdv = 1.f / sdv;
-    for (float& e : range) {
-      e = (e - avg) * rsdv;
-    }
+    for (float& e : range) e = (e - avg) * rsdv;
   }
   return std::forward<R>(range);
 }
@@ -213,9 +211,7 @@ template <typename R, typename> R standardize_rms(R&& range) {
     Warning("standardize() of range with zero rms");
   } else {
     const float rrms = 1.f / rms;
-    for (auto& e : range) {
-      e *= rrms;
-    }
+    for (auto& e : range) e *= rrms;
   }
   return std::forward<R>(range);
 }

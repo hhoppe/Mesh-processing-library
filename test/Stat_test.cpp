@@ -37,16 +37,12 @@ int main() {
   {
     float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array
     SHOW(ArView(values));
-    for (float v : values) {
-      SHOW(v);
-    }
+    for (float v : values) SHOW(v);
     HH_RSTAT(Svalues, ArView(values));
   }
   {
     const float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array
-    for (float v : values) {
-      SHOW(v);
-    }
+    for (float v : values) SHOW(v);
     HH_RSTAT(Svalues, values);
   }
   { HH_RSTAT(Svalues2, V(2.f, 4.f, 4.f, 5.f, 4.f)); }

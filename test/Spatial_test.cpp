@@ -15,9 +15,7 @@ int main() {
       sp.enter(i, &pa[i]);
       p += v;
     }
-    for (int i = 8; i < pa.num(); i += 7) {
-      sp.remove(i, &pa[i]);
-    }
+    for (int i = 8; i < pa.num(); i += 7) sp.remove(i, &pa[i]);
     SpatialSearch<int> ss(&sp, Point(.7f, .2f, .8f));
     while (!ss.done()) {
       float dis2;

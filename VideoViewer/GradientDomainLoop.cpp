@@ -932,9 +932,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   Array<unique_ptr<RVideo>> prvideos(totstreams);  // video streams
   const bool use_nv12 = true;
   Array<Nv12> rvideoframes(totstreams);  // current image frame in each video stream
-  for (auto& frame : rvideoframes) {
-    frame.init(sdims);
-  }
+  for (auto& frame : rvideoframes) frame.init(sdims);
   Array<int> rvideo_fi(totstreams, INT_MAX);  // current frame index in each video stream
   auto func_get_si = [&](int pi, int streami) {
     ASSERTX(pi >= 1 && ar_nstreams.ok(pi));

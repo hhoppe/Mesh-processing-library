@@ -582,9 +582,7 @@ inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
 
 inline void HWbase::fill_polygon_ogl(CArrayView<Vec2<float>> points) {
   glBegin(points.num() == 3 ? GL_TRIANGLES : points.num() == 4 ? GL_QUADS : GL_POLYGON);
-  for (const Vec2<float>& p : points) {
-    glVertex2f(p[1], p[0]);
-  }
+  for (const Vec2<float>& p : points) glVertex2f(p[1], p[0]);
   glEnd();
 }
 

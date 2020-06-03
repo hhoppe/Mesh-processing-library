@@ -37,9 +37,7 @@ int main() {
     assertw(s.pop() == 2);
     {
       int i = 0;
-      for (int j : s) {
-        assertw(j == 1 - i++);
-      }
+      for (int j : s) assertw(j == 1 - i++);
     }
     assertw(!s.contains(2));
     assertw(s.pop() == 1);
@@ -52,9 +50,7 @@ int main() {
     s.push(1);
     s.push(2);
     int i = 0;
-    for (int j : s) {
-      assertw(j == 2 - i++);
-    }
+    for (int j : s) assertw(j == 2 - i++);
     assertx(i == 3);
     assertw(s.pop() == 2);
     assertw(s.pop() == 1);
@@ -83,9 +79,7 @@ int main() {
     stack.push(make_unique<ST>(4));
     stack.push(make_unique<ST>(5));
     stack.push(make_unique<ST>(6));
-    for (auto& e : stack) {
-      SHOW(e->_i);
-    }
+    for (auto& e : stack) SHOW(e->_i);
     for (auto& e : stack) e = nullptr;  // otherwise, ~Stack() may destroy elements in unknown order
     SHOW("end");
   }

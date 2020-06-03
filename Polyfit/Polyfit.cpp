@@ -87,18 +87,14 @@ void analyze_poly(int indent, const string& s) {
 }
 
 void poly_transform(const Frame& f) {
-  for (vertex v : verts) {
-    v->p *= f;
-  }
+  for (vertex v : verts) v->p *= f;
 }
 
 void compute_xform() {
   Bbox bb;
   bb.clear();
   for_int(i, pt.n) bb.union_with(pt.co[i]);
-  for (vertex v : verts) {
-    bb.union_with(v->p);
-  }
+  for (vertex v : verts) bb.union_with(v->p);
   xform = bb.get_frame_to_small_cube();
   if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
   xformi = ~xform;
@@ -144,9 +140,7 @@ void output_poly(WSA3dStream& oa3d, bool clearobject = false) {
   if (clearobject) oa3d.write_clear_object();
   A3dElem el;
   Set<vertex> setv;
-  for (vertex v : verts) {
-    setv.enter(v);
-  }
+  for (vertex v : verts) setv.enter(v);
   while (!setv.empty()) {
     vertex vf = setv.get_one(), vf0 = vf;
     HH_ASSUME(vf);
@@ -331,18 +325,12 @@ void fit_ring(vertex v, int niter) {
   Vec2<vertex> va{v->v[0], v->v[1]};
   Array<int> arpts;
   if (va[0])
-    for (int pi : va[0]->pts) {
-      arpts.push(pi);
-    }
+    for (int pi : va[0]->pts) arpts.push(pi);
   if (va[1])
-    for (int pi : v->pts) {
-      arpts.push(pi);
-    }
+    for (int pi : v->pts) arpts.push(pi);
   double rss0, rss1;
   local_fit(arpts, va, niter, v->p, rss0, rss1);
-  for (int pi : arpts) {
-    reproject_locally(pi);
-  }
+  for (int pi : arpts) reproject_locally(pi);
 }
 
 void cleanup_neighborhood(vertex v, int nri) {
@@ -376,14 +364,10 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   Array<int> arpts;
   for_int(i, 3) {
     if (!ev[i] || !ev[i]->v[1]) continue;
-    for (int pi : ev[i]->pts) {
-      arpts.push(pi);
-    }
+    for (int pi : ev[i]->pts) arpts.push(pi);
     rssf += spring * dist2(ev[i]->p, ev[i]->v[1]->p);
   }
-  for (int pi : arpts) {
-    rssf += pt.dis2[pi];
-  }
+  for (int pi : arpts) rssf += pt.dis2[pi];
   // Find the best starting location by exploring one iteration.
   double minrss1 = BIGFLOAT;
   int minii = -1;
@@ -429,12 +413,8 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
   Vec2<vertex> va{v, assertx(v->v[1])};
   double rssf = spring * dist2(va[0]->p, va[1]->p);
   Array<int> arpts;
-  for (int pi : v->pts) {
-    arpts.push(pi);
-  }
-  for (int pi : arpts) {
-    rssf += pt.dis2[pi];
-  }
+  for (int pi : v->pts) arpts.push(pi);
+  for (int pi : arpts) rssf += pt.dis2[pi];
   Point newp = interp(va[0]->p, va[1]->p);
   double rss0, rss1;
   local_fit(arpts, va, ni, newp, rss0, rss1);
@@ -529,9 +509,7 @@ void do_sample(Args& args) {
     enter_point(interp(v->p, v->v[1]->p, Random::G.unif()), v);
   }
   // Enter vertices as points
-  for (vertex v : verts) {
-    enter_point(v->p, v->v[1] ? v : v->v[0]);
-  }
+  for (vertex v : verts) enter_point(v->p, v->v[1] ? v : v->v[0]);
   showdf("%d points read\n", pt.n);
 }
 
@@ -657,9 +635,7 @@ void do_lfit(Args& args) {
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning lfit, %d iters (nli=%d), spr=%g\n", ni, nli, spring);
   for_int(i, ni) {
-    for (vertex v : verts) {
-      fit_ring(v, nli);
-    }
+    for (vertex v : verts) fit_ring(v, nli);
     if (a3d_spawn) output_poly(*a3d_spawn, true);
   }
   if (verb >= 2) showdf("Finished lfit\n");
@@ -744,8 +720,6 @@ int main(int argc, const char** argv) {
   }
   hh_clean_up();
   if (!nooutput) output_poly(g_oa3d);
-  for (vertex v : verts) {
-    delete v;
-  }
+  for (vertex v : verts) delete v;
   return 0;
 }

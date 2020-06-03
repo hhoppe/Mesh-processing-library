@@ -642,9 +642,7 @@ void mesh_init(GMesh& mesh) {
   for (Vertex v : mesh.vertices()) {
     if (mesh.flags(v).flag(g3d::vflag_ok).set(true)) continue;
     v_coord(v).init(mesh.point(v));
-    for (Face f : mesh.faces(v)) {
-      fredo.add(f);
-    }
+    for (Face f : mesh.faces(v)) fredo.add(f);
   }
   for (Face f : mesh.faces()) {
     if (!mesh.flags(f).flag(g3d::fflag_ok)) fredo.add(f);

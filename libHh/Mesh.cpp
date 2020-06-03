@@ -211,9 +211,7 @@ bool Mesh::is_nice(Vertex v) const {
 
 int Mesh::degree(Vertex v) const {
   int n = 0;
-  for (HEdge he : v->_arhe) {
-    n += is_boundary(he) ? 2 : 1;
-  }
+  for (HEdge he : v->_arhe) n += is_boundary(he) ? 2 : 1;
   return n;
 }
 
@@ -360,9 +358,7 @@ Face Mesh::opp_face(Vertex v, Face f) const { return opp_face(f, opp_edge(v, f))
 
 void Mesh::get_vertices(Face f, Array<Vertex>& va) const {
   va.init(0);
-  for (Vertex v : vertices(f)) {
-    va.push(v);
-  }
+  for (Vertex v : vertices(f)) va.push(v);
 }
 
 Vertex Mesh::vertex(Face f, int i) const {
@@ -377,9 +373,7 @@ Vertex Mesh::vertex(Face f, int i) const {
 
 Array<Corner> Mesh::get_corners(Face f, Array<Corner>&& ca) const {
   ca.init(0);
-  for (Corner c : corners(f)) {
-    ca.push(c);
-  }
+  for (Corner c : corners(f)) ca.push(c);
   return std::move(ca);
 }
 
@@ -527,9 +521,7 @@ void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
   }
   // Change remaining faces around vt to have vs instead
   Array<Corner> arc;
-  for (HEdge he : corners(vt)) {
-    arc.push(he);
-  }
+  for (HEdge he : corners(vt)) arc.push(he);
   for (HEdge he : arc) {
     // ends up deleting and recreating MEdge structures, which is great.
     remove_hedge(he, he->_prev->_vert);
@@ -582,9 +574,7 @@ Edge Mesh::swap_edge(Edge e) {
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : faces(e)) {
-    for (HEdge he : corners(f)) {
-      ar_he.push(he);
-    }
+    for (HEdge he : corners(f)) ar_he.push(he);
   }
   create_bogus_hedges(ar_he);
   // Destroy faces
@@ -641,9 +631,7 @@ void Mesh::merge_vertices(Vertex vs, Vertex vt) {
   // We cannot introduce bogus hedges, because we intend to merge boundary edges together.
   // Change faces around vt to instead use vs.
   Array<Corner> arc;
-  for (HEdge he : corners(vt)) {
-    arc.push(he);
-  }
+  for (HEdge he : corners(vt)) arc.push(he);
   for (HEdge he : arc) {
     ASSERTX(he->_vert == vt);
     remove_hedge(he, he->_prev->_vert);
@@ -661,9 +649,7 @@ Vertex Mesh::center_split_face(Face f) {
   get_vertices(f, va);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (HEdge he : corners(f)) {
-    ar_he.push(he);
-  }
+  for (HEdge he : corners(f)) ar_he.push(he);
   create_bogus_hedges(ar_he);
   // Destroy face
   destroy_face(f);
@@ -690,9 +676,7 @@ Edge Mesh::split_face(Face f, Vertex v1, Vertex v2) {
   }
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (HEdge he : corners(f)) {
-    ar_he.push(he);
-  }
+  for (HEdge he : corners(f)) ar_he.push(he);
   create_bogus_hedges(ar_he);
   // Destroy face
   destroy_face(f);
@@ -794,18 +778,12 @@ Face Mesh::coalesce_faces(Edge e) {
   Array<Vertex> va = gather_edge_coalesce_vertices(e);
   // See if any vertices can be deleted
   Set<Vertex> vbefore;
-  for (Vertex v : vertices(f1)) {
-    vbefore.enter(v);
-  }
-  for (Vertex v : vertices(f2)) {
-    vbefore.add(v);
-  }
+  for (Vertex v : vertices(f1)) vbefore.enter(v);
+  for (Vertex v : vertices(f2)) vbefore.add(v);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : faces(e)) {
-    for (HEdge he : corners(f)) {
-      ar_he.push(he);
-    }
+    for (HEdge he : corners(f)) ar_he.push(he);
   }
   create_bogus_hedges(ar_he);
   // Destroy faces
@@ -816,12 +794,8 @@ Face Mesh::coalesce_faces(Edge e) {
   Face fn = create_face(va);
   remove_bogus_hedges(ar_he);
   // Delete any isolated vertices
-  for (Vertex v : va) {
-    vbefore.remove(v);
-  }
-  for (Vertex v : vbefore) {
-    destroy_vertex(v);
-  }
+  for (Vertex v : va) vbefore.remove(v);
+  for (Vertex v : vbefore) destroy_vertex(v);
   if (debug() >= 3) ok();
   return fn;
 }
@@ -833,9 +807,7 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : faces(e)) {
-    for (HEdge he : corners(f)) {
-      ar_he.push(he);
-    }
+    for (HEdge he : corners(f)) ar_he.push(he);
   }
   create_bogus_hedges(ar_he);
   Vertex v1 = vertex1(e), v2 = vertex2(e);
@@ -870,15 +842,11 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
 
 Edge Mesh::remove_vertex_between_edges(Vertex vr) {
   Array<Face> fa;
-  for (Face f : ccw_faces(vr)) {
-    fa.push(f);
-  }
+  for (Face f : ccw_faces(vr)) fa.push(f);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : fa) {
-    for (HEdge he : corners(f)) {
-      ar_he.push(he);
-    }
+    for (HEdge he : corners(f)) ar_he.push(he);
   }
   create_bogus_hedges(ar_he);
   Vec2<Array<Vertex>> va;
@@ -1100,17 +1068,13 @@ bool Mesh::valid(Corner c) const {
 
 Mesh::OrderedVertices_range::OrderedVertices_range(const Mesh& mesh) {
   _vertices.reserve(mesh.num_vertices());
-  for (Vertex v : mesh.vertices()) {
-    _vertices.push(v);
-  }
+  for (Vertex v : mesh.vertices()) _vertices.push(v);
   sort(_vertices, [&mesh](Vertex v1, Vertex v2) { return mesh.vertex_id(v1) < mesh.vertex_id(v2); });
 }
 
 Mesh::OrderedFaces_range::OrderedFaces_range(const Mesh& mesh) {
   _faces.reserve(mesh.num_faces());
-  for (Face f : mesh.faces()) {
-    _faces.push(f);
-  }
+  for (Face f : mesh.faces()) _faces.push(f);
   sort(_faces, [&mesh](Face f1, Face f2) { return mesh.face_id(f1) < mesh.face_id(f2); });
 }
 

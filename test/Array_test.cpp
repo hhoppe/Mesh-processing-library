@@ -36,9 +36,7 @@ int main() {
     ar.push(make_unique<ST>(4));
     ar.push(make_unique<ST>(5));
     ar.push(make_unique<ST>(6));
-    for (auto& e : ar) {
-      SHOW(e->_i);
-    }
+    for (auto& e : ar) SHOW(e->_i);
     SHOW("end");
   }
   {

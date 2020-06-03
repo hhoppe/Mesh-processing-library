@@ -29,9 +29,7 @@ void showmesh(GMesh& mesh) {
   showf("  } EndVertices\n  Edges (%d)\n  Faces (%d) {\n", mesh.num_edges(), mesh.num_faces());
   for (Face f : mesh.ordered_faces()) {
     showf("    Face %d {", mesh.face_id(f));
-    for (Vertex v : mesh.vertices(f)) {
-      showf(" %d", mesh.vertex_id(v));
-    }
+    for (Vertex v : mesh.vertices(f)) showf(" %d", mesh.vertex_id(v));
     showf(" }\n");
   }
   SHOW("  } EndFaces\n} EndMesh");
@@ -86,9 +84,7 @@ int main() {
     SHOW("renumbered");
     mesh.renumber();
     mesh.write(std::cout);
-    for (Face f : mesh.ordered_faces()) {
-      f_pstruct1(f) = make_unique<Struct1>(mesh.face_id(f));
-    }
+    for (Face f : mesh.ordered_faces()) f_pstruct1(f) = make_unique<Struct1>(mesh.face_id(f));
     mesh.clear();
     // The mesh faces are destroyed in a non-sorted order.
     SHOW(sum_destruct);

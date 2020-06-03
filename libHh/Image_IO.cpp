@@ -212,9 +212,7 @@ void ImageIO::read_rgb(Image& image, FILE* file) {
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx][2] = image[yx][1] = image[yx][0]; });
   }
   if (image.zsize() < 4) {
-    for (Pixel& pix : image) {
-      pix[3] = 255;
-    }
+    for (Pixel& pix : image) pix[3] = 255;
   }
   if (1) image.reverse_y();  // because *.rgb format has image origin at lower-left
 }
@@ -303,12 +301,8 @@ void ImageIO::write_rgb(const Image& image, FILE* file) {
       }
     }
     assertt(rowstart.num() == nrows && rowsize.num() == nrows);
-    for (auto& v : rowstart) {
-      to_std(&v);
-    }
-    for (auto& v : rowsize) {
-      to_std(&v);
-    }
+    for (auto& v : rowstart) to_std(&v);
+    for (auto& v : rowsize) to_std(&v);
     assertt(write_raw(file, rowstart));
     assertt(write_raw(file, rowsize));
     // (Note: could fail to write all if output is pipe.)
@@ -582,9 +576,7 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
     cprogress.update(float(cinfo.next_scanline) / cinfo.image_height);
     int y = cinfo.next_scanline;
     uchar* p = row.data();
-    for_int(x, image.xsize()) {
-      for_int(z, image.zsize()) { *p++ = image[y][x][z]; }
-    }
+    for_int(x, image.xsize()) for_int(z, image.zsize()) { *p++ = image[y][x][z]; }
     // jpeg_write_scanlines expects an array of pointers to scanlines.
     // Here the array is only one element long, but you could pass
     // more than one scanline at a time if that is more convenient.
@@ -993,9 +985,7 @@ void ImageIO::write_ppm(const Image& image, FILE* file) {
   for_int(y, image.ysize()) {
     cprogress.update(float(y) / image.ysize());
     uchar* p = row.data();
-    for_int(x, image.xsize()) {
-      for_int(z, ncomp) { *p++ = image[y][x][z]; }
-    }
+    for_int(x, image.xsize()) for_int(z, ncomp) { *p++ = image[y][x][z]; }
     assertt(write_raw(file, row));
   }
 }
@@ -1120,9 +1110,7 @@ void ImageIO::read_png(Image& image, FILE* file) {
       }
     }
     if (image.zsize() < 4) {
-      for (Pixel& pix : image) {
-        pix[3] = 255;
-      }
+      for (Pixel& pix : image) pix[3] = 255;
     }
   }
   png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
@@ -1170,9 +1158,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
     parallel_for_each(range(image.ysize()), [&](const int y) {
       row_pointers[y] = matrix[y].data();
       uchar* buf = matrix[y].data();
-      for_int(x, image.xsize()) {
-        for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
-      }
+      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
     });
     png_set_rows(png_ptr, info_ptr, row_pointers.data());
     int png_transforms = 0;
@@ -1186,9 +1172,7 @@ void ImageIO::write_png(const Image& image, FILE* file) {
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize());
       uchar* buf = buffer.data();
-      for_int(x, image.xsize()) {
-        for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
-      }
+      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
       png_bytep row_pointer = buffer.data();
       png_write_row(png_ptr, row_pointer);
     }

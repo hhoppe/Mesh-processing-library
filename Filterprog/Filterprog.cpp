@@ -105,9 +105,7 @@ class LivingAncestor {
 void LivingAncestor::activate() {
   assertx(!_is_active);
   _is_active = true;
-  for (Vertex v : mesh.vertices()) {
-    set_vertex(mesh.vertex_id(v));
-  }
+  for (Vertex v : mesh.vertices()) set_vertex(mesh.vertex_id(v));
 }
 
 void LivingAncestor::set_descendant(int vnew, int vold) {
@@ -122,15 +120,11 @@ LivingAncestor vlineage;  // closest living ancestor relation
 
 void clear_vertex_corner_strings(Vertex v) {
   mesh.set_string(v, nullptr);
-  for (Corner c : mesh.corners(v)) {
-    mesh.set_string(c, nullptr);
-  }
+  for (Corner c : mesh.corners(v)) mesh.set_string(c, nullptr);
 }
 
 void clear_mesh_strings() {
-  for (Vertex v : mesh.vertices()) {
-    clear_vertex_corner_strings(v);
-  }
+  for (Vertex v : mesh.vertices()) clear_vertex_corner_strings(v);
   // Face string info such as groups and materials is kept intact and propagated through.
 }
 
@@ -158,9 +152,7 @@ WedgeInfo create_winfo(Corner c) {
 // With non-strict PM, some of these ancestor wid's may be assigned 0 to indicate that no ancestor corner exists.
 void carry_old_corner_info(Edge e) {
   for (Face f : mesh.faces(e)) {
-    for (Corner c : mesh.corners(f)) {
-      c_owedge_id(c) = 0;
-    }
+    for (Corner c : mesh.corners(f)) c_owedge_id(c) = 0;
   }
   for (Face ff : mesh.faces(e)) {
     for (Corner crep : mesh.corners(ff)) {
@@ -562,9 +554,7 @@ void write_mesh(bool write_morph = false) {
     }
     for (Face f : mesh.faces()) {
       Array<Vertex> van;
-      for (Corner c : mesh.corners(f)) {
-        van.push(mcv.get(c));
-      }
+      for (Corner c : mesh.corners(f)) van.push(mcv.get(c));
       Face fn = nmesh.create_face(van);
       nmesh.set_string(fn, mesh.get_string(f));
     }
@@ -574,9 +564,7 @@ void write_mesh(bool write_morph = false) {
       showdf("Wrote %s\n", mesh_genus_string(nmesh).c_str());
     }
   } else {
-    for (Vertex v : mesh.vertices()) {
-      write_init_vertex(v, write_morph);
-    }
+    for (Vertex v : mesh.vertices()) write_init_vertex(v, write_morph);
     {
       HH_ATIMER(__mesh_write);
       mesh.write(std::cout);
@@ -594,9 +582,7 @@ bool next_morph(int nfaces) {
     HH_ATIMER(__record_attrib);
     for (Vertex v : mesh.vertices()) {
       v_opos(v) = mesh.point(v);
-      for (Corner c : mesh.corners(v)) {
-        c_owedge_id(c) = c_cwedge_id(c);
-      }
+      for (Corner c : mesh.corners(v)) c_owedge_id(c) = c_cwedge_id(c);
     }
     gowinfo.copy_from(gcwinfo);
   }
@@ -626,9 +612,7 @@ bool next_morph(int nfaces) {
   gowinfo.clear();
   for (Vertex v : mesh.vertices()) {
     v_opos(v) = Point(k_undefined, k_undefined, k_undefined);  // optional
-    for (Corner c : mesh.corners(v)) {
-      c_owedge_id(c) = -1;  // optional
-    }
+    for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;  // optional
   }
   return !!is;
 }
@@ -681,9 +665,7 @@ void do_fbasemesh(Args& args) {
       if (!gcwinfo.contains(wid)) gcwinfo.set(wid, create_winfo(c));
     }
   }
-  for (Edge e : mesh.edges()) {
-    assertx(!mesh.get_string(e));
-  }
+  for (Edge e : mesh.edges()) assertx(!mesh.get_string(e));
   clear_mesh_strings();
 }
 

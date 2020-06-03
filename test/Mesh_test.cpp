@@ -8,15 +8,11 @@ namespace {
 
 void show_mesh(const Mesh& mesh) {
   showf("Mesh {\n  Vertices (%d) {\n", mesh.num_vertices());
-  for (Vertex v : mesh.ordered_vertices()) {
-    showf("    %d\n", mesh.vertex_id(v));
-  }
+  for (Vertex v : mesh.ordered_vertices()) showf("    %d\n", mesh.vertex_id(v));
   showf("  } EndVertices\n  Edges (%d)\n  Faces (%d) {\n", mesh.num_edges(), mesh.num_faces());
   for (Face f : mesh.ordered_faces()) {
     showf("    Face %d {", mesh.face_id(f));
-    for (Vertex v : mesh.vertices(f)) {
-      showf(" %d", mesh.vertex_id(v));
-    }
+    for (Vertex v : mesh.vertices(f)) showf(" %d", mesh.vertex_id(v));
     showf(" }\n");
   }
   SHOW("  } EndFaces\n} EndMesh");
@@ -52,9 +48,7 @@ int main() {
     mesh.ok();
     // (1, 2, 3), (2, 1, 4)
     Edge e = mesh.edge(v1, v2);
-    for (Face f : mesh.faces(e)) {
-      SHOW(mesh.face_id(f));
-    }
+    for (Face f : mesh.faces(e)) SHOW(mesh.face_id(f));
     SHOW("done");
     mesh.ok();
     v5 = mesh.split_edge(e);
@@ -75,18 +69,14 @@ int main() {
   assertx(mesh.num_edges() == 8);
   {
     Array<Vertex> va;
-    for (Vertex v : mesh.ccw_vertices(v5)) {
-      va.push(v);
-    }
+    for (Vertex v : mesh.ccw_vertices(v5)) va.push(v);
     assertx(va.num() == 4);
     SHOW("vertices: 3 1 4 2");
     for_int(i, 4) SHOW(mesh.vertex_id(va[i]));
   }
   {
     Array<Face> fa;
-    for (Face f : mesh.ccw_faces(v2)) {
-      fa.push(f);
-    }
+    for (Face f : mesh.ccw_faces(v2)) fa.push(f);
     assertx(fa.num() == 2);
     Face pf1 = mesh.face(v5, v2 /*, v3*/);
     Face pf2 = mesh.face(v5, v4 /*, v2*/);
@@ -119,13 +109,9 @@ int main() {
     Face fo = mesh.opp_face(f, mesh.edge(v1, v5));
     assertx(fo == mesh.face(v1, v4 /*, v5*/));
     SHOW("face vertex: 5 3 1");
-    for (Vertex v : mesh.vertices(f)) {
-      SHOW(mesh.vertex_id(v));
-    }
+    for (Vertex v : mesh.vertices(f)) SHOW(mesh.vertex_id(v));
     SHOW("face face: 4, 2");
-    for (Face ff : mesh.faces(f)) {
-      SHOW(mesh.face_id(ff));
-    }
+    for (Face ff : mesh.faces(f)) SHOW(mesh.face_id(ff));
     SHOW("face edge: (1, 5), (3, 5), (3, 1)");
     for (Edge e : mesh.edges(f)) {
       showf("edge (%d, %d)\n", mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e)));
@@ -135,13 +121,9 @@ int main() {
     mesh.ok();
     Vertex v = v3;
     SHOW("vertex vertex: 5 2 1");
-    for (Vertex vv : mesh.vertices(v)) {
-      SHOW(mesh.vertex_id(vv));
-    }
+    for (Vertex vv : mesh.vertices(v)) SHOW(mesh.vertex_id(vv));
     SHOW("vertex face: 2, 3");
-    for (Face f : mesh.faces(v)) {
-      SHOW(mesh.face_id(f));
-    }
+    for (Face f : mesh.faces(v)) SHOW(mesh.face_id(f));
     SHOW("vertex edge: (3, 5), (2, 3), (3, 1)");
     for (Edge e : mesh.edges(v)) {
       showf("edge (%d, %d)\n", mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e)));
@@ -201,9 +183,7 @@ int main() {
   }
   show_mesh(mesh);
   {
-    for (Edge e : mesh.edges()) {
-      assertx(!mesh.nice_edge_collapse(e));
-    }
+    for (Edge e : mesh.edges()) assertx(!mesh.nice_edge_collapse(e));
   }
   {
     Array<Vertex> va;

@@ -70,13 +70,9 @@ int main() {
     fill(a1, 1);
     Vec3<int> a2{2, 1, 3};
     SHOW(a1);
-    for (const auto& u : range(a1)) {
-      SHOW(u);
-    }
+    for (const auto& u : range(a1)) SHOW(u);
     SHOW(a2);
-    for (const auto& u : range(a2)) {
-      SHOW(u);
-    }
+    for (const auto& u : range(a2)) SHOW(u);
   }
   struct S : Vec2<int> {
     // void f() const { SHOW(*this); }

@@ -148,9 +148,7 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
   bb.clear();
   // compute the meshes bounding box
   for (Face f : meshd.faces()) {
-    for (Vertex v : meshd.vertices(f)) {
-      bb.union_with(meshd.point(v));
-    }
+    for (Vertex v : meshd.vertices(f)) bb.union_with(meshd.point(v));
   }
   bbdiag = mag(bb[0] - bb[1]);
   // showdf("size of the diag %f\n", bbdiag);
@@ -173,9 +171,7 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
       for_int(i, poly.num()) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), fd));
     }
-    for (PolygonFace& polyface : ar_polyface) {
-      psp.enter(&polyface);
-    }
+    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
   HH_TIMER(_sample_distances);
   if (numpts) {
@@ -245,9 +241,7 @@ void do_distance() {
   for_int(imesh, 2) {
     assertx(meshes[imesh].num_faces());
     maxnfaces = max(maxnfaces, meshes[imesh].num_faces());
-    for (Vertex v : meshes[imesh].vertices()) {
-      bbox.union_with(meshes[imesh].point(v));
-    }
+    for (Vertex v : meshes[imesh].vertices()) bbox.union_with(meshes[imesh].point(v));
     if (!imesh) bbox0 = bbox;
   }
   xform = bbox.get_frame_to_small_cube();

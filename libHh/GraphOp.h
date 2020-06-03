@@ -97,9 +97,7 @@ template <typename T, typename Func = float(const T&, const T&)>
 Graph<T> graph_mst(const Graph<T>& undirectedg, Func fdist) {
   assertx(!undirectedg.empty());
   Graph<T> gnew;
-  for (const T& v : undirectedg.vertices()) {
-    gnew.enter(v);
-  }
+  for (const T& v : undirectedg.vertices()) gnew.enter(v);
   if (!graph_mst(undirectedg, fdist, gnew)) gnew.clear();
   return gnew;
 }
@@ -196,9 +194,7 @@ inline Graph<int> graph_quick_emst(CArrayView<Point> pa, const PointSpatial<int>
 template <typename T, typename Func = float(const T&, const T&)> Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
   Stat stat;
   for (const T& v1 : g.vertices()) {
-    for (const T& v2 : g.edges(v1)) {
-      stat.enter(fdist(v1, v2));
-    }
+    for (const T& v2 : g.edges(v1)) stat.enter(fdist(v1, v2));
   }
   return stat;
 }

@@ -57,12 +57,8 @@ int main() {
     assertw(sv == (50 * 8 + 99 * 8) * (50 / 2));
     sk = 0;
     sv = 0;
-    for (int k : m.keys()) {
-      sk += k;
-    }
-    for (int v : m.values()) {
-      sv += v;
-    }
+    for (int k : m.keys()) sk += k;
+    for (int v : m.values()) sv += v;
     assertw(sk == (50 + 99) * (50 / 2));
     assertw(sv == (50 * 8 + 99 * 8) * (50 / 2));
     for_intL(i, 50, 100) m.remove(i);
@@ -138,13 +134,9 @@ int main() {
     assertx(m.get("ab") == "14");
     assertx(m["abcd"] == "113");
     Array<string> ar;
-    for (const string& k : m.keys()) {
-      ar.push(k);
-    }
+    for (const string& k : m.keys()) ar.push(k);
     sort(ar);
-    for (const string& s : ar) {
-      SHOW(s, m[s]);
-    }
+    for (const string& s : ar) SHOW(s, m[s]);
     assertx(m.remove("ab") == "14");
     SHOW(m);
   }

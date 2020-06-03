@@ -1526,12 +1526,8 @@ void mesh_init(GMesh& mesh) {
     for (Vertex v : mesh.vertices()) {
       if (mesh.flags(v).flag(g3d::vflag_ok).set(true)) continue;
       vredo.add(v);
-      for (Vertex w : mesh.vertices(v)) {
-        vredo.add(w);
-      }
-      for (Face f : mesh.faces(v)) {
-        fredo.add(f);
-      }
+      for (Vertex w : mesh.vertices(v)) vredo.add(w);
+      for (Face f : mesh.faces(v)) fredo.add(f);
     }
     for (Vertex v : vredo) {
       VertexLOD& vlod = v_lod(v);
@@ -1607,9 +1603,7 @@ void mesh_init(GMesh& mesh) {
   }
   if (lsmooth) {
     if (have_vnors.add(&mesh))
-      for (Vertex v : mesh.vertices()) {
-        vredo.add(v);
-      }
+      for (Vertex v : mesh.vertices()) vredo.add(v);
     for (Vertex v : vredo) {
       Vnors vnors;
       vnors.compute(mesh, v);
@@ -1657,9 +1651,7 @@ void mesh_init(GMesh& mesh) {
   }
   if (!lsmooth || ((ledges || strip_lines) && cullbackedges && lcullface)) {
     if (have_fnors.add(&mesh))
-      for (Face f : mesh.faces()) {
-        fredo.add(f);
-      }
+      for (Face f : mesh.faces()) fredo.add(f);
     for (Face f : fredo) {
       mesh.flags(f).flag(g3d::fflag_ok) = true;
       mesh.polygon(f, poly);
@@ -1668,9 +1660,7 @@ void mesh_init(GMesh& mesh) {
   }
   if (0 && strip_lines && !map_mfa.contains(&mesh)) {
     Array<Face> fa;
-    for (Face f : mesh.ordered_faces()) {
-      fa.push(f);
-    }
+    for (Face f : mesh.ordered_faces()) fa.push(f);
     map_mfa.enter(&mesh, std::move(fa));
   }
   if (strip_lines) {
@@ -1732,9 +1722,7 @@ inline void render_corner(const GMesh& mesh, Corner c) {
 
 inline void render_face(const GMesh& mesh, Face f) {
   setup_face(mesh, f);
-  for (Corner c : mesh.corners(f)) {
-    render_corner(mesh, c);
-  }
+  for (Corner c : mesh.corners(f)) render_corner(mesh, c);
 }
 
 inline bool same_corner_attrib(const GMesh& mesh, Vertex v1, Corner c1a, Corner c1b) {
@@ -1874,9 +1862,7 @@ void draw_mesh(GMesh& mesh) {
       bool vis_new_state = !mesh.gflags().flag(mflag_fvisited);
       mesh.gflags().flag(mflag_fvisited) = vis_new_state;
       if (k_debug) {
-        for (Face f : mesh.faces()) {
-          assertx(mesh.flags(f).flag(fflag_visited) != vis_new_state);
-        }
+        for (Face f : mesh.faces()) assertx(mesh.flags(f).flag(fflag_visited) != vis_new_state);
       }
       Array<Vertex> va;
       for (Face f : mesh.faces()) {
@@ -2052,9 +2038,7 @@ void draw_mesh(GMesh& mesh) {
       if (is_new) {
         Bbox bbox;
         bbox.clear();
-        for (Vertex v : mesh.vertices()) {
-          bbox.union_with(mesh.point(v));
-        }
+        for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
         mesh_radius = bbox.max_side();
         assertw(mesh_radius > 0.f);
       }
@@ -2501,9 +2485,7 @@ void GXobject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
     if (lsmooth) {
       if (mesh.flags(v).flag(vflag_unique_nors)) {
         Vector nnor = interp_normal(vlod.Nnor, vlod.Onor, f1, f2);
-        for (Corner c : mesh.corners(v)) {
-          c_nor(c) = nnor;
-        }
+        for (Corner c : mesh.corners(v)) c_nor(c) = nnor;
       } else {
         for (Corner c : mesh.corners(v)) {
           const CornerLOD& clod = c_lod(c);
@@ -2515,9 +2497,7 @@ void GXobject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
       UV uv;
       uv[0] = f1 * vlod.Nuv[0] + f2 * vlod.Ouv[0];
       uv[1] = f1 * vlod.Nuv[1] + f2 * vlod.Ouv[1];
-      for (Corner c : mesh.corners(v)) {
-        c_uv(c) = uv;
-      }
+      for (Corner c : mesh.corners(v)) c_uv(c) = uv;
     }
   }
   if (!lsmooth || (ledges && cullbackedges && lcullface)) {
@@ -3439,9 +3419,7 @@ bool sr_morph_active;
 void read_sr(const string& filename) {
   HH_TIMER(_read_sr);
   RFile fi(filename);
-  for (string sline; fi().peek() == '#';) {
-    assertx(my_getline(fi(), sline));
-  }
+  for (string sline; fi().peek() == '#';) assertx(my_getline(fi(), sline));
   assertx(fi().peek() == 'P' || fi().peek() == 'S');
   bool srm_input = fi().peek() == 'S';
   if (!srm_input) {
@@ -4889,17 +4867,13 @@ void Cylinder::draw() {
   glBegin(GL_TRIANGLE_FAN);
   glNormal3fv(tn.data());
   glVertex3fv(tc.data());
-  for (int i = 0; i < _v.num(); i += 2) {
-    glVertex3fv(_v[i].data());
-  }
+  for (int i = 0; i < _v.num(); i += 2) glVertex3fv(_v[i].data());
   glEnd();
   //
   glBegin(GL_TRIANGLE_FAN);
   glNormal3fv(bn.data());
   glVertex3fv(bc.data());
-  for (int i = _v.num() - 1; i >= 0; i -= 2) {
-    glVertex3fv(_v[i].data());
-  }
+  for (int i = _v.num() - 1; i >= 0; i -= 2) glVertex3fv(_v[i].data());
   glEnd();
 }
 

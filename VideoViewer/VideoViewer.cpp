@@ -1002,9 +1002,7 @@ Array<string> get_image_sequence(const string& filename) {
 }
 
 void reset_sliders() {
-  for (const Slider& slider : g_sliders) {
-    *slider.pval = 1.f;
-  }
+  for (const Slider& slider : g_sliders) *slider.pval = 1.f;
 }
 
 void initiate_loop_request() {
@@ -1040,9 +1038,7 @@ template <typename R> Array<float> to_luminance(const R& range) {
   static_assert(std::is_same<iterator_t<R>, Pixel>::value, "");
   Array<float> ar;
   ar.reserve(int(distance(range)));
-  for (const Pixel& pix : range) {
-    ar.push(RGB_to_Y(pix));
-  }
+  for (const Pixel& pix : range) ar.push(RGB_to_Y(pix));
   return ar;
 }
 
@@ -3862,12 +3858,8 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
       assertx(pipe_api.Optimize(hvideo, g_lp.mat_period, g_lp.mat_start));  // multilabel graph cut
       assertw(is_zero(hdims % g_lp.mat_start.dims()));
       if (0) SHOW(pipe_api.GetConfig().m_MinPeriodSrc, pipe_api.GetConfig().m_MinPeriod);
-      for (int& period : g_lp.mat_period) {
-        period = period <= 1 ? 1 : period * DT;
-      }
-      for (int& start : g_lp.mat_start) {
-        start *= DT;
-      }
+      for (int& period : g_lp.mat_period) period = period <= 1 ? 1 : period * DT;
+      for (int& start : g_lp.mat_start) start *= DT;
     } else {  // for debugging
 #endif
       Warning("Compiled without support for seamless video loop");

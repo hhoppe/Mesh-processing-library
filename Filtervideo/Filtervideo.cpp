@@ -249,9 +249,7 @@ void apply_as_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const Vec2<in
 //  (Not CMatrixView because the videos can get padded with extra frames.)
 void assemble_videos(MatrixView<Video> videos) {
   int maxframes = 0;
-  for (const auto& yx : range(videos.dims())) {
-    maxframes = max(maxframes, videos[yx].nframes());
-  }
+  for (const auto& yx : range(videos.dims())) maxframes = max(maxframes, videos[yx].nframes());
   for (const auto& yx : range(videos.dims())) {
     assertx(videos[yx].ysize() == videos[yx[0]][0].ysize());
     assertx(videos[yx].xsize() == videos[0][yx[1]].xsize());
@@ -267,9 +265,7 @@ void assemble_videos(MatrixView<Video> videos) {
   }
   CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
   if (0) {
-    for (Vec3<int> ugrid : range(gvideos.dims())) {
-      SHOW(ugrid, gvideos[ugrid].dims());
-    }
+    for (Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
   }
   video = assemble(gvideos);
 }
@@ -305,9 +301,7 @@ void do_assemble(Args& args) {
     apply_as_operations(videos[yx], yx, videos.dims());
   });  // we can assume that parallelism is justified
   if (0) {
-    for (const auto& yx : range(videos.dims())) {
-      SHOW(yx, filenames[yx], videos[yx].nframes());
-    }
+    for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   }
   ConsoleProgress::set_all_silent(prev_silent);
   for (const auto& yx : range(videos.dims())) {
@@ -1213,17 +1207,11 @@ void do_loadpj(Args& args) {
   g_lp.mat_static.init(video.spatial_dims());
   g_lp.mat_start.init(video.spatial_dims());
   g_lp.mat_period.init(video.spatial_dims());
-  for (auto& e : g_lp.mat_static) {
-    is >> e;
-  }
+  for (auto& e : g_lp.mat_static) is >> e;
   assertx(is);
-  for (auto& e : g_lp.mat_start) {
-    is >> e;
-  }
+  for (auto& e : g_lp.mat_start) is >> e;
   assertx(is);
-  for (auto& e : g_lp.mat_period) {
-    is >> e;
-  }
+  for (auto& e : g_lp.mat_period) is >> e;
   assertx(is);
   if (use_activation) {
     g_lp.mat_activation.init(video.spatial_dims());
@@ -1483,9 +1471,7 @@ void compute_looping_regions() {
       }
     }
   }
-  for (auto& pix : g_lp.region_color) {
-    pix = random_color(Random::G);
-  }
+  for (auto& pix : g_lp.region_color) pix = random_color(Random::G);
   if (getenv_bool("LOOPING_REGIONS_IMAGE")) {
     Image image(video.spatial_dims());
     for (const auto& yx : range(video.spatial_dims())) {
@@ -2286,9 +2272,7 @@ void do_equalizemedians() {
   for_int(f, video.nframes()) ar_medians.push(frame_median(video[f]));
   Vector mean_of_medians = mean(ar_medians);
   SHOW(mean_of_medians);
-  for (auto& vec : ar_medians) {
-    vec -= mean_of_medians;
-  }
+  for (auto& vec : ar_medians) vec -= mean_of_medians;
   for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
     for_int(z, nz) pix[z] = clamp_to_uint8(int(pix[z] - ar_medians[f][z] + .5f));
   }
@@ -2299,9 +2283,7 @@ void do_equalizemeans() {
   for_int(f, video.nframes()) ar_means.push(frame_mean(video[f]));
   Vector mean_of_means = mean(ar_means);
   SHOW(mean_of_means);
-  for (auto& vec : ar_means) {
-    vec -= mean_of_means;
-  }
+  for (auto& vec : ar_means) vec -= mean_of_means;
   for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
     for_int(z, nz) pix[z] = clamp_to_uint8(int(pix[z] - ar_means[f][z] + .5f));
   }

@@ -153,9 +153,7 @@ void test4() {
         Matrix<Real> A(m, n);
         switch (imode) {
           case 0:
-            for (Real& v : A) {
-              v = possible_cast<Real>(Random::G.dunif());
-            }
+            for (Real& v : A) v = possible_cast<Real>(Random::G.dunif());
             break;
           case 1: identity_mat(A); break;
           default: assertnever("");

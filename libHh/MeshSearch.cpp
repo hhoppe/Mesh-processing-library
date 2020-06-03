@@ -61,9 +61,7 @@ MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
   HH_TIMER(__meshsearch_build);
   Bbox bbox;
   bbox.clear();
-  for (Vertex v : _mesh.vertices()) {
-    bbox.union_with(_mesh.point(v));
-  }
+  for (Vertex v : _mesh.vertices()) bbox.union_with(_mesh.point(v));
   _ftospatial = bbox.get_frame_to_small_cube();
   int fi = 0;
   for (Face f : _mesh.faces()) {
@@ -75,9 +73,7 @@ MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
     fi++;
   }
   _ppsp = make_unique<PolygonFaceSpatial>(psp_size);
-  for (PolygonFace& polyface : _ar_polyface) {
-    _ppsp->enter(&polyface);
-  }
+  for (PolygonFace& polyface : _ar_polyface) _ppsp->enter(&polyface);
   assertx(fi == _mesh.num_faces());
 }
 

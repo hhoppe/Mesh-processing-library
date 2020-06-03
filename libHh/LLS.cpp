@@ -117,9 +117,7 @@ Array<float> SparseLLS::mult_m_v(CArrayView<float> vi) const {
   // vo[m] = _a[m][n]*vi[n];
   for_int(i, _m) {
     double sum = 0.;
-    for (const Ival& ival : _rows[i]) {
-      sum += double(ival._v) * vi[ival._i];
-    }
+    for (const Ival& ival : _rows[i]) sum += double(ival._v) * vi[ival._i];
     vo[i] = float(sum);
   }
   return vo;
@@ -130,9 +128,7 @@ Array<float> SparseLLS::mult_mt_v(CArrayView<float> vi) const {
   // vo[n] = uT[n][m]*vi[m];
   for_int(j, _n) {
     double sum = 0.;
-    for (const Ival& ival : _cols[j]) {
-      sum += double(ival._v) * vi[ival._i];
-    }
+    for (const Ival& ival : _cols[j]) sum += double(ival._v) * vi[ival._i];
     vo[j] = float(sum);
   }
   return vo;
@@ -224,9 +220,7 @@ bool FullLLS::solve(double* prssb, double* prssa) {
 
 double FullLLS::get_rss() {
   double rss = 0.;
-  for_int(di, _nd) {
-    for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di][i]);
-  }
+  for_int(di, _nd) for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di][i]);
   return rss;
 }
 
@@ -389,9 +383,7 @@ bool SvdLLS::solve_aux() {
   }
   // SHOW(_a, _b, _mU, _mS, _mVT);
   // SHOW(mat_mul(mat_mul(_mU, diag_mat(_mS)), transpose(_mVT)));
-  for (float& s : _mS) {
-    s = 1.f / s;
-  }
+  for (float& s : _mS) s = 1.f / s;
   for_int(d, _nd) {
     // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
     mat_mul(_b[d], _mU, _work);
@@ -413,9 +405,7 @@ bool SvdDoubleLLS::solve_aux() {
   if (cond > k_double_cond_warning) {
     HH_SSTAT(Ssvdlls_cond, cond);
   }
-  for (double& s : _mS) {
-    s = 1. / s;
-  }
+  for (double& s : _mS) s = 1. / s;
   for_int(d, _nd) {
     _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // slow
   }
@@ -433,9 +423,7 @@ bool QrdLLS::solve_aux() {
   if (cond > k_float_cond_warning) {
     HH_SSTAT(Ssvdlls_cond, cond);
   }
-  for (float& s : _mS) {
-    s = 1.f / s;
-  }
+  for (float& s : _mS) s = 1.f / s;
   for_int(d, _nd) {
     // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
     mat_mul(_b[d], _mU, _work);

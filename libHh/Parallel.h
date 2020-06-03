@@ -232,18 +232,14 @@ void parallel_for_each(const Range& range, const Function& function,
         desire_parallelism ? &ThreadPoolIndexedTask::default_threadpool() : nullptr;
     if (!thread_pool || thread_pool->already_active()) {
       // Traverse the range elements sequentially.
-      for (size_t index = 0; index < num_elements; ++index) {
-        function(begin_range[index]);
-      }
+      for (size_t index = 0; index < num_elements; ++index) function(begin_range[index]);
     } else {
       // Traverse the range elements in parallel.
       const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
       thread_pool->execute(num_threads, [begin_range, num_elements, chunk_size, &function](int thread_index) {
         size_t index_start = thread_index * chunk_size;
         size_t index_stop = std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
-        for (size_t index = index_start; index < index_stop; ++index) {
-          function(begin_range[index]);
-        }
+        for (size_t index = index_start; index < index_stop; ++index) function(begin_range[index]);
       });
     }
   }

@@ -795,9 +795,7 @@ void init_qem() {
       BQemT& qem = *up_qem;
       for (Face f : mesh.faces()) {
         get_face_qem(f, qem);
-        for (Corner c : mesh.corners(f)) {
-          gwq[c_wedge_id(c)]->add(qem);
-        }
+        for (Corner c : mesh.corners(f)) gwq[c_wedge_id(c)]->add(qem);
       }
     }
     // Add perpendicular constraints along sharp edges
@@ -993,9 +991,7 @@ void create_vertex_corner_strings(Vertex v, bool force_on_corners = false) {
 // Clear vertex and corner strings of vertex v.
 void clear_vertex_corner_strings(Vertex v) {
   mesh.set_string(v, nullptr);
-  for (Corner c : mesh.corners(v)) {
-    mesh.set_string(c, nullptr);
-  }
+  for (Corner c : mesh.corners(v)) mesh.set_string(c, nullptr);
 }
 
 void create_face_string(Face f) { mesh.set_string(f, material_strings[f_matid(f)].c_str()); }
@@ -1004,25 +1000,15 @@ void clear_face_string(Face f) { mesh.set_string(f, nullptr); }
 
 // Clear all mesh strings except on faces.
 void clear_mesh_strings() {
-  for (Vertex v : mesh.vertices()) {
-    clear_vertex_corner_strings(v);
-  }
-  for (Edge e : mesh.edges()) {
-    mesh.update_string(e, "sharp", nullptr);
-  }
-  for (Face f : mesh.faces()) {
-    clear_face_string(f);  // encoded by f_matid and material_strings
-  }
+  for (Vertex v : mesh.vertices()) clear_vertex_corner_strings(v);
+  for (Edge e : mesh.edges()) mesh.update_string(e, "sharp", nullptr);
+  for (Face f : mesh.faces()) clear_face_string(f);  // encoded by f_matid and material_strings
 }
 
 // Write current mesh.
 void write_mesh(std::ostream& os) {
-  for (Vertex v : mesh.vertices()) {
-    create_vertex_corner_strings(v);
-  }
-  for (Face f : mesh.faces()) {
-    create_face_string(f);
-  }
+  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v);
+  for (Face f : mesh.faces()) create_face_string(f);
   if (sphericalparam) {
     string str;
     for (Vertex v : mesh.vertices()) {
@@ -1110,9 +1096,7 @@ void parse_mesh_material_identifiers() {
          nexistingmatidempty, material_strings.num() - nfirst);
   showff("nmaterials=%d\n", material_strings.num());
   for_int(i, material_strings.num()) showff("%s\n", material_strings[i].c_str());
-  for (Face f : mesh.faces()) {
-    f_matid(f) = msrepmatid.get(mfsrep.get(f));
-  }
+  for (Face f : mesh.faces()) f_matid(f) = msrepmatid.get(mfsrep.get(f));
 }
 
 void parse_mesh_wedge_identifiers() {
@@ -1232,9 +1216,7 @@ void parse_mesh() {
   // Encode wedge id's (c_wedge_id(c))
   parse_mesh_wedge_identifiers();
   // Clear edge flags now that normals have been computed.
-  for (Edge e : mesh.edges()) {
-    mesh.flags(e) = 0;
-  }
+  for (Edge e : mesh.edges()) mesh.flags(e) = 0;
   for (Vertex v : mesh.vertices()) {
     v_global(v) = false;
     if (GMesh::string_has_key(mesh.get_string(v), "global")) v_global(v) = true;
@@ -1273,9 +1255,7 @@ void parse_mesh() {
     Bbox bbox;
     for (Vertex v : mesh.vertices()) {
       bbox[0] = bbox[1] = mesh.point(v);
-      for (Vertex vv : mesh.vertices(v)) {
-        bbox.union_with(mesh.point(vv));
-      }
+      for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
       Point point = interp(bbox[0], bbox[1]);
       float max_d2 = dist2(mesh.point(v), point);
       for (Vertex vv : mesh.vertices(v)) {
@@ -1382,28 +1362,20 @@ void analyze_mesh(const char* s) {
   if (minqem || minaps) return;
   {
     float efdis = 0.f;
-    for (const fptinfo& fpt : fpts) {
-      efdis += fpt.dist2;
-    }
+    for (const fptinfo& fpt : fpts) efdis += fpt.dist2;
     float fdrms = my_sqrt(efdis / max(fpts.num(), 1));
     float dmax2 = 0.f;
-    for (const fptinfo& fpt : fpts) {
-      dmax2 = max(dmax2, fpt.dist2);
-    }
+    for (const fptinfo& fpt : fpts) dmax2 = max(dmax2, fpt.dist2);
     float fdmax = my_sqrt(dmax2);
     showff(" fdist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n", fpts.num(), fdrms, fdrms / gdiam * 100, fdmax,
            fdmax / gdiam * 100);
   }
   {
     float eedis = 0.f;
-    for (const eptinfo& ept : epts) {
-      eedis += ept.dist2;
-    }
+    for (const eptinfo& ept : epts) eedis += ept.dist2;
     float edrms = my_sqrt(eedis / max(epts.num(), 1));
     float dmax2 = 0.f;
-    for (const eptinfo& ept : epts) {
-      dmax2 = max(dmax2, ept.dist2);
-    }
+    for (const eptinfo& ept : epts) dmax2 = max(dmax2, ept.dist2);
     float edmax = my_sqrt(dmax2);
     showff(" edist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n", epts.num(), edrms, edrms / gdiam * 100, edmax,
            edmax / gdiam * 100);
@@ -1453,9 +1425,7 @@ void sample_pts() {
   float mesh_area;
   {
     double sum_area = 0.;
-    for (Face f : mesh.faces()) {
-      sum_area += mesh.area(f);
-    }
+    for (Face f : mesh.faces()) sum_area += mesh.area(f);
     mesh_area = float(sum_area);
   }
   if (numpts == -1) {
@@ -1504,9 +1474,7 @@ void sample_pts() {
       Face f;
       if (jittervertices) {
         fa.init(0);
-        for (Face ff : mesh.faces(v)) {
-          fa.push(ff);
-        }
+        for (Face ff : mesh.faces(v)) fa.push(ff);
         f = fa[Random::G.get_unsigned(fa.num())];
       } else {
         f = assertx(mesh.most_clw_face(v));
@@ -1609,9 +1577,7 @@ void sample_pts() {
 
 void do_tvcreinit() {
   for (Face f : mesh.faces()) {
-    for (Corner c : mesh.corners(f)) {
-      c_tvc_owid(c) = c_wedge_id(c);
-    }
+    for (Corner c : mesh.corners(f)) c_tvc_owid(c) = c_wedge_id(c);
   }
   // Note: in the current Mesh implementation, Mesh::collapse_edge() preserves attributes of Corners,
   // so c_tvc_owid(c) is propagated correctly through simplification.
@@ -1638,9 +1604,7 @@ void perhaps_initialize() {
   }
   {
     gbbox.clear();
-    for (Vertex v : mesh.vertices()) {
-      gbbox.union_with(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) gbbox.union_with(mesh.point(v));
     gdiam = assertx(gbbox.max_side());
     gdiam = getenv_float("GDIAM", gdiam, true);
     gcolc = square(gdiam * colfac);
@@ -1676,9 +1640,7 @@ void perhaps_initialize() {
   for (;;) {
     if (ter_grid != "" || product(grid_dims)) break;
     int max_vid = 0;
-    for (Vertex v : mesh.vertices()) {
-      max_vid = max(max_vid, mesh.vertex_id(v));
-    }
+    for (Vertex v : mesh.vertices()) max_vid = max(max_vid, mesh.vertex_id(v));
     if (max_vid != mesh.num_vertices()) break;
     Point p11 = gbbox[0];
     {
@@ -2276,9 +2238,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
           assertx(e_setpts(ee).empty());
         } else {
           if ((w == vo1 && eoretire[0]) || (w == vo2 && eoretire[1])) {
-            for (eptinfo* pept : e_setpts(ee)) {
-              nn.ar_eptretire.push(pept);
-            }
+            for (eptinfo* pept : e_setpts(ee)) nn.ar_eptretire.push(pept);
           } else {
             int vi = nva - 1;
             for (eptinfo* pept : e_setpts(ee)) {
@@ -2305,9 +2265,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
     if (!edge_sharp(e)) {
       assertx(e_setpts(e).empty());
     } else if (eretire) {
-      for (eptinfo* pept : e_setpts(e)) {
-        nn.ar_eptretire.push(pept);
-      }
+      for (eptinfo* pept : e_setpts(e)) nn.ar_eptretire.push(pept);
     } else {
       assertx(vcreasei >= 0);
       for (eptinfo* pept : e_setpts(e)) {
@@ -2318,16 +2276,12 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   }
   // Gather ar_fpts.
   for (Face f : mesh.faces(v1)) {
-    for (fptinfo* pfpt : f_setpts(f)) {
-      nn.ar_fpts.push(pfpt);
-    }
+    for (fptinfo* pfpt : f_setpts(f)) nn.ar_fpts.push(pfpt);
     if (f == f1 || f == f2) continue;
   }
   for (Face f : mesh.faces(v2)) {
     if (f == f1 || f == f2) continue;
-    for (fptinfo* pfpt : f_setpts(f)) {
-      nn.ar_fpts.push(pfpt);
-    }
+    for (fptinfo* pfpt : f_setpts(f)) nn.ar_fpts.push(pfpt);
   }
   return true;
 }
@@ -2984,9 +2938,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
       Bbox& bb = ar_bb[i];
       bb.clear();
-      for (Vertex v : mesh.vertices(f)) {
-        bb.union_with(mesh.point(v));
-      }
+      for (Vertex v : mesh.vertices(f)) bb.union_with(mesh.point(v));
     }
     Polygon poly;
     Array<Corner> ca;
@@ -3111,9 +3063,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Bbox bbox;
     bbox.clear();
     for (Vertex v : mesh.vertices(e)) {
-      for (Vertex vv : mesh.vertices(v)) {
-        bbox.union_with(mesh.point(vv));
-      }
+      for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
     }
     if (!bbox.max_side()) {
       Warning("Empty bbox");
@@ -3539,9 +3489,7 @@ void check_ccw(Vertex v) {
   Vec3<Point> p;
   for (Face f : mesh.faces(v)) {
     int i = 0;
-    for (Vertex vv : mesh.vertices(f)) {
-      p[i++] = c_uv(mesh.corner(vv, f));
-    }
+    for (Vertex vv : mesh.vertices(f)) p[i++] = c_uv(mesh.corner(vv, f));
     assertw(cross(p[0], p[1], p[2])[2] >= 0.f);
   }
 }
@@ -3727,12 +3675,8 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
   } else {
     assertx(!maxerr);
     double rssfg = 0., rssfc = 0., rssfn = 0.;
-    for (fptinfo* pfpt : nn.ar_fpts) {
-      rssfg += pfpt->dist2;
-    }
-    for (eptinfo* pept : nn.ar_epts) {
-      rssfg += pept->dist2;
-    }
+    for (fptinfo* pfpt : nn.ar_fpts) rssfg += pfpt->dist2;
+    for (eptinfo* pept : nn.ar_epts) rssfg += pept->dist2;
     if (spring) {
       for (Vertex v : mesh.vertices(e)) {
         for (Edge ee : mesh.edges(v)) {
@@ -3742,15 +3686,11 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       }
     }
     if (have_ccolors && gcolc) {
-      for (fptinfo* pfpt : nn.ar_fpts) {
-        rssfc += pfpt->coldist2();
-      }
+      for (fptinfo* pfpt : nn.ar_fpts) rssfc += pfpt->coldist2();
       rssfc *= gcolc;
     }
     if (have_cnormals && gnorc) {
-      for (fptinfo* pfpt : nn.ar_fpts) {
-        rssfn += pfpt->nordist2();
-      }
+      for (fptinfo* pfpt : nn.ar_fpts) rssfn += pfpt->nordist2();
       rssfn *= gnorc;
     }
     rssf = rssfg + rssfc + rssfn;
@@ -3895,9 +3835,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         }
         // Gather materials adjacent to v1
         Set<int> v1mats;
-        for (Face f : mesh.faces(tv1)) {
-          v1mats.add(f_matid(f));
-        }
+        for (Face f : mesh.faces(tv1)) v1mats.add(f_matid(f));
         // Check whether any other vertex around v1 is
         //  on the same boundary as v1
         for (Vertex v : mesh.vertices(tv2)) {
@@ -4207,9 +4145,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       min_ii = ii;
       min_p = newp;
       min_ar_wi.init(0);
-      for (const WedgeInfo& wi : ar_wi) {
-        min_ar_wi.push(wi);
-      }
+      for (const WedgeInfo& wi : ar_wi) min_ar_wi.push(wi);
       min_dir_error = dir_error;
     }
   }
@@ -4314,24 +4250,16 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
   ret_vs = vs;
   CArrayView<int> ar_rwid = !bswap ? nn.ar_rwid_v1 : nn.ar_rwid_v2;
   // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // now undefined
-  for (eptinfo* pept : nn.ar_epts) {
-    point_change_edge(pept, nullptr);
-  }
+  for (eptinfo* pept : nn.ar_epts) point_change_edge(pept, nullptr);
   for (eptinfo* pept : nn.ar_eptretire) {
     point_change_edge(pept, nullptr);
     pept->dist2 = 0.f;
   }
   for (Vertex v : mesh.vertices(e)) {
-    for (Edge ee : mesh.edges(v)) {
-      assertx(e_setpts(ee).empty());
-    }
+    for (Edge ee : mesh.edges(v)) assertx(e_setpts(ee).empty());
   }
-  for (fptinfo* pfpt : nn.ar_fpts) {
-    point_change_face(pfpt, nullptr);
-  }
-  for (Face f : mesh.faces(e)) {
-    assertx(f_setpts(f).empty());
-  }
+  for (fptinfo* pfpt : nn.ar_fpts) point_change_face(pfpt, nullptr);
+  for (Face f : mesh.faces(e)) assertx(f_setpts(f).empty());
   if (wfile_prog) {
     std::ostream& os = (*wfile_prog)();
     os << "# Beg REcol\n";
@@ -4371,9 +4299,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       }
       create_face_string(f);
       os << "Face " << mesh.face_id(f) << " ";
-      for (Vertex v : mesh.vertices(f)) {
-        os << " " << mesh.vertex_id(v);
-      }
+      for (Vertex v : mesh.vertices(f)) os << " " << mesh.vertex_id(v);
       const char* sinfo = mesh.get_string(f);
       if (sinfo) os << " {" << sinfo << "}";
       os << "\n";
@@ -4414,9 +4340,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
   if (minqem) {
     if (qemlocal) {
       if (qemcache) {
-        for (Face f : mesh.faces(vs)) {
-          get_face_qem(f, f_qem(f));
-        }
+        for (Face f : mesh.faces(vs)) get_face_qem(f, f_qem(f));
       }
     } else {
       for_int(i, ar_rwid.num()) gwq[ar_rwid[i]]->copy(*nn.ar_wq[i]);
@@ -4484,9 +4408,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     clear_vertex_corner_strings(vs);
   }
   if (k_debug) {
-    for (fptinfo* pfpt : nn.ar_fpts) {
-      mesh.valid(assertx(pfpt->cmf));
-    }
+    for (fptinfo* pfpt : nn.ar_fpts) mesh.valid(assertx(pfpt->cmf));
     for (eptinfo* pept : nn.ar_epts) {
       if (!pept->cme) continue;
       mesh.valid(assertx(pept->cme));
@@ -4501,13 +4423,9 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       Vec3<Face> fn;
       int i = 0;
       if (0) {
-        for (Face ff : mesh.faces(f)) {
-          fn[i++] = ff;
-        }
+        for (Face ff : mesh.faces(f)) fn[i++] = ff;
       } else {
-        for (Vertex v : mesh.vertices(f)) {
-          fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
-        }
+        for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
       }
       // Can occur if at corner of terrain grid && !terrain
       assertw(strict_mat_neighbors(f, fn[0], fn[1], fn[2]));
@@ -4521,9 +4439,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       for (Face f : mesh.faces(vv1)) {
         if (f_matid(f) != imat) v1mats.add(f_matid(f));
       }
-      for (Face f : mesh.faces(vv2)) {
-        assertx(!v1mats.contains(f_matid(f)));
-      }
+      for (Face f : mesh.faces(vv2)) assertx(!v1mats.contains(f_matid(f)));
     }
   }
   return R_success;
@@ -4607,9 +4523,7 @@ void consider_tvc(Edge& edefault, float costdefault) {
     for (Corner c : mesh.corners(v)) {
       if ((!tvcowid && c_wedge_id(c) == wid) || (tvcowid && c_tvc_owid(c) == owid)) {
         Face f = mesh.corner_face(c);
-        for (Edge e : mesh.edges(f)) {
-          sete.add(e);
-        }
+        for (Edge e : mesh.edges(f)) sete.add(e);
       }
     }
   }
@@ -4644,9 +4558,7 @@ void optimize() {
     for (Face f : mesh.faces()) {
       Vec3<Face> fn;
       int i = 0;
-      for (Vertex v : mesh.vertices(f)) {
-        fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
-      }
+      for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
       if (strict_mat_neighbors(f, fn[0], fn[1], fn[2])) continue;
       if ((!fn[0]) + (!fn[1]) + (!fn[2]) >= 2) {
         // Can occur if at corner of terrain grid && !terrain
@@ -4665,9 +4577,7 @@ void optimize() {
     // Add some randomness to the way edges are selected.
     Array<Edge> ar;
     ar.reserve(mesh.num_edges());
-    for (Edge e : mesh.edges()) {
-      ar.push(e);
-    }
+    for (Edge e : mesh.edges()) ar.push(e);
     {
       std::default_random_engine dre;
       std::shuffle(ar.begin(), ar.end(), dre);
@@ -4849,9 +4759,7 @@ void do_simplify() {
     {
       Set<int> set_wid;
       for (Face f : mesh.faces()) {
-        for (Corner c : mesh.corners(f)) {
-          set_wid.add(c_wedge_id(c));
-        }
+        for (Corner c : mesh.corners(f)) set_wid.add(c_wedge_id(c));
       }
       num_wedges = set_wid.num();
     }
@@ -4866,9 +4774,7 @@ void do_simplify() {
 //   e.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
 void do_rebuildpq() {
   assertx(pqecost.num() == mesh.num_edges());
-  for (Edge e : mesh.edges()) {
-    assertw(pqecost.remove(e) == k_bad_cost);
-  }
+  for (Edge e : mesh.edges()) assertw(pqecost.remove(e) == k_bad_cost);
   assertx(!pqecost.num());
 }
 
@@ -4935,9 +4841,7 @@ void do_removesharp() {
     mesh.flags(e) = 0;
   }
   for (Face f : mesh.faces()) {
-    for (Corner c : mesh.corners(f)) {
-      mesh.set_string(c, nullptr);
-    }
+    for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
   }
 }
 

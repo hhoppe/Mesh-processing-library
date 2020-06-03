@@ -107,9 +107,7 @@ void do_mfilename(Args& args) {
   RFile is(args.get_filename());
   gmesh.read(is());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
-  for (Vertex v : gmesh.vertices()) {
-    gbbox.union_with(gmesh.point(v));
-  }
+  for (Vertex v : gmesh.vertices()) gbbox.union_with(gmesh.point(v));
   if (getenv_bool("FORCE_GLOBAL_PROJECT")) {
     Warning("Using FORCE_GLOBAL_PROJECT");
     g_force_global_project = true;
@@ -187,9 +185,7 @@ int vertex_num_sharp_edges(const GMesh& mesh, Vertex v) {
 float min_dihedral_about_vertices(const GMesh& mesh, Vertex v) {
   Set<Edge> sete;
   for (Vertex vv : mesh.vertices(v)) {
-    for (Edge e : mesh.edges(vv)) {
-      sete.add(e);
-    }
+    for (Edge e : mesh.edges(vv)) sete.add(e);
   }
   float mindic = 2;
   for (Edge e : sete) {
@@ -217,16 +213,12 @@ double get_espr() {
   if (!spring) return 0.;
   double sum = 0.;
   if (0) {
-    for (Edge e : gmesh.edges()) {
-      sum += gmesh.length2(e) * spring;
-    }
+    for (Edge e : gmesh.edges()) sum += gmesh.length2(e) * spring;
   } else {
     for (Vertex v : gmesh.vertices()) {
       Homogeneous h(gmesh.point(v));
       float fac = 1.f / gmesh.degree(v);
-      for (Vertex vv : gmesh.vertices(v)) {
-        h -= fac * Homogeneous(gmesh.point(vv));
-      }
+      for (Vertex vv : gmesh.vertices(v)) h -= fac * Homogeneous(gmesh.point(vv));
       sum += mag2(to_Vector(h)) * spring;
     }
   }
@@ -238,9 +230,7 @@ double get_earea() {
   // may be a bug here: g_psmesh may not be defined everywhere?
   SubMesh& smesh = *assertx(g_psmesh);
   double sum = 0.;
-  for (Face f : smesh.mesh().faces()) {
-    sum += smesh.mesh().area(f);
-  }
+  for (Face f : smesh.mesh().faces()) sum += smesh.mesh().area(f);
   return sum * areafac;
 }
 
@@ -362,9 +352,7 @@ void do_gfit(Args& args) {
   if (verb >= 2) showdf("\n");
   HH_TIMER(_gfit);
   int niter = args.get_int();
-  for (Vertex v : gmesh.vertices()) {
-    gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
-  }
+  for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, true);
   smesh.update_vertex_positions();
@@ -380,9 +368,7 @@ void do_gfit(Args& args) {
   }
   if (os) {
     gmesh.record_changes(os);
-    for (Vertex v : gmesh.vertices()) {
-      gmesh.set_point(v, gmesh.point(v));
-    }
+    for (Vertex v : gmesh.vertices()) gmesh.set_point(v, gmesh.point(v));
     wf_frame();
   }
   if (verb >= 2) analyze_mesh("gfit_after ");
@@ -403,9 +389,7 @@ void do_fgfit(Args& args) {
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("fgfit with %d iterations\n", niter);
   std::ostream* os = gmesh.record_changes(nullptr);
-  for (Vertex v : gmesh.vertices()) {
-    gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
-  }
+  for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   g_psmesh = &smesh;
   subdivide(smesh, true);
@@ -478,9 +462,7 @@ void do_fgfit(Args& args) {
         }
       }
       // Computer gradient
-      for (Vertex v : gmesh.vertices()) {
-        v_grad(v) = Vector(0.f, 0.f, 0.f);
-      }
+      for (Vertex v : gmesh.vertices()) v_grad(v) = Vector(0.f, 0.f, 0.f);
       Array<Vertex> va;
       for_int(i, co.num()) {
         _smesh.mesh().get_vertices(gscmf[i], va);
@@ -500,9 +482,7 @@ void do_fgfit(Args& args) {
         for (Vertex v : gmesh.vertices()) {
           Homogeneous h(gmesh.point(v));
           float fac = 1.f / gmesh.degree(v);
-          for (Vertex vv : gmesh.vertices(v)) {
-            h -= fac * Homogeneous(gmesh.point(vv));
-          }
+          for (Vertex vv : gmesh.vertices(v)) h -= fac * Homogeneous(gmesh.point(vv));
           v_grad(v) += to_Vector(h) * sqrt_spring;
         }
       }
@@ -544,9 +524,7 @@ void do_fgfit(Args& args) {
   assertw(opt.solve());
   if (os) {
     gmesh.record_changes(os);
-    for (Vertex v : gmesh.vertices()) {
-      gmesh.set_point(v, gmesh.point(v));
-    }
+    for (Vertex v : gmesh.vertices()) gmesh.set_point(v, gmesh.point(v));
     wf_frame();
   }
   if (verb >= 2) analyze_mesh("fgfit_after ");
@@ -558,9 +536,7 @@ void do_interp() {
   initialize();
   if (verb >= 2) showdf("\n");
   HH_TIMER(_interp);
-  for (Vertex v : gmesh.vertices()) {
-    gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
-  }
+  for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, true);
   Map<Vertex, int> mvi;
@@ -607,9 +583,7 @@ void do_imagefit() {
   assertx(co.num() && gmesh.num_vertices());
   initialize();
   HH_TIMER(_imagefit);
-  for (Vertex v : gmesh.vertices()) {
-    gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
-  }
+  for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, false);
   Map<Vertex, int> mvi;
@@ -644,9 +618,7 @@ void do_imagefit() {
     for_int(i, n) {
       lls.enter_a_rc(row, i, +sqrt_spring);
       int deg = gmesh.degree(iv[i]);
-      for (Vertex v : gmesh.vertices(iv[i])) {
-        lls.enter_a_rc(row, mvi.get(v), -sqrt_spring / deg);
-      }
+      for (Vertex v : gmesh.vertices(iv[i])) lls.enter_a_rc(row, mvi.get(v), -sqrt_spring / deg);
       Vector zero(0.f, 0.f, 0.f);
       lls.enter_b_r(row, zero);
       row++;
@@ -658,9 +630,7 @@ void do_imagefit() {
       int deg = smesh.mesh().degree(v);
       Combvh barycomb;
       barycomb.c[v] = +sqrt_spring;
-      for (Vertex vv : smesh.mesh().vertices(v)) {
-        barycomb.c[vv] = -sqrt_spring / deg;
-      }
+      for (Vertex vv : smesh.mesh().vertices(v)) barycomb.c[vv] = -sqrt_spring / deg;
       Combvh comb = smesh.compose_c_mvcvh(barycomb);
       for_combination(comb.c, [&](Vertex vv, float val) { lls.enter_a_rc(row, mvi.get(vv), val); });
       Vector zero(0.f, 0.f, 0.f);
@@ -754,9 +724,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
       for_int(i, poly.num()) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), f));
     }
-    for (PolygonFace& polyface : ar_polyface) {
-      psp.enter(&polyface);
-    }
+    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
   HH_STIMER(____lspatialproject);
   for (int i : setpts) {
@@ -842,16 +810,10 @@ void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& l
   for (Vertex v : setgmv) {
     for (Vertex vv : gmesh.vertices(v)) {
       for (Vertex vvv : gmesh.vertices(vv)) {
-        for (Vertex vvvv : gmesh.vertices(vvv)) {
-          setvg.add(vvvv);
-        }
-        for (Face f : gmesh.faces(vvv)) {
-          setfg.add(f);
-        }
+        for (Vertex vvvv : gmesh.vertices(vvv)) setvg.add(vvvv);
+        for (Face f : gmesh.faces(vvv)) setfg.add(f);
       }
-      for (Face f : gmesh.faces(vv)) {
-        setmfg.add(f);
-      }
+      for (Face f : gmesh.faces(vv)) setmfg.add(f);
     }
   }
   for (Vertex v : setvg) {
@@ -866,30 +828,20 @@ void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& l
     lmesh.create_face_private(gmesh.face_id(f), va);
   }
   // Add flags to lmesh
-  for (Edge e : lmesh.edges()) {
-    lmesh.flags(e) = gmesh.flags(tremm(e, lmesh, gmesh));
-  }
-  for (Vertex v : lmesh.vertices()) {
-    lmesh.flags(v) = gmesh.flags(trvmm(v, lmesh, gmesh));
-  }
+  for (Edge e : lmesh.edges()) lmesh.flags(e) = gmesh.flags(tremm(e, lmesh, gmesh));
+  for (Vertex v : lmesh.vertices()) lmesh.flags(v) = gmesh.flags(trvmm(v, lmesh, gmesh));
   // Gather into setpts the points projecting on faces in setmfg
   for (Face f : setmfg) {
-    for (int pi : mfpts.get(f)) {
-      setpts.enter(pi);
-    }
+    for (int pi : mfpts.get(f)) setpts.enter(pi);
   }
   {
     double sum = 0.;
-    for (int pi : setpts) {
-      sum += gdis2[pi];
-    }
+    for (int pi : setpts) sum += gdis2[pi];
     rssf = sum;
   }
   // Gather into setbadpts the points projecting on faces in setbadfg
   for (Face f : setbadfg) {
-    for (int pi : mfpts.get(f)) {
-      setbadpts.enter(pi);
-    }
+    for (int pi : mfpts.get(f)) setbadpts.enter(pi);
   }
 }
 
@@ -899,9 +851,7 @@ void build_lmesh2(GMesh& lmesh, const Set<Vertex>& setmv, Set<Face>& setmf) {
   }
   for (Vertex v : setmv) {
     for (Vertex vv : lmesh.vertices(v)) {
-      for (Face f : lmesh.faces(vv)) {
-        setmf.add(f);
-      }
+      for (Face f : lmesh.faces(vv)) setmf.add(f);
     }
   }
 }
@@ -915,9 +865,7 @@ void subdiv_trim(SubMesh& smesh, const Set<Face>& setmf) {
       if (!setmf.contains(smesh.orig_face(f))) setfrem.enter(f);
     }
     HH_SSTAT(Ssetfrem, setfrem.num());
-    for (Face f : setfrem) {
-      smesh.mesh().destroy_face(f);
-    }
+    for (Face f : setfrem) smesh.mesh().destroy_face(f);
   }
   {  // trim isolated vertices
     Set<Vertex> setvrem;
@@ -925,9 +873,7 @@ void subdiv_trim(SubMesh& smesh, const Set<Face>& setmf) {
       if (!smesh.mesh().degree(v)) setvrem.enter(v);
     }
     HH_SSTAT(Ssetvrem, setvrem.num());
-    for (Vertex v : setvrem) {
-      smesh.mesh().destroy_vertex(v);
-    }
+    for (Vertex v : setvrem) smesh.mesh().destroy_vertex(v);
   }
 }
 
@@ -1012,19 +958,13 @@ EResult try_ecol(Edge eg, double& edrss) {
     Set<Vertex> setgmv;
     Set<Face> setbadfg;
     for (Vertex v : gmesh.vertices(eg)) {
-      for (Vertex vv : gmesh.vertices(v)) {
-        setgmv.add(vv);
-      }
-      for (Face f : gmesh.faces(v)) {
-        setbadfg.add(f);
-      }
+      for (Vertex vv : gmesh.vertices(v)) setgmv.add(vv);
+      for (Face f : gmesh.faces(v)) setbadfg.add(f);
     }
     build_lmesh1(setgmv, setbadfg, lmesh, setpts, setbadpts, rssf);
   }
   float minb = BIGFLOAT;
-  for (Vertex v : gmesh.vertices(eg)) {
-    minb = min(minb, min_dihedral_about_vertices(gmesh, v));
-  }
+  for (Vertex v : gmesh.vertices(eg)) minb = min(minb, min_dihedral_about_vertices(gmesh, v));
   Edge e = tremm(eg, gmesh, lmesh);
   Vertex v1 = lmesh.vertex1(e), v2 = lmesh.vertex2(e);
   Point p1 = lmesh.point(v1), p2 = lmesh.point(v2);
@@ -1041,15 +981,11 @@ EResult try_ecol(Edge eg, double& edrss) {
   lmesh.collapse_edge(e);  // keep v1
   Set<Vertex> setmv;
   setmv.enter(v1);
-  for (Vertex vv : lmesh.vertices(v1)) {
-    setmv.enter(vv);
-  }
+  for (Vertex vv : lmesh.vertices(v1)) setmv.enter(vv);
   Set<Face> setmf;
   build_lmesh2(lmesh, setmv, setmf);
   Set<Face> setgoodf;
-  for (Face f : lmesh.faces(v1)) {
-    setgoodf.enter(f);
-  }
+  for (Face f : lmesh.faces(v1)) setgoodf.enter(f);
   SubMesh smesh(lmesh);
   subdiv_trim(smesh, setmf);
   Mvcvih mvcvih;
@@ -1071,9 +1007,7 @@ EResult try_ecol(Edge eg, double& edrss) {
     optimize_local(smesh, setmv, setpts, mvcvih, rss1);
     mina = min_dihedral_about_vertices(lmesh, v1);
     // Return to initial state.
-    for (Vertex v : setmv) {
-      lmesh.set_point(v, gmesh.point(trvmm(v, lmesh, gmesh)));
-    }
+    for (Vertex v : setmv) lmesh.set_point(v, gmesh.point(trvmm(v, lmesh, gmesh)));
     if (mina < k_min_cos && mina < minb) continue;  // disallow
     if (rss1 < minrss) {
       minrss = rss1;
@@ -1090,19 +1024,13 @@ EResult try_ecol(Edge eg, double& edrss) {
   // ALL SYSTEMS GO
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
   for (Vertex v : gmesh.vertices(eg)) {
-    for (Edge ee : gmesh.edges(v)) {
-      ecand.remove(ee);
-    }
+    for (Edge ee : gmesh.edges(v)) ecand.remove(ee);
   }
   Vertex v1g = gmesh.vertex1(eg);
   gmesh.collapse_edge(eg);  // keep v1g
   // add about 12-16 edges
-  for (Edge ee : gmesh.edges(v1g)) {
-    ecand.add(ee);
-  }
-  for (Face f : gmesh.faces(v1g)) {
-    ecand.add(gmesh.opp_edge(v1g, f));
-  }
+  for (Edge ee : gmesh.edges(v1g)) ecand.add(ee);
+  for (Face f : gmesh.faces(v1g)) ecand.add(gmesh.opp_edge(v1g, f));
   local_update_gmesh(smesh, setmv, setpts);
   remove_face(f1g);
   if (f2g) remove_face(f2g);
@@ -1127,25 +1055,19 @@ EResult try_esha(Edge eg, double& edrss) {
     Set<Vertex> setgmv;
     Set<Face> setbadfg;
     for (Vertex v : gmesh.vertices(eg)) {
-      for (Vertex vv : gmesh.vertices(v)) {
-        setgmv.add(vv);
-      }
+      for (Vertex vv : gmesh.vertices(v)) setgmv.add(vv);
     }
     build_lmesh1(setgmv, setbadfg, lmesh, setpts, setbadpts, rssf);
   }
   float minb = BIGFLOAT;
   if (testdih) {
-    for (Vertex v : gmesh.vertices(eg)) {
-      minb = min(minb, min_dihedral_about_vertices(gmesh, v));
-    }
+    for (Vertex v : gmesh.vertices(eg)) minb = min(minb, min_dihedral_about_vertices(gmesh, v));
   }
   Edge e = tremm(eg, gmesh, lmesh);
   lmesh.flags(e).flag(GMesh::eflag_sharp) = !is_sharp;
   Set<Vertex> setmv;
   for (Vertex v : lmesh.vertices(e)) {
-    for (Vertex vv : lmesh.vertices(v)) {
-      setmv.add(vv);
-    }
+    for (Vertex vv : lmesh.vertices(v)) setmv.add(vv);
   }
   Set<Face> setmf;
   build_lmesh2(lmesh, setmv, setmf);
@@ -1164,9 +1086,7 @@ EResult try_esha(Edge eg, double& edrss) {
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   if (testdih) {
     float mina = BIGFLOAT;
-    for (Vertex v : lmesh.vertices(e)) {
-      mina = min(mina, min_dihedral_about_vertices(lmesh, v));
-    }
+    for (Vertex v : lmesh.vertices(e)) mina = min(mina, min_dihedral_about_vertices(lmesh, v));
     if (mina < k_min_cos && mina < minb) return R_dih;
   }
   // ALL SYSTEMS GO
@@ -1177,12 +1097,8 @@ EResult try_esha(Edge eg, double& edrss) {
                    << (is_sharp ? "sharp" : "") << "}\n";
   }
   for (Vertex v : gmesh.vertices(eg)) {
-    for (Edge ee : gmesh.edges(v)) {
-      ecand.add(ee);
-    }
-    for (Face f : gmesh.faces(v)) {
-      ecand.add(gmesh.opp_edge(v, f));
-    }
+    for (Edge ee : gmesh.edges(v)) ecand.add(ee);
+    for (Face f : gmesh.faces(v)) ecand.add(gmesh.opp_edge(v, f));
   }
   local_update_gmesh(smesh, setmv, setpts);
   return R_success;
@@ -1289,15 +1205,11 @@ EResult try_espl(Edge eg, double& edrss) {
   // edges (vn, vo1) [and (vn, vo2)] are not sharp
   Set<Vertex> setmv;
   setmv.enter(vn);
-  for (Vertex v : lmesh.vertices(vn)) {
-    setmv.enter(v);
-  }
+  for (Vertex v : lmesh.vertices(vn)) setmv.enter(v);
   Set<Face> setmf;
   build_lmesh2(lmesh, setmv, setmf);
   Set<Face> setgoodf;
-  for (Face f : lmesh.faces(vn)) {
-    setgoodf.enter(f);
-  }
+  for (Face f : lmesh.faces(vn)) setgoodf.enter(f);
   SubMesh smesh(lmesh);
   subdiv_trim(smesh, setmf);
   Mvcvih mvcvih;
@@ -1312,15 +1224,11 @@ EResult try_espl(Edge eg, double& edrss) {
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO
   for (Face f : gmesh.faces(eg)) {
-    for (Edge ee : gmesh.edges(f)) {
-      ecand.remove(ee);
-    }
+    for (Edge ee : gmesh.edges(f)) ecand.remove(ee);
   }
   Vertex vng = gmesh.split_edge(eg);
   for (Face f : gmesh.faces(vng)) {
-    for (Edge ee : gmesh.edges(f)) {
-      ecand.add(ee);
-    }
+    for (Edge ee : gmesh.edges(f)) ecand.add(ee);
   }
   Edge eug = gmesh.edge(vng, v2g);
   Face nf1g = gmesh.face1(eug), nf2g = gmesh.face2(eug);
@@ -1343,9 +1251,7 @@ EResult try_op(Edge e, EOperation op, double& edrss) {
 
 void stoc_init() {
   HH_DTIMER(_initial_fit);
-  for (Face f : gmesh.faces()) {
-    mfpts.enter(f, Set<int>());
-  }
+  for (Face f : gmesh.faces()) mfpts.enter(f, Set<int>());
   {
     for (Vertex v : gmesh.vertices()) {
       gmesh.flags(v).flag(SubMesh::vflag_variable) = false;
@@ -1394,9 +1300,7 @@ void stoc_end() {
     smesh.update_vertex_positions();
     global_all_project(smesh);
   }
-  for (Face f : gmesh.faces()) {
-    mfpts.remove(f);
-  }
+  for (Face f : gmesh.faces()) mfpts.remove(f);
   assertx(!mfpts.num());
 }
 
@@ -1409,9 +1313,7 @@ void do_stoc() {
   stoc_init();
   if (verb >= 2) analyze_mesh("stoc_before");
   if (gecol) ecol = true;
-  for (Edge e : gmesh.edges()) {
-    ecand.enter(e);
-  }
+  for (Edge e : gmesh.edges()) ecand.enter(e);
   double cedis = get_edis(), cetot = get_etot();
   int i = 0, nbad = 0;
   while (!ecand.empty()) {
@@ -1550,13 +1452,9 @@ int main(int argc, const char** argv) {
   args.parse();
   if (outn) {
     assertx(gmesh.num_vertices());
-    for (Vertex v : gmesh.vertices()) {
-      gmesh.flags(v).flag(SubMesh::vflag_variable) = false;
-    }
+    for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = false;
     if (markcuts) {
-      for (Edge e : gmesh.edges()) {
-        gmesh.flags(e).flag(eflag_cut) = true;
-      }
+      for (Edge e : gmesh.edges()) gmesh.flags(e).flag(eflag_cut) = true;
     }
     SubMesh smesh(gmesh);
     subdivide(smesh, false);

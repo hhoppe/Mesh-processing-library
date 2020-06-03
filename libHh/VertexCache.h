@@ -242,9 +242,7 @@ class LruVertexCache : public VertexCache {
     const EListNode* vinodee = &_vinlist[vi]->elist;
     const EListNode* delime = _list.delim();
     int num = 0;
-    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) {
-      num++;
-    }
+    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }
@@ -254,9 +252,7 @@ class LruVertexCache : public VertexCache {
     const EListNode* vinodee = &_vinlist[vi]->elist;
     const EListNode* delime = _list.delim();
     int num = 0;
-    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) {
-      num++;
-    }
+    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }

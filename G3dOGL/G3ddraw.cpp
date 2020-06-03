@@ -41,9 +41,7 @@ static void recompute_sharpe(GMesh& mesh, const Set<Edge>& eredo) {
 
 void RecomputeSharpEdges(GMesh& mesh) {
   Set<Edge> eredo;
-  for (Edge e : mesh.edges()) {
-    eredo.enter(e);
-  }
+  for (Edge e : mesh.edges()) eredo.enter(e);
   recompute_sharpe(mesh, eredo);
 }
 
@@ -93,9 +91,7 @@ void Applyq(const Frame& tq) {
     mesh.gflags().flag(mflag_ok) = false;
     if (sizemode && anglethresh >= 0) {
       Set<Edge> eredo;
-      for (Edge e : mesh.edges(v)) {
-        eredo.enter(e);
-      }
+      for (Edge e : mesh.edges(v)) eredo.enter(e);
       for (Face f : mesh.faces(v)) {
         if (!mesh.is_triangle(f)) continue;
         eredo.enter(mesh.opp_edge(v, f));
@@ -179,14 +175,10 @@ void update_lod() {
   int obi;
   float finterp;
   get_lod(flevel, g_obs.last, obi, finterp);
-  for (int i = g_obs.first; i <= g_obs.last; i++) {
-    g_obs[i].set_vis(i == obi);
-  }
+  for (int i = g_obs.first; i <= g_obs.last; i++) g_obs[i].set_vis(i == obi);
   cob = obi;
   HB::set_current_object(cob);
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].update();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].update();
   HB::segment_morph_mesh(obi, finterp);
 }
 
@@ -612,9 +604,7 @@ static void g3d_michael1() {
   float relsize = g_obs[1].radius() / zoom / d;
   relsize *= 15;
   int obn = relsize < 0.3 ? 1 : relsize < 0.6 ? 2 : relsize < 1.0 ? 3 : relsize < 7 ? 4 : relsize < 25 ? 5 : 6;
-  for (int i = g_obs.first; i <= g_obs.last; i++) {
-    g_obs[i].set_vis(i == obn);
-  }
+  for (int i = g_obs.first; i <= g_obs.last; i++) g_obs[i].set_vis(i == obn);
 }
 
 static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& frame, int& obi, float& finterp) {
@@ -665,9 +655,7 @@ static void g3d_ellipse1() {
     }
     HB::segment_morph_mesh(obi, finterp);
   }
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].update();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].update();
 }
 
 static void g3d_ellipse2() {
@@ -759,9 +747,7 @@ static void set_viewing() {
 }
 
 static void update_segs() {
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].update();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].update();
 }
 
 void ShowInfo() {
@@ -873,15 +859,11 @@ static void compute_subdivmode() {
     HB::open_segment(2);
     const GMesh& mesh = *g_obs[1].get_mesh();
     // Give a rough idea of what the mesh extents will be
-    for (Vertex v : mesh.vertices()) {
-      g_obs[2].enter_point(mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) g_obs[2].enter_point(mesh.point(v));
     HB::close_segment();
     g_obs[2].update_stats();
     GMesh& omesh = *g_obs[1].get_mesh();
-    for (Vertex v : omesh.vertices()) {
-      omesh.flags(v).flag(SubMesh::vflag_variable) = true;
-    }
+    for (Vertex v : omesh.vertices()) omesh.flags(v).flag(SubMesh::vflag_variable) = true;
     smesh = make_unique<SubMesh>(omesh);
     smesh->subdivide_n(nsub, 1);
     g_obs[2].override_mesh(&smesh->mesh());
@@ -915,9 +897,7 @@ static void compute_subdivmode() {
 
 void Draw() {
   if (keystring != "") {
-    for (char ch : keystring) {
-      KeyPressed(string(1, ch));
-    }
+    for (char ch : keystring) KeyPressed(string(1, ch));
     keystring = "";
   }
   cur_needs_redraw = false;

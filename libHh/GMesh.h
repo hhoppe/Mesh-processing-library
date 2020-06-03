@@ -18,9 +18,7 @@
   mesh.set_point(v3, Point(1.f, 6.f, 7.f));
   Face f1 = mesh.create_face(v1, v2, v3);
   for (Face f : mesh.ordered_faces()) {
-    for (Vertex v : mesh.vertices(f)) {
-      process(f, mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices(f)) process(f, mesh.point(v));
   }
 }
 #endif

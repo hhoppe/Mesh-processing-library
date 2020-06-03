@@ -14,9 +14,7 @@ int main() {
     SHOW(v2[0]);
     SHOW(v2.with(1, 17));
     SHOW(-v2);
-    for (int j : v2) {
-      SHOW(j);
-    }
+    for (int j : v2) SHOW(j);
     {
       Vector4i v2copy(v2);
       SHOW(v2copy);

@@ -142,9 +142,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
         _mesh.update_string(e, "sharp", "");
       }
       // For all faces in the two fans after the closure, label them with the "filled" attribute.
-      for (Face f : _mesh.faces(vn)) {
-        _mesh.update_string(f, "filled", "");
-      }
+      for (Face f : _mesh.faces(vn)) _mesh.update_string(f, "filled", "");
       // Label the two vertices at the centers of the face fans.
       _mesh.update_string(vn, "filledcenter", "");
     }
@@ -321,9 +319,7 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
   num_edges = ecycle.num();
   if (process) {
     float len = 0.f;
-    for (Edge e : ecycle) {
-      len += _mesh.length(e);
-    }
+    for (Edge e : ecycle) len += _mesh.length(e);
     if (0)
       showdf("Cycle edges=%d length=%g v1d=%g v2d=%g e12=%g\n", ecycle.num(), len, v_dist(v1), v_dist(v2),
              _mesh.length(e12));
@@ -341,9 +337,7 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
     }
     if (0) {
       SHOWL;
-      for (Vertex v : vao) {
-        SHOW(_mesh.vertex_id(v));
-      }
+      for (Vertex v : vao) SHOW(_mesh.vertex_id(v));
     }
     Array<Vertex> van = close_cycle(vao);
     // Re-initialize v_dist() and e_joined() for that portion of the mesh disconnected from vseed.
@@ -360,12 +354,8 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
                                            int& num_edges) {
   if (sdebug) {  // verify that previous search has cleanly reinitialized all fields.
     Warning("sdebug");
-    for (Edge e : _mesh.edges()) {
-      assertx(!e_joined(e));
-    }
-    for (Vertex v : _mesh.vertices()) {
-      assertx(v_dist(v) == BIGFLOAT);
-    }
+    for (Edge e : _mesh.edges()) assertx(!e_joined(e));
+    for (Vertex v : _mesh.vertices()) assertx(v_dist(v) == BIGFLOAT);
   }
   search_radius = BIGFLOAT;
   farthest_vertex = nullptr;
@@ -500,9 +490,7 @@ void CloseMinCycles::find_cycles() {
   }
   HPqueue<Vertex> pqvlbsr;  // lower-bound on search radius for min cycle about vertex
   pqvlbsr.reserve(_mesh.num_vertices());
-  for (Vertex v : _mesh.vertices()) {
-    pqvlbsr.enter_unsorted(v, 0.f);
-  }
+  for (Vertex v : _mesh.vertices()) pqvlbsr.enter_unsorted(v, 0.f);
   if (0) pqvlbsr.sort();  // sorting is unnecessary because all initial priority values are the same
   Vertex vrand = _mesh.random_vertex(Random::G);  // allow getenv_int("SEED_RANDOM") to vary the search.
   if (0) vrand = _mesh.id_vertex(53);             // debug: select specific vertex
@@ -602,9 +590,7 @@ void CloseMinCycles::find_cycles() {
       flood_reinitialize(vseed);  // again re-initialize v_dist() and e_joined()
       if (sdebug) {
         Warning("slow");
-        for (Edge e : _mesh.edges()) {
-          assertx(!e_joined(e));
-        }
+        for (Edge e : _mesh.edges()) assertx(!e_joined(e));
       }
       ++nprocessed;
       --_cgenus;
@@ -637,9 +623,7 @@ void CloseMinCycles::compute() {
     while (!setbe.empty()) {
       Edge e = setbe.get_one();
       Queue<Edge> queuee = gather_boundary(_mesh, e);
-      for (Edge ee : queuee) {
-        assertx(setbe.remove(ee));
-      }
+      for (Edge ee : queuee) assertx(setbe.remove(ee));
       Set<Face> setf = mesh_remove_boundary(_mesh, e);
       for (Face f : setf) {
         Vertex vnew = _mesh.center_split_face(f);
@@ -649,9 +633,7 @@ void CloseMinCycles::compute() {
     }
     if (ar_boundary_centers.num()) showdf("Temporarily filled in %d boundaries\n", ar_boundary_centers.num());
   }
-  for (Face f : _mesh.faces()) {
-    assertx(_mesh.is_triangle(f));
-  }
+  for (Face f : _mesh.faces()) assertx(_mesh.is_triangle(f));
   if (0) {
     SHOW(mesh_genus_string(_mesh));
     assertx(_mesh.is_nice());
@@ -679,12 +661,8 @@ void CloseMinCycles::compute() {
          _tot_handles, _tot_tunnels, _cgenus);
   for (Vertex vnew : ar_boundary_centers) {
     Array<Face> faces;
-    for (Face f : _mesh.faces(vnew)) {
-      faces.push(f);
-    }
-    for (Face f : faces) {
-      _mesh.destroy_face(f);
-    }
+    for (Face f : _mesh.faces(vnew)) faces.push(f);
+    for (Face f : faces) _mesh.destroy_face(f);
     _mesh.destroy_vertex(vnew);
   }
   ASSERTX(_cgenus == int(mesh_genus(_mesh)));

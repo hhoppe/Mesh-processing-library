@@ -24,9 +24,7 @@ class Stats {
       if (stat->_print && stat->num()) ntoprint++;
     }
     if (ntoprint) showdf("Summary of statistics:\n");
-    for (Stat* stat : _vec) {
-      stat->terminate();
-    }
+    for (Stat* stat : _vec) stat->terminate();
     _vec.clear();
   }
   std::vector<Stat*> _vec;

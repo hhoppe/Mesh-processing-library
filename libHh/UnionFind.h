@@ -38,9 +38,7 @@ template <typename T> T UnionFind<T>::irep(T e, bool& present) const {
     }
   }
   // e now contains root; update all nodes along path to root.
-  for (T* p : ar) {
-    *p = e;
-  }
+  for (T* p : ar) *p = e;
   return e;
 }
 

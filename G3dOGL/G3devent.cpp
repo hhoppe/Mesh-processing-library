@@ -27,9 +27,7 @@ bool keylock;
 const bool b_g3d_demofly = getenv_bool("G3D_DEMOFLY");
 
 void press_keys(const string& str) {
-  for (char ch : str) {
-    KeyPressed(string(1, ch));
-  }
+  for (char ch : str) KeyPressed(string(1, ch));
 }
 
 void save_state() {
@@ -80,27 +78,21 @@ void read_state() {
 bool ob_prev() {
   if (cob == g_obs.first) {
     if (g_obs[cob + 1].visible()) return false;
-    for (int i = g_obs.first; i <= g_obs.last; i++) {
-      g_obs[i].set_vis(true);
-    }
+    for (int i = g_obs.first; i <= g_obs.last; i++) g_obs[i].set_vis(true);
   } else {
     g_obs[cob].set_vis(false);
     --cob;
     g_obs[cob].set_vis(true);
     HB::set_current_object(cob);
   }
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].update();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].update();
   return true;
 }
 
 bool ob_next() {
   if (cob == g_obs.last) return false;
   if (g_obs[cob].visible() && g_obs[cob + 1].visible()) {
-    for (int i = g_obs.first; i <= g_obs.last; i++) {
-      g_obs[i].set_vis(false);
-    }
+    for (int i = g_obs.first; i <= g_obs.last; i++) g_obs[i].set_vis(false);
     g_obs[cob].set_vis(true);
   } else {
     g_obs[cob].set_vis(false);
@@ -108,9 +100,7 @@ bool ob_next() {
     g_obs[cob].set_vis(true);
     HB::set_current_object(cob);
   }
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].update();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].update();
   return true;
 }
 
@@ -134,9 +124,7 @@ void all_reset() {
     demofly_idle_time = 0.f;
     while (demofly_mode) KeyPressed(" ");
   }
-  for (int i = 0; i <= g_obs.last; i++) {
-    g_obs[i].tm() = Frame::identity();
-  }
+  for (int i = 0; i <= g_obs.last; i++) g_obs[i].tm() = Frame::identity();
   tview = Frame::identity();
   cob = 1;
   zoom = 1.f;
@@ -344,9 +332,7 @@ void swap_edge() {
   Edge enew = mesh->swap_edge(e);
   mesh->gflags().flag(mflag_ok) = false;
   for (Face f : mesh->faces(enew)) {
-    for (Vertex v : mesh->vertices(f)) {
-      mesh->flags(v).flag(vflag_ok) = false;
-    }
+    for (Vertex v : mesh->vertices(f)) mesh->flags(v).flag(vflag_ok) = false;
   }
   if (subdivmode) ClearSubMesh();
   HB::redraw_later();
@@ -369,9 +355,7 @@ void split_edge() {
   Vertex vnew = mesh->split_edge(e);
   mesh->set_point(vnew, pint);
   mesh->gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh->vertices(vnew)) {
-    mesh->flags(v).flag(vflag_ok) = false;
-  }
+  for (Vertex v : mesh->vertices(vnew)) mesh->flags(v).flag(vflag_ok) = false;
   if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
@@ -435,9 +419,7 @@ bool try_toggle_edge() {
   pmesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
   pmesh->set_string(e, pmesh->flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
   pmesh->gflags().flag(mflag_ok) = false;
-  for (Vertex v : pmesh->vertices(e)) {
-    pmesh->flags(v).flag(vflag_ok) = false;
-  }
+  for (Vertex v : pmesh->vertices(e)) pmesh->flags(v).flag(vflag_ok) = false;
   return true;
 }
 
@@ -463,9 +445,7 @@ void untag(GMesh& mesh, Edge e) {
   mesh.flags(e).flag(GMesh::eflag_sharp) = false;
   mesh.set_string(e, nullptr);
   mesh.gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh.vertices(e)) {
-    mesh.flags(v).flag(vflag_ok) = false;
-  }
+  for (Vertex v : mesh.vertices(e)) mesh.flags(v).flag(vflag_ok) = false;
 }
 
 void untag_cut() {
@@ -522,9 +502,7 @@ void destroy_face() {
     HB::beep();
     return;
   }
-  for (Vertex v : mesh->vertices(f)) {
-    mesh->flags(v).flag(vflag_ok) = false;
-  }
+  for (Vertex v : mesh->vertices(f)) mesh->flags(v).flag(vflag_ok) = false;
   mesh->destroy_face(f);
   mesh->gflags().flag(mflag_ok) = false;
   if (subdivmode) ClearSubMesh();
@@ -628,12 +606,8 @@ void reinit() {
   if (!assertw(cob >= g_obs.first)) return;
   GMesh& mesh = *g_obs[cob].get_mesh();
   mesh.gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh.vertices()) {
-    mesh.flags(v).flag(vflag_ok) = false;
-  }
-  for (Face f : mesh.faces()) {
-    mesh.flags(f).flag(fflag_ok) = false;
-  }
+  for (Vertex v : mesh.vertices()) mesh.flags(v).flag(vflag_ok) = false;
+  for (Face f : mesh.faces()) mesh.flags(f).flag(fflag_ok) = false;
   HB::redraw_now();
 }
 

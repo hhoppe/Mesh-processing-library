@@ -373,12 +373,8 @@ void add_exterior_orientation(const Set<int>& nodes) {
 
 void remove_exterior_orientation() {
   Array<int> ari;
-  for (int j : gpcpseudo->edges(num)) {
-    ari.push(j);
-  }
-  for (int i : ari) {
-    gpcpseudo->remove_undirected(num, i);
-  }
+  for (int j : gpcpseudo->edges(num)) ari.push(j);
+  for (int i : ari) gpcpseudo->remove_undirected(num, i);
   gpcpseudo->remove(num);
 }
 
@@ -416,9 +412,7 @@ void orient_set(const Set<int>& nodes) {
   showdf("component with %d points\n", nodes.num());
   add_exterior_orientation(nodes);
   gpcpath = make_unique<Graph<int>>();
-  for (int i : nodes) {
-    gpcpath->enter(i);
-  }
+  for (int i : nodes) gpcpath->enter(i);
   gpcpath->enter(num);
   {
     HH_TIMER(__graphmst);
@@ -771,9 +765,7 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   // We close iom here so that the mesh comes after everything else in the file.
   if (iom && is_3D) {
-    for (Vertex v : mesh.vertices()) {
-      mesh.set_point(v, mesh.point(v) * xformi);
-    }
+    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xformi);
     // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // note: would require RTTI
     mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
   }

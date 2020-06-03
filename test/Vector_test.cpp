@@ -31,9 +31,7 @@ void test_stack() {
     s.push_back(1);
     s.push_back(2);
     int i = 0;
-    for (int j : s) {
-      assertw(j == i++);
-    }
+    for (int j : s) assertw(j == i++);
     assertx(i == 3);
     assertw(vec_pop(s) == 2);
     assertw(vec_pop(s) == 1);
@@ -72,9 +70,7 @@ void test_stack() {
     assertw(vec_pop(s) == 2);
     {
       int i = 0;
-      for (int j : s) {
-        assertw(j == i++);
-      }
+      for (int j : s) assertw(j == i++);
     }
     assertw(!vec_contains(s, 2));
     assertw(vec_pop(s) == 1);
@@ -114,9 +110,7 @@ void test_queue() {
   assertw(queue_pop(q) == 1);
   {
     int i = 0;
-    for (int j : q) {
-      assertw(j == 2 + i++);
-    }
+    for (int j : q) assertw(j == 2 + i++);
   }
   assertw(!queue_contains(q, 1));
   q.push_front(5);
@@ -172,9 +166,7 @@ void test_list() {
   l.insert(++find(l.begin(), l.end(), 2), 3);
   {
     int i = 0;
-    for (int j : l) {
-      assertw(j == i++);
-    }
+    for (int j : l) assertw(j == i++);
   }
   // assertw(l.before(2) == 1);
   // assertw(l.after(2) == 3);

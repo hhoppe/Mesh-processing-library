@@ -105,9 +105,7 @@ void read_mesh_line(char* s) {
   // (Bug: Not all mesh transformations clear vflag_ok, fflag_ok flags)
   if (vi1) {
     mesh.flags(mesh.id_vertex(vi1)).flag(vflag_ok) = false;
-    for (Face f : mesh.faces(mesh.id_vertex(vi1))) {
-      mesh.flags(f).flag(fflag_ok) = false;
-    }
+    for (Face f : mesh.faces(mesh.id_vertex(vi1))) mesh.flags(f).flag(fflag_ok) = false;
   }
   if (vi) {
     total_vertices++;
@@ -139,9 +137,7 @@ bool try_g3d_command(const string& pstr) {
   } else if (remove_at_beginning(str, "keys ")) {
     // assertx(str.size() == 1);  // new 20121213
     // KeyPressed(str);
-    for (char ch : str) {
-      KeyPressed(string(1, ch));
-    }
+    for (char ch : str) KeyPressed(string(1, ch));
     return true;
   } else if (remove_at_beginning(str, "wait ")) {
     wait_command = Args::parse_float(str);

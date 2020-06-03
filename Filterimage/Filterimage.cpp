@@ -192,9 +192,7 @@ void do_tomesh(Args& args) {
   const int begy = beg_yx[0], begx = beg_yx[1];
   const int endy1 = end_yx1[0], endx1 = end_yx1[1];
   for (int y = 0; y < endy1 - begy; y += s) {
-    for (int x = 0; x < endx1 - begx; x += s) {
-      verts[y][x] = nullptr;
-    }
+    for (int x = 0; x < endx1 - begx; x += s) verts[y][x] = nullptr;
   }
   const bool uniform_scaling = true;
   if (!uniform_scaling) {
@@ -203,33 +201,19 @@ void do_tomesh(Args& args) {
     scale_yx = twice(1.f / (max(image.dims()) - 1));
   }
   if (blocks) {
-    for (int x = begx; x < endx1; x += s) {
-      assign_vertex(mesh, verts, V(begy, x));
-    }
-    for (int x = begx; x < endx1; x += s) {
-      assign_vertex(mesh, verts, V(endy1 - s, x));
-    }
+    for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(begy, x));
+    for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(endy1 - s, x));
+    for (int y = begy + s; y < endy1 - s; y += s) assign_vertex(mesh, verts, V(y, begx));
+    for (int y = begy + s; y < endy1 - s; y += s) assign_vertex(mesh, verts, V(y, endx1 - s));
     for (int y = begy + s; y < endy1 - s; y += s) {
-      assign_vertex(mesh, verts, V(y, begx));
-    }
-    for (int y = begy + s; y < endy1 - s; y += s) {
-      assign_vertex(mesh, verts, V(y, endx1 - s));
-    }
-    for (int y = begy + s; y < endy1 - s; y += s) {
-      for (int x = begx + s; x < endx1 - s; x += s) {
-        assign_vertex(mesh, verts, V(y, x));
-      }
+      for (int x = begx + s; x < endx1 - s; x += s) assign_vertex(mesh, verts, V(y, x));
     }
     for (int y = 0; y < endy1 - begy; y += s) {
-      for (int x = 0; x < endx1 - begx; x += s) {
-        assertx(verts[y][x]);
-      }
+      for (int x = 0; x < endx1 - begx; x += s) assertx(verts[y][x]);
     }
   } else {
     for (int y = begy; y < endy1; y += s) {
-      for (int x = begx; x < endx1; x += s) {
-        assign_vertex(mesh, verts, V(y, x));
-      }
+      for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(y, x));
     }
   }
   bool yeven = false;
@@ -267,9 +251,7 @@ void do_tomesh(Args& args) {
   }
   if (blocks) {
     string str;
-    for (Face f : mesh.faces()) {
-      mesh.set_string(f, csform(str, "block=\"x%dy%d\"", bxnum, bynum));
-    }
+    for (Face f : mesh.faces()) mesh.set_string(f, csform(str, "block=\"x%dy%d\"", bxnum, bynum));
   }
   mesh.write(std::cout);
   std::cout.flush();
@@ -346,9 +328,7 @@ void do_info() {
   if (0) {
     Stat stat("ch0");
     stat.set_rms();
-    for (const auto& yx : range(image.dims())) {
-      stat.enter(image[yx][0]);
-    }
+    for (const auto& yx : range(image.dims())) stat.enter(image[yx][0]);
     showf("%s", stat.name_string().c_str());
     SHOW(stat.rms());
     const float maxv = 255.f;
@@ -546,9 +526,7 @@ void do_overlayimage(Args& args) {
   Image image2;
   image2.read_file(imagename);
   assertx(image.ok(yx0 + image2.dims() - 1));
-  for (const auto& yx : range(image2.dims())) {
-    image[yx0 + yx] = image2[yx];
-  }
+  for (const auto& yx : range(image2.dims())) image[yx0 + yx] = image2[yx];
 }
 
 void do_drawrectangle(Args& args) {
@@ -627,9 +605,7 @@ void do_scalehalf2n1() {
   assertx((newdims - 1) * 2 + 1 == image.dims());
   Image timage(image);
   image.init(newdims);
-  for (const auto& yx : range(image.dims())) {
-    image[yx] = timage[yx * 2];
-  }
+  for (const auto& yx : range(image.dims())) image[yx] = timage[yx * 2];
 }
 
 // *** tops (to postscript)
@@ -725,9 +701,7 @@ void do_tops() {
     std::cout << sform("  false %d\n", cz);
     std::cout << sform("  colorimage\n");
     column_ps = 0;
-    for (const auto& yx : range(image.dims())) {
-      for_int(z, cz) output_hex_byte(image[yx][z]);  // ? test bw image
-    }
+    for (const auto& yx : range(image.dims())) for_int(z, cz) output_hex_byte(image[yx][z]);  // ? test bw image
     if (column_ps) std::cout << "\n";
   }
   std::cout << "% % end of image data\n";
@@ -920,9 +894,7 @@ void apply_as_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Vec2<int
 }
 
 void assemble_images(CMatrixView<Image> images) {
-  for (const auto& yx : range(images.dims())) {
-    assertx(images[yx].zsize() == images[0][0].zsize());
-  }
+  for (const auto& yx : range(images.dims())) assertx(images[yx].zsize() == images[0][0].zsize());
   image.init(V(0, 0));
   image.set_zsize(images[0][0].zsize());  // attributes copied outside this function
   image = assemble(images);
@@ -1069,9 +1041,7 @@ void do_disassemble(Args& args) {
   parallel_for_coords(atiles, [&](const Vec2<int>& yx) {
     Image nimage(tiledims);
     nimage.attrib() = image.attrib();
-    for (const auto& yxd : range(tiledims)) {
-      nimage[yxd] = image[yx * tiledims + yxd];
-    }
+    for (const auto& yxd : range(tiledims)) nimage[yxd] = image[yx * tiledims + yxd];
     nimage.set_silent_io_progress(true);
     nimage.write_file(sform("%s.%d.%d.%s", rootname.c_str(), yx[1], yx[0], suffix.c_str()));
   });
@@ -1087,9 +1057,7 @@ void do_tile(Args& args) {
   parallel_for_coords(
       atiles,
       [&](const Vec2<int>& yx) {
-        for (const auto& yxd : range(timage.dims())) {
-          image[yx * timage.dims() + yxd] = timage[yxd];
-        }
+        for (const auto& yxd : range(timage.dims())) image[yx * timage.dims() + yxd] = timage[yxd];
       },
       product(timage.dims()) * 4);
 }
@@ -1195,9 +1163,7 @@ void do_readalpha(Args& args) {
       image.dims(),
       [&](const Vec2<int>& yx) {
         image[yx][3] = ialpha[yx][0];
-        for_int(c, 3) {
-          image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // premultiplied alpha
-        }
+        for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // premultiplied alpha
       },
       10);
 }
@@ -1326,9 +1292,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
   Grid<D, Vector4> hgrid;  // half-resolution grid
   {                        // pull step
     // clamp weights prior to downscaling
-    for (const auto& u : range(dims)) {
-      grid[u] *= 1.f / max(grid[u][3], 1.f);  // make weight at most 1.f
-    }
+    for (const auto& u : range(dims)) grid[u] *= 1.f / max(grid[u][3], 1.f);  // make weight at most 1.f
     if (!primal) {
       // - This dual structure is better than original lumigraph pull-push when used over power-of-two grids
       //    because it doesn't shift the content off the right/bottom boundaries at coarse levels.
@@ -1367,9 +1331,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
   new_pullpush(hgrid);
   {  // push step
     // clamp weights prior to upscaling
-    for (const auto& u : range(hdims)) {
-      hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // make weight at most 1.f
-    }
+    for (const auto& u : range(hdims)) hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // make weight at most 1.f
     Grid<D, Vector4> gridu;
     if (!primal) {
       const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // bilinear
@@ -1837,9 +1799,7 @@ void do_superresolution(Args& args) {
   const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
   // Precompute pixel luminance values (in range [0.f, 255.f]).
   Matrix<float> mlum(image.dims());
-  for (const auto& yx : range(image.dims())) {
-    mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0];
-  }
+  for (const auto& yx : range(image.dims())) mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0];
   // Apply ordinary magnification (using any chosen scaling filter).
   Image oimage = std::move(image);
   image = scale(oimage, twice(fac), g_filterbs, &gcolor);
@@ -2194,14 +2154,10 @@ void do_poisson() {
                  ((maxn - image.dim(0)) / 2.f + yx[0]) / (maxn - 1.f), 0.f);
   };
   float vmean = 0.f;
-  for (const auto& yx : range(image.dims())) {
-    vmean += float(image[yx][0]);
-  }
+  for (const auto& yx : range(image.dims())) vmean += float(image[yx][0]);
   vmean /= float(image.size());
   Matrix<Point> matp(image.dims());
-  for (const auto& yx : range(image.dims())) {
-    matp[yx] = func_default_pos(yx);
-  }
+  for (const auto& yx : range(image.dims())) matp[yx] = func_default_pos(yx);
   Matrix<float> matw(image.dims() - 1, 1.f);
   for_int(iter, g_niter) {
     // Solve a sparse linear-least-squares system;
@@ -2400,9 +2356,7 @@ void do_procedure(Args& args) {
     Image image2;
     image2.read_file(args.get_filename());
     assertx(same_size(image1, image2));
-    for (const auto& yx : range(image.dims())) {
-      image[yx] = yx[1] % 2 == 0 ? image1[yx] : image2[yx];
-    }
+    for (const auto& yx : range(image.dims())) image[yx] = yx[1] % 2 == 0 ? image1[yx] : image2[yx];
   } else if (name == "stereo_purple") {
     const int n = 800;
     const int nobj = 8;

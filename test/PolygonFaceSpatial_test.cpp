@@ -22,9 +22,7 @@ void test2(int pspn) {
     ar_polyface.push(PolygonFace(std::move(poly), Face(intptr_t{i})));
   }
   PolygonFaceSpatial psp(pspn);
-  for (PolygonFace& polyface : ar_polyface) {
-    psp.enter(&polyface);
-  }
+  for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   const int ns = 100;
   for_int(j, ns) {
     Point p;
@@ -62,9 +60,7 @@ int main() {
       V(PolygonFace(Polygon(V(Point(.2f, .2f, .2f), Point(.2f, .8f, .8f), Point(.2f, .8f, .2f))), f1),
         PolygonFace(Polygon(V(Point(.8f, .2f, .2f), Point(.8f, .8f, .8f), Point(.8f, .8f, .2f))), f2));
   PolygonFaceSpatial psp(10);
-  for (const PolygonFace& polyface : ar_polyface) {
-    psp.enter(&polyface);
-  }
+  for (const PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   {
     Point p1(.1f, .5f, .3f);
     Point p2(.9f, .5f, .3f);

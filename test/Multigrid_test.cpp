@@ -97,9 +97,7 @@ template <int D> void test_random(Args& args) {
   using FType = double;
   // using FType = Vector4;  // must disable HH_RSTAT calls below
   Grid<D, FType> grid_orig(dims);
-  for (auto& e : grid_orig) {
-    e = FType{Random::G.unif()};
-  }
+  for (auto& e : grid_orig) e = FType{Random::G.unif()};
   Multigrid<D, FType> multigrid(dims);
   fill(multigrid.initial_estimate(), FType{0});
   if (1) {
@@ -127,9 +125,7 @@ template <int D, typename T, typename Periodic = MultigridPeriodicNone<D>>
 void test(GridView<D, T> grid_orig, Periodic = Periodic{}) {
   const Vec<int, D> dims = grid_orig.dims();
   SHOW(dims);
-  for (auto& e : grid_orig) {
-    e = T{Random::G.unif()};
-  }
+  for (auto& e : grid_orig) e = T{Random::G.unif()};
   Multigrid<D, T, Periodic> multigrid(dims);
   fill(multigrid.initial_estimate(), T{0});
   multigrid.set_desired_mean(mean(grid_orig));

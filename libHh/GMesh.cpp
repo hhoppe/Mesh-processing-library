@@ -60,9 +60,7 @@ void GMesh::merge(const GMesh& mo, Map<Vertex, Vertex>* pmvvn) {
   Array<Vertex> van;
   for (Face fo : mo.ordered_faces()) {
     van.init(0);
-    for (Vertex vo : mo.vertices(fo)) {
-      van.push(mvvn.get(vo));
-    }
+    for (Vertex vo : mo.vertices(fo)) van.push(mvvn.get(vo));
     Face fn = create_face(van);
     flags(fn) = mo.flags(fo);
     set_string(fn, mo.get_string(fo));
@@ -88,9 +86,7 @@ void GMesh::set_point(Vertex v, const Point& pp) {
 
 void GMesh::polygon(Face f, Polygon& poly) const {
   poly.init(0);
-  for (Vertex v : vertices(f)) {
-    poly.push(point(v));
-  }
+  for (Vertex v : vertices(f)) poly.push(point(v));
 }
 
 float GMesh::length2(Edge e) const { return dist2(point(vertex1(e)), point(vertex2(e))); }
@@ -110,9 +106,7 @@ float GMesh::area(Face f) const {
 }
 
 void GMesh::transform(const Frame& frame) {
-  for (Vertex v : vertices()) {
-    set_point(v, point(v) * frame);
-  }
+  for (Vertex v : vertices()) set_point(v, point(v) * frame);
 }
 
 // STRING
@@ -452,9 +446,7 @@ void GMesh::read_line(char* sline) {
         SHOWL;
         SHOW(va.num());
         SHOW(sline);
-        for (Vertex v : va) {
-          SHOW(vertex_id(v));
-        }
+        for (Vertex v : va) SHOW(vertex_id(v));
       }
       return;
     }
@@ -554,9 +546,7 @@ void GMesh::write(std::ostream& os) const {
   }
   for (Face f : ordered_faces()) {
     os << "Face " << face_id(f) << " ";
-    for (Vertex v : vertices(f)) {
-      os << " " << vertex_id(v);
-    }
+    for (Vertex v : vertices(f)) os << " " << vertex_id(v);
     const char* sinfo = get_string(f);
     if (sinfo) os << " {" << sinfo << "}";
     os << "\n";
@@ -581,9 +571,7 @@ void GMesh::write(std::ostream& os) const {
 
 void GMesh::write(WA3dStream& oa3d, const A3dVertexColor& col) const {
   A3dElem el;
-  for (Face f : ordered_faces()) {
-    write_face(oa3d, el, col, f);
-  }
+  for (Face f : ordered_faces()) write_face(oa3d, el, col, f);
   oa3d.flush();
 }
 
@@ -681,14 +669,10 @@ Vertex GMesh::split_edge(Edge e, int id) {
   flags(edge(v1, vn)).flag(eflag_sharp) = fle;
   flags(edge(v2, vn)).flag(eflag_sharp) = fle;
   if (fstring1) {
-    for (Face f : faces(edge(vn, vo1))) {
-      set_string(f, fstring1.get());
-    }
+    for (Face f : faces(edge(vn, vo1))) set_string(f, fstring1.get());
   }
   if (fstring2) {
-    for (Face f : faces(edge(vn, vo2))) {
-      set_string(f, fstring2.get());
-    }
+    for (Face f : faces(edge(vn, vo2))) set_string(f, fstring2.get());
   }
   set_point(vn, interp(point(v1), point(v2)));  // (_os == nullptr)
   if (tos) {
@@ -709,9 +693,7 @@ Edge GMesh::swap_edge(Edge e) {
     fstring = make_unique_c_string(get_string(f1));
   Edge ne = Mesh::swap_edge(e);
   if (fstring) {
-    for (Face f : faces(ne)) {
-      set_string(f, fstring.get());
-    }
+    for (Face f : faces(ne)) set_string(f, fstring.get());
   }
   if (tos) {
     _os = tos;
@@ -788,9 +770,7 @@ Vertex GMesh::center_split_face(Face f) {
   if (have_nor) update_string(vn, "normal", csform_vec(str, snor));
   if (have_uv) update_string(vn, "uv", csform_vec(str, suv));
   if (fstring) {
-    for (Face fn : faces(vn)) {
-      set_string(fn, fstring.get());
-    }
+    for (Face fn : faces(vn)) set_string(fn, fstring.get());
   }
   if (mvs.num()) {
     for (Face fn : faces(vn)) {
@@ -814,9 +794,7 @@ Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
   Edge en = Mesh::split_face(f, v1, v2);
   // f = nullptr;  // now undefined
   if (fstring) {
-    for (Face ff : faces(en)) {
-      set_string(ff, fstring.get());
-    }
+    for (Face ff : faces(en)) set_string(ff, fstring.get());
   }
   if (mvs.num()) {
     for (Face ff : faces(en)) {

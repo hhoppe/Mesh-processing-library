@@ -253,13 +253,9 @@ void SubMesh::refine(Mvcvh& mconv) {
   // Save current mesh objects for later iteration
   // Array<Vertex> arv; for (Vertex v : _m.vertices()) arv += v;
   Array<Face> arf;
-  for (Face f : _m.ordered_faces()) {
-    arf.push(f);
-  }
+  for (Face f : _m.ordered_faces()) arf.push(f);
   Array<Edge> are;
-  for (Edge e : _m.edges()) {
-    are.push(e);
-  }
+  for (Edge e : _m.edges()) are.push(e);
   Map<Edge, Vertex> menewv;
   // Create new vertices and make them midpoints of old edges
   for (Edge e : are) {  // was ForStack which went in reverse order
@@ -280,9 +276,7 @@ void SubMesh::refine(Mvcvh& mconv) {
       vinfo(v).nume = 4;
       vinfo(v).numsharpe = 0;
       Combvh comb;
-      for (Vertex vv : _m.vertices(f)) {
-        comb.c[vv] = .25f;
-      }
+      for (Vertex vv : _m.vertices(f)) comb.c[vv] = .25f;
       mconv.enter(v, std::move(comb));
     }
   }
@@ -348,15 +342,11 @@ void SubMesh::refine(Mvcvh& mconv) {
           for_int(j, 2) _m.update_string(_m.corner(vs[i], fna[(i + j) % 4]), "imagen", csform(str, "%d", ins[i]));
         }
         int inc = (ins[0] + ins[2]) / 2;
-        for (Corner c : _m.corners(vc)) {
-          _m.update_string(c, "imagen", csform(str, "%d", inc));
-        }
+        for (Corner c : _m.corners(vc)) _m.update_string(c, "imagen", csform(str, "%d", inc));
       }
     }
     if (has_imagen) {
-      for (Vertex v : _m.vertices()) {
-        _m.update_string(v, "imagen", nullptr);
-      }
+      for (Vertex v : _m.vertices()) _m.update_string(v, "imagen", nullptr);
     }
   } else {
     for (Face f : arf) {  // was ForStack which went in reverse order
@@ -402,18 +392,14 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   assertx(!_isquad);
   // _mforigf, _mfindex, and _mofif are not supported with this scheme!
   Array<Face> arf;
-  for (Face f : _m.faces()) {
-    arf.push(f);
-  }
+  for (Face f : _m.faces()) arf.push(f);
   // Determine which edges will be subdivided
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : _m.edges()) {
     if (sharp(e) || edge_dihedral_angle_cos(_m, e) <= cosang) subde.enter(e);
   }
   Queue<Face> queuef;
-  for (Face f : arf) {
-    queuef.enqueue(f);
-  }
+  for (Face f : arf) queuef.enqueue(f);
   while (!queuef.empty()) {
     Face f = queuef.dequeue();
     int nnew = 0;
@@ -572,9 +558,7 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
   if (wa == 1) return;
   if (wa) comb.c[v] = wa;
   if (wc)
-    for (Vertex vv : _m.vertices(v)) {
-      comb.c[vv] = wc;
-    }
+    for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
 }
 
 // Subdivision algorithm:
@@ -611,9 +595,7 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
     float a = _s222 ? .25f : subdiv_a(ne) * 2.f - 1.f;
     float wa = a, wc = (1.f - wa) / ne;
     comb.c[v] = wa;
-    for (Vertex vv : _m.vertices(v)) {
-      comb.c[vv] = wc;
-    }
+    for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
     ASSERTX(comb.is_combination());
     return;
   }
@@ -674,9 +656,7 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     assertw(!_weighta);
     float wc = (1 - wa) / ne;
     comb.c[v] = wa;
-    for (Vertex vv : _m.vertices(v)) {
-      comb.c[vv] = wc;
-    }
+    for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
     return;
   }
   if (nesharp >= 3) return;  // corner vertex held constant
@@ -692,9 +672,7 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     float wa = 3 / (11 - 8 * a), wc = (1 - wa) / ne;
     if (wa) comb.c[v] = wa;
     if (wc)
-      for (Vertex vv : _m.vertices(v)) {
-        comb.c[vv] = wc;
-      }
+      for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
   } else if (nesharp == 2) {  // bspline curve
     // for cubic, 1-4-1 mask
     float wa = 4.f / 6.f, wb = 1.f / 6.f, wc = 0.f;
@@ -715,12 +693,8 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
 void SubMesh::triangulate_quads(Mvcvh& mconv) {
   assertx(_isquad);
   Array<Face> arf;
-  for (Face f : _m.ordered_faces()) {
-    arf.push(f);
-  }
-  for (Edge e : _m.edges()) {
-    assertx(!_m.flags(e));
-  }
+  for (Face f : _m.ordered_faces()) arf.push(f);
+  for (Edge e : _m.edges()) assertx(!_m.flags(e));
   if (0) {
     for (Vertex v : _m.vertices()) {
       Combvh comb;
@@ -737,9 +711,7 @@ void SubMesh::triangulate_quads(Mvcvh& mconv) {
     vinfo(v).numsharpe = 0;
     {
       Combvh comb;
-      for (Vertex vv : _m.vertices(v)) {
-        comb.c[vv] = .25f;
-      }
+      for (Vertex vv : _m.vertices(v)) comb.c[vv] = .25f;
       mconv.enter(v, std::move(comb));
     }
     Array<Face>& ar = _mofif.get(forig);
@@ -766,9 +738,7 @@ void SubMesh::update_vertex_position(Vertex v) {
 }
 
 void SubMesh::update_vertex_positions() {
-  for (Vertex v : _m.vertices()) {
-    update_vertex_position(v);
-  }
+  for (Vertex v : _m.vertices()) update_vertex_position(v);
 }
 
 Face SubMesh::orig_face(Face f) const { return _mforigf.get(f); }

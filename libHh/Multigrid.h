@@ -91,9 +91,7 @@ template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean
 template <int D> Vector4 mean(CGridView<D, Vector4> grid) {
   Vec4<double> v;
   fill(v, 0.);
-  for (const auto& e : grid) for_int(c, 4) {
-      v[c] += e[c];
-    }
+  for (const auto& e : grid) for_int(c, 4) v[c] += e[c];
   v = v / static_cast<double>(assertx(grid.size()));
   Vector4 vec;
   for_int(c, 4) vec[c] = static_cast<float>(v[c]);
@@ -105,9 +103,7 @@ template <int D> Vector4 mean(const Grid<D, Vector4>& grid) { return mean(static
 // Specialize range_stat() to operate on magnitude of Vector4 elements.
 template <int D> Stat range_stat(const Grid<D, Vector4>& range) {
   Stat stat;
-  for (auto e : range) {
-    stat.enter(mag_e(e));
-  }
+  for (auto e : range) stat.enter(mag_e(e));
   return stat;
 }
 
@@ -218,9 +214,7 @@ class Multigrid : noncopyable {
         [&](const Vec<int, D>& u) {
           T v;
           my_zero(v);
-          for (const auto& ut : range(u * 2, u * 2 + vrange)) {
-            v += grid[ut];
-          }
+          for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid[ut];
           ngrid[u] = v * fac;
         },
         product(vrange) * 2);
@@ -236,9 +230,7 @@ class Multigrid : noncopyable {
       for (const auto& u : range(uL, uU)) {
         T v;
         my_zero(v);
-        for (const auto& ut : range(u * 2, u * 2 + vrange)) {
-          v += grid.inside(ut, bndrules, &bordervalue);
-        }
+        for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, bndrules, &bordervalue);
         ngrid[u] = v * fac;
       }
     }
@@ -391,9 +383,7 @@ class Multigrid : noncopyable {
       T vnei;
       my_zero(vnei);
       if (0) {
-        for (int o : ar_interior_offsets) {
-          vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
-        }
+        for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
       } else if (D <= 3) {
         // get rid of &vnei lambda capture which forces stack allocation on VS2013
         if (D > 0) {
@@ -640,9 +630,7 @@ class Multigrid : noncopyable {
       T vnei;
       my_zero(vnei);
       if (0) {
-        for (int o : ar_interior_offsets) {
-          vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
-        }
+        for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
       } else {
         if (D > 0) {
           int o = ar_interior_offsets[0];

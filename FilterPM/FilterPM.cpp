@@ -1104,9 +1104,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       HH_SSTAT(Sadflclw, abs(dflclw));
       assertx(stivspl.remove(nmin));
       --ncand;
-      for (int ivspldep : gdep.edges(ivspl)) {
-        assertx(ivspl_done[ivspldep]);
-      }
+      for (int ivspldep : gdep.edges(ivspl)) assertx(ivspl_done[ivspldep]);
       assertx(!ivspl_done[ivspl]);
       ivspl_done[ivspl] = true;
       // Construct new vsplit record.
@@ -1136,9 +1134,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       pmi->apply_vsplit_private(new_vspl, pmesh._info, nullptr);
     }
     assertx(ncand == 0);
-    for (bool done : ivspl_done) {
-      assertx(done);
-    }
+    for (bool done : ivspl_done) assertx(done);
     for_int(i, pmesh._vsplits.num() - last_ivspl) {
       new_vsplits.push(pmesh._vsplits[last_ivspl + i]);
       Vsplit& new_vspl = new_vsplits.last();

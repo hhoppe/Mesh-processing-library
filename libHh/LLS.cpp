@@ -381,7 +381,7 @@ SvdLLS::SvdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _
 bool SvdLLS::solve_aux() {
   dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
-  if (0) sort_singular_values(_mU, _mS, _mVT);
+  sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) {
@@ -407,7 +407,7 @@ bool SvdDoubleLLS::solve_aux() {
   dummy_use(k_double_cond_max);
   Matrix<double> A = convert<double>(_a);
   if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
-  if (0) sort_singular_values(_mU, _mS, _mVT);
+  sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   double cond = _mS[0] / _mS.last();
   if (cond > k_double_cond_warning) {
@@ -427,7 +427,7 @@ QrdLLS::QrdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _
 bool QrdLLS::solve_aux() {
   dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
-  if (0) sort_singular_values(_mU, _mS, _mVT);
+  sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) {

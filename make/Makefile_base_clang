@@ -5,10 +5,6 @@ ifneq ($(is_mswin),)
   LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)
 endif
 
-ifeq ($(plain_compiler),)
-  STD_CXX ?= -std=c++14#  previously was -std=gnu++11 then -std=gnu++14
-endif
-
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
 ifeq ($(omit_omp:0=),)  # OpenMP support started in clang 4.0

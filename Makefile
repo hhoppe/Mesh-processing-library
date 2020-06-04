@@ -11,7 +11,8 @@
 #  make everything  # makeall plus progtest
 #  make CONFIG=win -C ~/src -j8 -t libs  # touch all files
 #  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
-#  make CONFIG=clang STD_CXX=-std=c++2a -j  # test code compatibility with future C++20
+#  make CONFIG=clang CXX_STD=c++2a -j  # test code compatibility with future C++20
+#  make CONFIG=win CXX_STD=c++latest -j  # compatibility with proposed c++ features
 
 # Test various implementations of gmake:
 #  c:/cygwin/bin/make CONFIG=clang -C ~/src -j

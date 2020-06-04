@@ -10,7 +10,7 @@ CRUMBS ?= *.s *.stackdump *.h.gch *.h.pch#  gch for gcc compiler, pch for clang 
 LDOUTPUT ?= -o $@
 no_warnings = -w
 
-STD_CXX ?= -std=c++14#  previously was -std=c++11; could also use -std=c++1y for gcc 4.8
+CXX_STD ?= c++14
 
 gcc_base = 1#  also true for clang since it includes this file
 CXX ?= g++
@@ -94,7 +94,7 @@ ifeq ($(plain_compiler),)
 endif  # $(plain_compiler)
 
 ccommon += $(if $(x64:0=),-m64,-m32)
-cxxall += $(STD_CXX) $(ccommon)
+cxxall += -std=$(CXX_STD) $(ccommon)
 c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)
 cdbg += $(commondbg)

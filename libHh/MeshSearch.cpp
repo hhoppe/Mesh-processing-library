@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "MeshSearch.h"
+#include "libHh/MeshSearch.h"
 
-#include "Bbox.h"
-#include "Random.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/Bbox.h"
+#include "libHh/Random.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 
 namespace hh {
 

@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_PRIMES_H_
 #define MESH_PROCESSING_LIBHH_PRIMES_H_
 
-#include "Array.h"
-#include "BinarySearch.h"
-#include "Random.h"
+#include "libHh/Array.h"
+#include "libHh/BinarySearch.h"
+#include "libHh/Random.h"
 
 namespace hh {
 

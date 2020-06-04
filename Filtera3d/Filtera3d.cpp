@@ -1,20 +1,20 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"
-#include "Args.h"
-#include "Array.h"
-#include "Bbox.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "Graph.h"      // for -joinlines
-#include "GraphOp.h"    // for -joinlines graph_symmetric_closure()
-#include "HashPoint.h"  // for -joinlines
-#include "Kdtree.h"     // for -intersect
-#include "MathOp.h"
-#include "Polygon.h"  // for -intersect
-#include "Random.h"   // for -noise
-#include "Spatial.h"
-#include "Stat.h"
-#include "Vec.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/Graph.h"      // for -joinlines
+#include "libHh/GraphOp.h"    // for -joinlines graph_symmetric_closure()
+#include "libHh/HashPoint.h"  // for -joinlines
+#include "libHh/Kdtree.h"     // for -intersect
+#include "libHh/MathOp.h"
+#include "libHh/Polygon.h"  // for -intersect
+#include "libHh/Random.h"   // for -noise
+#include "libHh/Spatial.h"
+#include "libHh/Stat.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 namespace {

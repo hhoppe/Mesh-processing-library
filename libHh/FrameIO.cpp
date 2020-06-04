@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "FrameIO.h"
+#include "libHh/FrameIO.h"
 
-#include "BinaryIO.h"
-#include "Buffer.h"
-#include "NetworkOrder.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/Buffer.h"
+#include "libHh/NetworkOrder.h"
 
 namespace hh {
 

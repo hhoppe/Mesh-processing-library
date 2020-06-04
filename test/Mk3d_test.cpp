@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Mk3d.h"
+#include "libHh/Mk3d.h"
 using namespace hh;
 
 int main() {

@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
 #define MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
 
-#include "Array.h"
-#include "Pixel.h"
+#include "libHh/Array.h"
+#include "libHh/Pixel.h"
 
 namespace hh {
 

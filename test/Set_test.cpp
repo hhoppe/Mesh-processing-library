@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Set.h"
+#include "libHh/Set.h"
 
-#include "Advanced.h"  // my_hash()
-#include "Array.h"
-#include "Geometry.h"
-#include "Random.h"
-#include "RangeOp.h"  // compare()
+#include "libHh/Advanced.h"  // my_hash()
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // compare()
 using namespace hh;
 
 namespace std {

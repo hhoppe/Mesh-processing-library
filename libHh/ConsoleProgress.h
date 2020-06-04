@@ -4,7 +4,7 @@
 
 #include <atomic>
 
-#include "Locks.h"
+#include "libHh/Locks.h"
 
 #if 0
 {

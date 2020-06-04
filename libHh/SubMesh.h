@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_SUBMESH_H_
 #define MESH_PROCESSING_LIBHH_SUBMESH_H_
 
-#include "Array.h"
-#include "Combination.h"
-#include "GMesh.h"
-#include "Homogeneous.h"
+#include "libHh/Array.h"
+#include "libHh/Combination.h"
+#include "libHh/GMesh.h"
+#include "libHh/Homogeneous.h"
 
 namespace hh {
 

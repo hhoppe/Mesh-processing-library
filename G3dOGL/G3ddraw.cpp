@@ -1,13 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "G3d.h"
-#include "GMesh.h"
-#include "GeomOp.h"
-#include "Histogram.h"
-#include "MeshOp.h"  // edge_dihedral_angle_cos()
-#include "Quaternion.h"
-#include "Random.h"
-#include "StringOp.h"
-#include "SubMesh.h"
+#include "G3dOGL/G3d.h"
+#include "libHh/GMesh.h"
+#include "libHh/GeomOp.h"
+#include "libHh/Histogram.h"
+#include "libHh/MeshOp.h"  // edge_dihedral_angle_cos()
+#include "libHh/Quaternion.h"
+#include "libHh/Random.h"
+#include "libHh/StringOp.h"
+#include "libHh/SubMesh.h"
 using namespace hh;
 
 namespace g3d {

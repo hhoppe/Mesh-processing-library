@@ -1,25 +1,25 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"
-#include "Args.h"
-#include "Bbox.h"
-#include "Encoding.h"  // Encoding and DeltaEncoding
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "Graph.h"   // do_reorder_vspl()
-#include "MeshOp.h"  // mesh_genus_string()
-#include "PMesh.h"
-#include "Polygon.h"
-#include "STree.h"  // do_reorder_vspl()
-#include "Stat.h"
-#include "StringOp.h"
-#include "Timer.h"
-#include "VertexCache.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Bbox.h"
+#include "libHh/Encoding.h"  // Encoding and DeltaEncoding
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Graph.h"   // do_reorder_vspl()
+#include "libHh/MeshOp.h"  // mesh_genus_string()
+#include "libHh/PMesh.h"
+#include "libHh/Polygon.h"
+#include "libHh/STree.h"  // do_reorder_vspl()
+#include "libHh/Stat.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
+#include "libHh/VertexCache.h"
 
 #define DEF_SR
 
 #if defined(DEF_SR)
-#include "SRMesh.h"
+#include "libHh/SRMesh.h"
 #endif
 
 using namespace hh;

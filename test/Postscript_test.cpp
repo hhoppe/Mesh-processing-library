@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Postscript.h"
+#include "libHh/Postscript.h"
 using namespace hh;
 
 int main() {

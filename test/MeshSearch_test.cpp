@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "MeshSearch.h"
+#include "libHh/MeshSearch.h"
 
-#include "Matrix.h"
-#include "MeshOp.h"
-#include "Timer.h"
+#include "libHh/Matrix.h"
+#include "libHh/MeshOp.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 int main() {

@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GMesh.h"
+#include "libHh/GMesh.h"
 using namespace hh;
 
 namespace {

@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_G3DOGL_SCGEOMORPH_H_
 #define MESH_PROCESSING_G3DOGL_SCGEOMORPH_H_
 
-#include "Array.h"
-#include "Geometry.h"
-#include "Map.h"
-#include "SimplicialComplex.h"
+#include "G3dOGL/SimplicialComplex.h"
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/Map.h"
 
 namespace hh {
 

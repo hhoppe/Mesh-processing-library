@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_FACEDISTANCE_H_
 #define MESH_PROCESSING_LIBHH_FACEDISTANCE_H_
 
-#include "Bbox.h"
-#include "Geometry.h"
+#include "libHh/Bbox.h"
+#include "libHh/Geometry.h"
 
 namespace hh {
 

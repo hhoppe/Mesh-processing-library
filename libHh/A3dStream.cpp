@@ -1,13 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"
+#include "libHh/A3dStream.h"
 
 #include <cstdio>  // sscanf()
 
-#include "BinaryIO.h"
-#include "NetworkOrder.h"
-#include "Polygon.h"
-#include "RangeOp.h"
-#include "StringOp.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/NetworkOrder.h"
+#include "libHh/Polygon.h"
+#include "libHh/RangeOp.h"
+#include "libHh/StringOp.h"
 
 namespace hh {
 

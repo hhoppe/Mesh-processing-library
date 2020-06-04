@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Principal.h"
+#include "libHh/Principal.h"
 
-#include "LLS.h"
-#include "Random.h"
-#include "Timer.h"
+#include "libHh/LLS.h"
+#include "libHh/Random.h"
+#include "libHh/Timer.h"
 
 namespace hh {
 

@@ -1,30 +1,30 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"
-#include "Args.h"
-#include "BinaryIO.h"
-#include "Color_ramp.h"  // k_color_ramp
-#include "ConsoleProgress.h"
-#include "Contour.h"
-#include "Encoding.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "GridOp.h"
-#include "GridPixelOp.h"  // scale_Matrix_Pixel()
-#include "Image.h"
-#include "LLS.h"
-#include "MathOp.h"  // smooth_step(), floor(Vec<>)
-#include "Matrix.h"
-#include "MatrixOp.h"  // euclidean_distance_map()
-#include "Multigrid.h"
-#include "Parallel.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "Stat.h"
-#include "StringOp.h"
-#include "Timer.h"
-#include "Vector4.h"
-#include "Video.h"  // RVideo, WVideo
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/Color_ramp.h"  // k_color_ramp
+#include "libHh/ConsoleProgress.h"
+#include "libHh/Contour.h"
+#include "libHh/Encoding.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/GridOp.h"
+#include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
+#include "libHh/Image.h"
+#include "libHh/LLS.h"
+#include "libHh/MathOp.h"  // smooth_step(), floor(Vec<>)
+#include "libHh/Matrix.h"
+#include "libHh/MatrixOp.h"  // euclidean_distance_map()
+#include "libHh/Multigrid.h"
+#include "libHh/Parallel.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
+#include "libHh/Vector4.h"
+#include "libHh/Video.h"  // RVideo, WVideo
 using namespace hh;
 
 namespace {

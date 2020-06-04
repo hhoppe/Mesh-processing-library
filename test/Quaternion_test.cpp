@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Quaternion.h"
+#include "libHh/Quaternion.h"
 
-#include "Advanced.h"  // clone()
-#include "RangeOp.h"   // round_elements()
+#include "libHh/Advanced.h"  // clone()
+#include "libHh/RangeOp.h"   // round_elements()
 using namespace hh;
 
 static Frame round(Frame frame) {

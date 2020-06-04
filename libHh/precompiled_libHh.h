@@ -16,26 +16,26 @@
 
 #else
 
-#include "Array.h"
-#include "Geometry.h"
-#include "Hh.h"
-#include "RangeOp.h"
-#include "Stat.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/Hh.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"
+#include "libHh/Vec.h"
 
 #if 0
-#include "Args.h"
-#include "FileIO.h"
-#include "GMesh.h"
-#include "Matrix.h"
-#include "Set.h"
-#include "StringOp.h"
-#include "Timer.h"
+#include "libHh/Args.h"
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Matrix.h"
+#include "libHh/Set.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
 #endif
 
 #if 0
-#include "Pqueue.h"
-#include "Queue.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Queue.h"
 #endif
 
 #if 0 && defined(_MSC_VER)

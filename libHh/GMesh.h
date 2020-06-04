@@ -4,8 +4,8 @@
 
 #include <cstring>  // std::memcpy()
 
-#include "Mesh.h"
-#include "Polygon.h"
+#include "libHh/Mesh.h"
+#include "libHh/Polygon.h"
 
 #if 0
 {

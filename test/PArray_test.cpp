@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "PArray.h"
+#include "libHh/PArray.h"
 using namespace hh;
 
 int main() {

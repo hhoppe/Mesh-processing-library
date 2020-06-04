@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Principal.h"
+#include "libHh/Principal.h"
 
-#include "FileIO.h"
-#include "RangeOp.h"
-#include "Timer.h"
+#include "libHh/FileIO.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

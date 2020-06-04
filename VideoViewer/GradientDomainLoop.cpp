@@ -1,16 +1,16 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GradientDomainLoop.h"
+#include "VideoViewer/GradientDomainLoop.h"
 
-#include "ArrayOp.h"  // sort_unique()
-#include "ConsoleProgress.h"
-#include "FileIO.h"       // file_exists()
-#include "GridOp.h"       // scale_filter_nearest(), scale()
-#include "GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
-#include "Image.h"
-#include "Multigrid.h"
-#include "Parallel.h"
-#include "Queue.h"
-#include "Timer.h"
+#include "libHh/ArrayOp.h"  // sort_unique()
+#include "libHh/ConsoleProgress.h"
+#include "libHh/FileIO.h"       // file_exists()
+#include "libHh/GridOp.h"       // scale_filter_nearest(), scale()
+#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/Image.h"
+#include "libHh/Multigrid.h"
+#include "libHh/Parallel.h"
+#include "libHh/Queue.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 // *** loop creation based on gradient-domain optimization

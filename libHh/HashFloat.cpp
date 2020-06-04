@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HashFloat.h"
+#include "libHh/HashFloat.h"
 
 namespace hh {
 

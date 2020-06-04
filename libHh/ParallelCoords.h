@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_
 #define MESH_PROCESSING_LIBHH_PARALLELCOORDS_H_
 
-#include "Grid.h"  // ravel_index()
-#include "Parallel.h"
+#include "libHh/Grid.h"  // ravel_index()
+#include "libHh/Parallel.h"
 
 namespace hh {
 

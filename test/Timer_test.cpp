@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Timer.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 int main() {

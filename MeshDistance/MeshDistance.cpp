@@ -1,18 +1,18 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"  // A3dColor
-#include "Args.h"
-#include "Bbox.h"
-#include "BinarySearch.h"
-#include "Facedistance.h"  // project_point_triangle2()
-#include "FileIO.h"
-#include "GMesh.h"
-#include "MathOp.h"
-#include "MeshOp.h"      // Vnors
-#include "MeshSearch.h"  // PolygonFaceSpatial
-#include "Polygon.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "Timer.h"
+#include "libHh/A3dStream.h"  // A3dColor
+#include "libHh/Args.h"
+#include "libHh/Bbox.h"
+#include "libHh/BinarySearch.h"
+#include "libHh/Facedistance.h"  // project_point_triangle2()
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/MathOp.h"
+#include "libHh/MeshOp.h"      // Vnors
+#include "libHh/MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/Polygon.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

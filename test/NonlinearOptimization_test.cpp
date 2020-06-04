@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "NonlinearOptimization.h"
+#include "libHh/NonlinearOptimization.h"
 using namespace hh;
 
 namespace {

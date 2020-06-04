@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 #define MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 namespace hh {
 

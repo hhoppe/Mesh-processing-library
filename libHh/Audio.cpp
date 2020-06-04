@@ -1,12 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Audio.h"
+#include "libHh/Audio.h"
 
 #include <mutex>  // std::once_flag, std::call_once()
 
-#include "BinaryIO.h"
-#include "FileIO.h"
-#include "GridOp.h"    // crop()
-#include "StringOp.h"  // get_path_extension()
+#include "libHh/BinaryIO.h"
+#include "libHh/FileIO.h"
+#include "libHh/GridOp.h"    // crop()
+#include "libHh/StringOp.h"  // get_path_extension()
 
 #define HH_AUDIO_HAVE_FFMPEG  // always as fallback
 

@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Locks.h"
+#include "libHh/Locks.h"
 
-#include "Parallel.h"
-#include "RangeOp.h"  // sum()
-#include "Stat.h"
-#include "Vec.h"
+#include "libHh/Parallel.h"
+#include "libHh/RangeOp.h"  // sum()
+#include "libHh/Stat.h"
+#include "libHh/Vec.h"
 
 #include <future>
 #include <vector>

@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "FileIO.h"
+#include "libHh/FileIO.h"
 
 #include <fcntl.h>     // O_NOINHERIT, O_BINARY
 #include <sys/stat.h>  // struct stat, struct _stat, stat()
@@ -42,10 +42,10 @@
 #include <ext/stdio_filebuf.h>  // __gnu_cxx::stdio_filebuf<char>
 #endif
 
-#include "Locks.h"
-#include "RangeOp.h"  // contains()
-#include "StringOp.h"
-#include "Vec.h"
+#include "libHh/Locks.h"
+#include "libHh/RangeOp.h"  // contains()
+#include "libHh/StringOp.h"
+#include "libHh/Vec.h"
 
 // Note that RFile/WFile first construct a FILE* (which is accessible via cfile()), then a std::stream on top.
 // This is quite flexible.  I use this in:

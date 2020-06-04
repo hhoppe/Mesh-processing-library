@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HashFloat.h"
+#include "libHh/HashFloat.h"
 
 #include <iomanip>  // std::setprecision()
 
-#include "ArrayOp.h"  // concat()
-#include "RangeOp.h"  // sum()
+#include "libHh/ArrayOp.h"  // concat()
+#include "libHh/RangeOp.h"  // sum()
 using namespace hh;
 
 namespace {

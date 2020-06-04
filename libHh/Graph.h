@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GRAPH_H_
 #define MESH_PROCESSING_LIBHH_GRAPH_H_
 
-#include "Array.h"
-#include "Map.h"
+#include "libHh/Array.h"
+#include "libHh/Map.h"
 
 #if 0
 {

@@ -2,16 +2,16 @@
 #ifndef MESH_PROCESSING_LIBHH_MULTIGRID_H_
 #define MESH_PROCESSING_LIBHH_MULTIGRID_H_
 
-#include "Advanced.h"  // unroll<>
-#include "Grid.h"
-#include "MathOp.h"
-#include "ParallelCoords.h"
-#include "RangeOp.h"
-#include "Set.h"
-#include "Stat.h"
-#include "Timer.h"
-#include "Vector4.h"
-// #include "Locks.h"  // HH_LOCK for debugging
+#include "libHh/Advanced.h"  // unroll<>
+#include "libHh/Grid.h"
+#include "libHh/MathOp.h"
+#include "libHh/ParallelCoords.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Set.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
+#include "libHh/Vector4.h"
+// #include "libHh/Locks.h"  // HH_LOCK for debugging
 
 #if 0
 {

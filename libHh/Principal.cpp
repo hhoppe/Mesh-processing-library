@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Principal.h"
+#include "libHh/Principal.h"
 
-#include "Homogeneous.h"
-#include "SGrid.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/Homogeneous.h"
+#include "libHh/SGrid.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 
 namespace hh {
 

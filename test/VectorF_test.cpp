@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "VectorF.h"
+#include "libHh/VectorF.h"
 using namespace hh;
 
 int main() {

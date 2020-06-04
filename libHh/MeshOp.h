@@ -2,12 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_MESHOP_H_
 #define MESH_PROCESSING_LIBHH_MESHOP_H_
 
-#include "GMesh.h"
-#include "Map.h"
-#include "Polygon.h"
-#include "Queue.h"
-#include "Set.h"
-#include "Stat.h"
+#include "libHh/GMesh.h"
+#include "libHh/Map.h"
+#include "libHh/Polygon.h"
+#include "libHh/Queue.h"
+#include "libHh/Set.h"
+#include "libHh/Stat.h"
 
 namespace hh {
 

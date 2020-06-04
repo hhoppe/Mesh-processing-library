@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GEOMETRY_H_
 #define MESH_PROCESSING_LIBHH_GEOMETRY_H_
 
-#include "SGrid.h"
-#include "Vec.h"
+#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

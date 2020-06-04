@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_HASHFLOAT_H_
 #define MESH_PROCESSING_LIBHH_HASHFLOAT_H_
 
-#include "Map.h"
+#include "libHh/Map.h"
 
 namespace hh {
 

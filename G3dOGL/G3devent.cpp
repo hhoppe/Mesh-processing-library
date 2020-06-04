@@ -1,15 +1,15 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <cctype>  // std::isdigit()
 
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "G3d.h"
-#include "GMesh.h"
-#include "GeomOp.h"
-#include "MeshOp.h"  // mesh_genus_string()
-#include "Polygon.h"
-#include "Quaternion.h"
-#include "StringOp.h"
+#include "G3dOGL/G3d.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/GeomOp.h"
+#include "libHh/MeshOp.h"  // mesh_genus_string()
+#include "libHh/Polygon.h"
+#include "libHh/Quaternion.h"
+#include "libHh/StringOp.h"
 using namespace hh;
 
 extern float ambient;  // access from G3dOGL

@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_VECTORF_H_
 #define MESH_PROCESSING_LIBHH_VECTORF_H_
 
-#include "Advanced.h"  // unroll<>, unroll_max<>
-#include "Array.h"
-#include "Vec.h"
-#include "Vector4.h"
+#include "libHh/Advanced.h"  // unroll<>, unroll_max<>
+#include "libHh/Array.h"
+#include "libHh/Vec.h"
+#include "libHh/Vector4.h"
 
 namespace hh {
 

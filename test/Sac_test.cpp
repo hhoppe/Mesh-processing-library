@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Sac.h"
+#include "libHh/Sac.h"
 
-#include "Geometry.h"
+#include "libHh/Geometry.h"
 using namespace hh;
 
 namespace {

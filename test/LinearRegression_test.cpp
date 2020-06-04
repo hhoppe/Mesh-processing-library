@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "LinearRegression.h"
+#include "libHh/LinearRegression.h"
 
-#include "ArrayOp.h"  // concat()
+#include "libHh/ArrayOp.h"  // concat()
 using namespace hh;
 
 namespace {

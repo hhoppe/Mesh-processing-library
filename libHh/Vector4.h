@@ -35,7 +35,7 @@
 #include <arm_neon.h>
 #endif
 
-#include "Pixel.h"
+#include "libHh/Pixel.h"
 
 namespace hh {
 

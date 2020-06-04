@@ -2,13 +2,13 @@
 #ifndef MESH_PROCESSING_LIBHH_SRMESH_H_
 #define MESH_PROCESSING_LIBHH_SRMESH_H_
 
-#include "Bbox.h"
-#include "EList.h"
-#include "LinearFunc.h"
-#include "Map.h"
-#include "Materials.h"
-#include "Pixel.h"
-#include "Pool.h"
+#include "libHh/Bbox.h"
+#include "libHh/EList.h"
+#include "libHh/LinearFunc.h"
+#include "libHh/Map.h"
+#include "libHh/Materials.h"
+#include "libHh/Pixel.h"
+#include "libHh/Pool.h"
 
 #if 0
 {

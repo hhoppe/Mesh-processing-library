@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Vec.h"
+#include "libHh/Vec.h"
 
 #include <type_traits>
 
-#include "Array.h"
-#include "RangeOp.h"
-#include "Set.h"
+#include "libHh/Array.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Set.h"
 using namespace hh;
 
 namespace hh {

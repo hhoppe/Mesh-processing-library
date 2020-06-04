@@ -14,7 +14,7 @@ extern "C" {
 #endif
 }
 
-#include "../libHWin/HWbase.h"
+#include "libHWin/HWbase.h"
 
 namespace hh {
 

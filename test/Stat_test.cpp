@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Stat.h"
+#include "libHh/Stat.h"
 
-#include "Array.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 // Optionally, run with:    rm -f Stat.Stat_test; (setenv STAT_FILES; Stat_test); cat Stat.Stat_test

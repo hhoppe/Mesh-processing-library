@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_RANGEOP_H_
 #define MESH_PROCESSING_LIBHH_RANGEOP_H_
 
-#include "Range.h"
+#include "libHh/Range.h"
 
 namespace hh {
 

@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Qem.h"
+#include "MeshSimplify/Qem.h"
 
-#include "LLS.h"
-#include "Polygon.h"  // orthogonal_vector()
-#include "RangeOp.h"
-#include "SGrid.h"
+#include "libHh/LLS.h"
+#include "libHh/Polygon.h"  // orthogonal_vector()
+#include "libHh/RangeOp.h"
+#include "libHh/SGrid.h"
 
 namespace hh {
 

@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_MESHSIMPLIFY_QEM_H_
 #define MESH_PROCESSING_MESHSIMPLIFY_QEM_H_
 
-#include "Array.h"
-#include "Matrix.h"
+#include "libHh/Array.h"
+#include "libHh/Matrix.h"
 
 namespace hh {
 

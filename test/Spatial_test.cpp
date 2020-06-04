@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Spatial.h"
+#include "libHh/Spatial.h"
 
-#include "Random.h"
+#include "libHh/Random.h"
 using namespace hh;
 
 int main() {

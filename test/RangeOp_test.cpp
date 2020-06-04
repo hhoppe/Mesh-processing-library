@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "RangeOp.h"
+#include "libHh/RangeOp.h"
 
-#include "Advanced.h"  // clone()
-#include "Array.h"
+#include "libHh/Advanced.h"  // clone()
+#include "libHh/Array.h"
 using namespace hh;
 
 int main() {

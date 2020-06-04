@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Args.h"
+#include "libHh/Args.h"
 
 #include <cctype>   // std::isdigit()
 #include <cstdlib>  // atoi()
 
-#include "RangeOp.h"  // contains()
-#include "StringOp.h"
+#include "libHh/RangeOp.h"  // contains()
+#include "libHh/StringOp.h"
 
 namespace hh {
 

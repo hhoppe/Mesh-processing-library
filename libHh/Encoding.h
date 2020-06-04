@@ -2,11 +2,11 @@
 #ifndef MESH_PROCESSING_LIBHH_ENCODING_H_
 #define MESH_PROCESSING_LIBHH_ENCODING_H_
 
-#include "Array.h"
-#include "Geometry.h"
-#include "Map.h"
-#include "Pqueue.h"
-#include "RangeOp.h"  // sort()
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/Map.h"
+#include "libHh/Pqueue.h"
+#include "libHh/RangeOp.h"  // sort()
 
 namespace hh {
 

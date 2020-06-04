@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Queue.h"
+#include "libHh/Queue.h"
 using namespace hh;
 
 int main() {

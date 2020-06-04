@@ -4,40 +4,30 @@
 #define DEF_SC
 #define DEF_PLY
 
-#if defined(DEF_PM)
-#include "PMesh.h"
-#endif
-#if defined(DEF_SR)
-#include "SRMesh.h"
-#endif
-#if defined(DEF_PLY)
-#include "NetworkOrder.h"
-#endif
-#include "A3dStream.h"
-#include "Args.h"
-#include "Array.h"
-#include "BinaryIO.h"
-#include "ConsoleProgress.h"
-#include "FileIO.h"
-#include "GMesh.h"
-#include "HB.h"
+#include "G3dOGL/HB.h"
+#include "G3dOGL/SCGeomorph.h"         // DEF_SC
+#include "G3dOGL/SimplicialComplex.h"  // DEF_SC
+#include "G3dOGL/SplitRecord.h"        // DEF_SC
+#include "G3dOGL/normalmapping.h"
 #include "HW.h"
-#include "Image.h"
-#include "MathOp.h"
-#include "MeshOp.h"  // Vnors
-#include "Polygon.h"
-#include "SGrid.h"
-#include "StringOp.h"
-#include "Timer.h"
-#include "Video.h"
-
-#include "normalmapping.h"
-
-#if defined(DEF_SC)
-#include "SCGeomorph.h"
-#include "SimplicialComplex.h"
-#include "SplitRecord.h"
-#endif
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/ConsoleProgress.h"
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Image.h"
+#include "libHh/MathOp.h"
+#include "libHh/MeshOp.h"        // Vnors
+#include "libHh/NetworkOrder.h"  // DEF_PLY
+#include "libHh/PMesh.h"         // DEF_PM
+#include "libHh/Polygon.h"
+#include "libHh/SGrid.h"
+#include "libHh/SRMesh.h"  // DEF_SR
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
+#include "libHh/Video.h"
 
 using namespace hh;
 

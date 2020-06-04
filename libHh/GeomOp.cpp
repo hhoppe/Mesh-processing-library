@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GeomOp.h"
+#include "libHh/GeomOp.h"
 
-#include "MathOp.h"
+#include "libHh/MathOp.h"
 
 namespace hh {
 

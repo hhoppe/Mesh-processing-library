@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Timer.h"
+#include "libHh/Timer.h"
 
 #include <array>
 #include <cctype>  // std::isdigit()
@@ -16,7 +16,7 @@
 #endif             // defined(_WIN32)
 
 #if !defined(HH_NO_TIMERS_CLASS)
-#include "Stat.h"
+#include "libHh/Stat.h"
 #endif
 
 // Return the effective number of cores (or 0 if unknown).

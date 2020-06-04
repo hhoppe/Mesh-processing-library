@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_UNIV_H_
 #define MESH_PROCESSING_LIBHH_UNIV_H_
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 namespace hh {
 

@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_ARRAYOP_H_
 #define MESH_PROCESSING_LIBHH_ARRAYOP_H_
 
-#include "Advanced.h"  // do_in_order
-#include "Array.h"
-#include "RangeOp.h"  // sort()
-#include "Vec.h"      // Vec2<>
+#include "libHh/Advanced.h"  // do_in_order
+#include "libHh/Array.h"
+#include "libHh/RangeOp.h"  // sort()
+#include "libHh/Vec.h"      // Vec2<>
 
 namespace hh {
 

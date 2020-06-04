@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
 #define MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
 
-#include "LLS.h"
+#include "libHh/LLS.h"
 
 #if 0
 {

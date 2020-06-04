@@ -2,12 +2,12 @@
 #ifndef MESH_PROCESSING_VIDEOVIEWER_GRADIENTDOMAINLOOP_H_
 #define MESH_PROCESSING_VIDEOVIEWER_GRADIENTDOMAINLOOP_H_
 
-#include "../libHh/Video.h"  // relative path to avoid name collision with ./Video.h in Loopers code
-#include "Grid.h"            // CGridView<>, GridView<>, Grid<>
-#include "Hh.h"
-#include "MathOp.h"  // my_mod()
-#include "Matrix.h"  // CMatrixView<>
-#include "Pixel.h"   // Pixel
+#include "libHh/Grid.h"  // CGridView<>, GridView<>, Grid<>
+#include "libHh/Hh.h"
+#include "libHh/MathOp.h"  // my_mod()
+#include "libHh/Matrix.h"  // CMatrixView<>
+#include "libHh/Pixel.h"   // Pixel
+#include "libHh/Video.h"
 
 namespace hh {
 

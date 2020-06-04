@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Kdtree.h"
+#include "libHh/Kdtree.h"
 using namespace hh;
 
 int main() {

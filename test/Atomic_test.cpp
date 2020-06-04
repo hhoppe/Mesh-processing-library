@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "AtomicOperate.h"
+#include "libHh/AtomicOperate.h"
 
-#include "Array.h"
-#include "Parallel.h"
-#include "Timer.h"
+#include "libHh/Array.h"
+#include "libHh/Parallel.h"
+#include "libHh/Timer.h"
 
 using namespace hh;
 

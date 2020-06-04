@@ -1,16 +1,16 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "MeshOp.h"
+#include "libHh/MeshOp.h"
 
 #include <cstring>  // strncmp() etc.
 #include <mutex>    // std::once_flag, std::call_once()
 
-#include "Array.h"
-#include "Facedistance.h"  // lb_dist_point_triangle(), project_point_triangle2()
-#include "GeomOp.h"
-#include "MathOp.h"  // Trig
-#include "Polygon.h"
-#include "RangeOp.h"  // sort()
-#include "Set.h"
+#include "libHh/Array.h"
+#include "libHh/Facedistance.h"  // lb_dist_point_triangle(), project_point_triangle2()
+#include "libHh/GeomOp.h"
+#include "libHh/MathOp.h"  // Trig
+#include "libHh/Polygon.h"
+#include "libHh/RangeOp.h"  // sort()
+#include "libHh/Set.h"
 
 namespace hh {
 

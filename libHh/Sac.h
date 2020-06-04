@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_SAC_H_
 #define MESH_PROCESSING_LIBHH_SAC_H_
 
-#include "Pool.h"
+#include "libHh/Pool.h"
 
 // A Sac reserves space at the end of a structure for additional storage requested by other program components.
 

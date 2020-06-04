@@ -1,38 +1,38 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <cstring>  // strcmp(), strlen(), etc.
 
-#include "A3dStream.h"
-#include "Args.h"
-#include "Array.h"
-#include "Bbox.h"
-#include "BinarySearch.h"
-#include "Contour.h"
-#include "Facedistance.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "GeomOp.h"  // dihedral_angle_cos()
-#include "HashPoint.h"
-#include "HashTuple.h"  // std::hash<std::pair<...>>
-#include "Homogeneous.h"
-#include "Image.h"
-#include "LLS.h"
-#include "LinearFunc.h"
-#include "Map.h"
-#include "MathOp.h"
-#include "MeshOp.h"      // Vnors, ...
-#include "MeshSearch.h"  // PolygonFaceSpatial
-#include "Polygon.h"
-#include "Pqueue.h"
-#include "Principal.h"  // principal_components()
-#include "Queue.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "Set.h"
-#include "Stack.h"
-#include "Stat.h"
-#include "StringOp.h"
-#include "Timer.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/BinarySearch.h"
+#include "libHh/Contour.h"
+#include "libHh/Facedistance.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/GeomOp.h"  // dihedral_angle_cos()
+#include "libHh/HashPoint.h"
+#include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
+#include "libHh/Homogeneous.h"
+#include "libHh/Image.h"
+#include "libHh/LLS.h"
+#include "libHh/LinearFunc.h"
+#include "libHh/Map.h"
+#include "libHh/MathOp.h"
+#include "libHh/MeshOp.h"      // Vnors, ...
+#include "libHh/MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/Polygon.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Principal.h"  // principal_components()
+#include "libHh/Queue.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Set.h"
+#include "libHh/Stack.h"
+#include "libHh/Stat.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
 #if !defined(HH_NO_SIMPLEX)
 #include "recipes.h"
 #endif

@@ -2,16 +2,16 @@
 #ifndef MESH_PROCESSING_LIBHH_SPATIAL_H_
 #define MESH_PROCESSING_LIBHH_SPATIAL_H_
 
-#include "Array.h"
-#include "Bbox.h"
-#include "Geometry.h"
-#include "Map.h"
-#include "Pqueue.h"
-#include "Queue.h"
-#include "Set.h"
-#include "Stat.h"
-#include "Univ.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/Geometry.h"
+#include "libHh/Map.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Queue.h"
+#include "libHh/Set.h"
+#include "libHh/Stat.h"
+#include "libHh/Univ.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

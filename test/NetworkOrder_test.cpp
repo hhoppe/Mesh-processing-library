@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "NetworkOrder.h"
+#include "libHh/NetworkOrder.h"
 
-#include "Array.h"
-#include "BinaryIO.h"
-#include "FileIO.h"
-#include "Matrix.h"
-#include "Stat.h"
+#include "libHh/Array.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/FileIO.h"
+#include "libHh/Matrix.h"
+#include "libHh/Stat.h"
 using namespace hh;
 
 int main() {

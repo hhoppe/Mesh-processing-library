@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HashPoint.h"
+#include "libHh/HashPoint.h"
 using namespace hh;
 
 int main() {

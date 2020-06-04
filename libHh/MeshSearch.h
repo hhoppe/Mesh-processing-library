@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_MESHSEARCH_H_
 #define MESH_PROCESSING_LIBHH_MESHSEARCH_H_
 
-#include "Facedistance.h"
-#include "GMesh.h"
-#include "Spatial.h"
+#include "libHh/Facedistance.h"
+#include "libHh/GMesh.h"
+#include "libHh/Spatial.h"
 
 #if 0
 {

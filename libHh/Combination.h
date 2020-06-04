@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_COMBINATION_H_
 #define MESH_PROCESSING_LIBHH_COMBINATION_H_
 
-#include "Map.h"
-#include "RangeOp.h"
+#include "libHh/Map.h"
+#include "libHh/RangeOp.h"
 
 #if 0
 {

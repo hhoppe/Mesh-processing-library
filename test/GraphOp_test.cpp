@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GraphOp.h"
+#include "libHh/GraphOp.h"
 
-#include "Spatial.h"
-#include "Stat.h"
-#include "Vec.h"
+#include "libHh/Spatial.h"
+#include "libHh/Stat.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 namespace {

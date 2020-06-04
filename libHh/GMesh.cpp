@@ -1,15 +1,15 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GMesh.h"
+#include "libHh/GMesh.h"
 
 #include <cctype>   // std::isalnum()
 #include <cstdio>   // sscanf()
 #include <cstdlib>  // atoi()
 #include <cstring>  // strncmp(), strlen(), std::memmove(), etc.
 
-#include "A3dStream.h"
-#include "Array.h"
-#include "Polygon.h"
-#include "Set.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Array.h"
+#include "libHh/Polygon.h"
+#include "libHh/Set.h"
 
 namespace hh {
 

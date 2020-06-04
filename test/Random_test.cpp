@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Random.h"
+#include "libHh/Random.h"
 
-#include "Stat.h"
+#include "libHh/Stat.h"
 using namespace hh;
 
 int main() {

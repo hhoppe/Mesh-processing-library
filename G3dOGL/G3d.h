@@ -2,13 +2,13 @@
 #ifndef MESH_PROCESSING_G3DOGL_G3D_H_
 #define MESH_PROCESSING_G3DOGL_G3D_H_
 
-#include "Array.h"
-#include "Bbox.h"
-#include "GMesh.h"
-#include "Geometry.h"
-#include "HB.h"
-#include "Sac.h"
-#include "Stat.h"
+#include "G3dOGL/HB.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/GMesh.h"
+#include "libHh/Geometry.h"
+#include "libHh/Sac.h"
+#include "libHh/Stat.h"
 
 namespace g3d {
 using namespace hh;

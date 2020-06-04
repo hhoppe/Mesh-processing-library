@@ -21,27 +21,27 @@
 //  no longer need EMST, assume this new graph represents components
 // 1993-09-09: all coordinates transformed internally into unit box.
 
-#include "A3dStream.h"
-#include "Args.h"
-#include "Array.h"
-#include "Bbox.h"
-#include "Contour.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "Graph.h"
-#include "GraphOp.h"  // graph_edge_stats(), graph_num_components(), graph_mst()
-#include "Homogeneous.h"
-#include "MeshOp.h"
-#include "Mk3d.h"
-#include "Mklib.h"
-#include "Polygon.h"
-#include "Principal.h"
-#include "Set.h"
-#include "Spatial.h"
-#include "Stat.h"
-#include "StringOp.h"
-#include "Timer.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/Contour.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Graph.h"
+#include "libHh/GraphOp.h"  // graph_edge_stats(), graph_num_components(), graph_mst()
+#include "libHh/Homogeneous.h"
+#include "libHh/MeshOp.h"
+#include "libHh/Mk3d.h"
+#include "libHh/Mklib.h"
+#include "libHh/Polygon.h"
+#include "libHh/Principal.h"
+#include "libHh/Set.h"
+#include "libHh/Spatial.h"
+#include "libHh/Stat.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

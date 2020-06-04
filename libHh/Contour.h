@@ -2,13 +2,13 @@
 #ifndef MESH_PROCESSING_LIBHH_CONTOUR_H_
 #define MESH_PROCESSING_LIBHH_CONTOUR_H_
 
-#include "GMesh.h"
-#include "MeshOp.h"  // triangulate_face()
-#include "PArray.h"
-#include "Queue.h"
-#include "SGrid.h"
-#include "Set.h"
-#include "Stat.h"
+#include "libHh/GMesh.h"
+#include "libHh/MeshOp.h"  // triangulate_face()
+#include "libHh/PArray.h"
+#include "libHh/Queue.h"
+#include "libHh/SGrid.h"
+#include "libHh/Set.h"
+#include "libHh/Stat.h"
 
 #if 0
 {

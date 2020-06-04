@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
 #define MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
 
-#include "Array.h"
-#include "MathOp.h"  // my_mod()
-#include "Matrix.h"
+#include "libHh/Array.h"
+#include "libHh/MathOp.h"  // my_mod()
+#include "libHh/Matrix.h"
 
 namespace hh {
 

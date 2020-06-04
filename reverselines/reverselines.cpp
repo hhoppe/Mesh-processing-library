@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include "Args.h"
-#include "Array.h"
-#include "BinaryIO.h"  // write_raw()
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/BinaryIO.h"  // write_raw()
 using namespace hh;
 
 #if !defined(_WIN32)
@@ -82,7 +82,7 @@ int main(int argc, const char** argv) {
 // Probably the bottleneck is stdio stream write.
 
 #include <fcntl.h>  // open()
-#include "Array.h"
+#include "libHh/Array.h"
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);

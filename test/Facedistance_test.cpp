@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Facedistance.h"
+#include "libHh/Facedistance.h"
 
-#include "A3dStream.h"
-#include "Random.h"
-#include "RangeOp.h"  // round_elements()
+#include "libHh/A3dStream.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
 void test1() {

@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "LLS.h"
+#include "libHh/LLS.h"
 
-#include "MatrixOp.h"  // identity_mat()
-#include "Random.h"
-#include "SingularValueDecomposition.h"
-#include "Stat.h"
+#include "libHh/MatrixOp.h"  // identity_mat()
+#include "libHh/Random.h"
+#include "libHh/SingularValueDecomposition.h"
+#include "libHh/Stat.h"
 using namespace hh;
 
 static unique_ptr<LLS> make_lls(int c, int m, int n, int nd) {

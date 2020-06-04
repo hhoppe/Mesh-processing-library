@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 #include <fcntl.h>     // O_BINARY, fcntl()
 #include <sys/stat.h>  // struct stat and fstat()
@@ -44,7 +44,7 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 #endif  // defined(_WIN32)
 
 // This has no associated *.cpp files.
-#include "StringOp.h"  // replace_all(), remove_at_beginning(), remove_at_end(), get_canonical_path(), to_lower()
+#include "libHh/StringOp.h"  // replace_all(), remove_at_beginning(), remove_at_end(), get_canonical_path(), to_lower()
 
 #if !defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
 #define HH_NO_STACKWALKER
@@ -76,7 +76,7 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 //  which I compiled in ~/src/_other/exc-abort.zip
 // However, it does not show symbols in call stack.
 // A correct implementation would have to combine the Windows-based StackWalker with the debug symbols of gcc.
-#include "StackWalker.h"
+#include "libHh/StackWalker.h"
 #endif  // !defined(HH_NO_STACKWALKER)
 
 #include <map>            // avoids creating a depencency on my Map class

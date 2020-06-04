@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Mklib.h"
+#include "libHh/Mklib.h"
 
-#include "RangeOp.h"  // round_elements()
+#include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
 int main(int argc, char**) {

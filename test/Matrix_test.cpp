@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "MatrixOp.h"
+#include "libHh/MatrixOp.h"
 
-#include "Array.h"
-#include "RangeOp.h"
-#include "Vector4.h"
+#include "libHh/Array.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Vector4.h"
 using namespace hh;
 
 int main() {

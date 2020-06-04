@@ -1,14 +1,14 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Args.h"
-#include "Buffer.h"
-#include "BufferedA3dStream.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "G3d.h"
-#include "GMesh.h"
-#include "MeshOp.h"
-#include "Polygon.h"
-#include "StringOp.h"
+#include "G3dOGL/G3d.h"
+#include "libHh/Args.h"
+#include "libHh/Buffer.h"
+#include "libHh/BufferedA3dStream.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/MeshOp.h"
+#include "libHh/Polygon.h"
+#include "libHh/StringOp.h"
 using namespace hh;
 
 namespace g3d {

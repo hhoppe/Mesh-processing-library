@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "UnionFind.h"
+#include "libHh/UnionFind.h"
 
-#include "Vec.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 int main() {

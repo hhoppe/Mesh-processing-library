@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_MKLIB_H_
 #define MESH_PROCESSING_LIBHH_MKLIB_H_
 
-#include "Mk3d.h"
+#include "libHh/Mk3d.h"
 
 namespace hh {
 

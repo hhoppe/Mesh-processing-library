@@ -8,28 +8,28 @@
 #include <io.h>  // close(), dup2()
 #endif
 
-#include "Args.h"
-#include "ArrayOp.h"  // median()
-#include "Bbox.h"
-#include "BinarySearch.h"  // discrete_binary_search()
-#include "Color_ramp.h"    // k_color_ramp
-#include "FileIO.h"        // my_sh()
-#include "Geometry.h"
-#include "GradientDomainLoop.h"
-#include "GridOp.h"       // crop()
-#include "GridPixelOp.h"  // spatially_scale_Grid_Pixel()
 #include "HW.h"
-#include "Image.h"
-#include "Locks.h"  // <mutex>
-#include "Map.h"
-#include "MathOp.h"     // is_pow2()
-#include "Polygon.h"    // intersect_poly_poly()
-#include "Principal.h"  // principal_components()
-#include "SGrid.h"
-#include "Stat.h"      // HH_RSTAT()
-#include "StringOp.h"  // get_path_tail()
-#include "Timer.h"
-#include "Video.h"
+#include "VideoViewer/GradientDomainLoop.h"
+#include "libHh/Args.h"
+#include "libHh/ArrayOp.h"  // median()
+#include "libHh/Bbox.h"
+#include "libHh/BinarySearch.h"  // discrete_binary_search()
+#include "libHh/Color_ramp.h"    // k_color_ramp
+#include "libHh/FileIO.h"        // my_sh()
+#include "libHh/Geometry.h"
+#include "libHh/GridOp.h"       // crop()
+#include "libHh/GridPixelOp.h"  // spatially_scale_Grid_Pixel()
+#include "libHh/Image.h"
+#include "libHh/Locks.h"  // <mutex>
+#include "libHh/Map.h"
+#include "libHh/MathOp.h"     // is_pow2()
+#include "libHh/Polygon.h"    // intersect_poly_poly()
+#include "libHh/Principal.h"  // principal_components()
+#include "libHh/SGrid.h"
+#include "libHh/Stat.h"      // HH_RSTAT()
+#include "libHh/StringOp.h"  // get_path_tail()
+#include "libHh/Timer.h"
+#include "libHh/Video.h"
 
 #if !defined(HH_NO_VIDEO_LOOP)
 // From ~/git/CompPhoto/Applications/VideoLooping/LoopAPILib/LoopAPILib/src/

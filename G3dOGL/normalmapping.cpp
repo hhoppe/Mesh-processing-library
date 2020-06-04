@@ -2,10 +2,10 @@
 #include <memory>  // _WIN32 bug: must appear before <mutex> to avoid warning 4548
 #include <mutex>   // std::once_flag, std::call_once()
 
-#include "Array.h"
 #include "HW.h"
-#include "Image.h"
-#include "StringOp.h"
+#include "libHh/Array.h"
+#include "libHh/Image.h"
+#include "libHh/StringOp.h"
 #include "normalmapping.h"
 
 // (setenv NORMAL_MAPPING ogl2; G3dOGL ~/data/mesh/buddhaf.nf10000.m -key Dt)

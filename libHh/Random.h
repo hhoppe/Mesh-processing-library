@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_RANDOM_H_
 #define MESH_PROCESSING_LIBHH_RANDOM_H_
 
-#include "Vec.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Spatial.h"
+#include "libHh/Spatial.h"
 
 namespace hh {
 

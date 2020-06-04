@@ -12,13 +12,13 @@
 #endif
 #endif  // defined(GL_VERSION)
 
-#include "Array.h"
-#include "FileIO.h"  // file_exists()
-#include "Image.h"
-#include "RangeOp.h"
-#include "StringOp.h"
-#include "Vec.h"
-#include "Vector4.h"
+#include "libHh/Array.h"
+#include "libHh/FileIO.h"  // file_exists()
+#include "libHh/Image.h"
+#include "libHh/RangeOp.h"
+#include "libHh/StringOp.h"
+#include "libHh/Vec.h"
+#include "libHh/Vector4.h"
 
 namespace hh {
 

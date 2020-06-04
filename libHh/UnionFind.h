@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_UNIONFIND_H_
 #define MESH_PROCESSING_LIBHH_UNIONFIND_H_
 
-#include "Map.h"
-#include "PArray.h"
+#include "libHh/Map.h"
+#include "libHh/PArray.h"
 
 namespace hh {
 

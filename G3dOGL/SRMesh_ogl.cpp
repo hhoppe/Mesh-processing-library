@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GMesh.h"
 #include "HW.h"
-#include "SRMesh.h"
-#include "Stat.h"
+#include "libHh/GMesh.h"
+#include "libHh/SRMesh.h"
+#include "libHh/Stat.h"
 
 namespace hh {
 

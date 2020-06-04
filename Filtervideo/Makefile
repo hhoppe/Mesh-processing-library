@@ -3,7 +3,6 @@ include $(HhRoot)/make/Makefile_defs
 
 gdloopdir = $(HhRoot)/VideoViewer
 extraobjs = $(foreach n,GradientDomainLoop,$(gdloopdir)/$(n).$(extobj))
-cppinc += -I$(gdloopdir)#  for GradientDomainLoop.h
 
 include $(HhRoot)/make/Makefile_prog
 

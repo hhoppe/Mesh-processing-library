@@ -1,14 +1,14 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "LLS.h"
+#include "libHh/LLS.h"
 
-#include "MatrixOp.h"  // mat_mul()
-#include "RangeOp.h"
-#include "SingularValueDecomposition.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/MatrixOp.h"  // mat_mul()
+#include "libHh/RangeOp.h"
+#include "libHh/SingularValueDecomposition.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 
 #if !defined(HH_NO_LAPACK)
-#include "my_lapack.h"
+#include "libHh/my_lapack.h"
 #endif
 
 namespace hh {

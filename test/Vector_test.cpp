@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Stack.h"  // vec_contains()
+#include "libHh/Stack.h"  // vec_contains()
 
 #include <deque>
 #include <list>

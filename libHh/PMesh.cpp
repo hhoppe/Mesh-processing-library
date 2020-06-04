@@ -1,14 +1,14 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "PMesh.h"
+#include "libHh/PMesh.h"
 
 #include <cstring>  // strncmp() etc.
 
-#include "BinaryIO.h"   // read_binary_std() and write_binary_std()
-#include "GMesh.h"      // in extract_gmesh()
-#include "HashTuple.h"  // std::hash<std::pair<...>>
-#include "PArray.h"     // ar_pwedge
-#include "RangeOp.h"    // fill()
-#include "Set.h"
+#include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
+#include "libHh/GMesh.h"      // in extract_gmesh()
+#include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
+#include "libHh/PArray.h"     // ar_pwedge
+#include "libHh/RangeOp.h"    // fill()
+#include "libHh/Set.h"
 
 namespace hh {
 

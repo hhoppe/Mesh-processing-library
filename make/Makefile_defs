@@ -184,7 +184,7 @@ cmd_makedep = @echo Creating $(make_dep); \
   || rm -f $(make.dep)
 
 ifeq ($(plain_compiler),)
-  cppinc += -I. -I$(HhRoot)/include -I$(HhRoot)/libHh
+  cppinc += -I$(HhRoot)
 endif
 
 include_make_dep = $(if $(filter depend clean deepclean cleanall,$(MAKECMDGOALS)),,1)

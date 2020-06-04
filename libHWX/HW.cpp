@@ -8,16 +8,16 @@
 #include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 extern "C" {
+#include <X11/Xatom.h>  // XA_STRING
 #include <X11/Xos.h>
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
-#include "X11/Xatom.h"  // XA_STRING
 }
 
-#include "Args.h"
 #include "HW.xbm"
-#include "Image.h"
-#include "MathOp.h"  // is_pow2()
+#include "libHh/Args.h"
+#include "libHh/Image.h"
+#include "libHh/MathOp.h"  // is_pow2()
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wold-style-cast"  // for DefaultScreen() etc.

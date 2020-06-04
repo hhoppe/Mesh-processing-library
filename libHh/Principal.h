@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_PRINCIPAL_H_
 #define MESH_PROCESSING_LIBHH_PRINCIPAL_H_
 
-#include "Geometry.h"
-#include "Matrix.h"
+#include "libHh/Geometry.h"
+#include "libHh/Matrix.h"
 
 namespace hh {
 

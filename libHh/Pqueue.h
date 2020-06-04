@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_PQUEUE_H_
 #define MESH_PROCESSING_LIBHH_PQUEUE_H_
 
-#include "Array.h"
-#include "Map.h"
+#include "libHh/Array.h"
+#include "libHh/Map.h"
 
 namespace hh {
 

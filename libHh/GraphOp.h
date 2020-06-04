@@ -2,16 +2,16 @@
 #ifndef MESH_PROCESSING_LIBHH_GRAPHOP_H_
 #define MESH_PROCESSING_LIBHH_GRAPHOP_H_
 
-#include "Array.h"
-#include "Geometry.h"
-#include "Graph.h"
-#include "Pqueue.h"
-#include "Queue.h"
-#include "RangeOp.h"  // fill()
-#include "Set.h"
-#include "Spatial.h"
-#include "Stat.h"
-#include "UnionFind.h"
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/Graph.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Queue.h"
+#include "libHh/RangeOp.h"  // fill()
+#include "libHh/Set.h"
+#include "libHh/Spatial.h"
+#include "libHh/Stat.h"
+#include "libHh/UnionFind.h"
 
 namespace hh {
 

@@ -2,17 +2,17 @@
 #ifndef MESH_PROCESSING_LIBHH_GRIDOP_H_
 #define MESH_PROCESSING_LIBHH_GRIDOP_H_
 
-#include "Filter.h"
-#include "Grid.h"
-#include "PArray.h"
-#include "ParallelCoords.h"
-#include "Pixel.h"
-#include "StridedArrayView.h"
-#include "Vector4.h"
-#include "Vector4i.h"
+#include "libHh/Filter.h"
+#include "libHh/Grid.h"
+#include "libHh/PArray.h"
+#include "libHh/ParallelCoords.h"
+#include "libHh/Pixel.h"
+#include "libHh/StridedArrayView.h"
+#include "libHh/Vector4.h"
+#include "libHh/Vector4i.h"
 
 #if 0
-#include "Timer.h"
+#include "libHh/Timer.h"
 #define HH_GRIDOP_TIMER(x) HH_TIMER(x)
 #endif
 

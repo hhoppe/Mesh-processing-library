@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_G3DOGL_NORMALMAPPING_H_
 #define MESH_PROCESSING_G3DOGL_NORMALMAPPING_H_
 
-#include "Geometry.h"
-#include "Pixel.h"
+#include "libHh/Geometry.h"
+#include "libHh/Pixel.h"
 
 namespace hh {
 

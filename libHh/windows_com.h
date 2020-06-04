@@ -6,7 +6,7 @@
 
 #include <combaseapi.h>
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 namespace hh {
 

@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
 #define MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
 
-#include "PArray.h"
-#include "Qem.h"
+#include "MeshSimplify/Qem.h"
+#include "libHh/PArray.h"
 
 namespace hh {
 

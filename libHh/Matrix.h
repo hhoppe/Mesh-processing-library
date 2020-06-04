@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_MATRIX_H_
 #define MESH_PROCESSING_LIBHH_MATRIX_H_
 
-#include "Grid.h"
+#include "libHh/Grid.h"
 
 #if 0
 {

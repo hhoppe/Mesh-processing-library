@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Polygon.h"
+#include "libHh/Polygon.h"
 
-#include "GeomOp.h"
-#include "RangeOp.h"  // round_elements()
+#include "libHh/GeomOp.h"
+#include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
 int main() {

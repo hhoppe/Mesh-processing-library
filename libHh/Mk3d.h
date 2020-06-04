@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_MK3D_H_
 #define MESH_PROCESSING_LIBHH_MK3D_H_
 
-#include "A3dStream.h"
-#include "Stack.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Stack.h"
 
 namespace hh {
 

@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_POOL_H_
 #define MESH_PROCESSING_LIBHH_POOL_H_
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 #if 0
 {

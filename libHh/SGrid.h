@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_SGRID_H_
 #define MESH_PROCESSING_LIBHH_SGRID_H_
 
-#include "Grid.h"
+#include "libHh/Grid.h"
 
 namespace hh {
 

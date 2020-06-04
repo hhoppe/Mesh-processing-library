@@ -10,11 +10,11 @@
 #include <commdlg.h>   // GetOpenFileNameW()
 #include <shellapi.h>  // DragAcceptFiles()
 
-#include "Args.h"
-#include "Array.h"
-#include "Image.h"
-#include "MathOp.h"
-#include "StringOp.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Image.h"
+#include "libHh/MathOp.h"
+#include "libHh/StringOp.h"
 
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("glu32.lib");

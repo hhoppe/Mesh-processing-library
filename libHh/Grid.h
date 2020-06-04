@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_GRID_H_
 #define MESH_PROCESSING_LIBHH_GRID_H_
 
-#include "Parallel.h"
-#include "RangeOp.h"
-#include "Vec.h"
+#include "libHh/Parallel.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Vec.h"
 
 #if 0
 {

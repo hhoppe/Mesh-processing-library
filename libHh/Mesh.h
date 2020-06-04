@@ -2,13 +2,13 @@
 #ifndef MESH_PROCESSING_LIBHH_MESH_H_
 #define MESH_PROCESSING_LIBHH_MESH_H_
 
-#include "Array.h"
-#include "Flags.h"
-#include "Geometry.h"  // because of Point, too bad.
-#include "Map.h"
-#include "PArray.h"
-#include "Pool.h"
-#include "Sac.h"
+#include "libHh/Array.h"
+#include "libHh/Flags.h"
+#include "libHh/Geometry.h"  // because of Point, too bad.
+#include "libHh/Map.h"
+#include "libHh/PArray.h"
+#include "libHh/Pool.h"
+#include "libHh/Sac.h"
 
 #if 0
 {

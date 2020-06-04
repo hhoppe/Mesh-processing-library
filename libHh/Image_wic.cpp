@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include "Image.h"  // HH_IMAGE_HAVE_WIC
+#include "libHh/Image.h"  // HH_IMAGE_HAVE_WIC
 
 #if !defined(HH_IMAGE_HAVE_WIC)
 
@@ -23,10 +23,10 @@ HH_REFERENCE_LIB("oleaut32.lib");  // for VARIANT; odd: required from command-li
 HH_REFERENCE_LIB("shlwapi.lib");   // for SHCreateMemStream()
 // HH_REFERENCE_LIB("windowscodecs.lib");  // for IID_IWICBitmapSource
 
-#include "FileIO.h"
-#include "StringOp.h"
-#include "windows_com.h"  // com_ptr<>
-// #include "ConsoleProgress.h"
+#include "libHh/FileIO.h"
+#include "libHh/StringOp.h"
+#include "libHh/windows_com.h"  // com_ptr<>
+// #include "libHh/ConsoleProgress.h"
 using namespace hh;
 
 // JPEG EXIF:

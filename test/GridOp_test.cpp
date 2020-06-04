@@ -1,13 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GridOp.h"
+#include "libHh/GridOp.h"
 
-#include "Filter.h"
-#include "MatrixOp.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "SGrid.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/Filter.h"
+#include "libHh/MatrixOp.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/SGrid.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {

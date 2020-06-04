@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SplitRecord.h"
+#include "G3dOGL/SplitRecord.h"
 using namespace hh;
 
 void SplitRecord::write(std::ostream& os) const {

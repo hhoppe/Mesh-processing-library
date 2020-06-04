@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Stack.h"
+#include "libHh/Stack.h"
 using namespace hh;
 
 int main() {

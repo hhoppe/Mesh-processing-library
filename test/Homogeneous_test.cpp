@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Homogeneous.h"
+#include "libHh/Homogeneous.h"
 using namespace hh;
 
 int main() {

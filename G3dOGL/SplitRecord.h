@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_G3DOGL_SPLITRECORD_H_
 #define MESH_PROCESSING_G3DOGL_SPLITRECORD_H_
 
-#include "SimplicialComplex.h"
+#include "G3dOGL/SimplicialComplex.h"
 
 namespace hh {
 

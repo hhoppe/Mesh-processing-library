@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_BUFFEREDA3DSTREAM_H_
 #define MESH_PROCESSING_LIBHH_BUFFEREDA3DSTREAM_H_
 
-#include "A3dStream.h"
-#include "Buffer.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Buffer.h"
 
 namespace hh {
 

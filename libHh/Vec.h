@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_VEC_H_
 #define MESH_PROCESSING_LIBHH_VEC_H_
 
-#include "Array.h"  // ArrayView<>, CArrayView<>
+#include "libHh/Array.h"  // ArrayView<>, CArrayView<>
 
 namespace hh {
 

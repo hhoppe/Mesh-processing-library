@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_LINEARFUNC_H_
 #define MESH_PROCESSING_LIBHH_LINEARFUNC_H_
 
-#include "Geometry.h"
+#include "libHh/Geometry.h"
 
 namespace hh {
 

@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include "Image.h"  // HH_IMAGE_HAVE_IO
+#include "libHh/Image.h"  // HH_IMAGE_HAVE_IO
 
 #if !defined(HH_IMAGE_HAVE_IO)
 
@@ -19,13 +19,13 @@ extern "C" {
 #include "png.h"
 }
 
-#include "Array.h"
-#include "BinaryIO.h"  // read_raw(), write_raw()
-#include "ConsoleProgress.h"
-#include "FileIO.h"
-#include "NetworkOrder.h"
-#include "Parallel.h"
-#include "StringOp.h"  // to_lower()
+#include "libHh/Array.h"
+#include "libHh/BinaryIO.h"  // read_raw(), write_raw()
+#include "libHh/ConsoleProgress.h"
+#include "libHh/FileIO.h"
+#include "libHh/NetworkOrder.h"
+#include "libHh/Parallel.h"
+#include "libHh/StringOp.h"  // to_lower()
 using namespace hh;
 
 #if defined(__GNUC__)

@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Buffer.h"
+#include "libHh/Buffer.h"
 
-#include "Args.h"
+#include "libHh/Args.h"
 using namespace hh;
 
 // run with:

@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GRIDPIXELOP_H_
 #define MESH_PROCESSING_LIBHH_GRIDPIXELOP_H_
 
-#include "GridOp.h"
-#include "MatrixOp.h"
+#include "libHh/GridOp.h"
+#include "libHh/MatrixOp.h"
 
 namespace hh {
 

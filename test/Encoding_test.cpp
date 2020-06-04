@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Encoding.h"
+#include "libHh/Encoding.h"
 using namespace hh;
 
 int main() {

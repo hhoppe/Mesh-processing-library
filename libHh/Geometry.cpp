@@ -1,12 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Geometry.h"
+#include "libHh/Geometry.h"
 
-#include "Array.h"
-#include "GeomOp.h"       // solid_angle()
-#include "Homogeneous.h"  // centroid
-#include "Matrix.h"
-#include "MatrixOp.h"
-#include "SGrid.h"
+#include "libHh/Array.h"
+#include "libHh/GeomOp.h"       // solid_angle()
+#include "libHh/Homogeneous.h"  // centroid
+#include "libHh/Matrix.h"
+#include "libHh/MatrixOp.h"
+#include "libHh/SGrid.h"
 
 namespace hh {
 

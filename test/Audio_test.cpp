@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Audio.h"
+#include "libHh/Audio.h"
 
-#include "GridOp.h"  // crop()
-#include "Stat.h"
+#include "libHh/GridOp.h"  // crop()
+#include "libHh/Stat.h"
 using namespace hh;
 
 int main() {

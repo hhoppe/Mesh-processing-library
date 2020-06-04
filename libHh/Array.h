@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_ARRAY_H_
 #define MESH_PROCESSING_LIBHH_ARRAY_H_
 
-#include "Range.h"
+#include "libHh/Range.h"
 
 // Array is a dynamically resizable 1D array like std::vector, but it is derived from CArrayView and ArrayView
 //  and it constructs/destructs elements based on capacity() rather than num().

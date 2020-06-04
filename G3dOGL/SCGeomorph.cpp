@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SCGeomorph.h"
+#include "G3dOGL/SCGeomorph.h"
 
-#include "GMesh.h"
+#include "libHh/GMesh.h"
 using namespace hh;
 
 // Determine whether triangle defined by verts is degenerate.

@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_FLAGS_H_
 #define MESH_PROCESSING_LIBHH_FLAGS_H_
 
-#include "MathOp.h"  // is_pow2()
+#include "libHh/MathOp.h"  // is_pow2()
 
 namespace hh {
 

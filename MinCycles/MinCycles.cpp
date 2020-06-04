@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Args.h"
-#include "CloseMinCycles.h"
-#include "FileIO.h"
-#include "Timer.h"
+#include "MinCycles/CloseMinCycles.h"
+#include "libHh/Args.h"
+#include "libHh/FileIO.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

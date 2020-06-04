@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_BUFFER_H_
 #define MESH_PROCESSING_LIBHH_BUFFER_H_
 
-#include "Array.h"
-#include "NetworkOrder.h"
+#include "libHh/Array.h"
+#include "libHh/NetworkOrder.h"
 
 namespace hh {
 

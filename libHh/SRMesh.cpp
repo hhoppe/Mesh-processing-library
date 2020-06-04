@@ -1,20 +1,20 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SRMesh.h"
+#include "libHh/SRMesh.h"
 
-#include "BinaryIO.h"
-#include "BoundingSphere.h"
-#include "FileIO.h"
-#include "GMesh.h"
-#include "MathOp.h"
-#include "NetworkOrder.h"  // from_std()
-#include "PMesh.h"
-#include "Set.h"
-#include "Stack.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/BoundingSphere.h"
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/MathOp.h"
+#include "libHh/NetworkOrder.h"  // from_std()
+#include "libHh/PMesh.h"
+#include "libHh/Set.h"
+#include "libHh/Stack.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 #if defined(ANALYZE_PM_COMPRESSION_WITH_XIA_VARSHNEY)
-#include "Encoding.h"
-#include "STree.h"
+#include "libHh/Encoding.h"
+#include "libHh/STree.h"
 #endif
 
 namespace hh {

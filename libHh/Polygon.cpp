@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Polygon.h"
+#include "libHh/Polygon.h"
 
-#include "Array.h"
-#include "Bbox.h"
-#include "PArray.h"
-#include "RangeOp.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/PArray.h"
+#include "libHh/RangeOp.h"
 
 namespace hh {
 

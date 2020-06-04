@@ -3,14 +3,14 @@
 #include <io.h>  // close(), dup2()
 #endif
 
-#include "G3d.h"
+#include "G3dOGL/G3d.h"
 
-#include "Args.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "RangeOp.h"
-#include "StringOp.h"
+#include "libHh/Args.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/RangeOp.h"
+#include "libHh/StringOp.h"
 using namespace hh;
 
 namespace g3d {

@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Args.h"
-#include "FrameIO.h"
-#include "GeomOp.h"      // euler_angles_to_frame()
-#include "Quaternion.h"  // pow(Frame, float)
-#include "RangeOp.h"
-#include "Stat.h"
+#include "libHh/Args.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GeomOp.h"      // euler_angles_to_frame()
+#include "libHh/Quaternion.h"  // pow(Frame, float)
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"
 using namespace hh;
 
 namespace {

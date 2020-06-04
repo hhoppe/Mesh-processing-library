@@ -1,12 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SimplicialComplex.h"
+#include "G3dOGL/SimplicialComplex.h"
 
 #include <cstdlib>  // atof()
 
-#include "RangeOp.h"  // compare()
-#include "Set.h"
-#include "Stack.h"  // also vec_contains()
-#include "StringOp.h"
+#include "libHh/RangeOp.h"  // compare()
+#include "libHh/Set.h"
+#include "libHh/Stack.h"  // also vec_contains()
+#include "libHh/StringOp.h"
 using namespace hh;
 
 namespace {

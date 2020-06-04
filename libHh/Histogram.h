@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_HISTOGRAM_H_
 #define MESH_PROCESSING_LIBHH_HISTOGRAM_H_
 
-#include "Array.h"
-#include "FileIO.h"
-#include "RangeOp.h"
-#include "Stat.h"
+#include "libHh/Array.h"
+#include "libHh/FileIO.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"
 
 namespace hh {
 

@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_POLYGONSPATIAL_H_
 #define MESH_PROCESSING_LIBHH_POLYGONSPATIAL_H_
 
-#include "Bbox.h"
-#include "Facedistance.h"
-#include "Polygon.h"
-#include "Spatial.h"
+#include "libHh/Bbox.h"
+#include "libHh/Facedistance.h"
+#include "libHh/Polygon.h"
+#include "libHh/Spatial.h"
 
 namespace hh {
 

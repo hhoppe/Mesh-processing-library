@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_HASHPOINT_H_
 #define MESH_PROCESSING_LIBHH_HASHPOINT_H_
 
-#include "Geometry.h"
-#include "HashFloat.h"
-#include "Pool.h"
-#include "Set.h"
+#include "libHh/Geometry.h"
+#include "libHh/HashFloat.h"
+#include "libHh/Pool.h"
+#include "libHh/Set.h"
 
 namespace hh {
 

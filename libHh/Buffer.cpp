@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Buffer.h"
+#include "libHh/Buffer.h"
 
 #include <fcntl.h>  // O_RDONLY
 #include <cerrno>   // errno, EINTR, etc.
@@ -18,9 +18,9 @@
 #define EWOULDBLOCK EAGAIN
 #endif
 
-#include "NetworkOrder.h"
-#include "StringOp.h"
-#include "Vec.h"
+#include "libHh/NetworkOrder.h"
+#include "libHh/StringOp.h"
+#include "libHh/Vec.h"
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wold-style-cast"  // for FD_ZERO() macro

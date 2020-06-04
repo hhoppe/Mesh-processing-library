@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Array.h"
+#include "libHh/Array.h"
 
-#include "ArrayOp.h"
-#include "RangeOp.h"
-#include "Vec.h"
+#include "libHh/ArrayOp.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 int main() {

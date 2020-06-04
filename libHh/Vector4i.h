@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_VECTOR4I_H_
 #define MESH_PROCESSING_LIBHH_VECTOR4I_H_
 
-#include "Vector4.h"
+#include "libHh/Vector4.h"
 
 // SSE4.1: _mm_cvtepu8_epi32(), _mm_mullo_epi32()
 

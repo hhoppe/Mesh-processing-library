@@ -2,12 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_KDTREE_H_
 #define MESH_PROCESSING_LIBHH_KDTREE_H_
 
-#include "Array.h"
-#include "RangeOp.h"
-#include "SGrid.h"
-#include "Stack.h"
-#include "Stat.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/RangeOp.h"
+#include "libHh/SGrid.h"
+#include "libHh/Stack.h"
+#include "libHh/Stat.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

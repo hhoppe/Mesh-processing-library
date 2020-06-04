@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_VERTEXCACHE_H_
 #define MESH_PROCESSING_LIBHH_VERTEXCACHE_H_
 
-#include "Array.h"
-#include "EList.h"
-#include "RangeOp.h"
+#include "libHh/Array.h"
+#include "libHh/EList.h"
+#include "libHh/RangeOp.h"
 
 namespace hh {
 

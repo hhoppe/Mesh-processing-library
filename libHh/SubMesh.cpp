@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SubMesh.h"
+#include "libHh/SubMesh.h"
 
-#include "Homogeneous.h"
-#include "MeshOp.h"  // edge_dihedral_angle_cos()
-#include "Queue.h"
-#include "RangeOp.h"  // is_zero()
-#include "Set.h"
+#include "libHh/Homogeneous.h"
+#include "libHh/MeshOp.h"  // edge_dihedral_angle_cos()
+#include "libHh/Queue.h"
+#include "libHh/RangeOp.h"  // is_zero()
+#include "libHh/Set.h"
 
 namespace hh {
 

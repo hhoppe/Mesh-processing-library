@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_BINARYSEARCH_H_
 #define MESH_PROCESSING_LIBHH_BINARYSEARCH_H_
 
-#include "Array.h"
+#include "libHh/Array.h"
 
 namespace hh {
 

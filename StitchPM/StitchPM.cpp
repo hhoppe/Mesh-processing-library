@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Args.h"
-#include "FileIO.h"
-#include "GMesh.h"
-#include "Matrix.h"
-#include "PMesh.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/Args.h"
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Matrix.h"
+#include "libHh/PMesh.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

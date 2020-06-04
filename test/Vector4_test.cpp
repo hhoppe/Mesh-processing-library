@@ -1,10 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Vector4.h"
+#include "libHh/Vector4.h"
 
 // #include <iomanip>  // std::setprecision()
 
-#include "Array.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 // Test Neon syntax:

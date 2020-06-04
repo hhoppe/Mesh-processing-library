@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 // This macro can be set here, in Makefile, or at the top of any source file (if careful with precompiled headers).
 // #define HH_NO_OPENMP

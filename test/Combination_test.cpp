@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Combination.h"
+#include "libHh/Combination.h"
 
-#include "HashTuple.h"
+#include "libHh/HashTuple.h"
 using namespace hh;
 
 int main() {

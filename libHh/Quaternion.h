@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_QUATERNION_H_
 #define MESH_PROCESSING_LIBHH_QUATERNION_H_
 
-#include "Geometry.h"
-#include "MathOp.h"
+#include "libHh/Geometry.h"
+#include "libHh/MathOp.h"
 
 namespace hh {
 

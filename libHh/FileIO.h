@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_FILEIO_H_
 #define MESH_PROCESSING_LIBHH_FILEIO_H_
 
-#include "Array.h"  // CArrayView
+#include "libHh/Array.h"  // CArrayView
 
 namespace hh {
 

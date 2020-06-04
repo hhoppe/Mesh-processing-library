@@ -1,12 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Map.h"
+#include "libHh/Map.h"
 
-#include "Array.h"
-#include "Geometry.h"
-#include "HashTuple.h"
-#include "Random.h"
-#include "RangeOp.h"  // sort()
-#include "Set.h"
+#include "libHh/Array.h"
+#include "libHh/Geometry.h"
+#include "libHh/HashTuple.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // sort()
+#include "libHh/Set.h"
 using namespace hh;
 
 int main() {

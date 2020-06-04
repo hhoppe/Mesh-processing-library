@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GEOMOP_H_
 #define MESH_PROCESSING_LIBHH_GEOMOP_H_
 
-#include "Geometry.h"
-#include "Polygon.h"
+#include "libHh/Geometry.h"
+#include "libHh/Polygon.h"
 
 #if 0
 {

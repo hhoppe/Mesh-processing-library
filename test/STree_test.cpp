@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "STree.h"
+#include "libHh/STree.h"
 
-#include "Random.h"
-#include "RangeOp.h"
-#include "Set.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Set.h"
 using namespace hh;
 
 int main() {

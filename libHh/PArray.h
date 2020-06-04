@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_PARRAY_H_
 #define MESH_PROCESSING_LIBHH_PARRAY_H_
 
-#include "Array.h"  // ArrayView
+#include "libHh/Array.h"  // ArrayView
 
 namespace hh {
 

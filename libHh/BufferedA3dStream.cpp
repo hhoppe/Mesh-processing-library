@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "BufferedA3dStream.h"
+#include "libHh/BufferedA3dStream.h"
 
 #include <cstdio>  // sscanf()
 

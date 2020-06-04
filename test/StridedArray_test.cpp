@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "StridedArrayView.h"
+#include "libHh/StridedArrayView.h"
 
-#include "Array.h"
-#include "RangeOp.h"
+#include "libHh/Array.h"
+#include "libHh/RangeOp.h"
 using namespace hh;
 
 int main() {

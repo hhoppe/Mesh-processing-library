@@ -2,31 +2,31 @@
 
 #include <random>  // std::default_random_engine
 
-#include "A3dStream.h"  // A3dColor
-#include "Args.h"
-#include "Array.h"
-#include "BQem.h"
-#include "Bbox.h"
-#include "BinaryIO.h"
-#include "BinarySearch.h"
-#include "BoundingSphere.h"
-#include "ConsoleProgress.h"
-#include "Facedistance.h"  // project_point_triangle2(), project_point_seg2()
-#include "FileIO.h"
-#include "GMesh.h"
-#include "GeomOp.h"  // dihedral_angle_cos()
-#include "LinearFunc.h"
-#include "Map.h"
-#include "MathOp.h"
-#include "Matrix.h"
-#include "MeshOp.h"  // Vnors
-#include "Polygon.h"
-#include "Pqueue.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "SGrid.h"
-#include "Set.h"
-#include "Timer.h"
+#include "MeshSimplify/BQem.h"
+#include "libHh/A3dStream.h"  // A3dColor
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/BinaryIO.h"
+#include "libHh/BinarySearch.h"
+#include "libHh/BoundingSphere.h"
+#include "libHh/ConsoleProgress.h"
+#include "libHh/Facedistance.h"  // project_point_triangle2(), project_point_seg2()
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/GeomOp.h"  // dihedral_angle_cos()
+#include "libHh/LinearFunc.h"
+#include "libHh/Map.h"
+#include "libHh/MathOp.h"
+#include "libHh/Matrix.h"
+#include "libHh/MeshOp.h"  // Vnors
+#include "libHh/Polygon.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/SGrid.h"
+#include "libHh/Set.h"
+#include "libHh/Timer.h"
 #if !defined(HH_NO_SIMPLEX)
 #include "recipes.h"
 #endif

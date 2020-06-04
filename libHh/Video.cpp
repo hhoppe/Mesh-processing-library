@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Video.h"
+#include "libHh/Video.h"
 
 // I actually get better read/write performance by directly calling Media Foundation, at least in Windows 7.
 // Generally, I prefer ffmpeg for its portability and quality.
@@ -27,7 +27,6 @@
 #include <mfidl.h>
 #include <mfreadwrite.h>
 #include <versionhelpers.h>  // IsWindows8OrGreater()
-#include "windows_com.h"     // com_ptr<>
 // #include <wrl/client.h>             // ComPtr<>
 // template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 HH_REFERENCE_LIB("mfplat.lib");
@@ -39,23 +38,26 @@ HH_REFERENCE_LIB("mfuuid.lib");       // MF_MT_DEFAULT_STRIDE
 #include <wincodec.h>  // WIC
 #endif
 
+#include "libHh/windows_com.h"  // com_ptr<>
+
 #endif  // defined(HH_VIDEO_HAVE_MF)
 
 //----------------------------------------------------------------------------
 
 #if defined(HH_VIDEO_HAVE_FFMPEG)
-#include "BinaryIO.h"
-#endif  // defined(HH_VIDEO_HAVE_FFMPEG)
+#include "libHh/BinaryIO.h"
+#endif
 
 //----------------------------------------------------------------------------
 
 #include <cstring>  // std::memcpy()
-#include "ConsoleProgress.h"
-#include "FileIO.h"
-#include "GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
-#include "StringOp.h"     // get_path_extension()
-#include "Timer.h"
-#include "Vector4.h"
+
+#include "libHh/ConsoleProgress.h"
+#include "libHh/FileIO.h"
+#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/StringOp.h"     // get_path_extension()
+#include "libHh/Timer.h"
+#include "libHh/Vector4.h"
 
 //----------------------------------------------------------------------------
 

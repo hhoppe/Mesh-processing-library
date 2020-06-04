@@ -1,18 +1,18 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Image.h"
+#include "libHh/Image.h"
 
 #include <cstring>  // strlen()
 
-#include "Audio.h"        // ffmpeg_command_exists()
-#include "BinaryIO.h"     // read_binary_raw(), write_binary_raw()
-#include "FileIO.h"       // RFile, WFile
-#include "GridPixelOp.h"  // scale_Matrix_Pixel()
-#include "Parallel.h"
-#include "Random.h"  // for testing
-#include "Stat.h"    // for testing
-#include "StringOp.h"
-#include "Vector4.h"
-#include "Vector4i.h"
+#include "libHh/Audio.h"        // ffmpeg_command_exists()
+#include "libHh/BinaryIO.h"     // read_binary_raw(), write_binary_raw()
+#include "libHh/FileIO.h"       // RFile, WFile
+#include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
+#include "libHh/Parallel.h"
+#include "libHh/Random.h"  // for testing
+#include "libHh/Stat.h"    // for testing
+#include "libHh/StringOp.h"
+#include "libHh/Vector4.h"
+#include "libHh/Vector4i.h"
 
 namespace hh {
 

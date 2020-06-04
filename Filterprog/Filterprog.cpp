@@ -3,18 +3,18 @@
 #include <cstdlib>  // atoi()
 #include <cstring>  // strncmp() etc.
 
-#include "A3dStream.h"  // A3dColor
-#include "Args.h"
-#include "Bbox.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "GMesh.h"
-#include "Geometry.h"
-#include "MeshOp.h"  // mesh_genus_string(), Vnors
-#include "PMesh.h"   // S_vsplit
-#include "RangeOp.h"
-#include "StringOp.h"
-#include "Timer.h"
+#include "libHh/A3dStream.h"  // A3dColor
+#include "libHh/Args.h"
+#include "libHh/Bbox.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/Geometry.h"
+#include "libHh/MeshOp.h"  // mesh_genus_string(), Vnors
+#include "libHh/PMesh.h"   // S_vsplit
+#include "libHh/RangeOp.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
 using namespace hh;
 
 namespace {

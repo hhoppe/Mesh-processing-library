@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_A3DSTREAM_H_
 #define MESH_PROCESSING_LIBHH_A3DSTREAM_H_
 
-#include "Geometry.h"
-#include "PArray.h"
-#include "Pixel.h"
-#include "RangeOp.h"
+#include "libHh/Geometry.h"
+#include "libHh/PArray.h"
+#include "libHh/Pixel.h"
+#include "libHh/RangeOp.h"
 
 namespace hh {
 

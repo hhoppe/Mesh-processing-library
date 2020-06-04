@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_RANGE_H_
 #define MESH_PROCESSING_LIBHH_RANGE_H_
 
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 // Introduce structures to facilitate the processing of "ranges", containers or views whose elements can be
 //  traversed using iterators initialized via begin() and end().

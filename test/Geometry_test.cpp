@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Geometry.h"
+#include "libHh/Geometry.h"
 
-#include "MatrixOp.h"
-#include "RangeOp.h"
-#include "SGrid.h"
+#include "libHh/MatrixOp.h"
+#include "libHh/RangeOp.h"
+#include "libHh/SGrid.h"
 using namespace hh;
 
 namespace {

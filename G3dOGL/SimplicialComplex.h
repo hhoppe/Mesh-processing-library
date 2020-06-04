@@ -2,17 +2,17 @@
 #ifndef MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
 #define MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
 
-#include "A3dStream.h"
-#include "Flags.h"
-#include "GMesh.h"
-#include "Map.h"
-#include "MeshOp.h"  // Vnors
-#include "PArray.h"
-#include "Polygon.h"
-#include "Pqueue.h"
-#include "Queue.h"
-#include "Stack.h"
-#include "Timer.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Flags.h"
+#include "libHh/GMesh.h"
+#include "libHh/Map.h"
+#include "libHh/MeshOp.h"  // Vnors
+#include "libHh/PArray.h"
+#include "libHh/Polygon.h"
+#include "libHh/Pqueue.h"
+#include "libHh/Queue.h"
+#include "libHh/Stack.h"
+#include "libHh/Timer.h"
 
 namespace hh {
 

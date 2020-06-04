@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_MATERIALS_H_
 #define MESH_PROCESSING_LIBHH_MATERIALS_H_
 
-#include "Array.h"
-#include "StringOp.h"
+#include "libHh/Array.h"
+#include "libHh/StringOp.h"
 
 namespace hh {
 

@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_BOUNDINGSPHERE_H_
 #define MESH_PROCESSING_LIBHH_BOUNDINGSPHERE_H_
 
-#include "Geometry.h"
+#include "libHh/Geometry.h"
 
 namespace hh {
 

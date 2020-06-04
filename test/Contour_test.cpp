@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Contour.h"
+#include "libHh/Contour.h"
 
-#include "A3dStream.h"
-#include "FileIO.h"
-#include "MathOp.h"
+#include "libHh/A3dStream.h"
+#include "libHh/FileIO.h"
+#include "libHh/MathOp.h"
 using namespace hh;
 
 namespace {

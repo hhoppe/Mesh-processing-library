@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_SINGULARVALUEDECOMPOSITION_H_
 #define MESH_PROCESSING_LIBHH_SINGULARVALUEDECOMPOSITION_H_
 
-#include "GridOp.h"  // column()
-#include "Matrix.h"
-#include "RangeOp.h"  // fill()
+#include "libHh/GridOp.h"  // column()
+#include "libHh/Matrix.h"
+#include "libHh/RangeOp.h"  // fill()
 
 namespace hh {
 

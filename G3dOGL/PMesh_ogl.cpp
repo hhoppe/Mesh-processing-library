@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "GMesh.h"  // GMesh::string_key()
 #include "HW.h"
-#include "PMesh.h"
+#include "libHh/GMesh.h"  // GMesh::string_key()
+#include "libHh/PMesh.h"
 
 namespace hh {
 

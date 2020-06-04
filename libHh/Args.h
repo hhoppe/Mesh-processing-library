@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_ARGS_H_
 #define MESH_PROCESSING_LIBHH_ARGS_H_
 
-#include "Array.h"
-#include "Vec.h"
+#include "libHh/Array.h"
+#include "libHh/Vec.h"
 
 // Parsing of command-line arguments.
 

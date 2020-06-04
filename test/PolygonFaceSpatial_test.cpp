@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/MeshSearch.h"  // PolygonFaceSpatial
 
-#include "Array.h"
-#include "Facedistance.h"
-#include "Random.h"
+#include "libHh/Array.h"
+#include "libHh/Facedistance.h"
+#include "libHh/Random.h"
 using namespace hh;
 
 namespace {

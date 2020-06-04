@@ -5,7 +5,7 @@
 #include <memory>  // _WIN32 bug: must appear before <tuple> to avoid warning 4548
 #include <tuple>   // std::tuple
 
-#include "Advanced.h"  // hash_combine()
+#include "libHh/Advanced.h"  // hash_combine()
 
 // Define hash functions for std::tuple<> and std::pair<>.
 // Also define std::ostream operators for std::tuple<>.   (std::ostream for std::pair<> is in Hh.h)

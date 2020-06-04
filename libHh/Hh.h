@@ -7,7 +7,7 @@
 
 // *** Pre-header
 
-// These macro definitions have no effect if #include "Hh.h" is after #include <>,
+// These macro definitions have no effect if #include "libHh/Hh.h" is after #include <>,
 //  so instead one should adjust project/makefile build settings.
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
@@ -77,7 +77,7 @@
 
 // *** Variadic macros
 
-#include "VariadicMacros.h"  // HH_MAP_REDUCE()
+#include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
 // *** Language portability
 

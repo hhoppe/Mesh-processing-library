@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_MATHOP_H_
 #define MESH_PROCESSING_LIBHH_MATHOP_H_
 
-#include "Array.h"
-#include "SGrid.h"
+#include "libHh/Array.h"
+#include "libHh/SGrid.h"
 
 namespace hh {
 

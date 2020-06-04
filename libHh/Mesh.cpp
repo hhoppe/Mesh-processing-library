@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Mesh.h"
+#include "libHh/Mesh.h"
 
-#include "Array.h"
-#include "Random.h"
-#include "RangeOp.h"  // sort()
-#include "Set.h"
-#include "Stack.h"
+#include "libHh/Array.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // sort()
+#include "libHh/Set.h"
+#include "libHh/Stack.h"
 
 namespace hh {
 

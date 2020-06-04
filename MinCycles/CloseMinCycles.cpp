@@ -1,16 +1,16 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "CloseMinCycles.h"
+#include "MinCycles/CloseMinCycles.h"
 
 #include <atomic>
 
-#include "MeshOp.h"  // gather_boundary(), edge_signed_dihedral_angle(), etc.
-#include "Pqueue.h"
-#include "Queue.h"
-#include "Random.h"
-#include "RangeOp.h"  // reverse()
-#include "Set.h"
-#include "Stat.h"
-#include "Timer.h"
+#include "libHh/MeshOp.h"  // gather_boundary(), edge_signed_dihedral_angle(), etc.
+#include "libHh/Pqueue.h"
+#include "libHh/Queue.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // reverse()
+#include "libHh/Set.h"
+#include "libHh/Stat.h"
+#include "libHh/Timer.h"
 
 namespace hh {
 

@@ -2,11 +2,11 @@
 #ifndef MESH_PROCESSING_LIBHH_VIDEO_H_
 #define MESH_PROCESSING_LIBHH_VIDEO_H_
 
-#include "Audio.h"
-#include "FileIO.h"  // TmpFile
-#include "Filter.h"  // FilterBnd
-#include "Grid.h"
-#include "Image.h"  // Nv12View
+#include "libHh/Audio.h"
+#include "libHh/FileIO.h"  // TmpFile
+#include "libHh/Filter.h"  // FilterBnd
+#include "libHh/Grid.h"
+#include "libHh/Image.h"  // Nv12View
 
 #if 0
 {

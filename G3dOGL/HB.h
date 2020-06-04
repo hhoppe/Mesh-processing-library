@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_G3DOGL_HB_H_
 #define MESH_PROCESSING_G3DOGL_HB_H_
 
-#include "Array.h"
-#include "Flags.h"
-#include "Geometry.h"
+#include "libHh/Array.h"
+#include "libHh/Flags.h"
+#include "libHh/Geometry.h"
 
 namespace g3d {
 extern const hh::FlagMask mflag_ok;

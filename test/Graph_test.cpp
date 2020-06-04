@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Graph.h"
+#include "libHh/Graph.h"
 
-#include "RangeOp.h"
+#include "libHh/RangeOp.h"
 using namespace hh;
 
 namespace {

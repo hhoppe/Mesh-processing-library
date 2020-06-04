@@ -2,12 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_PMESH_H_
 #define MESH_PROCESSING_LIBHH_PMESH_H_
 
-#include "A3dStream.h"  // A3dColor
-#include "Array.h"
-#include "Bbox.h"
-#include "Geometry.h"  // Point, Vector
-#include "Materials.h"
-#include "Pixel.h"
+#include "libHh/A3dStream.h"  // A3dColor
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/Geometry.h"  // Point, Vector
+#include "libHh/Materials.h"
+#include "libHh/Pixel.h"
 
 namespace hh {
 

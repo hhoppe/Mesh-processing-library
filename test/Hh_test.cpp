@@ -1,17 +1,17 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Hh.h"
+#include "libHh/Hh.h"
 
 #if defined(_WIN32)
 #include <process.h>  // _spawnvp()
 #endif
 
-#include "Advanced.h"
-#include "Array.h"
-#include "FileIO.h"
-#include "Geometry.h"
-#include "Random.h"
-#include "RangeOp.h"  // reverse(), sort()
-#include "StringOp.h"
+#include "libHh/Advanced.h"
+#include "libHh/Array.h"
+#include "libHh/FileIO.h"
+#include "libHh/Geometry.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"  // reverse(), sort()
+#include "libHh/StringOp.h"
 using namespace hh;
 
 namespace {

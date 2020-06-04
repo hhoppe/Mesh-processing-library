@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_BBOX_H_
 #define MESH_PROCESSING_LIBHH_BBOX_H_
 
-#include "Geometry.h"
-#include "RangeOp.h"
+#include "libHh/Geometry.h"
+#include "libHh/RangeOp.h"
 
 namespace hh {
 

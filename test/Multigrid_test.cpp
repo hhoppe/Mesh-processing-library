@@ -1,13 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #define HH_MULTIGRID_TIMER(x)  // override before "Multigrid.h"
-#include "Multigrid.h"
+#include "libHh/Multigrid.h"
 
-#include "Args.h"
-#include "Image.h"
-#include "ParallelCoords.h"
-#include "Random.h"
-#include "Stat.h"
-#include "Vector4.h"
+#include "libHh/Args.h"
+#include "libHh/Image.h"
+#include "libHh/ParallelCoords.h"
+#include "libHh/Random.h"
+#include "libHh/Stat.h"
+#include "libHh/Vector4.h"
 using namespace hh;
 
 namespace {

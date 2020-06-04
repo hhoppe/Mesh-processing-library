@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
 #define MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
 
-#include "Array.h"
-#include "GMesh.h"
-#include "Map.h"
+#include "libHh/Array.h"
+#include "libHh/GMesh.h"
+#include "libHh/Map.h"
 
 namespace hh {
 

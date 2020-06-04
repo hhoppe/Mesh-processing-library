@@ -2,13 +2,13 @@
 #ifndef MESH_PROCESSING_LIBHH_IMAGE_H_
 #define MESH_PROCESSING_LIBHH_IMAGE_H_
 
-#include "Array.h"
-#include "Matrix.h"
-#include "MatrixOp.h"
-#include "ParallelCoords.h"
-#include "RangeOp.h"  // fill()
-#include "Vector4.h"
-#include "Vector4i.h"
+#include "libHh/Array.h"
+#include "libHh/Matrix.h"
+#include "libHh/MatrixOp.h"
+#include "libHh/ParallelCoords.h"
+#include "libHh/RangeOp.h"  // fill()
+#include "libHh/Vector4.h"
+#include "libHh/Vector4i.h"
 
 #if 0
 {

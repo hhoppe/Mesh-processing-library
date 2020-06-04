@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_POLYGON_H_
 #define MESH_PROCESSING_LIBHH_POLYGON_H_
 
-#include "Geometry.h"
-#include "PArray.h"
-#include "Pool.h"
+#include "libHh/Geometry.h"
+#include "libHh/PArray.h"
+#include "libHh/Pool.h"
 
 namespace hh {
 

@@ -1,26 +1,26 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "Advanced.h"  // clone()
-#include "Args.h"
-#include "ArrayOp.h"  // median()
-#include "ConsoleProgress.h"
-#include "FileIO.h"
-#include "FrameIO.h"
-#include "Geometry.h"
-#include "GradientDomainLoop.h"
-#include "GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
-#include "Homogeneous.h"
-#include "Image.h"
-#include "MathOp.h"    // smooth_step(), frac(Vec<>), floor(Vec<>)
-#include "MatrixOp.h"  // euclidean_distance_map()
-#include "Multigrid.h"
-#include "Parallel.h"
-#include "Random.h"
-#include "RangeOp.h"
-#include "Stat.h"
-#include "StringOp.h"
-#include "Timer.h"
-#include "UnionFind.h"
-#include "Video.h"
+#include "VideoViewer/GradientDomainLoop.h"
+#include "libHh/Advanced.h"  // clone()
+#include "libHh/Args.h"
+#include "libHh/ArrayOp.h"  // median()
+#include "libHh/ConsoleProgress.h"
+#include "libHh/FileIO.h"
+#include "libHh/FrameIO.h"
+#include "libHh/Geometry.h"
+#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/Homogeneous.h"
+#include "libHh/Image.h"
+#include "libHh/MathOp.h"    // smooth_step(), frac(Vec<>), floor(Vec<>)
+#include "libHh/MatrixOp.h"  // euclidean_distance_map()
+#include "libHh/Multigrid.h"
+#include "libHh/Parallel.h"
+#include "libHh/Random.h"
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"
+#include "libHh/StringOp.h"
+#include "libHh/Timer.h"
+#include "libHh/UnionFind.h"
+#include "libHh/Video.h"
 using namespace hh;
 
 namespace {

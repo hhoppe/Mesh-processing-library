@@ -2,11 +2,11 @@
 #ifndef MESH_PROCESSING_LIBHH_HIDDENLINEREMOVAL_H_
 #define MESH_PROCESSING_LIBHH_HIDDENLINEREMOVAL_H_
 
-#include "Array.h"
-#include "Bbox.h"
-#include "Kdtree.h"
-#include "PArray.h"
-#include "Polygon.h"
+#include "libHh/Array.h"
+#include "libHh/Bbox.h"
+#include "libHh/Kdtree.h"
+#include "libHh/PArray.h"
+#include "libHh/Polygon.h"
 
 namespace hh {
 

@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "SimpleTimer.h"
+#include "libHh/SimpleTimer.h"
 using namespace hh;
 
 volatile int external_value = 3;

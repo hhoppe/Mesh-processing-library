@@ -2,11 +2,11 @@
 #ifndef MESH_PROCESSING_LIBHH_MATRIXOP_H_
 #define MESH_PROCESSING_LIBHH_MATRIXOP_H_
 
-#include "Geometry.h"  // Frame
-#include "GridOp.h"
-#include "MathOp.h"  // my_mod()
-#include "Matrix.h"
-#include "SGrid.h"
+#include "libHh/Geometry.h"  // Frame
+#include "libHh/GridOp.h"
+#include "libHh/MathOp.h"  // my_mod()
+#include "libHh/Matrix.h"
+#include "libHh/SGrid.h"
 
 namespace hh {
 

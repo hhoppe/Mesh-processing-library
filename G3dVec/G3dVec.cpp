@@ -1,19 +1,19 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "A3dStream.h"
-#include "Args.h"
-#include "Array.h"
-#include "FileIO.h"
-#include "GMesh.h"
-#include "HB.h"
+#include "G3dOGL/HB.h"
 #include "HW.h"
-#include "HashPoint.h"
-#include "HiddenLineRemoval.h"
-#include "Map.h"
-#include "MathOp.h"  // floor(Vec<>)
-#include "PArray.h"
-#include "Polygon.h"
-#include "Postscript.h"
-#include "Set.h"
+#include "libHh/A3dStream.h"
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
+#include "libHh/HashPoint.h"
+#include "libHh/HiddenLineRemoval.h"
+#include "libHh/Map.h"
+#include "libHh/MathOp.h"  // floor(Vec<>)
+#include "libHh/PArray.h"
+#include "libHh/Polygon.h"
+#include "libHh/Postscript.h"
+#include "libHh/Set.h"
 using namespace hh;
 
 namespace g3d {

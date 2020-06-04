@@ -52,11 +52,16 @@ build/
 /OWNERS
 /test/google_run_test.sh
 /mesh_processing.blueprint
-/google_disable_tcmalloc_large_alloc_warning.cc
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
 [Bb]uild[Ll]og.*
+
+# Backup & report files from converting an old project file to a newer Visual Studio version
+# _UpgradeReport_Files/
+# Backup*/
+# UpgradeLog*.XML
+# UpgradeLog*.htm
 
 # Windows image file caches
 Thumbs.db
@@ -83,6 +88,7 @@ Makefile.dep
 # Emacs
 *~
 \#*\#
+.\#*
 
 # RCS version control
 RCS/
@@ -92,71 +98,72 @@ RCS/
 
 /bin/unix/*
 !/bin/unix/.gitignore
-/test/tA3dStream
-/test/tArgs
-/test/tArray
-/test/tAtomic
-/test/tAudio
-/test/tBuffer
-/test/tCombination
-/test/tContour
-/test/tEList
-/test/tEncoding
-/test/tFacedistance
-/test/tFrameIO
-/test/tGMesh
-/test/tGeometry
-/test/tGraph
-/test/tGraphOp
-/test/tGrid
-/test/tGridOp
-/test/tHashFloat
-/test/tHashPoint
-/test/tHashTuple
-/test/tHh
-/test/tHiddenLineRemoval
-/test/tHomogeneous
-/test/tImage
-/test/tKdtree
-/test/tLLS
-/test/tLinearRegression
-/test/tLocks
-/test/tMap
-/test/tMathOp
-/test/tMatrix
-/test/tMesh
-/test/tMeshSearch
-/test/tMk3d
-/test/tMklib
-/test/tMultigrid
-/test/tNetworkOrder
-/test/tNonlinearOptimization
-/test/tPArray
-/test/tPolygon
-/test/tPolygonFaceSpatial
-/test/tPool
-/test/tPostscript
-/test/tPqueue
-/test/tPrincipal
-/test/tQuaternion
-/test/tQueue
-/test/tRandom
-/test/tRangeOp
-/test/tSGrid
-/test/tSTree
-/test/tSac
-/test/tSet
-/test/tSpatial
-/test/tStack
-/test/tStat
-/test/tStridedArray
-/test/tTimer
-/test/tUnionFind
-/test/tVec
-/test/tVector
-/test/tVector4
-/test/tVector4i
-/test/tVectorF
+/test/A3dStream_test
+/test/Args_test
+/test/Array_test
+/test/Atomic_test
+/test/Audio_test
+/test/Buffer_test
+/test/Combination_test
+/test/Contour_test
+/test/EList_test
+/test/Encoding_test
+/test/Facedistance_test
+/test/FrameIO_test
+/test/GMesh_test
+/test/Geometry_test
+/test/GraphOp_test
+/test/Graph_test
+/test/GridOp_test
+/test/Grid_test
+/test/HashFloat_test
+/test/HashPoint_test
+/test/HashTuple_test
+/test/Hh_test
+/test/HiddenLineRemoval_test
+/test/Homogeneous_test
+/test/Image_test
+/test/Kdtree_test
+/test/LLS_test
+/test/LinearRegression_test
+/test/Locks_test
+/test/Map_test
+/test/MathOp_test
+/test/Matrix_test
+/test/MeshSearch_test
+/test/Mesh_test
+/test/Mk3d_test
+/test/Mklib_test
+/test/Multigrid_test
+/test/NetworkOrder_test
+/test/NonlinearOptimization_test
+/test/PArray_test
+/test/PolygonFaceSpatial_test
+/test/Polygon_test
+/test/Pool_test
+/test/Postscript_test
+/test/Pqueue_test
+/test/Principal_test
+/test/Quaternion_test
+/test/Queue_test
+/test/Random_test
+/test/RangeOp_test
+/test/SGrid_test
+/test/STree_test
+/test/Sac_test
+/test/Set_test
+/test/SimpleTimer_test
+/test/Spatial_test
+/test/Stack_test
+/test/Stat_test
+/test/StridedArray_test
+/test/Timer_test
+/test/UnionFind_test
+/test/Vec_test
+/test/Vector4_test
+/test/Vector4i_test
+/test/VectorF_test
+/test/Vector_test
 
 /demos/data/cactus.recon.m
 /demos/data/cactus.opt.m

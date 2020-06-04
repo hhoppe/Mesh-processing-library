@@ -95,12 +95,6 @@
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; http://stackoverflow.com/a/15864723
 #endif
 
-#if defined(_MSC_VER)
-#define HH_POSIX(x) _##x
-#else
-#define HH_POSIX(x) x
-#endif
-
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
 #define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // e.g.: HH_REFERENCE_LIB("user32.lib");
 #else

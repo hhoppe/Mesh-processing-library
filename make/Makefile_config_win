@@ -35,6 +35,7 @@ ifeq ($(plain_compiler),)
   cwarnings = -W4 $(cxxthoroughwarnings)
   ccommon += $(if $(ignore_compile_warnings:0=),,-WX)
   ccommon += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS#  -D_CRT_NONSTDC_NO_DEPRECATE
+  ccommon += -D_CRT_DECLARE_NONSTDC_NAMES=1# introduces POSIX as open(), read(), etc. rather than _open(), _read().
   ccommon += -nologo -Oi -Gm- -Zc:rvalueCast -fp:fast -FC $(if $(less_pedantic:0=),,$(cwarnings))
   # cxxall += -GR-#  could disable RTTI
   #   -Zc:strictStrings: "Note that when you are using this option in debug mode, the STL will not compile."

@@ -68,7 +68,7 @@ DWORD WINAPI buf_thread_func(void*) {
       assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);
     }
     assertx(buf_buffern == 0);
-    int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
+    int nread = read(buf_fd, buf_buffer.data(), buf_buffer.num());
     buf_buffern = nread;
     if (nread < 0) assertnever("buffer_read");
     assertx(SetEvent(g_buf_event_data_available));
@@ -89,10 +89,10 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
     buf_fd = _fd;
     if (1) {
       // Win32 CreateWindow() stops responding if fd0 == STDIN is open on a pipe.
-      buf_fd = HH_POSIX(dup)(_fd);
-      assertx(!HH_POSIX(close)(_fd));
+      buf_fd = dup(_fd);
+      assertx(!close(_fd));
       // Create a dummy open file so fd0 is not re-used
-      assertx(HH_POSIX(open)("NUL", O_RDONLY) == 0);  // (never freed)
+      assertx(open("NUL", O_RDONLY) == 0);  // (never freed)
     }
     // Only one RBuffer on fd 0 allowed.
     assertx(!g_buf_event_data_available);
@@ -137,7 +137,7 @@ RBuffer::ERefill RBuffer::refill() {
     buf_buffern = 0;
     assertx(SetEvent(buf_event_data_copied));
   } else {
-    nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], unsigned(ntoread));
+    nread = read(_fd, &_ar[_beg + _n], unsigned(ntoread));
     if (nread < 0) {
       _err = true;
       return ERefill::other;
@@ -149,7 +149,7 @@ RBuffer::ERefill RBuffer::refill() {
   }
 #else
   for (;;) {
-    nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], ntoread);
+    nread = read(_fd, &_ar[_beg + _n], ntoread);
     if (nread < 0) {
       if (errno == EINTR) continue;  // for ATT UNIX (hpux)
       if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -224,7 +224,7 @@ WBuffer::EFlush WBuffer::flush(int nb) {
   for (;;) {
     assertx(nb <= _n);
     if (!nb) return EFlush::all;
-    nwritten = HH_POSIX(write)(_fd, &_ar[_beg], unsigned(nb));
+    nwritten = write(_fd, &_ar[_beg], unsigned(nb));
     if (nwritten < 0) {
       if (errno == EINTR) continue;
       if (errno == EWOULDBLOCK || errno == EAGAIN) {

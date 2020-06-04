@@ -501,11 +501,11 @@ void use_standard_exponent_format_in_io() {
 
 void use_binary_io() {
 #if defined(_WIN32)
-  _fmode = O_BINARY;                             // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
-  assertx(HH_POSIX(setmode)(0, O_BINARY) >= 0);  // stdin
-  assertx(HH_POSIX(setmode)(1, O_BINARY) >= 0);  // stdout
-  assertx(HH_POSIX(setmode)(2, O_BINARY) >= 0);  // stderr
-                                                 // There is no global variable for default iostream binary mode.
+  _fmode = O_BINARY;                   // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
+  assertx(setmode(0, O_BINARY) >= 0);  // stdin
+  assertx(setmode(1, O_BINARY) >= 0);  // stdout
+  assertx(setmode(2, O_BINARY) >= 0);  // stderr
+  // There is no global variable for default iostream binary mode.
   // With new iostream, it appears that std::cin, std::cout, std::cerr adjust
   //  (fortunately) to the settings of stdin, stdout, stderr.
 #endif
@@ -704,7 +704,7 @@ bool set_fd_no_delay(int fd, bool nodelay) {
   dummy_use(fd, nodelay);
 #if defined(__sgi)
   // on SGI, setting nodelay on terminal fd may cause window closure
-  if (nodelay) assertx(!HH_POSIX(isatty)(fd));
+  if (nodelay) assertx(!isatty(fd));
 #endif
     // 20140704 CYGWIN64 this no longer works.  See also ~/src/native/test_cygwin_nonblocking_read.cpp .
     // 20140826 G3dcmp works again now.
@@ -1318,7 +1318,7 @@ static bool isafile(int fd) {
 #else   // cygwin or Unix
   struct stat statbuf;
   assertx(!fstat(fd, &statbuf));
-  return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
+  return !isatty(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
 #endif  // defined(_WIN32)
 }
 
@@ -1338,7 +1338,7 @@ static bool isafile(int fd) {
 static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
   bool need_cout, need_cerr;
   // _WIN32: isatty() often returns 64
-  bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);
+  bool isatty1 = !!isatty(1), isatty2 = !!isatty(2);
   bool same_cout_cerr;
 #if defined(_WIN32)
   {
@@ -1431,7 +1431,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
     // Problem: this does not work if "app | pipe..."
     return isafile(1);
 #else
-    return !HH_POSIX(isatty)(1);
+    return !isatty(1);
 #endif
   };
   std::call_once(
@@ -1494,7 +1494,7 @@ int to_int(const char* s) {
 
 static void unsetenv(const char* name) {
   // Note: In Unix, deletion would use sform("%s", name).
-  assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=", name).c_str()).release()));  // never deleted
+  assertx(!putenv(make_unique_c_string(sform("%s=", name).c_str()).release()));  // never deleted
 }
 
 static void setenv(const char* name, const char* value, int change_flag) {
@@ -1505,7 +1505,7 @@ static void setenv(const char* name, const char* value, int change_flag) {
     unsetenv(name);
   } else {
     // never deleted
-    assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=%s", name, value).c_str()).release()));
+    assertx(!putenv(make_unique_c_string(sform("%s=%s", name, value).c_str()).release()));
   }
 }
 

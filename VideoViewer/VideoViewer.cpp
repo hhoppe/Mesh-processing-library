@@ -4346,9 +4346,9 @@ int main(int argc, const char** argv) {
   g_argv0 = get_canonical_path(aargs[0]);
   if (!contains(aargs, "-")) {
     // Close stdin unless we need it, for Windows app started from emacs shell.
-    if (0) assertx(!HH_POSIX(close)(0));
+    if (0) assertx(!close(0));
     // Close stdin, but do not leave fd0 empty in case we open another file.
-    if (1) assertx(HH_POSIX(dup2)(1, 0) >= 0);
+    if (1) assertx(dup2(1, 0) >= 0);
   }
   bool b_help = aargs.num() == 2 && ParseArgs::special_arg(aargs[1]);
   if (0) {

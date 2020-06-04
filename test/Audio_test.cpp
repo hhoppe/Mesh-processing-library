@@ -62,6 +62,6 @@ int main() {
         }
       }
     }
-    assertx(!unlink("Audio_test.wav"));
+    HH_POSIX(unlink)("Audio_test.wav");
   }
 }

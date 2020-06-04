@@ -312,9 +312,9 @@ int main(int argc, const char** argv) {
     HB::watch_fd0(InputArrived);
   } else if (!keep_stdin_open) {
     // Close stdin unless we need it, for Windows app started from emacs shell.
-    if (0) assertx(!close(0));
+    if (0) assertx(!HH_POSIX(close)(0));
     // Close stdin, but do not leave fd0 empty in case we open another file.
-    if (1) assertx(dup2(1, 0) >= 0);
+    if (1) assertx(HH_POSIX(dup2)(1, 0) >= 0);
   }
   auto func_try_set_gfilename = [](string str) {
     if (g_filename != "") return;

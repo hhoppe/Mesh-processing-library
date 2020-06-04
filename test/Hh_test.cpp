@@ -105,7 +105,7 @@ void test_spawn() {
       try_it(str);
     }
   }
-  assertx(!unlink(tmpf.c_str()));
+  assertx(!HH_POSIX(unlink)(tmpf.c_str()));
 }
 
 void test_spawn2() {

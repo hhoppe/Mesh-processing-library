@@ -290,7 +290,7 @@ RFile::RFile(const string& filename) {
     _file_ispipe = true;
     _file = my_popen(V<string>("gzip", "-d", "-c", sfor), mode);  // gzip supports .Z (replacement for zcat)
   } else if (filename == "-") {
-    // assertw(!isatty(0));
+    // assertw(!HH_POSIX(isatty)(0));
     _file = stdin;
     _is = &std::cin;
   } else if (file_exists(sfor)) {
@@ -559,7 +559,7 @@ TmpFile::TmpFile(const string& suffix) {
   static std::atomic<int> s_count{0};
   for_int(i, 10000) {
     int lcount = ++s_count;
-    _filename = sform("TmpFile.%d.%d%s%s", getpid(), lcount, (suffix == "" ? "" : "."), suffix.c_str());
+    _filename = sform("TmpFile.%d.%d%s%s", HH_POSIX(getpid)(), lcount, (suffix == "" ? "" : "."), suffix.c_str());
     if (!file_exists(_filename)) return;
   }
   assertnever("");
@@ -567,7 +567,7 @@ TmpFile::TmpFile(const string& suffix) {
 
 TmpFile::~TmpFile() {
   if (!getenv_bool("TMPFILE_KEEP")) {
-    assertx(!unlink(_filename.c_str()));
+    assertx(!HH_POSIX(unlink)(_filename.c_str()));
   }
 }
 
@@ -702,9 +702,9 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
     for_int(i, sargv.num()) argv[i] = sargv[i].c_str();
     if (wait) {
       pid_t pid = fork();
-      assertx(pid >= 0);            // assert that fork() succeeded
-      if (!pid) {                   // child process
-        if (0) assertx(!close(0));  // no need to read from stdin?
+      assertx(pid >= 0);                      // assert that fork() succeeded
+      if (!pid) {                             // child process
+        if (0) assertx(!HH_POSIX(close)(0));  // no need to read from stdin?
         execvp(argv[0], const_cast<char**>(argv.data()));
         exit(127);  // exec() failed; report same exit code as failed system()
       }
@@ -720,14 +720,14 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
       int fd[2];
       assertx(pipe(fd) != -1);
       pid_t pid = fork();
-      assertx(pid >= 0);         // assert that fork() succeeded  (else close(fd[0]), close(fd[1]))
-      if (!pid) {                // child process
-        assertx(!close(fd[0]));  // no need to read from parent process
+      assertx(pid >= 0);                   // assert that fork() succeeded  (else close(fd[0]), close(fd[1]))
+      if (!pid) {                          // child process
+        assertx(!HH_POSIX(close)(fd[0]));  // no need to read from parent process
         pid = fork();
         if (pid > 0) {
           // grandchild pid back to parent
           int64_t t = pid;
-          assertx(write(fd[1], &t, sizeof(t)) == sizeof(t));
+          assertx(HH_POSIX(write)(fd[1], &t, sizeof(t)) == sizeof(t));
           exit(0);
         }
         if (!pid) {                                    // grandchild process
@@ -740,12 +740,12 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         assertx(write(fd[1], &t, sizeof(t)) == sizeof(t));
         exit(1);  // this exit code is not accessed by parent
       }
-      ::wait(nullptr);         // (I don't understand the reason/need for this)
-      assertx(!close(fd[1]));  // no need to write to child process
-      pid = -1;                // expect to read back a process id from child
-      for (;;) {               // outputs from child or grandchild may come in any order
+      ::wait(nullptr);                   // (I don't understand the reason/need for this)
+      assertx(!HH_POSIX(close)(fd[1]));  // no need to write to child process
+      pid = -1;                          // expect to read back a process id from child
+      for (;;) {                         // outputs from child or grandchild may come in any order
         int64_t t;
-        int nread = read(fd[0], &t, sizeof(t));
+        int nread = HH_POSIX(read)(fd[0], &t, sizeof(t));
         assertx(nread >= 0);
         SHOW(t);  // ?
         if (!nread) break;
@@ -754,7 +754,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         else
           pid = narrow_cast<pid_t>(t);
       }
-      assertx(!close(fd[0]));
+      assertx(!HH_POSIX(close)(fd[0]));
       return pid;
     }
   }
@@ -909,7 +909,7 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
   assertx(pipes[0] > 2 && pipes[0] < tot_fd && pipes[1] > 2 && pipes[1] < tot_fd);
   int new_stdhdl = pipes[is_read ? 1 : 0];
   int pipehdl = pipes[is_read ? 0 : 1];
-  int bu_stdhdl = dup(stdhdl);
+  int bu_stdhdl = HH_POSIX(dup)(stdhdl);
   assertx(bu_stdhdl > 2);
   if (0) {
     SHOW(stdhdl, pipehdl, new_stdhdl, bu_stdhdl);
@@ -917,12 +917,12 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
     SHOW(_get_osfhandle(pipes[0]), _get_osfhandle(pipes[1]));
     SHOW(_get_osfhandle(new_stdhdl), _get_osfhandle(bu_stdhdl));
   }
-  assertx(dup2(new_stdhdl, stdhdl) >= 0);  // success is either 0 or stdhdl depending on POSIX or Windows
+  assertx(HH_POSIX(dup2)(new_stdhdl, stdhdl) >= 0);  // success is either 0 or stdhdl depending on POSIX or Windows
   // SetStdHandle(STD_INPUT_HANDLE & STD_OUTPUT_HANDLE) done automatically
   //  by _set_osfhnd() called from dup2(), only for _CONSOLE_APP !
   if (stdhdl == 0) assertx(SetStdHandle(STD_INPUT_HANDLE, HANDLE(_get_osfhandle(stdhdl))));
   if (stdhdl == 1) assertx(SetStdHandle(STD_OUTPUT_HANDLE, HANDLE(_get_osfhandle(stdhdl))));
-  assertx(!close(new_stdhdl));
+  assertx(!HH_POSIX(close)(new_stdhdl));
   if (0) {
     SHOW(_get_osfhandle(0), _get_osfhandle(1), _get_osfhandle(2));
     SHOW(_get_osfhandle(bu_stdhdl), _get_osfhandle(pipehdl));
@@ -936,21 +936,21 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
     return nullptr;
   }
   popen_pid[pipehdl] = pid;
-  assertx(dup2(bu_stdhdl, stdhdl) >= 0);  // success is either 0 or stdhdl depending on posix or iso
+  assertx(HH_POSIX(dup2)(bu_stdhdl, stdhdl) >= 0);  // success is either 0 or stdhdl depending on posix or iso
   // if (stdhdl == 0) assertx(SetStdHandle(STD_INPUT_HANDLE,  HANDLE(_get_osfhandle(stdhdl))));
   // if (stdhdl == 1) assertx(SetStdHandle(STD_OUTPUT_HANDLE, HANDLE(_get_osfhandle(stdhdl))));
-  assertx(!close(bu_stdhdl));
-  return assertx(fdopen(pipehdl, mode.c_str()));  // closed by fclose() in my_pclose_internal() below
+  assertx(!HH_POSIX(close)(bu_stdhdl));
+  return assertx(HH_POSIX(fdopen)(pipehdl, mode.c_str()));  // closed by fclose() in my_pclose_internal() below
 }
 
 int my_pclose_internal(FILE* file) {
   std::lock_guard<std::mutex> lg(s_mutex);
-  int fd = fileno(file);
+  int fd = HH_POSIX(fileno)(file);
   assertx(!fclose(file));
   assertx(popen_pid);
   intptr_t proc_handle = popen_pid[fd];
   int termstat;
-  intptr_t handle = cwait(&termstat, proc_handle, WAIT_CHILD);
+  intptr_t handle = HH_POSIX(cwait)(&termstat, proc_handle, WAIT_CHILD);
   if (handle != proc_handle) return -1;
   return termstat;
 }

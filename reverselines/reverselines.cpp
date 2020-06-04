@@ -67,7 +67,7 @@ int main(int argc, const char** argv) {
   }
   assertx(off == 0);
   assertx(!munmap(const_cast<char*>(buf.data()), len));
-  assertx(!close(fd));
+  assertx(!HH_POSIX(close)(fd));
   return 0;
 }
 
@@ -132,7 +132,7 @@ int main(int argc, const char** argv) {
     }
   }
   assertx(off == 0);
-  assertx(!close(fd));
+  assertx(!HH_POSIX(close)(fd));
   return 0;
 }
 

@@ -707,7 +707,6 @@ void SRMesh::compute_nspheres(CArrayView<SRVertexGeometry> vgeoms) {
   // Compute bound(star(v)) of vertices in fully refined mesh.
   {
     Array<Bbox> ar_bbox(_vertices.num());
-    for_int(vi, _vertices.num()) ar_bbox[vi].clear();
     Array<Vector> ar_fnormal(_faces.num());  // cache face normals
     for_int(fi, _faces.num()) {
       SRAFace* fa = _faces[fi].aface;
@@ -788,9 +787,8 @@ void SRMesh::write_srm(std::ostream& os) const {
   os << "base_nvertices=" << _base_vertices.num() << " base_nfaces=" << _base_faces.num()
      << " nvsplits=" << _vsplits.num() << '\n';
   // Write out bounding box.
-  const Bbox& bb = _bbox;
-  os << "bbox " << bb[0][0] << ' ' << bb[0][1] << ' ' << bb[0][2] << "  " << bb[1][0] << ' ' << bb[1][1] << ' '
-     << bb[1][2] << '\n';
+  os << "bbox " << _bbox[0][0] << ' ' << _bbox[0][1] << ' ' << _bbox[0][2] << "  " << _bbox[1][0] << ' ' << _bbox[1][1]
+     << ' ' << _bbox[1][2] << '\n';
   // Write out materials.
   _materials.write(os);
   // Write out base mesh.
@@ -861,11 +859,10 @@ void SRMesh::read_srm(std::istream& is) {
   }
   // Read in bounding box.
   {
-    Bbox& bb = _bbox;
     string sline;
     assertx(my_getline(is, sline));
-    assertx(sscanf(sline.c_str(), "bbox %g %g %g  %g %g %g", &bb[0][0], &bb[0][1], &bb[0][2], &bb[1][0], &bb[1][1],
-                   &bb[1][2]) == 6);
+    assertx(sscanf(sline.c_str(), "bbox %g %g %g  %g %g %g", &_bbox[0][0], &_bbox[0][1], &_bbox[0][2], &_bbox[1][0],
+                   &_bbox[1][1], &_bbox[1][2]) == 6);
   }
   // Read in materials.
   _materials.read(is);

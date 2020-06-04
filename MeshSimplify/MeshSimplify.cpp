@@ -2357,13 +2357,13 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   assertx(nf);  // at least one face
   int np = nn.ar_fpts.num();
   assertw(np);
-  Array<Bbox> ar_bb(nf);
+  Array<Bbox> ar_bbox(nf);
   for_int(i, nf) {
-    Bbox& bb = ar_bb[i];
-    bb[0] = newp;
-    bb[1] = newp;
-    bb.union_with(mesh.point(nn.va[i]));
-    bb.union_with(mesh.point(nn.va[i + 1]));
+    Bbox& bbox = ar_bbox[i];
+    bbox[0] = newp;
+    bbox[1] = newp;
+    bbox.union_with(mesh.point(nn.va[i]));
+    bbox.union_with(mesh.point(nn.va[i + 1]));
   }
   param.ar_mini.init(np);
   param.ar_bary.init(np);
@@ -2378,7 +2378,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
     //  observed it is about 40% of cycles in local_fit.
     for_int(i, nf) {
       // 37--46 instr/loop (+ delays) when '-O'
-      ar_d2[i] = square(lb_dist_point_bbox(p, ar_bb[i]));
+      ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
     }
     float min_d2 = BIGFLOAT;
     int min_i = -1;
@@ -2931,12 +2931,11 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   //  That mis-reprojection is why we sometimes see a uniform error component here.
   {
     int nf = nn.ar_corners.num();
-    Array<Bbox> ar_bb(nf);
+    Array<Bbox> ar_bbox(nf);
     for_int(i, nf) {
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
-      Bbox& bb = ar_bb[i];
-      bb.clear();
-      for (Vertex v : mesh.vertices(f)) bb.union_with(mesh.point(v));
+      Bbox& bbox = ar_bbox[i];
+      for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
     }
     Polygon poly;
     Array<Corner> ca;
@@ -2944,7 +2943,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
     for (fptinfo* pfpt : nn.ar_fpts) {
       fptinfo& fpt = *pfpt;
       const Point& p = fpt.p;
-      for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bb[i]));
+      for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
       float min_d2 = BIGFLOAT;
       Face min_f = nullptr;
       Bary min_bary(0.f, 0.f, 0.f);
@@ -3059,7 +3058,6 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   const float transf_size = 1.f;
   {
     Bbox bbox;
-    bbox.clear();
     for (Vertex v : mesh.vertices(e)) {
       for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
     }

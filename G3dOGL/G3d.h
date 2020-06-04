@@ -117,7 +117,7 @@ class object {
   void set_vis(bool i);
   Frame& tm();
   Point center();  // mode-dependent center in world coordinates
-  const Bbox& bb();
+  const Bbox& bbox();
   float radius();
   void update();                    // update HB if necessary
   GMesh* get_mesh();                // creates if non-existent
@@ -129,7 +129,7 @@ class object {
   bool _vis{true};              // is visible
   bool _def{false};             // is non-empty
   Point _pavg;                  // estimated centroid
-  Bbox _bb{Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f)};
+  Bbox _bbox{Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f)};
   float _radius;             // estimated object radius
   bool _needs_update{true};  // wants HB update
   Vec3<Stat> _stat_coord;    // statistics on each coordinate

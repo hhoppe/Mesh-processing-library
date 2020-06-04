@@ -173,7 +173,6 @@ void do_geom_nfaces(Args& args) {
 void do_outbbox() {
   // Approximate union bbox(M^0 .. M^n) using bbox(M^0) union bbox(M^i).
   Bbox bbox0;
-  bbox0.clear();
   for_int(vi, pmi->_vertices.num()) bbox0.union_with(pmi->_vertices[vi].attrib.point);
   {
     // int nv = INT_MAX;
@@ -181,7 +180,6 @@ void do_outbbox() {
     pmi->goto_nvertices(nv);
   }
   Bbox bboxi;
-  bboxi.clear();
   for_int(vi, pmi->_vertices.num()) bboxi.union_with(pmi->_vertices[vi].attrib.point);
   Bbox bbox = bbox0;
   bbox.union_with(bboxi);
@@ -1455,7 +1453,6 @@ void do_uvsphtopos() {
   assertx(pmi->_wedges.num() == pmi->_vertices.num());
   Array<Point> sphpoints(pmi->_wedges.num());
   Bbox bbox;
-  bbox.clear();
   for_int(w, pmi->_wedges.num()) {
     assertx(pmi->_wedges[w].vertex == w);
     const UV& uv = pmi->_wedges[w].attrib.uv;

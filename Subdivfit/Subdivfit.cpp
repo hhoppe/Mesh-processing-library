@@ -1404,7 +1404,6 @@ void do_outmesh(Args& args) {
 }  // namespace
 
 int main(int argc, const char** argv) {
-  gbbox.clear();
   ParseArgs args(argc, argv);
   HH_ARGSD(mfilename, "file.m : read initial mesh (can be -)");
   HH_ARGSD(filename, "file.pts : read point data (can be -)");

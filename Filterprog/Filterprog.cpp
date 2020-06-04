@@ -634,7 +634,7 @@ void do_fbasemesh(Args& args) {
       if (sline.size() < 2) continue;
       showff("|%s\n", sline.substr(2).c_str());
       int n1, n2, n3;
-      Bbox bb;
+      Bbox bbox;
       if (sscanf(sline.c_str(), "# nmaterials=%d", &n1) == 1) {
         nmaterials = n1;
       } else if (sscanf(sline.c_str(), "# PM: nvertices=%d nwedges=%d nfaces=%d", &n1, &n2, &n3) == 3) {
@@ -643,9 +643,9 @@ void do_fbasemesh(Args& args) {
         pm_nfaces = n3;
       } else if (sscanf(sline.c_str(), "# PM: necols=%d", &n1) == 1) {
         pm_nvsplits = n1;
-      } else if (sscanf(sline.c_str(), "# PM: bounding box %g %g %g  %g %g %g", &bb[0][0], &bb[0][1], &bb[0][2],
-                        &bb[1][0], &bb[1][1], &bb[1][2]) == 6) {
-        pm_bbox = bb;
+      } else if (sscanf(sline.c_str(), "# PM: bounding box %g %g %g  %g %g %g", &bbox[0][0], &bbox[0][1], &bbox[0][2],
+                        &bbox[1][0], &bbox[1][1], &bbox[1][2]) == 6) {
+        pm_bbox = bbox;
       } else if (begins_with(sline, "# PM: has_wad2")) {
         pm_has_wad2 = true;
       }

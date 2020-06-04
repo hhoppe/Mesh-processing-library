@@ -187,12 +187,11 @@ void mesh_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox bb;
-  bb.clear();
-  for_int(i, pt.co.num()) bb.union_with(pt.co[i]);
-  for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-  gdiam = bb.max_side();
-  xform = bb.get_frame_to_small_cube();
+  Bbox bbox;
+  for_int(i, pt.co.num()) bbox.union_with(pt.co[i]);
+  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+  gdiam = bbox.max_side();
+  xform = bbox.get_frame_to_small_cube();
   if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
   xformi = ~xform;
   for_int(i, pt.co.num()) pt.co[i] *= xform;
@@ -844,19 +843,18 @@ void UPointLLS::solve(double* prss0, double* prss1) {
 
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   int nf = ar_faces.num();
-  Array<Bbox> ar_bb(nf);
+  Array<Bbox> ar_bbox(nf);
   for_int(i, nf) {
     Face f = ar_faces[i];
-    Bbox& bb = ar_bb[i];
-    bb.clear();
-    for (Vertex v : mesh.vertices(f)) bb.union_with(mesh.point(v));
+    Bbox& bbox = ar_bbox[i];
+    for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
   }
   Polygon poly;
   for (int pi : ar_pts) {
     const Point& p = pt.co[pi];
     static Array<float> ar_d2;
     ar_d2.init(nf);
-    for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bb[i]));
+    for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
     float mind2 = BIGFLOAT;
     Face minf = nullptr;
     for (;;) {
@@ -903,14 +901,14 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
   double rss1;
   dummy_init(rss1);
   for_int(ni, niter) {
-    static Array<Bbox> ar_bb;
-    ar_bb.init(nw - 1);
+    static Array<Bbox> ar_bbox;
+    ar_bbox.init(nw - 1);
     for_int(i, nw - 1) {
-      Bbox& bb = ar_bb[i];
-      bb.clear();
-      bb.union_with(newp);
-      bb.union_with(*wa[i]);
-      bb.union_with(*wa[i + 1]);
+      Bbox& bbox = ar_bbox[i];
+      bbox.clear();
+      bbox.union_with(newp);
+      bbox.union_with(*wa[i]);
+      bbox.union_with(*wa[i + 1]);
     }
     UPointLLS ulls(newp);
     for (int pi : ar_pts) {
@@ -920,7 +918,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
       ar_d2.init(nw - 1);
       for_int(i, nw - 1) {
         // ar_d2[i] = square(lb_dist_point_triangle(p, newp, *wa[i], *wa[i + 1]));
-        ar_d2[i] = square(lb_dist_point_bbox(p, ar_bb[i]));
+        ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
       }
       int nproj = 0;
       float mind2 = BIGFLOAT;

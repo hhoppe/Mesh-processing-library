@@ -2037,7 +2037,6 @@ void draw_mesh(GMesh& mesh) {
       float& mesh_radius = mesh_radii.enter(&mesh, 0.f, is_new);
       if (is_new) {
         Bbox bbox;
-        bbox.clear();
         for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
         mesh_radius = bbox.max_side();
         assertw(mesh_radius > 0.f);
@@ -5166,7 +5165,6 @@ void read_ply(const string& filename) {
   }
   showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_vpos.num(), ply_findices.num());
   Bbox bbox;
-  bbox.clear();
   for_int(i, ply_vpos.num()) bbox.union_with(ply_vpos[i]);
   g3d::UpdateOb1Bbox(bbox);
   if (g3d::g_filename == "") g3d::g_filename = filename;

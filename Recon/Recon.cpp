@@ -138,10 +138,9 @@ void process_read() {
 }
 
 void compute_xform() {
-  Bbox bb;
-  bb.clear();
-  for_int(i, num) bb.union_with(co[i]);
-  xform = bb.get_frame_to_small_cube();
+  Bbox bbox;
+  for_int(i, num) bbox.union_with(co[i]);
+  xform = bbox.get_frame_to_small_cube();
   if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
   float xform_scale = xform[0][0];
   showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());

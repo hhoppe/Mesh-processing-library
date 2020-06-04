@@ -9,16 +9,16 @@ namespace hh {
 
 // Axis-aligned bounding box in 3D.
 struct Bbox : Vec2<Point> {
-  Bbox() = default;
+  Bbox() { clear(); }
   constexpr Bbox(const Point& pmin, const Point& pmax) : Vec2<Point>(pmin, pmax) {}
-  constexpr Bbox(Vec2<Point> bb) : Vec2<Point>(std::move(bb)) {}
+  constexpr Bbox(Vec2<Point> bbox) : Vec2<Point>(std::move(bbox)) {}
   void clear() { (*this)[0] = thrice(+big), (*this)[1] = thrice(-big); }
   void infinite() { (*this)[0] = thrice(-big), (*this)[1] = thrice(+big); }
-  void union_with(const Bbox& bb) {
+  void union_with(const Bbox& bbox) {
     auto& self = *this;
     for_int(c, 3) {
-      if (bb[0][c] < self[0][c]) self[0][c] = bb[0][c];
-      if (bb[1][c] > self[1][c]) self[1][c] = bb[1][c];
+      if (bbox[0][c] < self[0][c]) self[0][c] = bbox[0][c];
+      if (bbox[1][c] > self[1][c]) self[1][c] = bbox[1][c];
     }
   }
   void union_with(const Point& pp) {
@@ -29,25 +29,25 @@ struct Bbox : Vec2<Point> {
       if (v > self[1][c]) self[1][c] = v;
     }
   }
-  void intersect(const Bbox& bb) {
+  void intersect(const Bbox& bbox) {
     auto& self = *this;
     for_int(c, 3) {
-      if (bb[0][c] > self[0][c]) self[0][c] = bb[0][c];
-      if (bb[1][c] < self[1][c]) self[1][c] = bb[1][c];
+      if (bbox[0][c] > self[0][c]) self[0][c] = bbox[0][c];
+      if (bbox[1][c] < self[1][c]) self[1][c] = bbox[1][c];
     }
   }
-  bool inside(const Bbox& bb) const {
+  bool inside(const Bbox& bbox) const {
     auto& self = *this;
     for_int(c, 3) {
-      if (self[0][c] < bb[0][c]) return false;
-      if (self[1][c] > bb[1][c]) return false;
+      if (self[0][c] < bbox[0][c]) return false;
+      if (self[1][c] > bbox[1][c]) return false;
     }
     return true;
   }
-  bool overlap(const Bbox& bb) const {
+  bool overlap(const Bbox& bbox) const {
     auto& self = *this;
     for_int(c, 3) {
-      if (bb[0][c] > self[1][c] || bb[1][c] < self[0][c]) return false;
+      if (bbox[0][c] > self[1][c] || bbox[1][c] < self[0][c]) return false;
     }
     return true;
   }
@@ -77,16 +77,15 @@ struct Bbox : Vec2<Point> {
   }
   void transform(const Frame& frame) {
     auto& self = *this;
-    Bbox bb;
-    bb.clear();
+    Bbox bbox;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
       Point corner(i0 ? self[1][0] : self[0][0], i1 ? self[1][1] : self[0][1], i2 ? self[1][2] : self[0][2]);
-      bb.union_with(corner * frame);
+      bbox.union_with(corner * frame);
     }
-    self = bb;
+    self = bbox;
   }
-  friend std::ostream& operator<<(std::ostream& os, const Bbox& bb) {
-    return os << "Bbox{" << bb[0] << ", " << bb[1] << "}";
+  friend std::ostream& operator<<(std::ostream& os, const Bbox& bbox) {
+    return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
 
  private:

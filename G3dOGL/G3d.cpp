@@ -95,8 +95,8 @@ void object::update_stats() {
   for_int(c, 3) {
     _pavg[c] = _stat_coord[c].avg();
     _radius += _stat_coord[c].num() > 1 ? _stat_coord[c].sdv() : 0.f;
-    _bb[0][c] = _stat_coord[c].min();
-    _bb[1][c] = _stat_coord[c].max();
+    _bbox[0][c] = _stat_coord[c].min();
+    _bbox[1][c] = _stat_coord[c].max();
   }
 }
 
@@ -117,13 +117,13 @@ Point object::center() {
   return !_def || !mode_centroid ? rec_point : _pavg;
 }
 
-const Bbox& object::bb() {
+const Bbox& object::bbox() {
   static const Bbox k_bbempty(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
   if (!_def) {
     Warning("Undefined bbox");
     return k_bbempty;
   }
-  return _bb;
+  return _bbox;
 }
 
 float object::radius() { return _radius; }

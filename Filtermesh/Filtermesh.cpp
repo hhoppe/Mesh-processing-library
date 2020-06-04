@@ -356,10 +356,9 @@ GMesh geometric_merge(const GMesh& mo) {
   // Thus, gmerge is always more robust than do_froma3d().
   Frame xform;
   {
-    Bbox bb;
-    bb.clear();
-    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-    xform = bb.get_frame_to_small_cube();
+    Bbox bbox;
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+    xform = bbox.get_frame_to_small_cube();
   }
   GMesh mn;
   // Create new vertices.
@@ -2256,7 +2255,6 @@ void do_smootha3d() {
 
 void do_bbox() {
   Bbox bbox;
-  bbox.clear();
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   nooutput = true;
@@ -2264,7 +2262,6 @@ void do_bbox() {
 
 void do_tobbox() {
   Bbox bbox;
-  bbox.clear();
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   Frame xform = bbox.get_frame_to_cube();
   showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
@@ -2509,7 +2506,6 @@ void do_info() {
   }
   {
     Bbox bbox;
-    bbox.clear();
     for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
     showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   }
@@ -3302,7 +3298,6 @@ void do_quantizeverts(Args& args) {
   int nbits = args.get_int();
   assertx(nbits >= 1 && nbits <= 32);
   Bbox bbox;
-  bbox.clear();
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
   const float scale = pow(2.f, float(nbits));
@@ -3535,10 +3530,9 @@ void do_signeddistcontour(Args& args) {
   int grid = args.get_int();
   assertx(grid >= 2);
   {
-    Bbox bb;
-    bb.clear();
-    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-    Frame xform = bb.get_frame_to_small_cube();
+    Bbox bbox;
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+    Frame xform = bbox.get_frame_to_small_cube();
     showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
@@ -3571,10 +3565,9 @@ void do_signeddistbmp(Args& args) {
   int grid = args.get_int();
   assertx(grid >= 2);
   {
-    Bbox bb;
-    bb.clear();
-    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-    Frame xform = bb.get_frame_to_small_cube();
+    Bbox bbox;
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+    Frame xform = bbox.get_frame_to_small_cube();
     showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
@@ -3633,7 +3626,6 @@ Point compute_hull_point(Vertex v, float offset) {
   const float transf_size = 1.f;
   {
     Bbox bbox;
-    bbox.clear();
     bbox.union_with(mesh.point(v));
     for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
@@ -3814,10 +3806,8 @@ void do_alignmentframe(Args& args) {
   assertw(cmesh.num_vertices() == nmesh.num_vertices());  // just warn
   assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
   Bbox cbb;
-  cbb.clear();
   for (Vertex v : cmesh.vertices()) cbb.union_with(cmesh.point(v));
   Bbox nbb;
-  nbb.clear();
   for (Vertex v : nmesh.vertices()) nbb.union_with(nmesh.point(v));
   // Point corig = cbb[0];
   // Point norig = nbb[0];
@@ -3985,11 +3975,10 @@ void do_shootrays(Args& args) {
     showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
     assertx(mesh.num_vertices() && omesh.num_vertices());
   }
-  Bbox bb;
-  bb.clear();
-  for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-  for (Vertex v : omesh.vertices()) bb.union_with(omesh.point(v));
-  Frame xform = bb.get_frame_to_small_cube(0.5f);
+  Bbox bbox;
+  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+  for (Vertex v : omesh.vertices()) bbox.union_with(omesh.point(v));
+  Frame xform = bbox.get_frame_to_small_cube(0.5f);
   Frame xformi = ~xform;
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(omesh.num_faces());
@@ -4016,8 +4005,8 @@ void do_shootrays(Args& args) {
     const bool show_a3d = true;
     auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
     auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
-    float negdisp = -1e-5f * bb.max_side() * xform[0][0];
-    float maxdisp = raymaxdispfrac * bb.max_side() * xform[0][0];
+    float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
+    float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
     string str;
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * xform;
@@ -4105,10 +4094,9 @@ void do_transferkeysfrom(Args& args) {
   Array<Vertex> arv;
   Frame xform;
   {
-    Bbox bb;
-    bb.clear();
-    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-    xform = bb.get_frame_to_small_cube();
+    Bbox bbox;
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+    xform = bbox.get_frame_to_small_cube();
   }
   if (1) {
     for (Vertex v : mesh.vertices()) hp.pre_consider(mesh.point(v) * xform);
@@ -4353,10 +4341,9 @@ void do_trimpts(Args& args) {
   assertx(mesh.num_vertices());
   Frame xform;
   {
-    Bbox bb;
-    bb.clear();
-    for (Vertex v : mesh.vertices()) bb.union_with(mesh.point(v));
-    xform = bb.get_frame_to_small_cube();
+    Bbox bbox;
+    for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+    xform = bbox.get_frame_to_small_cube();
   }
   PointSpatial<int> psp(800);
   Array<Point> points;

@@ -788,9 +788,9 @@ void select_frel() {
 void DoJump() {
   if (!assertw(g_obs[cob].defined())) return;
   if (cob == obview) return;
-  const Bbox& bb = g_obs[cob].bb();
-  Vector diag = bb[1] - bb[0];
-  Point centerbb = bb[0] + diag / 2.f;
+  const Bbox& bbox = g_obs[cob].bbox();
+  Vector diag = bbox[1] - bbox[0];
+  Point centerbb = bbox[0] + diag / 2.f;
   if (!object_mode) {
     zoom = .2f;
     int minc = arg_min(diag);

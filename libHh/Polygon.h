@@ -16,7 +16,7 @@ class Polygon : public PArray<Point, 4> {
 
  public:
   using base::base;  // C++11 inherit constructors
-  void get_bbox(Bbox& bb) const;
+  void get_bbox(Bbox& bbox) const;
   Vector get_normal_dir() const;  // non-normalized normal
   Vector get_normal() const;      // user should check !is_zero()
   float get_planec(const Vector& pnor) const;
@@ -25,7 +25,7 @@ class Polygon : public PArray<Point, 4> {
   // Because Polygon is a CArrayView<Point>, we can call centroid(Polygon) -- see Geometry.h
   // Finds intersection of polygon with halfspace in +hn direction
   bool intersect_hyperplane(const Point& hp, const Vector& hn);                 // ret: is_modified
-  bool intersect_bbox(const Bbox& bb);                                          // ret: is_modified
+  bool intersect_bbox(const Bbox& bbox);                                        // ret: is_modified
   bool intersect_segment(const Point& p1, const Point& p2, Point& pint) const;  // ret: is_intersection
   bool intersect_line(const Point& p, const Vector& v, Point& pint) const;      // ret: is_intersection
   // Intersect with plane defined by (planenor, planed, planetol); report intersection as array of points pa.

@@ -166,10 +166,10 @@ inline int Spatial::float_to_index(float fd) const {
 }
 
 inline Bbox Spatial::indices_to_bbox(const Ind& ci) const {
-  Bbox bb;
-  bb[0] = indices_to_point(ci);
-  bb[1] = bb[0] + Vector(_gni, _gni, _gni);
-  return bb;
+  Bbox bbox;
+  bbox[0] = indices_to_point(ci);
+  bbox[1] = bbox[0] + Vector(_gni, _gni, _gni);
+  return bbox;
 }
 
 inline Spatial::Ind Spatial::decode(int en) const {
@@ -238,8 +238,8 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
   while (!queue.empty()) {
     int en = queue.dequeue();
     ci = decode(en);
-    Bbox bb = indices_to_bbox(ci);
-    if (!fcontains(bb)) {
+    Bbox bbox = indices_to_bbox(ci);
+    if (!fcontains(bbox)) {
       if (en != enf) continue;  // for numerics, en == enf special
     } else {
       _map[en].push(id);

@@ -10,8 +10,8 @@ namespace hh {
 // Find a lower bound on the distance between p and triangle (p1, p2, p3).
 float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3);
 
-// Find a lower bound on the distance between p and an axis-aligned bounding box bb.
-float lb_dist_point_bbox(const Point& p, const Bbox& bb);
+// Find a lower bound on the distance between p and an axis-aligned bounding box.
+float lb_dist_point_bbox(const Point& p, const Bbox& bbox);
 
 // Given point p and triangle (p1, p2, p3), return the squared distance,
 //  and compute the convex barycentric coordinates ret_cba of the closest point ret_clp within the triangle.
@@ -49,35 +49,35 @@ inline float lb_dist_point_triangle(const Point& p, const Point& p1, const Point
   return d;
 }
 
-inline float lb_dist_point_bbox(const Point& p, const Bbox& bb) {
+inline float lb_dist_point_bbox(const Point& p, const Bbox& bbox) {
 #if 0
   float d = 0.f;
   for_int(c, 3) {
     float v = p[c], a;
-    if ((a = v - bb[1][c]) > 0.f) {
+    if ((a = v - bbox[1][c]) > 0.f) {
       if (a > d) d = a;
-    } else if ((a = bb[0][c] - v) > 0.f) {
+    } else if ((a = bbox[0][c] - v) > 0.f) {
       if (a > d) d = a;
     }
   }
 #else
   float d = 0.f, v, a;
   v = p[0];
-  if ((a = v - bb[1][0]) > 0.f) {
+  if ((a = v - bbox[1][0]) > 0.f) {
     d = a;
-  } else if ((a = bb[0][0] - v) > 0.f) {
+  } else if ((a = bbox[0][0] - v) > 0.f) {
     d = a;
   }
   v = p[1];
-  if ((a = v - bb[1][1]) > 0.f) {
+  if ((a = v - bbox[1][1]) > 0.f) {
     if (a > d) d = a;
-  } else if ((a = bb[0][1] - v) > 0.f) {
+  } else if ((a = bbox[0][1] - v) > 0.f) {
     if (a > d) d = a;
   }
   v = p[2];
-  if ((a = v - bb[1][2]) > 0.f) {
+  if ((a = v - bbox[1][2]) > 0.f) {
     if (a > d) d = a;
-  } else if ((a = bb[0][2] - v) > 0.f) {
+  } else if ((a = bbox[0][2] - v) > 0.f) {
     if (a > d) d = a;
   }
 #endif

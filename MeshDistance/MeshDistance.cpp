@@ -144,13 +144,12 @@ void print_it(const string& s, const PStats& pstats) {
 }
 
 void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
-  Bbox bb;
-  bb.clear();
+  Bbox bbox;
   // compute the meshes bounding box
   for (Face f : meshd.faces()) {
-    for (Vertex v : meshd.vertices(f)) bb.union_with(meshd.point(v));
+    for (Vertex v : meshd.vertices(f)) bbox.union_with(meshd.point(v));
   }
-  bbdiag = mag(bb[0] - bb[1]);
+  bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
   // PolygonFaceSpatial psp(max(10, int(sqrt(float(meshd.num_vertices())) / 5.f + .5f)));
   int psp_size = (meshd.num_vertices() < 20000
@@ -235,9 +234,7 @@ void do_distance() {
   assertx(meshes.num() == 2);
   int maxnfaces = 0;
   Bbox bbox;
-  bbox.clear();
   Bbox bbox0;
-  dummy_init(bbox0);
   for_int(imesh, 2) {
     assertx(meshes[imesh].num_faces());
     maxnfaces = max(maxnfaces, meshes[imesh].num_faces());

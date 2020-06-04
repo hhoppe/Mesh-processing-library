@@ -89,7 +89,7 @@ struct S_tess {
 } g_tess;
 
 struct S_inter {
-  Bbox bb;                           // global bounding box of all polygons
+  Bbox bbox;                         // global bounding box of all polygons
   Array<unique_ptr<Polygon>> vpoly;  // (not Array<Polygon> as resizing would invalidate pointers)
   int nedges;
 } g_inter;
@@ -113,7 +113,7 @@ HH_STATNP(Sqdiagl);   // quad diagonal length
 HH_STATNP(Sparea);    // polygon area
 HH_STATNP(Splanar);   // polygon planarity (0=planar)
 HH_STATNP(Sptnor);    // point, existence of normal
-Bbox bbox;            // box extent
+Bbox g_bbox;          // box extent
 float fsplit;         // fsplit=split; { fsplit*=speedup; }
 A3dVertexColor zero_vertexcolor;
 Vec2<float> colorheight;
@@ -245,7 +245,7 @@ void pass3(const A3dElem& el) {
   }
   if (info) compute_stats(el);
   if (box || boxframe) for_int(i, el.num()) {
-      bbox.union_with(el[i].p);
+      g_bbox.union_with(el[i].p);
     }
   output_element(el);
   delay_element();
@@ -539,9 +539,9 @@ bool loop(A3dElem& el) {
   if (intersect && polyg) {
     auto npoly = make_unique<Polygon>();
     el.get_polygon(*npoly);
-    Bbox bb;
-    npoly->get_bbox(bb);
-    g_inter.bb.union_with(bb);
+    Bbox bbox;
+    npoly->get_bbox(bbox);
+    g_inter.bbox.union_with(bbox);
     g_inter.vpoly.push(std::move(npoly));
     return false;  // new: only output intersection edges
   }
@@ -567,16 +567,16 @@ using KD = Kdtree<Polygon*, 3>;
 void compute_intersect() {
   // e.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3d ~/data/mesh/peedy.orig.m -input -key NN
   if (!g_inter.vpoly.num()) return;
-  Frame f = g_inter.bb.get_frame_to_cube();
+  Frame f = g_inter.bbox.get_frame_to_cube();
   KD kd(8);
   A3dElem el;
   Array<Point> pa;
   for (auto& ppoly : g_inter.vpoly) {
     Polygon& poly = *ppoly;
-    Bbox bb;
-    poly.get_bbox(bb);
-    bb[0] *= f;
-    bb[1] *= f;
+    Bbox bbox;
+    poly.get_bbox(bbox);
+    bbox[0] *= f;
+    bbox[1] *= f;
     auto func_considerpoly = [&](Polygon* const& id, ArrayView<float>, ArrayView<float>, KD::CBloc) {
       const Polygon& p1 = *id;
       const Polygon& p2 = poly;
@@ -591,8 +591,8 @@ void compute_intersect() {
       }
       return KD::ECallbackReturn::nothing;
     };
-    kd.search(bb[0], bb[1], func_considerpoly);
-    kd.enter(&poly, bb[0], bb[1]);
+    kd.search(bbox[0], bbox[1], func_considerpoly);
+    kd.enter(&poly, bbox[0], bbox[1]);
   }
   g_inter.vpoly.clear();
 }
@@ -695,13 +695,12 @@ void join_lines() {
 
 void compute_outlier() {
   Array<bool> ar_is_outlier;
-  Bbox bb;
-  bb.clear();
+  Bbox bbox;
   for_int(i, g_outlier.pa.num()) {
     ar_is_outlier.push(false);
-    bb.union_with(g_outlier.pa[i]);
+    bbox.union_with(g_outlier.pa[i]);
   }
-  Frame xform = bb.get_frame_to_cube(), xformi = ~xform;
+  Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
   PointSpatial<int> SPp(30);
   for_int(i, g_outlier.pa.num()) {
     g_outlier.pa[i] *= xform;
@@ -766,10 +765,10 @@ void process(RSA3dStream& ia3d) {
     showdf(" %s", Sptnor.name_string().c_str());
   }
   if (box) {
-    showf("%g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2]);
-    showf("%g %g %g\n", bbox[1][0], bbox[1][1], bbox[1][2]);
+    showf("%g %g %g\n", g_bbox[0][0], g_bbox[0][1], g_bbox[0][2]);
+    showf("%g %g %g\n", g_bbox[1][0], g_bbox[1][1], g_bbox[1][2]);
   }
-  if (boxframe) FrameIO::write(std::cout, bbox.get_frame_to_cube(), 0, 0.f, false);
+  if (boxframe) FrameIO::write(std::cout, g_bbox.get_frame_to_cube(), 0, 0.f, false);
   if (ncullsphere) showdf("ncullsphere=%d\n", ncullsphere);
   if (nmindis) showdf("nmindis=%d\n", nmindis);
   if (nfixorient) showdf("nfixorient=%d\n", nfixorient);
@@ -873,8 +872,6 @@ int main(int argc, const char** argv) {
   }
   if (stat) info = 1;
   if (stat || box || boxframe) nooutput = true;
-  bbox.clear();
-  g_inter.bb.clear();
   fsplit = float(split);
   assertx(!(toasciit && tobinary));
   if (toasciit) my_setenv("A3D_BINARY", "0");

@@ -14,11 +14,11 @@ void PolygonFaceSpatial::enter(const PolygonFace* ppolyface) {
   Polygon poly = opoly;
   Bbox bbox;
   poly.get_bbox(bbox);
-  auto func_polygonface_in_bbox = [&](const Bbox& bb) -> bool {
+  auto func_polygonface_in_bbox = [&](const Bbox& spatial_bbox) -> bool {
     for_int(c, 3) {
-      if (bbox[0][c] > bb[1][c] || bbox[1][c] < bb[0][c]) return false;
+      if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
     }
-    int modif = poly.intersect_bbox(bb);
+    int modif = poly.intersect_bbox(spatial_bbox);
     bool ret = poly.num() > 0;
     if (modif) poly = opoly;
     return ret;
@@ -60,7 +60,6 @@ MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
   psp_size = clamp(10, psp_size, 150);
   HH_TIMER(__meshsearch_build);
   Bbox bbox;
-  bbox.clear();
   for (Vertex v : _mesh.vertices()) bbox.union_with(_mesh.point(v));
   _ftospatial = bbox.get_frame_to_small_cube();
   int fi = 0;

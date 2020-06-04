@@ -728,13 +728,12 @@ static void set_viewing() {
   }
   if (auto_hither) {
     Bbox gbb;
-    gbb.clear();
     Frame tcami = inverse(tcam);
     int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++) {
-      Bbox bb = g_obs[obn].bb();
-      bb.transform(g_obs[obn].t() * tcami);
-      gbb.union_with(bb);
+      Bbox bbox = g_obs[obn].bbox();
+      bbox.transform(g_obs[obn].t() * tcami);
+      gbb.union_with(bbox);
     }
     float minx = gbb[0][0];          // could be negative
     if (minx > 0.f) minx *= .9999f;  // for -key ojo on zero-height data.

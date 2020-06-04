@@ -1468,8 +1468,8 @@ void PMesh::write(std::ostream& os) const {
   os << "version=2\n";
   os << sform("nvsplits=%d nvertices=%d nwedges=%d nfaces=%d\n", _info._tot_nvsplits, _info._full_nvertices,
               _info._full_nwedges, _info._full_nfaces);
-  const Bbox& bb = _info._full_bbox;
-  os << sform("bbox %g %g %g  %g %g %g\n", bb[0][0], bb[0][1], bb[0][2], bb[1][0], bb[1][1], bb[1][2]);
+  const Bbox& bbox = _info._full_bbox;
+  os << sform("bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   os << sform("has_rgb=%d\n", _info._has_rgb);
   os << sform("has_uv=%d\n", _info._has_uv);
   os << sform("has_resid=%d\n", _info._has_resid);
@@ -1514,9 +1514,9 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       assertx(sscanf(s2, "nvsplits=%d nvertices=%d nwedges=%d nfaces=%d", &pminfo._tot_nvsplits,
                      &pminfo._full_nvertices, &pminfo._full_nwedges, &pminfo._full_nfaces) == 4);
     } else if (!strncmp(s2, "bbox ", 5)) {
-      Bbox& bb = pminfo._full_bbox;
-      assertx(sscanf(s2, "bbox %g %g %g  %g %g %g", &bb[0][0], &bb[0][1], &bb[0][2], &bb[1][0], &bb[1][1],
-                     &bb[1][2]) == 6);
+      Bbox& bbox = pminfo._full_bbox;
+      assertx(sscanf(s2, "bbox %g %g %g  %g %g %g", &bbox[0][0], &bbox[0][1], &bbox[0][2], &bbox[1][0], &bbox[1][1],
+                     &bbox[1][2]) == 6);
     } else if (!strncmp(s2, "has_rgb=", 8)) {
       int i;
       assertx(sscanf(s2, "has_rgb=%d", &i) == 1);

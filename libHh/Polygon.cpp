@@ -10,10 +10,10 @@ namespace hh {
 
 HH_ALLOCATE_POOL(Polygon);
 
-void Polygon::get_bbox(Bbox& bb) const {
+void Polygon::get_bbox(Bbox& bbox) const {
   assertx(num() >= 1);
-  bb.clear();
-  for_int(i, num()) bb.union_with((*this)[i]);
+  bbox.clear();
+  for_int(i, num()) bbox.union_with((*this)[i]);
 }
 
 Vector Polygon::get_normal_dir() const {
@@ -77,20 +77,20 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   return true;
 }
 
-bool Polygon::intersect_bbox(const Bbox& bb) {
+bool Polygon::intersect_bbox(const Bbox& bbox) {
   assertx(num() >= 3);
   bool m = false;  // polygon_is_modified
-  m |= intersect_hyperplane(bb[0], Vector(+1.f, +0.f, +0.f));
+  m |= intersect_hyperplane(bbox[0], Vector(+1.f, +0.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bb[1], Vector(-1.f, +0.f, +0.f));
+  m |= intersect_hyperplane(bbox[1], Vector(-1.f, +0.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bb[0], Vector(+0.f, +1.f, +0.f));
+  m |= intersect_hyperplane(bbox[0], Vector(+0.f, +1.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bb[1], Vector(+0.f, -1.f, +0.f));
+  m |= intersect_hyperplane(bbox[1], Vector(+0.f, -1.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bb[0], Vector(+0.f, +0.f, +1.f));
+  m |= intersect_hyperplane(bbox[0], Vector(+0.f, +0.f, +1.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bb[1], Vector(+0.f, +0.f, -1.f));
+  m |= intersect_hyperplane(bbox[1], Vector(+0.f, +0.f, -1.f));
   if (!num()) return true;
   return m;
 }

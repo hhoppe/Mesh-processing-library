@@ -33,7 +33,7 @@ class HiddenLineRemoval {
     Vector n;
     float d;
     float tol;
-    Bbox bb;
+    Bbox bbox;
   };
   struct HlrSegment {
     HlrSegment() = default;
@@ -62,16 +62,16 @@ class HiddenLineRemoval {
     p.n = nor;
     p.d = p.p.get_planec(p.n);
     p.tol = max(p.p.get_tolerance(p.n, p.d), float{k_epsilon_a}) * 1.02f;  // cast to avoid reference of constexpr
-    p.p.get_bbox(p.bb);
+    p.p.get_bbox(p.bbox);
     // enter coordinates [1..2] into Kdtree<int, 2>
-    _kd.enter(pn, p.bb[0].tail<2>(), p.bb[1].tail<2>());
+    _kd.enter(pn, p.bbox[0].tail<2>(), p.bbox[1].tail<2>());
   }
 
   bool draw_point_i(const Point& p) {
     Vec2<float> t{p[1], p[2]};
     auto func_hlr_point_consider_poly = [&](const int& pn, ArrayView<float>, ArrayView<float>, KD::CBloc) {
       const HlrPolygon& hp = _polygons[pn];
-      if (p[0] < hp.bb[0][0]) return KD::ECallbackReturn::nothing;  // point in front of bbox of polygon
+      if (p[0] < hp.bbox[0][0]) return KD::ECallbackReturn::nothing;  // point in front of bbox of polygon
       const Polygon& poly = hp.p;
       float d = pvdot(p, hp.n) - hp.d;
       if (d <= hp.tol) return KD::ECallbackReturn::nothing;  // point in front of plane of polygon
@@ -109,14 +109,14 @@ class HiddenLineRemoval {
   void render_seg_kd(HlrSegment& s, KD::CBloc kdloc) {
     assertx(_func_draw_seg_cb);
     float bbxmax = max(s.p[0][0], s.p[1][0]);
-    Vec2<Vec2<float>> bb;
-    bb[0][0] = min(s.p[0][1], s.p[1][1]);
-    bb[1][0] = max(s.p[0][1], s.p[1][1]);
-    bb[0][1] = min(s.p[0][2], s.p[1][2]);
-    bb[1][1] = max(s.p[0][2], s.p[1][2]);
+    Vec2<Vec2<float>> bbox;
+    bbox[0][0] = min(s.p[0][1], s.p[1][1]);
+    bbox[1][0] = max(s.p[0][1], s.p[1][1]);
+    bbox[0][1] = min(s.p[0][2], s.p[1][2]);
+    bbox[1][1] = max(s.p[0][2], s.p[1][2]);
     auto func_hlr_seg_consider_poly = [&](const int& pn, ArrayView<float> bb0, ArrayView<float> bb1,
                                           KD::CBloc kdloc2) {
-      if (bbxmax < _polygons[pn].bb[0][0]) return KD::ECallbackReturn::nothing;
+      if (bbxmax < _polygons[pn].bbox[0][0]) return KD::ECallbackReturn::nothing;
       auto ret = handle_polygon(s, pn, kdloc2);
       if (ret == KD::ECallbackReturn::bbshrunk) {
         bbxmax = max(s.p[0][0], s.p[1][0]);
@@ -127,7 +127,7 @@ class HiddenLineRemoval {
       }
       return ret;
     };
-    if (!_kd.search(bb[0], bb[1], func_hlr_seg_consider_poly, kdloc)) _func_draw_seg_cb(s.p[0], s.p[1]);
+    if (!_kd.search(bbox[0], bbox[1], func_hlr_seg_consider_poly, kdloc)) _func_draw_seg_cb(s.p[0], s.p[1]);
   }
   // Intersect the segment s with the segment between p0 and p1.
   // If there is an intersection point, return 1 and subdivide the original

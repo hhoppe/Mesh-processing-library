@@ -91,11 +91,10 @@ void poly_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox bb;
-  bb.clear();
-  for_int(i, pt.n) bb.union_with(pt.co[i]);
-  for (vertex v : verts) bb.union_with(v->p);
-  xform = bb.get_frame_to_small_cube();
+  Bbox bbox;
+  for_int(i, pt.n) bbox.union_with(pt.co[i]);
+  for (vertex v : verts) bbox.union_with(v->p);
+  xform = bbox.get_frame_to_small_cube();
   if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
   xformi = ~xform;
   for_int(i, pt.n) pt.co[i] *= xform;

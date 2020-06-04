@@ -95,7 +95,7 @@
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; http://stackoverflow.com/a/15864723
 #endif
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && defined(__clang__)
 #define HH_POSIX(x) _##x
 #else
 #define HH_POSIX(x) x

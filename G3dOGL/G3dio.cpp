@@ -224,10 +224,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
   string str;
   for (;;) {
     if (buf.eof()) return true;
-    if (buf.err()) {
-      assertnever("RBuffer error");
-      HB::quit();
-    }
+    if (buf.err()) assertnever("RBuffer error");
     {
       auto ret = try_input(buf, ra3d, str);
       if (ret != ETryInput::nothing && asynchronousinput) {

@@ -2886,14 +2886,14 @@ void do_compare(Args& args) {
   for_int(z, image.zsize()) {
     double err2 = ar_err2[z];
     double mssim = ar_mssim[z];
-    const double psnr = 20. * log10(255. / my_sqrt(err2));
+    const double psnr = 20. * log10(255. / (my_sqrt(err2) + 1e-10));
     showf("channel%d: RMSE[0,255]=%f PSNR=%f MSSIM[0,1]=%f\n", z, my_sqrt(err2), psnr, mssim);
     allerr2 += err2;
     allmssim += mssim;
   }
   allerr2 /= image.zsize();
   allmssim /= image.zsize();
-  const double psnr = 20. * log10(255. / my_sqrt(allerr2));
+  const double psnr = 20. * log10(255. / (my_sqrt(allerr2) + 1e-10));
   showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
   nooutput = true;
 }

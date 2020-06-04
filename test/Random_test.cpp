@@ -74,7 +74,7 @@ int main() {
     SHOW(ar);
   }
   if (1) {
-    const unsigned ub = unsigned(std::numeric_limits<unsigned>::max() * .99f);
+    const unsigned ub = unsigned(float(std::numeric_limits<unsigned>::max()) * .99f);
     for_int(i, 10000) {
       unsigned v = Random::G.get_unsigned(ub);
       assertx(v < ub);

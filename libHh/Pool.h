@@ -113,7 +113,7 @@ class Pool : noncopyable {
             (n != _nalloc ? " **" : ""));
     if (n != _nalloc) return;
     for (Chunk* chunk = _chunkh; chunk;) {
-      char* p = reinterpret_cast<char*>(chunk);
+      uint8_t* p = reinterpret_cast<uint8_t*>(chunk);
       chunk = chunk->next;
       aligned_free(p - _offset);
     }

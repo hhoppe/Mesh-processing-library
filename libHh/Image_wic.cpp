@@ -289,7 +289,6 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   const bool write_through_memory =
       file_requires_pipe(filename) ||
       (have_metadata && canonical_pathname(get_path_absolute(filename)) == canonical_pathname(orig_filename));
-  // HGLOBAL hMem = nullptr;
   my_HGLOBAL hMem;  // gets defined if write_through_memory
   com_ptr<IStream> output_stream;
   if (write_through_memory) {
@@ -418,7 +417,6 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     void* pv = assertx(GlobalLock(hMem));
     { success = !!fi().write(reinterpret_cast<char*>(pv), size); }
     assertx(my_GlobalUnlock(hMem));
-    // assertx(!GlobalFree(hMem));
     // Such error may occur if filename == "-" (std::cout) is a pipe that has already been closed.
     if (!success) throw std::runtime_error("Error writing image to '" + filename + "'");
   }

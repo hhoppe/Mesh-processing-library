@@ -85,7 +85,7 @@ int main() {
         assertx(stree.enter(val[i]));
       }
       unsigned check_order_last = 0;
-      for (auto& i : stree) {
+      for (const auto& i : stree) {
         assertx(i >= check_order_last);
         check_order_last = i;
       }

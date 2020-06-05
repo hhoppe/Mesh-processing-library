@@ -17,18 +17,18 @@
   SRAVertex* v = new SRAVertex;
   v->_active.link_after(list_activev.delim());
   for (EListNode* n : list_activev) assertx(n->linked());
-  for (SRAVertex* v : EList_outer_range(list, SRAVertex, _active)) assertx(v->ok);
+  for (SRAVertex* v : HH_ELIST_RANGE(list, SRAVertex, _active)) assertx(v->ok);
 }
 #endif
 
 namespace hh {
 
 // Define a range to iterate over a list of Struct by following EListNode named node_elem_name within it.
-#define EList_outer_range(list, Struct, node_elem_name) \
+#define HH_ELIST_RANGE(list, Struct, node_elem_name) \
   hh::EList::OuterRange<Struct, offsetof(Struct, node_elem_name)>(list)
 
 // Given a pointer to EListNode node_elem_name, a member of Struct, return a pointer the Struct.
-#define EListOuter(Struct, node_elem_name, node) \
+#define HH_ELIST_OUTER(Struct, node_elem_name, node) \
   reinterpret_cast<Struct*>(const_cast<char*>(reinterpret_cast<const char*>(node) - offsetof(Struct, node_elem_name)))
 
 // Implements a doubly-linked list node to embed within other struct.
@@ -107,7 +107,7 @@ class EList {
    public:
     OuterIter(EListNode* node) : _node(node) {}
     bool operator!=(const OuterIter& rhs) const { return _node != rhs._node; }
-    Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<char*>(_node) - offset); }
+    Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset); }
     OuterIter& operator++();
     OuterIter& operator--();
 

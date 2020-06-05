@@ -337,7 +337,7 @@ class WVideo::Implementation {
 class Unsupported_RVideo_Implementation : public RVideo::Implementation {
  public:
   explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
-  ~Unsupported_RVideo_Implementation() = default;
+  ~Unsupported_RVideo_Implementation() override = default;
   string name() const override { return "unsupported"; }
   bool read(MatrixView<Pixel> frame) override {
     dummy_use(frame);
@@ -348,7 +348,7 @@ class Unsupported_RVideo_Implementation : public RVideo::Implementation {
 class Unsupported_WVideo_Implementation : public WVideo::Implementation {
  public:
   explicit Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
-  ~Unsupported_WVideo_Implementation() = default;
+  ~Unsupported_WVideo_Implementation() override = default;
   string name() const override { return "unsupported"; }
   void write(CMatrixView<Pixel> frame) override {
     dummy_use(frame);
@@ -396,7 +396,7 @@ WVideo::WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib att
       _sdims(spatial_dims),
       _attrib(std::move(attrib)),
       _use_nv12(use_nv12),
-      _pfilename(filename) {
+      _pfilename(_filename) {
   if (_attrib.suffix == "") _attrib.suffix = to_lower(get_path_extension(_filename));
   if (_attrib.suffix == "")
     throw std::runtime_error("Video '" + filename + "': no filename suffix specified for writing");
@@ -612,7 +612,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
       if (0) SHOW(dims, _stride);
     }
   }
-  ~MF_RVideo_Implementation() {
+  ~MF_RVideo_Implementation() override {
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
   string name() const override { return "MF"; }
@@ -1073,7 +1073,7 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
     if (ldebug) SHOW(scmd);
     _pfi = make_unique<RFile>(scmd);
   }
-  ~FF_RVideo_Implementation() = default;
+  ~FF_RVideo_Implementation() override = default;
   string name() const override { return "FF"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();

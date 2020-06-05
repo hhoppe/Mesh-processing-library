@@ -122,7 +122,6 @@
 #endif
 
 #if defined(__clang__)
-// #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #define HH_ASSUME(...)                                                                                            \
   _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wassume\"") __builtin_assume(__VA_ARGS__) \
       _Pragma("clang diagnostic pop")
@@ -130,7 +129,7 @@
 #define HH_ASSUME(...) __assume(__VA_ARGS__)  // implies __analysis_assume() but is expression rather than statement
 #else
 // #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // gcc
-// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // gcc; weaker
+// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // gcc: intended for branch prediction
 #define HH_ASSUME(...) (void(0))
 #endif
 
@@ -335,10 +334,10 @@ template <typename T> constexpr bool has_ostream_eol() {
 
 // With single expression, show "expr = value" and return expr (may require parentheses as in "SHOW((ntimes<3>(1)))".
 // With multiple expressions, show a sequence of "expr=value" on a single line.
-#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
 // Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
-#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number.
 #define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
@@ -574,19 +573,19 @@ template <typename T> T assertw_aux(T&& val, const char* s) {
 
 void show_cerr_and_debug(const string& s);
 
-#define HH_SHOW_0(sargs, prec, arg1) hh::details::SHOW_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
+#define HH_SHOW__0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
-#define HH_SHOW_1(sargs, prec, ...)                                            \
+#define HH_SHOW__1(sargs, prec, ...)                                            \
   do {                                                                         \
     std::ostringstream HH_ID(oss);                                             \
     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOWM_, << " " <<, __VA_ARGS__)) << "\n";  \
+    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW__M, << " " <<, __VA_ARGS__)) << "\n";  \
     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
   } while (false)
 
-#define HH_SHOWM_(x) (#x[0] == '"' ? "" : #x "=") << (x)
+#define HH_SHOW__M(x) (#x[0] == '"' ? "" : #x "=") << (x)
 
-template <typename T> T SHOW_aux(string str, T&& val, bool has_eol, bool high_precision) {
+template <typename T> T show_aux(string str, T&& val, bool has_eol, bool high_precision) {
   std::ostringstream oss;
   if (high_precision) oss.precision(std::numeric_limits<double>::max_digits10);
   oss << (str[0] == '"' ? "" : str + " = ") << val << (has_eol ? "" : "\n");

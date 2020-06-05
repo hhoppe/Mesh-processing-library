@@ -33,15 +33,15 @@ int main() {
     for (auto pa : EList::OuterRange<A, offsetof(A, _node)>{list}) SHOW(pa->_i);  // works
 #endif
     SHOW("2");
-    for (A* pa : EList_outer_range(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a2._node.relink_before(&a1._node);
     SHOW("relink a2");
-    for (A* pa : EList_outer_range(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a1._node.unlink();
     SHOW("unlink a1");
-    for (A* pa : EList_outer_range(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a2._node.unlink();
     SHOW("unlink a2");
-    for (A* pa : EList_outer_range(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
   }
 }

@@ -80,9 +80,9 @@ void try_it(const string& stest) {
 
 void test_spawn() {
   {
-    try_it("abc");
-    try_it("a b c");
-    try_it("'a b' c");
+    try_it(R"(abc)");
+    try_it(R"(a b c)");
+    try_it(R"('a b' c)");
     try_it(R"("a b" c)");
     try_it(R"(hh1 "a' b.txt" "a' b.txt" "a' b.txt" |)");
     try_it(R"(hh1 "a' \ b.txt" "a' b.txt" "a' b.txt" |)");
@@ -93,11 +93,11 @@ void test_spawn() {
     try_it(R"(hh1 "a' " b.txt" "a' b.txt" "a' b.txt" &)");
     try_it(R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &)");
     try_it(R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &~!@#$%^&*()`[]{};:,.<>/?-_=\+)");
-    try_it("%^&*()`[]{};:,.<>/?-_=\\+");
-    try_it("%^&*()");
+    try_it(R"(%^&*()`[]{};:,.<>/?-_=\+)");
+    try_it(R"(%^&*())");
   }
   {
-    const string arcands = "abcdefgh       `~!@#$%^&*()-_=+[{]}\\|;:'\"\",<.>/?";  // double '"' frequency
+    const string arcands = R"(abcdefgh       `~!@#$%^&*()-_=+[{]}\|;:'"",<.>/?)";  // double '"' frequency
     for_int(itry, 10) {                                                            // tried up to 10000
       const int len = 20;
       string str(len, ' ');
@@ -446,7 +446,7 @@ line2)";
     struct A {
       A() { SHOW("A default construct"); }
       A(const A& /*unused*/) { SHOW("A copy construct"); }
-      A(A&& /*unused*/) { SHOW("A move construct"); }
+      A(A&& /*unused*/) noexcept { SHOW("A move construct"); }
       ~A() { SHOW("A destruct"); }
     };
     SHOW("1");
@@ -457,7 +457,6 @@ line2)";
     {
       A a;
       A a2(a);
-      dummy_use(a2);
     }
     SHOW("4");
     { clone(A()); }
@@ -509,7 +508,7 @@ line2)";
     SHOW(sizeof(buf[0]));
   }
   {
-#define F_EACH(x) 2 * (x)
+#define F_EACH(x) (2 * (x))
 #define F(...) HH_APPLY((F_EACH, __VA_ARGS__))
     float a = pow(F(1.f, 2.f));
     SHOW(a);

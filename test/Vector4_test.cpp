@@ -50,7 +50,7 @@ int main() {
     SHOW(v4);
     SHOW(sizeof(v1));
     Vector4 va[2];
-    SHOW(reinterpret_cast<char*>(&va[1]) - reinterpret_cast<char*>(&va[0]));
+    SHOW(reinterpret_cast<uint8_t*>(&va[1]) - reinterpret_cast<uint8_t*>(&va[0]));
   }
   {
     Vec<uint8_t, 8> ar{uint8_t{23}, uint8_t{37}, uint8_t{45}, uint8_t{255},

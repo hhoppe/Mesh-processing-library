@@ -283,7 +283,7 @@ SRMesh::~SRMesh() {
     //    considering nodes accessible with only right-child relations.
     EListNode* ndelim = _active_vertices.delim();
     for (EListNode* n = ndelim->next(); n != ndelim;) {
-      SRAVertex* va = EListOuter(SRAVertex, activev, n);
+      SRAVertex* va = HH_ELIST_OUTER(SRAVertex, activev, n);
       n = n->next();  // advance here before node gets deleted
       bool branch_has_left_child = false;
       bool branch_has_right_child = false;
@@ -1364,7 +1364,7 @@ void SRMesh::apply_ecol(SRVertex* vs, EListNode*& pn) {
 void SRMesh::extract_gmesh(GMesh& gmesh) const {
   assertx(!gmesh.num_vertices());
   string str;
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     int vi = narrow_cast<int>(va->vertex - _vertices.data());
     Vertex gv = gmesh.create_vertex_private(vi + 1);
     gmesh.set_point(gv, va->vgeom.point);
@@ -1372,7 +1372,7 @@ void SRMesh::extract_gmesh(GMesh& gmesh) const {
     gmesh.update_string(gv, "normal", csform_vec(str, nor));
   }
   Array<Vertex> gvaa;
-  // Should not use EList_outer_range(_active_faces, SRAFace, fa) because we
+  // Should not use HH_ELIST_RANGE(_active_faces, SRAFace, fa) because we
   //  would not get reproducible face id's (no SRAFace* -> SRFace* info).
   for_int(fi, _faces.num()) {
     SRAFace* fa = _faces[fi].aface;
@@ -1391,7 +1391,7 @@ void SRMesh::extract_gmesh(GMesh& gmesh) const {
 void SRMesh::ok() const {
   Set<const SRAVertex*> setva;
   {
-    for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+    for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
       assertx(_vertices.ok(va->vertex));
       assertx(va->vertex->avertex == va);
       assertx(setva.add(va));
@@ -1409,7 +1409,7 @@ void SRMesh::ok() const {
   }
   Set<const SRAFace*> setfa;
   {
-    for (SRAFace* fa : EList_outer_range(_active_faces, SRAFace, activef)) {
+    for (SRAFace* fa : HH_ELIST_RANGE(_active_faces, SRAFace, activef)) {
       assertx(fa != &_isolated_aface);
       assertx(setfa.add(fa));
     }
@@ -1425,7 +1425,7 @@ void SRMesh::ok() const {
     assertx(numf == num_active_faces());
   }
   {
-    for (SRAFace* fa : EList_outer_range(_active_faces, SRAFace, activef)) {
+    for (SRAFace* fa : HH_ELIST_RANGE(_active_faces, SRAFace, activef)) {
       for_int(j, 3) {
         const SRAVertex* va = fa->vertices[j];
         assertx(setva.contains(va));
@@ -1569,12 +1569,12 @@ void SRMesh::fully_coarsen() {
 
 void SRMesh::verify_optimality() const {
   HH_ATIMER(____verify_optimality);
-  for (SRAVertex* vsa : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* vs = vsa->vertex;
     if (!is_splitable(vs)) continue;
     if (qrefine(vs)) Warning("** should refine");
   }
-  for (SRAVertex* vta : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* vta : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* vt = vta->vertex;
     SRVertex* vs = vt->parent;
     if (!vs) continue;
@@ -1636,7 +1636,7 @@ void SRMesh::adapt_refinement(int pnvtraverse) {
   EListNode* n = ndelim->next();
   for (;;) {
     if (n == ndelim) break;
-    SRAVertex* vsa = EListOuter(SRAVertex, activev, n);
+    SRAVertex* vsa = HH_ELIST_OUTER(SRAVertex, activev, n);
     SRVertex* vs = vsa->vertex;
     if (!nvtraverse--) break;
     n = n->next();
@@ -1728,7 +1728,7 @@ void SRMesh::adapt_refinement(int pnvtraverse) {
     EListNode* n_bu = n;
     for (;;) {
       if (n == ndelim) break;
-      SRAVertex* vsa = EListOuter(SRAVertex, activev, n);
+      SRAVertex* vsa = HH_ELIST_OUTER(SRAVertex, activev, n);
       SRVertex* vs = vsa->vertex;
       n = n->next();
       if (vsa->visible) continue;
@@ -1820,7 +1820,7 @@ void SRMesh::set_refine_morph_time(int refine_morph_time) {
   assertx(!refine_morph_time || refine_morph_time > 1);
   if (_refine_morph_time && !refine_morph_time) {
     // Snap refine-morphing vertices to their final positions.
-    for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+    for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
       if (!va->vmorph) continue;
       if (va->vmorph->coarsening) continue;
       // Snap vertices forward to their (new) refined positions.
@@ -1835,7 +1835,7 @@ void SRMesh::set_coarsen_morph_time(int coarsen_morph_time) {
   assertx(!coarsen_morph_time || coarsen_morph_time > 1);
   if (_coarsen_morph_time && !coarsen_morph_time) {
     // Perform ecol's for coarsen-morphing vertices.
-    for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+    for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
       if (!va->vmorph) continue;
       if (!va->vmorph->coarsening) continue;
       // Snap vertices backward to their (original) refined positions.
@@ -1855,7 +1855,7 @@ void SRMesh::update_vmorphs() {
   EListNode* ndelim = _active_vertices.delim();
   for (EListNode* n = ndelim->next();;) {
     if (n == ndelim) break;
-    SRAVertex* va = EListOuter(SRAVertex, activev, n);
+    SRAVertex* va = HH_ELIST_OUTER(SRAVertex, activev, n);
     n = n->next();
     SRVertexMorph* vm = va->vmorph.get();
     if (!vm) continue;
@@ -1919,14 +1919,14 @@ int SRMesh::num_vertices_refine_morphing() const { return _num_vertices_refine_m
 int SRMesh::num_vertices_coarsen_morphing() const { return _num_vertices_coarsen_morphing; }
 
 bool SRMesh::verify_all_faces_visited() const {
-  for (SRAFace* f : EList_outer_range(_active_faces, SRAFace, activef)) {
+  for (SRAFace* f : HH_ELIST_RANGE(_active_faces, SRAFace, activef)) {
     assertx((unsigned(f->matid) & k_Face_visited_mask) == _cur_frame_mask);
   }
   return true;
 }
 
 bool SRMesh::verify_all_vertices_uncached() const {
-  for (SRAVertex* v : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* v : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     assertx(v->cached_time < _cache_time);
   }
   return true;
@@ -1938,7 +1938,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
   assertx(!_refine_morph_time && !_coarsen_morph_time);
   Map<SRVertex*, SRVertexGeometry> m_v_vg;
   // Record the geometry of the current set of active vertices.
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     m_v_vg.enter(va->vertex, va->vgeom);
   }
   // Apply vspl's.
@@ -1946,7 +1946,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
     HH_ATIMER(__geo_vspls);
     EListNode* ndelim = _active_vertices.delim();
     for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
-      SRAVertex* vsa = EListOuter(SRAVertex, activev, n);
+      SRAVertex* vsa = HH_ELIST_OUTER(SRAVertex, activev, n);
       SRVertex* vs = vsa->vertex;
       if (!is_splitable(vs) || !qrefine(vs)) continue;
       force_vsplit(vs, n);
@@ -1954,7 +1954,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
     }
   }
   // Compute geoinfo._ancestors[0]
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* v = va->vertex;
     SRVertex* vv = v;
     while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
@@ -1967,7 +1967,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
     HH_ATIMER(__geo_ecols);
     EListNode* ndelim = _active_vertices.delim();
     for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
-      SRAVertex* vsa = EListOuter(SRAVertex, activev, n);
+      SRAVertex* vsa = HH_ELIST_OUTER(SRAVertex, activev, n);
       SRVertex* vs = vsa->vertex;
       SRVertex* vsp = vs->parent;
       if (!vsp || get_vt(vsp->vspli) != vs || !ecol_legal(vs)) continue;
@@ -1978,7 +1978,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
     }
   }
   // Record the geometry of the current set of active vertices.
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     m_v_vg.enter(va->vertex, va->vgeom);
   }
   // Undo ecol's by traversing sequence backwards.
@@ -1991,7 +1991,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
     }
   }
   // Compute geoinfo._ancestors[1]
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* v = va->vertex;
     SRVertex* vv = v;
     while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
@@ -2002,7 +2002,7 @@ void SRMesh::construct_geomorph(SRGeomorphInfo& geoinfo) {
 void SRMesh::extract_gmesh(GMesh& gmesh, const SRGeomorphInfo& geoinfo) const {
   extract_gmesh(gmesh);
   string str;
-  for (SRAVertex* va : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* va : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* v = va->vertex;
     int vi = narrow_cast<int>(v - _vertices.data());
     Vertex gv = gmesh.id_vertex(vi + 1);
@@ -2063,7 +2063,7 @@ void SRMesh::refine_in_best_dflclw_order() {
   };
   STree<Scvspl, less_Scvspl> stcvspl;  // current legal vsplits
   int ncand = 0;                       // number in stcvspl
-  for (SRAVertex* vsa : EList_outer_range(_active_vertices, SRAVertex, activev)) {
+  for (SRAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SRAVertex, activev)) {
     SRVertex* vs = vsa->vertex;
     if (!is_splitable(vs) || !vspl_legal(vs)) continue;
     Scvspl n;

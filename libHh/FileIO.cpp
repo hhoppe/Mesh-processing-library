@@ -218,7 +218,7 @@ class ocfstream : public std::ostream {
 class RFile::Implementation {
  public:
   explicit Implementation(FILE* file) : _ifstream(file) {}  // non-standard extension in VS
-  operator std::istream*() { return &_ifstream; }
+  std::istream* get_stream() { return &_ifstream; }
 
  private:
   std::ifstream _ifstream;
@@ -227,7 +227,7 @@ class RFile::Implementation {
 class WFile::Implementation {
  public:
   explicit Implementation(FILE* file) : _ofstream(file) {}  // non-standard extension in VS
-  operator std::ostream*() { return &_ofstream; }
+  std::ostream* get_stream() { return &_ofstream; }
 
  private:
   std::ofstream _ofstream;
@@ -238,7 +238,7 @@ class WFile::Implementation {
 class RFile::Implementation {
  public:
   Implementation(FILE* file) : _filebuf(file, std::ios_base::in), _istream(&_filebuf) {}
-  operator std::istream*() { return &_istream; }
+  std::istream* get_stream() { return &_istream; }
 
  private:
   __gnu_cxx::stdio_filebuf<char> _filebuf;  // gcc-specific
@@ -248,7 +248,7 @@ class RFile::Implementation {
 class WFile::Implementation {
  public:
   Implementation(FILE* file) : _filebuf(file, std::ios_base::out), _ostream(&_filebuf) {}
-  operator std::ostream*() { return &_ostream; }
+  std::ostream* get_stream() { return &_ostream; }
 
  private:
   __gnu_cxx::stdio_filebuf<char> _filebuf;  // gcc-specific
@@ -260,7 +260,7 @@ class WFile::Implementation {
 class RFile::Implementation {
  public:
   Implementation(FILE* file) : _icfstream(file) {}
-  operator std::istream*() { return &_icfstream; }
+  std::istream* get_stream() { return &_icfstream; }
 
  private:
   icfstream _icfstream;  // cross-platform but less efficient due to extra buffering
@@ -269,7 +269,7 @@ class RFile::Implementation {
 class WFile::Implementation {
  public:
   Implementation(FILE* file) : _ocfstream(file) {}
-  operator std::ostream*() { return &_ocfstream; }
+  std::ostream* get_stream() { return &_ocfstream; }
 
  private:
   ocfstream _ocfstream;  // cross-platform but slightly less efficient due to extra API layer
@@ -311,7 +311,7 @@ RFile::RFile(const string& filename) {
   }
   if (_file && !_is) {
     _impl = make_unique<Implementation>(_file);
-    _is = *_impl;
+    _is = _impl->get_stream();
   }
   if (!_is) throw std::runtime_error("Could not open file '" + filename + "' for reading");
 }
@@ -363,7 +363,7 @@ WFile::WFile(const string& filename) {
   }
   if (_file && !_os) {
     _impl = make_unique<Implementation>(_file);
-    _os = *_impl;
+    _os = _impl->get_stream();
     if (0) {
       // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
       // Verify that the precision was unchanged from its default value of 6.
@@ -832,7 +832,7 @@ struct basic_nullbuf : std::basic_streambuf<Ch, Traits> {
   using base_type = std::basic_streambuf<Ch, Traits>;
   using int_type = typename base_type::int_type;
   using traits_type = typename base_type::traits_type;
-  virtual int_type overflow(int_type c) override { return traits_type::not_eof(c); }
+  int_type overflow(int_type c) override { return traits_type::not_eof(c); }
 };
 
 using nullbuf = basic_nullbuf<char>;

@@ -203,8 +203,8 @@ class LruVertexCache : public VertexCache {
     EListNode* tnodee = _list.delim()->next();
     EListNode* tdelime = _list.delim();
     while (tnodee != tdelime) {
-      Node* onode = EListOuter(Node, elist, onodee);
-      Node* tnode = EListOuter(Node, elist, tnodee);
+      Node* onode = HH_ELIST_OUTER(Node, elist, onodee);
+      Node* tnode = HH_ELIST_OUTER(Node, elist, tnodee);
       int vif = onode->vert;
       tnode->vert = vif;
       _vinlist[vif] = tnode;  // vif == k_no_entry is OK
@@ -223,7 +223,7 @@ class LruVertexCache : public VertexCache {
     }
     EListNode* nodee = _list.delim()->prev();  // rear node
     // if (nodee == _list.delim()) return false;  // cs == 0
-    node = EListOuter(Node, elist, nodee);
+    node = HH_ELIST_OUTER(Node, elist, nodee);
     int vj = node->vert;
     ASSERTX(vj == k_no_entry || _vinlist[vj] == node);
     _vinlist[vj] = nullptr;  // vj == k_no_entry is OK
@@ -264,7 +264,7 @@ class LruVertexCache : public VertexCache {
     Iter(const LruVertexCache& vcache) : _delim(vcache._list.delim()), _n(vcache._list.delim()->next()) {}
     int next() override {
       if (_n == _delim) return 0;
-      int vi = EListOuter(LruVertexCache::Node, elist, _n)->vert;
+      int vi = HH_ELIST_OUTER(LruVertexCache::Node, elist, _n)->vert;
       _n = _n->next();
       return vi;  // vi == k_no_entry is OK
     }

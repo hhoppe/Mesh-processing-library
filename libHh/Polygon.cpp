@@ -170,9 +170,9 @@ void Polygon::intersect_plane(const Vector& polynor, const Vector& planenor, flo
   if (!pa.num()) return;
   Vector vint = get_vint(polynor, planenor);
   struct InterLess {
-    explicit InterLess(Vector vint) : _vint(std::move(vint)) {}
+    explicit InterLess(const Vector& vint) : _vint(vint) {}
     bool operator()(const Point& p1, const Point& p2) const { return cmp_inter(p1, p2, _vint) == -1; }
-    Vector _vint;
+    const Vector& _vint;
   };
   sort(pa, InterLess(vint));
 }

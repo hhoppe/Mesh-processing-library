@@ -525,11 +525,11 @@ static inline int strprefix(const char* s, const char* p) {
 }
 
 bool GMesh::recognize_line(const char* s) {
-  static const char* ar_prefixes[] = {
+  static const char* prefixes[] = {
       "Vertex ",  "Face ",  "Corner ", "Edge ", "MVertex ", "CVertex ",
       "DVertex ", "DFace ", "Ecol ",   "Eswa ", "Espl ",    "Vspl",
   };
-  for (const char* prefix : ar_prefixes) {
+  for (const char* prefix : prefixes) {
     if (strprefix(s, prefix)) return true;
   }
   return false;

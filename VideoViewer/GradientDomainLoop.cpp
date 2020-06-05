@@ -877,7 +877,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                 auto video_nv12_Yfi = lvideo_nv12_Y[fi];
                 for_intL(y, hy * DS, hy * DS + DS) {
                   auto* nframeYy = nframe.get_Y()[y].data();
-                  auto* video_nv12_Yy = video_nv12_Yfi[y].data();
+                  const auto* video_nv12_Yy = video_nv12_Yfi[y].data();
                   for_intL(x, hx * DS, hx * DS + DS) {
                     nframeYy[x] = clamp_to_uint8(video_nv12_Yy[x] + offset_YUV[0]);  // OPT:nv12Y
                   }
@@ -885,7 +885,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                 auto video_nv12_UVfi = lvideo_nv12_UV[fi];
                 for_intL(y, hy * DSh, hy * DSh + DSh) {
                   auto* nframeUVy = nframe.get_UV()[y].data();
-                  auto* video_nv12_UVy = video_nv12_UVfi[y].data();
+                  const auto* video_nv12_UVy = video_nv12_UVfi[y].data();
                   for_intL(x, hx * DSh, hx * DSh + DSh) {
                     nframeUVy[x][0] = clamp_to_uint8(video_nv12_UVy[x][0] + offset_YUV[1]);
                     nframeUVy[x][1] = clamp_to_uint8(video_nv12_UVy[x][1] + offset_YUV[2]);

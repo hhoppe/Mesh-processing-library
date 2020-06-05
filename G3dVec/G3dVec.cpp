@@ -1074,8 +1074,8 @@ void HB::set_yonder(float y) {
   is_yonder = yonder != 0.f;
 }
 
-void HB::set_current_object(int cob) {
-  dummy_use(cob);  // no lighting feature in g3dX
+void HB::set_current_object(int obn) {
+  dummy_use(obn);  // no lighting feature in g3dX
 }
 
 void HB::update_seg(int segn, const Frame& f, bool vis) {

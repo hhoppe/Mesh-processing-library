@@ -38,13 +38,18 @@ inline Vector ok_normalized(Vector v) {
 }
 // Overload to have lower precision than RangeOp.h templates (which return double).
 // Must overload several versions to hide the influence of the template in RangeOp.h
-// #define E static_cast<float>(double{v1[0]} * v2[0] + double{v1[1]} * v2[1] + double{v1[2]} * v2[2])
-#define E v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]
-inline constexpr float dot(const Vec3<float>& v1, const Vec3<float>& v2) { return E; }
-inline constexpr float dot(const Vec3<float>& v1, const Vector& v2) { return E; }
-inline constexpr float dot(const Vector& v1, const Vec3<float>& v2) { return E; }
-inline constexpr float dot(const Vector& v1, const Vector& v2) { return E; }
-#undef E
+inline constexpr float dot(const Vec3<float>& v1, const Vec3<float>& v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+inline constexpr float dot(const Vec3<float>& v1, const Vector& v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+inline constexpr float dot(const Vector& v1, const Vec3<float>& v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
+inline constexpr float dot(const Vector& v1, const Vector& v2) {
+  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
+}
 inline constexpr float mag2(const Vec3<float>& v1) { return dot(v1, v1); }
 inline constexpr float mag2(const Vector& v1) { return dot(v1, v1); }
 inline float mag(const Vec3<float>& v1) { return sqrt(mag2(v1)); }
@@ -64,12 +69,18 @@ inline float pvdot(const Point& p, const Vector& v) { return dot(to_Vector(p), v
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
 float area2(const Point& p1, const Point& p2, const Point& p3);
 Point centroid(CArrayView<Point> pa);
-#define E square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2])
-inline float dist2(const Vec3<float>& v1, const Vec3<float>& v2) { return E; }
-inline float dist2(const Vec3<float>& v1, const Point& v2) { return E; }
-inline float dist2(const Point& v1, const Vec3<float>& v2) { return E; }
-inline float dist2(const Point& v1, const Point& v2) { return E; }
-#undef E
+inline float dist2(const Vec3<float>& v1, const Vec3<float>& v2) {
+  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
+}
+inline float dist2(const Vec3<float>& v1, const Point& v2) {
+  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
+}
+inline float dist2(const Point& v1, const Vec3<float>& v2) {
+  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
+}
+inline float dist2(const Point& v1, const Point& v2) {
+  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
+}
 inline float dist(const Vec3<float>& v1, const Vec3<float>& v2) { return sqrt(dist2(v1, v2)); }
 inline float dist(const Vec3<float>& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
 inline float dist(const Point& v1, const Vec3<float>& v2) { return sqrt(dist2(v1, v2)); }

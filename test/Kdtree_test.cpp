@@ -6,7 +6,7 @@ int main() {
   {
     struct cbf {
       Kdtree<int, 1>::ECallbackReturn operator()(const int& id, ArrayView<float> /*unused*/,
-                                                 ArrayView<float> /*unused*/, Kdtree<int, 1>::CBloc) const {
+                                                 ArrayView<float> /*unused*/, Kdtree<int, 1>::CBloc /*unused*/) const {
         showf("found index %d\n", id);
         return Kdtree<int, 1>::ECallbackReturn::nothing;
       }

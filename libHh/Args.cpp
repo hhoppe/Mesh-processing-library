@@ -154,7 +154,7 @@ ParseArgs::ParseArgs(int& argc, const char**& argv) : _name("") {
   argv = nullptr;
 }
 
-ParseArgs::ParseArgs(CArrayView<string> aargs, const string& name) : _name(name) {
+ParseArgs::ParseArgs(CArrayView<string> aargs, string name) : _name(std::move(name)) {
   assertx(aargs.num() > 0);
   _argv0 = aargs[0];
   _args = aargs.slice(1, aargs.num());
@@ -231,7 +231,7 @@ bool ParseArgs::special_arg(const string& s) {
 void ParseArgs::print_help() {
   std::cerr << get_ename() << " Options:" << (_disallow_prefixes ? " (no implicit prefixes)" : "") << "\n";
   for (const option& o : _aroptions) {
-    string sdefault = "";
+    string sdefault;
     if (o.parsef == &ParseArgs::fquestion && _name != "") continue;
     if (contains(o.doc, "(<unlisted>)")) continue;
     if (o.narg > 0) {
@@ -417,7 +417,7 @@ void ParseArgs::copy_parse(const ParseArgs& pa) {
 
 void ParseArgs::fbool(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<bool*>(pargs._curopt->argp);
+  auto* argp = static_cast<bool*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   if (!n) {  // set a flag variable
     if (0 && *argp) {
@@ -432,35 +432,35 @@ void ParseArgs::fbool(Args& args) {
 
 void ParseArgs::fchar(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<char*>(pargs._curopt->argp);
+  auto* argp = static_cast<char*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_char();
 }
 
 void ParseArgs::fint(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<int*>(pargs._curopt->argp);
+  auto* argp = static_cast<int*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_int();
 }
 
 void ParseArgs::ffloat(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<float*>(pargs._curopt->argp);
+  auto* argp = static_cast<float*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_float();
 }
 
 void ParseArgs::fdouble(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<double*>(pargs._curopt->argp);
+  auto* argp = static_cast<double*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_double();
 }
 
 void ParseArgs::fstring(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  auto argp = static_cast<string*>(pargs._curopt->argp);
+  auto* argp = static_cast<string*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_string();
 }

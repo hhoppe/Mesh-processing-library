@@ -13,7 +13,7 @@ namespace {
 void test_stack() {
   {
     struct ST {
-      ST(int i) : _i(i) {}
+      explicit ST(int i) : _i(i) {}
       int _i;
     };
     std::vector<const ST*> s;

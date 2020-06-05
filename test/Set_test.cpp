@@ -122,10 +122,6 @@ int main() {
     ar2.push(5);
     Array<int> ar3;
     ar3.push(6);
-    assertx(std::equal_to<Array<int>>()(ar1, ar1));
-    assertx(std::equal_to<Array<int>>()(ar2, ar2));
-    assertx(std::equal_to<Array<int>>()(ar1, ar2));
-    assertx(!std::equal_to<Array<int>>()(ar1, ar3));
     assertx(ar1 == ar1);
     assertx(ar1 == ar2);
     assertx(ar2 == ar1);

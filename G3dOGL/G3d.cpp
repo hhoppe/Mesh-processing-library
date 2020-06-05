@@ -100,9 +100,9 @@ void object::update_stats() {
   }
 }
 
-bool object::defined() { return _def; }
-bool object::visible() { return _vis; }
-const Frame& object::t() { return _t; }
+bool object::defined() const { return _def; }
+bool object::visible() const { return _vis; }
+const Frame& object::t() const { return _t; }
 void object::set_vis(bool i) {
   if (_vis != i) _needs_update = true;
   _vis = i;
@@ -112,12 +112,12 @@ Frame& object::tm() {
   return _t;
 }
 
-Point object::center() {
+const Point& object::center() const {
   if (_obn) assertw(_def);
   return !_def || !mode_centroid ? rec_point : _pavg;
 }
 
-const Bbox& object::bbox() {
+const Bbox& object::bbox() const {
   static const Bbox k_bbempty(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
   if (!_def) {
     Warning("Undefined bbox");
@@ -126,7 +126,7 @@ const Bbox& object::bbox() {
   return _bbox;
 }
 
-float object::radius() { return _radius; }
+float object::radius() const { return _radius; }
 
 void object::update() {
   if (!_needs_update) return;

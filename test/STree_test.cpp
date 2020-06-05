@@ -4,6 +4,7 @@
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Set.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 int main() {
@@ -36,11 +37,11 @@ int main() {
   }
   {
     struct astruct {
-      astruct(int x = 0, int y = 0) {
+      explicit astruct(int x = 0, int y = 0) {
         a[0] = x;
         a[1] = y;
       }
-      int a[2];
+      Vec<int, 2> a;
     };
     auto func_compare_astruct = [](const astruct& s1, const astruct& s2) {
       if (s1.a[0] != s2.a[0]) return s1.a[0] - s2.a[0];
@@ -68,7 +69,7 @@ int main() {
   }
   {
     const int n = 1000;
-    unsigned val[n];
+    Vec<unsigned, n> val;
     Set<unsigned> setv;
     for_int(i, n) {
       for (;;) {

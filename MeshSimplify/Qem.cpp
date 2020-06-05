@@ -5,29 +5,11 @@
 #include "libHh/Polygon.h"  // orthogonal_vector()
 #include "libHh/RangeOp.h"
 #include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 
 // Many static data structures below -- lots of code is not thread-safe.
-
-// Given larger q1, add to it the smaller q2 (in the upper-left corner).
-template <typename T, int n1, int n2> void qem_add_submatrix(Qem<T, n1>& q1, const Qem<T, n2>& q2) {
-  assertx(n1 > n2);
-  {
-    T* pa1 = q1._a.data();
-    const T* pa2 = q2._a.data();
-    for_int(i, n2) {
-      for_intL(j, i, n2) {
-        *pa1 += *pa2;
-        pa1++;
-        pa2++;
-      }
-      pa1 += (n1 - n2);
-    }
-  }
-  for_int(i, n2) q1._b[i] += q2._b[i];
-  q1._c += q2._c;
-}
 
 template <typename T, int n> void Qem<T, n>::set_zero() {
   for_int(i, (n * (n + 1)) / 2) { _a[i] = T{0}; }
@@ -81,7 +63,7 @@ template <typename T, int n> void Qem<T, n>::set_d2_from_point(const float* p0) 
 }
 
 template <typename T, int n> void Qem<T, n>::set_distance_gh98(const float* p0, const float* p1, const float* p2) {
-  T e1[n], e2[n];
+  Vec<T, n> e1, e2;
   // e1 = p1 - p0,  e2 = p2 - p0
   for_int(i, n) {
     e1[i] = T{p1[i]} - p0[i];
@@ -136,7 +118,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_gh98(const float* p0, 
 
 template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, const float* p1, const float* p2) {
   const int ngeom = 3, nattrib = n - ngeom;
-  T nor[ngeom];
+  Vec<T, ngeom> nor;
   // Vector nor = cross(Point(p0[0], p0[1], p0[2]),
   //                    Point(p1[0], p1[1], p1[2]),
   //                    Point(p2[0], p2[1], p2[2]));

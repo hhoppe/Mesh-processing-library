@@ -805,7 +805,7 @@ void SRMesh::write_srm(std::ostream& os) const {
       unsigned fni = fa->fnei[j] != &_isolated_aface ? narrow_cast<int>(fa->fnei[j] - _base_faces.data()) + 1 : 0;
       write_binary_std(os, ArView(fni));
     }
-    write_binary_std(os, ArView(unsigned(fa->matid & ~k_Face_visited_mask)));
+    write_binary_std(os, ArView(unsigned(fa->matid) & ~k_Face_visited_mask));
   }
   // Write out vsplits.
   for_int(vspli, _vsplits.num()) {
@@ -817,8 +817,8 @@ void SRMesh::write_srm(std::ostream& os) const {
       write_binary_std(os, ArView(fni));
     }
 #if !defined(SR_PREDICT_MATID)
-    write_binary_std(os, ArView(narrow_cast<ushort>(vspl->fl_matid & ~k_Face_visited_mask)));
-    write_binary_std(os, ArView(narrow_cast<ushort>(vspl->fr_matid & ~k_Face_visited_mask)));
+    write_binary_std(os, ArView(narrow_cast<ushort>(unsigned(vspl->fl_matid) & ~k_Face_visited_mask)));
+    write_binary_std(os, ArView(narrow_cast<ushort>(unsigned(vspl->fr_matid) & ~k_Face_visited_mask)));
 #else
     write_binary_std(os, ArView(ushort{0}));
     write_binary_std(os, ArView(ushort{0}));
@@ -1257,7 +1257,7 @@ void SRMesh::apply_vspl(SRVertex* vs, EListNode*& pn) {
       vta->activev.relink_after(n);
     }
   } else {
-    if (n == &vta->activev) pn = n = n->next();
+    if (n == &vta->activev) pn = n->next();
   }
   _num_active_vertices++;
   _num_active_faces += 2;
@@ -1338,7 +1338,7 @@ void SRMesh::apply_ecol(SRVertex* vs, EListNode*& pn) {
   {
     SRVertex* vsp = vs->parent;
     if (!vsp) {
-      if (n == &vsa->activev) pn = n = n->next();
+      if (n == &vsa->activev) pn = n->next();
     } else {
       SRVertex* vspt = get_vt(vsp->vspli);  // vs's sibling (or itself)
       SRAVertex* vspta = (vspt + 0)->avertex;
@@ -1349,7 +1349,7 @@ void SRMesh::apply_ecol(SRVertex* vs, EListNode*& pn) {
         }
       } else {
         // Skip past vsa if current node.
-        if (n == &vsa->activev) pn = n = n->next();
+        if (n == &vsa->activev) pn = n->next();
       }
     }
   }
@@ -1384,7 +1384,7 @@ void SRMesh::extract_gmesh(GMesh& gmesh) const {
     }
     Face gf = gmesh.create_face_private(fi + 1, gvaa);
     dummy_use(gf);
-    gmesh.set_string(gf, _materials.get(fa->matid & ~k_Face_visited_mask).c_str());
+    gmesh.set_string(gf, _materials.get(unsigned(fa->matid) & ~k_Face_visited_mask).c_str());
   }
 }
 
@@ -1920,7 +1920,7 @@ int SRMesh::num_vertices_coarsen_morphing() const { return _num_vertices_coarsen
 
 bool SRMesh::verify_all_faces_visited() const {
   for (SRAFace* f : EList_outer_range(_active_faces, SRAFace, activef)) {
-    assertx((f->matid & k_Face_visited_mask) == _cur_frame_mask);
+    assertx((unsigned(f->matid) & k_Face_visited_mask) == _cur_frame_mask);
   }
   return true;
 }

@@ -1,11 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "HW.h"
 
-#include <sys/select.h>  // fd_set, select()
 #include <cerrno>
 #include <csignal>  // signal()
 #include <cstring>  // strlen(), std::memset(), std::strerror()
 #include <ctime>    // setitimer(), struct itimerval, struct timeval
+
+#include <sys/select.h>  // fd_set, select()
 
 extern "C" {
 #include <X11/Xatom.h>  // XA_STRING

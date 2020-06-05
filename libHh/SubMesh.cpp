@@ -425,7 +425,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
     Vertex _v1, _v2;
   };
   struct hash_Svv {
-    hash_Svv(const GMesh* mesh) : _mesh(*assertx(mesh)) {}
+    explicit hash_Svv(const GMesh* mesh) : _mesh(*assertx(mesh)) {}
     size_t operator()(const Svv& s) const { return _mesh.vertex_id(s._v1) + intptr_t{_mesh.vertex_id(s._v2)} * 761; }
     const GMesh& _mesh;
   };

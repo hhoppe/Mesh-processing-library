@@ -93,7 +93,7 @@ class SparseLLS : public LLS {
 // Base class for full (non-sparse) approaches.
 class FullLLS : public LLS {
  public:
-  explicit FullLLS(int m, int n, int nd) : LLS(m, n, nd), _a(m, n) { clear(); }
+  explicit FullLLS(int m, int n, int nd) : LLS(m, n, nd), _a(m, n) { FullLLS::clear(); }
   void clear() override;
   void enter_a_rc(int r, int c, float val) override { _a[r][c] = val; }
   void enter_a_r(int r, CArrayView<float> ar) override {

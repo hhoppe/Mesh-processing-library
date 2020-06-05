@@ -121,7 +121,12 @@
 #define HH_PRINTF_ATTRIBUTE(...)
 #endif
 
-#if defined(_MSC_VER) && !defined(__clang__)
+#if defined(__clang__)
+// #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
+#define HH_ASSUME(...)                                                                                            \
+  _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wassume\"") __builtin_assume(__VA_ARGS__) \
+      _Pragma("clang diagnostic pop")
+#elif defined(_MSC_VER)
 #define HH_ASSUME(...) __assume(__VA_ARGS__)  // implies __analysis_assume() but is expression rather than statement
 #else
 // #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // gcc

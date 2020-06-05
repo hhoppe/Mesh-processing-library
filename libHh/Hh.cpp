@@ -2,8 +2,6 @@
 
 #include "libHh/Hh.h"
 
-#include <fcntl.h>     // O_BINARY, fcntl()
-#include <sys/stat.h>  // struct stat and fstat()
 #include <array>
 #include <cctype>  // std::isdigit()
 #include <cerrno>  // errno
@@ -16,6 +14,9 @@
 #include <new>      // set_new_handler()
 #include <regex>
 #include <vector>
+
+#include <fcntl.h>     // O_BINARY, fcntl()
+#include <sys/stat.h>  // struct stat and fstat()
 
 #if defined(__MINGW32__)
 #include <malloc.h>  // __mingw_aligned_malloc()
@@ -479,6 +480,7 @@ void setup_exception_hooks() {
     // LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(
     //   _In_  LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
     LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);
+    dummy_use(v);
     if (0) SHOW(reinterpret_cast<uint64_t>(v));
     // 0x0041DE18 -- already is an exception filter.  what did it do?
   }
@@ -1494,7 +1496,8 @@ int to_int(const char* s) {
 
 static void unsetenv(const char* name) {
   // Note: In Unix, deletion would use sform("%s", name).
-  assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=", name).c_str()).release()));  // never deleted
+  const char* s = make_unique_c_string(sform("%s=", name).c_str()).release();  // never deleted
+  assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
 static void setenv(const char* name, const char* value, int change_flag) {
@@ -1504,8 +1507,8 @@ static void setenv(const char* name, const char* value, int change_flag) {
     // Note: In Unix, deletion would use sform("%s", name).
     unsetenv(name);
   } else {
-    // never deleted
-    assertx(!HH_POSIX(putenv)(make_unique_c_string(sform("%s=%s", name, value).c_str()).release()));
+    const char* s = make_unique_c_string(sform("%s=%s", name, value).c_str()).release();  // never deleted
+    assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
   }
 }
 

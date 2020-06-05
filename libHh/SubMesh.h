@@ -65,7 +65,7 @@ class SubMesh {
 
   // omesh to and from mesh:
   Face orig_face(Face f) const;
-  void orig_face_index(Face fi, Face& fo, int& pindex) const;
+  void orig_face_index(Face fi, Face& of, int& pindex) const;
   Face get_face(Face of, int index) const;
 
   // split and compute splitting masks:

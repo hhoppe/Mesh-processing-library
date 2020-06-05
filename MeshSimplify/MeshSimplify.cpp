@@ -274,9 +274,9 @@ Set<eptinfo*>& e_setpts(Edge) {
 // ***
 
 #if defined(QEM_DOUBLE)
-#define L_QEM_T double
+using L_QEM_T = double;
 #else
-#define L_QEM_T float
+using L_QEM_T = float;
 #endif
 using BQemT = BQem<L_QEM_T>;
 constexpr int k_qemsmax = 9;
@@ -525,7 +525,7 @@ Matrix<ushort> g_gridu;  // if -gridushorts
 #if defined(ENABLE_TVC)
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_tvc_owid);  // original wedge id of mesh corner
 #else
-int& c_tvc_owid(Corner) {
+int& c_tvc_owid(Corner /*unused*/) {
   assertnever_ret("");
   static int t;
   return t;
@@ -538,7 +538,7 @@ constexpr int tvc_cachesize = tvc_realcachesize - tvc_fudge;
 // index 0 is most recently added; empty entries have {wid = -1, v = 0}.
 struct CacheEntry {
   CacheEntry() = default;
-  CacheEntry(Corner c) {
+  explicit CacheEntry(Corner c) {
     assertx(c);
     wid = c_wedge_id(c);
     v = mesh.corner_vertex(c);
@@ -930,10 +930,8 @@ template <int n> Vec<float, n> interp_floats(const Vec<float, n>& ar1, const Vec
 
 // Interpolate two wedge scalar attributes.  ii == 0: v2, ii == 2: v1, ii == 1: midp
 WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
-  WedgeInfo wio;
-  wio.col = interp_floats(wi1.col, wi2.col, ii);
-  wio.nor = interp_floats(wi1.nor, wi2.nor, ii);
-  wio.uv = interp_floats(wi1.uv, wi2.uv, ii);
+  WedgeInfo wio{interp_floats(wi1.col, wi2.col, ii), interp_floats(wi1.nor, wi2.nor, ii),
+                interp_floats(wi1.uv, wi2.uv, ii)};
   // Interpolated normal may be zero.  Will test for this later.
   if (wio.nor[0] != k_undefined) wio.nor.normalize();
   return wio;
@@ -1089,7 +1087,7 @@ void parse_mesh_material_identifiers() {
   for (const string& srep : hashstring) {
     if (GMesh::string_has_key(srep.c_str(), "matid")) continue;  // handled above
     int matid = material_strings.add(1);
-    material_strings[matid] = GMesh::string_update(srep.c_str(), "matid", csform(str, "%d", matid));
+    material_strings[matid] = GMesh::string_update(srep, "matid", csform(str, "%d", matid));
     msrepmatid.enter(&srep, matid);
   }
   showdf("Materials=%d: %d with matid (%d unused), %d without matid\n", material_strings.num(), nfirst,
@@ -1572,7 +1570,6 @@ void sample_pts() {
       point_change_edge(&ept, e);
     }
   }
-  return;
 }
 
 void do_tvcreinit() {
@@ -2438,7 +2435,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
       float bary;
       float d2 = project_point_seg2(p, mesh.point(nn.va[ovi]), newp, &bary);
       if (d2 < min_d2) {
-        min_d2 = d2;
+        // min_d2 = d2;
         mini = ovi;
         min_bary = bary;
       }
@@ -4198,7 +4195,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
     int dir = -1;  // 0 == CCW, 1 == CLW
     int jmin = INT_MAX;
-    bool ar_ok[2] = {false, false};
+    Vec<bool, 2> ar_ok = {false, false};
     for_int(i, 2) {
       if (minii2) {
         if (min_ii == 0 && i == 1) continue;  // force swap

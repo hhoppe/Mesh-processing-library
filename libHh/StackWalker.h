@@ -163,7 +163,7 @@ class StackWalker
     virtual void OnLoadModule(LPCSTR img, LPCSTR mod, DWORD64 baseAddr, DWORD size, DWORD result, LPCSTR symType, LPCSTR pdbName, ULONGLONG fileVersion);
     virtual void OnCallstackEntry(CallstackEntryType eType, CallstackEntry &entry);
     virtual void OnDbgHelpErr(LPCSTR szFuncName, DWORD gle, DWORD64 addr);
-    virtual void OnOutput(LPCSTR szText);
+    virtual void OnOutput(LPCSTR buffer);
 
     StackWalkerInternal *m_sw;
     HANDLE m_hProcess;

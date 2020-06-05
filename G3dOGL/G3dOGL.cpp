@@ -85,7 +85,6 @@ constexpr float k_default_yonder = BIGFLOAT;
 constexpr bool lod_use_nvertices = true;  // lod input/output uses #vertices, not slider
 
 struct DerivedHW : HW {
-  DerivedHW() {}
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;
@@ -262,11 +261,11 @@ Color meshcolor;
 Color cuspcolor;
 
 struct Node : noncopyable {
-  virtual ~Node() {}
+  virtual ~Node() = default;
   enum class EType { polygon, line, point };
   EType _type;  // faster than virtual function or dynamic_cast() or hh::dynamic_exact_cast(), and avoids RTTI
  protected:
-  Node(EType type) : _type(type) {}
+  explicit Node(EType type) : _type(type) {}
 };
 
 struct NodePolygon : Node {
@@ -408,7 +407,7 @@ void psc_set_lod(float lod);
 void read_sc_gm(const string& filename);
 void sc_gm_wrap_draw(bool show);
 void sc_gm_set_lod(float lod);
-void draw_sc_gm(const SimplicialComplex&);
+void draw_sc_gm(const SimplicialComplex& kmesh);
 Vec<SCGeomorph, 20> Gmorphs;  // has to be here because of draw_all
 int sc_gm_morph = 0;
 int sc_gm_num = -1;
@@ -852,7 +851,7 @@ void display_texture_size_info() {
     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
     showf("GL_MAX_TEXTURE_SIZE: %d\n", max_texture_size);
   }
-  for (auto& glt_format : k_glt_formats) {
+  for (const auto& glt_format : k_glt_formats) {
     for_intL(mm, 1 - detailed, 2) {
       for_intL(aspx, 1, 1 + 3 * detailed + 1) {
         if (aspx == 3) continue;  // always fails to allocate
@@ -931,7 +930,7 @@ void load_texturemaps() {
     const Array<string> exts = {"nor.bmp", "nor.jpg", "nor.ppm", "nor.rgb", "nor.png",
                                 "bmp",     "jpg",     "ppm",     "rgb",     "png"};
     string s;
-    for (auto& ext : exts) {
+    for (const auto& ext : exts) {
       s = name + "." + ext;
       if (file_exists(s)) break;
       s.clear();
@@ -1385,7 +1384,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
     const Node* un = arn[i].get();
     switch (un->_type) {
       case Node::EType::polygon: {
-        auto n = down_cast<const NodePolygon*>(un);
+        const auto* n = down_cast<const NodePolygon*>(un);
         if (ledges && !lshading) continue;
         initialize_lit();
         // OpenGL seems to have problem culling polygons, even if planar and convex.
@@ -1421,7 +1420,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         break;
       }
       case Node::EType::line: {
-        auto n = down_cast<const NodeLine*>(un);
+        const auto* n = down_cast<const NodeLine*>(un);
         initialize_unlit();
         if (n->pa.num() == 2) {
           glBegin(GL_LINES);
@@ -1447,7 +1446,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         break;
       }
       case Node::EType::point: {
-        auto n = down_cast<const NodePoint*>(un);
+        const auto* n = down_cast<const NodePoint*>(un);
         initialize_unlit();
         glBegin(GL_POINTS);
         for (int j = 0;;) {
@@ -1479,7 +1478,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
       }
       const Node* un = arn[i].get();
       if (un->_type == Node::EType::polygon) {
-        auto n = down_cast<const NodePolygon*>(un);
+        const auto* n = down_cast<const NodePolygon*>(un);
         const Polygon& poly = n->poly;
         j += poly.num();
         if (j > buffer_nedges) {
@@ -3806,7 +3805,7 @@ bool sr_key_press(char ch) {
 
 class Cylinder {
  public:
-  Cylinder(int depth);
+  explicit Cylinder(int depth);
   void draw();
   void draw(const Point& p1, const Point& p2, float r);
 

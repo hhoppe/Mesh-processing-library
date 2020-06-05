@@ -83,7 +83,7 @@ class ParseArgs : public Args {
   // e.g. name is "", "HW", "HB_GL"
   // takes ownership; sets argc = 0, argv = nullptr; ensure_utf8_encoding()
   explicit ParseArgs(int& argc, const char**& argv);
-  explicit ParseArgs(CArrayView<string> aargs, const string& name = "");
+  explicit ParseArgs(CArrayView<string> aargs, string name = "");
 
   // Define options: (any prefix of string str is recognized unless it contains a '[' or disallow_prefixes() is set):
   void f(string str, bool& arg, string doc = "");  // sets flag to true

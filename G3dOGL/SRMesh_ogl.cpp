@@ -68,7 +68,7 @@ inline void SRMesh::draw_vertex(const SRAVertex* v, bool use_texture) const {
 
 template <bool use_texture> void SRMesh::ogl_render_faces_strips_aux() {
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
-  const int lcur_frame_mask = _cur_frame_mask;
+  const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
   dummy_use(omatid);
   const EListNode* ndelim = _active_faces.delim();
@@ -78,7 +78,7 @@ template <bool use_texture> void SRMesh::ogl_render_faces_strips_aux() {
     SRAFace* f = EListOuter(SRAFace, activef, n);
     n = n->next();
     int matid = f->matid;
-    if ((matid & k_Face_visited_mask) == lcur_frame_mask) continue;
+    if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
     int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
     f->matid = matidv;
     if (!use_texture && matid != omatid) {
@@ -405,7 +405,7 @@ int SRMesh::ogl_render_tvclines() {
   int cache_time = _cache_time;
   const int desiredloc = k_cache_size - 9;
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
-  const int lcur_frame_mask = _cur_frame_mask;
+  const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
   dummy_use(omatid);
   const EListNode* ndelim = _active_faces.delim();
@@ -417,7 +417,7 @@ int SRMesh::ogl_render_tvclines() {
     SRAFace* f = EListOuter(SRAFace, activef, n);
     n = n->next();
     int matid = f->matid;
-    if ((matid & k_Face_visited_mask) == lcur_frame_mask) continue;
+    if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
     int matidv = matid ^ k_Face_visited_mask;  // material id visited
     // index j of Corner c within current face
     int j = 0;
@@ -513,7 +513,7 @@ void SRMesh::ogl_render_faces_tvc(bool unlit_texture) {
   int cache_time = _cache_time;
   const int desiredloc = k_cache_size - 9;
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
-  const int lcur_frame_mask = _cur_frame_mask;
+  const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
   dummy_use(omatid);
   const EListNode* ndelim = _active_faces.delim();
@@ -525,7 +525,7 @@ void SRMesh::ogl_render_faces_tvc(bool unlit_texture) {
     SRAFace* f = EListOuter(SRAFace, activef, n);
     n = n->next();
     int matid = f->matid;
-    if ((matid & k_Face_visited_mask) == lcur_frame_mask) continue;
+    if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
     int matidv = matid ^ k_Face_visited_mask;  // material id visited
 #if !defined(SR_USE_TEXTURE)
     if (matid != omatid) {

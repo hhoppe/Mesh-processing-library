@@ -39,6 +39,6 @@ int main() {
   }
   {
     SHOW("make_unique");
-    auto pa = make_unique<A>();
+    auto pa = make_unique<A>();  // NOLINT(clang-analyzer-unix.Malloc)
   }
 }

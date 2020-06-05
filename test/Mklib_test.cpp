@@ -4,7 +4,7 @@
 #include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
-int main(int argc, char**) {
+int main(int argc, char** /*unused*/) {
   if (argc > 1) {
     RSA3dStream ia3d(std::cin);
     WSA3dStream oa3d(std::cout);

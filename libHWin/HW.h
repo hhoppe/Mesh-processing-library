@@ -23,7 +23,7 @@ namespace hh {
 // Win32 implementation of abstract windowing interface.
 class HW : public HWbase {
  public:
-  HW();
+  HW() = default;
 
   // call anytime after init() before open():
   void set_double_buffering(bool newstate) override;

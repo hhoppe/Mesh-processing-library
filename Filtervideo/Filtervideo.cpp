@@ -952,7 +952,7 @@ void do_cropmult(Args& args) {
 
 void do_filter(Args& args) { filterb.set_filter(Filter::get(args.get_string())); }
 
-static void apply_scale(const Vec2<float>& v) {
+void apply_scale(const Vec2<float>& v) {
   video.scale(v, twice(filterb), &gcolor);
   if (max(v) < 1.f) {
     video.attrib().bitrate = int(video.attrib().bitrate * pow(float(product(v)), .8f) + .5f);
@@ -1134,7 +1134,7 @@ struct {
   Array<Point> region_centroid;  // center point
 } g_lp;                          // looping data structures
 
-static void possibly_rescale_loop_parameters() {
+void possibly_rescale_loop_parameters() {
   assertx(g_lp.mat_static.ysize() > 0);
   if (g_lp.mat_static.dims() != video.spatial_dims()) {
     // std::cerr << "Scaling vlp from " << g_lp.mat_static.dims() <<  " to " << video.spatial_dims() << "\n";
@@ -1197,7 +1197,7 @@ void do_loadpj(Args& args) {
   if ((*pfi)().peek() == 31) {  // decompress a gzip-compressed pjo/pjr file
     pfi = make_unique<RFile>("gzip -d -c <" + filename + " |");
   }
-  std::istream& is = (*pfi.get())();
+  std::istream& is = (*pfi)();
   g_lp.mat_static.init(video.spatial_dims());
   g_lp.mat_start.init(video.spatial_dims());
   g_lp.mat_period.init(video.spatial_dims());

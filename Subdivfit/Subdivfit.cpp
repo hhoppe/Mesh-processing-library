@@ -405,7 +405,7 @@ void do_fgfit(Args& args) {
     int _niter;
     double _etot{0.};
     bool _desire_global_project{false};
-    FG(SubMesh& smesh) : _smesh(smesh) {
+    explicit FG(SubMesh& smesh) : _smesh(smesh) {
       for (Vertex v : gmesh.vertices()) {
         _mvi.enter(v, _iv.num());
         _iv.push(v);

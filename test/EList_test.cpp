@@ -5,7 +5,7 @@ using namespace hh;
 int main() {
   {
     struct A {
-      A(int i) : _i(i) {}
+      explicit A(int i) : _i(i) {}
       int _i;
       EListNode _node;
     };

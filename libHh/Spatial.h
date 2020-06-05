@@ -62,7 +62,7 @@ class Spatial : noncopyable {            // abstract class
 class BPointSpatial : public Spatial {
  public:
   explicit BPointSpatial(int gn) : Spatial(gn) {}
-  ~BPointSpatial() { clear(); }
+  ~BPointSpatial() { BPointSpatial::clear(); }
   void clear() override;
   // id != 0
   void enter(Univ id, const Point* pp);   // note: pp not copied, no ownership taken
@@ -99,7 +99,7 @@ template <typename Approx2 = float(const Point& p, Univ id), typename Exact2 = f
 class ObjectSpatial : public Spatial {
  public:
   explicit ObjectSpatial(int gn) : Spatial(gn) {}
-  ~ObjectSpatial() { clear(); }
+  ~ObjectSpatial() { ObjectSpatial::clear(); }
   void clear() override {
     for (auto& cell : _map.values()) {
       HH_SSTAT(Sospcelln, cell.num());

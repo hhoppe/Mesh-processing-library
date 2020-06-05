@@ -338,20 +338,6 @@ struct NormalMapping_dot3 final : NormalMapping {
   }
   void activate() override { glDisable(GL_BLEND); }
   void deactivate() override { glEnable(GL_BLEND); }
-  Array<uint8_t> fill_buffer_rgb8(const Image& image) {
-    Array<uint8_t> buffer;
-    buffer.reserve(assert_narrow_cast<int>(product(image.dims()) * 3));
-    for_int(y, image.ysize()) {
-      for_int(x, image.xsize()) {
-        if (image.zsize() == 1) {
-          for_int(z, 3) buffer.push(image[y][x][0]);
-        } else {
-          for_int(z, 3) buffer.push(image[y][x][z]);
-        }
-      }
-    }
-    return buffer;
-  }
   static type& instance() {
     static type& f = *new type;
     return f;
@@ -452,20 +438,6 @@ struct NormalMapping_nvrc final : NormalMapping {
   void deactivate() override {
     // const int GL_REGISTER_COMBINERS_NV = 0x8522;
     glDisable(GL_REGISTER_COMBINERS_NV);
-  }
-  Array<uint8_t> fill_buffer_rgb8(const Image& image) {
-    Array<uint8_t> buffer;
-    buffer.reserve(assert_narrow_cast<int>(product(image.dims()) * 3));
-    for_int(y, image.ysize()) {
-      for_int(x, image.xsize()) {
-        if (image.zsize() == 1) {
-          for_int(z, 3) buffer.push(image[y][x][0]);
-        } else {
-          for_int(z, 3) buffer.push(image[y][x][z]);
-        }
-      }
-    }
-    return buffer;
   }
   static type& instance() {
     static type& f = *new type;

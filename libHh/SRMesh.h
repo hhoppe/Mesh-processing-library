@@ -231,6 +231,7 @@ class SRMesh {
   void ogl_show_residuals(bool uniform_too);
   void ogl_render_faces_tvc(bool unlit_texture);
   int ogl_render_tvclines();  // return number of cache misses
+
  private:
   Bbox _bbox;
   Materials _materials;
@@ -267,9 +268,9 @@ class SRMesh {
   SRRefineParams _refp;
 
   // Rendering: common code and data:
-  static constexpr int k_Face_visited_mask = 1 << 30;  // high bit of matid
+  static constexpr unsigned k_Face_visited_mask = 1 << 30;  // high bit of matid
   static constexpr int k_illegal_matid = -1;
-  int _cur_frame_mask{0};  // 0 or k_Face_visited_mask
+  unsigned _cur_frame_mask{0};  // 0 or k_Face_visited_mask
 
   // Rendering: accessor functions:
   // main ones
@@ -288,7 +289,6 @@ class SRMesh {
   void draw_vertex(const SRAVertex* v, bool use_texture) const;
   template <bool use_texture> void ogl_render_faces_strips_aux();
 
- private:
   int get_vf_j0(const SRAVertex* v, const SRAFace* f) const;
   int get_vf_j1(const SRAVertex* v, const SRAFace* f) const;
   int get_vf_j2(const SRAVertex* v, const SRAFace* f) const;

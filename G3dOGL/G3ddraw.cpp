@@ -793,7 +793,7 @@ void ShowInfo() {
         str = sform("vertices=%d faces=%d", pmesh->num_vertices(), pmesh->num_faces());
       }
     }
-    HB::draw_row_col_text(V(1, 0), str.c_str());
+    HB::draw_row_col_text(V(1, 0), str);
   }
   if (info && g_g3d_demofly) {
     // velocity = 0.05 * ddistance * 10 * fchange  units/frame

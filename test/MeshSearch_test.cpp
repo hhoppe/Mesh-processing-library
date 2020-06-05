@@ -41,6 +41,7 @@ int main() {
       hintf = f;
       SHOW(mesh.face_id(f), bary, clp, d2);
     }
+    dummy_use(hintf);
   }
   {
     GMesh mesh;

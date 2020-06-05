@@ -64,11 +64,11 @@ void BPointSpatial::shrink_to_fit() {
   for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
-void BPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>&) const {
+void BPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
   // SHOW("add_cell", ci);
   int en = encode(ci);
   bool present;
-  auto& cell = _map.retrieve(en, present);
+  const auto& cell = _map.retrieve(en, present);
   if (!present) return;
   for (const Node& e : cell) {
     // SHOW("enter", *e.p, dist2(pcenter, *e.p));
@@ -76,8 +76,8 @@ void BPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcent
   }
 }
 
-Univ BPointSpatial::pq_id(Univ id) const {
-  const Node* e = Conv<const Node*>::d(id);
+Univ BPointSpatial::pq_id(Univ pqe) const {
+  const Node* e = Conv<const Node*>::d(pqe);
   return e->id;
 }
 
@@ -101,15 +101,15 @@ void IPointSpatial::clear() {
   _map.clear();
 }
 
-void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>&) const {
+void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
   int en = encode(ci);
   bool present;
-  auto& cell = _map.retrieve(en, present);
+  const auto& cell = _map.retrieve(en, present);
   if (!present) return;
   for (int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
 }
 
-Univ IPointSpatial::pq_id(Univ id) const { return id; }
+Univ IPointSpatial::pq_id(Univ pqe) const { return pqe; }
 
 // *** SpatialSearch
 

@@ -22,7 +22,7 @@ class HashFloat : noncopyable {
   float _small;             // numbers with abs<small are grouped at 0
   float _factor;            // used to access prev and next buckets
   float _recip;             // 1 / _factor
-  uint32_t encode(float v) const;
+  uint32_t encode(float f) const;
 };
 
 }  // namespace hh

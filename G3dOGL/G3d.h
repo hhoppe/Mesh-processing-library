@@ -111,14 +111,14 @@ class object {
   void clear();  // (re)-initialize for definition
   void enter_point(const Point& p);
   void update_stats();
-  bool defined();
-  bool visible();
-  const Frame& t();
+  bool defined() const;
+  bool visible() const;
+  const Frame& t() const;
   void set_vis(bool i);
   Frame& tm();
-  Point center();  // mode-dependent center in world coordinates
-  const Bbox& bbox();
-  float radius();
+  const Point& center() const;  // mode-dependent center in world coordinates
+  const Bbox& bbox() const;
+  float radius() const;
   void update();                    // update HB if necessary
   GMesh* get_mesh();                // creates if non-existent
   void override_mesh(GMesh* mesh);  // nullptr ends override

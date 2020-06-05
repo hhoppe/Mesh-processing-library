@@ -9,7 +9,7 @@ using namespace hh;
 int main() {
   using Vec2f = Vec2<float>;
   struct A {
-    A(int i = 0) : _i(i) { showf("A(%d)\n", _i); }
+    explicit A(int i = 0) : _i(i) { showf("A(%d)\n", _i); }
     ~A() { showf("~A(%d)\n", _i); }
     int _i;
   };

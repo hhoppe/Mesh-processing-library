@@ -400,7 +400,7 @@ Edge Mesh::opp_boundary(Edge e, Vertex v) const {
   assertnever("Vertex not on Edge");
 }
 
-Vertex Mesh::vertex_between_edges(Edge e1, Edge e2) {
+Vertex Mesh::vertex_between_edges(Edge e1, Edge e2) const {
   if (vertex1(e1) == vertex1(e2) || vertex1(e1) == vertex2(e2)) return vertex1(e1);
   if (vertex2(e1) == vertex1(e2) || vertex2(e1) == vertex2(e2)) return vertex2(e1);
   assertnever("edges not adjacent");
@@ -409,8 +409,7 @@ Vertex Mesh::vertex_between_edges(Edge e1, Edge e2) {
 // *** Other associations
 
 Edge Mesh::query_edge(Vertex v, Vertex w) const {
-  HEdge he;
-  he = query_hedge(v, w);
+  HEdge he = query_hedge(v, w);
   if (he) return he->_edge;
   he = query_hedge(w, v);
   if (he) return he->_edge;
@@ -698,11 +697,12 @@ Array<Vertex> Mesh::gather_edge_coalesce_vertices(Edge e) const {
     Array<Vertex> va2;
     get_vertices(f2, va2);
     int nv1 = va1.num(), nv2 = va2.num();
-    int i1, i2, ic;
+    int i1 = 0;
     // Find one vertex common to both faces (v1)
-    for (i1 = 0; i1 < nv1; i1++)
+    for (; i1 < nv1; i1++)
       if (va1[i1] == v1) break;
-    for (i2 = 0; i2 < nv2; i2++)
+    int i2 = 0;
+    for (; i2 < nv2; i2++)
       if (va2[i2] == v1) break;
     assertx(i1 < nv1 && i2 < nv2);
     // Find most clw vertex on face1 common to both
@@ -711,7 +711,8 @@ Array<Vertex> Mesh::gather_edge_coalesce_vertices(Edge e) const {
       i2 = (i2 + 1) % nv2;
     }
     // Let ic be the number of vertices common to both faces
-    for (ic = 1;; ic++)
+    int ic = 1;
+    for (;; ic++)
       if (va1[(i1 + ic) % nv1] != va2[(i2 - ic + nv2) % nv2]) break;
     for_intL(i, ic - 1, nv1) va.push(va1[(i1 + i) % nv1]);
     for_int(i, nv2 - ic + 1) va.push(va2[(i2 + i) % nv2]);

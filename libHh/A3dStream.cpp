@@ -8,6 +8,7 @@
 #include "libHh/Polygon.h"
 #include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 
@@ -16,9 +17,9 @@ namespace {
 const A3dColor k_color_undefined{-1.f, 0.f, 0.f};
 
 struct a3d_binary_buf {
-  char magic[2];
+  Vec<char, 2> magic;
   ushort utype;
-  float f[3];
+  Vec<float, 3> f;
 };
 
 }  // namespace

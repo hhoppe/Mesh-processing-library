@@ -1900,6 +1900,7 @@ void do_istoroidal() {
   }
   float zconsec = max(zaconsec[0], zaconsec[1]);
   float zrandom = max(zarandom[0], zarandom[1]);
+  dummy_use(zrandom);
   if (0) showf("zconsec=%7.3f    zrandom=%7.3f\n", zconsec, zrandom);
   if (1) {
     std::cout << sform("%.2f\n", zconsec);

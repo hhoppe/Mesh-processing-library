@@ -19,7 +19,7 @@ namespace hh {
 namespace {
 
 struct hash_edge {
-  hash_edge(const GMesh* mesh) : _mesh(*mesh) {}
+  explicit hash_edge(const GMesh* mesh) : _mesh(*mesh) {}
   size_t operator()(Edge e) const {
     return _mesh.vertex_id(_mesh.vertex1(e)) + intptr_t{_mesh.vertex_id(_mesh.vertex2(e))} * 76541;
   }
@@ -453,7 +453,7 @@ inline bool sharp(const GMesh& mesh, Vertex v, Edge e) {
     string str1, str2;
     const char* sk1 = assertx(GMesh::string_key(str1, s1, "wid"));
     const char* sk2 = GMesh::string_key(str2, s2, "wid");
-    if (sk2 && strcmp(sk1, sk2)) return true;
+    if (sk2 && strcmp(sk1, sk2) != 0) return true;
   }
   return false;
 }

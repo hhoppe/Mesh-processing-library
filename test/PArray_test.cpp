@@ -4,7 +4,7 @@ using namespace hh;
 
 int main() {
   struct ST {
-    ST(int i) : _i(i) { showf("ST(%d)\n", _i); }
+    explicit ST(int i) : _i(i) { showf("ST(%d)\n", _i); }
     ~ST() { showf("~ST(%d)\n", _i); }
     int _i;
   };

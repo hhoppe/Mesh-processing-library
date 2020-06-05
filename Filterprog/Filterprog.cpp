@@ -64,7 +64,7 @@ class MapWedgeInfo {
   }
   void set(int wid, WedgeInfo wi) {
     assertx(wid);
-    _map[wid] = std::move(wi);
+    _map[wid] = wi;
   }
   const WedgeInfo& get(int wid) const { return _map.get(wid); }
   void copy_from(const MapWedgeInfo& mwi);

@@ -1007,7 +1007,7 @@ bool edge_matbnd(Edge e) {
     const char* s1 = mesh.get_string(mesh.face1(e));
     const char* s2 = mesh.get_string(mesh.face2(e));
     if (!s1 && !s2) return false;
-    return !s1 || !s2 || strcmp(s1, s2);
+    return !s1 || !s2 || strcmp(s1, s2) != 0;
   } else {
     // Note: material boundary is currently based solely on rgb attributes
     //   of faces!
@@ -1654,9 +1654,8 @@ void do_fillholes(Args& args) {
         for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
       }
     }
-    for (Face f : setf) {
-      if (0) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
-    }
+    if (0)
+      for (Face f : setf) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
   }
   showdf("Filled in %d holes\n", Sbndlen.inum());
 }
@@ -2055,7 +2054,7 @@ void do_cornermerge() {
       }
       if (!s) {
         s = mesh.get_string(c);
-      } else if (strcmp(s, mesh.get_string(c))) {
+      } else if (strcmp(s, mesh.get_string(c)) != 0) {
         s = nullptr;
         break;
       }
@@ -2088,7 +2087,7 @@ void do_slowcornermerge() {
       bool all_same = true;
       for (Corner c : mesh.corners(v)) {
         const char* s2 = GMesh::string_key(str, mesh.get_string(c), key.data());
-        if (!s2 || strcmp(val.data(), s2)) {
+        if (!s2 || strcmp(val.data(), s2) != 0) {
           all_same = false;
           break;
         }
@@ -2130,7 +2129,7 @@ void do_rgbvertexmerge() {
       if (!ck) continue;
       if (!s) {
         s = ck;
-      } else if (strcmp(s, ck)) {
+      } else if (strcmp(s, ck) != 0) {
         s = nullptr;
         break;
       }
@@ -2155,7 +2154,7 @@ void do_facemerge() {
       }
       if (!s) {
         s = mesh.get_string(c);
-      } else if (strcmp(s, mesh.get_string(c))) {
+      } else if (strcmp(s, mesh.get_string(c)) != 0) {
         s = nullptr;
         break;
       }
@@ -2181,7 +2180,7 @@ void do_rgbfacemerge() {
       }
       if (!s) {
         s = ck;
-      } else if (strcmp(s, ck)) {
+      } else if (strcmp(s, ck) != 0) {
         s = nullptr;
         break;
       }

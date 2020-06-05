@@ -7,7 +7,7 @@ namespace {
 int sum_destruct = 0;
 
 struct Struct1 {
-  Struct1(int i = 0) : _i(i) { SHOW(i); }
+  explicit Struct1(int i = 0) : _i(i) { SHOW(i); }
   ~Struct1() {
     if (0) SHOW(_i);
     sum_destruct += _i;

@@ -72,7 +72,7 @@ const Array<PSG> k_ar_suffix_container = {
 };
 
 const GUID* get_container_format(const string& suffix) {
-  for (auto& p : k_ar_suffix_container) {
+  for (const auto& p : k_ar_suffix_container) {
     if (p.suffix == suffix) return p.guid;
   }
   return nullptr;
@@ -105,9 +105,10 @@ HRESULT my_progress_callback(void* data, ULONG framenum, WICProgressOperation, d
 class my_HGLOBAL {
  public:
   ~my_HGLOBAL() { *this = nullptr; }
-  void operator=(HGLOBAL p) {
+  my_HGLOBAL& operator=(HGLOBAL p) {
     if (_hMem) assertx(!GlobalFree(_hMem));
     _hMem = p;
+    return *this;
   }
   operator HGLOBAL() const { return _hMem; }
 

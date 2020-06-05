@@ -17,7 +17,7 @@ void Polygon::get_bbox(Bbox& bbox) const {
 }
 
 Vector Polygon::get_normal_dir() const {
-  auto& self = *this;
+  const auto& self = *this;
   if (num() == 3) return cross(self[0], self[1], self[2]);  // short-cut
   assertx(num() >= 3);
   Vector nor(0.f, 0.f, 0.f);
@@ -138,7 +138,7 @@ void Polygon::intersect_plane(const Vector& polynor, const Vector& planenor, flo
                               Array<Point>& pa) const {
   // See example use in Filtera3d.cpp:compute_intersect()
   assertx(num() >= 3);
-  auto& self = *this;
+  const auto& self = *this;
   PArray<float, 8> sa(num());
   for_int(i, num()) {
     float sc = pvdot(self[i], planenor) - planed;
@@ -170,7 +170,7 @@ void Polygon::intersect_plane(const Vector& polynor, const Vector& planenor, flo
   if (!pa.num()) return;
   Vector vint = get_vint(polynor, planenor);
   struct InterLess {
-    InterLess(Vector vint) : _vint(std::move(vint)) {}
+    explicit InterLess(Vector vint) : _vint(std::move(vint)) {}
     bool operator()(const Point& p1, const Point& p2) const { return cmp_inter(p1, p2, _vint) == -1; }
     Vector _vint;
   };
@@ -224,7 +224,7 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
 
 bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
   assertx(num() >= 3);
-  auto& self = *this;
+  const auto& self = *this;
   int axis = -1;
   float maxd = 0.f;
   for_int(c, 3) {
@@ -261,7 +261,7 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
 
 bool Polygon::is_convex() const {
   assertx(num() >= 3);
-  auto& self = *this;
+  const auto& self = *this;
   if (num() == 3) return true;
   unsigned n = num();  // unsigned to avoid -Werror=strict-overflow
   Vector dir = get_normal_dir();

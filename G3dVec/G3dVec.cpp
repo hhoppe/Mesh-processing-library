@@ -35,7 +35,7 @@ const int interval_check_stop = 1024;
 enum ClipConditionCodes { CCN = 0, CCH = 1, CCY = 2, CCR = 4, CCL = 8, CCD = 16, CCU = 32 };
 
 struct DerivedHW : HW {
-  DerivedHW() {}
+  DerivedHW() = default;
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;
@@ -127,11 +127,11 @@ struct equal_segment {
 };
 
 struct Node : noncopyable {
-  virtual ~Node() {}
+  virtual ~Node() = default;
   enum class EType { polygon, line, linenor, point, pointnor };
   EType _type;  // faster than virtual function or dynamic_cast() or hh::dynamic_exact_cast(), and avoids RTTI
  protected:
-  Node(EType type) : _type(type) {}
+  explicit Node(EType type) : _type(type) {}
 };
 
 struct NodePolygon : Node {
@@ -142,7 +142,7 @@ struct NodePolygon : Node {
 };
 
 struct NodeLine : Node {
-  NodeLine(segment* ps, EType type = EType::line) : Node(type), s(ps) {}
+  explicit NodeLine(segment* ps, EType type = EType::line) : Node(type), s(ps) {}
   segment* s;
 };
 
@@ -152,12 +152,12 @@ struct NodeLineNor : NodeLine {
 };
 
 struct NodePoint : Node {
-  NodePoint(coord* pp, EType type = EType::point) : Node(type), p(pp) {}
+  explicit NodePoint(coord* pp, EType type = EType::point) : Node(type), p(pp) {}
   coord* p;
 };
 
 struct NodePointNor : NodePoint {
-  NodePointNor(coord* pp, Vector n) : NodePoint(pp, EType::pointnor), nor(std::move(n)) {}
+  NodePointNor(coord* pp, Vector n) : NodePoint(pp, EType::pointnor), nor(n) {}
   Vector nor;
 };
 
@@ -513,7 +513,7 @@ void draw_segment(coord* c1, coord* c2) {
 void draw_node(const Node* un) {
   switch (un->_type) {
     case Node::EType::polygon: {
-      auto n = down_cast<const NodePolygon*>(un);
+      const auto* n = down_cast<const NodePolygon*>(un);
       if (!(cullface && is_cull(n->repc->p, n->pnor))) {
         for (segment* s : n->ars) {
           if (s->frame == frame) continue;
@@ -526,7 +526,7 @@ void draw_node(const Node* un) {
       break;
     }
     case Node::EType::linenor: {
-      auto n = down_cast<const NodeLineNor*>(un);
+      const auto* n = down_cast<const NodeLineNor*>(un);
       segment* s = n->s;
       if (s->frame != frame && !((culledge == 1 && (is_cull(s->c1->p, n->nor[0]) && is_cull(s->c2->p, n->nor[1]))) ||
                                  (culledge == 2 && (is_cull(s->c1->p, n->nor[0]) || is_cull(s->c2->p, n->nor[1]))))) {
@@ -538,7 +538,7 @@ void draw_node(const Node* un) {
       break;
     }
     case Node::EType::line: {
-      auto n = down_cast<const NodeLine*>(un);
+      const auto* n = down_cast<const NodeLine*>(un);
       segment* s = n->s;
       if (s->frame != frame) {
         s->frame = frame;
@@ -549,12 +549,12 @@ void draw_node(const Node* un) {
       break;
     }
     case Node::EType::pointnor: {
-      auto n = down_cast<const NodePointNor*>(un);
+      const auto* n = down_cast<const NodePointNor*>(un);
       if (!is_cull(n->p->p, n->nor)) draw_point(n->p);
       break;
     }
     case Node::EType::point: {
-      auto n = down_cast<const NodePoint*>(un);
+      const auto* n = down_cast<const NodePoint*>(un);
       draw_point(n->p);
       break;
     }
@@ -610,7 +610,7 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
     if (i % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
     Node* un = arn[i].get();
     if (un->_type == Node::EType::polygon) {
-      auto n = down_cast<NodePolygon*>(un);
+      auto* n = down_cast<NodePolygon*>(un);
       if (cullface && is_cull(n->repc->p, n->pnor)) continue;
       poly.init(0);
       int andcodes = CCH | CCY | CCR | CCL | CCD | CCU, orcodes = 0;
@@ -888,7 +888,7 @@ void GXobject::close() {
   for_int(i, _arnc.num()) {
     Node* un = _arnc[i].get();
     if (un->_type == Node::EType::polygon) {
-      auto n = down_cast<NodePolygon*>(un);
+      auto* n = down_cast<NodePolygon*>(un);
       for (segment* s : n->ars) {
         s->c1->count++;
         s->c2->count++;
@@ -898,7 +898,7 @@ void GXobject::close() {
   for_int(i, _arnc.num()) {
     Node* un = _arnc[i].get();
     if (un->_type == Node::EType::polygon) {
-      auto n = down_cast<NodePolygon*>(un);
+      auto* n = down_cast<NodePolygon*>(un);
       coord* maxc = nullptr;
       int maxn = -1;
       for (segment* s : n->ars) {
@@ -991,7 +991,7 @@ GXobject* GXobjects::obp(int i) const {
 }
 
 // recursion on links is not permitted, only simple link allowed
-int GXobjects::defined(int i) const { return obp(i) ? 1 : 0; }
+int GXobjects::defined(int segn) const { return obp(segn) ? 1 : 0; }
 
 GXobject& GXobjects::operator[](int i) { return *assertx(obp(i)); }
 
@@ -1074,8 +1074,8 @@ void HB::set_yonder(float y) {
   is_yonder = yonder != 0.f;
 }
 
-void HB::set_current_object(int) {
-  // no lighting feature in g3dX
+void HB::set_current_object(int cob) {
+  dummy_use(cob);  // no lighting feature in g3dX
 }
 
 void HB::update_seg(int segn, const Frame& f, bool vis) {

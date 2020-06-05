@@ -170,7 +170,7 @@ class Mesh : noncopyable {
   Edge opp_boundary(Edge e, Vertex v) const;                               // is_boundary(e)
   Edge clw_boundary(Edge e) const { return opp_boundary(e, vertex2(e)); }  // is_boundary(e)
   Edge ccw_boundary(Edge e) const { return opp_boundary(e, vertex1(e)); }  // is_boundary(e)
-  Vertex vertex_between_edges(Edge e1, Edge e2);
+  Vertex vertex_between_edges(Edge e1, Edge e2) const;
 
   // ** Corner:
   Corner corner(Vertex v, Face f) const { return get_hedge(v, f); }

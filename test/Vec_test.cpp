@@ -11,7 +11,7 @@ using namespace hh;
 namespace hh {
 
 template <typename T, int N, size_t... Is>
-constexpr Vec<T, (N - 1)> V_rest_aux(const Vec<T, N>& u, std::index_sequence<Is...>) {
+constexpr Vec<T, (N - 1)> V_rest_aux(const Vec<T, N>& u, std::index_sequence<Is...> /*unused*/) {
   return Vec<T, N - 1>(u[Is + 1]...);
 }
 
@@ -20,7 +20,7 @@ template <typename T, int N> constexpr Vec<T, (N - 1)> V_rest(const Vec<T, N>& u
 }
 
 template <int n, typename T, int N, size_t... Is>
-constexpr Vec<T, n> V_segment_aux(const Vec<T, N>& u, int i, std::index_sequence<Is...>) {
+constexpr Vec<T, n> V_segment_aux(const Vec<T, N>& u, int i, std::index_sequence<Is...> /*unused*/) {
   return Vec<T, n>(u[Is + i]...);
 }
 
@@ -39,7 +39,7 @@ template <typename T> constexpr T list_sum(const T& t0) { return t0; }
 template <typename T, typename... U> constexpr T list_sum(const T& t0, U&&... ts) { return t0 + list_sum(ts...); }
 
 template <typename T, int N, size_t... Is>
-constexpr T V_dot_aux(const Vec<T, N>& u1, const Vec<T, N>& u2, std::index_sequence<Is...>) {
+constexpr T V_dot_aux(const Vec<T, N>& u1, const Vec<T, N>& u2, std::index_sequence<Is...> /*unused*/) {
   return list_sum(u1[Is] * u2[Is]...);
 }
 
@@ -48,10 +48,10 @@ template <typename T, int N> constexpr T V_dot(const Vec<T, N>& u1, const Vec<T,
 }
 
 namespace details {
-template <int N, size_t... Is> constexpr Vec<int, N> V_iota_aux(std::index_sequence<Is...>) {
+template <int N, size_t... Is> constexpr Vec<int, N> V_iota_aux(std::index_sequence<Is...> /*unused*/) {
   return Vec<int, N>(int(Is)...);
 }
-template <int N, size_t... Is> constexpr Vec<int, N> V_rev_iota_aux(std::index_sequence<Is...>) {
+template <int N, size_t... Is> constexpr Vec<int, N> V_rev_iota_aux(std::index_sequence<Is...> /*unused*/) {
   return Vec<int, N>(int(N - 1 - Is)...);
 }
 }  // namespace details
@@ -283,9 +283,9 @@ if (0) {
   struct P {
     P() { SHOW("P::P()"); }
     ~P() { SHOW("P::~P()"); }
-    P(const P&) { SHOW("P::P(const P&)"); }
-    P(P&&) { SHOW("P::P(P&&)"); }
-    P& operator=(const P&) {
+    P(const P& /*unused*/) { SHOW("P::P(const P&)"); }
+    P(P&& /*unused*/) { SHOW("P::P(P&&)"); }
+    P& operator=(const P& /*unused*/) {
       SHOW("P::operator=(const P&)");
       return *this;
     }

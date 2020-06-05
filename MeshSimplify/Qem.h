@@ -59,7 +59,6 @@ template <typename T, int n> class Qem {
   Vec<T, (n * (n + 1)) / 2> _a;  // upper triangle of symmetric matrix
   Vec<T, n> _b;
   T _c;
-  template <typename TT, int n1, int n2> friend void qem_add_submatrix(Qem<TT, n1>& q1, const Qem<TT, n2>& q2);
 };
 
 template <typename T, int n> HH_DECLARE_OSTREAM_EOL(Qem<T, n>);

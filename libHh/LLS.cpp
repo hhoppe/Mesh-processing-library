@@ -55,7 +55,7 @@ unique_ptr<LLS> LLS::make(int m, int n, int nd, float nonzerofrac) {
 
 LLS::LLS(int m, int n, int nd) : _m(m), _n(n), _nd(nd), _b(nd, m), _x(nd, n) {
   assertx(_m > 0 && _n > 0 && _nd > 0 && _m >= _n);
-  clear();
+  LLS::clear();
 }
 
 void LLS::clear() {

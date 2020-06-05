@@ -287,8 +287,8 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
 
 class RVideo::Implementation {
  public:
-  Implementation(RVideo& rvideo) : _rvideo(rvideo) {}
-  virtual ~Implementation() {}
+  explicit Implementation(RVideo& rvideo) : _rvideo(rvideo) {}
+  virtual ~Implementation() = default;
   virtual string name() const = 0;
   virtual bool read(MatrixView<Pixel> frame) = 0;
   virtual bool read_nv12(Nv12View frame) {  // default slow path
@@ -317,8 +317,8 @@ class RVideo::Implementation {
 
 class WVideo::Implementation {
  public:
-  Implementation(WVideo& wvideo) : _wvideo(wvideo) {}
-  virtual ~Implementation() {}
+  explicit Implementation(WVideo& wvideo) : _wvideo(wvideo) {}
+  virtual ~Implementation() = default;
   virtual string name() const = 0;
   virtual void write(CMatrixView<Pixel> frame) = 0;
   virtual void write_nv12(CNv12View frame) {  // default slow path
@@ -336,9 +336,9 @@ class WVideo::Implementation {
 
 class Unsupported_RVideo_Implementation : public RVideo::Implementation {
  public:
-  Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
-  ~Unsupported_RVideo_Implementation() {}
-  virtual string name() const override { return "unsupported"; }
+  explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
+  ~Unsupported_RVideo_Implementation() = default;
+  string name() const override { return "unsupported"; }
   bool read(MatrixView<Pixel> frame) override {
     dummy_use(frame);
     assertnever("?");
@@ -347,9 +347,9 @@ class Unsupported_RVideo_Implementation : public RVideo::Implementation {
 
 class Unsupported_WVideo_Implementation : public WVideo::Implementation {
  public:
-  Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
-  ~Unsupported_WVideo_Implementation() {}
-  virtual string name() const override { return "unsupported"; }
+  explicit Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
+  ~Unsupported_WVideo_Implementation() = default;
+  string name() const override { return "unsupported"; }
   void write(CMatrixView<Pixel> frame) override {
     dummy_use(frame);
     assertnever("?");
@@ -358,7 +358,7 @@ class Unsupported_WVideo_Implementation : public WVideo::Implementation {
 
 //----------------------------------------------------------------------------
 
-RVideo::RVideo(const string& filename, bool use_nv12) : _filename(filename), _use_nv12(use_nv12) {
+RVideo::RVideo(string filename, bool use_nv12) : _filename(std::move(filename)), _use_nv12(use_nv12) {
   if (file_requires_pipe(_filename)) {
     RFile fi(_filename);
     int c = fi().peek();
@@ -391,8 +391,12 @@ bool RVideo::read(Nv12View frame) {
 }
 bool RVideo::discard_frame() { return _impl->discard_frame(); }
 
-WVideo::WVideo(const string& filename, const Vec2<int>& spatial_dims, const Video::Attrib& attrib, bool use_nv12)
-    : _filename(filename), _sdims(spatial_dims), _attrib(attrib), _use_nv12(use_nv12), _pfilename(filename) {
+WVideo::WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib attrib, bool use_nv12)
+    : _filename(std::move(filename)),
+      _sdims(spatial_dims),
+      _attrib(std::move(attrib)),
+      _use_nv12(use_nv12),
+      _pfilename(filename) {
   if (_attrib.suffix == "") _attrib.suffix = to_lower(get_path_extension(_filename));
   if (_attrib.suffix == "")
     throw std::runtime_error("Video '" + filename + "': no filename suffix specified for writing");
@@ -470,7 +474,9 @@ std::atomic<int> Initialize_COM_MF::s_num_video_uses;
 
 class LockIMFMediaBuffer {
  public:
-  LockIMFMediaBuffer(IMFMediaBuffer* buffer) : _buffer(buffer) { AS(_buffer->Lock(&_pData, nullptr, nullptr)); }
+  explicit LockIMFMediaBuffer(IMFMediaBuffer* buffer) : _buffer(buffer) {
+    AS(_buffer->Lock(&_pData, nullptr, nullptr));
+  }
   ~LockIMFMediaBuffer() {
     assertx(_pData);
     AS(_buffer->Unlock());
@@ -524,7 +530,7 @@ static void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV
 
 class MF_RVideo_Implementation : public RVideo::Implementation {
  public:
-  MF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
+  explicit MF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
     {
       com_ptr<IMFSourceResolver> pSourceResolver;
       AS(MFCreateSourceResolver(&pSourceResolver));
@@ -609,7 +615,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
   ~MF_RVideo_Implementation() {
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
-  virtual string name() const override { return "MF"; }
+  string name() const override { return "MF"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();
     assertx(frame.dims() == sdims);
@@ -720,7 +726,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
 
 class MF_WVideo_Implementation : public WVideo::Implementation {
  public:
-  MF_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
+  explicit MF_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
     const auto& attrib = _wvideo._attrib;
     if (attrib.audio.size()) Warning("MF_WVideo does not currently support audio");
     _impl_nv12 = attrib.suffix == "mp4";
@@ -807,11 +813,11 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
     }
     AS(_pSinkWriter->BeginWriting());
   }
-  ~MF_WVideo_Implementation() {
+  ~MF_WVideo_Implementation() override {
     if (_pSinkWriter) AS(_pSinkWriter->Finalize());
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
-  virtual string name() const override { return "MF"; }
+  string name() const override { return "MF"; }
   void write(CMatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(_wvideo.spatial_dims()));
@@ -941,7 +947,7 @@ class MF_WVideo_Implementation : public Unsupported_WVideo_Implementation {
 
 class FF_RVideo_Implementation : public RVideo::Implementation {
  public:
-  FF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
+  explicit FF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
     assertx(supported());
     // See: ~/src/_other/Repository.cpp
     // See: ffmpeg -hide_banner -pix_fmts
@@ -1067,8 +1073,8 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
     if (ldebug) SHOW(scmd);
     _pfi = make_unique<RFile>(scmd);
   }
-  ~FF_RVideo_Implementation() {}
-  virtual string name() const override { return "FF"; }
+  ~FF_RVideo_Implementation() = default;
+  string name() const override { return "FF"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();
     assertx(frame.dims() == sdims);
@@ -1119,13 +1125,13 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
 
 class FF_WVideo_Implementation : public WVideo::Implementation {
  public:
-  FF_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
+  explicit FF_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
     const bool ldebug = getenv_bool("FF_DEBUG");
     assertx(supported());
     const string& filename = _wvideo._filename;
     Video::Attrib& attrib = _wvideo._attrib;
     const Vec2<int> sdims = _wvideo.spatial_dims();
-    string sfilecontainer = "";  // default is to infer container format based on filename extension
+    string sfilecontainer;  // default is to infer container format based on filename extension
     // ffmpeg -hide_banner -formats
     {
       assertx(filename != "-");  // WVideo::WVideo() should have created TmpFile if writing to stdout.
@@ -1138,7 +1144,7 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
     }
     string ipixfmt = _wvideo._use_nv12 ? "nv12" : "rgba";  // was rgb24
     string str_audio = " -an";                             // default no audio
-    string ocodec = "";
+    string ocodec;
     string opixfmt = "yuv420p";
     // ffmpeg -hide_banner -codecs | grep '^..E'
     // ffmpeg -hide_banner -encoders
@@ -1179,8 +1185,8 @@ class FF_WVideo_Implementation : public WVideo::Implementation {
     if (ldebug) SHOW(scmd);
     _pfi = make_unique<WFile>(scmd);
   }
-  ~FF_WVideo_Implementation() {}
-  virtual string name() const override { return "FF"; }
+  ~FF_WVideo_Implementation() override = default;
+  string name() const override { return "FF"; }
   void write(CMatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(sdims));

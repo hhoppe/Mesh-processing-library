@@ -38,7 +38,7 @@ class VertexCache : noncopyable {
 
 class FifoVertexCache : public VertexCache {
  public:
-  explicit FifoVertexCache(int nverts1, int cs) { init(nverts1, cs); }
+  explicit FifoVertexCache(int nverts1, int cs) { FifoVertexCache::init(nverts1, cs); }
   EType type() const override { return EType::fifo; }
   void init(int nverts1, int cs) override {
     assertx(nverts1 > 0 && cs >= 1);
@@ -166,7 +166,7 @@ class FifoVertexCache : public VertexCache {
 
 class LruVertexCache : public VertexCache {
  public:
-  explicit LruVertexCache(int nverts1, int cs) { init(nverts1, cs); }
+  explicit LruVertexCache(int nverts1, int cs) { LruVertexCache::init(nverts1, cs); }
   ~LruVertexCache() {
     while (!_list.empty()) {
       EListNode* nodee = _list.delim()->next();

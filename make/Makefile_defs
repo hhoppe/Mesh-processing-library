@@ -81,24 +81,24 @@ endef
 MAKEFLAGS += --no-print-directory#  print-directory is ugly and ineffective with "-j" (see main.el)
 
 ## Possible configuration settings:
-cppinc += -DHH_NO_LAPACK        # by default I no longer use lapack
-cppinc += -D_UNICODE -DUNICODE  # (useful for alternative testing since my msbuild *.vcxproj does not set it)
+cppinc += -DHH_NO_LAPACK#  by default I no longer use lapack
+cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuild *.vcxproj does not set it)
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
 # cppinc += -DHH_NO_UTF8
 # cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
-# cppinc += -DHH_NO_IMAGE_WIC   # only matters for CONFIG=win/w32
-# cppinc += -DHH_IMAGE_IO_TOO   # only matters for CONFIG=win/w32 (default is to just use WIC)
-# cppinc += -DHH_NO_VECTOR4_VECTORIZATION  # otherwise enable SSE / NEON instructions
+# cppinc += -DHH_NO_IMAGE_WIC#  only matters for CONFIG=win/w32
+# cppinc += -DHH_IMAGE_IO_TOO#  only matters for CONFIG=win/w32 (default is to just use WIC)
+# cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  otherwise enable SSE / NEON instructions
 # ifeq ($(call file_exists,$(HhRoot)/libHh/StackWalker.h),)
 # cppinc += -DHH_NO_STACKWALKER # set for distrib
 # endif
-cppinc += -DHH_NO_MKL         # set for distrib (only matters for CONFIG=win/w32)
-cppinc += -DHH_NO_SIMPLEX     # set for distrib
-cppinc += -DHH_NO_VIDEO_LOOP  # set for distrib
+cppinc += -DHH_NO_MKL#  set for distrib (only matters for CONFIG=win/w32)
+cppinc += -DHH_NO_SIMPLEX#  set for distrib
+cppinc += -DHH_NO_VIDEO_LOOP#  set for distrib
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
-cppinc += -DHH_NO_IMAGE_IO    # set for distrib
+cppinc += -DHH_NO_IMAGE_IO#  set for distrib
 endif
 # # cppinc += -DHH_NO_LIB_REFERENCES
 # # cppinc += -DHH_NO_HH_INIT

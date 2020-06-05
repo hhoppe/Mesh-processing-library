@@ -68,7 +68,6 @@ const double k_loop_duration = 5.;        // output loop length in seconds
 
 class DerivedHW : public HW {
  public:
-  DerivedHW() {}
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;
@@ -298,7 +297,6 @@ bool filename_is_media(const string& s) { return filename_is_image(s) || filenam
 
 class DirMediaFilenames {
  public:
-  DirMediaFilenames() {}
   CArrayView<string> get(const string& filename) {
     assertx(!file_requires_pipe(filename));
     string directory = get_path_head(filename);
@@ -525,7 +523,7 @@ void read_image(Image& image, const string& filename) {
   }
 }
 
-unique_ptr<Object> object_reading_image(string filename) {
+unique_ptr<Object> object_reading_image(const string& filename) {
   if (!assertw(file_requires_pipe(filename) || filename_is_image(filename))) SHOW("not image?", filename);
   Image image;
   HH_CTIMER(_read_image, g_verbose >= 1);
@@ -546,22 +544,18 @@ unique_ptr<Object> object_reading_image(string filename) {
     if (g_verbose >= 1) SHOW("accessing prefetch", pp - g_prefetch_image.data(), filename);
     p.filename = "";
     p.file_modification_time = 0;
-    image = std::move(*p.pimage.get());
+    image = std::move(*p.pimage);
     p.pimage = nullptr;
     bgra = k_use_bgra;
   } else {
     read_image(image, filename);  // may throw
     bgra = k_use_bgra;
   }
-  return make_unique<Object>(std::move(image), std::move(filename), bgra, unsaved);
+  return make_unique<Object>(std::move(image), filename, bgra, unsaved);
 }
 
-unique_ptr<Object> object_reading_file(string filename) {  // may throw
-  if (filename_is_image(filename)) {
-    return object_reading_image(filename);
-  } else {
-    return object_reading_video(filename);
-  }
+unique_ptr<Object> object_reading_file(const string& filename) {  // may throw
+  return filename_is_image(filename) ? object_reading_image(filename) : object_reading_video(filename);
 }
 
 string next_image_in_directory(const string& filename, int increment) {
@@ -865,7 +859,7 @@ void view_externally() {
   if (file_requires_pipe(filename)) throw "file '" + filename + "' is a pipe";
   message("Externally opening " + filename, 5.);
   // This works best in Windows, even with Unicode filenames.
-  if (!my_spawn(V<string>("cmd", "/s/c", "start \"dummy_window_title\" \"" + filename + "\""), true)) {
+  if (!my_spawn(V<string>("cmd", "/s/c", R"(start "dummy_window_title" ")" + filename + "\""), true)) {
     if (g_verbose) SHOW("spawned using cmd");
     return;  // success
   }
@@ -1157,7 +1151,7 @@ bool DerivedHW::key_press(string skey) {
     if (skey == "<right>") skey = "<next>";
   }
   if ((skey == "/" || skey == "\x1F") && is_control) skey = "?";  // control-/ is also help
-  int keycode = skey[0];
+  int keycode = uint8_t(skey[0]);
   try {
     if (0) {
     } else if (skey == "<f1>") {  // help
@@ -1611,7 +1605,7 @@ bool DerivedHW::key_press(string skey) {
             set_video_frame(first_cob_loaded, k_before_start);
             reset_window(determine_default_window_dims(g_frame_dims));
           }
-          if (smess != "") throw smess;
+          if (smess != "") throw string(smess);
           break;
         }
         case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file
@@ -2510,7 +2504,7 @@ bool DerivedHW::key_press(string skey) {
           recognized = false;
       }
     }
-  } catch (string s) {
+  } catch (const string& s) {
     if (s != "") {
       message("Error: " + s, 8.);
       beep();
@@ -2749,14 +2743,14 @@ void advance_frame() {
   }
 }
 
-static bool supports_non_power_of_two_textures;
-static bool supports_pbuffer;
-static bool supports_BGRA;
-static bool supports_texture_edge_clamp;
-static bool supports_filter_anisotropic;
+bool supports_non_power_of_two_textures;
+bool supports_pbuffer;
+bool supports_BGRA;
+bool supports_texture_edge_clamp;
+bool supports_filter_anisotropic;
 
-static void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dims,
-                               std::function<GLenum(MatrixView<Pixel>)> func_copy) {
+void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dims,
+                        const std::function<GLenum(MatrixView<Pixel>)>& func_copy) {
   if (!supports_pbuffer) {
     Matrix<Pixel> frame(dims);
     GLenum frame_format = func_copy(frame);
@@ -2772,11 +2766,11 @@ static void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<in
     USE_GL_EXT(glMapBuffer, PFNGLMAPBUFFERPROC);
     USE_GL_EXT(glUnmapBuffer, PFNGLUNMAPBUFFERPROC);
     const int nbuf = 1;
-    static unsigned io_buf[nbuf];
+    static Vec<unsigned, nbuf> io_buf;
     static bool is_init2 = false;
     if (!is_init2) {
       is_init2 = true;
-      glGenBuffers(nbuf, io_buf);
+      glGenBuffers(nbuf, io_buf.data());
     }
     glEnable(GL_TEXTURE_2D);  // to be safe on AMD; see https://www.opengl.org/wiki/Common_Mistakes
     {
@@ -2967,28 +2961,28 @@ void upload_image_to_texture() {
 //  "This is great, because you'll be able to share shader code between them."
 
 #if defined(__CYGWIN__)
-static const string glsl_shader_version = "#version 300 es\n";  // works everywhere
+const string glsl_shader_version = "#version 300 es\n";  // works everywhere
 // static const string glsl_shader_version = "#version 130\n";  // last non-es version supported by cygwin; also works
 #elif defined(__APPLE__)
 // "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context)
 // "Apparently X11 doesn't support OpenGL higher than 2.1 on OS X.  As such I suggest you switch to GLFW."
 // http://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
-static const string glsl_shader_version =
+const string glsl_shader_version =
     "#version 120\n"
     "#error Mac OSX XQuartz only supports OpenGL 2.1, which is insufficient for this program (VideoViewer).\n";
 // For Mac OS X 10.5 - XQuartz 2.7.8: "2.1 INTEL-10.6.33"
 // Note: work around this by subsequently setting "use_modern_opengl = false".
 #else
-static const string glsl_shader_version = "#version 330\n";  // not supported on cygwin
+const string glsl_shader_version = "#version 330\n";  // not supported on cygwin
 #endif
 
-static const string vertex_shader = glsl_shader_version + (
+const string vertex_shader = glsl_shader_version + (
 #include "vertex_shader.glsl"
-                                                          );
+                                                   );
 
-static const string fragment_shader = glsl_shader_version + (
+const string fragment_shader = glsl_shader_version + (
 #include "fragment_shader.glsl"
-                                                            );
+                                                     );
 
 void render_image() {
   // HH_TIMER(_render_image);
@@ -3081,7 +3075,7 @@ void render_image() {
     if (!is_init) {
       is_init = true;
       {
-        auto func_get_line = [](string slines, int line) -> string {
+        auto func_get_line = [](const string& slines, int line) -> string {
           string::size_type i = 0;
           for_int(count, line - 1) {
             i = slines.find('\n', i);
@@ -3091,7 +3085,7 @@ void render_image() {
           string::size_type j = slines.find('\n', i);
           return slines.substr(i, j - i + 1);
         };
-        auto func_err = [&](string shadertype, string shader, string serr) {
+        auto func_err = [&](const string& shadertype, const string& shader, const string& serr) {
           showf("OpenGL %s compilation error: %s", shadertype.c_str(), serr.data());
           int line;
           if (sscanf(serr.c_str(), "0(%d)", &line) == 1) {
@@ -3100,7 +3094,7 @@ void render_image() {
           }
           _exit(1);
         };
-        auto func_compile_shader = [&](GLuint shader_id, string shader_string, GLenum shaderType) {
+        auto func_compile_shader = [&](GLuint shader_id, const string& shader_string, GLenum shaderType) {
           glShaderSource(shader_id, 1, ArView(shader_string.c_str()).data(),
                          ArView(GLint(shader_string.size())).data());
           glCompileShader(shader_id);
@@ -4141,7 +4135,7 @@ void do_vlp(Args& args) {
   g_lp.is_loaded = true;
 }
 
-static void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
+void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
   assertx(k % 2 == 0);  // should be a multiple of 2 for UV representation
   // Workaround for Cygwin gcc 5.4.0 compiler bug in demos/create_videoloop_palmtrees.sh:
   //  (cd ~/src/demos; ~/src/bin/cygwin/VideoViewer -batch_create_loop data/palmtrees_small.mp4 v.mp4)
@@ -4297,7 +4291,7 @@ void DerivedHW::drag_and_drop(CArrayView<string> filenames) {
     do_vlp(as_lvalue(Args{filenames[0]}));
   } else {
     int nread = 0;
-    for (auto& filename : filenames) {
+    for (const auto& filename : filenames) {
       try {
         Args args{filename};
         if (filename_is_image(filename)) {
@@ -4397,7 +4391,7 @@ int main(int argc, const char** argv) {
   args.p("-verbose", g_verbose, "b : debug verbosity (0=none, 1=some, 2=more");
   try {
     if (!args.parse() || !hw_success) return 1;
-  } catch (const std::runtime_error& ex) {
+  } catch (const std::exception& ex) {
     showf("Error while parsing command-line arguments: %s\n", ex.what());
     return 1;
   }

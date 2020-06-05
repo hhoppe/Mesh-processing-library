@@ -178,7 +178,7 @@ class WA3dStream : noncopyable {
 class WSA3dStream : public WA3dStream {  // Write to stream
  public:
   explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
-  ~WSA3dStream() { flush(); }
+  ~WSA3dStream() { WSA3dStream::flush(); }
   void flush() override { _os.flush(); }
   std::ostream& os() { return _os; }
 

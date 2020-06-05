@@ -789,7 +789,7 @@ void do_fgfit(Args& args) {
 // rss= ||b||^2-||U x||^2 = ||b||^2 - x^2 * ||U||^2.
 class UPointLLS {
  public:
-  UPointLLS(Point& p) : _p(p) {}
+  explicit UPointLLS(Point& p) : _p(p) {}
   void enter_spring(const Point& pother, float sqrt_tension);
   // Constraint between point pdata and the point on triangle (p, p1, p2)
   // with barycentric coordinates (1-param1-param2, param1, param2)

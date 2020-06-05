@@ -83,16 +83,16 @@ void test_spawn() {
     try_it("abc");
     try_it("a b c");
     try_it("'a b' c");
-    try_it("\"a b\" c");
-    try_it("hh1 \"a' b.txt\" \"a' b.txt\" \"a' b.txt\" |");
-    try_it("hh1 \"a' \\ b.txt\" \"a' b.txt\" \"a' b.txt\" |");
+    try_it(R"("a b" c)");
+    try_it(R"(hh1 "a' b.txt" "a' b.txt" "a' b.txt" |)");
+    try_it(R"(hh1 "a' \ b.txt" "a' b.txt" "a' b.txt" |)");
     try_it("hh1 \"a' \" b");
-    try_it("hh1 \"a' \" b.txt\" \"a' ");
+    try_it(R"(hh1 "a' " b.txt" "a' )");
     try_it("\"|");
-    try_it("hh1 \"a' \" b.txt\" \"a' b.txt\" \"a' b.txt\" |");
-    try_it("hh1 \"a' \" b.txt\" \"a' b.txt\" \"a' b.txt\" &");
-    try_it("hh1 \"a' | & \" b.txt\" \"a' b.txt\" \"a' b.txt\" &");
-    try_it("hh1 \"a' | & \" b.txt\" \"a' b.txt\" \"a' b.txt\" &~!@#$%^&*()`[]{};:,.<>/?-_=\\+");
+    try_it(R"(hh1 "a' " b.txt" "a' b.txt" "a' b.txt" |)");
+    try_it(R"(hh1 "a' " b.txt" "a' b.txt" "a' b.txt" &)");
+    try_it(R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &)");
+    try_it(R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &~!@#$%^&*()`[]{};:,.<>/?-_=\+)");
     try_it("%^&*()`[]{};:,.<>/?-_=\\+");
     try_it("%^&*()");
   }
@@ -187,7 +187,7 @@ void test_implicit_default_virtual_destructor() {
     ~A() { SHOW("~A()"); }
   };
   struct Base {
-    virtual ~Base() {}
+    virtual ~Base() = default;
   };
   struct Derived : Base {
     A _a;
@@ -210,7 +210,7 @@ void func2() { throw std::runtime_error("func2_err"); }
 
 void func3() {
   struct S {
-    S(string s) : _s(s) { SHOW("start " + _s); }
+    explicit S(string s) : _s(std::move(s)) { SHOW("start " + _s); }
     ~S() { SHOW("end " + _s); }
     string _s;
   };
@@ -395,8 +395,8 @@ int main() {
   }
   test_implicit_default_virtual_destructor();
   {
-    string s1 = "ab\"!''\"\"'&cdefg";
-    string s2 = "hh1 \"a' | & \" b.txt\" \"a' b.txt\" \"a' b.txt\" &~!@#$%^&*()`[]{};:,.<>/?-_=\\+";
+    string s1 = R"(ab"!''""'&cdefg)";
+    string s2 = R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &~!@#$%^&*()`[]{};:,.<>/?-_=\+)";
     SHOW(quote_arg_for_sh(s1));
     SHOW(quote_arg_for_sh(s2));
   }
@@ -445,8 +445,8 @@ line2)";
   {
     struct A {
       A() { SHOW("A default construct"); }
-      A(const A&) { SHOW("A copy construct"); }
-      A(A&&) { SHOW("A move construct"); }
+      A(const A& /*unused*/) { SHOW("A copy construct"); }
+      A(A&& /*unused*/) { SHOW("A move construct"); }
       ~A() { SHOW("A destruct"); }
     };
     SHOW("1");
@@ -457,6 +457,7 @@ line2)";
     {
       A a;
       A a2(a);
+      dummy_use(a2);
     }
     SHOW("4");
     { clone(A()); }
@@ -508,7 +509,7 @@ line2)";
     SHOW(sizeof(buf[0]));
   }
   {
-#define F_EACH(x) 2 * x
+#define F_EACH(x) 2 * (x)
 #define F(...) HH_APPLY((F_EACH, __VA_ARGS__))
     float a = pow(F(1.f, 2.f));
     SHOW(a);

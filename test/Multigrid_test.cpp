@@ -122,7 +122,7 @@ template <int D> void test_random(Args& args) {
 
 // Reconstruct a grid of random numbers from their Laplacian.
 template <int D, typename T, typename Periodic = MultigridPeriodicNone<D>>
-void test(GridView<D, T> grid_orig, Periodic = Periodic{}) {
+void test(GridView<D, T> grid_orig, Periodic /*unused*/ = Periodic{}) {
   const Vec<int, D> dims = grid_orig.dims();
   SHOW(dims);
   for (auto& e : grid_orig) e = T{Random::G.unif()};

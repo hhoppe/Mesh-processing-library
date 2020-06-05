@@ -1173,7 +1173,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   else if (k_debug)
     pwwl = reinterpret_cast<int*>(intptr_t{k_undefined});
   if (thru_l) {  // first go clw
-    ASSERTX(*pwwl == wlclw);
+    ASSERTX(pwwl && *pwwl == wlclw);
     ASSERTX(wlccw >= 0);
     for (;;) {
       *pwwl = wlccw;
@@ -1588,6 +1588,7 @@ void PMeshRStream::read_base_mesh(AWMesh* bmesh) {
   assertx(_vspliti == -1);
   _vspliti = 0;
   if (!_is) {
+    assertx(_pm);
     if (bmesh) *bmesh = _pm->_base_mesh;
   } else {
     if (!_pm & !bmesh) {

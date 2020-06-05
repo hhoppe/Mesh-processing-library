@@ -162,27 +162,27 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
 }
 
 // Perform union of two simplicial complex where id's are meaningful withing *this SC.
-void SimplicialComplex::scUnion(const SimplicialComplex& K1, const SimplicialComplex& K2,
+void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialComplex& s2,
                                 SimplicialComplex& res) const {
-  res.copy(K1);
+  res.copy(s1);
 
   for_int(i, MAX_DIM + 1) {
-    ForSCSimplex(K2, i, K2_s) {
-      Simplex res_news = res.getSimplex(K2_s->getDim(), K2_s->getId());
+    ForSCSimplex(s2, i, s2_s) {
+      Simplex res_news = res.getSimplex(s2_s->getDim(), s2_s->getId());
 
       // create it if it doesn't exist in res
       if (!res_news) {
-        res_news = res.createSimplex(K2_s->getDim(), K2_s->getId());
-        if (res_news->getDim() == 0) res_news->setPosition(K2_s->getPosition());
-        res_news->setVAttribute(K2_s->getVAttribute());
-        res_news->_flags = K2_s->_flags;
-        res_news->_area = K2_s->_area;
+        res_news = res.createSimplex(s2_s->getDim(), s2_s->getId());
+        if (res_news->getDim() == 0) res_news->setPosition(s2_s->getPosition());
+        res_news->setVAttribute(s2_s->getVAttribute());
+        res_news->_flags = s2_s->_flags;
+        res_news->_area = s2_s->_area;
         // update its links
-        ForSCSimplexChildIndex(K2_s, K2_c, K2_ci) {
-          Simplex res_child = res.getSimplex(K2_c->getDim(), K2_c->getId());
+        ForSCSimplexChildIndex(s2_s, s2_c, s2_ci) {
+          Simplex res_child = res.getSimplex(s2_c->getDim(), s2_c->getId());
           assertx(res_child);  // all children must exist
 
-          res_news->setChild(K2_ci, res_child);
+          res_news->setChild(s2_ci, res_child);
 
           // update p
           res_child->addParent(res_news);
@@ -617,9 +617,9 @@ void SimplicialComplex::read(std::istream& is) {
   }
 }
 
-void SimplicialComplex::readLine(const char* psline) {
+void SimplicialComplex::readLine(const char* str) {
   int dim, sid;
-  char* sline = const_cast<char*>(psline);
+  char* sline = const_cast<char*>(str);
   if (sline[0] == '#') return;
   char* va_field = strchr(sline, '{');
   if (va_field) {
@@ -657,11 +657,11 @@ void SimplicialComplex::readLine(const char* psline) {
     // read in vattributes
     sd->set_string(va_field);
 
-    string str;
-    const char* attrid = GMesh::string_key(str, va_field, "attrid");
+    string str2;
+    const char* attrid = GMesh::string_key(str2, va_field, "attrid");
     if (attrid) sd->setVAttribute(to_int(attrid));
 
-    const char* area = GMesh::string_key(str, va_field, "area");
+    const char* area = GMesh::string_key(str2, va_field, "area");
     if (area) sd->setArea(float(atof(area)));
   } else if (!strncmp(sline, "Unify ", 6)) {
     int vi1, vi2;
@@ -677,10 +677,10 @@ void SimplicialComplex::readLine(const char* psline) {
   }
 }
 
-void SimplicialComplex::attrReadLine(const char* sline) {
-  if (sline[0] == '#') return;
+void SimplicialComplex::attrReadLine(const char* str) {
+  if (str[0] == '#') return;
 
-  _material_strings.push(sline);
+  _material_strings.push(str);
 }
 
 // Construct skeleteon from this SC containing only simplices of dimension <= dim.
@@ -924,10 +924,10 @@ OrderedSimplexIter::OrderedSimplexIter(const SimplicialComplex& K, int dim) {
   pq.sort();
 }
 
-SimplexVertexFaceIter::SimplexVertexFaceIter(Simplex v) {
-  assertx(v->getDim() == 0);
+SimplexVertexFaceIter::SimplexVertexFaceIter(Simplex s) {
+  assertx(s->getDim() == 0);
 
-  ForSCSimplexParent(v, e) {
+  ForSCSimplexParent(s, e) {
     ForSCSimplexParent(e, f) {
       bool found = false;
       for (Simplex sqf : _sq) {

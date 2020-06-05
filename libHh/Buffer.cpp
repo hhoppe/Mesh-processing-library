@@ -1,9 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Buffer.h"
 
-#include <fcntl.h>  // O_RDONLY
 #include <cerrno>   // errno, EINTR, etc.
 #include <cstring>  // std::memcpy(), std::memmove()
+
+#include <fcntl.h>  // O_RDONLY
 
 #if defined(_WIN32)
 #include <io.h>  // open(), read(), etc.
@@ -62,7 +63,7 @@ Vec<char, 2048> buf_buffer;
 int buf_buffern;
 int buf_fd;
 
-DWORD WINAPI buf_thread_func(void*) {
+DWORD WINAPI buf_thread_func(void* /*unused*/) {
   for (;;) {
     if (1) {
       assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);

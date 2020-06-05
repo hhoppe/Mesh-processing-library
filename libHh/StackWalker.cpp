@@ -62,9 +62,9 @@
 
 #include "StackWalker.h"
 
-#include <windows.h>
-#include <tchar.h>
 #include <stdio.h>
+#include <tchar.h>
+#include <windows.h>
 
 #include "Hh.h"
 #include "Locks.h"              // for HH_LOCK { ... }
@@ -89,17 +89,17 @@ void* new_malloc(size_t s)
 {
     char* ret = pmalloc;
     pmalloc += s;
-    if (pmalloc>local_malloc_buf+sizeof(local_malloc_buf)) { std::cerr << "new_malloc overflow\n"; _exit(1); }
+    if (pmalloc > local_malloc_buf + sizeof(local_malloc_buf)) { std::cerr << "new_malloc overflow\n"; _exit(1); }
     return ret;
 }
 
 char* new_strdup(const char* s)
 {
-    char* ret = static_cast<char*>(malloc(strlen(s)+1));
-    strcpy(ret,s);
+    char* ret = static_cast<char*>(new_malloc(strlen(s) + 1));
+    strcpy(ret, s);  // NOLINT(clang-analyzer-security.insecureAPI.strcpy)
     return ret;
 }
-void new_free(void*)
+void new_free(void* /*unused*/)
 {
 }
 

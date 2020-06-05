@@ -64,7 +64,7 @@ class SimplicialComplex : noncopyable {
   bool equal(Simplex s1, Simplex s2) const;
   bool eq1simp(Simplex s1, Simplex s2) const;
   bool eq2simp(Simplex s1, Simplex s2) const;
-  void replace(Simplex src, Simplex with, Stack<Simplex>& affected);
+  void replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents);
   int compare_normal(const GMesh& mesh, Corner c1, Corner c2);
 
   // one array per dimension

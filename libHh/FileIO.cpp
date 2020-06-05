@@ -1,12 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/FileIO.h"
 
-#include <fcntl.h>     // O_NOINHERIT, O_BINARY
-#include <sys/stat.h>  // struct stat, struct _stat, stat()
 #include <atomic>
 #include <cctype>   // std::isalnum()
 #include <cstring>  // std::memset()
 #include <fstream>  // std::ifstream, std::ofstream
+
+#include <fcntl.h>     // O_NOINHERIT, O_BINARY
+#include <sys/stat.h>  // struct stat, struct _stat, stat()
 
 #if defined(_WIN32)
 
@@ -216,7 +217,7 @@ class ocfstream : public std::ostream {
 
 class RFile::Implementation {
  public:
-  Implementation(FILE* file) : _ifstream(file) {}  // non-standard extension in VS
+  explicit Implementation(FILE* file) : _ifstream(file) {}  // non-standard extension in VS
   operator std::istream*() { return &_ifstream; }
 
  private:
@@ -225,7 +226,7 @@ class RFile::Implementation {
 
 class WFile::Implementation {
  public:
-  Implementation(FILE* file) : _ofstream(file) {}  // non-standard extension in VS
+  explicit Implementation(FILE* file) : _ofstream(file) {}  // non-standard extension in VS
   operator std::ostream*() { return &_ofstream; }
 
  private:
@@ -326,8 +327,8 @@ RFile::~RFile() {
   if (_file) {
     if (_file_ispipe) {
       int ret = my_pclose(_file);
-      // PIPE signal may cause source process to return
-      // signal information, so ignore return value here.
+      // PIPE signal may cause source process to return signal information, so ignore return value here.
+      dummy_use(ret);
       if (0) assertw(!ret);
     } else {
       if (_file != stdin) assertw(!fclose(_file));
@@ -831,7 +832,7 @@ struct basic_nullbuf : std::basic_streambuf<Ch, Traits> {
   using base_type = std::basic_streambuf<Ch, Traits>;
   using int_type = typename base_type::int_type;
   using traits_type = typename base_type::traits_type;
-  virtual int_type overflow(int_type c) { return traits_type::not_eof(c); }
+  virtual int_type overflow(int_type c) override { return traits_type::not_eof(c); }
 };
 
 using nullbuf = basic_nullbuf<char>;
@@ -889,7 +890,7 @@ int my_pclose(FILE* file) { return pclose(file); }
 const int tot_fd = 512;  // max of _NHANDLE_ in internal.h
 intptr_t* popen_pid = nullptr;
 
-static std::mutex s_mutex;
+std::mutex s_mutex;
 
 template <typename Tcmd>  // const string& or CArrayView<string>
 FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
@@ -904,8 +905,8 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
   if (!popen_pid) popen_pid = new intptr_t[tot_fd];  // never deleted
   int stdhdl = is_read ? 1 : 0;
   const int bufsize = 1024;  // tried larger size for faster mp4 read in FF_RVideo_Implementation, but no effect
-  int pipes[2];
-  assertx(!_pipe(pipes, bufsize, O_BINARY | O_NOINHERIT));
+  Vec<int, 2> pipes;
+  assertx(!_pipe(pipes.data(), bufsize, O_BINARY | O_NOINHERIT));
   assertx(pipes[0] > 2 && pipes[0] < tot_fd && pipes[1] > 2 && pipes[1] < tot_fd);
   int new_stdhdl = pipes[is_read ? 1 : 0];
   int pipehdl = pipes[is_read ? 0 : 1];

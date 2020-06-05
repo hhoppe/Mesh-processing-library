@@ -185,8 +185,8 @@ class Timers {
   }
   std::unordered_map<string, int> _map;
   struct TimerInfo {
-    TimerInfo(string name) : stat(std::move(name), false) {}
-    TimerInfo(TimerInfo&& t)
+    explicit TimerInfo(string name) : stat(std::move(name), false) {}
+    explicit TimerInfo(TimerInfo&& t)
         : stat(std::move(t.stat)), sum_process_time(t.sum_process_time), sum_real_time(t.sum_real_time) {}
     Stat stat;  // thread CPU time
     double sum_process_time{0.};

@@ -170,7 +170,7 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
 // Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
 class RVideo {
  public:
-  explicit RVideo(const string& filename, bool use_nv12 = false);  // may throw std::runtime_error
+  explicit RVideo(string filename, bool use_nv12 = false);  // may throw std::runtime_error
   ~RVideo();
   const Vec3<int>& dims() const { return _dims; }  // (nframes, ysize, xsize)
   const Video::Attrib& attrib() const { return _attrib; }
@@ -197,7 +197,7 @@ class RVideo {
 // Write a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
 class WVideo {
  public:
-  explicit WVideo(const string& filename, const Vec2<int>& spatial_dims, const Video::Attrib& attrib,
+  explicit WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib attrib,
                   bool use_nv12 = false);  // dims are (y, x); may throw std::runtime_error
   ~WVideo();
   const Vec2<int>& spatial_dims() const { return _sdims; }

@@ -67,8 +67,6 @@ extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
 //  seems too complicated.  I can assume a single-window model.
 static HW* pHW;
 
-HW::HW() {}
-
 bool HW::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
@@ -533,7 +531,8 @@ bool HW::suggests_stop() {
 //  except for PostMessage, OutputDebugString, certain 'timeXXXX' functions, and certain 'midiOutXXXX' functions.
 //  (See 'TimeProc' documentation for full details.)
 // Only called by start_hwkey()
-void CALLBACK callbackSimuKey(UINT id, UINT, DWORD_PTR userData, DWORD_PTR, DWORD_PTR) {
+void CALLBACK callbackSimuKey(UINT id, UINT /*unused*/, DWORD_PTR userData, DWORD_PTR /*unused*/,
+                              DWORD_PTR /*unused*/) {
   dummy_use(id);
   // Set flag, meaning that a "new" keypress (simulated) has occurred.
   // (Basically just "opens the gates", so msg loop will process next simulated key now.
@@ -683,7 +682,6 @@ void HW::set_double_buffering(bool newstate) {
   _is_glx_dbuf = newstate;
   // if !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK)
   if (_hwdebug) SHOW(_is_glx_dbuf);
-  return;
 }
 
 bool HW::get_pointer(Vec2<int>& yx) {

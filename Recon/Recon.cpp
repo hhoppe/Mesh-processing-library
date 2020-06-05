@@ -487,7 +487,7 @@ void orient_tp() {
     iog->diffuse(.7f, .7f, .7f);
     iog->specular(0.f, 0.f, 0.f);
     iog->phong(1.f);
-    print_graph(*iog, *gpcpseudo.get(), pcorg, nullptr);
+    print_graph(*iog, *gpcpseudo, pcorg, nullptr);
     close_mk(iog);
   }
   // Now treat each connected component of gpcpseudo separately.
@@ -518,7 +518,7 @@ void orient_tp() {
     ioh->diffuse(.7f, .7f, .7f);
     ioh->specular(0.f, 0.f, 0.f);
     ioh->phong(1.f);
-    print_graph(*ioh, *gpcpseudo.get(), pcorg, &pcnor);
+    print_graph(*ioh, *gpcpseudo, pcorg, &pcnor);
     close_mk(ioh);
   }
 }

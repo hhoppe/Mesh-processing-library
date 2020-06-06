@@ -48,7 +48,7 @@
 
 #if defined(_MSC_VER)
 
-#include <windows.h>
+#include <Windows.h>
 
 namespace hh {
 

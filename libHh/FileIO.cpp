@@ -12,7 +12,7 @@
 #if defined(_WIN32)
 
 // not #define WIN32_LEAN_AND_MEAN because need REFIID and Shellapi.h; must appear before <shellapi.h>
-#include <windows.h>  // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
+#include <Windows.h>  // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
 
 #include <io.h>         // _pipe(), dup(), close(), etc.
 #include <process.h>    // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)

@@ -25,7 +25,7 @@
 #if defined(_WIN32)
 
 // #define WIN32_LEAN_AND_MEAN // must omit to include CommandLineToArgvW(); must appear before <shellapi.h>
-#include <windows.h>  // QueryPerformanceCounter(), QueryPerformanceFrequency()
+#include <Windows.h>  // QueryPerformanceCounter(), QueryPerformanceFrequency()
 
 #include <direct.h>                // getcwd()
 #include <io.h>                    // isatty(), setmode(), get_osfhandle()
@@ -106,7 +106,7 @@ namespace {
 class MyStackWalker : public StackWalker {
  public:
   MyStackWalker() = default;
-  MyStackWalker(DWORD dwProcessId, HANDLE hProcess) : StackWalker(dwProcessId, hProcess) {}
+  // MyStackWalker(DWORD dwProcessId, HANDLE hProcess) : StackWalker(dwProcessId, hProcess) {}
   void OnOutput(LPCSTR szText) override {
     // no heap allocation!
     static std::array<char, 512> buf;  // static just in case stack is almost exhausted
@@ -399,6 +399,7 @@ HH_NORETURN void my_signal_handler(int signal_num) {
   // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
   // Avoid any function that generates a system call (e.g., getcwd(), time()).
   // _exit(213);  // does not show up at all.
+  showf("my_signal_handler\n");
   SHOW(signal_num);
   if (0) {
     // http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes

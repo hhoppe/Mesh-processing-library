@@ -65,7 +65,7 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
     init(0);
     return true;
   }
-  PArray<Point, 100> np;
+  Polygon np;
   for_int(vc, num()) {
     int vp = vc ? vc - 1 : num() - 1;
     bool inc = sa[vc] >= 0.f;
@@ -73,7 +73,7 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
     if (inp ^ inc) np.push(interp(self[vp], self[vc], sa[vc] / (sa[vc] - sa[vp])));
     if (inc) np.push(self[vc]);
   }
-  *this = np;  // copy from the CArrayView<Point>
+  *this = std::move(np);
   return true;
 }
 

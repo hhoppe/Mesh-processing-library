@@ -5,7 +5,7 @@
 #include <mutex>    // std::once_flag, std::call_once()
 
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
-#include <ShellScalingAPI.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
+#include <ShellScalingApi.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
 #include <commdlg.h>   // GetOpenFileNameW()
 #include <shellapi.h>  // DragAcceptFiles()

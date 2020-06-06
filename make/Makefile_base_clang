@@ -21,8 +21,9 @@ ifeq ($(plain_compiler),)
     -Wno-unused-macros -Wno-padded -Wno-shadow \
     -Wno-conversion -Wno-exit-time-destructors \
     -Wno-float-equal -Wno-missing-prototypes -Wno-missing-noreturn -Wno-weak-vtables \
-    -Wno-disabled-macro-expansion
-  ccommon += -Wno-constant-logical-operand#  even if $(less_pedantic)
+    -Wno-disabled-macro-expansion -Wno-comma -Wno-double-promotion -Wno-language-extension-token \
+    -Wno-atomic-implicit-seq-cst -Wno-undefined-func-template
+  ccommon += -Wno-constant-logical-operand#  even without $(PEDANTIC)
   ifneq ($(is_mac),1)
     cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
   endif

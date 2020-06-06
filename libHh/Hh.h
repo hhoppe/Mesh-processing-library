@@ -95,7 +95,7 @@
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; http://stackoverflow.com/a/15864723
 #endif
 
-#if defined(_MSC_VER) && defined(__clang__)
+#if defined(_MSC_VER)
 #define HH_POSIX(x) _##x
 #else
 #define HH_POSIX(x) x
@@ -334,10 +334,10 @@ template <typename T> constexpr bool has_ostream_eol() {
 
 // With single expression, show "expr = value" and return expr (may require parentheses as in "SHOW((ntimes<3>(1)))".
 // With multiple expressions, show a sequence of "expr=value" on a single line.
-#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
 // Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
-#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_HAVE_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number.
 #define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")

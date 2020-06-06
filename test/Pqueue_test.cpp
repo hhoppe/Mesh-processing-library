@@ -5,6 +5,8 @@
 
 using namespace hh;
 
+namespace {
+
 void test1() {
 #if 0  // test noncopyable
   {
@@ -240,6 +242,8 @@ void test9() {
     }
   }
 }
+
+}  // namespace
 
 int main() {
   test1();

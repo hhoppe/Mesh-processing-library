@@ -9,7 +9,7 @@
 #if defined(_WIN32)
 #include <io.h>  // open(), read(), etc.
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // WaitForSingleObject(), CreateThread(), SetEvent(), etc.
+#include <Windows.h>  // WaitForSingleObject(), CreateThread(), SetEvent(), etc.
 #define BUFFER_USE_WIN32_THREAD
 #else
 #include <sys/select.h>  // select(), fd_set

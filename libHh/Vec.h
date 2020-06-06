@@ -38,7 +38,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   bool ok(int i) const { return i >= 0 && i < n; }
   void assign(CArrayView<T> ar) { assign_i(ar); }
   constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
-  bool in_range(const type& dims) const { return in_range(type::all(0), dims); }
+  bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
   bool in_range(const type& uL, const type& uU) const;  // true if uL[c] <= [c] < uU[c] for all c in [0, n - 1]
   // type with(int i, const T& e) const& { type ar(*this); ar[i] = e; return ar; }
   type with(int i, T e) const& {

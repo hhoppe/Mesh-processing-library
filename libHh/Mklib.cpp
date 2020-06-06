@@ -125,7 +125,7 @@ void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
 }
 
 void Mklib::flat_ringU(int n, float h, float r0, float r1) {
-  assertx(r0 * h || r0 * r0 - r1);
+  assertx(r0 * h > 0 || r0 * r0 - r1 > 0);
   float a0 = atan2(r0 * h, r0 * r0 - r1);
   ringU(n, h, r0, r1, a0, a0);
 }

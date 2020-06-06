@@ -39,7 +39,7 @@ ifeq ($(plain_compiler),)
   cxxwarnings = -Woverloaded-virtual
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
-  ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(if $(less_pedantic:0=),,$(cwarnings))
+  ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math $(if $(PEDANTIC:0=),$(cwarnings),)
   ifneq ($(CXX),clang++)
     ccommon += -mfpmath=sse
   endif
@@ -56,7 +56,8 @@ ifeq ($(plain_compiler),)
   # not: -fno-exceptions  because I now use exceptions in FileIO, Image, Video, Audio
   ifeq ($(CXX),g++)
     cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance
-    cwarnings += -Wno-double-promotion -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
+    cwarnings += -Wno-double-promotion
+    # -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
     cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wno-literal-suffix -Wuseless-cast
     cxxwarnings += -fsized-deallocation -Wsized-deallocation
     #  -Wno-error=old-style-cast
@@ -73,8 +74,8 @@ ifeq ($(plain_compiler),)
   # and http://stackoverflow.com/questions/1289881/using-gcc-to-produce-readable-assembly
   cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
   cxxexe +=
-  cxxrel += $(commonrel) $(if $(less_pedantic:0=),,$(cxxwarnings))
-  cxxdbg += $(commondbg) $(if $(less_pedantic:0=),,$(cxxwarnings))
+  cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings),)
+  cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings),)
 
   ifeq ($(use_pch),1)
     # Force-include the precompiled header into every *.cpp file.  Valid for clang as well.

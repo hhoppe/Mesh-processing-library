@@ -27,10 +27,11 @@
 #include "libHh/SGrid.h"
 #include "libHh/Set.h"
 #include "libHh/Timer.h"
-#if !defined(HH_NO_SIMPLEX)
+using namespace hh;
+
+#if defined(HH_HAVE_SIMPLEX)
 #include "recipes.h"
 #endif
-using namespace hh;
 
 namespace {
 
@@ -619,7 +620,7 @@ bool bad_dihedral(float dihb, float diha) { return diha < gmindih && diha < dihb
 
 constexpr bool use_traditional_dih = true;  // I prefer it sometimes, e.g. shark
 struct Dihedral {
-  float dihb;
+  float dihb = 0.f;
   Array<Vector> ar_dirs;
 };
 
@@ -628,7 +629,6 @@ Dihedral enter_dihedral(Edge e, const NewMeshNei& nn) {
   if (use_traditional_dih) {
     dih.dihb = min(min_dihedral_about_vertex(mesh, mesh.vertex1(e)), min_dihedral_about_vertex(mesh, mesh.vertex2(e)));
   } else {
-    dih.dihb = 0.f;
     for_int(i, nn.ar_corners.num()) {
       dih.ar_dirs.push(cross(mesh.point(mesh.corner_vertex(nn.ar_corners[i][0])),
                              mesh.point(mesh.corner_vertex(nn.ar_corners[i][1])),
@@ -865,15 +865,15 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
             c = mesh.ccw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
-            int nwid = retrieve_nwid(nn, c);
-            if (nwid >= 0) return nwid;
+            int nwid2 = retrieve_nwid(nn, c);
+            if (nwid2 >= 0) return nwid2;
           }
           for (Corner c = ci;;) {  // try clw
             c = mesh.clw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
-            int nwid = retrieve_nwid(nn, c);
-            if (nwid >= 0) return nwid;
+            int nwid2 = retrieve_nwid(nn, c);
+            if (nwid2 >= 0) return nwid2;
           }
         }
         return -1;
@@ -3128,9 +3128,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     }
     if (innerhull) link_normal = -link_normal;
   }
-#if defined(HH_NO_SIMPLEX)
-  assertnever("Linear programming (simplex) is unavailable");
-#else
+#if defined(HH_HAVE_SIMPLEX)
   // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0
   int n_m1 = 0;
   for_int(i, ar_lf.num()) {
@@ -3228,7 +3226,9 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   free_ivector(iposv, 1, m);
   free_ivector(izrov, 1, n);
   return ret;
-#endif
+#else  // defined(HH_HAVE_SIMPLEX)
+  assertnever("Linear programming (simplex) is unavailable");
+#endif  // defined(HH_HAVE_SIMPLEX)
 }
 
 float compute_volume_before(Edge e) {

@@ -38,7 +38,7 @@ class GMesh : public Mesh {
  public:
   GMesh() = default;
   GMesh(GMesh&& m) noexcept { swap(*this, m); }  // = default?
-  ~GMesh() = default;
+  ~GMesh() override = default;
   GMesh& operator=(GMesh&& m) noexcept {
     clear();
     swap(*this, m);

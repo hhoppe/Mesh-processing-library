@@ -7,7 +7,7 @@
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 
-#if !defined(HH_NO_LAPACK)
+#if defined(HH_HAVE_LAPACK)
 #include "libHh/my_lapack.h"
 #endif
 
@@ -366,76 +366,7 @@ constexpr float k_float_cond_max = 1e5f;
 constexpr double k_double_cond_warning = 1e8;
 constexpr double k_double_cond_max = 1e12;
 
-#if defined(HH_NO_LAPACK)
-
-// *** SvdLLS
-
-SvdLLS::SvdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
-
-bool SvdLLS::solve_aux() {
-  dummy_use(k_float_cond_max);
-  if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
-  sort_singular_values(_mU, _mS, _mVT);
-  if (!_mS.last()) return false;
-  float cond = _mS[0] / _mS.last();
-  if (cond > k_float_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
-  // SHOW(_a, _b, _mU, _mS, _mVT);
-  // SHOW(mat_mul(mat_mul(_mU, diag_mat(_mS)), transpose(_mVT)));
-  for (float& s : _mS) s = 1.f / s;
-  for_int(d, _nd) {
-    // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
-    mat_mul(_b[d], _mU, _work);
-    _work *= _mS;
-    mat_mul(_mVT, _work, _x[d]);
-  }
-  return true;
-}
-
-SvdDoubleLLS::SvdDoubleLLS(int m, int n, int nd) : FullLLS(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
-
-bool SvdDoubleLLS::solve_aux() {
-  dummy_use(k_double_cond_max);
-  Matrix<double> A = convert<double>(_a);
-  if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
-  sort_singular_values(_mU, _mS, _mVT);
-  if (!_mS.last()) return false;
-  double cond = _mS[0] / _mS.last();
-  if (cond > k_double_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
-  for (double& s : _mS) s = 1. / s;
-  for_int(d, _nd) {
-    _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // slow
-  }
-  return true;
-}
-
-QrdLLS::QrdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}  // == SvdLLS
-
-bool QrdLLS::solve_aux() {
-  dummy_use(k_float_cond_max);
-  if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
-  sort_singular_values(_mU, _mS, _mVT);
-  if (!_mS.last()) return false;
-  float cond = _mS[0] / _mS.last();
-  if (cond > k_float_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
-  for (float& s : _mS) s = 1.f / s;
-  for_int(d, _nd) {
-    // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
-    mat_mul(_b[d], _mU, _work);
-    _work *= _mS;
-    mat_mul(_mVT, _work, _x[d]);
-  }
-  return true;
-}
-
-#else  // defined(HH_NO_LAPACK)
-
-// *** NO_LAPACK
+#if defined(HH_HAVE_LAPACK)  // ***
 
 namespace {
 
@@ -567,6 +498,73 @@ bool QrdLLS::solve_aux() {
   return true;
 }
 
-#endif  // defined(HH_NO_LAPACK)
+#else  // *** !defined(HH_HAVE_LAPACK)
+
+// *** SvdLLS
+
+SvdLLS::SvdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
+
+bool SvdLLS::solve_aux() {
+  dummy_use(k_float_cond_max);
+  if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
+  sort_singular_values(_mU, _mS, _mVT);
+  if (!_mS.last()) return false;
+  float cond = _mS[0] / _mS.last();
+  if (cond > k_float_cond_warning) {
+    HH_SSTAT(Ssvdlls_cond, cond);
+  }
+  // SHOW(_a, _b, _mU, _mS, _mVT);
+  // SHOW(mat_mul(mat_mul(_mU, diag_mat(_mS)), transpose(_mVT)));
+  for (float& s : _mS) s = 1.f / s;
+  for_int(d, _nd) {
+    // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
+    mat_mul(_b[d], _mU, _work);
+    _work *= _mS;
+    mat_mul(_mVT, _work, _x[d]);
+  }
+  return true;
+}
+
+SvdDoubleLLS::SvdDoubleLLS(int m, int n, int nd) : FullLLS(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
+
+bool SvdDoubleLLS::solve_aux() {
+  dummy_use(k_double_cond_max);
+  Matrix<double> A = convert<double>(_a);
+  if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
+  sort_singular_values(_mU, _mS, _mVT);
+  if (!_mS.last()) return false;
+  double cond = _mS[0] / _mS.last();
+  if (cond > k_double_cond_warning) {
+    HH_SSTAT(Ssvdlls_cond, cond);
+  }
+  for (double& s : _mS) s = 1. / s;
+  for_int(d, _nd) {
+    _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // slow
+  }
+  return true;
+}
+
+QrdLLS::QrdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}  // == SvdLLS
+
+bool QrdLLS::solve_aux() {
+  dummy_use(k_float_cond_max);
+  if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
+  sort_singular_values(_mU, _mS, _mVT);
+  if (!_mS.last()) return false;
+  float cond = _mS[0] / _mS.last();
+  if (cond > k_float_cond_warning) {
+    HH_SSTAT(Ssvdlls_cond, cond);
+  }
+  for (float& s : _mS) s = 1.f / s;
+  for_int(d, _nd) {
+    // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));
+    mat_mul(_b[d], _mU, _work);
+    _work *= _mS;
+    mat_mul(_mVT, _work, _x[d]);
+  }
+  return true;
+}
+
+#endif  // defined(HH_HAVE_LAPACK)
 
 }  // namespace hh

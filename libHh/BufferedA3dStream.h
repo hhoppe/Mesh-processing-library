@@ -23,7 +23,7 @@ class RBufferedA3dStream : public RA3dStream {  // Read from RBuffer
 class WBufferedA3dStream : public WA3dStream {  // Write to WBuffer
  public:
   explicit WBufferedA3dStream(WBuffer& b) : _buf(b) {}
-  ~WBufferedA3dStream() { flush(); }
+  ~WBufferedA3dStream() override { flush(); }
   void flush() override { _buf.flush(); }
 
  private:

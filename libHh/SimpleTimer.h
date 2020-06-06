@@ -63,7 +63,7 @@ class SimpleTimer {
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #define NOGDI         // avoid name collision on symbol Polygon
-#include <windows.h>  // winbase.h: LARGE_INTEGER, QueryPerformanceCounter, QueryPerformanceFrequency
+#include <Windows.h>  // winbase.h: LARGE_INTEGER, QueryPerformanceCounter, QueryPerformanceFrequency
 #else
 #include <time.h>  // clock_gettime()
 #endif

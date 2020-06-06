@@ -74,7 +74,7 @@ int main(int argc, const char** argv) {
 #else
 
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // CreateFile(), etc.
+#include <Windows.h>  // CreateFile(), etc.
 
 #if 0
 

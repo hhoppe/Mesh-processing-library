@@ -99,7 +99,7 @@ int main() {
     assertw(!s.remove(101));
     for_int(i, 50) assertw(s.remove(i));
     assertw(s.num() == 50);
-    se = sum(s);
+    se = int(sum(s));
     assertw(se == (50 + 99) * (50 / 2));
     se = 0;
     while (s.num()) se += s.remove_one();

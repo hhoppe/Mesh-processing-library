@@ -114,7 +114,6 @@ class A3dElem {
         for_int(i, el.num()) {
           os << "  [" << i << "] = {p=" << el[i].p << ", d=" << el[i].c.d << ", s=" << el[i].c.s << ", g=" << el[i].c.g
              << ", n=" << el[i].n << "}\n";
-          ;
         }
         break;
       case A3dElem::EType::comment: os << " comment='" << el.comment() << "'"; break;
@@ -178,7 +177,7 @@ class WA3dStream : noncopyable {
 class WSA3dStream : public WA3dStream {  // Write to stream
  public:
   explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
-  ~WSA3dStream() { WSA3dStream::flush(); }
+  ~WSA3dStream() override { WSA3dStream::flush(); }
   void flush() override { _os.flush(); }
   std::ostream& os() { return _os; }
 

@@ -33,11 +33,11 @@
 #include "libHh/Stat.h"
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
-#if !defined(HH_NO_SIMPLEX)
+using namespace hh;
+
+#if defined(HH_HAVE_SIMPLEX)
 #include "recipes.h"
 #endif
-
-using namespace hh;
 
 namespace {
 
@@ -3663,10 +3663,7 @@ Point compute_hull_point(Vertex v, float offset) {
     assertx(link_normal.normalize());
     if (offset < 0.f) link_normal = -link_normal;
   }
-#if defined(HH_NO_SIMPLEX)
-  assertnever_ret("Linear programming (simplex) is unavailable");
-  return Point(thrice(BIGFLOAT));
-#else
+#if defined(HH_HAVE_SIMPLEX)
   // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0
   int n_m1 = int(count_if(ar_lf, [](const LinearFunc& lf) { return lf.offset > 0.f; }));
   // Use Numerical Recipes code (converted to double precision)
@@ -3764,7 +3761,10 @@ Point compute_hull_point(Vertex v, float offset) {
   free_ivector(izrov, 1, n);
   assertx(ret);
   return newpoint;
-#endif
+#else  // defined(HH_HAVE_SIMPLEX)
+  assertnever_ret("Linear programming (simplex) is unavailable");
+  return Point(thrice(BIGFLOAT));
+#endif  // defined(HH_HAVE_SIMPLEX)
 }
 
 // set f = ~/data/mesh/bunny.nf400.m; Filtermesh $f -hull 5e-3 | G3d $f -input -key DmDeNN
@@ -3932,7 +3932,7 @@ void do_smoothgim(Args& args) {
       }
       assertw(nor.normalize());
       mesh.update_string(v, "normal", csform_vec(str, nor));
-      if (y * x)
+      if (y * x > 0)
         mesh.create_face(
             V(vertices[y - 1][x - 1], vertices[y - 1][x - 0], vertices[y - 0][x - 0], vertices[y - 0][x - 1]));
     }
@@ -3956,7 +3956,7 @@ void do_subsamplegim(Args& args) {
       Vertex vo = omesh.id_vertex(y * nsubsamp * (nn * nsubsamp + 1) + x * nsubsamp + 1);
       nmesh.set_point(vn, omesh.point(vo));
       nmesh.set_string(vn, omesh.get_string(vo));
-      if (y * x)
+      if (y * x > 0)
         nmesh.create_face(
             V(vertices[y - 1][x - 1], vertices[y - 1][x - 0], vertices[y - 0][x - 0], vertices[y - 0][x - 1]));
     }

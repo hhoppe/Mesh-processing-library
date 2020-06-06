@@ -21,12 +21,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-     <PreprocessorDefinitions>HH_NO_IMAGE_IO;HH_NO_MKL;HH_NO_SIMPLEX;HH_NO_VIDEO_LOOP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="!Exists('$(HhRoot)\libHh\StackWalker.cpp')">
-    <ClCompile>
-     <PreprocessorDefinitions>HH_NO_STACKWALKER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+     <PreprocessorDefinitions>HH_NO_IMAGE_IO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'false'=='true'">

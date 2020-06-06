@@ -95,7 +95,7 @@ class HW : public HWbase {
   void deallocate_buf();
   void get_color(string colorname, unsigned long& pixel, Pixel& color);
   void set_keyintr() { _is_keyintr = true; }
-  friend void set_keyintr(HW* pHW);
+  friend void set_keyintr(HW& hw);
 };
 
 }  // namespace hh

@@ -20,13 +20,13 @@
 // #undef _WIN32_WINNT
 // #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // required by Media Foundation; must appear before other headers.
+#include <Windows.h>  // required by Media Foundation; must appear before other headers.
 
 #include <codecapi.h>  // CODECAPI_AVEncMPVGOPSize, etc.
 #include <mfapi.h>
 #include <mfidl.h>
 #include <mfreadwrite.h>
-#include <versionhelpers.h>  // IsWindows8OrGreater()
+#include <VersionHelpers.h>  // IsWindows8OrGreater()
 // #include <wrl/client.h>             // ComPtr<>
 // template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 HH_REFERENCE_LIB("mfplat.lib");

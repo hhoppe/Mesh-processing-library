@@ -29,8 +29,12 @@ extern "C" {
 
 namespace hh {
 
-static inline string from_nullptr_or_cstring(const char* s) { return !s ? "" : s; }
-static inline const char* to_nullptr_or_cstring(const string& s) { return s == "" ? nullptr : s.c_str(); }
+namespace {
+string from_nullptr_or_cstring(const char* s) { return !s ? "" : s; }
+const char* to_nullptr_or_cstring(const string& s) { return s == "" ? nullptr : s.c_str(); }
+}  // namespace
+
+void set_keyintr(HW& hw) { hw.set_keyintr(); }
 
 const string k_font_name = "6x13";
 
@@ -333,16 +337,16 @@ void HW::open() {
                                    // "12x24" // yuck
                              "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // not all that large
       );
-      XFontStruct* font_info;
-      font_info = XLoadQueryFont(_display, fontname.c_str());
-      if (!font_info) {
+      XFontStruct* font_info2;
+      font_info2 = XLoadQueryFont(_display, fontname.c_str());
+      if (!font_info2) {
         showf("XLoadQueryFont failed on font '%s', so reverting to font 'fixed'\n", fontname.c_str());
         fontname = "fixed";  // == "6x13"
-        font_info = assertx(XLoadQueryFont(_display, fontname.c_str()));
+        font_info2 = assertx(XLoadQueryFont(_display, fontname.c_str()));
       }
-      Font id = font_info->fid;
-      int first = font_info->min_char_or_byte2;
-      int last = font_info->max_char_or_byte2;
+      Font id = font_info2->fid;
+      int first = font_info2->min_char_or_byte2;
+      int last = font_info2->max_char_or_byte2;
       // SHOW(first, last);  // first=0 last=255
       _listbase_font = assertx(glGenLists(last + 1));
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
@@ -579,10 +583,8 @@ bool HW::suggests_stop() {
 
 static void handle_alarm(int) {
   signal(SIGALRM, handle_alarm);  // for ATT unix
-  set_keyintr(pHW);
+  set_keyintr(*pHW);
 }
-
-void set_keyintr(HW* pHW) { pHW->set_keyintr(); }
 
 void HW::start_hwkey() {
   struct itimerval ti;

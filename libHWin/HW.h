@@ -6,7 +6,7 @@ extern "C" {
 // #define WIN32_LEAN_AND_MEAN // not possible
 #undef NOGDI
 #define Polygon Win32_Polygon  // avoid name collision on symbol Polygon
-#include <windows.h>           // required by OpenGL
+#include <Windows.h>           // required by OpenGL
 #undef Polygon
 #undef small           // <windows.h> defines 'small':  "#define small char" in ./shared/rpcndr.h
 #include <GL/gl.h>     // glBegin() etc. for users of this class

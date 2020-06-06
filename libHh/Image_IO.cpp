@@ -356,9 +356,9 @@ void ImageIO::read_jpg(Image& image, FILE* file) {
   cinfo.err = jpeg_std_error(&jerr);
   // Intercepting warning messages ("Premature end of JPEG file") would require modifying jerr.output_message .
   // (Note that "Premature end" may appear in VideoViewer due to the prefetch reading of another image.)
-  jerr.error_exit = [](j_common_ptr cinfo) {
+  jerr.error_exit = [](j_common_ptr cinfo2) {
     char jpegLastErrorMsg[JMSG_LENGTH_MAX];
-    cinfo->err->format_message(cinfo, jpegLastErrorMsg);
+    cinfo2->err->format_message(cinfo2, jpegLastErrorMsg);
     throw std::runtime_error(string("libjpeg read error: ") + jpegLastErrorMsg);
   };
   jpeg_create_decompress(&cinfo);
@@ -508,9 +508,9 @@ void ImageIO::write_jpg(const Image& image, FILE* file) {
 
   // Step 1: allocate and initialize JPEG compression object:
   cinfo.err = jpeg_std_error(&jerr);
-  jerr.error_exit = [](j_common_ptr cinfo) {
+  jerr.error_exit = [](j_common_ptr cinfo2) {
     char jpegLastErrorMsg[JMSG_LENGTH_MAX];
-    cinfo->err->format_message(cinfo, jpegLastErrorMsg);
+    cinfo2->err->format_message(cinfo2, jpegLastErrorMsg);
     throw std::runtime_error(string("libjpeg write error: ") + jpegLastErrorMsg);
   };
   jpeg_create_compress(&cinfo);

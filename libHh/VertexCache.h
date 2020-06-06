@@ -167,7 +167,7 @@ class FifoVertexCache : public VertexCache {
 class LruVertexCache : public VertexCache {
  public:
   explicit LruVertexCache(int nverts1, int cs) { LruVertexCache::init(nverts1, cs); }
-  ~LruVertexCache() {
+  ~LruVertexCache() override {
     while (!_list.empty()) {
       EListNode* nodee = _list.delim()->next();
       nodee->unlink();

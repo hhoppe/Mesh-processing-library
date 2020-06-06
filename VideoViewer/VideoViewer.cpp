@@ -31,7 +31,7 @@
 #include "libHh/Timer.h"
 #include "libHh/Video.h"
 
-#if !defined(HH_NO_VIDEO_LOOP)
+#if defined(HH_HAVE_VIDEO_LOOP)
 // From ~/git/CompPhoto/Applications/VideoLooping/LoopAPILib/LoopAPILib/src/
 #include "OptSetting.h"
 #include "PipeAPI.h"
@@ -1605,7 +1605,7 @@ bool DerivedHW::key_press(string skey) {
             set_video_frame(first_cob_loaded, k_before_start);
             reset_window(determine_default_window_dims(g_frame_dims));
           }
-          if (smess != "") throw string(smess);
+          if (smess != "") throw string() + smess;
           break;
         }
         case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file
@@ -3723,10 +3723,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     app_draw_text(V((2 + 0) * (font_height + 4), 6),
                   "Drag to pan  (<shift>:constraints) (<w> to reset view, <h> for help)");
   } else {
-#if !defined(HH_NO_VIDEO_LOOP)
-    if (0 && getobnum() == 1 && g_cob >= 0 && !getob().is_image() && !getenv_bool("HH_NO_LOOP_MESSAGE"))
+    if (0 && getobnum() == 1 && g_cob >= 0 && !getob().is_image())
       app_draw_text(V((2 + 0) * (font_height + 4), 6), "To generate a loop, press the <G> key");
-#endif
   }
   assertx(!gl_report_errors());
   if (g_frame_has_transparency) redraw_later();
@@ -3806,7 +3804,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
       g_lp.mat_start.init(hdims, start);
       g_lp.mat_period.init(hdims, period);
     } else if (1) {
-#if !defined(HH_NO_VIDEO_LOOP)
+#if defined(HH_HAVE_VIDEO_LOOP)
       if (getenv_bool("LOOP_STATISTICS")) SHOW(hvideo.dims());
       if (1) mafTime::Disable();
       Loopers::Config config;

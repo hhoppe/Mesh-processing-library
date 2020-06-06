@@ -24,7 +24,7 @@ template <int D, typename T> void read_image(Image& image, Grid<D, T>& grid_orig
   if (0) HH_RSTAT(Sorig, grid_orig);
 }
 
-void read_image(Image& image, Grid<2, Vector4>& grid_orig) {
+template <> inline void read_image(Image& image, Grid<2, Vector4>& grid_orig) {
   assertx(image.zsize() == 3);
   grid_orig.init(image.dims());
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });

@@ -2,15 +2,19 @@
 #include "libHh/SimpleTimer.h"
 using namespace hh;
 
-volatile int external_value = 3;
+namespace {
 
-static void some_work() {
+volatile int external_value = 3;  // volatile to prevent compiler optimizations
+
+void some_work() {
   const int n = 10'000'000;
   int value = 13;
   for (int i = 0; i < n; i++) {
     value = value / 2 + external_value;
     if (value > 100) exit(1);
   }
+}
+
 }
 
 int main() {

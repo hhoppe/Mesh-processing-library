@@ -64,7 +64,7 @@
 
 #include <stdio.h>
 #include <tchar.h>
-#include <windows.h>
+#include <Windows.h>
 
 #include "Hh.h"
 #include "Locks.h"              // for HH_LOCK { ... }
@@ -110,7 +110,7 @@ const bool verbose = getenv_bool("STACKWALKER_VERBOSE");
 // If VC7 and later, then use the shipped 'dbghelp.h'-file
 #if _MSC_VER >= 1300
 #pragma warning(disable:4091) // C4091: 'typedef ': ignored on left of '' when no variable is declared
-#include <dbghelp.h>
+#include <DbgHelp.h>
 #else
 // inline the important dbghelp.h-declarations...
 typedef enum {

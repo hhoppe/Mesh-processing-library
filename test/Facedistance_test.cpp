@@ -6,6 +6,8 @@
 #include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
+namespace {
+
 void test1() {
   // Point p1(.2f, .3f, .6f);
   // Point p2(.3f, .7f, .2f);
@@ -77,6 +79,8 @@ void test2() {
     SHOW(specular);
   }
 }
+
+}  // namespace
 
 int main() {
   test1();

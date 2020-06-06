@@ -17,6 +17,7 @@ template <typename T> class com_ptr_ref {
  public:
   com_ptr_ref(com_ptr<T>& cp) : _cp(cp) { assertx(!_cp); }
   ~com_ptr_ref() { assertx(!_cp), _cp.reset(_p); }
+  com_ptr_ref(const com_ptr_ref<T>& cp) = default;
   operator T**() {
     assertx(!_num++);
     assertx(!_p);
@@ -48,7 +49,7 @@ template <typename T> class com_ptr : public unique_ptr<T, void (*)(T*)> {
 };
 
 // Helper for IID_PPV_ARGS in "com_ptr<IMFByteStream> pbs; AS(pSource->QueryInterface(IID_PPV_ARGS(&pbs)));".
-template <typename T> void** IID_PPV_ARGS_Helper(com_ptr_ref<T>&& p) throw() {
+template <typename T> void** IID_PPV_ARGS_Helper(com_ptr_ref<T>&& p) {
   static_assert(std::is_base_of<IUnknown, T>::value, "T has to derive from IUnknown");
   return reinterpret_cast<void**>(static_cast<T**>(p));
 }

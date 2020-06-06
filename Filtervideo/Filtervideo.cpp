@@ -733,7 +733,7 @@ void do_makeloop(Args& args) {
   int fbeg = parse_nframes(args.get_string(), true);
   int fend = parse_nframes(args.get_string(), true);
   const int nf = fend - fbeg, ny = video.ysize(), nx = video.xsize();
-  ;
+  //
   assertw(fbeg > 0 && fend < video.nframes());  // at least one frame padding at beg/end to retrieve gradient
   assertx(nf >= 3);
   Video nvideo(nf, video.spatial_dims());

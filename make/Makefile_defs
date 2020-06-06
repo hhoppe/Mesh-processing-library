@@ -29,8 +29,7 @@ endif
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
   build_configs ?= win mingw clang cygwin w32#  default set for "make makeall" or "make CONFIG=all"
-  nondefault_configs = distrib
-  configs ?=       $(build_configs) $(nondefault_configs) $(nonworking_configs)
+  configs ?=       $(build_configs) $(nonworking_configs)
 else
   build_configs ?= unix
   configs ?=       unix
@@ -81,8 +80,11 @@ endef
 MAKEFLAGS += --no-print-directory#  print-directory is ugly and ineffective with "-j" (see main.el)
 
 ## Possible configuration settings:
-cppinc += -DHH_NO_LAPACK#  by default I no longer use lapack
 cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuild *.vcxproj does not set it)
+# cppinc += -DHH_HAVE_LAPACK#  by default I no longer use lapack
+# cppinc += -DHH_HAVE_MKL#  only active if HH_HAVE_LACKPACK and CONFIG=win/w32
+# cppinc += -DHH_HAVE_SIMPLEX
+# cppinc += -DHH_HAVE_VIDEO_LOOP
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
 # cppinc += -DHH_NO_UTF8
@@ -91,28 +93,19 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_IMAGE_WIC#  only matters for CONFIG=win/w32
 # cppinc += -DHH_IMAGE_IO_TOO#  only matters for CONFIG=win/w32 (default is to just use WIC)
 # cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  otherwise enable SSE / NEON instructions
-# ifeq ($(call file_exists,$(HhRoot)/libHh/StackWalker.h),)
-# cppinc += -DHH_NO_STACKWALKER # set for distrib
-# endif
-cppinc += -DHH_NO_MKL#  set for distrib (only matters for CONFIG=win/w32)
-cppinc += -DHH_NO_SIMPLEX#  set for distrib
-cppinc += -DHH_NO_VIDEO_LOOP#  set for distrib
+# cppinc += -DHH_NO_STACKWALKER
+# cppinc += -DHH_NO_LIB_REFERENCES
+# cppinc += -DHH_NO_HH_INIT
+# PEDANTIC ?= 1
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
-cppinc += -DHH_NO_IMAGE_IO#  set for distrib
-endif
-# # cppinc += -DHH_NO_LIB_REFERENCES
-# # cppinc += -DHH_NO_HH_INIT
-
-ignore_compile_warnings := 1  # set for distrib
-less_pedantic := 1            # set for distrib
-
-ifneq ($(CONFIG),win)
-cppinc += -DHH_NO_VIDEO_LOOP#  because LoopAPILib is only compiled for CONFIG==win
+cppinc += -DHH_NO_IMAGE_IO
 endif
 
-have_lapack = $(if $(filter -DHH_NO_LAPACK,$(cppinc)),,1)
+ignore_compile_warnings ?= 1
+
+have_lapack = $(if $(filter -DHH_HAVE_LAPACK,$(cppinc)),1,)
+have_recipes = $(if $(filter -DHH_HAVE_SIMPLEX,$(cppinc)),1,)
 have_image_io = $(if $(filter -DHH_NO_IMAGE_IO,$(cppinc)),,1)
-have_recipes = $(if $(filter -DHH_NO_SIMPLEX,$(cppinc)),,1)
 
 
 # Use CONFIG=all as a way to run gmake successively on all $(build_configs).

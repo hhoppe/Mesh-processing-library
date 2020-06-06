@@ -10,7 +10,7 @@
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#include <windows.h>  // GetThreadTimes(), GetProcessTimes(), FILETIME
+#include <Windows.h>  // GetThreadTimes(), GetProcessTimes(), FILETIME
 #else
 #include <time.h>  // clock_gettime()
 #endif             // defined(_WIN32)

@@ -15,7 +15,7 @@
 // http://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments   (finding comma)
 
 // Return 1 if there is more than one argument (i.e. has a comma), else 0.
-#define HH_HAVE_GT1_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_COMMA_SEQ_N()))
+#define HH_GT1_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_COMMA_SEQ_N()))
 
 // This will let macros expand before concatenating them.
 #define HH_PRIMITIVE_CAT(tuple) HH_PRIMITIVE_CAT_ tuple

@@ -194,9 +194,9 @@ HH_NUM_ARGS(a, b, c, d, e, f) = 6
 HH_NUM_ARGS(1) = 1
 HH_NUM_ARGS(1, 2) = 2
 HH_NUM_ARGS(1, 2, 3) = 3
-HH_HAVE_GT1_ARGS(1) = 0
-HH_HAVE_GT1_ARGS(1, 2) = 1
-HH_HAVE_GT1_ARGS(1, 2, 3) = 1
+HH_GT1_ARGS(1) = 0
+HH_GT1_ARGS(1, 2) = 1
+HH_GT1_ARGS(1, 2, 3) = 1
 a = 16
 a=16 n=5 a=16
 1=1 2=2 3=3 4=4 5=5

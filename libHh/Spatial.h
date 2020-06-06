@@ -62,7 +62,7 @@ class Spatial : noncopyable {            // abstract class
 class BPointSpatial : public Spatial {
  public:
   explicit BPointSpatial(int gn) : Spatial(gn) {}
-  ~BPointSpatial() { BPointSpatial::clear(); }
+  ~BPointSpatial() override { BPointSpatial::clear(); }
   void clear() override;
   // id != 0
   void enter(Univ id, const Point* pp);   // note: pp not copied, no ownership taken
@@ -84,7 +84,7 @@ class BPointSpatial : public Spatial {
 class IPointSpatial : public Spatial {
  public:
   explicit IPointSpatial(int gn, CArrayView<Point> arp);
-  ~IPointSpatial() { clear(); }
+  ~IPointSpatial() override { clear(); }
   void clear() override;
 
  private:
@@ -99,7 +99,7 @@ template <typename Approx2 = float(const Point& p, Univ id), typename Exact2 = f
 class ObjectSpatial : public Spatial {
  public:
   explicit ObjectSpatial(int gn) : Spatial(gn) {}
-  ~ObjectSpatial() { ObjectSpatial::clear(); }
+  ~ObjectSpatial() override { ObjectSpatial::clear(); }
   void clear() override {
     for (auto& cell : _map.values()) {
       HH_SSTAT(Sospcelln, cell.num());

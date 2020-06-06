@@ -538,15 +538,9 @@ line2)";
     SHOW(HH_NUM_ARGS(1, 2));
     SHOW(HH_NUM_ARGS(1, 2, 3));
     //
-    // SHOW(HH_HAVE_ARGS());
-    // SHOW(HH_HAVE_ARGS(1));
-    // SHOW(HH_HAVE_ARGS(1, 2));
-    // SHOW(HH_HAVE_ARGS(1, 2, 3));
-    //
-    // SHOW(HH_HAVE_GT1_ARGS());
-    SHOW(HH_HAVE_GT1_ARGS(1));
-    SHOW(HH_HAVE_GT1_ARGS(1, 2));
-    SHOW(HH_HAVE_GT1_ARGS(1, 2, 3));
+    SHOW(HH_GT1_ARGS(1));
+    SHOW(HH_GT1_ARGS(1, 2));
+    SHOW(HH_GT1_ARGS(1, 2, 3));
   }
   {
     float a = 16.f;

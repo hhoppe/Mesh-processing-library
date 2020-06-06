@@ -7,7 +7,9 @@
 #include "libHh/Stat.h"
 using namespace hh;
 
-static unique_ptr<LLS> make_lls(int c, int m, int n, int nd) {
+namespace {
+
+unique_ptr<LLS> make_lls(int c, int m, int n, int nd) {
   if (c == 0) return make_unique<SparseLLS>(m, n, nd);
   if (c == 1) return make_unique<LudLLS>(m, n, nd);
   if (c == 2) return make_unique<GivensLLS>(m, n, nd);
@@ -178,6 +180,8 @@ void test4() {
     }
   }
 }
+
+}  // namespace
 
 int main() {
   test1();

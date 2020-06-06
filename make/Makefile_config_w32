@@ -1,8 +1,6 @@
 rel ?= 1#  0=debug or 1=release (usually 1, to be different from CONFIG=win)
 x64 ?= 0
 
-cppinc += -DHH_NO_VIDEO_LOOP  # because LoopAPILib/Win32/DebugMD/LoopAPILib.lib is unavailable
-
 # msvc = 2015
 msvc = 2019
 

@@ -2,14 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_VECTOR4_H_
 #define MESH_PROCESSING_LIBHH_VECTOR4_H_
 
-#if 0  // Note: sandbox/server machines like msr-sandbox-031.redmond.corp.microsoft.com lack this feature.
-#define HH_NO_SSE41
-#endif
-
-#if 0 && defined(HH_DEBUG)  // debug version would be more portable, but ~/src/progtest/Filterimage.ou has differences
-#define HH_NO_SSE41
-#endif
-
 #if defined(HH_NO_VECTOR4_VECTORIZATION)
 // If so, do not enable vectorization.
 #elif defined(_M_ARM) && _M_ARM_FP >= 40 || \

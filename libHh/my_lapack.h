@@ -114,36 +114,4 @@ HH_REFERENCE_LIB("libI77.lib");
 
 #endif  // !(defined(_WIN32) || defined(__CYGWIN__))
 
-// *** Old
-
-#if 0
-// from mkl_lapack.h:
-// It shows that the MKL lapack functions have almost the same signatures (except for "const char*").
-using MKL_INT = int;  // 32-bit unless MKL_ILP64
-extern "C" {
-void SGESVD(const char* jobu, const char* jobvt, const MKL_INT* m, const MKL_INT* n, float* a, const MKL_INT* lda,
-            float* s, float* u, const MKL_INT* ldu, float* vt, const MKL_INT* ldvt, float* work, const MKL_INT* lwork,
-            MKL_INT* info);
-void SGESVD_(const char* jobu, const char* jobvt, const MKL_INT* m, const MKL_INT* n, float* a, const MKL_INT* lda,
-             float* s, float* u, const MKL_INT* ldu, float* vt, const MKL_INT* ldvt, float* work, const MKL_INT* lwork,
-             MKL_INT* info);
-void sgesvd(const char* jobu, const char* jobvt, const MKL_INT* m, const MKL_INT* n, float* a, const MKL_INT* lda,
-            float* s, float* u, const MKL_INT* ldu, float* vt, const MKL_INT* ldvt, float* work, const MKL_INT* lwork,
-            MKL_INT* info);
-void sgesvd_(const char* jobu, const char* jobvt, const MKL_INT* m, const MKL_INT* n, float* a, const MKL_INT* lda,
-             float* s, float* u, const MKL_INT* ldu, float* vt, const MKL_INT* ldvt, float* work, const MKL_INT* lwork,
-             MKL_INT* info);
-}
-
-// from /usr/include/lapacke.h:
-
-lapack_int LAPACKE_sgelss(int matrix_order, lapack_int m, lapack_int n, lapack_int nrhs, float* a, lapack_int lda,
-                          float* b, lapack_int ldb, float* s, float rcond, lapack_int* rank);
-
-void LAPACK_sgelss(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda, float* b,
-                   lapack_int* ldb, float* s, float* rcond, lapack_int* rank, float* work, lapack_int* lwork,
-                   lapack_int* info);
-
-#endif
-
 #endif  // MESH_PROCESSING_LIBHH_MY_LAPACK_H_

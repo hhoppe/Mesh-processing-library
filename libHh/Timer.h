@@ -68,8 +68,6 @@ class Timer : noncopyable {
   void zero();
 };
 
-#if !defined(HH_NO_TIMERS)
-
 #define HH_TIMER_VAR(id) Timer_##id  // variable name used internally
 #define HH_TIMER_AUX(id, mode) hh::Timer HH_TIMER_VAR(id)(#id, mode)
 #define HH_TIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::normal)
@@ -79,18 +77,6 @@ class Timer : noncopyable {
 #define HH_STIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::summary)
 #define HH_PTIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::possibly)
 #define HH_TIMER_END(id) HH_TIMER_VAR(id).terminate()  // terminate a HH_TIMER(id) earlier than its scope
-
-#else
-
-#define HH_TIMER(id) HH_EAT_SEMICOLON
-#define HH_CTIMER(id, cond) HH_EAT_SEMICOLON
-#define HH_DTIMER(id) HH_EAT_SEMICOLON
-#define HH_ATIMER(id) HH_EAT_SEMICOLON
-#define HH_STIMER(id) HH_EAT_SEMICOLON
-#define HH_PTIMER(id) HH_EAT_SEMICOLON
-#define HH_TIMER_END(id) HH_EAT_SEMICOLON
-
-#endif  // !defined(HH_NO_TIMERS)
 
 }  // namespace hh
 

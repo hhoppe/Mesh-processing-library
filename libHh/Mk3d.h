@@ -18,8 +18,8 @@ class Mk3d : noncopyable {
   template <typename Func> void save(Func func) { push(), func(), pop(); }
   void translate(float x, float y, float z) { translate(Vector(x, y, z)); }
   void translate(const Vector& v) { apply(Frame::translation(v)); }
-  enum { Xaxis = 0, Yaxis = 1, Zaxis = 2 };  // (Mk3d::Xaxis is easier than Mk3d::Axis::x)
-  void rotate(int axis, float angle) { apply(Frame::rotation(axis, angle)); }
+  enum class Axis { x = 0, y = 1, z = 2 };
+  void rotate(Axis axis, float angle) { apply(Frame::rotation(int(axis), angle)); }
   void scale(float x, float y, float z);
   void scale(float v) { scale(v, v, v); }
   void apply(const Frame& t) { _ctm = t * _ctm, _ctmi = inverse(_ctm); }

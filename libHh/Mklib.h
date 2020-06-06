@@ -38,8 +38,8 @@ class Mklib : noncopyable {
   //                        -->  (-.5, -.5, 0)<>(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
   template <typename Func = void(int)> void OtoU(Func func, int n) {
     MkSave mk_save(mk);
-    mk.rotate(1, TAU / 4);
-    mk.rotate(0, -TAU / 4);
+    mk.rotate(Mk3d::Axis::y, TAU / 4);
+    mk.rotate(Mk3d::Axis::x, -TAU / 4);
     mk.translate(.5f, 0, 0);
     func(n);
   }
@@ -48,29 +48,29 @@ class Mklib : noncopyable {
   template <typename Func = void(int)> void circle_of(Func func, int n) {
     float a = TAU / n, h = cos(a * .5f);
     MkSave mk_save(mk);
-    mk.rotate(1, TAU / 4);
-    mk.rotate(2, TAU / 4);
-    mk.rotate(2, a * .5f);
+    mk.rotate(Mk3d::Axis::y, TAU / 4);
+    mk.rotate(Mk3d::Axis::z, TAU / 4);
+    mk.rotate(Mk3d::Axis::z, a * .5f);
     for_int(i, n) {
       {
         MkSave mk_save2(mk);
         mk.translate(h, 0, 0);
         func(i);
       }
-      mk.rotate(2, a);
+      mk.rotate(Mk3d::Axis::z, a);
     }
   }
   template <typename Func = void(int)> void circle_ofU(Func func, int n) {
     float a = TAU / n, h = cos(a * .5f);
     MkSave mk_save(mk);
-    mk.rotate(2, a * .5f);
+    mk.rotate(Mk3d::Axis::z, a * .5f);
     for_int(i, n) {
       {
         MkSave mk_save2(mk);
         mk.translate(h, 0, 0);
         func(i);
       }
-      mk.rotate(2, a);
+      mk.rotate(Mk3d::Axis::z, a);
     }
   }
   // radius 1 along +z axis, calls func with +x axis normal to circle;
@@ -84,7 +84,7 @@ class Mklib : noncopyable {
         mk.translate(1, 0, 0);
         func(i);
       }
-      mk.rotate(2, a);
+      mk.rotate(Mk3d::Axis::z, a);
     }
   }
   // height h, 2 radii and normal angles w/respect XY plane

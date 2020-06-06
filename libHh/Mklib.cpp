@@ -17,13 +17,13 @@ void Mklib::squareO() {
 void Mklib::squareXY() {
   mk_save;
   mk.translate(.5f, .5f, 0);
-  mk.rotate(1, TAU / 4);
+  mk.rotate(Mk3d::Axis::y, TAU / 4);
   squareO();
 }
 
 void Mklib::squareU() {
   mk_save;
-  mk.rotate(1, -TAU / 4);
+  mk.rotate(Mk3d::Axis::y, -TAU / 4);
   squareO();
 }
 
@@ -31,37 +31,37 @@ void Mklib::cubeO() {
   {
     mk_save;
     mk.translate(+.0f, +.0f, -.5f);
-    mk.rotate(1, TAU / 4);
+    mk.rotate(Mk3d::Axis::y, TAU / 4);
     squareO();
   }
   {
     mk_save;
     mk.translate(+.0f, +.0f, +.5f);
-    mk.rotate(1, -TAU / 4);
+    mk.rotate(Mk3d::Axis::y, -TAU / 4);
     squareO();
   }
   {
     mk_save;
     mk.translate(-.5f, +.0f, +.0f);
-    mk.rotate(2, TAU / 2);
+    mk.rotate(Mk3d::Axis::z, TAU / 2);
     squareO();
   }
   {
     mk_save;
     mk.translate(+.5f, +.0f, +.0f);
-    mk.rotate(2, 0);
+    mk.rotate(Mk3d::Axis::z, 0);
     squareO();
   }
   {
     mk_save;
     mk.translate(+.0f, -.5f, +.0f);
-    mk.rotate(2, -TAU / 4);
+    mk.rotate(Mk3d::Axis::z, -TAU / 4);
     squareO();
   }
   {
     mk_save;
     mk.translate(+.0f, +.5f, +.0f);
-    mk.rotate(2, TAU / 4);
+    mk.rotate(Mk3d::Axis::z, TAU / 4);
     squareO();
   }
 }
@@ -88,8 +88,8 @@ void Mklib::polygonO(int n) {
 
 void Mklib::polygonU(int n) {
   mk_save;
-  mk.rotate(1, -TAU / 4);
-  mk.rotate(0, -TAU / 4);
+  mk.rotate(Mk3d::Axis::y, -TAU / 4);
+  mk.rotate(Mk3d::Axis::x, -TAU / 4);
   polygonO(n);
 }
 
@@ -98,7 +98,7 @@ void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
   mk_save;
   if (r0 <= 0) {
     mk.translate(0, 0, h);
-    mk.rotate(0, TAU / 2);
+    mk.rotate(Mk3d::Axis::x, TAU / 2);
     ringU(n, h, r1, r0, -a1, -a0);
   } else {
     float ft0 = r1 / r0, ft3 = h / r0;
@@ -145,7 +145,7 @@ void Mklib::poly_hole(int n, float r1) {
 void Mklib::volume_ringU(int n, float r1) {
   {
     mk_save;
-    mk.rotate(0, TAU / 2);
+    mk.rotate(Mk3d::Axis::x, TAU / 2);
     poly_hole(n, r1);
   }
   {
@@ -172,7 +172,7 @@ void Mklib::cylinderU(int n) {
   tubeU(n);
   {
     mk_save;
-    mk.rotate(0, TAU / 2);
+    mk.rotate(Mk3d::Axis::x, TAU / 2);
     polygonU(n);
   }
   {
@@ -188,7 +188,7 @@ void Mklib::coneU(int n) {
   capU(n);
   {
     mk_save;
-    mk.rotate(0, TAU / 2);
+    mk.rotate(Mk3d::Axis::x, TAU / 2);
     polygonU(n);
   }
 }

@@ -13,7 +13,7 @@ int main() {
   {
     MkSave mk_save(mk);
     mk.translate(10, 0, 0);
-    mk.rotate(2, TAU / 4);
+    mk.rotate(Mk3d::Axis::z, TAU / 4);
     mk.scale(1, 1, .5);
     mk.point(1, 2, 3);
     mk.point(4, 5, 6);

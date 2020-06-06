@@ -42,7 +42,7 @@ int main(int argc, char** /*unused*/) {
   {
     MkSave mk_save(mk);
     mk.translate(6, 0, 0);
-    mk.rotate(2, TAU / 4);
+    mk.rotate(Mk3d::Axis::z, TAU / 4);
     mk.scale(1, 1, .5);
     os.write_comment("tetra");
     mkl.tetra();

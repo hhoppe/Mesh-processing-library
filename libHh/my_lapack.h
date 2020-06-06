@@ -102,27 +102,6 @@ lapack_int sgeqrf_(lapack_int* m, lapack_int* n, float* a, lapack_int* lda, floa
 }
 
 #if defined(_MSC_VER)
-#if defined(_WIN64) && defined(HH_HAVE_MKL)  // for now, only use MKL on x64
-#if !defined(HH_MKL_NOT_DLL)
-// 2014
-HH_REFERENCE_LIB("mkl_intel_lp64_dll.lib");
-HH_REFERENCE_LIB("mkl_intel_thread_dll.lib");
-HH_REFERENCE_LIB("mkl_core_dll.lib");
-HH_REFERENCE_LIB("libiomp5md.lib");
-// e.g.: depends MeshSimplify.exe
-//  -> mkl_intel_thread.dll -> libiomp5md.dll mkl_core.dll ("core" dispatches among several mkl_*.dll based on CPU)
-#else  // !defined(HH_MKL_NOT_DLL)
-// 2012
-#if defined(_WIN64)
-HH_REFERENCE_LIB("mkl_intel_lp64.lib");
-#else
-HH_REFERENCE_LIB("mkl_intel_c.lib");
-#endif
-HH_REFERENCE_LIB("mkl_intel_thread.lib");
-HH_REFERENCE_LIB("mkl_core.lib");
-HH_REFERENCE_LIB("libiomp5md.lib");
-#endif  // !defined(HH_MKL_NOT_DLL)
-#else   // defined(_WIN64) && defined(HH_HAVE_MKL)
 HH_REFERENCE_LIB("liblapack.lib");
 HH_REFERENCE_LIB("libBLAS.lib");
 #if 1
@@ -131,7 +110,6 @@ HH_REFERENCE_LIB("libf2c.lib");  // CLAPACK
 HH_REFERENCE_LIB("libF77.lib");  // liblapack
 HH_REFERENCE_LIB("libI77.lib");
 #endif
-#endif  // defined(_WIN64) && defined(HH_HAVE_MKL)
 #endif  // defined(_MSC_VER)
 
 #endif  // !(defined(_WIN32) || defined(__CYGWIN__))

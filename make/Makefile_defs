@@ -1,6 +1,6 @@
 ## Note: this file is included into all other Makefiles.
 # It sets default variables, functions, and rules.
-# (The "possible configuration settings" below can be adjusted.)
+# (The "Possible configuration settings" below can be adjusted.)
 
 ifneq ($(defs_loaded),)   # include guard; should be checked to avoid loading this file more than once
   $(error $(lastword $(MAKEFILE_LIST)) loaded more than once)
@@ -82,7 +82,6 @@ MAKEFLAGS += --no-print-directory#  print-directory is ugly and ineffective with
 ## Possible configuration settings:
 cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuild *.vcxproj does not set it)
 # cppinc += -DHH_HAVE_LAPACK#  by default I no longer use lapack
-# cppinc += -DHH_HAVE_MKL#  only active if HH_HAVE_LACKPACK and CONFIG=win/w32
 # cppinc += -DHH_HAVE_SIMPLEX
 # cppinc += -DHH_HAVE_VIDEO_LOOP
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
@@ -96,7 +95,9 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_STACKWALKER
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
+
 # PEDANTIC ?= 1
+
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
 cppinc += -DHH_NO_IMAGE_IO
 endif

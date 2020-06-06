@@ -32,7 +32,10 @@ const FlagMask fflag_invisible = Mesh::allocate_Face_flag();
 const string k_default_geometry = "700x700+130+0";
 constexpr float k_default_hither = .01f;
 const int interval_check_stop = 1024;
-enum ClipConditionCodes { CCN = 0, CCH = 1, CCY = 2, CCR = 4, CCL = 8, CCD = 16, CCU = 32 };
+
+using ConditionCode = unsigned;
+const ConditionCode k_code_hither = 1, k_code_yonder = 2, k_code_right = 4, k_code_left = 8, k_code_down = 16,
+                    k_code_up = 32;
 
 struct DerivedHW : HW {
   DerivedHW() = default;
@@ -102,12 +105,12 @@ struct coord {
     count = 0;
     p = ppp;
   }
-  int count;  // num of references to this
-  int frame;  // frame number it was last transformed
-  int ccode;  // clipping plane condition codes
-  Point p;    // point in object frame
-  Point pt;   // point tranformed to view frame
-  Point pp;   // point projected onto screen
+  int count;            // num of references to this
+  int frame;            // frame number it was last transformed
+  ConditionCode ccode;  // clipping plane condition codes
+  Point p;              // point in object frame
+  Point pt;             // point tranformed to view frame
+  Point pp;             // point projected onto screen
 };
 
 struct segment {
@@ -291,21 +294,21 @@ Point coord_to_hlr_point(const coord* c) { return point_to_hlr_point(c->pp); }
 void transf2(coord* c) {
   const Point& pt = c->pt;
   float pt0 = pt[0];
-  int ccode = pt0 < hither ? CCH : is_yonder && pt0 > yonder ? CCY : CCN;
+  ConditionCode ccode = pt0 < hither ? k_code_hither : is_yonder && pt0 > yonder ? k_code_yonder : 0;
   if (!ccode) {
     float a = 1.f / pt0, pp1, pp2;
     c->pp[0] = -a;
     c->pp[1] = pp1 = pt[1] * a;
     c->pp[2] = pp2 = pt[2] * a;
     if (pp1 < 0) {
-      if (pp1 < -tclip1) ccode += CCR;
+      if (pp1 < -tclip1) ccode |= k_code_right;
     } else {
-      if (pp1 > tclip1) ccode += CCL;
+      if (pp1 > tclip1) ccode |= k_code_left;
     }
     if (pp2 < 0) {
-      if (pp2 < -tclip2) ccode += CCD;
+      if (pp2 < -tclip2) ccode |= k_code_down;
     } else {
-      if (pp2 > tclip2) ccode += CCU;
+      if (pp2 > tclip2) ccode |= k_code_up;
     }
   }
   c->ccode = ccode;
@@ -320,11 +323,11 @@ void transf(coord* c) {
 }
 
 void inbound(coord* c, const coord* c2) {
-  int cc = c->ccode;
+  ConditionCode cc = c->ccode;
   float border;
-  if (cc & CCH) {
+  if (cc & k_code_hither) {
     border = hither;
-  } else if (cc & CCY) {
+  } else if (cc & k_code_yonder) {
     border = yonder;
   } else {
     assertnever("");
@@ -334,7 +337,7 @@ void inbound(coord* c, const coord* c2) {
   c->pt[1] = c->pt[1] + (c2->pt[1] - c->pt[1]) * ratio;
   c->pt[2] = c->pt[2] + (c2->pt[2] - c->pt[2]) * ratio;
   transf2(c);
-  assertx(!(c->ccode & (CCH | CCY)));
+  assertx(!(c->ccode & (k_code_hither | k_code_yonder)));
 }
 
 bool clip_side(coord* c1, const coord* c2, int axis, float val) {
@@ -350,19 +353,19 @@ bool clip_side(coord* c1, const coord* c2, int axis, float val) {
 }
 
 bool clip2(coord* c, const coord* c2) {
-  int cc = c->ccode, cc2 = c2->ccode;
-  if (cc & CCR) {
+  ConditionCode cc = c->ccode, cc2 = c2->ccode;
+  if (cc & k_code_right) {
     if (clip_side(c, c2, 1, +trclip1)) return true;
     cc = c->ccode;
-  } else if (cc & CCL) {
+  } else if (cc & k_code_left) {
     if (clip_side(c, c2, 1, -trclip1)) return true;
     cc = c->ccode;
   }
   if (cc & cc2) return true;
-  if (cc & CCD) {
+  if (cc & k_code_down) {
     if (clip_side(c, c2, 2, +trclip2)) return true;
     cc = c->ccode;
-  } else if (cc & CCU) {
+  } else if (cc & k_code_up) {
     if (clip_side(c, c2, 2, -trclip2)) return true;
     cc = c->ccode;
   }
@@ -408,7 +411,7 @@ void draw_fisheye(const coord* c1, const coord* c2) {
     v *= 1.0001f * hither / v[0];
     o2.pt = Point(0.f, 0.f, 0.f) + v;
     transf2(&o2);
-    assertx(!(o2.ccode & (CCH | CCY)));
+    assertx(!(o2.ccode & (k_code_hither | k_code_yonder)));
     if (i) draw_segment(&o1, &o2);
     o1 = o2;
     p1 += vd;
@@ -416,15 +419,14 @@ void draw_fisheye(const coord* c1, const coord* c2) {
 }
 
 void slow_draw_seg(coord* c1, coord* c2) {
-  int cc1 = c1->ccode;
-  int cc2 = c2->ccode;
+  ConditionCode cc1 = c1->ccode, cc2 = c2->ccode;
   coord ct1, ct2;
   if (cc1 || cc2) {
     if (cc1 & cc2) return;
     if (cc1) {
       ct1 = *c1;
       c1 = &ct1;
-      if (cc1 & (CCH | CCY)) {
+      if (cc1 & (k_code_hither | k_code_yonder)) {
         inbound(c1, c2);
         cc1 = c1->ccode;
       }
@@ -432,12 +434,12 @@ void slow_draw_seg(coord* c1, coord* c2) {
     if (cc2) {
       ct2 = *c2;
       c2 = &ct2;
-      if (cc2 & (CCH | CCY)) {
+      if (cc2 & (k_code_hither | k_code_yonder)) {
         inbound(c2, c1);
         cc2 = c2->ccode;
       }
     }
-    assertx(!((cc1 | cc2) & (CCH | CCY)));
+    assertx(!((cc1 | cc2) & (k_code_hither | k_code_yonder)));
     if (cc1 & cc2) return;
     if (!fisheye) {
       if (cc1 && clip2(c1, c2)) return;
@@ -470,15 +472,14 @@ void slow_draw_seg(coord* c1, coord* c2) {
 }
 
 void fast_draw_seg(coord* c1, coord* c2) {
-  int cc1 = c1->ccode;
-  int cc2 = c2->ccode;
+  ConditionCode cc1 = c1->ccode, cc2 = c2->ccode;
   coord ct1, ct2;
   if (cc1 || cc2) {
     if (cc1 & cc2) return;
     if (cc1) {
       ct1 = *c1;
       c1 = &ct1;
-      if (cc1 & (CCH | CCY)) {
+      if (cc1 & (k_code_hither | k_code_yonder)) {
         inbound(c1, c2);
         cc1 = c1->ccode;
       }
@@ -486,12 +487,12 @@ void fast_draw_seg(coord* c1, coord* c2) {
     if (cc2) {
       ct2 = *c2;
       c2 = &ct2;
-      if (cc2 & (CCH | CCY)) {
+      if (cc2 & (k_code_hither | k_code_yonder)) {
         inbound(c2, c1);
         cc2 = c2->ccode;
       }
     }
-    assertx(!((cc1 | cc2) & (CCH | CCY)));
+    assertx(!((cc1 | cc2) & (k_code_hither | k_code_yonder)));
     if (cc1 & cc2) return;
     if (cc1 && clip2(c1, c2)) return;
     if (cc2 && clip2(c2, c1)) return;
@@ -571,12 +572,12 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
   }
 }
 
-void enter_hidden_polygon(Polygon& poly, int andcodes, int orcodes) {
+void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
   // If completely on one side of a clipping plane, reject
-  if (andcodes) return;
+  if (and_codes) return;
   // If not all vertices are beyond hither, do clipping
   // don't have to worry at all about yonder plane!
-  if (orcodes & CCH) {
+  if (or_codes & k_code_hither) {
     float s = 1.95f;
     // s = 2.2;  // debug, shrink inside screen boundaries
     poly.intersect_hyperplane(Point(hither, 0.f, 0.f), Vector(+1.f, 0.f, 0.f));
@@ -613,7 +614,8 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
       auto* n = down_cast<NodePolygon*>(un);
       if (cullface && is_cull(n->repc->p, n->pnor)) continue;
       poly.init(0);
-      int andcodes = CCH | CCY | CCR | CCL | CCD | CCU, orcodes = 0;
+      ConditionCode and_codes = k_code_hither | k_code_yonder | k_code_right | k_code_left | k_code_down | k_code_up;
+      ConditionCode or_codes = 0;
       {
         coord* cfirst;
         {
@@ -625,13 +627,13 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
         for (segment* s : n->ars) {
           cc = s->c1 == cc ? s->c2 : s->c1;
           transf(cc);
-          andcodes &= cc->ccode;
-          orcodes |= cc->ccode;
+          and_codes &= cc->ccode;
+          or_codes |= cc->ccode;
           poly.push(cc->pt);  // viewing frame coordinates
         }
         if (!assertw(cc == cfirst)) return;
       }
-      enter_hidden_polygon(poly, andcodes, orcodes);
+      enter_hidden_polygon(poly, and_codes, or_codes);
     }
   }
 }
@@ -680,14 +682,15 @@ void enter_mesh_hidden_polygons(GMesh& mesh) {
     if (i++ % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
     if (cullface && mesh.flags(f).flag(fflag_invisible)) continue;
     poly.init(0);
-    int andcodes = CCH | CCY | CCR | CCL | CCD | CCU, orcodes = 0;
+    ConditionCode and_codes = k_code_hither | k_code_yonder | k_code_right | k_code_left | k_code_down | k_code_up;
+    ConditionCode or_codes = 0;
     for (Vertex v : mesh.vertices(f)) {
       coord& cc = v_coord(v);
-      andcodes &= cc.ccode;
-      orcodes |= cc.ccode;
+      and_codes &= cc.ccode;
+      or_codes |= cc.ccode;
       poly.push(cc.pt);  // viewing frame coordinates
     }
-    enter_hidden_polygon(poly, andcodes, orcodes);
+    enter_hidden_polygon(poly, and_codes, or_codes);
   }
 }
 

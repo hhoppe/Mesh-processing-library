@@ -27,9 +27,9 @@ gfx_libs = -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
 
 ## Stack trace on error
-# (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/src/bin/mingw/HTest -dividebyzero)
+# (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/git/hh_src/bin/mingw/HTest -dividebyzero)
 
-# (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/src/bin/mingw/HTest -accessviolation)
+# (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/git/hh_src/bin/mingw/HTest -accessviolation)
 # ...
 # Program received signal SIGSEGV, Segmentation fault.
 # 0x0000000000540429 in int& hh::details::SHOW_aux<int&>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, int&, bool) ()

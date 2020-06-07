@@ -1,2 +1,2 @@
-HhRoot = ..
-include $(HhRoot)/make/Makefile_lib
+MeshRoot = ..
+include $(MeshRoot)/make/Makefile_lib

@@ -47,7 +47,7 @@ ifeq ($(plain_compiler),)
   # (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E - -march=native |& sed -r '/cc1/\!d; s/(")|(^.* - )|( -mno-[^\ ]+)//g')
   # or also:
   #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -march=native -Q -v --help=target)
-  #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E -march=native ~/src/libHh/Hh.h |& cat)
+  #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E -march=native ~/git/mesh_processing/libHh/Hh.h |& cat)
   # hhopped old: -march:native -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 \
   #   --param l2-cache-size=8192 -mtune=core2)
   # hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
@@ -79,16 +79,16 @@ ifeq ($(plain_compiler),)
 
   ifeq ($(use_pch),1)
     # Force-include the precompiled header into every *.cpp file.  Valid for clang as well.
-    # However, clang gets confused with "HhRoot = /hh/src" in ~/prevproj/2006/poissonrecon/PoissonRecon/Makefile .
+    # However, clang gets confused with "MeshRoot = /hh/src" in ~/prevproj/2006/poissonrecon/PoissonRecon/Makefile .
     # Even changing this to a relative path leaves it confused, so disable pch in that case.
-    ifeq ($(CXX)-$(filter-out /%,$(HhRoot)),clang++-)
-      $(info Disabling pch for clang with non-relative HhRoot=$(HhRoot))
+    ifeq ($(CXX)-$(filter-out /%,$(MeshRoot)),clang++-)
+      $(info Disabling pch for clang with non-relative MeshRoot=$(MeshRoot))
       # Note: it may also apply to directories that are not in expected ../ relative location?
-      # ifneq ($(HhRoot),..)
-      # $(info Disabling pch for this directory HhRoot=$(HhRoot))
+      # ifneq ($(MeshRoot),..)
+      # $(info Disabling pch for this directory MeshRoot=$(MeshRoot))
     else
-      cxxall += -include $(HhRoot)/libHh/precompiled_libHh.h
-      # cxxall += -include $(call add_drive,$(abspath $(HhRoot)/libHh/precompiled_libHh.h))
+      cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+      # cxxall += -include $(call add_drive,$(abspath $(MeshRoot)/libHh/precompiled_libHh.h))
     endif
   endif
 

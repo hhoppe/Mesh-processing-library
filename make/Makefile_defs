@@ -21,9 +21,9 @@ is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  running under Cygwin?
 is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  running under Msys?
 is_mac := $(call file_exists,/.DS_Store)#  running on Mac OS?
 
-ifeq ($(HhRoot),)
-  $(warning HhRoot variable not set; set to default value of "..")
-  HhRoot ?= ..#  If not already set, best guess is "1 directory above the project file", e.g. for libHh.
+ifeq ($(MeshRoot),)
+  $(warning MeshRoot variable not set; set to default value of "..")
+  MeshRoot ?= ..#  If not already set, best guess is "1 directory above the project file", e.g. for libHh.
 endif
 
 # Define the set of possible CONFIG configurations.
@@ -132,7 +132,7 @@ else # ifeq ($(CONFIG),all)
 
 
 # Add ./bin so that the script hcheck is in path.
-$(call prepend_PATH,$(abspath $(HhRoot))/bin)
+$(call prepend_PATH,$(abspath $(MeshRoot))/bin)
 
 dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL below
 
@@ -178,7 +178,7 @@ cmd_makedep = @echo Creating $(make_dep); \
   || rm -f $(make.dep)
 
 ifeq ($(plain_compiler),)
-  cppinc += -I$(HhRoot)
+  cppinc += -I$(MeshRoot)
 endif
 
 include_make_dep = $(if $(filter depend clean deepclean cleanall,$(MAKECMDGOALS)),,1)
@@ -206,7 +206,7 @@ else
 endif
 
 my_libs ?= Hh $(if ,lbfgsf)
-LDLIBS += $(foreach n,$(my_libs),$(HhRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
+LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
 LDFLAGS +=
 
 ifeq ($(win_base),1)  # CONFIG = win or w32
@@ -215,13 +215,13 @@ ifeq ($(win_base),1)  # CONFIG = win or w32
 else ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
   loc_libs = $(strip $(if $(have_recipes),recipes,) $(if ,lbfgsf))
   sys_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_lapack),lapack,))
-  LDLIBS += $(foreach n,$(loc_libs),$(HhRoot)/lib/$(CONFIG)/lib$(n).a) $(foreach n,$(sys_libs),-l$(n))
+  LDLIBS += $(foreach n,$(loc_libs),$(MeshRoot)/lib/$(CONFIG)/lib$(n).a) $(foreach n,$(sys_libs),-l$(n))
 else  # CONFIG = mingw, clang, etc.
   loc_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_recipes),recipes,) \
     $(if ,lbfgsf) \
     $(if $(have_lapack),lapack blas f2c,))
     # $(if $(have_lapack),lapack F77 I77 BLAS,)
-  LDFLAGS += $(if $(loc_libs),$(if $(extlib:lib=),-L,-libpath:)$(HhRoot)/lib/$(CONFIG))
+  LDFLAGS += $(if $(loc_libs),$(if $(extlib:lib=),-L,-libpath:)$(MeshRoot)/lib/$(CONFIG))
   LDLIBS += $(foreach n,$(loc_libs),$(if $(extlib:lib=),-l$(n),lib$(n).lib))
 endif
 

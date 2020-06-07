@@ -1264,13 +1264,14 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry &ent
             if (!verbose) return;
         } else {
             //HH
+            if (!verbose && strstr(entry.name,"hh::StackWalker::ShowCallstack")) return;
+            if (!verbose && strstr(entry.name,"::show_call_stack")) return; // hh::`anonymous namespace'::
             if (!verbose && strstr(entry.name,"hh::details::assertx_aux")) return;
             if (!verbose && strstr(entry.name,"hh::details::assertx_aux2")) return;
+            if (!verbose && strstr(entry.name,"::my_top_level_exception_filter")) return; // hh::`anonymous namespace'
             if (!verbose && strstr(entry.name,"CRTStartup")) return;             // <=VS2013
             if (!verbose && strstr(entry.name,"__scrt_common_main_seh")) return; // >=VS2015
-            if (!verbose && strstr(entry.name,"::show_call_stack")) return; // hh::`anonymous namespace'::
-            if (!verbose && strstr(entry.name,"hh::StackWalker::ShowCallstack")) return;
-            if (!verbose && strstr(entry.name,"::my_top_level_exception_filter")) return; // hh::`anonymous namespace'
+            if (!verbose && strstr(entry.name, "crt\\vcstartup")) return;        // VS2019
             // _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "%s (%d): %s\n", entry.lineFileName, entry.lineNumber, entry.name);
             _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "%s(%lu): %s\n", entry.lineFileName, entry.lineNumber, entry.name);
         }

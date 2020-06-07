@@ -28,7 +28,7 @@ ifeq ($(plain_compiler),)
   disable_my_warnings = -wd4127 -wd4512
   disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
   disable_other_warnings += -wd5026 -wd5027# VS 2015
-  # Next one because of "cppinc += -I$(HhRoot)/lib$(HW)" in some of the projects, with VS 2015 update 3.
+  # Next one because of "cppinc += -I$(MeshRoot)/lib$(HW)" in some of the projects, with VS 2015 update 3.
   disable_other_warnings += -wd4599# "command line argument number ... does not match precompiled header"
   disable_other_warnings += -wd5039 -wd5045 -wd5040# VS 2019 has bug disabling 5045
   cxxthoroughwarnings = -Wall $(disable_warnings_in_headers) $(disable_my_warnings) $(disable_other_warnings)
@@ -113,10 +113,10 @@ cdbg += $(commondbg)
 
 ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg,),)#  link-time code generation
 LDFLAGS += -link -nologo $(if $(rel:0=),-incremental:no -opt:ref -opt:icf,-debug) -dynamicbase:no $(ltcg) \
-  -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release
-# -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_staticlib
-# -libpath:$(HhRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_lib
-# -libpath:$(HhRoot)/libNumeric/mkl_libs
+  -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release
+# -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_staticlib
+# -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_lib
+# -libpath:$(MeshRoot)/libNumeric/mkl_libs
 
 gfx_libs ?= user32.lib gdi32.lib
 # gfx_libs += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib shcore.lib advapi32.lib \
@@ -124,7 +124,7 @@ gfx_libs ?= user32.lib gdi32.lib
 # gfx_libs += d3dx9.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comdlg32.lib comctl32.lib d3d11.lib
 
 ifeq ($(win_base)-rel$(rel)-pch$(use_pch),1-rel1-pch1)  # CONFIG = win or w32
-  pch_root = $(HhRoot)/libHh/precompiled_libHh
+  pch_root = $(MeshRoot)/libHh/precompiled_libHh
   abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
   # Use the named precompiled header, and force-include it into every *.cpp file.
   cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)

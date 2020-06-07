@@ -10,8 +10,8 @@
   <PropertyGroup Condition="'$(LocalRoot)'==''">
    <LocalRoot>..</LocalRoot> <!-- default; most of my projects live in an immediate subfolder -->
   </PropertyGroup>
-  <PropertyGroup Condition="'$(HhRoot)'==''">
-   <HhRoot>$(LocalRoot)</HhRoot>
+  <PropertyGroup Condition="'$(MeshRoot)'==''">
+   <MeshRoot>$(LocalRoot)</MeshRoot>
   </PropertyGroup>
   <PropertyGroup Condition="'$(ExeRoot)'==''">
    <ExeRoot>$(LocalRoot)</ExeRoot>
@@ -33,7 +33,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalIncludeDirectories>$(HhRoot);$(HhRoot)\libHWin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MeshRoot);$(MeshRoot)\libHWin;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>HH_NO_LAPACK;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRT_DECLARE_NONSTDC_NAMES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -122,14 +122,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' OR '$(Configuration)' == 'ReleaseMD'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>$(HhRoot)\libHh\precompiled_libHh.h</PrecompiledHeaderFile>
-      <ForcedIncludeFiles>$(HhRoot)\libHh\precompiled_libHh.h</ForcedIncludeFiles>
+      <PrecompiledHeaderFile>$(MeshRoot)\libHh\precompiled_libHh.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>$(MeshRoot)\libHh\precompiled_libHh.h</ForcedIncludeFiles>
       <- This still fails:
-           <AdditionalOptions>/Fp$(HhRoot)\libHh\$(IntDir)precompiled_libHh.pch</AdditionalOptions>
+           <AdditionalOptions>/Fp$(MeshRoot)\libHh\$(IntDir)precompiled_libHh.pch</AdditionalOptions>
            c:\hh\src\filtera3d\filtera3d.cpp : error C2859: c:\hh\src\filtera3d\x64\releasemd\vc120.pdb is not the pdb file that was used when this precompiled header was created, recreate the precompiled header. [c:\hh\src\Filtera3d\Filtera3d.vcxproj]
       ->
       <- When using this option, msbuild removes the libHh *.pch file before starting build of non-libHh projects
-           <PrecompiledHeaderOutputFile>$(HhRoot)\libHh\$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
+           <PrecompiledHeaderOutputFile>$(MeshRoot)\libHh\$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
       ->
     </ClCompile>
   </ItemDefinitionGroup>

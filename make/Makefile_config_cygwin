@@ -18,7 +18,7 @@ endif
 gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
 
 
-# Stack dump: #  gdb --batch -ex run -ex where --args ~/src/bin/cygwin/HTest -dividebyzero
+# Stack dump: #  gdb --batch -ex run -ex where --args ~/git/hh_src/bin/cygwin/HTest -dividebyzero
 # Program received signal SIGFPE, Arithmetic exception.
 # 0x0000000100401578 in (anonymous namespace)::do_dividebyzero () at c:/Hh/src/HTest/HTest.cpp:119
 # 119 SHOW(3/i);
@@ -27,7 +27,7 @@ gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
 # #2  0x000000010042bb2f in hh::ParseArgs::parse (this=0x22a650) at c:/Hh/src/libHh/Args.cpp:335
 # #3  0x000000010040e0f9 in main (argc=2, argv=0x22aaf0) at c:/Hh/src/HTest/HTest.cpp:2095
 
-# gdb --batch -ex run -ex where --args ~/src/bin/cygwin/HTest -accessviolation
+# gdb --batch -ex run -ex where --args ~/git/hh_src/bin/cygwin/HTest -accessviolation
 # Program received signal SIGSEGV, Segmentation fault.
 # 0x0000000100490c02 in hh::SHOW_aux<int&> (str=..., val=@0x0: <error reading variable>, has_eol=false) at Hh.h:562
 # 562 Hh.h: No such file or directory.
@@ -53,7 +53,7 @@ gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
 # In bash: export CYGWIN="$CYGWIN error_start=dumper -d %1 %2"
 
 ## ~/bin/stackdump : script I wrote to parse the hex values in *.stackdump and gather info using gdb
-# (set path=(~/src/bin/cygwin $path:q); test_coredump)
+# (set path=(~/git/hh_src/bin/cygwin $path:q); test_coredump)
 #   0 [main] test_coredump 74912 cygwin_exception::open_stackdumpfile: Dumping stack trace to test_coredump.exe.stackdump
 # stackdump
 # No symbol table is loaded.  Use the "file" command.
@@ -70,7 +70,7 @@ gfx_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
 # No symbol matches 0x0007719BA01.
 
 ## Using the "CYGWIN error_start=..." does not work well.
-# CYGWIN="$CYGWIN error_start=gdb --nw %1 %2" ~/src/bin/cygwin/HTest -dividebyzero
+# CYGWIN="$CYGWIN error_start=gdb --nw %1 %2" ~/git/hh_src/bin/cygwin/HTest -dividebyzero
 # Reading symbols from /Hh/src/bin/cygwin/HTest.exe...done.
 # Attaching to program `/Hh/src/bin/cygwin/HTest.exe', process 30864
 # [New Thread 30864.0x988c]

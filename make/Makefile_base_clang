@@ -60,23 +60,11 @@ endif
 # clang -include test.h test.c -o test     # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
 
 
-## clang-modernize:
-# cp -rp ~/src ~/tmp
-# cd ~/tmp/src
-# foreach i (*/*.{cpp,h})
-# foreach i ({Filterterrain,G3dOGL,G3dVec}/*.{cpp,h} libHh/BinarySearch.h samplesphere/vec2_3.h Filtergim/rebin3.h)
-#  echo "** $i"
-#  if ($i =~ old/* || $i =~ other/*) continue
-#  c:/progra~2/llvm/bin/clang-modernize -summary "$i" -- -Ic:/hh/src/include -Ic:/hh/src/libHh -Ic:/hh/src/libHWin -Ic:/hh/src/G3dOGL -std=gnu++11 -x c++ -march=native -mfpmath=sse -w | grep -v " - Accepted: 0"
-#  tounix "$i" >&nul
-# end
-
-
 ## sanitize/analyze:
 # clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc
 # clang -fsanitize=memory -fno-omit-frame-pointer -g -O2 umr.cc
 #
-# See ./test/native/test_sanitize_address.cpp and ~/src/test/native/Makefile
+# See ./test/native/test_sanitize_address.cpp and ~/git/hh_src/test/native/Makefile
 # At this time, MemorySanitizer supports Linux x86_64 only.
 # 
 # Address sanitizer:

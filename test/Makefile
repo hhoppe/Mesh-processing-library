@@ -2,11 +2,11 @@
 #  make CONFIG=win -j8
 #  make clean Stack_test.ou
 
-HhRoot = ..
+MeshRoot = ..
 
 new_all: test
 
-include $(HhRoot)/make/Makefile_progs
+include $(MeshRoot)/make/Makefile_progs
 
 ifeq ($(gcc_base),1)
   # For the test programs in this directory, reduce floating-point imprecision issues.
@@ -19,7 +19,7 @@ endif
 # NetworkOrder_test: cxxall += $(cxx_list_assembly_code)
 
 # Precompiled headers:
-# - gcc and clang already benefit from "cxxall += -include $(HhRoot)/libHh/precompiled_libHh.h"
-#    under all $(HhRoot) directories
+# - gcc and clang already benefit from "cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h"
+#    under all $(MeshRoot) directories
 # - win is too difficult; it would not work with multiple executables in the same directory, each requiring its
 #    own pdb file.

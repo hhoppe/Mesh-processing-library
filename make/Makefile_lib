@@ -1,9 +1,9 @@
 # For use as:
-#  HhRoot = ..
-#  include $(HhRoot)/make/Makefile_lib
+#  MeshRoot = ..
+#  include $(MeshRoot)/make/Makefile_lib
 
 ifeq ($(defs_loaded),)
-  include $(HhRoot)/make/Makefile_defs
+  include $(MeshRoot)/make/Makefile_defs
 endif
 
 ifneq ($(CONFIG),all)

@@ -1,9 +1,9 @@
-HhRoot = ..
-include $(HhRoot)/make/Makefile_defs
+MeshRoot = ..
+include $(MeshRoot)/make/Makefile_defs
 
-$(call prepend,LDLIBS,$(HhRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
-cppinc += -I$(HhRoot)/lib$(HW)
-g3dogldir = $(HhRoot)/G3dOGL
+$(call prepend,LDLIBS,$(MeshRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
+cppinc += -I$(MeshRoot)/lib$(HW)
+g3dogldir = $(MeshRoot)/G3dOGL
 extraobjs = $(foreach n,G3d G3ddraw G3devent G3dio,$(g3dogldir)/$(n).$(extobj))
 
-include $(HhRoot)/make/Makefile_prog
+include $(MeshRoot)/make/Makefile_prog

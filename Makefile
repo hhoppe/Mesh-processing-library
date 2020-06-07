@@ -3,25 +3,20 @@
 #  depending on the detected platform.
 # Setting "CONFIG=all" runs the make process successively on all available configurations.
 # Examples:
+#  make -j demos
 #  make -j Filtermesh  # builds single program using default CONFIG (either "win" or "unix")
 #  make -j4  # limit parallelism to 4 cores; important on a Virtual Machine
 #  make CONFIG=mingw -j demos
 #  make makeall   # run all CONFIG   (same as "make CONFIG=all -j")
 #  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j deepclean")
-#  make CONFIG=win -C ~/src -j8 -t libs  # touch all files
 #  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
 #  make CONFIG=clang CXX_STD=c++2a -j  # test code compatibility with future C++20
 #  make CONFIG=win CXX_STD=c++latest -j  # compatibility with proposed c++ features
 #  make CONFIG=all PEDANTIC=1  # enable most compiler warnings
 
-# Test various implementations of gmake:
-#  c:/cygwin/bin/make CONFIG=clang -C ~/src -j
-#  c:/progra~1/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin/mingw32-make CONFIG=mingw -C ~/src -j
-#  c:/MinGW/msys/1.0/bin/make CONFIG=win -C ~/src -j
+MeshRoot ?= .#  this current file is located in the root directory of the package
 
-HhRoot ?= .#  this current file is located in the root directory of the package
-
-include $(HhRoot)/make/Makefile_defs
+include $(MeshRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)
 

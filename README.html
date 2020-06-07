@@ -77,14 +77,14 @@
   <h2>Code compilation</h2>
   
   <h3>Compiling using the Microsoft Visual Studio IDE</h3>
-  <p>Open the <code>distrib.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
+  <p>Open the <code>mesh_processing.sln</code> file and build the solution (typically using the <code>"ReleaseMD - x64"</code> build configuration).
    Executables are placed in the <code>bin</code>, <code>bin/debug</code>, <code>bin/Win32</code>, or <code>bin/Win32/debug</code> directory, depending on the build configuration (64-bit versus 32-bit, and release versus debug).</p>
   
   <h3>Compiling using <code>msbuild</code></h3>
   <p>Set the appropriate environment variables and run <code>msbuild</code>, e.g.:</p>
   <div class="codeline">PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%</div>
   <!--<div class="codeline">VisualStudioVersion=14.0</div>-->
-  <div class="codeline">msbuild -nologo -verbosity:minimal distrib.sln -maxcpucount:4 -p:PlatformToolset=v140 -p:platform=x64 -p:configuration=ReleaseMD</div>
+  <div class="codeline">msbuild -nologo -verbosity:minimal mesh_processing.sln -maxcpucount:4 -p:PlatformToolset=v140 -p:platform=x64 -p:configuration=ReleaseMD</div>
   <p>(Some alternatives are to set <code>platform</code> to <code>Win32</code>, or <code>configuration</code> to <code>DebugMD</code>, <code>Release</code>, or <code>Debug</code>; here <code>MD</code> stands for <a href="https://msdn.microsoft.com/en-us/library/aa278396%28v=vs.60%29.aspx">multithreaded DLL</a>.)
    Executables are placed in the same target directory as in the IDE.</p>
   

@@ -20,18 +20,18 @@ include $(MeshRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)  # until rest of file
 
-libdirs = \
+lib_dirs = \
   libHh \
   lib$(HW)
 
-progdirs = \
+prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
   MeshSimplify reverselines Filterprog FilterPM StitchPM \
   MinCycles \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \
   G3dOGL G3dVec VideoViewer \
 
-dirs = $(libdirs) $(progdirs)
+dirs = $(lib_dirs) $(prog_dirs)
 dirs+test = $(dirs) test demos
 dirs+test+all = $(sort $(dirs+test) libHWin libHWX)#  sort to remove duplicates
 
@@ -45,18 +45,18 @@ demos: progs                    # run all demos (after building programs)
 
 progs: $(dirs)                  # build all programs
 
-libs: $(libdirs)                # build all libraries
+libs: $(lib_dirs)               # build all libraries
 
-test: $(libdirs)                # run all unit tests (after building libraries)
+test: $(lib_dirs)               # run all unit tests (after building libraries)
 
 
 $(dirs+test):    # build any subproject by running make in its subdirectory
 	$(MAKE) -C $@
 
-$(progdirs): $(libdirs)         # building a program first requires building libraries
+$(prog_dirs): $(lib_dirs)       # building a program first requires building libraries
 
 ifeq ($(use_pch),1)             # if using precompiler headers, build libHh before other libraries
-  $(filter-out libHh,$(libdirs)): libHh
+  $(filter-out libHh,$(lib_dirs)): libHh
 endif
 
 G3dVec: G3dOGL                  # compile shared files in G3dOGL first
@@ -107,7 +107,7 @@ debug:
 #	$(CXX)
 #	cl '-?'
 #	@echo '.FEATURES: $(.FEATURES) .INCLUDE_DIRS: $(.INCLUDE_DIRS)'
-#	@echo 'rel=$(rel) x64=$(x64) extobj=$(extobj) extlib=$(extlib) libdirs=($(libdirs))'
+#	@echo 'rel=$(rel) x64=$(x64) extobj=$(extobj) extlib=$(extlib) lib_dirs=($(lib_dirs))'
 #	@echo 'CURDIR=$(CURDIR) PWD=$(PWD) MAKEFLAGS=$(MAKEFLAGS)'
 #	@echo '.VARIABLES: $(.VARIABLES)'
 #	@echo 'Variables:'$$'\n''$(foreach var,$(.VARIABLES),  $(var) = $($(var))'$$'\n'')'
@@ -131,6 +131,6 @@ timingtest: Filterimage Filtervideo
 	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
 .PHONY: all everything progs libs $(dirs+test) clean $(clean_dirs) \
-  deepclean $(deepcleandirs) depend $(depend_dirs) TAGS tags debug timingtest
+  deepclean $(deepclean_dirs) depend $(depend_dirs) TAGS tags debug timingtest
 
 endif  # ifneq ($(CONFIG),all)

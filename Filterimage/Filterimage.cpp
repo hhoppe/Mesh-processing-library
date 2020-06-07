@@ -1372,7 +1372,7 @@ void do_softpullpush() {
 // *** voronoidilate
 
 void do_voronoidilate() {
-  // Filterimage ~/src/demos/data/texture.input.png -filter i -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
+  // Filterimage ~/git/mesh_processing/demos/data/texture.input.png -filter i -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
   // Using Vec2<float>:  win: 0.74  gcc: 0.23
   // Using Vec2<int>  :  win: 0.27  gcc: 0.19
   HH_TIMER(_voronoi);
@@ -1910,7 +1910,7 @@ void do_istoroidal() {
 }
 
 void do_gdtoroidal() {
-  // e.g.: Filterimage ~/src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
+  // e.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
   assertx(image.zsize() == 3);
   Grid<2, Vector4> grid_orig(image.dims());
   parallel_for_coords(
@@ -1967,7 +1967,7 @@ void do_gdtoroidal() {
 }
 
 void do_gradientsharpen(Args& args) {
-  // e.g.: Filterimage ~/src/test/multigrid/rampart256.png -gradientsharpen 1.5 | imgv
+  // e.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gradientsharpen 1.5 | imgv
   float gradient_sharpening = args.get_float();
   float screening_weight = 1.f;
   assertx(image.zsize() == 3);
@@ -3534,12 +3534,12 @@ int main(int argc, const char** argv) {
   return 0;
 }
 
-//  (setenv A B; ~/src/bin/mingw/Filterimage data/lake.png -contour 256 >v)
+//  (setenv A B; ~/git/mesh_processing/bin/mingw/Filterimage data/lake.png -contour 256 >v)
 // # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
 // Exception error: ACCESS_VIOLATION
 // MyStackWalker is disabled, so call stack is not available.
 
-//  (setenv A B; gdb --batch -ex run -ex where --args ~/src/bin/mingw/Filterimage data/lake.png -contour 256 >v)
+//  (setenv A B; gdb --batch -ex run -ex where --args ~/git/mesh_processing/bin/mingw/Filterimage data/lake.png -contour 256 >v)
 // # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
 // warning: # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
 //  tail v

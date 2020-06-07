@@ -212,7 +212,7 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
   };
 
  private:
-  // See my experiments in ~/src/test/misc/test_hash_buckets.cpp
+  // See my experiments in ~/git/hh_src/test/misc/test_hash_buckets.cpp
   base _m;
   static const V& def() {
     static const V k_default = V();

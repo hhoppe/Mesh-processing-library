@@ -61,7 +61,7 @@ extern "C" {
 
 // http://www.netlib.org/lapack/explore-html/d0/db8/group__real_g_esolve.html#ga206e3084597d088b31dc054a69aec93f
 // SGELSS solves overdetermined or underdetermined systems for GE matrices, using SVD.
-// ~/src/lib_src/CLAPACK/SRC/sgelss.c
+// ~/git/lib_src/CLAPACK/SRC/sgelss.c
 lapack_int sgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda, float* b,
                    lapack_int* ldb, float* s, float* rcond, lapack_int* irank, float* work, lapack_int* lwork,
                    lapack_int* info);
@@ -74,7 +74,7 @@ lapack_int dgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, double* a, la
 // http://www.netlib.org/lapack/explore-html/d0/d2a/sgelsx_8f.html
 // SGELSX solves overdetermined or underdetermined systems for GE matrices, using QR.
 // This routine is deprecated and has been replaced by routine SGELSY.
-// ~/src/lib_src/CLAPACK/SRC/sgelsx.c
+// ~/git/lib_src/CLAPACK/SRC/sgelsx.c
 // lapack_int sgelsx_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda,
 //                   float* b, lapack_int* ldb, lapack_int* jpvt, float* rcond, lapack_int* irank,
 //                   float* work, lapack_int* info);
@@ -87,7 +87,7 @@ lapack_int sgelsy_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lap
 // http://www.netlib.org/lapack/explore-html/d4/dca/group__real_g_esing.html
 // subroutine SGESVD (JOBU, JOBVT, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, INFO)
 // SGESVD computes the singular value decomposition (SVD) for GE matrices
-// ~/src/lib_src/CLAPACK/SRC/sgesvd.c
+// ~/git/lib_src/CLAPACK/SRC/sgesvd.c
 lapack_int sgesvd_(char* jobu, char* jobvt, lapack_int* m, lapack_int* n, float* a, lapack_int* lda, float* s,
                    float* u, lapack_int* ldu, float* vt, lapack_int* ldvt, float* work, lapack_int* lwork,
                    lapack_int* info);
@@ -96,7 +96,7 @@ lapack_int sgesvd_(char* jobu, char* jobvt, lapack_int* m, lapack_int* n, float*
 // subroutine SGEQRF (M, N, A, LDA, TAU, WORK, LWORK, INFO)
 // SGEQRF computes a QR factorization of a real M-by-N matrix A:
 // A = Q * R.
-// ~/src/lib_src/CLAPACK/SRC/sgeqrf.c
+// ~/git/lib_src/CLAPACK/SRC/sgeqrf.c
 lapack_int sgeqrf_(lapack_int* m, lapack_int* n, float* a, lapack_int* lda, float* tau, float* work, lapack_int* lwork,
                    lapack_int* info);
 }

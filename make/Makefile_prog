@@ -4,7 +4,7 @@
 # or
 #  MeshRoot = /hh/src
 #  prog = name#  if different from containing directory
-#  exedir = .#  if not the default $(MeshRoot)/bin/$(CONFIG)
+#  exe_dir = .#  if not the default $(MeshRoot)/bin/$(CONFIG)
 #  include $(MeshRoot)/make/Makefile_prog
 
 ifeq ($(defs_loaded),)
@@ -13,13 +13,13 @@ endif
 
 ifneq ($(CONFIG),all)  # until rest of file
 
-exedir ?= $(MeshRoot)/bin/$(CONFIG)
+exe_dir ?= $(MeshRoot)/bin/$(CONFIG)
 
 prog ?= $(notdir $(abspath .))
-exe ?= $(exedir)/$(prog)
+exe ?= $(exe_dir)/$(prog)
 outputs = $(exe:%=%.ou)
 
-extraobjs +=#  this variable must be defined prior to use as a dependency
+extra_objs +=#  this variable must be defined prior to use as a dependency
 
 all: progs
 
@@ -37,8 +37,8 @@ lib:
 
 progs: $(exe)
 
-$(exe): $(obj) $(extraobjs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))
-	$(CXX) $(LDOUTPUT) $(TARGET_ARCH) $(call add_drive,$(obj) $(extraobjs) $(LDLIBS)) $(LDFLAGS)
+$(exe): $(obj) $(extra_objs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))
+	$(CXX) $(LDOUTPUT) $(TARGET_ARCH) $(call add_drive,$(obj) $(extra_objs) $(LDLIBS)) $(LDFLAGS)
 
 test: $(outputs)
 	@echo '** Summary of diffs'

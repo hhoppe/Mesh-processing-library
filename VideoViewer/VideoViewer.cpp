@@ -3017,7 +3017,7 @@ void render_image() {
 #if 1 && defined(__CYGWIN__)
   const bool use_modern_opengl = false;
   // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
-  // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/src/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
+  // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
   // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
   // Mac OS is currently "2.1" which is insufficient.
@@ -4136,7 +4136,7 @@ void do_vlp(Args& args) {
 void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
   assertx(k % 2 == 0);  // should be a multiple of 2 for UV representation
   // Workaround for Cygwin gcc 5.4.0 compiler bug in demos/create_videoloop_palmtrees.sh:
-  //  (cd ~/src/demos; ~/src/bin/cygwin/VideoViewer -batch_create_loop data/palmtrees_small.mp4 v.mp4)
+  //  (cd ~/git/mesh_processing/demos; ~/git/mesh_processing/bin/cygwin/VideoViewer -batch_create_loop data/palmtrees_small.mp4 v.mp4)
   // Vec2<int> odims = onv12.get_Y().dims().tail<2>();
   Vec3<int> tmpdims = onv12.get_Y().dims();
   Vec2<int> odims = tmpdims.tail<2>();

@@ -21,7 +21,7 @@ struct Combvh {
 HH_INITIALIZE_POOL(Combvh);
 
 // Previously I used unique_ptr<Combvh> rather than Combvh because of alignment problems due to __m128 in Combvh::h
-// See ~/src/test/native/unordered_map_of_m128.cpp
+// See ~/git/hh_src/test/native/unordered_map_of_m128.cpp
 
 class Mvcvh : public Map<Vertex, Combvh> {
  public:

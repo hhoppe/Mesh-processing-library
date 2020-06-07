@@ -32,7 +32,7 @@ template <typename R> struct is_range { static constexpr bool value = details::h
 // SFINAE construct to enable a member function only if type R is a range (i.e. supports begin()).
 template <typename R> using enable_if_range_t = std::enable_if_t<is_range<R>::value>;
 
-// Identify the type of element in given range type (see also ~/src/test/native/container_element3.cpp).
+// Identify the type of element in given range type (see also ~/git/hh_src/test/native/container_element3.cpp).
 template <typename R> using iterator_t = typename details::range_elem<R>::type;
 
 //----------------------------------------------------------------------------

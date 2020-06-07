@@ -463,7 +463,7 @@ inline Pixel parse_color(const string& scolor) {
 // http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/   shader program
 
 // c:/Program Files (x86)/Windows Kits/8.1/Include/um/gl/GL.h
-// ~/src/G3dOGL/glext.h
+// ~/git/mesh_processing/G3dOGL/glext.h
 
 // Check if there are any outstanding OpenGL errors and if so report them.
 // For debugging, sprinkle:  ASSERTX(!gl_report_errors());
@@ -491,7 +491,7 @@ const string& gl_extensions_string();
 #define USE_GL_EXT_MAYBE(func, type) USE_GL_EXT_MAYBE_AUX(func, type, NSGLGetProcAddress(#func))
 #endif
 
-// See ~/src/G3dOGL/glext.h
+// See ~/git/mesh_processing/G3dOGL/glext.h
 #define USE_GL_EXT(func, type)  \
   USE_GL_EXT_MAYBE(func, type); \
   assertx(func)

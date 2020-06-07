@@ -104,10 +104,12 @@ graphics_libs ?= user32.lib gdi32.lib
 # move out??
 # For release build, we force-include the precompiled header into every *.cpp file.  For debug build, we
 # force-include it only for the files in libHh (see libHh/Makefile) due to the shared *.pdb file.
-ifeq (rel$(rel)-pch$(use_pch),rel1-pch1)
-  pch_root = $(MeshRoot)/libHh/precompiled_libHh
-  abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
-  cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
+ifeq ($(use_pch),1)
+  ifeq (rel$(rel),rel1)
+    pch_root = $(MeshRoot)/libHh/precompiled_libHh
+    abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
+    cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
+  endif
 endif
 
 ## Embedding resources

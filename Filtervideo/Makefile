@@ -1,8 +1,8 @@
 MeshRoot = ..
 include $(MeshRoot)/make/Makefile_defs
 
-gdloopdir = $(MeshRoot)/VideoViewer
-extraobjs = $(foreach n,GradientDomainLoop,$(gdloopdir)/$(n).$(extobj))
+gdloop_dir = $(MeshRoot)/VideoViewer
+extra_objs = $(foreach n,GradientDomainLoop,$(gdloop_dir)/$(n).$(extobj))
 
 include $(MeshRoot)/make/Makefile_prog
 

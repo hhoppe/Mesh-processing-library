@@ -74,7 +74,7 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 
 // I tried to find a mingw compatible version of StackWalker
 // I did find: http://home.broadpark.no/~gvanem/misc/exc-abort.zip
-//  which I compiled in ~/src/_other/exc-abort.zip
+//  which I compiled in ~/git/hh_src/_other/exc-abort.zip
 // However, it does not show symbols in call stack.
 // A correct implementation would have to combine the Windows-based StackWalker with the debug symbols of gcc.
 #include "libHh/StackWalker.h"
@@ -542,7 +542,7 @@ void change_default_io_precision() {
   // This is likely the motivation for the default precision of 6.
   //  == std::numeric_limits<T>::digits10, the number of digits reliably encoded/decoded as float.
   //
-  // See experiments in ~/src/test/misc/test_float_discrepancy.cpp
+  // See experiments in ~/git/hh_src/test/misc/test_float_discrepancy.cpp
   //
   // See my answer at http://stackoverflow.com/a/23437425/1190077
   //  to the question of the precision necessary to exactly save and retrieve floating-point numbers :
@@ -709,7 +709,7 @@ bool set_fd_no_delay(int fd, bool nodelay) {
   // on SGI, setting nodelay on terminal fd may cause window closure
   if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
-    // 20140704 CYGWIN64 this no longer works.  See also ~/src/native/test_cygwin_nonblocking_read.cpp .
+    // 20140704 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
     // 20140826 G3dcmp works again now.
 #if defined(O_NONBLOCK)
   return fcntl(fd, F_SETFL, nodelay ? O_NONBLOCK : 0) != -1;
@@ -778,7 +778,7 @@ static string beautify_type_name(string s) {
 namespace details {
 
 string extract_function_type_name(string s) {
-  // See experiments in ~/src/test/misc/test_compile_time_type_name.cpp
+  // See experiments in ~/git/hh_src/test/misc/test_compile_time_type_name.cpp
   // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
   s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string
   // GOOGLE3: versioned libstdc++ or libc++

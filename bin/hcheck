@@ -4,7 +4,8 @@
 
 # set -x
 
-PATH=".:/perl/bin:/c/perl/bin:/cygdrive/c/perl/bin:$PATH" # Cygwin perl was not robust to "make -j" in ~/src/test
+# Cygwin perl was not robust to "make -j" in ~/git/hh_src/test
+PATH=".:/perl/bin:/c/perl/bin:/cygdrive/c/perl/bin:$PATH"
 # echo PATH=$PATH 1>&2
 
 status=0

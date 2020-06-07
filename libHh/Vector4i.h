@@ -82,14 +82,27 @@ class Vector4i {
     return *this;
   }
   void fill(int v) { _r = _mm_set1_epi32(v); }
+#if defined(HH_NO_SSE41)
+  friend Vector4i min(const Vector4i& l, const Vector4i& r) {
+    return Vector4i(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
+  }
+  friend Vector4i max(const Vector4i& l, const Vector4i& r) {
+    return Vector4i(max(l[0], r[0]), max(l[1], r[1]), max(l[2], r[2]), max(l[3], r[3]));
+  }
+#else
   friend Vector4i min(const Vector4i& l, const Vector4i& r) { return _mm_min_epi32(l._r, r._r); }
   friend Vector4i max(const Vector4i& l, const Vector4i& r) { return _mm_max_epi32(l._r, r._r); }
+#endif
   friend Vector4i operator&(const Vector4i& l, const Vector4i& r) { return _mm_and_si128(l._r, r._r); }
   friend Vector4i operator|(const Vector4i& l, const Vector4i& r) { return _mm_or_si128(l._r, r._r); }
   friend Vector4i operator^(const Vector4i& l, const Vector4i& r) { return _mm_xor_si128(l._r, r._r); }
   friend Vector4i operator<<(const Vector4i& l, int n) { return _mm_slli_epi32(l._r, n); }
   friend Vector4i operator>>(const Vector4i& l, int n) { return _mm_srai_epi32(l._r, n); }
+#if defined(HH_NO_SSE41)
+  friend Vector4i abs(const Vector4i& l) { return Vector4i(abs(l[0]), abs(l[1]), abs(l[2]), abs(l[3])); }
+#else
   friend Vector4i abs(const Vector4i& l) { return _mm_abs_epi32(l._r); }
+#endif
 #if !(defined(_M_X64) || defined(__x86_64))
   // "new type[size]" does not create aligned storage -- problem for Vector4i in 32-bit model
   static void* operator new(size_t s) { return aligned_malloc(s, alignof(type)); }

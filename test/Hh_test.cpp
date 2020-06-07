@@ -635,6 +635,6 @@ line2)";
     SHOW(sizeof(ArrayView<char>));   // 16 on win, mingw
     SHOW(alignof(Array<char>));      // 8 on win, mingw
     SHOW(sizeof(Array<char>));       // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
-                                     // see ~/src/test/native/bug_size.cpp
+                                     // see ~/git/hh_src/test/native/bug_size.cpp
   }
 }

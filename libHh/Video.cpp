@@ -447,7 +447,9 @@ void WVideo::write(CNv12View frame) {
 class Initialize_COM_MF {
  public:
   Initialize_COM_MF() {
-    if (s_num_video_uses++ && 0) return;
+    if (s_num_video_uses++) {
+      if (0) return;
+    }
     // default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED
     if (0) {
       // The following could work if we could guarantee that VT initialization occurred before this call.
@@ -949,7 +951,7 @@ class FF_RVideo_Implementation : public RVideo::Implementation {
  public:
   explicit FF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
     assertx(supported());
-    // See: ~/src/_other/Repository.cpp
+    // See: ~/git/hh_src/_other/Repository.cpp
     // See: ffmpeg -hide_banner -pix_fmts
     const bool ldebug = getenv_bool("FF_DEBUG");
     const string& filename = _rvideo._filename;

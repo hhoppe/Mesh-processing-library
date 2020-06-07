@@ -92,7 +92,7 @@ string portable_simple_quote(const string& s) { return string_requires_quoting(s
 
 // related: http://stackoverflow.com/questions/4151504/wrapping-file-with-custom-stdostream
 
-// http://www.josuttis.com/cppcode/fdstream.hpp   -- see ~/src/_other/fdstream.h
+// http://www.josuttis.com/cppcode/fdstream.hpp   -- see ~/git/hh_src/_other/fdstream.h
 
 // Also http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8cc-source.html and
 //   http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8h-source.html
@@ -578,16 +578,16 @@ TmpFile::~TmpFile() {
 //
 // It appears that the prefix (c:) of the command name affects the parsing of the arguments.
 //  (here sh == /cygwin/bin/sh)
-// sh -c ~/src/bin/win/HTest\ -showargs\ \\\"ab
+// sh -c ~/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab
 //  # Arg00='\ab'
-// sh -c c:/hh/src/bin/win/HTest\ -showargs\ \\\"ab
+// sh -c c:/hh/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab
 //  # Arg00='\ab'
-// sh -c /hh/src/bin/win/HTest\ -showargs\ \\\"ab
+// sh -c /hh/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab
 //  # Arg00='"ab'
 // sh -c /cygdrive/c/hh/src/bin/win/HTest\ -showargs\ \\\"ab\ c:/dummy
 //  # Arg00='"ab'
 //  # Arg01='c:/dummy'
-// (set path=(~/src/bin/win $path:q); sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
+// (set path=(~/git/hh_src/bin/win $path:q); sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
 //  # Arg00='"ab'
 //  # Arg01='c:/dummy'
 
@@ -809,7 +809,7 @@ intptr_t my_sh(CArrayView<string> sargv, bool wait) {
     if (ret < 0 && debug) Warning("Shell 'csh' not found");
   }
   // CMD
-  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; set path=(. ~/src/bin c:/windows/system32 c:/windows); Filtermesh ~/data/mesh/"complex file name.m" -stat)
+  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; set path=(. ~/git/mesh_processing/bin c:/windows/system32 c:/windows); Filtermesh ~/data/mesh/"complex file name.m" -stat)
   if (ret < 0) {
     if (1) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
     scmd = "";

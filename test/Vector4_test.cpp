@@ -9,7 +9,7 @@ using namespace hh;
 
 // Test Neon syntax:
 // modify make/Makefile_defs_clang to override cxxall, then
-// make CONFIG=clang -C ~/src/test Vector4_test.o
+// make CONFIG=clang -C ~/git/mesh_processing/test Vector4_test.o
 //  (It checks C++ syntax, then crashes with "ARM does not support Windows COFF format".)
 
 static void to_norm(const Vector4& v) {

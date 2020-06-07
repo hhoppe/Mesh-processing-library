@@ -4,8 +4,8 @@ MeshRoot = ..
 
 include $(MeshRoot)/make/Makefile_defs
 
-$(call prepend,LDLIBS,$(MeshRoot)/lib$(HW)/lib$(HW).$(extlib) $(gfx_libs) )
-cppinc += -I$(MeshRoot)/lib$(HW)
+$(call prepend,LDLIBS,$(MeshRoot)/lib$(HW)/lib$(HW).$(extlib) $(graphics_libs) )
+includes += -I$(MeshRoot)/lib$(HW)
 
 # Creating a windows app (rather than console app) seems a bad idea as it disconects from shell
 #  and does not launch subprocesses (RFile / WFile / my_system) without constructing new consoles anyways.

@@ -1,0 +1,99 @@
+# Note: this file sets up variables for both gcc and clang compilers, as they have similar command-line arguments.
+# (It is included by both ./Makefile_base_gcc and ./Makefile_base_clang.)
+
+use_pch ?= 1#  (usually 1; use_precompiled_headers)
+
+extobj = o
+extlib = a
+extasm = s
+CRUMBS ?= *.s *.stackdump *.h.gch *.h.pch
+LDOUTPUT ?= -o $@
+no_warnings = -w
+
+gcc_or_clang = 1
+
+CXX_STD ?= c++14
+
+# Override the default compilation target to let code run on a greater variety of machines.
+machine_arch = -march=native#  fastest on local machine
+machine_arch = -march=corei7#  to be able to run on more machines, e.g. hhoppeh
+
+# For debugging, echo complete compiler commands:
+# ccommon += -v
+
+ifeq ($(plain_compiler),)
+  cwarnings = $(if $(ignore_compile_warnings:0=),,-Werror)
+  cwarnings += -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization
+  cwarnings += -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls
+  cwarnings += -Wshadow
+  cxxwarnings = -Woverloaded-virtual
+  #  -Winline -Wconversion
+  # -pedantic-errors == -Werror -Wpedantic
+  ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math -mfpmath=sse
+  ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
+  ccommon += $(if $(omit_omp:0=),,-fopenmp)
+  cxxall += -fno-rtti
+  cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
+  commonrel += -O3 -DNDEBUG
+  # (O3 enables -fomit-frame-pointer -finline-functions)
+  # -fno-trapping-math
+  commondbg += -g -D_GLIBCXX_DEBUG#  to enable checking of STL containers in libstdc++
+  cxxexe +=
+  cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings),)
+  cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings),)
+endif
+
+ccommon += $(if $(x64:0=),-m64,-m32)
+cxxall += $(strip $(if $(CXX_STD),-std=$(CXX_STD),) $(ccommon))
+c-all += -std=c11 $(ccommon)#  or -std=c99
+crel += $(commonrel)
+cdbg += $(commondbg)
+
+# Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations)
+gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
+  -fsigned-zeros -ftrapping-math -fno-associative-math -fno-reciprocal-math
+# Cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
+# Note that -fexcess-precision=standard is undefined for C++
+
+# Force use of C++ (rather than C) standard library by explicitly specifying CXX.
+# % : %.o
+#	$(LINK.o) $^ $(LOADLIBES) $(LDLIBS) -o $@
+% : %.o
+	$(CXX) $(LDOUTPUT) $(cxxexe) $(TARGET_ARCH) $(call add_drive,$^ $(LDLIBS)) $(LDFLAGS)
+
+# Use absolute pathnames for source files, to get these in warnings and errors.
+# %.o : %.cpp
+#	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
+%.o : %.cpp
+#	@echo $(CXX) $<
+#	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+
+# Use absolute pathnames for source files, to get these in warnings and errors.
+# %.o : %.c
+#	$(COMPILE.c) $(OUTPUT_OPTION) $<
+%.o : %.c
+#	@echo $(CXX) $<
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.c) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+
+ifeq ($(use_pch),1)
+  # Force-include the precompiled header into every *.cpp file.   move out of here??
+  ifeq ($(CXX)-$(filter-out /%,$(MeshRoot)),clang++-)
+    $(info Disabling precompiled header for clang with non-relative MeshRoot=$(MeshRoot))
+  else
+    cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+  endif
+endif
+
+## Machine architectures:
+# Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate
+# (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E - -march=native |& sed -r '/cc1/\!d; s/(")|(^.* - )|( -mno-[^\ ]+)//g')
+# or also:
+#  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -march=native -Q -v --help=target)
+#  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E -march=native ~/git/mesh_processing/libHh/Hh.h |& cat)
+# hhopped old: -march:native -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 \
+#   --param l2-cache-size=8192 -mtune=core2)
+# hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
+# hhoppew: -march=haswell -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mmovbe -maes -mpclmul -mpopcnt -mabm -mfma -mbmi -mbmi2 -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrdrnd -mf16c -mfsgsbase -mfxsr -mxsave -mxsaveopt --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=20480 -mtune=haswell
+#   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works
+# https://gcc.gnu.org/onlinedocs/gcc-5.2.0/gcc/x86-Options.html

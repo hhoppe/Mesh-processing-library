@@ -18,7 +18,7 @@ MeshRoot ?= .#  this current file is located in the root directory of the packag
 
 include $(MeshRoot)/make/Makefile_defs
 
-ifneq ($(CONFIG),all)
+ifneq ($(CONFIG),all)  # until rest of file
 
 libdirs = \
   libHh \
@@ -30,12 +30,6 @@ progdirs = \
   MinCycles \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \
   G3dOGL G3dVec VideoViewer \
-
-ifeq ($(win_base),1)  # CONFIG = win or w32
-endif
-
-ifeq ($(win32),1)
-endif
 
 dirs = $(libdirs) $(progdirs)
 dirs+test = $(dirs) test demos

@@ -6,7 +6,7 @@ ifeq ($(defs_loaded),)
   include $(MeshRoot)/make/Makefile_defs
 endif
 
-ifneq ($(CONFIG),all)
+ifneq ($(CONFIG),all)  # until rest of file
 
 troot ?= $(notdir $(abspath .))
 tlib ?= $(troot).$(extlib)
@@ -54,7 +54,7 @@ else
 	  echo Updating library $@ by merging files $?; \
 	  $(AR) cr $@ $?; \
 	fi
-	@ranlib $@
+	@$(RANLIB) $@
 
 endif
 

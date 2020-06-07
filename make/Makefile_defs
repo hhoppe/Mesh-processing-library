@@ -96,10 +96,11 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
+# CXX_STD ?= c++14
 # PEDANTIC ?= 1
 
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
-cppinc += -DHH_NO_IMAGE_IO
+  cppinc += -DHH_NO_IMAGE_IO
 endif
 
 ignore_compile_warnings ?= 1
@@ -116,8 +117,7 @@ have_image_io = $(if $(filter -DHH_NO_IMAGE_IO,$(cppinc)),,1)
 # (Modifying the variable $(MAKECMDGOALS) would be a solution, but the variable is read-only.)
 # Sleep is added to prevent synchronization bugs when using "-j" on successive make invocations in the same directory.
 
-ifeq ($(CONFIG),all)
-
+ifeq ($(CONFIG),all)  # There is an else clause below.
 
 override_goal := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),$(if $(.DEFAULT_GOAL),$(.DEFAULT_GOAL),dummy_all))
 # $(info have CONFIG=all override_goal=$(override_goal))
@@ -127,9 +127,7 @@ $(override_goal):
 	@RESULT=0; $(foreach a,$(if $(filter clean deepclean,$(MAKECMDGOALS)),$(configs),$(build_configs)),echo "**** CONFIG=$(a)"; $(MAKE) CONFIG=$(a) $(MAKECMDGOALS); RESULT=$$((RESULT + $$?)); sleep $(if $(filter clean deepclean,$(MAKECMDGOALS)),0,0.8); ) (exit $$RESULT)
 .PHONY: $(override_goal)
 
-
-else # ifeq ($(CONFIG),all)
-
+else  # ifeq ($(CONFIG),all)  # until rest of file
 
 # Add ./bin so that the script hcheck is in path.
 $(call prepend_PATH,$(abspath $(MeshRoot))/bin)
@@ -138,6 +136,7 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 
 .PHONY: dummy_all dummy_goal *.exe cleanall makeall
 
+# Note that the C++ compile command $(CXX) (e.g. "cl", "g++", or "clang++") is also used for all program linking.
 # Must appear before rule "%.obj : %.cpp" to take precedence.
 # The prefix '@' character (which hides the executed command line) is optional.
 # (Use 'make -n' to see these hidden '@' command lines.)
@@ -178,7 +177,7 @@ cmd_makedep = @echo Creating $(make_dep); \
   || rm -f $(make.dep)
 
 ifeq ($(plain_compiler),)
-  cppinc += -I$(MeshRoot)
+  includes += -I$(MeshRoot)
 endif
 
 include_make_dep = $(if $(filter depend clean deepclean cleanall,$(MAKECMDGOALS)),,1)
@@ -194,7 +193,7 @@ obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
 #         Compilation directory tracking in emacs does not work with "-j"
 # solution: avoid c: paths in makefiles; add c: in compiler rules for CONFIG=win/w32.
 
-CPPFLAGS = $(cppinc)
+CPPFLAGS = $(strip $(cppinc) $(includes))
 CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
 CFLAGS = $(strip $(c-all) $(if $(rel:0=),$(crel),$(cdbg)))
 
@@ -228,10 +227,10 @@ endif
 LDLIBS += $(last_libs)#  optionally defined in ,/Makefile_config_$(CONFIG)
 
 ifneq ($(have_lapack),)
-# <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/
-ifneq ($(call file_exists,/usr/include/lapacke),)
-cppinc += -I/usr/include/lapacke
-endif
+  # <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/
+  ifneq ($(call file_exists,/usr/include/lapacke),)
+    includes += -I/usr/include/lapacke
+  endif
 endif
 
 # Invokes $< which is the first prerequisite (either $(@:%.ou=%) in ./test or $(@:%.ou=%.script) in ./progtest)

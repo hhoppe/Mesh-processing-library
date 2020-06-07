@@ -1,16 +1,15 @@
 CXX = clang++
 CC = clang
+AR = llvm-ar
+RANLIB = llvm-ranlib
 
 ifneq ($(is_mswin),)
   LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)
 endif
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
-ifeq ($(omit_omp:0=),)  # OpenMP support started in clang 4.0
-ccommon += -fopenmp
-last_libs += -llibomp
-endif
+last_libs += $(if $(omit_omp:0=),,-llibomp)
 
 ifeq ($(plain_compiler),)
   cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
@@ -27,20 +26,16 @@ ifeq ($(plain_compiler),)
   ifneq ($(is_mac),1)
     cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
   endif
-  #  -Wno-header-hygiene -Wno-format-nonliteral   -Wno-old-style-cast  -Wno-error=old-style-cast
-
-  # Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou
-  # cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1
-
   # cxxrel += -gline-tables-only
-  #
-  # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax
-  # cxx_list_assembly_code = -S -mllvm --x86-asm-syntax=intel
-  # Unfortunately, clang cannot emit *.s assembler output while also creating the *.o object file,
-  #  so for now I would have to do this manually by directly calling make on *.s using above.
-  cxx_list_assembly_code =
 endif
 
+# http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax
+# cxx_list_assembly_code = -S -mllvm --x86-asm-syntax=intel
+# Unfortunately, clang cannot emit *.s assembler output while also creating the *.o object file,
+#  so for now I do this manually by directly calling make on *.s using rule below.
+cxx_list_assembly_code =
+
+# Enable creation of assembly file if desired (as alternative to cxx_list_assembly_code):
 %.s : %.cpp
 # I see no way to interleave source code in assembly listing; -g -fverbose-asm do not help, -Wa,-achln unrecognized
 	$(filter-out ,$(COMPILE.cpp)) -S -mllvm --x86-asm-syntax=intel $(@:$(extasm)=cpp)
@@ -51,14 +46,9 @@ endif
 	@rm -f $(@)  # because we actually "-include" itself to get the right path when building it.
 	@$(COMPILE.cpp) -x c++-header -o $@ $<
 
-
 ## precompiled headers:
-# http://clang.llvm.org/docs/UsersManual.html#precompiled-headers 
-#  http://clang.llvm.org/docs/PCHInternals.html
-# 
 # clang test.h -o test.h.pch
-# clang -include test.h test.c -o test     # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
-
+# clang -include test.h test.c -o test  # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
 
 ## sanitize/analyze:
 # clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc
@@ -69,19 +59,7 @@ endif
 # 
 # Address sanitizer:
 # Be warned though that it only works so far on Linux and Mac. No luck for MinGW.
-#
-# Static analyzer: scan-build
-#  not found in c:/progra~2/llvm/
-#
-# clang --analyze
-#  doesn't seem to work; all indications is that this should be replaced by scan-build
 
-
-## Old
-
-# ccommon += -D__STRICT_ANSI__  # to fix "error: use of undeclared identifier '__float128'"
-# Instead, setting -std=gnu++11 disables __STRICT_ANSI__ (useful to get _exit, _fdopen, etc.) without
-#  introducing error about undeclared identifier '__float128'.
-# Instead, added "typedef struct { long double x, y; } __float128;" in libHh/Hh.h
-
-# cxxall += -stdlib=libc++#  http://stackoverflow.com/questions/24497956/is-codecvt-not-supported-by-clang-or-gcc
+## Neon
+# Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou
+# cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1

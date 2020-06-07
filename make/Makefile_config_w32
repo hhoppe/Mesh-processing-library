@@ -1,7 +1,6 @@
 rel ?= 1#  0=debug or 1=release (usually 1, to be different from CONFIG=win)
-x64 ?= 0
+x64 = 0#  compile into 32-bit code
 
-# msvc = 2015
-msvc = 2019
+include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_win
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_win
+commonrel += -arch:SSE2

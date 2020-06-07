@@ -2,7 +2,7 @@
 # It is included by ./Makefile_config_win
 
 # cl.exe uses environment variables CL and INCLUDE.
-# link.exe uses environment variables LINK, LIB, PATH, and TMP.
+# link.exe (usually invoked from cl.exe) uses environment variables LINK, LIB, PATH, and TMP.
 
 ifeq ($(msvc),2019)
 

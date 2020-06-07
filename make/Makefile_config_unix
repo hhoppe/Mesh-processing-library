@@ -2,14 +2,13 @@ rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 1#  32-bit not supported
 
 ifeq ($(is_mac),1)
-  cppinc += -DHH_NO_IMAGE_IO#   to avoid installing libjpeg and libpng; instead just use ffmpeg
-  cppinc += -I/opt/X11/include#   for XQuartz X11
-  LDFLAGS += -L/opt/X11/lib#      for XQuartz X11
-  cppinc += -Wno-variadic-macros# ignore warning in <X11/Xlib.h>
-  CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=new ..."
+  cppinc += -DHH_NO_IMAGE_IO#  to avoid installing libjpeg and libpng; instead just use ffmpeg
+  includes += -I/opt/X11/include#  for XQuartz X11
+  LDFLAGS += -L/opt/X11/lib#  for XQuartz X11
+  CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=gcc ..."
   omit_omp = 1
 else
-  CC = gcc#  set default choice of compiler (clang or gcc); override using "make CC=new ..."
+  CC = gcc#  set default choice of compiler (clang or gcc); override using "make CC=clang ..."
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
@@ -19,4 +18,4 @@ ifeq ($(CC),gcc)
   LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
 endif
 
-gfx_libs ?= -lGLU -lGL -lX11#  -lXext
+graphics_libs ?= -lGLU -lGL -lX11#  -lXext

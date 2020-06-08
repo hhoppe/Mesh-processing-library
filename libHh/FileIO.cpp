@@ -854,7 +854,8 @@ FILE* my_popen(const string& scmd, const string& mode) {
   // Note that "g++ -std=c++XX ..." sets -D__STRICT_ANSI__ which hides from the header files the functions
   //  popen(), pclose(), usleep(), posix_memalign(), setenv(), unsetenv(), gethostname().
   // Therefore we must compile with "g++ -std=c++XX -U__STRICT_ANSI__ ...".
-  FILE* f = popen(scmd.c_str(), mode.c_str());
+  FILE* f;
+  HH_LOCK { f = popen(scmd.c_str(), mode.c_str()); }
   // CYGWIN problem:
   //  Invoking a Perl script prog using "#!" mechanism calls "c:/Perl/bin/perl /cygdrive/c/hh/.../prog",
   //   and c:/Perl/bin/perl does not recognize /cygdrive/c
@@ -872,7 +873,11 @@ FILE* my_popen(CArrayView<string> sargv, const string& mode) {
   return my_popen(scmd, mode);
 }
 
-int my_pclose(FILE* file) { return pclose(file); }
+int my_pclose(FILE* file) {
+  int ret;
+  HH_LOCK { ret = pclose(file); }
+  return ret;
+}
 
 #else  // defined(_WIN32)
 

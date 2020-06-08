@@ -2,7 +2,7 @@
 #  MeshRoot = ..
 #  include $(MeshRoot)/make/Makefile_prog
 # or
-#  MeshRoot = /hh/src
+#  MeshRoot = /hh/git/mesh_processing
 #  prog = name#  if different from containing directory
 #  exe_dir = .#  if not the default $(MeshRoot)/bin/$(CONFIG)
 #  include $(MeshRoot)/make/Makefile_prog

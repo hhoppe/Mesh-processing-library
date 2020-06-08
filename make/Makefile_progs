@@ -1,5 +1,5 @@
 # For use as:
-#  MeshRoot = ..#  or /hh/src
+#  MeshRoot = ..#  or /hh/git/mesh_processing
 #  include $(MeshRoot)/make/Makefile_prog
 
 # use_vs_libs = 1#  (optional, use libraries generated from Visual Studio using msbuild)

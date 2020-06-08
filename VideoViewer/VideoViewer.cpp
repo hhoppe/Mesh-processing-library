@@ -3017,7 +3017,7 @@ void render_image() {
 #if 1 && defined(__CYGWIN__)
   const bool use_modern_opengl = false;
   // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
-  // make CONFIG=cygwin -C ~/src -j8 VideoViewer && ~/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
+  // make CONFIG=cygwin -C ~/git/mesh_processing -j8 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
   // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
   // Mac OS is currently "2.1" which is insufficient.

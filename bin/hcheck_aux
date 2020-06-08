@@ -9,8 +9,8 @@ while (<>) {
   s@(Created at .* on )(.*)( using:)@$1...$3@;
   s@ /hh/@ C:/hh/@g;  # for cygwin
   s@ c:/hh/@ C:/hh/@g;  # for windows release (hmake)
-  # s@/hh/src/bin/\w+/@/hh/src/bin/CONFIG/@g;
-  # s@(c:|/c|/cygdrive/c)?/hh/src/bin/(\w+/)?@c:/hh/src/bin/.../@gi;
+  # s@/hh/git/hh_src/bin/\w+/@/hh/git/hh_src/bin/CONFIG/@g;
+  # s@(c:|/c|/cygdrive/c)?/hh/git/hh_src/bin/(\w+/)?@c:/hh/git/hh_src/bin/.../@gi;
   s@(c:|/c|/cygdrive/c)?/hh/(tfs/MSR_Core_Graphics/People/hhoppe/)?src/bin/(\w+/)?@@gi;
   s@\.exe@@g;
   s@\w\w\w \w\w\w [ \d]\d \d\d:\d\d:\d\d \d\d\d\d@Day Mon dd hh:mm::ss yyyy@g;

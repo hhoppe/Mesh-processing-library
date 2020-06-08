@@ -394,7 +394,7 @@ void Image::write_file_i(const string& filename, bool bgra) const {
 #endif
   }
   if (implementation == "IO") {
-#if defined(HH_IMAGE_HAVE_IO)
+#if defined(HH_IMAGE_HAVE_IO)  // unlike WIC, allows writing image domains larger than 4 GiB
     write_file_IO(filename, bgra);
     return;
 #else

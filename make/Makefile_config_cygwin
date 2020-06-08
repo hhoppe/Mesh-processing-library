@@ -6,6 +6,7 @@ ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else                            # default is gcc compiler
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  ccommon += -U__STRICT_ANSI__#  do allow header declarations of POSIX functions even though using -std=c++XX.
 endif
 
 graphics_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext

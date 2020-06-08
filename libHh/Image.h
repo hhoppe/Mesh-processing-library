@@ -286,9 +286,10 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 
 #if !defined(HH_NO_IMAGE_WIC) && defined(_MSC_VER)  // mingw doesn't recognize <wincodecsdk.h>
 #define HH_IMAGE_HAVE_WIC
-#if !defined(HH_IMAGE_IO_TOO) && !defined(HH_NO_IMAGE_IO)  // optional, to enable getenv_string("IMAGE_IMPLEMENTATION")
-#define HH_NO_IMAGE_IO
 #endif
+
+#if defined(HH_IMAGE_HAVE_WIC) && !defined(HH_IMAGE_IO_TOO) && !defined(HH_NO_IMAGE_IO)
+#define HH_NO_IMAGE_IO
 #endif
 
 #if !defined(HH_NO_IMAGE_IO)

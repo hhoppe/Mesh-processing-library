@@ -584,7 +584,7 @@ TmpFile::~TmpFile() {
 //  # Arg00='\ab'
 // sh -c /hh/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab
 //  # Arg00='"ab'
-// sh -c /cygdrive/c/hh/src/bin/win/HTest\ -showargs\ \\\"ab\ c:/dummy
+// sh -c /cygdrive/c/hh/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab\ c:/dummy
 //  # Arg00='"ab'
 //  # Arg01='c:/dummy'
 // (set path=(~/git/hh_src/bin/win $path:q); sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
@@ -851,6 +851,9 @@ namespace {
 FILE* my_popen(const string& scmd, const string& mode) {
   // CYGWIN might fail to find hardcoded "/bin/sh" unless cygwin1.dll is in c:/cygwin/bin
   //  (see also http://cygwin.com/ml/cygwin/2003-06/msg00567.html )
+  // Note that "g++ -std=c++XX ..." sets -D__STRICT_ANSI__ which hides from the header files the functions
+  //  popen(), pclose(), usleep(), posix_memalign(), setenv(), unsetenv(), gethostname().
+  // Therefore we must compile with "g++ -std=c++XX -U__STRICT_ANSI__ ...".
   FILE* f = popen(scmd.c_str(), mode.c_str());
   // CYGWIN problem:
   //  Invoking a Perl script prog using "#!" mechanism calls "c:/Perl/bin/perl /cygdrive/c/hh/.../prog",

@@ -89,8 +89,8 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_UTF8
 # cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
-# cppinc += -DHH_NO_IMAGE_WIC#  only matters for CONFIG=win/w32
-# cppinc += -DHH_IMAGE_IO_TOO#  only matters for CONFIG=win/w32 (default is to just use WIC)
+# cppinc += -DHH_NO_IMAGE_WIC#  option for CONFIG=win/w32/clang
+# cppinc += -DHH_IMAGE_IO_TOO#  option for CONFIG=win/w32/clang; default is to just use WIC
 # cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  otherwise enable SSE / NEON instructions
 # cppinc += -DHH_NO_STACKWALKER
 # cppinc += -DHH_NO_LIB_REFERENCES

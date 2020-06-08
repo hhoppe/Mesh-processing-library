@@ -29,7 +29,7 @@ ifeq ($(plain_compiler),)
   cxxwarnings = -Woverloaded-virtual
   #  -Winline -Wconversion
   # -pedantic-errors == -Werror -Wpedantic
-  ccommon += -U__STRICT_ANSI__ $(machine_arch) -ffast-math -mfpmath=sse
+  ccommon += $(machine_arch) -ffast-math -mfpmath=sse
   ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
   ccommon += $(if $(omit_omp:0=),,-fopenmp)
   cxxall += -fno-rtti

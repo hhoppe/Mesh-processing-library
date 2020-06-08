@@ -116,9 +116,8 @@
 #endif
 
 #if defined(__clang__)
-#define HH_ASSUME(...)                                                                                            \
-  _Pragma("clang diagnostic push") _Pragma("clang diagnostic ignored \"-Wassume\"") __builtin_assume(__VA_ARGS__) \
-      _Pragma("clang diagnostic pop")
+#pragma clang diagnostic ignored "-Wassume"  // (assumed expression can have side effects which will be discarded)
+#define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(_MSC_VER)
 #define HH_ASSUME(...) __assume(__VA_ARGS__)  // implies __analysis_assume() but is expression rather than statement
 #else

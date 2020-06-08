@@ -1,7 +1,7 @@
 CXX = clang++
 CC = clang
-AR = llvm-ar
-RANLIB = llvm-ranlib
+AR = ar
+RANLIB = ranlib
 
 ifneq ($(is_mswin),)
   LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)

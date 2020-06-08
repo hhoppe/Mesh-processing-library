@@ -10,6 +10,8 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 # 20200603 LLVM-10.0.0-win64.exe from http://releases.llvm.org/download.html
 LLVM_ROOT = c:/Progra~1/LLVM
 $(call prepend_PATH,$(LLVM_ROOT)/bin)
+AR = llvm-ar
+RANLIB = llvm-ranlib
 
 # Bug: MSVC <functional> requires "-frtti"; workaround in https://stackoverflow.com/questions/47950690 no longer works.
 cxxall += -frtti

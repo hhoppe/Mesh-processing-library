@@ -30,6 +30,11 @@ cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
 	@echo Making $(@) from $<
 	@$(COMPILE.cpp) $<
 
+ifeq ($(use_pch),1)
+  # Force-include the precompiled header into every *.cpp file.
+  cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+endif
+
 ## Precompiled headers
 # https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html 
 # This also works with -include. So yet another way to use precompiled headers, good for projects not designed

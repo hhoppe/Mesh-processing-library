@@ -583,7 +583,7 @@ void change_default_io_precision() {
   //  MSVC as far as printf() is concerned.  (It may be using an older version of the runtime.)
 }
 
-void excercise_errors() {
+void exercise_errors() {
   SHOWL;
   if (0) {
     float b = 1.f / float(g_unoptimized_zero);  // silently produces infinity
@@ -615,7 +615,7 @@ void hh_init_aux() {
   untie_cin_and_cout();
   warn_if_running_debug_version();
   if (0) change_default_io_precision();
-  if (0) excercise_errors();
+  if (0) exercise_errors();
 }
 
 }  // namespace

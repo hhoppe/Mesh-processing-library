@@ -76,15 +76,6 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 #	@echo $(CXX) $<
 	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.c) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
 
-ifeq ($(use_pch),1)
-  # Force-include the precompiled header into every *.cpp file.   move out of here??
-  ifeq ($(CXX)-$(filter-out /%,$(MeshRoot)),clang++-)
-    $(info Disabling precompiled header for clang with non-relative MeshRoot=$(MeshRoot))
-  else
-    cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
-  endif
-endif
-
 ## Machine architectures:
 # Found using: http://stackoverflow.com/questions/5470257/how-to-see-which-flags-march-native-will-activate
 # (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E - -march=native |& sed -r '/cc1/\!d; s/(")|(^.* - )|( -mno-[^\ ]+)//g')

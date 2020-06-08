@@ -46,6 +46,15 @@ cxx_list_assembly_code =
 	@rm -f $(@)  # because we actually "-include" itself to get the right path when building it.
 	@$(COMPILE.cpp) -x c++-header -o $@ $<
 
+ifeq ($(use_pch),1)
+  # Force-include the precompiled header into every *.cpp file if the header is accessed with a relative path.
+  ifeq ($(filter-out /%,$(MeshRoot)),)
+    $(info Disabling precompiled header with non-relative MeshRoot=$(MeshRoot))
+  else
+    cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+  endif
+endif
+
 ## precompiled headers:
 # clang test.h -o test.h.pch
 # clang -include test.h test.c -o test  # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.

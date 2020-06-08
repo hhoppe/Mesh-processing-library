@@ -101,11 +101,10 @@ graphics_libs ?= user32.lib gdi32.lib
 #   shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
 # graphics_libs += d3dx9.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comdlg32.lib comctl32.lib d3d11.lib
 
-# move out??
 # For release build, we force-include the precompiled header into every *.cpp file.  For debug build, we
 # force-include it only for the files in libHh (see libHh/Makefile) due to the shared *.pdb file.
 ifeq ($(use_pch),1)
-  ifeq (rel$(rel),rel1)
+  ifeq ($(rel),1)
     pch_root = $(MeshRoot)/libHh/precompiled_libHh
     abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
     cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)

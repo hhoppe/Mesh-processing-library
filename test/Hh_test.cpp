@@ -257,7 +257,7 @@ void test_exceptions() {
     SHOW("catch4", ex.what());
   }
   if (0) {
-    throw std::runtime_error("err2");  // excercise my_terminate() or my_top_level_exception_filter()
+    throw std::runtime_error("err2");  // exercise my_terminate() or my_top_level_exception_filter()
                                        // instead use "HTest -exception"
   }
 }

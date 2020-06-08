@@ -96,7 +96,7 @@
 #endif
 
 #if defined(_MSC_VER)
-#define HH_POSIX(x) _##x
+#define HH_POSIX(x) _##x  // On Windows, Unix functions like open(), read(), dup() have a leading underscore.
 #else
 #define HH_POSIX(x) x
 #endif
@@ -105,12 +105,6 @@
 #define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // e.g.: HH_REFERENCE_LIB("user32.lib");
 #else
 #define HH_REFERENCE_LIB(libstring) HH_EAT_SEMICOLON
-#endif
-
-#if defined(__GNUC__) || defined(__clang__)
-#define HH_ATTRIBUTE(...) __attribute__((__VA_ARGS__))  // see also __declspec(x)
-#else
-#define HH_ATTRIBUTE(...) [[__VA_ARGS__]]  // C++11
 #endif
 
 #if defined(__clang__)
@@ -136,7 +130,7 @@
 #if defined(_WIN32)
 #define HH_NORETURN __declspec(noreturn)  // it gets converted to __attribute__((noreturn)) under __GNUC__
 #else
-#define HH_NORETURN HH_ATTRIBUTE(noreturn)
+#define HH_NORETURN __attribute__((noreturn))  // could also be [[noreturn]]
 #endif
 
 #if defined(_MSC_VER)
@@ -146,7 +140,7 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define HH_UNUSED HH_ATTRIBUTE(unused)
+#define HH_UNUSED __attribute__((unused))  // also C++17 [[maybe_unused]]
 #else
 #define HH_UNUSED
 #endif
@@ -711,7 +705,6 @@ template <typename T> T* aligned_new(size_t n) {
   return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(n * sizeof(T), alignof(T)));
 }
 
-// Deallocate aligned memory.
 template <typename T> void aligned_delete(T* p) {
   if (alignof(T) <= 8)
     delete[] p;

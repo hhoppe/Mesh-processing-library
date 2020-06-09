@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include "G3dOGL/G3d.h"
+
 #if defined(_WIN32)
 #include <io.h>  // close(), dup2()
 #endif
-
-#include "G3dOGL/G3d.h"
 
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"

@@ -22,7 +22,7 @@ ifneq ($(CONFIG),all)  # until rest of file
 
 lib_dirs = \
   libHh \
-  lib$(HW)
+  lib$(HW)#  libHWin (Windows program) or libHWX (X11 program)
 
 prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
@@ -67,12 +67,12 @@ Filtervideo: VideoViewer        # compile shared files in VideoViewer first
 clean_dirs = $(foreach n,$(dirs+test),clean_$(n))  # pseudo-dependency to allow "make -j clean" parallelism
 clean: $(clean_dirs)
 $(clean_dirs):
-	$(MAKE) -C $(@:clean_%=%) clean
+	$(MAKE) -C $(@:clean_%=%) -s clean
 
 deepclean_dirs = $(foreach n,$(dirs+test),deepclean_$(n))  # pseudo-dependency to allow "make -j deepclean" parallelism
 deepclean: $(deepclean_dirs)
 $(deepclean_dirs):
-	$(MAKE) -C $(@:deepclean_%=%) deepclean
+	$(MAKE) -C $(@:deepclean_%=%) -s deepclean
 
 depend_dirs = $(foreach n,$(dirs+test+all),depend_$(n))  # pseudo-dependency to allow "make -j depend" parallelism
 depend: $(depend_dirs)
@@ -112,6 +112,7 @@ debug:
 #	@echo '.VARIABLES: $(.VARIABLES)'
 #	@echo 'Variables:'$$'\n''$(foreach var,$(.VARIABLES),  $(var) = $($(var))'$$'\n'')'
 #	@echo $(CURDIR),$(patsubst c:%,%,$(PWD))
+#	$(info LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))
 
 # location of executable used for timing test
 rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin)#  CONFIG=win instead uses the release exe built by msbuild

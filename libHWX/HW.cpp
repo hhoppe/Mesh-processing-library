@@ -1,11 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "HW.h"
 
-#include <cerrno>
-#include <csignal>  // signal()
-#include <cstring>  // strlen(), std::memset(), std::strerror()
-#include <ctime>    // setitimer(), struct itimerval, struct timeval
-
 #include <sys/select.h>  // fd_set, select()
 
 extern "C" {
@@ -14,6 +9,11 @@ extern "C" {
 #include <X11/cursorfont.h>
 #include <X11/keysym.h>
 }
+
+#include <cerrno>
+#include <csignal>  // signal()
+#include <cstring>  // strlen(), std::memset(), std::strerror()
+#include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 #include "HW.xbm"
 #include "libHh/Args.h"

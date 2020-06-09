@@ -39,9 +39,9 @@ class Polygon : public PArray<Point, 4> {
 
 // Intersect 2 polygons.  pairs (pa[2 * i], pa[2 * i + 1]) are resulting segments.
 Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2);  // If compiler error on this line, then
-//   it is likely that '#include <windows.h>' invoked '#include <wingdi.h>' which defined Polygon().
-//  If so, use '#define NOGDI' prior to '#include <windows.h>',
-//   or wrap '#include <windows.h>' with '#define Polygon Win32_Polygon' and '#undef Polygon'.
+//   it is likely that '#include <Windows.h>' invoked '#include <wingdi.h>' which defined Polygon().
+//  If so, use '#define NOGDI' prior to '#include <Windows.h>',
+//   or wrap '#include <Windows.h>' with '#define Polygon Win32_Polygon' and '#undef Polygon'.
 
 std::ostream& operator<<(std::ostream& os, const Polygon& poly);
 template <> HH_DECLARE_OSTREAM_EOL(Polygon);  // implemented by CArrayView<Point>

@@ -1,11 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/FileIO.h"
 
-#include <atomic>
-#include <cctype>   // std::isalnum()
-#include <cstring>  // std::memset()
-#include <fstream>  // std::ifstream, std::ofstream
-
 #include <fcntl.h>     // O_NOINHERIT, O_BINARY
 #include <sys/stat.h>  // struct stat, struct _stat, stat()
 
@@ -42,6 +37,11 @@
 #if defined(IO_USE_STDIO_FILEBUF)
 #include <ext/stdio_filebuf.h>  // __gnu_cxx::stdio_filebuf<char>
 #endif
+
+#include <atomic>
+#include <cctype>   // std::isalnum()
+#include <cstring>  // std::memset()
+#include <fstream>  // std::ifstream, std::ofstream
 
 #include "libHh/Locks.h"
 #include "libHh/RangeOp.h"  // contains()

@@ -1,7 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #ifndef MESH_PROCESSING_LIBHH_MY_LAPACK_H_
 #define MESH_PROCESSING_LIBHH_MY_LAPACK_H_
-
 #include "libHh/Hh.h"  // HH_REFERENCE_LIB()
 
 #if defined(HH_USE_LAPACK_INTEGER)  // Google

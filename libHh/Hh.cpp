@@ -1,5 +1,4 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-
 #include "libHh/Hh.h"
 
 #include <fcntl.h>     // O_BINARY, fcntl()
@@ -8,19 +7,6 @@
 #if defined(__MINGW32__)
 #include <malloc.h>  // __mingw_aligned_malloc()
 #endif
-
-#include <array>
-#include <cctype>  // std::isdigit()
-#include <cerrno>  // errno
-#include <chrono>
-#include <csignal>  // signal()
-#include <cstdarg>  // va_list
-#include <cstring>  // std::memcpy(), strlen(), std::memset(), std::strerror()
-#include <locale>   // std::use_facet<>, std::locale()
-#include <mutex>    // std::once_flag, std::call_once()
-#include <new>      // set_new_handler()
-#include <regex>
-#include <vector>
 
 #if defined(_WIN32)
 
@@ -43,6 +29,21 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 #endif
 
 #endif  // defined(_WIN32)
+
+#include <array>
+#include <cctype>  // std::isdigit()
+#include <cerrno>  // errno
+#include <chrono>
+#include <csignal>  // signal()
+#include <cstdarg>  // va_list
+#include <cstring>  // std::memcpy(), strlen(), std::memset(), std::strerror()
+#include <locale>   // std::use_facet<>, std::locale()
+#include <map>      // avoids creating a depencency on my Map class
+#include <mutex>    // std::once_flag, std::call_once()
+#include <new>      // set_new_handler()
+#include <regex>
+#include <unordered_map>  // avoids creating a depencency on my Map class
+#include <vector>
 
 // This has no associated *.cpp files.
 #include "libHh/StringOp.h"  // replace_all(), remove_at_beginning(), remove_at_end(), get_canonical_path(), to_lower()
@@ -79,9 +80,6 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 // A correct implementation would have to combine the Windows-based StackWalker with the debug symbols of gcc.
 #include "libHh/StackWalker.h"
 #endif  // !defined(HH_NO_STACKWALKER)
-
-#include <map>            // avoids creating a depencency on my Map class
-#include <unordered_map>  // avoids creating a depencency on my Map class
 
 namespace hh {
 
@@ -201,10 +199,6 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   HH_REFERENCE_LIB("user32.lib");  // MessageBoxA()
 #endif
   const unsigned int MSFT_CPP_EXCEPT = 0xE06d7363;  // c++ exception
-  // struct EXCEPTION_POINTERS {
-  //     PEXCEPTION_RECORD ExceptionRecord;
-  //     PCONTEXT ContextRecord;
-  // };
   unsigned ExceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
   if (0) SHOW("have", ExceptionCode);
   switch (ExceptionCode) {
@@ -238,70 +232,12 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       break;
     case MSFT_CPP_EXCEPT: {  // uncaught c++ exception
       EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
-      if (0) {
-        SHOW(er.ExceptionCode, er.ExceptionFlags, er.ExceptionAddress, er.NumberParameters);
-        SHOW(type_name<decltype(er.ExceptionInformation[0])>());  // unsigned int64
-        for_int(i, er.NumberParameters) SHOW(i, er.ExceptionInformation[i]);
-        SHOW(*reinterpret_cast<int*>(er.ExceptionInformation[1]));
-      }
-      showf("Uncaught c++ exception (see below).\n");
-      if (0) {
-        // Workaround (it may not be the right type of exception) but it seems to work.
-        // However, if it is the wrong type of exception, this crashes here before show_call_stack(),
-        //  so delay doing this until later below.
-        const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
-        showf(" %s\n", ex.what());
-      }
-#if 0
-      if (0) {  // this approach from gcc does not work under Windows
-        try {
-          throw;
-        } catch (const std::exception& ex) {
-          SHOW("caught", ex.what());
-        }
-#pragma warning(disable : 4571)  // catch (...) semantics changed since Visual C++ 7.1
-        catch (...) {
-          SHOW("unrecognized");
-        }
-      }
-      // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
-      // http://stackoverflow.com/questions/3523716
-      // The following good suggestions did not work; probably because RTTI is disabled.
-      // http://www.gamedev.net/page/resources/_/technical/general-programming/the-visual-c-exception-model-r2488
-      //   or http://members.gamedev.net/sicrane/articles/exception.html  -- nice but not x64?
-      // http://support.microsoft.com/kb/185294
-      // http://blogs.msdn.com/b/oldnewthing/archive/2010/07/30/10044061.aspx
-      // http://pastebin.com/c7CtisXp
-      // (http://www.threejacks.com/?q=node/177 Translating Hardware Exceptions to C++ Exceptions on Windows
-      //   no, this requires /EHa expensive model.)
-
-      if (0) {
-        auto info = ExceptionInfo;
-        std::type_info* baseType = nullptr;
-        static const std::type_info& stdInfo = typeid(std::exception);
-        LPBYTE pBaseObj = (LPBYTE)info->ExceptionRecord->ExceptionInformation[1];
-        _CatchableTypeArray* typeArray =
-            ((_ThrowInfo*)info->ExceptionRecord->ExceptionInformation[2])->pCatchableTypeArray;
-        SHOW(typeArray);
-        if (typeArray) {  // nullptr because RTTI is disabled?
-          for_int(i, typeArray->nCatchableTypes) {
-            _CatchableType& type = *(typeArray->arrayOfCatchableTypes[i]);
-            std::type_info* tinfo = (std::type_info*)type.pType;
-            if (i == 0) baseType = tinfo;
-
-            if (*tinfo == stdInfo) {
-              std::exception* pException = (std::exception*)(pBaseObj + type.thisDisplacement.mdisp);
-              std::cerr << "Type: " << baseType->name() << "\n";
-              std::cerr << "Message: " << pException->what() << "\n";
-              break;
-            }
-          }
-        }
-      }
-#endif
+      // If this crashes, it may be best to delay until after show_call_stack() below.
+      const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
+      std::cerr << "Uncaught c++ exception: " << ex.what() << "\n";
       break;
     }
-    default: showf("Unrecognized exception code %u (0x%X)\n", ExceptionCode, ExceptionCode);
+    default: SHOW("Unrecognized exception code", ExceptionCode);
   }
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
   report_possible_win32_error();
@@ -323,20 +259,6 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       // This also fails on win32 (32-bit).
       show_call_stack();
     }
-    if (0) {
-      // Adapted from http://www.codeproject.com/Articles/11132/Walking-the-callstack
-      // This does not seem to work at all.
-      // StackWalker sw; sw.ShowCallstack(GetCurrentThread(), ExceptionInfo->ContextRecord);
-    }
-  }
-  if (1 && ExceptionCode == MSFT_CPP_EXCEPT) {
-    // Note: moved here from above because it will terminate abruptly if the exception
-    //  is not of the type std::runtime_error.
-    // I tried to enclose this in "try { }" and "__try { }" blocks but these do not support
-    //  memory access violations (using compilation option -EHsc) since these are asynchronous exceptions.
-    EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
-    const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
-    showf("C++ exception: %s\n", ex.what());
   }
   if (!k_debug) _exit(1);
   return EXCEPTION_CONTINUE_SEARCH;  // or EXCEPTION_EXECUTE_HANDLER, EXCEPTION_CONTINUE_EXECUTION
@@ -385,7 +307,7 @@ HH_NORETURN void my_abort_handler(int signal_num) {
 #else
   bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");
   if (want_abort) {
-    showf("Signaling true abort\n");
+    std::cerr << "Signaling true abort\n";
     signal(SIGABRT, SIG_IGN);
     abort();
   }
@@ -399,8 +321,7 @@ HH_NORETURN void my_signal_handler(int signal_num) {
   // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
   // Avoid any function that generates a system call (e.g., getcwd(), time()).
   // _exit(213);  // does not show up at all.
-  showf("my_signal_handler\n");
-  SHOW(signal_num);
+  SHOW("my_signal_handler", signal_num);
   if (0) {
     // http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
     // unfortunately, cygwin does not have backtrace/execinfo:  http://comments.gmane.org/gmane.os.cygwin/91196

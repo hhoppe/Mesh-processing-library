@@ -90,11 +90,6 @@ cxx_list_assembly_code ?= -FAs
 
 ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg,),)#  link-time code generation
 LDFLAGS += -link -nologo $(if $(rel:0=),-incremental:no -opt:ref -opt:icf,-debug) -dynamicbase:no $(ltcg)
-# ??
-# -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release
-# -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_staticlib
-# -libpath:$(MeshRoot)/lib/$(if $(x64:0=),x64,win32)/Release/opencv_x64_vc12_lib
-# -libpath:$(MeshRoot)/libNumeric/mkl_libs
 
 graphics_libs ?= user32.lib gdi32.lib
 # graphics_libs += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib shcore.lib advapi32.lib \

@@ -1,9 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Buffer.h"
 
-#include <cerrno>   // errno, EINTR, etc.
-#include <cstring>  // std::memcpy(), std::memmove()
-
 #include <fcntl.h>  // O_RDONLY
 
 #if defined(_WIN32)
@@ -18,6 +15,9 @@
 #if defined(_WIN32) && !defined(EWOULDBLOCK)  // undefined in __MINGW32__; was undefined until Visual Studio 2010
 #define EWOULDBLOCK EAGAIN
 #endif
+
+#include <cerrno>   // errno, EINTR, etc.
+#include <cstring>  // std::memcpy(), std::memmove()
 
 #include "libHh/NetworkOrder.h"
 #include "libHh/StringOp.h"

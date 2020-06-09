@@ -30,8 +30,7 @@ ifeq ($(include_make_dep),1)
   -include $(make_dep)
 endif
 
-lib:
-#	$(MAKE) -C $(MeshRoot)/libHh
+libs:
 # The separate "-C dir" commands are useful to follow symbolic links or relative paths (for pch under CONFIG=win).
 	$(MAKE) -C $(MeshRoot) -C libHh
 
@@ -69,7 +68,7 @@ deepclean: clean
 debug:
 	echo 'exe=$(exe) obj=$(obj) LDLIBS=$(LDLIBS) filter=$(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))'
 
-.PHONY: all depend lib progs test clean deepclean debug
+.PHONY: all depend libs progs test clean deepclean debug
 
 ifeq ($(CXX),cl)
   # local *.pdb file; different from the final one created under ./bin

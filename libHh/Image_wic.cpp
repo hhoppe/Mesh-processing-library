@@ -1,5 +1,4 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-
 #include "libHh/Image.h"  // HH_IMAGE_HAVE_WIC
 
 #if !defined(HH_IMAGE_HAVE_WIC)
@@ -8,8 +7,6 @@ extern void Image_wic_dummy_function_to_avoid_linkage_warnings();
 void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 
 #else
-
-#include <cctype>  // std::isalnum(), std::toupper()
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // required by WIC; must appear before other headers.
@@ -23,10 +20,12 @@ HH_REFERENCE_LIB("oleaut32.lib");  // for VARIANT; odd: required from command-li
 HH_REFERENCE_LIB("shlwapi.lib");   // for SHCreateMemStream()
 // HH_REFERENCE_LIB("windowscodecs.lib");  // for IID_IWICBitmapSource
 
+#include <cctype>  // std::isalnum(), std::toupper()
+
+// #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
 #include "libHh/StringOp.h"
 #include "libHh/windows_com.h"  // com_ptr<>
-// #include "libHh/ConsoleProgress.h"
 using namespace hh;
 
 // JPEG EXIF:

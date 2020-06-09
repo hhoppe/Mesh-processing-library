@@ -1,19 +1,19 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Timer.h"
 
-#include <array>
-#include <cctype>  // std::isdigit()
-#include <mutex>   // std::once_flag, std::call_once()
-#include <thread>  // std::thread::hardware_concurrency()
-#include <unordered_map>
-#include <vector>
-
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // GetThreadTimes(), GetProcessTimes(), FILETIME
 #else
 #include <time.h>  // clock_gettime()
 #endif             // defined(_WIN32)
+
+#include <array>
+#include <cctype>  // std::isdigit()
+#include <mutex>   // std::once_flag, std::call_once()
+#include <thread>  // std::thread::hardware_concurrency()
+#include <unordered_map>
+#include <vector>
 
 #if !defined(HH_NO_TIMERS_CLASS)
 #include "libHh/Stat.h"

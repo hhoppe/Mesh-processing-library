@@ -1,12 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
+#if defined(_WIN32)
+#include <io.h>  // close(), dup2()
+#endif
+
 #include <atomic>
 #include <cmath>
 #include <functional>  // function<>
 #include <thread>
-#if defined(_WIN32)
-#include <io.h>  // close(), dup2()
-#endif
 
 #include "HW.h"
 #include "VideoViewer/GradientDomainLoop.h"

@@ -1,26 +1,26 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "HW.h"
 
-#include <cstring>  // std::memset()
-#include <mutex>    // std::once_flag, std::call_once()
-
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
 #include <ShellScalingApi.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
 #include <commdlg.h>   // GetOpenFileNameW()
 #include <shellapi.h>  // DragAcceptFiles()
 
-#include "libHh/Args.h"
-#include "libHh/Array.h"
-#include "libHh/Image.h"
-#include "libHh/MathOp.h"
-#include "libHh/StringOp.h"
-
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("glu32.lib");
 HH_REFERENCE_LIB("winmm.lib");     // timeEndPeriod, etc.
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
 HH_REFERENCE_LIB("shcore.lib");    // SetProcessDpiAwareness()
+
+#include <cstring>  // std::memset()
+#include <mutex>    // std::once_flag, std::call_once()
+
+#include "libHh/Args.h"
+#include "libHh/Array.h"
+#include "libHh/Image.h"
+#include "libHh/MathOp.h"
+#include "libHh/StringOp.h"
 
 // Notes:
 //  http://msdn.microsoft.com/en-us/library/windows/desktop/ms633575%28v=vs.85%29.aspx Using Window Classes

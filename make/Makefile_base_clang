@@ -63,7 +63,7 @@ endif
 # clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc
 # clang -fsanitize=memory -fno-omit-frame-pointer -g -O2 umr.cc
 #
-# See ./test/native/test_sanitize_address.cpp and ~/git/hh_src/test/native/Makefile
+# See ~/git/hh_src/test/native/test_sanitize_address.cpp and ~/git/hh_src/test/native/Makefile
 # At this time, MemorySanitizer supports Linux x86_64 only.
 #
 # Address sanitizer:

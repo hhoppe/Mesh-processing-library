@@ -150,6 +150,10 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 
+ifneq ($(call file_exists,$(MeshRoot)/../hh_src/Makefile_local_defs),)
+  include $(MeshRoot)/../hh_src/Makefile_local_defs
+endif
+
 *.exe:
 	@echo 'Avoid *.exe "$@" as makefile target; use "$(@:%.exe=%)" instead.' && exit 1
 
@@ -204,27 +208,16 @@ else
   HW = HWX
 endif
 
-my_libs ?= Hh $(if ,lbfgsf)
+my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.
 LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
-LDFLAGS +=
 
-ifeq ($(win_base),1)  # CONFIG = win or w32
-  # For win, I use HH_REFERENCE_LIB() to request libraries.
-  # see -libpath in ./Makefile_config_win
-else ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
-  loc_libs = $(strip $(if $(have_recipes),recipes,) $(if ,lbfgsf))
-  sys_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_lapack),lapack,))
-  LDLIBS += $(foreach n,$(loc_libs),$(MeshRoot)/lib/$(CONFIG)/lib$(n).a) $(foreach n,$(sys_libs),-l$(n))
-else  # CONFIG = mingw, clang, etc.
-  loc_libs = $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_recipes),recipes,) \
-    $(if ,lbfgsf) \
-    $(if $(have_lapack),lapack blas f2c,))
-    # $(if $(have_lapack),lapack F77 I77 BLAS,)
-  LDFLAGS += $(if $(loc_libs),$(if $(extlib:lib=),-L,-libpath:)$(MeshRoot)/lib/$(CONFIG))
-  LDLIBS += $(foreach n,$(loc_libs),$(if $(extlib:lib=),-l$(n),lib$(n).lib))
+ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
+  system_libs += $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_lapack),lapack,))
+  LDLIBS += $(foreach n,$(system_libs),-l$(n))
 endif
 
-LDLIBS += $(last_libs)#  optionally defined in ,/Makefile_config_$(CONFIG)
+LDLIBS += $(other_libs)#  optionally defined externally
+LDLIBS += $(last_libs)#  optionally defined in ./Makefile_config_$(CONFIG)
 
 ifneq ($(have_lapack),)
   # <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/

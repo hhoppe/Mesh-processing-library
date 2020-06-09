@@ -15,8 +15,6 @@
 
 #if defined(HH_VIDEO_HAVE_MF)
 
-#include <mutex>  // std::once_flag, std::call_once()
-
 // #undef _WIN32_WINNT
 // #define _WIN32_WINNT _WIN32_WINNT_WIN7
 #define WIN32_LEAN_AND_MEAN
@@ -37,6 +35,8 @@ HH_REFERENCE_LIB("mfuuid.lib");       // MF_MT_DEFAULT_STRIDE
 #if defined(TRY_WIC)
 #include <wincodec.h>  // WIC
 #endif
+
+#include <mutex>  // std::once_flag, std::call_once()
 
 #include "libHh/windows_com.h"  // com_ptr<>
 

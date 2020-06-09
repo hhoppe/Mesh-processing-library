@@ -100,7 +100,7 @@ TAGS tags:       # build source code index file used by Emacs
 debug:
 # Note that we can also use $(info any message) to print a message during the parsing of the Makefile.
 	@echo '$PATH=$(PATH)'
-#	make -p -f /dev/null   # print out all the predefined variables and implicit rules 
+#	make -p -f /dev/null   # print out all the predefined variables and implicit rules
 #	echo $(COMPILE.c)
 #	$(COMPILE.c) --version
 #	$(COMPILE.c) '-?'

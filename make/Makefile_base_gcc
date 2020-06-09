@@ -36,7 +36,7 @@ ifeq ($(use_pch),1)
 endif
 
 ## Precompiled headers
-# https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html 
+# https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
 # This also works with -include. So yet another way to use precompiled headers, good for projects not designed
 # with precompiled header files in mind, is to simply take most of the header files used by a project, include
 # them from another header file, precompile that header file, and -include the precompiled header. If the

@@ -12,7 +12,7 @@ ifneq ($(call file_exists,c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v
   # PATH="/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin:$PATH" which g++
 else ifneq ($(call file_exists,c:/Program Files/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin),)
   $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-7.1.0-posix-seh-rt_v5-rev0/mingw64/bin)
-else 
+else
   $(error Did not find mingw-w64 directory.)
 endif
 

@@ -2,8 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_HH_H_
 #define MESH_PROCESSING_LIBHH_HH_H_
 
-//       1         2         3         4         5         6         7         8         9        10        11
-//345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+//       1         2         3         4         5         6         7         8
+//       9        10        11
+// 45678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 
 // *** Pre-header
 
@@ -268,7 +269,7 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
-                                 // Added "0" for clang use in constexpr
+// Added "0" for clang use in constexpr
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
 // The next two became necessary for VC12 optimization of Vec::operator[] in GradientDomainLoop.cpp
 #define ASSERTXX(...) (void(0))

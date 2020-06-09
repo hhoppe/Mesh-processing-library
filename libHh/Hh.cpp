@@ -2,6 +2,13 @@
 
 #include "libHh/Hh.h"
 
+#include <fcntl.h>     // O_BINARY, fcntl()
+#include <sys/stat.h>  // struct stat and fstat()
+
+#if defined(__MINGW32__)
+#include <malloc.h>  // __mingw_aligned_malloc()
+#endif
+
 #include <array>
 #include <cctype>  // std::isdigit()
 #include <cerrno>  // errno
@@ -14,13 +21,6 @@
 #include <new>      // set_new_handler()
 #include <regex>
 #include <vector>
-
-#include <fcntl.h>     // O_BINARY, fcntl()
-#include <sys/stat.h>  // struct stat and fstat()
-
-#if defined(__MINGW32__)
-#include <malloc.h>  // __mingw_aligned_malloc()
-#endif
 
 #if defined(_WIN32)
 
@@ -857,18 +857,21 @@ class Warnings {
   void flush_internal() {
     if (_map.empty()) return;
     struct string_less {  // lexicographic comparison; deterministic, unlike pointer comparison
-      bool operator()(const char* s1, const char* s2) const { return strcmp(s1, s2) < 0; }
+      bool operator()(const void* s1, const void* s2) const {
+        return strcmp(static_cast<const char*>(s1),
+                      static_cast<const char*>(s2)) < 0;
+      }
     };
-    std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
+    std::map<const void*, int, string_less> sorted_map(_map.begin(), _map.end());
     showdf("Summary of warnings:\n");
     for (auto& kv : sorted_map) {
-      const char* s = kv.first;
+      const char* s = static_cast<const char*>(kv.first);
       int n = kv.second;
       showdf(" %5d '%s'\n", n, s);
     }
     _map.clear();
   }
-  std::unordered_map<const char*, int> _map;  // warning char* -> number of occurrences
+  std::unordered_map<const void*, int> _map;  // warning char* -> number of occurrences; void* for google3
 };
 
 }  // namespace

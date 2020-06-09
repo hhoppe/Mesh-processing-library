@@ -98,16 +98,16 @@ template <typename R, typename = enable_if_range_t<R>> R standardize_rms(R&& ran
   hh::Stat S { #S, false }  // no print
 
 // static Stat
-#define HH_SSTAT(S, v)                              \
-  do {                                              \
-    static hh::Stat& S = *new Stat(#S, true, true); \
-    S.enter(v);                                     \
+#define HH_SSTAT(S, v)                                  \
+  do {                                                  \
+    static hh::Stat& S = *new hh::Stat(#S, true, true); \
+    S.enter(v);                                         \
   } while (false)
-#define HH_SSTAT_RMS(S, v)                          \
-  do {                                              \
-    static hh::Stat& S = *new Stat(#S, true, true); \
-    S.set_rms();                                    \
-    S.enter(v);                                     \
+#define HH_SSTAT_RMS(S, v)                              \
+  do {                                                  \
+    static hh::Stat& S = *new hh::Stat(#S, true, true); \
+    S.set_rms();                                        \
+    S.enter(v);                                         \
   } while (false)
 
 // range Stat

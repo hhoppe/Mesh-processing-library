@@ -192,7 +192,7 @@ void do_createobject(Args& args) {
       matv[y][x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       float ang = xf * TAU;
-      mesh.set_point(v, Point(cos(ang), sin(ang), yf * (TAU / 2)));
+      mesh.set_point(v, Point(std::cos(ang), std::sin(ang), yf * (TAU / 2)));
       UV uv(xf * 2.f, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
@@ -211,7 +211,7 @@ void do_createobject(Args& args) {
       float ang = xf * TAU;
       float r = lerp(0.396313f, +0.249999f, yf);
       float z = lerp(0.436485f, -0.480285f, yf);
-      mesh.set_point(v, Point(r * cos(ang), r * sin(ang), z));
+      mesh.set_point(v, Point(r * std::cos(ang), r * std::sin(ang), z));
       UV uv(lerp(0.013743f, 0.982733f, xf), lerp(0.005718f, 0.993877f, yf));
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
@@ -222,7 +222,7 @@ void do_createobject(Args& args) {
       Vertex v = mesh.create_vertex();
       matv[y][x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
-      mesh.set_point(v, Point(xf, yf, sin(xf * TAU * 3.f) * .05f));
+      mesh.set_point(v, Point(xf, yf, std::sin(xf * TAU * 3.f) * .05f));
       UV uv(xf, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
@@ -241,9 +241,9 @@ void do_createobject(Args& args) {
       Vertex v = mesh.create_vertex();
       matv[y][x] = v;
       float ang_major = x / (nx - 1.f) * TAU, ang_minor = y / (ny - 1.f) * TAU;
-      float rx_minor = .7f + cos(ang_major) * .2f, ry_minor = rx_minor;
-      float x_minor = rx_minor * cos(ang_minor), y_minor = ry_minor * sin(ang_minor);
-      float xc = (rx_major + x_minor) * cos(ang_major), yc = (ry_major + x_minor) * sin(ang_major);
+      float rx_minor = .7f + std::cos(ang_major) * .2f, ry_minor = rx_minor;
+      float x_minor = rx_minor * std::cos(ang_minor), y_minor = ry_minor * std::sin(ang_minor);
+      float xc = (rx_major + x_minor) * std::cos(ang_major), yc = (ry_major + x_minor) * std::sin(ang_major);
       float zc = y_minor;
       mesh.set_point(v, Point(xc, yc, zc));
     }
@@ -708,7 +708,7 @@ void record_cuspv() {
 void do_angle(Args& args) {
   float angle = args.get_float();
   assertx(angle >= 0.f && angle <= 180.f);
-  cosangle = cos(to_rad(angle)), record_sharpe();
+  cosangle = std::cos(to_rad(angle)), record_sharpe();
 }
 
 void do_cosangle(Args& args) {
@@ -1111,7 +1111,7 @@ void do_trisubdiv() {
     } else {  // interior: quartic bspline interior
       // (if dart (nesharp == 1), treat as interior vertex)
       int n = ne;
-      float a = 5.f / 8.f - square((3.f + 2.f * cos(TAU / n)) / 8.f);
+      float a = 5.f / 8.f - square((3.f + 2.f * std::cos(TAU / n)) / 8.f);
       float centerw = n * (1.f - a) / a;
       h += centerw * Homogeneous(mesh.point(v));
     }
@@ -1730,7 +1730,7 @@ void do_splitvalence(Args& args) {
     Array<Vertex> va;
     for (Vertex vv : mesh.ccw_vertices(v)) va.push(vv);
     Vector vec(0.f, 0.f, 0.f);
-    for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * sin(float(i) / va.num() * TAU);
+    for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
     Vertex vs1 = va[0];
     Vertex vs2 = va[va.num() / 2];
     Vertex vn = mesh.split_vertex(v, vs1, vs2, 0);
@@ -2517,7 +2517,7 @@ void do_info() {
         Warning("Edge dihedral undefined next to degenerate face");
         angcos = 1.f;
       }
-      float ang = acos(angcos);
+      float ang = std::acos(angcos);
       Sdiha.enter(ang);
     }
   }
@@ -3374,7 +3374,7 @@ void do_procedure(Args& args) {
         mv[i][j] = v;
         float anglat = float(i) / (nlat - 1.f) * (TAU / 2);
         float anglon = float(j) / (nlon - 0.f) * TAU;
-        Point p(cos(anglon) * sin(anglat), sin(anglon) * sin(anglat), cos(anglat));
+        Point p(std::cos(anglon) * std::sin(anglat), std::sin(anglon) * std::sin(anglat), std::cos(anglat));
         mesh.set_point(v, p);
         UV uv(float(j) / (nlon - 1.f), float(i) / (nlat - 1.f));
         mesh.update_string(v, "uv", csform_vec(str, uv));

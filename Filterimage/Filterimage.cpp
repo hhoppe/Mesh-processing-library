@@ -333,7 +333,7 @@ void do_info() {
     SHOW(stat.rms());
     const float maxv = 255.f;
     const float rmsv = stat.rms();
-    float psnr = 20.f * log10(maxv / rmsv);
+    float psnr = 20.f * std::log10(maxv / rmsv);
     SHOW(psnr);
   }
 }
@@ -1414,7 +1414,7 @@ void do_featureoffsets() {
         } else {  // arctan
           float f = float(i);
           // 128 + 70 * ArcTan[f * 1]
-          f = 128.f + 70.f * atan2(f, 1.f);
+          f = 128.f + 70.f * std::atan2(f, 1.f);
           i = int(f + .5f);
         }
         assertw(i >= 0 && i <= 255);
@@ -1422,7 +1422,7 @@ void do_featureoffsets() {
       }
     } else {  // scalar arctan
       float f = float(mag(mvec[yx]));
-      f = 0.f + 150.f * atan2(f, 1.f);
+      f = 0.f + 150.f * std::atan2(f, 1.f);
       int i = int(f + .5f);
       assertx(i >= 0 && i <= 255);
       image[yx][0] = uint8_t(i);
@@ -1626,7 +1626,7 @@ void do_genpattern(Args& args) {
           break;
         case '2': {  // 20-degree diagonal
           const float ang = 20.f * (TAU / 360);
-          auto vrot = V(cos(ang), sin(ang));
+          auto vrot = V(std::cos(ang), std::sin(ang));
           r = float(dot(V(y, x), vrot) / dot(convert<float>(image.dims() - 1), vrot));
           break;
         }
@@ -1688,7 +1688,7 @@ void do_homogenize(Args& args) {
     for_int(k, n) for_int(x, image.dim(c)) {
       table[c][k][x] = (k == 0 ? 1.0
                                : (k == 1 && bilinear) ? (x + 0.5 - image.dim(c) / 2.)
-                                                      : cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
+                                                      : std::cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
     }
   }
   if (image.zsize() < 4) {  // version without alpha-channel cropping
@@ -2218,10 +2218,10 @@ void do_poisson() {
           for (const auto& yx : range(image.dims() - 1)) {
             matconf[yx] = (square(matp[yx + V(0, 1)][0] - matp[yx][0] + matp[yx][1] - matp[yx + V(1, 0)][1]) +
                            square(matp[yx + V(0, 1)][1] - matp[yx][1] - matp[yx][0] + matp[yx + V(1, 0)][0]));
-            a += log(matconf[yx]);
+            a += std::log(matconf[yx]);
             stat.enter(matconf[yx]);
           }
-          float gmean = exp(float(a) / ny / nx);
+          float gmean = std::exp(float(a) / ny / nx);
           SHOW(gmean);
           gmean = stat.avg();  // !
           for (const auto& yx : range(image.dims() - 1)) {
@@ -2421,11 +2421,11 @@ void do_procedure(Args& args) {
       Point pcenter(0.5f, 0.5f, 0.f);
       Vector vr = p - pcenter;
       float r = mag(vr);
-      float a = atan2(vr[1], vr[0]);
+      float a = std::atan2(vr[1], vr[0]);
       // Point np = (p - pcenter) * Frame::rotation(2, to_rad(20.f)) + pcenter;
       a += to_rad(20.f - abs(r - 0.5f) * 20.f);
       r = (.6f + smooth_step(r / .707f) * .5f) * r;
-      Point np = pcenter + r * Vector(cos(a), sin(a), 0.f);
+      Point np = pcenter + r * Vector(std::cos(a), std::sin(a), 0.f);
       mesh.set_point(v, np);
       mesh.update_string(v, "Opos", csform_vec(str, p));
       Vector vrgb = Vector(image[yx][0], image[yx][1], image[yx][2]) * (1.f / 255.f);
@@ -2887,14 +2887,14 @@ void do_compare(Args& args) {
   for_int(z, image.zsize()) {
     double err2 = ar_err2[z];
     double mssim = ar_mssim[z];
-    const double psnr = 20. * log10(255. / (my_sqrt(err2) + 1e-10));
+    const double psnr = 20. * std::log10(255. / (my_sqrt(err2) + 1e-10));
     showf("channel%d: RMSE[0,255]=%f PSNR=%f MSSIM[0,1]=%f\n", z, my_sqrt(err2), psnr, mssim);
     allerr2 += err2;
     allmssim += mssim;
   }
   allerr2 /= image.zsize();
   allmssim /= image.zsize();
-  const double psnr = 20. * log10(255. / (my_sqrt(allerr2) + 1e-10));
+  const double psnr = 20. * std::log10(255. / (my_sqrt(allerr2) + 1e-10));
   showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
   nooutput = true;
 }

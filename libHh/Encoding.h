@@ -84,7 +84,7 @@ template <typename T> class Encoding : noncopyable {
     //  thus for map.num() == 1 and tot_prob == 24586.f, prob / tot_prop == 0.99999994f results in nonzero entropy.
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) sum += prob * (-log2(prob / tot_prob));
+    for (float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return static_cast<float>(sum);
   }
   // Return normalized entropy (entropy() / tot_prob).
@@ -93,7 +93,7 @@ template <typename T> class Encoding : noncopyable {
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) sum += prob * (-log2(prob / tot_prob));
+    for (float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return static_cast<float>(sum / tot_prob);
   }
   // include probability table
@@ -185,8 +185,8 @@ class DeltaEncoding {
   static int val_bits(float v) {
     float a = abs(v);
     if (a < 1.f) return 0;
-    // int vbits = static_cast<int>(ceil(log2(a)));  // old method
-    int vbits = static_cast<int>(floor(log2(a + 1.0001f)));  // new method 970609
+    // int vbits = static_cast<int>(ceil(std::log2(a)));  // old method
+    int vbits = static_cast<int>(floor(std::log2(a + 1.0001f)));  // new method 970609
     // v : 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
     // vb: -  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4  4  4
     return vbits;

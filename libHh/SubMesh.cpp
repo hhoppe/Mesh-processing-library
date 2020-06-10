@@ -117,7 +117,9 @@ void Mvcvh::compose(const Mvcvh& mconv) {
 // weight of center vertex in position vertex mask, Loop scheme
 // It is the weight that appears in the subdivision matrix,
 // not the weight used when splitting + averaging.
-static inline float subdiv_a(int n) { return n == 6 ? .625f : 3.f / 8.f + square((3.f + 2.f * cos(TAU / n)) / 8.f); }
+static inline float subdiv_a(int n) {
+  return n == 6 ? .625f : 3.f / 8.f + square((3.f + 2.f * std::cos(TAU / n)) / 8.f);
+}
 // 3, 0.4375   4, 0.515625   5, 0.579534   6, 0.625   7, 0.656826   1000, 0.765619
 
 SubMesh::SubMesh(GMesh& pmesh) : _omesh(pmesh) {

@@ -2249,7 +2249,7 @@ void wrap_draw(bool show) {
     if (button_active) {
       Vec2<float> yxf;
       assertx(HB::get_pointer(yxf));
-      float dval = exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
+      float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
       int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
       *sliders[i].val *= dval;
       hw.redraw_later();
@@ -3253,7 +3253,7 @@ void pm_wrap_draw(bool show) {
           const float factor = 5.f;
           float val = 1.1f - (yxf[0]) * 1.2f;
           val = max(val, 0.f);
-          pm_lod_level = (exp(factor * val) - 1.0f) / (exp(factor) - 1.0f);
+          pm_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
           break;
         }
         default: assertnever("");
@@ -3643,7 +3643,7 @@ void sr_wrap_draw(bool show) {
       if (button_active) {
         Vec2<float> yxf;
         assertx(HB::get_pointer(yxf));
-        float dval = exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
+        float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
         int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
         *sliders[i].val *= dval;
         hw.redraw_later();
@@ -4324,7 +4324,7 @@ void psc_wrap_draw(bool show) {
           const float factor = 5.f;
           float val = 1.1f - (yxf[0]) * 1.2f;
           val = max(val, 0.f);
-          psc_lod_level = (exp(factor * val) - 1.0f) / (exp(factor) - 1.0f);
+          psc_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
           break;
         }
         default: assertnever("");
@@ -4811,8 +4811,8 @@ Cylinder::Cylinder(int depth) {
   float th = .5f * dth;
   int i;
   for (i = 0; i < nv; i++) {
-    verts[2 * i] = cos(th);
-    verts[2 * i + 1] = sin(th);
+    verts[2 * i] = std::cos(th);
+    verts[2 * i + 1] = std::sin(th);
     th += dth;
   }
   int ii = 0;

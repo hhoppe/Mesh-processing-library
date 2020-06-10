@@ -64,16 +64,17 @@
     <ClCompile Include="A3dStream.cpp" />
     <ClCompile Include="Args.cpp" />
     <ClCompile Include="Audio.cpp" />
-    <ClCompile Include="BufferedA3dStream.cpp" />
     <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="BufferedA3dStream.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="Filter.cpp" />
     <ClCompile Include="FrameIO.cpp" />
-    <ClCompile Include="Geometry.cpp" />
-    <ClCompile Include="GeomOp.cpp" />
     <ClCompile Include="GMesh.cpp" />
+    <ClCompile Include="GeomOp.cpp" />
+    <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="HashFloat.cpp" />
     <ClCompile Include="Hh.cpp" />
+    <ClCompile Include="Hh_init.cpp" />
     <ClCompile Include="Image.cpp">
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
     </ClCompile>
@@ -87,22 +88,22 @@
     <ClCompile Include="Mklib.cpp" />
     <ClCompile Include="PMesh.cpp" />
     <ClCompile Include="Polygon.cpp" />
-    <ClCompile Include="precompiled_libHh.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-      <PrecompiledHeaderFile>precompiled_libHh.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
-    </ClCompile>
     <ClCompile Include="Principal.cpp" />
     <ClCompile Include="Principal_em.cpp" />
     <ClCompile Include="Random.cpp" />
-    <ClCompile Include="Spatial.cpp" />
     <ClCompile Include="SRMesh.cpp" />
+    <ClCompile Include="Spatial.cpp" />
     <ClCompile Include="StackWalker.cpp" />
     <ClCompile Include="Stat.cpp" />
     <ClCompile Include="SubMesh.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Video.cpp">
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+    </ClCompile>
+    <ClCompile Include="precompiled_libHh.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <PrecompiledHeaderFile>precompiled_libHh.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)precompiled_libHh.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -111,13 +112,14 @@
     <ClInclude Include="Args.h" />
     <ClInclude Include="Array.h" />
     <ClInclude Include="ArrayOp.h" />
+    <ClInclude Include="AtomicOperate.h" />
     <ClInclude Include="Audio.h" />
-    <ClInclude Include="BufferedA3dStream.h" />
     <ClInclude Include="Bbox.h" />
     <ClInclude Include="BinaryIO.h" />
     <ClInclude Include="BinarySearch.h" />
     <ClInclude Include="BoundingSphere.h" />
     <ClInclude Include="Buffer.h" />
+    <ClInclude Include="BufferedA3dStream.h" />
     <ClInclude Include="Color_ramp.h" />
     <ClInclude Include="Combination.h" />
     <ClInclude Include="ConsoleProgress.h" />
@@ -129,9 +131,9 @@
     <ClInclude Include="Filter.h" />
     <ClInclude Include="Flags.h" />
     <ClInclude Include="FrameIO.h" />
-    <ClInclude Include="Geometry.h" />
-    <ClInclude Include="GeomOp.h" />
     <ClInclude Include="GMesh.h" />
+    <ClInclude Include="GeomOp.h" />
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Graph.h" />
     <ClInclude Include="GraphOp.h" />
     <ClInclude Include="Grid.h" />
@@ -141,14 +143,15 @@
     <ClInclude Include="HashPoint.h" />
     <ClInclude Include="HashTuple.h" />
     <ClInclude Include="Hh.h" />
-    <ClInclude Include="Histogram.h" />
+    <ClInclude Include="Hh_init.h" />
     <ClInclude Include="HiddenLineRemoval.h" />
+    <ClInclude Include="Histogram.h" />
     <ClInclude Include="Homogeneous.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Kdtree.h" />
+    <ClInclude Include="LLS.h" />
     <ClInclude Include="LinearFunc.h" />
     <ClInclude Include="LinearRegression.h" />
-    <ClInclude Include="LLS.h" />
     <ClInclude Include="Locks.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Materials.h" />
@@ -161,36 +164,36 @@
     <ClInclude Include="Mk3d.h" />
     <ClInclude Include="Mklib.h" />
     <ClInclude Include="Multigrid.h" />
-    <ClInclude Include="my_lapack.h" />
     <ClInclude Include="NetworkOrder.h" />
     <ClInclude Include="NonlinearOptimization.h" />
+    <ClInclude Include="PArray.h" />
+    <ClInclude Include="PMesh.h" />
     <ClInclude Include="Parallel.h" />
     <ClInclude Include="ParallelCoords.h" />
-    <ClInclude Include="PArray.h" />
     <ClInclude Include="Pixel.h" />
-    <ClInclude Include="PMesh.h" />
     <ClInclude Include="Polygon.h" />
     <ClInclude Include="PolygonSpatial.h" />
     <ClInclude Include="Pool.h" />
     <ClInclude Include="Postscript.h" />
     <ClInclude Include="Pqueue.h" />
-    <ClInclude Include="precompiled_libHh.h" />
     <ClInclude Include="Primes.h" />
     <ClInclude Include="Principal.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Random.h" />
+    <ClInclude Include="Range.h" />
     <ClInclude Include="RangeOp.h" />
+    <ClInclude Include="SGrid.h" />
+    <ClInclude Include="SRMesh.h" />
+    <ClInclude Include="STree.h" />
     <ClInclude Include="Sac.h" />
     <ClInclude Include="Set.h" />
-    <ClInclude Include="SGrid.h" />
     <ClInclude Include="SimpleTimer.h" />
+    <ClInclude Include="SingularValueDecomposition.h" />
     <ClInclude Include="Spatial.h" />
-    <ClInclude Include="SRMesh.h" />
     <ClInclude Include="Stack.h" />
     <ClInclude Include="StackWalker.h" />
     <ClInclude Include="Stat.h" />
-    <ClInclude Include="STree.h" />
     <ClInclude Include="StridedArrayView.h" />
     <ClInclude Include="StringOp.h" />
     <ClInclude Include="SubMesh.h" />
@@ -204,6 +207,8 @@
     <ClInclude Include="VectorF.h" />
     <ClInclude Include="VertexCache.h" />
     <ClInclude Include="Video.h" />
+    <ClInclude Include="my_lapack.h" />
+    <ClInclude Include="precompiled_libHh.h" />
     <ClInclude Include="windows_com.h" />
   </ItemGroup>
   <ItemGroup>

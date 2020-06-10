@@ -1193,7 +1193,7 @@ void verify_loop_parameters() {
 void do_loadpj(Args& args) {
   HH_TIMER(_loadpj);
   string filename = args.get_filename();
-  unique_ptr<RFile> pfi = make_unique<RFile>(filename);
+  auto pfi = make_unique<RFile>(filename);
   if ((*pfi)().peek() == 31) {  // decompress a gzip-compressed pjo/pjr file
     pfi = make_unique<RFile>("gzip -d -c <" + filename + " |");
   }
@@ -1860,7 +1860,7 @@ void process_gen(Args& args) {
     float tperiod = 20.f;   // was 20.f then 60.f
     parallel_for_each(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
-        float v = cos((yx[1] / speriod - f / tperiod) * TAU) * .5f + .5f;
+        float v = std::cos((yx[1] / speriod - f / tperiod) * TAU) * .5f + .5f;
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
@@ -1894,7 +1894,9 @@ void process_gen(Args& args) {
       if (name == "checker3")
         fill(video[f], Pixel::gray(uint8_t(abs(float(f) / video.nframes() - .5) * 2.f * 255.f + .5f)));
       for (const auto& yx : range(video.spatial_dims())) {
-        auto p = (convert<float>(yx) + V(sin(f / tperiod * TAU), cos(f / tperiod * TAU)) * motion_amplitude) / speriod;
+        auto p =
+            (convert<float>(yx) + V(std::sin(f / tperiod * TAU), std::cos(f / tperiod * TAU)) * motion_amplitude) /
+            speriod;
         auto pf = p - floor(p);
         auto pi = convert<int>(floor(p));
         float r = float(mag(pf - V(.5f, .5f)));
@@ -1931,8 +1933,8 @@ void process_gen(Args& args) {
       for (const auto& yx : range(video.spatial_dims())) {
         float t = float(yx[0]);
         if (name == "slits4")
-          t = (yx[0] - video.ysize() / 2.f) * cos(f / rotperiod * TAU) -
-              (yx[1] - video.xsize() / 2.f) * sin(f / rotperiod * TAU);
+          t = (yx[0] - video.ysize() / 2.f) * std::cos(f / rotperiod * TAU) -
+              (yx[1] - video.xsize() / 2.f) * std::sin(f / rotperiod * TAU);
         float v = t * nsperiods / video.ysize() + f / tperiod;
         Pixel& pix = video[f][yx];
         pix = Pixel::black();
@@ -2094,7 +2096,7 @@ void do_procedure(Args& args) {
           video.spatial_dims(),
           [&](const Vec2<int>& yx) {
             float d = float(mag(convert<float>(yx) - convert<float>(video.spatial_dims()) * .5f));
-            float vdrift = sin(f / period * TAU) * magnitude * smooth_step(clamp(1.f - d / sradius, 0.f, 1.f));
+            float vdrift = std::sin(f / period * TAU) * magnitude * smooth_step(clamp(1.f - d / sradius, 0.f, 1.f));
             for_int(z, nz) video[f][yx][z] = clamp_to_uint8(int(video[f][yx][z] + vdrift + .5f));
           },
           20);

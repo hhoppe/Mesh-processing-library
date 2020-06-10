@@ -90,7 +90,7 @@ void project_point(GMesh& meshs, const Point& ps, const A3dColor& pscol, const V
       float g_MK = 0.f;
       if (0) g_MK = 75.f * (1.0f / bbdiag);
       d2 = abs(d2);
-      float val = g_K * log(d2 + 1.f);
+      float val = g_K * std::log(d2 + 1.f);
       HH_SSTAT(Serrval, val);
       // showdf("val %f first cut %f d2 %f\n", val, bbdiag / 100, d2 * 100);
       // if (val < 1.f)
@@ -129,8 +129,8 @@ void print_it(const string& s, const PStats& pstats) {
     {
       float d = vg;
       float peak = g_diag0;
-      float psnr = 20.f * log10(peak / d);
-      float npsnr = 20.f * log10(2.f / my_sqrt(pstats.Snd2.avg()));
+      float psnr = 20.f * std::log10(peak / d);
+      float npsnr = 20.f * std::log10(2.f / my_sqrt(pstats.Snd2.avg()));
       showdf("PSNR=%.1f  nPSNR=%.1f\n", psnr, npsnr);
     }
   }

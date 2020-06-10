@@ -25,7 +25,7 @@ static const bool g_g3d_demofly = getenv_bool("G3D_DEMOFLY");
 
 static void recompute_sharpe(GMesh& mesh, const Set<Edge>& eredo) {
   assertx(anglethresh >= 0);
-  float vcos = cos(to_rad(anglethresh));
+  float vcos = std::cos(to_rad(anglethresh));
   for (Edge e : eredo) {
     if (mesh.is_boundary(e)) continue;
     bool is_sharp = edge_dihedral_angle_cos(mesh, e) < vcos;
@@ -55,7 +55,7 @@ void Applyq(const Frame& tq) {
   Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : to_Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
     Frame f = Frame::identity();
-    for_int(c, 3) f[c][c] = exp(tq.p()[c] / ddistance);
+    for_int(c, 3) f[c][c] = std::exp(tq.p()[c] / ddistance);
     g_obs[cob].tm() = Frame::translation(-vtran) * f * Frame::translation(vtran) * g_obs[cob].t();
     return;
   }
@@ -203,7 +203,7 @@ static void handle_sliders(bool show, float yq) {
     if (val == &lod_level)
       *val = 1.1f - (selected.yx[0]) * 1.2f;
     else
-      *val *= exp(-yq);
+      *val *= std::exp(-yq);
     if (val == &anglethresh) {
       if (anglethresh <= 0) anglethresh = 45;
       if (anglethresh > 180) anglethresh = 180;
@@ -323,7 +323,7 @@ static void act_button2(const Vec2<float>& pyxq) {
 
 static void act_button3(const Vec2<float>& yxq) {
   if (selected.shift) {  // zoom
-    float a = exp(-yxq[0]);
+    float a = std::exp(-yxq[0]);
     zoom *= a;
     if (object_mode && cob != obview) {
       float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
@@ -431,7 +431,7 @@ static void fly_g3d_demofly(Vec2<float>& yxf) {
       if (0) SHOW(point_desired);
     }
     if (seeking_point) {
-      float yaw_angle_desired = atan2(point_desired[1] - frame.p()[1], point_desired[0] - frame.p()[0]);
+      float yaw_angle_desired = std::atan2(point_desired[1] - frame.p()[1], point_desired[0] - frame.p()[0]);
       float yaw_angle_diff = yaw_angle_desired - ang[0];
       if (yaw_angle_diff < -TAU / 2) yaw_angle_diff += TAU;
       if (yaw_angle_diff > +TAU / 2) yaw_angle_diff -= TAU;
@@ -582,7 +582,7 @@ static void act_auto() {
       t = 0.f;
     }
     float th = -tt * (TAU / 21.f);
-    act_button1(V(abs(sin(th)) * ch, abs(cos(th)) * ch));
+    act_button1(V(abs(std::sin(th)) * ch, abs(std::cos(th)) * ch));
   } else {
     static const bool g3d_rev_auto = getenv_bool("G3D_REV_AUTO");
     if (g3d_rev_auto) ch = -ch;
@@ -620,9 +620,9 @@ static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& fram
   {
     Point p;
     Vector v1, v2, v3;
-    p = Point(cos(ang) * r1, sin(ang) * r2, 0.f);
+    p = Point(std::cos(ang) * r1, std::sin(ang) * r2, 0.f);
     if (0) {
-      v1 = ok_normalized(Vector(-sin(ang) * r2, cos(ang) * r1, 0.f));
+      v1 = ok_normalized(Vector(-std::sin(ang) * r2, std::cos(ang) * r1, 0.f));
       v2 = ok_normalized(Point(0.f, 0.f, 0.f) - p);
     } else {
       v1 = Vector(1.f, 0.f, 0.f);
@@ -634,7 +634,7 @@ static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& fram
   if (object_up_y)
     frame_ob_up = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   frame = frame_ob_up * frame_ellipse;
-  float flevel = .5f + .5f * sin(ang);
+  float flevel = .5f + .5f * std::sin(ang);
   get_lod(flevel, nlod, obi, finterp);
 }
 
@@ -838,7 +838,7 @@ static void show_globe() {
   dummy_init(yxo);
   for_int(i, n) {
     float a = i * TAU / n;
-    Vec2<float> yx = .5f + V(sin(a), cos(a)) * .5f * k_globe_radius;
+    Vec2<float> yx = .5f + V(std::sin(a), std::cos(a)) * .5f * k_globe_radius;
     if (i & 0x1) HB::draw_segment(yxo, yx);
     yxo = yx;
   }

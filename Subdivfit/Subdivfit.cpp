@@ -160,7 +160,7 @@ void wf_frame() {
 void subdivide(SubMesh& smesh, bool triang) {
   HH_STIMER(___submesh);
   smesh.mask_parameters(s222, weighta);
-  smesh.subdivide_n(nsubdiv, !nolimit, cos(to_rad(selective)), triang);
+  smesh.subdivide_n(nsubdiv, !nolimit, std::cos(to_rad(selective)), triang);
 }
 
 // translate Vertex from one Mesh to another Mesh
@@ -1043,7 +1043,7 @@ EResult try_esha(Edge eg, double& edrss) {
   if (gmesh.is_boundary(eg)) return R_illegal;
   bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   float vcos = edge_dihedral_angle_cos(gmesh, eg);
-  static const float k_cos30d = cos(to_rad(30.f));
+  static const float k_cos30d = std::cos(to_rad(30.f));
   if (!is_sharp && vcos > k_cos30d) return R_sharp;  // quick culling
   // if is_sharp then always consider smoothing it
   HH_STIMER(__try_esha);

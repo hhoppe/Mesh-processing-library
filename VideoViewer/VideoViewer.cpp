@@ -498,7 +498,7 @@ unique_ptr<Object> object_reading_video(string filename) {
   try {
     if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
     bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi");
-    unique_ptr<RVideo> prvideo = make_unique<RVideo>(filename, use_nv12);  // may throw
+    auto prvideo = make_unique<RVideo>(filename, use_nv12);  // may throw
     Vec3<int> dims = prvideo->dims();                                      // should allocate extra padframes?
     if (use_nv12 && !is_zero(dims.tail<2>() % 2)) {
       use_nv12 = false;
@@ -2004,8 +2004,8 @@ bool DerivedHW::key_press(string skey) {
             assertnever("");
           }
           const int new_cur_frame = g_framenum - trimbeg;
-          unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob._filename, "_trim"));
+          auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob._filename, "_trim"));
           newob->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
@@ -2045,8 +2045,8 @@ bool DerivedHW::key_press(string skey) {
           const int new_cur_frame =
               (g_framenum < ob._framein ? int(g_framenum)
                                         : g_framenum >= ob._frameou1 ? g_framenum - ncut : ob._framein);
-          unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob._filename, "_cut"));
+          auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob._filename, "_cut"));
           newob->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
@@ -2071,12 +2071,12 @@ bool DerivedHW::key_press(string skey) {
           } else {
             assertnever("");
           }
-          unique_ptr<Object> newob1 = make_unique<Object>(ob, std::move(nvideo1), std::move(nvideo1_nv12),
-                                                          append_to_filename(ob._filename, "_split1"));
+          auto newob1 = make_unique<Object>(ob, std::move(nvideo1), std::move(nvideo1_nv12),
+                                            append_to_filename(ob._filename, "_split1"));
           newob1->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob1));
-          unique_ptr<Object> newob2 = make_unique<Object>(ob, std::move(nvideo2), std::move(nvideo2_nv12),
-                                                          append_to_filename(ob._filename, "_split2"));
+          auto newob2 = make_unique<Object>(ob, std::move(nvideo2), std::move(nvideo2_nv12),
+                                            append_to_filename(ob._filename, "_split2"));
           newob2->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob2));
           set_video_frame(g_cob, 0.);  // select the first frame (of the second video)
@@ -2112,8 +2112,8 @@ bool DerivedHW::key_press(string skey) {
           }
           const int new_cur_frame = ob1.nframes() + g_framenum;
           const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
-          unique_ptr<Object> newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob1._filename, "_merged"));
+          auto newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob1._filename, "_merged"));
           newob->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
@@ -2166,8 +2166,8 @@ bool DerivedHW::key_press(string skey) {
           }
           const int new_cur_frame = g_framenum;
           const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
-          unique_ptr<Object> newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob1._filename, "_diff"));
+          auto newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob1._filename, "_diff"));
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           message("Here is the difference video.", 6.);
@@ -2192,8 +2192,8 @@ bool DerivedHW::key_press(string skey) {
             assertnever("");
           }
           const int new_cur_frame = g_framenum;
-          unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob._filename, "_mirror"));
+          auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob._filename, "_mirror"));
           newob->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
@@ -2230,8 +2230,8 @@ bool DerivedHW::key_press(string skey) {
               nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[of]);
             });
           }
-          unique_ptr<Object> newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
-                                                         append_to_filename(ob._filename, "_rate"));
+          auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
+                                           append_to_filename(ob._filename, "_rate"));
           newob->_video.attrib().audio.clear();  // TODO
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
@@ -3183,7 +3183,7 @@ void render_image() {
         const float motion_radius = 5.f;
         const double angular_velocity = .1;
         const float ang = float(my_mod(double(s_frame_num) * angular_velocity, D_TAU));
-        glUniform2fv(h_checker_offset, 1, (motion_radius * V(cos(ang), sin(ang))).data());
+        glUniform2fv(h_checker_offset, 1, (motion_radius * V(std::cos(ang), std::sin(ang))).data());
         glUniform4fv(h_through_color, 1,
                      (g_checker ? V(-1.f, 0.f, 0.f, 0.f).data() : Vector4(g_through_color).data()));
       }
@@ -3371,9 +3371,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
           assertx(i >= 0 && i < g_sliders.num());
           float dval;
           if (!g_selected.control_was_pressed) {  // pointer position determines value
-            dval = exp((yx[0] - g_selected.yx_last[0]) / float(-g_win_dims[0]) * .90f);  // was .60f
+            dval = std::exp((yx[0] - g_selected.yx_last[0]) / float(-g_win_dims[0]) * .90f);  // was .60f
           } else {  // pointer position determines rate of change
-            dval = exp((yx[0] - g_selected.yx_pressed[0]) / float(-g_win_dims[0]) * .02f);
+            dval = std::exp((yx[0] - g_selected.yx_pressed[0]) / float(-g_win_dims[0]) * .02f);
           }
           if (alt_pressed) dval = pow(dval, .2f);
           *g_sliders[i].pval *= dval;
@@ -3385,9 +3385,9 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         if (!g_selected.shift_was_pressed) {  // zoom
           float fac_zoom;
           if (!g_selected.control_was_pressed) {  // pointer position determines value
-            fac_zoom = exp((yx[0] - g_selected.yx_last[0]) * .005f);
+            fac_zoom = std::exp((yx[0] - g_selected.yx_last[0]) * .005f);
           } else {  // pointer position determines rate of change
-            fac_zoom = exp((yx[0] - g_selected.yx_pressed[0]) * .005f * .02f);
+            fac_zoom = std::exp((yx[0] - g_selected.yx_pressed[0]) * .005f * .02f);
           }
           if (alt_pressed) fac_zoom = pow(fac_zoom, .2f);
           perform_zoom_at_cursor(fac_zoom, g_selected.yx_pressed);
@@ -4266,14 +4266,14 @@ void do_zonal(Args& args) {
     const float scale = 25.f / float(mean(image.dims()));
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = Pixel::gray(
-          uint8_t((cos(square((ysize - 1 - yx[0]) * scale) + square(yx[1] * scale)) * .499f + .5f) * 256.f));
+          uint8_t((std::cos(square((ysize - 1 - yx[0]) * scale) + square(yx[1] * scale)) * .499f + .5f) * 256.f));
     });
   } else {
     // from resample/supersampling/zonal.cpp
     const float scale = TAU / float(sum(image.dims()));
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] =
-          Pixel::gray(uint8_t((cos((square(ysize - 1 - yx[0]) + square(yx[1])) * scale) * .45f + .5f) * 256.f));
+        Pixel::gray(uint8_t((std::cos((square(ysize - 1 - yx[0]) + square(yx[1])) * scale) * .45f + .5f) * 256.f));
     });
   }
   {

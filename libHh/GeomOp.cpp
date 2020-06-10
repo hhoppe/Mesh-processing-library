@@ -101,7 +101,7 @@ float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, 
   float fsin = mag(vcross);
   if (dot(vcross, p2 - p1) < 0.f) fsin = -fsin;
   if (!fsin && !fcos) return -10.f;
-  return atan2(fsin, fcos);
+  return std::atan2(fsin, fcos);
 }
 
 float solid_angle(const Point& p, CArrayView<Point> pa) {
@@ -135,7 +135,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
       if (!assertw(v2.normalize())) continue;
       float vcos = dot(v1, v2);
       float vsin = dot(cross(v1, v2), top);
-      float ang = atan2(vsin, vcos);
+      float ang = std::atan2(vsin, vcos);
       sum_ang += ang;
     }
   } else {
@@ -167,7 +167,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
         if (!assertw(v2.normalize())) return 0.f;
         float vcos = dot(v1, v2);
         float vsin = dot(cross(v1, v2), topp);
-        double ang = atan2(vsin, vcos);
+        double ang = std::atan2(vsin, vcos);
         // Ambiguity between -TAU / 2 and +TAU / 2 does matter here!
         if (0) SHOW(ang, ang + D_TAU / 2);
         if (ang < -D_TAU / 2 + 1e-6) {
@@ -203,7 +203,7 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3) {
 
 namespace {
 
-template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : atan2(y, x); }
+template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2(y, x); }
 
 }  // namespace
 
@@ -228,7 +228,7 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : atan2(y, x
 Vec3<float> frame_to_euler_angles(const Frame& f) {
   Vec3<float> ang;
   ang[0] = my_atan2(f[0][1], f[0][0]);
-  ang[1] = my_atan2(-f[0][2], hypot(f[0][0], f[0][1]));
+  ang[1] = my_atan2(-f[0][2], std::hypot(f[0][0], f[0][1]));
   ang[2] = my_atan2(f[1][2] / sqrt(square(f[1][0]) + square(f[1][1]) + square(f[1][2])),
                     f[2][2] / sqrt(square(f[2][0]) + square(f[2][1]) + square(f[2][2])));
   return ang;
@@ -244,7 +244,7 @@ void euler_angles_to_frame(const Vec3<float>& ang, Frame& f) {
 void frame_aim_at(Frame& f, const Vector& v) {
   Vec3<float> ang;
   ang[0] = my_atan2(v[1], v[0]);
-  ang[1] = my_atan2(-v[2], hypot(v[0], v[1]));
+  ang[1] = my_atan2(-v[2], std::hypot(v[0], v[1]));
   ang[2] = 0.f;
   euler_angles_to_frame(ang, f);
 }

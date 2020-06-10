@@ -2,14 +2,13 @@
 #ifndef MESH_PROCESSING_LIBHH_HH_H_
 #define MESH_PROCESSING_LIBHH_HH_H_
 
-//       1         2         3         4         5         6         7         8
-//       9        10        11
+//       1         2         3         4         5         6         7         8         9        10        11
 // 45678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 
 // *** Pre-header
 
-// These macro definitions have no effect if #include "libHh/Hh.h" is after #include <>,
-//  so instead one should adjust project/makefile build settings.
+// These macro definitions have no effect if #include "libHh/Hh.h" is after #include <system_files>,
+// so instead one should adjust project/makefile build settings.
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS  // do not suggest use of *_s() secure function calls
@@ -49,12 +48,17 @@
 // If already defined, undefine them.
 #undef min
 #undef max
-#undef NOMINMAX     // (defined as "1" in __MINGW32__ but "" in vt_basetypes.h)
-#define NOMINMAX 1  // prevent min() and max() macros in <windows.h>
+#define NOMINMAX  // prevent min() and max() macros in <windows.h>
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG) || (!defined(_MSC_VER) && !defined(NDEBUG))
 #define HH_DEBUG
+#endif
+
+// *** System headers.
+
+#if !defined(_WIN32)
+#include <unistd.h>  // read(), write(), _exit(), etc.
 #endif
 
 // *** Standard headers
@@ -69,16 +73,6 @@
 #include <stdexcept>  // runtime_error (already included except with __clang__)
 #include <string>     // string
 #include <utility>    // swap(), forward(), move(), declval(), pair<>, index_sequence<>
-
-// *** Non-standard headers
-
-#if !defined(_WIN32)
-#include <unistd.h>  // read(), write(), _exit(), etc.
-#endif
-
-// *** Variadic macros
-
-#include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
 // *** Language portability
 
@@ -148,17 +142,6 @@
 #define HH_ID(x) HH_CAT(_hh_id_, x)  // private identifier in a macro definition
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
-// *** Check for identifier conflicts
-
-#if 0  // temporarily test that my identifiers do not conflict with those in std namespace
-#if defined(__clang__)
-#pragma clang diagnostic ignored "-Wheader-hygiene"
-#endif
-using namespace std;
-namespace hh { }
-using namespace hh;
-#endif
-
 // *** Syntactic sugar
 
 #define for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
@@ -167,43 +150,54 @@ using namespace hh;
 #define for_intL(i, start, stop) for_T(int, i, start, stop)
 #define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
 
+// *** Variadic macros
+
+#include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
+
+// *** Check for identifier conflicts
+
+#if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
+#if defined(__clang__)
+#pragma clang diagnostic ignored "-Wheader-hygiene"
+#endif
+using namespace std;
+namespace hh { }
+using namespace hh;
+#endif
+
+// *** Ensure hh::details::hh_init() is called
+
+#if !defined(HH_NO_HH_INIT)
+#include "libHh/Hh_init.h"
+#endif
+
 // *** Begin namespace
 
 namespace hh {
 
-// *** Import some frequently used standard C++ names into the hh namespace.
+// *** Import some standard C++ names into the hh namespace
 
-using std::abs;  // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5) == 1 is scary).
+// Common types:
 using std::make_unique;
-using std::max;
-using std::min;
-using std::size_t;  // (it seems to be already defined)
+using std::size_t;  // (it may be already defined)
 using std::string;  // almost a new fundamental type using std::uint8_t;
 using std::unique_ptr;
-// Use the following templated functions; else defined only for double (performance overhead).
-using std::acos;
-using std::asin;
-using std::atan;
-using std::atan2;
+// Math functions that are overloaded for vectors:
+using std::abs;  // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5) == 1 is too scary).
 using std::ceil;
-using std::cos;
-using std::exp;
 using std::floor;
-using std::hypot;
-using std::log;
-using std::log10;
-using std::log2;
+using std::max;  // avoid fmax()
+using std::min;  // avoid fmin()
+// Other common math functions:
 using std::pow;
-using std::sin;
 using std::sqrt;
-using std::tan;
-// Possibly use fmod, exp2.
-// Avoid fabs, fmin, fmax.
+
+// *** Useful type abbreviations
 
 using uchar = unsigned char;
 using ushort = unsigned short;
 
-// *** Forward declarations of details.
+// *** Forward declaration of implementation details
 
 namespace details {
 template <typename T> struct identity { using type = T; };
@@ -211,21 +205,37 @@ template <typename T> struct sum_type;
 template <typename T> class Range;
 }  // namespace details
 
-// *** Utility classes.
+// *** Generalized casting
 
-// Note: if I get compilation errors about redefinition of dummy_use(), etc. on MS VS,
-//  it may be due to current directory being different from that in precompiled header due to symbol links,
-//  or to an explicit MeshRoot environment variable that does not match the current tree.
+// For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
+template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
 
-// Avoid warnings of unused variables
-template <typename... A> void dummy_use(const A&...) {}
-
-// Avoid warnings of uninitialized variables
-template <typename T> void dummy_init(T& v) { v = T(); }
-template <typename T, typename... A> void dummy_init(T& v, A&... a) {
-  v = T{};
-  dummy_init(a...);
+// For use in downcasting to a derived class.
+template <typename Dest, typename Src> Dest down_cast(Src* f) {
+  static_assert(std::is_base_of<Src, typename std::remove_pointer<Dest>::type>::value, "");
+  return static_cast<Dest>(f);
 }
+
+// Conversion with bounds-checking in Debug configuration.
+template <typename Target, typename Source> constexpr Target narrow_cast(Source v);
+
+// Bounds-safe conversion, checked even in Release configuration.
+template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v);
+
+// Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
+template <typename Target, typename Source> constexpr Target possible_cast(Source v) { return static_cast<Target>(v); }
+
+// Cast a temporary as an lvalue; only use when safe.
+template <typename T> T& as_lvalue(T&& e) { return e; }
+
+// *** Constants
+
+constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
+constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+// #undef PI  // instead, use TAU / 2
+
+// *** Utility classes
 
 // Derive from this class to disable copy constructor and copy assignment.
 struct noncopyable;
@@ -241,7 +251,8 @@ constexpr bool k_debug = true;  // convenience variable to avoid introducing "#i
 constexpr bool k_debug = false;  // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
 #endif
 
-extern int g_unoptimized_zero;  // always zero, but the compiler does not know; used to disable optimizations.
+// Value used to disable optimizations; it is always zero but unknown to the compiler.
+extern int g_unoptimized_zero;
 
 #define HH_FL " in line " HH_STR2(__LINE__) " of file " __FILE__
 
@@ -271,18 +282,31 @@ extern int g_unoptimized_zero;  // always zero, but the compiler does not know; 
 #else
 // Added "0" for clang use in constexpr
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
-// The next two became necessary for VC12 optimization of Vec::operator[] in GradientDomainLoop.cpp
 #define ASSERTXX(...) (void(0))
 #define HH_CHECK_BOUNDS(i, n) (void(0))
 #endif  // defined(HH_DEBUG)
 
 // *** Output functions
 
-// showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
-// os << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
-// SHOW(x, y, x*y);
-// SHOW_PRECISE(point + vector);  // show with greater precision
-// SHOWL;  // show current file and line
+#if 0
+{
+  showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
+  std::cerr << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
+  SHOW(x, y, x * y);
+  SHOW_PRECISE(point + vector);  // show value with greater precision
+  SHOWL;                         // show current filename and line number
+}
+#endif
+
+// With one expression, show "expr = value" on stderr and return expr; may require parentheses: SHOW((ntimes<3>(1))).
+// With multiple expressions, show on stderr a sequence of "expr=value" on a single line.
+#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+
+// Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
+#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+
+// Show current file and line number.
+#define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
 
 // Write formatted string to std::cerr.
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...);
@@ -293,7 +317,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...);
 // Write formatted string (with g_comment_prefix_string == "# ") to std::cout only if it is a file.
 HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...);
 
-// C-string prefix for formatted output in showdf() and showff(); default is "# ".
+// C-string prefix for formatted std::cout output in showdf() and showff(); default is "# ".
 extern const char* g_comment_prefix_string;
 
 // Override "char*" output to detect nullptr in C-string.
@@ -326,24 +350,61 @@ template <typename T> constexpr bool has_ostream_eol() {
   std::ostream& operator<<(std::ostream& os, const __VA_ARGS__& c) { return os << hh::stream_range<decltype(c)>(c); } \
   HH_EAT_SEMICOLON
 
-// With single expression, show "expr = value" and return expr (may require parentheses as in "SHOW((ntimes<3>(1)))".
-// With multiple expressions, show a sequence of "expr=value" on a single line.
-#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+// *** Inline definitions
 
-// Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
-#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+// Avoid warnings of unused variables
+template <typename... A> void dummy_use(const A&...) {}
+// Note: if I get compilation errors about redefinition of dummy_use(), etc. on MS VS,
+// it may be due to current directory being different from that in precompiled header due to symbol links,
+// or to an explicit MeshRoot environment variable that does not match the current tree.
 
-// Show current file and line number.
-#define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
+// Avoid warnings of uninitialized variables
+template <typename T> void dummy_init(T& v) { v = T(); }
+template <typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}, dummy_init(a...); }
 
-// *** Constants
+// Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
+template <typename T> void my_zero(T& e);
 
-constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
-constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see http://tauday.com/
-constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
-// #undef PI  // instead, use TAU / 2
+// Returns T{-1} or T{+1} based on sign of expression.
+template <typename T> constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
 
-// *** Hh.cpp
+// Returns { T{-1}, T{0}, T{+1} } based on sign of expression.
+template <typename T> constexpr T signz(const T& e) { return e > T{0} ? T{1} : e < T{0} ? T{-1} : T{0}; }
+
+// Returns a value times itself.
+template <typename T> constexpr T square(const T& e) { return e * e; }
+
+// Returns v clamped to the range [a, b].
+template <typename T> constexpr T clamp(const T& v, const T& a, const T& b);
+
+// Like clamp() but slightly less efficient; however works on values like Vector4.
+template <typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
+
+// Linearly interpolate between two values (f == 1.f returns v1; f == 0.f returns v2).
+inline constexpr float interp(float v1, float v2, float f = 0.5f);
+
+// Linearly interpolate between two values (f == 1. returns v1; f == 0. returns v2).
+inline constexpr double interp(double v1, double v2, double f = 0.5);
+
+// Returns v clamped to range [0, 255].
+inline uint8_t clamp_to_uint8(int v);
+
+// Returns j%3 (where j is in [0, 5]).
+inline int mod3(int j);
+
+// Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
+template <typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v * fac + .5f) / fac; }
+
+// Higher-precision type to represent the sum of a set of elements.
+template <typename T> using sum_type_t = typename details::sum_type<T>::type;
+
+// Range of integers as in Python range(stop):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+template <typename T> details::Range<T> range(T stop) { return details::Range<T>(stop); }
+
+// Range of integers as in Python range(start, stop):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
+template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
+
+// *** Functions defined in Hh.cpp
 
 // Register a function to be called by hh_clean_up(); used by timers, statistics, and warnings.
 void hh_at_clean_up(void (*function)());
@@ -449,91 +510,17 @@ string get_header_info();
 // On Windows, replace the command-line argv with a new one that contains UTF-8 encoded strings; else do nothing.
 void ensure_utf8_encoding(int& argc, const char**& argv);
 
-// *** Inlines
+// Show any Win32 error if on _WIN32.
+void show_possible_win32_error();
 
-// Returns T{-1} or T{+1} based on sign of expression.
-template <typename T> constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
-
-// Returns { T{-1}, T{0}, T{+1} } based on sign of expression.
-template <typename T> constexpr T signz(const T& e) { return e > T{0} ? T{1} : e < T{0} ? T{-1} : T{0}; }
-
-// Returns a value times itself.
-template <typename T> constexpr T square(const T& e) { return e * e; }
-
-// Returns v clamped to the range [a, b].
-template <typename T> constexpr T clamp(const T& v, const T& a, const T& b);
-
-// Like clamp() but slightly less efficient; however works on values like Vector4.
-template <typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
-
-// Linearly interpolate between two values (f == 1.f returns v1; f == 0.f returns v2).
-inline constexpr float interp(float v1, float v2, float f = 0.5f) {
-  return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f
-}
-
-// Linearly interpolate between two values (f == 1. returns v1; f == 0. returns v2).
-inline constexpr double interp(double v1, double v2, double f = 0.5) {
-  return f * v1 + (1. - f) * v2;  // or v2 + (v1 - v2) * f
-}
-
-// Returns v clamped to range [0, 255].
-inline uint8_t clamp_to_uint8(int v);
-
-// Returns j%3 (where j is in [0, 5]).
-inline int mod3(int j);
-
-// Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
-template <typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v * fac + .5f) / fac; }
-
-// Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
-template <typename T> void my_zero(T& e) {
-  // e = T{};  // bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4
-  static constexpr T k_dummy_zero_object{};
-  e = k_dummy_zero_object;
-}
-template <> inline void my_zero(float& e) { e = 0.f; }
-template <> inline void my_zero(double& e) { e = 0.; }
-
-// For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
-template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
-
-// For use in downcasting to a derived class.
-template <typename Dest, typename Src> Dest down_cast(Src* f) {
-  static_assert(std::is_base_of<Src, typename std::remove_pointer<Dest>::type>::value, "");
-  return static_cast<Dest>(f);
-}
-
-// Conversion with bounds-checking in Debug configuration.
-template <typename Target, typename Source> constexpr Target narrow_cast(Source v);
-
-// Bounds-safe conversion, checked even in Release configuration.
-template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v);
-
-// Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
-template <typename Target, typename Source> constexpr Target possible_cast(Source v) { return static_cast<Target>(v); }
-
-// Cast a temporary as an lvalue; only use when safe.
-template <typename T> T& as_lvalue(T&& e) { return e; }
-
-// Higher-precision type to represent the sum of a set of elements.
-template <typename T> using sum_type_t = typename details::sum_type<T>::type;
-
-// Range of integers as in Python range(stop):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
-template <typename T> details::Range<T> range(T stop) { return details::Range<T>(stop); }
-
-// Range of integers as in Python range(start, stop):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
-template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
+// Show the call stack if possible.
+void show_call_stack();
 
 //----------------------------------------------------------------------------
 
 // HH_REFERENCE_LIB("libHh.lib");
 
 namespace details {
-
-#if !defined(HH_NO_HH_INIT)
-int hh_init();
-static HH_UNUSED int dummy_init_hh = hh_init();
-#endif
 
 // Evaluates to false in boolean context for use in macro as:
 // "if (details::false_capture<int> i = stop) { HH_UNREACHABLE; } else".
@@ -668,6 +655,14 @@ template <typename T> class Range {
 
 }  // namespace details
 
+template <typename Target, typename Source> constexpr Target narrow_cast(Source v) {
+  return (ASSERTXX(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+}
+
+template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
+  return (assertx(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+}
+
 struct noncopyable {
  protected:
   noncopyable(const noncopyable&) = delete;
@@ -693,27 +688,24 @@ template <typename C> class stream_range {
   const C& _c;
 };
 
-template <typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
-
-template <typename T> string make_string(const T& e) {
-  std::ostringstream oss;
-  oss << e;
-  return assertx(oss).str();
+template <typename T> void my_zero(T& e) {
+  // e = T{};  // bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4
+  static constexpr T k_dummy_zero_object{};
+  e = k_dummy_zero_object;
 }
-
-template <typename T> T* aligned_new(size_t n) {
-  return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(n * sizeof(T), alignof(T)));
-}
-
-template <typename T> void aligned_delete(T* p) {
-  if (alignof(T) <= 8)
-    delete[] p;
-  else
-    aligned_free(p);
-}
+template <> inline void my_zero(float& e) { e = 0.f; }
+template <> inline void my_zero(double& e) { e = 0.; }
 
 template <typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
   return (ASSERTXX(!(v < a && v > b)), v < a ? a : v > b ? b : v);
+}
+
+inline constexpr float interp(float v1, float v2, float f) {
+  return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f
+}
+
+inline constexpr double interp(double v1, double v2, double f) {
+  return f * v1 + (1. - f) * v2;  // or v2 + (v1 - v2) * f
 }
 
 inline uint8_t clamp_to_uint8(int v) {
@@ -732,12 +724,23 @@ inline int mod3(int j) {
   return ar_mod3[j];
 }
 
-template <typename Target, typename Source> constexpr Target narrow_cast(Source v) {
-  return (ASSERTXX(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+template <typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
+
+template <typename T> string make_string(const T& e) {
+  std::ostringstream oss;
+  oss << e;
+  return assertx(oss).str();
 }
 
-template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
-  return (assertx(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+template <typename T> T* aligned_new(size_t n) {
+  return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(n * sizeof(T), alignof(T)));
+}
+
+template <typename T> void aligned_delete(T* p) {
+  if (alignof(T) <= 8)
+    delete[] p;
+  else
+    aligned_free(p);
 }
 
 }  // namespace hh

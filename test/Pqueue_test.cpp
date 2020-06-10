@@ -82,7 +82,7 @@ void test3() {
   const int n = 1000;
   HPqueue<int> pq;
   pq.reserve(n);
-  for_int(i, n) pq.enter_unsorted(i, 2.f + sin(i * 7.f));
+  for_int(i, n) pq.enter_unsorted(i, 2.f + std::sin(i * 7.f));
   pq.sort();
   float a = 0.f;
   while (!pq.empty()) {
@@ -95,7 +95,7 @@ void test3() {
 
 void test4() {
   Pqueue<int> pq;
-  for_int(i, 1000) pq.enter(i, 2.f + sin(float(i)));
+  for_int(i, 1000) pq.enter(i, 2.f + std::sin(float(i)));
   float a = 0.f;
   while (!pq.empty()) {
     float b = pq.min_priority();
@@ -146,11 +146,11 @@ void test7() {
     HPqueue<int> pq;
     pq.reserve(n);
     Array<float> arval1;
-    for_int(i, n) arval1.push(2.f + sin(i * 11.f + k * 1.2345f));
+    for_int(i, n) arval1.push(2.f + std::sin(i * 11.f + k * 1.2345f));
     Array<float> arval2;
-    for_int(i, n) arval2.push(2.f + sin(i * 13.f + k * 2.7419f));
+    for_int(i, n) arval2.push(2.f + std::sin(i * 13.f + k * 2.7419f));
     Array<float> arval3;
-    for_int(i, n) arval3.push(2.f + sin(i * 13.f + k * 3.1415f));
+    for_int(i, n) arval3.push(2.f + std::sin(i * 13.f + k * 3.1415f));
     for_int(i, n) pq.enter_unsorted(i, arval1[i]);
     pq.sort();
     for_int(i, n) assertx(pq.update(i, arval2[i]) == arval1[i]);

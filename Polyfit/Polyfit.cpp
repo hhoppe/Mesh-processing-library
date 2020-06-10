@@ -468,7 +468,7 @@ void create_poly(bool pclosed, int n) {
     // generate n points along ellipse at radius stdv
     for_int(i, n + 1) {
       float a = float(i) / n * TAU;
-      poly.push(Point(stdv * cos(a), stdv * sin(a), 0.f) * frame);
+      poly.push(Point(stdv * std::cos(a), stdv * std::sin(a), 0.f) * frame);
     }
   }
   initialize_poly(poly);

@@ -230,11 +230,11 @@ inline float angle_between_unit_vectors(const Vector& va, const Vector& vb) {
   ASSERTXX(is_unit(va) && is_unit(vb));
   float vdot = dot(va, vb);
   if (vdot > +.95f) {
-    return asin(mag(cross(va, vb)));
+    return std::asin(mag(cross(va, vb)));
   } else if (vdot < -.95f) {
-    return TAU / 2 - asin(mag(cross(va, vb)));
+    return TAU / 2 - std::asin(mag(cross(va, vb)));
   } else {
-    return acos(vdot);
+    return std::acos(vdot);
   }
 }
 

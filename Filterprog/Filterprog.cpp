@@ -691,7 +691,7 @@ void do_geomseq(Args& args) {
     int wnfaces = maxnfaces;
     const int fudge = 1;
     float ratio = float(wnfaces + fudge) / cnfaces;
-    int nsteps = int(log(ratio) / log(factornf) + .5f);
+    int nsteps = int(std::log(ratio) / std::log(factornf) + .5f);
     factornf = pow(ratio, 1.f / nsteps);
     showdf("rounded factor %.3f to %.3f for %d steps (%d to %d faces)\n", oldfactornf, factornf, nsteps, cnfaces,
            wnfaces);

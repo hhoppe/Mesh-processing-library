@@ -62,8 +62,8 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
       T cs, sn;
       {  // compute Jacobi rotation parameters: cos(theta), sin(theta)
         TT z = (b - a) / (TT{2} * c);
-        TT t = sign(z) / (abs(z) + hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero
-        cs = T{1} / static_cast<T>(hypot(TT{1}, t));
+        TT t = sign(z) / (abs(z) + std::hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero
+        cs = T{1} / static_cast<T>(std::hypot(TT{1}, t));
         sn = static_cast<T>(TT{cs} * t);
         // SHOW(z, t, cs, sn);
       }

@@ -112,7 +112,7 @@ template <typename T> T Random::get_gauss() {
       s = v1 * v1 + v2 * v2;
     } while (s >= T{1} || s == T{0});
     // The 2D point (v1, v2) lies inside the unit-radius circle.
-    T a = sqrt(T{-2} * log(s) / s);
+    T a = sqrt(T{-2} * std::log(s) / s);
     return a * v1;
     // (there is an additional random sample number: a*v2)
   }

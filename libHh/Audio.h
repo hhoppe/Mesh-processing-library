@@ -14,7 +14,7 @@
   audio.attrib().samplerate = samplerate;
   for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {
     float t = i / samplerate;  // time in seconds
-    audio(ch, i) = sin(t * freq * TAU);
+    audio(ch, i) = std::sin(t * freq * TAU);
   }
   audio.attrib().bitrate = 256 * 1000;  // 256Kbps
   audio.write_file("file.mp3");

@@ -15,8 +15,8 @@ double feval(ArrayView<double> ret_grad) {
     case 0: {  // f : R -> R :  x -> square(x - .5) + sin(x) * .1
       assertx(g_x.num() == 1);
       const double x = g_x[0];
-      f = square(x - .5) + sin(x) * .1;
-      ret_grad[0] = 2. * (x - .5) + cos(x) * .1;
+      f = square(x - .5) + std::sin(x) * .1;
+      ret_grad[0] = 2. * (x - .5) + std::cos(x) * .1;
       break;
     }
     case 1: {  // f : R^2 -> R :  (x, y) -> (x - .3) ^ 2 + (y - .4) ^ 2
@@ -30,8 +30,8 @@ double feval(ArrayView<double> ret_grad) {
     case 2: {  // f : R^3 -> R
       assertx(g_x.num() == 3);
       const double x = g_x[0], y = g_x[1], z = g_x[2];
-      f = square(x - .3) + square(y - .4) + square(z - .7) + sin(x) + cos(y);
-      ret_grad.assign(V(2. * (x - .3) + cos(x), 2. * (y - .4) - sin(y), 2. * (z - .7)));
+      f = square(x - .3) + square(y - .4) + square(z - .7) + std::sin(x) + std::cos(y);
+      ret_grad.assign(V(2. * (x - .3) + std::cos(x), 2. * (y - .4) - std::sin(y), 2. * (z - .7)));
       break;
     }
     default: assertnever("");

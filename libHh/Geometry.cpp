@@ -103,7 +103,7 @@ bool Frame::is_ident() const {
 Frame Frame::rotation(int axis, float angle) {
   assertx(axis >= 0 && axis < 3);
   Frame f = Frame::identity();
-  float c = cos(angle), s = sin(angle);
+  float c = std::cos(angle), s = std::sin(angle);
   if (abs(c) < 1e-6f) c = 0.f;
   if (abs(s) < 1e-6f) s = 0.f;
   switch (axis) {
@@ -148,7 +148,7 @@ Point slerp(const Point& pa, const Point& pb, float ba) {
   // AbarB is tangent at B in direction of A.
   Vector AbarB = va - vb * vdot;
   AbarB.normalize();
-  Vector v = vb * cos(ang) + AbarB * sin(ang);
+  Vector v = vb * std::cos(ang) + AbarB * std::sin(ang);
   ASSERTXX(is_unit(v));
   return to_Point(v);
 }

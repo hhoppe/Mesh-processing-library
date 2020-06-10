@@ -77,7 +77,7 @@ const LUfactorization g_periodic_omoms_lu_factorization =
 inline double sinc_abs(double x) {
   // Sinc[x]  where here I assume that x >= 0
   ASSERTX(x >= 0.);
-  return x < 1e-9 ? 1. : sin(x) / x;
+  return x < 1e-9 ? 1. : std::sin(x) / x;
 }
 
 // normalized sinc function
@@ -100,7 +100,7 @@ inline double lanczos(double x, double R) {  // a = W = 2 * R
 inline double hamming(double x, double R) {  // a = W = 2 * R
   // hamming[x_, a_] := dirichlet[x, a] (0.54 + 0.46 Cos[2 Pi x / a])
   x = abs(x);
-  return x < R ? sinc_norm_abs(x) * (0.54 + 0.46 * cos(((D_TAU / 2) / R) * x)) : 0.;
+  return x < R ? sinc_norm_abs(x) * (0.54 + 0.46 * std::cos(((D_TAU / 2) / R) * x)) : 0.;
 }
 
 struct Filter_impulse final : Filter {

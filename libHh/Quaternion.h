@@ -106,11 +106,11 @@ inline Quaternion::Quaternion(const Frame& f) {
 
 inline Quaternion::Quaternion(const Vector& axis, float angle) {
   float a = mag(axis);
-  a = a ? sin(angle * .5f) / a : 1.f;
+  a = a ? std::sin(angle * .5f) / a : 1.f;
   _c[0] = axis[0] * a;
   _c[1] = axis[1] * a;
   _c[2] = axis[2] * a;
-  _c[3] = cos(angle * .5f);
+  _c[3] = std::cos(angle * .5f);
 }
 
 inline Quaternion::Quaternion(const Vector& vf, const Vector& vt) {
@@ -124,7 +124,7 @@ inline Quaternion::Quaternion(const Vector& vf, const Vector& vt) {
 inline void Quaternion::angle_axis(float& angle, Vector& axis) const {
   ASSERTXX(is_unit());
   // angle = my_acos(_c[3]) * 2.f;
-  // float a = sin(angle * .5f);
+  // float a = std::sin(angle * .5f);
   // a = a ? 1.f / a : 1.f;
   // axis = Vector(_c[0] * a, _c[1] * a, _c[2] * a);
   float xyz = sqrt(square(_c[0]) + square(_c[1]) + square(_c[2]));
@@ -145,7 +145,7 @@ inline float Quaternion::angle() const {
 
 inline Vector Quaternion::axis() const {
   ASSERTXX(is_unit());
-  // float a = my_sqrt(1.f - _c[3] * _c[3]);  // == sin(angle() * .5)
+  // float a = my_sqrt(1.f - _c[3] * _c[3]);  // == std::sin(angle() * .5)
   // a = a ? 1.f / a : 1.f;
   float xyz = sqrt(square(_c[0]) + square(_c[1]) + square(_c[2]));
   float a = xyz ? 1.f / xyz : 1.f;
@@ -197,7 +197,7 @@ inline Quaternion pow(const Quaternion& qi, float e) {
     float wo = qi[3];
     float ango = my_acos(wo) * 2.f;
     float angn = ango * e;
-    float wn = cos(angn * .5f);
+    float wn = std::cos(angn * .5f);
     float xyzo = my_sqrt(1.f - wo * wo);
     float xyzn = my_sqrt(1.f - wn * wn);
     q[3] = wn;
@@ -210,7 +210,7 @@ inline Quaternion pow(const Quaternion& qi, float e) {
     float xyzo = sqrt(square(qi[0]) + square(qi[1]) + square(qi[2]));
     float ango = my_asin(xyzo) * 2.f;
     float angn = ango * e;
-    float xyzn = sin(angn * .5f);
+    float xyzn = std::sin(angn * .5f);
     float a = xyzo ? xyzn / xyzo : 1.f;
     for_int(i, 3) q[i] = qi[i] * a;
     q[3] = my_sqrt(1.f - (square(q[0]) + square(q[1]) + square(q[2])));
@@ -231,7 +231,7 @@ inline Vector log(const Quaternion& qi) {
   ASSERTXX(qi.is_unit());
   float scale = sqrt(square(qi[0]) + square(qi[1]) + square(qi[2]));
   assertx(scale || qi[3]);
-  float theta = atan2(scale, qi[3]);
+  float theta = std::atan2(scale, qi[3]);
   if (scale > 0) scale = theta / scale;
   for_int(i, 3) v[i] = qi[i] * scale;
   return v;
@@ -240,9 +240,9 @@ inline Vector log(const Quaternion& qi) {
 inline Quaternion exp(const Vector& v) {
   Quaternion q;
   float theta = sqrt(square(v[0]) + square(v[1]) + square(v[2]));
-  float scale = theta > 1e-6f ? sin(theta) / theta : 1;
+  float scale = theta > 1e-6f ? std::sin(theta) / theta : 1;
   for_int(i, 3) q[i] = v[i] * scale;
-  q[3] = cos(theta);
+  q[3] = std::cos(theta);
   return q;
 }
 
@@ -256,8 +256,8 @@ inline Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t) {
     q[1] = q0[0];
     q[2] = -q0[3];
     q[3] = q0[2];
-    sclp = sin((.5f - t) * (TAU / 2));
-    sclq = sin(t * (TAU / 2));
+    sclp = std::sin((.5f - t) * (TAU / 2));
+    sclq = std::sin(t * (TAU / 2));
     for_int(i, 3) q[i] = sclp * q0[i] + sclq * q[i];
   } else if (1 - cosom < 1e-6f) {  // ends very close
     sclp = 1.f - t;
@@ -265,9 +265,9 @@ inline Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t) {
     for_int(i, 4) q[i] = sclp * q0[i] + sclq * q1[i];
   } else {  // usual case
     omega = my_acos(cosom);
-    sinom = sin(omega);
-    sclp = sin((1.f - t) * omega) / sinom;
-    sclq = sin(t * omega) / sinom;
+    sinom = std::sin(omega);
+    sclp = std::sin((1.f - t) * omega) / sinom;
+    sclq = std::sin(t * omega) / sinom;
     for_int(i, 4) q[i] = sclp * q0[i] + sclq * q1[i];
   }
   q.normalize();  // just to make sure

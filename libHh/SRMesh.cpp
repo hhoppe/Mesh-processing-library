@@ -776,7 +776,7 @@ void SRMesh::compute_nspheres(CArrayView<SRVertexGeometry> vgeoms) {
     if (sr_no_normal_test) alpha = TAU / 4;
     if (alpha >= TAU / 4) alpha = TAU / 4;  // then backface cone is empty.
     HH_SSTAT(Salpha, alpha);
-    vspl->sin2alpha = square(sin(alpha));
+    vspl->sin2alpha = square(std::sin(alpha));
   }
 }
 

@@ -101,20 +101,20 @@ template <typename T> T frac(T f) {
 // Evaluate a Gaussian function.
 template <typename T> T gaussian(T x, T sdv = T{1}) {
   static_assert(std::is_floating_point<T>::value, "");
-  return exp(-square(x / sdv) / T{2}) / (sqrt(static_cast<T>(D_TAU)) * sdv);
+  return std::exp(-square(x / sdv) / T{2}) / (sqrt(static_cast<T>(D_TAU)) * sdv);
 }
 
 // Like std::acos() but prevent NaN's from appearing due to roundoff errors.
 // my_acos() is discouraged due to poor accuracy for small angles! see angle_between_unit_vectors().
 template <typename T> T my_acos(T a) {
-  return (a < T{-1} ? (assertw(a > T{-1.001f}), acos(T{-1}))
-                    : a > T{+1} ? (assertw(a < T{+1.001f}), acos(T{+1})) : acos(a));
+  return (a < T{-1} ? (assertw(a > T{-1.001f}), std::acos(T{-1}))
+          : a > T{+1} ? (assertw(a < T{+1.001f}), std::acos(T{+1})) : std::acos(a));
 }
 
 // Like std::asin() but prevent NaN's from appearing due to roundoff errors.
 template <typename T> T my_asin(T a) {
-  return (a < T{-1} ? (assertw(a > T{-1.001f}), asin(T{-1}))
-                    : a > T{+1} ? (assertw(a < T{+1.001f}), asin(T{+1})) : asin(a));
+  return (a < T{-1} ? (assertw(a > T{-1.001f}), std::asin(T{-1}))
+          : a > T{+1} ? (assertw(a < T{+1.001f}), std::asin(T{+1})) : std::asin(a));
 }
 
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.
@@ -126,7 +126,7 @@ template <typename T> T my_sqrt(T a) {
 // Is the integer i an even power of two?
 inline constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
 
-// Fast version of static_cast<int>(floor(log2(x))).
+// Fast version of static_cast<int>(floor(std::log2(x))).
 inline int int_floor_log2(unsigned x) {
   int a = 0;
   while (x >>= 1) a++;

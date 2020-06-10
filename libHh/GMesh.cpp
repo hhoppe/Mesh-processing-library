@@ -663,8 +663,8 @@ Vertex GMesh::split_edge(Edge e, int id) {
   Face f1 = face1(e), f2 = face2(e);
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
   bool fle = flags(e).flag(eflag_sharp);
-  unique_ptr<char[]> fstring1 = make_unique_c_string(get_string(f1));  // often nullptr
-  unique_ptr<char[]> fstring2 = f2 ? make_unique_c_string(get_string(f2)) : nullptr;
+  auto fstring1 = make_unique_c_string(get_string(f1));  // often nullptr
+  auto fstring2 = f2 ? make_unique_c_string(get_string(f2)) : nullptr;
   Vertex vn = Mesh::split_edge(e, id);
   flags(edge(v1, vn)).flag(eflag_sharp) = fle;
   flags(edge(v2, vn)).flag(eflag_sharp) = fle;
@@ -732,7 +732,7 @@ void GMesh::merge_vertices(Vertex vs, Vertex vt) {
 Vertex GMesh::center_split_face(Face f) {
   Polygon poly;
   polygon(f, poly);
-  unique_ptr<char[]> fstring = make_unique_c_string(get_string(f));  // often nullptr
+  auto fstring = make_unique_c_string(get_string(f));  // often nullptr
   Map<Vertex, unique_ptr<char[]>> mvs;
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);
@@ -785,7 +785,7 @@ Vertex GMesh::center_split_face(Face f) {
 }
 
 Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
-  unique_ptr<char[]> fstring = make_unique_c_string(get_string(f));  // often nullptr
+  auto fstring = make_unique_c_string(get_string(f));  // often nullptr
   Map<Vertex, unique_ptr<char[]>> mvs;
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);

@@ -232,7 +232,7 @@ Vertex edge_face_opp_vertex(Edge e, Face f) {
 float edge_dihedral_energy(const Point& p1, const Point& p2, const Point& ps1, const Point& ps2) {
   float angcos = dihedral_angle_cos(p1, p2, ps1, ps2);
   // ang is the unsigned angle away from planarity (range 0 .. TAU / 2)
-  float ang = angcos < -1.f ? TAU / 2 : acos(angcos);
+  float ang = angcos < -1.f ? TAU / 2 : std::acos(angcos);
   HH_SSTAT(Sang, ang);
   return pow(ang, dihpower) * dihfac;
 }

@@ -624,7 +624,7 @@ line2)";
     int& j3 = assertx(j);
     assertx(&j3 == &j);
     assertx(j3 == 56);
-    unique_ptr<int> p = make_unique<int>(57);
+    auto p = make_unique<int>(57);
     unique_ptr<int> p2 = std::move(assertx(p));
     assertx(*p2 == 57 && !p);
     unique_ptr<int> p3 = assertx(std::move(p2));

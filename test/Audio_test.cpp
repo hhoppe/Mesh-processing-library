@@ -20,15 +20,15 @@ int main() {
       double t = i / samplerate;  // time in seconds
       float v;
       if (1) {
-        v = sin(float(t * freq * TAU));  // this one compresses well using *.mp3
+        v = std::sin(float(t * freq * TAU));  // this one compresses well using *.mp3
       } else if (0) {
         double mod_freq = 5.;  // add a modulation frequency of 5 Hz
-        double freq2 = freq * (1. + .3 * sin(t * mod_freq * TAU));
-        v = sin(float(t * freq2 * TAU));
+        double freq2 = freq * (1. + .3 * std::sin(t * mod_freq * TAU));
+        v = std::sin(float(t * freq2 * TAU));
       } else {
         double mod_freq = 5.;  // add a modulation frequency of 5 Hz
-        double t2 = t + .5 * (1. / mod_freq) * pow(sin(t * mod_freq * TAU), .5);
-        v = sin(float(t2 * freq * TAU));
+        double t2 = t + .5 * (1. / mod_freq) * pow(std::sin(t * mod_freq * TAU), .5);
+        v = std::sin(float(t2 * freq * TAU));
       }
       audio1(ch, i) = v;
     }

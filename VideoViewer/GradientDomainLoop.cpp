@@ -1095,7 +1095,7 @@ void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CM
       cost = max(cost, 1e-10f);
       HH_SSTAT(Scost, cost);
       const float c1 = .12f, c2 = 1.f, gamma = .5f;
-      float v = pow(clamp(1.f - log(cost) * c1 + c2, 0.f, 1.f), gamma) * 255.f;
+      float v = pow(clamp(1.f - std::log(cost) * c1 + c2, 0.f, 1.f), gamma) * 255.f;
       HH_SSTAT(Sv, v);
       image(y, x) = Pixel::gray(clamp_to_uint8(int(v)));
     }

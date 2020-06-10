@@ -99,9 +99,9 @@ int main() {
     func_show_float(a);
     a = -1.f / g_float_zero;
     func_show_float(a);
-    a = acos(2.f);
+    a = std::acos(2.f);
     func_show_float(a);
-    a = acos(-2.f);
+    a = std::acos(-2.f);
     func_show_float(a);
     a = 0.f / g_float_zero;
     func_show_float(a);  // IND in win; 0 in mingw and cygwin

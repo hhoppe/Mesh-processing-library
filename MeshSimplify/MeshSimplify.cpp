@@ -177,7 +177,7 @@ float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& 
     float dih;
     if (0) {
       dih = signed_dihedral_angle(newp, mesh.point(va[i]), mesh.point(va[ip1]), mesh.point(va[im1]));
-      if (1) dih = dih < -8.f ? -2.f : cos(dih);
+      if (1) dih = dih < -8.f ? -2.f : std::cos(dih);
     } else {
       dih = dihedral_angle_cos(newp, mesh.point(va[i]), mesh.point(va[ip1]), mesh.point(va[im1]));
     }

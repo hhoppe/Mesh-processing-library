@@ -491,8 +491,8 @@ int encode_mesh(const AWMesh& mesh) {
   float matbits = enc_materials.norm_entropy();
   if (verb >= 2) SHOW(matbits);
   return int(nv * (3 * k_point_quantization) +
-             nw * (log2(float(nv)) + 3 * k_normal_quantization + 2 * k_uv_quantization) +
-             nf * (3 * log2(float(nw)) + matbits));
+             nw * (std::log2(float(nv)) + 3 * k_normal_quantization + 2 * k_uv_quantization) +
+             nf * (3 * std::log2(float(nw)) + matbits));
 }
 
 int wrap_dflclw(int dflclw, int nfaces) {
@@ -561,13 +561,13 @@ void do_compression() {
     int cur_nf = base_nf;
     for_int(vspli, nvsplits) {
       const Vsplit& vspl = pmesh._vsplits[vspli];
-      bits_flclw += log2(float(base_nv + vspli));
+      bits_flclw += std::log2(float(base_nv + vspli));
       int dflclw = vspl.flclw - flclwo;
       dflclw = wrap_dflclw(dflclw, cur_nf);
       float fdflclw = float(dflclw);
       flclwo = vspl.flclw;
       de_dflclw.enter_vector(V(fdflclw));
-      bits_vs_index += log2(3.f);
+      bits_vs_index += std::log2(3.f);
       enc_vlr_offset.add(vspl.vlr_offset1, 1.f);
       int mcode = vspl.code & (Vsplit::II_MASK | Vsplit::S_MASK | Vsplit::T_MASK | Vsplit::L_MASK | Vsplit::R_MASK |
                                Vsplit::FLN_MASK | Vsplit::FRN_MASK);
@@ -1170,7 +1170,7 @@ void do_exp_reorder(Args& args) {
   ensure_pm_loaded();
   int base_nv = pmesh._base_mesh._vertices.num();
   int full_nv = pmesh._info._full_nvertices;
-  int nsteps = int(log(float(full_nv) / base_nv) / log(fac) + .5f);
+  int nsteps = int(std::log(float(full_nv) / base_nv) / log(fac) + .5f);
   fac = pow(float(full_nv) / base_nv, 1.f / nsteps);
   showdf("Reordering: %d segments between %d and %d vertices, fac=%g\n", nsteps, base_nv, full_nv, fac);
   float nvf = float(base_nv);
@@ -1426,7 +1426,7 @@ Point convert_to_sph(const UV& uv) {
   float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2
   float lat = (uv[1] - .5f) * (TAU / 2);  // -TAU / 4 .. +TAU / 4
   // my coordinate system
-  return Point(cos(lon) * cos(lat), sin(lon) * cos(lat), sin(lat));
+  return Point(std::cos(lon) * std::cos(lat), std::sin(lon) * std::cos(lat), std::sin(lat));
 }
 
 // Problems that make this visualization useless:

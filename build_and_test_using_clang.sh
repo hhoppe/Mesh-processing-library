@@ -13,7 +13,7 @@ if [[ ${WINDIR+x} ]]; then      # on Windows
   ldflags="../libHWin/libHWin.a ../libHh/libHh.a -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32"
 else                            # on Unix
   cpp=clang++ ar=ar ranlib=ranlib
-  cppflags="-I.. -I../libHWX -std=c++14 -O3 -DNDEBUG"
+  cppflags="-I.. -I../libHWX -std=c++14 -O3 -DNDEBUG -pthread"
   libs="libHh libHWX"
   ldflags="../libHWX/libHWX.a ../libHh/libHh.a -lGLU -lGL -lX11 -ljpeg -lpng -lz"
 fi

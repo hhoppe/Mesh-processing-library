@@ -58,13 +58,18 @@
  *
  **********************************************************************/
 
-#if defined(_MSC_VER)
+#if !defined(_MSC_VER)
+
+extern void StackWalker_dummy_function_to_avoid_linkage_warnings();
+void StackWalker_dummy_function_to_avoid_linkage_warnings() {}
+
+#else
 
 #include "StackWalker.h"
 
+#include <Windows.h>
 #include <stdio.h>
 #include <tchar.h>
-#include <Windows.h>
 
 #include "Hh.h"
 #include "Locks.h"              // for HH_LOCK { ... }

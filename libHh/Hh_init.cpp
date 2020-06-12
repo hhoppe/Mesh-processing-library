@@ -2,11 +2,11 @@
 #include "libHh/Hh_init.h"
 
 #include <fcntl.h>  // O_BINARY
-#include <io.h>     // _setmode()
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
+#include <io.h>     // _setmode()??
 #endif
 
 #include <csignal>  // signal()

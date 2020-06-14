@@ -159,7 +159,7 @@ class ThreadPoolIndexedTask : noncopyable {
       _num_remaining_tasks = num_tasks;
       _task_index = 0;
       _condition_variable_worker.notify_all();
-      _condition_variable_master.wait(lock, [this] { return !_num_remaining_tasks; });
+      _condition_variable_main.wait(lock, [this] { return !_num_remaining_tasks; });
     }
   }
   static ThreadPoolIndexedTask& default_threadpool() {
@@ -178,7 +178,7 @@ class ThreadPoolIndexedTask : noncopyable {
   int _num_remaining_tasks = 0;
   int _task_index = 0;
   std::condition_variable _condition_variable_worker;
-  std::condition_variable _condition_variable_master;
+  std::condition_variable _condition_variable_main;
 
   void worker_main() {
     std::unique_lock<std::mutex> lock(_mutex);
@@ -193,7 +193,7 @@ class ThreadPoolIndexedTask : noncopyable {
         _task_function(i);
         lock.lock();
         assertx(_num_remaining_tasks > 0);
-        if (!--_num_remaining_tasks) _condition_variable_master.notify_all();
+        if (!--_num_remaining_tasks) _condition_variable_main.notify_all();
       }
     }
   }

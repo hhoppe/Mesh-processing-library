@@ -645,7 +645,7 @@ void do_imagefit() {
   }
   static const float tolerance = getenv_float("LLS_TOLERANCE", 1e-9f, true);  // larger than default 1e-10f
   lls.set_tolerance(tolerance);
-  int max_iter = getenv_int("LLS_MAXITER", INT_MAX, true);
+  int max_iter = getenv_int("LLS_MAXITER", std::numeric_limits<int>::max(), true);
   lls.set_max_iter(max_iter);
   double rss0, rss1;
   {

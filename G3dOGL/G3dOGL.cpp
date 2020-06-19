@@ -858,7 +858,8 @@ void display_texture_size_info() {
         if (aspx == 4) continue;  // always same size as aspx == 2
         Vec2<int> aspyx(1, aspx);
         int border = 0;
-        Vec2<int> max_yx = find_max_texture(glt_format.format, aspyx, border, (mm ? INT_MAX : 0));
+        Vec2<int> max_yx =
+            find_max_texture(glt_format.format, aspyx, border, (mm ? std::numeric_limits<int>::max() : 0));
         int r = 0, g = 0, b = 0, a = 0, comp = 0;
         glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_RED_SIZE, &r);
         glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_GREEN_SIZE, &g);
@@ -1051,7 +1052,7 @@ void load_texturemaps() {
       glMatrixMode(GL_MODELVIEW);
     }
     //
-    anisotropy = INT_MAX;
+    anisotropy = std::numeric_limits<int>::max();
     if (getenv_bool("NO_ANISO")) {
       showdf("NO_ANISO\n");
       anisotropy = 1;
@@ -1371,9 +1372,9 @@ bool setup_ob(int i) {
 void draw_list(CArrayView<unique_ptr<Node>> arn) {
   glShadeModel(lsmooth ? GL_SMOOTH : GL_FLAT);
   int ii = lquickmode ? quicki : 0;
-  const int buffer_ntriangles = g_is_ati ? INT_MAX : 32;
-  const int buffer_nedges = g_is_ati ? INT_MAX : 128;
-  const int buffer_npoints = g_is_ati ? INT_MAX : 128;
+  const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
+  const int buffer_nedges = g_is_ati ? std::numeric_limits<int>::max() : 128;
+  const int buffer_npoints = g_is_ati ? std::numeric_limits<int>::max() : 128;
   for_int(i, arn.num()) {  // note: index i is also incremented within loop
     if (ii) {
       if (!--ii)
@@ -1740,9 +1741,9 @@ inline bool edge_continuous(const GMesh& mesh, Edge e) {
 
 void draw_mesh(GMesh& mesh) {
   mesh_init(mesh);
-  const int buffer_ntriangles = g_is_ati ? INT_MAX : 32;
-  const int buffer_nquads = g_is_ati ? INT_MAX : 32;
-  const int buffer_nedges = g_is_ati ? INT_MAX : 128;
+  const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
+  const int buffer_nquads = g_is_ati ? std::numeric_limits<int>::max() : 32;
+  const int buffer_nedges = g_is_ati ? std::numeric_limits<int>::max() : 128;
   if (!ledges || lshading) {
     bool has_f_color = mesh.gflags().flag(mflag_f_colors);
     bool has_v_color = mesh.gflags().flag(mflag_v_colors);
@@ -2346,7 +2347,7 @@ void all_reset() {
   if (0) {
     ambient = .30f;
     lightsource = .65f;
-    anisotropy = INT_MAX;
+    anisotropy = std::numeric_limits<int>::max();
     set_anisotropy();
   }
 }
@@ -3111,8 +3112,9 @@ void HB::draw_text(const Vec2<float>& yx, const string& s) {
 void HB::draw_row_col_text(const Vec2<int>& yx, const string& s) {
   auto fdims = HB::get_font_dims();
   hw.draw_text(V((yx[0] < 0 ? win_dims[0] + yx[0] * fdims[0] : yx[0] * fdims[0]),
-                 (yx[1] == INT_MAX ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
-                                   : yx[1] < 0 ? win_dims[1] + yx[1] * fdims[1] - 2 : yx[1] * fdims[1] + 2)),
+                 (yx[1] == std::numeric_limits<int>::max()
+                      ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
+                      : yx[1] < 0 ? win_dims[1] + yx[1] * fdims[1] - 2 : yx[1] * fdims[1] + 2)),
                s);
 }
 
@@ -3460,8 +3462,9 @@ void sr_adapt_refinement() {
   }
   {
     // const float upper_limit = 1.1f;
-    // int max_active_faces = sr_regulatenf ? sr_regulatenf * upper_limit : INT_MAX;
-    int nvtrav = sr_fracvtrav >= 1.f ? INT_MAX : int(srmesh.num_active_vertices() * sr_fracvtrav);
+    // int max_active_faces = sr_regulatenf ? sr_regulatenf * upper_limit : std::numeric_limits<int>::max();
+    int nvtrav =
+        sr_fracvtrav >= 1.f ? std::numeric_limits<int>::max() : int(srmesh.num_active_vertices() * sr_fracvtrav);
     srmesh.adapt_refinement(nvtrav);
   }
   // timer.stop();
@@ -5193,7 +5196,7 @@ void draw_ply() {
         if (texturenormal) normalmap_activate();
       }
     }
-    const int buffer_ntriangles = g_is_ati ? INT_MAX : 32;
+    const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
     int ntriangles = 0;
     for_int(i, ply_findices.num()) {
       if (ply_findices[i].num() == 3) {

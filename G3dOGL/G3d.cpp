@@ -2,7 +2,9 @@
 #include "G3dOGL/G3d.h"
 
 #if defined(_WIN32)
-#include <io.h>  // close(), dup2()
+#include <io.h>  // dup2()
+#else
+#include <unistd.h>  // dup2()
 #endif
 
 #include "libHh/Args.h"

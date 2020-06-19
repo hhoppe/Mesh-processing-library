@@ -11,7 +11,7 @@ struct Struct1 {
   ~Struct1() {
     if (0) SHOW(_i);
     sum_destruct += _i;
-    _i = INT_MAX;
+    _i = std::numeric_limits<int>::max();
   }
   int _i;
 };

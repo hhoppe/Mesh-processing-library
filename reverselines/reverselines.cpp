@@ -7,11 +7,10 @@ using namespace hh;
 
 #if !defined(_WIN32)
 
-#include <fcntl.h>     // open()
-#include <sys/mman.h>  // mmap()
+#include <fcntl.h>     // O_RDONLY
+#include <sys/mman.h>  // mmap(), munmap()
 #include <sys/stat.h>  // fstat()
-#include <cstdio>
-#include <cstdlib>  // exit()
+#include <unistd.h>    // open(), close()
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
@@ -75,68 +74,6 @@ int main(int argc, const char** argv) {
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // CreateFile(), etc.
-
-#if 0
-
-// Conclusion: read() is not any faster than memory-mapped read, even for this mostly sequential access.
-// Probably the bottleneck is stdio stream write.
-
-#include <fcntl.h>  // open()
-#include "libHh/Array.h"
-
-int main(int argc, const char** argv) {
-  ParseArgs args(argc, argv);
-  HH_ARGSC("", "filename : output the lines in file in reverse order");
-  args.other_args_ok();
-  args.parse();
-  string filename = args.get_filename();
-  if (args.num()) args.problem("expect a single argument");
-  int fd = open(filename.c_str(), O_RDONLY | O_BINARY | O_SEQUENTIAL);
-  assertx(fd >= 0);
-  int64_t size = _filelengthi64(fd);
-  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB view
-  Array<char> buf(segsize * 2);
-  int64_t off = 0;
-  int64_t llen = size;
-  // Whenever possible, map segment of size [segsize + 1, segsize * 2]
-  while (llen > segsize * 2) {
-    off += segsize;
-    llen -= segsize;
-  }
-  int len = assert_narrow_cast<int>(llen);
-  int i = len;
-  _lseeki64(fd, off, SEEK_SET);
-  assertx(read(fd, buf.data(), len) == len);
-  int nwarnings = 0;
-  while (i) {
-    assertx(buf[i - 1] == '\n');
-    int iend = i;
-    if (i > 1 && buf[i - 2] == '\r') {
-      if (!nwarnings++) showf("Warning: found '\\r' in end-of-line\n");
-      --i;
-    }
-    --i;
-    while (i) {
-      assertx(buf[i - 1] != '\r');
-      if (buf[i - 1] == '\n') break;
-      --i;
-    }
-    assertx(write_raw(stdout, buf.slice(i, iend)));
-    if (off && i <= segsize) {
-      assertx(i);
-      off -= segsize;
-      len = segsize * 2;
-      i += segsize;
-      _lseeki64(fd, off, SEEK_SET);
-      assertx(read(fd, buf.data(), len) == len);
-    }
-  }
-  assertx(off == 0);
-  assertx(!HH_POSIX(close)(fd));
-  return 0;
-}
-
-#else
 
 // Output the text file named "file" with lines in reverse order
 //  to stdout by memory mapping the file.
@@ -215,7 +152,5 @@ int main(int argc, const char** argv) {
   assertx(CloseHandle(h_file));
   return 0;
 }
-
-#endif  // 0
 
 #endif  // !defined(_WIN32)

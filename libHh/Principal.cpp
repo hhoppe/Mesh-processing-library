@@ -30,7 +30,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
   Vec<float, n> val;
   for_int(i, n) val[i] = a[i][i];
   SGrid<float, n, n> vec = {{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}};
-  for_int(iter, INT_MAX) {
+  for (int iter = 0;; iter++) {
     {
       float sum = 0.f;
       for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i][j]);
@@ -128,7 +128,7 @@ static void compute_eigenvectors(MatrixView<float> a, MatrixView<float> mo, Arra
   for_int(i, n) eimag[i] = a[i][i];
   {
     auto up_timer = n > 1000 ? make_unique<Timer>("__eigenv") : nullptr;
-    for_int(iter, INT_MAX) {
+    for (int iter = 0;; iter++) {
       {
         float sum = 0.f;
         for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i][j]);

@@ -49,7 +49,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
         glGetShaderInfoLog(fragment_shader_id, str.num(), nullptr, str.data());
         SHOWL;
         SHOW(str.data());
-        _exit(1);
+        exit_immediately(1);
       }
     }
     program_id = assertx(glCreateProgram());
@@ -66,7 +66,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
         glGetProgramInfoLog(program_id, str.num(), nullptr, str.data());
         SHOWL;
         SHOW(str.data());
-        _exit(1);
+        exit_immediately(1);
       }
     }
     glValidateProgram(program_id);

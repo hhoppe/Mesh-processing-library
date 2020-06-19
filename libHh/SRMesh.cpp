@@ -1902,7 +1902,7 @@ void SRMesh::update_vmorphs() {
     } else {
       ASSERTX(vm->time == 0);
       // Vertex could be coarsen-morphing and not caught in
-      //  adapt_refinement if pnvtraverse<INT_MAX.
+      //  adapt_refinement if pnvtraverse < std::numeric_limits<int>::max().
       if (!vm->coarsening) finish_vmorph(va);
     }
   }

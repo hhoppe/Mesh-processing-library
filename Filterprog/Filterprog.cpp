@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+
 #include <cctype>   // isspace(), isdigit(), etc.
 #include <cstdlib>  // atoi()
 #include <cstring>  // strncmp() etc.
@@ -1483,7 +1484,7 @@ void do_pm_encode() {
   }
   pmesh.write(std::cout);
   std::cout.flush();
-  if (1) _exit(0);  // no destruction of GMesh and PMesh
+  if (1) exit_immediately(0);  // no destruction of GMesh and PMesh
 }
 
 }  // namespace

@@ -21,6 +21,7 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 
 #else
 
+#include <unistd.h>  // isatty(), gethostname(), usleep(), _exit(), etc.
 // #define __STDC_WANT_LIB_EXT1__ 1 // http://en.cppreference.com/w/c/chrono/localtime  localtime_s() in C11; fails
 #include <time.h>  // clock_gettime()
 
@@ -512,7 +513,6 @@ void my_sleep(double sec) {
     }
   }
 #else
-  // in <unistd.h>
   if (!assertw(!usleep(static_cast<useconds_t>(sec * 1e6)))) {
     assertx(errno == EINTR);  // possibly might be interrupted by a signal?
   }
@@ -1215,5 +1215,9 @@ void show_possible_win32_error() {
 }
 
 void show_call_stack() { show_call_stack_internal(); }
+
+HH_NORETURN void exit_immediately(int code) {
+  _exit(code);
+}
 
 }  // namespace hh

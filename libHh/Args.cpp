@@ -294,7 +294,7 @@ void ParseArgs::iadd(option o) {
 
 auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
   option* omatch = nullptr;
-  int nmatches = 0, minlfound = INT_MAX;
+  int nmatches = 0, minlfound = std::numeric_limits<int>::max();
   int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
     if (!o.parsef) continue;
@@ -404,7 +404,7 @@ void ParseArgs::problem(const string& s) {
   std::cerr << mes;
   if (_argv0 != "") {
     std::cerr << "(Use '" << get_path_tail(_argv0) << " -?' to view options.)\n";
-    _exit(1);
+    exit_immediately(1);
   } else {
     assertnever("ParseArgs parsing error");
   }
@@ -468,7 +468,7 @@ void ParseArgs::fstring(Args& args) {
 void ParseArgs::fquestion(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   pargs.print_help();
-  if (!pargs._other_options_ok) _exit(0);
+  if (!pargs._other_options_ok) exit_immediately(0);
 }
 
 void ParseArgs::fversion(Args& args) {
@@ -501,7 +501,7 @@ void ParseArgs::fversion(Args& args) {
   str += sform(" clr=%d", __CLR_VER);
 #endif
   showf("%s\n", str.c_str());
-  _exit(0);
+  exit_immediately(0);
 }
 
 string ParseArgs::header() {

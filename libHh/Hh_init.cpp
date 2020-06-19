@@ -6,7 +6,7 @@
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <io.h>     // _setmode()??
+#include <io.h>     // _setmode()
 #endif
 
 #include <csignal>  // signal()
@@ -105,7 +105,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       SHOWL;
       abort();
     }
-    _exit(1);
+    exit_immediately(1);
   }
   if (ExceptionCode != EXCEPTION_BREAKPOINT) {  // otherwise we have already shown the call stack previously
     if (1) {
@@ -115,7 +115,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       show_call_stack();
     }
   }
-  if (!k_debug) _exit(1);
+  if (!k_debug) exit_immediately(1);
   return EXCEPTION_CONTINUE_SEARCH;  // or EXCEPTION_EXECUTE_HANDLER, EXCEPTION_CONTINUE_EXECUTION
 }
 
@@ -167,7 +167,7 @@ HH_NORETURN void my_abort_handler(int signal_num) {
     abort();
   }
 #endif
-  _exit(1);
+  exit_immediately(1);
 }
 
 // #include <execinfo.h> // backtrace()
@@ -175,7 +175,7 @@ HH_NORETURN void my_signal_handler(int signal_num) {
   // Avoid issuing low-level or STDIO.H I/O routines (such as printf and fread).
   // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
   // Avoid any function that generates a system call (e.g., getcwd(), time()).
-  // _exit(213);  // does not show up at all.
+  // exit_immediately(213);  // does not show up at all.
   SHOW("my_signal_handler", signal_num);
   if (0) {
     // http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
@@ -203,8 +203,8 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
   dummy_use(pnRet);
   possibly_sleep();
   if (0) assertnever("my_CrtDbgHook with !IsDebuggerPresent()");
-  _exit(1);
-  // return 0;  // commented because _exit() does not return
+  exit_immediately(1);
+  // return 0;  // commented because exit_immediately() does not return
   // Return true - {Abort, Retry, Ignore} dialog will *not* be displayed
   // Return false - {Abort, Retry, Ignore} dialog *will* be displayed
 }
@@ -280,11 +280,11 @@ void use_standard_exponent_format_in_io() {
 
 void use_binary_io() {
 #if defined(_WIN32)
-  _fmode = O_BINARY;                             // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
-  assertx(HH_POSIX(setmode)(0, O_BINARY) >= 0);  // stdin
-  assertx(HH_POSIX(setmode)(1, O_BINARY) >= 0);  // stdout
-  assertx(HH_POSIX(setmode)(2, O_BINARY) >= 0);  // stderr
-                                                 // There is no global variable for default iostream binary mode.
+  _fmode = O_BINARY;  // <stdlib.h>; same as: assertx(!_set_fmode(O_BINARY));
+  assertx(_setmode(0, O_BINARY) >= 0);
+  assertx(_setmode(1, O_BINARY) >= 0);
+  assertx(_setmode(2, O_BINARY) >= 0);
+  // There is no global variable for default iostream binary mode.
   // With new iostream, it appears that std::cin, std::cout, std::cerr adjust
   //  (fortunately) to the settings of stdin, stdout, stderr.
 #endif

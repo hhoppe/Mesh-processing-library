@@ -32,7 +32,7 @@ int main() {
   SHOW(sqrt(1.f / 12.f) * pow(2.f, 64.f));
   {
     r1.seed(0);
-    unsigned vmin = INT_MAX, vmax = 0;
+    unsigned vmin = std::numeric_limits<int>::max(), vmax = 0;
     for_int(i, num) {
       unsigned v = r1.get_unsigned();
       if (v < vmin) vmin = v;

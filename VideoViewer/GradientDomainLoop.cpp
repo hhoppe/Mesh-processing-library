@@ -935,7 +935,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   const bool use_nv12 = true;
   Array<Nv12> rvideoframes(totstreams);  // current image frame in each video stream
   for (auto& frame : rvideoframes) frame.init(sdims);
-  Array<int> rvideo_fi(totstreams, INT_MAX);  // current frame index in each video stream
+  Array<int> rvideo_fi(totstreams, std::numeric_limits<int>::max());  // current frame index in each video stream
   auto func_get_si = [&](int pi, int streami) {
     ASSERTX(pi >= 1 && ar_nstreams.ok(pi));
     ASSERTX(streami >= 0 && streami < ar_nstreams[pi]);
@@ -976,7 +976,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
             if (prvideos[si]) {
               if (verbose) showf(" closing stream\n");
               prvideos[si] = nullptr;
-              rvideo_fi[si] = INT_MAX;
+              rvideo_fi[si] = std::numeric_limits<int>::max();
             }
           }
           if (verbose)

@@ -14,15 +14,15 @@ class CloseMinCycles {
  public:
   CloseMinCycles(GMesh& mesh) : _mesh(mesh) {}
   float _max_cycle_length{BIGFLOAT};  // by default, allow cycles with infinite length when iteratively simplifying
-  int _max_cycle_nedges{INT_MAX};     // by default, allow cycles with infinite number of edges
-  int _ncycles{INT_MAX};              // by default, perform as many cycle closures as possible
-  int _desired_genus{0};              // by default, simplify mesh topology to genus zero
-  float _frac_cycle_length{1.f};      // by default, find exact minimal cycles (> 1.f means approximate)
+  int _max_cycle_nedges{std::numeric_limits<int>::max()};  // by default, allow cycles with infinite number of edges
+  int _ncycles{std::numeric_limits<int>::max()};           // by default, perform as many cycle closures as possible
+  int _desired_genus{0};                                   // by default, simplify mesh topology to genus zero
+  float _frac_cycle_length{1.f};  // by default, find exact minimal cycles (> 1.f means approximate)
   void compute();
 
  private:
   GMesh& _mesh;
-  int _cgenus{INT_MAX};  // current mesh genus
+  int _cgenus{std::numeric_limits<int>::max()};  // current mesh genus
   int _tot_handles{0};
   int _tot_tunnels{0};
   Flag e_joined(Edge e);

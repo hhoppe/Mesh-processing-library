@@ -45,7 +45,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
     assertx(eps > T{0});
     eps *= T{8};
   }
-  for_int(iter, INT_MAX) {
+  for (int iter = 0;; iter++) {
     T max_e = T{0};
     for_intL(j, 1, n) for_int(i, j) {  // for indices i < j of columns of U
       // SHOW(U, VT);

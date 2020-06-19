@@ -37,8 +37,8 @@ FilterBnd filterb{Filter::get("spline"), bndrule};
 int startframe = 0;
 int tradius = 0;  // was 4
 bool nooutput = false;
-int trunc_begin = 0;         // skip the first trunc_begin frames
-int trunc_frames = INT_MAX;  // read at most trunc_frames frames
+int trunc_begin = 0;                                 // skip the first trunc_begin frames
+int trunc_frames = std::numeric_limits<int>::max();  // read at most trunc_frames frames
 
 // ***
 
@@ -138,7 +138,7 @@ void read_video(const string& filename, bool use_nv12) {
       nfread++;
     }
   }
-  if (video.attrib().audio.size() && (trunc_begin || trunc_frames != INT_MAX)) {
+  if (video.attrib().audio.size() && (trunc_begin || trunc_frames != std::numeric_limits<int>::max())) {
     Warning("Clearing audio");
     video.attrib().audio.clear();  // TODO
   }

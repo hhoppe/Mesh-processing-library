@@ -70,7 +70,7 @@ class SparseLLS : public LLS {
   void enter_a_c(int c, CArrayView<float> ar) override;
   bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
   void set_tolerance(float tolerance);  // default square(8e-7) * m  (because x is float) (was 1e-10f)
-  void set_max_iter(int max_iter);      // default INT_MAX
+  void set_max_iter(int max_iter);      // default std::numeric_limits<int>::max()
   void set_verbose(int verb);           // default 0
  private:
   struct Ival {
@@ -82,7 +82,7 @@ class SparseLLS : public LLS {
   Array<Array<Ival>> _rows;
   Array<Array<Ival>> _cols;
   float _tolerance;
-  int _max_iter{INT_MAX};
+  int _max_iter{std::numeric_limits<int>::max()};
   int _verb{0};
   int _nentries{0};
   Array<float> mult_m_v(CArrayView<float> vi) const;

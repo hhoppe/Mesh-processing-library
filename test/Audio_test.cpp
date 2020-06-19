@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Audio.h"
 
+#include "libHh/FileIO.h"
 #include "libHh/GridOp.h"  // crop()
 #include "libHh/Stat.h"
 using namespace hh;
@@ -62,6 +63,6 @@ int main() {
         }
       }
     }
-    HH_POSIX(unlink)("Audio_test.wav");
+    assertx(remove_file("Audio_test.wav"));
   }
 }

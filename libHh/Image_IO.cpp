@@ -225,7 +225,7 @@ void ImageIO::write_rgb(const Image& image, FILE* file) {
     rgbi.xsize = assert_narrow_cast<ushort>(image.xsize());
     rgbi.ysize = assert_narrow_cast<ushort>(image.ysize());
     rgbi.zsize = assert_narrow_cast<ushort>(image.zsize());
-    rgbi.vmin = INT_MAX;
+    rgbi.vmin = std::numeric_limits<int>::max();
     rgbi.vmax = 0;
     rgbi.wastebytes = 0;
     const char* name = "no name";

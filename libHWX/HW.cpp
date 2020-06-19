@@ -104,7 +104,7 @@ static int my_io_error_handler(Display* display) {
   dummy_use(display);
   // This handler is called when the window close button is pressed, so there is nothing unusual.
   // SHOW("X server connection is lost");
-  _exit(0);  // IE error handler is unfortunately required to exit
+  exit_immediately(0);  // IE error handler is unfortunately required to exit
   // Ideally, CYGWIN would send a DestroyWindow event when user clicks "X" button, but it does not seem to.
   return 0;
 }

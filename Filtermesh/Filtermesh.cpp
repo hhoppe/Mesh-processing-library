@@ -331,7 +331,7 @@ void do_rawfroma3d() {
 // Note: vertex_id() should be called on mn, not mesh, but no difference in current implementation.
 void normalize_arrayv(Array<Vertex>& ar) {
   assertx(ar.num() >= 3);
-  int mini, minvid = INT_MAX;
+  int mini, minvid = std::numeric_limits<int>::max();
   dummy_init(mini);
   for_int(i, ar.num()) {
     int vid = mesh.vertex_id(ar[i]);
@@ -752,7 +752,7 @@ void do_nidrenumberv() {
   HH_TIMER(_nidrenumberv);
   Set<Vertex> setv;
   for (Vertex v : mesh.vertices()) setv.enter(v);
-  const int large = INT_MAX / 2;
+  const int large = std::numeric_limits<int>::max() / 2;
   {
     int i = large;
     for (Vertex v : setv) mesh.vertex_renumber_id_private(v, i++);
@@ -4590,6 +4590,6 @@ int main(int argc, const char** argv) {
     std::cout.flush();
   }
   mesh.record_changes(nullptr);  // do not record mesh destruction
-  if (nocleanup) _exit(0);
+  if (nocleanup) exit_immediately(0);
   return 0;
 }

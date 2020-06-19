@@ -188,7 +188,7 @@ bool SparseLLS::solve(double* prssb, double* prssa) {
     for_int(j, _n) x[j] = _x[di][j];
     if (!do_cg(x, rhv, prssb, prssa)) {
       success = false;
-      if (0 && _max_iter == INT_MAX) continue;
+      if (0 && _max_iter == std::numeric_limits<int>::max()) continue;
     }
     for_int(j, _n) _x[di][j] = x[j];
   }

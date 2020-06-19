@@ -105,7 +105,7 @@ void test_spawn() {
       try_it(str);
     }
   }
-  assertx(!HH_POSIX(unlink)(tmpf.c_str()));
+  assertx(remove_file(tmpf));
 }
 
 void test_spawn2() {
@@ -563,7 +563,8 @@ line2)";
 #undef E
   }
   {
-    for (int i : {INT_MIN, INT_MIN + 1, -257, -256, -255, -1, 0, 1, 2, 127, 254, 255, 256, 257, INT_MAX}) {
+    for (int i : {std::numeric_limits<int>::min(), std::numeric_limits<int>::min() + 1, -257, -256, -255, -1, 0, 1, 2,
+                  127, 254, 255, 256, 257, std::numeric_limits<int>::max()}) {
       SHOW(i, int(clamp_to_uint8(i)));
     }
   }

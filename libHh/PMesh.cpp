@@ -12,7 +12,7 @@
 
 namespace hh {
 
-constexpr int k_undefined = k_debug ? -INT_MAX : -1;
+constexpr int k_undefined = k_debug ? -std::numeric_limits<int>::max() : -1;
 
 // *** Performance
 
@@ -524,7 +524,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   int wlccw, wlclw, wrccw, wrclw;  // == k_undefined if faces do not exist
   int jlccw, jlclw, jrccw, jrclw;  // only defined if faces exist
   dummy_init(jlccw, jlclw, jrccw, jrclw);
-  if (k_debug) jlccw = jlclw = jrccw = jrclw = INT_MAX;
+  if (k_debug) jlccw = jlclw = jrccw = jrclw = std::numeric_limits<int>::max();
   PArray<int*, 10> ar_pwedges;
   if (vspl.vlr_offset1 == 0) {
     // Extremely rare case when flclw does not exist.
@@ -623,7 +623,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   // Save current number of wedges if ancestry.
   int onumwedges;
   dummy_init(onumwedges);  // defined if ancestry
-  if (k_debug) onumwedges = INT_MAX;
+  if (k_debug) onumwedges = std::numeric_limits<int>::max();
   if (ancestry) onumwedges = _wedges.num();
   // First un-share wedges around vt (may be gap on top).  May modify wlclw and wrccw!
   int wnl = k_undefined, wnr = k_undefined;

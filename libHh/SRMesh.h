@@ -209,7 +209,7 @@ class SRMesh {
   void set_refine_morph_time(int refine_morph_time);    // 0 = disable
   void set_coarsen_morph_time(int coarsen_morph_time);  // 0 = disable
   void set_view_params(const SRViewParams& vp);
-  void adapt_refinement(int nvtraverse = INT_MAX);
+  void adapt_refinement(int nvtraverse = std::numeric_limits<int>::max());
   bool is_still_morphing() const;
   bool is_still_adapting() const;
   int num_vertices_refine_morphing() const;

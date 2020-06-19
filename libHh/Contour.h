@@ -427,7 +427,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
     Vec<Vertex, 12> va;
     while (!mapsucc.empty()) {
       Vertex vf = nullptr;
-      int minvi = INT_MAX;  // find min to be portable
+      int minvi = std::numeric_limits<int>::max();  // find min to be portable
       for (Vertex v : mapsucc.keys()) {
         int vi = _pmesh->vertex_id(v);
         if (vi < minvi) {

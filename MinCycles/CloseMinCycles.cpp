@@ -359,7 +359,7 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
   }
   search_radius = BIGFLOAT;
   farthest_vertex = nullptr;
-  num_edges = INT_MAX;
+  num_edges = std::numeric_limits<int>::max();
   Map<Vertex, Vertex> map_vtouch;
   auto v_vtouch = [&](Vertex v) -> Vertex& { return map_vtouch[v]; };
   // The priority queue on Vertex v contains two types of prioritized events:
@@ -522,7 +522,7 @@ void CloseMinCycles::find_cycles() {
     ubsr = min(ubsr, sr);  // if find a cycle, possibly reduce the upper-bound on the minimal search radius
     if (verb)
       showf("it=%-4d v=%-7d sr=%-12g nedges=%-4d lb=%-12g ub=%-12g\n", iter, _mesh.vertex_id(vseed), sr,
-            (num_edges == INT_MAX ? -1 : num_edges), lbsr, ubsr);
+            (num_edges == std::numeric_limits<int>::max() ? -1 : num_edges), lbsr, ubsr);
     if (!(sr * (1.f + 2e-7f) >= lbsr)) {
       SHOW((lbsr - sr) / sr - 1.f);
       assertx(sr >= lbsr);
@@ -574,7 +574,7 @@ void CloseMinCycles::find_cycles() {
     // Process the cycle if its radius is within some fraction of the lower-bound minimal cycle radius lbsr.
     if (sr <= _frac_cycle_length * lbsr) {  // was: "if (sr == lbsr)"
       if (verb) showdf("After %d iter, processing cycle of length %g\n", iter + 1, sr * 2.f);
-      assertx(num_edges < INT_MAX);
+      assertx(num_edges < std::numeric_limits<int>::max());
       if (num_edges > _max_cycle_nedges) {
         showdf("Stopping because next cycle has %d>%d edges\n", num_edges, _max_cycle_nedges);
         break;
@@ -611,7 +611,7 @@ void CloseMinCycles::find_cycles() {
 // Wrap main function with set up and clean up.
 void CloseMinCycles::compute() {
   assertx(_frac_cycle_length >= 1.f);
-  assertx(_cgenus == INT_MAX);
+  assertx(_cgenus == std::numeric_limits<int>::max());
   if (!_mesh.num_vertices()) return;
   Array<Vertex> ar_boundary_centers;
   if (1) {  // deal with mesh boundaries

@@ -1,7 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
 #if defined(_WIN32)
-#include <io.h>  // close(), dup2()
+#include <io.h>  // dup2()
+#else
+#include <unistd.h>  // dup2()
 #endif
 
 #include <atomic>
@@ -906,7 +908,7 @@ template <typename T> Grid<3, T> rotate_ccw(CGridView<3, T> grid, int rot_degree
 
 // Replace current object with previous/next file in object's directory.  Ret: success.
 bool replace_with_other_object_in_directory(int increment) {
-  assertx(abs(increment) == 1 || abs(increment) == INT_MAX);
+  assertx(abs(increment) == 1 || abs(increment) == std::numeric_limits<int>::max());
   const Object& ob0 = check_saved_object();
   string filename0 = ob0._filename;
   string directory = get_path_head(filename0);
@@ -923,12 +925,12 @@ bool replace_with_other_object_in_directory(int increment) {
     skip_first_advance = true;
     i0 = 0;
   }
-  if (increment == -INT_MAX) {
+  if (increment == -std::numeric_limits<int>::max()) {
     increment = +1;
     skip_first_advance = true;
     i0 = 0;
   }
-  if (increment == +INT_MAX) {
+  if (increment == +std::numeric_limits<int>::max()) {
     increment = -1;
     skip_first_advance = true;
     i0 = filenames.num() - 1;
@@ -1285,7 +1287,7 @@ bool DerivedHW::key_press(string skey) {
       if (g_cob < 0) throw string("no loaded objects");
       if (getob()._is_image || is_control) {  // load first object in directory
         std::lock_guard<std::mutex> lock(g_mutex_obs);
-        if (!replace_with_other_object_in_directory(-INT_MAX)) beep();
+        if (!replace_with_other_object_in_directory(-std::numeric_limits<int>::max())) beep();
       } else {  // jump to first frame in video
         g_playing = false;
         set_video_frame(g_cob, k_before_start);
@@ -1294,7 +1296,7 @@ bool DerivedHW::key_press(string skey) {
       if (g_cob < 0) throw string("no loaded objects");
       if (getob()._is_image || is_control) {  // load last object in directory
         std::lock_guard<std::mutex> lock(g_mutex_obs);
-        if (!replace_with_other_object_in_directory(+INT_MAX)) beep();
+        if (!replace_with_other_object_in_directory(+std::numeric_limits<int>::max())) beep();
       } else {  // jump to last frame in video
         g_playing = false;
         set_video_frame(g_cob, getob().nframes() - 1.);
@@ -3093,7 +3095,7 @@ void render_image() {
             string sline = func_get_line(shader, line);
             if (sline != "") showf("%s", sline.c_str());
           }
-          _exit(1);
+          exit_immediately(1);
         };
         auto func_compile_shader = [&](GLuint shader_id, const string& shader_string, GLenum shaderType) {
           glShaderSource(shader_id, 1, ArView(shader_string.c_str()).data(),
@@ -3130,7 +3132,7 @@ void render_image() {
             Array<char> str(slen, '\0');
             glGetProgramInfoLog(program_id, str.num(), nullptr, str.data());
             showf("OpenGL program linking error: %s", str.data());
-            _exit(1);
+            exit_immediately(1);
           }
         }
         if (1) {
@@ -4338,9 +4340,7 @@ int main(int argc, const char** argv) {
   Array<string> aargs(argv, argv + argc);
   g_argv0 = get_canonical_path(aargs[0]);
   if (!contains(aargs, "-")) {
-    // Close stdin unless we need it, for Windows app started from emacs shell.
-    if (0) assertx(!HH_POSIX(close)(0));
-    // Close stdin, but do not leave fd0 empty in case we open another file.
+    // For Windows app started from emacs shell, close stdin but do not leave fd0 empty in case we open another file.
     if (1) assertx(HH_POSIX(dup2)(1, 0) >= 0);
   }
   bool b_help = aargs.num() == 2 && ParseArgs::special_arg(aargs[1]);

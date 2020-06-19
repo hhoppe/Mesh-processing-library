@@ -71,6 +71,9 @@ Array<string> get_directories_in_directory(const string& directory);
 // Checks if my_sh() would find this command in the current PATH.
 bool command_exists_in_path(const string& name);
 
+// Returns success.
+bool remove_file(const string& name);
+
 // Deletes a file/directory to the Recycle Bin / Trash if possible.  Ret: success.
 bool recycle_path(const string& pathname);
 

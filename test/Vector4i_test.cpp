@@ -52,15 +52,15 @@ int main() {
     SHOW((Vector4i(pix) + 15).pixel());
     SHOW((Vector4i(pix) + 250).pixel());
     SHOW((Vector4i(pix) + 100000).pixel());
-    SHOW((Vector4i(pix) + (INT_MAX - 255)).pixel());
-    if (0) SHOW((Vector4i(pix) + INT_MAX).pixel());  // (overflows silently)
+    SHOW((Vector4i(pix) + (std::numeric_limits<int>::max() - 255)).pixel());
+    if (0) SHOW((Vector4i(pix) + std::numeric_limits<int>::max()).pixel());  // (overflows silently)
     SHOW((Vector4i(pix) - 1).pixel());
     SHOW((Vector4i(pix) - 15).pixel());
     SHOW((Vector4i(pix) - 100000).pixel());
-    SHOW((Vector4i(pix) - INT_MAX).pixel());
+    SHOW((Vector4i(pix) - std::numeric_limits<int>::max()).pixel());
   }
   {
-    Array<int> ar1{31, INT_MAX, -INT_MAX, 0};
+    Array<int> ar1{31, std::numeric_limits<int>::max(), -std::numeric_limits<int>::max(), 0};
     SHOW(ar1);
     Vector4i v;
     v.load_unaligned(ar1.data());
@@ -69,7 +69,7 @@ int main() {
     SHOW(ar1);
   }
   {
-    Vec4<int> ar1{31, INT_MAX, -INT_MAX, 0};
+    Vec4<int> ar1{31, std::numeric_limits<int>::max(), -std::numeric_limits<int>::max(), 0};
     SHOW(ar1);
     Vector4i v;
     v.load_unaligned(ar1.data());

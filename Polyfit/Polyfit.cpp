@@ -580,7 +580,7 @@ void do_stoc() {
   fill(opstat.ns, 0);
   fill(opstat.nor, 0);
   {
-    int i = 0, nbad = 0, lasti = -INT_MAX;
+    int i = 0, nbad = 0, lasti = -std::numeric_limits<int>::max();
     for (vertex v : verts) {
       if (v->v[1]) ecand.enter(v);
     }

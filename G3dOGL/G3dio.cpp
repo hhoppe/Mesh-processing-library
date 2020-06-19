@@ -346,8 +346,7 @@ void WriteOutput() {
   if (!FrameIO::write(std::cout, *t, obn, z, obinary)) {
 #if 1 || defined(_WIN32)
     // No SIGPIPE to terminate process in Win32.
-    // Unlike exit(), _exit() does not call destructors.
-    _exit(0);
+    exit_immediately(0);
 #else
     Warning("FrameIO::write failed");
 #endif

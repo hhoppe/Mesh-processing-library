@@ -106,7 +106,7 @@ float get_filtered_pixel_value(const Vec2<int>& yxc) {
   float sum = valc;
   int count = 1;
   const int upper_range = 10;
-  for_intL(range, 1, INT_MAX) {
+  for (int range = 1;; range++) {
     bool stop = false;
     float psum = 0.f;
     int pcount = 0;

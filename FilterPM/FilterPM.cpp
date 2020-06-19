@@ -136,7 +136,7 @@ void do_coarsest() {
 }
 
 void do_finest() {
-  pmi->goto_nvertices(INT_MAX);
+  pmi->goto_nvertices(std::numeric_limits<int>::max());
   do_info();
 }
 
@@ -175,7 +175,7 @@ void do_outbbox() {
   Bbox bbox0;
   for_int(vi, pmi->_vertices.num()) bbox0.union_with(pmi->_vertices[vi].attrib.point);
   {
-    // int nv = INT_MAX;
+    // int nv = std::numeric_limits<int>::max();
     int nv = max(4000, pmi->_vertices.num() * 2);
     pmi->goto_nvertices(nv);
   }
@@ -513,7 +513,7 @@ void do_compression() {
   if (verb >= 2) SHOW(bits_basemesh);
   if (verb >= 2) SHOW(bits_basemesh / base_nv);
   ensure_pm_loaded();
-  pmi->goto_nvertices(INT_MAX);  // goto fully detailed mesh
+  pmi->goto_nvertices(std::numeric_limits<int>::max());  // goto fully detailed mesh
   int full_nv = pmesh._info._full_nvertices;
   int full_nw = pmesh._info._full_nwedges;
   int full_nf = pmesh._info._full_nfaces;
@@ -635,7 +635,7 @@ void do_compression() {
       RFile fi("v.FilterPM");
       assertx(fi() >> nbytes);
     }
-    assertx(!HH_POSIX(unlink)("v.FilterPM"));
+    assertx(remove_file("v.FilterPM"));
     bits_g_mesh = nbytes * 8.f / full_nv;
     if (verb >= 2) showf("Gzipped Mesh: %.1f bits/vertex\n", bits_g_mesh);
   }
@@ -659,7 +659,7 @@ void do_compression() {
       RFile fi("v.FilterPM");
       assertx(fi() >> nbytes);
     }
-    assertx(!HH_POSIX(unlink)("v.FilterPM"));
+    assertx(remove_file("v.FilterPM"));
     bits_g_pmesh = nbytes * 8.f / full_nv;
     if (verb >= 2) showf("Gzipped PMesh: %.1f bits/vertex\n", bits_g_pmesh);
   }
@@ -774,7 +774,7 @@ void do_testiterate(Args& args) {
   {
     SHOW("loading file");
     ensure_pm_loaded();
-    pmi->goto_nvertices(INT_MAX);  // go to end
+    pmi->goto_nvertices(std::numeric_limits<int>::max());  // go to end
     SHOW("file loaded");
     pmi->goto_nvertices(0);  // go back to base mesh
     SHOW("back to base mesh");
@@ -787,7 +787,7 @@ void do_testiterate(Args& args) {
     {
       HH_TIMER(_gotomax);
       timer_max.start();
-      pmi->goto_nvertices(INT_MAX);
+      pmi->goto_nvertices(std::numeric_limits<int>::max());
       timer_max.stop();
     }
     {
@@ -806,7 +806,7 @@ void do_testiterate(Args& args) {
 void do_zero_vadsmall() {
   HH_TIMER(_zero_vadsmall);
   ensure_pm_loaded();
-  pmi->goto_nvertices(INT_MAX);
+  pmi->goto_nvertices(std::numeric_limits<int>::max());
   // Now work backwards.
   for (;;) {
     const Vsplit* pcvspl = pmrs->prev_vsplit();
@@ -892,14 +892,14 @@ void do_compute_nor() {
   if (1) assertnever("compute_nor() abandonned for now");
   // Compute normals in original mesh.
   ensure_pm_loaded();
-  pmi->goto_nvertices(INT_MAX);
+  pmi->goto_nvertices(std::numeric_limits<int>::max());
   // Propagate normals down vsplits.
   for (;;) {
     const Vsplit* pcvspl = pmrs->prev_vsplit();
     if (!pcvspl) break;
     Vsplit& vspl = *const_cast<Vsplit*>(pcvspl);
     assertx(pmrs->next_vsplit());
-    const int k_undefined = -INT_MAX;
+    const int k_undefined = -std::numeric_limits<int>::max();
     unsigned code = vspl.code;
     // int ii = (code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
     bool isr = vspl.adds_two_faces();

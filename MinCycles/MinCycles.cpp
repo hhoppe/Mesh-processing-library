@@ -8,8 +8,8 @@ using namespace hh;
 namespace {
 
 float maxcyclelength = BIGFLOAT;
-int maxcyclenedges = INT_MAX;
-int ncycles = INT_MAX;
+int maxcyclenedges = std::numeric_limits<int>::max();
+int ncycles = std::numeric_limits<int>::max();
 int genus = 0;
 float fraccyclelength = 1.f;
 bool nooutput = false;

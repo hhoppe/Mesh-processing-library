@@ -55,24 +55,21 @@
 #define HH_DEBUG
 #endif
 
-// *** System headers.
-
-#if !defined(_WIN32)
-#include <unistd.h>  // read(), write(), _exit(), etc.
-#endif
-
 // *** Standard headers
 
 #include <algorithm>  // min(), max()
-#include <climits>    // INT_MAX       (already included except with __clang__)
 #include <cmath>      // sqrt(), cos(), pow(), etc.
 #include <cstdint>    // int64_t, uint64_t, int32_t, etc.
 #include <iostream>   // ostream, cout, operator<<(ostream&), etc.
 #include <memory>     // unique_ptr<>
 #include <sstream>    // stringstream
-#include <stdexcept>  // runtime_error (already included except with __clang__)
+#include <stdexcept>  // runtime_error
 #include <string>     // string
 #include <utility>    // swap(), forward(), move(), declval(), pair<>, index_sequence<>
+
+// *** Variadic macros
+
+#include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
 // *** Language portability
 
@@ -149,10 +146,6 @@
 #define for_int(i, stop) for_T(int, i, 0, stop)
 #define for_intL(i, start, stop) for_T(int, i, start, stop)
 #define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
-
-// *** Variadic macros
-
-#include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
 // *** Check for identifier conflicts
 
@@ -515,6 +508,9 @@ void show_possible_win32_error();
 
 // Show the call stack if possible.
 void show_call_stack();
+
+// For Unix _exit(code).
+HH_NORETURN void exit_immediately(int code);
 
 //----------------------------------------------------------------------------
 

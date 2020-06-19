@@ -821,7 +821,7 @@ static void show_caption() {
     if (!contains(s, ' ')) return;
     s.erase(0, s.find(' ') + 1);
   }
-  HB::draw_row_col_text(V(loc, INT_MAX), s);
+  HB::draw_row_col_text(V(loc, std::numeric_limits<int>::max()), s);
 }
 
 static void show_cross() {

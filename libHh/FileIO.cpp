@@ -16,6 +16,7 @@
 
 #else
 
+#include <unistd.h>  // unlink(), getpid(), open(), execvp(), etc.
 #include <dirent.h>    // struct dirent, opendir(), readdir(), closedir()
 #include <sys/wait.h>  // wait(), waidpid()
 #include <utime.h>     // struct utimbuf, struct _utimbuf, utime()
@@ -324,7 +325,7 @@ RFile::~RFile() {
   if (_file_ispipe) {
 #if defined(_WIN32)
     // Avoids the "Broken pipe" error message, but takes too long for huge streams!
-    if (0) _is->ignore(INT_MAX);
+    if (0) _is->ignore(std::numeric_limits<int>::max());
 #endif
   }
   _impl = nullptr;
@@ -515,6 +516,10 @@ bool command_exists_in_path(const string& name) {
   return false;
 }
 
+bool remove_file(const string& name) {
+  return !HH_POSIX(unlink)(name.c_str());
+}
+
 bool recycle_path(const string& pathname) {
   // http://www.hardcoded.net/articles/send-files-to-trash-on-all-platforms.htm
 #if defined(_WIN32)
@@ -552,7 +557,7 @@ bool recycle_path(const string& pathname) {
   if (!ret) assertx(!op.fAnyOperationsAborted);
   return !ret;
 #else
-  return !unlink(pathname.c_str());
+  return remove_file(pathname);
 #endif
 }
 
@@ -567,9 +572,7 @@ TmpFile::TmpFile(const string& suffix) {
 }
 
 TmpFile::~TmpFile() {
-  if (!getenv_bool("TMPFILE_KEEP")) {
-    assertx(!HH_POSIX(unlink)(_filename.c_str()));
-  }
+  if (!getenv_bool("TMPFILE_KEEP")) assertx(remove_file(_filename));
 }
 
 // *** Quoting

@@ -418,7 +418,7 @@ class Multigrid : noncopyable {
           const int num_grids = 3 + 1, fudge = 4;         // 3 rows of grid_result, grid_rhs, plus some extra
           const int col_width = static_cast<int>(
               pow(static_cast<float>(L2_cache_size / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
-          col_dims = ntimes<D>(col_width).with(0, INT_MAX);
+          col_dims = ntimes<D>(col_width).with(0, std::numeric_limits<int>::max());
         }
         // even-odd in just first dimension
         const Vec<int, D> even_odd = ntimes<D>(1).with(0, 2);  // { 2, 1, 1, ... }

@@ -2299,7 +2299,7 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   //  could be assigned two different attribute values.
   // This should have been prevented earlier.
   //
-  const int not_used = INT_MAX;
+  const int not_used = std::numeric_limits<int>::max();
   //
   Corner cv1f1 = mesh.corner(mesh.vertex1(e), mesh.face1(e));
   Corner cv2f1 = mesh.ccw_face_corner(cv1f1);
@@ -4194,7 +4194,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     Vertex vs = mesh.vertex1(e), vt = mesh.vertex2(e);
     Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
     int dir = -1;  // 0 == CCW, 1 == CLW
-    int jmin = INT_MAX;
+    int jmin = std::numeric_limits<int>::max();
     Vec<bool, 2> ar_ok = {false, false};
     for_int(i, 2) {
       if (minii2) {

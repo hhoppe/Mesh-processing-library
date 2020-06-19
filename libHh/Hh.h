@@ -570,7 +570,7 @@ template <typename T> T show_aux(string str, T&& val, bool has_eol, bool high_pr
   std::ostringstream oss;
   if (high_precision) oss.precision(std::numeric_limits<double>::max_digits10);
   oss << (str[0] == '"' ? "" : str + " = ") << val << (has_eol ? "" : "\n");
-  // Single write for better behavior under parallelism.  For guaranteed atomic write, use HH_LOCK { SHOW(...); }
+  // Single write for better behavior under parallelism.  For guaranteed atomic write, use std::lock_guard<>.
   show_cerr_and_debug(assertx(oss).str());
   return std::forward<T>(val);
 }

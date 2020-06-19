@@ -11,7 +11,6 @@
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 #include "libHh/Vector4.h"
-// #include "libHh/Locks.h"  // HH_LOCK for debugging
 
 #if 0
 {
@@ -434,7 +433,7 @@ class Multigrid : noncopyable {
           auto func_relax_column = [&](const Vec<int, D>& coli) {
             Vec<int, D> uL = general_clamp((coli * even_odd + eo + 0) * col_dims - voverlap, ntimes<D>(0), dims);
             Vec<int, D> uU = general_clamp((coli * even_odd + eo + 1) * col_dims + voverlap, ntimes<D>(0), dims);
-            // HH_LOCK { SHOW(dims, uL, uU); }
+            // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
             for_int(iter2, local_iter ? niter : 1) {  // implement as streaming?
               for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
             }
@@ -451,7 +450,7 @@ class Multigrid : noncopyable {
           const Vec<int, D> uL = ntimes<D>(0).with(0, thread * d0chunk);
           const Vec<int, D> uU = dims.with(0, min((thread + 1) * d0chunk, dim0) - sync_rows);
           if (1 && b_default_metric) {
-            // HH_LOCK { SHOW(dims, uL, uU); }
+            // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
             for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
           } else {
             for (const auto& u : range(uL, uU)) func_update(u);

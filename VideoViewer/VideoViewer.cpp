@@ -7,6 +7,7 @@
 #include <atomic>
 #include <cmath>
 #include <functional>  // function<>
+#include <mutex>
 #include <thread>
 
 #include "HW.h"
@@ -21,7 +22,6 @@
 #include "libHh/GridOp.h"       // crop()
 #include "libHh/GridPixelOp.h"  // spatially_scale_Grid_Pixel()
 #include "libHh/Image.h"
-#include "libHh/Locks.h"  // <mutex>
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"     // is_pow2()
 #include "libHh/Polygon.h"    // intersect_poly_poly()
@@ -539,7 +539,7 @@ unique_ptr<Object> object_reading_image(const string& filename) {
                return p.filename == filename && p.file_modification_time == get_path_modification_time(filename) &&
                       p.pimage;
              })) {
-    std::lock_guard<std::mutex> lg(g_mutex_prefetch);
+    std::lock_guard<std::mutex> lock(g_mutex_prefetch);
     PrefetchImage& p = *pp;
     assertx(p.filename == filename);
     if (g_verbose >= 1) SHOW("accessing prefetch", pp - g_prefetch_image.data(), filename);
@@ -587,7 +587,7 @@ void app_draw_text(const Vec2<int>& yx, const string& s, bool wrap = true) {
 
 // Show a message on the window for a given duration.
 void message(const string& s, double duration = 1.5) {
-  std::lock_guard<std::mutex> lg(g_mutex_messages);
+  std::lock_guard<std::mutex> lock(g_mutex_messages);
   if (1) g_messages.clear();  // immediately erase any old messages
   g_messages.push(Message{s, get_precise_time() + duration});
   hw.redraw_later();
@@ -674,7 +674,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
       string filename = next_image_in_directory(o._filename, increment);
       if (filename == "") continue;
       int i = (1 - increment) / 2;  // 0 == next, 1 == prev
-      std::lock_guard<std::mutex> lg(g_mutex_prefetch);
+      std::lock_guard<std::mutex> lock(g_mutex_prefetch);
       if (none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename == filename; })) {
         if (g_verbose >= 1) SHOW("requesting_prefetch", i, filename);
         g_prefetch_image[i].filename = filename;
@@ -959,7 +959,7 @@ bool replace_with_other_object_in_directory(int increment) {
         if (ob._image_is_bgra && !k_use_bgra) convert_bgra_rgba(image);
         int ii = increment == 1 ? 1 : 0;
         if (g_verbose >= 1) SHOW("saving_to_prefetch", ii, ob._filename);
-        std::lock_guard<std::mutex> lg(g_mutex_prefetch);
+        std::lock_guard<std::mutex> lock(g_mutex_prefetch);
         g_prefetch_image[ii].filename = ob._filename;
         g_prefetch_image[ii].file_modification_time = ob._file_modification_time;
         g_prefetch_image[ii].pimage = make_unique<Image>(std::move(image));
@@ -1158,7 +1158,7 @@ bool DerivedHW::key_press(string skey) {
     } else if (skey == "<f1>") {  // help
       return key_press("?");
     } else if (skey == "<f2>") {  // rename file
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       Object& ob = check_loaded_saved_object();
       string old_filename = ob._filename;
       string old_type = ob.stype();
@@ -1173,7 +1173,7 @@ bool DerivedHW::key_press(string skey) {
       ob._orig_filename = new_filename;
       g_dir_media_filenames.invalidate();
     } else if (skey == "<f5>") {  // reload from file
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       const bool reload_all = is_shift;
       for_int(obi, getobnum()) {
         if (!reload_all && obi != g_cob) continue;
@@ -1202,7 +1202,7 @@ bool DerivedHW::key_press(string skey) {
         }
       }
     } else if (skey == "<f7>") {  // move file
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       check_loaded_saved_object();
       string old_filename = getob()._filename;
       string old_type = getob().stype();
@@ -1227,7 +1227,7 @@ bool DerivedHW::key_press(string skey) {
       }
       g_dir_media_filenames.invalidate();
     } else if (skey == "<f8>") {  // copy file
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       const Object& ob = check_saved_object();
       string old_filename = ob._filename;
       string old_type = ob.stype();
@@ -1284,7 +1284,7 @@ bool DerivedHW::key_press(string skey) {
     } else if (skey == "<home>") {  // select first directory file or first video frame
       if (g_cob < 0) throw string("no loaded objects");
       if (getob()._is_image || is_control) {  // load first object in directory
-        std::lock_guard<std::mutex> lg(g_mutex_obs);
+        std::lock_guard<std::mutex> lock(g_mutex_obs);
         if (!replace_with_other_object_in_directory(-INT_MAX)) beep();
       } else {  // jump to first frame in video
         g_playing = false;
@@ -1293,20 +1293,20 @@ bool DerivedHW::key_press(string skey) {
     } else if (skey == "<end>") {  // select last directory file or last video frame
       if (g_cob < 0) throw string("no loaded objects");
       if (getob()._is_image || is_control) {  // load last object in directory
-        std::lock_guard<std::mutex> lg(g_mutex_obs);
+        std::lock_guard<std::mutex> lock(g_mutex_obs);
         if (!replace_with_other_object_in_directory(+INT_MAX)) beep();
       } else {  // jump to last frame in video
         g_playing = false;
         set_video_frame(g_cob, getob().nframes() - 1.);
       }
     } else if (skey == "<prior>") {  // previous object in directory
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       if (!replace_with_other_object_in_directory(-1)) beep();
     } else if (skey == "<next>") {  // next object in directory
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       if (!replace_with_other_object_in_directory(+1)) beep();
     } else if (skey == "<delete>") {  // delete file
-      std::lock_guard<std::mutex> lg(g_mutex_obs);
+      std::lock_guard<std::mutex> lock(g_mutex_obs);
       check_saved_object();
       string old_filename = getob()._filename;
       string old_type = getob().stype();
@@ -1469,7 +1469,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'x': {  // exchange object with previous one
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           check_object();
           if (g_cob < 1) throw string("no prior object to exchange with");
           std::swap(g_obs[g_cob], g_obs[g_cob - 1]);
@@ -1479,7 +1479,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'X': {  // exchange object with next one
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           check_object();
           if (g_cob == getobnum() - 1) throw string("no next object to exchange with");
           std::swap(g_obs[g_cob], g_obs[g_cob + 1]);
@@ -1593,7 +1593,7 @@ bool DerivedHW::key_press(string skey) {
               smess += " (File '" + filename + "' not found)";
               continue;
             }
-            std::lock_guard<std::mutex> lg(g_mutex_obs);
+            std::lock_guard<std::mutex> lock(g_mutex_obs);
             try {
               add_object(object_reading_file(filename));  // may throw
               set_video_frame(g_cob, k_before_start);     // set to first frame
@@ -1610,7 +1610,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_loaded_object();
           if (g_use_sliders) throw string("close sliders first before saving file");
           string cur_filename = ob._filename;
@@ -1660,14 +1660,14 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'D' - 64: {  // C-d: unload current image/video from viewer
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_object();
           message("Unloaded " + ob.stype() + " " + get_path_tail(ob._filename), 4.);
           unload_current_object();
           break;
         }
         case 'K' - 64: {  // C-k: unload all objects except current one
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           check_object();
           check_all_objects();
           g_obs.erase(0, g_cob);
@@ -1687,7 +1687,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'C': {  // crop to view (and resample content if view includes a rotation)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_object();
           if (view_has_rotation()) {             // view includes a rotation
             assertx(var(get_zooms()) < 1e-10f);  // zoom must be isotropic if rotation is present
@@ -1765,7 +1765,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'W': {  // crop white borders
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_image();
           assertx(ob._video.size());
           Matrix<Pixel> nimage = compute_wcrop(Matrix<Pixel>(ob._video[0]));
@@ -1778,7 +1778,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'S': {  // scale (resample content to current view resolution)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_object();
           if (max_abs_element(V(g_view[0][1], g_view[1][0])) > 0.f) throw ob.stype() + " is rotated";
           Vec2<int> ndims;
@@ -1851,7 +1851,7 @@ bool DerivedHW::key_press(string skey) {
         }
         case 'L' - 64:
         case 'R' - 64: {  // C-S-l, C-S-r: rotate content 90-degrees left (ccw) or right (clw)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const int rot_degrees = keycode == 'L' - 64 ? 90 : -90;
           Object& ob = check_loaded_object();
           if (ob._video.size()) {  // includes the case of ob.is_image()
@@ -1887,7 +1887,7 @@ bool DerivedHW::key_press(string skey) {
         }
         case 'V': {  // convert sequence of images (starting from current) to a video
           // vv ~/prevproj/2016/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F*.png -key 'V'
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_image();
           const int ibeg = g_cob;
           int n = 0;
@@ -1921,7 +1921,7 @@ bool DerivedHW::key_press(string skey) {
         case '#': {  // convert image sequence (incrementing current image name) to a video
           // VideoViewer ~/proj/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F00001.png -key '#'
           // vv d:/Other/2015_06_12_HuguesH_Take2/Output_V1/Frames/view.F00001.png -key '#'
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_image();
           if (file_requires_pipe(ob._filename)) throw string("image is loaded from a pipe");
           string filename = get_path_root(ob._filename) + ".mp4";
@@ -1986,7 +1986,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'T': {  // temporal exterior video trim (shift-t)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           if (ob._framein == 0 && ob._frameou1 == ob.nframes())
             throw string("to trim video, set beg and end frames using '<' and '>' keys.");
@@ -2013,7 +2013,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'T' - 64: {  // temporal interior video cut (control-shift-t)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           if (!is_shift) {
             beep();
             throw string("");
@@ -2054,7 +2054,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case '|': {  // split current video into two, where current frame becomes first frame of second part
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           const int nf = ob.nframes();
           if (g_framenum < 1) throw string("splitting requires selecting frame number >=1");
@@ -2086,7 +2086,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case '&': {  // create new video by merging (concatenating) current video with previous one
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob2 = check_loaded_video();
           if (g_cob == 0) throw string("no previous video object to append to");
           const Object& ob1 = *g_obs[g_cob - 1];
@@ -2130,7 +2130,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'D': {  // create a new video by differencing the current video from the previous video
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob2 = check_loaded_video();
           if (g_cob == 0) throw string("no previous video object to difference from");
           const Object& ob1 = *g_obs[g_cob - 1];
@@ -2174,7 +2174,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'M': {  // mirror: reverse the frames of a video
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           Video nvideo;
           VideoNv12 nvideo_nv12;
@@ -2201,7 +2201,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'R': {  // resample temporal rate
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           string s;
           if (!query(V(20, 10), "Resample by temporal factor (e.g. .5 reduces #frames by half): ", s))
@@ -2239,7 +2239,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'b': {  // brightness controls
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           redraw_later();
           if (!g_use_sliders) {
             g_use_sliders = true;
@@ -2300,7 +2300,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'L': {  // create an unoptimized loop (synchronously)
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw string("too few video frames");
           const Vec2<int> hdims = ob.spatial_dims() / 2;  // in case YUV representation is used
@@ -2313,7 +2313,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'G': {  // generate optimized seamless loop
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw string("too few video frames");
           g_request_loop_synchronously = false;
@@ -2321,7 +2321,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'G' - 64: {  // generate high-quality optimized seamless loop
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw string("too few video frames");
           g_request_loop_synchronously = false;
@@ -2330,7 +2330,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'G' + 256: {  // generate optimized seamless loop synchronously; disabled
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw string("too few video frames");
           message("Waiting for seamless loop creation");
@@ -2339,7 +2339,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'c': {  // clone
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_object();
           Video nvideo(ob._video);
           VideoNv12 nvideo_nv12(Grid<3, uint8_t>(ob._video_nv12.get_Y()),
@@ -2350,7 +2350,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'I': {  // copy current frame as a new image object
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           if (g_framenum < 0) throw string("no current video frame");
           Image image(ob.spatial_dims());
@@ -2372,7 +2372,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'F': {  // set framerate
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_loaded_video();
           string s = sform("%g", ob._video.attrib().framerate);
           if (!query(V(20, 10), "Framerate (fps) for video: ", s)) throw string("");
@@ -2382,7 +2382,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'B': {  // set bitrate
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_loaded_video();
           double bitrate = double(ob._video.attrib().bitrate);
           string s = bitrate >= 1000000. ? sform("%gm", bitrate / 1000000.) : sform("%gk", bitrate / 1000.);
@@ -2404,7 +2404,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'C' - 64: {  // C-c: copy image or frame to clipboard
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_object();
           if (g_framenum < 0) throw string("no current video frame");
           Image image(ob.spatial_dims());
@@ -2423,7 +2423,7 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case 'V' - 64: {  // C-v: paste clipboard image as new object
-          std::lock_guard<std::mutex> lg(g_mutex_obs);
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
           Image image;
           if (!copy_clipboard_to_image(image)) throw string("could not copy an image from clipboard");
           const bool bgra = false;
@@ -3346,7 +3346,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     while (!g_videoloop_ready_obj) my_sleep(.1);
   }
   if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
-    std::lock_guard<std::mutex> lg(g_mutex_obs);
+    std::lock_guard<std::mutex> lock(g_mutex_obs);
     if (g_vlp_ready_obj) {
       add_object(std::move(g_vlp_ready_obj));  // insert right after current video
     }
@@ -3696,7 +3696,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
   }
   if (g_messages.num()) {  // show any messages
     {
-      std::lock_guard<std::mutex> lg(g_mutex_messages);
+      std::lock_guard<std::mutex> lock(g_mutex_messages);
       for_int(i, g_messages.num()) app_draw_text(V((2 + i) * (font_height + 4), 6), g_messages[i].s);
       for (int i = 0;;) {
         if (i >= g_messages.num()) break;
@@ -3900,7 +3900,7 @@ void background_work(bool asynchronous) {
       Object* pob = nullptr;
       bool is_cob = false;  // pob is current object
       {
-        std::lock_guard<std::mutex> lg(g_mutex_obs);
+        std::lock_guard<std::mutex> lock(g_mutex_obs);
         if (g_cob < 0) {
         } else if (getob()._prvideo) {
           pob = &getob();
@@ -3953,7 +3953,7 @@ void background_work(bool asynchronous) {
     {  // Presently there is no more video content to be loaded.  Possibly create seamless loop.
       Object* pob = nullptr;
       {
-        std::lock_guard<std::mutex> lg(g_mutex_obs);
+        std::lock_guard<std::mutex> lock(g_mutex_obs);
         if (g_cob >= 0 && !g_videoloop_ready_obj && !getob().is_image() &&
             (g_request_loop || (g_lp.is_loaded && getobnum() == 1))) {
           pob = &getob();
@@ -4037,7 +4037,7 @@ void background_work(bool asynchronous) {
       int i = -1;
       string filename;
       {
-        std::lock_guard<std::mutex> lg(g_mutex_prefetch);
+        std::lock_guard<std::mutex> lock(g_mutex_prefetch);
         for_int(ii, 2) {
           if (g_prefetch_image[ii].filename != "" && g_prefetch_image[ii].file_modification_time == 0) {
             assertx(!g_prefetch_image[ii].pimage);
@@ -4060,7 +4060,7 @@ void background_work(bool asynchronous) {
         }
         if (g_verbose >= 1) SHOW("prefetched", i, filename, file_modification_time, ok);
         {
-          std::lock_guard<std::mutex> lg(g_mutex_prefetch);
+          std::lock_guard<std::mutex> lock(g_mutex_prefetch);
           if (g_prefetch_image[i].filename == filename) {
             g_prefetch_image[i].file_modification_time = file_modification_time;
             g_prefetch_image[i].pimage = ok ? make_unique<Image>(std::move(image)) : nullptr;
@@ -4079,7 +4079,7 @@ void background_work(bool asynchronous) {
 void do_video(Args& args) {
   string filename = args.get_filename();
   if (!file_requires_pipe(filename)) filename = get_path_absolute(filename);
-  std::lock_guard<std::mutex> lg(g_mutex_obs);
+  std::lock_guard<std::mutex> lock(g_mutex_obs);
   g_obs.push(object_reading_video(filename));  // may throw
 }
 
@@ -4087,7 +4087,7 @@ void do_video(Args& args) {
 void do_image(Args& args) {
   string filename = args.get_filename();
   if (!file_requires_pipe(filename)) filename = get_path_absolute(filename);
-  std::lock_guard<std::mutex> lg(g_mutex_obs);
+  std::lock_guard<std::mutex> lock(g_mutex_obs);
   g_obs.push(object_reading_image(filename));  // may throw
 }
 
@@ -4249,7 +4249,7 @@ void do_stripe(Args& args) {
   }
   video.attrib().framerate = framerate;
   {
-    std::lock_guard<std::mutex> lg(g_mutex_obs);
+    std::lock_guard<std::mutex> lock(g_mutex_obs);
     const bool unsaved = true;
     g_obs.push(make_unique<Object>(std::move(video), std::move(video_nv12), nullptr,
                                    get_current_directory() + "/stripe_video.mp4", unsaved));
@@ -4277,7 +4277,7 @@ void do_zonal(Args& args) {
     });
   }
   {
-    std::lock_guard<std::mutex> lg(g_mutex_obs);
+    std::lock_guard<std::mutex> lock(g_mutex_obs);
     const bool bgra = false;
     const bool unsaved = true;
     g_obs.push(make_unique<Object>(std::move(image), get_current_directory() + "/zonal_plate.png", bgra, unsaved));

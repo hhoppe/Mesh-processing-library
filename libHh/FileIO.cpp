@@ -42,8 +42,8 @@
 #include <cctype>   // std::isalnum()
 #include <cstring>  // std::memset()
 #include <fstream>  // std::ifstream, std::ofstream
+#include <mutex>    // mutex, lock_guard
 
-#include "libHh/Locks.h"
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
 #include "libHh/Vec.h"
@@ -59,6 +59,8 @@
 namespace hh {
 
 namespace {
+
+std::mutex s_mutex;  // for all popen(), pclose() operations in this file
 
 FILE* my_popen(const string& scmd, const string& mode);
 FILE* my_popen(CArrayView<string> scmd, const string& mode);
@@ -282,6 +284,7 @@ class WFile::Implementation {
 // *** RFile
 
 RFile::RFile(const string& filename) {
+  std::lock_guard<std::mutex> lock(s_mutex);  // for popen(), and just to be safe, for fopen() as well
   string sfor = get_canonical_path(filename);
   const string mode = "r";
   if (ends_with(filename, "|")) {
@@ -317,6 +320,7 @@ RFile::RFile(const string& filename) {
 }
 
 RFile::~RFile() {
+  std::lock_guard<std::mutex> lock(s_mutex);  // for pclose(), and just to be safe, for fclose() as well
   if (_file_ispipe) {
 #if defined(_WIN32)
     // Avoids the "Broken pipe" error message, but takes too long for huge streams!
@@ -339,6 +343,7 @@ RFile::~RFile() {
 // *** WFile
 
 WFile::WFile(const string& filename) {
+  std::lock_guard<std::mutex> lock(s_mutex);  // for popen(), and just to be safe, for fopen() as well
   assertx(filename != "");
   string sfor = get_canonical_path(filename);
   const string mode = "w";
@@ -364,17 +369,12 @@ WFile::WFile(const string& filename) {
   if (_file && !_os) {
     _impl = make_unique<Implementation>(_file);
     _os = _impl->get_stream();
-    if (0) {
-      // Change default precision to 8 digits to approximate single-precision float numbers "almost" exactly.
-      // Verify that the precision was unchanged from its default value of 6.
-      //  (similar code both in Hh.cpp and FileIO.cpp)
-      assertx(_os->precision(8) == 6);  // see discussion in Hh.cpp
-    }
   }
   if (!(_os && *_os)) throw std::runtime_error("Could not open file '" + filename + "' for writing");
 }
 
 WFile::~WFile() {
+  std::lock_guard<std::mutex> lock(s_mutex);  // for pclose(), and just to be safe, for fclose() as well
   if (_os) _os->flush();
   _impl = nullptr;
   if (_file) {
@@ -849,19 +849,10 @@ namespace {
 #if !defined(_WIN32)
 
 FILE* my_popen(const string& scmd, const string& mode) {
-  // CYGWIN might fail to find hardcoded "/bin/sh" unless cygwin1.dll is in c:/cygwin/bin
-  //  (see also http://cygwin.com/ml/cygwin/2003-06/msg00567.html )
   // Note that "g++ -std=c++XX ..." sets -D__STRICT_ANSI__ which hides from the header files the functions
   //  popen(), pclose(), usleep(), posix_memalign(), setenv(), unsetenv(), gethostname().
   // Therefore we must compile with "g++ -std=c++XX -U__STRICT_ANSI__ ...".
-  FILE* f;
-  HH_LOCK { f = popen(scmd.c_str(), mode.c_str()); }
-  // CYGWIN problem:
-  //  Invoking a Perl script prog using "#!" mechanism calls "c:/Perl/bin/perl /cygdrive/c/hh/.../prog",
-  //   and c:/Perl/bin/perl does not recognize /cygdrive/c
-  //  Therefore I should manually call "perl prog".
-  //  No, I fixed this using c:/cygwin/etc/fstab, so it calls "c:/Perl/bin/perl /hh/.../prog"
-  return f;
+  return popen(scmd.c_str(), mode.c_str());
 }
 
 FILE* my_popen(CArrayView<string> sargv, const string& mode) {
@@ -874,9 +865,7 @@ FILE* my_popen(CArrayView<string> sargv, const string& mode) {
 }
 
 int my_pclose(FILE* file) {
-  int ret;
-  HH_LOCK { ret = pclose(file); }
-  return ret;
+  return pclose(file);
 }
 
 #else  // defined(_WIN32)
@@ -898,11 +887,8 @@ int my_pclose(FILE* file) {
 const int tot_fd = 512;  // max of _NHANDLE_ in internal.h
 intptr_t* popen_pid = nullptr;
 
-std::mutex s_mutex;
-
 template <typename Tcmd>  // const string& or CArrayView<string>
 FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
-  std::lock_guard<std::mutex> lg(s_mutex);
   assertx(mode == "rb" || mode == "wb");
   bool is_read = mode == "rb";
   if (0) SHOW(getenv_string("PATH"));
@@ -953,7 +939,6 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
 }
 
 int my_pclose_internal(FILE* file) {
-  std::lock_guard<std::mutex> lg(s_mutex);
   int fd = HH_POSIX(fileno)(file);
   assertx(!fclose(file));
   assertx(popen_pid);

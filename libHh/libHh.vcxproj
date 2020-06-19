@@ -152,7 +152,6 @@
     <ClInclude Include="LLS.h" />
     <ClInclude Include="LinearFunc.h" />
     <ClInclude Include="LinearRegression.h" />
-    <ClInclude Include="Locks.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Materials.h" />
     <ClInclude Include="MathOp.h" />

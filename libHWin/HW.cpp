@@ -13,7 +13,6 @@ HH_REFERENCE_LIB("winmm.lib");     // timeEndPeriod, etc.
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
 HH_REFERENCE_LIB("shcore.lib");    // SetProcessDpiAwareness()
 
-#include <cstring>  // std::memset()
 #include <mutex>    // std::once_flag, std::call_once()
 
 #include "libHh/Args.h"
@@ -851,9 +850,8 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
-  OPENFILENAMEW ofn;
+  OPENFILENAMEW ofn = {};
   {
-    std::memset(&ofn, 0, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = _hwnd;
     ofn.lpstrFilter = (L"Video and Images\0" VIDEO_EXTS L";" IMAGE_EXTS L"\0"
@@ -898,9 +896,8 @@ string HW::query_save_filename(const string& hint_filename, bool force) {
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
-  OPENFILENAMEW ofn;
+  OPENFILENAMEW ofn = {};
   {
-    std::memset(&ofn, 0, sizeof(ofn));
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = _hwnd;
     ofn.lpstrFilter = (L"All Files (*.*)\0*.*\0");
@@ -1127,8 +1124,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
   }
   if (_offscreen != "" && !_pbuffer) {
     assertx(!_is_glx_dbuf);
-    BITMAPINFOHEADER bmih;
-    std::memset(&bmih, 0, sizeof(bmih));
+    BITMAPINFOHEADER bmih = {};
     bmih.biSize = sizeof(bmih);
     bmih.biWidth = _win_dims[1];
     bmih.biHeight = _win_dims[0];
@@ -1224,8 +1220,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
       _hRenderDC = assertx(wglGetPbufferDCARB(hbuf));
     } else {
       // Set the pixelFormat
-      PIXELFORMATDESCRIPTOR pfd;
-      std::memset(&pfd, 0, sizeof(pfd));
+      PIXELFORMATDESCRIPTOR pfd = {};
       pfd.nSize = sizeof(pfd);
       pfd.nVersion = 1;
       assertx(SetPixelFormat(_hRenderDC, iPixelFormat, &pfd));
@@ -1271,8 +1266,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
     const int height = -MulDiv((_bigfont ? 15 : 11), GetDeviceCaps(_hDC, LOGPIXELSY), 72);
     // SHOW(GetDeviceCaps(_hDC, LOGPIXELSY), height);
     // GetDeviceCaps(_hDC, LOGPIXELSY)=96, height=-15
-    LOGFONTW lf;
-    std::memset(&lf, 0, sizeof(lf));
+    LOGFONTW lf = {};
     lf.lfHeight = height;
     lf.lfWidth = 0;  // default aspect ratio
     lf.lfEscapement = 0;
@@ -1359,9 +1353,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
   {
     uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal)));
     {
-      bmp_BITMAPINFOHEADER bmih;
-      static_assert(sizeof(bmih) == 40, "");
-      std::memset(&bmih, 0, sizeof(bmih));
+      bmp_BITMAPINFOHEADER bmih = {};
       bmih.biSize = sizeof(bmih);
       bmih.biWidth = image.xsize();
       bmih.biHeight = image.ysize();

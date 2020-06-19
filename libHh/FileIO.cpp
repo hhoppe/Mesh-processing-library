@@ -16,9 +16,9 @@
 
 #else
 
-#include <unistd.h>  // unlink(), getpid(), open(), execvp(), etc.
 #include <dirent.h>    // struct dirent, opendir(), readdir(), closedir()
 #include <sys/wait.h>  // wait(), waidpid()
+#include <unistd.h>    // unlink(), getpid(), execvp(), etc.
 #include <utime.h>     // struct utimbuf, struct _utimbuf, utime()
 
 #endif  // defined(_WIN32)
@@ -41,7 +41,6 @@
 
 #include <atomic>
 #include <cctype>   // std::isalnum()
-#include <cstring>  // std::memset()
 #include <fstream>  // std::ifstream, std::ofstream
 #include <mutex>    // mutex, lock_guard
 
@@ -544,8 +543,7 @@ bool recycle_path(const string& pathname) {
     wfilenames = widen(name);
     wfilenames.push_back(0);  // for double-null termination
   }
-  SHFILEOPSTRUCTW op;
-  std::memset(&op, '\0', sizeof(op));
+  SHFILEOPSTRUCTW op = {};
   op.hwnd = nullptr;     // hopefully this handle is not used when I specify FOF_NO_UI
   op.wFunc = FO_DELETE;  // use Recycle Bin if possible
   op.pFrom = wfilenames.data();

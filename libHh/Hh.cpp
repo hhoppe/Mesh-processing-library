@@ -36,7 +36,7 @@ HH_REFERENCE_LIB("shell32.lib");   // CommandLineToArgvW()
 #include <cerrno>  // errno
 #include <chrono>
 #include <cstdarg>  // va_list
-#include <cstring>  // std::memcpy(), strlen(), std::memset(), std::strerror()
+#include <cstring>  // std::memcpy(), strlen(), std::strerror()
 #include <locale>   // std::use_facet<>, std::locale()
 #include <map>      // avoids creating a depencency on my Map class
 #include <mutex>    // std::once_flag, std::call_once()
@@ -520,20 +520,6 @@ void my_sleep(double sec) {
 }
 
 size_t available_memory() {
-#if 0
-  if (1) {
-    size_t max_size_t{static_cast<size_t>(-1)};  // potential size of virtual address space
-    SHOW(max_size_t);
-  }
-  if (1) {
-    // This approach to estimating available memory fails,
-    // because on most platforms (e.g. win and mingw), pair.second == 0 when allocation fails.
-    auto pair = std::get_temporary_buffer<uchar>(static_cast<size_t>(-1));
-    SHOW(static_cast<size_t>(pair.first));
-    SHOW(pair.second);
-    std::return_temporary_buffer<uchar>(pair.first);
-  }
-#endif
   const bool ldebug = getenv_bool("MEMORY_DEBUG");
 #if defined(_WIN32)
   MEMORYSTATUSEX memory_status;
@@ -559,7 +545,6 @@ size_t available_memory() {
   size_t ret = min(physical_avail, virtual_avail);
   return ret;
 #endif
-  // if all fails, return 0;
 }
 
 string get_current_directory() {
@@ -752,73 +737,13 @@ static bool isafile(int fd) {
 #if defined(_WIN32)
   assertx(fd >= 0);
   HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
-  if (fd <= 2)
-    assertx(handle == GetStdHandle(fd == 0 ? STD_INPUT_HANDLE : fd == 1 ? STD_OUTPUT_HANDLE : STD_ERROR_HANDLE));
-#if 0
-  if (1) {
-    int i = GetFileType(handle);
-    SHOW(i);
-    // get FILE_TYPE_DISK (1) for file
-    // get FILE_TYPE_PIPE (3) for either pipe or emacs shell (darn)
-  }
-  if (1) {
-    DWORD out_buffer_size = 0, in_buffer_size = 0, max_instances = 0;
-    int suc = GetNamedPipeInfo(handle, 0, &out_buffer_size, &in_buffer_size, &max_instances);
-    SHOW(suc, out_buffer_size, in_buffer_size, max_instances);
-  }
-  if (1) {
-    DWORD flags;
-    int suc = GetHandleInformation(handle, &flags);
-    SHOW(suc, flags);
-  }
-  if (1) {
-    DWORD state = 0, cur_instances = 0, max_collection_count = 0;
-    DWORD collect_data_timeout = 0;
-    std::array<wchar_t, 200> username;
-    username[0] = wchar_t{0};
-    int suc = GetNamedPipeHandleStateW(handle, &state, &cur_instances, &max_collection_count, &collect_data_timeout,
-                                       username.data(), username.size() - 1);
-    SHOW(suc, state, cur_instances, max_collection_count, collect_data_timeout, narrow(username.data()));
-  }
-  // handle should never be a pipe with GetFileInformationByHandleEx()
-  if (1) {
-    FILE_STREAM_INFO fsi;
-    std::memset(&fsi, 0, sizeof(fsi));
-    if (assertw(GetFileInformationByHandleEx(handle, FileStreamInfo, &fsi, sizeof(fsi))))
-      SHOW(fsi.NextEntryOffset, fsi.StreamNameLength, fsi.StreamSize.QuadPart, fsi.StreamAllocationSize.QuadPart,
-           narrow(fsi.StreamName));  // fails always?
-  }
-  if (1) {
-    FILE_NAME_INFO fni;
-    std::memset(&fni, 0, sizeof(fni));
-    if (assertw(GetFileInformationByHandleEx(handle, FileNameInfo, &fni, sizeof(fni))))
-      SHOW(fni.FileNameLength, narrow(fni.FileName));  // fails always?
-  }
-#endif
-  bool success;
-  {
-    BY_HANDLE_FILE_INFORMATION hfinfo;
-    std::memset(&hfinfo, 0, sizeof(hfinfo));
-    success = !!GetFileInformationByHandle(handle, &hfinfo);
-    // 20041006 XPSP2: bug: now pipe returns success; detect this using the peculiar file information:
-    if (success && hfinfo.dwVolumeSerialNumber == 0 && hfinfo.ftCreationTime.dwHighDateTime == 0 &&
-        hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
-      success = false;
-    if (0) {
-      SHOW(fd, success);
-      SHOW(hfinfo.dwFileAttributes);
-      SHOW(hfinfo.ftCreationTime.dwLowDateTime);
-      SHOW(hfinfo.ftLastAccessTime.dwLowDateTime);
-      SHOW(hfinfo.ftLastWriteTime.dwLowDateTime);
-      SHOW(hfinfo.dwVolumeSerialNumber);
-      SHOW(hfinfo.nFileSizeHigh);
-      SHOW(hfinfo.nFileSizeLow);
-      SHOW(hfinfo.nNumberOfLinks);
-      SHOW(hfinfo.nFileIndexHigh);
-      SHOW(hfinfo.nFileIndexLow);
-    }
-  }
-  return success;
+  BY_HANDLE_FILE_INFORMATION hfinfo = {};
+  if (!GetFileInformationByHandle(handle, &hfinfo)) return false;
+  // 20041006 XPSP2: bug: now pipe returns success; detect this using the peculiar file information:
+  if (hfinfo.dwVolumeSerialNumber == 0 && hfinfo.ftCreationTime.dwHighDateTime == 0 &&
+      hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
+    return false;
+  return true;
 #else   // cygwin or Unix
   struct stat statbuf;
   assertx(!fstat(fd, &statbuf));
@@ -847,10 +772,8 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
 #if defined(_WIN32)
   {
     same_cout_cerr = false;
-    BY_HANDLE_FILE_INFORMATION hfinfo1;
-    std::memset(&hfinfo1, 0, sizeof(hfinfo1));
-    BY_HANDLE_FILE_INFORMATION hfinfo2;
-    std::memset(&hfinfo2, 0, sizeof(hfinfo2));
+    BY_HANDLE_FILE_INFORMATION hfinfo1 = {};
+    BY_HANDLE_FILE_INFORMATION hfinfo2 = {};
     if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(1)), &hfinfo1) &&
         GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(2)), &hfinfo2) &&
         hfinfo1.dwVolumeSerialNumber == hfinfo2.dwVolumeSerialNumber &&
@@ -986,16 +909,6 @@ int to_int(const char* s) {
 
 #if defined(_WIN32)
 
-// http://publib.boulder.ibm.com/infocenter/zos/v1r11/index.jsp?topic=/com.ibm.zos.r11.bpxbd00/setenv.htm
-// #include <cstdlib>
-// int setenv(const char* var_name, const char* new_value, int change_flag);
-//  new_value == 0 -> unset var_name
-//  change_flag == 0 -> only add/modify if not already existing
-//  return 0 if successful
-// HOWEVER: http://pubs.opengroup.org/onlinepubs/9699919799/functions/setenv.html
-//  does not show that new_value == 0 unsets the variable.
-//  Instead, it offers unsetenv(const char* name)
-
 static void unsetenv(const char* name) {
   // Note: In Unix, deletion would use sform("%s", name).
   const char* s = make_unique_c_string(sform("%s=", name).c_str()).release();  // never deleted
@@ -1079,11 +992,7 @@ string get_hostname() {
   if (host == "") host = getenv_string("COMPUTERNAME");
   if (host == "") host = getenv_string("HOST");
   if (host == "") host = "?";
-  if (1) {
-    host = to_lower(host);  // requires StringOp.h
-  } else {
-    // std::use_facet<std::ctype<char>>(std::locale()).tolower(&host[0], &host[0] + host.size());  // not host.data()
-  }
+  host = to_lower(host);
   return host;
 }
 

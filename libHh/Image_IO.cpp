@@ -9,7 +9,7 @@ void Image_IO_dummy_function_to_avoid_linkage_warnings() {}
 
 #else
 
-#include <cstring>  // strlen(), std::memset()
+#include <cstring>  // strlen()
 
 extern "C" {
 #if defined(__GNUC__) && !defined(__clang__)
@@ -216,8 +216,7 @@ void ImageIO::write_rgb(const Image& image, FILE* file) {
   ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
   const bool rle = true;
   {
-    rgb_IMAGE rgbi;
-    std::memset(&rgbi, 0, sizeof(rgbi));
+    rgb_IMAGE rgbi = {};
     rgbi.imagic = k_rgb_imagic;
     rgbi.type = 1;
     if (rle) rgbi.type |= 0x0100;
@@ -829,9 +828,7 @@ void ImageIO::write_bmp(const Image& image, FILE* file) {
   to_dos(&bmfh.bfReserved1);
   bmfh.bfReserved2 = 0;
   to_dos(&bmfh.bfReserved2);
-  bmp_BITMAPINFOHEADER bmih;
-  static_assert(sizeof(bmih) == 40, "");
-  std::memset(&bmih, 0, sizeof(bmih));
+  bmp_BITMAPINFOHEADER bmih = {};
   bmih.biSize = sizeof(bmih);
   to_dos(&bmih.biSize);
   bmih.biWidth = image.xsize();

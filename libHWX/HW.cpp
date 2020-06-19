@@ -12,7 +12,7 @@ extern "C" {
 
 #include <cerrno>
 #include <csignal>  // signal()
-#include <cstring>  // strlen(), std::memset(), std::strerror()
+#include <cstring>  // strlen(), std::strerror()
 #include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 #include "HW.xbm"
@@ -1061,8 +1061,7 @@ void HW::wake_up() {
     // "Xlib is not thread-safe and calling its functions from more than one thread may be dangerous!"
     // "For some reason it works stably if the two threads both call XOpenDisplay and use separate
     //   display* structures."
-    XEvent event;
-    std::memset(&event, 0, sizeof(event));
+    XEvent event = {};
     event.type = Expose;
     event.xexpose.window = _win;
     XSendEvent(_display, _win, False, ExposureMask, &event);

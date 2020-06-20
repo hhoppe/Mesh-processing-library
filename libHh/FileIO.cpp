@@ -515,9 +515,7 @@ bool command_exists_in_path(const string& name) {
   return false;
 }
 
-bool remove_file(const string& name) {
-  return !HH_POSIX(unlink)(name.c_str());
-}
+bool remove_file(const string& name) { return !HH_POSIX(unlink)(name.c_str()); }
 
 bool recycle_path(const string& pathname) {
   // http://www.hardcoded.net/articles/send-files-to-trash-on-all-platforms.htm
@@ -865,9 +863,7 @@ FILE* my_popen(CArrayView<string> sargv, const string& mode) {
   return my_popen(scmd, mode);
 }
 
-int my_pclose(FILE* file) {
-  return pclose(file);
-}
+int my_pclose(FILE* file) { return pclose(file); }
 
 #else  // defined(_WIN32)
 

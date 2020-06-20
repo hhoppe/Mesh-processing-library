@@ -3,13 +3,13 @@
 
 #if defined(_WIN32)
 #include <fcntl.h>  // O_RDONLY
-#include <io.h>  // read(), write(), open(), dup()
+#include <io.h>     // read(), write(), open(), dup()
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // WaitForSingleObject(), CreateThread(), SetEvent(), etc.
 #define BUFFER_USE_WIN32_THREAD
 #else
-#include <unistd.h>  // read(), write()
 #include <sys/select.h>  // select(), fd_set
+#include <unistd.h>      // read(), write()
 #endif
 
 #if defined(_WIN32) && !defined(EWOULDBLOCK)  // undefined in __MINGW32__; was undefined until Visual Studio 2010

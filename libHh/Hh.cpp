@@ -120,24 +120,14 @@ void show_call_stack_internal() { std::cerr << "MyStackWalker is disabled, so ca
 
 #endif  // !defined(HH_NO_STACKWALKER)
 
-} // namespace
+}  // namespace
 
 #if defined(_WIN32) && !defined(HH_NO_UTF8)
 
 // Convert Windows UTF-16 std::wstring to UTF-8 std::string.
 std::string narrow(const std::wstring& wstr) {
-  // int WideCharToMultiByte(
-  //     _In_       UINT CodePage,
-  //     _In_       DWORD dwFlags,
-  //     _In_       LPCWSTR lpWideCharStr,
-  //     _In_       int cchWideChar,
-  //     _Out_opt_  LPSTR lpMultiByteStr,
-  //     _In_       int cbMultiByte,
-  //     _In_opt_   LPCSTR lpDefaultChar,
-  //     _Out_opt_  LPBOOL lpUsedDefaultChar
-  //     );
   const unsigned flags = WC_ERR_INVALID_CHARS;
-  // By specifying cchWideChar == -1, we include null-terminating character in nchars.
+  // By specifying cchWideChar == -1, we include the null terminating character in nchars.
   int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
   assertx(nchars > 0);
   string str(nchars - 1, '\0');  // does allocate space for an extra null-terminating character
@@ -149,16 +139,8 @@ std::string narrow(const std::wstring& wstr) {
 
 // Convert UTF-8 std::string to Windows UTF-16 std::wstring.
 std::wstring widen(const std::string& str) {
-  // int MultiByteToWideChar(
-  //     _In_       UINT CodePage,
-  //     _In_       DWORD dwFlags,
-  //     _In_       LPCSTR lpMultiByteStr,
-  //     _In_       int cbMultiByte,
-  //     _Out_opt_  LPWSTR lpWideCharStr,
-  //     _In_       int cchWideChar
-  //     );
   const unsigned flags = MB_ERR_INVALID_CHARS;
-  // By specifying str.size() + 1, we include the null-terminating character in nwchars.
+  // By specifying str.size() + 1, we include the null terminating character in nwchars.
   int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), nullptr, 0);
   assertx(nwchars > 0);
   std::wstring wstr(nwchars - 1, wchar_t{0});
@@ -173,14 +155,14 @@ std::wstring widen(const std::string& str) {
 std::string narrow(const std::wstring& wstr) {
   const std::locale& loc = std::locale();
   string str(wstr.size(), '\0');
-  std::use_facet<std::ctype<wchar_t>>(loc).narrow(wstr.data(), wstr.data() + wstr.size(), '?', &str[0]);
+  std::use_facet<std::ctype<wchar_t> >(loc).narrow(wstr.data(), wstr.data() + wstr.size(), '?', &str[0]);
   return str;
 }
 
 std::wstring widen(const std::string& str) {
   const std::locale& loc = std::locale();
   std::wstring wstr(str.size(), wchar_t{0});
-  std::use_facet<std::ctype<wchar_t>>(loc).widen(str.data(), str.data() + str.size(), &wstr[0]);
+  std::use_facet<std::ctype<wchar_t> >(loc).widen(str.data(), str.data() + str.size(), &wstr[0]);
   return wstr;
 }
 
@@ -319,8 +301,7 @@ class Warnings {
     if (_map.empty()) return;
     struct string_less {  // lexicographic comparison; deterministic, unlike pointer comparison
       bool operator()(const void* s1, const void* s2) const {
-        return strcmp(static_cast<const char*>(s1),
-                      static_cast<const char*>(s2)) < 0;
+        return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2)) < 0;
       }
     };
     std::map<const void*, int, string_less> sorted_map(_map.begin(), _map.end());
@@ -815,8 +796,6 @@ void show_possible_win32_error() {
 
 void show_call_stack() { show_call_stack_internal(); }
 
-HH_NORETURN void exit_immediately(int code) {
-  _exit(code);
-}
+HH_NORETURN void exit_immediately(int code) { _exit(code); }
 
 }  // namespace hh

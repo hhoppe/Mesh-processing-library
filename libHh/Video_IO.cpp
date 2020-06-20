@@ -50,7 +50,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
-#include "libHh/StringOp.h"     // get_path_extension(), to_lower(), begins_with(), ends_with(), contains()
+#include "libHh/StringOp.h"  // get_path_extension(), to_lower(), begins_with(), ends_with(), contains()
 #include "libHh/Timer.h"
 #include "libHh/Vector4.h"
 

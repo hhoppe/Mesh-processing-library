@@ -14,7 +14,7 @@ HH_REFERENCE_LIB("shcore.lib");   // SetProcessDpiAwareness()
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 HH_REFERENCE_LIB("winmm.lib");    // timeEndPeriod, etc.
 
-#include <mutex>    // std::once_flag, std::call_once()
+#include <mutex>  // std::once_flag, std::call_once()
 
 #include "libHh/Args.h"
 #include "libHh/Array.h"

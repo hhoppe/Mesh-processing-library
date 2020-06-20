@@ -154,7 +154,7 @@
 #pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif
 using namespace std;
-namespace hh { }
+namespace hh {}
 using namespace hh;
 #endif
 
@@ -273,7 +273,6 @@ extern int g_unoptimized_zero;
 #define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
-// Added "0" for clang use in constexpr
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
 #define ASSERTXX(...) (void(0))
 #define HH_CHECK_BOUNDS(i, n) (void(0))

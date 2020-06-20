@@ -1,6 +1,6 @@
 #include "libHh/Hh.h"
 
-#include <fcntl.h>     // fcntl()
+#include <fcntl.h>  // fcntl()
 
 #if defined(_WIN32)
 

@@ -501,7 +501,7 @@ unique_ptr<Object> object_reading_video(string filename) {
     if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
     bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi");
     auto prvideo = make_unique<RVideo>(filename, use_nv12);  // may throw
-    Vec3<int> dims = prvideo->dims();                                      // should allocate extra padframes?
+    Vec3<int> dims = prvideo->dims();                        // should allocate extra padframes?
     if (use_nv12 && !is_zero(dims.tail<2>() % 2)) {
       use_nv12 = false;
       prvideo = nullptr;
@@ -4275,7 +4275,7 @@ void do_zonal(Args& args) {
     const float scale = TAU / float(sum(image.dims()));
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] =
-        Pixel::gray(uint8_t((std::cos((square(ysize - 1 - yx[0]) + square(yx[1])) * scale) * .45f + .5f) * 256.f));
+          Pixel::gray(uint8_t((std::cos((square(ysize - 1 - yx[0]) + square(yx[1])) * scale) * .45f + .5f) * 256.f));
     });
   }
   {

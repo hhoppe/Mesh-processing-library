@@ -10,10 +10,10 @@ void Image_libs_dummy_function_to_avoid_linkage_warnings() {}
 
 #include <cstring>  // strlen()
 
-extern "C" {
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic ignored "-Wuseless-cast"  // for (size_t) cast in two macros in jpeglib.h
 #endif
+extern "C" {
 #include "jpeglib.h"
 #include "png.h"
 }
@@ -40,11 +40,16 @@ namespace hh {
 namespace details {
 
 struct ImageLibs {  // friend of Image
-  static void read_rgb(Image& image, FILE* file), write_rgb(const Image& image, FILE* file);
-  static void read_jpg(Image& image, FILE* file), write_jpg(const Image& image, FILE* file);
-  static void read_bmp(Image& image, FILE* file), write_bmp(const Image& image, FILE* file);
-  static void read_ppm(Image& image, FILE* file), write_ppm(const Image& image, FILE* file);
-  static void read_png(Image& image, FILE* file), write_png(const Image& image, FILE* file);
+  static void read_rgb(Image& image, FILE* file);
+  static void write_rgb(const Image& image, FILE* file);
+  static void read_jpg(Image& image, FILE* file);
+  static void write_jpg(const Image& image, FILE* file);
+  static void read_bmp(Image& image, FILE* file);
+  static void write_bmp(const Image& image, FILE* file);
+  static void read_ppm(Image& image, FILE* file);
+  static void write_ppm(const Image& image, FILE* file);
+  static void read_png(Image& image, FILE* file);
+  static void write_png(const Image& image, FILE* file);
 };
 
 struct ImageFiletype {

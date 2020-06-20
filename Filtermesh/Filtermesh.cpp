@@ -3761,7 +3761,7 @@ Point compute_hull_point(Vertex v, float offset) {
   free_ivector(izrov, 1, n);
   assertx(ret);
   return newpoint;
-#else  // defined(HH_HAVE_SIMPLEX)
+#else   // defined(HH_HAVE_SIMPLEX)
   assertnever_ret("Linear programming (simplex) is unavailable");
   return Point(thrice(BIGFLOAT));
 #endif  // defined(HH_HAVE_SIMPLEX)

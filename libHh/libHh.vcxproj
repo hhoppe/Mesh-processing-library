@@ -64,6 +64,7 @@
     <ClCompile Include="A3dStream.cpp" />
     <ClCompile Include="Args.cpp" />
     <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="Audio_IO.cpp" />
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="BufferedA3dStream.cpp" />
     <ClCompile Include="FileIO.cpp" />
@@ -75,10 +76,12 @@
     <ClCompile Include="HashFloat.cpp" />
     <ClCompile Include="Hh.cpp" />
     <ClCompile Include="Hh_init.cpp" />
+    <ClCompile Include="Hh_main.cpp" />
     <ClCompile Include="Image.cpp">
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
     </ClCompile>
     <ClCompile Include="Image_IO.cpp" />
+    <ClCompile Include="Image_libs.cpp" />
     <ClCompile Include="Image_wic.cpp" />
     <ClCompile Include="LLS.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -100,6 +103,7 @@
     <ClCompile Include="Video.cpp">
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
     </ClCompile>
+    <ClCompile Include="Video_IO.cpp" />
     <ClCompile Include="precompiled_libHh.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
       <PrecompiledHeaderFile>precompiled_libHh.h</PrecompiledHeaderFile>

@@ -90,7 +90,7 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
 # cppinc += -DHH_NO_IMAGE_WIC#  option for CONFIG=win/w32/clang
-# cppinc += -DHH_IMAGE_IO_TOO#  option for CONFIG=win/w32/clang; default is to just use WIC
+# cppinc += -DHH_IMAGE_LIBS_TOO#  option for CONFIG=win/w32/clang; default is to just use WIC
 # cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  otherwise enable SSE / NEON instructions
 # cppinc += -DHH_NO_STACKWALKER
 # cppinc += -DHH_NO_LIB_REFERENCES
@@ -100,14 +100,14 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # PEDANTIC ?= 1
 
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
-  cppinc += -DHH_NO_IMAGE_IO
+  cppinc += -DHH_NO_IMAGE_LIBS
 endif
 
 ignore_compile_warnings ?= 1
 
 have_lapack = $(if $(filter -DHH_HAVE_LAPACK,$(cppinc)),1,)
 have_recipes = $(if $(filter -DHH_HAVE_SIMPLEX,$(cppinc)),1,)
-have_image_io = $(if $(filter -DHH_NO_IMAGE_IO,$(cppinc)),,1)
+have_image_libs = $(if $(filter -DHH_NO_IMAGE_LIBS,$(cppinc)),,1)
 
 
 # Use CONFIG=all as a way to run gmake successively on all $(build_configs).
@@ -212,7 +212,7 @@ my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libH
 LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
 
 ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
-  system_libs += $(strip $(if $(have_image_io),jpeg png z,) $(if $(have_lapack),lapack,))
+  system_libs += $(strip $(if $(have_image_libs),jpeg png z,) $(if $(have_lapack),lapack,))
   LDLIBS += $(foreach n,$(system_libs),-l$(n))
 endif
 

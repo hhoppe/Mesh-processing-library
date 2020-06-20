@@ -530,7 +530,7 @@ unique_ptr<Object> object_reading_image(const string& filename) {
   if (!assertw(file_requires_pipe(filename) || filename_is_image(filename))) SHOW("not image?", filename);
   Image image;
   HH_CTIMER(_read_image, g_verbose >= 1);
-  // about 0.20sec for 5472x3648 using WIC; 0.40sec using Image_IO libjpeg; 0.08sec using Pixel::gray
+  // about 0.20sec for 5472x3648 using Image_wic; 0.40sec using Image_libs libjpeg; 0.08sec using Pixel::gray
   bool bgra = false, unsaved = false;
   if (0) {  // test the response time without any loading delay
     static uchar uc = 40;
@@ -4375,8 +4375,8 @@ int main(int argc, const char** argv) {
   args.p("*.JPEG", do_image, ": load input image");
   args.p("*.PNG", do_image, ": load input image");
   args.p("*.BMP", do_image, ": load input image");
-  args.p("*.arw", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
-  args.p("*.exr", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=FF)");
+  args.p("*.arw", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
+  args.p("*.exr", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
   HH_ARGSD(vlp, "file.vlp : load looping parameters");
   args.p("*.vlp", do_vlp, ": load looping parameters");
   HH_ARGSD(batch_create_loop, "input_video.mp4 output_loop.mp4 : create loop without opening any window");

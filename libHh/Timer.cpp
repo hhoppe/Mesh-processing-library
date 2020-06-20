@@ -3,7 +3,8 @@
 
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h>  // GetThreadTimes(), GetProcessTimes(), FILETIME
+#include <Windows.h>               // GetThreadTimes(), GetProcessTimes(), FILETIME
+HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyExA()
 #else
 #include <time.h>  // clock_gettime()
 #endif             // defined(_WIN32)
@@ -42,8 +43,6 @@ namespace hh {
 #if !defined(HH_NO_TIMERS_CLASS)
 
 namespace {
-
-HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyEx, etc. require this library.
 
 string timing_host() {
   string rev;

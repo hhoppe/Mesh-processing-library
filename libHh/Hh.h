@@ -470,11 +470,16 @@ float getenv_float(const string& varname, float vdefault, bool warn = false);
 // Return string value of environment variable varname, or "" if not defined.
 string getenv_string(const string& varname);
 
-// Return machine name, in lowercase.
-string get_hostname();
+// Show any Win32 error if on _WIN32.
+void show_possible_win32_error();
 
-// Use fcntl() to make read() calls non-blocking; returns false if failure.
-bool set_fd_no_delay(int fd, bool nodelay);
+// Show the call stack if possible.
+void show_call_stack();
+
+// For Unix _exit(code).
+HH_NORETURN void exit_immediately(int code);
+
+// *** Hh_main.cpp
 
 // Return absolute time, in secs (accuracy at least ~.001).
 double get_precise_time();
@@ -497,20 +502,17 @@ string get_current_directory();
 // String like "2016-02-15 18:02:28".
 string get_current_datetime();
 
+// Return machine name, in lowercase.
+string get_hostname();
+
 // String with date, time, machine, build parameters.
 string get_header_info();
 
 // On Windows, replace the command-line argv with a new one that contains UTF-8 encoded strings; else do nothing.
 void ensure_utf8_encoding(int& argc, const char**& argv);
 
-// Show any Win32 error if on _WIN32.
-void show_possible_win32_error();
-
-// Show the call stack if possible.
-void show_call_stack();
-
-// For Unix _exit(code).
-HH_NORETURN void exit_immediately(int code);
+// Use fcntl() to make read() calls non-blocking; returns false if failure.
+bool set_fd_no_delay(int fd, bool nodelay);
 
 //----------------------------------------------------------------------------
 

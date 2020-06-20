@@ -2,15 +2,17 @@
 #ifndef MESH_PROCESSING_LIBHWIN_HW_H_
 #define MESH_PROCESSING_LIBHWIN_HW_H_
 
-extern "C" {
-// #define WIN32_LEAN_AND_MEAN // not possible
+// #define WIN32_LEAN_AND_MEAN  // not possible
 #undef NOGDI
 #define Polygon Win32_Polygon  // avoid name collision on symbol Polygon
 #include <Windows.h>           // required by OpenGL
 #undef Polygon
-#undef small           // <windows.h> defines 'small':  "#define small char" in ./shared/rpcndr.h
-#include <GL/gl.h>     // glBegin() etc. for users of this class
+#undef small  // <windows.h> defines 'small':  "#define small char" in ./shared/rpcndr.h
+
 #include <mmsystem.h>  // timeGetDevCaps(), MMRESULT
+
+extern "C" {
+#include <GL/gl.h>     // glBegin() etc. for users of this class
 #if !defined(HH_NO_GLU)
 #include <GL/glu.h>
 #endif

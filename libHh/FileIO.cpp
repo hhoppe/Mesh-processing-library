@@ -6,13 +6,13 @@
 
 #if defined(_WIN32)
 
-// not #define WIN32_LEAN_AND_MEAN because need REFIID and Shellapi.h; must appear before <shellapi.h>
-#include <Windows.h>  // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
-
-#include <io.h>         // _pipe(), dup(), close(), etc.
-#include <process.h>    // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
-#include <shellapi.h>   // SHFileOperation(), SHFILEOPSTRUCTW
-#include <sys/utime.h>  // struct utimbuf, struct _utimbuf, utime(), _wutime()
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>              // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
+#include <io.h>                   // _pipe(), dup(), close(), etc.
+#include <process.h>              // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
+#include <shellapi.h>             // SHFileOperation(), SHFILEOPSTRUCTW
+#include <sys/utime.h>            // struct utimbuf, struct _utimbuf, utime(), _wutime()
+HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 
 #else
 
@@ -50,7 +50,7 @@
 
 // Note that RFile/WFile first construct a FILE* (which is accessible via cfile()), then a std::stream on top.
 // This is quite flexible.  I use this in:
-// - Image_IO.cpp so that libpng and libjpeg can work directly on FILE*; this could easily be worked around
+// - Image_libs.cpp so that libpng and libjpeg can work directly on FILE*; this could easily be worked around
 //    because these libraries support user-defined reader/writer functions, which could access std::stream.
 // - G3dio.cpp to create a RBuffer directly on the POSIX file descriptor fileno(cfile());
 //   It might be possible to implement RBuffer as a custom adaptively resizable std::streambuf

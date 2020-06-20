@@ -3,7 +3,6 @@
 #define MESH_PROCESSING_LIBHH_VIDEO_H_
 
 #include "libHh/Audio.h"
-#include "libHh/FileIO.h"  // TmpFile
 #include "libHh/Filter.h"  // FilterBnd
 #include "libHh/Grid.h"
 #include "libHh/Image.h"  // Nv12View
@@ -14,11 +13,13 @@
   Pixel& pix = video(f, y, x);    // as in Image, [y = 0][x = 0] is at upper-left corner of each image frame
   uint8_t c = video(f, y, x)[z];  // z = [0..2]
 
-  // Video read/write is performed using: Windows Media Foundation (MF) or ffmpeg (FF).
+  // Video read/write is performed using: Windows Media Foundation (mf) or ffmpeg (ffmpeg).
 }
 #endif
 
 namespace hh {
+
+class TmpFile;  // libHh/FileIO.h
 
 // A Video is a 3D grid of RGB pixels, plus attributes like compression type, frame rate, and bit rate.
 class Video : public Grid<3, Pixel> {
@@ -108,9 +109,9 @@ class VideoNv12 : noncopyable {
   CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
   GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
   CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  void special_reduce_dim0(int i) { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
   void read_file(const string& filename, Video::Attrib* pattrib = nullptr);    // may throw std::runtime_error
   void write_file(const string& filename, const Video::Attrib& attrib) const;  // may throw std::runtime_error
-  void special_reduce_dim0(int i) { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
 
  private:
   Grid<3, uint8_t> _grid_Y;         // luminance
@@ -167,7 +168,7 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
 VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
                 const Pixel* bordervalue = nullptr, VideoNv12&& pnewvideo_nv12 = VideoNv12());
 
-// Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
+// Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may equal "ffmpeg" or "mf".
 class RVideo {
  public:
   explicit RVideo(string filename, bool use_nv12 = false);  // may throw std::runtime_error
@@ -191,10 +192,10 @@ class RVideo {
   unique_ptr<TmpFile> _tmpfile;
   unique_ptr<Implementation> _impl;
   friend class MF_RVideo_Implementation;
-  friend class FF_RVideo_Implementation;
+  friend class Ffmpeg_RVideo_Implementation;
 };
 
-// Write a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may set FF or MF.
+// Write a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may equal "ffmpeg" or "mf".
 class WVideo {
  public:
   explicit WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib attrib,
@@ -216,7 +217,7 @@ class WVideo {
   unique_ptr<TmpFile> _tmpfile;
   unique_ptr<Implementation> _impl;
   friend class MF_WVideo_Implementation;
-  friend class FF_WVideo_Implementation;
+  friend class Ffmpeg_WVideo_Implementation;
 };
 
 //----------------------------------------------------------------------------

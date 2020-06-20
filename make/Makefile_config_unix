@@ -2,7 +2,7 @@ rel ?= 1#  0=debug or 1=release (usually 1)
 x64 = 1#  32-bit not supported
 
 ifeq ($(is_mac),1)
-  cppinc += -DHH_NO_IMAGE_IO#  to avoid installing libjpeg and libpng; instead just use ffmpeg
+  cppinc += -DHH_NO_IMAGE_LIBS#  to avoid installing libjpeg and libpng; instead just use ffmpeg
   includes += -I/opt/X11/include#  for XQuartz X11
   LDFLAGS += -L/opt/X11/lib#  for XQuartz X11
   CC = clang#  set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.

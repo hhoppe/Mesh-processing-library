@@ -15,10 +15,9 @@ void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 #include <wincodec.h>     // WIC
 #include <wincodecsdk.h>  // IWICMetadataBlockReader
 
-HH_REFERENCE_LIB("ole32.lib");     // for CoInitializeEx() and CoCreateInstance()
-HH_REFERENCE_LIB("oleaut32.lib");  // for VARIANT; odd: required from command-line cl.exe but not from msbuild.exe
-HH_REFERENCE_LIB("shlwapi.lib");   // for SHCreateMemStream()
-// HH_REFERENCE_LIB("windowscodecs.lib");  // for IID_IWICBitmapSource
+HH_REFERENCE_LIB("ole32.lib");     // CoInitializeEx() and CoCreateInstance()
+HH_REFERENCE_LIB("oleaut32.lib");  // VARIANT; odd: required from command-line cl.exe but not from msbuild.exe
+HH_REFERENCE_LIB("shlwapi.lib");   // SHCreateMemStream()
 
 #include <cctype>  // std::isalnum(), std::toupper()
 

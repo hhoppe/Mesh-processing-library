@@ -75,7 +75,8 @@ void StackWalker_dummy_function_to_avoid_linkage_warnings() {}
 
 #include "Hh.h"
 
-#pragma comment(lib, "version.lib")  // for "VerQueryValue"
+HH_REFERENCE_LIB("version.lib");   // for "VerQueryValue"
+HH_REFERENCE_LIB("advapi32.lib");  // for GetUserName() here and in StackWalker
 
 namespace hh {
 

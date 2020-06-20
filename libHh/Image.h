@@ -24,14 +24,14 @@
   //  (This is consistent with *.jpg, *.png, *.ppm, DirectX.)
   //  (In contrast, *.rgb, *.bmp, OpenGL glTexImage2D() have image origin at lower-left.)
   // bgra == true -> BGR or BGRA channel-ordering.
-  // Image read/write is performed using: Windows Imaging Component (WIC), libpng + libjpeg + .. (IO), or ffmpeg (FF).
+  // Image IO is performed using: Windows Imaging Component (wic), libpng + libjpeg + .. (libs), or ffmpeg (ffmpeg).
 }
 #endif
 
 namespace hh {
 
 namespace details {
-struct ImageIO;
+struct ImageLibs;
 }
 
 class Image : public Matrix<Pixel> {
@@ -76,10 +76,10 @@ class Image : public Matrix<Pixel> {
     string suffix;           // e.g. "rgb"; "" if unknown; to identify format of read_file("-") and write_file("-")
    private:                  // reserved for Image class internals
     Array<uchar> exif_data;  // zero length if absent; could also be implemented easily as string
-    string orig_filename;    // for WIC, upon writing image, it can reopen source file to copy metadata
-    string orig_suffix;      // for WIC, indicates type of original image container
+    string orig_filename;    // for Image_wic, upon writing image, it can reopen source file to copy metadata
+    string orig_suffix;      // for Image_wic, indicates type of original image container
     friend Image;
-    friend details::ImageIO;
+    friend details::ImageLibs;
   };
 
  private:
@@ -87,13 +87,13 @@ class Image : public Matrix<Pixel> {
   bool _silent_io_progress{false};
   void read_file_i(const string& filename, bool bgra);
   void write_file_i(const string& filename, bool bgra) const;
-  friend details::ImageIO;
+  friend details::ImageLibs;
   void read_file_wic(const string& filename, bool bgra);
   void write_file_wic(const string& filename, bool bgra) const;
-  void read_file_IO(const string& filename, bool bgra);
-  void write_file_IO(const string& filename, bool bgra) const;
-  void read_file_FF(const string& filename, bool bgra);
-  void write_file_FF(const string& filename, bool bgra) const;
+  void read_file_libs(const string& filename, bool bgra);
+  void write_file_libs(const string& filename, bool bgra) const;
+  void read_file_ffmpeg(const string& filename, bool bgra);
+  void write_file_ffmpeg(const string& filename, bool bgra) const;
 };
 
 // Whether filename suffix identifies it as an image.
@@ -275,25 +275,25 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 #define HH_NO_IMAGE_WIC
 #endif
 
-#if 0  // temporarily enable Image_IO even when WIC is available
-#define HH_IMAGE_IO_TOO
+#if 0  // temporarily enable Image_libs even when WIC is available
+#define HH_IMAGE_LIBS_TOO
 #endif
 
 #if 0  // test the use of ffmpeg
 #define HH_NO_IMAGE_WIC
-#define HH_NO_IMAGE_IO
+#define HH_NO_IMAGE_LIBS
 #endif
 
 #if !defined(HH_NO_IMAGE_WIC) && defined(_MSC_VER)  // mingw doesn't recognize <wincodecsdk.h>
 #define HH_IMAGE_HAVE_WIC
 #endif
 
-#if defined(HH_IMAGE_HAVE_WIC) && !defined(HH_IMAGE_IO_TOO) && !defined(HH_NO_IMAGE_IO)
-#define HH_NO_IMAGE_IO
+#if defined(HH_IMAGE_HAVE_WIC) && !defined(HH_IMAGE_LIBS_TOO) && !defined(HH_NO_IMAGE_LIBS)
+#define HH_NO_IMAGE_LIBS
 #endif
 
-#if !defined(HH_NO_IMAGE_IO)
-#define HH_IMAGE_HAVE_IO
+#if !defined(HH_NO_IMAGE_LIBS)
+#define HH_IMAGE_HAVE_LIBS
 #endif
 
 //----------------------------------------------------------------------------

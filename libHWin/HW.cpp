@@ -7,11 +7,12 @@
 #include <commdlg.h>   // GetOpenFileNameW()
 #include <shellapi.h>  // DragAcceptFiles()
 
-HH_REFERENCE_LIB("opengl32.lib");
-HH_REFERENCE_LIB("glu32.lib");
-HH_REFERENCE_LIB("winmm.lib");     // timeEndPeriod, etc.
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
-HH_REFERENCE_LIB("shcore.lib");    // SetProcessDpiAwareness()
+HH_REFERENCE_LIB("glu32.lib");
+HH_REFERENCE_LIB("opengl32.lib");
+HH_REFERENCE_LIB("shcore.lib");   // SetProcessDpiAwareness()
+HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
+HH_REFERENCE_LIB("winmm.lib");    // timeEndPeriod, etc.
 
 #include <mutex>    // std::once_flag, std::call_once()
 

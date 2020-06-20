@@ -405,11 +405,11 @@ void hh_at_clean_up(void (*function)());
 void hh_clean_up();
 
 #if defined(_WIN32)
-// Convert Windows UTF-16 std::wstring to UTF-8 std::string (or encoding based on locale if defined(HH_NO_UTF8))
-std::string narrow(const std::wstring& wstr);
+// Convert Windows UTF-16 std::wstring to UTF-8 std::string.
+std::string utf8_from_utf16(const std::wstring& wstr);
 
-// Convert UTF-8 std::string (or encoding based on locale if defined(HH_NO_UTF8)) to Windows UTF-16 std::wstring.
-std::wstring widen(const std::string& str);
+// Convert UTF-8 std::string to Windows UTF-16 std::wstring.
+std::wstring utf16_from_utf8(const std::string& str);
 #endif
 
 // e.g. SHOW(type_name<T>());

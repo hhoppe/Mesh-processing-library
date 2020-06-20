@@ -174,10 +174,10 @@ size_t available_memory() {
 }
 
 string get_current_directory() {
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   std::array<wchar_t, 2000> buffer;
   assertx(_wgetcwd(buffer.data(), int(buffer.size() - 1)));
-  return get_canonical_path(narrow(buffer.data()));
+  return get_canonical_path(utf8_from_utf16(buffer.data()));
 #else
   std::array<char, 2000> buffer;
   assertx(getcwd(buffer.data(), int(buffer.size() - 1)));
@@ -277,13 +277,13 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
     static int done = 0;
     assertx(!done++);
   }
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   if (1) {  // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb776391%28v=vs.85%29.aspx
     wchar_t** wargv;
     {
       int nargc;
       wargv = assertx(CommandLineToArgvW(GetCommandLineW(), &nargc));
-      if (nargc != argc) SHOW(argc, nargc, narrow(GetCommandLineW()), narrow(wargv[0]));
+      if (nargc != argc) SHOW(argc, nargc, utf8_from_utf16(GetCommandLineW()), utf8_from_utf16(wargv[0]));
       assertx(nargc == argc);
       using type = const char*;
       assertx(argc > 0);
@@ -291,7 +291,7 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
       argv = new type[intptr_t{argc + 1}];  // never deleted
       argv[argc] = nullptr;                 // extra nullptr is safest
       for_int(i, argc) {
-        argv[i] = make_unique_c_string(narrow(wargv[i]).c_str()).release();  // never deleted
+        argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // never deleted
       }
     }
     LocalFree(wargv);

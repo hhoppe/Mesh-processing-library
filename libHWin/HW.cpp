@@ -473,7 +473,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         for_int(i, cFiles) {
           Vec<wchar_t, 2000> filename;
           assertx(DragQueryFileW(hdrop, i, filename.data(), filename.num() - 1));
-          filenames[i] = get_canonical_path(narrow(filename.data()));
+          filenames[i] = get_canonical_path(utf8_from_utf16(filename.data()));
           // TextOutW(hdc, pt.x, pt.y, filename.data(), lstrlenW(filename)); pt.y += 20;
         }
         DragFinish(hdrop);
@@ -737,10 +737,10 @@ void HW::fill_polygon(CArrayView<Vec2<float>> points) {
 void HW::set_window_title(string ps) {
   assertx(_state == EState::init || _state == EState::open);
   _window_title = std::move(ps);
-  // std::wcerr << widen(_window_title) << widen("\n");
+  // std::wcerr << utf16_from_utf8(_window_title) << utf16_from_utf8("\n");
   if (_state == EState::open) {
     ASSERTX(IsWindowUnicode(_hwnd));
-    assertx(SetWindowTextW(_hwnd, widen(_window_title).c_str()));
+    assertx(SetWindowTextW(_hwnd, utf16_from_utf8(_window_title).c_str()));
     // Note that this gets converted to a WM_SETTEXT message;
     //  see http://stackoverflow.com/questions/9410681/setwindowtextw-in-an-ansi-project
   }
@@ -845,9 +845,9 @@ void HW::hard_flush() {
 
 Array<string> HW::query_open_filenames(const string& hint_filename) {
   // http://www.winprog.org/tutorial/app_two.html
-  std::wstring whint_filename = widen(hint_filename);
-  std::wstring whint_directory = widen(replace_all(get_path_head(hint_filename), "/", "\\"));
-  std::wstring whint_tail = widen(get_path_tail(hint_filename));
+  std::wstring whint_filename = utf16_from_utf8(hint_filename);
+  std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
+  std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
@@ -865,7 +865,7 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
     // ofn.lpstrDefExt = L"txt";
     ofn.lpstrTitle = L"Open File";
     ofn.lpstrInitialDir = whint_directory.c_str();
-    if (0) SHOW(narrow(ofn.lpstrInitialDir), narrow(ofn.lpstrFile));
+    if (0) SHOW(utf8_from_utf16(ofn.lpstrInitialDir), utf8_from_utf16(ofn.lpstrFile));
   }
   if (!GetOpenFileNameW(&ofn)) return {};
   // If the OFN_ALLOWMULTISELECT flag is set and the user selects multiple files, the buffer contains
@@ -875,12 +875,12 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
   Array<string> filenames;
   if (ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]) {  // single file
     filenames.reserve(1);
-    filenames.push(get_canonical_path(narrow(buffer.data())));
+    filenames.push(get_canonical_path(utf8_from_utf16(buffer.data())));
   } else {  // multiple files
-    string directory = get_canonical_path(narrow(buffer.data()));
+    string directory = get_canonical_path(utf8_from_utf16(buffer.data()));
     for (wchar_t* p = &buffer[int(directory.size() + 1)]; *p;) {
-      if (0) SHOW(directory, narrow(p));
-      filenames.push(directory + "/" + narrow(p));
+      if (0) SHOW(directory, utf8_from_utf16(p));
+      filenames.push(directory + "/" + utf8_from_utf16(p));
       p += wcslen(p) + 1;
     }
   }
@@ -890,10 +890,10 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
 
 string HW::query_save_filename(const string& hint_filename, bool force) {
   // http://msdn.microsoft.com/en-us/library/windows/desktop/ms646928%28v=vs.85%29.aspx
-  std::wstring whint_filename = widen(hint_filename);
-  std::wstring whint_directory = widen(replace_all(get_path_head(hint_filename), "/", "\\"));
-  std::wstring whint_tail = widen(get_path_tail(hint_filename));
-  std::wstring whint_extension = widen(get_path_extension(hint_filename));
+  std::wstring whint_filename = utf16_from_utf8(hint_filename);
+  std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
+  std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
+  std::wstring whint_extension = utf16_from_utf8(get_path_extension(hint_filename));
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
@@ -911,7 +911,7 @@ string HW::query_save_filename(const string& hint_filename, bool force) {
   }
   if (!GetSaveFileNameW(&ofn)) return "";
   assertx(ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]);  // single file
-  return get_canonical_path(narrow(buffer.data()));
+  return get_canonical_path(utf8_from_utf16(buffer.data()));
 }
 
 void HW::begin_draw_visible() {
@@ -1012,7 +1012,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
   // hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH),  then was nullptr
   wnd_class.hbrBackground = HBRUSH(COLOR_WINDOW + 1);
   wnd_class.lpszMenuName = nullptr;
-  std::wstring wargv0 = widen(_argv0);  // must live until the RegisterClassExW() call
+  std::wstring wargv0 = utf16_from_utf8(_argv0);  // must live until the RegisterClassExW() call
   wnd_class.lpszClassName = wargv0.c_str();
   wnd_class.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
   // wnd_class.hIconSm      = LoadImage(_hInstance, MAKEINTRESOURCE(5), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
@@ -1026,8 +1026,8 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
   {
     _hwnd = k_bogus_hwnd;
     int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-    _hwnd = CreateWindowW(widen(_argv0).c_str(), widen(_window_title).c_str(), style, 0, 0, rect.right - rect.left,
-                          rect.bottom - rect.top, nullptr, nullptr, _hInstance, nullptr);
+    _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(), utf16_from_utf8(_window_title).c_str(), style, 0, 0,
+                          rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, _hInstance, nullptr);
     if (!_hwnd) SHOW(GetLastError());
     assertx(_hwnd);
     _hDC = assertx(GetDC(_hwnd));
@@ -1093,8 +1093,8 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
   int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
   if (_iconic) style |= WS_ICONIC;
   if (_maximize) style |= WS_MAXIMIZE;
-  _hwnd = CreateWindowW(widen(_argv0).c_str(),         // window class name
-                        widen(_window_title).c_str(),  // window title bar
+  _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // window class name
+                        utf16_from_utf8(_window_title).c_str(),  // window title bar
                         style,
                         yxpos[1] < 0 ? CW_USEDEFAULT : yxpos[1],  // initial x position
                         yxpos[0] < 0 ? CW_USEDEFAULT : yxpos[0],  // initial y position

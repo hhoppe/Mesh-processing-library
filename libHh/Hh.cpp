@@ -122,10 +122,9 @@ void show_call_stack_internal() { std::cerr << "MyStackWalker is disabled, so ca
 
 }  // namespace
 
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
 
-// Convert Windows UTF-16 std::wstring to UTF-8 std::string.
-std::string narrow(const std::wstring& wstr) {
+std::string utf8_from_utf16(const std::wstring& wstr) {
   const unsigned flags = WC_ERR_INVALID_CHARS;
   // By specifying cchWideChar == -1, we include the null terminating character in nchars.
   int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
@@ -137,8 +136,7 @@ std::string narrow(const std::wstring& wstr) {
   return str;
 }
 
-// Convert UTF-8 std::string to Windows UTF-16 std::wstring.
-std::wstring widen(const std::string& str) {
+std::wstring utf16_from_utf8(const std::string& str) {
   const unsigned flags = MB_ERR_INVALID_CHARS;
   // By specifying str.size() + 1, we include the null terminating character in nwchars.
   int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), nullptr, 0);
@@ -148,25 +146,7 @@ std::wstring widen(const std::string& str) {
   return wstr;
 }
 
-#elif defined(_WIN32) && defined(HH_NO_UTF8)
-
-// Note: generally the default locale on Windows uses the Windows-1252 code page, which supports some
-//  common accented characters, but is incompatible with UTF-8.
-std::string narrow(const std::wstring& wstr) {
-  const std::locale& loc = std::locale();
-  string str(wstr.size(), '\0');
-  std::use_facet<std::ctype<wchar_t> >(loc).narrow(wstr.data(), wstr.data() + wstr.size(), '?', &str[0]);
-  return str;
-}
-
-std::wstring widen(const std::string& str) {
-  const std::locale& loc = std::locale();
-  std::wstring wstr(str.size(), wchar_t{0});
-  std::use_facet<std::ctype<wchar_t> >(loc).widen(str.data(), str.data() + str.size(), &wstr[0]);
-  return wstr;
-}
-
-#endif  // end of UTF8 handling
+#endif
 
 static string beautify_type_name(string s) {
   // SHOW(s);
@@ -394,7 +374,7 @@ void show_cerr_and_debug(const string& s) {
   std::cerr << s;
 #if defined(_WIN32)
   // May display in debug window if such a window is present; otherwise does nothing.
-  OutputDebugStringW(widen(s).c_str());
+  OutputDebugStringW(utf16_from_utf8(s).c_str());
 #endif
 }
 
@@ -631,7 +611,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
   if (need_cout) std::cout << s;
   if (need_cerr) std::cerr << s;
 #if defined(_WIN32)
-  OutputDebugStringW(widen(s).c_str());
+  OutputDebugStringW(utf16_from_utf8(s).c_str());
 #endif
 }
 
@@ -750,14 +730,14 @@ float getenv_float(const string& varname, float vdefault, bool warn) {
 }
 
 string getenv_string(const string& varname) {
-#if 0 && defined(_WIN32) && !defined(HH_NO_UTF8)
+#if 0 && defined(_WIN32)
   assertnever("Would likely have to never use getenv() or putenv().");
   // http://msdn.microsoft.com/en-us/library/tehxacec.aspx :
   // When two copies of the environment (MBCS and Unicode) exist simultaneously in a program, the run-time
   //  system must maintain both copies, resulting in slower execution time. For example, whenever you call
   //  _putenv, a call to _wputenv is also executed automatically, so that the two environment strings correspond.
-  const wchar_t* ws = _wgetenv(widen(varname).c_str());
-  return ws ? narrow(ws) : "";
+  const wchar_t* ws = _wgetenv(utf16_from_utf8(varname).c_str());
+  return ws ? utf8_from_utf16(ws) : "";
 #else
   const char* s = getenv(varname.c_str());
   return s ? s : "";

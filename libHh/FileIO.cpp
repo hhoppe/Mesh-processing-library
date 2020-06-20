@@ -300,8 +300,8 @@ RFile::RFile(const string& filename) {
   } else if (file_exists(sfor)) {
     if (!assertw(!file_exists(sfor + ".Z")) || !assertw(!file_exists(sfor + ".gz")))
       showdf("** Using uncompressed version of '%s'\n", sfor.c_str());
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
-    _file = _wfopen(widen(sfor).c_str(), L"rb");
+#if defined(_WIN32)
+    _file = _wfopen(utf16_from_utf8(sfor).c_str(), L"rb");
 #else
     _file = fopen(sfor.c_str(), "rb");
 #endif
@@ -360,8 +360,8 @@ WFile::WFile(const string& filename) {
     _file = stdout;
     _os = &std::cout;
   } else {
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
-    _file = _wfopen(widen(sfor).c_str(), L"wb");
+#if defined(_WIN32)
+    _file = _wfopen(utf16_from_utf8(sfor).c_str(), L"wb");
 #else
     _file = fopen(sfor.c_str(), "wb");
 #endif
@@ -391,9 +391,9 @@ WFile::~WFile() {
 // *** Misc
 
 bool file_exists(const string& name) {
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   struct _stat fstat;
-  if (_wstat(widen(name).c_str(), &fstat)) return false;
+  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return false;
 #else
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return false;
@@ -407,9 +407,9 @@ bool file_exists(const string& name) {
 }
 
 bool directory_exists(const string& name) {
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   struct _stat fstat;
-  if (_wstat(widen(name).c_str(), &fstat)) return false;
+  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return false;
 #else
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return false;
@@ -425,10 +425,10 @@ bool file_requires_pipe(const string& name) {
 
 // ret: 0 if error
 uint64_t get_path_modification_time(const string& name) {
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   // https://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
   struct _stat fstat;  // __time32_t st_mtime;
-  if (_wstat(widen(name).c_str(), &fstat)) return 0;
+  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return 0;
   return fstat.st_mtime;
 #else
   struct stat fstat;
@@ -440,11 +440,11 @@ uint64_t get_path_modification_time(const string& name) {
 // ret: success
 bool set_path_modification_time(const string& name, uint64_t time) {
   // https://msdn.microsoft.com/en-us/library/4wacf567.aspx
-#if defined(_WIN32) && !defined(HH_NO_UTF8)
+#if defined(_WIN32)
   struct _utimbuf ut;
   ut.actime = time;
   ut.modtime = time;
-  return !_wutime(widen(name).c_str(), &ut);
+  return !_wutime(utf16_from_utf8(name).c_str(), &ut);
 #else
   struct utimbuf ut;
   ut.actime = time;
@@ -461,11 +461,11 @@ Array<string> get_in_directory(const string& directory, EType type) {
   Array<string> ar_filenames;
 #if defined(_WIN32)
   WIN32_FIND_DATAW file_data;
-  HANDLE dir = FindFirstFileW(widen(directory + "/*").c_str(), &file_data);
+  HANDLE dir = FindFirstFileW(utf16_from_utf8(directory + "/*").c_str(), &file_data);
   {
     if (dir == INVALID_HANDLE_VALUE) return {};  // No files found
     do {
-      string file_name = narrow(file_data.cFileName);
+      string file_name = utf8_from_utf16(file_data.cFileName);
       const bool is_directory = !!(file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
       if ((type == EType::files && is_directory) || (type == EType::directories && !is_directory)) continue;
       if (is_directory && (file_name == "." || file_name == "..")) continue;
@@ -538,7 +538,7 @@ bool recycle_path(const string& pathname) {
     for_int(i, narrow_cast<int>(name.size())) {
       if (name[i] == '/') name[i] = '\\';
     }
-    wfilenames = widen(name);
+    wfilenames = utf16_from_utf8(name);
     wfilenames.push_back(0);  // for double-null termination
   }
   SHFILEOPSTRUCTW op = {};
@@ -683,7 +683,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
       string str =
           (b_client_cmd ? (i < 2 ? sargv[i] : (dq + sargv[i] + dq)) : spawn_quote(sargv[i], b_client_uses_cygwin));
       if (0) SHOW(i, str);
-      nargv[i] = widen(str);
+      nargv[i] = utf16_from_utf8(str);
     }
     Array<const wchar_t*> argv(sargv.num() + 1);
     for_int(i, sargv.num()) argv[i] = nargv[i].c_str();
@@ -693,7 +693,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
     //  (created if the current process does not already have a console window)
     //  because CreateProcess() call is hidden within CRT/dospawn.c and its StartupInfo structure
     //  does not specify ".wShowWindow = SW_HIDE" (http://stackoverflow.com/questions/4743559/).
-    return _wspawnvp(mode, widen(sargv[0]).c_str(), argv.data());
+    return _wspawnvp(mode, utf16_from_utf8(sargv[0]).c_str(), argv.data());
   }
 #else  // Unix (or cygwin)
   {

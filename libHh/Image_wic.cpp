@@ -139,8 +139,8 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     success = SUCCEEDED(wic_factory->CreateDecoderFromStream(input_stream, nullptr, opts, &decoder));
   } else {
     if (!file_exists(filename)) throw std::runtime_error("Image file '" + filename + "' does not exist");
-    success = SUCCEEDED(
-        wic_factory->CreateDecoderFromFilename(widen(filename).c_str(), nullptr, GENERIC_READ, opts, &decoder));
+    success = SUCCEEDED(wic_factory->CreateDecoderFromFilename(utf16_from_utf8(filename).c_str(), nullptr,
+                                                               GENERIC_READ, opts, &decoder));
   }
   if (!success) throw std::runtime_error("Could not read and decode image in file '" + filename + "'");
   {
@@ -297,7 +297,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   } else {
     com_ptr<IWICStream> output_wic_stream;
     AS(wic_factory->CreateStream(&output_wic_stream));
-    if (FAILED(output_wic_stream->InitializeFromFilename(widen(filename).c_str(), GENERIC_WRITE)))
+    if (FAILED(output_wic_stream->InitializeFromFilename(utf16_from_utf8(filename).c_str(), GENERIC_WRITE)))
       throw std::runtime_error("Could not write image to file '" + filename + "'");
     // output_stream = output_wic_stream;  // worked but fragile
     AS(output_wic_stream->QueryInterface(IID_PPV_ARGS(&output_stream)));
@@ -346,8 +346,8 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     com_ptr<IWICMetadataBlockWriter> meta_bwriter;
     if (have_metadata) {
       const WICDecodeOptions opts = WICDecodeMetadataCacheOnDemand;
-      if (!SUCCEEDED(wic_factory->CreateDecoderFromFilename(widen(orig_filename).c_str(), nullptr, GENERIC_READ, opts,
-                                                            &decoder))) {
+      if (!SUCCEEDED(wic_factory->CreateDecoderFromFilename(utf16_from_utf8(orig_filename).c_str(), nullptr,
+                                                            GENERIC_READ, opts, &decoder))) {
         SHOW(orig_filename, filename);
         Warning("Could not decode original image metadata");
       } else {

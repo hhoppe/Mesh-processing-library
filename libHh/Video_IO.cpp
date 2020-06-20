@@ -444,8 +444,8 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
           MF_RESOLUTION_BYTESTREAM | MF_RESOLUTION_CONTENT_DOES_NOT_HAVE_TO_MATCH_EXTENSION_OR_MIME_TYPE;
       MF_OBJECT_TYPE objectType = MF_OBJECT_INVALID;
       com_ptr<IUnknown> pSource;
-      if (FAILED(pSourceResolver->CreateObjectFromURL(widen(_rvideo._filename).c_str(), createObjFlags, nullptr,
-                                                      &objectType, &pSource)))
+      if (FAILED(pSourceResolver->CreateObjectFromURL(utf16_from_utf8(_rvideo._filename).c_str(), createObjFlags,
+                                                      nullptr, &objectType, &pSource)))
         throw std::runtime_error("Could not open video in file '" + _rvideo._filename + "'");
       assertx(objectType == MF_OBJECT_BYTESTREAM);
       AS(pSource->QueryInterface(IID_PPV_ARGS(&_pByteStream)));
@@ -673,8 +673,8 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
       AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, TRUE));  // no effect
       // AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, FALSE));  // no effect
       IMFByteStream* const k_ByteStream = nullptr;
-      if (FAILED(MFCreateSinkWriterFromURL(widen(_wvideo._filename).c_str(), k_ByteStream, nullptr /*pAttributes*/,
-                                           &_pSinkWriter)))
+      if (FAILED(MFCreateSinkWriterFromURL(utf16_from_utf8(_wvideo._filename).c_str(), k_ByteStream,
+                                           nullptr /*pAttributes*/, &_pSinkWriter)))
         throw std::runtime_error("Could not write video to file '" + _wvideo._filename + "'");
     }
     {

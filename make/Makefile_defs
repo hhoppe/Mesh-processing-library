@@ -86,7 +86,6 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_HAVE_VIDEO_LOOP
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
-# cppinc += -DHH_NO_UTF8
 # cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
 # cppinc += -DHH_NO_IMAGE_WIC#  option for CONFIG=win/w32/clang

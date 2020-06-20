@@ -86,7 +86,7 @@ int main(int argc, const char** argv) {
   string filename = args.get_filename();
   if (args.num()) args.problem("expect a single argument");
   // 0=no_security,  0=no_copy_attribute_from_existing_fhandle
-  HANDLE h_file = CreateFileW(widen(filename).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+  HANDLE h_file = CreateFileW(utf16_from_utf8(filename).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                               FILE_FLAG_RANDOM_ACCESS, nullptr);
   assertx(h_file != INVALID_HANDLE_VALUE);
   // CreateFileMapping fails on files of size 0, so test it here.

@@ -5,6 +5,8 @@
 #include <atomic>
 #include <mutex>
 
+#include "libHh/Hh.h"
+
 #if 0
 {
   ConsoleProgress cprogress;

@@ -4375,6 +4375,7 @@ int main(int argc, const char** argv) {
   args.p("*.JPEG", do_image, ": load input image");
   args.p("*.PNG", do_image, ": load input image");
   args.p("*.BMP", do_image, ": load input image");
+  args.p("*.heic", do_image, ": load input image");
   args.p("*.arw", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
   args.p("*.exr", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
   HH_ARGSD(vlp, "file.vlp : load looping parameters");

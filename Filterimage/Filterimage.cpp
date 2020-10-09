@@ -902,20 +902,16 @@ void do_assemble(Args& args) {
   // Filterimage -as_fit 480 320 -as_cropsides -8 -8 -8 -8 -assemble 2 2 ~/data/image/lake.png{,,,} | vv -
   // (cd $HOMEPATH/Dropbox/Pictures/2014/india; Filterimage -nostdin -color 0 0 0 255 -as_fit 640 640 -as_cropsides -4 -4 -4 -4 -assemble -1 -1 2*.jpg | vv -)
   int nx = args.get_int(), ny = args.get_int();
-  assertx((nx > 0 && ny >= 0) || (ny > 0 && nx >= 0) || (nx == -1 && ny == -1));
+  assertx(nx >= -1 && ny >= -1);
   if (nx > 0 && ny > 0) args.ensure_at_least(nx * ny);
   Array<string> lfilenames;
   while (args.num() && args.peek_string()[0] != '-') lfilenames.push(args.get_filename());
-  if (nx == -1 && ny == -1) {
-    ny = max(int(ceil(sqrt(float(lfilenames.num())))), 1);
-    nx = ny;
-  } else if (nx && !ny) {
-    ny = (lfilenames.num() - 1) / nx + 1;
-  } else if (ny && !nx) {
+  if (nx <= 0 && ny <= 0) {
+    nx = ny = max(int(ceil(sqrt(float(lfilenames.num())))), 1);
+  } else if (nx <= 0) {
     nx = (lfilenames.num() - 1) / ny + 1;
-  } else if (ny && nx) {
-  } else {
-    assertnever("");
+  } else if (ny <= 0) {
+    ny = (lfilenames.num() - 1) / nx + 1;
   }
   Matrix<Image> images(V(ny, nx));
   assertx(images.size() >= lfilenames.size());

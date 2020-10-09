@@ -275,14 +275,15 @@ void do_assemble(Args& args) {
   // Filtervideo -assemble 2 2 dis.{0.0,1.0,0.1,1.1}.mp4 -info >reassemble.mp4
   // Filtervideo -nostdin -color 0 0 0 -as_fit 320 320 -as_cropsides -8 -8 -8 -8 -assemble 2 2 ~/data/video/short.mp4{,,,} | vv -
   int nx = args.get_int(), ny = args.get_int();
-  assertx((nx > 0 && ny >= 0) || (nx == -1 && ny == -1));
-  if (ny > 0) args.ensure_at_least(nx * ny);
+  assertx(nx >= -1 && ny >= -1);
+  if (nx > 0 && ny > 0) args.ensure_at_least(nx * ny);
   Array<string> lfilenames;
   while (args.num() && args.peek_string()[0] != '-') lfilenames.push(args.get_filename());
-  if (nx == -1 && ny == -1) {
-    ny = int(ceil(sqrt(float(lfilenames.num()))));
-    nx = ny;
-  } else if (!ny) {
+  if (nx <= 0 && ny <= 0) {
+    nx = ny = max(int(ceil(sqrt(float(lfilenames.num())))), 1);
+  } else if (nx <= 0) {
+    nx = (lfilenames.num() - 1) / ny + 1;
+  } else if (ny <= 0) {
     ny = (lfilenames.num() - 1) / nx + 1;
   }
   Matrix<Video> videos(V(ny, nx));

@@ -61,6 +61,9 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 #define HH_IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100)
 // It does not seem possible to determine endianness in a constexpr:
 //  http://stackoverflow.com/questions/1583791/constexpr-and-endianness
+// Update: it is possible in C++20 (https://stackoverflow.com/a/8197886):
+// #include <type_traits>
+// constexpr bool is_big_endian = std::endian::native == std::endian::big;
 
 template <typename T> void my_swap_bytes(T* p) {
   static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2, "");

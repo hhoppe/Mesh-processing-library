@@ -23,8 +23,9 @@
   Set<mypair, hash_mypair, equal_mypair> setpairs;
   //
   struct hash_edge {  // from MeshOp.cpp
-    ... const GMesh& _mesh;
-  }
+    ...;
+    const GMesh& _mesh;
+  };
   hash_edge he(mesh);
   Set<Edge, hash_edge> sete(he);
 }

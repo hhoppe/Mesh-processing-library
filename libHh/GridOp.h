@@ -40,9 +40,13 @@ template <int D, typename T>
 Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& uL, const Vec<int, D>& uU,
                 Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined), const T* bordervalue = nullptr);
 
+enum class Alignment { Left, Center, Right };
+
 // Merge a D-dimensional grid of D-dimensional grids into a single D-dimensional grid.
 //  (U must be derived from CGridView<D, T>).
-template <int D, typename U, typename T = typename U::value_type> Grid<D, T> assemble(CGridView<D, U> grids);
+template <int D, typename U, typename T = typename U::value_type>
+Grid<D, T> assemble(CGridView<D, U> grids, const T& background = T{},
+                    const Vec<Alignment, D>& align = ntimes<D>(Alignment::Center));
 
 // Recast a grid view as a next-higher-dimensional grid view with just a single slice in dimension zero.
 template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T> grid);
@@ -172,37 +176,59 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
   return newgrid;
 }
 
-template <int D, typename U, typename T> Grid<D, T> assemble(CGridView<D, U> grids) {
+template <int D, typename U, typename T> Grid<D, T>
+assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& align) {
   static_assert(std::is_base_of<CGridView<D, T>, U>::value, "");
+  Vec<Array<int>, D> max_sizes;  // max size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)]
+  for_int(d, D) max_sizes[d].init(grids.dim(d), 0);
+  for (const auto& u : range(grids.dims())) {
+    for_int(d, D) max_sizes[d][u[d]] = max(max_sizes[d][u[d]], grids[u].dim(d));
+  }
   Vec<Array<int>, D> locs;  // start locations on each axis; [d = 0 .. D - 1][0 .. grids.dim(d)]
   for_int(d, D) {
     int tot = 0;
     for_int(j, grids.dim(d)) {
       locs[d].push(tot);
-      tot += grids[ntimes<D>(0).with(d, j)].dim(d);
+      tot += max_sizes[d][j];
     }
     locs[d].push(tot);
   }
   Vec<int, D> dims;
   for_int(d, D) dims[d] = locs[d].last();
+  bool tight_packing = true;
+  for (const auto& u : range(grids.dims())) {
+    for_int(d, D) {
+      if (grids[u].dim(d) != max_sizes[d][u[d]]) tight_packing = false;
+    }
+  }
   if (0) {
     for_coords(grids.dims(), [&](const Vec<int, D>& ugrid) { SHOW(ugrid, grids[ugrid].dims()); });
     SHOW(locs, dims);
   }
   Grid<D, T> grid(dims);
+  if (!tight_packing) fill(grid, background);
   parallel_for_coords(grids.dims(), [&](const Vec<int, D>& ugrid) {
     CGridView<D, T> agrid = grids[ugrid];
-    Vec<int, D> uL, uU;
+    Vec<int, D> offset;
     for_int(d, D) {
-      uL[d] = locs[d][ugrid[d]];
-      uU[d] = locs[d][ugrid[d] + 1];
+      int uL = locs[d][ugrid[d]];
+      int uU = locs[d][ugrid[d] + 1];
+      int expected = uU - uL;
+      switch (align[d]) {
+        case Alignment::Left:
+          offset[d] = uL;
+          break;
+        case Alignment::Center:
+          offset[d] = uL + (expected - agrid.dim(d)) / 2;
+          break;
+        case Alignment::Right:
+          offset[d] = uL + (expected - agrid.dim(d));
+          break;
+        default:
+          assertnever("");
+      }
     }
-    Vec<int, D> expected_dims = uU - uL;
-    if (agrid.dims() != expected_dims) {
-      SHOW(ugrid, expected_dims, agrid.dims());
-      assertnever("inconsistent grid size");
-    }
-    for (Vec<int, D> u : range(agrid.dims())) grid[uL + u] = agrid[u];
+    for (Vec<int, D> u : range(agrid.dims())) grid[offset + u] = agrid[u];
   });
   return grid;
 }

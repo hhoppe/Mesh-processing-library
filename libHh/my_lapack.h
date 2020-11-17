@@ -3,6 +3,8 @@
 #define MESH_PROCESSING_LIBHH_MY_LAPACK_H_
 #include "libHh/Hh.h"  // HH_REFERENCE_LIB()
 
+#if defined(HH_HAVE_LAPACK)
+
 #if defined(HH_USE_LAPACK_INTEGER)  // Google
 
 #include <lapack.h>
@@ -112,5 +114,7 @@ HH_REFERENCE_LIB("libI77.lib");
 #endif  // defined(_MSC_VER)
 
 #endif  // !(defined(_WIN32) || defined(__CYGWIN__))
+
+#endif  // defined(HAVE_LAPACK)
 
 #endif  // MESH_PROCESSING_LIBHH_MY_LAPACK_H_

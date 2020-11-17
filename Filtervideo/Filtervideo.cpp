@@ -208,7 +208,7 @@ void do_as_cropsides(Args& args) {
 
 void do_as_tnframes(Args& args) { as_tnframes = args.get_int(); }
 
-void apply_as_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const Vec2<int>& gdims) {
+void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const Vec2<int>& gdims) {
   if (!is_zero(as_fit_dims)) {
     {
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(vid.dims().tail<2>()));
@@ -251,8 +251,6 @@ void assemble_videos(MatrixView<Video> videos) {
   int maxframes = 0;
   for (const auto& yx : range(videos.dims())) maxframes = max(maxframes, videos[yx].nframes());
   for (const auto& yx : range(videos.dims())) {
-    assertx(videos[yx].ysize() == videos[yx[0]][0].ysize());
-    assertx(videos[yx].xsize() == videos[0][yx[1]].xsize());
     Video& vid = videos[yx];
     const int max_pad_frames = 1;
     if (1 && vid.nframes() != maxframes && vid.nframes() && maxframes - vid.nframes() <= max_pad_frames) {
@@ -261,19 +259,20 @@ void assemble_videos(MatrixView<Video> videos) {
       const int npad = maxframes - vid.nframes();
       vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamped));
     }
-    assertx(videos[yx].nframes() == videos[0][0].nframes());
+    assertw(videos[yx].nframes() == videos[0][0].nframes());
   }
   CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
   if (0) {
     for (Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
   }
-  video = assemble(gvideos);
+  video = assemble(gvideos, gcolor);
 }
 
 void do_assemble(Args& args) {
   // Filtervideo ~/data/video/short.mp4 -info -disassemble 480 270 dis
   // Filtervideo -assemble 2 2 dis.{0.0,1.0,0.1,1.1}.mp4 -info >reassemble.mp4
   // Filtervideo -nostdin -color 0 0 0 -as_fit 320 320 -as_cropsides -8 -8 -8 -8 -assemble 2 2 ~/data/video/short.mp4{,,,} | vv -
+  // Filtervideo -nostdin -color 255 0 0 -assemble 3 -1 ~/data/video/HD*.mp4 | vv -
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx >= -1 && ny >= -1);
   if (nx > 0 && ny > 0) args.ensure_at_least(nx * ny);
@@ -299,25 +298,15 @@ void do_assemble(Args& args) {
   parallel_for_coords(videos.dims(), [&](const Vec2<int>& yx) {
     if (filenames[yx] == "") return;
     videos[yx].read_file(filenames[yx]);
-    apply_as_operations(videos[yx], yx, videos.dims());
+    assertw(videos[yx].attrib().framerate == videos[0][0].attrib().framerate);
+    apply_assemble_operations(videos[yx], yx, videos.dims());
   });  // we can assume that parallelism is justified
   if (0) {
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   }
   ConsoleProgress::set_all_silent(prev_silent);
-  for (const auto& yx : range(videos.dims())) {
-    if (filenames[yx] == "") {
-      // Let it be OK if fewer images than nx.
-      int width = yx[0] == 0 ? 0 : videos[0][yx[1]].xsize();
-      assertx(yx[0] == videos.dims()[0] - 1 && yx[1] > 0);  // partial last row
-      videos[yx].init(videos[0][0].nframes(), V(videos[yx[0]][0].ysize(), width));
-      videos[yx].attrib() = videos[0][0].attrib();
-      fill(videos[yx], gcolor);
-    }
-  }
   assemble_videos(videos);
   video.attrib() = videos[0][0].attrib();  // including audio
-  assertw(all_of(videos, [&](const Video& v) { return v.attrib().framerate == video.attrib().framerate; }));
   const float recoding_allowance = 1.5f;
   int newbitrate = int(float(videos[0][0].attrib().bitrate) / product(videos[0][0].spatial_dims()) *
                            product(video.spatial_dims()) * recoding_allowance +
@@ -1071,7 +1060,7 @@ void do_gridcrop(Args& args) {
         if (0) SHOW(vl, vt, vr, vb);
         Grid<3, Pixel>& vid = videos[yx];
         vid = crop(video, V(0, vt, vl), V(0, vb, vr), thrice(bndrule), &gcolor);
-        apply_as_operations(vid, yx, videos.dims());
+        apply_assemble_operations(vid, yx, videos.dims());
       },
       video.nframes() * sy * sx * 4);
   assemble_videos(videos);

@@ -6,10 +6,7 @@
 #include "libHh/SingularValueDecomposition.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
-
-#if defined(HH_HAVE_LAPACK)
 #include "libHh/my_lapack.h"
-#endif
 
 namespace hh {
 

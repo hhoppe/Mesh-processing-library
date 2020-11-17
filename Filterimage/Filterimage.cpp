@@ -863,7 +863,7 @@ void do_as_cropsides(Args& args) {
   as_crop_vb = args.get_int();
 }
 
-void apply_as_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Vec2<int>& gdims) {
+void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Vec2<int>& gdims) {
   if (!is_zero(as_fit_dims)) {
     {
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(im.dims()));
@@ -893,7 +893,7 @@ void assemble_images(CMatrixView<Image> images) {
   for (const auto& yx : range(images.dims())) assertx(images[yx].zsize() == images[0][0].zsize());
   image.init(V(0, 0));
   image.set_zsize(images[0][0].zsize());  // attributes copied outside this function
-  image = assemble(images);
+  image = assemble(images, gcolor);
 }
 
 void do_assemble(Args& args) {
@@ -926,17 +926,8 @@ void do_assemble(Args& args) {
     if (filenames[yx] == "") return;
     if (images.size() >= 10) images[yx].set_silent_io_progress(true);
     images[yx].read_file(filenames[yx]);
-    apply_as_operations(images[yx], yx, images.dims());
+    apply_assemble_operations(images[yx], yx, images.dims());
   });  // we can assume that parallelism is justified
-  for (const auto& yx : range(images.dims())) {
-    if (filenames[yx] == "") {
-      // Let it be OK if fewer images than nx.
-      int width = yx[0] == 0 ? 0 : images[0][yx[1]].xsize();
-      assertx(yx[0] == images.dims()[0] - 1 && yx[1] > 0);  // partial last row
-      images[yx].init(V(images[yx[0]][0].ysize(), width), gcolor);
-      images[yx].set_zsize(images[0][0].zsize());
-    }
-  }
   assemble_images(images);
   image.attrib() = images[0][0].attrib();
 }
@@ -1012,7 +1003,7 @@ void do_gridcrop(Args& args) {
         if (0) showf("vl=%d vt=%d  vr=%d vb=%d\n", vl, vt, vr, vb);
         Grid<2, Pixel>& im = images[yx];
         im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
-        apply_as_operations(im, yx, images.dims());
+        apply_assemble_operations(im, yx, images.dims());
       },
       sy * sx * 4);
   assemble_images(images);
@@ -2645,7 +2636,7 @@ void do_procedure(Args& args) {
       int i = 0;
       for_coords(grid_thumbnails.dims(), [&](const Vec2<int>& yx) {
         grid_thumbnails[yx] = (ar_thumbnails.ok(i) ? std::move(ar_thumbnails[i++]) : Image(twice(size), gcolor));
-        apply_as_operations(grid_thumbnails[yx], yx, grid_thumbnails.dims());
+        apply_assemble_operations(grid_thumbnails[yx], yx, grid_thumbnails.dims());
       });
     }
     assemble_images(grid_thumbnails);
@@ -2755,6 +2746,10 @@ void do_procedure(Args& args) {
     for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = sample_domain(color_ramp, V((yx[1] + .5f) / image.xsize()), g_filterbs.head<1>(), &vgcolor).pixel();
     });
+  } else if (name == "compress_yuv420") {
+    Nv12 nv12(image.dims());
+    convert_Image_to_Nv12(image, nv12);
+    convert_Nv12_to_Image(nv12, image);
   } else {
     args.problem("procedure '" + name + "' unrecognized");
   }

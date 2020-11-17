@@ -40,13 +40,13 @@ template <int D, typename T>
 Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& uL, const Vec<int, D>& uU,
                 Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined), const T* bordervalue = nullptr);
 
-enum class Alignment { Left, Center, Right };
+enum class Alignment { left, center, right };
 
 // Merge a D-dimensional grid of D-dimensional grids into a single D-dimensional grid.
 //  (U must be derived from CGridView<D, T>).
 template <int D, typename U, typename T = typename U::value_type>
 Grid<D, T> assemble(CGridView<D, U> grids, const T& background = T{},
-                    const Vec<Alignment, D>& align = ntimes<D>(Alignment::Center));
+                    const Vec<Alignment, D>& align = ntimes<D>(Alignment::center));
 
 // Recast a grid view as a next-higher-dimensional grid view with just a single slice in dimension zero.
 template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T> grid);
@@ -215,13 +215,13 @@ assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& al
       int uU = locs[d][ugrid[d] + 1];
       int expected = uU - uL;
       switch (align[d]) {
-        case Alignment::Left:
+        case Alignment::left:
           offset[d] = uL;
           break;
-        case Alignment::Center:
+        case Alignment::center:
           offset[d] = uL + (expected - agrid.dim(d)) / 2;
           break;
-        case Alignment::Right:
+        case Alignment::right:
           offset[d] = uL + (expected - agrid.dim(d));
           break;
         default:

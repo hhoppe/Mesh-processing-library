@@ -3070,21 +3070,9 @@ void do_colorbizarre() {
       a = (a - lfb[i][0]) / (lfb[i][1] - lfb[i][0]);
       float c;
       switch (i) {
-        case 0:
-          c = (a < .25f ? 0.f + a * 4.f
-                        : a < .50f ? 0.f :
-                                   /**/ 1.f - square(a - .75f) * 16.f);
-          break;
-        case 1:
-          c = (a < .25f ? 0.f + a * 4.f
-                        : a < .50f ? 1.f
-                                   : a < .75f ? 1.f - (a - .5f) * 4.f :
-                                              /**/ 0.f);
-          break;
-        case 2:
-          c = (a < .25f ? 1.f - a * 4.f :
-                        /**/ 1.f - (a - .25f) * 1.33333f);
-          break;
+        case 0: c = (a < .25f ? 0.f + a * 4.f : a < .50f ? 0.f : 1.f - square(a - .75f) * 16.f); break;
+        case 1: c = (a < .25f ? 0.f + a * 4.f : a < .50f ? 1.f : a < .75f ? 1.f - (a - .5f) * 4.f : 0.f); break;
+        case 2: c = (a < .25f ? 1.f - a * 4.f : 1.f - (a - .25f) * 1.33333f); break;
         default: assertnever("");
       }
       if (0) assertx(c >= 0.f && c <= 1.f);
@@ -3761,7 +3749,7 @@ Point compute_hull_point(Vertex v, float offset) {
   free_ivector(izrov, 1, n);
   assertx(ret);
   return newpoint;
-#else   // defined(HH_HAVE_SIMPLEX)
+#else  // defined(HH_HAVE_SIMPLEX)
   assertnever_ret("Linear programming (simplex) is unavailable");
   return Point(thrice(BIGFLOAT));
 #endif  // defined(HH_HAVE_SIMPLEX)

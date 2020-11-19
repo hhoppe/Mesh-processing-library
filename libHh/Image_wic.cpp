@@ -11,8 +11,8 @@ void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // required by WIC; must appear before other headers.
 
-#include <Shlwapi.h>      // SHCreateMemStream()
-#include <wincodec.h>     // WIC
+#include <Shlwapi.h>  // SHCreateMemStream()
+#include <wincodec.h>  // WIC
 #include <wincodecsdk.h>  // IWICMetadataBlockReader
 
 HH_REFERENCE_LIB("ole32.lib");     // CoInitializeEx() and CoCreateInstance()

@@ -237,18 +237,13 @@ void ParseArgs::print_help() {
     if (o.narg > 0) {
       sdefault = "[";
       for_int(i, o.narg) {
-        string s0 =
-            (o.parsef == &ParseArgs::fbool
-                 ? show_bool(static_cast<bool*>(o.argp)[i])
-                 : o.parsef == &ParseArgs::fchar
-                       ? string(1, static_cast<char*>(o.argp)[i])
-                       : o.parsef == &ParseArgs::fint
-                             ? sform("%d", static_cast<int*>(o.argp)[i])
-                             : o.parsef == &ParseArgs::ffloat
-                                   ? show_float(static_cast<float*>(o.argp)[i])
-                                   : o.parsef == &ParseArgs::fdouble
-                                         ? show_double(static_cast<double*>(o.argp)[i])
-                                         : o.parsef == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i] : "?");
+        string s0 = (o.parsef == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
+                     : o.parsef == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
+                     : o.parsef == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
+                     : o.parsef == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
+                     : o.parsef == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
+                     : o.parsef == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
+                                                       : "?");
         if (i > 0) sdefault += " ";
         sdefault += s0;
       }

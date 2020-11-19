@@ -215,7 +215,7 @@ class Vector4 {
     estimate = vmulq_f32(vrecpsq_f32(v._r, estimate), estimate);
     return estimate;
   }
-#else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
+#else  // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
   Vector4(const Vector4& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4(float x, float y, float z, float w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   void load_unaligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }

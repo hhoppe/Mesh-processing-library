@@ -544,8 +544,9 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
 #if !defined(SR_PREDICT_MATID)
     vspl->fl_matid =
         narrow_cast<short>((code & Vsplit::FLN_MASK) ? pm_vspl.fl_matid : f_matid[vspl->fn[1]->aface->matid]);
-    vspl->fr_matid = narrow_cast<short>(
-        !cr2faces ? -1 : (code & Vsplit::FRN_MASK) ? pm_vspl.fr_matid : f_matid[vspl->fn[3]->aface->matid]);
+    vspl->fr_matid = narrow_cast<short>(!cr2faces                   ? -1
+                                        : (code & Vsplit::FRN_MASK) ? pm_vspl.fr_matid
+                                                                    : f_matid[vspl->fn[3]->aface->matid]);
 #else
     assertx(!(code & Vsplit::FLN_MASK));
     assertx(!cr2faces || !(code & Vsplit::FRN_MASK));

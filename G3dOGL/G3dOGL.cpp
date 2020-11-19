@@ -3087,7 +3087,10 @@ string HB::show_info() {
                g_xobs.reverse_cull[obn] ? 'r' : ' ', g_xobs.shading[obn] ? 's' : ' ', g_xobs.smooth[obn] ? 'm' : ' ',
                g_xobs.edges[obn] ? 'e' : ' ', mdepthcue ? 'u' : ' ', antialiasing ? 'a' : ' ',
                nice_rendering ? 'n' : ' ', perspec ? 'p' : ' ', slidermode ? 'S' : ' ', texture_active ? 't' : ' ',
-               use_dl ? 'C' : ' ', quickmode ? 'q' : butquick ? 'Q' : ' ');
+               use_dl ? 'C' : ' ',
+               quickmode  ? 'q'
+               : butquick ? 'Q'
+                          : ' ');
 }
 
 bool HB::world_to_vdc(const Point& pi, float& xo, float& yo, float& zo) {
@@ -3112,9 +3115,9 @@ void HB::draw_text(const Vec2<float>& yx, const string& s) {
 void HB::draw_row_col_text(const Vec2<int>& yx, const string& s) {
   auto fdims = HB::get_font_dims();
   hw.draw_text(V((yx[0] < 0 ? win_dims[0] + yx[0] * fdims[0] : yx[0] * fdims[0]),
-                 (yx[1] == std::numeric_limits<int>::max()
-                      ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
-                      : yx[1] < 0 ? win_dims[1] + yx[1] * fdims[1] - 2 : yx[1] * fdims[1] + 2)),
+                 (yx[1] == std::numeric_limits<int>::max() ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
+                  : yx[1] < 0                              ? win_dims[1] + yx[1] * fdims[1] - 2
+                                                           : yx[1] * fdims[1] + 2)),
                s);
 }
 
@@ -3612,17 +3615,16 @@ void sr_wrap_draw(bool show) {
     bool morph = sr_morph_active;
     string s1 = sform("faces=%-5d", nf);
     string s2 = !bigfont() || !morph ? sform(" pixtol=%4.2f", pixtol) : sform(" pix=%4.2f", pixtol);
-    string s3 =
-        (!morph ? ""
-                : !bigfont() ? sform(" morph%02d vgr=%04.1f%% vgc=%04.1f%%", sr_gtime,
-                                     srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
-                                     srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices())
-                             : sform("vgr=%04.1f%% vgc=%04.1f%%",
-                                     srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
-                                     srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices()));
-    string s4 =
-        (sr_ntstrips ? sform(" f/strip=%4.1f", float(nf) / sr_ntstrips)
-                     : sr_ncachemiss ? sform(" v/t=%4.2f", float(sr_ncachemiss) / srmesh.num_active_faces()) : "");
+    string s3 = (!morph       ? ""
+                 : !bigfont() ? sform(" morph%02d vgr=%04.1f%% vgc=%04.1f%%", sr_gtime,
+                                      srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
+                                      srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices())
+                              : sform("vgr=%04.1f%% vgc=%04.1f%%",
+                                      srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
+                                      srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices()));
+    string s4 = (sr_ntstrips     ? sform(" f/strip=%4.1f", float(nf) / sr_ntstrips)
+                 : sr_ncachemiss ? sform(" v/t=%4.2f", float(sr_ncachemiss) / srmesh.num_active_faces())
+                                 : "");
     if (!bigfont()) {
       HB::draw_row_col_text(V(1, 4), s1 + s2 + s3 + s4);
     } else {

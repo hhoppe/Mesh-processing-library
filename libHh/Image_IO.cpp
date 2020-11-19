@@ -122,33 +122,21 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
     assertt(quality > 0 && quality <= 100);
     // Nonlinear mapping; see http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
-    int qscale = quality >= 95
-                     ? 0
-                     : quality >= 90
-                           ? 1
-                           : quality >= 80
-                                 ? 2
-                                 : quality >= 75
-                                       ? 3
-                                       : quality >= 65
-                                             ? 4
-                                             : quality >= 60
-                                                   ? 5
-                                                   : quality >= 50
-                                                         ? 6
-                                                         : quality >= 45
-                                                               ? 7
-                                                               : quality >= 40
-                                                                     ? 8
-                                                                     : quality >= 35
-                                                                           ? 9
-                                                                           : quality >= 30
-                                                                                 ? 11
-                                                                                 : quality >= 25
-                                                                                       ? 13
-                                                                                       : quality >= 20
-                                                                                             ? 16
-                                                                                             : quality >= 15 ? 21 : 32;
+    int qscale = quality >= 95   ? 0
+                 : quality >= 90 ? 1
+                 : quality >= 80 ? 2
+                 : quality >= 75 ? 3
+                 : quality >= 65 ? 4
+                 : quality >= 60 ? 5
+                 : quality >= 50 ? 6
+                 : quality >= 45 ? 7
+                 : quality >= 40 ? 8
+                 : quality >= 35 ? 9
+                 : quality >= 30 ? 11
+                 : quality >= 25 ? 13
+                 : quality >= 20 ? 16
+                 : quality >= 15 ? 21
+                                 : 32;
     // Note: it appears that we cannot approach jpeg_set_quality() with quality > 93 or quality < 13.
     scompression = sform(" -qscale:v %d", qscale);
   }

@@ -751,15 +751,13 @@ string get_szoom() {
 
 // Select filter for spatial resampling operations.
 const Filter& get_resampling_filter() {
-  return (g_kernel == EKernel::nearest
-              ? Filter::get("impulse")
-              : g_kernel == EKernel::linear
-                    ? Filter::get("triangle")
-                    : g_kernel == EKernel::keys ? Filter::get("spline") :  // higher quality than "keys"
-                          g_kernel == EKernel::lanczos6
-                              ? Filter::get("lanczos6")
-                              : g_kernel == EKernel::lanczos10 ? Filter::get("lanczos10")
-                                                               : (assertnever_ret(""), Filter::get("impulse")));
+  return (g_kernel == EKernel::nearest  ? Filter::get("impulse")
+          : g_kernel == EKernel::linear ? Filter::get("triangle")
+          : g_kernel == EKernel::keys   ? Filter::get("spline")
+                                        :  // higher quality than "keys"
+              g_kernel == EKernel::lanczos6 ? Filter::get("lanczos6")
+            : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos10")
+                                              : (assertnever_ret(""), Filter::get("impulse")));
 }
 
 // Change zooom while holding window dimensions constant and keeping same content at cursor.
@@ -839,9 +837,10 @@ void perform_window_rotation(float vrotate) {
 void set_looping(ELooping looping) {
   g_looping = looping;
   message(string() + "Looping set to: " +
-          (g_looping == ELooping::off
-               ? "off"
-               : g_looping == ELooping::one ? "one" : g_looping == ELooping::all ? "all" : "mirror"));
+          (g_looping == ELooping::off   ? "off"
+           : g_looping == ELooping::one ? "one"
+           : g_looping == ELooping::all ? "all"
+                                        : "mirror"));
 }
 
 // Set speed and display message.
@@ -2044,9 +2043,9 @@ bool DerivedHW::key_press(string skey) {
           } else {
             assertnever("");
           }
-          const int new_cur_frame =
-              (g_framenum < ob._framein ? int(g_framenum)
-                                        : g_framenum >= ob._frameou1 ? g_framenum - ncut : ob._framein);
+          const int new_cur_frame = (g_framenum < ob._framein     ? int(g_framenum)
+                                     : g_framenum >= ob._frameou1 ? g_framenum - ncut
+                                                                  : ob._framein);
           auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_cut"));
           newob->_video.attrib().audio.clear();  // TODO
@@ -2650,8 +2649,9 @@ void advance_frame() {
     time_since_last_frame = vtime - last_frame_time;
     rotate(ar_last_frame_times, ar_last_frame_times.last());  // shift towards rear
     ar_last_frame_times[0] = time_since_last_frame;
-    steady_time_since_last_frame =
-        (sqrt(var(ar_last_frame_times)) > .008 ? -1 : 1 ? median(ar_last_frame_times) : mean(ar_last_frame_times));
+    steady_time_since_last_frame = (sqrt(var(ar_last_frame_times)) > .008 ? -1
+                                    : 1                                   ? median(ar_last_frame_times)
+                                                                          : mean(ar_last_frame_times));
     assertw(time_since_last_frame >= 0.);
     time_since_last_frame = clamp(time_since_last_frame, 0., 3. / 60.);
     last_frame_time = vtime;
@@ -3004,9 +3004,10 @@ void render_image() {
   }
   {
     // Settings for !use_modern_opengl
-    glTexParameteri(
-        GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        (g_render_kernel == EKernel::nearest ? GL_NEAREST : g_generated_mipmap ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    (g_render_kernel == EKernel::nearest ? GL_NEAREST
+                     : g_generated_mipmap                ? GL_LINEAR_MIPMAP_LINEAR
+                                                         : GL_LINEAR));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
                     g_render_kernel == EKernel::nearest ? GL_NEAREST : GL_LINEAR);
   }
@@ -3579,12 +3580,11 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
       string smiddle = get_szoom() + sform(" %dx%d ", g_frame_dims[1], g_frame_dims[0]);
       string smodes;
       {
-        smodes = (ob.is_image()
-                      ? ""
-                      : sform(" [%s] ",
-                              (g_looping == ELooping::all
-                                   ? "a"
-                                   : g_looping == ELooping::one ? "l" : g_looping == ELooping::mirror ? "m" : " ")));
+        smodes = (ob.is_image() ? ""
+                                : sform(" [%s] ", (g_looping == ELooping::all      ? "a"
+                                                   : g_looping == ELooping::one    ? "l"
+                                                   : g_looping == ELooping::mirror ? "m"
+                                                                                   : " ")));
       }
       string sname;
       {
@@ -3593,10 +3593,11 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
       string sbitrate;
       {
         const int bitrate = ob._video.attrib().bitrate;
-        sbitrate = (ob.is_image() ? ""
-                                  : bitrate > 1000000 ? sform(" %.2fMbps", bitrate / 1000000.f)
-                                                      : bitrate > 1000 ? sform(" %.2fKbps", bitrate / 1000.f)
-                                                                       : bitrate > 0 ? sform(" %dbps", bitrate) : "");
+        sbitrate = (ob.is_image()       ? ""
+                    : bitrate > 1000000 ? sform(" %.2fMbps", bitrate / 1000000.f)
+                    : bitrate > 1000    ? sform(" %.2fKbps", bitrate / 1000.f)
+                    : bitrate > 0       ? sform(" %dbps", bitrate)
+                                        : "");
       }
       string sloaded;
       {

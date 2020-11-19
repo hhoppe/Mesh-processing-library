@@ -107,14 +107,16 @@ template <typename T> T gaussian(T x, T sdv = T{1}) {
 // Like std::acos() but prevent NaN's from appearing due to roundoff errors.
 // my_acos() is discouraged due to poor accuracy for small angles! see angle_between_unit_vectors().
 template <typename T> T my_acos(T a) {
-  return (a < T{-1} ? (assertw(a > T{-1.001f}), std::acos(T{-1}))
-                    : a > T{+1} ? (assertw(a < T{+1.001f}), std::acos(T{+1})) : std::acos(a));
+  return (a < T{-1}   ? (assertw(a > T{-1.001f}), std::acos(T{-1}))
+          : a > T{+1} ? (assertw(a < T{+1.001f}), std::acos(T{+1}))
+                      : std::acos(a));
 }
 
 // Like std::asin() but prevent NaN's from appearing due to roundoff errors.
 template <typename T> T my_asin(T a) {
-  return (a < T{-1} ? (assertw(a > T{-1.001f}), std::asin(T{-1}))
-                    : a > T{+1} ? (assertw(a < T{+1.001f}), std::asin(T{+1})) : std::asin(a));
+  return (a < T{-1}   ? (assertw(a > T{-1.001f}), std::asin(T{-1}))
+          : a > T{+1} ? (assertw(a < T{+1.001f}), std::asin(T{+1}))
+                      : std::asin(a));
 }
 
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.

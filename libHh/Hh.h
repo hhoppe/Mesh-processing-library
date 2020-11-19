@@ -269,7 +269,7 @@ extern int g_unoptimized_zero;
 #define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
 #if defined(HH_DEBUG)
-#define ASSERTX(...) assertx(__VA_ARGS__)   // In release, do not evaluate expression
+#define ASSERTX(...) assertx(__VA_ARGS__)  // In release, do not evaluate expression
 #define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else

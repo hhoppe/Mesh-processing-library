@@ -1373,11 +1373,10 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
 EResult try_op(Edge e, EOperation op, float& edrss) {
   HH_STIMER(__try_op);
   EResult result;
-  result = (op == OP_ecol
-                ? try_ecol(e, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
-                : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
-                                : op == OP_eswa ? try_eswa(e, int(3.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
-                                                : (assertnever(""), R_success));
+  result = (op == OP_ecol   ? try_ecol(e, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
+            : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
+            : op == OP_eswa ? try_eswa(e, int(3.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
+                            : (assertnever(""), R_success));
   opstat.na[op]++;
   if (result == R_success) opstat.ns[op]++;
   opstat.nor[result]++;

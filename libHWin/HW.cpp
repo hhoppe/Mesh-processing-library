@@ -413,7 +413,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONUP:
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
-    /**/ case WM_RBUTTONDOWN:
+    case WM_RBUTTONDOWN:
     case WM_RBUTTONUP:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP: {

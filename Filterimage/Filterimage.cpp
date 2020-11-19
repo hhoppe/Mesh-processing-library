@@ -1673,9 +1673,9 @@ void do_homogenize(Args& args) {
   for_int(c, 2) {
     table[c].init(V(n, image.dim(c)));
     for_int(k, n) for_int(x, image.dim(c)) {
-      table[c][k][x] = (k == 0 ? 1.0
-                               : (k == 1 && bilinear) ? (x + 0.5 - image.dim(c) / 2.)
-                                                      : std::cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
+      table[c][k][x] = (k == 0                 ? 1.0
+                        : (k == 1 && bilinear) ? (x + 0.5 - image.dim(c) / 2.)
+                                               : std::cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
     }
   }
   if (image.zsize() < 4) {  // version without alpha-channel cropping

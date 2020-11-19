@@ -122,8 +122,9 @@ void project_point(GMesh& meshs, Face fs, CArrayView<Corner> cas, const Bary& ba
 void print_it(const string& s, const PStats& pstats) {
   if (1) {
     float vg = my_sqrt(pstats.Sgd2.avg());
-    string sg = (unitcube0 ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
-                           : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f) : sform(" L2=%#-10.5f", vg));
+    string sg = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
+                 : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
+                             : sform(" L2=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cL2=%#-10.4g  nL2=%#-10.4g\n", s.c_str(), pstats.Sgd2.inum(), sg.c_str(),
            my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
     {
@@ -136,8 +137,9 @@ void print_it(const string& s, const PStats& pstats) {
   }
   if (maxerror) {
     float vg = my_sqrt(pstats.Sgd2.max());
-    string sg = (unitcube0 ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
-                           : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f) : sform(" Li=%#-10.5f", vg));
+    string sg = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
+                 : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
+                             : sform(" Li=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cLi=%#-10.4g  nLi=%#-10.4g\n", s.c_str(), pstats.Sgd2.inum(), sg.c_str(),
            my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
   }
@@ -152,11 +154,11 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
   // PolygonFaceSpatial psp(max(10, int(sqrt(float(meshd.num_vertices())) / 5.f + .5f)));
-  int psp_size = (meshd.num_vertices() < 20000
-                      ? 25
-                      : meshd.num_vertices() < 30000
-                            ? 32
-                            : meshd.num_vertices() < 100000 ? 40 : meshd.num_vertices() < 300000 ? 70 : 100);
+  int psp_size = (meshd.num_vertices() < 20000    ? 25
+                  : meshd.num_vertices() < 30000  ? 32
+                  : meshd.num_vertices() < 100000 ? 40
+                  : meshd.num_vertices() < 300000 ? 70
+                                                  : 100);
   psp_size = getenv_int("PSP_SIZE", psp_size, true);
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(meshd.num_faces());

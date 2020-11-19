@@ -1,4 +1,6 @@
 # See https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+# clang-format -style=google -dump-config
+# clang-format -i `allC`
 
 BasedOnStyle: Google
 ColumnLimit: 119  # default is 80
@@ -8,6 +10,7 @@ AlwaysBreakTemplateDeclarations: MultiLine  # default is Yes
 AllowShortCaseLabelsOnASingleLine: true     # default is false
 DerivePointerAlignment: false               # default is true
 ReflowComments: false                       # default is true
+IncludeBlocks: Preserve                     # sort each #include block separately
 
 # AllowShortFunctionsOnASingleLine: Inline  # default is All
 # CommentPragmas: '^///'                    # default is '^ IWYU pragma:'; however, it still indents it.

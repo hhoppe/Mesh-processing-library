@@ -1198,7 +1198,10 @@ highlight<v>ertices  show_sharp<e>dges
 string HB::show_info() {
   return sform("[X %c%c%c%c%c%c%c%c]", cullface ? 'b' : ' ', " lL"[culledge], reverse_cull ? 'r' : ' ',
                highlight_vertices ? 'v' : ' ', show_sharp ? 'e' : ' ', fisheye ? 'f' : ' ', hlrmode ? 'h' : ' ',
-               quickmode ? 'q' : butquick ? 'Q' : buthlr ? 'H' : ' ');
+               quickmode  ? 'q'
+               : butquick ? 'Q'
+               : buthlr   ? 'H'
+                          : ' ');
 }
 
 bool HB::world_to_vdc(const Point& pi, float& xo, float& yo, float& zo) {
@@ -1223,9 +1226,9 @@ void HB::draw_text(const Vec2<float>& yx, const string& s) {
 void HB::draw_row_col_text(const Vec2<int>& yx, const string& s) {
   auto fdims = HB::get_font_dims();
   hw.draw_text(V((yx[0] < 0 ? win_dims[0] + yx[0] * fdims[0] : yx[0] * fdims[0]),
-                 (yx[1] == std::numeric_limits<int>::max()
-                      ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
-                      : yx[1] < 0 ? win_dims[1] + yx[1] * fdims[1] - 2 : yx[1] * fdims[1] + 2)),
+                 (yx[1] == std::numeric_limits<int>::max() ? (win_dims[1] - narrow_cast<int>(s.size()) * fdims[1]) / 2
+                  : yx[1] < 0                              ? win_dims[1] + yx[1] * fdims[1] - 2
+                                                           : yx[1] * fdims[1] + 2)),
                s);
 }
 

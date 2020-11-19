@@ -522,10 +522,10 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
   cinfo.image_width = image.xsize();
   cinfo.image_height = image.ysize();
   cinfo.input_components = image.zsize();
-  cinfo.in_color_space =
-      (image.zsize() == 3
-           ? JCS_RGB
-           : image.zsize() == 1 ? JCS_GRAYSCALE : image.zsize() == 4 ? JCS_UNKNOWN : (assertt(false), JCS_UNKNOWN));
+  cinfo.in_color_space = (image.zsize() == 3   ? JCS_RGB
+                          : image.zsize() == 1 ? JCS_GRAYSCALE
+                          : image.zsize() == 4 ? JCS_UNKNOWN
+                                               : (assertt(false), JCS_UNKNOWN));
   // Now use the library routine to set default compression parameters.
   // (You must set at least cinfo.in_color_space before calling this,
   // since the defaults depend on the source color space.)
@@ -1120,12 +1120,12 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
   png_init_io(png_ptr, file);
   // turn off compression or set another filter
   // png_set_filter(png_ptr, 0, PNG_FILTER_NONE);
-  png_set_IHDR(
-      png_ptr, info_ptr, image.xsize(), image.ysize(), 8,
-      (image.zsize() == 1 ? PNG_COLOR_TYPE_GRAY
-                          : image.zsize() == 3 ? PNG_COLOR_TYPE_RGB
-                                               : image.zsize() == 4 ? PNG_COLOR_TYPE_RGB_ALPHA : (assertt(false), 0)),
-      PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+  png_set_IHDR(png_ptr, info_ptr, image.xsize(), image.ysize(), 8,
+               (image.zsize() == 1   ? PNG_COLOR_TYPE_GRAY
+                : image.zsize() == 3 ? PNG_COLOR_TYPE_RGB
+                : image.zsize() == 4 ? PNG_COLOR_TYPE_RGB_ALPHA
+                                     : (assertt(false), 0)),
+               PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
   if (getenv_bool("PNG_SRGB")) {  // 20080507
     // It looks unchanged both on the screen and on the printer --> I give up on this.
     // (The intent was to make the images look less dark on the printer.)

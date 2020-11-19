@@ -12,7 +12,7 @@ HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
 
 #else
 
-#include <time.h>    // clock_gettime()
+#include <time.h>  // clock_gettime()
 #include <unistd.h>  // getcwd(), gethostname(), usleep(), etc.
 #if !defined(__APPLE__)
 #include <sys/sysinfo.h>  // struct sysinfo, sysinfo()

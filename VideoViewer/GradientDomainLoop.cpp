@@ -792,8 +792,9 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         for_int(f, nnf) {
           cprogress.update(float(f) / nnf);
           if (pwvideo) queue_frames.enqueue(Matrix<Pixel>{sdims});
-          MatrixView<Pixel> nframe(videoloop.size() ? videoloop[f]
-                                                    : videoloop_nv12.size() ? sframe : queue_frames.rear());
+          MatrixView<Pixel> nframe(videoloop.size()        ? videoloop[f]
+                                   : videoloop_nv12.size() ? sframe
+                                                           : queue_frames.rear());
           parallel_for_each(range(hny), [&](const int hy) {
             for_int(hx, hnx) {
               int fi = get_framei(f * hmat_deltatime(hy, hx), hmat_start(hy, hx), hmat_period(hy, hx));

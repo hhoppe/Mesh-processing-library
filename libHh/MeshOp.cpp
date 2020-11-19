@@ -499,15 +499,12 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
   static EType default_nor_type;
   static std::once_flag flag;
   std::call_once(flag, [] {
-    default_nor_type =
-        (getenv_bool("SUM_NOR")
-             ? EType::sum
-             : getenv_bool("AREA_NOR")
-                   ? EType::area
-                   : getenv_bool("SLOAN_NOR")
-                         ? EType::sloan
-                         : getenv_bool("SUBDIV_NOR") ? EType::subdiv
-                                                     : getenv_bool("ANGLE_NOR") ? EType::angle : EType::unspecified);
+    default_nor_type = (getenv_bool("SUM_NOR")      ? EType::sum
+                        : getenv_bool("AREA_NOR")   ? EType::area
+                        : getenv_bool("SLOAN_NOR")  ? EType::sloan
+                        : getenv_bool("SUBDIV_NOR") ? EType::subdiv
+                        : getenv_bool("ANGLE_NOR")  ? EType::angle
+                                                    : EType::unspecified);
     if (assertw(default_nor_type == EType::unspecified)) default_nor_type = EType::angle;
   });
   if (nortype == EType::unspecified) nortype = default_nor_type;

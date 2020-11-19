@@ -220,8 +220,9 @@ class Multigrid : noncopyable {
     // The optional D leftover hyperplanes [dims / 2, ndims - 1] for odd sizes
     Vec<Bndrule, D> bndrules;
     for_int(d, D) {  // emperically, I found this boundary rule to behave well
-      bndrules[d] = (_periodic(d) ? Bndrule::border
-                                  : largest_odd_size >= largest_other_size ? Bndrule::border : Bndrule::reflected);
+      bndrules[d] = (_periodic(d)                             ? Bndrule::border
+                     : largest_odd_size >= largest_other_size ? Bndrule::border
+                                                              : Bndrule::reflected);
     }
     for_int(c, D) {
       const Vec<int, D> uL = ntimes<D>(0).with(c, dims[c] / 2);

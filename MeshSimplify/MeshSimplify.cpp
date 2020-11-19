@@ -1909,10 +1909,10 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
   // current Mesh implementation boundary Edge direction
   if (mesh.is_boundary(e)) assertx(mesh.most_ccw_vertex(v2) == v1);
-  Vertex cv =
-      (mesh.is_boundary(e) ? v2 :  // current vertex for rotation
-           !mesh.is_boundary(v1) ? v2
-                                 : !mesh.is_boundary(v2) ? v1 : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
+  Vertex cv = (mesh.is_boundary(e) ? v2 :  // current vertex for rotation
+                   !mesh.is_boundary(v1) ? v2
+               : !mesh.is_boundary(v2)   ? v1
+                                         : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
   Vertex ov = mesh.opp_vertex(cv, e);  // other vertex of rotation (v1 or v2)
   Vertex w = assertx(mesh.most_clw_vertex(cv));
   if (!mesh.is_boundary(cv)) {
@@ -2211,11 +2211,10 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   {
     Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
     int vcreasei = -1;  // crease continuation; 1 of possibly 2 edges
-    Vertex cv = (mesh.is_boundary(e)
-                     ? v2
-                     : !mesh.is_boundary(v1)
-                           ? v2
-                           : !mesh.is_boundary(v2) ? v1 : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
+    Vertex cv = (mesh.is_boundary(e)     ? v2
+                 : !mesh.is_boundary(v1) ? v2
+                 : !mesh.is_boundary(v2) ? v1
+                                         : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
     Vertex ov = mesh.opp_vertex(cv, e);  // other vertex of rotation (v1 or v2)
     Vertex w = assertx(mesh.most_clw_vertex(cv));
     if (!mesh.is_boundary(cv)) {
@@ -3226,7 +3225,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   free_ivector(iposv, 1, m);
   free_ivector(izrov, 1, n);
   return ret;
-#else   // defined(HH_HAVE_SIMPLEX)
+#else  // defined(HH_HAVE_SIMPLEX)
   assertnever("Linear programming (simplex) is unavailable");
 #endif  // defined(HH_HAVE_SIMPLEX)
 }

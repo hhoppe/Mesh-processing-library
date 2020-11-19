@@ -7,11 +7,11 @@
 HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyExA()
 #else
 #include <time.h>  // clock_gettime()
-#endif             // defined(_WIN32)
+#endif  // defined(_WIN32)
 
 #include <array>
 #include <cctype>  // std::isdigit()
-#include <mutex>   // std::once_flag, std::call_once()
+#include <mutex>  // std::once_flag, std::call_once()
 #include <thread>  // std::thread::hardware_concurrency()
 #include <unordered_map>
 #include <vector>

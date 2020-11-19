@@ -176,8 +176,8 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
   return newgrid;
 }
 
-template <int D, typename U, typename T> Grid<D, T>
-assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& align) {
+template <int D, typename U, typename T>
+Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& align) {
   static_assert(std::is_base_of<CGridView<D, T>, U>::value, "");
   Vec<Array<int>, D> max_sizes;  // max size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)]
   for_int(d, D) max_sizes[d].init(grids.dim(d), 0);
@@ -215,17 +215,10 @@ assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& al
       int uU = locs[d][ugrid[d] + 1];
       int expected = uU - uL;
       switch (align[d]) {
-        case Alignment::left:
-          offset[d] = uL;
-          break;
-        case Alignment::center:
-          offset[d] = uL + (expected - agrid.dim(d)) / 2;
-          break;
-        case Alignment::right:
-          offset[d] = uL + (expected - agrid.dim(d));
-          break;
-        default:
-          assertnever("");
+        case Alignment::left: offset[d] = uL; break;
+        case Alignment::center: offset[d] = uL + (expected - agrid.dim(d)) / 2; break;
+        case Alignment::right: offset[d] = uL + (expected - agrid.dim(d)); break;
+        default: assertnever("");
       }
     }
     for (Vec<int, D> u : range(agrid.dims())) grid[offset + u] = agrid[u];

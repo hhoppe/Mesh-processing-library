@@ -509,7 +509,7 @@ static bool isafile(int fd) {
       hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
     return false;
   return true;
-#else   // cygwin or Unix
+#else  // cygwin or Unix
   struct stat statbuf;
   assertx(!fstat(fd, &statbuf));
   return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);

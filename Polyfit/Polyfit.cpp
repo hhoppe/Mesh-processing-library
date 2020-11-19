@@ -441,9 +441,9 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
 EResult try_op(vertex v, EOperation op, float& edrss) {
   HH_ATIMER(__try_op);
   EResult result;
-  result = (op == OP_ecol ? try_ecol(v, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
-                          : op == OP_espl ? try_espl(v, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
-                                          : (assertnever(""), R_success));
+  result = (op == OP_ecol   ? try_ecol(v, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
+            : op == OP_espl ? try_espl(v, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
+                            : (assertnever(""), R_success));
   opstat.na[op]++;
   if (result == R_success) opstat.ns[op]++;
   opstat.nor[result]++;

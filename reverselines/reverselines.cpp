@@ -7,10 +7,10 @@ using namespace hh;
 
 #if !defined(_WIN32)
 
-#include <fcntl.h>     // O_RDONLY
+#include <fcntl.h>  // O_RDONLY
 #include <sys/mman.h>  // mmap(), munmap()
 #include <sys/stat.h>  // fstat()
-#include <unistd.h>    // open(), close()
+#include <unistd.h>  // open(), close()
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);

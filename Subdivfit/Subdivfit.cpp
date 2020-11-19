@@ -1240,11 +1240,11 @@ EResult try_espl(Edge eg, double& edrss) {
 
 EResult try_op(Edge e, EOperation op, double& edrss) {
   EResult result;
-  result = (op == OP_ecol
-                ? try_ecol(e, edrss)
-                : op == OP_esha ? try_esha(e, edrss)
-                                : op == OP_eswa ? try_eswa(e, edrss)
-                                                : op == OP_espl ? try_espl(e, edrss) : (assertnever(""), R_success));
+  result = (op == OP_ecol   ? try_ecol(e, edrss)
+            : op == OP_esha ? try_esha(e, edrss)
+            : op == OP_eswa ? try_eswa(e, edrss)
+            : op == OP_espl ? try_espl(e, edrss)
+                            : (assertnever(""), R_success));
   opstat[op][result]++;
   return result;
 }
@@ -1343,10 +1343,10 @@ void do_stoc() {
     }
     if (result == R_success) wf_frame();
     if (verb >= 3)
-      showf(
-          "# it %5d, %s (after %3d) [%5d/%-5d] %s\n", i, opname[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
-          (result == R_success ? sform("* success e=%e", edrss).c_str()
-                               : result == R_energy ? sform("positive e=%e", edrss).c_str() : orname[result].c_str()));
+      showf("# it %5d, %s (after %3d) [%5d/%-5d] %s\n", i, opname[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
+            (result == R_success  ? sform("* success e=%e", edrss).c_str()
+             : result == R_energy ? sform("positive e=%e", edrss).c_str()
+                                  : orname[result].c_str()));
     if (result == R_success)
       nbad = 0;
     else

@@ -27,7 +27,7 @@ HH_ALLOCATE_POOL(Mesh::MHEdge);
 //
 //  Total:                      == 360 bytes/vertex (+ string_info{v,f,e,w})
 //
-//  example: mojave_sq600 (360K vertices): 130 MBytes
+//  example: mojave_sq600 (360k vertices): 130 MBytes
 //
 // (Compare with WMesh: 68 bytes/vertex;  AWMesh:  92 bytes/vertex
 //  no attribs:  WMesh: 40 bytes/vertex;  AWMesh:  64 bytes/vertex)

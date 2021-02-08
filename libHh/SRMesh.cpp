@@ -50,7 +50,7 @@ const float SRVsplit::sin2alpha = 0.f;
 //  SRFace      2n      9*4     == 72n  bytes
 //  Total:                      == 224n bytes
 //
-//  example: mojave_sq600 (360K vertices): 80 MBytes
+//  example: mojave_sq600 (360k vertices): 80 MBytes
 //
 // (Compare with GMesh: 312n bytes + 28n bytes attribs)
 // (Compare with WMesh: 68n bytes;  AWMesh:  92n bytes)
@@ -139,7 +139,7 @@ const float SRVsplit::sin2alpha = 0.f;
 // - vertex geometries could be defined procedurally (eg. image, noise)
 //    to reduce space.
 // - reduce space: use shorts for SRVertex::avertex and SRFace::aface and
-//    set maximum number of SRAVertex and SRAFace to 64Ki (problem:
+//    set maximum number of SRAVertex and SRAFace to 64 Ki (problem:
 //    fully_refine() is currently required during read_pm() ).
 // - possibly: separate linked list for vmorph'ing SRAVertex nodes to speed
 //     up update_vmorphs(), or better yet,

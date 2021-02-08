@@ -10,13 +10,13 @@ int main() {
   if (0) my_setenv("AUDIO_DEBUG", "1");
   if (1) my_setenv("AUDIO_TEST_CODEC", "1");  // avoid dependency on external ffmpeg program
   if (1) {
-    // 400Hz tone for 3sec at 48KHz sampling in stereo
+    // 400 Hz tone for 3 s at 48 kHz sampling in stereo
     const double freq = 400., duration = 3., samplerate = 48 * 1000.;
     const int nchannels = 2;
     const int nsamples = int(duration * samplerate + .5);
     Audio audio1(V(nchannels, nsamples));
     audio1.attrib().samplerate = samplerate;
-    audio1.attrib().bitrate = 256 * 1000;  // 256Kbps
+    audio1.attrib().bitrate = 256 * 1000;  // 256 kbps
     for_int(i, audio1.nsamples()) for_int(ch, audio1.nchannels()) {
       double t = i / samplerate;  // time in seconds
       float v;

@@ -2138,7 +2138,7 @@ void draw_all() {
     if (!setup_ob(i)) continue;
     //
     // DL Tests 20020528: frames / sec (before use_dl -> after use_dl)
-    //  dragonf 200K faces: (-geom 500x500)
+    //  dragonf 200k faces: (-geom 500x500)
     //   .m polygons        3.3 -> 5.8
     //   .m ntriangles=inf  3.7 -> 20.3 ** and long dl compile!
     //   .m ntriangles=128  3.7 -> 26.7

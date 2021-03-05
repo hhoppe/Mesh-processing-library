@@ -120,7 +120,7 @@ char Args::parse_char(const string& s) {
 }
 
 int Args::parse_int(const string& s) {
-  if (!check_int(s)) assertnever("Argument " + s + "' is not an integer");
+  if (!check_int(s)) assertnever("Argument '" + s + "' is not an integer");
   return convert_int(s);
 }
 

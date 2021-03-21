@@ -189,6 +189,7 @@ void HW::open() {
     // Due to interaction with window events or double-buffering, first draw_it() produces only background color.
     draw_it();
     draw_it();
+    draw_it();  // necessary 2021-03-21
     // glFlush();
     glFinish();
     // my_sleep(0.2);

@@ -2989,15 +2989,26 @@ const string fragment_shader = glsl_shader_version + (
 
 void render_image() {
   // HH_TIMER(_render_image);
+#if 1 && defined(__CYGWIN__)
+  const bool use_modern_opengl = false;
+  // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
+  // make CONFIG=cygwin -C ~/git/mesh_processing -j8 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
+#else
+  // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
+  // Mac OS is currently "2.1" which is insufficient.
+  const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0] >= '3';
+#endif
   glEnable(GL_TEXTURE_2D);  // may need to come before glGenerateMipmap on old AMD drivers
   if (1) {
     USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
     const float min_zoom = min(get_zooms());
     const bool mipmap_enabled = true;
-    if (mipmap_enabled && min_zoom < 1.f && glGenerateMipmap && !g_generated_mipmap) {
+    if (mipmap_enabled && min_zoom < 0.99999f && glGenerateMipmap &&
+        !g_generated_mipmap && use_modern_opengl) {
       // Ideally, for highest quality filtering modes, I should manually construct the coarser mipmap levels.
       // test on:  VideoViewer ~/data/video/M4Kseacrowd.mp4 -key -
-      glGenerateMipmap(GL_TEXTURE_2D);  // not supported on Windows Remote Desktop
+      // Not supported on Windows Remote Desktop; blurry trilinear blending with MESA GL on Chrome Remote Desktop.
+      glGenerateMipmap(GL_TEXTURE_2D);
       g_generated_mipmap = true;
       if (0) SHOW("generated mimap");
     }
@@ -3018,15 +3029,6 @@ void render_image() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
   }
   const auto yxi = V(V(0, 0), V(1, 0), V(1, 1), V(0, 1));
-#if 1 && defined(__CYGWIN__)
-  const bool use_modern_opengl = false;
-  // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
-  // make CONFIG=cygwin -C ~/git/mesh_processing -j8 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
-#else
-  // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
-  // Mac OS is currently "2.1" which is insufficient.
-  const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0] >= '3';
-#endif
   if (use_modern_opengl) {
     // Note: this is not portable across Windows Remote Desktop under Windows 7 (which has GL_VERSION 1.1).
     // See [Gortler book] page 47, page 252.

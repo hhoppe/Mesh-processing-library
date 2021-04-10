@@ -246,4 +246,10 @@ int main() {
     SHOW(grid_column<1>(grid4.view(), V(1, 0, 1, 1)));
     SHOW(grid_column<3>(grid4.view(), V(1, 1, 1, 0)));
   }
+  if (1) {
+    Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
+    CGridView<3, Pixel> view = raise_grid_rank(grid);
+    assertx(view.dims() == V(1, 20, 20));
+    assertx(equal(view[0], grid));
+  }
 }

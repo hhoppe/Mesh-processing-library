@@ -227,10 +227,7 @@ Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignm
 }
 
 template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T> grid) {
-  Vec<int, D + 1> dims;
-  dims[0] = 1;
-  for_int(d, D) dims[1 + d] = grid.dim(d);
-  return CGridView<D + 1, T>(grid.data(), dims);
+  return CGridView<D + 1, T>(grid.data(), concat(V(1), grid.dims()));
 }
 
 inline bool env_image_linear_filter() {

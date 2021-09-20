@@ -41,6 +41,7 @@ HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 
 #include <atomic>
 #include <cctype>  // std::isalnum()
+#include <cstring>  // std::memmove()
 #include <fstream>  // std::ifstream, std::ofstream
 #include <mutex>  // mutex, lock_guard
 

@@ -35,6 +35,10 @@ HH_REFERENCE_LIB("libjpeg.lib");
 HH_REFERENCE_LIB("libpng.lib");
 HH_REFERENCE_LIB("libz.lib");
 
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic ignored "-Wstringop-overflow"  // for "for_int(z, image.zsize()) pix[z] = *p++;"
+#endif
+
 namespace hh {
 
 namespace details {

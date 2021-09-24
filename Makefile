@@ -11,6 +11,7 @@
 #  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j deepclean")
 #  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
 #  make CONFIG=clang CXX_STD=c++2a -j  # test code compatibility with future C++20
+#  make CONFIG=mingw CXX_STD=c++2a -j  # test code compatibility with future C++20
 #  make CONFIG=win CXX_STD=c++latest -j  # compatibility with proposed c++ features
 #  make CONFIG=all PEDANTIC=1  # enable most compiler warnings
 
@@ -126,6 +127,9 @@ timingtest: Filterimage Filtervideo
 # hhoppeh mingw: expect 0.9 sec, 27 sec
 # hhoppeh mingw: expect 0.7 sec, 17 sec (now threadpool rather than OpenMP)
 # hhoppeh clang: expect 0.7 sec, 18 sec
+# hhoppeg   win: expect 0.25 sec, 5.8 sec
+# hhoppeg mingw: expect 0.25 sec, 5.5 sec
+# hhoppeg clang: expect 0.26 sec, 5.7 sec
 # See also HTest -timescaleimage
 	$(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo) 2>&1 | grep '(_gdloop:'

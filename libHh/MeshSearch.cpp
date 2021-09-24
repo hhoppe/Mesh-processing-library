@@ -31,6 +31,7 @@ bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2, c
   Vector vray = p2 - p1;
   bool foundint = false;
   float ret_fmin;
+  dummy_init(ret_fmin);
   auto func_test_polygonface_with_ray = [&](Univ id) -> bool {
     const PolygonFace* ppolyface = Conv<const PolygonFace*>::d(id);
     const Polygon& poly = ppolyface->poly;

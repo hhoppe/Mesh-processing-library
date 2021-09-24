@@ -472,14 +472,14 @@ bool gl_report_errors();  // ret: true if errors (only call after init() and bef
 // Return a string containing all the supported OpenGL extensions.
 const string& gl_extensions_string();
 
-#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc) \
-  using Type##func = type;                        \
-  static Type##func func;                         \
-  static bool is_init_##func;                     \
-  if (!is_init_##func) {                          \
-    is_init_##func = true;                        \
-    func = Type##func(GetProc);                   \
-  }                                               \
+#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc)                          \
+  using Type##func = type;                                                 \
+  static Type##func func;                                                  \
+  static bool is_init_##func;                                              \
+  if (!is_init_##func) {                                                   \
+    is_init_##func = true;                                                 \
+    func = reinterpret_cast<Type##func>(reinterpret_cast<void*>(GetProc)); \
+  }                                                                        \
   HH_EAT_SEMICOLON
 
 #if defined(_WIN32)

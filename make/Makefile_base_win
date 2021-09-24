@@ -26,7 +26,7 @@ ccommon += -openmp -EHsc
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
   disable_my_warnings = -wd4127 -wd4512
-  disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647
+  disable_other_warnings = -wd4625 -wd4626 -wd4365 -wd4061 -wd4191 -wd4711 -wd4557 -wd4640  -wd4623 -wd4647 -wd5219
   disable_other_warnings += -wd5026 -wd5027# VS 2015
   disable_other_warnings += -wd4599# "command line argument number ... does not match precompiled header"
   disable_other_warnings += -wd5039 -wd5045 -wd5040# VS 2019 has bug disabling 5045

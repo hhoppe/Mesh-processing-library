@@ -198,7 +198,8 @@ class ISimplex : noncopyable {
     while (hh::Simplex f = HH_ID(iter).next()) {
 #define EndFor \
   }            \
-  }
+  }            \
+  HH_EAT_SEMICOLON
 
 class OrderedSimplexIter {
  public:

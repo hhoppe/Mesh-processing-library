@@ -906,7 +906,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmfh.bfOffBits);
     int rowsize = image.xsize() * ncomp;
     while ((rowsize & 3) != 0) rowsize++;
-    assertw(int64_t{rowsize} * image.ysize() < (1ull << 32));
+    assertw(int64_t{rowsize} * image.ysize() < (1ll << 32));
     bmfh.bfSize = headers2size + rowsize * image.ysize();
     to_dos(&bmfh.bfSize);
     bmih.biSizeImage = rowsize * image.ysize();

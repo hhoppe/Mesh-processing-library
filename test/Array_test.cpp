@@ -136,9 +136,9 @@ int main() {
   }
   {
     Array<int> ar1{1, 2};
-    SHOW(ar1 == V(1, 1 + 1));
-    SHOW(ar1 == V(1, 2, 3));
-    SHOW(ar1 == V(1, 3));
+    SHOW(ar1 == V(1, 1 + 1).view());
+    SHOW(ar1 == V(1, 2, 3).view());
+    SHOW(ar1 == V(1, 3).view());
   }
   if (0) {
     // Array<int> ar(5);

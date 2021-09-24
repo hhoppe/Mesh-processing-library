@@ -269,12 +269,12 @@ int main() {
     {
       Array<int> ar;
       for (int e : range(2)) ar.push(e);
-      assertx(ar == V(0, 1));
+      assertx(ar == V(0, 1).view());
     }
     {
       Array<int> ar;
       for (int e : range(1, 4)) ar.push(e);
-      assertx(ar == V(1, 2, 3));
+      assertx(ar == V(1, 2, 3).view());
     }
     {
       Array<int> ar;
@@ -289,7 +289,7 @@ int main() {
     {
       Array<int> ar;
       for (int e : range(-2, 0)) ar.push(e);
-      assertx(ar == V(-2, -1));
+      assertx(ar == V(-2, -1).view());
     }
     {
       Array<int> ar;
@@ -309,22 +309,22 @@ int main() {
     {
       Array<uchar> ar;
       for (uchar e : range(uchar{4}, uchar{6})) ar.push(e);
-      assertx(ar == V(uchar{4}, uchar{5}));
+      assertx(ar == V(uchar{4}, uchar{5}).view());
     }
     {
       Array<uint8_t> ar;
       for (uint8_t e : range(uint8_t{4}, uint8_t{6})) ar.push(e);
-      assertx(ar == V(uint8_t{4}, uint8_t{5}));
+      assertx(ar == V(uint8_t{4}, uint8_t{5}).view());
     }
     {
       Array<short> ar;
       for (short e : range<short>(-2, 2)) ar.push(e);
-      assertx(ar == convert<short>(V(-2, -1, 0, 1)));
+      assertx(ar == convert<short>(V(-2, -1, 0, 1)).view());
     }
     {
       Array<uint64_t> ar;
       for (uint64_t e : range(uint64_t{3})) ar.push(e);
-      assertx(ar == V<uint64_t>(0u, 1u, 2u));
+      assertx(ar == V<uint64_t>(0u, 1u, 2u).view());
     }
   }
   if (0) {

@@ -15,6 +15,9 @@ class Polygon : public PArray<Point, 4> {
   using base = PArray<Point, 4>;
 
  public:
+  Polygon() = default;
+  Polygon(const Polygon& p) = default;
+  Polygon& operator=(const Polygon& p) = default;
   using base::base;  // C++11 inherit constructors
   void get_bbox(Bbox& bbox) const;
   Vector get_normal_dir() const;  // non-normalized normal

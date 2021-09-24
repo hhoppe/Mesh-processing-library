@@ -288,7 +288,8 @@ template <typename T> class Array : public ArrayView<T> {
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
-  bool operator==(CArrayView<T> o) const { return _n == o.num() && o == *this; }
+  bool operator==(CArrayView<T> o) const { return _n == o.num() && static_cast<const CArrayView<T>&>(*this) == o; }
+  bool operator==(const type& o) const { return _n == o.num() && static_cast<const CArrayView<T>&>(*this) == o; }
   // iterator is inherited from ArrayView
  private:
   using base::_a;

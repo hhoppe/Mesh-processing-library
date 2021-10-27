@@ -10,8 +10,9 @@
 #  make makeall   # run all CONFIG   (same as "make CONFIG=all -j")
 #  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j deepclean")
 #  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
-#  make CONFIG=clang CXX_STD=c++2a -j  # test code compatibility with future C++20
-#  make CONFIG=mingw CXX_STD=c++2a -j  # test code compatibility with future C++20
+#  make CONFIG=mingw CXX_STD=c++2a -j  # test code compatibility with C++20
+#  make CONFIG=clang CXX_STD=c++20 -j  # test code compatibility with C++20
+#  make CONFIG=clang CXX_STD=c++2b -j  # test code compatibility with future C++
 #  make CONFIG=win CXX_STD=c++latest -j  # compatibility with proposed c++ features
 #  make CONFIG=all PEDANTIC=1  # enable most compiler warnings
 

@@ -49,8 +49,8 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     // Unfortunately, STACK_OVERFLOW does not seem to reach here in _WIN32 DEBUG mode.
 #if 0
   if (getenv_bool("ASSERTX_MESSAGE_BOX"))
-    MessageBox(nullptr, "Attach debugger, set breakpoint in my_top_level_exception_filter, then close this box",
-               "Hh.cpp", MB_OK);
+    MessageBoxA(nullptr, "Attach debugger, set breakpoint in my_top_level_exception_filter, then close this box",
+                "Hh.cpp", MB_OK);
   HH_REFERENCE_LIB("user32.lib");  // MessageBoxA()
 #endif
   const unsigned int MSFT_CPP_EXCEPT = 0xE06d7363;  // c++ exception

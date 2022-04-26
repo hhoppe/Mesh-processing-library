@@ -432,7 +432,7 @@ string append_to_filename(const string& filename, const string& smodif) {
 bool is_unlocked(const Object& ob) {
   while (ob._locked_by_background_thread) {
     if (g_request_loop) return false;  // Waiting for background thread to finish could take several seconds
-    my_sleep(0.);                      // Wait for background thread to finish reading a frame
+    my_sleep(.001);                    // Wait for background thread to finish reading a frame
   }
   return true;
 }
@@ -2638,8 +2638,8 @@ void DerivedHW::wheel_turn(float v) {
 
 void advance_frame() {
   double time_since_last_frame, steady_time_since_last_frame;
+  static double last_frame_time = 0.;
   {  // steady is set to negative if unreliable
-    static double last_frame_time = 0.;
     static Vec<double, 8> ar_last_frame_times;
     double vtime = get_precise_time();
     if (!last_frame_time) {
@@ -2647,13 +2647,12 @@ void advance_frame() {
       fill(ar_last_frame_times, 10000.);
     }
     time_since_last_frame = vtime - last_frame_time;
+    assertw(time_since_last_frame >= 0.);
     rotate(ar_last_frame_times, ar_last_frame_times.last());  // shift towards rear
     ar_last_frame_times[0] = time_since_last_frame;
-    steady_time_since_last_frame = (sqrt(var(ar_last_frame_times)) > .008 ? -1
-                                    : 1                                   ? median(ar_last_frame_times)
-                                                                          : mean(ar_last_frame_times));
-    assertw(time_since_last_frame >= 0.);
-    time_since_last_frame = clamp(time_since_last_frame, 0., 3. / 60.);
+    steady_time_since_last_frame = sqrt(var(ar_last_frame_times)) > .008 ? -1. : median(ar_last_frame_times);
+    const double slowest_monitor_refresh_fps = 20.;
+    time_since_last_frame = clamp(time_since_last_frame, 0., 1. / slowest_monitor_refresh_fps);
     last_frame_time = vtime;
   }
   if (g_cob < 0) return;
@@ -2662,86 +2661,79 @@ void advance_frame() {
   const auto& ob = getob();
   assertx(ob.size());
   const double video_framerate = ob._video.attrib().framerate ? ob._video.attrib().framerate : 30.;
+  const double playback_framerate = video_framerate * g_speed;
   if (g_frametime < 0. || !ob._nframes_loaded) {
     g_frametime = 0.;
-    while (!ob._nframes_loaded) my_sleep(0.);
+    while (!ob._nframes_loaded)
+      my_sleep(.001);
+    return;
+  }
+  bool centering = false;
+  int old_framenum = g_framenum;
+  int direction = g_looping == ELooping::mirror && !g_mirror_state_forward ? -1 : +1;
+  if (playback_framerate <= 20.) {
+    // For slow playback (much less than monitor refresh), sleep until it is time to show a new frame.
+    g_frametime += direction * time_since_last_frame * playback_framerate;
+    double frames_to_sleep = (direction > 0 ? ceil(g_frametime + 1e-6) - g_frametime :
+                              g_frametime - floor(g_frametime - 1e-6));
+    double time_to_sleep = frames_to_sleep / playback_framerate;
+    g_frametime += direction * frames_to_sleep;
+    my_sleep(time_to_sleep);
+    double time_stopped_sleep = get_precise_time();
+    last_frame_time = time_stopped_sleep;  // For next call, ignore the time we just slept.
   } else {
-    int old_framenum = g_framenum;
-    int direction = g_looping == ELooping::mirror && !g_mirror_state_forward ? -1 : +1;
-    if (0) {
-      g_frametime += direction * 1. * g_speed;  // always 60 fps; ignore video_framerate and g_speed
-    } else if (steady_time_since_last_frame >= 0. && steady_time_since_last_frame < 1. / 40. &&
-               steady_time_since_last_frame * video_framerate * g_speed >= .92) {
-      g_frametime += direction * steady_time_since_last_frame * video_framerate * g_speed;
-    } else {
-      // For slow playback (less than monitor refresh), sleep until it is time to show a new frame.
-      for (;;) {
-        double time_change;
-        {
-          static double prev_time = 0.;
-          double vtime = get_precise_time();
-          if (!prev_time) prev_time = vtime;
-          time_change = vtime - prev_time;
-          assertw(time_change >= 0.);
-          // time_change = clamp(time_change, .001, .5 + 1. / 30.);
-          const double max_time_change = 1. / 20.;  // was .5 + 1. / 30.;
-          time_change = clamp(time_change, 0., max_time_change);
-          prev_time = vtime;
-        }
-        g_frametime += direction * time_change * video_framerate * g_speed;
-        if (int(floor(g_frametime)) != old_framenum) break;
-        if (g_messages.num()) break;
-        if (0) my_sleep(.002);  // could be more accurate
-        my_sleep(0.);           // just give up time slice
-      }
-    }
-    bool centered = false;
-    {
+    double time_advance = steady_time_since_last_frame > 0. ? steady_time_since_last_frame : time_since_last_frame;
+    g_frametime += direction * time_advance * playback_framerate;
+    if (steady_time_since_last_frame > 0.) {
       // I notice a slight drift: the frame sync of the GPU/monitor is slightly slower than 60 fps.
       // Therefore if I advance based on real time, I occasionally have to skip forward a frame.
-      // To counter this, I create a slight bias to moving g_frametime towards the center of the
+      // To counter this, I create a slight bias to moving g_frametime towards the center (+0.5) of the
       //  current video frame interval, if we are advancing frames at the same rate as monitor refresh.
-      if (1 && abs(steady_time_since_last_frame - 1. / (video_framerate * g_speed)) < .005) {
-        centered = true;
+      // This is now generalized for a monitor refresh rate that is any multiple of the playback framerate.
+      double monitor_frames_per_video_frame = 1. / (steady_time_since_last_frame  * playback_framerate);
+      double f = monitor_frames_per_video_frame;
+      if ((f > 0.75 && abs(f - int(f + 0.5)) < .008) ||
+          (f > 0.1 && f < 0.7 && abs(1. / f - int (1. / f + 0.5)) < .008)) {
+        int multiple = f > 0.75 ? int(f + 0.5) : 1;
+        centering = true;
         const double adjustment_rate = .01;  // 1% seems sufficient
-        double adjustment = -signz(g_frametime - floor(g_frametime) - .5) * adjustment_rate;
+        double adjustment = -signz(g_frametime * multiple - floor(g_frametime * multiple) - .5) * adjustment_rate;
         g_frametime += adjustment;
       }
     }
-    const int framediff = my_mod(direction * (int(floor(g_frametime)) - old_framenum), ob.nframes());
-    if (g_verbose >= 2 || (0 && abs(framediff) != 1 && g_speed == 1.))
-      showf(
-          "frametime=%-11.5f framediff=%-2d dtime=%-9.5f steady=%-9.5f"
-          " nloaded=%-3d  centered=%d\n",
-          g_frametime, framediff, time_since_last_frame, steady_time_since_last_frame, ob._nframes_loaded + 0,
-          centered);
-    if (int(floor(g_frametime)) >= ob._nframes_loaded && ob._nframes_loaded < ob.nframes()) {
-      if (g_verbose >= 2) SHOW("wait", g_frametime, ob._nframes_loaded, ob.nframes());
-      // We have advanced past the number of loaded frames, so wait until at least some forward progress.
-      while (old_framenum == ob._nframes_loaded - 1) {
-        if (0) my_sleep(.005);
-        my_sleep(0.);
-      }
-      assertx(old_framenum < ob._nframes_loaded - 1);
-      g_frametime = ob._nframes_loaded - 1.;  // reset the desired time
-    } else if (g_looping == ELooping::mirror) {
-      if (g_frametime >= ob._frameou1) {
-        g_mirror_state_forward = false;
-        g_frametime = ob._frameou1 - 1 - 1e-6f;
-      } else if (g_frametime < ob._framein) {
-        g_mirror_state_forward = true;
-        g_frametime = ob._framein;
-      }
-    } else if (g_frametime >= ob._frameou1) {
-      if (g_looping == ELooping::one) {
-        g_frametime -= (ob._frameou1 - ob._framein);  // restart current video
-      } else if (g_looping == ELooping::all) {
-        int obi = g_cob >= getobnum() - 1 ? 0 : g_cob + 1;
-        set_video_frame(obi, getob(obi)._framein ? getob(obi)._framein - .001 : k_before_start);
-      } else {
-        g_frametime = ob._frameou1 - 1;  // freeze on last frame
-        g_playing = false;
-      }
+  }
+  const int framediff = my_mod(direction * (int(floor(g_frametime)) - old_framenum), ob.nframes());
+  if (g_verbose >= 2 || (0 && abs(framediff) != 1 && g_speed == 1.))
+    showf(
+        "frametime=%-11.5f framediff=%-2d dtime=%-9.5f steady=%-9.5f"
+        " nloaded=%-3d  centering=%d\n",
+        g_frametime, framediff, time_since_last_frame, steady_time_since_last_frame, ob._nframes_loaded + 0,
+        centering);
+  if (int(floor(g_frametime)) >= ob._nframes_loaded && ob._nframes_loaded < ob.nframes()) {
+    if (g_verbose >= 2) SHOW("wait", g_frametime, ob._nframes_loaded, ob.nframes());
+    // We have advanced past the number of loaded frames, so wait until at least some forward progress.
+    while (old_framenum == ob._nframes_loaded - 1) {
+      my_sleep(.001);
+    }
+    assertx(old_framenum < ob._nframes_loaded - 1);
+    g_frametime = ob._nframes_loaded - 1.;  // reset the desired time
+  } else if (g_looping == ELooping::mirror) {
+    if (g_frametime >= ob._frameou1) {
+      g_mirror_state_forward = false;
+      g_frametime = ob._frameou1 - 1 - 1e-6f;
+    } else if (g_frametime < ob._framein) {
+      g_mirror_state_forward = true;
+      g_frametime = ob._framein;
+    }
+  } else if (g_frametime >= ob._frameou1) {
+    if (g_looping == ELooping::one) {
+      g_frametime -= (ob._frameou1 - ob._framein);  // restart current video
+    } else if (g_looping == ELooping::all) {
+      int obi = g_cob >= getobnum() - 1 ? 0 : g_cob + 1;
+      set_video_frame(obi, getob(obi)._framein ? getob(obi)._framein - .001 : k_before_start);
+    } else {
+      g_frametime = ob._frameou1 - 1;  // freeze on last frame
+      g_playing = false;
     }
   }
 }
@@ -3348,7 +3340,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
   }
   if (!product(g_win_dims)) return;
   if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation) {
-    while (!g_videoloop_ready_obj) my_sleep(.1);
+    while (!g_videoloop_ready_obj)
+      my_sleep(.001);
   }
   if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
     std::lock_guard<std::mutex> lock(g_mutex_obs);
@@ -3376,7 +3369,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
           assertx(i >= 0 && i < g_sliders.num());
           float dval;
           if (!g_selected.control_was_pressed) {  // pointer position determines value
-            dval = std::exp((yx[0] - g_selected.yx_last[0]) / float(-g_win_dims[0]) * .90f);  // was .60f
+            dval = std::exp((yx[0] - g_selected.yx_last[0]) / float(-g_win_dims[0]) * .90f);
           } else {  // pointer position determines rate of change
             dval = std::exp((yx[0] - g_selected.yx_pressed[0]) / float(-g_win_dims[0]) * .02f);
           }
@@ -3946,7 +3939,7 @@ void background_work(bool asynchronous) {
             if (g_framenum < 0) {
               if (g_framenum < 0) my_sleep(.01);  // help main thread get started
             } else {
-              my_sleep(0.);  // help main thread catch up if it can
+              my_sleep(.001);  // help main thread catch up if it can
             }
           }
         }
@@ -4218,7 +4211,7 @@ void do_batch_create_loop(Args& args) {
 }
 
 // Create a procedural video containing a moving vertical stripe.
-//  e.g.:  VideoViewer -stripe 320 640 480 60
+//  e.g.:  VideoViewer -stripe 240 720 200 60
 void do_stripe(Args& args) {
   const int nframes = args.get_int();
   const int xsize = args.get_int();

@@ -2331,6 +2331,15 @@ void do_procedure(Args& args) {
           image[yx] = timage[yx[0] < timage.ysize() ? yx : image.dims() - 1 - yx + V(0, timage.xsize() / 2)];
         },
         2);
+  } else if (name == "premultiply_alpha") {
+    assertx(image.zsize() == 4);
+    parallel_for_coords(
+        image.dims(),
+        [&](const Vec2<int>& yx) {
+          auto alpha = image[yx][3];
+          for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * alpha / 255.f + .5f);
+        },
+        10);
   } else if (name == "interleavecols") {
     Image image1(image);
     Image image2;

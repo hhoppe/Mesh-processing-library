@@ -1351,8 +1351,9 @@ bool setup_ob(int i) {
   }
   glPolygonMode(GL_FRONT_AND_BACK, lshading ? GL_FILL : GL_LINE);
   static const bool all_textured = getenv_bool("G3D_ALL_TEXTURED");
-  const int texture_id = i - 1;
+  int texture_id = i - 1;
   if (texture_active && texture_id >= 0 && (texture_id < g_textures.num() || all_textured)) {
+    if (texture_id >= g_textures.num()) texture_id = g_textures.num() - 1;
     glBindTexture(GL_TEXTURE_2D, g_textures[texture_id].texname);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_TEXTURE_GEN_S);

@@ -1,10 +1,12 @@
 # Mesh Processing Library
 
-[//]: # (This may be the most platform independent comment -- after a blank line)
-[//]: # (Preview using http://daringfireball.net/projects/markdown/dingus )
-[//]: # (See nice docs in http://daringfireball.net/projects/markdown/syntax )
-[//]: # ( or https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html )
-[//]: # (GitHub-specific: https://help.github.com/categories/writing-on-github/ )
+<!--
+Preview exact GitHub rendering using "env grip"; it automatically calls GitHub API and serves webpage; really nice.
+GitHub-specific syntax: https://help.github.com/categories/writing-on-github/
+Nice docs in http://daringfireball.net/projects/markdown/syntax
+
+[//]: # (Another way to insert comments -- after a blank line)
+-->
 
 
 ## Overview
@@ -806,6 +808,5 @@ All streams are opened in binary mode.  This allows text and binary to coexist i
 
 ## License
 
-See the file <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/LICENSE">`./LICENSE`</a>.
-
+See <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/LICENSE">`LICENSE`</a>.
 This project has adopted the <a href="https://opensource.microsoft.com/codeofconduct/">Microsoft Open Source Code of Conduct</a>.  For more information see the <a href="https://opensource.microsoft.com/codeofconduct/faq/">Code of Conduct FAQ</a> or contact <a href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> with any additional questions or comments.

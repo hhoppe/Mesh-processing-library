@@ -100,7 +100,7 @@ For instance, the line
 
  <tr id="pub_recon">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/recon.red.jpg" width="240" height="148" alt=""/>
+   <img class="thumbnail" src="thumbnails/recon.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/recon/">Surface reconstruction from unorganized points</a>.</div>
@@ -114,7 +114,7 @@ For instance, the line
 
  <tr id="pub_meshopt">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/meshopt.red.jpg" width="240" height="125" alt=""/>
+   <img class="thumbnail" src="thumbnails/meshopt.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/meshopt/">Mesh optimization</a>.</div>
@@ -128,7 +128,7 @@ For instance, the line
 
  <tr id="pub_psrecon">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/psrecon.red.jpg" width="240" height="148" alt=""/>
+   <img class="thumbnail" src="thumbnails/psrecon.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psrecon/">Piecewise Smooth Surface Reconstruction</a>.</div>
@@ -142,7 +142,7 @@ For instance, the line
 
  <tr id="pub_pm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/pm.red.jpg" width="240" height="151" alt=""/>
+   <img class="thumbnail" src="thumbnails/pm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/pm/">Progressive meshes</a>.</div>
@@ -156,7 +156,7 @@ For instance, the line
 
  <tr id="pub_efficientpm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/efficientpm.red.jpg" width="240" height="132" alt=""/>
+   <img class="thumbnail" src="thumbnails/efficientpm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/efficientpm/">Efficient implementation of progressive meshes</a>.</div>
@@ -170,7 +170,7 @@ For instance, the line
 
  <!--<tr id="pub_newqem">
      <td class="lcell">
-      <img class="thumbnail" src="thumbnails/newqem.red.jpg" width="240" height="136" alt=""/>
+      <img class="thumbnail" src="thumbnails/newqem.red.jpg" alt=""/>
      </td>
      <td class="rcell">
       <div class="title"><a href="https://hhoppe.com/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
@@ -184,7 +184,7 @@ For instance, the line
 
  <tr id="pub_vdrpm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/vdrpm.red.jpg" width="240" height="150" alt=""/>
+   <img class="thumbnail" src="thumbnails/vdrpm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/vdrpm/">View-dependent refinement of progressive meshes</a>.</div>
@@ -198,7 +198,7 @@ For instance, the line
 
  <tr id="pub_svdlod">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/svdlod.red.jpg" width="240" height="149" alt=""/>
+   <img class="thumbnail" src="thumbnails/svdlod.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/svdlod/">Smooth view-dependent level-of-detail control and its application to terrain rendering</a>.</div>
@@ -212,7 +212,7 @@ For instance, the line
 
  <tr id="pub_psc">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/psc.red.jpg" width="240" height="167" alt=""/>
+   <img class="thumbnail" src="thumbnails/psc.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psc/">Progressive simplicial complexes</a>.</div>
@@ -226,7 +226,7 @@ For instance, the line
 
  <!--<tr id="pub_tvc">
      <td class="lcell">
-      <img class="thumbnail" src="thumbnails/tvc.red.jpg" width="240" height="136" alt=""/>
+      <img class="thumbnail" src="thumbnails/tvc.red.jpg" alt=""/>
      </td>
      <td class="rcell">
       <div class="title"><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>

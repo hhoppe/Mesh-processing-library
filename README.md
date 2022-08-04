@@ -1,5 +1,5 @@
 # Mesh-processing-library
-See [README.html](https://rawgit.com/hhoppe/Mesh-processing-library/main/README.html) for details.
+See [Webpage](https://hhoppe.github.io/Mesh-processing-library/) for details.
 
 C++ library and programs that demonstrate mesh processing techniques in computer graphics
 published at ACM SIGGRAPH in 1992–1998:
@@ -20,4 +20,4 @@ published at ACM SIGGRAPH in 1992–1998:
 [//]: # ( or https://confluence.atlassian.com/bitbucketserver/markdown-syntax-guide-776639995.html )
 [//]: # (GitHub-specific: https://help.github.com/categories/writing-on-github/ )
 
-See [license.txt](https://rawgit.com/hhoppe/Mesh-processing-library/main/license.txt)
+See [LICENSE](https://github.com/hhoppe/Mesh-processing-library/blob/main/LICENSE).

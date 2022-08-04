@@ -47,7 +47,6 @@ build/
 # Google
 /BUILD
 /*.bzl
-/LICENSE
 /METADATA
 /OWNERS
 /test/google_run_test.sh

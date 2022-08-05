@@ -11,9 +11,8 @@ Nice docs in http://daringfireball.net/projects/markdown/syntax
 
 ## Overview
 
-This <a href="https://github.com/hhoppe/Mesh-processing-library">GitHub package</a>
-contains a C++ library and several application programs that demonstrate mesh processing technologies
-published in research papers at ACM SIGGRAPH in 1992&ndash;1998:
+This package contains C++ libraries and programs demonstrating mesh processing research
+published in ACM SIGGRAPH (1992&ndash;1998):
 
 - <em>surface reconstruction</em> (from unorganized, unoriented points)
 - <em>mesh optimization</em>
@@ -26,7 +25,7 @@ published in research papers at ACM SIGGRAPH in 1992&ndash;1998:
 - <em>progressive simplicial complexes</em>
 <!-- - <em>optimized mesh traversal</em> (for transparent vertex caching) -->
 
-The source code has been updated to modern C++ style and supports cross-platform use.
+The source code has been updated to modern C++ style and for cross-platform use.
 
 
 ## Requirements / dependencies

@@ -4936,6 +4936,20 @@ Array<PlyIndices> ply_findices;
 //
 // property list uchar uint vertex_indices  # Blender
 
+// ply
+// format binary_little_endian 1.0
+// element vertex 5398641
+// property float x
+// property float y
+// property float z
+// property float value
+// property uchar red
+// property uchar green
+// property uchar blue
+// element face 5079921
+// property list int int vertex_indices
+// end_header
+
 void read_ply(const string& filename) {
   // HH_TIMER(_read_ply);
   RFile fi(filename);
@@ -4949,6 +4963,7 @@ void read_ply(const string& filename) {
   int len_nfv = 1;  // default uchar
   int state = 0;    // 0=undef, 1=vert, 2=face
   int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0, flist = 0, fnother = 0, fnotherb = 0;
+  bool skip_vvalue = false;
   for (string sline;;) {
     assertx(my_getline(fi(), sline));
     if (0) {
@@ -4980,94 +4995,62 @@ void read_ply(const string& filename) {
       assertw(nf > 0);
       ply_findices.init(nf);
       state = 2;
-    } else if (sline == "property float x") {
+    } else if (sline == "property float x" || sline == "property float y" || sline == "property float z") {
       assertx(state == 1);
-      vnpos++;
       assertx(vnnor + vnrgb + vnother == 0);
-    } else if (sline == "property float y") {
-      assertx(state == 1);
       vnpos++;
+    } else if (sline == "property float value") {
+      assertx(state == 1);
       assertx(vnnor + vnrgb + vnother == 0);
-    } else if (sline == "property float z") {
+      skip_vvalue = true;
+    } else if (sline == "property float nx" || sline == "property float ny" || sline == "property float nz") {
       assertx(state == 1);
-      vnpos++;
-      assertx(vnnor + vnrgb + vnother == 0);
-    } else if (sline == "property float nx") {
-      assertx(state == 1);
-      vnnor++;
       assertx(vnrgb + vnother == 0);
-    } else if (sline == "property float ny") {
-      assertx(state == 1);
       vnnor++;
-      assertx(vnrgb + vnother == 0);
-    } else if (sline == "property float nz") {
+    } else if (sline == "property uchar red" || sline == "property uchar green" || sline == "property uchar blue") {
       assertx(state == 1);
-      vnnor++;
-      assertx(vnrgb + vnother == 0);
-    } else if (sline == "property uchar red") {
-      assertx(state == 1);
-      vnrgb++;
       assertx(vnother == 0);
-    } else if (sline == "property uchar green") {
-      assertx(state == 1);
       vnrgb++;
-      assertx(vnother == 0);
-    } else if (sline == "property uchar blue") {
-      assertx(state == 1);
-      vnrgb++;
-      assertx(vnother == 0);
-    } else if (sline == "property list uchar int vertex_indices") {
+    } else if (sline == "property list uchar int vertex_indices" ||
+               sline == "property list uchar uint vertex_indices") {
       assertx(state == 2);
-      flist++;
       assertx(fnother == 0);
-    } else if (sline == "property list uchar uint vertex_indices") {
-      assertx(state == 2);
       flist++;
-      assertx(fnother == 0);
     } else if (sline == "property list int int vertex_indices") {
       assertx(state == 2);
-      flist++;
       assertx(fnother == 0);
+      flist++;
       len_nfv = 4;
     } else if (begins_with(sline, "property float")) {
-      if (state == 1)
+      if (state == 1) {
         vnotherb += 4;
-      else if (state == 2)
-        fnotherb += 4;
-      else
-        assertnever("");
-      if (state == 1)
         vnother++;
-      else if (state == 2)
+      } else if (state == 2) {
+        fnotherb += 4;
         fnother++;
-      else
+      } else {
         assertnever("");
+      }
     } else if (begins_with(sline, "property int")) {
-      if (state == 1)
+      if (state == 1) {
         vnotherb += 4;
-      else if (state == 2)
+        vnother++;
+      } else if (state == 2) {
         fnotherb += 4;
-      else
-        assertnever("");
-      if (state == 1)
-        vnother++;
-      else if (state == 2)
         fnother++;
-      else
+      } else {
         assertnever("");
+      }
     } else if (begins_with(sline, "property uchar")) {
-      if (state == 1)
+      if (state == 1) {
         vnotherb += 1;
-      else if (state == 2)
-        fnotherb += 1;
-      else
-        assertnever("");
-      if (state == 1)
         vnother++;
-      else if (state == 2)
+      } else if (state == 2) {
+        fnotherb += 1;
         fnother++;
-      else
+      } else {
         assertnever("");
+      }
     } else if (sline == "end_header") {
       break;
     } else {
@@ -5088,6 +5071,10 @@ void read_ply(const string& filename) {
           from_std(&ply_vpos[i][c]);
         else
           from_dos(&ply_vpos[i][c]);
+      }
+      if (skip_vvalue) {
+        float dummy;
+        assertx(read_binary_raw(fi(), ArView(dummy)));
       }
       if (vnnor) assertx(read_binary_raw(fi(), ply_vnor[i].view()));
       for_int(c, vnnor) {
@@ -5132,6 +5119,10 @@ void read_ply(const string& filename) {
   } else {
     for_int(i, ply_vpos.num()) {
       for_int(c, vnpos) assertx(fi() >> ply_vpos[i][c]);
+      if (skip_vvalue) {
+        float dummy;
+        assertx(fi() >> dummy);
+      }
       for_int(c, vnnor) assertx(fi() >> ply_vnor[i][c]);
       for_int(c, vnrgb) {
         int v;

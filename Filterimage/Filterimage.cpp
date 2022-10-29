@@ -53,6 +53,7 @@ int g_niter = 1;
 bool use_lab = true;
 bool nooutput = false;
 Pixel gcolor{255, 255, 255, 255};
+float tolerance = 0.f;
 Vec2<Bndrule> g_bndrules = twice(Bndrule::reflected);
 Vec2<FilterBnd> g_filterbs =
     V(FilterBnd(Filter::get("spline"), g_bndrules[0]), FilterBnd(Filter::get("spline"), g_bndrules[1]));
@@ -1054,7 +1055,8 @@ void do_replace(Args& args) {
   }
   int count = 0;
   for (const auto& yx : range(image.dims())) {
-    if (equal(image[yx], gcolor, image.zsize()) ^ g_not) {
+    bool is_match = tolerance ? dist2(image[yx], gcolor) <= tolerance : equal(image[yx], gcolor, image.zsize());
+    if (is_match ^ g_not) {
       count++;
       image[yx] = newcolor;
     }
@@ -3451,6 +3453,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(overlayimage, "xl yt image : place image above current one");
   HH_ARGSD(drawrectangle, "x0 y0 x1 y1 : replace specified region by current color");
+  HH_ARGSP(tolerance, "f : max Euclidean distance in '-replace'.");
   HH_ARGSD(replace, "r g b a : replace all pixels matching specified color with this color");
   HH_ARGSD(gamma, "v : gammawarp image");
   HH_ARGSD(tobw, ": convert to grayscale");

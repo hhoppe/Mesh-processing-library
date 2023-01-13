@@ -90,7 +90,7 @@ void Image::to_color() {
 bool filename_is_image(const string& filename) {
   static const auto& k_extensions = *new Array<string>{
       "jpg", "jpeg", "png", "bmp", "rgb",  "ppm", "pgm", "pbm", "tif", "tiff",
-      "jxr", "hdp",  "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr", "heic",
+      "jxr", "hdp",  "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr", "heic", "jfif",
   };
   return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
 }
@@ -100,7 +100,7 @@ string image_suffix_for_magic_byte(uchar c) {
   // also redundant information in k_image_filetypes
   // Documentation on prefixes for various image containers:
   // *.rgb: "\001"
-  // *.jpg: "\377\330\377\341I\005Exif", "\377\330\377\340\000\020JFIF"
+  // *.jpg: "\377\330\377\341I\005Exif"; *.jfif: "\377\330\377\340\000\020JFIF"
   // *.bmp: "BM"
   // *.ppm: "P6\n", "P5\r\n"
   // *.png: "\211PNG\r\n"

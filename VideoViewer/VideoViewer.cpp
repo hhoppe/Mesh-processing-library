@@ -4365,6 +4365,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(image, "file : load input image");
   args.p("*.jpg", do_image, ": load input image");
   args.p("*.jpeg", do_image, ": load input image");
+  args.p("*.jfif", do_image, ": load input image");
   args.p("*.png", do_image, ": load input image");
   args.p("*.bmp", do_image, ": load input image");
   args.p("*.JPG", do_image, ": load input image");

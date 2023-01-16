@@ -4375,6 +4375,8 @@ int main(int argc, const char** argv) {
   args.p("*.heic", do_image, ": load input image");
   args.p("*.arw", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
   args.p("*.exr", do_image, ": load input image (requires IMAGE_IMPLEMENTATION=ffmpeg)");
+  args.p("*.tiff", do_image, ": load input image");
+  args.p("*.tif", do_image, ": load input image");
   HH_ARGSD(vlp, "file.vlp : load looping parameters");
   args.p("*.vlp", do_vlp, ": load looping parameters");
   HH_ARGSD(batch_create_loop, "input_video.mp4 output_loop.mp4 : create loop without opening any window");

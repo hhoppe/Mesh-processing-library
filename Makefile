@@ -29,7 +29,7 @@ lib_dirs = \
 prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
   MeshSimplify reverselines Filterprog FilterPM StitchPM \
-  MinCycles \
+  MinCycles MeshReorder \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \
   G3dOGL G3dVec VideoViewer \
 

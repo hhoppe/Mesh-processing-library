@@ -11,6 +11,7 @@ if .==. (
   call view_simplified_using_meshopt.bat
 
   call view_pm_gaudipark.bat
+  call view_pm_cessna.bat
   call view_pm_club.bat
   call view_geomorphs.bat
 
@@ -22,8 +23,9 @@ if .==. (
 
   call view_psc_drumset.bat
 
-
   call view_topologically_simplified.bat
+
+  call view_vertexcache_bunny.bat
 
   call view_rendered_mechpart_image.bat
   call view_rendered_mechpart_video.bat

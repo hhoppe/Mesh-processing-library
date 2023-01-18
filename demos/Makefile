@@ -21,6 +21,7 @@ create_scripts = \
   create_recon_polygon.sh \
   create_simplified_using_meshopt.sh \
   create_pm_gaudipark.sh \
+  create_pm_cessna.sh \
   create_pm_club.sh \
   determine_approximation_error.sh \
   create_geomorphs.sh \
@@ -28,6 +29,7 @@ create_scripts = \
   create_sr_terrain.sh \
   create_terrain_hierarchy.sh \
   create_topologically_simplified.sh \
+  create_vertexcache_bunny.sh \
   create_rendered_mechpart_image.sh \
   create_rendered_mechpart_video.sh \
   create_voronoi_fillin.sh \
@@ -41,6 +43,7 @@ view_scripts = \
   view_recon_polygon.sh \
   view_simplified_using_meshopt.sh \
   view_pm_gaudipark.sh \
+  view_pm_cessna.sh \
   view_pm_club.sh \
   view_geomorphs.sh \
   view_sr_office.sh \
@@ -49,6 +52,7 @@ view_scripts = \
   view_gcanyon_frames.sh \
   view_psc_drumset.sh \
   view_topologically_simplified.sh \
+  view_vertexcache_bunny.sh \
   view_rendered_mechpart_image.sh \
   view_rendered_mechpart_video.sh \
   view_voronoi_fillin.sh \

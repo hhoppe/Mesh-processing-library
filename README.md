@@ -12,7 +12,7 @@ Nice docs in http://daringfireball.net/projects/markdown/syntax
 ## Overview
 
 This package contains C++ libraries and programs demonstrating mesh processing research
-published in ACM SIGGRAPH (1992&ndash;1998):
+published in ACM SIGGRAPH (1992&ndash;1999):
 
 - <em>surface reconstruction</em> (from unorganized, unoriented points)
 - <em>mesh optimization</em>
@@ -23,7 +23,7 @@ published in ACM SIGGRAPH (1992&ndash;1998):
 - <em>view-dependent mesh refinement</em>
 - <em>smooth terrain LOD</em>
 - <em>progressive simplicial complexes</em>
-<!-- - <em>optimized mesh traversal</em> (for transparent vertex caching) -->
+- <em>optimized mesh traversal</em> (for transparent vertex caching)
 
 The source code has been updated to modern C++ style and for cross-platform use.
 
@@ -225,19 +225,19 @@ For instance, the line
   </td>
  </tr>
 
- <!--<tr id="pub_tvc">
-     <td class="lcell">
-      <img class="thumbnail" src="thumbnails/tvc.red.jpg" alt=""/>
-     </td>
-     <td class="rcell">
-      <div class="title"><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
-      <div class="authors">Hugues Hoppe.</div>
-      <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>, 269-276.</div>
-      <div class="desc"><em>Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</em></div>
-      <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshReorder"><code>MeshReorder</code></a></div>
-      <div class="demos"><span class="sdemos">Demos:</span> <code>create_vertexcache_result</code>, <code>view_vertexcache_result</code></div>
-     </td>
- </tr>-->
+ <tr id="pub_tvc">
+  <td class="lcell">
+   <img class="thumbnail" src="thumbnails/tvc.red.jpg" alt=""/>
+  </td>
+  <td class="rcell">
+   <div class="title"><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
+   <div class="authors">Hugues Hoppe.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>, 269-276.</div>
+   <div class="desc"><em>Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</em></div>
+   <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshReorder"><code>MeshReorder</code></a></div>
+   <div class="demos"><span class="sdemos">Demos:</span> <code>create_vertexcache_bunny</code>, <code>view_vertexcache_bunny</code></div>
+  </td>
+ </tr>
 
 </table>
 
@@ -634,23 +634,26 @@ FilterPM demos/data/office.pm -nf 200000 -outmesh | \
 - shows the resulting closed edge cycles (tagged as sharp) in blue.
 
 
-<!--## Optimized mesh traversal
+## <a id="prog_MeshReorder"></a>Optimized mesh traversal
 
-The program `MeshReorder` reorders the triangle faces (and optionally vertices) within a mesh
-so as to exploit a GPU vertex cache to minimize memory bandwidth and shading cost.
+The program **`MeshReorder`** reorders the triangle faces (and optionally vertices) within a mesh
+to exploit GPU vertex caching and thereby minimize memory bandwidth and shading cost.
 
-For example, within `demos/create_vertexcache_result`,
+For example, within `demos/create_vertexcache_bunny`,
 ```shell
-Filtermesh demos/data/small_stell_dodecahedron4.nsub4.m -renumber -removeinfo | \
-  MeshReorder - -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
-    >small_stell_dodecahedron4.nsub4.vertexcache.m
-G3dOGL small_stell_dodecahedron4.nsub4.vertexcache.m -key DmDe -lightambient .70 -lightsource .35
+MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
+    >data/bunny.vertexcache.m
 ```
 - simulates traversal using a FIFO cache of 16 vertices and reports cache miss rates,
-- optimizes the triangle face ordering and re-simulates the cache behavior,
-- writes the mesh with corner colors that identify cache misses,
-- and finally views the result.
--->
+- optimizes the triangle face ordering,
+- reports the updated cache miss rate, and
+- writes the mesh with corner colors that identify cache misses.
+
+Then, within `dmeos/view_vertexcache_bunny`,
+```shell
+G3dOGL data/bunny.vertexcache.m -st data/bunny.s3d -key DmDTDTDC
+```
+visualizes the resulting sequence of triangle strips and cache misses.
 
 
 ## <a id="prog_G3dOGL"></a>Geometry viewer

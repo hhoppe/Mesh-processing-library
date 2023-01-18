@@ -13,6 +13,7 @@ view_recon_polygon.sh
 view_simplified_using_meshopt.sh
 
 view_pm_gaudipark.sh
+view_pm_cessna.sh
 view_pm_club.sh
 view_geomorphs.sh
 
@@ -24,8 +25,9 @@ view_gcanyon_frames.sh
 
 view_psc_drumset.sh
 
-
 view_topologically_simplified.sh
+
+view_vertexcache_bunny.sh
 
 view_rendered_mechpart_image.sh
 view_rendered_mechpart_video.sh

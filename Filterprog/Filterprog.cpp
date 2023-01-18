@@ -1040,7 +1040,7 @@ void process_vsplit() {
           if (verify_reflection) {
             PMWedgeAttrib wat;
             sub_reflect(wat, !ns ? waovsfl : waovtfl, vspl.ar_wad.last());
-            assertx(!compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance));
+            assertw(!compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance));
           }
           break;
         default: assertnever("");

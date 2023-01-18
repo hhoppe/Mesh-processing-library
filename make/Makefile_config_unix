@@ -18,4 +18,4 @@ ifeq ($(CC),gcc)
   LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
 endif
 
-graphics_libs ?= -lGLU -lGL -lX11#  -lXext
+graphics_libs ?= -lGL -lX11#  -lXext

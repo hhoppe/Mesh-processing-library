@@ -11,7 +11,7 @@ else                            # default is gcc compiler
   # ccommon += -U__STRICT_ANSI__#  do allow header declarations of POSIX functions even if using -std=c++XX.
 endif
 
-graphics_libs ?= -lGLU -lGL -lX11 -lopengl32#  -lXext
+graphics_libs ?= -lGL -lX11 -lopengl32#  -lXext
 
 # Stack dump:
 # gdb --batch -ex run -ex where --args ~/git/hh_src/bin/cygwin/HTest -dividebyzero

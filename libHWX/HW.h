@@ -9,7 +9,6 @@ extern "C" {
 #include <X11/Xutil.h>  // struct XWMHints
 #if defined(HH_OGLX)
 #include <GL/gl.h>
-#include <GL/glu.h>
 #include <GL/glx.h>
 #endif
 }

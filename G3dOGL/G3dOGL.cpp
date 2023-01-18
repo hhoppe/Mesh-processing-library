@@ -1740,6 +1740,46 @@ inline bool edge_continuous(const GMesh& mesh, Edge e) {
   return true;
 }
 
+// https://linux.die.net/man/3/glusphere
+// https://github.com/funchal/libglu/blob/debian-unstable/src/libutil/quad.c
+void render_sphere(const Point& center, float radius, int slices, int stacks) {
+  const int nlon = slices, nlat = stacks;
+  assertx(nlon >= 3 && nlat >= 2);
+  Array<Vector> normals1(nlon), normals2(nlon);
+  Array<Point> points1(nlon), points2(nlon);
+  fill(normals1, Vector(0.f, 0.f, 1.f));
+  fill(points1, center + Vector(0.f, 0.f, radius));
+  glBegin(GL_TRIANGLES);
+  for_intL(i, 1, nlat + 1) {
+    const float angle1 = float(i) / nlat * (TAU / 2);
+    const float c1 = cos(angle1), s1 = sin(angle1);
+    for_int(j, nlon) {
+      const float angle2 = float(j) / nlon * TAU;
+      normals2[j] = Vector(cos(angle2) * s1, sin(angle2) * s1, c1);
+      points2[j] = center + radius * normals2[j];
+    }
+    for_int(j, nlon) {
+      // First triangle of quad.
+      glNormal3fv(normals1[j].data());
+      glVertex3fv(points1[j].data());
+      glNormal3fv(normals2[j].data());
+      glVertex3fv(points2[j].data());
+      glNormal3fv(normals2[(j + 1) % nlon].data());
+      glVertex3fv(points2[(j + 1) % nlon].data());
+      // Second triangle of quad.
+      glNormal3fv(normals1[j].data());
+      glVertex3fv(points1[j].data());
+      glNormal3fv(normals2[(j + 1) % nlon].data());
+      glVertex3fv(points2[(j + 1) % nlon].data());
+      glNormal3fv(normals1[(j + 1) % nlon].data());
+      glVertex3fv(points1[(j + 1) % nlon].data());
+    }
+    normals1 = normals2;
+    points1 = points2;
+  }
+  glEnd();
+}
+
 void draw_mesh(GMesh& mesh) {
   mesh_init(mesh);
   const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
@@ -2035,20 +2075,10 @@ void draw_mesh(GMesh& mesh) {
       glShadeModel(GL_SMOOTH);
       initialize_lit();
       update_mat_color(cuspcolor);
-#if !defined(HH_NO_GLU)
-      unique_ptr<GLUquadricObj, decltype(&gluDeleteQuadric)> quadric{gluNewQuadric(), gluDeleteQuadric};
       for (Vertex v : mesh.vertices()) {
         if (!mesh.flags(v).flag(GMesh::vflag_cusp)) continue;
-        glPushMatrix();
-        {
-          const Point& p = mesh.point(v);
-          glTranslatef(p[0], p[1], p[2]);
-          const int nslices = 8, nstacks = 8;
-          gluSphere(quadric.get(), sphereradius * mesh_radius, nslices, nstacks);
-        }
-        glPopMatrix();
+        render_sphere(mesh.point(v), sphereradius * mesh_radius, 8, 8);
       }
-#endif
     }
     set_thickness(thicka3d);
   }
@@ -4419,25 +4449,17 @@ inline float projected_area(float area, const Point& x) {
 
 void draw_point(const Point& vp, float area) {
   dummy_use(vp, area);
-#if !defined(HH_NO_GLU)
   float sphererad = sqrt(area / (TAU * 2));
-  unique_ptr<GLUquadricObj, decltype(&gluDeleteQuadric)> quadric{gluNewQuadric(), gluDeleteQuadric};
-  glPushMatrix();
-  {
-    glTranslatef(vp[0], vp[1], vp[2]);
-    float prad = projected_area(sphererad, vp);
-    int complexity;
-    if (prad < 10) {
-      complexity = 3;
-    } else if (prad < 40) {
-      complexity = 8;
-    } else {
-      complexity = 20;
-    }
-    gluSphere(quadric.get(), sphererad, complexity, complexity);
+  float prad = projected_area(sphererad, vp);
+  int complexity;
+  if (prad < 10) {
+    complexity = 3;
+  } else if (prad < 40) {
+    complexity = 8;
+  } else {
+    complexity = 20;
   }
-  glPopMatrix();
-#endif
+  render_sphere(vp, sphererad, complexity, complexity);
 }
 
 void draw_sc() {

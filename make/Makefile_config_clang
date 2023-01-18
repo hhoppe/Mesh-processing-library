@@ -26,4 +26,4 @@ ccommon += -Xclang -flto-visibility-public-std
 
 LDFLAGS += -L$(LLVM_ROOT)/lib#  LLVM bug; this should not be necessary; for -llibomp; still needed in clang 10.0.
 
-graphics_libs ?= -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
+graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32

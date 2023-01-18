@@ -13,9 +13,6 @@
 
 extern "C" {
 #include <GL/gl.h>  // glBegin() etc. for users of this class
-#if !defined(HH_NO_GLU)
-#include <GL/glu.h>
-#endif
 }
 
 #include "HWbase.h"

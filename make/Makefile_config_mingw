@@ -17,7 +17,7 @@ else
   $(error Did not find mingw-w64 directory.)
 endif
 
-graphics_libs = -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
+graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
 
 ## Stack trace on error

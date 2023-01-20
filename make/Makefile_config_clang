@@ -21,9 +21,9 @@ cxxall += -D_CRT_SECURE_NO_WARNINGS
 # Note that I require HH_POSIX(fdopen)... because the non-underscore versions do not exist in the clang library.
 # cxxall += -D_CRT_DECLARE_NONSTDC_NAMES=1 -D_CRT_NONSTDC_NO_DEPRECATE
 
-# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning; still needed in clang 6.0.1
-ccommon += -Xclang -flto-visibility-public-std
+# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning; was still needed in clang 6.0.1
+# ccommon += -Xclang -flto-visibility-public-std
 
-LDFLAGS += -L$(LLVM_ROOT)/lib#  LLVM bug; this should not be necessary; for -llibomp; still needed in clang 10.0.
+# LDFLAGS += -L$(LLVM_ROOT)/lib#  LLVM bug; this should not be necessary; for -llibomp.
 
 graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32

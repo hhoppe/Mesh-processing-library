@@ -4,11 +4,10 @@ x64 = 1
 CXX_STD ?= gnu++14              # Within CYGWIN, -std=c++14 omits fileno() and setitimer().
 
 ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
-  omit_omp = 1                  # <omp.h> is missing
+  # omit_omp = 1                  # "<omp.h> not found", but maybe before I removed -fopenmp?
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else                            # default is gcc compiler
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
-  # ccommon += -U__STRICT_ANSI__#  do allow header declarations of POSIX functions even if using -std=c++XX.
 endif
 
 graphics_libs ?= -lGL -lX11 -lopengl32#  -lXext

@@ -5,9 +5,10 @@ RANLIB = ranlib
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
-last_libs += $(if $(omit_omp:0=),,-lgomp)
+last_libs += $(if $(omit_omp:0=),,-lgomp)#  For OpenMP.
 
 ifeq ($(plain_compiler),)
+  ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
   cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance -Wno-double-promotion
   cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wno-literal-suffix -Wuseless-cast
   cxxwarnings += -fsized-deallocation -Wsized-deallocation

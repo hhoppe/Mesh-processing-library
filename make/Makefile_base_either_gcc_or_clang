@@ -31,7 +31,6 @@ ifeq ($(plain_compiler),)
   # -pedantic-errors == -Werror -Wpedantic
   ccommon += $(machine_arch) -ffast-math -mfpmath=sse
   ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
-  ccommon += $(if $(omit_omp:0=),,-fopenmp)
   cxxall += -fno-rtti
   cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
   commonrel += -O3 -DNDEBUG

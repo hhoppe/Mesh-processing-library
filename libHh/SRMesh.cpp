@@ -255,6 +255,7 @@ inline const SRVertexGeometry* SRMesh::refined_vg(const SRAVertex* va) const {
 
 inline void SRMesh::finish_vmorph(SRAVertex* va) {
   va->vgeom = va->vmorph->vgrefined;
+  delete va->vmorph;
   va->vmorph = nullptr;
 }
 
@@ -308,7 +309,7 @@ SRMesh::~SRMesh() {
         v = vp;
       }
       if (branch_has_right_child) {
-        // va->vmorph is deleted automatically
+        delete va->vmorph;
         delete va;
       } else {
         ASSERTX(!va->vmorph);
@@ -433,7 +434,7 @@ void SRMesh::read_pm(PMeshRStream& pmrs) {
       va->vgeom.point = bmesh._vertices[vi].attrib.point;
       va->vgeom.vnormal = bmesh._wedges[vi].attrib.normal;
       if (b_nor001) assertx(Vector(0.f, 0.f, 1.f) == va->vgeom.vnormal);
-      va->vmorph = nullptr;
+      // va->vmorph = nullptr;
       va->visible = false;
       va->cached_time = 0;
       vgeoms[vi] = va->vgeom;
@@ -875,7 +876,7 @@ void SRMesh::read_srm(std::istream& is) {
     _vertices[vi].vspli = -1;
     va->activev.link_before(_active_vertices.delim());
     va->vertex = &_vertices[vi];
-    va->vmorph = nullptr;
+    // va->vmorph = nullptr;
     va->visible = false;
     va->cached_time = 0;
     assertx(read_binary_std(is, va->vgeom.point.view()));
@@ -1107,8 +1108,8 @@ void SRMesh::apply_vspl(SRVertex* vs, EListNode*& pn) {
   vua->visible = vta->visible;
   vua->cached_time = 0;
   if (vua->visible && _refine_morph_time) {
-    vua->vmorph = make_unique<SRVertexMorph>();
-    SRVertexMorph* vm = vua->vmorph.get();
+    vua->vmorph = new SRVertexMorph();
+    SRVertexMorph* vm = vua->vmorph;
     vm->coarsening = false;
     int time = _refine_morph_time;
     vm->time = static_cast<short>(time - 1);
@@ -1179,6 +1180,7 @@ void SRMesh::apply_vspl(SRVertex* vs, EListNode*& pn) {
     vta->vgeom = vspl->vt_vgeom;
 #endif
     vua->vgeom = vspl->vu_vgeom;
+    delete vua->vmorph;
     vua->vmorph = nullptr;
   }
   SRFace* fl = get_fl(vspli);
@@ -1308,6 +1310,7 @@ void SRMesh::apply_ecol(SRVertex* vs, EListNode*& pn) {
       break;
     }
   }
+  delete vua->vmorph;
   delete vua;
   EListNode* n = pn;
   {
@@ -1686,7 +1689,7 @@ void SRMesh::adapt_refinement(int pnvtraverse) {
     // if (qcoarsen(vs)) {
     //     EListNode* tn = n->prev(); apply_ecol(vsp, tn); n = tn;
     // }
-    SRVertexMorph* vm = vsa->vmorph.get();
+    SRVertexMorph* vm = vsa->vmorph;
 #if defined(SR_NO_VSGEOM)
     rvg = &pvspl->vs_vgeom;
     new_vis = false;
@@ -1765,10 +1768,10 @@ void SRMesh::start_coarsen_morphing(SRVertex* vt) {
   const SRVertexGeometry* coarsened_vg = refined_vg(vt->avertex);
   for_int(i, 2) {
     SRAVertex* va = (vt + i)->avertex;
-    SRVertexMorph* vm = va->vmorph.get();
+    SRVertexMorph* vm = va->vmorph;
     if (!vm) {
-      va->vmorph = make_unique<SRVertexMorph>();
-      vm = va->vmorph.get();
+      va->vmorph = new SRVertexMorph();
+      vm = va->vmorph;
       vm->vgrefined = va->vgeom;
       // if i == 0, left child is not going to morph, so may want to
       //  do something more efficient than adding zero's every frame.
@@ -1795,7 +1798,7 @@ void SRMesh::abort_coarsen_morphing(SRVertex* vc) {
   for_int(i, 2) {
     SRVertex* vti = vt + i;
     SRAVertex* va = vti->avertex;
-    SRVertexMorph* vm = va->vmorph.get();
+    SRVertexMorph* vm = va->vmorph;
     ASSERTX(vm && vm->coarsening);
     // Now set the vertex to refine-morph to its desired position.
     vm->coarsening = false;
@@ -1858,7 +1861,7 @@ void SRMesh::update_vmorphs() {
     if (n == ndelim) break;
     SRAVertex* va = HH_ELIST_OUTER(SRAVertex, activev, n);
     n = n->next();
-    SRVertexMorph* vm = va->vmorph.get();
+    SRVertexMorph* vm = va->vmorph;
     if (!vm) continue;
     if (vm->time) {
       vm->time -= 1;

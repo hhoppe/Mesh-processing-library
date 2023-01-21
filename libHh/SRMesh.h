@@ -91,9 +91,9 @@ struct SRAVertex {    // active vertex
   EListNode activev;  // at offset 0 for fast pointer conversion
   SRVertex* vertex;
   SRVertexGeometry vgeom;
-  unique_ptr<SRVertexMorph> vmorph;  // nullptr if no morph
-  bool visible;                      // was vertex visible when last traversed?
-  int cached_time;                   // for transparent vertex caching
+  SRVertexMorph* vmorph{nullptr};  // avoid unique_ptr<> because we need standard layout for offsetof() in EListNode.
+  bool visible;                    // was vertex visible when last traversed?
+  int cached_time;                 // for transparent vertex caching
   HH_POOL_ALLOCATION(SRAVertex);
 };
 HH_INITIALIZE_POOL(SRAVertex);

@@ -23,7 +23,7 @@ ifeq ($(plain_compiler),)
     -Wno-disabled-macro-expansion -Wno-comma -Wno-double-promotion -Wno-language-extension-token \
     -Wno-atomic-implicit-seq-cst -Wno-undefined-func-template
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  This was needed for OpenMP in early clang; now it should be omitted.
-  ccommon += -Wno-constant-logical-operand#  even without $(PEDANTIC)
+  ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
   ifneq ($(is_mac),1)
     cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
   endif

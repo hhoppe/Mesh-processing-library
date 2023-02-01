@@ -760,12 +760,16 @@ const Filter& get_resampling_filter() {
                                               : (assertnever_ret(""), Filter::get("impulse")));
 }
 
+Frame scale_2d(const Vec2<float>& vec) { return Frame::scaling(concat(vec, V(1.f))); }
+
+Frame translate_2d(const Vec2<float>& vec) { return Frame::translation(concat(vec, V(0.f))); }
+
 // Change zooom while holding window dimensions constant and keeping same content at cursor.
 void perform_zoom_at_cursor(float fac_zoom, Vec2<int> yx) {
   if (fac_zoom == 1.f) return;
   g_fit_view_to_window = false;
   Vec3<float> pcenter = concat(convert<float>(yx) + .5f, V(0.f));
-  set_view(g_view * Frame::translation(-pcenter) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pcenter));
+  set_view(g_view * Frame::translation(-pcenter) * scale_2d(twice(fac_zoom)) * Frame::translation(pcenter));
 }
 
 // Resize the window and reset the view.
@@ -781,7 +785,7 @@ void perform_window_zoom(float fac_zoom) {
   if (is_fullscreen() || !g_fit_view_to_window) {  // zoom the view relative to window center
     g_fit_view_to_window = false;
     Vec3<float> pc = concat(convert<float>(g_win_dims), V(0.f)) / 2.f;  // no .5f adjustment
-    set_view(g_view * Frame::translation(-pc) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pc));
+    set_view(g_view * Frame::translation(-pc) * scale_2d(twice(fac_zoom)) * Frame::translation(pc));
     if (!is_fullscreen() && product(g_frame_dims) && !view_has_rotation()) {
       // tighten window if entire image can be made visible
       assertx(var(get_zooms()) < 1e-10f);  // zoom must be isotropic if !g_fit_view_to_window
@@ -791,7 +795,7 @@ void perform_window_zoom(float fac_zoom) {
       if (max(ndims, g_win_dims) == g_win_dims) {
         if (0) SHOW(ndims);
         reset_window(ndims);
-        set_view(Frame::scaling(thrice(zoom)));  // remove translation
+        set_view(scale_2d(twice(zoom)));  // remove translation
       }
     }
     message("Zoom set to: " + get_szoom());
@@ -802,7 +806,7 @@ void perform_window_zoom(float fac_zoom) {
     {
       Vec3<float> pc0 = concat(convert<float>(cur_dims), V(0.f)) / 2.f;
       Vec3<float> pc1 = concat(convert<float>(ndims), V(0.f)) / 2.f;
-      set_view(g_view * Frame::translation(-pc0) * Frame::scaling(thrice(fac_zoom)) * Frame::translation(pc1));
+      set_view(g_view * Frame::translation(-pc0) * scale_2d(twice(fac_zoom)) * Frame::translation(pc1));
     }
     if (max(ndims - hw.get_max_window_dims()) > 0) {  // window would be too large for screen
       ndims = hw.get_max_window_dims();
@@ -1695,11 +1699,9 @@ bool DerivedHW::key_press(string skey) {
             const Vec2<int> osdims = ob.spatial_dims();
             Vec2<int> nsdims = convert<int>(convert<float>(g_win_dims) / get_zooms()[0] + .5f);
             if (!ob.is_image()) nsdims = nsdims / 4 * 4;  // video should have dims that are multiples of 4
-            auto scale_win = concat(convert<float>(g_win_dims), V(1.f));
-            auto scale_frame = concat(convert<float>(g_frame_dims), V(1.f));
             // frame maps from/to [-0.5, +0.5] ^ 2 whereas g_view maps from/to pixel/texel coordinates
-            Frame frame = Frame::translation(thrice(.5f)) * Frame::scaling(scale_win) * ~g_view *
-                          ~Frame::scaling(scale_frame) * ~Frame::translation(thrice(.5f));
+            Frame frame = translate_2d(twice(.5f)) * scale_2d(convert<float>(g_win_dims)) * ~g_view *
+              ~scale_2d(convert<float>(g_frame_dims)) * ~translate_2d(twice(.5f));
             const FilterBnd filterb(get_resampling_filter(), Bndrule::reflected);
             immediate_message("Resampling rotated object...");
             Video nvideo;
@@ -1840,7 +1842,7 @@ bool DerivedHW::key_press(string skey) {
             {
               Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
               const int cmax = arzoom[0] > arzoom[1] ? 0 : 1;
-              view = Frame::scaling(concat(twice(arzoom[cmax]), V(1.f)));
+              view = scale_2d(twice(arzoom[cmax]));
               view[3][1 - cmax] = (ndims[1 - cmax] - g_frame_dims[1 - cmax] * arzoom[cmax]) / 2.f;
               // align window edge with pixel edge using fmod()
               view[3][1 - cmax] = view[3][1 - cmax] - std::fmod(view[3][1 - cmax], arzoom[cmax]);
@@ -3461,7 +3463,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
   if (g_cob >= 0 && g_fit_view_to_window) {
     assertx(product(g_frame_dims));
     Vec2<float> arzoom = convert<float>(g_win_dims) / convert<float>(g_frame_dims);
-    set_view(Frame::scaling(V(arzoom[0], arzoom[1], 1.f)));
+    set_view(scale_2d(arzoom));
     if (g_fit == EFit::isotropic) {
       int cmax = arzoom[0] > arzoom[1] ? 0 : 1;
       g_view[cmax][cmax] = arzoom[1 - cmax];

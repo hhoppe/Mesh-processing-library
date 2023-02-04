@@ -13,7 +13,7 @@ extern "C" {
 #include <cerrno>
 #include <csignal>  // signal()
 #include <cstring>  // strlen(), std::strerror()
-#include <ctime>  // setitimer(), struct itimerval, struct timeval
+#include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 #include "HW.xbm"
 #include "libHh/Args.h"
@@ -347,7 +347,7 @@ void HW::open() {
       Font id = font_info2->fid;
       int first = font_info2->min_char_or_byte2;
       int last = font_info2->max_char_or_byte2;
-      // SHOW(first, last);  // first=0 last=255
+      if (0) SHOW(first, last);  // first=0 last=255
       _listbase_font = assertx(glGenLists(last + 1));
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
       if (fontname == "fixed") {
@@ -358,6 +358,7 @@ void HW::open() {
         _font_dims = V(38, 16);  // 16x38 from CourierBold20 of IrisGL fm.
         _font_dims = V(28, 16);  // reduce line-spacing
       }
+      if (_hwdebug) SHOW(_font_dims);
     }
     if (_multisample > 1) {  // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
       glEnable(GL_MULTISAMPLE);

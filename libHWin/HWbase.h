@@ -571,11 +571,12 @@ inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
   glListBase(_listbase_font);
   USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC);  // not supported on Remote Desktop
   if (glWindowPos2i) {
-    glWindowPos2i(yx[1],
-                  _win_dims[0] - yx[0] - _font_dims[0]);  // reverse y; not clip-tested, so raster position valid
+    const int x = yx[1], y = _win_dims[0] - yx[0] - _font_dims[0];
+    glWindowPos2i(x, y);  // reverse y; not clip-tested, so raster position valid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   } else {
-    glRasterPos2i(yx[1], yx[0] + _font_dims[0]);  // clipped, so raster position may be invalid
+    const int x = yx[1], y = yx[0] + _font_dims[0];
+    glRasterPos2i(x, y);  // clipped, so raster position may be invalid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   }
 }

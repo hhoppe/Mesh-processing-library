@@ -1701,7 +1701,7 @@ bool DerivedHW::key_press(string skey) {
             if (!ob.is_image()) nsdims = nsdims / 4 * 4;  // video should have dims that are multiples of 4
             // frame maps from/to [-0.5, +0.5] ^ 2 whereas g_view maps from/to pixel/texel coordinates
             Frame frame = translate_2d(twice(.5f)) * scale_2d(convert<float>(g_win_dims)) * ~g_view *
-              ~scale_2d(convert<float>(g_frame_dims)) * ~translate_2d(twice(.5f));
+                          ~scale_2d(convert<float>(g_frame_dims)) * ~translate_2d(twice(.5f));
             const FilterBnd filterb(get_resampling_filter(), Bndrule::reflected);
             immediate_message("Resampling rotated object...");
             Video nvideo;
@@ -2666,8 +2666,7 @@ void advance_frame() {
   const double playback_framerate = video_framerate * g_speed;
   if (g_frametime < 0. || !ob._nframes_loaded) {
     g_frametime = 0.;
-    while (!ob._nframes_loaded)
-      my_sleep(.001);
+    while (!ob._nframes_loaded) my_sleep(.001);
     return;
   }
   bool centering = false;
@@ -2676,8 +2675,8 @@ void advance_frame() {
   if (playback_framerate <= 20.) {
     // For slow playback (much less than monitor refresh), sleep until it is time to show a new frame.
     g_frametime += direction * time_since_last_frame * playback_framerate;
-    double frames_to_sleep = (direction > 0 ? ceil(g_frametime + 1e-6) - g_frametime :
-                              g_frametime - floor(g_frametime - 1e-6));
+    double frames_to_sleep =
+        (direction > 0 ? ceil(g_frametime + 1e-6) - g_frametime : g_frametime - floor(g_frametime - 1e-6));
     double time_to_sleep = frames_to_sleep / playback_framerate;
     g_frametime += direction * frames_to_sleep;
     my_sleep(time_to_sleep);
@@ -2692,10 +2691,10 @@ void advance_frame() {
       // To counter this, I create a slight bias to moving g_frametime towards the center (+0.5) of the
       //  current video frame interval, if we are advancing frames at the same rate as monitor refresh.
       // This is now generalized for a monitor refresh rate that is any multiple of the playback framerate.
-      double monitor_frames_per_video_frame = 1. / (steady_time_since_last_frame  * playback_framerate);
+      double monitor_frames_per_video_frame = 1. / (steady_time_since_last_frame * playback_framerate);
       double f = monitor_frames_per_video_frame;
       if ((f > 0.75 && abs(f - int(f + 0.5)) < .008) ||
-          (f > 0.1 && f < 0.7 && abs(1. / f - int (1. / f + 0.5)) < .008)) {
+          (f > 0.1 && f < 0.7 && abs(1. / f - int(1. / f + 0.5)) < .008)) {
         int multiple = f > 0.75 ? int(f + 0.5) : 1;
         centering = true;
         const double adjustment_rate = .01;  // 1% seems sufficient
@@ -2997,8 +2996,7 @@ void render_image() {
     USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
     const float min_zoom = min(get_zooms());
     const bool mipmap_enabled = true;
-    if (mipmap_enabled && min_zoom < 0.99999f && glGenerateMipmap &&
-        !g_generated_mipmap && use_modern_opengl) {
+    if (mipmap_enabled && min_zoom < 0.99999f && glGenerateMipmap && !g_generated_mipmap && use_modern_opengl) {
       // Ideally, for highest quality filtering modes, I should manually construct the coarser mipmap levels.
       // test on:  VideoViewer ~/data/video/M4Kseacrowd.mp4 -key -
       // Not supported on Windows Remote Desktop; blurry trilinear blending with MESA GL on Chrome Remote Desktop.
@@ -3342,8 +3340,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
   }
   if (!product(g_win_dims)) return;
   if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation) {
-    while (!g_videoloop_ready_obj)
-      my_sleep(.001);
+    while (!g_videoloop_ready_obj) my_sleep(.001);
   }
   if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
     std::lock_guard<std::mutex> lock(g_mutex_obs);

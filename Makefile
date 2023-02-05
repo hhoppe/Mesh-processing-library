@@ -41,7 +41,6 @@ all: progs test
 
 everything:
 	$(MAKE) makeall
-	beep && beep
 
 demos: progs                    # run all demos (after building programs)
 

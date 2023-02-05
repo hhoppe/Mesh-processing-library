@@ -800,6 +800,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           if (count % 2) {  // pad to 2-byte boundary
             assertt(i < bufsize);
             c = buf[i++];
+            dummy_use(c);
             if (0) assertw(c == 0);  // does not seem true?
           }
         }

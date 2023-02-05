@@ -289,12 +289,12 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
 
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   assertx(same_size(nv12v.get_Y(), frame));
-  uint8_t* __restrict bufY = nv12v.get_Y().data();
   uint8_t* __restrict bufUV = nv12v.get_UV().data()->data();
-  // assertx(reinterpret_cast<uintptr_t>(bufUV) % 4 == 0);
-  // assertx(reinterpret_cast<uintptr_t>(bufY) % 4 == 0);
+  // assertx(reinterpret_cast<uintptr_t>(nv12v.get_Y().data()) % 4 == 0);
+  // assertx(reinterpret_cast<uintptr_t>(nv12v.get_UV().data()->data()) % 4 == 0);
   // I tried optimizing this, but all implementations take about the same elapsed time.
   if (0) {
+    uint8_t* __restrict bufY = nv12v.get_Y().data();
     for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *bufY++ = RGB_to_Y(frame[y][x]); }
     for_int(yb, frame.ysize() / 2) {
       int y = yb * 2;
@@ -311,6 +311,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       }
     }
   } else if (0) {
+    uint8_t* __restrict bufY = nv12v.get_Y().data();
     // for_size_t(i, frame.size()) { *bufY++ = RGB_to_Y(frame.flat(i)); }
     {
       const uint8_t* p = frame.data()->data();

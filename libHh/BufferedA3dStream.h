@@ -24,7 +24,7 @@ class WBufferedA3dStream : public WA3dStream {  // Write to WBuffer
  public:
   explicit WBufferedA3dStream(WBuffer& b) : _buf(b) {}
   ~WBufferedA3dStream() override { flush(); }
-  void flush() override { _buf.flush(); }
+  void flush() override final { _buf.flush(); }
 
  private:
   WBuffer& _buf;

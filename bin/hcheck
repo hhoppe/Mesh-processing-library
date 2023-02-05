@@ -22,10 +22,12 @@ for i in "$@"; do
     i=${i%.script}
   elif [[ -e "$e.script" ]]; then
     : # all OK
+  elif [[ -x "$e" ]]; then
+    : # all OK
   elif [[ -f "$e.exe" ]]; then
     e="$e.exe"
-  elif [[ ! -x "$e" ]]; then
-    echo "$e is not executable, skipping" 1>&2
+  else
+    echo "Could not find $e or $e.exe; skipping" 1>&2
     status=1
     continue
   fi

@@ -19,7 +19,7 @@
 #include <cctype>  // std::isdigit()
 #include <cerrno>  // errno
 #include <chrono>
-#include <cstdarg>  // va_list
+#include <cstdarg>  // std::va_list
 #include <cstring>  // std::memcpy(), strlen(), std::strerror()
 #include <locale>   // std::use_facet<>, std::locale()
 #include <map>
@@ -384,7 +384,7 @@ void show_cerr_and_debug(const string& s) {
 //  see: http://stackoverflow.com/questions/222195/are-there-gotchas-using-varargs-with-reference-parameters
 // Varargs callee must have two versions:
 //  see: http://www.c-faq.com/varargs/handoff.html   http://www.tin.org/bin/man.cgi?section=3&topic=vsnprintf
-static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, va_list ap) {
+static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list ap) {
   // Adapted from http://stackoverflow.com/questions/2342162/stdstring-formating-like-sprintf
   //  and http://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
   // asprintf() supported only on BSD/GCC
@@ -397,7 +397,7 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, va_list ap) {
   if (0) {
     std::cerr << "format=" << format << "\n";
   }
-  va_list ap2;
+  std::va_list ap2;
   for (;;) {
     va_copy(ap2, ap);
     int n = vsnprintf(buf, size, format, ap2);
@@ -422,11 +422,11 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, va_list ap) {
 }
 
 // Inspired from vinsertf() in http://stackoverflow.com/a/2552973/1190077
-static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, va_list ap) {
+static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, std::va_list ap) {
   const size_t minsize = 40;
   if (str.size() < minsize) str.resize(minsize);
   bool promised = false;  // precise size was promised
-  va_list ap2;
+  std::va_list ap2;
   for (;;) {
     va_copy(ap2, ap);
     int n = vsnprintf(&str[0], str.size(), format, ap2);  // string::data() returns const char*
@@ -447,7 +447,7 @@ static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, v
 }
 
 HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...) {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   string s = vsform(format, ap);
   va_end(ap);
@@ -455,10 +455,10 @@ HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...) {
 }
 
 string sform_nonliteral(const char* format, ...) {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   // Disabling the diagnostic is unnecessary in gcc because it makes an exception when
-  //  the call makes use of a va_list (i.e. "ap").
+  //  the call makes use of a std::va_list (i.e. "ap").
 #if defined(__clang__)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wformat-nonliteral"
@@ -472,7 +472,7 @@ string sform_nonliteral(const char* format, ...) {
 }
 
 HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, ...) {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   vssform(str, format, ap);
   va_end(ap);
@@ -480,7 +480,7 @@ HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, 
 }
 
 HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ...) {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   vssform(str, format, ap);
   va_end(ap);
@@ -491,7 +491,7 @@ HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ..
 // See http://www.c-faq.com/varargs/handoff.html
 
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...) {
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   string s = vsform(format, ap);
   va_end(ap);
@@ -604,7 +604,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
   static bool need_cout, need_cerr;
   static std::once_flag flag;
   std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr));
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   string s = g_comment_prefix_string + vsform(format, ap);
   va_end(ap);
@@ -629,7 +629,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
   std::call_once(
       flag, [&](bool& b) { b = func_want_cout(); }, std::ref(want_cout));
   if (!want_cout) return;
-  va_list ap;
+  std::va_list ap;
   va_start(ap, format);
   string s = g_comment_prefix_string + vsform(format, ap);
   va_end(ap);

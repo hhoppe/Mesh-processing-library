@@ -99,6 +99,7 @@ class BoundedIntervals {
     ASSERTX(max_size > 0);
     if (_num <= 0) {
       _nintervs = 0;
+      _size = -1;  // Dummy value.
       return;
     }
     _nintervs = (_num - 1) / max_size + 1;

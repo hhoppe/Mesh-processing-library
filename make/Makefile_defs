@@ -157,10 +157,10 @@ endif
 	@echo 'Avoid *.exe "$@" as makefile target; use "$(@:%.exe=%)" instead.' && exit 1
 
 cleanall:
-	$(MAKE) CONFIG=all -j -s deepclean
+	$(MAKE) CONFIG=all -s deepclean
 
 makeall:
-	$(MAKE) CONFIG=all -j
+	$(MAKE) CONFIG=all
 
 debug_path:  # for debugging
 	echo PATH:$$PATH; which $(CXX)

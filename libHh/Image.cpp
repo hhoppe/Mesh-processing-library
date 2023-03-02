@@ -91,6 +91,7 @@ bool filename_is_image(const string& filename) {
   static const auto& k_extensions = *new Array<string>{
       "jpg", "jpeg", "png", "bmp", "rgb",  "ppm", "pgm", "pbm", "tif", "tiff",
       "jxr", "hdp",  "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr", "heic", "jfif",
+      "ico",
   };
   return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
 }
@@ -107,6 +108,7 @@ string image_suffix_for_magic_byte(uchar c) {
   // *.arw: "II*\000" (Sony alpha raw)
   // *.exr: "v/1\001\002\0\0\0channels"
   // *.heic: "\000\000\000\030ftypheic" (first byte is indistinguishable from *.mp4)
+  // *.ico: "\000\000\001" (first byte is indistinguishable from *.mp4)
   switch (c) {
     case 1: return "rgb";    // u'\x01'
     case 255: return "jpg";  // u'\xFF'

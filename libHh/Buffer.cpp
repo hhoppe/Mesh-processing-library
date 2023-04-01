@@ -70,10 +70,24 @@ DWORD WINAPI buf_thread_func(void* /*unused*/) {
     }
     assertx(buf_buffern == 0);
     int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
+    if (nread < 0 && errno == EINVAL && GetLastError() == ERROR_NO_DATA) {
+      // Cygwin bash has implemented a pipe using a non-blocking read mode, and there is no data, so we must wait.
+      if (0) {
+        my_sleep(0.005);  // However, busy-waiting wastes CPU cycles.
+      } else {
+        // Instead, we modify the wait mode on the pipe handle from PIPE_NOWAIT to PIPE_WAIT.
+        DWORD mode = PIPE_READMODE_BYTE | PIPE_WAIT;
+        assertx(SetNamedPipeHandleState(HANDLE(_get_osfhandle(buf_fd)), &mode, NULL, NULL));
+      }
+      continue;
+    }
     buf_buffern = nread;
-    if (nread < 0) assertnever("buffer_read");
+    if (nread < 0) {
+      SHOW("read", buf_fd, reinterpret_cast<uintptr_t>(buf_buffer.data()), buf_buffer.num(), nread, errno);
+      assertnever("buffer_read");
+    }
     assertx(SetEvent(g_buf_event_data_available));
-    if (nread <= 0) break;
+    if (nread == 0) break;
     assertx(WaitForSingleObject(buf_event_data_copied, INFINITE) == WAIT_OBJECT_0);
     assertx(buf_buffern == 0);
   }
@@ -91,6 +105,7 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
     if (1) {
       // Win32 CreateWindow() stops responding if fd0 == STDIN is open on a pipe.
       buf_fd = HH_POSIX(dup)(_fd);
+      assertx(buf_fd != _fd);
       assertx(!HH_POSIX(close)(_fd));
       // Create a dummy open file so fd0 is not re-used
       assertx(HH_POSIX(open)("NUL", O_RDONLY) == 0);  // (never freed)

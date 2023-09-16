@@ -13,4 +13,4 @@ set NFACES=40000
 set LOADTEXTURE=
 set LOADTEXTURE=-key Dt
 
-G3dOGL -eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_4k2k.l1.srm -texturemap data/gcanyon_color_2k1k.bmp -sr_screen_thresh 0.003846 -lightambient .7 -st data/gcanyon_4k2k_fly2.s3d -sr_regulatenf %NFACES% -sr_fracvtrav .3333 -sr_gain .3333 -key De0------l -hither .0001 %LOADTEXTURE% %G3DARGS% %TEXGEOMETRY% -input <data/gcanyon_4k2k_fly4.edited.frames
+G3dOGL -eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_4k2k.l1.srm -texturemap data/gcanyon_color_4k2k.png -sr_screen_thresh 0.003846 -lightambient .7 -st data/gcanyon_4k2k_fly2.s3d -sr_regulatenf %NFACES% -sr_fracvtrav .3333 -sr_gain .3333 -key De0------l -hither .0001 %LOADTEXTURE% %G3DARGS% %TEXGEOMETRY% -input <data/gcanyon_4k2k_fly4.edited.frames

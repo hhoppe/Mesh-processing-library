@@ -44,12 +44,17 @@
 using namespace hh;
 
 // TODO:
-// - for long videos, do not allocate memory and develop some RVideo seek() function.
-// - possibly associate g_view per object?  it is useful as it is now too.
+// - revisit mouse buttons on laptop.
 // - unsharp mask:  affine extrapolation of original and Gaussian-blurred image:
-//    radius, magnitude (0% is blurred, 100% is original), threshold (skip pixels for which difference is too small)
+//    radius, magnitude (0% is blurred, 100% is original), threshold (skip pixels for which difference is too small).
+// - brush out area, then fill using diffusion.
 // - clone tool with gradient-domain blending: draw destination region,
-//    then interactively select position/offset of source content
+//    then interactively select position/offset of source content.
+// - do not report errors on image or video prefetch.  Is video prefetched?
+// - cache more images.
+// - do not cache an object if already loaded as a different object.
+// - for long videos, do not allocate memory and instead implement some RVideo seek() function.
+// - possibly associate g_view per object?  it is useful as it is now too.
 
 namespace {
 

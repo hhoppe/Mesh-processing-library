@@ -405,7 +405,9 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     size_t i0 = ravel_index(dims, u0);
     T v;
     my_zero(v);
-    for_int(k, nk) v += mat_weights[x][k] * grid.flat(i0 + k * stride);
+    const float* mat_weights_x = mat_weights[x].data();
+    const T* grid_i0 = grid.data() + i0;
+    for_int(k, nk) v += mat_weights_x[k] * grid_i0[k * stride];
     ngrid[u] = v;
   };
   // TODO: use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.

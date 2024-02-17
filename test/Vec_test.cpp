@@ -309,7 +309,7 @@ if (0) {
   SU2 s2 = std::move(s1);
   assertx(*s2[0] == 1);
   assertx(*s2[1] == 2);
-  assertx(!s1[0]);  // NOLINT(bugprone-use-after-move, hicpp-invalid-access-moved)
+  assertx(!s1[0]);  // NOLINT(bugprone-use-after-move, hicpp-invalid-access-moved, clang-analyzer-cplusplus.Move)
   assertx(!s1[1]);
 }
 {

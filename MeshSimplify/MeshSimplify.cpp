@@ -3301,6 +3301,7 @@ void project_vnew_nn(Edge e, const Point& newp, Face& pcf, Bary& pbary, Point& p
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
   Polygon poly;
   float min_d2 = BIGFLOAT;
+  pcf = f1;  // dummy assignment for clang-tidy
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
@@ -4572,7 +4573,7 @@ void optimize() {
     for (Edge e : mesh.edges()) ar.push(e);
     {
       std::default_random_engine dre;
-      std::shuffle(ar.begin(), ar.end(), dre);
+      std::shuffle(ar.begin(), ar.end(), dre);  // clang-tidy reports error here if -U__STRICT_ANSI__.
     }
     for (Edge e : ar) {
       if (verb >= 1) cprogress2.update(float(pqecost.num()) / mesh.num_edges());

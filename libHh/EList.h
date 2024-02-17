@@ -49,8 +49,8 @@ class EListNode : noncopyable {
 
  private:
   friend class EList;
-  EListNode* _prev;
-  EListNode* _next{nullptr};  // placed second, to be close to data in rest of struct
+  EListNode* _prev{nullptr};  // Optional initialization; performed to help clang-tidy.
+  EListNode* _next{nullptr};  // Placed second, to be close to data in rest of struct.
 };
 
 // The list object which heads a list of EListNode.

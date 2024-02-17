@@ -41,4 +41,4 @@ int main() {
     SHOW("make_unique");
     auto pa = make_unique<A>();  // NOLINT(clang-analyzer-unix.Malloc)
   }
-}
+}  // NOLINT(clang-analyzer-unix.Malloc)

@@ -730,6 +730,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     Vector4i v{0};
     for_int(k, nk) {
       int ii = x - r + k;
+      // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
       const Pixel& value = map_boundaryrule_1D(ii, nx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
       v += kerneli[k] * Vector4i(value);
     }

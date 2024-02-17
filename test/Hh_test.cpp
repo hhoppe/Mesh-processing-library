@@ -20,6 +20,7 @@ const string tmpf = "v.Hh_test.txt";
 
 void try_it(const string& stest) {
   if (0) SHOW(stest);
+  // This test is broken.  I cannot assume that csh, sh, or cmd are in the user's path.
   for_int(method, 2) {  // csh, sh, cmd
     if (0) SHOW(method);
     string s1 = quote_arg_for_sh(stest);  // stronger than quote_arg_for_shell()
@@ -328,12 +329,12 @@ int main() {
     }
   }
   if (0) {
-    test_spawn2();
+    test_spawn();
     return 0;
   }
-  if (1) {
-    test_spawn();
-    if (0) return 0;
+  if (0) {
+    test_spawn2();
+    return 0;
   }
   {
     assertx(!getenv("ZZ"));

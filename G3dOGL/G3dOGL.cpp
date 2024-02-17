@@ -4845,6 +4845,7 @@ Cylinder::Cylinder(int depth) {
   // clip maximum depth
   depth = clamp(depth, 1, 3);
   int nv = 4 * (1 << (depth - 1));
+  assertx(nv > 0);  // For clang-tidy.
   int num = 2 * (nv + 1);
   _v.init(num);
   _n.init(num);

@@ -349,7 +349,16 @@ void HW::open() {
       int last = font_info2->max_char_or_byte2;
       if (0) SHOW(first, last);  // first=0 last=255
       _listbase_font = assertx(glGenLists(last + 1));
+      assertx(!gl_report_errors());
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
+      {
+        GLenum v = glGetError();
+        if (v) {
+          assertx(v == GL_OUT_OF_MEMORY);  // Unexpected behavior under WSL after glXUseXFont().
+          assertx(!glGetError());
+        }
+      }
+      assertx(!gl_report_errors());
       if (fontname == "fixed") {
         _font_dims = V(13 + 2, 6);
       } else if (!_bigfont) {
@@ -362,7 +371,7 @@ void HW::open() {
     }
     if (_multisample > 1) {  // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
       glEnable(GL_MULTISAMPLE);
-      assertx(!gl_report_errors());
+      assertw(!gl_report_errors());
       if (_hwdebug) {
         int sample_buffers;
         glGetIntegerv(GL_SAMPLE_BUFFERS, &sample_buffers);

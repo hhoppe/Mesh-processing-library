@@ -108,7 +108,7 @@ void close_mk(unique_ptr<Mk3d>& pmk) {
 }
 
 void process_read() {
-  HH_TIMER(_read);
+  HH_TIMER("_read");
   RSA3dStream ia3d(std::cin);
   A3dElem el;
   int nnor = 0;
@@ -256,7 +256,7 @@ void print_principal(const Frame& f) {
 }
 
 void process_principal() {
-  HH_TIMER(_principal);
+  HH_TIMER("_principal");
   // Statistics in reverse order of printout
   HH_STAT(Sr21);
   HH_STAT(Sr20);
@@ -414,7 +414,7 @@ void orient_set(const Set<int>& nodes) {
   for (int i : nodes) gpcpath->enter(i);
   gpcpath->enter(num);
   {
-    HH_TIMER(__graphmst);
+    HH_TIMER("__graphmst");
     // must be connected here!
     assertx(graph_mst<int>(*gpcpseudo, pc_corr, *gpcpath));
   }
@@ -464,7 +464,7 @@ void print_graph(Mk3d& mk, const Graph<int>& g, CArrayView<Point> pa, CArrayView
 }
 
 void orient_tp() {
-  HH_TIMER(_orient);
+  HH_TIMER("_orient");
   if (usenormals == 3 && have_normals) return;
   if (usenormals == 2 && have_normals) {
     for_int(i, num) {
@@ -478,7 +478,7 @@ void orient_tp() {
     stat.set_print(true);
   }
   {
-    HH_TIMER(__graphnumcompon);
+    HH_TIMER("__graphnumcompon");
     int nc = graph_num_components(*gpcpseudo);
     showdf("Number of components: %d\n", nc);
     if (nc > 1) showdf("*** #comp > 1, may want larger -samp\n");
@@ -679,7 +679,7 @@ template <typename Contour> void contour_2D(Contour& contour) {  // with or with
 }
 
 void process_contour() {
-  HH_TIMER(_contour);
+  HH_TIMER("_contour");
   if (is_3D) {
     // Note: now mesh is always created even if !iom.
     if (ioc) {
@@ -704,7 +704,7 @@ void process_contour() {
 }
 
 void process() {
-  HH_TIMER(Recon);
+  HH_TIMER("Recon");
   process_read();
   compute_xform();
   if (!gridsize) gridsize = int(1.f / samplingd + .5f);
@@ -719,7 +719,7 @@ void process() {
     fill(pciso, false);
   }
   {
-    HH_TIMER(_SPp);
+    HH_TIMER("_SPp");
     int n = is_3D ? (num > 100000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
     SPp = make_unique<PointSpatial<int>>(n);
     for_int(i, num) SPp->enter(i, &co[i]);
@@ -729,7 +729,7 @@ void process() {
     for_int(i, num) gpcpseudo->enter(i);
     process_principal();
     {
-      HH_TIMER(_SPpc);
+      HH_TIMER("_SPpc");
       int n = is_3D ? (num > 100000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
       SPpc = make_unique<PointSpatial<int>>(n);
       for_int(i, num) SPpc->enter(i, &pcorg[i]);

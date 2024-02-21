@@ -168,7 +168,7 @@ Set<Edge, hash_edge> ecand;  // Set of candidate edges in stoc; hash without poi
 float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp);
 
 void DataPts::ok() const {
-  HH_DTIMER(__pt_ok);
+  HH_DTIMER("__pt_ok");
   Polygon poly;
   for_int(i, co.num()) {
     Face f = assertx(cmf[i]);
@@ -494,7 +494,7 @@ void global_project() {
 
 void initial_projection() {
   {
-    HH_TIMER(_initialproj);
+    HH_TIMER("_initialproj");
     global_project();
   }
   assertw(!sdebug);
@@ -505,7 +505,7 @@ void initial_projection() {
 // *** commands
 
 void do_mfilename(Args& args) {
-  HH_TIMER(_mfilename);
+  HH_TIMER("_mfilename");
   assertx(!mesh.num_vertices());
   RFile is(args.get_filename());
   mesh.read(is());
@@ -518,7 +518,7 @@ void do_mfilename(Args& args) {
 }
 
 void do_filename(Args& args) {
-  HH_TIMER(_filename);
+  HH_TIMER("_filename");
   assertx(!pt.co.num());
   RFile is(args.get_filename());
   RSA3dStream ia3d(is());
@@ -614,7 +614,7 @@ void global_fit() {
 
 void do_gfit(Args& args) {
   perhaps_initialize();
-  HH_TIMER(_gfit);
+  HH_TIMER("_gfit");
   int niter = args.get_int();
   assertw(!dihfac);
   if (verb >= 2) showdf("\n");
@@ -625,13 +625,13 @@ void do_gfit(Args& args) {
   for (i = 0; !niter || i < niter;) {
     if (!niter && i >= k_max_gfit_iter) break;
     i++;
-    HH_STIMER(__gfit_iter);
+    HH_STIMER("__gfit_iter");
     {
-      HH_STIMER(__glls);
+      HH_STIMER("__glls");
       global_fit();
     }
     {
-      HH_STIMER(__gproject);
+      HH_STIMER("__gproject");
       global_project();
     }
     if (sdebug) {
@@ -658,7 +658,7 @@ void do_gfit(Args& args) {
 void do_fgfit(Args& args) {
   // Improve fit for constant simplicial complex.
   perhaps_initialize();
-  HH_TIMER(_fgfit);
+  HH_TIMER("_fgfit");
   int niter = args.get_int();
   assertx(pt.co.num() && mesh.num_vertices());
   if (verb >= 2) showdf("\n");
@@ -698,13 +698,13 @@ void do_fgfit(Args& args) {
         }
       }
       if (vertices_moved) {
-        HH_STIMER(__fgproject);
+        HH_STIMER("__fgproject");
         global_project();
       }
     }
     double feval(ArrayView<double> ret_grad) {  // evaluate function and its gradient
       assertx(ret_grad.num() == _iv.num() * 3);
-      HH_STIMER(__feval);
+      HH_STIMER("__feval");
       // Only for the first iteration (because the mesh varies wildly),
       //  restrict each point to project onto same initial face.
       // This prevents bad folds as the mesh snaps back to place in the second iteration.
@@ -987,7 +987,7 @@ void cleanup_neighborhood(Vertex v, int nri) {
 
 void do_lfit(Args& args) {
   perhaps_initialize();
-  HH_STIMER(_lfit);
+  HH_STIMER("_lfit");
   int ni = args.get_int();
   int nli = args.get_int();
   if (verb >= 2) showdf("\n");
@@ -1002,7 +1002,7 @@ void do_lfit(Args& args) {
 void do_four1split() {
   // Currently loses edge flags and face strings
   perhaps_initialize();
-  HH_TIMER(_four1split);
+  HH_TIMER("_four1split");
   Array<Edge> are;
   for (Edge e : mesh.edges()) are.push(e);
   Array<Face> arf;
@@ -1094,7 +1094,7 @@ int vertex_num_sharp_edges(Vertex v) {
 }
 
 EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
-  HH_STIMER(__try_ecol);
+  HH_STIMER("__try_ecol");
   if (!mesh.nice_edge_collapse(e)) return R_illegal;  // not a legal move
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
@@ -1188,7 +1188,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   if (drss >= 0) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   HH_SSTAT(Sminii, minii == 1);
-  HH_STIMER(__doecol);
+  HH_STIMER("__doecol");
   if (k_simp96) {
     Vector nor1, nor2, nnor;
     UV uv1, uv2, uvn;
@@ -1221,7 +1221,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
 }
 
 EResult try_espl(Edge e, int ni, int nri, float& edrss) {
-  HH_STIMER(__try_espl);
+  HH_STIMER("__try_espl");
   // always legal
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
@@ -1242,7 +1242,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
-  HH_STIMER(__doespl);
+  HH_STIMER("__doespl");
   for (Face f : mesh.faces(e)) {
     for (Edge ee : mesh.edges(f)) {  // one duplication
       ecand.remove(ee);
@@ -1316,7 +1316,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
     return R_illegal;
   }
   // ALL SYSTEMS GO
-  HH_STIMER(__doeswa);
+  HH_STIMER("__doeswa");
   ecand.remove(e);
   remove_face(f1);
   remove_face(f2);
@@ -1343,7 +1343,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
 }
 
 EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
-  HH_STIMER(__try_eswa);
+  HH_STIMER("__try_eswa");
   if (!mesh.legal_edge_swap(e)) return R_illegal;  // not legal move
   if (k_simp96 && edge_sharp(e)) {
     Warning("Not swapping sharp edges");
@@ -1371,7 +1371,7 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
 }
 
 EResult try_op(Edge e, EOperation op, float& edrss) {
-  HH_STIMER(__try_op);
+  HH_STIMER("__try_op");
   EResult result;
   result = (op == OP_ecol   ? try_ecol(e, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
             : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
@@ -1385,7 +1385,7 @@ EResult try_op(Edge e, EOperation op, float& edrss) {
 
 void do_stoc() {
   perhaps_initialize();
-  HH_STIMER(_stoc);
+  HH_STIMER("_stoc");
   assertx(!dihfac);
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning stoc, spring=%g, fliter=%g\n", spring, fliter);
@@ -1465,7 +1465,7 @@ void apply_schedule() {
 }
 
 void do_reconstruct() {
-  HH_TIMER(reconstruct);
+  HH_TIMER("reconstruct");
   if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
   do_fgfit(as_lvalue(Args{"100"}));  // was "20"
@@ -1474,14 +1474,14 @@ void do_reconstruct() {
 }
 
 void do_simplify() {
-  HH_TIMER(simplify);
+  HH_TIMER("simplify");
   if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
   apply_schedule();
 }
 
 void do_quicksimplify() {
-  HH_TIMER(quicksimplify);
+  HH_TIMER("quicksimplify");
   float gfliter = fliter;
   const Array<float> k_spring_sched2 = {1e-2f, 1e-4f};
   spring = k_spring_sched2[0];
@@ -1496,7 +1496,7 @@ void do_quicksimplify() {
 }
 
 void do_zippysimplify() {
-  HH_TIMER(zippysimplify);
+  HH_TIMER("zippysimplify");
   // Note: I think I prefer the 1e-2f, 1e-4f schedule because it biases
   //  triangulations of planar regions to avoid long skinny triangles,
   //  as opposed to ending with no spring energy at all.
@@ -1549,12 +1549,13 @@ int main(int argc, const char** argv) {
   HH_ARGSP(spbf, "ratio : set spring constant boundary factor");
   HH_ARGSP(fliter, "factor : modify # local iters done in stoc");
   HH_ARGSP(feswaasym, "f : set drss threshold (fraction of crep)");
-  HH_TIMER(Meshfit);
-  showdf("%s", args.header().c_str());
-  args.parse();
-  perhaps_initialize();
-  analyze_mesh("FINAL");
-  HH_TIMER_END(Meshfit);
+  {
+    HH_TIMER("Meshfit");
+    showdf("%s", args.header().c_str());
+    args.parse();
+    perhaps_initialize();
+    analyze_mesh("FINAL");
+  }
   hh_clean_up();
   if (!nooutput) {
     mesh_transform(xformi);

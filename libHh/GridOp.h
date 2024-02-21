@@ -13,11 +13,11 @@
 
 #if 0
 #include "libHh/Timer.h"
-#define HH_GRIDOP_TIMER(x) HH_TIMER(x)
+#define HH_GRIDOP_TIMER(name) HH_TIMER(name)
 #endif
 
 #if !defined(HH_GRIDOP_TIMER)
-#define HH_GRIDOP_TIMER(x)
+#define HH_GRIDOP_TIMER(name)
 #endif
 
 namespace hh {
@@ -236,7 +236,7 @@ inline bool env_image_linear_filter() {
 }
 
 template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gridf) {
-  HH_GRIDOP_TIMER(__convert1);
+  HH_GRIDOP_TIMER("__convert1");
   assertx(same_size(gridu, gridf));
   parallel_for_each(
       range(gridu.size()),
@@ -249,7 +249,7 @@ template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gr
 }
 
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu) {
-  HH_GRIDOP_TIMER(__convert2);
+  HH_GRIDOP_TIMER("__convert2");
   assertx(same_size(gridf, gridu));
   parallel_for_each(
       range(gridf.size()),
@@ -317,7 +317,7 @@ namespace details {
 
 // Perform the inverse convolution preprocess for a single dimension d.
 template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, const FilterBnd& filterb, int d) {
-  HH_GRIDOP_TIMER(__inv_convol);
+  HH_GRIDOP_TIMER("__inv_convol");
   const LUfactorization& lu = filterb.lu_factorization();
   const bool lastspecial = lu.Llastrow.num() > 0;
   const Vec<int, D>& dims = grid.dims();
@@ -372,7 +372,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
 template <int D, typename T>
 Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pixelindex0,
                              CMatrixView<float> mat_weights, Bndrule bndrule, const T* bordervalue) {
-  HH_GRIDOP_TIMER(__evaluate);
+  HH_GRIDOP_TIMER("__evaluate");
   const Vec<int, D>& dims = grid.dims();
   int cx = dims[d];
   int nx = ar_pixelindex0.num();
@@ -458,7 +458,7 @@ Grid<D, T> scale_d(CGridView<D, T> grid, int d, int nx, const FilterBnd& filterb
 template <int D, typename T>
 Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
                    const T* bordervalue, Grid<D, T>&& gr, bool primal) {
-  HH_GRIDOP_TIMER(__scale);
+  HH_GRIDOP_TIMER("__scale");
   if (any_of(filterbs, [](const FilterBnd& fb) { return fb.bndrule() == Bndrule::border; })) assertx(bordervalue);
   const Vec<int, D>& dims = grid.dims();
   int npreprocess = 0;
@@ -641,7 +641,7 @@ void scale_filter_nearest_aux(Specialize<3>, CGridView<D, T> grid, GridView<D, T
 
 template <int D, typename T>
 Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D, T>&& gr) {
-  HH_GRIDOP_TIMER(__scale_filter_nearest);
+  HH_GRIDOP_TIMER("__scale_filter_nearest");
   if (!product(ndims)) {
     gr.init(ndims);
     return std::move(gr);
@@ -704,7 +704,7 @@ T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, 
 template <int D, bool parallel>
 Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
                           const Pixel* bordervalue) {
-  // HH_TIMER(__convolve_d);
+  // HH_TIMER("__convolve_d");
   if (bndrule == Bndrule::border) assertx(bordervalue);
   const Vec<int, D>& dims = grid.dims();
   const int nx = dims[d];

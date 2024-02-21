@@ -10,13 +10,13 @@
 #if 0
 {
   procedure() {
-    HH_SIMPLE_TIMER(_proc);  // timing for entire procedure
+    SimpleTimer timer1("_proc");  // timing for entire procedure
     if (something) {
-      HH_SIMPLE_TIMER(__step1);  // sub-timings for substeps
+      SimpleTimer timer2("__step1");  // sub-timings for substeps
       step1();
     }
     if (1) {
-      HH_SIMPLE_TIMER(__step2);
+      SimpleTimer timer3("__step2");
       step2();
     }
     double tot_step2 = 0.;
@@ -34,8 +34,6 @@
 #endif
 
 namespace hh {
-
-#define HH_SIMPLE_TIMER(id) hh::SimpleTimer simple_timer_##id(#id)
 
 class SimpleTimer {
  public:

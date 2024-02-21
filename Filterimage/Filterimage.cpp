@@ -557,19 +557,19 @@ void do_vfilter(Args& args) {
 }
 
 void do_scaleunif(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   float s = args.get_float();
   image.scale(twice(s), g_filterbs, &gcolor);
 }
 
 void do_scalenonunif(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   float sx = args.get_float(), sy = args.get_float();
   image.scale(V(sy, sx), g_filterbs, &gcolor);
 }
 
 void do_scaletox(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = parse_size(args.get_string(), image.xsize(), false);
   assertx(nx > 0);
   float s = float(nx) / assertx(image.xsize());
@@ -577,7 +577,7 @@ void do_scaletox(Args& args) {
 }
 
 void do_scaletoy(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int ny = parse_size(args.get_string(), image.ysize(), false);
   assertx(ny > 0);
   float s = float(ny) / assertx(image.ysize());
@@ -585,7 +585,7 @@ void do_scaletoy(Args& args) {
 }
 
 void do_scaletodims(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   auto syx = convert<float>(V(ny, nx)) / convert<float>(image.dims());
@@ -593,14 +593,14 @@ void do_scaletodims(Args& args) {
 }
 
 void do_scaleinside(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   image.scale(twice(min(convert<float>(V(ny, nx)) / convert<float>(image.dims()))), g_filterbs, &gcolor);
 }
 
 void do_scalehalf2n1() {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   if (image.xsize() == 1 && image.ysize() == 1) Warning("Image already 1x1; no effect");
   const Vec2<int> newdims = (image.dims() - 1) / 2 + 1;
   assertx((newdims - 1) * 2 + 1 == image.dims());
@@ -726,7 +726,7 @@ void do_rot180() {
 // frame maps from destination pixel (y, x) to source pixel (y, x);
 //  both have (possibly rectangular) domain [-0.5, +0.5]^2
 void apply_frame(const Frame& frame) {
-  HH_STIMER(_apply_frame);
+  HH_STIMER("_apply_frame");
   Vector4 vgcolor;
   convert(CGrid1View(gcolor), Grid1View(vgcolor));
   Matrix<Vector4> matv(image.dims());
@@ -813,7 +813,7 @@ void do_blur(Args& args) {
   // Filterimage ~/data/image/rampart1.jpg -info -blur 2 -info | imgv
   //  old  (_blur:                  32.00  x8.0     32.83)
   //  new  (_blur:                   0.50  x7.2      0.54)
-  HH_TIMER(_blur);
+  HH_TIMER("_blur");
   const float sdv_pixels = args.get_float();  // 1sdv in pixels
   const float nsvd = 2.5f;
   const int r = int(nsvd * sdv_pixels + .5f);  // window radius
@@ -1364,7 +1364,7 @@ void do_voronoidilate() {
   // Filterimage ~/git/mesh_processing/demos/data/texture.input.png -filter i -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
   // Using Vec2<float>:  win: 0.74  gcc: 0.23
   // Using Vec2<int>  :  win: 0.27  gcc: 0.19
-  HH_TIMER(_voronoi);
+  HH_TIMER("_voronoi");
   if (image.suffix() == "jpg") assertnever("euclidean_distance_map not useful on jpg image");
   Matrix<Vec2<int>> mvec(image.dims(), image.dims());
   int num_undef = 0;
@@ -1658,7 +1658,7 @@ void do_genpattern(Args& args) {
 //  The difficulty is that the cropped basis is not orthogonal or normalized.
 //  This is handled by a clever low-memory orthogonal projection.
 void do_homogenize(Args& args) {
-  HH_TIMER(_homogenize);
+  HH_TIMER("_homogenize");
   // e.g.:  Filterimage ~/data/image/lake.png -scalen 1 .5 -homogenize 4 | imgv
   //        Filterimage ~/prevproj/2010/spherestitch/Other/mattu_lowfreq/test2.png -homogenize 4 | imgv
   int n = args.get_int();
@@ -1989,7 +1989,7 @@ void do_gradientsharpen(Args& args) {
 void do_gdfill() {
   // e.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | imgv
   // also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | imgv  (see ~/proj/skype/Notes.txt)
-  HH_TIMER(_gdfill);
+  HH_TIMER("_gdfill");
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has visible difference
   assertx(image.zsize() == 4);
   auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
@@ -2144,7 +2144,7 @@ void do_poisson() {
   for_int(iter, g_niter) {
     // Solve a sparse linear-least-squares system;
     //  parameters are number of rows (constraints), number of unknowns, and dimensionality of unknowns.
-    HH_TIMER(_lls);
+    Timer timer("_lls");
     const int ny = image.ysize(), nx = image.xsize();
     SparseLls lls(
         2 * (ny * (nx - 1) + nx * (ny - 1)) + conformal * 2 * (ny - 2 + conf_L) * (nx - 2 + conf_L) + nconstraints,
@@ -2287,7 +2287,7 @@ void do_poisson() {
       lls.enter_xest_rc((y * nx + x) * 2 + 1, 0, matp[y][x][1]);
     }
     assertx(lls.solve());
-    HH_TIMER_END(_lls);
+    timer.terminate();  // "_lls"
     for_int(y, ny) for_int(x, nx) {
       matp[y][x][0] = lls.get_x_rc((y * nx + x) * 2 + 0, 0);
       matp[y][x][1] = lls.get_x_rc((y * nx + x) * 2 + 1, 0);
@@ -2380,10 +2380,10 @@ void do_procedure(Args& args) {
     images[0][1] = image2;
     assemble_images(images);
   } else if (name == "benchmark") {
-    HH_TIMER(_overall);
+    HH_TIMER("_overall");
     const float s = 1.01f;
     for_int(i, 10) {
-      // HH_TIMER(__scale);
+      // HH_TIMER("__scale");
       image.scale(twice(s), g_filterbs, &gcolor);
     }
   } else if (name == "mark_dark") {
@@ -3131,7 +3131,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
         Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
         Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
         if (optimized) {
-          // HH_ATIMER(___rows);
+          // HH_ATIMER("___rows");
           fill(fscolsum, Vector4(0.f));
           fill(fscolsum2, Vector4(0.f));
           fill(fccolsum, Vector4(0.f));
@@ -3150,7 +3150,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
             }
           }
         }
-        // HH_ATIMER(___rest);
+        // HH_ATIMER("___rest");
         for_int(x, mat_s.xsize()) {
           Vector4 ssum(0.f), ssum2(0.f);  // structure sum and sum squared
           Vector4 csum(0.f), csum2(0.f);  // color sum and sum squared
@@ -3253,7 +3253,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
 
 void structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4>& mat_c, Matrix<Vector4>& mat_out,
                         Matrix<Vector4>& mat_zscore) {
-  HH_TIMER(__structure_transfer);
+  HH_TIMER("__structure_transfer");
   if (getenv_bool("USE_RANK_TRANSFER")) {  // results in grain artifacts
     structure_transfer_rank(mat_s, mat_c, mat_out, mat_zscore);
   } else if (getenv_bool("USE_NO_TRANSFER")) {  // results in ghosting
@@ -3274,7 +3274,7 @@ void output_image(CMatrixView<Vector4> mat, const string& filename) {
 void do_pyramid(Args& args) {
   // e.g.  (cd ~/tmp; cp -p ~/data/image/misc/city.input.{13,17}.jpg .; Filterimage city.input.13.jpg -pyramid city.input.17.jpg; ls -al)
   string ffile = args.get_filename();  // argument is fine-scale image
-  HH_TIMER(_pyramid);
+  HH_TIMER("_pyramid");
   string rootname = ffile;
   assertx(contains(rootname, '.'));
   rootname.erase(rootname.find('.'));  // unlike get_path_root(), remove multiple extensions
@@ -3293,7 +3293,7 @@ void do_pyramid(Args& args) {
   mat_gaussianf[lf] = convert_image_mat(imagef);
   // Create the Gaussian image pyramid of the fine-scale image.
   if (ld > 0) {
-    HH_TIMER(__pyramid_downsample);
+    HH_TIMER("__pyramid_downsample");
     for (int l = lf - 1; l >= lc; --l) {
       mat_gaussianf[l] = downsample_image(mat_gaussianf[l + 1]);
     }
@@ -3331,7 +3331,7 @@ void do_pyramid(Args& args) {
     Matrix<Vector4> mat_diff(imagec.dims());
     parallel_for_coords(
         imagec.dims(), [&](const Vec2<int>& yx) { mat_diff[yx] = mat_xfer[yx] - mat_gaussianf[lc][yx]; }, 2);
-    HH_TIMER(__upsample_blend);
+    HH_TIMER("__upsample_blend");
     for_intL(l, lc + 1, lf - iskipfinest + 1) {
       Matrix<Vector4> mat_tmp = upsample_image(mat_diff);
       float alpha = (float(lf) - float(l)) / (float(lf) - float(lc));

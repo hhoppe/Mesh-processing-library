@@ -534,13 +534,13 @@ void read_image(Image& image, const string& filename) {
 unique_ptr<Object> object_reading_image(const string& filename) {
   if (!assertw(file_requires_pipe(filename) || filename_is_image(filename))) SHOW("not image?", filename);
   Image image;
-  HH_CTIMER(_read_image, g_verbose >= 1);
+  HH_CTIMER("_read_image", g_verbose >= 1);
   // about 0.20sec for 5472x3648 using Image_wic; 0.40sec using Image_libs libjpeg; 0.08sec using Pixel::gray
   bool bgra = false, unsaved = false;
   if (0) {  // test the response time without any loading delay
     static uchar uc = 40;
     uc = narrow_cast<uchar>(40 + my_mod(uc + 40, 180));  // not thread-safe
-    HH_TIMER(_read_init);
+    HH_TIMER("_read_init");
     image.init(V(3648, 5472), Pixel::gray(uc));
   } else if (PrefetchImage* pp = find_if(g_prefetch_image, [&](const PrefetchImage& p) {
                return p.filename == filename && p.file_modification_time == get_path_modification_time(filename) &&
@@ -1142,7 +1142,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
 }
 
 bool DerivedHW::key_press(string skey) {
-  // HH_TIMER(key_press);
+  // HH_TIMER("key_press");
   bool recognized = true;
   static string prev_skey1, prev_skey2;
   prev_skey2 = prev_skey1;
@@ -2795,7 +2795,7 @@ void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dim
 }
 
 void upload_image_to_texture() {
-  HH_CTIMER(_upload_image, g_verbose >= 1);
+  HH_CTIMER("_upload_image", g_verbose >= 1);
   assertx(product(g_frame_dims));
   assertx(g_cob >= 0 && g_framenum >= 0);
   static int max_texture_size;
@@ -2986,7 +2986,7 @@ const string fragment_shader = glsl_shader_version + (
                                                      );
 
 void render_image() {
-  // HH_TIMER(_render_image);
+  // HH_TIMER("_render_image");
 #if 1 && defined(__CYGWIN__)
   const bool use_modern_opengl = false;
   // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
@@ -3288,7 +3288,7 @@ void render_image() {
 }
 
 void DerivedHW::draw_window(const Vec2<int>& dims) {
-  // HH_TIMER(draw_window);
+  // HH_TIMER("draw_window");
   static bool first = true;
   if (first) {
     first = false;
@@ -3748,7 +3748,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
   assertx((1 << log2DT) == DT);
   Grid<3, Pixel> hvideo;
   {
-    HH_TIMER(loop_downsampling);
+    HH_TIMER("loop_downsampling");
     const Vec2<int> sdims(ny, nx);
     int DS = 1;
     {                                                                         // spatial downsampling factor
@@ -3775,7 +3775,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     if (0) SHOW(sdims, hdims, DS);
     Grid<3, Pixel> hvideo1(concat(V(onf), hdims));
     {  // reduced (maybe "half") resolution
-      HH_TIMER(__scale_spatially);
+      HH_TIMER("__scale_spatially");
       if (ovideo.size()) {
         spatially_scale_Grid3_Pixel(ovideo, twice(filterb), nullptr, hvideo1);
       } else if (ovideo_nv12.size()) {
@@ -3786,7 +3786,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     }
     hvideo.init(concat(V(hnf), hdims));
     {
-      HH_TIMER(__scale_temporally);
+      HH_TIMER("__scale_temporally");
       parallel_for_each(range(hnf), [&](const int f) {
         for_int(y, hdims[0]) for_int(x, hdims[1]) {
           Vector4i v(0);
@@ -3798,7 +3798,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
   }
   const Vec2<int> hdims = hvideo.dims().tail<2>();
   {
-    HH_TIMER(loop_optimize);
+    HH_TIMER("loop_optimize");
     if (0) {  // for testing
       Warning("Testing special looping parameters");
       const int start = nnf / 3, period = nnf / 3;
@@ -3878,7 +3878,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     }
   }
   if (1) {
-    HH_TIMER(loop_rstat);
+    HH_TIMER("loop_rstat");
     HH_RSTAT(Speriod, g_lp.mat_period);
     HH_RSTAT(Sstart, g_lp.mat_start);
     // e.g.:
@@ -3965,7 +3965,7 @@ void background_work(bool asynchronous) {
       }
       if (pob) {
         auto& ob = *pob;
-        HH_TIMER(loop);
+        Timer timer_loop("loop");
         const Vec3<int> odims = ob._dims.with(0, ob._frameou1 - ob._framein);
         CGridView<3, Pixel> ovideo(ob._video.size() ? ob._video.slice(ob._framein, ob._frameou1) : ob._video);
         CVideoNv12View ovideo_nv12(ob._video_nv12.size()
@@ -3987,7 +3987,7 @@ void background_work(bool asynchronous) {
         Video videoloop(!use_nv12 ? ndims : thrice(0));
         VideoNv12 videoloop_nv12(use_nv12 ? ndims : thrice(0));
         {
-          HH_TIMER(loop_gdloop);
+          HH_TIMER("loop_gdloop");
           GdLoopScheme scheme = 1 ? GdLoopScheme::fast : GdLoopScheme::precise;
           compute_gdloop(odims, "", ovideo, ovideo_nv12, g_lp.mat_start, g_lp.mat_period, scheme, ndims[0], nullptr,
                          videoloop, videoloop_nv12, 1);
@@ -4028,7 +4028,7 @@ void background_work(bool asynchronous) {
         hw.wake_up();
         // Note: for batch loop creation, it is best to use do_batch_create_loop().
         if (getenv_bool("VIDEOLOOP_EXIT")) {
-          HH_TIMER_END(loop);
+          timer_loop.terminate();
           SHOW("exiting");
           exit(0);
         }
@@ -4055,7 +4055,7 @@ void background_work(bool asynchronous) {
         if (!file_modification_time) file_modification_time = 1;  // a small nonzero value
         Image image;
         try {
-          HH_CTIMER(_background_read_image, g_verbose >= 1);
+          HH_CTIMER("_background_read_image", g_verbose >= 1);
           read_image(image, filename);
         } catch (std::runtime_error&) {
           ok = false;
@@ -4175,14 +4175,14 @@ void do_batch_create_loop(Args& args) {
                             crop(ovideo_nv12.get_UV(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamped)));
   }
   {
-    HH_TIMER(loop);
+    Timer timer_loop("loop");
     // frames in seamless video loop; was 150
     int nframes = int(k_loop_duration * attrib.framerate + .5);
     nframes = getenv_int("LOOP_NFRAMES", nframes, g_verbose >= 1);
     const Vec3<int> odims = ovideo_nv12.get_Y().dims();
     const Vec3<int> ndims = concat(V(nframes), ovideo_nv12.get_Y().dims().tail<2>());
     {
-      HH_TIMER(loop_optimize);
+      HH_TIMER("loop_optimize");
       compute_looping_parameters(odims, Video(), ovideo_nv12, nframes);
     }
     GdLoopScheme scheme = 1 ? GdLoopScheme::fast : GdLoopScheme::precise;
@@ -4199,11 +4199,11 @@ void do_batch_create_loop(Args& args) {
       videoloop.attrib() = attrib;
     }
     {
-      HH_TIMER(loop_gdloop);
+      HH_TIMER("loop_gdloop");
       compute_gdloop(odims, "", ovideo, ovideo_nv12, g_lp.mat_start, g_lp.mat_period, scheme, ndims[0], nullptr,
                      videoloop, videoloop_nv12, 1);
     }
-    HH_TIMER_END(loop);
+    timer_loop.terminate();
     if (output_filename != "") {
       if (videoloop_nv12.get_Y().size())
         videoloop_nv12.write_file(output_filename, attrib);

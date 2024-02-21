@@ -102,7 +102,7 @@ void compute_xform() {
 }
 
 void initial_projection() {
-  HH_TIMER(_initialproj);
+  HH_TIMER("_initialproj");
   // do it inefficiently for now ?
   for_int(i, pt.n) {
     if (!pt.cle[i]) {
@@ -439,7 +439,7 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
 }
 
 EResult try_op(vertex v, EOperation op, float& edrss) {
-  HH_ATIMER(__try_op);
+  HH_ATIMER("__try_op");
   EResult result;
   result = (op == OP_ecol   ? try_ecol(v, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
             : op == OP_espl ? try_espl(v, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
@@ -475,7 +475,7 @@ void create_poly(bool pclosed, int n) {
 }
 
 void do_pfilename(Args& args) {
-  HH_TIMER(_pfilename);
+  HH_TIMER("_pfilename");
   RFile is(args.get_filename());
   RSA3dStream ia3d(is());
   A3dElem el;
@@ -513,7 +513,7 @@ void do_sample(Args& args) {
 }
 
 void do_filename(Args& args) {
-  HH_TIMER(_filename);
+  HH_TIMER("_filename");
   assertx(!pt.n);
   RFile is(args.get_filename());
   RSA3dStream ia3d(is());
@@ -537,7 +537,7 @@ void do_closedcurve(Args& args) { create_poly(true, args.get_int()); }
 
 void do_gfit(Args& args) {
   perhaps_initialize();
-  HH_TIMER(_gfit);
+  HH_TIMER("_gfit");
   int niter = args.get_int();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning gfit, %d iterations, spr=%g\n", niter, spring);
@@ -549,11 +549,11 @@ void do_gfit(Args& args) {
     if (verb >= 3) showdf("iter %d/%d\n", i, niter);
     std::cout.flush();
     {
-      HH_ATIMER(__lls);
+      HH_ATIMER("__lls");
       global_fit();
     }
     {
-      HH_ATIMER(__project);
+      HH_ATIMER("__project");
       global_project();
     }
     float necsc = get_edis() + get_espr();
@@ -573,7 +573,7 @@ void do_gfit(Args& args) {
 
 void do_stoc() {
   perhaps_initialize();
-  HH_STIMER(_stoc);
+  HH_STIMER("_stoc");
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning stoc, spring=%g, fliter=%g\n", spring, fliter);
   fill(opstat.na, 0);
@@ -628,7 +628,7 @@ void do_stoc() {
 
 void do_lfit(Args& args) {
   perhaps_initialize();
-  HH_STIMER(_lfit);
+  HH_STIMER("_lfit");
   int ni = args.get_int();
   int nli = args.get_int();
   if (verb >= 2) showdf("\n");
@@ -657,7 +657,7 @@ void apply_schedule() {
 }
 
 void do_reconstruct() {
-  HH_TIMER(_reconstruct);
+  HH_TIMER("_reconstruct");
   if (!spring) spring = spring_sched[0];
   perhaps_initialize();
   do_gfit(as_lvalue(Args{"0"}));
@@ -665,14 +665,14 @@ void do_reconstruct() {
 }
 
 void do_simplify() {
-  HH_TIMER(_simplify);
+  HH_TIMER("_simplify");
   if (!spring) spring = spring_sched[0];
   perhaps_initialize();
   apply_schedule();
 }
 
 void do_outpoly(Args& args) {
-  HH_TIMER(_outpoly);
+  HH_TIMER("_outpoly");
   WFile os(args.get_filename());
   WSA3dStream oa3d(os());
   output_poly(oa3d);
@@ -707,12 +707,13 @@ int main(int argc, const char** argv) {
   HH_ARGSF(nooutput, ": don't print final poly on stdout");
   HH_ARGSP(fliter, "factor : modify # local iters done in stoc");
   HH_ARGSP(verb, "i : verbosity level (1=avg, 2=more, 3=lots, 4=huge)");
-  HH_TIMER(Polyfit);
-  showdf("%s", args.header().c_str());
-  args.parse();
-  perhaps_initialize();
-  analyze_poly(0, "FINAL");
-  HH_TIMER_END(Polyfit);
+  {
+    HH_TIMER("Polyfit");
+    showdf("%s", args.header().c_str());
+    args.parse();
+    perhaps_initialize();
+    analyze_poly(0, "FINAL");
+  }
   if (file_spawn) {
     a3d_spawn = nullptr;
     file_spawn = nullptr;

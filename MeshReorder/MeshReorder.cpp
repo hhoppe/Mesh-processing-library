@@ -108,8 +108,8 @@ inline bool same_string(const char* s1, const char* s2) {
 void show_rate(Timer& timer) {
   timer.stop();
   double runtime = timer.cpu();
-  timer.start();
   showdf("reordering rate: %.0f faces / sec\n", mesh.num_faces() / max(runtime, 1e-6));
+  timer.start();
 }
 
 // Given a face, get its 3 vertices and its 3 adjacent faces.
@@ -218,7 +218,7 @@ void extract_mesh() {
 
 // Use the two (modified) global arrays to reorder the faces in GMesh.
 void replace_mesh() {
-  HH_PTIMER(_replace_mesh);
+  HH_PTIMER("_replace_mesh");
   if (0) {  // simplest version
     assertx(!color_forder && !color_fmiss && !color_corners);
     assertx(reorder_vertices);
@@ -334,7 +334,7 @@ void replace_mesh() {
       mesh.update_string(f, "rgb", csform_vec(str, rgb));
     }
   } else if (color_fmiss && cache_type != VertexCache::EType::notype) {
-    HH_PTIMER(__color_fmiss);
+    HH_PTIMER("__color_fmiss");
     auto up_vcache = VertexCache::make(cache_type, 1 + mesh.num_vertices(), cache_size);
     VertexCache& vcache = *up_vcache;
     const Vec<const char*, 4> color_nmiss = {
@@ -361,7 +361,7 @@ void replace_mesh() {
       for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", nullptr);
     }
   } else if (color_corners && cache_type != VertexCache::EType::notype) {
-    HH_PTIMER(__color_corners);
+    HH_PTIMER("__color_corners");
     auto up_vcache = VertexCache::make(cache_type, 1 + mesh.num_vertices(), cache_size);
     VertexCache& vcache = *up_vcache;
     const char* color_miss = "(.8 .0 .0)";
@@ -465,7 +465,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
 // Analyze the bandwidth of the mesh under the transparent vertex caching framework,
 //  using the current cache type and size.
 void do_analyze() {
-  HH_PTIMER(_analyze);
+  HH_PTIMER("_analyze");
   showdf("Mesh analysis (%s)\n", VertexCache::type_string(cache_type).c_str());
   int nmiss = analyze_mesh(cache_size);
   int nverts, nstrips;
@@ -483,7 +483,7 @@ void do_analyze() {
 // Analyze the badnwidth of the mesh under the traditional triangle strip
 //  framework (without vertex caching).
 void do_strip_analyze() {
-  HH_PTIMER(_strip_analyze);
+  HH_PTIMER("_strip_analyze");
   showdf("Strip analysis\n");
   int nverts, nstrips;
   analyze_strips(nverts, nstrips);
@@ -605,7 +605,7 @@ void do_fixup_indices() {
 
 // Print basic information on current face ordering.
 void do_info() {
-  HH_PTIMER(_info);
+  HH_PTIMER("_info");
   analyze_mesh(cache_size);
 }
 
@@ -871,7 +871,7 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
 // *** Greedy stripify
 
 void do_greedy_stripify() {
-  HH_TIMER(_greedy_stripify);
+  HH_TIMER("_greedy_stripify");
   old_strip_order = true;  // never got around to fixing this.
   ar_verts.init(0);
   ar_faces.init(0);
@@ -978,7 +978,7 @@ int find_next_face(Array<Face>& fa, const MeshStatus& ms) {
 }
 
 void do_sgi_stripify() {
-  HH_TIMER(_sgi_stripify);
+  HH_TIMER("_sgi_stripify");
   ar_verts.init(0);
   ar_faces.init(0);
   MeshStatus ms;
@@ -1128,7 +1128,7 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
 }
 
 void do_meshify5() {
-  Timer timer("_meshify5", Timer::EMode::normal);
+  Timer timer("_meshify5");
   ConsoleProgress cprogress;
   old_strip_order = false;
   ar_verts.init(0);
@@ -1262,7 +1262,7 @@ void do_meshify8() {
   int locnext;
   Corner c;
   const int desiredloc = simulate_nf ? simulate_nf : cache_size - 9;
-  Timer timer("_meshify8", Timer::EMode::normal);
+  Timer timer("_meshify8");
   for (;;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     c = ms.find_initial_corner(vcache);
@@ -1338,7 +1338,7 @@ void do_meshify9() {
   int locnext = 0;       // dont_care (only care if cnext != 0)
   Corner c;
   const int desiredloc = simulate_nf ? simulate_nf : cache_size - 9;
-  Timer timer("_meshify9", Timer::EMode::normal);
+  Timer timer("_meshify9");
   for (;;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     ASSERTX(!cnext);
@@ -1437,7 +1437,7 @@ void do_meshify10() {
   int locnext = 0;       // dont_care (only care if cnext != 0)
   Corner c;
   const int desiredloc = simulate_nf ? simulate_nf : cache_size - 9;
-  Timer timer("_meshify10", Timer::EMode::normal);
+  Timer timer("_meshify10");
   const bool only_first_ring = getenv_bool("ONLY_FIRST_RING");
   for (;;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
@@ -1557,25 +1557,26 @@ int main(int argc, const char** argv) {
   HH_ARGSD(meshify9, ": like 8, queue of restarts");
   HH_ARGSD(meshify10, ": like 9, go clockwise after restart (simpler, faster, and even better)");
   HH_ARGSD(timingtest, "niter : run timing test");
-  HH_TIMER(MeshReorder);
-  string arg0 = args.num() ? args.peek_string() : "";
-  if (!ParseArgs::special_arg(arg0)) {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-    gfilename = filename;
-    RFile fi(filename);
-    HH_TIMER(_readmesh);
-    for (string sline; fi().peek() == '#';) {
-      assertx(my_getline(fi(), sline));
-      if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+  {
+    HH_TIMER("MeshReorder");
+    string arg0 = args.num() ? args.peek_string() : "";
+    if (!ParseArgs::special_arg(arg0)) {
+      string filename = "-";
+      if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+      gfilename = filename;
+      RFile fi(filename);
+      HH_TIMER("_readmesh");
+      for (string sline; fi().peek() == '#';) {
+        assertx(my_getline(fi(), sline));
+        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      }
+      mesh.read(fi());
+      showff("%s", args.header().c_str());
+      fixup_mesh();
+      extract_mesh();
     }
-    mesh.read(fi());
-    showff("%s", args.header().c_str());
-    fixup_mesh();
-    extract_mesh();
+    args.parse();
   }
-  args.parse();
-  HH_TIMER_END(MeshReorder);
   hh_clean_up();
   if (!nooutput) {
     replace_mesh();

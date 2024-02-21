@@ -30,8 +30,8 @@
 
 namespace hh {
 
-#if !defined(HH_MULTIGRID_TIMER)  // client can define HH_MULTIGRID_TIMER(x) as nothing to omit all the timers.
-#define HH_MULTIGRID_TIMER(x) HH_STIMER(x)
+#if !defined(HH_MULTIGRID_TIMER)  // client can define HH_MULTIGRID_TIMER(name) as nothing to omit all the timers.
+#define HH_MULTIGRID_TIMER(name) HH_STIMER(name)
 #endif
 
 // Notes:
@@ -190,7 +190,7 @@ class Multigrid : noncopyable {
   // Box filter on dual grid; dimensions are halved except along dimensions whose size is already 1.
   Grid<D, T> dual_downsample(CGridView<D, T> grid) { return dual_downsample_aux(Specialize<Z>{}, grid); }
   template <int DD> Grid<D, T> dual_downsample_aux(Specialize<DD>, CGridView<D, T> grid) {
-    HH_MULTIGRID_TIMER(_downsample);
+    HH_MULTIGRID_TIMER("_downsample");
     const Vec<int, D> dims = grid.dims();
     assertx(max(dims) > 1);
     const Vec<int, D> ndims = (dims + 1) / 2;
@@ -237,7 +237,7 @@ class Multigrid : noncopyable {
     return ngrid;
   }
   Grid<D, T> dual_downsample_aux(Specialize<2>, CGridView<D, T> grid) {
-    HH_MULTIGRID_TIMER(_downsample2);
+    HH_MULTIGRID_TIMER("_downsample2");
     const Vec<int, D> dims = grid.dims();
     assertx(max(dims) > 1);
     const Vec<int, D> ndims = (dims + 1) / 2;
@@ -288,7 +288,7 @@ class Multigrid : noncopyable {
     return dual_upsample_aux(Specialize<Z>{}, grid, destdims);
   }
   template <int DD> Grid<D, T> dual_upsample_aux(Specialize<DD>, CGridView<D, T> grid, const Vec<int, D>* destdims) {
-    HH_MULTIGRID_TIMER(_upsample);
+    HH_MULTIGRID_TIMER("_upsample");
     const Vec<int, D> dims = grid.dims();
     const Vec<int, D> ndims = destdims ? *destdims : dims * 2;
     if (0) SHOW(dims, ndims);
@@ -300,7 +300,7 @@ class Multigrid : noncopyable {
     return ngrid;
   }
   Grid<D, T> dual_upsample_aux(Specialize<2>, CGridView<D, T> grid, const Vec<int, D>* destdims) {
-    HH_MULTIGRID_TIMER(_upsample2);
+    HH_MULTIGRID_TIMER("_upsample2");
     const Vec<int, D> dims = grid.dims();
     const Vec<int, D> ndims = destdims ? *destdims : dims * 2;
     assertx(ndims[0] == dims[0] * 2 || ndims[0] == dims[0] * 2 - 1);
@@ -334,7 +334,7 @@ class Multigrid : noncopyable {
   }
   template <int DD>
   void relax_aux(Specialize<DD>, CGridView<D, T> grid_rhs, GridView<D, T> grid_result, int niter, bool extra) {
-    HH_MULTIGRID_TIMER(_relax);
+    HH_MULTIGRID_TIMER("_relax");
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     if (product(dims) == 1) {
@@ -496,7 +496,7 @@ class Multigrid : noncopyable {
     // SHOW(g_nfast, g_nslow);
   }
   void relax_aux(Specialize<2>, CGridView<D, T> grid_rhs, GridView<D, T> grid_result, int niter, bool extra) {
-    HH_MULTIGRID_TIMER(_relax2);
+    HH_MULTIGRID_TIMER("_relax2");
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     int ny = dims[0], nx = dims[1];
@@ -591,7 +591,7 @@ class Multigrid : noncopyable {
   }
   template <int DD>
   Grid<D, T> compute_residual_aux(Specialize<DD>, CGridView<D, T> grid_rhs, CGridView<D, T> grid_result) {
-    HH_MULTIGRID_TIMER(_compute_residual);
+    HH_MULTIGRID_TIMER("_compute_residual");
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     const float wL = get_wL(dims);
@@ -655,7 +655,7 @@ class Multigrid : noncopyable {
     return grid_residual;
   }
   Grid<D, T> compute_residual_aux(Specialize<2>, CGridView<D, T> grid_rhs, CGridView<D, T> grid_result) {
-    HH_MULTIGRID_TIMER(_compute_residual2);
+    HH_MULTIGRID_TIMER("_compute_residual2");
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     int ny = dims[0], nx = dims[1];
@@ -721,7 +721,7 @@ class Multigrid : noncopyable {
   }
   // Print statistics at each V-cycle iteration, including error if the exact original solution is known.
   void analyze_error(string s) {
-    HH_MULTIGRID_TIMER(_analyze);
+    HH_MULTIGRID_TIMER("_analyze");
     // Stat stat(s, true); stat.set_rms(); for (auto e : grid_result - _grid_orig) stat.enter(mag_e(e));
     Precise mean_result = mean(_grid_result);
     double rms_resid = mag_e(rms(compute_residual(_grid_rhs, _grid_result)));
@@ -760,7 +760,7 @@ class Multigrid : noncopyable {
     for_int(k, num_recursions) rec_vcycle(grid_newrhs, grid_newresult);
     Grid<D, T> grid_correction = dual_upsample(grid_newresult, &grid_result.dims());
     {
-      HH_MULTIGRID_TIMER(_add_correction);
+      HH_MULTIGRID_TIMER("_add_correction");
       grid_result += grid_correction;
     }
     double rms2 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
@@ -772,7 +772,7 @@ class Multigrid : noncopyable {
   }
   // Perform a sequence of multigrid V-cycles.
   void run_multigrid(CGridView<D, T> grid_rhs, GridView<D, T> grid_result) {
-    HH_MULTIGRID_TIMER(multigrid);
+    HH_MULTIGRID_TIMER("multigrid");
     assertx(same_size(grid_rhs, grid_result));
     // TODO: implement a streaming multigrid algorithm (faster and less memory usage)
     if (getenv_bool("MULTIGRID_VERBOSE")) _verbose = true;
@@ -784,7 +784,7 @@ class Multigrid : noncopyable {
     if (!_num_vcycles) _num_vcycles = k_default_num_vcycles;
     for_int(vcycle, _num_vcycles) {
       {
-        HH_MULTIGRID_TIMER(vcycle);
+        HH_MULTIGRID_TIMER("vcycle");
         rec_vcycle(grid_rhs, grid_result);
       }
       if (0) grid_result -= static_cast<T>(mean(grid_result));  // does not help reducing rms(err)

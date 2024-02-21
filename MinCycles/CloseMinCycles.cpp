@@ -175,7 +175,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
 
 // Given Edge e adjacent to two already BFS-visited vertices, determine if connecting them would form a nonseparating cycle.
 bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
-  HH_STIMER(__would_be_nonseparating_cycle);
+  HH_STIMER("__would_be_nonseparating_cycle");
   assertx(v_dist(_mesh.vertex1(e12)) != BIGFLOAT && v_dist(_mesh.vertex2(e12)) != BIGFLOAT);
   assertx(!e_joined(e12));
   e_joined(e12) = true;  // must be undone before function return if the cycle is non-separating
@@ -286,7 +286,7 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
 // If it is, optionally process the cycle.
 // Return: was_a_nonseparating_cycle.
 bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist, int& num_edges) {
-  HH_STIMER(__look_for_cycle);
+  HH_STIMER("__look_for_cycle");
   if (verb) Warning("Looking for cycle");
   Edge e12 = _mesh.edge(v1, v2);
   assertx(!e_joined(e12));
@@ -471,7 +471,7 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
 //  Intuitively, if the BFS covers a large mesh region before finding a cycle, then most of the vertices
 //   in the search region cannot contain small cycles.
 void CloseMinCycles::find_cycles() {
-  HH_TIMER(_find_cycles);
+  HH_TIMER("_find_cycles");
   if (0) {  // debug
     // results in 2 separate components, so not a topological handle
     close_cycle(V(_mesh.id_vertex(50), _mesh.id_vertex(53), _mesh.id_vertex(59), _mesh.id_vertex(49)));
@@ -615,7 +615,7 @@ void CloseMinCycles::compute() {
   if (!_mesh.num_vertices()) return;
   Array<Vertex> ar_boundary_centers;
   if (1) {  // deal with mesh boundaries
-    HH_TIMER(_fillholes);
+    HH_TIMER("_fillholes");
     Set<Edge> setbe;
     for (Edge e : _mesh.edges()) {
       if (_mesh.is_boundary(e)) setbe.enter(e);
@@ -649,7 +649,7 @@ void CloseMinCycles::compute() {
     e_bfsnum(e) = 0;
   }
   {
-    HH_TIMER(__genus);
+    HH_TIMER("__genus");
     float fgenus = mesh_genus(_mesh);  // somewhat slow implementation
     assertx(fgenus == floor(fgenus));
     _cgenus = int(fgenus);

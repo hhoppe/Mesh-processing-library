@@ -263,7 +263,7 @@ void do_createobject(Args& args) {
 // *** froma3d
 
 void do_froma3d() {
-  HH_TIMER(_froma3d);
+  HH_TIMER("_froma3d");
   HH_STAT(Sppdist2);
   RSA3dStream ia3d(std::cin);
   HashPoint hp;
@@ -727,13 +727,13 @@ void do_setb3d() { my_setenv("A3D_BINARY", "1"); }
 // *** toa3d, tob3d
 
 void do_toa3d() {
-  HH_TIMER(_toa3d);
+  HH_TIMER("_toa3d");
   nooutput = true;
   output_mesh();
 }
 
 void do_tob3d() {
-  HH_TIMER(_tob3d);
+  HH_TIMER("_tob3d");
   my_setenv("A3D_BINARY", "1");
   nooutput = true;
   output_mesh();
@@ -744,12 +744,12 @@ void do_endobject() { oa3d.write_end_object(); }
 // *** other
 
 void do_renumber() {
-  HH_TIMER(_renumber);
+  HH_TIMER("_renumber");
   mesh.renumber();
 }
 
 void do_nidrenumberv() {
-  HH_TIMER(_nidrenumberv);
+  HH_TIMER("_nidrenumberv");
   Set<Vertex> setv;
   for (Vertex v : mesh.vertices()) setv.enter(v);
   const int large = std::numeric_limits<int>::max() / 2;
@@ -767,7 +767,7 @@ void do_nidrenumberv() {
 }
 
 void do_merge(Args& args) {
-  HH_TIMER(_merge);
+  HH_TIMER("_merge");
   int i = 0;
   for (;;) {
     if (!args.num()) break;
@@ -785,12 +785,12 @@ void do_merge(Args& args) {
 }
 
 void do_outmesh() {
-  HH_TIMER(_outmesh);
+  HH_TIMER("_outmesh");
   mesh.write(std::cout);
 }
 
 void do_addmesh() {
-  HH_TIMER(_addmesh);
+  HH_TIMER("_addmesh");
   A3dElem el(A3dElem::EType::endfile);
   oa3d.write(el);
   mesh.write(std::cout);
@@ -819,7 +819,7 @@ void do_mark() {
 // *** delaunay
 
 void do_delaunay() {
-  HH_TIMER(_delaunay);
+  HH_TIMER("_delaunay");
   assertx(cosangle != k_undefined_cosangle);
   int ns = retriangulate_all(mesh, cosangle, circum_radius_swap_criterion, nullptr, nullptr);
   showdf("Swapped %d edges\n", ns);
@@ -828,7 +828,7 @@ void do_delaunay() {
 // *** diagonal
 
 void do_diagonal() {
-  HH_TIMER(_diagonal);
+  HH_TIMER("_diagonal");
   assertx(cosangle != k_undefined_cosangle);
   int ns = retriangulate_all(mesh, cosangle, diagonal_distance_swap_criterion, nullptr, nullptr);
   showdf("Swapped %d edges\n", ns);
@@ -924,7 +924,7 @@ void output_segment(Face f, Map<Face, int>& mfseg) {
 }
 
 void do_segment() {
-  HH_TIMER(_segment);
+  HH_TIMER("_segment");
   nooutput = true;
   Map<Face, int> mfseg;  // Face -> segment number
   Array<Face> arepf;
@@ -958,7 +958,7 @@ void record_segment(Face f, Map<Face, int>& mfseg) {
 }
 
 void do_recordsegments() {
-  HH_TIMER(_recordsegments);
+  HH_TIMER("_recordsegments");
   Map<Face, int> mfseg;  // Face -> segment number
   Array<Face> arepf;
   gather_segments(mfseg, arepf);
@@ -995,7 +995,7 @@ void selectively_smooth() {
 }
 
 void do_selsmooth() {
-  HH_TIMER(_selsmooth);
+  HH_TIMER("_selsmooth");
   nooutput = true;
   selectively_smooth();
 }
@@ -1062,7 +1062,7 @@ void do_tagmateriale() {
 // (each old vertex will temporarily have 2 rings of faces!).
 void do_trisubdiv() {
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
-  HH_TIMER(_trisubdiv);
+  HH_TIMER("_trisubdiv");
   Array<Vertex> arv;
   for (Vertex v : mesh.vertices()) arv.push(v);
   Array<Face> arf;
@@ -1150,7 +1150,7 @@ void do_trisubdiv() {
 void do_silsubdiv() {
   // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
-  HH_TIMER(_silsubdiv);
+  HH_TIMER("_silsubdiv");
   Array<Face> arf;
   for (Face f : mesh.faces()) arf.push(f);
   // Determine which edges will be subdivided.
@@ -1251,7 +1251,7 @@ void do_silsubdiv() {
 // *** Taubin
 
 void do_taubinsmooth(Args& args) {
-  HH_TIMER(_taubinsmooth);
+  HH_TIMER("_taubinsmooth");
   int niter = args.get_int();
   float lambda, mu;
   if (0) {
@@ -1309,7 +1309,7 @@ float cotan(const Point& p1, const Point& p2, const Point& p3) {
 }
 
 void do_desbrunsmooth(Args& args) {
-  HH_TIMER(_desbrunsmooth);
+  HH_TIMER("_desbrunsmooth");
   float lambda = args.get_float();
   assertx(lambda > 0.f);
   const bool use_taubin_laplacian = false;
@@ -1461,7 +1461,7 @@ Vec2<Vertex> find_diameter_of_boundary_vertices() {
 }
 
 void do_lscm() {
-  HH_TIMER(_lscm);
+  HH_TIMER("_lscm");
   assertx(mesh_single_disk());
   int m = (2 + mesh.num_faces()) * 2;
   int n = mesh.num_vertices() * 2;
@@ -1534,7 +1534,7 @@ void do_lscm() {
 // *** Poisson parametrization
 
 void do_poissonparam() {
-  HH_TIMER(_poissonparam);
+  HH_TIMER("_poissonparam");
   assertx(mesh_single_disk());
   int m = 2 + mesh.num_faces() * 4;
   int n = mesh.num_vertices() * 2;
@@ -1625,7 +1625,7 @@ void do_poissonparam() {
 // *** fillholes
 
 void do_fillholes(Args& args) {
-  HH_TIMER(_fillholes);
+  HH_TIMER("_fillholes");
   int maxnume = args.get_int();  // == maxnumv
   Set<Edge> setbe;
   for (Edge e : mesh.edges()) {
@@ -1912,7 +1912,7 @@ int remove_component(const Set<Face>& setf) {
 
 void do_rmcomp(Args& args) {
   // Component is assumed face-face connected (do not jump bowtie).
-  HH_TIMER(_rmcomponents);
+  HH_TIMER("_rmcomponents");
   int maxnumf = args.get_int();
   HH_STAT(Svertsrem);
   HH_STAT(Sfacesrem);
@@ -1977,7 +1977,7 @@ float try_coalesce(Edge e) {
 // by removing one consecutive set of edges common to them.
 // But, after several coalescences, 2 faces may share more than one such set.
 void do_coalesce(Args& args) {
-  HH_TIMER(_coalesce);
+  HH_TIMER("_coalesce");
   float fcrit = args.get_float();
   int nerem = 0;
   Set<Edge> sete;
@@ -2003,7 +2003,7 @@ void do_coalesce(Args& args) {
 }
 
 void do_makequads(Args& args) {
-  HH_TIMER(_makequads);
+  HH_TIMER("_makequads");
   float p_tol = args.get_float();
   int nerem = 0;
   int nf = mesh.num_faces();
@@ -2246,7 +2246,7 @@ void do_fixfaces() {
 }
 
 void do_smootha3d() {
-  HH_TIMER(_smootha3d);
+  HH_TIMER("_smootha3d");
   nooutput = true;
   // Not too efficient because normals are completely shared at vertices.
   selectively_smooth();
@@ -2610,7 +2610,7 @@ void do_obtusesplit() {
 }
 
 void do_analyzestretch() {
-  HH_TIMER(_analyzestretch);
+  HH_TIMER("_analyzestretch");
   bool is_sphere = true;
   if (getenv_bool("PLANAR_STRETCH")) {
     showdf("Using PLANAR_STRETCH\n");
@@ -2743,12 +2743,12 @@ float reduce_criterion(Edge e) {
 }
 
 void do_reduce() {
-  HH_TIMER(_reduce);
+  HH_TIMER("_reduce");
   assertx(reducecrit != EReduceCriterion::undefined);
   // Also use: nfaces, maxcrit.
   HPqueue<Edge> pqe;
   {
-    HH_TIMER(__initpq);
+    HH_TIMER("__initpq");
     HH_STAT(Sred);  // optional
     for (Edge e : mesh.edges()) {
       float f = reduce_criterion(e);
@@ -2815,7 +2815,7 @@ void output_point(const Point& p, const Vector& n) {
 }
 
 void do_randpts(Args& args) {
-  HH_TIMER(_randpts);
+  HH_TIMER("_randpts");
   nooutput = true;
   int npoints = args.get_int();
   int nf = mesh.num_faces();
@@ -2871,7 +2871,7 @@ void do_randpts(Args& args) {
 }
 
 void do_vertexpts() {
-  HH_TIMER(_vertexpts);
+  HH_TIMER("_vertexpts");
   nooutput = true;
   for (Vertex v : mesh.vertices()) {
     Vnors vnors;
@@ -2883,7 +2883,7 @@ void do_vertexpts() {
 }
 
 void do_orderedvertexpts() {
-  HH_TIMER(_orderedvertexpts);
+  HH_TIMER("_orderedvertexpts");
   nooutput = true;
   for (Vertex v : mesh.ordered_vertices()) {
     Vnors vnors;
@@ -2895,7 +2895,7 @@ void do_orderedvertexpts() {
 }
 
 void do_bndpts(Args& args) {
-  HH_TIMER(_bndpts);
+  HH_TIMER("_bndpts");
   nooutput = true;
   int nperbnd = args.get_int();
   assertx(nperbnd > 0);
@@ -3972,7 +3972,7 @@ void do_shootrays(Args& args) {
   bool has_blend = false;
   PolygonFaceSpatial psp(120);
   {
-    HH_TIMER(__create_psp);
+    HH_TIMER("__create_psp");
     string str;
     for (Face f : omesh.faces()) {
       Polygon poly(3);
@@ -3988,7 +3988,7 @@ void do_shootrays(Args& args) {
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
   {
-    HH_TIMER(__shoot_rays);
+    HH_TIMER("__shoot_rays");
     const bool show_a3d = true;
     auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
     auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
@@ -4552,26 +4552,27 @@ int main(int argc, const char** argv) {
   HH_ARGSD(addmesh, ": output a3d endfile + mesh now");
   HH_ARGSF(nocleanup, ": exit() before invoking destructors");
   HH_ARGSC("", ":**");
-  HH_TIMER(Filtermesh);
-  string arg0 = args.num() ? args.peek_string() : "";
-  if (ParseArgs::special_arg(arg0)) {
-  } else if (arg0 != "-froma3d" && arg0 != "-rawfroma3d" && arg0 != "-creategrid" && arg0 != "-fromgrid" &&
-             arg0 != "-frompointgrid" && arg0 != "-createobject") {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-    RFile fi(filename);
-    HH_TIMER(_readmesh);
-    for (string sline; fi().peek() == '#';) {
-      assertx(my_getline(fi(), sline));
-      if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+  {
+    HH_TIMER("Filtermesh");
+    string arg0 = args.num() ? args.peek_string() : "";
+    if (ParseArgs::special_arg(arg0)) {
+    } else if (arg0 != "-froma3d" && arg0 != "-rawfroma3d" && arg0 != "-creategrid" && arg0 != "-fromgrid" &&
+               arg0 != "-frompointgrid" && arg0 != "-createobject") {
+      string filename = "-";
+      if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+      RFile fi(filename);
+      HH_TIMER("_readmesh");
+      for (string sline; fi().peek() == '#';) {
+        assertx(my_getline(fi(), sline));
+        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      }
+      mesh.read(fi());
+      showff("%s", args.header().c_str());
+    } else {
+      showff("%s", args.header().c_str());
     }
-    mesh.read(fi());
-    showff("%s", args.header().c_str());
-  } else {
-    showff("%s", args.header().c_str());
+    args.parse();
   }
-  args.parse();
-  HH_TIMER_END(Filtermesh);
   hh_clean_up();
   if (!nooutput) {
     mesh.write(std::cout);

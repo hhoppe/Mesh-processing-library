@@ -11,7 +11,7 @@
   MeshSearch msearch(&mesh);
   msearch.allow_local_project(true);
   {
-    HH_TIMER(_spatial_create);
+    HH_TIMER("_spatial_create");
     msearch.build_spatial();
   }
   Bary bary;

@@ -200,9 +200,13 @@ class Timers {
 int Timer::_s_show = getenv_int("SHOW_TIMES");
 
 Timer::Timer(string pname, EMode mode) : _name(std::move(pname)), _mode(mode) {
-  if (_name != "" && _s_show >= 2) showf(" (%-20.20s started)\n", sform("%.19s:", _name.c_str()).c_str());
   zero();
-  start();
+  if (_name == "") {
+    _mode = EMode::noprint;
+  } else {
+   if (_s_show >= 2) showf(" (%-20.20s started)\n", sform("%.19s:", _name.c_str()).c_str());
+   start();
+  }
 }
 
 void Timer::terminate() {

@@ -560,14 +560,14 @@ void write_mesh(bool write_morph = false) {
       nmesh.set_string(fn, mesh.get_string(f));
     }
     {
-      HH_ATIMER(__mesh_write_split);
+      HH_ATIMER("__mesh_write_split");
       nmesh.write(std::cout);
       showdf("Wrote %s\n", mesh_genus_string(nmesh).c_str());
     }
   } else {
     for (Vertex v : mesh.vertices()) write_init_vertex(v, write_morph);
     {
-      HH_ATIMER(__mesh_write);
+      HH_ATIMER("__mesh_write");
       mesh.write(std::cout);
     }
     showdf("Wrote %s\n", mesh_genus_string(mesh).c_str());
@@ -580,7 +580,7 @@ bool next_morph(int nfaces) {
   if (mesh.num_faces() >= nfaces) return false;
   // Record attributes of current mesh.
   {
-    HH_ATIMER(__record_attrib);
+    HH_ATIMER("__record_attrib");
     for (Vertex v : mesh.vertices()) {
       v_opos(v) = mesh.point(v);
       for (Corner c : mesh.corners(v)) c_owedge_id(c) = c_cwedge_id(c);
@@ -590,7 +590,7 @@ bool next_morph(int nfaces) {
   RFile& fi_prog = *assertx(pfi_prog);
   std::istream& is = fi_prog();
   {
-    HH_ATIMER(__read_records);
+    HH_ATIMER("__read_records");
     for (;;) {  // Read a record and refine mesh.
       read_record(is, true);
       if (!is || mesh.num_faces() >= nfaces) break;
@@ -621,7 +621,7 @@ bool next_morph(int nfaces) {
 // Read the base mesh.
 void do_fbasemesh(Args& args) {
   {
-    // HH_TIMER(_read_mesh);
+    // HH_TIMER("_read_mesh");
     RFile fi(args.get_filename());
     int nmaterials = 0;
     for (string sline; fi().peek() == '#';) {
@@ -655,7 +655,7 @@ void do_fbasemesh(Args& args) {
     showff("Found %d materials\n", pm_material_strings.num());
     mesh.read(fi());
   }
-  // HH_TIMER(_parse_mesh);
+  // HH_TIMER("_parse_mesh");
   showdf("Read %s\n", mesh_genus_string(mesh).c_str());
   string str;
   for (Vertex v : mesh.vertices()) {
@@ -719,7 +719,7 @@ void do_from(Args& args) {
   RFile& fi_prog = *assertx(pfi_prog);
   std::istream& is = fi_prog();
   {
-    HH_ATIMER(__skip_records);
+    HH_ATIMER("__skip_records");
     for (;;) {  // Read a record and refine mesh.
       if (mesh.num_faces() >= nfaces) break;
       read_record(is, false);
@@ -736,7 +736,7 @@ void do_consider(Args& args) {
   std::istream& is = fi_prog();
   int nrec = 0;
   {
-    HH_ATIMER(__skip_records);
+    HH_ATIMER("__skip_records");
     for (;;) {  // Read a record and refine mesh.
       if (nrec >= nrecords) break;
       read_record(is, false);
@@ -790,7 +790,7 @@ void do_animateto(Args& args) {
   {
     write_mesh();
     record_changes = true;
-    HH_ATIMER(__animate);
+    HH_ATIMER("__animate");
     for (;;) {  // Read a record and refine mesh.
       read_record(is, false);
       if (!is || mesh.num_faces() >= nfaces) break;
@@ -1430,14 +1430,14 @@ void do_pm_encode() {
       gcwinfo.clear();
     }
     {  // reclaim memory
-      HH_TIMER(_mesh_clear);
+      HH_TIMER("_mesh_clear");
       mesh.clear();
     }
     RFile fi(append_old_pm);
     PMeshRStream pmrs(fi(), nullptr);
     int num_old_bmesh_faces;
     {
-      HH_TIMER(_read_old_bmesh);
+      HH_TIMER("_read_old_bmesh");
       AWMesh old_bmesh;
       pmrs.read_base_mesh(&old_bmesh);
       // Assert old base mesh is same size as new final mesh.
@@ -1511,7 +1511,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":Construction of PM");
   HH_ARGSP(append_old_pm, "file.pm :  append old vsplit sequence");
   HH_ARGSD(pm_encode, ": output PM format");
-  // HH_TIMER(Filterprog);
+  // HH_TIMER("Filterprog");
   g_header = args.header();
   args.parse();
   pfi_prog = nullptr;

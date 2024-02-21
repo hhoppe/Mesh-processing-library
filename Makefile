@@ -3,20 +3,20 @@
 #  depending on the detected platform.
 # Setting "CONFIG=all" runs the make process successively on all available configurations.
 # Examples:
-#  make -j demos
-#  make -j Filtermesh  # builds single program using default CONFIG (either "win" or "unix")
+#  make -j12 demos
+#  make -j12 Filtermesh  # builds single program using default CONFIG (either "win" or "unix")
 #  make -j4  # limit parallelism to 4 cores; important on a Virtual Machine
-#  make CONFIG=mingw -j demos
-#  make makeall   # run all CONFIG   (same as "make CONFIG=all -j")
-#  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j deepclean")
-#  make CONFIG=cygwin CC=clang -j  # use clang compiler under cygwin
-#  make CONFIG=mingw CXX_STD=c++2a -j  # test code compatibility with C++20
-#  make CONFIG=clang CXX_STD=c++20 -j  # test code compatibility with C++20
-#  make CONFIG=clang CXX_STD=c++2b -j  # test code compatibility with future C++
-#  make CONFIG=win CXX_STD=c++latest -j  # compatibility with proposed c++ features
+#  make CONFIG=mingw -j12 demos
+#  make makeall   # run all CONFIG   (same as "make CONFIG=all -j12")
+#  make cleanall  # clean all CONFIG (same as "make CONFIG=all -j12 deepclean")
+#  make CONFIG=cygwin CC=clang -j12  # use clang compiler under cygwin
+#  make CONFIG=mingw CXX_STD=c++2a -j12  # test code compatibility with C++20
+#  make CONFIG=clang CXX_STD=c++20 -j12  # test code compatibility with C++20
+#  make CONFIG=clang CXX_STD=c++2b -j12  # test code compatibility with future C++
+#  make CONFIG=win CXX_STD=c++latest -j12  # compatibility with proposed c++ features
 #  make CONFIG=all PEDANTIC=1  # enable most compiler warnings
-#  make CXX_STD=c++2b -j12
-#  make CC=clang CXX_STD=c++2b -j12
+#  make CXX_STD=c++2b PEDANTIC=1 -j12
+#  make CC=clang CXX_STD=c++2b PENDANTIC=1 -j12
 
 MeshRoot ?= .#  this current file is located in the root directory of the package
 

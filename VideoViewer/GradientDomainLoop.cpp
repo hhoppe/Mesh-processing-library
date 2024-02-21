@@ -126,7 +126,7 @@ class BoundedIntervals {
 //  by performing relaxation only at the current (finest) resolution level.
 void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel> video, CMatrixView<int> mat_start,
                                CMatrixView<int> mat_period) {
-  HH_TIMER(_fast_relax);
+  HH_TIMER("_fast_relax");
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = videoloop.dim(0);
   assertx(same_size(video[0], videoloop[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));
   const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
@@ -137,7 +137,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
     const int fp1 = f < nnf - 1 ? f + 1 : 0;
     CMatrixView<float> lmat_deltatime(mat_deltatime);
     {
-      HH_STIMER(_fast_relax1);  // compute the input frame mat_framei for all pixels at output frame f
+      HH_STIMER("_fast_relax1");  // compute the input frame mat_framei for all pixels at output frame f
       CMatrixView<int> lmat_start(mat_start);
       CMatrixView<int> lmat_period(mat_period);
       parallel_for_coords(V(ny, nx), [&](const Vec2<int>& yx) {
@@ -145,7 +145,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
       });
     }
     {
-      HH_STIMER(_fast_relax2);  // compute the right-hand-side of the multigrid system for the output frame f
+      HH_STIMER("_fast_relax2");  // compute the right-hand-side of the multigrid system for the output frame f
       auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const Vector4& pix0, int fi0,
                             int fi1, int y0, int x0, int y1, int x1, Vector4& vrhs) {
         Vector4 t = Vector4(videofi0(y1, x1)) - pix0;
@@ -185,7 +185,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
       });
     }
     {
-      HH_STIMER(_fast_relax3);  // perform niter Gauss-Seidel iterations on frame f using rhs computed above
+      HH_STIMER("_fast_relax3");  // perform niter Gauss-Seidel iterations on frame f using rhs computed above
       const int niter = 2;
       const float wL = 1.f, w = wL, rwL6 = 1.f / (screening_weight + 6.f * w);
       //
@@ -255,11 +255,11 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     grid_framei = compute_framei(dims, mat_deltatime, mat_start, mat_period);
   }
   for_int(z, MG::nz) {
-    HH_TIMER(_mgcompute);
+    HH_TIMER("_mgcompute");
     // no special weighting of temporal differences vs. spatial differences
     Multigrid<3, EType, MultigridPeriodicTemporally> multigrid(dims);
     if (0) {  // simpler, slightly slower code
-      HH_TIMER(__setup_rhs);
+      HH_TIMER("__setup_rhs");
       // speedup: for each f, stream rows: extract Matrix<EType> and compute difference values on edges
       auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
                             int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
@@ -308,7 +308,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         }
       });
     } else {
-      HH_TIMER(__setup_rhs2);  // surprisingly, only a little faster than the simpler version above
+      HH_TIMER("__setup_rhs2");  // surprisingly, only a little faster than the simpler version above
       parallel_for_each(range(nnf), [&](const int f) {
         CMatrixView<short> grid_frameif = grid_framei[f];
         MatrixView<EType> mrhs = multigrid.rhs()[f];
@@ -387,7 +387,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
       });
     }
     if (have_est) {
-      HH_TIMER(_videoloop_est);
+      HH_TIMER("_videoloop_est");
       parallel_for_each(range(nnf), [&](const int f) {
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
         CMatrixView<Pixel> mest2 = videoloop[f];
@@ -403,13 +403,13 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     const int niter = 3;
     if (have_est) {
       assertx(!b_exact);
-      HH_TIMER(__just_relax);
+      HH_TIMER("__just_relax");
       multigrid.just_relax(niter);
     } else {
-      HH_TIMER(__solve);
+      HH_TIMER("__solve");
       multigrid.solve();
     }
-    HH_TIMER(__put);
+    HH_TIMER("__put");
     CGridView<3, EType> grid_result = multigrid.result();
     parallel_for_each(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) MG::put(videoloop(f, y, x), z, grid_result(f, y, x));
@@ -461,10 +461,10 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
   ConsoleProgress cprogress("Multigrid solver");
   for_int(z, MG::nz) {
     cprogress.update(float(z) / MG::nz);
-    HH_TIMER(_mgcompute);
+    HH_TIMER("_mgcompute");
     // no special weighting of temporal differences vs. spatial differences
     Multigrid<3, EType, MultigridPeriodicTemporally> multigrid(dims);
-    HH_TIMER(__setup_rhs);
+    Timer timer_setup_rhs("__setup_rhs");
     if (0) {  // slower reference implementation
       auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
                             int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
@@ -604,16 +604,16 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
         });
       }
     }
-    HH_TIMER_END(__setup_rhs);
+    timer_setup_rhs.terminate();
     if (0) multigrid.set_desired_mean(EType{0});       // use screening_weight instead
     multigrid.set_screening_weight(screening_weight);  // small errors on brink2s loop with screening == 0
     if (1) multigrid.set_num_vcycles(1);
     if (verbose >= 2) multigrid.set_verbose(true);
     {
-      HH_TIMER(__solve);
+      HH_TIMER("__solve");
       multigrid.solve();
     }
-    HH_TIMER(__put);
+    HH_TIMER("__put");
     CGridView<3, EType> grid_result = multigrid.result();
     parallel_for_each(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) MG::put(video_offset(f, y, x), z, grid_result(f, y, x) + MG::k_offset_zero);
@@ -693,7 +693,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   assertx(is_zero(hdims % hmat_period.dims()));
   Grid<3, Pixel> hvideo(onf / DT, hny, hnx);
   {  // reduced (maybe "half") resolution
-    HH_TIMER(__scale_down);
+    HH_TIMER("__scale_down");
     assertx(DT == 1);
     if (video.size()) {
       spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
@@ -748,7 +748,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   }
   Grid<3, Pixel> hvideo_offset(nnf / DT, hny, hnx);
   {  // half-resolution loop
-    HH_TIMER(__solve_offsets);
+    HH_TIMER("__solve_offsets");
     if (video_filename == "" && !getenv_bool("VIDEOLOOP_USE_LITTLE_MEMORY") &&
         available_memory() > assert_narrow_cast<size_t>(product(hvideo_offset.dims()) * sizeof(Vector4) * 6))
       solve_using_offsets_aux<true>(hvideo, hmat_start, hmat_period, hvideo_offset);  // faster but more memory
@@ -761,11 +761,11 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   if (video_filename == "") {
     // In this easier case, one can randomly gather content from the input video grid.
     if (0) {  // Use box filter upsampling to directly create output video.
-      HH_TIMER(__recon1);
+      HH_TIMER("__recon1");
       assertx(video.size() && videoloop.size());
       Grid<3, short> grid_framei;
       {
-        HH_TIMER(___grid_framei);
+        HH_TIMER("___grid_framei");
         Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
         Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
         Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
@@ -780,7 +780,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         }
       });
     } else if (video.size()) {  // faster version of above, for RGB representation
-      HH_TIMER(__recon2);
+      HH_TIMER("__recon2");
       Matrix<float> hmat_deltatime = compute_deltatime(hmat_period, nnf);
       Queue<Matrix<Pixel>> queue_frames;
       Matrix<Pixel> sframe;
@@ -835,7 +835,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                             videoloop_nv12, num_loops);
         return;
       }
-      HH_TIMER(__recon2_nv12);
+      HH_TIMER("__recon2_nv12");
       Matrix<float> hmat_deltatime = compute_deltatime(hmat_period, nnf);
       Queue<Nv12> queue_frames;
       Nv12 sframe;
@@ -915,7 +915,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   // Multi-input-stream reconstruction (lower memory usage but more I/O)
   // Process 4K video in just 1.9 GiB max memory -- much of it is in Media Foundation video stream overhead.
   // FullHD video in 670 MB max memory.
-  HH_TIMER(__recon_multistream);
+  HH_TIMER("__recon_multistream");
   assertx(video_filename != "");
   assertx(file_requires_pipe(video_filename) || file_exists(video_filename));
   int onf_actual = max(mat_start + mat_period);
@@ -1293,7 +1293,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   if (getenv_bool("VIDEOLOOP_PRECISE")) scheme = GdLoopScheme::precise;
   if (getenv_bool("VIDEOLOOP_NO_BLEND")) scheme = GdLoopScheme::no_blend;
   if (getenv_bool("VIDEOLOOP_EXACT")) scheme = GdLoopScheme::exact;
-  HH_TIMER(_gdloop);
+  HH_TIMER("_gdloop");
   if (verbose) showf("Rendering looping video of %d frames.\n", nnf);
   if (scheme == GdLoopScheme::no_blend) {
     Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
@@ -1359,11 +1359,11 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       // "box" is fastest; previously "spline" and "triangle"
       const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
       const bool debug = false;
-      HH_TIMER(_gdloop1);
+      Timer timer_gdloop1("_gdloop1");
       Grid<3, Pixel> hvideo(video.dim(0), ((video.dim(1) + 3) / 4) * 2,
                             ((video.dim(2) + 3) / 4) * 2);  // half-resolution
       {
-        HH_TIMER(__scale_down);
+        HH_TIMER("__scale_down");
         spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
       }
       if (debug) write_video(hvideo, "hvideo.mp4");
@@ -1371,16 +1371,16 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // half-resolution
       Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // half-resolution
       // HH_RSTAT(Shstart, hmat_start); HH_RSTAT(Shperiod, hmat_period);
-      HH_TIMER_END(_gdloop1);
+      timer_gdloop1.terminate();
       Grid<3, Pixel> hvideoloop(concat(V(videoloop.dim(0)), hdims));  // half-resolution loop
       {
-        HH_TIMER(_gdloop2);
+        HH_TIMER("_gdloop2");
         compute_gdloop_aux1<false>(hvideo, hmat_start, hmat_period, hvideoloop, b_exact);
       }
       if (debug) write_video(hvideoloop, "hvideoloop.mp4");
-      HH_TIMER(_gdloop3);
+      HH_TIMER("_gdloop3");
       {
-        HH_TIMER(__scale_up);
+        HH_TIMER("__scale_up");
         spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), nullptr, videoloop);
       }
       if (debug) write_video(videoloop, "videoloop.mp4");

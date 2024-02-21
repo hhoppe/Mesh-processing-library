@@ -57,7 +57,7 @@ void SimplicialComplex::copy(const SimplicialComplex& orig) {
 
 // Check as much as possible if SimplicialComplex is ok.
 void SimplicialComplex::ok() const {
-  HH_ATIMER(__ok);
+  HH_ATIMER("__ok");
   for_int(i, MAX_DIM + 1) {
     ForScSimplex(*this, i, si) {
       assertx(si->getDim() <= MAX_DIM && si->getDim() >= 0);

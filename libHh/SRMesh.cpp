@@ -393,7 +393,7 @@ void SrMesh::display_hierarchy_height() const {
 }
 
 void SrMesh::read_pm(PMeshRStream& pmrs) {
-  HH_TIMER(__read_pm);
+  HH_TIMER("__read_pm");
   assertx(!_base_vertices.num());
   assertx(!_refine_morph_time && !_coarsen_morph_time);
   assertw(!pmrs._info._has_rgb);
@@ -417,7 +417,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   }
   // Copy materials.
   _materials = bmesh._materials;
-  HH_TIMER(___read_convert);
+  Timer timer("___read_convert");
   Array<SrVertexGeometry> vgeoms(_vertices.num());  // all vertex geometries
   // Process the base mesh.
   {
@@ -585,7 +585,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   f_pm2sr.clear();  // cleanup to shrink memory usage
   f_matid.clear();  // cleanup to shrink memory usage
   assertx(!pmrs.peek_next_vsplit());
-  HH_TIMER_END(___read_convert);
+  timer.terminate();  // "___read_convert"
   if (k_debug) ok();
   // Compute radii of influence of vertex splits.
   compute_bspheres(vgeoms);
@@ -603,7 +603,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   {
     // Coarsen now so that performance statistics don't get skewed.
     // Also we usually never care about the fully detailed mesh.
-    HH_TIMER(___read_coarsen);
+    HH_TIMER("___read_coarsen");
     fully_coarsen();
   }
   if (k_debug) ok();
@@ -618,7 +618,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
 }
 
 void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
-  HH_TIMER(___compute_bspheres);
+  HH_TIMER("___compute_bspheres");
   // spheres bounding positions over surface.
   Array<BoundingSphere> ar_bsphere(_vertices.num());
   // Compute bound(star(v)) of vertices in fully refined mesh.
@@ -703,7 +703,7 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
 }
 
 void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
-  HH_TIMER(___compute_nspheres);
+  HH_TIMER("___compute_nspheres");
   // spheres bounding normals over surface.
   Array<BoundingSphere> ar_nsphere(_vertices.num());
   // Compute bound(star(v)) of vertices in fully refined mesh.
@@ -835,7 +835,7 @@ void SrMesh::write_srm(std::ostream& os) const {
 }
 
 void SrMesh::read_srm(std::istream& is) {
-  HH_TIMER(__read_srm);
+  HH_TIMER("__read_srm");
   assertx(!_base_vertices.num());
   assertx(!_refine_morph_time && !_coarsen_morph_time);  // just to be safe
   // Read past comments.
@@ -1572,7 +1572,7 @@ void SrMesh::fully_coarsen() {
 }
 
 void SrMesh::verify_optimality() const {
-  HH_ATIMER(____verify_optimality);
+  HH_ATIMER("____verify_optimality");
   for (SrAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* vs = vsa->vertex;
     if (!is_splitable(vs)) continue;
@@ -1630,7 +1630,7 @@ static inline unsigned lsb_mask(unsigned size) {
 }
 
 void SrMesh::adapt_refinement(int pnvtraverse) {
-  // too slow. HH_ATIMER(____adapt_ref_f);
+  // too slow. HH_ATIMER("____adapt_ref_f");
   _ar_tobevisible.init(0);
   uintptr_t left_child_mask = lsb_mask(sizeof(SrVertex));
   uintptr_t left_child_result = reinterpret_cast<uintptr_t>(_quick_first_vt) & left_child_mask;
@@ -1947,7 +1947,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   }
   // Apply vspl's.
   {
-    HH_ATIMER(__geo_vspls);
+    HH_ATIMER("__geo_vspls");
     EListNode* ndelim = _active_vertices.delim();
     for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
       SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);
@@ -1968,7 +1968,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   // Apply ecol's and record them in a sequence.
   Array<SrVertex*> seq_ecols;
   {
-    HH_ATIMER(__geo_ecols);
+    HH_ATIMER("__geo_ecols");
     EListNode* ndelim = _active_vertices.delim();
     for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
       SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);

@@ -68,7 +68,7 @@ void do_minfo() {
 
 void do_nvertices(Args& args) {
   int nvertices = args.get_int();
-  HH_TIMER(_goto);
+  HH_TIMER("_goto");
   if (sdebug) pmi->ok();
   pmi->goto_nvertices(nvertices);
   if (sdebug) pmi->ok();
@@ -77,7 +77,7 @@ void do_nvertices(Args& args) {
 
 void do_nfaces(Args& args) {
   int nfaces = args.get_int();
-  HH_TIMER(_goto);
+  HH_TIMER("_goto");
   if (sdebug) pmi->ok();
   pmi->goto_nfaces(nfaces);
   if (sdebug) pmi->ok();
@@ -93,7 +93,7 @@ int count_nedges(const AWMesh& mesh) {
 
 void do_nedges(Args& args) {
   int nedges = args.get_int();
-  HH_TIMER(_goto);
+  HH_TIMER("_goto");
   for (;;) {
     int cnedges = count_nedges(*pmi);
     if (cnedges >= nedges) break;
@@ -111,7 +111,7 @@ void do_nedges(Args& args) {
 
 void do_nsplits(Args& args) {
   int nsplits = args.get_int();
-  HH_TIMER(_goto);
+  HH_TIMER("_goto");
   pmi->goto_nvertices(pmesh._base_mesh._vertices.num() + nsplits);
   do_info();
 }
@@ -141,7 +141,7 @@ void do_finest() {
 }
 
 void do_outmesh() {
-  HH_TIMER(_write_mesh);
+  HH_TIMER("_write_mesh");
   GMesh gmesh;
   pmi->extract_gmesh(gmesh, pmi->rstream()._info);
   if (nooutput) std::cout << "o 1 1 0\n";
@@ -153,16 +153,16 @@ void do_geom_nfaces(Args& args) {
   int nfaces = args.get_int();
   Geomorph geomorph;
   {
-    HH_TIMER(_geomorph);
+    HH_TIMER("_geomorph");
     geomorph.construct_goto_nfaces(*pmi, nfaces);
   }
   do_info();
   if (nooutput) std::cout << "o 1 1 0\n";
   {
-    HH_TIMER(_sgeomorph);
+    Timer timer("_sgeomorph");
     SGeomorph sgeomorph(geomorph);
-    HH_TIMER_END(_sgeomorph);
-    HH_TIMER(_write);
+    timer.terminate();
+    HH_TIMER("_write");
     GMesh gmesh;
     sgeomorph.extract_gmesh(gmesh, pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
     gmesh.write(std::cout);
@@ -219,10 +219,10 @@ void do_outbbox() {
 
 void read_srmesh() {
   if (pmi) {
-    HH_TIMER(__sr_read);
+    HH_TIMER("__sr_read");
     srmesh.read_pm(*pmrs);
   } else {
-    HH_TIMER(__srm_read);
+    HH_TIMER("__srm_read");
     srmesh.read_srm((*assertx(pfi))());
   }
   if (sdebug) srmesh.ok();
@@ -245,15 +245,15 @@ void do_srout(Args& args) {
     views[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL
   }
-  HH_TIMER(_srout);
+  HH_TIMER("_srout");
   read_srmesh();
   {
-    HH_TIMER(__adapt);
+    HH_TIMER("__adapt");
     srmesh.set_view_params(views[0]);
     srmesh.adapt_refinement();
   }
   {
-    HH_TIMER(__sr_write);
+    HH_TIMER("__sr_write");
     GMesh gmesh;
     srmesh.extract_gmesh(gmesh);
     showdf("%s\n", mesh_genus_string(gmesh).c_str());
@@ -279,21 +279,21 @@ void do_srgeomorph(Args& args) {
     views[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL
   }
-  HH_TIMER(_srgeomorph);
+  HH_TIMER("_srgeomorph");
   read_srmesh();
   {
-    HH_TIMER(__adapt1);
+    HH_TIMER("__adapt1");
     srmesh.set_view_params(views[0]);
     srmesh.adapt_refinement();
   }
   SrGeomorphInfo geoinfo;
   {
-    HH_TIMER(__construct_geomorph);
+    HH_TIMER("__construct_geomorph");
     srmesh.set_view_params(views[1]);
     srmesh.construct_geomorph(geoinfo);
   }
   {
-    HH_TIMER(__sr_write);
+    HH_TIMER("__sr_write");
     GMesh gmesh;
     srmesh.extract_gmesh(gmesh, geoinfo);
     gmesh.write(std::cout);
@@ -312,7 +312,7 @@ void do_srfgeo(Args& args) {
 void do_srfly(Args& args) {
   RFile fiframes(args.get_filename());
   read_srmesh();
-  HH_TIMER(_srfly);
+  HH_TIMER("_srfly");
   float screen_thresh = args.get_float();
   srmesh.set_refine_morph_time(srfly_grtime);
   srmesh.set_coarsen_morph_time(srfly_gctime);
@@ -336,14 +336,14 @@ void do_srfly(Args& args) {
 }
 
 void do_tosrm() {
-  HH_TIMER(_tosrm);
+  HH_TIMER("_tosrm");
   {
     PMeshRStream lpmrs((*assertx(pfi))(), nullptr);
-    HH_TIMER(__sr_read);
+    HH_TIMER("__sr_read");
     srmesh.read_pm(lpmrs);
   }
   {
-    HH_TIMER(__write_srm);
+    HH_TIMER("__write_srm");
     srmesh.write_srm(std::cout);
   }
   nooutput = true;
@@ -454,7 +454,7 @@ void quantize_vsplit_int(Vsplit& vspl, const PMeshInfo& pminfo) {
 }
 
 void do_quantize() {
-  HH_TIMER(_quantize);
+  HH_TIMER("_quantize");
   ensure_pm_loaded();
   quantize_mesh(pmesh._base_mesh, pmesh._info);
   for_int(vspli, pmesh._vsplits.num()) quantize_vsplit(pmesh._vsplits[vspli], pmesh._info);
@@ -502,7 +502,7 @@ int wrap_dflclw(int dflclw, int nfaces) {
 }
 
 void do_compression() {
-  HH_TIMER(_compression);
+  HH_TIMER("_compression");
   assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
   assertx(!pmesh._info._has_rgb);
   pmi->goto_nvertices(0);
@@ -669,7 +669,7 @@ void do_compression() {
 }
 
 void do_gcompression() {
-  HH_TIMER(_gcompression);
+  HH_TIMER("_gcompression");
   assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
   pmi->goto_nvertices(0);
   ensure_pm_loaded();
@@ -780,18 +780,16 @@ void do_testiterate(Args& args) {
     SHOW("back to base mesh");
   }
   Timer timer_max;
-  timer_max.stop();
   Timer timer_min;
-  timer_min.stop();
   for_int(i, niter) {
     {
-      HH_TIMER(_gotomax);
+      HH_TIMER("_gotomax");
       timer_max.start();
       pmi->goto_nvertices(std::numeric_limits<int>::max());
       timer_max.stop();
     }
     {
-      HH_TIMER(_gotomin);
+      HH_TIMER("_gotomin");
       timer_min.start();
       pmi->goto_nvertices(0);
       timer_min.stop();
@@ -804,7 +802,7 @@ void do_testiterate(Args& args) {
 }
 
 void do_zero_vadsmall() {
-  HH_TIMER(_zero_vadsmall);
+  HH_TIMER("_zero_vadsmall");
   ensure_pm_loaded();
   pmi->goto_nvertices(std::numeric_limits<int>::max());
   // Now work backwards.
@@ -987,7 +985,7 @@ Array<int> gather_faces(int vs, int f0) {
 }
 
 void global_reorder_vspl(int first_ivspl, int last_ivspl) {
-  HH_ATIMER(_reorder);
+  HH_ATIMER("_reorder");
   ensure_pm_loaded();
   assertx(first_ivspl >= 0);
   assertx(first_ivspl < last_ivspl);
@@ -1000,7 +998,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   Array<int> ivspl_fl;   // ivspl -> face fl it creates
   Array<int> oldf_newf;  // new face indexing (renaming) used later.
   {
-    HH_ATIMER(__compute_depend);
+    HH_ATIMER("__compute_depend");
     pmi->goto_nvertices(pmesh._base_mesh._vertices.num() + first_ivspl);
     Array<int> f_ivspldep;  // for each face, ivspl it depends on (or -1)
     for_int(f, pmi->_faces.num()) f_ivspldep.push(-1);
@@ -1041,7 +1039,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   for_int(i, first_ivspl) new_vsplits.push(pmesh._vsplits[i]);
   AWMesh temp_mesh;
   {
-    HH_ATIMER(__new_vsplits);
+    HH_ATIMER("__new_vsplits");
     pmi->goto_nvertices(pmesh._base_mesh._vertices.num() + first_ivspl);
     temp_mesh = *pmi;
     struct Sivspl {
@@ -1332,7 +1330,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
 // Analyze the bandwidth of the mesh under the transparent vertex caching framework,
 //  using the current cache type and size.
 void do_tvc_analyze() {
-  HH_PTIMER(_tvc_analyze);
+  HH_PTIMER("_tvc_analyze");
   showdf("Mesh analysis (%s)\n", VertexCache::type_string(cache_type).c_str());
   int nmiss = analyze_mesh(cache_size);
   int nverts, nstrips;
@@ -1530,7 +1528,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(polystream, ": for progressive hull, refine polygons");
   HH_ARGSD(uvsphtopos, ": transfer uv longlat to sphere pos");
   HH_ARGSF(nooutput, ": do not output final PM");
-  HH_TIMER(FilterPM);
+  HH_TIMER("FilterPM");
   string arg0 = args.num() ? args.peek_string() : "";
   string filename = "-";
   if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();

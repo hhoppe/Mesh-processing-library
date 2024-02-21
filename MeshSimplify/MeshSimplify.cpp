@@ -774,7 +774,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
 }
 
 void init_qem() {
-  HH_TIMER(_init_qem);
+  HH_TIMER("_init_qem");
   assertx(minqem);
   if (qemlocal) {
     if (qemcache) {
@@ -816,7 +816,7 @@ void init_qem() {
       }
     }
     if (1) {  // Verify QEM's are initially zero
-      HH_TIMER(_qem_verify0);
+      HH_TIMER("_qem_verify0");
       for (Vertex v : mesh.vertices()) {
         for (Corner c : mesh.corners(v)) {
           Vec<float, k_qemsmax> p;
@@ -1410,7 +1410,7 @@ void analyze_mesh(const char* s) {
 
 // Sample the original mesh to obtain the set of face points and edge points.
 void sample_pts() {
-  HH_TIMER(_sample_pts);
+  HH_TIMER("_sample_pts");
   if (terrain || minarea || minvolume || minedgelength || minvdist || minqem || minaps || minrandom) {
     assertx(!fpts.num());
     assertx(!numpts);
@@ -1596,7 +1596,7 @@ void perhaps_initialize() {
     numpts = 0;
   }
   {
-    HH_TIMER(_parsemesh);
+    HH_TIMER("_parsemesh");
     parse_mesh();
   }
   {
@@ -3638,7 +3638,7 @@ float trishape_quality(const Point& p0, const Point& p1, const Point& p2) {
 EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& ret_vs) {
   ret_cost = k_bad_cost;
   ret_vs = nullptr;
-  HH_PTIMER(__try_ecol);
+  HH_PTIMER("__try_ecol");
   if (!mesh.nice_edge_collapse(e)) return R_illegal;  // not a legal move
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // f2 could be nullptr
@@ -4160,7 +4160,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
   if (!commit) return R_success;
   if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
   // ALL SYSTEMS GO.
-  HH_PTIMER(__doecol);
+  HH_PTIMER("__doecol");
   if (wfile_prog) g_necols++;
   int new_desn = v_desn(v1) + v_desn(v2);
   int new_desh = max(v_desh(v1), v_desh(v2)) + 1;
@@ -4744,7 +4744,7 @@ void optimize() {
 
 // Simplify the mesh until it has <=nfaces or <=nvertices.
 void do_simplify() {
-  HH_TIMER(_simplify);
+  HH_TIMER("_simplify");
   perhaps_initialize();
   static int pm_was_output = 0;
   if (wfile_prog && !pm_was_output++) {
@@ -4943,14 +4943,13 @@ int main(int argc, const char** argv) {
     Args targs{"1"};
     do_verb(targs);
   }
-  HH_TIMER(MeshSimplify);
-  Timer timer;
+  Timer timer("MeshSimplify");
   int orig_nf = 0;
   string arg0 = args.num() ? args.peek_string() : "";
   if (!ParseArgs::special_arg(arg0)) {
     string filename = "-";
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-    HH_TIMER(_readmesh);
+    HH_TIMER("_readmesh");
     RFile fi(filename);
     for (string sline; fi().peek() == '#';) {
       assertx(my_getline(fi(), sline));
@@ -4967,7 +4966,8 @@ int main(int argc, const char** argv) {
   timer.stop();
   showdf("Time: cpu%.2f real%.2f  rate:%.2f f/sec\n", timer.cpu(), timer.real(),
          (orig_nf - final_nf) / max(timer.cpu(), 0.001));
-  HH_TIMER_END(MeshSimplify);
+  timer.start();
+  timer.terminate();
   hh_clean_up();
   if (!nooutput) write_mesh(std::cout);
   wfile_prog = nullptr;

@@ -107,7 +107,7 @@ int parse_nframes(string s, bool measure_neg_from_end) {
 
 void read_video(const string& filename, bool use_nv12) {
   // Similar code in: Video::read_file(), VideoNv12::read_file(), and FilterVideo.cpp::read_video().
-  HH_TIMER(_read_video);
+  HH_TIMER("_read_video");
   RVideo rvideo(filename, use_nv12);
   showf("Reading video %s\n", Video::diagnostic_string(rvideo.dims(), rvideo.attrib()).c_str());
   const int nfexpect = rvideo.nframes() - trunc_begin;
@@ -455,7 +455,7 @@ void do_writeframe(Args& args) {
 }
 
 void do_info() {
-  HH_TIMER(_info);
+  HH_TIMER("_info");
   showf("Video nf=%d w=%d h=%d fps=%g bitrate=%d suffix=%s%s\n", video.nframes(), video.xsize(), video.ysize(),
         video.attrib().framerate, video.attrib().bitrate,
         video.attrib().suffix == "" ? "unk" : video.attrib().suffix.c_str(),
@@ -493,7 +493,7 @@ void do_sizes() {
 }
 
 void do_tscale(Args& args) {
-  HH_TIMER(_tscale);
+  HH_TIMER("_tscale");
   float fac = args.get_float();
   assertx(fac > 0.f);
   int nnf = int(video.nframes() * fac + 0.5f);
@@ -513,7 +513,7 @@ void do_tscale(Args& args) {
 }
 
 void do_tnframes(Args& args) {
-  HH_TIMER(_tscale);
+  HH_TIMER("_tscale");
   int nnf = args.get_int();
   assertx(nnf > 0);
   if (video.nframes() == nnf) return;
@@ -624,7 +624,7 @@ void do_trimend(Args& args) {
 }
 
 void do_loop(Args& args) {
-  HH_TIMER(_loop);
+  HH_TIMER("_loop");
   int ninst = args.get_int();
   assertx(ninst >= 1);
   const int onf = video.nframes();
@@ -639,7 +639,7 @@ void do_loop(Args& args) {
 }
 
 void do_mirror(Args& args) {
-  HH_TIMER(_mirror);
+  HH_TIMER("_mirror");
   int ninst = args.get_int();
   assertx(ninst >= 1);
   assertw(ninst >= 2);
@@ -684,7 +684,7 @@ void do_phaseoffset(Args& args) {
 }
 
 void do_tcrossfade(Args& args) {
-  HH_TIMER(_tcrossfade);
+  HH_TIMER("_tcrossfade");
   int fbeg = parse_nframes(args.get_string(), true);
   int fend = parse_nframes(args.get_string(), true);
   assertx(tradius > 0);
@@ -719,7 +719,7 @@ void do_tcrossfade(Args& args) {
 // Filtervideo ~/proj/motiongraph/data/circlestar.mp4 -makeloop 1 100 >circlestar.makeloop.mp4
 // Filtervideo //ivm-server2/blink/VideoLooping/NOT_Uploaded_CloudFactory/2015-12-14/Joshwe/burst_IMG_5193_stab.mp4 -makeloop 1 -1 >v.mp4
 void do_makeloop(Args& args) {
-  HH_TIMER(_makeloop);
+  HH_TIMER("_makeloop");
   int fbeg = parse_nframes(args.get_string(), true);
   int fend = parse_nframes(args.get_string(), true);
   const int nf = fend - fbeg, ny = video.ysize(), nx = video.xsize();
@@ -747,7 +747,7 @@ void do_makeloop(Args& args) {
 #endif
       MultigridType multigrid(nvideo.dims());
       {
-        HH_STIMER(__setup_rhs);
+        HH_STIMER("__setup_rhs");
         parallel_for_each(range(nf), [&](const int f) {
           for_int(y, ny) for_int(x, nx) {
             int fi = fbeg + f;
@@ -785,7 +785,7 @@ void do_makeloop(Args& args) {
       using EType = float;
       MultigridType multigrid(nvideo.dims());
       {
-        HH_STIMER(__setup_rhs);
+        HH_STIMER("__setup_rhs");
         parallel_for_each(range(nf), [&](const int f) { fill(multigrid.initial_estimate()[f], EType{0}); });
         parallel_for_each(range(nf), [&](const int f) { fill(multigrid.rhs()[f], EType{0}); });
         GridView<3, EType> mrhs = multigrid.rhs();
@@ -951,19 +951,19 @@ void apply_scale(const Vec2<float>& v) {
 }
 
 void do_scaleunif(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   float s = args.get_float();
   apply_scale(twice(s));
 }
 
 void do_scalenonunif(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   float sx = args.get_float(), sy = args.get_float();
   apply_scale(V(sy, sx));
 }
 
 void do_scaletox(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = parse_size(args.get_string(), video.xsize(), false);
   assertx(nx > 0);
   float s = float(nx) / assertx(video.xsize());
@@ -971,7 +971,7 @@ void do_scaletox(Args& args) {
 }
 
 void do_scaletoy(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int ny = parse_size(args.get_string(), video.ysize(), false);
   assertx(ny > 0);
   float s = float(ny) / assertx(video.ysize());
@@ -979,7 +979,7 @@ void do_scaletoy(Args& args) {
 }
 
 void do_scaleifgtmax(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int n = args.get_int();
   assertx(n > 0);
   int cn = max(video.spatial_dims());
@@ -988,7 +988,7 @@ void do_scaleifgtmax(Args& args) {
 }
 
 void do_scaletodims(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   auto syx = convert<float>(V(ny, nx)) / convert<float>(video.spatial_dims());
@@ -996,7 +996,7 @@ void do_scaletodims(Args& args) {
 }
 
 void do_scaleinside(Args& args) {
-  HH_TIMER(_scale);
+  HH_TIMER("_scale");
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   apply_scale(twice(min(convert<float>(V(ny, nx)) / convert<float>(video.spatial_dims()))));
@@ -1015,7 +1015,7 @@ void do_fliphorizontal() {
 }
 
 void do_disassemble(Args& args) {
-  HH_TIMER(_disassemble);
+  HH_TIMER("_disassemble");
   // Filtervideo ~/data/video/short.mp4 -disassemble 480 270 dis
   // Filtervideo -assemble 2 2 dis.{0.0,1.0,0.1,1.1}.mp4 >reassemble.mp4
   int tilex = args.get_int();  // resulting tile size (x, y)
@@ -1043,7 +1043,7 @@ void do_disassemble(Args& args) {
 }
 
 void do_gridcrop(Args& args) {
-  HH_TIMER(_gridcrop);
+  HH_TIMER("_gridcrop");
   // Filtervideo ~/data/video/short.mp4 -as_cropsides -1 -1 -1 -1 -gridcrop 3 3 20 20 >gridcrop.mp4
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx >= 2 && ny >= 2);
@@ -1181,7 +1181,7 @@ void verify_loop_parameters() {
 }
 
 void do_loadpj(Args& args) {
-  HH_TIMER(_loadpj);
+  HH_TIMER("_loadpj");
   string filename = args.get_filename();
   auto pfi = make_unique<RFile>(filename);
   if ((*pfi)().peek() == 31) {  // decompress a gzip-compressed pjo/pjr file
@@ -1213,7 +1213,7 @@ void do_loadpj(Args& args) {
 }
 
 void do_loadvlp(Args& args) {
-  HH_TIMER(_loadvlp);
+  HH_TIMER("_loadvlp");
   string filename = args.get_filename();  // it is a png file, even if its suffix is *.vlp
   Image image;
   image.read_file(filename);
@@ -1264,7 +1264,7 @@ void do_loadvlp(Args& args) {
 }
 
 void do_savepj(Args& args) {
-  HH_TIMER(_savepj);
+  HH_TIMER("_savepj");
   string filename = args.get_filename();
   assertw(contains(filename, ".pjr"));
   assertx(g_lp.mat_activation.ysize() > 0);
@@ -1294,7 +1294,7 @@ void do_savepj(Args& args) {
 }
 
 void do_savevlp(Args& args) {
-  HH_TIMER(_savevlp);
+  HH_TIMER("_savevlp");
   dummy_use(args);
   assertnever("not implemented");
 }
@@ -1377,7 +1377,7 @@ void compute_temporal_costs() {
 }
 
 void compute_looping_regions() {
-  HH_TIMER(_compute_looping_regions);
+  HH_TIMER("_compute_looping_regions");
   possibly_rescale_loop_parameters();
   const bool small_looping_regions = getenv_bool("SMALL_LOOPING_REGIONS");  // bad; used in *.wind1
   if (small_looping_regions) assertx(use_activation && g_lp.mat_activation.ysize() > 0);
@@ -1590,7 +1590,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
 }
 
 void do_remap() {
-  HH_TIMER(_remap);
+  HH_TIMER("_remap");
   possibly_rescale_loop_parameters();
   if (max(g_lp.mat_start) == 0) return;  // already remapped (quite possible)
   int nnf = max(g_lp.mat_period);        // maximum period
@@ -1605,7 +1605,7 @@ void do_remap() {
 }
 
 void do_render_loops(Args& args) {
-  HH_TIMER(_render_loops);
+  HH_TIMER("_render_loops");
   int nnf = parse_nframes(args.get_string(), false);
   possibly_rescale_loop_parameters();
   assertw(max(g_lp.mat_start) > 0);                                 // else hopefully already temporally crossfaded
@@ -1632,7 +1632,7 @@ void do_render_loops(Args& args) {
 }
 
 void do_render_wind(Args& args) {
-  HH_TIMER(_render_wind);
+  HH_TIMER("_render_wind");
   int nnf = parse_nframes(args.get_string(), false);
   compute_looping_regions();
   do_remap();                                                // for temporal crossfading
@@ -1648,7 +1648,7 @@ void do_render_wind(Args& args) {
 }
 
 void do_render_harmonize(Args& args) {
-  HH_TIMER(_render_harmonize);
+  HH_TIMER("_render_harmonize");
   int nnf = parse_nframes(args.get_string(), false);
   compute_looping_regions();
   do_remap();  // for temporal crossfading
@@ -1831,7 +1831,7 @@ void do_saveloopframe(Args& args) {
 // ***
 
 void process_gen(Args& args) {
-  HH_TIMER(_gen);
+  HH_TIMER("_gen");
   // see ~/proj/fiberpatterns/Notes.txt
   // Filtervideo -create 180 1024 768 -procedure gen box_y -to mp4 -framerate 30 -bitrate 10m | vidv
   assertx(video.size());
@@ -2288,7 +2288,7 @@ void do_frameinfo() {
 
 int main(int argc, const char** argv) {
   my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
-  HH_TIMER(Filtervideo);
+  HH_TIMER("Filtervideo");
   ParseArgs args(argc, argv);
   HH_ARGSC("", ": (Video coordinates: (x = 0, y = 0) at left, top)");
   HH_ARGSC("", ":A video is automatically read from stdin except with the following arguments:");

@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#define HH_MULTIGRID_TIMER(x)  // override before "Multigrid.h"
+#define HH_MULTIGRID_TIMER(name)  // override before "Multigrid.h"
 #include "libHh/Multigrid.h"
 
 #include "libHh/Args.h"
@@ -33,7 +33,7 @@ template <> inline void read_image(Image& image, Grid<2, Vector4>& grid_orig) {
 // Compute the Laplacian of the given original grid.
 template <int D, typename T, typename Periodic, typename Metric>
 void setup_rhs(CGridView<D, T> grid_orig, Multigrid<D, T, Periodic, Metric>& multigrid) {
-  // HH_TIMER(_setup_rhs);
+  // HH_TIMER("_setup_rhs");
   GridView<D, T> grid_rhs = multigrid.rhs();
   assertx(same_size(grid_orig, grid_rhs));
   const Vec<int, D> dims = grid_rhs.dims();
@@ -63,7 +63,7 @@ void setup_rhs(CGridView<D, T> grid_orig, Multigrid<D, T, Periodic, Metric>& mul
 template <typename T>
 void setup_rhs2(CGridView<2, T> grid_orig, GridView<2, T> grid_rhs, float gradient_sharpening = 1.f,
                 float screening_weight = 0.f) {
-  // HH_TIMER(_setup_rhs2);
+  // HH_TIMER("_setup_rhs2");
   assertx(same_size(grid_orig, grid_rhs));
   int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
   parallel_for_each(
@@ -336,7 +336,7 @@ int main(int argc, const char** argv) {
       Multigrid<2, float> multigrid(dims);
       double mean_orig;
       {
-        // HH_TIMER(_setup_stitch);
+        // HH_TIMER("_setup_stitch");
         auto func_stitch = [&](int y0, int x0, int y1, int x1, double& vrhs) {
           int label0 = grid_labels[y0][x0];
           int label1 = grid_labels[y1][x1];

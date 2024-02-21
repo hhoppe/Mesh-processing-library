@@ -925,7 +925,7 @@ void set_light_ambient(float lambient) {
 void load_texturemaps() {
   static const bool debug = getenv_bool("TEXTURE_DEBUG");
   if (debug) display_texture_size_info();
-  // HH_TIMER(_load_texturemap);
+  // HH_TIMER("_load_texturemap");
   textures_loaded = true;
   if (!texturemaps.num()) {
     string name = g3d::g_filename;
@@ -2247,7 +2247,7 @@ void draw_all() {
       defining_dl = false;
       static const bool debug_dl = getenv_bool("DL_DEBUG");
       if (debug_dl) {
-        HH_TIMER(_dl_create);
+        HH_TIMER("_dl_create");
         glEndList();
       } else {
         glEndList();
@@ -3253,7 +3253,7 @@ unique_ptr<PMeshIter> pmi;
 float pm_lod_level = getenv_float("PM_LOD_LEVEL", 0.f);
 
 void read_pm(const string& filename) {
-  // HH_TIMER(_read_pm);
+  // HH_TIMER("_read_pm");
   // RFile fi(filename);
   if (filename == "-") g3d::keep_stdin_open = true;
   g_fi = make_unique<RFile>(filename);
@@ -3454,7 +3454,7 @@ float sr_radar_old_hither;
 bool sr_morph_active;
 
 void read_sr(const string& filename) {
-  HH_TIMER(_read_sr);
+  HH_TIMER("_read_sr");
   RFile fi(filename);
   for (string sline; fi().peek() == '#';) assertx(my_getline(fi(), sline));
   assertx(fi().peek() == 'P' || fi().peek() == 'S');
@@ -3490,8 +3490,8 @@ void sr_regulator() {
 }
 
 void sr_adapt_refinement() {
-  // HH_ATIMER(_sr_adapt_refinement);
   // Timer timer;
+  // timer.start();
   // Note: called before setup_ob(), so we must form the parameters we need here ourselves!
   {
     SrViewParams vp;
@@ -4009,7 +4009,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
 }
 
 void read_sc(const string& filename) {
-  HH_TIMER(__read_sc);
+  HH_TIMER("__read_sc");
   RFile fin(filename);
   Kmesh.read(fin());
   fct_pnor.init(Kmesh.getMaxId(2));
@@ -4054,7 +4054,7 @@ void read_sc(const string& filename) {
 }
 
 void read_psc(const string& filename) {
-  HH_TIMER(__read_psc);
+  HH_TIMER("__read_psc");
   RFile fin(filename);
   // read in base point
   Kmesh.read(fin());
@@ -4092,14 +4092,14 @@ void read_psc(const string& filename) {
   if (hpix) {
     for_int(times, 10) {
       {
-        HH_ATIMER(vsplit);
+        HH_ATIMER("vsplit");
         for_int(i, psc_lod_list.num() - 1) {
           SplitRecord& vsplit = psc_lod_list[i];
           vsplit.applySplit(Kmesh);
         }
       }
       {
-        HH_ATIMER(vunify);
+        HH_ATIMER("vunify");
         for (int i = psc_lod_list.num() - 2; i >= 0; --i) {
           SplitRecord& vsplit = psc_lod_list[i];
           vsplit.applyUnify(Kmesh);
@@ -4600,7 +4600,7 @@ bool grab_sc_gm(std::istream& is, std::stringstream& grab_stream) {
 }
 
 void read_sc_gm(const string& filename) {
-  HH_TIMER(__read_sc_gm);
+  HH_TIMER("__read_sc_gm");
   RFile fin(filename);
   // swallow stuff before first delim
   {
@@ -4987,7 +4987,7 @@ Array<PlyIndices> ply_findices;
 // end_header
 
 void read_ply(const string& filename) {
-  // HH_TIMER(_read_ply);
+  // HH_TIMER("_read_ply");
   RFile fi(filename);
   {
     string sline;

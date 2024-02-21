@@ -40,13 +40,13 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":*");
   HH_ARGSD(closecycles, ": perform topological simplification");
   HH_ARGSF(nooutput, ": do not print mesh at program end");
-  HH_TIMER(main);
+  HH_TIMER("main");
   string arg0 = args.num() ? args.peek_string() : "";
   if (!ParseArgs::special_arg(arg0)) {
     string filename = "-";
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
     RFile fi(filename);
-    HH_TIMER(_readmesh);
+    HH_TIMER("_readmesh");
     for (string sline; fi().peek() == '#';) {
       assertx(my_getline(fi(), sline));
       if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
@@ -57,7 +57,7 @@ int main(int argc, const char** argv) {
   args.parse();
   hh_clean_up();
   if (!nooutput) {
-    HH_TIMER(_writemesh);
+    HH_TIMER("_writemesh");
     mesh.write(std::cout);
   }
   return 0;

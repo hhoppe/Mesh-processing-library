@@ -91,7 +91,7 @@ void verify_attrib(Video::Attrib& attrib) {
 
 void Video::read_file(const string& filename) {
   // Similar code in: Video::read_file(), VideoNv12::read_file(), and FilterVideo.cpp::read_video().
-  HH_TIMER(_read_video);
+  HH_TIMER("_read_video");
   clear();
   RVideo rvideo(filename);
   attrib() = rvideo.attrib();
@@ -118,7 +118,7 @@ void Video::read_file(const string& filename) {
 }
 
 void Video::write_file(const string& filename) const {
-  HH_TIMER(_write_video);
+  HH_TIMER("_write_video");
   assertx(size());
   verify_attrib(const_cast<Video&>(*this).attrib());  // mutable
   string suffix = to_lower(get_path_extension(filename));
@@ -136,7 +136,7 @@ void Video::write_file(const string& filename) const {
 
 void VideoNv12::read_file(const string& filename, Video::Attrib* pattrib) {
   // Similar code in: Video::read_file(), VideoNv12::read_file(), and FilterVideo.cpp::read_video().
-  HH_TIMER(_read_video);
+  HH_TIMER("_read_video");
   clear();
   const bool use_nv12 = true;
   RVideo rvideo(filename, use_nv12);
@@ -164,7 +164,7 @@ void VideoNv12::read_file(const string& filename, Video::Attrib* pattrib) {
 }
 
 void VideoNv12::write_file(const string& filename, const Video::Attrib& pattrib) const {
-  HH_TIMER(_write_video);
+  HH_TIMER("_write_video");
   assertx(size());
   Video::Attrib attrib = pattrib;
   verify_attrib(attrib);

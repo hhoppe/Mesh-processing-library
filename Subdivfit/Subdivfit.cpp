@@ -158,7 +158,7 @@ void wf_frame() {
 }
 
 void subdivide(SubMesh& smesh, bool triang) {
-  HH_STIMER(___submesh);
+  HH_STIMER("___submesh");
   smesh.mask_parameters(s222, weighta);
   smesh.subdivide_n(nsubdiv, !nolimit, std::cos(to_rad(selective)), triang);
 }
@@ -259,7 +259,7 @@ void analyze_mesh(const string& s) {
 }
 
 void global_all_project(const SubMesh& smesh) {
-  HH_STIMER(___gallproject);
+  HH_STIMER("___gallproject");
   const GMesh& mesh = smesh.mesh();
   MeshSearch msearch(&mesh, false);
   Face hintf = nullptr;
@@ -276,7 +276,7 @@ void global_all_project(const SubMesh& smesh) {
 }
 
 void global_neighb_project(const SubMesh& smesh) {
-  HH_STIMER(___gneighproject);
+  HH_STIMER("___gneighproject");
   if (g_force_global_project) {
     global_all_project(smesh);
   } else {
@@ -285,7 +285,7 @@ void global_neighb_project(const SubMesh& smesh) {
 }
 
 void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
-  HH_STIMER(___glls);
+  HH_STIMER("___glls");
   GMesh& omesh = smesh.orig_mesh();
   GMesh& mesh = smesh.mesh();
   Map<Vertex, int> mvi;
@@ -326,7 +326,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   for_int(i, n) lls.enter_xest_r(i, omesh.point(iv[i]));
   // Since specify max_iter, do not solve until convergence.
   {
-    HH_STIMER(____gsolve);
+    HH_STIMER("____gsolve");
     lls.solve(&rss0, &rss1);
   }
   for_int(i, n) {
@@ -350,7 +350,7 @@ void do_gfit(Args& args) {
   initialize();
   std::ostream* os = gmesh.record_changes(nullptr);
   if (verb >= 2) showdf("\n");
-  HH_TIMER(_gfit);
+  HH_TIMER("_gfit");
   int niter = args.get_int();
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
@@ -359,7 +359,7 @@ void do_gfit(Args& args) {
   global_all_project(smesh);
   if (verb >= 2) analyze_mesh("gfit_before");
   for_int(ni, niter) {
-    HH_STIMER(__gfit_iter);
+    HH_STIMER("__gfit_iter");
     double rss0, rss1;
     global_lls(smesh, rss0, rss1);
     if (verb >= 3) showf(" gopt %d/%d lls rss0=%g rss1=%g\n", ni + 1, niter, rss0, rss1);
@@ -382,7 +382,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 // Filtermesh ~/data/recon/new/cactus.crep1e-5.m -angle 55 -mark | Subdivfit -mf - -fi ~/data/recon/new/cactus.3337.pts -verb 3 -fgfit 60 >~/tmp/cactus.fgfit.m && G3dcmp ~/data/recon/new/cactus.nsub2.crep1e-5p.0.m ~/tmp/cactus.fgfit.m -key DmDe
 // verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
 void do_fgfit(Args& args) {
-  HH_TIMER(_fgfit);
+  HH_TIMER("_fgfit");
   int niter = args.get_int();
   assertx(co.num() && gmesh.num_vertices());
   initialize();
@@ -437,7 +437,7 @@ void do_fgfit(Args& args) {
     }
     double feval(ArrayView<double> ret_grad) {  // evaluate function and its gradient
       assertx(ret_grad.num() == _iv.num() * 3);
-      HH_STIMER(___computegrad);
+      HH_STIMER("___computegrad");
       unpack_vertices();
       _smesh.update_vertex_positions();
       {
@@ -535,7 +535,7 @@ void do_interp() {
   assertx(gmesh.num_vertices());
   initialize();
   if (verb >= 2) showdf("\n");
-  HH_TIMER(_interp);
+  HH_TIMER("_interp");
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, true);
@@ -563,7 +563,7 @@ void do_interp() {
   }
   double rss0, rss1;
   {
-    HH_STIMER(__isolve);
+    HH_STIMER("__isolve");
     assertx(lls.solve(&rss0, &rss1));
   }
   if (verb >= 2) showdf("lls rss0=%g, rss1=%g\n", rss0, rss1);
@@ -582,7 +582,7 @@ void do_interp() {
 void do_imagefit() {
   assertx(co.num() && gmesh.num_vertices());
   initialize();
-  HH_TIMER(_imagefit);
+  HH_TIMER("_imagefit");
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, false);
@@ -649,7 +649,7 @@ void do_imagefit() {
   lls.set_max_iter(max_iter);
   double rss0, rss1;
   {
-    HH_STIMER(__isolve);
+    HH_STIMER("__isolve");
     assertw(lls.solve(&rss0, &rss1));
   }
   if (verb >= 1) showdf("lls rss0=%g, rss1=%g\n", rss0, rss1);
@@ -711,12 +711,12 @@ void update_local(SubMesh& smesh, const Mvcvih& mvcvih) {
 
 void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Set<int>& setpts,
                        const Set<int>& setbadpts) {
-  HH_STIMER(___lallproject);
+  HH_STIMER("___lallproject");
   const GMesh& mesh = smesh.mesh();
   Array<PolygonFace> ar_polyface;
   PolygonFaceSpatial psp(60);
   {
-    HH_STIMER(____lmakespatial);
+    HH_STIMER("____lmakespatial");
     for (Face f : mesh.faces()) {
       if (!setgoodf.contains(smesh.orig_face(f))) continue;
       Polygon poly(3);
@@ -726,7 +726,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
     }
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
-  HH_STIMER(____lspatialproject);
+  HH_STIMER("____lspatialproject");
   for (int i : setpts) {
     if (setbadpts.contains(i)) {
       SpatialSearch<PolygonFace*> ss(&psp, co[i] * xform);
@@ -742,11 +742,11 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
 // Optimization of setmv given setpts, gscmf, mvcvih
 void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, const Mvcvih& mvcvih,
                     double& rss1) {
-  HH_STIMER(___loptimize);
+  HH_STIMER("___loptimize");
   update_local(smesh, mvcvih);
   const GMesh& mesh = smesh.mesh();
   {
-    HH_STIMER(____lneighproject);
+    HH_STIMER("____lneighproject");
     for (int pi : setpts) {
       Point dummy_clp;
       project_point_neighb(mesh, co[pi], gscmf[pi], gbary[pi], dummy_clp, true);
@@ -759,7 +759,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
   Lls& lls = *up_lls;
   int rowi = 0;
   {
-    HH_STIMER(____lcombinations);
+    HH_STIMER("____lcombinations");
     Array<Vertex> va;
     for (int pi : setpts) {
       mesh.get_vertices(gscmf[pi], va);
@@ -791,7 +791,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
     lls.enter_xest_r(i, p);
   }
   {
-    HH_STIMER(____lsolve);
+    HH_STIMER("____lsolve");
     assertx(lls.solve(nullptr, &rss1));
   }
   if (0) SHOW("local optimization", m, n, rss1);
@@ -950,7 +950,7 @@ EResult try_ecol(Edge eg, double& edrss) {
   // SHOW("try_ecol");
   if (!gmesh.nice_edge_collapse(eg)) return R_illegal;
   if (!gecol && !ok_sharp_edge_change(eg)) return R_sharp;
-  HH_STIMER(__try_ecol);
+  HH_STIMER("__try_ecol");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
   double rssf;
@@ -1046,7 +1046,7 @@ EResult try_esha(Edge eg, double& edrss) {
   static const float k_cos30d = std::cos(to_rad(30.f));
   if (!is_sharp && vcos > k_cos30d) return R_sharp;  // quick culling
   // if is_sharp then always consider smoothing it
-  HH_STIMER(__try_esha);
+  HH_STIMER("__try_esha");
   // setbadpts and setgoodf are empty
   GMesh lmesh;
   Set<int> setpts, setbadpts;
@@ -1115,7 +1115,7 @@ EResult try_eswa(Edge eg, double& edrss) {
   float mina = dihedral_angle_cos(gmesh.point(vo1g), gmesh.point(vo2g), gmesh.point(v1g), gmesh.point(v2g));
   if (mina < k_min_cos && mina < minb) return R_dih;
   // could do culling check if mina>cos5 && minb>cos5 ?
-  HH_STIMER(__try_eswa);
+  HH_STIMER("__try_eswa");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
   double rssf;
@@ -1182,7 +1182,7 @@ EResult try_espl(Edge eg, double& edrss) {
   Vertex vo1g = gmesh.side_vertex1(eg), vo2g = gmesh.side_vertex2(eg);
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
   // vo2g and f2g may be zero
-  HH_STIMER(__try_espl);
+  HH_STIMER("__try_espl");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
   double rssf;
@@ -1250,7 +1250,7 @@ EResult try_op(Edge e, EOperation op, double& edrss) {
 }
 
 void stoc_init() {
-  HH_DTIMER(_initial_fit);
+  HH_DTIMER("_initial_fit");
   for (Face f : gmesh.faces()) mfpts.enter(f, Set<int>());
   {
     for (Vertex v : gmesh.vertices()) {
@@ -1306,7 +1306,7 @@ void stoc_end() {
 
 void do_stoc() {
   if (verb >= 2) showdf("\n");
-  HH_TIMER(_stoc);
+  HH_TIMER("_stoc");
   assertx(co.num() && gmesh.num_vertices());
   initialize();
   if (verb >= 1) showdf("Stoc, crep=%g csharp=%g wcrep=%g wcsharp=%g\n", crep, csharp, wcrep, wcsharp);
@@ -1318,7 +1318,7 @@ void do_stoc() {
   int i = 0, nbad = 0;
   while (!ecand.empty()) {
     std::cout.flush();
-    HH_STIMER(__lattempt);
+    HH_STIMER("__lattempt");
     i++;
     Edge e = ecand.remove_random(Random::G);
     gmesh.valid(e);  // optional
@@ -1446,7 +1446,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("  Examples", ": Subdivfit -mf - -outn");
   HH_ARGSC("", ": Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v");
   HH_ARGSC("", ":");
-  HH_TIMER(Subdivfit);
+  Timer timer("Subdivfit");
   showdf("%s", args.header().c_str());
   args.parse();
   if (outn) {
@@ -1458,7 +1458,7 @@ int main(int argc, const char** argv) {
     SubMesh smesh(gmesh);
     subdivide(smesh, false);
     smesh.update_vertex_positions();
-    HH_TIMER_END(Subdivfit);
+    timer.terminate();
     hh_clean_up();
     if (!nooutput) {
       GMesh& m = smesh.mesh();
@@ -1466,7 +1466,7 @@ int main(int argc, const char** argv) {
       m.write(std::cout);
     }
   } else {
-    HH_TIMER_END(Subdivfit);
+    timer.terminate();
     hh_clean_up();
     if (!nooutput) {
       mark_mesh(gmesh);

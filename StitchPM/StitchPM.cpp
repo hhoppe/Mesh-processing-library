@@ -219,7 +219,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(blocks, "n : block size (num_vertices - 1 per side)");
   HH_ARGSD(stitch, ": stitch the PM's together");
   showdf("%s", args.header().c_str());
-  HH_TIMER(StitchPM);
+  HH_TIMER("StitchPM");
   args.parse();
   return 0;
 }

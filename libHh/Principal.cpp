@@ -127,7 +127,7 @@ static void compute_eigenvectors(MatrixView<float> a, MatrixView<float> mo, Arra
   for_int(i, n) for_int(j, n) mo[i][j] = i == j ? 1.f : 0.f;
   for_int(i, n) eimag[i] = a[i][i];
   {
-    auto up_timer = n > 1000 ? make_unique<Timer>("__eigenv") : nullptr;
+    auto up_timer = n > 1000 ? make_unique<Timer>("__eigenv", Timer::EMode::abbrev) : nullptr;
     for (int iter = 0;; iter++) {
       {
         float sum = 0.f;
@@ -183,8 +183,8 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
   assertx(eimag.num() == n);
   Matrix<float> a(n, n);
   {
-    // HH_TIMER(_pca_cov);
-    auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_cov") : nullptr;
+    // HH_TIMER("_pca_cov");
+    auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_cov", Timer::EMode::abbrev) : nullptr;
     if (1) {  // more cache-coherent
       Matrix<double> t(V(n, n), 0.);
       if (0) {  // unoptimized
@@ -257,7 +257,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
   assertx(niter >= 1);
   assertx(eimag.num() == ne);
   //
-  auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_inc") : nullptr;
+  auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_inc", Timer::EMode::abbrev) : nullptr;
   for_int(i, ne) for_int(c, n) mo[i][c] = mi[i][c];
   Array<float> vnorm(ne);
   for_int(i, ne) vnorm[i] = float(assertx(sqrt(mag2(mo[i]))));

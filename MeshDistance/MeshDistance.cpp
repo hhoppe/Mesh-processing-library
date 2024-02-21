@@ -164,7 +164,7 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
   ar_polyface.reserve(meshd.num_faces());
   PolygonFaceSpatial psp(psp_size);
   {
-    HH_TIMER(_create_spatial);
+    HH_TIMER("_create_spatial");
     for (Face fd : meshd.faces()) {
       Polygon poly(3);
       meshd.polygon(fd, poly);
@@ -174,7 +174,7 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
     }
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
-  HH_TIMER(_sample_distances);
+  HH_TIMER("_sample_distances");
   if (numpts) {
     PStats pstats;
     // showdf("- random sampling of %d points\n", numpts);
@@ -232,7 +232,7 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
 }
 
 void do_distance() {
-  HH_TIMER(_distance);
+  HH_TIMER("_distance");
   assertx(meshes.num() == 2);
   int maxnfaces = 0;
   Bbox bbox;
@@ -274,7 +274,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(unitdiag0, "bool : normalize distance by mesh0 bbox diag");
   HH_ARGSP(maxerror, "bool : include Linf norm");
   HH_ARGSD(distance, ": compute inter-mesh distances");
-  HH_TIMER(MeshDistance);
+  HH_TIMER("MeshDistance");
   args.parse();
   if (errmesh) meshes[0].write(std::cout);
   return 0;

@@ -7,20 +7,20 @@
 #if 0
 {
   procedure() {
-    HH_TIMER(_proc);  // timing for entire procedure
+    HH_TIMER("_proc");  // timing for entire procedure
     if (something) {
-      HH_TIMER(__step1);  // sub-timings for substeps
+      HH_TIMER("__step1");  // sub-timings for substeps
       step1();
     }
     if (1) {
-      HH_TIMER(__step2);
+      HH_TIMER("__step2");
       step2();
     }
   }
   {
-    HH_TIMER(atimer2);
+    Timer timer("atimer2");
     statements;
-    HH_TIMER_END(atimer2);
+    timer.terminate();  // shows timing up to here.
     more_statements;
   }
   // getenv_int("SHOW_TIMES") == -1 : all -> noprint
@@ -44,7 +44,10 @@ class Timer : noncopyable {
   // summary:         only print in summary
   // possibly:        never print, do not keep stats (except if SHOW_TIMES)
   // noprint:         never print, do not keep stats
-  explicit Timer(string pname = "", EMode mode = EMode::noprint);  // timer is automatically started
+  //
+  // If a name is given in the constructor, the timer is automatically started.
+  // Otherwise, mode is overriden to EMode::noprint and the timer is not started.
+  explicit Timer(string pname = "", EMode mode = EMode::normal);
   ~Timer() { terminate(); }
   void terminate();  // finish the timer earlier than its end of scope
   void stop();
@@ -68,15 +71,13 @@ class Timer : noncopyable {
   void zero();
 };
 
-#define HH_TIMER_VAR(id) Timer_##id  // variable name used internally
-#define HH_TIMER_AUX(id, mode) hh::Timer HH_TIMER_VAR(id)(#id, mode)
-#define HH_TIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::normal)
-#define HH_CTIMER(id, cond) HH_TIMER_AUX(id, (cond) ? hh::Timer::EMode::normal : hh::Timer::EMode::noprint)
-#define HH_DTIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::diagnostic)
-#define HH_ATIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::abbrev)
-#define HH_STIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::summary)
-#define HH_PTIMER(id) HH_TIMER_AUX(id, hh::Timer::EMode::possibly)
-#define HH_TIMER_END(id) HH_TIMER_VAR(id).terminate()  // terminate a HH_TIMER(id) earlier than its scope
+#define HH_TIMER_AUX(name, mode) hh::Timer HH_UNIQUE_ID(timer)(name, mode)
+#define HH_TIMER(name) HH_TIMER_AUX(name, hh::Timer::EMode::normal)
+#define HH_CTIMER(name, cond) HH_TIMER_AUX(name, (cond) ? hh::Timer::EMode::normal : hh::Timer::EMode::noprint)
+#define HH_DTIMER(name) HH_TIMER_AUX(name, hh::Timer::EMode::diagnostic)
+#define HH_ATIMER(name) HH_TIMER_AUX(name, hh::Timer::EMode::abbrev)
+#define HH_STIMER(name) HH_TIMER_AUX(name, hh::Timer::EMode::summary)
+#define HH_PTIMER(name) HH_TIMER_AUX(name, hh::Timer::EMode::possibly)
 
 }  // namespace hh
 

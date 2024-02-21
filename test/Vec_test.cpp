@@ -204,7 +204,6 @@ SHOW(t5);
   SHOW((Vec2<int>(10, 10) - pp));
   SHOW(-pp);
 }
-#if 0
 {
   static_assert(std::is_standard_layout<Vec3<int>>::value == true, "");
   static_assert(std::is_trivially_default_constructible<Vec3<int>>::value == true, "");
@@ -218,18 +217,11 @@ SHOW(t5);
   static_assert(std::is_standard_layout<Vec3<int>>::value == true, "");
   static_assert(std::is_standard_layout<S>::value == true, "");
   static_assert(std::is_standard_layout<S3>::value == true, "");
-#if 0
-  // GCC and clang complain that both S3 and Vec3<int> have a user-declared constructor,
-  // even though http://en.cppreference.com/w/cpp/types/is_pod
-  // states that is_pod corresponds to is_trivial and is_standard_layout.
-  // Visual Studio 2015 now also fails on these assertions.
-  static_assert(std::is_pod<S3>::value == false, "");         // fails
-  static_assert(std::is_pod<Vec3<int>>::value == false, "");  // fails
-#endif
-  static_assert(std::is_pod<S2>::value == true, "");
-  static_assert(std::is_pod<S4>::value == true, "");
+  static_assert(std::is_standard_layout<S2>::value == true, "");
+  static_assert(std::is_trivial<S2>::value == true, "");
+  static_assert(std::is_standard_layout<S4>::value == true, "");
+  static_assert(std::is_trivial<S4>::value == true, "");
 }
-#endif
 {
   Set<size_t> set;
   for_int(i, 100) for_int(j, 100) {

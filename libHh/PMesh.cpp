@@ -18,17 +18,17 @@ constexpr int k_undefined = k_debug ? -std::numeric_limits<int>::max() : -1;
 
 // Analysis of memory requirement:
 //
-//  PMVertex:   3*4     *1v/v   == 12 bytes/vertex
-//  PMWedge:    6*4     *1w/v   == 24 bytes/vertex (** Assume: 1 wedge/vertex)
-//  PMFace:     4*4     *2f/v   == 32 bytes/vertex
-//  PMFaceN:    3*4     *2f/v   == 24 bytes/vertex
+//  PmVertex:   3*4     *1v/v   == 12 bytes/vertex
+//  PmWedge:    6*4     *1w/v   == 24 bytes/vertex (** Assume: 1 wedge/vertex)
+//  PmFace:     4*4     *2f/v   == 32 bytes/vertex
+//  PmFaceN:    3*4     *2f/v   == 24 bytes/vertex
 //
 //  WMesh:      68 bytes/vertex
 //
 //  AWMesh:     92 bytes/vertex
 //
-//  PMSVertex:  8*4     *1v/v   == 32 bytes/vertex
-//  PMSFace:    4*4     *2f/v   == 32 bytes/vertex
+//  PmSVertex:  8*4     *1v/v   == 32 bytes/vertex
+//  PmSFace:    4*4     *2f/v   == 32 bytes/vertex
 //
 //  SMesh:      64 bytes/vertex
 //
@@ -61,7 +61,7 @@ constexpr int k_magic_first_byte = 0xFF;
 
 namespace {
 
-inline void attrib_ok(PMWedgeAttrib& a) {
+inline void attrib_ok(PmWedgeAttrib& a) {
   float len2 = mag2(a.normal);
   // Normal could be all-zero from MeshSimplify,
   //  either because it was zero in original model,
@@ -84,46 +84,46 @@ inline int face_prediction(int fa, int fb, int ii) {
 
 // *** Attrib
 
-void interp(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttrib& a2, float f1) {
+void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float f1) {
   a.point = interp(a1.point, a2.point, f1);
 }
 
-void interp(PMWedgeAttrib& a, const PMWedgeAttrib& a1, const PMWedgeAttrib& a2, float f1) {
+void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float f1) {
   a.normal = ok_normalized(interp(a1.normal, a2.normal, f1));
   a.rgb = interp(a1.rgb, a2.rgb, f1);
   a.uv = interp(a1.uv, a2.uv, f1);
 }
 
-void interp(PMSVertexAttrib& a, const PMSVertexAttrib& a1, const PMSVertexAttrib& a2, float f1) {
+void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float f1) {
   interp(a.v, a1.v, a2.v, f1);
   interp(a.w, a1.w, a2.w, f1);
 }
 
-void add(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttribD& ad) { a.point = a1.point + ad.dpoint; }
+void add(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad) { a.point = a1.point + ad.dpoint; }
 
-void sub(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttribD& ad) { a.point = a1.point - ad.dpoint; }
+void sub(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad) { a.point = a1.point - ad.dpoint; }
 
-void diff(PMVertexAttribD& ad, const PMVertexAttrib& a1, const PMVertexAttrib& a2) { ad.dpoint = a1.point - a2.point; }
+void diff(PmVertexAttribD& ad, const PmVertexAttrib& a1, const PmVertexAttrib& a2) { ad.dpoint = a1.point - a2.point; }
 
-void add(PMWedgeAttrib& a, const PMWedgeAttrib& a1, const PMWedgeAttribD& ad) {
+void add(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttribD& ad) {
   a.normal = a1.normal + ad.dnormal;
   a.rgb = a1.rgb + ad.drgb;
   a.uv = a1.uv + ad.duv;
 }
 
-void add_zero(PMWedgeAttrib& a, const PMWedgeAttribD& ad) {
+void add_zero(PmWedgeAttrib& a, const PmWedgeAttribD& ad) {
   a.normal = ad.dnormal;
   a.rgb = ad.drgb;
   a.uv = ad.duv;
 }
 
-void sub_noreflect(PMWedgeAttrib& a, const PMWedgeAttrib& abase, const PMWedgeAttribD& ad) {
+void sub_noreflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad) {
   a.normal = abase.normal - ad.dnormal;
   a.rgb = abase.rgb - ad.drgb;
   a.uv = abase.uv - ad.duv;
 }
 
-void sub_reflect(PMWedgeAttrib& a, const PMWedgeAttrib& abase, const PMWedgeAttribD& ad) {
+void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad) {
   // note: may have abase == a -> not really const
   const Vector& n = abase.normal;
   const Vector& d = ad.dnormal;
@@ -134,7 +134,7 @@ void sub_reflect(PMWedgeAttrib& a, const PMWedgeAttrib& abase, const PMWedgeAttr
   a.uv = abase.uv - ad.duv;
 }
 
-void diff(PMWedgeAttribD& ad, const PMWedgeAttrib& a1, const PMWedgeAttrib& a2) {
+void diff(PmWedgeAttribD& ad, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
   ad.dnormal = a1.normal - a2.normal;
   float a1rgb0 = a1.rgb[0], a1rgb1 = a1.rgb[1], a1rgb2 = a1.rgb[2];
   float a2rgb0 = a2.rgb[0], a2rgb1 = a2.rgb[1], a2rgb2 = a2.rgb[2];
@@ -158,11 +158,11 @@ void diff(PMWedgeAttribD& ad, const PMWedgeAttrib& a1, const PMWedgeAttrib& a2) 
   ad.duv[1] = a1uv1 - a2uv1;
 }
 
-int compare(const PMVertexAttrib& a1, const PMVertexAttrib& a2) { return compare(a1.point, a2.point); }
+int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2) { return compare(a1.point, a2.point); }
 
-int compare(const PMVertexAttrib& a1, const PMVertexAttrib& a2, float tol) { return compare(a1.point, a2.point, tol); }
+int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol) { return compare(a1.point, a2.point, tol); }
 
-int compare(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2) {
+int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
   int r;
   r = compare(a1.normal, a2.normal);
   if (r) return r;
@@ -172,7 +172,7 @@ int compare(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2) {
   return r;
 }
 
-int compare(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2, float tol) {
+int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol) {
   int r;
   r = compare(a1.normal, a2.normal, tol);
   if (r) return r;
@@ -400,7 +400,7 @@ void Vsplit::write(std::ostream& os, const PMeshInfo& pminfo) const {
   }
   write_binary_std(os, vad_large.dpoint.view());
   write_binary_std(os, vad_small.dpoint.view());
-  for (const PMWedgeAttribD& wad : ar_wad) {
+  for (const PmWedgeAttribD& wad : ar_wad) {
     if (1) write_binary_std(os, wad.dnormal.view());
     if (pminfo._has_rgb) write_binary_std(os, wad.drgb.view());
     if (pminfo._has_uv) write_binary_std(os, wad.duv.view());
@@ -861,8 +861,8 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(!isr || _wedges[_faces[fr].wedges[2]].vertex == vt);
   // Update vertex attributes.
   {
-    PMVertexAttrib& vas = _vertices[vs].attrib;
-    PMVertexAttrib& vat = _vertices[vt].attrib;
+    PmVertexAttrib& vas = _vertices[vs].attrib;
+    PmVertexAttrib& vat = _vertices[vt].attrib;
     switch (ii) {
       case 2:
         add(vat, vas, vspl.vad_large);
@@ -873,7 +873,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
         add(vas, vas, vspl.vad_large);
         break;
       case 1: {
-        PMVertexAttrib vam;
+        PmVertexAttrib vam;
         add(vam, vas, vspl.vad_small);
         add(vat, vam, vspl.vad_large);
         sub(vas, vam, vspl.vad_large);
@@ -883,7 +883,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     }
   }
   // Update wedge attributes.
-  PMWedgeAttrib awvtfr, awvsfr;
+  PmWedgeAttrib awvtfr, awvsfr;
   dummy_init(awvtfr, awvsfr);
   int lnum = 0;
   if (pminfo._has_wad2) {
@@ -917,13 +917,13 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
           add(_wedges[wvsfl].attrib, _wedges[!nt ? wvtfl : wvsfl].attrib, vspl.ar_wad[lnum++]);
           break;
         case 1: {
-          const PMWedgeAttribD& wad = vspl.ar_wad[lnum];
+          const PmWedgeAttribD& wad = vspl.ar_wad[lnum];
           if (!ns) {
-            const PMWedgeAttrib& wabase = _wedges[wvsfl].attrib;
+            const PmWedgeAttrib& wabase = _wedges[wvsfl].attrib;
             add(_wedges[wvtfl].attrib, wabase, wad);
             sub_reflect(_wedges[wvsfl].attrib, wabase, wad);
           } else {
-            const PMWedgeAttrib& wabase = _wedges[wvtfl].attrib;
+            const PmWedgeAttrib& wabase = _wedges[wvtfl].attrib;
             sub_reflect(_wedges[wvsfl].attrib, wabase, wad);
             add(_wedges[wvtfl].attrib, wabase, wad);
           }
@@ -954,11 +954,11 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
           break;
         case 1: {
           if (!ns) {
-            const PMWedgeAttrib& wabase = awvsfr;
+            const PmWedgeAttrib& wabase = awvsfr;
             if (ut) add(_wedges[wvtfr].attrib, wabase, vspl.ar_wad[lnum]);
             if (us) sub_reflect(_wedges[wvsfr].attrib, wabase, vspl.ar_wad[lnum]);
           } else {
-            const PMWedgeAttrib& wabase = awvtfr;
+            const PmWedgeAttrib& wabase = awvtfr;
             if (us) sub_reflect(_wedges[wvsfr].attrib, wabase, vspl.ar_wad[lnum]);
             if (ut) add(_wedges[wvtfr].attrib, wabase, vspl.ar_wad[lnum]);
           }
@@ -1011,13 +1011,13 @@ void AWMesh::apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onu
   const bool isl = true;
   // Vertex ancestry.
   {
-    Array<PMVertexAttrib>& vancestry = ancestry->_vancestry;
+    Array<PmVertexAttrib>& vancestry = ancestry->_vancestry;
     int vi = vancestry.add(1);
     // ASSERTX(vi == vt);
     vancestry[vi] = vancestry[vs];
   }
   // Wedge ancestry.
-  Array<PMWedgeAttrib>& wancestry = ancestry->_wancestry;
+  Array<PmWedgeAttrib>& wancestry = ancestry->_wancestry;
   wancestry.resize(_wedges.num());
   // If ambiguities in inside wedges, set no ancestor.
   if (0) {
@@ -1227,14 +1227,14 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   for (int w : ar_wmodif) _wedges[w].vertex = vs;
   // Update vertex attributes.
   {
-    PMVertexAttrib& vas = _vertices[vs].attrib;
-    PMVertexAttrib& vat = _vertices[vt].attrib;
+    PmVertexAttrib& vas = _vertices[vs].attrib;
+    PmVertexAttrib& vat = _vertices[vt].attrib;
     switch (ii) {
       case 2: sub(vas, vas, vspl.vad_small); break;
       case 0: sub(vas, vat, vspl.vad_small); break;
       case 1:
         if (0) {
-          PMVertexAttrib vam;
+          PmVertexAttrib vam;
           interp(vam, vas, vat, 0.5f);
           sub(vas, vam, vspl.vad_small);
         } else {
@@ -1247,7 +1247,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
     }
   }
   // Udpate wedge attributes.
-  PMWedgeAttrib awvtfr, awvsfr;
+  PmWedgeAttrib awvtfr, awvsfr;
   dummy_init(awvtfr, awvsfr);
   bool problem = false;
   if (pminfo._has_wad2) {
@@ -1273,13 +1273,13 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
           break;
         case 0: _wedges[wvsfl].attrib = _wedges[wvtfl].attrib; break;
         case 1: {
-          PMWedgeAttrib wa;
+          PmWedgeAttrib wa;
           if (0) {
             interp(wa, _wedges[wvsfl].attrib, _wedges[wvtfl].attrib, 0.5f);
           } else {
             // faster because avoid normalization of interp()
             const int lnum = 0;
-            const PMWedgeAttribD& wad = vspl.ar_wad[lnum];
+            const PmWedgeAttribD& wad = vspl.ar_wad[lnum];
             sub_noreflect(wa, _wedges[wvtfl].attrib, wad);
           }
           _wedges[wvsfl].attrib = wa;
@@ -1307,7 +1307,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
           if (!ns) _wedges[wvsfr].attrib = awvtfr;
           break;
         case 1: {
-          PMWedgeAttrib wa;
+          PmWedgeAttrib wa;
           interp(wa, awvsfr, awvtfr, 0.5f);
           if (!ns) _wedges[wvsfr].attrib = wa;
           if (!nt && !thru_r) _wedges[wvtfr].attrib = wa;
@@ -1844,10 +1844,10 @@ bool Geomorph::construct_goto_nfaces(PMeshIter& pmi, int nfaces) { return constr
 void Geomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
   const float f1 = 1.f - alpha;
-  for (const PMVertexAttribG& ag : _vgattribs) {
+  for (const PmVertexAttribG& ag : _vgattribs) {
     interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], f1);
   }
-  for (const PMWedgeAttribG& ag : _wgattribs) {
+  for (const PmWedgeAttribG& ag : _wgattribs) {
     interp(_wedges[ag.wedge].attrib, ag.attribs[0], ag.attribs[1], f1);
   }
 }
@@ -1925,7 +1925,7 @@ SGeomorph::SGeomorph(const Geomorph& geomorph) : SMesh(geomorph) {
 void SGeomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
   const float f1 = 1.f - alpha;
-  for (const PMSVertexAttribG& ag : _vgattribs) {
+  for (const PmSVertexAttribG& ag : _vgattribs) {
     interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], f1);
   }
 }
@@ -1939,7 +1939,7 @@ void SGeomorph::extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const {
     Vertex gv = gmesh.id_vertex(v + 1);
     int vg = mvvg[v];
     if (vg >= 0) assertx(_vgattribs[vg].vertex == v);
-    const PMSVertexAttrib& va0 = vg < 0 ? _vertices[v].attrib : _vgattribs[vg].attribs[0];
+    const PmSVertexAttrib& va0 = vg < 0 ? _vertices[v].attrib : _vgattribs[vg].attribs[0];
     const Point& opos = va0.v.point;
     gmesh.update_string(gv, "Opos", csform_vec(str, opos));
     const Vector& onor = va0.w.normal;

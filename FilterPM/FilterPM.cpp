@@ -19,7 +19,7 @@
 #define DEF_SR
 
 #if defined(DEF_SR)
-#include "libHh/SRMesh.h"
+#include "libHh/SrMesh.h"
 #endif
 
 using namespace hh;
@@ -38,7 +38,7 @@ unique_ptr<PMeshRStream> pmrs;
 unique_ptr<PMeshIter> pmi;
 
 RFile* pfi = nullptr;
-SRMesh srmesh;
+SrMesh srmesh;
 
 void ensure_pm_loaded() {
   int n = 0;
@@ -229,7 +229,7 @@ void read_srmesh() {
 }
 
 void do_srout(Args& args) {
-  Vec<SRViewParams, 1> views;
+  Vec<SrViewParams, 1> views;
   for_int(i, views.num()) {
     Frame frame;
     int obn;
@@ -263,7 +263,7 @@ void do_srout(Args& args) {
 }
 
 void do_srgeomorph(Args& args) {
-  Vec2<SRViewParams> views;
+  Vec2<SrViewParams> views;
   for_int(i, views.num()) {
     Frame frame;
     int obn;
@@ -286,7 +286,7 @@ void do_srgeomorph(Args& args) {
     srmesh.set_view_params(views[0]);
     srmesh.adapt_refinement();
   }
-  SRGeomorphInfo geoinfo;
+  SrGeomorphInfo geoinfo;
   {
     HH_TIMER(__construct_geomorph);
     srmesh.set_view_params(views[1]);
@@ -317,7 +317,7 @@ void do_srfly(Args& args) {
   srmesh.set_refine_morph_time(srfly_grtime);
   srmesh.set_coarsen_morph_time(srfly_gctime);
   for (;;) {
-    SRViewParams view;
+    SrViewParams view;
     Frame frame;
     int obn;
     float zoomx;
@@ -820,8 +820,8 @@ void do_zero_vadsmall() {
     int vs = pmi->_wedges[wvsfl].vertex;
     int vt = pmi->_vertices.num() - 1;
     assertx(pmi->_wedges[pmi->_faces[fl].wedges[1]].vertex == vt);
-    const PMVertexAttrib& vas = pmi->_vertices[vs].attrib;
-    const PMVertexAttrib& vat = pmi->_vertices[vt].attrib;
+    const PmVertexAttrib& vas = pmi->_vertices[vs].attrib;
+    const PmVertexAttrib& vat = pmi->_vertices[vt].attrib;
     switch (ii) {
       case 2:
         diff(vspl.vad_large, vat, vas);
@@ -832,7 +832,7 @@ void do_zero_vadsmall() {
         diff(vspl.vad_small, vas, vas);  // set to zero.
         break;
       case 1: {
-        PMVertexAttrib vam;
+        PmVertexAttrib vam;
         interp(vam, vas, vat, 0.5f);
         diff(vspl.vad_large, vat, vam);
         diff(vspl.vad_small, vas, vas);  // set to zero.
@@ -886,7 +886,7 @@ void do_zero_resid() {
   pmesh._info._has_resid = false;
 }
 
-PMWedgeAttrib zero_wad;  // cannot declare const because default constructor leaves uninitialized
+PmWedgeAttrib zero_wad;  // cannot declare const because default constructor leaves uninitialized
 
 void do_compute_nor() {
   if (1) assertnever("compute_nor() abandonned for now");
@@ -915,7 +915,7 @@ void do_compute_nor() {
     int vt = pmi->_vertices.num() - 1;
     assertx(pmi->_wedges[wvtfl].vertex == vt);
     int lnum = 0;
-    Array<PMWedgeAttribD>& ar_wad = vspl.ar_wad;
+    Array<PmWedgeAttribD>& ar_wad = vspl.ar_wad;
     if (1) {
       bool nt = !(code & Vsplit::T_LSAME);
       bool ns = !(code & Vsplit::S_LSAME);

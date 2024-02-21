@@ -6,7 +6,7 @@
 #include "libHh/Facedistance.h"
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/Polygon.h"
 #include "libHh/Principal.h"
@@ -228,8 +228,8 @@ void global_fit() {
       if (v->v[1]) m++;
     }
   }
-  if (verb >= 2) showf("GlobalFit: about to solve a %dx%d LLS system\n", m, n);
-  SparseLLS lls(m, n, 3);
+  if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
+  SparseLls lls(m, n, 3);
   // Add point constraints
   for_int(i, pt.n) {
     vertex cle = assertx(pt.cle[i]);

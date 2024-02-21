@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
 #define MESH_PROCESSING_LIBHH_LINEARREGRESSION_H_
 
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 
 #if 0
 {
@@ -52,7 +52,7 @@ template <int N, int D, typename Eval = Vec<float, N>(const Vec<float, D>&)> cla
   }
 
  private:
-  SvdDoubleLLS _lls;
+  SvdDoubleLls _lls;
   Eval _eval;
   int _row{0};
 };

@@ -9,7 +9,7 @@
 
 namespace hh {
 
-class SCGeomorph : noncopyable {
+class ScGeomorph : noncopyable {
  public:
   void clear();
   void read(std::istream& is);
@@ -41,7 +41,7 @@ class SCGeomorph : noncopyable {
   Array<int> s_norgroup;
 };
 
-inline void SCGeomorph::clear() {
+inline void ScGeomorph::clear() {
   K.clear();
   vold.clear();
   vnew.clear();

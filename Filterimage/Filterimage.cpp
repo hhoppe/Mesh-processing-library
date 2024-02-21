@@ -12,7 +12,7 @@
 #include "libHh/GridOp.h"
 #include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
 #include "libHh/Image.h"
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/MathOp.h"  // smooth_step(), floor(Vec<>)
 #include "libHh/Matrix.h"
 #include "libHh/MatrixOp.h"  // euclidean_distance_map()
@@ -2146,7 +2146,7 @@ void do_poisson() {
     //  parameters are number of rows (constraints), number of unknowns, and dimensionality of unknowns.
     HH_TIMER(_lls);
     const int ny = image.ysize(), nx = image.xsize();
-    SparseLLS lls(
+    SparseLls lls(
         2 * (ny * (nx - 1) + nx * (ny - 1)) + conformal * 2 * (ny - 2 + conf_L) * (nx - 2 + conf_L) + nconstraints,
         ny * nx * 2, 1);
     lls.set_verbose(0);

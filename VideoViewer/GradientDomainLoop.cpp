@@ -1257,7 +1257,7 @@ void integrally_downscale_Nv12_to_Image(CNv12View nv12, MatrixView<Pixel> nmatri
 
 void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CGridView<3, Pixel> video,
                     CVideoNv12View video_nv12, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
-                    EGDLoopScheme scheme, int nnf, WVideo* pwvideo, GridView<3, Pixel> videoloop,
+                    GdLoopScheme scheme, int nnf, WVideo* pwvideo, GridView<3, Pixel> videoloop,
                     VideoNv12View videoloop_nv12, int num_loops) {
   const Vec3<int> odims = videodims;  // original (input) dimensions;
   Vec2<int> sdims = odims.tail<2>();  // spatial dimensions (for both input and loop)
@@ -1290,12 +1290,12 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       assertx(mat_start[yx] > 0 && mat_start[yx] + mat_period[yx] < onf);
     }
   }
-  if (getenv_bool("VIDEOLOOP_PRECISE")) scheme = EGDLoopScheme::precise;
-  if (getenv_bool("VIDEOLOOP_NO_BLEND")) scheme = EGDLoopScheme::no_blend;
-  if (getenv_bool("VIDEOLOOP_EXACT")) scheme = EGDLoopScheme::exact;
+  if (getenv_bool("VIDEOLOOP_PRECISE")) scheme = GdLoopScheme::precise;
+  if (getenv_bool("VIDEOLOOP_NO_BLEND")) scheme = GdLoopScheme::no_blend;
+  if (getenv_bool("VIDEOLOOP_EXACT")) scheme = GdLoopScheme::exact;
   HH_TIMER(_gdloop);
   if (verbose) showf("Rendering looping video of %d frames.\n", nnf);
-  if (scheme == EGDLoopScheme::no_blend) {
+  if (scheme == GdLoopScheme::no_blend) {
     Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
     Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
     Grid<3, short> grid_framei;
@@ -1342,16 +1342,16 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         }
       }
     }
-  } else if (scheme == EGDLoopScheme::fast) {  // new scheme: solve for offset values at coarse resolution
+  } else if (scheme == GdLoopScheme::fast) {  // new scheme: solve for offset values at coarse resolution
     solve_using_offsets(odims, video_filename, video, video_nv12, mat_start, mat_period, nnf, pwvideo, videoloop,
                         videoloop_nv12, num_loops);
   } else {
-    assertx(scheme == EGDLoopScheme::precise || scheme == EGDLoopScheme::exact);
+    assertx(scheme == GdLoopScheme::precise || scheme == GdLoopScheme::exact);
     // Old, slower, more precise scheme
     assertx(video.size() && videoloop.size());  // it does not implement streaming video read, write, or nv12
     Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
     Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
-    const bool b_exact = scheme == EGDLoopScheme::exact;
+    const bool b_exact = scheme == GdLoopScheme::exact;
     const bool use_halfres = !b_exact;
     if (!use_halfres) {
       compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
@@ -1386,7 +1386,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       if (debug) write_video(videoloop, "videoloop.mp4");
       if (1) {  // visually excellent, but actual rms numbers are poor
         compute_gdloop_fast_relax(videoloop, video, mat_start_highres, mat_period_highres);
-      } else if (1) {  // rms numbers are better, but still not as good as EGDLoopScheme::fast
+      } else if (1) {  // rms numbers are better, but still not as good as GdLoopScheme::fast
         compute_gdloop_aux1<true>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
       } else {
         // just keep low-frequency video

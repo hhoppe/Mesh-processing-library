@@ -168,7 +168,7 @@ RBuffer::ERefill RBuffer::refill() {
     nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], ntoread);
     if (nread < 0) {
       if (errno == EINTR) continue;  // for ATT UNIX (hpux)
-      if (errno == EWOULDBLOCK || errno == EAGAIN) {
+      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) {
         return ERefill::no;
       }
     }
@@ -243,7 +243,7 @@ WBuffer::EFlush WBuffer::flush(int nb) {
     nwritten = HH_POSIX(write)(_fd, &_ar[_beg], unsigned(nb));
     if (nwritten < 0) {
       if (errno == EINTR) continue;
-      if (errno == EWOULDBLOCK || errno == EAGAIN) {
+      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) {
         return EFlush::part;
       }
       _err = true;

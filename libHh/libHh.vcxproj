@@ -83,7 +83,7 @@
     <ClCompile Include="Image_IO.cpp" />
     <ClCompile Include="Image_libs.cpp" />
     <ClCompile Include="Image_wic.cpp" />
-    <ClCompile Include="LLS.cpp" />
+    <ClCompile Include="Lls.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshOp.cpp" />
     <ClCompile Include="MeshSearch.cpp" />
@@ -94,7 +94,7 @@
     <ClCompile Include="Principal.cpp" />
     <ClCompile Include="Principal_em.cpp" />
     <ClCompile Include="Random.cpp" />
-    <ClCompile Include="SRMesh.cpp" />
+    <ClCompile Include="SrMesh.cpp" />
     <ClCompile Include="Spatial.cpp" />
     <ClCompile Include="StackWalker.cpp" />
     <ClCompile Include="Stat.cpp" />
@@ -153,7 +153,7 @@
     <ClInclude Include="Homogeneous.h" />
     <ClInclude Include="Image.h" />
     <ClInclude Include="Kdtree.h" />
-    <ClInclude Include="LLS.h" />
+    <ClInclude Include="Lls.h" />
     <ClInclude Include="LinearFunc.h" />
     <ClInclude Include="LinearRegression.h" />
     <ClInclude Include="Map.h" />
@@ -187,7 +187,7 @@
     <ClInclude Include="Range.h" />
     <ClInclude Include="RangeOp.h" />
     <ClInclude Include="SGrid.h" />
-    <ClInclude Include="SRMesh.h" />
+    <ClInclude Include="SrMesh.h" />
     <ClInclude Include="STree.h" />
     <ClInclude Include="Sac.h" />
     <ClInclude Include="Set.h" />

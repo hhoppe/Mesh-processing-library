@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "MeshSimplify/Qem.h"
 
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/Polygon.h"  // orthogonal_vector()
 #include "libHh/RangeOp.h"
 #include "libHh/SGrid.h"
@@ -163,7 +163,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     //  (  v1   1 ) * ( g_s )   =   ( s1 )
     //  (  v2   1 )   (     )       ( s2 )
     //  (  n    0 )   ( d_s )       ( 0  )
-    static LudLLS lls(4, 4, nattrib);
+    static LudLls lls(4, 4, nattrib);
     lls.clear();
     for_int(c, 3) {
       lls.enter_a_rc(0, c, p0[c]);
@@ -251,7 +251,7 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
 // minp unchanged if unsuccessful !
 template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   // minp = - A^-1 b        or     A * minp = -b
-  static SvdDoubleLLS lls(n, n, 1);
+  static SvdDoubleLls lls(n, n, 1);
   lls.clear();
   {
     const T* pa = _a.data();
@@ -277,13 +277,13 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   assertx(nf > 0 && nf < n);
   // Given fixed minp[0 .. nf - 1], optimize for minp[nf .. n - 1] .
   //  A_22 * x_2 = (-b_2 - A_21 * x_1)    (A_21 = A_12^T)
-  static unique_ptr<SvdDoubleLLS> plls;
+  static unique_ptr<SvdDoubleLls> plls;
   static int prev_nf;
   if (!plls || prev_nf != nf) {
-    plls = make_unique<SvdDoubleLLS>(n - nf, n - nf, 1);
+    plls = make_unique<SvdDoubleLls>(n - nf, n - nf, 1);
     prev_nf = nf;
   }
-  SvdDoubleLLS& lls = *plls;
+  SvdDoubleLls& lls = *plls;
   Vec<double, n> b;
   // for_int(i, n - nf) { b[i] = -_b[nf + i]; } // GCC4.8.1 [-Werror=array-bounds]
   const T* bt = _b.data();
@@ -367,7 +367,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     for_intL(i, 3, n) zt[i - 1][i] = 1.;
     if (0) print_matrix(zt);
   }
-  static SvdDoubleLLS lls(n, n, 1);
+  static SvdDoubleLls lls(n, n, 1);
   lls.clear();
   for_int(i, n - 1) {
     for_int(j, n) {
@@ -442,7 +442,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
     if (0) print_matrix(c);
     if (0) print_matrix(b);
   }
-  static SvdDoubleLLS lls(ngeom + 1, ngeom + 1, 1);
+  static SvdDoubleLls lls(ngeom + 1, ngeom + 1, 1);
   lls.clear();
   for_int(i, ngeom) {
     for_int(j, ngeom) {
@@ -480,13 +480,13 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
   assertx(nattrib >= 0);
   const int msize = ngeom + nattrib * nw;
   // cache previous size
-  static unique_ptr<SvdDoubleLLS> plls;
+  static unique_ptr<SvdDoubleLls> plls;
   static int psize;
   if (msize != psize) {
-    plls = make_unique<SvdDoubleLLS>(msize, msize, 1);
+    plls = make_unique<SvdDoubleLls>(msize, msize, 1);
     psize = msize;
   }
-  SvdDoubleLLS& lls = *plls;
+  SvdDoubleLls& lls = *plls;
   lls.clear();
   SGrid<double, ngeom, ngeom> msum;
   fill(msum, 0.);
@@ -590,13 +590,13 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   const int msize1 = msize;
 #endif
   // cache previous size
-  static unique_ptr<SvdDoubleLLS> plls;
+  static unique_ptr<SvdDoubleLls> plls;
   static int psize1;
   if (msize1 != psize1) {
-    plls = make_unique<SvdDoubleLLS>(msize1, msize1, 1);
+    plls = make_unique<SvdDoubleLls>(msize1, msize1, 1);
     psize1 = msize1;
   }
-  SvdDoubleLLS& lls = *plls;
+  SvdDoubleLls& lls = *plls;
   lls.clear();
 #if defined(DEF_LAGRANGE)
   for_int(i, msize) for_int(j, msize) lls.enter_a_rc(i, j, float(a[i][j]));

@@ -67,7 +67,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
   Simplex vt = nullptr;
 
   Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForSCSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
+  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
   EndFor;
 
   if (0) {
@@ -165,7 +165,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForSCSimplexChildIndex(f, e, ei) {
+      ForScSimplexChildIndex(f, e, ei) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -214,7 +214,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
   Simplex vt = nullptr;
 
   Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForSCSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
+  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
   EndFor;
 
   if (0) {
@@ -314,7 +314,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForSCSimplexChildIndex(f, e, ei) {
+      ForScSimplexChildIndex(f, e, ei) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -364,7 +364,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
   Simplex vt = nullptr;
 
   Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForSCSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
+  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
   EndFor;
 
   if (0) {
@@ -468,7 +468,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForSCSimplexChildIndex(f, e, ei) {
+      ForScSimplexChildIndex(f, e, ei) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)

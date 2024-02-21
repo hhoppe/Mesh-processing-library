@@ -11,7 +11,7 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"  // dihedral_angle_cos()
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"
@@ -571,8 +571,8 @@ void global_fit() {
   }
   int m = pt.co.num(), n = mesh.num_vertices();
   if (spring) m += mesh.num_edges();
-  if (verb >= 2) showf("GlobalFit: about to solve a %dx%d LLS system\n", m, n);
-  SparseLLS lls(m, n, 3);
+  if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
+  SparseLls lls(m, n, 3);
   lls.set_max_iter(200);
   // Add point constraints
   Array<Vertex> va;
@@ -773,7 +773,7 @@ void do_fgfit(Args& args) {
 
 // *** lfit
 
-// *** UPointLLS
+// *** UPointLls
 // Solve a linear least squares problem involving a single point,
 // in which the problem decomposes into 3 independent univariate LLS problems.
 // The system is U * x = b,
@@ -787,9 +787,9 @@ void do_fgfit(Args& args) {
 // coordinates simultaneously, while traversing U and b row-by-row.
 // To compute the rss (||U x - b||^2), Werner observed that
 // rss= ||b||^2-||U x||^2 = ||b||^2 - x^2 * ||U||^2.
-class UPointLLS {
+class UPointLls {
  public:
-  explicit UPointLLS(Point& p) : _p(p) {}
+  explicit UPointLls(Point& p) : _p(p) {}
   void enter_spring(const Point& pother, float sqrt_tension);
   // Constraint between point pdata and the point on triangle (p, p1, p2)
   // with barycentric coordinates (1-param1-param2, param1, param2)
@@ -803,7 +803,7 @@ class UPointLLS {
   double _rss0{0.};
 };
 
-inline void UPointLLS::enter_spring(const Point& pother, float sqrt_tension) {
+inline void UPointLls::enter_spring(const Point& pother, float sqrt_tension) {
   for_int(c, 3) {
     double u = sqrt_tension;
     double b = double(pother[c]) * sqrt_tension;
@@ -814,7 +814,7 @@ inline void UPointLLS::enter_spring(const Point& pother, float sqrt_tension) {
   }
 }
 
-inline void UPointLLS::enter_projection(const Point& pdata, const Point& p1, const Point& p2, float param1,
+inline void UPointLls::enter_projection(const Point& pdata, const Point& p1, const Point& p2, float param1,
                                         float param2) {
   double u = 1.f - param1 - param2;
   double pa1 = param1, pa2 = param2;
@@ -827,7 +827,7 @@ inline void UPointLLS::enter_projection(const Point& pdata, const Point& p1, con
   }
 }
 
-void UPointLLS::solve(double* prss0, double* prss1) {
+void UPointLls::solve(double* prss0, double* prss1) {
   double rss1 = 0.;
   for_int(c, 3) {
     double newv = assertw(_vUtU[c]) ? _vUtb[c] / _vUtU[c] : _p[c];
@@ -910,7 +910,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
       bbox.union_with(*wa[i]);
       bbox.union_with(*wa[i + 1]);
     }
-    UPointLLS ulls(newp);
+    UPointLls ulls(newp);
     for (int pi : ar_pts) {
       // HH_SSTAT(SLFconsid, nw - 1);
       const Point& p = pt.co[pi];

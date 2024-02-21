@@ -191,7 +191,7 @@ class RVideo {
   Video::Attrib _attrib;
   unique_ptr<TmpFile> _tmpfile;
   unique_ptr<Implementation> _impl;
-  friend class MF_RVideo_Implementation;
+  friend class Mf_RVideo_Implementation;
   friend class Ffmpeg_RVideo_Implementation;
 };
 
@@ -216,7 +216,7 @@ class WVideo {
   string _pfilename;  // original name if pipe
   unique_ptr<TmpFile> _tmpfile;
   unique_ptr<Implementation> _impl;
-  friend class MF_WVideo_Implementation;
+  friend class Mf_WVideo_Implementation;
   friend class Ffmpeg_WVideo_Implementation;
 };
 

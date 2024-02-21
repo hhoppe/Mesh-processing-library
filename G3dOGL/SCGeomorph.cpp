@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "G3dOGL/SCGeomorph.h"
+#include "G3dOGL/ScGeomorph.h"
 
 #include "libHh/GMesh.h"
 using namespace hh;
 
 // Determine whether triangle defined by verts is degenerate.
-int SCGeomorph::degenerate(Simplex v[3]) {
+int ScGeomorph::degenerate(Simplex v[3]) {
   int i, j;
   int cnt = 0;
   for (i = 0; i < 2; i++) {
@@ -18,7 +18,7 @@ int SCGeomorph::degenerate(Simplex v[3]) {
 }
 
 // Determine vertex normal by averaging normals of adjacent faces belonging to the same normal group.
-void SCGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm, bool skip_degenerate) {
+void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm, bool skip_degenerate) {
   Simplex verts[3];
 
   int ngroup = s_norgroup[corner_fct->getVAttribute()];
@@ -60,7 +60,7 @@ void SCGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   bool done = false;
   while (e->isManifold()) {
     // find other facet around e
-    ForSCSimplexParent(e, f) {
+    ForScSimplexParent(e, f) {
       if (f != fct) {
         fct = f;
         break;
@@ -163,7 +163,7 @@ void SCGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
     while (e->isManifold()) {
       // find other facet around e
-      ForSCSimplexParent(e, f) {
+      ForScSimplexParent(e, f) {
         if (f != fct) {
           fct = f;
           break;
@@ -245,7 +245,7 @@ void SCGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   avg_norm.normalize();
 }
 
-void SCGeomorph::read(std::istream& is) {
+void ScGeomorph::read(std::istream& is) {
   K.read(is);
 
   vold.init(K.getMaxId(0));
@@ -264,7 +264,7 @@ void SCGeomorph::read(std::istream& is) {
   }
 
   // verts
-  ForSCSimplex(K, 0, v) {
+  ForScSimplex(K, 0, v) {
     // new pos
     vnew[v->getId()] = v->getPosition();
 
@@ -299,7 +299,7 @@ void SCGeomorph::read(std::istream& is) {
   EndFor;
 
   // edges
-  ForSCSimplex(K, 1, e) {
+  ForScSimplex(K, 1, e) {
     // old area
     const char* soa = GMesh::string_key(str, e->get_string(), "Oarea");
     if (soa) {
@@ -326,7 +326,7 @@ void SCGeomorph::read(std::istream& is) {
   EndFor;
 
   // facets for corner normals
-  ForSCSimplex(K, 2, f) {
+  ForScSimplex(K, 2, f) {
     Simplex v[3];
     f->vertices(v);
 
@@ -339,14 +339,14 @@ void SCGeomorph::read(std::istream& is) {
 
   // corner normals
   // new normals
-  ForSCSimplex(K, 2, f) {
+  ForScSimplex(K, 2, f) {
     Simplex v[3];
     f->vertices(v);
     fct_pnor[f->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
   EndFor;
 
-  ForSCSimplex(K, 2, f) {
+  ForScSimplex(K, 2, f) {
     Simplex verts[3];
     f->vertices(verts);
     for_int(i, 3) vertSmoothNormal(verts[i], f, nnew[3 * f->getId() + i]);
@@ -355,9 +355,9 @@ void SCGeomorph::read(std::istream& is) {
 }
 
 // Interpolate between old and new using alpha parameter.
-void SCGeomorph::update(float alpha, Array<Vector>& corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
+void ScGeomorph::update(float alpha, Array<Vector>& corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
   // verts
-  ForSCSimplex(K, 0, v) { v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha)); }
+  ForScSimplex(K, 0, v) { v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha)); }
   EndFor;
 
   // area

@@ -20,7 +20,7 @@ HH_STAT(Sarea_moved);
 
 void SimplicialComplex::clear() {
   for_int(i, MAX_DIM + 1) {
-    ForSCSimplex(*this, i, s) { delete s; }
+    ForScSimplex(*this, i, s) { delete s; }
     EndFor;
     _simplices[i].clear();
     _free_sid[i] = 1;
@@ -32,10 +32,10 @@ void SimplicialComplex::copy(const SimplicialComplex& orig) {
   clear();
 
   for_int(i, MAX_DIM + 1) {
-    ForSCSimplex(orig, i, s) {
+    ForScSimplex(orig, i, s) {
       Simplex news;
       news = createSimplex(s->getDim(), s->getId());
-      ForSCSimplexChildIndex(s, c, ci) {
+      ForScSimplexChildIndex(s, c, ci) {
         Simplex this_child = getSimplex(c->getDim(), c->getId());
         news->setChild(ci, this_child);
         this_child->addParent(news);
@@ -59,9 +59,9 @@ void SimplicialComplex::copy(const SimplicialComplex& orig) {
 void SimplicialComplex::ok() const {
   HH_ATIMER(__ok);
   for_int(i, MAX_DIM + 1) {
-    ForSCSimplex(*this, i, si) {
+    ForScSimplex(*this, i, si) {
       assertx(si->getDim() <= MAX_DIM && si->getDim() >= 0);
-      ForSCSimplexChild(si, c) {
+      ForScSimplexChild(si, c) {
         if (!valid(c)) {
           std::cerr << "Simplex " << si->getDim() << " " << si->getId() << "has invalid child.\n";
         }
@@ -73,13 +73,13 @@ void SimplicialComplex::ok() const {
       }
       EndFor;
 
-      ForSCSimplexParent(si, p) {
+      ForScSimplexParent(si, p) {
         if (!valid(p)) {
           std::cerr << "Simplex " << si->getDim() << " " << si->getId() << "has invalid parent.\n";
         }
 
         bool found = false;
-        ForSCSimplexChild(p, pc) {
+        ForScSimplexChild(p, pc) {
           if (pc == si) found = true;
         }
         EndFor;
@@ -92,8 +92,8 @@ void SimplicialComplex::ok() const {
       EndFor;
       // check for duplicates
       int num_identical = 0;
-      ForSCSimplexParent(si, p1) {
-        ForSCSimplexParent(si, p2) {
+      ForScSimplexParent(si, p1) {
+        ForScSimplexParent(si, p2) {
           if (p1 == p2) {
             num_identical++;
             continue;
@@ -123,7 +123,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
   // res._material_strings = _material_strings;
 
   // note: it cycles through lower dimension parents first
-  ForSCSimplexStar(s, curr) {
+  ForScSimplexStar(s, curr) {
     Simplex news;
 
     // create a copy of current simplex in resulting simplicial complex
@@ -133,7 +133,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
     news->_flags = curr->_flags;
     news->_area = curr->_area;
 
-    ForSCSimplexChildIndex(curr, c, ci) {
+    ForScSimplexChildIndex(curr, c, ci) {
       Simplex res_child = res.getSimplex(c->getDim(), c->getId());
       // note some children might not be ancestors of s
       if (!res_child) {
@@ -145,7 +145,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
         res_child->_area = c->_area;
 
         // update child pointers (all must exist)
-        ForSCSimplexChildIndex(c, cc, cci) {
+        ForScSimplexChildIndex(c, cc, cci) {
           Simplex res_childchild = res.getSimplex(cc->getDim(), cc->getId());
           assertx(res_childchild);  // all must exist
           res_child->setChild(cci, res_childchild);
@@ -167,7 +167,7 @@ void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialCom
   res.copy(s1);
 
   for_int(i, MAX_DIM + 1) {
-    ForSCSimplex(s2, i, s2_s) {
+    ForScSimplex(s2, i, s2_s) {
       Simplex res_news = res.getSimplex(s2_s->getDim(), s2_s->getId());
 
       // create it if it doesn't exist in res
@@ -178,7 +178,7 @@ void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialCom
         res_news->_flags = s2_s->_flags;
         res_news->_area = s2_s->_area;
         // update its links
-        ForSCSimplexChildIndex(s2_s, s2_c, s2_ci) {
+        ForScSimplexChildIndex(s2_s, s2_c, s2_ci) {
           Simplex res_child = res.getSimplex(s2_c->getDim(), s2_c->getId());
           assertx(res_child);  // all children must exist
 
@@ -198,7 +198,7 @@ void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialCom
 void SimplicialComplex::star(Simplex s, Array<Simplex>& res) const {
   res.init(0);
   res.push(s);
-  ForSCSimplexStar(s, curr) { res.push(curr); }
+  ForScSimplexStar(s, curr) { res.push(curr); }
   EndFor;
 }
 
@@ -210,12 +210,12 @@ void SimplicialComplex::destroySimplex(Simplex s, int area_test) {
   }
 
   // remove all references from it's children
-  ForSCSimplexChild(s, c) { vec_remove_ordered(c->_parent, s); }
+  ForScSimplexChild(s, c) { vec_remove_ordered(c->_parent, s); }
   EndFor;
 
   Stack<Simplex> todel;
   // find all parents to be removed
-  ForSCSimplexParent(s, p) { todel.push(p); }
+  ForScSimplexParent(s, p) { todel.push(p); }
   EndFor;
 
   // destroy parents!
@@ -237,8 +237,8 @@ bool SimplicialComplex::equal(Simplex s1, Simplex s2) const {
   if (s1 == s2 || s1->getId() == s2->getId()) return true;
 
   int num_equal = 0;
-  ForSCSimplexChild(s1, c1) {
-    ForSCSimplexChild(s2, c2) {
+  ForScSimplexChild(s1, c1) {
+    ForScSimplexChild(s2, c2) {
       if (equal(c1, c2)) num_equal++;
     }
     EndFor;
@@ -292,11 +292,11 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   // propagate material
   if (both) {
     // new principal edges
-    ForSCSimplexStar(both, s) {
+    ForScSimplexStar(both, s) {
       if (s == both) continue;
 
       assertx(s->getDim() == 2);
-      ForSCSimplexChild(s, c) {
+      ForScSimplexChild(s, c) {
         if (c->getParents().size() == 1) {
           c->setVAttribute(s->getVAttribute());
         }
@@ -314,7 +314,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   float cmp_area = 0.f;
 
   if (propagate_area) {
-    ForSCSimplexStar(vs, s) {
+    ForScSimplexStar(vs, s) {
       if (s->isPrincipal()) {
         assertx(s->getArea() > 0.f);
       } else {
@@ -323,7 +323,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
     }
     EndFor;
 
-    ForSCSimplexStar(vt, s) {
+    ForScSimplexStar(vt, s) {
       if (s->isPrincipal()) {
         assertx(s->getArea() > 0.f);
       } else {
@@ -334,7 +334,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
     if (both) {
       // distribute area
-      ForSCSimplexStar(both, spx) {
+      ForScSimplexStar(both, spx) {
         // consider only principal simplices
         if (!spx->isPrincipal()) continue;
 
@@ -342,13 +342,13 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
         bool drop_area = false;
 
         // give it's area to manifold adjacent component
-        ForSCSimplexChild(spx, c) {
+        ForScSimplexChild(spx, c) {
           if (c == both) continue;
 
           if (c->isManifold()) {
             Simplex spx_adj = nullptr;
             // find adjacent component
-            ForSCSimplexParent(c, p) {
+            ForScSimplexParent(c, p) {
               if (p != spx) {
                 spx_adj = p;
                 break;
@@ -420,7 +420,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
   // remap all references of vt to vs in simplices adjacent to vt.
   std::vector<Simplex> worklist[MAX_DIM + 1];
-  ForSCSimplexStar(vs, s) {
+  ForScSimplexStar(vs, s) {
     if (s == vs) continue;
     worklist[s->getDim()].push_back(s);
   }
@@ -503,7 +503,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
   // distribute vt area if any
   if (propagate_area && cmp_area != 0.f) {
-    ForSCSimplexStar(vs, s) {
+    ForScSimplexStar(vs, s) {
       if (s->isPrincipal()) {
         Sarea_moved.enter(cmp_area);
         s->setArea(s->getArea() + cmp_area);
@@ -524,7 +524,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
 void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents) {
   // remove references from children
-  ForSCSimplexChildIndex(src, c, ci) {
+  ForScSimplexChildIndex(src, c, ci) {
     src->_child[ci] = nullptr;
     vec_remove_ordered(c->_parent, src);
   }
@@ -532,8 +532,8 @@ void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affect
 
   // replace references from parents
   // and add reference to parent from tgt
-  ForSCSimplexParent(src, p) {
-    ForSCSimplexChildIndex(p, c, ci) {
+  ForScSimplexParent(src, p) {
+    ForScSimplexChildIndex(p, c, ci) {
       if (src != c) continue;
       p->setChild(ci, tgt);
     }
@@ -556,14 +556,14 @@ void SimplicialComplex::write(std::ostream& os) const {
 
   // dump simplicial complex
   for_int(dim, MAX_DIM + 1) {
-    ForSCOrderedSimplex(*this, dim, s) {
+    ForScOrderedSimplex(*this, dim, s) {
       os << "Simplex " << dim << " " << s->getId() << "  ";
       if (dim == 0) {
         Point pos = s->getPosition();
         os << " " << pos[0] << " " << pos[1] << " " << pos[2];
       } else {  // dim != 0
         // iterate over children
-        ForSCSimplexChild(s, c) { os << " " << c->getId(); }
+        ForScSimplexChild(s, c) { os << " " << c->getId(); }
         EndFor;
       }
 
@@ -595,9 +595,7 @@ void SimplicialComplex::write(std::ostream& os) const {
 
 void SimplicialComplex::read(std::istream& is) {
   string sline;
-  // pointer to appropriate parser function
-  using PMF = void (SimplicialComplex::*)(const char*);
-  PMF parseLine = &SimplicialComplex::readLine;
+  auto parse_line = &SimplicialComplex::readLine;
   for (;;) {
     if (!my_getline(is, sline)) break;
     if (sline == "") continue;
@@ -605,15 +603,15 @@ void SimplicialComplex::read(std::istream& is) {
     if (sline[0] == '#') continue;  // skip comment
     // if attribute change state and read next line
     if (begins_with(sline, "[Attributes]")) {
-      parseLine = &SimplicialComplex::attrReadLine;
+      parse_line = &SimplicialComplex::attrReadLine;
       continue;
     }
 
     if (begins_with(sline, "[EndAttributes]")) {
-      parseLine = &SimplicialComplex::readLine;
+      parse_line = &SimplicialComplex::readLine;
       continue;
     }
-    (this->*parseLine)(sline.c_str());
+    (this->*parse_line)(sline.c_str());
   }
 }
 
@@ -650,7 +648,7 @@ void SimplicialComplex::readLine(const char* str) {
         sd->setChild(i, spxChild);
       }
       // Update children's parent pointers
-      ForSCSimplexChild(sd, c) { c->addParent(sd); }
+      ForScSimplexChild(sd, c) { c->addParent(sd); }
       EndFor;
     }
 
@@ -689,7 +687,7 @@ void SimplicialComplex::skeleton(int dim) {
 
   if (dim + 1 > MAX_DIM) return;
 
-  ForSCSimplex(*this, dim + 1, s) { todel.push(s); }
+  ForScSimplex(*this, dim + 1, s) { todel.push(s); }
   EndFor;
 
   while (!todel.empty()) {
@@ -712,7 +710,7 @@ void SimplicialComplex::readQHull(std::istream& is) {
   int verts;
   {
     int i = 0;
-    ForSCOrderedSimplex(*this, 0, v) {
+    ForScOrderedSimplex(*this, 0, v) {
       id2vtx.enter(i, v);
       i++;
     }
@@ -844,7 +842,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     }
 
     // update parent of the children
-    ForSCSimplexChild(s2, c) { c->addParent(s2); }
+    ForScSimplexChild(s2, c) { c->addParent(s2); }
     EndFor;
   }
 
@@ -884,7 +882,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     }
     showdf("Found %d materials without existing attrid\n", _material_strings.num() - nfirst);
     showdf("nmaterials=%d\n", _material_strings.num());
-    ForSCSimplex(*this, 2, s3) { s3->setVAttribute(msrepattrid.get(mssrep.get(s3))); }
+    ForScSimplex(*this, 2, s3) { s3->setVAttribute(msrepattrid.get(mssrep.get(s3))); }
     EndFor;
   }
 }
@@ -915,7 +913,7 @@ Simplex SimplicialComplex::createSimplex(int dim, int id) {
 }
 
 OrderedSimplexIter::OrderedSimplexIter(const SimplicialComplex& K, int dim) {
-  ForSCSimplex(K, dim, s) {
+  ForScSimplex(K, dim, s) {
     int sid = s->getId();
     assertw(sid <= 16777216);  // precision available in float
     pq.enter_unsorted(s, float(sid));
@@ -927,8 +925,8 @@ OrderedSimplexIter::OrderedSimplexIter(const SimplicialComplex& K, int dim) {
 SimplexVertexFaceIter::SimplexVertexFaceIter(Simplex s) {
   assertx(s->getDim() == 0);
 
-  ForSCSimplexParent(s, e) {
-    ForSCSimplexParent(e, f) {
+  ForScSimplexParent(s, e) {
+    ForScSimplexParent(e, f) {
       bool found = false;
       for (Simplex sqf : _sq) {
         if (f == sqf) {
@@ -955,7 +953,7 @@ Simplex SimplexVertexFaceIter::next() {
 SimplexStarIter::SimplexStarIter(Simplex s) {
   _sq.push(s);
 
-  ForSCSimplexParent(s, ss) { _sq.push(ss); }
+  ForScSimplexParent(s, ss) { _sq.push(ss); }
   EndFor;
 
   if (s->getDim() == 0) {
@@ -963,7 +961,7 @@ SimplexStarIter::SimplexStarIter(Simplex s) {
     // for each edge
     for_intL(i, 1, _index) {
       // add in faces
-      ForSCSimplexParent(_sq[i], f) {
+      ForScSimplexParent(_sq[i], f) {
         bool found = false;
 
         // only, if not already there
@@ -999,7 +997,7 @@ Simplex SimplexFacesIter::next() {
   Simplex curr = _sq.dequeue();
 
   if (curr->getDim() != 0) {
-    ForSCSimplexChild(curr, c) {
+    ForScSimplexChild(curr, c) {
       if (!_sq.contains(c)) _sq.enqueue(c);
     }
     EndFor;

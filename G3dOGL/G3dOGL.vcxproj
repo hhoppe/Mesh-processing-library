@@ -58,16 +58,16 @@
     </ClCompile>
     <ClCompile Include="normalmapping.cpp" />
     <ClCompile Include="PMesh_ogl.cpp" />
-    <ClCompile Include="SCGeomorph.cpp" />
+    <ClCompile Include="ScGeomorph.cpp" />
     <ClCompile Include="SimplicialComplex.cpp" />
     <ClCompile Include="SplitRecord.cpp" />
-    <ClCompile Include="SRMesh_ogl.cpp" />
+    <ClCompile Include="SrMesh_ogl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="G3d.h" />
     <ClInclude Include="HB.h" />
     <ClInclude Include="normalmapping.h" />
-    <ClInclude Include="SCGeomorph.h" />
+    <ClInclude Include="ScGeomorph.h" />
     <ClInclude Include="SimplicialComplex.h" />
     <ClInclude Include="SplitRecord.h" />
   </ItemGroup>

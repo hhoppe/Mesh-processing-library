@@ -5,7 +5,7 @@
 #define DEF_PLY
 
 #include "G3dOGL/HB.h"
-#include "G3dOGL/SCGeomorph.h"         // DEF_SC
+#include "G3dOGL/ScGeomorph.h"         // DEF_SC
 #include "G3dOGL/SimplicialComplex.h"  // DEF_SC
 #include "G3dOGL/SplitRecord.h"        // DEF_SC
 #include "G3dOGL/normalmapping.h"
@@ -24,7 +24,7 @@
 #include "libHh/PMesh.h"         // DEF_PM
 #include "libHh/Polygon.h"
 #include "libHh/SGrid.h"
-#include "libHh/SRMesh.h"  // DEF_SR
+#include "libHh/SrMesh.h"  // DEF_SR
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
 #include "libHh/Video.h"
@@ -294,9 +294,9 @@ struct Texture {
 
 Array<Texture> g_textures;
 
-class GXobject {
+class GxObject {
  public:
-  ~GXobject() { assertx(!_opened); }
+  ~GxObject() { assertx(!_opened); }
   void open(bool todraw) {
     assertx(!_opened);
     _opened = true;
@@ -318,9 +318,9 @@ class GXobject {
   void append(unique_ptr<Node> n);
 };
 
-class GXobjects {
+class GxObjects {
  public:
-  GXobjects();
+  GxObjects();
   Vec<Frame, k_max_object> t;
   Vec<bool, k_max_object> vis;
   Vec<bool, k_max_object> cullface;      // backface culling (polygon normal)
@@ -343,21 +343,21 @@ class GXobjects {
   }
   void make_link(int oldsegn, int newsegn);
   bool defined(int segn) const { return !!obp(segn); }  // recursion on links not permitted
-  GXobject& operator[](int i) { return *assertx(obp(i)); }
+  GxObject& operator[](int i) { return *assertx(obp(i)); }
 
  private:
   int _imin{k_max_object};
   int _imax{0};
-  // if _link[i], is a link to GXobject _link[i]
+  // if _link[i], is a link to GxObject _link[i]
   Vec<int, k_max_object> _link;
-  Vec<unique_ptr<GXobject>, k_max_object> _ob;
+  Vec<unique_ptr<GxObject>, k_max_object> _ob;
   int _segn{-1};
-  GXobject* obp(int i) const;
+  GxObject* obp(int i) const;
 };
 
-bool GXobject::s_idraw;
+bool GxObject::s_idraw;
 
-GXobjects g_xobs;
+GxObjects g_xobs;
 
 // *** PM stuff (progressive mesh)
 
@@ -408,7 +408,7 @@ void read_sc_gm(const string& filename);
 void sc_gm_wrap_draw(bool show);
 void sc_gm_set_lod(float lod);
 void draw_sc_gm(const SimplicialComplex& kmesh);
-Vec<SCGeomorph, 20> Gmorphs;  // has to be here because of draw_all
+Vec<ScGeomorph, 20> Gmorphs;  // has to be here because of draw_all
 int sc_gm_morph = 0;
 int sc_gm_num = -1;
 bool psc_key_press(char ch);
@@ -2396,7 +2396,7 @@ void all_reset() {
   }
 }
 
-// *** GXobject
+// *** GxObject
 
 Color create_mat_color(const A3dVertexColor& vc) {
   Color col;
@@ -2412,7 +2412,7 @@ bool operator==(const A3dVertexColor& c1, const A3dVertexColor& c2) {
 
 bool operator!=(const A3dVertexColor& c1, const A3dVertexColor& c2) { return !(c1 == c2); }
 
-void GXobject::add(const A3dElem& el) {
+void GxObject::add(const A3dElem& el) {
   assertx(_opened);
   assertx(el.num());
   switch (el.type()) {
@@ -2473,7 +2473,7 @@ void GXobject::add(const A3dElem& el) {
   }
 }
 
-void GXobject::append(unique_ptr<Node> n) {
+void GxObject::append(unique_ptr<Node> n) {
   _arn.push(std::move(n));
   if (s_idraw) {
     assertx(is_window);
@@ -2481,7 +2481,7 @@ void GXobject::append(unique_ptr<Node> n) {
   }
 }
 
-void GXobject::close() {
+void GxObject::close() {
   assertx(_opened);
   _opened = false;
   if (s_idraw) {
@@ -2490,7 +2490,7 @@ void GXobject::close() {
   }
 }
 
-void GXobject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.f is old
+void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.f is old
   use_dl = false;
   GMesh& mesh = *pmesh;
   mesh_init(mesh);
@@ -2573,9 +2573,9 @@ void GXobject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
   }
 }
 
-// *** GXobjects
+// *** GxObjects
 
-GXobjects::GXobjects() {
+GxObjects::GxObjects() {
   for_int(i, k_max_object) {
     _link[i] = 0;
     t[i] = Frame::identity();
@@ -2588,7 +2588,7 @@ GXobjects::GXobjects() {
   }
 }
 
-void GXobjects::clear(int segn) {
+void GxObjects::clear(int segn) {
   assertx(_segn == -1);
   assertx(_link.ok(segn));
   _link[segn] = 0;
@@ -2597,15 +2597,15 @@ void GXobjects::clear(int segn) {
   // I could update _imin, _imax here
 }
 
-void GXobjects::open(int segn) {
+void GxObjects::open(int segn) {
   assertx(_segn == -1);
   _segn = segn;
   assertx(_link.ok(segn));
   _link[_segn] = 0;
-  if (!_ob[_segn]) {  // create GXobject
+  if (!_ob[_segn]) {  // create GxObject
     _imin = min(_imin, _segn);
     _imax = max(_imax, _segn);
-    _ob[_segn] = make_unique<GXobject>();
+    _ob[_segn] = make_unique<GxObject>();
   }
   if (is_window) {
     hw.begin_draw_visible();
@@ -2615,7 +2615,7 @@ void GXobjects::open(int segn) {
   _ob[_segn]->open(is_window);
 }
 
-void GXobjects::make_link(int oldsegn, int newsegn) {
+void GxObjects::make_link(int oldsegn, int newsegn) {
   assertx(_segn == -1);
   assertx(_link.ok(oldsegn));
   assertx(_link.ok(newsegn));
@@ -2626,7 +2626,7 @@ void GXobjects::make_link(int oldsegn, int newsegn) {
   _imax = max(_imax, newsegn);
 }
 
-GXobject* GXobjects::obp(int i) const {
+GxObject* GxObjects::obp(int i) const {
   assertx(_link.ok(i));
   if (_ob[i]) return _ob[i].get();
   if (_link[i]) return _ob[_link[i]].get();
@@ -2894,7 +2894,7 @@ void HB::draw_space() {
   if (sr_mode) sr_pre_space();
 #endif
   // I noticed a 12% slowdown with gcanyon_4k2k_fly2.frames when I
-  //  placed the ClearWindow() before SRMesh::adapt_refinement() !
+  //  placed the ClearWindow() before SrMesh::adapt_refinement() !
   hw.clear_window();  // computation done before this!
   wrap_draw(false);
   if (picture && !g3d::input) {
@@ -3441,7 +3441,7 @@ bool pm_key_press(char ch) {
 
 #if defined(DEF_SR)
 
-SRMesh srmesh;
+SrMesh srmesh;
 int sr_ntstrips;
 int sr_ncachemiss;
 bool sr_freeze;
@@ -3494,7 +3494,7 @@ void sr_adapt_refinement() {
   // Timer timer;
   // Note: called before setup_ob(), so we must form the parameters we need here ourselves!
   {
-    SRViewParams vp;
+    SrViewParams vp;
     vp.set_frame(tpos * inverse(g_xobs.t[1]));
     if (!product(win_dims)) {  // window is iconified on _WIN32
       vp.set_zooms(twice(1.f));
@@ -3585,7 +3585,7 @@ void draw_sr() {
       }
     }
     if (sr_no_strips) {
-      Warning("SRMesh: not using strips for rendering");
+      Warning("SrMesh: not using strips for rendering");
       srmesh.ogl_render_faces_individually(texture_active && !texture_lit);
     } else if (!sr_use_tvc) {
       srmesh.ogl_render_faces_strips(texture_active && !texture_lit);
@@ -3921,7 +3921,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
   bool done = false;
   while (e->isManifold()) {
     // find other facet around e
-    ForSCSimplexParent(e, f) {
+    ForScSimplexParent(e, f) {
       if (f != fct) {
         fct = f;
         break;
@@ -3970,7 +3970,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     fct = corner_fct;
     while (e->isManifold()) {
       // find other facet around e
-      ForSCSimplexParent(e, f) {
+      ForScSimplexParent(e, f) {
         if (f != fct) {
           fct = f;
           break;
@@ -4025,24 +4025,24 @@ void read_sc(const string& filename) {
     s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : meshcolor.d;
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
-  ForSCSimplex(Kmesh, 2, s2) {
+  ForScSimplex(Kmesh, 2, s2) {
     Vec3<Simplex> v;
     s2->vertices(v.data());
     fct_pnor[s2->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
   EndFor;
-  ForSCSimplex(Kmesh, 2, s2) {
+  ForScSimplex(Kmesh, 2, s2) {
     Vec3<Simplex> verts;
     s2->vertices(verts.data());
     for_int(i, 3) vertSmoothNormal(verts[i], s2, corner_pnor[3 * s2->getId() + i]);
   }
   EndFor;
   // initialize principal verts and edges set
-  ForSCSimplex(Kmesh, 0, v) {
+  ForScSimplex(Kmesh, 0, v) {
     if (v->isPrincipal()) psc_principal_verts.enter(v);
   }
   EndFor;
-  ForSCSimplex(Kmesh, 1, e) {
+  ForScSimplex(Kmesh, 1, e) {
     if (e->isPrincipal()) psc_principal_edges.enter(e);
   }
   EndFor;
@@ -4060,7 +4060,7 @@ void read_psc(const string& filename) {
   Kmesh.read(fin());
   assertx(Kmesh.num(0) == 1 && Kmesh.num(1) == 0 && Kmesh.num(2) == 0);
   // initialize principal verts and edges set
-  ForSCSimplex(Kmesh, 0, v) { psc_principal_verts.enter(v); }
+  ForScSimplex(Kmesh, 0, v) { psc_principal_verts.enter(v); }
   EndFor;
   s_color.init(Kmesh.materialNum());
   s_norgroup.init(Kmesh.materialNum());
@@ -4131,7 +4131,7 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.remove(vs);
       } else {
-        ForSCSimplexParent(vs, e) {
+        ForScSimplexParent(vs, e) {
           if (!e->isPrincipal()) continue;
           psc_principal_edges.remove(e);
         }
@@ -4140,7 +4140,7 @@ void psc_update_lod() {
       if (vt->isPrincipal()) {
         psc_principal_verts.remove(vt);
       } else {
-        ForSCSimplexParent(vt, e) {
+        ForScSimplexParent(vt, e) {
           if (!e->isPrincipal()) continue;
           psc_principal_edges.remove(e);
         }
@@ -4152,7 +4152,7 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.enter(vs);
       } else {
-        ForSCSimplexParent(vs, e) {
+        ForScSimplexParent(vs, e) {
           if (!e->isPrincipal()) continue;
           psc_principal_edges.enter(e);
         }
@@ -4171,7 +4171,7 @@ void psc_update_lod() {
       } else {
         // otherwise, compute and cache
         int cnt = 0;
-        ForSCVertexFace(vs, f) {
+        ForScVertexFace(vs, f) {
           dummy_use(f);
           cnt++;
         }
@@ -4182,7 +4182,7 @@ void psc_update_lod() {
         Vec3<Simplex> verts;
         NormalRecord nr;
         // calculate facet normals
-        ForSCVertexFace(vs, s2) {
+        ForScVertexFace(vs, s2) {
           assertx(s2->getDim() == 2);
           nr.fid = s2->getId();
           s2->vertices(verts.data());
@@ -4196,7 +4196,7 @@ void psc_update_lod() {
         // starbar of vs, but we don't bother.
         // revisit facets in same order and calculate corner normals
         int ii = 0;
-        ForSCVertexFace(vs, s2) {
+        ForScVertexFace(vs, s2) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4226,7 +4226,7 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.remove(vs);
       } else {
-        ForSCSimplexParent(vs, e) { psc_principal_edges.remove(e); }
+        ForScSimplexParent(vs, e) { psc_principal_edges.remove(e); }
         EndFor;
       }
       // do split
@@ -4236,7 +4236,7 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.enter(vs);
       } else {
-        ForSCSimplexParent(vs, e) {
+        ForScSimplexParent(vs, e) {
           if (!e->isPrincipal()) continue;
           psc_principal_edges.enter(e);
         }
@@ -4246,7 +4246,7 @@ void psc_update_lod() {
         psc_principal_verts.enter(vt);
       } else {
         Simplex vsvt = vs->edgeTo(vt);
-        ForSCSimplexParent(vt, e) {
+        ForScSimplexParent(vt, e) {
           if (e == vsvt || !e->isPrincipal()) continue;
           psc_principal_edges.enter(e);
         }
@@ -4264,12 +4264,12 @@ void psc_update_lod() {
         }
       } else {
         int cnt = 0;
-        ForSCVertexFace(vs, f) {
+        ForScVertexFace(vs, f) {
           dummy_use(f);
           cnt++;
         }
         EndFor;
-        ForSCVertexFace(vt, f) {
+        ForScVertexFace(vt, f) {
           dummy_use(f);
           cnt++;
         }
@@ -4280,7 +4280,7 @@ void psc_update_lod() {
         NormalRecord nr;
         Vec3<Simplex> verts;
         // calculate facet normals
-        ForSCVertexFace(vs, s2) {
+        ForScVertexFace(vs, s2) {
           assertx(s2->getDim() == 2);
           s2->vertices(verts.data());
           nr.fid = s2->getId();
@@ -4290,7 +4290,7 @@ void psc_update_lod() {
           anr.push(nr);
         }
         EndFor;
-        ForSCVertexFace(vt, s2) {
+        ForScVertexFace(vt, s2) {
           assertx(s2->getDim() == 2);
           s2->vertices(verts.data());
           nr.fid = s2->getId();
@@ -4302,7 +4302,7 @@ void psc_update_lod() {
         EndFor;
         // revisit facets in same order and calculate corner normals
         int ii = 0;
-        ForSCVertexFace(vs, s2) {
+        ForScVertexFace(vs, s2) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4313,7 +4313,7 @@ void psc_update_lod() {
           ii++;
         }
         EndFor;
-        ForSCVertexFace(vt, s2) {
+        ForScVertexFace(vt, s2) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4485,7 +4485,7 @@ void draw_sc() {
     assertw(lsmooth);
     glBegin(GL_TRIANGLES);
     int i = 0;
-    ForSCSimplex(Kmesh, 2, s2) {
+    ForScSimplex(Kmesh, 2, s2) {
       if ((++i & 0x7F) == 0 && i) {
         glEnd();
         glBegin(GL_TRIANGLES);
@@ -4577,7 +4577,7 @@ void draw_sc() {
     initialize_unlit();
     set_thickness(thicknormal);
     glBegin(GL_LINES);
-    ForSCSimplex(Kmesh, 1, s) {
+    ForScSimplex(Kmesh, 1, s) {
       update_cur_color(s->hasColor() ? s_color[s->getVAttribute()] : pix_edgecolor);
       Point p0 = s->getChild(0)->getPosition();
       Point p1 = s->getChild(1)->getPosition();
@@ -4590,7 +4590,7 @@ void draw_sc() {
   }
 }
 
-// SCGeomorph stuff
+// ScGeomorph stuff
 bool grab_sc_gm(std::istream& is, std::stringstream& grab_stream) {
   for (string sline; my_getline(is, sline);) {
     if (begins_with(sline, "[SC Geomorph]")) return true;
@@ -4730,7 +4730,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     assertw(lsmooth);
     glBegin(GL_TRIANGLES);
     int i = 0;
-    ForSCSimplex(kmesh, 2, s2) {
+    ForScSimplex(kmesh, 2, s2) {
       if ((++i & 0x7F) == 0 && i) {
         glEnd();
         glBegin(GL_TRIANGLES);
@@ -4762,7 +4762,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     glPushAttrib(GL_TRANSFORM_BIT);
     {  // save GL_NORMALIZE
       glEnable(GL_NORMALIZE);
-      ForSCSimplex(kmesh, 1, s1) {
+      ForScSimplex(kmesh, 1, s1) {
         if (s1->getArea() < 1e-3f) continue;
         psc_orphan_nedges++;
         const Point& vj = s1->getChild(0)->getPosition();
@@ -4808,7 +4808,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     glPopAttrib();
     // draw all 0-simplices with no parents
     psc_orphan_nverts = 0;
-    ForSCSimplex(kmesh, 0, s0) {
+    ForScSimplex(kmesh, 0, s0) {
       if (s0->getArea() < 1e-3f) continue;
       psc_orphan_nverts++;
       maybe_update_mat_diffuse(s_color[s0->getVAttribute()]);
@@ -4825,7 +4825,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     initialize_unlit();
     set_thickness(thicknormal);
     glBegin(GL_LINES);
-    ForSCSimplex(kmesh, 1, s) {
+    ForScSimplex(kmesh, 1, s) {
       update_cur_color(s->hasColor() ? s_color[s->getVAttribute()] : pix_edgecolor);
       Point p0 = s->getChild(0)->getPosition();
       Point p1 = s->getChild(1)->getPosition();

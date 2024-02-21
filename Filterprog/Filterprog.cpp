@@ -843,9 +843,9 @@ int face_prediction(Face f, Face fa, Face fb, int ii) {
   return m == predicted_matid ? -1 : m;
 }
 
-PMWedgeAttrib get_wattrib(Corner c) {
+PmWedgeAttrib get_wattrib(Corner c) {
   assertx(c);
-  PMWedgeAttrib wa;
+  PmWedgeAttrib wa;
   int wid = c_cwedge_id(c);
   const WedgeInfo& wi = gcwinfo.get(wid);
   assertx(has_normal);
@@ -866,25 +866,25 @@ PMWedgeAttrib get_wattrib(Corner c) {
   return wa;
 }
 
-PMWedgeAttrib retrieve_wattrib(Corner c) {
+PmWedgeAttrib retrieve_wattrib(Corner c) {
   if (c) return get_wattrib(c);
   // to help debug
-  PMWedgeAttrib wa;
+  PmWedgeAttrib wa;
   fill(wa.normal, BIGFLOAT);
   fill(wa.rgb, BIGFLOAT);
   fill(wa.uv, BIGFLOAT);
   return wa;
 }
 
-PMWedgeAttribD diff(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2) {
-  PMWedgeAttribD ad;
+PmWedgeAttribD diff(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
+  PmWedgeAttribD ad;
   diff(ad, a1, a2);
   return ad;
 }
 
-PMWedgeAttribD diff_zero(const PMWedgeAttrib& a1) {
-  static PMWedgeAttrib zero;  // cannot declare const because default constructor leaves uninitialized
-  PMWedgeAttribD ad;
+PmWedgeAttribD diff_zero(const PmWedgeAttrib& a1) {
+  static PmWedgeAttrib zero;  // cannot declare const because default constructor leaves uninitialized
+  PmWedgeAttribD ad;
   diff(ad, a1, zero);
   return ad;
 }
@@ -897,8 +897,8 @@ Array<int> append_f_vsi_offset;  // old face index -> offset for vsindex
 
 struct _save {
   // Prior to vsplit
-  PMVertexAttrib vaovs;
-  PMWedgeAttrib wavtflo, wavsflo, wavtfro, wavsfro;
+  PmVertexAttrib vaovs;
+  PmWedgeAttrib wavtflo, wavsflo, wavtfro, wavsfro;
   // Vsplit parameters
   Vertex vs, vt, vl, vr;  // vr may be nullptr
   int ii;
@@ -986,9 +986,9 @@ void process_vsplit() {
   vspl.code = narrow_cast<ushort>(code);
   // Encode vertex attributes.
   {
-    PMVertexAttrib vas;
+    PmVertexAttrib vas;
     vas.point = mesh.point(save.vs);
-    PMVertexAttrib vat;
+    PmVertexAttrib vat;
     vat.point = mesh.point(save.vt);
     switch (save.ii) {
       case 2:
@@ -1000,7 +1000,7 @@ void process_vsplit() {
         diff(vspl.vad_small, vat, save.vaovs);
         break;
       case 1: {
-        PMVertexAttrib vam;
+        PmVertexAttrib vam;
         interp(vam, vas, vat, 0.5f);
         diff(vspl.vad_large, vat, vam);
         diff(vspl.vad_small, vam, save.vaovs);
@@ -1021,8 +1021,8 @@ void process_vsplit() {
       vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vt, fl))));
       vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vs, fl))));
     } else {
-      const PMWedgeAttrib& waovsfl = (code & Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
-      const PMWedgeAttrib& waovtfl = (code & Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
+      const PmWedgeAttrib& waovsfl = (code & Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
+      const PmWedgeAttrib& waovtfl = (code & Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
       switch (save.ii) {
         case 2:
           vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl));
@@ -1038,7 +1038,7 @@ void process_vsplit() {
           // Added check on ns to deal with (ws=5 wt=6) case.
           vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl));
           if (verify_reflection) {
-            PMWedgeAttrib wat;
+            PmWedgeAttrib wat;
             sub_reflect(wat, !ns ? waovsfl : waovtfl, vspl.ar_wad.last());
             assertw(!compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance));
           }
@@ -1056,8 +1056,8 @@ void process_vsplit() {
       if (ut) vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vt, fr))));
       if (us) vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vs, fr))));
     } else {
-      const PMWedgeAttrib& waovsfr = (code & Vsplit::S_RSAME) ? save.wavsfro : save.wavsflo;
-      const PMWedgeAttrib& waovtfr = (code & Vsplit::T_RSAME) ? save.wavtfro : save.wavtflo;
+      const PmWedgeAttrib& waovsfr = (code & Vsplit::S_RSAME) ? save.wavsfro : save.wavsflo;
+      const PmWedgeAttrib& waovtfr = (code & Vsplit::T_RSAME) ? save.wavtfro : save.wavtflo;
       switch (save.ii) {
         case 2:
           if (ut) vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fr)), !ns ? waovsfr : waovtfr));
@@ -1079,9 +1079,9 @@ void process_vsplit() {
     assertx(vspl.ar_wad.num() == 1);
     bool ns = !(code & Vsplit::S_LSAME);
     vspl.ar_wad.init(0);
-    const PMWedgeAttrib& waovsfl = (code & Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
-    const PMWedgeAttrib& waovtfl = (code & Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
-    const PMWedgeAttrib& wao = ns ? waovtfl : waovsfl;
+    const PmWedgeAttrib& waovsfl = (code & Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
+    const PmWedgeAttrib& waovtfl = (code & Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
+    const PmWedgeAttrib& wao = ns ? waovtfl : waovsfl;
     vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), wao));
     vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vs, fl)), wao));
   }
@@ -1332,7 +1332,7 @@ void do_pm_encode() {
         if (!is_new) continue;
         i = !nunique++ ? i0++ : bmesh._wedges.add(1);
         bmesh._wedges[i].vertex = rvi;
-        PMWedgeAttrib& wa = bmesh._wedges[i].attrib;
+        PmWedgeAttrib& wa = bmesh._wedges[i].attrib;
         const WedgeInfo& wi = gcwinfo.get(wid);
         assertx(has_normal);
         assertx(wi.nor[0] != k_undefined);

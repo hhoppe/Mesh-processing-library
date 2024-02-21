@@ -17,66 +17,66 @@ class PMeshIter;
 struct PMeshInfo;
 
 // Vertex attributes.
-struct PMVertexAttrib {
+struct PmVertexAttrib {
   Point point;
 };
 
 // Vertex attribute deltas.
-struct PMVertexAttribD {
+struct PmVertexAttribD {
   Vector dpoint;
 };
 
-void interp(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttrib& a2, float f1);
-void add(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttribD& ad);
-void sub(PMVertexAttrib& a, const PMVertexAttrib& a1, const PMVertexAttribD& ad);
-void diff(PMVertexAttribD& ad, const PMVertexAttrib& a1, const PMVertexAttrib& a2);
-int compare(const PMVertexAttrib& a1, const PMVertexAttrib& a2);
-int compare(const PMVertexAttrib& a1, const PMVertexAttrib& a2, float tol);
+void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float f1);
+void add(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
+void sub(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
+void diff(PmVertexAttribD& ad, const PmVertexAttrib& a1, const PmVertexAttrib& a2);
+int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2);
+int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol);
 
 // Wedge attributes.
-struct PMWedgeAttrib {
+struct PmWedgeAttrib {
   Vector normal;
   A3dColor rgb;
   UV uv;
 };
 
 // Wedge attribute deltas.
-struct PMWedgeAttribD {
+struct PmWedgeAttribD {
   Vector dnormal;
   A3dColor drgb;
   UV duv;
 };
 
-void interp(PMWedgeAttrib& a, const PMWedgeAttrib& a1, const PMWedgeAttrib& a2, float f1);
-void add(PMWedgeAttrib& a, const PMWedgeAttrib& a1, const PMWedgeAttribD& ad);
-void sub_noreflect(PMWedgeAttrib& a, const PMWedgeAttrib& abase, const PMWedgeAttribD& ad);
-void sub_reflect(PMWedgeAttrib& a, const PMWedgeAttrib& abase, const PMWedgeAttribD& ad);
-void add_zero(PMWedgeAttrib& a, const PMWedgeAttribD& ad);
-void diff(PMWedgeAttribD& ad, const PMWedgeAttrib& a1, const PMWedgeAttrib& a2);
-int compare(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2);
-int compare(const PMWedgeAttrib& a1, const PMWedgeAttrib& a2, float tol);
+void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float f1);
+void add(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttribD& ad);
+void sub_noreflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad);
+void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad);
+void add_zero(PmWedgeAttrib& a, const PmWedgeAttribD& ad);
+void diff(PmWedgeAttribD& ad, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2);
+int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2);
+int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol);
 
 // Face attribute is discrete: an integer material identifier that indexes into the _materials array.
-struct PMFaceAttrib {
+struct PmFaceAttrib {
   int matid;
-  // Note: a high bit is used for k_Face_visited_mask in SRMesh::ogl_render_faces_strips().
+  // Note: a high bit is used for k_Face_visited_mask in SrMesh::ogl_render_faces_strips().
 };
 
-struct PMVertex {
-  PMVertexAttrib attrib;
+struct PmVertex {
+  PmVertexAttrib attrib;
 };
 
-struct PMWedge {
+struct PmWedge {
   int vertex;
-  PMWedgeAttrib attrib;
+  PmWedgeAttrib attrib;
 };
 
-struct PMFace {
+struct PmFace {
   Vec3<int> wedges;
-  PMFaceAttrib attrib;
+  PmFaceAttrib attrib;
 };
 
-// optimize: use pointers in PMFace::wedges and W_Edge::vertex
+// optimize: use pointers in PmFace::wedges and W_Edge::vertex
 // However, this requires arrays that don't reallocate.
 // So either reserve, or use versatile Win32 memory allocation.
 
@@ -87,9 +87,9 @@ struct WMesh {
   void extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const;
   void ok() const;
   Materials _materials;
-  Array<PMVertex> _vertices;
-  Array<PMWedge> _wedges;
-  Array<PMFace> _faces;
+  Array<PmVertex> _vertices;
+  Array<PmWedge> _wedges;
+  Array<PmFace> _faces;
 };
 
 // Vertex split record.  Records the information necessary to split a vertex of the mesh, to add to the mesh 1 new
@@ -207,11 +207,11 @@ struct Vsplit {
   // for ii == 0: vad_large = new_vs - old_vs, vad_small = new_vt - old_vs
   // for ii == 1: vad_large = new_vt - new_i,  vad_small = new_i - old_vs
   //    where new_i=interp(new_vt, new_vs)
-  PMVertexAttribD vad_large;
-  PMVertexAttribD vad_small;  // is zero if "MeshSimplify -nofitgeom"
+  PmVertexAttribD vad_large;
+  PmVertexAttribD vad_small;  // is zero if "MeshSimplify -nofitgeom"
 
   // ** Wedge attribute deltas (size 1--6)
-  Array<PMWedgeAttribD> ar_wad;
+  Array<PmWedgeAttribD> ar_wad;
   // Order: [(wvtfl, wvsfl), [(wvtfr, wvsfr)], wvlfl, [wvrfr]]
 
   // ** Residual information:
@@ -221,12 +221,12 @@ struct Vsplit {
 };
 
 // For each face, what are its 3 neighbors?
-struct PMFaceNeighbors {
+struct PmFaceNeighbors {
   Vec3<int> faces;  // faces[i] is across edge opposite of wedges[i].  < 0 if no neighbor.
 };
 
 // Wedge mesh augmented with adjacency information.
-// Specifically, dual graph encoding face-face adjacency using PMFaceNeighbors.
+// Specifically, dual graph encoding face-face adjacency using PmFaceNeighbors.
 class AWMesh : public WMesh {
  public:
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
@@ -245,7 +245,7 @@ class AWMesh : public WMesh {
   void ogl_render_edges();
 
  public:
-  Array<PMFaceNeighbors> _fnei;  // must be same size as _faces!
+  Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
  public:
   int get_jvf(int v, int f) const;  // get index of vertex v in face f
   int get_wvf(int v, int f) const;
@@ -357,20 +357,20 @@ class PMeshIter : public AWMesh {
 // Records vertex and wedge ancestry during PM traversal in order to construct geomorphs.
 class Ancestry {
  public:
-  Array<PMVertexAttrib> _vancestry;
-  Array<PMWedgeAttrib> _wancestry;
+  Array<PmVertexAttrib> _vancestry;
+  Array<PmWedgeAttrib> _wancestry;
 };
 
 // Geomorph endstates: pair of attributes for a changing vertex.
-struct PMVertexAttribG {
+struct PmVertexAttribG {
   int vertex;
-  Vec2<PMVertexAttrib> attribs;
+  Vec2<PmVertexAttrib> attribs;
 };
 
 // Geomorph endstates: pair of attributes for a changing wedge.
-struct PMWedgeAttribG {
+struct PmWedgeAttribG {
   int wedge;
-  Vec2<PMWedgeAttrib> attribs;
+  Vec2<PmWedgeAttrib> attribs;
 };
 
 // A geomorph is a mesh which is able to smoothly transition between two endstates.
@@ -401,8 +401,8 @@ class Geomorph : public WMesh {
   void evaluate(float alpha);  // 0 <= alpha <= 1 (0 == coarse)
  private:
   friend class SGeomorph;
-  Array<PMVertexAttribG> _vgattribs;
-  Array<PMWedgeAttribG> _wgattribs;
+  Array<PmVertexAttribG> _vgattribs;
+  Array<PmWedgeAttribG> _wgattribs;
   enum class EWant { vsplits, nvertices, nfaces };
   bool construct(PMeshIter& pmi, EWant want, int num);
   // Default operator=() and copy_constructor are safe.
@@ -415,29 +415,28 @@ class Geomorph : public WMesh {
 //    WMesh does.)
 
 // Simple vertex attributes.
-struct PMSVertexAttrib {
-  PMVertexAttrib v;
-  PMWedgeAttrib w;
+struct PmSVertexAttrib {
+  PmVertexAttrib v;
+  PmWedgeAttrib w;
 };
 
-void interp(PMSVertexAttrib& a, const PMSVertexAttrib& a1, const PMSVertexAttrib& a2, float f1);
+void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float f1);
 
-struct PMSVertex {
-  PMSVertexAttrib attrib;
+struct PmSVertex {
+  PmSVertexAttrib attrib;
 };
 
-struct PMSFace {
+struct PmSFace {
   Vec3<int> vertices;
-  PMFaceAttrib attrib;
+  PmFaceAttrib attrib;
 };
 
-struct PMSVertexAttribG {
+struct PmSVertexAttribG {
   int vertex;
-  Vec2<PMSVertexAttrib> attribs;
+  Vec2<PmSVertexAttrib> attribs;
 };
-#if defined(__GNUC__)  // else makes VS2015 Intellisense unhappy
-static_assert(std::is_pod<PMSVertexAttribG>::value, "");
-#endif
+static_assert(std::is_standard_layout<PmSVertexAttribG>::value, "");
+static_assert(std::is_trivial<PmSVertexAttribG>::value, "");
 
 // Simple mesh: faces -> vertices.
 // Split wedges into independent vertices.
@@ -448,8 +447,8 @@ class SMesh {
 
  public:
   Materials _materials;
-  Array<PMSVertex> _vertices;
-  Array<PMSFace> _faces;
+  Array<PmSVertex> _vertices;
+  Array<PmSFace> _faces;
   // Default operator=() and copy_constructor are safe.
 };
 
@@ -464,7 +463,7 @@ class SGeomorph : public SMesh {
   void extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const;
 
  private:
-  Array<PMSVertexAttribG> _vgattribs;
+  Array<PmSVertexAttribG> _vgattribs;
   // Default operator=() and copy_constructor are safe.
 };
 

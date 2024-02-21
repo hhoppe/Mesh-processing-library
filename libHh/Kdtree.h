@@ -50,13 +50,8 @@ template <typename T, int D> class Kdtree : noncopyable {
     Entry() = default;
     Entry(const T& id) : _id(id) {}
     Entry(T&& id) noexcept : _id(std::move(id)) {}
-    Entry& operator=(Entry&& e) noexcept {
-      _id = std::move(e._id);
-      _bb = e._bb;
-      return *this;
-    }
-    T _id;
-    SGrid<float, 2, D> _bb;  // bounding box on entry
+    T _id{};
+    SGrid<float, 2, D> _bb{};  // bounding box on entry
   };
   struct Node {
     Node() = default;

@@ -434,9 +434,9 @@ void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12V
 
 }  // namespace
 
-class MF_RVideo_Implementation : public RVideo::Implementation {
+class Mf_RVideo_Implementation : public RVideo::Implementation {
  public:
-  explicit MF_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
+  explicit Mf_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) {
     {
       com_ptr<IMFSourceResolver> pSourceResolver;
       AS(MFCreateSourceResolver(&pSourceResolver));
@@ -518,7 +518,7 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
       if (0) SHOW(dims, _stride);
     }
   }
-  ~MF_RVideo_Implementation() override {
+  ~Mf_RVideo_Implementation() override {
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
   string name() const override { return "mf"; }
@@ -630,9 +630,9 @@ class MF_RVideo_Implementation : public RVideo::Implementation {
   int _stride;
 };
 
-class MF_WVideo_Implementation : public WVideo::Implementation {
+class Mf_WVideo_Implementation : public WVideo::Implementation {
  public:
-  explicit MF_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
+  explicit Mf_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) {
     const auto& attrib = _wvideo._attrib;
     if (attrib.audio.size()) Warning("MF_WVideo does not currently support audio");
     _impl_nv12 = attrib.suffix == "mp4";
@@ -719,7 +719,7 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
     }
     AS(_pSinkWriter->BeginWriting());
   }
-  ~MF_WVideo_Implementation() override {
+  ~Mf_WVideo_Implementation() override {
     if (_pSinkWriter) AS(_pSinkWriter->Finalize());
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
@@ -811,14 +811,14 @@ class MF_WVideo_Implementation : public WVideo::Implementation {
 
 #else
 
-class MF_RVideo_Implementation : public Unsupported_RVideo_Implementation {
+class Mf_RVideo_Implementation : public Unsupported_RVideo_Implementation {
  public:
-  MF_RVideo_Implementation(RVideo& rvideo) : Unsupported_RVideo_Implementation(rvideo) {}
+  Mf_RVideo_Implementation(RVideo& rvideo) : Unsupported_RVideo_Implementation(rvideo) {}
   static bool supported() { return false; }
 };
-class MF_WVideo_Implementation : public Unsupported_WVideo_Implementation {
+class Mf_WVideo_Implementation : public Unsupported_WVideo_Implementation {
  public:
-  MF_WVideo_Implementation(WVideo& wvideo) : Unsupported_WVideo_Implementation(wvideo) {}
+  Mf_WVideo_Implementation(WVideo& wvideo) : Unsupported_WVideo_Implementation(wvideo) {}
   static bool supported() { return false; }
 };
 
@@ -1115,11 +1115,11 @@ unique_ptr<RVideo::Implementation> RVideo::Implementation::make(RVideo& rvideo) 
   //   e.g.:  RVIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -stat
   string implementation = getenv_string("RVIDEO_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("VIDEO_IMPLEMENTATION");
-  if (implementation == "mf") return make_unique<MF_RVideo_Implementation>(rvideo);
+  if (implementation == "mf") return make_unique<Mf_RVideo_Implementation>(rvideo);
   if (implementation == "ffmpeg") return make_unique<Ffmpeg_RVideo_Implementation>(rvideo);
   if (implementation != "") throw std::runtime_error("RVideo implementation '" + implementation + "' not recognized");
   if (Ffmpeg_RVideo_Implementation::supported()) return make_unique<Ffmpeg_RVideo_Implementation>(rvideo);
-  if (MF_RVideo_Implementation::supported()) return make_unique<MF_RVideo_Implementation>(rvideo);
+  if (Mf_RVideo_Implementation::supported()) return make_unique<Mf_RVideo_Implementation>(rvideo);
   throw std::runtime_error("Video I/O not implemented");
 }
 
@@ -1130,14 +1130,14 @@ unique_ptr<WVideo::Implementation> WVideo::Implementation::make(WVideo& wvideo) 
   // - ffmpeg: cannot write *.wmv using VC1 codec (instead resorts to msmpeg4v3).
   string implementation = getenv_string("WVIDEO_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("VIDEO_IMPLEMENTATION");
-  if (implementation == "mf") return make_unique<MF_WVideo_Implementation>(wvideo);
+  if (implementation == "mf") return make_unique<Mf_WVideo_Implementation>(wvideo);
   if (implementation == "ffmpeg") return make_unique<Ffmpeg_WVideo_Implementation>(wvideo);
   if (implementation != "") throw std::runtime_error("WVideo implementation '" + implementation + "' not recognized");
   // Prefer ffmpeg, but revert to Windows Media Foundation (if available) for *.wmv output (using VC1 encoder).
-  if (wvideo._attrib.suffix == "wmv" && MF_WVideo_Implementation::supported())
-    return make_unique<MF_WVideo_Implementation>(wvideo);
+  if (wvideo._attrib.suffix == "wmv" && Mf_WVideo_Implementation::supported())
+    return make_unique<Mf_WVideo_Implementation>(wvideo);
   if (Ffmpeg_WVideo_Implementation::supported()) return make_unique<Ffmpeg_WVideo_Implementation>(wvideo);
-  if (MF_WVideo_Implementation::supported()) return make_unique<MF_WVideo_Implementation>(wvideo);
+  if (Mf_WVideo_Implementation::supported()) return make_unique<Mf_WVideo_Implementation>(wvideo);
   throw std::runtime_error("Video I/O not implemented");
 }
 

@@ -3988,7 +3988,7 @@ void background_work(bool asynchronous) {
         VideoNv12 videoloop_nv12(use_nv12 ? ndims : thrice(0));
         {
           HH_TIMER(loop_gdloop);
-          EGDLoopScheme scheme = 1 ? EGDLoopScheme::fast : EGDLoopScheme::precise;
+          GdLoopScheme scheme = 1 ? GdLoopScheme::fast : GdLoopScheme::precise;
           compute_gdloop(odims, "", ovideo, ovideo_nv12, g_lp.mat_start, g_lp.mat_period, scheme, ndims[0], nullptr,
                          videoloop, videoloop_nv12, 1);
         }
@@ -4185,11 +4185,11 @@ void do_batch_create_loop(Args& args) {
       HH_TIMER(loop_optimize);
       compute_looping_parameters(odims, Video(), ovideo_nv12, nframes);
     }
-    EGDLoopScheme scheme = 1 ? EGDLoopScheme::fast : EGDLoopScheme::precise;
+    GdLoopScheme scheme = 1 ? GdLoopScheme::fast : GdLoopScheme::precise;
     Video ovideo;
     VideoNv12 videoloop_nv12;
     Video videoloop;
-    if (scheme == EGDLoopScheme::fast) {
+    if (scheme == GdLoopScheme::fast) {
       videoloop_nv12.init(ndims);
     } else {
       ovideo.init(ovideo_nv12.get_Y().dims());

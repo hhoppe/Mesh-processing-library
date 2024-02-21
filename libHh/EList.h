@@ -8,16 +8,16 @@
 
 #if 0
 {
-  struct SRAVertex {
+  struct SrAVertex {
     EListNode _active;
     bool ok{true};
     ...
   };
   EList list_activev;
-  SRAVertex* v = new SRAVertex;
+  SrAVertex* v = new SrAVertex;
   v->_active.link_after(list_activev.delim());
   for (EListNode* n : list_activev) assertx(n->linked());
-  for (SRAVertex* v : HH_ELIST_RANGE(list, SRAVertex, _active)) assertx(v->ok);
+  for (SrAVertex* v : HH_ELIST_RANGE(list, SrAVertex, _active)) assertx(v->ok);
 }
 #endif
 

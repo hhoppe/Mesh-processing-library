@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 
 #include "libHh/MatrixOp.h"  // mat_mul()
 #include "libHh/RangeOp.h"
@@ -14,102 +14,102 @@ static const int sdebug = getenv_int("LLS_DEBUG");  // 0, 1, or 2
 
 // *** virtual constructor
 
-unique_ptr<LLS> LLS::make(int m, int n, int nd, float nonzerofrac) {
+unique_ptr<Lls> Lls::make(int m, int n, int nd, float nonzerofrac) {
   if (getenv_bool("SPARSE_LLS")) {
-    Warning("Using SparseLLS");
-    return make_unique<SparseLLS>(m, n, nd);
+    Warning("Using SparseLls");
+    return make_unique<SparseLls>(m, n, nd);
   }
   if (getenv_bool("LUD_LLS")) {
-    Warning("Using LudLLS");
-    return make_unique<LudLLS>(m, n, nd);
+    Warning("Using LudLls");
+    return make_unique<LudLls>(m, n, nd);
   }
   if (getenv_bool("GIVENS_LLS")) {
-    Warning("Using GivensLLS");
-    return make_unique<GivensLLS>(m, n, nd);
+    Warning("Using GivensLls");
+    return make_unique<GivensLls>(m, n, nd);
   }
   if (getenv_bool("SVD_LLS")) {
-    Warning("Using SvdLLS");
-    return make_unique<SvdLLS>(m, n, nd);
+    Warning("Using SvdLls");
+    return make_unique<SvdLls>(m, n, nd);
   }
   if (getenv_bool("SVD_DOUBLE_LLS")) {
-    Warning("Using SvdDoubleLLS");
-    return make_unique<SvdDoubleLLS>(m, n, nd);
+    Warning("Using SvdDoubleLls");
+    return make_unique<SvdDoubleLls>(m, n, nd);
   }
   if (getenv_bool("QRD_LLS")) {
-    Warning("Using QrdLLS");
-    return make_unique<QrdLLS>(m, n, nd);
+    Warning("Using QrdLls");
+    return make_unique<QrdLls>(m, n, nd);
   }
   int64_t size = int64_t{m} * n;
   if (size < 1000 * 40) {  // small system
-    return make_unique<QrdLLS>(m, n, nd);
+    return make_unique<QrdLls>(m, n, nd);
   } else {  // large system
-    if (nonzerofrac < .3f) return make_unique<SparseLLS>(m, n, nd);
-    return make_unique<QrdLLS>(m, n, nd);
+    if (nonzerofrac < .3f) return make_unique<SparseLls>(m, n, nd);
+    return make_unique<QrdLls>(m, n, nd);
   }
 }
 
-// *** LLS
+// *** Lls
 
-LLS::LLS(int m, int n, int nd) : _m(m), _n(n), _nd(nd), _b(nd, m), _x(nd, n) {
+Lls::Lls(int m, int n, int nd) : _m(m), _n(n), _nd(nd), _b(nd, m), _x(nd, n) {
   assertx(_m > 0 && _n > 0 && _nd > 0 && _m >= _n);
-  LLS::clear();
+  Lls::clear();
 }
 
-void LLS::clear() {
+void Lls::clear() {
   fill(_b, 0.f);
   fill(_x, 0.f);
   _solved = false;
 }
 
-void LLS::enter_a(CMatrixView<float> mat) {
+void Lls::enter_a(CMatrixView<float> mat) {
   assertx(mat.ysize() == _m && mat.xsize() == _n);
   for_int(r, _m) enter_a_r(r, mat[r]);
 }
 
-void LLS::enter_b(CMatrixView<float> mat) {
+void Lls::enter_b(CMatrixView<float> mat) {
   assertx(mat.ysize() == _m && mat.xsize() == _nd);
   for_int(r, _m) enter_b_r(r, mat[r]);
 }
 
-void LLS::enter_xest(CMatrixView<float> mat) {
+void Lls::enter_xest(CMatrixView<float> mat) {
   assertx(mat.ysize() == _n && mat.xsize() == _nd);
   for_int(r, _n) enter_xest_r(r, mat[r]);
 }
 
-void LLS::get_x(MatrixView<float> mat) {
+void Lls::get_x(MatrixView<float> mat) {
   assertx(mat.ysize() == _n && mat.xsize() == _nd);
   for_int(r, _n) get_x_r(r, mat[r]);
 }
 
-// *** SparseLLS
+// *** SparseLls
 
-void SparseLLS::clear() {
+void SparseLls::clear() {
   _rows.clear();
   _cols.clear();
-  LLS::clear();
+  Lls::clear();
 }
 
-void SparseLLS::enter_a_rc(int r, int c, float val) {
+void SparseLls::enter_a_rc(int r, int c, float val) {
   _rows[r].push(Ival(c, val));
   _cols[c].push(Ival(r, val));
   _nentries++;
 }
 
-void SparseLLS::enter_a_r(int r, CArrayView<float> ar) {
+void SparseLls::enter_a_r(int r, CArrayView<float> ar) {
   ASSERTX(ar.num() == _n);
   for_int(c, _n) {
     if (ar[c]) enter_a_rc(r, c, ar[c]);
   }
 }
 
-void SparseLLS::enter_a_c(int c, CArrayView<float> ar) {
+void SparseLls::enter_a_c(int c, CArrayView<float> ar) {
   ASSERTX(ar.num() == _m);
   for_int(r, _m) {
     if (ar[r]) enter_a_rc(r, c, ar[r]);
   }
 }
 
-Array<float> SparseLLS::mult_m_v(CArrayView<float> vi) const {
+Array<float> SparseLls::mult_m_v(CArrayView<float> vi) const {
   Array<float> vo(_m);
   // vo[m] = _a[m][n]*vi[n];
   for_int(i, _m) {
@@ -120,7 +120,7 @@ Array<float> SparseLLS::mult_m_v(CArrayView<float> vi) const {
   return vo;
 }
 
-Array<float> SparseLLS::mult_mt_v(CArrayView<float> vi) const {
+Array<float> SparseLls::mult_mt_v(CArrayView<float> vi) const {
   Array<float> vo(_n);
   // vo[n] = uT[n][m]*vi[m];
   for_int(j, _n) {
@@ -131,7 +131,7 @@ Array<float> SparseLLS::mult_mt_v(CArrayView<float> vi) const {
   return vo;
 }
 
-bool SparseLLS::do_cg(Array<float>& x, CArrayView<float> h, double* prssb, double* prssa) const {
+bool SparseLls::do_cg(Array<float>& x, CArrayView<float> h, double* prssb, double* prssa) const {
   // x(_n), h(_m)
   Array<float> rc, gc, gp, dc, tc;
   rc = mult_m_v(x);
@@ -171,11 +171,11 @@ bool SparseLLS::do_cg(Array<float>& x, CArrayView<float> h, double* prssb, doubl
   return gm2 < _tolerance;
 }
 
-bool SparseLLS::solve(double* prssb, double* prssa) {
-  auto up_timer = _verb ? make_unique<Timer>("_____SparseLLS", Timer::EMode::abbrev) : nullptr;
+bool SparseLls::solve(double* prssb, double* prssa) {
+  auto up_timer = _verb ? make_unique<Timer>("_____SparseLls", Timer::EMode::abbrev) : nullptr;
   assertx(!_solved);
   _solved = true;
-  if (sdebug) showf("SparseLLS: solving %dx%d system, nonzerofrac=%f\n", _m, _n, float(_nentries) / _m / _n);
+  if (sdebug) showf("SparseLls: solving %dx%d system, nonzerofrac=%f\n", _m, _n, float(_nentries) / _m / _n);
   if (prssb) *prssb = 0.;
   if (prssa) *prssa = 0.;
   Array<float> x(_n), rhv(_m);
@@ -192,20 +192,20 @@ bool SparseLLS::solve(double* prssb, double* prssa) {
   return success;
 }
 
-void SparseLLS::set_tolerance(float tolerance) { _tolerance = tolerance; }
+void SparseLls::set_tolerance(float tolerance) { _tolerance = tolerance; }
 
-void SparseLLS::set_max_iter(int max_iter) { _max_iter = max_iter; }
+void SparseLls::set_max_iter(int max_iter) { _max_iter = max_iter; }
 
-void SparseLLS::set_verbose(int verb) { _verb = verb; }
+void SparseLls::set_verbose(int verb) { _verb = verb; }
 
-// *** FullLLS
+// *** FullLls
 
-void FullLLS::clear() {
+void FullLls::clear() {
   fill(_a, 0.f);
-  LLS::clear();
+  Lls::clear();
 }
 
-bool FullLLS::solve(double* prssb, double* prssa) {
+bool FullLls::solve(double* prssb, double* prssa) {
   assertx(_m >= _n);
   assertx(!_solved);
   _solved = true;
@@ -215,15 +215,15 @@ bool FullLLS::solve(double* prssb, double* prssa) {
   return success;
 }
 
-double FullLLS::get_rss() {
+double FullLls::get_rss() {
   double rss = 0.;
   for_int(di, _nd) for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di][i]);
   return rss;
 }
 
-// *** LudLLS
+// *** LudLls
 
-bool LudLLS::solve_aux() {
+bool LudLls::solve_aux() {
   auto up_ta = _m != _n ? make_unique<Matrix<float>>(_n, _n) : nullptr;
   MatrixView<float> a = up_ta ? *up_ta : _a;
   if (_m != _n) {
@@ -307,9 +307,9 @@ bool LudLLS::solve_aux() {
   return true;
 }
 
-// *** GivensLLS
+// *** GivensLls
 
-bool GivensLLS::solve_aux() {
+bool GivensLls::solve_aux() {
   int nposs = 0, ngivens = 0;
   for_int(i, _n) {
     for_intL(k, i + 1, _m) {
@@ -340,7 +340,7 @@ bool GivensLLS::solve_aux() {
       }
     }
     if (!_a[i][i]) {
-      Warning("GivensLLS solution fails");
+      Warning("GivensLls solution fails");
       return false;
     }
   }
@@ -373,12 +373,12 @@ inline int work_size(int m, int n) {
 
 }  // namespace
 
-// *** SvdLLS
+// *** SvdLls
 
-SvdLLS::SvdLLS(int m, int n, int nd)
-    : FullLLS(m, n, nd), _fa(_m * _n), _fb(_m * _nd), _s(_n), _work(work_size(_m, _n)) {}
+SvdLls::SvdLls(int m, int n, int nd)
+    : FullLls(m, n, nd), _fa(_m * _n), _fb(_m * _nd), _s(_n), _work(work_size(_m, _n)) {}
 
-bool SvdLLS::solve_aux() {
+bool SvdLls::solve_aux() {
   {
     float* ap = _fa.data();
     for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
@@ -411,12 +411,12 @@ bool SvdLLS::solve_aux() {
   return true;
 }
 
-// *** SvdDoubleLLS
+// *** SvdDoubleLls
 
-SvdDoubleLLS::SvdDoubleLLS(int m, int n, int nd)
-    : FullLLS(m, n, nd), _fa(_m * _n), _fb(_m * _nd), _s(_n), _work(work_size(_m, _n)) {}
+SvdDoubleLls::SvdDoubleLls(int m, int n, int nd)
+    : FullLls(m, n, nd), _fa(_m * _n), _fb(_m * _nd), _s(_n), _work(work_size(_m, _n)) {}
 
-bool SvdDoubleLLS::solve_aux() {
+bool SvdDoubleLls::solve_aux() {
   {
     double* ap = _fa.data();
     for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
@@ -449,16 +449,16 @@ bool SvdDoubleLLS::solve_aux() {
   return true;
 }
 
-// *** QrdLLS
+// *** QrdLls
 
-QrdLLS::QrdLLS(int m, int n, int nd)
-    : FullLLS(m, n, nd),
+QrdLls::QrdLls(int m, int n, int nd)
+    : FullLls(m, n, nd),
       _fa(_m * _n),
       _fb(_m * _nd)
 // _work(max(4 * _n, 2 * _n + _nd)) was for old sgelsx
 {}
 
-bool QrdLLS::solve_aux() {
+bool QrdLls::solve_aux() {
   {
     float* ap = _fa.data();
     for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
@@ -497,11 +497,11 @@ bool QrdLLS::solve_aux() {
 
 #else  // *** !defined(HH_HAVE_LAPACK)
 
-// *** SvdLLS
+// *** SvdLls
 
-SvdLLS::SvdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
+SvdLls::SvdLls(int m, int n, int nd) : FullLls(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
 
-bool SvdLLS::solve_aux() {
+bool SvdLls::solve_aux() {
   dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
@@ -522,9 +522,9 @@ bool SvdLLS::solve_aux() {
   return true;
 }
 
-SvdDoubleLLS::SvdDoubleLLS(int m, int n, int nd) : FullLLS(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
+SvdDoubleLls::SvdDoubleLls(int m, int n, int nd) : FullLls(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
 
-bool SvdDoubleLLS::solve_aux() {
+bool SvdDoubleLls::solve_aux() {
   dummy_use(k_double_cond_max);
   Matrix<double> A = convert<double>(_a);
   if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
@@ -541,9 +541,9 @@ bool SvdDoubleLLS::solve_aux() {
   return true;
 }
 
-QrdLLS::QrdLLS(int m, int n, int nd) : FullLLS(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}  // == SvdLLS
+QrdLls::QrdLls(int m, int n, int nd) : FullLls(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}  // == SvdLls
 
-bool QrdLLS::solve_aux() {
+bool QrdLls::solve_aux() {
   dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);

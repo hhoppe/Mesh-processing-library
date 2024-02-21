@@ -1821,7 +1821,7 @@ float compute_spring(const NewMeshNei& nn) {
   return spring;
 }
 
-// *** ULLS
+// *** ULls
 // Solve a linear least squares problem involving a single variable
 //  in which the problem decomposes into nd independent
 //  univariate LLS problems.
@@ -1836,9 +1836,9 @@ float compute_spring(const NewMeshNei& nn) {
 //  coordinates simultaneously, while traversing U and b row-by-row.
 // To compute the rss (||Ux-b||^2), Werner observed that
 //  rss= ||b||^2-||Ux||^2 = ||b||^2 - x^2*||U||^2.
-class ULLS : noncopyable {
+class ULls : noncopyable {
  public:
-  ULLS(float* sol, int nd);
+  ULls(float* sol, int nd);
   // Constraint between point pdata and the point on triangle (p1, p2, p)
   //  with barycentric coordinates (param1, param2, 1-param1-param2).
   void enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2, float param1,
@@ -1854,11 +1854,11 @@ class ULLS : noncopyable {
   Array<double> _vUtU, _vUtb, _btb;
 };
 
-ULLS::ULLS(float* sol, int nd) : _sol(sol), _nd(nd), _vUtU(nd), _vUtb(nd), _btb(nd) {
+ULls::ULls(float* sol, int nd) : _sol(sol), _nd(nd), _vUtU(nd), _vUtb(nd), _btb(nd) {
   for_int(c, _nd) _vUtU[c] = _vUtb[c] = _btb[c] = 0.;
 }
 
-inline void ULLS::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2,
+inline void ULls::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2,
                                     float param1, float param2) {
   double pa1 = param1, pa2 = param2, u = 1. - pa1 - pa2;
   for_int(c, _nd) {
@@ -1869,7 +1869,7 @@ inline void ULLS::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>&
   }
 }
 
-inline void ULLS::enter_eprojection(const Point& pdata, const Point& p1, float param1) {
+inline void ULls::enter_eprojection(const Point& pdata, const Point& p1, float param1) {
   double pa1 = param1, u = 1. - pa1;
   for_int(c, _nd) {
     double b = pdata[c] - pa1 * p1[c];
@@ -1879,7 +1879,7 @@ inline void ULLS::enter_eprojection(const Point& pdata, const Point& p1, float p
   }
 }
 
-inline void ULLS::enter_spring(const Point& pother, float sqrt_spring) {
+inline void ULls::enter_spring(const Point& pother, float sqrt_spring) {
   for_int(c, _nd) {
     double u = sqrt_spring;
     double b = double(pother[c]) * sqrt_spring;
@@ -1889,10 +1889,10 @@ inline void ULLS::enter_spring(const Point& pother, float sqrt_spring) {
   }
 }
 
-void ULLS::solve(double& prss1) {
+void ULls::solve(double& prss1) {
   double rss1 = 0.;
   for_int(c, _nd) {
-    double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULLS ill-conditioned"), _sol[c]);
+    double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULls ill-conditioned"), _sol[c]);
     _sol[c] = float(newv);
     double a = _btb[c] - _vUtU[c] * square(newv);
     assertw(a > -1e-8);
@@ -2415,7 +2415,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
   SSTATV2(Sfit_nf, nn.ar_corners.num());
   SSTATV2(Sfit_nfp, nn.ar_fpts.num());
   SSTATV2(Sfit_nep, nn.ar_epts.num());
-  ULLS ulls(newp.data(), 3);
+  ULls ulls(newp.data(), 3);
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
     int mini = param.ar_mini[pi];
@@ -2732,10 +2732,10 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
 double fit_color(const NewMeshNei& nn, const Param& param, Array<WedgeInfo>& ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
   // SSTATV2(Srwid, ar_wi.num());
-  Array<unique_ptr<ULLS>> ar_ulls;
+  Array<unique_ptr<ULls>> ar_ulls;
   for_int(i, ar_wi.num()) {
     A3dColor& newcolor = ar_wi[i].col;
-    ar_ulls.push(make_unique<ULLS>(newcolor.data(), 3));
+    ar_ulls.push(make_unique<ULls>(newcolor.data(), 3));
   }
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
@@ -2900,7 +2900,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   bool handle_residuals = !!wfile_prog;
   Vector vnormal(0.f, 0.f, 0.f);
   {
-    // Compute average vertex normal (as will be done in SRMesh if the
+    // Compute average vertex normal (as will be done in SrMesh if the
     //  vertex doesn't have a unique normal).
     for_int(i, nn.ar_corners.num()) {
       Corner c = nn.ar_corners[i][2];

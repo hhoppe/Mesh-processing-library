@@ -50,7 +50,7 @@ class SimplicialComplex : noncopyable {
   Simplex getSimplex(int dim, int id) const;
   int materialNum() const;
   const char* getMaterial(int matid) const;
-  const Map<int, Simplex>& getSimplices(int dim) const;  // ForSCSimplex
+  const Map<int, Simplex>& getSimplices(int dim) const;  // ForScSimplex
   void starbar(Simplex s, SimplicialComplex& result) const;
   void star(Simplex s, Array<Simplex>& ares) const;
   void ok() const;
@@ -151,12 +151,12 @@ class ISimplex : noncopyable {
 
 // Some iterators behave unpredictably if SC modified during traversal
 
-#define ForSCSimplex(K, dim, s) \
+#define ForScSimplex(K, dim, s) \
   {                             \
     {                           \
       for (hh::Simplex s : (K).getSimplices(dim).values())
 
-#define ForSCOrderedSimplex(K, dim, s)          \
+#define ForScOrderedSimplex(K, dim, s)          \
   {                                             \
     hh::OrderedSimplexIter HH_ID(iter)(K, dim); \
     while (hh::Simplex s = HH_ID(iter).next()) {
@@ -164,35 +164,35 @@ class ISimplex : noncopyable {
 // getChild() no longer return 0:
 // { Simplex c; for (int i = 0; c = s->getChild(i); i++) {
 // JOVAN: Why can the child be zero?  move the test where needed!
-#define ForSCSimplexChildIndex(s, c, i) \
+#define ForScSimplexChildIndex(s, c, i) \
   {                                     \
     for_int(i, (s)->getDim() + 1) {     \
       hh::Simplex c = (s)->getChild(i); \
       {                                 \
         if (!c) break;                  \
       }
-#define ForSCSimplexChild(s, c) ForSCSimplexChildIndex(s, c, HH_UNIQUE_ID(i))
+#define ForScSimplexChild(s, c) ForScSimplexChildIndex(s, c, HH_UNIQUE_ID(i))
 
 // iterate over all descendents of a simplex (>= 1 dimension)
 // iterates by generations children first, grandchildren next, etc.
-#define ForSCSimplexFaces(s, c)          \
+#define ForScSimplexFaces(s, c)          \
   {                                      \
     hh::SimplexFacesIter HH_ID(iter)(s); \
     while (hh::Simplex c = HH_ID(iter).next()) {
 // iterate over immediate parents of a simplex (1 dimension up)
-#define ForSCSimplexParent(s, p) \
+#define ForScSimplexParent(s, p) \
   {                              \
     {                            \
       for (hh::Simplex p : (s)->getParents())
 
 // iterate over all ancestors of a simplex (>= 1 dimension)
 // iterates by generations parents first, grandparents next, etc.
-#define ForSCSimplexStar(s, p)          \
+#define ForScSimplexStar(s, p)          \
   {                                     \
     hh::SimplexStarIter HH_ID(iter)(s); \
     while (hh::Simplex p = HH_ID(iter).next()) {
 // iterate through faces adjacent to a vertex
-#define ForSCVertexFace(v, f)                 \
+#define ForScVertexFace(v, f)                 \
   {                                           \
     hh::SimplexVertexFaceIter HH_ID(iter)(v); \
     while (hh::Simplex f = HH_ID(iter).next()) {
@@ -277,7 +277,7 @@ inline Simplex SimplicialComplex::getSimplex(Simplex s) const {
   return ts;
 }
 
-// ForSCSimplex needs it
+// ForScSimplex needs it
 inline const Map<int, Simplex>& SimplicialComplex::getSimplices(int dim) const { return _simplices[dim]; }
 
 inline Simplex ISimplex::getChild(int num) const {
@@ -298,7 +298,7 @@ inline Simplex ISimplex::opp_vertex(Simplex v1) {
 
 inline Simplex ISimplex::opp_edge(Simplex v1) {
   assertx(getDim() == 2);
-  ForSCSimplexChild(this, edge) {
+  ForScSimplexChild(this, edge) {
     if (edge->_child[0] != v1 && edge->_child[1] != v1) return edge;
   }
   EndFor;
@@ -365,7 +365,7 @@ inline float ISimplex::length() const { return sqrt(length2()); }
 
 inline Simplex ISimplex::edgeTo(Simplex opp_v) {
   assertx(_dim == 0);
-  ForSCSimplexParent(this, e) {
+  ForScSimplexParent(this, e) {
     if (e->opp_vertex(this) == opp_v) return e;
   }
   EndFor;

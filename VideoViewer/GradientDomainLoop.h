@@ -48,7 +48,7 @@ inline float get_deltatime(int period, int nnf) {
 // Shrink an Nv12 image by an integral factor (which can be one) to an Image.
 void integrally_downscale_Nv12_to_Image(CNv12View nv12, MatrixView<Pixel> nmatrixp);
 
-enum class EGDLoopScheme { no_blend, precise, fast, exact };
+enum class GdLoopScheme { no_blend, precise, fast, exact };
 
 // Given an input video with specified dimensions videodims{num_frames, ysize, xsize},
 //  provided either as
@@ -66,7 +66,7 @@ enum class EGDLoopScheme { no_blend, precise, fast, exact };
 //  else num_loops must equal 1.
 void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CGridView<3, Pixel> video,
                     CVideoNv12View video_nv12, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
-                    EGDLoopScheme scheme, int nnf, WVideo* pwvideo, GridView<3, Pixel> videoloop,
+                    GdLoopScheme scheme, int nnf, WVideo* pwvideo, GridView<3, Pixel> videoloop,
                     VideoNv12View videoloop_nv12, int num_loops);
 
 }  // namespace hh

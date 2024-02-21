@@ -188,7 +188,8 @@ void HW::open() {
     int value;                                                 \
     assertx(!glXGetConfig(_display, visinfo, attrib, &value)); \
     SHOW(#attrib, value);                                      \
-  }
+  }                                                            \
+  HH_EAT_SEMICOLON
       T(GLX_USE_GL);
       T(GLX_BUFFER_SIZE);
       T(GLX_LEVEL);

@@ -8,7 +8,7 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GeomOp.h"
 #include "libHh/Homogeneous.h"
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"
@@ -296,7 +296,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   }
   int m = co.num(), n = iv.num();
   int mm = spring ? m + n : m;
-  SparseLLS lls(mm, n, 3);
+  SparseLls lls(mm, n, 3);
   lls.set_max_iter(10);
   Array<Vertex> va;
   for_int(i, m) {
@@ -546,8 +546,8 @@ void do_interp() {
     iv.push(v);
   }
   int n = iv.num();
-  // auto up_lls = LLS::make(n, n, 3, 12.f / n); LLS& lls = *up_lls;
-  SparseLLS lls(n, n, 3);
+  // auto up_lls = Lls::make(n, n, 3, 12.f / n); Lls& lls = *up_lls;
+  SparseLls lls(n, n, 3);
   for_int(i, n) {
     Vertex v = iv[i];
     Point p = gmesh.point(v);
@@ -597,7 +597,7 @@ void do_imagefit() {
   if (spring && !sprlimit) m += iv.num();
   if (spring && sprlimit) m *= 2;
   int n = iv.num();
-  SparseLLS lls(m, n, 3);
+  SparseLls lls(m, n, 3);
   int row = 0;
   string str;
   for (Vertex v : smesh.mesh().vertices()) {
@@ -754,9 +754,9 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
   }
   int m = setpts.num(), n = mvcvih.iv.num();
   assertx(n == setmv.num());  // optional
-  // auto up_lls = make_unique<SparseLLS>(m, n, 3); SparseLLS& lls = *up_lls;
-  auto up_lls = LLS::make(m, n, 3, 1.f);
-  LLS& lls = *up_lls;
+  // auto up_lls = make_unique<SparseLls>(m, n, 3); SparseLls& lls = *up_lls;
+  auto up_lls = Lls::make(m, n, 3, 1.f);
+  Lls& lls = *up_lls;
   int rowi = 0;
   {
     HH_STIMER(____lcombinations);

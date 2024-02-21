@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 
 #include "libHh/MatrixOp.h"  // identity_mat()
 #include "libHh/Random.h"
@@ -9,19 +9,19 @@ using namespace hh;
 
 namespace {
 
-unique_ptr<LLS> make_lls(int c, int m, int n, int nd) {
-  if (c == 0) return make_unique<SparseLLS>(m, n, nd);
-  if (c == 1) return make_unique<LudLLS>(m, n, nd);
-  if (c == 2) return make_unique<GivensLLS>(m, n, nd);
-  if (c == 3) return make_unique<SvdLLS>(m, n, nd);
-  if (c == 4) return make_unique<SvdDoubleLLS>(m, n, nd);
-  if (c == 5) return make_unique<QrdLLS>(m, n, nd);
+unique_ptr<Lls> make_lls(int c, int m, int n, int nd) {
+  if (c == 0) return make_unique<SparseLls>(m, n, nd);
+  if (c == 1) return make_unique<LudLls>(m, n, nd);
+  if (c == 2) return make_unique<GivensLls>(m, n, nd);
+  if (c == 3) return make_unique<SvdLls>(m, n, nd);
+  if (c == 4) return make_unique<SvdDoubleLls>(m, n, nd);
+  if (c == 5) return make_unique<QrdLls>(m, n, nd);
   assertnever("");
 }
 
 void test1() {
   {
-    SvdLLS lls(1, 1, 1);
+    SvdLls lls(1, 1, 1);
     lls.enter_a_rc(0, 0, 1.f);
     lls.enter_b_rc(0, 0, 10.f);
     lls.enter_xest_rc(0, 0, 1.f);
@@ -31,7 +31,7 @@ void test1() {
   {
     Vec1<float> X1 = {-100.f}, B1 = {2.f};
     Vec1<float> X2 = {-100.f}, B2 = {2.f};
-    SvdLLS lls(1, 1, 2);
+    SvdLls lls(1, 1, 2);
     lls.enter_a_rc(0, 0, 4.f);
     lls.enter_b_c(0, B1);
     lls.enter_xest_c(0, X1);
@@ -46,7 +46,7 @@ void test1() {
   {
     float X1[1] = {-100.f};
     float X2[1] = {-100.f};
-    SparseLLS lls(1, 1, 2);
+    SparseLls lls(1, 1, 2);
     lls.enter_a_rc(0, 0, 4.f);
     lls.enter_b_c(0, V(2.f));
     lls.enter_xest_c(0, X1);
@@ -61,12 +61,12 @@ void test1() {
     lls.get_x_c(1, X2);
     SHOW(X1[0]);
     SHOW(X2[0]);
-    // SparseLLS::Ival::pool.destroy();
+    // SparseLls::Ival::pool.destroy();
   }
   {
     Vec1<float> X1 = {-100.f}, X2 = {-100.f};
     const Vec1<float> B1 = {2.f}, B2 = {2.f};
-    LudLLS lls(1, 1, 2);
+    LudLls lls(1, 1, 2);
     lls.enter_a_rc(0, 0, 4.f);
     lls.enter_b_c(0, B1);
     lls.enter_xest_c(0, X1);
@@ -94,7 +94,7 @@ void test1() {
       SHOW(c);
       const int nd = 2;
       auto up_lls = make_lls(c, n, n, nd);
-      LLS& lls = *up_lls;
+      Lls& lls = *up_lls;
       for_int(i, n) {
         for_int(j, n) lls.enter_a_rc(i, j, a[i][j]);
         lls.enter_b_rc(i, 0, b[i]);
@@ -113,7 +113,7 @@ void test2() {
   for_int(c, 6) {
     SHOW(c);
     auto up_lls = make_lls(c, 2, 1, 1);
-    LLS& lls = *up_lls;
+    Lls& lls = *up_lls;
     lls.enter_a_rc(0, 0, 1.f);
     lls.enter_a_rc(1, 0, 1.f);
     lls.enter_b_rc(0, 0, 10.f);
@@ -128,7 +128,7 @@ void test3() {
   for_int(c, 6) {
     SHOW(c);
     auto up_lls = make_lls(c, 3, 2, 1);
-    LLS& lls = *up_lls;
+    Lls& lls = *up_lls;
     lls.enter_a_rc(0, 0, 1.f);
     lls.enter_a_rc(0, 1, 1.f);
     lls.enter_a_rc(1, 0, 1.f);

@@ -8,11 +8,11 @@
 namespace hh {
 
 // Solve a linear-least-squares system, i.e., for system A * x = b, find argmin_x |A * x - b|.
-class LLS : noncopyable {
+class Lls : noncopyable {
  public:
   // virtual constructor
-  static unique_ptr<LLS> make(int m, int n, int nd, float nonzerofrac);  // A(m, n), x(n, nd), b(m, nd)
-  virtual ~LLS() {}
+  static unique_ptr<Lls> make(int m, int n, int nd, float nonzerofrac);  // A(m, n), x(n, nd), b(m, nd)
+  virtual ~Lls() {}
   virtual void clear();
   // All entries will be zero unless entered as below.
   void enter_a(CMatrixView<float> mat);                     // [_m][_n]
@@ -57,13 +57,13 @@ class LLS : noncopyable {
   Matrix<float> _b;     // [_nd][_m]; transpose of client view
   Matrix<float> _x;     // [_nd][_n]; transpose of client view
   bool _solved{false};  // solve() can destroy A, so check
-  LLS(int m, int n, int nd);
+  Lls(int m, int n, int nd);
 };
 
 // Sparse conjugate-gradient approach.
-class SparseLLS : public LLS {
+class SparseLls : public Lls {
  public:
-  explicit SparseLLS(int m, int n, int nd) : LLS(m, n, nd), _rows(m), _cols(n), _tolerance(square(8e-7f) * m) {}
+  explicit SparseLls(int m, int n, int nd) : Lls(m, n, nd), _rows(m), _cols(n), _tolerance(square(8e-7f) * m) {}
   void clear() override;
   void enter_a_rc(int r, int c, float val) override;
   void enter_a_r(int r, CArrayView<float> ar) override;
@@ -91,9 +91,9 @@ class SparseLLS : public LLS {
 };
 
 // Base class for full (non-sparse) approaches.
-class FullLLS : public LLS {
+class FullLls : public Lls {
  public:
-  explicit FullLLS(int m, int n, int nd) : LLS(m, n, nd), _a(m, n) { FullLLS::clear(); }
+  explicit FullLls(int m, int n, int nd) : Lls(m, n, nd), _a(m, n) { FullLls::clear(); }
   void clear() override;
   void enter_a_rc(int r, int c, float val) override { _a[r][c] = val; }
   void enter_a_r(int r, CArrayView<float> ar) override {
@@ -114,27 +114,27 @@ class FullLLS : public LLS {
 };
 
 // LU decomposition on A^t * A = A^t * b (slow).
-class LudLLS : public FullLLS {
+class LudLls : public FullLls {
  public:
-  explicit LudLLS(int m, int n, int nd) : FullLLS(m, n, nd) {}
+  explicit LudLls(int m, int n, int nd) : FullLls(m, n, nd) {}
 
  private:
   bool solve_aux() override;
 };
 
 // Givens substitution approach.
-class GivensLLS : public FullLLS {
+class GivensLls : public FullLls {
  public:
-  explicit GivensLLS(int m, int n, int nd) : FullLLS(m, n, nd) {}
+  explicit GivensLls(int m, int n, int nd) : FullLls(m, n, nd) {}
 
  private:
   bool solve_aux() override;
 };
 
 // Singular value decomposition.
-class SvdLLS : public FullLLS {
+class SvdLls : public FullLls {
  public:
-  explicit SvdLLS(int m, int n, int nd);
+  explicit SvdLls(int m, int n, int nd);
 
  private:
   bool solve_aux() override;
@@ -145,9 +145,9 @@ class SvdLLS : public FullLLS {
 };
 
 // Double-precision version of SVD.
-class SvdDoubleLLS : public FullLLS {
+class SvdDoubleLls : public FullLls {
  public:
-  explicit SvdDoubleLLS(int m, int n, int nd);
+  explicit SvdDoubleLls(int m, int n, int nd);
 
  private:
   bool solve_aux() override;
@@ -158,9 +158,9 @@ class SvdDoubleLLS : public FullLLS {
 };
 
 // QR decomposition.
-class QrdLLS : public FullLLS {
+class QrdLls : public FullLls {
  public:
-  explicit QrdLLS(int m, int n, int nd);
+  explicit QrdLls(int m, int n, int nd);
 
  private:
   bool solve_aux() override;

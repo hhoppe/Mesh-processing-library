@@ -172,9 +172,9 @@ struct hbfaceinfo {
 };
 HH_SAC_ALLOCATE_FUNC(Mesh::MFace, hbfaceinfo, f_info);
 
-class GXobject {
+class GxObject {
  public:
-  ~GXobject() { assertx(!_opened); }
+  ~GxObject() { assertx(!_opened); }
   void open(bool todraw);
   void add(const A3dElem& el);
   void close();
@@ -199,9 +199,9 @@ class GXobject {
   void append(unique_ptr<Node> n);
 };
 
-class GXobjects {
+class GxObjects {
  public:
-  GXobjects();
+  GxObjects();
   Vec<Frame, k_max_object> t;
   Vec<bool, k_max_object> vis;
   Vec<bool, k_max_object> cullface;
@@ -217,24 +217,24 @@ class GXobjects {
   void close();
   void make_link(int oldsegn, int newsegn);
   int defined(int segn) const;
-  GXobject& operator[](int i);
+  GxObject& operator[](int i);
 
  private:
   int _imin{k_max_object};
   int _imax{0};
-  // if _link[i], is a link to GXobject _link[i]
+  // if _link[i], is a link to GxObject _link[i]
   Vec<int, k_max_object> _link;
-  Array<unique_ptr<GXobject>> _ob;
+  Array<unique_ptr<GxObject>> _ob;
   int _segn{-1};
   bool _idraw;
-  GXobject* obp(int i) const;
+  GxObject* obp(int i) const;
 };
 
-bool GXobject::s_idraw;
-int GXobject::s_nuvertices;
-int GXobject::s_nusegments;
+bool GxObject::s_idraw;
+int GxObject::s_nuvertices;
+int GxObject::s_nusegments;
 
-GXobjects g_xobs;
+GxObjects g_xobs;
 
 // *** HW callback functions
 
@@ -802,16 +802,16 @@ void toggle_attribute(Vec<int, k_max_object>& attrib, int numstates) {
   }
 }
 
-// *** GXobject
+// *** GxObject
 
-void GXobject::open(bool todraw) {
+void GxObject::open(bool todraw) {
   assertx(!_opened);
   _opened = true;
   s_idraw = todraw;
   s_nuvertices = s_nusegments = 0;
 }
 
-void GXobject::add(const A3dElem& el) {
+void GxObject::add(const A3dElem& el) {
   assertx(_opened);
   assertx(el.num());
   switch (el.type()) {
@@ -852,7 +852,7 @@ void GXobject::add(const A3dElem& el) {
   }
 }
 
-coord* GXobject::add_coord(const Point& p) {
+coord* GxObject::add_coord(const Point& p) {
   if (!nohash) {
     int vi = _hp.enter(p);
     if (vi < _ac.num()) return _ac[vi].get();
@@ -864,7 +864,7 @@ coord* GXobject::add_coord(const Point& p) {
   return c;
 }
 
-segment* GXobject::add_segment(coord* c1, coord* c2) {
+segment* GxObject::add_segment(coord* c1, coord* c2) {
   segment s;
   s.c1 = c1 < c2 ? c1 : c2;
   s.c2 = c1 < c2 ? c2 : c1;
@@ -875,7 +875,7 @@ segment* GXobject::add_segment(coord* c1, coord* c2) {
   return const_cast<segment*>(&sret);
 }
 
-void GXobject::append(unique_ptr<Node> n) {
+void GxObject::append(unique_ptr<Node> n) {
   _arnc.push(std::move(n));
   if (s_idraw) {
     assertx(is_window);
@@ -883,7 +883,7 @@ void GXobject::append(unique_ptr<Node> n) {
   }
 }
 
-void GXobject::close() {
+void GxObject::close() {
   assertx(_opened);
   _opened = false;
   if (datastat) SHOW(s_nuvertices, s_nusegments);
@@ -925,9 +925,9 @@ void GXobject::close() {
   _arn.push_array(std::move(_arnc));
 }
 
-// *** GXobjects
+// *** GxObjects
 
-GXobjects::GXobjects() : _ob(k_max_object) {
+GxObjects::GxObjects() : _ob(k_max_object) {
   for_int(i, k_max_object) {
     _link[i] = 0;
     t[i] = Frame::identity();
@@ -940,7 +940,7 @@ GXobjects::GXobjects() : _ob(k_max_object) {
   }
 }
 
-void GXobjects::clear(int segn) {
+void GxObjects::clear(int segn) {
   assertx(_segn == -1);
   assertx(_link.ok(segn));
   _link[segn] = 0;
@@ -948,34 +948,34 @@ void GXobjects::clear(int segn) {
   // I could update _imin, _imax here
 }
 
-void GXobjects::open(int segn) {
+void GxObjects::open(int segn) {
   assertx(_segn == -1);
   _segn = segn;
   assertx(_link.ok(segn));
   _link[_segn] = 0;
-  if (!_ob[_segn]) {  // create GXobject
+  if (!_ob[_segn]) {  // create GxObject
     _imin = min(_imin, _segn);
     _imax = max(_imax, _segn);
-    _ob[_segn] = make_unique<GXobject>();
+    _ob[_segn] = make_unique<GxObject>();
   }
   _idraw = is_window && setup_ob(_segn);
   if (_idraw) hw.begin_draw_visible();
   _ob[_segn]->open(_idraw);
 }
 
-void GXobjects::add(const A3dElem& el) {
+void GxObjects::add(const A3dElem& el) {
   assertx(_segn != -1);
   _ob[_segn]->add(el);
 }
 
-void GXobjects::close() {
+void GxObjects::close() {
   assertx(_segn != -1);
   _ob[_segn]->close();
   if (_idraw) hw.end_draw_visible();
   _segn = -1;
 }
 
-void GXobjects::make_link(int oldsegn, int newsegn) {
+void GxObjects::make_link(int oldsegn, int newsegn) {
   assertx(_segn == -1);
   assertx(_link.ok(oldsegn));
   assertx(_link.ok(newsegn));
@@ -986,7 +986,7 @@ void GXobjects::make_link(int oldsegn, int newsegn) {
   _imax = max(_imax, newsegn);
 }
 
-GXobject* GXobjects::obp(int i) const {
+GxObject* GxObjects::obp(int i) const {
   assertx(_link.ok(i));
   if (_ob[i]) return _ob[i].get();
   if (_link[i]) return _ob[_link[i]].get();
@@ -994,9 +994,9 @@ GXobject* GXobjects::obp(int i) const {
 }
 
 // recursion on links is not permitted, only simple link allowed
-int GXobjects::defined(int segn) const { return obp(segn) ? 1 : 0; }
+int GxObjects::defined(int segn) const { return obp(segn) ? 1 : 0; }
 
-GXobject& GXobjects::operator[](int i) { return *assertx(obp(i)); }
+GxObject& GxObjects::operator[](int i) { return *assertx(obp(i)); }
 
 }  // namespace
 

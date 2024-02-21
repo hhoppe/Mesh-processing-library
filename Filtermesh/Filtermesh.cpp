@@ -16,7 +16,7 @@
 #include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
 #include "libHh/Homogeneous.h"
 #include "libHh/Image.h"
-#include "libHh/LLS.h"
+#include "libHh/Lls.h"
 #include "libHh/LinearFunc.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
@@ -1319,7 +1319,7 @@ void do_desbrunsmooth(Args& args) {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
   }
-  SparseLLS lls(a_v.num(), a_v.num(), 3);
+  SparseLls lls(a_v.num(), a_v.num(), 3);
   lls.set_tolerance(1e-6f);
   lls.set_verbose(1);
   Array<int> nei_vi;
@@ -1471,7 +1471,7 @@ void do_lscm() {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
   }
-  SparseLLS lls(m, n, 1);
+  SparseLls lls(m, n, 1);
   lls.set_verbose(1);
   // lls.set_tolerance(1e-8f);
   Vec2<Vertex> vb = find_diameter_of_boundary_vertices();
@@ -1544,7 +1544,7 @@ void do_poissonparam() {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
   }
-  SparseLLS lls(m, n, 1);
+  SparseLls lls(m, n, 1);
   lls.set_verbose(1);
   // lls.set_tolerance(1e-8f);
   Vertex v0;

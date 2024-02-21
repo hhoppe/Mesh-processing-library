@@ -219,8 +219,8 @@ template <typename Target, typename Source> constexpr Target assert_narrow_cast(
 // Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
 template <typename Target, typename Source> constexpr Target possible_cast(Source v) { return static_cast<Target>(v); }
 
-// Cast a temporary as an lvalue; only use when safe.
-template <typename T> T& as_lvalue(T&& e) { return e; }
+// Cast a temporary as an lvalue; be careful; only use when safe.
+template <typename T> T& as_lvalue(T&& e) { return const_cast<T&>(static_cast<const T&>(e)); }
 
 // *** Constants
 
@@ -293,10 +293,10 @@ extern int g_unoptimized_zero;
 
 // With one expression, show "expr = value" on stderr and return expr; may require parentheses: SHOW((ntimes<3>(1))).
 // With multiple expressions, show on stderr a sequence of "expr=value" on a single line.
-#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+#define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
 // Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
-#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW__, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+#define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number.
 #define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
@@ -552,17 +552,17 @@ template <typename T> T assertw_aux(T&& val, const char* s) {
 
 void show_cerr_and_debug(const string& s);
 
-#define HH_SHOW__0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
+#define HH_SHOW_0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
-#define HH_SHOW__1(sargs, prec, ...)                                           \
+#define HH_SHOW_1(sargs, prec, ...)                                           \
   do {                                                                         \
     std::ostringstream HH_ID(oss);                                             \
     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW__M, << " " <<, __VA_ARGS__)) << "\n"; \
+    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n"; \
     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
   } while (false)
 
-#define HH_SHOW__M(x) (#x[0] == '"' ? "" : #x "=") << (x)
+#define HH_SHOW_M(x) (#x[0] == '"' ? "" : #x "=") << (x)
 
 template <typename T> T show_aux(string str, T&& val, bool has_eol, bool high_precision) {
   std::ostringstream oss;

@@ -1716,7 +1716,7 @@ void do_gdloop(Args& args) {
     videoloop.attrib().audio.clear();
   }
   VideoNv12 dummy_vnv12;
-  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, EGDLoopScheme::fast, videoloop.dim(0),
+  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, GdLoopScheme::fast, videoloop.dim(0),
                  nullptr, videoloop, dummy_vnv12, 1);
   video = std::move(videoloop);
   video_nv12.clear();
@@ -1746,7 +1746,7 @@ void do_gdloopfile(Args& args) {
   }
   WVideo wvideo(loop_filename, sdims, video.attrib(), use_nv12);
   VideoNv12 dummy_vnv12;
-  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, EGDLoopScheme::fast, nnf, &wvideo,
+  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, GdLoopScheme::fast, nnf, &wvideo,
                  Grid<3, Pixel>{}, dummy_vnv12, 1);
   nooutput = true;
 }
@@ -1775,7 +1775,7 @@ void do_gdloopstream(Args& args) {
     attrib.audio.clear();
   }
   WVideo wvideo(loop_filename, odims.tail<2>(), attrib, use_nv12);
-  const EGDLoopScheme scheme = EGDLoopScheme::fast;
+  const GdLoopScheme scheme = GdLoopScheme::fast;
   VideoNv12 dummy_vnv12;
   compute_gdloop(odims, video_filename, Grid<3, Pixel>{}, VideoNv12{}, g_lp.mat_start, g_lp.mat_period, scheme, nnf,
                  &wvideo, Grid<3, Pixel>{}, dummy_vnv12, 1);
@@ -1798,10 +1798,10 @@ void do_gdlooperr(Args& args) {
   VideoNv12 dummy_vnv12;
   Video videoloop_exact(nnf, sdims);
   videoloop_exact.attrib() = video.attrib();
-  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, EGDLoopScheme::exact,
+  compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, GdLoopScheme::exact,
                  videoloop_exact.dim(0), nullptr, videoloop_exact, dummy_vnv12, 1);
   SHOWL;
-  EGDLoopScheme scheme = 1 ? EGDLoopScheme::fast : EGDLoopScheme::precise;
+  GdLoopScheme scheme = 1 ? GdLoopScheme::fast : GdLoopScheme::precise;
   Video videoloop(nnf, sdims);
   videoloop.attrib() = video.attrib();
   compute_gdloop(dims, "", video, video_nv12, g_lp.mat_start, g_lp.mat_period, scheme, videoloop.dim(0), nullptr,

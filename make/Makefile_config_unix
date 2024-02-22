@@ -8,7 +8,7 @@ ifeq ($(is_mac),1)
   CC = clang#  set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
   omit_omp = 1
 else
-  CC = gcc#  set default choice of compiler (clang or gcc); override using "make CC=clang ..."
+  CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=gcc ..."
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)

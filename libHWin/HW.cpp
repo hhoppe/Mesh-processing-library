@@ -148,6 +148,7 @@ bool HW::init_aux(Array<string>& aargs) {
   // See discussion at
   //  http://stackoverflow.com/questions/493536/can-one-executable-be-both-a-console-and-gui-application
   //  http://blogs.msdn.com/b/oldnewthing/archive/2009/01/01/9259142.aspx
+  if (_hwdebug) SHOW(win_started_from_console(), IsDebuggerPresent());
   if (!getenv_bool("SHOW_CONSOLE_WINDOW") && _extra_console_visible && !IsDebuggerPresent()) {
     // http://www.cplusplus.com/forum/beginner/12001/
     // Benefits:
@@ -157,6 +158,7 @@ bool HW::init_aux(Array<string>& aargs) {
     //  - Flashes console window briefly before it disappears;
     //     To counter this, one can create a shortcut that starts minimized.
     _extra_console_visible = false;
+    if (_hwdebug) SHOW(GetConsoleWindow());
     ShowWindow(GetConsoleWindow(), SW_HIDE);
   }
 #endif

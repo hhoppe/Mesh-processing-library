@@ -129,7 +129,7 @@ bool HW::init_aux(Array<string>& aargs) {
 #elif defined(_WIN32) && (NTDDI_VERSION >= NTDDI_WINBLUE)
     // For mingw, the API is not exposed in the include files, so we retrieve its address from the DLL.
     enum PROCESS_DPI_AWARENESS { PROCESS_DPI_UNAWARE, PROCESS_SYSTEM_DPI_AWARE, PROCESS_PER_MONITOR_DPI_AWARE };
-    using Func = int(WINAPI *)(PROCESS_DPI_AWARENESS);
+    using Func = int(WINAPI*)(PROCESS_DPI_AWARENESS);
     HMODULE hModule = assertx(LoadLibraryA("shcore.dll"));
     Func func = assertx(Func(GetProcAddress(hModule, "SetProcessDpiAwareness")));
     assertx(!func(PROCESS_PER_MONITOR_DPI_AWARE));

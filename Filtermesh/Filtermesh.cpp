@@ -16,8 +16,8 @@
 #include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
 #include "libHh/Homogeneous.h"
 #include "libHh/Image.h"
-#include "libHh/Lls.h"
 #include "libHh/LinearFunc.h"
+#include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"      // Vnors, ...
@@ -3749,7 +3749,7 @@ Point compute_hull_point(Vertex v, float offset) {
   free_ivector(izrov, 1, n);
   assertx(ret);
   return newpoint;
-#else  // defined(HH_HAVE_SIMPLEX)
+#else   // defined(HH_HAVE_SIMPLEX)
   assertnever_ret("Linear programming (simplex) is unavailable");
   return Point(thrice(BIGFLOAT));
 #endif  // defined(HH_HAVE_SIMPLEX)

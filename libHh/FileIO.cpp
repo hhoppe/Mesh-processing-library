@@ -16,10 +16,10 @@ HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 
 #else
 
-#include <dirent.h>  // struct dirent, opendir(), readdir(), closedir()
+#include <dirent.h>    // struct dirent, opendir(), readdir(), closedir()
 #include <sys/wait.h>  // wait(), waidpid()
-#include <unistd.h>  // unlink(), getpid(), execvp(), etc.
-#include <utime.h>  // struct utimbuf, struct _utimbuf, utime()
+#include <unistd.h>    // unlink(), getpid(), execvp(), etc.
+#include <utime.h>     // struct utimbuf, struct _utimbuf, utime()
 
 #endif  // defined(_WIN32)
 
@@ -40,10 +40,10 @@ HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 #endif
 
 #include <atomic>
-#include <cctype>  // std::isalnum()
+#include <cctype>   // std::isalnum()
 #include <cstring>  // std::memmove()
 #include <fstream>  // std::ifstream, std::ofstream
-#include <mutex>  // mutex, lock_guard
+#include <mutex>    // mutex, lock_guard
 
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"

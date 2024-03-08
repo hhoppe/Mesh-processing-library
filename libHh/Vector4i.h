@@ -44,7 +44,7 @@ class Vector4i {
 #else
     __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pix));
     // same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pix.data())));
-    _r = _mm_cvtepu8_epi32(in);  // expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
+    _r = _mm_cvtepu8_epi32(in);          // expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
 #endif
   }
   Pixel pixel() const {
@@ -181,7 +181,7 @@ class Vector4i {
     int _c[4];
   };
 
-#else  // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
+#else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
   Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }

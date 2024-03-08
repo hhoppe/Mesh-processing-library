@@ -175,7 +175,7 @@ make_dep ?= Makefile.dep#   was Makefile_$(CONFIG).dep but now independent of CO
 # need "-D_M_IX86" for vt_round.h
 # added "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -march=native -D_M_IX86 -DHH_NO_SSE41 -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++11 $(src_cpp) | \
+  g++ -MM -march=native -D_M_IX86 -DHH_NO_SSE41 -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++14 $(src_cpp) | \
   perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
   || rm -f $(make.dep)
 

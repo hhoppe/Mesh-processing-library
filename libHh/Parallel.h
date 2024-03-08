@@ -74,7 +74,7 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #define HH_OMP_POP_WARNINGS HH_PRAGMA(clang diagnostic pop)
 #elif defined(__GNUC__)
 #define HH_OMP_PUSH_WARNINGS HH_PRAGMA(GCC diagnostic ignored "-Wparentheses")  // "suggest explicit braces"
-#define HH_OMP_POP_WARNINGS  // With gcc, the pop would have to occur later outside the macro.
+#define HH_OMP_POP_WARNINGS                     // With gcc, the pop would have to occur later outside the macro.
 #pragma GCC diagnostic ignored "-Wparentheses"  // strange; this alone does not work in a precompiled header
 #else
 #define HH_OMP_PUSH_WARNINGS

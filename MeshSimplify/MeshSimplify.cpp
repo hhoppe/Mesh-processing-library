@@ -3225,7 +3225,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   free_ivector(iposv, 1, m);
   free_ivector(izrov, 1, n);
   return ret;
-#else  // defined(HH_HAVE_SIMPLEX)
+#else   // defined(HH_HAVE_SIMPLEX)
   assertnever("Linear programming (simplex) is unavailable");
 #endif  // defined(HH_HAVE_SIMPLEX)
 }

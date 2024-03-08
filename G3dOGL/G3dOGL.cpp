@@ -647,12 +647,10 @@ void set_thickness2(int vthick) {
     // More recent: GL_ALIASED_LINE_WIDTH_RANGE, GL_SMOOTHED_LINE_WIDTH_RANGE.
     Vec2<float> min_max;
     glGetFloatv(GL_LINE_WIDTH_RANGE, min_max.data());
-    if (getenv_bool("OPENGL_DEBUG"))
-      SHOW("line_width_range", min_max);  // Often [0.5, 10]; but [1, 1] on WSL.
+    if (getenv_bool("OPENGL_DEBUG")) SHOW("line_width_range", min_max);  // Often [0.5, 10]; but [1, 1] on WSL.
     line_width_supported = min_max[1] > 1.f;
   }
-  if (vthick != 1 && !line_width_supported)
-    vthick = 1;
+  if (vthick != 1 && !line_width_supported) vthick = 1;
   g_pthick = vthick;
   if (vthick > 1) {
     if (antialiasing) glDisable(GL_LINE_SMOOTH);

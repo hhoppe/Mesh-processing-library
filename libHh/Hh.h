@@ -270,7 +270,7 @@ extern int g_unoptimized_zero;
 #define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
 #if defined(HH_DEBUG)
-#define ASSERTX(...) assertx(__VA_ARGS__)  // In release, do not evaluate expression
+#define ASSERTX(...) assertx(__VA_ARGS__)   // In release, do not evaluate expression
 #define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
@@ -554,11 +554,11 @@ void show_cerr_and_debug(const string& s);
 
 #define HH_SHOW_0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
-#define HH_SHOW_1(sargs, prec, ...)                                           \
+#define HH_SHOW_1(sargs, prec, ...)                                            \
   do {                                                                         \
     std::ostringstream HH_ID(oss);                                             \
     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n"; \
+    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
   } while (false)
 

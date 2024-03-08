@@ -30,21 +30,81 @@
   HH_PRIMITIVE_CAT((HH_MAP_REDUCE_, HH_NUM_ARGS(__VA_ARGS__)))(macro, reduction, __VA_ARGS__)
 #define HH_MAP_REDUCE_1(m, r, x1) m(x1)
 #define HH_MAP_REDUCE_2(m, r, x1, x2) m(x1) r m(x2)
-#define HH_MAP_REDUCE_3(m, r, x1, x2, x3) m(x1) r m(x2) r m(x3)
-#define HH_MAP_REDUCE_4(m, r, x1, x2, x3, x4) m(x1) r m(x2) r m(x3) r m(x4)
-#define HH_MAP_REDUCE_5(m, r, x1, x2, x3, x4, x5) m(x1) r m(x2) r m(x3) r m(x4) r m(x5)
-#define HH_MAP_REDUCE_6(m, r, x1, x2, x3, x4, x5, x6) m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6)
-#define HH_MAP_REDUCE_7(m, r, x1, x2, x3, x4, x5, x6, x7) m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7)
+#define HH_MAP_REDUCE_3(m, r, x1, x2, x3) \
+  m(x1) r m(x2)                           \
+  r m(x3)
+#define HH_MAP_REDUCE_4(m, r, x1, x2, x3, x4) \
+  m(x1) r m(x2)                               \
+  r m(x3)                                     \
+  r m(x4)
+#define HH_MAP_REDUCE_5(m, r, x1, x2, x3, x4, x5) \
+  m(x1) r m(x2)                                   \
+  r m(x3)                                         \
+  r m(x4)                                         \
+  r m(x5)
+#define HH_MAP_REDUCE_6(m, r, x1, x2, x3, x4, x5, x6) \
+  m(x1) r m(x2)                                       \
+  r m(x3)                                             \
+  r m(x4)                                             \
+  r m(x5)                                             \
+  r m(x6)
+#define HH_MAP_REDUCE_7(m, r, x1, x2, x3, x4, x5, x6, x7) \
+  m(x1) r m(x2)                                           \
+  r m(x3)                                                 \
+  r m(x4)                                                 \
+  r m(x5)                                                 \
+  r m(x6)                                                 \
+  r m(x7)
 #define HH_MAP_REDUCE_8(m, r, x1, x2, x3, x4, x5, x6, x7, x8) \
-  m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7) r m(x8)
+  m(x1) r m(x2)                                               \
+  r m(x3)                                                     \
+  r m(x4)                                                     \
+  r m(x5)                                                     \
+  r m(x6)                                                     \
+  r m(x7)                                                     \
+  r m(x8)
 #define HH_MAP_REDUCE_9(m, r, x1, x2, x3, x4, x5, x6, x7, x8, x9) \
-  m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7) r m(x8) r m(x9)
+  m(x1) r m(x2)                                                   \
+  r m(x3)                                                         \
+  r m(x4)                                                         \
+  r m(x5)                                                         \
+  r m(x6)                                                         \
+  r m(x7)                                                         \
+  r m(x8)                                                         \
+  r m(x9)
 #define HH_MAP_REDUCE_10(m, r, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) \
-  m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7) r m(x8) r m(x9) r m(x10)
+  m(x1) r m(x2)                                                         \
+  r m(x3)                                                               \
+  r m(x4)                                                               \
+  r m(x5)                                                               \
+  r m(x6)                                                               \
+  r m(x7)                                                               \
+  r m(x8)                                                               \
+  r m(x9)                                                               \
+  r m(x10)
 #define HH_MAP_REDUCE_11(m, r, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) \
-  m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7) r m(x8) r m(x9) r m(x10) r m(x11)
+  m(x1) r m(x2)                                                              \
+  r m(x3)                                                                    \
+  r m(x4)                                                                    \
+  r m(x5)                                                                    \
+  r m(x6)                                                                    \
+  r m(x7)                                                                    \
+  r m(x8)                                                                    \
+  r m(x9)                                                                    \
+  r m(x10)                                                                   \
+  r m(x11)
 #define HH_MAP_REDUCE_12(m, r, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) \
-  m(x1) r m(x2) r m(x3) r m(x4) r m(x5) r m(x6) r m(x7) r m(x8) r m(x9) r m(x10) r m(x11) r m(x12)
+  m(x1) r m(x2)                                                                   \
+  r m(x3)                                                                         \
+  r m(x4)                                                                         \
+  r m(x5)                                                                         \
+  r m(x6)                                                                         \
+  r m(x7)                                                                         \
+  r m(x8)                                                                         \
+  r m(x9)                                                                         \
+  r m(x10)                                                                        \
+  r m(x11)                                                                        \
+  r m(x12)
 
 // Call a MACRO on each argument passed in (i.e. special case of HH_MAP_REDUCE where reduction is ",").
 // Example:

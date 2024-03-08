@@ -89,9 +89,8 @@ void Image::to_color() {
 
 bool filename_is_image(const string& filename) {
   static const auto& k_extensions = *new Array<string>{
-      "jpg", "jpeg", "png", "bmp", "rgb",  "ppm", "pgm", "pbm", "tif", "tiff",
-      "jxr", "hdp",  "wdp", "wmp", "webp", "bpg", "jp2", "arw", "exr", "heic", "jfif",
-      "ico",
+      "jpg", "jpeg", "png", "bmp",  "rgb", "ppm", "pgm", "pbm", "tif",  "tiff", "jxr",
+      "hdp", "wdp",  "wmp", "webp", "bpg", "jp2", "arw", "exr", "heic", "jfif", "ico",
   };
   return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
 }

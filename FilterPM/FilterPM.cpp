@@ -922,11 +922,7 @@ void do_compute_nor() {
         diff(ar_wad[lnum++], pmi->_wedges[wvsfl].attrib, zero_wad);
       } else {
         // abandonned for now...
-        dummy_use(wvlfl);
-        dummy_use(wvsfr);
-        dummy_use(wvtfr);
-        dummy_use(wvrfr);
-        dummy_use(vs);
+        dummy_use(wvlfl, wvsfr, wvtfr, wvrfr, vs);
       }
     }
     if (isr) {

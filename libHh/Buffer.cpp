@@ -212,7 +212,11 @@ bool RBuffer::extract_line(string& str) {
   if (i == _n) return false;  // no complete line yet
   str.assign(par, i);         // skip trailing '\n'
   extract(i + 1);             // including trailing '\n'
-  if (remove_at_end(str, "\r")) Warning("RBuffer: stripping out control-M from DOS file");
+  if (remove_at_end(str, "\r")) {
+    static const bool ignore_dos_eol = getenv_bool("IGNORE_DOS_EOL");
+    if (!ignore_dos_eol)
+      Warning("RBuffer: stripping out control-M from DOS file");
+  }
   return true;
 }
 

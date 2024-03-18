@@ -22,7 +22,6 @@ struct Vector : Vec3<float> {
   Vector() = default;
   constexpr Vector(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Vector(Vec3<float> v) : Vec3<float>(v) {}
-  bool normalize();
 };
 Vector operator*(const Vector& v, const Frame& f);
 Vector operator*(const Frame& f, const Vector& normal);
@@ -36,11 +35,8 @@ inline Vector ok_normalized(Vector v) {
   v.normalize();
   return v;
 }
-// Overload to have lower precision than RangeOp.h templates (which return double).
-// Must overload several versions to hide the influence of the template in RangeOp.h
-inline constexpr float dot(const Vec3<float>& v1, const Vec3<float>& v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
+// Vec.h defines explicit low-precision versions of these functions for Vec3<T>.  Because Vector only inherits from
+// Vec3<float>, we must overload several versions to hide the influence of the templated functions in RangeOp.h.
 inline constexpr float dot(const Vec3<float>& v1, const Vector& v2) {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
@@ -50,9 +46,7 @@ inline constexpr float dot(const Vector& v1, const Vec3<float>& v2) {
 inline constexpr float dot(const Vector& v1, const Vector& v2) {
   return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
 }
-inline constexpr float mag2(const Vec3<float>& v1) { return dot(v1, v1); }
 inline constexpr float mag2(const Vector& v1) { return dot(v1, v1); }
-inline float mag(const Vec3<float>& v1) { return sqrt(mag2(v1)); }
 inline float mag(const Vector& v1) { return sqrt(mag2(v1)); }
 
 // *** Point (lives in 3D affine space; represents position rather than translation).
@@ -69,9 +63,6 @@ inline float pvdot(const Point& p, const Vector& v) { return dot(to_Vector(p), v
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
 float area2(const Point& p1, const Point& p2, const Point& p3);
 Point centroid(CArrayView<Point> pa);
-inline float dist2(const Vec3<float>& v1, const Vec3<float>& v2) {
-  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
-}
 inline float dist2(const Vec3<float>& v1, const Point& v2) {
   return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
 }
@@ -81,7 +72,6 @@ inline float dist2(const Point& v1, const Vec3<float>& v2) {
 inline float dist2(const Point& v1, const Point& v2) {
   return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
 }
-inline float dist(const Vec3<float>& v1, const Vec3<float>& v2) { return sqrt(dist2(v1, v2)); }
 inline float dist(const Vec3<float>& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
 inline float dist(const Point& v1, const Vec3<float>& v2) { return sqrt(dist2(v1, v2)); }
 inline float dist(const Point& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
@@ -137,7 +127,10 @@ struct Bary : Vec3<float> {
 };
 
 // *** Texture coordinates; usually defined over unit square [0, 1]^2.
-//  Origin (0, 0) should be upper-left of an image although much code still assumes origin is at lower-left.
+// In DirectX, Metal, and Vulkan, the UV origin is at the top left corner of a texture image, whereas
+// in OpenGL the UV origin at the lower left.
+// Unfortunately, my code/results uses the OpenGL convention (even though my yx pixel coordinates have their
+// origin at the top left of the image).
 struct UV : Vec2<float> {
   UV() = default;
   constexpr UV(float u, float v) : Vec2<float>(u, v) {}
@@ -148,9 +141,6 @@ struct UV : Vec2<float> {
 
 // Project v into plane orthogonal to unitdir.
 Vector project_orthogonally(const Vector& v, const Vector& unitdir);
-
-// More robust than acos(dot()) for small angles!
-float angle_between_unit_vectors(const Vector& va, const Vector& vb);
 
 // General affine combination of 4 points.  Note that interpolation domain is 3-dimensional (non-planar).
 // "bary[3]" == 1.f - bary[0] - bary[1] - bary[2]
@@ -165,8 +155,8 @@ Vec<T, n> qinterp(const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3,
 template <typename T, int n>
 Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, float u, float v);
 
-// Spherical linear interpolation.  slerp(pa, pb, 1.f) == pa.
-Point slerp(const Point& pa, const Point& pb, float ba);
+// Spherical linear interpolation.  slerp(p1, p2, 1.f) == p1.
+Point slerp(const Point& p1, const Point& p2, float ba);
 
 // Spherical triangle area.
 float spherical_triangle_area(const Vec3<Point>& pa);
@@ -196,14 +186,6 @@ template <typename T> constexpr T to_deg(T rad) {
 
 // *** Vector
 
-inline bool Vector::normalize() {
-  auto& v = *this;
-  float sum2 = square(v[0]) + square(v[1]) + square(v[2]);
-  if (!sum2) return false;
-  v *= (1.f / sqrt(sum2));
-  return true;
-}
-
 inline constexpr Vector cross(const Vector& v1, const Vector& v2) {
   return Vector(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 }
@@ -224,18 +206,6 @@ inline bool Bary::is_convex() const {
 inline Vector project_orthogonally(const Vector& v, const Vector& unitdir) {
   ASSERTXX(is_unit(unitdir));
   return v - unitdir * dot(v, unitdir);
-}
-
-inline float angle_between_unit_vectors(const Vector& va, const Vector& vb) {
-  ASSERTXX(is_unit(va) && is_unit(vb));
-  float vdot = dot(va, vb);
-  if (vdot > +.95f) {
-    return std::asin(mag(cross(va, vb)));
-  } else if (vdot < -.95f) {
-    return TAU / 2 - std::asin(mag(cross(va, vb)));
-  } else {
-    return std::acos(vdot);
-  }
 }
 
 template <typename T, int n>

@@ -63,6 +63,11 @@ Frame make_horiz(const Frame& f);
 // Affinely broaden the triangle (in all directions) by the factor 1.f + eps * .5f .
 void widen_triangle(ArrayView<Point> poly, float eps);
 
+// *** Other
+
+// Return the signed volume of a tetrahedron (positive if p4 is in the direction cross(p1, p2, p3)).
+float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4);
+
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_GEOMOP_H_

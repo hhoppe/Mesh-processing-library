@@ -964,7 +964,7 @@ void load_texturemaps() {
     Image itexture;
     const string filename = texturemaps[i];
     itexture.read_file(filename);
-    if (1) itexture.reverse_y();  // because glTexImage2D() has image origin at lower-left
+    if (1) itexture.reverse_y();  // because glTexImage2D() has image pixel-grid origin at lower-left
     int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     // On ATI, default GL_RGB is in fact GL_RGB5.
@@ -3202,7 +3202,6 @@ int HB::id() { return 2000; }
 void* HB::escape(void* code, void* data) {
   int icode = narrow_cast<int>(reinterpret_cast<intptr_t>(code));
   float fdata = *static_cast<float*>(data);
-  dummy_use(fdata);
   switch (icode) {
     case 1: {
       if (fdata < 0.f) {
@@ -4459,7 +4458,6 @@ inline float projected_area(float area, const Point& x) {
 }
 
 void draw_point(const Point& vp, float area) {
-  dummy_use(vp, area);
   float sphererad = sqrt(area / (TAU * 2));
   float prad = projected_area(sphererad, vp);
   int complexity;

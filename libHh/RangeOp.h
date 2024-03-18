@@ -399,6 +399,14 @@ template <typename R, typename = enable_if_range_t<R>> bool is_zero(const R& ran
   return true;
 }
 
+// Does it have unit norm?
+template <
+    typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+bool is_unit(const R& range, SumType tolerance = 1e-4f) {
+  return abs(mag2<SumType>(range) - 1.f) <= tolerance;
+}
+
 // Modify the range to have unit norm (or die if input has zero norm).
 template <typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>> R normalize(R&& range) {
   Iterator v = static_cast<Iterator>(Iterator{1.f} / assertx(mag(range)));

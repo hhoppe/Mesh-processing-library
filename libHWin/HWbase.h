@@ -137,6 +137,7 @@ class HWbase : noncopyable {
   string _backcolor;
   string _forecolor;
   string _offscreen;                    // name of output file to render to, without any visible window
+  bool _nosetforeground{false};
   Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color
   Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color
   bool _bigfont{false};

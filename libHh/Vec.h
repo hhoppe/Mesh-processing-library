@@ -110,6 +110,17 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   template <typename Func = T(int)> static type create(Func func) {
     return create_aux(func, std::make_index_sequence<n>());
   }
+  // (std::is_floating_point_v<> requires CXX_STD=c++17.)
+  template <typename U = T> std::enable_if_t<std::is_floating_point<U>::value, bool> normalize() {
+    auto sum2 = mag2(*this);
+    if (!sum2) return false;
+    *this *= 1.f / sqrt(sum2);
+    return true;
+  }
+  // Defining friend functions in-class is convenient but unfortunately _MSC_VER (VS 2019) attempts to instantiate
+  // all these and this fails if "T - T" or "sqrt(T)" are undefined.
+  // friend T mag2(const type& vec) { return dot(vec, vec); }
+  // friend T mag(const type& vec) { return sqrt(mag2(vec)); }
 
  private:
   // C++ requires empty classes to have nonzero size to ensure object identity.
@@ -197,6 +208,60 @@ constexpr Vec<T, (n1 + details::concat_n<Vec<T, n2>, A...>::value)> concat(const
   return concat(details::concat_aux(a1, a2, std::make_index_sequence<n1 + n2>()), arr...);
 }
 template <typename T, int n1> constexpr Vec<T, n1> concat(const Vec<T, n1>& a1) { return a1; }
+
+//----------------------------------------------------------------------------
+
+// For Numeric T:
+
+template <typename T, int n> T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
+  T sum{};
+  for_int(i, n) sum += v1[i] * v2[i];
+  return sum;
+}
+template <typename T, int n> T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
+template <typename T, int n> T mag(const Vec<T, n>& vec) { return sqrt(mag2(vec)); }
+template <typename T, int n> T dist2(const Vec<T, n>& v1, const Vec<T, n>& v2) { return mag2(v1 - v2); }
+template <typename T, int n> T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) { return sqrt(dist2(v1, v2)); }
+template <typename T, int n> Vec<T, n> normalized(Vec<T, n> vec) {
+  assertx(vec.normalize());
+  return vec;
+}
+template <typename T, int n> Vec<T, n> ok_normalized(Vec<T, n> vec) {
+  vec.normalize();
+  return vec;
+}
+template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
+  return abs(mag2(vec) - 1.f) <= tolerance;
+}
+template <typename T> constexpr Vec<T, 3> cross(const Vec<T, 3>& v1, const Vec<T, 3>& v2) {
+  return Vec<T, 3>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
+}
+template <typename T> constexpr T cross(const Vec<T, 2>& v1, const Vec<T, 2>& v2) {
+  return v1[0] * v2[1] - v2[0] * v1[1];
+}
+// More robust than acos(dot()) for small angles!
+template <typename T> T angle_between_unit_vectors(const Vec<T, 3>& v1, const Vec<T, 3>& v2) {
+  ASSERTXX(is_unit(v1) && is_unit(v2));
+  T vdot = dot(v1, v2);
+  if (vdot > +.95f) {
+    return std::asin(mag(cross(v1, v2)));
+  } else if (vdot < -.95f) {
+    return T(D_TAU / 2) - std::asin(mag(cross(v1, v2)));
+  } else {
+    return std::acos(vdot);
+  }
+}
+template <typename T> T angle_between_unit_vectors(const Vec<T, 2>& v1, const Vec<T, 2>& v2) {
+  ASSERTXX(is_unit(v1) && is_unit(v2));
+  T vdot = dot(v1, v2);
+  if (vdot > +.95f) {
+    return std::asin(cross(v1, v2));
+  } else if (vdot < -.95f) {
+    return T(D_TAU / 2) - std::asin(cross(v1, v2));
+  } else {
+    return std::acos(vdot);
+  }
+}
 
 //----------------------------------------------------------------------------
 

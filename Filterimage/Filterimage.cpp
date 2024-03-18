@@ -1379,7 +1379,7 @@ void do_voronoidilate() {
   for (const auto& yx : range(image.dims())) {
     if (mag2(mvec[yx]) == 0) continue;
     assertx(mvec[yx][0] < image.ysize());  // no more large (undefined) values
-    HH_SSTAT(Svoronoidist, mag(mvec[yx]));
+    HH_SSTAT(Svoronoidist, mag<float>(mvec[yx]));
     image[yx] = image[yx + mvec[yx]];
   }
 }
@@ -1394,7 +1394,7 @@ void do_featureoffsets() {
   euclidean_distance_map(mvec);
   for (const auto& yx : range(image.dims())) {
     assertx(mvec[yx][0] < image.ysize());  // no more large (undefined) values
-    HH_SSTAT(Svoronoidist, mag(mvec[yx]));
+    HH_SSTAT(Svoronoidist, mag<float>(mvec[yx]));
     if (1) {
       for_int(c, 2) {
         int i = mvec[yx][c];
@@ -1410,7 +1410,7 @@ void do_featureoffsets() {
         image[yx][c] = uint8_t(i);
       }
     } else {  // scalar arctan
-      float f = float(mag(mvec[yx]));
+      float f = float(mag<float>(mvec[yx]));
       f = 0.f + 150.f * std::atan2(f, 1.f);
       int i = int(f + .5f);
       assertx(i >= 0 && i <= 255);

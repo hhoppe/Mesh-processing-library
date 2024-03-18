@@ -240,7 +240,7 @@ void setup_exception_hooks() {
   if (!IsDebuggerPresent()) {
     // Because the "Just-in-time debugging" no longer seems to work.
     _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, my_CrtDbgHook);  // only in Debug
-    dummy_use(&my_CrtDbgHook);                                // otherwise unreferenced in Release
+    dummy_use(my_CrtDbgHook);                                 // otherwise unreferenced in Release
   }
 #endif
 #if defined(_WIN32)

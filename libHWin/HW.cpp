@@ -83,6 +83,7 @@ bool HW::init_aux(Array<string>& aargs) {
   args.f("-maximize", _maximize, ": set initial window state");
   args.f("-fullscreen", _fullscreen, ": set initial window state");
   args.p("-offscreen", _offscreen, "imagefilename : save image");
+  args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();
@@ -1100,33 +1101,44 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
   // Note: yxpos == twice(-1) if unspecified.
   // Note: wndProc_wrapper is called during CreateWindow!
   _hwnd = k_bogus_hwnd;
-  int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-  if (_iconic) style |= WS_ICONIC;
-  if (_maximize) style |= WS_MAXIMIZE;
-  _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // window class name
-                        utf16_from_utf8(_window_title).c_str(),  // window title bar
-                        style,
-                        yxpos[1] < 0 ? CW_USEDEFAULT : yxpos[1],  // initial x position
-                        yxpos[0] < 0 ? CW_USEDEFAULT : yxpos[0],  // initial y position
-                        // size of entire window; not necessarily client area
-                        rect.right - rect.left,  // initial width
-                        rect.bottom - rect.top,  // initial height
-                        nullptr,                 // parent window handle
-                        nullptr,                 // window menu handle
-                        _hInstance,              // program instance handle
-                        nullptr);                // creation parameters
-  // Make sure we were able to create the window.
-  assertx(_hwnd);
-  // Get a DC for the window (for convenience; let's only do it once)
-  _hDC = assertx(GetDC(_hwnd));
-  _hRenderDC = _hDC;
-  if (_offscreen == "") {
-    // Display the window
-    ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
-    assertx(UpdateWindow(_hwnd));
-    // Grabbing focus often fails because of focus rules (which is nice).
-    SetForegroundWindow(_hwnd);
-    if (!_iconic) assertx(SetFocus(_hwnd));
+  {
+    int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    if (_iconic) style |= WS_ICONIC;
+    if (_maximize) style |= WS_MAXIMIZE;
+    const int x = yxpos[1] < 0 ? CW_USEDEFAULT : yxpos[1];
+    const int y = yxpos[0] < 0 ? CW_USEDEFAULT : yxpos[0];
+    const int width = rect.right - rect.left;
+    const int height = rect.bottom - rect.top;
+    _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // window class name
+                          utf16_from_utf8(_window_title).c_str(),  // window title bar
+                          style,
+                          x,                       // initial x position
+                          y,                       // initial y position
+                          // size of entire window; not necessarily client area
+                          width,       // initial width
+                          height,      // initial height
+                          nullptr,     // parent window handle
+                          nullptr,     // window menu handle
+                          _hInstance,  // program instance handle
+                          nullptr);    // creation parameters
+    // Make sure we were able to create the window.
+    assertx(_hwnd);
+    // Get a DC for the window (for convenience; let's only do it once)
+    _hDC = assertx(GetDC(_hwnd));
+    _hRenderDC = _hDC;
+    if (_offscreen == "") {
+      // Display the window
+      ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
+      assertx(UpdateWindow(_hwnd));
+      // Grabbing focus often fails because of focus rules.  G3dcmp uses -nosetforeground but it does not fix it.
+      if (!_nosetforeground) {
+        SetForegroundWindow(_hwnd);
+        if (!_iconic) {
+          assertx(SetFocus(_hwnd));
+          if (0) assertx(SetWindowPos(_hwnd, HWND_TOP, x, y, width, height, 0));  // Does not help.
+        }
+      }
+    }
   }
   //
   if (_fullscreen) {

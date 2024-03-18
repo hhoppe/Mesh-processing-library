@@ -34,7 +34,7 @@ Point operator*(const Point& p, const Frame& f) {
 }
 
 Vector cross(const Point& p1, const Point& p2, const Point& p3) {
-  // return cross(p2-p1, p3-p1);
+  // return cross(p2 - p1, p3 - p1);
   //
   // I once thought that "double" was necessary in next 3 lines to
   //  overcome an apparent problem with poor computed surface normals.
@@ -140,15 +140,14 @@ std::ostream& operator<<(std::ostream& os, const Frame& f) {
 
 // *** Misc
 
-Point slerp(const Point& pa, const Point& pb, float ba) {
-  Vector va = to_Vector(pa), vb = to_Vector(pb);
-  float ang = angle_between_unit_vectors(va, vb);
+Point slerp(const Point& p1, const Point& p2, float ba) {
+  Vector v1 = to_Vector(p1), v2 = to_Vector(p2);
+  float ang = angle_between_unit_vectors(v1, v2);
   ang *= ba;
-  float vdot = dot(va, vb);
-  // AbarB is tangent at B in direction of A.
-  Vector AbarB = va - vb * vdot;
-  AbarB.normalize();
-  Vector v = vb * std::cos(ang) + AbarB * std::sin(ang);
+  float vdot = dot(v1, v2);
+  Vector vv = v1 - v2 * vdot;  // Tangent at p2 in direction of p1.
+  vv.normalize();
+  Vector v = v2 * std::cos(ang) + vv * std::sin(ang);
   ASSERTXX(is_unit(v));
   return to_Point(v);
 }

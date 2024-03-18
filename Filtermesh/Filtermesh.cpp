@@ -1498,7 +1498,7 @@ void do_lscm() {
       assertx(va.num() == 3);
       for_int(j, 3) poly[j] = mesh.point(va[j]);
       vsa[0] = normalized(poly[1] - poly[0]);
-      Vector nor = normalized(cross(vsa[0], poly[2] - poly[0]));
+      Vector nor = normalized(cross(vsa[0], Vector(poly[2] - poly[0])));
       vsa[1] = cross(vsa[0], nor);
       assertx(is_unit(vsa[1]));
       barya[0] = vector_bary(poly, vsa[0]);

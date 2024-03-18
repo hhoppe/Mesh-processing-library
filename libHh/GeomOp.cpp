@@ -292,4 +292,13 @@ void widen_triangle(ArrayView<Point> poly, float eps) {
   poly[2] = p2;
 }
 
+float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4) {
+  // Formula derived from the scalar triple product of vectors.
+  if (0) {
+    return dot(p2 - p1, cross(p3 - p1, p4 - p1)) / 6.f;
+  } else {
+    return dot(p2 - p1, cross(p1, p3, p4)) / 6.f;
+  }
+}
+
 }  // namespace hh

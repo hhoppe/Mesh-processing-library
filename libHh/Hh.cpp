@@ -363,7 +363,11 @@ std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings)
   getline(is, sline);  // already creates its own sentry project (with noskipws == true)
   if (is && sline.size() && sline.back() == '\r') {
     sline.pop_back();
-    if (dos_eol_warnings) Warning("my_getline: stripping out control-M from DOS file");
+    if (dos_eol_warnings) {
+      static const bool ignore_dos_eol = getenv_bool("IGNORE_DOS_EOL");
+      if (!ignore_dos_eol)
+        Warning("my_getline: stripping out control-M from DOS file");
+    }
   }
   return is;
 }

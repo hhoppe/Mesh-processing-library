@@ -70,7 +70,6 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
-  dummy_use(omatid);
   const EListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   for (EListNode* n = ndelim->next();;) {
@@ -406,8 +405,6 @@ int SrMesh::ogl_render_tvclines() {
   const int desiredloc = k_cache_size - 9;
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   const unsigned lcur_frame_mask = _cur_frame_mask;
-  int omatid = -1;
-  dummy_use(omatid);
   const EListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   Point p;

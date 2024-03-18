@@ -66,6 +66,7 @@ bool HW::init_aux(Array<string>& aargs) {
   args.f("-maximize", _maximize, ": set initial window state");
   args.f("-fullscreen", _fullscreen, ": set initial window state");
   args.p("-offscreen", _offscreen, "imagefilename : save image");
+  args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();

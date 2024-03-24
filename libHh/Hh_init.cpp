@@ -89,7 +89,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
       // If this crashes, it may be best to delay until after show_call_stack() below.
       const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
-      std::cerr << "Uncaught c++ exception: " << ex.what() << "\n";
+      std::cerr << "Fatal uncaught c++ exception: " << ex.what() << "\n";
       break;
     }
     default: SHOW("Unrecognized exception code", ExceptionCode);
@@ -137,7 +137,7 @@ HH_NORETURN void my_terminate_handler() {
   try {
     throw;
   } catch (const std::exception& ex) {
-    fprintf(stderr, "Terminate: Uncaught c++ exception: %s\n", ex.what());
+    fprintf(stderr, "Terminate: Fatal uncaught c++ exception: %s\n", ex.what());
     fflush(stderr);
   } catch (...) {
   }

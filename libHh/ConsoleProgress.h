@@ -102,8 +102,7 @@ inline void ConsoleProgress::update_i(float f) {
           str += "\b\b\b";
         str += sform("%02d%%", val);
       }
-      std::cerr << str;   // write atomically so "prog1.exe | prog2.exe" is OK.
-      std::cerr.flush();  // likely unnecessary
+      std::cerr << str << std::flush;  // write atomically so "prog1.exe | prog2.exe" is OK.
     }
   }
 }
@@ -130,8 +129,7 @@ inline void ConsoleProgress::clear() {
         // For cmd.exe console, must overwrite "\b" with spaces.
         str = "\b\b\b\b    \b\b\b\b";
       }
-      std::cerr << str;
-      std::cerr.flush();
+      std::cerr << str << std::flush;
     }
   }
 }

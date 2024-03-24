@@ -38,7 +38,7 @@ string mesh_genus_string(const Mesh& mesh);
 // Return: success (may fail if some edges already exist).
 bool triangulate_face(GMesh& mesh, Face f);
 
-// ret: cosf of signed angle away from "flattness" (== exterior angle)
+// ret: cos of signed angle away from "flatness" (== exterior angle)
 // range -1..1  (or -2 if a triangle is degenerate)
 // For non-triangles, looks at average of immediate neighbors on either side.
 float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
@@ -68,7 +68,7 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep);
 using EDGEF = bool (*)(const GMesh& m, Edge e);
 
 // For all Mesh Edge e,
-//  if dihedral angle cosf of faces both before and after is > mincos, and if (fdoswap(e)) then
+//  if dihedral angle cos of faces both before and after is > mincos, and if (fdoswap(e)) then
 //    call fdel(e), swap the edge, and call fadd(newedge).
 // Consider all affect edges again.
 // Return number of edges swapped.

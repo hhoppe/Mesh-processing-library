@@ -7,7 +7,7 @@
 
 namespace hh {
 
-// Precomputed cosf() and sinf() functions over integer divisions of TAU.
+// Precomputed cos() and sin() functions over integer divisions of TAU.
 class Trig {
  public:
   // compute cos(i * TAU / j)

@@ -26,7 +26,7 @@ float aspect_ratio(const Point& p0, const Point& p1, const Point& p2);
 
 // *** Angles
 
-// ret: cosf of signed angle away from "flattness" (== exterior angle)
+// ret: cos of signed angle away from "flatness" (== exterior angle)
 // range -1.f .. 1.f  (or -2.f if a triangle is degenerate)
 float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
@@ -38,7 +38,7 @@ float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, 
 // range 0 .. TAU * 2
 float solid_angle(const Point& p, CArrayView<Point> pa);
 
-// ret: cosf of signed angle away from "flattness" (== exterior angle)
+// ret: cos of signed angle away from "flatness" (== exterior angle)
 // range -1..1  (or -2 if an edge is degenerate)
 float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 

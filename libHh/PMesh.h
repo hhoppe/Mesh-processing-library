@@ -228,6 +228,9 @@ struct PmFaceNeighbors {
 // Wedge mesh augmented with adjacency information.
 // Specifically, dual graph encoding face-face adjacency using PmFaceNeighbors.
 class AWMesh : public WMesh {
+ private:
+  struct VF_range;
+  struct VV_range;
  public:
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
@@ -253,6 +256,8 @@ class AWMesh : public WMesh {
   int most_ccw_face(int v, int f);  // negative if v is interior vertex
   bool is_boundary(int v, int f);
   bool gather_faces(int v, int f, Array<int>& faces);  // ret: is_boundary
+  VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
+  VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // std::pair<int, int>{vv, ff}.
  private:
   void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,
@@ -260,6 +265,56 @@ class AWMesh : public WMesh {
   // Rendering using OpenGL
   Array<Pixel> _ogl_mat_byte_rgba;  // size is _materials.num()
   void ogl_process_materials();
+  struct VF_range : PArray<int, 10> {
+    VF_range(const AWMesh& mesh, int v, int f) {
+      int ff = f, lastf, stopf;
+      do {
+        lastf = ff;
+        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // go clw.
+      } while (ff >= 0 && ff != f);
+      if (ff < 0) {
+        stopf = ff;
+        ff = lastf;
+      } else {
+        stopf = f;
+        // ff = f;
+      }
+      for (;;) {
+        push(ff);
+        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 1)];  // go ccw.
+        if (ff == stopf) break;
+      }
+    }
+  };
+  struct VV_range : PArray<std::pair<int, int>, 10> {
+    VV_range(const AWMesh& mesh, int v, int f) {
+      int ff = f, lastf;
+      do {
+        lastf = ff;
+        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // go clw.
+      } while (ff >= 0 && ff != f);
+      if (ff < 0) ff = lastf;
+      int j = mesh.get_jvf(v, ff);
+      int vv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 1)]].vertex;
+      int stopv = vv;
+      int nextv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 2)]].vertex;
+      while (vv >= 0) {
+        push(std::pair<int, int>{vv, ff});
+        vv = nextv;
+        lastf = ff;
+        ff = mesh._fnei[ff].faces[mod3(j + 1)];
+        if (ff < 0) {
+          nextv = -1;
+          ff = lastf;
+        } else {
+          nextv = mesh._wedges[mesh._faces[ff].wedges[mod3((j = mesh.get_jvf(v, ff)) + 2)]].vertex;
+          if (nextv == stopv) {
+            nextv = -1;
+          }
+        }
+      }
+    }
+  };
 
  protected:
   void apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry* ancestry = nullptr);

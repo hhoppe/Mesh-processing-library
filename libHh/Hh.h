@@ -206,7 +206,7 @@ template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::ty
 
 // For use in downcasting to a derived class.
 template <typename Dest, typename Src> Dest down_cast(Src* f) {
-  static_assert(std::is_base_of<Src, typename std::remove_pointer<Dest>::type>::value, "");
+  static_assert(std::is_base_of<Src, std::remove_pointer_t<Dest>>::value, "");
   return static_cast<Dest>(f);
 }
 

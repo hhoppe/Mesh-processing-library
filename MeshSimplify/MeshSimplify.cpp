@@ -4568,9 +4568,7 @@ void optimize() {
     // showf("Entering %d edges into priority queue\n", mesh.num_edges());
     ConsoleProgress cprogress2;
     // Add some randomness to the way edges are selected.
-    Array<Edge> ar;
-    ar.reserve(mesh.num_edges());
-    for (Edge e : mesh.edges()) ar.push(e);
+    Array<Edge> ar(mesh.edges());
     {
       std::default_random_engine dre;
       std::shuffle(ar.begin(), ar.end(), dre);  // clang-tidy reports error here if -U__STRICT_ANSI__.

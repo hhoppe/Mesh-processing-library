@@ -254,10 +254,8 @@ void SubMesh::subdivide_aux(float cosang, Mvcvh* pmconv) {
 void SubMesh::refine(Mvcvh& mconv) {
   // Save current mesh objects for later iteration
   // Array<Vertex> arv; for (Vertex v : _m.vertices()) arv += v;
-  Array<Face> arf;
-  for (Face f : _m.ordered_faces()) arf.push(f);
-  Array<Edge> are;
-  for (Edge e : _m.edges()) are.push(e);
+  Array<Face> arf(_m.ordered_faces());
+  Array<Edge> are(_m.edges());
   Map<Edge, Vertex> menewv;
   // Create new vertices and make them midpoints of old edges
   for (Edge e : are) {  // was ForStack which went in reverse order
@@ -393,8 +391,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   // See also Filtermesh.cpp:do_silsubdiv()
   assertx(!_isquad);
   // _mforigf, _mfindex, and _mofif are not supported with this scheme!
-  Array<Face> arf;
-  for (Face f : _m.faces()) arf.push(f);
+  Array<Face> arf(_m.faces());
   // Determine which edges will be subdivided
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : _m.edges()) {
@@ -694,8 +691,6 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
 
 void SubMesh::triangulate_quads(Mvcvh& mconv) {
   assertx(_isquad);
-  Array<Face> arf;
-  for (Face f : _m.ordered_faces()) arf.push(f);
   for (Edge e : _m.edges()) assertx(!_m.flags(e));
   if (0) {
     for (Vertex v : _m.vertices()) {
@@ -704,7 +699,7 @@ void SubMesh::triangulate_quads(Mvcvh& mconv) {
       mconv.enter(v, std::move(comb));
     }
   }
-  for (Face f : arf) {  // was ForStack which went in reverse order
+  for (Face f : Array<Face>(_m.ordered_faces())) {
     Face forig = _mforigf.remove(f);
     _mfindex.remove(f);  // can be index 0
     Vertex v = _m.center_split_face(f);

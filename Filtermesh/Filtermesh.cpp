@@ -340,9 +340,7 @@ void normalize_arrayv(Array<Vertex>& ar) {
       mini = i;
     }
   }
-  Array<Vertex> art;
-  art.reserve(ar.num());
-  for (Vertex v : ar) art.push(v);
+  Array<Vertex> art(ar);
   for_int(i, ar.num()) ar[i] = art[(mini + i) % ar.num()];
 }
 
@@ -1063,12 +1061,9 @@ void do_tagmateriale() {
 void do_trisubdiv() {
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_trisubdiv");
-  Array<Vertex> arv;
-  for (Vertex v : mesh.vertices()) arv.push(v);
-  Array<Face> arf;
-  for (Face f : mesh.faces()) arf.push(f);
-  Array<Edge> are;
-  for (Edge e : mesh.edges()) are.push(e);
+  Array<Vertex> arv(mesh.vertices());
+  Array<Face> arf(mesh.faces());
+  Array<Edge> are(mesh.edges());
   Map<Edge, Vertex> menewv;
   // Create new vertices and compute their positions.
   string str;
@@ -1151,8 +1146,7 @@ void do_silsubdiv() {
   // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_silsubdiv");
-  Array<Face> arf;
-  for (Face f : mesh.faces()) arf.push(f);
+  const Array<Face> arf(mesh.faces());
   // Determine which edges will be subdivided.
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : mesh.edges()) {
@@ -1727,8 +1721,7 @@ void do_splitvalence(Args& args) {
         if (!GMesh::string_has_key(mesh.get_string(f), "hole")) is_hole = false;
       }
     }
-    Array<Vertex> va;
-    for (Vertex vv : mesh.ccw_vertices(v)) va.push(vv);
+    Array<Vertex> va(mesh.ccw_vertices(v));
     Vector vec(0.f, 0.f, 0.f);
     for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
     Vertex vs1 = va[0];
@@ -2205,12 +2198,7 @@ void do_flip() {
     arva.add(1);
     mesh.get_vertices(f, arva.last());
   }
-  {
-    Array<Face> arf;
-    for (Face f : mesh.faces()) arf.push(f);
-    for (Face f : arf) mesh.destroy_face(f);
-  }
-  Array<Vertex> vnew;
+  for (Face f : Array<Face>(mesh.faces())) mesh.destroy_face(f);
   for (Array<Vertex>& va : arva) {
     reverse(va);
     mesh.create_face(va);

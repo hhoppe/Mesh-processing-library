@@ -660,9 +660,7 @@ void CloseMinCycles::compute() {
   showdf("Closed %d cycles (%d handles and %d tunnels), resulting in mesh of genus %d\n", _tot_handles + _tot_tunnels,
          _tot_handles, _tot_tunnels, _cgenus);
   for (Vertex vnew : ar_boundary_centers) {
-    Array<Face> faces;
-    for (Face f : _mesh.faces(vnew)) faces.push(f);
-    for (Face f : faces) _mesh.destroy_face(f);
+    for (Face f : Array<Face>(_mesh.faces(vnew))) _mesh.destroy_face(f);
     _mesh.destroy_vertex(vnew);
   }
   ASSERTX(_cgenus == int(mesh_genus(_mesh)));

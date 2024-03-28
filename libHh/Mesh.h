@@ -371,15 +371,15 @@ class Mesh : noncopyable {
   struct OrderedVertices_range {
     using Container = Array<Vertex>;
     OrderedVertices_range(const Mesh& mesh);
-    Container::iterator begin() { return _vertices.begin(); }
-    Container::iterator end() { return _vertices.end(); }
+    Container::iterator begin() const { return const_cast<Container&>(_vertices).begin(); }
+    Container::iterator end() const { return const_cast<Container&>(_vertices).end(); }
     Container _vertices;
   };
   struct OrderedFaces_range {
     using Container = Array<Face>;
     OrderedFaces_range(const Mesh& mesh);
-    Container::iterator begin() { return _faces.begin(); }
-    Container::iterator end() { return _faces.end(); }
+    Container::iterator begin() const { return const_cast<Container&>(_faces).begin(); }
+    Container::iterator end() const { return const_cast<Container&>(_faces).end(); }
     Container _faces;
   };
   // Vertex Iter

@@ -68,15 +68,13 @@ int main() {
   assertx(mesh.num_faces() == 4);
   assertx(mesh.num_edges() == 8);
   {
-    Array<Vertex> va;
-    for (Vertex v : mesh.ccw_vertices(v5)) va.push(v);
+    Array<Vertex> va(mesh.ccw_vertices(v5));
     assertx(va.num() == 4);
     SHOW("vertices: 3 1 4 2");
     for_int(i, 4) SHOW(mesh.vertex_id(va[i]));
   }
   {
-    Array<Face> fa;
-    for (Face f : mesh.ccw_faces(v2)) fa.push(f);
+    Array<Face> fa(mesh.ccw_faces(v2));
     assertx(fa.num() == 2);
     Face pf1 = mesh.face(v5, v2 /*, v3*/);
     Face pf2 = mesh.face(v5, v4 /*, v2*/);

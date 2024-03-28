@@ -519,9 +519,7 @@ void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
     destroy_face(he2->_face);
   }
   // Change remaining faces around vt to have vs instead
-  Array<Corner> arc;
-  for (HEdge he : corners(vt)) arc.push(he);
-  for (HEdge he : arc) {
+  for (HEdge he : Array<Corner>(corners(vt))) {
     // ends up deleting and recreating MEdge structures, which is great.
     remove_hedge(he, he->_prev->_vert);
     remove_hedge(he->_next, he->_vert);
@@ -629,9 +627,7 @@ void Mesh::merge_vertices(Vertex vs, Vertex vt) {
   assertx(legal_vertex_merge(vs, vt));
   // We cannot introduce bogus hedges, because we intend to merge boundary edges together.
   // Change faces around vt to instead use vs.
-  Array<Corner> arc;
-  for (HEdge he : corners(vt)) arc.push(he);
-  for (HEdge he : arc) {
+  for (HEdge he : Array<Corner>(corners(vt))) {
     ASSERTX(he->_vert == vt);
     remove_hedge(he, he->_prev->_vert);
     remove_hedge(he->_next, he->_vert);
@@ -647,8 +643,7 @@ Vertex Mesh::center_split_face(Face f) {
   Array<Vertex> va;
   get_vertices(f, va);
   // Create bogus hedges if boundaries
-  Array<HEdge> ar_he;
-  for (HEdge he : corners(f)) ar_he.push(he);
+  Array<HEdge> ar_he(corners(f));
   create_bogus_hedges(ar_he);
   // Destroy face
   destroy_face(f);
@@ -674,8 +669,7 @@ Edge Mesh::split_face(Face f, Vertex v1, Vertex v2) {
     v = ccw_vertex(f, v);
   }
   // Create bogus hedges if boundaries
-  Array<HEdge> ar_he;
-  for (HEdge he : corners(f)) ar_he.push(he);
+  Array<HEdge> ar_he(corners(f));
   create_bogus_hedges(ar_he);
   // Destroy face
   destroy_face(f);
@@ -842,8 +836,7 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
 }
 
 Edge Mesh::remove_vertex_between_edges(Vertex vr) {
-  Array<Face> fa;
-  for (Face f : ccw_faces(vr)) fa.push(f);
+  Array<Face> fa(ccw_faces(vr));
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : fa) {

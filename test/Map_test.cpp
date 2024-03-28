@@ -133,8 +133,7 @@ int main() {
     assertx(m.get("abcd") == "113");
     assertx(m.get("ab") == "14");
     assertx(m["abcd"] == "113");
-    Array<string> ar;
-    for (const string& k : m.keys()) ar.push(k);
+    Array<string> ar(m.keys());
     sort(ar);
     for (const string& s : ar) SHOW(s, m[s]);
     assertx(m.remove("ab") == "14");

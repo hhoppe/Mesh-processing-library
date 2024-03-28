@@ -1661,9 +1661,7 @@ void mesh_init(GMesh& mesh) {
     }
   }
   if (0 && strip_lines && !map_mfa.contains(&mesh)) {
-    Array<Face> fa;
-    for (Face f : mesh.ordered_faces()) fa.push(f);
-    map_mfa.enter(&mesh, std::move(fa));
+    map_mfa.enter(&mesh, Array<Face>(mesh.ordered_faces()));
   }
   if (strip_lines) {
     bool is_new;

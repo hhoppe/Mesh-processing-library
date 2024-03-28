@@ -1003,13 +1003,10 @@ void do_four1split() {
   // Currently loses edge flags and face strings
   perhaps_initialize();
   HH_TIMER("_four1split");
-  Array<Edge> are;
-  for (Edge e : mesh.edges()) are.push(e);
-  Array<Face> arf;
-  for (Face f : mesh.faces()) arf.push(f);
+  Array<Face> arf(mesh.faces());
   Map<Edge, Vertex> menewv;  // old Edge -> Vertex
   // Create new vertices and compute their positions
-  for (Edge e : are) {
+  for (Edge e : Array<Edge>(mesh.edges())) {
     Vertex v = mesh.create_vertex();
     menewv.enter(e, v);
     mesh.set_point(v, interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e))));

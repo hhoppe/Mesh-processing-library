@@ -442,7 +442,7 @@ void GMesh::read_line(char* sline) {
     }
     if (!assertw(va.num() >= 3)) return;
     if (!assertw(legal_create_face(va))) {
-      if (1) {
+      if (0) {
         SHOWL;
         SHOW(va.num());
         SHOW(sline);

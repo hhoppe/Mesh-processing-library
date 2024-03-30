@@ -25,6 +25,11 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   explicit PArray(CArrayView<T> ar) : PArray() { *this = ar; }
   PArray(PArray<T, pcap>&& ar) : PArray() { *this = std::move(ar); }
   PArray(std::initializer_list<T> l) : PArray(CArrayView<T>(l)) {}
+  template <typename I> explicit PArray(I b, I e) : PArray() {
+    for (; b != e; ++b) push(*b);
+  }
+  template <typename Range, typename = enable_if_range_t<Range>>
+  explicit PArray(Range&& range) : PArray(range.begin(), range.end()) {}
   ~PArray() {
     if (_cap != pcap) {
       delete[] _a;

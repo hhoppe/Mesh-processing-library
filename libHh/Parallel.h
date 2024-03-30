@@ -217,9 +217,9 @@ void parallel_for_each(const Range& range, const Function& function,
   const auto begin_range = begin(range);
   const auto end_range = end(range);
   const size_t num_elements = size_t(end_range - begin_range);
-  using iterator_category = typename std::iterator_traits<decltype(begin_range)>::iterator_category;
-  static_assert(std::is_same<iterator_category, std::random_access_iterator_tag>::value,
-                "Range iterator is not random-access");
+  // using iterator_category = typename std::iterator_traits<decltype(begin_range)>::iterator_category;
+  // static_assert(std::is_same<iterator_category, std::random_access_iterator_tag>::value,
+  //               "Range iterator is not random-access");
   uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
   constexpr bool use_omp = false;  // OpenMP seems to never be faster, so there is no reason to use it here.
   if (use_omp) {

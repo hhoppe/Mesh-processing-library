@@ -212,17 +212,23 @@ inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
       return;
     }
   }
-  if (style == EStyle::shadowed) {
-    set_color(back_color);
-    for_intL(xd, -1, 2) for_intL(yd, -1, 2) {
-      if (xd || yd) draw_text_internal(yx + V(yd, xd), s);
-    }
-    set_color_to_foreground();
-  } else if (style == EStyle::boxed) {
-    set_color(back_color);
-    fill_rectangle(convert<float>(yx + V(4, -2)),
-                   convert<float>(yx + _font_dims * V(1, narrow_cast<int>(s.size())) + V(4, 2)));
-    set_color_to_foreground();
+  switch (style) {
+    case EStyle::regular:
+      break;
+    case EStyle::shadowed:
+      set_color(back_color);
+      for_intL(xd, -1, 2) for_intL(yd, -1, 2) {
+        if (xd || yd) draw_text_internal(yx + V(yd, xd), s);
+      }
+      set_color_to_foreground();
+      break;
+    case EStyle::boxed:
+      set_color(back_color);
+      fill_rectangle(convert<float>(yx + V(4, -2)),
+                     convert<float>(yx + _font_dims * V(1, narrow_cast<int>(s.size())) + V(4, 2)));
+      set_color_to_foreground();
+      break;
+    default: assertnever("");
   }
   draw_text_internal(yx, s);
 }

@@ -35,22 +35,22 @@ using namespace hh;
 
 namespace {
 
-//  (usually defined)
+// If disabled, use "-minqem" instead of point sampling.  (usually defined)
 #define ENABLE_FACEPTS
 
-//  avoid meshes with color to avoid fptcolor.  (usually not defined) (but needed for demos mandrill)
+// If disabled, avoid meshes with color to avoid fptcolor.  (usually not defined) (but needed for demos mandrill)
 #define ENABLE_FPTCOLOR
 
-//  use '-norfac 0' to avoid ftpnor.  (usually defined)
+// If disabled, use "-minqem" or "-norfac 0" to avoid ftpnor.  (usually defined)
 #define ENABLE_FPTNOR
 
-//  use '-neptfac 0' to avoid edge points.  (usually defined)
+// If disabled, use "-minqem" or "-neptfac 0" to avoid edge points.  (usually defined)
 #define ENABLE_EDGEPTS
 
-//  Quadric error metric on faces.  (usually defined)
+// If disabled, do not use "-qemcache" (cache quadric error metric on faces).  (usually defined)
 #define ENABLE_QEMCACHE
 
-//  double-precision float QEM floats (usually defined)
+// If disabled, uses single-precision QEM floats. (usually defined)
 #define QEM_DOUBLE
 
 //  (usually undefined)
@@ -58,10 +58,10 @@ namespace {
 
 // ***
 
-#define SSTATV2(Svar, v)                      \
-  do {                                        \
-    static Stat Svar(#Svar, verb >= 2, true); \
-    Svar.enter(v);                            \
+#define SSTATV2(Svar, v)                             \
+  do {                                               \
+    static Stat HH_ID(Svar)(#Svar, verb >= 2, true); \
+    if (verb >= 2) HH_ID(Svar).enter(v);             \
   } while (false)
 
 // *** MISC
@@ -246,8 +246,8 @@ struct struct_f_setpts {
   ~struct_f_setpts() { ASSERTX(setpts.empty()); }
   Set<fptinfo*> setpts;
 };
-HH_SACABLE(struct_f_setpts);
 #if defined(ENABLE_FACEPTS)
+HH_SACABLE(struct_f_setpts);
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, struct_f_setpts, func_f_setpts);
 inline Set<fptinfo*>& f_setpts(Face f) { return func_f_setpts(f).setpts; }
 #else
@@ -261,8 +261,8 @@ struct struct_e_setpts {
   ~struct_e_setpts() { ASSERTX(setpts.empty()); }
   Set<eptinfo*> setpts;
 };
-HH_SACABLE(struct_e_setpts);
 #if defined(ENABLE_EDGEPTS)
+HH_SACABLE(struct_e_setpts);
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MEdge, struct_e_setpts, func_e_setpts);
 inline Set<eptinfo*>& e_setpts(Edge e) { return func_e_setpts(e).setpts; }
 #else
@@ -282,8 +282,8 @@ using L_QEM_T = float;
 using BQemT = BQem<L_QEM_T>;
 constexpr int k_qemsmax = 9;
 
-#if defined(ENABLE_QEMCACHE)
 using upBQemT = unique_ptr<BQemT>;
+#if defined(ENABLE_QEMCACHE)
 HH_SACABLE(upBQemT);
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, upBQemT, f_qem_p);
 #else
@@ -719,8 +719,8 @@ void corner_qem_vector(Corner c, ArrayView<float> pp) {
   create_qem_vector(mesh.point(mesh.corner_vertex(c)), c_winfo(c), pp);
 }
 
-// Without frac_diam, using qemweight, the rssa numbers can become so small
-//  that translating them by offset_cost makes them lose all precision.
+// Without frac_diam, using qemweight, the rssa numbers can become so small that translating them by
+// offset_cost makes them lose all precision.
 constexpr float frac_diam = 1e-3f;
 
 void get_face_qem(Face f, BQemT& qem) {
@@ -735,8 +735,7 @@ void get_face_qem(Face f, BQemT& qem) {
   }
   if (qemweight) {
     float facearea = mag(cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2])));
-    // Remember that QEM itself is squared on scale.
-    // If weigh faces by area, then cost is O(scale^4).
+    // Remember that QEM itself is squared on scale.  If weigh faces by area, then cost is O(scale^4).
     facearea *= 1.f / square(frac_diam * gdiam);
     qem.scale(facearea);
   }
@@ -756,11 +755,9 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
     nor = cross(nor, evec);
   }
   assertw(nor.normalize());  // is_zero(nor) is OK below.
-  // Length squared does not seem like the right thing to do
-  //  here.  Instead, should perhaps normalize geometry to unit
-  //  cube and use simply edge length.
-  // Note: scaling nor by length is equivalent to scaling qem
-  //  by length^2.
+  // Length squared does not seem like the right thing to do here.  Instead, should perhaps normalize geometry to
+  // unit cube and use simply edge length.
+  // Note: scaling nor by length is equivalent to scaling qem by length^2.
   if (qemweight) {
     nor *= (mesh.length(e) / (frac_diam * gdiam));
   }
@@ -910,15 +907,15 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
   }
 }
 
-// Given that would-be vertex v1 would have 2 incident sharp edges, and one
-//  of them is (v1, nn.va[vi]), return the index of the other sharp edge.
+// Given that would-be vertex v1 would have 2 incident sharp edges, and one of them is (v1, nn.va[vi]),
+// return the index of the other sharp edge.
 int other_creasevi(const NewMeshNei& nn, int vi) {
   assertx(nn.ar_vdisc.num() == 2);
   return (vi == nn.ar_vdisc[0] ? nn.ar_vdisc[1] : vi == nn.ar_vdisc[1] ? nn.ar_vdisc[0] : (assertnever(""), 0));
 }
 
-// Interpolate two arrays of floating point values, taking into account that
-//  either one could contain k_undefined values.
+// Interpolate two arrays of floating point values, taking into account that either one could contain
+// k_undefined values.
 template <int n> Vec<float, n> interp_floats(const Vec<float, n>& ar1, const Vec<float, n>& ar2, int ii) {
   assertx(ii >= 0 && ii <= 2);
   if ((ar1[0] == k_undefined && ii > 0) || (ar2[0] == k_undefined && ii < 2)) {
@@ -1029,8 +1026,7 @@ void write_mesh(std::ostream& os) {
   clear_mesh_strings();
 }
 
-// Parse wedge attributes at corner c, using computed normals in vnors if
-//  corner doesn't have an explicit normal.
+// Parse wedge attributes at corner c, using computed normals in vnors if corner doesn't have an explicit normal.
 WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
   WedgeInfo wi;
   A3dColor& col = wi.col;
@@ -1336,8 +1332,7 @@ void add_face_point(Face f, Bary bary, bool define_scalars) {
   }
 }
 
-// Sample an edge point on edge e.
-// Must later do point_change_edge()!
+// Sample an edge point on edge e.  Must later do point_change_edge()!
 void add_edge_point(Edge e, float bary) {
   epts.add(1);
   eptinfo& ept = epts.last();
@@ -1803,13 +1798,12 @@ float compute_spring(const NewMeshNei& nn) {
     np = nn.ar_fpts.num();
   }
   // spring as a function of #points and #faces?
-  // From looking at many examples of Meshfit,
-  //  had roughly #f / #p == 7--40 before spring was set below 1e-2 .
+  // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2 .
   // Let frac = np / nf
   //  spring = frac<4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
   float spring = (np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f);
-  // I found that variable spring constants tends to produce patches
-  //  of large faces, which gives poor behavior for selective refinement.
+  // I found that variable spring constants tends to produce patches of large faces, which gives poor behavior
+  // for selective refinement.
   // So now 970827 I go with constant springs.
   // if (1) spring = 1e-8f;
   // No way, that doesn't give good results for meshes >sq100
@@ -1822,9 +1816,8 @@ float compute_spring(const NewMeshNei& nn) {
 }
 
 // *** ULls
-// Solve a linear least squares problem involving a single variable
-//  in which the problem decomposes into nd independent
-//  univariate LLS problems.
+// Solve a linear least squares problem involving a single variable in which the problem decomposes into nd
+//  independent univariate LLS problems.
 // The system is Ux=b,
 //  the design matrix U is a column vector with m rows
 //  (the m constraints coming from either the springs or the projected points).
@@ -1832,10 +1825,9 @@ float compute_spring(const NewMeshNei& nn) {
 // The vector b is also a column vector with m rows.
 // To solve it using (UtU)x=Utb, note that UtU is simply the norm of U,
 //  and Utb is simply the dot product of U and b.
-// To do this efficiently, UtU and Utb can be accumulated for all nd
-//  coordinates simultaneously, while traversing U and b row-by-row.
-// To compute the rss (||Ux-b||^2), Werner observed that
-//  rss= ||b||^2-||Ux||^2 = ||b||^2 - x^2*||U||^2.
+// To do this efficiently, UtU and Utb can be accumulated for all nd coordinates simultaneously,
+//  while traversing U and b row-by-row.
+// To compute the rss (||Ux-b||^2), Werner observed that rss= ||b||^2-||Ux||^2 = ||b||^2 - x^2*||U||^2.
 class ULls : noncopyable {
  public:
   ULls(float* sol, int nd);
@@ -2143,8 +2135,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
   return true;
 }
 
-// To consider the edge collapse of e, gather information about the
-//  neighborhood that would result.
+// To consider the edge collapse of e, gather information about the neighborhood that would result.
 bool gather_nn(Edge e, NewMeshNei& nn) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
@@ -2184,8 +2175,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
       } else if (vo == vo2) {
         eoretire[1] = true;
       } else {
-        // If allowed this, then it would be difficult to encode in
-        //  vsplit records of PM representation.
+        // If allowed this, then it would be difficult to encode in vsplit records of PM representation.
         // 1996-04-17 is this still true?
         if (verb >= 2) Warning("Edge collapse would retire external edge");
         return false;
@@ -2292,10 +2282,8 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
       ar_wi.push(gwinfo[rwid]);
     }
   }
-  // In the case that half_edges (vs, vt) and (vs, vl) are sharp
-  //  (and possibly half_edge (vs, vr) is sharp) and
-  //  vertex vt is smooth, then problem occurs since resulting wedge
-  //  could be assigned two different attribute values.
+  // In the case that half_edges (vs, vt) and (vs, vl) are sharp (and possibly half_edge (vs, vr) is sharp) and
+  // vertex vt is smooth, then problem occurs since resulting wedge could be assigned two different attribute values.
   // This should have been prevented earlier.
   //
   const int not_used = std::numeric_limits<int>::max();
@@ -2521,8 +2509,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     // should be on gridpoint, so zero error
     assertx(d2 < square(1e-5f));
   }
-  // Consider the grid points strictly within the triangles,
-  //  and verify that triangles are not flipped or degenerate.
+  // Consider the grid points strictly within the triangles, and verify that triangles are not flipped or degenerate.
   int nf = nn.ar_corners.num();
   for_int(fi, nf) {
     int p0x, p0y;
@@ -2726,8 +2713,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
   return max_d2;
 }
 
-// Optimize the scalar attributes of wedges around v1 given fixed
-//  parametrizations of the face points (param).
+// Optimize the scalar attributes of wedges around v1 given fixed parametrizations of the face points (param).
 // Return the resulting scalar energy.
 double fit_color(const NewMeshNei& nn, const Param& param, Array<WedgeInfo>& ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
@@ -2892,16 +2878,14 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
   SSTATV2(Sres_dir, dir_error);
 }
 
-// After ecol is committed, reproject points onto new mesh neighborhood and
-//  update global structures.
+// After ecol is committed, reproject points onto new mesh neighborhood and update global structures.
 void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error) {
   uni_error = 0.f;
   dir_error = 0.f;
   bool handle_residuals = !!wfile_prog;
   Vector vnormal(0.f, 0.f, 0.f);
   {
-    // Compute average vertex normal (as will be done in SrMesh if the
-    //  vertex doesn't have a unique normal).
+    // Compute average vertex normal (as will be done in SrMesh if the vertex doesn't have a unique normal).
     for_int(i, nn.ar_corners.num()) {
       Corner c = nn.ar_corners[i][2];
       int wid = c_wedge_id(c);
@@ -2922,8 +2906,8 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
     ar_normaldist2.reserve(totpoints);
   }
   // Current problem with rnor001:
-  //  Both the distance evaluation in fit_geom() and evaluate_geom() and
-  //   the reprojection here do not use the (0, 0, 1) vector direction.
+  //  Both the distance evaluation in fit_geom() and evaluate_geom() and the reprojection here do not use
+  //  the (0, 0, 1) vector direction.
   //  That mis-reprojection is why we sometimes see a uniform error component here.
   {
     int nf = nn.ar_corners.num();
@@ -2987,9 +2971,8 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
             Face f = mesh.corner_face(nn.ar_corners[i][2]);
             mesh.polygon(f, poly);
             float eps = 1e-3f;
-            // I used to have eps=1e-5f, but I found that this would result in
-            //  Sres_npnor av=.95 for gcanyon_sq200 (it should be 1.0 except for the
-            //  last edge collapse which changes terrain to a triangle).
+            // I used to have eps=1e-5f, but I found that this would result in Sres_npnor av=.95 for gcanyon_sq200
+            // (it should be 1.0 except for the last edge collapse which changes terrain to a triangle).
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
             // It must have been a numerical problem in intersect_line().
             widen_triangle(poly, eps);
@@ -3173,9 +3156,8 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     assertx(nr == m);
   }
   {
-    // I could instead try to use the Raymond Seidel fast linear
-    //  programming scheme, which I copied from Seth Teller into
-    //  rseidel_lp.tar.gz .  (then into linprog.tar.gz)
+    // I could instead try to use the Raymond Seidel fast linear programming scheme, which I copied from
+    // Seth Teller into rseidel_lp.tar.gz .  (then into linprog.tar.gz)
     simplx(a, m, n, m1, m2, m3, &icase, izrov, iposv);
   }
   bool ret = false;
@@ -3567,8 +3549,8 @@ bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
   int matf0 = fnei0 ? f_matid(fnei0) : -1;
   int matf1 = fnei1 ? f_matid(fnei1) : -1;
   int matf2 = fnei2 ? f_matid(fnei2) : -1;
-  // If all neighbors different, face is either single chart or part of one
-  //  adjacent chart but at a corner, so all is OK.
+  // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
+  // so all is OK.
   if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) {
     return true;
   }
@@ -3738,8 +3720,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     if (hull && fakeii < 3) continue;
     if (minii1 && ii != 1) continue;
     if (nominii1 && ii == 1) continue;
-    // Added these tests to speed up search by not considering cases
-    //  that lead to crease and corner migration.
+    // Added these tests to speed up search by not considering cases that lead to crease and corner migration.
     if (minii2) {
       if (ii == 1) continue;
       if (mesh.is_boundary(e)) {
@@ -3747,12 +3728,9 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         if (terrain) {
           if (is_grid_corner(v2)) continue;
         } else {
-          // new 980105 for SR_PREDICT_MATID
-          // or should I use clw_edge? double check.
-          // 20040301: removed to allow simplification of planck400k to 2 triangles
-          //  in presence of 4 vertices tagged global.
-          // 20040713: reintroduced because otherwise ctfparam
-          //  can crash.
+          // new 19980105 for SR_PREDICT_MATID; or should I use clw_edge? double check.
+          // 20040301: removed to allow simplification of planck400k to 2 triangles with 4 vertices tagged global.
+          // 20040713: reintroduced because otherwise ctfparam can crash.
           if (1 && mesh.is_boundary(mesh.ccw_edge(f1, e))) continue;
         }
       } else {
@@ -3829,8 +3807,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         // Gather materials adjacent to v1
         Set<int> v1mats;
         for (Face f : mesh.faces(tv1)) v1mats.add(f_matid(f));
-        // Check whether any other vertex around v1 is
-        //  on the same boundary as v1
+        // Check whether any other vertex around v1 is on the same boundary as v1
         for (Vertex v : mesh.vertices(tv2)) {
           if (v == tv1 || v == mesh.side_vertex1(e) || v == mesh.side_vertex2(e)) continue;
           Edge ee = mesh.edge(tv2, v);
@@ -3948,12 +3925,10 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         }
       }
       int nw = ar_wi.num();
-      static Matrix<float> minp;
-      if (minp.ysize() < nw) minp.init(nw, k_qemsmax);
+      Matrix<float> minp(nw, k_qemsmax);
       for_int(i, nw) create_qem_vector(newp, ar_wi[i], minp[i]);
       if (fakeii == 3) {
-        // If colfac && !fit_colors, or if norfac && !fit_normals,
-        //  should compute minimum subject to those constraints.
+        // If colfac && !fit_colors, or if norfac && !fit_normals, should compute minimum subject to those constraints.
         const float small_constr_cweight = 1e-3f;
         float cweight = small_constr_cweight;
         // if (qemweight) cweight *= square(gdiam*.05f);
@@ -4081,8 +4056,8 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     }
     if (edgepathfac) {
       assertx(ii == 0 || ii == 2);
-      // if (ii == 0), vertex kept is v2
-      // if (ii == 2), vertex kept is v1
+      // if ii == 0, vertex kept is v2
+      // if ii == 2, vertex kept is v1
       for (Vertex vv : mesh.vertices(ii == 0 ? v1 : v2)) {
         if (vv == v1 || vv == v2 || vv == vo1 || vv == vo2) continue;
         // loop over vertices vv adjacent to v1|v2
@@ -4448,8 +4423,7 @@ float get_tvc_cost(Edge e, bool edir) {
   int nincache = 0;
   // Simulate LRU cache (even though ideally it should be FIFO).
   // Final PM order:  { facel , facer , cached_vertices } ,
-  //   so access the face corners in reverse order, looking into
-  //   cached_vertices, accounting for cache misses so far.
+  // so access the face corners in reverse order, looking into cached_vertices, accounting for cache misses so far.
   for_int(ii, ar_ce.num()) {
     const CacheEntry& ce = ar_ce[ar_ce.num() - 1 - ii];
     int wi = ce.wid, owi = ce.owid;
@@ -4744,8 +4718,9 @@ void optimize() {
 void do_simplify() {
   HH_TIMER("_simplify");
   perhaps_initialize();
-  static int pm_was_output = 0;
-  if (wfile_prog && !pm_was_output++) {
+  static bool pm_was_output = false;
+  if (wfile_prog && !pm_was_output) {
+    pm_was_output = true;
     int num_wedges;
     {
       Set<int> set_wid;

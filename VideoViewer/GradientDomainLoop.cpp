@@ -1295,103 +1295,109 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   if (getenv_bool("VIDEOLOOP_EXACT")) scheme = GdLoopScheme::exact;
   HH_TIMER("_gdloop");
   if (verbose) showf("Rendering looping video of %d frames.\n", nnf);
-  if (scheme == GdLoopScheme::no_blend) {
-    Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-    Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
-    Grid<3, short> grid_framei;
-    {
-      Matrix<float> mat_deltatime = compute_deltatime(mat_period_highres, nnf);
-      grid_framei = compute_framei(ndims, mat_deltatime, mat_start_highres, mat_period_highres);
-    }
-    const int ny = sdims[0], nx = sdims[1];
-    // We support all 3 * 3 possible cases of input and output types.
-    if (video.size()) {  // use Image (RGB) representation
-      Matrix<Pixel> sframe;
-      if (!videoloop.size()) sframe.init(sdims);
-      for_int(iloop, num_loops) {
-        for_int(f, nnf) {
-          auto frame = videoloop.size() ? videoloop[f] : sframe;
-          parallel_for_each(range(ny),
-                            [&](const int y) { for_int(x, nx) frame(y, x) = video(grid_framei(f, y, x), y, x); });
-          if (pwvideo) pwvideo->write(sframe);
-          if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
+  switch (scheme) {
+    case GdLoopScheme::no_blend: {
+      Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+      Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+      Grid<3, short> grid_framei;
+      {
+        Matrix<float> mat_deltatime = compute_deltatime(mat_period_highres, nnf);
+        grid_framei = compute_framei(ndims, mat_deltatime, mat_start_highres, mat_period_highres);
+      }
+      const int ny = sdims[0], nx = sdims[1];
+      // We support all 3 * 3 possible cases of input and output types.
+      if (video.size()) {  // use Image (RGB) representation
+        Matrix<Pixel> sframe;
+        if (!videoloop.size()) sframe.init(sdims);
+        for_int(iloop, num_loops) {
+          for_int(f, nnf) {
+            auto frame = videoloop.size() ? videoloop[f] : sframe;
+            parallel_for_each(range(ny),
+                              [&](const int y) { for_int(x, nx) frame(y, x) = video(grid_framei(f, y, x), y, x); });
+            if (pwvideo) pwvideo->write(sframe);
+            if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
+          }
+        }
+      } else {  // use Nv12 (YUV) representation
+        VideoNv12 tvideo;
+        if (!video_nv12.size()) {
+          tvideo.read_file(video_filename);
+          assertx(tvideo.get_Y().dims() == odims);
+        }
+        CVideoNv12View ivideo = video_nv12.size() ? video_nv12 : tvideo;
+        Nv12 sframe;
+        if (!videoloop_nv12.size()) sframe.init(sdims);
+        for_int(iloop, num_loops) {
+          for_int(f, nnf) {
+            auto frame = videoloop_nv12.size() ? videoloop_nv12[f] : sframe;
+            parallel_for_each(range(ny), [&](const int y) {
+              for_int(x, nx) {
+                const int fi = grid_framei(f, y, x);
+                frame.get_Y()(y, x) = ivideo.get_Y()(fi, y, x);
+                const int hy = y / 2, hx = x / 2;
+                frame.get_UV()(hy, hx) = ivideo.get_UV()(fi, hy, hx);  // if (hy * 2 == y && hx * 2 == x)
+              }
+            });
+            if (pwvideo) pwvideo->write(sframe);
+            if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
+          }
         }
       }
-    } else {  // use Nv12 (YUV) representation
-      VideoNv12 tvideo;
-      if (!video_nv12.size()) {
-        tvideo.read_file(video_filename);
-        assertx(tvideo.get_Y().dims() == odims);
-      }
-      CVideoNv12View ivideo = video_nv12.size() ? video_nv12 : tvideo;
-      Nv12 sframe;
-      if (!videoloop_nv12.size()) sframe.init(sdims);
-      for_int(iloop, num_loops) {
-        for_int(f, nnf) {
-          auto frame = videoloop_nv12.size() ? videoloop_nv12[f] : sframe;
-          parallel_for_each(range(ny), [&](const int y) {
-            for_int(x, nx) {
-              const int fi = grid_framei(f, y, x);
-              frame.get_Y()(y, x) = ivideo.get_Y()(fi, y, x);
-              const int hy = y / 2, hx = x / 2;
-              frame.get_UV()(hy, hx) = ivideo.get_UV()(fi, hy, hx);  // if (hy * 2 == y && hx * 2 == x)
-            }
-          });
-          if (pwvideo) pwvideo->write(sframe);
-          if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
+      break;
+    }
+    case GdLoopScheme::fast:  // new scheme: solve for offset values at coarse resolution
+      solve_using_offsets(odims, video_filename, video, video_nv12, mat_start, mat_period, nnf, pwvideo, videoloop,
+                          videoloop_nv12, num_loops);
+      break;
+    case GdLoopScheme::precise:
+    case GdLoopScheme::exact: {
+      // Old, slower, more precise scheme
+      assertx(video.size() && videoloop.size());  // it does not implement streaming video read, write, or nv12
+      Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+      Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+      const bool b_exact = scheme == GdLoopScheme::exact;
+      const bool use_halfres = !b_exact;
+      if (!use_halfres) {
+        compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
+      } else {  // reduce resolution on two spatial dimensions by a factor two
+        // "box" is fastest; previously "spline" and "triangle"
+        const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
+        const bool debug = false;
+        Timer timer_gdloop1("_gdloop1");
+        Grid<3, Pixel> hvideo(video.dim(0), ((video.dim(1) + 3) / 4) * 2,
+                              ((video.dim(2) + 3) / 4) * 2);  // half-resolution
+        {
+          HH_TIMER("__scale_down");
+          spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
+        }
+        if (debug) write_video(hvideo, "hvideo.mp4");
+        const Vec2<int> hdims = hvideo.dims().tail<2>();
+        Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // half-resolution
+        Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // half-resolution
+        // HH_RSTAT(Shstart, hmat_start); HH_RSTAT(Shperiod, hmat_period);
+        timer_gdloop1.terminate();
+        Grid<3, Pixel> hvideoloop(concat(V(videoloop.dim(0)), hdims));  // half-resolution loop
+        {
+          HH_TIMER("_gdloop2");
+          compute_gdloop_aux1<false>(hvideo, hmat_start, hmat_period, hvideoloop, b_exact);
+        }
+        if (debug) write_video(hvideoloop, "hvideoloop.mp4");
+        HH_TIMER("_gdloop3");
+        {
+          HH_TIMER("__scale_up");
+          spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), nullptr, videoloop);
+        }
+        if (debug) write_video(videoloop, "videoloop.mp4");
+        if (1) {  // visually excellent, but actual rms numbers are poor
+          compute_gdloop_fast_relax(videoloop, video, mat_start_highres, mat_period_highres);
+        } else if (1) {  // rms numbers are better, but still not as good as GdLoopScheme::fast
+          compute_gdloop_aux1<true>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
+        } else {
+          // just keep low-frequency video
         }
       }
     }
-  } else if (scheme == GdLoopScheme::fast) {  // new scheme: solve for offset values at coarse resolution
-    solve_using_offsets(odims, video_filename, video, video_nv12, mat_start, mat_period, nnf, pwvideo, videoloop,
-                        videoloop_nv12, num_loops);
-  } else {
-    assertx(scheme == GdLoopScheme::precise || scheme == GdLoopScheme::exact);
-    // Old, slower, more precise scheme
-    assertx(video.size() && videoloop.size());  // it does not implement streaming video read, write, or nv12
-    Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-    Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
-    const bool b_exact = scheme == GdLoopScheme::exact;
-    const bool use_halfres = !b_exact;
-    if (!use_halfres) {
-      compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
-    } else {  // reduce resolution on two spatial dimensions by a factor two
-      // "box" is fastest; previously "spline" and "triangle"
-      const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
-      const bool debug = false;
-      Timer timer_gdloop1("_gdloop1");
-      Grid<3, Pixel> hvideo(video.dim(0), ((video.dim(1) + 3) / 4) * 2,
-                            ((video.dim(2) + 3) / 4) * 2);  // half-resolution
-      {
-        HH_TIMER("__scale_down");
-        spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
-      }
-      if (debug) write_video(hvideo, "hvideo.mp4");
-      const Vec2<int> hdims = hvideo.dims().tail<2>();
-      Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // half-resolution
-      Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // half-resolution
-      // HH_RSTAT(Shstart, hmat_start); HH_RSTAT(Shperiod, hmat_period);
-      timer_gdloop1.terminate();
-      Grid<3, Pixel> hvideoloop(concat(V(videoloop.dim(0)), hdims));  // half-resolution loop
-      {
-        HH_TIMER("_gdloop2");
-        compute_gdloop_aux1<false>(hvideo, hmat_start, hmat_period, hvideoloop, b_exact);
-      }
-      if (debug) write_video(hvideoloop, "hvideoloop.mp4");
-      HH_TIMER("_gdloop3");
-      {
-        HH_TIMER("__scale_up");
-        spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), nullptr, videoloop);
-      }
-      if (debug) write_video(videoloop, "videoloop.mp4");
-      if (1) {  // visually excellent, but actual rms numbers are poor
-        compute_gdloop_fast_relax(videoloop, video, mat_start_highres, mat_period_highres);
-      } else if (1) {  // rms numbers are better, but still not as good as GdLoopScheme::fast
-        compute_gdloop_aux1<true>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
-      } else {
-        // just keep low-frequency video
-      }
-    }
+    default: assertnever("");
   }
   if (getenv_bool("VIDEOLOOP_SHOW_SPATIAL_COST")) {
     assertx(video.size());

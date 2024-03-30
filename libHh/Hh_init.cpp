@@ -58,7 +58,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   if (0) SHOW("have", ExceptionCode);
   switch (ExceptionCode) {
 #define E(x) \
-  case EXCEPTION_##x: std::cerr << "Exception error: " #x "\n"; break
+  case EXCEPTION_##x: std::cerr << "Fatal exception error: " #x "\n"; break
     E(ACCESS_VIOLATION);
     E(DATATYPE_MISALIGNMENT);
     // E(BREAKPOINT);

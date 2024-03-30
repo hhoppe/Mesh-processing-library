@@ -319,32 +319,28 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
   Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   double qem = 0.;
-  Polygon poly;
-  Array<Vector> ar_normals;
+  Vec3<Vertex> va;
+  Vec3<Point> poly;
+  PArray<Vector, 12> ar_normals;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      Vector normal = poly.get_normal();
+      mesh.triangle_vertices(f, va);
+      for_int(i, 3) poly[i] = mesh.point(va[i]);
+      Vector normal = ok_normalized(cross(poly[0], poly[1], poly[2]));
       float d = -pvdot(poly[0], normal);
       qem += square(pvdot(newp, normal) + d);
       if (f == f1 || f == f2) continue;
       ar_normals.push(normal);
     }
   }
-  Array<Vertex> va;
   int nnor = 0;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (f == f1 || f == f2) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      mesh.get_vertices(f, va);
-      for_int(i, 3) {
-        if (va[i] == v1 || va[i] == v2) poly[i] = newp;
-      }
-      if (dot(ar_normals[nnor], poly.get_normal_dir()) < 0) return BIGFLOAT;  // flipped normal
+      mesh.triangle_vertices(f, va);
+      for_int(i, 3) poly[i] = va[i] == v1 || va[i] == v2 ? newp : mesh.point(va[i]);
+      if (dot(ar_normals[nnor], cross(poly[0], poly[1], poly[2])) < 0.f) return BIGFLOAT;  // flipped normal
       nnor++;
     }
   }
@@ -504,7 +500,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
                         : getenv_bool("SLOAN_NOR")  ? EType::sloan
                         : getenv_bool("SUBDIV_NOR") ? EType::subdiv
                         : getenv_bool("ANGLE_NOR")  ? EType::angle
-                                                    : EType::unspecified);
+                        : EType::unspecified);
     if (assertw(default_nor_type == EType::unspecified)) default_nor_type = EType::angle;
   });
   if (nortype == EType::unspecified) nortype = default_nor_type;
@@ -565,105 +561,115 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     dummy_use(closed);
     int avn = av.num();
     Vector vec(0.f, 0.f, 0.f);
-    // I once thought that "double" precision was necessary to
-    //  overcome an apparent problem with poor computed surface normals.
-    // However, the problem lay in the geometry.
-    // Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
-    // EType::angle still seemed like a good solution.
-    if (nortype == EType::angle) {
-      Polygon& poly = _tmp_poly;
-      for_int(i, af.num()) {
-        int i1 = i + 1;
-        if (i1 == av.num()) i1 = 0;
-        float ang =
+    // I once thought that "double" precision was necessary to overcome an apparent problem with poorly computed
+    // surface normals.  However, the problem lay in the geometry.
+    // Prefiltering with "Filtermesh -taubinsmooth 4" solved it.  EType::angle still seemed like a good solution.
+    switch (nortype) {
+      case EType::angle: {
+        Polygon& poly = _tmp_poly;
+        for_int(i, af.num()) {
+          int i1 = i + 1;
+          if (i1 == av.num()) i1 = 0;
+          float ang =
             angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp), ok_normalized(mesh.point(av[i1]) - vp));
-        mesh.polygon(af[i], poly);
-        vec += poly.get_normal() * ang;
+          mesh.polygon(af[i], poly);
+          vec += poly.get_normal() * ang;
+        }
+        break;
       }
-    } else if (nortype == EType::sum) {
-      Polygon& poly = _tmp_poly;
-      for_int(i, af.num()) {
-        mesh.polygon(af[i], poly);
-        vec += poly.get_normal();
+      case EType::sum: {
+        Polygon& poly = _tmp_poly;
+        for_int(i, af.num()) {
+          mesh.polygon(af[i], poly);
+          vec += poly.get_normal();
+        }
+        break;
       }
-    } else if (nortype == EType::area) {
-      Polygon& poly = _tmp_poly;
-      for_int(i, af.num()) {
-        mesh.polygon(af[i], poly);
-        float area = poly.get_area();
-        vec += poly.get_normal() * area;
+      case EType::area: {
+        Polygon& poly = _tmp_poly;
+        for_int(i, af.num()) {
+          mesh.polygon(af[i], poly);
+          float area = poly.get_area();
+          vec += poly.get_normal() * area;
+        }
+        break;
       }
-    } else if (nortype == EType::sloan) {
-      Polygon& poly = _tmp_poly;
-      for_int(i, af.num()) {
-        mesh.polygon(af[i], poly);
-        float area = poly.get_area();
-        if (!assertw(area)) continue;
-        vec += poly.get_normal() / square(area);
+      case EType::sloan: {
+        Polygon& poly = _tmp_poly;
+        for_int(i, af.num()) {
+          mesh.polygon(af[i], poly);
+          float area = poly.get_area();
+          if (!assertw(area)) continue;
+          vec += poly.get_normal() / square(area);
+        }
+        break;
       }
-    } else if (nsharpe > 2 || is_cusp) {  // corner
-      vec = cross(vp, mesh.point(av[0]), mesh.point(av.last()));
-      if (avn > 2) {  // from Polygon::get_normal_dir()
-        Vector pnor(0.f, 0.f, 0.f);
-        for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-        if (dot(vec, pnor) < 0) {
-          Warning("flipnor_corner");
-          vec = -vec;
+      default: {
+        if (nsharpe > 2 || is_cusp) {  // corner
+          vec = cross(vp, mesh.point(av[0]), mesh.point(av.last()));
+          if (avn > 2) {  // from Polygon::get_normal_dir()
+            Vector pnor(0.f, 0.f, 0.f);
+            for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
+            if (dot(vec, pnor) < 0) {
+              Warning("flipnor_corner");
+              vec = -vec;
+            }
+          }
+        } else if (nsharpe == 2 && !extraordinary_crease_vertex(mesh, v)) {
+          // regular crease vertex 1, .5, -1, -1, .5
+          assertx(avn == 4);
+          Vector v1 = mesh.point(av[3]) - mesh.point(av[0]);
+          Vector v2 = vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
+          vec = cross(v1, v2);
+          {  // direction could be wrong (very bad case)
+            Vector pnor(0.f, 0.f, 0.f);
+            for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
+            if (dot(vec, pnor) < 0) {
+              Warning("flipnor_regcrease");
+              vec = -vec;
+            }
+          }
+        } else if (nsharpe == 2) {  // non-regular crease vertex
+          Vector v1 = mesh.point(av.last()) - mesh.point(av[0]);
+          if (avn == 2) {  // 2, -1, -1
+            vec = vp * 2.f - mesh.point(av[0]) - mesh.point(av[1]);
+          } else if (avn == 3) {  // 1, 0, -1, 0
+            vec = vp - mesh.point(av[1]);
+          } else {
+            // float theta = (TAU / 2) / (avn - 1.f);
+            int idenom = 2 * (avn - 1);
+            vec = (mesh.point(av[0]) + mesh.point(av.last())) * Trig::sin(1, idenom);
+            float fcom = (2 * Trig::cos(1, idenom) - 2);
+            for_intL(i, 1, avn - 1) vec += mesh.point(av[i]) * (fcom * Trig::sin(i, idenom));
+          }
+          vec = cross(v1, vec);
+          if (avn > 2) {
+            Vector pnor(0.f, 0.f, 0.f);
+            for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
+            if (dot(vec, pnor) < 0) {
+              Warning("flipnor_crease");
+              vec = -vec;
+            }
+          }
+        } else if (avn == 2) {
+          Warning("Degree-2 vertex --- assuming bi-cubic quad special");
+          Vector t1 = mesh.point(av[1]) - mesh.point(av[0]);
+          for_int(i, 2) {
+            Vertex vo = mesh.clw_vertex(av[i], v);
+            assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // is_quad
+          }
+          Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
+          vec = cross(t1, t2);
+        } else {  // interior or dart
+          Vector v1(0.f, 0.f, 0.f), v2(0.f, 0.f, 0.f);
+          for_int(i, avn) {
+            const Point& p = mesh.point(av[i]);
+            v1 += p * Trig::cos(i, avn);
+            v2 += p * Trig::sin(i, avn);
+          }
+          vec = cross(v1, v2);
         }
       }
-    } else if (nsharpe == 2 && !extraordinary_crease_vertex(mesh, v)) {
-      // regular crease vertex 1, .5, -1, -1, .5
-      assertx(avn == 4);
-      Vector v1 = mesh.point(av[3]) - mesh.point(av[0]);
-      Vector v2 = vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
-      vec = cross(v1, v2);
-      {  // direction could be wrong (very bad case)
-        Vector pnor(0.f, 0.f, 0.f);
-        for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-        if (dot(vec, pnor) < 0) {
-          Warning("flipnor_regcrease");
-          vec = -vec;
-        }
-      }
-    } else if (nsharpe == 2) {  // non-regular crease vertex
-      Vector v1 = mesh.point(av.last()) - mesh.point(av[0]);
-      if (avn == 2) {  // 2, -1, -1
-        vec = vp * 2.f - mesh.point(av[0]) - mesh.point(av[1]);
-      } else if (avn == 3) {  // 1, 0, -1, 0
-        vec = vp - mesh.point(av[1]);
-      } else {
-        // float theta = (TAU / 2) / (avn - 1.f);
-        int idenom = 2 * (avn - 1);
-        vec = (mesh.point(av[0]) + mesh.point(av.last())) * Trig::sin(1, idenom);
-        float fcom = (2 * Trig::cos(1, idenom) - 2);
-        for_intL(i, 1, avn - 1) vec += mesh.point(av[i]) * (fcom * Trig::sin(i, idenom));
-      }
-      vec = cross(v1, vec);
-      if (avn > 2) {
-        Vector pnor(0.f, 0.f, 0.f);
-        for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-        if (dot(vec, pnor) < 0) {
-          Warning("flipnor_crease");
-          vec = -vec;
-        }
-      }
-    } else if (avn == 2) {
-      Warning("Degree-2 vertex --- assuming bi-cubic quad special");
-      Vector t1 = mesh.point(av[1]) - mesh.point(av[0]);
-      for_int(i, 2) {
-        Vertex vo = mesh.clw_vertex(av[i], v);
-        assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // is_quad
-      }
-      Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
-      vec = cross(t1, t2);
-    } else {  // interior or dart
-      Vector v1(0.f, 0.f, 0.f), v2(0.f, 0.f, 0.f);
-      for_int(i, avn) {
-        const Point& p = mesh.point(av[i]);
-        v1 += p * Trig::cos(i, avn);
-        v2 += p * Trig::sin(i, avn);
-      }
-      vec = cross(v1, v2);
     }
     assertw(vec.normalize());
     if (af.num() == nfaces) {

@@ -868,16 +868,22 @@ Array<Vertex> Mesh::fix_vertex(Vertex v) {
   for (HEdge herep : hedges) {
     if (herep->_vert != v) continue;  // half-edge already moved to a new vertex
     component.init(0);
-    component.push(herep);
-    for (HEdge he = herep;;) {
-      he = clw_hedge(he);
-      if (!he || he == herep) break;
-      component.push(he);
-    }
-    for (HEdge he = herep;;) {
-      he = ccw_hedge(he);
-      if (!he || he == herep) break;
-      component.push(he);
+    {
+      HEdge he = herep;
+      for (;;) {
+        assertx(he->_vert == v);
+        component.push(he);
+        he = clw_hedge(he);
+        if (!he || he == herep) break;
+      }
+      if (!he) {
+        for (he = herep;;) {
+          he = ccw_hedge(he);
+          if (!he) break;
+          assertx(he != herep && he->_vert == v);
+          component.push(he);
+        }
+      }
     }
     if (num_he_processed + component.num() == hedges.num()) break;  // do not fix last component
     Vertex vnew = create_vertex();

@@ -683,20 +683,28 @@ static void g3d_ellipse2() {
 }
 
 static void change_frames() {
-  if (flightmode == EFlightmode::fly) {
-    act_fly();
-    if (viewmode && button_active) act_button();
-  } else if (flightmode == EFlightmode::flight) {
-    act_flight();
-    if (viewmode && button_active) act_button();
-  } else if (flightmode == EFlightmode::automatic) {
-    act_auto();
-    if (button_active) act_button();
-  } else if (flightmode == EFlightmode::bobble) {
-    act_bobble();
-    if (button_active) act_button();
-  } else if (button_active) {
-    act_button();
+  switch (flightmode) {
+    case EFlightmode::none:
+      if (button_active) act_button();
+      break;
+    case EFlightmode::fly:
+      act_fly();
+      if (viewmode && button_active) act_button();
+      break;
+    case EFlightmode::flight:
+      act_flight();
+      if (viewmode && button_active) act_button();
+      break;
+    case EFlightmode::automatic:
+      act_auto();
+      if (button_active) act_button();
+      break;
+    case EFlightmode::bobble:
+      act_bobble();
+      if (button_active) act_button();
+      break;
+    default:
+      assertnever("");
   }
   static const bool g3d_michael = getenv_bool("G3D_MICHAEL");
   if (g3d_michael) g3d_michael1();

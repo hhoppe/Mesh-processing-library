@@ -287,15 +287,21 @@ class LruVertexCache : public VertexCache {
 //----------------------------------------------------------------------------
 
 inline string VertexCache::type_string(EType type) {
-  if (type == EType::fifo) return "Fifo";
-  if (type == EType::lru) return "Lru";
-  assertnever("Cache type not specified");
+  switch (type) {
+    case EType::fifo: return "Fifo";
+    case EType::lru: return "Lru";
+    case EType::notype: assertnever("Cache type not specified");
+    default: assertnever("");
+  }
 }
 
 inline unique_ptr<VertexCache> VertexCache::make(EType type, int nverts1, int cs) {
-  if (type == EType::fifo) return make_unique<FifoVertexCache>(nverts1, cs);
-  if (type == EType::lru) return make_unique<LruVertexCache>(nverts1, cs);
-  assertnever("Cache type not specified");
+  switch (type) {
+    case EType::fifo: return make_unique<FifoVertexCache>(nverts1, cs);
+    case EType::lru: return make_unique<LruVertexCache>(nverts1, cs);
+    case EType::notype: assertnever("Cache type not specified");
+    default: assertnever("");
+  }
 }
 
 inline std::ostream& operator<<(std::ostream& os, const VertexCache& vc) {

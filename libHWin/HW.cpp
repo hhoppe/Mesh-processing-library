@@ -1112,8 +1112,8 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
     _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // window class name
                           utf16_from_utf8(_window_title).c_str(),  // window title bar
                           style,
-                          x,                       // initial x position
-                          y,                       // initial y position
+                          x,  // initial x position
+                          y,  // initial y position
                           // size of entire window; not necessarily client area
                           width,       // initial width
                           height,      // initial height

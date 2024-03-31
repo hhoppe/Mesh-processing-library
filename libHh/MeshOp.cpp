@@ -500,7 +500,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
                         : getenv_bool("SLOAN_NOR")  ? EType::sloan
                         : getenv_bool("SUBDIV_NOR") ? EType::subdiv
                         : getenv_bool("ANGLE_NOR")  ? EType::angle
-                        : EType::unspecified);
+                                                    : EType::unspecified);
     if (assertw(default_nor_type == EType::unspecified)) default_nor_type = EType::angle;
   });
   if (nortype == EType::unspecified) nortype = default_nor_type;
@@ -570,8 +570,8 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
         for_int(i, af.num()) {
           int i1 = i + 1;
           if (i1 == av.num()) i1 = 0;
-          float ang =
-            angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp), ok_normalized(mesh.point(av[i1]) - vp));
+          float ang = angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp),
+                                                 ok_normalized(mesh.point(av[i1]) - vp));
           mesh.polygon(af[i], poly);
           vec += poly.get_normal() * ang;
         }

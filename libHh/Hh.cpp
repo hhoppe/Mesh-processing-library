@@ -365,8 +365,7 @@ std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings)
     sline.pop_back();
     if (dos_eol_warnings) {
       static const bool ignore_dos_eol = getenv_bool("IGNORE_DOS_EOL");
-      if (!ignore_dos_eol)
-        Warning("my_getline: stripping out control-M from DOS file");
+      if (!ignore_dos_eol) Warning("my_getline: stripping out control-M from DOS file");
     }
   }
   return is;

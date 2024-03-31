@@ -136,7 +136,7 @@ class HWbase : noncopyable {
   string _user_geometry;
   string _backcolor;
   string _forecolor;
-  string _offscreen;                    // name of output file to render to, without any visible window
+  string _offscreen;  // name of output file to render to, without any visible window
   bool _nosetforeground{false};
   Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color
   Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color
@@ -213,8 +213,7 @@ inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     }
   }
   switch (style) {
-    case EStyle::regular:
-      break;
+    case EStyle::regular: break;
     case EStyle::shadowed:
       set_color(back_color);
       for_intL(xd, -1, 2) for_intL(yd, -1, 2) {

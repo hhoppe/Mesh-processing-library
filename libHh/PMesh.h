@@ -231,6 +231,7 @@ class AWMesh : public WMesh {
  private:
   struct VF_range;
   struct VV_range;
+
  public:
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;

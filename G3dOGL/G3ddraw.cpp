@@ -703,8 +703,7 @@ static void change_frames() {
       act_bobble();
       if (button_active) act_button();
       break;
-    default:
-      assertnever("");
+    default: assertnever("");
   }
   static const bool g3d_michael = getenv_bool("G3D_MICHAEL");
   if (g3d_michael) g3d_michael1();

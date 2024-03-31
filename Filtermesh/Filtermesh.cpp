@@ -2759,7 +2759,8 @@ void do_reduce_old_sequential() {
     if (crit > maxcrit) break;
     Edge e = pqe.remove_min();
     ASSERTX(mesh.nice_edge_collapse(e));
-    for (Vertex v : mesh.vertices(e)) for (Edge e2 : mesh.edges(v)) pqe.remove(e2);
+    for (Vertex v : mesh.vertices(e))
+      for (Edge e2 : mesh.edges(v)) pqe.remove(e2);
     Vertex vkept = mesh.vertex1(e);
     Point newp;
     if (reducecrit == EReduceCriterion::qem) {
@@ -2773,9 +2774,11 @@ void do_reduce_old_sequential() {
     if (reducecrit == EReduceCriterion::qem) mesh.set_point(vkept, newp);
     Set<Edge> seteupdate;
     if (reducecrit == EReduceCriterion::qem) {
-      for (Vertex v : mesh.vertices(vkept)) for (Edge e2 : mesh.edges(v)) seteupdate.add(e2);
+      for (Vertex v : mesh.vertices(vkept))
+        for (Edge e2 : mesh.edges(v)) seteupdate.add(e2);
     } else {
-      for (Face f : mesh.faces(vkept)) for (Edge e2 : mesh.edges(f)) seteupdate.add(e2);
+      for (Face f : mesh.faces(vkept))
+        for (Edge e2 : mesh.edges(f)) seteupdate.add(e2);
     }
     // Applying parallel_for_each() is slower because the parallelism is too fine-grained and memory-incoherent.
     for (Edge e2 : seteupdate) pqe.enter_update(e2, reduce_criterion(e2));

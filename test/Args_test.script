@@ -34,7 +34,7 @@ echo '******'
 TARGS_PHASE=2
 
 echo '****'
-Args_test file file.vlp -flag -showar 0 -showar 1 -ar 1 2 file2 file2.vlp -showar 0 -showar 1 file.png 2>&1 | "${f[@]}"
+Args_test file file.vlp -flag -showar 0 -showar 1 -vec2 1 2 file2 file2.vlp -showar 0 -showar 1 file.png 2>&1 | "${f[@]}"
 
 echo '****'
 Args_test file file.vlp -unknown.string -showar 0 2>&1 | "${f[@]}"

@@ -125,7 +125,7 @@ ArView(argv, argc) = Array<const char*>(18) {
   0
   -showar
   1
-  -ar
+  -vec2
   1
   2
   file2
@@ -136,17 +136,17 @@ ArView(argv, argc) = Array<const char*>(18) {
   1
   file.png
 }
-reading file args.get_filename()=file ar=[0, 0]
-reading vlp args.get_filename()=file.vlp ar=[0, 0]
-showar i=0 ar[i]=0
-showar i=1 ar[i]=0
-reading file args.get_filename()=file2 ar=[1, 2]
-reading vlp args.get_filename()=file2.vlp ar=[1, 2]
-showar i=0 ar[i]=1
-showar i=1 ar[i]=2
-reading file args.get_filename()=file.png ar=[1, 2]
+reading file args.get_filename()=file vec2=[0, 0]
+reading vlp args.get_filename()=file.vlp vec2=[0, 0]
+showar i=0 vec2[i]=0
+showar i=1 vec2[i]=0
+reading file args.get_filename()=file2 vec2=[1, 2]
+reading vlp args.get_filename()=file2.vlp vec2=[1, 2]
+showar i=0 vec2[i]=1
+showar i=1 vec2[i]=2
+reading file args.get_filename()=file.png vec2=[1, 2]
 optsparse = 1
-flag2=1 ar=[1, 2]
+flag2=1 vec2=[1, 2]
 ****
 ArView(argv, argc) = Array<const char*>(6) {
   Args_test
@@ -156,8 +156,8 @@ ArView(argv, argc) = Array<const char*>(6) {
   -showar
   0
 }
-reading file args.get_filename()=file ar=[0, 0]
-reading vlp args.get_filename()=file.vlp ar=[0, 0]
+reading file args.get_filename()=file vec2=[0, 0]
+reading vlp args.get_filename()=file.vlp vec2=[0, 0]
 Args_test : ParseArgs error : option not recognized at '-unknown.string'.
 (Use 'Args_test -?' to view options.)
 ****
@@ -170,9 +170,9 @@ ArView(argv, argc) = Array<const char*>(7) {
   -showar
   0
 }
-reading file args.get_filename()=file ar=[0, 0]
-reading vlp args.get_filename()=file.vlp ar=[0, 0]
-string args.get_string()=-unknown.string ar=[0, 0]
+reading file args.get_filename()=file vec2=[0, 0]
+reading vlp args.get_filename()=file.vlp vec2=[0, 0]
+string args.get_string()=-unknown.string vec2=[0, 0]
 Args_test : ParseArgs error : invalid filename when parsing option '-showar' (interpreted as '*').
 (Use 'Args_test -?' to view options.)
 ****
@@ -184,9 +184,9 @@ ArView(argv, argc) = Array<const char*>(6) {
   -unknown.string
   file2
 }
-reading file args.get_filename()=file ar=[0, 0]
-reading vlp args.get_filename()=file.vlp ar=[0, 0]
-string args.get_string()=-unknown.string ar=[0, 0]
-reading file args.get_filename()=file2 ar=[0, 0]
+reading file args.get_filename()=file vec2=[0, 0]
+reading vlp args.get_filename()=file.vlp vec2=[0, 0]
+string args.get_string()=-unknown.string vec2=[0, 0]
+reading file args.get_filename()=file2 vec2=[0, 0]
 optsparse = 1
-flag2=0 ar=[0, 0]
+flag2=0 vec2=[0, 0]

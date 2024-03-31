@@ -543,7 +543,7 @@ inline const string& gl_extensions_string() {
     const char* s = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (!s) {
       if (1) Warning("glGetString(GL_EXTENSIONS) failed once");
-      (void)glGetError();
+      glGetError();
     } else {
       s_string = s;
       s_string += " ";

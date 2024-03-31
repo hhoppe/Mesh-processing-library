@@ -4468,6 +4468,7 @@ void do_assignwids() {
 // *** main
 
 int main(int argc, const char** argv) {
+  dummy_use(do_reduce_old_sequential);
   ParseArgs args(argc, argv);
   HH_ARGSC("", ":** Other input types");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");

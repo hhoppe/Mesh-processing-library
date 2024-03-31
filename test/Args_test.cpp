@@ -15,7 +15,7 @@ void phase0() { echo_args(as_lvalue(Args{"string", "3"})); }
 void do_show1p1() { SHOW(1 + 1); }
 
 bool flag2 = false;
-Vec2<int> ar = {0, 0};
+Vec2<int> vec2 = {0, 0};
 
 void phase1(int argc, const char** argv) {
   SHOW(ArView(argv, argc));
@@ -49,22 +49,22 @@ void phase1(int argc, const char** argv) {
 void phase2(int argc, const char** argv) {
   auto do_showar = [](Args& args) {
     int i = args.get_int();
-    SHOW("showar", i, ar[i]);
+    SHOW("showar", i, vec2[i]);
   };
-  auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), ar); };
-  auto do_file = [](Args& args) { SHOW("reading file", args.get_filename(), ar); };
-  auto do_string = [](Args& args) { SHOW("string", args.get_string(), ar); };
+  auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), vec2); };
+  auto do_file = [](Args& args) { SHOW("reading file", args.get_filename(), vec2); };
+  auto do_string = [](Args& args) { SHOW("string", args.get_string(), vec2); };
   SHOW(ArView(argv, argc));
   ParseArgs args(argc, argv);
   HH_ARGSF(flag2, ": enable flag");
-  HH_ARGSP(ar, "i1 i2 : set two coefficients");
+  HH_ARGSP(vec2, "i1 i2 : set two coefficients");
   HH_ARGSD(showar, "i : show coefficient indexed i");
   args.p("*.vlp", do_vlp, "file.vlp : read the file");
   args.p("*", do_file, "file : read any other file type");
   args.p("*.string", do_string, "string : print string");
   bool optsparse = args.parse();
   SHOW(optsparse);
-  SHOW(flag2, ar);
+  SHOW(flag2, vec2);
 }
 
 }  // namespace

@@ -7,12 +7,12 @@ using namespace hh;
 int main() {
   {
     constexpr Pixel red{255, 0, 0, 255};
-    (void)red;  // Avoid unused variable warning
+    dummy_use(red);
     constexpr Pixel green{0, 255, 0};
-    (void)green;  // Avoid unused variable warning
+    dummy_use(green);
     constexpr Vec4<uint8_t> v{uint8_t{0}, uint8_t{0}, uint8_t{255}, uint8_t{255}};
     const Pixel blue{v};  // constexpr fails in VS 2015
-    (void)blue;           // Avoid unused variable warning
+    dummy_use(blue);
   }
   if (1) {
     Image image(V(20, 20), Pixel(65, 66, 67, 72));

@@ -299,7 +299,8 @@ extern int g_unoptimized_zero;
 #define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number.
-#define SHOWL hh::details::show_cerr_and_debug("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n")
+#define SHOWL \
+  hh::details::show_cerr_and_debug(hh::details::forward_slash("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n"))
 
 // Write formatted string to std::cerr.
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...);
@@ -529,6 +530,8 @@ template <typename T> struct false_capture {
   T _e;
 };
 
+string forward_slash(const string& s);
+
 HH_NORETURN void assertx_aux2(const char* s);
 
 inline HH_NORETURN void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
@@ -542,7 +545,7 @@ template <typename T> constexpr T assertx_aux(T&& val, const char* s) {
 }
 
 template <typename T> T assertt_aux(T&& val, const char* s) {
-  if (!val) throw std::runtime_error(s);
+  if (!val) throw std::runtime_error(forward_slash(s));
   return std::forward<T>(val);
 }
 

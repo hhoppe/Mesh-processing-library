@@ -200,6 +200,10 @@ static string beautify_type_name(string s) {
 
 namespace details {
 
+string forward_slash(const string& s) {
+  return replace_all(s, "\\", "/");
+}
+
 string extract_function_type_name(string s) {
   // See experiments in ~/git/hh_src/test/misc/test_compile_time_type_name.cpp
   // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
@@ -289,7 +293,7 @@ class Warnings {
     for (auto& kv : sorted_map) {
       const char* s = static_cast<const char*>(kv.first);
       int n = kv.second;
-      showdf(" %5d '%s'\n", n, s);
+      showdf(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     }
     _map.clear();
   }
@@ -303,7 +307,7 @@ void hh_at_clean_up(void (*function)()) { CleanUp::register_function(function); 
 void hh_clean_up() { CleanUp::flush(); }
 
 void details::assertx_aux2(const char* s) {
-  showf("Fatal assertion error: %s\n", s);
+  showf("Fatal assertion error: %s\n", details::forward_slash(s).c_str());
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
   show_possible_win32_error();
   abort();
@@ -315,7 +319,7 @@ bool details::assertw_aux2(const char* s) {
   static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
   int count = Warnings::increment_count(s);
   if (count > 1 && warn_just_once) return false;
-  showf("assertion warning: %s\n", s);
+  showf("assertion warning: %s\n", details::forward_slash(s).c_str());
   static const bool assertw_abort = getenv_bool("ASSERTW_ABORT") || getenv_bool("ASSERT_ABORT");
   if (assertw_abort) {
     my_setenv("ASSERT_ABORT", "1");

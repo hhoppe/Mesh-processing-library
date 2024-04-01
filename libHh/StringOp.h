@@ -41,16 +41,16 @@ inline bool remove_at_end(string& s, const string& se) {
   return true;
 }
 
-// Replace all pattern substrings with specified replacement substring.
-static inline string replace_all(const string& str, const string& spattern, const string& sreplacement) {
+// Replace all instances of substring with the replacement substring.
+static inline string replace_all(const string& str, const string& substring, const string& sreplacement) {
   string sres;
   string::size_type i = 0;
   for (;;) {
-    auto j = str.find(spattern, i);
+    auto j = str.find(substring, i);
     sres += str.substr(i, j - i);
     if (j == string::npos) break;
     sres += sreplacement;
-    i = j + spattern.size();
+    i = j + substring.size();
   }
   return sres;
 }

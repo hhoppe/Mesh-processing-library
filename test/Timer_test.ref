@@ -1,29 +1,50 @@
-#  (t1:                      
-#  (t2:                      
-#  (t3:                      
-#  (oneabbrev:               
-#  (abbrev:                  
-#  (firsthalf:               
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t7:                      
-#  (t8:                      
-#  (secondhalf:              
-#  (total:                   
-#  t1:                 (1     )        :         av=     
-#  t2:                 (1     )        :         av=     
-#  t3:                 (1     )        :         av=     
-#  oneabbrev:          (1000  )    
-#  abbrev:             (1     )        :         av=     
-#  firsthalf:          (1     )        :         av=     
-#  t7:                 (10    )    
-#  t8:                 (1     )        :         av=     
-#  secondhalf:         (1     )        :         av=     
-#  total:              (1     )        :         av=     
+** cerr:
+#  (t1:
+#  (t2:
+#  (t3:
+#  (oneabbrev:
+#  (abbrev:
+#  (firsthalf:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t8:
+#  (secondhalf:
+#  (total:
+** cout:
+# (Timing on ...)
+#  (t1:
+#  (t2:
+#  (t3:
+#  (abbrev:
+#  (firsthalf:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (t7:
+#  (secondhalf:
+#  (total:
+# Summary of timers (...):
+#  t1:                 (1     )        :         av=
+#  t2:                 (1     )        :         av=
+#  t3:                 (1     )        :         av=
+#  oneabbrev:          (1000  )
+#  abbrev:             (1     )        :         av=
+#  firsthalf:          (1     )        :         av=
+#  t7:                 (10    )
+#  t8:                 (1     )        :         av=
+#  secondhalf:         (1     )        :         av=
+#  total:              (1     )        :         av=

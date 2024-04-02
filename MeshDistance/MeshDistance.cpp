@@ -9,6 +9,7 @@
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"      // Vnors
 #include "libHh/MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
@@ -21,7 +22,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, A3dColor, c_color);
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, Vector, c_normal);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_normal);
 
-int verb = 1;
+int verbose = 1;
 bool bothdir = true;
 float nptfac = 1.f;
 bool errmesh = false;
@@ -72,18 +73,18 @@ struct PStats {
   }
 };
 
-void project_point(GMesh& meshs, const Point& ps, const A3dColor& pscol, const Vector& psnor, const GMesh& meshd,
+void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const Vector& psnor, const GMesh& mesh_d,
                    const PolygonFaceSpatial& psp, Vertex vv, PStats& pstats) {
   SpatialSearch<PolygonFace*> ss(&psp, ps * xform);
   PolygonFace* polyface = ss.next();
   Face fd = polyface->face;
-  Array<Corner> cad = meshd.get_corners(fd);
+  Vec3<Corner> cad = mesh_d.triangle_corners(fd);
   Bary baryd;
   {
     Point clp;
-    float d2 =
-        project_point_triangle2(ps, meshd.point(meshd.corner_vertex(cad[0])), meshd.point(meshd.corner_vertex(cad[1])),
-                                meshd.point(meshd.corner_vertex(cad[2])), baryd, clp);
+    float d2 = project_point_triangle2(ps, mesh_d.point(mesh_d.corner_vertex(cad[0])),
+                                       mesh_d.point(mesh_d.corner_vertex(cad[1])),
+                                       mesh_d.point(mesh_d.corner_vertex(cad[2])), baryd, clp);
     pstats.Sgd2.enter(d2);
     if (errmesh && vv) {
       float g_K = 1000000.f * (1.0f / bbdiag);
@@ -95,13 +96,13 @@ void project_point(GMesh& meshs, const Point& ps, const A3dColor& pscol, const V
       // showdf("val %f first cut %f d2 %f\n", val, bbdiag / 100, d2 * 100);
       // if (val < 1.f)
       if (val < bbdiag / 100) {
-        meshs.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, max(0.f, 1.f - val), max(0.f, 1.f - val)).c_str());
+        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, max(0.f, 1.f - val), max(0.f, 1.f - val)).c_str());
       } else if (val < bbdiag / 50) {  // else if (val < 2.f)
-        meshs.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, min(val - 1.f, 1.f), 0.f).c_str());
+        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, min(val - 1.f, 1.f), 0.f).c_str());
       } else {
         // val = val - 2;
         if (0) val /= g_MK;
-        meshs.update_string(vv, "rgb", sform("(%g %g %g)", max(0.f, 1.f - val), 0.f, 0.f).c_str());
+        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", max(0.f, 1.f - val), 0.f, 0.f).c_str());
       }
     }
   }
@@ -109,14 +110,15 @@ void project_point(GMesh& meshs, const Point& ps, const A3dColor& pscol, const V
   pstats.Snd2.enter(dist2(psnor, interp(c_normal(cad[0]), c_normal(cad[1]), c_normal(cad[2]), baryd[0], baryd[1])));
 }
 
-void project_point(GMesh& meshs, Face fs, CArrayView<Corner> cas, const Bary& barys, const GMesh& meshd,
+void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d,
                    const PolygonFaceSpatial& psp, Vertex vv, PStats& pstats) {
   dummy_use(fs);
-  Point ps = interp(meshs.point(meshs.corner_vertex(cas[0])), meshs.point(meshs.corner_vertex(cas[1])),
-                    meshs.point(meshs.corner_vertex(cas[2])), barys[0], barys[1]);
+  Vec3<Corner> cas = mesh_s.triangle_corners(fs);
+  Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
+                    mesh_s.point(mesh_s.corner_vertex(cas[2])), barys[0], barys[1]);
   A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys[0], barys[1]);
   Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys[0], barys[1]);
-  project_point(meshs, ps, pscol, psnor, meshd, psp, vv, pstats);
+  project_point(mesh_s, ps, pscol, psnor, mesh_d, psp, vv, pstats);
 }
 
 void print_it(const string& s, const PStats& pstats) {
@@ -145,29 +147,30 @@ void print_it(const string& s, const PStats& pstats) {
   }
 }
 
-void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
+void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) {
+  const bool parallel = !errmesh;
   Bbox bbox;
   // compute the meshes bounding box
-  for (Face f : meshd.faces()) {
-    for (Vertex v : meshd.vertices(f)) bbox.union_with(meshd.point(v));
+  for (Face f : mesh_d.faces()) {
+    for (Vertex v : mesh_d.vertices(f)) bbox.union_with(mesh_d.point(v));
   }
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
-  // PolygonFaceSpatial psp(max(10, int(sqrt(float(meshd.num_vertices())) / 5.f + .5f)));
-  int psp_size = (meshd.num_vertices() < 20000    ? 25
-                  : meshd.num_vertices() < 30000  ? 32
-                  : meshd.num_vertices() < 100000 ? 40
-                  : meshd.num_vertices() < 300000 ? 70
+  // PolygonFaceSpatial psp(max(10, int(sqrt(float(mesh_d.num_vertices())) / 5.f + .5f)));
+  int psp_size = (mesh_d.num_vertices() < 20000    ? 25
+                  : mesh_d.num_vertices() < 30000  ? 32
+                  : mesh_d.num_vertices() < 100000 ? 40
+                  : mesh_d.num_vertices() < 300000 ? 70
                                                   : 100);
   psp_size = getenv_int("PSP_SIZE", psp_size, true);
   Array<PolygonFace> ar_polyface;
-  ar_polyface.reserve(meshd.num_faces());
+  ar_polyface.reserve(mesh_d.num_faces());
   PolygonFaceSpatial psp(psp_size);
   {
     HH_TIMER("_create_spatial");
-    for (Face fd : meshd.faces()) {
+    for (Face fd : mesh_d.faces()) {
       Polygon poly(3);
-      meshd.polygon(fd, poly);
+      mesh_d.polygon(fd, poly);
       assertx(poly.num() == 3);
       for_int(i, poly.num()) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), fd));
@@ -182,8 +185,8 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
     Array<float> fcarea;  // cumulative area (nf + 1)
     {
       double sum_area = 0.;  // for accuracy
-      for (Face f : meshs.faces()) {
-        float area = meshs.area(f);
+      for (Face f : mesh_s.faces()) {
+        float area = mesh_s.area(f);
         fface.push(f);
         fcarea.push(float(sum_area));
         sum_area += area;
@@ -191,42 +194,56 @@ void compute_mesh_distance(GMesh& meshs, const GMesh& meshd, PStats& pastats) {
       for_int(i, fface.num()) fcarea[i] /= float(sum_area);
       fcarea.push(1.00001f);
     }
-    Array<Corner> cas;
-    for_int(i, numpts) {
-      int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
+    auto process_point = [&](int fi, float a, float b, PStats& pst) {
       Face f = fface[fi];
-      cas = meshs.get_corners(f, std::move(cas));
-      float a = Random::G.unif(), b = Random::G.unif();
-      if (a + b > 1.f) {
-        a = 1.f - a;
-        b = 1.f - b;
-      }
+      if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
       Bary bary(a, b, 1.f - a - b);
-      project_point(meshs, f, cas, bary, meshd, psp, nullptr, pstats);
+      project_point(mesh_s, f, bary, mesh_d, psp, nullptr, pst);
+    };
+    if (!parallel) {
+      for_int(i, numpts) {
+        int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
+        float a = Random::G.unif(), b = Random::G.unif();
+        process_point(fi, a, b, pstats);
+      }
+    } else {
+      Array<float> randoms;
+      for_int(i, numpts * 3) randoms.push(Random::G.unif());
+      int num_threads = get_max_threads();
+      Array<PStats> ar_pstats(num_threads);
+      const int chunk_size = (numpts + num_threads - 1) / num_threads;
+      parallel_for_int(thread_index, num_threads) {
+        for (int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, numpts))) {
+          int fi = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
+          process_point(fi, randoms[i * 3 + 1], randoms[i * 3 + 2], ar_pstats[thread_index]);
+        }
+      }
+      for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
     }
-    if (verb >= 2) print_it(" r", pstats);
+    if (verbose >= 2) print_it(" r", pstats);
     pastats.add(pstats);
   }
   if (vertexpts) {
     PStats pstats;
-    // showdf("- vertex sampling\n");
-    Array<Corner> cas;
-    for (Vertex v : meshs.vertices()) {
-      if (1) {  // works on mesh containing just isolated vertices
-        const Vector& psnor = v_normal(v);
-        const A3dColor pscol(0.f, 0.f, 0.f);
-        project_point(meshs, meshs.point(v), pscol, psnor, meshd, psp, v, pstats);
-      } else {
-        Face f = assertx(meshs.most_clw_face(v));
-        cas = meshs.get_corners(f, std::move(cas));
-        Bary bary(0.f, 0.f, 0.f);
-        int cai = cas.index(meshs.corner(v, f));
-        assertx(cai >= 0);
-        bary[cai] = 1.f;
-        project_point(meshs, f, cas, bary, meshd, psp, v, pstats);
+    auto process_vertex = [&](Vertex v, PStats& pst) {
+      const Vector& psnor = v_normal(v);
+      const A3dColor pscol(0.f, 0.f, 0.f);
+      project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, pst);
+    };
+    if (!parallel) {
+      for (Vertex v : mesh_s.vertices()) process_vertex(v, pstats);
+    } else {
+      Array<Vertex> vertices(mesh_s.vertices());
+      int num_threads = get_max_threads();
+      Array<PStats> ar_pstats(num_threads);
+      const int chunk_size = (vertices.num() + num_threads - 1) / num_threads;
+      parallel_for_int(thread_index, num_threads) {
+        for (int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, vertices.num())))
+          process_vertex(vertices[i], ar_pstats[thread_index]);
       }
+      for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
     }
-    if (verb >= 2) print_it(" v", pstats);
+    if (verbose >= 2) print_it(" v", pstats);
     pastats.add(pstats);
   }
 }
@@ -251,10 +268,10 @@ void do_distance() {
   for_int(idir, 2) {
     PStats pastats;
     if (!bothdir && idir == 1) continue;
-    if (bothdir && verb >= 2) showdf("Distance mesh%d -> mesh%d\n", idir, 1 - idir);
+    if (bothdir && verbose >= 2) showdf("Distance mesh%d -> mesh%d\n", idir, 1 - idir);
     compute_mesh_distance(meshes[idir], meshes[1 - idir], pastats);
     pbstats.add(pastats);
-    if (!bothdir || verb >= 2) print_it(sform(" %c", '0' + idir), pastats);
+    if (!bothdir || verbose >= 2) print_it(sform(" %c", '0' + idir), pastats);
   }
   if (bothdir) print_it(" B", pbstats);
 }
@@ -269,7 +286,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(nptfac, "fac : random points samples");
   HH_ARGSP(vertexpts, "bool : also project vertices");
   HH_ARGSP(errmesh, "bool : output mesh with error");
-  HH_ARGSP(verb, "int : verbosity level");
+  HH_ARGSP(verbose, "int : verbosity level");
   HH_ARGSP(unitcube0, "bool : normalize distance by mesh0 bbox side");
   HH_ARGSP(unitdiag0, "bool : normalize distance by mesh0 bbox diag");
   HH_ARGSP(maxerror, "bool : include Linf norm");

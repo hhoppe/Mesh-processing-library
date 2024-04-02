@@ -138,9 +138,9 @@ class Mesh : noncopyable {
   Face opp_face(Vertex v, Face f) const;  // is_triangle(f); ret nullptr if none
   // ccw order
   void get_vertices(Face f, Array<Vertex>& va) const;
-  void triangle_vertices(Face f, Vec3<Vertex>& va) const;
+  Vec3<Vertex> triangle_vertices(Face f) const;
+  Vec3<Corner> triangle_corners(Face f) const;
   Vertex vertex(Face f, int i) const;  // die if i>=num_vertices(f)
-  Array<Corner> get_corners(Face f, Array<Corner>&& ca = Array<Corner>()) const;
   // move about a face
   Edge clw_edge(Face f, Edge e) const { return hedge_from_ef(e, f)->_prev->_edge; }
   Edge ccw_edge(Face f, Edge e) const { return hedge_from_ef(e, f)->_next->_edge; }
@@ -820,12 +820,24 @@ inline void swap(Mesh& l, Mesh& r) noexcept {
   swap(l._nedges, r._nedges);
 }
 
-inline void Mesh::triangle_vertices(Face f, Vec3<Vertex>& va) const {
+inline Vec3<Vertex> Mesh::triangle_vertices(Face f) const {
+  Vec3<Vertex> va;
   HEdge he = herep(f), he0 = he;
   va[0] = he->_vert, he = he->_next;
   va[1] = he->_vert, he = he->_next;
   va[2] = he->_vert, he = he->_next;
   assertx(he == he0);  // is_triangle()
+  return va;
+}
+
+inline Vec3<Corner> Mesh::triangle_corners(Face f) const {
+  Vec3<Corner> ca;
+  HEdge he = herep(f);
+  ca[0] = he, he = he -> _next;
+  ca[1] = he, he = he -> _next;
+  ca[2] = he, he = he -> _next;
+  assertx(he == ca[0]);  // is_triangle()
+  return ca;
 }
 
 }  // namespace hh

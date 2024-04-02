@@ -95,8 +95,7 @@ float GMesh::length(Edge e) const { return sqrt(length2(e)); }
 
 float GMesh::area(Face f) const {
   if (is_triangle(f)) {
-    Vec3<Vertex> va;
-    triangle_vertices(f, va);
+    Vec3<Vertex> va = triangle_vertices(f);
     return sqrt(area2(point(va[0]), point(va[1]), point(va[2])));
   } else {
     Polygon& poly = _tmp_poly;

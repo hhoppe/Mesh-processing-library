@@ -126,9 +126,7 @@ class Timers {
       return true;
     }
     static std::once_flag flag;
-    std::call_once(flag, [] {
-      if (!getenv_bool("NO_DIAGNOSTICS_IN_STDOUT")) showff("(Timing on %s)\n", timing_host().c_str());
-    });
+    std::call_once(flag, [] { showff("(Timing on %s)\n", timing_host().c_str()); });
     return false;
   }
   static void flush() { instance().flush_internal(); }
@@ -146,7 +144,7 @@ class Timers {
       if (timer_info.stat.num() > 1) _have_some_mult = true;
     }
     if (_have_some_mult || Timer::show_times() > 0) {
-      showdf("Summary of timers (%s):\n", timing_host().c_str());
+      showff("Summary of timers (%s):\n", timing_host().c_str());
       const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // num fractional decimal digits
       for (const auto& timer_info : _vec_timer_info) {
         const Stat& stat = timer_info.stat;
@@ -169,10 +167,10 @@ class Timers {
         }
         int64_t n = stat.num();
         long long ln = n;  // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
-        showdf(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n", sform("%.19s:", stat.name().c_str()).c_str(),
+        showff(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n", sform("%.19s:", stat.name().c_str()).c_str(),
                ln, n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ",
-               n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ", precision, stat_sum / n, precision,
-               stat_sum, sparallel.c_str(), precision, timer_info.sum_real_time);
+               n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ", precision, stat_sum / n,
+               precision, stat_sum, sparallel.c_str(), precision, timer_info.sum_real_time);
         if (stat.num() > 1000 && stat.num() * 1e-6 > stat_sum) {
           showdf("**Timer '%s' created more overhead than measured!\n", stat.name().c_str());
         }

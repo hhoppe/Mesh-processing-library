@@ -5,6 +5,8 @@
 
 namespace hh {
 
+int Stat::_s_show = getenv_int("SHOW_STATS");
+
 class Stats {
  public:
   static void add(Stat* stat) { instance()._vec.push_back(stat); }
@@ -23,7 +25,13 @@ class Stats {
     for (Stat* stat : _vec) {
       if (stat->_print && stat->num()) ntoprint++;
     }
-    if (ntoprint) showdf("Summary of statistics:\n");
+    if (ntoprint) {
+      if (Stat::_s_show == -1) {
+        showff("Summary of statistics:\n");
+      } else {
+        showdf("Summary of statistics:\n");
+      }
+    }
     for (Stat* stat : _vec) stat->terminate();
     _vec.clear();
   }
@@ -38,7 +46,11 @@ Stat::Stat(string pname, bool print, bool is_static) : _name(std::move(pname)), 
     string filename = "Stat." + _name;  // the name is assumed ASCII; no need to worry about UTF-8.
     _pofs = make_unique<std::ofstream>(filename);
   }
-  if (is_static) Stats::add(this);
+  if (_s_show <= -2) {
+    _print = false;
+  } else if (is_static) {
+    Stats::add(this);
+  }
 }
 
 Stat::Stat(const char* pname, bool print, bool is_static) : Stat(string(pname ? pname : ""), print, is_static) {}
@@ -59,7 +71,13 @@ void swap(Stat& l, Stat& r) noexcept {
 }
 
 void Stat::terminate() {
-  if (_print && num()) showdf("%s", name_string().c_str());
+  if (_print && num()) {
+    if (_s_show == -1) {
+      showff("%s", name_string().c_str());
+    } else {
+      showdf("%s", name_string().c_str());
+    }
+  }
   _print = false;
 }
 

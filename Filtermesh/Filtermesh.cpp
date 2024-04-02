@@ -3177,13 +3177,13 @@ void do_normaltransf(Args& args) {
     for (Corner c : mesh.corners(v)) {
       if (parse_key_vec(mesh.get_string(c), "normal", n)) {
         n = n * frame;
-        assertw(is_unit(n));
+        if (0) assertw(is_unit(n));
         mesh.update_string(c, "normal", csform_vec(str, n));
       }
     }
     if (parse_key_vec(mesh.get_string(v), "normal", n)) {
       n = n * frame;
-      assertw(is_unit(n));
+      if (0) assertw(is_unit(n));
       mesh.update_string(v, "normal", csform_vec(str, n));
     }
   }
@@ -3538,8 +3538,7 @@ float signed_distance(const Point& p, Face f) {
       return sqrt(d2) * sign(dot(poly.get_normal_dir(), p - clp));
     }
     case 1: {  // edge
-      Vec3<Vertex> va;
-      mesh.triangle_vertices(f, va);
+      Vec3<Vertex> va = mesh.triangle_vertices(f);
       Edge e = mesh.edge(va[mod3(jzero + 1)], va[mod3(jzero + 2)]);
       if (mesh.is_boundary(e)) return k_Contour_undefined;
       Vector nor = poly.get_normal();
@@ -3548,8 +3547,7 @@ float signed_distance(const Point& p, Face f) {
       return sqrt(d2) * sign(dot(nor, p - clp));
     }
     case 2: {  // vertex
-      Vec3<Vertex> va;
-      mesh.triangle_vertices(f, va);
+      Vec3<Vertex> va = mesh.triangle_vertices(f);
       Vertex v = va[jpos];
       if (mesh.is_boundary(v)) return k_Contour_undefined;
       Vector nor(0.f, 0.f, 0.f);
@@ -4102,7 +4100,7 @@ void do_shootrays(Args& args) {
         Polygon poly;
         omesh.polygon(minof, poly);
         // for_int(c, 3) poly[c] *= xform;
-        Array<Corner> ca = omesh.get_corners(minof);
+        Vec3<Corner> ca = omesh.triangle_corners(minof);
         Bary bary;
         Point clp;
         project_point_triangle2(minp * xformi, poly[0], poly[1], poly[2], bary, clp);

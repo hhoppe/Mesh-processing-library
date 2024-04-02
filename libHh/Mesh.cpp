@@ -371,12 +371,6 @@ Vertex Mesh::vertex(Face f, int i) const {
   assertnever("Face has too few vertices");
 }
 
-Array<Corner> Mesh::get_corners(Face f, Array<Corner>&& ca) const {
-  ca.init(0);
-  for (Corner c : corners(f)) ca.push(c);
-  return std::move(ca);
-}
-
 // *** Edge
 
 Vertex Mesh::opp_vertex(Edge e, Face f) const {

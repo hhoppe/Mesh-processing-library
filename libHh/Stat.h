@@ -14,7 +14,9 @@
   }
   HH_SSTAT(Svanum, va.num());
   SHOW(Stat(V(1., 4., 5., 6.)).sdv());
-  // getenv_bool("STAT_FILES") -> store all data values in files.
+  // getenv_bool("STAT_FILES") -> store all data values in ./Stat.* files.
+  Stat::set_show_stats(-1);  // Or "export SHOW_STATS=-1": only print in showff().
+  Stat::set_show_stats(-2);  // Or "export SHOW_STATS=-2": disable printing of all statistics.
 }
 #endif
 
@@ -62,6 +64,9 @@ class Stat {
   string name_string() const;   // operator<<() uses namestring format
   friend void swap(Stat& l, Stat& r) noexcept;
   friend std::ostream& operator<<(std::ostream& os, const Stat& st) { return os << st.name_string(); }
+  //
+  static int show_stats() { return _s_show; }
+  static void set_show_stats(int val) { _s_show = val; }
 
  private:
   string _name;
@@ -73,6 +78,7 @@ class Stat {
   float _min;
   float _max;
   unique_ptr<std::ofstream> _pofs;  // if getenv_bool("STAT_FILES")
+  static int _s_show;
   // if add any member variables, be sure to update swap()
   friend class Stats;
   void output(float f) const;

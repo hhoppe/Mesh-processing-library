@@ -305,10 +305,10 @@ extern int g_unoptimized_zero;
 // Write formatted string to std::cerr.
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...);
 
-// Write formatted string (with g_comment_prefix_string == "# ") to std::cerr, and to std::cout if it is a file.
+// Write formatted string (with g_comment_prefix_string == "# ") to std::cerr and possibly to std::cout.
 HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...);
 
-// Write formatted string (with g_comment_prefix_string == "# ") to std::cout only if it is a file.
+// Write formatted string (with g_comment_prefix_string == "# ") to std::cout only if it is a file or pipe.
 HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...);
 
 // C-string prefix for formatted std::cout output in showdf() and showff(); default is "# ".

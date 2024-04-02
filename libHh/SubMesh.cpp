@@ -350,8 +350,7 @@ void SubMesh::refine(Mvcvh& mconv) {
     }
   } else {
     for (Face f : arf) {  // was ForStack which went in reverse order
-      Vec3<Vertex> va;
-      _m.triangle_vertices(f, va);
+      Vec3<Vertex> va = _m.triangle_vertices(f);
       Vec3<Vertex> vs;
       for_int(i, 3) vs[i] = menewv.get(_m.edge(va[i], va[mod3(i + 1)]));
       Face forig = _mforigf.get(f);
@@ -446,8 +445,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   // Subdivide faces, destroys validity of flags(e)
   for (Face f : arf) {
     int nnew = 0, i0 = -1;
-    Vec3<Vertex> va;
-    _m.triangle_vertices(f, va);
+    Vec3<Vertex> va = _m.triangle_vertices(f);
     Vec3<Vertex> vs;
     for_int(i, 3) {
       Edge e = _m.edge(va[i], va[mod3(i + 1)]);

@@ -59,7 +59,7 @@ MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
   int psp_size = int(sqrt(_mesh.num_faces() * .05f));
   if (_allow_local_project) psp_size /= 2;
   psp_size = clamp(10, psp_size, 150);
-  HH_TIMER("__meshsearch_build");
+  HH_STIMER("__meshsearch_build");
   Bbox bbox;
   for (Vertex v : _mesh.vertices()) bbox.union_with(_mesh.point(v));
   _ftospatial = bbox.get_frame_to_small_cube();
@@ -94,8 +94,7 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
         break;
       }
       if (dfrac < 1e-6f) break;  // success
-      Vec3<Vertex> va;
-      _mesh.triangle_vertices(f, va);
+      Vec3<Vertex> va = _mesh.triangle_vertices(f);
       int side = -1;
       for_int(i, 3) {
         if (bary[i] == 1.f) {

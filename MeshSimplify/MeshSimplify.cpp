@@ -724,8 +724,7 @@ void corner_qem_vector(Corner c, ArrayView<float> pp) {
 constexpr float frac_diam = 1e-3f;
 
 void get_face_qem(Face f, BQemT& qem) {
-  Vec3<Vertex> va;
-  mesh.triangle_vertices(f, va);
+  Vec3<Vertex> va = mesh.triangle_vertices(f);
   SGrid<float, 3, k_qemsmax> pa;
   for_int(i, 3) corner_qem_vector(mesh.corner(va[i], f), pa[i]);
   if (qemgh98) {
@@ -744,8 +743,7 @@ void get_face_qem(Face f, BQemT& qem) {
 void get_sharp_edge_qem(Edge e, BQemT& qem) {
   Vector nor(0.f, 0.f, 0.f);  // average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
-    Vec3<Vertex> va;
-    mesh.triangle_vertices(f, va);
+    Vec3<Vertex> va = mesh.triangle_vertices(f);
     Vector fnor = cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
     assertw(fnor.normalize());
     nor += fnor;
@@ -1013,8 +1011,7 @@ void write_mesh(std::ostream& os) {
     }
     if (1) {  // sanity check
       for (Face f : mesh.faces()) {
-        Vec3<Vertex> va;
-        mesh.triangle_vertices(f, va);
+        Vec3<Vertex> va = mesh.triangle_vertices(f);
         Vec3<Point> poly;
         for_int(i, 3) poly[i] = v_sph(va[i]);
         assertx(spherical_triangle_area(poly) < TAU);
@@ -1222,8 +1219,7 @@ void parse_mesh() {
       assertx(is_unit(sph));
     }
     for (Face f : mesh.faces()) {
-      Vec3<Vertex> va;
-      mesh.triangle_vertices(f, va);
+      Vec3<Vertex> va = mesh.triangle_vertices(f);
       Vec3<Point> poly;
       for_int(i, 3) poly[i] = v_sph(va[i]);
       assertx(spherical_triangle_area(poly) < TAU);
@@ -1313,7 +1309,7 @@ void add_face_point(Face f, Bary bary, bool define_scalars) {
   fpt.dist2 = 0.f;
   if (have_ccolors) {
     if (define_scalars) {
-      Array<Corner> ca = mesh.get_corners(f);
+      Vec3<Corner> ca = mesh.triangle_corners(f);
       fpt.ptcol() = interp(c_winfo(ca[0]).col, c_winfo(ca[1]).col, c_winfo(ca[2]).col, bary);
     } else {
       fpt.ptcol() = A3dColor(k_undefined, k_undefined, k_undefined);
@@ -1322,7 +1318,7 @@ void add_face_point(Face f, Bary bary, bool define_scalars) {
   }
   if (have_cnormals && norfac) {
     if (define_scalars) {
-      Array<Corner> ca = mesh.get_corners(f);
+      Vec3<Corner> ca = mesh.triangle_corners(f);
       fpt.ptnor() = interp(c_winfo(ca[0]).nor, c_winfo(ca[1]).nor, c_winfo(ca[2]).nor, bary);
       assertw(fpt.ptnor().normalize());
     } else {
@@ -2918,7 +2914,6 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
     }
     Polygon poly;
-    Array<Corner> ca;
     Array<float> ar_d2(nf);
     for (fptinfo* pfpt : nn.ar_fpts) {
       fptinfo& fpt = *pfpt;
@@ -2947,13 +2942,13 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       assertx(min_f);
       fpt.dist2 = min_d2;
       if (have_ccolors && fpt.ptcol()[0] != k_undefined) {
-        ca = mesh.get_corners(min_f, std::move(ca));
+        Vec3<Corner> ca = mesh.triangle_corners(min_f);
         fpt.coldist2() =
             dist2(interp(c_winfo(ca[0]).col, c_winfo(ca[1]).col, c_winfo(ca[2]).col, min_bary[0], min_bary[1]),
                   Point(fpt.ptcol()));
       }
       if (have_cnormals && norfac && fpt.ptnor()[0] != k_undefined) {
-        ca = mesh.get_corners(min_f, std::move(ca));
+        Vec3<Corner> ca = mesh.triangle_corners(min_f);
         Vector nor = ok_normalized(
             interp(c_winfo(ca[0]).nor, c_winfo(ca[1]).nor, c_winfo(ca[2]).nor, min_bary[0], min_bary[1]));
         fpt.nordist2() = mag2(nor - fpt.ptnor());
@@ -3314,8 +3309,7 @@ void perform_attrib_project(Edge e, const Point& newp, Array<WedgeInfo>& ar_wi) 
   Bary bary;
   Point clp;
   project_vnew_nn(e, newp, cf, bary, clp);
-  Vec3<Vertex> va;
-  mesh.triangle_vertices(cf, va);
+  Vec3<Vertex> va = mesh.triangle_vertices(cf);
   const WedgeInfo& wi1 = c_winfo(mesh.corner(va[0], cf));
   const WedgeInfo& wi2 = c_winfo(mesh.corner(va[1], cf));
   const WedgeInfo& wi3 = c_winfo(mesh.corner(va[2], cf));

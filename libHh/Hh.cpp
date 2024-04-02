@@ -289,11 +289,11 @@ class Warnings {
       }
     };
     std::map<const void*, int, string_less> sorted_map(_map.begin(), _map.end());
-    showdf("Summary of warnings:\n");
+    showff("Summary of warnings:\n");
     for (auto& kv : sorted_map) {
       const char* s = static_cast<const char*>(kv.first);
       int n = kv.second;
-      showdf(" %5d '%s'\n", n, details::forward_slash(s).c_str());
+      showff(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     }
     _map.clear();
   }
@@ -525,93 +525,65 @@ static bool isafile(int fd) {
 }
 
 // Scenarios:
-//   command-line                       isatty1 isatty2 1==2    isf1    isf2    cout    cerr
-//   app                                1       1               0       0       0       1
-//   app >file                          0       1               1       0       1       1
-//   app | app2                         0       1               0       0       1       1
-//   app 2>file                         1       0               0       1       1       1
-//   app >&file                         0       0       1       1       1       0       1
-//   app |& grep                        0       0       1       0       0       0       1
-//   (app | app2) |& grep               0       0       0       0       0       1       1
-//   (app >file) |& grep                0       0       0       1       0       1       1
-//   (app >file) >&file2                0       0       0       1       1       1       1
-//   blaze run app                      0       0       0       0       0       0       1
+//   command-line                       isatty1 isatty2 same    isf1    isf2    cout    cerr    want_ff
+//   app                                1       1       1       0       0       0       1       0
+//   app >file                          0       1       0       1       0       1       1       1
+//   app | app2                         0       1       0       0       0       1       1       1
+//   app 2>file                         1       0       0       0       1       1       1       0
+//   app >&file                         0       0       1       1       1       0       1       1
+//   app |& app2                        0       0       1       0       0       0       1       1(*A)
+//   (app | app2) |& app3               0       0       0       0       0       1       1       1
+//   (app >file) |& app2                0       0       0       1       0       1       1       1
+//   (app >file) >&file2                0       0       0       1       1       1       1       1
+//   blaze run app                      0       0       0       0       0       0       1       1(*B)
+//
+// Difficulty: for Cygwin bash shell in _WIN32, we always see isatty1=0 and isatty2=0.
 
-static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr) {
-  bool need_cout, need_cerr;
-  // _WIN32: isatty() often returns 64
-  bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);
+static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bool& pwant_ff) {
+  bool need_cout, need_cerr, want_ff;
+  bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);  // _WIN32: isatty() often returns 64.
   bool same_cout_cerr;
-#if defined(_WIN32)
   {
-    same_cout_cerr = false;
-    BY_HANDLE_FILE_INFORMATION hfinfo1 = {};
-    BY_HANDLE_FILE_INFORMATION hfinfo2 = {};
-    if (GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(1)), &hfinfo1) &&
-        GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(2)), &hfinfo2) &&
-        hfinfo1.dwVolumeSerialNumber == hfinfo2.dwVolumeSerialNumber &&
-        hfinfo1.nFileIndexHigh == hfinfo2.nFileIndexHigh && hfinfo1.nFileIndexLow == hfinfo2.nFileIndexLow)
-      same_cout_cerr = true;
+#if defined(_WIN32)
+    BY_HANDLE_FILE_INFORMATION hfinfo1{}, hfinfo2{};
+    same_cout_cerr = GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(1)), &hfinfo1) &&
+                     GetFileInformationByHandle(reinterpret_cast<HANDLE>(_get_osfhandle(2)), &hfinfo2) &&
+                     hfinfo1.dwVolumeSerialNumber == hfinfo2.dwVolumeSerialNumber &&
+                     hfinfo1.nFileIndexHigh == hfinfo2.nFileIndexHigh &&
+                     hfinfo1.nFileIndexLow == hfinfo2.nFileIndexLow;
     // You can compare the VolumeSerialNumber and FileIndex members returned in the
     //  BY_HANDLE_FILE_INFORMATION structure to determine if two paths map to the same target.
-    if (0) SHOW(same_cout_cerr);
-  }
-  // need_cout = isatty1^isatty2;
-  need_cerr = true;
-  // Problem:
-  //  - when I run the shell within emacs on _WIN32, I cannot distinguish "app" from "app | pipe".
-  //    Both show stdout as !isafile(), and I cannot distinguish between them using the statbuf buffers
-  //     (the st_dev values are always different), or GetFileType(), or GetNamedPipeHandleState(),
-  //     or any socket2 API (these pipes don't use sockets).
-  //  The worst consequence is that I miss "showff()" when I use "app | pipe".
-  if (isatty1 && isatty2) {
-    need_cout = false;
-  } else if (isatty1 || isatty2) {
-    need_cout = true;
-  } else if (isafile(1) && isafile(2) && same_cout_cerr) {
-    // 20120208 new case to correctly handle "app >&file"
-    need_cout = false;
-  } else if (isafile(1)) {
-    need_cout = true;
-  } else {
-    // In emacs, both "app" and "app | pipe" fall in here.
-    need_cout = false;
-  }
 #else
-  {
-    struct stat statbuf1, statbuf2;
-    assertw(!fstat(1, &statbuf1));
-    assertw(!fstat(2, &statbuf2));
+    struct stat statbuf1 = {}, statbuf2 = {};
+    same_cout_cerr = assertw(!fstat(1, &statbuf1)) && assertw(!fstat(2, &statbuf2)) &&
+                     statbuf1.st_dev == statbuf2.st_dev && statbuf1.st_ino == statbuf2.st_ino;
     // SHOW(statbuf1.st_dev, statbuf2.st_dev, statbuf1.st_ino, statbuf2.st_ino);
-    same_cout_cerr = statbuf1.st_dev == statbuf2.st_dev && statbuf1.st_ino == statbuf2.st_ino;
+#endif
   }
   need_cerr = true;
-  // (perl -e 'open(OUT,">v"); binmode(OUT); for (stat(STDOUT), "*", stat(STDERR)) { print OUT "$_\n"; }') >&v2 && cat v
-  if (isatty1 && isatty2) {
-    need_cout = false;
-  } else if (isatty1 || isatty2) {
-    need_cout = true;
-  } else if (same_cout_cerr) {
-    need_cout = false;
-  } else if (!isafile(1) && !isafile(2)) {  // 20170222 for blaze run
-    need_cout = false;
+  need_cout = !same_cout_cerr;
+  if (0 && !isatty1 && !isatty2 && !isafile(0) && !isafile(1)) need_cout = false;  // 20170222 for "blaze run" (*B).
+  if (same_cout_cerr) {
+    want_ff = isafile(1) || isatty1;
+    // On _WIN32, isatty1 is always false and we fail to set want_ff=1 for "app |& app2" (*A).
   } else {
-    need_cout = true;
+    want_ff = isafile(1) || !isafile(2);
   }
-#endif  // defined(_WIN32)
-  // dynamically updated by my_setenv()
-  if (getenv_bool("NO_DIAGNOSTICS_IN_STDOUT")) need_cout = false;
-  if (getenv_bool("SHOW_NEED_COUT")) {
-    SHOW(isatty1, isatty2, same_cout_cerr, isafile(1), isafile(2), need_cout, need_cerr);
+  if (getenv_bool("NO_DIAGNOSTICS_IN_STDOUT")) {  // Could be set in main() by my_setenv().
+    need_cout = false;
+    want_ff = false;
   }
+  if (getenv_bool("SHOW_NEED_COUT"))
+    SHOW(isatty1, isatty2, same_cout_cerr, isafile(1), isafile(2), need_cout, need_cerr, want_ff);
   pneed_cout = need_cout;
   pneed_cerr = need_cerr;
+  pwant_ff = want_ff;
 }
 
 HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
-  static bool need_cout, need_cerr;
+  static bool need_cout, need_cerr, want_ff;
   static std::once_flag flag;
-  std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr));
+  std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr), std::ref(want_ff));
   std::va_list ap;
   va_start(ap, format);
   string s = g_comment_prefix_string + vsform(format, ap);
@@ -624,19 +596,10 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
 }
 
 HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
-  static bool want_cout;
+  static bool need_cout, need_cerr, want_ff;
   static std::once_flag flag;
-  auto func_want_cout = [] {
-#if defined(_WIN32)
-    // Problem: this does not work if "app | pipe..."
-    return isafile(1);
-#else
-    return !HH_POSIX(isatty)(1);
-#endif
-  };
-  std::call_once(
-      flag, [&](bool& b) { b = func_want_cout(); }, std::ref(want_cout));
-  if (!want_cout) return;
+  std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr), std::ref(want_ff));
+  if (!want_ff) return;
   std::va_list ap;
   va_start(ap, format);
   string s = g_comment_prefix_string + vsform(format, ap);

@@ -255,14 +255,13 @@ void WMesh::write(std::ostream& os, const PMeshInfo& pminfo) const {
 }
 
 void WMesh::extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const {
+  assertx(!gmesh.num_vertices());
   const int no_ref = -1, multiple_refs = -2;
   Array<int> wedgeref(_vertices.num(), no_ref);
   for_int(w, _wedges.num()) {
     int v = _wedges[w].vertex;
-    int& wr = wedgeref[v];
-    wr = wr == no_ref ? w : multiple_refs;
+    wedgeref[v] = wedgeref[v] == no_ref ? w : multiple_refs;
   }
-  assertx(!gmesh.num_vertices());
   string str;
   for_int(v, _vertices.num()) {
     Vertex gv = gmesh.create_vertex();

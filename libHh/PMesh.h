@@ -86,6 +86,8 @@ struct WMesh {
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const;
   void ok() const;
+  Vec3<int> face_vertices(int f) const;
+  Vec3<Point> face_points(int f) const;
   Materials _materials;
   Array<PmVertex> _vertices;
   Array<PmWedge> _wedges;
@@ -524,6 +526,18 @@ class SGeomorph : public SMesh {
 };
 
 //----------------------------------------------------------------------------
+
+inline Vec3<int> WMesh::face_vertices(int f) const {
+  Vec3<int> vertices;
+  for_int(j, 3) vertices[j] = _wedges[_faces[f].wedges[j]].vertex;
+  return vertices;
+}
+
+inline Vec3<Point> WMesh::face_points(int f) const {
+  Vec3<Point> points;
+  for_int(j, 3) points[j] = _vertices[_wedges[_faces[f].wedges[j]].vertex].attrib.point;
+  return points;
+}
 
 inline bool Vsplit::adds_two_faces() const { return vlr_offset1 > 1; }
 

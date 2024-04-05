@@ -61,8 +61,8 @@ inline Vector to_Vector(const Point& p) { return Vector(p[0], p[1], p[2]); }
 inline Point to_Point(const Vector& v) { return Point(v[0], v[1], v[2]); }
 inline float pvdot(const Point& p, const Vector& v) { return dot(to_Vector(p), v); }
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
-float area2(const Point& p1, const Point& p2, const Point& p3);
-Point centroid(CArrayView<Point> pa);
+inline float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * mag2(cross(p1, p2, p3)); }
+inline float area2(const Vec3<Point>& pa) { return .25f * mag2(cross(pa[0], pa[1], pa[2])); }
 inline float dist2(const Vec3<float>& v1, const Point& v2) {
   return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
 }
@@ -191,6 +191,19 @@ inline constexpr Vector cross(const Vector& v1, const Vector& v2) {
 }
 
 // *** Point
+
+inline Vector cross(const Point& p1, const Point& p2, const Point& p3) {
+  // return cross(p2 - p1, p3 - p1);
+  //
+  // I once thought that "double" was necessary in next 3 lines to
+  //  overcome an apparent problem with poor computed surface normals.
+  // However, the problem lay in the geometry.
+  // Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
+  float p1x = p1[0], p1y = p1[1], p1z = p1[2];
+  float v1x = p2[0] - p1x, v1y = p2[1] - p1y, v1z = p2[2] - p1z;
+  float v2x = p3[0] - p1x, v2y = p3[1] - p1y, v2z = p3[2] - p1z;
+  return Vector(v1y * v2z - v1z * v2y, v1z * v2x - v1x * v2z, v1x * v2y - v1y * v2x);
+}
 
 // *** Bary
 

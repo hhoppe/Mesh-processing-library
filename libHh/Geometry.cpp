@@ -33,28 +33,6 @@ Point operator*(const Point& p, const Frame& f) {
                xi * f[0][2] + yi * f[1][2] + zi * f[2][2] + f[3][2]);
 }
 
-Vector cross(const Point& p1, const Point& p2, const Point& p3) {
-  // return cross(p2 - p1, p3 - p1);
-  //
-  // I once thought that "double" was necessary in next 3 lines to
-  //  overcome an apparent problem with poor computed surface normals.
-  // However, the problem lay in the geometry.
-  // Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
-  float p1x = p1[0], p1y = p1[1], p1z = p1[2];
-  float v1x = p2[0] - p1x, v1y = p2[1] - p1y, v1z = p2[2] - p1z;
-  float v2x = p3[0] - p1x, v2y = p3[1] - p1y, v2z = p3[2] - p1z;
-  return Vector(v1y * v2z - v1z * v2y, v1z * v2x - v1x * v2z, v1x * v2y - v1y * v2x);
-}
-
-float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * mag2(cross(p1, p2, p3)); }
-
-Point centroid(CArrayView<Point> pa) {
-  assertx(pa.num());
-  Vec3<float> v(0.f, 0.f, 0.f);
-  for (const Point& p : pa) v += p;
-  return v / float(pa.num());
-}
-
 // *** Frame
 
 Frame Frame::translation(const Vec3<float>& ar) {

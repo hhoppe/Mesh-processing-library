@@ -336,7 +336,7 @@ void show_normals(const A3dElem& el) {
     // el is not necessarily Type::polygon
     Array<Point> pa;
     for_int(i, el.num()) pa.push(el[i].p);
-    Point pavg = centroid(pa);
+    Point pavg = mean(pa);
     for_int(i, el.num()) c += dist(pa[i], pavg);
     c /= el.num();
   }

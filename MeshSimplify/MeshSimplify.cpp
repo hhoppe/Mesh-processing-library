@@ -3464,7 +3464,7 @@ void check_ccw(Vertex v) {
 }
 
 bool valid_aps(Edge e, Vertex v1, Vertex v2) {
-  Vec3<Point> p;
+  Vec3<Point> pa;
   for (Corner c : mesh.corners(v1)) {
     Face f = mesh.corner_face(c);
     Corner cs1 = mesh.ccw_face_corner(c);
@@ -3479,16 +3479,15 @@ bool valid_aps(Edge e, Vertex v1, Vertex v2) {
       assertx(mesh.face2(e) && f_matid(f) == f_matid(mesh.face2(e)));
       ft = mesh.face2(e);
     }
-    p[0] = c_uv(mesh.corner(v2, ft));
-    p[1] = c_uv(cs1);
-    p[2] = c_uv(cs2);
-    if (my_sqrt(area2(p[0], p[1], p[2])) == 0.f) {
-      // This shouldn't be necessary because "strict_sharp 2"
-      //  also takes care of it
+    pa[0] = c_uv(mesh.corner(v2, ft));
+    pa[1] = c_uv(cs1);
+    pa[2] = c_uv(cs2);
+    if (my_sqrt(area2(pa)) == 0.f) {
+      // This shouldn't be necessary because "strict_sharp 2" also takes care of it
       Warning("Not valid APS - Area");
       return false;
     }
-    Vector vv = cross(p[0], p[1], p[2]);
+    Vector vv = cross(pa[0], pa[1], pa[2]);
     if (vv[2] < 0) {
       Warning("Not valid APS - Cross");
       return false;

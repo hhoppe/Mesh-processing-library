@@ -726,7 +726,7 @@ void do_gcompression() {
     }
     // SHOW(polygon.num());
     // for_int(i, polygon.num()) SHOW(polygon[i]);
-    Point pcentroid = centroid(polygon);
+    Point pcentroid = mean(polygon);
     Point pvs = pmi->_vertices[vs].attrib.point;
     Point pnew = pvs + vspl.vad_large.dpoint;
     Vector vdiff = pnew - pcentroid;

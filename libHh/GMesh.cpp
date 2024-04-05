@@ -95,8 +95,7 @@ float GMesh::length(Edge e) const { return sqrt(length2(e)); }
 
 float GMesh::area(Face f) const {
   if (is_triangle(f)) {
-    Vec3<Vertex> va = triangle_vertices(f);
-    return sqrt(area2(point(va[0]), point(va[1]), point(va[2])));
+    return sqrt(area2(triangle_points(f)));
   } else {
     Polygon& poly = _tmp_poly;
     polygon(f, poly);
@@ -763,7 +762,7 @@ Vertex GMesh::center_split_face(Face f) {
   snor /= float(poly.num());
   suv /= float(poly.num());
   Vertex vn = Mesh::center_split_face(f);
-  set_point(vn, centroid(poly));
+  set_point(vn, mean(poly));
   string str;
   if (have_col) update_string(vn, "rgb", csform_vec(str, scol));
   if (have_nor) update_string(vn, "normal", csform_vec(str, snor));

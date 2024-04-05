@@ -638,7 +638,7 @@ void set_recpoint() {
   // For now, just use centroid.
   Polygon poly;
   mesh->polygon(f, poly);
-  Point p = centroid(poly);
+  Point p = mean(poly);
   if (1) showf("Hit face %d (centroid [%g, %g, %g])\n", mesh->face_id(f), p[0], p[1], p[2]);
   rec_point = p;
   mode_centroid = false;

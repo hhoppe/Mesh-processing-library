@@ -25,7 +25,7 @@ class Polygon : public PArray<Point, 4> {
   float get_planec(const Vector& pnor) const;
   float get_tolerance(const Vector& pnor, float d) const;
   float get_area() const;
-  // Because Polygon is a CArrayView<Point>, we can call centroid(Polygon) -- see Geometry.h
+  // The polygon centroid can be obtained as mean(polygon) using RangeOp.
   // Finds intersection of polygon with halfspace in +hn direction
   bool intersect_hyperplane(const Point& hp, const Vector& hn);                 // ret: is_modified
   bool intersect_bbox(const Bbox& bbox);                                        // ret: is_modified

@@ -707,7 +707,8 @@ void record_cuspv() {
 void do_angle(Args& args) {
   float angle = args.get_float();
   assertx(angle >= 0.f && angle <= 180.f);
-  cosangle = std::cos(to_rad(angle)), record_sharpe();
+  cosangle = std::cos(to_rad(angle));
+  record_sharpe();
 }
 
 void do_cosangle(Args& args) {
@@ -844,7 +845,7 @@ void gather_follow_seg(Face f, Map<Face, int>& mfseg, int segnum, int& pnf, Poin
   for (;;) {
     nf++;
     mesh.polygon(f, poly);
-    h += poly.get_area() * Homogeneous(centroid(poly));
+    h += poly.get_area() * Homogeneous(mean(poly));
     for (Edge e : mesh.edges(f)) {
       if (sharp(e)) continue;
       Face f2 = mesh.opp_face(f, e);
@@ -3473,7 +3474,7 @@ void do_procedure(Args& args) {
       Vector nor = poly.get_normal();
       if (1) vec = project_orthogonally(vec, nor);
       if (1) vec.normalize();
-      Point pc = centroid(poly);
+      Point pc = mean(poly);
       Stat stat;
       for (Vertex v : mesh.vertices(f)) stat.enter(dist(pc, mesh.point(v)));
       if (1) vec *= stat.avg() * 0.5f;

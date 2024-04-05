@@ -69,6 +69,7 @@ class GMesh : public Mesh {
   const Point& point(Vertex v) const { return v->_point; }
   void set_point(Vertex v, const Point& p);
   void polygon(Face f, Polygon& poly) const;
+  Vec3<Point> triangle_points(Face f) const;
   float length2(Edge e) const;
   float length(Edge e) const;
   float area(Face f) const;
@@ -187,6 +188,16 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
     func();
     return false;
   });
+}
+
+inline Vec3<Point> GMesh::triangle_points(Face f) const {
+  Vec3<Point> pa;
+  HEdge he = herep(f), he0 = he;
+  pa[0] = he->_vert->_point, he = he->_next;
+  pa[1] = he->_vert->_point, he = he->_next;
+  pa[2] = he->_vert->_point, he = he->_next;
+  assertx(he == he0);  // is_triangle()
+  return pa;
 }
 
 //----------------------------------------------------------------------------

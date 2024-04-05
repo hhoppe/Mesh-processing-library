@@ -9,26 +9,30 @@ using namespace hh;
 
 namespace {
 
-bool noinput = false;
 int every = 0;
 int object = -1;
 bool ginverse = false;
-bool toasciit = false;  //  "toascii" seems to be a reserved identifier in Win32
-bool tobinary = false;
+bool orthonormalize = false;
+bool snap_to_axes = false;
+float induce_roll = 0.f;
+float lowpass = 1.f;  // Note that 1.f == no filtering.
+bool add_mid_frames = false;
 double delay = 0.;
+int repeat = 1;
+bool eof1 = false;
+bool toasciit = false;  //  The name "toascii" seems to be a reserved identifier in Win32.
+bool tobinary = false;
+
 bool is_pretransf = false;
+Frame cpretransf;
 bool is_transf = false;
-Frame cpretransf, ctransf;
+Frame ctransf;
+bool statistics = false;
+bool b_frame = false;
+
+bool noinput = false;
 int icount = 0;
 int ocount = 0;
-bool b_frame = false;
-bool statistics = false;
-bool eof1 = false;
-int repeat = 1;
-bool orthonormalize = false;
-float induce_roll = 0.f;
-bool add_mid_frames = false;
-float lowpass = 1.f;  // 1.f == no filtering
 
 void do_create_euler(Args& args) {
   float yaw = to_rad(args.get_float());
@@ -50,7 +54,7 @@ void do_induce_roll(Frame& t) {
   p0 = p1;
   p1 = p2;
   p2 = t.p();
-  p2[2] = 0;  // set elevations to zero
+  p2[2] = 0;  // Set elevations to zero.
   icount1++;
   if (icount1 < 3) return;
   double v1x = double(p1[0]) - p0[0];
@@ -67,8 +71,7 @@ void do_induce_roll(Frame& t) {
   float bank = s * induce_roll;
   t = Frame::rotation(0, bank) * t;
   HH_SSTAT(Sbank, bank);
-  // Not used: it couldn't estimate curvature well enough from
-  //  my gcanyon_4k2k_fly2.frame file.
+  // Not used: it couldn't estimate curvature well enough from my gcanyon_4k2k_fly2.frame file.
 }
 
 bool loop() {
@@ -98,6 +101,16 @@ bool loop() {
     float vdot = dot(v2, t.v(2));
     assertx(abs(vdot) > .99f);
     t.v(2) = v2 * sign(vdot);
+  }
+  if (snap_to_axes) {
+    for_int(i, 3) {
+      Vector& vec = t.v(i);
+      int axis = arg_max(abs(vec));
+      for_int(j, 3)
+        vec[j] = j == axis ? sign(vec[j]) : 0.f;
+    }
+    t.p() = Point(0.f, 0.f, 0.f);
+    zoom = 0.f;
   }
   if (induce_roll) do_induce_roll(t);
   if (add_mid_frames) {
@@ -167,6 +180,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(pretransf, "'frame' : pre-transform by frame");
   HH_ARGSP(transf, "'frame' : post-transform by frame");
   HH_ARGSF(orthonormalize, ": orthonormalize frame");
+  HH_ARGSF(snap_to_axes, ": change each frame vector to the nearest axis");
   HH_ARGSP(induce_roll, "factor : for flight over terrain");
   HH_ARGSP(lowpass, "factor : contribution of new frame [0..1]");
   HH_ARGSF(add_mid_frames, ": add interpolating frame between each pair");

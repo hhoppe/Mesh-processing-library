@@ -1539,7 +1539,7 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       showf("PMesh header string not recognized '%s'\n", s2);
     }
   }
-  assertw(pminfo._tot_nvsplits);
+  // assertw(pminfo._tot_nvsplits);
   assertw(pminfo._full_nvertices);
   assertw(pminfo._full_nwedges);
   assertw(pminfo._full_nfaces);

@@ -2624,13 +2624,14 @@ void do_analyzestretch() {
   HH_STAT(Stri_minsv);
   HH_STAT(Ssurfarea);
   HH_STAT(Sstarea);
+  int num_domainp = 0, num_uv = 0;
   for (Face f : mesh.faces()) {
     mesh.get_vertices(f, va);
     assertx(va.num() == 3);
     mesh.polygon(f, poly);
     assertx(poly.num() == 3);
     if (GMesh::string_has_key(mesh.get_string(va[0]), "domainp")) {
-      Warning("Inferring domain from domainp");
+      num_domainp += 1;
       Vec3<Point> pa;
       for_int(i, va.num()) {
         Vertex v = va[i];
@@ -2643,7 +2644,7 @@ void do_analyzestretch() {
       uvs[1] = UV(mag(v01), 0.f);
       uvs[2] = UV(dot(v02, v01n), mag(v02 - v01n * dot(v02, v01n)));
     } else {
-      Warning("Inferring domain from uv");
+      num_uv += 1;
       for_int(i, va.num()) {
         Vertex v = va[i];
         UV& uv = uvs[i];
@@ -2685,6 +2686,7 @@ void do_analyzestretch() {
     d_l2_integ_stretch += surfarea * square(l2_stretch);
     Stri_isotropy.enter(maxsv / minsv);
   }
+  showdf("Inferred stretch domain from %d 'domainp' and %d 'uv'.\n", num_domainp, num_uv);
   float starea = Sstarea.sum();
   float surfarea = Ssurfarea.sum();
   float l2_integ_stretch = float(d_l2_integ_stretch);

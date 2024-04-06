@@ -1554,6 +1554,9 @@ int main(int argc, const char** argv) {
     ensure_pm_loaded();
     pmesh.write(std::cout);
   }
+  if (filename == "-")  // Read entire input stream to avoid broken pipe.
+    while (pmrs->next_vsplit())
+      ;
   pmi = nullptr;
   pmrs = nullptr;
   return 0;

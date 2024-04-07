@@ -34,13 +34,13 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   return float(sqrt(d2) / s);
 }
 
-// Should normalize to be 1 for an equilateral triangle?
+// Should normalize to be 1.f for an equilateral triangle?
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
-  double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0);
+  double a = dist<double>(p0, p1), b = dist<double>(p1, p2), c = dist<double>(p2, p0);
   double s = (a + b + c) * .5;
   double d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
-    Warning("aspect_ratio degenerate");
+    // Warning("aspect_ratio degenerate");
     return 1e10f;
   }
   return float(a * b * c * .25 * s / d2);

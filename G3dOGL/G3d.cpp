@@ -2,9 +2,9 @@
 #include "G3dOGL/G3d.h"
 
 #if defined(_WIN32)
-#include <io.h>  // dup2()
+#include <io.h>  // close(), dup2()
 #else
-#include <unistd.h>  // dup2()
+#include <unistd.h>  // close(), dup2()
 #endif
 
 #include "libHh/Args.h"
@@ -345,7 +345,7 @@ int main(int argc, const char** argv) {
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));
   }
   // always jump to good viewpoint
-  if (contains(keystring, 'j')) {
+  if (contains(keystring, 'j') || statefile =="none") {
     // do nothing
   } else if (statefile != "noname.s3d") {
     keystring += ",";

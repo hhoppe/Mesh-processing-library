@@ -433,7 +433,7 @@ void toggle_tag() {
   HB::redraw_later();
 }
 
-Array<Edge> get_sharp_edges(GMesh& mesh, Vertex v) {
+auto get_sharp_edges(GMesh& mesh, Vertex v) {
   Array<Edge> are;
   for (Edge e : mesh.edges(v)) {
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) are.push(e);

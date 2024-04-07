@@ -952,7 +952,7 @@ void do_transf(Args& args) {
 
 // *** reorder_vspl
 
-Array<int> gather_faces(int vs, int f0) {
+auto gather_faces(int vs, int f0) {
   Array<int> faces;
   faces.push(f0);
   int f;

@@ -150,7 +150,7 @@ namespace {
 //    (e.g. in key.np10000.crep1e-5.spr0.m , the ring starts folding inwards, and there are several bad folds)
 
 // Gather a ring of vertices around vertex v.
-Array<Vertex> gather_vertex_ring(const GMesh& mesh, Vertex v) {
+auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
   Array<Vertex> va;
   for (Vertex w = mesh.most_clw_vertex(v);;) {
     va.push(w);

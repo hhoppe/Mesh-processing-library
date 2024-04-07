@@ -3870,7 +3870,7 @@ void do_alignmentframe(Args& args) {
 
 inline Point avg_cubic(const Point& p0, const Point& p1, const Point& p2) { return p0 * .25f + p1 * .50f + p2 * .25f; }
 
-Matrix<Point> smoothgim_subdiv(CMatrixView<Point> opoints) {
+auto smoothgim_subdiv(CMatrixView<Point> opoints) {
   int nn = opoints.ysize() - 1;
   Matrix<Point> npoints(nn * 2 + 1, nn * 2 + 1);
   // copy old points

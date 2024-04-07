@@ -36,7 +36,7 @@ inline void write_video(CGridView<3, Pixel> grid, const string& filename) {  // 
 const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  // weak screening
 
 // Determine how fast each pixel advances during the loop.
-Matrix<float> compute_deltatime(CMatrixView<int> mat_period, int nnf) {
+auto compute_deltatime(CMatrixView<int> mat_period, int nnf) {
   Matrix<float> mat_deltatime(mat_period.dims());
   parallel_for_coords(mat_period.dims(), [&](const Vec2<int>& yx) {
     int period = mat_period[yx];
@@ -48,8 +48,8 @@ Matrix<float> compute_deltatime(CMatrixView<int> mat_period, int nnf) {
 }
 
 // Determine input frame for each output pixel.
-Grid<3, short> compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime, CMatrixView<int> mat_start,
-                              CMatrixView<int> mat_period) {
+auto compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime, CMatrixView<int> mat_start,
+                    CMatrixView<int> mat_period) {
   Grid<3, short> grid_framei(dims);
   int nnf = dims[0], ny = dims[1], nx = dims[2];
   Vec2<int> sdims = dims.tail<2>();

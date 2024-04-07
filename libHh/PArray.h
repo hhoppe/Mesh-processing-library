@@ -35,21 +35,21 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       delete[] _a;
     }
   }
-  PArray<T, pcap>& operator=(CArrayView<T> ar) {
+  auto& operator=(CArrayView<T> ar) {
     if (!(ar.data() == _a && ar.num() == _n)) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
     }
     return *this;
   }
-  PArray<T, pcap>& operator=(const PArray<T, pcap>& ar) {
+  auto& operator=(const PArray<T, pcap>& ar) {
     if (&ar != this) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
     }
     return *this;
   }
-  PArray<T, pcap>& operator=(PArray<T, pcap>&& ar) noexcept {
+  auto& operator=(PArray<T, pcap>&& ar) noexcept {
     clear();
     if (ar._cap != pcap) {
       std::swap(_a, ar._a);

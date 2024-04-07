@@ -35,7 +35,7 @@ namespace {
 //  Could check dihedral(starbar) instead of dihedral(star)
 //   using GetEdgeRing() ->vertices
 
-Array<const Point*> gather_vertex_ring(const GMesh& mesh, Vertex v) {
+auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
   Array<const Point*> wa;
   Vertex w = mesh.most_clw_vertex(v), wf = w;
   for (;;) {
@@ -47,7 +47,8 @@ Array<const Point*> gather_vertex_ring(const GMesh& mesh, Vertex v) {
   return wa;
 }
 
-Array<const Point*> gather_edge_ring(const GMesh& mesh, Edge e) {
+auto gather_edge_ring(const GMesh& mesh, Edge e) {
+  Array<const Point*> wa;
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   // current Mesh implementation boundary Edge direction
   if (mesh.is_boundary(e)) assertx(mesh.most_clw_vertex(v2) != v1);
@@ -57,7 +58,6 @@ Array<const Point*> gather_edge_ring(const GMesh& mesh, Edge e) {
   Vertex w = mesh.most_clw_vertex(cv);
   if (w == ov) w = mesh.clw_vertex(cv, w), assertx(!mesh.is_boundary(cv));
   Vertex wf = assertx(w);
-  Array<const Point*> wa;
   for (;;) {
     wa.push(&mesh.point(w));
     Vertex w2 = mesh.ccw_vertex(cv, w);

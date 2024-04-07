@@ -2030,7 +2030,7 @@ void process_gen(Args& args) {
   }
 }
 
-Matrix<bool> get_black_border_mask(CMatrixView<Pixel> image) {
+auto get_black_border_mask(CMatrixView<Pixel> image) {
   const Vec2<int> dims = image.dims();
   Matrix<bool> mask(dims, false);
   for_coords(dims, [&](const Vec2<int>& yx) {

@@ -2968,7 +2968,7 @@ inline Vector4 LAB_to_RGB(const Vector4& pv) {
 }
 
 // Color-space conversion of an image.
-Matrix<Vector4> convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
+auto convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
   Matrix<Vector4> mat_LAB(mat_RGB.dims());
   parallel_for_coords(
       mat_RGB.dims(), [&](const Vec2<int>& yx) { mat_LAB[yx] = RGB_to_LAB(mat_RGB[yx]); }, 50);
@@ -2976,14 +2976,14 @@ Matrix<Vector4> convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
 }
 
 // Color-space conversion of an image.
-Matrix<Vector4> convert_to_RGB(CMatrixView<Vector4> mat_LAB) {
+auto convert_to_RGB(CMatrixView<Vector4> mat_LAB) {
   Matrix<Vector4> mat_RGB(mat_LAB.dims());
   parallel_for_coords(
       mat_LAB.dims(), [&](const Vec2<int>& yx) { mat_RGB[yx] = LAB_to_RGB(mat_LAB[yx]); }, 50);
   return mat_RGB;
 }
 
-Matrix<Vector4> convert_image_mat(CMatrixView<Pixel> im) {
+auto convert_image_mat(CMatrixView<Pixel> im) {
   Matrix<Vector4> mat(im.dims());
   parallel_for_coords(
       im.dims(),
@@ -2994,7 +2994,7 @@ Matrix<Vector4> convert_image_mat(CMatrixView<Pixel> im) {
   return mat;
 }
 
-Matrix<Pixel> convert_mat_image(CMatrixView<Vector4> mat) {
+auto convert_mat_image(CMatrixView<Vector4> mat) {
   Matrix<Pixel> im(mat.dims());
   parallel_for_coords(
       mat.dims(),
@@ -3003,7 +3003,7 @@ Matrix<Pixel> convert_mat_image(CMatrixView<Vector4> mat) {
 }
 
 // Downsample by one level, creating coarser image from finer image.
-Matrix<Vector4> downsample_image(CMatrixView<Vector4> mat_F) {
+auto downsample_image(CMatrixView<Vector4> mat_F) {
   assertx(mat_F.dims() % 2 == V(0, 0));
   Matrix<Vector4> mat_C(mat_F.dims() / 2);
   // downsampling weights: (-3 -9 29 111 111 29 -9 -3) / 256
@@ -3056,7 +3056,7 @@ Matrix<Vector4> downsample_image(CMatrixView<Vector4> mat_F) {
 }
 
 // Upsample by one level, creating finer image from coarser image.
-Matrix<Vector4> upsample_image(CMatrixView<Vector4> mat_C) {
+auto upsample_image(CMatrixView<Vector4> mat_C) {
   Matrix<Vector4> mat_F(mat_C.dims() * 2);
   // upsampling weights: (-9 111 29 -3) / 128  and (-3 29 111 -9) / 128  on alternating pixels
   const int kn = 4;

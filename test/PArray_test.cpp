@@ -128,8 +128,8 @@ using U = unique_ptr<int>;
 template <> PArray<U, 4>::PArray(const PArray<U, 4>&) : ArrayView() {}                    // non-&& definition illegal
 template <> PArray<U, 4>::PArray(CArrayView<U>) : ArrayView() {}                          // non-&& definition illegal
 template <> PArray<U, 4>::PArray(std::initializer_list<U>) : ArrayView() {}               // definition illegal
-template <> PArray<U, 4>& PArray<U, 4>::operator=(const PArray<U, 4>&) { return *this; }  // non-&& definition illegal
-template <> PArray<U, 4>& PArray<U, 4>::operator=(CArrayView<U>) { return *this; }        // non-&& definition illegal
+template <> auto& PArray<U, 4>::operator=(const PArray<U, 4>&) { return *this; }  // non-&& definition illegal
+template <> auto& PArray<U, 4>::operator=(CArrayView<U>) { return *this; }        // non-&& definition illegal
 template <> void PArray<U, 4>::push(const U&) {}                                          // non-&& definition illegal
 template <> void PArray<U, 4>::push(CArrayView<U>) {}                                     // non-&& definition illegal
 template <> void PArray<U, 4>::unshift(const U&) {}                                       // non-&& definition illegal

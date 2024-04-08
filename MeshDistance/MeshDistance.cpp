@@ -39,11 +39,11 @@ float g_diag0;
 float bbdiag;
 
 void do_mfile(Args& args) {
-  RFile fi(args.get_filename());
+  const string filename = args.get_filename();
   assertx(meshes.num() < 2);
   meshes.add(1);
   GMesh& mesh = meshes.last();
-  mesh.read(fi());
+  mesh = GMesh::read(RFile(filename)());
   Vnors vnors;
   for (Vertex v : mesh.vertices()) {
     vnors.compute(mesh, v);

@@ -105,7 +105,7 @@ class GMesh : public Mesh {
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
   // ** Standard I/O for my meshes (see format below):
-  void read(std::istream& is);  // read a whole mesh, discard comments
+  static GMesh read(std::istream& is);  // read a whole mesh, discard comments
   void read_line(char* s);      // no '\n' required
   static bool recognize_line(const char* s);
   void write(std::ostream& os) const;

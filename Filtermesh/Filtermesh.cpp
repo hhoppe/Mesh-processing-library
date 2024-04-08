@@ -773,9 +773,7 @@ void do_merge(Args& args) {
     if (!args.num()) break;
     if (args.peek_string()[0] == '-') break;
     string filename = args.get_filename();
-    RFile is(filename);
-    GMesh omesh;
-    omesh.read(is());
+    GMesh omesh = GMesh::read(RFile(filename)());
     showdf("%s:\n", filename.c_str());
     showdf("  %s\n", mesh_genus_string(omesh).c_str());
     mesh.merge(omesh);
@@ -3834,16 +3832,12 @@ void do_hull(Args& args) {
 void do_alignmentframe(Args& args) {
   string filename = args.get_filename();
   const GMesh& cmesh = mesh;
-  GMesh nmesh;
-  {
-    RFile is(filename);
-    nmesh.read(is());
-    showdf("Computing alignment of current mesh:\n");
-    showdf("  %s\n", mesh_genus_string(cmesh).c_str());
-    showdf("with mesh %s:\n", filename.c_str());
-    showdf("  %s\n", mesh_genus_string(nmesh).c_str());
-    assertx(cmesh.num_vertices() && nmesh.num_vertices());
-  }
+  GMesh nmesh = GMesh::read(RFile(filename)());
+  showdf("Computing alignment of current mesh:\n");
+  showdf("  %s\n", mesh_genus_string(cmesh).c_str());
+  showdf("with mesh %s:\n", filename.c_str());
+  showdf("  %s\n", mesh_genus_string(nmesh).c_str());
+  assertx(cmesh.num_vertices() && nmesh.num_vertices());
   assertw(cmesh.num_vertices() == nmesh.num_vertices());  // just warn
   assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
   Bbox cbb;
@@ -4009,13 +4003,9 @@ void do_subsamplegim(Args& args) {
 // Filtermesh ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.ohull.nf10000.m -shootrays ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.wids.m | G3dOGL -key DmDe -st ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.s3d
 void do_shootrays(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh;
-  {  // original mesh
-    RFile is(filename);
-    omesh.read(is());
-    showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
-    assertx(mesh.num_vertices() && omesh.num_vertices());
-  }
+  GMesh omesh = GMesh::read(RFile(filename)());  // Original mesh.
+  showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
+  assertx(mesh.num_vertices() && omesh.num_vertices());
   Bbox bbox;
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   for (Vertex v : omesh.vertices()) bbox.union_with(omesh.point(v));
@@ -4124,13 +4114,9 @@ void do_shootrays(Args& args) {
 
 void do_transferkeysfrom(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh;
-  {
-    RFile is(filename);
-    omesh.read(is());
-    showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
-    assertx(mesh.num_vertices() && omesh.num_vertices());
-  }
+  GMesh omesh = GMesh::read(RFile(filename)());
+  showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
+  assertx(mesh.num_vertices() && omesh.num_vertices());
   HashPoint hp;  // (4, 0.f, 1.f);
   Array<Vertex> arv;
   Frame xform;
@@ -4185,14 +4171,10 @@ void do_transferkeysfrom(Args& args) {
 
 void do_transferwidkeysfrom(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh;
-  {  // an original mesh containing a superset of vertices
-    RFile is(filename);
-    omesh.read(is());
-    showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
-    assertx(mesh.num_vertices() && omesh.num_vertices());
-    assertx(omesh.num_vertices() >= mesh.num_vertices());
-  }
+  GMesh omesh = GMesh::read(RFile(filename)());  // An original mesh containing a superset of vertices.
+  showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
+  assertx(mesh.num_vertices() && omesh.num_vertices());
+  assertx(omesh.num_vertices() >= mesh.num_vertices());
   Map<int, const char*> mwidstring;
   string str;
   for (Vertex ov : omesh.vertices()) {
@@ -4621,7 +4603,7 @@ int main(int argc, const char** argv) {
         assertx(my_getline(fi(), sline));
         if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
       }
-      mesh.read(fi());
+      mesh = GMesh::read(fi());
       showff("%s", args.header().c_str());
     } else {
       showff("%s", args.header().c_str());

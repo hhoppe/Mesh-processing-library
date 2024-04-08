@@ -76,8 +76,7 @@ int main() {
     SHOW(GMesh::string_update(s3, "sharp", ""));
   }
   {
-    GMesh mesh;
-    mesh.read(std::cin);
+    GMesh mesh = GMesh::read(std::cin);
     showmesh(mesh);
     SHOW("original");
     mesh.write(std::cout);

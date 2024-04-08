@@ -1570,7 +1570,7 @@ int main(int argc, const char** argv) {
         assertx(my_getline(fi(), sline));
         if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
       }
-      mesh.read(fi());
+      mesh = GMesh::read(fi());
       showff("%s", args.header().c_str());
       fixup_mesh();
       extract_mesh();

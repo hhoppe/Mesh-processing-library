@@ -384,11 +384,13 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 
 // I/O
 
-void GMesh::read(std::istream& is) {
+GMesh GMesh::read(std::istream& is) {
+  GMesh mesh;
   for (string sline; my_getline(is, sline);) {
-    read_line(const_cast<char*>(sline.c_str()));
+    mesh.read_line(const_cast<char*>(sline.c_str()));
   }
-  if (debug() >= 1) ok();
+  if (debug() >= 1) mesh.ok();
+  return mesh;
 }
 
 void GMesh::read_line(char* sline) {

@@ -123,7 +123,7 @@ RCS/
 /test/Homogeneous_test
 /test/Image_test
 /test/Kdtree_test
-/test/LLS_test
+/test/Lls_test
 /test/LinearRegression_test
 /test/Locks_test
 /test/Map_test

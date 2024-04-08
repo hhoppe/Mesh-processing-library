@@ -4922,7 +4922,7 @@ int main(int argc, const char** argv) {
       if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
     }
     showdf("%s", args.header().c_str());
-    mesh.read(fi());
+    mesh = GMesh::read(fi());
     orig_nf = mesh.num_faces();
   }
   args.parse();

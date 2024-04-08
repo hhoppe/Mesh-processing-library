@@ -254,8 +254,8 @@ void WMesh::write(std::ostream& os, const PMeshInfo& pminfo) const {
   assertx(os);
 }
 
-void WMesh::extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const {
-  assertx(!gmesh.num_vertices());
+GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
+  GMesh gmesh;
   const int no_ref = -1, multiple_refs = -2;
   Array<int> wedgeref(_vertices.num(), no_ref);
   for_int(w, _wedges.num()) {
@@ -312,6 +312,7 @@ void WMesh::extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const {
       }
     }
   }
+  return gmesh;
 }
 
 void WMesh::ok() const {
@@ -1866,8 +1867,8 @@ SMesh::SMesh(const WMesh& wmesh)
   }
 }
 
-void SMesh::extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const {
-  assertx(!gmesh.num_vertices());
+GMesh SMesh::extract_gmesh(int has_rgb, int has_uv) const {
+  GMesh gmesh;
   string str;
   for_int(v, _vertices.num()) {
     Vertex gv = gmesh.create_vertex();
@@ -1895,6 +1896,7 @@ void SMesh::extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const {
     int matid = _faces[f].attrib.matid & ~AWMesh::k_Face_visited_mask;
     gmesh.set_string(gf, _materials.get(matid).c_str());
   }
+  return gmesh;
 }
 
 // *** SGeomorph
@@ -1929,8 +1931,8 @@ void SGeomorph::evaluate(float alpha) {
   }
 }
 
-void SGeomorph::extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const {
-  SMesh::extract_gmesh(gmesh, has_rgb, has_uv);
+GMesh SGeomorph::extract_gmesh(int has_rgb, int has_uv) const {
+  GMesh gmesh = SMesh::extract_gmesh(has_rgb, has_uv);
   Array<int> mvvg(_vertices.num(), -1);
   for_int(vg, _vgattribs.num()) mvvg[_vgattribs[vg].vertex] = vg;
   string str;
@@ -1952,6 +1954,7 @@ void SGeomorph::extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const {
       gmesh.update_string(gv, "Ouv", csform_vec(str, uv));
     }
   }
+  return gmesh;
 }
 
 }  // namespace hh

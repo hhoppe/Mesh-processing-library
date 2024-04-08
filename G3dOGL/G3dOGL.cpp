@@ -3545,8 +3545,7 @@ void sr_pre_space() {
     static int frame;
     if (g3d_dump_frame && frame++ == g3d_dump_frame) {
       SHOW("dumping v.m and my_sleep(10.)");
-      GMesh gmesh;
-      srmesh.extract_gmesh(gmesh);
+      GMesh gmesh = srmesh.extract_gmesh();
       WFile fi("v.m");
       gmesh.write(fi());
       my_sleep(10.);

@@ -142,8 +142,7 @@ void do_finest() {
 
 void do_outmesh() {
   HH_TIMER("_write_mesh");
-  GMesh gmesh;
-  pmi->extract_gmesh(gmesh, pmi->rstream()._info);
+  GMesh gmesh = pmi->extract_gmesh(pmi->rstream()._info);
   if (nooutput) std::cout << "o 1 1 0\n";
   gmesh.write(std::cout);
   nooutput = true;
@@ -163,8 +162,7 @@ void do_geom_nfaces(Args& args) {
     SGeomorph sgeomorph(geomorph);
     timer.terminate();
     HH_TIMER("_write");
-    GMesh gmesh;
-    sgeomorph.extract_gmesh(gmesh, pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
+    GMesh gmesh = sgeomorph.extract_gmesh(pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
     gmesh.write(std::cout);
   }
   nooutput = true;
@@ -183,35 +181,35 @@ void do_outbbox() {
   for_int(vi, pmi->_vertices.num()) bboxi.union_with(pmi->_vertices[vi].attrib.point);
   Bbox bbox = bbox0;
   bbox.union_with(bboxi);
-  GMesh mesh;
+  GMesh gmesh;
   Vec<Vertex, 8> va;
-  for_int(i, 8) va[i] = mesh.create_vertex();
-  mesh.set_point(va[0], Point(bbox[0][0], bbox[0][1], bbox[0][2]));
-  mesh.set_point(va[1], Point(bbox[1][0], bbox[0][1], bbox[0][2]));
-  mesh.set_point(va[2], Point(bbox[1][0], bbox[1][1], bbox[0][2]));
-  mesh.set_point(va[3], Point(bbox[0][0], bbox[1][1], bbox[0][2]));
-  mesh.set_point(va[4], Point(bbox[0][0], bbox[0][1], bbox[1][2]));
-  mesh.set_point(va[5], Point(bbox[1][0], bbox[0][1], bbox[1][2]));
-  mesh.set_point(va[6], Point(bbox[1][0], bbox[1][1], bbox[1][2]));
-  mesh.set_point(va[7], Point(bbox[0][0], bbox[1][1], bbox[1][2]));
-  mesh.create_face(va[0], va[3], va[1]);  // front
-  mesh.create_face(va[1], va[3], va[2]);
-  mesh.create_face(va[1], va[6], va[5]);  // right
-  mesh.create_face(va[6], va[1], va[2]);
-  mesh.create_face(va[7], va[2], va[3]);  // top
-  mesh.create_face(va[6], va[2], va[7]);
-  mesh.create_face(va[3], va[4], va[7]);  // left
-  mesh.create_face(va[0], va[4], va[3]);
-  mesh.create_face(va[0], va[1], va[4]);  // bottom
-  mesh.create_face(va[1], va[5], va[4]);
-  mesh.create_face(va[7], va[5], va[6]);  // back
-  mesh.create_face(va[7], va[4], va[5]);
+  for_int(i, 8) va[i] = gmesh.create_vertex();
+  gmesh.set_point(va[0], Point(bbox[0][0], bbox[0][1], bbox[0][2]));
+  gmesh.set_point(va[1], Point(bbox[1][0], bbox[0][1], bbox[0][2]));
+  gmesh.set_point(va[2], Point(bbox[1][0], bbox[1][1], bbox[0][2]));
+  gmesh.set_point(va[3], Point(bbox[0][0], bbox[1][1], bbox[0][2]));
+  gmesh.set_point(va[4], Point(bbox[0][0], bbox[0][1], bbox[1][2]));
+  gmesh.set_point(va[5], Point(bbox[1][0], bbox[0][1], bbox[1][2]));
+  gmesh.set_point(va[6], Point(bbox[1][0], bbox[1][1], bbox[1][2]));
+  gmesh.set_point(va[7], Point(bbox[0][0], bbox[1][1], bbox[1][2]));
+  gmesh.create_face(va[0], va[3], va[1]);  // front
+  gmesh.create_face(va[1], va[3], va[2]);
+  gmesh.create_face(va[1], va[6], va[5]);  // right
+  gmesh.create_face(va[6], va[1], va[2]);
+  gmesh.create_face(va[7], va[2], va[3]);  // top
+  gmesh.create_face(va[6], va[2], va[7]);
+  gmesh.create_face(va[3], va[4], va[7]);  // left
+  gmesh.create_face(va[0], va[4], va[3]);
+  gmesh.create_face(va[0], va[1], va[4]);  // bottom
+  gmesh.create_face(va[1], va[5], va[4]);
+  gmesh.create_face(va[7], va[5], va[6]);  // back
+  gmesh.create_face(va[7], va[4], va[5]);
   // emphasize centroid of bboxi
   for_int(i, 100) {
-    Vertex v = mesh.create_vertex();
-    mesh.set_point(v, Point(interp(bboxi[0], bboxi[1])));
+    Vertex v = gmesh.create_vertex();
+    gmesh.set_point(v, Point(interp(bboxi[0], bboxi[1])));
   }
-  mesh.write(std::cout);
+  gmesh.write(std::cout);
   nooutput = true;
 }
 
@@ -254,8 +252,7 @@ void do_srout(Args& args) {
   }
   {
     HH_TIMER("__sr_write");
-    GMesh gmesh;
-    srmesh.extract_gmesh(gmesh);
+    GMesh gmesh = srmesh.extract_gmesh();
     showdf("%s\n", mesh_genus_string(gmesh).c_str());
     gmesh.write(std::cout);
   }
@@ -294,8 +291,7 @@ void do_srgeomorph(Args& args) {
   }
   {
     HH_TIMER("__sr_write");
-    GMesh gmesh;
-    srmesh.extract_gmesh(gmesh, geoinfo);
+    GMesh gmesh = srmesh.extract_gmesh(geoinfo);
     gmesh.write(std::cout);
   }
   nooutput = true;

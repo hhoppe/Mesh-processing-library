@@ -22,14 +22,12 @@
     if (0) {
       SrGeomorphInfo geoinfo;
       srmesh.construct_geomorph(geoinfo);
-      GMesh gmesh;
-      extract_gmesh(gmesh, geoinfo);
+      GMesh gmesh = extract_gmesh(geoinfo);
     }
     srmesh.adapt_refinement();
     srmesh.ogl_render_faces_tvc(false);  // ogl_render_*();
     if (0) {
-      GMesh gmesh;
-      srmesh.extract_gmesh(gmesh);
+      GMesh gmesh = srmesh.extract_gmesh();
     }
     if (!(srmesh.is_still_morphing() || srmesh.is_still_adapting())) pause_for_input();
   }
@@ -215,8 +213,8 @@ class SrMesh {
   int num_vertices_refine_morphing() const;
   int num_vertices_coarsen_morphing() const;
   void construct_geomorph(SrGeomorphInfo& geoinfo);
-  void extract_gmesh(GMesh& gmesh) const;
-  void extract_gmesh(GMesh& gmesh, const SrGeomorphInfo& geoinfo) const;
+  GMesh extract_gmesh() const;
+  GMesh extract_gmesh(const SrGeomorphInfo& geoinfo) const;
   int num_active_vertices() const { return _num_active_vertices; }
   int num_active_faces() const { return _num_active_faces; }
   void ok() const;

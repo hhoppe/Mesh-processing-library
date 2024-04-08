@@ -84,7 +84,7 @@ struct PmFace {
 struct WMesh {
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
-  void extract_gmesh(GMesh& gmesh, const PMeshInfo& pminfo) const;
+  GMesh extract_gmesh(const PMeshInfo& pminfo) const;
   void ok() const;
   Vec3<int> face_vertices(int f) const;
   Vec3<Point> face_points(int f) const;
@@ -501,7 +501,7 @@ static_assert(std::is_trivial<PmSVertexAttribG>::value, "");
 class SMesh {
  public:
   explicit SMesh(const WMesh& wmesh);
-  void extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const;
+  GMesh extract_gmesh(int has_rgb, int has_uv) const;
 
  public:
   Materials _materials;
@@ -518,7 +518,7 @@ class SGeomorph : public SMesh {
  public:
   explicit SGeomorph(const Geomorph& geomorph);
   void evaluate(float alpha);  // 0 <= alpha <= 1 (0 == coarse)
-  void extract_gmesh(GMesh& gmesh, int has_rgb, int has_uv) const;
+  GMesh extract_gmesh(int has_rgb, int has_uv) const;
 
  private:
   Array<PmSVertexAttribG> _vgattribs;

@@ -1365,8 +1365,8 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
   --_num_active_faces;
 }
 
-void SrMesh::extract_gmesh(GMesh& gmesh) const {
-  assertx(!gmesh.num_vertices());
+GMesh SrMesh::extract_gmesh() const {
+  GMesh gmesh;
   string str;
   for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     int vi = narrow_cast<int>(va->vertex - _vertices.data());
@@ -1390,6 +1390,7 @@ void SrMesh::extract_gmesh(GMesh& gmesh) const {
     dummy_use(gf);
     gmesh.set_string(gf, _materials.get(unsigned(fa->matid) & ~k_Face_visited_mask).c_str());
   }
+  return gmesh;
 }
 
 void SrMesh::ok() const {
@@ -2003,8 +2004,8 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   }
 }
 
-void SrMesh::extract_gmesh(GMesh& gmesh, const SrGeomorphInfo& geoinfo) const {
-  extract_gmesh(gmesh);
+GMesh SrMesh::extract_gmesh(const SrGeomorphInfo& geoinfo) const {
+  GMesh gmesh;
   string str;
   for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
@@ -2029,6 +2030,7 @@ void SrMesh::extract_gmesh(GMesh& gmesh, const SrGeomorphInfo& geoinfo) const {
       gmesh.update_string(gv, "normal", csform_vec(str, n));
     }
   }
+  return gmesh;
 }
 
 // ***

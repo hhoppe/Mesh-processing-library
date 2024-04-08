@@ -172,7 +172,7 @@ void fixup_mesh() {
 //  and outputs the mesh mesh3 which is identical to mesh1 except that
 //  the misses in mesh1 that are eliminated in mesh2 are colored blue.
 void do_diff_corners(Args& args) {
-  GMesh mesh2 = GMesh(RFile(args.get_filename())());
+  GMesh mesh2{RFile(args.get_filename())()};
   assertx(mesh2.num_vertices() == mesh.num_vertices());
   assertx(mesh2.num_faces() == mesh.num_faces());
   Map<int, int> mapfoldf;

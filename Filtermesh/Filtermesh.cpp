@@ -3309,8 +3309,7 @@ void do_projectimage(Args& args) {
     assertx(FrameIO::read(iss, frame, obn, zoom, bin));
   }
   Frame frameinv = ~frame;
-  Image image;
-  image.read_file(imagename);
+  Image image = Image::read(imagename);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));

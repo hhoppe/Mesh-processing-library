@@ -14,6 +14,12 @@ void Video::init(const Vec3<int>& dims) {
   }
 }
 
+Video Video::read(const string& filename) {
+  Video video;
+  video.read_file(filename);
+  return video;
+}
+
 string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
   string s = sform("nframes~%d %dx%d (%gfps)", dims[0], dims[2], dims[1], attrib.framerate);
   if (attrib.suffix != "") s += " (" + attrib.suffix + ")";

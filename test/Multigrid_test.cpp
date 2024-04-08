@@ -255,8 +255,7 @@ int main(int argc, const char** argv) {
     string imagename;
     imagename = "multigrid/rampart256.png";
     imagename = "multigrid/rampart2048.png";
-    Image image;
-    image.read_file(imagename);
+    Image image = Image::read(imagename);
     Grid<2, Vector4> grid_orig;
     read_image(image, grid_orig);
     const Vec2<int> dims = grid_orig.dims();
@@ -287,8 +286,7 @@ int main(int argc, const char** argv) {
     imagename = "multigrid/rampart2048x48.png";
     imagename = "multigrid/rampart257.png";
     imagename = "multigrid/rampart2048.png";
-    Image image;
-    image.read_file(imagename);
+    Image image = Image::read(imagename);
     Grid<2, Vector4> grid_orig;
     read_image(image, grid_orig);
     const Vec2<int> dims = grid_orig.dims();
@@ -313,11 +311,9 @@ int main(int argc, const char** argv) {
     imagename0 = "multigrid/rampart2048.png";
     imagename1 = "multigrid/prismatic2048.png";
     Vec3<Grid<2, Vector4>> grids;
-    Image image0;
-    image0.read_file(imagename0);
+    Image image0 = Image::read(imagename0);
     read_image(image0, grids[0]);
-    Image image1;
-    image1.read_file(imagename1);
+    Image image1 = Image::read(imagename1);
     read_image(image1, grids[1]);
     assertx(same_size(grids[0], grids[1]));
     const Vec2<int> dims = grids[0].dims();

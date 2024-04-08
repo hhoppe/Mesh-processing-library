@@ -402,8 +402,7 @@ void do_outfile(Args& args) {
 
 void do_append(Args& args) {
   string filename = args.get_filename();
-  Video video2;
-  video2.read_file(filename);
+  Video video2 = Video::read(filename);
   const int nf1 = video.nframes(), nf2 = video2.nframes();
   assertx(nf2 > 0);
   assertx(same_size(video[0], video2[0]));
@@ -1215,8 +1214,7 @@ void do_loadpj(Args& args) {
 void do_loadvlp(Args& args) {
   HH_TIMER("_loadvlp");
   string filename = args.get_filename();  // it is a png file, even if its suffix is *.vlp
-  Image image;
-  image.read_file(filename);
+  Image image = Image::read(filename);
   assertx(image.zsize() >= 3);
   g_lp.mat_static.init(image.dims());
   g_lp.mat_start.init(image.dims());
@@ -2203,8 +2201,7 @@ void do_procedure(Args& args) {
 
 void do_diff(Args& args) {
   string filename = args.get_filename();
-  Video video2;
-  video2.read_file(filename);
+  Video video2 = Video::read(filename);
   assertx(same_size(video, video2));
   parallel_for_coords(
       video.dims(),

@@ -5,6 +5,12 @@
 
 namespace hh {
 
+Audio Audio::read(const string& filename) {
+  Audio audio;
+  audio.read_file(filename);
+  return audio;
+}
+
 string Audio::diagnostic_string() const {
   string s = sform("nsamples=%d nchannels=%d (%g Hz)", nsamples(), nchannels(), attrib().samplerate);
   if (attrib().suffix != "") s += " (" + attrib().suffix + ")";

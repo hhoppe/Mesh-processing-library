@@ -2421,8 +2421,8 @@ void do_procedure(Args& args) {
       Point np = pcenter + r * Vector(std::cos(a), std::sin(a), 0.f);
       mesh.set_point(v, np);
       mesh.update_string(v, "Opos", csform_vec(str, p));
-      Vector vrgb = Vector(image[yx][0], image[yx][1], image[yx][2]) * (1.f / 255.f);
-      // Vector nvrgb = Vector(image2[yx][0], image2[yx][1], image2[yx][2]) * (1.f / 255.f);
+      Vector vrgb = Vector(image[yx][0], image[yx][1], image[yx][2]) / 255.f;
+      // Vector nvrgb = Vector(image2[yx][0], image2[yx][1], image2[yx][2]) / 255.f;
       Vector4 vec4 = sample_domain(image2v, V(np[1], np[0]), filterbs);
       vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
       Vector nvrgb(vec4[0], vec4[1], vec4[2]);
@@ -2661,7 +2661,7 @@ void do_procedure(Args& args) {
       Vec2<float> yxf = (convert<float>(yx) + .5f) / max(convert<float>(image.dims()));
       float fac = 5e-4f;
       mesh.set_point(v, Point(yxf[1], yxf[0], depth * fac));
-      UV uv = V(yx[1] / (image.dim(1) - 1.f), 1.f - yx[0] / (image.dim(0) - 1.f));
+      UV uv(yx[1] / (image.dim(1) - 1.f), 1.f - yx[0] / (image.dim(0) - 1.f));
       // = (convert<float>(yx) / convert<float>(image.dims() - 1)).rev();
       mesh.update_string(v, "uv", csform_vec(str, uv));
     });

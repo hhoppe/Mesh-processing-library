@@ -155,7 +155,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
         for_int(x, nx) {
           int fi = mat_framei(y, x);
           CMatrixView<Pixel> videofi = video[fi];
-          Vector4 pixv = Vector4(videofi(y, x));
+          Vector4 pixv(videofi(y, x));
           Vector4 vrhs(-screening_weight * pixv);
           const int start = mat_start(y, x), period = mat_period(y, x);
           int fm1i = get_framei(lmat_deltatime(y, x) * fm1, start, period);

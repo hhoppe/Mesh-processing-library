@@ -776,7 +776,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
       h[1] = b0 * cvihhf[0][1] + b1 * cvihhf[1][1] + b2 * cvihhf[2][1];
       h[2] = b0 * cvihhf[0][2] + b1 * cvihhf[1][2] + b2 * cvihhf[2][2];
       for_int(j, n) lls.enter_a_rc(rowi, j, float(b0 * cvihcf[0][j] + b1 * cvihcf[1][j] + b2 * cvihcf[2][j]));
-      // Homogeneous hrh = Homogeneous(co[pi])-h;
+      // Homogeneous hrh = Homogeneous(co[pi]) - h;
       Vector vrh;
       for_int(c, 3) vrh[c] = float(co[pi][c] - h[c]);
       lls.enter_b_r(rowi, vrh);

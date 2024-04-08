@@ -71,7 +71,7 @@ int main() {
     hf[1][3] = 4.f;
     hf[3][3] = 0.f;
     SHOW(hf);
-    // Point p = Point(2.f, 3.f, 4.f);
+    // Point p(2.f, 3.f, 4.f);
     Array<float> p{2.f, 3.f, 4.f, 1.f};
     SHOW(p);
     SHOW(mat_mul(p, hf.view()));

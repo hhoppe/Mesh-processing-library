@@ -139,12 +139,14 @@ dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 # Must appear before rule "%.obj : %.cpp" to take precedence.
 # The prefix '@' character (which hides the executed command line) is optional.
 # (Use 'make -n' to see these hidden '@' command lines.)
+# The "rm -f $@" is introduced to delete any Unix executable "$@" in the same location if building "$@.exe", to avoid
+# having that Unix executable being considered when running a *_test.script.
 % : %.cpp
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; ,)$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 % : %.c
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; ,)$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)

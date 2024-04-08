@@ -1412,7 +1412,7 @@ void compute_looping_regions() {
               p1sum[c] += to_float(video(f, y, x)[c]);
               p1sum2[c] += square(to_float(video(f, y, x)[c]));  // again at same pixel [y][x]
             }
-            Vector vmul = Vector(p0sum[0] * p1sum[0], p0sum[1] * p1sum[1], p0sum[2] * p1sum[2]);
+            Vector vmul(p0sum[0] * p1sum[0], p0sum[1] * p1sum[1], p0sum[2] * p1sum[2]);
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
             for_int(z, 3) { HH_SSTAT(Stotz, vtot[z]); }
             scost2 += vtot[0] + vtot[1] + vtot[2];

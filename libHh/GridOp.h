@@ -241,7 +241,7 @@ template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gr
   parallel_for_each(
       range(gridu.size()),
       [&](const size_t i) {
-        Vector4 v = Vector4(gridu.flat(i));
+        Vector4 v(gridu.flat(i));
         if (env_image_linear_filter()) v = square(v);  // assumes gamma = 2.0 rather than SRGB 2.2
         gridf.flat(i) = v;
       },
@@ -291,7 +291,7 @@ template <int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D, Vec
       range(gridu.size()),
       [&](const size_t i) {
         const auto& uv = gridu.flat(i);
-        Vector4 v = Vector4(Pixel(uv[0], uv[1], 0, 0));
+        Vector4 v(Pixel(uv[0], uv[1], 0, 0));
         if (env_image_linear_filter()) v = square(v);
         gridf.flat(i) = v;
       },

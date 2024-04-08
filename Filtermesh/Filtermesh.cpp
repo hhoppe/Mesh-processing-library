@@ -3763,7 +3763,7 @@ Point compute_hull_point(Vertex v, float offset) {
     Warning("simplx: objective function is unbounded");
   } else {
     // A finite solution is found.
-    Point pnew = Point(0.f, 0.f, 0.f);  // must be initialized to zero's.
+    Point pnew(0.f, 0.f, 0.f);  // must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
       if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);

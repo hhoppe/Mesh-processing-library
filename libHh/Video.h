@@ -32,6 +32,7 @@ class Video : public Grid<3, Pixel> {
   explicit Video(int pnframes, const Vec2<int>& sdims) : Video(V(pnframes, sdims[0], sdims[1])) {}
   explicit Video(const Video&) = default;
   explicit Video(const base& video) : base(video.dims()) { base::assign(video); }
+  explicit Video(const string& filename) { read_file(filename); }
   Video(Video&& v) noexcept { swap(*this, v); }  // = default?
   Video(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
   ~Video() {}
@@ -56,7 +57,6 @@ class Video : public Grid<3, Pixel> {
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
   void read_file(const string& filename);  // filename may be "-" for std::cin;  may throw std::runtime_error
-  static Video read(const string& filename);
   void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
 
   // Misc:

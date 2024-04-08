@@ -507,7 +507,7 @@ void initial_projection() {
 void do_mfilename(Args& args) {
   HH_TIMER("_mfilename");
   assertx(!mesh.num_vertices());
-  mesh = GMesh::read(RFile(args.get_filename())());
+  mesh = GMesh(RFile(args.get_filename())());
   for (Face f : mesh.faces()) {
     int nv = mesh.num_vertices(f);
     assertx(nv <= 4);

@@ -38,6 +38,7 @@ class GMesh : public Mesh {
  public:
   GMesh() = default;
   GMesh(GMesh&& m) noexcept { swap(*this, m); }  // = default?
+  explicit GMesh(std::istream& is);
   ~GMesh() override = default;
   GMesh& operator=(GMesh&& m) noexcept {
     clear();
@@ -104,8 +105,7 @@ class GMesh : public Mesh {
   void update_string(Corner c, const char* key, const char* val);
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
-  // ** Standard I/O for my meshes (see format below):
-  static GMesh read(std::istream& is);  // read a whole mesh, discard comments
+  // ** Standard I/O for my meshes (see also GMesh(std::istream&)) (see format below):
   void read_line(char* s);      // no '\n' required
   static bool recognize_line(const char* s);
   void write(std::ostream& os) const;

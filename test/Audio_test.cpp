@@ -40,7 +40,7 @@ int main() {
       SHOW(audio1.diagnostic_string());
     }
     if (1) {
-      Audio audio2 = Audio::read(0 ? "Audio_test.mp3" : "Audio_test.wav");
+      Audio audio2(0 ? "Audio_test.mp3" : "Audio_test.wav");
       SHOW(audio2.nsamples());
       SHOW(audio2.diagnostic_string());
       SHOW(audio2.dims());

@@ -384,13 +384,10 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 
 // I/O
 
-GMesh GMesh::read(std::istream& is) {
-  GMesh mesh;
-  for (string sline; my_getline(is, sline);) {
-    mesh.read_line(const_cast<char*>(sline.c_str()));
-  }
-  if (debug() >= 1) mesh.ok();
-  return mesh;
+GMesh::GMesh(std::istream& is) {
+  for (string sline; my_getline(is, sline);)
+    read_line(const_cast<char*>(sline.c_str()));
+  if (debug() >= 1) ok();
 }
 
 void GMesh::read_line(char* sline) {
@@ -470,7 +467,7 @@ void GMesh::read_line(char* sline) {
     int vi1, vi2;
     assertx(sscanf(sline, "Edge %d %d", &vi1, &vi2) == 2);
     Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
-    if (!e) Warning("GMesh::read(): Did not find edge in mesh");
+    if (!e) Warning("GMesh::read_line(): Did not find edge in mesh");
     if (e && sinfo) {
       set_string(e, sinfo);
       flags(e).flag(eflag_sharp) = string_has_key(sinfo, "sharp");

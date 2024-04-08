@@ -43,7 +43,7 @@ void do_mfile(Args& args) {
   assertx(meshes.num() < 2);
   meshes.add(1);
   GMesh& mesh = meshes.last();
-  mesh = GMesh::read(RFile(filename)());
+  mesh = GMesh(RFile(filename)());
   Vnors vnors;
   for (Vertex v : mesh.vertices()) {
     vnors.compute(mesh, v);

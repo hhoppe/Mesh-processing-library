@@ -44,6 +44,7 @@ class Image : public Matrix<Pixel> {
   explicit Image(const Vec2<int>& pdims, Pixel pix) : Image(pdims) { fill(*this, pix); }
   explicit Image(const Image&) = default;
   explicit Image(const base& image) : base(image.dims()) { base::assign(image); }
+  explicit Image(const string& filename) { read_file(filename); }
   Image(Image&& m) noexcept { swap(*this, m); }
   Image(base&& m) noexcept { swap(implicit_cast<base&>(*this), m); }
   Image& operator=(Image&& image) noexcept;
@@ -63,7 +64,6 @@ class Image : public Matrix<Pixel> {
   // filename may be "-" for std::cin;  may throw std::runtime_error
   void read_file(const string& filename) { read_file_i(filename, false); }
   void read_file_bgra(const string& filename) { read_file_i(filename, true); }
-  static Image read(const string& filename);
   // filename may be "-" for std::cout; may throw std::runtime_error; suffix() is mutable
   void write_file(const string& filename) const { write_file_i(filename, false); }
   void write_file_bgra(const string& filename) const { write_file_i(filename, true); }

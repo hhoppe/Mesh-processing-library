@@ -1944,7 +1944,7 @@ bool DerivedHW::key_press(string skey) {
           std::atomic<bool> ok{true};
           parallel_for_each(range(nframes), [&](const int f) {
             if (!ok) return;
-            Image image = Image::read(filenames[f]);  // not bgra
+            Image image(filenames[f]);  // not bgra
             if (image.dims() != dims.tail<2>()) {
               ok = false;
               return;

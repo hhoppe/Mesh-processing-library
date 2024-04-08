@@ -523,8 +523,8 @@ void do_overlayimage(Args& args) {
   int x0 = parse_size(args.get_string(), image.xsize(), true);
   int y0 = parse_size(args.get_string(), image.ysize(), true);
   const Vec2<int> yx0(y0, x0);
-  string imagename = args.get_string();
-  Image image2 = Image::read(imagename);
+  string filename = args.get_string();
+  Image image2(filename);
   assertx(image.ok(yx0 + image2.dims() - 1));
   for (const auto& yx : range(image2.dims())) image[yx0 + yx] = image2[yx];
 }
@@ -1136,7 +1136,7 @@ void do_readalpha(Args& args) {
     assertx(image.zsize() == 3);
     image.set_zsize(4);
   }
-  Image ialpha = Image::read(filename);
+  Image ialpha(filename);
   assertx(same_size(ialpha, image));
   parallel_for_coords(
       image.dims(),
@@ -1540,7 +1540,7 @@ void do_composite(Args& args) {
 #undef E
   int op = ops.index(opname);
   if (op < 0) assertnever("composite operation '" + opname + "' unrecognized");
-  Image bimage = Image::read(bfilename);
+  Image bimage(bfilename);
   assertx(same_size(bimage, image));
   assertx(bimage.zsize() == image.zsize());
   for (const auto& yx : range(image.dims())) {
@@ -2341,7 +2341,7 @@ void do_procedure(Args& args) {
         10);
   } else if (name == "interleavecols") {
     Image image1(image);
-    Image image2 = Image::read(args.get_filename());
+    Image image2(args.get_filename());
     assertx(same_size(image1, image2));
     for (const auto& yx : range(image.dims())) image[yx] = yx[1] % 2 == 0 ? image1[yx] : image2[yx];
   } else if (name == "stereo_purple") {
@@ -2397,7 +2397,7 @@ void do_procedure(Args& args) {
     // Filterimage image1.png -procedure test1 image2.png >mesh.m
     assertx(min(image.dims()) >= 2);
     string filename2 = args.get_filename();
-    Image image2 = Image::read(filename2);
+    Image image2(filename2);
     assertx(same_size(image, image2));
     Matrix<Vector4> image2v(image.dims());
     convert(image2, image2v);
@@ -2507,8 +2507,8 @@ void do_procedure(Args& args) {
     // cd ~/proj/videoloops/data/test_bfs_mask_expansion
     // Filterimage TDpoolpalms_temp_opt0_3.png -procedure test_videoloop_mask_dilation
     assertx(image.size() > 0);
-    Image image_periods = Image::read("TDpoolpalms_labels_opt0_3_period.png");  // period0: 128, 128, 255; 480x272
-    // Image image_periods = Image::read("periods.png");  // period0: 0, 0, 0 but 480x270
+    Image image_periods("TDpoolpalms_labels_opt0_3_period.png");  // period0: 128, 128, 255; 480x272
+    // Image image_periods("periods.png");  // period0: 0, 0, 0 but 480x270
     assertx(image_periods.dims() == image.dims());
     //
     const uint8_t cost_threshold = 3;  // let the mask consist of the pixels whose temporal costs is >= threshold
@@ -2761,7 +2761,7 @@ void do_procedure(Args& args) {
 
 void do_diff(Args& args) {
   string filename = args.get_filename();
-  Image image2 = Image::read(filename);
+  Image image2(filename);
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
   parallel_for_coords(
@@ -2775,7 +2775,7 @@ void do_diff(Args& args) {
 void do_maxdiff(Args& args) {
   float thresh = args.get_float();
   string filename = args.get_filename();
-  Image image2 = Image::read(filename);
+  Image image2(filename);
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
   int maxdiff = 0;
@@ -2791,7 +2791,7 @@ void do_maxdiff(Args& args) {
 void do_maxrmsdiff(Args& args) {
   float thresh = args.get_float();
   string filename = args.get_filename();
-  Image image2 = Image::read(filename);
+  Image image2(filename);
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
   Stat stat;
@@ -2807,7 +2807,7 @@ void do_maxrmsdiff(Args& args) {
 
 void do_compare(Args& args) {
   string filename = args.get_filename();
-  Image image2 = Image::read(filename);
+  Image image2(filename);
   const Image& image1 = image;
   assertx(same_size(image1, image2) && image1.zsize() == image2.zsize());
   const int r = 5;                    // window radius
@@ -3262,13 +3262,13 @@ void output_image(CMatrixView<Vector4> mat, const string& filename) {
 //  construct smooth visual transition.
 void do_pyramid(Args& args) {
   // e.g.  (cd ~/tmp; cp -p ~/data/image/misc/city.input.{13,17}.jpg .; Filterimage city.input.13.jpg -pyramid city.input.17.jpg; ls -al)
-  string ffile = args.get_filename();  // argument is fine-scale image
+  string ffilename = args.get_filename();  // argument is fine-scale image
   HH_TIMER("_pyramid");
-  string rootname = ffile;
+  string rootname = ffilename;
   assertx(contains(rootname, '.'));
   rootname.erase(rootname.find('.'));  // unlike get_path_root(), remove multiple extensions
   Image& imagec = image;
-  Image imagef = Image::read(ffile);
+  Image imagef(ffilename);
   int sizeratio = imagef.ysize() / imagec.ysize();
   assertx(imagef.dims() == imagec.dims() * sizeratio);
   assertx(is_pow2(sizeratio));
@@ -3338,9 +3338,9 @@ void do_pyramid(Args& args) {
 //  perform structure transfer.
 void do_structuretransfer(Args& args) {
   // Filterimage ~/data/image/misc/city.input.13.jpg -structuretransfer ~/data/image/misc/city.down.png | imgv
-  string sfile = args.get_filename();  // argument is structure image
+  string sfilename = args.get_filename();  // argument is structure image
   Image& cimage = image;
-  Image simage = Image::read(sfile);
+  Image simage(sfilename);
   Matrix<Vector4> mat_c = convert_image_mat(cimage);
   Matrix<Vector4> mat_s = convert_image_mat(simage);
   Matrix<Vector4> mat_xfer, mat_zscore;
@@ -3353,7 +3353,7 @@ void do_structuretransfer(Args& args) {
 void do_resamplemesh(Args& args) {
   string mfile = args.get_filename();
   assertx(min(image.dims()) >= 2);
-  GMesh mesh = GMesh::read(RFile(mfile)());
+  GMesh mesh{RFile(mfile)()};
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = g_filterbs;

@@ -962,7 +962,7 @@ void load_texturemaps() {
     glGenTextures(1, &g_textures[i].texname);
     glBindTexture(GL_TEXTURE_2D, g_textures[i].texname);
     const string filename = texturemaps[i];
-    Image itexture = Image::read(filename);
+    Image itexture(filename);
     if (1) itexture.reverse_y();  // because glTexImage2D() has image pixel-grid origin at lower-left
     int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -1129,7 +1129,7 @@ void load_texturemaps() {
         glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 1000.f, 0.f).data());
         glEnable(GL_TEXTURE_GEN_S);
       } else {
-        Image etexture = Image::read("ramp1.png");
+        Image etexture("ramp1.png");
         const int level = 0, border = 0;
         glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border, GL_RGBA, GL_UNSIGNED_BYTE,
                      etexture.data());

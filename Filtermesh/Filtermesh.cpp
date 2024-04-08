@@ -773,7 +773,7 @@ void do_merge(Args& args) {
     if (!args.num()) break;
     if (args.peek_string()[0] == '-') break;
     string filename = args.get_filename();
-    GMesh omesh = GMesh::read(RFile(filename)());
+    GMesh omesh{RFile(filename)()};
     showdf("%s:\n", filename.c_str());
     showdf("  %s\n", mesh_genus_string(omesh).c_str());
     mesh.merge(omesh);
@@ -3309,7 +3309,7 @@ void do_projectimage(Args& args) {
     assertx(FrameIO::read(iss, frame, obn, zoom, bin));
   }
   Frame frameinv = ~frame;
-  Image image = Image::read(imagename);
+  Image image(imagename);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
@@ -3831,7 +3831,7 @@ void do_hull(Args& args) {
 void do_alignmentframe(Args& args) {
   string filename = args.get_filename();
   const GMesh& cmesh = mesh;
-  GMesh nmesh = GMesh::read(RFile(filename)());
+  GMesh nmesh{RFile(filename)()};
   showdf("Computing alignment of current mesh:\n");
   showdf("  %s\n", mesh_genus_string(cmesh).c_str());
   showdf("with mesh %s:\n", filename.c_str());
@@ -4002,7 +4002,7 @@ void do_subsamplegim(Args& args) {
 // Filtermesh ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.ohull.nf10000.m -shootrays ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.wids.m | G3dOGL -key DmDe -st ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.s3d
 void do_shootrays(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh = GMesh::read(RFile(filename)());  // Original mesh.
+  GMesh omesh{RFile(filename)()};  // Original mesh.
   showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
   assertx(mesh.num_vertices() && omesh.num_vertices());
   Bbox bbox;
@@ -4113,7 +4113,7 @@ void do_shootrays(Args& args) {
 
 void do_transferkeysfrom(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh = GMesh::read(RFile(filename)());
+  GMesh omesh{RFile(filename)()};
   showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
   assertx(mesh.num_vertices() && omesh.num_vertices());
   HashPoint hp;  // (4, 0.f, 1.f);
@@ -4170,7 +4170,7 @@ void do_transferkeysfrom(Args& args) {
 
 void do_transferwidkeysfrom(Args& args) {
   string filename = args.get_filename();
-  GMesh omesh = GMesh::read(RFile(filename)());  // An original mesh containing a superset of vertices.
+  GMesh omesh{RFile(filename)()};  // An original mesh containing a superset of vertices.
   showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
   assertx(mesh.num_vertices() && omesh.num_vertices());
   assertx(omesh.num_vertices() >= mesh.num_vertices());
@@ -4602,7 +4602,7 @@ int main(int argc, const char** argv) {
         assertx(my_getline(fi(), sline));
         if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
       }
-      mesh = GMesh::read(fi());
+      mesh = GMesh(fi());
       showff("%s", args.header().c_str());
     } else {
       showff("%s", args.header().c_str());

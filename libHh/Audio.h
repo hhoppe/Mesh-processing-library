@@ -35,6 +35,7 @@ class Audio : public Grid<2, float> {
   struct Attrib;
   explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); }  // nchannels, nsamples
   explicit Audio(const Audio&) = default;
+  explicit Audio(const string& filename) { read_file(filename); }
   Audio(Audio&& v) noexcept { swap(*this, v); }
   Audio(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
   ~Audio() {}
@@ -53,7 +54,6 @@ class Audio : public Grid<2, float> {
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
   void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error
-  static Audio read(const string& filename);
   void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
   string diagnostic_string() const;
 

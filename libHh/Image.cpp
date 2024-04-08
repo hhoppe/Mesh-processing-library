@@ -46,12 +46,6 @@ void Image::set_zsize(int n) {
   attrib().zsize = n;
 }
 
-Image Image::read(const string& filename) {
-  Image image;
-  image.read_file(filename);
-  return image;
-}
-
 // *** MISC
 
 void Image::to_bw() {

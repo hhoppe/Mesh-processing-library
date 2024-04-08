@@ -653,7 +653,7 @@ void do_fbasemesh(Args& args) {
     }
     showff("%s", g_header.c_str());
     showff("Found %d materials\n", pm_material_strings.num());
-    mesh = GMesh::read(fi());
+    mesh = GMesh(fi());
   }
   // HH_TIMER("_parse_mesh");
   showdf("Read %s\n", mesh_genus_string(mesh).c_str());

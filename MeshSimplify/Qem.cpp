@@ -251,7 +251,7 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
 // minp unchanged if unsuccessful !
 template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   // minp = - A^-1 b        or     A * minp = -b
-  static SvdDoubleLls lls(n, n, 1);
+  static SvdDoubleLls lls(n, n, 1);  // not thread-safe??
   lls.clear();
   {
     const T* pa = _a.data();

@@ -362,7 +362,7 @@ struct Param {
   Array<Bary> ar_bary;  // coordinates on face (using ar_corners)
 };
 
-constexpr float k_bad_dih = 1e20f;
+constexpr float k_bad_dih = 1e28f;
 
 class LHPqueue : public HPqueue<Edge> {
   using base = HPqueue<Edge>;

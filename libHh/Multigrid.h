@@ -91,9 +91,9 @@ template <int D> Vector4 mean(CGridView<D, Vector4> grid) {
   Vec4<double> v;
   fill(v, 0.);
   for (const auto& e : grid) for_int(c, 4) v[c] += e[c];
-  v = v / static_cast<double>(assertx(grid.size()));
+  v = v / double(assertx(grid.size()));
   Vector4 vec;
-  for_int(c, 4) vec[c] = static_cast<float>(v[c]);
+  for_int(c, 4) vec[c] = float(v[c]);
   return vec;
 }
 template <int D> Vector4 mean(GridView<D, Vector4> grid) { return mean(static_cast<CGridView<D, Vector4>>(grid)); }
@@ -417,8 +417,7 @@ class Multigrid : noncopyable {
         {                                                 // hypercolumn dimensions
           const int L2_cache_size = 4 * 1024 * 1024 / 8;  // conservatively assume 4 MiB shared among 8 threads
           const int num_grids = 3 + 1, fudge = 4;         // 3 rows of grid_result, grid_rhs, plus some extra
-          const int col_width = static_cast<int>(
-              pow(static_cast<float>(L2_cache_size / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
+          const int col_width = int(pow(float(L2_cache_size / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
           col_dims = ntimes<D>(col_width).with(0, std::numeric_limits<int>::max());
         }
         // even-odd in just first dimension

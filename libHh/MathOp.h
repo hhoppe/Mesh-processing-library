@@ -128,7 +128,7 @@ template <typename T> T my_sqrt(T a) {
 // Is the integer i an even power of two?
 inline constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
 
-// Fast version of static_cast<int>(floor(std::log2(x))).
+// Fast version of int(floor(std::log2(x))).
 inline int int_floor_log2(unsigned x) {
   int a = 0;
   while (x >>= 1) a++;

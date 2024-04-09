@@ -70,7 +70,7 @@ template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rank_elemen
 template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rankf_element(const R& range, double rankf) {
   assertx(rankf >= 0. && rankf <= 1.);
   int num = narrow_cast<int>(distance(range));
-  int rank = static_cast<int>(floor(rankf * num));
+  int rank = int(floor(rankf * num));
   if (rank == num) rank--;
   return rank_element(range, rank);
 }

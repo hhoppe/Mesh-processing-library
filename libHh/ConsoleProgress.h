@@ -12,7 +12,7 @@
   ConsoleProgress cprogress;
   const int n = 10000;
   for_int(i, n) {
-    cprogress.update(static_cast<float>(i) / n);
+    cprogress.update(float(i) / n);
     process(i);
   }
 }
@@ -35,7 +35,7 @@ class ConsoleProgress : noncopyable {
   explicit ConsoleProgress(string task_name = "", bool set_silent = false);
   ~ConsoleProgress() { clear(); }
   void update(float f) {
-    if (!_silent && min(static_cast<int>(f * 100.f), 99) > _last_val) update_i(f);
+    if (!_silent && min(int(f * 100.f), 99) > _last_val) update_i(f);
   }
   void clear();
   static bool set_all_silent(bool v) { return std::exchange(silent_instance(), v); }
@@ -55,7 +55,7 @@ class ConsoleProgress : noncopyable {
 class ConsoleProgressInc : public ConsoleProgress {
  public:
   ConsoleProgressInc(int total, string taskname = "") : ConsoleProgress(std::move(taskname)), _total(total) {}
-  void increment() { update(static_cast<float>(_counter++) / _total); }
+  void increment() { update(float(_counter++) / _total); }
 
  private:
   int _total;
@@ -78,7 +78,7 @@ inline void ConsoleProgress::update_i(float f) {
   // - "\b" (8) erases the last character; I modified emacs shell to do the same.
   // - "\r" (13) moves cursor to beginning of line, but does *not* clear the line contents;
   //  I modified emacs shell to delete backwards to the line beginning.
-  int val = clamp(static_cast<int>(f * 100.f), 0, 99);
+  int val = clamp(int(f * 100.f), 0, 99);
   if (val <= _last_val) return;
   {  // synchronize in case multiple threads are updating the object or using ConsoleProgress
     std::lock_guard<std::mutex> lock(global_mutex_instance());

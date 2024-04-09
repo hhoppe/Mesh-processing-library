@@ -1520,36 +1520,38 @@ int main(int argc, const char** argv) {
   HH_ARGSD(polystream, ": for progressive hull, refine polygons");
   HH_ARGSD(uvsphtopos, ": transfer uv longlat to sphere pos");
   HH_ARGSF(nooutput, ": do not output final PM");
-  HH_TIMER("FilterPM");
+
   string arg0 = args.num() ? args.peek_string() : "";
   string filename = "-";
   if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
   gfilename = filename;
   RFile fi(filename);  // opened out here because &fi is captured below
-  if (!ParseArgs::special_arg(arg0)) {
-    for (string sline; fi().peek() == '#';) {
-      assertx(my_getline(fi(), sline));
-      if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+  {
+    HH_TIMER("FilterPM");
+    if (!ParseArgs::special_arg(arg0)) {
+      for (string sline; fi().peek() == '#';) {
+        assertx(my_getline(fi(), sline));
+        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      }
+      assertx(fi().peek() == 'P' || fi().peek() == 'S');
+      bool srm_input = fi().peek() == 'S';
+      showff("%s", args.header().c_str());
+      if (arg0 == "-tosrm") {
+        // it will do its own efficient parsing
+        pfi = &fi;
+      } else if (srm_input) {
+        nooutput = true;
+        pfi = &fi;
+      } else {
+        pmrs = make_unique<PMeshRStream>(fi(), &pmesh);
+        pmi = make_unique<PMeshIter>(*pmrs);
+      }
     }
-    assertx(fi().peek() == 'P' || fi().peek() == 'S');
-    bool srm_input = fi().peek() == 'S';
-    showff("%s", args.header().c_str());
-    if (arg0 == "-tosrm") {
-      // it will do its own efficient parsing
-      pfi = &fi;
-    } else if (srm_input) {
-      nooutput = true;
-      pfi = &fi;
-    } else {
-      pmrs = make_unique<PMeshRStream>(fi(), &pmesh);
-      pmi = make_unique<PMeshIter>(*pmrs);
-    }
+    args.parse();
+    if (!nooutput) ensure_pm_loaded();
   }
-  args.parse();
-  if (!nooutput) {
-    ensure_pm_loaded();
-    pmesh.write(std::cout);
-  }
+  hh_clean_up();
+  if (!nooutput) pmesh.write(std::cout);
   if (filename == "-")  // Read entire input stream to avoid broken pipe.
     while (pmrs->next_vsplit())
       ;

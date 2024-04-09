@@ -80,7 +80,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   void rec_depth(int ni, Stat& stat, int depth) const {
     if (ni < 0) return;
     const Node& n = _arnode[ni];
-    stat.enter_multiple(static_cast<float>(depth), n._stackei.height());
+    stat.enter_multiple(float(depth), n._stackei.height());
     rec_depth(n._l, stat, depth + 1);
     rec_depth(n._h, stat, depth + 1);
   }

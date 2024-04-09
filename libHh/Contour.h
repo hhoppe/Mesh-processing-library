@@ -241,13 +241,13 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   int march_from_i(const DPoint& startp) {
     for_int(d, D) ASSERTX(startp[d] >= 0.f && startp[d] <= 1.f);
     IPoint cc;
-    for_int(d, D) cc[d] = min(static_cast<int>(startp[d] * _gn), _gn - 1);
+    for_int(d, D) cc[d] = min(int(startp[d] * _gn), _gn - 1);
     return march_from_aux(cc);
   }
   int march_near_i(const DPoint& startp) {
     for_int(d, D) ASSERTX(startp[d] >= 0.f && startp[d] <= 1.f);
     IPoint cc;
-    for_int(d, D) cc[d] = min(static_cast<int>(startp[d] * _gn), _gn - 1);
+    for_int(d, D) cc[d] = min(int(startp[d] * _gn), _gn - 1);
     int ret = 0;
     IPoint ci;
     for_intL(i, -1, 2) {
@@ -597,13 +597,13 @@ class Contour2D : public ContourBase<2> {
   int march_from_i(const DPoint& startp) {
     for_int(d, D) ASSERTX(startp[d] >= 0.f && startp[d] <= 1.f);
     IPoint cc;
-    for_int(d, D) cc[d] = min(static_cast<int>(startp[d] * _gn), _gn - 1);
+    for_int(d, D) cc[d] = min(int(startp[d] * _gn), _gn - 1);
     return march_from_aux(cc);
   }
   int march_near_i(const DPoint& startp) {
     for_int(d, D) ASSERTX(startp[d] >= 0.f && startp[d] <= 1.f);
     IPoint cc;
-    for_int(d, D) cc[d] = min(static_cast<int>(startp[d] * _gn), _gn - 1);
+    for_int(d, D) cc[d] = min(int(startp[d] * _gn), _gn - 1);
     int ret = 0;
     IPoint ci;
     for_intL(i, -1, 2) {

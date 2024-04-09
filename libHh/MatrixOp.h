@@ -248,7 +248,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     const Vec2<KernelFunc> kernels = map(filterbs, [](const FilterBnd& f) { return f.filter().func(); });
     const Vec2<Bndrule> bndrules = map(filterbs, [](const FilterBnd& f) { return f.bndrule(); });
     const Vec2<float> kernel_radii =
-        map(filterbs, [](const FilterBnd& f) { return static_cast<float>(f.filter().radius()); });
+        map(filterbs, [](const FilterBnd& f) { return float(f.filter().radius()); });
     const bool transform_filter_expensive = getenv_bool("TRANSFORM_FILTER_EXPENSIVE");
     const bool transform_filter_radial = getenv_bool("TRANSFORM_FILTER_RADIAL");
     if (!transform_filter_expensive) {
@@ -282,9 +282,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                 Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
                 float w = 1.f;
                 if (!transform_filter_radial) {  // normal tensor-product of kernels
-                  for_int(c, 2) w *= static_cast<float>(kernels[c](dst_dyx[c]));
+                  for_int(c, 2) w *= float(kernels[c](dst_dyx[c]));
                 } else {  // single kernel based on radial distance
-                  w = static_cast<float>(kernels[0](mag(dst_dyx)));
+                  w = float(kernels[0](mag(dst_dyx)));
                 }
                 // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
                 if (!w) continue;
@@ -293,7 +293,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                 num++;
               }
               // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
-              nm[y][x] = val / assertx(static_cast<float>(sumw));
+              nm[y][x] = val / assertx(float(sumw));
               // SHOW(num, sumw, nm[y][x]); assertnever("");
             }
           },
@@ -323,9 +323,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                     kernel_radii;  // pixels
                 float w = 1.f;
                 if (!transform_filter_radial) {  // normal tensor-product of kernels
-                  for_int(c, 2) w *= static_cast<float>(kernels[c](sample_offset[c]));
+                  for_int(c, 2) w *= float(kernels[c](sample_offset[c]));
                 } else {  // single kernel based on radial distance
-                  w = static_cast<float>(kernels[0](mag(sample_offset)));
+                  w = float(kernels[0](mag(sample_offset)));
                 }
                 Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
                 Vec2<float> tp = transform_about_center(p, frame);
@@ -335,7 +335,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                 num++;
               }
               // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
-              nm[yx] = val / assertx(static_cast<float>(sumw));
+              nm[yx] = val / assertx(float(sumw));
               // SHOW(num, sumw, nm[yx]); assertnever("");
             }
           },

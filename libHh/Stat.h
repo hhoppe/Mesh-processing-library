@@ -42,9 +42,9 @@ class Stat {
   void zero();
   void terminate();
   void enter(float f);
-  void enter(double f) { enter(static_cast<float>(f)); }
-  void enter(int f) { enter(static_cast<float>(f)); }
-  void enter(unsigned f) { enter(static_cast<float>(f)); }
+  void enter(double f);
+  void enter(int f) { enter(float(f)); }
+  void enter(unsigned f) { enter(float(f)); }
   void enter_multiple(float f, int fac);  // fac could be negative
   void remove(float f) { enter_multiple(f, -1); }
   void add(const Stat& st);
@@ -57,7 +57,7 @@ class Stat {
   float var() const;  // sample variance (rather than population variance)
   float sdv() const { return sqrt(var()); }
   float ssd() const;
-  float sum() const { return static_cast<float>(_sum); }
+  float sum() const { return float(_sum); }
   float rms() const;
   float max_abs() const { return std::max(abs(min()), abs(max())); }
   string short_string() const;  // no leading name, no trailing '\n'
@@ -141,8 +141,19 @@ template <typename R, typename> Stat::Stat(R&& range) : Stat{} {
 
 inline void Stat::enter(float f) {
   _n++;
-  _sum += static_cast<double>(f);
-  _sum2 += square(static_cast<double>(f));
+  const double d = f;
+  _sum += d;
+  _sum2 += square(d);
+  if (f < _min) _min = f;
+  if (f > _max) _max = f;
+  if (_pofs) output(f);
+}
+
+inline void Stat::enter(double d) {
+  _n++;
+  _sum += d;
+  _sum2 += square(d);
+  const float f = float(d);
   if (f < _min) _min = f;
   if (f > _max) _max = f;
   if (_pofs) output(f);
@@ -150,8 +161,9 @@ inline void Stat::enter(float f) {
 
 inline void Stat::enter_multiple(float f, int fac) {
   _n += fac;
-  _sum += static_cast<double>(f) * fac;
-  _sum2 += square(static_cast<double>(f)) * fac;
+  const double d = f;
+  _sum += d * fac;
+  _sum2 += square(d) * fac;
   if (f < _min) _min = f;
   if (f > _max) _max = f;
   if (_pofs) for_int(i, fac) {
@@ -164,7 +176,7 @@ inline float Stat::avg() const {
     Warning("avg() of empty");
     return 0.f;
   }
-  return static_cast<float>(_sum / static_cast<double>(_n));
+  return float(_sum / double(_n));
 }
 
 inline float Stat::var() const {
@@ -172,7 +184,7 @@ inline float Stat::var() const {
     Warning("Stat::var() of fewer than 2 elements");
     return 0.f;
   }
-  return static_cast<float>(std::max((_sum2 - _sum * _sum / static_cast<double>(_n)) / (_n - 1.), 0.));
+  return float(std::max((_sum2 - _sum * _sum / double(_n)) / (_n - 1.), 0.));
 }
 
 inline float Stat::ssd() const {
@@ -180,7 +192,7 @@ inline float Stat::ssd() const {
     Warning("ssd() of empty");
     return 0.f;
   }
-  return static_cast<float>(std::max(_sum2 - _sum * _sum / static_cast<double>(_n), 0.));
+  return float(std::max(_sum2 - _sum * _sum / double(_n), 0.));
 }
 
 inline float Stat::rms() const {
@@ -188,7 +200,7 @@ inline float Stat::rms() const {
     Warning("rms() of empty");
     return 0.f;
   }
-  return sqrt(static_cast<float>(_sum2 / static_cast<double>(_n)));
+  return sqrt(float(_sum2 / double(_n)));
 }
 
 template <typename R, typename> Stat range_stat(const R& range) {

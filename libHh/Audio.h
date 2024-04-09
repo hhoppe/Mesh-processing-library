@@ -9,7 +9,7 @@
   // 400 Hz tone for 3 s at 48 kHz sampling in stereo
   const double freq = 400., duration = 3., samplerate = 48 * 1000.;
   const int nchannels = 2;
-  const int nsamples = static_cast<int>(duration * samplerate + .5);
+  const int nsamples = int(duration * samplerate + .5);
   Audio audio(V(nchannels, nsamples));
   audio.attrib().samplerate = samplerate;
   for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {

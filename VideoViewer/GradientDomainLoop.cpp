@@ -1278,7 +1278,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   assertx(num_loops >= 1);
   if (!pwvideo) assertx(num_loops == 1);
   assertx(min(mat_period) > 0);
-  for (Vec2<int> yx : range(mat_start.dims())) {
+  for (const Vec2<int> yx : range(mat_start.dims())) {
     assertx(mat_start[yx] >= 0 && mat_start[yx] + mat_period[yx] <= onf);
     if (0) {
       // Assume room at both ends for faster, better gradient-domain blend.

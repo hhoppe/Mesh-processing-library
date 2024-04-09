@@ -269,7 +269,7 @@ int main() {
   if (1) {
     {
       Array<int> ar;
-      for (int e : range(2)) ar.push(e);
+      for (const int e : range(2)) ar.push(e);
       assertx(ar == V(0, 1).view());
     }
     {

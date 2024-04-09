@@ -213,8 +213,8 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
       Array<PStats> ar_pstats(num_threads);
       const int chunk_size = (numpts + num_threads - 1) / num_threads;
       parallel_for_int(thread_index, num_threads) {
-        for (int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, numpts))) {
-          int fi = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
+        for (const int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, numpts))) {
+          const int fi = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
           process_point(fi, randoms[i * 3 + 1], randoms[i * 3 + 2], ar_pstats[thread_index]);
         }
       }
@@ -238,7 +238,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
       Array<PStats> ar_pstats(num_threads);
       const int chunk_size = (vertices.num() + num_threads - 1) / num_threads;
       parallel_for_int(thread_index, num_threads) {
-        for (int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, vertices.num())))
+        for (const int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, vertices.num())))
           process_vertex(vertices[i], ar_pstats[thread_index]);
       }
       for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);

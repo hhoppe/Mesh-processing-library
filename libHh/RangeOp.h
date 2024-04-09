@@ -112,10 +112,10 @@ R fill(R&& range, const Iterator& v) {
 }
 
 // Reverse the elements in a randomly accessible range.
-template <typename R, typename = enable_if_range_t<R>> R reverse(R&& range) {
+template <typename R, typename = enable_if_range_t<R>> R reverse(R&& range_) {
   using std::begin;
   using std::end;
-  auto b = begin(range), e = end(range);
+  auto b = begin(range_), e = end(range_);
   ASSERTX(e >= b);  // requires random-access iterator
   // std::reverse(b, e);
   size_t num = e - b;
@@ -123,7 +123,7 @@ template <typename R, typename = enable_if_range_t<R>> R reverse(R&& range) {
     using std::swap;
     swap(b[i], b[num - 1 - i]);
   }
-  return std::forward<R>(range);
+  return std::forward<R>(range_);
 }
 // R reversed(const R& range) { return reverse(clone(range)); }
 
@@ -255,7 +255,7 @@ Iterator max_abs_element(const R& range) {
   using std::end;
   auto iter = begin(range), itend = end(range);
   ASSERTX(iter != itend);
-  // return abs(*std::max_element(ibeg, iend, [](Iterator l, Iterator r) { return abs(l) < abs(r); }));
+  // return abs(*std::max_element(ibeg, iend, [](Iterator a, Iterator b) { return abs(a) < abs(b); }));
   Iterator v = static_cast<Iterator>(abs(*iter));
   for (++iter; iter != itend; ++iter) v = max(v, static_cast<Iterator>(abs(*iter)));
   return v;
@@ -312,7 +312,7 @@ SumType mag2(const R& range) {
   using std::begin;
   using std::end;
   // return std::accumulate(begin(range), end(range), SumType{},
-  //                        [](const SumType& l, const Iterator& r) { return l + square(r); });
+  //                        [](const SumType& sum, const Iterator& e) { return sum + square(e); });
   auto iter = begin(range), itend = end(range);
   if (iter == itend) {
     SumType v;
@@ -385,7 +385,7 @@ SumType product(const R& range) {
   auto iter = begin(range), itend = end(range);
   ASSERTX(iter != itend);
   // return std::accumulate(begin(range), end(range), SumType{1},
-  //                        [](const SumType& l, const Iterator& r) { return l * r; });
+  //                        [](const SumType& sum, const Iterator& e) { return sum * e; });
   SumType v = *iter;
   for (++iter; iter != itend; ++iter) v *= *iter;
   return v;

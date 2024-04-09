@@ -276,8 +276,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
               T val;
               my_zero(val);
               double sumw = 0.;
-              for (Vec2<int> yx : range(convert<int>(floor(psrc - src_kernel_radii)),
-                                        convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
+              for (const Vec2<int> yx : range(convert<int>(floor(psrc - src_kernel_radii)),
+                                              convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
                 Vec2<float> dyx = convert<float>(yx) - psrc;
                 Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
                 float w = 1.f;

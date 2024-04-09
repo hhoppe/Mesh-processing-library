@@ -55,7 +55,7 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #if defined(HH_NO_OPENMP)
 
 #define HH_PRAGMA_OMP(...)
-#define omp_parallel_for_T(omp_args, T, i, lb, ub) for_T(T, i, lb, ub)
+#define omp_parallel_for_T(omp_args, T, i, lb, ub) traditional_for_T(T, i, lb, ub)
 
 #else  // defined(HH_NO_OPENMP)
 

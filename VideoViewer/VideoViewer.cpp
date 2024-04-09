@@ -3493,7 +3493,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     const float eps = .01f;
     const Vec2<Vec2<int>> yxminmax =
         bbox_minmax(map(minmax_corners(V(twice(-eps), convert<float>(g_win_dims) + eps)), &get_image_yx).view());
-    for (Vec2<int> tex_yx : range(yxminmax[0], yxminmax[1] + 1)) {
+    for (const Vec2<int> tex_yx : range(yxminmax[0], yxminmax[1] + 1)) {
       if (!tex_yx.in_range(g_frame_dims)) continue;
       const Pixel pix = get_frame_pix(tex_yx);
       const Vec2<int> win_yx = get_win_yx(convert<float>(tex_yx) + .5f);

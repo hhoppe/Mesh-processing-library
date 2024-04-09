@@ -250,8 +250,7 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   void reverse_x() {
     static_assert(D == 2, "");
     const int ny = this->ysize();
-    parallel_for_each(
-        range(ny), [&](const int y) { reverse((*this)[y]); }, this->xsize() * 2);
+    parallel_for_each(range(ny), [&](const int y) { reverse((*this)[y]); }, this->xsize() * 2);
   }
 
  protected:

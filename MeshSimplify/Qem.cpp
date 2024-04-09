@@ -658,18 +658,4 @@ template class Qem<double, 6>;
 template class Qem<float, 9>;
 template class Qem<double, 9>;
 
-#if defined(__sgi)
-// On SGI belvedere, see "C++ Programming Guide" under "Using Templates".
-// I could use the command-line flag "-ptall" to explicitly instantiate all
-//  references like "class Qem<float, 3>;" in this file.
-// Instead, I use the "#pragma instantiate class".
-
-// #pragma instantiate Qem<float, 3>
-// ...
-
-// With h++ using -ptused, Qem.o does not have to exist at all;
-//  instead, the program including Qem.h pulls the appropriate source code
-//  from Qem.cpp and compiles it.
-#endif
-
 }  // namespace hh

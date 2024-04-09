@@ -142,8 +142,16 @@
 
 // *** Syntactic sugar
 
-#define for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
-#define for_T(T, i, start, stop) for_T_aux(T, i, start, stop, HH_UNIQUE_ID(stop_var))
+#define traditional_for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
+#define traditional_for_T(T, i, start, stop) traditional_for_T_aux(T, i, start, stop, HH_UNIQUE_ID(stop_var))
+#if !defined(HH_DEBUG)
+#define for_T(T, i, start, stop) traditional_for_T(T, i, start, stop)
+#else
+#if defined(_MSC_VER)
+#pragma warning(disable : 4701 4703)  // Several: warning C4701: potentially uninitialized local variable.
+#endif
+#define for_T(T, i, start, stop) for (const T i : hh::range<T>(start, stop))  // In Debug, check "const T i" works.
+#endif
 #define for_int(i, stop) for_T(int, i, 0, stop)
 #define for_intL(i, start, stop) for_T(int, i, start, stop)
 #define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
@@ -392,10 +400,10 @@ template <typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(
 // Higher-precision type to represent the sum of a set of elements.
 template <typename T> using sum_type_t = typename details::sum_type<T>::type;
 
-// Range of integers as in Python range(stop):  e.g.: for (int i : range(5)) { SHOW(i); } gives 0..4 .
+// Range of integers as in Python range(stop):  e.g.: for (const int i : range(5)) { SHOW(i); } gives 0..4 .
 template <typename T> details::Range<T> range(T stop) { return details::Range<T>(stop); }
 
-// Range of integers as in Python range(start, stop):  e.g.: for (int i : range(2, 5)) { SHOW(i); } gives 2..4 .
+// Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
 
 // *** Functions defined in Hh.cpp

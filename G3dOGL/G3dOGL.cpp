@@ -1385,7 +1385,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
   const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
   const int buffer_nedges = g_is_ati ? std::numeric_limits<int>::max() : 128;
   const int buffer_npoints = g_is_ati ? std::numeric_limits<int>::max() : 128;
-  for_int(i, arn.num()) {  // note: index i is also incremented within loop
+  for (int i = 0; i < arn.num(); i++) {  // Note: index i is also incremented within loop.
     if (ii) {
       if (!--ii)
         ii = quicki;

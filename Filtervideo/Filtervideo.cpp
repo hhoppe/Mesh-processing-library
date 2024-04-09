@@ -263,7 +263,7 @@ void assemble_videos(MatrixView<Video> videos) {
   }
   CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
   if (0) {
-    for (Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
+    for (const Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
   }
   video = assemble(gvideos, gcolor);
 }
@@ -1389,7 +1389,7 @@ void compute_looping_regions() {
       for_int(y, video.ysize()) for_int(x, video.xsize()) {
         image[y * 2][x * 2] = Pixel(170, 170, 255);  // nodes are colored light-blue; edges are colored below
         for_int(axis, 2) {
-          int y1 = y, x1 = x;
+          int y0 = y, y1 = y, x0 = x, x1 = x;
           if (axis == 0) {
             y1++;
             if (y1 == video.ysize()) continue;
@@ -1398,19 +1398,19 @@ void compute_looping_regions() {
             if (x1 == video.xsize()) continue;
           }
           float scost2 = 0.f;
-          for_int(edge_direction, 2) {           // two parts (at adjacent pixels x and z) of the spatial cost term
-            std::swap(y, y1), std::swap(x, x1);  // isn't swap dangerous here?
-            int start0 = g_lp.mat_start[y][x], period0 = g_lp.mat_period[y][x];
+          for_int(edge_direction, 2) {  // two parts (at adjacent pixels x and z) of the spatial cost term
+            std::swap(y0, y1), std::swap(x0, x1);
+            int start0 = g_lp.mat_start[y0][x0], period0 = g_lp.mat_period[y0][x0];
             int start1 = g_lp.mat_start[y1][x1], period1 = g_lp.mat_period[y1][x1];
             Vector p0sum(0.f, 0.f, 0.f), p0sum2(0.f, 0.f, 0.f);
             Vector p1sum(0.f, 0.f, 0.f), p1sum2(0.f, 0.f, 0.f);
             for_intL(f, start0, start0 + period0) for_int(c, 3) {
-              p0sum[c] += to_float(video(f, y, x)[c]);
-              p0sum2[c] += square(to_float(video(f, y, x)[c]));
+              p0sum[c] += to_float(video(f, y0, x0)[c]);
+              p0sum2[c] += square(to_float(video(f, y0, x0)[c]));
             }
             for_intL(f, start1, start1 + period1) for_int(c, 3) {
-              p1sum[c] += to_float(video(f, y, x)[c]);
-              p1sum2[c] += square(to_float(video(f, y, x)[c]));  // again at same pixel [y][x]
+              p1sum[c] += to_float(video(f, y0, x0)[c]);
+              p1sum2[c] += square(to_float(video(f, y0, x0)[c]));  // again at same pixel [y0][x0]
             }
             Vector vmul(p0sum[0] * p1sum[0], p0sum[1] * p1sum[1], p0sum[2] * p1sum[2]);
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
@@ -1418,9 +1418,9 @@ void compute_looping_regions() {
             scost2 += vtot[0] + vtot[1] + vtot[2];
           }
           HH_SSTAT(Sscost2, scost2);
-          image[y + y1][x + x1] = Pixel::gray(clamp_to_uint8(int(255.5f - scost2 * .01f)));
-          bool both_static = g_lp.mat_period[y][x] == 1 && g_lp.mat_period[y1][x1] == 1;
-          if (scost2 > 6000.f || both_static) uf.unify(V(y, x), V(y1, x1));  // 6000.f good?
+          image[y0 + y1][x0 + x1] = Pixel::gray(clamp_to_uint8(int(255.5f - scost2 * .01f)));
+          bool both_static = g_lp.mat_period[y0][x0] == 1 && g_lp.mat_period[y1][x1] == 1;
+          if (scost2 > 6000.f || both_static) uf.unify(V(y0, x0), V(y1, x1));  // 6000.f good?
         }
       }
       image.write_file("image_scost.png");

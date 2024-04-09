@@ -107,14 +107,14 @@ float get_filtered_pixel_value(const Vec2<int>& yxc) {
   float sum = valc;
   int count = 1;
   const int upper_range = 10;
-  for (int range = 1;; range++) {
+  for (int r = 1;; r++) {
     bool stop = false;
     float psum = 0.f;
     int pcount = 0;
     for (int sign : {-1, 1}) {
-      int x = yxc[1] + sign * range;
+      int x = yxc[1] + sign * r;
       if (x < 0 || x >= image.xsize()) continue;
-      for_intL(y, max(yxc[0] - (range - 0), 0), min(yxc[0] + (range - 0), image.ysize())) {
+      for_intL(y, max(yxc[0] - (r - 0), 0), min(yxc[0] + (r - 0), image.ysize())) {
         float val = get_pixel_value(V(y, x));
         if (val > valc + 1.f || val < valc - 1.f) {
           stop = true;
@@ -126,9 +126,9 @@ float get_filtered_pixel_value(const Vec2<int>& yxc) {
       }
     }
     for (int sign : {-1, 1}) {
-      int y = yxc[0] + sign * range;
+      int y = yxc[0] + sign * r;
       if (y < 0 || y >= image.ysize()) continue;
-      for_intL(x, max(yxc[1] - (range - 1), 0), min(yxc[1] + (range - 1), image.xsize())) {
+      for_intL(x, max(yxc[1] - (r - 1), 0), min(yxc[1] + (r - 1), image.xsize())) {
         float val = get_pixel_value(V(y, x));
         if (val > valc + 1.f || val < valc - 1.f) {
           stop = true;
@@ -139,8 +139,8 @@ float get_filtered_pixel_value(const Vec2<int>& yxc) {
         }
       }
     }
-    if (stop || range == upper_range) {
-      // HH_SSTAT(Srange, range);
+    if (stop || r == upper_range) {
+      // HH_SSTAT(Srange, r);
       break;
     }
     sum += psum;

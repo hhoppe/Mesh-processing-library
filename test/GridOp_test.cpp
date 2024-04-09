@@ -78,7 +78,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
           if (!(bndrule == Bndrule::reflected || bndrule == Bndrule::periodic)) continue;
           filterbs = inverse_convolution(grid, filterbs);
         }
-        for (Vec<int, D> u : range(ogrid.dims())) {
+        for (const Vec<int, D> u : range(ogrid.dims())) {
           Vec<float, D> p;
           for_int(d, D) p[d] = (u[d] + .5f) / ogrid.dim(d);
           float oval = ogrid[u];

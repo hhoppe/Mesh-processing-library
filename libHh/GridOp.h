@@ -221,7 +221,7 @@ Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignm
         default: assertnever("");
       }
     }
-    for (Vec<int, D> u : range(agrid.dims())) grid[offset + u] = agrid[u];
+    for (const Vec<int, D> u : range(agrid.dims())) grid[offset + u] = agrid[u];
   });
   return grid;
 }

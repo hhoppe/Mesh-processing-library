@@ -2635,10 +2635,8 @@ void do_analyzestretch() {
         Vertex v = va[i];
         assertx(parse_key_vec(mesh.get_string(v), "domainp", pa[i]));
       }
+      const Vector v01 = pa[1] - pa[0], v01n = normalized(v01), v02 = pa[2] - pa[0];
       uvs[0] = UV(0.f, 0.f);
-      Vector v01 = pa[1] - pa[0], v01n = ok_normalized(v01);
-      assertx(!is_zero(v01n));
-      Vector v02 = pa[2] - pa[0];
       uvs[1] = UV(mag(v01), 0.f);
       uvs[2] = UV(dot(v02, v01n), mag(v02 - v01n * dot(v02, v01n)));
     } else {

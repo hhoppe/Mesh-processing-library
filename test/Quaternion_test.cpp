@@ -12,7 +12,7 @@ static Frame round(Frame frame) {
 }
 
 static Quaternion round(Quaternion q) {
-  for (float& f : q.access_private()) f = round_fraction_digits(f);
+  round_elements(q.access_private());
   return q;
 }
 
@@ -38,7 +38,7 @@ int main() {
     SHOW(round_elements(clone(qq.axis())));
     f = round(f);
     SHOW(Quaternion(f));
-    SHOW(to_Frame(q1 * inverse(q1)));
+    SHOW(round(to_Frame(q1 * inverse(q1))));
   }
   {
     // Note: pow(qi, f) == slerp(Quaternion(Vector(0.f, 0.f, 0.f), 0.f), qi, f) == exp(log(qi) * f)

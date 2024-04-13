@@ -155,7 +155,7 @@ int main() {
     double radius = filter.radius();
     const int n = 30;
     for_int(i, n) {
-      double x = ((double(i) / n) - .5) * radius * 1.1;
+      double x = ((double(i) / n) - .5) * radius * 1.1 + 1e-14;
       showf("func(%12f)=%12f\n", x, func(x));
     }
   }

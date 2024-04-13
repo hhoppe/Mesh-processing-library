@@ -28,7 +28,3 @@ ss1.next(&dis2) = 24
 round_fraction_digits(dis2, 1e6f) = 0.083417
 ss1.next(&dis2) = 23
 round_fraction_digits(dis2, 1e6f) = 0.083809
-# Summary of statistics:
-# Sssncellsv:         (3      )        6859:64000        av=28035.666      sd=31309.42
-# Sssnelemsv:         (3      )          12:1000         av=346            sd=566.42389
-# Spspcelln:          (917    )           1:5            av=1.1188658      sd=0.36201105

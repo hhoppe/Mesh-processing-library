@@ -22,19 +22,7 @@ int main() {
     SHOW(gridx, gridy);
     assertx(gridx >= 4 && gridy >= 4);
     Matrix<float> ggridf(gridx, gridy);
-#if 1
     assertx(read_binary_std(fi(), ggridf.array_view()));
-#else
-    Array<float> arf(gridx);
-    for_int(y, gridy) {
-      fi().read(reinterpret_cast<char*>(arf.data()), gridx * sizeof(arf[0]));
-      assertx(fi());
-      for_int(x, gridx) {
-        from_std(&arf[x]);
-        ggridf[x][y] = arf[x];
-      }
-    }
-#endif
     HH_RSTAT(Sgrid, ggridf);
   }
 }

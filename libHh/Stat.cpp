@@ -100,12 +100,14 @@ void Stat::add(const Stat& st) {
 }
 
 string Stat::short_string() const {
-  float tavg = _n > 0 ? avg() : 0.f, tsdv = _n > 1 ? sdv() : 0.f, trms = _n > 0 ? rms() : 0.f;
+  const double d_avg = _n > 0 ? _sum / _n : 0.;  // Higher precision than avg().
+  const double d_sdv = _n > 1 ? sqrt(std::max((_sum2 - _sum * _sum / _n) / (_n - 1.), 0.)) : 0.;
+  const double d_rms = _n > 0 ? sqrt(_sum2 / _n) : 0.;
   // (on _WIN32, could also use "(%-7I64d)")
-  // Use %14.8g rather than %12.6g because avg and sdv are double-precision.
+  // Use %14.8g rather than %12.6g because d_avg and d_sdv are double-precision.
   long long ln = _n;
-  return sform("(%-7lld)%12g:%-12g av=%-14.8g %s=%.8g", ln, _min, _max, tavg, (!_setrms ? "sd" : "rms"),
-               (!_setrms ? tsdv : trms));
+  return sform("(%-7lld)%12g:%-12g av=%-14.8g %s=%.8g", ln, _min, _max, d_avg, (!_setrms ? "sd" : "rms"),
+               (!_setrms ? d_sdv : d_rms));
 }
 
 string Stat::name_string() const {

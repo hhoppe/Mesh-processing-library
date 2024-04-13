@@ -21,7 +21,7 @@ Graph: edges {
 4 at dist=12
 5 at dist=13
 7 at dist=15
-stat = plain_graph:        (12     )           1:6            av=3.3333333      sd=1.9694639
+graph_edge_stats(g, fdist()) = (12     )           1:6            av=3.3333333      sd=1.9694639
 graph_num_components(g) = 1
 symclosure:
 Graph: edges {
@@ -194,4 +194,4 @@ Graph: edges {
 # Summary of statistics:
 # Sssncellsv:         (46     )           8:294          av=61.304348      sd=59.549744
 # Sssnelemsv:         (46     )           3:14           av=8.5            sd=2.8343136
-# Spspcelln:          (13     )           1:4            av=1.5384616      sd=0.9674179
+# Spspcelln:          (13     )           1:4            av=1.5384615      sd=0.96741792

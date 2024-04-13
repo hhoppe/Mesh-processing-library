@@ -7,7 +7,7 @@
 using namespace hh;
 
 int main() {
-  my_setenv("SHOW_STATS", "-2");
+  my_setenv("SHOW_STATS", "-2");  // Due to variations in Spatial construction.
   Timer::set_show_times(-1);
   {
     GMesh mesh;

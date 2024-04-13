@@ -58,11 +58,7 @@ void do_ints() {
       showf("%d at dist=%g\n", v, dis);
     }
   }
-  {
-    Stat stat = graph_edge_stats(g, fdist());
-    stat.set_name("plain_graph");
-    SHOW(stat);
-  }
+  SHOW(graph_edge_stats(g, fdist()));
   SHOW(graph_num_components(g));
   // graph_symmetric_closure(g);
   SHOW("symclosure:");

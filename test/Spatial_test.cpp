@@ -5,6 +5,7 @@
 using namespace hh;
 
 int main() {
+  my_setenv("SHOW_STATS", "-2");
   {
     PointSpatial<int> sp(40);
     Vec<Point, 30> pa;

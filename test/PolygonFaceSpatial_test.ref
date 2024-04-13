@@ -8,8 +8,3 @@ At dis2 0.04 found poly:
 Polygon(3) = { [0.2, 0.2, 0.2] [0.2, 0.8, 0.8] [0.2, 0.8, 0.2] }
 At dis2 0.16 found poly:
 Polygon(3) = { [0.8, 0.2, 0.2] [0.8, 0.8, 0.8] [0.8, 0.8, 0.2] }
-# Summary of statistics:
-# Sospobcells:        (62     )           2:191          av=47.241936      sd=45.710308
-# Sssncellsv:         (201    )           1:1000         av=37.686565      sd=96.829262
-# Sssnelemsv:         (201    )           1:24           av=5.7761192      sd=4.6491532
-# Sospcelln:          (1744   )           1:15           av=1.6794724      sd=1.265597

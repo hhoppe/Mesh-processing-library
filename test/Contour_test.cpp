@@ -95,7 +95,7 @@ void testmesh() {
   }
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);
-    for_int(i, 3) p[i] = round_fraction_digits(p[i], 1e4f);
+    round_elements(p, 1e4f);
     mesh.set_point(v, p);
   }
   WFile fmesh("Contour_test.m");

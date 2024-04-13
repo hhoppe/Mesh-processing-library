@@ -34,7 +34,7 @@ void test2(int pspn) {
     assertx(found_i == &polyface - ar_polyface.data());
     Polygon& poly1 = polyface.poly;
     float rdis2 = dist_point_triangle2(p, poly1[0], poly1[1], poly1[2]);
-    assertw(rdis2 == dis2);
+    assertx(abs(rdis2 - dis2) < 1e-8f);
     float mind2 = BIGFLOAT;
     int mini = 0;
     for_int(i, np) {
@@ -54,6 +54,7 @@ void test2(int pspn) {
 }  // namespace
 
 int main() {
+  my_setenv("SHOW_STATS", "-2");
   Face f1 = Face(intptr_t{1});
   Face f2 = Face(intptr_t{1});
   const Vec2<PolygonFace> ar_polyface =

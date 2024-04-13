@@ -176,7 +176,7 @@ inline float Stat::avg() const {
     Warning("avg() of empty");
     return 0.f;
   }
-  return float(_sum / double(_n));
+  return float(_sum / _n);
 }
 
 inline float Stat::var() const {
@@ -184,7 +184,7 @@ inline float Stat::var() const {
     Warning("Stat::var() of fewer than 2 elements");
     return 0.f;
   }
-  return float(std::max((_sum2 - _sum * _sum / double(_n)) / (_n - 1.), 0.));
+  return float(std::max((_sum2 - _sum * _sum / _n) / (_n - 1.), 0.));
 }
 
 inline float Stat::ssd() const {
@@ -192,7 +192,7 @@ inline float Stat::ssd() const {
     Warning("ssd() of empty");
     return 0.f;
   }
-  return float(std::max(_sum2 - _sum * _sum / double(_n), 0.));
+  return float(std::max(_sum2 - _sum * _sum / _n, 0.));
 }
 
 inline float Stat::rms() const {
@@ -200,14 +200,10 @@ inline float Stat::rms() const {
     Warning("rms() of empty");
     return 0.f;
   }
-  return sqrt(float(_sum2 / double(_n)));
+  return sqrt(float(_sum2 / _n));
 }
 
-template <typename R, typename> Stat range_stat(const R& range) {
-  Stat stat;
-  for (auto e : range) stat.enter(e);
-  return stat;
-}
+template <typename R, typename> Stat range_stat(const R& range) { return Stat(range); }  // Specialized in Multigrid.h
 
 template <typename R, typename> R standardize(R&& range) {
   Stat stat = range_stat(range);

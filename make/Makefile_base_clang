@@ -9,8 +9,6 @@ endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
-# last_libs += $(if $(omit_omp:0=),,-llibomp)#  This was needed for OpenMP in early clang; now it should be omitted.
-
 ifeq ($(plain_compiler),)
   # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
   # cxxall += -msse4.1
@@ -22,12 +20,10 @@ ifeq ($(plain_compiler),)
     -Wno-float-equal -Wno-missing-prototypes -Wno-missing-noreturn -Wno-weak-vtables \
     -Wno-disabled-macro-expansion -Wno-comma -Wno-double-promotion -Wno-language-extension-token \
     -Wno-atomic-implicit-seq-cst -Wno-undefined-func-template
-  # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  This was needed for OpenMP in early clang; now it should be omitted.
   ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
   ifneq ($(is_mac),1)
     cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
   endif
-  # cxxrel += -gline-tables-only
 endif
 
 # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax

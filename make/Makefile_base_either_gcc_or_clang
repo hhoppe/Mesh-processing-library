@@ -16,7 +16,7 @@ CXX_STD ?= c++14
 
 # Override the default compilation target to let code run on a greater variety of machines.
 machine_arch = -march=native#  fastest on local machine
-machine_arch = -march=corei7#  to be able to run on more machines, e.g. hhoppeh
+# machine_arch = -march=corei7#  to be able to run the same executable on more machines, e.g. hhoppeh
 
 # For debugging, echo complete compiler commands:
 # ccommon += -v

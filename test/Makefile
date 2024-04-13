@@ -8,9 +8,6 @@ new_all: test
 
 include $(MeshRoot)/make/Makefile_progs
 
-# For the test programs in this directory, reduce floating-point imprecision issues.
-ccommon += $(if $(gcc_or_clang:0=),$(gcc_safe_precise_math),)
-
 # for assembly code, use ./test/opt/ instead
 # Map_test: cxxall += $(cxx_list_assembly_code)
 # Vector4_test: cxxall += $(cxx_list_assembly_code)

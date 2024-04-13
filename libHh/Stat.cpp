@@ -5,7 +5,7 @@
 
 namespace hh {
 
-int Stat::_s_show = getenv_int("SHOW_STATS");
+int Stat::_s_show = -10;
 
 class Stats {
  public:
@@ -46,6 +46,7 @@ Stat::Stat(string pname, bool print, bool is_static) : _name(std::move(pname)), 
     string filename = "Stat." + _name;  // the name is assumed ASCII; no need to worry about UTF-8.
     _pofs = make_unique<std::ofstream>(filename);
   }
+  if (_s_show == -10) _s_show = getenv_int("SHOW_STATS");
   if (_s_show <= -2) {
     _print = false;
   } else if (is_static) {

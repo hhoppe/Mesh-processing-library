@@ -49,7 +49,7 @@ template <int N> void try_xyz(CArrayView<Vec3<float>> xyzdata) {
   SHOW(ar);
   for (auto xyz : xyzdata) {
     float zfit = float(dot(ar, Eval()(xyz.head<2>())));
-    showf("x=%g  y=%g  z=%8g  zfit=%8g\n", xyz[0], xyz[1], xyz[2], zfit);
+    showf("x=%g  y=%g  z=%8.5g  zfit=%8.5g\n", xyz[0], xyz[1], xyz[2], zfit);
   }
 }
 

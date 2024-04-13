@@ -230,6 +230,7 @@ template <typename T, int n> Vec<T, n> ok_normalized(Vec<T, n> vec) {
   vec.normalize();
   return vec;
 }
+template <typename T, int n> Vec<T, n> fast_normalized(const Vec<T, n>& vec) { return vec / mag(vec); }
 template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
   return abs(mag2(vec) - 1.f) <= tolerance;
 }

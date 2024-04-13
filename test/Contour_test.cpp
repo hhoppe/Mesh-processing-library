@@ -93,6 +93,11 @@ void testmesh() {
     int nc2 = contour.march_from(Point(.25f, .65f, .7f));
     SHOW(nc1, nc2);
   }
+  for (Vertex v : mesh.vertices()) {
+    Point p = mesh.point(v);
+    for_int(i, 3) p[i] = round_fraction_digits(p[i], 1e4f);
+    mesh.set_point(v, p);
+  }
   WFile fmesh("Contour_test.m");
   mesh.write(fmesh());
 }

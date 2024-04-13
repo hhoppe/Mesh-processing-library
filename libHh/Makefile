@@ -5,11 +5,6 @@ Video.$(extobj): includes += $(if $(VisionToolsRoot),-I$(VisionToolsRoot)/inc,)
 
 # MathOp.$(extobj): cxxall += $(cxx_list_assembly_code)
 
-ifeq ($(gcc_or_clang),1)
-  # Selectively increase floating-point precision to reduce differences in the testing programs in ../test
-  MeshSearch.$(extobj) Random.$(extobj) Polygon.$(extobj) : ccommon += $(gcc_safe_precise_math)
-endif
-
 ifeq ($(use_pch),1)
   pch_root = precompiled_libHh
   ifeq ($(win_base),1)  # CONFIG = win or w32

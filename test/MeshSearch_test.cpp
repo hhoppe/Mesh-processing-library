@@ -7,6 +7,7 @@
 using namespace hh;
 
 int main() {
+  my_setenv("SHOW_STATS", "-2");
   Timer::set_show_times(-1);
   {
     GMesh mesh;
@@ -31,7 +32,8 @@ int main() {
       float d2;
       Face f = msearch.search(Point(5.f, 2.f, 0.f), hintf, bary, clp, d2);
       hintf = f;
-      SHOW(mesh.face_id(f), bary, clp, d2);
+      SHOW(mesh.face_id(f), bary, clp);
+      assertx(d2 < 1e-12f);
     }
     {
       Bary bary;

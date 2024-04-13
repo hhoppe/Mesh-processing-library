@@ -12,8 +12,8 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 # last_libs += $(if $(omit_omp:0=),,-llibomp)#  This was needed for OpenMP in early clang; now it should be omitted.
 
 ifeq ($(plain_compiler),)
-  cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
-  cxxall += -msse4.1
+  # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
+  # cxxall += -msse4.1
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
   cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
     -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-sign-conversion \

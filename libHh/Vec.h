@@ -244,9 +244,10 @@ template <typename T> constexpr T cross(const Vec<T, 2>& v1, const Vec<T, 2>& v2
 template <typename T> T angle_between_unit_vectors(const Vec<T, 3>& v1, const Vec<T, 3>& v2) {
   ASSERTXX(is_unit(v1) && is_unit(v2));
   T vdot = dot(v1, v2);
-  if (vdot > +.95f) {
+  const float thresh = 0.9475f;  // Empirically from Python determine_crossover_for_acos_angle_approximation().
+  if (vdot > +thresh) {
     return std::asin(mag(cross(v1, v2)));
-  } else if (vdot < -.95f) {
+  } else if (vdot < -thresh) {
     return T(D_TAU / 2) - std::asin(mag(cross(v1, v2)));
   } else {
     return std::acos(vdot);
@@ -255,9 +256,10 @@ template <typename T> T angle_between_unit_vectors(const Vec<T, 3>& v1, const Ve
 template <typename T> T angle_between_unit_vectors(const Vec<T, 2>& v1, const Vec<T, 2>& v2) {
   ASSERTXX(is_unit(v1) && is_unit(v2));
   T vdot = dot(v1, v2);
-  if (vdot > +.95f) {
+  const float thresh = 0.9475f;
+  if (vdot > +thresh) {
     return std::asin(cross(v1, v2));
-  } else if (vdot < -.95f) {
+  } else if (vdot < -thresh) {
     return T(D_TAU / 2) - std::asin(cross(v1, v2));
   } else {
     return std::acos(vdot);

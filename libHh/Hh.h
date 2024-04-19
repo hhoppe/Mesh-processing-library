@@ -614,7 +614,7 @@ template <typename T> class Range {
    public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type = T;
-    using difference_type = int64_t;
+    using difference_type = int64_t;  // (It may be larger than std::ptrdiff_t.)
     using pointer = value_type*;
     using reference = value_type&;
     Iterator(T start, T stop) : _v(start), _stop(stop) {}
@@ -626,18 +626,15 @@ template <typename T> class Range {
     bool operator>(const type& rhs) const { return _v > rhs._v; }
     bool operator>=(const type& rhs) const { return _v >= rhs._v; }
     difference_type operator-(const type& rhs) const { return difference_type(_v) - rhs._v; }
+    type operator+(difference_type n) const { return Iterator(*this) += n; }
     type& operator+=(difference_type n) {
       ASSERTXX(_v < _stop);
-      _v += n;
+      _v = T(_v + n);
       ASSERTXX(_v <= _stop);
       return *this;
     }
-    T operator*() const { return (ASSERTXX(_v < _stop), _v); }
-    type& operator++() {
-      ASSERTXX(_v < _stop);
-      _v += T{1};
-      return *this;
-    }
+    const T& operator*() const { return (ASSERTXX(_v < _stop), _v); }
+    type& operator++() { return *this += T{1}; }
     T operator[](size_t i) const { return (ASSERTXX(T(_v + i) < _stop), T(_v + i)); }
 
    private:

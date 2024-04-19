@@ -64,13 +64,11 @@ template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean
     omp_parallel_for_T(reduction(+ : v) if (g.size() * 1 >= k_omp_thresh), intptr_t, i, 0, size) { v += g.flat(i); }
   } else {
     const int num_threads = get_max_threads();
-    const intptr_t chunk_size = (size + num_threads - 1) / num_threads;
     Array<MeanType> means(num_threads);
-    parallel_for_each(range(num_threads), [&](const int thread_index) {
+    parallel_for_chunk(range(size), num_threads, [&](const int thread_index, auto subrange) {
       MeanType v2;
       my_zero(v2);
-      for_each(range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, size)),
-               [&](const intptr_t i) { v2 += g.flat(i); });
+      for (const intptr_t i : subrange) v2 += g.flat(i);
       means[thread_index] = v2;
     });
     for_int(thread_index, num_threads) v += means[thread_index];

@@ -148,7 +148,7 @@ void print_it(const string& s, const PStats& pstats) {
 }
 
 void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) {
-  const bool parallel = !errmesh;
+  const bool use_parallelism = !errmesh;
   Bbox bbox;
   // compute the meshes bounding box
   for (Face f : mesh_d.faces()) {
@@ -191,56 +191,39 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
         fcarea.push(float(sum_area));
         sum_area += area;
       }
-      for_int(i, fface.num()) fcarea[i] /= float(sum_area);
+      for_int(face_index, fface.num()) fcarea[face_index] /= float(sum_area);
       fcarea.push(1.00001f);
     }
-    auto process_point = [&](int fi, float a, float b, PStats& pst) {
-      Face f = fface[fi];
-      if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
-      Bary bary(a, b, 1.f - a - b);
-      project_point(mesh_s, f, bary, mesh_d, psp, nullptr, pst);
-    };
-    if (!parallel) {
-      for_int(i, numpts) {
-        int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
-        float a = Random::G.unif(), b = Random::G.unif();
-        process_point(fi, a, b, pstats);
+    Array<float> randoms;
+    for_int(i, numpts * 3) randoms.push(Random::G.unif());
+    const int num_threads = use_parallelism ? get_max_threads() : 1;
+    Array<PStats> ar_pstats(num_threads);
+    parallel_for_chunk(range(numpts), num_threads, [&](int thread_index, auto subrange) {
+      for (const int i : subrange) {
+        const int face_index = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
+        Face f = fface[face_index];
+        float a = randoms[i * 3 + 1], b = randoms[i * 3 + 2];
+        if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
+        Bary bary(a, b, 1.f - a - b);
+        project_point(mesh_s, f, bary, mesh_d, psp, nullptr, ar_pstats[thread_index]);
       }
-    } else {
-      Array<float> randoms;
-      for_int(i, numpts * 3) randoms.push(Random::G.unif());
-      int num_threads = get_max_threads();
-      Array<PStats> ar_pstats(num_threads);
-      const int chunk_size = (numpts + num_threads - 1) / num_threads;
-      parallel_for_int(thread_index, num_threads) {
-        for (const int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, numpts))) {
-          const int fi = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
-          process_point(fi, randoms[i * 3 + 1], randoms[i * 3 + 2], ar_pstats[thread_index]);
-        }
-      }
-      for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
-    }
+    });
+    for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
     if (verbose >= 2) print_it(" r", pstats);
     pastats.add(pstats);
   }
   if (vertexpts) {
     PStats pstats;
-    auto process_vertex = [&](Vertex v, PStats& pst) {
-      const Vector& psnor = v_normal(v);
-      const A3dColor pscol(0.f, 0.f, 0.f);
-      project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, pst);
-    };
-    if (!parallel) {
-      for (Vertex v : mesh_s.vertices()) process_vertex(v, pstats);
-    } else {
-      Array<Vertex> vertices(mesh_s.vertices());
-      int num_threads = get_max_threads();
+    {
+      const int num_threads = use_parallelism ? get_max_threads() : 1;
       Array<PStats> ar_pstats(num_threads);
-      const int chunk_size = (vertices.num() + num_threads - 1) / num_threads;
-      parallel_for_int(thread_index, num_threads) {
-        for (const int i : range(thread_index * chunk_size, std::min((thread_index + 1) * chunk_size, vertices.num())))
-          process_vertex(vertices[i], ar_pstats[thread_index]);
-      }
+      parallel_for_chunk(Array<Vertex>(mesh_s.vertices()), num_threads, [&](int thread_index, auto subrange) {
+        for (Vertex v : subrange) {
+          const A3dColor pscol(0.f, 0.f, 0.f);
+          const Vector& psnor = v_normal(v);
+          project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, ar_pstats[thread_index]);
+        }
+      });
       for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
     }
     if (verbose >= 2) print_it(" v", pstats);

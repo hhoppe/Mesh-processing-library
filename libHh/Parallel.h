@@ -16,6 +16,7 @@
 
 #if 0
 {
+  // To disable parallelism: OMP_NUM_THREADS=1
   parallel_for_each(range(n), [&](const int i) { func(i); });
   parallel_for_int(i, n) func(i);
   cond_parallel_for_int(n * 1000, i, n) func_1000_instruction_cycles(i);  // only parallelize if beneficial
@@ -40,17 +41,24 @@
 #endif
 
 // Notes on using OpenMP:
-// - Any OpenMP pragma must immediately precede the "for" statement,
-//    so I must embed the OpenMP pragma inside the omp_parallel_for_T() macro.
-// - With OpenMP, the "for" statement initializer may only declare a single variable,
-//    so I must evaluate the upper-bound ub earlier in the omp_parallel_for_T() macro.
-// - OpenMP version 2.0 (VS2010, 2013, 2015) only allows signed integral index types
-//    (version 3.0 allows unsigned types),
-//    so for now I must override the macros for parallel_for_size_t() on VS.
+// - Any OpenMP pragma must immediately precede the "for" statement, so I must embed the OpenMP pragma inside
+//    the omp_parallel_for_T() macro.
+// - With OpenMP, the "for" statement initializer may only declare a single variable, so I must evaluate the
+//    upper-bound ub earlier in the omp_parallel_for_T() macro.
+// - OpenMP version 2.0 (VS2010, 2013, 2015) only allows signed integral index types (version 3.0 allows unsigned
+//    types), so for now I must override the macros for parallel_for_size_t() on VS.
 
 namespace hh {
 
-inline int get_max_threads() { return max(int(std::thread::hardware_concurrency()), 1); }
+inline int get_max_threads() {
+  constexpr int k_uninitialized = -99;
+  static int s_value = k_uninitialized;
+  if (s_value == k_uninitialized) {
+    int default_value = max(int(std::thread::hardware_concurrency()), 1);
+    s_value = getenv_int("OMP_NUM_THREADS", default_value);
+  }
+  return s_value;
+}
 
 #if defined(HH_NO_OPENMP)
 
@@ -61,7 +69,7 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 
 #define HH_PRAGMA_OMP(...) HH_PRAGMA(omp __VA_ARGS__)
 
-#if defined(HH_DEBUG) && 1  // allows more warnings but does not pre-evaluate the upper-bound ub
+#if defined(HH_DEBUG) && 1  // Allows more warnings but does not pre-evaluate the upper-bound ub.
 
 #define omp_parallel_for_T(omp_args, T, i, lb, ub) \
     HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<(ub); i++)
@@ -75,11 +83,11 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #elif defined(__GNUC__)
 #define HH_OMP_PUSH_WARNINGS HH_PRAGMA(GCC diagnostic ignored "-Wparentheses")  // "suggest explicit braces"
 #define HH_OMP_POP_WARNINGS                     // With gcc, the pop would have to occur later outside the macro.
-#pragma GCC diagnostic ignored "-Wparentheses"  // strange; this alone does not work in a precompiled header
+#pragma GCC diagnostic ignored "-Wparentheses"  // Strange; this alone does not work in a precompiled header.
 #else
 #define HH_OMP_PUSH_WARNINGS
 #define HH_OMP_POP_WARNINGS
-#pragma warning(disable : 4701)  // "potentially uninitialized local variable 'xx' used"
+#pragma warning(disable : 4701)  // "potentially uninitialized local variable 'xx' used".
 #endif
 #define omp_parallel_for_T(omp_args, T, i, lb, ub) omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
 #define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                 \
@@ -99,17 +107,14 @@ inline int get_max_threads() { return max(int(std::thread::hardware_concurrency(
 #define parallel_for_intL(i, lb, ub) parallel_for_T(int, i, lb, ub)
 #define parallel_for_size_t(i, ub) parallel_for_T(size_t, i, 0, ub)
 
-// (Note: name parallel_for() conflicts with that in VC <ppl.h> )
-#define hh_parallel_for(...) HH_PRAGMA_OMP(parallel for) for (__VA_ARGS__)
-
 #define cond_parallel_for_int(c, i, ub) cond_parallel_for_T(c, int, i, 0, ub)
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, size_t, i, 0, ub)
 
-const uint64_t k_omp_thresh = 100 * 1000;  // number of instruction cycles above which a loop should be parallelized
-const uint64_t k_omp_many_cycles_per_elem = 400;  // number of instruction cycles for larger-overhead parallelism
-const int k_omp_min_iterations = 8;               // sufficient number of loop iterations for parallelism
+constexpr uint64_t k_omp_thresh = 100 * 1000;  // Number of instruction cycles above which to parallelize a loop.
+constexpr uint64_t k_omp_many_cycles_per_elem = 400;  // Num of instruction cycles for larger-overhead parallelism.
+constexpr int k_omp_min_iterations = 8;               // Sufficient number of loop iterations for parallelism.
 
-#if _OPENMP < 200805  // (2.0 == 200203; 3.0 == 200805; 4.0 == 201307; VS2015 is still 2.0)
+#if _OPENMP < 200805  // (2.0 == 200203; 3.0 == 200805; 4.0 == 201307; VS2015 is still 2.0).
 // http://dautovri.blogspot.com/2015/04/check-your-openmp-version.html
 // Loop variable cannot be unsigned, so use a signed one instead.
 #undef parallel_for_size_t
@@ -119,6 +124,8 @@ const int k_omp_min_iterations = 8;               // sufficient number of loop i
 #endif
 
 // ***
+
+namespace details {
 
 // Launches a set of threads whose number matches the hardware parallelism, and terminates these threads upon
 // destruction.  The member function execute(num_tasks, task_function) allows parallel execution of an indexed task,
@@ -147,7 +154,7 @@ class ThreadPoolIndexedTask : noncopyable {
     for (auto& thread : _threads) thread.join();
   }
   int num_threads() const { return int(_threads.size()); }
-  bool already_active() const { return _num_remaining_tasks != 0; }  // detect nested execution
+  bool already_active() const { return _num_remaining_tasks != 0; }  // Detect nested execution.
   void execute(int num_tasks, const Task& task_function) {
     if (already_active()) {
       Warning("Nested execution of ThreadPoolIndexedTask is run serially");
@@ -182,7 +189,7 @@ class ThreadPoolIndexedTask : noncopyable {
 
   void worker_main() {
     std::unique_lock<std::mutex> lock(_mutex);
-    // Consider: https://stackoverflow.com/questions/233127/how-can-i-propagate-exceptions-between-threads
+    // Consider: https://stackoverflow.com/questions/233127/how-can-i-propagate-exceptions-between-threads .
     // However, rethrowing the exception in the main thread loses the stack state, so not useful for debugging.
     for (;;) {
       _condition_variable_worker.wait(lock, [this] { return _task_index < _num_tasks; });
@@ -199,50 +206,91 @@ class ThreadPoolIndexedTask : noncopyable {
   }
 };
 
+template <typename Iterator>
+class Subrange {
+ public:
+  Subrange(Iterator begin_, Iterator end_) : _begin(begin_), _end(end_) {}
+  auto begin() { return _begin; }
+  auto end() { return _end; }
+ private:
+  Iterator _begin, _end;
+};
+
+}  // namespace details
+
 constexpr uint64_t k_parallelism_always = k_omp_thresh;
 
-// Evaluates function(element) for each element in range by parallelizing across chunks of elements using
-// a cached thread pool.  The range must support begin/end functions returning random-access iterators.
-// Parallelism is disabled if the estimated cost (estimated_cycles_per_element * size(range)) is less than some
-// internal threshold, or if this parallel_for_each() is already executing (nested) within another parallel_for_each().
-// Exceptions within function() cause program termination as they are not caught.
-// One drawback over OpenMP is that if an exception or abort occurs within function(), the stack trace will not
-// include the functions that called parallel_for_each() because these lie in the stack frames of a different thread.
-template <typename Range, typename Function = void(size_t)>
-void parallel_for_each(const Range& range, const Function& function,
-                       uint64_t estimated_cycles_per_element = k_parallelism_always) {
-  // using std::size; const size_t num_elements = size(range);  // C++17
+// Divide `range` into `num_threads` chunks (i.e., subranges) and call `process_chunk(thread_index, subrange)` in
+// parallel over the different chunks using a cached thread pool.  The range must support begin/end functions
+// returning random-access iterators.
+// Parallelism is disabled if the estimated cost `estimated_cycles_per_element * size(range)` is less than some
+// internal threshold, or if we are already executing (nested) within another parallel_for_*() loop.
+// Exceptions within process_chunk() cause program termination as they are not caught.  One drawback over OpenMP
+// is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
+// that called parallel_for_chunk() because these lie in the stack frames of a different thread.
+// Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
+template <typename Range, typename ProcessChunk>
+void parallel_for_chunk(const Range& range_, int num_threads, const ProcessChunk& process_chunk,
+                        uint64_t estimated_cycles_per_element = k_parallelism_always) {
+  assertx(num_threads >= 1);
+  // using std::size; const size_t num_elements = size(range_);  // C++17.
   using std::begin;
   using std::end;
-  const auto begin_range = begin(range);
-  const auto end_range = end(range);
+  const auto begin_range = begin(range_);
+  const auto end_range = end(range_);
+  using Iterator = decltype(begin_range);
   const size_t num_elements = size_t(end_range - begin_range);
-  // using iterator_category = typename std::iterator_traits<decltype(begin_range)>::iterator_category;
-  // static_assert(std::is_same<iterator_category, std::random_access_iterator_tag>::value,
-  //               "Range iterator is not random-access");
-  uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
-  constexpr bool use_omp = false;  // OpenMP seems to never be faster, so there is no reason to use it here.
-  if (use_omp) {
-    cond_parallel_for_size_t(total_num_cycles, index, num_elements) { function(begin_range[index]); }
+  const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
+  const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
+  details::ThreadPoolIndexedTask* const thread_pool =
+    desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
+  if (!thread_pool || thread_pool->already_active()) {
+    // Process the entire range as a single chunk.
+    const int thread_index = 0;
+    details::Subrange<Iterator> subrange(begin_range, end_range);
+    process_chunk(thread_index, subrange);
   } else {
-    const int max_num_threads = get_max_threads();
-    const int num_threads = int(min<size_t>(max_num_threads, num_elements));
-    const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
-    ThreadPoolIndexedTask* const thread_pool =
-        desire_parallelism ? &ThreadPoolIndexedTask::default_threadpool() : nullptr;
-    if (!thread_pool || thread_pool->already_active()) {
-      // Traverse the range elements sequentially.
-      for (size_t index = 0; index < num_elements; ++index) function(begin_range[index]);
+    // Process the chunks in parallel.
+    const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
+    const auto func = [begin_range, num_elements, chunk_size, &process_chunk](int thread_index) {
+      Iterator begin_chunk = begin_range + std::min(size_t(thread_index) * chunk_size, num_elements);
+      Iterator end_chunk = begin_range + std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
+      details::Subrange<Iterator> subrange(begin_chunk, end_chunk);
+      process_chunk(thread_index, subrange);
+    };
+    constexpr bool use_openmp = false;
+    if (use_openmp) {
+      omp_parallel_for_T(, int, thread_index, 0, num_threads) func(thread_index);
     } else {
-      // Traverse the range elements in parallel.
-      const size_t chunk_size = (num_elements + num_threads - 1) / num_threads;
-      thread_pool->execute(num_threads, [begin_range, num_elements, chunk_size, &function](int thread_index) {
-        size_t index_start = thread_index * chunk_size;
-        size_t index_stop = std::min((size_t(thread_index) + 1) * chunk_size, num_elements);
-        for (size_t index = index_start; index < index_stop; ++index) function(begin_range[index]);
-      });
+      thread_pool->execute(num_threads, func);
     }
   }
+}
+
+// Evaluates process_element(element) for each element in range by parallelizing across chunks of elements using
+// a cached thread pool.  The range must support begin/end functions returning random-access iterators.
+// Parallelism is disabled if the estimated cost (estimated_cycles_per_element * size(range)) is less than some
+// internal threshold, or if we are already executing (nested) within another parallel_for_*() loop.
+// Exceptions within process_chunk() cause program termination as they are not caught.  One drawback over OpenMP
+// is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
+// that called parallel_for_chunk() because these lie in the stack frames of a different thread.
+// Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
+template <typename Range, typename ProcessElement>
+void parallel_for_each(const Range& range_, const ProcessElement& process_element,
+                       uint64_t estimated_cycles_per_element = k_parallelism_always) {
+  // using std::size; const size_t num_elements = size(range_);  // C++17.
+  using std::begin;
+  using std::end;
+  const auto begin_range = begin(range_);
+  const auto end_range = end(range_);
+  const size_t num_elements = size_t(end_range - begin_range);
+  const int max_num_threads = get_max_threads();
+  const int num_threads = int(std::min(size_t(max_num_threads), num_elements));
+  const auto process_chunk = [&](const int thread_index, auto subrange) {
+    dummy_use(thread_index);
+    for (auto& element : subrange) process_element(element);
+  };
+  parallel_for_chunk(range_, num_threads, process_chunk, estimated_cycles_per_element);
 }
 
 }  // namespace hh

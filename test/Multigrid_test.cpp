@@ -153,7 +153,7 @@ struct MultigridPeriodicDim0 {
 }  // namespace
 
 int main(int argc, const char** argv) {
-  // To disable parallelism:  setenv OMP_NUM_THREADS 1
+  // To disable parallelism: OMP_NUM_THREADS=1
   ParseArgs args(argc, argv);
   const bool standard_test = 1;
   if (standard_test && !args.num()) {  // verify multigrid convergence with different grid dimensions

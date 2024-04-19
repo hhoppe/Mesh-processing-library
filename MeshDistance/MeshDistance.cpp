@@ -110,8 +110,8 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
   pstats.Snd2.enter(dist2(psnor, interp(c_normal(cad[0]), c_normal(cad[1]), c_normal(cad[2]), baryd[0], baryd[1])));
 }
 
-void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d,
-                   const PolygonFaceSpatial& psp, Vertex vv, PStats& pstats) {
+void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const PolygonFaceSpatial& psp,
+                   Vertex vv, PStats& pstats) {
   dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
   Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
@@ -127,8 +127,8 @@ void print_it(const string& s, const PStats& pstats) {
     string sg = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
                  : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
                              : sform(" L2=%#-10.5f", vg));
-    showdf("%s(%7d)  %s  cL2=%#-10.4g  nL2=%#-10.4g\n", s.c_str(), pstats.Sgd2.inum(), sg.c_str(),
-           my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
+    showdf("%s(%7d)  %s  cL2=%#-10.4g  nL2=%#-10.4g\n",  //
+           s.c_str(), pstats.Sgd2.inum(), sg.c_str(), my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
     {
       float d = vg;
       float peak = g_diag0;
@@ -142,8 +142,8 @@ void print_it(const string& s, const PStats& pstats) {
     string sg = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
                  : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
                              : sform(" Li=%#-10.5f", vg));
-    showdf("%s(%7d)  %s  cLi=%#-10.4g  nLi=%#-10.4g\n", s.c_str(), pstats.Sgd2.inum(), sg.c_str(),
-           my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
+    showdf("%s(%7d)  %s  cLi=%#-10.4g  nLi=%#-10.4g\n",  //
+           s.c_str(), pstats.Sgd2.inum(), sg.c_str(), my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
   }
 }
 
@@ -161,7 +161,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
                   : mesh_d.num_vertices() < 30000  ? 32
                   : mesh_d.num_vertices() < 100000 ? 40
                   : mesh_d.num_vertices() < 300000 ? 70
-                                                  : 100);
+                                                   : 100);
   psp_size = getenv_int("PSP_SIZE", psp_size, true);
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(mesh_d.num_faces());

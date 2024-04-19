@@ -1466,8 +1466,8 @@ void PMesh::read(std::istream& is) {
 void PMesh::write(std::ostream& os) const {
   os << "PM\n";
   os << "version=2\n";
-  os << sform("nvsplits=%d nvertices=%d nwedges=%d nfaces=%d\n", _info._tot_nvsplits, _info._full_nvertices,
-              _info._full_nwedges, _info._full_nfaces);
+  os << sform("nvsplits=%d nvertices=%d nwedges=%d nfaces=%d\n",  //
+              _info._tot_nvsplits, _info._full_nvertices, _info._full_nwedges, _info._full_nfaces);
   const Bbox& bbox = _info._full_bbox;
   os << sform("bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   os << sform("has_rgb=%d\n", _info._has_rgb);

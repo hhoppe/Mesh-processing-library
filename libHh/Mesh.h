@@ -833,9 +833,9 @@ inline Vec3<Vertex> Mesh::triangle_vertices(Face f) const {
 inline Vec3<Corner> Mesh::triangle_corners(Face f) const {
   Vec3<Corner> ca;
   HEdge he = herep(f);
-  ca[0] = he, he = he -> _next;
-  ca[1] = he, he = he -> _next;
-  ca[2] = he, he = he -> _next;
+  ca[0] = he, he = he->_next;
+  ca[1] = he, he = he->_next;
+  ca[2] = he, he = he->_next;
   assertx(he == ca[0]);  // is_triangle()
   return ca;
 }

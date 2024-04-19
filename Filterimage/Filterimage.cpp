@@ -309,8 +309,8 @@ void do_outfile(Args& args) {
 }
 
 void do_info() {
-  showf("Image w=%d h=%d z=%d format=%s\n", image.xsize(), image.ysize(), image.zsize(),
-        image.suffix() == "" ? "unk" : image.suffix().c_str());
+  showf("Image w=%d h=%d z=%d format=%s\n",  //
+        image.xsize(), image.ysize(), image.zsize(), image.suffix() == "" ? "unk" : image.suffix().c_str());
   Array<Stat> stat_pixels;
   for_int(z, image.zsize()) stat_pixels.push(Stat(sform("Component%d", z)));
   int na0 = 0, na255 = 0;
@@ -323,8 +323,8 @@ void do_info() {
   }
   for_int(z, image.zsize()) showf("%s", stat_pixels[z].name_string().c_str());
   if (image.zsize() == 4) {
-    showf("Alpha: #0=%d(%.3f%%)  #255=%d(%.3f%%)\n", na0, float(na0) / image.size() * 100.f, na255,
-          float(na255) / image.size() * 100.f);
+    showf("Alpha: #0=%d(%.3f%%)  #255=%d(%.3f%%)\n",  //
+          na0, float(na0) / image.size() * 100.f, na255, float(na255) / image.size() * 100.f);
   }
   if (0) {
     Stat stat("ch0");

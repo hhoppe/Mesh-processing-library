@@ -414,8 +414,8 @@ bool try_toggle_edge() {
   Point pint;
   if (!select_edge(yx, obn, pmesh, e, pint)) return false;
   bool tagged = pmesh->flags(e).flag(GMesh::eflag_sharp);
-  showf("Setting edge (%d, %d) tag to %d\n", pmesh->vertex_id(pmesh->vertex1(e)), pmesh->vertex_id(pmesh->vertex2(e)),
-        !tagged);
+  showf("Setting edge (%d, %d) tag to %d\n",  //
+        pmesh->vertex_id(pmesh->vertex1(e)), pmesh->vertex_id(pmesh->vertex2(e)), !tagged);
   pmesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
   pmesh->set_string(e, pmesh->flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
   pmesh->gflags().flag(mflag_ok) = false;

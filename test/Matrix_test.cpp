@@ -136,7 +136,10 @@ int main() {
     SHOW(sum(m));
     SHOW(mean(m));
     {
-      Matrix<float> expected{{-1.f/6.f, 0.f, 1.f/6.f, 0.f}, {-1.f/3.f, 1.f/6.f, -1.f/3.f, 1.f/6.f}, {11.f/18.f, 1.f/9.f, 1.f/6.f, -1.f/3.f}, {0.f, -1.f/6.f, 0.f, 1.f/6.f}};
+      Matrix<float> expected{{-1.f / 6.f, 0.f, 1.f / 6.f, 0.f},
+                             {-1.f / 3.f, 1.f / 6.f, -1.f / 3.f, 1.f / 6.f},
+                             {11.f / 18.f, 1.f / 9.f, 1.f / 6.f, -1.f / 3.f},
+                             {0.f, -1.f / 6.f, 0.f, 1.f / 6.f}};
       assertx(dist(inverse(m), expected) < 1e-6f);
     }
     assertx(dist(mat_mul(m, inverse(m)), identity_mat<float>(4)) < 1e-6f);

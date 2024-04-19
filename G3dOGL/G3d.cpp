@@ -345,7 +345,7 @@ int main(int argc, const char** argv) {
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));
   }
   // always jump to good viewpoint
-  if (contains(keystring, 'j') || statefile =="none") {
+  if (contains(keystring, 'j') || statefile == "none") {
     // do nothing
   } else if (statefile != "noname.s3d") {
     keystring += ",";

@@ -728,8 +728,8 @@ class Multigrid : noncopyable {
         (!have_orig() ? 0
                       : max_e(max_abs_element(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result))));
     string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result - _mean_desired));
-    showf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n", s.c_str(), mag_e(mean_result), smean_off.c_str(),
-          rms_resid, rms_err, max_abs_err);
+    showf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",  //
+          s.c_str(), mag_e(mean_result), smean_off.c_str(), rms_resid, rms_err, max_abs_err);
   }
   bool coarse_enough(CGridView<D, T> grid_rhs) { return max(grid_rhs.dims()) <= k_direct_solver_resolution; }
   // Recursively perform a multigrid V-cyce.
@@ -764,8 +764,8 @@ class Multigrid : noncopyable {
     relax(grid_rhs, grid_result, k_num_iter_gauss_seidel, true);
     double rms3 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
     if (vverbose)
-      showf(" resy=%-7d  rms0=%-12.7e rms1=%-12.7e   rms2=%-12.7e rms3=%-12.7e\n", grid_rhs.dim(0), rms0, rms1, rms2,
-            rms3);
+      showf(" resy=%-7d  rms0=%-12.7e rms1=%-12.7e   rms2=%-12.7e rms3=%-12.7e\n",  //
+            grid_rhs.dim(0), rms0, rms1, rms2, rms3);
   }
   // Perform a sequence of multigrid V-cycles.
   void run_multigrid(CGridView<D, T> grid_rhs, GridView<D, T> grid_result) {

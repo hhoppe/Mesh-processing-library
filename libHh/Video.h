@@ -56,7 +56,7 @@ class Video : public Grid<3, Pixel> {
   int xsize() const { return dim(2); }
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
-  void read_file(const string& filename);  // filename may be "-" for std::cin;  may throw std::runtime_error
+  void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error
   void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
 
   // Misc:

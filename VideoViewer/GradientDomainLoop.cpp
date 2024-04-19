@@ -982,8 +982,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
             }
           }
           if (verbose)
-            showf(" stream %d (%d of %d for period[%d]==%-3d): input %-3d->%-3d (%d)\n", si, streami, nstreams, pi,
-                  period, rvideo_fi[si], fi, fi - rvideo_fi[si]);
+            showf(" stream %d (%d of %d for period[%d]==%-3d): input %-3d->%-3d (%d)\n",  //
+                  si, streami, nstreams, pi, period, rvideo_fi[si], fi, fi - rvideo_fi[si]);
           if (fi >= 0 && fi < rvideo_fi[si]) {
             prvideos[si] = make_unique<RVideo>(video_filename, use_nv12);  // open or re-open at beginning
             rvideo_fi[si] = -1;

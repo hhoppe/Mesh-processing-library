@@ -200,9 +200,7 @@ static string beautify_type_name(string s) {
 
 namespace details {
 
-string forward_slash(const string& s) {
-  return replace_all(s, "\\", "/");
-}
+string forward_slash(const string& s) { return replace_all(s, "\\", "/"); }
 
 string extract_function_type_name(string s) {
   // See experiments in ~/git/hh_src/test/misc/test_compile_time_type_name.cpp

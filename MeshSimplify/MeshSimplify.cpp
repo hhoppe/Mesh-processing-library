@@ -1083,8 +1083,8 @@ void parse_mesh_material_identifiers() {
     material_strings[matid] = GMesh::string_update(srep, "matid", csform(str, "%d", matid));
     msrepmatid.enter(&srep, matid);
   }
-  showdf("Materials=%d: %d with matid (%d unused), %d without matid\n", material_strings.num(), nfirst,
-         nexistingmatidempty, material_strings.num() - nfirst);
+  showdf("Materials=%d: %d with matid (%d unused), %d without matid\n",  //
+         material_strings.num(), nfirst, nexistingmatidempty, material_strings.num() - nfirst);
   showff("nmaterials=%d\n", material_strings.num());
   for_int(i, material_strings.num()) showff("%s\n", material_strings[i].c_str());
   for (Face f : mesh.faces()) f_matid(f) = msrepmatid.get(mfsrep.get(f));
@@ -1356,8 +1356,8 @@ void analyze_mesh(const char* s) {
     float dmax2 = 0.f;
     for (const fptinfo& fpt : fpts) dmax2 = max(dmax2, fpt.dist2);
     float fdmax = my_sqrt(dmax2);
-    showff(" fdist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n", fpts.num(), fdrms, fdrms / gdiam * 100, fdmax,
-           fdmax / gdiam * 100);
+    showff(" fdist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
+           fpts.num(), fdrms, fdrms / gdiam * 100, fdmax, fdmax / gdiam * 100);
   }
   {
     float eedis = 0.f;
@@ -1366,8 +1366,8 @@ void analyze_mesh(const char* s) {
     float dmax2 = 0.f;
     for (const eptinfo& ept : epts) dmax2 = max(dmax2, ept.dist2);
     float edmax = my_sqrt(dmax2);
-    showff(" edist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n", epts.num(), edrms, edrms / gdiam * 100, edmax,
-           edmax / gdiam * 100);
+    showff(" edist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
+           epts.num(), edrms, edrms / gdiam * 100, edmax, edmax / gdiam * 100);
   }
   if (have_ccolors) {
     // Compute color errors (Euclidean distance in RGB unit cube)
@@ -1611,10 +1611,10 @@ void perhaps_initialize() {
   }
   if (!have_ccolors || !gcolc) fit_colors = false;
   if (!have_cnormals || !gnorc) fit_normals = false;
-  showff("PM: bounding box %g %g %g  %g %g %g\n", gbbox[0][0], gbbox[0][1], gbbox[0][2], gbbox[1][0], gbbox[1][1],
-         gbbox[1][2]);
-  showdf("parameters: diam=%g fitcol=%d colfac=%g fitnor=%d norfac=%g\n", gdiam, fit_colors, colfac, fit_normals,
-         norfac);
+  showff("PM: bounding box %g %g %g  %g %g %g\n",  //
+         gbbox[0][0], gbbox[0][1], gbbox[0][2], gbbox[1][0], gbbox[1][1], gbbox[1][2]);
+  showdf("parameters: diam=%g fitcol=%d colfac=%g fitnor=%d norfac=%g\n",  //
+         gdiam, fit_colors, colfac, fit_normals, norfac);
   if ((fit_colors || fit_normals) || attrib_project) {
     has_wad2 = true;
     showff("PM: has_wad2\n");
@@ -4266,9 +4266,9 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       os << "\n";
       clear_face_string(f);
     }
-    os << sform("REcol %d  %d %d  %d %d  %d %d  %d\n", mesh.vertex_id(vs), mesh.vertex_id(vs), mesh.vertex_id(vt),
-                (vl ? mesh.vertex_id(vl) : 0), (vr ? mesh.vertex_id(vr) : 0), mesh.face_id(fl),
-                (fr ? mesh.face_id(fr) : 0), min_ii);
+    os << sform("REcol %d  %d %d  %d %d  %d %d  %d\n",  //
+                mesh.vertex_id(vs), mesh.vertex_id(vs), mesh.vertex_id(vt), (vl ? mesh.vertex_id(vl) : 0),
+                (vr ? mesh.vertex_id(vr) : 0), mesh.face_id(fl), (fr ? mesh.face_id(fr) : 0), min_ii);
   }
   if (minqem) {
     if (qemlocal) {
@@ -4575,8 +4575,8 @@ void optimize() {
     }
     if (verb >= 1) cprogress.update((orig_nfaces - float(mesh.num_faces())) / max(1.f, orig_nfaces - float(nfaces)));
     if (verb >= 4 && ntested % 1000 == 0) {
-      showf("it %5d, pq%5d/%-5d nf=%d (%3d) eval=%-2d notbest=%-2d\n", ntested, pqecost.num(), mesh.num_edges(),
-            mesh.num_faces(), mesh.num_faces() - onf, neval, nnotbest);
+      showf("it %5d, pq%5d/%-5d nf=%d (%3d) eval=%-2d notbest=%-2d\n",  //
+            ntested, pqecost.num(), mesh.num_edges(), mesh.num_faces(), mesh.num_faces() - onf, neval, nnotbest);
       onf = mesh.num_faces();
       neval = 0;
       nnotbest = 0;
@@ -4622,7 +4622,8 @@ void optimize() {
     Vertex vs;
     EResult result = try_ecol(e, false, cost, min_ii, vs);
     if (verb >= 4)
-      showdf("op, expect=%e got=%e thresh=%e %s\n", expect_cost, cost, thresh_cost,
+      showdf("op, expect=%e got=%e thresh=%e %s\n",  //
+             expect_cost, cost, thresh_cost,
              (result == R_success ? sform(" success (%.2f)", cost / thresh_cost).c_str() : ""));
     if (cost > thresh_cost || cost == k_bad_cost) {
       if (cost != k_bad_cost) {
@@ -4696,11 +4697,11 @@ void optimize() {
   }
   cprogress.clear();
   if (verb >= 2)
-    showdf("it %5d, pq%5d/%-5d nf=%d (%3d) eval=%-2d notbest=%-2d\n", ntested, pqecost.num(), mesh.num_edges(),
-           mesh.num_faces(), mesh.num_faces() - onf, neval, nnotbest);
+    showdf("it %5d, pq%5d/%-5d nf=%d (%3d) eval=%-2d notbest=%-2d\n",  //
+           ntested, pqecost.num(), mesh.num_edges(), mesh.num_faces(), mesh.num_faces() - onf, neval, nnotbest);
   if (verb >= 2)
-    showdf("Finished optimization.  |pq|=%d/%dtot  min=%g\n", pqecost.num(), mesh.num_edges(),
-           (pqecost.empty() ? 0 : pqecost.min_priority()));
+    showdf("Finished optimization.  |pq|=%d/%dtot  min=%g\n",  //
+           pqecost.num(), mesh.num_edges(), (pqecost.empty() ? 0 : pqecost.min_priority()));
   if (verb >= 2)
     showdf("Operations successful: %d/%d  (%.1f%%)\n", nsuccess, ntested, float(nsuccess) / max(ntested, 1) * 100.f);
   if (tvcfac) showdf("Number of cache misses: %d\n", tvc_ncachemiss);
@@ -4930,8 +4931,8 @@ int main(int argc, const char** argv) {
   wrap_up();
   int final_nf = mesh.num_faces();
   timer.stop();
-  showdf("Time: cpu%.2f real%.2f  rate:%.2f f/sec\n", timer.cpu(), timer.real(),
-         (orig_nf - final_nf) / max(timer.cpu(), 0.001));
+  showdf("Time: cpu%.2f real%.2f  rate:%.2f f/sec\n",  //
+         timer.cpu(), timer.real(), (orig_nf - final_nf) / max(timer.cpu(), 0.001));
   timer.start();
   timer.terminate();
   hh_clean_up();

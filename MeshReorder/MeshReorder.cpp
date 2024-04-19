@@ -387,8 +387,9 @@ int analyze_mesh(int cs) {
   VertexCache& vcache = *up_vcache;
   int nmiss = 0;
   for_int(i, ar_verts.num()) nmiss += !vcache.access_hits(ar_verts[i]);
-  showdf("cs=%-6d nmiss=%-6d %5.1f%%  v/t=%5.3f  v/v=%5.3f\n", cs, nmiss, float(nmiss) / ar_verts.num() * 100.f,
-         float(nmiss) / mesh.num_faces(), float(nmiss) / mesh.num_vertices());
+  showdf("cs=%-6d nmiss=%-6d %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //
+         cs, nmiss, float(nmiss) / ar_verts.num() * 100.f, float(nmiss) / mesh.num_faces(),
+         float(nmiss) / mesh.num_vertices());
   return nmiss;
 }
 
@@ -473,9 +474,9 @@ void do_analyze() {
   float b_t = b_v + b_i;
   showdf("Bandwidth: vertices %4.2f b/t, indices %4.2f b/t, Total %4.2f byte/tri\n", b_v, b_i, b_t);
   string nametail = get_path_tail(gfilename);
-  showdf("%-14.14s v/t=%5.3f v/v=%5.3f slen=%4.1f bv=%4.2f bi=%4.2f bt=%4.2f\n", nametail.c_str(),
-         float(nmiss) / mesh.num_faces(), float(nmiss) / mesh.num_vertices(), float(mesh.num_faces()) / nstrips, b_v,
-         b_i, b_t);
+  showdf("%-14.14s v/t=%5.3f v/v=%5.3f slen=%4.1f bv=%4.2f bi=%4.2f bt=%4.2f\n",  //
+         nametail.c_str(), float(nmiss) / mesh.num_faces(), float(nmiss) / mesh.num_vertices(),
+         float(mesh.num_faces()) / nstrips, b_v, b_i, b_t);
 }
 
 // Analyze the badnwidth of the mesh under the traditional triangle strip
@@ -487,8 +488,8 @@ void do_strip_analyze() {
   analyze_strips(nverts, nstrips);
   // number of vertices transferred
   int nvt = nverts - (nstrips - 1) * k_strip_restart_nvindices;
-  showdf("nverts_transf=%d     %5.1f%%  v/t=%5.3f  v/v=%5.3f\n", nvt, float(nvt) / ar_verts.num() * 100.f,
-         float(nvt) / mesh.num_faces(), float(nvt) / mesh.num_vertices());
+  showdf("nverts_transf=%d     %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //
+         nvt, float(nvt) / ar_verts.num() * 100.f, float(nvt) / mesh.num_faces(), float(nvt) / mesh.num_vertices());
   showdf("Bandwidth:                                       Total %4.2f byte/tri\n",
          float(nvt * k_bytes_per_vertex) / mesh.num_faces());
 }

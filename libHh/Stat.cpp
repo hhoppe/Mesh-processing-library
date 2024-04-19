@@ -106,8 +106,8 @@ string Stat::short_string() const {
   // (on _WIN32, could also use "(%-7I64d)")
   // Use %14.8g rather than %12.6g because d_avg and d_sdv are double-precision.
   long long ln = _n;
-  return sform("(%-7lld)%12g:%-12g av=%-14.8g %s=%.8g", ln, _min, _max, d_avg, (!_setrms ? "sd" : "rms"),
-               (!_setrms ? d_sdv : d_rms));
+  return sform("(%-7lld)%12g:%-12g av=%-14.8g %s=%.8g",  //
+               ln, _min, _max, d_avg, (!_setrms ? "sd" : "rms"), (!_setrms ? d_sdv : d_rms));
 }
 
 string Stat::name_string() const {

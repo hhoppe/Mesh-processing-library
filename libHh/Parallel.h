@@ -206,12 +206,12 @@ class ThreadPoolIndexedTask : noncopyable {
   }
 };
 
-template <typename Iterator>
-class Subrange {
+template <typename Iterator> class Subrange {
  public:
   Subrange(Iterator begin_, Iterator end_) : _begin(begin_), _end(end_) {}
   auto begin() { return _begin; }
   auto end() { return _end; }
+
  private:
   Iterator _begin, _end;
 };
@@ -243,7 +243,7 @@ void parallel_for_chunk(const Range& range_, int num_threads, const ProcessChunk
   const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
-    desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
+      desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
   if (!thread_pool || thread_pool->already_active()) {
     // Process the entire range as a single chunk.
     const int thread_index = 0;

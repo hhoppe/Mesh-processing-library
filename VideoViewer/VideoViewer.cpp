@@ -649,8 +649,8 @@ void app_set_window_title() {
     if (!g_fit_view_to_window && !view_has_rotation() && !image_is_fully_visible()) {
       Vec2<int> yxL, yxU;
       fully_visible_image_rectangle(yxL, yxU);
-      s += sform(" (%d, %d)-(%d, %d)  (W=%d, H=%d)", yxL[1], yxL[0], yxU[1] - 1, yxU[0] - 1, yxU[1] - yxL[1],
-                 yxU[0] - yxL[0]);
+      s += sform(" (%d, %d)-(%d, %d)  (W=%d, H=%d)",  //
+                 yxL[1], yxL[0], yxU[1] - 1, yxU[0] - 1, yxU[1] - yxL[1], yxU[0] - yxL[0]);
     }
   }
   hw.set_window_title(s);
@@ -2570,8 +2570,8 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
               } else {
                 Pixel pix = get_frame_pix(yxi);
                 Vec4<int> p = convert<int>(pix);
-                s += sform("RGB:(%d, %d, %d, %d), HTML:(#%02X%02X%02X%02X)", p[0], p[1], p[2], p[3], p[0], p[1], p[2],
-                           p[3]);
+                s += sform("RGB:(%d, %d, %d, %d), HTML:(#%02X%02X%02X%02X)",  //
+                           p[0], p[1], p[2], p[3], p[0], p[1], p[2], p[3]);
               }
               if (!is_fullscreen()) {
                 set_window_title(s);

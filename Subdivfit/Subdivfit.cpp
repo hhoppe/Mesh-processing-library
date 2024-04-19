@@ -253,8 +253,9 @@ double get_etot() {
 }
 
 void analyze_mesh(const string& s) {
-  showdf("%s: v=%d nse=%d/%d  edis=%g espr=%g edih=%g earea=%g etot=%g\n", s.c_str(), gmesh.num_vertices(),
-         num_sharp_edges(), gmesh.num_edges(), get_edis(), get_espr(), 0., get_earea(), get_etot());
+  showdf("%s: v=%d nse=%d/%d  edis=%g espr=%g edih=%g earea=%g etot=%g\n",  //
+         s.c_str(), gmesh.num_vertices(), num_sharp_edges(), gmesh.num_edges(), get_edis(), get_espr(), 0.,
+         get_earea(), get_etot());
 }
 
 void global_all_project(const SubMesh& smesh) {
@@ -1342,7 +1343,8 @@ void do_stoc() {
     }
     if (result == R_success) wf_frame();
     if (verb >= 3)
-      showf("# it %5d, %s (after %3d) [%5d/%-5d] %s\n", i, opname[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
+      showf("# it %5d, %s (after %3d) [%5d/%-5d] %s\n",  //
+            i, opname[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
             (result == R_success  ? sform("* success e=%e", edrss).c_str()
              : result == R_energy ? sform("positive e=%e", edrss).c_str()
                                   : orname[result].c_str()));

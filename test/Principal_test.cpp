@@ -92,8 +92,8 @@ void test_em() {
     assertx(em_principal_components(mi, mo2, eimag2, 10));
   }
   float sumest = float(mag2(eimag2));
-  showf("sum=%g  sumest=%g (%g)  sumact=%g (%g) (lost=%g)\n", sum, sumest, sumest / sum, sumact, sumact / sum,
-        sumact / sum - sumest / sum);
+  showf("sum=%g  sumest=%g (%g)  sumact=%g (%g) (lost=%g)\n",  //
+        sum, sumest, sumest / sum, sumact, sumact / sum, sumact / sum - sumest / sum);
   {
     double var = 0.f;
     for_int(y, mi.ysize()) var += mag2(mi[y]);

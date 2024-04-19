@@ -50,8 +50,9 @@ void ensure_pm_loaded() {
 }
 
 void do_info() {
-  showdf("Mesh vspli=%d nv=%d nw=%d nf=%d\n", pmi->_vertices.num() - pmesh._base_mesh._vertices.num(),
-         pmi->_vertices.num(), pmi->_wedges.num(), pmi->_faces.num());
+  showdf("Mesh vspli=%d nv=%d nw=%d nf=%d\n",  //
+         pmi->_vertices.num() - pmesh._base_mesh._vertices.num(), pmi->_vertices.num(), pmi->_wedges.num(),
+         pmi->_faces.num());
 }
 
 void do_minfo() {
@@ -605,13 +606,14 @@ void do_compression() {
                        enc_flr_matid.entropy() + de_pl.total_entropy() + de_ps.total_entropy() + de_n.total_entropy() +
                        de_uv.total_entropy());
     if (verb >= 2) showf("Sum of bit fields per vsplit: %.1f\n", tot_bits / float(nvsplits));
-    showf("Encoded PMesh: %d bits (%.1f bits/vertex)\n", bits_basemesh + tot_bits,
-          float(bits_basemesh + tot_bits) / full_nv);
+    showf("Encoded PMesh: %d bits (%.1f bits/vertex)\n",  //
+          bits_basemesh + tot_bits, float(bits_basemesh + tot_bits) / full_nv);
     bits_e_pmesh = float(bits_basemesh + tot_bits) / full_nv;
-    showf("** %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f\n", bits_flclw / nvsplits,
-          bits_vs_index / nvsplits, enc_vlr_offset.entropy() / nvsplits, enc_corners_ii_matp.entropy() / nvsplits,
-          enc_flr_matid.entropy() / nvsplits, de_pl.total_entropy() / nvsplits, de_ps.total_entropy() / nvsplits,
-          de_n.total_entropy() / nvsplits, de_uv.total_entropy() / nvsplits, float(tot_bits) / nvsplits);
+    showf("** %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f & %.1f\n",  //
+          bits_flclw / nvsplits, bits_vs_index / nvsplits, enc_vlr_offset.entropy() / nvsplits,
+          enc_corners_ii_matp.entropy() / nvsplits, enc_flr_matid.entropy() / nvsplits,
+          de_pl.total_entropy() / nvsplits, de_ps.total_entropy() / nvsplits, de_n.total_entropy() / nvsplits,
+          de_uv.total_entropy() / nvsplits, float(tot_bits) / nvsplits);
   }
   if (gzip) {
     {
@@ -659,8 +661,8 @@ void do_compression() {
     bits_g_pmesh = nbytes * 8.f / full_nv;
     if (verb >= 2) showf("Gzipped PMesh: %.1f bits/vertex\n", bits_g_pmesh);
   }
-  showf("** %.0f & %.0f & %.0f &  %.0f & %.0f & %.0f\n", bits_m_mesh, bits_g_mesh, bits_e_mesh, bits_m_pmesh,
-        bits_g_pmesh, bits_e_pmesh);
+  showf("** %.0f & %.0f & %.0f &  %.0f & %.0f & %.0f\n",  //
+        bits_m_mesh, bits_g_mesh, bits_e_mesh, bits_m_pmesh, bits_g_pmesh, bits_e_pmesh);
   nooutput = true;
 }
 
@@ -1182,8 +1184,8 @@ void do_stat() {
   ensure_pm_loaded();
   const AWMesh& bm = pmesh._base_mesh;
   showdf("Basemesh nv=%d nw=%d nf=%d\n", bm._vertices.num(), bm._wedges.num(), bm._faces.num());
-  showdf("Fullmesh nv=%d nw=%d nf=%d\n", pmesh._info._full_nvertices, pmesh._info._full_nwedges,
-         pmesh._info._full_nfaces);
+  showdf("Fullmesh nv=%d nw=%d nf=%d\n",  //
+         pmesh._info._full_nvertices, pmesh._info._full_nwedges, pmesh._info._full_nfaces);
   int nvsplits = pmesh._info._tot_nvsplits;
   showdf("Nvsplits=%d\n", nvsplits);
   if (nvsplits) {
@@ -1254,8 +1256,8 @@ int analyze_mesh(int cs) {
     }
   }
   if (0)
-    showdf("cs=%-6d nmiss=%-6d %5.1f%%  v/t=%5.3f  v/v=%5.3f\n", cs, nmiss,
-           float(nmiss) / (3 * pmi->_faces.num()) * 100.f, float(nmiss) / pmi->_faces.num(),
+    showdf("cs=%-6d nmiss=%-6d %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //
+           cs, nmiss, float(nmiss) / (3 * pmi->_faces.num()) * 100.f, float(nmiss) / pmi->_faces.num(),
            float(nmiss) / pmi->_wedges.num());
   return nmiss;
 }
@@ -1333,9 +1335,9 @@ void do_tvc_analyze() {
   if (0) showdf("Bandwidth: vertices %4.2f b/t, indices %4.2f b/t, Total %4.2f byte/tri\n", b_v, b_i, b_t);
   string nametail = get_path_tail(gfilename);
   if (1)
-    showdf("%-14.14s v/t=%5.3f v/v=%5.3f slen=%4.1f bv=%4.2f bi=%4.2f bt=%4.2f\n", nametail.c_str(),
-           float(nmiss) / pmi->_faces.num(), float(nmiss) / pmi->_vertices.num(), float(pmi->_faces.num()) / nstrips,
-           b_v, b_i, b_t);
+    showdf("%-14.14s v/t=%5.3f v/v=%5.3f slen=%4.1f bv=%4.2f bi=%4.2f bt=%4.2f\n",  //
+           nametail.c_str(), float(nmiss) / pmi->_faces.num(), float(nmiss) / pmi->_vertices.num(),
+           float(pmi->_faces.num()) / nstrips, b_v, b_i, b_t);
   nooutput = true;
 }
 

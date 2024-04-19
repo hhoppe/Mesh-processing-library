@@ -167,10 +167,11 @@ class Timers {
         }
         int64_t n = stat.num();
         long long ln = n;  // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
-        showff(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n", sform("%.19s:", stat.name().c_str()).c_str(),
-               ln, n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ",
-               n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ", precision, stat_sum / n,
-               precision, stat_sum, sparallel.c_str(), precision, timer_info.sum_real_time);
+        showff(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",  //
+               sform("%.19s:", stat.name().c_str()).c_str(), ln,
+               n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ",   //
+               n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ",  //
+               precision, stat_sum / n, precision, stat_sum, sparallel.c_str(), precision, timer_info.sum_real_time);
         if (stat.num() > 1000 && stat.num() * 1e-6 > stat_sum) {
           showdf("**Timer '%s' created more overhead than measured!\n", stat.name().c_str());
         }
@@ -236,9 +237,10 @@ void Timer::terminate() {
       if (_process_cpu_time > u) u = _process_cpu_time;
     }
   }
-  const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // num fractional decimal digits
-  string s = sform(" (%-20.20s %8.*f%s %8.*f)\n", sform("%.19s:", _name.c_str()).c_str(), precision, u,
-                   sparallel.c_str(), precision, real());
+  // Number of fractional decimal digits.
+  const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);
+  string s = sform(" (%-20.20s %8.*f%s %8.*f)\n",  //
+                   sform("%.19s:", _name.c_str()).c_str(), precision, u, sparallel.c_str(), precision, real());
   if (cmode == EMode::normal) {
     showdf("%s", s.c_str());
   } else {

@@ -106,8 +106,7 @@ bool loop() {
     for_int(i, 3) {
       Vector& vec = t.v(i);
       int axis = arg_max(abs(vec));
-      for_int(j, 3)
-        vec[j] = j == axis ? sign(vec[j]) : 0.f;
+      for_int(j, 3) vec[j] = j == axis ? sign(vec[j]) : 0.f;
     }
     t.p() = Point(0.f, 0.f, 0.f);
     zoom = 0.f;

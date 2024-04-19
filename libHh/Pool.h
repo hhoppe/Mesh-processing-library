@@ -109,8 +109,8 @@ class Pool : noncopyable {
     int n = 0;
     for (Link* p = _h; p; p = p->next) n++;
     if (sdebug >= 2 || (sdebug && _nalloc) || n != _nalloc)
-      showf("Pool %-20s: (size %2d) %6d/%-6d elements outstanding%s\n", _name, _esize, _nalloc - n, _nalloc,
-            (n != _nalloc ? " **" : ""));
+      showf("Pool %-20s: (size %2d) %6d/%-6d elements outstanding%s\n",  //
+            _name, _esize, _nalloc - n, _nalloc, (n != _nalloc ? " **" : ""));
     if (n != _nalloc) return;
     for (Chunk* chunk = _chunkh; chunk;) {
       uint8_t* p = reinterpret_cast<uint8_t*>(chunk);

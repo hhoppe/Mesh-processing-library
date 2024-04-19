@@ -169,8 +169,8 @@ string mesh_genus_string(const Mesh& mesh) {
   for (Vertex v : mesh.vertices()) {
     if (mesh.flags(v).flag(GMesh::vflag_cusp)) ncv++;
   }
-  return sform("Genus: c=%d b=%d  v=%d f=%d e=%d  genus=%g%s", nc, nb, nv, nf, ne, genus,
-               (nse + ncv) ? sform("  sharpe=%d cuspv=%d", nse, ncv).c_str() : "");
+  return sform("Genus: c=%d b=%d  v=%d f=%d e=%d  genus=%g%s",  //
+               nc, nb, nv, nf, ne, genus, (nse + ncv) ? sform("  sharpe=%d cuspv=%d", nse, ncv).c_str() : "");
 }
 
 bool triangulate_face(GMesh& mesh, Face f) {

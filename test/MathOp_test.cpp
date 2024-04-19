@@ -77,7 +77,8 @@ int main() {
         uint32_t ui;
       } u;
       u.f = a;
-      showf("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n", a, u.ui, std::isfinite(a), std::isinf(a), std::isnan(a),
+      showf("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
+            a, u.ui, std::isfinite(a), std::isinf(a), std::isnan(a),
             std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
     };
     float a;

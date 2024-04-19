@@ -761,7 +761,8 @@ void ShowInfo() {
     Vec3<float> ang = frame_to_euler_angles(g_obs[obview].t());
     const Point& p = g_obs[obview].t().p();
     string s;
-    s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s", cob,
+    s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",  //
+              cob,
               (ratemode == ERatemode::position ? 'p'
                : ratemode == ERatemode::move   ? 'm'
                : ratemode == ERatemode::step   ? 's'
@@ -779,8 +780,8 @@ void ShowInfo() {
               editmode ? 'E' : ' ', obview ? '0' + obview : ' ', auto_level ? 'l' : ' ', input ? 'I' : ' ',
               output ? 'O' : ' ', HB::show_info().c_str(), screenrate,
               (info != 2 ? ""
-                         : sform(" [%5.2f] x%12g y%12g z%12g a%+4.0f b%+4.0f p%+4.0f", zoom, p[0], p[1], p[2],
-                                 to_deg(ang[0]), to_deg(ang[1]), to_deg(ang[2]))
+                         : sform(" [%5.2f] x%12g y%12g z%12g a%+4.0f b%+4.0f p%+4.0f",  //
+                                 zoom, p[0], p[1], p[2], to_deg(ang[0]), to_deg(ang[1]), to_deg(ang[2]))
                                .c_str()));
     static const bool show_fps = getenv_bool("G3D_SHOW_FPS");
     // if (HB::get_font_dims()[1] > 9 ...)

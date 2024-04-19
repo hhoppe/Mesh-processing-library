@@ -106,7 +106,7 @@ class GMesh : public Mesh {
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
   // ** Standard I/O for my meshes (see also GMesh(std::istream&)) (see format below):
-  void read_line(char* s);      // no '\n' required
+  void read_line(char* s);  // no '\n' required
   static bool recognize_line(const char* s);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;

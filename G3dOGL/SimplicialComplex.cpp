@@ -868,8 +868,8 @@ void SimplicialComplex::readGMesh(std::istream& is) {
       _material_strings[attrid] = srep;
       msrepattrid.enter(&srep, attrid);
     }
-    showdf("Found %d materials with existing attrid (%d empty)\n", msrepattrid.num(),
-           _material_strings.num() - msrepattrid.num());
+    showdf("Found %d materials with existing attrid (%d empty)\n",  //
+           msrepattrid.num(), _material_strings.num() - msrepattrid.num());
     int nfirst = msrepattrid.num();
     // string str;
     for (const string& srep : hashstring) {

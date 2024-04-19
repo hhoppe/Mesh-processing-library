@@ -280,14 +280,14 @@ void analyze_mesh(const string& s) {
   double edis = get_edis(), espr = get_espr(), edih = get_edih();
   double erep = get_erep();
   double etot = edis + espr + edih + erep;
-  showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n", s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(),
-         get_nbv());
+  showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",  //
+         s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
   showdf("  F=%g S=%g D=%g R=%g T=%g\n", edis, espr, edih, erep, etot);
   float drms = float(sqrt(edis / pt.co.num()) * xformi[0][0]), dmax2 = 0.f;
   for_int(i, pt.co.num()) dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i]));
   float dmax = my_sqrt(dmax2) * xformi[0][0];
-  showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n", drms, drms / gdiam * 100, dmax,
-         dmax / gdiam * 100);
+  showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
+         drms, drms / gdiam * 100, dmax, dmax / gdiam * 100);
 }
 
 void push_face_points(Face f, Array<int>& ar_pts) {
@@ -552,8 +552,8 @@ void do_outlierdelete(Args& args) {
     if (dist(pt.co[i], pt.clp[i]) <= vdist) ar_pt.push(pt.co[i]);
     point_change_face(i, nullptr);
   }
-  showdf("Removing %d outlier points (dist>%g): #pts reduced from %d to %d\n", pt.co.num() - ar_pt.num(), vdist,
-         pt.co.num(), ar_pt.num());
+  showdf("Removing %d outlier points (dist>%g): #pts reduced from %d to %d\n",  //
+         pt.co.num() - ar_pt.num(), vdist, pt.co.num(), ar_pt.num());
   pt.clear();
   for (const Point& p : ar_pt) pt.enter(p);
   initial_projection();
@@ -1414,8 +1414,9 @@ void do_stoc() {
       result = try_op(e, op, edrss);
     }
     if (verb >= 2 && ni % 100 == 0) {
-      showdf("it %5d, ecol=%2d  espl=%2d  eswa=%2d   [%5d/%-5d]\n", ni, opstat.ns[OP_ecol] - lecol,
-             opstat.ns[OP_espl] - lespl, opstat.ns[OP_eswa] - leswa, ecand.num(), mesh.num_edges());
+      showdf("it %5d, ecol=%2d  espl=%2d  eswa=%2d   [%5d/%-5d]\n",  //
+             ni, opstat.ns[OP_ecol] - lecol, opstat.ns[OP_espl] - lespl, opstat.ns[OP_eswa] - leswa, ecand.num(),
+             mesh.num_edges());
       lecol = opstat.ns[OP_ecol];
       lespl = opstat.ns[OP_espl];
       leswa = opstat.ns[OP_eswa];
@@ -1425,8 +1426,8 @@ void do_stoc() {
       continue;
     }
     if (verb >= 3)
-      showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n", ni, opname[op].c_str(), nbad, ecand.num(),
-            mesh.num_edges(), edrss);
+      showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
+            ni, opname[op].c_str(), nbad, ecand.num(), mesh.num_edges(), edrss);
     if (file_spawn) (*file_spawn)().flush();
     nbad = 0;
   }
@@ -1434,8 +1435,9 @@ void do_stoc() {
   const int nat = narrow_cast<int>(sum(opstat.na));
   const int nst = narrow_cast<int>(sum(opstat.ns));
   if (verb >= 2) {
-    showdf("%s(ecol=%d/%d, espl=%d/%d eswa=%d/%d tot=%d/%d)\n", "Endstoc: ", opstat.ns[OP_ecol], opstat.na[OP_ecol],
-           opstat.ns[OP_espl], opstat.na[OP_espl], opstat.ns[OP_eswa], opstat.na[OP_eswa], nst, nat);
+    showdf("%s(ecol=%d/%d, espl=%d/%d eswa=%d/%d tot=%d/%d)\n", "Endstoc: ",  //
+           opstat.ns[OP_ecol], opstat.na[OP_ecol], opstat.ns[OP_espl], opstat.na[OP_espl], opstat.ns[OP_eswa],
+           opstat.na[OP_eswa], nst, nat);
     showdf("         (otswaps=%d)\n", opstat.notswaps);
     showdf("Result of %d attempted operations:\n", nat);
     for_int(i, opstat.nor.num()) showdf("  %5d %s\n", opstat.nor[i], orname[i].c_str());

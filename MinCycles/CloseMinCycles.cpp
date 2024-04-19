@@ -321,8 +321,8 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
     float len = 0.f;
     for (Edge e : ecycle) len += _mesh.length(e);
     if (0)
-      showdf("Cycle edges=%d length=%g v1d=%g v2d=%g e12=%g\n", ecycle.num(), len, v_dist(v1), v_dist(v2),
-             _mesh.length(e12));
+      showdf("Cycle edges=%d length=%g v1d=%g v2d=%g e12=%g\n",  //
+             ecycle.num(), len, v_dist(v1), v_dist(v2), _mesh.length(e12));
     HH_SSTAT(Scyclene, ecycle.num());
     HH_SSTAT(Scyclelen, len);
     assertw(difference_is_within_relative_eps(len, verify_dist * 2.f, 1e-6f));
@@ -383,8 +383,8 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
     float vdist = hpq.min_priority();
     Vertex vnew = hpq.remove_min();
     if (0)
-      showf("pqmin: v=%d lb=%g v_dist(v)=%g v_vprev(v)=%d v_vtouch(v)=%d\n", _mesh.vertex_id(vnew), vdist,
-            v_dist(vnew), v_dist(vnew) == BIGFLOAT ? _mesh.vertex_id(v_vprev(vnew)) : -1,
+      showf("pqmin: v=%d lb=%g v_dist(v)=%g v_vprev(v)=%d v_vtouch(v)=%d\n",  //
+            _mesh.vertex_id(vnew), vdist, v_dist(vnew), v_dist(vnew) == BIGFLOAT ? _mesh.vertex_id(v_vprev(vnew)) : -1,
             v_dist(vnew) != BIGFLOAT ? _mesh.vertex_id(v_vtouch(vnew)) : -1);
     if (v_dist(vnew) != BIGFLOAT) {  // a candidate cycle edge
       if (verb) Warning("Front is touching itself");
@@ -521,8 +521,9 @@ void CloseMinCycles::find_cycles() {
     min_cycle_from_vertex(vseed, false, sr, vfarthest, num_edges);
     ubsr = min(ubsr, sr);  // if find a cycle, possibly reduce the upper-bound on the minimal search radius
     if (verb)
-      showf("it=%-4d v=%-7d sr=%-12g nedges=%-4d lb=%-12g ub=%-12g\n", iter, _mesh.vertex_id(vseed), sr,
-            (num_edges == std::numeric_limits<int>::max() ? -1 : num_edges), lbsr, ubsr);
+      showf("it=%-4d v=%-7d sr=%-12g nedges=%-4d lb=%-12g ub=%-12g\n",  //
+            iter, _mesh.vertex_id(vseed), sr, (num_edges == std::numeric_limits<int>::max() ? -1 : num_edges), lbsr,
+            ubsr);
     if (!(sr * (1.f + 2e-7f) >= lbsr)) {
       SHOW((lbsr - sr) / sr - 1.f);
       assertx(sr >= lbsr);
@@ -657,8 +658,8 @@ void CloseMinCycles::compute() {
   }
   showdf("Starting with mesh of genus %d\n", _cgenus);
   find_cycles();
-  showdf("Closed %d cycles (%d handles and %d tunnels), resulting in mesh of genus %d\n", _tot_handles + _tot_tunnels,
-         _tot_handles, _tot_tunnels, _cgenus);
+  showdf("Closed %d cycles (%d handles and %d tunnels), resulting in mesh of genus %d\n",  //
+         _tot_handles + _tot_tunnels, _tot_handles, _tot_tunnels, _cgenus);
   for (Vertex vnew : ar_boundary_centers) {
     for (Face f : Array<Face>(_mesh.faces(vnew))) _mesh.destroy_face(f);
     _mesh.destroy_vertex(vnew);

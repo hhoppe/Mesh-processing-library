@@ -877,9 +877,10 @@ void display_texture_size_info() {
         glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_BLUE_SIZE, &b);
         glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE, &a);
         if (1) glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED, &comp);
-        glGetError();  // ignore any error
-        showf("%-20s %d:%d (%4dx%4d) [%d,%d,%d,%d]%s%s\n", glt_format.name.c_str(), aspyx[1], aspyx[0], max_yx[1],
-              max_yx[0], r, g, b, a, (comp ? " comp" : ""), (mm ? " mipmap" : ""));
+        glGetError();                                       // ignore any error
+        showf("%-20s %d:%d (%4dx%4d) [%d,%d,%d,%d]%s%s\n",  //
+              glt_format.name.c_str(), aspyx[1], aspyx[0], max_yx[1], max_yx[0], r, g, b, a, (comp ? " comp" : ""),
+              (mm ? " mipmap" : ""));
       }
     }
     if (detailed) showf("\n");
@@ -3121,11 +3122,11 @@ depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 
 string HB::show_info() {
   int obn = cob;
-  return sform("[GL %c%c%c%c%c%c%c%c%c%c%c%c%c]", g_xobs.cullface[obn] ? 'b' : ' ',
-               g_xobs.reverse_cull[obn] ? 'r' : ' ', g_xobs.shading[obn] ? 's' : ' ', g_xobs.smooth[obn] ? 'm' : ' ',
-               g_xobs.edges[obn] ? 'e' : ' ', mdepthcue ? 'u' : ' ', antialiasing ? 'a' : ' ',
-               nice_rendering ? 'n' : ' ', perspec ? 'p' : ' ', slidermode ? 'S' : ' ', texture_active ? 't' : ' ',
-               use_dl ? 'C' : ' ',
+  return sform("[GL %c%c%c%c%c%c%c%c%c%c%c%c%c]",  //
+               g_xobs.cullface[obn] ? 'b' : ' ', g_xobs.reverse_cull[obn] ? 'r' : ' ', g_xobs.shading[obn] ? 's' : ' ',
+               g_xobs.smooth[obn] ? 'm' : ' ', g_xobs.edges[obn] ? 'e' : ' ', mdepthcue ? 'u' : ' ',
+               antialiasing ? 'a' : ' ', nice_rendering ? 'n' : ' ', perspec ? 'p' : ' ', slidermode ? 'S' : ' ',
+               texture_active ? 't' : ' ', use_dl ? 'C' : ' ',
                quickmode  ? 'q'
                : butquick ? 'Q'
                           : ' ');
@@ -3527,8 +3528,9 @@ void sr_pre_space() {
     } else {
       // We have a previous frame.
       std::ostream& os = (*sr_stats_file)();
-      os << sform("%6.4f %6.4f %6d %7.5f %4.2f\n", sr_refinement_time, g3d::fchange, srmesh.num_active_faces(),
-                  sr_screen_thresh, float(sr_ncachemiss) / srmesh.num_active_faces());
+      os << sform("%6.4f %6.4f %6d %7.5f %4.2f\n",  //
+                  sr_refinement_time, g3d::fchange, srmesh.num_active_faces(), sr_screen_thresh,
+                  float(sr_ncachemiss) / srmesh.num_active_faces());
     }
   }
   {
@@ -3651,13 +3653,14 @@ void sr_wrap_draw(bool show) {
     bool morph = sr_morph_active;
     string s1 = sform("faces=%-5d", nf);
     string s2 = !bigfont() || !morph ? sform(" pixtol=%4.2f", pixtol) : sform(" pix=%4.2f", pixtol);
-    string s3 = (!morph       ? ""
-                 : !bigfont() ? sform(" morph%02d vgr=%04.1f%% vgc=%04.1f%%", sr_gtime,
-                                      srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
-                                      srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices())
-                              : sform("vgr=%04.1f%% vgc=%04.1f%%",
-                                      srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
-                                      srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices()));
+    string s3 =
+        (!morph       ? ""
+         : !bigfont() ? sform(" morph%02d vgr=%04.1f%% vgc=%04.1f%%",  //
+                              sr_gtime, srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
+                              srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices())
+                      : sform("vgr=%04.1f%% vgc=%04.1f%%",  //
+                              srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
+                              srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices()));
     string s4 = (sr_ntstrips     ? sform(" f/strip=%4.1f", float(nf) / sr_ntstrips)
                  : sr_ncachemiss ? sform(" v/t=%4.2f", float(sr_ncachemiss) / srmesh.num_active_faces())
                                  : "");

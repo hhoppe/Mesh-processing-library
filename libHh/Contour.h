@@ -72,10 +72,10 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     assertx(_queue.empty());
     if (_os) {
       *_os << sform("%sMarch:\n", g_comment_prefix_string);
-      *_os << sform("%svisited %d cubes (%d were undefined, %d contained nothing)\n", g_comment_prefix_string,
-                    _ncvisited, _ncundef, _ncnothing);
-      *_os << sform("%sevaluated %d vertices (%d were zero, %d were undefined)\n", g_comment_prefix_string, _nvevaled,
-                    _nvzero, _nvundef);
+      *_os << sform("%svisited %d cubes (%d were undefined, %d contained nothing)\n",  //
+                    g_comment_prefix_string, _ncvisited, _ncundef, _ncnothing);
+      *_os << sform("%sevaluated %d vertices (%d were zero, %d were undefined)\n",  //
+                    g_comment_prefix_string, _nvevaled, _nvzero, _nvundef);
       *_os << sform("%sencountered %d tough edges\n", g_comment_prefix_string, _nedegen);
     }
   }

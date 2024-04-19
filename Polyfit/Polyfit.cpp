@@ -606,8 +606,8 @@ void do_stoc() {
         continue;
       }
       if (verb >= 3 || (verb >= 2 && i >= lasti + 100)) {
-        showdf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n", i, opname[op].c_str(), nbad, ecand.num(), verts.num(),
-               edrss);
+        showdf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
+               i, opname[op].c_str(), nbad, ecand.num(), verts.num(), edrss);
         lasti = i;
       }
       if (a3d_spawn) output_poly(*a3d_spawn, true);
@@ -618,8 +618,8 @@ void do_stoc() {
   const int nat = narrow_cast<int>(sum(opstat.na));
   const int nst = narrow_cast<int>(sum(opstat.ns));
   if (verb >= 2) {
-    showdf("Endstoc:  (col=%d/%d, espl=%d/%d tot=%d/%d)\n", opstat.ns[OP_ecol], opstat.na[OP_ecol], opstat.ns[OP_espl],
-           opstat.na[OP_espl], nst, nat);
+    showdf("Endstoc:  (col=%d/%d, espl=%d/%d tot=%d/%d)\n",  //
+           opstat.ns[OP_ecol], opstat.na[OP_ecol], opstat.ns[OP_espl], opstat.na[OP_espl], nst, nat);
     showdf("Result of %d attempted operations:\n", nat);
     for_int(i, R_NUM) showdf("  %5d %s\n", opstat.nor[i], orname[i].c_str());
   }

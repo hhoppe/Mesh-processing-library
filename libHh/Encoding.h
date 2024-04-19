@@ -177,8 +177,8 @@ class DeltaEncoding {
     int total_bits = int(ceil(total_entropy()));
     float enc_signs = _enc_sign[0].entropy() + _enc_sign[1].entropy();
     if (!s.empty())
-      showdf("DE %s: n=%d  nbits=%.1f  sign=%.1f  bdelta=%.1f  total=%.1f  (%d)\n", s.c_str(), _num,
-             _enc_nbits.entropy() / _num, enc_signs / _num, float(_delta_bits) / _num,
+      showdf("DE %s: n=%d  nbits=%.1f  sign=%.1f  bdelta=%.1f  total=%.1f  (%d)\n",  //
+             s.c_str(), _num, _enc_nbits.entropy() / _num, enc_signs / _num, float(_delta_bits) / _num,
              float(total_bits) / _num, total_bits);
     return total_bits;
   }

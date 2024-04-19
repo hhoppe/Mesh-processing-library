@@ -72,15 +72,9 @@ int main() {
       NonlinearOptimization<Eval> opt(g_x);
       assertx(opt.solve());
       switch (ifunc) {
-        case 0:
-          assertx(dist(g_x, V(0.45509f)) < 1e-4f);
-          break;
-        case 1:
-          assertx(dist(g_x, V(0.3f, 0.4f)) < 1e-5f);
-          break;
-        case 2:
-          assertx(dist(g_x, V(-0.19092f, 0.73547f, 0.7f)) < 1e-5f);
-          break;
+        case 0: assertx(dist(g_x, V(0.45509f)) < 1e-4f); break;
+        case 1: assertx(dist(g_x, V(0.3f, 0.4f)) < 1e-5f); break;
+        case 2: assertx(dist(g_x, V(-0.19092f, 0.73547f, 0.7f)) < 1e-5f); break;
         default: assertnever("");
       }
       // x=(     0.45509) f=   0.045971 mag(g)=   9.96e-13)

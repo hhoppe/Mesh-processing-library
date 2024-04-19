@@ -107,8 +107,8 @@ void test_io() {
                         V(0.2288884f, 0.228888392f, 0.228888407f).view())) {
     float f2 = roundtrip(f, 9);  // was 7; in principle 9 is required!  (17 is sufficient for double)
     // %a (hexadecimal float) is not supported in mingw which uses old MS CRT
-    showf("f=%-10.7g %-10.8g %-11.9g %x  f2=%-10.7g %-10.8g %-11.9g %x  f==f2=%d\n", f, f, f, as_uint(f), f2, f2, f2,
-          as_uint(f2), f == f2);
+    showf("f=%-10.7g %-10.8g %-11.9g %x  f2=%-10.7g %-10.8g %-11.9g %x  f==f2=%d\n",  //
+          f, f, f, as_uint(f), f2, f2, f2, as_uint(f2), f == f2);
   }
   // 0.2288884f in FrameIO_test.inp:
   //  VC12 writes it as 0.228888392; this seems incorrect -- it is different as shown below

@@ -455,8 +455,8 @@ void do_writeframe(Args& args) {
 
 void do_info() {
   HH_TIMER("_info");
-  showf("Video nf=%d w=%d h=%d fps=%g bitrate=%d suffix=%s%s\n", video.nframes(), video.xsize(), video.ysize(),
-        video.attrib().framerate, video.attrib().bitrate,
+  showf("Video nf=%d w=%d h=%d fps=%g bitrate=%d suffix=%s%s\n",  //
+        video.nframes(), video.xsize(), video.ysize(), video.attrib().framerate, video.attrib().bitrate,
         video.attrib().suffix == "" ? "unk" : video.attrib().suffix.c_str(),
         video.attrib().audio.size() ? (" (audio: " + video.attrib().audio.diagnostic_string() + ")").c_str() : "");
   Array<Stat> stat_pixels;
@@ -1127,8 +1127,8 @@ void possibly_rescale_loop_parameters() {
   assertx(g_lp.mat_static.ysize() > 0);
   if (g_lp.mat_static.dims() != video.spatial_dims()) {
     // std::cerr << "Scaling vlp from " << g_lp.mat_static.dims() <<  " to " << video.spatial_dims() << "\n";
-    showdf("Scaling vlp from %s to %s\n", make_string(g_lp.mat_static.dims()).c_str(),
-           make_string(video.spatial_dims()).c_str());
+    showdf("Scaling vlp from %s to %s\n",  //
+           make_string(g_lp.mat_static.dims()).c_str(), make_string(video.spatial_dims()).c_str());
   }
   FilterBnd tfilterb(Filter::get("impulse"), Bndrule::reflected);
   auto func_scale_Matrix_int = [&](Matrix<int>& m) {
@@ -2276,8 +2276,8 @@ void do_frameinfo() {
   for_int(f, video.nframes()) {
     Vector median = frame_median(video[f]);
     Vector mean = frame_mean(video[f]);
-    showf(" frame %-3d mean=(%6.2f %6.2f %6.2f) median=(%3g %3g %3g)\n", f, mean[0], mean[1], mean[2], median[0],
-          median[1], median[2]);
+    showf(" frame %-3d mean=(%6.2f %6.2f %6.2f) median=(%3g %3g %3g)\n",  //
+          f, mean[0], mean[1], mean[2], median[0], median[1], median[2]);
   }
 }
 

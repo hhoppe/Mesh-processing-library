@@ -69,7 +69,7 @@ int my_pclose(FILE* file);
 
 inline bool character_requires_quoting(char ch) {
   // cmd special characters: space, &()[]{}^=;!'+,`~
-  return !std::isalnum(ch) && !contains(":/-@_.", ch);  // removed + and ,
+  return !std::isalnum(ch) && !contains(":/-@_.", ch);  // Removed "+" and ",".
 }
 
 bool string_requires_quoting(const string& s) {

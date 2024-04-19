@@ -1196,8 +1196,9 @@ highlight<v>ertices  show_sharp<e>dges
 }
 
 string HB::show_info() {
-  return sform("[X %c%c%c%c%c%c%c%c]", cullface ? 'b' : ' ', " lL"[culledge], reverse_cull ? 'r' : ' ',
-               highlight_vertices ? 'v' : ' ', show_sharp ? 'e' : ' ', fisheye ? 'f' : ' ', hlrmode ? 'h' : ' ',
+  return sform("[X %c%c%c%c%c%c%c%c]",  //
+               cullface ? 'b' : ' ', " lL"[culledge], reverse_cull ? 'r' : ' ', highlight_vertices ? 'v' : ' ',
+               show_sharp ? 'e' : ' ', fisheye ? 'f' : ' ', hlrmode ? 'h' : ' ',
                quickmode  ? 'q'
                : butquick ? 'Q'
                : buthlr   ? 'H'

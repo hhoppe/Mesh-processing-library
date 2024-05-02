@@ -44,7 +44,7 @@ namespace {
 
 const std::wstring orientation_flag = L"/app1/ifd/{ushort=274}";  // EXIF tag for image orientation
 
-#define AS(expr) assertx(SUCCEEDED(expr))
+#define AS(expr) assertt(SUCCEEDED(expr))
 
 inline bool my_GlobalUnlock(HGLOBAL hGbl) { return !GlobalUnlock(hGbl) && GetLastError() == NO_ERROR; }
 

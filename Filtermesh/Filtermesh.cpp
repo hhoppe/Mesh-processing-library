@@ -3372,11 +3372,11 @@ void do_procedure(Args& args) {
     }
     for (Face f : setf) mesh.destroy_face(f);
     for (Vertex v : setv) mesh.destroy_vertex(v);
-  } else if (name == "mark_hole_on_david_mesh") {
-    // mark hole at base of David mesh
+  } else if (name == "mark_holes") {
+    const int large_vertex_degree = args.get_int();
     for (Vertex v : mesh.vertices()) {
-      if (mesh.degree(v) < 100) continue;  // was 50
-      Warning("Marking faces around a vertex");
+      if (mesh.degree(v) < large_vertex_degree) continue;
+      showdf("Marking hole faces around a vertex with degree %d\n", mesh.degree(v));
       for (Face f : mesh.faces(v)) mesh.update_string(f, "hole", "");
     }
   } else if (name == "remove_stmatface_genus_5") {

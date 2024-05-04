@@ -3589,7 +3589,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
       string sbitrate;
       {
         const int bitrate = ob._video.attrib().bitrate;
-        sbitrate = (ob.is_image()       ? ""
+        sbitrate = (ob.is_image()         ? ""
                     : bitrate > 1'000'000 ? sform(" %.2fMbps", bitrate / 1'000'000.f)
                     : bitrate > 1000      ? sform(" %.2fKbps", bitrate / 1000.f)
                     : bitrate > 0         ? sform(" %dbps", bitrate)

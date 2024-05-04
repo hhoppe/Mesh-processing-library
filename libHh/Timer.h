@@ -65,7 +65,7 @@ class Timer : noncopyable {
   bool _ever_started;
   double _thread_cpu_time;   // thread  user + system time
   double _process_cpu_time;  // process user + system time
-  int64_t _real_counter;
+  int64_t _real_time_counter;
   static int _s_show;
   friend class Timers;
   void zero();

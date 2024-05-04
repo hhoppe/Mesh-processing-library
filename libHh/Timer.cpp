@@ -228,11 +228,15 @@ void Timer::terminate() {
   // bool meaningful = u > 1e-8;
   // Moreover, all *cpu* times are quantized to 16 milliseconds, so need a minimum to make any sense.
   bool meaningful = u > .04;
+  // Using hh::ThreadPoolIndexedTask (and unlike OpenMP), the main thread lets the pool threads do the actual work,
+  // so _thread_cpu_time is low and the ratio _process_cpu_time / _thread_cpu_time is not meaningful.
+  // Instead, I consider the ratio _process_cpu_time / _real_time.
   if (_process_cpu_time) {
     if (meaningful) {
       const int ncores = std_thread_hardware_concurrency();
-      if (ncores && _process_cpu_time / u > ncores) u = _process_cpu_time / ncores;
-      sparallel = sform("  x%-4.1f", _process_cpu_time / u);
+      const double parallelism = clamp(_process_cpu_time / real(), 1., double(ncores));
+      sparallel = sform("  x%-4.1f", parallelism);
+      u = max(u, _process_cpu_time / parallelism);
     } else {
       if (_process_cpu_time > u) u = _process_cpu_time;
     }
@@ -253,7 +257,7 @@ void Timer::zero() {
   _started = false;
   _thread_cpu_time = 0.;
   _process_cpu_time = 0.;
-  _real_counter = 0;
+  _real_time_counter = 0;
 }
 
 #if defined(_WIN32)
@@ -286,7 +290,7 @@ void Timer::start() {
   assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
   _process_cpu_time -= double(ti.tv_sec) + double(ti.tv_nsec) * 1e-9;
 #endif  // defined(_WIN32)
-  _real_counter -= get_precise_counter();
+  _real_time_counter -= get_precise_counter();
 }
 
 void Timer::stop() {
@@ -307,12 +311,12 @@ void Timer::stop() {
   assertx(!clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ti));
   _process_cpu_time += double(ti.tv_sec) + double(ti.tv_nsec) * 1e-9;
 #endif  // defined(_WIN32)
-  _real_counter += get_precise_counter();
+  _real_time_counter += get_precise_counter();
 }
 
 double Timer::real() const {
   assertx(!_started);
-  return max(_real_counter * get_seconds_per_counter(), 0.);
+  return max(_real_time_counter * get_seconds_per_counter(), 0.);
 }
 
 double Timer::cpu() const {

@@ -110,8 +110,7 @@ bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin) {
     frame_binary_buf buf;
     buf.magic[0] = k_binary_code;
     buf.magic[1] = 0;
-    assertw(obn >= -32768 && obn < 32768);
-    buf.shortobn = narrow_cast<ushort>(obn);
+    buf.shortobn = assert_narrow_cast<ushort>(obn);
     to_std(&buf.shortobn);
     for_int(i, 4) {
       for_int(j, 3) {
@@ -132,7 +131,7 @@ bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin) {
   if (bin) {
     b.put(char{k_binary_code});
     b.put('\0');
-    b.put(narrow_cast<short>(obn));
+    b.put(assert_narrow_cast<short>(obn));
     for_int(i, 4) for_int(j, 3) b.put(f[i][j]);
     b.put(zoom);
   } else {

@@ -255,10 +255,10 @@ class AWMesh : public WMesh {
  public:
   int get_jvf(int v, int f) const;  // get index of vertex v in face f
   int get_wvf(int v, int f) const;
-  int most_clw_face(int v, int f);  // negative if v is interior vertex
-  int most_ccw_face(int v, int f);  // negative if v is interior vertex
-  bool is_boundary(int v, int f);
-  bool gather_faces(int v, int f, Array<int>& faces);  // ret: is_boundary
+  int most_clw_face(int v, int f) const;  // negative if v is interior vertex
+  int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
+  bool is_boundary(int v, int f) const;
+  bool gather_faces(int v, int f, Array<int>& faces) const;  // ret: is_boundary
   VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
   VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // std::pair<int, int>{vv, ff}.
  private:

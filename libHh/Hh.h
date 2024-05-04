@@ -468,7 +468,7 @@ std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings 
 void my_setenv(const string& varname, const string& value);
 
 // Return false if environment variable is {undefined, "0", or "false"}, true if {"", "1", or "true"), else abort.
-bool getenv_bool(const string& varname);
+bool getenv_bool(const string& varname, bool vdefault = false, bool warn = false);
 
 // Return vdefault if environment variable varname is not defined, 1 if "", value if integer, else abort.
 int getenv_int(const string& varname, int vdefault = 0, bool warn = false);
@@ -477,7 +477,22 @@ int getenv_int(const string& varname, int vdefault = 0, bool warn = false);
 float getenv_float(const string& varname, float vdefault, bool warn = false);
 
 // Return string value of environment variable varname, or "" if not defined.
-string getenv_string(const string& varname);
+string getenv_string(const string& varname, const string& vdefault = "", bool warn = false);
+
+// Return typed value of environment variable varname.
+template <typename T> T getenv_type(const string& varname, T vdefault, bool warn = false);
+template <> inline bool getenv_type<bool>(const string& var, bool vdefault, bool warn) {
+  return getenv_bool(var, vdefault, warn);
+}
+template <> inline int getenv_type<int>(const string& var, int vdefault, bool warn) {
+  return getenv_int(var, vdefault, warn);
+}
+template <> inline float getenv_type<float>(const string& var, float vdefault, bool warn) {
+  return getenv_float(var, vdefault, warn);
+}
+template <> inline string getenv_type<string>(const string& var, string vdefault, bool warn) {
+  return getenv_string(var, vdefault, warn);
+}
 
 // Show any Win32 error if on _WIN32.
 void show_possible_win32_error();

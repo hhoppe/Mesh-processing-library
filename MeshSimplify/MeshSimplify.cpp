@@ -1,7 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include <random>  // std::default_random_engine
-
 #include "MeshSimplify/BQem.h"
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
@@ -3732,11 +3730,11 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       }
     }
     if (keepglobalv && ii != 2 && v_global(v1)) {
-      Warning("Keeping global vertex");
+      if (0) Warning("Keeping global vertex");
       continue;
     }
     if (keepglobalv && ii != 0 && v_global(v2)) {
-      Warning("Keeping global vertex");
+      if (0) Warning("Keeping global vertex");
       continue;
     }
     if (invertexorder) {
@@ -4536,10 +4534,7 @@ void optimize() {
     ConsoleProgress cprogress2;
     // Add some randomness to the way edges are selected.
     Array<Edge> ar(mesh.edges());
-    {
-      std::default_random_engine dre;
-      std::shuffle(ar.begin(), ar.end(), dre);  // clang-tidy reports error here if -U__STRICT_ANSI__.
-    }
+    shuffle(ar, Random::G);
     for (Edge e : ar) {
       if (verb >= 1) cprogress2.update(float(pqecost.num()) / mesh.num_edges());
       ASSERTX(!pqecost.contains(e));

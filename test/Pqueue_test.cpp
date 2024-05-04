@@ -106,11 +106,11 @@ void test4() {
 }
 
 void test5() {
-  std::default_random_engine dre;
+  std::default_random_engine random_engine;
   for_int(itest, 500) {
-    const int n = itest < 30 ? itest : 30 + dre() % 400;
+    const int n = itest < 30 ? itest : 30 + random_engine() % 400;
     HPqueue<int> pq;
-    for_int(i, n) pq.enter_unsorted(i, float(dre()));
+    for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
     pq.sort();
     float a = 0.f;
     while (!pq.empty()) {
@@ -123,13 +123,13 @@ void test5() {
 }
 
 void test6() {
-  std::default_random_engine dre;
+  std::default_random_engine random_engine;
   for_int(itest, 100) {
     const int n = 70;
     HPqueue<int> pq;
-    for_int(i, n) pq.enter_unsorted(i, float(dre()));
+    for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
     pq.sort();
-    for_int(i, n * 3) pq.update(i, float(dre()));
+    for_int(i, n * 3) pq.update(i, float(random_engine()));
     float a = 0.f;
     while (!pq.empty()) {
       float b = pq.min_priority();
@@ -209,17 +209,17 @@ void test8() {
 void test9() {
   const int ntests = 100;
   const int n = 19;
-  std::default_random_engine dre;
+  std::default_random_engine random_engine;
   for_int(k, ntests) {
     Array<int> ar1;
     for_int(i, n) ar1.push(i);
-    std::shuffle(ar1.begin(), ar1.end(), dre);
+    std::shuffle(ar1.begin(), ar1.end(), random_engine);
     Array<float> ar2;
     for_int(i, n) ar2.push(float(i));
-    std::shuffle(ar2.begin(), ar2.end(), dre);
+    std::shuffle(ar2.begin(), ar2.end(), random_engine);
     Array<float> ar3;
     for_int(i, n) ar3.push(float(i));
-    std::shuffle(ar3.begin(), ar3.end(), dre);
+    std::shuffle(ar3.begin(), ar3.end(), random_engine);
     HPqueue<int> hpq;
     for_int(i, n) {
       int j = ar1[i];

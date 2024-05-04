@@ -453,7 +453,7 @@ int Vsplit::expected_wad_num(const PMeshInfo& pminfo) const {
 
 // *** AWMesh
 
-int AWMesh::most_clw_face(int v, int f) {
+int AWMesh::most_clw_face(int v, int f) const {
   int ff = f, lastf;
   do {
     lastf = ff;
@@ -462,7 +462,7 @@ int AWMesh::most_clw_face(int v, int f) {
   return (ff == k_undefined) ? lastf : k_undefined;
 }
 
-int AWMesh::most_ccw_face(int v, int f) {
+int AWMesh::most_ccw_face(int v, int f) const {
   int ff = f, lastf;
   do {
     lastf = ff;
@@ -471,9 +471,9 @@ int AWMesh::most_ccw_face(int v, int f) {
   return (ff == k_undefined) ? lastf : k_undefined;
 }
 
-bool AWMesh::is_boundary(int v, int f) { return most_ccw_face(v, f) != k_undefined; }
+bool AWMesh::is_boundary(int v, int f) const { return most_ccw_face(v, f) != k_undefined; }
 
-bool AWMesh::gather_faces(int v, int f, Array<int>& faces) {
+bool AWMesh::gather_faces(int v, int f, Array<int>& faces) const {
   int ff = f;
   faces.init(0);
   do {

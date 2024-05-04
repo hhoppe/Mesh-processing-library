@@ -671,11 +671,12 @@ void my_setenv(const string& varname, const string& value) {
     setenv(varname.c_str(), value.c_str(), 1);
 }
 
-bool getenv_bool(const string& varname) {
+bool getenv_bool(const string& varname, bool vdefault, bool warn) {
   const char* s = getenv(varname.c_str());
-  if (!s) return false;
+  if (!s) return vdefault;
   if (!*s) return true;
   assertx(check_bool(s));
+  if (warn) showf("Environment variable '%s=%d' overrides default value '%d'\n", varname.c_str(), s, vdefault);
   return !strcmp(s, "1") || !strcmp(s, "true");
 }
 
@@ -698,7 +699,7 @@ float getenv_float(const string& varname, float vdefault, bool warn) {
   return v;
 }
 
-string getenv_string(const string& varname) {
+string getenv_string(const string& varname, const string& vdefault, bool warn) {
 #if 0 && defined(_WIN32)
   assertnever("Would likely have to never use getenv() or putenv().");
   // http://msdn.microsoft.com/en-us/library/tehxacec.aspx :
@@ -706,10 +707,12 @@ string getenv_string(const string& varname) {
   //  system must maintain both copies, resulting in slower execution time. For example, whenever you call
   //  _putenv, a call to _wputenv is also executed automatically, so that the two environment strings correspond.
   const wchar_t* ws = _wgetenv(utf16_from_utf8(varname).c_str());
-  return ws ? utf8_from_utf16(ws) : "";
+  return ws ? utf8_from_utf16(ws) : vdefault;
 #else
   const char* s = getenv(varname.c_str());
-  return s ? s : "";
+  if (!s) return vdefault;
+  if (warn) showf("Environment variable '%s=%g' overrides default value '%s'\n", varname.c_str(), s, vdefault.c_str());
+  return s;
 #endif
 }
 

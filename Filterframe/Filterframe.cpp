@@ -35,16 +35,13 @@ int icount = 0;
 int ocount = 0;
 
 void do_create_euler(Args& args) {
-  float yaw = to_rad(args.get_float());
-  float pitch = to_rad(args.get_float());
-  float roll = to_rad(args.get_float());
-  Vec3<float> angles(yaw, pitch, roll);
+  const float yaw = to_rad(args.get_float());
+  const float pitch = to_rad(args.get_float());
+  const float roll = to_rad(args.get_float());
+  const Vec3<float> angles(yaw, pitch, roll);
   Frame frame = Frame::identity();
   euler_angles_to_frame(angles, frame);
-  int obn = 0;
-  float zoom = 0.f;
-  bool bin = false;
-  assertx(FrameIO::write(std::cout, frame, obn, zoom, bin));
+  assertx(FrameIO::write(std::cout, ObjectFrame{frame}));
   noinput = true;
 }
 
@@ -57,31 +54,28 @@ void do_induce_roll(Frame& t) {
   p2[2] = 0;  // Set elevations to zero.
   icount1++;
   if (icount1 < 3) return;
-  double v1x = double(p1[0]) - p0[0];
-  double v1y = double(p1[1]) - p0[1];
-  double v2x = double(p2[0]) - p0[0];
-  double v2y = double(p2[1]) - p0[1];
-  float sarea = float(v1y * v2x - v1x * v2y);
+  const double v1x = double(p1[0]) - p0[0];
+  const double v1y = double(p1[1]) - p0[1];
+  const double v2x = double(p2[0]) - p0[0];
+  const double v2y = double(p2[1]) - p0[1];
+  const float sarea = float(v1y * v2x - v1x * v2y);
   const int num = 5;
   static Vec<float, num> sa;
   for_int(i, num - 1) sa[i] = sa[i + 1];
   sa[num - 1] = sarea;
-  float s = float(sum(sa));
-  s /= num;
-  float bank = s * induce_roll;
+  const float s = float(sum(sa)) / num;
+  const float bank = s * induce_roll;
   t = Frame::rotation(0, bank) * t;
   HH_SSTAT(Sbank, bank);
   // Not used: it couldn't estimate curvature well enough from my gcanyon_4k2k_fly2.frame file.
 }
 
 bool loop() {
-  Frame t;
-  int obn;
-  float zoom;
-  bool bin;
-  if (!FrameIO::read(std::cin, t, obn, zoom, bin)) return true;
+  ObjectFrame object_frame;
+  if (!FrameIO::read(std::cin, object_frame)) return true;
+  Frame& t = object_frame.frame;
   icount++;
-  if (object >= 0) obn = object;
+  if (object >= 0) object_frame.obn = object;
   if (ginverse) assertw(t.invert());
   if (is_pretransf) t = cpretransf * t;
   if (is_transf) t = t * ctransf;
@@ -90,26 +84,26 @@ bool loop() {
     static float zo;
     if (icount > 1) {
       t = to * pow(~to * t, lowpass);
-      zoom = zo * (1.f - lowpass) + zoom * lowpass;
+      object_frame.zoom = zo * (1.f - lowpass) + object_frame.zoom * lowpass;
     }
     to = t;
-    zo = zoom;
+    zo = object_frame.zoom;
   }
   if (orthonormalize) {
     for_int(i, 3) assertw(t.v(i).normalize());
-    Vector v2 = cross(t.v(0), t.v(1));
-    float vdot = dot(v2, t.v(2));
+    const Vector v2 = cross(t.v(0), t.v(1));
+    const float vdot = dot(v2, t.v(2));
     assertx(abs(vdot) > .99f);
     t.v(2) = v2 * sign(vdot);
   }
   if (snap_to_axes) {
     for_int(i, 3) {
       Vector& vec = t.v(i);
-      int axis = arg_max(abs(vec));
+      const int axis = arg_max(abs(vec));
       for_int(j, 3) vec[j] = j == axis ? sign(vec[j]) : 0.f;
     }
     t.p() = Point(0.f, 0.f, 0.f);
-    zoom = 0.f;
+    object_frame.zoom = 0.f;
   }
   if (induce_roll) do_induce_roll(t);
   if (add_mid_frames) {
@@ -118,14 +112,15 @@ bool loop() {
     if (icount > 1) {
       Frame tn = to * pow(~to * t, .5f);
       tn.p() = interp(to.p(), t.p(), .5f);
-      float zn = (zoom + zo) * .5f;
-      if (!FrameIO::write(std::cout, tn, obn, zn, bin)) return true;
+      const float zn = (object_frame.zoom + zo) * .5f;
+      const ObjectFrame object_frame_new{tn, object_frame.obn, zn, object_frame.binary};
+      if (!FrameIO::write(std::cout, object_frame_new)) return true;
     }
     to = t;
-    zo = zoom;
+    zo = object_frame.zoom;
   }
-  if (toasciit) bin = false;
-  if (tobinary) bin = true;
+  if (toasciit) object_frame.binary = false;
+  if (tobinary) object_frame.binary = true;
   if (statistics) {
     static Point plast;
     if (icount > 1) {
@@ -142,7 +137,7 @@ bool loop() {
   }
   for_int(irepeat, repeat) {
     if (delay) my_sleep(delay);
-    if (!FrameIO::write(std::cout, t, obn, zoom, bin)) return true;
+    if (!FrameIO::write(std::cout, object_frame)) return true;
     ocount++;
     if (b_frame) std::cout << "f 0 0 0\n";
     if (ocount == 1 && eof1) std::cout << "q 0 0 0\n";

@@ -188,15 +188,10 @@ namespace {
 void do_key(Args& args) { keystring += args.get_string(); }
 
 void do_frame(Args& args) {
-  Frame f;
-  int obn;
-  float z;
-  bool bin;
-  {
-    std::istringstream iss(args.get_string());
-    assertx(FrameIO::read(iss, f, obn, z, bin));
-  }
-  UpdateFrame(obn, f, z);
+  ObjectFrame object_frame;
+  std::istringstream iss(args.get_string());
+  assertx(FrameIO::read(iss, object_frame));
+  UpdateFrame(object_frame);
 }
 
 bool s3dname_command_exists() { return command_exists_in_path("s3dname"); }
@@ -248,13 +243,14 @@ void ExpandStateFilename() {
   try_finding_it(statefile);
 }
 
-void UpdateFrame(int obn, const Frame& f, float z) {
+void UpdateFrame(const ObjectFrame& object_frame) {
+  const int obn = object_frame.obn;
   assertx(g_obs.legal(obn));
-  if (FrameIO::is_not_a_frame(f)) {
+  if (FrameIO::is_not_a_frame(object_frame.frame)) {
     g_obs[obn].set_vis(false);
   } else {
-    g_obs[obn].tm() = f;
-    if (!obn && z) zoom = z;
+    g_obs[obn].tm() = object_frame.frame;
+    if (!obn && object_frame.zoom) zoom = object_frame.zoom;
   }
 }
 

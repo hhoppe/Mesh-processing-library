@@ -3,18 +3,15 @@
 using namespace hh;
 
 int main() {
-  Frame f;
-  int obn;
-  float zoom;
-  bool bin;
   const bool frame_binary = getenv_bool("FRAME_BINARY");
   for (;;) {
-    if (!FrameIO::read(std::cin, f, obn, zoom, bin)) break;
+    ObjectFrame object_frame;
+    if (!FrameIO::read(std::cin, object_frame)) break;
     if (0) {
-      SHOW_PRECISE(f);
-      SHOW_PRECISE(zoom);
+      SHOW_PRECISE(object_frame.frame);
+      SHOW_PRECISE(object_frame.zoom);
     }
-    bin = frame_binary;
-    FrameIO::write(std::cout, f, obn, zoom, bin);
+    object_frame.binary = frame_binary;
+    FrameIO::write(std::cout, object_frame);
   }
 }

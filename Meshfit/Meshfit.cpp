@@ -192,7 +192,7 @@ void compute_xform() {
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   gdiam = bbox.max_side();
   xform = bbox.get_frame_to_small_cube();
-  if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+  if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xformi = ~xform;
   for_int(i, pt.co.num()) pt.co[i] *= xform;
   mesh_transform(xform);

@@ -143,7 +143,7 @@ void compute_xform() {
   xform = bbox.get_frame_to_small_cube();
   if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
   float xform_scale = xform[0][0];
-  showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+  showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xformi = ~xform;
   for_int(i, num) co[i] *= xform;
   // nor[] is unchanged

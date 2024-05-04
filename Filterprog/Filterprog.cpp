@@ -765,19 +765,16 @@ void do_view(Args& args) {
   RFile fi(filename);
   for (;;) {
     if (fi().peek() < 0) break;
-    Frame f;
-    int obn;
-    float z;
-    bool bin;
-    if (!assertw(FrameIO::read(fi(), f, obn, z, bin))) break;
-    if (obn) {
+    ObjectFrame object_frame;
+    if (!assertw(FrameIO::read(fi(), object_frame))) break;
+    if (object_frame.obn) {
       Warning("Skipping non-object0 frame");
       continue;
     }
     sel_refinement = true;  // must activate vlineage!
     vlineage.activate();
-    view_frame = f;
-    view_zoom = z;
+    view_frame = object_frame.frame;
+    view_zoom = object_frame.zoom;
     view_iframe = inverse(view_frame);
   }
 }

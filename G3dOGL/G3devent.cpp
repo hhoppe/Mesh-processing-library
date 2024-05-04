@@ -34,15 +34,14 @@ void save_state() {
   ExpandStateFilename();
   try {
     WFile fi(statefile);  // may throw
-    Frame ft;
-    FrameIO::create_not_a_frame(ft);
+    Frame ft = FrameIO::get_not_a_frame();
     for (int i = 0; i <= g_obs.last; i++) {
       bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
       const Frame& f = is_vis ? g_obs[i].t() : ft;
       if (i && f.is_ident()) continue;
-      assertw(FrameIO::write(fi(), f, i, (!i ? zoom : 0.f), false));
+      assertw(FrameIO::write(fi(), ObjectFrame{f, i, (!i ? zoom : 0.f)}));
     }
-    if (!tview.is_ident()) assertw(FrameIO::write(fi(), tview, -1, 0.f, false));
+    if (!tview.is_ident()) assertw(FrameIO::write(fi(), ObjectFrame{tview, -1}));
     assertw(fi());
   } catch (const std::runtime_error& ex) {
     SHOW("Cannot save to '" + statefile + "' : " + ex.what());
@@ -59,15 +58,12 @@ void read_state() {
         assertx(my_getline(fi(), sline));
         continue;
       }
-      Frame f;
-      int obn;
-      float z;
-      bool bin;
-      if (!assertw(FrameIO::read(fi(), f, obn, z, bin))) break;
-      if (obn == -1) {
-        tview = f;
+      ObjectFrame object_frame;
+      if (!assertw(FrameIO::read(fi(), object_frame))) break;
+      if (object_frame.obn == -1) {
+        tview = object_frame.frame;
       } else {
-        UpdateFrame(obn, f, z);
+        UpdateFrame(object_frame);
       }
     }
   } catch (const std::runtime_error& ex) {
@@ -648,10 +644,10 @@ void show_all_info() {
   SHOW("Frames:");
   for (int i = 0; i <= g_obs.last; i++) {
     showf("%s", g_obs[i].defined() ? "*" : " ");
-    assertw(FrameIO::write(std::cerr, g_obs[i].t(), i, (!i ? zoom : 0.f), false));
+    assertw(FrameIO::write(std::cerr, ObjectFrame{g_obs[i].t(), i, (!i ? zoom : 0.f)}));
   }
   SHOW("Viewing offset:");
-  assertw(FrameIO::write(std::cerr, tview, -1, 0.f, false));
+  assertw(FrameIO::write(std::cerr, ObjectFrame{tview, -1}));
   SHOW(ddistance, expo, keep_active, mode_centroid, want_jump, obinary, keystring);
   SHOW(g_obs.first, g_obs.last, HB::get_hither(), HB::get_yonder(), obview, cob);
 }

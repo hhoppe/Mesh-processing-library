@@ -141,7 +141,7 @@ void do_filename(Args& args) {
 void initialize() {
   if (!xform[0][0]) {
     xform = gbbox.get_frame_to_small_cube(xformsize);
-    if (verb >= 2) showdf(" internal xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+    if (verb >= 2) showdf(" internal xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     xform_scale = assertx(xform[0][0]);
   }
   wcrep = crep / square(xform_scale);

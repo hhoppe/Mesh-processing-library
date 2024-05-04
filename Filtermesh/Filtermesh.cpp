@@ -2251,7 +2251,7 @@ void do_tobbox() {
   Bbox bbox;
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   Frame xform = bbox.get_frame_to_cube();
-  showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+  showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
 }
 
@@ -3296,18 +3296,13 @@ void do_rmdiaguv() {
 
 // Filtermesh ~/data/simplify/bunny.orig.m -projectimage "`cat ~/data/s3d/bunny.s3d`" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d -st bunny.s3d -lighta 1 -lights 0
 void do_projectimage(Args& args) {
-  string framestring = args.get_string();
-  string imagename = args.get_filename();
-  Frame frame;
-  int obn;
-  float zoom;
-  bool bin;
-  {
-    std::istringstream iss(framestring);
-    assertx(FrameIO::read(iss, frame, obn, zoom, bin));
-  }
-  Frame frameinv = ~frame;
-  Image image(imagename);
+  const string framestring = args.get_string();
+  const string imagename = args.get_filename();
+  ObjectFrame object_frame;
+  std::istringstream iss(framestring);
+  assertx(FrameIO::read(iss, object_frame));
+  const Frame frameinv = ~object_frame.frame;
+  const Image image(imagename);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
@@ -3320,8 +3315,8 @@ void do_projectimage(Args& args) {
       Warning("Mesh vertex behind view projection is not sampled");
       continue;
     }
-    p[1] = p[1] / p[0] / zoom * -0.5f + 0.5f;
-    p[2] = -p[2] / p[0] / zoom * +0.5f + 0.5f;  // negate because my image origin is at upper left
+    p[1] = p[1] / p[0] / object_frame.zoom * -0.5f + 0.5f;
+    p[2] = -p[2] / p[0] / object_frame.zoom * +0.5f + 0.5f;  // negate because my image origin is at upper left
     if (1) {
       HH_SSTAT(Sx, p[1]);
       HH_SSTAT(Sy, p[2]);
@@ -3569,7 +3564,7 @@ void do_signeddistcontour(Args& args) {
     Bbox bbox;
     for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
     Frame xform = bbox.get_frame_to_small_cube();
-    showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+    showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
   Array<PolygonFace> ar_polyface;
@@ -3604,7 +3599,7 @@ void do_signeddistbmp(Args& args) {
     Bbox bbox;
     for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
     Frame xform = bbox.get_frame_to_small_cube();
-    showdf("Applying xform: %s", FrameIO::create_string(xform, 1, 0.f).c_str());
+    showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
   Array<PolygonFace> ar_polyface;
@@ -3854,7 +3849,7 @@ void do_alignmentframe(Args& args) {
   Sscale.terminate();
   Frame frame = (Frame::translation(Point(0.f, 0.f, 0.f) - corig) * Frame::scaling(thrice(scale)) *
                  Frame::translation(norig - Point(0.f, 0.f, 0.f)));
-  std::cout << FrameIO::create_string(frame, 1, 0.f);
+  std::cout << FrameIO::create_string(ObjectFrame{frame, 1});
   // for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * frame);
   nooutput = true;
 }

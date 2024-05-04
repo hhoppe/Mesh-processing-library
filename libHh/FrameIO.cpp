@@ -15,31 +15,21 @@ constexpr float k_Frame_fnan = 1e30f;
 
 struct frame_binary_buf {
   Vec2<char> magic;
-  ushort shortobn;
+  ushort short_obn;
   Vec4<Vec3<float>> f;
   float zoom;
 };
 
-void decode(std::istream& is, Frame& f, int& obn, float& zoom) {
-  if (1) {  // to avoid bug_istream_float.cpp in VC12
-    string sline;
-    assertx(my_getline(is, sline));
-    assertx(sline != "");
-    assertx(sline[0] == 'F' && sline[1] == ' ');
-    assertx(sscanf(sline.c_str() + 1, "%d  %f %f %f  %f %f %f  %f %f %f  %f %f %f  %f",  // + 1 to skip ch
-                   &obn, &f[0][0], &f[0][1], &f[0][2], &f[1][0], &f[1][1], &f[1][2], &f[2][0], &f[2][1], &f[2][2],
-                   &f[3][0], &f[3][1], &f[3][2], &zoom) == 14);
-  } else {
-    char ch = '\0';
-    is.get(ch);  // is >> ch would eat up white space
-    assertx(is);
-    assertx(ch == 'F');
-    // if (ch != 'F') is.clear(std::ios::badbit);
-    assertx(is >> obn);
-    // f = Frame::identity();
-    for_int(i, 4) for_int(j, 3) assertx(is >> f[i][j]);
-    assertx(is >> zoom);
-  }
+void decode(std::istream& is, ObjectFrame& object_frame) {
+  string sline;
+  assertx(my_getline(is, sline));
+  assertx(sline != "");
+  assertx(sline[0] == 'F' && sline[1] == ' ');
+  Frame& f = object_frame.frame;
+  assertx(sscanf(sline.c_str() + 1, "%d  %f %f %f  %f %f %f  %f %f %f  %f %f %f  %f",  // + 1 to skip ch
+                 &object_frame.obn, &f[0][0], &f[0][1], &f[0][2], &f[1][0], &f[1][1], &f[1][2], &f[2][0], &f[2][1],
+                 &f[2][2], &f[3][0], &f[3][1], &f[3][2], &object_frame.zoom) == 14);
+  object_frame.binary = false;
 }
 
 }  // namespace
@@ -55,44 +45,39 @@ ERecognize recognize(RBuffer& b) {
   return ERecognize::no;
 }
 
-bool read(std::istream& is, Frame& f, int& obn, float& zoom, bool& bin) {
+bool read(std::istream& is, ObjectFrame& object_frame) {
   int c = is.peek();
   if (c < 0) return false;
-  bin = c == k_binary_code;
-  if (bin) {  // binary
+  object_frame.binary = c == k_binary_code;
+  if (object_frame.binary) {
     frame_binary_buf buf;
     if (!read_binary_raw(is, ArView(buf))) return false;
     assertx(buf.magic[1] == 0);
-    from_std(&buf.shortobn);
-    obn = buf.shortobn;
+    from_std(&buf.short_obn);
+    object_frame.obn = buf.short_obn;
     for_int(i, 4) {
       for_int(j, 3) {
         from_std(&buf.f[i][j]);
-        f[i][j] = buf.f[i][j];
+        object_frame.frame[i][j] = buf.f[i][j];
       }
     }
     from_std(&buf.zoom);
-    zoom = buf.zoom;
+    object_frame.zoom = buf.zoom;
     return true;
   } else {
-    decode(is, f, obn, zoom);
-    bool good = !!is;
-    if (0) {
-      // The newline is now read as part of decode() using my_getline().
-      is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // read past newline
-    }
-    return good;
+    decode(is, object_frame);
+    return bool(is);
   }
 }
 
-bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin) {
+bool read(RBuffer& b, ObjectFrame& object_frame) {
   if (!b.num()) return false;
-  bin = b[0] == k_binary_code;
-  if (bin) {  // binary
+  object_frame.binary = b[0] == k_binary_code;
+  if (object_frame.binary) {
     if (b.num() < 14 * 4) return false;
-    obn = b.get_short(2);
-    for_int(i, 4) for_int(j, 3) f[i][j] = b.get_float((1 + (i * 3) + j) * 4);
-    zoom = b.get_float(13 * 4);
+    object_frame.obn = b.get_short(2);
+    for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = b.get_float((1 + (i * 3) + j) * 4);
+    object_frame.zoom = b.get_float(13 * 4);
     b.extract(14 * 4);
     return true;
   } else {
@@ -100,71 +85,68 @@ bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin) {
     string str;
     if (!b.extract_line(str)) return false;
     std::istringstream iss(str);
-    decode(iss, f, obn, zoom);
-    return !!iss;
+    decode(iss, object_frame);
+    return bool(iss);
   }
 }
 
-bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin) {
-  if (bin) {
+bool write(std::ostream& os, const ObjectFrame& object_frame) {
+  if (object_frame.binary) {
     frame_binary_buf buf;
     buf.magic[0] = k_binary_code;
     buf.magic[1] = 0;
-    buf.shortobn = assert_narrow_cast<ushort>(obn);
-    to_std(&buf.shortobn);
+    buf.short_obn = assert_narrow_cast<ushort>(object_frame.obn);
+    to_std(&buf.short_obn);
     for_int(i, 4) {
       for_int(j, 3) {
-        buf.f[i][j] = f[i][j];
+        buf.f[i][j] = object_frame.frame[i][j];
         to_std(&buf.f[i][j]);
       }
     }
-    buf.zoom = zoom;
+    buf.zoom = object_frame.zoom;
     to_std(&buf.zoom);
     write_binary_raw(os, ArView(buf));
   } else {
-    os << create_string(f, obn, zoom);
+    os << create_string(object_frame);
   }
-  return !!os;
+  return bool(os);
 }
 
-bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin) {
-  if (bin) {
+bool write(WBuffer& b, const ObjectFrame& object_frame) {
+  if (object_frame.binary) {
     b.put(char{k_binary_code});
     b.put('\0');
-    b.put(assert_narrow_cast<short>(obn));
-    for_int(i, 4) for_int(j, 3) b.put(f[i][j]);
-    b.put(zoom);
+    b.put(assert_narrow_cast<short>(object_frame.obn));
+    for_int(i, 4) for_int(j, 3) b.put(object_frame.frame[i][j]);
+    b.put(object_frame.zoom);
   } else {
-    string s = create_string(f, obn, zoom);
+    string s = create_string(object_frame);
     b.put(s.c_str(), narrow_cast<int>(s.size()));
   }
   return true;
 }
 
-string create_string(const Frame& f, int obn, float zoom) {
-  // Maybe should use %.9g for exact representation.  Yes, changed from %.7g on 2014-05-02.
+string create_string(const ObjectFrame& object_frame) {
+  // 2014-05-02: changed from %.7g .
+  const Frame& f = object_frame.frame;
   return sform("F %d  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g\n",  //
-               obn, f[0][0], f[0][1], f[0][2], f[1][0], f[1][1], f[1][2], f[2][0], f[2][1], f[2][2], f[3][0], f[3][1],
-               f[3][2], zoom);
+               object_frame.obn, f[0][0], f[0][1], f[0][2], f[1][0], f[1][1], f[1][2], f[2][0], f[2][1], f[2][2],
+               f[3][0], f[3][1], f[3][2], object_frame.zoom);
 }
 
 Frame parse_frame(const string& s) {
-  Frame frame;
-  int obn;
-  float zoom;
-  bool bin;
-  {
-    std::istringstream iss(s);
-    if (!read(iss, frame, obn, zoom, bin)) assertnever("Could not parse Frame '" + s + "'");
-  }
-  return frame;
+  ObjectFrame object_frame;
+  std::istringstream iss(s);
+  if (!read(iss, object_frame)) assertnever("Could not parse Frame '" + s + "'");
+  return object_frame.frame;
 }
 
 bool is_not_a_frame(const Frame& f) { return f[0][0] == k_Frame_fnan; }
 
-void create_not_a_frame(Frame& f) {
-  f = Frame::identity();
+Frame get_not_a_frame() {
+  Frame f = Frame::identity();
   f[0][0] = k_Frame_fnan;
+  return f;
 }
 
 }  // namespace FrameIO

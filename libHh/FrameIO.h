@@ -9,23 +9,30 @@ namespace hh {
 class RBuffer;
 class WBuffer;
 
+struct ObjectFrame {
+  Frame frame;
+  int obn = 0;
+  float zoom = 0.f;
+  bool binary = false;
+};
+
 namespace FrameIO {
 
 // Read Frame objects from std::stream or RBuffer.
 enum class ERecognize { parse_error, no, partial, yes };
 ERecognize recognize(RBuffer& b);
-bool read(std::istream& is, Frame& f, int& obn, float& zoom, bool& bin);  // ret is_success
-bool read(RBuffer& b, Frame& f, int& obn, float& zoom, bool& bin);        // ret is_success
+bool read(std::istream& is, ObjectFrame& object_frame);  // ret is_success
+bool read(RBuffer& b, ObjectFrame& object_frame);        // ret is_success
 Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.
-bool write(std::ostream& os, const Frame& f, int obn, float zoom, bool bin);  // ret is_success
-bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin);        // ret is_success
-string create_string(const Frame& f, int obn, float zoom);
+bool write(std::ostream& os, const ObjectFrame& object_frame);  // ret is_success
+bool write(WBuffer& b, const ObjectFrame& object_frame);        // ret is_success
+string create_string(const ObjectFrame& object_frame);
 
 // Detect special frames.
 bool is_not_a_frame(const Frame& f);
-void create_not_a_frame(Frame& f);
+Frame get_not_a_frame();
 
 }  // namespace FrameIO
 
@@ -57,8 +64,8 @@ void create_not_a_frame(Frame& f);
 //   consistent with the ordering of the axes represented by the frame.
 //
 //   The identify frame is
-//   F 0  1 0 0  0 1 0  0 0 1  0 0 0  1
-//   where the object_id == 0 and zoom == 1 values are often unused.
+//   F 0  1 0 0  0 1 0  0 0 1  0 0 0  0
+//   where the object_id == 0 and zoom == 0 values are often unused.
 //
 //   For example, the eye-to-world frame that forms a good viewpoint for the demos/data/dragon.pm model is stored
 //   in demos/data/dragon.s3d :

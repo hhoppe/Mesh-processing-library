@@ -5,6 +5,7 @@
 #include "G3dOGL/HB.h"
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
+#include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/Geometry.h"
 #include "libHh/Sac.h"
@@ -152,7 +153,7 @@ class objects {
 extern objects g_obs;
 
 // G3d
-void UpdateFrame(int obn, const Frame& f, float z);
+void UpdateFrame(const ObjectFrame& object_frame);
 void ExpandStateFilename();
 void UpdateOb1Bbox(const Bbox& bbox);
 

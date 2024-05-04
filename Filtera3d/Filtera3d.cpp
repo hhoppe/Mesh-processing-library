@@ -769,7 +769,7 @@ void process(RSA3dStream& ia3d) {
     showf("%g %g %g\n", g_bbox[0][0], g_bbox[0][1], g_bbox[0][2]);
     showf("%g %g %g\n", g_bbox[1][0], g_bbox[1][1], g_bbox[1][2]);
   }
-  if (boxframe) FrameIO::write(std::cout, g_bbox.get_frame_to_cube(), 0, 0.f, false);
+  if (boxframe) FrameIO::write(std::cout, ObjectFrame{g_bbox.get_frame_to_cube()});
   if (ncullsphere) showdf("ncullsphere=%d\n", ncullsphere);
   if (nmindis) showdf("nmindis=%d\n", nmindis);
   if (nfixorient) showdf("nfixorient=%d\n", nfixorient);

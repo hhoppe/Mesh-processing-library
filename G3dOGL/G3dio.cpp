@@ -190,13 +190,10 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     case FrameIO::ERecognize::parse_error: assertnever("");
     case FrameIO::ERecognize::partial: return ETryInput::nothing;  // partial frame
     case FrameIO::ERecognize::yes: {
-      Frame f;
-      int obn;
-      float z;
-      bool bin;
-      i = FrameIO::read(buf, f, obn, z, bin);
+      ObjectFrame object_frame;
+      i = FrameIO::read(buf, object_frame);
       if (!assertw(i)) return ETryInput::success;
-      UpdateFrame(obn, f, z);
+      UpdateFrame(object_frame);
       num_input_frames++;
       return ETryInput::success;
     }
@@ -333,17 +330,15 @@ void ReadInput(bool during_init) {
 
 void WriteOutput() {
   float z = 0.f;
-  Frame ft;
-  const Frame* t;
-  int obn = eye_move ? obview : cob;
+  Frame frame;
+  const int obn = eye_move ? obview : cob;
   if (g_obs[obn].visible() || obn == obview) {
     if (!obn) z = zoom;
-    t = &g_obs[obn].t();
+    frame = g_obs[obn].t();
   } else {
-    FrameIO::create_not_a_frame(ft);
-    t = &ft;
+    frame = FrameIO::get_not_a_frame();
   }
-  if (!FrameIO::write(std::cout, *t, obn, z, obinary)) {
+  if (!FrameIO::write(std::cout, ObjectFrame{frame, obn, z, obinary})) {
 #if 1 || defined(_WIN32)
     // No SIGPIPE to terminate process in Win32.
     exit_immediately(0);

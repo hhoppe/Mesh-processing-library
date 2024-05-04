@@ -230,16 +230,11 @@ void read_srmesh() {
 void do_srout(Args& args) {
   Vec<SrViewParams, 1> views;
   for_int(i, views.num()) {
-    Frame frame;
-    int obn;
-    float zoomx;
-    bool bin;
-    {
-      std::istringstream iss(args.get_string());
-      assertx(FrameIO::read(iss, frame, obn, zoomx, bin));
-    }
-    views[i].set_frame(frame);
-    views[i].set_zooms(twice(zoomx));
+    ObjectFrame object_frame;
+    std::istringstream iss(args.get_string());
+    assertx(FrameIO::read(iss, object_frame));
+    views[i].set_frame(object_frame.frame);
+    views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
     views[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL
@@ -263,16 +258,11 @@ void do_srout(Args& args) {
 void do_srgeomorph(Args& args) {
   Vec2<SrViewParams> views;
   for_int(i, views.num()) {
-    Frame frame;
-    int obn;
-    float zoomx;
-    bool bin;
-    {
-      std::istringstream iss(args.get_string());
-      assertx(FrameIO::read(iss, frame, obn, zoomx, bin));
-    }
-    views[i].set_frame(frame);
-    views[i].set_zooms(twice(zoomx));
+    ObjectFrame object_frame;
+    std::istringstream iss(args.get_string());
+    assertx(FrameIO::read(iss, object_frame));
+    views[i].set_frame(object_frame.frame);
+    views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
     views[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL
@@ -315,13 +305,10 @@ void do_srfly(Args& args) {
   srmesh.set_coarsen_morph_time(srfly_gctime);
   for (;;) {
     SrViewParams view;
-    Frame frame;
-    int obn;
-    float zoomx;
-    bool bin;
-    if (!FrameIO::read(fiframes(), frame, obn, zoomx, bin)) break;
-    view.set_frame(frame);
-    view.set_zooms(twice(zoomx));
+    ObjectFrame object_frame;
+    if (!FrameIO::read(fiframes(), object_frame)) break;
+    view.set_frame(object_frame.frame);
+    view.set_zooms(twice(object_frame.zoom));
     view.set_screen_thresh(screen_thresh);
     view.set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL

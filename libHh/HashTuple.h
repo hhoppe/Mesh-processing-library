@@ -13,7 +13,7 @@
 namespace hh {
 namespace details {
 
-// Inspired from http://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
+// Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
 template <typename TU, size_t Index = (std::tuple_size<TU>::value - 1)> struct tuple_hash {
   size_t operator()(const TU& tu) const {
     return hh::hash_combine(tuple_hash<TU, Index - 1>()(tu), std::get<Index>(tu));

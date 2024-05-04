@@ -44,9 +44,9 @@ template <typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimiza
   //  Mathematical Programming B 45 (3): 503-528.  doi:10.1007/BF01589116.
   // Nocedal (1980).  "Updating quasi-Newton matrices with limited storage".
   //  Mathematics of Computation 35(151), 773-782.  doi:10.1090/S0025-5718-1980-0572855-7.
-  // Useful: http://aria42.com/blog/2014/12/understanding-lbfgs/
-  // (e.g. fortran implementation in http://users.iems.northwestern.edu/~nocedal/lbfgs.html
-  //   and thread-safe C version in https://github.com/chokkan/liblbfgs)
+  // Useful: https://web.archive.org/web/20231002054213/https://aria42.com/blog/2014/12/understanding-lbfgs
+  // (e.g. fortran implementation in https://users.iems.northwestern.edu/~nocedal/lbfgs.html
+  //   and thread-safe C version in https://github.com/chokkan/liblbfgs )
   // (_m not constexpr because V() later accesses it as a const reference)
   const int _m = 6;          // number of stored prior gradients and differences; recommended range 3..7
   const double _eps = 1e-6;  // mag(_g) < _eps*max(1., mag(_x)); default 1e-5 in github.com/chokkan/liblbfgs

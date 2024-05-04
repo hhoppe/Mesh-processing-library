@@ -12,7 +12,7 @@ namespace hh {
 // adjacent to numbers that are almost small.
 
 // TODO: Exploit the fact that "Adjacent floats (of the same sign) have adjacent integer representations".
-//  See http://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2/
+//  See https://randomascii.wordpress.com/2012/01/23/stupid-float-tricks-2/
 
 namespace {
 

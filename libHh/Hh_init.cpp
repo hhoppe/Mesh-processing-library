@@ -40,7 +40,7 @@ void possibly_sleep() {
 
 // For SetUnhandledExceptionFilter(my_top_level_exception_filter);
 // Note: This custom filter for unhandled exceptions is not called when running under debugger.
-//  See http://www.debuginfo.com/articles/debugfilters.html
+//  See https://www.debuginfo.com/articles/debugfilters.html
 //  The solution is to enable show_message_box, and attach the debugger to debug.
 //
 // long __stdcall my_top_level_exception_filter(_EXCEPTION_POINTERS* ExceptionInfo) {
@@ -129,10 +129,10 @@ HH_NORETURN void my_terminate_handler() {
     fflush(stderr);
   }
 #if defined(__GNUC__) || defined(__clang__)
-  // http://stackoverflow.com/questions/3774316/c-unhandled-exceptions
-  // http://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
+  // https://stackoverflow.com/questions/3774316/c-unhandled-exceptions
+  // https://stackoverflow.com/questions/17258733/how-to-customize-uncaught-exception-termination-behavior
   // This works on mingw, clang.
-  // On cygwin, my_terminate_handler() is never called (bug).  http://stackoverflow.com/questions/24402412
+  // On cygwin, my_terminate_handler() is never called (bug).  https://stackoverflow.com/questions/24402412
   // On win, SetUnhandledExceptionFilter(my_top_level_exception_filter) is called instead.
   try {
     throw;
@@ -178,8 +178,8 @@ HH_NORETURN void my_signal_handler(int signal_num) {
   // exit_immediately(213);  // does not show up at all.
   SHOW("my_signal_handler", signal_num);
   if (0) {
-    // http://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
-    // unfortunately, cygwin does not have backtrace/execinfo:  http://comments.gmane.org/gmane.os.cygwin/91196
+    // https://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
+    // unfortunately, cygwin does not have backtrace/execinfo.
     // void *ar[10]; size_t size = backtrace(ar, 10);  // get void*'s for all entries on the stack
     // backtrace_symbols_fd(ar, size, 2);  // print out all the frames to stderr
     //
@@ -250,7 +250,7 @@ void setup_exception_hooks() {
     // assertx(v == SEM_FAILCRITICALERRORS);  // already default!
     if (1) SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
     // It is not the default for Windows apps?
-    // Also consider from http://stackoverflow.com/a/467652/1190077 :
+    // Also consider from https://stackoverflow.com/a/467652 :
     if (1) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);  // yes, useful e.g. for mingw32
   }
   if (1) {
@@ -320,11 +320,11 @@ void change_default_io_precision() {
   //
   // See experiments in ~/git/hh_src/test/misc/test_float_discrepancy.cpp
   //
-  // See my answer at http://stackoverflow.com/a/23437425/1190077
+  // See my answer at https://stackoverflow.com/a/23437425
   //  to the question of the precision necessary to exactly save and retrieve floating-point numbers :
   //
   // See the nice detailed discussion in
-  //  http://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
+  //  https://randomascii.wordpress.com/2012/03/08/float-precisionfrom-zero-to-100-digits-2/
   //
   // The short answer is that the minimum precision is the following:
   //
@@ -346,8 +346,8 @@ void change_default_io_precision() {
   //  is not worth it.
   //
   // See also:
-  //  http://stackoverflow.com/questions/10357192/printf-rounding-behavior-for-doubles
-  //  http://www.exploringbinary.com/inconsistent-rounding-of-printed-floating-point-numbers/
+  //  https://stackoverflow.com/questions/10357192/printf-rounding-behavior-for-doubles
+  //  https://www.exploringbinary.com/inconsistent-rounding-of-printed-floating-point-numbers/
   // Visual C++ uses the round-half-away-from-zero rule,
   //  and gcc (actually, glibc) uses the round-half-to-even rule, also known as bankers' rounding.
   // glibc printf() has been updated to take the current IEEE rounding mode into account. This was done

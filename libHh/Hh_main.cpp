@@ -53,8 +53,8 @@ int64_t get_precise_counter() {
   // CONFIG=win: std::chrono::duration<int64, std::ratio<1, 1'000'000'000>>  (nanoseconds as signed 64-bit integer)
   return possible_cast<int64_t>(duration.count());
 #elif defined(_WIN32)
-  // http://stackoverflow.com/questions/2414359/microsecond-resolution-timestamps-on-windows?rq=1
-  // https://msdn.microsoft.com/en-us/library/windows/desktop/ms644905%28v=vs.85%29.aspx
+  // https://stackoverflow.com/questions/2414359/microsecond-resolution-timestamps-on-windows
+  // https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancefrequency
   //  The high frequency counter need not be tied to the CPU frequency at all.  It will only resemble the CPU
   //  frequency is the system actually uses the TSC (TimeStampCounter) underneath.  As the TSC is generally
   //  unreliable on multi-core systems it tends not to be used.  When the TSC is not used the ACPI Power
@@ -107,8 +107,8 @@ void my_sleep(double sec) {
     SleepEx(0, TRUE);  // milliseconds; allow wake up for events
   } else {
     // Inspired from discussion at
-    //  http://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-    // Even better at http://www.geisswerks.com/ryan/FAQS/timing.html
+    //  https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
+    // Even better at https://www.geisswerks.com/ryan/FAQS/timing.html
     const bool use_1ms_time_resolution = false;
     if (use_1ms_time_resolution) {
       static std::once_flag flag;
@@ -119,7 +119,7 @@ void my_sleep(double sec) {
         timeBeginPeriod(1);
 #endif
         // Note: should be matched with timeEndPeriod(1) but let program termination handle this.
-        // http://stackoverflow.com/questions/7590475/
+        // https://stackoverflow.com/questions/7590475/
       });
     }
     const double sleep_threshold = use_1ms_time_resolution ? .002 : .03;  // seconds
@@ -161,9 +161,8 @@ size_t available_memory() {
   // Perhaps could use https://developer.apple.com/library/ios/documentation/System/Conceptual/ManPages_iPhoneOS/man3/sysctlbyname.3.html
   return 0;
 #else
-  // http://nadeausoftware.com/articles/2012/09/c_c_tip_how_get_physical_memory_size_system
   struct sysinfo sysi;
-  assertx(!sysinfo(&sysi));  // http://linux.die.net/man/2/sysinfo
+  assertx(!sysinfo(&sysi));  // https://linux.die.net/man/2/sysinfo
   uint64_t unit = sysi.mem_unit;
   uint64_t physical_avail = sysi.freeram * unit;
   uint64_t virtual_avail = static_cast<size_t>(-1);
@@ -278,7 +277,7 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
     assertx(!done++);
   }
 #if defined(_WIN32)
-  if (1) {  // see http://msdn.microsoft.com/en-us/library/windows/desktop/bb776391%28v=vs.85%29.aspx
+  if (1) {  // See https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-commandlinetoargvw
     wchar_t** wargv;
     {
       int nargc;

@@ -16,7 +16,7 @@
 #else
 #pragma message("warning: untested")
 #endif
-// http://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Vector-Extensions.html
+// https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Vector-Extensions.html
 // typedef int v4si __attribute__((vector_size (16)));
 
 #if defined(HH_VECTOR4_SSE)
@@ -41,7 +41,7 @@ Vector4 to_Vector4_raw(const uint8_t p[4]);   // converts each uint8_t [0, 255] 
 // And also https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_sse.h
 //  and https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_neon.h
 // See ~/git/CompPhoto/ClassLibs/VisionTools/src/common/SSEonNeon.h
-// http://gcc.gnu.org/onlinedocs/gcc-4.8.1/gcc/ARM-NEON-Intrinsics.html#ARM-NEON-Intrinsics
+// https://gcc.gnu.org/onlinedocs/gcc-4.8.1/gcc/ARM-NEON-Intrinsics.html#ARM-NEON-Intrinsics
 class Vector4 {
   using type = Vector4;
 
@@ -125,15 +125,15 @@ class Vector4 {
     return _mm_cvtss_f32(r);
     // return r.m128_f32[0];  // less portable
     // float f; _mm_store_ss(&f, r); return f;  // requires stack store and load on VC11
-    // http://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-float-vector-sum-on-x86
+    // https://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-float-vector-sum-on-x86
 #endif
   }
   friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist()
-    // http://stackoverflow.com/questions/1528727/why-is-sse-scalar-sqrtx-slower-than-rsqrtx-x
+    // https://stackoverflow.com/questions/1528727/why-is-sse-scalar-sqrtx-slower-than-rsqrtx-x
     return _mm_sqrt_ps(v._r);
   }
   friend Vector4 abs(const Vector4& v) {  // For use in max_abs_element()
-    // http://stackoverflow.com/questions/3361132/flipping-sign-on-packed-sse-floats
+    // https://stackoverflow.com/questions/3361132/flipping-sign-on-packed-sse-floats
     static const __m128 k_sign_mask = _mm_set1_ps(-0.f);  // -0.f = 1 << 31, _mm_set1_ps() not constexpr
     // static const __m128 k_sign_mask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));  // not constexpr
     return _mm_andnot_ps(k_sign_mask, v._r);
@@ -150,7 +150,7 @@ class Vector4 {
   }
   // Unfortunately, presence of union leads to !std::is_trivially_copyable<Vector4>::value .
   // I could remove union and use more complex accessor function as in
-  //  http://stackoverflow.com/questions/12624466/get-member-of-m128-by-index
+  //  https://stackoverflow.com/questions/12624466/get-member-of-m128-by-index
   // or in <fvec.h>.
   // However, this seems too complicated for little gain.
   union {
@@ -192,7 +192,7 @@ class Vector4 {
   }
   friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist()
     // return vrecpeq_f32(vrsqrteq_f32(v));  // very approximate
-    // Maybe use vrsqrteq_f32 and vrsqrtsq_f32 as in http://rcl-rs-vvg.blogspot.com/2010/08/simd-etudes.html
+    // Maybe use vrsqrteq_f32 and vrsqrtsq_f32 as in https://rcl-rs-vvg.blogspot.com/2010/08/simd-etudes.html
     //  but unclear.
     using std::sqrt;
     return Vector4(sqrt(v[0]), sqrt(v[1]), sqrt(v[2]), sqrt(v[3]));
@@ -330,7 +330,7 @@ inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
 #elif defined(HH_VECTOR4_NEON)
 
 inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
-  // See http://stackoverflow.com/a/14506159/1190077
+  // See https://stackoverflow.com/a/14506159
   //  vmovl.u8       q3, d2    // Expand to 16-bit
   //  vmovl.u16      q10, d6   // Expand to 32-bit
   //  vmovl.u16      q11, d7

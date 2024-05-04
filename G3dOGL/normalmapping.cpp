@@ -17,8 +17,8 @@ static Vec4<float> normalizef(const Vec3<float>& v) { return concat(v * .5f + .5
 
 struct NormalMapping_ogl2 final : NormalMapping {
   using type = NormalMapping_ogl2;
-  // Great tutorial: http://zach.in.tu-clausthal.de/teaching/cg_literatur/glsl_tutorial/
-  //   "GLSL Tutorial von Lighthouse3D"
+  // Great tutorial: "GLSL Tutorial von Lighthouse3D"
+  // https://web.archive.org/web/20170204132401/http://zach.in.tu-clausthal.de/teaching/cg_literatur/glsl_tutorial/
   string name() const override { return "ogl2"; }
   bool is_supported() const override { return assertx(glGetString(GL_VERSION))[0] >= '2'; }
   void init() override {
@@ -112,7 +112,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
   void deactivate() override {
     USE_GL_EXT(glUseProgram, PFNGLUSEPROGRAMPROC);
     glUseProgram(0);  // go back to fixed-function pipeline; see https://www.opengl.org/sdk/docs/man2/
-    // and http://stackoverflow.com/questions/13546461/what-does-gluseprogram0-do
+    // and https://stackoverflow.com/questions/13546461/what-does-gluseprogram0-do
     assertx(!gl_report_errors());
     // glDetachShader(program_id, fragment_shader_id);
     // glDeleteShader(fragment_shader_id);
@@ -221,7 +221,7 @@ struct NormalMapping_frag1 final : NormalMapping {
   // # OPTION ARB_precision_hint_fastest;
   // # PARAM  vhalf = { 0.5, 0.5, 0.5, 0.5 };
   // # OUTPUT oCol = result.color;
-  // http://en.wikipedia.org/wiki/ARB_assembly_language
+  // https://en.wikipedia.org/wiki/ARB_assembly_language
   // https://www.opengl.org/registry/specs/ARB/fragment_program.txt
   const string fragment_shader = R"(!!ARBfp1.0
         TEMP    norm, light, vhalf, ndotl, ndoth, diffuse;
@@ -255,7 +255,7 @@ struct NormalMapping_frag1 final : NormalMapping {
 };
 
 // *** ENV_DOT3 extension
-// http://www.ati.com/developer/sdk/RadeonSDK/Html/Samples/OpenGL/RadeonSimpleDOT3.html
+// http://www.ati.com/developer/sdk/RadeonSDK/Html/Samples/OpenGL/RadeonSimpleDOT3.html [deleted]
 // The main difference between the texture_env_* extension and the combiners is
 // that the combiners replace the entire fragment pipeline, while the
 // texture_env_* extensions only extend it. So the texture_env_dot3 extension

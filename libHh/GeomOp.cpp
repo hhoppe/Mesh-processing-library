@@ -207,7 +207,7 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2
 
 }  // namespace
 
-// See http://en.wikipedia.org/wiki/Euler_angles
+// See https://en.wikipedia.org/wiki/Euler_angles
 //  Tait-Bryan angles / Nautical angles / Cardan angles : sometimes called Euler angles, not "proper Euler angles"
 //
 //  I use (z, -y', x''):

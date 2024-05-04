@@ -23,8 +23,8 @@ template <typename T> std::decay_t<T> clone(T&& v) {
   return std::decay_t<T>(std::forward<T>(v));  // std::decay_t<T> cast is necessary for explicit constructor
 }
 // Note: the following would lead to an extra move-construction if v is an rvalue
-//    (see http://stackoverflow.com/questions/16724657/why-do-we-copy-then-move )
-// Also, std::move is redundant?  see http://vmpstr.blogspot.com/2015/12/redundant-stdmove.html
+//    (see https://stackoverflow.com/questions/16724657/why-do-we-copy-then-move )
+// Also, std::move is redundant?  see https://vmpstr.blogspot.com/2015/12/redundant-stdmove.html
 // template<typename T> T clone(T v) { return std::move(v); }
 
 // e.g.:  unroll<6>([&](int j) { _a[j] = min(l._a[j], r._a[j]); });
@@ -63,7 +63,7 @@ template <typename T> size_t hash_combine(size_t seed, const T& v) {
 // Nice syntax for in-order expansion of parameter packs.
 //  examples: do_in_order { (process(args), 0)... };
 //            do_in_order { i += args.num() ... };
-// In C++17, replace by fold expression with comma operator; http://en.cppreference.com/w/cpp/language/fold
+// In C++17, replace by fold expression with comma operator; https://en.cppreference.com/w/cpp/language/fold
 struct do_in_order {
   template <typename T> do_in_order(std::initializer_list<T>&&) {}
 };

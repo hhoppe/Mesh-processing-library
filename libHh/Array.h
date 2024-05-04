@@ -457,9 +457,9 @@ template <typename T> void ArrayView<T>::assign(base ar) {
   // for_int(i, _n) _a[i] = ar[i];
   // std::memcpy() would be unsafe here for general T.
   // std::copy() and std::move() perform std::memmove() if std::is_trivially_copyable<T>::value
-  //  see http://stackoverflow.com/questions/17625635/moving-an-object-in-memory-using-stdmemcpy
+  //  see https://stackoverflow.com/questions/17625635/moving-an-object-in-memory-using-stdmemcpy
   // Some C++ standard libraries are unhappy if _a is nullptr even when ar.begin() == ar.end();
-  //  see http://stackoverflow.com/questions/19480609/
+  //  see https://stackoverflow.com/questions/19480609/
   if (_a) std::copy(ar.begin(), ar.end(), _a);
 }
 

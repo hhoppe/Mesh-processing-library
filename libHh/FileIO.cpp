@@ -86,19 +86,19 @@ string portable_simple_quote(const string& s) { return string_requires_quoting(s
 #if defined(IO_USE_CFSTREAM)
 
 // Open fstream on (C stdio) FILE* or POSIX fd:
-// http://stackoverflow.com/questions/2746168/how-to-construct-a-c-fstream-from-a-posix-file-descriptor
+// https://stackoverflow.com/questions/2746168/how-to-construct-a-c-fstream-from-a-posix-file-descriptor
 
-// related: http://stackoverflow.com/questions/10667543/creating-fstream-object-from-a-file-pointer
+// related: https://stackoverflow.com/questions/10667543/creating-fstream-object-from-a-file-pointer
 
-// related: http://stackoverflow.com/questions/14734091/how-to-open-custom-i-o-streams-from-within-a-c-program
+// related: https://stackoverflow.com/questions/14734091/how-to-open-custom-i-o-streams-from-within-a-c-program
 //  solutions by Andy Prowl (unbuffered), James Kanze (buffered)
 
-// related: http://stackoverflow.com/questions/4151504/wrapping-file-with-custom-stdostream
+// related: https://stackoverflow.com/questions/4151504/wrapping-file-with-custom-stdostream
 
-// http://www.josuttis.com/cppcode/fdstream.hpp   -- see ~/git/hh_src/_other/fdstream.h
+// https://www.josuttis.com/cppcode/fdstream.hpp   -- see ~/git/hh_src/_other/fdstream.h
 
 // Also http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8cc-source.html and
-//   http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8h-source.html
+//      http://ilab.usc.edu/rjpeters/groovx/stdiobuf_8h-source.html
 
 int seekdir_to_origin(std::ios_base::seekdir dir) {
   switch (dir) {
@@ -457,8 +457,8 @@ bool set_path_modification_time(const string& name, uint64_t time) {
 namespace {
 enum class EType { files, directories };
 Array<string> get_in_directory(const string& directory, EType type) {
-  // http://stackoverflow.com/questions/306533/how-do-i-get-a-list-of-files-in-a-directory-in-c
-  // also http://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
+  // https://stackoverflow.com/questions/306533/how-do-i-get-a-list-of-files-in-a-directory-in-c
+  // also https://stackoverflow.com/questions/612097/how-can-i-get-the-list-of-files-in-a-directory-using-c-or-c
   Array<string> ar_filenames;
 #if defined(_WIN32)
   WIN32_FIND_DATAW file_data;
@@ -519,7 +519,6 @@ bool command_exists_in_path(const string& name) {
 bool remove_file(const string& name) { return !HH_POSIX(unlink)(name.c_str()); }
 
 bool recycle_path(const string& pathname) {
-  // http://www.hardcoded.net/articles/send-files-to-trash-on-all-platforms.htm
 #if defined(_WIN32)
   // https://msdn.microsoft.com/en-us/library/windows/desktop/bb762164%28v=vs.85%29.aspx
   // typedef struct _SHFILEOPSTRUCT {
@@ -693,7 +692,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
     // One problem is that there is no way to hide the resulting console window
     //  (created if the current process does not already have a console window)
     //  because CreateProcess() call is hidden within CRT/dospawn.c and its StartupInfo structure
-    //  does not specify ".wShowWindow = SW_HIDE" (http://stackoverflow.com/questions/4743559/).
+    //  does not specify ".wShowWindow = SW_HIDE" (https://stackoverflow.com/questions/4743559).
     return _wspawnvp(mode, utf16_from_utf8(sargv[0]).c_str(), argv.data());
   }
 #else  // Unix (or cygwin)

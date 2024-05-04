@@ -2757,9 +2757,7 @@ void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dim
     glTexSubImage2D(GL_TEXTURE_2D, level, offset[1], offset[0], dims[1], dims[0], frame_format, GL_UNSIGNED_BYTE,
                     assertx(frame.data()));
   } else {
-    // Using pixel buffer objects; see http://www.mathematik.uni-dortmund.de/~goeddeke/gpgpu/tutorial3.html
-    // Also https://www.opengl.org/registry/specs/ARB/pixel_buffer_object.txt
-    //  and http://www.nvidia.com/object/fast_texture_transfers.html
+    // https://www.opengl.org/registry/specs/ARB/pixel_buffer_object.txt
     USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
     USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
     USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
@@ -2954,9 +2952,9 @@ void upload_image_to_texture() {
 // cygwin: OpenGL GLSL 3.00 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.00 ES, and 3.00 ES
 // https://github.com/mattdesl/lwjgl-basics/wiki/GLSL-Versions
 // https://en.wikipedia.org/wiki/OpenGL_Shading_Language
-// http://www.opengl.org/registry/doc/GLSLangSpec.4.50.pdf
+// https://www.opengl.org/registry/doc/GLSLangSpec.4.50.pdf
 // https://www.opengl.org/wiki/Sampler_%28GLSL%29
-// http://emblemparade.net/blog/which-versions-of-opengl-es-should-you-target/
+// https://emblemparade.com/blog/which-versions-of-opengl-es-should-you-target/
 //  "OpenGL ES GLSL 300 es" is mostly equivalent to "OpenGL GLSL 330".
 //  "This is great, because you'll be able to share shader code between them."
 
@@ -2966,7 +2964,7 @@ const string glsl_shader_version = "#version 300 es\n";  // works everywhere
 #elif defined(__APPLE__)
 // "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context)
 // "Apparently X11 doesn't support OpenGL higher than 2.1 on OS X.  As such I suggest you switch to GLFW."
-// http://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
+// https://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
 const string glsl_shader_version =
     "#version 120\n"
     "#error Mac OSX XQuartz only supports OpenGL 2.1, which is insufficient for this program (VideoViewer).\n";
@@ -3029,8 +3027,8 @@ void render_image() {
     // Note: this is not portable across Windows Remote Desktop under Windows 7 (which has GL_VERSION 1.1).
     // See [Gortler book] page 47, page 252.
     // See http://www.3dgraphicsfoundations.com/code.html
-    // See http://www.cg.tuwien.ac.at/courses/CG23/slides/tutorials/CG2LU_OpenGL_3.x_Introduction_pt_1.pdf
-    // See http://www.cg.tuwien.ac.at/courses/CG23/slides/tutorials/CG2LU_OpenGL_3.x_Textures_and_Objects_pt_2.pdf
+    // See https://www.cg.tuwien.ac.at/courses/CG23/slides/tutorials/CG2LU_OpenGL_3.x_Introduction_pt_1.pdf
+    // See https://www.cg.tuwien.ac.at/courses/CG23/slides/tutorials/CG2LU_OpenGL_3.x_Textures_and_Objects_pt_2.pdf
     USE_GL_EXT(glCreateShader, PFNGLCREATESHADERPROC);
     USE_GL_EXT(glShaderSource, PFNGLSHADERSOURCEPROC);
     USE_GL_EXT(glCompileShader, PFNGLCOMPILESHADERPROC);
@@ -3893,7 +3891,7 @@ void background_work(bool asynchronous) {
     assertx(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL));
   }
 #else
-  // see http://stackoverflow.com/questions/10876342/equivalent-of-setthreadpriority-on-linux-pthreads
+  // see https://stackoverflow.com/questions/10876342/equivalent-of-setthreadpriority-on-linux-pthreads
 #endif
   if (0) my_sleep(2.);  // test delay in video read
   for (;;) {

@@ -57,7 +57,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 //----------------------------------------------------------------------------
 
 // Notes on uncompressed/lossless video formats:
-// http://superuser.com/questions/347433/how-to-create-an-uncompressed-avi-from-a-series-of-1000s-of-png-images-using-ff
+// https://superuser.com/questions/347433/how-to-create-an-uncompressed-avi-from-a-series-of-1000s-of-png-images-using-ff
 // Consider 1280x720p 24fps Big Buck Bunny movie:
 // - uncompressed (V308 is the 8 bpc variant of V410; not supported in many viewers)  518 Mbps
 //   ffmpeg ...  -c:v v308 output.mov
@@ -341,7 +341,7 @@ void WVideo::write(CNv12View frame) {
 #if defined(HH_VIDEO_HAVE_MF)
 
 // Supported Media Formats in Media Foundation
-// http://msdn.microsoft.com/en-us/library/dd757927%28VS.85%29.aspx
+// https://learn.microsoft.com/en-us/windows/win32/medfound/supported-media-formats-in-media-foundation
 // Containers: 3gp, asf, wma, wmv, aac, adts, avi, mp3, m4a, v4v, mov, mp4, sami, smi, wav
 
 namespace {
@@ -658,10 +658,9 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
     else
       throw std::runtime_error("Video: encoder suffix '" + attrib.suffix + "' not recognized");
     // See Tutorial: Using the Sink Writer to Encode Video (Windows)
-    //  http://msdn.microsoft.com/en-us/library/windows/desktop/ff819477%28v=vs.85%29.aspx
+    //  https://learn.microsoft.com/en-us/windows/win32/medfound/tutorial--using-the-sink-writer-to-encode-video
     // Color conversion bug:
-    // http://social.msdn.microsoft.com/Forums/en-US/mediafoundationdevelopment/thread/8a03ac4d-34a3-493d-b27e-5147de575fb7
-    // Use Color Converter DSP (http://msdn.microsoft.com/en-us/library/ff819079%28VS.85%29.aspx)
+    // Use Color Converter DSP (https://learn.microsoft.com/en-us/windows/win32/medfound/colorconverter)
     // See "Work around for XVP color conversion problem" in
     //   ~/git/CompPhoto/ClassLibs/VisionTools/src/fileio/MFVideoSrc.h
     {
@@ -840,19 +839,19 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
     string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
     {  // read header for dimensions and attributes (ignore video and audio data)
-      // 2>&1 works on both Unix bash shell and Windows cmd shell: http://stackoverflow.com/questions/1420965/
+      // 2>&1 works on both Unix bash shell and Windows cmd shell: https://stackoverflow.com/questions/1420965/
       // Ideally, <nul and/or </dev/null so that "vv ~/proj/fastloops/data/assembled_all_loops_uhd.mp4" does
       //  not stop responding.
       // Instead, use -nostdin .  Yes, it works.  Moreover, now do dup2(1, 0) in VideoViewer.
       //
       // TODO: read and preserve metadata in video:  yes, likely also more robust way to read attributes below.
-      // http://stackoverflow.com/a/9473239/1190077:
-      //  http://www.ffmpeg.org/ffmpeg-formats.html#Metadata-1
+      // https://stackoverflow.com/a/9473239:
+      //  https://www.ffmpeg.org/ffmpeg-formats.html#Metadata-1
       // ffmpeg -i input_video -f ffmetadata metadata.txt
       // ffmpeg -i input_video -i ffmetadata.txt -map_metadata 1 -codec copy output_video
       // (BTW, ffmpeg supports multiple outputs: https://trac.ffmpeg.org/wiki/Creating%20multiple%20outputs
       //   ffmpeg -i input1 -i input2 -acodec ... -vcodec ... output1 -acodec ... -vcodec ... output2 )
-      // http://superuser.com/questions/349518/
+      // https://superuser.com/questions/349518/
       // ffmpeg -i video.mp4 -vn -acodec copy -metadata title="My Title" audio.m4a
       // ffmpeg -i ~/data/video/HDbrink8h.mp4 -f ffmetadata v.txt && cat v.txt
       // ;FFMETADATA1

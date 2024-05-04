@@ -24,9 +24,6 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wold-style-cast"  // for DefaultScreen() etc.
 #endif
 
-// Docs:
-// http://www.sbin.org/doc/Xlib/chapt_03.html
-
 namespace hh {
 
 namespace {
@@ -386,7 +383,7 @@ void HW::open() {
 #endif
   }
   _draw = _win;
-  // TODO: implement HWbase::drag_and_drop();  see http://www.newplanetsoftware.com/xdnd/
+  // TODO: implement HWbase::drag_and_drop()
   int force_first_draws = 0;
 #if defined(__CYGWIN__)
   force_first_draws = 3;  // For some unknown reason, first couple draws are corrupt on __CYGWIN__
@@ -450,7 +447,7 @@ bool HW::loop() {
     if (!got_event() && !_is_keyintr) {
       // no more events, so possibly blocked
       if (_update != EUpdate::nothing) break;
-      // I later found: http://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
+      // I later found: https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
       fd_set fdr;
       int fd = ConnectionNumber(_display);
       FD_ZERO(&fdr);
@@ -911,7 +908,7 @@ void HW::set_window_title(string ps) {
       XSetWMName(_display, _win, &prop);
     }
     if (0) {
-      // http://stackoverflow.com/questions/23273292/how-to-change-net-wm-name-x-library
+      // https://stackoverflow.com/questions/23273292/how-to-change-net-wm-name-x-library
       XChangeProperty(_display, _win, XInternAtom(_display, "_NET_WM_NAME", False),
                       XInternAtom(_display, "UTF8_STRING", False), 8, PropModeReplace,
                       reinterpret_cast<uchar*>(const_cast<char*>(_window_title.c_str())), _window_title.size());
@@ -949,9 +946,8 @@ void HW::make_fullscreen(bool b) {
   const bool use_change_property = false;  // Linux
 #endif
   if (use_change_property) {
-    // http://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
-    // http://fixunix.com/xwindows/91585-how-make-xlib-based-window-full-screen.html
-    // http://standards.freedesktop.org/wm-spec/1.3/ar01s05.html
+    // https://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
+    // https://specifications.freedesktop.org/wm-spec/1.3/ar01s05.html
     // Under cygwin, it seems to detect _NET_WM_STATE_FULLSCREEN only the first time it is set.
     // On Mac, it doesn't seem to do anything.
     static Vec2<int> bu_dims;
@@ -970,8 +966,7 @@ void HW::make_fullscreen(bool b) {
       bu_dims = twice(0);
     }
   } else {
-    // http://boards.openpandora.org/topic/12280-x11-fullscreen-howto/  answer
-    // then https://mail.gnome.org/archives/metacity-devel-list/2010-February/msg00000.html
+    // https://mail.gnome.org/archives/metacity-devel-list/2010-February/msg00000.html
     // This does not work under cygwin.
     // On Mac, it makes window fullscreen but leads to OpenGL error and shows black until later refresh
     //  the first time fullscreen is invoked.  Now on Sierra 10.12.4 XQuartz 2.7.11 it hangs badly.
@@ -1065,9 +1060,9 @@ void HW::end_draw_visible() {
 
 void HW::wake_up() {
   // Warning("untested");
-  // http://stackoverflow.com/questions/10785491/how-to-allow-a-worker-thread-to-updata-an-x11-window
-  // http://ubuntuforums.org/archive/index.php/t-570702.html
-  // http://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
+  // https://stackoverflow.com/questions/10785491/how-to-allow-a-worker-thread-to-updata-an-x11-window
+  // https://ubuntuforums.org/archive/index.php/t-570702.html
+  // https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
   if (!_exposed) return;
   if (0) {
     // "Xlib is not thread-safe and calling its functions from more than one thread may be dangerous!"

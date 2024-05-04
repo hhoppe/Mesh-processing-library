@@ -7,7 +7,7 @@
 // Introduce structures to facilitate the processing of "ranges", containers or views whose elements can be
 //  traversed using iterators initialized via begin() and end().
 // Apparently this is moving towards standardization in the "Ranges" Technical Specification,
-//  draft N4560 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
+//  draft N4560 https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 #if 0
 {
   // Count the number of elements equal to specified one; see RangeOp.h for other examples.
@@ -38,7 +38,7 @@ template <typename R> using iterator_t = typename details::range_elem<R>::type;
 //----------------------------------------------------------------------------
 
 namespace details {
-// http://stackoverflow.com/questions/9402476/can-i-get-the-iterator-for-a-template-type-regardless-if-that-type-is-an-arra/9402618
+// https://stackoverflow.com/questions/9402476
 using std::begin;                                                  // fallback for ADL
 template <typename T> auto adl_begin(T& t) -> decltype(begin(t));  // only for type signature
 template <typename T> auto adl_begin(const T& t) -> decltype(begin(t));

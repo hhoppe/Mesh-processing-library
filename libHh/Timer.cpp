@@ -280,7 +280,7 @@ void Timer::start() {
   _thread_cpu_time -= to_seconds(tuser) + to_seconds(tkernel);
   assertx(GetProcessTimes(cur_process, &tcreat, &texit, &tkernel, &tuser));
   _process_cpu_time -= to_seconds(tuser) + to_seconds(tkernel);
-  // http://stackoverflow.com/questions/5532046/c-getthreadtimes-but-with-a-better-resolution
+  // https://stackoverflow.com/questions/5532046/c-getthreadtimes-but-with-a-better-resolution
   // Replace GetThreadTimes() by QueryThreadCycleTime(), it counts cpu cycles.
   // However, CPU frequency can change dynamically!
 #else

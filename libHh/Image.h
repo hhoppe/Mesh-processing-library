@@ -218,8 +218,8 @@ class CNv12View {
   CMatrixView<Vec2<uint8_t>> _mat_UV;  // chroma at half the spatial resolution
 };
 
-// Listed as "numerical approximations" on http://en.wikipedia.org/wiki/YUV
-// Also found at http://msdn.microsoft.com/en-us/library/aa917087.aspx
+// Listed as "numerical approximations" on https://en.wikipedia.org/wiki/YUV
+// Also found at https://learn.microsoft.com/en-us/previous-versions/aa917087(v=msdn.10)
 // This may not correspond to YUV format used in ATSC HD video?
 // Also, it condenses Y to range [16, 235]; strange.  Thus RGB_to_Y(Pixel::gray(128)) == 126.
 

@@ -49,7 +49,7 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 
 #endif
 
-// See http://stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine
+// See https://stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine
 // #define HH_LITTLE_ENDIAN 0x41424344UL
 // #define HH_BIG_ENDIAN    0x44434241UL
 // #define HH_ENDIAN_ORDER  ('ABCD')  // GCC: error: multi-character character constant [-Werror=multichar]
@@ -60,7 +60,7 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 // #define HH_IS_BIG_ENDIAN (1 != *(unsigned char *)&(const int){1})
 #define HH_IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100)
 // It does not seem possible to determine endianness in a constexpr:
-//  http://stackoverflow.com/questions/1583791/constexpr-and-endianness
+//  https://stackoverflow.com/questions/1583791/constexpr-and-endianness
 // Update: it is possible in C++20 (https://stackoverflow.com/a/8197886):
 // #include <type_traits>
 // constexpr bool is_big_endian = std::endian::native == std::endian::big;

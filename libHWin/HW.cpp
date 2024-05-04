@@ -22,14 +22,14 @@ HH_REFERENCE_LIB("winmm.lib");    // timeEndPeriod, etc.
 #include "libHh/StringOp.h"
 
 // Notes:
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/ms633575%28v=vs.85%29.aspx Using Window Classes
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/ms632595%28v=vs.85%29.aspx Windows
+//  https://learn.microsoft.com/en-us/windows/win32/winmsg/using-window-classes
+//  https://learn.microsoft.com/en-us/windows/win32/winmsg/windows
 
 namespace hh {
 
 // Determine if an application (in this case always a CONSOLE app) was started from a console window
 //  (as opposed to launched from some UI).
-// http://stackoverflow.com/a/14550262
+// https://stackoverflow.com/a/14550262
 namespace details {
 static int fwbp_pid;
 static int fwbp_count;
@@ -62,7 +62,7 @@ const HWND k_bogus_hwnd = HWND(intptr_t{-7});  // clang: reinterpret_cast<HWND>(
 
 extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
 
-// Solutions in http://stackoverflow.com/questions/117792/best-method-for-storing-this-pointer-for-use-in-wndproc
+// Solutions in https://stackoverflow.com/questions/117792/best-method-for-storing-this-pointer-for-use-in-wndproc
 //  seems too complicated.  I can assume a single-window model.
 static HW* pHW;
 
@@ -147,11 +147,10 @@ bool HW::init_aux(Array<string>& aargs) {
   //  "ShowWindow(GetConsoleWindow(), SW_HIDE);" is called as done below.
   //
   // See discussion at
-  //  http://stackoverflow.com/questions/493536/can-one-executable-be-both-a-console-and-gui-application
-  //  http://blogs.msdn.com/b/oldnewthing/archive/2009/01/01/9259142.aspx
+  //  https://stackoverflow.com/questions/493536/can-one-executable-be-both-a-console-and-gui-application
   if (_hwdebug) SHOW(win_started_from_console(), IsDebuggerPresent());
   if (!getenv_bool("SHOW_CONSOLE_WINDOW") && _extra_console_visible && !IsDebuggerPresent()) {
-    // http://www.cplusplus.com/forum/beginner/12001/
+    // https://www.cplusplus.com/forum/beginner/12001/
     // Benefits:
     //  - no change to compilation (i.e., omit: -SUBSYSTEM:windows -ENTRY:mainCRTStartup).
     //  - subprocesses (RFile / WFile / my_system) still have access to console so behave properly.
@@ -307,19 +306,19 @@ LRESULT CALLBACK wndProc_wrapper(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lPa
 }
 
 // Windows 7 Touch Input:
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/dd371581%28v=vs.85%29.aspx RegisterTouchWindow
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/dd317341%28v=vs.85%29.aspx WM_TOUCH message
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/dd744775%28v=vs.85%29.aspx Detecting and Tracking
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/dd317334%28v=vs.85%29.aspx TOUCHINPUT structure
-//  http://msdn.microsoft.com/en-us/library/windows/desktop/dd562199%28v=vs.85%29.aspx samples
-//  http://msdn.microsoft.com/en-us/magazine/ee336016.aspx overview
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/dd371581%28v=vs.85%29.aspx RegisterTouchWindow
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/dd317341%28v=vs.85%29.aspx WM_TOUCH message
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/dd744775%28v=vs.85%29.aspx Detecting and Tracking
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/dd317334%28v=vs.85%29.aspx TOUCHINPUT structure
+//  https://msdn.microsoft.com/en-us/library/windows/desktop/dd562199%28v=vs.85%29.aspx samples
+//  https://msdn.microsoft.com/en-us/magazine/ee336016.aspx overview
 
 LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   if (_hwdebug) SHOW("wndProc", iMsg);
   static PAINTSTRUCT ps;  // always zero
   switch (iMsg) {
     case WM_ERASEBKGND:
-      // http://www.opengl.org/pipeline/article/vol003_7/
+      // https://www.opengl.org/pipeline/article/vol003_7/
       // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
       // (this will avoid GDI clearing the OpenGL windows background).
       // HH: I found this unnecessary so far.
@@ -354,7 +353,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // Remove from message queue all other repaint messages.
       // Implicitly "validates" whole window to remove WM_PAINT msgs.
       // Win32 note: only 1 WM_PAINT message will be in queue at a time.
-      // To support several OpenGL contexts, see http://stackoverflow.com/questions/2842319/swapbuffers-causes-redraw
+      // To support several OpenGL contexts, see https://stackoverflow.com/questions/2842319/swapbuffers-causes-redraw
       assertx(BeginPaint(_hwnd, &ps));
       assertx(EndPaint(_hwnd, &ps));
       // Redraw the screen
@@ -386,7 +385,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       }
       // The problem in windows is that there is no way to avoid seeing a flash of background color right
       //  after window resizing (most noticeable in Remote Desktop).  Good discussion at
-      //  http://stackoverflow.com/questions/9786218/drawing-in-window-while-resizing-leaves-unpainted-border
+      //  https://stackoverflow.com/questions/9786218/drawing-in-window-while-resizing-leaves-unpainted-border
       if (0) {
         // This clears the new window completely, which makes the problem somewhat worse.
         {
@@ -474,7 +473,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     }
     case WM_DROPFILES: {
-      // See http://www.codeproject.com/Articles/840/How-to-Implement-Drag-and-Drop-Between-Your-Progra
+      // See https://www.codeproject.com/Articles/840/How-to-Implement-Drag-and-Drop-Between-Your-Progra
       Array<string> filenames;
       {
         HDROP hdrop = HDROP(wParam);
@@ -753,7 +752,7 @@ void HW::set_window_title(string ps) {
     ASSERTX(IsWindowUnicode(_hwnd));
     assertx(SetWindowTextW(_hwnd, utf16_from_utf8(_window_title).c_str()));
     // Note that this gets converted to a WM_SETTEXT message;
-    //  see http://stackoverflow.com/questions/9410681/setwindowtextw-in-an-ansi-project
+    //  see https://stackoverflow.com/questions/9410681/setwindowtextw-in-an-ansi-project
   }
 }
 
@@ -776,8 +775,8 @@ Vec2<int> HW::get_max_window_dims() {
 
 void HW::resize_window(const Vec2<int>& yx) {
   assertx(_state == EState::open);
-  // http://stackoverflow.com/questions/5609486/in-c-windows-api-resize-window-during-runtime
-  // http://stackoverflow.com/questions/692742/how-do-you-programmatically-resize-and-move-windows-with-the-windows-api
+  // https://stackoverflow.com/questions/5609486/in-c-windows-api-resize-window-during-runtime
+  // https://stackoverflow.com/questions/692742
   RECT wa_rect;
   assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
   RECT rect = {0, 0, yx[1], yx[0]};  // left, top, right, bottom
@@ -785,7 +784,7 @@ void HW::resize_window(const Vec2<int>& yx) {
   int width = rect.right - rect.left;
   int height = rect.bottom - rect.top;
   // or consider MoveWindow()
-  // http://msdn.microsoft.com/en-us/library/windows/desktop/ms633545%28v=vs.85%29.aspx
+  // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
   int new_top = 0, new_left = 0;  // unused unless force_move
   bool force_move = false;
   if (_win_pos[0] + height > wa_rect.bottom || _win_pos[1] + width > wa_rect.right) {
@@ -809,7 +808,6 @@ bool HW::is_fullscreen() {
 }
 
 void HW::make_fullscreen(bool b) {
-  // http://blogs.msdn.com/b/oldnewthing/archive/2010/04/12/9994016.aspx
   if (b == is_fullscreen()) return;
   static WINDOWPLACEMENT g_wp_prev;
   g_wp_prev.length = sizeof(g_wp_prev);
@@ -900,7 +898,7 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
 }
 
 string HW::query_save_filename(const string& hint_filename, bool force) {
-  // http://msdn.microsoft.com/en-us/library/windows/desktop/ms646928%28v=vs.85%29.aspx
+  // https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getsavefilenamea
   std::wstring whint_filename = utf16_from_utf8(hint_filename);
   std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
   std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
@@ -944,7 +942,7 @@ void HW::wake_up() {
 }
 
 void HW::set_pixel_format(bool fake_first) {
-  // http://www.opengl.org/pipeline/article/vol003_7/
+  // https://www.opengl.org/pipeline/article/vol003_7/
   // Windows Vista introduces the new pixelformat flag PFD_SUPPORT_COMPOSITION (defined in the Driver
   //  Development Kit's wingdi.h as 0x00008000).
   // Creating an OpenGL context for a pixelformat without this flag will disable composition for the duration

@@ -350,7 +350,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
   throw std::runtime_error("Library libjpeg is not installed.  See Readme.txt file.");
 #else
   // Note that it would be possible to read from an istream instead of a FILE* as described in
-  //  http://stackoverflow.com/questions/6327784/how-to-use-libjpeg-to-read-a-jpeg-from-a-stdistream
+  //  https://stackoverflow.com/questions/6327784/how-to-use-libjpeg-to-read-a-jpeg-from-a-stdistream
   jpeg_decompress_struct cinfo;
   jpeg_error_mgr jerr;
 
@@ -1005,7 +1005,7 @@ static void my_png_user_warning_fn(png_structp png_ptr, png_const_charp warning_
 
 void ImageLibs::read_png(Image& image, FILE* file) {
   // Note that it would be possible to read from an istream instead of a FILE* using png_set_read_fn() as
-  //   described in http://www.piko3d.net/tutorials/libpng-tutorial-loading-png-files-from-streams/
+  //   described in https://www.piko3d.net/tutorials/libpng-tutorial-loading-png-files-from-streams/
   // (PNG_LIBPNG_VER_STRING, png_voidp(user_error_ptr), user_error_fn, user_warning_fn)
   png_structp png_ptr = assertt(png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, nullptr, nullptr));
   png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), my_png_user_error_fn, my_png_user_warning_fn);

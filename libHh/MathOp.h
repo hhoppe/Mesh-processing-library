@@ -67,7 +67,7 @@ template <typename T> bool my_mod_check(T ret, T b) {
 
 // Modulo operation.  (The built-in C/C++ remainder operation (a % b) returns negative remainders if a < 0).
 inline int my_mod(int a, int b) {
-  // http://stackoverflow.com/questions/4003232/
+  // https://stackoverflow.com/questions/4003232/
   // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
   return (ASSERTX(b > 0), details::fix_mod(a % b, b));
 }

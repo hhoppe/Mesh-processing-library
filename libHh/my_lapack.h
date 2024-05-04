@@ -60,7 +60,6 @@ using lapack_int = long;  // was defined as "integer" in f2c.h
 // clapack routines in liblapack
 extern "C" {
 
-// http://www.netlib.org/lapack/explore-html/d0/db8/group__real_g_esolve.html#ga206e3084597d088b31dc054a69aec93f
 // SGELSS solves overdetermined or underdetermined systems for GE matrices, using SVD.
 // ~/git/lib_src/CLAPACK/SRC/sgelss.c
 lapack_int sgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda, float* b,
@@ -72,7 +71,7 @@ lapack_int dgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, double* a, la
                    lapack_int* ldb, double* s, double* rcond, lapack_int* irank, double* work, lapack_int* lwork,
                    lapack_int* info);
 
-// http://www.netlib.org/lapack/explore-html/d0/d2a/sgelsx_8f.html
+// https://www.netlib.org/lapack/explore-html/d0/d2a/sgelsx_8f.html
 // SGELSX solves overdetermined or underdetermined systems for GE matrices, using QR.
 // This routine is deprecated and has been replaced by routine SGELSY.
 // ~/git/lib_src/CLAPACK/SRC/sgelsx.c
@@ -80,12 +79,11 @@ lapack_int dgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, double* a, la
 //                   float* b, lapack_int* ldb, lapack_int* jpvt, float* rcond, lapack_int* irank,
 //                   float* work, lapack_int* info);
 
-// http://www.netlib.org/lapack/explore-html/dc/db6/sgelsy_8f.html
+// https://www.netlib.org/lapack/explore-html/dc/db6/sgelsy_8f.html
 lapack_int sgelsy_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lapack_int* lda, float* b,
                    lapack_int* ldb, lapack_int* jpvt, float* rcond, lapack_int* irank, float* work, lapack_int* lwork,
                    lapack_int* info);
 
-// http://www.netlib.org/lapack/explore-html/d4/dca/group__real_g_esing.html
 // subroutine SGESVD (JOBU, JOBVT, M, N, A, LDA, S, U, LDU, VT, LDVT, WORK, LWORK, INFO)
 // SGESVD computes the singular value decomposition (SVD) for GE matrices
 // ~/git/lib_src/CLAPACK/SRC/sgesvd.c
@@ -93,7 +91,6 @@ lapack_int sgesvd_(char* jobu, char* jobvt, lapack_int* m, lapack_int* n, float*
                    float* u, lapack_int* ldu, float* vt, lapack_int* ldvt, float* work, lapack_int* lwork,
                    lapack_int* info);
 
-// http://www.netlib.org/lapack/explore-html/d8/ddc/group__real_g_ecomputational.html#ga7cb54fa1727bf0166523036f4948bc56
 // subroutine SGEQRF (M, N, A, LDA, TAU, WORK, LWORK, INFO)
 // SGEQRF computes a QR factorization of a real M-by-N matrix A:
 // A = Q * R.

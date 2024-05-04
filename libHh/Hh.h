@@ -29,7 +29,7 @@
 #pragma warning(disable : 4127)  // conditional expression is constant, e.g. "if (0)", "if (1)"
 #pragma warning(disable : 4464)  // #include paths containing ".." relative folders (e.g. "../libHh/Video.h")
 #pragma warning(disable : 4512)  // in Release config: assignment operator could not be generated
-#pragma warning(disable : 4592)  // bug in VS2015 update 1; http://stackoverflow.com/questions/34013930/
+#pragma warning(disable : 4592)  // bug in VS2015 update 1; https://stackoverflow.com/questions/34013930/
 // Workarounds for warning 4702 (unreachable code) (pragma would have to appear before function body):
 //  for (; ; ++iter) { f(); break; }    // replace "break;" by "if (1) break;"
 //  { assertnever("abandonned"); f(); }  // use "assertnever_ret(..);"
@@ -76,7 +76,7 @@
 
 #define HH_EAT_SEMICOLON static_assert(true, "")  // redundant declaration to swallow subsequent semicolon
 
-// Safest to indirect once through these.  http://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
+// Safest to indirect once through these.  https://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
 #define HH_STR(e) #e
 #define HH_STR2(e) HH_STR(e)
 #define HH_CAT(a, b) a##b
@@ -85,7 +85,7 @@
 #if defined(_MSC_VER)  // _Pragma() is still not defined in Visual Studio 2017 (_MSC_VER == 1910)
 #define HH_PRAGMA(...) __pragma(__VA_ARGS__)
 #else
-#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; http://stackoverflow.com/a/15864723
+#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; https://stackoverflow.com/a/15864723
 #endif
 
 #if defined(_MSC_VER)
@@ -233,8 +233,8 @@ template <typename T> T& as_lvalue(T&& e) { return const_cast<T&>(static_cast<co
 // *** Constants
 
 constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
-constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see http://tauday.com/
-constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see http://tauday.com/
+constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see https://tauday.com/
+constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 // #undef PI  // instead, use TAU / 2
 
 // *** Utility classes
@@ -603,9 +603,8 @@ string extract_function_type_name(string s);
 
 template <typename T> struct TypeNameAux {
 #if defined(__GNUC__) || defined(__clang__)
-  // http://shaderop.com/2010/09/uniquely-identifying-types-in-c-without-using-rtti/
-  // http://www.gamedev.net/topic/608203-c-get-type-name-without-rtti/
-  // http://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
+  // https://www.gamedev.net/forums/topic/608203-c-get-type-name-without-rtti/
+  // https://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
   static string name() { return extract_function_type_name(__PRETTY_FUNCTION__); }
 #elif defined(_MSC_VER)
   static string name() { return extract_function_type_name(__FUNCTION__); }  // also __FUNCSIG__, __FUNCDNAME__
@@ -731,7 +730,7 @@ inline constexpr double interp(double v1, double v2, double f) {
 
 inline uint8_t clamp_to_uint8(int v) {
   // return clamp(v, 0, 255);
-  // http://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
+  // https://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
   v &= -(v >= 0);
   return static_cast<uint8_t>(v | ((255 - v) >> 31));
 }

@@ -121,7 +121,8 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
   if (suffix() == "jpg") {
     int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
     assertt(quality > 0 && quality <= 100);
-    // Nonlinear mapping; see http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
+    // Nonlinear mapping; see
+    // https://web.archive.org/web/20170405194543/http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
     int qscale = quality >= 95   ? 0
                  : quality >= 90 ? 1
                  : quality >= 80 ? 2
@@ -175,7 +176,7 @@ void Image::read_file_i(const string& filename, bool bgra) {
     // - WIC: getting orientation information seems a bit complex.
     //    Maybe: https://msdn.microsoft.com/en-us/library/windows/desktop/ee719904%28v=vs.85%29.aspx
     // - libjpeg: does not itself parse the EXIF tags.
-    //    Could use libexif or http://www.sentex.net/~mwandel/jhead/ to do this.
+    //    Could use libexif or https://www.sentex.net/~mwandel/jhead/ to do this.
     // - ffmpeg: its information does not show rotation.
     //    Could use separate program "exiftool" or "exif" (cygwin) or "ffprobe -show_frames" to do this.
     // Overall, it would require 3 separate efforts and more dependencies to support this.

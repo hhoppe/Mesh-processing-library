@@ -463,10 +463,9 @@ inline Pixel parse_color(const string& scolor) {
 #if defined(GL_VERSION)  // OpenGL
 
 // See:
-// http://open.gl/textures  really nice!
-// http://www.clockworkcoders.com/oglsl/tutorial8.htm
-// http://docs.gl/
-// http://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/   shader program
+// https://open.gl/textures  really nice!
+// https://docs.gl/
+// https://www.opengl-tutorial.org/beginners-tutorials/tutorial-2-the-first-triangle/   shader program
 
 // c:/Program Files (x86)/Windows Kits/8.1/Include/um/gl/GL.h
 // ~/git/mesh_processing/G3dOGL/glext.h
@@ -527,7 +526,7 @@ inline bool gl_report_errors() {
 }
 
 inline const string& gl_extensions_string() {
-  // e.g. see http://www.geeks3d.com/20100722/tips-how-to-get-the-list-of-the-opengl-extensions-with-a-core-profile/
+  // e.g. see https://www.geeks3d.com/20100722/tips-how-to-get-the-list-of-the-opengl-extensions-with-a-core-profile/
   // Remote Desktop (even on Win10):
   //  glGetString(GL_VERSION) = 1.1.0
   //  gl_extensions_string() = GL_WIN_swap_hint GL_EXT_bgra GL_EXT_paletted_texture

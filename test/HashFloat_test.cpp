@@ -98,7 +98,7 @@ void test_io() {
   const Array<float> ar1eps = ar * eps + 1.f;
   // 7 digits of precision are insufficient, in either sform("%.7g") or ostream << setprecision(7).
   // 8 digits are mostly sufficient -- e.g. not true of numbers between 1000 and 1024
-  // 1023.9932861328125f from http://randomascii.wordpress.com/2012/02/11/they-sure-look-equal/
+  // 1023.9932861328125f from https://randomascii.wordpress.com/2012/02/11/they-sure-look-equal/
   // printf("%1.8e\n", d);   // Round-trippable float, always with an exponent
   // printf("%.9g\n", d);    // Round-trippable float, shortest possible
   // printf("%1.16e\n", d);  // Round-trippable double, always with an exponent

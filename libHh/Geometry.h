@@ -11,9 +11,9 @@ class Frame;
 struct Point;
 
 // My Vector, Point, Frame classes assumes row vectors (rather than column vectors).
-// This is similar to RenderMan -- http://www.levork.org/2002/02/07/row-and-column-matrix-conventions-in-renderman/
-// http://en.wikipedia.org/wiki/Row_vector
-// https://www.opengl.org/discussion_boards/archive/index.php/t-153574.html :
+// This is similar to RenderMan.
+// https://en.wikipedia.org/wiki/Row_vector
+// https://community.khronos.org/t/transpose/43582
 //   OpenGL was long ago derived from SGI's propietary graphics library 'Irix GL'
 //   In its docs, matrix ops were specified as operating on row vectors on the matrix left.
 

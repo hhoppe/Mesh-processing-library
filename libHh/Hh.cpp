@@ -57,12 +57,12 @@ namespace {
 
 #if !defined(HH_NO_STACKWALKER)
 
-// StackWalk64  http://msdn.microsoft.com/en-us/library/ms680650%28VS.85%29.aspx   complicated
-// comment: You can find article and good example of use at: http://www.codeproject.com/KB/threads/StackWalker.aspx
-//   and http://stackwalker.codeplex.com/
-// CaptureStackBackTrace() http://msdn.microsoft.com/en-us/library/windows/desktop/bb204633%28v=vs.85%29.aspx
+// StackWalk64  https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk  complicated
+// comment: You can find article and good example of use at:
+//  https://www.codeproject.com/Articles/11132/Walking-the-callstack-2
+// CaptureStackBackTrace() https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/bb204633(v=vs.85)
 
-// http://www.codeproject.com/KB/threads/StackWalker.aspx
+// https://www.codeproject.com/Articles/11132/Walking-the-callstack-2
 // "Walking the callstack"  by Jochen Kalmbach [MVP VC++]     2005-11-14   NICE!
 //
 // The goal for this project was the following:
@@ -107,12 +107,12 @@ void show_call_stack_internal() {
 
 // Other possible stack-walking routines:
 
-// http://www.codeproject.com/KB/debug/PDBfiles_Symbols.aspx
+// https://www.codeproject.com/Articles/178574/Using-PDB-files-and-symbols-to-debug-your-applicat
 //  "Using PDB files and symbols to debug your application" by Yanick Salzmann   2011-04-18   few downloads
 //  "With the help of PDB files, you are able to recover the source code as it was before compilation
 //   from the bits and bytes at runtime."
 
-// http://stackoverflow.com/questions/6205981/windows-c-stack-trace-from-a-running-app
+// https://stackoverflow.com/questions/6205981/windows-c-stack-trace-from-a-running-app
 
 #else
 
@@ -131,7 +131,7 @@ std::string utf8_from_utf16(const std::wstring& wstr) {
   assertx(nchars > 0);
   string str(nchars - 1, '\0');  // does allocate space for an extra null-terminating character
   // Writing into std::string using &str[0] is arguably legal in C++11; see discussion at
-  //  http://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers
+  //  https://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers
   assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, &str[0], nchars, nullptr, nullptr));
   return str;
 }
@@ -328,7 +328,7 @@ bool details::assertw_aux2(const char* s) {
 
 // may return nullptr
 void* aligned_malloc(size_t size, int alignment) {
-  // see http://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
+  // see https://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
 #if defined(_MSC_VER)
   return _aligned_malloc(size, alignment);
 #elif defined(__MINGW32__)
@@ -386,12 +386,12 @@ void show_cerr_and_debug(const string& s) {
 }  // namespace details
 
 // Should not define "sform(const string& format, ...)":
-//  see: http://stackoverflow.com/questions/222195/are-there-gotchas-using-varargs-with-reference-parameters
+//  see: https://stackoverflow.com/questions/222195/are-there-gotchas-using-varargs-with-reference-parameters
 // Varargs callee must have two versions:
-//  see: http://www.c-faq.com/varargs/handoff.html   http://www.tin.org/bin/man.cgi?section=3&topic=vsnprintf
+//  see: https://www.c-faq.com/varargs/handoff.html   http://www.tin.org/bin/man.cgi?section=3&topic=vsnprintf
 static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list ap) {
-  // Adapted from http://stackoverflow.com/questions/2342162/stdstring-formating-like-sprintf
-  //  and http://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
+  // Adapted from https://stackoverflow.com/questions/2342162/stdstring-formating-like-sprintf
+  //  and https://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
   // asprintf() supported only on BSD/GCC
   const int stacksize = 256;
   char stackbuf[stacksize];  // stack-based buffer that is big enough most of the time
@@ -426,7 +426,7 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   }
 }
 
-// Inspired from vinsertf() in http://stackoverflow.com/a/2552973/1190077
+// Inspired from vinsertf() in https://stackoverflow.com/a/2552973
 static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, std::va_list ap) {
   const size_t minsize = 40;
   if (str.size() < minsize) str.resize(minsize);
@@ -493,8 +493,8 @@ HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ..
   return str.c_str();
 }
 
-// Problem from http://stackoverflow.com/questions/3366978/what-is-wrong-with-this-recursive-va-arg-code ?
-// See http://www.c-faq.com/varargs/handoff.html
+// Problem from https://stackoverflow.com/questions/3366978/what-is-wrong-with-this-recursive-va-arg-code ?
+// See https://www.c-faq.com/varargs/handoff.html
 
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...) {
   std::va_list ap;
@@ -702,7 +702,7 @@ float getenv_float(const string& varname, float vdefault, bool warn) {
 string getenv_string(const string& varname, const string& vdefault, bool warn) {
 #if 0 && defined(_WIN32)
   assertnever("Would likely have to never use getenv() or putenv().");
-  // http://msdn.microsoft.com/en-us/library/tehxacec.aspx :
+  // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/getenv-wgetenv :
   // When two copies of the environment (MBCS and Unicode) exist simultaneously in a program, the run-time
   //  system must maintain both copies, resulting in slower execution time. For example, whenever you call
   //  _putenv, a call to _wputenv is also executed automatically, so that the two environment strings correspond.

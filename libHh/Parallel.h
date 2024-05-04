@@ -115,7 +115,6 @@ constexpr uint64_t k_omp_many_cycles_per_elem = 400;  // Num of instruction cycl
 constexpr int k_omp_min_iterations = 8;               // Sufficient number of loop iterations for parallelism.
 
 #if _OPENMP < 200805  // (2.0 == 200203; 3.0 == 200805; 4.0 == 201307; VS2015 is still 2.0).
-// http://dautovri.blogspot.com/2015/04/check-your-openmp-version.html
 // Loop variable cannot be unsigned, so use a signed one instead.
 #undef parallel_for_size_t
 #define parallel_for_size_t(i, ub) parallel_for_T(intptr_t, i, 0, static_cast<intptr_t>(ub))

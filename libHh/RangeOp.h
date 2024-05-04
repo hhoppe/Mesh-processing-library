@@ -10,8 +10,8 @@ namespace hh {
 
 #if 1
 // Extensions of functions from C++ <algorithm> as proposed by "Ranges" TS,
-//  draft N4560 http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
-// See http://en.cppreference.com/w/cpp/experimental/ranges#Ranges.
+//  draft N4560 https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
+// See https://en.cppreference.com/w/cpp/experimental/ranges#Ranges.
 
 // Check unary predicate against elements; true if range is empty.
 template <typename R, typename Pred, typename = enable_if_range_t<R>> bool all_of(const R& range, Pred p) {

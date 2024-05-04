@@ -34,7 +34,7 @@ using namespace hh;
 // WIC really expects that we keep open the input image, with an active IWICMetadataBlockReader,
 //  so that the metadata can be copied using "piBlockWriter->InitializeFromBlockReader(piBlockReader);"
 //  (see How-to: Re-encode a JPEG Image with Metadata:
-//    http://msdn.microsoft.com/en-us/library/windows/desktop/ee719794%28v=vs.85%29.aspx ).
+//    https://learn.microsoft.com/en-us/windows/win32/wic/-wic-codec-jpegmetadataencoding ).
 // My current approach is to store the input image filename into Image::Attrib::orig_filename.
 // If the input was read from a pipe, I issue a warning about missing Exif when writing the image.
 
@@ -190,7 +190,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     }
     com_ptr<IWICFormatConverter> converter;
     AS(wic_factory->CreateFormatConverter(&converter));
-    // Pixel formats:  http://msdn.microsoft.com/en-us/library/windows/desktop/ee719797%28v=vs.85%29.aspx
+    // Pixel formats: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-codec-native-pixel-formats
     //  PRGBA is premultiplied alpha (whereas RGBA is not)
     // We want to decode the incoming pixels as non-premultiplied alpha (RGBA or BGRA) so that the decoder
     //  does not do any transformation, although the values are actually (often) pre-multiplied alpha.
@@ -290,7 +290,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   my_HGLOBAL hMem;  // gets defined if write_through_memory
   com_ptr<IStream> output_stream;
   if (write_through_memory) {
-    // http://code.google.com/p/sumatrapdf/source/browse/trunk/src/utils/WinUtil.cpp?r=9012
+    // https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp
     size_t iSize = 0;
     hMem = assertx(GlobalAlloc(GMEM_MOVEABLE, iSize));
     AS(CreateStreamOnHGlobal(hMem, FALSE, &output_stream));
@@ -303,7 +303,8 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     AS(output_wic_stream->QueryInterface(IID_PPV_ARGS(&output_stream)));
   }
   assertx(output_stream);
-  // CreateEncoder:  http://msdn.microsoft.com/en-us/library/windows/desktop/ee690311%28v=vs.85%29.aspx
+  // CreateEncoder:
+  //  https://learn.microsoft.com/en-us/windows/win32/api/wincodec/nf-wincodec-iwicimagingfactory-createencoder
   com_ptr<IWICBitmapEncoder> encoder;
   AS(wic_factory->CreateEncoder(*container_format, nullptr, &encoder));
   AS(encoder->Initialize(output_stream, WICBitmapEncoderNoCache));
@@ -317,13 +318,13 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     notification->RegisterProgressNotification(my_progress_callback, &cprogress, WICProgressOperationAll);
   }
 #endif
-  // WIC GUIDs and CLSIDs:  http://msdn.microsoft.com/en-us/library/windows/desktop/ee719882%28v=vs.85%29.aspx
+  // WIC GUIDs and CLSIDs: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-guids-clsids
   {
     com_ptr<IWICBitmapFrameEncode> frame_encode;
     {
       IPropertyBag2* property_bag;  // auto freed
       AS(encoder->CreateNewFrame(&frame_encode, &property_bag));
-      // Encoder options:  http://msdn.microsoft.com/en-us/library/windows/desktop/ee719871%28v=vs.85%29.aspx
+      // Encoder options: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-creating-encoder
       if (container_format == &GUID_ContainerFormatJpeg) {
         int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75)
         assertx(quality > 0 && quality <= 100);
@@ -365,7 +366,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
         if (1) {
           // Additional metadata: make sure that orientation field is reset to normal,
           //  because we have applied any rotation to the image content itself.
-          // http://mdsn.asyan.org/CreateDecoderFromFilename/how-to-re-encode-a-jpeg-image-with-metadata.%D0%BE%D1%82%D0%B2%D0%B5%D1%82
+          // https://learn.microsoft.com/en-us/windows/win32/wic/-wic-codec-jpegmetadataencoding
           com_ptr<IWICMetadataQueryWriter> pQueryWriter;
           if (assertw(SUCCEEDED(frame_encode->GetMetadataQueryWriter(&pQueryWriter)))) {
             PROPVARIANT propvariant;

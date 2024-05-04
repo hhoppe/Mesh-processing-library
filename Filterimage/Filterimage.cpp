@@ -1077,7 +1077,7 @@ void do_tocolor() { image.to_color(); }
 
 void do_hue() {
   assertx(image.zsize() >= 3);
-  // http://en.wikipedia.org/wiki/Grayscale
+  // https://en.wikipedia.org/wiki/Grayscale
   // To convert any color to a grayscale representation of its luminance, first one must obtain the values of
   // its red, green, and blue (RGB) primaries in linear intensity encoding, by gamma expansion. Then, add together
   // 30% of the red value, 59% of the green value, and 11% of the blue value (these weights depend on the exact
@@ -1718,7 +1718,7 @@ void do_homogenize(Args& args) {
     //             = x - B^T * (R^T * R)^-1 * B * x
     //             = x - B^T * (B * B^T)^-1 * B * x
     //              (which does not simplify because B is non-square, like (A^T * A)^-1 * A^T * b.
-    // In fact, see http://en.wikipedia.org/wiki/Projection_operator (orthogonal projection).
+    // In fact, see https://en.wikipedia.org/wiki/Projection_operator (orthogonal projection).
     // My key insight is that we can perform orthogonal projection without ever forming the matrix A!
     // So memory complexity is O(m + n * n), where m is the size of the image x and n is the number of basis.
     const int n2 = n * n;

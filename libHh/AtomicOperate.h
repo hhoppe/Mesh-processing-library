@@ -61,7 +61,7 @@ template <typename T, typename Func> void atomic_operate(volatile T* ptr, Func f
   T value = *ptr;
   Tint& inew_value = *(details::force_pointer_cast<Tint>(&value));
   Tint iold_value;
-  // Note: there is http://en.cppreference.com/w/cpp/atomic/atomic_compare_exchange
+  // Note: there is https://en.cppreference.com/w/cpp/atomic/atomic_compare_exchange
   //  but it only operates on std::atomic<T> types.  Maybe there is a good reason.
   do {
     iold_value = inew_value;

@@ -676,7 +676,7 @@ bool getenv_bool(const string& varname, bool vdefault, bool warn) {
   if (!s) return vdefault;
   if (!*s) return true;
   assertx(check_bool(s));
-  if (warn) showf("Environment variable '%s=%d' overrides default value '%d'\n", varname.c_str(), s, vdefault);
+  if (warn) showf("Environment variable '%s=%s' overrides default value '%d'\n", varname.c_str(), s, vdefault);
   return !strcmp(s, "1") || !strcmp(s, "true");
 }
 
@@ -711,7 +711,7 @@ string getenv_string(const string& varname, const string& vdefault, bool warn) {
 #else
   const char* s = getenv(varname.c_str());
   if (!s) return vdefault;
-  if (warn) showf("Environment variable '%s=%g' overrides default value '%s'\n", varname.c_str(), s, vdefault.c_str());
+  if (warn) showf("Environment variable '%s=%s' overrides default value '%s'\n", varname.c_str(), s, vdefault.c_str());
   return s;
 #endif
 }

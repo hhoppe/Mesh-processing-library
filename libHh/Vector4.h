@@ -149,9 +149,8 @@ class Vector4 {
     return *this;
   }
   // Unfortunately, presence of union leads to !std::is_trivially_copyable<Vector4>::value .
-  // I could remove union and use more complex accessor function as in
-  //  https://stackoverflow.com/questions/12624466/get-member-of-m128-by-index
-  // or in <fvec.h>.
+  // We could remove union and use more complex accessor function as in
+  //  https://stackoverflow.com/questions/12624466/get-member-of-m128-by-index or in <fvec.h>.
   // However, this seems too complicated for little gain.
   union {
     __m128 _r;  // This could be made public to allow mixing of above overloads and full set of SSE ops.

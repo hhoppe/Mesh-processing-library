@@ -616,7 +616,7 @@ inline float get_grid_value(const Vec2<int>& yx) { return gridzscale * (!gridush
 // Given dihedral values before and after edge collapse, is it illegal?
 bool bad_dihedral(float dihb, float diha) { return diha < gmindih && diha < dihb; }
 
-constexpr bool use_traditional_dih = true;  // I prefer it sometimes, e.g. shark
+constexpr bool use_traditional_dih = true;  // Preferable sometimes, e.g. shark.
 struct Dihedral {
   float dihb = 0.f;
   Array<Vector> ar_dirs;
@@ -1796,12 +1796,10 @@ float compute_spring(const NewMeshNei& nn) {
   // Let frac = np / nf
   //  spring = frac<4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
   float spring = (np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f);
-  // I found that variable spring constants tends to produce patches of large faces, which gives poor behavior
-  // for selective refinement.
-  // So now 1997-08-27 I go with constant springs.
+  // Variable spring constants tends to produce patches of large faces, which gives poor behavior for selective
+  // refinement.  So now 1997-08-27 we use constant springs.
   // if (1) spring = 1e-8f;
-  // No way, that doesn't give good results for meshes >sq100
-  // Go back to higher spring constants.
+  // No, that doesn't give good results for meshes >sq100. We go back to higher spring constants.
   if (gspring != -1) spring = gspring;
   if (spring > 0.f) {
     SSTATV2(Slogspring, log10f(spring));
@@ -2107,9 +2105,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
       }
     }
     for (int r : nn.ar_rwid_v1) {
-      // I don't quite know what is happening here.
-      // This resulted due to my new code for rwid_v1 above.
-      // Filterprog would crash (on grotto) unless disallowed.
+      // This check is necessary due to new code for rwid_v1 above, else Filterprog would crash on grotto.
       if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
     }
     for (int r : nn.ar_rwid_v2) {
@@ -2964,7 +2960,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
             Face f = mesh.corner_face(nn.ar_corners[i][2]);
             mesh.polygon(f, poly);
             float eps = 1e-3f;
-            // I used to have eps=1e-5f, but I found that this would result in Sres_npnor av=.95 for gcanyon_sq200
+            // We used to have eps=1e-5f, but this would result in Sres_npnor av=.95 for gcanyon_sq200
             // (it should be 1.0 except for the last edge collapse which changes terrain to a triangle).
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
             // It must have been a numerical problem in intersect_line().
@@ -3149,8 +3145,8 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     assertx(nr == m);
   }
   {
-    // I could instead try to use the Raymond Seidel fast linear programming scheme, which I copied from
-    // Seth Teller into rseidel_lp.tar.gz .  (then into linprog.tar.gz)
+    // We could instead use the Raymond Seidel (or Raimund Seidel) fast linear programming scheme, copied from
+    // Seth Teller into rseidel_lp.tar.gz, then into linprog.tar.gz .
     simplx(a, m, n, m1, m2, m3, &icase, izrov, iposv);
   }
   bool ret = false;
@@ -3719,7 +3715,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         if (terrain) {
           if (is_grid_corner(v2)) continue;
         } else {
-          // new 1998-01-05 for SR_PREDICT_MATID; or should I use clw_edge? double check.
+          // new 1998-01-05 for SR_PREDICT_MATID; or should we use clw_edge? double check.
           // 2004-03-01: removed to allow simplification of planck400k to 2 triangles with 4 vertices tagged global.
           // 2004-07-13: reintroduced because otherwise ctfparam can crash.
           if (1 && mesh.is_boundary(mesh.ccw_edge(f1, e))) continue;
@@ -3877,7 +3873,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
     } else if (minedgelength) {
       rssa = mesh.length2(e);
     } else if (minvdist) {
-      Warning("I found minvdist to be a really bad idea");
+      Warning("minvdist was found to be a bad idea");
       Face cf;
       Bary bary;
       Point clp;

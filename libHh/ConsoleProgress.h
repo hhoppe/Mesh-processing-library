@@ -75,9 +75,9 @@ inline void ConsoleProgress::update_i(float f) {
   // - "\a" (7) rings bell.
   // - "\t" (9) is tab (\011).
   // - "\n" (10) is usual newline.
-  // - "\b" (8) erases the last character; I modified emacs shell to do the same.
+  // - "\b" (8) erases the last character; my emacs shell is modified to do the same.
   // - "\r" (13) moves cursor to beginning of line, but does *not* clear the line contents;
-  //  I modified emacs shell to delete backwards to the line beginning.
+  //    my emacs shell is modified to have "\r" delete backwards to the line beginning.
   int val = clamp(int(f * 100.f), 0, 99);
   if (val <= _last_val) return;
   {  // synchronize in case multiple threads are updating the object or using ConsoleProgress

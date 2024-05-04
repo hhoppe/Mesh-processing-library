@@ -217,7 +217,7 @@ class Multigrid : noncopyable {
         product(vrange) * 2);
     // The optional D leftover hyperplanes [dims / 2, ndims - 1] for odd sizes
     Vec<Bndrule, D> bndrules;
-    for_int(d, D) {  // emperically, I found this boundary rule to behave well
+    for_int(d, D) {  // These boundary rules were chosen because they behave well emperically.
       bndrules[d] = (_periodic(d)                             ? Bndrule::border
                      : largest_odd_size >= largest_other_size ? Bndrule::border
                                                               : Bndrule::reflected);
@@ -469,7 +469,7 @@ class Multigrid : noncopyable {
       }
     }
     if (extra && 1) {  // perform additional relaxations near ends of dimensions with odd sizes
-      // I tried custom relaxation kernels near end boundaries but it did not work.
+      // We also tried using custom relaxation kernels near end boundaries but it did not work well.
       for_int(iter, 3) {
         int extra_niter = 30, extra_size = 6;
         if (D == 3) {  // reduce computational cost on Video
@@ -580,7 +580,7 @@ class Multigrid : noncopyable {
       }
     }
   }
-  // I implemented the specialization relax_aux(Specialize<1>, ...) but it was not any faster for mingw 4.8.1
+  // Tried implementing the specialization relax_aux(Specialize<1>, ...) but it was no faster for mingw 4.8.1.
   //
   // Compute the residual of the Laplacian:  grid_rhs - Laplacian * grid_result .
   Grid<D, T> compute_residual(CGridView<D, T> grid_rhs, CGridView<D, T> grid_result) {

@@ -44,7 +44,7 @@ namespace hh {
 //  However, cannot get shortest _Euclidean_ cycle.
 //  Problem is that we require two fronts of visited vertices, and the vertex Voronoi regions corresponding to
 //   these visited vertices no longer encode the search region topology.
-//  So, I instead went with dual-edge "joined" labels during search.
+//  So, we instead went with dual-edge "joined" labels during search.
 //  These labels indicate which Vertex Voronoi regions are joined together.
 //
 //  Note: After finding shortest cycle, we could keep expanding the BFS for a while so as

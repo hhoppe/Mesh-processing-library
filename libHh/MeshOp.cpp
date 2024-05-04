@@ -560,9 +560,9 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
     dummy_use(closed);
     int avn = av.num();
     Vector vec(0.f, 0.f, 0.f);
-    // I once thought that "double" precision was necessary to overcome an apparent problem with poorly computed
-    // surface normals.  However, the problem lay in the geometry.
-    // Prefiltering with "Filtermesh -taubinsmooth 4" solved it.  EType::angle still seemed like a good solution.
+    // It once seemed that "double" was needed below to overcome an apparent problem with poorly computed surface
+    // normals.  However, the problem lay in the geometry. Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
+    // EType::angle still seems like a good scheme.
     switch (nortype) {
       case EType::angle: {
         Polygon& poly = _tmp_poly;

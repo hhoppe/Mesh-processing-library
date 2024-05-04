@@ -356,8 +356,8 @@ template <typename T> constexpr bool has_ostream_eol() {
 
 // Avoid warnings of unused variables
 template <typename... A> void dummy_use(const A&...) {}
-// Note: if I get compilation errors about redefinition of dummy_use(), etc. on MS VS,
-// it may be due to current directory being different from that in precompiled header due to symbol links,
+// Note: any compilation errors about redefinition of dummy_use(), etc. on MS VS may be due to the current
+// directory being different from that in precompiled header due to symbol links,
 // or to an explicit MeshRoot environment variable that does not match the current tree.
 
 // Avoid warnings of uninitialized variables

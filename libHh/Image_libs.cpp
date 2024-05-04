@@ -669,7 +669,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
     case 24:
     case 32: assertw(!bmih.biClrUsed); break;
     case 1:
-      if (!assertw(bmih.biClrUsed)) bmih.biClrUsed = 2;  // I do not remember what this is for
+      if (!assertw(bmih.biClrUsed)) bmih.biClrUsed = 2;  // Unclear what this was for.
       assertt(bmih.biClrUsed == 2);
       break;
     case 8:
@@ -1132,7 +1132,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
                                      : (assertt(false), 0)),
                PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
   if (getenv_bool("PNG_SRGB")) {  // 2008-05-07
-    // It looks unchanged both on the screen and on the printer --> I give up on this.
+    // It looks unchanged both on the screen and on the printer --> we give up on this.
     // (The intent was to make the images look less dark on the printer.)
     int srgb_intent = PNG_sRGB_INTENT_PERCEPTUAL;
     png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, srgb_intent);

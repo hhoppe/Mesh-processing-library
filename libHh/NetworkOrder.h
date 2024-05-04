@@ -9,7 +9,7 @@ namespace hh {
 // Convert between native byte ordering and network byte ordering.
 //
 // Notes:
-// - Network order is Big Endian (MSB first).  I use that for most of my binary files.
+// - Network order is Big Endian (MSB first).  That is the convention used here for all binary files.
 //
 // - Intel_x86 and VAX are Little Endian
 // - RISC is mostly Big Endian.  ARM is both.  All ARM versions of Windows run Little Endian
@@ -18,8 +18,8 @@ namespace hh {
 //  the packet headers and for many higher level protocols and file formats that are designed for use over IP.
 
 // Big Endian is natural for dates/times (2014-12-22 12:34:56).
-// I also use it for grid access (matrix[y][x] == matrix[yx]; matrix.dims() == V(matrix.ysize(), matrix.xsize())) and
-//   for screen coordinates (const Vec2<int>& yx).
+// It is also used for grid access (matrix[y][x] == matrix[yx]; matrix.dims() == V(matrix.ysize(), matrix.xsize()))
+//   and for screen coordinates (const Vec2<int>& yx).
 
 #if defined(__GNUC__) || defined(__clang__)
 
@@ -69,7 +69,7 @@ template <typename T> void my_swap_bytes(T* p) {
   static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2, "");
   // The "union" are required for gcc 4.8.1; otherwise it changes value in memory but not in register
   //  -- see NetworkOrder_test.cpp
-  // I first tried making "T* p" be volatile, but that hit another compiler bug in FrameIO.cpp
+  // First tried making "T* p" be volatile, but that hit another compiler bug in FrameIO.cpp
   //  exposed in FrameIO_test.cpp (the zoom variable is incorrect) and A3dStream_test.cpp .
   if (sizeof(T) == 8) {
     union {

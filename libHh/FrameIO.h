@@ -60,7 +60,7 @@ Frame get_not_a_frame();
 //   Thus, zoom == 1.f for a square window corresponds to a horizontal field-of-view of 90 degrees.
 //   The zoom value is typically used only for object 0 (the eye frame).
 //
-//   In many contexts, I associate the X, Y, Z world axes with "forward", "left", and "up" directions,
+//   In many contexts, the X, Y, Z world axes area associated with "forward", "left", and "up" directions,
 //   consistent with the ordering of the axes represented by the frame.
 //
 //   The identify frame is

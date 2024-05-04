@@ -70,7 +70,7 @@ void Applyq(const Frame& tq) {
   bool is_eye_move = eye_move && !viewmode && !ledit && cob != obview;
   Frame told = fm;
   if (object_mode) {
-    // I have no idea what this does anymore, but it seems to work
+    // Complicated change-of-frame to apply the correct transformation.
     const int ob = obview;
     Frame f = Frame::translation(vtran) * fm * ~g_obs[ob].t();
     Vector vtran2 = to_Vector(f.p());
@@ -534,9 +534,8 @@ static void act_flight() {
     if (abs(a) > 90.f) a = (180.f - abs(a)) * sign(a);
     if (abs(a) > 45.f) a = 45.f * sign(a);
     a = sign(a) * pow(abs(a) / 45.f, .5f);
-    // I found that doing translation*rotation*~translation is incorrect!
-    // It gives rise to a small secondary translation.
-    // I don't know why g3dfly.c doesn't show that bug.
+    // Doing "translation * rotation * ~translation" is incorrect!
+    // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that bug.
     Point savep = obframe.p();
     Frame f1 = Frame::translation(-to_Vector(obframe.p()));
     const float yaw_factor = 0.032f;                                                  // was 0.025f in g3dfly.c

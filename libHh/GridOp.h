@@ -472,7 +472,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   }
   assertx(njustspline == 0 || njustspline == D);
   // Note: IMAGE_EXPAND_VALUE_RANGE would be 2. to get a range [-.5, 1.5].
-  // I found empirically in ~/prevproj/2011/vtfilter/Notes.txt that the lower factor of 1.5 gives best results.
+  // The lower factor of 1.5 was found empirically to yield the best results; see ~/prevproj/2011/vtfilter/Notes.txt.
   static const float k_expand_value_range = getenv_float("IMAGE_EXPAND_VALUE_RANGE", 1.5f, true);
   float expand_value_range = npreprocess ? 1.f / assertx(k_expand_value_range) : k_expand_value_range;
   if (npreprocess) {

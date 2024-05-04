@@ -138,7 +138,7 @@ void HashFloat::pre_consider(float f) {
   float rm = _m.retrieve(bm);
   if (rp && rm) {
     Warning("HashFloat: Performing unification");
-    assertx(bc != k_small_key);  // I have not thought of that case yet.
+    assertx(bc != k_small_key);  // That case has not yet been considered.
     _m.enter(bc, f);
     for (float ff = f;;) {
       ff *= _factor;

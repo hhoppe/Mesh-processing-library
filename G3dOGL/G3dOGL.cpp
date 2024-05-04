@@ -2537,7 +2537,7 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
       }
     } else {
       Warning("GL_NORMALIZE");
-      glEnable(GL_NORMALIZE);  // not reset anywhere I hope.
+      glEnable(GL_NORMALIZE);  // Hopefully not reset anywhere.
       ogl_normalize = true;
       for (Face f : mesh.faces()) {
         Corner c1;
@@ -2589,7 +2589,7 @@ void GxObjects::clear(int segn) {
   _link[segn] = 0;
   _ob[segn] = nullptr;
   svalid_dl.remove(segn);
-  // I could update _imin, _imax here
+  // We could update _imin, _imax here.
 }
 
 void GxObjects::open(int segn) {
@@ -2650,7 +2650,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   // had ambient=.25 lightsource=.75 on SGI
   // had ambient=.60 lightsource=.75 on PC
   // changed to high-contrast default on 2002-01-17
-  //  (I liked the contrast of the old normal-map images.)
+  //  (The contrast of the old normal-map images was nice.)
   // ambient = .25f; lightsource = .85f;  // before 2012-05-02
   ambient = .30f;      // was .60f
   lightsource = .65f;  // was .75f then .72f
@@ -2885,11 +2885,11 @@ void HB::draw_space() {
     // HB::segment_morph_mesh(1, g3d::lod_level);
   }
 #if defined(DEF_SR)
-  // I checked: I believe there are no graphics calls before this since the last swapbuffer.
+  // We assume that there are no graphics calls before this since the last swapbuffer.
   if (sr_mode) sr_pre_space();
 #endif
-  // I noticed a 12% slowdown with gcanyon_4k2k_fly2.frames when I
-  //  placed the ClearWindow() before SrMesh::adapt_refinement() !
+  // There is a 12% slowdown with gcanyon_4k2k_fly2.frames when placing the ClearWindow()
+  //  before SrMesh::adapt_refinement() !
   hw.clear_window();  // computation done before this!
   wrap_draw(false);
   if (picture && !g3d::input) {

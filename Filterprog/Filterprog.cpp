@@ -319,9 +319,9 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
     } else {
       // With conditions (1\') and (2), the edges (vs, vl) or (vs, vr)
       //  may not exist.
-      // See my notes 1996-06-21.  I don't see any easy fix for this.
+      // See notes 1996-06-21.  There does not seem to be an easy fix for this.
       if (0) {
-        // SIGGRAPH 96 conditions (1\') and (2)
+        // SIGGRAPH 1996 conditions (1\') and (2)
         if (vsie != vsi) possible = false;
         if (vl && (vs == vl || !mesh.query_edge(vs, vl))) possible = false;
         if (vr && (vs == vr || !mesh.query_edge(vs, vr))) possible = false;
@@ -337,8 +337,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         // Problem: the edge (vs, vl) may not be present.
         if (possible && vl && !mesh.query_edge(vs, vl)) possible = false;
         if (possible && vr && !mesh.query_edge(vs, vr)) possible = false;
-        // Overall, I think this looks nicer than the SIGGRAPH 96
-        //  (1\') and (2) criteria; 1996-06-21.
+        // Overall, this looks nicer than the SIGGRAPH 1996 (1\') and (2) criteria; 1996-06-21.
       }
     }
     if (!possible || !should_perform_vsplit(vs)) {

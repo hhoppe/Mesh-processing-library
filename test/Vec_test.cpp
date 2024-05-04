@@ -269,7 +269,7 @@ if (0) {
   // VS2013: does not use move constructor on Vec1<P>.
   // This could be due to the fact that Vec1 contains std::array<P, 1> which is non-trivial.
   // (If it contained P[1], it would still be non-trivial since P has explicit copy-constructuor.)
-  // Thus, I may need to introduce explicit "= default" on move constructor and assignment in Vec,
+  // Thus, we may need to introduce explicit "= default" on move constructor and assignment in Vec,
   //  something that is not supported in VS2013.
   // Somehow gcc still defines implicit move constructor for Vec1<P>.
   struct P {

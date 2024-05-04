@@ -93,8 +93,8 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
         ((f->vertices[0]->visible << 0) | (f->vertices[1]->visible << 1) | (f->vertices[2]->visible << 2));
     if (!sw_culling_3bits) continue;
 #endif
-    // Here I explored (1997-12-20) only trying the first neighboring face test, hoping that it would reduce
-    // computation.  However, the reduction (only 0.7% of total using HPIXPC) was more than offset by the increase
+    // 1997-12-20 explored only trying the first neighboring face test, hoping that it would reduce computation.
+    // However, the reduction (only 0.7% of total using HPIXPC) was more than offset by the increase
     // in vertex transforms in OpenGL (1.3% of total cycles)    (tstrips: 4.21 -> 2.8 faces/strip).
     if (fn = f->fnei[0], fn->matid == matid) {
       glBegin(GL_TRIANGLE_STRIP);

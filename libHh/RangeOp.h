@@ -97,7 +97,7 @@ void swap_ranges(R1&& range1, R2&& range2) {
       swap(itend1, itend2);
     }
     std::swap_ranges(iter1, itend1, iter2);
-  } else {  // Instead I require that they have the same size.
+  } else {  // Instead we require that they have the same size.
     auto it = std::swap_ranges(iter1, itend1, iter2);
     ASSERTX(it == itend2);  // verify they have the same number of elements
   }

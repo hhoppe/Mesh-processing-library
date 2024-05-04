@@ -945,7 +945,7 @@ void GxObjects::clear(int segn) {
   assertx(_link.ok(segn));
   _link[segn] = 0;
   _ob[segn] = nullptr;
-  // I could update _imin, _imax here
+  // We could update _imin, _imax here.
 }
 
 void GxObjects::open(int segn) {

@@ -150,19 +150,17 @@ void HW::open() {
         attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
         // then becomes enabled by default.
         // Note: inf_reality balrog has _multisample<=8.
-        // Note: may want to disable multisampling manually before
-        //  drawing anti-aliased lines.  Actually anti-aliased lines look
-        //  rather poor on inf_reality (too thick);
-        //  I prefer multisampled aliased lines.
-        // Note: do I need glEnable(GL_POLYGON_SMOOTH)? No, it seems that
-        //  it is an old way of anti-aliasing using alpha planes.
+        // Note: may want to disable multisampling manually before drawing anti-aliased lines.  Actually,
+        //  anti-aliased lines look rather poor on inf_reality (too thick); we prefer multisampled aliased lines.
+        // Note: do we need glEnable(GL_POLYGON_SMOOTH)? No, it seems that it is an old way of anti-aliasing
+        //  using alpha planes.
       }
       attributelist.push(None);
       // Note: on my Octane, this chooses VisualId 0x37: `glxinfo`:
       //     visual  x  bf lv rg d st  r  g  b a  ax dp st accum buffs  ms
       //   id dep cl sp sz l  ci b ro sz sz sz sz bf th cl  r  g  b  a ns b
       //  0x37 24 tc  . 36  . r  y  . 12 12 12  .  . 24  8 16 16 16 16  . .
-      // which has 12bits/channel (even though I only asked for 4; not bad.
+      // which has 12bits/channel (even though only 4 were requested); not bad.
       // Note: on cygwin, it selects: VisualId 396 (0x18c)
       //     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
       //   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
@@ -294,7 +292,7 @@ void HW::open() {
     XSetBackground(_display, _gc, _pixel_background);
     XSetForeground(_display, _gc, _pixel_foreground);
   }
-  if (0) {  // This fails With Cinnamon: it prevents window close and I don't receive any ClientMessage event.
+  if (0) {  // This fails With Cinnamon: it prevents window close and we don't receive any ClientMessage event.
     _wmDeleteMessage = XInternAtom(_display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(_display, _win, &_wmDeleteMessage, 1);
   }
@@ -447,7 +445,7 @@ bool HW::loop() {
     if (!got_event() && !_is_keyintr) {
       // no more events, so possibly blocked
       if (_update != EUpdate::nothing) break;
-      // I later found: https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
+      // Later found: https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
       fd_set fdr;
       int fd = ConnectionNumber(_display);
       FD_ZERO(&fdr);
@@ -495,7 +493,7 @@ void HW::handle_event() {
       break;
     case UnmapNotify:
       if (_hwdebug) SHOW("UnmapNotify");
-      // I could perhaps somehow force the redraws to stop
+      // Possibly we could somehow force the redraws to stop.
       break;
     case Expose:
       if (_hwdebug) SHOW("Expose", _exposed);

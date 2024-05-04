@@ -1,8 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Video.h"
 
-// I actually get better read/write performance by directly calling Media Foundation, at least in Windows 7.
-// Generally, I prefer ffmpeg for its portability and quality.
+// We get better read/write performance by directly calling Media Foundation, at least in Windows 7.
+// But, use of ffmpeg is convenient for its portability and quality.
 
 #define HH_VIDEO_HAVE_MF      // unless disabled below
 #define HH_VIDEO_HAVE_FFMPEG  // always as fallback
@@ -69,10 +69,10 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 //                    29 Mbps for yuv422p, 43 Mbps with ultrafast
 //   ffmpeg ...  -c:v libx264 -qp 0 -pix_fmt yuv420p -f mp4 output.mp4
 
-// I choose "-c:v ffvhuff" because it allows a unique container suffix ("avi") that is distinct from the others.
-// I could use "-c:v ffvhuff -pix_fmt yuv420p" because it is compact and translates trivially to/from Nv12Video.
+// We choose "-c:v ffvhuff" because it allows a unique container suffix ("avi") that is distinct from the others.
+// We could use "-c:v ffvhuff -pix_fmt yuv420p" because it is compact and translates trivially to/from Nv12Video.
 // However, it is lossy like NV12.
-// Instead, I prefer "-c:v ffvhuff -pix_fmt yuv444p" which is lossless.
+// Instead, we prefer "-c:v ffvhuff -pix_fmt yuv444p" which is lossless.
 
 // An alternative would be to use lossless x264, still in an avi container?
 
@@ -533,7 +533,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
     {
       LockIMFMediaBuffer lock(pBuffer);
       const uint8_t* pData = lock();
-      // The following fails on the mp4 I tried!
+      // The following fails in practice on an mp4.
       // com_ptr<IMF2DBuffer> p2Dbuf; AS(pBuffer->QueryInterface(IID_PPV_ARGS(&p2Dbuf)));
       // BYTE* pData; LONG lstride; AS(p2Dbuf->Lock2D(&pData, &lstride)); {
       if (!_impl_nv12) {
@@ -860,7 +860,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       // compatible_brands=mp41isom
       // encoder=Lavf56.4.101
       // Conclusion: not useful because already given in regular stdout of ffmpeg
-      // I could look at ffprobe to see if it can output more information, or use exiftool.
+      // We could look at ffprobe to see if it can output more information, or use exiftool.
       // Option "-nostdin" is unrecognized by older versions, but it can continue nonetheless.
       string s = "ffmpeg -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
                  " -acodec copy -vcodec copy -f null - 2>&1 |";
@@ -1019,7 +1019,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
       assertx(filename != "-");  // WVideo::WVideo() should have created TmpFile if writing to stdout.
       // (Note that ffmpeg -f mp4 is not supported over pipe because it requires a seekable output;
       //  without -f, it actually uses avi as a default container, which doesn't match the mp4 file suffix.)
-      // At some point I managed to get Win7 Windows Media Player to play some type of file by creating an avi
+      // At some point we managed to get Win7 Windows Media Player to play some type of file by creating an avi
       //  container with a file suffix of mp4.  Not good for the long term.
       // if (attrib.suffix == "mp4") sfilecontainer = " -f avi";
       // Setting container should be unnecessary because it is derived automatically based on file suffix.
@@ -1124,7 +1124,7 @@ unique_ptr<RVideo::Implementation> RVideo::Implementation::make(RVideo& rvideo) 
 
 unique_ptr<WVideo::Implementation> WVideo::Implementation::make(WVideo& wvideo) {
   // Notes:
-  // - Win7 Media Foundation: I can set large bitrate on mp4, but do not see increase in file size.
+  // - Win7 Media Foundation: we can set a large bitrate on mp4, but do not see increase in file size.
   //   e.g.: VIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -info -bitrate 32.84m -info -to mp4 | Filtervideo -stat
   // - ffmpeg: cannot write *.wmv using VC1 codec (instead resorts to msmpeg4v3).
   string implementation = getenv_string("WVIDEO_IMPLEMENTATION");

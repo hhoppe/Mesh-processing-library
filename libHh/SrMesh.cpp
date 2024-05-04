@@ -115,10 +115,9 @@ const float SrVsplit::sin2alpha = 0.f;
 //  Vertex:32 Face: 2*6                                 Total: 44n bytes
 
 // Observations:
-// Note that 'array_field-_array' requires an integer division,
-//  which is very slow on R10K (~40 cycle stall).  I've managed to eliminate
-//  these in all critical sections
-//  (using "int SrVertex::vspli" instead of "SrVsplit* SrVertex::vspl")
+// Note that 'array_field-_array' requires an integer division, which is very slow on R10K (~40 cycle stall).
+// We managed to eliminate these in all critical sections (using "int SrVertex::vspli" instead of
+//  "SrVsplit* SrVertex::vspl").
 
 // New profiling (canyon_4k2k_fly2.frames):
 //     25% adapt_refinement()
@@ -136,33 +135,26 @@ const float SrVsplit::sin2alpha = 0.f;
 //   with adapt_refinement:               460'000 faces / sec
 
 // TODO:
-// - vertex geometries could be defined procedurally (eg. image, noise)
-//    to reduce space.
-// - reduce space: use shorts for SrVertex::avertex and SrFace::aface and
-//    set maximum number of SrAVertex and SrAFace to 64 Ki (problem:
-//    fully_refine() is currently required during read_pm() ).
-// - possibly: separate linked list for vmorph'ing SrAVertex nodes to speed
-//     up update_vmorphs(), or better yet,
+// - vertex geometries could be defined procedurally (eg. image, noise) to reduce space.
+// - reduce space: use shorts for SrVertex::avertex and SrFace::aface and set maximum number of SrAVertex and
+//    SrAFace to 64 Ki (problem: fully_refine() is currently required during read_pm() ).
+// - possibly: separate linked list for vmorph'ing SrAVertex nodes to speed up update_vmorphs(), or better yet,
 //     update_vmorphs when creating DrawIndexPrimitive
 // - let screen-space tolerance vary with distance of surface from eye.
 
 // Notes on software view frustum culling (SR_SW_CULLING):
-// - Evaluating visibility is more difficult for leaf vertices, since
-//  they don't have radius_neg values, so for them I just assign
-//  vsa->visible = true.  I could also refer to the bounding
-//  spheres of their parent vertices (leaf_bsphere_use_parent in RCS).
-//  I don't know which gives better performance.
-// - The test for face_invisible() must be "!vis(v0) && !vis(v1) && !vis(v2)"
-//  instead of "!vis(v0) || !vis(v1) || !vis(v2)" because the positions of the
-//  vertices v_l and v_r are unknonwn due to the relaxed refinement constraints.
-//  Very unfortunate since otherwise would easily know that some vertices
-//  need not be entered into the DrawPrimitive() call (transform + lighting).
-// - Even with this && test, some faces sometimes drop out erroneously
-//  when geomorphs are turned on in demo_gcanyon.
-// - Performance: seems to improve.  for the demos in Video.Notes,
-//  I see an improvement from nf=10000 to nf=11300 for 36 fps flythrough.
-// - Conclusion: for now, leave on since small perf improvement with only
-//  very few visual errors.  How to handle DrawPrimitive() in future?
+// - Evaluating visibility is more difficult for leaf vertices, since they don't have radius_neg values, so for them
+//    we just assign vsa->visible = true.  We could also refer to the bounding spheres of their parent vertices
+//   (leaf_bsphere_use_parent in RCS).  We don't know which gives better performance.
+// - The test for face_invisible() must be "!vis(v0) && !vis(v1) && !vis(v2)" instead of
+//    "!vis(v0) || !vis(v1) || !vis(v2)" because the positions of the vertices v_l and v_r are unknonwn due to the
+//    relaxed refinement constraints./  Very unfortunate since otherwise would easily know that some vertices
+//    need not be entered into the DrawPrimitive() call (transform + lighting).
+// - Even with this && test, some faces sometimes drop out erroneously when geomorphs are turned on in demo_gcanyon.
+// - Performance: seems to improve.  for the demos in Video.Notes, we see an improvement from nf=10000 to nf=11300
+//    for 36 fps flythrough.
+// - Conclusion: for now, leave on since small perf improvement with only very few visual errors.
+//    How to handle DrawPrimitive() in future?
 
 // *** SrViewParams
 
@@ -984,14 +976,12 @@ void SrMesh::read_srm(std::istream& is) {
 //    if (dot(normalized(p - eye), vnormal) > sin(alpha))
 //    if (dot(p - eye, vnormal) > 0 && square(dot(p - eye, vnormal)) > mag2(p - eye) * square(sin(alpha))
 // Reject vsplit if residual smaller than screen threshold.
-//   Note: using Euclidean distance (pem2 below) is better in some ways
-//    because it removes more faces on sides and behind viewer,
-//   but using linear functional tzdist is more accurate for
-//    approximating residual size under perspective projection.
-//   As pointed out in Lindstrom-etal96, Euclidean distance tends
-//    to coarsen objects away from the center of projection, especially
-//    with a wide field of view.
-//   So overall I prefer Euclidean distance.
+//   Note: using Euclidean distance (pem2 below) is better in some ways because it removes more faces on sides and
+//     behind viewer, but using linear functional tzdist is more accurate for approximating residual size under
+//     perspective projection.
+//   As pointed out in Lindstrom-etal96, Euclidean distance tends to coarsen objects away from the center of
+//     projection, especially with a wide field of view.
+//   So overall the Euclidean distance is preferred.
 //   Refine based on uniform and directional residual error.
 //   Assume dir_error = vspl->dir_error_mag * vs->vnormal:
 //   Return 0

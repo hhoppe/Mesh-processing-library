@@ -45,8 +45,8 @@ struct A3dVertex {
 
 class Polygon;
 
-// I thought about making this a base class for different types of elements,
-//  but thought it would be too inefficient to allocate/deallocate every time.
+// This could be made a base class for different types of elements, but then it would be inefficient to
+//  allocate/deallocate every time.
 class A3dElem {
  public:
   enum class EType {

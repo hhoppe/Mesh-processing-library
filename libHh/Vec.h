@@ -451,7 +451,7 @@ template <typename T, int n> struct has_ostream_eol_aux<Vec<T, n>> {
 //  (2) there is no heap allocation.
 
 #if 0
-// I could define the following:
+// We could define the following:
 template <typename T, typename T2, int n, typename RT = Vec<std::common_type_t<T, T2>>>
 Vec<RT, n> operator+(const Vec<T, n>& a1, const Vec<T2, n>& a2) {
   Vec<RT, n> ar;

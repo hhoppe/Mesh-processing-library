@@ -39,13 +39,12 @@ constexpr int k_undefined = k_debug ? -std::numeric_limits<int>::max() : -1;
 //  PMesh:      56 bytes/vertex (smaller than WMesh and SMesh!)
 //
 // optimize:
-// - if I had to do it over again, I would require ii == 2 always, and remove
-//    the vad_small field.
+// - if redoing it all again, would require ii == 2 always, and remove the vad_small field.
 // - place all ar_wad in a separate array.  let PMeshIter keep pointer into it.
 // - do the same for fl_matid and fr_matid
 //
 // Using shorts for flclw and all indices, separate matid array, and no
-//  vad_small, I get 38n + 58m bytes for PMesh  (above is 56n + 92m bytes)
+//  vad_small, we get 38n + 58m bytes for PMesh  (above is 56n + 92m bytes)
 
 // So practically speaking (1999-05-21):
 //  D3D mesh : 44n bytes
@@ -1757,13 +1756,11 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   //  with different attributes, and these perhaps should be morphed (between their original values in
   //  j and their final values in k).
   // They are morphed here but not in Filterprog.cpp.
-  // 1997-05-16: this is the reason why I didn't let the Ancestry class contain
-  // ancestry relations (and record the attributes of M^c): I would not
-  // have available to me the original attributes of an orphan wedge
-  // introduced in M^j which was subsequently changed.  The only solution is
-  // to carry the attributes explicitly as I currently do,
-  // or allocate a separate array to record the attributes of orphan wedges
-  // when they are first created, which doesn't seem so nice.
+  // 1997-05-16: this is the reason why we didn't let the Ancestry class contain ancestry relations (and record the
+  // attributes of M^c): we would be missing the original attributes of an orphan wedge introduced in M^j that was
+  // subsequently changed.  The only solution is to carry the attributes explicitly as is currently done,
+  // or to allocate a separate array to record the attributes of orphan wedges when they are first created,
+  // which does not seem so nice.
   bool ret = true;
   assertx(!_vertices.num() && !_vgattribs.num() && !_wgattribs.num());
   // Initialize ancestry to current attributes (identity).

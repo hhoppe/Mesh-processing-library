@@ -203,7 +203,7 @@ bool try_finding_it(const string& name) {
   }
   // Was "s3dname.bat" due to problem of launching "c:/perl/bin/perl /cygdrive/c/hh/bin/s3dname",
   //  but now solved using c:/cygwin/etc/fstab .
-  // Added "<$nul" so that "G3dOGL ~/data/mesh/cat.m &" does not freeze.  (Nowadays I use "G3d ~/data/mesh".)
+  // Added "<$nul" so that "G3dOGL ~/data/mesh/cat.m &" does not freeze.  (Nowadays we use "G3d ~/data/mesh".)
   // However, it still seems to freeze.  Added "close(STDIN)" inside s3dname.
   // #if 0 && defined(_WIN32)
   //   const string snul = "nul";

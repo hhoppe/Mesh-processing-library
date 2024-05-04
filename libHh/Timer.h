@@ -34,7 +34,7 @@ namespace hh {
 // Object that tracks elapsed time, per-thread computation, and per-process computation over its lifetime.
 // It reports effective multithreading factor (for parallelism defined inside its scope, not outside).
 // Timing data associated with multiple Timers with the same name are accumulated and reported at program end.
-//  (This accumulation is not thread-safe; I assume that the timers are created outside multi-threading sections.)
+//  (This accumulation is not thread-safe; we assume that any timers are created outside multi-threading sections.)
 class Timer : noncopyable {
  public:
   enum class EMode { normal, diagnostic, abbrev, summary, possibly, noprint };

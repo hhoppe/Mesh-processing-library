@@ -178,7 +178,6 @@ inline float project_point_triangle2(const Point& p, const Point& p1, const Poin
   float vpx = p[0] - p1[0], vpy = p[1] - p1[1], vpz = p[2] - p1[2];
   float v2vp = v2x * vpx + v2y * vpy + v2z * vpz;
   float v3vp = v3x * vpx + v3y * vpy + v3z * vpz;
-  // I have forgotten how I derived these; it sure is neat.
   float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
   float b2 = (v2vp - b3 * v2v3) / v2v2;
   float b1 = 1.f - b2 - b3;

@@ -75,14 +75,14 @@ const LUfactorization g_periodic_omoms_lu_factorization =
 // Filter kernels
 
 inline double sinc_abs(double x) {
-  // Sinc[x]  where here I assume that x >= 0
+  // Sinc[x], but assuming here that x >= 0.
   ASSERTX(x >= 0.);
   return x < 1e-9 ? 1. : std::sin(x) / x;
 }
 
 // normalized sinc function
 inline double sinc_norm_abs(double x) {
-  // SincNorm[x]  where here I assume that x >= 0
+  // SincNorm[x], but assuming here that x >= 0.
   ASSERTX(x >= 0.);
   x *= D_TAU / 2;
   return sinc_abs(x);

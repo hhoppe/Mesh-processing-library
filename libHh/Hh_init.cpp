@@ -194,8 +194,8 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
   std::cerr << "my_CrtDbgHook with no debugger present\n";
   std::cerr << "Failure message: " << szMsg << "\n";
   if (1) {
-    // I used to often get "Segmentation fault" due to corrupt heap,
-    //  but now StackWalker has its own local memory buffer.
+    // Previously we would get "Segmentation fault" due to corrupt heap, but this is resolved now that StackWalker
+    //  has its own local memory buffer.
     show_call_stack();
   }
   std::cerr << "Now after show_call_stack()\n";
@@ -342,8 +342,7 @@ void change_default_io_precision() {
   //
   // os << defaultfloat << setprecision(std::numeric_limits<T>::max_digits10) << d;  // 9 or 17
   //
-  // I feel that the difference between 8 and 9 digits of precision (mainly for numbers between 1000 and 1023)
-  //  is not worth it.
+  // The difference between 8 and 9 digits of precision (mainly for numbers between 1000 and 1023) is not worth it.
   //
   // See also:
   //  https://stackoverflow.com/questions/10357192/printf-rounding-behavior-for-doubles
@@ -351,8 +350,8 @@ void change_default_io_precision() {
   // Visual C++ uses the round-half-away-from-zero rule,
   //  and gcc (actually, glibc) uses the round-half-to-even rule, also known as bankers' rounding.
   // glibc printf() has been updated to take the current IEEE rounding mode into account. This was done
-  //  in version 2.17; I just tested it on version 2.18. In doing it this way of course,
-  //  round-to-nearest/round-half-away-from-zero is still not an option, so this doesn't help you make its
+  //  in version 2.17.
+  //  round-to-nearest/round-half-away-from-zero is still not an option, so this doesn't help making the
   //  output consistent with other platforms.
   //
   // MinGW gcc uses the Microsoft C runtime, so it's not really going to show any different results than

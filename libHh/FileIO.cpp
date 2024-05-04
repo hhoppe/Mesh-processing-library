@@ -50,7 +50,7 @@ HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 #include "libHh/Vec.h"
 
 // Note that RFile/WFile first construct a FILE* (which is accessible via cfile()), then a std::stream on top.
-// This is quite flexible.  I use this in:
+// This is quite flexible.  Used in:
 // - Image_libs.cpp so that libpng and libjpeg can work directly on FILE*; this could easily be worked around
 //    because these libraries support user-defined reader/writer functions, which could access std::stream.
 // - G3dio.cpp to create a RBuffer directly on the POSIX file descriptor fileno(cfile());
@@ -542,7 +542,7 @@ bool recycle_path(const string& pathname) {
     wfilenames.push_back(0);  // for double-null termination
   }
   SHFILEOPSTRUCTW op = {};
-  op.hwnd = nullptr;     // hopefully this handle is not used when I specify FOF_NO_UI
+  op.hwnd = nullptr;     // hopefully this handle is not used when specifying FOF_NO_UI
   op.wFunc = FO_DELETE;  // use Recycle Bin if possible
   op.pFrom = wfilenames.data();
   op.fFlags = FOF_ALLOWUNDO;
@@ -647,7 +647,7 @@ static string cygwin_spawn_quote(const string& s) {
 
 // Under Windows, must quote the arguments in spawn call so that they are properly parsed by client CRT.
 // Note that we do not know ahead of time if client uses cygwin or not.
-// I assume that "sh" is always a cygwin process, and launch everything else from within "sh -c".
+// We assume that "sh" is always a cygwin process, and launch everything else from within "sh -c".
 static string spawn_quote(const string& s, bool b_client_uses_cygwin) {
   return b_client_uses_cygwin ? cygwin_spawn_quote(s) : windows_spawn_quote(s);
 }
@@ -740,7 +740,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         assertx(write(fd[1], &t, sizeof(t)) == sizeof(t));
         exit(1);  // this exit code is not accessed by parent
       }
-      ::wait(nullptr);                   // (I don't understand the reason/need for this)
+      ::wait(nullptr);                   // The reason/need for this is unclear.
       assertx(!HH_POSIX(close)(fd[1]));  // no need to write to child process
       pid = -1;                          // expect to read back a process id from child
       for (;;) {                         // outputs from child or grandchild may come in any order

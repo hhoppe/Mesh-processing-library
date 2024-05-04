@@ -133,7 +133,7 @@ inline const char* str_last_non_space(const char* s) {
   return p - 1;
 }
 
-// I don't remember: how is this different (if it is) from strchr()?  maybe faster when inline
+// This may be identical to strchr().  Possibly faster when inlined.
 inline const char* str_chr(const char* s, char ch) {
   for (const char* p = s;;) {
     char chp = *p;

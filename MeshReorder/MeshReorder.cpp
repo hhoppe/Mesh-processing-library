@@ -56,8 +56,7 @@ namespace {
 
 // Notes:
 //
-// - I tried inlining FifoVertexCache::access() using defined(FAST_FIFO)
-//   but it didn't improve performance significantly.
+// - Inlining FifoVertexCache::access() using defined(FAST_FIFO) did not improve performance significantly.
 
 // This number could be set according to the flexible vertex format size.
 constexpr int k_bytes_per_vertex = 32;  // default position + normal + uv
@@ -671,7 +670,6 @@ class MeshStatus {
   // Lookahead simulation (does not affect global state):
   void sim_init();
   bool sim_face_visited(Face f) const;
-  int sim_face_unvisited(Face f) const;
   void sim_visit_face(Face f);
 
  private:
@@ -735,12 +733,6 @@ inline bool MeshStatus::sim_face_visited(Face f) const {
   // face is visited either in current lookahead simulation (== _sim_num)
   //  or is globally visited (== std::numeric_limits<int>::max()).
   return f_sim_num(f) >= _sim_num;
-}
-
-inline int MeshStatus::sim_face_unvisited(Face f) const {
-  // return !sim_face_visited(f);
-  // I must have introduced this for optimization purposes.
-  return f_sim_num(f) < _sim_num;
 }
 
 inline void MeshStatus::sim_visit_face(Face f) {
@@ -1078,7 +1070,7 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
         }
         c = qnextc.dequeue();
         f = mesh.corner_face(c);
-        if (ms.sim_face_unvisited(f)) break;
+        if (!ms.sim_face_visited(f)) break;
       }
       if (!c) break;
       qnextc.clear();
@@ -1105,13 +1097,13 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
     // bool fextnei = cext && !ms.sim_face_visited(mesh.corner_face(cext));
     Corner cint = mesh.ccw_corner(c), cext;
     Face f2;
-    if (cint && (f2 = mesh.corner_face(cint), ms.sim_face_unvisited(f2))) {
+    if (cint && (f2 = mesh.corner_face(cint), !ms.sim_face_visited(f2))) {
       cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-      if (cext && ms.sim_face_unvisited(mesh.corner_face(cext))) qnextc.enqueue(cext);
+      if (cext && !ms.sim_face_visited(mesh.corner_face(cext))) qnextc.enqueue(cext);
       c = cint;
       f = f2;
     } else if ((cext = mesh.ccw_corner(mesh.clw_face_corner(c))) != nullptr &&
-               (f2 = mesh.corner_face(cext), ms.sim_face_unvisited(f2))) {
+               (f2 = mesh.corner_face(cext), !ms.sim_face_visited(f2))) {
       c = cext;
       f = f2;
     } else {  // strip cannot continue

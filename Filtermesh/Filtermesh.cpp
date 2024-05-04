@@ -3738,9 +3738,8 @@ Point compute_hull_point(Vertex v, float offset) {
     assertx(nr == m);
   }
   {
-    // I could instead try to use the Raymond Seidel (or Raimund Seidel) fast linear
-    //  programming scheme, which I copied from Seth Teller into
-    //  rseidel_lp.tar.gz .  (then into linprog.tar.gz)
+    // We could instead use the Raymond Seidel (or Raimund Seidel) fast linear programming scheme, copied from
+    // Seth Teller into rseidel_lp.tar.gz, then into linprog.tar.gz .
     simplx(a, m, n, m1, m2, m3, &icase, izrov, iposv);
   }
   Point newpoint;
@@ -3810,14 +3809,11 @@ void do_hull(Args& args) {
   for (Vertex v : mesh.vertices()) mesh.set_point(v, mapvp.get(v));
 }
 
-// Output frame to rigidly transform from one mesh to another presumably
-//  identical mesh.
-// The reason that I don't simply align the current mesh is to encourage
-//  proper usage:
-// Two *original* meshes should be aligned.  Then, the resulting alignment
-//  frame should be used to align the corresponding *processed* meshes.
-// Aligning the processed meshes to each other is likely invalid since they
-//  no longer share the same geometry.
+// Output frame to rigidly transform from one mesh to another presumably identical mesh.
+// The reason that we don't simply align the current mesh is to encourage proper usage:
+// Two *original* meshes should be aligned.  Then, the resulting alignment frame should be used to align the
+//  corresponding *processed* meshes.
+// Aligning the processed meshes to each other is likely invalid since they no longer share the same geometry.
 // Proper use:
 //  set frame="`Filtermesh oldmesh.orig.m -alignment newmesh.orig.m`"
 //  Filtermesh oldmesh.result.m -transf "`cat $frame`" >newmesh.resultcmp.m
@@ -4387,7 +4383,7 @@ void do_trimpts(Args& args) {
     showdf("Read %d inbound points out of %d points from %s\n", points.num(), totpts, filename.c_str());
   }
   if (getenv_bool("CIRCUMRADIUS")) {  // not really the circumradius!
-    // But probably I should use minimum bounding sphere anyways.
+    // But probably we should use the minimum bounding sphere anyways.
     Array<Face> dfaces;
     Polygon poly;
     for (Face f : mesh.faces()) {

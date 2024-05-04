@@ -210,7 +210,7 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2
 // See https://en.wikipedia.org/wiki/Euler_angles
 //  Tait-Bryan angles / Nautical angles / Cardan angles : sometimes called Euler angles, not "proper Euler angles"
 //
-//  I use (z, -y', x''):
+//  We use (z, -y', x''):
 //   angle 0 is measured wrt  z  axis (alpha) (yaw)   (heading)
 //   angle 1 is measured wrt -y' axis (beta)  (pitch) (elevation)
 //   angle 2 is measured wrt x'' axis (phi)   (roll)  (bank)

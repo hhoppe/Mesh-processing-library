@@ -20,7 +20,7 @@ const string tmpf = "v.Hh_test.txt";
 
 void try_it(const string& stest) {
   if (0) SHOW(stest);
-  // This test is broken.  I cannot assume that csh, sh, or cmd are in the user's path.
+  // This test is broken.  We cannot assume that csh, sh, or cmd are in the user's path.
   for_int(method, 2) {  // csh, sh, cmd
     if (0) SHOW(method);
     string s1 = quote_arg_for_sh(stest);  // stronger than quote_arg_for_shell()
@@ -57,7 +57,7 @@ void try_it(const string& stest) {
     } else if (1 && method == 1) {
       string s2 = "echo " + s1 + " >" + tmpf;
       assertx(!my_sh(s2));
-    } else if (method == 2) {  // I give up on this.
+    } else if (method == 2) {  // Give up on this.
       string s1cmd = '"' + stest + '"';
       // string s1cmd = windows_spawn_quote(stest);
       // string s2 = "echo " + s1cmd + " >" + tmpf;  // DOS eol; extra space at eol; echo ignores quotes
@@ -72,7 +72,7 @@ void try_it(const string& stest) {
     string sline;
     assertx(my_getline(fi(), sline));
     // SHOW(sline);
-    // Here I once saw the error "method=1 stest=a b c sline=a\ b\ c"; it was due to a setting of env
+    // Once saw the error "method=1 stest=a b c sline=a\ b\ c"; it was due to a setting of env
     //  variable CYGWIN="noglob nodosfilewarning" likely set during an interrupted Emacs grep -- since fixed.
     if (sline != stest) SHOW(method, stest, sline);
     assertx(sline == stest);

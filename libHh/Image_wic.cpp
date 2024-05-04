@@ -28,7 +28,7 @@ HH_REFERENCE_LIB("shlwapi.lib");   // SHCreateMemStream()
 using namespace hh;
 
 // JPEG EXIF:
-// I cannot find a way to store the metadata associated with an image into memory (e.g. Image::Attrib::exif_data).
+// We cannot find a way to store the metadata associated with an image into memory (e.g. Image::Attrib::exif_data).
 // WIC allows traversing the multiple metadata containers and all of their elements (of different types).
 // Storing all this seems hard, and reconstructing the proper hierarchy during writing may be impossible.
 // WIC really expects that we keep open the input image, with an active IWICMetadataBlockReader,
@@ -36,7 +36,7 @@ using namespace hh;
 //  (see How-to: Re-encode a JPEG Image with Metadata:
 //    https://learn.microsoft.com/en-us/windows/win32/wic/-wic-codec-jpegmetadataencoding ).
 // My current approach is to store the input image filename into Image::Attrib::orig_filename.
-// If the input was read from a pipe, I issue a warning about missing Exif when writing the image.
+// If the input was read from a pipe, we issue a warning about missing Exif when writing the image.
 
 namespace hh {
 
@@ -335,7 +335,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
         VariantInit(&variant);
         variant.vt = VT_R4;
         variant.fltVal = quality / 100.f;  // range [0., 1.]
-        // I verified that the compression rate is similar to that of libjpeg for quality = 50, 95, 100.
+        // The compression rate is verified to be similar to that of libjpeg for quality = 50, 95, 100.
         AS(property_bag->Write(1, &option, &variant));
         VariantClear(&variant);
       }
@@ -387,7 +387,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
       if (0) pixel_format = GUID_WICPixelFormat24bppBGR;
     }
     AS(frame_encode->SetPixelFormat(&pixel_format));
-    // I believe that the created "bitmap" is a view on the existing data, without any copy -- nice.
+    // The created "bitmap" seems to be a view on the existing data, without any copy -- nice.
     com_ptr<IWICBitmap> bitmap;
     {
       // If image lacks alpha channel, use RGBA (with non-premultiplied alpha) so that encoder can ignore

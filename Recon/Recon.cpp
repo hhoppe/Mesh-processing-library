@@ -4,8 +4,7 @@
 // 1993-03-16 ported from C version
 
 // Notes:
-//  The pcnor's should point outwards (I define distance function to be
-//   negative inside the object).
+//  The pcnor's should point outwards. (The distance function is defined to be negative inside the object.)
 //  The growing of pc's is not ideal.
 //  The goals are:
 //   - to only consider points on the current sheet

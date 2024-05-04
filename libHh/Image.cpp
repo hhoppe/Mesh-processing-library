@@ -293,7 +293,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   uint8_t* __restrict bufUV = nv12v.get_UV().data()->data();
   // assertx(reinterpret_cast<uintptr_t>(nv12v.get_Y().data()) % 4 == 0);
   // assertx(reinterpret_cast<uintptr_t>(nv12v.get_UV().data()->data()) % 4 == 0);
-  // I tried optimizing this, but all implementations take about the same elapsed time.
+  // Tried other optimizations too.  Note that all the implementations take about the same elapsed time.
   if (0) {
     uint8_t* __restrict bufY = nv12v.get_Y().data();
     for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *bufY++ = RGB_to_Y(frame[y][x]); }

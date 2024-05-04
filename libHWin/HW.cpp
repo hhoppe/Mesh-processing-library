@@ -63,7 +63,7 @@ const HWND k_bogus_hwnd = HWND(intptr_t{-7});  // clang: reinterpret_cast<HWND>(
 extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
 
 // Solutions in https://stackoverflow.com/questions/117792/best-method-for-storing-this-pointer-for-use-in-wndproc
-//  seems too complicated.  I can assume a single-window model.
+//  seems too complicated.  We can assume a single-window model.
 static HW* pHW;
 
 bool HW::init_aux(Array<string>& aargs) {
@@ -104,10 +104,10 @@ bool HW::init_aux(Array<string>& aargs) {
     // For now, try HIGH_PRIORITY_CLASS.
     // Test:
     //   G3dcmp -win1 "-key iij____J" hover.m{,} -key i
-    // That does not solve problem.  I notice the following:
-    // If the left window is selected using either Alt-TAB or by clicking
-    //   into it, it updates much faster than the right window.
-    // However, if I just left-click on the title bar, or if I select the left window by clicking its title bar,
+    // That does not solve problem.  We notice the following:
+    // If the left window is selected using either Alt-TAB or by clicking into it, it updates much faster than
+    //  the right window.
+    // However, if we just left-click on the title bar, or select the left window by clicking its title bar,
     //  that bad behavior does not occur.  Bizarre.
     // The behavior is the same at both NORMAL and HIGH priority classes.
     SHOWL;
@@ -143,8 +143,8 @@ bool HW::init_aux(Array<string>& aargs) {
   set_double_buffering(true);
   if (!win_started_from_console()) _extra_console_visible = true;
 #if 1  // || !defined(HH_DEBUG)
-  // I don't know why, but if I launch from a shortcut as "minimized", the program terminates unless
-  //  "ShowWindow(GetConsoleWindow(), SW_HIDE);" is called as done below.
+  // Note: if we launch from a shortcut as "minimized", the program terminates unless
+  //  "ShowWindow(GetConsoleWindow(), SW_HIDE);" is called as done below.  Unclear why.
   //
   // See discussion at
   //  https://stackoverflow.com/questions/493536/can-one-executable-be-both-a-console-and-gui-application
@@ -238,7 +238,7 @@ void HW::open() {
   assertx(wglMakeCurrent(_hRenderDC, nullptr));
   assertx(wglDeleteContext(_hRC));
   if (_offscreen != "" && _pbuffer) {
-    // I did not bother putting these in.
+    // Possibly:
     // wglReleasePbufferDCARB(hbuf, _hRenderDC);
     // wglDestroyPbufferARB(hbuf);
   }
@@ -321,7 +321,6 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // https://www.opengl.org/pipeline/article/vol003_7/
       // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
       // (this will avoid GDI clearing the OpenGL windows background).
-      // HH: I found this unnecessary so far.
       return 1;  // introduced 2014-12-03
     case WM_CREATE:
       // On window creation, send a WM_SHOWWINDOW msg,
@@ -342,7 +341,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         }
       } else {
         // Window is about to be HIDDEN (like X-windows UnmapNotify)
-        // I could perhaps somehow force the redraws to stop.
+        // Possibly we could somehow force the redraws to stop.
       }
       return 0;
     }
@@ -505,7 +504,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // Try to override the smallest width to < 104 interior pixels.
       //  (GetSystemMetrics(SM_CXMIN)=112 - 2 * 4 == 104).
       // The fix below seems to allow small geometry from command-line,
-      //   but not when resizing window (min width 100 on Windows 7).  I can live with this.
+      //   but not when resizing window (min width 100 on Windows 7).  This seems OK.
       MINMAXINFO* p = reinterpret_cast<MINMAXINFO*>(lParam);
       p->ptMinTrackSize.x = 20;  // was previously 50
       p->ptMinTrackSize.y = 20;  // no effect

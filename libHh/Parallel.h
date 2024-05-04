@@ -41,12 +41,12 @@
 #endif
 
 // Notes on using OpenMP:
-// - Any OpenMP pragma must immediately precede the "for" statement, so I must embed the OpenMP pragma inside
+// - Any OpenMP pragma must immediately precede the "for" statement, so we must embed the OpenMP pragma inside
 //    the omp_parallel_for_T() macro.
-// - With OpenMP, the "for" statement initializer may only declare a single variable, so I must evaluate the
+// - With OpenMP, the "for" statement initializer may only declare a single variable, so we must evaluate the
 //    upper-bound ub earlier in the omp_parallel_for_T() macro.
 // - OpenMP version 2.0 (VS2010, 2013, 2015) only allows signed integral index types (version 3.0 allows unsigned
-//    types), so for now I must override the macros for parallel_for_size_t() on VS.
+//    types), so for now we must override the macros for parallel_for_size_t() on VS.
 
 namespace hh {
 

@@ -261,19 +261,6 @@ inline Simplex SimplicialComplex::getSimplex(int dim, int id) const {
 
 inline Simplex SimplicialComplex::getSimplex(Simplex s) const {
   Simplex ts = getSimplex(s->getDim(), s->getId());
-#if 0
-  // this function is bad ie does the reasonable thing
-  // iff simplex s belongs to the same simplicial complex
-  // as this or is from some copy derived SC assured to have
-  // same ids, I used it with different assumption at some places
-  // so to keep myself sane I'll check things here.
-  // but this should eventually disappear
-  if (s->getDim() == 1) {
-    assertx(ts->getDim() == 1);
-    assertx(ts->_child[0] == s->_child[0]);
-    assertx(ts->_child[1] == s->_child[1]);
-  }
-#endif
   return ts;
 }
 

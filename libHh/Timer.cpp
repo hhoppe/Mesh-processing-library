@@ -107,7 +107,7 @@ class Timers {
     bool is_new;
     int i;
     {
-      // Note: not thread-safe.  (I assume that the timers are created outside multi-threading sections.)
+      // Note: not thread-safe.  (Any timers must be created outside multi-threading sections.)
       auto p = instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
       is_new = p.second;
       i = p.first->second;
@@ -224,13 +224,13 @@ void Timer::terminate() {
 #endif
   double u = cpu();
   string sparallel = "       ";
-  // With GNU libc++, u is sometimes around -5.55112e-17 or  1.11022e-16, so I cannot test against zero.
+  // With GNU libc++, u is sometimes around -5.55112e-17 or  1.11022e-16, so we cannot test against zero.
   // bool meaningful = u > 1e-8;
   // Moreover, all *cpu* times are quantized to 16 milliseconds, so need a minimum to make any sense.
   bool meaningful = u > .04;
   // Using hh::ThreadPoolIndexedTask (and unlike OpenMP), the main thread lets the pool threads do the actual work,
   // so _thread_cpu_time is low and the ratio _process_cpu_time / _thread_cpu_time is not meaningful.
-  // Instead, I consider the ratio _process_cpu_time / _real_time.
+  // Instead, we consider the ratio _process_cpu_time / _real_time.
   if (_process_cpu_time) {
     if (meaningful) {
       const int ncores = std_thread_hardware_concurrency();

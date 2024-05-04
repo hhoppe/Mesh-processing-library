@@ -1277,7 +1277,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       //    because it doesn't shift the content off the right/bottom boundaries at coarse levels.
       // - It is important to use Bndrule::border to avoid introducing excessive confidence at coarse levels.
       // - Filter "triangle" is nicer overall than original lumigraph although it introduces a bit of ringing.
-      // expand to even dimensions
+      // Expand to even dimensions.
       Grid<D, Vector4> grid2 = crop(grid, ntimes<D>(0), -dims % 2, ntimes<D>(Bndrule::border), &vzero);
       // Using filter "triangle" (with weights (1 / 4, 3 / 4, 3 / 4, 1 / 4) / 2) is dual to
       //  the upscaling "triangle" kernel (with alternating weights (3 / 4, 1 / 4) and (1 / 4, 3 / 4)).
@@ -1288,8 +1288,8 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       for (auto& e : hgrid) e *= adjust_weight;
     } else {
       // - Somehow the coarse-scale content is getting shifted right/bottom unlike in the original Lumigraph
-      //   implementation; I don't know what is causing the difference.
-      // expand to odd dimensions
+      //   implementation; the cause is unknown.
+      // Expand to odd dimensions.
       Grid<D, Vector4> grid2 =
           crop(grid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
       assertx(grid2.dims() % 2 == ntimes<D>(1));

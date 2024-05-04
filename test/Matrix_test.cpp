@@ -103,7 +103,7 @@ int main() {
     }
     SHOW(v1);
     SHOW(v2);
-    // I did not enable ArrayView::operator=()
+    // ArrayView::operator=() is not enabled.
     // m[0] = m[2] = v1;
     // m[1] = m[3] = v2;
     m[0].assign(v1);

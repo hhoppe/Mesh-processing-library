@@ -2690,9 +2690,9 @@ void advance_frame() {
     double time_advance = steady_time_since_last_frame > 0. ? steady_time_since_last_frame : time_since_last_frame;
     g_frametime += direction * time_advance * playback_framerate;
     if (steady_time_since_last_frame > 0.) {
-      // I notice a slight drift: the frame sync of the GPU/monitor is slightly slower than 60 fps.
-      // Therefore if I advance based on real time, I occasionally have to skip forward a frame.
-      // To counter this, I create a slight bias to moving g_frametime towards the center (+0.5) of the
+      // There is a slight drift: the frame sync of the GPU/monitor is slightly slower than 60 fps.
+      // Therefore if we advance based on real time, we occasionally have to skip forward a frame.
+      // To counter this, we create a slight bias to moving g_frametime towards the center (+0.5) of the
       //  current video frame interval, if we are advancing frames at the same rate as monitor refresh.
       // This is now generalized for a monitor refresh rate that is any multiple of the playback framerate.
       double monitor_frames_per_video_frame = 1. / (steady_time_since_last_frame * playback_framerate);
@@ -2986,7 +2986,7 @@ void render_image() {
   // HH_TIMER("_render_image");
 #if 1 && defined(__CYGWIN__)
   const bool use_modern_opengl = false;
-  // Otherwise I get a segmentation fault in glxSwapBuffers(); I don't know why.
+  // Otherwise we get a segmentation fault in glxSwapBuffers(); it is unclear why.
   // make CONFIG=cygwin -C ~/git/mesh_processing -j8 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
   // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
@@ -2999,8 +2999,8 @@ void render_image() {
     const float min_zoom = min(get_zooms());
     const bool mipmap_enabled = true;
     if (mipmap_enabled && min_zoom < 0.99999f && glGenerateMipmap && !g_generated_mipmap && use_modern_opengl) {
-      // Ideally, for highest quality filtering modes, I should manually construct the coarser mipmap levels.
-      // test on:  VideoViewer ~/data/video/M4Kseacrowd.mp4 -key -
+      // Ideally, for highest quality filtering modes, we should manually construct the coarser mipmap levels.
+      // Test on:  VideoViewer ~/data/video/M4Kseacrowd.mp4 -key -
       // Not supported on Windows Remote Desktop; blurry trilinear blending with MESA GL on Chrome Remote Desktop.
       glGenerateMipmap(GL_TEXTURE_2D);
       g_generated_mipmap = true;
@@ -3821,7 +3821,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
       if (0) my_setenv(Loopers::PipeAPI::env_diagnostics(), "true");
       if (1) {
         // Unfortunately we do not have access to framerate here, so cannot work in seconds.
-        // I am not using this now.
+        // We are not using this now.
         int min_period = getenv_int("LOOP_MIN_PERIOD");  // in original frames
         if (min_period) {
           SHOW(min_period);

@@ -276,9 +276,8 @@ struct NormalMapping_dot3 final : NormalMapping {
   }
   void init() override {
     USE_GL_EXT(glActiveTextureARB, PFNGLACTIVETEXTUREARBPROC);
-    // Note, that you are not using the second tmu, only the second combiner,
-    // but you have to enable the tmu and set a valid configuration.
-    // I usually bind a tiny white texture.
+    // Even though we are not using the second tmu, only the second combiner, we must still enable the tmu and set
+    // a valid configuration.  We usually bind a tiny white texture.
     {
       glActiveTextureARB(GL_TEXTURE1_ARB);
       glEnable(GL_TEXTURE_2D);

@@ -77,9 +77,9 @@ namespace {
 
 // See notes inside StackWalker.cpp with pointers to packages for Mingw.
 
-// I tried to find a mingw compatible version of StackWalker
-// I did find: http://home.broadpark.no/~gvanem/misc/exc-abort.zip
-//  which I compiled in ~/git/hh_src/_other/exc-abort.zip
+// It is difficult to find a mingw-compatible version of StackWalker.
+// Considered http://home.broadpark.no/~gvanem/misc/exc-abort.zip
+//  which was compiled in ~/git/hh_src/_other/exc-abort.zip
 // However, it does not show symbols in call stack.
 // A correct implementation would have to combine the Windows-based StackWalker with the debug symbols of gcc.
 
@@ -311,7 +311,7 @@ void details::assertx_aux2(const char* s) {
   abort();
 }
 
-// I use "const char*" rather than "string" for efficiency of warnings creation.
+// We use "const char*" rather than "string" for efficiency of hashing in Warnings.
 // Ret: true if this is the first time the warning message is printed.
 bool details::assertw_aux2(const char* s) {
   static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");

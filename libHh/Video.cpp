@@ -19,7 +19,7 @@ string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
   if (attrib.suffix != "") s += " (" + attrib.suffix + ")";
   int brate = attrib.bitrate;
   if (brate)
-    s += (brate > 1000000 ? sform(" (%.2fMi bps)", brate / 1000000.f)
+    s += (brate > 1'000'000 ? sform(" (%.2fMi bps)", brate / 1'000'000.f)
           : brate > 1000  ? sform(" (%.2fKi bps)", brate / 1000.f)
                           : sform(" (%d bps)", brate));
   return s;

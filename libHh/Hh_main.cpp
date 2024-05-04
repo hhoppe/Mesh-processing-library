@@ -50,7 +50,7 @@ int64_t get_precise_counter() {
   Clock::time_point t = Clock::now();
   Clock::duration duration = t.time_since_epoch();  // number of ticks, of type Clock::rep
   // SHOW(type_name<decltype(duration)>());
-  // CONFIG=win: std::chrono::duration<int64, std::ratio<1,1000000000>>  (nanoseconds as signed 64-bit integer)
+  // CONFIG=win: std::chrono::duration<int64, std::ratio<1, 1'000'000'000>>  (nanoseconds as signed 64-bit integer)
   return possible_cast<int64_t>(duration.count());
 #elif defined(_WIN32)
   // http://stackoverflow.com/questions/2414359/microsecond-resolution-timestamps-on-windows?rq=1
@@ -66,7 +66,7 @@ int64_t get_precise_counter() {
 #else
   struct timespec ti;
   assertx(!clock_gettime(CLOCK_MONOTONIC, &ti));
-  return int64_t{ti.tv_sec} * (1000 * 1000 * 1000) + ti.tv_nsec;
+  return int64_t{ti.tv_sec} * 1'000'000'000 + ti.tv_nsec;
 #endif
 }
 
@@ -305,8 +305,8 @@ bool set_fd_no_delay(int fd, bool nodelay) {
   // on SGI, setting nodelay on terminal fd may cause window closure
   if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
-    // 20140704 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
-    // 20140826 G3dcmp works again now.
+    // 2014-07-04 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
+    // 2014-08-26 G3dcmp works again now.
 #if defined(O_NONBLOCK)
   return fcntl(fd, F_SETFL, nodelay ? O_NONBLOCK : 0) != -1;
 #elif defined(FNDELAY)

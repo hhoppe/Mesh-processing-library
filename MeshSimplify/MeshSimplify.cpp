@@ -485,7 +485,7 @@ int maxvalence = 32;          // maximum vertex valence as result of ecol
 bool poszfacenormal = false;  // prevent edge collapses that would create face normals with negative z
 bool dihallow = false;        // penalize but allow bad dihedral angles
 int invertexorder = 0;        // remove vertices in reverse order (2=fix_edges)
-bool wedge_materials = true;  // material boundaries imply wedge boundaries; introduced for DirectX 19960725
+bool wedge_materials = true;  // material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25
 
 // failed attempt at signed_dihedral_angle():
 //  const float gmindih = -to_rad(109.471);
@@ -1040,7 +1040,7 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
     Warning("Normal is zero, setting arbitrarily to (1.f, 0.f, 0.f)");
     nor = Vector(1.f, 0.f, 0.f);
   }
-  // disabled next line 20010823
+  // disabled next line 2001-08-23
   if (0 && rnor001) nor = Vector(0.f, 0.f, 1.f);
   UV& uv = wi.uv;
   fill(uv, k_undefined);
@@ -1798,7 +1798,7 @@ float compute_spring(const NewMeshNei& nn) {
   float spring = (np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f);
   // I found that variable spring constants tends to produce patches of large faces, which gives poor behavior
   // for selective refinement.
-  // So now 970827 I go with constant springs.
+  // So now 1997-08-27 I go with constant springs.
   // if (1) spring = 1e-8f;
   // No way, that doesn't give good results for meshes >sq100
   // Go back to higher spring constants.
@@ -2072,7 +2072,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
           }
           // if (cnwid >= 0) break;
           if (!same) break;
-          if (cnwid >= 0) {  // 20090415
+          if (cnwid >= 0) {  // 2009-04-15
             assertx(cnwid == wid);
             break;
           }
@@ -2082,7 +2082,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
           if (dir) assertx(mesh.clw_face_corner(c1) == pc1);
           bool same = c_wedge_id(pc) == c_wedge_id(pc1) && c_wedge_id(c) == c_wedge_id(c1);
           if (!same) {
-            if (1 && c_wedge_id(pc) == c_wedge_id(pc1)) {  // 20090415
+            if (1 && c_wedge_id(pc) == c_wedge_id(pc1)) {  // 2009-04-15
               assertx(mesh.corner_face(c1) == mesh.face1(e) || mesh.corner_face(c1) == mesh.face2(e));
               Vertex vo = mesh.corner_vertex(c1);
               if (0) {
@@ -2095,7 +2095,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
             }
             break;
           }
-          if (cnwid >= 0) {  // 20090415
+          if (cnwid >= 0) {  // 2009-04-15
             assertx(cnwid == wid);
             break;
           }
@@ -3719,9 +3719,9 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
         if (terrain) {
           if (is_grid_corner(v2)) continue;
         } else {
-          // new 19980105 for SR_PREDICT_MATID; or should I use clw_edge? double check.
-          // 20040301: removed to allow simplification of planck400k to 2 triangles with 4 vertices tagged global.
-          // 20040713: reintroduced because otherwise ctfparam can crash.
+          // new 1998-01-05 for SR_PREDICT_MATID; or should I use clw_edge? double check.
+          // 2004-03-01: removed to allow simplification of planck400k to 2 triangles with 4 vertices tagged global.
+          // 2004-07-13: reintroduced because otherwise ctfparam can crash.
           if (1 && mesh.is_boundary(mesh.ccw_edge(f1, e))) continue;
         }
       } else {
@@ -3937,7 +3937,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
             // auto constrv = ArView(constr, qems + 1);
             if (1 && nw == 1) {
               success = nn.ar_wq[0]->fast_minp_constr_lf(minp[0].data(), constr.data());
-              // 20051019 sometimes never returns success if qemvolume == 1 and mesh has boundaries.
+              // 2005-10-19 sometimes never returns success if qemvolume == 1 and mesh has boundaries.
             } else {
               success = nn.ar_wq[0]->ar_compute_minp_constr_lf(nn.ar_wq, minp, constr.data());
             }

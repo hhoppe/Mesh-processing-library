@@ -248,7 +248,7 @@ bool lmcad;    // lmcolor() state
 Pixel curcol;  // current color (for lines and points)
 Color matcol;  // material color (for polygons)
 
-// default color for polygons  (was (.9f, .6f, .4f) before 20020117
+// default color for polygons  (was (.9f, .6f, .4f) before 2002-01-17
 // const A3dVertexColor k_default_color{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 const A3dVertexColor k_default_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 
@@ -1146,8 +1146,8 @@ void load_texturemaps() {
         // Horizontal spacing is 10m -> 16385 samples span 163'840m
         //  x = 799.5 + z * 0.10
         //  x' in [0, 1]:  x' = x / 1600  [shift by 0.5?]
-        //  z' in world_units:  z' = z / 163840
-        //  1600 * x' = 799.5 + z' * 163840 * 0.10
+        //  z' in world_units:  z' = z / 163'840
+        //  1600 * x' = 799.5 + z' * 163'840 * 0.10
         //  x' = 0.5 + z' * 10.24
         glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_OBJECT_LINEAR);
         glTexGenfv(GL_S, GL_OBJECT_PLANE, V(0.f, 0.f, 10.24f, 0.5f).data());
@@ -2176,7 +2176,7 @@ void draw_all() {
     if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
     if (!setup_ob(i)) continue;
     //
-    // DL Tests 20020528: frames / sec (before use_dl -> after use_dl)
+    // DL Tests 2002-05-28: frames / sec (before use_dl -> after use_dl)
     //  dragonf 200k faces: (-geom 500x500)
     //   .m polygons        3.3 -> 5.8
     //   .m ntriangles=inf  3.7 -> 20.3 ** and long dl compile!
@@ -2313,7 +2313,7 @@ void process_print() {
   // drawmode(); NORMALDRAW is fine
   glPushAttrib(GL_PIXEL_MODE_BIT);
   {                            // save GL_READ_BUFFER
-    if (0) {                   // 20160907 disabled because we do want most-recent rendering which is in backbuffer
+    if (0) {                   // 2016-09-07 disabled because we do want most-recent rendering which is in backbuffer
       glReadBuffer(GL_FRONT);  // default is GL_BACK if doublebuffered
     }
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -2331,9 +2331,9 @@ void process_print() {
     if (!movie_video) {
       assertx(!movie_frame);
       movie_video = make_unique<Video>(concat(V(movie_nframes), image.dims()));
-      movie_video->attrib().suffix = "mp4";                                           // useful default
-      movie_video->attrib().framerate = 60;                                           // useful default
-      movie_video->attrib().bitrate = max(1000000, int(product(image.dims()) * 10));  // ~20Mbps at FullHD
+      movie_video->attrib().suffix = "mp4";                                             // useful default
+      movie_video->attrib().framerate = 60;                                             // useful default
+      movie_video->attrib().bitrate = max(1'000'000, int(product(image.dims()) * 10));  // ~20Mbps at FullHD
     }
     (*movie_video)[movie_frame].assign(image);
   } else {
@@ -2649,17 +2649,17 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   yonder = k_default_yonder;
   // had ambient=.25 lightsource=.75 on SGI
   // had ambient=.60 lightsource=.75 on PC
-  // changed to high-contrast default on 20020117
+  // changed to high-contrast default on 2002-01-17
   //  (I liked the contrast of the old normal-map images.)
-  // ambient = .25f; lightsource = .85f;  // before 20120502
+  // ambient = .25f; lightsource = .85f;  // before 2012-05-02
   ambient = .30f;      // was .60f
   lightsource = .65f;  // was .75f then .72f
   backfacec = {.15f, .5f, .15f};
   dbuffer = true;
   Vec3<float> spherecolor = {.2f, 1.f, .2f};  // was {1.f, .2f, .2f}
-  Vec3<float> meshcold = {.6f, .6f, .6f};     // was {.8f, .5f, .4f} before 20120502
+  Vec3<float> meshcold = {.6f, .6f, .6f};     // was {.8f, .5f, .4f} before 2012-05-02
   Vec3<float> meshcols = {.5f, .5f, .5f};
-  Vec3<float> meshcolp = {4.f, 0.f, 0.f};  // 4 to match normal-map; was 5 before 20020117
+  Vec3<float> meshcolp = {4.f, 0.f, 0.f};  // 4 to match normal-map; was 5 before 2002-01-17
   Vec1<float> meshcola = {1.f};
   string pm_filename;
   string sc_filename;
@@ -2878,8 +2878,8 @@ void HB::draw_space() {
   if (movie_nframes) {
     g3d::lod_level = float(movie_frame) / (movie_nframes - 1.f);
     if (1) {
-      // disabled 20110114 for terrain which became blank since no LOD
-      // re-enabled 20120306 to create movie from LOD slider; added check "if (!lod_mode)" in G3ddraw.cpp
+      // disabled 2011-01-14 for terrain which became blank since no LOD
+      // re-enabled 2012-03-06 to create movie from LOD slider; added check "if (!lod_mode)" in G3ddraw.cpp
       g3d::update_lod();
     }
     // HB::segment_morph_mesh(1, g3d::lod_level);
@@ -3373,7 +3373,7 @@ void draw_pm() {
       }
     }
     // static const int pm_strips = getenv_int("PM_STRIPS");
-    // 20020528: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
+    // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
     static const bool pm_strips = !getenv_bool("PM_NOSTRIPS");
     if (!pm_strips || pmesh._info._has_rgb) {
       if (0) Warning("PMesh: no strips for rendering (may be slower)");
@@ -5204,7 +5204,7 @@ void draw_ply() {
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
   // Options lsmooth, lquickmode not handled.
-  if (ply_findices.num() > 5000000 && defining_dl)
+  if (ply_findices.num() > 5'000'000 && defining_dl)
     Warning("Graphics card may not have sufficient memory for display list");
   bool has_rgb = false;
   if (!ledges || lshading) {

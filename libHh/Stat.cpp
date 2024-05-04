@@ -111,7 +111,7 @@ string Stat::short_string() const {
 }
 
 string Stat::name_string() const {
-  // 20130703: changed from %-12.20s and substr(0, 19)
+  // 2013-07-03: changed from %-12.20s and substr(0, 19)
   return (_name == "" ? "" : sform("%-20.28s", (_name.substr(0, 27) + ":").c_str())) + short_string() + "\n";
 }
 

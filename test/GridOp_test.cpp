@@ -169,7 +169,7 @@ int main() {
       double radius = filter.radius();
       bool is_partition_of_unity = filter.is_partition_of_unity();
       SHOW(name);
-      const int n = 100000;  // was 1000000
+      const int n = 100'000;
       {
         double sum = 0., xo = 0.;
         for_int(i, n) {

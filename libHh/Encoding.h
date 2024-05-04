@@ -186,7 +186,7 @@ class DeltaEncoding {
     float a = abs(v);
     if (a < 1.f) return 0;
     // int vbits = int(ceil(std::log2(a)));  // old method
-    int vbits = int(floor(std::log2(a + 1.0001f)));  // new method 970609
+    int vbits = int(floor(std::log2(a + 1.0001f)));  // new method 1997-06-09
     // v : 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
     // vb: -  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4  4  4
     return vbits;

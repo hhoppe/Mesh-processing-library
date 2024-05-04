@@ -1131,7 +1131,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
                 : image.zsize() == 4 ? PNG_COLOR_TYPE_RGB_ALPHA
                                      : (assertt(false), 0)),
                PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
-  if (getenv_bool("PNG_SRGB")) {  // 20080507
+  if (getenv_bool("PNG_SRGB")) {  // 2008-05-07
     // It looks unchanged both on the screen and on the printer --> I give up on this.
     // (The intent was to make the images look less dark on the printer.)
     int srgb_intent = PNG_sRGB_INTENT_PERCEPTUAL;
@@ -1142,7 +1142,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     assertt(level >= 0 && level <= 9);
     png_set_compression_level(png_ptr, level);
   }
-  if (1) {  // 20100103 to get consistent import size into Word
+  if (1) {  // 2010-01-03 to get consistent import size into Word
     // png_set_pHYs(png_ptr, info_ptr, res_x, res_y, unit_type);
     // res_x       - pixels/unit physical resolution in x direction
     // res_y       - pixels/unit physical resolution in y direction

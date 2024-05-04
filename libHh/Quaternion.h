@@ -205,7 +205,7 @@ inline Quaternion pow(const Quaternion& qi, float e) {
     for_int(i, 3) q[i] = qi[i] * a;
     q.normalize();
   } else {
-    // 20070615 much more numerically stable
+    // 2007-06-15 much more numerically stable
     // The important case is small angles, for which all the precision is in qi[0..2].
     float xyzo = sqrt(square(qi[0]) + square(qi[1]) + square(qi[2]));
     float ango = my_asin(xyzo) * 2.f;

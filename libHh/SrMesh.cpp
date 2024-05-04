@@ -132,8 +132,8 @@ const float SrVsplit::sin2alpha = 0.f;
 
 // Timing:
 //  (setenv NO_REGULATION; setenv NO_AMORTIZATION; demo_gcanyon -timestat -st gcanyon_4k2k_perf.s3d -geom 500x150 -sr_screen_thresh .00145 -key DS)
-//   just display (little rasterization): 712000 faces / sec
-//   with adapt_refinement:               460000 faces / sec
+//   just display (little rasterization): 712'000 faces / sec
+//   with adapt_refinement:               460'000 faces / sec
 
 // TODO:
 // - vertex geometries could be defined procedurally (eg. image, noise)
@@ -566,12 +566,12 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     for_int(i, 2) {
       int matid = (fl + i)->aface->matid;
       if (!i || cr2faces) {
-        // 20121212 This section appears to be broken, because aface matid are used to store face_id's,
+        // 2012-12-12 This section appears to be broken, because aface matid are used to store face_id's,
         //  and these same matid are used to predict matid for newly introduced faces in apply_vspl().
         // In summary, support of > 1 material seems broken.
         if (0) assertw(_materials.ok(matid));
       }
-      // 20121212 added mask (_isolated_aface.matid == k_illegal_matid or bad matid)
+      // 2012-12-12 added mask (_isolated_aface.matid == k_illegal_matid or bad matid)
       f_matid.push(static_cast<short>(matid & 0xFFFF));
       if (!i || cr2faces) (fl + i)->aface->matid = _base_faces.num() + 2 * vspli + i;
       if (!i || cr2faces) f_pm2sr.push(_base_faces.num() + 2 * vspli + i);

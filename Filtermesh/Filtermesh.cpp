@@ -1703,7 +1703,7 @@ void do_splitvalence(Args& args) {
   assertx(maxvalence > 6);
   const bool write_hole = getenv_bool("WRITE_HOLE");
   HPqueue<Vertex> pqv;
-  int large_int = 16777216;
+  int large_int = 1 << 24;
   for (Vertex v : mesh.vertices()) {
     if (mesh.degree(v) >= maxvalence) pqv.enter(v, float(large_int - mesh.degree(v)));
   }

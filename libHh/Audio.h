@@ -7,7 +7,7 @@
 #if 0
 {
   // 400 Hz tone for 3 s at 48 kHz sampling in stereo
-  const double freq = 400., duration = 3., samplerate = 48 * 1000.;
+  const double freq = 400., duration = 3., samplerate = 48'000.;
   const int nchannels = 2;
   const int nsamples = int(duration * samplerate + .5);
   Audio audio(V(nchannels, nsamples));
@@ -16,7 +16,7 @@
     float t = i / samplerate;  // time in seconds
     audio(ch, i) = std::sin(t * freq * TAU);
   }
-  audio.attrib().bitrate = 256 * 1000;  // 256 kbps
+  audio.attrib().bitrate = 256'000;  // 256 kbps
   audio.write_file("file.mp3");
   // Audio read/write is performed using ffmpeg.
 }

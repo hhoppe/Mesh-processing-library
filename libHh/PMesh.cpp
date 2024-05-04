@@ -1757,7 +1757,7 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   //  with different attributes, and these perhaps should be morphed (between their original values in
   //  j and their final values in k).
   // They are morphed here but not in Filterprog.cpp.
-  // 970516: this is the reason why I didn't let the Ancestry class contain
+  // 1997-05-16: this is the reason why I didn't let the Ancestry class contain
   // ancestry relations (and record the attributes of M^c): I would not
   // have available to me the original attributes of an orphan wedge
   // introduced in M^j which was subsequently changed.  The only solution is

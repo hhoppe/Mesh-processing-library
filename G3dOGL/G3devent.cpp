@@ -1182,7 +1182,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
       SHOW(butnum);
       return;
     }
-    if (flightmode == EFlightmode::automatic) {  // added 20020501
+    if (flightmode == EFlightmode::automatic) {  // added 2002-05-01
       flightmode = EFlightmode::none;
     }
     keep_active = false;

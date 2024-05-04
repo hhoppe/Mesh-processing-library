@@ -87,9 +87,9 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
                                        mesh_d.point(mesh_d.corner_vertex(cad[2])), baryd, clp);
     pstats.Sgd2.enter(d2);
     if (errmesh && vv) {
-      float g_K = 1000000.f * (1.0f / bbdiag);
+      float g_K = 1'000'000.f / bbdiag;
       float g_MK = 0.f;
-      if (0) g_MK = 75.f * (1.0f / bbdiag);
+      if (0) g_MK = 75.f / bbdiag;
       d2 = abs(d2);
       float val = g_K * std::log(d2 + 1.f);
       HH_SSTAT(Serrval, val);
@@ -159,8 +159,8 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
   // PolygonFaceSpatial psp(max(10, int(sqrt(float(mesh_d.num_vertices())) / 5.f + .5f)));
   int psp_size = (mesh_d.num_vertices() < 20000    ? 25
                   : mesh_d.num_vertices() < 30000  ? 32
-                  : mesh_d.num_vertices() < 100000 ? 40
-                  : mesh_d.num_vertices() < 300000 ? 70
+                  : mesh_d.num_vertices() < 100'000 ? 40
+                  : mesh_d.num_vertices() < 300'000 ? 70
                                                    : 100);
   psp_size = getenv_int("PSP_SIZE", psp_size, true);
   Array<PolygonFace> ar_polyface;

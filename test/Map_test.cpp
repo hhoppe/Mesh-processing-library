@@ -13,7 +13,7 @@ int main() {
   if (0) {  // timing test
     Map<int, int> m;
     SHOW(m.num());
-    for_int(i, 1000000) m.enter(i, 1);  // now this is somewhat slow (4.5sec) in Debug under VC2012!
+    for_int(i, 1'000'000) m.enter(i, 1);  // now this is somewhat slow (4.5sec) in Debug under VC2012!
     SHOW("after end");
     m.clear();  // slow with _ITERATOR_DEBUG_LEVEL == 2 (in Debug) under VC2010!
     SHOW("after clear");

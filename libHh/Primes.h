@@ -43,7 +43,7 @@ inline int prev_prime(int i, int count = 1) {
 }
 
 inline int random_prime_under(int n, Random& random) {
-  assertx(n < 100000);
+  assertx(n < 100'000);
   static Array<int> primes;  // not thread-safe
   if (!primes.num()) primes.push(2);
   while (primes.last() < n) primes.push(next_prime(primes.last()));

@@ -161,7 +161,7 @@ void RA3dStream::set_current_color(char ctype, const Vec3<float>& f) {
 // *** RSA3dStream
 
 bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) {
-  // _is >> std::ws;  // commented 20121211
+  // _is >> std::ws;  // commented 2012-12-11
   char ch;
   if (_is.peek() == '\n') _is.get(ch);  // there may be a blank line between elements
   int vpeek = _is.peek();
@@ -192,7 +192,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     if (1) {
       string sline;
       assertx(my_getline(_is, sline));
-      assertx(sscanf(sline.c_str(), "%g %g %g", &f[0], &f[1], &f[2]) == 3);  // 20131220 added assertx()
+      assertx(sscanf(sline.c_str(), "%g %g %g", &f[0], &f[1], &f[2]) == 3);  // 2013-12-20 added assertx()
     } else {
       assertx(_is >> f[0] >> f[1] >> f[2]);
       _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // likely needed

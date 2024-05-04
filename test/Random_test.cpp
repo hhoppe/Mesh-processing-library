@@ -12,7 +12,7 @@ int main() {
   }
   r1.seed(0);
   for_int(i, 3) SHOW(r1.get_unsigned());
-  const int num = 0 ? 10 * 1000 * 1000 : 1000 * 1000;  // 10M takes too long in debug
+  const int num = 0 ? 10'000'000 : 1'000'000;  // 10M takes too long in debug
   {
     Stat Sgauss;
     for_int(i, num) {

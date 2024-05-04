@@ -25,8 +25,7 @@ int main(int argc, const char** argv) {
   assertx(!fstat(fd, &stat_buf));  // off_t st_size
   unsigned rlen = unsigned(stat_buf.st_size);
   assertx(rlen == stat_buf.st_size);  // verify that it fits
-  // Had problems with hand0.prog (size 572506964): would not map
-  //  into memory, so used segmentation scheme below.
+  // Had problems with hand0.prog (size 572506964): would not map into memory, so used segmentation scheme below.
   if (!rlen) {
     Warning("File has zero length");
     return 0;

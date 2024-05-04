@@ -36,7 +36,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   SGrid(const type&) = default;
   SGrid(initializer_type l) { *this = l; }  // not constexpr, instead use = V(V(), V(), ...)
   constexpr explicit SGrid(const base& g) : base(g) {}
-  constexpr SGrid(base&& g) : base(std::move(g)) {}  // added move 20140414; ok?
+  constexpr SGrid(base&& g) : base(std::move(g)) {}
   SGrid(CGridView<D, T> g) { *this = g; }
   type& operator=(const type& g) = default;
   type& operator=(initializer_type l) {

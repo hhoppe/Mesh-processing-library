@@ -263,7 +263,7 @@ void Timer::zero() {
 #if defined(_WIN32)
 static inline double to_seconds(const FILETIME& ft) {
   const double low_to_sec = 100e-9;  // 100 nanoseconds
-  const double high_to_sec = low_to_sec * 4294967296.0;
+  const double high_to_sec = low_to_sec * 4'294'967'296.0;
   return ft.dwLowDateTime * low_to_sec + ft.dwHighDateTime * high_to_sec;
 }
 #endif

@@ -377,7 +377,7 @@ void do_bitrate(Args& args) {
     factor = 1000.;
     arg.pop_back();
   } else if (arg != "" && arg.back() == 'm') {
-    factor = 1000000.;
+    factor = 1'000'000.;
     arg.pop_back();
   }
   double fbitrate = Args::parse_double(arg) * factor;
@@ -817,7 +817,7 @@ void do_makeloop(Args& args) {
     }
   }
   if (0) nvideo.attrib().bitrate = video.attrib().bitrate * 2;
-  if (1) nvideo.attrib().bitrate = max(video.attrib().bitrate, 20 * 1000 * 1000);
+  if (1) nvideo.attrib().bitrate = max(video.attrib().bitrate, 20'000'000);
   video = std::move(nvideo);
 }
 
@@ -2106,7 +2106,7 @@ void do_procedure(Args& args) {
       showf("gauss(%10f)=%10f\n", f, gaussian(f, 1.f));
     }
     double sum = 0.;
-    int n = 100000;
+    int n = 100'000;
     float samp = 10.f;
     for_int(i, n) {
       float f = (float(i - n / 2) / (n / samp));

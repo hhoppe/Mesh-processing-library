@@ -307,7 +307,7 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
         v = vn;
       }
     }
-    if (!assertw(epath[1].num())) return false;  // fix 20140911
+    if (!assertw(epath[1].num())) return false;  // fix 2014-09-11
     while (epath[0].last() == epath[1].last()) {
       if (process) Warning("Cycle was not minimal since trimming dart");
       epath[0].sub(1);
@@ -581,7 +581,7 @@ void CloseMinCycles::find_cycles() {
         break;
       }
       bool restart_at_farthest = true;  // may improve loop if _frac_cycle_length > 1.f (e.g. holes3.m)
-      if (!assertw(_frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;  // fix 20140911
+      if (!assertw(_frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;  // fix 2014-09-11
       if (restart_at_farthest) vseed = vfarthest;
       float old_sr = sr;
       min_cycle_from_vertex(vseed, true, sr, vfarthest, num_edges);

@@ -510,7 +510,7 @@ static bool isafile(int fd) {
   HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
   BY_HANDLE_FILE_INFORMATION hfinfo = {};
   if (!GetFileInformationByHandle(handle, &hfinfo)) return false;
-  // 20041006 XPSP2: bug: now pipe returns success; detect this using the peculiar file information:
+  // 2004-10-06 XPSP2: bug: now pipe returns success; detect this using the peculiar file information:
   if (hfinfo.dwVolumeSerialNumber == 0 && hfinfo.ftCreationTime.dwHighDateTime == 0 &&
       hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
     return false;
@@ -560,7 +560,7 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bo
   }
   need_cerr = true;
   need_cout = !same_cout_cerr;
-  if (0 && !isatty1 && !isatty2 && !isafile(0) && !isafile(1)) need_cout = false;  // 20170222 for "blaze run" (*B).
+  if (0 && !isatty1 && !isatty2 && !isafile(0) && !isafile(1)) need_cout = false;  // 2017-02-22 for "blaze run" (*B).
   if (same_cout_cerr) {
     want_ff = isafile(1) || isatty1;
     // On _WIN32, isatty1 is always false and we fail to set want_ff=1 for "app |& app2" (*A).

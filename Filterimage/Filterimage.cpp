@@ -788,7 +788,7 @@ void do_randomizeRGB() {
         unsigned v =
             unsigned(image[yx][0] * (53 + 113 * 256 + 43 * 65536) + image[yx][1] * (97 + 89 * 256 + 107 * 65536) +
                      image[yx][2] * (11 + 61 * 256 + 47 * 65536)) %
-            16777216;
+            (1 << 24);
         image[yx] = Pixel(narrow_cast<uint8_t>((v >> 0) & 255), narrow_cast<uint8_t>((v >> 8) & 255),
                           narrow_cast<uint8_t>((v >> 16) & 255));
       },

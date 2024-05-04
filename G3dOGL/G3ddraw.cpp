@@ -355,7 +355,7 @@ static void act_button() {
   Vec2<float> yxf;
   if (expo && ratemode != ERatemode::position) {
     // f +- 0 to 8 to 64  * .2 == 0 to 1.6 to 13
-    float c1 = 1.f;  // 20120417 was previously .2f;
+    float c1 = 1.f;  // 2012-04-17 was previously .2f;
     for_int(c, 2) yxf[c] = pow(abs(yxi[c]) * 2.f, 3.f) * sign(yxi[c]) * c1;
   } else {
     yxf = yxi;

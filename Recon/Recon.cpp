@@ -718,7 +718,7 @@ void process() {
   }
   {
     HH_TIMER("_SPp");
-    int n = is_3D ? (num > 100000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+    int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
     SPp = make_unique<PointSpatial<int>>(n);
     for_int(i, num) SPp->enter(i, &co[i]);
   }
@@ -728,7 +728,7 @@ void process() {
     process_principal();
     {
       HH_TIMER("_SPpc");
-      int n = is_3D ? (num > 100000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+      int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
       SPpc = make_unique<PointSpatial<int>>(n);
       for_int(i, num) SPpc->enter(i, &pcorg[i]);
     }

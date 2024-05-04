@@ -135,7 +135,7 @@ bool try_g3d_command(const string& pstr) {
   string str = pstr;
   if (0) {
   } else if (remove_at_beginning(str, "keys ")) {
-    // assertx(str.size() == 1);  // new 20121213
+    // assertx(str.size() == 1);  // new 2012-12-13
     // KeyPressed(str);
     for (char ch : str) KeyPressed(string(1, ch));
     return true;
@@ -206,7 +206,7 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     default: assertnever("");
   }
   if (!buf.extract_line(str)) return ETryInput::nothing;  // partial something
-  // 20121211: now trailing '\n' has been removed; all still OK?
+  // 2012-12-11: now trailing '\n' has been removed; all still OK?
   {  // try Mesh
     char* s = const_cast<char*>(str.c_str());
     if (GMesh::recognize_line(s)) {

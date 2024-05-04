@@ -919,7 +919,7 @@ void GxObject::close() {
         s->c1->count -= 1;
         s->c2->count -= 1;
       }
-      maxc->count = 100000;
+      maxc->count = 100'000;
     }
   }
   _arn.push_array(std::move(_arnc));

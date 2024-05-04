@@ -221,7 +221,7 @@ EFit g_fit = k_default_fit;
 bool g_fit_view_to_window = true;  // always adjust g_view to fit window (using g_fit), else g_view is unconstrained
 enum class EKernel { linear, keys, lanczos6, lanczos10, nearest, last };
 Array<string> k_kernel_string{"linear", "keys", "lanczos6", "lanczos10", "nearest"};
-const EKernel k_default_kernel = EKernel::keys;  // 20150521: was EKernel::linear; could be EKernel::lanczos6
+const EKernel k_default_kernel = EKernel::keys;  // 2015-05-21: was EKernel::linear; could be EKernel::lanczos6
 EKernel g_kernel = k_default_kernel;             // desired image reconstruction (sampling) filter
 EKernel g_render_kernel;                         // filter in use
 const bool k_default_info = true;
@@ -1839,7 +1839,7 @@ bool DerivedHW::key_press(string skey) {
             }
             if (ratio <= 0.f) throw string("invalid aspect ratio");
             set_fullscreen(false);  // OK to subsequently call resize_window() below before a draw_window()?
-            const int nlarge = 1000000;
+            const int nlarge = 1'000'000;
             ndims = determine_default_window_dims(V(nlarge, int(nlarge * ratio + .5f)));
             resize_window(ndims);
             g_fit_view_to_window = false;
@@ -2392,14 +2392,14 @@ bool DerivedHW::key_press(string skey) {
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_loaded_video();
           double bitrate = double(ob._video.attrib().bitrate);
-          string s = bitrate >= 1000000. ? sform("%gm", bitrate / 1000000.) : sform("%gk", bitrate / 1000.);
+          string s = bitrate >= 1'000'000. ? sform("%gm", bitrate / 1'000'000.) : sform("%gk", bitrate / 1000.);
           if (!query(V(20, 10), "Bitrate (bps) for video: ", s)) throw string("");
           double factor = 1.;
           if (s != "" && s.back() == 'k') {
             factor = 1000.;
             s.pop_back();
           } else if (s != "" && s.back() == 'm') {
-            factor = 1000000.;
+            factor = 1'000'000.;
             s.pop_back();
           }
           if (!Args::check_double(s)) throw string("cannot parse bitrate");
@@ -3592,10 +3592,10 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
       {
         const int bitrate = ob._video.attrib().bitrate;
         sbitrate = (ob.is_image()       ? ""
-                    : bitrate > 1000000 ? sform(" %.2fMbps", bitrate / 1000000.f)
-                    : bitrate > 1000    ? sform(" %.2fKbps", bitrate / 1000.f)
-                    : bitrate > 0       ? sform(" %dbps", bitrate)
-                                        : "");
+                    : bitrate > 1'000'000 ? sform(" %.2fMbps", bitrate / 1'000'000.f)
+                    : bitrate > 1000      ? sform(" %.2fKbps", bitrate / 1000.f)
+                    : bitrate > 0         ? sform(" %dbps", bitrate)
+                                          : "");
       }
       string sloaded;
       {

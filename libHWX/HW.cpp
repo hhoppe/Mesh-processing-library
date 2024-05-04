@@ -602,9 +602,9 @@ void HW::start_hwkey() {
   struct itimerval ti;
   struct timeval tv;
   signal(SIGALRM, handle_alarm);
-  int64_t usec = int(_hwdelay * 1000000.f + .5f);
-  tv.tv_sec = int(usec / 1000000);
-  tv.tv_usec = int(usec % 1000000);
+  int64_t usec = int(_hwdelay * 1'000'000.f + .5f);
+  tv.tv_sec = int(usec / 1'000'000);
+  tv.tv_usec = int(usec % 1'000'000);
   ti.it_value = tv;
   ti.it_interval = tv;
   if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
@@ -746,7 +746,7 @@ void HW::draw_it() {
   }
 #if 1 || defined(__CYGWIN__)
   // This synchronization was necessary with cygwin to avoid having GLX build a buffer of many frames of rendering.
-  // 20160317 this also became necessary with iglx over ssh under Unix,
+  // 2016-03-17 this also became necessary with iglx over ssh under Unix,
   //   e.g. ~/distrib/bin/unix/G3dOGL ~/distrib/demos/data/fandisk.orig.m -key J
   if (1) XSync(_display, 0);
 #endif

@@ -366,7 +366,7 @@ void exercise_errors() {
     SHOW(b);
   }
   if (0) {
-    int a = 123456789;
+    int a = 123'456'789;
     int b = a * a;  // silently overflows
     SHOW(b);
   }

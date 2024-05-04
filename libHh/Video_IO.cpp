@@ -306,7 +306,7 @@ WVideo::WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib att
   }
   if (!_attrib.bitrate) {
     Warning("Setting a high video bitrate");
-    _attrib.bitrate = 40 * 1000000;
+    _attrib.bitrate = 40'000'000;
   }
   _impl = Implementation::make(*this);
   if (getenv_bool("VIDEO_DEBUG")) SHOW(_impl->name());
@@ -465,7 +465,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       AS(_pReader->GetPresentationAttribute(DWORD(MF_SOURCE_READER_MEDIASOURCE), MF_PD_DURATION, &var));
       assertx(var.vt == VT_UI8);
       ULONGLONG durationInHundredsOfNanoseconds = var.uhVal.QuadPart;
-      double TIME_HNS_TO_S_FACTOR = 10000000.;
+      double TIME_HNS_TO_S_FACTOR = 10'000'000.;
       duration = double(durationInHundredsOfNanoseconds) / TIME_HNS_TO_S_FACTOR;
       PropVariantClear(&var);
     }
@@ -868,7 +868,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       if (ldebug) SHOW(s);
       RFile fi(s);
       Vec3<int> dims{0, 0, 0};
-      double total_bitrate = 1000000.;  // a default value of 1Mbps
+      double total_bitrate = 1'000'000.;  // a default value of 1Mbps
       double video_bitrate = -1.;
       double framerate = -1.;
       bool yuv444p = false;

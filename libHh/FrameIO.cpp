@@ -142,7 +142,7 @@ bool write(WBuffer& b, const Frame& f, int obn, float zoom, bool bin) {
 }
 
 string create_string(const Frame& f, int obn, float zoom) {
-  // Maybe should use %.9g for exact representation.  Yes, changed from %.7g on 20140502.
+  // Maybe should use %.9g for exact representation.  Yes, changed from %.7g on 2014-05-02.
   return sform("F %d  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g\n",  //
                obn, f[0][0], f[0][1], f[0][2], f[1][0], f[1][1], f[1][2], f[2][0], f[2][1], f[2][2], f[3][0], f[3][1],
                f[3][2], zoom);

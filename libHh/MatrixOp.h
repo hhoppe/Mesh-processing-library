@@ -296,7 +296,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
               // SHOW(num, sumw, nm[y][x]); assertnever("");
             }
           },
-          nm.xsize() * 10000);
+          nm.xsize() * 10'000);
     } else {
       // Approach 2: supersample uniformly in kernel window of destination image, evaluating reconstruction
       //  kernels at corresponding points in source image (expensive!).
@@ -338,7 +338,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
               // SHOW(num, sumw, nm[yx]); assertnever("");
             }
           },
-          nm.xsize() * 10000);
+          nm.xsize() * 10'000);
     }
     return;
   }

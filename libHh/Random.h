@@ -17,8 +17,8 @@ class Random : noncopyable {
   explicit Random(uint32_t seedv = 0);
   ~Random();
   void seed(uint32_t seedv);
-  unsigned get_unsigned();  // [0, std::numeric_limits<unsigned>::max()]  (4294967295 if sizeof(unsigned) == 4)
-  uint64_t get_uint64();    // [0, std::numeric_limits<uint64_t>::max()]  (18446744073709551615)
+  unsigned get_unsigned();  // [0, std::numeric_limits<unsigned>::max()]
+  uint64_t get_uint64();    // [0, std::numeric_limits<uint64_t>::max()]
   size_t get_size_t();      // range depends on size_t
   unsigned get_unsigned(unsigned ub);  // [0, ub - 1]
   float unif();                        // [0.f, 1.f)

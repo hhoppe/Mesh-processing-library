@@ -51,12 +51,12 @@ int main() {
     SHOW(Vector4i(pix).pixel());
     SHOW((Vector4i(pix) + 15).pixel());
     SHOW((Vector4i(pix) + 250).pixel());
-    SHOW((Vector4i(pix) + 100000).pixel());
+    SHOW((Vector4i(pix) + 100'000).pixel());
     SHOW((Vector4i(pix) + (std::numeric_limits<int>::max() - 255)).pixel());
     if (0) SHOW((Vector4i(pix) + std::numeric_limits<int>::max()).pixel());  // (overflows silently)
     SHOW((Vector4i(pix) - 1).pixel());
     SHOW((Vector4i(pix) - 15).pixel());
-    SHOW((Vector4i(pix) - 100000).pixel());
+    SHOW((Vector4i(pix) - 100'000).pixel());
     SHOW((Vector4i(pix) - std::numeric_limits<int>::max()).pixel());
   }
   {

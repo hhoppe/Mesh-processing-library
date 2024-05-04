@@ -27,7 +27,7 @@ inline void write_video(CGridView<3, Pixel> grid, const string& filename) {  // 
   Video video;
   video = grid;
   video.attrib().framerate = 30.;
-  video.attrib().bitrate = 100000000;
+  video.attrib().bitrate = 100'000'000;
   video.attrib().suffix = "mp4";
   video.write_file(filename);
 }
@@ -317,7 +317,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
         Array<EType> apix0(nx), apix1(nx), asy0(nx), asy1(nx), asx(nx + 1);
         asx[0] = asx[nx] = EType{0};
-        const int xwidth = 0 ? 600 : 100000;  // breaking up into swaths is actually detrimental
+        const int xwidth = 0 ? 600 : 100'000;  // breaking up into swaths is actually detrimental
         for (BoundedIntervals bi(nx, xwidth); *bi; ++bi) {
           int xl = bi.l(), xu = bi.u();
           for_intL(x, xl, min(xu + 1, nx)) apix0[x] = MG::get(video(grid_frameif(0, x), 0, x), z);
@@ -396,7 +396,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     }
     if (0) multigrid.set_desired_mean(mean(multigrid.initial_estimate()));  // use screening_weight instead
     multigrid.set_screening_weight(screening_weight);  // small errors on brink2s loop with screening == 0
-    int num_vcycles = 3;                               // 20140725 tried changing from 3 to 1, and it looks OK
+    int num_vcycles = 3;                               // 2014-07-25 tried changing from 3 to 1, and it looks OK
     if (b_exact) num_vcycles = 10;
     if (1) multigrid.set_num_vcycles(num_vcycles);
     if (verbose >= 2) multigrid.set_verbose(true);
@@ -1055,7 +1055,7 @@ void compute_gdloop_aux1(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
                          GridView<3, Pixel> videoloop, bool b_exact) {
   // Multigrid<3, Vector4>(200Mpix) fits in ~12 GB memory  (== 2Mpix(FullHD) * 30fps * ~3.33sec)
   // const bool use_vector4 = getenv_bool("GDLOOP_USE_VECTOR4");
-  // if (video.size() > 200 * 1000 * 1000)
+  // if (video.size() > 200'000'000)
   // if (use_vector4)
   if (!getenv_bool("VIDEOLOOP_USE_LITTLE_MEMORY") &&
       available_memory() > assert_narrow_cast<size_t>(product(videoloop.dims()) * sizeof(Vector4) * 6))

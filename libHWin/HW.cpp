@@ -323,7 +323,7 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
       // (this will avoid GDI clearing the OpenGL windows background).
       // HH: I found this unnecessary so far.
-      return 1;  // introduced 20141203
+      return 1;  // introduced 2014-12-03
     case WM_CREATE:
       // On window creation, send a WM_SHOWWINDOW msg,
       //  since that msg doesn't get sent when ShowWindow() is called, in certain situations.

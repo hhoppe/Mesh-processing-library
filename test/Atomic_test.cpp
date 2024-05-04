@@ -11,7 +11,7 @@ int main() {
 #if 1
   {
     const int num = 100;
-    const int niter = 1 * 1000 * 1000;
+    const int niter = 1'000'000;
     auto func_hash = [=](int i) { return narrow_cast<int>((int64_t{i} * 97) % num); };
     auto func_oper = [](float v) { return v * 2.f + 1.f; };
     Array<float> ar1(num, 1.f);
@@ -31,7 +31,7 @@ int main() {
   }
   {
     const int num = 100;
-    const int niter = 1 * 1000 * 1000;
+    const int niter = 1'000'000;
     auto func_hash = [=](int i) { return narrow_cast<int>((int64_t{i} * 97) % num); };
     auto func_oper = [](uint8_t v) { return uint8_t((v * 97 + 31) % 256); };
     Array<uint8_t> ar1(num, uint8_t{1});

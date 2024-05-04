@@ -110,7 +110,7 @@ inline int get_max_threads() {
 #define cond_parallel_for_int(c, i, ub) cond_parallel_for_T(c, int, i, 0, ub)
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, size_t, i, 0, ub)
 
-constexpr uint64_t k_omp_thresh = 100 * 1000;  // Number of instruction cycles above which to parallelize a loop.
+constexpr uint64_t k_omp_thresh = 100'000;  // Number of instruction cycles above which to parallelize a loop.
 constexpr uint64_t k_omp_many_cycles_per_elem = 400;  // Num of instruction cycles for larger-overhead parallelism.
 constexpr int k_omp_min_iterations = 8;               // Sufficient number of loop iterations for parallelism.
 

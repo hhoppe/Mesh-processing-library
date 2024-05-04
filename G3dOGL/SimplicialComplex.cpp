@@ -913,7 +913,7 @@ Simplex SimplicialComplex::createSimplex(int dim, int id) {
 OrderedSimplexIter::OrderedSimplexIter(const SimplicialComplex& K, int dim) {
   ForScSimplex(K, dim, s) {
     int sid = s->getId();
-    assertw(sid <= 16777216);  // precision available in float
+    assertw(sid <= (1 << 24));  // precision available in float
     pq.enter_unsorted(s, float(sid));
   }
   EndFor;

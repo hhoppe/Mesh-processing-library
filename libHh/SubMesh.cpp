@@ -231,7 +231,7 @@ void SubMesh::subdivide_aux(float cosang, Mvcvh* pmconv) {
     unique_ptr<Mvcvh> tmconv = !pmconv ? make_unique<Mvcvh>() : nullptr;
     Mvcvh& mconv = pmconv ? *pmconv : *tmconv;
     if (cosang < .99999f) {
-      // udpate geometry so that EdgeDihedralCos makes sense
+      // Update geometry so that EdgeDihedralCos makes sense.
       update_vertex_positions();
       _selrefine = true;
       selectively_refine(mconv, cosang);

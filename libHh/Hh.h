@@ -32,7 +32,7 @@
 #pragma warning(disable : 4592)  // bug in VS2015 update 1; https://stackoverflow.com/questions/34013930/
 // Workarounds for warning 4702 (unreachable code) (pragma would have to appear before function body):
 //  for (; ; ++iter) { f(); break; }    // replace "break;" by "if (1) break;"
-//  { assertnever("abandonned"); f(); }  // use "assertnever_ret(..);"
+//  { assertnever("abandoned"); f(); }  // use "assertnever_ret(..);"
 // Code analysis
 #pragma warning(disable : 6237)   // (<zero> && <expression>) is always zero
 #pragma warning(disable : 6286)   // (<non-zero constant> || <expression>) is always a non-zero constant

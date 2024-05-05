@@ -365,7 +365,7 @@ class PMesh : noncopyable {
 // Progressive mesh stream
 // Can be either:
 //  - read from an existing PMesh, or
-//  - read from an input streamm, or
+//  - read from an input stream, or
 //  - read from an input stream and archived to a PMesh
 class PMeshRStream : noncopyable {
  public:

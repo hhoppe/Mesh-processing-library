@@ -135,7 +135,7 @@ int record_face(Corner cc, VertexCache& vcache) {
   return nmiss;
 }
 
-// For a given face, return the number of vertices currenly in the cache.
+// For a given face, return the number of vertices currently in the cache.
 int face_nvcached(Face f, const VertexCache& vcache) {
   int nvcached = 0;
   for (Vertex v : mesh.vertices(f)) nvcached += vcache.contains(mesh.vertex_id(v));
@@ -663,7 +663,7 @@ class MeshStatus {
   // Global state:
   void process(Face f);
   bool processed(Face f) const;
-  int face_nnei(Face f) const;  // number of unprocessed neighbhors
+  int face_nnei(Face f) const;  // number of unprocessed neighbors
   Face find_initial_face();
   Corner find_initial_corner(const VertexCache& vcache);
 
@@ -926,7 +926,7 @@ void do_greedy_stripify() {
           std::swap(v1, v2);
           vo = va[j];
           i = 3;
-        } else {  // new way: re-use {v2, v1} first
+        } else {  // new way: reuse {v2, v1} first
           vo = v2;
           v2 = va[j];
           i = 3;

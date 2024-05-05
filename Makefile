@@ -16,7 +16,7 @@
 #  make CONFIG=win CXX_STD=c++latest -j12  # compatibility with proposed c++ features
 #  make CONFIG=all PEDANTIC=1  # enable most compiler warnings
 #  make CXX_STD=c++2b PEDANTIC=1 -j12
-#  make CC=gcc CXX_STD=c++2b PENDANTIC=1 -j12
+#  make CC=gcc CXX_STD=c++2b PEDANTIC=1 -j12
 
 MeshRoot ?= .#  this current file is located in the root directory of the package
 

@@ -15,7 +15,7 @@
  *                       (should also be enough)
  *                     - Changed to compile correctly with the PSDK of VC7.0
  *                       (GetFileVersionInfoSizeA and GetFileVersionInfoA is wrongly defined:
- *                        it uses LPSTR instead of LPCSTR as first paremeter)
+ *                        it uses LPSTR instead of LPCSTR as first parameter)
  *                     - Added declarations to support VC5/6 without using 'dbghelp.h'
  *                     - Added a 'pUserData' member to the ShowCallstack function and the
  *                       PReadProcessMemoryRoutine declaration (to pass some user-defined data,
@@ -623,7 +623,7 @@ class StackWalkerInternal {
     }
     ULONGLONG fileVersion = 0;
     if ((m_parent != NULL) && (szImg != NULL)) {
-      // try to retrive the file-version:
+      // try to retrieve the file-version:
       if ((this->m_parent->m_options & StackWalker::RetrieveFileVersion) != 0) {
         VS_FIXEDFILEINFO* fInfo = NULL;
         DWORD dwHandle;
@@ -647,7 +647,7 @@ class StackWalkerInternal {
         }
       }
 
-      // Retrive some additional-infos about the module
+      // Retrieve some additional-infos about the module
       IMAGEHLP_MODULE64_V2 Module;
       const char* szSymType = "-unknown-";
       if (this->GetModuleInfo(hProcess, baseAddr, &Module) != FALSE) {
@@ -696,7 +696,7 @@ class StackWalkerInternal {
     //      if (GetLastError() != ERROR_INVALID_PARAMETER)
     //        return FALSE;
     //    }
-    // could not retrive the bigger structure, try with the smaller one (as defined in VC7.1)...
+    // could not retrieve the bigger structure, try with the smaller one (as defined in VC7.1)...
     pModuleInfo->SizeOfStruct = sizeof(IMAGEHLP_MODULE64_V2);
     void* pData = malloc(4096);  // reserve enough memory, so the bug in v6.3.5.1 does not lead to memory-overwrites...
     if (pData == NULL) {
@@ -947,7 +947,7 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT* context, PReadPro
       // if this returns ERROR_INVALID_ADDRESS (487) or ERROR_NOACCESS (998), you can
       // assume that either you are done, or that the stack is so hosed that the next
       // deeper frame could not be found.
-      // CONTEXT need not to be suplied if imageTyp is IMAGE_FILE_MACHINE_I386!
+      // CONTEXT need not to be supplied if imageTyp is IMAGE_FILE_MACHINE_I386!
       if (!this->m_sw->pSW(imageType, this->m_hProcess, hThread, &s, &c, myReadProcMem, this->m_sw->pSFTA,
                            this->m_sw->pSGMB, NULL)) {
         this->OnDbgHelpErr("StackWalk64", GetLastError(), s.AddrPC.Offset);

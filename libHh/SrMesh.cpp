@@ -147,7 +147,7 @@ const float SrVsplit::sin2alpha = 0.f;
 //    we just assign vsa->visible = true.  We could also refer to the bounding spheres of their parent vertices
 //   (leaf_bsphere_use_parent in RCS).  We don't know which gives better performance.
 // - The test for face_invisible() must be "!vis(v0) && !vis(v1) && !vis(v2)" instead of
-//    "!vis(v0) || !vis(v1) || !vis(v2)" because the positions of the vertices v_l and v_r are unknonwn due to the
+//    "!vis(v0) || !vis(v1) || !vis(v2)" because the positions of the vertices v_l and v_r are unknown due to the
 //    relaxed refinement constraints./  Very unfortunate since otherwise would easily know that some vertices
 //    need not be entered into the DrawPrimitive() call (transform + lighting).
 // - Even with this && test, some faces sometimes drop out erroneously when geomorphs are turned on in demo_gcanyon.

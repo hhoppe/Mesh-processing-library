@@ -177,7 +177,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
 
 // *** Contour3D
 
-struct Contour3D_NoBorder {  // special type to indicate that no border ouput is desired
+struct Contour3D_NoBorder {  // special type to indicate that no border output is desired
   float operator()(const Array<Vec3<float>>&) const {
     assertnever_ret("");
     return 0.f;
@@ -556,7 +556,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
 
 // *** Contour2D
 
-struct Contour2D_NoBorder {  // special type to indicate that no border ouput is desired
+struct Contour2D_NoBorder {  // special type to indicate that no border output is desired
   float operator()(const Array<Vec2<float>>&) const {
     if (1) assertnever("");
     return 0.f;

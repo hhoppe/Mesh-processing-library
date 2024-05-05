@@ -354,10 +354,10 @@ void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
   const int bufn = 6 + nwa * wadlength + 2 * pminfo._has_resid;
   assertx(bufn <= buf.num());
   assertx(read_binary_std(is, buf.head(bufn)));
-  Vector& vlarge = vad_large.dpoint;
-  for_int(c, 3) vlarge[c] = buf[0 + c];
-  Vector& vsmall = vad_small.dpoint;
-  for_int(c, 3) vsmall[c] = buf[3 + c];
+  Vector& v_large = vad_large.dpoint;
+  for_int(c, 3) v_large[c] = buf[0 + c];
+  Vector& v_small = vad_small.dpoint;
+  for_int(c, 3) v_small[c] = buf[3 + c];
   ar_wad.init(nwa);
   for_int(i, nwa) {
     int bufw = 6 + i * wadlength;
@@ -513,7 +513,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   const bool isr = vspl.vlr_offset1 > 1;
   // Allocate space for new faces now, since ar_pwedges points into _faces array.
   _faces.add(isr ? 2 : 1), _fnei.add(isr ? 2 : 1);  // !remember _fnei
-  // Get vertices, faces, and wedges in neigbhorhood.
+  // Get vertices, faces, and wedges in neighborhood.
   int vs;
   unsigned code = vspl.code;
   int ii = (code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
@@ -860,22 +860,22 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(!isr || _wedges[_faces[fr].wedges[2]].vertex == vt);
   // Update vertex attributes.
   {
-    PmVertexAttrib& vas = _vertices[vs].attrib;
-    PmVertexAttrib& vat = _vertices[vt].attrib;
+    PmVertexAttrib& va_s = _vertices[vs].attrib;
+    PmVertexAttrib& va_t = _vertices[vt].attrib;
     switch (ii) {
       case 2:
-        add(vat, vas, vspl.vad_large);
-        add(vas, vas, vspl.vad_small);
+        add(va_t, va_s, vspl.vad_large);
+        add(va_s, va_s, vspl.vad_small);
         break;
       case 0:
-        add(vat, vas, vspl.vad_small);
-        add(vas, vas, vspl.vad_large);
+        add(va_t, va_s, vspl.vad_small);
+        add(va_s, va_s, vspl.vad_large);
         break;
       case 1: {
-        PmVertexAttrib vam;
-        add(vam, vas, vspl.vad_small);
-        add(vat, vam, vspl.vad_large);
-        sub(vas, vam, vspl.vad_large);
+        PmVertexAttrib va_m;
+        add(va_m, va_s, vspl.vad_small);
+        add(va_t, va_m, vspl.vad_large);
+        sub(va_s, va_m, vspl.vad_large);
         break;
       }
       default: assertnever("");
@@ -1226,26 +1226,26 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   for (int w : ar_wmodif) _wedges[w].vertex = vs;
   // Update vertex attributes.
   {
-    PmVertexAttrib& vas = _vertices[vs].attrib;
-    PmVertexAttrib& vat = _vertices[vt].attrib;
+    PmVertexAttrib& va_s = _vertices[vs].attrib;
+    PmVertexAttrib& va_t = _vertices[vt].attrib;
     switch (ii) {
-      case 2: sub(vas, vas, vspl.vad_small); break;
-      case 0: sub(vas, vat, vspl.vad_small); break;
+      case 2: sub(va_s, va_s, vspl.vad_small); break;
+      case 0: sub(va_s, va_t, vspl.vad_small); break;
       case 1:
         if (0) {
-          PmVertexAttrib vam;
-          interp(vam, vas, vat, 0.5f);
-          sub(vas, vam, vspl.vad_small);
+          PmVertexAttrib va_m;
+          interp(va_m, va_s, va_t, 0.5f);
+          sub(va_s, va_m, vspl.vad_small);
         } else {
           // slightly faster
-          sub(vas, vat, vspl.vad_large);
-          sub(vas, vas, vspl.vad_small);
+          sub(va_s, va_t, vspl.vad_large);
+          sub(va_s, va_s, vspl.vad_small);
         }
         break;
       default: assertnever("");
     }
   }
-  // Udpate wedge attributes.
+  // Update wedge attributes.
   PmWedgeAttrib awvtfr, awvsfr;
   dummy_init(awvtfr, awvsfr);
   bool problem = false;

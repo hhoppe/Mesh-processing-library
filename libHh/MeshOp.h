@@ -16,7 +16,7 @@ namespace hh {
 // Given a mesh boundary edge, follow the boundary to construct a closed loop of edges.
 Queue<Edge> gather_boundary(const Mesh& mesh, Edge e);
 
-// Given a mesh face, find all faces conected through Face-Edge-Face connections.
+// Given a mesh face, find all faces connected through Face-Edge-Face connections.
 Set<Face> gather_component(const Mesh& mesh, Face f);
 
 // Given a mesh face, find all faces connected through vertices (at least as large as gather_component).

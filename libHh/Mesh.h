@@ -550,12 +550,12 @@ class Mesh : noncopyable {
     }
     Face operator*() const { return _it->_sym->_face; }
     FF_iterator& operator++() {
-      HEdge bu = _beg ? nullptr : _it;
+      HEdge tmp = _beg ? nullptr : _it;
       _beg = false;
       for (;;) {
         _it = _it->_next;
         if (_it->_sym) break;
-        ASSERTX(_it != bu);
+        ASSERTX(_it != tmp);
       }
       return *this;
     }

@@ -189,7 +189,7 @@ bool g_working_on_loop_creation{false};    // set by background thread
 unique_ptr<Object> g_videoloop_ready_obj;  // created by background thread
 unique_ptr<Object> g_vlp_ready_obj;        // created by background thread
 double g_initial_time = 0.;                // requested initial time in video (in seconds)
-double g_frametime = k_before_start;       // continous time in units of frame; < 0. means show first frame next
+double g_frametime = k_before_start;       // continuous time in units of frame; < 0. means show first frame next
 std::atomic<int> g_framenum{-1};           // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1
 Vec2<int> g_frame_dims;                    // spatial dimensions in pixels of current video or image object
 bool g_frame_has_transparency;             // true if png image with some partially transparent pixel(s)

@@ -56,7 +56,7 @@ class HW : public HWbase {
   bool _fullscreen{false};  // command-line desire
   bool _is_fullscreen{false};
   int _multisample{0};
-  unsigned long _pixel_background;  // XWindows pixel id
+  unsigned long _pixel_background;  // X Windows pixel id
   unsigned long _pixel_foreground;
   unsigned long _pixel_border;
   bool _need_toggle_buffering{false};

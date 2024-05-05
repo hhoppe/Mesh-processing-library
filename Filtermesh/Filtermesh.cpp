@@ -2032,7 +2032,7 @@ void do_makequads(Args& args) {
     dummy_use(fnew);
     nerem++;
   }
-  showdf("Applied %d coallesces: (%d tris) -> (%d tris, %d quads)\n", nerem, nf, nf - nerem, nerem);
+  showdf("Applied %d coalesces: (%d tris) -> (%d tris, %d quads)\n", nerem, nf, nf - nerem, nerem);
 }
 
 void do_cornermerge() {
@@ -2524,7 +2524,7 @@ Point get_dp(Vertex v) {
 
 // Possibly split spherical triangle into two pieces.
 void do_obtusesplit() {
-  if (1) assertnever("abandonned for now");
+  if (1) assertnever("abandoned for now");
   bool is_sphere = true;
   for (Vertex v : mesh.vertices()) {
     if (!is_unit(mesh.point(v))) {

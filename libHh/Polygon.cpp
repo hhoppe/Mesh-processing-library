@@ -55,13 +55,13 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   assertx(num() >= 3);
   auto& self = *this;
   PArray<float, 10> sa(num());
-  int nin = 0;
+  int num_intersections = 0;
   for_int(i, num()) {
     sa[i] = dot(self[i] - hp, hn);
-    if (sa[i] >= 0) nin++;
+    if (sa[i] >= 0) num_intersections++;
   }
-  if (nin == num()) return false;
-  if (nin == 0) {
+  if (num_intersections == num()) return false;
+  if (num_intersections == 0) {
     init(0);
     return true;
   }
@@ -108,10 +108,10 @@ bool Polygon::intersect_line(const Point& p, const Vector& v, Point& pint) const
   Vector n = get_normal();
   if (!assertw(!is_zero(n))) return false;
   float d = get_planec(n);
-  float numer = d - n[0] * p[0] - n[1] * p[1] - n[2] * p[2];
-  float denom = n[0] * v[0] + n[1] * v[1] + n[2] * v[2];
-  if (!denom) return false;
-  float alpha = numer / denom;
+  float numerator = d - n[0] * p[0] - n[1] * p[1] - n[2] * p[2];
+  float denominator = n[0] * v[0] + n[1] * v[1] + n[2] * v[2];
+  if (!denominator) return false;
+  float alpha = numerator / denominator;
   pint = p + v * alpha;
   return point_inside(n, pint);
 }
@@ -134,15 +134,15 @@ Vector get_vint(const Vector& polynor, const Vector& planenor) {
 
 }  // namespace
 
-void Polygon::intersect_plane(const Vector& polynor, const Vector& planenor, float planed, float planetol,
+void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_normal, float plane_d, float plane_tol,
                               Array<Point>& pa) const {
   // See example use in Filtera3d.cpp:compute_intersect()
   assertx(num() >= 3);
   const auto& self = *this;
   PArray<float, 8> sa(num());
   for_int(i, num()) {
-    float sc = pvdot(self[i], planenor) - planed;
-    if (abs(sc) <= planetol) sc = 0.f;
+    float sc = pvdot(self[i], plane_normal) - plane_d;
+    if (abs(sc) <= plane_tol) sc = 0.f;
     sa[i] = sc;
   }
   float sp = 0.f;
@@ -168,7 +168,7 @@ void Polygon::intersect_plane(const Vector& polynor, const Vector& planenor, flo
   }
   assertx((pa.num() & 0x1) == 0);
   if (!pa.num()) return;
-  Vector vint = get_vint(polynor, planenor);
+  Vector vint = get_vint(poly_normal, plane_normal);
   struct InterLess {
     explicit InterLess(const Vector& vint) : _vint(vint) {}
     bool operator()(const Point& p1, const Point& p2) const { return cmp_inter(p1, p2, _vint) == -1; }
@@ -243,7 +243,7 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
   float z0 = self[num() - 1][ax1] - pz;
   float y1, z1;
   dummy_init(y1, z1);
-  int nint = 0;
+  int num_intersectionst = 0;
   for (int i = 0; i < num(); i++, y0 = y1, z0 = z1) {
     y1 = self[i][ax0] - py;
     z1 = self[i][ax1] - pz;
@@ -251,12 +251,12 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
     if (z0 < 0 && z1 < 0) continue;
     if (y0 < 0 && y1 < 0) continue;
     if (y0 >= 0 && y1 >= 0) {
-      nint++;
+      num_intersectionst++;
       continue;
     }
-    if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0) nint++;
+    if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0) num_intersectionst++;
   }
-  return (nint & 0x1) != 0;
+  return (num_intersectionst & 0x1) != 0;
 }
 
 bool Polygon::is_convex() const {

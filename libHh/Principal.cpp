@@ -320,7 +320,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
 // %matrix
 // %[V,D]=ccipca(X,k) , Batch mode: take input matrix and number of
 // %eigenvector and return the eigenvector and eigenvalue
-// %[V,D]=ccipca(X,k,iteration,oldV,access) , Incremental mode: Take input matirx and
+// %[V,D]=ccipca(X,k,iteration,oldV,access) , Incremental mode: Take input matrix and
 // %number of eigenvector and number of iteration, and the old eigenvector
 // %matrix, return the eigenvector and eigenvalue matrix
 // %
@@ -339,7 +339,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
 // %OUTPUT
 // %V --- Eigenvector matrix, column-wise
 // %D --- Diagonal matrix of eigenvalue
-// %n --- Updating occurance
+// %n --- Updating occurrence
 //
 //   [datadim, samplenum] = size(X);
 //

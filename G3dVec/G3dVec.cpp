@@ -109,7 +109,7 @@ struct coord {
   int frame;            // frame number it was last transformed
   ConditionCode ccode;  // clipping plane condition codes
   Point p;              // point in object frame
-  Point pt;             // point tranformed to view frame
+  Point pt;             // point transformed to view frame
   Point pp;             // point projected onto screen
 };
 

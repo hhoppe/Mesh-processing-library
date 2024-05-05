@@ -161,7 +161,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
   EndFor;
 }
 
-// Perform union of two simplicial complex where id's are meaningful withing *this SC.
+// Perform union of two simplicial complex where id's are meaningful within this SC.
 void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialComplex& s2,
                                 SimplicialComplex& res) const {
   res.copy(s1);

@@ -4187,9 +4187,9 @@ void psc_update_lod() {
           anr.push(nr);
         }
         EndFor;
-        // note: to be completely correct we should also recalculate corners just oustide
-        // starbar of vs, but we don't bother.
-        // revisit facets in same order and calculate corner normals
+        // Note: to be completely correct, we should also recalculate corners just outside starbar of vs, but
+        // we do not bother.
+        // Revisit facets in same order and calculate corner normals.
         int ii = 0;
         ForScVertexFace(vs, s2) {
           Vec3<Simplex> verts2;

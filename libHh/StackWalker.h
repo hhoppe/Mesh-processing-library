@@ -70,7 +70,7 @@ class StackWalkerInternal;  // forward
 class StackWalker {
  public:
   typedef enum StackWalkOptions {
-    // No addition info will be retrived
+    // No addition info will be retrieved
     // (only the address is available)
     RetrieveNone = 0,
 
@@ -86,7 +86,7 @@ class StackWalker {
     // Also retrieve the version for the DLL/EXE
     RetrieveFileVersion = 8,
 
-    // Contains all the abouve
+    // Contains all the above
     RetrieveVerbose = 0xF,
 
     // Generate a "good" symbol-search-path
@@ -95,7 +95,7 @@ class StackWalker {
     // Also use the public Microsoft-Symbol-Server
     SymUseSymSrv = 0x20,
 
-    // Contains all the abouve "Sym"-options
+    // Contains all the above "Sym"-options
     SymAll = 0x30,
 
     // Contains all options (default)

@@ -409,7 +409,7 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
       ASSERTX(!e_joined(e));
       e_joined(e) = true;
     }
-    // Update unvisited neigbhors using ordinary BFS Dijkstra rules.
+    // Update unvisited neighbors using ordinary BFS Dijkstra rules.
     for (Vertex v : _mesh.vertices(vnew)) {
       if (v_dist(v) != BIGFLOAT) continue;  // already visited
       float elen = dist(_mesh.point(vnew), _mesh.point(v));

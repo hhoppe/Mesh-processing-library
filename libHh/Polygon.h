@@ -31,8 +31,8 @@ class Polygon : public PArray<Point, 4> {
   bool intersect_bbox(const Bbox& bbox);                                        // ret: is_modified
   bool intersect_segment(const Point& p1, const Point& p2, Point& pint) const;  // ret: is_intersection
   bool intersect_line(const Point& p, const Vector& v, Point& pint) const;      // ret: is_intersection
-  // Intersect with plane defined by (planenor, planed, planetol); report intersection as array of points pa.
-  void intersect_plane(const Vector& polynor, const Vector& planenor, float planed, float planetol,
+  // Intersect with plane defined by (plane_normal, plane_d, plane_tol); report intersection as array of points pa.
+  void intersect_plane(const Vector& poly_normal, const Vector& plane_normal, float plane_d, float plane_tol,
                        Array<Point>& pa) const;
   bool point_inside(const Vector& pnor, const Point& point) const;  // ret: point_is_inside
   bool is_convex() const;

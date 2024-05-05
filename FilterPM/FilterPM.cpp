@@ -803,22 +803,22 @@ void do_zero_vadsmall() {
     int vs = pmi->_wedges[wvsfl].vertex;
     int vt = pmi->_vertices.num() - 1;
     assertx(pmi->_wedges[pmi->_faces[fl].wedges[1]].vertex == vt);
-    const PmVertexAttrib& vas = pmi->_vertices[vs].attrib;
-    const PmVertexAttrib& vat = pmi->_vertices[vt].attrib;
+    const PmVertexAttrib& va_s = pmi->_vertices[vs].attrib;
+    const PmVertexAttrib& va_t = pmi->_vertices[vt].attrib;
     switch (ii) {
       case 2:
-        diff(vspl.vad_large, vat, vas);
-        diff(vspl.vad_small, vas, vas);  // set to zero.
+        diff(vspl.vad_large, va_t, va_s);
+        diff(vspl.vad_small, va_s, va_s);  // set to zero.
         break;
       case 0:
-        diff(vspl.vad_large, vas, vat);
-        diff(vspl.vad_small, vas, vas);  // set to zero.
+        diff(vspl.vad_large, va_s, va_t);
+        diff(vspl.vad_small, va_s, va_s);  // set to zero.
         break;
       case 1: {
-        PmVertexAttrib vam;
-        interp(vam, vas, vat, 0.5f);
-        diff(vspl.vad_large, vat, vam);
-        diff(vspl.vad_small, vas, vas);  // set to zero.
+        PmVertexAttrib va_m;
+        interp(va_m, va_s, va_t, 0.5f);
+        diff(vspl.vad_large, va_t, va_m);
+        diff(vspl.vad_small, va_s, va_s);  // set to zero.
         break;
       }
       default: assertnever("");
@@ -872,7 +872,7 @@ void do_zero_resid() {
 PmWedgeAttrib zero_wad;  // cannot declare const because default constructor leaves uninitialized
 
 void do_compute_nor() {
-  if (1) assertnever("compute_nor() abandonned for now");
+  if (1) assertnever("compute_nor() abandoned for now");
   // Compute normals in original mesh.
   ensure_pm_loaded();
   pmi->goto_nvertices(std::numeric_limits<int>::max());
@@ -906,13 +906,13 @@ void do_compute_nor() {
         diff(ar_wad[lnum++], pmi->_wedges[wvtfl].attrib, zero_wad);
         diff(ar_wad[lnum++], pmi->_wedges[wvsfl].attrib, zero_wad);
       } else {
-        // abandonned for now...
+        // abandoned for now...
         dummy_use(wvlfl, wvsfr, wvtfr, wvrfr, vs);
       }
     }
     if (isr) {
     }
-    // abandonned for now...
+    // abandoned for now...
     assertx(pmi->prev());
   }
   // Save normals of base mesh.

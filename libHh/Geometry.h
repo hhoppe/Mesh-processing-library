@@ -14,7 +14,7 @@ struct Point;
 // This is similar to RenderMan.
 // https://en.wikipedia.org/wiki/Row_vector
 // https://community.khronos.org/t/transpose/43582
-//   OpenGL was long ago derived from SGI's propietary graphics library 'Irix GL'
+//   OpenGL was long ago derived from SGI's proprietary graphics library 'Irix GL'
 //   In its docs, matrix ops were specified as operating on row vectors on the matrix left.
 
 // *** Vector (lives in 3D linear space; represents translation rather than position).

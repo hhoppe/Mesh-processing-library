@@ -154,7 +154,7 @@ void Audio::read_file(const string& pfilename) {
               }
               if (ldebug) SHOW(vh, vm, vs, vcs, duration, start, duration - start);
               duration -= start;
-              // It is best not to do explict "-ss 0 -i" as this starts reading before real start.
+              // It is best not to do explicit "-ss 0 -i" as this starts reading before real start.
             }
           }
         }

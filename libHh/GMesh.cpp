@@ -658,12 +658,12 @@ Vertex GMesh::split_edge(Edge e, int id) {
   Vertex v1 = vertex1(e), v2 = vertex2(e);
   Face f1 = face1(e), f2 = face2(e);
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
-  bool fle = flags(e).flag(eflag_sharp);
+  bool flag_e = flags(e).flag(eflag_sharp);
   auto fstring1 = make_unique_c_string(get_string(f1));  // often nullptr
   auto fstring2 = f2 ? make_unique_c_string(get_string(f2)) : nullptr;
   Vertex vn = Mesh::split_edge(e, id);
-  flags(edge(v1, vn)).flag(eflag_sharp) = fle;
-  flags(edge(v2, vn)).flag(eflag_sharp) = fle;
+  flags(edge(v1, vn)).flag(eflag_sharp) = flag_e;
+  flags(edge(v2, vn)).flag(eflag_sharp) = flag_e;
   if (fstring1) {
     for (Face f : faces(edge(vn, vo1))) set_string(f, fstring1.get());
   }

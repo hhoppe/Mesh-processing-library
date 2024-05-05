@@ -1937,7 +1937,7 @@ void do_gdtoroidal() {
           Vector4 vrhs(0.f);
           for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
             auto yxn = yx + yxd;
-            if (grid_orig.ok(yxn)) continue;  // only consider neigbhors across the periodic boundaries
+            if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
             assertx(grid_orig.map_inside(yxn, bndrules));
             vrhs += (grid_orig[yx] - grid_orig[yxn]);
           }

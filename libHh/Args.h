@@ -78,8 +78,8 @@ class Args {
 // ParseArgs adds functionality for parsing the stream of string arguments using a set of options.
 // It automatically updates variables or calls functions specified by the recognized options.
 class ParseArgs : public Args {
-  using PARSEF = void (*)(Args& args);
-  using PARSEF0 = void (*)();
+  using PARSE_FUNC = void (*)(Args& args);
+  using PARSE_FUNC0 = void (*)();
 
  public:
   // e.g. name is "", "HW", "HB_GL"
@@ -104,9 +104,9 @@ class ParseArgs : public Args {
   template <typename T, size_t narg> void p(string str, T (&arg)[narg], string doc = "") {
     p(str, arg, narrow_cast<int>(narg), doc);
   }
-  void c(string str = "", string doc = "");              // add a comment in the options list
-  void p(string str, PARSEF parsef, string doc = "");    // parsing function taking args
-  void p(string str, PARSEF0 parsef0, string doc = "");  // parsing function without args
+  void c(string str = "", string doc = "");                      // add a comment in the options list
+  void p(string str, PARSE_FUNC parse_func, string doc = "");    // parsing function taking args
+  void p(string str, PARSE_FUNC0 parse_func0, string doc = "");  // parsing function without args
   // by default, all arguments must parse
   void other_args_ok() { _other_args_ok = true; }          // non -* are ok (filenames); after "--", all args ok
   void other_options_ok() { _other_options_ok = true; }    // unrecognized -* are ok
@@ -125,11 +125,11 @@ class ParseArgs : public Args {
  private:
   struct option {
     option() = default;
-    option(string pstr, int pnarg, PARSEF pparsef, void* pargp, string pdoc)
-        : str(std::move(pstr)), narg(pnarg), parsef(pparsef), argp(pargp), doc(std::move(pdoc)) {}
+    option(string pstr, int narg_, PARSE_FUNC parse_func_, void* argp_, string doc_)
+        : str(std::move(pstr)), narg(narg_), parse_func(parse_func_), argp(argp_), doc(std::move(doc_)) {}
     string str;
-    int narg;  // number of arguments; >= 0 if built-in PARSEF, -1 if PARSEF, -2 if PARSEF0
-    PARSEF parsef;
+    int narg;  // number of arguments; >= 0 if built-in PARSE_FUNC, -1 if PARSE_FUNC, -2 if PARSE_FUNC0
+    PARSE_FUNC parse_func;
     void* argp;
     string doc;
   };

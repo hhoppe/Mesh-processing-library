@@ -277,7 +277,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(zoom, "f : set focal length");
   HH_ARGSF(iostat, ": show I/O statistics");
   HH_ARGSF(timestat, ": show timing statistics");
-  HH_ARGSF(terse, ": turn diagnositcs off");
+  HH_ARGSF(terse, ": turn diagnostics off");
   HH_ARGSF(killeof, ": exit upon reading EOF");
   HH_ARGSF(spacekill, ": exit upon space key press");
   HH_ARGSP(statefilename, "s3dname : name of .s3d file (frames)");

@@ -216,12 +216,12 @@ void ParseArgs::p(string str, double* argp, int narg, string doc) {
 
 void ParseArgs::c(string str, string doc) { iadd(option(std::move(str), 0, nullptr, nullptr, std::move(doc))); }
 
-void ParseArgs::p(string str, PARSEF parsef, string doc) {
-  iadd(option(std::move(str), -1, parsef, nullptr, std::move(doc)));
+void ParseArgs::p(string str, PARSE_FUNC parse_func, string doc) {
+  iadd(option(std::move(str), -1, parse_func, nullptr, std::move(doc)));
 }
 
-void ParseArgs::p(string str, PARSEF0 parsef0, string doc) {
-  iadd(option(std::move(str), -2, PARSEF(parsef0), nullptr, std::move(doc)));
+void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
+  iadd(option(std::move(str), -2, PARSE_FUNC(parse_func0), nullptr, std::move(doc)));
 }
 
 bool ParseArgs::special_arg(const string& s) {
@@ -232,17 +232,17 @@ void ParseArgs::print_help() {
   std::cerr << get_ename() << " Options:" << (_disallow_prefixes ? " (no implicit prefixes)" : "") << "\n";
   for (const option& o : _aroptions) {
     string sdefault;
-    if (o.parsef == &ParseArgs::fquestion && _name != "") continue;
+    if (o.parse_func == &ParseArgs::fquestion && _name != "") continue;
     if (contains(o.doc, "(<unlisted>)")) continue;
     if (o.narg > 0) {
       sdefault = "[";
       for_int(i, o.narg) {
-        string s0 = (o.parsef == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
-                     : o.parsef == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
-                     : o.parsef == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
-                     : o.parsef == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
-                     : o.parsef == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
-                     : o.parsef == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
+        string s0 = (o.parse_func == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
+                     : o.parse_func == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
+                     : o.parse_func == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
+                     : o.parse_func == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
+                     : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
+                     : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
                                                        : "?");
         if (i > 0) sdefault += " ";
         sdefault += s0;
@@ -277,7 +277,7 @@ void ParseArgs::iadd(option o) {
         Warning("Possibly inconsistent parameter option comment");
       }
     }
-    if (!o.narg && o.parsef) {
+    if (!o.narg && o.parse_func) {
       if (o.doc[0] != ':') {
         SHOW(o.str, o.doc);
         Warning("Possibly inconsistent flag option comment");
@@ -292,7 +292,7 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
   int nmatches = 0, minlfound = std::numeric_limits<int>::max();
   int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
-    if (!o.parsef) continue;
+    if (!o.parse_func) continue;
     if (begins_with(o.str, "*") && (s[0] != '-' || skip_options)) {
       bool allow_case_independent_wildcard = true;
       if (o.str != to_lower(o.str)) allow_case_independent_wildcard = false;
@@ -345,7 +345,7 @@ bool ParseArgs::parse_internal() {
     }
     bool is_option = arg[0] == '-' && arg[1] && !skip;
     if (_curopt && !is_option) {
-      assertx(_curopt->narg == -1);  // wildcard option; do not advance; let client parsef advance it
+      assertx(_curopt->narg == -1);  // wildcard option; do not advance; let client parse_func advance it
     } else {
       shift_args();
     }
@@ -360,9 +360,9 @@ bool ParseArgs::parse_internal() {
     }
     int narg = _curopt->narg;
     if (narg == -2) {
-      PARSEF0(_curopt->parsef)();
+      PARSE_FUNC0(_curopt->parse_func)();
     } else {
-      _curopt->parsef(*this);
+      _curopt->parse_func(*this);
     }
     if (arg == "-?" || arg == "--help") {
       _unrecognized_args.push(arg);

@@ -217,7 +217,7 @@ class Multigrid : noncopyable {
         product(vrange) * 2);
     // The optional D leftover hyperplanes [dims / 2, ndims - 1] for odd sizes
     Vec<Bndrule, D> bndrules;
-    for_int(d, D) {  // These boundary rules were chosen because they behave well emperically.
+    for_int(d, D) {  // These boundary rules were chosen because they behave well empirically.
       bndrules[d] = (_periodic(d)                             ? Bndrule::border
                      : largest_odd_size >= largest_other_size ? Bndrule::border
                                                               : Bndrule::reflected);

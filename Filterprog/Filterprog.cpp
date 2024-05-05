@@ -982,24 +982,24 @@ void process_vsplit() {
   vspl.code = narrow_cast<ushort>(code);
   // Encode vertex attributes.
   {
-    PmVertexAttrib vas;
-    vas.point = mesh.point(save.vs);
-    PmVertexAttrib vat;
-    vat.point = mesh.point(save.vt);
+    PmVertexAttrib va_s;
+    va_s.point = mesh.point(save.vs);
+    PmVertexAttrib va_t;
+    va_t.point = mesh.point(save.vt);
     switch (save.ii) {
       case 2:
-        diff(vspl.vad_large, vat, save.vaovs);
-        diff(vspl.vad_small, vas, save.vaovs);
+        diff(vspl.vad_large, va_t, save.vaovs);
+        diff(vspl.vad_small, va_s, save.vaovs);
         break;
       case 0:
-        diff(vspl.vad_large, vas, save.vaovs);
-        diff(vspl.vad_small, vat, save.vaovs);
+        diff(vspl.vad_large, va_s, save.vaovs);
+        diff(vspl.vad_small, va_t, save.vaovs);
         break;
       case 1: {
-        PmVertexAttrib vam;
-        interp(vam, vas, vat, 0.5f);
-        diff(vspl.vad_large, vat, vam);
-        diff(vspl.vad_small, vam, save.vaovs);
+        PmVertexAttrib va_m;
+        interp(va_m, va_s, va_t, 0.5f);
+        diff(vspl.vad_large, va_t, va_m);
+        diff(vspl.vad_small, va_m, save.vaovs);
         break;
       }
       default: assertnever("");
@@ -1418,7 +1418,7 @@ void do_pm_encode() {
   pmesh._info._has_resid = has_resid;
   if (append_old_pm != "") {
     showdf("Now appending file %s\n", append_old_pm.c_str());
-    {  // reclaim meory
+    {  // reclaim memory
       mvrenumber.clear();
       mwrenumber.clear();
       mfrenumber.clear();

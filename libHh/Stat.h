@@ -40,7 +40,7 @@ class Stat {
   void set_print(bool print) { _print = print; }
   void set_rms() { _setrms = true; }  // show rms instead of sdv
   void zero();
-  void terminate();
+  void terminate();  // make this private??
   void enter(float f);
   void enter(double f);
   void enter(int f) { enter(float(f)); }
@@ -82,6 +82,7 @@ class Stat {
   // if add any member variables, be sure to update swap()
   friend class Stats;
   void output(float f) const;
+  void summary_terminate();
 };
 
 template <> HH_DECLARE_OSTREAM_EOL(Stat);

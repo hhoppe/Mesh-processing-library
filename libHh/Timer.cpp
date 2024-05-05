@@ -144,7 +144,8 @@ class Timers {
       if (timer_info.stat.num() > 1) _have_some_mult = true;
     }
     if (_have_some_mult || Timer::show_times() > 0) {
-      showff("Summary of timers (%s):\n", timing_host().c_str());
+      const bool show_in_cout = !getenv_bool("HH_HIDE_SUMMARIES");
+      (show_in_cout ? showdf : showff)("Summary of timers (%s):\n", timing_host().c_str());
       const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // num fractional decimal digits
       for (const auto& timer_info : _vec_timer_info) {
         const Stat& stat = timer_info.stat;
@@ -167,7 +168,7 @@ class Timers {
         }
         int64_t n = stat.num();
         long long ln = n;  // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
-        showff(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",  //
+        (show_in_cout ? showdf : showff)(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",  //
                sform("%.19s:", stat.name().c_str()).c_str(), ln,
                n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ",   //
                n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ",  //

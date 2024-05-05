@@ -26,13 +26,10 @@ class Stats {
       if (stat->_print && stat->num()) ntoprint++;
     }
     if (ntoprint) {
-      if (Stat::_s_show == -1) {
-        showff("Summary of statistics:\n");
-      } else {
-        showdf("Summary of statistics:\n");
-      }
+      const bool show_in_cout = Stat::_s_show >= 0 && !getenv_bool("HH_HIDE_SUMMARIES");
+      (show_in_cout ? showdf : showff)("Summary of statistics:\n");
     }
-    for (Stat* stat : _vec) stat->terminate();
+    for (Stat* stat : _vec) stat->summary_terminate();
     _vec.clear();
   }
   std::vector<Stat*> _vec;
@@ -73,11 +70,16 @@ void swap(Stat& l, Stat& r) noexcept {
 
 void Stat::terminate() {
   if (_print && num()) {
-    if (_s_show == -1) {
-      showff("%s", name_string().c_str());
-    } else {
-      showdf("%s", name_string().c_str());
-    }
+    const bool show_in_cout = _s_show >= 0;
+    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
+  }
+  _print = false;
+}
+
+void Stat::summary_terminate() {
+  if (_print && num()) {
+    const bool show_in_cout = _s_show >= 0 && !getenv_bool("HH_HIDE_SUMMARIES");
+    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
   }
   _print = false;
 }

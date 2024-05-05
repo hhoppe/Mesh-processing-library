@@ -53,7 +53,13 @@ Stat::Stat(string pname, bool print, bool is_static) : _name(std::move(pname)), 
 
 Stat::Stat(const char* pname, bool print, bool is_static) : Stat(string(pname ? pname : ""), print, is_static) {}
 
-Stat::~Stat() { terminate(); }
+Stat::~Stat() {
+  if (_print && num()) {
+    const bool show_in_cout = _s_show >= 0;
+    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
+  }
+  _print = false;
+}
 
 void swap(Stat& l, Stat& r) noexcept {
   using std::swap;
@@ -66,14 +72,6 @@ void swap(Stat& l, Stat& r) noexcept {
   swap(l._min, r._min);
   swap(l._max, r._max);
   swap(l._pofs, r._pofs);
-}
-
-void Stat::terminate() {
-  if (_print && num()) {
-    const bool show_in_cout = _s_show >= 0;
-    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
-  }
-  _print = false;
 }
 
 void Stat::summary_terminate() {

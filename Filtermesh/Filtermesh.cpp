@@ -3836,13 +3836,15 @@ void do_alignmentframe(Args& args) {
   // Point norig = nbb[0];
   Point corig = interp(cbb[0], cbb[1]);  // align centroids
   Point norig = interp(nbb[0], nbb[1]);
-  HH_STAT(Sscale);
-  for_int(c, 3) Sscale.enter((nbb[1][c] - nbb[0][c]) / assertx(cbb[1][c] - cbb[0][c]));
-  // float scale = Sscale.max();
-  float scale = Sscale.avg();
-  showdf("Sscale.max() / Sscale.min() = %g\n", Sscale.max() / Sscale.min());
-  assertw(Sscale.max() / Sscale.min() < 1.0001f);
-  Sscale.terminate();
+  float scale;
+  {
+    HH_STAT(Sscale);
+    for_int(c, 3) Sscale.enter((nbb[1][c] - nbb[0][c]) / assertx(cbb[1][c] - cbb[0][c]));
+    // float scale = Sscale.max();
+    scale = Sscale.avg();
+    showdf("Sscale.max() / Sscale.min() = %g\n", Sscale.max() / Sscale.min());
+    assertw(Sscale.max() / Sscale.min() < 1.0001f);
+  }
   Frame frame = (Frame::translation(Point(0.f, 0.f, 0.f) - corig) * Frame::scaling(thrice(scale)) *
                  Frame::translation(norig - Point(0.f, 0.f, 0.f)));
   std::cout << FrameIO::create_string(ObjectFrame{frame, 1});

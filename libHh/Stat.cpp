@@ -26,8 +26,8 @@ class Stats {
       if (stat->_print && stat->num()) ntoprint++;
     }
     if (ntoprint) {
-      const bool show_in_cout = Stat::_s_show >= 0 && !getenv_bool("HH_HIDE_SUMMARIES");
-      (show_in_cout ? showdf : showff)("Summary of statistics:\n");
+      const auto show_local = Stat::_s_show < 0 || getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
+      show_local("Summary of statistics:\n");
     }
     for (Stat* stat : _vec) stat->summary_terminate();
     _vec.clear();
@@ -55,8 +55,8 @@ Stat::Stat(const char* pname, bool print, bool is_static) : Stat(string(pname ? 
 
 Stat::~Stat() {
   if (_print && num()) {
-    const bool show_in_cout = _s_show >= 0;
-    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
+    const auto show_local = _s_show < 0 ? showff : showdf;
+    show_local("%s", name_string().c_str());
   }
   _print = false;
 }
@@ -76,8 +76,8 @@ void swap(Stat& l, Stat& r) noexcept {
 
 void Stat::summary_terminate() {
   if (_print && num()) {
-    const bool show_in_cout = _s_show >= 0 && !getenv_bool("HH_HIDE_SUMMARIES");
-    (show_in_cout ? showdf : showff)("%s", name_string().c_str());
+    const auto show_local = _s_show < 0 || getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
+    show_local("%s", name_string().c_str());
   }
   _print = false;
 }

@@ -335,7 +335,7 @@ int main(int argc, const char** argv) {
   ReadFiles(true);
   if (input) ReadInput(true);
   // For command "PMview parasauru.pm -key Dt -st parasaur", window title ("parasaur") is poor choice;
-  //  it occurs because PMview passes name through -st, which is overriden.?
+  //  it occurs because PMview passes name through -st, which is overridden.?
   {
     string filenametail = get_path_tail(g_filename);
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));

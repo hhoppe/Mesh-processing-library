@@ -191,7 +191,8 @@ int main() {
             double xx = x + double(j);
             if (abs(xx) <= radius) sum += func(xx);
           }
-          stat.enter(float(sum));
+          float float_sum = float(sum);  // For same Stat sd results between CONFIG=win (debug) and others (release).
+          stat.enter(float_sum);
           assertw(abs(sum - 1.) < (is_partition_of_unity ? 1e-5 : .07));  // gaussian needs .07
         }
         if (1) SHOW(stat);

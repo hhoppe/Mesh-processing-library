@@ -287,12 +287,12 @@ class Warnings {
       }
     };
     std::map<const void*, int, string_less> sorted_map(_map.begin(), _map.end());
-    const bool show_in_cout = !getenv_bool("HH_HIDE_SUMMARIES");
-    (show_in_cout ? showdf : showff)("Summary of warnings:\n");
+    const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
+    show_local("Summary of warnings:\n");
     for (auto& kv : sorted_map) {
       const char* s = static_cast<const char*>(kv.first);
       int n = kv.second;
-      (show_in_cout ? showdf : showff)(" %5d '%s'\n", n, details::forward_slash(s).c_str());
+      show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     }
     _map.clear();
   }

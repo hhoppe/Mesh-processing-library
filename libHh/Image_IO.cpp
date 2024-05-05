@@ -183,7 +183,7 @@ void Image::read_file_i(const string& filename, bool bgra) {
   }
   string implementation = getenv_string("RIMAGE_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("IMAGE_IMPLEMENTATION");
-  if (implementation != "") Warning("RImage I/O implementation overriden");
+  if (implementation != "") Warning("RImage I/O implementation overridden");
   if (implementation == "wic") {
 #if defined(HH_IMAGE_HAVE_WIC)
     read_file_wic(filename, bgra);
@@ -217,7 +217,7 @@ void Image::write_file_i(const string& filename, bool bgra) const {
   if (filename == "-") my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
   string implementation = getenv_string("WIMAGE_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("IMAGE_IMPLEMENTATION");
-  if (implementation != "") Warning("WImage I/O implementation overriden");
+  if (implementation != "") Warning("WImage I/O implementation overridden");
   if (implementation == "wic") {
 #if defined(HH_IMAGE_HAVE_WIC)
     write_file_wic(filename, bgra);

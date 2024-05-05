@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# introduced 3 grep filters to ignore differences between win and mingw
+# introduced grep filters to ignore differences between win and mingw
 Contour_test 2>&1 | grep -v SContneval | grep -v 'Summary of statistics'
 
 # cat Contour_test.{2D,2Dborder,3D,3Dborder,m}

@@ -127,7 +127,7 @@ int cmp_inter(const Point& p1, const Point& p2, const Vector& vint) {
 Vector get_vint(const Vector& polynor, const Vector& planenor) {
   Vector vint = cross(polynor, planenor);
   // was 'if (!...) return', then was assertx
-  if (!assertw(vint.normalize())) vint[0] = 1.f;
+  if (!vint.normalize()) vint[0] = 1.f;
   vector_standard_direction(vint);
   return vint;
 }

@@ -1396,6 +1396,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
           // just keep low-frequency video
         }
       }
+      break;
     }
     default: assertnever("");
   }

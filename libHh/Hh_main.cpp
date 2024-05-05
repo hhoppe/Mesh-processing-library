@@ -57,7 +57,7 @@ int64_t get_precise_counter() {
   // https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancefrequency
   //  The high frequency counter need not be tied to the CPU frequency at all.  It will only resemble the CPU
   //  frequency is the system actually uses the TSC (TimeStampCounter) underneath.  As the TSC is generally
-  //  unreliable on multi-core systems it tends not to be used.  When the TSC is not used the ACPI Power
+  //  unreliable on multicore systems it tends not to be used.  When the TSC is not used the ACPI Power
   //  Management Timer (pmtimer) may be used.  You can tell if your system uses the ACPI PMT by checking if
   //  QueryPerformanceFrequency returns the signature value of 3'579'545 (ie 3.57MHz).
   LARGE_INTEGER l;

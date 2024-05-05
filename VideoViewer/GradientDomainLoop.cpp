@@ -949,7 +949,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   };
   Nv12 sframe;
   if (!videoloop_nv12.size()) sframe.init(sdims);
-  ConsoleProgress cprogress("Multi-stream video assembly and write");
+  ConsoleProgress cprogress("Multistream video assembly and write");
   // TODO: use seek functionality of IMFSourceReader::SetCurrentPosition() method
   for_int(iloop, num_loops) {
     for_int(f, nnf) {

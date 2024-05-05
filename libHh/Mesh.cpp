@@ -681,7 +681,7 @@ Array<Vertex> Mesh::gather_edge_coalesce_vertices(Edge e) const {
   Array<Vertex> va;
   if (1) {
     Array<Vertex> va1;
-    get_vertices(f1, va1);  // slow but thread-safe
+    get_vertices(f1, va1);  // slow but threadsafe
     Array<Vertex> va2;
     get_vertices(f2, va2);
     int nv1 = va1.num(), nv2 = va2.num();

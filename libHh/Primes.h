@@ -44,7 +44,7 @@ inline int prev_prime(int i, int count = 1) {
 
 inline int random_prime_under(int n, Random& random) {
   assertx(n < 100'000);
-  static Array<int> primes;  // not thread-safe
+  static Array<int> primes;  // not threadsafe
   if (!primes.num()) primes.push(2);
   while (primes.last() < n) primes.push(next_prime(primes.last()));
   int i = discrete_binary_search(primes, 0, primes.num() - 1, n - 1);

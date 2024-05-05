@@ -1730,7 +1730,7 @@ void do_gdloop(Args& args) {
 // Remap into a looping video by using gradient-domain stitching.
 // e.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloopfile 5sec - | vidv
 // set d=~/proj/videoloops/data/test; Filtervideo $d/seacrowd.wmv -loadvlp $d/seacrowd_loop.vlp -gdloopfile 5sec v.wmv
-//  (for 4K video, 4.9 GB for input, then max of 6.5 GB; total 85 sec) (198 sec with multi-stream input)
+//  (for 4K video, 4.9 GB for input, then max of 6.5 GB; total 85 sec) (198 sec with multistream input)
 void do_gdloopfile(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
   string loop_filename = args.get_filename();

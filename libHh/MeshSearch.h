@@ -70,7 +70,7 @@ class MeshSearch {
   explicit MeshSearch(const GMesh* mesh, bool allow_local_project);
   void allow_internal_boundaries(bool b) { _allow_internal_boundaries = b; }
   void allow_off_surface(bool b) { _allow_off_surface = b; }
-  // search() is thread-safe (except for Random::G?)
+  // search() is threadsafe (except for Random::G?)
   Face search(const Point& p, Face hintf, Bary& bary, Point& clp, float& d2) const;
   const GMesh& mesh() const { return _mesh; }
 

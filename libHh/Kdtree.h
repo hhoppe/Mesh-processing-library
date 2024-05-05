@@ -148,7 +148,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     if (!_arnode.num()) return false;
     int nelemvis = 0;
     bool ret = rec_search(ni, ni, bb0, bb1, cbfunc, nelemvis);
-    if (0) {  // not thread-safe
+    if (0) {  // not threadsafe
       static const bool b_stats = getenv_bool("KD_STATS");
       static Stat SKDsearchnel("SKDsearchnel", b_stats);
       if (b_stats) SKDsearchnel.enter(nelemvis);

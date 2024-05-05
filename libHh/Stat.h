@@ -17,6 +17,7 @@
   // getenv_bool("STAT_FILES") -> store all data values in ./Stat.* files.
   Stat::set_show_stats(-1);  // Or "export SHOW_STATS=-1": only print in showff().
   Stat::set_show_stats(-2);  // Or "export SHOW_STATS=-2": disable printing of all statistics.
+  // getenv_bool("HH_HIDE_SUMMARIES") : if true, omit summary of statistics.
 }
 #endif
 

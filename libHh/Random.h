@@ -13,7 +13,7 @@ namespace hh {
 //   most distributions, including floating-point types, is implementation-dependent.)
 class Random : noncopyable {
  public:
-  static Random G;  // can be uninitialized before main()!  any shared Random is not thread-safe.
+  static Random G;  // can be uninitialized before main()!  any shared Random is not threadsafe.
   explicit Random(uint32_t seedv = 0);
   ~Random();
   void seed(uint32_t seedv);

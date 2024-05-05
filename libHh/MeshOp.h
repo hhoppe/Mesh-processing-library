@@ -60,7 +60,7 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);
 // Return memoryless QEM and penalize bad dihedral angles.
 float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
 
-// Fill the one or more holes associated with the boundary loop containing erep.  Return the new multi-sided faces.
+// Fill the one or more holes associated with the boundary loop containing erep.  Return the new multisided faces.
 Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep);
 
 // *** Retriangulate

@@ -9,7 +9,7 @@
 
 namespace hh {
 
-// Many static data structures below -- lots of code is not thread-safe.
+// Many static data structures below -- lots of code is not threadsafe.
 
 template <typename T, int n> void Qem<T, n>::set_zero() {
   for_int(i, (n * (n + 1)) / 2) { _a[i] = T{0}; }
@@ -251,7 +251,7 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
 // minp unchanged if unsuccessful !
 template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   // minp = - A^-1 b        or     A * minp = -b
-  static SvdDoubleLls lls(n, n, 1);  // not thread-safe!
+  static SvdDoubleLls lls(n, n, 1);  // not threadsafe!
   lls.clear();
   {
     const T* pa = _a.data();

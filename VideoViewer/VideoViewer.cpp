@@ -539,7 +539,7 @@ unique_ptr<Object> object_reading_image(const string& filename) {
   bool bgra = false, unsaved = false;
   if (0) {  // test the response time without any loading delay
     static uchar uc = 40;
-    uc = narrow_cast<uchar>(40 + my_mod(uc + 40, 180));  // not thread-safe
+    uc = narrow_cast<uchar>(40 + my_mod(uc + 40, 180));  // not threadsafe
     HH_TIMER("_read_init");
     image.init(V(3648, 5472), Pixel::gray(uc));
   } else if (PrefetchImage* pp = find_if(g_prefetch_image, [&](const PrefetchImage& p) {

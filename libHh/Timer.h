@@ -26,15 +26,16 @@
   // getenv_int("SHOW_TIMES") == -1 : all -> noprint
   // getenv_int("SHOW_TIMES") == 1  : all but noprint -> normal
   Timer::set_show_times(-1);  // disable printing of all timers
+  // getenv_bool("HH_HIDE_SUMMARIES") : if true, omit summary of timers.
 }
 #endif
 
 namespace hh {
 
-// Object that tracks elapsed time, per-thread computation, and per-process computation over its lifetime.
-// It reports effective multithreading factor (for parallelism defined inside its scope, not outside).
+// Object that tracks elapsed time and process computation (user+system) time over its lifetime.
+// It reports effective multithreading factor as a percentage, if detected.
 // Timing data associated with multiple Timers with the same name are accumulated and reported at program end.
-//  (This accumulation is not thread-safe; we assume that any timers are created outside multi-threading sections.)
+//  (This accumulation is not threadsafe; we assume that any timers are created outside multithreading sections.)
 class Timer : noncopyable {
  public:
   enum class EMode { normal, diagnostic, abbrev, summary, possibly, noprint };

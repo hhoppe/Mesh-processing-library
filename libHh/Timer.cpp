@@ -107,7 +107,7 @@ class Timers {
     bool is_new;
     int i;
     {
-      // Note: not thread-safe.  (Any timers must be created outside multi-threading sections.)
+      // Note: not threadsafe.  (Any timers must be created outside multithreading sections.)
       auto p = instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
       is_new = p.second;
       i = p.first->second;

@@ -187,7 +187,7 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
     Vec2<Queue<Corner>> queues;  // initialized with two opposing half-edges
     queues[0].enqueue(_mesh.corner(_mesh.vertex2(e12), _mesh.face1(e12)));
     queues[1].enqueue(_mesh.corner(_mesh.vertex1(e12), _mesh.face2(e12)));
-    static std::atomic<int> g_bfsnum{0};  // thread-safe
+    static std::atomic<int> g_bfsnum{0};  // threadsafe
     int bfsnum = (++g_bfsnum) * 2;
     Vec2<Set<Edge>> sets;  // for slower algorithm
     int count = 0;

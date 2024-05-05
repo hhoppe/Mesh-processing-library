@@ -1063,7 +1063,7 @@ void HW::wake_up() {
   // https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
   if (!_exposed) return;
   if (0) {
-    // "Xlib is not thread-safe and calling its functions from more than one thread may be dangerous!"
+    // "Xlib is not threadsafe and calling its functions from more than one thread may be dangerous!"
     // "For some reason it works stably if the two threads both call XOpenDisplay and use separate
     //   display* structures."
     XEvent event = {};

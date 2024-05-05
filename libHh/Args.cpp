@@ -243,7 +243,7 @@ void ParseArgs::print_help() {
                      : o.parse_func == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
                      : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
                      : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
-                                                       : "?");
+                                                           : "?");
         if (i > 0) sdefault += " ";
         sdefault += s0;
       }

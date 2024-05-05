@@ -124,8 +124,7 @@ string create_parallelism_string(double process_time, double real_time, int64_t 
     const bool meaningful = process_time / num_calls > .02;  // CPU times are often quantized to 16 milliseconds.
     const int ncores = std_thread_hardware_concurrency();
     const double parallelism = min(process_time / real_time, double(ncores));
-    if (meaningful && parallelism > 1.1)
-      sparallel = sform("  x%4.1f", parallelism);
+    if (meaningful && parallelism > 1.1) sparallel = sform("  x%4.1f", parallelism);
   }
   return sparallel;
 }
@@ -139,8 +138,7 @@ class Timers {
     const auto pair = instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
     const bool is_new = pair.second;
     const int i = pair.first->second;
-    if (is_new)
-      instance()._vec_timer_info.emplace_back(Timers::TimerInfo(timer._name));
+    if (is_new) instance()._vec_timer_info.emplace_back(Timers::TimerInfo(timer._name));
     Timers::TimerInfo& timer_info = instance()._vec_timer_info[i];
     timer_info.stat_cpu_times.enter(timer.cpu());
     timer_info.sum_process_times += timer._process_cpu_time;

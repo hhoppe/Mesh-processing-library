@@ -2102,7 +2102,7 @@ void output_contour(int gn, float contour_value) {
 
 void do_contour(Args& args) {
   // e.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d -st imageup
-  // e.g.:  (setenv CONTOUR_VERTEX_TOL 0; Filterimage ~/data/image/lake.png -contour 8 | G3d -st imageup)
+  // e.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d -st imageup
   // e.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d -st imageup
   int gn = args.get_int();
   output_contour(gn, 127.5f);
@@ -3519,17 +3519,3 @@ int main(int argc, const char** argv) {
   if (!nooutput) image.write_file("-");
   return 0;
 }
-
-//  (setenv A B; ~/git/mesh_processing/bin/mingw/Filterimage data/lake.png -contour 256 >v)
-// # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
-// Exception error: ACCESS_VIOLATION
-// MyStackWalker is disabled, so call stack is not available.
-
-//  (setenv A B; gdb --batch -ex run -ex where --args ~/git/mesh_processing/bin/mingw/Filterimage data/lake.png -contour 256 >v)
-// # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
-// warning: # SContneval:         (16054  )           2:16           av=3.8521864      sd=1.3917073
-//  tail v
-// Program received signal SIGSEGV, Segmentation fault.
-// 0x000007fefe45908d in wcscspn () from /windows/system32/msvcrt.dll
-// #0  0x000007fefe45908d in wcscspn () from /windows/system32/msvcrt.dll
-// #1  0x0000000000000000 in ? ()

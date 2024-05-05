@@ -130,7 +130,7 @@ const float SrVsplit::sin2alpha = 0.f;
 //     27% OpenGL calls (12% __glMgrim_Vertex3fv)
 
 // Timing:
-//  (setenv NO_REGULATION; setenv NO_AMORTIZATION; demo_gcanyon -timestat -st gcanyon_4k2k_perf.s3d -geom 500x150 -sr_screen_thresh .00145 -key DS)
+//  NO_REGULATION=1 NO_AMORTIZATION=1 demo_gcanyon -timestat -st gcanyon_4k2k_perf.s3d -geom 500x150 -sr_screen_thresh .00145 -key DS
 //   just display (little rasterization): 712'000 faces / sec
 //   with adapt_refinement:               460'000 faces / sec
 

@@ -5,7 +5,7 @@
 #include "libHh/Vec.h"
 using namespace hh;
 
-// Optionally, run with:    rm -f Stat.Stat_test; (setenv STAT_FILES; Stat_test); cat Stat.Stat_test
+// Optionally, run with:  rm -f Stat.Stat_test; STAT_FILES=1 Stat_test; cat Stat.Stat_test
 
 int main() {
   {

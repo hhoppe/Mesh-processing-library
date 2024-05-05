@@ -8,8 +8,7 @@
 #include "libHh/StringOp.h"
 #include "normalmapping.h"
 
-// (setenv NORMAL_MAPPING ogl2; G3dOGL ~/data/mesh/buddhaf.nf10000.m -key Dt)
-//  also frag1 nvrc dot3
+// NORMAL_MAPPING=ogl2 G3dOGL ~/data/mesh/buddhaf.nf10000.m -key Dt  # Also: frag1 nvrc dot3.
 
 namespace hh {
 

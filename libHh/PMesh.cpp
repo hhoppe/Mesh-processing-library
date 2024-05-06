@@ -1162,7 +1162,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   if (flclw >= 0) _fnei[flclw].faces[mod3(jlclw + 1)] = flccw;
   if (frccw >= 0) _fnei[frccw].faces[mod3(jrccw + 2)] = frclw;
   if (frclw >= 0) _fnei[frclw].faces[mod3(jrclw + 1)] = frccw;
-  // Propagate wedges id's across collapsed faces if can go thru.
+  // Propagate wedges id's across collapsed faces if can go through.
   int ffl = flclw, ffr = frccw;
   int jjl = jlclw, jjr = jrccw;
   int* pwwl;

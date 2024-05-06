@@ -1323,7 +1323,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
     // -20 -> width=12 height=23
   }
   // Create the bitmap display lists
-  //  We are making images of glyphs 0 thru 255, and the display list numbering starts at 1000 (arbitrary choice).
+  //  We are making images of glyphs 0 through 255, and the display list numbering starts at 1000 (arbitrary choice).
   _listbase_font = 1000;  // arbitrary value
   assertw(wglUseFontBitmaps(_hRenderDC, 0, 255, _listbase_font));
   // wglUseFontBitmapsW(_hRenderDC, 0, 65535, _listbase_font);  // would generate bitmaps for all Unicode (large)

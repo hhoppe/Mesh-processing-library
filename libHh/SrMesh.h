@@ -111,7 +111,7 @@ struct SrAFace {      // active face
 };
 
 struct SrAFacePair {
-  // Note that these two faces generally become unconnected thru refinement.
+  // Note that these two faces generally become unconnected through refinement.
   Vec2<SrAFace> pair;
   HH_POOL_ALLOCATION(SrAFacePair);
 };

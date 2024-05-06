@@ -289,8 +289,7 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
       // Replace original argv array by a new one which contains UTF8-encoded arguments.
       argv = new type[intptr_t{argc + 1}];  // never deleted
       argv[argc] = nullptr;                 // extra nullptr is safest
-      for_int(i, argc)
-        argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // never deleted
+      for_int(i, argc) argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // never deleted
     }
     LocalFree(wargv);
   }

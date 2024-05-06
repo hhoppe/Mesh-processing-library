@@ -427,15 +427,13 @@ bool file_requires_pipe(const string& name) {
 // ret: 0 if error
 uint64_t get_path_modification_time(const string& name) {
 #if defined(_WIN32)
-  // https://msdn.microsoft.com/en-us/library/14h5k7ff.aspx
   struct _stat fstat;  // __time32_t st_mtime;
   if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return 0;
-  return fstat.st_mtime;
 #else
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return 0;
-  return fstat.st_mtime;
 #endif
+  return fstat.st_mtime;
 }
 
 // ret: success

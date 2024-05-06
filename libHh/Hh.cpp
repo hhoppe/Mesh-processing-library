@@ -21,7 +21,6 @@
 #include <chrono>
 #include <cstdarg>  // std::va_list
 #include <cstring>  // std::memcpy(), strlen(), std::strerror()
-#include <locale>   // std::use_facet<>, std::locale()
 #include <map>
 #include <mutex>  // std::once_flag, std::call_once()
 #include <regex>
@@ -701,20 +700,10 @@ float getenv_float(const string& varname, float vdefault, bool warn) {
 }
 
 string getenv_string(const string& varname, const string& vdefault, bool warn) {
-#if 0 && defined(_WIN32)
-  assertnever("Would likely have to never use getenv() or putenv().");
-  // https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/getenv-wgetenv :
-  // When two copies of the environment (MBCS and Unicode) exist simultaneously in a program, the run-time
-  //  system must maintain both copies, resulting in slower execution time. For example, whenever you call
-  //  _putenv, a call to _wputenv is also executed automatically, so that the two environment strings correspond.
-  const wchar_t* ws = _wgetenv(utf16_from_utf8(varname).c_str());
-  return ws ? utf8_from_utf16(ws) : vdefault;
-#else
   const char* s = getenv(varname.c_str());
   if (!s) return vdefault;
   if (warn) showf("Environment variable '%s=%s' overrides default value '%s'\n", varname.c_str(), s, vdefault.c_str());
   return s;
-#endif
 }
 
 void show_possible_win32_error() {

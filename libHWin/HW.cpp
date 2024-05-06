@@ -746,7 +746,6 @@ void HW::fill_polygon(CArrayView<Vec2<float>> points) {
 void HW::set_window_title(string ps) {
   assertx(_state == EState::init || _state == EState::open);
   _window_title = std::move(ps);
-  // std::wcerr << utf16_from_utf8(_window_title) << utf16_from_utf8("\n");
   if (_state == EState::open) {
     ASSERTX(IsWindowUnicode(_hwnd));
     assertx(SetWindowTextW(_hwnd, utf16_from_utf8(_window_title).c_str()));

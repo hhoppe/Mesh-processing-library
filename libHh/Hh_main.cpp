@@ -179,7 +179,7 @@ string get_current_directory() {
   return get_canonical_path(utf8_from_utf16(buffer.data()));
 #else
   std::array<char, 2000> buffer;
-  assertx(getcwd(buffer.data(), int(buffer.size() - 1)));
+  assertx(HH_POSIX(getcwd)(buffer.data(), int(buffer.size() - 1)));
   return get_canonical_path(buffer.data());
 #endif
 }
@@ -289,9 +289,8 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
       // Replace original argv array by a new one which contains UTF8-encoded arguments.
       argv = new type[intptr_t{argc + 1}];  // never deleted
       argv[argc] = nullptr;                 // extra nullptr is safest
-      for_int(i, argc) {
+      for_int(i, argc)
         argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // never deleted
-      }
     }
     LocalFree(wargv);
   }

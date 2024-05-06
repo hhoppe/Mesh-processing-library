@@ -6,7 +6,8 @@
 #if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-#include <io.h>  // _setmode()
+#include <io.h>      // _setmode()
+#include <locale.h>  // setlocale()
 #endif
 
 #include <csignal>  // signal()
@@ -290,6 +291,22 @@ void use_binary_io() {
 #endif
 }
 
+void set_utf8_locale() {
+#if defined(_WIN32)
+  // Starting in Windows 10 version 1803 (10.0.17134.0), the Universal C Runtime supports using a UTF-8 code page.
+  // The change means that char strings passed to C runtime functions can expect strings in the UTF-8 encoding.
+  // To enable UTF-8 mode, use ".UTF8" as the code page when using setlocale.
+  //
+  // Note that if we use FindFirstFileA() (with WIN32_FIND_DATAA), we do not get UTF8-encoded strings!
+  // The setlocale(LC_ALL, ".UTF8") only applies to the CRT functions, not the Win32 functions.
+  // It works; it allows some changes (not that many) in FileIO.cpp, and one change in Hh_main.cpp.
+  //
+  // A separate problem is that CONFIG=mingw uses a custom CRT which does not support UTF8 (see
+  // https://www.perlmonks.org/?node_id=11153441), so for now I leave this disabled.
+  assertx(setlocale(LC_ALL, ".UTF8"));  // Or "en_US.UTF8".
+#endif
+}
+
 void unsynchronize_stream_and_stdio() {
   // We expect no interleaved unbuffered use of iostream and FILE stdio.
   std::ios_base::sync_with_stdio(false);
@@ -386,6 +403,7 @@ void hh_init_aux() {
   setup_exception_hooks();
   use_standard_exponent_format_in_io();
   use_binary_io();
+  if (0) set_utf8_locale();
   unsynchronize_stream_and_stdio();
   untie_cin_and_cout();
   warn_if_running_debug_version();

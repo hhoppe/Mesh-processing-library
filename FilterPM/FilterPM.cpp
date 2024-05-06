@@ -1293,7 +1293,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
       // expected_j stays the same:  LRLR*R*LRLR
     } else {
       if (debug) std::cerr << "*";
-      Warning("Strip turns on itself");
+      if (0) Warning("Strip turns on itself");
       nstrips++;
       if (fi) nverts += k_strip_restart_nvindices;
       nverts += 3;

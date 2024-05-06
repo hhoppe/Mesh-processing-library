@@ -716,7 +716,7 @@ void do_fgfit(Args& args) {
       double prev_etot = _etot;
       _etot = show_energies(verb >= 3 ? sform("it%2d/%-2d", _iter, _niter) : "");
       double echange = _etot - prev_etot;
-      assertw(echange < 0.);
+      if (0) assertw(echange < 0.);
       // Compute gradient.
       fill(ret_grad, 0.);
       // D edis

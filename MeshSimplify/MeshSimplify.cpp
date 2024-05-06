@@ -2106,11 +2106,13 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
     }
     for (int r : nn.ar_rwid_v1) {
       // This check is necessary due to new code for rwid_v1 above, else Filterprog would crash on grotto.
-      if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
+      // if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
+      if (!(r != rwid_v1 && r != rwid_v2)) return false;
     }
     for (int r : nn.ar_rwid_v2) {
       // Same here.
-      if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
+      // if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
+      if (!(r != rwid_v1 && r != rwid_v2)) return false;
     }
     nn.ar_rwid_v1.push(rwid_v1);
     nn.ar_rwid_v2.push(rwid_v2);

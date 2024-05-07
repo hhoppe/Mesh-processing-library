@@ -23,7 +23,7 @@ namespace hh {
 
 namespace {
 
-HH_NORETURN void my_new_handler() { assertnever("new is out of memory"); }
+[[noreturn]] void my_new_handler() { assertnever("new is out of memory"); }
 
 #if defined(_WIN32)
 void possibly_sleep() {
@@ -54,7 +54,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
                 "Hh.cpp", MB_OK);
   HH_REFERENCE_LIB("user32.lib");  // MessageBoxA()
 #endif
-  const unsigned int MSFT_CPP_EXCEPT = 0xE06d7363;  // c++ exception
+  const unsigned int MSFT_CPP_EXCEPT = 0xE06d7363;  // C++ exception
   unsigned ExceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
   if (0) SHOW("have", ExceptionCode);
   switch (ExceptionCode) {
@@ -86,11 +86,11 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     case EXCEPTION_BREAKPOINT:
       // No need to show a message since an assertion error was likely already reported.
       break;
-    case MSFT_CPP_EXCEPT: {  // uncaught c++ exception
+    case MSFT_CPP_EXCEPT: {  // uncaught C++ exception
       EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
       // If this crashes, it may be best to delay until after show_call_stack() below.
       const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
-      std::cerr << "Fatal uncaught c++ exception: " << ex.what() << "\n";
+      std::cerr << "Fatal uncaught C++ exception: " << ex.what() << "\n";
       break;
     }
     default: SHOW("Unrecognized exception code", ExceptionCode);
@@ -122,7 +122,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 
 #endif  // defined(_WIN32)
 
-HH_NORETURN void my_terminate_handler() {
+[[noreturn]] void my_terminate_handler() {
   // The function shall not return and shall terminate the program.
   // Here, trust stderr more than std::cerr.
   if (0) {
@@ -138,7 +138,7 @@ HH_NORETURN void my_terminate_handler() {
   try {
     throw;
   } catch (const std::exception& ex) {
-    fprintf(stderr, "Terminate: Fatal uncaught c++ exception: %s\n", ex.what());
+    fprintf(stderr, "Terminate: Fatal uncaught C++ exception: %s\n", ex.what());
     fflush(stderr);
   } catch (...) {
   }
@@ -148,7 +148,7 @@ HH_NORETURN void my_terminate_handler() {
   assertnever("my_terminate_handler");
 }
 
-HH_NORETURN void my_abort_handler(int signal_num) {
+[[noreturn]] void my_abort_handler(int signal_num) {
   dummy_use(signal_num);
 #if defined(_MSC_VER) || defined(__MINGW32__)
   if (1) {
@@ -172,7 +172,7 @@ HH_NORETURN void my_abort_handler(int signal_num) {
 }
 
 // #include <execinfo.h> // backtrace()
-HH_NORETURN void my_signal_handler(int signal_num) {
+[[noreturn]] void my_signal_handler(int signal_num) {
   // Avoid issuing low-level or STDIO.H I/O routines (such as printf and fread).
   // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
   // Avoid any function that generates a system call (e.g., getcwd(), time()).

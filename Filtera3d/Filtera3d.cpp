@@ -577,8 +577,8 @@ void compute_intersect() {
     poly.get_bbox(bbox);
     bbox[0] *= f;
     bbox[1] *= f;
-    auto func_considerpoly = [&](Polygon* const& id, ArrayView<float> /*unused*/, ArrayView<float> /*unused*/,
-                                 KD::CBloc /*unused*/) {
+    auto func_considerpoly = [&](Polygon* const& id, Vec<float, 3>& bb0, Vec<float, 3>& bb1, KD::CBloc floc) {
+      dummy_use(bb0, bb1, floc);
       const Polygon& p1 = *id;
       const Polygon& p2 = poly;
       pa = intersect_poly_poly(p1, p2);

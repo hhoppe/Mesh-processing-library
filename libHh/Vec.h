@@ -110,7 +110,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   template <typename Func = T(int)> static type create(Func func) {
     return create_aux(func, std::make_index_sequence<n>());
   }
-  // (std::is_floating_point_v<> requires CXX_STD=c++17.)
+  // (std::is_floating_point_v<> requires C++17.)
   template <typename U = T> std::enable_if_t<std::is_floating_point<U>::value, bool> normalize() {
     auto sum2 = mag2(*this);
     if (!sum2) return false;

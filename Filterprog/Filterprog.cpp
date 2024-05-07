@@ -1004,6 +1004,11 @@ void process_vsplit() {
       }
       default: assertnever("");
     }
+    if (!is_zero(vspl.vad_small.dpoint) && mag2(vspl.vad_small.dpoint) < 1e-15f) {
+      // With "-vsgeom", using clang, there may be a tiny dpoint roundoff error (ii==2) due to text conversion?
+      // SHOW(save.ii, va_s.point, va_t.point, save.vaovs.point, vspl.vad_small.dpoint);
+      vspl.vad_small.dpoint = Vector(0.f, 0.f, 0.f);
+    }
   }
   // Encode wedge attributes.
   vspl.ar_wad.init(0);
@@ -1459,12 +1464,7 @@ void do_pm_encode() {
       pmesh._vsplits.push(*pvspl);
       Vsplit& vspl1 = pmesh._vsplits.last();
       if (vspl1.flclw >= num_old_bmesh_faces) continue;
-      int old_flclw = vspl1.flclw;
-      if (0) {
-        // mesh is now cleared
-        assertx(append_f_renumber[old_flclw] == mfrenumber.get(mesh.id_face(old_flclw + 1)));  // ?
-      }
-      vspl1.flclw = append_f_renumber[old_flclw];
+      int old_flclw = std::exchange(vspl1.flclw, append_f_renumber[vspl1.flclw]);
       int old_vsindex = (vspl1.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
       assertx(old_vsindex >= 0 && old_vsindex <= 2);
       int new_vsindex = mod3(old_vsindex + append_f_vsi_offset[old_flclw]);

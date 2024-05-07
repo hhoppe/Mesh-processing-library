@@ -206,7 +206,7 @@ inline Vector cross(const Point& p1, const Point& p2, const Point& p3) {
 
 inline bool Bary::is_convex() const {
   auto& self = *this;
-  return (self[0] >= 0.f && self[0] <= 1.f && self[1] >= 0.f && self[1] <= 1.f && self[2] >= 0.f && self[2] <= 1.f);
+  return self[0] >= 0.f && self[0] <= 1.f && self[1] >= 0.f && self[1] <= 1.f && self[2] >= 0.f && self[2] <= 1.f;
 }
 
 // *** UV

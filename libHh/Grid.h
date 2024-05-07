@@ -378,7 +378,8 @@ template <> inline constexpr size_t ravel_index(const Vec1<int>& dims, const Vec
           u[0]);
 }
 template <> inline constexpr size_t ravel_index(const Vec<int, 0>& dims, const Vec<int, 0>& u) {
-  return (void(dims), void(u), 0);  // used in GridView[V()]
+  dummy_use(dims, u);
+  return 0;  // used in GridView[V()]
 }
 
 template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
@@ -396,35 +397,43 @@ template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
 namespace details {
 template <int D> struct ravel_index_rec {
   template <typename... A> constexpr size_t operator()(size_t v, const Vec<int, D>& dims, int d0, A... dd) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]),
-            ravel_index_rec<D - 1>()((v + d0) * dims[1], dims.template segment<D - 1>(1), dd...));
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    return ravel_index_rec<D - 1>()((v + d0) * dims[1], dims.template segment<D - 1>(1), dd...);
   }
 };
 template <> struct ravel_index_rec<1> {
   constexpr size_t operator()(size_t v, const Vec<int, 1>& dims, int d0) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]), void(dims), v + d0);
+    dummy_use(dims);
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    return v + d0;
   }
 };
 template <int D> struct ravel_index_list_aux {
   template <typename... A> constexpr size_t operator()(const Vec<int, D>& dims, int d0, A... dd) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]),
-            ravel_index_rec<D - 1>()(intptr_t{d0} * dims[1], dims.template segment<D - 1>(1), dd...));
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    return ravel_index_rec<D - 1>()(intptr_t{d0} * dims[1], dims.template segment<D - 1>(1), dd...);
   }
 };
 template <> struct ravel_index_list_aux<1> {
   constexpr size_t operator()(const Vec1<int>& dims, int d0) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]), void(dims), d0);
+    dummy_use(dims);
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    return d0;
   }
 };
 template <> struct ravel_index_list_aux<2> {
   constexpr size_t operator()(const Vec2<int>& dims, int d0, int d1) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]), intptr_t{d0} * dims[1] + d1);
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    HH_CHECK_BOUNDS(d1, dims[1]);
+    return intptr_t{d0} * dims[1] + d1;
   }
 };
 template <> struct ravel_index_list_aux<3> {
   constexpr size_t operator()(const Vec3<int>& dims, int d0, int d1, int d2) const {
-    return (HH_CHECK_BOUNDS(d0, dims[0]), HH_CHECK_BOUNDS(d1, dims[1]), HH_CHECK_BOUNDS(d2, dims[2]),
-            (intptr_t{d0} * dims[1] + d1) * dims[2] + d2);
+    HH_CHECK_BOUNDS(d0, dims[0]);
+    HH_CHECK_BOUNDS(d1, dims[1]);
+    HH_CHECK_BOUNDS(d2, dims[2]);
+    return (intptr_t{d0} * dims[1] + d1) * dims[2] + d2;
   }
 };
 }  // namespace details

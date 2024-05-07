@@ -846,9 +846,6 @@ namespace {
 #if !defined(_WIN32)
 
 FILE* my_popen(const string& scmd, const string& mode) {
-  // Note that "g++ -std=c++XX ..." sets -D__STRICT_ANSI__ which hides from the header files the functions
-  //  popen(), pclose(), usleep(), posix_memalign(), setenv(), unsetenv(), gethostname().
-  // Therefore we must compile with "g++ -std=c++XX -U__STRICT_ANSI__ ...".
   return popen(scmd.c_str(), mode.c_str());
 }
 

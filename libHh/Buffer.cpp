@@ -63,7 +63,8 @@ Vec<char, 2048> buf_buffer;
 int buf_buffern;
 int buf_fd;
 
-DWORD WINAPI buf_thread_func(void* /*unused*/) {
+DWORD WINAPI buf_thread_func(void* param) {
+  dummy_use(param);
   for (;;) {
     if (1) {
       assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);

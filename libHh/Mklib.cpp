@@ -105,7 +105,8 @@ void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
     float ft4 = std::sin((TAU / 2) / n), ft5 = std::cos((TAU / 2) / n);
     float ft1 = std::tan(a0), ft2 = std::tan(a1);
     mk.scale(r0);
-    auto func_wedge0 = [&](int /*unused*/) {
+    auto func_wedge0 = [&](int i) {
+      dummy_use(i);
       mk.point(0, ft4, 0);
       if (smooth()) mk.normal(ft5, ft4, ft1);
       mk.point((ft0 - 1) * ft5, ft4 * ft0, ft3);
@@ -131,7 +132,8 @@ void Mklib::flat_ringU(int n, float h, float r0, float r1) {
 }
 
 void Mklib::poly_hole(int n, float r1) {
-  auto func_poly0 = [&](int /*unused*/) {
+  auto func_poly0 = [&](int i) {
+    dummy_use(i);
     float s = std::sin((TAU / 2) / n), h = std::cos((TAU / 2) / n);
     mk.point(0, s, 0);
     mk.point(-h * (1 - r1), +s * r1, 0);

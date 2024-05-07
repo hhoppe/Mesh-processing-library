@@ -66,7 +66,7 @@
 #include <sstream>    // stringstream
 #include <stdexcept>  // runtime_error
 #include <string>     // string
-#include <utility>    // swap(), forward(), move(), declval(), pair<>, index_sequence<>
+#include <utility>    // swap(), forward(), move(), declval<>, pair<>, index_sequence<>
 
 // *** Variadic macros
 
@@ -83,7 +83,7 @@
 #define HH_CAT2(a, b) HH_CAT(a, b)
 
 #if defined(_MSC_VER)  // _Pragma() is still not defined in Visual Studio 2017 (_MSC_VER == 1910)
-#define HH_PRAGMA(...) __pragma(__VA_ARGS__)
+#define HH_PRAGMA(...) __pragma(__VA_ARGS__)  // _Pragma() causes compiler internal error with OpenMP in VS 2019.
 #else
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; https://stackoverflow.com/a/15864723
 #endif
@@ -119,12 +119,6 @@
 #define HH_ASSUME(...) (void(0))
 #endif
 
-#if defined(_WIN32)
-#define HH_NORETURN __declspec(noreturn)  // it gets converted to __attribute__((noreturn)) under __GNUC__
-#else
-#define HH_NORETURN __attribute__((noreturn))  // could also be [[noreturn]]
-#endif
-
 #if defined(_MSC_VER)
 #define HH_UNREACHABLE __assume(0)  // this path is never taken
 #else
@@ -132,7 +126,7 @@
 #endif
 
 #if defined(__GNUC__) || defined(__clang__)
-#define HH_UNUSED __attribute__((unused))  // also C++17 [[maybe_unused]]
+#define HH_UNUSED __attribute__((unused))  // C++17: [[maybe_unused]]
 #else
 #define HH_UNUSED
 #endif
@@ -355,7 +349,7 @@ template <typename T> constexpr bool has_ostream_eol() {
 // *** Inline definitions
 
 // Avoid warnings of unused variables
-template <typename... A> void dummy_use(const A&...) {}
+template <typename... A> constexpr void dummy_use(const A&...) {}
 // Note: any compilation errors about redefinition of dummy_use(), etc. on MS VS may be due to the current
 // directory being different from that in precompiled header due to symbol links,
 // or to an explicit MeshRoot environment variable that does not match the current tree.
@@ -501,7 +495,7 @@ void show_possible_win32_error();
 void show_call_stack();
 
 // For Unix _exit(code).
-HH_NORETURN void exit_immediately(int code);
+[[noreturn]] void exit_immediately(int code);
 
 // *** Hh_main.cpp
 
@@ -555,16 +549,17 @@ template <typename T> struct false_capture {
 
 string forward_slash(const string& s);
 
-HH_NORETURN void assertx_aux2(const char* s);
+[[noreturn]] void assertx_aux2(const char* s);
 
-inline HH_NORETURN void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
+[[noreturn]] inline void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
 
 bool assertw_aux2(const char* s);
 
 inline string add_fl(string s, const char* file_line) { return s + file_line; }
 
 template <typename T> constexpr T assertx_aux(T&& val, const char* s) {
-  return ((!val ? assertx_aux2(s) : void(0)), std::forward<T>(val));
+  if (!val) assertx_aux2(s);
+  return std::forward<T>(val);
 }
 
 template <typename T> T assertt_aux(T&& val, const char* s) {
@@ -573,7 +568,8 @@ template <typename T> T assertt_aux(T&& val, const char* s) {
 }
 
 template <typename T> T assertw_aux(T&& val, const char* s) {
-  return ((!val ? void(assertw_aux2(s)) : void(0)), std::forward<T>(val));
+  if (!val) assertw_aux2(s);
+  return std::forward<T>(val);
 }
 
 void show_cerr_and_debug(const string& s);
@@ -676,11 +672,15 @@ template <typename T> class Range {
 }  // namespace details
 
 template <typename Target, typename Source> constexpr Target narrow_cast(Source v) {
-  return (ASSERTXX(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+  Target v2 = static_cast<Target>(v);
+  ASSERTXX(static_cast<Source>(v2) == v);
+  return v2;
 }
 
 template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v) {
-  return (assertx(static_cast<Source>(static_cast<Target>(v)) == v), static_cast<Target>(v));
+  Target v2 = static_cast<Target>(v);
+  assertx(static_cast<Source>(v2) == v);
+  return v2;
 }
 
 struct noncopyable {
@@ -717,7 +717,8 @@ template <> inline void my_zero(float& e) { e = 0.f; }
 template <> inline void my_zero(double& e) { e = 0.; }
 
 template <typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
-  return (ASSERTXX(!(v < a && v > b)), v < a ? a : v > b ? b : v);
+  ASSERTXX(!(v < a && v > b));
+  return v < a ? a : v > b ? b : v;
 }
 
 inline constexpr float interp(float v1, float v2, float f) {

@@ -694,7 +694,7 @@ class Multigrid : noncopyable {
       }
       grid_residual[y][x] = grid_rhs[y][x] - (vnei - vnum * grid_result[y][x]);
     };
-    auto func_interior = [grid_result, wL, wL4, grid_rhs, &grid_residual](int y, int x) {
+    const auto func_interior = [grid_result, wL, wL4, grid_rhs, &grid_residual](int y, int x) {
       if (1) ASSERTX(true && b_default_metric);
       T vnei = (grid_result[y - 1][x + 0] + grid_result[y + 1][x + 0] + grid_result[y + 0][x - 1] +
                 grid_result[y + 0][x + 1]);

@@ -5,6 +5,8 @@
 #  meshtopm.sh file.m >file.pm
 #  cat file.m | meshtopm.sh -numpts 100000 >file.numpts100000.pm
 
+# set -x  # Echo expanded commands.
+
 # Concerns:
 # - on Mac, old version of mktemp does not support "--suffix".
 # - on Cygwin, mktemp sometimes uses /tmp even with my TMPDIR override.

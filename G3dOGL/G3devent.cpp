@@ -186,7 +186,7 @@ void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }
 
 // (area is determ / 2)
 float determ2d(const Point& p1, const Point& p2, const Point& p3) {
-  return (p1[0] * p2[1] - p1[1] * p2[0] + p2[0] * p3[1] - p2[1] * p3[0] + p3[0] * p1[1] - p3[1] * p1[0]);
+  return p1[0] * p2[1] - p1[1] * p2[0] + p2[0] * p3[1] - p2[1] * p3[0] + p3[0] * p1[1] - p3[1] * p1[0];
 }
 
 bool select_vertex(const Vec2<float>& yx, int& ret_obn, GMesh*& ret_mesh, Vertex& ret_v) {

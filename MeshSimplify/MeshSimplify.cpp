@@ -524,7 +524,8 @@ Matrix<ushort> g_gridu;  // if -gridushorts
 #if defined(ENABLE_TVC)
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_tvc_owid);  // original wedge id of mesh corner
 #else
-int& c_tvc_owid(Corner /*unused*/) {
+int& c_tvc_owid(Corner c) {
+  dummy_use(c);
   assertnever_ret("");
   static int t;
   return t;

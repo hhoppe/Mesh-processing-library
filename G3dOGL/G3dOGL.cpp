@@ -3758,12 +3758,9 @@ bool sr_key_press(char ch) {
       static bool striplines_old_textureactive;
       sr_striplines = !sr_striplines;
       if (sr_striplines) {
-        striplines_old_edges = g_xobs.edges[1];
-        striplines_old_shading = g_xobs.shading[1];
-        striplines_old_textureactive = texture_active;
-        g_xobs.edges[1] = true;
-        g_xobs.shading[1] = false;
-        texture_active = false;
+        striplines_old_edges = std::exchange(g_xobs.edges[1], true);
+        striplines_old_shading = std::exchange(g_xobs.shading[1], false);
+        striplines_old_textureactive = std::exchange(texture_active, false);
       } else {
         g_xobs.edges[1] = striplines_old_edges;
         g_xobs.shading[1] = striplines_old_shading;
@@ -3803,24 +3800,20 @@ bool sr_key_press(char ch) {
       //
       sr_radar = !sr_radar;
       if (sr_radar) {
-        radar_old_tview = g3d::tview;
-        radar_old_edges = g_xobs.edges[1];
+        radar_old_tview = std::exchange(g3d::tview, sr_tview);
+        radar_old_edges = std::exchange(g_xobs.edges[1], true);
         sr_radar_old_hither = hither;
-        radar_old_textureactive = texture_active;
-        radar_old_outside_frustum = outside_frustum;
-        g3d::tview = sr_tview;
-        g_xobs.edges[1] = true;
+        radar_old_textureactive = std::exchange(texture_active, false);
+        radar_old_outside_frustum = std::exchange(outside_frustum, false);
         // hither = sr_hither_radar;
-        texture_active = false;
         if (g_xobs.min_segn() == 0 && g_xobs.defined(0)) g_xobs.vis[0] = true;
-        outside_frustum = false;
       } else {
         g3d::tview = radar_old_tview;
         g_xobs.edges[1] = radar_old_edges;
         hither = sr_radar_old_hither;
         texture_active = radar_old_textureactive;
-        if (g_xobs.min_segn() == 0 && g_xobs.defined(0)) g_xobs.vis[0] = false;
         outside_frustum = radar_old_outside_frustum;
+        if (g_xobs.min_segn() == 0 && g_xobs.defined(0)) g_xobs.vis[0] = false;
       }
       hw.redraw_now();
       break;

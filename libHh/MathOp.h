@@ -50,26 +50,15 @@ class Trig {
   }
 };
 
-namespace details {
-inline int fix_mod(int ret, int b) {
+// Modulo operation.  (The built-in C/C++ remainder operation (a % b) returns negative remainders if a < 0).
+inline constexpr int my_mod(int a, int b) {
+  // https://stackoverflow.com/questions/4003232/
+  // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
+  ASSERTX(b > 0);
+  int ret = a % b;
   return ret < 0 ? ret + b : ret;
   // return ret + b * (ret < 0);
   // b &= -(ret < 0); return ret + b;
-}
-template <typename T> bool my_mod_check(T ret, T b) {
-  if (!(ret >= T{0} && ret < b)) {
-    SHOW(ret, b);
-    assertnever("");
-  }
-  return true;
-}
-}  // namespace details
-
-// Modulo operation.  (The built-in C/C++ remainder operation (a % b) returns negative remainders if a < 0).
-inline int my_mod(int a, int b) {
-  // https://stackoverflow.com/questions/4003232/
-  // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
-  return (ASSERTX(b > 0), details::fix_mod(a % b, b));
 }
 
 // Modulo operation on floating-point values.  (In contrast, std::fmod(a, b) returns negative remainders if a < 0.f).
@@ -78,7 +67,7 @@ template <typename T> T my_mod(T a, T b) {
   ASSERTX(b > T{0});
   T ret = std::fmod(a, b);
   if (ret < T{0}) ret += b;
-  ASSERTX(details::my_mod_check(ret, b));
+  ASSERTX(ret >= T{0} && ret < b);
   return ret;
 }
 
@@ -122,7 +111,11 @@ template <typename T> T my_asin(T a) {
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.
 template <typename T> T my_sqrt(T a) {
   static_assert(std::is_floating_point<T>::value, "");
-  return a < T{0} ? (assertx(a > (sizeof(T) == sizeof(float) ? T{-1e-5f} : T{-1e-10f})), T{0}) : sqrt(a);
+  if (a < T{0}) {
+    assertx(a > (sizeof(T) == sizeof(float) ? T{-1e-5f} : T{-1e-10f}));
+    return T{0};
+  }
+  return sqrt(a);
 }
 
 // Is the integer i an even power of two?

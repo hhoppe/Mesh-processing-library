@@ -540,9 +540,8 @@ bool HW::suggests_stop() {
 //  except for PostMessage, OutputDebugString, certain 'timeXXXX' functions, and certain 'midiOutXXXX' functions.
 //  (See 'TimeProc' documentation for full details.)
 // Only called by start_hwkey()
-void CALLBACK callbackSimuKey(UINT id, UINT /*unused*/, DWORD_PTR userData, DWORD_PTR /*unused*/,
-                              DWORD_PTR /*unused*/) {
-  dummy_use(id);
+void CALLBACK callbackSimuKey(UINT id, UINT msg, DWORD_PTR userData, DWORD_PTR dw1, DWORD_PTR dw2) {
+  dummy_use(id, msg, dw1, dw2);
   // Set flag, meaning that a "new" keypress (simulated) has occurred.
   // (Basically just "opens the gates", so msg loop will process next simulated key now.
   //  Gives periodic/delayed keypresses this way, instead of all being processed at once -- more like real input).

@@ -229,14 +229,14 @@ constexpr uint64_t k_parallelism_always = k_omp_thresh;
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessChunk>
-void parallel_for_chunk(const Range& range_, int num_threads, const ProcessChunk& process_chunk,
+void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
                         uint64_t estimated_cycles_per_element = k_parallelism_always) {
   assertx(num_threads >= 1);
-  // using std::size; const size_t num_elements = size(range_);  // C++17.
+  // using std::size; const size_t num_elements = size(range);  // C++17.
   using std::begin;
   using std::end;
-  const auto begin_range = begin(range_);
-  const auto end_range = end(range_);
+  const auto begin_range = begin(range);
+  const auto end_range = end(range);
   using Iterator = decltype(begin_range);
   const size_t num_elements = size_t(end_range - begin_range);
   const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
@@ -275,13 +275,13 @@ void parallel_for_chunk(const Range& range_, int num_threads, const ProcessChunk
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessElement>
-void parallel_for_each(const Range& range_, const ProcessElement& process_element,
+void parallel_for_each(const Range& range, const ProcessElement& process_element,
                        uint64_t estimated_cycles_per_element = k_parallelism_always) {
-  // using std::size; const size_t num_elements = size(range_);  // C++17.
+  // using std::size; const size_t num_elements = size(range);  // C++17.
   using std::begin;
   using std::end;
-  const auto begin_range = begin(range_);
-  const auto end_range = end(range_);
+  const auto begin_range = begin(range);
+  const auto end_range = end(range);
   const size_t num_elements = size_t(end_range - begin_range);
   const int max_num_threads = get_max_threads();
   const int num_threads = int(std::min(size_t(max_num_threads), num_elements));
@@ -289,7 +289,7 @@ void parallel_for_each(const Range& range_, const ProcessElement& process_elemen
     dummy_use(thread_index);
     for (auto& element : subrange) process_element(element);
   };
-  parallel_for_chunk(range_, num_threads, process_chunk, estimated_cycles_per_element);
+  parallel_for_chunk(range, num_threads, process_chunk, estimated_cycles_per_element);
 }
 
 }  // namespace hh

@@ -49,22 +49,22 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   explicit Set(Hashf hashf, Equalf equalf) : _s(0, hashf, equalf) {}
   void clear() { _s.clear(); }
   void enter(const T& e) {  // e must be new
-    auto p = _s.insert(e);
-    ASSERTX(p.second);
+    auto [_, is_new] = _s.insert(e);
+    ASSERTX(is_new);
   }
   void enter(T&& e) {  // must be new
-    auto p = _s.insert(std::move(e));
-    ASSERTX(p.second);
+    auto [_, is_new] = _s.insert(std::move(e));
+    ASSERTX(is_new);
   }
   const T& enter(const T& e, bool& is_new) {
-    auto p = _s.insert(e);
-    is_new = p.second;
-    return *p.first;
+    auto [it, is_new_] = _s.insert(e);
+    is_new = is_new_;
+    return *it;
   }
   // omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new
   bool add(const T& e) {  // ret: is_new
-    auto p = _s.insert(e);
-    return p.second;
+    auto [_, is_new] = _s.insert(e);
+    return is_new;
   }
   // omit "bool add(T&& e)" because e could be lost if !is_new
   bool remove(const T& e) { return remove_i(e); }  // ret: was_found
@@ -74,18 +74,18 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   bool empty() const { return _s.empty(); }
   const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
   const T& retrieve(const T& e) const {
-    auto i = _s.find(e);
-    return i != end() ? *i : def();
+    auto it = _s.find(e);
+    return it != end() ? *it : def();
   }
   const T& get(const T& e) const {
-    auto i = _s.find(e);
-    ASSERTXX(i != end());
-    return *i;
+    auto it = _s.find(e);
+    ASSERTXX(it != end());
+    return *it;
   }
   const T& get_one() const { return (ASSERTXX(!empty()), *begin()); }
   const T& get_random(Random& r) const {
-    auto i = crand(r);
-    return *i;
+    auto it = crand(r);
+    return *it;
   }
   T remove_one() {
     ASSERTXX(!empty());
@@ -94,9 +94,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return e;
   }
   T remove_random(Random& r) {
-    auto i = crand(r);
-    T e = std::move(*i);
-    _s.erase(i);
+    auto it = crand(r);
+    T e = std::move(*it);
+    _s.erase(it);
     return e;
   }
   iterator begin() { return _s.begin(); }
@@ -111,9 +111,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return k_default;
   }
   const T& retrieve_i(const T& e, bool& present) const {
-    auto i = _s.find(e);
-    present = i != end();
-    return present ? *i : def();
+    auto it = _s.find(e);
+    present = it != end();
+    return present ? *it : def();
   }
   bool remove_i(const T& e) {
     if (_s.erase(e) == 0) return false;
@@ -141,9 +141,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
       }
       ASSERTXX(li != _s.end(bn));
       // convert from const_local_iterator to const_iterator
-      auto i = _s.find(*li);
-      ASSERTXX(i != _s.end());
-      return i;
+      auto it = _s.find(*li);
+      ASSERTXX(it != _s.end());
+      return it;
     }
   }
   // Default operator=() and copy_constructor are safe.

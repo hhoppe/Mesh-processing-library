@@ -29,29 +29,29 @@ template <typename T, typename Less = std::less<T>> class STree : noncopyable {
   bool empty() const { return _s.empty(); }
   // To avoid ambiguity, e should not equal T{}.
   bool enter(const T& e) {  // ret: is_new
-    auto p = _s.insert(e);
-    return !!p.second;
+    auto [it, is_new] = _s.insert(e);
+    return is_new;
   }
   const T& retrieve(const T& e) const {  // or ret=T{}
-    auto i = _s.find(e);
-    return i != end() ? *i : def();
+    auto it = _s.find(e);
+    return it != end() ? *it : def();
   }
   bool remove(const T& e) { return _s.erase(e) > 0; }
   const T& pred(const T& e) const {
-    auto i = _s.lower_bound(e);
-    return i != begin() ? *--i : def();
+    auto it = _s.lower_bound(e);
+    return it != begin() ? *--it : def();
   }
   const T& succ(const T& e) const {
-    auto i = _s.upper_bound(e);
-    return i != end() ? *i : def();
+    auto it = _s.upper_bound(e);
+    return it != end() ? *it : def();
   }
   const T& pred_eq(const T& e) const {
-    auto i = _s.upper_bound(e);
-    return i != begin() ? *--i : def();
+    auto it = _s.upper_bound(e);
+    return it != begin() ? *--it : def();
   }
   const T& succ_eq(const T& e) const {
-    auto i = _s.lower_bound(e);
-    return i != end() ? *i : def();
+    auto it = _s.lower_bound(e);
+    return it != end() ? *it : def();
   }
   const T& min() const { return (ASSERTXX(!empty()), *begin()); }
   const T& max() const { return (ASSERTXX(!empty()), *--end()); }

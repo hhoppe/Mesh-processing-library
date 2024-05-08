@@ -171,10 +171,10 @@ type_name<sum_type_t<ushort>>() = unsigned int64
 type_name<sum_type_t<int>>() = int64
 type_name<sum_type_t<unsigned>>() = unsigned int64
 type_name<sum_type_t<char*>>() = char*
-vsign=-1 type_name<decltype(vsign)>()=float
-vsignz=-1 type_name<decltype(vsignz)>()=float
-vsignd=-1 type_name<decltype(vsignd)>()=double
-vsignzd=-1 type_name<decltype(vsignzd)>()=double
+vsign=-1 type_name(vsign)=float
+vsignz=-1 type_name(vsignz)=float
+vsignd=-1 type_name(vsignd)=double
+vsignzd=-1 type_name(vsignzd)=double
 vsquare5 = 25
 vclamped10 = 10
 vclamped30 = 20

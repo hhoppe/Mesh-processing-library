@@ -49,56 +49,56 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
   explicit Map(Hashf hashf, Equalf equalf) : _m(0, hashf, equalf) {}
   void clear() { _m.clear(); }
   void enter(const K& k, const V& v) {  // k new!
-    auto p = _m.emplace(k, v);
-    ASSERTX(p.second);
+    auto [_, is_new] = _m.emplace(k, v);
+    ASSERTX(is_new);
   }
   void enter(K&& k, const V& v) {
-    auto p = _m.emplace(std::move(k), v);
-    ASSERTX(p.second);
+    auto [_, is_new] = _m.emplace(std::move(k), v);
+    ASSERTX(is_new);
   }
   void enter(const K& k, V&& v) {
-    auto p = _m.emplace(k, std::move(v));
-    ASSERTX(p.second);
+    auto [_, is_new] = _m.emplace(k, std::move(v));
+    ASSERTX(is_new);
   }
   void enter(K&& k, V&& v) {
-    auto p = _m.emplace(std::move(k), std::move(v));
-    ASSERTX(p.second);
+    auto [_, is_new] = _m.emplace(std::move(k), std::move(v));
+    ASSERTX(is_new);
   }
   V& enter(const K& k, const V& v, bool& is_new) {  // does not modify element if it already exists
-    auto p = _m.emplace(k, v);
-    is_new = p.second;
-    return p.first->second;
+    auto [it, is_new_] = _m.emplace(k, v);
+    is_new = is_new_;
+    return it->second;
   }
   // omit "V& enter(const K& k, V&& v, bool& is_new)" because v could be lost if !is_new
   // note: force_enter using: { map[k] = std::move(v); }
   bool contains(const K& k) const { return _m.find(k) != end(); }
   const V& retrieve(const K& k, bool& present) const {
-    auto i = _m.find(k);
-    present = i != end();
-    return present ? i->second : def();
+    auto it = _m.find(k);
+    present = it != end();
+    return present ? it->second : def();
   }
   const V& retrieve(const K& k) const {
-    auto i = _m.find(k);
-    if (i == end()) return def();
-    return i->second;
+    auto it = _m.find(k);
+    if (it == end()) return def();
+    return it->second;
   }
   V& get(const K& k) {
-    auto i = _m.find(k);
-    ASSERTXX(i != end());
-    return i->second;
+    auto it = _m.find(k);
+    ASSERTXX(it != end());
+    return it->second;
   }
   const V& get(const K& k) const {
-    auto i = _m.find(k);
-    ASSERTXX(i != end());
-    return i->second;
+    auto it = _m.find(k);
+    ASSERTXX(it != end());
+    return it->second;
   }
   // const V& get(const K& k) const { return (*this)[k]; } // bad: throws exception if absent
   V remove(const K& k) { return remove_i(k); }
   V replace(const K& k, const V& v) {
-    auto i = _m.find(k);
-    if (i == end()) return V();
-    V vo = i->second;
-    i->second = v;
+    auto it = _m.find(k);
+    if (it == end()) return V();
+    V vo = it->second;
+    it->second = v;
     return vo;
   }
   // omit "V replace(const K& k, V&& v)" because v could be lost if !present
@@ -107,8 +107,8 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
   bool empty() const { return _m.empty(); }
   V& operator[](const K& k) { return _m[k]; }  // introduced for Combination
   const V& operator[](const K& k) const {
-    auto i = _m.find(k);
-    return i != end() ? i->second : def();
+    auto it = _m.find(k);
+    return it != end() ? it->second : def();
   }
   const K& get_one_key() const { return (ASSERTXX(!empty()), begin()->first); }
   const V& get_one_value() const { return (ASSERTXX(!empty()), begin()->second); }
@@ -219,10 +219,10 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
     return k_default;
   }
   V remove_i(const K& k) {
-    auto i = _m.find(k);
-    if (i == end()) return V();
-    auto v = std::move(i->second);
-    _m.erase(i);
+    auto it = _m.find(k);
+    if (it == end()) return V();
+    auto v = std::move(it->second);
+    _m.erase(it);
     if (1 && _m.size() < _m.bucket_count() / 16) _m.rehash(0);
     return v;
   }
@@ -247,9 +247,9 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
       }
       ASSERTXX(li != _m.end(bn));
       // convert from const_local_iterator to const_iterator
-      auto i = _m.find(li->first);
-      ASSERTXX(i != end());
-      return i;
+      auto it = _m.find(li->first);
+      ASSERTXX(it != end());
+      return it;
     }
   }
   // Default operator=() and copy_constructor are safe.
@@ -259,7 +259,7 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
 template <typename K, typename V, typename Hash = std::hash<K>, typename Equal = std::equal_to<K>,
           typename Func = void(const K& key, const V& val)>
 inline void for_map_key_value(const Map<K, V, Hash, Equal>& map, Func func) {
-  for (auto& kv : map) func(kv.first, kv.second);
+  for (auto& [key, value] : map) func(key, value);
 }
 
 template <typename K, typename V> HH_DECLARE_OSTREAM_RANGE(Map<K, V>);

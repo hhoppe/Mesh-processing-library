@@ -475,13 +475,13 @@ line2)";
   }
   {
     constexpr auto vsign = sign(-TAU);
-    SHOW(vsign, type_name<decltype(vsign)>());
+    SHOW(vsign, type_name(vsign));
     constexpr auto vsignz = signz(-TAU);
-    SHOW(vsignz, type_name<decltype(vsignz)>());
+    SHOW(vsignz, type_name(vsignz));
     constexpr auto vsignd = sign(-D_TAU);
-    SHOW(vsignd, type_name<decltype(vsignd)>());
+    SHOW(vsignd, type_name(vsignd));
     constexpr auto vsignzd = signz(-D_TAU);
-    SHOW(vsignzd, type_name<decltype(vsignzd)>());
+    SHOW(vsignzd, type_name(vsignzd));
     constexpr auto vsquare5 = square(5);
     SHOW(vsquare5);
     constexpr auto vclamped10 = clamp(-11, 10, 20);

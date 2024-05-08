@@ -33,7 +33,7 @@ template <typename T> class Combination : public Map<T, float> {
 
 template <typename T, typename Func = void(const T& e, float val)>
 void for_combination(const Combination<T>& combination, Func func) {
-  for (auto& kv : combination) func(kv.first, kv.second);
+  for (auto& [key, value] : combination) func(key, value);
 }
 
 }  // namespace hh

@@ -306,7 +306,7 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
     int lo = narrow_cast<int>(o.str.size());
     auto i = o.str.find('[');
     int minfit = i != string::npos ? narrow_cast<int>(i) : _disallow_prefixes ? narrow_cast<int>(o.str.size()) : 0;
-    int nchar = clamp(ls, 2, lo);
+    int nchar = clamp(ls, 2, max(lo, ls));
     if (minfit) nchar = minfit;
     if (!o.str.compare(0, nchar, s, 0, nchar)) {
       nmatches++;

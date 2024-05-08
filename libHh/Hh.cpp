@@ -39,7 +39,7 @@
 
 namespace hh {
 
-// Compilation-time tests for assumptions present in my C++ code
+// Compilation-time tests for assumptions present in my C++ code.
 static_assert(sizeof(int) >= 4);
 static_assert(sizeof(char) == 1);
 static_assert(sizeof(uchar) == 1);
@@ -48,7 +48,7 @@ static_assert(sizeof(ushort) == 2);
 static_assert(sizeof(int64_t) == 8);
 static_assert(sizeof(uint64_t) == 8);
 
-const char* g_comment_prefix_string = "# ";  // not string because cannot be destroyed before Timers destruction
+const char* g_comment_prefix_string = "# ";  // Not `string` because cannot be destroyed before Timers destruction.
 
 int g_unoptimized_zero = 0;
 
@@ -57,7 +57,7 @@ namespace {
 #if !defined(HH_NO_STACKWALKER)
 
 // StackWalk64  https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk  complicated
-// comment: You can find article and good example of use at:
+// Comment: You can find article and good example of use at:
 //  https://www.codeproject.com/Articles/11132/Walking-the-callstack-2
 // CaptureStackBackTrace() https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/bb204633(v=vs.85)
 
@@ -89,7 +89,7 @@ class MyStackWalker : public StackWalker {
   // MyStackWalker(DWORD dwProcessId, HANDLE hProcess) : StackWalker(dwProcessId, hProcess) {}
   void OnOutput(LPCSTR szText) override {
     // no heap allocation!
-    static std::array<char, 512> buf;  // static just in case stack is almost exhausted
+    static std::array<char, 512> buf;  // Made static just in case stack is almost exhausted.
     snprintf(buf.data(), int(buf.size() - 1), "%.*s", int(buf.size() - 6), szText);
     std::cerr << buf.data();
     // printf(szText);
@@ -128,7 +128,7 @@ std::string utf8_from_utf16(const std::wstring& wstr) {
   // By specifying cchWideChar == -1, we include the null terminating character in nchars.
   int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
   assertx(nchars > 0);
-  string str(nchars - 1, '\0');  // does allocate space for an extra null-terminating character
+  string str(nchars - 1, '\0');  // Does allocate space for an extra null-terminating character.
   // Writing into std::string using &str[0] is arguably legal in C++11; see discussion at
   //  https://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers .
   // It is officially supported in C++17 using non-const str.data().
@@ -205,7 +205,7 @@ string forward_slash(const string& s) { return replace_all(s, "\\", "/"); }
 string extract_function_type_name(string s) {
   // See experiments in ~/git/hh_src/test/misc/test_compile_time_type_name.cpp
   // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
-  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string
+  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string.
   // GOOGLE3: versioned libstdc++ or libc++
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
   if (remove_at_beginning(s, "hh::details::TypeNameAux<")) {  // VC
@@ -213,29 +213,29 @@ string extract_function_type_name(string s) {
       SHOW(s);
       assertnever("");
     }
-    remove_at_end(s, " ");  // possible space for complex types
-  } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC
+    remove_at_end(s, " ");  // Possible space for complex types.
+  } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC.
     if (!remove_at_end(s, "; std::string = std::basic_string<char>]")) {
       SHOW(s);
       assertnever("");
     }
-  } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) {  // Google opt
+  } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) {  // Google opt.
     auto i = s.find("; ");
     if (i == string::npos) {
       SHOW(s);
       assertnever("");
     }
     s.erase(i);
-    remove_at_end(s, " ");  // possible space
+    remove_at_end(s, " ");  // Possible space.
   } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<") ||
-             remove_at_beginning(s, "static string hh::details::TypeNameAux<")) {  // clang
+             remove_at_beginning(s, "static string hh::details::TypeNameAux<")) {  // clang.
     auto i = s.find(">::name() [T = ");
     if (i == string::npos) {
       SHOW(s);
       assertnever("");
     }
     s.erase(i);
-    remove_at_end(s, " ");  // possible space for complex types
+    remove_at_end(s, " ");  // Possible space for complex types.
   } else if (s == "name") {
     SHOW(s);
     assertnever("");
@@ -281,22 +281,20 @@ class Warnings {
   ~Warnings() = delete;
   void flush_internal() {
     if (_map.empty()) return;
-    struct string_less {  // lexicographic comparison; deterministic, unlike pointer comparison
+    struct string_less {  // Lexicographic comparison; deterministic, unlike pointer comparison.
       bool operator()(const void* s1, const void* s2) const {
         return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2)) < 0;
       }
     };
-    std::map<const void*, int, string_less> sorted_map(_map.begin(), _map.end());
+    std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
     const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
     show_local("Summary of warnings:\n");
-    for (auto& kv : sorted_map) {
-      const char* s = static_cast<const char*>(kv.first);
-      int n = kv.second;
+    for (auto [s, n] : sorted_map) {
       show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     }
     _map.clear();
   }
-  std::unordered_map<const void*, int> _map;  // warning char* -> number of occurrences; void* for google3
+  std::unordered_map<const char*, int> _map;
 };
 
 }  // namespace
@@ -327,13 +325,15 @@ bool details::assertw_aux2(const char* s) {
   return true;
 }
 
-// may return nullptr
-void* aligned_malloc(size_t size, int alignment) {
+// May return nullptr.
+void* aligned_malloc(size_t alignment, size_t size) {
   // see https://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
-#if defined(_MSC_VER)
+#if defined(_MSC_VER)  // 2024: Visual Studio still does not support std::aligned_alloc().
   return _aligned_malloc(size, alignment);
-#elif defined(__MINGW32__)
+#elif defined(__MINGW32__)  // 2024: mingw also lacks it.
   return __mingw_aligned_malloc(size, alignment);
+#elif 1
+  return std::aligned_alloc(alignment, size);
 #else
   // Use: posix_memalign(void **memptr, size_t alignment, size_t size)
   void* p = nullptr;
@@ -356,14 +356,16 @@ void aligned_free(void* p) {
   _aligned_free(p);
 #elif defined(__MINGW32__)
   __mingw_aligned_free(p);
+#elif 1
+  std::free(p);
 #else
   free(p);
 #endif
 }
 
 std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings) {
-  sline.clear();       // just to be safe, if the caller failed to test return value.
-  getline(is, sline);  // already creates its own sentry project (with noskipws == true)
+  sline.clear();       // Just to be safe, if the caller failed to test return value.
+  getline(is, sline);  // Already creates its own sentry project (with noskipws == true).
   if (is && sline.size() && sline.back() == '\r') {
     sline.pop_back();
     if (dos_eol_warnings) {
@@ -395,11 +397,11 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   //  and https://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
   // asprintf() supported only on BSD/GCC
   const int stacksize = 256;
-  char stackbuf[stacksize];  // stack-based buffer that is big enough most of the time
+  char stackbuf[stacksize];  // Stack-based buffer that is big enough most of the time.
   int size = stacksize;
-  std::vector<char> vecbuf;  // dynamic buffer just in case; do not take dependency on Array.h or PArray.h
+  std::vector<char> vecbuf;  // Dynamic buffer just in case; do not take dependency on Array.h or PArray.h .
   char* buf = stackbuf;
-  bool promised = false;  // precise size was promised
+  bool promised = false;  // Precise size was promised.
   if (0) {
     std::cerr << "format=" << format << "\n";
   }
@@ -427,16 +429,16 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   }
 }
 
-// Inspired from vinsertf() in https://stackoverflow.com/a/2552973
+// Inspired from vinsertf() in https://stackoverflow.com/a/2552973.
 static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, std::va_list ap) {
   const size_t minsize = 40;
   if (str.size() < minsize) str.resize(minsize);
-  bool promised = false;  // precise size was promised
+  bool promised = false;  // Precise size was promised.
   std::va_list ap2;
   for (;;) {
     va_copy(ap2, ap);
     // NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
-    int n = vsnprintf(str.data(), str.size(), format, ap2);  // string::data() returns const char*
+    int n = vsnprintf(str.data(), str.size(), format, ap2);
     va_end(ap2);
     if (promised) assertx(n == narrow_cast<int>(str.size()) - 1);
     if (n >= 0) {
@@ -516,7 +518,7 @@ static bool isafile(int fd) {
       hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
     return false;
   return true;
-#else   // cygwin or Unix
+#else   // cygwin or Unix.
   struct stat statbuf;
   assertx(!fstat(fd, &statbuf));
   return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
@@ -611,7 +613,7 @@ unique_ptr<char[]> make_unique_c_string(const char* s) {
   size_t size = strlen(s) + 1;
   auto s2 = make_unique<char[]>(size);
   // std::copy(s, s + size, s2.get());
-  std::memcpy(s2.get(), s, size);  // safe for known element type (char)
+  std::memcpy(s2.get(), s, size);  // Safe for known element type (char).
   return s2;
 }
 
@@ -646,7 +648,7 @@ int to_int(const char* s) {
 
 static void unsetenv(const char* name) {
   // Note: In Unix, deletion would use sform("%s", name).
-  const char* s = make_unique_c_string(sform("%s=", name).c_str()).release();  // never deleted
+  const char* s = make_unique_c_string(sform("%s=", name).c_str()).release();  // Never deleted.
   assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
@@ -657,7 +659,7 @@ static void setenv(const char* name, const char* value, int change_flag) {
     // Note: In Unix, deletion would use sform("%s", name).
     unsetenv(name);
   } else {
-    const char* s = make_unique_c_string(sform("%s=%s", name, value).c_str()).release();  // never deleted
+    const char* s = make_unique_c_string(sform("%s=%s", name, value).c_str()).release();  // Never deleted.
     assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
   }
 }
@@ -713,7 +715,6 @@ void show_possible_win32_error() {
     unsigned last_error = GetLastError();
     std::array<char, 2000> msg;
     int result = 0;
-    // https://social.msdn.microsoft.com/Forums/vstudio/en-US/08b25925-4d40-4b59-bd71-0e20519e312f/formatmessage-fails-to-return-error-description
     if (last_error >= 12000 && last_error <= 12175)
       result =
           FormatMessageA(FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS, GetModuleHandleA("wininet.dll"),
@@ -722,14 +723,14 @@ void show_possible_win32_error() {
       result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, nullptr, last_error,
                               MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), msg.data(), int(msg.size() - 1), nullptr);
     if (!result) {
-      SHOW(last_error);  // numeric code
+      SHOW(last_error);  // Numeric code.
       if (GetLastError() == ERROR_MR_MID_NOT_FOUND) {
         strncpy(msg.data(), "(error code not found)", msg.size() - 1);
         msg.back() = '\0';
       } else {
         strncpy(msg.data(), "(FormatMessage failed)", msg.size() - 1);
         msg.back() = '\0';
-        SHOW(GetLastError());  // numeric codes
+        SHOW(GetLastError());  // Numeric codes.
       }
     }
     showf("possible win32 error: %s", msg.data());

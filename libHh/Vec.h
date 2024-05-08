@@ -440,7 +440,7 @@ template <typename T, int n> std::ostream& operator<<(std::ostream& os, const Ve
 }
 // Unlike would-be HH_DECLARE_OSTREAM_EOL(Vec<T, n>), it considers has_ostream_eol<T>.
 template <typename T, int n> struct has_ostream_eol_aux<Vec<T, n>> {
-  static constexpr bool value() { return has_ostream_eol<T>(); }
+  static constexpr bool value = has_ostream_eol<T>();
 };
 
 //----------------------------------------------------------------------------

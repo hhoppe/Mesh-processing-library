@@ -46,10 +46,10 @@ double get_precise_time() {
 int64_t get_precise_counter() {
 #if defined(USE_HIGH_RESOLUTION_CLOCK)
   using Clock = std::chrono::high_resolution_clock;
-  static_assert(Clock::is_steady);  // should be monotonic, else we might get negative durations
+  static_assert(Clock::is_steady);  // Should be monotonic, else we might get negative durations.
   Clock::time_point t = Clock::now();
-  Clock::duration duration = t.time_since_epoch();  // number of ticks, of type Clock::rep
-  // SHOW(type_name<decltype(duration)>());
+  Clock::duration duration = t.time_since_epoch();  // Number of ticks, of type Clock::rep.
+  // SHOW(type_name(duration));
   // CONFIG=win: std::chrono::duration<int64, std::ratio<1, 1'000'000'000>>  (nanoseconds as signed 64-bit integer)
   return possible_cast<int64_t>(duration.count());
 #elif defined(_WIN32)
@@ -73,11 +73,11 @@ int64_t get_precise_counter() {
 double get_seconds_per_counter() {
 #if defined(USE_HIGH_RESOLUTION_CLOCK)
   using Clock = std::chrono::high_resolution_clock;
-  constexpr std::chrono::duration<Clock::rep, std::ratio<1>> k_one_sec{1};  // 1 second
+  constexpr std::chrono::duration<Clock::rep, std::ratio<1>> k_one_sec{1};  // 1 second.
   using Duration = Clock::duration;
   constexpr Duration::rep nticks_per_sec = std::chrono::duration_cast<Duration>(k_one_sec).count();
   constexpr double sec_per_tick = 1. / nticks_per_sec;
-  return sec_per_tick;  // == 1e-9 in VS2015
+  return sec_per_tick;  // == 1e-9 in VS2015.
 #elif defined(_WIN32)
   static double v;
   static std::once_flag flag;
@@ -86,7 +86,7 @@ double get_seconds_per_counter() {
     assertx(QueryPerformanceFrequency(&l));
     v = 1. / assertx(double(l.QuadPart));
   });
-  return v;  // 3.01874e-07 (based on ACPI Power Management pmtimer)
+  return v;  // 3.01874e-07 (based on ACPI Power Management pmtimer).
 #else
   return 1e-9;
 #endif
@@ -104,7 +104,7 @@ void my_sleep(double sec) {
 #elif defined(_WIN32)
   if (!sec) {
     // The aim is likely to give up time slice to another thread.
-    SleepEx(0, TRUE);  // milliseconds; allow wake up for events
+    SleepEx(0, TRUE);  // milliseconds; allow wake up for events.
   } else {
     // Inspired from discussion at
     //  https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
@@ -113,16 +113,16 @@ void my_sleep(double sec) {
     if (use_1ms_time_resolution) {
       static std::once_flag flag;
       std::call_once(flag, [] {
-        assertnever("");  // requires another library
+        assertnever("");  // Requires another library.
 #if 0
-        // reduce Sleep/timer resolution from 16ms to <2ms (note: applies system-wide)
+        // Reduce Sleep/timer resolution from 16ms to <2ms (note: applies system-wide).
         timeBeginPeriod(1);
 #endif
         // Note: should be matched with timeEndPeriod(1) but let program termination handle this.
         // https://stackoverflow.com/questions/7590475/
       });
     }
-    const double sleep_threshold = use_1ms_time_resolution ? .002 : .03;  // seconds
+    const double sleep_threshold = use_1ms_time_resolution ? .002 : .03;  // Seconds.
     // int64_t freq; assertx(QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq)));
     LARGE_INTEGER freq;
     assertx(QueryPerformanceFrequency(&freq));
@@ -131,16 +131,16 @@ void my_sleep(double sec) {
     for (;;) {
       LARGE_INTEGER count2;
       assertx(QueryPerformanceCounter(&count2));
-      double elapsed = (count2.QuadPart - count1.QuadPart) / double(freq.QuadPart);  // seconds
+      double elapsed = (count2.QuadPart - count1.QuadPart) / double(freq.QuadPart);  // Seconds.
       double remaining = sec - elapsed;
       if (remaining <= 0.) break;
       if (remaining > sleep_threshold)
-        SleepEx(int((remaining - sleep_threshold) * 1000. + .5), TRUE);  // in milliseconds; see note above
+        SleepEx(int((remaining - sleep_threshold) * 1000. + .5), TRUE);  // In milliseconds; see note above.
     }
   }
 #else
   if (!assertw(!usleep(static_cast<useconds_t>(sec * 1e6)))) {
-    assertx(errno == EINTR);  // possibly might be interrupted by a signal?
+    assertx(errno == EINTR);  // Possibly might be interrupted by a signal?
   }
 #endif  // defined(_WIN32)
 }
@@ -201,7 +201,7 @@ string get_current_datetime() {
 #else
     time_t ti = time(implicit_cast<time_t*>(nullptr));
     struct tm tm_result;
-    struct tm& ptm = *assertx(localtime_r(&ti, &tm_result));  // POSIX
+    struct tm& ptm = *assertx(localtime_r(&ti, &tm_result));  // POSIX.
     year = ptm.tm_year + 1900;
     month = ptm.tm_mon + 1;
     day = ptm.tm_mday;
@@ -233,7 +233,7 @@ string get_hostname() {
 string get_header_info() {
   string datetime = get_current_datetime();
   string host = get_hostname();
-  // Number of cores: std_thread_hardware_concurrency()
+  // Number of cores: std_thread_hardware_concurrency().
   string config;
 #if defined(__clang__)
   // string __clang_version__ is longer and has space(s).
@@ -287,9 +287,9 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
       using type = const char*;
       assertx(argc > 0);
       // Replace original argv array by a new one which contains UTF8-encoded arguments.
-      argv = new type[intptr_t{argc + 1}];  // never deleted
-      argv[argc] = nullptr;                 // extra nullptr is safest
-      for_int(i, argc) argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // never deleted
+      argv = new type[intptr_t{argc + 1}];  // Never deleted.
+      argv[argc] = nullptr;                 // Extra nullptr is safest.
+      for_int(i, argc) argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // Never deleted.
     }
     LocalFree(wargv);
   }
@@ -299,7 +299,7 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
 bool set_fd_no_delay(int fd, bool nodelay) {
   dummy_use(fd, nodelay);
 #if defined(__sgi)
-  // on SGI, setting nodelay on terminal fd may cause window closure
+  // On SGI, setting nodelay on terminal fd may cause window closure.
   if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
     // 2014-07-04 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .

@@ -5,57 +5,53 @@
 //       1         2         3         4         5         6         7         8         9        10        11
 // 45678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-// *** Pre-header
+// *** Pre-header.
 
 // These macro definitions have no effect if #include "libHh/Hh.h" is after #include <system_files>,
 // so instead one should adjust project/makefile build settings.
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
-#define _CRT_SECURE_NO_WARNINGS  // do not suggest use of *_s() secure function calls
+#define _CRT_SECURE_NO_WARNINGS  // Do not suggest use of *_s() secure function calls.
 #endif
 
 #if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
-#define _SCL_SECURE_NO_WARNINGS  // allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*)
+#define _SCL_SECURE_NO_WARNINGS  // Allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*).
 #endif
 
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
-// "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__
-// For <windows.h>; e.g. 0x0501 == WinXP; 0x0601 == WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__
+// "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__.
+// For <windows.h>; e.g. 0x0501 == WinXP; 0x0601 == WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__.
 #define _WIN32_WINNT 0x0603  // == _WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHWin/HW.cpp
 #endif
 
 #if defined(_MSC_VER)
 // Disable some nitpicky level4 warnings (for -W4).
-#pragma warning(disable : 4127)  // conditional expression is constant, e.g. "if (0)", "if (1)"
-#pragma warning(disable : 4464)  // #include paths containing ".." relative folders (e.g. "../libHh/Video.h")
-#pragma warning(disable : 4512)  // in Release config: assignment operator could not be generated
-#pragma warning(disable : 4592)  // bug in VS2015 update 1; https://stackoverflow.com/questions/34013930/
-// Workarounds for warning 4702 (unreachable code) (pragma would have to appear before function body):
-//  for (; ; ++iter) { f(); break; }    // replace "break;" by "if (1) break;"
-//  { assertnever("abandoned"); f(); }  // use "assertnever_ret(..);"
-// Code analysis
-#pragma warning(disable : 6237)   // (<zero> && <expression>) is always zero
-#pragma warning(disable : 6286)   // (<non-zero constant> || <expression>) is always a non-zero constant
-#pragma warning(disable : 6993)   // Code analysis ignores OpenMP constructs; analyzing single-threaded code
-#pragma warning(disable : 26439)  // (declare a function noexcept)
-#pragma warning(disable : 26444)  // (Avoid unnamed objects with custom construction and destruction)
-#pragma warning(disable : 26451)  // (Using operator on a 4 byte value and then casting the result to a 8 byte value)
-#pragma warning(disable : 26495)  // (always initialize a member variable)
+#pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
+#pragma warning(disable : 4464)  // Allow #include paths containing ".." relative folders (e.g. "../libHh/Video.h").
+#pragma warning(disable : 4512)  // In Release config, assignment operator could not be generated.
+// Code analysis:
+#pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
+#pragma warning(disable : 6286)   // <non-zero constant> || <expression> is always a non-zero constant.
+#pragma warning(disable : 6993)   // Code analysis ignores OpenMP constructs; analyzing single-threaded code.
+#pragma warning(disable : 26439)  // Declare a function noexcept.
+#pragma warning(disable : 26444)  // Avoid unnamed objects with custom construction and destruction.
+#pragma warning(disable : 26451)  // Using operator on a 4 byte value and then casting the result to a 8 byte value.
+#pragma warning(disable : 26495)  // Always initialize a member variable.
 #endif
 
 #if defined(_WIN32)
 // If later include <windef.h>, disable macros min and max, e.g. which interfere with std::numeric_limits<T>::max().
+#define NOMINMAX  // Prevent min() and max() macros in <windows.h>.
 // If already defined, undefine them.
 #undef min
 #undef max
-#define NOMINMAX  // prevent min() and max() macros in <windows.h>
 #endif
 
 #if defined(_DEBUG) || defined(DEBUG) || (!defined(_MSC_VER) && !defined(NDEBUG))
 #define HH_DEBUG
 #endif
 
-// *** Standard headers
+// *** Standard headers.
 
 #include <algorithm>  // min(), max()
 #include <cmath>      // sqrt(), cos(), pow(), etc.
@@ -68,13 +64,13 @@
 #include <string>     // string
 #include <utility>    // swap(), forward(), move(), declval<>, pair<>, index_sequence<>
 
-// *** Variadic macros
+// *** Variadic macros.
 
 #include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
-// *** Language portability
+// *** Language portability.
 
-#define HH_EAT_SEMICOLON static_assert(true)  // redundant declaration to swallow subsequent semicolon
+#define HH_EAT_SEMICOLON static_assert(true)  // Redundant declaration to swallow subsequent semicolon.
 
 // Safest to indirect once through these.  https://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
 #define HH_STR(e) #e
@@ -82,10 +78,10 @@
 #define HH_CAT(a, b) a##b
 #define HH_CAT2(a, b) HH_CAT(a, b)
 
-#if defined(_MSC_VER)  // _Pragma() is still not defined in Visual Studio 2017 (_MSC_VER == 1910)
+#if defined(_MSC_VER)
 #define HH_PRAGMA(...) __pragma(__VA_ARGS__)  // _Pragma() causes compiler internal error with OpenMP in VS 2019.
 #else
-#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))  // C++11; https://stackoverflow.com/a/15864723
+#define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))
 #endif
 
 #if defined(_MSC_VER)
@@ -109,26 +105,27 @@
 #endif
 
 #if defined(__clang__)
-#pragma clang diagnostic ignored "-Wassume"  // (assumed expression can have side effects which will be discarded)
+#pragma clang diagnostic ignored "-Wassume"  // (Assumed expression can have side effects which will be discarded.)
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(_MSC_VER)
-#define HH_ASSUME(...) __assume(__VA_ARGS__)  // implies __analysis_assume() but is expression rather than statement
+#define HH_ASSUME(...) __assume(__VA_ARGS__)  // Implies __analysis_assume() but is expression rather than statement.
+#elif 0
+// #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // Maybe for gcc.
+// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // In gcc but intended for branch prediction.
 #else
-// #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // gcc
-// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // gcc: intended for branch prediction
 #define HH_ASSUME(...) (void(0))
 #endif
 
 #if defined(_MSC_VER)
-#define HH_UNREACHABLE __assume(0)  // this path is never taken
+#define HH_UNREACHABLE __assume(0)  // This path is never taken.
 #else
 #define HH_UNREACHABLE __builtin_unreachable()
 #endif
 
-#define HH_ID(x) HH_CAT(_hh_id_, x)  // private identifier in a macro definition
+#define HH_ID(x) HH_CAT(_hh_id_, x)  // Private identifier in a macro definition.
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
-// *** Syntactic sugar
+// *** Syntactic sugar.
 
 #define traditional_for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
 #define traditional_for_T(T, i, start, stop) traditional_for_T_aux(T, i, start, stop, HH_UNIQUE_ID(stop_var))
@@ -144,7 +141,7 @@
 #define for_intL(i, start, stop) for_T(int, i, start, stop)
 #define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
 
-// *** Check for identifier conflicts
+// *** Check for identifier conflicts.
 
 #if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
 #if defined(__clang__)
@@ -155,39 +152,41 @@ namespace hh {}
 using namespace hh;
 #endif
 
-// *** Ensure hh::details::hh_init() is called
+// *** Ensure hh::details::hh_init() is called.
 
 #if !defined(HH_NO_HH_INIT)
 #include "libHh/Hh_init.h"
 #endif
 
-// *** Begin namespace
+// *** Begin namespace.
 
 namespace hh {
 
-// *** Import some standard C++ names into the hh namespace
+// *** Import some standard C++ names into the hh namespace.
 
 // Common types:
 using std::make_unique;
-using std::size_t;  // (it may be already defined)
-using std::string;  // almost a new fundamental type using std::uint8_t;
+using std::size_t;  // (It may be already imported.)
+using std::string;  // Almost a new fundamental type.
 using std::unique_ptr;
+// Useful general functions:
+using std::clamp;
 // Math functions that are overloaded for vectors:
-using std::abs;  // from <cmath>; else non-templated defined only for int from <cstdlib> (abs(1.5) == 1 is too scary).
+using std::abs;  // From <cmath>; else non-templated defined only for int from <cstdlib>; abs(1.5) == 1 is too scary.
 using std::ceil;
 using std::floor;
-using std::max;  // avoid fmax()
-using std::min;  // avoid fmin()
+using std::max;  // Avoid fmax().
+using std::min;  // Avoid fmin().
 // Other common math functions:
 using std::pow;
 using std::sqrt;
 
-// *** Useful type abbreviations
+// *** Useful type abbreviations.
 
 using uchar = unsigned char;
 using ushort = unsigned short;
 
-// *** Forward declaration of implementation details
+// *** Forward declaration of implementation details.
 
 namespace details {
 template <typename T> struct identity { using type = T; };
@@ -195,7 +194,7 @@ template <typename T> struct sum_type;
 template <typename T> class Range;
 }  // namespace details
 
-// *** Generalized casting
+// *** Generalized casting.
 
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
 template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
@@ -218,14 +217,14 @@ template <typename Target, typename Source> constexpr Target possible_cast(Sourc
 // Cast a temporary as an lvalue; be careful; only use when safe.
 template <typename T> T& as_lvalue(T&& e) { return const_cast<T&>(static_cast<const T&>(e)); }
 
-// *** Constants
+// *** Constants.
 
 constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
 constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 // #undef PI  // instead, use TAU / 2
 
-// *** Utility classes
+// *** Utility classes.
 
 // Derive from this class to disable copy constructor and copy assignment.
 struct noncopyable;
@@ -233,15 +232,15 @@ struct noncopyable;
 // Specialize<i> is a dummy type for function specialization.
 template <int> struct Specialize {};
 
-// *** Assertions, warnings, errors, debug
+// *** Assertions, warnings, errors, debug.
 
 #if defined(HH_DEBUG)
-constexpr bool k_debug = true;  // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
+constexpr bool k_debug = true;  // Convenience variable to avoid introducing "#if defined(HH_DEBUG)".
 #else
-constexpr bool k_debug = false;  // convenience variable to avoid introducing "#if defined(HH_DEBUG)"
+constexpr bool k_debug = false;  // Convenience variable to avoid introducing "#if defined(HH_DEBUG)".
 #endif
 
-// Value used to disable optimizations; it is always zero but unknown to the compiler.
+// Value used to prevent compiler optimizations; it is always zero but unknown to the compiler.
 extern int g_unoptimized_zero;
 
 #define HH_FL " in line " HH_STR2(__LINE__) " of file " __FILE__
@@ -266,8 +265,8 @@ extern int g_unoptimized_zero;
 #define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
 #if defined(HH_DEBUG)
-#define ASSERTX(...) assertx(__VA_ARGS__)   // In release, do not evaluate expression
-#define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization
+#define ASSERTX(...) assertx(__VA_ARGS__)   // In release, do not evaluate expression.
+#define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization.
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
@@ -275,15 +274,15 @@ extern int g_unoptimized_zero;
 #define HH_CHECK_BOUNDS(i, n) (void(0))
 #endif  // defined(HH_DEBUG)
 
-// *** Output functions
+// *** Output functions.
 
 #if 0
 {
   showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
   std::cerr << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
   SHOW(x, y, x * y);
-  SHOW_PRECISE(point + vector);  // show value with greater precision
-  SHOWL;                         // show current filename and line number
+  SHOW_PRECISE(point + vector);  // Show value with greater precision.
+  SHOWL;                         // Show current filename and line number.
 }
 #endif
 
@@ -319,20 +318,18 @@ template <typename A, typename B> std::ostream& operator<<(std::ostream& os, con
 }
 
 // By default, assume that types do not end their stream output with a newline character.
-template <typename T> struct has_ostream_eol_aux {
-  static constexpr bool value() { return false; }  // use variable instead?
-};
+template <typename T> struct has_ostream_eol_aux { static constexpr bool value = false; };
 
 // Declares that the specified type ends its stream output with a newline character; must be placed in namespace hh.
-#define HH_DECLARE_OSTREAM_EOL(...)                \
-  struct has_ostream_eol_aux<__VA_ARGS__> {        \
-    static constexpr bool value() { return true; } \
+#define HH_DECLARE_OSTREAM_EOL(...)         \
+  struct has_ostream_eol_aux<__VA_ARGS__> { \
+    static constexpr bool value = true;     \
   }
 
 // Identifies if a type T ends its stream output (i.e. operator<<(std::ostream)) with a newline character "\n".
 template <typename T> constexpr bool has_ostream_eol() {
   // (function template cannot partially specialize, e.g. Array<T>)
-  return has_ostream_eol_aux<std::remove_cv_t<std::remove_reference_t<T>>>::value();
+  return has_ostream_eol_aux<std::remove_cv_t<std::remove_reference_t<T>>>::value;
 }
 
 // For the specified container type, define an ostream operator<<() that iterates over the container's range.
@@ -340,15 +337,15 @@ template <typename T> constexpr bool has_ostream_eol() {
   std::ostream& operator<<(std::ostream& os, const __VA_ARGS__& c) { return os << hh::stream_range(c); } \
   HH_EAT_SEMICOLON
 
-// *** Inline definitions
+// *** Inline definitions.
 
-// Avoid warnings of unused variables
+// Avoid warnings of unused variables.
 template <typename... A> constexpr void dummy_use(const A&...) {}
 // Note: any compilation errors about redefinition of dummy_use(), etc. on MS VS may be due to the current
 // directory being different from that in precompiled header due to symbol links,
 // or to an explicit MeshRoot environment variable that does not match the current tree.
 
-// Avoid warnings of uninitialized variables
+// Avoid warnings of uninitialized variables.
 template <typename T> void dummy_init(T& v) { v = T(); }
 template <typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}, dummy_init(a...); }
 
@@ -364,10 +361,7 @@ template <typename T> constexpr T signz(const T& e) { return e > T{0} ? T{1} : e
 // Returns a value times itself.
 template <typename T> constexpr T square(const T& e) { return e * e; }
 
-// Returns v clamped to the range [a, b].
-template <typename T> constexpr T clamp(const T& v, const T& a, const T& b);
-
-// Like clamp() but slightly less efficient; however works on values like Vector4.
+// Like clamp() but slightly less efficient; however, it works on values like Vector4.
 template <typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
 
 // Linearly interpolate between two values (f == 1.f returns v1; f == 0.f returns v2).
@@ -394,7 +388,7 @@ template <typename T> details::Range<T> range(T stop) { return details::Range<T>
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
 
-// *** Functions defined in Hh.cpp
+// *** Functions defined in Hh.cpp.
 
 // Register a function to be called by hh_clean_up(); used by timers, statistics, and warnings.
 void hh_at_clean_up(void (*function)());
@@ -412,6 +406,7 @@ std::wstring utf16_from_utf8(const std::string& str);
 
 // e.g. SHOW(type_name<T>());
 template <typename T> string type_name();
+template <typename T> string type_name(const T&) { return type_name<T>(); }
 
 // Write an object e to its string representation using operator<<(ostream&, const T&).
 template <typename T> string make_string(const T& e);
@@ -437,10 +432,10 @@ int to_int(const char* s);
 // Convert string to integer value, or crash if invalid.
 inline int to_int(const string& s) { return to_int(s.c_str()); }
 
-// Allocate an aligned memory block (returns nullptr if fails).
-void* aligned_malloc(size_t size, int alignment);
+// Allocate an aligned memory block (returns nullptr if fails).  Portable std::aligned_alloc().
+void* aligned_malloc(size_t alignment, size_t size);
 
-// Deallocate an aligned memory block previously created by aligned_malloc().
+// Deallocate an aligned memory block previously created by aligned_malloc().  Portable std::free().
 void aligned_free(void* p);
 
 // Allocate n elements of type T, with appropriate memory alignment based on T.
@@ -491,7 +486,7 @@ void show_call_stack();
 // For Unix _exit(code).
 [[noreturn]] void exit_immediately(int code);
 
-// *** Hh_main.cpp
+// *** Hh_main.cpp.
 
 // Return absolute time, in secs (accuracy at least ~.001).
 double get_precise_time();
@@ -597,7 +592,7 @@ template <typename T> struct TypeNameAux {
   // https://stackoverflow.com/questions/4384765/whats-the-difference-between-pretty-function-function-func
   static string name() { return extract_function_type_name(__PRETTY_FUNCTION__); }
 #elif defined(_MSC_VER)
-  static string name() { return extract_function_type_name(__FUNCTION__); }  // also __FUNCSIG__, __FUNCDNAME__
+  static string name() { return extract_function_type_name(__FUNCTION__); }  // Also __FUNCSIG__, __FUNCDNAME__.
 #else
   static string name() { return extract_function_type_name(__func__); }  // C++11 (C99); unadorned so likely to fail!
 #endif
@@ -611,7 +606,7 @@ template <typename T> struct sum_type {
 
 // Range of integral elements defined as in Python range(start, stop), where step is 1 and stop is not included.
 template <typename T> class Range {
-  static_assert(std::is_integral_v<T>);  // must have exact arithmetic for equality testing
+  static_assert(std::is_integral_v<T>);  // Must have exact arithmetic for equality testing.
   class Iterator {
     using type = Iterator;
 
@@ -703,17 +698,12 @@ template <typename C> class stream_range {
 };
 
 template <typename T> void my_zero(T& e) {
-  // e = T{};  // bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4
+  // e = T{};  // Bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4.
   static constexpr T k_dummy_zero_object{};
   e = k_dummy_zero_object;
 }
 template <> inline void my_zero(float& e) { e = 0.f; }
 template <> inline void my_zero(double& e) { e = 0.; }
-
-template <typename T> constexpr T clamp(const T& v, const T& a, const T& b) {
-  ASSERTXX(!(v < a && v > b));
-  return v < a ? a : v > b ? b : v;
-}
 
 inline constexpr float interp(float v1, float v2, float f) {
   return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f
@@ -748,7 +738,7 @@ template <typename T> string make_string(const T& e) {
 }
 
 template <typename T> T* aligned_new(size_t n) {
-  return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(n * sizeof(T), alignof(T)));
+  return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(alignof(T), n * sizeof(T)));
 }
 
 template <typename T> void aligned_delete(T* p) {

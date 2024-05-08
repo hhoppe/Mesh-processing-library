@@ -14,7 +14,7 @@ namespace hh {
 namespace details {
 
 // Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
-template <typename TU, size_t Index = (std::tuple_size<TU>::value - 1)> struct tuple_hash {
+template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_hash {
   size_t operator()(const TU& tu) const {
     return hh::hash_combine(tuple_hash<TU, Index - 1>()(tu), std::get<Index>(tu));
   }
@@ -24,7 +24,7 @@ template <typename TU> struct tuple_hash<TU, 0> {
   size_t operator()(const TU& tu) const { return hh::my_hash(std::get<0>(tu)); }
 };
 
-template <typename TU, size_t Index = (std::tuple_size<TU>::value - 1)> struct tuple_write {
+template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_write {
   void operator()(std::ostream& os, const TU& tu) const {
     tuple_write<TU, Index - 1>()(os, tu);
     os << ", " << std::get<Index>(tu);

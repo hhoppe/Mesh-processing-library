@@ -47,14 +47,14 @@ inline int64_t sync_val_compare_and_swap(volatile int64_t* ptr, int64_t old_valu
 namespace details {
 // Avoid GCC warning "dereferencing type-punned pointer will break strict-aliasing rules" for T = float or double.
 template <typename T, typename S> T* force_pointer_cast(S* s) {
-  static_assert(sizeof(T) == sizeof(S), "");
+  static_assert(sizeof(T) == sizeof(S));
   return reinterpret_cast<T*>(s);
 }
 }  // namespace details
 
 // Atomically apply func (often a lambda function) to the value stored in *ptr (which can be floating-point).
 template <typename T, typename Func> void atomic_operate(volatile T* ptr, Func func) {
-  static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8, "");
+  static_assert(sizeof(T) == 1 || sizeof(T) == 2 || sizeof(T) == 4 || sizeof(T) == 8);
   using Tint = std::conditional_t<
       sizeof(T) == 1, char,
       std::conditional_t<sizeof(T) == 2, short, std::conditional_t<sizeof(T) == 4, int32_t, int64_t>>>;

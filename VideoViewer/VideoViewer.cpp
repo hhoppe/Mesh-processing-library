@@ -845,11 +845,10 @@ void perform_window_rotation(float vrotate) {
 // Change 3-way looping state and display message.
 void set_looping(ELooping looping) {
   g_looping = looping;
-  message(string("Looping set to: ") +
-          (g_looping == ELooping::off   ? "off"
-           : g_looping == ELooping::one ? "one"
-           : g_looping == ELooping::all ? "all"
-                                        : "mirror"));
+  message(string("Looping set to: ") + (g_looping == ELooping::off   ? "off"
+                                        : g_looping == ELooping::one ? "one"
+                                        : g_looping == ELooping::all ? "all"
+                                                                     : "mirror"));
 }
 
 // Set speed and display message.
@@ -1040,7 +1039,7 @@ void unload_current_object() {
 }
 
 template <typename R> Array<float> to_luminance(const R& range) {
-  static_assert(std::is_same<iterator_t<R>, Pixel>::value, "");
+  static_assert(std::is_same_v<iterator_t<R>, Pixel>);
   Array<float> ar;
   ar.reserve(int(distance(range)));
   for (const Pixel& pix : range) ar.push(RGB_to_Y(pix));
@@ -1328,8 +1327,7 @@ bool DerivedHW::key_press(string skey) {
       string old_type = getob().stype();
       if (!g_prompted_for_delete) {
         string s = "yes";
-        if (!query(V(20, 10), "OK to delete " + old_type + " '" + old_filename + "': ", s) || s != "yes")
-          throw "";
+        if (!query(V(20, 10), "OK to delete " + old_type + " '" + old_filename + "': ", s) || s != "yes") throw "";
         g_prompted_for_delete = true;
       }
       bool next_loaded = replace_with_other_object_in_directory(+1);
@@ -2217,8 +2215,7 @@ bool DerivedHW::key_press(string skey) {
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           string s;
-          if (!query(V(20, 10), "Resample by temporal factor (e.g. .5 reduces #frames by half): ", s))
-            throw "";
+          if (!query(V(20, 10), "Resample by temporal factor (e.g. .5 reduces #frames by half): ", s)) throw "";
           if (!Args::check_double(s)) throw "temporal factor is not a float";
           double fac = Args::parse_double(s);
           if (fac <= 0.) throw "factor must be positive";
@@ -2410,8 +2407,7 @@ bool DerivedHW::key_press(string skey) {
           }
           if (!Args::check_double(s)) throw "cannot parse bitrate";
           bitrate = Args::parse_double(s) * factor;
-          if (bitrate <= 0. || abs(bitrate - floor(bitrate + .5)) > 1e-6)
-            throw "bitrate is not positive integer";
+          if (bitrate <= 0. || abs(bitrate - floor(bitrate + .5)) > 1e-6) throw "bitrate is not positive integer";
           ob._video.attrib().bitrate = int(bitrate + .5);
           redraw_later();
           break;

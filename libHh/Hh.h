@@ -74,7 +74,7 @@
 
 // *** Language portability
 
-#define HH_EAT_SEMICOLON static_assert(true, "")  // redundant declaration to swallow subsequent semicolon
+#define HH_EAT_SEMICOLON static_assert(true)  // redundant declaration to swallow subsequent semicolon
 
 // Safest to indirect once through these.  https://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
 #define HH_STR(e) #e
@@ -123,12 +123,6 @@
 #define HH_UNREACHABLE __assume(0)  // this path is never taken
 #else
 #define HH_UNREACHABLE __builtin_unreachable()
-#endif
-
-#if defined(__GNUC__) || defined(__clang__)
-#define HH_UNUSED __attribute__((unused))  // C++17: [[maybe_unused]]
-#else
-#define HH_UNUSED
 #endif
 
 #define HH_ID(x) HH_CAT(_hh_id_, x)  // private identifier in a macro definition
@@ -208,7 +202,7 @@ template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::ty
 
 // For use in downcasting to a derived class.
 template <typename Dest, typename Src> Dest down_cast(Src* f) {
-  static_assert(std::is_base_of<Src, std::remove_pointer_t<Dest>>::value, "");
+  static_assert(std::is_base_of_v<Src, std::remove_pointer_t<Dest>>);
   return static_cast<Dest>(f);
 }
 
@@ -326,7 +320,7 @@ template <typename A, typename B> std::ostream& operator<<(std::ostream& os, con
 
 // By default, assume that types do not end their stream output with a newline character.
 template <typename T> struct has_ostream_eol_aux {
-  static constexpr bool value() { return false; }
+  static constexpr bool value() { return false; }  // use variable instead?
 };
 
 // Declares that the specified type ends its stream output with a newline character; must be placed in namespace hh.
@@ -342,8 +336,8 @@ template <typename T> constexpr bool has_ostream_eol() {
 }
 
 // For the specified container type, define an ostream operator<<() that iterates over the container's range.
-#define HH_DECLARE_OSTREAM_RANGE(...)                                                                                 \
-  std::ostream& operator<<(std::ostream& os, const __VA_ARGS__& c) { return os << hh::stream_range<decltype(c)>(c); } \
+#define HH_DECLARE_OSTREAM_RANGE(...)                                                                    \
+  std::ostream& operator<<(std::ostream& os, const __VA_ARGS__& c) { return os << hh::stream_range(c); } \
   HH_EAT_SEMICOLON
 
 // *** Inline definitions
@@ -610,14 +604,14 @@ template <typename T> struct TypeNameAux {
 };
 
 template <typename T> struct sum_type {
-  using type = std::conditional_t<!std::is_arithmetic<T>::value, T,
-                                  std::conditional_t<std::is_floating_point<T>::value, double,
-                                                     std::conditional_t<std::is_signed<T>::value, int64_t, uint64_t>>>;
+  using type = std::conditional_t<!std::is_arithmetic_v<T>, T,
+                                  std::conditional_t<std::is_floating_point_v<T>, double,
+                                                     std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>>>;
 };
 
 // Range of integral elements defined as in Python range(start, stop), where step is 1 and stop is not included.
 template <typename T> class Range {
-  static_assert(std::is_integral<T>::value, "");  // must have exact arithmetic for equality testing
+  static_assert(std::is_integral_v<T>);  // must have exact arithmetic for equality testing
   class Iterator {
     using type = Iterator;
 

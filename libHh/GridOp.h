@@ -109,14 +109,14 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
 //----------------------------------------------------------------------------
 
 template <int COL_D, int D, typename T> CStridedArrayView<T> grid_column(CGridView<D, T> grid, const Vec<int, D>& u0) {
-  static_assert(COL_D >= 0 && COL_D < D, "");
+  static_assert(COL_D >= 0 && COL_D < D);
   ASSERTX(grid.ok(u0));
   ASSERTX(u0[COL_D] == 0);
   return CStridedArrayView<T>(&grid[u0], grid.dim(COL_D), grid_stride(grid.dims(), COL_D));
 }
 
 template <int COL_D, int D, typename T> StridedArrayView<T> grid_column(GridView<D, T> grid, const Vec<int, D>& u0) {
-  static_assert(COL_D >= 0 && COL_D < D, "");
+  static_assert(COL_D >= 0 && COL_D < D);
   ASSERTX(grid.ok(u0));
   ASSERTX(u0[COL_D] == 0);
   return StridedArrayView<T>(&grid[u0], grid.dim(COL_D), grid_stride(grid.dims(), COL_D));
@@ -178,7 +178,7 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
 
 template <int D, typename U, typename T>
 Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& align) {
-  static_assert(std::is_base_of<CGridView<D, T>, U>::value, "");
+  static_assert(std::is_base_of_v<CGridView<D, T>, U>);
   Vec<Array<int>, D> max_sizes;  // max size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)]
   for_int(d, D) max_sizes[d].init(grids.dim(d), 0);
   for (const auto& u : range(grids.dims())) {

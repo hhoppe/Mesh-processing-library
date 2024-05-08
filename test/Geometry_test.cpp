@@ -10,7 +10,7 @@ namespace {
 
 template <typename R, typename = enable_if_range_t<R>> R truncate_small_floats(R&& range) {
   using T = iterator_t<R>;
-  static_assert(std::is_floating_point<T>::value, "range must contain elements of type float/double");
+  static_assert(std::is_floating_point_v<T>, "range must contain elements of type float/double");
   for (auto& e : range) {
     if (abs(e) < 1e-6f) e = 0.f;
   }
@@ -50,12 +50,12 @@ int main() {
     SHOW(q);
     // SHOW(~f2);
     Frame f2inv = ~f2;
-    truncate_small_floats(ArView(&f2inv[0][0], 12));
+    truncate_small_floats(f2inv.view());
     SHOW(f2inv);
     SHOW(f2 * f2);
     SHOW(q * inverse(f2));
     Frame ff = f3 * f * ~f2 * Frame::identity() * ~Frame::identity();
-    truncate_small_floats(ArView(&ff[0][0], 12));
+    truncate_small_floats(ff.view());
     SHOW(ff);
     Frame zero = Frame::scaling(thrice(0.f));
     SHOW(zero);

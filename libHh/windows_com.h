@@ -50,7 +50,7 @@ template <typename T> class com_ptr : public unique_ptr<T, void (*)(T*)> {
 
 // Helper for IID_PPV_ARGS in "com_ptr<IMFByteStream> pbs; AS(pSource->QueryInterface(IID_PPV_ARGS(&pbs)));".
 template <typename T> void** IID_PPV_ARGS_Helper(com_ptr_ref<T>&& p) {
-  static_assert(std::is_base_of<IUnknown, T>::value, "T has to derive from IUnknown");
+  static_assert(std::is_base_of_v<IUnknown, T>, "T has to derive from IUnknown");
   return reinterpret_cast<void**>(static_cast<T**>(p));
 }
 

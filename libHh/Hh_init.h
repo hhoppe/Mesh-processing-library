@@ -8,7 +8,7 @@
 namespace hh {
 namespace details {
 int hh_init();
-static HH_UNUSED int dummy_init_hh = hh_init();
+[[maybe_unused]] static int dummy_init_hh = hh_init();
 }  // namespace details
 }  // namespace hh
 

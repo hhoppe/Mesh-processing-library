@@ -12,8 +12,8 @@ namespace hh {
 class SUniv;
 using Univ = SUniv*;
 
-static_assert(sizeof(Univ) >= sizeof(int), "");
-static_assert(sizeof(Univ) >= sizeof(float), "");
+static_assert(sizeof(Univ) >= sizeof(int));
+static_assert(sizeof(Univ) >= sizeof(float));
 
 // Templated helper class for conversion to/from Univ.
 template <typename T> struct Conv;

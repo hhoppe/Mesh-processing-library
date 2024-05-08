@@ -95,7 +95,7 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
-# CXX_STD ?= c++14
+CXX_STD ?= c++17
 # PEDANTIC ?= 1
 
 ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)

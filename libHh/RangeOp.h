@@ -192,8 +192,8 @@ template <typename R, typename = enable_if_range_t<R>> std::ptrdiff_t distance(c
 // Higher-precision type to represent the mean of a set of elements.
 template <typename T> struct mean_type {
   using type = std::conditional_t<
-      !std::is_arithmetic<T>::value, T,
-      std::conditional_t<std::is_floating_point<T>::value, double, std::conditional_t<sizeof(T) >= 4, double, float>>>;
+      !std::is_arithmetic_v<T>, T,
+      std::conditional_t<std::is_floating_point_v<T>, double, std::conditional_t<sizeof(T) >= 4, double, float>>>;
 };
 template <typename T> using mean_type_t = typename mean_type<T>::type;
 
@@ -202,7 +202,7 @@ template <typename T> struct factor_type {
   // Some user-defined types T (such as Vector4, Point, Vector) only support T * float, not T * double.
   // T * double is supported for all built-in arithmetic types; otherwise default is T * float.
   // User may override factor_type for a new type T supporting T * double.
-  using type = std::conditional_t<std::is_arithmetic<T>::value, double, float>;
+  using type = std::conditional_t<std::is_arithmetic_v<T>, double, float>;
 };
 template <typename T> using factor_type_t = typename factor_type<T>::type;
 
@@ -262,9 +262,8 @@ Iterator max_abs_element(const R& range) {
 }
 
 // Sum of values in a range.
-template <
-    typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 SumType sum(const R& range) {
   using std::begin;
   using std::end;
@@ -283,7 +282,7 @@ SumType sum(const R& range) {
 // Average of values in a range.
 template <
     typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value, mean_type_t<Iterator>, DesiredType>>
+    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 MeanType mean(const R& range) {
   using std::begin;
   using std::end;
@@ -305,9 +304,8 @@ MeanType mean(const R& range) {
 }
 
 // Sum of squared values in a range (or zero if empty).
-template <
-    typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 SumType mag2(const R& range) {
   using std::begin;
   using std::end;
@@ -327,7 +325,7 @@ SumType mag2(const R& range) {
 // Root sum of squared values in a range.
 template <
     typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value, mean_type_t<Iterator>, DesiredType>>
+    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 MeanType mag(const R& range) {
   return sqrt(mag2<MeanType>(range));
 }
@@ -335,7 +333,7 @@ MeanType mag(const R& range) {
 // Root mean square of values in a range.
 template <
     typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value, mean_type_t<Iterator>, DesiredType>>
+    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 MeanType rms(const R& range) {
   MeanType v;
   my_zero(v);
@@ -355,7 +353,7 @@ MeanType rms(const R& range) {
 // Variance of values in a range.
 template <
     typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value, mean_type_t<Iterator>, DesiredType>>
+    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 MeanType var(const R& range) {
   MeanType zero, v, v2;
   my_zero(zero);
@@ -376,9 +374,8 @@ MeanType var(const R& range) {
 }
 
 // Product of values in a non-empty range.
-template <
-    typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 SumType product(const R& range) {
   using std::begin;
   using std::end;
@@ -400,9 +397,8 @@ template <typename R, typename = enable_if_range_t<R>> bool is_zero(const R& ran
 }
 
 // Does it have unit norm?
-template <
-    typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 bool is_unit(const R& range, SumType tolerance = 1e-4f) {
   return abs(mag2<SumType>(range) - 1.f) <= tolerance;
 }
@@ -418,16 +414,15 @@ template <typename R, typename = enable_if_range_t<R>, typename Iterator = itera
 // Round the values in a range to the nearest 1/fac increment (by default fac == 1e5f).
 template <typename R, typename = enable_if_range_t<R>, typename Iterator = iterator_t<R>>
 R round_elements(R&& range, Iterator fac = 1e5f) {
-  static_assert(std::is_floating_point<Iterator>::value, "");
+  static_assert(std::is_floating_point_v<Iterator>);
   for (auto& e : range) e = round_fraction_digits(e, fac);
   return std::forward<R>(range);
 }
 
 // Compute the sum of squared differences of corresponding elements of two ranges.
-template <
-    typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
-    typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
+          typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 SumType dist2(const R1& range1, const R2& range2) {
   using std::begin;
   using std::end;
@@ -444,16 +439,15 @@ SumType dist2(const R1& range1, const R2& range2) {
 template <
     typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
     typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
-    typename MeanType = std::conditional_t<std::is_same<DesiredType, void>::value, mean_type_t<Iterator>, DesiredType>>
+    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 MeanType dist(const R1& range1, const R2& range2) {
   return sqrt(MeanType(dist2(range1, range2)));
 }
 
 // Compute the inner product of two ranges.
-template <
-    typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
-    typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
-    typename SumType = std::conditional_t<std::is_same<DesiredType, void>::value, sum_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename R1, typename R2, typename = enable_if_range_t<R1>,
+          typename = enable_if_range_t<R2>, typename Iterator = iterator_t<R1>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Iterator>, DesiredType>>
 SumType dot(const R1& range1, const R2& range2) {
   using std::begin;
   using std::end;

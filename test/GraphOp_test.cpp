@@ -47,10 +47,11 @@ void do_ints() {
   // SHOW(Array<int>(g.vertices().begin(), g.vertices().end()).sort());
   int vs = 2;
   {
-    Dijkstra<int, fdist> di(&g, vs);
-    // Dijkstra<int> di(&g, vs, ffdist);  // works too
-    // auto func_fdist = [&](const int& v1, const int& v2) { return float(abs(v1-v2)); };
-    // Dijkstra<int, decltype(func_fdist)> di(g, vs, func_fdist);  // works too
+    Dijkstra di(&g, vs, fdist());
+    // Dijkstra<int, fdist> di(&g, vs);  // works too
+    // Dijkstra di(&g, vs, ffdist);  // works too
+    // const auto func_fdist = [&](const int& v1, const int& v2) { return float(abs(v1 - v2)); };
+    // Dijkstra di(&g, vs, func_fdist);  // works too
     for (;;) {
       if (di.done()) break;
       float dis;

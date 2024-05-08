@@ -40,13 +40,13 @@
 namespace hh {
 
 // Compilation-time tests for assumptions present in my C++ code
-static_assert(sizeof(int) >= 4, "");
-static_assert(sizeof(char) == 1, "");
-static_assert(sizeof(uchar) == 1, "");
-static_assert(sizeof(short) == 2, "");
-static_assert(sizeof(ushort) == 2, "");
-static_assert(sizeof(int64_t) == 8, "");
-static_assert(sizeof(uint64_t) == 8, "");
+static_assert(sizeof(int) >= 4);
+static_assert(sizeof(char) == 1);
+static_assert(sizeof(uchar) == 1);
+static_assert(sizeof(short) == 2);
+static_assert(sizeof(ushort) == 2);
+static_assert(sizeof(int64_t) == 8);
+static_assert(sizeof(uint64_t) == 8);
 
 const char* g_comment_prefix_string = "# ";  // not string because cannot be destroyed before Timers destruction
 
@@ -132,7 +132,7 @@ std::string utf8_from_utf16(const std::wstring& wstr) {
   // Writing into std::string using &str[0] is arguably legal in C++11; see discussion at
   //  https://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers .
   // It is officially supported in C++17 using non-const str.data().
-  assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, &str[0], nchars, nullptr, nullptr));
+  assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, str.data(), nchars, nullptr, nullptr));
   return str;
 }
 
@@ -142,7 +142,7 @@ std::wstring utf16_from_utf8(const std::string& str) {
   int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), nullptr, 0);
   assertx(nwchars > 0);
   std::wstring wstr(nwchars - 1, wchar_t{0});
-  assertx(MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), &wstr[0], nwchars));
+  assertx(MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), wstr.data(), nwchars));
   return wstr;
 }
 
@@ -436,7 +436,7 @@ static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, s
   for (;;) {
     va_copy(ap2, ap);
     // NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
-    int n = vsnprintf(&str[0], str.size(), format, ap2);  // string::data() returns const char*
+    int n = vsnprintf(str.data(), str.size(), format, ap2);  // string::data() returns const char*
     va_end(ap2);
     if (promised) assertx(n == narrow_cast<int>(str.size()) - 1);
     if (n >= 0) {

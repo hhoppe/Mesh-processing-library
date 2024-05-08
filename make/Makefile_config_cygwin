@@ -1,7 +1,8 @@
 rel ?= 1#  0=debug or 1=release  (usually 1; debug has bug: "-g" on getline() causes crash)
 x64 = 1
 
-CXX_STD ?= gnu++14              # Within CYGWIN, -std=c++14 omits fileno() and setitimer().
+# Within CYGWIN, -std=c++17 (or c++14) omits: popen(), pclose(), usleep(), gethostname(), setenv(), getenv().
+CXX_STD = gnu++17
 
 ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
   # omit_omp = 1                  # "<omp.h> not found", but maybe before I removed -fopenmp?

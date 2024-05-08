@@ -831,7 +831,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
   assertt(write_raw(file, magic.view()));
   int ncomp = image.zsize();
   bmp_BITMAPFILEHEADER_HH bmfh;
-  static_assert(sizeof(bmfh) == k_size_BITMAPFILEHEADER - magic.num(), "");
+  static_assert(sizeof(bmfh) == k_size_BITMAPFILEHEADER - magic.num());
   int headers2size = k_size_BITMAPFILEHEADER + sizeof(bmp_BITMAPINFOHEADER);
   bmfh.bfReserved1 = 0;
   to_dos(&bmfh.bfReserved1);

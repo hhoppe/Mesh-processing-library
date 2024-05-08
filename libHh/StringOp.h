@@ -58,14 +58,14 @@ static inline string replace_all(const string& str, const string& substring, con
 // Convert a string to lowercase.
 inline string to_lower(string s) {
   // for (char& ch : s) if (std::isupper(ch)) ch += 'a' - 'A';
-  std::use_facet<std::ctype<char>>(std::locale()).tolower(&s[0], &s[0] + s.size());  // fails with s.data()
+  std::use_facet<std::ctype<char>>(std::locale()).tolower(s.data(), s.data() + s.size());
   return s;
 }
 
 // Convert a string to uppercase.
 inline string to_upper(string s) {
   // for (char& ch : s) if (std::islower(ch)) ch += 'A' - 'a';
-  std::use_facet<std::ctype<char>>(std::locale()).toupper(&s[0], &s[0] + s.size());  // fails with s.data()
+  std::use_facet<std::ctype<char>>(std::locale()).toupper(s.data(), s.data() + s.size());
   return s;
 }
 

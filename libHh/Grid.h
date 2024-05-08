@@ -85,7 +85,7 @@ template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim);
 
 // Compute the size_t product of a small fixed set of numbers.
 template <int D> size_t product_dims(const int* ar) {
-  static_assert(D > 0, "");
+  static_assert(D > 0);
   size_t v = ar[0];
   if (D > 1) {
     for_intL(i, 1, D) v *= ar[i];
@@ -102,7 +102,7 @@ template <int D, typename T> class CGridView {
  public:
   explicit CGridView(const T* a, const Vec<int, D>& dims) : _a(const_cast<T*>(a)), _dims(dims) {}
   CGridView(const type&) = default;
-  explicit CGridView(CArrayView<T> ar) : CGridView(ar.data(), V(ar.num())) { static_assert(D == 1, ""); }
+  explicit CGridView(CArrayView<T> ar) : CGridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
   // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
   void reinit(type g) { *this = g; }
   template <typename T2> friend bool same_size(type g1, CGridView<D, T2> g2) { return g1.dims() == g2.dims(); }
@@ -150,11 +150,11 @@ template <int D, typename T> class CGridView {
   CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   // For implementation of Matrix (D == 2):
   int ysize() const {
-    static_assert(D == 2, "");
+    static_assert(D == 2);
     return dim(0);
   }
   int xsize() const {
-    static_assert(D == 2, "");
+    static_assert(D == 2);
     return dim(1);
   }
   bool map_inside(int& y, int& x, Bndrule bndrule) const;  // ret: false if bndrule == Border and i is outside
@@ -190,7 +190,7 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
  public:
   explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // stop recursion if ArrayView == GridView
   GridView(const type&) = default;                                     // because it has explicit copy assignment
-  explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1, ""); }
+  explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
   void reinit(type g) { *this = g; }
   using base::size;
   typename details::Grid_aux<D, T>::Ret operator[](int r);
@@ -242,13 +242,13 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   }
   const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const;
   void reverse_y() {
-    static_assert(D == 2, "");
+    static_assert(D == 2);
     const int ny = this->ysize();
     parallel_for_each(
         range(ny / 2), [&](const int y) { swap_ranges((*this)[y], (*this)[ny - 1 - y]); }, this->xsize() * 2);
   }
   void reverse_x() {
-    static_assert(D == 2, "");
+    static_assert(D == 2);
     const int ny = this->ysize();
     parallel_for_each(
         range(ny), [&](const int y) { reverse((*this)[y]); }, this->xsize() * 2);
@@ -383,7 +383,7 @@ template <> inline constexpr size_t ravel_index(const Vec<int, 0>& dims, const V
 }
 
 template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
-  static_assert(D >= 1, "");
+  static_assert(D >= 1);
   Vec<int, D> u;
   for (int d = D - 1; d >= 1; --d) {
     size_t t = i / dims[d];
@@ -471,12 +471,12 @@ template <typename T> struct Grid_get<3, T> {  // specialization for speedup
   }
 };
 template <int D, typename T> CGridView<D - 1, T> details::Grid_get<D, T>::cget(const T* a, const int* dims, int r) {
-  static_assert(D >= 4, "");
+  static_assert(D >= 4);
   return CGridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));
 }
 //
 template <int D, typename T> GridView<D - 1, T> details::Grid_get<D, T>::get(T* a, const int* dims, int r) {
-  static_assert(D >= 4, "");
+  static_assert(D >= 4);
   return GridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));
 }
 
@@ -525,18 +525,18 @@ template <int D, typename T> typename details::Grid_aux<D, T>::CRet CGridView<D,
 template <int D, typename T>
 template <int n>
 typename details::Grid_aux<D - n + 1, T>::CRet CGridView<D, T>::operator[](const Vec<int, n>& u) const {
-  static_assert(n >= 0 && n <= D, "");
+  static_assert(n >= 0 && n <= D);
   return details::Grid_get2<D - n, T>::template cget2<n>(_a, _dims, u);
 }
 
 template <int D, typename T> template <typename... A> const T& CGridView<D, T>::operator()(A... dd) const {
-  static_assert(sizeof...(dd) == D, "");
+  static_assert(sizeof...(dd) == D);
   return _a[ravel_index_list(_dims, dd...)];
 }
 
 template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule1) const {
   // (renamed bndrule to bndrule1 due to buggy VS2015 warning about shadowed variable)
-  static_assert(D == 2, "");
+  static_assert(D == 2);
   return map_boundaryrule_1D(y, ysize(), bndrule1) && map_boundaryrule_1D(x, xsize(), bndrule1);
 }
 
@@ -559,24 +559,24 @@ template <int D, typename T> typename details::Grid_aux<D, T>::Ret GridView<D, T
 template <int D, typename T>
 template <int n>
 typename details::Grid_aux<D - n + 1, T>::Ret GridView<D, T>::operator[](const Vec<int, n>& u) {
-  static_assert(n >= 0 && n <= D, "");
+  static_assert(n >= 0 && n <= D);
   return details::Grid_get2<D - n, T>::template get2<n>(_a, _dims, u);
 }
 
 template <int D, typename T>
 template <int n>
 typename details::Grid_aux<D - n + 1, T>::CRet GridView<D, T>::operator[](const Vec<int, n>& u) const {
-  static_assert(n >= 0 && n <= D, "");
+  static_assert(n >= 0 && n <= D);
   return details::Grid_get2<D - n, T>::template cget2<n>(_a, _dims, u);
 }
 
 template <int D, typename T> template <typename... A> T& GridView<D, T>::operator()(A... dd) {
-  static_assert(sizeof...(dd) == D, "");
+  static_assert(sizeof...(dd) == D);
   return _a[ravel_index_list(_dims, dd...)];
 }
 
 template <int D, typename T> template <typename... A> const T& GridView<D, T>::operator()(A... dd) const {
-  static_assert(sizeof...(dd) == D, "");
+  static_assert(sizeof...(dd) == D);
   return _a[ravel_index_list(_dims, dd...)];
 }
 

@@ -142,9 +142,9 @@ SHOW(t5);
 }
 {
   Vec<char, 2> magic{'B', 'M'};
-  static_assert(sizeof(magic) == 2, "");
+  static_assert(sizeof(magic) == 2);
   Vec<uchar, 4> buf2{uchar{0}, uchar{0}, uchar{0}, uchar{0}};
-  static_assert(sizeof(buf2) == 4, "");
+  static_assert(sizeof(buf2) == 4);
 }
 {
   Vec2<float> p(1.f, 2.f), q(8.f, 7.f), r;
@@ -205,22 +205,22 @@ SHOW(t5);
   SHOW(-pp);
 }
 {
-  static_assert(std::is_standard_layout<Vec3<int>>::value == true, "");
-  static_assert(std::is_trivially_default_constructible<Vec3<int>>::value == true, "");
-  static_assert(std::is_trivially_copyable<Vec3<int>>::value == true, "");
-  static_assert(std::is_trivially_copyable<S>::value == true, "");
-  static_assert(std::is_trivially_copyable<S3>::value == true, "");
-  static_assert(std::is_trivially_copyable<S4>::value == true, "");
-  static_assert(std::is_trivial<Vec3<int>>::value == true, "");
-  static_assert(std::is_trivial<S>::value == true, "");
-  static_assert(std::is_trivial<S3>::value == true, "");
-  static_assert(std::is_standard_layout<Vec3<int>>::value == true, "");
-  static_assert(std::is_standard_layout<S>::value == true, "");
-  static_assert(std::is_standard_layout<S3>::value == true, "");
-  static_assert(std::is_standard_layout<S2>::value == true, "");
-  static_assert(std::is_trivial<S2>::value == true, "");
-  static_assert(std::is_standard_layout<S4>::value == true, "");
-  static_assert(std::is_trivial<S4>::value == true, "");
+  static_assert(std::is_standard_layout_v<Vec3<int>> == true);
+  static_assert(std::is_trivially_default_constructible_v<Vec3<int>> == true);
+  static_assert(std::is_trivially_copyable_v<Vec3<int>> == true);
+  static_assert(std::is_trivially_copyable_v<S> == true);
+  static_assert(std::is_trivially_copyable_v<S3> == true);
+  static_assert(std::is_trivially_copyable_v<S4> == true);
+  static_assert(std::is_trivial_v<Vec3<int>> == true);
+  static_assert(std::is_trivial_v<S> == true);
+  static_assert(std::is_trivial_v<S3> == true);
+  static_assert(std::is_standard_layout_v<Vec3<int>> == true);
+  static_assert(std::is_standard_layout_v<S> == true);
+  static_assert(std::is_standard_layout_v<S3> == true);
+  static_assert(std::is_standard_layout_v<S2> == true);
+  static_assert(std::is_trivial_v<S2> == true);
+  static_assert(std::is_standard_layout_v<S4> == true);
+  static_assert(std::is_trivial_v<S4> == true);
 }
 {
   Set<size_t> set;
@@ -284,10 +284,10 @@ if (0) {
     // P& operator=(P&&) { SHOW("P::operator=(P&&)"); return *this; }
   };
 #if 0
-  static_assert(std::is_trivial<P>::value == false, "");
-  static_assert(std::is_trivial<Vec1<P>>::value == false, "");
-  static_assert(std::is_trivially_copyable<P>::value == false, "");
-  static_assert(std::is_trivially_copyable<Vec1<P>>::value == false, "");
+  static_assert(std::is_trivial_v<P> == false);
+  static_assert(std::is_trivial_v<Vec1<P>> == false);
+  static_assert(std::is_trivially_copyable_v<P> == false);
+  static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
 #endif
   Vec1<P> s1;
   Vec1<P> s2 = s1;

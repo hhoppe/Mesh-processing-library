@@ -172,13 +172,13 @@ Vector bary_vector(const Vec3<Point>& pa, const Bary& bary);
 
 // Convert degrees to radians.
 template <typename T> constexpr T to_rad(T deg) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   return deg * static_cast<T>(D_TAU / 360);
 }
 
 // Convert radians to degrees.
 template <typename T> constexpr T to_deg(T rad) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   return rad * static_cast<T>(360 / D_TAU);
 }
 

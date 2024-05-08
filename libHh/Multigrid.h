@@ -50,7 +50,7 @@ inline double max_e(double e) { return e; }
 inline float max_e(const Vector4& e) { return max(e); }
 
 // Specialize mean() of Grid for parallelism.
-template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_type_t<T>> mean(CGridView<D, T> g) {
+template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(CGridView<D, T> g) {
   using MeanType = mean_type_t<T>;
   MeanType v;
   my_zero(v);
@@ -75,10 +75,10 @@ template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean
   }
   return v * (1. / size);
 }
-template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_type_t<T>> mean(GridView<D, T> g) {
+template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(GridView<D, T> g) {
   return mean(static_cast<CGridView<D, T>>(g));
 }
-template <int D, typename T> std::enable_if_t<std::is_arithmetic<T>::value, mean_type_t<T>> mean(const Grid<D, T>& g) {
+template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(const Grid<D, T>& g) {
   return mean(static_cast<CGridView<D, T>>(g));
 }
 
@@ -166,12 +166,12 @@ class Multigrid : noncopyable {
   Periodic _periodic;
   Metric _metric;
   //
-  static constexpr bool b_no_periodicity = std::is_same<Periodic, MultigridPeriodicNone<D>>::value;
-  static constexpr bool b_default_metric = std::is_same<Metric, MultigridMetricIsotropic<D>>::value;
+  static constexpr bool b_no_periodicity = std::is_same_v<Periodic, MultigridPeriodicNone<D>>;
+  static constexpr bool b_default_metric = std::is_same_v<Metric, MultigridMetricIsotropic<D>>;
   static constexpr bool b_fastest = 0;
   static constexpr int k_direct_solver_resolution = 2;  // = 2, 4, 8
   static constexpr int k_num_iter_gauss_seidel = 2;     // 1, 2, 5, 10, 20, 100; note that 1 or 2 is sufficient
-  static constexpr int k_default_num_vcycles = 0 ? 25 : std::is_same<T, double>::value ? 12 : 5;  // 5, 12, 16, 25, 50
+  static constexpr int k_default_num_vcycles = 0 ? 25 : std::is_same_v<T, double> ? 12 : 5;  // 5, 12, 16, 25, 50
   static constexpr bool k_enable_specializations = b_no_periodicity && 1;
   //
   bool have_orig() const { return _grid_orig.size() > 0; }
@@ -637,7 +637,7 @@ class Multigrid : noncopyable {
           int o = ar_interior_offsets[2];
           vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         }
-        static_assert(D <= 3, "");
+        static_assert(D <= 3);
       }
       float vnum = _screening_weight + wL * (2.f * D);
       grid_residual.flat(i) = grid_rhs.flat(i) - (wL * vnei - vnum * grid_result.flat(i));  // OPT:resid

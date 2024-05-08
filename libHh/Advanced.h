@@ -16,10 +16,10 @@ template <typename T> T& optional_reference(const std::unique_ptr<T>& up) {
 template <typename T> std::decay_t<T> clone(T&& v) {
   // First, verify that T is default-constructible;
   //  my exotic classes like ArrayView and GridView are not default-constructible and should not be cloned.
-  static_assert(std::is_default_constructible<std::decay_t<T>>::value, "");  // or maybe (void(T{}));
+  static_assert(std::is_default_constructible_v<std::decay_t<T>>);  // or maybe (void(T{}));
   // if r-value reference, return moved object;
   // else it is an l-value reference (const or not) and return a copy.
-  // return std::is_rvalue_reference<T>::value ? std::move(v) : std::decay_t<T>(v);
+  // return std::is_rvalue_reference_v<T> ? std::move(v) : std::decay_t<T>(v);
   return std::decay_t<T>(std::forward<T>(v));  // std::decay_t<T> cast is necessary for explicit constructor
 }
 // Note: the following would lead to an extra move-construction if v is an rvalue
@@ -59,14 +59,6 @@ template <typename T> size_t my_hash(const T& v) { return std::hash<T>()(v); }
 template <typename T> size_t hash_combine(size_t seed, const T& v) {
   return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
-
-// Nice syntax for in-order expansion of parameter packs.
-//  examples: do_in_order { (process(args), 0)... };
-//            do_in_order { i += args.num() ... };
-// In C++17, replace by fold expression with comma operator; https://en.cppreference.com/w/cpp/language/fold
-struct do_in_order {
-  template <typename T> do_in_order(std::initializer_list<T>&&) {}
-};
 
 }  // namespace hh
 

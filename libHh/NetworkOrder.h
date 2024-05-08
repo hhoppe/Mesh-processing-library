@@ -66,7 +66,7 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 // constexpr bool is_big_endian = std::endian::native == std::endian::big;
 
 template <typename T> void my_swap_bytes(T* p) {
-  static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2, "");
+  static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2);
   // The "union" are required for gcc 4.8.1; otherwise it changes value in memory but not in register
   //  -- see NetworkOrder_test.cpp
   // First tried making "T* p" be volatile, but that hit another compiler bug in FrameIO.cpp

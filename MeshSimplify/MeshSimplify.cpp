@@ -1703,7 +1703,7 @@ void perhaps_initialize() {
         showdf("Reading terrain grid (%dx%d)\n", grid_dims[1], grid_dims[0]);
         assertx(min(grid_dims) >= 4);
         g_gridu.init(grid_dims);
-        static_assert(sizeof(ushort) == 2, "");
+        static_assert(sizeof(ushort) == 2);
         for_int(y, grid_dims[0]) assertx(read_binary_std(fi(), g_gridu[y]));
       }
     } else {

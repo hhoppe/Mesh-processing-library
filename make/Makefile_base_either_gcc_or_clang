@@ -12,8 +12,6 @@ no_warnings = -w
 
 gcc_or_clang = 1
 
-CXX_STD ?= c++14
-
 machine_arch = -march=native#  Fastest code on local machine.
 # machine_arch = -march=corei7#  To be able to run the same executable on more machines.
 

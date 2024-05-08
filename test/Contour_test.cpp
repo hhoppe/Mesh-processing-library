@@ -38,7 +38,7 @@ void test2D() {
     func_polylinetoa3d(poly, el);
     wborder.write(el);
   };
-  Contour2D<feval2D, decltype(func_contour), decltype(func_border)> contour(gn, feval2D(), func_contour, func_border);
+  Contour2D contour(gn, feval2D(), func_contour, func_border);
   contour.march_near(V(.64f, .39f));
   // contour.march_from(V(.64f, .39f));
 }
@@ -74,7 +74,7 @@ void test3D() {
     func_polygontoa3d(poly, el);
     wborder.write(el);
   };
-  Contour3D<feval3D, decltype(func_contour), decltype(func_border)> contour(gn, func_contour, feval3D(), func_border);
+  Contour3D contour(gn, func_contour, feval3D(), func_border);
   int nc1 = contour.march_from(Point(.35f, .3f, .3f));
   int nc2 = contour.march_from(Point(.25f, .65f, .7f));
   int nc3 = contour.march_from(Point(.95f, .65f, .7f));
@@ -152,7 +152,7 @@ void do_sphere() {
   };
   GMesh mesh;
   {
-    Contour3DMesh<decltype(func_sphere)> contour(128, &mesh, func_sphere);
+    Contour3DMesh contour(128, &mesh, func_sphere);
     contour.set_vertex_tolerance(1 ? 1e-5f : 0);
     contour.march_near(Point(.5f + k_radius, .5f, .5f));
   }
@@ -169,7 +169,7 @@ int main() {
     };
     GMesh mesh;
     {
-      Contour3DMesh<decltype(func_eval)> contour(50, &mesh, func_eval);  // or 6
+      Contour3DMesh contour(50, &mesh, func_eval);  // or 6
       contour.march_near(Point(.9f, .5f, .5f));
     }
     mesh.write(std::cout);

@@ -762,8 +762,8 @@ void do_fgfit(Args& args) {
   FG fg;
   fg._niter = niter;
   if (getenv_string("NLOPT_DEBUG") == "") my_setenv("NLOPT_DEBUG", "1");
-  auto func_eval = [&](ArrayView<double> ret_grad) { return fg.feval(ret_grad); };
-  NonlinearOptimization<decltype(func_eval)> opt(fg._x, func_eval);
+  const auto func_eval = [&](ArrayView<double> ret_grad) { return fg.feval(ret_grad); };
+  NonlinearOptimization opt(fg._x, func_eval);
   assertx(niter > 0);
   opt.set_max_neval(niter + 1);
   assertw(opt.solve());

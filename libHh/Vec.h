@@ -15,7 +15,7 @@ template <int D> class VecL_range;
 // Allocated fixed-size 1D array with n elements of type T.
 // Like std::array<T, n>, but with constructors and "empty base class optimization" support for n == 0.
 template <typename T, int n> class Vec : details::Vec_base<T, n> {
-  static_assert(n >= 0, "");
+  static_assert(n >= 0);
   using type = Vec<T, n>;
   using base = details::Vec_base<T, n>;
 
@@ -70,20 +70,20 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   ArrayView<T> tail(int s) { return segment(n - s, s); }
   CArrayView<T> tail(int s) const { return segment(n - s, s); }
   template <int i, int s> Vec<T, s>& segment() {  // V(1, 2, 3, 4).segment<2, 1> == V(2, 3)
-    static_assert(i >= 0 && s >= 0 && i + s <= n, "");
+    static_assert(i >= 0 && s >= 0 && i + s <= n);
     return *reinterpret_cast<Vec<T, s>*>(a() + i);
   }
   template <int i, int s> const Vec<T, s>& segment() const {
-    static_assert(i >= 0 && s >= 0 && i + s <= n, "");
+    static_assert(i >= 0 && s >= 0 && i + s <= n);
     return *reinterpret_cast<const Vec<T, s>*>(a() + i);
   }
   template <int s> Vec<T, s>& segment(int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3)
-    static_assert(s >= 0 && s <= n, "");
+    static_assert(s >= 0 && s <= n);
     ASSERTXX(check(i, s));
     return *reinterpret_cast<Vec<T, s>*>(a() + i);
   }
   template <int s> const Vec<T, s>& segment(int i) const {
-    static_assert(s >= 0 && s <= n, "");
+    static_assert(s >= 0 && s <= n);
     ASSERTXX(check(i, s));
     return *reinterpret_cast<const Vec<T, s>*>(a() + i);
   }
@@ -110,8 +110,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   template <typename Func = T(int)> static type create(Func func) {
     return create_aux(func, std::make_index_sequence<n>());
   }
-  // (std::is_floating_point_v<> requires C++17.)
-  template <typename U = T> std::enable_if_t<std::is_floating_point<U>::value, bool> normalize() {
+  template <typename U = T> std::enable_if_t<std::is_floating_point_v<U>, bool> normalize() {
     auto sum2 = mag2(*this);
     if (!sum2) return false;
     *this *= 1.f / sqrt(sum2);
@@ -318,7 +317,7 @@ template <int D> class Vec_iterator {
   }
   const Vec<int, D>& operator*() const { return (ASSERTX(_u[0] < _uU[0]), _u); }
   type& operator++() {
-    static_assert(D > 0, "");
+    static_assert(D > 0);
     ASSERTXX(_u[0] < _uU[0]);
     if (D == 1) {
       _u[0]++;

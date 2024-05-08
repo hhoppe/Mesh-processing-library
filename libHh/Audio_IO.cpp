@@ -33,7 +33,7 @@ struct WavHeader {
   uint32_t Subchunk2Size;
 };
 
-static_assert(sizeof(WavHeader) == 44, "");
+static_assert(sizeof(WavHeader) == 44);
 
 }  // namespace
 

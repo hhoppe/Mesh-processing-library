@@ -82,9 +82,9 @@ int main() {
   }
 #if 0
   {
-    // fails: static_assert(std::is_trivially_copyable<Vector4>::value, "");
+    // fails: static_assert(std::is_trivially_copyable_v<Vector4>);
 #if defined(HH_VECTOR4_SSE)
-    static_assert(std::is_trivially_copyable<__m128>::value, "");  // true
+    static_assert(std::is_trivially_copyable_v<__m128>);  // true
 #endif
   }
 #endif

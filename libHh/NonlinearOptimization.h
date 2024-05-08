@@ -17,11 +17,11 @@ namespace hh {
 //  provided in x, and places the obtained minimum in x.  It returns false if the solution fails to converge.
 // The optimization iterates until machine-precision convergence, or until a maximum number of evaluations
 //  provided using set_max_neval().
-template <typename Eval = double (&)(ArrayView<double>)> class NonlinearOptimization : noncopyable {
+// Eval = double (&)(ArrayView<double>)
+template <typename Eval> class NonlinearOptimization : noncopyable {
  public:
   // (renamed x to x_ due to VS2015 bug warning "C4459: declaration of 'x' hides global declaration")
-  explicit NonlinearOptimization(ArrayView<double> x_) : NonlinearOptimization(x_, Eval()) {}
-  explicit NonlinearOptimization(ArrayView<double> x_, Eval eval) : NonlinearOptimization(nullptr, x_, eval) {
+  explicit NonlinearOptimization(ArrayView<double> x_, Eval eval = Eval()) : NonlinearOptimization(nullptr, x_, eval) {
     _debug = getenv_int("NLOPT_DEBUG");
   }
   void set_max_neval(int max_neval) { _max_neval = max_neval; }  // default is -1 which signifies infinity

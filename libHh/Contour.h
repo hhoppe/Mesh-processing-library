@@ -17,7 +17,7 @@
   };
   if (1) {
     GMesh mesh;
-    Contour3DMesh<decltype(func_eval)> contour(50, &mesh, func_eval);
+    Contour3DMesh contour(50, &mesh, func_eval);
     contour.march_near(Point(.9f, .6f, .6f));
     mesh.write(std::cout);
   } else {
@@ -25,8 +25,7 @@
       void operator()(const Array<Vec3<float>>&){...};
     };
     auto func_border = [](const Array<Vec3<float>>&) { ... };
-    Contour3D<decltype(func_eval), func_contour, decltype(func_border)> contour(50, func_eval, func_contour(),
-                                                                                func_border);
+    Contour3D contour(50, func_eval, func_contour(), func_border);
     contour.march_from(Point(.9f, .6f, .6f));
   }
 }
@@ -61,7 +60,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   static constexpr float k_not_yet_evaled = BIGFLOAT;
   using DPoint = Vec<float, D>;  // domain point
   using IPoint = Vec<int, D>;    // grid point
-  static_assert(D == 2 || D == 3, "");
+  static_assert(D == 2 || D == 3);
   static constexpr int k_max_gn = D == 3 ? 1024 : 65536;  // bits/coordinate == 10 for 3D, 16 for 2D (max 32 bits)
   explicit ContourBase(int gn) : _gn(gn), _gni(1.f / gn) {
     assertx(_gn > 0);
@@ -225,16 +224,16 @@ class Contour3DBase : public ContourBase<3, VertexData> {
  protected:
   Eval _eval;
   Border _border;
-  static constexpr bool b_no_border = std::is_same<Border, Contour3D_NoBorder>::value;
+  static constexpr bool b_no_border = std::is_same_v<Border, Contour3D_NoBorder>;
   using Node222 = SGrid<Node*, 2, 2, 2>;
   using base::k_not_yet_evaled;
   //
   unsigned encode(const IPoint& ci) const {
-    static_assert(k_max_gn <= 1024, "");
+    static_assert(k_max_gn <= 1024);
     return (((unsigned(ci[0]) << 10) | unsigned(ci[1])) << 10) | unsigned(ci[2]);
   }
   IPoint decode(unsigned en) const {
-    static_assert(k_max_gn <= 1024, "");
+    static_assert(k_max_gn <= 1024);
     return IPoint(narrow_cast<int>(en >> 20), narrow_cast<int>((en >> 10) & ((1u << 10) - 1)),
                   narrow_cast<int>(en & ((1u << 10) - 1)));
   }
@@ -582,16 +581,16 @@ class Contour2D : public ContourBase<2> {
   Eval _eval;
   Contour _contour;
   Border _border;
-  static constexpr bool b_no_border = std::is_same<Border, Contour2D_NoBorder>::value;
+  static constexpr bool b_no_border = std::is_same_v<Border, Contour2D_NoBorder>;
   using Node22 = SGrid<Node*, 2, 2>;
   using base::k_not_yet_evaled;
   //
   unsigned encode(const IPoint& ci) const {
-    static_assert(k_max_gn <= 65536, "");
+    static_assert(k_max_gn <= 65536);
     return (unsigned(ci[0]) << 16) | unsigned(ci[1]);
   }
   IPoint decode(unsigned en) const {
-    static_assert(k_max_gn <= 65536, "");
+    static_assert(k_max_gn <= 65536);
     return IPoint(narrow_cast<int>(en >> 16), narrow_cast<int>(en & ((1u << 16) - 1)));
   }
   int march_from_i(const DPoint& startp) {

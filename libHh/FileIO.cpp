@@ -845,9 +845,7 @@ namespace {
 
 #if !defined(_WIN32)
 
-FILE* my_popen(const string& scmd, const string& mode) {
-  return popen(scmd.c_str(), mode.c_str());
-}
+FILE* my_popen(const string& scmd, const string& mode) { return popen(scmd.c_str(), mode.c_str()); }
 
 FILE* my_popen(CArrayView<string> sargv, const string& mode) {
   string scmd;

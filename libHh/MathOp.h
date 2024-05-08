@@ -63,7 +63,7 @@ inline constexpr int my_mod(int a, int b) {
 
 // Modulo operation on floating-point values.  (In contrast, std::fmod(a, b) returns negative remainders if a < 0.f).
 template <typename T> T my_mod(T a, T b) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   ASSERTX(b > T{0});
   T ret = std::fmod(a, b);
   if (ret < T{0}) ret += b;
@@ -77,19 +77,19 @@ float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
 
 // Evaluate a smooth-step function; x in [0, 1] -> ret: [0, 1]  (with zero derivatives at x == 0 and x == 1).
 template <typename T> constexpr T smooth_step(T x) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   return x * x * (T{3} - T{2} * x);
 }
 
 // Compute fractional part (as in HLSL).
 template <typename T> T frac(T f) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   return f - floor(f);
 }
 
 // Evaluate a Gaussian function.
 template <typename T> T gaussian(T x, T sdv = T{1}) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   return std::exp(-square(x / sdv) / T{2}) / (sqrt(static_cast<T>(D_TAU)) * sdv);
 }
 
@@ -110,7 +110,7 @@ template <typename T> T my_asin(T a) {
 
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.
 template <typename T> T my_sqrt(T a) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   if (a < T{0}) {
     assertx(a > (sizeof(T) == sizeof(float) ? T{-1e-5f} : T{-1e-10f}));
     return T{0};

@@ -38,8 +38,8 @@ constexpr int k_write_size = 8192;
 
 void Buffer::shift() {
   assertx(_beg);
-  // if (_n) std::copy(&_ar[_beg], &_ar[_beg] + _n, _ar.begin());  // ranges overlap but shift is "left" so OK.
-  std::memmove(&_ar[0], &_ar[_beg], unsigned(_n));  // safe for known element type (char); extents may overlap.
+  // if (_n) std::copy(_ar.data() + _beg, _ar.data() + _beg + _n, _ar.data());  // overlap but shift is "left" so OK.
+  std::memmove(_ar.data(), _ar.data() + _beg, unsigned(_n));  // safe for known type (char); extents may overlap.
   _beg = 0;
 }
 

@@ -26,7 +26,7 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
 
 template <typename T>
 bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   const int m = A.ysize(), n = A.xsize();
   assertx(n >= 1);
   assertx(m >= n);
@@ -101,7 +101,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
 }
 
 template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   const int m = U.ysize(), n = U.xsize();
   assertx(n >= 1);
   assertx(m >= n);

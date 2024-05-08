@@ -22,18 +22,19 @@
 namespace hh {
 
 namespace details {
-template <typename R> struct has_begin;
-template <typename R> struct range_elem;
+template <typename T> struct has_begin;
+template <typename T> struct range_elem;
 }  // namespace details
 
-// Determine if type R is a range (i.e. supports begin()).
-template <typename R> struct is_range { static constexpr bool value = details::has_begin<R>::value; };
+// Determine if type T is a range (i.e. supports begin()).
+template <typename T> struct is_range { static constexpr bool value = details::has_begin<T>::value; };
+template <typename T> constexpr bool is_range_v = is_range<T>::value;
 
-// SFINAE construct to enable a member function only if type R is a range (i.e. supports begin()).
-template <typename R> using enable_if_range_t = std::enable_if_t<is_range<R>::value>;
+// SFINAE construct to enable a member function only if type T is a range (i.e. supports begin()).
+template <typename T> using enable_if_range_t = std::enable_if_t<is_range_v<T>>;
 
 // Identify the type of element in given range type (see also ~/git/hh_src/test/native/container_element3.cpp).
-template <typename R> using iterator_t = typename details::range_elem<R>::type;
+template <typename T> using iterator_t = typename details::range_elem<T>::type;
 
 //----------------------------------------------------------------------------
 
@@ -45,7 +46,7 @@ template <typename T> auto adl_begin(const T& t) -> decltype(begin(t));
 template <typename T> struct has_begin {  // trait to identify if T has a begin(T) function.
   template <typename U> static char deduce(decltype(adl_begin(std::declval<const U&>()))*);
   template <typename> static void deduce(...);
-  static constexpr bool value = !std::is_void<decltype(deduce<T>(nullptr))>::value;
+  static constexpr bool value = !std::is_void_v<decltype(deduce<T>(nullptr))>;
 };
 template <typename T> struct range_elem { using type = std::decay_t<decltype(*begin(std::declval<T&>()))>; };
 }  // namespace details

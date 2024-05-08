@@ -3585,7 +3585,7 @@ void do_signeddistcontour(Args& args) {
   };
   GMesh nmesh;
   {
-    Contour3DMesh<decltype(func_mesh_signed_distance)> contour(grid, &nmesh, func_mesh_signed_distance);
+    Contour3DMesh contour(grid, &nmesh, func_mesh_signed_distance);
     contour.set_ostream(&std::cout);
     for (Vertex v : mesh.vertices()) contour.march_from(mesh.point(v));
   }

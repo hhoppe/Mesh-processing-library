@@ -56,7 +56,8 @@ int main() {
     // NonlinearOptimization<double (*)(ArrayView<double>)> opt(g_x, feval);  // works
     // NonlinearOptimization<double (&)(ArrayView<double>)> opt(g_x, feval);  // works
     // NonlinearOptimization<decltype(&feval)> opt(g_x, feval);  // works
-    NonlinearOptimization<> opt(g_x, feval);  // works
+    // NonlinearOptimization<> opt(g_x, feval);  // works
+    NonlinearOptimization opt(g_x, feval);
     const int niter = 5;
     opt.set_max_neval(niter);
     assertx(opt.solve());

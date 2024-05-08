@@ -71,14 +71,12 @@ int main() {
     SHOW(mean(ar));
   }
   {
-    SHOW(details::has_begin<Array<float>>::value ? 1 : 0);
-    SHOW(details::has_begin<std::fstream>::value ? 1 : 0);
+    SHOW(is_range_v<Array<float>> ? 1 : 0);
+    SHOW(is_range_v<std::fstream> ? 1 : 0);
     struct S {
       int _a;
     };
-    // "!!" necessary in gcc 4.8.2 debug,
-    //  else linker error "ld: RangeOp_test.cpp: undefined reference to `hh::details::has_begin<main::S>::value'"
-    SHOW(!!details::has_begin<S>::value);
+    SHOW(is_range_v<S>);
   }
   {
       // This should fail to compile.

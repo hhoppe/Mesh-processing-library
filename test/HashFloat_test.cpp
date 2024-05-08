@@ -75,7 +75,7 @@ template <typename T> T roundtrip(T v, int digits = -1) {
   assertx(ss << v);
   T v2;
   if (1) {
-    static_assert(std::is_same<T, float>::value, "");
+    static_assert(std::is_same_v<T, float>);
     assertx(sscanf(ss.str().c_str(), "%f", &v2));
   } else {
     assertx(ss >> v2);

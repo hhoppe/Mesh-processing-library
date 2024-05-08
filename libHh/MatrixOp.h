@@ -18,7 +18,7 @@ template <typename T> StridedArrayView<T> column(MatrixView<T> mat, int x) { ret
 
 // ret: success
 template <typename T> bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
-  static_assert(std::is_floating_point<T>::value, "");
+  static_assert(std::is_floating_point_v<T>);
   // mi.data() == mo.data() is OK
   const int n = mi.ysize();
   assertx(n && mi.xsize() == n);
@@ -375,7 +375,7 @@ template <typename T> Matrix<T> outer_product(CArrayView<T> ar1, CArrayView<T> a
 // Convolve array ar with convolution kernel ark; result has the same size and type as ar.
 template <typename T, typename TK>
 Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T* bordervalue = nullptr) {
-  static_assert(std::is_floating_point<TK>::value, "Kernel array must contain float/double");
+  static_assert(std::is_floating_point_v<TK>, "Kernel array must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(ark.num() % 2 == 1);
   const int xxm = ark.num() / 2;
@@ -394,7 +394,7 @@ Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T
 // Convolve matrix mat with convolution kernel matk; result has the same size and type as mat.
 template <typename T, typename TK>
 Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, const T* bordervalue = nullptr) {
-  static_assert(std::is_floating_point<TK>::value, "Kernel matrix must contain float/double");
+  static_assert(std::is_floating_point_v<TK>, "Kernel matrix must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
   const Vec2<int> pm = matk.dims() / 2;

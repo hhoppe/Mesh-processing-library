@@ -46,7 +46,7 @@ double get_precise_time() {
 int64_t get_precise_counter() {
 #if defined(USE_HIGH_RESOLUTION_CLOCK)
   using Clock = std::chrono::high_resolution_clock;
-  static_assert(Clock::is_steady, "");  // should be monotonic, else we might get negative durations
+  static_assert(Clock::is_steady);  // should be monotonic, else we might get negative durations
   Clock::time_point t = Clock::now();
   Clock::duration duration = t.time_since_epoch();  // number of ticks, of type Clock::rep
   // SHOW(type_name<decltype(duration)>());

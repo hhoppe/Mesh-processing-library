@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_ARRAYOP_H_
 #define MESH_PROCESSING_LIBHH_ARRAYOP_H_
 
-#include "libHh/Advanced.h"  // do_in_order
 #include "libHh/Array.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Vec.h"      // Vec2<>
@@ -13,12 +12,12 @@ namespace hh {
 template <typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... arr) {
   Array<T> ar;
   int i = ar1.num();
-  do_in_order{i += arr.num()...};
+  ((i += arr.num()), ...);
   ar.reserve(i);
   // ar.reserve(ar1.num() + narrow_cast<int>(sum(CArrayView<int>{arr.num()...})));  // requires sum()
   // Vec<int, sizeof...(arr)> t(arr.num()...); ar.reserve(ar1.num() + narrow_cast<int>(sum(t)));
   ar.push_array(ar1);
-  do_in_order{(ar.push_array(arr), 0)...};
+  (ar.push_array(arr), ...);
   return ar;
 }
 

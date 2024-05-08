@@ -260,7 +260,7 @@ class AWMesh : public WMesh {
   bool is_boundary(int v, int f) const;
   bool gather_faces(int v, int f, Array<int>& faces) const;  // ret: is_boundary
   VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
-  VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // std::pair<int, int>{vv, ff}.
+  VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
  private:
   void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,

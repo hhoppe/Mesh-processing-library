@@ -12,7 +12,7 @@
     ...;
 
    public:
-    HH_MAKE_SAC(MVertex);  // must be last entry of class!
+    HH_MAKE_SAC(MVertex);  // Must be last entry of class!
   };
   //
   HH_SAC_ALLOCATE_FUNC(MVertex, Point, v_point);
@@ -21,7 +21,7 @@
   //
   using ArrayInt = Array<int>;
   HH_SACABLE(ArrayInt);
-  HH_SAC_ALLOCATE_CD_FUNC(MVertex, ArrayInt, v_ar);  // CD means call constructor and destructor
+  HH_SAC_ALLOCATE_CD_FUNC(MVertex, ArrayInt, v_ar);  // CD means call constructor and destructor.
   v_ar(v).push(7);
   //
   static int key_a = HH_SAC_ALLOCATE_CD(MVertex, A);
@@ -31,7 +31,7 @@
 
 namespace hh {
 
-class BSac : noncopyable {  // noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable
+class BSac : noncopyable {  // Noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable.
  public:
   using Func = void (*)(void*);
   static constexpr int k_dummy = 4;

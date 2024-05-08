@@ -7,9 +7,9 @@
 #if 0
 {
   procedure() {
-    HH_TIMER("_proc");  // timing for entire procedure
+    HH_TIMER("_proc");  // Timing for entire procedure.
     if (something) {
-      HH_TIMER("__step1");  // sub-timings for substeps
+      HH_TIMER("__step1");  // Sub-timings for substeps.
       step1();
     }
     if (1) {
@@ -20,12 +20,12 @@
   {
     Timer timer("atimer2");
     statements;
-    timer.terminate();  // shows timing up to here.
+    timer.terminate();  // Shows timing up to here.
     more_statements;
   }
-  // getenv_int("SHOW_TIMES") == -1 : all -> noprint
-  // getenv_int("SHOW_TIMES") == 1  : all but noprint -> normal
-  Timer::set_show_times(-1);  // disable printing of all timers
+  // getenv_int("SHOW_TIMES") == -1 : all -> noprint.
+  // getenv_int("SHOW_TIMES") == 1  : all but noprint -> normal.
+  Timer::set_show_times(-1);  // Disable printing of all timers.
   // getenv_bool("HH_HIDE_SUMMARIES") : if true, omit summary of timers.
 }
 #endif

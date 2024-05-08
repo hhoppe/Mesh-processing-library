@@ -162,8 +162,7 @@ void all_reset() {
 // turn viewing direction toward world point (zeroes the roll)
 void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[obview].t().p()); }
 
-#if 0
-void enter_aim() {
+[[maybe_unused]] void enter_aim() {
   int obn = cob != obview ? cob : 1;
   Point paim = g_obs[obn].center() * g_obs[obn].t();
   Vector vaim = paim - g_obs[obview].t().p();
@@ -180,7 +179,6 @@ void enter_aim() {
   frame *= to_Frame(rot);
   frame.p() = pt;
 }
-#endif
 
 void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }
 

@@ -8,7 +8,6 @@ namespace hh {
 
 // Set of algorithms for manipulating ranges (including containers), i.e. supporting begin() and end() functions.
 
-#if 1
 // Extensions of functions from C++ <algorithm> as proposed by "Ranges" TS,
 //  draft N4560 https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
 // See https://en.cppreference.com/w/cpp/experimental/ranges#Ranges.
@@ -173,7 +172,7 @@ template <typename R, typename = enable_if_range_t<R>> std::ptrdiff_t distance(c
   return std::distance(begin(range), end(range));
 }
 
-// Also: find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal()
+// Also from std: find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal()
 //  is_permutation(), search(), search_n(), copy(), copy_if(), copy_backward(), move(), move_backward()
 //  transform(), replace(), replace_if(), replace_copy(), replace_copy_if(),
 //  generate(), remove(), remove_if(), remove_copy(), remove_copy_if(), unique(), unique_copy(),
@@ -185,9 +184,8 @@ template <typename R, typename = enable_if_range_t<R>> std::ptrdiff_t distance(c
 //  set_union(), set_intersection(), set_difference(), set_symmetric_difference(), *heap*()
 //  minmax(), minmax_element(), lexicographical_compare(), next_permutation(), prev_permutation()
 
-#endif  // "Ranges" TS, draft N4560
 
-// ***
+// *** My custom range operations:
 
 // Higher-precision type to represent the mean of a set of elements.
 template <typename T> struct mean_type {

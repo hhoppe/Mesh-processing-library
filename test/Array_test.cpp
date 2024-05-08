@@ -153,7 +153,7 @@ int main() {
     Array3 ar;
     ar[0].push(1);
 #if 0
-    // Note: gcc unhappy creating copy constructor for Vec<T, n> if T has explicit copy constructor
+    // Note: gcc unhappy creating copy constructor for Vec<T, n> if T has explicit copy constructor.
     // This was my motivation for prior "hh_explicit" macro definition.
     Array3 ar2(ar);
     SHOW(ar2[0]);

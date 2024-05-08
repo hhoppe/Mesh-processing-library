@@ -24,12 +24,12 @@ int main() {
     // Creating a member function (templated on the class Struct and offset) did not work on win,
     //  because it was not able to parse the offsetof() function as a template argument.
     // Instead, creating a templated subclass worked.
-    for (auto pa : list.outer_range<A, 8>()) SHOW(pa->_i);  // works
-    for (auto pa : list.outer_range<A, offsetof(A, _node)>()) SHOW(pa->_i);  // fails on win
+    for (auto pa : list.outer_range<A, 8>()) SHOW(pa->_i);                     // works
+    for (auto pa : list.outer_range<A, offsetof(A, _node)>()) SHOW(pa->_i);    // fails on win
     for (auto pa : list.outer_range<A, (offsetof(A, _node))>()) SHOW(pa->_i);  // fails on win
     const size_t off = offsetof(A, _node);
-    for (auto pa : list.outer_range<A, off>()) SHOW(pa->_i);  // works
-    for (auto pa : EList::OuterRange<A, off>{list}) SHOW(pa->_i);  // works
+    for (auto pa : list.outer_range<A, off>()) SHOW(pa->_i);                      // works
+    for (auto pa : EList::OuterRange<A, off>{list}) SHOW(pa->_i);                 // works
     for (auto pa : EList::OuterRange<A, offsetof(A, _node)>{list}) SHOW(pa->_i);  // works
 #endif
     SHOW("2");

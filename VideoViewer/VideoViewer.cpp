@@ -2985,14 +2985,14 @@ const string fragment_shader = glsl_shader_version + (
 
 void render_image() {
   // HH_TIMER("_render_image");
-#if 1 && defined(__CYGWIN__)
+#if defined(__CYGWIN__)
   const bool use_modern_opengl = false;
   // Otherwise we get a segmentation fault in glxSwapBuffers(); it is unclear why.
   // make CONFIG=cygwin -C ~/git/mesh_processing -j8 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
   // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
   // Mac OS is currently "2.1" which is insufficient.
-  const bool use_modern_opengl = 1 && assertx(glGetString(GL_VERSION))[0] >= '3';
+  const bool use_modern_opengl = assertx(glGetString(GL_VERSION))[0] >= '3';
 #endif
   glEnable(GL_TEXTURE_2D);  // may need to come before glGenerateMipmap on old AMD drivers
   if (1) {

@@ -1302,7 +1302,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       for (auto& e : hgrid) e *= adjust_weight;
     }
   }
-#if 1  // only for D == 2
+#if 1  // Only for D == 2.
   if (0) as_image(hgrid).write_file(sform("hgrid.%03dx%03d.png", hgrid.xsize(), hgrid.ysize()));
   if (0) as_image(undo_alpha(hgrid)).write_file(sform("hgridx.%03dx%03d.png", hgrid.xsize(), hgrid.ysize()));
   if (0) as_image(just_alpha(hgrid)).write_file(sform("hgridw.%03dx%03d.png", hgrid.xsize(), hgrid.ysize()));
@@ -1334,7 +1334,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       grid[u] = grid[u] + (1.f - w) * gridu[u];
     }
   }
-#if 1  // only for D == 2
+#if 1  // Only for D == 2.
   if (0) as_image(grid).write_file(sform("grid.%03dx%03d.png", grid.xsize(), grid.ysize()));
   if (0) as_image(undo_alpha(grid)).write_file(sform("gridx.%03dx%03d.png", grid.xsize(), grid.ysize()));
   if (0) as_image(just_alpha(grid)).write_file(sform("gridw.%03dx%03d.png", grid.xsize(), grid.ysize()));

@@ -178,7 +178,7 @@ SHOW(t5);
   SHOW(a2[2]);
 }
 {
-  // can a class derived from Vec be automatically converted to a CArrayView argument? yes.
+  // Can a class derived from Vec be automatically converted to a CArrayView argument? yes.
   auto func = [](CArrayView<int> a) {
     assertx(a.num() == 2);
     SHOW(a[1]);
@@ -191,14 +191,14 @@ SHOW(t5);
 {
   Vec3<int> a1(3, 4, 5);
   SHOW(a1);
-#if 0  // fails because a1 contains int and 3.f is a float
+#if 0  // Fails because a1 contains int and 3.f is a float.
   SHOW(a1 / 3.f);
   Vec3<float> a2 = a1 / 3.f;
   SHOW(a2);
 #endif
 }
 {
-  Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // test both ways
+  Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // Test both ways.
   SHOW(pp);
   SHOW((pp + V(10, 10)));
   SHOW((Vec2<int>(10, 10) - pp));

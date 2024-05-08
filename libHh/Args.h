@@ -8,24 +8,26 @@
 // Parsing of command-line arguments.
 
 #if 0
-namespace {
-bool nooutput = false;
-int niter = 0;
-void do_png() { some_action(); }
-void do_outfile(Args& args) { string filename = args.get_filename(); }
-}  // namespace
-int main(int argc, const char** argv) {
-  ParseArgs args(argc, argv);
-  HH_ARGSC("", ":Comment : Directly set parameters:");
-  HH_ARGSF(nooutput, ": do not output final image on stdout");
-  HH_ARGSP(niter, "n : number of iterations");
-  HH_ARGSC("", ":Comment : Directly call functions:");
-  HH_ARGSD(png, ": set output format");
-  HH_ARGSD(outfile, "filename : output an intermediate image");
-  args.parse();
-  if (!nooutput) {
-    write_some_output();
+{
+  namespace {
+  bool nooutput = false;
+  int niter = 0;
+  void do_png() { some_action(); }
+  void do_outfile(Args& args) { string filename = args.get_filename(); }
+  }  // namespace
+
+  int main(int argc, const char** argv) {
+    ParseArgs args(argc, argv);
+    HH_ARGSC("", ":Comment : Directly set parameters:");
+    HH_ARGSF(nooutput, ": do not output final image on stdout");
+    HH_ARGSP(niter, "n : number of iterations");
+    HH_ARGSC("", ":Comment : Directly call functions:");
+    HH_ARGSD(png, ": set output format");
+    HH_ARGSD(outfile, "filename : output an intermediate image");
+    args.parse();
+    if (!nooutput) write_some_output();
   }
+  return 0;
 }
 #endif
 

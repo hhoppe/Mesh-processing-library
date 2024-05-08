@@ -10,9 +10,9 @@
 #if 0
 {
   procedure() {
-    SimpleTimer timer1("_proc");  // timing for entire procedure
+    SimpleTimer timer1("_proc");  // Timing for entire procedure.
     if (something) {
-      SimpleTimer timer2("__step1");  // sub-timings for substeps
+      SimpleTimer timer2("__step1");  // Sub-timings for substeps.
       step1();
     }
     if (1) {

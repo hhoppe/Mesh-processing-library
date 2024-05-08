@@ -8,17 +8,15 @@ using namespace hh;
 namespace {
 
 void test1() {
-#if 0  // test noncopyable
+#if 0
   {
     Pqueue<int> pq;
-    Pqueue<int> pq2 = pq;
+    Pqueue<int> pq2 = pq;  // Fails because it is not copyable.
     dummy_use(pq2);
   }
-#endif
-#if 0  // test noncopyable
   {
     Pqueue<int> pq;
-    Pqueue<int> pq2 = std::move(pq);
+    Pqueue<int> pq2 = std::move(pq);  // Fails because move construction is not defined.
     dummy_use(pq2);
   }
 #endif

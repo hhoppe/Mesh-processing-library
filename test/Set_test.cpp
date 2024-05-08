@@ -127,15 +127,21 @@ int main() {
     assertx(ar2 == ar1);
     assertx(ar1 != ar3);
   }
-#if 0  // *i calls U::U(const U&) for unknown reason, on both VS and gcc
   {
     using U = unique_ptr<int>;
     std::unordered_set<U> s;
     s.insert(make_unique<int>(31));
     s.insert(make_unique<int>(37));
-    auto i = s.begin();
-    dummy_use(i);
-    U u = std::move(*i);
+    auto it = s.begin();
+    // The type of *it is a const T& due to the container's requirement to maintain the uniqueness and ordering of
+    // elements based on their hash values, so the following cannot work:
+    //  U u = std::move(*it);
+    //  s.erase(it);
+    // We must use extract() instead:
+    auto node = s.extract(it);
+    U u = std::move(node.value());
+    assertx(*u == 31 || *u == 37);
+    SHOW(s.size());
   }
   {
     using U = unique_ptr<int>;
@@ -145,15 +151,14 @@ int main() {
     s.enter(make_unique<int>(43));
     Array<int> ar;
     while (!s.empty()) {
-      ar += *s.remove_one();
+      ar.push(*s.remove_one());
     }
-    ar.sort();
+    sort(ar);
     SHOW(ar);
   }
-#endif
 }
 
 template class hh::Set<unsigned>;
 template class hh::Set<const int*>;
 template class hh::Set<Vector>;
-// full instantiation of Set not possible for unique_ptr<T>
+// Full instantiation of Set<unique_ptr<T>> is not possible due to many undefined functions.

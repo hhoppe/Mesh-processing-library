@@ -154,7 +154,7 @@ int main() {
   }
   {
 #if 0
-    SGrid<float> grid_no_dimensions;  // it fails to compile, which is correct
+    SGrid<float> grid_no_dimensions;  // It fails to compile, which is correct.
 #endif
   }
 }

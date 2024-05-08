@@ -332,7 +332,10 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     // precision determined by that in WFile::WFile()
     _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';
   }
-  assertx(_os);
+  if (!_os) {
+    showf("Write failed, maybe due to broken pipe.\n");
+    exit_immediately(0);
+  }
 }
 
 void WSA3dStream::output_comment(const string& s) { assertx(_os << "#" << s << "\n"); }

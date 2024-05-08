@@ -433,7 +433,7 @@ line2)";
 #if 0
     ArrayView<int> arv(ar);
     auto arv2 = clone(arv);
-    dummy_use(arv2);  // correctly fails static_assert
+    dummy_use(arv2);  // Correctly fails static_assert.
 #endif
   }
   {

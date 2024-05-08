@@ -30,57 +30,36 @@ float project_point_seg2(const Point& p, const Point& p1, const Point& p2, float
 inline float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3) {
   float d = 0.f;
   for_int(c, 3) {
-    float v1 = p1[c], mi = v1, ma = v1, v2 = p2[c], v3 = p3[c];
-    if (v2 < mi)
-      mi = v2;
-    else if (v2 > ma)
-      ma = v2;
-    if (v3 < mi)
-      mi = v3;
-    else if (v3 > ma)
-      ma = v3;
-    float v = p[c], a;
-    if ((a = v - ma) > 0.f) {
-      if (a > d) d = a;
-    } else if ((a = mi - v) > 0.f) {
-      if (a > d) d = a;
+    const float v1 = p1[c], v2 = p2[c], v3 = p3[c];
+    float v_min = v1, v_max = v1;
+    if (v2 < v_min)
+      v_min = v2;
+    else if (v2 > v_max)
+      v_max = v2;
+    if (v3 < v_min)
+      v_min = v3;
+    else if (v3 > v_max)
+      v_max = v3;
+    const float v = p[c];
+    if (const float a1 = v - v_max; a1 > d) {
+      d = a1;
+    } else if (const float a2 = v_min - v; a2 > d) {
+      d = a2;
     }
   }
   return d;
 }
 
 inline float lb_dist_point_bbox(const Point& p, const Bbox& bbox) {
-#if 0
   float d = 0.f;
   for_int(c, 3) {
-    float v = p[c], a;
-    if ((a = v - bbox[1][c]) > 0.f) {
-      if (a > d) d = a;
-    } else if ((a = bbox[0][c] - v) > 0.f) {
-      if (a > d) d = a;
+    const float v = p[c];
+    if (const float a1 = v - bbox[1][c]; a1 > d) {
+      d = a1;
+    } else if (const float a2 = bbox[0][c] - v; a2 > d) {
+      d = a2;
     }
   }
-#else
-  float d = 0.f, v, a;
-  v = p[0];
-  if ((a = v - bbox[1][0]) > 0.f) {
-    d = a;
-  } else if ((a = bbox[0][0] - v) > 0.f) {
-    d = a;
-  }
-  v = p[1];
-  if ((a = v - bbox[1][1]) > 0.f) {
-    if (a > d) d = a;
-  } else if ((a = bbox[0][1] - v) > 0.f) {
-    if (a > d) d = a;
-  }
-  v = p[2];
-  if ((a = v - bbox[1][2]) > 0.f) {
-    if (a > d) d = a;
-  } else if ((a = bbox[0][2] - v) > 0.f) {
-    if (a > d) d = a;
-  }
-#endif
   return d;
 }
 

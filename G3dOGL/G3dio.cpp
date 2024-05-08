@@ -339,12 +339,9 @@ void WriteOutput() {
     frame = FrameIO::get_not_a_frame();
   }
   if (!FrameIO::write(std::cout, ObjectFrame{frame, obn, z, obinary})) {
-#if 1 || defined(_WIN32)
     // No SIGPIPE to terminate process in Win32.
-    exit_immediately(0);
-#else
-    Warning("FrameIO::write failed");
-#endif
+    showf("Write failed, maybe due to broken pipe.\n");
+    exit_immediately(1);
   }
   std::cout.flush();
 }

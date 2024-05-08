@@ -168,22 +168,7 @@ int main() {
   }
 }
 
-#if 0  // Matrix is a Grid, instanced in Grid_test
-namespace hh {
-template class CMatrixView<unsigned>;
-template class CMatrixView<double>;
-template class CMatrixView<const int*>;
-
-template class MatrixView<unsigned>;
-template class MatrixView<double>;
-template class MatrixView<const int*>;
-
-template class Matrix<unsigned>;
-template class Matrix<double>;
-template class Matrix<const int*>;
-
-using U = unique_ptr<int>;
-template <> void Matrix<U>::operator=(CMatrixView<U>) {}  // definition illegal
-template class Matrix<U>;
-}  // namespace hh
-#endif
+// Matrix is an alias for Grid, so it cannot be directly instanced; however, Grid<2, T> is instanced in Grid_test.cpp.
+// namespace hh {
+// template class CMatrixView<unsigned>;
+// }  // namespace hh

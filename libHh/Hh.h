@@ -607,8 +607,9 @@ template <typename T> struct sum_type {
 // Range of integral elements defined as in Python range(start, stop), where step is 1 and stop is not included.
 template <typename T> class Range {
   static_assert(std::is_integral_v<T>);  // Must have exact arithmetic for equality testing.
-  class Iterator {
-    using type = Iterator;
+ public:
+  class iterator {
+    using type = iterator;
 
    public:
     using iterator_category = std::random_access_iterator_tag;
@@ -616,8 +617,8 @@ template <typename T> class Range {
     using difference_type = int64_t;  // (It may be larger than std::ptrdiff_t.)
     using pointer = value_type*;
     using reference = value_type&;
-    Iterator(T start, T stop) : _v(start), _stop(stop) {}
-    Iterator(const type& iter) = default;
+    iterator(T start, T stop) : _v(start), _stop(stop) {}
+    iterator(const type& iter) = default;
     bool operator==(const type& rhs) const { return _v == rhs._v; }
     bool operator!=(const type& rhs) const { return !(*this == rhs); }
     bool operator<(const type& rhs) const { return _v < rhs._v; }
@@ -625,7 +626,7 @@ template <typename T> class Range {
     bool operator>(const type& rhs) const { return _v > rhs._v; }
     bool operator>=(const type& rhs) const { return _v >= rhs._v; }
     difference_type operator-(const type& rhs) const { return difference_type(_v) - rhs._v; }
-    type operator+(difference_type n) const { return Iterator(*this) += n; }
+    type operator+(difference_type n) const { return iterator(*this) += n; }
     type& operator+=(difference_type n) {
       ASSERTXX(_v < _stop);
       _v = T(_v + n);
@@ -640,17 +641,15 @@ template <typename T> class Range {
     T _v, _stop;
   };
 
- public:
   using value_type = T;
-  using iterator = Iterator;
-  using const_iterator = Iterator;
+  using const_iterator = iterator;
   using size_type = size_t;
   explicit Range(T stop) : Range(T{0}, stop) {}
   Range(T start, T stop) : _start(min(start, stop)), _stop(stop) {}
-  Iterator begin() const { return Iterator(_start, _stop); }
-  Iterator end() const { return Iterator(_stop, _stop); }
-  Iterator cbegin() const { return Iterator(_start, _stop); }
-  Iterator cend() const { return Iterator(_stop, _stop); }
+  iterator begin() const { return iterator(_start, _stop); }
+  iterator end() const { return iterator(_stop, _stop); }
+  iterator cbegin() const { return iterator(_start, _stop); }
+  iterator cend() const { return iterator(_stop, _stop); }
   size_t size() const { return _stop - _start; }
   bool empty() const { return _stop == _start; }
 

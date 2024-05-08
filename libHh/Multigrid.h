@@ -21,7 +21,7 @@
   setup_rhs(grid_orig, multigrid.rhs());
   if (optional)
     for (const auto& u : range(dims)) multigrid.initial_estimate()[u] = some_value;
-  // Grid<2, float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig);  // for convergence analysis
+  // Grid<2, float> grid_orig(dims); if (optional) multigrid.set_original(grid_orig);  // For convergence analysis.
   multigrid.solve();
   CGridView<2, float> grid_result = multigrid.result();
   if (1) HH_RSTAT(Sresult, grid_result);

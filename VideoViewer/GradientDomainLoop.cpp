@@ -658,9 +658,9 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   // const int DS = 4;       // spatial downsampling factor (good for 1920x1088 to 480x272)
   // const int DS = ny / 270;
 #if 0
-  int DS = 1;
-  {                                                                         // spatial downsampling factor
-    const int videoloops_maxh = getenv_int("VIDEOLOOPS_MAXH", 350, false);  // default value used in Loopers
+  int DS = 1;  // Spatial downsampling factor.
+  {
+    const int videoloops_maxh = getenv_int("VIDEOLOOPS_MAXH", 350, false);  // Default value used in Loopers.
     int y = ny;
     while (y > videoloops_maxh) {
       assertx(y % 2 == 0);
@@ -673,7 +673,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   if (verbose) showdf("Spatial downsampling factor is %d\n", DS);
   if (0) SHOW(odims, mat_start.dims(), sdims, DS);
   assertx(is_zero(sdims % DS));
-  const int DT = 1;  // temporal downsampling factor
+  const int DT = 1;  // Temporal downsampling factor.
   assertx(onf % DT == 0);
   // The problem with DT > 1 is that temporal discontinuities generally occur at all frames in fine-scale video
   //  due to get_framei(), but only on even frames when upsampled from coarse-scale correction.

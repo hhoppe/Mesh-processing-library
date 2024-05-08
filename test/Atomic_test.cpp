@@ -8,7 +8,6 @@
 using namespace hh;
 
 int main() {
-#if 1
   {
     const int num = 100;
     const int niter = 1'000'000;
@@ -49,5 +48,4 @@ int main() {
     }
     assertx(ar1 == ar2);
   }
-#endif
 }

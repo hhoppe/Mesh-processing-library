@@ -13,7 +13,7 @@
 #if 0
 {
   SrMesh srmesh;
-  srmesh.read_srm(std::cin);  // or read_pm()
+  srmesh.read_srm(std::cin);  // Or read_pm().
   srmesh.set_refine_morph_time(32);
   srmesh.set_coarsen_morph_time(16);
   for (;;) {
@@ -25,7 +25,7 @@
       GMesh gmesh = extract_gmesh(geoinfo);
     }
     srmesh.adapt_refinement();
-    srmesh.ogl_render_faces_tvc(false);  // ogl_render_*();
+    srmesh.ogl_render_faces_tvc(false);  // See all ogl_render_*().
     if (0) {
       GMesh gmesh = srmesh.extract_gmesh();
     }

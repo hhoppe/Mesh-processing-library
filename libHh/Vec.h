@@ -457,7 +457,7 @@ Vec<RT, n> operator+(const Vec<T, n>& a1, const Vec<T2, n>& a2) {
   for_int(i, n) ar[i] = a1[i] + a2[i];
   return ar;
 }
-//  (Stroustrup book had dubious value_type:  =Vec<Common_type<Value_type<T>, Value_type<T2>>, n> )
+// (Stroustrup book had dubious value_type:  = Vec<Common_type<Value_type<T>, Value_type<T2>>, n>.)
 #endif
 
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h

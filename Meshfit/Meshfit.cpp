@@ -1100,18 +1100,18 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     // ignore sharp edges
   } else if (!edge_sharp(e)) {
     if (vertex_num_sharp_edges(v1) >= 1 && vertex_num_sharp_edges(v2) >= 1) {
-      Warning("Edge collapse would offend sharp edges (a)");
+      if (verb >= 2) Warning("Edge collapse would offend sharp edges (a)");
       return R_illegal;
     }
   } else {
     if (vertex_num_sharp_edges(v1) >= 3 && vertex_num_sharp_edges(v2) >= 3) {
-      Warning("Edge collapse would offend sharp edges (b)");
+      if (verb >= 2) Warning("Edge collapse would offend sharp edges (b)");
       return R_illegal;
     }
     for (Face f : mesh.faces(e)) {
       Vertex vs = mesh.opp_vertex(e, f);
       if (edge_sharp(mesh.edge(v1, vs)) && edge_sharp(mesh.edge(v2, vs))) {
-        Warning("Edge collapse would offend sharp edges (c)");
+        if (verb >= 2) Warning("Edge collapse would offend sharp edges (c)");
         return R_illegal;
       }
     }
@@ -1309,7 +1309,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   } else if (finfo1 && finfo2 && !strcmp(finfo1, finfo2)) {
     // ok, they match
   } else {
-    Warning("Edge swap would lose face info");
+    if (verb >= 2) Warning("Edge swap would lose face info");
     return R_illegal;
   }
   // ALL SYSTEMS GO
@@ -1343,7 +1343,7 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
   HH_STIMER("__try_eswa");
   if (!mesh.legal_edge_swap(e)) return R_illegal;  // not legal move
   if (k_simp96 && edge_sharp(e)) {
-    Warning("Not swapping sharp edges");
+    if (verb >= 2) Warning("Not swapping sharp edges");
     return R_illegal;
   }
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);

@@ -49,47 +49,10 @@ float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
 // *** Misc
 
 float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, const Point& po2) {
-#if 0
   Vector ves1 = cross(p1, p2, po1);
   Vector ves2 = cross(p1, po2, p2);
   if (!ves1.normalize() || !ves2.normalize()) return -2.f;
-  float d = dot(ves1, ves2);
-  if (d < -1.f) d = -1.f;
-  if (d > +1.f) d = +1.f;
-  return d;
-#endif
-  float ves1x, ves1y, ves1z;
-  {
-    float v1x = p2[0] - p1[0], v1y = p2[1] - p1[1], v1z = p2[2] - p1[2];
-    float v2x = po1[0] - p1[0], v2y = po1[1] - p1[1], v2z = po1[2] - p1[2];
-    ves1x = v1y * v2z - v1z * v2y;
-    ves1y = v1z * v2x - v1x * v2z;
-    ves1z = v1x * v2y - v1y * v2x;
-    float sum2 = ves1x * ves1x + ves1y * ves1y + ves1z * ves1z;
-    if (!sum2) return -2.f;
-    float fac = 1.f / sqrt(sum2);
-    ves1x *= fac;
-    ves1y *= fac;
-    ves1z *= fac;
-  }
-  float ves2x, ves2y, ves2z;
-  {
-    float v1x = po2[0] - p1[0], v1y = po2[1] - p1[1], v1z = po2[2] - p1[2];
-    float v2x = p2[0] - p1[0], v2y = p2[1] - p1[1], v2z = p2[2] - p1[2];
-    ves2x = v1y * v2z - v1z * v2y;
-    ves2y = v1z * v2x - v1x * v2z;
-    ves2z = v1x * v2y - v1y * v2x;
-    float sum2 = ves2x * ves2x + ves2y * ves2y + ves2z * ves2z;
-    if (!sum2) return -2.f;
-    float fac = 1.f / sqrt(sum2);
-    ves2x *= fac;
-    ves2y *= fac;
-    ves2z *= fac;
-  }
-  float d = ves1x * ves2x + ves1y * ves2y + ves1z * ves2z;
-  if (d < -1.f) d = -1.f;
-  if (d > +1.f) d = +1.f;
-  return d;
+  return clamp(dot(ves1, ves2), -1.f, 1.f);
 }
 
 float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2) {

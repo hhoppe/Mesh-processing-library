@@ -22,7 +22,7 @@
   };
   Set<mypair, hash_mypair, equal_mypair> setpairs;
   //
-  struct hash_edge {  // from MeshOp.cpp
+  struct hash_edge {  // From MeshOp.cpp.
     ...;
     const GMesh& _mesh;
   };
@@ -89,15 +89,15 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   }
   T remove_one() {
     ASSERTXX(!empty());
-    T e = std::move(*begin());
-    _s.erase(begin());
-    return e;
+    // T e = std::move(*begin());  // See discussion in Set_test.cpp.
+    // _s.erase(begin());
+    auto node = _s.extract(begin());
+    return std::move(node.value());
   }
   T remove_random(Random& r) {
     auto it = crand(r);
-    T e = std::move(*it);
-    _s.erase(it);
-    return e;
+    auto node = _s.extract(it);
+    return std::move(node.value());
   }
   iterator begin() { return _s.begin(); }
   const_iterator begin() const { return _s.begin(); }

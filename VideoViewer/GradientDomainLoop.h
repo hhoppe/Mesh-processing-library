@@ -26,7 +26,7 @@ inline float to_float(uint8_t uc) {
     for_int(i, 256) ar[i] = float(i);
     return ar;
   }();
-  return ar[uc];  // is actually slower
+  return ar[uc];  // This lookup table is actually slower.
 #else
   return float(uc);
 #endif

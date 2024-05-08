@@ -737,10 +737,10 @@ void do_makeloop(Args& args) {
     cprogress.update(float(z) / nz);
     if (0) {  // solve directly for colors; may require many iterations to accurately converge
 #if 1
-      const float wtemporal = 1.f;  // temporal weight (1.f == isotropic space and time)
+      const float wtemporal = 1.f;  // Temporal weight (1.f == isotropic space and time).
       using MultigridType = Multigrid<3, float, MultigridPeriodicTemporally>;
 #else
-      const float wtemporal = .25f;  // give less weight to temporal differences
+      const float wtemporal = .25f;  // Give less weight to temporal differences.
       using MultigridType = Multigrid<3, float, MultigridPeriodicTemporally, MultigridMetricAnisotropic<3>>;
       MultigridMetricAnisotropic<3>::_metricw = {wtemporal, 1.f, 1.f};
 #endif

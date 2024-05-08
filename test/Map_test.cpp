@@ -91,10 +91,10 @@ int main() {
   {
     using TU = std::tuple<float, float>;
     Map<TU, int> m;
-    m.enter(std::make_tuple(2.f, 2.f), 3);
-    m.enter(std::make_tuple(2.f, 3.f), 4);
-    m.enter(std::make_tuple(3.f, 3.f), 5);
-    SHOW(m.get(std::make_tuple(2.f, 3.f)));
+    m.enter(std::tuple(2.f, 2.f), 3);
+    m.enter(std::tuple(2.f, 3.f), 4);
+    m.enter(std::tuple(3.f, 3.f), 5);
+    SHOW(m.get(std::tuple(2.f, 3.f)));
     // for (const TU& tu : m.keys()) SHOW(tu);
     SHOW(sum(m.values()));
   }

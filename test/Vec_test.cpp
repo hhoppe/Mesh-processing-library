@@ -265,13 +265,7 @@ SHOW(t5);
   auto ar2 = map(ar1, [](int e) { return e * 10; });
   SHOW(ar2);
 }
-if (0) {
-  // VS2013: does not use move constructor on Vec1<P>.
-  // This could be due to the fact that Vec1 contains std::array<P, 1> which is non-trivial.
-  // (If it contained P[1], it would still be non-trivial since P has explicit copy-constructuor.)
-  // Thus, we may need to introduce explicit "= default" on move constructor and assignment in Vec,
-  //  something that is not supported in VS2013.
-  // Somehow gcc still defines implicit move constructor for Vec1<P>.
+{
   struct P {
     P() { SHOW("P::P()"); }
     ~P() { SHOW("P::~P()"); }
@@ -283,12 +277,10 @@ if (0) {
     }
     // P& operator=(P&&) { SHOW("P::operator=(P&&)"); return *this; }
   };
-#if 0
   static_assert(std::is_trivial_v<P> == false);
   static_assert(std::is_trivial_v<Vec1<P>> == false);
   static_assert(std::is_trivially_copyable_v<P> == false);
   static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
-#endif
   Vec1<P> s1;
   Vec1<P> s2 = s1;
   Vec1<P> s3 = std::move(s1);

@@ -360,7 +360,7 @@ template <typename... P> constexpr size_t ravel_index_aux2(std::pair<int, int> p
 
 template <int D, size_t... Is>
 constexpr size_t ravel_index_aux1(const Vec<int, D>& dims, const Vec<int, D>& u, std::index_sequence<Is...>) {
-  return ravel_index_aux2(std::make_pair(dims[D - 1 - Is], u[D - 1 - Is])...);
+  return ravel_index_aux2(std::pair(dims[D - 1 - Is], u[D - 1 - Is])...);
 }
 }  // namespace details
 template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec<int, D>& u) {

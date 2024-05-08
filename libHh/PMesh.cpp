@@ -1428,7 +1428,7 @@ void AWMesh::construct_adjacency() {
       int j1 = mod3(j + 1), j2 = mod3(j + 2);
       int v0 = _wedges[_faces[f].wedges[j1]].vertex;
       int v1 = _wedges[_faces[f].wedges[j2]].vertex;
-      mvv_face.enter(std::make_pair(v0, v1), f);
+      mvv_face.enter(std::pair(v0, v1), f);
     }
   }
   for_int(f, _faces.num()) {
@@ -1437,7 +1437,7 @@ void AWMesh::construct_adjacency() {
       int v0 = _wedges[_faces[f].wedges[j1]].vertex;
       int v1 = _wedges[_faces[f].wedges[j2]].vertex;
       bool present;
-      int fn = mvv_face.retrieve(std::make_pair(v1, v0), present);
+      int fn = mvv_face.retrieve(std::pair(v1, v0), present);
       _fnei[f].faces[j] = present ? fn : k_undefined;
     }
   }

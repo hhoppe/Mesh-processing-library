@@ -302,7 +302,7 @@ class AWMesh : public WMesh {
       int stopv = vv;
       int nextv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 2)]].vertex;
       while (vv >= 0) {
-        push(std::pair<int, int>{vv, ff});
+        push(std::pair{vv, ff});
         vv = nextv;
         lastf = ff;
         ff = mesh._fnei[ff].faces[mod3(j + 1)];

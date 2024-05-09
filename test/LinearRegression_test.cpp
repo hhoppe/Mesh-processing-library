@@ -67,7 +67,7 @@ int main() {
     const int n = 4;
     for_int(ix, n) for_int(iy, n) {
       const auto xy = V(float(ix), float(iy));
-      const float z = float(mag(xy - V(n / 2.f, n / 2.f)));
+      const float z = mag(xy - V(n / 2.f, n / 2.f));
       xyzdata.push(concat(xy.view(), ArView(z)));
     }
     try_xyz<2>(xyzdata);

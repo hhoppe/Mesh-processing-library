@@ -305,7 +305,7 @@ static void act_button1(const Vec2<float>& yxq) {
   } else {  // rotate
     // Applyq(Frame::rotation(2, yxq[1]) * Frame::rotation(1, -yxq[0]));
     Vector axis(0.f, -yxq[0], yxq[1]);
-    Quaternion q(axis, float(mag(yxq)));
+    Quaternion q(axis, mag(yxq));
     Applyq(to_Frame(q));
   }
 }
@@ -497,7 +497,7 @@ static void act_fly() {
   const float a = .1f;
   yxf *= a;
   Frame f1 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));
-  Frame f2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), float(mag(yxf))));
+  Frame f2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), mag(yxf)));
   Frame f = f1 * f2;
   static const bool g3d_fly_use_frame_speed = getenv_bool("G3D_FLY_USE_FRAME_SPEED");
   assertw(!g3d_fly_use_frame_speed);

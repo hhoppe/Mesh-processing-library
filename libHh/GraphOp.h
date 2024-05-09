@@ -53,6 +53,9 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
   Set<T> _set;
 };
 
+// Template deduction guide:
+template <typename T, typename Func_dist> Dijkstra(const Graph<T>* g, T vs, Func_dist fdist)->Dijkstra<T, Func_dist>;
+
 // *** Kruskal MST
 
 // Given a graph gnew consisting solely of vertices, computes the minimum spanning tree of undirectedg over

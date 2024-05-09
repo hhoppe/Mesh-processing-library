@@ -129,7 +129,7 @@ class icfstreambuf : public std::streambuf {
     // copy up to putback_size previously read characters into putback buffer
     int putback_num = 0;
     if (1) {
-      putback_num = min(int(gptr() - eback()), possible_cast<int>(putback_size));
+      putback_num = min(int(gptr() - eback()), putback_size);
       ASSERTX(putback_num >= 0 && putback_num <= putback_size);
       std::memmove(_buffer0 - putback_num, gptr() - putback_num, putback_num);  // ranges may overlap
     }

@@ -1408,7 +1408,7 @@ void do_featureoffsets() {
         image[yx][c] = uint8_t(i);
       }
     } else {  // scalar arctan
-      float f = float(mag<float>(mvec[yx]));
+      float f = mag<float>(mvec[yx]);
       f = 0.f + 150.f * std::atan2(f, 1.f);
       int i = int(f + .5f);
       assertx(i >= 0 && i <= 255);
@@ -1613,7 +1613,7 @@ void do_genpattern(Args& args) {
         case '2': {  // 20-degree diagonal
           const float ang = 20.f * (TAU / 360);
           auto vrot = V(std::cos(ang), std::sin(ang));
-          r = float(dot(V(y, x), vrot) / dot(convert<float>(image.dims() - 1), vrot));
+          r = dot(V(y, x), vrot) / dot(convert<float>(image.dims() - 1), vrot);
           break;
         }
         case 'r': {                                                   // radius

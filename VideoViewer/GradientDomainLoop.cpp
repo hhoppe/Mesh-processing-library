@@ -635,8 +635,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   const int onf = odims[0], ny = odims[1], nx = odims[2];
   const Vec2<int> sdims(ny, nx);
   const Vec3<int> ndims(nnf, ny, nx);
-  assertx((video_filename != "") + !!video.size() + !!video_nv12.size() == 1);
-  assertx(!!pwvideo + !!videoloop.size() + !!videoloop_nv12.size() == 1);
+  assertx(int(video_filename != "") + int(!!video.size()) + int(!!video_nv12.size()) == 1);
+  assertx(int(!!pwvideo) + int(!!videoloop.size()) + int(!!videoloop_nv12.size()) == 1);
   if (video.size()) assertx(video.dims() == odims);
   if (video_nv12.size()) assertx(video_nv12.get_Y().dims() == odims);
   if (videoloop.size()) assertx(videoloop.dims() == ndims);
@@ -1264,14 +1264,14 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   assertx(product(sdims));
   const int onf = odims[0];  // number of input frames
   assertx(onf > 0);
-  assertx((video_filename != "") + !!video.size() + !!video_nv12.size() == 1);  // exactly one of 3 input types
+  assertx(int(video_filename != "") + int(!!video.size()) + int(!!video_nv12.size()) == 1);
   if (video_filename != "") assertx(file_requires_pipe(video_filename) || file_exists(video_filename));
   if (video.size()) assertx(video.dims() == odims);
   if (video_nv12.size()) assertx(video_nv12.get_Y().dims() == odims);
   assertx(mat_start.size() && mat_period.size() && mat_start.dims() == mat_period.dims());
-  assertx(nnf > 0);                                                        // number of frames in new (loop) video
-  const Vec3<int> ndims = concat(V(nnf), sdims);                           // dimensions of new (loop) video
-  assertx(!!pwvideo + !!videoloop.size() + !!videoloop_nv12.size() == 1);  // exactly one of 3 output types
+  assertx(nnf > 0);                               // number of frames in new (loop) video
+  const Vec3<int> ndims = concat(V(nnf), sdims);  // dimensions of new (loop) video
+  assertx(int(!!pwvideo) + int(!!videoloop.size()) + int(!!videoloop_nv12.size()) == 1);
   if (pwvideo) assertx(pwvideo->spatial_dims() == sdims);
   if (videoloop.size()) assertx(videoloop.dims() == ndims);
   if (videoloop_nv12.size()) assertx(videoloop_nv12.get_Y().dims() == ndims);

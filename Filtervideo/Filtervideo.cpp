@@ -1887,7 +1887,7 @@ void process_gen(Args& args) {
             speriod;
         auto pf = p - floor(p);
         auto pi = convert<int>(floor(p));
-        float r = float(mag(pf - V(.5f, .5f)));
+        float r = mag(pf - V(.5f, .5f));
         Pixel& pix = video[f][yx];
         if (mode == 1 && (pi[0] + pi[1]) % 2 == 0) pix = Pixel::white();
         if (mode == 2 && r < sradius) pix = Pixel::white();
@@ -2004,7 +2004,7 @@ void process_gen(Args& args) {
       }
       euclidean_distance_map(mvec);
       for (const auto& yx : range(video.spatial_dims())) {
-        float v = float(mag(mvec[yx]));
+        float v = mag(mvec[yx]);
         if (v > radius) continue;
         auto yxo = convert<int>(convert<float>(yx) + mvec[yx] + .5f);
         video[f][yx] = mpixel[yxo];
@@ -2015,7 +2015,7 @@ void process_gen(Args& args) {
     parallel_for_each(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         auto pc = V((.2f + .6f * f / float(video.nframes())) * video.xsize(), .5f * video.ysize());
-        float r = float(dist(convert<float>(yx), pc));
+        float r = dist(convert<float>(yx), pc);
         video[f][yx] = Pixel::gray(r < radius ? 255 : 0);
       }
     });
@@ -2083,7 +2083,7 @@ void do_procedure(Args& args) {
       parallel_for_coords(
           video.spatial_dims(),
           [&](const Vec2<int>& yx) {
-            float d = float(mag(convert<float>(yx) - convert<float>(video.spatial_dims()) * .5f));
+            float d = mag(convert<float>(yx) - convert<float>(video.spatial_dims()) * .5f);
             float vdrift = std::sin(f / period * TAU) * magnitude * smooth_step(clamp(1.f - d / sradius, 0.f, 1.f));
             for_int(z, nz) video[f][yx][z] = clamp_to_uint8(int(video[f][yx][z] + vdrift + .5f));
           },

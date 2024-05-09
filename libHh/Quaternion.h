@@ -47,10 +47,10 @@ class Quaternion {
   Quaternion(float x, float y, float z, float w) : _c(x, y, z, w) {}
   float& operator[](int i) { return _c[i]; }
   const float& operator[](int i) const { return _c[i]; }
-  friend float mag2(const Quaternion& q) { return float(mag2(q._c)); }
-  friend float mag(const Quaternion& q) { return float(mag(q._c)); }
-  friend float dot(const Quaternion& q1, const Quaternion& q2) { return float(dot(q1._c, q2._c)); }
-  void normalize() { _c *= 1.f / assertx(float(mag(_c))); }
+  friend float mag2(const Quaternion& q) { return mag2(q._c); }
+  friend float mag(const Quaternion& q) { return mag(q._c); }
+  friend float dot(const Quaternion& q1, const Quaternion& q2) { return dot(q1._c, q2._c); }
+  void normalize() { _c *= 1.f / assertx(mag(_c)); }
 };
 
 Quaternion operator*(const Quaternion& q1, const Quaternion& q2);

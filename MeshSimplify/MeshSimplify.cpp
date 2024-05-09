@@ -4517,7 +4517,7 @@ void optimize() {
       int i = 0;
       for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
       if (strict_mat_neighbors(f, fn[0], fn[1], fn[2])) continue;
-      if ((!fn[0]) + (!fn[1]) + (!fn[2]) >= 2) {
+      if (int(!fn[0]) + int(!fn[1]) + int(!fn[2]) >= 2) {
         // Can occur if at corner of terrain grid && !terrain
         Warning("Valence 2 vertex on boundary will be degenerate");
       } else {

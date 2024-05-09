@@ -140,6 +140,9 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   }
 };
 
+// Template deduction guide:
+template <typename Eval> NonlinearOptimization(ArrayView<double> x_, Eval eval) -> NonlinearOptimization<Eval>;
+
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_

@@ -135,7 +135,7 @@ class Timers {
  public:
   static bool record(const Timer& timer, Timer::EMode cmode) {
     // Note: not threadsafe.  (Any timers must be created outside multithreading sections.)
-    const auto [it, is_new] =
+    const auto& [it, is_new] =
         instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
     const auto& [_, i] = *it;
     if (is_new) instance()._vec_timer_info.emplace_back(Timers::TimerInfo(timer._name));

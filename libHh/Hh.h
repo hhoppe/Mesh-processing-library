@@ -532,7 +532,7 @@ namespace details {
 // Evaluates to false in boolean context for use in macro as:
 // "if (details::false_capture<int> i = stop) { HH_UNREACHABLE; } else".
 template <typename T> struct false_capture {
-  template <typename... Args> false_capture(Args&&... args) : _e(args...) {}
+  template <typename... Args> explicit false_capture(Args&&... args) : _e(args...) {}
   operator bool() const { return false; }
   const T& operator()() const { return _e; }
   T _e;
@@ -620,7 +620,7 @@ template <typename T> class Range {
     using pointer = value_type*;
     using reference = value_type&;
     iterator(T start, T stop) : _v(start), _stop(stop) {}
-    iterator(const type& iter) = default;
+    explicit iterator(const type& iter) = default;
     bool operator==(const type& rhs) const { return _v == rhs._v; }
     bool operator!=(const type& rhs) const { return !(*this == rhs); }
     bool operator<(const type& rhs) const { return _v < rhs._v; }
@@ -685,7 +685,7 @@ inline std::ostream& operator<<(std::ostream& os, const char* s) { return std::o
 // User-defined ostream manipulator, which is constructed from a container and writes out its elements.
 template <typename C> class stream_range {
  public:
-  stream_range(const C& c) : _c(c) {}
+  explicit stream_range(const C& c) : _c(c) {}
   friend std::ostream& operator<<(std::ostream& os, const stream_range& sc) {
     os << type_name<C>() << "={\n";
     for (const auto& e : sc._c) {
@@ -697,6 +697,8 @@ template <typename C> class stream_range {
  private:
   const C& _c;
 };
+
+template <typename C> stream_range(const C& c) -> stream_range<C>;  // Template deduction guide.
 
 template <typename T> void my_zero(T& e) {
   // e = T{};  // Bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4.

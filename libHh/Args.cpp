@@ -20,13 +20,13 @@ inline double convert_double(const string& s) { return atof(s.c_str()); }  // or
 inline string show_bool(bool b) { return b ? "true" : "false"; }
 
 inline string show_float(float f) {
-  string s = make_string(f);  // (could use to_string(f) defined for numeric values but GCC Win library has bug)
+  string s = make_string(f);  // Nicely Produces "0" rather than the "0.000000" of std::to_string(f).
   if (s.find_first_of(".e") == string::npos) s += ".";
   return s;
 }
 
 inline string show_double(double f) {
-  string s = make_string(f);  // (could use to_string(f) defined for numeric values but GCC Win library has bug)
+  string s = make_string(f);
   if (s.find_first_of(".e") == string::npos) s += ".";
   return s;
 }

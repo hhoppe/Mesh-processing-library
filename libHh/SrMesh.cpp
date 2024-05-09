@@ -1020,7 +1020,7 @@ inline bool SrMesh::is_visible(const SrVertexGeometry* vg, const SrVsplit* vspl)
 
 inline bool SrMesh::big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) const {
 #if !defined(SR_NOR001)
-  // original SIGGRAPH 97 definition
+  // The original SIGGRAPH 97 definition.
   const Point& p = vg->point;
   float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
@@ -1031,7 +1031,7 @@ inline bool SrMesh::big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) 
   float vdot = pex * vnor[0] + pey * vnor[1] + pez * vnor[2];
   return vspl->uni_error_mag2 >= rhs1 || vspl->dir_error_mag2 * (pem2 - square(vdot)) >= rhs1 * pem2;
 #elif 0
-  // SIGGRAPH 97 definition specialized to height field
+  // SIGGRAPH 97 definition specialized to a height field.
   const Point& p = vg->point;
   float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
@@ -1041,7 +1041,7 @@ inline bool SrMesh::big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) 
   float rhs1 = _refp._tz2 * pem2;
   return vspl->dir_error_mag2 * (pem2 - pez2) >= rhs1 * pem2;
 #elif 0
-  // remove term that checks z direction of view direction
+  // Remove the term that checks the z direction of the view direction.
   const Point& p = vg->point;
   float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
@@ -1049,13 +1049,11 @@ inline bool SrMesh::big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) 
   float pem2 = pex * pex + pey * pey + pez * pez;
   float rhs1 = _refp._tz2 * pem2;
   return vspl->dir_error_mag2 >= rhs1;
-#elif 1
-  // try linear functional instead of Euclidean (z direction still ignored)
-  // this allows eyepoint anticipation for correct geomorphs.
+#else
+  // Try linear functional instead of Euclidean (z direction still ignored).
+  // This allows eyepoint anticipation for correct geomorphs.
   float lf = _refp._eyedir.eval(vg->point);
   return vspl->dir_error_mag2 >= _refp._tz2 * square(lf);
-#else
-  BUG;
 #endif
 }
 

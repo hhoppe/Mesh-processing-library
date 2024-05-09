@@ -123,7 +123,7 @@ inline int rgb_dist2(const Pixel& pix1, const Pixel& pix2) {
 // Convert float/double matrix (with 0.f == black and 1.f == white) to an image.
 template <typename T> Image as_image(CMatrixView<T> matrix) {
   static_assert(std::is_floating_point_v<T>, "T must be float/double");
-  // (renamed image to image1 due to buggy VS2015 warning about shadowed variable)
+  // (Renamed image to image1 due to Visual Studio bug "C4459: declaration ... hides global declaration".)
   Image image1(matrix.dims());
   parallel_for_each(range(image1.ysize()), [&](const int y) {
     for_int(x, image1.xsize()) {

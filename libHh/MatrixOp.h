@@ -44,7 +44,6 @@ template <typename T> bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
       if (max_i != i) swap_ranges(t[i], t[max_i]);
     }
     if (!t[i][i]) return false;
-    // Note: bug in VS2015 update 1 - x64 DebugMD due to OpenMP; if parallel, never terminates.
     parallel_for_each(
         range(n),
         [&](const int j) {

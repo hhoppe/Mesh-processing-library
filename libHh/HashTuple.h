@@ -2,7 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_HASHTUPLE_H_
 #define MESH_PROCESSING_LIBHH_HASHTUPLE_H_
 
-#include <memory>  // _WIN32 bug: must appear before <tuple> to avoid warning 4548
 #include <tuple>   // std::tuple
 
 #include "libHh/Advanced.h"  // hash_combine()

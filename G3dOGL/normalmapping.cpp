@@ -1,5 +1,4 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include <memory>  // _WIN32 bug: must appear before <mutex> to avoid warning 4548
 #include <mutex>   // std::once_flag, std::call_once()
 
 #include "HW.h"

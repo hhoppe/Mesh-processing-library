@@ -513,7 +513,7 @@ static bool isafile(int fd) {
   HANDLE handle = reinterpret_cast<HANDLE>(_get_osfhandle(fd));
   BY_HANDLE_FILE_INFORMATION hfinfo = {};
   if (!GetFileInformationByHandle(handle, &hfinfo)) return false;
-  // 2004-10-06 XPSP2: bug: now pipe returns success; detect this using the peculiar file information:
+  // 2004-10-06 XPSP2: pipe returns true above; detect this using the peculiar file information:
   if (hfinfo.dwVolumeSerialNumber == 0 && hfinfo.ftCreationTime.dwHighDateTime == 0 &&
       hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
     return false;

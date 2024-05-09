@@ -102,7 +102,7 @@ void read_mesh_line(char* s) {
   if (sscanf(s, "Ecol %d %d", &vi1, &vi2) != 2) vi1 = vi2 = 0;
   if (sscanf(s, "Vspl %d %d %d %d", &vspl1, &vspl2, &vspl3, &vspl4) != 4) vspl1 = vspl2 = vspl3 = vspl4 = 0;
   mesh.read_line(s);
-  // (Bug: Not all mesh transformations clear vflag_ok, fflag_ok flags)
+  // (Note: Not all mesh transformations clear vflag_ok, fflag_ok flags.)
   if (vi1) {
     mesh.flags(mesh.id_vertex(vi1)).flag(vflag_ok) = false;
     for (Face f : mesh.faces(mesh.id_vertex(vi1))) mesh.flags(f).flag(fflag_ok) = false;

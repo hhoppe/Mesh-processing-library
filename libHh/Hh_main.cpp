@@ -77,7 +77,7 @@ double get_seconds_per_counter() {
   using Duration = Clock::duration;
   constexpr Duration::rep nticks_per_sec = std::chrono::duration_cast<Duration>(k_one_sec).count();
   constexpr double sec_per_tick = 1. / nticks_per_sec;
-  return sec_per_tick;  // == 1e-9 in VS2015.
+  return sec_per_tick;  // (== 1e-9 in Visual Studio.)
 #elif defined(_WIN32)
   static double v;
   static std::once_flag flag;

@@ -713,11 +713,6 @@ Vec2<int> find_max_texture(GLenum internal_format, const Vec2<int>& yx_aspect, i
     static const bool debug = getenv_bool("TEXTURE_MAX_DEBUG");
     if (debug) SHOW("try", level, internal_format, yx, border, w);
     if (!w) break;  // proxy allocation failed
-    if (level >= 16) {
-      // Bug on squeal (Impact).
-      SHOW("level > 16");
-      break;
-    }
     max_yx = (yx * (1 << level)) + 2 * border;
     if (max_mipmap_level == 0) {
       // try the next larger image size at level zero
@@ -726,6 +721,7 @@ Vec2<int> find_max_texture(GLenum internal_format, const Vec2<int>& yx_aspect, i
       // try same image size at next higher mipmap level
       level++;
       if (level + level_offset > max_mipmap_level) break;
+      assertx(level < 16);
     }
   }
   if (product(max_yx)) {
@@ -2319,7 +2315,7 @@ void process_print() {
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     // glPixelStorei(GL_PACK_ROW_LENGTH, nxpix*3);
     if (nxpix < 44) {
-      // Generally slow for RemoteDesktop, but must use this to counter OpenGL bug if nxpix<44.
+      // Generally slow for RemoteDesktop, but must use this to counter OpenGL bug if nxpix < 44.
       for_int(y, nypix) glReadPixels(0, y, nxpix, 1, GL_RGBA, GL_UNSIGNED_BYTE, image[y].data());
     } else {
       glReadPixels(0, 0, nxpix, nypix, GL_RGBA, GL_UNSIGNED_BYTE, image.data());

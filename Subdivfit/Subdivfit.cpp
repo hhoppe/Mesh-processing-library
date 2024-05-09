@@ -226,7 +226,7 @@ double get_espr() {
 
 double get_earea() {
   if (!areafac) return 0.;
-  // may be a bug here: g_psmesh may not be defined everywhere?
+  // There may be a bug here: g_psmesh may not be defined everywhere?
   SubMesh& smesh = *assertx(g_psmesh);
   double sum = 0.;
   for (Face f : smesh.mesh().faces()) sum += smesh.mesh().area(f);

@@ -719,9 +719,9 @@ void HW::draw_it() {
           sleep(1);
         }
         if (0) glFinish();  // does not help
-        // 2015-02-04 cygwin new bug: swapping the buffers causes the window to blink to background
+        // 2015-02-04 cygwin new bug: Swapping the buffers causes the window to blink to background.
         glXSwapBuffers(_display, _win);
-        // 2015-07-27 cygwin: "VideoViewer ~/data/image/lake.png" causes segmentation fault in line above
+        // 2015-07-27 cygwin: "VideoViewer ~/data/image/lake.png" causes segmentation fault in line above.
         if (0) {
           SHOW("after_swap");
           sleep(1);

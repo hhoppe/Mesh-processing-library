@@ -4384,14 +4384,14 @@ void do_trimpts(Args& args) {
     for_int(i, points.num()) psp.enter(i, &points[i]);
     showdf("Read %d inbound points out of %d points from %s\n", points.num(), totpts, filename.c_str());
   }
-  if (getenv_bool("CIRCUMRADIUS")) {  // not really the circumradius!
+  if (getenv_bool("CIRCUMRADIUS")) {  // Note: not really the circumradius!
     // But probably we should use the minimum bounding sphere anyways.
     Array<Face> dfaces;
     Polygon poly;
     for (Face f : mesh.faces()) {
       mesh.polygon(f, poly);
       assertx(poly.num() == 3);
-      Point pc = interp(poly[0], poly[1], poly[2]);  // BUG: not true circumcenter!
+      Point pc = interp(poly[0], poly[1], poly[2]);  // Note: not really the circumcenter!
       float circumd = dist(pc, poly[0]);
       float maxd = circumd * dtrim * xform[0][0];
       SpatialSearch<int> ss(&psp, pc * xform, maxd);

@@ -252,8 +252,6 @@ class Multigrid : noncopyable {
         if (dims[0] % 2 == 1) ngrid[ndims[0] - 1][x] = grid[(ndims[0] - 1) * 2][x] * 1.f;  // .5f or 1.f; don't care
       }
     } else {
-      // Note: bug in VS2015 update 1 - x64 DebugMD due to OpenMP;
-      //  Multigrid_test; ngrid.dims=[17, 17] but appears as [0, 17] within loop.
       parallel_for_each(
           range(dims[0] / 2),
           [&](const int y) {

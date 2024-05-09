@@ -25,14 +25,7 @@
 }
 #endif
 
-#if defined(_MSC_VER) && defined(HH_DEBUG) && !defined(HH_NO_OPENMP)
-// Bug in Visual Studio 2015 update 1; compilation creates buggy code in x64-Debug with OpenMP in:
-//  MatrixOp.h: invert(CMatrixView<T> mi, MatrixView<T> mo)  (from Frame::invert() from Geom_test.cpp);
-//  Multigrid.h: dual_downsample_aux(Specialize<2>, CGridView<D, T> grid)  (from Multigrid_test.cpp);
-#define HH_NO_OPENMP
-#endif
-
-#if !defined(_OPENMP) && !defined(HH_NO_OPENMP)  // if compiler feature is absent,  we disable the macros as well
+#if !defined(_OPENMP) && !defined(HH_NO_OPENMP)  // If the compiler feature is absent,  we disable the parallel macros.
 #define HH_NO_OPENMP
 #endif
 

@@ -2116,14 +2116,12 @@ void do_procedure(Args& args) {
   } else if (name == "gen") {
     process_gen(args);
   } else if (name == "black_to_red") {
-    // Combination of omp and lambda capture causes internal error in VS2015, in both Debug and Release.
-    // parallel_for_each(range(video.nframes()), [&](const int f) {
-    for_int(f, video.nframes()) {
+    parallel_for_each(range(video.nframes()), [&](const int f) {
       Matrix<bool> mask = get_black_border_mask(video[f]);
       for_coords(video.spatial_dims(), [&](const Vec2<int>& yx) {
         if (mask[yx]) video[f][yx] = Pixel::red();
       });
-    }
+    });
   } else if (name == "black_border_copy_frame0") {
     for_int(f, video.nframes()) {
       Matrix<bool> mask = get_black_border_mask(video[f]);

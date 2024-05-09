@@ -4136,11 +4136,7 @@ void do_vlp(Args& args) {
 
 void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
   assertx(k % 2 == 0);  // should be a multiple of 2 for UV representation
-  // Workaround for Cygwin gcc 5.4.0 compiler bug in demos/create_videoloop_palmtrees.sh:
-  //  (cd ~/git/mesh_processing/demos; ~/git/mesh_processing/bin/cygwin/VideoViewer -batch_create_loop data/palmtrees_small.mp4 v.mp4)
-  // Vec2<int> odims = onv12.get_Y().dims().tail<2>();
-  Vec3<int> tmpdims = onv12.get_Y().dims();
-  Vec2<int> odims = tmpdims.tail<2>();
+  Vec2<int> odims = onv12.get_Y().dims().tail<2>();
   Vec2<int> ndims = odims / k * k;
   if (ndims == odims) return;
   Warning("Cropping spatial dimensions of video to more even size");

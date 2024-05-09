@@ -20,7 +20,7 @@ namespace hh {
 // Eval = double (&)(ArrayView<double>)
 template <typename Eval> class NonlinearOptimization : noncopyable {
  public:
-  // (renamed x to x_ due to VS2015 bug warning "C4459: declaration of 'x' hides global declaration")
+  // (Renamed x to x_ due to Visual Studio bug "C4459: declaration ... hides global declaration".)
   explicit NonlinearOptimization(ArrayView<double> x_, Eval eval = Eval()) : NonlinearOptimization(nullptr, x_, eval) {
     _debug = getenv_int("NLOPT_DEBUG");
   }

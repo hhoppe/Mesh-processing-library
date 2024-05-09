@@ -535,7 +535,7 @@ static void act_flight() {
     if (abs(a) > 45.f) a = 45.f * sign(a);
     a = sign(a) * pow(abs(a) / 45.f, .5f);
     // Doing "translation * rotation * ~translation" is incorrect!
-    // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that bug.
+    // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that problem.
     Point savep = obframe.p();
     Frame f1 = Frame::translation(-to_Vector(obframe.p()));
     const float yaw_factor = 0.032f;                                                  // was 0.025f in g3dfly.c

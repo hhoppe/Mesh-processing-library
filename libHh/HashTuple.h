@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_HASHTUPLE_H_
 #define MESH_PROCESSING_LIBHH_HASHTUPLE_H_
 
-#include <tuple>   // std::tuple
+#include <tuple>  // std::tuple
 
 #include "libHh/Advanced.h"  // hash_combine()
 

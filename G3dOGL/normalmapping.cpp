@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include <mutex>   // std::once_flag, std::call_once()
+#include <mutex>  // std::once_flag, std::call_once()
 
 #include "HW.h"
 #include "libHh/Array.h"

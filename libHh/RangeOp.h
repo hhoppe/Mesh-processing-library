@@ -184,7 +184,6 @@ template <typename R, typename = enable_if_range_t<R>> std::ptrdiff_t distance(c
 //  set_union(), set_intersection(), set_difference(), set_symmetric_difference(), *heap*()
 //  minmax(), minmax_element(), lexicographical_compare(), next_permutation(), prev_permutation()
 
-
 // *** My custom range operations:
 
 // Higher-precision type to represent the mean of a set of elements.

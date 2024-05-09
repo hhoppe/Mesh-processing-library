@@ -180,8 +180,7 @@ template <typename T> class Array : public ArrayView<T> {
   template <typename Iterator> explicit Array(Iterator b, Iterator e) : Array() {
     // Note that if an Iterator is a native pointer (T*), it is automatically recognized as a random-access iterator.
     using iterator_category = typename std::iterator_traits<Iterator>::iterator_category;
-    if constexpr (std::is_same_v<iterator_category, std::random_access_iterator_tag>)
-      reserve(narrow_cast<int>(e - b));
+    if constexpr (std::is_same_v<iterator_category, std::random_access_iterator_tag>) reserve(narrow_cast<int>(e - b));
     for (; b != e; ++b) push(*b);
   }
   template <typename Range, typename = enable_if_range_t<Range>>

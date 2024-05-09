@@ -72,6 +72,8 @@
 
 #define HH_EAT_SEMICOLON static_assert(true)  // Redundant declaration to swallow subsequent semicolon.
 
+#define HH_IGNORE(identifier) HH_EAT_SEMICOLON  // Macro used just for documentation; ignores `identifier`.
+
 // Safest to indirect once through these.  https://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
 #define HH_STR(e) #e
 #define HH_STR2(e) HH_STR(e)

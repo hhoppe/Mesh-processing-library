@@ -45,10 +45,10 @@ template <int N> void try_xyz(CArrayView<Vec3<float>> xyzdata) {
   };
   LinearRegression<N2, 2, Eval> regression(xyzdata.num());
   for (auto xyz : xyzdata) regression.enter(xyz.head<2>(), xyz[2]);
-  auto ar = regression.get_solution();
+  const auto ar = regression.get_solution();
   SHOW(ar);
   for (auto xyz : xyzdata) {
-    float zfit = float(dot(ar, Eval()(xyz.head<2>())));
+    const float zfit = float(dot(ar, Eval()(xyz.head<2>())));
     showf("x=%g  y=%g  z=%8.5g  zfit=%8.5g\n", xyz[0], xyz[1], xyz[2], zfit);
   }
 }
@@ -66,8 +66,8 @@ int main() {
     Array<Vec3<float>> xyzdata;
     const int n = 4;
     for_int(ix, n) for_int(iy, n) {
-      auto xy = V(float(ix), float(iy));
-      float z = float(mag(xy - V(n / 2.f, n / 2.f)));
+      const auto xy = V(float(ix), float(iy));
+      const float z = float(mag(xy - V(n / 2.f, n / 2.f)));
       xyzdata.push(concat(xy.view(), ArView(z)));
     }
     try_xyz<2>(xyzdata);

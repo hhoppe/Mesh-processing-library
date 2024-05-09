@@ -209,7 +209,7 @@ int main() {
   }
   if (1) {
     // 1D
-    SGrid<int, 5> grid1 = V(1, 2, 3, 4, 5);
+    const SGrid<int, 5> grid1 = V(1, 2, 3, 4, 5);
     SHOW(scale_filter_nearest(grid1.view(), V(1)));
     SHOW(scale_filter_nearest(grid1.view(), V(2)));
     SHOW(scale_filter_nearest(grid1.view(), V(3)));
@@ -219,19 +219,20 @@ int main() {
     SHOW(scale_filter_nearest(grid1.view(), V(10)));
     SHOW(scale_filter_nearest(grid1.view(), V(11)));
     // 2D
-    SGrid<int, 4, 5> grid2 = V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
+    const SGrid<int, 4, 5> grid2 =
+        V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
     SHOW(scale_filter_nearest(grid2.view(), V(2, 3)));
     SHOW(scale_filter_nearest(grid2.view(), V(1, 8)));
     SHOW(scale_filter_nearest(grid2.view(), V(4, 10)));
     // 3D
-    SGrid<int, 2, 2, 5> grid3 =
+    const SGrid<int, 2, 2, 5> grid3 =
         V(V(V(1, 2, 3, 4, 5), V(11, 12, 13, 14, 15)), V(V(101, 102, 103, 104, 105), V(111, 112, 113, 114, 115)));
     SHOW(scale_filter_nearest(grid3.view(), V(2, 1, 5)));
     SHOW(scale_filter_nearest(grid3.view(), V(1, 2, 7)));
     SHOW(scale_filter_nearest(grid3.view(), V(1, 1, 3)));
     SHOW(scale_filter_nearest(grid3.view(), V(2, 2, 3)));
     // 4D
-    SGrid<int, 2, 2, 2, 2> grid4 =
+    const SGrid<int, 2, 2, 2, 2> grid4 =
         V(V(V(V(1, 2), V(3, 4)), V(V(5, 6), V(7, 8))), V(V(V(11, 12), V(13, 14)), V(V(15, 16), V(17, 18))));
     SHOW(scale_filter_nearest(grid4.view(), V(2, 2, 2, 2)));
     SHOW(scale_filter_nearest(grid4.view(), V(2, 1, 2, 2)));
@@ -248,7 +249,7 @@ int main() {
     SHOW(grid_column<3>(grid4.view(), V(1, 1, 1, 0)));
   }
   if (1) {
-    Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
+    const Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
     CGridView<3, Pixel> view = raise_grid_rank(grid);
     assertx(view.dims() == V(1, 20, 20));
     assertx(equal(view[0], grid));

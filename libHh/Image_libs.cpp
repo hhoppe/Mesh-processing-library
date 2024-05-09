@@ -827,7 +827,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
 }
 
 void ImageLibs::write_bmp(const Image& image, FILE* file) {
-  Vec2<char> magic{'B', 'M'};
+  const Vec2<char> magic{'B', 'M'};
   assertt(write_raw(file, magic.view()));
   int ncomp = image.zsize();
   bmp_BITMAPFILEHEADER_HH bmfh;
@@ -898,7 +898,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     assertt(write_raw(file, ArView(bmfh)));
     assertt(write_raw(file, ArView(bmih)));
     for_int(i, 256) {
-      Vec4<uchar> buf2{uchar(i), uchar(i), uchar(i), uchar{255}};
+      const Vec4<uchar> buf2{uchar(i), uchar(i), uchar(i), uchar{255}};
       assertt(write_raw(file, buf2.view()));
     }
     assertt(write_raw(file, buf));

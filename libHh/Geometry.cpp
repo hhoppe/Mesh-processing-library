@@ -57,7 +57,7 @@ Frame operator*(const Frame& f1, const Frame& f2) {
 bool invert(const Frame& fi, Frame& fo) {
   // &fi == &fo is ok
   SGrid<float, 4, 4> m = to_Matrix(fi);
-  if (!invert(m.view(), m.view())) return false;
+  if (!invert(m.const_view(), m.view())) return false;
   fo = to_Frame(m);
   return true;
 }

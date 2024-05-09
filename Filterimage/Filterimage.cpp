@@ -270,7 +270,7 @@ void do_tofloats(Args& args) {
   }
   auto numyx = (endyx1 - begyx - 1) / step + 1;
   showdf("Writing floats file of size (%dx%d)\n", numyx[1], numyx[0]);
-  assertx(write_binary_std(fi(), convert<float>(numyx.rev()).view()));
+  assertx(write_binary_std(fi(), convert<float>(numyx.rev()).const_view()));
   for (const auto& iyx : range(numyx)) {
     auto yx = begyx + iyx * step;
     float elev = get_filtered_pixel_value(yx) * scalezaxis + offsetzaxis;

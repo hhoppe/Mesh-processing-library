@@ -61,6 +61,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   operator CArrayView<T>() const { return view(); }
   ArrayView<T> view() { return ArrayView<T>(a(), n); }
   CArrayView<T> view() const { return CArrayView<T>(a(), n); }
+  CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
   template <int s> Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2)
   template <int s> const Vec<T, s>& head() const { return segment<s>(0); }
   ArrayView<T> head(int s) { return segment(0, s); }

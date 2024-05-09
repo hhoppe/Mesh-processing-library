@@ -68,8 +68,10 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   operator CGridView<D, T>() const { return view(); }
   GridView<D, T> view() { return GridView<D, T>(data(), dims()); }
   CGridView<D, T> view() const { return CGridView<D, T>(data(), dims()); }
+  CGridView<D, T> const_view() const { return CGridView<D, T>(data(), dims()); }
   ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
   CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  CArrayView<T> const_array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   template <int s> SGrid<T, s, od...>& segment(int i) {
     return (ASSERTXX(check(i, s)), *reinterpret_cast<SGrid<T, s, od...>*>(p(i)));
   }

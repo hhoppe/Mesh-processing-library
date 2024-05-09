@@ -248,7 +248,7 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
     for_intL(d0, uL[0], uU[0]) for_intL(d1, uL[1], uU[1]) {
       // "size_t ib = ravel_index_list(dims, d0, d1, uL[2]);" fails for D != 3
       // "size_t ib = ravel_index<D>(dims, {d0, d1, uL[2]});" fails for D != 3
-      // size_t ib = ravel_index<D>(dims, V(d0, d1, uL[2]).view());  // .view() for compilation of D != 3
+      // size_t ib = ravel_index<D>(dims, V(d0, d1, uL[2]).const_view());  // .const_view() for compilation of D != 3
       // for_int(id, uU[2] - uL[2]) func_raster(ib + id);
       size_t i0 = (d0 * dims[1] + d1) * dims[2];
       for_intL(d2, uL[2], uU[2]) func_raster(i0 + d2);

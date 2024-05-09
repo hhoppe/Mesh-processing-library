@@ -532,7 +532,7 @@ namespace details {
 // Evaluates to false in boolean context for use in macro as:
 // "if (details::false_capture<int> i = stop) { HH_UNREACHABLE; } else".
 template <typename T> struct false_capture {
-  template <typename... Args> explicit false_capture(Args&&... args) : _e(args...) {}
+  template <typename... Args> false_capture(Args&&... args) : _e(args...) {}
   operator bool() const { return false; }
   const T& operator()() const { return _e; }
   T _e;

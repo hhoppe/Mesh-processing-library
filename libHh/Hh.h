@@ -620,7 +620,7 @@ template <typename T> class Range {
     using pointer = value_type*;
     using reference = value_type&;
     iterator(T start, T stop) : _v(start), _stop(stop) {}
-    explicit iterator(const type& iter) = default;
+    iterator(const type& iter) = default;
     bool operator==(const type& rhs) const { return _v == rhs._v; }
     bool operator!=(const type& rhs) const { return !(*this == rhs); }
     bool operator<(const type& rhs) const { return _v < rhs._v; }

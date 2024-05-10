@@ -1406,15 +1406,15 @@ void do_outmesh(Args& args) {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSD(mfilename, "file.m : read initial mesh (can be -)");
-  HH_ARGSD(filename, "file.pts : read point data (can be -)");
+  HH_ARGSD(mfilename, "file.m : read initial mesh (can be '-')");
+  HH_ARGSD(filename, "file.pts : read point data (can be '-')");
   HH_ARGSP(verb, "i : set verbosity level");
   HH_ARGSF(outn, ": at end, write meshn instead of mesh0");
   HH_ARGSC("", ":");
   HH_ARGSD(record, "file.m : send orig + changes to file");
   HH_ARGSP(crep, "val : set repr. constant");
   HH_ARGSP(csharp, "val : penalize sharp edges");
-  HH_ARGSP(spring, "val : edge neighborhood spring (only for *fit)");
+  HH_ARGSP(spring, "val : edge neighborhood spring (only for '-*fit')");
   HH_ARGSP(areafac, "val : penalize area of limit surface");
   HH_ARGSD(reconstruct, ": run standard optimization");
   HH_ARGSC("", ":");
@@ -1443,10 +1443,9 @@ int main(int argc, const char** argv) {
   HH_ARGSP(weighta, "a : override interior extraord. weight");
   HH_ARGSP(xformsize, "s : override internal xform");
   HH_ARGSF(markcuts, ": mark refined base mesh edges with 'cut'");
-  HH_ARGSC("", ":");
-  HH_ARGSC("  Examples", ": Subdivfit -mf - -outn");
-  HH_ARGSC("", ": Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v");
-  HH_ARGSC("", ":");
+  HH_ARGSC("", "");
+  HH_ARGSC("Examples: Subdivfit -mf - -outn", "");
+  HH_ARGSC("          Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v", "");
   Timer timer("Subdivfit");
   showdf("%s", args.header().c_str());
   args.parse();

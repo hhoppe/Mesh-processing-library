@@ -4443,7 +4443,7 @@ void do_assignwids() {
 int main(int argc, const char** argv) {
   dummy_use(do_reduce_old_sequential);
   ParseArgs args(argc, argv);
-  HH_ARGSC("", ":** Other input types");
+  HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:", "");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");
   HH_ARGSD(fromgrid, "ny nx file_of_z_values : create grid of quads");
   HH_ARGSD(frompointgrid, "ny nx file_of_points : create grid of quads");
@@ -4451,7 +4451,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(froma3d, ": build mesh from a3d input");
   HH_ARGSD(rawfroma3d, ": build mesh from a3d input (isolated tris)");
   HH_ARGSD(fromObj, "file.obj [flip] : import obj");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSD(renumber, ": renumber vertices and faces");
   HH_ARGSD(nidrenumberv, ": renumber vertices to have id=key{'Nid'}");
   HH_ARGSD(merge, "mesh1 mesh2 ... : merge other meshes");
@@ -4463,12 +4463,12 @@ int main(int argc, const char** argv) {
   HH_ARGSD(toa3d, ": output a3d version of mesh");
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");
   HH_ARGSD(solidangle, "sterad. : tag cusp vertices (def. 0)");
   HH_ARGSD(tagmateriale, ": tag as sharp edges separating materials");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSD(transf, "'frame' : affine transform by frame");
   HH_ARGSD(keepsphere, "x y z r : delete faces with vertex outside");
   HH_ARGSD(delaunay, ": retriangulate based on circumradii");
@@ -4485,7 +4485,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(desbrunsmooth, "l : Desbrun smoothing with lambda (e.g. 1.)");
   HH_ARGSD(lscm, ": least-squares conformal map parametrization");
   HH_ARGSD(poissonparam, ": Poisson parametrization");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSD(mark, ": mark tagged elements on output");
   HH_ARGSD(assign_normals, ": save normals as strings on {v, c}");
   HH_ARGSD(removeinfo, ": remove all info (keys, tags) at {v, f, e, c}");
@@ -4498,13 +4498,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tobbox, ": rescale to bounding box");
   HH_ARGSD(genus, ": print mesh genus");
   HH_ARGSD(info, ": print statistics about mesh");
-  HH_ARGSD(stat, ": -info -noo");
+  HH_ARGSD(stat, ": equivalent to '-info -noo'");
   HH_ARGSD(analyzestretch, ": analyze stretch given uv");
   HH_ARGSD(fixvertices, ": disconnect non-nice vertices");
   HH_ARGSD(fixfaces, ": remove contradictory faces");
   HH_ARGSD(nice, ": assert mesh is nice");
   HH_ARGSD(flip, ": flip orientation of faces");
-  HH_ARGSD(smootha3d, ": == -angle 180 -selsmooth");
+  HH_ARGSD(smootha3d, ": equivalent to ;-angle 180 -selsmooth'");
   HH_ARGSD(fillholes, "nedges : fill holes with <= nedges");
   HH_ARGSP(checkflat, "tol : if > 0, triang faces dif. (rec. 1e-5)");
   HH_ARGSF(alltriangulate, ": subdivide even the triangle");
@@ -4563,7 +4563,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(trimpts, "file.pts d : remove faces away from points");
   HH_ARGSD(assignwids, ": assign wedge ids");
   HH_ARGSD(procedure, "name... : apply named procedure to mesh");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSP(nfaces, "n :  stop when mesh has <=n faces");
   HH_ARGSP(maxcrit, "f :  stop when edge crit >=f");
   HH_ARGSD(lengthc, ":  use edge length as reduction criterion");
@@ -4571,14 +4571,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(volumec, ":  use preservation of volume criterion");
   HH_ARGSD(qemc, ":  use qem criterion");
   HH_ARGSD(reduce, ": reduce mesh (must follow these args)");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSD(randpts, "n : print n random points on mesh");
   HH_ARGSD(vertexpts, ": print mesh vertices as points");
   HH_ARGSD(orderedvertexpts, ": print mesh vertices as points");
   HH_ARGSD(bndpts, "n : print n points on each boundary edge");
   HH_ARGSD(addmesh, ": output a3d endfile + mesh now");
   HH_ARGSF(nocleanup, ": exit() before invoking destructors");
-  HH_ARGSC("", ":**");
   {
     HH_TIMER("Filtermesh");
     string arg0 = args.num() ? args.peek_string() : "";

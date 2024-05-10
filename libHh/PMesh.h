@@ -6,12 +6,12 @@
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
 #include "libHh/Geometry.h"  // Point, Vector
+#include "libHh/GMesh.h"
 #include "libHh/Materials.h"
 #include "libHh/Pixel.h"
 
 namespace hh {
 
-class GMesh;
 class Ancestry;
 class PMeshIter;
 struct PMeshInfo;
@@ -401,6 +401,7 @@ class PMeshIter : public AWMesh {
   bool goto_nfaces(int nf) { return goto_nfaces_ancestry(nf, nullptr); }        // within +- 1, favor 0 or -1
   PMeshRStream& rstream() { return _pmrs; }
   const PMeshRStream& rstream() const { return _pmrs; }
+  GMesh extract_gmesh() const { return AWMesh::extract_gmesh(rstream()._info); }
 
  private:
   friend class Geomorph;

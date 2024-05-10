@@ -18,7 +18,7 @@ ArView(argv, argc) = Array<const char*>(2) {
   -?
 }
 Args_test Options:
- -?                           : print available options
+ -?                           : print available options (also --help, --version)
  -flag                        : enable flag
  -flap                        : turn on the flaps
  -flac                        : send out flacs

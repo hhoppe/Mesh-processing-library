@@ -788,6 +788,7 @@ int main(int argc, const char** argv) {
   string transf;
   bool stat = false;
   ParseArgs args(argc, argv);
+  HH_ARGSC("An 'a3d stream' is read from stdin or first arg.  Subsequent options are:", "");
   HH_ARGSF(onlypoly, ": remove special a3d commands");
   HH_ARGSF(nopolygons, ": cull polygons");
   HH_ARGSF(nopolylines, ": cull polylines");
@@ -801,12 +802,12 @@ int main(int argc, const char** argv) {
   HH_ARGSP(sharpthresh, "deg : corners in smoothcurves");
   HH_ARGSP(smoothcurves, "iter : smooth the polylines");
   HH_ARGSP(minverts, "nv : only keep elements with >=nv verts");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSF(culloutside, ": set to remove points outside");
   HH_ARGSP(cullsphere, "x y z r : remove points within sphere");
   HH_ARGSP(mindis, "f : make no pair of points closer than f");
   HH_ARGSP(outlier, "n d : remove points if n'th closest >d");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSF(nonormals, ": remove vertex normals");
   HH_ARGSF(optnormals, ": remove unnecessary polygon normals");
   HH_ARGSF(nocolor, ": remove color information");
@@ -827,13 +828,13 @@ int main(int argc, const char** argv) {
   HH_ARGSF(twosided, ": make polygons two-sided");
   HH_ARGSF(triangulate, ": triangulate all faces with > 3 vertices");
   HH_ARGSP(tessellate, "n : subdivide each triangle into n*n faces");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSF(info, ": print statistics");
   HH_ARGSF(stat, ": print statistics");
   HH_ARGSF(box, ": show bounding box");
   HH_ARGSF(boxframe, ": output frame that will box data");
   HH_ARGSF(nooutput, ": turn off a3d output");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSP(split, "i : output frame every ith element");
   HH_ARGSP(speedup, "factor : increase 'split' every frame");
   HH_ARGSP(frdelay, "fsec : pause after each frame");

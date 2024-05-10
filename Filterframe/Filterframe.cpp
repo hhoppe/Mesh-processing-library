@@ -11,7 +11,7 @@ namespace {
 
 int every = 0;
 int object = -1;
-bool ginverse = false;
+bool g_inverse = false;
 bool orthonormalize = false;
 bool snap_to_axes = false;
 float induce_roll = 0.f;
@@ -45,7 +45,9 @@ void do_create_euler(Args& args) {
   noinput = true;
 }
 
-void do_induce_roll(Frame& t) {
+void do_inverse() { g_inverse = true; }
+
+void apply_induce_roll(Frame& t) {
   static int icount1 = 0;
   static Point p0, p1, p2;
   p0 = p1;
@@ -76,7 +78,7 @@ bool loop() {
   Frame& t = object_frame.frame;
   icount++;
   if (object >= 0) object_frame.obn = object;
-  if (ginverse) assertw(t.invert());
+  if (g_inverse) assertw(t.invert());
   if (is_pretransf) t = cpretransf * t;
   if (is_transf) t = t * ctransf;
   if (lowpass != 1.f) {
@@ -105,7 +107,7 @@ bool loop() {
     t.p() = Point(0.f, 0.f, 0.f);
     object_frame.zoom = 0.f;
   }
-  if (induce_roll) do_induce_roll(t);
+  if (induce_roll) apply_induce_roll(t);
   if (add_mid_frames) {
     static Frame to;
     static float zo;
@@ -166,11 +168,12 @@ int main(int argc, const char** argv) {
   string pretransf;
   bool frame = false, stat = false;
   ParseArgs args(argc, argv);
+  HH_ARGSC("A frame stream is read from stdin or first arg except with the following arguments:", "");
   HH_ARGSD(create_euler, "yaw pitch roll : create frame from Euler angles (degrees)");
-  HH_ARGSC("", ":**");
+  HH_ARGSC("", ":");
   HH_ARGSP(every, "i : use only every ith element");
   HH_ARGSP(object, "obn : force object # to obn");
-  args.f("-inverse", ginverse, ": normalize normals");
+  HH_ARGSD(inverse, ": replace each frame by its inverse");
   HH_ARGSP(pretransf, "'frame' : pre-transform by frame");
   HH_ARGSP(transf, "'frame' : post-transform by frame");
   HH_ARGSF(orthonormalize, ": orthonormalize frame");

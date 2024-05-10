@@ -167,6 +167,7 @@ class ParseArgs : public Args {
 #define HH_ARGSC(header_comment, comment) args.c(header_comment, comment)
 #define HH_ARGSF_O(var, comment) args.f("-" #var, options.var, comment)
 #define HH_ARGSP_O(var, comment) args.p("-" #var, options.var, comment)
+#define HH_ARGS_INDENT "                            "
 
 }  // namespace hh
 

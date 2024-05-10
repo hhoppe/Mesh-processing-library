@@ -143,7 +143,7 @@ void do_finest() {
 
 void do_outmesh() {
   HH_TIMER("_write_mesh");
-  GMesh gmesh = pmi->extract_gmesh(pmi->rstream()._info);
+  GMesh gmesh = pmi->extract_gmesh();
   if (nooutput) std::cout << "o 1 1 0\n";
   gmesh.write(std::cout);
   nooutput = true;
@@ -1457,7 +1457,8 @@ void do_uvsphtopos() {
 int main(int argc, const char** argv) {
   assertw(!sdebug);
   ParseArgs args(argc, argv);
-  HH_ARGSC("", ":** Goto specific mesh");
+  HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:", "");
+  HH_ARGSC(HH_ARGS_INDENT "Go to specific mesh:", "");
   HH_ARGSD(nvertices, "nverts : goto mesh with that many vertices");
   HH_ARGSD(nfaces, "nfaces : goto mesh with that many faces");
   HH_ARGSD(nedges, "nedges : goto mesh with that many edges");
@@ -1465,22 +1466,22 @@ int main(int argc, const char** argv) {
   HH_ARGSD(maxresidd, "residd : goto mesh with <=resid_dir error");
   HH_ARGSD(coarsest, ": goto to base mesh");
   HH_ARGSD(finest, ": goto to fully detailed mesh");
-  HH_ARGSC("", ":** Act on current mesh");
+  HH_ARGSC(HH_ARGS_INDENT "Act on current mesh:", "");
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
-  HH_ARGSC("", ":** Output selectively refined meshes and geomorphs");
+  HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:", "");
   HH_ARGSD(srout, "'frame' srthresh : create SR mesh");
   HH_ARGSD(srgeomorph, "{'frame' srthresh} * 2 : create SR geomorph");
   HH_ARGSD(srfgeo, "rtime ctime :  set fly parameters");
   HH_ARGSD(srfly, "file.frames scthresh : (for timing)");
   HH_ARGSD(tosrm, ": convert to .srm format");
-  HH_ARGSC("", ":** Modify progressive mesh");
+  HH_ARGSC(HH_ARGS_INDENT "Modify progressive mesh:", "");
   HH_ARGSD(truncate_beyond, ": truncate PM beyond current mesh");
   HH_ARGSD(truncate_prior, ": advance base_mesh to current mesh");
   HH_ARGSD(quantize, ": quantize and output PM");
-  HH_ARGSD(zero_vadsmall, ": recompute to keep only 1 delta/vertex");
+  HH_ARGSD(zero_vadsmall, ": recompute to keep only 1 delta per vertex");
   HH_ARGSD(zero_normal, ": zero out all normals");
   HH_ARGSD(zero_uvrgb, ": zero out all {uv, rgb} information");
   HH_ARGSD(zero_resid, ": zero out all residuals");
@@ -1488,8 +1489,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(transf, "'frame' : affine transform all vertices");
   HH_ARGSD(reorder_vspl, ": reorder vsplits to improve compression");
   HH_ARGSD(lreorder_vspl, "fvspl lvspl : reorder within vsplit range");
-  HH_ARGSD(exp_reorder, "fac : several reorders; verts*=fac");
-  HH_ARGSC("", ":** Analyze PM");
+  HH_ARGSD(exp_reorder, "fac : several reorders; verts *= fac");
+  HH_ARGSC(HH_ARGS_INDENT "Analyze PM:", "");
   HH_ARGSD(stat, ": output some stats on file");
   HH_ARGSP(verb, "level : verbosity level");
   HH_ARGSF(gzip, ": in compression, include gzip analysis");
@@ -1498,13 +1499,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(write_resid_uni, ": output uniform residuals");
   HH_ARGSD(write_resid_dir, ": output directional residuals");
   HH_ARGSD(outbbox, ": output mesh bounding box around model");
-  HH_ARGSC("", ":** Vertex caching");
+  HH_ARGSC(HH_ARGS_INDENT "Vertex caching:", "");
   HH_ARGSD(fifo, ": set cache type to FIFO");
   HH_ARGSD(lru, ": set cache type to LRU");
   HH_ARGSP(cache_size, "n : set number of cache entries");
   HH_ARGSD(tvc_analyze, ": analyze vertex caching of current mesh");
-  HH_ARGSD(graph_tvc, ": output sequence {(nf, vmiss/v)}");
-  HH_ARGSC("", ":** Misc");
+  HH_ARGSD(graph_tvc, ": output sequence {(nf, vmiss / v)}");
+  HH_ARGSC(HH_ARGS_INDENT "Misc:", "");
   HH_ARGSD(testiterate, "n : run n iterations back and forth");
   HH_ARGSD(polystream, ": for progressive hull, refine polygons");
   HH_ARGSD(uvsphtopos, ": transfer uv longlat to sphere pos");

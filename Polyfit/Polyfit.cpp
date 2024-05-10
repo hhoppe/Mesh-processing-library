@@ -688,9 +688,9 @@ void do_spawn(Args& args) {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSD(pfilename, "file.a3d : initial polygon (can be -)");
+  HH_ARGSD(pfilename, "file.a3d : initial polygon (can be '-')");
   HH_ARGSD(sample, "n : sample n points from polygon");
-  HH_ARGSD(filename, "file.pts : point data (can be -)");
+  HH_ARGSD(filename, "file.pts : point data (can be '-')");
   HH_ARGSD(opencurve, "n : create initial polyline from points");
   HH_ARGSD(closedcurve, "n : create initial polygon from points");
   HH_ARGSP(crep, "v : set constant for representation energy");

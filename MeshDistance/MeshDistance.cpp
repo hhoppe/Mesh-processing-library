@@ -263,7 +263,6 @@ void do_distance() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC("Example command", ": MeshDistance -mf mesh1.m -mf mesh2.m -maxerror 1 -distance");
   HH_ARGSD(mfile, "filename : read a mesh file");
   HH_ARGSP(bothdir, "bool : also compute dist(mesh2, mesh1)");
   HH_ARGSP(nptfac, "fac : random points samples");
@@ -274,6 +273,8 @@ int main(int argc, const char** argv) {
   HH_ARGSP(unitdiag0, "bool : normalize distance by mesh0 bbox diag");
   HH_ARGSP(maxerror, "bool : include Linf norm");
   HH_ARGSD(distance, ": compute inter-mesh distances");
+  HH_ARGSC("", "");
+  HH_ARGSC("Example command: MeshDistance -mf mesh1.m -mf mesh2.m -maxerror 1 -distance", "");
   HH_TIMER("MeshDistance");
   args.parse();
   if (errmesh) meshes[0].write(std::cout);

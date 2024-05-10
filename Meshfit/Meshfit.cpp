@@ -1515,8 +1515,8 @@ void do_zippysimplify() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSD(mfilename, "file.m : initial mesh (can be -)");
-  HH_ARGSD(filename, "file.pts : point data (can be -)");
+  HH_ARGSD(mfilename, "file.m : initial mesh (can be '-')");
+  HH_ARGSD(filename, "file.pts : point data (can be '-')");
   HH_ARGSP(crep, "v : set representation energy");
   HH_ARGSD(reconstruct, ": apply surface reconstruction schedule");
   HH_ARGSD(simplify, ": apply mesh simplification schedule");

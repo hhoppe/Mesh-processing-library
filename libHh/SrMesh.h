@@ -22,7 +22,7 @@
     if (0) {
       SrGeomorphInfo geoinfo;
       srmesh.construct_geomorph(geoinfo);
-      GMesh gmesh = extract_gmesh(geoinfo);
+      GMesh gmesh = srmesh.extract_gmesh(geoinfo);
     }
     srmesh.adapt_refinement();
     srmesh.ogl_render_faces_tvc(false);  // See all ogl_render_*().

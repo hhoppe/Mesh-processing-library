@@ -4822,6 +4822,7 @@ int main(int argc, const char** argv) {
   //  500 is the number of faces of the base mesh in the PM rep
   //
   ParseArgs args(argc, argv);
+  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:", "");
   HH_ARGSP(numpts, "n : set number of random pts to sample");
   HH_ARGSP(nfaces, "n : number of faces desired");
   HH_ARGSP(nvertices, "n : number of vertices desired");
@@ -4839,7 +4840,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(trishapeafac, "f : weight on tri aspect ratio times area");
   HH_ARGSP(bndfac, "f : weight to encourage boundary simpl. (1e10)");
   HH_ARGSP(tvcfac, "f : weight on tvc coherence");
-  HH_ARGSP(tvcpqa, "bool : tvcfac*pqecost_average_cost");
+  HH_ARGSP(tvcpqa, "bool : tvcfac * pqecost_average_cost");
   HH_ARGSP(tvcowid, "bool : compare tvc wedges in original mesh");
   HH_ARGSD(tvcreinit, ": reinitialize owid and vertex cache");
   HH_ARGSF(dihallow, ": allow bad dihedral as last resort");
@@ -4858,7 +4859,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(verb, "i : verbosity level (1=avg, 2=more, 3=lots)");
   HH_ARGSP(neptfac, "f : fac # samples on sharp edges (def 1or4)");
   HH_ARGSP(affectpq, "i :  (1=little, 2=avg, 3=all)");
-  HH_ARGSD(vsgeom, ": for SR, -minii2 -no_fit_geom");
+  HH_ARGSD(vsgeom, ": for SR, '-minii2 -no_fit_geom'");
   HH_ARGSF(miniiall, ": search 3 new vertex pos");
   HH_ARGSF(minii1, ": force minii == 1 always");
   HH_ARGSF(nominii1, ": force minii != 1 always");
@@ -4899,7 +4900,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(wedge_materials, "bool : material boundaries imply wedge bnds");
   HH_ARGSP(mresid, "maxresidual : then stop simplification");
   HH_ARGSP(maxvalence, "val : prevent ecols creating verts >valence");
-  HH_ARGSF(poszfacenormal, ": prevent facenormal from having -z");
+  HH_ARGSF(poszfacenormal, ": prevent facenormal from having nor_z < 0");
   {
     Args targs{"1"};
     do_verb(targs);

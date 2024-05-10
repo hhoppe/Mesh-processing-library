@@ -3377,8 +3377,8 @@ void do_resamplemesh(Args& args) {
 int main(int argc, const char** argv) {
   my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
   ParseArgs args(argc, argv);
-  HH_ARGSC("", ": (Image coordinates: (x = 0, y = 0) at left, top)");
-  HH_ARGSC("", ":An image is automatically read from stdin except with the following arguments:");
+  HH_ARGSC("(Image coordinates: (x = 0, y = 0) at (left, top).)", "");
+  HH_ARGSC("An image is read from stdin or first arg except with the following arguments:", "");
   HH_ARGSD(nostdin, ": do not attempt to read input image from stdin");
   HH_ARGSD(create, "width height : create white image");
   HH_ARGSD(as_fit, "nx ny : when assembling, scale each image uniformly to fit into this size");
@@ -3391,7 +3391,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(outfile, "filename : output an intermediate image");
   HH_ARGSF(nooutput, ": do not output final image on stdout");
   HH_ARGSD(info, ": print image statistics");
-  HH_ARGSD(stat, ": equivalent to -info -nooutput");
+  HH_ARGSD(stat, ": equivalent to '-info -nooutput'");
   HH_ARGSD(sizes, ": print 'width height'");
   HH_ARGSD(tops, ": convert to encapsulated postscript");
   HH_ARGSC("", ":");
@@ -3423,7 +3423,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scaletoy, "y : uniform scale to y height");
   HH_ARGSD(scaletodims, "x y : non-uniform scale");
   HH_ARGSD(scaleinside, "x y : uniform scale to become no larger than rectangle");
-  HH_ARGSD(scalehalf2n1, ": subsample 4 ^ n + 1 -> 2 ^ n + 1 on each axis");
+  HH_ARGSD(scalehalf2n1, ": subsample 4**n + 1 -> 2**n + 1 on each axis");
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");

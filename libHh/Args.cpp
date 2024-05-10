@@ -163,7 +163,7 @@ ParseArgs::ParseArgs(CArrayView<string> aargs, string name) : _name(std::move(na
 void ParseArgs::common_construction() {
   _argv0 = get_canonical_path(_argv0);
   if (_argv0 != "") {
-    iadd(option("-?", 0, &ParseArgs::fquestion, nullptr, ": print available options"));
+    iadd(option("-?", 0, &ParseArgs::fquestion, nullptr, ": print available options (also --help, --version)"));
     iadd(option("--help", 0, &ParseArgs::fquestion, nullptr, ": (<unlisted>) show help"));
     iadd(option("--version", 0, &ParseArgs::fversion, nullptr, ": (<unlisted>) show version"));
   }

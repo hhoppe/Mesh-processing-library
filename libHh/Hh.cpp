@@ -129,9 +129,6 @@ std::string utf8_from_utf16(const std::wstring& wstr) {
   int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
   assertx(nchars > 0);
   string str(nchars - 1, '\0');  // Does allocate space for an extra null-terminating character.
-  // Writing into std::string using &str[0] is arguably legal in C++11; see discussion at
-  //  https://stackoverflow.com/questions/1042940/writing-directly-to-stdstring-internal-buffers .
-  // It is officially supported in C++17 using non-const str.data().
   assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, str.data(), nchars, nullptr, nullptr));
   return str;
 }

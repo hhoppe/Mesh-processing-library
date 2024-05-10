@@ -2,7 +2,7 @@
 #include "libHh/Args.h"
 
 #include <cctype>   // std::isdigit()
-#include <cstdlib>  // atoi()
+#include <cstdlib>  // std::atoi()
 
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
@@ -13,10 +13,9 @@ namespace {
 
 inline bool convert_bool(const string& s) { return s == "1" || s == "true"; }
 inline char convert_char(const string& s) { return s[0]; }
-inline int convert_int(const string& s) { return atoi(s.c_str()); }             // or stoi(s) or to_int(s.c_str())
-inline float convert_float(const string& s) { return float(atof(s.c_str())); }  // or stof(s)
-inline double convert_double(const string& s) { return atof(s.c_str()); }  // or stod(s) or strtod(s.c_str(), nullptr)
-
+inline int convert_int(const string& s) { return std::atoi(s.c_str()); }  // Or std::stoi(s) or std::to_int(s.c_str()).
+inline float convert_float(const string& s) { return float(atof(s.c_str())); }  // Or std::stof(s).
+inline double convert_double(const string& s) { return atof(s.c_str()); }  // Or stod(s) or strtod(s.c_str(), nullptr).
 inline string show_bool(bool b) { return b ? "true" : "false"; }
 
 inline string show_float(float f) {
@@ -63,7 +62,7 @@ bool Args::check_double(const string& s) { return check_float(s); }
 bool Args::check_filename(const string& s) {
   if (s.empty()) return false;
   if (s[0] == '-' && s != "-") return false;
-  if (begins_with(s, "|") || ends_with(s, "|")) return true;  // for my WFile and RFile pipes
+  if (begins_with(s, "|") || ends_with(s, "|")) return true;  // For my WFile and RFile pipes.
   if (s.find_first_of("*?\"<>|") != string::npos) return false;
   return true;
 }
@@ -149,7 +148,7 @@ ParseArgs::ParseArgs(int& argc, const char**& argv) : _name("") {
   _args.init(argc - 1);
   for_int(i, argc - 1) _args[i] = assertx(argv[1 + i]);
   common_construction();
-  // we have taken ownership
+  // We have taken ownership.
   argc = 0;
   argv = nullptr;
 }
@@ -225,7 +224,7 @@ void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
 }
 
 bool ParseArgs::special_arg(const string& s) {
-  return s == "-?" || s == "--help" || s == "--version";  // maybe also s == "--"
+  return s == "-?" || s == "--help" || s == "--version";  // Maybe also s == "--".
 }
 
 void ParseArgs::print_help() {
@@ -255,8 +254,8 @@ void ParseArgs::print_help() {
     string s1 = o.str;
     if (contains(o.str, '[') && !contains(o.str, ']')) s1 += "]";
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
-    s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);                 // was -21
-    if (sdefault != "") s1 = sform("%-84s %s", s1.c_str(), sdefault.c_str());  // was -65
+    s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);
+    if (sdefault != "") s1 = sform("%-84s %s", s1.c_str(), sdefault.c_str());
     std::cerr << s1.c_str() << "\n";
   }
 }
@@ -270,7 +269,7 @@ string ParseArgs::get_ename() {
 }
 
 void ParseArgs::iadd(option o) {
-  if (1 && o.doc != "") {  // enforce my "conventions" to properly distinguish flags and parameters
+  if (1 && o.doc != "") {  // Enforce my "conventions" to properly distinguish flags and parameters.
     if (o.narg > 0) {
       if (o.doc[0] == ':' || !contains(o.doc, ':') || o.doc[o.doc.find(':') - 1] != ' ') {
         SHOW(o.str, o.doc);
@@ -302,7 +301,7 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
       continue;
     }
     if (o.str[0] == '-' && skip_options) continue;
-    if (o.str == "-" && s != "-") continue;  // require exact match of "-"
+    if (o.str == "-" && s != "-") continue;  // Require exact match of "-".
     int lo = narrow_cast<int>(o.str.size());
     auto i = o.str.find('[');
     int minfit = i != string::npos ? narrow_cast<int>(i) : _disallow_prefixes ? narrow_cast<int>(o.str.size()) : 0;
@@ -310,8 +309,8 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
     if (minfit) nchar = minfit;
     if (!o.str.compare(0, nchar, s, 0, nchar)) {
       nmatches++;
-      if (nchar == ls && lo == ls) {  // exact match
-        // bad if 2 exact matches
+      if (nchar == ls && lo == ls) {  // Exact match.
+        // Error if 2 exact matches.
         assertx(minlfound);
         minlfound = 0;
         omatch = &o;
@@ -328,14 +327,14 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
 }
 
 bool ParseArgs::parse_internal() {
-  assertx(_icur != -2);  // did not already parse
+  assertx(_icur != -2);  // Did not already parse.
   bool skip = false;
   while (num()) {
     _icur = _iarg;
     const string& arg = peek_string();
     _curopt = nullptr;
     if (arg == "--") {
-      skip = true;  // treat all remaining arguments as non-options
+      skip = true;  // Treat all remaining arguments as non-options.
       if (!_other_options_ok) {
         shift_args();
         continue;
@@ -345,16 +344,16 @@ bool ParseArgs::parse_internal() {
     }
     bool is_option = arg[0] == '-' && arg[1] && !skip;
     if (_curopt && !is_option) {
-      assertx(_curopt->narg == -1);  // wildcard option; do not advance; let client parse_func advance it
+      assertx(_curopt->narg == -1);  // Wildcard option; do not advance; let client parse_func advance it.
     } else {
       shift_args();
     }
-    if (!_curopt) {  // not found
+    if (!_curopt) {  // Not found.
       if ((_other_args_ok && !is_option) || (_other_options_ok && is_option)) {
         if (arg != "--" || _other_options_ok) _unrecognized_args.push(arg);
         continue;
       } else {
-        _icur = -1;  // not recognized as an option
+        _icur = -1;  // Not recognized as an option.
         problem("option not recognized");
       }
     }
@@ -376,7 +375,7 @@ bool ParseArgs::parse_internal() {
 
 bool ParseArgs::parse() {
   if (!parse_internal()) return false;
-  // ready to get_*() any leftover arguments
+  // Ready to get_*() any leftover arguments.
   _args = std::move(_unrecognized_args);
   _iarg = 0;
   return true;
@@ -414,13 +413,13 @@ void ParseArgs::fbool(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<bool*>(pargs._curopt->argp);
   int n = pargs._curopt->narg;
-  if (!n) {  // set a flag variable
+  if (!n) {  // Set a flag variable.
     if (0 && *argp) {
       SHOW(pargs._curopt->str);
       Warning("ParseArgs: flag is already set");
     }
     *argp = true;
-  } else {  // set a parameter variable
+  } else {  // Set a parameter variable.
     for_int(i, n) argp[i] = pargs.get_bool();
   }
 }
@@ -473,7 +472,7 @@ void ParseArgs::fversion(Args& args) {
 #if defined(_MSC_VER)
   str += sform(" MSC=%d", _MSC_VER);
 #endif
-#if defined(__VERSION__)  // for __GNUC__
+#if defined(__VERSION__)  // For __GNUC__.
   str += " version=" __VERSION__;
 #endif
   str += sform(" cplusplus=%d", int(__cplusplus));
@@ -483,7 +482,7 @@ void ParseArgs::fversion(Args& args) {
 #if defined(_OPENMP)
   str += sform(" OpenMP=%d", _OPENMP);
 #endif
-// #if defined(__DATE__) && defined(__TIME__) // not so useful because compilation time of this particular file
+// #if defined(__DATE__) && defined(__TIME__) // Not so useful because compilation time of this particular file.
 //     str += sform(" built=[%s %s]", __DATE__, __TIME__);
 // #endif
 #if defined(__AVX__)
@@ -501,7 +500,7 @@ void ParseArgs::fversion(Args& args) {
 
 string ParseArgs::header() {
   string smain = "Created at " + get_header_info() + " using:\n";
-  const int thresh_line_len = 120 - 5;  // was 80 - 5
+  const int thresh_line_len = 120 - 5;
   int len = 0;
   string s = g_comment_prefix_string;
   for_int(i, 1 + _args.num()) {

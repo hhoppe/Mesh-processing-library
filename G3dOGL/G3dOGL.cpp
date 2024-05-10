@@ -1610,8 +1610,7 @@ void mesh_init(GMesh& mesh) {
       dummy_init(gOnor, gNnor);
       for (Corner c : mesh.corners(v)) {
         c_nor(c) = vnors.get_nor(mesh.corner_face(c));
-        Vector onor;
-        if (mesh.parse_corner_key_vec(c, "Onormal", onor)) {
+        if (Vector onor; mesh.parse_corner_key_vec(c, "Onormal", onor)) {
           CornerLOD& clod = c_lod(c);
           clod.Nnor = c_nor(c);
           clod.Onor = onor;

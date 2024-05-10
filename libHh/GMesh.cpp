@@ -741,17 +741,15 @@ Vertex GMesh::center_split_face(Face f) {
   UV suv(0.f, 0.f);
   bool have_uv = true;
   for (Corner c : corners(f)) {
-    Vector n;
-    UV uv;
-    if (parse_corner_key_vec(c, "rgb", n))
-      scol += n;
+    if (Vector col; parse_corner_key_vec(c, "rgb", col))
+      scol += col;
     else
       have_col = false;
-    if (parse_corner_key_vec(c, "normal", n))
-      snor += n;
+    if (Vector nor; parse_corner_key_vec(c, "normal", nor))
+      snor += nor;
     else
       have_nor = false;
-    if (parse_corner_key_vec(c, "uv", uv))
+    if (UV uv; parse_corner_key_vec(c, "uv", uv))
       suv += uv;
     else
       have_uv = false;

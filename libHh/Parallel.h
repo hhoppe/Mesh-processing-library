@@ -84,7 +84,7 @@ inline int get_max_threads() {
 #endif
 #define omp_parallel_for_T(omp_args, T, i, lb, ub) omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
 #define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                 \
-  HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u = ub) { HH_UNREACHABLE; } else \
+  HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u{ub}) { HH_UNREACHABLE; } else \
         HH_OMP_POP_WARNINGS HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<u(); i++)
 
 #endif  // defined(HH_DEBUG)
@@ -225,13 +225,12 @@ template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
                         uint64_t estimated_cycles_per_element = k_parallelism_always) {
   assertx(num_threads >= 1);
-  // using std::size; const size_t num_elements = size(range);  // C++17.
   using std::begin;
   using std::end;
   const auto begin_range = begin(range);
   const auto end_range = end(range);
   using Iterator = decltype(begin_range);
-  const size_t num_elements = size_t(end_range - begin_range);
+  const size_t num_elements = end_range - begin_range;
   const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
@@ -270,12 +269,8 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
 template <typename Range, typename ProcessElement>
 void parallel_for_each(const Range& range, const ProcessElement& process_element,
                        uint64_t estimated_cycles_per_element = k_parallelism_always) {
-  // using std::size; const size_t num_elements = size(range);  // C++17.
-  using std::begin;
-  using std::end;
-  const auto begin_range = begin(range);
-  const auto end_range = end(range);
-  const size_t num_elements = size_t(end_range - begin_range);
+  using std::size;
+  const size_t num_elements = size(range);
   const int max_num_threads = get_max_threads();
   const int num_threads = int(std::min(size_t(max_num_threads), num_elements));
   const auto process_chunk = [&](const int thread_index, auto subrange) {

@@ -61,30 +61,6 @@ inline bool are_coprime(int i1, int i2) {
   return true;
 }
 
-// a.k.a. greatest_common_factor
-inline int greatest_common_divisor(int i1, int i2) {
-  // In number theory, the Euclidean algorithm (also called Euclid's algorithm) is an algorithm to determine
-  // the greatest common divisor (gcd) of two integers or elements of any Euclidean domain (for example,
-  // polynomials over a field) by repeatedly dividing the two numbers and the remainder in turns. Its major
-  // significance is that it does not require factoring the two integers, and it is also significant in that it
-  // is one of the oldest algorithms known, dating back to the Greeks.
-  // function gcd(a, b)
-  //  if b = 0 return a
-  //  else return gcd(b, a mod b)
-  assertx(i1 > 0 && i2 > 0);
-  for (;;) {
-    int t = i1 % i2;
-    if (t == 0) return i2;
-    i1 = i2;
-    i2 = t;
-  }
-}
-
-inline int least_common_multiple(int i1, int i2) {
-  assertx(i1 > 0 && i2 > 0);
-  return (i1 / greatest_common_divisor(i1, i2)) * i2;
-}
-
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_PRIMES_H_

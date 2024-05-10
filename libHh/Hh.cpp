@@ -333,13 +333,12 @@ void* aligned_malloc(size_t alignment, size_t size) {
   return std::aligned_alloc(alignment, size);
 #else
   // Use: posix_memalign(void **memptr, size_t alignment, size_t size)
-  void* p = nullptr;
   const int min_alignment = 8;  // else get EINVAL on Unix gcc 4.8.1
   if (alignment < min_alignment) {
     alignment = min_alignment;
-    size = ((size - 1) / alignment + 1) * alignment;
+    size = ((size + alignment - 1) / alignment) * alignment;
   }
-  if (0) SHOW(size, alignment);
+  void* p = nullptr;
   if (int ierr = posix_memalign(&p, alignment, size)) {
     if (0) SHOW(ierr, ierr == EINVAL, ierr == ENOMEM);
     return nullptr;

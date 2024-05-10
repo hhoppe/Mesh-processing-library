@@ -54,7 +54,7 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
 };
 
 // Template deduction guide:
-template <typename T, typename Func_dist> Dijkstra(const Graph<T>* g, T vs, Func_dist fdist)->Dijkstra<T, Func_dist>;
+template <typename T, typename Func_dist> Dijkstra(const Graph<T>* g, T vs, Func_dist fdist) -> Dijkstra<T, Func_dist>;
 
 // *** Kruskal MST
 

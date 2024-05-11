@@ -3298,9 +3298,8 @@ void do_rmdiaguv() {
 void do_projectimage(Args& args) {
   const string framestring = args.get_string();
   const string imagename = args.get_filename();
-  ObjectFrame object_frame;
   std::istringstream iss(framestring);
-  assertx(FrameIO::read(iss, object_frame));
+  ObjectFrame object_frame = *assertx(FrameIO::read(iss));
   const Frame frameinv = ~object_frame.frame;
   const Image image(imagename);
   Matrix<Vector4> imagev(image.dims());

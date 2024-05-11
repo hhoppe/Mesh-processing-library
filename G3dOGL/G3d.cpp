@@ -188,9 +188,8 @@ namespace {
 void do_key(Args& args) { keystring += args.get_string(); }
 
 void do_frame(Args& args) {
-  ObjectFrame object_frame;
   std::istringstream iss(args.get_string());
-  assertx(FrameIO::read(iss, object_frame));
+  ObjectFrame object_frame = *assertx(FrameIO::read(iss));
   UpdateFrame(object_frame);
 }
 

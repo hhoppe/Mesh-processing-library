@@ -72,9 +72,7 @@ void apply_induce_roll(Frame& t) {
   // Not used: it couldn't estimate curvature well enough from my gcanyon_4k2k_fly2.frame file.
 }
 
-bool loop() {
-  ObjectFrame object_frame;
-  if (!FrameIO::read(std::cin, object_frame)) return true;
+bool process_frame(ObjectFrame& object_frame) {
   Frame& t = object_frame.frame;
   icount++;
   if (object >= 0) object_frame.obn = object;
@@ -148,9 +146,11 @@ bool loop() {
   return false;
 }
 
-void process() {
+void process_frames() {
   for (;;) {
-    if (loop()) break;
+    auto object_frame = FrameIO::read(std::cin);
+    if (!object_frame) break;
+    process_frame(*object_frame);
   }
   if (!std::cin.good() && !std::cin.eof()) {
     assertnever("Read error");
@@ -199,6 +199,6 @@ int main(int argc, const char** argv) {
   }
   statistics = stat;
   b_frame = frame;
-  if (!noinput) process();
+  if (!noinput) process_frames();
   return 0;
 }

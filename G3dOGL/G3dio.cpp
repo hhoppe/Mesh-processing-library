@@ -169,7 +169,6 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     buf.extract(1);
     return ETryInput::success;
   }
-  int i;
   // try A3d
   switch (ra3d.recognize()) {
     case RBufferedA3dStream::ERecognize::parse_error: assertnever("");
@@ -190,10 +189,9 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     case FrameIO::ERecognize::parse_error: assertnever("");
     case FrameIO::ERecognize::partial: return ETryInput::nothing;  // partial frame
     case FrameIO::ERecognize::yes: {
-      ObjectFrame object_frame;
-      i = FrameIO::read(buf, object_frame);
-      if (!assertw(i)) return ETryInput::success;
-      UpdateFrame(object_frame);
+      auto object_frame = assertw(FrameIO::read(buf));
+      if (!object_frame) return ETryInput::success;
+      UpdateFrame(*object_frame);
       num_input_frames++;
       return ETryInput::success;
     }

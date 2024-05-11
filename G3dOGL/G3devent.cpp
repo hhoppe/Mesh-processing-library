@@ -58,12 +58,12 @@ void read_state() {
         assertx(my_getline(fi(), sline));
         continue;
       }
-      ObjectFrame object_frame;
-      if (!assertw(FrameIO::read(fi(), object_frame))) break;
-      if (object_frame.obn == -1) {
-        tview = object_frame.frame;
+      auto object_frame = assertw(FrameIO::read(fi()));
+      if (!object_frame) break;
+      if (object_frame->obn == -1) {
+        tview = object_frame->frame;
       } else {
-        UpdateFrame(object_frame);
+        UpdateFrame(*object_frame);
       }
     }
   } catch (const std::runtime_error& ex) {

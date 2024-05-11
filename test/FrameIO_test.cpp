@@ -5,13 +5,13 @@ using namespace hh;
 int main() {
   const bool frame_binary = getenv_bool("FRAME_BINARY");
   for (;;) {
-    ObjectFrame object_frame;
-    if (!FrameIO::read(std::cin, object_frame)) break;
+    auto object_frame = FrameIO::read(std::cin);
+    if (!object_frame) break;
     if (0) {
-      SHOW_PRECISE(object_frame.frame);
-      SHOW_PRECISE(object_frame.zoom);
+      SHOW_PRECISE(object_frame->frame);
+      SHOW_PRECISE(object_frame->zoom);
     }
-    object_frame.binary = frame_binary;
-    FrameIO::write(std::cout, object_frame);
+    object_frame->binary = frame_binary;
+    FrameIO::write(std::cout, *object_frame);
   }
 }

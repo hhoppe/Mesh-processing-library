@@ -45,13 +45,14 @@ ERecognize recognize(RBuffer& b) {
   return ERecognize::no;
 }
 
-bool read(std::istream& is, ObjectFrame& object_frame) {
+std::optional<ObjectFrame> read(std::istream& is) {
   int c = is.peek();
-  if (c < 0) return false;
+  if (c < 0) return {};
+  ObjectFrame object_frame;
   object_frame.binary = c == k_binary_code;
   if (object_frame.binary) {
     frame_binary_buf buf;
-    if (!read_binary_raw(is, ArView(buf))) return false;
+    if (!read_binary_raw(is, ArView(buf))) return {};
     assertx(buf.magic[1] == 0);
     from_std(&buf.short_obn);
     object_frame.obn = buf.short_obn;
@@ -63,30 +64,33 @@ bool read(std::istream& is, ObjectFrame& object_frame) {
     }
     from_std(&buf.zoom);
     object_frame.zoom = buf.zoom;
-    return true;
+    return object_frame;
   } else {
     decode(is, object_frame);
-    return bool(is);
+    if (!is) return {};
+    return object_frame;
   }
 }
 
-bool read(RBuffer& b, ObjectFrame& object_frame) {
-  if (!b.num()) return false;
+std::optional<ObjectFrame> read(RBuffer& b) {
+  if (!b.num()) return {};
+  ObjectFrame object_frame;
   object_frame.binary = b[0] == k_binary_code;
   if (object_frame.binary) {
-    if (b.num() < 14 * 4) return false;
+    if (b.num() < 14 * 4) return {};
     object_frame.obn = b.get_short(2);
     for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = b.get_float((1 + (i * 3) + j) * 4);
     object_frame.zoom = b.get_float(13 * 4);
     b.extract(14 * 4);
-    return true;
+    return object_frame;
   } else {
-    if (b[0] != 'F') return false;
+    if (b[0] != 'F') return {};
     string str;
-    if (!b.extract_line(str)) return false;
+    if (!b.extract_line(str)) return {};
     std::istringstream iss(str);
     decode(iss, object_frame);
-    return bool(iss);
+    if (!iss) return {};
+    return object_frame;
   }
 }
 
@@ -135,10 +139,10 @@ string create_string(const ObjectFrame& object_frame) {
 }
 
 Frame parse_frame(const string& s) {
-  ObjectFrame object_frame;
   std::istringstream iss(s);
-  if (!read(iss, object_frame)) assertnever("Could not parse Frame '" + s + "'");
-  return object_frame.frame;
+  auto object_frame = read(iss);
+  if (!object_frame) assertnever("Could not parse Frame '" + s + "'");
+  return object_frame->frame;
 }
 
 bool is_not_a_frame(const Frame& f) { return f[0][0] == k_Frame_fnan; }

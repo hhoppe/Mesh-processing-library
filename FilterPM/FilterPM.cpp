@@ -230,9 +230,8 @@ void read_srmesh() {
 void do_srout(Args& args) {
   Vec<SrViewParams, 1> views;
   for_int(i, views.num()) {
-    ObjectFrame object_frame;
     std::istringstream iss(args.get_string());
-    assertx(FrameIO::read(iss, object_frame));
+    ObjectFrame object_frame = *assertx(FrameIO::read(iss));
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
@@ -258,9 +257,8 @@ void do_srout(Args& args) {
 void do_srgeomorph(Args& args) {
   Vec2<SrViewParams> views;
   for_int(i, views.num()) {
-    ObjectFrame object_frame;
     std::istringstream iss(args.get_string());
-    assertx(FrameIO::read(iss, object_frame));
+    ObjectFrame object_frame = *assertx(FrameIO::read(iss));
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
@@ -304,11 +302,11 @@ void do_srfly(Args& args) {
   srmesh.set_refine_morph_time(srfly_grtime);
   srmesh.set_coarsen_morph_time(srfly_gctime);
   for (;;) {
+    auto object_frame = FrameIO::read(fiframes());
+    if (!object_frame) break;
     SrViewParams view;
-    ObjectFrame object_frame;
-    if (!FrameIO::read(fiframes(), object_frame)) break;
-    view.set_frame(object_frame.frame);
-    view.set_zooms(twice(object_frame.zoom));
+    view.set_frame(object_frame->frame);
+    view.set_zooms(twice(object_frame->zoom));
     view.set_screen_thresh(screen_thresh);
     view.set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL

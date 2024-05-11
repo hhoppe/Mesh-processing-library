@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_FRAMEIO_H_
 #define MESH_PROCESSING_LIBHH_FRAMEIO_H_
 
+#include <optional>
+
 #include "libHh/Geometry.h"
 
 namespace hh {
@@ -21,8 +23,8 @@ namespace FrameIO {
 // Read Frame objects from std::stream or RBuffer.
 enum class ERecognize { parse_error, no, partial, yes };
 ERecognize recognize(RBuffer& b);
-bool read(std::istream& is, ObjectFrame& object_frame);  // ret is_success
-bool read(RBuffer& b, ObjectFrame& object_frame);        // ret is_success
+std::optional<ObjectFrame> read(std::istream& is);
+std::optional<ObjectFrame> read(RBuffer& b);
 Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.

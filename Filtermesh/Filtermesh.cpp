@@ -4443,7 +4443,7 @@ void do_assignwids() {
 int main(int argc, const char** argv) {
   dummy_use(do_reduce_old_sequential);
   ParseArgs args(argc, argv);
-  HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:", "");
+  HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");
   HH_ARGSD(fromgrid, "ny nx file_of_z_values : create grid of quads");
   HH_ARGSD(frompointgrid, "ny nx file_of_points : create grid of quads");

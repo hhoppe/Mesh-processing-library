@@ -4822,7 +4822,7 @@ int main(int argc, const char** argv) {
   //  500 is the number of faces of the base mesh in the PM rep
   //
   ParseArgs args(argc, argv);
-  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:", "");
+  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSP(numpts, "n : set number of random pts to sample");
   HH_ARGSP(nfaces, "n : number of faces desired");
   HH_ARGSP(nvertices, "n : number of vertices desired");

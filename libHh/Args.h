@@ -106,7 +106,7 @@ class ParseArgs : public Args {
   template <typename T, size_t narg> void p(string str, T (&arg)[narg], string doc = "") {
     p(str, arg, narrow_cast<int>(narg), doc);
   }
-  void c(string str = "", string doc = "");                      // Add a comment in the options list.
+  void c(string str, string doc = "");                           // Add a comment in the options list.
   void p(string str, PARSE_FUNC parse_func, string doc = "");    // Parsing function taking args.
   void p(string str, PARSE_FUNC0 parse_func0, string doc = "");  // Parsing function without args.
   // By default, all arguments must parse.
@@ -164,7 +164,7 @@ class ParseArgs : public Args {
 #define HH_ARGSF(var, comment) args.f("-" #var, var, comment)
 #define HH_ARGSP(var, comment) args.p("-" #var, var, comment)
 #define HH_ARGSD(var, comment) args.p("-" #var, do_##var, comment)
-#define HH_ARGSC(header_comment, comment) args.c(header_comment, comment)
+#define HH_ARGSC(...) args.c(__VA_ARGS__)
 #define HH_ARGSF_O(var, comment) args.f("-" #var, options.var, comment)
 #define HH_ARGSP_O(var, comment) args.p("-" #var, options.var, comment)
 #define HH_ARGS_INDENT "                            "

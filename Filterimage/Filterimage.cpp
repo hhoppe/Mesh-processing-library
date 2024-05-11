@@ -3377,8 +3377,8 @@ void do_resamplemesh(Args& args) {
 int main(int argc, const char** argv) {
   my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
   ParseArgs args(argc, argv);
-  HH_ARGSC("(Image coordinates: (x = 0, y = 0) at (left, top).)", "");
-  HH_ARGSC("An image is read from stdin or first arg except with the following arguments:", "");
+  HH_ARGSC("(Image coordinates: (x = 0, y = 0) at (left, top).)");
+  HH_ARGSC("An image is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(nostdin, ": do not attempt to read input image from stdin");
   HH_ARGSD(create, "width height : create white image");
   HH_ARGSD(as_fit, "nx ny : when assembling, scale each image uniformly to fit into this size");

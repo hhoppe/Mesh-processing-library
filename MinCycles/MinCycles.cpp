@@ -30,8 +30,8 @@ void do_closecycles() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:", "");
-  HH_ARGSC(HH_ARGS_INDENT "Criteria for stopping topological simplification:", "");
+  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
+  HH_ARGSC(HH_ARGS_INDENT "Criteria for stopping topological simplification:");
   HH_ARGSP(maxcyclelength, "len : when smallest cycle exceeds specified length");
   HH_ARGSP(maxcyclenedges, "n : when smallest cycle has >n edges");
   HH_ARGSP(ncycles, "n : after removing this number of cycles");

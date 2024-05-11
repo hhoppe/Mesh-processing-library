@@ -1514,7 +1514,7 @@ void do_timingtest(Args& args) {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:", "");
+  HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSD(fifo, ": set cache type to FIFO");
   HH_ARGSD(lru, ": set cache type to LRU");
   HH_ARGSP(cache_size, "n : set number of cache entries");
@@ -1525,7 +1525,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(color_forder, "bool : show order of faces");
   HH_ARGSP(old_strip_order, "bool : last 2 verts reused in next face");
   HH_ARGSF(nooutput, ": do not write final mesh");
-  HH_ARGSC(HH_ARGS_INDENT "Miscellaneous functions:", "");
+  HH_ARGSC(HH_ARGS_INDENT "Miscellaneous functions:");
   HH_ARGSD(analyze, ": analyze mesh bandwidth for current cache");
   HH_ARGSD(fanalyze, ": same, with different cache sizes");
   HH_ARGSD(strip_analyze, ": analysis assuming OGL sequential strips");
@@ -1535,7 +1535,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(diff_corners, "mesh2.m : color changing corners blue");
   HH_ARGSF(reorder_vertices, ": reorder vertices according to first use");
   HH_ARGSF(duplicate_vertices, ": dup vertices upon cache misses");
-  HH_ARGSC(HH_ARGS_INDENT "Reordering algorithms:", "");
+  HH_ARGSC(HH_ARGS_INDENT "Reordering algorithms:");
   HH_ARGSD(greedy_stripify, ": generalized triangle strips");
   HH_ARGSD(sgi_stripify, ": better greedy heuristic");
   // HH_ARGSD(meshify1,       ": advancing front (simulate, heuristic)");

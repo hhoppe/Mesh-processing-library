@@ -788,7 +788,7 @@ int main(int argc, const char** argv) {
   string transf;
   bool stat = false;
   ParseArgs args(argc, argv);
-  HH_ARGSC("An 'a3d stream' is read from stdin or first arg.  Subsequent options are:", "");
+  HH_ARGSC("An 'a3d stream' is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSF(onlypoly, ": remove special a3d commands");
   HH_ARGSF(nopolygons, ": cull polygons");
   HH_ARGSF(nopolylines, ": cull polylines");

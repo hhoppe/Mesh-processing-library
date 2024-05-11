@@ -1486,12 +1486,12 @@ void do_pm_encode() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC(HH_ARGS_INDENT "Construction of progressive mesh:", "");
+  HH_ARGSC(HH_ARGS_INDENT "Construction of progressive mesh:");
   HH_ARGSD(fbasemesh, "file.m : base mesh");
   HH_ARGSD(fprogressive, "file.rprog : progressive vsplit stream");
   HH_ARGSP(append_old_pm, "file.pm : append old vsplit sequence");
   HH_ARGSD(pm_encode, ": output PM format");
-  HH_ARGSC(HH_ARGS_INDENT "Old options mostly made obsolete by FilterPM:", "");
+  HH_ARGSC(HH_ARGS_INDENT "Old options mostly made obsolete by FilterPM:");
   HH_ARGSP(maxnfaces, "nfaces : for -arithseq and -geomseq");
   HH_ARGSD(arithseq, "delta : geomorph every delta nfaces");
   HH_ARGSD(geomseq, "factor : geomorph every factor nfaces");

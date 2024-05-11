@@ -744,7 +744,7 @@ void process() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC("An 'a3d stream' of points is read from stdin.  Subsequent options are:", "");
+  HH_ARGSC("An 'a3d stream' of points is read from stdin.  Subsequent options are:");
   HH_ARGSP(rootname, "string : name for output files (optional)");
   HH_ARGSP(what, "string : output ch codes 'dbufgpohlcm' (default mesh 'm')");
   HH_ARGSP(samplingd, "f : sampling density + noise (delta + rho)");

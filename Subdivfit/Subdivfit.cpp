@@ -1443,9 +1443,9 @@ int main(int argc, const char** argv) {
   HH_ARGSP(weighta, "a : override interior extraord. weight");
   HH_ARGSP(xformsize, "s : override internal xform");
   HH_ARGSF(markcuts, ": mark refined base mesh edges with 'cut'");
-  HH_ARGSC("", "");
-  HH_ARGSC("Examples: Subdivfit -mf - -outn", "");
-  HH_ARGSC("          Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v", "");
+  HH_ARGSC("");
+  HH_ARGSC("Examples: Subdivfit -mf - -outn");
+  HH_ARGSC("          Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v");
   Timer timer("Subdivfit");
   showdf("%s", args.header().c_str());
   args.parse();

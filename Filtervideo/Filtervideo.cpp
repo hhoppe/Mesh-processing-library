@@ -2285,8 +2285,8 @@ int main(int argc, const char** argv) {
   my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
   HH_TIMER("Filtervideo");
   ParseArgs args(argc, argv);
-  HH_ARGSC("(Video coordinates: (x = 0, y = 0) at (left, top).)", "");
-  HH_ARGSC("A video is read from stdin or first arg except with the following arguments:", "");
+  HH_ARGSC("(Video coordinates: (x = 0, y = 0) at (left, top).)");
+  HH_ARGSC("A video is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(nostdin, ": do not attempt to read input video from stdin");
   HH_ARGSD(create, "nframes width height : create video (default white)");
   HH_ARGSD(readnv12, "filename : read video into NV12 grids rather than RGB grid");

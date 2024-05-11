@@ -4348,7 +4348,7 @@ int main(int argc, const char** argv) {
   string through_color = "#FF9696";  // pink
   bool checker = true;
   ParseArgs args(aargs);
-  HH_ARGSC("All non-options with recognized suffixes (images or videos) are loaded.", "");
+  HH_ARGSC("All non-options with recognized suffixes (images or videos) are loaded.");
   args.p("-", do_stdin, ": load image or video from stdin");
   HH_ARGSD(image, "file : load image");
   args.p("*.jpg", do_image, ": load image (<unlisted>)");

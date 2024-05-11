@@ -5,8 +5,8 @@
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
-#include "libHh/Geometry.h"  // Point, Vector
 #include "libHh/GMesh.h"
+#include "libHh/Geometry.h"  // Point, Vector
 #include "libHh/Materials.h"
 #include "libHh/Pixel.h"
 

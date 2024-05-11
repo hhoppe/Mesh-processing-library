@@ -2096,7 +2096,7 @@ void draw_mesh(GMesh& mesh) {
     Point pp;
     Face fp = nullptr;
     bool stripstarted = false;
-    const Array<Face>& fa = map_mfa.get(&mesh);
+    CArrayView<Face> fa = map_mfa.get(&mesh);
     for (Face f : fa) {
       mesh.get_vertices(f, va);
       p = interp(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
@@ -4311,7 +4311,7 @@ void psc_update_lod() {
       if (!psc_unify_area_list[i + 1]) {
         Array<AreaData>& aar = *new Array<AreaData>;
         psc_unify_area_list[i + 1] = &aar;
-        const Array<AreaData>& tmp = vsplit.getAreas();
+        CArrayView<AreaData> tmp = vsplit.getAreas();
         aar.reserve(tmp.num());
         AreaData ar;
         for_int(ii, tmp.num()) {

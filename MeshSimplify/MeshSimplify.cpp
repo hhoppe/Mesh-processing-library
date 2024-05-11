@@ -2708,7 +2708,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
 
 // Optimize the scalar attributes of wedges around v1 given fixed parametrizations of the face points (param).
 // Return the resulting scalar energy.
-double fit_color(const NewMeshNei& nn, const Param& param, Array<WedgeInfo>& ar_wi) {
+double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
   // SSTATV2(Srwid, ar_wi.num());
   Array<unique_ptr<ULls>> ar_ulls;
@@ -3300,7 +3300,7 @@ Vec<float, n> interp_3way(const Vec<float, n>& ar1, const Vec<float, n>& ar2, co
   return interp(ar1, ar2, ar3, bary);
 }
 
-void perform_attrib_project(Edge e, const Point& newp, Array<WedgeInfo>& ar_wi) {
+void perform_attrib_project(Edge e, const Point& newp, ArrayView<WedgeInfo> ar_wi) {
   assertx(ar_wi.num() == 1);
   Face cf;
   Bary bary;

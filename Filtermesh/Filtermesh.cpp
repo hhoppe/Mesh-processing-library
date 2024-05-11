@@ -330,7 +330,7 @@ void do_rawfroma3d() {
 // *** gmerge
 
 // Note: vertex_id() should be called on mn, not mesh, but no difference in current implementation.
-void normalize_arrayv(Array<Vertex>& ar) {
+void normalize_arrayv(ArrayView<Vertex> ar) {
   assertx(ar.num() >= 3);
   int mini, minvid = std::numeric_limits<int>::max();
   dummy_init(mini);

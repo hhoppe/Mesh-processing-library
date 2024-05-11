@@ -87,7 +87,7 @@ class SparseLls : public Lls {
   int _nentries{0};
   Array<float> mult_m_v(CArrayView<float> vi) const;
   Array<float> mult_mt_v(CArrayView<float> vi) const;
-  bool do_cg(Array<float>& x, CArrayView<float> h, double* prssb, double* prssa) const;
+  bool do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, double* prssa) const;
 };
 
 // Base class for full (non-sparse) approaches.

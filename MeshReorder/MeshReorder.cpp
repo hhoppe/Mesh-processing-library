@@ -939,7 +939,7 @@ void do_greedy_stripify() {
 
 // *** SGI stripify  (implements the greedy "tomesh.c" algorithm from SGI).
 
-int find_next_face(Array<Face>& fa, const MeshStatus& ms) {
+int find_next_face(CArrayView<Face> fa, const MeshStatus& ms) {
   // Assumes that current face has been removed from pqfnnei.
   int ret = 3;
   int min_nnei = std::numeric_limits<int>::max(), min_min_next_nnei;

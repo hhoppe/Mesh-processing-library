@@ -898,7 +898,7 @@ void do_compute_nor() {
     int vt = pmi->_vertices.num() - 1;
     assertx(pmi->_wedges[wvtfl].vertex == vt);
     int lnum = 0;
-    Array<PmWedgeAttribD>& ar_wad = vspl.ar_wad;
+    ArrayView<PmWedgeAttribD> ar_wad = vspl.ar_wad;
     if (1) {
       bool nt = !(code & Vsplit::T_LSAME);
       bool ns = !(code & Vsplit::S_LSAME);

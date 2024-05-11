@@ -34,7 +34,7 @@ class SplitRecord {
   void applyUnify(SimplicialComplex& K) const;
 
   // access
-  const Array<AreaData>& getAreas();
+  CArrayView<AreaData> getAreas();
   int getVs() const { return _vsid; }
   int getVt() const { return _vtid; }
   int vsp() const { return _pos_bit; }
@@ -78,7 +78,7 @@ inline void SplitRecord::reset() {
   _material_index = 0;
 }
 
-inline const Array<AreaData>& SplitRecord::getAreas() { return _area; }
+inline CArrayView<AreaData> SplitRecord::getAreas() { return _area; }
 
 }  // namespace hh
 

@@ -355,7 +355,7 @@ void ScGeomorph::read(std::istream& is) {
 }
 
 // Interpolate between old and new using alpha parameter.
-void ScGeomorph::update(float alpha, Array<Vector>& corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
+void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
   // verts
   ForScSimplex(K, 0, v) { v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha)); }
   EndFor;

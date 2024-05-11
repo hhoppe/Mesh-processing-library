@@ -154,7 +154,7 @@ class FifoVertexCache : public VertexCache {
     }
 
    private:
-    const Array<int>& _qv;
+    CArrayView<int> _qv;
     int _qi;
     int _numi;
   };

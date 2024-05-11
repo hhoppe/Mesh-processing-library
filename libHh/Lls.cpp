@@ -131,7 +131,7 @@ Array<float> SparseLls::mult_mt_v(CArrayView<float> vi) const {
   return vo;
 }
 
-bool SparseLls::do_cg(Array<float>& x, CArrayView<float> h, double* prssb, double* prssa) const {
+bool SparseLls::do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, double* prssa) const {
   // x(_n), h(_m)
   Array<float> rc, gc, gp, dc, tc;
   rc = mult_m_v(x);

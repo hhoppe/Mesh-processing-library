@@ -13,7 +13,7 @@ class ScGeomorph : noncopyable {
  public:
   void clear();
   void read(std::istream& is);
-  void update(float alpha, Array<Vector>& corner_nors);
+  void update(float alpha, ArrayView<Vector> corner_nors);
   SimplicialComplex& getK() { return K; }
 
  private:

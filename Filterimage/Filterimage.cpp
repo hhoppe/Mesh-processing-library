@@ -2084,7 +2084,7 @@ void output_contour(int gn, float contour_value) {
     filterbs = inverse_convolution(matrix, filterbs);
   auto func_eval = [&](const Vec2<float>& p) -> float { return sample_domain(matrix, p, filterbs) - contour_value; };
   A3dElem el;
-  auto func_contour = [&](const Array<Vec2<float>>& poly) {
+  auto func_contour = [&](CArrayView<Vec2<float>> poly) {
     el.init(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
       Point p(poly[i][1], poly[i][0], 0.f);

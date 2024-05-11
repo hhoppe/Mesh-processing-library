@@ -602,7 +602,7 @@ template <int D> struct eval_point {
 };
 
 struct output_border3D {
-  void operator()(const Array<Vec3<float>>& poly) const {
+  void operator()(CArrayView<Vec3<float>> poly) const {
     assertx(ioc);
     A3dElem el(A3dElem::EType::polygon);
     for_int(i, poly.num()) {
@@ -614,7 +614,7 @@ struct output_border3D {
 };
 
 struct output_border2D {
-  void operator()(const Array<Vec2<float>>& poly) const {
+  void operator()(CArrayView<Vec2<float>> poly) const {
     assertx(ioc);
     ASSERTX(poly.num() == 2);
     A3dElem el(A3dElem::EType::polyline);
@@ -627,7 +627,7 @@ struct output_border2D {
 };
 
 struct output_contour2D {
-  void operator()(const Array<Vec2<float>>& poly) const {
+  void operator()(CArrayView<Vec2<float>> poly) const {
     if (!iom) return;
     ASSERTX(poly.num() == 2);
     A3dElem el(A3dElem::EType::polyline);

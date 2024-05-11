@@ -18,7 +18,7 @@ void test2D() {
       return f;
     }
   };
-  auto func_polylinetoa3d = [](const Array<Vec2<float>>& poly, A3dElem& el) {
+  auto func_polylinetoa3d = [](CArrayView<Vec2<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
       el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]), Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
@@ -30,11 +30,11 @@ void test2D() {
   WFile fborder("Contour_test.2Dborder");
   WSA3dStream wborder(fborder());
   A3dElem el;
-  auto func_contour = [&](const Array<Vec2<float>>& poly) {
+  auto func_contour = [&](CArrayView<Vec2<float>> poly) {
     func_polylinetoa3d(poly, el);
     wcontour.write(el);
   };
-  auto func_border = [&](const Array<Vec2<float>>& poly) {
+  auto func_border = [&](CArrayView<Vec2<float>> poly) {
     func_polylinetoa3d(poly, el);
     wborder.write(el);
   };
@@ -61,16 +61,16 @@ void test3D() {
   WSA3dStream wcontour(fcontour());
   WFile fborder("Contour_test.3Dborder");
   WSA3dStream wborder(fborder());
-  auto func_polygontoa3d = [](const Array<Vec3<float>>& poly, A3dElem& el) {
+  auto func_polygontoa3d = [](CArrayView<Vec3<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polygon);
     for_int(i, poly.num()) el.push(A3dVertex(poly[i], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
   };
   A3dElem el;
-  auto func_contour = [&](const Array<Vec3<float>>& poly) {
+  auto func_contour = [&](CArrayView<Vec3<float>> poly) {
     func_polygontoa3d(poly, el);
     wcontour.write(el);
   };
-  auto func_border = [&](const Array<Vec3<float>>& poly) {
+  auto func_border = [&](CArrayView<Vec3<float>> poly) {
     func_polygontoa3d(poly, el);
     wborder.write(el);
   };

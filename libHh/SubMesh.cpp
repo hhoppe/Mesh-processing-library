@@ -744,7 +744,7 @@ void SubMesh::orig_face_index(Face fi, Face& of, int& pindex) const {
 }
 
 Face SubMesh::get_face(Face of, int index) const {
-  const Array<Face>& ar = _mofif.get(of);
+  CArrayView<Face> ar = _mofif.get(of);
   return ar[index];
 }
 

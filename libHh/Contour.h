@@ -22,9 +22,9 @@
     mesh.write(std::cout);
   } else {
     struct func_contour {
-      void operator()(const Array<Vec3<float>>&){...};
+      void operator()(CArrayView<Vec3<float>>){...};
     };
-    auto func_border = [](const Array<Vec3<float>>&) { ... };
+    auto func_border = [](CArrayView<Vec3<float>>) { ... };
     Contour3D contour(50, func_eval, func_contour(), func_border);
     contour.march_from(Point(.9f, .6f, .6f));
   }
@@ -177,7 +177,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
 // *** Contour3D
 
 struct Contour3D_NoBorder {  // special type to indicate that no border output is desired
-  float operator()(const Array<Vec3<float>>&) const {
+  float operator()(CArrayView<Vec3<float>>) const {
     assertnever_ret("");
     return 0.f;
   }
@@ -478,7 +478,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
   }
 };
 
-template <typename Eval = float(const Vec3<float>&), typename Contour = float(const Array<Vec3<float>>&),
+template <typename Eval = float(const Vec3<float>&), typename Contour = float(CArrayView<Vec3<float>>),
           typename Border = Contour3D_NoBorder>
 class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border> {
   using base = Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border>;
@@ -556,13 +556,13 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
 // *** Contour2D
 
 struct Contour2D_NoBorder {  // special type to indicate that no border output is desired
-  float operator()(const Array<Vec2<float>>&) const {
+  float operator()(CArrayView<Vec2<float>>) const {
     if (1) assertnever("");
     return 0.f;
   }
 };
 
-template <typename Eval = float(const Vec2<float>&), typename Contour = void(const Array<Vec2<float>>&),
+template <typename Eval = float(const Vec2<float>&), typename Contour = void(CArrayView<Vec2<float>>),
           typename Border = Contour2D_NoBorder>
 class Contour2D : public ContourBase<2> {
   static constexpr int D = 2;

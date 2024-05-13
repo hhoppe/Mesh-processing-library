@@ -2,20 +2,20 @@
 #  MeshRoot = ..#  or /hh/git/mesh_processing
 #  include $(MeshRoot)/make/Makefile_prog
 
-# use_vs_libs = 1#  (optional, use libraries generated from Visual Studio using msbuild)
+# use_vs_libs = 1#  (Optional, use libraries generated from Visual Studio using msbuild).
 
 ifeq ($(defs_loaded),)
   include $(MeshRoot)/make/Makefile_defs
 endif
 
-ifneq ($(CONFIG),all)  # until rest of file
+ifneq ($(CONFIG),all)  # For the rest of this file.
 
 exes = $(obj:%.$(extobj)=%)
 outputs = $(exes:%=%.ou)
 
 all: progs
 
-dot_quoted_target =#  no intermediate files produced, so target suffix is blank rather than .$(extobj)
+dot_quoted_target =#  No intermediate files produced, so target suffix is blank rather than .$(extobj).
 
 depend $(make_dep):
 	$(cmd_makedep)

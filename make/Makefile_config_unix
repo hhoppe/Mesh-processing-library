@@ -1,21 +1,21 @@
-rel ?= 1#  0=debug or 1=release (usually 1)
-x64 = 1#  32-bit not supported
+rel ?= 1#  0=debug or 1=release (usually 1).
+x64 = 1#  32-bit is not supported.
 
 ifeq ($(is_mac),1)
-  cppinc += -DHH_NO_IMAGE_LIBS#  to avoid installing libjpeg and libpng; instead just use ffmpeg
-  includes += -I/opt/X11/include#  for XQuartz X11 on Mac
-  LDFLAGS += -L/opt/X11/lib#  for XQuartz X11 on Mac
-  CC = clang#  set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
+  cppinc += -DHH_NO_IMAGE_LIBS#  To avoid installing libjpeg and libpng; instead just use ffmpeg.
+  includes += -I/opt/X11/include#  For XQuartz X11 on Mac.
+  LDFLAGS += -L/opt/X11/lib#  For XQuartz X11 on Mac.
+  CC = clang#  Set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
   omit_omp = 1
 else
-  CC = clang#  set default choice of compiler (clang or gcc); override using "make CC=gcc ..."
+  CC = clang#  Set default choice of compiler (clang or gcc); override using "make CC=gcc ...".
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
 
 ifeq ($(CC),gcc)
-  # Perhaps test for existence of library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0
-  LDFLAGS += -pthread  # necessary with gcc for std::thread in VideoViewer.cpp
+  # Perhaps test for the existence of the library file /usr/lib$(if $(x64:0=),64,)/libpthread.so.0.
+  LDFLAGS += -pthread  # Necessary with gcc for std::thread in VideoViewer.cpp.
 endif
 
 graphics_libs ?= -lGL -lX11#  -lXext

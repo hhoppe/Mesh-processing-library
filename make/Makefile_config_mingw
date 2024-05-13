@@ -1,11 +1,9 @@
-rel ?= 1#  0=debug or 1=release (usually 1)
-x64 = 1#  32-bit not supported by mingw64
+rel ?= 1#  0=debug or 1=release (usually 1).
+x64 = 1#  32-bit is not supported by mingw64.
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
-# $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-4.9.1-posix-seh-rt_v3-rev0/mingw64/bin)
-# set path=('c:/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); unhash; which g++
-# PATH="/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin:$PATH" which g++
+# To locate: PATH="/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin:$PATH" which g++
 
 ifneq ($(call file_exists,c:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin),)
   $(call prepend_PATH,c:/Program Files/mingw-w64/x86_64-8.1.0-posix-seh-rt_v6-rev0/mingw64/bin)
@@ -20,7 +18,7 @@ endif
 graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
 
-## Stack trace on error
+## Stack trace on error:
 # (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/git/hh_src/bin/mingw/HTest -dividebyzero)
 
 # (set path=('/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin' $path:q); gdb --batch -ex run -ex where --args ~/git/hh_src/bin/mingw/HTest -accessviolation)
@@ -34,20 +32,13 @@ graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 # #4  0x0000000000558bac in main ()
 
 
-## Debugging
+## Debugging:
 # http://stackoverflow.com/questions/5814568/is-there-a-way-to-generate-a-gdb-readable-coredump-when-running-programs-compile
 # http://code.google.com/p/backtrace-mingw/source/browse/trunk/backtrace.c  for mingw32
 
 
-## Misc
+## Misc:
 # Check 64-bit and 32-bit output by using:
 #  dumpbin -headers ../../libNumeric/clapack/blas_mingw.a | head -20
 #  dumpbin -headers experiment3.o | head -20
 #  dumpbin -headers experiment3.exe | head -20
-
-# default MS Visual C Runtime is version 0x0060 (msvcrt.dll)
-# would need >=0x0080 (VC8) for _set_output_format, but better workaround using setenv (see Hh.cpp)
-# msvcrt = 0x00A0
-# set_msvcrt_version = -D__MSVCRT_VERSION__=$(msvcrt)
-# based on __MSVCRT_VERSION__ chosen above (not needed for default 0x060); for debug use -lmsvcr100d?
-# last_libs += -lmsvcr100

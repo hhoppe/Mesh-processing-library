@@ -2,7 +2,7 @@
 # It sets default variables, functions, and rules.
 # (The "Possible configuration settings" below can be adjusted.)
 
-ifneq ($(defs_loaded),)   # include guard; should be checked to avoid loading this file more than once
+ifneq ($(defs_loaded),)   # An include guard; should be checked to avoid loading this file more than once.
   $(error $(lastword $(MAKEFILE_LIST)) loaded more than once)
 endif
 defs_loaded = 1
@@ -16,10 +16,10 @@ $(if $(wildcard $(subst $(space),\$(space),$(1))),1,)
 endef
 
 # Identify the build system.
-is_mswin ?= $(if $(WINDIR)$(windir),1,)#  check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows
-is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  running under Cygwin?
-is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  running under Msys?
-is_mac := $(call file_exists,/.DS_Store)#  running on Mac OS?
+is_mswin ?= $(if $(WINDIR)$(windir),1,)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
+is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  Running under Cygwin?
+is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  Running under Msys?
+is_mac := $(call file_exists,/.DS_Store)#  Running on Mac OS?
 
 ifeq ($(MeshRoot),)
   $(warning MeshRoot variable not set; set to default value of "..")
@@ -28,7 +28,7 @@ endif
 
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
-  build_configs ?= win mingw clang cygwin w32#  default set for "make makeall" or "make CONFIG=all"
+  build_configs ?= win mingw clang cygwin w32#  Default set for "make makeall" or "make CONFIG=all".
   configs ?=       $(build_configs) $(nonworking_configs)
 else
   build_configs ?= unix
@@ -38,15 +38,15 @@ endif
 export CONFIG ?= $(word 1,$(build_configs))
 $(if $(filter $(CONFIG),all $(configs)),,$(error CONFIG=$(CONFIG) is not recognized among [all $(configs)]))
 
-win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1,)#  hopefully equivalent to defined(_WIN32)
+win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1,)#  Hopefully equivalent to defined(_WIN32).
 
 SHELL = bash#   sh is standard ("for i in $var; do; done"); bash is necessary for "shopt nullglob", [[ ]], etc.
 
-add_drive = $(patsubst /%,$(absdrive)/%,$(1))#  use $(call add_drive,...) to invoke this macro
+add_drive = $(patsubst /%,$(absdrive)/%,$(1))#  Use $(call add_drive,...) to invoke this macro.
 
-drive_abspath = $(call add_drive,$(abspath $(1)))#  use $(call drive_abspath,...) to invoke this macro
+drive_abspath = $(call add_drive,$(abspath $(1)))#  Use $(call drive_abspath,...) to invoke this macro.
 
-ifeq ($(is_msys),1)  # fix PATH for msys make
+ifeq ($(is_msys),1)  # Fix PATH for msys make.
   PATH := $(subst :/hh/,:/c/hh/,$(PATH))
 endif
 
@@ -67,8 +67,8 @@ prepend = \
     $(eval $1 := $2$(call expand,$1)), \
     $(eval $1 = $2$(call expand,$1)))
 
-# Function to prepend a directory to the current PATH.  This complicated code verifies existence of the directory,
-#  removes drive letter, adds /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
+# Function to prepend a directory to the current PATH.  This complicated code verifies the existence of the directory,
+#  removes any drive letter, adds a /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
 define prepend_PATH
   $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
@@ -77,20 +77,20 @@ define prepend_PATH
     $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive,)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):))
 endef
 
-MAKEFLAGS += --no-print-directory#  print-directory is ugly and ineffective with "-j" (see main.el)
+MAKEFLAGS += --no-print-directory#  Because print-directory is ugly and ineffective with "-j" (see main.el).
 
 ## Possible configuration settings:
-cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuild *.vcxproj does not set it)
-# cppinc += -DHH_HAVE_LAPACK#  by default I no longer use lapack
+cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuild *.vcxproj does not set it.)
+# cppinc += -DHH_HAVE_LAPACK#  By default we no longer use lapack.
 # cppinc += -DHH_HAVE_SIMPLEX
 # cppinc += -DHH_HAVE_VIDEO_LOOP
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
 # cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
-# cppinc += -DHH_NO_IMAGE_WIC#  option for CONFIG=win/w32/clang
-# cppinc += -DHH_IMAGE_LIBS_TOO#  option for CONFIG=win/w32/clang; default is to just use WIC
-# cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  otherwise enable SSE / NEON instructions
+# cppinc += -DHH_NO_IMAGE_WIC#  Option for CONFIG=win/w32/clang.
+# cppinc += -DHH_IMAGE_LIBS_TOO#  Option for CONFIG=win/w32/clang; default is to just use WIC.
+# cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  Otherwise enable SSE / NEON instructions.
 # cppinc += -DHH_NO_STACKWALKER
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
@@ -98,7 +98,7 @@ cppinc += -D_UNICODE -DUNICODE#  (useful for alternative testing since my msbuil
 CXX_STD ?= c++17
 # PEDANTIC ?= 1
 
-ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in)
+ifeq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG != cygwin or unix  (on cygwin/unix, libjpg and libpng are built-in).
   cppinc += -DHH_NO_IMAGE_LIBS
 endif
 
@@ -126,12 +126,12 @@ $(override_goal):
 	@RESULT=0; $(foreach a,$(if $(filter clean deepclean,$(MAKECMDGOALS)),$(configs),$(build_configs)),echo "**** CONFIG=$(a)"; $(MAKE) CONFIG=$(a) $(MAKECMDGOALS); RESULT=$$((RESULT + $$?)); sleep $(if $(filter clean deepclean,$(MAKECMDGOALS)),0,0.8); ) (exit $$RESULT)
 .PHONY: $(override_goal)
 
-else  # ifeq ($(CONFIG),all)  # until rest of file
+else  # ifeq ($(CONFIG),all)  # For the rest of this file.
 
 # Add ./bin so that the script hcheck is in path.
 $(call prepend_PATH,$(abspath $(MeshRoot))/bin)
 
-dummy_goal:  # introduce a dummy goal so that we can reset the .DEFAULT_GOAL below
+dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL below.
 
 .PHONY: dummy_all dummy_goal *.exe cleanall makeall
 
@@ -164,18 +164,18 @@ cleanall:
 makeall:
 	$(MAKE) CONFIG=all
 
-debug_path:  # for debugging
+debug_path:  # For debugging.
 	echo PATH:$$PATH; which $(CXX)
 
-ifeq ($(.DEFAULT_GOAL),dummy_goal)  # reset unless previously set
+ifeq ($(.DEFAULT_GOAL),dummy_goal)  # Reset unless previously set.
   .DEFAULT_GOAL :=
 endif
 
-dot_quoted_target = .\$$(extobj)#  this variable is cleared in ./Makefile_progs (also included in ./test/Makefile)
-make_dep ?= Makefile.dep#   was Makefile_$(CONFIG).dep but now independent of CONFIG
-# need "-march=native" to enable include of <xmmintrin.h>
-# need "-D_M_IX86" for vt_round.h
-# added "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h
+dot_quoted_target = .\$$(extobj)#  This variable is cleared in ./Makefile_progs (also included in ./test/Makefile).
+make_dep ?= Makefile.dep#   This was Makefile_$(CONFIG).dep but is now independent of CONFIG.
+# We need "-march=native" to enable include of <xmmintrin.h>.
+# We need "-D_M_IX86" for vt_round.h.
+# We need "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h.
 cmd_makedep = @echo Creating $(make_dep); \
   g++ -MM -march=native -D_M_IX86 -DHH_NO_SSE41 -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++14 $(src_cpp) | \
   perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
@@ -193,16 +193,16 @@ src_cpp ?= $(wildcard *.cpp)
 src_c ?= $(wildcard *.c)
 src ?= $(src_cpp) $(src_c)
 obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
-# problem: if I use (notdir obj), then it compiles using (notdir src), and emacs is confused,
+# Problem: if we use (notdir obj), then it compiles using (notdir src), and emacs is confused,
 #         but if use full dir obj, then gmake ignores file modification times.
-#         Compilation directory tracking in emacs does not work with "-j"
-# solution: avoid c: paths in makefiles; add c: in compiler rules for CONFIG=win/w32.
+#         Compilation directory tracking in emacs does not work with "-j".
+# Solution: avoid "c:" paths in makefiles; add "c:" in compiler rules for CONFIG=win/w32.
 
 CPPFLAGS = $(strip $(cppinc) $(includes))
 CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
 CFLAGS = $(strip $(c-all) $(if $(rel:0=),$(crel),$(cdbg)))
 
-# lib$(HW) must be added as prefix to LDLIBS because lib$(HW)/HW.cpp references Image and Buffer in libHh
+# Note: lib$(HW) must be added as prefix to LDLIBS because lib$(HW)/HW.cpp references Image and Buffer in libHh.
 ifeq ($(win32),1)
   HW = HWin
 else
@@ -212,22 +212,22 @@ endif
 my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.
 LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
 
-ifneq ($(filter cygwin unix,$(CONFIG)),)  # CONFIG = cygwin or unix
+ifneq ($(filter cygwin unix,$(CONFIG)),)  # For CONFIG = cygwin or unix.
   system_libs += $(strip $(if $(have_image_libs),jpeg png z,) $(if $(have_lapack),lapack,))
   LDLIBS += $(foreach n,$(system_libs),-l$(n))
 endif
 
-LDLIBS += $(other_libs)#  optionally defined externally
-LDLIBS += $(last_libs)#  optionally defined in ./Makefile_config_$(CONFIG)
+LDLIBS += $(other_libs)#  Optionally defined externally.
+LDLIBS += $(last_libs)#  Optionally defined in ./Makefile_config_$(CONFIG).
 
 ifneq ($(have_lapack),)
-  # <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/
+  # The file <lapacke.h> is in either /usr/include/ or /usr/include/lapacke/.
   ifneq ($(call file_exists,/usr/include/lapacke),)
     includes += -I/usr/include/lapacke
   endif
 endif
 
-# Invokes $< which is the first prerequisite (either $(@:%.ou=%) in ./test or $(@:%.ou=%.script) in ./progtest)
+# Invoke $< which is the first prerequisite (either $(@:%.ou=%) in ./test or $(@:%.ou=%.script) in ./progtest).
 # Note: GNU make version 3.81 cannot have an " =" at the end of the next line; strange.
 # Also, generally it appears unsafe to embed comments within a define..endef definition.
 define cmd_hcheck
@@ -244,7 +244,7 @@ define cmd_hcheck
   fi;
 endef
 
-# Test the program % by saving its output into %.ou and then comparing it with the reference output in %.ref
+# Test the program % by saving its output into %.ou and then comparing it with the reference output in %.ref.
 %.ou : % %.ref
 	$(cmd_hcheck)
 
@@ -252,7 +252,7 @@ endef
 #  %.ref is automatically deleted at the end of make.  Nice.
 %.ref :
 	touch $@
-# .PRECIOUS: %.ref  # setting this would avoid deleting a temporarily created %.ref
+# .PRECIOUS: %.ref  # Setting this would avoid deleting a temporarily created %.ref.
 
 # Not used, although it could be useful:
 # makefile0 ?= $(firstword $(MAKEFILE_LIST))
@@ -269,12 +269,12 @@ endef
 # Assembly code listing: several ways to generate this:
 # (1) Create the assembly file during normal compilation by adding one of the two following rules to the Makefile.
 #   (Note: this approach does not work with clang.)
-#  file.$(extobj): cxxall += $(cxx_list_assembly_code)  # for a "%.(extobj) : %.cpp" compilation
-#  file: cxxall += $(cxx_list_assembly_code)            # for a "% : %.cpp" compilation
+#  file.$(extobj): cxxall += $(cxx_list_assembly_code)  # For a "%.(extobj) : %.cpp" compilation.
+#  file: cxxall += $(cxx_list_assembly_code)            # For a "% : %.cpp" compilation.
 # (2) Add a rule to separately create the assembly file:
 #   (This adds an expensive additional step.)
-#  file.$(extobj) : file.$(extasm)  # only works for a "%.(extobj) : %.cpp" compilation
-# (3) Directly call make on file.$(extasm)
+#  file.$(extobj) : file.$(extasm)  # Only works for a "%.(extobj) : %.cpp" compilation.
+# (3) Directly call make on file.$(extasm).
 #   (This does not require any change to the Makefile.)
 
 endif  # ifneq ($(CONFIG),all)

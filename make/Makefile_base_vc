@@ -8,7 +8,7 @@ ifeq ($(msvc),2019)
 
   msvcbuild = 14.29.30133
   windowskit = 10.0.19041.0
-  cxxall += -FS#  serialize access to *.pdb files for parallel builds
+  cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
   export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\winrt;
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/Tools/)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/)
@@ -19,10 +19,10 @@ ifeq ($(msvc),2019)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/VC/VCPackages)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
   ifeq ($(x64),1)
-    # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"
+    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat".
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
   else
-    # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat"
+    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat".
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x86;
   endif
@@ -31,7 +31,7 @@ else ifeq ($(msvc),2017)
 
   msvcbuild = 14.15.26726
   windowskit = 10.0.17134.0
-  cxxall += -FS#  serialize access to *.pdb files for parallel builds
+  cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
   export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\winrt;
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/Tools/)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/)
@@ -42,10 +42,10 @@ else ifeq ($(msvc),2017)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/VC/VCPackages)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
   ifeq ($(x64),1)
-    # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat"
+    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat".
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
   else
-    # see: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat"
+    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat".
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x86;
   endif

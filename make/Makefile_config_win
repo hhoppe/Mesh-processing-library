@@ -1,4 +1,4 @@
-rel ?= 0#  0=debug or 1=release (usually 0)
-x64 = 1#  compile into 64-bit code
+rel ?= 0#  0=debug or 1=release (usually 0).
+x64 = 1#  Compile into 64-bit code.
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_win

@@ -11,9 +11,9 @@ ifeq ($(plain_compiler),)
   cxxwarnings += -fsized-deallocation -Wsized-deallocation
 endif
 
-# By itself, '-Wa,-a' defaults to '-ahls'. -h (high-level source requires "-g" debug compilation)
+# By itself, '-Wa,-a' defaults to '-ahls'. -h (high-level source requires "-g" debug compilation).
 # See options in http://tigcc.ticalc.org/doc/gnuasm.html
-# and http://stackoverflow.com/questions/1289881/using-gcc-to-produce-readable-assembly
+# and http://stackoverflow.com/questions/1289881/using-gcc-to-produce-readable-assembly.
 cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
 
 # Enable creation of assembly file if desired (as alternative to cxx_list_assembly_code):
@@ -33,14 +33,14 @@ ifeq ($(use_pch),1)
   cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
 endif
 
-## Precompiled headers
+## Precompiled headers:
 # https://gcc.gnu.org/onlinedocs/gcc/Precompiled-Headers.html
-# This also works with -include. So yet another way to use precompiled headers, good for projects not designed
+# This also works with -include.  So yet another way to use precompiled headers, good for projects not designed
 # with precompiled header files in mind, is to simply take most of the header files used by a project, include
-# them from another header file, precompile that header file, and -include the precompiled header. If the
+# them from another header file, precompile that header file, and -include the precompiled header.  If the
 # header files have guards against multiple inclusion, they are skipped because they've already been included
 # (in the precompiled header).
 
 ## Static linking:
-# Use "-static" or "-Wl,-Bdynamic -lsomelibIwantshared -Wl,-Bstatic -lsomelibIwantstatic"
+# Use "-static" or "-Wl,-Bdynamic -lsomelibIwantshared -Wl,-Bstatic -lsomelibIwantstatic".
 # http://stackoverflow.com/questions/13768515/how-to-do-static-linking-of-libwinpthread-1-dll-in-mingw

@@ -1,5 +1,5 @@
-rel ?= 1#  0=debug or 1=release (usually 1, to be different from CONFIG=win)
-x64 = 0#  compile into 32-bit code
+rel ?= 1#  0=debug or 1=release (usually 1, to be different from CONFIG=win).
+x64 = 0#  Compile into 32-bit code.
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_win
 

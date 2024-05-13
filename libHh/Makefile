@@ -25,7 +25,7 @@ ifeq ($(use_pch),1)
     $(filter-out $(pch_root).$(extobj),$(obj)) : | $(abs_pch_file).gch
     # Make the precompiled header dependent on the CONFIG, and inherit all dependencies in Makefile.dep.
     $(abs_pch_file).gch : built_ob.$(extobj).$(CONFIG) $(pch_root).$(extobj)
-    # Omit precompiled header when compiling precompiled header file
+    # Omit precompiled header when compiling precompiled header file.
     $(abs_pch_file).gch : cxxall := $(filter-out -include $(MeshRoot)/libHh/precompiled_libHh.h,$(cxxall))
   endif
   ifeq ($(CXX),clang++)
@@ -34,11 +34,11 @@ ifeq ($(use_pch),1)
     $(filter-out $(pch_root).$(extobj),$(obj)) : | $(abs_pch_file).pch
     # Make the precompiled header dependent on the CONFIG, and inherit all dependencies in Makefile.dep.
     $(abs_pch_file).pch : built_ob.$(extobj).$(CONFIG) $(pch_root).$(extobj)
-    # Omit precompiled header when compiling precompiled header file
-    # No, this misbehaves: it results in errors when compiling ./libHh/Image_libs.o
-    # Instead, I removed the *.h.pch using a "rm" in the "%.pch : %.h" rule of make/Makefile_defs_clang
+    # Omit precompiled header when compiling precompiled header file.
+    # No, this misbehaves: it results in errors when compiling ./libHh/Image_libs.o.
+    # Instead, I removed the *.h.pch using a "rm" in the "%.pch : %.h" rule of make/Makefile_defs_clang.
     # $(abs_pch_file).pch : cxxall := $(filter-out -include $(MeshRoot)/libHh/precompiled_libHh.h,$(cxxall))
-    # This is necessary because $(pch_root).$(extobj) gets built before $(abs_pch_file).pch
+    # This is necessary because $(pch_root).$(extobj) gets built before $(abs_pch_file).pch.
     $(pch_root).$(extobj) : cxxall := $(filter-out -include $(MeshRoot)/libHh/precompiled_libHh.h,$(cxxall))
   endif
 endif

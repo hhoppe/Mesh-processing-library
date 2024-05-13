@@ -1,7 +1,7 @@
 # Note: this file sets up variables for both gcc and clang compilers, as they have similar command-line arguments.
 # (It is included by both ./Makefile_base_gcc and ./Makefile_base_clang.)
 
-use_pch ?= 1#  (usually 1; use_precompiled_headers)
+use_pch ?= 1#  (Usually 1; use precompiled headers.)
 
 extobj = o
 extlib = a
@@ -12,7 +12,7 @@ no_warnings = -w
 
 gcc_or_clang = 1
 
-machine_arch = -march=native#  Fastest code on local machine.
+machine_arch = -march=native#  Fastest code on the local machine.
 # machine_arch = -march=corei7#  To be able to run the same executable on more machines.
 
 # For debugging, echo complete compiler commands:
@@ -32,11 +32,11 @@ ifeq ($(plain_compiler),)
   ccommon += $(machine_arch) -ffast-math -mfpmath=sse
   ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
   cxxall += -fno-rtti
-  cxxwarnings += -Wno-strict-overflow#  even #pragma in Grid.h does not disable this
+  cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.
   commonrel += -O3 -DNDEBUG
-  # (O3 enables -fomit-frame-pointer -finline-functions)
+  # (Option -O3 enables -fomit-frame-pointer -finline-functions.)
   # -fno-trapping-math
-  commondbg += -g -D_GLIBCXX_DEBUG#  to enable checking of STL containers in libstdc++
+  commondbg += -g -D_GLIBCXX_DEBUG#  To enable checking of STL containers in libstdc++.
   cxxexe +=
   cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings),)
   cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings),)
@@ -48,11 +48,11 @@ c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)
 cdbg += $(commondbg)
 
-# Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations)
+# Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations).
 gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
   -fsigned-zeros -ftrapping-math -fno-associative-math -fno-reciprocal-math
 # Note: cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
-# Note: -fexcess-precision=standard is undefined for C++
+# Note: -fexcess-precision=standard is undefined for C++.
 
 # Force use of C++ (rather than C) standard library by explicitly specifying CXX.
 # % : %.o
@@ -85,5 +85,5 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 #   --param l2-cache-size=8192 -mtune=core2)
 # hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
 # hhoppew: -march=haswell -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mmovbe -maes -mpclmul -mpopcnt -mabm -mfma -mbmi -mbmi2 -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrdrnd -mf16c -mfsgsbase -mfxsr -mxsave -mxsaveopt --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=20480 -mtune=haswell
-#   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works
+#   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works.
 # https://gcc.gnu.org/onlinedocs/gcc-5.2.0/gcc/x86-Options.html

@@ -1,6 +1,6 @@
-# clang 64_bit on Windows  (defines _MSC_VER and not __GNUC__)
+# For clang 64_bit on Windows; it defines _MSC_VER and not __GNUC__.
 
-rel ?= 1#  0=debug or 1=release (usually 1)
+rel ?= 1#  0=debug or 1=release (usually 1).
 x64 = 1
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
@@ -16,7 +16,7 @@ RANLIB = llvm-ranlib
 
 cxxall += -D_CRT_SECURE_NO_WARNINGS
 
-# Note that I require HH_POSIX(fdopen)... because the non-underscore versions do not exist in the clang library.
+# Note that we require HH_POSIX(fdopen)... because the non-underscore versions do not exist in the clang library.
 # cxxall += -D_CRT_DECLARE_NONSTDC_NAMES=1 -D_CRT_NONSTDC_NO_DEPRECATE
 
 graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32

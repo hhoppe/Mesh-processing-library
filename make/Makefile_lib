@@ -6,7 +6,7 @@ ifeq ($(defs_loaded),)
   include $(MeshRoot)/make/Makefile_defs
 endif
 
-ifneq ($(CONFIG),all)  # until rest of file
+ifneq ($(CONFIG),all)  # For the rest of this file.
 
 troot ?= $(notdir $(abspath .))
 tlib ?= $(troot).$(extlib)
@@ -32,21 +32,21 @@ deepclean: clean
 
 .PHONY: all depend clean deepclean
 
-ifeq ($(CXX),cl)  # (was: ifeq ($(extobj),obj))
+ifeq ($(CXX),cl)  # (Was: ifeq ($(extobj),obj))
 
-  ccommon += -Fd$(troot).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
+  ccommon += -Fd$(troot).pdb#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
   # Compile library C code using "-Zl" flag to omit reference to standard C (rather than C++) library,
   c-all += -Zl
 
   $(tlib): $(obj)
 	lib -nologo $(if $(call file_exists,$(tlib)),$@ $?,-out:$@ $^) $(ltcg)
-  # Above version only rebuilds from scratch if library does not exist.
+  # The above version only rebuilds from scratch if the library does not exist.
   #	@echo obj=$(obj) mod=$?
   #	lib -nologo -out:$@ $^
 
 else
 
-  $(tlib): $(obj)  # "ar cr" does a merge; flag "c" only creates library if it does not already exist
+  $(tlib): $(obj)  # Note that "ar cr" does a merge; flag "c" only creates library if it does not already exist.
 	@if [ ! -f $(tlib) ]; then \
 	  echo Creating library $@; \
 	  $(AR) cr $@ $(obj); \

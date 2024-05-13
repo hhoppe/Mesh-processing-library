@@ -4,13 +4,13 @@ AR = ar
 RANLIB = ranlib
 
 ifneq ($(is_mswin),)
-  LDOUTPUT = -o $@.exe#  otherwise I get names without extension (unlike with gcc)
+  LDOUTPUT = -o $@.exe#  Otherwise we get names without extension (unlike with gcc).
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
 ifeq ($(plain_compiler),)
-  # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
+  # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  For my test suite.
   # cxxall += -msse4.1
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
   cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
@@ -36,13 +36,13 @@ cxx_list_assembly_code =
 
 # Enable creation of assembly file if desired (as alternative to cxx_list_assembly_code):
 %.s : %.cpp
-# I see no way to interleave source code in assembly listing; -g -fverbose-asm do not help, -Wa,-achln unrecognized
+# I see no way to interleave source code in assembly listing; -g -fverbose-asm do not help, -Wa,-achln is unrecognized.
 	$(filter-out ,$(COMPILE.cpp)) -S -mllvm --x86-asm-syntax=intel $(@:$(extasm)=cpp)
 #	rm -f v.$(@:$(extasm)=$(extobj))
 
 %.h.pch : %.h
 	@echo Making $(@) from $<
-	@rm -f $(@)  # because we actually "-include" itself to get the right path when building it.
+	@rm -f $(@)            # Because we actually "-include" itself to get the right path when building it.
 	@$(COMPILE.cpp) -x c++-header -o $@ $<
 
 ifeq ($(use_pch),1)
@@ -54,11 +54,11 @@ ifeq ($(use_pch),1)
   endif
 endif
 
-## precompiled headers:
+## Precompiled headers:
 # clang test.h -o test.h.pch
-# clang -include test.h test.c -o test  # unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
+# clang -include test.h test.c -o test  # Unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
 
-## sanitize/analyze:
+## Sanitize/analyze:
 # clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc
 # clang -fsanitize=memory -fno-omit-frame-pointer -g -O2 umr.cc
 #
@@ -66,8 +66,8 @@ endif
 # At this time, MemorySanitizer supports Linux x86_64 only.
 #
 # Address sanitizer:
-# Be warned though that it only works so far on Linux and Mac. No luck for MinGW.
+# Be warned though that it only works so far on Linux and Mac.  No luck for MinGW.
 
-## Neon
-# Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou
+## Neon:
+# Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou.
 # cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1

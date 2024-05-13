@@ -11,7 +11,7 @@ ifeq ($(defs_loaded),)
   include $(MeshRoot)/make/Makefile_defs
 endif
 
-ifneq ($(CONFIG),all)  # until rest of file
+ifneq ($(CONFIG),all)  # For the rest of this file.
 
 exe_dir ?= $(MeshRoot)/bin/$(CONFIG)
 
@@ -19,7 +19,7 @@ prog ?= $(notdir $(abspath .))
 exe ?= $(exe_dir)/$(prog)
 outputs = $(exe:%=%.ou)
 
-extra_objs +=#  this variable must be defined prior to use as a dependency
+extra_objs +=#  This variable must be defined prior to use as a dependency.
 
 all: progs
 
@@ -71,8 +71,8 @@ debug:
 .PHONY: all depend libs progs test clean deepclean debug
 
 ifeq ($(CXX),cl)
-  # local *.pdb file; different from the final one created under ./bin
-  ccommon += -Fd$(prog).pdb#  unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
+  # local *.pdb file; it is different from the final one created under ./bin.
+  ccommon += -Fd$(prog).pdb#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
 endif
 
 endif  # ifneq ($(CONFIG),all)

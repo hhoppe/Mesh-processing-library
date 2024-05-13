@@ -9,13 +9,10 @@ endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
-last_libs += $(if $(omit_omp:0=),,-fopenmp=libiomp5)#  For OpenMP.  (-lomp only works on unix, not CONFIG=clang)
-
 ifeq ($(plain_compiler),)
   # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  for my test suite
   # cxxall += -msse4.1
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
-  ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
   cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
     -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-sign-conversion \
     -Wno-unused-macros -Wno-padded -Wno-shadow \
@@ -25,7 +22,9 @@ ifeq ($(plain_compiler),)
     -Wno-atomic-implicit-seq-cst -Wno-undefined-func-template
   ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
   ifneq ($(is_mac),1)
-    cwarnings += -Wno-source-uses-openmp -Wno-reserved-id-macro -Wno-unreachable-code-return -Wno-unreachable-code-break
+    cwarnings += -Wno-unreachable-code-return -Wno-unreachable-code-break \
+      -Wno-unsafe-buffer-usage -Wno-reserved-id-macro
+    # cwarnings += -Wno-source-uses-openmp
   endif
 endif
 

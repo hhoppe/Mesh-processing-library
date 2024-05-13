@@ -220,7 +220,8 @@ void ParseArgs::p(string str, PARSE_FUNC parse_func, string doc) {
 }
 
 void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
-  iadd(option(std::move(str), -2, PARSE_FUNC(parse_func0), nullptr, std::move(doc)));
+  using voidp = void*;
+  iadd(option(std::move(str), -2, PARSE_FUNC(voidp(parse_func0)), nullptr, std::move(doc)));
 }
 
 bool ParseArgs::special_arg(const string& s) {
@@ -359,7 +360,8 @@ bool ParseArgs::parse_internal() {
     }
     int narg = _curopt->narg;
     if (narg == -2) {
-      PARSE_FUNC0(_curopt->parse_func)();
+      using voidp = void*;
+      PARSE_FUNC0(voidp(_curopt->parse_func))();
     } else {
       _curopt->parse_func(*this);
     }

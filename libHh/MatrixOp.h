@@ -290,6 +290,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                 sumw += w;
                 num++;
               }
+              dummy_use(num);
               // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
               nm[y][x] = val / assertx(float(sumw));
               // SHOW(num, sumw, nm[y][x]); assertnever("");
@@ -332,6 +333,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
                 sumw += w;
                 num++;
               }
+              dummy_use(num);
               // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
               nm[yx] = val / assertx(float(sumw));
               // SHOW(num, sumw, nm[yx]); assertnever("");

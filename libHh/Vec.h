@@ -118,10 +118,10 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     return true;
   }
   // Enable structured bindings:
-  template<std::size_t Index> auto&& get()       &  { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get()       && { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get() const &  { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get() const && { return get_helper<Index>(*this); }
+  template <std::size_t Index> auto&& get() & { return get_helper<Index>(*this); }
+  template <std::size_t Index> auto&& get() && { return get_helper<Index>(*this); }
+  template <std::size_t Index> auto&& get() const& { return get_helper<Index>(*this); }
+  template <std::size_t Index> auto&& get() const&& { return get_helper<Index>(*this); }
   // Defining friend functions in-class is convenient but unfortunately _MSC_VER (VS 2019) attempts to instantiate
   // all these and this fails if "T - T" or "sqrt(T)" are undefined.
   // friend T mag2(const type& vec) { return dot(vec, vec); }
@@ -141,7 +141,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     SHOW(i, s, n);
     return false;
   }
-  template<std::size_t Index, typename TT> auto&& get_helper(TT&& t) const {
+  template <std::size_t Index, typename TT> auto&& get_helper(TT&& t) const {
     static_assert(Index >= 0 && Index < n);
     return std::forward<TT>(t)[Index];
   }

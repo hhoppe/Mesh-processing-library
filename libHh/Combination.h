@@ -23,7 +23,8 @@ template <typename T> class Combination : public Map<T, float> {
   void shrink_to_fit() const {  // remove elements with zero weights
     Combination& var_self = const_cast<Combination&>(*this);
     Array<T> ar;
-    for (auto& [e, v] : *this) if (!v) ar.push(e);
+    for (auto& [e, v] : *this)
+      if (!v) ar.push(e);
     for (const T& e : ar) var_self.remove(e);
   }
   using base::values;

@@ -5077,6 +5077,7 @@ void read_ply(const string& filename) {
   assertx(vnpos == 3);
   assertx(vnnor == 0 || vnnor == 3);
   assertx(vnrgb == 0 || vnrgb == 3 || vnrgb == 4);
+  dummy_use(flist);
   // assertw(flist == 1);  // there may be just vertices
   if (vnnor) ply_vnor.init(ply_vpos.num());
   if (vnrgb) ply_vrgb.init(ply_vpos.num(), Pixel::gray(0));

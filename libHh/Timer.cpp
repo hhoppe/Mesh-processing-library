@@ -46,10 +46,12 @@ namespace hh {
 
 namespace {
 
+#if defined(_WIN32)
 // Use of QueryProcessCycleTime() should provide more precise CPU process times, but it comes with two drawbacks:
 // (1) It involves approximating the (dynamic) CPU frequency using a static non-portable registry value, and
 // (2) the call to QueryProcessCycleTime() surprisingly seems to have larger overhead than GetProcessTimes().
 constexpr bool k_win32_use_process_cycle_time = false;
+#endif
 
 #if defined(_WIN32)
 int cpu_mhz_speed() {

@@ -6,6 +6,7 @@ BasedOnStyle: Google
 ColumnLimit: 119  # default is 80
 
 Language: Cpp
+# Standard: Latest  # Or: Auto, Cpp17, Cpp20.
 AlwaysBreakTemplateDeclarations: MultiLine  # default is Yes
 AllowShortCaseLabelsOnASingleLine: true     # default is false
 DerivePointerAlignment: false               # default is true

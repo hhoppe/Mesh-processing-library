@@ -6,24 +6,17 @@ x64 = 1
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 
 # 20180911 LLVM 6.0.1 # LLVM-6.0.1-win64.exe from http://releases.llvm.org/download.html
-# 20190922? LLVM 8.0.1 x86_64-pc-windows-msvc (could have been installed by Visual Studio?)
+# 20190922 LLVM 8.0.1 x86_64-pc-windows-msvc (could have been installed by Visual Studio?)
 # 20200603 LLVM-10.0.0-win64.exe from http://releases.llvm.org/download.html
+# 20240513 LLVM-17.0.1-win64.exe from github releases from http://releases.llvm.org/download.html
 LLVM_ROOT = c:/Progra~1/LLVM
 $(call prepend_PATH,$(LLVM_ROOT)/bin)
 AR = llvm-ar
 RANLIB = llvm-ranlib
 
-# Bug: MSVC <functional> requires "-frtti"; workaround in https://stackoverflow.com/questions/47950690 no longer works.
-cxxall += -frtti
-
 cxxall += -D_CRT_SECURE_NO_WARNINGS
 
 # Note that I require HH_POSIX(fdopen)... because the non-underscore versions do not exist in the clang library.
 # cxxall += -D_CRT_DECLARE_NONSTDC_NAMES=1 -D_CRT_NONSTDC_NO_DEPRECATE
-
-# https://stackoverflow.com/questions/42545078/clang-version-5-and-lnk4217-warning; was still needed in clang 6.0.1
-# ccommon += -Xclang -flto-visibility-public-std
-
-# LDFLAGS += -L$(LLVM_ROOT)/lib#  LLVM bug; this should not be necessary; for -llibomp.
 
 graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32

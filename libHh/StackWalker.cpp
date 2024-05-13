@@ -75,6 +75,13 @@ void StackWalker_dummy_function_to_avoid_linkage_warnings() {}
 
 #include "Hh.h"
 
+#if defined(__clang__)  // For PEDANTIC=1.
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wcast-function-type"
+#pragma clang diagnostic ignored "-Wzero-as-null-pointer-constant"
+#pragma clang diagnostic ignored "-Wextra-semi-stmt"
+#endif
+
 HH_REFERENCE_LIB("version.lib");   // for "VerQueryValue"
 HH_REFERENCE_LIB("advapi32.lib");  // for GetUserName() here and in StackWalker
 
@@ -527,7 +534,7 @@ class StackWalkerInternal {
   }  // GetModuleListTH32
 
   // **************************************** PSAPI ************************
-  typedef struct _MODULEINFO {
+  typedef struct MODULEINFO_ {
     LPVOID lpBaseOfDll;
     DWORD SizeOfImage;
     LPVOID EntryPoint;
@@ -853,12 +860,12 @@ static LPVOID s_readMemoryFunction_UserData = NULL;
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4740)  // flow in or out of inline asm code suppresses global optimization
+#pragma warning(disable : 4127)  // conditional expression is constant
 #endif
 
 BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT* context, PReadProcessMemoryRoutine readMemoryFunction,
                                 LPVOID pUserData) {
   CONTEXT c;
-  ;
   CallstackEntry csEntry;
   IMAGEHLP_SYMBOL64* pSym = NULL;
   StackWalkerInternal::IMAGEHLP_MODULE64_V2 Module;
@@ -878,7 +885,6 @@ BOOL StackWalker::ShowCallstack(HANDLE hThread, const CONTEXT* context, PReadPro
   if (context == NULL) {
     // If no context is provided, capture the context
     if (hThread == GetCurrentThread()) {
-#pragma warning(disable : 4127)  // conditional expression is constant
       GET_CURRENT_CONTEXT(c, USED_CONTEXT_FLAGS);
     } else {
       SuspendThread(hThread);

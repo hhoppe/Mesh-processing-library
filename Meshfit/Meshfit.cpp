@@ -941,6 +941,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
           minbary = bary;
         }
       }
+      dummy_use(nproj);
       // HH_SSTAT(SLFproj, nproj);
       // Found closest face mini and corresponding minbary
       assertx(mini >= 0);

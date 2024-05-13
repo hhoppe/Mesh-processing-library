@@ -69,14 +69,14 @@ struct SelectedVertex {
 
 struct SelectedEdge {
   int obn;
-  GMesh *mesh;
+  GMesh* mesh;
   Edge e;
   Point inter;
 };
 
 struct SelectedFace {
   int obn;
-  GMesh *mesh;
+  GMesh* mesh;
   Face f;
 };
 

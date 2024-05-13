@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_G3DOGL_HB_H_
 #define MESH_PROCESSING_G3DOGL_HB_H_
 
+#include <optional>
+
 #include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"
@@ -50,7 +52,7 @@ void update_seg(int segn, const Frame& f, bool vis);
 void draw_space();
 bool special_keypress(char ch);                                       // ret: recognized
 string show_info();                                                   // info line state string
-bool world_to_vdc(const Point& pi, float& xo, float& yo, float& zo);  // set zo, ret: pi_in_front -> (xo, yo)
+std::pair<float, std::optional<Vec2<float>>> world_to_vdc(const Point& pi);  // [zs, pi_in_front ? (xs, ys) : {}]
 void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);
 Vec2<int> get_font_dims();  // height, width
 void draw_text(const Vec2<float>& yx, const string& s);

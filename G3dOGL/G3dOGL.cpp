@@ -3127,13 +3127,12 @@ string HB::show_info() {
                           : ' ');
 }
 
-bool HB::world_to_vdc(const Point& pi, float& xo, float& yo, float& zo) {
+std::pair<float, std::optional<Vec2<float>>> HB::world_to_vdc(const Point& pi) {
+  std::pair<float, std::optional<Vec2<float>>> pair;
   Point p = pi * tcami;
-  zo = p[0];
-  if (p[0] < hither) return false;
-  xo = .5f - p[1] / p[0] * tzp[1];
-  yo = .5f - p[2] / p[0] * tzp[0];
-  return true;
+  pair.first = p[0];
+  if (p[0] >= hither) pair.second = V(.5f - p[1] / p[0] * tzp[1], .5f - p[2] / p[0] * tzp[0]);
+  return pair;
 }
 
 void HB::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {

@@ -106,6 +106,11 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   const T* end() const { return a() + n; }
   T* data() { return a(); }
   const T* data() const { return a(); }
+  // Enable structured bindings:
+  template<std::size_t Index> auto&& get()       &  { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get()       && { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get() const &  { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get() const && { return get_helper<Index>(*this); }
   static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
   static constexpr int Num = n;
   template <typename Func = T(int)> static type create(Func func) {
@@ -135,6 +140,10 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     if (i >= 0 && s >= 0 && i + s <= n) return true;
     SHOW(i, s, n);
     return false;
+  }
+  template<std::size_t Index, typename TT> auto&& get_helper(TT&& t) const {
+    static_assert(Index >= 0 && Index < n);
+    return std::forward<TT>(t)[Index];
   }
   template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const {
     return type(base::operator[](n - 1 - Is)...);
@@ -521,6 +530,12 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 #undef TT
 
 }  // namespace hh
+
+// Enable structured bindings.
+namespace std {
+template <typename T, int n> struct tuple_size<hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
+template <std::size_t Index, typename T, int n> struct tuple_element<Index, hh::Vec<T, n>> { using type = T; };
+}  // namespace std
 
 //----------------------------------------------------------------------------
 

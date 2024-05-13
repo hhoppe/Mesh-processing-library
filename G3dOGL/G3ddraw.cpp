@@ -668,13 +668,13 @@ static void g3d_ellipse2() {
     obi = i * nlod + obi;
     int nfaces = g_obs[obi].get_mesh()->num_faces();
     Point pabove = Point(0.f, 0.f, obradius * 1.8f) * fellipse;
-    float xo, yo, zo;
-    if (HB::world_to_vdc(pabove, xo, yo, zo)) {
-      yo -= .01f;
-      HB::draw_text(V(yo, xo), sform("%d", nfaces));
+    const auto [zs, xys] = HB::world_to_vdc(pabove);
+    if (xys) {
+      auto [xs, ys] = *xys;
+      HB::draw_text(V(ys - .01f, xs), sform("%d", nfaces));
     } else {
       SHOW(pabove);
-      SHOW(zo);
+      SHOW(zs);
     }
   }
 }

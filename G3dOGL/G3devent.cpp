@@ -183,12 +183,13 @@ void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[ob
 void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }
 
 // (area is determ / 2)
-float determ2d(const Point& p1, const Point& p2, const Point& p3) {
+float determ2d(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
   return p1[0] * p2[1] - p1[1] * p2[0] + p2[0] * p3[1] - p2[1] * p3[0] + p3[0] * p1[1] - p3[1] * p1[0];
 }
 
 std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
   SelectedVertex selected_vertex{};
+  const Vec2<float> ps = yx.rev();
   Vec2<int> win_dims = HB::get_extents();
   // must be this close (4 pixel radius)
   // for all vertices in that range, pick closest one
@@ -200,16 +201,19 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
     GMesh& mesh = *g_obs[obn].get_mesh();
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * g_obs[obn].t();
-      float xp, yp, zp;
-      HB::world_to_vdc(p, xp, yp, zp);
-      float d = abs(xp - yx[1]) + abs(yp - yx[0]);
-      if (d > maxd || zp > minz) continue;
-      minz = zp;
-      selected_vertex = {obn, &mesh, v};
+      const auto [zs, xys] = HB::world_to_vdc(p);
+      if (xys) {
+        const auto [xs, ys] = *xys;
+        const float d = abs(xs - ps[0]) + abs(ys - ps[1]);
+        if (d <= maxd && zs <= minz) {
+          minz = zs;
+          selected_vertex = {obn, &mesh, v};
+        }
+      }
     }
-    if (selected_vertex.v) return selected_vertex;
     if (subdivmode && obn == 1) break;  // no more objects
   }
+  if (selected_vertex.v) return selected_vertex;
   return {};
 }
 
@@ -229,13 +233,13 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
     for (Edge e : mesh.edges()) {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Point p1 = mesh.point(v1), p2 = mesh.point(v2);
-      Point ps1(0.f, 0.f, 0.f), ps2(0.f, 0.f, 0.f), ps(concat(yx.rev(), V(0.f)));
-      float zs1, zs2;
-      if (!HB::world_to_vdc(p1 * t, ps1[0], ps1[1], zs1)) continue;
-      if (!HB::world_to_vdc(p2 * t, ps2[0], ps2[1], zs2)) continue;
-      Vector vd = ok_normalized(ps2 - ps1);
-      float a = clamp(dot(vd, ps - ps1) / mag(ps2 - ps1), 0.f, 1.f);
-      float d = dist(ps, interp(ps2, ps1, a));
+      const auto [zs1, xys1] = HB::world_to_vdc(p1 * t);
+      const auto [zs2, xys2] = HB::world_to_vdc(p2 * t);
+      if (!xys1 || !xys2) continue;
+      const auto xys = yx.rev();
+      const Vec2<float> vd = ok_normalized(*xys2 - *xys1);
+      float a = clamp(dot(vd, xys - *xys1) / mag(*xys2 - *xys1), 0.f, 1.f);
+      float d = dist(xys, interp(*xys2, *xys1, a));
       float z = max(zs1, zs2);
       if (d > maxd || z > minz) continue;
       float minzsn = BIGFLOAT;
@@ -243,8 +247,7 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
         Polygon poly;
         mesh.polygon(f, poly);
         Point pn = p1 + poly.get_normal_dir();
-        float xs, ys, zs;
-        HB::world_to_vdc(pn * t, xs, ys, zs);
+        const auto [zs, _] = HB::world_to_vdc(pn * t);
         minzsn = min(minzsn, zs);
       }
       if (minzsn > zs1 && prune_backfacing) continue;
@@ -252,14 +255,15 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
       const Point inter = interp(p2, p1, a);  // Not correct for perspective!
       selected_edge = {obn, &mesh, e, inter};
     }
-    if (selected_edge.e) return selected_edge;
     if (subdivmode && obn == 1) break;  // no more objects
   }
+  if (selected_edge.e) return selected_edge;
   return {};
 }
 
 std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
   SelectedFace selected_face{};
+  const Vec2<float> ps = yx.rev();
   float minz = BIGFLOAT;
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
     if (!g_obs[obn].visible()) continue;
@@ -273,29 +277,31 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         pa[0] = mesh.point(va[0]);
         pa[1] = mesh.point(va[vi + 1]);
         pa[2] = mesh.point(va[vi + 2]);
-        Vec3<Point> psa;
+        Vec3<Vec2<float>> psa;
         Vec3<float> psz, areas;
         bool all_in = true;
         for_int(i, 3) {
-          psa[i] = Point(0.f, 0.f, 0.f);
-          if (!HB::world_to_vdc(pa[i] * t, psa[i][0], psa[i][1], psz[i])) {
+          auto [zs, xys] = HB::world_to_vdc(pa[i] * t);
+          if (xys) {
+            psz[i] = zs;
+            psa[i] = *xys;
+          } else {
             all_in = false;
             break;
           }
         }
         if (!all_in) continue;
-        Point ps(concat(yx.rev(), V(0.f)));
         for_int(i, 3) areas[i] = determ2d(psa[mod3(i + 1)], psa[i], ps) * .5f;
-        if (areas[0] < 0 || areas[1] < 0 || areas[2] < 0) continue;
+        if (areas[0] < 0.f || areas[1] < 0.f || areas[2] < 0.f) continue;
         float z = max({psz[0], psz[1], psz[2]});
         if (z > minz) continue;
         minz = z;
         selected_face = {obn, &mesh, f};
       }
     }
-    if (selected_face.f) return selected_face;
     if (subdivmode && obn == 1) break;  // no more objects
   }
+  if (selected_face.f) return selected_face;
   return {};
 }
 
@@ -539,8 +545,8 @@ void crop_mesh_to_view() {
     for (Face f : mesh.faces()) {
       bool all_out = true;
       for (Vertex v : mesh.vertices(f)) {
-        float xo, yo, zo;
-        if (HB::world_to_vdc(mesh.point(v) * t, xo, yo, zo) && xo >= 0.f && xo <= 1.f && yo >= 0.f && yo <= 1.f) {
+        auto [zs, xys] = HB::world_to_vdc(mesh.point(v) * t);
+        if (xys && (*xys)[0] >= 0.f && (*xys)[0] <= 1.f && (*xys)[1] >= 0.f && (*xys)[1] <= 1.f) {
           all_out = false;
           break;
         }

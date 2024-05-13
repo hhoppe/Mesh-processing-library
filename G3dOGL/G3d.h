@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_G3DOGL_G3D_H_
 #define MESH_PROCESSING_G3DOGL_G3D_H_
 
+#include <optional>
+
 #include "G3dOGL/HB.h"
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
@@ -59,6 +61,25 @@ extern bool spacekill;           // kill g3d when space is hit
 extern bool cur_needs_redraw;    // current window calls for a redraw
 extern bool prev_needed_redraw;  // previous window called for a redraw
 
+struct SelectedVertex {
+  int obn;
+  GMesh* mesh;
+  Vertex v;
+};
+
+struct SelectedEdge {
+  int obn;
+  GMesh *mesh;
+  Edge e;
+  Point inter;
+};
+
+struct SelectedFace {
+  int obn;
+  GMesh *mesh;
+  Face f;
+};
+
 extern int button_active;  // 0=no, 1-3=which button
 struct sselected {
   bool shift;
@@ -66,9 +87,7 @@ struct sselected {
   Vec2<float> yx;         // current location
   Vec2<float> yxio;       // change in location of button, misc. scales
   Vec2<float> yxfo;
-  int obn;
-  GMesh* mesh;
-  Vertex v;
+  std::optional<SelectedVertex> selected_vertex;
   Frame frel;  // for !object_mode, change of axis transform
 };
 extern sselected selected;

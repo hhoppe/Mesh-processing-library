@@ -59,13 +59,10 @@ void Applyq(const Frame& tq) {
     g_obs[cob].tm() = Frame::translation(-vtran) * f * Frame::translation(vtran) * g_obs[cob].t();
     return;
   }
-  GMesh& mesh = *selected.mesh;
-  Vertex v = selected.v;
   static Frame fedit;
   bool ledit = editmode && button_active != 1;  // button1 has old semantics
-  if (ledit && (!button_active || !v)) return;
-  if (ledit) fedit = g_obs[selected.obn].t();
-  // Frame::translation(mesh.point(v));
+  if (ledit && !(button_active && selected.selected_vertex)) return;
+  if (ledit) fedit = g_obs[selected.selected_vertex->obn].t();
   Frame& fm = ledit ? fedit : viewmode ? tview : g_obs[cob].tm();
   bool is_eye_move = eye_move && !viewmode && !ledit && cob != obview;
   Frame told = fm;
@@ -85,18 +82,19 @@ void Applyq(const Frame& tq) {
     g_obs[cob].tm() = told;
   }
   if (ledit) {
-    Point p = mesh.point(v) * fm * ~told;
-    mesh.set_point(v, p);
-    mesh.flags(v).flag(vflag_ok) = false;
-    mesh.gflags().flag(mflag_ok) = false;
+    auto& [_, mesh, v] = *selected.selected_vertex;
+    Point p = mesh->point(v) * fm * ~told;
+    mesh->set_point(v, p);
+    mesh->flags(v).flag(vflag_ok) = false;
+    mesh->gflags().flag(mflag_ok) = false;
     if (sizemode && anglethresh >= 0) {
       Set<Edge> eredo;
-      for (Edge e : mesh.edges(v)) eredo.enter(e);
-      for (Face f : mesh.faces(v)) {
-        if (!mesh.is_triangle(f)) continue;
-        eredo.enter(mesh.opp_edge(v, f));
+      for (Edge e : mesh->edges(v)) eredo.enter(e);
+      for (Face f : mesh->faces(v)) {
+        if (!mesh->is_triangle(f)) continue;
+        eredo.enter(mesh->opp_edge(v, f));
       }
-      recompute_sharpe(mesh, eredo);
+      recompute_sharpe(*mesh, eredo);
     }
   }
 }

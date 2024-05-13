@@ -53,7 +53,7 @@ template <typename T> class Encoding : noncopyable {
     };
     Array<P> ar;
     ar.reserve(_map.num());
-    for_map_key_value(_map, [&](const T& e, float prob) { ar.push(P{prob, make_string(e)}); });
+    for (auto& [e, prob] : _map) ar.push(P{prob, make_string(e)});
     sort(ar, [](const P& p1, const P& p2) { return p1.prob < p2.prob || (p1.prob == p2.prob && p1.str < p2.str); });
     showdf("Encoding {\n");
     for (const P& p : ar) showdf(" %s %g\n", p.str.c_str(), p.prob);
@@ -121,7 +121,7 @@ template <typename T> class Encoding : noncopyable {
       pq.reserve(_map.num());
       float max_prob = 0.f;
       for (float prob : _map.values()) max_prob = max(max_prob, prob);
-      for_map_key_value(_map, [&](const T& e, float prob) { pq.enter_unsorted(e, max_prob - prob); });
+      for (auto& [e, prob] : _map) pq.enter_unsorted(e, max_prob - prob);
       pq.sort();
       if (!assertw(tot_prob)) tot_prob = 1.f;
       float cumu_prob = 0.f;
@@ -140,7 +140,7 @@ template <typename T> class Encoding : noncopyable {
       };
       Array<P> ar;
       ar.reserve(_map.num());
-      for_map_key_value(_map, [&](const T& e, float prob) { ar.push(P{prob, cb_entry_name(e)}); });
+      for (auto& [e, prob] : _map) ar.push(P{prob, cb_entry_name(e)});
       // Sort in descending order by prob, then if equal, ascending by name.
       sort(ar, [](const P& p1, const P& p2) { return p1.prob > p2.prob || (p1.prob == p2.prob && p1.str < p2.str); });
       float cumu_prob = 0.f;

@@ -258,7 +258,6 @@ class AWMesh : public WMesh {
   int most_clw_face(int v, int f) const;  // negative if v is interior vertex
   int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
   bool is_boundary(int v, int f) const;
-  bool gather_faces(int v, int f, Array<int>& faces) const;  // ret: is_boundary
   VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
   VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
  private:

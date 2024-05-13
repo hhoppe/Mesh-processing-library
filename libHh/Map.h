@@ -9,7 +9,7 @@
 #if 0
 {
   Map<Edge, Vertex> mev;  // Default uses std::hash<K>and std::equal_to<K> (which tries operator ==).
-  for_map_key_value(mev, [&](Edge e, Vertex v) { func(e, v); });
+  for (auto& [e, v] : mev) func(e, v);
   for (Edge e : mev.keys()) func(e);
   for (Vertex v : mev.values()) func(v);
   //
@@ -118,7 +118,7 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
   values_range values() { return values_range(*this); }
   cvalues_range cvalues() { return cvalues_range(*this); }
   cvalues_range values() const { return cvalues_range(*this); }
-  // for for_map_key_value and HH_DECLARE_OSTREAM_RANGE(Map<K, V>):
+  // for "for (auto& [k, v] : map)" and HH_DECLARE_OSTREAM_RANGE(Map<K, V>):
   bciter begin() const { return _m.begin(); }
   bciter end() const { return _m.end(); }
 
@@ -254,13 +254,6 @@ template <typename K, typename V, typename Hash = std::hash<K>, typename Equal =
   }
   // Default operator=() and copy_constructor are safe.
 };
-
-// Iterate over both keys and values simultaneously
-template <typename K, typename V, typename Hash = std::hash<K>, typename Equal = std::equal_to<K>,
-          typename Func = void(const K& key, const V& val)>
-inline void for_map_key_value(const Map<K, V, Hash, Equal>& map, Func func) {
-  for (auto& [key, value] : map) func(key, value);
-}
 
 template <typename K, typename V> HH_DECLARE_OSTREAM_RANGE(Map<K, V>);
 template <typename K, typename V> HH_DECLARE_OSTREAM_EOL(Map<K, V>);

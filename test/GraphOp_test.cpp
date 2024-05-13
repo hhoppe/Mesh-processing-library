@@ -64,22 +64,28 @@ void do_ints() {
   // graph_symmetric_closure(g);
   SHOW("symclosure:");
   show_graph(g, true);
-  auto gmst = graph_mst(g, fdist());
-  show_graph(gmst);
+  {
+    auto [gmst, is_connected] = graph_mst(g, fdist());
+    assertx(is_connected);
+    show_graph(gmst);
+  }
   g.enter_undirected(5, 6);
-  gmst = graph_mst(g, fdist());
-  show_graph(gmst);
-  g.enter(8);
-  g.enter(9);
-  g.enter(10);
-  g.enter_undirected(10, 8);
-  g.enter_undirected(8, 9);
-  SHOW(graph_num_components(g));
-  g.enter_undirected(9, 7);
-  SHOW(graph_num_components(g));
-  // EMST of 7 points 0..6 on the Real line (easy)
-  gmst = graph_mst(7, fidist());
-  show_graph(gmst);
+  {
+    auto [gmst, is_connected] = graph_mst(g, fdist());
+    assertx(is_connected);
+    show_graph(gmst);
+    g.enter(8);
+    g.enter(9);
+    g.enter(10);
+    g.enter_undirected(10, 8);
+    g.enter_undirected(8, 9);
+    SHOW(graph_num_components(g));
+    g.enter_undirected(9, 7);
+    SHOW(graph_num_components(g));
+    // EMST of 7 points 0..6 on the Real line (easy)
+    gmst = graph_mst(7, fidist());
+    show_graph(gmst);
+  }
 }
 
 void do_points() {

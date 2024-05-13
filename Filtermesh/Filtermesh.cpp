@@ -1112,7 +1112,7 @@ void do_trisubdiv() {
     }
     mapvp.enter(v, to_Point(normalized(h)));
   }
-  for_map_key_value(mapvp, [&](Vertex v, const Point& p) { mesh.set_point(v, p); });
+  for (auto& [v, p] : mapvp) mesh.set_point(v, p);
   // Create new triangulation.
   Array<Vertex> va;
   Vec3<Vertex> vs;
@@ -1219,12 +1219,12 @@ void do_silsubdiv() {
       mesh.set_string(fn, fstring.get());
     }
   }
-  for_map_key_value(mvv_nvb, [&](const PairVV& vv, const Vb& nvb) {
+  for (auto& [vv, nvb] : mvv_nvb) {
     if (nvb.is_sharp) {
       mesh.flags(mesh.edge(nvb.vnew, vv.first)).flag(GMesh::eflag_sharp) = true;
       mesh.flags(mesh.edge(nvb.vnew, vv.second)).flag(GMesh::eflag_sharp) = true;
     }
-  });
+  }
   // Update vertex positions.
   for (Vertex v : mesh.vertices()) {
     int nesharp = 0;

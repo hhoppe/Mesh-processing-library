@@ -361,20 +361,20 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha 
   EndFor;
 
   // area
-  for_map_key_value(anew, [&](Simplex s, float narea) {
+  for (auto& [s, narea] : anew) {
     assertx(s->isPrincipal());
     float oarea = 0.f;
     if (aold.contains(s)) oarea = aold.get(s);
     s->setArea(alpha * narea + (1.f - alpha) * oarea);
-  });
+  }
 
-  for_map_key_value(aold, [&](Simplex s, float oarea) {
+  for (auto& [s, oarea] : aold) {
     // handled by anew
     if (!s->isPrincipal()) {
       s->setArea((1.f - alpha) * oarea);
       s->setVAttribute(mold.get(s));
     }
-  });
+  }
 
   // normals
   assertx(corner_nors.num() >= nnew.num());

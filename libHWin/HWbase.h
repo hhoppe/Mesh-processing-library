@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHWIN_HWBASE_H_
 #define MESH_PROCESSING_LIBHWIN_HWBASE_H_
 
+#include <optional>
+
 #if defined(GL_VERSION)  // OpenGL
 #if defined(_WIN32)
 #include "GL/glext.h"  // possibly use local file because Windows does not come with it.
@@ -99,9 +101,9 @@ class HWbase : noncopyable {
     Warning("clipboard not implemented");
     return false;
   }
-  virtual bool copy_clipboard_to_image(Image&) {
+  virtual std::optional<Image> copy_clipboard_to_image() {
     Warning("clipboard not implemented");
-    return false;
+    return {};
   }
 
  private:

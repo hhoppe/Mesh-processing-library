@@ -950,14 +950,14 @@ void Mesh::face_renumber_id_private(Face f, int newid) {
 
 void Mesh::ok() const {
   // Check consistency of id2x (one way)
-  for_map_key_value(_id2vertex, [&](int id, Vertex v) {
+  for (auto& [id, v] : _id2vertex) {
     valid(v);
     assertx(v->_id == id);
-  });
-  for_map_key_value(_id2face, [&](int id, Face f) {
+  }
+  for (auto& [id, f] : _id2face) {
     valid(f);
     assertx(f->_id == id);
-  });
+  }
   // Look over Vertices
   Set<HEdge> sethe;
   for (Vertex v1 : vertices()) {

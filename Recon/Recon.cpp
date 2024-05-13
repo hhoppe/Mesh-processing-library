@@ -408,12 +408,12 @@ void orient_set(const Set<int>& nodes) {
   showdf("component with %d points\n", nodes.num());
   add_exterior_orientation(nodes);
   gpcpath = make_unique<Graph<int>>();
-  for (int i : nodes) gpcpath->enter(i);
-  gpcpath->enter(num);
   {
     HH_TIMER("__graphmst");
     // must be connected here!
-    assertx(graph_mst<int>(*gpcpseudo, pc_corr, *gpcpath));
+    auto [graph, is_connected] = graph_mst<int>(*gpcpseudo, pc_corr);
+    assertx(is_connected);
+    *gpcpath = std::move(graph);
   }
   int nextlink = gpcpath->out_degree(num);
   if (nextlink > 1) showdf(" num_exteriorlinks_used=%d\n", nextlink);

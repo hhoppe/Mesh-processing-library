@@ -58,24 +58,23 @@ template <typename T, typename Func_dist> Dijkstra(const Graph<T>* g, T vs, Func
 
 // *** Kruskal MST
 
-// Given a graph gnew consisting solely of vertices, computes the minimum spanning tree of undirectedg over
-//  the vertices in gnew under the cost metric fdist.  Returns is_connected.
-// Implementation: Kruskal's algorithm, O(e log(e))
-//  (Prim's algorithm is recommended when e=~n^2, see below)
+// Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
+// Implementation: Kruskal's algorithm, O(e log(e))  (Prim's algorithm is recommended when e=~n^2, see below.)
 template <typename T, typename Func = float(const T&, const T&)>
-bool graph_mst(const Graph<T>& undirectedg, Func fdist, Graph<T>& gnew) {
+auto graph_mst(const Graph<T>& undirectedg, Func fdist) {
+  std::pair<Graph<T>, bool> pair;
+  Graph<T>& gnew = pair.first;
+  for (const T& v : undirectedg.vertices()) gnew.enter(v);
   int nv = 0, nebefore = 0;
   struct tedge {
     T v1, v2;
     float w;
   };
   Array<tedge> tedges;
-  for (const T& v1 : gnew.vertices()) {
+  for (const T& v1 : undirectedg.vertices()) {
     nv++;
-    ASSERTX(!gnew.out_degree(v1));
     for (const T& v2 : undirectedg.edges(v1)) {
       if (v1 < v2) continue;
-      ASSERTXX(gnew.contains(v2));
       nebefore++;
       tedges.push(tedge{v1, v2, fdist(v1, v2)});
     }
@@ -92,17 +91,8 @@ bool graph_mst(const Graph<T>& undirectedg, Func fdist, Graph<T>& gnew) {
     if (neadded == nv - 1) break;
   }
   showf("graph_mst: %d vertices, %d/%d edges considered, %d output\n", nv, neconsidered, nebefore, neadded);
-  return neadded == nv - 1;
-}
-
-// Returns an undirected graph that is the MST of undirectedg, or empty if g is not connected.
-template <typename T, typename Func = float(const T&, const T&)>
-Graph<T> graph_mst(const Graph<T>& undirectedg, Func fdist) {
-  assertx(!undirectedg.empty());
-  Graph<T> gnew;
-  for (const T& v : undirectedg.vertices()) gnew.enter(v);
-  if (!graph_mst(undirectedg, fdist, gnew)) gnew.clear();
-  return gnew;
+  pair.second = neadded == nv - 1;
+  return pair;
 }
 
 // *** Prim MST

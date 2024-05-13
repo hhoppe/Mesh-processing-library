@@ -58,7 +58,7 @@ class HW : public HWbase {
 
   // clipboard:
   bool copy_image_to_clipboard(const Image& image) override;
-  bool copy_clipboard_to_image(Image& image) override;
+  std::optional<Image> copy_clipboard_to_image() override;
 
  private:
   MMRESULT _sk_timerID{0};

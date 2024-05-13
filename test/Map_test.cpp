@@ -35,12 +35,12 @@ int main() {
     assertw(m.remove(998) == 999);
     assertw(!m.contains(998));
     assertw(m.retrieve(2) == 2 * 8);
-    for_map_key_value(m, [&](int k, int v) { assertw(k * 8 == v); });
+    for (auto& [k, v] : m) assertw(k * 8 == v);
     int sk = 0, sv = 0;
-    for_map_key_value(m, [&](const int& k, const int& v) {
+    for (auto& [k, v] : m) {
       sk += k;
       sv += v;
-    });
+    }
     assertw(sk == (0 + 99) * (100 / 2));
     assertw(sv == (0 + 99 * 8) * (100 / 2));
     assertw(!m.contains(100));
@@ -49,10 +49,10 @@ int main() {
     assertw(m.num() == 50);
     sk = 0;
     sv = 0;
-    for_map_key_value(m, [&](int k, int v) {
+    for (auto& [k, v] : m) {
       sk += k;
       sv += v;
-    });
+    }
     assertw(sk == (50 + 99) * (50 / 2));
     assertw(sv == (50 * 8 + 99 * 8) * (50 / 2));
     sk = 0;

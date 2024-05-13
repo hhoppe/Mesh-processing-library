@@ -1410,12 +1410,13 @@ bool HW::copy_image_to_clipboard(const Image& image) {
   return ok;
 }
 
-bool HW::copy_clipboard_to_image(Image& image) {
+std::optional<Image> HW::copy_clipboard_to_image() {
+  std::optional<Image> optional_image;
   if (IsClipboardFormatAvailable(CF_BITMAP)) {
     Warning("ignoring CF_BITMAP for now");
   }
   if (IsClipboardFormatAvailable(CF_DIB)) {
-    if (!assertw(OpenClipboard(nullptr))) return false;
+    if (!assertw(OpenClipboard(nullptr))) return {};
     HANDLE hGlobal = assertx(GetClipboardData(CF_DIB));
     size_t size = assertx(GlobalSize(hGlobal));
     assertx(size >= sizeof(bmp_BITMAPINFOHEADER));
@@ -1424,6 +1425,8 @@ bool HW::copy_clipboard_to_image(Image& image) {
       {
         bmp_BITMAPINFOHEADER& bmih = *reinterpret_cast<bmp_BITMAPINFOHEADER*>(buf);
         assertx(bmih.biSize == 40);
+        optional_image = Image();
+        Image& image = *optional_image;
         image.init(V(bmih.biHeight, bmih.biWidth));
         assertx(bmih.biBitCount == 8 || bmih.biBitCount == 24 || bmih.biBitCount == 32);
         const int ncomp = bmih.biBitCount / 8;
@@ -1452,9 +1455,8 @@ bool HW::copy_clipboard_to_image(Image& image) {
       GlobalUnlock(hGlobal);  // decrement reference count; nonzero because still owned by clipboard
     }
     assertx(CloseClipboard());
-    return true;
   }
-  return false;
+  return optional_image;
 }
 
 }  // namespace hh

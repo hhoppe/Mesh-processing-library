@@ -472,22 +472,6 @@ int AWMesh::most_ccw_face(int v, int f) const {
 
 bool AWMesh::is_boundary(int v, int f) const { return most_ccw_face(v, f) != k_undefined; }
 
-bool AWMesh::gather_faces(int v, int f, Array<int>& faces) const {
-  int ff = f;
-  faces.init(0);
-  do {
-    faces.push(ff);
-    ff = _fnei[ff].faces[mod3(get_jvf(v, ff) + 1)];
-  } while (ff != k_undefined && ff != f);
-  if (ff == f) return false;
-  ff = _fnei[f].faces[mod3(get_jvf(v, f) + 2)];
-  while (ff != k_undefined) {
-    faces.push(ff);
-    ff = _fnei[ff].faces[mod3(get_jvf(v, ff) + 2)];
-  }
-  return true;
-}
-
 void AWMesh::rotate_ccw(int v, int& w, int& f) const {
   f = _fnei[f].faces[mod3(get_jvf(v, f) + 1)];
   w = f == k_undefined ? k_undefined : get_wvf(v, f);

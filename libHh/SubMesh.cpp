@@ -92,7 +92,7 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
 // this=mconv*this
 void Mvcvh::compose(const Mvcvh& mconv) {
   Mvcvh nthis;
-  for_map_key_value(mconv, [&](Vertex v, const Combvh& comb) {
+  for (auto& [v, comb] : mconv) {
     assertx(is_zero(comb.h));
     if (!comb.c.num()) {
       // identity assumed, keep unchanged
@@ -104,7 +104,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
       if (debug()) assertx(ncomb.is_combination());
       nthis.enter(v, std::move(ncomb));
     }
-  });
+  }
   // swap(*this, nthis) is wrong because nthis only has entries for changed vertices.
   while (!nthis.empty()) {
     Vertex v = nthis.get_one_key();
@@ -469,12 +469,12 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
       _m.create_face(vs[0], vs[1], vs[2]);
     }
   }
-  for_map_key_value(mvvnewv, [&](const Svv& vv, const Snvf& nvf) {
+  for (auto& [vv, nvf] : mvvnewv) {
     if (nvf.eflags) {
       _m.flags(_m.edge(nvf.vnew, vv._v1)) = nvf.eflags;
       _m.flags(_m.edge(nvf.vnew, vv._v2)) = nvf.eflags;
     }
-  });
+  }
   if (1) {  // need to fix up some values
     for (Vertex v : _m.vertices()) {
       int nsharpe = 0;
@@ -752,12 +752,12 @@ Face SubMesh::get_face(Face of, int index) const {
 
 void SubMesh::show_mvcvh(const Mvcvh& mvcvh) const {
   showf("Mvcvh = {\n");
-  for_map_key_value(mvcvh, [&](Vertex v, const Combvh& comb) {
+  for (auto& [v, comb] : mvcvh) {
     showf(" vertex %d {\n", _m.vertex_id(v));
     showf("  h[3]=%g\n", comb.h[3]);
     for_combination(comb.c, [&](Vertex vv, float val) { showf("  v%-4d  %g\n", _m.vertex_id(vv), val); });
     showf(" }\n");
-  });
+  }
   showf("}\n");
 }
 

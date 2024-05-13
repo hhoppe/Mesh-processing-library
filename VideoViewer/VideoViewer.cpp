@@ -2433,12 +2433,12 @@ bool DerivedHW::key_press(string skey) {
         }
         case 'V' - 64: {  // C-v: paste clipboard image as new object
           std::lock_guard<std::mutex> lock(g_mutex_obs);
-          Image image;
-          if (!copy_clipboard_to_image(image)) throw "could not copy an image from clipboard";
+          auto image = copy_clipboard_to_image();
+          if (!image) throw "could not copy an image from clipboard";
           const bool bgra = false;
           const bool unsaved = true;
           string filename = get_current_directory() + "/v1.png";
-          g_obs.push(make_unique<Object>(std::move(image), filename, bgra, unsaved));
+          g_obs.push(make_unique<Object>(std::move(*image), filename, bgra, unsaved));
           set_video_frame(getobnum() - 1, k_before_start);
           reset_window(determine_default_window_dims(g_frame_dims));
           break;

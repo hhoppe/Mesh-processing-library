@@ -106,11 +106,6 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   const T* end() const { return a() + n; }
   T* data() { return a(); }
   const T* data() const { return a(); }
-  // Enable structured bindings:
-  template<std::size_t Index> auto&& get()       &  { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get()       && { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get() const &  { return get_helper<Index>(*this); }
-  template<std::size_t Index> auto&& get() const && { return get_helper<Index>(*this); }
   static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
   static constexpr int Num = n;
   template <typename Func = T(int)> static type create(Func func) {
@@ -122,6 +117,11 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     *this *= 1.f / sqrt(sum2);
     return true;
   }
+  // Enable structured bindings:
+  template<std::size_t Index> auto&& get()       &  { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get()       && { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get() const &  { return get_helper<Index>(*this); }
+  template<std::size_t Index> auto&& get() const && { return get_helper<Index>(*this); }
   // Defining friend functions in-class is convenient but unfortunately _MSC_VER (VS 2019) attempts to instantiate
   // all these and this fails if "T - T" or "sqrt(T)" are undefined.
   // friend T mag2(const type& vec) { return dot(vec, vec); }

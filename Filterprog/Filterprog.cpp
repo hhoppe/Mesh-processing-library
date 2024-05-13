@@ -76,7 +76,7 @@ class MapWedgeInfo {
 
 void MapWedgeInfo::copy_from(const MapWedgeInfo& mwi) {
   assertx(!_map.num());
-  for_map_key_value(mwi._map, [&](int wid, const WedgeInfo& wi) { set(wid, wi); });
+  for (auto& [wid, wi] : mwi._map) set(wid, wi);
 }
 
 MapWedgeInfo gcwinfo;  // current wedge information

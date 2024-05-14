@@ -277,7 +277,11 @@ void CloseIfOpen() {
       const GMesh& mesh = *g_obs[robn].get_mesh();
       if (total_vertices == mesh.num_vertices()) {
         showf("%s\n", s.c_str());
-        showf(" %s\n", mesh_genus_string(mesh).c_str());
+        if (mesh.num_vertices() <= 50'000) {  // For speed, only compute on smaller meshes.
+          showf(" %s\n", mesh_genus_string(mesh).c_str());
+        } else {
+          showf(" v=%d f=%d e=%d\n", mesh.num_vertices(), mesh.num_faces(), mesh.num_edges());
+        }
       } else {
         showf("%s %dv %df\n", s.c_str(), total_vertices, total_faces);
       }

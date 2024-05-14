@@ -2424,11 +2424,11 @@ void do_info() {
   showdf("%s\n", mesh_genus_string(mesh).c_str());
   {
     HH_STAT(Sbound);
-    Sbound = mesh_stat_boundaries(mesh);
+    Sbound.add(mesh_stat_boundaries(mesh));
   }
   {
     HH_STAT(Scompf);
-    Scompf = mesh_stat_components(mesh);
+    Scompf.add(mesh_stat_components(mesh));
   }
   {
     HH_STAT(Snormsolida);

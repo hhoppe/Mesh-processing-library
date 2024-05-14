@@ -349,6 +349,9 @@ int main(int argc, const char** argv) {
   }
   HB::set_current_object(cob);
   HB::open();
+  if (1) {  // Faster exit, without destruction of Pool data, etc.
+    exit_immediately(0);
+  }
   for (int i = g_obs.first; i <= g_obs.last; i++) {
     g_obs[i].clear();
     HB::clear_segment(i);

@@ -794,7 +794,7 @@ void ShowInfo() {
     if (pmesh != opmesh || nfaces != onfaces) {
       opmesh = pmesh;
       onfaces = nfaces;
-      if (1) {
+      if (pmesh->num_vertices() <= 50'000) {  // For speed, only compute on smaller meshes.
         str = mesh_genus_string(*pmesh);
       } else {
         str = sform("vertices=%d faces=%d", pmesh->num_vertices(), pmesh->num_faces());

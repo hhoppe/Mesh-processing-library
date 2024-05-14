@@ -11,6 +11,7 @@
 #include "libHh/Polygon.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
+#include "libHh/Stack.h"
 
 namespace hh {
 
@@ -62,6 +63,8 @@ int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, 
   }
   return neswapped;
 }
+
+const FlagMask fflag_visited = Mesh::allocate_Face_flag();
 
 }  // namespace
 
@@ -123,12 +126,31 @@ Stat mesh_stat_boundaries(const Mesh& mesh) {
 
 Stat mesh_stat_components(const Mesh& mesh) {
   Stat Scompf;
-  Set<Face> setfvis;  // faces already considered
-  for (Face f : mesh.faces()) {
-    if (setfvis.contains(f)) continue;
-    Set<Face> setf = gather_component(mesh, f);
-    for (Face ff : setf) setfvis.enter(ff);
-    Scompf.enter(setf.num());
+  if (0) {
+    Set<Face> setfvis;  // faces already considered
+    for (Face f : mesh.faces()) {
+      if (setfvis.contains(f)) continue;
+      Set<Face> setf = gather_component(mesh, f);
+      for (Face ff : setf) setfvis.enter(ff);
+      Scompf.enter(setf.num());
+    }
+  } else {  // Faster.
+    Mesh& mesh2 = const_cast<Mesh&>(mesh);
+    for (Face f : mesh.faces()) mesh2.flags(f).flag(fflag_visited) = false;
+    for (Face f : mesh.faces()) {
+      if (!mesh2.flags(f).flag(fflag_visited).set(true)) {
+        int num_faces = 0;
+        Stack<Face> stack;
+        stack.push(f);
+        while (!stack.empty()) {
+          f = stack.pop();
+          num_faces++;
+          for (Face f2 : mesh.faces(f))
+            if (!mesh2.flags(f2).flag(fflag_visited).set(true)) stack.push(f2);
+        }
+        Scompf.enter(num_faces);
+      }
+    }
   }
   return Scompf;
 }

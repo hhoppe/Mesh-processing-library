@@ -4978,8 +4978,9 @@ void read_ply(const string& filename) {
   bool binary = false;
   bool bigendian = false;
   int len_nfv = 1;  // default uchar
-  int state = 0;    // 0=undef, 1=vert, 2=face
-  int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0, flist = 0, fnother = 0, fnotherb = 0;
+  int state = 0;    // 0=undef, 1=vert, 2=face_before_vertex_indices, 3=face_after_vertex_indices
+  int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0, flist = 0;
+  int fnskip = 0, fnskipb = 0, fnother = 0, fnotherb = 0;
   bool skip_vvalue = false;
   for (string sline;;) {
     assertx(my_getline(fi(), sline));
@@ -4998,6 +4999,8 @@ void read_ply(const string& filename) {
       assertx(state == 0);
       binary = true;
       bigendian = false;
+    } else if (begins_with(sline, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
+      assertw(state == 0);
     } else if (begins_with(sline, "element vertex ")) {
       assertx(state == 0);
       int nv = 0;
@@ -5031,18 +5034,21 @@ void read_ply(const string& filename) {
     } else if (sline == "property list uchar int vertex_indices" ||
                sline == "property list uchar uint vertex_indices") {
       assertx(state == 2);
-      assertx(fnother == 0);
       flist++;
+      state = 3;
     } else if (sline == "property list int int vertex_indices") {
       assertx(state == 2);
-      assertx(fnother == 0);
       flist++;
       len_nfv = 4;
+      state = 3;
     } else if (begins_with(sline, "property float")) {
       if (state == 1) {
         vnotherb += 4;
         vnother++;
       } else if (state == 2) {
+        fnskipb += 4;
+        fnskip++;
+      } else if (state == 3) {
         fnotherb += 4;
         fnother++;
       } else {
@@ -5053,6 +5059,9 @@ void read_ply(const string& filename) {
         vnotherb += 4;
         vnother++;
       } else if (state == 2) {
+        fnskipb += 4;
+        fnskip++;
+      } else if (state == 3) {
         fnotherb += 4;
         fnother++;
       } else {
@@ -5063,6 +5072,9 @@ void read_ply(const string& filename) {
         vnotherb += 1;
         vnother++;
       } else if (state == 2) {
+        fnskipb += 1;
+        fnskip++;
+      } else if (state == 3) {
         fnotherb += 1;
         fnother++;
       } else {
@@ -5090,10 +5102,7 @@ void read_ply(const string& filename) {
         else
           from_dos(&ply_vpos[i][c]);
       }
-      if (skip_vvalue) {
-        float dummy;
-        assertx(read_binary_raw(fi(), ArView(dummy)));
-      }
+      if (skip_vvalue) fi().ignore(sizeof(float));
       if (vnnor) assertx(read_binary_raw(fi(), ply_vnor[i].view()));
       for_int(c, vnnor) {
         if (bigendian)
@@ -5102,12 +5111,10 @@ void read_ply(const string& filename) {
           from_dos(&ply_vnor[i][c]);
       }
       for_int(c, vnrgb) assertx(read_binary_raw(fi(), ArView(ply_vrgb[i][c])));
-      for_int(c, vnotherb) {
-        uchar dummy;
-        assertx(read_binary_raw(fi(), ArView(dummy)));
-      }
+      if (vnotherb) fi().ignore(vnotherb);
     }
     for_int(i, ply_findices.num()) {
+      if (fnskipb) fi().ignore(fnskipb);
       int ni;
       if (len_nfv == 1) {
         uchar vi = 0;
@@ -5129,10 +5136,7 @@ void read_ply(const string& filename) {
           from_dos(&ply_findices[i][j]);
         assertx(ply_findices[i][j] < ply_vpos.num());
       }
-      for_int(c, fnotherb) {
-        uchar dummy;
-        assertx(read_binary_raw(fi(), ArView(dummy)));
-      }
+      if (fnotherb) fi().ignore(fnotherb);
     }
   } else {
     for_int(i, ply_vpos.num()) {
@@ -5154,6 +5158,10 @@ void read_ply(const string& filename) {
     }
     // SHOW(ply_vpos.last());
     for_int(i, ply_findices.num()) {
+      for_int(c, fnskip) {
+        float dummy;
+        assertx(fi() >> dummy);
+      }
       int ni = 0;
       assertx(fi() >> ni);
       ply_findices[i].init(ni);

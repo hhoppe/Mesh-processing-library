@@ -665,11 +665,6 @@ void SimplicialComplex::readLine(const char* str) {
     int vi1, vi2;
     assertx(sscanf(sline, "Unify %d %d", &vi1, &vi2) == 2);
     unify(getSimplex(0, vi1), getSimplex(0, vi2));
-    if (num(2) == 2018) {
-      write(std::cout);
-      std::cout.flush();
-      exit(0);
-    }
   } else {
     // default
   }

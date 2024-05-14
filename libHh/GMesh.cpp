@@ -113,20 +113,18 @@ namespace {
 
 inline int str_key_nchars(const char* s) {
   const char* p = s;
-  int i = 0;
   for (;;) {
-    char ch = *p;
+    const char ch = *p;
     if (ch == ' ' || ch == '=' || ch == 0) break;
     p++;
-    i++;
   }
-  return i;  // narrow_cast<int>(p-s);
+  return narrow_cast<int>(p - s);
 }
 
 inline const char* str_last_non_space(const char* s) {
   const char* p = s;
   for (;;) {
-    char ch = *p;
+    const char ch = *p;
     if (ch == ' ' || ch == 0) break;
     p++;
   }
@@ -205,7 +203,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
     if (Warning("Cannot parse StringKey value")) SHOW(_str, _s + nch + 1);
     return false;
   }
-  vb = _s + nch + 1, vl = narrow_cast<int>(send - (_s + nch));
+  vb = _s + nch + 1, vl = narrow_cast<int>(send - vb + 1);
   _s = send + 1;
   if (_s[0] == ' ') _s++;
   return true;

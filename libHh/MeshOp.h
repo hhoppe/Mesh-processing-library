@@ -36,7 +36,7 @@ string mesh_genus_string(const Mesh& mesh);
 
 // For faces with > 3 sides, find a good triangulation of the vertices.
 // Return: success (may fail if some edges already exist).
-bool triangulate_face(GMesh& mesh, Face f);
+[[nodiscard]] bool triangulate_face(GMesh& mesh, Face f);
 
 // ret: cos of signed angle away from "flatness" (== exterior angle)
 // range -1..1  (or -2 if a triangle is degenerate)

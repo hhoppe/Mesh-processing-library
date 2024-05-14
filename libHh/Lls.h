@@ -38,9 +38,9 @@ class Lls : noncopyable {
     ASSERTX(ar.num() == _n);
     for_int(r, _n) enter_xest_rc(r, c, ar[r]);
   }
-  void enter_xest_rc(int r, int c, float val) { _x[c][r] = val; }          // r < _n, c < _nd
-  virtual bool solve(double* rssb = nullptr, double* rssa = nullptr) = 0;  // ret: success
-  void get_x(MatrixView<float> mat);                                       // [_n][_nd]
+  void enter_xest_rc(int r, int c, float val) { _x[c][r] = val; }                        // r < _n, c < _nd
+  [[nodiscard]] virtual bool solve(double* rssb = nullptr, double* rssa = nullptr) = 0;  // ret: success
+  void get_x(MatrixView<float> mat);                                                     // [_n][_nd]
   void get_x_r(int r, ArrayView<float> ar) {
     ASSERTX(ar.num() == _nd);
     for_int(c, _nd) ar[c] = get_x_rc(r, c);

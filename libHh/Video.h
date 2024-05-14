@@ -180,9 +180,9 @@ class RVideo {
   const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }  // (ysize, xsize)
   int ysize() const { return _dims[1]; }
   int xsize() const { return _dims[2]; }
-  bool read(MatrixView<Pixel> frame);  // frame(ysize(), xsize()); ret: false if EOF
-  bool read(Nv12View frame);           // ret: false if EOF
-  bool discard_frame();                // skip the next frame; ret: success (false if EOF)
+  [[nodiscard]] bool read(MatrixView<Pixel> frame);  // frame(ysize(), xsize()); ret: false if EOF
+  [[nodiscard]] bool read(Nv12View frame);           // ret: false if EOF
+  [[nodiscard]] bool discard_frame();                // skip the next frame; ret: success (false if EOF)
   class Implementation;
 
  private:

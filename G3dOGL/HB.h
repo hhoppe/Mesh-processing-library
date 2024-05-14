@@ -24,10 +24,11 @@ namespace HB {
 // Screen coordinate system is (y = 0, x = 0) top left to (y = 1, x = 1) bottom right.
 // Hither and yonder planes may be 0.f (disabled).
 
+// ret: success
 bool init(Array<string>& aargs,
           bool (*pfkeyp)(const string& s),  // ret: handled
           void (*pfbutp)(int butnum, bool pressed, bool shift, const Vec2<float>& yx), void (*pfwheel)(float v),
-          void (*pfdraw)());  // ret: success
+          void (*pfdraw)());
 
 // call after init() and before open():
 void set_window_title(string s);

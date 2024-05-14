@@ -46,12 +46,12 @@ template <typename T> std::ostream& write_binary_std(std::ostream& os, CArrayVie
 }
 
 // Read an array of elements without any Endian byte-reordering.  Ret: success.
-template <typename T> bool read_raw(FILE* file, ArrayView<T> ar) {
+template <typename T> [[nodiscard]] bool read_raw(FILE* file, ArrayView<T> ar) {
   return fread(ar.data(), ar.num() * sizeof(T), 1, file) == 1;
 }
 
 // Write an array of elements without any Endian byte-reordering.  Ret: success.
-template <typename T> bool write_raw(FILE* file, CArrayView<T> ar) {
+template <typename T> [[nodiscard]] bool write_raw(FILE* file, CArrayView<T> ar) {
   return fwrite(ar.data(), ar.num() * sizeof(T), 1, file) == 1;
 }
 

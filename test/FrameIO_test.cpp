@@ -12,6 +12,6 @@ int main() {
       SHOW_PRECISE(object_frame->zoom);
     }
     object_frame->binary = frame_binary;
-    FrameIO::write(std::cout, *object_frame);
+    assertx(FrameIO::write(std::cout, *object_frame));
   }
 }

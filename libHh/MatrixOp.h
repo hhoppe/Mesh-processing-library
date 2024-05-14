@@ -17,7 +17,7 @@ template <typename T> CStridedArrayView<T> column(CMatrixView<T> mat, int x) { r
 template <typename T> StridedArrayView<T> column(MatrixView<T> mat, int x) { return grid_column<0>(mat, V(0, x)); }
 
 // ret: success
-template <typename T> bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
+template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
   static_assert(std::is_floating_point_v<T>);
   // mi.data() == mo.data() is OK
   const int n = mi.ysize();

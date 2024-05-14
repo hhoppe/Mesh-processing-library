@@ -28,8 +28,8 @@ std::optional<ObjectFrame> read(RBuffer& b);
 Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.
-bool write(std::ostream& os, const ObjectFrame& object_frame);  // ret is_success
-bool write(WBuffer& b, const ObjectFrame& object_frame);        // ret is_success
+[[nodiscard]] bool write(std::ostream& os, const ObjectFrame& object_frame);  // ret is_success
+[[nodiscard]] bool write(WBuffer& b, const ObjectFrame& object_frame);        // ret is_success
 string create_string(const ObjectFrame& object_frame);
 
 // Detect special frames.

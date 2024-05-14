@@ -25,21 +25,22 @@ template <typename T, int n> class Qem {
 
   // Find min.  All these return "success"; minp unchanged if unsuccessful:
   // regular version
-  bool compute_minp(float* minp) const;
+  [[nodiscard]] bool compute_minp(float* minp) const;
   // First nfixed variables are fixed as given; solve for remainder.
-  bool compute_minp_constr_first(float* minp, int nfixed) const;
+  [[nodiscard]] bool compute_minp_constr_first(float* minp, int nfixed) const;
   // Linear functional constraint: lf[0 .. n - 1] * x + lf[n] == 0
-  bool compute_minp_constr_lf(float* minp, const float* lf) const;
+  [[nodiscard]] bool compute_minp_constr_lf(float* minp, const float* lf) const;
   // Sparse version w/ independent attribs and lf constr only on geom
-  bool fast_minp_constr_lf(float* minp, const float* lf) const;
+  [[nodiscard]] bool fast_minp_constr_lf(float* minp, const float* lf) const;
 
   // Special versions for wedge-based mesh simplification:
   // They take multiple quadrics (*this == ar_q[0]) and assume that the
   //  first 3 rows of matrix variables are shared.
   // regular version
-  bool ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp) const;
+  [[nodiscard]] bool ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp) const;
   // linear functional constraint must be volumetric!
-  bool ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp, const float* lf) const;
+  [[nodiscard]] bool ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp,
+                                               const float* lf) const;
 
   friend std::ostream& operator<<(std::ostream& os, const Qem<T, n>& qem) {
     os << "Qem{\n a={\n";

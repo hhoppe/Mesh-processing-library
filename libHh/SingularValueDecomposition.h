@@ -16,7 +16,7 @@ namespace hh {
 // Implicitly computes the product A*A^T and then uses a sequence of Jacobi rotations to diagonalize it.
 // Singular values are not sorted.
 template <typename T>
-bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT);
+[[nodiscard]] bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT);
 
 // Modify the singular value decomposition U * diag(S) * VT^T such that the singular values in S are
 // in decreasing order.

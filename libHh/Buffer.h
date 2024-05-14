@@ -40,7 +40,7 @@ class RBuffer : public Buffer {
   char operator[](int bi) const;
   bool has_line() const;
   // next dies if len not sufficient, includes '\n', ret success
-  bool extract_line(string& str);
+  [[nodiscard]] bool extract_line(string& str);
   char get_char(int bi) const;  // same as operator[]
   int get_int(int bi) const;
   short get_short(int bi) const;

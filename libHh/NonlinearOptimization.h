@@ -25,7 +25,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     _debug = getenv_int("NLOPT_DEBUG");
   }
   void set_max_neval(int max_neval) { _max_neval = max_neval; }  // default is -1 which signifies infinity
-  bool solve() { return solve_i(); }                             // ret: success
+  [[nodiscard]] bool solve() { return solve_i(); }               // ret: success
  private:
   // ** Approach-independent:
   ArrayView<double> _x;  // view of user-supplied vector; stores initial estimate and final solution
@@ -72,7 +72,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   }
   // Backtracking line search to find approximate minimum of f=_eval() along direction p,
   //  with initial step size alpha.  Updates number of evaluations neval.  Ret: success.
-  bool line_search(double& f, CArrayView<double> p, double& alpha, int& neval, int iter) {
+  [[nodiscard]] bool line_search(double& f, CArrayView<double> p, double& alpha, int& neval, int iter) {
     // https://en.wikipedia.org/wiki/Backtracking_line_search
     const double finit = f;  // initial f
     _xinit.assign(_x);       // initial _x

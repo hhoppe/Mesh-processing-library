@@ -13,12 +13,15 @@ namespace hh {
 
 static Vec4<float> normalizef(const Vec3<float>& v) { return concat(v * .5f + .5f, V(0.f)); }
 
-struct NormalMapping_ogl2 final : NormalMapping {
+class NormalMapping_ogl2 final : public NormalMapping {
+ public:
   using type = NormalMapping_ogl2;
   // Great tutorial: "GLSL Tutorial von Lighthouse3D"
   // https://web.archive.org/web/20170204132401/http://zach.in.tu-clausthal.de/teaching/cg_literatur/glsl_tutorial/
+
   string name() const override { return "ogl2"; }
   bool is_supported() const override { return assertx(glGetString(GL_VERSION))[0] >= '2'; }
+
   void init() override {
     USE_GL_EXT(glCreateShader, PFNGLCREATESHADERPROC);
     USE_GL_EXT(glShaderSource, PFNGLSHADERSOURCEPROC);
@@ -76,6 +79,7 @@ struct NormalMapping_ogl2 final : NormalMapping {
     assertx(glIsProgram(program_id));
     assertx(!gl_report_errors());
   }
+
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
     Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
@@ -102,11 +106,13 @@ struct NormalMapping_ogl2 final : NormalMapping {
     glUniform1fv(loc_ambient, 1, V(ambient).data());
     assertx(!gl_report_errors());
   }
+
   void activate() override {
     USE_GL_EXT(glUseProgram, PFNGLUSEPROGRAMPROC);
     glUseProgram(program_id);
     assertx(!gl_report_errors());
   }
+
   void deactivate() override {
     USE_GL_EXT(glUseProgram, PFNGLUSEPROGRAMPROC);
     glUseProgram(0);  // go back to fixed-function pipeline; see https://www.opengl.org/sdk/docs/man2/
@@ -116,7 +122,13 @@ struct NormalMapping_ogl2 final : NormalMapping {
     // glDeleteShader(fragment_shader_id);
     // glDeleteProgram(program_id);
   }
-  //
+
+  static type& instance() {
+    static type& f = *new type;
+    return f;
+  }
+
+ private:
   GLuint program_id;
   GLuint fragment_shader_id;
   const string unused_vertex_shader = &R"(
@@ -147,16 +159,15 @@ struct NormalMapping_ogl2 final : NormalMapping {
             gl_FragColor.a = 1.;
         }
     )"[1];
-  static type& instance() {
-    static type& f = *new type;
-    return f;
-  }
 };
 
-struct NormalMapping_frag1 final : NormalMapping {
+class NormalMapping_frag1 final : public NormalMapping {
+ public:
   using type = NormalMapping_frag1;
+
   string name() const override { return "frag1"; }
   bool is_supported() const override { return contains(gl_extensions_string(), "GL_ARB_fragment_program"); }
+
   void init() override {
     USE_GL_EXT(glGenProgramsARB, PFNGLGENPROGRAMSARBPROC);
     USE_GL_EXT(glBindProgramARB, PFNGLBINDPROGRAMARBPROC);
@@ -180,6 +191,7 @@ struct NormalMapping_frag1 final : NormalMapping {
     assertx(glIsProgramARB(program_id));
     assertx(!gl_report_errors());
   }
+
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
     Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
@@ -202,18 +214,26 @@ struct NormalMapping_frag1 final : NormalMapping {
     glProgramLocalParameter4fvARB(GL_FRAGMENT_PROGRAM_ARB, 1, vhalf2.data());
     assertx(!gl_report_errors());
   }
+
   void activate() override {
     USE_GL_EXT(glBindProgramARB, PFNGLBINDPROGRAMARBPROC);
     glEnable(GL_FRAGMENT_PROGRAM_ARB);
     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
     assertx(!gl_report_errors());
   }
+
   void deactivate() override {
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
     // glDeleteProgramsARB(1, &program_id);
     assertx(!gl_report_errors());
   }
-  //
+
+  static type& instance() {
+    static type& f = *new type;
+    return f;
+  }
+
+ private:
   GLuint program_id;
   // Unfortunately, C++ preprocessor does not like the '#' comment character as first non-whitespace.
   // # OPTION ARB_precision_hint_fastest;
@@ -246,10 +266,6 @@ struct NormalMapping_frag1 final : NormalMapping {
         MOV     result.color.a, 1.;
         END
     )";
-  static type& instance() {
-    static type& f = *new type;
-    return f;
-  }
 };
 
 // *** ENV_DOT3 extension
@@ -261,9 +277,12 @@ struct NormalMapping_frag1 final : NormalMapping {
 // DOT3_RGB_EXT                    Arg0 <dotprod> Arg1
 // (this is just like MODULATE or REPLACE)
 // where arg0 and arg1 are: PRIMARY_COLOR_EXT, TEXTURE, CONSTANT_EXT or PREVIOUS_EXT.
-struct NormalMapping_dot3 final : NormalMapping {
+class NormalMapping_dot3 final : public NormalMapping {
+ public:
   using type = NormalMapping_dot3;
+
   string name() const override { return "dot3"; }
+
   bool is_supported() const override {
     if (!contains(gl_extensions_string(), "GL_ARB_texture_env_dot3")) return false;
     GLint max_texture_units;
@@ -272,6 +291,7 @@ struct NormalMapping_dot3 final : NormalMapping {
     if (max_texture_units < 2) return false;
     return true;
   }
+
   void init() override {
     USE_GL_EXT(glActiveTextureARB, PFNGLACTIVETEXTUREARBPROC);
     // Even though we are not using the second tmu, only the second combiner, we must still enable the tmu and set
@@ -326,6 +346,7 @@ struct NormalMapping_dot3 final : NormalMapping {
     //
     glActiveTextureARB(GL_TEXTURE0_ARB);
   }
+
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
     dummy_use(eyedirmodel, ambient, meshcolor_s);
@@ -333,18 +354,23 @@ struct NormalMapping_dot3 final : NormalMapping {
     Vec4<float> light2 = normalizef(dot3_scaled_light);
     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, light2.data());
   }
+
   void activate() override { glDisable(GL_BLEND); }
   void deactivate() override { glEnable(GL_BLEND); }
+
   static type& instance() {
     static type& f = *new type;
     return f;
   }
 };
 
-struct NormalMapping_nvrc final : NormalMapping {
+class NormalMapping_nvrc final : public NormalMapping {
+ public:
   using type = NormalMapping_nvrc;
+
   string name() const override { return "nvrc"; }
   bool is_supported() const override { return contains(gl_extensions_string(), "GL_NV_register_combiners"); }
+
   void init() override {
     USE_GL_EXT(glCombinerParameteriNV, PFNGLCOMBINERPARAMETERINVPROC);
     USE_GL_EXT(glCombinerInputNV, PFNGLCOMBINERINPUTNVPROC);
@@ -407,6 +433,7 @@ struct NormalMapping_nvrc final : NormalMapping {
     // replace diffuse term by ambient:
     // glFinalCombinerInputNV(GL_VARIABLE_D_NV, GL_CONSTANT_COLOR1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB);
   }
+
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
     Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
@@ -428,14 +455,17 @@ struct NormalMapping_nvrc final : NormalMapping {
     Vec4<float> vhalf2 = normalizef(scaled_vhalf);
     glCombinerParameterfvNV(GL_CONSTANT_COLOR1_NV, vhalf2.data());
   }
+
   void activate() override {
     // const int GL_REGISTER_COMBINERS_NV = 0x8522;
     glEnable(GL_REGISTER_COMBINERS_NV);
   }
+
   void deactivate() override {
     // const int GL_REGISTER_COMBINERS_NV = 0x8522;
     glDisable(GL_REGISTER_COMBINERS_NV);
   }
+
   static type& instance() {
     static type& f = *new type;
     return f;

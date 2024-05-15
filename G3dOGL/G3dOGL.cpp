@@ -1365,10 +1365,8 @@ bool setup_ob(int i) {
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
     if (texturenormal) {
-      Vector lightdirmodel = k_lightdir_eye0 * ~fmodeltoeye;
-      assertw(lightdirmodel.normalize());
-      Vector eyedirmodel = Vector(-1.f, 0.f, 0.f) * ~fmodeltoeye;
-      assertw(eyedirmodel.normalize());
+      Vector lightdirmodel = ok_normalized(k_lightdir_eye0 * ~fmodeltoeye);
+      Vector eyedirmodel = ok_normalized(Vector(-1.f, 0.f, 0.f) * ~fmodeltoeye);
       normalmap_setlight(lightdirmodel, eyedirmodel, lambient);
     }
   }

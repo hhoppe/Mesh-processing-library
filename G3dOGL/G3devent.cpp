@@ -798,6 +798,7 @@ void DoJump() {
 bool KeyPressed(const string& ps) {
   string s = ps;
   if (s == "<f1>") s = "?";
+  if (s == "<f5>") s = "r";
   if (s.size() != 1) return false;
   char ch = s[0];
   if (b_g3d_demofly && contains(" Zf", ch)) {

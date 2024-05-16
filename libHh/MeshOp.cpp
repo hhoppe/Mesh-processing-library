@@ -488,67 +488,48 @@ bool extraordinary_crease_vertex(const GMesh& mesh, Vertex v) {
   return nside != 3;
 }
 
-}  // namespace
-
-void Vnors::clear() { _mfnor = nullptr; }
-
-void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
-  Vector vnor(0.f, 0.f, 0.f);
-  bool hasvnor;
-  int ncnor = 0;
-  {
-    hasvnor = parse_key_vec(mesh.get_string(v), "normal", vnor);
-    for (Corner c : mesh.corners(v)) {
-      if (GMesh::string_has_key(mesh.get_string(c), "normal")) ncnor++;
-    }
-    static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
-    if (ignore_mesh_normals) {
-      hasvnor = false;
-      ncnor = 0;
-    }
-    if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
-    if (hasvnor && !ncnor) {
-      clear();
-      _nor = vnor;
-      return;
-    }
-  }
-  static EType default_nor_type;
+Vnors::EType get_default_nor_type() {
+  static Vnors::EType default_nor_type;
   static std::once_flag flag;
   std::call_once(flag, [] {
-    default_nor_type = (getenv_bool("SUM_NOR")      ? EType::sum
-                        : getenv_bool("AREA_NOR")   ? EType::area
-                        : getenv_bool("SLOAN_NOR")  ? EType::sloan
-                        : getenv_bool("SUBDIV_NOR") ? EType::subdiv
-                        : getenv_bool("ANGLE_NOR")  ? EType::angle
-                                                    : EType::unspecified);
-    if (assertw(default_nor_type == EType::unspecified)) default_nor_type = EType::angle;
+    default_nor_type = (getenv_bool("SUM_NOR")      ? Vnors::EType::sum
+                        : getenv_bool("AREA_NOR")   ? Vnors::EType::area
+                        : getenv_bool("SLOAN_NOR")  ? Vnors::EType::sloan
+                        : getenv_bool("SUBDIV_NOR") ? Vnors::EType::subdiv
+                        : getenv_bool("ANGLE_NOR")  ? Vnors::EType::angle
+                                                    : Vnors::EType::unspecified);
+    if (assertw(default_nor_type == Vnors::EType::unspecified)) default_nor_type = Vnors::EType::angle;
   });
-  if (nortype == EType::unspecified) nortype = default_nor_type;
+  return default_nor_type;
+}
+
+}  // namespace
+
+Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
+  static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
+  const bool hasvnor = ignore_mesh_normals ? false : parse_key_vec(mesh.get_string(v), "normal", _nor);
+  const int ncnor = ignore_mesh_normals ? 0 : int(count_if(mesh.corners(v), [&](Corner c) {
+    return GMesh::string_has_key(mesh.get_string(c), "normal");
+  }));
+  if (hasvnor && !ncnor) return;
+  if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
+
+  if (nortype == EType::unspecified) nortype = get_default_nor_type();
   if (nortype == EType::subdiv && !mesh.is_nice(v)) {
     Warning("attempt to eval subdiv normal at non-nice vertex");
     nortype = EType::angle;
   }
   const Point& vp = mesh.point(v);
-  int nfaces = 0, nsharpe = 0;
-  bool is_cusp = mesh.flags(v).flag(GMesh::vflag_cusp);
-  for (Face f : mesh.faces(v)) {
-    nfaces++;
-    if (_mfnor && !_mfnor->contains(f)) clear();
-  }
+  const bool is_cusp = mesh.flags(v).flag(GMesh::vflag_cusp);
+  const int nfaces = int(distance(mesh.faces(v)));
   if (!nfaces) {
     Warning("Isolated vertex has undefined normal");
-    clear();
-    _nor = Vector(0.f, 0.f, 0.f);
     return;
   }
-  if (_mfnor && _mfnor->num() != nfaces) clear();
-  for (Edge e : mesh.edges(v)) {
-    if (sharp(mesh, v, e)) nsharpe++;
-  }
-  PArray<Face, 10> setfvis;
+  const int nsharpe = int(count_if(mesh.edges(v), [&](Edge e) { return sharp(mesh, v, e); }));
+  PArray<Face, 10> faces_visited;
   for (Face frep : mesh.faces(v)) {
-    if (setfvis.contains(frep)) continue;
+    if (faces_visited.contains(frep)) continue;
     bool closed = false;
     PArray<Vertex, 10> av;
     PArray<Face, 10> af;
@@ -580,52 +561,45 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
       if (closed && f == frep) break;
     }
     dummy_use(closed);
-    int avn = av.num();
-    Vector vec(0.f, 0.f, 0.f);
+    const int avn = av.num();
+    Vector vec{};
     // It once seemed that "double" was needed below to overcome an apparent problem with poorly computed surface
     // normals.  However, the problem lay in the geometry. Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
     // EType::angle still seems like a good scheme.
+    Polygon& poly = _tmp_poly;
     switch (nortype) {
-      case EType::angle: {
-        Polygon& poly = _tmp_poly;
+      case EType::angle:
         for_int(i, af.num()) {
           int i1 = i + 1;
           if (i1 == av.num()) i1 = 0;
-          float ang = angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp),
-                                                 ok_normalized(mesh.point(av[i1]) - vp));
+          const float ang = angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp),
+                                                       ok_normalized(mesh.point(av[i1]) - vp));
           mesh.polygon(af[i], poly);
           vec += poly.get_normal() * ang;
         }
         break;
-      }
-      case EType::sum: {
-        Polygon& poly = _tmp_poly;
+      case EType::sum:
         for_int(i, af.num()) {
           mesh.polygon(af[i], poly);
           vec += poly.get_normal();
         }
         break;
-      }
-      case EType::area: {
-        Polygon& poly = _tmp_poly;
+      case EType::area:
         for_int(i, af.num()) {
           mesh.polygon(af[i], poly);
-          float area = poly.get_area();
+          const float area = poly.get_area();
           vec += poly.get_normal() * area;
         }
         break;
-      }
-      case EType::sloan: {
-        Polygon& poly = _tmp_poly;
+      case EType::sloan:
         for_int(i, af.num()) {
           mesh.polygon(af[i], poly);
-          float area = poly.get_area();
+          const float area = poly.get_area();
           if (!assertw(area)) continue;
           vec += poly.get_normal() / square(area);
         }
         break;
-      }
-      default: {
+      default:
         if (nsharpe > 2 || is_cusp) {  // corner
           vec = cross(vp, mesh.point(av[0]), mesh.point(av.last()));
           if (avn > 2) {  // from Polygon::get_normal_dir()
@@ -639,8 +613,9 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
         } else if (nsharpe == 2 && !extraordinary_crease_vertex(mesh, v)) {
           // regular crease vertex 1, .5, -1, -1, .5
           assertx(avn == 4);
-          Vector v1 = mesh.point(av[3]) - mesh.point(av[0]);
-          Vector v2 = vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
+          const Vector v1 = mesh.point(av[3]) - mesh.point(av[0]);
+          const Vector v2 =
+              vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
           vec = cross(v1, v2);
           {  // direction could be wrong (very bad case)
             Vector pnor(0.f, 0.f, 0.f);
@@ -651,16 +626,16 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
             }
           }
         } else if (nsharpe == 2) {  // non-regular crease vertex
-          Vector v1 = mesh.point(av.last()) - mesh.point(av[0]);
+          const Vector v1 = mesh.point(av.last()) - mesh.point(av[0]);
           if (avn == 2) {  // 2, -1, -1
             vec = vp * 2.f - mesh.point(av[0]) - mesh.point(av[1]);
           } else if (avn == 3) {  // 1, 0, -1, 0
             vec = vp - mesh.point(av[1]);
           } else {
             // float theta = (TAU / 2) / (avn - 1.f);
-            int idenom = 2 * (avn - 1);
+            const int idenom = 2 * (avn - 1);
             vec = (mesh.point(av[0]) + mesh.point(av.last())) * Trig::sin(1, idenom);
-            float fcom = (2 * Trig::cos(1, idenom) - 2);
+            const float fcom = (2 * Trig::cos(1, idenom) - 2);
             for_intL(i, 1, avn - 1) vec += mesh.point(av[i]) * (fcom * Trig::sin(i, idenom));
           }
           vec = cross(v1, vec);
@@ -674,12 +649,12 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
           }
         } else if (avn == 2) {
           Warning("Degree-2 vertex --- assuming bi-cubic quad special");
-          Vector t1 = mesh.point(av[1]) - mesh.point(av[0]);
+          const Vector t1 = mesh.point(av[1]) - mesh.point(av[0]);
           for_int(i, 2) {
             Vertex vo = mesh.clw_vertex(av[i], v);
             assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // is_quad
           }
-          Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
+          const Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
           vec = cross(t1, t2);
         } else {  // interior or dart
           Vector v1(0.f, 0.f, 0.f), v2(0.f, 0.f, 0.f);
@@ -690,29 +665,21 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
           }
           vec = cross(v1, v2);
         }
-      }
     }
     assertw(vec.normalize());
     if (af.num() == nfaces) {
-      clear();
-      _nor = vec;
-      break;  // quick end
+      if (!hasvnor) _nor = vec;
+      break;
     }
-    if (!_mfnor) {
-      _mfnor = make_unique<Map<Face, Vector>>();
-      for (Face ff : mesh.faces(v)) _mfnor->enter(ff, Vector());
-    }
+    if (!_mfnor) _mfnor = make_unique<Map<Face, Vector>>();
+    // ?? for (Face ff : mesh.faces(v)) _mfnor->enter(ff, Vector());
     for (Face ff : af) {
-      setfvis.push(ff);
-      _mfnor->get(ff) = vec;
+      faces_visited.push(ff);
+      _mfnor->enter(ff, vec);
     }
   }
   if (ncnor) {
-    if (hasvnor) _nor = vnor;
-    if (!_mfnor) {
-      _mfnor = make_unique<Map<Face, Vector>>();
-      for (Face f : mesh.faces(v)) _mfnor->enter(f, Vector());
-    }
+    if (!_mfnor) _mfnor = make_unique<Map<Face, Vector>>();
     for (Corner c : mesh.corners(v)) {
       Vector nor;
       if (!parse_key_vec(mesh.get_string(c), "normal", nor)) {
@@ -723,7 +690,7 @@ void Vnors::compute(const GMesh& mesh, Vertex v, EType nortype) {
         nor = _nor;
       }
       Face f = mesh.corner_face(c);
-      _mfnor->get(f) = nor;
+      (*_mfnor)[f] = nor;
     }
   }
 }

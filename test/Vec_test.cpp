@@ -73,6 +73,11 @@ int main() {
     for (const auto& u : range(a1)) SHOW(u);
     SHOW(a2);
     for (const auto& u : range(a2)) SHOW(u);
+    Vec3<int> a3{};
+    assertx(is_zero(a3));
+    Vec3<int> a4(1, 2, 3);
+    a4 = Vec3<int>{};
+    assertx(is_zero(a4));
   }
   struct S : Vec2<int> {
     // void f() const { SHOW(*this); }

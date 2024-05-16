@@ -6,7 +6,7 @@
 #include "libHh/Flags.h"
 #include "libHh/GMesh.h"
 #include "libHh/Map.h"
-#include "libHh/MeshOp.h"  // Vnors
+#include "libHh/MeshOp.h"
 #include "libHh/PArray.h"
 #include "libHh/Polygon.h"
 #include "libHh/Pqueue.h"

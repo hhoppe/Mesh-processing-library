@@ -9,10 +9,8 @@
 #if 0
 {
   const MeshSearch msearch(mesh, {true});
-  Bary bary;
-  Point clp;
-  float d2;
-  Face f = msearch(p, bary, clp, d2);
+  Face hintf = nullptr;
+  const auto& [f, bary, clp, d2] = msearch(p, hintf);
 }
 #endif
 
@@ -68,8 +66,13 @@ class MeshSearch {
     bool allow_off_surface{false};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
-  // search() is threadsafe (except for Random::G?).
-  Face search(const Point& p, Face hintf, Bary& bary, Point& clp, float& d2) const;
+  struct Result {
+    Face f;
+    Bary bary;
+    Point clp;
+    float d2;
+  };
+  Result search(const Point& p, Face hintf) const;  // search() is threadsafe (except for Random::G?).
   const GMesh& mesh() const { return _mesh; }
 
  private:

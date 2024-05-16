@@ -1115,7 +1115,6 @@ void parse_mesh_wedge_identifiers() {
     gwinfo.init(1 + max_vid);  // to be filled in below
   }
   int nccolors = 0;
-  Vnors vnors;
   for (Vertex v : mesh.vertices()) {
     // Vnors will get normals from vertex&corner strings if present.
     // Remove normals which are explicitly zero.
@@ -1134,7 +1133,7 @@ void parse_mesh_wedge_identifiers() {
       Warning("Removing explicit zero normal from corner");
       mesh.update_string(c, "normal", nullptr);
     }
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
     Set<Corner> setcvis;
     for (Corner crep : mesh.corners(v)) {
       if (!setcvis.add(crep)) continue;

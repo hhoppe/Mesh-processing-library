@@ -79,8 +79,7 @@ void output_edge(Edge e, A3dVertexColor col = A3dVertexColor(Pixel::black())) {
 void assign_normals() {
   string str;
   for (Vertex v : mesh.vertices()) {
-    Vnors vnors;
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
     if (vnors.is_unique()) {
       const Vector& nor = vnors.unique_nor();
       mesh.update_string(v, "normal", csform_vec(str, nor));
@@ -2894,11 +2893,7 @@ void do_randpts(Args& args) {
   }
   fcarea.push(1.00001f);
   Map<Vertex, Vnors> mvnors;
-  for (Vertex v : mesh.vertices()) {
-    Vnors vnors;
-    vnors.compute(mesh, v);
-    mvnors.enter(v, std::move(vnors));
-  }
+  for (Vertex v : mesh.vertices()) mvnors.enter(v, Vnors(mesh, v));
   Array<Vertex> va;
   Bary bary;
   for_int(i, npoints) {
@@ -2926,8 +2921,7 @@ void do_vertexpts() {
   HH_TIMER("_vertexpts");
   nooutput = true;
   for (Vertex v : mesh.vertices()) {
-    Vnors vnors;
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
     Vector nor = vnors.is_unique() ? vnors.unique_nor() : Vector(0.f, 0.f, 0.f);
     output_point(mesh.point(v), nor);
   }
@@ -2938,8 +2932,7 @@ void do_orderedvertexpts() {
   HH_TIMER("_orderedvertexpts");
   nooutput = true;
   for (Vertex v : mesh.ordered_vertices()) {
-    Vnors vnors;
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
     Vector nor = vnors.is_unique() ? vnors.unique_nor() : Vector(0.f, 0.f, 0.f);
     output_point(mesh.point(v), nor);
   }
@@ -3478,8 +3471,7 @@ void do_procedure(Args& args) {
     for (Vertex v : mesh.ordered_vertices()) {
       Vector vec;
       if (!parse_key_vec(mesh.get_string(v), "Vup", vec)) continue;
-      Vnors vnors;
-      vnors.compute(mesh, v);
+      Vnors vnors(mesh, v);
       assertx(vnors.is_unique());
       const Vector& nor = vnors.unique_nor();
       if (1) vec = project_orthogonally(vec, nor);

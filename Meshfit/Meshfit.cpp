@@ -404,31 +404,19 @@ void global_project_aux() {
     if (1) {
       Face hintf = nullptr;
       for_int(i, pt.co.num()) {
-        Bary bary;
-        Point clp;
-        float d2;
-        Face f = msearch.search(pt.co[i], hintf, bary, clp, d2);
+        const auto& [f, bary, clp, d2] = msearch.search(pt.co[i], hintf);
         hintf = f;
         point_change_face(i, f);
         pt.clp[i] = clp;
       }
     } else {  // TODO: parallel; it crashes?
-      // c:\hh\src\libhh\hh.cpp(143): hh::`anonymous namespace'::show_call_stack
-      // c:\hh\src\libhh\hh.cpp(236): hh::`anonymous namespace'::my_top_level_exception_filter
-      // c:\hh\src\libhh\spatial.h(190): hh::ObjectSpatial<hh::details::polygonface_approx_distance2,hh::details::polygonface_distance2>::add_cell
-      // c:\hh\src\libhh\spatial.cpp(105): hh::BSpatialSearch::BSpatialSearch
-      // c:\hh\src\libhh\meshsearch.cpp(126): hh::MeshSearch::search
-      // c:\hh\src\meshfit\meshfit.cpp(365): `anonymous namespace'::global_project_aux$omp$1
-      //  why does gfit not change geometry significantly?
-      //  is it possible to remove FORCE_GLOBAL_PROJECT ?
-      //  try fgfit?
       Array<Face> ar_face(pt.co.num());
       Array<Point> ar_clp(pt.co.num());
       parallel_for_each(range(pt.co.num()), [&](const int i) {
-        Bary bary;
-        float d2;
         Face hintf = pt.cmf[i];  // different semantics now
-        ar_face[i] = msearch.search(pt.co[i], hintf, bary, ar_clp[i], d2);
+        const auto& [f, bary, clp, d2] = msearch.search(pt.co[i], hintf);
+        ar_face[i] = f;
+        ar_clp[i] = clp;
       });
       for_int(i, pt.co.num()) {
         point_change_face(i, ar_face[i]);

@@ -26,23 +26,14 @@ int main() {
     const MeshSearch msearch(mesh, {false});
     Face hintf = nullptr;
     {
-      Bary bary;
-      Point clp;
-      float d2;
-      Face f = msearch.search(Point(5.f, 2.f, 0.f), hintf, bary, clp, d2);
-      hintf = f;
+      const auto& [f, bary, clp, d2] = msearch.search(Point(5.f, 2.f, 0.f), hintf);
       SHOW(mesh.face_id(f), bary, clp);
       assertx(d2 < 1e-12f);
     }
     {
-      Bary bary;
-      Point clp;
-      float d2;
-      Face f = msearch.search(Point(5.f, 9.f, 0.1f), hintf, bary, clp, d2);
-      hintf = f;
+      const auto& [f, bary, clp, d2] = msearch.search(Point(5.f, 9.f, 0.1f), hintf);
       SHOW(mesh.face_id(f), bary, clp, d2);
     }
-    dummy_use(hintf);
   }
   {
     GMesh mesh;
@@ -64,10 +55,7 @@ int main() {
       for_int(c, 3) p[c] = Random::G.unif();
       p[2] *= 1e-7f;  // was 1e-4f
       SHOW(p);
-      Bary bary;
-      Point clp;
-      float d2;
-      Face f = msearch.search(p, hintf, bary, clp, d2);
+      const auto& [f, bary, clp, d2] = msearch.search(p, hintf);
       hintf = f;
       SHOW(mesh.face_id(f), bary, clp, d2);
     }

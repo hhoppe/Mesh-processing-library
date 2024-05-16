@@ -1600,8 +1600,7 @@ void mesh_init(GMesh& mesh) {
     if (have_vnors.add(&mesh))
       for (Vertex v : mesh.vertices()) vredo.add(v);
     for (Vertex v : vredo) {
-      Vnors vnors;
-      vnors.compute(mesh, v);
+      Vnors vnors(mesh, v);
       bool uniquenors = true;
       int num = 0;
       Vector gOnor, gNnor;

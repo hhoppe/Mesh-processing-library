@@ -44,9 +44,8 @@ void do_mfile(Args& args) {
   meshes.add(1);
   GMesh& mesh = meshes.last();
   mesh = GMesh(RFile(filename)());
-  Vnors vnors;
   for (Vertex v : mesh.vertices()) {
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
     v_normal(v) = vnors.is_unique() ? vnors.unique_nor() : Vector(BIGFLOAT, BIGFLOAT, BIGFLOAT);
     for (Corner c : mesh.corners(v)) {
       {

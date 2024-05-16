@@ -101,19 +101,17 @@ bool diagonal_distance_swap_criterion(const GMesh& mesh, Edge e);
 // If string(v) contains normal information, use that instead.
 class Vnors {
  public:
-  Vnors() = default;
-  Vnors(Vnors&& v) : _mfnor(std::move(v._mfnor)), _nor(v._nor) {}  // = default
   enum class EType { unspecified, angle, sum, area, sloan, subdiv };
-  void compute(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
+  Vnors(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
+  // ?? Vnors(Vnors&& v) : _mfnor(std::move(v._mfnor)), _nor(v._nor) {}  // = default
   bool is_unique() const { return !_mfnor; }
   const Vector& unique_nor() const { return (ASSERTX(is_unique()), _nor); }
   const Vector& face_nor(Face f) const { return (ASSERTX(!is_unique()), _mfnor->get(f)); }
-  const Vector& get_nor(Face f) const { return _mfnor ? _mfnor->get(f) : _nor; }  // in any case
-  void clear();
+  const Vector& get_nor(Face f) const { return _mfnor ? _mfnor->get(f) : _nor; }  // In any case.
 
  private:
-  unique_ptr<Map<Face, Vector>> _mfnor;  // if !_mfnor, common normal is stored in _nor
-  Vector _nor;
+  unique_ptr<Map<Face, Vector>> _mfnor;  // If !_mfnor, the unique normal is stored in _nor.
+  Vector _nor{};
   Polygon _tmp_poly;
 };
 

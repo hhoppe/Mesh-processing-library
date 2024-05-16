@@ -792,8 +792,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     s0->setPosition(mesh.point(v));
 
     // compute normals
-    Vnors vnors;
-    vnors.compute(mesh, v);
+    Vnors vnors(mesh, v);
 
     for (Corner c : mesh.corners(v)) {
       Vector nor = vnors.get_nor(mesh.corner_face(c));

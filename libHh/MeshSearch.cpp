@@ -76,7 +76,8 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
   for (PolygonFace& polyface : _ar_polyface) _ppsp->enter(&polyface);
 }
 
-Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, float& d2) const {
+MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
+  Result result;
   Face f = nullptr;
   Polygon poly;
   if (_options.allow_local_project && hintf) {
@@ -85,8 +86,8 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
     for (;;) {
       _mesh.polygon(f, poly);
       assertx(poly.num() == 3);
-      d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, clp);
-      float dfrac = sqrt(d2) * _ftospatial[0][0];
+      result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
+      float dfrac = sqrt(result.d2) * _ftospatial[0][0];
       // if (!count) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // failure
         f = nullptr;
@@ -96,7 +97,7 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
       Vec3<Vertex> va = _mesh.triangle_vertices(f);
       int side = -1;
       for_int(i, 3) {
-        if (bary[i] == 1.f) {
+        if (result.bary[i] == 1.f) {
           side = i;
           break;
         }
@@ -118,7 +119,7 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
         }
       } else {
         for_int(i, 3) {
-          if (bary[i] == 0.f) {
+          if (result.bary[i] == 0.f) {
             side = i;
             break;
           }
@@ -151,9 +152,10 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
     f = polyface.face;
     _mesh.polygon(f, poly);
     assertx(poly.num() == 3);
-    d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, clp);
+    result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
   }
-  return f;
+  result.f = f;
+  return result;
 }
 
 }  // namespace hh

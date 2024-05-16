@@ -401,8 +401,8 @@ void GMesh::read_line(char* sline) {
       *s = 0;
   }
   if (sline[0] == 'V' && !strncmp(sline, "Vertex ", 7)) {
-    Point p;
     int vi;
+    Point p;
     assertx(sscanf(sline, "Vertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
     Vertex v = create_vertex_private(vi);
     set_point(v, p);

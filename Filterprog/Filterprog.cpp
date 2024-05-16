@@ -11,7 +11,7 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/Geometry.h"
-#include "libHh/MeshOp.h"  // mesh_genus_string(), Vnors
+#include "libHh/MeshOp.h"  // mesh_genus_string()
 #include "libHh/PMesh.h"   // S_vsplit
 #include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"

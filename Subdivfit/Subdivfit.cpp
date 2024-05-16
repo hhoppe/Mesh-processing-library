@@ -264,14 +264,12 @@ void global_all_project(const SubMesh& smesh) {
   const MeshSearch msearch(mesh, {});
   Face hintf = nullptr;
   for_int(i, co.num()) {
-    Bary bary;
-    Point clp;
-    float d2;
-    gscmf[i] = msearch.search(co[i], hintf, bary, clp, d2);
-    hintf = gscmf[i];
-    gbary[i] = bary;
-    gclp[i] = clp;
-    gdis2[i] = d2;
+    const auto result = msearch.search(co[i], hintf);
+    hintf = result.f;
+    gscmf[i] = result.f;
+    gbary[i] = result.bary;
+    gclp[i] = result.clp;
+    gdis2[i] = result.d2;
   }
 }
 

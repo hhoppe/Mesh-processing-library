@@ -2691,7 +2691,7 @@ void do_analyzestretch() {
   float li_efficiency = surfarea / starea / square(Stri_li.max());
   float max_area_ratio = Ssurfarea.max() / Ssurfarea.min();
   showdf("starea=%g surfarea=%g rms_stretch=%g\n", starea, surfarea, rms_stretch);
-  showdf("Stretch: li=%.3g l2=%.3g maxani=%.4g avgani=%.4g arear=%.4g\n",  //
+  showdf("Stretch: li=%.3f l2=%.3f maxani=%-5.4g avgani=%-5.4g arear=%-5.4g\n",  //
          li_efficiency, l2_efficiency, Stri_isotropy.max(), Stri_isotropy.avg(), max_area_ratio);
 }
 

@@ -210,6 +210,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
 }
 
 bool GMesh::string_has_key(const char* ss, const char* key) {
+  if (!ss) return false;
   int keyl = int(strlen(key));
   bool found = false;
   for_cstring_key_value_ptr(ss, [&](const char* kb, int kl, const char* vb, int vl) {

@@ -231,7 +231,7 @@ void do_srout(Args& args) {
   Vec<SrViewParams, 1> views;
   for_int(i, views.num()) {
     std::istringstream iss(args.get_string());
-    ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+    const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
@@ -258,7 +258,7 @@ void do_srgeomorph(Args& args) {
   Vec2<SrViewParams> views;
   for_int(i, views.num()) {
     std::istringstream iss(args.get_string());
-    ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+    const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
@@ -302,7 +302,7 @@ void do_srfly(Args& args) {
   srmesh.set_refine_morph_time(srfly_grtime);
   srmesh.set_coarsen_morph_time(srfly_gctime);
   for (;;) {
-    auto object_frame = FrameIO::read(fiframes());
+    const auto object_frame = FrameIO::read(fiframes());
     if (!object_frame) break;
     SrViewParams view;
     view.set_frame(object_frame->frame);

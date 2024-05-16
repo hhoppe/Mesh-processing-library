@@ -764,7 +764,7 @@ void do_view(Args& args) {
   RFile fi(filename);
   for (;;) {
     if (fi().peek() < 0) break;
-    auto object_frame = assertw(FrameIO::read(fi()));
+    const auto object_frame = assertw(FrameIO::read(fi()));
     if (!object_frame) break;
     if (object_frame->obn) {
       Warning("Skipping non-object0 frame");

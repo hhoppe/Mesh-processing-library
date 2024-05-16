@@ -58,7 +58,7 @@ void read_state() {
         assertx(my_getline(fi(), sline));
         continue;
       }
-      auto object_frame = assertw(FrameIO::read(fi()));
+      const auto object_frame = assertw(FrameIO::read(fi()));
       if (!object_frame) break;
       if (object_frame->obn == -1) {
         tview = object_frame->frame;

@@ -189,7 +189,7 @@ void do_key(Args& args) { keystring += args.get_string(); }
 
 void do_frame(Args& args) {
   std::istringstream iss(args.get_string());
-  ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+  const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
   UpdateFrame(object_frame);
 }
 

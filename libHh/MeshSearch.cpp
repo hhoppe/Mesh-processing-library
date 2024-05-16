@@ -29,7 +29,7 @@ void PolygonFaceSpatial::enter(const PolygonFace* ppolyface) {
 bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2, const PolygonFace*& ret_ppolyface,
                                              Point& ret_pint) const {
   Vector vray = p2 - p1;
-  bool foundint = false;
+  bool found_intersection = false;
   float ret_fmin;
   dummy_init(ret_fmin);
   auto func_test_polygonface_with_ray = [&](Univ id) -> bool {
@@ -38,26 +38,26 @@ bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2, c
     Point pint;
     if (!poly.intersect_segment(p1, p2, pint)) return false;
     float f = dot(pint - p1, vray);
-    if (!foundint || f < ret_fmin) {
+    if (!found_intersection || f < ret_fmin) {
       ret_fmin = f;
       ret_pint = pint;
       ret_ppolyface = ppolyface;
-      foundint = true;
+      found_intersection = true;
     }
     return true;
   };
   search_segment(p1, p2, func_test_polygonface_with_ray);
-  return foundint;
+  return found_intersection;
 }
 
-MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
-    : _mesh(*assertx(mesh)), _allow_local_project(allow_local_project), _ar_polyface(_mesh.num_faces()) {
+MeshSearch::MeshSearch(const GMesh& mesh, Options options)
+    : _mesh(mesh), _options(std::move(options)), _ar_polyface(_mesh.num_faces()) {
   if (getenv_bool("NO_LOCAL_PROJECT")) {
     Warning("MeshSearch NO_LOCAL_PROJECT");
-    _allow_local_project = false;
+    _options.allow_local_project = false;
   }
   int psp_size = int(sqrt(_mesh.num_faces() * .05f));
-  if (_allow_local_project) psp_size /= 2;
+  if (_options.allow_local_project) psp_size /= 2;
   psp_size = clamp(10, psp_size, 150);
   HH_STIMER("__meshsearch_build");
   Bbox bbox;
@@ -74,13 +74,12 @@ MeshSearch::MeshSearch(const GMesh* mesh, bool allow_local_project)
   }
   _ppsp = make_unique<PolygonFaceSpatial>(psp_size);
   for (PolygonFace& polyface : _ar_polyface) _ppsp->enter(&polyface);
-  assertx(fi == _mesh.num_faces());
 }
 
 Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, float& d2) const {
   Face f = nullptr;
   Polygon poly;
-  if (_allow_local_project && hintf) {
+  if (_options.allow_local_project && hintf) {
     f = hintf;
     int count = 0;
     for (;;) {
@@ -125,8 +124,8 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
           }
         }
         if (side < 0) {
-          if (_allow_off_surface) break;     // success
-          if (_allow_internal_boundaries) {  // failure
+          if (_options.allow_off_surface) break;     // success
+          if (_options.allow_internal_boundaries) {  // failure
             f = nullptr;
             break;
           }
@@ -134,7 +133,7 @@ Face MeshSearch::search(const Point& p, Face hintf, Bary& bary, Point& clp, floa
       }
       if (side >= 0) f = _mesh.opp_face(va[side], f);
       if (!f) {
-        if (!_allow_internal_boundaries) assertnever("MeshSearch has hit surface boundary");
+        if (!_options.allow_internal_boundaries) assertnever("MeshSearch has hit surface boundary");
         break;  // failure
       }
       if (++count == 10) {  // failure

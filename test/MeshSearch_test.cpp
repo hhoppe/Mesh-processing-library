@@ -23,8 +23,7 @@ int main() {
     SHOW(mesh.face_id(f1));
     Face f2 = mesh.create_face(v1, v3, v4);
     SHOW(mesh.face_id(f2));
-    bool allow_local_project = false;
-    MeshSearch msearch(&mesh, allow_local_project);
+    const MeshSearch msearch(mesh, {false});
     Face hintf = nullptr;
     {
       Bary bary;
@@ -58,8 +57,7 @@ int main() {
       mesh.create_face(matv[y][x], matv[y + 1][x + 1], matv[y][x + 1]);
     }
     SHOW(mesh_genus_string(mesh));
-    bool allow_local_project = true;
-    MeshSearch msearch(&mesh, allow_local_project);
+    const MeshSearch msearch(mesh, {true});
     Face hintf = nullptr;
     for_int(i, 8) {
       Point p;

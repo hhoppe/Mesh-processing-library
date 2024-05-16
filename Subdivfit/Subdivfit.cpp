@@ -261,7 +261,7 @@ void analyze_mesh(const string& s) {
 void global_all_project(const SubMesh& smesh) {
   HH_STIMER("___gallproject");
   const GMesh& mesh = smesh.mesh();
-  MeshSearch msearch(&mesh, false);
+  const MeshSearch msearch(mesh, {});
   Face hintf = nullptr;
   for_int(i, co.num()) {
     Bary bary;

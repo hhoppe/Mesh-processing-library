@@ -189,7 +189,7 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     case FrameIO::ERecognize::parse_error: assertnever("");
     case FrameIO::ERecognize::partial: return ETryInput::nothing;  // partial frame
     case FrameIO::ERecognize::yes: {
-      auto object_frame = assertw(FrameIO::read(buf));
+      const auto object_frame = assertw(FrameIO::read(buf));
       if (!object_frame) return ETryInput::success;
       UpdateFrame(*object_frame);
       num_input_frames++;

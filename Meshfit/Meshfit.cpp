@@ -400,7 +400,7 @@ float project_point_neighb(const Point& p, Face& cf, Bary& ret_bary, Point& ret_
 
 void global_project_aux() {
   if (!have_quads) {
-    MeshSearch msearch(&mesh, false);
+    const MeshSearch msearch(mesh, {});
     if (1) {
       Face hintf = nullptr;
       for_int(i, pt.co.num()) {

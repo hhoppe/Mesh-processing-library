@@ -3299,7 +3299,7 @@ void do_projectimage(Args& args) {
   const string framestring = args.get_string();
   const string imagename = args.get_filename();
   std::istringstream iss(framestring);
-  ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+  const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
   const Frame frameinv = ~object_frame.frame;
   const Image image(imagename);
   Matrix<Vector4> imagev(image.dims());

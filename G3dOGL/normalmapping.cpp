@@ -82,28 +82,17 @@ class NormalMapping_ogl2 final : public NormalMapping {
 
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
-    Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
-    Vector scaled_light = lightdirmodel * lightsource;
-    // just pull the Red channel out; (default is gray 0.5f)
-    float meshspecular = meshcolor_s[0] / 255.f;
-    assertw(meshcolor_s[0] == meshcolor_s[1]);
-    assertw(meshcolor_s[0] == meshcolor_s[2]);
-    const int phong = 4;
-    Vector scaled_vhalf = vhalf * pow(lightsource * meshspecular, 1.f / phong);
+    dummy_use(meshcolor_s);
     USE_GL_EXT(glUseProgram, PFNGLUSEPROGRAMPROC);
-    USE_GL_EXT(glGetUniformLocation, PFNGLGETUNIFORMLOCATIONPROC);
     USE_GL_EXT(glUniform3fv, PFNGLUNIFORM3FVPROC);
     USE_GL_EXT(glUniform1fv, PFNGLUNIFORM1FVPROC);
+    USE_GL_EXT(glUniform1iv, PFNGLUNIFORM1IVPROC);
     glUseProgram(program_id);
-    GLint loc_vlight = glGetUniformLocation(program_id, "vlight");
-    assertx(loc_vlight >= 0);
-    GLint loc_vhalf = glGetUniformLocation(program_id, "vhalf");
-    assertx(loc_vhalf >= 0);
-    GLint loc_ambient = glGetUniformLocation(program_id, "ambient");
-    assertx(loc_ambient >= 0);
-    glUniform3fv(loc_vlight, 1, scaled_light.data());
-    glUniform3fv(loc_vhalf, 1, scaled_vhalf.data());
-    glUniform1fv(loc_ambient, 1, V(ambient).data());
+    glUniform3fv(get_loc("lightdirmodel"), 1, lightdirmodel.data());
+    glUniform3fv(get_loc("eyedirmodel"), 1, eyedirmodel.data());
+    glUniform1fv(get_loc("ambient"), 1, V(ambient).data());
+    glUniform1fv(get_loc("lightsource"), 1, V(lightsource).data());
+    glUniform1iv(get_loc("twolights"), 1, V(getenv_int("G3D_TWOLIGHTS")).data());
     assertx(!gl_report_errors());
   }
 
@@ -131,34 +120,42 @@ class NormalMapping_ogl2 final : public NormalMapping {
  private:
   GLuint program_id;
   GLuint fragment_shader_id;
+  GLint get_loc(const char* name) {
+    USE_GL_EXT(glGetUniformLocation, PFNGLGETUNIFORMLOCATIONPROC);
+    GLuint loc = glGetUniformLocation(program_id, name);
+    assertx(loc >= 0);
+    return loc;
+  }
   const string unused_vertex_shader = &R"(
-        void main() {
-            gl_TexCoord[0] = gl_MultiTexCoord0;
-            gl_Position = ftransform();
-        }
+    void main() {
+      gl_TexCoord[0] = gl_MultiTexCoord0;
+      gl_Position = ftransform();
+    }
     )"[1];
-  const string fragment_shader = &R"(
-        uniform vec3 vlight;
-        uniform vec3 vhalf;
-        uniform float ambient;
+  const string fragment_shader = R"(#version 120  // Using GLSL version 1.20.
+    uniform vec3 lightdirmodel;
+    uniform vec3 eyedirmodel;
+    uniform float ambient;
+    uniform float lightsource;
+    uniform int twolights;
 
-        uniform sampler2D tex;
+    uniform sampler2D tex;
 
-        varying vec3 tc;                // texture coordinates
-        // varying vec4 color;             // incoming fragment primary color
-
-        void main() {
-            // gl_FragColor = vec4(gl_TexCoord[0].st, 0., 1.); return;
-            vec3 vnorm = texture(tex, gl_TexCoord[0].st).xyz * 2. - 1.;  // texture.stpq
-            vnorm = normalize(vnorm);
-            if (0) { gl_FragColor = vec4(vnorm.xyz, 1.); return; }
-            float vdot = max(0., dot(vnorm, vhalf));
-            float adjustment1 = 1.2, adjustment2 = 1.4;
-            gl_FragColor = (gl_FrontMaterial.diffuse * (ambient + adjustment1 * max(0., dot(vnorm, vlight))) +
-                            gl_FrontMaterial.specular * adjustment2 * pow(vdot, 4.));
-            gl_FragColor.a = 1.;
-        }
-    )"[1];
+    void main() {
+      const float phong = 4.;
+      // gl_FragColor = vec4(gl_TexCoord[0].st, 0., 1.); return;
+      vec3 vnorm = texture2D(tex, gl_TexCoord[0].st).xyz * 2. - 1.;  // texture.stpq
+      vnorm = normalize(vnorm);
+      if (twolights > 0 && dot(vnorm, lightdirmodel) < 0.) vnorm = -vnorm;
+      if (false) { gl_FragColor = vec4(vnorm.xyz, 1.); return; }
+      float vdot1 = max(0., dot(vnorm, lightdirmodel) * lightsource);
+      vec3 vhalf = normalize(lightdirmodel + eyedirmodel);
+      float vdot2 = max(0., dot(vnorm, vhalf));
+      gl_FragColor.rgb = (gl_FrontMaterial.diffuse.rgb * (ambient + vdot1) +
+                          gl_FrontMaterial.specular.rgb * pow(vdot2, phong) * lightsource);
+      gl_FragColor.a = 1.;
+    }
+    )";
 };
 
 class NormalMapping_frag1 final : public NormalMapping {

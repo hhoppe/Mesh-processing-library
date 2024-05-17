@@ -672,7 +672,6 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
       break;
     }
     if (!_mfnor) _mfnor = make_unique<Map<Face, Vector>>();
-    // ?? for (Face ff : mesh.faces(v)) _mfnor->enter(ff, Vector());
     for (Face ff : af) {
       faces_visited.push(ff);
       _mfnor->enter(ff, vec);

@@ -400,114 +400,152 @@ void GMesh::read_line(char* sline) {
     } else
       *s = 0;
   }
-  if (sline[0] == 'V' && !strncmp(sline, "Vertex ", 7)) {
-    int vi;
-    Point p;
-    assertx(sscanf(sline, "Vertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
-    Vertex v = create_vertex_private(vi);
-    set_point(v, p);
-    if (sinfo) {
-      set_string(v, sinfo);
-      if (string_has_key(sinfo, "cusp")) flags(v).flag(vflag_cusp) = true;
-    }
-  } else if (sline[0] == 'F' && !strncmp(sline, "Face ", 5)) {
-    PArray<Vertex, 6> va;
-    char* s = sline + 4;
-    int fi = -1;
-    for (;;) {
-      while (*s && isspace(*s)) s++;
-      if (!*s) break;
-      char* beg = s;
-      while (*s && isdigit(*s)) s++;
-      if (*s && !isspace(*s)) {
-        SHOW(sline, *s);
-        assertnever("");
+  switch (sline[0]) {
+    case 'V':
+      if (!strncmp(sline, "Vertex ", 7)) {
+        int vi;
+        Point p;
+        assertx(sscanf(sline, "Vertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+        Vertex v = create_vertex_private(vi);
+        set_point(v, p);
+        if (sinfo) {
+          set_string(v, sinfo);
+          if (string_has_key(sinfo, "cusp")) flags(v).flag(vflag_cusp) = true;
+        }
+        return;
       }
-      int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
-      if (fi < 0) {
-        fi = j;
-        continue;
+      if (!strncmp(sline, "Vspl ", 5)) {
+        int vi, vs1i, vs2i, vni;
+        assertx(sscanf(sline, "Vspl %d %d %d %d", &vi, &vs1i, &vs2i, &vni) == 4);
+        split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
+        return;
       }
-      Vertex v = id_retrieve_vertex(j);
-      if (!v) {
-        SHOW(sline, j);
-        assertnever("Vertex does not exist");
+      if (!strncmp(sline, "Vmerge ", 7)) {
+        int vi1, vi2;
+        assertx(sscanf(sline, "Vmerge %d %d", &vi1, &vi2) == 2);
+        merge_vertices(id_vertex(vi1), id_vertex(vi2));
+        return;
       }
-      va.push(v);
-    }
-    if (!assertw(va.num() >= 3)) return;
-    if (!assertw(legal_create_face(va))) {
-      if (0) {
-        SHOWL;
-        SHOW(va.num());
-        SHOW(sline);
-        for (Vertex v : va) SHOW(vertex_id(v));
+      break;
+    case 'F':
+      if (!strncmp(sline, "Face ", 5)) {
+        PArray<Vertex, 6> va;
+        char* s = sline + 4;
+        int fi = -1;
+        for (;;) {
+          while (*s && isspace(*s)) s++;
+          if (!*s) break;
+          char* beg = s;
+          while (*s && isdigit(*s)) s++;
+          if (*s && !isspace(*s)) {
+            SHOW(sline, *s);
+            assertnever("");
+          }
+          int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
+          if (fi < 0) {
+            fi = j;
+            continue;
+          }
+          Vertex v = id_retrieve_vertex(j);
+          if (!v) {
+            SHOW(sline, j);
+            assertnever("Vertex does not exist");
+          }
+          va.push(v);
+        }
+        if (!assertw(va.num() >= 3)) return;
+        if (1 && !assertw(legal_create_face(va))) {  // Unfortunately, somewhat expensive.
+          if (0) {
+            SHOWL;
+            SHOW(va.num());
+            SHOW(sline);
+            for (Vertex v : va) SHOW(vertex_id(v));
+          }
+          return;
+        }
+        Face f = fi ? create_face_private(fi, va) : create_face(va);
+        if (sinfo) set_string(f, sinfo);
+        return;
       }
-      return;
-    }
-    Face f = fi ? create_face_private(fi, va) : create_face(va);
-    if (sinfo) set_string(f, sinfo);
-  } else if (sline[0] == 'C' && !strncmp(sline, "Corner ", 7)) {
-    int vi;
-    int fi;
-    assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
-    Vertex v = id_retrieve_vertex(vi);
-    Face f = id_retrieve_face(fi);
-    if (!v) {
-      Warning("Corner vertex does not exist");
-    } else if (!f) {
-      Warning("Corner face does not exist");
-    } else {
-      Corner c = corner(v, f);
-      if (sinfo) set_string(c, sinfo);
-    }
-  } else if (sline[0] == 'E' && !strncmp(sline, "Edge ", 5)) {
-    int vi1, vi2;
-    assertx(sscanf(sline, "Edge %d %d", &vi1, &vi2) == 2);
-    Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
-    if (!e) Warning("GMesh::read_line(): Did not find edge in mesh");
-    if (e && sinfo) {
-      set_string(e, sinfo);
-      flags(e).flag(eflag_sharp) = string_has_key(sinfo, "sharp");
-    }
-  } else if (!strncmp(sline, "MVertex ", 8)) {
-    Point p;
-    int vi;
-    assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
-    Vertex v = id_vertex(vi);
-    set_point(v, p);
-    if (sinfo) set_string(v, sinfo);
-  } else if (!strncmp(sline, "CVertex ", 8)) {
-    create_vertex_private(to_int(sline + 8));
-  } else if (!strncmp(sline, "DVertex ", 8)) {
-    destroy_vertex(id_vertex(to_int(sline + 8)));
-  } else if (!strncmp(sline, "DFace ", 6)) {
-    destroy_face(id_face(to_int(sline + 6)));
-  } else if (!strncmp(sline, "Ecol ", 5)) {
-    int vi1, vi2;
-    assertx(sscanf(sline, "Ecol %d %d", &vi1, &vi2) == 2);
-    // collapse_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)));
-    Vertex vs = id_vertex(vi1), vt = id_vertex(vi2);
-    collapse_edge_vertex(edge(vs, vt), vs);
-  } else if (!strncmp(sline, "Eswa ", 5)) {
-    int vi1, vi2;
-    assertx(sscanf(sline, "Eswa %d %d", &vi1, &vi2) == 2);
-    assertx(swap_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2))));
-  } else if (!strncmp(sline, "Espl ", 5)) {
-    int vi1, vi2, vi3;
-    assertx(sscanf(sline, "Espl %d %d %d", &vi1, &vi2, &vi3) == 3);
-    split_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)), vi3);
-  } else if (!strncmp(sline, "Vspl ", 5)) {
-    int vi, vs1i, vs2i, vni;
-    assertx(sscanf(sline, "Vspl %d %d %d %d", &vi, &vs1i, &vs2i, &vni) == 4);
-    split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
-  } else if (!strncmp(sline, "Vmerge ", 7)) {
-    int vi1, vi2;
-    assertx(sscanf(sline, "Vmerge %d %d", &vi1, &vi2) == 2);
-    merge_vertices(id_vertex(vi1), id_vertex(vi2));
-  } else {
-    if (Warning("GMesh::read: cannot parse line")) SHOW(sline);
+      break;
+    case 'C':
+      if (!strncmp(sline, "Corner ", 7)) {
+        int vi;
+        int fi;
+        assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
+        Vertex v = id_retrieve_vertex(vi);
+        Face f = id_retrieve_face(fi);
+        if (!v) {
+          Warning("Corner vertex does not exist");
+        } else if (!f) {
+          Warning("Corner face does not exist");
+        } else {
+          Corner c = corner(v, f);
+          if (sinfo) set_string(c, sinfo);
+        }
+        return;
+      }
+      if (!strncmp(sline, "CVertex ", 8)) {
+        create_vertex_private(to_int(sline + 8));
+        return;
+      }
+      break;
+    case 'E':
+      if (!strncmp(sline, "Edge ", 5)) {
+        int vi1, vi2;
+        assertx(sscanf(sline, "Edge %d %d", &vi1, &vi2) == 2);
+        Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
+        if (!e) Warning("GMesh::read_line(): Did not find edge in mesh");
+        if (e && sinfo) {
+          set_string(e, sinfo);
+          flags(e).flag(eflag_sharp) = string_has_key(sinfo, "sharp");
+        }
+        return;
+      }
+      if (!strncmp(sline, "Ecol ", 5)) {
+        int vi1, vi2;
+        assertx(sscanf(sline, "Ecol %d %d", &vi1, &vi2) == 2);
+        // collapse_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)));
+        Vertex vs = id_vertex(vi1), vt = id_vertex(vi2);
+        collapse_edge_vertex(edge(vs, vt), vs);
+        return;
+      }
+      if (!strncmp(sline, "Eswa ", 5)) {
+        int vi1, vi2;
+        assertx(sscanf(sline, "Eswa %d %d", &vi1, &vi2) == 2);
+        assertx(swap_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2))));
+        return;
+      }
+      if (!strncmp(sline, "Espl ", 5)) {
+        int vi1, vi2, vi3;
+        assertx(sscanf(sline, "Espl %d %d %d", &vi1, &vi2, &vi3) == 3);
+        split_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)), vi3);
+        return;
+      }
+      break;
+    case 'M':
+      if (!strncmp(sline, "MVertex ", 8)) {
+        Point p;
+        int vi;
+        assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+        Vertex v = id_vertex(vi);
+        set_point(v, p);
+        if (sinfo) set_string(v, sinfo);
+        return;
+      }
+      break;
+    case 'D':
+      if (!strncmp(sline, "DVertex ", 8)) {
+        destroy_vertex(id_vertex(to_int(sline + 8)));
+        return;
+      }
+      if (!strncmp(sline, "DFace ", 6)) {
+        destroy_face(id_face(to_int(sline + 6)));
+        return;
+      }
+      break;
   }
+  if (Warning("GMesh::read: cannot parse line")) SHOW(sline);
 }
 
 static inline int strprefix(const char* s, const char* p) {

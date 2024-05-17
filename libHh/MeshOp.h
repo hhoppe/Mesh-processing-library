@@ -103,7 +103,6 @@ class Vnors {
  public:
   enum class EType { unspecified, angle, sum, area, sloan, subdiv };
   Vnors(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
-  // ?? Vnors(Vnors&& v) : _mfnor(std::move(v._mfnor)), _nor(v._nor) {}  // = default
   bool is_unique() const { return !_mfnor; }
   const Vector& unique_nor() const { return (ASSERTX(is_unique()), _nor); }
   const Vector& face_nor(Face f) const { return (ASSERTX(!is_unique()), _mfnor->get(f)); }

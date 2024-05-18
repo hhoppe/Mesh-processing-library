@@ -2173,7 +2173,7 @@ void do_procedure(Args& args) {
           }
         });
       }
-      Vector4 vmean(0.f);
+      Vector4 vmean{};
       {
         MatrixView<Vector4> mest = multigrid.initial_estimate();
         parallel_for_coords(dims, [&](const Vec2<int>& yx) { mest[yx] = (mask[yx] ? grid0 : gridf)[yx]; });

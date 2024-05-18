@@ -270,8 +270,8 @@ const char* GMesh::corner_key(string& str, Corner c, const char* key) const {
   bool b2 = string_has_key(get_string(corner_vertex(c)), key);
   if (!b1 && !b2) return nullptr;
   if (b1 && b2) Warning("Have both vertex and corner info");
-  if (!b1) return assertx(string_key(str, get_string(corner_vertex(c)), key));
-  return assertx(string_key(str, get_string(c), key));
+  if (!b1) return string_key(str, get_string(corner_vertex(c)), key);
+  return string_key(str, get_string(c), key);
 }
 
 string GMesh::string_update(const string& s, const char* key, const char* val) {

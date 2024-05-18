@@ -29,7 +29,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
   }
   Vec<float, n> val;
   for_int(i, n) val[i] = a[i][i];
-  SGrid<float, n, n> vec = {{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}};
+  SGrid<float, n, n> vec{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}};
   for (int iter = 0;; iter++) {
     {
       float sum = 0.f;

@@ -1192,7 +1192,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
         iattribl.push_array(V(int(WGL_SAMPLE_BUFFERS_ARB), 1, int(WGL_SAMPLES_ARB), nsamples));
       }
       iattribl.push_array(V(0, 0));
-      Array<float> fattribl = {0.f, 0.f};
+      Array<float> fattribl{0.f, 0.f};
       Vec<int, 1000> iFormats;
       unsigned numFormats;
       assertx(wglChoosePixelFormatARB);

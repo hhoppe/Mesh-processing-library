@@ -834,7 +834,7 @@ void do_blur(Args& args) {
     parallel_for_coords(
         image.dims(),
         [&](const Vec2<int>& yx) {
-          Vector4 vec(0.f);
+          Vector4 vec{};
           for_coordsL(twice(-r), twice(r + 1), [&](const Vec2<int>& dyx) {
             vec += ar_gauss[dyx[0] + r] * ar_gauss[dyx[1] + r] * grid.inside(yx + dyx, g_bndrules);
           });
@@ -1912,7 +1912,7 @@ void do_gdtoroidal() {
     parallel_for_coords(
         image.dims(),
         [&](const Vec2<int>& yx) {
-          Vector4 vrhs(0.f);
+          Vector4 vrhs{};
           vrhs += grid_orig.inside(yx + V(-1, 0), bndrules) - grid_orig[yx];
           vrhs += grid_orig.inside(yx + V(+1, 0), bndrules) - grid_orig[yx];
           vrhs += grid_orig.inside(yx + V(0, -1), bndrules) - grid_orig[yx];
@@ -1934,7 +1934,7 @@ void do_gdtoroidal() {
     parallel_for_coords(
         image.dims(),
         [&](const Vec2<int>& yx) {  // (highly inefficient implementation)
-          Vector4 vrhs(0.f);
+          Vector4 vrhs{};
           for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
             auto yxn = yx + yxd;
             if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
@@ -1990,7 +1990,7 @@ void do_gdfill() {
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has visible difference
   assertx(image.zsize() == 4);
   auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
-  Vector4 vmean(0.f);
+  Vector4 vmean{};
   {
     for_coords(image.dims(), [&](const Vec2<int>& yx) {  // sequential due to reduction
       if (!masked(yx)) vmean += Vector4(image[yx]);
@@ -2047,7 +2047,7 @@ void do_gdfill() {
     parallel_for_coords(
         image.dims(),
         [&](const Vec2<int>& yx) {
-          Vector4 vrhs(0.f);
+          Vector4 vrhs{};
           for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
             auto yxn = yx + yxd;
             if (!grid_orig.ok(yxn)) continue;
@@ -3121,10 +3121,10 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
         Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
         if (optimized) {
           // HH_ATIMER("___rows");
-          fill(fscolsum, Vector4(0.f));
-          fill(fscolsum2, Vector4(0.f));
-          fill(fccolsum, Vector4(0.f));
-          fill(fccolsum2, Vector4(0.f));
+          fill(fscolsum, Vector4{});
+          fill(fscolsum2, Vector4{});
+          fill(fccolsum, Vector4{});
+          fill(fccolsum2, Vector4{});
           for_int(iy, window_diam) {
             float w = fwindow[iy];
             int yy = y - window_radius + iy;

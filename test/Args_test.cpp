@@ -23,8 +23,8 @@ void phase1(int argc, const char** argv) {
   bool flag = false, flap = false, flac = false;
   int val1 = 0, val2 = 0;
   float fa[2] = {0.f, 0.f};  // test C-array
-  Vec2<float> fb = {0.f, 0.f};
-  Vec2<float> fc = {0.f, 0.f};
+  Vec2<float> fb{0.f, 0.f};
+  Vec2<float> fc{0.f, 0.f};
   HH_ARGSF(flag, ": enable flag");
   HH_ARGSF(flap, ": turn on the flaps");
   args.f("-flac", flac, ": send out flacs");

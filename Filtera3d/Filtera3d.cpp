@@ -778,11 +778,11 @@ void process(RSA3dStream& ia3d) {
 }  // namespace
 
 int main(int argc, const char** argv) {
-  Vec3<float> diff = {-1.f, 0.f, 0.f};
-  Vec3<float> spec = {-1.f, 0.f, 0.f};
-  Vec3<float> phong = {-1.f, 0.f, 0.f};
-  Vec4<float> cullsphere = {0.f, 0.f, 0.f, 0.f};
-  Vec2<float> outlier = {0.f, 0.f};
+  Vec3<float> diff{-1.f, 0.f, 0.f};
+  Vec3<float> spec{-1.f, 0.f, 0.f};
+  Vec3<float> phong{-1.f, 0.f, 0.f};
+  Vec4<float> cullsphere{0.f, 0.f, 0.f, 0.f};
+  Vec2<float> outlier{0.f, 0.f};
   string restrictf;
   string transf;
   bool stat = false;

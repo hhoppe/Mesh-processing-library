@@ -354,7 +354,7 @@ struct NewMeshNei : noncopyable {
                         //    DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*()
 };
 
-// Parametrization of face points on would-be neighborhood.
+// Parameterization of face points on would-be neighborhood.
 struct Param {
   Array<int> ar_mini;   // closest face, index into ar_corners
   Array<Bary> ar_bary;  // coordinates on face (using ar_corners)
@@ -740,7 +740,7 @@ void get_face_qem(Face f, BQemT& qem) {
 }
 
 void get_sharp_edge_qem(Edge e, BQemT& qem) {
-  Vector nor(0.f, 0.f, 0.f);  // average normal of adjacent 1 or 2 faces.
+  Vector nor{};  // average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
     Vec3<Vertex> va = mesh.triangle_vertices(f);
     Vector fnor = cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
@@ -2388,7 +2388,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   }
 }
 
-// Optimize the position newp of v1 given fixed parametrizations of the face points (param).
+// Optimize the position newp of v1 given fixed parameterizations of the face points (param).
 // Return the resulting geometric energy (before reprojection -> overestimate).
 double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& newp) {
   assertx(nn.ar_corners.num());
@@ -2705,7 +2705,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
   return max_d2;
 }
 
-// Optimize the scalar attributes of wedges around v1 given fixed parametrizations of the face points (param).
+// Optimize the scalar attributes of wedges around v1 given fixed parameterizations of the face points (param).
 // Return the resulting scalar energy.
 double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
@@ -2875,7 +2875,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   uni_error = 0.f;
   dir_error = 0.f;
   bool handle_residuals = !!wfile_prog;
-  Vector vnormal(0.f, 0.f, 0.f);
+  Vector vnormal{};
   {
     // Compute average vertex normal (as will be done in SrMesh if the vertex doesn't have a unique normal).
     for_int(i, nn.ar_corners.num()) {
@@ -2917,7 +2917,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
       float min_d2 = BIGFLOAT;
       Face min_f = nullptr;
-      Bary min_bary(0.f, 0.f, 0.f);
+      Bary min_bary{};
       for (;;) {
         int tmin_i = arg_min(ar_d2);
         float tmin_d2 = ar_d2[tmin_i];
@@ -4866,7 +4866,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(no_simp_bnd, ": do not involve boundary vertices");
   HH_ARGSF(keepuvcorners, ": do not simplify vertices at uv=(0, 0), (1, 0), ...");
   HH_ARGSP(keepglobalv, "bool : do not simplify vertices tagged global");
-  HH_ARGSP(sphericalparam, "bool : keep valid spherical parametrization");
+  HH_ARGSP(sphericalparam, "bool : keep valid spherical parameterization");
   HH_ARGSF(attrib_project, ": project vunified to update wedge attribs");
   HH_ARGSP(gspring, "spr : force spring setting (-1 adaptive)");
   HH_ARGSP(gmindih, "dihcos : set min acceptable dihedral angle");

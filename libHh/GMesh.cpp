@@ -771,11 +771,11 @@ Vertex GMesh::center_split_face(Face f) {
     Vertex v = corner_vertex(c);
     if (get_string(c)) mvs.enter(v, extract_string(c));
   }
-  Vector scol(0.f, 0.f, 0.f);
+  Vector scol{};
   bool have_col = true;
-  Vector snor(0.f, 0.f, 0.f);
+  Vector snor{};
   bool have_nor = true;
-  UV suv(0.f, 0.f);
+  UV suv{};
   bool have_uv = true;
   for (Corner c : corners(f)) {
     if (Vector col; parse_corner_key_vec(c, "rgb", col))

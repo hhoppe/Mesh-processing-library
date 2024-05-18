@@ -4847,7 +4847,7 @@ Cylinder::Cylinder(int depth) {
   assertx(ii == num);
   // normals
   for (i = 0; i < num; i += 2) {
-    Vector an(0.f, 0.f, 0.f);
+    Vector an{};
     an += ok_normalized(cross(_v[i], _v[i + 1], _v[(i + 2) % num]));
     an += ok_normalized(cross(_v[(i + 2) % num], _v[(i + 3) % num], _v[(i + 4) % num]));
     an = ok_normalized(an);

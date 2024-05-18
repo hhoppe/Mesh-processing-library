@@ -61,7 +61,7 @@ const string& A3dElem::comment() const {
 }
 
 Vector A3dElem::pnormal() const {
-  Vector vt(0.f, 0.f, 0.f);
+  Vector vt{};
   assertx(_type == EType::polygon && num() >= 3);
   for_intL(i, 1, num() - 1) vt += cross(_v[0].p, _v[i].p, _v[i + 1].p);
   vt.normalize();

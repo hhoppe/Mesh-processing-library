@@ -1486,7 +1486,7 @@ void do_shadefancy(Args& args) {
     Pixel& pix = image[yx];
     Vector vnor;
     for_int(c, 3) vnor[c] = float(pix[c]) / 255.f * 2.f - 1.f;
-    Vector vcol(0.f, 0.f, 0.f);
+    Vector vcol{};
     for_int(i, ld.num()) {
       float vdot = dot(vnor, ld[i]);
       vdot = clamp(vdot, 0.f, 1.f);
@@ -1514,7 +1514,7 @@ void do_transf(Args& args) {
   parallel_for_coords(
       image.dims(),
       [&](const Vec2<int>& yx) {
-        Point p(0.f, 0.f, 0.f);
+        Point p{};
         for_int(z, image.zsize()) p[z] = image[yx][z] / 255.f;
         p *= frame;
         for_int(z, image.zsize()) image[yx][z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);
@@ -3012,7 +3012,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
         mat_C.dims(),
         [&](const Vec2<int>& yx) {
           const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;
-          Vector4 sum(0.f);
+          Vector4 sum{};
           for_int(iy, kn) for_int(ix, kn) {
             sum += (fkernel[iy] * fkernel[ix]) * mat_F.inside(yxf0 + V(iy, ix), k_reflected2);
           }
@@ -3026,7 +3026,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
         mtmp.dims(),
         [&](const Vec2<int>& yx) {
           int xf0 = yx[1] * 2 - kn / 2 + 1;
-          Vector4 sum(0.f);
+          Vector4 sum{};
           for_int(ix, kn) sum += fkernel[ix] * mat_F.inside(V(yx[0], xf0 + ix), k_reflected2);
           mtmp[yx] = sum;
         },
@@ -3035,7 +3035,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
         mat_C.dims(),
         [&](const Vec2<int>& yx) {
           int yf0 = yx[0] * 2 - kn / 2 + 1;
-          Vector4 sum(0.f);
+          Vector4 sum{};
           for_int(iy, kn) sum += fkernel[iy] * mtmp.inside(V(yf0 + iy, yx[1]), k_reflected2);
           mat_C[yx] = sum;
         },
@@ -3066,7 +3066,7 @@ auto upsample_image(CMatrixView<Vector4> mat_C) {
       mat_F.dims(),
       [&](const Vec2<int>& yx) {
         const Vec2<int> yxc = (yx + 1) / 2, yxodd = (yx + 1) - (yxc * 2), yxc0 = yxc - kn / 2;
-        Vector4 sum(0.f);
+        Vector4 sum{};
         for_int(iy, kn) for_int(ix, kn) {
           sum += (fkernels[yxodd[0]][iy] * fkernels[yxodd[1]][ix]) * mat_C.inside(yxc0 + V(iy, ix), k_reflected2);
         }
@@ -3141,8 +3141,8 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
         }
         // HH_ATIMER("___rest");
         for_int(x, mat_s.xsize()) {
-          Vector4 ssum(0.f), ssum2(0.f);  // structure sum and sum squared
-          Vector4 csum(0.f), csum2(0.f);  // color sum and sum squared
+          Vector4 ssum{}, ssum2{};  // structure sum and sum squared
+          Vector4 csum{}, csum2{};  // color sum and sum squared
           if (!optimized) {
             // Gather window statistics in structure image (downsampled fine image).
             for_int(iy, window_diam) for_int(ix, window_diam) {

@@ -20,7 +20,7 @@ Vector Polygon::get_normal_dir() const {
   const auto& self = *this;
   if (num() == 3) return cross(self[0], self[1], self[2]);  // short-cut
   assertx(num() >= 3);
-  Vector nor(0.f, 0.f, 0.f);
+  Vector nor{};
   for_intL(i, 1, num() - 1) nor += cross(self[0], self[i], self[i + 1]);
   return nor;
 }

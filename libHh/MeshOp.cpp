@@ -603,7 +603,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
         if (nsharpe > 2 || is_cusp) {  // corner
           vec = cross(vp, mesh.point(av[0]), mesh.point(av.last()));
           if (avn > 2) {  // from Polygon::get_normal_dir()
-            Vector pnor(0.f, 0.f, 0.f);
+            Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
             if (dot(vec, pnor) < 0) {
               Warning("flipnor_corner");
@@ -618,7 +618,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
               vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
           vec = cross(v1, v2);
           {  // direction could be wrong (very bad case)
-            Vector pnor(0.f, 0.f, 0.f);
+            Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
             if (dot(vec, pnor) < 0) {
               Warning("flipnor_regcrease");
@@ -640,7 +640,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           }
           vec = cross(v1, vec);
           if (avn > 2) {
-            Vector pnor(0.f, 0.f, 0.f);
+            Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
             if (dot(vec, pnor) < 0) {
               Warning("flipnor_crease");
@@ -657,7 +657,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           const Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
           vec = cross(t1, t2);
         } else {  // interior or dart
-          Vector v1(0.f, 0.f, 0.f), v2(0.f, 0.f, 0.f);
+          Vector v1{}, v2{};
           for_int(i, avn) {
             const Point& p = mesh.point(av[i]);
             v1 += p * Trig::cos(i, avn);

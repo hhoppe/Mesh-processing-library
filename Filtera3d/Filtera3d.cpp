@@ -115,12 +115,11 @@ HH_STATNP(Splanar);   // polygon planarity (0=planar)
 HH_STATNP(Sptnor);    // point, existence of normal
 Bbox g_bbox;          // box extent
 float fsplit;         // fsplit=split; { fsplit*=speedup; }
-A3dVertexColor zero_vertexcolor;
 Vec2<float> colorheight;
 A3dVertexColor input_color;
 
 A3dVertex affinely_combine(const A3dElem& el, CArrayView<float> ar_w) {
-  A3dVertex vavg(Point(0.f, 0.f, 0.f), Vector(0.f, 0.f, 0.f), zero_vertexcolor);
+  A3dVertex vavg{};
   Vector pnor = el.pnormal();
   for_int(i, el.num()) {
     float a = ar_w[i];
@@ -152,7 +151,7 @@ void delay_element() {
 
 bool is_degenerate(const A3dElem& el) {
   if (!assertw(el.num() < 3)) return true;
-  Vector vt(0.f, 0.f, 0.f);
+  Vector vt{};
   for_intL(i, 1, el.num() - 1) vt += cross(el[0].p, el[i].p, el[i + 1].p);
   float area = .5f * mag(vt);
   return !area;
@@ -169,7 +168,7 @@ bool out_of_bounds(const A3dElem& el) {
 }
 
 bool polygon_needs_flip(const A3dElem& el) {
-  Vector va(0.f, 0.f, 0.f);
+  Vector va{};
   Vector pnor = el.pnormal();
   for_int(i, el.num()) va += is_zero(el[i].n) ? pnor : el[i].n;
   return dot(va, pnor) < 0;
@@ -206,7 +205,7 @@ void compute_stats(const A3dElem& el) {
     Sqdiagl.enter(dist(el[1].p, el[3].p));
   }
   assertx(el.num() >= 3);
-  Vector vt(0.f, 0.f, 0.f);
+  Vector vt{};
   for_intL(i, 1, el.num() - 1) vt += cross(el[0].p, el[i].p, el[i + 1].p);
   float area = .5f * mag(vt);
   Sparea.enter(area);
@@ -472,7 +471,7 @@ bool loop(A3dElem& el) {
   }
   for_int(i, el.num()) {
     if (nonormals || (optnormals && !compare(el[i].n, pnor, 1e-6f))) el[i].n = Vector(0.f, 0.f, 0.f);
-    if (nocolor) el[i].c = zero_vertexcolor;
+    if (nocolor) el[i].c = A3dVertexColor{};
     bool validcol = false;
     if (cdiff[0] >= 0) {
       el[i].c.d = cdiff;

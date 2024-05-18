@@ -359,7 +359,7 @@ int main(int argc, const char** argv) {
             multigrid.rhs()[y][x] = float(vrhs);
           }
         });
-        double vsum(0.f);
+        double vsum = 0.f;
         if (0) {
           omp_parallel_for_T(reduction(+ : vsum), int, y, 0, dims[0]) for_int(x, dims[1]) {
             vsum += grids[grid_labels[y][x]][y][x][c];

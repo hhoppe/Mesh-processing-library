@@ -132,8 +132,8 @@ void do_filename(Args& args) {
     gscmfi.push(0);
     gdis2.push(0.f);
     gscmf.push(nullptr);
-    gbary.push(Bary(0.f, 0.f, 0.f));
-    gclp.push(Point(0.f, 0.f, 0.f));
+    gbary.push(Bary{});
+    gclp.push(Point{});
   }
   showdf("%d points read\n", co.num());
 }

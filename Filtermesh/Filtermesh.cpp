@@ -1372,7 +1372,7 @@ void do_desbrunsmooth(Args& args) {
   }
 }
 
-// *** LSCM parametrization
+// *** LSCM parameterization
 
 Vertex farthest_vertex(CArrayView<Vertex> bndverts, Vertex v0) {
   assertx(bndverts.num() >= 2);
@@ -1524,7 +1524,7 @@ void do_lscm() {
   }
 }
 
-// *** Poisson parametrization
+// *** Poisson parameterization
 
 void do_poissonparam() {
   HH_TIMER("_poissonparam");
@@ -1721,7 +1721,7 @@ void do_splitvalence(Args& args) {
       }
     }
     Array<Vertex> va(mesh.ccw_vertices(v));
-    Vector vec(0.f, 0.f, 0.f);
+    Vector vec{};
     for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
     Vertex vs1 = va[0];
     Vertex vs2 = va[va.num() / 2];
@@ -2895,21 +2895,19 @@ void do_randpts(Args& args) {
   Map<Vertex, Vnors> mvnors;
   for (Vertex v : mesh.vertices()) mvnors.enter(v, Vnors(mesh, v));
   Array<Vertex> va;
-  Bary bary;
   for_int(i, npoints) {
     int fi = discrete_binary_search(fcarea, 0, nf, Random::G.unif());
     Face f = fface[fi];
     mesh.get_vertices(f, va);
     assertx(va.num() == 3);
-    bary[0] = Random::G.unif();
-    bary[1] = Random::G.unif();
+    Bary bary(Random::G.unif(), Random::G.unif(), 0.f);
     if (bary[0] + bary[1] > 1.f) {
       bary[0] = 1.f - bary[0];
       bary[1] = 1.f - bary[1];
     }
     bary[2] = 1.f - bary[0] - bary[1];
     Point p = interp(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]), bary);
-    Vector nor(0.f, 0.f, 0.f);
+    Vector nor{};
     for_int(j, 3) nor += mvnors.get(va[j]).get_nor(f) * bary[j];
     assertx(nor.normalize());
     output_point(p, nor);
@@ -3534,7 +3532,7 @@ float signed_distance(const Point& p, Face f) {
       Vec3<Vertex> va = mesh.triangle_vertices(f);
       Vertex v = va[jpos];
       if (mesh.is_boundary(v)) return k_Contour_undefined;
-      Vector nor(0.f, 0.f, 0.f);
+      Vector nor{};
       for (Face ff : mesh.faces(v)) {
         mesh.polygon(ff, poly);
         nor += poly.get_normal();
@@ -4187,7 +4185,7 @@ void convex_group_flip_faces(const Set<Face>& group) {
   Point ctr = to_Point(normalized(h));
   int vote_flip = 0, vote_keep = 0;
   for (Face f : group) {
-    Vector toctr(0.f, 0.f, 0.f);
+    Vector toctr{};
     for (Vertex v : mesh.vertices(f)) toctr += ctr - mesh.point(v);
     Polygon poly;
     mesh.polygon(f, poly);
@@ -4250,7 +4248,7 @@ void do_fromObj(Args& args) {
       nor.push(n);
     } else if (strncmp(line, "f ", 2) == 0) {
       int n = 2, l = int(strlen(line));  // jump over "f "
-      Vector fn(0.f, 0.f, 0.f);
+      Vector fn{};
       Array<Vertex> va;
       Polygon pp;
       bool have_nors = true;
@@ -4474,8 +4472,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(silsubdiv, ": 1 iter of silhouette subdivision");
   HH_ARGSD(taubinsmooth, "n : n iter of Taubin smoothing");
   HH_ARGSD(desbrunsmooth, "l : Desbrun smoothing with lambda (e.g. 1.)");
-  HH_ARGSD(lscm, ": least-squares conformal map parametrization");
-  HH_ARGSD(poissonparam, ": Poisson parametrization");
+  HH_ARGSD(lscm, ": least-squares conformal map parameterization");
+  HH_ARGSD(poissonparam, ": Poisson parameterization");
   HH_ARGSC("", ":");
   HH_ARGSD(mark, ": mark tagged elements on output");
   HH_ARGSD(assign_normals, ": save normals as strings on {v, c}");

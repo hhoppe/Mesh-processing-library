@@ -2,7 +2,6 @@
 #include "libHh/MeshSearch.h"
 
 #include "libHh/Bbox.h"
-#include "libHh/Random.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 
@@ -89,11 +88,11 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
       result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
       float dfrac = sqrt(result.d2) * _ftospatial[0][0];
       // if (!count) { HH_SSTAT(Sms_dfrac0, dfrac); }
-      if (dfrac > 2e-2f) {  // failure
+      if (dfrac > 2e-2f) {  // Failure.
         f = nullptr;
         break;
       }
-      if (dfrac < 1e-6f) break;  // success
+      if (dfrac < 1e-6f) break;  // Success.
       Vec3<Vertex> va = _mesh.triangle_vertices(f);
       int side = -1;
       for_int(i, 3) {
@@ -103,17 +102,18 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
         }
       }
       if (side >= 0) {
-        if (0) {  // slow: randomly choose ccw or clw
-          side = mod3(side + 1 + (Random::G.unif() < 0.5f));
-        } else if (0) {  // works: always choose ccw
-          side = mod3(side + 1);
-        } else {  // fastest: jump across vertex
+        if (0) {  // Slow: randomly choose ccw or clw.
+          // side = mod3(side + 1 + (Random::G.unif() < 0.5f));
+        } else if (0) {  // Works: always choose ccw.
+          // side = mod3(side + 1);
+        } else {  // Fastest: jump across vertex.
           Vertex v = va[side];
           int val = _mesh.degree(v);
-          int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);
+          // int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but requires non-thread-safe Random.
+          int nrot = ((val - 1) / 2);
           for_int(i, nrot) {
             f = _mesh.ccw_face(v, f);
-            if (!f) break;  // failure
+            if (!f) break;  // Failure.
           }
           side = -1;
         }
@@ -125,8 +125,8 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
           }
         }
         if (side < 0) {
-          if (_options.allow_off_surface) break;     // success
-          if (_options.allow_internal_boundaries) {  // failure
+          if (_options.allow_off_surface) break;     // Success.
+          if (_options.allow_internal_boundaries) {  // Failure.
             f = nullptr;
             break;
           }
@@ -135,9 +135,9 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
       if (side >= 0) f = _mesh.opp_face(va[side], f);
       if (!f) {
         if (!_options.allow_internal_boundaries) assertnever("MeshSearch has hit surface boundary");
-        break;  // failure
+        break;  // Failure.
       }
-      if (++count == 10) {  // failure
+      if (++count == 10) {  // Failure.
         f = nullptr;
         break;
       }

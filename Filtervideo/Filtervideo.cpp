@@ -1402,8 +1402,8 @@ void compute_looping_regions() {
             std::swap(y0, y1), std::swap(x0, x1);
             int start0 = g_lp.mat_start[y0][x0], period0 = g_lp.mat_period[y0][x0];
             int start1 = g_lp.mat_start[y1][x1], period1 = g_lp.mat_period[y1][x1];
-            Vector p0sum(0.f, 0.f, 0.f), p0sum2(0.f, 0.f, 0.f);
-            Vector p1sum(0.f, 0.f, 0.f), p1sum2(0.f, 0.f, 0.f);
+            Vector p0sum{}, p0sum2{};
+            Vector p1sum{}, p1sum2{};
             for_intL(f, start0, start0 + period0) for_int(c, 3) {
               p0sum[c] += to_float(video(f, y0, x0)[c]);
               p0sum2[c] += square(to_float(video(f, y0, x0)[c]));
@@ -2213,7 +2213,7 @@ void do_transf(Args& args) {
   Frame frame = FrameIO::parse_frame(args.get_string());
   parallel_for_each(range(video.nframes()), [&](const int f) {
     for (Pixel& pix : video[f]) {
-      Point p(0.f, 0.f, 0.f);
+      Point p{};
       for_int(z, nz) p[z] = pix[z] / 255.f;
       p *= frame;
       for_int(z, nz) pix[z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);

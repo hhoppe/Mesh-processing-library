@@ -183,7 +183,7 @@ inline float project_point_triangle2(const Point& p, const Point& p1, const Poin
 
 inline float dist_point_triangle2(const Point& p, const Point& p1, const Point& p2, const Point& p3) {
   Bary bary;
-  Point clp(0.f, 0.f, 0.f);
+  Point clp;
   return project_point_triangle2(p, p1, p2, p3, bary, clp);
 }
 

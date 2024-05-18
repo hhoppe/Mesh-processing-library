@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_BBOX_H_
 
 #include "libHh/Geometry.h"
-#include "libHh/RangeOp.h"
+#include "libHh/Range.h"
 
 namespace hh {
 
@@ -12,6 +12,12 @@ struct Bbox : Vec2<Point> {
   Bbox() { clear(); }
   constexpr Bbox(const Point& pmin, const Point& pmax) : Vec2<Point>(pmin, pmax) {}
   constexpr Bbox(Vec2<Point> bbox) : Vec2<Point>(std::move(bbox)) {}
+  template <typename Range, typename = enable_if_range_t<Range>> explicit Bbox(Range&& range) {
+    using std::begin;
+    using std::end;
+    auto b = begin(range), e = end(range);
+    for (; b != e; ++b) union_with(*b);
+  }
   void clear() { (*this)[0] = thrice(+big), (*this)[1] = thrice(-big); }
   void infinite() { (*this)[0] = thrice(-big), (*this)[1] = thrice(+big); }
   void union_with(const Bbox& bbox) {

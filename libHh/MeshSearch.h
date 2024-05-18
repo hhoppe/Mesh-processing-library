@@ -72,7 +72,7 @@ class MeshSearch {
     Point clp;
     float d2;
   };
-  Result search(const Point& p, Face hintf) const;  // search() is threadsafe (except for Random::G?).
+  Result search(const Point& p, Face hintf) const;
   const GMesh& mesh() const { return _mesh; }
 
  private:

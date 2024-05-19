@@ -11,7 +11,7 @@ namespace hh {
 float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3);
 
 // Find a lower bound on the distance between p and an axis-aligned bounding box.
-float lb_dist_point_bbox(const Point& p, const Bbox& bbox);
+float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox);
 
 // Given point p and triangle (p1, p2, p3), return the squared distance,
 //  and compute the convex barycentric coordinates ret_cba of the closest point ret_clp within the triangle.
@@ -50,7 +50,7 @@ inline float lb_dist_point_triangle(const Point& p, const Point& p1, const Point
   return d;
 }
 
-inline float lb_dist_point_bbox(const Point& p, const Bbox& bbox) {
+inline float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox) {
   float d = 0.f;
   for_int(c, 3) {
     const float v = p[c];

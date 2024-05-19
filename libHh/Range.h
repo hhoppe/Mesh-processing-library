@@ -12,8 +12,7 @@
 {
   // Count the number of elements equal to specified one; see RangeOp.h for other examples.
   template <typename R, typename = enable_if_range_t<R>> size_t count(R && range, const iterator_t<R>& elem) {
-    using std::begin;
-    using std::end;
+    using std::begin, std::end;
     return std::count(begin(range), end(range), elem);
   }
 }

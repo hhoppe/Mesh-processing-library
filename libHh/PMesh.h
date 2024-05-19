@@ -336,7 +336,7 @@ struct PMeshInfo {
   int _full_nvertices;
   int _full_nwedges;
   int _full_nfaces;
-  Bbox _full_bbox;
+  Bbox<float, 3> _full_bbox;
 };
 
 // Progressive mesh:

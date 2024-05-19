@@ -33,7 +33,7 @@ class HiddenLineRemoval {
     Vector n;
     float d;
     float tol;
-    Bbox bbox;
+    Bbox<float, 3> bbox;
   };
   struct HlrSegment {
     HlrSegment() = default;
@@ -62,7 +62,7 @@ class HiddenLineRemoval {
     p.n = nor;
     p.d = p.p.get_planec(p.n);
     p.tol = max(p.p.get_tolerance(p.n, p.d), float{k_epsilon_a}) * 1.02f;  // cast to avoid reference of constexpr
-    p.p.get_bbox(p.bbox);
+    p.bbox = Bbox{p.p};
     // enter coordinates [1..2] into Kdtree<int, 2>
     _kd.enter(pn, p.bbox[0].tail<2>(), p.bbox[1].tail<2>());
   }

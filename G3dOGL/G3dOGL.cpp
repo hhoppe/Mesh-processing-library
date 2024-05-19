@@ -61,7 +61,7 @@ extern Frame tview;        // to let SR access view matrix
 extern int info;           // for SR diagnostics
 extern string g_filename;  // to override filename for ob1
 extern float lod_level;    // in movie/video
-extern void UpdateOb1Bbox(const Bbox& bbox);
+extern void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 extern void update_lod();
 extern bool keep_stdin_open;
 extern float override_frametime;
@@ -2067,8 +2067,7 @@ void draw_mesh(GMesh& mesh) {
       bool is_new;
       float& mesh_radius = mesh_radii.enter(&mesh, 0.f, is_new);
       if (is_new) {
-        Bbox bbox;
-        for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+        const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
         mesh_radius = bbox.max_side();
         assertw(mesh_radius > 0.f);
       }
@@ -5173,8 +5172,7 @@ void read_ply(const string& filename) {
     }
   }
   showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_vpos.num(), ply_findices.num());
-  Bbox bbox;
-  for_int(i, ply_vpos.num()) bbox.union_with(ply_vpos[i]);
+  const Bbox bbox{ply_vpos};
   g3d::UpdateOb1Bbox(bbox);
   if (g3d::g_filename == "") g3d::g_filename = filename;
 }

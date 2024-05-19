@@ -119,7 +119,7 @@ const Point& object::center() const {
   return !_def || !mode_centroid ? rec_point : _pavg;
 }
 
-const Bbox& object::bbox() const {
+const Bbox<float, 3>& object::bbox() const {
   static const Bbox k_bbempty(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
   if (!_def) {
     Warning("Undefined bbox");
@@ -164,7 +164,7 @@ void objects::copy(int obf, int obt) {
 objects g_obs;
 
 // hook from HB
-void UpdateOb1Bbox(const Bbox& bbox) {
+void UpdateOb1Bbox(const Bbox<float, 3>& bbox) {
   assertx(!g_obs[1].defined());
   g_obs[1].enter_point(Point(bbox[0][0], bbox[0][1], bbox[0][2]));
   g_obs[1].enter_point(Point(bbox[0][0], bbox[0][1], bbox[1][2]));

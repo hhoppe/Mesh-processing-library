@@ -218,7 +218,7 @@ class SrMesh {
   int num_active_vertices() const { return _num_active_vertices; }
   int num_active_faces() const { return _num_active_faces; }
   void ok() const;
-  const Bbox& get_bbox() const { return _bbox; }
+  const Bbox<float, 3>& get_bbox() const { return _bbox; }
 
   // Interface: Rendering using OpenGL:
   void ogl_render_faces_individually(bool unlit_texture);
@@ -231,7 +231,7 @@ class SrMesh {
   int ogl_render_tvclines();  // return number of cache misses
 
  private:
-  Bbox _bbox;
+  Bbox<float, 3> _bbox;
   Materials _materials;
   Array<SrVertex> _vertices;
   Array<SrFace> _faces;

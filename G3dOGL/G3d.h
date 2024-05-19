@@ -137,7 +137,7 @@ class object {
   void set_vis(bool i);
   Frame& tm();
   const Point& center() const;  // mode-dependent center in world coordinates
-  const Bbox& bbox() const;
+  const Bbox<float, 3>& bbox() const;
   float radius() const;
   void update();                    // update HB if necessary
   GMesh* get_mesh();                // creates if non-existent
@@ -149,7 +149,7 @@ class object {
   bool _vis{true};              // is visible
   bool _def{false};             // is non-empty
   Point _pavg;                  // estimated centroid
-  Bbox _bbox{Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f)};
+  Bbox<float, 3> _bbox{Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f)};
   float _radius;             // estimated object radius
   bool _needs_update{true};  // wants HB update
   Vec3<Stat> _stat_coord;    // statistics on each coordinate
@@ -174,7 +174,7 @@ extern objects g_obs;
 // G3d
 void UpdateFrame(const ObjectFrame& object_frame);
 void ExpandStateFilename();
-void UpdateOb1Bbox(const Bbox& bbox);
+void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 
 // G3devent
 bool KeyPressed(const string& s);

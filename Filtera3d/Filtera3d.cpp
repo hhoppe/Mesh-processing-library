@@ -89,7 +89,7 @@ struct S_tess {
 } g_tess;
 
 struct S_inter {
-  Bbox bbox;                         // global bounding box of all polygons
+  Bbox<float, 3> bbox;               // global bounding box of all polygons
   Array<unique_ptr<Polygon>> vpoly;  // (not Array<Polygon> as resizing would invalidate pointers)
   int nedges;
 } g_inter;
@@ -104,17 +104,17 @@ struct S_outlier {
   Array<Point> pa;
 } g_outlier;
 
-HH_STATNP(Slnvert);   // polyline # of vertices
-HH_STATNP(Sledgel);   // polyline edge length
-HH_STATNP(Slclosed);  // polyline closed
-HH_STATNP(Spnvert);   // polygon # of vertices
-HH_STATNP(Spedgel);   // polygon edge length
-HH_STATNP(Sqdiagl);   // quad diagonal length
-HH_STATNP(Sparea);    // polygon area
-HH_STATNP(Splanar);   // polygon planarity (0=planar)
-HH_STATNP(Sptnor);    // point, existence of normal
-Bbox g_bbox;          // box extent
-float fsplit;         // fsplit=split; { fsplit*=speedup; }
+HH_STATNP(Slnvert);     // polyline # of vertices
+HH_STATNP(Sledgel);     // polyline edge length
+HH_STATNP(Slclosed);    // polyline closed
+HH_STATNP(Spnvert);     // polygon # of vertices
+HH_STATNP(Spedgel);     // polygon edge length
+HH_STATNP(Sqdiagl);     // quad diagonal length
+HH_STATNP(Sparea);      // polygon area
+HH_STATNP(Splanar);     // polygon planarity (0=planar)
+HH_STATNP(Sptnor);      // point, existence of normal
+Bbox<float, 3> g_bbox;  // box extent
+float fsplit;           // fsplit=split; { fsplit*=speedup; }
 Vec2<float> colorheight;
 A3dVertexColor input_color;
 
@@ -538,9 +538,7 @@ bool loop(A3dElem& el) {
   if (intersect && polyg) {
     auto npoly = make_unique<Polygon>();
     el.get_polygon(*npoly);
-    Bbox bbox;
-    npoly->get_bbox(bbox);
-    g_inter.bbox.union_with(bbox);
+    g_inter.bbox.union_with(Bbox{*npoly});
     g_inter.vpoly.push(std::move(npoly));
     return false;  // new: only output intersection edges
   }
@@ -572,10 +570,8 @@ void compute_intersect() {
   Array<Point> pa;
   for (auto& ppoly : g_inter.vpoly) {
     Polygon& poly = *ppoly;
-    Bbox bbox;
-    poly.get_bbox(bbox);
-    bbox[0] *= f;
-    bbox[1] *= f;
+    Bbox bbox{poly};
+    for_int(min_max, 2) static_cast<Point&>(bbox[min_max]) *= f;
     auto func_considerpoly = [&](Polygon* const& id, Vec<float, 3>& bb0, Vec<float, 3>& bb1, KD::CBloc floc) {
       dummy_use(bb0, bb1, floc);
       const Polygon& p1 = *id;
@@ -694,12 +690,8 @@ void join_lines() {
 }
 
 void compute_outlier() {
-  Array<bool> ar_is_outlier;
-  Bbox bbox;
-  for_int(i, g_outlier.pa.num()) {
-    ar_is_outlier.push(false);
-    bbox.union_with(g_outlier.pa[i]);
-  }
+  Array<bool> ar_is_outlier(g_outlier.pa.num(), false);
+  const Bbox bbox{g_outlier.pa};
   Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
   PointSpatial<int> SPp(30);
   for_int(i, g_outlier.pa.num()) {

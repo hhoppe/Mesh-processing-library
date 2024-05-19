@@ -225,8 +225,7 @@ template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
                         uint64_t estimated_cycles_per_element = k_parallelism_always) {
   assertx(num_threads >= 1);
-  using std::begin;
-  using std::end;
+  using std::begin, std::end;
   const auto begin_range = begin(range);
   const auto end_range = end(range);
   using Iterator = decltype(begin_range);

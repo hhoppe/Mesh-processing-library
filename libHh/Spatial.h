@@ -46,7 +46,7 @@ class Spatial : noncopyable {            // abstract class
     for_int(c, 3) p[c] = index_to_float(ci[c]);
     return p;
   }
-  Bbox indices_to_bbox(const Ind& ci) const;
+  Bbox<float, 3> indices_to_bbox(const Ind& ci) const;
   int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied here
   Ind decode(int en) const;
   // for BSpatialSearch:
@@ -108,7 +108,7 @@ class ObjectSpatial : public Spatial {
   // id != 0
   // Enter an object that comes with a containment function: the function returns true if the object lies
   // within a given bounding box.  A starting point is also given.
-  template <typename Func = bool(const Bbox&)> void enter(Univ id, const Point& startp, Func fcontains);
+  template <typename Func = bool(const Bbox<float, 3>&)> void enter(Univ id, const Point& startp, Func fcontains);
   // Find the objects that could possibly intersect the segment (p1, p2).
   // The objects are not returned in the exact order of intersection!
   // However, once should_stop is set (ftest's return), the procedure
@@ -165,8 +165,8 @@ inline int Spatial::float_to_index(float fd) const {
   return int(f * _gn);
 }
 
-inline Bbox Spatial::indices_to_bbox(const Ind& ci) const {
-  Bbox bbox;
+inline Bbox<float, 3> Spatial::indices_to_bbox(const Ind& ci) const {
+  Bbox<float, 3> bbox;
   bbox[0] = indices_to_point(ci);
   bbox[1] = bbox[0] + Vector(_gni, _gni, _gni);
   return bbox;

@@ -105,4 +105,8 @@ int main() {
       SHOW(ar);
     }
   }
+  {
+    Array<int> ar2 = {6, 4, 2};
+    for (int i : transform(ar2, [](int j) { return j * j; })) SHOW(i);
+  }
 }

@@ -54,7 +54,7 @@ constexpr float k_min_cos = -1.f / 3.f;  // acos(109.471) == tetrahedron angle
 
 Array<Point> co;  // points
 GMesh gmesh;      // current control mesh
-Bbox gbbox;
+Bbox<float, 3> gbbox;
 Frame xform;
 float xform_scale;
 SubMesh* g_psmesh;

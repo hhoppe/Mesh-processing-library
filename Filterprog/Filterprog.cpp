@@ -40,7 +40,7 @@ const bool sdebug = getenv_bool("FILTERPROG_DEBUG");
 
 Array<string> pm_material_strings;
 int pm_nvsplits, pm_nvertices, pm_nwedges, pm_nfaces;
-Bbox pm_bbox;
+Bbox<float, 3> pm_bbox;
 bool pm_has_wad2 = false;
 
 string g_header;
@@ -634,7 +634,7 @@ void do_fbasemesh(Args& args) {
       if (sline.size() < 2) continue;
       showff("|%s\n", sline.substr(2).c_str());
       int n1, n2, n3;
-      Bbox bbox;
+      Bbox<float, 3> bbox;
       if (sscanf(sline.c_str(), "# nmaterials=%d", &n1) == 1) {
         nmaterials = n1;
       } else if (sscanf(sline.c_str(), "# PM: nvertices=%d nwedges=%d nfaces=%d", &n1, &n2, &n3) == 3) {

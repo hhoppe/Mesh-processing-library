@@ -616,7 +616,7 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
   // Compute bound(star(v)) of vertices in fully refined mesh.
   {
     // based on shirman-abi-ezzi93.
-    Array<Bbox> ar_bbox(_vertices.num());
+    Array<Bbox<float, 3>> ar_bbox(_vertices.num());
     for_int(vi, _vertices.num()) {
       if (!is_active_v(&_vertices[vi])) continue;
       ar_bbox[vi][0] = ar_bbox[vi][1] = _vertices[vi].avertex->vgeom.point;
@@ -700,7 +700,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
   Array<BoundingSphere> ar_nsphere(_vertices.num());
   // Compute bound(star(v)) of vertices in fully refined mesh.
   {
-    Array<Bbox> ar_bbox(_vertices.num());
+    Array<Bbox<float, 3>> ar_bbox(_vertices.num());
     Array<Vector> ar_fnormal(_faces.num());  // cache face normals
     for_int(fi, _faces.num()) {
       SrAFace* fa = _faces[fi].aface;

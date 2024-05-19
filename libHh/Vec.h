@@ -275,7 +275,7 @@ template <typename T> T angle_between_unit_vectors(const Vec<T, 2>& v1, const Ve
   }
 }
 
-template<typename T> [[nodiscard]] T snap_coordinate(T value) {
+template <typename T> [[nodiscard]] T snap_coordinate(T value) {
   const T eps = 1e-6f;
   if (abs(value - 0.f) < eps) value = 0.f;
   if (abs(value - 1.f) < eps) value = 1.f;
@@ -283,7 +283,7 @@ template<typename T> [[nodiscard]] T snap_coordinate(T value) {
   return value;
 }
 
-template<typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> vec) {
+template <typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> vec) {
   for_int(i, n) vec[i] = snap_coordinate(vec[i]);
   return vec;
 }

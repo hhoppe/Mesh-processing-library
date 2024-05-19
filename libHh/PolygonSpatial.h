@@ -37,9 +37,8 @@ class PolygonSpatial : public ObjectSpatial<details::polygon_approx_distance2, d
   void enter(const Polygon* ppoly) {  // poly is not copied!
     assertx(ppoly->num() == 3);
     Polygon poly = *ppoly;  // copied because modified below
-    Bbox bbox;
-    poly.get_bbox(bbox);
-    auto func_polygon_in_bbox = [&](const Bbox& spatial_bbox) -> bool {
+    const Bbox bbox{poly};
+    auto func_polygon_in_bbox = [&](const auto& spatial_bbox) -> bool {
       for_int(c, 3) {
         if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
       }

@@ -2,13 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_POLYGON_H_
 #define MESH_PROCESSING_LIBHH_POLYGON_H_
 
+#include "libHh/Bbox.h"
 #include "libHh/Geometry.h"
 #include "libHh/PArray.h"
 #include "libHh/Pool.h"
 
 namespace hh {
-
-struct Bbox;
 
 // A Polygon is an array of Points with additional functionality.
 class Polygon : public PArray<Point, 4> {
@@ -18,8 +17,7 @@ class Polygon : public PArray<Point, 4> {
   Polygon() = default;
   Polygon(const Polygon& p) = default;
   Polygon& operator=(const Polygon& p) = default;
-  using base::base;  // C++11 inherit constructors
-  void get_bbox(Bbox& bbox) const;
+  using base::base;               // C++11 inherit constructors
   Vector get_normal_dir() const;  // non-normalized normal
   Vector get_normal() const;      // user should check !is_zero()
   float get_planec(const Vector& pnor) const;
@@ -28,7 +26,7 @@ class Polygon : public PArray<Point, 4> {
   // The polygon centroid can be obtained as mean(polygon) using RangeOp.
   // Finds intersection of polygon with halfspace in +hn direction
   bool intersect_hyperplane(const Point& hp, const Vector& hn);                 // ret: is_modified
-  bool intersect_bbox(const Bbox& bbox);                                        // ret: is_modified
+  bool intersect_bbox(const Bbox<float, 3>& bbox);                              // ret: is_modified
   bool intersect_segment(const Point& p1, const Point& p2, Point& pint) const;  // ret: is_intersection
   bool intersect_line(const Point& p, const Vector& v, Point& pint) const;      // ret: is_intersection
   // Intersect with plane defined by (plane_normal, plane_d, plane_tol); report intersection as array of points pa.

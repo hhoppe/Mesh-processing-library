@@ -770,7 +770,7 @@ void select_frel() {
 void DoJump() {
   if (!assertw(g_obs[cob].defined())) return;
   if (cob == obview) return;
-  const Bbox& bbox = g_obs[cob].bbox();
+  const auto& bbox = g_obs[cob].bbox();
   Vector diag = bbox[1] - bbox[0];
   Point centerbb = bbox[0] + diag / 2.f;
   if (!object_mode) {

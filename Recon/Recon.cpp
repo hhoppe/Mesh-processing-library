@@ -137,8 +137,8 @@ void process_read() {
 }
 
 void compute_xform() {
-  Bbox bbox;
-  for_int(i, num) bbox.union_with(co[i]);
+  assertx(co.num() == num);
+  const Bbox bbox{co};
   xform = bbox.get_frame_to_small_cube();
   if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
   float xform_scale = xform[0][0];

@@ -731,7 +731,7 @@ static void set_viewing() {
     g_obs[0].set_vis(is_view || obview != 0);
   }
   if (auto_hither) {
-    Bbox gbb;
+    Bbox<float, 3> gbb;
     Frame tcami = inverse(tcam);
     int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++) {

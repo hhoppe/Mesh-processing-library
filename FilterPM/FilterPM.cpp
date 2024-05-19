@@ -171,15 +171,13 @@ void do_geom_nfaces(Args& args) {
 
 void do_outbbox() {
   // Approximate union bbox(M^0 .. M^n) using bbox(M^0) union bbox(M^i).
-  Bbox bbox0;
-  for_int(vi, pmi->_vertices.num()) bbox0.union_with(pmi->_vertices[vi].attrib.point);
+  const Bbox bbox0{transform(pmi->_vertices, [](auto& v) { return v.attrib.point; })};
   {
     // int nv = std::numeric_limits<int>::max();
     int nv = max(4000, pmi->_vertices.num() * 2);
     pmi->goto_nvertices(nv);
   }
-  Bbox bboxi;
-  for_int(vi, pmi->_vertices.num()) bboxi.union_with(pmi->_vertices[vi].attrib.point);
+  const Bbox bboxi{transform(pmi->_vertices, [](auto& v) { return v.attrib.point; })};
   Bbox bbox = bbox0;
   bbox.union_with(bboxi);
   GMesh gmesh;
@@ -929,8 +927,7 @@ void do_transf(Args& args) {
   }
   for_int(v, pmesh._base_mesh._vertices.num()) pmesh._base_mesh._vertices[v].attrib.point *= frame;
   implicit_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
-  pmesh._info._full_bbox[0] *= frame;  // only valid for non-rotations
-  pmesh._info._full_bbox[1] *= frame;
+  for_int(min_max, 2) static_cast<Point&>(pmesh._info._full_bbox[min_max]) *= frame;  // Only valid for non-rotations.
 }
 
 // *** reorder_vspl
@@ -1429,13 +1426,11 @@ void do_uvsphtopos() {
   }
   assertx(pmi->_wedges.num() == pmi->_vertices.num());
   Array<Point> sphpoints(pmi->_wedges.num());
-  Bbox bbox;
   for_int(w, pmi->_wedges.num()) {
     assertx(pmi->_wedges[w].vertex == w);
     const UV& uv = pmi->_wedges[w].attrib.uv;
     Point sph = convert_to_sph(uv);
     sphpoints[w] = sph;
-    bbox.union_with(sph);
   }
   AWMesh& bmesh = pmesh._base_mesh;
   for_int(w, bmesh._wedges.num()) bmesh._vertices[w].attrib.point = sphpoints[w];
@@ -1446,7 +1441,7 @@ void do_uvsphtopos() {
     vspl.vad_large.dpoint = sphpoints[vt] - sphpoints[vs];
     assertx(is_zero(vspl.vad_small.dpoint));
   }
-  pmesh._info._full_bbox = bbox;
+  pmesh._info._full_bbox = Bbox{sphpoints};
   pmesh._info._has_uv = false;  // clear the uv coordinates
 }
 

@@ -497,7 +497,7 @@ constexpr float k_bad_cost = BIGFLOAT;   // illegal cost (very high)
 constexpr float k_undefined = BIGFLOAT;  // undefined scalar attributes
 
 GMesh mesh;                    // current mesh
-Bbox gbbox;                    // bbox of original mesh
+Bbox<float, 3> gbbox;          // bbox of original mesh
 float gdiam;                   // diameter of original mesh
 float gcolc;                   // constant in front of color error term
 float gnorc;                   // constant in front of normal error term
@@ -1240,7 +1240,7 @@ void parse_mesh() {
   }
   // Construct bounding spheres
   if (bspherefac) {
-    Bbox bbox;
+    Bbox<float, 3> bbox;
     for (Vertex v : mesh.vertices()) {
       bbox[0] = bbox[1] = mesh.point(v);
       for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
@@ -2333,9 +2333,9 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   assertx(nf);  // at least one face
   int np = nn.ar_fpts.num();
   assertw(np);
-  Array<Bbox> ar_bbox(nf);
+  Array<Bbox<float, 3>> ar_bbox(nf);
   for_int(i, nf) {
-    Bbox& bbox = ar_bbox[i];
+    auto& bbox = ar_bbox[i];
     bbox[0] = newp;
     bbox[1] = newp;
     bbox.union_with(mesh.point(nn.va[i]));
@@ -2903,10 +2903,10 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   //  That mis-reprojection is why we sometimes see a uniform error component here.
   {
     int nf = nn.ar_corners.num();
-    Array<Bbox> ar_bbox(nf);
+    Array<Bbox<float, 3>> ar_bbox(nf);
     for_int(i, nf) {
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
-      Bbox& bbox = ar_bbox[i];
+      auto& bbox = ar_bbox[i];
       for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
     }
     Polygon poly;
@@ -3027,7 +3027,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    Bbox bbox;
+    Bbox<float, 3> bbox;
     for (Vertex v : mesh.vertices(e)) {
       for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
     }

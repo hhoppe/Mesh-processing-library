@@ -11,9 +11,8 @@ void PolygonFaceSpatial::enter(const PolygonFace* ppolyface) {
   const Polygon& opoly = ppolyface->poly;
   assertx(opoly.num() == 3);
   Polygon poly = opoly;
-  Bbox bbox;
-  poly.get_bbox(bbox);
-  auto func_polygonface_in_bbox = [&](const Bbox& spatial_bbox) -> bool {
+  const Bbox bbox{poly};
+  auto func_polygonface_in_bbox = [&](const Bbox<float, 3>& spatial_bbox) -> bool {
     for_int(c, 3) {
       if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
     }
@@ -59,8 +58,7 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
   if (_options.allow_local_project) psp_size /= 2;
   psp_size = clamp(10, psp_size, 150);
   HH_STIMER("__meshsearch_build");
-  Bbox bbox;
-  for (Vertex v : _mesh.vertices()) bbox.union_with(_mesh.point(v));
+  const Bbox bbox{transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); })};
   _ftospatial = bbox.get_frame_to_small_cube();
   int fi = 0;
   for (Face f : _mesh.faces()) {

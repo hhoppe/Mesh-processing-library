@@ -24,8 +24,7 @@ template <typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... a
 // Return a sorted, uniquified array of values gathered from a range.
 template <typename R, typename = enable_if_range_t<R>> Array<iterator_t<R>> sort_unique(const R& range) {
   using T = iterator_t<R>;
-  using std::begin;
-  using std::end;
+  using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   sort(ar);
   T* last = std::unique(ar.begin(), ar.end());
@@ -36,8 +35,7 @@ template <typename R, typename = enable_if_range_t<R>> Array<iterator_t<R>> sort
 // Return the two closest values to the median of a list (or the same value twice if the list length is odd).
 template <typename R, typename = enable_if_range_t<R>> Vec2<iterator_t<R>> median_two(const R& range) {
   using T = iterator_t<R>;
-  using std::begin;
-  using std::end;
+  using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   assertx(ar.num());
   const int median_index = ar.num() / 2;
@@ -56,8 +54,7 @@ template <typename R, typename = enable_if_range_t<R>> mean_type_t<iterator_t<R>
 // Return the element with specified rank within range (where 0 <= rank < size(range) and rank == 0 is min element).
 template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rank_element(const R& range, int rank) {
   using T = iterator_t<R>;
-  using std::begin;
-  using std::end;
+  using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   assertx(ar.num());
   assertx(ar.ok(rank));

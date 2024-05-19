@@ -187,7 +187,7 @@ void mesh_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox bbox;
+  Bbox<float, 3> bbox;
   for_int(i, pt.co.num()) bbox.union_with(pt.co[i]);
   for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
   gdiam = bbox.max_side();
@@ -831,10 +831,10 @@ void UPointLls::solve(double* prss0, double* prss1) {
 
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   int nf = ar_faces.num();
-  Array<Bbox> ar_bbox(nf);
+  Array<Bbox<float, 3>> ar_bbox(nf);
   for_int(i, nf) {
     Face f = ar_faces[i];
-    Bbox& bbox = ar_bbox[i];
+    auto& bbox = ar_bbox[i];
     for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
   }
   Polygon poly;
@@ -889,10 +889,10 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
   double rss1;
   dummy_init(rss1);
   for_int(ni, niter) {
-    static Array<Bbox> ar_bbox;
+    static Array<Bbox<float, 3>> ar_bbox;
     ar_bbox.init(nw - 1);
     for_int(i, nw - 1) {
-      Bbox& bbox = ar_bbox[i];
+      auto& bbox = ar_bbox[i];
       bbox.clear();
       bbox.union_with(newp);
       bbox.union_with(*wa[i]);

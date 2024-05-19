@@ -10,12 +10,6 @@ namespace hh {
 
 HH_ALLOCATE_POOL(Polygon);
 
-void Polygon::get_bbox(Bbox& bbox) const {
-  assertx(num() >= 1);
-  bbox.clear();
-  for_int(i, num()) bbox.union_with((*this)[i]);
-}
-
 Vector Polygon::get_normal_dir() const {
   const auto& self = *this;
   if (num() == 3) return cross(self[0], self[1], self[2]);  // short-cut
@@ -77,7 +71,7 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   return true;
 }
 
-bool Polygon::intersect_bbox(const Bbox& bbox) {
+bool Polygon::intersect_bbox(const Bbox<float, 3>& bbox) {
   assertx(num() >= 3);
   bool m = false;  // polygon_is_modified
   m |= intersect_hyperplane(bbox[0], Vector(+1.f, +0.f, +0.f));

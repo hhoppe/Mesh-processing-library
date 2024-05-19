@@ -148,11 +148,7 @@ void print_it(const string& s, const PStats& pstats) {
 
 void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) {
   const bool use_parallelism = !errmesh;
-  Bbox bbox;
-  // compute the meshes bounding box
-  for (Face f : mesh_d.faces()) {
-    for (Vertex v : mesh_d.vertices(f)) bbox.union_with(mesh_d.point(v));
-  }
+  const Bbox bbox{transform(mesh_d.vertices(), [&](Vertex v) { return mesh_d.point(v); })};
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
   // PolygonFaceSpatial psp(max(10, int(sqrt(float(mesh_d.num_vertices())) / 5.f + .5f)));
@@ -234,8 +230,8 @@ void do_distance() {
   HH_TIMER("_distance");
   assertx(meshes.num() == 2);
   int maxnfaces = 0;
-  Bbox bbox;
-  Bbox bbox0;
+  Bbox<float, 3> bbox;
+  Bbox<float, 3> bbox0;
   for_int(imesh, 2) {
     assertx(meshes[imesh].num_faces());
     maxnfaces = max(maxnfaces, meshes[imesh].num_faces());

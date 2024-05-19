@@ -91,7 +91,7 @@ void poly_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox bbox;
+  Bbox<float, 3> bbox;
   for_int(i, pt.n) bbox.union_with(pt.co[i]);
   for (vertex v : verts) bbox.union_with(v->p);
   xform = bbox.get_frame_to_small_cube();

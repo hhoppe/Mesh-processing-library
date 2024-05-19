@@ -15,8 +15,7 @@
 #include "HW.h"
 #include "VideoViewer/GradientDomainLoop.h"
 #include "libHh/Args.h"
-#include "libHh/ArrayOp.h"  // median()
-#include "libHh/Bbox.h"
+#include "libHh/ArrayOp.h"       // median()
 #include "libHh/BinarySearch.h"  // discrete_binary_search()
 #include "libHh/Color_ramp.h"    // k_color_ramp
 #include "libHh/FileIO.h"        // my_sh()

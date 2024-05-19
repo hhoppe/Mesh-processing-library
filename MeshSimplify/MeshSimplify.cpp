@@ -1240,14 +1240,12 @@ void parse_mesh() {
   }
   // Construct bounding spheres
   if (bspherefac) {
-    Bbox<float, 3> bbox;
     for (Vertex v : mesh.vertices()) {
-      bbox[0] = bbox[1] = mesh.point(v);
-      for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
-      Point point = interp(bbox[0], bbox[1]);
+      const Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
+      const Point point = interp(bbox[0], bbox[1]);
       float max_d2 = dist2(mesh.point(v), point);
       for (Vertex vv : mesh.vertices(v)) {
-        float d2 = dist2(mesh.point(vv), point);
+        const float d2 = dist2(mesh.point(vv), point);
         if (d2 > max_d2) max_d2 = d2;
       }
       v_bsphere(v).point = point;
@@ -2334,13 +2332,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   int np = nn.ar_fpts.num();
   assertw(np);
   Array<Bbox<float, 3>> ar_bbox(nf);
-  for_int(i, nf) {
-    auto& bbox = ar_bbox[i];
-    bbox[0] = newp;
-    bbox[1] = newp;
-    bbox.union_with(mesh.point(nn.va[i]));
-    bbox.union_with(mesh.point(nn.va[i + 1]));
-  }
+  for_int(i, nf) ar_bbox[i] = Bbox{V(newp, mesh.point(nn.va[i]), mesh.point(nn.va[i + 1]))};
   param.ar_mini.init(np);
   param.ar_bary.init(np);
   Array<float> ar_d2(nf);
@@ -2906,8 +2898,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
     Array<Bbox<float, 3>> ar_bbox(nf);
     for_int(i, nf) {
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
-      auto& bbox = ar_bbox[i];
-      for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
+      ar_bbox[i] = Bbox{transform(mesh.vertices(f), [&](Vertex v) { return mesh.point(v); })};
     }
     Polygon poly;
     Array<float> ar_d2(nf);
@@ -3027,10 +3018,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    Bbox<float, 3> bbox;
-    for (Vertex v : mesh.vertices(e)) {
-      for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
-    }
+    const Bbox bbox{transform(mesh.vertices(e), [&](Vertex v) { return mesh.point(v); })};
     if (!bbox.max_side()) {
       Warning("Empty bbox");
       return false;

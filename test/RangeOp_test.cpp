@@ -1,8 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/RangeOp.h"
 
+#include <list>
+#include <vector>
+
 #include "libHh/Advanced.h"  // clone()
 #include "libHh/Array.h"
+#include "libHh/PArray.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 int main() {
@@ -108,5 +113,20 @@ int main() {
   {
     Array<int> ar2 = {6, 4, 2};
     for (int i : transform(ar2, [](int j) { return j * j; })) SHOW(i);
+  }
+  {
+    for (int i : transform(std::vector<int>{10, 11}, [](int j) { return j * j; })) SHOW(i);
+  }
+  {
+    Array<int> result;
+    const Array<int> ar1{3, 4, 5};
+    for (int i : concatenate(V(1, 2), ar1)) result.push(i);
+    int c_array[1] = {6};
+    for (int i : concatenate(c_array, PArray<int, 2>{7, 8, 9})) result.push(i);
+    for (int i : concatenate(std::vector<int>{10, 11}, std::list<int>{12, 13})) result.push(i);
+    std::vector<int> vector{14, 15};
+    std::list<int> list{16, 17};
+    for (int i : concatenate(vector, list)) result.push(i);
+    SHOW(result);
   }
 }

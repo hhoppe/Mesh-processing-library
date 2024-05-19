@@ -8,13 +8,13 @@ using namespace hh;
 
 namespace {
 
-template <typename R, typename = enable_if_range_t<R>> R truncate_small_floats(R&& range) {
-  using T = iterator_t<R>;
+template <typename Range, typename = enable_if_range_t<Range>> Range truncate_small_floats(Range&& range) {
+  using T = iterator_t<Range>;
   static_assert(std::is_floating_point_v<T>, "range must contain elements of type float/double");
   for (auto& e : range) {
     if (abs(e) < 1e-6f) e = 0.f;
   }
-  return std::forward<R>(range);
+  return std::forward<Range>(range);
 }
 
 }  // namespace

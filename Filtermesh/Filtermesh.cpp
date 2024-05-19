@@ -3635,9 +3635,7 @@ Point compute_hull_point(Vertex v, float offset) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    Bbox<float, 3> bbox;
-    bbox.union_with(mesh.point(v));
-    for (Vertex vv : mesh.vertices(v)) bbox.union_with(mesh.point(vv));
+    Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
     bbox[1] += Vector(abs(offset), abs(offset), abs(offset));
     assertx(bbox.max_side());
@@ -3973,9 +3971,7 @@ void do_shootrays(Args& args) {
   GMesh omesh{RFile(filename)()};  // Original mesh.
   showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
   assertx(mesh.num_vertices() && omesh.num_vertices());
-  Bbox<float, 3> bbox;
-  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
-  for (Vertex v : omesh.vertices()) bbox.union_with(omesh.point(v));
+  const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
   Frame xform = bbox.get_frame_to_small_cube(0.5f);
   Frame xformi = ~xform;
   Array<PolygonFace> ar_polyface;

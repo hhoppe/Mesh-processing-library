@@ -166,10 +166,8 @@ inline int Spatial::float_to_index(float fd) const {
 }
 
 inline Bbox<float, 3> Spatial::indices_to_bbox(const Ind& ci) const {
-  Bbox<float, 3> bbox;
-  bbox[0] = indices_to_point(ci);
-  bbox[1] = bbox[0] + Vector(_gni, _gni, _gni);
-  return bbox;
+  const Point bb0 = indices_to_point(ci);
+  return Bbox{bb0, bb0 + thrice(_gni)};
 }
 
 inline Spatial::Ind Spatial::decode(int en) const {

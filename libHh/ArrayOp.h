@@ -22,8 +22,9 @@ template <typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... a
 }
 
 // Return a sorted, uniquified array of values gathered from a range.
-template <typename R, typename = enable_if_range_t<R>> Array<iterator_t<R>> sort_unique(const R& range) {
-  using T = iterator_t<R>;
+template <typename Range, typename = enable_if_range_t<Range>>
+Array<iterator_t<Range>> sort_unique(const Range& range) {
+  using T = iterator_t<Range>;
   using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   sort(ar);
@@ -33,8 +34,8 @@ template <typename R, typename = enable_if_range_t<R>> Array<iterator_t<R>> sort
 }
 
 // Return the two closest values to the median of a list (or the same value twice if the list length is odd).
-template <typename R, typename = enable_if_range_t<R>> Vec2<iterator_t<R>> median_two(const R& range) {
-  using T = iterator_t<R>;
+template <typename Range, typename = enable_if_range_t<Range>> Vec2<iterator_t<Range>> median_two(const Range& range) {
+  using T = iterator_t<Range>;
   using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   assertx(ar.num());
@@ -47,13 +48,15 @@ template <typename R, typename = enable_if_range_t<R>> Vec2<iterator_t<R>> media
 }
 
 // Return the median value of a list (or the mean of the two nearest values if the list length is even).
-template <typename R, typename = enable_if_range_t<R>> mean_type_t<iterator_t<R>> median(const R& range) {
+template <typename Range, typename = enable_if_range_t<Range>>
+mean_type_t<iterator_t<Range>> median(const Range& range) {
   return mean(median_two(range));
 }
 
 // Return the element with specified rank within range (where 0 <= rank < size(range) and rank == 0 is min element).
-template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rank_element(const R& range, int rank) {
-  using T = iterator_t<R>;
+template <typename Range, typename = enable_if_range_t<Range>>
+iterator_t<Range> rank_element(const Range& range, int rank) {
+  using T = iterator_t<Range>;
   using std::begin, std::end;
   Array<T> ar(begin(range), end(range));
   assertx(ar.num());
@@ -63,7 +66,8 @@ template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rank_elemen
 }
 
 // Return element with fractional ranking within range (where 0. <= rankf <= 1. and rankf == 0. is min element).
-template <typename R, typename = enable_if_range_t<R>> iterator_t<R> rankf_element(const R& range, double rankf) {
+template <typename Range, typename = enable_if_range_t<Range>>
+iterator_t<Range> rankf_element(const Range& range, double rankf) {
   assertx(rankf >= 0. && rankf <= 1.);
   int num = narrow_cast<int>(distance(range));
   int rank = int(floor(rankf * num));

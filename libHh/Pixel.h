@@ -23,18 +23,18 @@ struct Pixel : Vec4<uint8_t> {
   static constexpr Pixel blue() { return Pixel(0, 0, 255); }
   static constexpr Pixel pink() { return Pixel(255, 150, 150); }
   static constexpr Pixel yellow() { return Pixel(255, 255, 0); }
-  friend std::ostream& operator<<(std::ostream& os, const Pixel& p) {  // otherwise prints uchars
+  friend std::ostream& operator<<(std::ostream& os, const Pixel& p) {  // Otherwise prints uchars.
     return os << "Pixel(" << int{p[0]} << ", " << int{p[1]} << ", " << int{p[2]} << ", " << int{p[3]} << ")";
   }
 };
 
-template <typename R, typename = enable_if_range_t<R>> void convert_rgba_bgra(R&& range) {
-  static_assert(std::is_same_v<iterator_t<R>, Pixel>);
+template <typename Range, typename = enable_if_range_t<Range>> void convert_rgba_bgra(Range&& range) {
+  static_assert(std::is_same_v<iterator_t<Range>, Pixel>);
   for (Pixel& p : range) std::swap(p[0], p[2]);
 }
 
-template <typename R, typename = enable_if_range_t<R>> void convert_bgra_rgba(R&& range) {
-  convert_rgba_bgra(std::forward<R>(range));  // same implementation
+template <typename Range, typename = enable_if_range_t<Range>> void convert_bgra_rgba(Range&& range) {
+  convert_rgba_bgra(std::forward<Range>(range));  // Same implementation.
 }
 
 //----------------------------------------------------------------------------

@@ -230,14 +230,14 @@ void do_distance() {
   HH_TIMER("_distance");
   assertx(meshes.num() == 2);
   int maxnfaces = 0;
-  Bbox<float, 3> bbox;
-  Bbox<float, 3> bbox0;
   for_int(imesh, 2) {
     assertx(meshes[imesh].num_faces());
     maxnfaces = max(maxnfaces, meshes[imesh].num_faces());
-    for (Vertex v : meshes[imesh].vertices()) bbox.union_with(meshes[imesh].point(v));
-    if (!imesh) bbox0 = bbox;
   }
+  const Bbox bbox0{transform(meshes[0].vertices(), [&](Vertex v) { return meshes[0].point(v); })};
+  const Bbox bbox1{transform(meshes[1].vertices(), [&](Vertex v) { return meshes[1].point(v); })};
+  Bbox bbox = bbox0;
+  bbox.union_with(bbox1);
   xform = bbox.get_frame_to_small_cube();
   g_side0 = bbox0.max_side();
   g_diag0 = dist(bbox0[0], bbox0[1]);

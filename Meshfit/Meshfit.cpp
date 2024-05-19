@@ -187,9 +187,7 @@ void mesh_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox<float, 3> bbox;
-  for_int(i, pt.co.num()) bbox.union_with(pt.co[i]);
-  for (Vertex v : mesh.vertices()) bbox.union_with(mesh.point(v));
+  const Bbox bbox{concatenate(pt.co, transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); }))};
   gdiam = bbox.max_side();
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
@@ -831,12 +829,10 @@ void UPointLls::solve(double* prss0, double* prss1) {
 
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   int nf = ar_faces.num();
-  Array<Bbox<float, 3>> ar_bbox(nf);
-  for_int(i, nf) {
-    Face f = ar_faces[i];
-    auto& bbox = ar_bbox[i];
-    for (Vertex v : mesh.vertices(f)) bbox.union_with(mesh.point(v));
-  }
+  const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
+  const auto face_bbox = [&](Face f) { return Bbox{transform(mesh.vertices(f), vertex_point)}; };
+  // ?? const auto ar_bbox = Array{transform(ar_faces, face_bbox)};
+  const Array<Bbox<float, 3>> ar_bbox{transform(ar_faces, face_bbox)};
   Polygon poly;
   for (int pi : ar_pts) {
     const Point& p = pt.co[pi];

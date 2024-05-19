@@ -91,9 +91,8 @@ void poly_transform(const Frame& f) {
 }
 
 void compute_xform() {
-  Bbox<float, 3> bbox;
-  for_int(i, pt.n) bbox.union_with(pt.co[i]);
-  for (vertex v : verts) bbox.union_with(v->p);
+  assertx(pt.n == pt.co.num());
+  const Bbox bbox{concatenate(pt.co, transform(verts, [](vertex v) { return v->p; }))};
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xformi = ~xform;

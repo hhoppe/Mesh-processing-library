@@ -178,8 +178,7 @@ void do_outbbox() {
     pmi->goto_nvertices(nv);
   }
   const Bbox bboxi{transform(pmi->_vertices, [](auto& v) { return v.attrib.point; })};
-  Bbox bbox = bbox0;
-  bbox.union_with(bboxi);
+  const Bbox bbox = bbox_union(bbox0, bboxi);
   GMesh gmesh;
   Vec<Vertex, 8> va;
   for_int(i, 8) va[i] = gmesh.create_vertex();

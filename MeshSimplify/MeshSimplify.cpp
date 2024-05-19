@@ -1587,8 +1587,7 @@ void perhaps_initialize() {
     parse_mesh();
   }
   {
-    gbbox.clear();
-    for (Vertex v : mesh.vertices()) gbbox.union_with(mesh.point(v));
+    gbbox = Bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
     gdiam = assertx(gbbox.max_side());
     gdiam = getenv_float("GDIAM", gdiam, true);
     gcolc = square(gdiam * colfac);

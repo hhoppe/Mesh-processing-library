@@ -243,9 +243,7 @@ void pass3(const A3dElem& el) {
     nelem = 1;
   }
   if (info) compute_stats(el);
-  if (box || boxframe) for_int(i, el.num()) {
-      g_bbox.union_with(el[i].p);
-    }
+  for_int(i, el.num()) g_bbox.union_with(el[i].p);
   output_element(el);
   delay_element();
 }

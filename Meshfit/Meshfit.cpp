@@ -887,13 +887,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
   for_int(ni, niter) {
     static Array<Bbox<float, 3>> ar_bbox;
     ar_bbox.init(nw - 1);
-    for_int(i, nw - 1) {
-      auto& bbox = ar_bbox[i];
-      bbox.clear();
-      bbox.union_with(newp);
-      bbox.union_with(*wa[i]);
-      bbox.union_with(*wa[i + 1]);
-    }
+    for_int(i, nw - 1) ar_bbox[i] = Bbox{V(newp, *wa[i], *wa[i + 1])};
     UPointLls ulls(newp);
     for (int pi : ar_pts) {
       // HH_SSTAT(SLFconsid, nw - 1);

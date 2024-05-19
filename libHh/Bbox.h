@@ -73,6 +73,12 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return max(self[1] - self[0]);
   }
 
+  friend type bbox_union(const type& bbox1, const type& bbox2) {
+    type bbox = bbox1;
+    bbox.union_with(bbox2);
+    return bbox;
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const type& bbox) {
     return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
@@ -103,14 +109,15 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return f;
   }
 
-  template <int D = dim, typename = std::enable_if_t<D == 3>> void transform(const Frame& frame) {
-    auto& self = *this;
+  template <int D = dim, typename = std::enable_if_t<D == 3>>
+  [[nodiscard]] type transform(const Frame& frame) const {
     type bbox;
+    auto& self = *this;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
       Point corner(i0 ? self[1][0] : self[0][0], i1 ? self[1][1] : self[0][1], i2 ? self[1][2] : self[0][2]);
       bbox.union_with(corner * frame);
     }
-    self = bbox;
+    return bbox;
   }
 
  private:

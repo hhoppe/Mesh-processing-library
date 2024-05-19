@@ -588,8 +588,8 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     compute_nspheres(vgeoms);
   }
   // Record bbox of model.
-  _bbox.clear();
-  for_int(vi, _vertices.num()) _bbox.union_with(vgeoms[vi].point);
+  assertx(_vertices.num() == vgeoms.num());
+  _bbox = Bbox{transform(vgeoms, [](auto v) { return v.point; })};
   display_hierarchy_height();
   if (k_debug) ok();
   {

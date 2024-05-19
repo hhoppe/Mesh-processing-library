@@ -734,11 +734,8 @@ static void set_viewing() {
     Bbox<float, 3> gbb;
     Frame tcami = inverse(tcam);
     int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
-    for (int obn = firstobn; obn <= g_obs.last; obn++) {
-      Bbox bbox = g_obs[obn].bbox();
-      bbox.transform(g_obs[obn].t() * tcami);
-      gbb.union_with(bbox);
-    }
+    for (int obn = firstobn; obn <= g_obs.last; obn++)
+      gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * tcami));
     float minx = gbb[0][0];          // could be negative
     if (minx > 0.f) minx *= .9999f;  // for -key ojo on zero-height data.
     float diam = gbb.max_side();

@@ -246,8 +246,8 @@ class AWMesh : public WMesh {
   int _cur_frame_mask{0};                              // 0 or k_Face_visited_mask
 
   // Rendering using OpenGL
-  void ogl_render_faces_individually(const PMeshInfo& pminfo, int usetexture);
-  void ogl_render_faces_strips(const PMeshInfo& pminfo, int usetexture);
+  void ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture);
+  void ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_edges();
 
  public:

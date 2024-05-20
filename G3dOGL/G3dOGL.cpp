@@ -4,6 +4,8 @@
 #define DEF_SC
 #define DEF_PLY
 
+#include <map>
+
 #include "G3dOGL/HB.h"
 #include "G3dOGL/ScGeomorph.h"         // DEF_SC
 #include "G3dOGL/SimplicialComplex.h"  // DEF_SC
@@ -3381,7 +3383,7 @@ void draw_pm() {
     set_light_ambient(ambient);
     if (texturenormal) normalmap_deactivate();
   }
-  if (ledges && !texture_active) {
+  if (ledges) {
     // Options cullbackedges, lquickmode not handled.
     glShadeModel(GL_FLAT);
     initialize_unlit();
@@ -4935,6 +4937,7 @@ Array<Point> ply_vpos;
 Array<Vector> ply_vnor;
 Array<Pixel> ply_vrgb;
 Array<PlyIndices> ply_findices;
+Array<Vec3<UV>> ply_fuv;
 
 // ply
 // format binary_big_endian 1.0
@@ -4947,7 +4950,9 @@ Array<PlyIndices> ply_findices;
 // property list uchar int vertex_indices
 // end_header
 //
-// property list uchar uint vertex_indices  # Blender
+// comment TextureFile TextureDouble_A.png
+// property list uchar uint vertex_indices  # Blender, on faces.
+// property list uchar float texcoord  # Meshlab, proj/evolving.
 
 // ply
 // format binary_little_endian 1.0
@@ -4971,204 +4976,188 @@ void read_ply(const string& filename) {
     assertx(my_getline(fi(), sline));
     assertx(sline == "ply");
   }
+  const std::map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
+                                             {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
   bool binary = false;
   bool bigendian = false;
-  int len_nfv = 1;  // default uchar
-  int state = 0;    // 0=undef, 1=vert, 2=face_before_vertex_indices, 3=face_after_vertex_indices
-  int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0, flist = 0;
+  int num_element = 0;
+  string element;
+  int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0;
+  int len_nfv = 0;  // Size in bytes of number of vertex indices in each face.
   int fnskip = 0, fnskipb = 0, fnother = 0, fnotherb = 0;
-  bool skip_vvalue = false;
   for (string sline;;) {
     assertx(my_getline(fi(), sline));
     if (0) {
-    } else if (begins_with(sline, "comment ")) {
-      assertw(state == 0);
     } else if (sline == "format ascii 1.0") {
-      assertx(state == 0);
-      binary = false;
-      bigendian = false;
+      assertx(element == "");
     } else if (sline == "format binary_big_endian 1.0") {
-      assertx(state == 0);
+      assertx(element == "");
       binary = true;
       bigendian = true;
     } else if (sline == "format binary_little_endian 1.0") {
-      assertx(state == 0);
+      assertx(element == "");
       binary = true;
-      bigendian = false;
+    } else if (begins_with(sline, "comment ")) {
+      assertw(element == "");
     } else if (begins_with(sline, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
-      assertw(state == 0);
-    } else if (begins_with(sline, "element vertex ")) {
-      assertx(state == 0);
-      int nv = 0;
-      assertx(sscanf(sline.c_str(), "element vertex %d", &nv) == 1);
-      assertx(nv > 0);
-      ply_vpos.init(nv);
-      state = 1;
-    } else if (begins_with(sline, "element face ")) {
-      assertx(state == 1);
-      int nf = 0;
-      assertx(sscanf(sline.c_str(), "element face %d", &nf) == 1);
-      assertw(nf > 0);
-      ply_findices.init(nf);
-      state = 2;
-    } else if (sline == "property float x" || sline == "property float y" || sline == "property float z") {
-      assertx(state == 1);
-      assertx(vnnor + vnrgb + vnother == 0);
-      vnpos++;
-    } else if (sline == "property float value") {
-      assertx(state == 1);
-      assertx(vnnor + vnrgb + vnother == 0);
-      skip_vvalue = true;
-    } else if (sline == "property float nx" || sline == "property float ny" || sline == "property float nz") {
-      assertx(state == 1);
-      assertx(vnrgb + vnother == 0);
-      vnnor++;
-    } else if (sline == "property uchar red" || sline == "property uchar green" || sline == "property uchar blue") {
-      assertx(state == 1);
-      assertx(vnother == 0);
-      vnrgb++;
-    } else if (sline == "property list uchar int vertex_indices" ||
-               sline == "property list uchar uint vertex_indices") {
-      assertx(state == 2);
-      flist++;
-      state = 3;
-    } else if (sline == "property list int int vertex_indices") {
-      assertx(state == 2);
-      flist++;
-      len_nfv = 4;
-      state = 3;
-    } else if (begins_with(sline, "property float")) {
-      if (state == 1) {
-        vnotherb += 4;
-        vnother++;
-      } else if (state == 2) {
-        fnskipb += 4;
-        fnskip++;
-      } else if (state == 3) {
-        fnotherb += 4;
-        fnother++;
+      assertw(element == "");
+
+    } else if (begins_with(sline, "element ")) {
+      std::istringstream iss(sline.substr(std::strlen("element ")));
+      int count;
+      assertx(iss >> element >> count && iss.eof());
+      assertx(count >= 0);
+      if (element == "vertex") {
+        assertx(num_element == 0);
+        if (count == 0) assertnever("ply: no vertices");
+        ply_vpos.init(count);
+      } else if (element == "face") {
+        assertx(num_element == 1);
+        if (count == 0) Warning("ply: no faces");
+        ply_findices.init(count);
       } else {
-        assertnever("");
+        assertx(num_element >= 2);
+        showf("ply: ignoring element named '%s'\n", element.c_str());
       }
-    } else if (begins_with(sline, "property int")) {
-      if (state == 1) {
-        vnotherb += 4;
-        vnother++;
-      } else if (state == 2) {
-        fnskipb += 4;
-        fnskip++;
-      } else if (state == 3) {
-        fnotherb += 4;
-        fnother++;
+      num_element++;
+
+    } else if (begins_with(sline, "property list ")) {
+      assertx(element == "face");
+      std::istringstream iss(sline.substr(std::strlen("property list ")));
+      string sizetype, dtype, name;
+      assertx(iss >> sizetype >> dtype >> name && iss.eof());
+      if (name == "vertex_indices") {
+        assertx(len_nfv == 0);
+        assertx(dtype == "int" || dtype == "uint");
+        len_nfv = dsizes.at(sizetype);
+      } else if (name == "texcoord") {
+        assertx(len_nfv > 0 && fnother == 0);
+        assertx(sizetype == "uchar" && dtype == "float");
+        ply_fuv.init(ply_findices.num());
       } else {
-        assertnever("");
+        assertnever("ply: property list not recognized");
       }
-    } else if (begins_with(sline, "property uchar")) {
-      if (state == 1) {
-        vnotherb += 1;
-        vnother++;
-      } else if (state == 2) {
-        fnskipb += 1;
-        fnskip++;
-      } else if (state == 3) {
-        fnotherb += 1;
-        fnother++;
+
+    } else if (begins_with(sline, "property ")) {
+      assertx(element != "");
+      std::istringstream iss(sline.substr(std::strlen("property ")));
+      string dtype, name;
+      assertx(iss >> dtype >> name && iss.eof());
+      const int dsize = dsizes.at(dtype);
+      if (element == "vertex") {
+        if (contains(V<string>("x", "y", "z"), name)) {
+          assertx(vnnor + vnrgb + vnother == 0);
+          vnpos++;
+        } else if (contains(V<string>("nx", "ny", "nz"), name)) {
+          assertx(vnpos ==3 && vnrgb + vnother == 0);
+          vnnor++;
+        } else if (contains(V<string>("red", "green", "blue", "alpha"), name)) {
+          assertx(vnpos == 3 && vnother == 0);
+          assertx(dsize == 1);
+          vnrgb++;
+        } else {
+          showf("ply: ignoring vertex property '%s'\n", name.c_str());
+          vnotherb += dsize;
+          vnother++;
+        }
+      } else if (element == "face") {
+        showf("ply: ignoring face property '%s'\n", name.c_str());
+        if (len_nfv == 0) {
+          fnskipb += dsize;
+          fnskip++;
+        } else {
+          fnotherb += dsize;
+          fnother++;
+        }
       } else {
-        assertnever("");
+        // Ignore data after the faces.
       }
+
     } else if (sline == "end_header") {
       break;
     } else {
-      assertnever("ply field unknown in '" + sline + "'");
+      assertnever("ply: field unknown in '" + sline + "'");
     }
   }
   assertx(vnpos == 3);
   assertx(vnnor == 0 || vnnor == 3);
   assertx(vnrgb == 0 || vnrgb == 3 || vnrgb == 4);
-  dummy_use(flist);
-  // assertw(flist == 1);  // there may be just vertices
+
+  const auto read_value = [&](auto& value) {
+    assertx(read_binary_raw(fi(), ArView(value)));
+    if (bigendian)
+      from_std(&value);
+    else
+      from_dos(&value);
+  };
+
+  if (ply_findices.num()) assertx(len_nfv);
   if (vnnor) ply_vnor.init(ply_vpos.num());
   if (vnrgb) ply_vrgb.init(ply_vpos.num(), Pixel::gray(0));
   if (binary) {
     for_int(i, ply_vpos.num()) {
-      assertx(read_binary_raw(fi(), ply_vpos[i].view()));
-      for_int(c, vnpos) {
-        if (bigendian)
-          from_std(&ply_vpos[i][c]);
-        else
-          from_dos(&ply_vpos[i][c]);
-      }
-      if (skip_vvalue) fi().ignore(sizeof(float));
-      if (vnnor) assertx(read_binary_raw(fi(), ply_vnor[i].view()));
-      for_int(c, vnnor) {
-        if (bigendian)
-          from_std(&ply_vnor[i][c]);
-        else
-          from_dos(&ply_vnor[i][c]);
-      }
+      for_int(c, 3) read_value(ply_vpos[i][c]);
+      if (vnnor) for_int(c, vnnor) read_value(ply_vnor[i][c]);
       for_int(c, vnrgb) assertx(read_binary_raw(fi(), ArView(ply_vrgb[i][c])));
       if (vnotherb) fi().ignore(vnotherb);
     }
     for_int(i, ply_findices.num()) {
       if (fnskipb) fi().ignore(fnskipb);
-      int ni;
+      int nfv;
       if (len_nfv == 1) {
         uchar vi = 0;
         assertx(read_binary_raw(fi(), ArView(vi)));
-        ni = vi;
+        nfv = vi;
       } else if (len_nfv == 4) {
         int32_t vi = 0;
         assertx(read_binary_raw(fi(), ArView(vi)));
-        ni = vi;
+        nfv = vi;
+        assertw(nfv >= 3);
       } else {
         assertnever("");
       }
-      ply_findices[i].init(ni);
-      for_int(j, ni) {
-        assertx(read_binary_raw(fi(), ArView(ply_findices[i][j])));
-        if (bigendian)
-          from_std(&ply_findices[i][j]);
-        else
-          from_dos(&ply_findices[i][j]);
-        assertx(ply_findices[i][j] < ply_vpos.num());
+      ply_findices[i].init(nfv);
+      for_int(j, nfv) read_value(ply_findices[i][j]);
+      for_int(j, nfv) assertx(ply_findices[i][j] < ply_vpos.num());
+      if (ply_fuv.num()) {
+        uchar n = 0;
+        assertx(read_binary_raw(fi(), ArView(n)));
+        assertx(n == 6);
+        for_int(j, 3) for_int(c, 2) read_value(ply_fuv[i][j][c]);
       }
       if (fnotherb) fi().ignore(fnotherb);
     }
+
   } else {
+    float dummy_float;
     for_int(i, ply_vpos.num()) {
       for_int(c, vnpos) assertx(fi() >> ply_vpos[i][c]);
-      if (skip_vvalue) {
-        float dummy;
-        assertx(fi() >> dummy);
-      }
       for_int(c, vnnor) assertx(fi() >> ply_vnor[i][c]);
       for_int(c, vnrgb) {
         int v;
         assertx(fi() >> v);
-        ply_vrgb[i][c] = narrow_cast<uchar>(v);
+        ply_vrgb[i][c] = assert_narrow_cast<uchar>(v);
       }
-      for_int(c, vnother) {
-        float dummy;
-        assertx(fi() >> dummy);
-      }
+      for_int(c, vnother) assertx(fi() >> dummy_float);
     }
     // SHOW(ply_vpos.last());
     for_int(i, ply_findices.num()) {
-      for_int(c, fnskip) {
-        float dummy;
-        assertx(fi() >> dummy);
-      }
-      int ni = 0;
-      assertx(fi() >> ni);
-      ply_findices[i].init(ni);
-      for_int(j, ni) {
+      for_int(c, fnskip) assertx(fi() >> dummy_float);
+      int nfv = 0;
+      assertx(fi() >> nfv);
+      assertw(nfv >= 3);
+      ply_findices[i].init(nfv);
+      for_int(j, nfv) {
         assertx(fi() >> ply_findices[i][j]);
         assertx(ply_findices[i][j] < ply_vpos.num());
       }
-      for_int(c, fnother) {
-        float dummy;
-        assertx(fi() >> dummy);
+      if (ply_fuv.num()) {
+        int n = 0;
+        assertx(fi() >> n);
+        assertx(n == 6);
+        for_int(j, 3) for_int(c, 2) assertx(fi() >> ply_fuv[i][j][c]);
       }
+      for_int(c, fnother) assertx(fi() >> dummy_float);
     }
   }
   showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_vpos.num(), ply_findices.num());
@@ -5179,25 +5168,22 @@ void read_ply(const string& filename) {
 
 void draw_ply() {
   if (lsmooth && !ply_vnor.num()) {
-    ply_vnor.init(ply_vpos.num(), Vector(0.f, 0.f, 0.f));
+    ply_vnor.init(ply_vpos.num(), Vector{});
     for_int(i, ply_findices.num()) {
       Polygon poly;
-      for_int(j, ply_findices[i].num()) {
-        int vi = ply_findices[i][j];
-        poly.push(ply_vpos[vi]);
-      }
-      Vector vnor = poly.get_normal();
-      for_int(j, ply_findices[i].num()) {
-        int vi = ply_findices[i][j];
-        ply_vnor[vi] += vnor;
-      }
+      for_int(j, ply_findices[i].num()) poly.push(ply_vpos[ply_findices[i][j]]);
+      const Vector vnor = poly.get_normal();
+      for_int(j, ply_findices[i].num()) ply_vnor[ply_findices[i][j]] += vnor;
     }
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
-  // Options lsmooth, lquickmode not handled.
   if (ply_findices.num() > 5'000'000 && defining_dl)
     Warning("Graphics card may not have sufficient memory for display list");
-  bool has_rgb = false;
+  if (texture_active) {
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+  }
+  const bool has_rgb = ply_vrgb.num() > 0;
   if (!ledges || lshading) {
     glShadeModel(lsmooth || has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
@@ -5235,7 +5221,8 @@ void draw_ply() {
       }
       for_int(j, ply_findices[i].num()) {
         int vi = ply_findices[i][j];
-        if (lsmooth && ply_vnor.num()) glNormal3fv(ply_vnor[vi].data());
+        if (texture_active && ply_fuv.num()) glTexCoord2fv(ply_fuv[i][j].data());
+        if (lsmooth) glNormal3fv(ply_vnor[vi].data());
         if (ply_vrgb.num()) glColor4ubv(ply_vrgb[vi].data());
         glVertex3fv(ply_vpos[vi].data());
       }
@@ -5259,7 +5246,7 @@ void draw_ply() {
     set_light_ambient(ambient);
     if (texturenormal) normalmap_deactivate();
   }
-  if (ledges && !texture_active) {
+  if (ledges) {
     glShadeModel(GL_FLAT);
     initialize_unlit();
     set_thickness(thicknormal);

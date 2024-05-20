@@ -21,11 +21,11 @@ void AWMesh::ogl_process_materials() {
   }
 }
 
-void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int usetexture) {
+void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture) {
   if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
   int omatid = -1;
   // Prefer texture over color if texture is enabled.
-  if (pminfo._has_uv && usetexture) {
+  if (pminfo._has_uv && use_texture) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
   }
@@ -36,7 +36,7 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int usetextu
       glBegin(GL_TRIANGLES);
       omatid = -1;
     }
-    if (!(pminfo._has_uv && usetexture) && !pminfo._has_rgb) {
+    if (!(pminfo._has_uv && use_texture) && !pminfo._has_rgb) {
       int matid = _faces[f].attrib.matid;
       if (matid != omatid) {
         omatid = matid;
@@ -45,7 +45,7 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int usetextu
     }
     for_int(i, 3) {
       int w = _faces[f].wedges[i];
-      if (pminfo._has_uv && usetexture) {
+      if (pminfo._has_uv && use_texture) {
         glTexCoord2fv(_wedges[w].attrib.uv.data());
       } else if (pminfo._has_rgb) {
         glColor3fv(_wedges[w].attrib.rgb.data());
@@ -58,7 +58,7 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int usetextu
   glEnd();
 }
 
-void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int usetexture) {
+void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
   if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
   if (0) {
     for_int(f, _faces.num()) {
@@ -72,7 +72,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int usetexture) {
   int ntstrips = 0;
   const int write_ntstrips = 0;  // get about 3 faces/strip on dragon3
   bool has_uv = false;
-  if (pminfo._has_uv && usetexture) {
+  if (pminfo._has_uv && use_texture) {
     has_uv = true;
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);

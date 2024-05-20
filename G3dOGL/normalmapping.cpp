@@ -126,12 +126,12 @@ class NormalMapping_ogl2 final : public NormalMapping {
     assertx(loc >= 0);
     return loc;
   }
-  const string unused_vertex_shader = &R"(
+  const string unused_vertex_shader = R"(#version 120  // Using GLSL version 1.20.
     void main() {
       gl_TexCoord[0] = gl_MultiTexCoord0;
       gl_Position = ftransform();
     }
-    )"[1];
+    )";
   const string fragment_shader = R"(#version 120  // Using GLSL version 1.20.
     uniform vec3 lightdirmodel;
     uniform vec3 eyedirmodel;

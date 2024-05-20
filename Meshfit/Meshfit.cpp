@@ -831,7 +831,6 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   int nf = ar_faces.num();
   const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
   const auto face_bbox = [&](Face f) { return Bbox{transform(mesh.vertices(f), vertex_point)}; };
-  // ?? const auto ar_bbox = Array{transform(ar_faces, face_bbox)};
   const Array<Bbox<float, 3>> ar_bbox{transform(ar_faces, face_bbox)};
   Polygon poly;
   for (int pi : ar_pts) {

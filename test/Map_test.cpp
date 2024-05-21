@@ -19,6 +19,10 @@ int main() {
     SHOW("after clear");
   }
   {
+    const Map<string, int> map = {{"first", 1}, {"second", 2}};
+    assertx(map.get("second") == 2);
+  }
+  {
     Map<int, int> m;
     assertx(m.num() == 0);
     for (int i : m.keys()) {
@@ -142,17 +146,21 @@ int main() {
 }
 
 namespace hh {
+
 template class Map<int, int>;
 template class Map<Point, int, std::hash<Vec3<float>>>;
 template class Map<string, string>;
 
 using U = unique_ptr<int>;
-template <> U Map<int, U>::replace(const int&, const U&) { return U(); }  // definition illegal
-template <> void Map<int, U>::enter(const int&, const U&) {}              // definition illegal
-template <> void Map<int, U>::enter(int&&, const U&) {}                   // definition illegal
+// Override illegal definitions for U:
+template <> Map<int, U>::Map(std::initializer_list<std::pair<const int, U>>) {}
+template <> U Map<int, U>::replace(const int&, const U&) { return U(); }
+template <> void Map<int, U>::enter(const int&, const U&) {}
+template <> void Map<int, U>::enter(int&&, const U&) {}
 template <> U& Map<int, U>::enter(const int&, const U&, bool&) {
   static U u;
   return u;
 }
 template class Map<int, U>;
+
 }  // namespace hh

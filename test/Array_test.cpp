@@ -162,6 +162,7 @@ int main() {
 }
 
 namespace hh {
+
 template class Array<unsigned>;
 template class Array<double>;
 template class Array<const int*>;
@@ -175,16 +176,18 @@ template class CArrayView<double>;
 template class CArrayView<const int*>;
 
 using U = unique_ptr<int>;
-template <> Array<U>::Array(int, const U&) {}                                 // non-&& definition illegal
-template <> Array<U>::Array(const Array<U>&) : ArrayView() {}                 // non-&& definition illegal
-template <> Array<U>::Array(CArrayView<U>) : ArrayView() {}                   // non-&& definition illegal
-template <> Array<U>::Array(std::initializer_list<U>) : ArrayView() {}        // definition illegal
-template <> Array<U>& Array<U>::operator=(CArrayView<U>) { return *this; }    // definition illegal
-template <> Array<U>& Array<U>::operator=(const Array<U>&) { return *this; }  // definition illegal
-template <> void Array<U>::init(int, const U&) {}                             // non-&& definition illegal
-template <> void Array<U>::push(const U&) {}                                  // non-&& definition illegal
-template <> void Array<U>::push_array(CArrayView<U>) {}                       // non-&& definition illegal
-template <> void Array<U>::unshift(const U&) {}                               // non-&& definition illegal
-template <> void Array<U>::unshift(CArrayView<U>) {}                          // non-&& definition illegal
+// Override illegal definitions for U:
+template <> Array<U>::Array(int, const U&) {}
+template <> Array<U>::Array(const Array<U>&) : ArrayView() {}
+template <> Array<U>::Array(CArrayView<U>) : ArrayView() {}
+template <> Array<U>::Array(std::initializer_list<U>) : ArrayView() {}
+template <> Array<U>& Array<U>::operator=(CArrayView<U>) { return *this; }
+template <> Array<U>& Array<U>::operator=(const Array<U>&) { return *this; }
+template <> void Array<U>::init(int, const U&) {}
+template <> void Array<U>::push(const U&) {}
+template <> void Array<U>::push_array(CArrayView<U>) {}
+template <> void Array<U>::unshift(const U&) {}
+template <> void Array<U>::unshift(CArrayView<U>) {}
 template class Array<U>;
+
 }  // namespace hh

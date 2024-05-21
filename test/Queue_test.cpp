@@ -42,12 +42,15 @@ int main() {
 }
 
 namespace hh {
+
 template class Queue<unsigned>;
 template class Queue<double>;
 template class Queue<const int*>;
 
 using U = unique_ptr<int>;
-template <> void Queue<U>::enqueue(const U&) {}       // non-&& definition illegal
-template <> void Queue<U>::insert_first(const U&) {}  // non-&& definition illegal
+// Override illegal definitions for U:
+template <> void Queue<U>::enqueue(const U&) {}
+template <> void Queue<U>::insert_first(const U&) {}
 template class Queue<U>;
+
 }  // namespace hh

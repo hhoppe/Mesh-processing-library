@@ -19,6 +19,11 @@ template <> struct equal_to<Vector> {
 
 int main() {
   {
+    const Set<string> set = {"first", "second"};
+    assertx(set.contains("second"));
+    assertx(!set.contains("third"));
+  }
+  {
     auto func_get = [](const Set<Vector>& hs, const Vector& p) {
       SHOW("");
       SHOW(p);

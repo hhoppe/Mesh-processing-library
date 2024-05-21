@@ -316,12 +316,10 @@ template class Vec<float, 2>;
 template class Vec<ushort, 3>;
 
 using U = Vec<unsigned, 2>;
-constexpr int n = 3;
-template <> bool Vec<U, n>::in_range(const Vec<U, n>&) const {  // because default definition is illegal
-  return false;
-}
-template <> bool Vec<U, n>::in_range(const Vec<U, n>&, const Vec<U, n>&) const { return false; }
-template class Vec<U, n>;
+// Override illegal definitions for U:
+template <> bool Vec<U, 2>::in_range(const Vec<U, 2>&) const { return false; }
+template <> bool Vec<U, 2>::in_range(const Vec<U, 2>&, const Vec<U, 2>&) const { return false; }
+template class Vec<U, 2>;
 
 template class Vec<void*, 3>;
 

@@ -45,40 +45,41 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   using iterator = typename base::iterator;
   using const_iterator = typename base::const_iterator;
   Set() = default;
-  explicit Set(Hashf hashf) : _s(0, hashf) {}
-  explicit Set(Hashf hashf, Equalf equalf) : _s(0, hashf, equalf) {}
-  void clear() { _s.clear(); }
-  void enter(const T& e) {  // e must be new
-    auto [_, is_new] = _s.insert(e);
+  explicit Set(Hashf hashf) : _set(0, hashf) {}
+  explicit Set(Hashf hashf, Equalf equalf) : _set(0, hashf, equalf) {}
+  Set(std::initializer_list<T> list) : _set(std::move(list)) {}
+  void clear() { _set.clear(); }
+  void enter(const T& e) {  // Element e must be new.
+    auto [_, is_new] = _set.insert(e);
     ASSERTX(is_new);
   }
-  void enter(T&& e) {  // must be new
-    auto [_, is_new] = _s.insert(std::move(e));
+  void enter(T&& e) {  // Element e must be new.
+    auto [_, is_new] = _set.insert(std::move(e));
     ASSERTX(is_new);
   }
   const T& enter(const T& e, bool& is_new) {
-    auto [it, is_new_] = _s.insert(e);
+    auto [it, is_new_] = _set.insert(e);
     is_new = is_new_;
     return *it;
   }
-  // omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new
-  bool add(const T& e) {  // ret: is_new
-    auto [_, is_new] = _s.insert(e);
+  // Omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new.
+  bool add(const T& e) {  // Return: is_new.
+    auto [_, is_new] = _set.insert(e);
     return is_new;
   }
-  // omit "bool add(T&& e)" because e could be lost if !is_new
-  bool remove(const T& e) { return remove_i(e); }  // ret: was_found
-  bool contains(const T& e) const { return _s.find(e) != end(); }
-  int num() const { return narrow_cast<int>(_s.size()); }
-  size_t size() const { return _s.size(); }
-  bool empty() const { return _s.empty(); }
+  // Omit "bool add(T&& e)" because e could be lost if !is_new.
+  bool remove(const T& e) { return remove_i(e); }  // Return: was_found.
+  bool contains(const T& e) const { return _set.find(e) != end(); }
+  int num() const { return narrow_cast<int>(_set.size()); }
+  size_t size() const { return _set.size(); }
+  bool empty() const { return _set.empty(); }
   const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
   const T& retrieve(const T& e) const {
-    auto it = _s.find(e);
+    auto it = _set.find(e);
     return it != end() ? *it : def();
   }
   const T& get(const T& e) const {
-    auto it = _s.find(e);
+    auto it = _set.find(e);
     ASSERTXX(it != end());
     return *it;
   }
@@ -90,59 +91,59 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   T remove_one() {
     ASSERTXX(!empty());
     // T e = std::move(*begin());  // See discussion in Set_test.cpp.
-    // _s.erase(begin());
-    auto node = _s.extract(begin());
+    // _set.erase(begin());
+    auto node = _set.extract(begin());
     return std::move(node.value());
   }
   T remove_random(Random& r) {
     auto it = crand(r);
-    auto node = _s.extract(it);
+    auto node = _set.extract(it);
     return std::move(node.value());
   }
-  iterator begin() { return _s.begin(); }
-  const_iterator begin() const { return _s.begin(); }
-  iterator end() { return _s.end(); }
-  const_iterator end() const { return _s.end(); }
+  iterator begin() { return _set.begin(); }
+  const_iterator begin() const { return _set.begin(); }
+  iterator end() { return _set.end(); }
+  const_iterator end() const { return _set.end(); }
 
  private:
-  base _s;
+  base _set;
   static const T& def() {
     static const T k_default = T{};
     return k_default;
   }
   const T& retrieve_i(const T& e, bool& present) const {
-    auto it = _s.find(e);
+    auto it = _set.find(e);
     present = it != end();
     return present ? *it : def();
   }
   bool remove_i(const T& e) {
-    if (_s.erase(e) == 0) return false;
-    if (1 && _s.size() < _s.bucket_count() / 16) _s.rehash(0);
+    if (_set.erase(e) == 0) return false;
+    if (1 && _set.size() < _set.bucket_count() / 16) _set.rehash(0);
     return true;
   }
-  const_iterator crand(Random& r) const {  // see also similar code in Map
+  const_iterator crand(Random& r) const {  // See also similar code in Map.
     assertx(!empty());
     if (0) {
-      return std::next(begin(), r.get_size_t() % _s.size());  // likely slow; no improvement
+      return std::next(begin(), r.get_size_t() % _set.size());  // Likely slow; no improvement.
     } else {
-      size_t nbuckets = _s.bucket_count();
+      size_t nbuckets = _set.bucket_count();
       size_t bn = r.get_size_t() % nbuckets;
-      size_t ne = _s.bucket_size(bn);
+      size_t ne = _set.bucket_size(bn);
       size_t nskip = r.get_size_t() % (20 + ne);
-      while (nskip >= _s.bucket_size(bn)) {
-        nskip -= _s.bucket_size(bn);
+      while (nskip >= _set.bucket_size(bn)) {
+        nskip -= _set.bucket_size(bn);
         bn++;
         if (bn == nbuckets) bn = 0;
       }
-      auto li = _s.begin(bn);
+      auto li = _set.begin(bn);
       while (nskip--) {
-        ASSERTXX(li != _s.end(bn));
+        ASSERTXX(li != _set.end(bn));
         ++li;
       }
-      ASSERTXX(li != _s.end(bn));
-      // convert from const_local_iterator to const_iterator
-      auto it = _s.find(*li);
-      ASSERTXX(it != _s.end());
+      ASSERTXX(li != _set.end(bn));
+      // Convert from const_local_iterator to const_iterator.
+      auto it = _set.find(*li);
+      ASSERTXX(it != _set.end());
       return it;
     }
   }

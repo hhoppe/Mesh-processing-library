@@ -280,7 +280,7 @@ void CloseIfOpen() {
         if (mesh.num_vertices() <= 50'000) {  // For speed, only compute on smaller meshes.
           showf(" %s\n", mesh_genus_string(mesh).c_str());
         } else {
-          showf(" v=%d f=%d e=%d\n", mesh.num_vertices(), mesh.num_faces(), mesh.num_edges());
+          showf(" v=%d f=%d\n", mesh.num_vertices(), mesh.num_faces());
         }
       } else {
         showf("%s %dv %df\n", s.c_str(), total_vertices, total_faces);

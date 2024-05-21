@@ -77,14 +77,15 @@ int main() {
 }
 
 namespace hh {
+
 template class Kdtree<unsigned, 1>;
 template class Kdtree<float, 2>;
 template class Kdtree<double, 3>;
 
 using U = unique_ptr<int>;
-// void Kdtree<U, 2>::enter1(const U&, const float*, const float*) { } // definition illegal
-template <> Kdtree<U, 2>::Entry::Entry(const U&) {}          // definition illegal
-template <> void Kdtree<U, 2>::rec_print(int, int) const {}  // SHOW(U) undefined
+// Override illegal definitions for U:
+template <> Kdtree<U, 2>::Entry::Entry(const U&) {}
+template <> void Kdtree<U, 2>::rec_print(int, int) const {}
 template class Kdtree<U, 2>;
-// full instantiation still tries to instantiate Kdtree::Entry::Entry(const T&), so it fails.
+
 }  // namespace hh

@@ -4,8 +4,6 @@
 #define DEF_SC
 #define DEF_PLY
 
-#include <map>
-
 #include "G3dOGL/HB.h"
 #include "G3dOGL/ScGeomorph.h"         // DEF_SC
 #include "G3dOGL/SimplicialComplex.h"  // DEF_SC
@@ -613,11 +611,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
     if (in_slider) {
       use_dl = was_using_dl;
       was_using_dl = false;
-      if (g3d::output) {
-        std::cout << "lod "
-                  << "-1\n";
-        std::cout.flush();
-      }
+      if (g3d::output) std::cout << "lod -1\n" << std::flush;
     } else {
       fbutp(butnum, pressed, shift, yxf);
     }
@@ -3194,11 +3188,7 @@ void* HB::escape(void* code, void* data) {
   switch (icode) {
     case 1: {
       if (fdata < 0.f) {
-        if (g3d::output) {
-          std::cout << "lod "
-                    << "-1\n";
-          std::cout.flush();
-        }
+        if (g3d::output) std::cout << "lod -1\n" << std::flush;
         if (!use_dl) use_dl = was_using_dl;
       } else {
         if (use_dl) {
@@ -3261,8 +3251,7 @@ void pm_update_lod() {
   invalidate_dls();
   if (g3d::output) {
     float val = lod_use_nvertices ? pmi->_vertices.num() : pm_lod_level;
-    std::cout << "lod " << val << '\n';
-    std::cout.flush();
+    std::cout << "lod " << val << '\n' << std::flush;
   }
 }
 
@@ -3399,21 +3388,13 @@ bool pm_key_press(char ch) {
     case 'c':
       pm_lod_level = 0.f;
       pm_update_lod();
-      if (g3d::output) {
-        std::cout << "lod "
-                  << "-1\n";
-        std::cout.flush();
-      }
+      if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
     case 'a':
       pm_lod_level = 1.f;
       pm_update_lod();
-      if (g3d::output) {
-        std::cout << "lod "
-                  << "-1\n";
-        std::cout.flush();
-      }
+      if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
     default: return false;
@@ -3700,8 +3681,7 @@ void sr_wrap_draw(bool show) {
     static float old_screen_thresh;
     if (sr_screen_thresh != old_screen_thresh) {
       old_screen_thresh = sr_screen_thresh;
-      std::cout << "screen_thresh " << sr_screen_thresh << '\n';
-      std::cout.flush();
+      std::cout << "screen_thresh " << sr_screen_thresh << '\n' << std::flush;
     }
   }
 }
@@ -4326,8 +4306,7 @@ void psc_update_lod() {
   invalidate_dls();
   if (g3d::output) {
     float val = lod_use_nvertices ? psc_lod_num + 1 : psc_lod_level;
-    std::cout << "lod " << val << '\n';
-    std::cout.flush();
+    std::cout << "lod " << val << '\n' << std::flush;
   }
 }
 
@@ -4930,8 +4909,6 @@ bool psc_key_press(char ch) {
 
 #if defined(DEF_PLY)
 
-// struct PlyIndices { int vi[3]; };
-// using PlyIndices = std::array<int, 3>;
 using PlyIndices = PArray<int, 4>;
 Array<Point> ply_vpos;
 Array<Vector> ply_vnor;
@@ -4976,8 +4953,8 @@ void read_ply(const string& filename) {
     assertx(my_getline(fi(), sline));
     assertx(sline == "ply");
   }
-  const std::map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
-                                             {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
+  const Map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
+                                        {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
   bool binary = false;
   bool bigendian = false;
   int num_element = 0;
@@ -5029,7 +5006,7 @@ void read_ply(const string& filename) {
       if (name == "vertex_indices") {
         assertx(len_nfv == 0);
         assertx(dtype == "int" || dtype == "uint");
-        len_nfv = dsizes.at(sizetype);
+        len_nfv = dsizes.get(sizetype);
       } else if (name == "texcoord") {
         assertx(len_nfv > 0 && fnother == 0);
         assertx(sizetype == "uchar" && dtype == "float");
@@ -5043,7 +5020,7 @@ void read_ply(const string& filename) {
       std::istringstream iss(sline.substr(std::strlen("property ")));
       string dtype, name;
       assertx(iss >> dtype >> name && iss.eof());
-      const int dsize = dsizes.at(dtype);
+      const int dsize = dsizes.get(dtype);
       if (element == "vertex") {
         if (contains(V<string>("x", "y", "z"), name)) {
           assertx(vnnor + vnrgb + vnother == 0);

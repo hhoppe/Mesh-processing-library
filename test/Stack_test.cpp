@@ -86,11 +86,13 @@ int main() {
 }
 
 namespace hh {
+
 template class Stack<unsigned>;
 template class Stack<double>;
 template class Stack<const int*>;
 
 using U = unique_ptr<int>;
-template <> void Stack<U>::push(const U&) {}  // non-&& definition illegal
+template <> void Stack<U>::push(const U&) {}  // Override illegal definition for U.
 template class Stack<U>;
+
 }  // namespace hh

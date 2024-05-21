@@ -83,19 +83,19 @@ inline int face_prediction(int fa, int fb, int ii) {
 
 // *** Attrib
 
-void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float f1) {
-  a.point = interp(a1.point, a2.point, f1);
+void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float frac1) {
+  a.point = interp(a1.point, a2.point, frac1);
 }
 
-void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float f1) {
-  a.normal = ok_normalized(interp(a1.normal, a2.normal, f1));
-  a.rgb = interp(a1.rgb, a2.rgb, f1);
-  a.uv = interp(a1.uv, a2.uv, f1);
+void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float frac1) {
+  a.normal = ok_normalized(interp(a1.normal, a2.normal, frac1));
+  a.rgb = interp(a1.rgb, a2.rgb, frac1);
+  a.uv = interp(a1.uv, a2.uv, frac1);
 }
 
-void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float f1) {
-  interp(a.v, a1.v, a2.v, f1);
-  interp(a.w, a1.w, a2.w, f1);
+void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float frac1) {
+  interp(a.v, a1.v, a2.v, frac1);
+  interp(a.w, a1.w, a2.w, frac1);
 }
 
 void add(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad) { a.point = a1.point + ad.dpoint; }
@@ -1411,6 +1411,42 @@ void AWMesh::ok() const {
   }
 }
 
+void AWMesh::split_edge(int f, int j, float frac1) {
+  assertx(_wedges.num() == _vertices.num());  // Simpler case for now.
+  const int w1 = _faces[f].wedges[j];
+  const int w2 = _faces[f].wedges[mod3(j + 1)];
+  const int v1 = _wedges[w1].vertex;
+  const int v2 = _wedges[w2].vertex;
+  const int f2 = _fnei[f].faces[mod3(j + 2)];
+  assertx(f2 >= 0);  // Mesh is assumed to have no boundaries.
+  const int j2 = get_jvf(v2, f2);  // Index of v2 within f2; mod3(j2 + 1) is index of v1 within f2.
+  const int ws1 = _faces[f].wedges[mod3(j + 2)];
+  const int ws2 = _faces[f2].wedges[mod3(j2 + 2)];
+  const int vnew = _vertices.add(1);
+  const int wnew = _wedges.add(1);
+  const int fnew1 = _faces.add(1);
+  const int fnew2 = _faces.add(1);
+  _fnei.add(2);
+  interp(_vertices[vnew].attrib, _vertices[v1].attrib, _vertices[v2].attrib, frac1);
+  _wedges[wnew].vertex = vnew;
+  interp(_wedges[wnew].attrib, _wedges[w1].attrib, _wedges[w2].attrib, frac1);
+  _faces[fnew1].wedges = V(wnew, w2, ws1);
+  _faces[fnew1].attrib = _faces[f].attrib;
+  _faces[fnew2].wedges = V(w2, wnew, ws2);
+  _faces[fnew2].attrib = _faces[f2].attrib;
+  _faces[f].wedges[mod3(j + 1)] = wnew;
+  _faces[f2].wedges[j2] = wnew;
+  const auto fnei1 = _fnei[f].faces;
+  const auto fnei2 = _fnei[f2].faces;
+  const auto replace = [](auto& vec, auto oldval, auto newval) { vec[vec.view().index(oldval)] = newval; };
+  replace(_fnei[fnei1[j]].faces, f, fnew1);
+  replace(_fnei[fnei2[mod3(j2 + 1)]].faces, f2, fnew2);
+  _fnei[f].faces[j] = fnew1;
+  _fnei[f2].faces[mod3(j2 + 1)] = fnew2;
+  _fnei[fnew1].faces = V(fnei1[j], f, fnew2);
+  _fnei[fnew2].faces = V(f2, fnei2[mod3(j2 + 1)], fnew1);
+}
+
 void AWMesh::construct_adjacency() {
   _fnei.init(_faces.num());
   Map<std::pair<int, int>, int> mvv_face;  // (Vertex, Vertex) -> Face
@@ -1839,12 +1875,12 @@ bool Geomorph::construct_goto_nfaces(PMeshIter& pmi, int nfaces) { return constr
 
 void Geomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
-  const float f1 = 1.f - alpha;
+  const float frac1 = 1.f - alpha;
   for (const PmVertexAttribG& ag : _vgattribs) {
-    interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], f1);
+    interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], frac1);
   }
   for (const PmWedgeAttribG& ag : _wgattribs) {
-    interp(_wedges[ag.wedge].attrib, ag.attribs[0], ag.attribs[1], f1);
+    interp(_wedges[ag.wedge].attrib, ag.attribs[0], ag.attribs[1], frac1);
   }
 }
 
@@ -1921,9 +1957,9 @@ SGeomorph::SGeomorph(const Geomorph& geomorph) : SMesh(geomorph) {
 
 void SGeomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
-  const float f1 = 1.f - alpha;
+  const float frac1 = 1.f - alpha;
   for (const PmSVertexAttribG& ag : _vgattribs) {
-    interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], f1);
+    interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], frac1);
   }
 }
 

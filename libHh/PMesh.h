@@ -26,7 +26,7 @@ struct PmVertexAttribD {
   Vector dpoint;
 };
 
-void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float f1);
+void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a2, float frac1);
 void add(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
 void sub(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
 void diff(PmVertexAttribD& ad, const PmVertexAttrib& a1, const PmVertexAttrib& a2);
@@ -47,7 +47,7 @@ struct PmWedgeAttribD {
   UV duv;
 };
 
-void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float f1);
+void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float frac1);
 void add(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttribD& ad);
 void sub_noreflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad);
 void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad);
@@ -263,6 +263,8 @@ class AWMesh : public WMesh {
   bool is_boundary(int v, int f) const;
   VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
   VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
+  // Split the edge between _faces[f].wedges[j] and _faces[f].wedges[mod3(j + 1)] with interp(v1, v2, frac1).
+  void split_edge(int f, int j, float frac1);
  private:
   void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,
@@ -482,7 +484,7 @@ struct PmSVertexAttrib {
   PmWedgeAttrib w;
 };
 
-void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float f1);
+void interp(PmSVertexAttrib& a, const PmSVertexAttrib& a1, const PmSVertexAttrib& a2, float frac1);
 
 struct PmSVertex {
   PmSVertexAttrib attrib;

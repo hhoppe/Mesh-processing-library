@@ -3237,7 +3237,8 @@ void read_pm(const string& filename) {
   pmi = make_unique<PMeshIter>(*pmrs);
   if (0 && pm_lod_level == 0.f) pm_lod_level = 1.f;
   pmi->goto_nvertices(pmrs->base_mesh()._vertices.num() + int(pmrs->_info._tot_nvsplits * pm_lod_level + .5f));
-  slidermode = true;
+  slidermode = pmrs->_info._tot_nvsplits > 0;
+  showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), pmrs->_info._full_nvertices, pmrs->_info._full_nfaces);
   g3d::UpdateOb1Bbox(pmrs->_info._full_bbox);
   if (g3d::g_filename == "") g3d::g_filename = filename;
 }
@@ -3257,7 +3258,6 @@ void pm_update_lod() {
 
 void pm_wrap_draw(bool show) {
   if (!slidermode) return;
-  if (pmrs->_info._tot_nvsplits == 0) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       Vec2<float> yxf;

@@ -1438,6 +1438,14 @@ PMesh::PMesh() {
   _info._full_bbox[1] = Point(BIGFLOAT, BIGFLOAT, BIGFLOAT);
 }
 
+PMesh::PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo) : _base_mesh(std::move(awmesh)), _info(pminfo) {
+  _info._tot_nvsplits = 0;
+  _info._full_nvertices = _base_mesh._vertices.num();
+  _info._full_nwedges = _base_mesh._wedges.num();
+  _info._full_nfaces = _base_mesh._faces.num();
+  _info._full_bbox = Bbox{transform(_base_mesh._vertices, [](auto& v) { return v.attrib.point; })};
+}
+
 void PMesh::read(std::istream& is) {
   PMeshRStream pmrs(is, this);
   pmrs.read_base_mesh();

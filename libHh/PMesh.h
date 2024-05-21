@@ -81,13 +81,17 @@ struct PmFace {
 // So either reserve, or use versatile Win32 memory allocation.
 
 // Wedge mesh: faces -> wedges -> vertices
-struct WMesh {
+class WMesh {
+ public:
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   GMesh extract_gmesh(const PMeshInfo& pminfo) const;
   void ok() const;
   Vec3<int> face_vertices(int f) const;
   Vec3<Point> face_points(int f) const;
+  int get_jvf(int v, int f) const;  // get index of vertex v in face f
+  int get_wvf(int v, int f) const;
+  //
   Materials _materials;
   Array<PmVertex> _vertices;
   Array<PmWedge> _wedges;
@@ -253,8 +257,6 @@ class AWMesh : public WMesh {
  public:
   Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
  public:
-  int get_jvf(int v, int f) const;  // get index of vertex v in face f
-  int get_wvf(int v, int f) const;
   int most_clw_face(int v, int f) const;  // negative if v is interior vertex
   int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
   bool is_boundary(int v, int f) const;
@@ -344,6 +346,7 @@ struct PMeshInfo {
 class PMesh : noncopyable {
  public:
   PMesh();
+  PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo);
   // non-progressive read
   void read(std::istream& is);  // die unless empty
   void write(std::ostream& os) const;
@@ -539,10 +542,8 @@ inline Vec3<Point> WMesh::face_points(int f) const {
   return points;
 }
 
-inline bool Vsplit::adds_two_faces() const { return vlr_offset1 > 1; }
-
 #if defined(HH_DEBUG)
-inline int AWMesh::get_jvf(int v, int f) const {
+inline int WMesh::get_jvf(int v, int f) const {
   ASSERTX(_vertices.ok(v));
   ASSERTX(_faces.ok(f));
   for_int(j, 3) {
@@ -550,15 +551,15 @@ inline int AWMesh::get_jvf(int v, int f) const {
   }
   assertnever("");
 }
-inline int AWMesh::get_wvf(int v, int f) const { return _faces[f].wedges[get_jvf(v, f)]; }
+inline int WMesh::get_wvf(int v, int f) const { return _faces[f].wedges[get_jvf(v, f)]; }
 #else
-inline int AWMesh::get_jvf(int v, int f) const {
+inline int WMesh::get_jvf(int v, int f) const {
   // return (_wedges[_faces[f].wedges[0]].vertex == v ? 0 :
   //         _wedges[_faces[f].wedges[1]].vertex == v ? 1 :
   //         2);
   return ((_wedges[_faces[f].wedges[1]].vertex == v) + (_wedges[_faces[f].wedges[2]].vertex == v) * 2);
 }
-inline int AWMesh::get_wvf(int v, int f) const {
+inline int WMesh::get_wvf(int v, int f) const {
   int w0 = _faces[f].wedges[0];
   if (_wedges[w0].vertex == v) return w0;
   int w1 = _faces[f].wedges[1];
@@ -567,6 +568,8 @@ inline int AWMesh::get_wvf(int v, int f) const {
   return w2;
 }
 #endif  // defined(HH_DEBUG)
+
+inline bool Vsplit::adds_two_faces() const { return vlr_offset1 > 1; }
 
 }  // namespace hh
 

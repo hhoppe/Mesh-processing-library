@@ -5026,7 +5026,7 @@ void read_ply(const string& filename) {
           assertx(vnnor + vnrgb + vnother == 0);
           vnpos++;
         } else if (contains(V<string>("nx", "ny", "nz"), name)) {
-          assertx(vnpos ==3 && vnrgb + vnother == 0);
+          assertx(vnpos == 3 && vnrgb + vnother == 0);
           vnnor++;
         } else if (contains(V<string>("red", "green", "blue", "alpha"), name)) {
           assertx(vnpos == 3 && vnother == 0);

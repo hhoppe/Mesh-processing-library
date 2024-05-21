@@ -109,8 +109,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return f;
   }
 
-  template <int D = dim, typename = std::enable_if_t<D == 3>>
-  [[nodiscard]] type transform(const Frame& frame) const {
+  template <int D = dim, typename = std::enable_if_t<D == 3>> [[nodiscard]] type transform(const Frame& frame) const {
     type bbox;
     auto& self = *this;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {

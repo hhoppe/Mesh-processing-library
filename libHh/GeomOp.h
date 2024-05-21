@@ -68,6 +68,12 @@ void widen_triangle(ArrayView<Point> poly, float eps);
 // Return the signed volume of a tetrahedron (positive if p4 is in the direction cross(p1, p2, p3)).
 float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4);
 
+// Return (longitude, latitude) of point on the unit sphere.
+UV lonlat_from_sph(const Point& sph);
+
+// Return point on the unit sphere given (longitude, latitude).
+Point sph_from_lonlat(const UV& lonlat);
+
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_GEOMOP_H_

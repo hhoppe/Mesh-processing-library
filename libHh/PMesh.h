@@ -91,6 +91,7 @@ class WMesh {
   Vec3<Point> face_points(int f) const;
   int get_jvf(int v, int f) const;  // get index of vertex v in face f
   int get_wvf(int v, int f) const;
+  Array<int> gather_someface() const;  // Returns mapping: vertex index -> index of some adjacent face.
   //
   Materials _materials;
   Array<PmVertex> _vertices;

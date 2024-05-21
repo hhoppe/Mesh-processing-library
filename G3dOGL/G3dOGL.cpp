@@ -3257,6 +3257,7 @@ void pm_update_lod() {
 
 void pm_wrap_draw(bool show) {
   if (!slidermode) return;
+  if (pmrs->_info._tot_nvsplits == 0) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       Vec2<float> yxf;

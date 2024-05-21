@@ -331,6 +331,12 @@ void WMesh::ok() const {
   }
 }
 
+Array<int> WMesh::WMesh::gather_someface() const {
+  Array<int> someface(_vertices.num());
+  for_int(f, _faces.num()) for (const int v : face_vertices(f)) someface[v] = f;
+  return someface;
+}
+
 // *** Vsplit
 
 void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
@@ -982,7 +988,8 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
 #endif
 GOTO_VSPLIT_WAD2:
   void();  // empty statement
-           // ok();
+  //
+  // ok();
 }
 
 void AWMesh::apply_vsplit_private(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry* ancestry) {

@@ -79,13 +79,13 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
   Polygon poly;
   if (_options.allow_local_project && hintf) {
     f = hintf;
-    int count = 0;
+    int nfchanges = 0;
     for (;;) {
       _mesh.polygon(f, poly);
       assertx(poly.num() == 3);
       result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
       float dfrac = sqrt(result.d2) * _ftospatial[0][0];
-      // if (!count) { HH_SSTAT(Sms_dfrac0, dfrac); }
+      // if (!nfchanges) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // Failure.
         f = nullptr;
         break;
@@ -107,8 +107,9 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
         } else {  // Fastest: jump across vertex.
           Vertex v = va[side];
           int val = _mesh.degree(v);
-          // int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but requires non-thread-safe Random.
-          int nrot = ((val - 1) / 2);
+          // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
+          constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
+          const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges];
           for_int(i, nrot) {
             f = _mesh.ccw_face(v, f);
             if (!f) break;  // Failure.
@@ -135,12 +136,12 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
         if (!_options.allow_internal_boundaries) assertnever("MeshSearch has hit surface boundary");
         break;  // Failure.
       }
-      if (++count == 10) {  // Failure.
+      if (++nfchanges == 10) {  // Failure.
         f = nullptr;
         break;
       }
     }
-    // HH_SSTAT(Sms_locn, count);
+    // HH_SSTAT(Sms_nfchanges, nfchanges);
   }
   HH_SSTAT(Sms_loc, !!f);
   if (!f) {

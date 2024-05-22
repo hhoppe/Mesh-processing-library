@@ -15,7 +15,8 @@
 #include "HW.h"
 #include "VideoViewer/GradientDomainLoop.h"
 #include "libHh/Args.h"
-#include "libHh/ArrayOp.h"       // median()
+#include "libHh/ArrayOp.h"  // median()
+#include "libHh/Bbox.h"
 #include "libHh/BinarySearch.h"  // discrete_binary_search()
 #include "libHh/Color_ramp.h"    // k_color_ramp
 #include "libHh/FileIO.h"        // my_sh()
@@ -376,13 +377,9 @@ Vec2<int> get_win_yx(const Vec2<float>& image_yx) {
   return convert<int>(floor((Point(concat(image_yx, V(0.f))) * g_view).head<2>()));
 }
 
-template <typename T> Vec2<Vec2<T>> bbox_minmax(CArrayView<Vec2<T>> ar) {
-  return V(transitive_min(ar), transitive_max(ar));
-}
-
-template <typename T> Vec4<Vec2<T>> minmax_corners(const Vec2<Vec2<T>>& minmax) {
-  const Vec2<T>& vmin = minmax[0];
-  const Vec2<T>& vmax = minmax[1];
+template <typename T> Vec4<Vec2<T>> bbox_corners(const Bbox<T, 2>& bbox) {
+  const Vec2<T>& vmin = bbox[0];
+  const Vec2<T>& vmax = bbox[1];
   return V(V(vmin[0], vmin[1]), V(vmax[0], vmin[1]), V(vmax[0], vmax[1]), V(vmin[0], vmax[1]));
 }
 
@@ -419,8 +416,8 @@ bool intersect_poly_poly_2D(CArrayView<Vec2<float>> poly1, CArrayView<Vec2<float
 
 bool image_is_not_visible() {
   assertx(g_cob >= 0);
-  return !intersect_poly_poly_2D(minmax_corners(V(twice(0.f), convert<float>(g_win_dims))),
-                                 map(minmax_corners(V(twice(0.f), convert<float>(g_frame_dims))),
+  return !intersect_poly_poly_2D(bbox_corners(Bbox(twice(0.f), convert<float>(g_win_dims))),
+                                 map(bbox_corners(Bbox(twice(0.f), convert<float>(g_frame_dims))),
                                      [](const Vec2<float>& p) { return convert<float>(get_win_yx(p)); }));
 }
 
@@ -1416,14 +1413,14 @@ bool DerivedHW::key_press(string skey) {
           break;
         }
         case '{': {  // slow down video among preselected speeds
-          if (0) set_speed(k_speeds.inside(k_speeds.index(g_speed) - 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) - 1, Bndrule::clamped));
           int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())), 0,
                                              k_speeds.num(), clamp(g_speed * .999999f, k_speeds[0], k_speeds.last()));
           set_speed(k_speeds.inside(index + 0, Bndrule::clamped));
           break;
         }
         case '}': {  // speed up video among preselected speeds
-          if (0) set_speed(k_speeds.inside(k_speeds.index(g_speed) + 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) + 1, Bndrule::clamped));
           int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())), 0,
                                              k_speeds.num(), clamp(g_speed, k_speeds[0], k_speeds.last()));
           set_speed(k_speeds.inside(index + 1, Bndrule::clamped));
@@ -3489,9 +3486,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     // show RGBA values and coordinates as text
     const Vec2<int> fdims = get_font_dims();
     const float eps = .01f;
-    const Vec2<Vec2<int>> yxminmax =
-        bbox_minmax(map(minmax_corners(V(twice(-eps), convert<float>(g_win_dims) + eps)), &get_image_yx).view());
-    for (const Vec2<int> tex_yx : range(yxminmax[0], yxminmax[1] + 1)) {
+    const Bbox bbox{transform(bbox_corners(Bbox(twice(-eps), convert<float>(g_win_dims) + eps)), &get_image_yx)};
+    for (const Vec2<int> tex_yx : range(bbox[0], bbox[1] + 1)) {
       if (!tex_yx.in_range(g_frame_dims)) continue;
       const Pixel pix = get_frame_pix(tex_yx);
       const Vec2<int> win_yx = get_win_yx(convert<float>(tex_yx) + .5f);
@@ -4314,7 +4310,7 @@ void test() {
     for_int(i, 10) SHOW(i, intersect_poly_poly_2D(poly, poly + V(i * .2f, 0.f)));
   }
   if (0) {
-    auto poly1 = minmax_corners(V(twice(0.f), twice(1.f)));
+    auto poly1 = bbox_corners(Bbox(twice(0.f), twice(1.f)));
     auto poly2 = V(V(0.f, 0.f), V(1.f, 0.f), V(0.f, 1.f));
     SHOW(poly1, poly2);
     for_int(i, 10) SHOW(i, intersect_poly_poly_2D(poly1, poly2 + V(-1.f + i * .1f, -.5f)));

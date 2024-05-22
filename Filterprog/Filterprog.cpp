@@ -1151,8 +1151,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
     // Encode location of vs within that face.
     {
       Vec3<Vertex> va = mesh.triangle_vertices(f);
-      int vs_index = va.view().index(vs);
-      assertx(vs_index >= 0 && vs_index <= 2);
+      int vs_index = index(va, vs);
       code |= (vs_index << Vsplit::VSINDEX_SHIFT);
     }
     vspl.code = narrow_cast<ushort>(code);

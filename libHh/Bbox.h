@@ -120,7 +120,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 
  private:
-  static constexpr T big = BIGFLOAT;
+  static constexpr T big = std::numeric_limits<T>::max();  // Was BIGFLOAT.  OK??
 };
 
 // Template deduction guides:

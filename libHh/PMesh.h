@@ -243,8 +243,6 @@ class AWMesh : public WMesh {
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void ok() const;
-  void rotate_ccw(int v, int& w, int& f) const;
-  void rotate_clw(int v, int& w, int& f) const;
 
   // Rendering: common code and data
   static constexpr int k_Face_visited_mask = 1 << 30;  // high bit of matid
@@ -255,9 +253,8 @@ class AWMesh : public WMesh {
   void ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_edges();
 
- public:
   Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
- public:
+
   int most_clw_face(int v, int f) const;  // negative if v is interior vertex
   int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
   bool is_boundary(int v, int f) const;
@@ -265,6 +262,7 @@ class AWMesh : public WMesh {
   VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
   // Split the edge between _faces[f].wedges[j] and _faces[f].wedges[mod3(j + 1)] with interp(v1, v2, frac1).
   void split_edge(int f, int j, float frac1);
+
  private:
   void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,

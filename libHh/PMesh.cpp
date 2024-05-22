@@ -478,16 +478,6 @@ int AWMesh::most_ccw_face(int v, int f) const {
 
 bool AWMesh::is_boundary(int v, int f) const { return most_ccw_face(v, f) != k_undefined; }
 
-void AWMesh::rotate_ccw(int v, int& w, int& f) const {
-  f = _fnei[f].faces[mod3(get_jvf(v, f) + 1)];
-  w = f == k_undefined ? k_undefined : get_wvf(v, f);
-}
-
-void AWMesh::rotate_clw(int v, int& w, int& f) const {
-  f = _fnei[f].faces[mod3(get_jvf(v, f) + 2)];
-  w = f == k_undefined ? k_undefined : get_wvf(v, f);
-}
-
 void AWMesh::read(std::istream& is, const PMeshInfo& pminfo) {
   WMesh::read(is, pminfo);
   construct_adjacency();
@@ -1418,7 +1408,7 @@ void AWMesh::split_edge(int f, int j, float frac1) {
   const int v1 = _wedges[w1].vertex;
   const int v2 = _wedges[w2].vertex;
   const int f2 = _fnei[f].faces[mod3(j + 2)];
-  assertx(f2 >= 0);  // Mesh is assumed to have no boundaries.
+  assertx(f2 >= 0);                // Mesh is assumed to have no boundaries.
   const int j2 = get_jvf(v2, f2);  // Index of v2 within f2; mod3(j2 + 1) is index of v1 within f2.
   const int ws1 = _faces[f].wedges[mod3(j + 2)];
   const int ws2 = _faces[f2].wedges[mod3(j2 + 2)];
@@ -1438,7 +1428,7 @@ void AWMesh::split_edge(int f, int j, float frac1) {
   _faces[f2].wedges[j2] = wnew;
   const auto fnei1 = _fnei[f].faces;
   const auto fnei2 = _fnei[f2].faces;
-  const auto replace = [](auto& vec, auto oldval, auto newval) { vec[vec.view().index(oldval)] = newval; };
+  const auto replace = [](auto& vec, auto oldval, auto newval) { vec[index(vec, oldval)] = newval; };
   replace(_fnei[fnei1[j]].faces, f, fnew1);
   replace(_fnei[fnei2[mod3(j2 + 1)]].faces, f2, fnew2);
   _fnei[f].faces[j] = fnew1;

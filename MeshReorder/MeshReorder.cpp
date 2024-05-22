@@ -558,8 +558,7 @@ void do_fixup_indices() {
           j = mod3(iov1 + 2);  // clw turn
         }
       } else {  // no next face or previous face; anything
-        j = va.index(mesh.id_vertex(ar_verts[fi * 3 + 0]));
-        assertx(j >= 0);
+        j = index(va, mesh.id_vertex(ar_verts[fi * 3 + 0]));
       }
       for_int(k, 3) ar_verts[fi * 3 + k] = mesh.vertex_id(va[mod3(j + k)]);
       ov1 = ifn < 0 ? nullptr : va[mod3(j + 1)];
@@ -588,8 +587,7 @@ void do_fixup_indices() {
         if (ifn >= 0) {
           j = ifn;
         } else {  // no next face; anything goes
-          j = va.index(mesh.id_vertex(ar_verts[fi * 3 + 0]));
-          assertx(j >= 0);
+          j = index(va, mesh.id_vertex(ar_verts[fi * 3 + 0]));
         }
       }
       for_int(k, 3) {

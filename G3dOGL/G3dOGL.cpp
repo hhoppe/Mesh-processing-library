@@ -1891,7 +1891,6 @@ void draw_mesh(GMesh& mesh) {
       if (k_debug) {
         for (Face f : mesh.faces()) assertx(mesh.flags(f).flag(fflag_visited) != vis_new_state);
       }
-      Array<Vertex> va;
       for (Face f : mesh.faces()) {
         if (mesh.flags(f).flag(fflag_visited) == vis_new_state) continue;
         mesh.flags(f).flag(fflag_visited) = vis_new_state;
@@ -1905,7 +1904,7 @@ void draw_mesh(GMesh& mesh) {
         glBegin(GL_TRIANGLE_STRIP);
         int striplen = 1;
         int vi = 0;
-        mesh.get_vertices(f, va);
+        Vec3<Vertex> va = mesh.triangle_vertices(f);
         for_int(i, 3) {
           Face fn = mesh.opp_face(va[i], f);
           if (!fn || !mesh.is_triangle(fn) || mesh.flags(fn).flag(fflag_visited) == vis_new_state ||
@@ -1931,9 +1930,8 @@ void draw_mesh(GMesh& mesh) {
           mesh.flags(ff).flag(fflag_visited) = vis_new_state;
           striplen++;
           Vertex vwaspiv = va[mod3(vi + pivot)];
-          mesh.get_vertices(ff, va);
-          vi = va.index(vwaspiv);
-          ASSERTX(vi >= 0);
+          va = mesh.triangle_vertices(ff);
+          vi = index(va, vwaspiv);
           if (texture_active && !texture_lit) {
           } else {
             if (!lsmooth) glNormal3fv(f_pnor(ff).data());

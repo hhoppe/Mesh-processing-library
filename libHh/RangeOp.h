@@ -172,6 +172,15 @@ template <typename Range, typename = enable_if_range_t<Range>> std::ptrdiff_t di
 
 // *** My custom range operations:
 
+// Return the index of the first matching element, or die if not found.
+template <typename Range, typename = enable_if_range_t<Range>, typename Iterator = iterator_t<Range>>
+int index(const Range& range, const Iterator& elem) {
+  using std::begin, std::end;
+  auto iter = std::find(begin(range), end(range), elem);
+  if (iter == end(range)) assertnever(make_string(elem) + " not found in range");
+  return assert_narrow_cast<int>(iter - begin(range));
+}
+
 // Higher-precision type to represent the mean of a set of elements.
 template <typename T> struct mean_type {
   using type = std::conditional_t<

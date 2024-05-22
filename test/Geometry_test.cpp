@@ -50,12 +50,12 @@ int main() {
     SHOW(q);
     // SHOW(~f2);
     Frame f2inv = ~f2;
-    truncate_small_floats(f2inv.view());
+    truncate_small_floats(f2inv);
     SHOW(f2inv);
     SHOW(f2 * f2);
     SHOW(q * inverse(f2));
     Frame ff = f3 * f * ~f2 * Frame::identity() * ~Frame::identity();
-    truncate_small_floats(ff.view());
+    truncate_small_floats(ff);
     SHOW(ff);
     Frame zero = Frame::scaling(thrice(0.f));
     SHOW(zero);

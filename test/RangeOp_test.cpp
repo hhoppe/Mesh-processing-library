@@ -129,4 +129,8 @@ int main() {
     for (int i : concatenate(vector, list)) result.push(i);
     SHOW(result);
   }
+  {
+    assertx(index(range(10), 3) == 3);
+    assertx(index(V(3, 5, 7), 5) == 1);
+  }
 }

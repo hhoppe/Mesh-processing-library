@@ -1006,8 +1006,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       parallel_for_each(range(hny), [&](const int hy) {
         for_int(hx, hnx) {
           int period = hmat_period(hy, hx);
-          int pi = periods.index(period);
-          ASSERTX(pi >= 0);
+          int pi = index(periods, period);
           int si;
           {
             if (pi == 0) {

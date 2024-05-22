@@ -85,6 +85,7 @@ class WMesh {
  public:
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
+  void write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const;
   GMesh extract_gmesh(const PMeshInfo& pminfo) const;
   void ok() const;
   Vec3<int> face_vertices(int f) const;

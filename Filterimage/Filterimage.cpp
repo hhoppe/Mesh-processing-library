@@ -972,11 +972,11 @@ void do_invideo(Args& args) {
   showf("Reading video %s\n", Video::diagnostic_string(rvideo.dims(), rvideo.attrib()).c_str());
   unique_ptr<WVideo> pwvideo;  // not defined now because we do not yet know the frame size
   ConsoleProgress cprogress("Invideo");
-  image.init(rvideo.spatial_dims());
   for (int i = 0;; i++) {
     if (rvideo.nframes()) cprogress.update(float(i) / rvideo.nframes());
+    image.init(rvideo.spatial_dims());
     if (!rvideo.read(image)) break;
-    ParseArgs parseargs{Array<string>{}};
+    ParseArgs parseargs{Array<string>{"dummy_arg0"}};
     parseargs.copy_parse(*g_parseargs);
     parseargs.parse();
     if (!pwvideo) pwvideo = make_unique<WVideo>("-", image.dims(), rvideo.attrib());

@@ -4912,6 +4912,7 @@ using PlyIndices = PArray<int, 4>;
 Array<Point> ply_vpos;
 Array<Vector> ply_vnor;
 Array<Pixel> ply_vrgb;
+Array<UV> ply_vuv;
 Array<PlyIndices> ply_findices;
 Array<Vec3<UV>> ply_fuv;
 
@@ -4947,22 +4948,21 @@ Array<Vec3<UV>> ply_fuv;
 void read_ply(const string& filename) {
   // HH_TIMER("_read_ply");
   RFile fi(filename);
-  {
-    string sline;
-    assertx(my_getline(fi(), sline));
-    assertx(sline == "ply");
-  }
+  std::istream& is = fi();
+  string sline;
+  assertx(my_getline(is, sline));
+  assertx(sline == "ply");
   const Map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
                                         {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
   bool binary = false;
   bool bigendian = false;
   int num_element = 0;
   string element;
-  int vnpos = 0, vnnor = 0, vnrgb = 0, vnother = 0, vnotherb = 0;
+  int vnpos = 0, vnnor = 0, vnrgb = 0, vnuv = 0, vnother = 0, vnotherb = 0;
   int len_nfv = 0;  // Size in bytes of number of vertex indices in each face.
   int fnskip = 0, fnskipb = 0, fnother = 0, fnotherb = 0;
-  for (string sline;;) {
-    assertx(my_getline(fi(), sline));
+  for (;;) {
+    assertx(my_getline(is, sline));
     if (0) {
     } else if (sline == "format ascii 1.0") {
       assertx(element == "");
@@ -5022,15 +5022,21 @@ void read_ply(const string& filename) {
       const int dsize = dsizes.get(dtype);
       if (element == "vertex") {
         if (contains(V<string>("x", "y", "z"), name)) {
-          assertx(vnnor + vnrgb + vnother == 0);
+          assertx(dtype == "float");
+          assertx(vnnor + vnrgb + vnuv + vnother == 0);
           vnpos++;
         } else if (contains(V<string>("nx", "ny", "nz"), name)) {
-          assertx(vnpos == 3 && vnrgb + vnother == 0);
+          assertx(dtype == "float");
+          assertx(vnrgb + vnuv + vnother == 0);
           vnnor++;
         } else if (contains(V<string>("red", "green", "blue", "alpha"), name)) {
-          assertx(vnpos == 3 && vnother == 0);
           assertx(dsize == 1);
+          assertx(vnuv + vnother == 0);
           vnrgb++;
+        } else if (contains(V<string>("s", "t"), name)) {
+          assertx(dtype == "float");
+          assertx(vnother == 0);
+          vnuv++;
         } else {
           showf("ply: ignoring vertex property '%s'\n", name.c_str());
           vnotherb += dsize;
@@ -5058,35 +5064,35 @@ void read_ply(const string& filename) {
   assertx(vnpos == 3);
   assertx(vnnor == 0 || vnnor == 3);
   assertx(vnrgb == 0 || vnrgb == 3 || vnrgb == 4);
-
-  const auto read_value = [&](auto& value) {
-    assertx(read_binary_raw(fi(), ArView(value)));
-    if (bigendian)
-      from_std(&value);
-    else
-      from_dos(&value);
-  };
+  assertx(vnuv == 0 || vnuv == 2);
+  assertx(!(vnuv > 0 && ply_fuv.num()));
 
   if (ply_findices.num()) assertx(len_nfv);
   if (vnnor) ply_vnor.init(ply_vpos.num());
   if (vnrgb) ply_vrgb.init(ply_vpos.num(), Pixel::gray(0));
+  if (vnuv) ply_vuv.init(ply_vpos.num());
   if (binary) {
+    const auto read_value = [&](auto& value) {
+      assertx(read_binary_raw(is, ArView(value)));
+      bigendian ? from_std(&value) : from_dos(&value);
+    };
     for_int(i, ply_vpos.num()) {
       for_int(c, 3) read_value(ply_vpos[i][c]);
       if (vnnor) for_int(c, vnnor) read_value(ply_vnor[i][c]);
-      for_int(c, vnrgb) assertx(read_binary_raw(fi(), ArView(ply_vrgb[i][c])));
-      if (vnotherb) fi().ignore(vnotherb);
+      for_int(c, vnrgb) assertx(read_binary_raw(is, ArView(ply_vrgb[i][c])));
+      for_int(c, vnuv) assertx(read_binary_std(is, ArView(ply_vuv[i][c])));
+      if (vnotherb) is.ignore(vnotherb);
     }
     for_int(i, ply_findices.num()) {
-      if (fnskipb) fi().ignore(fnskipb);
+      if (fnskipb) is.ignore(fnskipb);
       int nfv;
       if (len_nfv == 1) {
         uchar vi = 0;
-        assertx(read_binary_raw(fi(), ArView(vi)));
+        assertx(read_binary_raw(is, ArView(vi)));
         nfv = vi;
       } else if (len_nfv == 4) {
         int32_t vi = 0;
-        assertx(read_binary_raw(fi(), ArView(vi)));
+        assertx(read_binary_std(is, ArView(vi)));
         nfv = vi;
         assertw(nfv >= 3);
       } else {
@@ -5097,43 +5103,44 @@ void read_ply(const string& filename) {
       for_int(j, nfv) assertx(ply_findices[i][j] < ply_vpos.num());
       if (ply_fuv.num()) {
         uchar n = 0;
-        assertx(read_binary_raw(fi(), ArView(n)));
+        assertx(read_binary_raw(is, ArView(n)));
         assertx(n == 6);
         for_int(j, 3) for_int(c, 2) read_value(ply_fuv[i][j][c]);
       }
-      if (fnotherb) fi().ignore(fnotherb);
+      if (fnotherb) is.ignore(fnotherb);
     }
 
   } else {
     float dummy_float;
     for_int(i, ply_vpos.num()) {
-      for_int(c, vnpos) assertx(fi() >> ply_vpos[i][c]);
-      for_int(c, vnnor) assertx(fi() >> ply_vnor[i][c]);
+      for_int(c, vnpos) assertx(is >> ply_vpos[i][c]);
+      for_int(c, vnnor) assertx(is >> ply_vnor[i][c]);
       for_int(c, vnrgb) {
         int v;
-        assertx(fi() >> v);
+        assertx(is >> v);
         ply_vrgb[i][c] = assert_narrow_cast<uchar>(v);
       }
-      for_int(c, vnother) assertx(fi() >> dummy_float);
+      for_int(c, vnuv) assertx(is >> ply_vuv[i][c]);
+      for_int(c, vnother) assertx(is >> dummy_float);
     }
     // SHOW(ply_vpos.last());
     for_int(i, ply_findices.num()) {
-      for_int(c, fnskip) assertx(fi() >> dummy_float);
+      for_int(c, fnskip) assertx(is >> dummy_float);
       int nfv = 0;
-      assertx(fi() >> nfv);
+      assertx(is >> nfv);
       assertw(nfv >= 3);
       ply_findices[i].init(nfv);
       for_int(j, nfv) {
-        assertx(fi() >> ply_findices[i][j]);
+        assertx(is >> ply_findices[i][j]);
         assertx(ply_findices[i][j] < ply_vpos.num());
       }
       if (ply_fuv.num()) {
         int n = 0;
-        assertx(fi() >> n);
+        assertx(is >> n);
         assertx(n == 6);
-        for_int(j, 3) for_int(c, 2) assertx(fi() >> ply_fuv[i][j][c]);
+        for_int(j, 3) for_int(c, 2) assertx(is >> ply_fuv[i][j][c]);
       }
-      for_int(c, fnother) assertx(fi() >> dummy_float);
+      for_int(c, fnother) assertx(is >> dummy_float);
     }
   }
   showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_vpos.num(), ply_findices.num());
@@ -5197,7 +5204,12 @@ void draw_ply() {
       }
       for_int(j, ply_findices[i].num()) {
         int vi = ply_findices[i][j];
-        if (texture_active && ply_fuv.num()) glTexCoord2fv(ply_fuv[i][j].data());
+        if (texture_active) {
+          if (ply_fuv.num())
+            glTexCoord2fv(ply_fuv[i][j].data());
+          else if (ply_vuv.num())
+            glTexCoord2fv(ply_vuv[vi].data());
+        }
         if (lsmooth) glNormal3fv(ply_vnor[vi].data());
         if (ply_vrgb.num()) glColor4ubv(ply_vrgb[vi].data());
         glVertex3fv(ply_vpos[vi].data());

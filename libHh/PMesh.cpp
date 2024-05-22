@@ -9,6 +9,7 @@
 #include "libHh/PArray.h"     // ar_pwedge
 #include "libHh/RangeOp.h"    // fill()
 #include "libHh/Set.h"
+#include "libHh/Vector4.h"
 
 namespace hh {
 
@@ -251,6 +252,77 @@ void WMesh::write(std::ostream& os, const PMeshInfo& pminfo) const {
     write_binary_std(os, ArView(lmatid));
   }
   assertx(os);
+}
+
+inline Pixel pack_color(const A3dColor& col) { return Vector4(col[0], col[1], col[2], 1.f).pixel(); }
+
+void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const {
+  const bool uv_in_vertex = true;  // Else in face, which is less compact.
+  os << "ply\n";
+  // Big Endian is network order, compatible with write_binary_std(...);
+  os << "format " << (binary ? "binary_big_endian" : "ascii") << " 1.0\n";
+  os << "element vertex " << _wedges.num() << "\n";
+  os << "property float x\n";
+  os << "property float y\n";
+  os << "property float z\n";
+  os << "property float nx\n";
+  os << "property float ny\n";
+  os << "property float nz\n";
+  if (pminfo._has_rgb) {
+    os << "property uchar red\n";
+    os << "property uchar green\n";
+    os << "property uchar blue\n";
+  }
+  if (pminfo._has_uv && uv_in_vertex) {
+    os << "property float s\n";  // Or "texcoord_u".
+    os << "property float t\n";  // Or "texcoord_v".
+  }
+  os << "element face " << _faces.num() << "\n";
+  os << "property list uchar int vertex_indices\n";
+  if (pminfo._has_uv && !uv_in_vertex)
+    os << "property list uchar float texcoord\n";
+  os << "end_header\n";
+  if (binary) {
+    for_int(w, _wedges.num()) {
+      const int v = _wedges[w].vertex;
+      write_binary_std(os, _vertices[v].attrib.point.const_view());
+      write_binary_std(os, _wedges[w].attrib.normal.const_view());
+      if (pminfo._has_rgb)
+        write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>().const_view());
+      if (pminfo._has_uv && uv_in_vertex)
+        write_binary_std(os, _wedges[w].attrib.uv.const_view());
+    }
+    for_int(f, _faces.num()) {
+      write_binary_raw(os, V(uchar(3)).const_view());
+      write_binary_std(os, _faces[f].wedges.const_view());
+      if (pminfo._has_uv && !uv_in_vertex) {
+        write_binary_raw(os, V(uchar(6)).const_view());
+        for_int(j, 3) write_binary_std(os, _wedges[_faces[f].wedges[j]].attrib.uv.const_view());
+      }
+    }
+  } else {
+    const auto write_ascii = [&](const auto& v, bool space = true) {
+      for_int(c, v.Num) os << (space || c > 0 ? " " : "") << v[c];
+    };
+    for_int(w, _wedges.num()) {
+      const int v = _wedges[w].vertex;
+      write_ascii(_vertices[v].attrib.point, false);
+      write_ascii(_wedges[w].attrib.normal);
+      if (pminfo._has_rgb) write_ascii(convert<int>(pack_color(_wedges[w].attrib.rgb).head<3>()));
+      if (pminfo._has_uv && uv_in_vertex) write_ascii(_wedges[w].attrib.uv);
+      os << "\n";
+    }
+    for_int(f, _faces.num()) {
+      os << "3";
+      write_ascii(_faces[f].wedges);
+      os << "\n";
+      if (pminfo._has_uv && !uv_in_vertex) {
+        os << "6";
+        for_int(j, 3) write_ascii(_wedges[_faces[f].wedges[j]].attrib.uv);
+        os << "\n";
+      }
+    }
+  }
 }
 
 GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {

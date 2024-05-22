@@ -24,8 +24,12 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     for (; b != e; ++b) union_with(*b);
   }
 
-  void clear() { (*this)[0] = PointD::all(+big), (*this)[1] = PointD::all(-big); }
-  void infinite() { (*this)[0] = PointD::all(-big), (*this)[1] = PointD::all(+big); }
+  void clear() {
+    (*this)[0] = PointD::all(std::numeric_limits<T>::max()), (*this)[1] = PointD::all(std::numeric_limits<T>::min());
+  }
+  void infinite() {
+    (*this)[0] = PointD::all(std::numeric_limits<T>::min()), (*this)[1] = PointD::all(std::numeric_limits<T>::max());
+  }
 
   void union_with(const type& bbox) {
     auto& self = *this;
@@ -83,7 +87,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
 
-  // ** Only for dim == 3:
+  // ** Functions only for dim == 3:
 
   // Uniform scaling into unit cube, centered on x & y, rest at z == 0.
   template <int D = dim, typename = std::enable_if_t<D == 3>> Frame get_frame_to_cube() const {
@@ -118,9 +122,6 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     }
     return bbox;
   }
-
- private:
-  static constexpr T big = std::numeric_limits<T>::max();  // Was BIGFLOAT.  OK??
 };
 
 // Template deduction guides:

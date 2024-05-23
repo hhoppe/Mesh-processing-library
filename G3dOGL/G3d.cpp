@@ -322,7 +322,7 @@ int main(int argc, const char** argv) {
       g_filename = str;
       return;
     }
-    if (begins_with(str, "bboxtomesh ") || ends_with(str, "|")) return;
+    if (starts_with(str, "bboxtomesh ") || ends_with(str, "|")) return;
     g_filename = str;
   };
   if (eyeob && g_aargs1.num() >= 2) func_try_set_gfilename(g_aargs1[1]);

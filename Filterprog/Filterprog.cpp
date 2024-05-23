@@ -646,7 +646,7 @@ void do_fbasemesh(Args& args) {
       } else if (sscanf(sline.c_str(), "# PM: bounding box %g %g %g  %g %g %g", &bbox[0][0], &bbox[0][1], &bbox[0][2],
                         &bbox[1][0], &bbox[1][1], &bbox[1][2]) == 6) {
         pm_bbox = bbox;
-      } else if (begins_with(sline, "# PM: has_wad2")) {
+      } else if (starts_with(sline, "# PM: has_wad2")) {
         pm_has_wad2 = true;
       }
     }

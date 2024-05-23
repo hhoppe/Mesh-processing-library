@@ -602,12 +602,12 @@ void SimplicialComplex::read(std::istream& is) {
     if (sline == "#") break;        // done parsing simplex, before vsplit records
     if (sline[0] == '#') continue;  // skip comment
     // if attribute change state and read next line
-    if (begins_with(sline, "[Attributes]")) {
+    if (starts_with(sline, "[Attributes]")) {
       parse_line = &SimplicialComplex::attrReadLine;
       continue;
     }
 
-    if (begins_with(sline, "[EndAttributes]")) {
+    if (starts_with(sline, "[EndAttributes]")) {
       parse_line = &SimplicialComplex::readLine;
       continue;
     }

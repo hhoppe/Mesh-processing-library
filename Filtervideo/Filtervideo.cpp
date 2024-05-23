@@ -1861,7 +1861,7 @@ void process_gen(Args& args) {
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
-  } else if (begins_with(name, "checker")) {
+  } else if (starts_with(name, "checker")) {
     float speriod = 100.f;  // was 20.f then 50.f
     float tperiod = 45.f;
     float sradius = .3f;
@@ -1912,7 +1912,7 @@ void process_gen(Args& args) {
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
-  } else if (begins_with(name, "slits")) {
+  } else if (starts_with(name, "slits")) {
     float nsperiods = 3.f;
     float fsperiod = .25f;
     float tperiod = 18.f;
@@ -1935,7 +1935,7 @@ void process_gen(Args& args) {
         }
       }
     });
-  } else if (begins_with(name, "stars")) {
+  } else if (starts_with(name, "stars")) {
     int n;           // number of stars
     float radius;    // in pixels
     float velrange;  // fraction of screen extent
@@ -2397,7 +2397,7 @@ int main(int argc, const char** argv) {
     }
   }
   string arg0 = args.num() ? args.peek_string() : "";
-  if (!ParseArgs::special_arg(arg0) && arg0 != "-nostdin" && arg0 != "-create" && !begins_with(arg0, "-as") &&
+  if (!ParseArgs::special_arg(arg0) && arg0 != "-nostdin" && arg0 != "-create" && !starts_with(arg0, "-as") &&
       arg0 != "-startframe" && arg0 != "-fromimages" && arg0 != "-readnv12") {
     string filename = "-";
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();

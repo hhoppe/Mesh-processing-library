@@ -254,7 +254,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
 
 string canonical_pathname(string s) {
   s = get_canonical_path(s);
-  if (begins_with(s, "/")) s = "C:" + s;
+  if (starts_with(s, "/")) s = "C:" + s;
   if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = static_cast<char>(std::toupper(s[0]));
   if (s.size() < 3 || s[2] != '/') assertnever("unexpected pathname in " + s);
   return s;

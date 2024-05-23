@@ -3653,10 +3653,10 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         ar.push("EXIF:");
         string sline;
         while (my_getline(fi(), sline)) {
-          if (contains(sline, "-----") || sline == "" || begins_with(sline, "Tag   ") ||
-              begins_with(sline, "EXIF tags"))
+          if (contains(sline, "-----") || sline == "" || starts_with(sline, "Tag   ") ||
+              starts_with(sline, "EXIF tags"))
             continue;
-          if (!begins_with(sline, "EXIF tags")) sline = "  " + sline;
+          if (!starts_with(sline, "EXIF tags")) sline = "  " + sline;
           ar.push(sline);
         }
       }

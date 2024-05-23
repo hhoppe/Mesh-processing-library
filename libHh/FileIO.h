@@ -42,7 +42,7 @@ class WFile : noncopyable {
 };
 
 // Assert that we have read to the end-of-file.
-void assert_reached_eof(std::istream& is) {
+inline void assert_reached_eof(std::istream& is) {
   char ch;
   is.get(ch);
   assertx(!is);

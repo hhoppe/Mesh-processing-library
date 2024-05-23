@@ -4535,7 +4535,7 @@ void draw_sc() {
 // ScGeomorph stuff
 bool grab_sc_gm(std::istream& is, std::stringstream& grab_stream) {
   for (string sline; my_getline(is, sline);) {
-    if (begins_with(sline, "[SC Geomorph]")) return true;
+    if (starts_with(sline, "[SC Geomorph]")) return true;
     grab_stream << sline << "\n";
   }
   return false;
@@ -4958,12 +4958,12 @@ void read_ply(const string& filename) {
     } else if (sline == "format binary_little_endian 1.0") {
       assertx(element == "");
       binary = true;
-    } else if (begins_with(sline, "comment ")) {
+    } else if (starts_with(sline, "comment ")) {
       assertw(element == "");
-    } else if (begins_with(sline, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
+    } else if (starts_with(sline, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
       assertw(element == "");
 
-    } else if (begins_with(sline, "element ")) {
+    } else if (starts_with(sline, "element ")) {
       std::istringstream iss(sline.substr(std::strlen("element ")));
       int count;
       assertx(iss >> element >> count && iss.eof());
@@ -4982,7 +4982,7 @@ void read_ply(const string& filename) {
       }
       num_element++;
 
-    } else if (begins_with(sline, "property list ")) {
+    } else if (starts_with(sline, "property list ")) {
       assertx(element == "face");
       std::istringstream iss(sline.substr(std::strlen("property list ")));
       string sizetype, dtype, name;
@@ -4999,7 +4999,7 @@ void read_ply(const string& filename) {
         assertnever("ply: property list not recognized");
       }
 
-    } else if (begins_with(sline, "property ")) {
+    } else if (starts_with(sline, "property ")) {
       assertx(element != "");
       std::istringstream iss(sline.substr(std::strlen("property ")));
       string dtype, name;

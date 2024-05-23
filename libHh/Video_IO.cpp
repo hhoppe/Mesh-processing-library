@@ -50,7 +50,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
-#include "libHh/StringOp.h"  // get_path_extension(), to_lower(), begins_with(), ends_with(), contains()
+#include "libHh/StringOp.h"  // get_path_extension(), to_lower(), starts_with(), ends_with(), contains()
 #include "libHh/Timer.h"
 #include "libHh/Vector4.h"
 
@@ -883,7 +883,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
         }
         {
           auto i = sline.find(", bitrate:");
-          if (i != string::npos && !begins_with(sline.substr(i), ", bitrate: N/A")) {
+          if (i != string::npos && !starts_with(sline.substr(i), ", bitrate: N/A")) {
             assertx(sscanf(sline.c_str() + i, ", bitrate: %lg kb/%c", &total_bitrate, &vch) == 2 && vch == 's');
             total_bitrate *= 1000.;
           }

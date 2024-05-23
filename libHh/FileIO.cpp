@@ -427,7 +427,7 @@ bool directory_exists(const string& name) {
 
 bool file_requires_pipe(const string& name) {
   return (name == "-" || ends_with(name, ".Z") || ends_with(name, ".gz") || ends_with(name, "|") ||
-          begins_with(name, "|"));
+          starts_with(name, "|"));
 }
 
 // Return: 0 if error.
@@ -676,7 +676,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
       // This next line seems to enable the launch of ffmpeg on ~/data/video/braille_*HDbrink8h.mp4
       if (1) my_setenv("LC_ALL", "en_US.CP437");
     }
-    if (!b_client_cmd && begins_with(sargv[0], "cmd")) Warning("Unexpected cmd command");
+    if (!b_client_cmd && starts_with(sargv[0], "cmd")) Warning("Unexpected cmd command");
     if (b_client_cmd && !(sargv.num() == 3 && sargv[1] == "/s/c")) {
       SHOW(sargv);
       Warning("Unexpected cmd args");

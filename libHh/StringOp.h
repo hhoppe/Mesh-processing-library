@@ -15,7 +15,7 @@ namespace hh {
 inline bool contains(const string& str, const string& substr) { return str.find(substr) != string::npos; }
 
 // Does string have the specified prefix string?
-inline bool begins_with(const string& s, const string& se) {
+inline bool starts_with(const string& s, const string& se) {
   assertx(!se.empty());
   return !s.compare(0, se.size(), se);
 }
@@ -29,7 +29,7 @@ inline bool ends_with(const string& s, const string& se) {
 
 // If se is not at beg of s, return false; else erase se from s and return true.
 inline bool remove_at_beginning(string& s, const string& se) {
-  if (!begins_with(s, se)) return false;
+  if (!starts_with(s, se)) return false;
   s.erase(0, se.size());
   return true;
 }

@@ -62,7 +62,7 @@ bool Args::check_double(const string& s) { return check_float(s); }
 bool Args::check_filename(const string& s) {
   if (s.empty()) return false;
   if (s[0] == '-' && s != "-") return false;
-  if (begins_with(s, "|") || ends_with(s, "|")) return true;  // For my WFile and RFile pipes.
+  if (starts_with(s, "|") || ends_with(s, "|")) return true;  // For my WFile and RFile pipes.
   if (s.find_first_of("*?\"<>|") != string::npos) return false;
   return true;
 }
@@ -293,7 +293,7 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
   int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
     if (!o.parse_func) continue;
-    if (begins_with(o.str, "*") && (s[0] != '-' || skip_options)) {
+    if (starts_with(o.str, "*") && (s[0] != '-' || skip_options)) {
       bool allow_case_independent_wildcard = true;
       if (o.str != to_lower(o.str)) allow_case_independent_wildcard = false;
       if (ends_with(allow_case_independent_wildcard ? to_lower(s) : s, o.str.substr(1))) {

@@ -226,7 +226,7 @@ void do_createobject(Args& args) {
       UV uv(xf, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
-  } else if (begins_with(obname, "torus")) {
+  } else if (starts_with(obname, "torus")) {
     const int ny = 64, nx = 64;
     matv.init(ny, nx);
     closed = true;

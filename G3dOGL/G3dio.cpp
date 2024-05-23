@@ -134,19 +134,19 @@ void read_mesh_line(char* s) {
 bool try_g3d_command(const string& pstr) {
   string str = pstr;
   if (0) {
-  } else if (remove_at_beginning(str, "keys ")) {
+  } else if (remove_at_start(str, "keys ")) {
     // assertx(str.size() == 1);  // new 2012-12-13
     // KeyPressed(str);
     for (char ch : str) KeyPressed(string(1, ch));
     return true;
-  } else if (remove_at_beginning(str, "wait ")) {
+  } else if (remove_at_start(str, "wait ")) {
     wait_command = Args::parse_float(str);
     return true;
-  } else if (remove_at_beginning(str, "lod ")) {
+  } else if (remove_at_start(str, "lod ")) {
     float f = Args::parse_float(str);
     HB::escape(reinterpret_cast<void*>(1), &f);
     return true;
-  } else if (remove_at_beginning(str, "screen_thresh ")) {
+  } else if (remove_at_start(str, "screen_thresh ")) {
     float f = Args::parse_float(str);
     HB::escape(reinterpret_cast<void*>(2), &f);
     return true;

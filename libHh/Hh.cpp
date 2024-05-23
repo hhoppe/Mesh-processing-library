@@ -27,7 +27,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "libHh/StringOp.h"  // replace_all(), remove_at_beginning(), remove_at_end()
+#include "libHh/StringOp.h"  // replace_all(), remove_at_start(), remove_at_end()
 
 #if !defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
 #define HH_NO_STACKWALKER
@@ -205,18 +205,18 @@ string extract_function_type_name(string s) {
   s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string.
   // GOOGLE3: versioned libstdc++ or libc++
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
-  if (remove_at_beginning(s, "hh::details::TypeNameAux<")) {  // VC
+  if (remove_at_start(s, "hh::details::TypeNameAux<")) {  // VC
     if (!remove_at_end(s, ">::name")) {
       SHOW(s);
       assertnever("");
     }
     remove_at_end(s, " ");  // Possible space for complex types.
-  } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC.
+  } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC.
     if (!remove_at_end(s, "; std::string = std::basic_string<char>]")) {
       SHOW(s);
       assertnever("");
     }
-  } else if (remove_at_beginning(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) {  // Google opt.
+  } else if (remove_at_start(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) {  // Google opt.
     auto i = s.find("; ");
     if (i == string::npos) {
       SHOW(s);
@@ -224,8 +224,8 @@ string extract_function_type_name(string s) {
     }
     s.erase(i);
     remove_at_end(s, " ");  // Possible space.
-  } else if (remove_at_beginning(s, "static std::string hh::details::TypeNameAux<") ||
-             remove_at_beginning(s, "static string hh::details::TypeNameAux<")) {  // clang.
+  } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<") ||
+             remove_at_start(s, "static string hh::details::TypeNameAux<")) {  // clang.
     auto i = s.find(">::name() [T = ");
     if (i == string::npos) {
       SHOW(s);

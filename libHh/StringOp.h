@@ -28,7 +28,7 @@ inline bool ends_with(const string& s, const string& se) {
 }
 
 // If se is not at beg of s, return false; else erase se from s and return true.
-inline bool remove_at_beginning(string& s, const string& se) {
+inline bool remove_at_start(string& s, const string& se) {
   if (!starts_with(s, se)) return false;
   s.erase(0, se.size());
   return true;

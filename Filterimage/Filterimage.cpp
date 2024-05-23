@@ -63,7 +63,7 @@ constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected);
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
   assertx(s != "" && size);
-  bool is_neg = remove_at_beginning(s, "-");
+  bool is_neg = remove_at_start(s, "-");
   assertx(s[0] != '-');
   int i;
   if (remove_at_end(s, "%")) {

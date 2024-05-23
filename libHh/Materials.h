@@ -23,7 +23,7 @@ class Materials {
     {
       string sline;
       assertx(my_getline(is, sline));
-      assertx(remove_at_beginning(sline, "nmaterials="));
+      assertx(remove_at_start(sline, "nmaterials="));
       nmaterials = to_int(sline);
     }
     _matstrings.init(nmaterials);

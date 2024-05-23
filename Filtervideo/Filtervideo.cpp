@@ -61,7 +61,7 @@ inline Pixel random_color(Random& random) {
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
   assertx(s != "" && size);
-  bool is_neg = remove_at_beginning(s, "-");
+  bool is_neg = remove_at_start(s, "-");
   assertx(s[0] != '-');
   int i;
   if (remove_at_end(s, "%")) {
@@ -82,7 +82,7 @@ int parse_size(string s, int size, bool measure_neg_from_end) {
 
 int parse_nframes(string s, bool measure_neg_from_end) {
   assertx(s != "");
-  bool is_neg = remove_at_beginning(s, "-");
+  bool is_neg = remove_at_start(s, "-");
   assertx(s[0] != '-');
   int i;
   if (remove_at_end(s, "sec") || remove_at_end(s, "s")) {

@@ -295,6 +295,8 @@ RFile::RFile(const string& filename) {
   if (ends_with(filename, "|")) {
     _file_ispipe = true;
     _file = my_popen(filename.substr(0, filename.size() - 1), mode);  // No quoting at all.
+  } else if (starts_with(filename, "https://") || starts_with(filename, "http://")) {
+    // ??
   } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
     _file_ispipe = true;
     _file = my_popen(V<string>("gzip", "-d", "-c", sfor), mode);  // gzip supports .Z (replacement for zcat).
@@ -428,7 +430,7 @@ bool file_requires_pipe(const string& name) {
           begins_with(name, "|"));
 }
 
-// Returns: 0 if error.
+// Return: 0 if error.
 uint64_t get_path_modification_time(const string& name) {
 #if defined(_WIN32)
   struct _stat fstat;  // Contains __time32_t st_mtime.
@@ -440,7 +442,7 @@ uint64_t get_path_modification_time(const string& name) {
   return fstat.st_mtime;
 }
 
-// Returns: success.
+// Return: success.
 bool set_path_modification_time(const string& name, uint64_t time) {
   // https://msdn.microsoft.com/en-us/library/4wacf567.aspx
 #if defined(_WIN32)
@@ -654,7 +656,7 @@ static string spawn_quote(const string& s, bool b_client_uses_cygwin) {
   return b_client_uses_cygwin ? cygwin_spawn_quote(s) : windows_spawn_quote(s);
 }
 
-// Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
   dummy_use(spawn_quote);
   assertx(sargv.num());
@@ -763,7 +765,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
 #endif
 }
 
-// Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_sh(const string& scmd, bool wait) {
   assertx(scmd != "");
   const bool debug = getenv_bool("MY_SH_DEBUG");

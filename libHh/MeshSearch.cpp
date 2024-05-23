@@ -92,13 +92,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
       }
       if (dfrac < 1e-6f) break;  // Success.
       Vec3<Vertex> va = _mesh.triangle_vertices(f);
-      int side = -1;
-      for_int(i, 3) {
-        if (result.bary[i] == 1.f) {
-          side = i;
-          break;
-        }
-      }
+      int side = result.bary.const_view().index(1.f);
       if (side >= 0) {
         if (0) {  // Slow: randomly choose ccw or clw.
           // side = mod3(side + 1 + (Random::G.unif() < 0.5f));

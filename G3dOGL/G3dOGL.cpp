@@ -436,7 +436,7 @@ void initialize_unlit() {
   assertx(curcol == k_color_invalid);
   matcol.d = k_color_invalid;
   matcol.s = k_color_invalid;
-  matcol.g = -1;
+  matcol.g = -1.f;
 }
 
 void update_cur_color2(const Pixel& col) {
@@ -1190,7 +1190,7 @@ void gl_init() {
     curcol = k_color_invalid;
     matcol.d = k_color_invalid;
     matcol.s = k_color_invalid;
-    matcol.g = -1;  // phong == -1 is different
+    matcol.g = -1.f;  // phong == -1 is different
   }
   {  // lighting
     if (1) {
@@ -3862,12 +3862,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
   Vec3<Simplex> verts;
   int ngroup = s_norgroup[corner_fct->getVAttribute()];
   corner_fct->vertices(verts.data());
-  // find order of vs in verts
-  int i_vs = -1;
-  for_int(i, 3) {
-    if (vs == verts[i]) i_vs = i;
-  }
-  assertx(i_vs >= 0);
+  const int i_vs = index(verts, vs);
   avg_norm = fct_pnor[corner_fct->getId()];
   // go around in one direction averaging normals
   // of adjacent facets with same normal group
@@ -3897,12 +3892,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     if (s_norgroup[fct->getVAttribute()] != ngroup) break;
     Vec3<Simplex> verts2;
     fct->vertices(verts2.data());
-    // find va among verts2
-    int i_va = -1;
-    for_int(i, 3) {
-      if (va == verts2[i]) i_va = i;
-    }
-    assertx(i_va >= 0);
+    const int i_va = index(verts2, va);
     if (verts2[mod3(i_va + 1)] == vb) {
       // va still before vb
       // inconsistent with previous fct
@@ -3942,12 +3932,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
       if (s_norgroup[fct->getVAttribute()] != ngroup) break;
       // Vec3<Simplex> verts;
       fct->vertices(verts.data());
-      // find va among verts
-      int i_va = -1;
-      for_int(i, 3) {
-        if (va == verts[i]) i_va = i;
-      }
-      assertx(i_va >= 0);
+      const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
         // va still before vb
         // inconsistent with previous fct

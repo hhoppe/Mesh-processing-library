@@ -314,9 +314,7 @@ class AWMesh : public WMesh {
           ff = lastf;
         } else {
           nextv = mesh._wedges[mesh._faces[ff].wedges[mod3((j = mesh.get_jvf(v, ff)) + 2)]].vertex;
-          if (nextv == stopv) {
-            nextv = -1;
-          }
+          if (nextv == stopv) nextv = -1;
         }
       }
     }

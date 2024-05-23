@@ -344,7 +344,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <int D, typename T, typename Func> auto map(CGridView<D, T>& c, Func func) {
+template <int D, typename T, typename Func> auto map(CGridView<D, T> c, Func func) {
   Grid<D, decltype(func(std::declval<T>()))> nc(c.dims());
   for_size_t(i, c.size()) nc.flat(i) = func(c.flat(i));
   return nc;

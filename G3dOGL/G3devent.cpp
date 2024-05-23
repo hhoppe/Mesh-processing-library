@@ -722,7 +722,7 @@ D       device prefix           D ?     list device commands
 
 void select_frel() {
   Frame& frel = selected.frel;
-  float f1 = -1, f2 = -1;  // best axis correlation
+  float f1 = -1.f, f2 = -1.f;  // best axis correlation
   int oax1 = -1, oax2 = -1, vax1 = -1, vax2 = -1, sign1 = 0, sign2 = 0;
   Frame fob = g_obs[cob].t();
   Frame vob = g_obs[obview].t();

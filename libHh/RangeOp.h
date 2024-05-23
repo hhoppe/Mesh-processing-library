@@ -496,7 +496,7 @@ bool contains(const Range& range, const iterator_t<Range>& elem) {
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2)) == V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.
 template <typename U, typename Range, typename = enable_if_range_t<Range>, typename Iterator = iterator_t<Range>>
-auto convert(Range&& c) {
+auto convert(const Range& c) {
   return map(c, [](const Iterator& e) { return static_cast<U>(e); });
 }
 
@@ -517,8 +517,14 @@ template <typename Iterator, typename Func> struct TransformedIterator {
   Iterator _iter;
   const Func& _func;
   bool operator!=(const type& other) const { return _iter != other._iter; }
+  bool operator==(const type& other) const { return _iter == other._iter; }
   decltype(auto) operator*() const { return _func(*_iter); }
   type& operator++() { return ++_iter, *this; }
+  type& operator=(const type& other) {
+    if (this != &other) _iter = other._iter;
+    // Note that _func is a reference and there is no need to assign it.
+    return *this;
+  }
 };
 
 template <typename Range, typename Func> struct TransformedRange {

@@ -315,7 +315,7 @@ template <typename T> class Array : public ArrayView<T> {
 // See also Vec.h, PArray.h, and Matrix.h
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, typename Func> auto map(CArrayView<T>& c, Func func) {
+template <typename T, typename Func> auto map(CArrayView<T> c, Func func) {
   Array<decltype(func(std::declval<T>()))> nc(c.num());
   for_int(i, c.num()) nc[i] = func(c[i]);
   return nc;

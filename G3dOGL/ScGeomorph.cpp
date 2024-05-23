@@ -24,13 +24,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   int ngroup = s_norgroup[corner_fct->getVAttribute()];
   corner_fct->vertices(verts);
 
-  // find order of vs in verts
-  int i_vs = -1;
-  for_int(i, 3) {
-    if (vs == verts[i]) i_vs = i;
-  }
-
-  assertx(i_vs >= 0);
+  int i_vs = index(verts, vs);
 
   avg_norm = fct_pnor[corner_fct->getId()];
 
@@ -117,13 +111,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
       // if new facet does not have same smoothing group
       if (s_norgroup[fct->getVAttribute()] != ngroup) break;
 
-      // find va among verts
-      int i_va = -1;
-      for_int(i, 3) {
-        if (va == verts[i]) i_va = i;
-      }
-      assertx(i_va >= 0);
-
+      const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
         // va still before vb
         // inconsistent with previous fct
@@ -216,13 +204,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
         // if new facet does not have same smoothing group
         if (s_norgroup[fct->getVAttribute()] != ngroup) break;
 
-        // find va among verts
-        int i_va = -1;
-        for_int(i, 3) {
-          if (va == verts[i]) i_va = i;
-        }
-        assertx(i_va >= 0);
-
+        const int i_va = index(verts, va);
         if (verts[mod3(i_va + 1)] == vb) {
           // va still before vb
           // inconsistent with previous fct

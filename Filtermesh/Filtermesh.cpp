@@ -1803,30 +1803,18 @@ void triangulate_quads(ETriType type) {
         break;
       }
       case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1][0..1] domain
-        float maxv = -BIGFLOAT;
-        int maxi = -1;
-        for_int(i, 4) {
+        const int maxi = arg_max(transform(range(4), [&](int i) {
           UV uv = get_uv(va[i]);
-          float v = abs(uv[0] - .5f) + abs(uv[1] - .5f);
-          if (v > maxv) {
-            maxv = v;
-            maxi = i;
-          }
-        }
+          return abs(uv[0] - .5f) + abs(uv[1] - .5f);
+        }));
         other_diag = maxi == 1 || maxi == 3;
         break;
       }
       case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1][0..1] domain
-        float maxv = -BIGFLOAT;
-        int maxi = -1;
-        for_int(i, 4) {
+        const int maxi = arg_max(transform(range(4), [&](int i) {
           UV uv = get_uv(va[i]);
-          float v = abs(uv[0] - .5f) + abs(uv[1] - .5f);
-          if (v > maxv) {
-            maxv = v;
-            maxi = i;
-          }
-        }
+          return abs(uv[0] - .5f) + abs(uv[1] - .5f);
+        }));
         other_diag = maxi == 0 || maxi == 2;
         break;
       }

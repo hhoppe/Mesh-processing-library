@@ -155,11 +155,8 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
 float angle_cos(const Point& p1, const Point& p2, const Point& p3) {
   Vector v1 = p2 - p1;
   Vector v2 = p3 - p2;
-  if (!v1.normalize() || !v2.normalize()) return -2;
-  float d = dot(v1, v2);
-  if (d < -1.f) d = -1.f;
-  if (d > +1.f) d = +1.f;
-  return d;
+  if (!v1.normalize() || !v2.normalize()) return -2.f;
+  return clamp(dot(v1, v2), -1.f, 1.f);
 }
 
 // *** Frames and Euler angles

@@ -64,7 +64,7 @@ Array<string> g_aargs1;    // not including argv0
 extern string g_filename;  // used in G3dOGL.cpp
 string g_filename;
 bool ob1_updated = false;
-float anglethresh = -1;  // no angle threshold set
+float anglethresh = -1.f;  // no angle threshold set
 bool subdivmode = false;
 bool lod_mode = false;
 float lod_level = 1.f;  // used to be default 0.f
@@ -264,7 +264,7 @@ int main(int argc, const char** argv) {
   override_frametime = getenv_float("G3D_FRAMETIME", override_frametime);
   selected.frel = Frame::identity();
   bool hb_success = HB::init(aargs, KeyPressed, ButtonPressed, WheelTurned, Draw);
-  float hither = -1, yonder = -1;
+  float hither = -1.f, yonder = -1.f;
   bool eyeob = false;
   string statefilename;
   string title;

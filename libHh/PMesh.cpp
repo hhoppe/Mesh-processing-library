@@ -279,18 +279,15 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
   }
   os << "element face " << _faces.num() << "\n";
   os << "property list uchar int vertex_indices\n";
-  if (pminfo._has_uv && !uv_in_vertex)
-    os << "property list uchar float texcoord\n";
+  if (pminfo._has_uv && !uv_in_vertex) os << "property list uchar float texcoord\n";
   os << "end_header\n";
   if (binary) {
     for_int(w, _wedges.num()) {
       const int v = _wedges[w].vertex;
       write_binary_std(os, _vertices[v].attrib.point.const_view());
       write_binary_std(os, _wedges[w].attrib.normal.const_view());
-      if (pminfo._has_rgb)
-        write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>().const_view());
-      if (pminfo._has_uv && uv_in_vertex)
-        write_binary_std(os, _wedges[w].attrib.uv.const_view());
+      if (pminfo._has_rgb) write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>().const_view());
+      if (pminfo._has_uv && uv_in_vertex) write_binary_std(os, _wedges[w].attrib.uv.const_view());
     }
     for_int(f, _faces.num()) {
       write_binary_raw(os, V(uchar(3)).const_view());

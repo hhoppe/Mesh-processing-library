@@ -261,6 +261,7 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
   os << "ply\n";
   // Big Endian is network order, compatible with write_binary_std(...);
   os << "format " << (binary ? "binary_big_endian" : "ascii") << " 1.0\n";
+  os << "comment PM_nvertices=" << _vertices.num() << "\n";
   os << "element vertex " << _wedges.num() << "\n";
   os << "property float x\n";
   os << "property float y\n";

@@ -9,7 +9,7 @@ namespace hh {
 // Create a read stream from a file (FILE and/or istream); supports file decompression and input pipe commands.
 class RFile : noncopyable {
  public:
-  // supports "-", ".Z", ".gz", "command args... |"  (in most cases, try to close stdin within "command |")
+  // Supports "-", ".Z", ".gz", "command args... |"  (in most cases, try to close stdin within "command |").
   explicit RFile(const string& filename);
   ~RFile();
   std::istream& operator()() const { return *_is; }
@@ -26,7 +26,7 @@ class RFile : noncopyable {
 // Create a write stream to a file (FILE and/or ostream); supports file compression and output pipe commands.
 class WFile : noncopyable {
  public:
-  // supports "-", ".Z", ".gz", "| command args..."
+  // Supports "-", ".Z", ".gz", "| command args...".
   explicit WFile(const string& filename);
   ~WFile();
   std::ostream& operator()() const { return *_os; }
@@ -88,10 +88,10 @@ class TmpFile : noncopyable {
   string _filename;
 };
 
-// For sh/csh argument.
+// For sh/bash/csh/tcsh argument.
 string quote_arg_for_sh(const string& s);
 
-// For sh/csh/cmd argument.
+// For sh/bash/csh/tcsh/cmd argument.
 string quote_arg_for_shell(const string& s);
 
 // Returns: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).

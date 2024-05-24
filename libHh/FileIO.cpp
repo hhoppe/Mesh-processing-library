@@ -8,11 +8,11 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>              // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
-#include <urlmon.h>               // URLDownloadToCacheFile()
 #include <io.h>                   // _pipe(), dup(), close(), etc.
 #include <process.h>              // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
 #include <shellapi.h>             // SHFileOperation(), SHFILEOPSTRUCTW
 #include <sys/utime.h>            // struct utimbuf, struct _utimbuf, utime(), _wutime()
+#include <urlmon.h>               // URLDownloadToCacheFile()
 HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 HH_REFERENCE_LIB("urlmon.lib");   // URLDownloadToCacheFile()
 
@@ -197,8 +197,7 @@ class ocfstreambuf : public std::streambuf {
     Warning("untested");
     assertx(!(which & std::ios_base::in));
     if (!(which & std::ios_base::out)) return std::streampos(std::streamoff(-1));
-    if (fseek(_file, assert_narrow_cast<long>(pos), SEEK_SET) != 0)
-      return std::streampos(std::streamoff(-1));
+    if (fseek(_file, assert_narrow_cast<long>(pos), SEEK_SET) != 0) return std::streampos(std::streamoff(-1));
     return ftell(_file);
   }
   virtual int sync() override { return fflush(_file); }

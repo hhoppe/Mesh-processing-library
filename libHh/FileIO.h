@@ -54,7 +54,14 @@ bool file_exists(const string& name);
 // Check if a folder already exists.
 bool directory_exists(const string& name);
 
-// Check if filename would be read using a pipe stream ("-", ".Z", ".gz", "| command", "command |").
+
+// Check if filename refers to a pipe command ("command |" or "| command").
+bool is_pipe(const string& name);
+
+// Check if filename is a URL ("https://" or "http://").
+bool is_url(const string& name);
+
+// Check if filename would be read using a pipe stream ("-", ".Z", ".gz", "| command", "command |", "https://").
 bool file_requires_pipe(const string& name);
 
 // Retrieve modification time of file or directory.

@@ -4,6 +4,7 @@
 #include <cctype>   // std::isdigit()
 #include <cstdlib>  // std::atoi()
 
+#include "libHh/FileIO.h"   // is_pipe(), is_url()
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
 
@@ -62,7 +63,7 @@ bool Args::check_double(const string& s) { return check_float(s); }
 bool Args::check_filename(const string& s) {
   if (s.empty()) return false;
   if (s[0] == '-' && s != "-") return false;
-  if (starts_with(s, "|") || ends_with(s, "|")) return true;  // For my WFile and RFile pipes.
+  if (is_pipe(s) || is_url(s)) return true;
   if (s.find_first_of("*?\"<>|") != string::npos) return false;
   return true;
 }

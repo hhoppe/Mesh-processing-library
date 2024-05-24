@@ -367,7 +367,7 @@ WFile::WFile(const string& filename) {
   assertx(filename != "");
   string sfor = get_canonical_path(filename);
   const string mode = "w";
-  if (filename[0] == '|') {
+  if (starts_with(filename, "|")) {
     _file_ispipe = true;
     _file = my_popen(filename.substr(1), mode);  // No quoting at all.
   } else if (ends_with(filename, ".Z")) {
@@ -438,9 +438,12 @@ bool directory_exists(const string& name) {
   return false;
 }
 
+bool is_pipe(const string& name) { return starts_with(name, "|") || ends_with(name, "|"); }
+
+bool is_url(const string& name) { return starts_with(name, "https://") || starts_with(name, "http://"); }
+
 bool file_requires_pipe(const string& name) {
-  return (name == "-" || ends_with(name, ".Z") || ends_with(name, ".gz") || ends_with(name, "|") ||
-          starts_with(name, "|"));
+  return name == "-" || ends_with(name, ".Z") || ends_with(name, ".gz") || is_pipe(name) || is_url(name);
 }
 
 // Return: 0 if error.

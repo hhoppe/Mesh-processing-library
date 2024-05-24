@@ -108,6 +108,7 @@ RCS/
 /test/EList_test
 /test/Encoding_test
 /test/Facedistance_test
+/test/FileIO_test
 /test/FrameIO_test
 /test/GMesh_test
 /test/Geometry_test

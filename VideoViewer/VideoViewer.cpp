@@ -861,8 +861,10 @@ void set_fullscreen(bool v) {
 // Open current object in default external program.
 void view_externally() {
   const string& filename = getob()._filename;
-  if (!file_exists(filename)) throw "file '" + filename + "' does not exist";
-  if (file_requires_pipe(filename)) throw "file '" + filename + "' is a pipe";
+  if (!is_url(filename)) {
+    if (!file_exists(filename)) throw "file '" + filename + "' does not exist";
+    if (file_requires_pipe(filename)) throw "file '" + filename + "' is a pipe";
+  }
   message("Externally opening " + filename, 5.);
   // This works best in Windows, even with Unicode filenames.
   if (!my_spawn(V<string>("cmd", "/s/c", R"(start "dummy_window_title" ")" + filename + "\""), true)) {
@@ -1592,8 +1594,9 @@ bool DerivedHW::key_press(string skey) {
 
           // ** Other:
         case 'O' - 64: {  // C-o: open an existing video/image file
-          string cur_filename = (g_cob >= 0 && !file_requires_pipe(getob()._filename) ? getob()._filename
-                                                                                      : get_current_directory() + '/');
+          string cur_filename = (g_cob >= 0 && (is_url(getob()._filename) || !file_requires_pipe(getob()._filename))
+                                     ? getob()._filename
+                                     : get_current_directory() + '/');
           Array<string> filenames = query_open_filenames(cur_filename);
           int first_cob_loaded = -1;
           string smess;
@@ -1691,7 +1694,7 @@ bool DerivedHW::key_press(string skey) {
           if (g_cob < 0) throw "no loaded object";
           string filename = getob()._filename;
           if (filename == "") throw getob().stype() + " has no filename";
-          if (my_spawn(V<string>(g_argv0, filename), false))
+          if (my_spawn(V<string>(g_argv0, filename), false) < 0)
             throw "failed to create new VideoViewer window on '" + filename + "'";
           if (g_verbose) SHOW("spawned new window", g_argv0, filename);
           break;

@@ -315,14 +315,7 @@ int main(int argc, const char** argv) {
   }
   auto func_try_set_gfilename = [](string str) {
     if (g_filename != "") return;
-    if (contains(str, "objtoMesh.pl ")) {
-      auto i = str.find("objtoMesh.pl ");
-      str.erase(0, i + 13);
-      assertx(remove_at_end(str, " |"));
-      g_filename = str;
-      return;
-    }
-    if (starts_with(str, "bboxtomesh ") || ends_with(str, "|")) return;
+    if (starts_with(str, "bboxtomesh ") || is_pipe(str) || is_url(str)) return;
     g_filename = str;
   };
   if (eyeob && g_aargs1.num() >= 2) func_try_set_gfilename(g_aargs1[1]);

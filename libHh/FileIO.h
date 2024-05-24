@@ -11,7 +11,7 @@ namespace hh {
 // Note that it is best to close stdin within an input pipe: "command </dev/null ... |"!
 class RFile : noncopyable {
  public:
-  explicit RFile(const string& filename);
+  explicit RFile(string filename);
   ~RFile();
   std::istream& operator()() const { return *_is; }
   FILE* cfile() { return _file; }

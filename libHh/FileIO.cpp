@@ -8,11 +8,13 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>              // SetStdHandle(), STD_INPUT_HANDLE, FindFirstFile(), FindNextFile()
+#include <urlmon.h>               // URLDownloadToCacheFile()
 #include <io.h>                   // _pipe(), dup(), close(), etc.
 #include <process.h>              // getpid(), _wspawnvp(), cwait()   (wspawnvp() has bad signature, at least in mingw)
 #include <shellapi.h>             // SHFileOperation(), SHFILEOPSTRUCTW
 #include <sys/utime.h>            // struct utimbuf, struct _utimbuf, utime(), _wutime()
 HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
+HH_REFERENCE_LIB("urlmon.lib");   // URLDownloadToCacheFile()
 
 #else
 
@@ -288,15 +290,27 @@ class WFile::Implementation {
 
 // *** RFile.
 
-RFile::RFile(const string& filename) {
+RFile::RFile(string filename) {
   std::lock_guard<std::mutex> lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
+
+  if (starts_with(filename, "https://") || starts_with(filename, "http://")) {
+#if defined(_WIN32) && !defined(__MINGW32__)
+    // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
+    WCHAR cache_filename[MAX_PATH];
+    assertt(SUCCEEDED(
+        URLDownloadToCacheFileW(NULL, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)));
+    // _file = _wfopen(cache_filename, L"rb");
+    filename = utf8_from_utf16(cache_filename);
+#else
+    filename = "wget -qO- " + portable_simple_quote(filename) + " |";
+#endif
+  }
+
   string sfor = get_canonical_path(filename);
   const string mode = "r";
   if (ends_with(filename, "|")) {
     _file_ispipe = true;
     _file = my_popen(filename.substr(0, filename.size() - 1), mode);  // No quoting at all.
-  } else if (starts_with(filename, "https://") || starts_with(filename, "http://")) {
-    // ??
   } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
     _file_ispipe = true;
     _file = my_popen(V<string>("gzip", "-d", "-c", sfor), mode);  // gzip supports .Z (replacement for zcat).

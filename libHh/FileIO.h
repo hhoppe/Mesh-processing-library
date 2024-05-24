@@ -78,13 +78,14 @@ bool remove_file(const string& name);
 // Delete a file or directory by moving it to the Recycle Bin / Trash if possible.  Return: success.
 bool recycle_path(const string& pathname);
 
-// Create the name for a temporary file, and deletes the file when going out of scope.
+// Create the name for a temporary file, and delete the file when going out of scope.
 class TmpFile : noncopyable {
  public:
   TmpFile(const string& suffix = "");
+  TmpFile(const string& suffix, std::istream& is);  // Create the temporary file with the contents of the input stream.
   ~TmpFile();
   string filename() const { return _filename; }
-
+  void write_to(std::ostream& os) const;  // Write the temporary file into the output stream.
  private:
   string _filename;
 };

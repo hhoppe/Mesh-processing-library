@@ -65,10 +65,8 @@ void Audio::read_file(const string& pfilename) {
     if (attrib().suffix == "")
       throw std::runtime_error(
           sform("Peeked audio format (int(c)=%d) in pipe '%s' not recognized", c, filename.c_str()));
-    tmpfile = make_unique<TmpFile>(attrib().suffix);
+    tmpfile = make_unique<TmpFile>(attrib().suffix, fi());
     filename = tmpfile->filename();
-    WFile fi2(filename);
-    fi2() << fi().rdbuf();  // copy the entire stream
   }
   if (!file_exists(filename)) throw std::runtime_error("Audio file '" + filename + "' does not exist");
   attrib().suffix = to_lower(get_path_extension(filename));
@@ -304,11 +302,7 @@ void Audio::write_file(const string& pfilename) const {
     throw std::runtime_error("Audio write is not implemented");
 #endif
   }
-  if (tmpfile) {
-    WFile fi(pfilename);
-    RFile fi2(filename);
-    fi() << fi2().rdbuf();  // copy the entire stream
-  }
+  if (tmpfile) tmpfile->write_to(WFile{pfilename}());
 }
 
 }  // namespace hh

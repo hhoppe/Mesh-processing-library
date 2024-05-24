@@ -577,7 +577,7 @@ bool recycle_path(const string& pathname) {
 
 TmpFile::TmpFile(const string& suffix) {
   static std::atomic<int> s_count{0};
-  for_int(i, 10000) {
+  for_int(i, 10'000) {
     int lcount = ++s_count;
     _filename = sform("TmpFile.%d.%d%s%s", HH_POSIX(getpid)(), lcount, (suffix == "" ? "" : "."), suffix.c_str());
     if (!file_exists(_filename)) return;
@@ -585,8 +585,18 @@ TmpFile::TmpFile(const string& suffix) {
   assertnever("");
 }
 
+TmpFile::TmpFile(const string& suffix, std::istream& is) : TmpFile(suffix) {
+  WFile fi(_filename);
+  fi() << is.rdbuf();  // Copy the entire stream into the temporary file.
+}
+
 TmpFile::~TmpFile() {
   if (!getenv_bool("TMPFILE_KEEP")) assertx(remove_file(_filename));
+}
+
+void TmpFile::write_to(std::ostream& os) const {
+  RFile fi(_filename);
+  os << fi().rdbuf() << std::flush;  // Write the temporary file into the output stream.
 }
 
 // *** Quoting.

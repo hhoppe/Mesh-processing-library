@@ -265,10 +265,8 @@ RVideo::RVideo(string filename, bool use_nv12) : _filename(std::move(filename)),
       throw std::runtime_error(
           sform("Peeked video format (c=%d) in pipe '%s' is not recognized", c, _filename.c_str()));
     // if (_attrib.suffix == "avi") _use_nv12 = false;  // must be done in caller
-    _tmpfile = make_unique<TmpFile>(_attrib.suffix);
+    _tmpfile = make_unique<TmpFile>(_attrib.suffix, fi());
     _filename = _tmpfile->filename();
-    WFile fi2(_filename);
-    fi2() << fi().rdbuf();  // copy the entire input stream to the temporary file
   }
   if (!file_exists(_filename)) throw std::runtime_error("Video file '" + _filename + "' does not exist");
   _attrib.suffix = to_lower(get_path_extension(_filename));
@@ -314,11 +312,7 @@ WVideo::WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib att
 
 WVideo::~WVideo() {
   _impl = nullptr;
-  if (_tmpfile) {
-    WFile fi(_pfilename);
-    RFile fi2(_filename);
-    fi() << fi2().rdbuf();  // copy the entire stream
-  }
+  if (_tmpfile) _tmpfile->write_to(WFile{_pfilename}());
 }
 
 void WVideo::write(CMatrixView<Pixel> frame) {

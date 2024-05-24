@@ -25,10 +25,8 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     if (attrib().suffix == "")
       throw std::runtime_error(
           sform("Peeked image format (c=%d) in pipe '%s' is not recognized", c, filename.c_str()));
-    tmpfile = make_unique<TmpFile>(attrib().suffix);
+    tmpfile = make_unique<TmpFile>(attrib().suffix, fi());
     filename = tmpfile->filename();
-    WFile fi2(filename);
-    fi2() << fi().rdbuf();  // copy the entire stream
   }
   if (!file_exists(filename)) throw std::runtime_error("Image file '" + filename + "' does not exist");
   {  // read header for dimensions and attributes (ignore actual data)
@@ -160,11 +158,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     if (!write_binary_raw(fi(), array_view()))
       throw std::runtime_error("Error writing pixels to image '" + filename + "'");
   }
-  if (tmpfile) {
-    WFile fi(pfilename);
-    RFile fi2(filename);
-    fi() << fi2().rdbuf();  // copy the entire stream
-  }
+  if (tmpfile) tmpfile->write_to(WFile{pfilename}());
 }
 
 // *** Input-Output

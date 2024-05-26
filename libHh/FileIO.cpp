@@ -296,9 +296,9 @@ RFile::RFile(string filename) {
 #if defined(_WIN32) && !defined(__MINGW32__)
     // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
     WCHAR cache_filename[MAX_PATH];
-    assertt(SUCCEEDED(
-        URLDownloadToCacheFileW(NULL, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)));
-    // _file = _wfopen(cache_filename, L"rb");
+    if (!SUCCEEDED(
+            URLDownloadToCacheFileW(NULL, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)))
+      assertnever("Failed to download '" + filename + "'");
     filename = utf8_from_utf16(cache_filename);
 #else
     filename = "wget -qO- " + portable_simple_quote(filename) + " |";

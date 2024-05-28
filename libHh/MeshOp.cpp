@@ -498,7 +498,10 @@ Vnors::EType get_default_nor_type() {
                         : getenv_bool("SUBDIV_NOR") ? Vnors::EType::subdiv
                         : getenv_bool("ANGLE_NOR")  ? Vnors::EType::angle
                                                     : Vnors::EType::unspecified);
-    if (assertw(default_nor_type == Vnors::EType::unspecified)) default_nor_type = Vnors::EType::angle;
+    if (default_nor_type == Vnors::EType::unspecified)
+      default_nor_type = Vnors::EType::angle;
+    else
+      Warning("Normal computation method is explicitly specified");
   });
   return default_nor_type;
 }

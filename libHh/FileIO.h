@@ -54,7 +54,6 @@ bool file_exists(const string& name);
 // Check if a folder already exists.
 bool directory_exists(const string& name);
 
-
 // Check if filename refers to a pipe command ("command |" or "| command").
 bool is_pipe(const string& name);
 

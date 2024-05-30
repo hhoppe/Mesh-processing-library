@@ -975,9 +975,6 @@ void create_vertex_corner_strings(Vertex v, bool force_on_corners = false) {
       if (uv[0] != k_undefined) mesh.update_string(c, "uv", csform_vec(str, uv));
     }
   }
-  for (Vertex vv : mesh.vertices()) {
-    if (v_global(vv)) mesh.update_string(v, "global", "");
-  }
 }
 
 // Clear vertex and corner strings of vertex v.
@@ -1000,6 +997,9 @@ void clear_mesh_strings() {
 // Write current mesh.
 void write_mesh(std::ostream& os) {
   for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v);
+  for (Vertex v : mesh.vertices()) {
+    if (v_global(v)) mesh.update_string(v, "global", "");
+  }
   for (Face f : mesh.faces()) create_face_string(f);
   if (sphericalparam) {
     string str;

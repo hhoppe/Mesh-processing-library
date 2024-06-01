@@ -448,13 +448,19 @@ bool Mesh::legal_edge_collapse(Edge e) const {
   if (debug() >= 1) valid(e);
   Vertex v1 = vertex1(e), v2 = vertex2(e);
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);  // vo2 may be nullptr
-  // Check that substituting v2 to v1 will not duplicate an edge in any
-  // faces adjacent to v2 (besides f1 and f2).
-  // (case of Face vertices being duplicated cannot happen here
-  //  since only f1 and f2 can have both v1 and v2)
-  for (Vertex v : vertices(v2)) {
-    if (v == v1 || v == vo1 || v == vo2) continue;
-    if (query_edge(v, v1)) return false;
+  // Check that substituting v2 to v1 will not duplicate an edge in any face adjacent to v2 (besides f1 and f2).
+  // (The case of Face vertices being duplicated cannot happen here since only f1 and f2 can have both v1 and v2.)
+  if (1) {  // Actually a tiny bit faster.
+    for (Vertex v : vertices(v2)) {
+      if (v == v1 || v == vo1 || v == vo2) continue;
+      if (query_edge(v, v1)) return false;
+    }
+  } else {
+    PArray<Vertex, 10> ar_v;
+    for (Vertex v : vertices(v2))
+      if (v != v1 && v != vo1 && v != vo2) ar_v.push(v);
+    for (Vertex v : vertices(v1))
+      if (ar_v.contains(v)) return false;
   }
   return true;
 }

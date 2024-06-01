@@ -1091,204 +1091,219 @@ void process_vsplit() {
 }
 
 // Read and parse a single line of a vsplit record.
-// Ret: 0 at end_of_record.
+// Ret: false at end_of_record.
 bool parse_line2(char* sline, bool& after_vsplit) {
   // Adapted from GMesh::read_line().
-  if (sline[0] == '#') {
-    if (!strcmp(sline, "# Beg REcol")) {
-      // End of record.
-      process_vsplit();
-      return false;
-    }
-    if (!strncmp(sline, "# Residuals", 11)) {
-      assertx(sscanf(sline, "# Residuals %g %g", &vspl.resid_uni, &vspl.resid_dir) == 2);
-      has_resid = true;
-    }
-    return true;
-  }
-  if (!strncmp(sline, "REcol ", 6)) {
-    assertx(!after_vsplit);
-    after_vsplit = true;
-    int voi, vsi, vti, vli, vri, fli, fri, ii;
-    assertx(sscanf(sline, "REcol %d %d %d %d %d %d %d %d", &voi, &vsi, &vti, &vli, &vri, &fli, &fri, &ii) == 8);
-    assertx(voi == vsi);  // redundancy
-    Vertex vs = mesh.id_vertex(vsi);
-    Vertex vl = mesh.id_vertex(vli), vr = vri ? mesh.id_vertex(vri) : nullptr;
-    unsigned code = 0;
-    assertx(ii >= 0 && ii <= 2);
-    code |= (ii << Vsplit::II_SHIFT);
-    Edge esl = mesh.edge(vs, vl);
-    Edge esr = vr ? mesh.edge(vs, vr) : nullptr;
-    {
-      if (!vr) {
-        // No vr, so simply pick one existing face adjacent to esl.
-        if (mesh.clw_face(vs, esl)) {
-          vspl.vlr_offset1 = 1;  // special code
-        } else if (mesh.ccw_face(vs, esl)) {
-          vspl.vlr_offset1 = 0;  // special code; flclw does not exist!
+  switch (sline[0]) {
+    case '#':
+      if (!strcmp(sline, "# Beg REcol")) {
+        // End of record.
+        process_vsplit();
+        return false;
+      }
+      if (!strncmp(sline, "# Residuals", 11)) {
+        assertx(sscanf(sline, "# Residuals %g %g", &vspl.resid_uni, &vspl.resid_dir) == 2);
+        has_resid = true;
+      }
+      return true;
+    case 'R':
+      if (!strncmp(sline, "REcol ", 6)) {
+        assertx(!after_vsplit);
+        after_vsplit = true;
+        int voi, vsi, vti, vli, vri, fli, fri, ii;
+        assertx(sscanf(sline, "REcol %d %d %d %d %d %d %d %d", &voi, &vsi, &vti, &vli, &vri, &fli, &fri, &ii) == 8);
+        assertx(voi == vsi);  // redundancy
+        Vertex vs = mesh.id_vertex(vsi);
+        Vertex vl = mesh.id_vertex(vli), vr = vri ? mesh.id_vertex(vri) : nullptr;
+        unsigned code = 0;
+        assertx(ii >= 0 && ii <= 2);
+        code |= (ii << Vsplit::II_SHIFT);
+        Edge esl = mesh.edge(vs, vl);
+        Edge esr = vr ? mesh.edge(vs, vr) : nullptr;
+        {
+          if (!vr) {
+            // No vr, so simply pick one existing face adjacent to esl.
+            if (mesh.clw_face(vs, esl)) {
+              vspl.vlr_offset1 = 1;  // special code
+            } else if (mesh.ccw_face(vs, esl)) {
+              vspl.vlr_offset1 = 0;  // special code; flclw does not exist!
+            } else {
+              assertnever("");
+            }
+          } else {
+            // Find number of CLW rotations from vl to vr.
+            Vertex v = vl;
+            int j = 0;
+            for (;;) {
+              j++;
+              v = mesh.clw_vertex(vs, v);
+              assertx(v && v != vl);
+              if (v == vr) break;
+            }
+            vspl.vlr_offset1 = narrow_cast<short>(j + 1);
+            assertx(vspl.vlr_offset1 == j + 1);
+          }
+        }
+        // Get one face adjacent to (vs, vl).
+        Face f = vspl.vlr_offset1 == 0 ? mesh.ccw_face(vs, esl) : mesh.clw_face(vs, esl);
+        assertx(f);
+        vspl.flclw = mfrenumber.get(f);
+        assertx(vspl.flclw < mesh.num_faces());
+        // Encode location of vs within that face.
+        {
+          Vec3<Vertex> va = mesh.triangle_vertices(f);
+          int vs_index = index(va, vs);
+          code |= (vs_index << Vsplit::VSINDEX_SHIFT);
+        }
+        vspl.code = narrow_cast<ushort>(code);
+        // HH_SSTAT(Svspl_vlr1, vspl.vlr_offset1);
+        // Save current vertex attributes.
+        save.vaovs.point = mesh.point(vs);
+        // Save current wedge attributes.
+        save.wavtflo = retrieve_wattrib(!esl ? nullptr : mesh.clw_corner(vs, esl));
+        save.wavsflo = retrieve_wattrib(!esl ? nullptr : mesh.ccw_corner(vs, esl));
+        save.wavtfro = retrieve_wattrib(!esr ? nullptr : mesh.ccw_corner(vs, esr));
+        save.wavsfro = retrieve_wattrib(!esr ? nullptr : mesh.clw_corner(vs, esr));
+        // DO IT:
+        Vertex vt = mesh.split_vertex(vs, vl, vr, vti);
+        // Save what was done
+        save.vs = vs;
+        save.vt = vt;
+        save.ii = ii;
+        save.vl = vl;
+        save.vr = vr;
+        return true;
+      }
+      break;
+    case 'F':
+      if (!strncmp(sline, "Face ", 5)) {
+        // NOTE: because of reverselines, face2 arrives before face1!
+        // Note: still true with std::swap(vs, vt) and collapse_edge_vertex
+        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        PArray<Vertex, 8> va;
+        char* s = sline + 4;
+        int fi = -1;
+        for (;;) {
+          while (*s && isspace(*s)) s++;
+          if (!*s) break;
+          char* beg = s;
+          while (*s && isdigit(*s)) s++;
+          assertx(!*s || isspace(*s));
+          int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
+          if (fi < 0) {
+            fi = j;
+            continue;
+          }
+          va.push(mesh.id_vertex(j));
+        }
+        assertx(va.num() == 3);
+        assertx(mesh.legal_create_face(va));
+        bool is_face2 = false;
+        int voffset = 0;
+        if (va.contains(save.vl)) {
+          if (va[0] == save.vs) {
+            voffset = 0;
+          } else if (va[1] == save.vs) {
+            voffset = 2;
+            va[1] = va[2];
+            va[2] = va[0];
+            va[0] = save.vs;
+          } else if (va[2] == save.vs) {
+            voffset = 1;
+            va[2] = va[1];
+            va[1] = va[0];
+            va[0] = save.vs;
+          } else {
+            assertnever("");
+          }
+        } else if (va.contains(save.vr)) {
+          is_face2 = true;
+          if (va[0] == save.vs) {
+            voffset = 0;
+          } else if (va[1] == save.vs) {
+            voffset = 2;
+            va[1] = va[2];
+            va[2] = va[0];
+            va[0] = save.vs;
+          } else if (va[2] == save.vs) {
+            voffset = 1;
+            va[2] = va[1];
+            va[1] = va[0];
+            va[0] = save.vs;
+          } else {
+            assertnever("");
+          }
         } else {
           assertnever("");
         }
-      } else {
-        // Find number of CLW rotations from vl to vr.
-        Vertex v = vl;
-        int j = 0;
-        for (;;) {
-          j++;
-          v = mesh.clw_vertex(vs, v);
-          assertx(v && v != vl);
-          if (v == vr) break;
+        assertx(mesh.legal_create_face(va));
+        assertx(fi >= 1);
+        Face f = mesh.create_face_private(fi, va);
+        int renum;
+        if (save.vr) {
+          // reverse the order
+          renum = mesh.num_faces() + (is_face2 ? 0 : -2);
+        } else {
+          renum = mesh.num_faces() - 1;
         }
-        vspl.vlr_offset1 = narrow_cast<short>(j + 1);
-        assertx(vspl.vlr_offset1 == j + 1);
+        mfrenumber.enter(f, renum);
+        if (append_old_pm != "") {
+          int old_f_num = fi - 1;
+          append_f_renumber.access(old_f_num);
+          append_f_renumber[old_f_num] = renum;
+          append_f_vsi_offset.access(old_f_num);
+          append_f_vsi_offset[old_f_num] = voffset;
+        }
+        if (sinfo) mesh.set_string(f, sinfo);
+        return true;
       }
-    }
-    // Get one face adjacent to (vs, vl).
-    Face f = vspl.vlr_offset1 == 0 ? mesh.ccw_face(vs, esl) : mesh.clw_face(vs, esl);
-    assertx(f);
-    vspl.flclw = mfrenumber.get(f);
-    assertx(vspl.flclw < mesh.num_faces());
-    // Encode location of vs within that face.
-    {
-      Vec3<Vertex> va = mesh.triangle_vertices(f);
-      int vs_index = index(va, vs);
-      code |= (vs_index << Vsplit::VSINDEX_SHIFT);
-    }
-    vspl.code = narrow_cast<ushort>(code);
-    // HH_SSTAT(Svspl_vlr1, vspl.vlr_offset1);
-    // Save current vertex attributes.
-    save.vaovs.point = mesh.point(vs);
-    // Save current wedge attributes.
-    save.wavtflo = retrieve_wattrib(!esl ? nullptr : mesh.clw_corner(vs, esl));
-    save.wavsflo = retrieve_wattrib(!esl ? nullptr : mesh.ccw_corner(vs, esl));
-    save.wavtfro = retrieve_wattrib(!esr ? nullptr : mesh.ccw_corner(vs, esr));
-    save.wavsfro = retrieve_wattrib(!esr ? nullptr : mesh.clw_corner(vs, esr));
-    // DO IT:
-    Vertex vt = mesh.split_vertex(vs, vl, vr, vti);
-    // Save what was done
-    save.vs = vs;
-    save.vt = vt;
-    save.ii = ii;
-    save.vl = vl;
-    save.vr = vr;
-  } else if (sline[0] == 'F' && !strncmp(sline, "Face ", 5)) {
-    // NOTE: because of reverselines, face2 arrives before face1!
-    // Note: still true with std::swap(vs, vt) and collapse_edge_vertex
-    const char* sinfo = get_sinfo(sline);  // note side-effect!
-    PArray<Vertex, 8> va;
-    char* s = sline + 4;
-    int fi = -1;
-    for (;;) {
-      while (*s && isspace(*s)) s++;
-      if (!*s) break;
-      char* beg = s;
-      while (*s && isdigit(*s)) s++;
-      assertx(!*s || isspace(*s));
-      int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
-      if (fi < 0) {
-        fi = j;
-        continue;
+      break;
+    case 'E':
+      if (!strncmp(sline, "Edge ", 5))
+        assertnever("Edge flags not used anymore");
+      break;
+    case 'M':
+      if (!strncmp(sline, "MVertex ", 8)) {
+        if (!after_vsplit) return true;
+        Point p;
+        int vi;
+        assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+        Vertex v = mesh.id_vertex(vi);
+        mesh.set_point(v, p);
+        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
+        return true;
       }
-      va.push(mesh.id_vertex(j));
-    }
-    assertx(va.num() == 3);
-    assertx(mesh.legal_create_face(va));
-    bool is_face2 = false;
-    int voffset = 0;
-    if (va.contains(save.vl)) {
-      if (va[0] == save.vs) {
-        voffset = 0;
-      } else if (va[1] == save.vs) {
-        voffset = 2;
-        va[1] = va[2];
-        va[2] = va[0];
-        va[0] = save.vs;
-      } else if (va[2] == save.vs) {
-        voffset = 1;
-        va[2] = va[1];
-        va[1] = va[0];
-        va[0] = save.vs;
-      } else {
-        assertnever("");
+      break;
+    case 'C':
+      if (!strncmp(sline, "Corner ", 7)) {
+        if (!after_vsplit) return true;
+        int vi;
+        int fi;
+        assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
+        Vertex v = mesh.id_vertex(vi);
+        Corner c = nullptr;
+        for (Corner cc : mesh.corners(v)) {
+          if (mesh.face_id(mesh.corner_face(cc)) == fi) {
+            c = cc;
+            break;
+          }
+        }
+        assertx(c);
+        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        string str;
+        int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
+        c_cwedge_id(c) = wid;
+        if (save.wid_read.add(wid)) {
+          mesh.set_string(c, sinfo);
+          WedgeInfo wi = create_winfo(c);
+          mesh.set_string(c, nullptr);
+          gcwinfo.set(wid, wi);
+        }
+        return true;
       }
-    } else if (va.contains(save.vr)) {
-      is_face2 = true;
-      if (va[0] == save.vs) {
-        voffset = 0;
-      } else if (va[1] == save.vs) {
-        voffset = 2;
-        va[1] = va[2];
-        va[2] = va[0];
-        va[0] = save.vs;
-      } else if (va[2] == save.vs) {
-        voffset = 1;
-        va[2] = va[1];
-        va[1] = va[0];
-        va[0] = save.vs;
-      } else {
-        assertnever("");
-      }
-    } else {
-      assertnever("");
-    }
-    assertx(mesh.legal_create_face(va));
-    assertx(fi >= 1);
-    Face f = mesh.create_face_private(fi, va);
-    int renum;
-    if (save.vr) {
-      // reverse the order
-      renum = mesh.num_faces() + (is_face2 ? 0 : -2);
-    } else {
-      renum = mesh.num_faces() - 1;
-    }
-    mfrenumber.enter(f, renum);
-    if (append_old_pm != "") {
-      int old_f_num = fi - 1;
-      append_f_renumber.access(old_f_num);
-      append_f_renumber[old_f_num] = renum;
-      append_f_vsi_offset.access(old_f_num);
-      append_f_vsi_offset[old_f_num] = voffset;
-    }
-    if (sinfo) mesh.set_string(f, sinfo);
-  } else if (sline[0] == 'E' && !strncmp(sline, "Edge ", 5)) {
-    assertnever("Edge flags not used anymore");
-  } else if (!strncmp(sline, "MVertex ", 8)) {
-    if (!after_vsplit) return true;
-    Point p;
-    int vi;
-    assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
-    Vertex v = mesh.id_vertex(vi);
-    mesh.set_point(v, p);
-    assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
-  } else if (sline[0] == 'C' && !strncmp(sline, "Corner ", 7)) {
-    if (!after_vsplit) return true;
-    int vi;
-    int fi;
-    assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
-    Vertex v = mesh.id_vertex(vi);
-    Corner c = nullptr;
-    for (Corner cc : mesh.corners(v)) {
-      if (mesh.face_id(mesh.corner_face(cc)) == fi) {
-        c = cc;
-        break;
-      }
-    }
-    assertx(c);
-    const char* sinfo = get_sinfo(sline);  // note side-effect!
-    string str;
-    int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
-    c_cwedge_id(c) = wid;
-    if (save.wid_read.add(wid)) {
-      mesh.set_string(c, sinfo);
-      WedgeInfo wi = create_winfo(c);
-      mesh.set_string(c, nullptr);
-      gcwinfo.set(wid, wi);
-    }
-  } else {
-    assertnever(string() + "Cannot parse line '" + sline + "'");
+      break;
   }
-  // Can return earlier!
-  return true;
+  assertnever(string() + "Cannot parse line '" + sline + "'");
 }
 
 void do_pm_encode() {

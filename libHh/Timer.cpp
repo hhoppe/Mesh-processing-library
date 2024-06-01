@@ -219,7 +219,10 @@ Timer::Timer(string pname, EMode mode) : _name(std::move(pname)), _mode(mode) {
 
 void Timer::terminate() {
   if (_s_show > 0 && _mode != EMode::noprint) _mode = EMode::normal;
-  if (_s_show < 0) _mode = EMode::noprint;
+  if (_mode == EMode::always)
+    _mode = EMode::normal;
+  else if (_s_show < 0)
+    _mode = EMode::noprint;
   const EMode cmode = _mode;
   _mode = EMode::noprint;
   if (cmode == EMode::possibly || cmode == EMode::noprint || _name == "" || !_ever_started) return;

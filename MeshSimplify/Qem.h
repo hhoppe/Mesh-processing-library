@@ -15,7 +15,7 @@ template <typename T, int n> class Qem {
   void scale(float f);
 
   // Create:
-  void set_d2_from_plane(const float* dir, float d);  // dir * p + d == 0 !
+  void set_d2_from_plane(const float* dir, float d);  // Requires: dir * p + d == 0 !
   void set_d2_from_point(const float* p0);
   void set_distance_gh98(const float* p0, const float* p1, const float* p2);
   void set_distance_hh99(const float* p0, const float* p1, const float* p2);
@@ -24,21 +24,20 @@ template <typename T, int n> class Qem {
   float evaluate(const float* p) const;
 
   // Find min.  All these return "success"; minp unchanged if unsuccessful:
-  // regular version
+  // Regular version.
   [[nodiscard]] bool compute_minp(float* minp) const;
   // First nfixed variables are fixed as given; solve for remainder.
   [[nodiscard]] bool compute_minp_constr_first(float* minp, int nfixed) const;
-  // Linear functional constraint: lf[0 .. n - 1] * x + lf[n] == 0
+  // Linear functional constraint: lf[0 .. n - 1] * x + lf[n] == 0.
   [[nodiscard]] bool compute_minp_constr_lf(float* minp, const float* lf) const;
-  // Sparse version w/ independent attribs and lf constr only on geom
+  // Sparse version w/ independent attribs and lf constr only on geom.
   [[nodiscard]] bool fast_minp_constr_lf(float* minp, const float* lf) const;
 
   // Special versions for wedge-based mesh simplification:
-  // They take multiple quadrics (*this == ar_q[0]) and assume that the
-  //  first 3 rows of matrix variables are shared.
-  // regular version
+  // They take multiple quadrics (*this == ar_q[0]) and assume that the first 3 rows of matrix variables are shared.
+  // Regular version.
   [[nodiscard]] bool ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp) const;
-  // linear functional constraint must be volumetric!
+  // Linear functional constraint must be volumetric!
   [[nodiscard]] bool ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp,
                                                const float* lf) const;
 
@@ -56,13 +55,21 @@ template <typename T, int n> class Qem {
   }
 
  private:
-  // qem(v) = v*a*v + 2*b*v + c
-  Vec<T, (n * (n + 1)) / 2> _a;  // upper triangle of symmetric matrix
+  // Representing: qem_energy(v) = (v^T * _a * v) + (2 * _b * v) + _c.
+  Vec<T, (n * (n + 1)) / 2> _a;  // Upper triangle of symmetric matrix.
   Vec<T, n> _b;
   T _c;
 };
 
 template <typename T, int n> HH_DECLARE_OSTREAM_EOL(Qem<T, n>);
+
+//----------------------------------------------------------------------------
+
+template <typename T, int n> void Qem<T, n>::add(const Qem<T, n>& qem) {
+  _a += qem._a;
+  _b += qem._b;
+  _c += qem._c;
+}
 
 }  // namespace hh
 

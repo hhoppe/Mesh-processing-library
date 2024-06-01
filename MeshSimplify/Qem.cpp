@@ -9,24 +9,32 @@
 
 namespace hh {
 
+namespace {
+
+void print_matrix(CMatrixView<double> m) {
+  std::cerr << "Matrix{\n";
+  for_int(i, m.ysize()) {
+    std::cerr << " ";
+    for_int(j, m.xsize()) std::cerr << sform(" %-12g", m[i][j]);
+    std::cerr << "\n";
+  }
+  std::cerr << "} EndMatrix\n";
+}
+
+}  // namespace
+
 // Many static data structures below -- lots of code is not threadsafe.
 
 template <typename T, int n> void Qem<T, n>::set_zero() {
-  for_int(i, (n * (n + 1)) / 2) { _a[i] = T{0}; }
-  for_int(i, n) { _b[i] = T{0}; }
+  fill(_a, T{0});
+  fill(_b, T{0});
   _c = T{0};
 }
 
-template <typename T, int n> void Qem<T, n>::add(const Qem<T, n>& qem) {
-  for_int(i, (n * (n + 1)) / 2) _a[i] += qem._a[i];
-  for_int(i, n) _b[i] += qem._b[i];
-  _c += qem._c;
-}
-
 template <typename T, int n> void Qem<T, n>::scale(float f) {
-  for_int(i, (n * (n + 1)) / 2) _a[i] *= f;
-  for_int(i, n) _b[i] *= f;
-  _c *= f;
+  _a *= T{f};
+  _b *= T{f};
+  _c *= T{f};
 }
 
 template <typename T, int n> void Qem<T, n>::set_d2_from_plane(const float* dir, float d) {
@@ -36,11 +44,9 @@ template <typename T, int n> void Qem<T, n>::set_d2_from_plane(const float* dir,
   // c = square(d)
   {
     T* pa = _a.data();
-    for_int(i, n) {
-      for_intL(j, i, n) { *pa++ = T{dir[i]} * dir[j]; }
-    }
+    for_int(i, n) for_intL(j, i, n)* pa++ = T{dir[i]} * dir[j];
   }
-  for_int(i, n) { _b[i] = T{d} * dir[i]; }
+  for_int(i, n) _b[i] = T{d} * dir[i];
   _c = square(T{d});
 }
 
@@ -53,10 +59,10 @@ template <typename T, int n> void Qem<T, n>::set_d2_from_point(const float* p0) 
     T* pa = _a.data();
     for_int(i, n) {
       *pa++ = T{1};
-      for_intL(j, i + 1, n) { *pa++ = T{0}; }
+      for_intL(j, i + 1, n) *pa++ = T{0};
     }
   }
-  for_int(i, n) { _b[i] = -T{p0[i]}; }
+  for_int(i, n) _b[i] = -T{p0[i]};
   T a = T{0};
   for_int(i, n) a += square(p0[i]);
   _c = a;
@@ -102,7 +108,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_gh98(const float* p0, 
     T* pa = _a.data();
     for_int(i, n) {
       *pa++ = T{1} - e1[i] * e1[i] - e2[i] * e2[i];
-      for_intL(j, i + 1, n) { *pa++ = T{0} - e1[i] * e1[j] - e2[i] * e2[j]; }
+      for_intL(j, i + 1, n) *pa++ = T{0} - e1[i] * e1[j] - e2[i] * e2[j];
     }
   }
   const float* p = p0;
@@ -147,10 +153,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     {
       T* pa = _a.data();
       for_int(i, ngeom) {  // note: only traverse first ngeom rows
-        for_intL(j, i, ngeom) {
-          *pa = nor[i] * nor[j];
-          pa++;
-        }
+        for_intL(j, i, ngeom) *pa++ = nor[i] * nor[j];
         pa += nattrib;
       }
     }
@@ -163,8 +166,10 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     //  (  v1   1 ) * ( g_s )   =   ( s1 )
     //  (  v2   1 )   (     )       ( s2 )
     //  (  n    0 )   ( d_s )       ( 0  )
-    static LudLls lls(4, 4, nattrib);
-    lls.clear();
+    //
+    // static LudLls lls(4, 4, nattrib);
+    // lls.clear();
+    LudLls lls(4, 4, nattrib);  // Threadsafe.
     for_int(c, 3) {
       lls.enter_a_rc(0, c, p0[c]);
       lls.enter_a_rc(1, c, p1[c]);
@@ -205,16 +210,11 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
         T* pa = _a.data();
         for_int(i, n) {
           for_intL(j, i, n) {
-            if (j < ngeom) {
+            if (j < ngeom)
               *pa += g_s[i] * g_s[j];
-            } else if (j == ngeom + si) {
-              if (i < ngeom)
-                *pa = -g_s[i];
-              else if (i == ngeom + si)
-                *pa = T{1};
-              else
-                *pa = T{0};
-            }
+            else if (j == ngeom + si)
+              *pa = i < ngeom ? -g_s[i] : i == ngeom + si ? T{1} : T{0};
+            // (The non-modified *pa are set in other iterations of the "si" loop.)
             pa++;
           }
         }
@@ -232,12 +232,9 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
   {
     const T* pa = _a.data();
     for_int(i, n) {
-      sum1 += *pa * square(T{p[i]});
-      pa++;
-      for_intL(j, i + 1, n) {
-        sum2 += *pa * T{p[i]} * p[j];
-        pa++;
-      }
+      sum1 += *pa++ * square(T{p[i]});
+      for_intL(j, i + 1, n)
+        sum2 += *pa++ * T{p[i]} * p[j];
     }
   }
   // for_int(i, n) sum2 += _b[i] * p[i];  // GCC4.8.1 array subscript is above array bounds
@@ -305,16 +302,6 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   if (!lls.solve()) return false;
   lls.get_x_c(0, ArView(&minp[nf], n - nf));
   return true;
-}
-
-static void print_matrix(CMatrixView<double> m) {
-  std::cerr << "Matrix{\n";
-  for_int(i, m.ysize()) {
-    std::cerr << " ";
-    for_int(j, m.xsize()) std::cerr << sform(" %-12g", m[i][j]);
-    std::cerr << "\n";
-  }
-  std::cerr << "} EndMatrix\n";
 }
 
 // minp unchanged if unsuccessful !

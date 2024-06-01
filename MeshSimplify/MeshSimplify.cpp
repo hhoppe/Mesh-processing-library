@@ -469,7 +469,7 @@ bool qemgh98 = false;         // use QEM from G&H98 paper (vs. my own)
 bool qemlocal = true;         // memoryless QEM
 bool qemvolume = true;        // linearly constrained to preserve volume
 bool qemweight = true;        // scale QEM with face_area / edge_len^2
-bool qemcache = false;        // cache qem at faces (for qemlocal)
+bool qemcache = true;         // cache qem at faces (for qemlocal); faster execution but uses more memory.
 bool no_fit_geom = false;     // do not optimize geometry (e.g. mandrill)
 bool fit_colors = true;       // optimize colors (otherwise, still use in metric)
 bool fit_normals = false;     // optimize normals (otherwise, still use in metric)
@@ -486,6 +486,7 @@ bool poszfacenormal = false;  // prevent edge collapses that would create face n
 bool dihallow = false;        // penalize but allow bad dihedral angles
 int invertexorder = 0;        // remove vertices in reverse order (2=fix_edges)
 bool wedge_materials = true;  // material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25
+constexpr bool use_parallelism = true;
 
 // failed attempt at signed_dihedral_angle():
 //  const float gmindih = -to_rad(109.471);
@@ -838,15 +839,15 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
     BQemT& ql = *up_ql;
     // First consider all faces besides f1 & f2
     for_int(fi, nn.ar_corners.num()) {
+      const int nwid = nn.ar_nwid[fi];
       Corner c = nn.ar_corners[fi][2];
       Face f = mesh.corner_face(c);
       if (qemcache) {
-        ql.copy(f_qem(f));
+        nn.ar_wq[nwid]->add(f_qem(f));
       } else {
         get_face_qem(f, ql);
+        nn.ar_wq[nwid]->add(ql);
       }
-      int nwid = nn.ar_nwid[fi];
-      nn.ar_wq[nwid]->add(ql);
     }
     // Now consider f1 & f2.  Try all neighboring corners with same wedge id to see if any survive.
     for (Face f : mesh.faces(e)) {
@@ -877,11 +878,11 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
         continue;
       }
       if (qemcache) {
-        ql.copy(f_qem(f));
+        nn.ar_wq[nwid]->add(f_qem(f));
       } else {
         get_face_qem(f, ql);
+        nn.ar_wq[nwid]->add(ql);
       }
-      nn.ar_wq[nwid]->add(ql);
     }
     if (neptfac) {
       for (Vertex v : mesh.vertices(e)) {
@@ -2134,6 +2135,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   if (!gather_nn_valid(e)) return false;
   // Gather ar_nwid, ar_rwid.
   if (!gather_nn_2(e, nn)) return false;
+  if (minqem) return true;            // 2024-05-30
   Vec2<bool> eoretire{false, false};  // (v1, vo{1,2}) no longer sharp
   bool eretire{false};                // (v1, v2) was sharp and no adjacent crease
   // Gather eoretire, eretire.
@@ -3592,19 +3594,25 @@ float trishape_quality(const Point& p0, const Point& p1, const Point& p2) {
   return pow(aspect_ratio(p0, p1, p2), trishapepow);
 }
 
+struct EcolResult {
+  EResult result;
+  float cost{k_bad_cost};
+  int min_ii{-1};
+  Vertex vs{nullptr};
+};
+
 // Consider the edge collapse of edge e.
-EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& ret_vs) {
-  ret_cost = k_bad_cost;
-  ret_vs = nullptr;
+EcolResult try_ecol(Edge e, bool commit) {
+  EcolResult ecol_result;
   HH_PTIMER("__try_ecol");
-  if (!mesh.nice_edge_collapse(e)) return R_illegal;  // not a legal move
+  if (!mesh.nice_edge_collapse(e)) return {R_illegal};
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // f2 could be nullptr
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);  // vo2 could be nullptr
   int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
-  if (!try_ecol_legal(e, v1, v2, v1nse, v2nse)) return R_illegal;
+  if (!try_ecol_legal(e, v1, v2, v1nse, v2nse)) return {R_illegal};
   NewMeshNei nn;
-  if (!gather_nn(e, nn)) return R_illegal;
+  if (!gather_nn(e, nn)) return {R_illegal};
   Dihedral dih;
   if (!terrain) dih = enter_dihedral(e, nn);
   BoundingSphere new_bsphere;
@@ -4093,22 +4101,23 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       min_dir_error = dir_error;
     }
   }
-  if (min_ii < 0) return R_dih;  // no dihedrally admissible configuration
+  if (min_ii < 0) return {R_dih};  // No dihedrally admissible configuration.
   float raw_cost;
   raw_cost = float(min_rssa - rssf);
-  ret_cost = raw_cost + offset_cost;
+  ecol_result.cost = raw_cost + offset_cost;
   if (raw_cost < 0) {
     SSTATV2(Snegcost, raw_cost);
   }
   const float smallcost = 1e-20f;
-  if (ret_cost < smallcost) ret_cost = smallcost;
+  if (ecol_result.cost < smallcost) ecol_result.cost = smallcost;
   if (invertexorder == 2) {
     // Of the legal edge collapses, select the one whose opposite vertex has smallest id.
     Vertex vo = mesh.opp_vertex(mesh.id_vertex(mesh.num_vertices()), e);
     int voi = mesh.vertex_id(vo);
-    ret_cost = float(voi);
+    ecol_result.cost = float(voi);
   }
-  if (!commit) return R_success;
+  ecol_result.result = R_success;
+  if (!commit) return ecol_result;
   if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
   // ALL SYSTEMS GO.
   HH_PTIMER("__doecol");
@@ -4190,8 +4199,8 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
   if (bswap) min_ii = 2 - min_ii;
   if (minii2) assertx(min_ii == 2);
   SSTATV2(Sminii1, min_ii);
-  ret_min_ii = min_ii;
-  ret_vs = vs;
+  ecol_result.min_ii = min_ii;
+  ecol_result.vs = vs;
   CArrayView<int> ar_rwid = !bswap ? nn.ar_rwid_v1 : nn.ar_rwid_v2;
   // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // now undefined
   for (eptinfo* pept : nn.ar_epts) point_change_edge(pept, nullptr);
@@ -4386,7 +4395,7 @@ EResult try_ecol(Edge e, bool commit, float& ret_cost, int& ret_min_ii, Vertex& 
       for (Face f : mesh.faces(vv2)) assertx(!v1mats.contains(f_matid(f)));
     }
   }
-  return R_success;
+  return ecol_result;
 }
 
 float get_tvc_cost(Edge e, bool edir) {
@@ -4495,8 +4504,76 @@ void consider_tvc(Edge& edefault, float costdefault) {
   assertx(costdefault >= 0.f && costdefault != k_bad_cost);
 }
 
+float fractional_progress(int orig_nfaces, int orig_nvertices) {
+  if (nfaces) return (orig_nfaces - float(mesh.num_faces())) / max(1.f, orig_nfaces - float(nfaces));
+  return (orig_nvertices - float(mesh.num_vertices())) / max(1.f, orig_nvertices - float(nvertices));
+}
+
+// Simplify the mesh until it has <= nfaces or <= nvertices.
+void parallel_optimize() {
+  const int orig_nfaces = mesh.num_faces(), orig_nvertices = mesh.num_vertices();
+  ConsoleProgress cprogress;
+  for (;;) {
+    if (verb == 1) cprogress.update(fractional_progress(orig_nfaces, orig_nvertices));
+    if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
+
+    struct EdgeCost {
+      Edge e;
+      float cost;
+    };
+    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
+
+    parallel_for_each(range(ar_edgecost.num()), [&](int index) {
+      Edge e = ar_edgecost[index].e;
+      const EcolResult ecol_result = try_ecol(e, false);
+      ar_edgecost[index].cost = ecol_result.cost;
+    });
+    const auto increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
+    sort(ar_edgecost, increasing_cost);
+
+    Set<Edge> invalidated_edges;
+    const float k_fraction_edges = 0.15f;
+    int num_edges_considered = 0, num_edges_collapsed = 0;
+    for_int(index, ar_edgecost.num()) {
+      if (num_edges_collapsed > 0 && index > int(k_fraction_edges * ar_edgecost.num())) break;
+      const auto [e, cost] = ar_edgecost[index];
+      if (cost == k_bad_cost) break;
+      if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
+      num_edges_considered++;
+      if (invalidated_edges.contains(e)) continue;
+      // COMMIT.
+      num_edges_collapsed++;
+      Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+      Vec2<Set<Edge>> invalidations_v1_v2;
+      for_int(j, 2) {
+        Vertex v = V(v1, v2)[j];
+        for (Vertex vv : mesh.vertices(v))
+          for (Edge ee : mesh.edges(vv)) invalidations_v1_v2[j].add(ee);
+      }
+      mesh.valid(e);
+      const EcolResult ecol_result = try_ecol(e, true);
+      // Note: Edge e is now undefined.
+      assertx(ecol_result.result == R_success);
+      assertx(ecol_result.min_ii == 2);
+      assertx(minii2 && no_fit_geom);
+      // assertx(ecol_result.cost == cost);
+      if (abs(ecol_result.cost - cost) / cost > 1e-4f) SHOW(cost, ecol_result.cost - cost), assertnever("?");
+      const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
+      // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
+      for (const int j : {j_vt})
+        for (Edge ee : invalidations_v1_v2[j]) invalidated_edges.add(ee);
+    }
+    if (verb >= 2)
+      showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //
+             ar_edgecost.num(), num_edges_considered, num_edges_collapsed);
+    if (num_edges_collapsed == 0) break;
+  }
+  nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
+}
+
 // Simplify the mesh until it has <=nfaces or <=nvertices.
 void optimize() {
+  if (minii2 && minqem) assertx(no_fit_geom);
   if (strict_sharp == 2) {
     for (Face f : mesh.faces()) {
       Vec3<Face> fn;
@@ -4511,6 +4588,14 @@ void optimize() {
       }
     }
   }
+  if (use_parallelism) {
+    const bool qem_compatible = minii2;  // The only Qem method used is evaluate() which is thread-safe.
+    const bool can_use_parallelism = !invertexorder && !tvcfac && (!minqem || qem_compatible);
+    if (can_use_parallelism) {
+      parallel_optimize();
+      return;
+    }
+  }
   ConsoleProgress cprogress;
   cprogress.update(0.f);
   if (!pqecost.num() && !invertexorder) {
@@ -4523,17 +4608,14 @@ void optimize() {
     for (Edge e : ar) {
       if (verb >= 1) cprogress2.update(float(pqecost.num()) / mesh.num_edges());
       ASSERTX(!pqecost.contains(e));
-      float cost;
-      int dummy_min_ii;
-      Vertex dummy_vs;
-      try_ecol(e, false, cost, dummy_min_ii, dummy_vs);
-      pqecost.enter_unsorted(e, cost);
-      if (verb >= 3) showdf("adding edge with cost=%g\n", cost - offset_cost);
+      const EcolResult ecol_result = try_ecol(e, false);
+      pqecost.enter_unsorted(e, ecol_result.cost);
+      if (verb >= 3) showdf("adding edge with cost=%g\n", ecol_result.cost - offset_cost);
     }
     pqecost.sort();
   }
   // showf("Begin simplification\n");
-  int orig_nfaces = mesh.num_faces();
+  const int orig_nfaces = mesh.num_faces(), orig_nvertices = mesh.num_vertices();
   int ntested = 0, nsuccess = 0, onf = mesh.num_faces(), neval = 0, nnotbest = 0;
   for (;;) {
     if (!invertexorder) assertx(pqecost.num() == mesh.num_edges());
@@ -4553,7 +4635,7 @@ void optimize() {
       SHOW(otot, ontot, tot, ntot);
       assertx(abs(tot / otot - 1.) < 1e-3);
     }
-    if (verb >= 1) cprogress.update((orig_nfaces - float(mesh.num_faces())) / max(1.f, orig_nfaces - float(nfaces)));
+    if (verb >= 1) cprogress.update(fractional_progress(orig_nfaces, orig_nvertices));
     if (verb >= 4 && ntested % 1000 == 0) {
       showf("it %5d, pq%5d/%-5d nf=%d (%3d) eval=%-2d notbest=%-2d\n",  //
             ntested, pqecost.num(), mesh.num_edges(), mesh.num_faces(), mesh.num_faces() - onf, neval, nnotbest);
@@ -4573,11 +4655,8 @@ void optimize() {
       // If this fails, then we should have renumbered original mesh.
       Vertex vtoremove = assertx(mesh.id_retrieve_vertex(idtoremove));
       for (Edge e : mesh.edges(vtoremove)) {
-        float cost;
-        int dummy_min_ii;
-        Vertex dummy_vs;
-        try_ecol(e, false, cost, dummy_min_ii, dummy_vs);
-        pqecost.enter(e, cost);
+        const EcolResult ecol_result = try_ecol(e, false);
+        pqecost.enter(e, ecol_result.cost);
         neval++;
       }
     }
@@ -4597,30 +4676,29 @@ void optimize() {
     const float a_factor = 1.0f;
     float thresh_cost = expect_cost + (nexte_cost - expect_cost) * a_factor + 1e-20f;
     ntested++;
-    float cost;
-    int min_ii;
-    Vertex vs;
-    EResult result = try_ecol(e, false, cost, min_ii, vs);
-    if (verb >= 4)
-      showdf("op, expect=%e got=%e thresh=%e %s\n",  //
-             expect_cost, cost, thresh_cost,
-             (result == R_success ? sform(" success (%.2f)", cost / thresh_cost).c_str() : ""));
-    if (cost > thresh_cost || cost == k_bad_cost) {
-      if (cost != k_bad_cost) {
-        if (0) showf("** expect %e, got %e (next is %e)\n", expect_cost, cost, nexte_cost);
-        SSTATV2(Snotbest, expect_cost - cost);
-        nnotbest++;
+    {
+      const auto& [result, cost, unused_min_ii, unused_vs] = try_ecol(e, false);
+      if (verb >= 4)
+        showdf("op, expect=%e got=%e thresh=%e %s\n",  //
+               expect_cost, cost, thresh_cost,
+               (result == R_success ? sform(" success (%.2f)", cost / thresh_cost).c_str() : ""));
+      if (cost > thresh_cost || cost == k_bad_cost) {
+        if (cost != k_bad_cost) {
+          if (0) showf("** expect %e, got %e (next is %e)\n", expect_cost, cost, nexte_cost);
+          SSTATV2(Snotbest, expect_cost - cost);
+          nnotbest++;
+        }
+        if (invertexorder) assertnever("");
+        pqecost.enter(e, cost);
+        continue;
       }
-      if (invertexorder) assertnever("");
-      pqecost.enter(e, cost);
-      continue;
-    }
-    assertx(result == R_success);
-    if (tvcfac) {
-      pqecost.enter(e, cost);
-      // Think things over in view of TVC; may modify e and cost!
-      consider_tvc(e, cost);
-      pqecost.remove(e);
+      assertx(result == R_success);
+      if (tvcfac) {
+        pqecost.enter(e, cost);
+        // Think things over in view of TVC; may modify e and cost!
+        consider_tvc(e, cost);
+        pqecost.remove(e);
+      }
     }
     // READY TO COMMIT.
     if (!invertexorder) {
@@ -4632,7 +4710,7 @@ void optimize() {
     }
     // COMMIT.
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    result = try_ecol(e, true, cost, min_ii, vs);
+    const auto& [result, unused_cost, unused_min_ii, vs] = try_ecol(e, true);
     assertx(result == R_success);
     if (invertexorder) assertx(mesh.vertex_id(vs) <= mesh.num_vertices());
     // e = nullptr;  // now undefined
@@ -4667,11 +4745,8 @@ void optimize() {
     }
     SSTATV2(Serecompute, seterecompute.num());
     for (Edge ee : seterecompute) {
-      float cost1;
-      int dummy_min_ii;
-      Vertex dummy_vs;
-      try_ecol(ee, false, cost1, dummy_min_ii, dummy_vs);
-      pqecost.update(ee, cost1);
+      const EcolResult ecol_result = try_ecol(ee, false);
+      pqecost.update(ee, ecol_result.cost);
       neval++;
     }
   }
@@ -4880,7 +4955,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(qemlocal, "bool : use memoryless QEM");
   HH_ARGSP(qemvolume, "bool : constrain to preserve vol");
   HH_ARGSP(qemweight, "bool : weight qem by area/length");
-  HH_ARGSP(qemcache, "bool : cache Q on faces for qemlocal");
+  HH_ARGSP(qemcache, "bool : cache Q on faces for qemlocal; faster but more mem.");
   HH_ARGSD(removesharp, ": delete attributes at edges and corners");
   HH_ARGSD(removeinfo, ": delete all attributes");
   HH_ARGSP(wedge_materials, "bool : material boundaries imply wedge bnds");
@@ -4891,7 +4966,7 @@ int main(int argc, const char** argv) {
     Args targs{"1"};
     do_verb(targs);
   }
-  Timer timer("MeshSimplify");
+  Timer timer("MeshSimplify", Timer::EMode::always);
   int orig_nf = 0;
   string arg0 = args.num() ? args.peek_string() : "";
   if (!ParseArgs::special_arg(arg0)) {
@@ -4910,10 +4985,8 @@ int main(int argc, const char** argv) {
   args.parse();
   perhaps_initialize();
   wrap_up();
-  int final_nf = mesh.num_faces();
   timer.stop();
-  showdf("Time: cpu%.2f real%.2f  rate:%.2f f/sec\n",  //
-         timer.cpu(), timer.real(), (orig_nf - final_nf) / max(timer.cpu(), 0.001));
+  showdf("Rate: %.0f faces/sec\n", (orig_nf - mesh.num_faces()) / max(timer.real(), 0.001));
   timer.start();
   timer.terminate();
   hh_clean_up();

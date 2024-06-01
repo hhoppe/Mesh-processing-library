@@ -41,13 +41,14 @@ namespace hh {
 // process_cpu_time / main_thread_cpu_time is not meaningful.
 class Timer : noncopyable {
  public:
-  enum class EMode { normal, diagnostic, abbrev, summary, possibly, noprint };
+  enum class EMode { normal, diagnostic, abbrev, summary, possibly, noprint, always };
   // normal:          showdf() every time
   // diagnostic:      showf() every time
   // abbrev:          showf() first time
   // summary:         only print in summary
   // possibly:        never print, do not keep stats (except if SHOW_TIMES)
   // noprint:         never print, do not keep stats
+  // always:          showdf() every time even if SHOW_TIMES == -1
   //
   // If a name is given in the constructor, the timer is automatically started.
   // Otherwise, mode is overridden to EMode::noprint and the timer is not started.

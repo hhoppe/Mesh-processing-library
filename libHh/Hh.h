@@ -567,13 +567,21 @@ void show_cerr_and_debug(const string& s);
 
 #define HH_SHOW_0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
+// #define HH_SHOW_1(sargs, prec, ...)                                            \
+//   do {                                                                         \
+//     std::ostringstream HH_ID(oss);                                             \
+//     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
+//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
+//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
+//   } while (false)
+// ?? search all "while (false)"
 #define HH_SHOW_1(sargs, prec, ...)                                            \
-  do {                                                                         \
+  [&]() {                                                                      \
     std::ostringstream HH_ID(oss);                                             \
     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
-  } while (false)
+  }()
 
 #define HH_SHOW_M(x) (#x[0] == '"' ? "" : #x "=") << (x)
 

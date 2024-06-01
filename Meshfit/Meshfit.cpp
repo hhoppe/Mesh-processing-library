@@ -1474,7 +1474,7 @@ void do_quicksimplify() {
 
 void do_zippysimplify() {
   HH_TIMER("zippysimplify");
-  // Note: the scedule {1e-2f, 1e-4f} seems preferable because it biases triangulations of planar regions to
+  // Note: the schedule {1e-2f, 1e-4f} seems preferable because it biases triangulations of planar regions to
   //  avoid long skinny triangles, as opposed to ending with no spring energy at all.
   // Removing springs completely causes problems.
   const Array<float> k_spring_sched2 = {1e-2f, 1e-4f};

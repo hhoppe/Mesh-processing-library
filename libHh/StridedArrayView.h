@@ -18,7 +18,7 @@ namespace hh {
 
 template <typename T> class StridedArrayView;
 
-// CStridedArrayView is like an CArrayView except its elements are separate by a stride (i.e. not necesssarily 1).
+// CStridedArrayView is like an CArrayView except its elements are separate by a stride (i.e. not necessarily 1).
 template <typename T> class CStridedArrayView {
   using type = CStridedArrayView<T>;
 
@@ -79,7 +79,7 @@ template <typename T> class CStridedArrayView {
   type& operator=(const type&) = delete;
 };
 
-// StridedArrayView is like an ArrayView except its elements are separate by a stride (i.e. not necesssarily 1).
+// StridedArrayView is like an ArrayView except its elements are separate by a stride (i.e. not necessarily 1).
 template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   using base = CStridedArrayView<T>;
   using type = StridedArrayView<T>;

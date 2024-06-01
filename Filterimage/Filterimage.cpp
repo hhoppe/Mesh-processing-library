@@ -473,46 +473,38 @@ void do_cropmatte() {
   int l = 0, r = 0, t = 0, b = 0;
   for (; l < image.xsize(); l++) {
     int x = l;
-    bool ok = true;
-    for_int(y, image.ysize()) {
-      if (!equal(image[y][x], gcolor, nz)) {
-        ok = false;
-        break;
-      }
-    }
+    const bool ok = [&]() {
+      for_int(y, image.ysize())
+        if (!equal(image[y][x], gcolor, nz)) return false;
+      return true;
+    }();
     if (!ok) break;
   }
   for (; r < image.xsize() - l; r++) {
     int x = image.xsize() - 1 - r;
-    bool ok = true;
-    for_int(y, image.ysize()) {
-      if (!equal(image[y][x], gcolor, nz)) {
-        ok = false;
-        break;
-      }
-    }
+    const bool ok = [&]() {
+      for_int(y, image.ysize())
+        if (!equal(image[y][x], gcolor, nz)) return false;
+      return true;
+    }();
     if (!ok) break;
   }
   for (; t < image.ysize(); t++) {
     int y = t;
-    bool ok = true;
-    for_int(x, image.xsize()) {
-      if (!equal(image[y][x], gcolor, nz)) {
-        ok = false;
-        break;
-      }
-    }
+    const bool ok = [&]() {
+      for_int(x, image.xsize())
+        if (!equal(image[y][x], gcolor, nz)) return false;
+      return true;
+    }();
     if (!ok) break;
   }
   for (; b < image.ysize() - t; b++) {
     int y = image.ysize() - 1 - b;
-    bool ok = true;
-    for_int(x, image.xsize()) {
-      if (!equal(image[y][x], gcolor, nz)) {
-        ok = false;
-        break;
-      }
-    }
+    const bool ok = [&]() {
+      for_int(x, image.xsize())
+        if (!equal(image[y][x], gcolor, nz)) return false;
+      return true;
+    }();
     if (!ok) break;
   }
   Grid<2, Pixel>& grid = image;

@@ -3060,13 +3060,11 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     // (Useful in the case of complete planarity.)
     Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
     Point pcandnew = to_Point(to_Vector(pcand) * scale) + translate;
-    bool ok = true;
-    for_int(i, ar_lf.num()) {
-      if (ar_lf[i].eval(pcandnew) < -1e-5f) {
-        ok = false;
-        break;
-      }
-    }
+    const bool ok = [&]() {
+      for_int(i, ar_lf.num())
+        if (ar_lf[i].eval(pcandnew) < -1e-5f) return false;  // From lambda.
+      return true;                                           // From lambda.
+    }();
     if (ok) {
       Warning("Using midpoint as hull point");
       newpoint = pcand;
@@ -3843,18 +3841,17 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (dihpenalty == BIGFLOAT) continue;
     }
     if (poszfacenormal) {
-      bool ok = true;
-      Polygon poly(3);
-      for_int(i, nn.va.num() - 1) {
-        poly[0] = mesh.point(nn.va[i]);
-        poly[1] = mesh.point(nn.va[i + 1]);
-        poly[2] = newp;
-        Vector normaldir = poly.get_normal_dir();
-        if (normaldir[2] < 0.f) {
-          ok = false;
-          break;
+      const bool ok = [&]() {
+        Polygon poly(3);
+        for_int(i, nn.va.num() - 1) {
+          poly[0] = mesh.point(nn.va[i]);
+          poly[1] = mesh.point(nn.va[i + 1]);
+          poly[2] = newp;
+          Vector normaldir = poly.get_normal_dir();
+          if (normaldir[2] < 0.f) return false;
         }
-      }
+        return true;
+      }();
       if (!ok) continue;
     }
     float dir_error = 0.f;

@@ -50,13 +50,11 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     operator[](i) = std::move(e);
     return *this;
   }
-  bool operator==(const type& p) const {
-    for_int(i, n) {
-      if (!(a()[i] == p[i])) return false;
-    }
+  bool operator==(const type& rhs) const {
+    for_int(i, n) if (!(a()[i] == rhs[i])) return false;
     return true;
   }
-  bool operator!=(const type& p) const { return !(*this == p); }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   operator ArrayView<T>() { return view(); }
   operator CArrayView<T>() const { return view(); }
   ArrayView<T> view() { return ArrayView<T>(a(), n); }

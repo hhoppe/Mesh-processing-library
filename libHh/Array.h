@@ -68,8 +68,8 @@ template <typename T> class CArrayView {
   const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   bool contains(const T& e) const;
   int index(const T& e) const;  // or -1 if not found
-  bool operator==(type o) const;
-  bool operator!=(type o) const { return !(*this == o); }
+  bool operator==(type rhs) const;
+  bool operator!=(type rhs) const { return !(*this == rhs); }
   type head(int n) const { return segment(0, n); }
   type tail(int n) const { return segment(_n - n, n); }
   type segment(int i, int s) const { return (ASSERTXX(check(i, s)), type(_a + i, s)); }
@@ -291,8 +291,12 @@ template <typename T> class Array : public ArrayView<T> {
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
-  bool operator==(CArrayView<T> o) const { return _n == o.num() && static_cast<const CArrayView<T>&>(*this) == o; }
-  bool operator==(const type& o) const { return _n == o.num() && static_cast<const CArrayView<T>&>(*this) == o; }
+  bool operator==(CArrayView<T> rhs) const {
+    return _n == rhs.num() && static_cast<const CArrayView<T>&>(*this) == rhs;
+  }
+  bool operator!=(CArrayView<T> rhs) const { return !(*this == rhs); }
+  bool operator==(const type& rhs) const { return _n == rhs.num() && static_cast<const CArrayView<T>&>(*this) == rhs; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   // iterator is inherited from ArrayView
  private:
   using base::_a;
@@ -430,10 +434,10 @@ template <typename T> int CArrayView<T>::index(const T& e) const {
   return -1;
 }
 
-template <typename T> bool CArrayView<T>::operator==(type o) const {
-  ASSERTX(_n == o._n);
+template <typename T> bool CArrayView<T>::operator==(type rhs) const {
+  ASSERTX(_n == rhs._n);
   for_int(i, _n) {
-    if (_a[i] != o._a[i]) return false;
+    if (_a[i] != rhs._a[i]) return false;
   }
   return true;
 }

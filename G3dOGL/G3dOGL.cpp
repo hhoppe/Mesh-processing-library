@@ -1537,10 +1537,8 @@ void mesh_init(GMesh& mesh) {
           vlod.Od = pack_color(A3dColor(1.f, 1.f, 0.f));  // yellow
         }
       }
-      bool has_c_color = false;
-      for (Corner c : mesh.corners(v)) {
-        if (GMesh::string_has_key(mesh.get_string(c), "rgb")) has_c_color = true;
-      }
+      const bool has_c_color =
+          any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "rgb"); });
       if (has_c_color) {
         if (mesh.flags(v).flag(vflag_color).set(false)) Warning("Found both vertex and corner rgb");
         mesh.gflags().flag(mflag_c_colors) = true;

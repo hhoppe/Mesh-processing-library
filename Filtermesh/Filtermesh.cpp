@@ -1422,15 +1422,15 @@ Vec2<Vertex> find_diameter_of_boundary_vertices() {
         vbt[1] = vmax;
       }
       for (;;) {
-        bool prog = false;
+        bool progress = false;
         for_int(c, 2) {
           Vertex vnew = farthest_vertex(bndverts, vbt[c]);
           if (vnew != vbt[1 - c]) {
-            prog = true;
+            progress = true;
             vbt[1 - c] = vnew;
           }
         }
-        if (!prog) break;
+        if (!progress) break;
       }
       float val = dist(mesh.point(vbt[0]), mesh.point(vbt[1]));
       if (val > maxval) {
@@ -1709,13 +1709,8 @@ void do_splitvalence(Args& args) {
     HH_SSTAT(Sval, mesh.degree(v));
     nsplit++;
     assertx(!mesh.is_boundary(v));  // not implemented
-    bool is_hole = false;
-    if (write_hole) {
-      is_hole = true;
-      for (Face f : mesh.faces(v)) {
-        if (!GMesh::string_has_key(mesh.get_string(f), "hole")) is_hole = false;
-      }
-    }
+    const bool is_hole =
+        write_hole && all_of(mesh.faces(v), [&](Face f) { return GMesh::string_has_key(mesh.get_string(f), "hole"); });
     Array<Vertex> va(mesh.ccw_vertices(v));
     Vector vec{};
     for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
@@ -1724,9 +1719,8 @@ void do_splitvalence(Args& args) {
     Vertex vn = mesh.split_vertex(v, vs1, vs2, 0);
     mesh.create_face(v, vn, vs1);
     mesh.create_face(v, vs2, vn);
-    if (is_hole) {
+    if (is_hole)
       for (Face f : mesh.faces(mesh.edge(v, vn))) mesh.update_string(f, "hole", "");
-    }
     mesh.set_point(vn, mesh.point(v) - vec * 1e-3f);
     mesh.update_string(vn, "newvertex", "");
     mesh.update_string(v, "newvertex", "");
@@ -1893,35 +1887,17 @@ void do_rmcomp(Args& args) {
   HH_STAT(Svertsrem);
   HH_STAT(Sfacesrem);
   Set<Face> setfvis;  // faces already considered
-  if (0) {
-    for (;;) {
-      bool found = false;
-      for (Face f : mesh.faces()) {
-        if (setfvis.contains(f)) continue;
-        Set<Face> setf = gather_component(mesh, f);
-        for (Face ff : setf) setfvis.enter(ff);
-        int nf = setf.num();
-        if (nf > maxnumf) continue;
-        Sfacesrem.enter(nf);
-        Svertsrem.enter(remove_component(setf));
-        found = true;
-        break;
-      }
-      if (!found) break;
-    }
-  } else {
-    Array<Set<Face>> ar_setf;
-    for (Face f : mesh.faces()) {
-      if (setfvis.contains(f)) continue;
-      Set<Face> setf = gather_component(mesh, f);
-      for (Face ff : setf) setfvis.enter(ff);
-      int nf = setf.num();
-      if (nf > maxnumf) continue;
-      ar_setf.push(std::move(setf));
-      Sfacesrem.enter(nf);
-    }
-    for (Set<Face>& setf : ar_setf) Svertsrem.enter(remove_component(setf));
+  Array<Set<Face>> ar_setf;
+  for (Face f : mesh.faces()) {
+    if (setfvis.contains(f)) continue;
+    Set<Face> setf = gather_component(mesh, f);
+    for (Face ff : setf) setfvis.enter(ff);
+    int nf = setf.num();
+    if (nf > maxnumf) continue;
+    ar_setf.push(std::move(setf));
+    Sfacesrem.enter(nf);
   }
+  for (Set<Face>& setf : ar_setf) Svertsrem.enter(remove_component(setf));
   showdf("Removed %d mesh components\n", Sfacesrem.inum());
   Set<Vertex> vdestroy;
   for (Vertex v : mesh.vertices()) {
@@ -2526,26 +2502,25 @@ void do_obtusesplit() {
   string str;
   while (!pqe.empty()) {
     Edge e = pqe.remove_min();
-    bool want_split = false;
-    for (Face ff : mesh.faces(e)) {
-      Point po = mesh.point(mesh.opp_vertex(e, ff));
-      Point p1 = mesh.point(mesh.vertex1(e));
-      Point p2 = mesh.point(mesh.vertex2(e));
-      float ang;
-      if (is_sphere) {
-        // spherical angle within triangle
-        Vector vto1 = project_orthogonally(p1 - po, to_Vector(po));
-        Vector vto2 = project_orthogonally(p2 - po, to_Vector(po));
+    const bool want_split = [&]() {
+      for (Face ff : mesh.faces(e)) {
+        Point po = mesh.point(mesh.opp_vertex(e, ff));
+        Point p1 = mesh.point(mesh.vertex1(e));
+        Point p2 = mesh.point(mesh.vertex2(e));
+        Vector vto1, vto2;
+        if (is_sphere) {  // Spherical angle within triangle.
+          vto1 = project_orthogonally(p1 - po, to_Vector(po));
+          vto2 = project_orthogonally(p2 - po, to_Vector(po));
+        } else {
+          vto1 = p1 - po;
+          vto2 = p2 - po;
+        }
         if (!assertw(vto1.normalize() && vto2.normalize())) continue;
-        ang = angle_between_unit_vectors(vto1, vto2);
-      } else {
-        Vector vto1 = p1 - po;
-        Vector vto2 = p2 - po;
-        if (!assertw(vto1.normalize() && vto2.normalize())) continue;
-        ang = angle_between_unit_vectors(vto1, vto2);
+        const float ang = angle_between_unit_vectors(vto1, vto2);
+        if (ang > thresh_ang) return true;
       }
-      if (ang > thresh_ang) want_split = true;
-    }
+      return false;
+    }();
     if (!want_split) continue;
     // ALL GO.
     Vec2<Vertex> va{mesh.vertex1(e), mesh.vertex2(e)};
@@ -3976,9 +3951,8 @@ void do_shootrays(Args& args) {
       if (1) widen_triangle(poly, 1e-4f);
       for_int(i, 3) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), f));
-      for (Corner c : omesh.corners(f)) {
+      for (Corner c : omesh.corners(f))
         if (omesh.corner_key(str, c, "blendi")) has_blend = true;
-      }
     }
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
@@ -4369,16 +4343,8 @@ void do_trimpts(Args& args) {
     }
     showdf("Found %d vertices too far\n", nvtoofar);
     Array<Face> dfaces;
-    for (Face f : mesh.faces()) {
-      bool toofar = false;
-      for (Vertex v : mesh.vertices(f)) {
-        if (mesh.flags(v).flag(vflag_toofar)) {
-          toofar = true;
-          break;
-        }
-      }
-      if (toofar) dfaces.push(f);
-    }
+    for (Face f : mesh.faces())
+      if (any_of(mesh.vertices(f), [&](Vertex v) { return mesh.flags(v).flag(vflag_toofar); })) dfaces.push(f);
     showdf("Destroying %d faces\n", dfaces.num());
     for (Face f : dfaces) mesh.destroy_face(f);
   }

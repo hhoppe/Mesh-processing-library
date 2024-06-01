@@ -68,6 +68,8 @@ class EList {
   // Use n->link_before(elist.delim()) as in: Array::push(), Queue::enqueue(), or std::vector::push_back().
   // Use n->link_after(elist.delim())  as in: Array::unshift() or Stack::push().
   class Iter {
+    using type = Iter;
+
    public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = EListNode;
@@ -75,15 +77,18 @@ class EList {
     using pointer = value_type*;
     using reference = value_type&;
     Iter(EListNode* node) : _node(node) {}
-    bool operator!=(const Iter& rhs) const { return _node != rhs._node; }
+    bool operator==(const type& rhs) const { return _node == rhs._node; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     EListNode* operator*() const { return _node; }
-    Iter& operator++();
-    Iter& operator--();
+    type& operator++();
+    type& operator--();
 
    private:
     EListNode* _node;
   };
   class ConstIter {
+    using type = ConstIter;
+
    public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = EListNode;
@@ -91,10 +96,11 @@ class EList {
     using pointer = value_type*;
     using reference = value_type&;
     ConstIter(const EListNode* node) : _node(node) {}
-    bool operator!=(const ConstIter& rhs) const { return _node != rhs._node; }
+    bool operator==(const type& rhs) const { return _node == rhs._node; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const EListNode* operator*() const { return _node; }
-    ConstIter& operator++();
-    ConstIter& operator--();
+    type& operator++();
+    type& operator--();
 
    private:
     const EListNode* _node;
@@ -104,12 +110,15 @@ class EList {
   ConstIter begin() const { return ConstIter(delim()->next()); }
   ConstIter end() const { return ConstIter(delim()); }
   template <typename Struct, size_t offset> class OuterIter {
+    using type = OuterIter;
+
    public:
     OuterIter(EListNode* node) : _node(node) {}
-    bool operator!=(const OuterIter& rhs) const { return _node != rhs._node; }
+    bool operator==(const type& rhs) const { return _node == rhs._node; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset); }
-    OuterIter& operator++();
-    OuterIter& operator--();
+    type& operator++();
+    type& operator--();
 
    private:
     EListNode* _node;

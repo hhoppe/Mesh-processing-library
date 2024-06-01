@@ -13,9 +13,9 @@ class WBuffer;
 
 struct ObjectFrame {
   Frame frame;
-  int obn = 0;
-  float zoom = 0.f;
-  bool binary = false;
+  int obn{0};
+  float zoom{0.f};
+  bool binary{false};
 };
 
 namespace FrameIO {

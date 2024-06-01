@@ -126,6 +126,8 @@ class Map {
 
  public:
   class keys_iterator {
+    using type = keys_iterator;
+
    public:
     using iterator_category = std::forward_iterator_tag;
     using value_type = Key;
@@ -134,10 +136,10 @@ class Map {
     using reference = value_type&;
     keys_iterator() = default;
     keys_iterator(bciter it) : _it(it) {}
-    bool operator!=(const keys_iterator& rhs) const { return _it != rhs._it; }
-    bool operator==(const keys_iterator& rhs) const { return _it == rhs._it; }
+    bool operator==(const type& rhs) const { return _it == rhs._it; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const Key& operator*() const { return _it->first; }
-    keys_iterator& operator++() {
+    type& operator++() {
       ++_it;
       return *this;
     }
@@ -155,6 +157,8 @@ class Map {
     const type& _map;
   };
   class cvalues_iterator {
+    using type = cvalues_iterator;
+
    public:
     using iterator_category = std::forward_iterator_tag;
     using value_type = Value;
@@ -163,10 +167,10 @@ class Map {
     using reference = value_type&;
     cvalues_iterator() = default;
     cvalues_iterator(bciter it) : _it(it) {}
-    bool operator!=(const cvalues_iterator& rhs) const { return _it != rhs._it; }
-    bool operator==(const cvalues_iterator& rhs) const { return _it == rhs._it; }
+    bool operator==(const type& rhs) const { return _it == rhs._it; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const Value& operator*() const { return _it->second; }
-    cvalues_iterator& operator++() {
+    type& operator++() {
       ++_it;
       return *this;
     }
@@ -184,6 +188,8 @@ class Map {
     const type& _map;
   };
   class values_iterator {
+    using type = values_iterator;
+
    public:
     using iterator_category = std::forward_iterator_tag;
     using value_type = Value;
@@ -192,10 +198,10 @@ class Map {
     using reference = value_type&;
     values_iterator() = default;
     values_iterator(biter it) : _it(it) {}
-    bool operator!=(const values_iterator& rhs) const { return _it != rhs._it; }
-    bool operator==(const values_iterator& rhs) const { return _it == rhs._it; }
+    bool operator==(const type& rhs) const { return _it == rhs._it; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Value& operator*() const { return _it->second; }
-    values_iterator& operator++() {
+    type& operator++() {
       ++_it;
       return *this;
     }

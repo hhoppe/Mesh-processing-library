@@ -32,6 +32,8 @@ template <typename T> class CStridedArrayView {
   bool ok(int i) const { return i >= 0 && i < _n; }
   using value_type = T;
   class iterator {
+    using type = iterator;
+
    public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type = T;
@@ -39,26 +41,26 @@ template <typename T> class CStridedArrayView {
     using pointer = value_type*;
     using reference = value_type&;
     iterator() = default;
-    bool operator==(const iterator& it) const { return _p == it._p; }
-    bool operator!=(const iterator& it) const { return _p != it._p; }
+    bool operator==(const type& rhs) const { return _p == rhs._p; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const T& operator*() const { return *_p; }
     const T* operator->() const { return _p; }
-    iterator& operator++() {
+    type& operator++() {
       _p += _stride;
       return *this;
     }
-    iterator& operator--() {
+    type& operator--() {
       _p -= _stride;
       return *this;
     }
-    iterator operator+(std::ptrdiff_t i) { return iterator(_p + i * _stride, _stride); }
-    iterator operator-(std::ptrdiff_t i) { return iterator(_p - i * _stride, _stride); }
+    type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
+    type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
     const T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
-    std::ptrdiff_t operator-(const iterator& it) const {
-      return (ASSERTXX((_p - it._p) % _stride == 0), (_p - it._p) / _stride);
+    std::ptrdiff_t operator-(const type& rhs) const {
+      return (ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride);
     }
-    bool operator<(const iterator& it) const { return (ASSERTXX((_p - it._p) % _stride == 0), _p < it._p); }
-    bool operator<=(const iterator& it) const { return (ASSERTXX((_p - it._p) % _stride == 0), _p <= it._p); }
+    bool operator<(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p < rhs._p); }
+    bool operator<=(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p <= rhs._p); }
 
    private:
     const T* _p;
@@ -92,6 +94,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   T& last() { return (*this)[_n - 1]; }
   const T& last() const { return base::last(); }
   class iterator {
+    using type = iterator;
+
    public:
     using iterator_category = std::random_access_iterator_tag;
     using value_type = T;
@@ -99,26 +103,26 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
     using pointer = value_type*;
     using reference = value_type&;
     iterator() = default;
-    bool operator==(const iterator& it) const { return _p == it._p; }
-    bool operator!=(const iterator& it) const { return _p != it._p; }
+    bool operator==(const type& rhs) const { return _p == rhs._p; }
+    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     T& operator*() const { return *_p; }
     T* operator->() const { return _p; }
-    iterator& operator++() {
+    type& operator++() {
       _p += _stride;
       return *this;
     }
-    iterator& operator--() {
+    type& operator--() {
       _p -= _stride;
       return *this;
     }
-    iterator operator+(std::ptrdiff_t i) { return iterator(_p + i * _stride, _stride); }
-    iterator operator-(std::ptrdiff_t i) { return iterator(_p - i * _stride, _stride); }
+    type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
+    type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
     T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
-    std::ptrdiff_t operator-(const iterator& it) const {
-      return (ASSERTXX((_p - it._p) % _stride == 0), (_p - it._p) / _stride);
+    std::ptrdiff_t operator-(const type& rhs) const {
+      return (ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride);
     }
-    bool operator<(const iterator& it) const { return (ASSERTXX((_p - it._p) % _stride == 0), _p < it._p); }
-    bool operator<=(const iterator& it) const { return (ASSERTXX((_p - it._p) % _stride == 0), _p <= it._p); }
+    bool operator<(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p < rhs._p); }
+    bool operator<=(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p <= rhs._p); }
 
    private:
     T* _p;

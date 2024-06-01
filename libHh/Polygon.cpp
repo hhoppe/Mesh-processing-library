@@ -73,20 +73,20 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
 
 bool Polygon::intersect_bbox(const Bbox<float, 3>& bbox) {
   assertx(num() >= 3);
-  bool m = false;  // polygon_is_modified
-  m |= intersect_hyperplane(bbox[0], Vector(+1.f, +0.f, +0.f));
+  bool modified = false;
+  modified |= intersect_hyperplane(bbox[0], Vector(+1.f, +0.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bbox[1], Vector(-1.f, +0.f, +0.f));
+  modified |= intersect_hyperplane(bbox[1], Vector(-1.f, +0.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bbox[0], Vector(+0.f, +1.f, +0.f));
+  modified |= intersect_hyperplane(bbox[0], Vector(+0.f, +1.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bbox[1], Vector(+0.f, -1.f, +0.f));
+  modified |= intersect_hyperplane(bbox[1], Vector(+0.f, -1.f, +0.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bbox[0], Vector(+0.f, +0.f, +1.f));
+  modified |= intersect_hyperplane(bbox[0], Vector(+0.f, +0.f, +1.f));
   if (!num()) return true;
-  m |= intersect_hyperplane(bbox[1], Vector(+0.f, +0.f, -1.f));
+  modified |= intersect_hyperplane(bbox[1], Vector(+0.f, +0.f, -1.f));
   if (!num()) return true;
-  return m;
+  return modified;
 }
 
 bool Polygon::intersect_segment(const Point& p1, const Point& p2, Point& pint) const {

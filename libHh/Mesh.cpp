@@ -991,14 +991,7 @@ void Mesh::ok() const {
       // Check that Faces reachable from Edges are valid
       valid(he->_face);
       // Check that each HEdge appears in its face
-      bool found = false;
-      for (HEdge hee : corners(he->_face)) {
-        if (hee == he) {
-          found = true;
-          break;
-        }
-      }
-      assertx(found);
+      assertx(contains(corners(he->_face), he));
       // Check that Edge is valid
       valid(he->_edge);
     }

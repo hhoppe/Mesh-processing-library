@@ -314,13 +314,7 @@ void replace_mesh() {
     Face fo = nullptr;
     for_int(fi, mesh.num_faces()) {
       Face f = mesh.id_face(1 + fi);
-      bool strip_continuation = false;
-      for (Face ff : mesh.faces(f)) {
-        if (ff == fo) {
-          strip_continuation = true;
-          break;
-        }
-      }
+      const bool strip_continuation = contains(mesh.faces(f), fo);
       fo = f;
       nf++;
       if (!strip_continuation) nf = 0;

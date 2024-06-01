@@ -32,17 +32,17 @@ void Mk3d::scale_color(float sr, float sg, float sb) {
 }
 
 void Mk3d::normal(const Vector& normal) {
-  bool mod = false;
+  bool modified = false;
   assertx(_el.num());
   Vector tn = transform(normal);
   assertw(tn.normalize());
   for_int(i, 3) {
     if (abs(tn[i]) < 1e-5f) {
       tn[i] = 0.f;
-      mod = true;
+      modified = true;
     }
   }
-  if (mod) assertw(tn.normalize());
+  if (modified) assertw(tn.normalize());
   _el[_el.num() - 1].n = tn;
 }
 

@@ -516,12 +516,12 @@ template <typename Iterator, typename Func> struct TransformedIterator {
   using reference = value_type&;
   Iterator _iter;
   const Func& _func;
-  bool operator!=(const type& other) const { return _iter != other._iter; }
-  bool operator==(const type& other) const { return _iter == other._iter; }
+  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return _func(*_iter); }
   type& operator++() { return ++_iter, *this; }
-  type& operator=(const type& other) {
-    if (this != &other) _iter = other._iter;
+  type& operator=(const type& rhs) {
+    if (this != &rhs) _iter = rhs._iter;
     // Note that _func is a reference and there is no need to assign it.
     return *this;
   }
@@ -559,7 +559,8 @@ template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
   static_assert(std::is_same_v<value_type, typename std::iterator_traits<Iterator2>::value_type>);
   Iterator1 _begin1, _end1;
   Iterator2 _begin2;
-  bool operator!=(const type& other) const { return _begin1 != other._begin1 || _begin2 != other._begin2; }
+  bool operator==(const type& rhs) const { return _begin1 == rhs._begin1 && _begin2 == rhs._begin2; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return _begin1 != _end1 ? *_begin1 : *_begin2; }
   type& operator++() {
     if (_begin1 != _end1)

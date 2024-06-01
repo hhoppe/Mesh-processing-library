@@ -2363,11 +2363,12 @@ bool DerivedHW::key_press(string skey) {
           const Object& ob = check_loaded_video();
           if (g_framenum < 0) throw "no current video frame";
           Image image(ob.spatial_dims());
-          bool bgra = false;
+          bool bgra;
           if (ob._video_nv12.size()) {
-            convert_Nv12_to_Image_BGRA(ob._video_nv12[g_framenum], image);
             bgra = true;
+            convert_Nv12_to_Image_BGRA(ob._video_nv12[g_framenum], image);
           } else {
+            bgra = false;
             image = ob._video[g_framenum];
             if (ob.is_image()) {
               bgra = ob._image_is_bgra;

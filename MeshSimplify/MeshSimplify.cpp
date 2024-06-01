@@ -3060,11 +3060,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     // (Useful in the case of complete planarity.)
     Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
     Point pcandnew = to_Point(to_Vector(pcand) * scale) + translate;
-    const bool ok = [&]() {
-      for_int(i, ar_lf.num())
-        if (ar_lf[i].eval(pcandnew) < -1e-5f) return false;  // From lambda.
-      return true;                                           // From lambda.
-    }();
+    const bool ok = all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
     if (ok) {
       Warning("Using midpoint as hull point");
       newpoint = pcand;
@@ -4078,15 +4074,9 @@ EcolResult try_ecol(Edge e, bool commit) {
     assertx(rssa < k_bad_dih * .1f);
     rssa += dihpenalty;
     assertx(std::isfinite(float(rssa)));
-    {
-      bool zeronormal = false;
-      for (const WedgeInfo& wi : ar_wi) {
-        if (is_zero(wi.nor)) zeronormal = true;
-      }
-      if (zeronormal) {
-        Warning("Edge collapse would introduce zero normal");
-        continue;
-      }
+    if (any_of(ar_wi, [&](const WedgeInfo& wi) { return is_zero(wi.nor); })) {
+      Warning("Edge collapse would introduce zero normal");
+      continue;
     }
     if (rssa < min_rssa) {
       min_rssa = rssa;

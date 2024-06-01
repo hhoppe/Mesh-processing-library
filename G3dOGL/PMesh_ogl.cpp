@@ -71,9 +71,8 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
   int omatid = -1;
   int ntstrips = 0;
   const int write_ntstrips = 0;  // get about 3 faces/strip on dragon3
-  bool has_uv = false;
-  if (pminfo._has_uv && use_texture) {
-    has_uv = true;
+  const bool has_uv = pminfo._has_uv && use_texture;
+  if (has_uv) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
   }

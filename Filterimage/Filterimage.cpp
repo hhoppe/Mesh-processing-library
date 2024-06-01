@@ -470,42 +470,22 @@ void do_croptodims(Args& args) {
 
 void do_cropmatte() {
   const int nz = image.zsize();
-  int l = 0, r = 0, t = 0, b = 0;
-  for (; l < image.xsize(); l++) {
-    int x = l;
-    const bool ok = [&]() {
-      for_int(y, image.ysize())
-        if (!equal(image[y][x], gcolor, nz)) return false;
-      return true;
-    }();
-    if (!ok) break;
+  int l, r, t, b;
+  for (l = 0; l < image.xsize(); l++) {
+    const int x = l;
+    if (!all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
   }
-  for (; r < image.xsize() - l; r++) {
-    int x = image.xsize() - 1 - r;
-    const bool ok = [&]() {
-      for_int(y, image.ysize())
-        if (!equal(image[y][x], gcolor, nz)) return false;
-      return true;
-    }();
-    if (!ok) break;
+  for (r = 0; r < image.xsize() - l; r++) {
+    const int x = image.xsize() - 1 - r;
+    if (!all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
   }
-  for (; t < image.ysize(); t++) {
-    int y = t;
-    const bool ok = [&]() {
-      for_int(x, image.xsize())
-        if (!equal(image[y][x], gcolor, nz)) return false;
-      return true;
-    }();
-    if (!ok) break;
+  for (t = 0; t < image.ysize(); t++) {
+    const int y = t;
+    if (!all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
   }
-  for (; b < image.ysize() - t; b++) {
-    int y = image.ysize() - 1 - b;
-    const bool ok = [&]() {
-      for_int(x, image.xsize())
-        if (!equal(image[y][x], gcolor, nz)) return false;
-      return true;
-    }();
-    if (!ok) break;
+  for (b = 0; b < image.ysize() - t; b++) {
+    const int y = image.ysize() - 1 - b;
+    if (!all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
   }
   Grid<2, Pixel>& grid = image;
   grid = crop(grid, V(t, l), V(b, r), g_bndrules, &gcolor);

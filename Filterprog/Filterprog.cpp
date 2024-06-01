@@ -1259,8 +1259,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       }
       break;
     case 'E':
-      if (!strncmp(sline, "Edge ", 5))
-        assertnever("Edge flags not used anymore");
+      if (!strncmp(sline, "Edge ", 5)) assertnever("Edge flags not used anymore");
       break;
     case 'M':
       if (!strncmp(sline, "MVertex ", 8)) {

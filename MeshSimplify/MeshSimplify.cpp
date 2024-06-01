@@ -4536,7 +4536,7 @@ void parallel_optimize() {
     int num_edges_considered = 0, num_edges_collapsed = 0;
     for_int(index, ar_edgecost.num()) {
       if (num_edges_collapsed > 0 && index > int(k_fraction_edges * ar_edgecost.num())) break;
-      const auto [e, cost] = ar_edgecost[index];
+      const auto& [e, cost] = ar_edgecost[index];
       if (cost == k_bad_cost) break;
       if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
       num_edges_considered++;
@@ -4557,7 +4557,10 @@ void parallel_optimize() {
       assertx(ecol_result.min_ii == 2);
       assertx(minii2 && no_fit_geom);
       // assertx(ecol_result.cost == cost);
-      if (abs(ecol_result.cost - cost) / cost > 1e-4f) SHOW(cost, ecol_result.cost - cost), assertnever("?");
+      if (abs(ecol_result.cost - cost) / cost > 1e-4f) {
+        SHOW(cost, ecol_result.cost - cost);
+        assertnever("?");
+      }
       const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
       for (const int j : {j_vt})

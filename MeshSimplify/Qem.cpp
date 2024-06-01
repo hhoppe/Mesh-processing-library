@@ -59,7 +59,7 @@ template <typename T, int n> void Qem<T, n>::set_d2_from_point(const float* p0) 
     T* pa = _a.data();
     for_int(i, n) {
       *pa++ = T{1};
-      for_intL(j, i + 1, n) *pa++ = T{0};
+      for_intL(j, i + 1, n) { *pa++ = T{0}; }
     }
   }
   for_int(i, n) _b[i] = -T{p0[i]};
@@ -108,7 +108,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_gh98(const float* p0, 
     T* pa = _a.data();
     for_int(i, n) {
       *pa++ = T{1} - e1[i] * e1[i] - e2[i] * e2[i];
-      for_intL(j, i + 1, n) *pa++ = T{0} - e1[i] * e1[j] - e2[i] * e2[j];
+      for_intL(j, i + 1, n) { *pa++ = T{0} - e1[i] * e1[j] - e2[i] * e2[j]; }
     }
   }
   const float* p = p0;
@@ -153,7 +153,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     {
       T* pa = _a.data();
       for_int(i, ngeom) {  // note: only traverse first ngeom rows
-        for_intL(j, i, ngeom) *pa++ = nor[i] * nor[j];
+        for_intL(j, i, ngeom) { *pa++ = nor[i] * nor[j]; }
         pa += nattrib;
       }
     }
@@ -233,8 +233,7 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
     const T* pa = _a.data();
     for_int(i, n) {
       sum1 += *pa++ * square(T{p[i]});
-      for_intL(j, i + 1, n)
-        sum2 += *pa++ * T{p[i]} * p[j];
+      for_intL(j, i + 1, n) sum2 += *pa++ * T{p[i]} * p[j];
     }
   }
   // for_int(i, n) sum2 += _b[i] * p[i];  // GCC4.8.1 array subscript is above array bounds

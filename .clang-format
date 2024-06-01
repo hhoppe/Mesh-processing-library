@@ -12,10 +12,13 @@ AllowShortCaseLabelsOnASingleLine: true     # default is false
 DerivePointerAlignment: false               # default is true
 ReflowComments: false                       # default is true
 IncludeBlocks: Preserve                     # sort each #include block separately
+# ForEachMacros: ['foreach', 'Q_FOREACH', 'BOOST_FOREACH', 'for_int', 'for_intL', 'for_size_t']
+# SpaceBeforeParens: Custom
+# SpaceBeforeParensOptions:
+#   AfterForeachMacros: false
 
 # AllowShortFunctionsOnASingleLine: Inline  # default is All
 # CommentPragmas: '^///'                    # default is '^ IWYU pragma:'; however, it still indents it.
-# ForEachMacros: ['for_int']                # default is ['foreach', 'Q_FOREACH', 'BOOST_FOREACH']
 # Standard: Latest                          # default is Auto  # not recognized by Visual Studio
 
 # StatementMacros: ['Q_UNUSED', 'QT_REQUIRE_VERSION']

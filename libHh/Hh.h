@@ -106,20 +106,24 @@
 #define HH_PRINTF_ATTRIBUTE(...)
 #endif
 
-#if defined(__clang__)
+#if 0
+#define HH_ASSUME(...) [[assume(__VA_ARGS__)]]  // C++23.
+#elif defined(__clang__)
 #pragma clang diagnostic ignored "-Wassume"  // (Assumed expression can have side effects which will be discarded.)
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(_MSC_VER)
 #define HH_ASSUME(...) __assume(__VA_ARGS__)  // Implies __analysis_assume() but is expression rather than statement.
 #elif 0
-// #define HH_ASSUME(...) do { if (!(__VA_ARGS__)) __builtin_unreachable(); } while (false)  // Maybe for gcc.
-// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // In gcc but intended for branch prediction.
+// #define HH_ASSUME(...) [&]() { if (!(__VA_ARGS__)) __builtin_unreachable(); }()  // Maybe for gcc.
+// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // In gcc/clang; intended for branch prediction.
 #else
 #define HH_ASSUME(...) (void(0))
 #endif
 
-#if defined(_MSC_VER)
-#define HH_UNREACHABLE __assume(0)  // This path is never taken.
+#if 0
+#define HH_UNREACHABLE std::unreachable()  // C++23.
+#elif defined(_MSC_VER) && !defined(__clang__)
+#define HH_UNREACHABLE __assume(false)  // This path is never taken.
 #else
 #define HH_UNREACHABLE __builtin_unreachable()
 #endif
@@ -567,21 +571,21 @@ void show_cerr_and_debug(const string& s);
 
 #define HH_SHOW_0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
 
-// #define HH_SHOW_1(sargs, prec, ...)                                            \
-//   do {                                                                         \
-//     std::ostringstream HH_ID(oss);                                             \
-//     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
-//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
-//   } while (false)
-// ?? search all "while (false)"
 #define HH_SHOW_1(sargs, prec, ...)                                            \
-  [&]() {                                                                      \
+  do {                                                                         \
     std::ostringstream HH_ID(oss);                                             \
     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
-  }()
+  } while (false)
+// C++20 allows lambda capture of structured bindings, so this would work and be an expression rather than statement:
+// #define HH_SHOW_1(sargs, prec, ...)                                            \
+//   [&]() {                                                                      \
+//     std::ostringstream HH_ID(oss);                                             \
+//     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
+//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
+//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
+//   }()
 
 #define HH_SHOW_M(x) (#x[0] == '"' ? "" : #x "=") << (x)
 

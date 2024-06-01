@@ -82,9 +82,6 @@ $(depend_dirs):                 # Enables "make -j" parallelism.
 	rm -f $(@:depend_%=%)/$(make_dep)
 	$(MAKE) -C $(@:depend_%=%) $(make_dep)
 
-TAGS tags:                      # Build source code index file used by Emacs.
-	(allC -h -use_rel; allC -C -use_rel) | grep -v Repository | PATH="/cygdrive/c/progra~1/emacs/bin:$$PATH" xargs etags --no-members
-
 debug:
 	$(info LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))
 	@echo '$PATH=$(PATH)'
@@ -113,6 +110,6 @@ timingtest: Filterimage Filtervideo
 	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
 .PHONY: all everything progs libs $(dirs+test) clean $(clean_dirs) \
-  deepclean $(deepclean_dirs) depend $(depend_dirs) TAGS tags debug timingtest
+  deepclean $(deepclean_dirs) depend $(depend_dirs) debug timingtest
 
 endif  # ifneq ($(CONFIG),all)

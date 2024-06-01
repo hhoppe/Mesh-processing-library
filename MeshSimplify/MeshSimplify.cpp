@@ -851,7 +851,7 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
     }
     // Now consider f1 & f2.  Try all neighboring corners with same wedge id to see if any survive.
     for (Face f : mesh.faces(e)) {
-      int nwid = [&] {
+      const int nwid = [&] {
         for (Vertex v : mesh.vertices(e)) {
           Corner ci = mesh.corner(v, f);
           assertx(retrieve_nwid(nn, ci) < 0);
@@ -3774,7 +3774,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       Vertex tv1 = v1, tv2 = v2;
       if (ii == 0) std::swap(tv1, tv2);
       // tv1 is kept, tv2 is lost
-      bool ok = [&] {
+      const bool ok = [&] {
         for (Face f : mesh.faces(e)) {
           Vertex vv = mesh.opp_vertex(e, f);  // side_vertex1|2
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
@@ -3786,7 +3786,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           Face fnei0 = mesh.opp_face(fc, mesh.edge(tv2, vvv));
           Face fnei1 = mesh.opp_face(fc, mesh.edge(vv, vvv));
           Face fnei2 = mesh.opp_face(f, mesh.edge(tv1, vv));
-          if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) return false;  // from lambda
+          if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) return false;  // From lambda.
         }
         // Gather materials adjacent to v1
         Set<int> v1mats;
@@ -3798,11 +3798,11 @@ EcolResult try_ecol(Edge e, bool commit) {
           int imat = f_matid(mesh.face1(ee));
           if (mesh.face2(ee) && f_matid(mesh.face2(ee)) == imat) {
             for (Face f : mesh.faces(v)) {
-              if (f_matid(f) != imat && v1mats.contains(f_matid(f))) return false;  // from lambda
+              if (f_matid(f) != imat && v1mats.contains(f_matid(f))) return false;  // From lambda.
             }
           }
         }
-        return true;  // from lambda
+        return true;  // From lambda.
       }();
       if (!ok) continue;
     }
@@ -3813,18 +3813,17 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (sphericalparam) {
       assertx(minii2);
       // See if new faces are all valid on sphere.
-      bool ok = true;
-      Polygon poly(3);
-      Vertex tv1 = ii == 2 ? v1 : v2;
-      for_int(i, nn.va.num() - 1) {
-        poly[0] = v_sph(nn.va[i]);
-        poly[1] = v_sph(nn.va[i + 1]);
-        poly[2] = v_sph(tv1);
-        if (spherical_triangle_area(poly) >= TAU) {
-          ok = false;
-          break;
+      const bool ok = [&]() {
+        Polygon poly(3);
+        Vertex tv1 = ii == 2 ? v1 : v2;
+        for_int(i, nn.va.num() - 1) {
+          poly[0] = v_sph(nn.va[i]);
+          poly[1] = v_sph(nn.va[i + 1]);
+          poly[2] = v_sph(tv1);
+          if (spherical_triangle_area(poly) >= TAU) return false;
         }
-      }
+        return true;
+      }();
       if (!ok) continue;
     }
     Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);

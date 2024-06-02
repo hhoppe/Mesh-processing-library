@@ -90,8 +90,8 @@ void SparseLls::clear() {
 }
 
 void SparseLls::enter_a_rc(int r, int c, float val) {
-  _rows[r].push(Ival(c, val));
-  _cols[c].push(Ival(r, val));
+  _rows[r].push(Ival{c, val});
+  _cols[c].push(Ival{r, val});
   _nentries++;
 }
 

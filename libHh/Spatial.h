@@ -72,8 +72,6 @@ class BPointSpatial : public Spatial {
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   Univ pq_id(Univ pqe) const override;
   struct Node {
-    Node() = default;
-    Node(Univ pid, const Point* pp) : id(pid), p(pp) {}
     Univ id;
     const Point* p;
   };

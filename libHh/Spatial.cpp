@@ -40,7 +40,7 @@ void BPointSpatial::enter(Univ id, const Point* pp) {
   Ind ci = point_to_indices(*pp);
   assertx(indices_inbounds(ci));
   int en = encode(ci);
-  _map[en].push(Node(id, pp));  // first creates empty Array<Node> if not present
+  _map[en].push(Node{id, pp});  // first creates empty Array<Node> if not present
 }
 
 void BPointSpatial::remove(Univ id, const Point* pp) {

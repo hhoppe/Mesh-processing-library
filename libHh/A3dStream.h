@@ -131,7 +131,6 @@ class RA3dStream : noncopyable {
   virtual ~RA3dStream() = default;
 
  protected:
-  RA3dStream() = default;
   virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0;  // ret success
  private:
   A3dVertexColor _curcol{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
@@ -161,7 +160,6 @@ class WA3dStream : noncopyable {
   virtual ~WA3dStream() = default;
 
  protected:
-  WA3dStream() = default;
   virtual void output(bool binary, char type, const Vec3<float>& f) = 0;
   virtual void output_comment(const string& s) = 0;
   virtual void blank_line() = 0;

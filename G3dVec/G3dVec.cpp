@@ -38,7 +38,6 @@ const ConditionCode k_code_hither = 1, k_code_yonder = 2, k_code_right = 4, k_co
                     k_code_up = 32;
 
 struct DerivedHW : HW {
-  DerivedHW() = default;
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;

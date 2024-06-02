@@ -47,20 +47,15 @@ template <typename T, int D> class Kdtree : noncopyable {
   const int _maxlevel;  // maximum # of subdivision on each axis
   float _fsize{0.f};    // ok to duplicate if average edge length < _fsize
   struct Entry {
-    Entry() = default;
-    Entry(const T& id) : _id(id) {}
-    Entry(T&& id) noexcept : _id(std::move(id)) {}
-    T _id{};
+    T _id;
     SGrid<float, 2, D> _bb{};  // bounding box on entry
   };
   struct Node {
-    Node() = default;
-    Node(int axis, float val) : _axis(axis), _val(val) {}
+    int _axis;            // 0 .. D - 1
+    float _val;
     Stack<int> _stackei;  // Entry indices
     int _l{-1};           // lower-valued subtree
     int _h{-1};           // higher-valued subtree
-    int _axis;            // 0 .. D - 1
-    float _val;
   };
   Array<Entry> _arentry;
   Array<Node> _arnode;
@@ -85,11 +80,11 @@ template <typename T, int D> class Kdtree : noncopyable {
     rec_depth(n._h, stat, depth + 1);
   }
   void enter_i(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) {
-    _arentry.push(Entry(id));
+    _arentry.push(Entry{id});
     enter_aux(bb0, bb1);
   }
   void enter_i(T&& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) {
-    _arentry.push(Entry(std::move(id)));
+    _arentry.push(Entry{std::move(id)});
     enter_aux(bb0, bb1);
   }
   void enter_aux(const Vec<float, D>& bb0, const Vec<float, D>& bb1) {
@@ -111,7 +106,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     const Entry& e = _arentry[ei];
     for (;;) {
       const float val = aval[axis];
-      if (ni == _arnode.num()) _arnode.push(Node(axis, val));
+      if (ni == _arnode.num()) _arnode.push(Node{axis, val});
       if (!axis) {
         if (++level == _maxlevel) break;
         inc *= .5f;

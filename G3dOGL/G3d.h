@@ -81,7 +81,7 @@ struct SelectedFace {
 };
 
 extern int button_active;  // 0=no, 1-3=which button
-struct sselected {
+struct Selected {
   bool shift;
   Vec2<float> yxpressed;  // location button was initially pressed
   Vec2<float> yx;         // current location
@@ -90,7 +90,7 @@ struct sselected {
   std::optional<SelectedVertex> selected_vertex;
   Frame frel;  // for !object_mode, change of axis transform
 };
-extern sselected selected;
+extern Selected selected;
 
 // viewing transforms
 extern Frame tview;  // view offset

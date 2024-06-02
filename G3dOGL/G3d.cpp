@@ -49,7 +49,7 @@ bool spacekill = false;
 bool cur_needs_redraw = false;
 bool prev_needed_redraw = false;
 int button_active = 0;
-struct sselected selected;
+Selected selected;
 Frame tview = Frame::identity();
 float zoom = 1.f;
 bool iostat = false;

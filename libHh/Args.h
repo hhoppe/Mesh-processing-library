@@ -126,9 +126,6 @@ class ParseArgs : public Args {
 
  private:
   struct option {
-    option() = default;
-    option(string pstr, int narg_, PARSE_FUNC parse_func_, void* argp_, string doc_)
-        : str(std::move(pstr)), narg(narg_), parse_func(parse_func_), argp(argp_), doc(std::move(doc_)) {}
     string str;
     int narg;  // Number of arguments; >= 0 if built-in PARSE_FUNC, -1 if PARSE_FUNC, -2 if PARSE_FUNC0.
     PARSE_FUNC parse_func;

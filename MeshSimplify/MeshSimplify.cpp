@@ -620,7 +620,7 @@ bool bad_dihedral(float dihb, float diha) { return diha < gmindih && diha < dihb
 
 constexpr bool use_traditional_dih = true;  // Preferable sometimes, e.g. shark.
 struct Dihedral {
-  float dihb = 0.f;
+  float dihb{0.f};
   Array<Vector> ar_dirs;
 };
 
@@ -4540,8 +4540,10 @@ void parallel_optimize() {
       const EcolResult ecol_result = try_ecol(e, true);
       // Note: Edge e is now undefined.
       assertx(ecol_result.result == R_success);
-      assertx(ecol_result.min_ii == 2);
-      assertx(minii2 && no_fit_geom);
+      if (minqem) {
+        assertx(ecol_result.min_ii == 2);
+        assertx(minii2 && no_fit_geom);
+      }
       // assertx(ecol_result.cost == cost);
       if (abs(ecol_result.cost - cost) / cost > 1e-4f) {
         SHOW(cost, ecol_result.cost - cost);
@@ -4549,7 +4551,13 @@ void parallel_optimize() {
       }
       const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
-      for (const int j : {j_vt})
+      Array<int> ar_j;
+      if (minqem && minii2 && no_fit_geom) {
+        ar_j = {j_vt};
+      } else {
+        ar_j = {0, 1};
+      }
+      for (const int j : ar_j)
         for (Edge ee : invalidations_v1_v2[j]) invalidated_edges.add(ee);
     }
     if (verb >= 2)

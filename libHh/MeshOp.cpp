@@ -20,7 +20,6 @@ namespace hh {
 namespace {
 
 struct hash_edge {
-  explicit hash_edge(const GMesh* mesh) : _mesh(*mesh) {}
   size_t operator()(Edge e) const {
     return _mesh.vertex_id(_mesh.vertex1(e)) + intptr_t{_mesh.vertex_id(_mesh.vertex2(e))} * 76541;
   }
@@ -207,7 +206,7 @@ bool triangulate_face(GMesh& mesh, Face f) {
   for_int(i, nv - 2) mesh.create_face(va[0], va[i + 1], va[i + 2]);
   Set<Vertex> setvr;  // vertices on ring of original face
   for_int(i, nv) setvr.enter(va[i]);
-  hash_edge he(&mesh);
+  hash_edge he{mesh};
   SetEdge sete(he);  // initially, inner edges
   for_intL(i, 2, nv - 1) sete.enter(mesh.edge(va[0], va[i]));
   retriangulate(mesh, sete, true, &setvr, -2, circum_radius_swap_criterion, nullptr, nullptr);
@@ -413,7 +412,7 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
 // *** Retriangulate
 
 int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he(&mesh);
+  hash_edge he{mesh};
   SetEdge sete(he);
   for (Edge e : mesh.edges()) {
     if (!mesh.is_boundary(e)) sete.enter(e);
@@ -422,14 +421,14 @@ int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGE
 }
 
 int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he(&mesh);
+  hash_edge he{mesh};
   SetEdge sete(he);
   sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
 int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he(&mesh);
+  hash_edge he{mesh};
   SetEdge sete(he);
   sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);

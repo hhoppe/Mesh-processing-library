@@ -178,7 +178,7 @@ template <int D, typename T> class CGridView {
     SHOW(u, _dims);
     return false;
   }
-  CGridView() {}
+  CGridView() = default;
   type& operator=(const type&) = default;
 };
 

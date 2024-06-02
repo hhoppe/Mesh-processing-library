@@ -74,8 +74,6 @@ class SparseLls : public Lls {
   void set_verbose(int verb);           // default 0
  private:
   struct Ival {
-    Ival() = default;
-    Ival(int i, float v) : _i(i), _v(v) {}
     int _i;
     float _v;
   };

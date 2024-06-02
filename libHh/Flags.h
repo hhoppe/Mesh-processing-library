@@ -17,7 +17,7 @@ class Flags {
   static constexpr int max_nflags = std::numeric_limits<type>::digits;
 
  public:
-  Flags() {}
+  Flags() = default;
   void operator=(type flags) { _flags = flags; }
   operator type() const { return _flags; }
   type set(type flags) { return std::exchange(_flags, flags); }  // return previous
@@ -40,8 +40,8 @@ class Flag {
     else
       _flags._flags &= ~_fmask;
   }
-  void operator=(const Flag& flag) { *this = bool(flag); }  // for unambiguity in gcc 4.8.2 SurfEd.cpp
-  Flag(const Flag&) = default;                              // hence needed for clang
+  void operator=(const Flag& flag) { *this = bool(flag); }
+  Flag(const Flag&) = default;
   operator bool() const { return (_flags._flags & _fmask) != 0; }
   bool set(bool bset) {  // return previous
     bool t = *this;

@@ -84,7 +84,7 @@ template class Kdtree<double, 3>;
 
 using U = unique_ptr<int>;
 // Override illegal definitions for U:
-template <> Kdtree<U, 2>::Entry::Entry(const U&) {}
+template <> void Kdtree<U, 2>::enter_i(const U&, const Vec<float, 2>&, const Vec<float, 2>&) {}
 template <> void Kdtree<U, 2>::rec_print(int, int) const {}
 template class Kdtree<U, 2>;
 

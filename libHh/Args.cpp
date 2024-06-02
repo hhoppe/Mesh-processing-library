@@ -164,65 +164,65 @@ ParseArgs::ParseArgs(CArrayView<string> aargs, string name) : _name(std::move(na
 void ParseArgs::common_construction() {
   _argv0 = get_canonical_path(_argv0);
   if (_argv0 != "") {
-    iadd(option("-?", 0, &ParseArgs::fquestion, nullptr, ": print available options (also --help, --version)"));
-    iadd(option("--help", 0, &ParseArgs::fquestion, nullptr, ": (<unlisted>) show help"));
-    iadd(option("--version", 0, &ParseArgs::fversion, nullptr, ": (<unlisted>) show version"));
+    iadd(option{"-?", 0, &ParseArgs::fquestion, nullptr, ": print available options (also --help, --version)"});
+    iadd(option{"--help", 0, &ParseArgs::fquestion, nullptr, ": (<unlisted>) show help"});
+    iadd(option{"--version", 0, &ParseArgs::fversion, nullptr, ": (<unlisted>) show version"});
   }
 }
 
 void ParseArgs::f(string str, bool& arg, string doc) {
   if (arg) assertnever("ParseArgs: flag '" + str + "' should not already be set");
-  iadd(option(std::move(str), 0, &ParseArgs::fbool, &arg, std::move(doc)));
+  iadd(option{std::move(str), 0, &ParseArgs::fbool, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, bool& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::fbool, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::fbool, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, char& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::fchar, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::fchar, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, int& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::fint, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::fint, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, float& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::ffloat, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::ffloat, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, double& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::fdouble, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::fdouble, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, string& arg, string doc) {
-  iadd(option(std::move(str), 1, &ParseArgs::fstring, &arg, std::move(doc)));
+  iadd(option{std::move(str), 1, &ParseArgs::fstring, &arg, std::move(doc)});
 }
 
 void ParseArgs::p(string str, int* argp, int narg, string doc) {
   assertx(narg > 0);
-  iadd(option(std::move(str), narg, &ParseArgs::fint, argp, std::move(doc)));
+  iadd(option{std::move(str), narg, &ParseArgs::fint, argp, std::move(doc)});
 }
 
 void ParseArgs::p(string str, float* argp, int narg, string doc) {
   assertx(narg > 0);
-  iadd(option(std::move(str), narg, &ParseArgs::ffloat, argp, std::move(doc)));
+  iadd(option{std::move(str), narg, &ParseArgs::ffloat, argp, std::move(doc)});
 }
 
 void ParseArgs::p(string str, double* argp, int narg, string doc) {
   assertx(narg > 0);
-  iadd(option(std::move(str), narg, &ParseArgs::fdouble, argp, std::move(doc)));
+  iadd(option{std::move(str), narg, &ParseArgs::fdouble, argp, std::move(doc)});
 }
 
-void ParseArgs::c(string str, string doc) { iadd(option(std::move(str), 0, nullptr, nullptr, std::move(doc))); }
+void ParseArgs::c(string str, string doc) { iadd(option{std::move(str), 0, nullptr, nullptr, std::move(doc)}); }
 
 void ParseArgs::p(string str, PARSE_FUNC parse_func, string doc) {
-  iadd(option(std::move(str), -1, parse_func, nullptr, std::move(doc)));
+  iadd(option{std::move(str), -1, parse_func, nullptr, std::move(doc)});
 }
 
 void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
   using voidp = void*;
-  iadd(option(std::move(str), -2, PARSE_FUNC(voidp(parse_func0)), nullptr, std::move(doc)));
+  iadd(option{std::move(str), -2, PARSE_FUNC(voidp(parse_func0)), nullptr, std::move(doc)});
 }
 
 bool ParseArgs::special_arg(const string& s) {

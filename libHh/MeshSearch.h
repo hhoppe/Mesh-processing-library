@@ -66,6 +66,7 @@ class MeshSearch {
     bool allow_off_surface{false};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
+
   struct Result {
     Face f;
     Bary bary;
@@ -73,6 +74,7 @@ class MeshSearch {
     float d2;
   };
   Result search(const Point& p, Face hintf) const;
+
   const GMesh& mesh() const { return _mesh; }
 
  private:

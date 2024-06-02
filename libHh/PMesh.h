@@ -271,6 +271,7 @@ class AWMesh : public WMesh {
   // Rendering using OpenGL
   Array<Pixel> _ogl_mat_byte_rgba;  // size is _materials.num()
   void ogl_process_materials();
+
   struct VF_range : PArray<int, 10> {
     VF_range(const AWMesh& mesh, int v, int f) {
       int ff = f, lastf, stopf;
@@ -292,6 +293,7 @@ class AWMesh : public WMesh {
       }
     }
   };
+
   struct VV_range : PArray<std::pair<int, int>, 10> {
     VV_range(const AWMesh& mesh, int v, int f) {
       int ff = f, lastf;

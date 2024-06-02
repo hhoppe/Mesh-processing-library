@@ -22,13 +22,13 @@ struct WavHeader {
   uint32_t ChunkSize;
   Vec4<char> Format{'W', 'A', 'V', 'E'};
   Vec4<char> Subcheck1ID{'f', 'm', 't', ' '};
-  uint32_t Subchunk1Size = 16;  // for PCM
-  uint16_t AudioFormat = 3;     // 1 == PCM, 3 == float
+  uint32_t Subchunk1Size{16};  // for PCM
+  uint16_t AudioFormat{3};     // 1 == PCM, 3 == float
   uint16_t NumChannels;
   uint32_t SampleRate;
   uint32_t ByteRate;
   uint16_t BlockAlign;
-  uint16_t BitsPerSample = sizeof(float) * 8;
+  uint16_t BitsPerSample{sizeof(float) * 8};
   Vec4<char> Subchunk2ID{'d', 'a', 't', 'a'};
   uint32_t Subchunk2Size;
 };

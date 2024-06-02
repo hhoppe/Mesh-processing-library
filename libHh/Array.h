@@ -85,7 +85,7 @@ template <typename T> class CArrayView {
   bool check(int i, int s) const;
   T* _a{nullptr};
   int _n{0};
-  CArrayView() {}
+  CArrayView() = default;
   type& operator=(const type&) = default;
 };
 

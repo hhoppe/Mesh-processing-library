@@ -319,7 +319,9 @@ class Mesh : noncopyable {
 
  private:
   friend class GMesh;
+
   // Mesh Iter
+
   class Edges_iterator {
     using type = Edges_iterator;
 
@@ -365,27 +367,38 @@ class Mesh : noncopyable {
       _hcur = _hend = nullptr;  // no element found
     }
   };
+
   struct Edges_range {
     Edges_range(const Mesh& m) : _m(m) {}
     Edges_iterator begin() const { return Edges_iterator(_m, true); }
     Edges_iterator end() const { return Edges_iterator(_m, false); }
+
+   private:
     const Mesh& _m;
   };
+
   struct OrderedVertices_range {
     using Container = Array<Vertex>;
     OrderedVertices_range(const Mesh& mesh);
     Container::iterator begin() const { return const_cast<Container&>(_vertices).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_vertices).end(); }
+
+   private:
     Container _vertices;
   };
+
   struct OrderedFaces_range {
     using Container = Array<Face>;
     OrderedFaces_range(const Mesh& mesh);
     Container::iterator begin() const { return const_cast<Container&>(_faces).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_faces).end(); }
+
+   private:
     Container _faces;
   };
+
   // Vertex Iter
+
   class VV_iterator {
     using type = VV_iterator;
 
@@ -413,12 +426,16 @@ class Mesh : noncopyable {
     CArrayView<HEdge>::iterator _it;
     Vertex _extrav{nullptr};
   };
+
   struct VV_range {
     VV_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VV_iterator begin() const { return VV_iterator(_ar.begin()); }
     VV_iterator end() const { return VV_iterator(_ar.end()); }
+
+   private:
     CArrayView<HEdge> _ar;
   };
+
   class VF_iterator {
     using type = VF_iterator;
 
@@ -440,12 +457,16 @@ class Mesh : noncopyable {
    private:
     CArrayView<HEdge>::iterator _it;
   };
+
   struct VF_range {
     VF_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VF_iterator begin() const { return VF_iterator(_ar.begin()); }
     VF_iterator end() const { return VF_iterator(_ar.end()); }
+
+   private:
     CArrayView<HEdge> _ar;
   };
+
   class VE_iterator {
     using type = VE_iterator;
 
@@ -473,12 +494,16 @@ class Mesh : noncopyable {
     CArrayView<HEdge>::iterator _it;
     Edge _extrae{nullptr};
   };
+
   struct VE_range {
     VE_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VE_iterator begin() const { return VE_iterator(_ar.begin()); }
     VE_iterator end() const { return VE_iterator(_ar.end()); }
+
+   private:
     CArrayView<HEdge> _ar;
   };
+
   class VC_iterator {
     using type = VC_iterator;
 
@@ -500,13 +525,18 @@ class Mesh : noncopyable {
    private:
     CArrayView<HEdge>::iterator _it;
   };
+
   struct VC_range {
     VC_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VC_iterator begin() const { return VC_iterator(_ar.begin()); }
     VC_iterator end() const { return VC_iterator(_ar.end()); }
+
+   private:
     CArrayView<HEdge> _ar;
   };
+
   // Face Iter
+
   class FV_iterator {
     using type = FV_iterator;
 
@@ -530,12 +560,16 @@ class Mesh : noncopyable {
     HEdge _it;
     bool _beg;
   };
+
   struct FV_range {
     FV_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FV_iterator begin() const { return FV_iterator(_herep, true); }
     FV_iterator end() const { return FV_iterator(_herep, false); }
+
+   private:
     HEdge _herep;
   };
+
   class FF_iterator {
     using type = FF_iterator;
 
@@ -573,12 +607,16 @@ class Mesh : noncopyable {
     HEdge _it;
     bool _beg;
   };
+
   struct FF_range {
     FF_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FF_iterator begin() const { return FF_iterator(_herep, true); }
     FF_iterator end() const { return FF_iterator(_herep, false); }
+
+   private:
     HEdge _herep;
   };
+
   class FE_iterator {
     using type = FE_iterator;
 
@@ -602,12 +640,16 @@ class Mesh : noncopyable {
     HEdge _it;
     bool _beg;
   };
+
   struct FE_range {
     FE_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FE_iterator begin() const { return FE_iterator(_herep, true); }
     FE_iterator end() const { return FE_iterator(_herep, false); }
+
+   private:
     HEdge _herep;
   };
+
   class FC_iterator {
     using type = FC_iterator;
 
@@ -631,13 +673,18 @@ class Mesh : noncopyable {
     HEdge _it;
     bool _beg;
   };
+
   struct FC_range {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FC_iterator begin() const { return FC_iterator(_herep, true); }
     FC_iterator end() const { return FC_iterator(_herep, false); }
+
+   private:
     HEdge _herep;
   };
+
   // Edge Iter
+
   struct EV_range : Vec2<Vertex> {  // always 2 vertices
     EV_range(const Mesh& m, Edge e) {
       HEdge he = m.herep(e);
@@ -645,6 +692,7 @@ class Mesh : noncopyable {
       (*this)[1] = he->_prev->_vert;
     }
   };
+
   struct EF_range : PArray<Face, 2> {  // 0 or 1 face
     EF_range(const Mesh& m, Edge e) {
       HEdge he = m.herep(e);
@@ -652,8 +700,8 @@ class Mesh : noncopyable {
       if (he->_sym) push(he->_sym->_face);
     }
   };
-  // ccw Vertex Iter
-  struct WV_range : PArray<Vertex, 10> {
+
+  struct WV_range : PArray<Vertex, 10> {  // ccw Vertex Iter
     WV_range(const Mesh& m, Vertex v) {
       HEdge he = m.most_clw_hedge(v), hef = he;  // return HEdges pointing to v
       while (he) {
@@ -664,6 +712,7 @@ class Mesh : noncopyable {
       }
     }
   };
+
   struct WF_range : PArray<Face, 10> {
     WF_range(const Mesh& m, Vertex v) {
       HEdge he = m.most_clw_hedge(v), hef = he;
@@ -674,6 +723,7 @@ class Mesh : noncopyable {
       }
     }
   };
+
   struct WE_range : PArray<Edge, 10> {
     WE_range(const Mesh& m, Vertex v) {
       HEdge he = m.most_clw_hedge(v), hef = he;
@@ -685,6 +735,7 @@ class Mesh : noncopyable {
       }
     }
   };
+
   struct WC_range : PArray<Corner, 10> {
     WC_range(const Mesh& m, Vertex v) {
       HEdge he = m.most_clw_hedge(v), hef = he;
@@ -705,6 +756,7 @@ class Mesh : noncopyable {
     HH_MAKE_POOLED_SAC(Mesh::MEdge);  // must be last entry of class!
     friend std::ostream& operator<<(std::ostream& os, Edge e);
   };
+
   struct MVertex {
     PArray<HEdge, 8> _arhe;  // hedges he such that he->_prev->_vert == this
     int _id;
@@ -715,6 +767,7 @@ class Mesh : noncopyable {
     HH_MAKE_POOLED_SAC(Mesh::MVertex);  // must be last entry of class!
     friend std::ostream& operator<<(std::ostream& os, Vertex v);
   };
+
   struct MFace {
     HEdge _herep;
     int _id;
@@ -724,6 +777,7 @@ class Mesh : noncopyable {
     HH_MAKE_POOLED_SAC(MFace);  // must be last entry of class!
     friend std::ostream& operator<<(std::ostream& os, Face f);
   };
+
   struct MHEdge {
     HEdge _prev;   // previous HEdge in ring around face
     HEdge _next;   // next HEdge in ring around face

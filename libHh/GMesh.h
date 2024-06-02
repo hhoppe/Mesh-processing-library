@@ -36,7 +36,7 @@ struct A3dVertexColor;
 class GMesh : public Mesh {
  public:
   GMesh() = default;
-  GMesh(GMesh&& m) noexcept { swap(*this, m); }  // = default?
+  GMesh(GMesh&& m) noexcept { swap(*this, m); }
   explicit GMesh(std::istream& is);
   ~GMesh() override = default;
   GMesh& operator=(GMesh&& m) noexcept {

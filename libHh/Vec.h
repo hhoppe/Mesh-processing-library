@@ -39,7 +39,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   void assign(CArrayView<T> ar) { assign_i(ar); }
   constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
   bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
-  bool in_range(const type& uL, const type& uU) const;  // true if uL[c] <= [c] < uU[c] for all c in [0, n - 1]
+  bool in_range(const type& uL, const type& uU) const;  // Return true if uL[c] <= [c] < uU[c] for all c in [0, n - 1].
   // type with(int i, const T& e) const& { type ar(*this); ar[i] = e; return ar; }
   type with(int i, T e) const& {
     type ar(*this);
@@ -60,15 +60,15 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   ArrayView<T> view() { return ArrayView<T>(a(), n); }
   CArrayView<T> view() const { return CArrayView<T>(a(), n); }
   CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
-  template <int s> Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2)
+  template <int s> Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2).
   template <int s> const Vec<T, s>& head() const { return segment<s>(0); }
   ArrayView<T> head(int s) { return segment(0, s); }
   CArrayView<T> head(int s) const { return segment(0, s); }
-  template <int s> Vec<T, s>& tail() { return segment<s>(n - s); }  // V(1, 2, 3).tail<2>() == V(2, 3)
+  template <int s> Vec<T, s>& tail() { return segment<s>(n - s); }  // V(1, 2, 3).tail<2>() == V(2, 3).
   template <int s> const Vec<T, s>& tail() const { return segment<s>(n - s); }
   ArrayView<T> tail(int s) { return segment(n - s, s); }
   CArrayView<T> tail(int s) const { return segment(n - s, s); }
-  template <int i, int s> Vec<T, s>& segment() {  // V(1, 2, 3, 4).segment<2, 1> == V(2, 3)
+  template <int i, int s> Vec<T, s>& segment() {  // V(1, 2, 3, 4).segment<2, 1> == V(2, 3).
     static_assert(i >= 0 && s >= 0 && i + s <= n);
     return *reinterpret_cast<Vec<T, s>*>(a() + i);
   }
@@ -76,7 +76,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
     static_assert(i >= 0 && s >= 0 && i + s <= n);
     return *reinterpret_cast<const Vec<T, s>*>(a() + i);
   }
-  template <int s> Vec<T, s>& segment(int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3)
+  template <int s> Vec<T, s>& segment(int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3).
     static_assert(s >= 0 && s <= n);
     ASSERTXX(check(i, s));
     return *reinterpret_cast<Vec<T, s>*>(a() + i);
@@ -156,7 +156,7 @@ template <typename T, int n> class Vec : details::Vec_base<T, n> {
   // Default operator=() and copy_constructor are safe.
 };
 
-template <typename T, int n> using SArray = Vec<T, n>;  // backwards compatibility
+template <typename T, int n> using SArray = Vec<T, n>;  // Backwards compatibility.
 template <typename T> using Vec0 = Vec<T, 0>;
 template <typename T> using Vec1 = Vec<T, 1>;
 template <typename T> using Vec2 = Vec<T, 2>;
@@ -290,7 +290,7 @@ template <typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> 
 
 namespace details {
 
-template <typename T, int n> struct Vec_base {  // allocates a member variable only if n > 0.
+template <typename T, int n> struct Vec_base {  // Allocates a member variable only if n > 0.
   Vec_base() = default;
   template <typename... Args> constexpr Vec_base(void*, Args&&... args) noexcept : _a{std::forward<Args>(args)...} {
     static_assert(sizeof...(args) == n, "#args");
@@ -299,7 +299,7 @@ template <typename T, int n> struct Vec_base {  // allocates a member variable o
   T* a() noexcept { return &_a[0]; }
   const T* a() const noexcept { return &_a[0]; }
   T& operator[](int i) { return _a[i]; }
-  constexpr const T& operator[](int i) const { return _a[i]; }  // operator[] needed for constexpr
+  constexpr const T& operator[](int i) const { return _a[i]; }
 };
 
 template <typename T> struct Vec_base<T, 0> {
@@ -334,7 +334,7 @@ template <int D> class Vec_iterator {
     dummy_use(rhs);
     ASSERTXX(rhs._uU == _uU);
     ASSERTXX(rhs._u[0] == _uU[0]);
-    return _u[0] < _uU[0];  // quick check against usual end()
+    return _u[0] < _uU[0];  // Quick check against usual end().
   }
   const Vec<int, D>& operator*() const { return (ASSERTX(_u[0] < _uU[0]), _u); }
   type& operator++() {
@@ -343,13 +343,13 @@ template <int D> class Vec_iterator {
     if (D == 1) {
       _u[0]++;
       return *this;
-    } else if (D == 2) {  // else VC12 does not unroll this tiny loop
+    } else if (D == 2) {  // Else VC12 does not unroll this tiny loop.
       if (++_u[1] < _uU[1]) return *this;
       _u[1] = 0;
       ++_u[0];
       return *this;
     } else {
-      int c = D - 1;  // here to avoid warning about loop condition in VC14 code analysis
+      int c = D - 1;  // Here to avoid warning about loop condition in VC14 code analysis.
       for (; c > 0; --c) {
         if (++_u[c] < _uU[c]) return *this;
         _u[c] = 0;
@@ -389,7 +389,7 @@ template <int D> class VecL_iterator {
   bool operator!=(const type& rhs) const {
     ASSERTX(rhs._uU == _uU);
     ASSERTX(rhs._u[0] == _uU[0]);
-    return _u[0] < _uU[0];  // quick check against usual end()
+    return _u[0] < _uU[0];  // Quick check against usual end().
   }
   const Vec<int, D>& operator*() const { return (ASSERTX(_u[0] < _uU[0]), _u); }
   type& operator++() {
@@ -435,9 +435,16 @@ template <int D> details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<i
 }
 
 // Backwards compatibility; deprecated.
-template <int D> details::Vec_range<D> coords(const Vec<int, D>& uU) { return range(uU); }
+template <int D> [[deprecated("Use for_coords() instead")]] details::Vec_range<D> coords(const Vec<int, D>& uU) {
+  return range(uU);
+}
+
 // Backwards compatibility; deprecated.
-template <int D> details::VecL_range<D> coordsL(const Vec<int, D>& uL, const Vec<int, D>& uU) { return range(uL, uU); }
+template <int D>
+[[deprecated("Use for_coordsL() instead")]] details::VecL_range<D> coordsL(const Vec<int, D>& uL,
+                                                                           const Vec<int, D>& uU) {
+  return range(uL, uU);
+}
 
 //----------------------------------------------------------------------------
 
@@ -483,7 +490,7 @@ Vec<RT, n> operator+(const Vec<T, n>& a1, const Vec<T2, n>& a2) {
 
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
-// See also floor(), ceil(), abs() generalized to Vec<> in MathOp.h
+// See also floor(), ceil(), abs() generalized to Vec<> in MathOp.h.
 #define TT template <typename T, int n>
 #define G Vec<T, n>
 #define F for_int(i, n)

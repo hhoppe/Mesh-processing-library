@@ -26,7 +26,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   static constexpr int D = 1 + sizeof...(od);
   static constexpr size_t vol = details::SGrid_vol<d0, od...>::value;
   using type = SGrid<T, d0, od...>;
-  using slice = typename details::SGrid_sslice<T, d0, od...>::type;  // slice as Vec
+  using slice = typename details::SGrid_sslice<T, d0, od...>::type;  // Slice as Vec.
   using base = Vec<slice, d0>;
   using initializer_type = details::nested_initializer_list_t<D, T>;
   using nested_retrieve = details::nested_list_retrieve<D, T>;
@@ -34,7 +34,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
  public:
   SGrid() = default;
   SGrid(const type&) = default;
-  SGrid(initializer_type l) { *this = l; }  // not constexpr, instead use = V(V(), V(), ...)
+  SGrid(initializer_type l) { *this = l; }  // Not constexpr, instead use = V(V(), V(), ...).
   constexpr explicit SGrid(const base& g) : base(g) {}
   constexpr SGrid(base&& g) : base(std::move(g)) {}
   SGrid(CGridView<D, T> g) { *this = g; }
@@ -182,7 +182,7 @@ TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f / 3.f, float f
   G g; F { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
-  // Vec3<float> == Bary;   may have bary[0] + bary[1] + bary[2] != 1.f
+  // Vec3<float> == Bary;   May have bary[0] + bary[1] + bary[2] != 1.f.
   G g; F { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); } return g;
 }
 

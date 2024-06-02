@@ -18,7 +18,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   static constexpr int max_unroll = 4;
 
  public:
-  VectorF() = default;  // was: { fill(0.f); }
+  VectorF() = default;  // Was: { fill(0.f); }.
   explicit VectorF(float v) { fill(v); }
   VectorF(const VectorF<n>&) = default;
   constexpr int num() const { return n; }
@@ -34,14 +34,14 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(j, m) for_int(c, 4) { *pDst++ = a()[j][c]; }
     for_int(k, p) { *pDst++ = b()[k]; }
   }
-  void load_aligned(const float* pSrc) {  // must be 16-aligned
+  void load_aligned(const float* pSrc) {  // Must be 16-aligned.
     for_int(j, m) {
       a()[j].load_aligned(pSrc);
       pSrc += 4;
     }
     for_int(k, p) b()[k] = *pSrc++;
   }
-  void store_aligned(float* pDst) const {  // must be 16-aligned
+  void store_aligned(float* pDst) const {  // Must be 16-aligned.
     for_int(j, m) {
       a()[j].store_aligned(pDst);
       pDst += 4;
@@ -156,7 +156,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     return sum1;
   }
 #if !(defined(_M_X64) || defined(__x86_64))
-  // "new type[size]" does not create aligned storage -- problem for Vector4 in 32-bit model
+  // Note that "new type[size]" does not create aligned storage -- problem for Vector4 in 32-bit model.
   static void* operator new(size_t s) { return aligned_malloc(alignof(type), s); }
   static void operator delete(void* pp, size_t) { aligned_free(pp); }
   static void* operator new[](size_t s) { return aligned_malloc(alignof(type), s); }

@@ -4,7 +4,7 @@
 
 #include "libHh/Vector4.h"
 
-// SSE4.1: _mm_cvtepu8_epi32(), _mm_mullo_epi32()
+// SSE4.1: _mm_cvtepu8_epi32(), _mm_mullo_epi32().
 
 namespace hh {
 
@@ -13,7 +13,7 @@ class Vector4i {
   using type = Vector4i;
 
  public:
-  Vector4i() = default;  // could be: { fill(0); }
+  Vector4i() = default;  // Could be: { fill(0); }.
   explicit Vector4i(int j) { fill(j); }
   int& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
   const int& operator[](int i) const { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
@@ -37,22 +37,22 @@ class Vector4i {
   static bool ok(int i) { return i >= 0 && i < 4; }
 #if defined(HH_VECTOR4_SSE)
   Vector4i(const Vector4i& v) : _r(v._r) {}
-  Vector4i(int x, int y, int z, int w) { _r = _mm_set_epi32(w, z, y, x); }  // note reverse ordering
+  Vector4i(int x, int y, int z, int w) { _r = _mm_set_epi32(w, z, y, x); }  // Note reverse ordering.
   explicit Vector4i(const Pixel& pix) {
 #if defined(HH_NO_SSE41)
     for_int(c, 4) _c[c] = pix[c];
 #else
     __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pix));
-    // same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pix.data())));
-    _r = _mm_cvtepu8_epi32(in);          // expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
+    // Same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pix.data())));
+    _r = _mm_cvtepu8_epi32(in);          // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
 #endif
   }
   Pixel pixel() const {
     Pixel pix;
-    __m128i t2 = _mm_packs_epi32(_r, _r);   // 8 signed 32-bit -> 8 signed 16-bit (saturation)
-    __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation)
+    __m128i t2 = _mm_packs_epi32(_r, _r);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
+    __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
     reinterpret_cast<int&>(pix) = _mm_cvtsi128_si32(t3);
-    // worse: _mm_store_ss(reinterpret_cast<float*>(pix.data()), _mm_castsi128_ps(t3));
+    // Worse: _mm_store_ss(reinterpret_cast<float*>(pix.data()), _mm_castsi128_ps(t3));
     return pix;
   }
   void load_unaligned(const int* pSrc) { _r = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pSrc)); }
@@ -104,7 +104,7 @@ class Vector4i {
   friend Vector4i abs(const Vector4i& l) { return _mm_abs_epi32(l._r); }
 #endif
 #if !(defined(_M_X64) || defined(__x86_64))
-  // "new type[size]" does not create aligned storage -- problem for Vector4i in 32-bit model
+  // Note that "new type[size]" does not create aligned storage -- problem for Vector4i in 32-bit model.
   static void* operator new(size_t s) { return aligned_malloc(alignof(type), s); }
   static void operator delete(void* p, size_t) { aligned_free(p); }
   static void* operator new[](size_t s) { return aligned_malloc(alignof(type), s); }
@@ -181,7 +181,7 @@ class Vector4i {
     int _c[4];
   };
 
-#else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
+#else   // Neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON).
   Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }

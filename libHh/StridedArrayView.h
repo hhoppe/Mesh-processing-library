@@ -147,12 +147,12 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
 template <typename T> std::ostream& operator<<(std::ostream& os, CStridedArrayView<T> a) {
   os << "StridedArray<" << type_name<T>() << ">(" << a.num() << ") {\n";
   for_int(i, a.num()) {
-    os << "  " << a[i] << (has_ostream_eol<T>() ? "" : "\n");  // skip linefeed if already printed
+    os << "  " << a[i] << (has_ostream_eol<T>() ? "" : "\n");  // Skip linefeed if already printed.
   }
   return os << "}\n";
 }
 template <typename T> HH_DECLARE_OSTREAM_EOL(CStridedArrayView<T>);
-template <typename T> HH_DECLARE_OSTREAM_EOL(StridedArrayView<T>);  // implemented by CStridedArrayView<T>
+template <typename T> HH_DECLARE_OSTREAM_EOL(StridedArrayView<T>);  // Implemented by CStridedArrayView<T>.
 
 }  // namespace hh
 

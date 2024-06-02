@@ -30,7 +30,7 @@ namespace hh {
 enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefined };
 
 // Convert a string ("reflected", "periodic", "clamped", "border", "101reflected") to a boundary rule by examining
-// first letter.
+// its first letter.
 Bndrule parse_boundaryrule(const string& s);
 
 // Convert a boundary rule to a string.
@@ -40,7 +40,7 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
 }
 
-// Modify index i to be within domain [0, n-1] using boundary rule; ret false if bndrule == Border and i is outside.
+// Modify index i to be within domain [0, n-1] using boundary rule; return false if bndrule == Border and i is outside.
 bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
 
 // View of a variable-sized 1D array with constant data of type T; e.g. refers to a const C-array,
@@ -52,9 +52,9 @@ template <typename T> class CArrayView {
   explicit CArrayView(const T* a, int n) : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n >= 0); }
   CArrayView(const type& a) = default;
   CArrayView(std::initializer_list<T> l) : CArrayView(l.begin(), narrow_cast<int>(l.size())) {}
-  template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // for: const T a[n];
-  template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // for: T a[n];
-  // template<int n> CArrayView(const Vec<T, n>&);  // implemented as conversion operator in Vec
+  template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // For: const T a[n];
+  template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
+  // template<int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
   template <typename T2> friend bool same_size(type ar1, CArrayView<T2> ar2) { return ar1.num() == ar2.num(); }
   void reinit(type a) { *this = a; }
   int num() const { return _n; }
@@ -63,11 +63,11 @@ template <typename T> class CArrayView {
   const T& last() const { return (*this)[_n - 1]; }
   bool ok(int i) const { return i >= 0 && i < _n; }
   bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
-  bool map_inside(int& i, Bndrule bndrule) const;  // ret: false if bndrule == Border and i is outside
+  bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
   const T& inside(int i, Bndrule bndrule) const { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
   const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   bool contains(const T& e) const;
-  int index(const T& e) const;  // or -1 if not found
+  int index(const T& e) const;  // Return -1 if not found.
   bool operator==(type rhs) const;
   bool operator!=(type rhs) const { return !(*this == rhs); }
   type head(int n) const { return segment(0, n); }
@@ -97,9 +97,9 @@ template <typename T> class ArrayView : public CArrayView<T> {
 
  public:
   explicit ArrayView(T* a, int n) : base(a, n) {}
-  template <size_t n> ArrayView(T (&a)[n]) : base(a, n) {}  // for: T a[n];
-  ArrayView(const type&) = default;                         // because it has explicit copy assignment
-  // template<int n> ArrayView(Vec<T, n>&);  // implemented as conversion operator in Vec
+  template <size_t n> ArrayView(T (&a)[n]) : base(a, n) {}  // For: T a[n];
+  ArrayView(const type&) = default;                         // Because it has explicit copy assignment.
+  // template<int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template<size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
@@ -208,18 +208,18 @@ template <typename T> class Array : public ArrayView<T> {
       _a = nullptr, _n = 0, _cap = 0;
     }
   }
-  void init(int n);  // allocate n, DISCARD old values if too small
+  void init(int n);  // Allocate n, DISCARD old values if too small.
   void init(int n, const T& v) {
     init(n);
     for_int(i, n) _a[i] = v;
   }
-  void resize(int n) {  // allocate n, RETAIN old values (using move if too small)
+  void resize(int n) {  // Allocate n, RETAIN old values (using move if too small).
     ASSERTX(n >= 0);
     if (n > _cap) grow_to_at_least(n);
     _n = n;
   }
-  void access(int i);  // allocate at least i + 1, RETAIN old values (using move if too small)
-  int add(int n) {     // ret: prev num
+  void access(int i);  // Allocate at least i + 1, RETAIN old values (using move if too small).
+  int add(int n) {     // Return: previous num().
     ASSERTX(n >= 0);
     int t = _n;
     resize(_n + n);
@@ -241,8 +241,8 @@ template <typename T> class Array : public ArrayView<T> {
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
   void erase(T* b, T* e) { erase(narrow_cast<int>(b - base::begin()), narrow_cast<int>(e - b)); }
-  bool remove_ordered(const T& e);    // ret: was there
-  bool remove_unordered(const T& e);  // ret: was there
+  bool remove_ordered(const T& e);    // Return: was there.
+  bool remove_unordered(const T& e);  // Return: was there.
   T pop() {
     ASSERTX(_n);
     T e = std::move(_a[_n - 1]);
@@ -250,7 +250,7 @@ template <typename T> class Array : public ArrayView<T> {
     return e;
   }
   type pop(int n);
-  void push(const T& e) {  // avoid a.push(a[..])!
+  void push(const T& e) {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
   }
@@ -297,7 +297,7 @@ template <typename T> class Array : public ArrayView<T> {
   bool operator!=(CArrayView<T> rhs) const { return !(*this == rhs); }
   bool operator==(const type& rhs) const { return _n == rhs.num() && static_cast<const CArrayView<T>&>(*this) == rhs; }
   bool operator!=(const type& rhs) const { return !(*this == rhs); }
-  // iterator is inherited from ArrayView
+  // Note that Array iterator is inherited from ArrayView.
  private:
   using base::_a;
   using base::_n;
@@ -312,11 +312,11 @@ template <typename T> class Array : public ArrayView<T> {
     for_intL(j, i, _n - n) _a[j] = std::move(_a[j + n]);
     sub(n);
   }
-  using base::reinit;                   // hide it
-  type& operator+=(const T&) = delete;  // dangerous because ambiguous (push() or add to all elements)
+  using base::reinit;                   // Hide it.
+  type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
 };
 
-// See also Vec.h, PArray.h, and Matrix.h
+// See also Vec.h, PArray.h, and Matrix.h.
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, typename Func> auto map(CArrayView<T> c, Func func) {
@@ -463,7 +463,7 @@ template <typename T> void ArrayView<T>::assign(base ar) {
   if (ar.data() == data()) return;
   // for_int(i, _n) _a[i] = ar[i];
   // std::memcpy() would be unsafe here for general T.
-  // std::copy() and std::move() perform std::memmove() if std::is_trivially_copyable_v<T>
+  // std::copy() and std::move() perform std::memmove() if std::is_trivially_copyable_v<T>;
   //  see https://stackoverflow.com/questions/17625635/moving-an-object-in-memory-using-stdmemcpy
   // Some C++ standard libraries are unhappy if _a is nullptr even when ar.begin() == ar.end();
   //  see https://stackoverflow.com/questions/19480609/
@@ -542,17 +542,17 @@ template <typename T> Array<T> Array<T>::pop(int n) {
 template <typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a) {
   os << "Array<" << type_name<T>() << ">(" << a.num() << ") {\n";
   for_int(i, a.num()) {
-    os << "  " << a[i] << (has_ostream_eol<T>() ? "" : "\n");  // skip linefeed if already printed
+    os << "  " << a[i] << (has_ostream_eol<T>() ? "" : "\n");  // Skip linefeed if already printed.
   }
   return os << "}\n";
 }
 template <typename T> HH_DECLARE_OSTREAM_EOL(CArrayView<T>);
-template <typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>);  // implemented by CArrayView<T>
-template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // implemented by CArrayView<T>
+template <typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>);  // Implemented by CArrayView<T>.
+template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // Implemented by CArrayView<T>.
 
 //----------------------------------------------------------------------------
 
-// Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h
+// Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <typename T>
 #define G Array<T>
@@ -603,7 +603,7 @@ TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
   ASSERTX(same_size(g1, g2) && same_size(g1, g3));
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // avoid dependency on Vec
+// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Avoid dependency on Vec.
 
 // clang-format on
 #undef F

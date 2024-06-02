@@ -8,10 +8,10 @@
 
 #if 0
 {
-  Grid<2, int> grid(V(20, 10), -1);        // dimensions (ny = 20, nx = 10), and optional initial value
-  int y, x;                                // individual coordinates
-  Vec2<int> u = V(y, x);                   // array of coordinates (in Big Endian order)
-  size_t i = ravel_index(grid.dims(), u);  // index into "vectorized" flat view of grid
+  Grid<2, int> grid(V(20, 10), -1);        // Dimensions (ny = 20, nx = 10), and optional initial value.
+  int y, x;                                // Individual coordinates.
+  Vec2<int> u = V(y, x);                   // Array of coordinates (in Big Endian order).
+  size_t i = ravel_index(grid.dims(), u);  // Index into "vectorized" flat view of grid.
   assertx(&grid[y][x] == &grid[u]);
   assertx(&grid(y, x) == &grid[u]);
   assertx(&grid.flat(i) == &grid[u]);
@@ -22,10 +22,10 @@
   grid(18, 6) = 2;
   grid[{18, 7}] = 3;
   grid.flat(ravel_index(grid.dims(), V(18, 8))) = 4;
-  for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y][x] *= 2;  // iterate using individual coordinates
-  for (const auto& u : range(grid.dims())) grid[u] *= 2;            // iterate using array of coordinate indices
-  for_size_t(i, grid.size()) grid.flat(i) *= 2;                     // iterate using raster order (fastest)
-  for (auto& e : grid) e *= 2;                                      // iterate over elements (also fastest)
+  for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y][x] *= 2;  // Iterate using individual coordinates.
+  for (const auto& u : range(grid.dims())) grid[u] *= 2;            // Iterate using array of coordinate indices.
+  for_size_t(i, grid.size()) grid.flat(i) *= 2;                     // Iterate using raster order (fastest).
+  for (auto& e : grid) e *= 2;                                      // Iterate over elements (also fastest).
 }
 #endif
 
@@ -78,7 +78,7 @@ template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec
 template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i);
 
 // Do the same for a list of coordinates.
-template <int D, typename... A> constexpr size_t ravel_index_list(const Vec<int, D>& dims, A... dd);  // dd... are int
+template <int D, typename... A> constexpr size_t ravel_index_list(const Vec<int, D>& dims, A... dd);  // dd... are int.
 
 // Find stride (in number of elements) of dimension d in the grid.
 template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim);
@@ -112,7 +112,7 @@ template <int D, typename T> class CGridView {
   size_t size() const { return product_dims<D>(_dims.data()); }
   typename details::Grid_aux<D, T>::CRet operator[](int r) const;
   template <int n> typename details::Grid_aux<D - n + 1, T>::CRet operator[](const Vec<int, n>& u) const;
-  template <typename... A> const T& operator()(A... dd) const;  // dd... are int
+  template <typename... A> const T& operator()(A... dd) const;  // dd... are int.
   const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
   bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
@@ -121,7 +121,7 @@ template <int D, typename T> class CGridView {
     return true;
   }
   template <typename... A> bool ok(A... dd) const { return ok(V(dd...)); }
-  bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // ret: false outside Border
+  bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Return false outside Border.
     for_int(c, D) {
       if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;
     }
@@ -137,7 +137,7 @@ template <int D, typename T> class CGridView {
     if (!map_inside(ut, bndrules)) return (ASSERTX(bordervalue), *bordervalue);
     return (*this)[ut];
   }
-  type slice(int ib, int ie) const {  // view of grid truncated in 0th dimension
+  type slice(int ib, int ie) const {  // View of grid truncated in 0th dimension.
     assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
@@ -157,7 +157,7 @@ template <int D, typename T> class CGridView {
     static_assert(D == 2);
     return dim(1);
   }
-  bool map_inside(int& y, int& x, Bndrule bndrule) const;  // ret: false if bndrule == Border and i is outside
+  bool map_inside(int& y, int& x, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
   const T& inside(int y, int x, Bndrule bndrule) const {
     bool b = map_inside(y, x, bndrule);
     ASSERTX(b);
@@ -166,7 +166,7 @@ template <int D, typename T> class CGridView {
   const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const;
 
  protected:
-  T* _a{nullptr};  // [0, _dims[0] - 1] * [0, _dims[1] - 1] * ... * [0, _dims[D - 1] - 1]
+  T* _a{nullptr};  // [0, _dims[0] - 1] * [0, _dims[1] - 1] * ... * [0, _dims[D - 1] - 1].
   Vec<int, D> _dims{ntimes<D>(0)};
   bool check(int r) const {
     if (r >= 0 && r < _dims[0]) return true;
@@ -188,8 +188,8 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   using base = CGridView<D, T>;
 
  public:
-  explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // stop recursion if ArrayView == GridView
-  GridView(const type&) = default;                                     // because it has explicit copy assignment
+  explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // Stop recursion if ArrayView == GridView.
+  GridView(const type&) = default;                                     // Because it has explicit copy assignment.
   explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
   void reinit(type g) { *this = g; }
   using base::size;
@@ -197,7 +197,7 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   typename details::Grid_aux<D, T>::CRet operator[](int r) const { return base::operator[](r); }
   template <int n> typename details::Grid_aux<D - n + 1, T>::Ret operator[](const Vec<int, n>& u);
   template <int n> typename details::Grid_aux<D - n + 1, T>::CRet operator[](const Vec<int, n>& u) const;
-  template <typename... A> T& operator()(A... dd);  // dd... are int
+  template <typename... A> T& operator()(A... dd);  // dd... are int.
   template <typename... A> const T& operator()(A... dd) const;
   T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
   const T& flat(size_t i) const { return base::flat(i); }
@@ -212,7 +212,7 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
     return base::inside(u, bndrules, bordervalue);
   }
-  type slice(int ib, int ie) {  // view of grid truncated in 0th dimension
+  type slice(int ib, int ie) {  // View of grid truncated in 0th dimension.
     assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
@@ -284,7 +284,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   explicit Grid(const Vec<int, D>& dims, const T& v) { init(dims, v); }
   explicit Grid(const type& g) : Grid(g.dims()) { base::assign(g); }
   explicit Grid(CGridView<D, T> g) : Grid(g.dims()) { base::assign(g); }
-  Grid(type&& g) noexcept { swap(*this, g); }  // not default
+  Grid(type&& g) noexcept { swap(*this, g); }  // Not "== default".
   Grid(initializer_type l) : Grid() { *this = l; }
   ~Grid() { clear(); }
   type& operator=(CGridView<D, T> g) {
@@ -333,14 +333,14 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     swap(l._dims, r._dims);
   }
   void special_reduce_dim0(int i) { assertx(i >= 0 && i <= _dims[0]), _dims[0] = i; }
-  // (must declare template parameters because these functions access private _a of <D - 1, T> and <D + 1, T>)
+  // (Must declare template parameters because these functions access private _a of <D - 1, T> and <D + 1, T>.)
   template <int DD, typename TT> friend Grid<DD - 1, TT> reduce_grid_rank(Grid<DD, TT>&& grid);
   template <int DD, typename TT> friend Grid<DD + 1, TT> increase_grid_rank(Grid<DD, TT>&& grid);
 
  private:
   using base::_a;
   using base::_dims;
-  using base::reinit;  // hide it
+  using base::reinit;  // Hide it.
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
@@ -374,12 +374,12 @@ template <> inline constexpr size_t ravel_index(const Vec2<int>& dims, const Vec
   return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]), intptr_t{u[0]} * dims[1] + u[1]);
 }
 template <> inline constexpr size_t ravel_index(const Vec1<int>& dims, const Vec1<int>& u) {
-  return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims),  // dummy_use(dims) returns void so cannot be constexpr
+  return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims),  // dummy_use(dims) returns void so cannot be constexpr.
           u[0]);
 }
 template <> inline constexpr size_t ravel_index(const Vec<int, 0>& dims, const Vec<int, 0>& u) {
   dummy_use(dims, u);
-  return 0;  // used in GridView[V()]
+  return 0;  // Used in GridView[V()].
 }
 
 template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
@@ -387,7 +387,7 @@ template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
   Vec<int, D> u;
   for (int d = D - 1; d >= 1; --d) {
     size_t t = i / dims[d];
-    u[d] = narrow_cast<int>(i - t * dims[d]);  // remainder
+    u[d] = narrow_cast<int>(i - t * dims[d]);  // Remainder.
     i = t;
   }
   u[0] = narrow_cast<int>(i);
@@ -462,7 +462,7 @@ template <typename T> struct Grid_get<2, T> {
   }
   static ArrayView<T> get(T* a, const int* dims, int r) { return ArrayView<T>(a + intptr_t{r} * dims[1], dims[1]); }
 };
-template <typename T> struct Grid_get<3, T> {  // specialization for speedup
+template <typename T> struct Grid_get<3, T> {  // Specialization for speedup.
   static CGridView<2, T> cget(const T* a, const int* dims, int r) {
     return CGridView<2, T>(a + intptr_t{r} * dims[1] * dims[2], Vec2<int>(dims[1], dims[2]));
   }
@@ -500,7 +500,7 @@ template <int DD, typename T>
 template <int n>
 typename details::Grid_aux<DD + 1, T>::CRet details::Grid_get2<DD, T>::cget2(const T* a, const Vec<int, n + DD>& dims,
                                                                              const Vec<int, n>& u) {
-  using T2 = typename details::Grid_aux<DD + 1, T>::CRet;  // Grid dimension D = n + DD;
+  using T2 = typename details::Grid_aux<DD + 1, T>::CRet;  // Grid dimension D = n + DD.
   return T2(a + ravel_index(dims.template head<n>(), u) * product_dims<DD>(dims.data() + n),
             CArrayView<int>(dims.data() + n, DD));
 }
@@ -508,7 +508,7 @@ template <int DD, typename T>
 template <int n>
 typename details::Grid_aux<DD + 1, T>::Ret details::Grid_get2<DD, T>::get2(T* a, const Vec<int, n + DD>& dims,
                                                                            const Vec<int, n>& u) {
-  using T2 = typename details::Grid_aux<DD + 1, T>::Ret;  // Grid dimension D = n + DD;
+  using T2 = typename details::Grid_aux<DD + 1, T>::Ret;  // Grid dimension D = n + DD.
   return T2(a + ravel_index(dims.template head<n>(), u) * product_dims<DD>(dims.data() + n),
             CArrayView<int>(dims.data() + n, DD));
 }
@@ -593,12 +593,12 @@ template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) {
   assertx(same_size(*this, g));
   if (g.data() == data()) return;
   // for_size_t(i, size()) _a[i] = g.flat(i);
-  // if (_a) std::memcpy(_a, g.begin(), (g.end() - g.begin()) * sizeof(T));  // no faster, and unsafe for general T
+  // if (_a) std::memcpy(_a, g.begin(), (g.end() - g.begin()) * sizeof(T));  // No faster, and unsafe for general T.
   if (_a) std::copy(g.begin(), g.end(), _a);
 }
 
 template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) {
-  assertx(grid.dim(0) == 1);  // perhaps could be <= 1
+  assertx(grid.dim(0) == 1);  // Perhaps could be <= 1.
   Grid<D - 1, T> ngrid;
   using std::swap;
   swap(ngrid._a, grid._a);
@@ -637,7 +637,7 @@ template <int D, typename T> struct nested_list_retrieve {
     assertx(grid.dim(0) == narrow_cast<int>(l.size()));
     for_int(i, narrow_cast<int>(l.size())) nested_list_retrieve<D - 1, T>()(grid[i], l.begin()[i]);
   }
-  void operator()(ArrayView<T> grid, nested_initializer_list_t<1, T> l) const {  // ArrayView<T> != GridView<1, T>
+  void operator()(ArrayView<T> grid, nested_initializer_list_t<1, T> l) const {  // ArrayView<T> != GridView<1, T>.
     assertx(grid.num() == narrow_cast<int>(l.size()));
     for_int(i, narrow_cast<int>(l.size())) grid[i] = l.begin()[i];
   }
@@ -690,8 +690,8 @@ template <int D, typename T> std::ostream& operator<<(std::ostream& os, CGridVie
   return details::grid_output<D, T>()(os, g);
 }
 template <int D, typename T> HH_DECLARE_OSTREAM_EOL(CGridView<D, T>);
-template <int D, typename T> HH_DECLARE_OSTREAM_EOL(GridView<D, T>);  // implemented by CGridView<D, T>
-template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // implemented by CGridView<D, T>
+template <int D, typename T> HH_DECLARE_OSTREAM_EOL(GridView<D, T>);  // Implemented by CGridView<D, T>.
+template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Implemented by CGridView<D, T>.
 
 //----------------------------------------------------------------------------
 
@@ -753,7 +753,7 @@ TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
   G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
 TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
-  // Vec3<float> == Bary;   may have bary[0] + bary[1] + bary[2] != 1.f
+  // Vec3<float> == Bary;   May have bary[0] + bary[1] + bary[2] != 1.f.
   ASSERTX(same_size(g1, g2) && same_size(g1, g3));
   G g(g1.dims()); F(g) { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); }
   return g;

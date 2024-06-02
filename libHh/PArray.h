@@ -8,7 +8,7 @@ namespace hh {
 
 // Resizable allocated 1D array just like Array<T> but contains built-in storage for pcap elements.
 //  As in Array<T>, T must have a public operator=().
-template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-allocated capacity pcap
+template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-allocated capacity pcap.
   using base = ArrayView<T>;
   using type = PArray<T, pcap>;
 
@@ -70,7 +70,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       _cap = pcap;
     }
   }
-  void init(int n) {  // allocate n, DISCARD old values if too small
+  void init(int n) {  // Allocate n, DISCARD old values if too small.
     ASSERTX(n >= 0);
     if (n > _cap) {
       if (_cap != pcap) {
@@ -82,12 +82,12 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
     _n = n;
   }
-  void resize(int n) {  // allocate n, RETAIN old values (using move if too small)
+  void resize(int n) {  // Allocate n, RETAIN old values (using move if too small).
     ASSERTX(n >= 0);
     if (n > _cap) grow_to_at_least(n);
     _n = n;
   }
-  void access(int i) {  // allocate at least i + 1, RETAIN old values (using move if too small)
+  void access(int i) {  // Allocate at least i + 1, RETAIN old values (using move if too small).
     ASSERTX(i >= 0);
     int n = i + 1;
     if (n > _cap) grow_to_at_least(n);
@@ -114,7 +114,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   int capacity() const { return _cap; }
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
-  bool remove_ordered(const T& e) {  // ret: was there
+  bool remove_ordered(const T& e) {  // Return: was there.
     for_int(i, _n) {
       if (_a[i] == e) {
         erase(i, 1);
@@ -123,7 +123,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
     return false;
   }
-  bool remove_unordered(const T& e) {  // ret: was there
+  bool remove_unordered(const T& e) {  // Return: was there.
     for_int(i, _n) {
       if (_a[i] == e) {
         if (i < _n - 1) {
@@ -141,7 +141,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     sub(1);
     return e;
   }
-  void push(const T& e) {  // avoid a.push(a[..])!
+  void push(const T& e) {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
   }
@@ -183,7 +183,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
         std::swap(l._a, r._a);
         std::swap(l._cap, r._cap);
         std::swap(l._n, r._n);
-        // _pa undefined in both
+        // _pa is undefined in both.
       } else {
         std::move(r._pa, r._pa + r._n, l._pa);
         r._a = l._a;
@@ -201,7 +201,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       } else {
         std::swap_ranges(l._pa, l._pa + max(l._n, r._n), r._pa);
         std::swap(l._n, r._n);
-        // _a and _cap unchanged
+        // _a and _cap are unchanged.
       }
     }
   }
@@ -209,7 +209,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
  private:
   using base::_a;
   using base::_n;
-  using base::reinit;  // hide it
+  using base::reinit;  // Hide it.
   int _cap{pcap};
   T _pa[pcap];
   void set_capacity(int ncap) {
@@ -247,7 +247,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       ASSERTX(_n <= pcap);
     }
   }
-  type& operator+=(const T&) = delete;  // dangerous because ambiguous (push() or add to all elements)
+  type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
@@ -257,7 +257,7 @@ template <typename T, int pcap, typename Func> auto map(const PArray<T, pcap>& c
   return nc;
 }
 
-template <typename T, int pcap> HH_DECLARE_OSTREAM_EOL(PArray<T, pcap>);  // implemented by CArrayView<T>
+template <typename T, int pcap> HH_DECLARE_OSTREAM_EOL(PArray<T, pcap>);  // Implemented by CArrayView<T>.
 
 }  // namespace hh
 

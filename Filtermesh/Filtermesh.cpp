@@ -886,13 +886,11 @@ void edge_angle_stats(const Map<Face, int>& mfseg) {
     if (mesh.is_boundary(e)) continue;
     Face f1 = mesh.face1(e), f2 = mesh.face2(e);
     if (!assertw(mesh.is_triangle(f1) && mesh.is_triangle(f2))) continue;
-    // float angcos = edge_dihedral_angle_cos(mesh, e);
-    // float ang = to_deg(my_acos(angcos));
-    float ang = edge_signed_dihedral_angle(mesh, e);
+    float angle = edge_signed_dihedral_angle(mesh, e);
     if (mfseg.get(f1) == mfseg.get(f2))
-      Sintang.enter(ang);
+      Sintang.enter(angle);
     else
-      Sbndang.enter(ang);
+      Sbndang.enter(angle);
   }
 }
 
@@ -2455,13 +2453,12 @@ void do_info() {
     HH_STAT(Sdiha);
     for (Edge e : mesh.edges()) {
       if (mesh.is_boundary(e)) continue;
-      float angcos = edge_dihedral_angle_cos(mesh, e);
-      if (angcos == -2.f) {
+      float angle = edge_signed_dihedral_angle(mesh, e);
+      if (angle == -10.f) {
         Warning("Edge dihedral undefined next to degenerate face");
-        angcos = 1.f;
+        angle = 0.f;
       }
-      float ang = std::acos(angcos);
-      Sdiha.enter(ang);
+      Sdiha.enter(angle);
     }
   }
 }

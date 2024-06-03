@@ -39,11 +39,12 @@ string mesh_genus_string(const Mesh& mesh);
 [[nodiscard]] bool triangulate_face(GMesh& mesh, Face f);
 
 // ret: cos of signed angle away from "flatness" (== exterior angle)
-// range -1..1  (or -2 if a triangle is degenerate)
+// range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
 // For non-triangles, looks at average of immediate neighbors on either side.
 float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
 
-// ret: -10.f if degenerate
+// Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
+// (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
 float edge_signed_dihedral_angle(const GMesh& mesh, Edge e);
 
 // Must be a nice interior vertex.

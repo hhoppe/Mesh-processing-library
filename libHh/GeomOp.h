@@ -27,11 +27,11 @@ float aspect_ratio(const Point& p0, const Point& p1, const Point& p2);
 // *** Angles
 
 // ret: cos of signed angle away from "flatness" (== exterior angle)
-// range -1.f .. 1.f  (or -2.f if a triangle is degenerate)
+// range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate)
 float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
-// return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy
-//  (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos())
+// Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
+// (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
 float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
 // Compute solid angle at p surrounded by ordered loop pa[]

@@ -78,7 +78,7 @@ float min_local_dihedral(CArrayView<const Point*> wa, const Point& newp) {
   int nw = wa.num();
   assertx(nw > 1);
   bool open = wa[0] != wa[nw - 1];
-  float mindic = 2;
+  float mindic = 2.f;
   for_intL(i, 1, nw - open) {
     int i1 = i + 1;
     if (i1 == nw) i1 = 1;
@@ -1202,7 +1202,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
   Array<const Point*> wa{&mesh.point(v2), &mesh.point(vo1), &mesh.point(v1)};
   if (vo2) wa.push_array(V(&mesh.point(vo2), &mesh.point(v2)));
-  float minb = vo2 ? edge_dihedral_angle_cos(mesh, e) : 2;
+  float minb = vo2 ? edge_dihedral_angle_cos(mesh, e) : 2.f;
   double rssf = spring_energy(e);
   Array<int> ar_pts;
   for (Face f : mesh.faces(e)) push_face_points(f, ar_pts);

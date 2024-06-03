@@ -53,7 +53,6 @@ float cosangle = k_undefined_cosangle;
 float solidangle = 0.f;
 float checkflat = 0.f;
 bool nooutput = false;
-bool nocleanup = false;
 bool bndmerge = false;
 float raymaxdispfrac = .03f;
 int nfaces = 0;
@@ -67,7 +66,7 @@ bool sharp(Edge e) { return mesh.is_boundary(e) || mesh.flags(e).flag(GMesh::efl
 
 inline bool same_string(const char* s1, const char* s2) { return !s1 && !s2 ? 1 : !s1 || !s2 ? 0 : !strcmp(s1, s2); }
 
-void output_mesh() { mesh.write(oa3d, k_surf_color); }
+void output_mesh_as_a3d() { mesh.write(oa3d, k_surf_color); }
 
 void output_edge(Edge e, A3dVertexColor col = A3dVertexColor(Pixel::black())) {
   A3dElem el(A3dElem::EType::polyline);
@@ -724,14 +723,14 @@ void do_setb3d() { my_setenv("A3D_BINARY", "1"); }
 void do_toa3d() {
   HH_TIMER("_toa3d");
   nooutput = true;
-  output_mesh();
+  output_mesh_as_a3d();
 }
 
 void do_tob3d() {
   HH_TIMER("_tob3d");
   my_setenv("A3D_BINARY", "1");
   nooutput = true;
-  output_mesh();
+  output_mesh_as_a3d();
 }
 
 void do_endobject() { oa3d.write_end_object(); }
@@ -2726,16 +2725,16 @@ void do_reduce_old_sequential() {
     mesh.collapse_edge(e);
     e = nullptr;
     if (reducecrit == EReduceCriterion::qem) mesh.set_point(vkept, newp);
-    Set<Edge> seteupdate;
+    Set<Edge> edges_to_update;
     if (reducecrit == EReduceCriterion::qem) {
       for (Vertex v : mesh.vertices(vkept))
-        for (Edge e2 : mesh.edges(v)) seteupdate.add(e2);
+        for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
     } else {
       for (Face f : mesh.faces(vkept))
-        for (Edge e2 : mesh.edges(f)) seteupdate.add(e2);
+        for (Edge e2 : mesh.edges(f)) edges_to_update.add(e2);
     }
     // Applying parallel_for_each() is slower because the parallelism is too fine-grained and memory-incoherent.
-    for (Edge e2 : seteupdate) pqe.enter_update(e2, reduce_criterion(e2));
+    for (Edge e2 : edges_to_update) pqe.enter_update(e2, reduce_criterion(e2));
   }
   cprogress.clear();
 }
@@ -2752,55 +2751,42 @@ void do_reduce() {
     for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
     pqe.sort();
   }
-  int orig_nf = mesh.num_faces();
-  Set<Edge> seteupdate;
+  const int orig_nf = mesh.num_faces();
+  Set<Edge> edges_to_update;
   ConsoleProgress cprogress;
   for (;;) {
-    assertx(pqe.num() + seteupdate.num() == mesh.num_edges());
+    assertx(pqe.num() + edges_to_update.num() == mesh.num_edges());
     cprogress.update(float(orig_nf - mesh.num_faces()) / max(orig_nf - nfaces, 1));
     if (mesh.num_faces() <= nfaces) break;
     const float fraction = 0.6f;
-    if (pqe.num() < max(int(mesh.num_edges() * fraction), 1000)) {
-      Array<Edge> ar_edge(seteupdate);
+    if (pqe.num() < max(int(mesh.num_edges() * fraction), 1000) && edges_to_update.num()) {
+      Array<Edge> ar_edge(edges_to_update);
       Array<float> ar_cost(ar_edge.num());
       if (0) sort(ar_edge);  // No resulting improvement in memory access coherence.
       // With parallelism, 1.3x faster than original version; without parallelism, 1.6x slower.
       parallel_for_each(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
-      for_int(i, ar_edge.num()) { pqe.enter(ar_edge[i], ar_cost[i]); }
-      seteupdate.clear();
+      for_int(i, ar_edge.num()) pqe.enter(ar_edge[i], ar_cost[i]);
+      edges_to_update.clear();
     }
     float crit = pqe.min_priority();
     if (crit > maxcrit) break;
     Edge e = pqe.remove_min();
-    ASSERTX(mesh.nice_edge_collapse(e));
-    if (reducecrit == EReduceCriterion::qem) {
-      for (Vertex v : mesh.vertices(e))
-        for (Vertex v2 : mesh.vertices(v))
-          for (Edge e2 : mesh.edges(v2))
-            if (pqe.remove(e2) < 0.f) seteupdate.remove(e2);
-    } else {
-      for (Vertex v : mesh.vertices(e))
-        for (Edge e2 : mesh.edges(v))
-          if (pqe.remove(e2) < 0.f) seteupdate.remove(e2);
-    }
+    for (Vertex v : mesh.vertices(e))
+      for (Vertex v2 : mesh.vertices(v))
+        for (Edge e2 : mesh.edges(v2))
+          if (pqe.remove(e2) < 0.f) edges_to_update.remove(e2);
     Vertex vkept = mesh.vertex1(e);
-    Point newp;
-    if (reducecrit == EReduceCriterion::qem) {
+    const Point newp = [&]() {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
       int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
-      newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    }
+      return interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+    }();
     mesh.collapse_edge(e);
     e = nullptr;
-    if (reducecrit == EReduceCriterion::qem) mesh.set_point(vkept, newp);
-    if (reducecrit == EReduceCriterion::qem) {
-      for (Vertex v : mesh.vertices(vkept))
-        for (Edge e2 : mesh.edges(v)) seteupdate.add(e2);
-    } else {
-      for (Face f : mesh.faces(vkept))
-        for (Edge e2 : mesh.edges(f)) seteupdate.add(e2);
-    }
+    mesh.set_point(vkept, newp);
+    for (Vertex v : mesh.vertices(vkept))
+      for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
   }
   cprogress.clear();
 }
@@ -4496,7 +4482,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(orderedvertexpts, ": print mesh vertices as points");
   HH_ARGSD(bndpts, "n : print n points on each boundary edge");
   HH_ARGSD(addmesh, ": output a3d endfile + mesh now");
-  HH_ARGSF(nocleanup, ": exit() before invoking destructors");
   {
     HH_TIMER("Filtermesh");
     string arg0 = args.num() ? args.peek_string() : "";
@@ -4524,6 +4509,7 @@ int main(int argc, const char** argv) {
     std::cout.flush();
   }
   mesh.record_changes(nullptr);  // do not record mesh destruction
-  if (nocleanup) exit_immediately(0);
+  oa3d.flush();
+  if (!k_debug) exit_immediately(0);
   return 0;
 }

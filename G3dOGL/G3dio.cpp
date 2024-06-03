@@ -97,10 +97,13 @@ void read_mesh_line(char* s) {
   int fi = 0, vi = 0, vi1 = 0, vi2 = 0, vspl1 = 0, vspl2 = 0, vspl3 = 0, vspl4 = 0;
   open_if_closed();
   GMesh& mesh = *g_obs[robn].get_mesh();
-  if (sscanf(s, "Vertex %d", &vi) != 1 && sscanf(s, "MVertex %d", &vi) != 1) vi = 0;
-  if (sscanf(s, "Face %d", &fi) != 1) fi = 0;
-  if (sscanf(s, "Ecol %d %d", &vi1, &vi2) != 2) vi1 = vi2 = 0;
-  if (sscanf(s, "Vspl %d %d %d %d", &vspl1, &vspl2, &vspl3, &vspl4) != 4) vspl1 = vspl2 = vspl3 = vspl4 = 0;
+  if (!((s[0] == 'V' && sscanf(s, "Vertex %d", &vi) == 1) ||  //
+        (s[0] == 'M' && sscanf(s, "MVertex %d", &vi) == 1)))
+    vi = 0;
+  if (!(s[0] == 'F' && sscanf(s, "Face %d", &fi) == 1)) fi = 0;
+  if (!(s[0] == 'E' && sscanf(s, "Ecol %d %d", &vi1, &vi2) == 2)) vi1 = vi2 = 0;
+  if (!(s[0] == 'V' && sscanf(s, "Vspl %d %d %d %d", &vspl1, &vspl2, &vspl3, &vspl4) == 4))
+    vspl1 = vspl2 = vspl3 = vspl4 = 0;
   mesh.read_line(s);
   // (Note: Not all mesh transformations clear vflag_ok, fflag_ok flags.)
   if (vi1) {

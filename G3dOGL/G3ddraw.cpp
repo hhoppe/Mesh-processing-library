@@ -829,7 +829,7 @@ static void show_caption() {
 }
 
 static void show_cross() {
-  if (!info || HB::get_font_dims()[1] > 9) return;
+  if (info < 2 || HB::get_font_dims()[1] > 11) return;  // Used to be "> 9".
   float r = .01f;
   HB::draw_segment(V(.5f - r, .5f - r), V(.5f + r, .5f + r));
   HB::draw_segment(V(.5f + r, .5f - r), V(.5f - r, .5f + r));

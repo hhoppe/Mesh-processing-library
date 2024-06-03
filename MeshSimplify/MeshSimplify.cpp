@@ -4507,7 +4507,10 @@ void parallel_optimize() {
       Edge e;
       float cost;
     };
-    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
+    // Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
+    Array<EdgeCost> ar_edgecost;
+    ar_edgecost.reserve(mesh.num_edges());
+    for (Edge e : mesh.edges()) ar_edgecost.push(EdgeCost{e, 0.f});
 
     parallel_for_each(range(ar_edgecost.num()), [&](int index) {
       Edge e = ar_edgecost[index].e;
@@ -4545,8 +4548,8 @@ void parallel_optimize() {
         assertx(minii2 && no_fit_geom);
       }
       // assertx(ecol_result.cost == cost);
-      if (abs(ecol_result.cost - cost) / cost > 1e-4f) {
-        SHOW(cost, ecol_result.cost - cost);
+      if (float err = abs(ecol_result.cost - cost); 0 && err > 1e-6f && err / cost > 1e-4f) {
+        SHOW(err, cost);
         assertnever("?");
       }
       const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
@@ -4990,5 +4993,6 @@ int main(int argc, const char** argv) {
   if (!nooutput) write_mesh(std::cout);
   wfile_prog = nullptr;
   gwinfo.clear();
+  if (!k_debug) exit_immediately(0);
   return 0;
 }

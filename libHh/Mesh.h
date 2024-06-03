@@ -352,7 +352,7 @@ class Mesh : noncopyable {
     void next() {
       for (;;) {
         if (_hcur != _hend) {
-          if ((*_hcur)->_edge->_herep != *_hcur) {
+          if ((*_hcur)->_edge->_herep != *_hcur) {  // Skip over any non-representative half-edge.
             ++_hcur;
             continue;
           }

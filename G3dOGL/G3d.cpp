@@ -140,6 +140,7 @@ GMesh* object::get_mesh() {
   if (_override_mesh) return _override_mesh;
   if (!_mesh) {
     _mesh = make_unique<GMesh>();
+    _mesh->gflags().flag(g3d::mflag_ok) = true;
     HB::segment_attach_mesh(_obn, _mesh.get());
   }
   return _mesh.get();
@@ -342,7 +343,7 @@ int main(int argc, const char** argv) {
   }
   HB::set_current_object(cob);
   HB::open();
-  if (1) {  // Faster exit, without destruction of Pool data, etc.
+  if (!k_debug) {  // Faster exit, without destruction of Pool data, etc.
     exit_immediately(0);
   }
   for (int i = g_obs.first; i <= g_obs.last; i++) {

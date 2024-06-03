@@ -2,7 +2,7 @@
 #include "libHh/FileIO.h"
 
 #include <fcntl.h>     // O_NOINHERIT, O_BINARY
-#include <sys/stat.h>  // struct stat, struct _stat, stat()
+#include <sys/stat.h>  // struct stat, stat(), struct _stati64, _wstati64()
 
 #if defined(_WIN32)
 
@@ -412,10 +412,12 @@ WFile::~WFile() {
 
 bool file_exists(const string& name) {
 #if defined(_WIN32)
-  struct _stat fstat;
-  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return false;
+  struct _stati64 fstat;
+  if (_wstati64(utf16_from_utf8(name).c_str(), &fstat)) return false;
 #else
   struct stat fstat;
+  // If this assertion failed, we might include "#define _FILE_OFFSET_BITS 64" at the top of the file.
+  static_assert(sizeof(fstat.st_size) == sizeof(int64_t), "Would be unable to open files larger than 2 GB.");
   if (stat(name.c_str(), &fstat)) return false;
 #endif
   if (fstat.st_mode & S_IFDIR) {
@@ -428,8 +430,8 @@ bool file_exists(const string& name) {
 
 bool directory_exists(const string& name) {
 #if defined(_WIN32)
-  struct _stat fstat;
-  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return false;
+  struct _stati64 fstat;
+  if (_wstati64(utf16_from_utf8(name).c_str(), &fstat)) return false;
 #else
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return false;
@@ -449,8 +451,9 @@ bool file_requires_pipe(const string& name) {
 // Return: 0 if error.
 uint64_t get_path_modification_time(const string& name) {
 #if defined(_WIN32)
-  struct _stat fstat;  // Contains __time32_t st_mtime.
-  if (_wstat(utf16_from_utf8(name).c_str(), &fstat)) return 0;
+  // (Gives 64-bit time, unlike _wstat32i64.)
+  struct _stati64 fstat;
+  if (_wstati64(utf16_from_utf8(name).c_str(), &fstat)) return 0;
 #else
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return 0;

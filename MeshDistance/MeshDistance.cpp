@@ -271,6 +271,8 @@ int main(int argc, const char** argv) {
   HH_ARGSC("Example command: MeshDistance -mf mesh1.m -mf mesh2.m -maxerror 1 -distance");
   HH_TIMER("MeshDistance");
   args.parse();
+  hh_clean_up();
   if (errmesh) meshes[0].write(std::cout);
+  if (!k_debug) exit_immediately(0);
   return 0;
 }

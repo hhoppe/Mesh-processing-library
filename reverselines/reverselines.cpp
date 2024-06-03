@@ -8,7 +8,7 @@ using namespace hh;
 #if !defined(_WIN32)
 
 #include <fcntl.h>     // O_RDONLY
-#include <sys/mman.h>  // mmap(), munmap()
+#include <sys/mman.h>  // mmap(), munmap(), off_t
 #include <sys/stat.h>  // fstat()
 #include <unistd.h>    // open(), close()
 
@@ -22,25 +22,23 @@ int main(int argc, const char** argv) {
   int fd = open(filename.c_str(), O_RDONLY);
   assertx(fd >= 0);
   struct stat stat_buf;
+  static_assert(sizeof(stat_buf.st_size) == sizeof(int64_t), "Likely must use '#define _FILE_OFFSET_BITS 64'");
   assertx(!fstat(fd, &stat_buf));  // off_t st_size
-  unsigned rlen = unsigned(stat_buf.st_size);
-  assertx(rlen == stat_buf.st_size);  // verify that it fits
-  // Had problems with hand0.prog (size 572506964): would not map into memory, so used segmentation scheme below.
+  int64_t rlen = stat_buf.st_size;
   if (!rlen) {
     Warning("File has zero length");
     return 0;
   }
-  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB
-  unsigned off = 0;
-  unsigned len = rlen;
-  int i = int(len);  // point right after '\n'
-  // Whenever possible, map segment of size [segsize + 1, segsize * 2]
+  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB.
+  off_t offset = 0;
+  size_t len = rlen;
+  // Whenever possible, map segment of size [segsize + 1, segsize * 2].
   while (len > segsize * 2) {
-    off += segsize;
+    offset += segsize;
     len -= segsize;
-    i -= segsize;
   }
-  CArrayView<char> buf(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, off)), len);
+  int i = assert_narrow_cast<int>(len);  // Always points right after '\n'.
+  CArrayView<char> buf(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset)), len);
   assertx(buf.data() != reinterpret_cast<void*>(intptr_t{-1}));
   for (;;) {
     if (!i) break;
@@ -53,17 +51,18 @@ int main(int argc, const char** argv) {
       --i;
     }
     assertx(write_raw(stdout, buf.slice(i, iend)));
-    if (off && unsigned(i) <= segsize) {
-      assertx(i);
+    if (offset && unsigned(i) <= segsize) {
+      assertx(i > 0);
       assertx(!munmap(const_cast<char*>(buf.data()), len));
-      off -= segsize;
+      offset -= segsize;
       len = segsize * 2;
       i += segsize;
-      buf.reinit(CArrayView<char>(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, off)), len));
+      buf.reinit(
+          CArrayView<char>(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset)), len));
       assertx(buf.data() != reinterpret_cast<void*>(intptr_t{-1}));
     }
   }
-  assertx(off == 0);
+  assertx(offset == 0);
   assertx(!munmap(const_cast<char*>(buf.data()), len));
   assertx(!HH_POSIX(close)(fd));
   return 0;
@@ -74,8 +73,7 @@ int main(int argc, const char** argv) {
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // CreateFile(), etc.
 
-// Output the text file named "file" with lines in reverse order
-//  to stdout by memory mapping the file.
+// Output the text file named "file" with lines in reverse order to stdout by memory mapping the file.
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
@@ -84,7 +82,7 @@ int main(int argc, const char** argv) {
   args.parse();
   string filename = args.get_filename();
   if (args.num()) args.problem("expect a single argument");
-  // 0=no_security,  0=no_copy_attribute_from_existing_fhandle
+  // nullptr: no_security;  nullptr: no_copy_attribute_from_existing_fhandle.
   HANDLE h_file = CreateFileW(utf16_from_utf8(filename).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                               FILE_FLAG_RANDOM_ACCESS, nullptr);
   assertx(h_file != INVALID_HANDLE_VALUE);
@@ -100,23 +98,23 @@ int main(int argc, const char** argv) {
     assertx(CloseHandle(h_file));
     return 0;
   }
-  // 0 = no_security,  0, 0 = map_whole_file,  0 = no_name
+  // nullptr: no_security;  0, 0: map_whole_file;  nullptr: no_name.
   HANDLE h_fmapping = CreateFileMapping(h_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
   assertx(h_fmapping != nullptr);
   HH_ASSUME(h_fmapping);
-  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB view
-  int64_t off = 0;
+  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB view.
+  int64_t offset = 0;
   int64_t llen = size;
-  // Whenever possible, map segment of size [segsize + 1, segsize * 2]
+  // Whenever possible, map segment of size [segsize + 1, segsize * 2].
   while (llen > segsize * 2) {
-    off += segsize;
+    offset += segsize;
     llen -= segsize;
   }
   int len = int(llen);
   int i = len;
-  CArrayView<char> buf(
-      static_cast<const char*>(MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(off >> 32), DWORD(off), DWORD(len))),
-      len);
+  CArrayView<char> buf(static_cast<const char*>(
+                           MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len))),
+                       len);
   assertx(buf.data());
   int nwarnings = 0;
   while (i) {
@@ -133,19 +131,19 @@ int main(int argc, const char** argv) {
       --i;
     }
     assertx(write_raw(stdout, buf.slice(i, iend)));
-    if (off && unsigned(i) <= segsize) {
+    if (offset && unsigned(i) <= segsize) {
       assertx(i);
       assertx(UnmapViewOfFile(buf.data()));
-      off -= segsize;
+      offset -= segsize;
       len = segsize * 2;
       i += segsize;
-      buf.reinit(CArrayView<char>(
-          static_cast<const char*>(MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(off >> 32), DWORD(off), DWORD(len))),
-          len));
+      buf.reinit(CArrayView<char>(static_cast<const char*>(MapViewOfFile(
+                                      h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len))),
+                                  len));
       assertx(buf.data());
     }
   }
-  assertx(off == 0);
+  assertx(offset == 0);
   assertx(UnmapViewOfFile(buf.data()));
   assertx(CloseHandle(h_fmapping));
   assertx(CloseHandle(h_file));

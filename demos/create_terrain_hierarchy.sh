@@ -21,7 +21,7 @@ for x in {0..3}; do
     rm -f ${rl}* >/dev/null
     (Filterimage $r.elev.png -tobw -elevation -step 1 -scalez 0.000694722 -removekinks \
       -blocks 32 -bx $x -by $y -tomesh | \
-      Filtermesh -assign_normals -nocleanup >$rl.orig.m) 2>>$log
+      Filtermesh -assign_normals >$rl.orig.m) 2>>$log
     # SRcreate $rl -terrain -no_simp_bnd
     bin/meshtopm.sh $rl.orig.m -vsgeom -terrain -no_simp_bnd >$rl.pm 2>>$log
     rm -f $rl.orig.m

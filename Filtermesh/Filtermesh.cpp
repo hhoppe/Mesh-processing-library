@@ -2708,28 +2708,23 @@ void do_reduce_old_sequential() {
     float crit = pqe.min_priority();
     if (crit > maxcrit) break;
     Edge e = pqe.remove_min();
-    ASSERTX(mesh.nice_edge_collapse(e));
     for (Vertex v : mesh.vertices(e))
-      for (Edge e2 : mesh.edges(v)) pqe.remove(e2);
+      for (Vertex v2 : mesh.vertices(v))
+        for (Edge e2 : mesh.edges(v2))
+          pqe.remove(e2);
     Vertex vkept = mesh.vertex1(e);
-    Point newp;
-    if (reducecrit == EReduceCriterion::qem) {
+    const Point newp = [&]() {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
       int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
-      newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    }
+      return interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+    }();
     mesh.collapse_edge(e);
     e = nullptr;
-    if (reducecrit == EReduceCriterion::qem) mesh.set_point(vkept, newp);
+    mesh.set_point(vkept, newp);
     Set<Edge> edges_to_update;
-    if (reducecrit == EReduceCriterion::qem) {
-      for (Vertex v : mesh.vertices(vkept))
-        for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
-    } else {
-      for (Face f : mesh.faces(vkept))
-        for (Edge e2 : mesh.edges(f)) edges_to_update.add(e2);
-    }
+    for (Vertex v : mesh.vertices(vkept))
+      for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
     // Applying parallel_for_each() is slower because the parallelism is too fine-grained and memory-incoherent.
     for (Edge e2 : edges_to_update) pqe.enter_update(e2, reduce_criterion(e2));
   }
@@ -2737,6 +2732,10 @@ void do_reduce_old_sequential() {
 }
 
 void do_reduce() {
+  if (0) {
+    do_reduce_old_sequential();
+    return;
+  }
   HH_TIMER("_reduce");
   assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
   HPqueue<Edge> pqe;
@@ -2756,7 +2755,8 @@ void do_reduce() {
     cprogress.update(float(orig_nf - mesh.num_faces()) / max(orig_nf - nfaces, 1));
     if (mesh.num_faces() <= nfaces) break;
     const float fraction = 0.6f;
-    if (pqe.num() < max(int(mesh.num_edges() * fraction), 1000) && edges_to_update.num()) {
+    if ((pqe.min_priority() > maxcrit || pqe.num() < max(int(mesh.num_edges() * fraction), 500)) &&
+        edges_to_update.num()) {
       Array<Edge> ar_edge(edges_to_update);
       Array<float> ar_cost(ar_edge.num());
       if (0) sort(ar_edge);  // No resulting improvement in memory access coherence.
@@ -2765,8 +2765,7 @@ void do_reduce() {
       for_int(i, ar_edge.num()) pqe.enter(ar_edge[i], ar_cost[i]);
       edges_to_update.clear();
     }
-    float crit = pqe.min_priority();
-    if (crit > maxcrit) break;
+    if (pqe.min_priority() > maxcrit && !edges_to_update.num()) break;
     Edge e = pqe.remove_min();
     for (Vertex v : mesh.vertices(e))
       for (Vertex v2 : mesh.vertices(v))
@@ -4343,7 +4342,6 @@ void do_assignwids() {
 // *** main
 
 int main(int argc, const char** argv) {
-  dummy_use(do_reduce_old_sequential);
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");

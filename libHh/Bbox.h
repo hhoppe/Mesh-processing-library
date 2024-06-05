@@ -25,10 +25,12 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 
   void clear() {
-    (*this)[0] = PointD::all(std::numeric_limits<T>::max()), (*this)[1] = PointD::all(std::numeric_limits<T>::min());
+    (*this)[0] = PointD::all(std::numeric_limits<T>::max());
+    (*this)[1] = PointD::all(std::numeric_limits<T>::lowest());
   }
   void infinite() {
-    (*this)[0] = PointD::all(std::numeric_limits<T>::min()), (*this)[1] = PointD::all(std::numeric_limits<T>::max());
+    (*this)[0] = PointD::all(std::numeric_limits<T>::lowest());
+    (*this)[1] = PointD::all(std::numeric_limits<T>::max());
   }
 
   void union_with(const type& bbox) {

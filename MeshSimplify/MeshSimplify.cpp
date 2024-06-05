@@ -4104,9 +4104,10 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   ecol_result.result = R_success;
   if (!commit) return ecol_result;
-  if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
+
   // ALL SYSTEMS GO.
   HH_PTIMER("__doecol");
+  if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
   if (wfile_prog) g_necols++;
   int new_desn = v_desn(v1) + v_desn(v2);
   int new_desh = max(v_desh(v1), v_desh(v2)) + 1;
@@ -4189,16 +4190,18 @@ EcolResult try_ecol(Edge e, bool commit) {
   ecol_result.vs = vs;
   CArrayView<int> ar_rwid = !bswap ? nn.ar_rwid_v1 : nn.ar_rwid_v2;
   // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // now undefined
-  for (eptinfo* pept : nn.ar_epts) point_change_edge(pept, nullptr);
-  for (eptinfo* pept : nn.ar_eptretire) {
-    point_change_edge(pept, nullptr);
-    pept->dist2 = 0.f;
+  if (!minqem) {
+    for (eptinfo* pept : nn.ar_epts) point_change_edge(pept, nullptr);
+    for (eptinfo* pept : nn.ar_eptretire) {
+      point_change_edge(pept, nullptr);
+      pept->dist2 = 0.f;
+    }
+    for (Vertex v : mesh.vertices(e)) {
+      for (Edge ee : mesh.edges(v)) assertx(e_setpts(ee).empty());
+    }
+    for (fptinfo* pfpt : nn.ar_fpts) point_change_face(pfpt, nullptr);
+    for (Face f : mesh.faces(e)) assertx(f_setpts(f).empty());
   }
-  for (Vertex v : mesh.vertices(e)) {
-    for (Edge ee : mesh.edges(v)) assertx(e_setpts(ee).empty());
-  }
-  for (fptinfo* pfpt : nn.ar_fpts) point_change_face(pfpt, nullptr);
-  for (Face f : mesh.faces(e)) assertx(f_setpts(f).empty());
   if (wfile_prog) {
     std::ostream& os = (*wfile_prog)();
     os << "# Beg REcol\n";
@@ -4278,17 +4281,14 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   if (minqem) {
     if (qemlocal) {
-      if (qemcache) {
+      if (qemcache)
         for (Face f : mesh.faces(vs)) get_face_qem(f, f_qem(f));
-      }
     } else {
       for_int(i, ar_rwid.num()) gwq[ar_rwid[i]]->copy(*nn.ar_wq[i]);
     }
   }
   // sanity checks
-  if (minaps) {
-    check_ccw(vs);
-  }
+  if (minaps) check_ccw(vs);
   if (k_debug) {
     {
       for_int(i, nn.ar_corners.num()) {

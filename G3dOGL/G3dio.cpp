@@ -116,7 +116,7 @@ void read_mesh_line(char* s) {
     g_obs[robn].enter_point(mesh.point(v));
     mesh.flags(v).flag(vflag_ok) = false;
     if (GMesh::string_has_key(mesh.get_string(v), "Opos")) {
-      if (!lod_mode) Warning("Entering lod_mode");
+      if (!lod_mode && 0) Warning("Entering lod_mode");
       lod_mode = true;
       Point po;
       assertx(parse_key_vec(mesh.get_string(v), "Opos", po));

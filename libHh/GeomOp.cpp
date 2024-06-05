@@ -113,6 +113,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
       Vector vc = pc - pp;
       if (is_zero(vc)) {
         Warning("is_zero(vc)");
+        if (0) SHOW(pa);
         if (!have_prior && i >= np) {
           Warning("Degenerate solid angle");
           sum_ang = D_TAU;

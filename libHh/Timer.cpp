@@ -58,7 +58,7 @@ int cpu_mhz_speed() {
   // There is concern that CPU clock frequency can change dynamically.
   static int v = 0;
   static std::once_flag flag;
-  std::call_once(flag, [] {
+  const auto initialize_speed = [] {
     HKEY hkey;
     const char* subkey = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, subkey, 0, KEY_QUERY_VALUE, &hkey)) return;
@@ -67,7 +67,8 @@ int cpu_mhz_speed() {
     if (RegQueryValueExA(hkey, "~MHz", nullptr, &tdword, reinterpret_cast<uchar*>(&val), &len)) return;
     assertx(len == 4 && val > 0);
     v = val;
-  });
+  };
+  std::call_once(flag, initialize_speed);
   return v;
 }
 #endif

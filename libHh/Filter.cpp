@@ -368,7 +368,7 @@ const Filter& Filter::get(const string& name) {
   // Careful: Filter::get() may be called by some static constructor.
   static Array<const Filter*> filters;
   static std::once_flag flag;
-  std::call_once(flag, [] {
+  const auto initialize_filters = [] {
     filters.push(&Filter_impulse::instance());
     filters.push(&Filter_box::instance());
     filters.push(&Filter_triangle::instance());
@@ -384,7 +384,8 @@ const Filter& Filter::get(const string& name) {
     filters.push(&Filter_lanczos6::instance());
     filters.push(&Filter_lanczos10::instance());
     filters.push(&Filter_hamming6::instance());
-  });
+  };
+  std::call_once(flag, initialize_filters);
   assertx(filters.num());
   for (const Filter* filter : filters) {
     string fname = filter->name();

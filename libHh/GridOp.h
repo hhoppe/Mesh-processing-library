@@ -521,7 +521,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   // However, operating on last dimension is most efficient due to memory layout.
   // Therefore, if identical downsampling on multiple dimensions, we prefer to do last dimension first.
   // And,       if identical upsampling   on multiple dimensions, we prefer to do last dimension last.
-  sort(ar, [](const Tup& t1, const Tup& t2) {
+  const auto by_quickest_size_reduction = [](const Tup& t1, const Tup& t2) {
     Vec2<Tup> tups(t1, t2);
     for (Tup& t : tups) {
       if (1 && t.dim == D - 1) {
@@ -531,7 +531,8 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
       }
     }
     return tups[0].scaling < tups[1].scaling;
-  });
+  };
+  sort(ar, by_quickest_size_reduction);
   CGridView<D, T> gridref(grid);  // (becomes gr after first iteration)
   for (const Tup& tup : ar) {
     int d = tup.dim;  // SHOW(d);

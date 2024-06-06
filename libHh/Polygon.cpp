@@ -163,11 +163,10 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
   assertx((pa.num() & 0x1) == 0);
   if (!pa.num()) return;
   Vector vint = get_vint(poly_normal, plane_normal);
-  struct InterLess {
-    bool operator()(const Point& p1, const Point& p2) const { return cmp_inter(p1, p2, _vint) == -1; }
-    const Vector& _vint;
+  const auto by_increasing_intersection_t = [&](const Point& p1, const Point& p2) {
+    return cmp_inter(p1, p2, vint) == -1;
   };
-  sort(pa, InterLess{vint});
+  sort(pa, by_increasing_intersection_t);
 }
 
 static inline float adjust_tolerance(float tol) {

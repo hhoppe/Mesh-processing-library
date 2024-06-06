@@ -1773,6 +1773,10 @@ void triangulate_quads(ETriType type) {
     assertx(va.num() == 4);
     Vertex va0 = va[0], va2 = va[2];
     bool other_diag;
+    const auto uv_distance_from_center = [&](int i) {
+      UV uv = get_uv(va[i]);
+      return abs(uv[0] - .5f) + abs(uv[1] - .5f);
+    };
     switch (type) {
       case ETriType::dshort: {  // Use GIM rule to select shorter diagonal.
         const float gim_diagonal_factor = 1.0f;
@@ -1794,18 +1798,12 @@ void triangulate_quads(ETriType type) {
         break;
       }
       case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1][0..1] domain
-        const int maxi = arg_max(transform(range(4), [&](int i) {
-          UV uv = get_uv(va[i]);
-          return abs(uv[0] - .5f) + abs(uv[1] - .5f);
-        }));
+        const int maxi = arg_max(transform(range(4), uv_distance_from_center));
         other_diag = maxi == 1 || maxi == 3;
         break;
       }
       case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1][0..1] domain
-        const int maxi = arg_max(transform(range(4), [&](int i) {
-          UV uv = get_uv(va[i]);
-          return abs(uv[0] - .5f) + abs(uv[1] - .5f);
-        }));
+        const int maxi = arg_max(transform(range(4), uv_distance_from_center));
         other_diag = maxi == 0 || maxi == 2;
         break;
       }
@@ -2446,6 +2444,15 @@ void do_info() {
       showdf("Non-triangular faces; volume not computed.\n");
   }
   {
+    HH_STAT(Sfinscribedr);
+    for (Face f : mesh.faces()) {
+      if (mesh.is_triangle(f)) {
+        Vec3<Point> points = mesh.triangle_points(f);
+        Sfinscribedr.enter(inscribed_radius(points[0], points[1], points[2]));
+      }
+    }
+  }
+  {
     const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
     showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   }
@@ -2971,6 +2978,26 @@ void do_norgroup() {
     int norgroup = mapfg.get(f);
     mesh.update_string(f, "norgroup", csform(str, "%d", norgroup));
   }
+}
+
+float face_inscribed_radius(Face f) {
+  Vec3<Point> points = mesh.triangle_points(f);
+  return inscribed_radius(points[0], points[1], points[2]);
+}
+
+bool is_degenerate(Face f) { return face_inscribed_radius(f) < 1e-6f; }
+
+void do_swapdegendiag() {
+  Set<Edge> set_bad_edges;
+  for (Face f : mesh.faces())
+    if (is_degenerate(f))
+      for (Edge e : mesh.edges(f)) set_bad_edges.add(e);
+  Array<Edge> bad_edges{set_bad_edges};
+  showdf("swapdegendiag: found %d bad edges to swap\n", bad_edges.num());
+  const auto by_decreasing_length = [&](Edge e1, Edge e2) { return mesh.length2(e1) > mesh.length2(e2); };
+  sort(bad_edges, by_decreasing_length);
+  for (Edge e : bad_edges)
+    if (any_of(mesh.faces(e), &is_degenerate) && assertw(mesh.legal_edge_swap(e))) mesh.swap_edge(e);
 }
 
 void do_transf(Args& args) {
@@ -4432,6 +4459,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(splitmatbnd, ": split vertices if face strings different");
   HH_ARGSD(renormalizenor, ": renormalize normals");
   HH_ARGSD(norgroup, ": assign faces norgroup id (smooth normals)");
+  HH_ARGSD(swapdegendiag, ": swap edge next to zero-inscribed-radius faces");
   HH_ARGSD(colorheight, "fac : assign vertex rgb based on elevation");
   HH_ARGSD(colorsqheight, "fac : same but with squared elevation");
   HH_ARGSD(colorbizarre, ": assign vertex rgb interestingly");

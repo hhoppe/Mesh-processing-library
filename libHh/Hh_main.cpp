@@ -81,11 +81,12 @@ double get_seconds_per_counter() {
 #elif defined(_WIN32)
   static double v;
   static std::once_flag flag;
-  std::call_once(flag, [] {
+  const auto initialize_frequency = [] {
     LARGE_INTEGER l;
     assertx(QueryPerformanceFrequency(&l));
     v = 1. / assertx(double(l.QuadPart));
-  });
+  };
+  std::call_once(flag, initialize_frequency);
   return v;  // 3.01874e-07 (based on ACPI Power Management pmtimer).
 #else
   return 1e-9;

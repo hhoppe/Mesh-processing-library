@@ -54,7 +54,10 @@ template <typename T> class Encoding : noncopyable {
     Array<P> ar;
     ar.reserve(_map.num());
     for (auto& [e, prob] : _map) ar.push(P{prob, make_string(e)});
-    sort(ar, [](const P& p1, const P& p2) { return p1.prob < p2.prob || (p1.prob == p2.prob && p1.str < p2.str); });
+    const auto by_decreasing_prob = [](const P& p1, const P& p2) {
+      return p1.prob > p2.prob || (p1.prob == p2.prob && p1.str < p2.str);
+    };
+    sort(ar, by_decreasing_prob);
     showdf("Encoding {\n");
     for (const P& p : ar) showdf(" %s %g\n", p.str.c_str(), p.prob);
     showdf("}\n");
@@ -141,8 +144,10 @@ template <typename T> class Encoding : noncopyable {
       Array<P> ar;
       ar.reserve(_map.num());
       for (auto& [e, prob] : _map) ar.push(P{prob, cb_entry_name(e)});
-      // Sort in descending order by prob, then if equal, ascending by name.
-      sort(ar, [](const P& p1, const P& p2) { return p1.prob > p2.prob || (p1.prob == p2.prob && p1.str < p2.str); });
+      const auto by_decreasing_prob_or_ascending_name = [](const P& p1, const P& p2) {
+        return p1.prob > p2.prob || (p1.prob == p2.prob && p1.str < p2.str);
+      };
+      sort(ar, by_decreasing_prob_or_ascending_name);
       float cumu_prob = 0.f;
       for_int(i, min(ntop, ar.num())) {
         const P& p = ar[i];

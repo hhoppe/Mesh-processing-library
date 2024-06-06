@@ -4517,8 +4517,8 @@ void parallel_optimize() {
       const EcolResult ecol_result = try_ecol(e, false);
       ar_edgecost[index].cost = ecol_result.cost;
     });
-    const auto increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
-    sort(ar_edgecost, increasing_cost);
+    const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
+    sort(ar_edgecost, by_increasing_cost);
 
     Set<Edge> invalidated_edges;
     const float k_fraction_edges = 0.15f;

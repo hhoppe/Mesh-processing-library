@@ -472,12 +472,13 @@ class NormalMapping_nvrc final : public NormalMapping {
 NormalMapping* NormalMapping::get() {
   static Array<NormalMapping*> normalmappings;
   static std::once_flag flag;
-  std::call_once(flag, [] {
+  const auto initialize_normalmappings = [] {
     normalmappings.push(&NormalMapping_ogl2::instance());
     normalmappings.push(&NormalMapping_frag1::instance());
     normalmappings.push(&NormalMapping_nvrc::instance());
     normalmappings.push(&NormalMapping_dot3::instance());
-  });
+  };
+  std::call_once(flag, initialize_normalmappings);
   assertx(normalmappings.num());
   string desired_name = getenv_string("NORMAL_MAPPING");
   for (NormalMapping* normalmapping : normalmappings) {

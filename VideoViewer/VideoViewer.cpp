@@ -337,11 +337,13 @@ class DirMediaFilenames {
   static Array<string> sort_dir(const string& directory, Array<string> filenames) {
     switch (g_sort) {
       case ESort::name: sort(filenames); break;
-      case ESort::date:
-        sort(filenames, [&](const string& s1, const string& s2) {
+      case ESort::date: {
+        const auto by_increasing_modification_time = [&](const string& s1, const string& s2) {
           return (get_path_modification_time(directory + '/' + s1) < get_path_modification_time(directory + '/' + s2));
-        });
+        };
+        sort(filenames, by_increasing_modification_time);
         break;
+      }
       default: assertnever("");
     }
     return filenames;
@@ -532,16 +534,16 @@ unique_ptr<Object> object_reading_image(const string& filename) {
   Image image;
   HH_CTIMER("_read_image", g_verbose >= 1);
   // about 0.20sec for 5472x3648 using Image_wic; 0.40sec using Image_libs libjpeg; 0.08sec using Pixel::gray
+  const auto prefetch_matches_filename = [&](const PrefetchImage& p) {
+    return p.filename == filename && p.file_modification_time == get_path_modification_time(filename) && p.pimage;
+  };
   bool bgra = false, unsaved = false;
   if (0) {  // test the response time without any loading delay
     static uchar uc = 40;
     uc = narrow_cast<uchar>(40 + my_mod(uc + 40, 180));  // not threadsafe
     HH_TIMER("_read_init");
     image.init(V(3648, 5472), Pixel::gray(uc));
-  } else if (PrefetchImage* pp = find_if(g_prefetch_image, [&](const PrefetchImage& p) {
-               return p.filename == filename && p.file_modification_time == get_path_modification_time(filename) &&
-                      p.pimage;
-             })) {
+  } else if (PrefetchImage* pp = find_if(g_prefetch_image, prefetch_matches_filename)) {
     std::lock_guard<std::mutex> lock(g_mutex_prefetch);
     PrefetchImage& p = *pp;
     assertx(p.filename == filename);
@@ -2872,10 +2874,11 @@ void upload_image_to_texture() {
         for_int(c, 2) {
           Vec2<int> offset = twice(0);
           Vec2<int> dims = g_tex_dims.with(c, g_background_padding_width);
-          upload_sub_texture(level, offset, dims, [&](MatrixView<Pixel> frame) {
+          const auto just_fill_with_color = [&](MatrixView<Pixel> frame) {
             fill(frame, color);
             return format;
-          });
+          };
+          upload_sub_texture(level, offset, dims, just_fill_with_color);
         }
       }
       prev_tex_active_dims = twice(-1);  // force update of remaining two gutters
@@ -2895,16 +2898,17 @@ void upload_image_to_texture() {
       Pixel color = k_background_color;
       if (supports_BGRA) color = color.to_BGRA();
       if (g_verbose >= 1) SHOW("padding", c, offset, dims);
-      upload_sub_texture(level, offset, dims, [&](MatrixView<Pixel> frame) {
+      const auto just_fill_with_color = [&](MatrixView<Pixel> frame) {
         fill(frame, color);
         return format;
-      });
+      };
+      upload_sub_texture(level, offset, dims, just_fill_with_color);
     }
   }
   {  // upload the texture data
     Vec2<int> offset = twice(g_background_padding_width);
     const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
-    upload_sub_texture(level, offset, g_tex_active_dims, [&](MatrixView<Pixel> frame) {
+    const auto copy_view_to_frame = [&](MatrixView<Pixel> frame) {
       GLenum frame_format = format;
       if (getob()._video_nv12.size()) {
         CNv12View view = getob()._video_nv12[g_framenum];
@@ -2936,7 +2940,8 @@ void upload_image_to_texture() {
         }
       }
       return frame_format;
-    });
+    };
+    upload_sub_texture(level, offset, g_tex_active_dims, copy_view_to_frame);
   }
   g_generated_mipmap = false;
   {

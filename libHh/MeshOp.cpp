@@ -490,7 +490,7 @@ bool extraordinary_crease_vertex(const GMesh& mesh, Vertex v) {
 Vnors::EType get_default_nor_type() {
   static Vnors::EType default_nor_type;
   static std::once_flag flag;
-  std::call_once(flag, [] {
+  const auto initialize_default_nor_type = [] {
     default_nor_type = (getenv_bool("SUM_NOR")      ? Vnors::EType::sum
                         : getenv_bool("AREA_NOR")   ? Vnors::EType::area
                         : getenv_bool("SLOAN_NOR")  ? Vnors::EType::sloan
@@ -501,7 +501,8 @@ Vnors::EType get_default_nor_type() {
       default_nor_type = Vnors::EType::angle;
     else
       Warning("Normal computation method is explicitly specified");
-  });
+  };
+  std::call_once(flag, initialize_default_nor_type);
   return default_nor_type;
 }
 
@@ -510,9 +511,8 @@ Vnors::EType get_default_nor_type() {
 Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
   static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
   const bool hasvnor = ignore_mesh_normals ? false : parse_key_vec(mesh.get_string(v), "normal", _nor);
-  const int ncnor = ignore_mesh_normals ? 0 : int(count_if(mesh.corners(v), [&](Corner c) {
-    return GMesh::string_has_key(mesh.get_string(c), "normal");
-  }));
+  const auto corner_has_normal = [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "normal"); };
+  const int ncnor = ignore_mesh_normals ? 0 : int(count_if(mesh.corners(v), corner_has_normal));
   if (hasvnor && !ncnor) return;
   if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
 
@@ -748,7 +748,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
       ar.push(S{f, d2});
     }
     nvis += ar.num();
-    sort(ar, [](const S& s1, const S& s2) { return s1.d2 < s2.d2; });
+    const auto by_increasing_distance = [](const S& s1, const S& s2) { return s1.d2 < s2.d2; };
+    sort(ar, by_increasing_distance);
     for (const auto& pa : ar) {
       if (pa.d2 >= mind2) break;
       Face f = pa.f;

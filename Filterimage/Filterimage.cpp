@@ -1149,10 +1149,8 @@ void do_matchtoalpha() {
 // *** quadpullpush
 
 template <int D> int64_t count_undef(CGridView<D, Pixel> grid) {
-  return count_if(grid, [](const Pixel& pix) {
-    assertx(pix[3] == 0 || pix[3] == 255);
-    return pix[3] == 0;
-  });
+  const auto is_undefined = [](const Pixel& pix) { return assertx(pix[3] == 0 || pix[3] == 255), pix[3] == 0; };
+  return count_if(grid, is_undefined);
 }
 
 template <int D> void quad_pullpush(GridView<D, Pixel> grid) {

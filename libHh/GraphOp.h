@@ -79,7 +79,8 @@ auto graph_mst(const Graph<T>& undirectedg, Func fdist) {
       tedges.push(tedge{v1, v2, fdist(v1, v2)});
     }
   }
-  sort(tedges, [](const tedge& a, const tedge& b) { return a.w < b.w; });
+  const auto by_increasing_weight = [](const tedge& a, const tedge& b) { return a.w < b.w; };
+  sort(tedges, by_increasing_weight);
   UnionFind<T> uf;
   int neconsidered = 0, neadded = 0;
   for (const tedge& t : tedges) {

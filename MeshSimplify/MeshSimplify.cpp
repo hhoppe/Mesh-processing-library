@@ -4548,7 +4548,7 @@ void parallel_optimize() {
         assertx(minii2 && no_fit_geom);
       }
       // assertx(ecol_result.cost == cost);
-      if (float err = abs(ecol_result.cost - cost); 0 && err > 1e-6f && err / cost > 1e-4f) {
+      if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0) {
         SHOW(err, cost);
         assertnever("?");
       }

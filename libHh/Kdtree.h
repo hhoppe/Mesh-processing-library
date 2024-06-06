@@ -51,7 +51,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     SGrid<float, 2, D> _bb{};  // bounding box on entry
   };
   struct Node {
-    int _axis;            // 0 .. D - 1
+    int _axis;  // 0 .. D - 1
     float _val;
     Stack<int> _stackei;  // Entry indices
     int _l{-1};           // lower-valued subtree

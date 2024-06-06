@@ -2710,8 +2710,7 @@ void do_reduce_old_sequential() {
     Edge e = pqe.remove_min();
     for (Vertex v : mesh.vertices(e))
       for (Vertex v2 : mesh.vertices(v))
-        for (Edge e2 : mesh.edges(v2))
-          pqe.remove(e2);
+        for (Edge e2 : mesh.edges(v2)) pqe.remove(e2);
     Vertex vkept = mesh.vertex1(e);
     const Point newp = [&]() {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);

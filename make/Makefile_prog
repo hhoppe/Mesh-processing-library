@@ -40,10 +40,7 @@ $(exe): $(obj) $(extra_objs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n
 	$(CXX) $(LDOUTPUT) $(TARGET_ARCH) $(call add_drive,$(obj) $(extra_objs) $(LDLIBS)) $(LDFLAGS)
 
 test: $(outputs)
-	@echo '** Summary of diffs'
-	@shopt -s nullglob && for i in *.diff; do echo "* $$i"; \
-	  if [[ `cat $$i | wc -l` -gt 100 ]]; then echo "Long diff **"; else cat $$i; fi \
-	done
+	$(cmd_diffs_summary)
 
 $(obj): built_ob.$(extobj).$(CONFIG)
 built_ob.$(extobj).$(CONFIG):

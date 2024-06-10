@@ -3277,7 +3277,7 @@ void do_projectimage(Args& args) {
     }
     Vector4 vec4 = sample_domain(imagev, V(p[2], p[1]), filterbs);
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
-    mesh.update_string(v, "rgb", csform_vec(str, ArView(vec4.data(), 3)));
+    mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }
 }
 

@@ -3334,7 +3334,7 @@ void do_resamplemesh(Args& args) {
     Point p = mesh.point(v);  // in range [0, 1]
     Vector4 vec4 = sample_domain(imagev, V(p[1], p[0]), filterbs);
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
-    mesh.update_string(v, "rgb", csform_vec(str, ArView(vec4.data(), 3)));
+    mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }
   hh_clean_up();
   mesh.write(std::cout);

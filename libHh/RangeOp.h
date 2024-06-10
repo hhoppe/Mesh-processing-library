@@ -429,10 +429,9 @@ SumType dist2(const Range1& range1, const Range2& range2) {
 }
 
 // Compute the Euclidean distance between two ranges interpreted as vectors.
-template <
-    typename DesiredType = void, typename Range1, typename Range2, typename = enable_if_range_t<Range1>,
-    typename = enable_if_range_t<Range2>, typename Iterator = iterator_t<Range1>,
-    typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
+template <typename DesiredType = void, typename Range1, typename Range2, typename = enable_if_range_t<Range1>,
+          typename = enable_if_range_t<Range2>, typename Iterator = iterator_t<Range1>,
+          typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
 SumType dist(const Range1& range1, const Range2& range2) {
   return sqrt(dist2<SumType>(range1, range2));
 }

@@ -238,16 +238,6 @@ const char* GMesh::string_key(string& str, const char* ss, const char* key) {
   return sfound;
 }
 
-const char* csform_vec(string& str, CArrayView<float> ar) {
-  switch (ar.num()) {
-    case 1: return csform(str, "(%g)", ar[0]);
-    case 2: return csform(str, "(%g %g)", ar[0], ar[1]);
-    case 3: return csform(str, "(%g %g %g)", ar[0], ar[1], ar[2]);
-    case 4: return csform(str, "(%g %g %g %g)", ar[0], ar[1], ar[2], ar[3]);
-    default: assertnever("");
-  }
-}
-
 bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar) {
   assertx(key && ar.num() >= 1);
   if (!ss) return false;

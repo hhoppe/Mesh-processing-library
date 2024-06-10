@@ -241,7 +241,7 @@ define cmd_hcheck
     elif [[ -e $@ ]] && [[ `cat $@ | wc -l` -le 30 ]]; then \
       cat $@; \
     fi; \
-  fi;
+  fi
 endef
 
 # Test the program % by saving its output into %.ou and then comparing it with the reference output in %.ref.
@@ -253,6 +253,16 @@ endef
 %.ref :
 	touch $@
 # .PRECIOUS: %.ref  # Setting this would avoid deleting a temporarily created %.ref.
+
+define cmd_diffs_summary
+  @if ls *.diff >&/dev/null; then \
+    echo '** Summary of diffs'; \
+    for i in *.diff; do \
+      echo "* $$i"; \
+      if [[ `cat $$i | wc -l` -gt 100 ]]; then echo "Long diff **"; else cat $$i; fi; \
+    done; \
+  fi
+endef
 
 # Not used, although it could be useful:
 # makefile0 ?= $(firstword $(MAKEFILE_LIST))

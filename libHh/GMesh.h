@@ -2,7 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GMESH_H_
 #define MESH_PROCESSING_LIBHH_GMESH_H_
 
-#include <cstring>  // std::memcpy()
+#include <charconv>  // std::to_chars()
+#include <cstring>   // std::memcpy()
 
 #include "libHh/Mesh.h"
 #include "libHh/Polygon.h"
@@ -129,8 +130,8 @@ class GMesh : public Mesh {
   mutable Polygon _tmp_poly;
 };
 
-// Format a vector string "(%g ... %g)" with ar.num() == 1..4
-const char* csform_vec(string& str, CArrayView<float> ar);
+// Format a vector string "(%g ... %g)".
+template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec);
 
 // Parse a vector from a {key=value}+ string
 bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar);
@@ -187,6 +188,40 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
     func();
     return false;
   });
+}
+
+//----------------------------------------------------------------------------
+
+template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
+  // https://en.cppreference.com/w/cpp/compiler_support/17
+  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
+  static_assert(n >= 1 && n <= 4);
+  switch (n) {
+    case 1: return csform(str, "(%g)", vec[0]);
+    case 2: return csform(str, "(%g %g)", vec[0], vec[1]);
+    case 3: return csform(str, "(%g %g %g)", vec[0], vec[1], vec[2]);
+    case 4: return csform(str, "(%g %g %g %g)", vec[0], vec[1], vec[2], vec[3]);
+    default: HH_UNREACHABLE;
+  }
+#else  // C++17.
+  constexpr int size = 100;
+  static_assert(n * 15 < size);
+  str.resize(size);
+  char* p = str.data();
+  char* end = p + size;
+  *p++ = '(';
+  for_int(i, n) {
+    if (i) *p++ = ' ';
+    constexpr int precision = 6;  // Default for printf("%g").
+    const auto result = std::to_chars(p, end, vec[i], std::chars_format::general, precision);
+    p = result.ptr;
+    ASSERTXX(p < end - 2);
+  }
+  *p++ = ')';
+  *p++ = char{0};
+  return str.c_str();
+#endif
 }
 
 inline Vec3<Point> GMesh::triangle_points(Face f) const {

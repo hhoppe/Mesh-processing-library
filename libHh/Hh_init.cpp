@@ -7,9 +7,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <io.h>      // _setmode()
-#include <locale.h>  // setlocale()
 #endif
 
+#include <clocale>  // setlocale()
 #include <csignal>  // signal()
 #include <cstring>  // std::strerror
 #include <mutex>    // std::once_flag, std::call_once()

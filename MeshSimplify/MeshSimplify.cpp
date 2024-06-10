@@ -309,7 +309,7 @@ struct WedgeInfo {
 
 Array<WedgeInfo> gwinfo;  // indexed by c_wedge_id, gwinfo[0] not used!
 
-Array<unique_ptr<BQemT>> gwq;  // empty() if !minqem.  indexed by c_wedge_id
+Array<unique_ptr<BQemT>> gwq;  // empty() if !minqem || qemlocal.  indexed by c_wedge_id
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // wedge id's of mesh corners
 
@@ -3598,7 +3598,6 @@ struct EcolResult {
 // Consider the edge collapse of edge e.
 EcolResult try_ecol(Edge e, bool commit) {
   EcolResult ecol_result;
-  HH_PTIMER("__try_ecol");
   if (!mesh.nice_edge_collapse(e)) return {R_illegal};
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // f2 could be nullptr
@@ -3946,8 +3945,8 @@ EcolResult try_ecol(Edge e, bool commit) {
           nn.ar_wq[0]->copy(qbu0);
         }
         {
-          WedgeInfo wijunk;
-          extract_qem_vector(minp[0].data(), newp, wijunk);  // just want newp
+          WedgeInfo dummy_wi;
+          extract_qem_vector(minp[0].data(), newp, dummy_wi);
           dihpenalty = dihedral_penalty(dih, nn, newp);
           if (dihpenalty == BIGFLOAT) continue;
           if (!strict_ii) ii = estimate_ii(v1, v2, newp);
@@ -3957,10 +3956,10 @@ EcolResult try_ecol(Edge e, bool commit) {
         }
         if (fit_colors || fit_normals) {
           for_int(i, nw) {
-            Point pjunk;
+            Point dummy_p;
             WedgeInfo wi;
-            extract_qem_vector(minp[i].data(), pjunk, wi);  // just want wi
-            assertx(pjunk == newp);
+            extract_qem_vector(minp[i].data(), dummy_p, wi);  // just want wi
+            assertx(dummy_p == newp);
             if (fit_colors) {
               for_int(c, 3) {
                 float v = wi.col[c];
@@ -3982,7 +3981,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           }
         }
         for_int(i, nw) create_qem_vector(newp, ar_wi[i], minp[i]);
-      }
+      }  // End of "if (fakeii == 3)".
       {
         double v = 0.;
         for_int(i, nw) v += nn.ar_wq[i]->evaluate(minp[i].data());
@@ -4106,7 +4105,6 @@ EcolResult try_ecol(Edge e, bool commit) {
   if (!commit) return ecol_result;
 
   // ALL SYSTEMS GO.
-  HH_PTIMER("__doecol");
   if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
   if (wfile_prog) g_necols++;
   int new_desn = v_desn(v1) + v_desn(v2);
@@ -4497,6 +4495,7 @@ float fractional_progress(int orig_nfaces, int orig_nvertices) {
 
 // Simplify the mesh until it has <= nfaces or <= nvertices.
 void parallel_optimize() {
+  HH_STIMER("_parallel_opt");
   const int orig_nfaces = mesh.num_faces(), orig_nvertices = mesh.num_vertices();
   ConsoleProgress cprogress;
   for (;;) {
@@ -4512,14 +4511,21 @@ void parallel_optimize() {
     ar_edgecost.reserve(mesh.num_edges());
     for (Edge e : mesh.edges()) ar_edgecost.push(EdgeCost{e, 0.f});
 
-    parallel_for_each(range(ar_edgecost.num()), [&](int index) {
-      Edge e = ar_edgecost[index].e;
-      const EcolResult ecol_result = try_ecol(e, false);
-      ar_edgecost[index].cost = ecol_result.cost;
-    });
-    const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
-    sort(ar_edgecost, by_increasing_cost);
+    {
+      HH_STIMER("__opt_cost");
+      parallel_for_each(range(ar_edgecost.num()), [&](int index) {
+        Edge e = ar_edgecost[index].e;
+        const EcolResult ecol_result = try_ecol(e, false);
+        ar_edgecost[index].cost = ecol_result.cost;
+      });
+    }
+    {
+      HH_STIMER("__opt_sort");
+      const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
+      sort(ar_edgecost, by_increasing_cost);
+    }
 
+    HH_STIMER("__opt_ecols");
     Set<Edge> invalidated_edges;
     const float k_fraction_edges = 0.15f;
     int num_edges_considered = 0, num_edges_collapsed = 0;
@@ -4795,7 +4801,7 @@ void do_rebuildpq() {
 
 void do_verb(Args& args) {
   verb = args.get_int();
-  if (verb < 2 && !Timer::show_times()) Timer::set_show_times(-1);
+  // if (verb < 2 && !Timer::show_times()) Timer::set_show_times(-1);
 }
 
 // Output the current mesh.

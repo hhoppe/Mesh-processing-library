@@ -360,8 +360,29 @@ void aligned_free(void* p) {
 }
 
 std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings) {
-  sline.clear();       // Just to be safe, if the caller failed to test return value.
-  getline(is, sline);  // Already creates its own sentry project (with noskipws == true).
+  if (0) {  // Slower.
+    sline.clear();
+    for (;;) {
+      char ch;
+      is.get(ch);
+      if (!is) return is;
+      if (ch == '\n') break;
+      sline.push_back(ch);
+    }
+    return is;
+  }
+  if (0) {  // On Visual Studio, ~1.05x faster than std::getline(); On clang, ~1.1x slower.
+    char line[500];
+    is.get(line, sizeof(line) - 1, '\n');
+    if (!is) return is;
+    char ch;
+    is.get(ch);
+    assertx(ch == '\n');
+    sline = line;
+    return is;
+  }
+  // Note that getline() always begins by clearing the string.
+  std::getline(is, sline);  // Already creates its own sentry project (with noskipws == true).
   if (is && sline.size() && sline.back() == '\r') {
     sline.pop_back();
     if (dos_eol_warnings) {

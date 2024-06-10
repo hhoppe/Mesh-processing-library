@@ -432,9 +432,9 @@ SumType dist2(const Range1& range1, const Range2& range2) {
 template <
     typename DesiredType = void, typename Range1, typename Range2, typename = enable_if_range_t<Range1>,
     typename = enable_if_range_t<Range2>, typename Iterator = iterator_t<Range1>,
-    typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
-MeanType dist(const Range1& range1, const Range2& range2) {
-  return sqrt(MeanType(dist2(range1, range2)));
+    typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Iterator>, DesiredType>>
+SumType dist(const Range1& range1, const Range2& range2) {
+  return sqrt(dist2<SumType>(range1, range2));
 }
 
 // Compute the inner product of two ranges.

@@ -148,14 +148,14 @@ float spherical_triangle_area(const Vec3<Point>& pa) {
 
 bool get_bary(const Point& p, const Vec3<Point>& pa, Bary& bary) {
   Vector nor = cross(pa[1] - pa[0], pa[2] - pa[0]);
-  double area = mag<>(nor);
-  if (area <= 1e-10) {
+  float area = float(mag<double>(nor));
+  if (area <= 1e-10f) {
     fill(bary, 1.f / 3.f);
     return false;
   }
   for_int(i, 3) {
     Vector sn = cross(pa[mod3(i + 2)] - pa[mod3(i + 1)], p - pa[mod3(i + 1)]);
-    bary[i] = float(mag(sn) / area * (dot(sn, nor) > 0.f ? 1.f : -1.f));
+    bary[i] = mag(sn) / area * (dot(sn, nor) > 0.f ? 1.f : -1.f);
   }
   if (mag2(to_Vector(pa[0]) * bary[0] + to_Vector(pa[1]) * bary[1] + to_Vector(pa[2]) * bary[2] - to_Vector(p)) >=
       1e-10f)

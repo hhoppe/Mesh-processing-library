@@ -6,10 +6,10 @@ move.enter(4) = 0
 move.enter(5) = 2
 move.enter(4) = 1
 # Encoding {
+#  10 0.5
+#  12 0.25
 #  11 0.125
 #  13 0.125
-#  12 0.25
-#  10 0.5
 # }
 enc.huffman_cost() = 1.75
 enc.entropy() = 1.75

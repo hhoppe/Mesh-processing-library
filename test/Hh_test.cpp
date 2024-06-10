@@ -603,7 +603,7 @@ line2)";
     }
   }
   if (1) {
-    RFile fi("echo ' abc' |");  // test to verify that we read the first space using getline
+    RFile fi("echo ' abc' |");  // Test to verify that we read the first space using my_getline().
     string sline;
     assertx(my_getline(fi(), sline));
     assertx(sline == " abc");

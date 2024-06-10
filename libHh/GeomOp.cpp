@@ -9,9 +9,10 @@ namespace hh {
 
 // Deduced from book: Coxeter "Geometry".
 float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
-  double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0);  // use double dist<>() rather than float dist()
-  double s = (a + b + c) * .5;
-  double d2 = s * (s - a) * (s - b) * (s - c);
+  using Precision = double;
+  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  Precision s = (a + b + c) * .5;
+  Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
     Warning("circum_radius degenerate");
     return 1e10f;
@@ -24,9 +25,10 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   // r = d / s
   // d = sqrt(s * (s - a) * (s - b) * (s -c))
   // s = (a + b + c) / 2
-  double a = dist<>(p0, p1), b = dist<>(p1, p2), c = dist<>(p2, p0);
-  double s = (a + b + c) * .5;
-  double d2 = s * (s - a) * (s - b) * (s - c);
+  using Precision = double;
+  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  Precision s = (a + b + c) * .5;
+  Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
     Warning("inscribed_radius degenerate");
     return 0.f;
@@ -36,9 +38,10 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
 
 // Should normalize to be 1.f for an equilateral triangle?
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
-  double a = dist<double>(p0, p1), b = dist<double>(p1, p2), c = dist<double>(p2, p0);
-  double s = (a + b + c) * .5;
-  double d2 = s * (s - a) * (s - b) * (s - c);
+  using Precision = double;
+  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  Precision s = (a + b + c) * .5;
+  Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
     // Warning("aspect_ratio degenerate");
     return 1e10f;
@@ -68,20 +71,19 @@ float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, 
 }
 
 float solid_angle(const Point& p, CArrayView<Point> pa) {
-  // solid angle: fraction area covered on sphere centered about p.  maximum = TAU * 2.
-  // idea: Gauss-Bonnet theorem:
-  // integral of curvature + line integral + exterior angles = TAU
-  // integral of curvature on unit sphere is equal to area
-  // line integral along geodesics (great circles) is zero
-  // So, solid angle = TAU - sum of exterior angles on unit sphere
+  // The solid angle is the fraction of area covered on a sphere centered about p.  Range is [0, TAU * 2].
+  // Idea: Gauss-Bonnet theorem: integral of curvature + line integral + exterior angles = TAU.
+  // Integral of curvature on unit sphere is equal to area; line integral along geodesics (great circles) is zero.
+  // Therefore, solid angle = TAU - sum of exterior angles on sphere.
   //
   // NOTE: This is imprecise for small triangles, due to TAU - TAU, but changing computation to double fixes that.
   //
-  // Alternative definitions (only valid for ang < TAU / 4):
-  // sin(ang / 2) = sqrt(sin(s) * sin(s - a) * sin(s - b) * sin(s - c)) / (2 * cos(a / 2) * cos(b / 2) * cos(c / 2))
-  //  where  s = (a + b + c) / 2   a = arclen(BC) on sphere, ...
+  // Alternative definition (only valid for ang < TAU / 4):
+  // sin(ang / 2) = sqrt(sin(s) * sin(s - a) * sin(s - b) * sin(s - c)) / (2 * cos(a / 2) * cos(b / 2) * cos(c / 2)),
+  //  where  s = (a + b + c) / 2,   a = arclen(BC) on sphere, b = arclen(CA), and c = arclen(AB).
   //
-  // tan(ang / 4) = sqrt(tan(s / 2) tan((s - a) / 2) tan((s - b) / 2) tan((s - c) / 2))
+  // Another alternative definition:
+  // tan(ang / 4) = sqrt(tan(s / 2) tan((s - a) / 2) tan((s - b) / 2) tan((s - c) / 2)).
   //
   const int np = pa.num();
   double sum_ang = 0.;
@@ -131,12 +133,12 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
         if (!assertw(v2.normalize())) return 0.f;
         float vcos = dot(v1, v2);
         float vsin = dot(cross(v1, v2), topp);
-        double ang = std::atan2(vsin, vcos);
+        float ang = std::atan2(vsin, vcos);
         // Ambiguity between -TAU / 2 and +TAU / 2 does matter here!
-        if (0) SHOW(ang, ang + D_TAU / 2);
-        if (ang < -D_TAU / 2 + 1e-6) {
-          Warning("Near degen angle");
-          ang = +D_TAU / 2;
+        if (0) SHOW(ang, ang + TAU / 2);
+        if (ang < -TAU / 2 + 1e-6f) {
+          Warning("Near-degenerate angle");
+          ang = +TAU / 2;
         }
         sum_ang += ang;
       }

@@ -34,8 +34,8 @@ class Mklib : noncopyable {
   void hemisphere(int nlat, int nlong);                 // radius 1, #latitudes(>= 2), #longitudes(>= 2)
   void tetra();                                         // centered at centroid, edge=1 height=sqrt(2 / 3)
   void tetraU();                                        // bottom face centroid at origin, top at (0, 0, sqrt(2 / 3))
-  // transformation on object: (-.5, -.5, -.5)<>(.5, .5, .5) with primary axis +x, secondary axis +y ("O")
-  //                        -->  (-.5, -.5, 0)<>(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
+  // transformation on object: (-.5, -.5, -.5)..(.5, .5, .5) with primary axis +x, secondary axis +y ("O")
+  //                        -->  (-.5, -.5, 0)..(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
   template <typename Func = void(int)> void OtoU(Func func, int n) {
     MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::y, TAU / 4);

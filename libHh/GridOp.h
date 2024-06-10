@@ -333,7 +333,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
     if (0) rowv[0] = rowv[0];                               // just copy first element
     for_intL(x, 1, min(cx - lastspecial, lu.Llower.num()))  // special initial elements
         rowv[x] = rowv[x] - lu.Llower[x] * rowv[x - 1];
-    const float cfast = lu.Llower[lu.Llower.num() - 1];
+    const float cfast = lu.Llower.last();
     if (lu.Llower.num() < cx - lastspecial) {
       T vprev = rowv[lu.Llower.num() - 1];
       for_intL(x, lu.Llower.num(), cx - lastspecial) {
@@ -354,7 +354,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
                        (rowv[cx - 2] - lu.UlastcolPen[min(cx - 1, lu.UlastcolPen.num() - 1)] * lastv);
       }
     }
-    const float cfast1 = lu.Uidiag[lu.Uidiag.num() - 1], cfast2 = lu.Uupper;
+    const float cfast1 = lu.Uidiag.last(), cfast2 = lu.Uupper;
     const int low = lu.Uidiag.num() - 1;
     if (cx - 2 - lastspecial >= low) {
       T vprev = rowv[cx - 2 - lastspecial + 1];

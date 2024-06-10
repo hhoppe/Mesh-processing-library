@@ -114,8 +114,8 @@ template <typename T> class Pqueue : noncopyable {
       _ar.sub(1);
       return e;
     }
-    T e0 = std::move(_ar[num() - 1]._e);
-    float pri = _ar[num() - 1]._pri;
+    T e0 = std::move(_ar.last()._e);
+    float pri = _ar.last()._pri;
     _ar.sub(1);
     int j = adjust_down(0, pri);
     _ar[j]._e = std::move(e0);
@@ -250,8 +250,8 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
       ASSERTX(j == 0);
       return e;
     }
-    T e0 = _ar[num() - 1]._e;
-    float pri = _ar[num() - 1]._pri;
+    T e0 = _ar.last()._e;
+    float pri = _ar.last()._pri;
     _ar.sub(1);
     {
       int j = _m.remove(e);
@@ -275,8 +275,8 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     int i = _m.retrieve(e, present);
     if (!present) return -1.f;
     float ppri = _ar[i]._pri;
-    T e0 = _ar[num() - 1]._e;
-    float pri = _ar[num() - 1]._pri;
+    T e0 = _ar.last()._e;
+    float pri = _ar.last()._pri;
     _ar.sub(1);
     {
       int j = _m.remove(e);

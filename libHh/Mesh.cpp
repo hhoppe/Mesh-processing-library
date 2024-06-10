@@ -126,7 +126,7 @@ bool Mesh::legal_create_face(CArrayView<Vertex> va) const {
       if (!setv.add(v)) return false;
     }
   }
-  Vertex vo = va[va.num() - 1];
+  Vertex vo = va.last();
   for_int(i, va.num()) {
     if (query_hedge(vo, va[i])) return false;
     vo = va[i];

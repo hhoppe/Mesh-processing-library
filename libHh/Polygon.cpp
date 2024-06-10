@@ -231,8 +231,8 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
   int ax1 = mod3(axis + 2);
   float py = point[ax0];
   float pz = point[ax1];
-  float y0 = self[num() - 1][ax0] - py;
-  float z0 = self[num() - 1][ax1] - pz;
+  float y0 = last()[ax0] - py;
+  float z0 = last()[ax1] - pz;
   float y1, z1;
   dummy_init(y1, z1);
   int num_intersectionst = 0;

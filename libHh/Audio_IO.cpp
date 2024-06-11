@@ -120,34 +120,34 @@ void Audio::read_file(const string& pfilename) {
       double audio_bitrate = -1.;
       int audio_nchannels = -1;
       int nlines = 0;
-      string sline;
+      string line;
       char vch;
-      while (my_getline(fi(), sline, false)) {
+      while (my_getline(fi(), line, false)) {
         nlines++;
-        if (ldebug) SHOW(sline);
-        if (contains(sline, "Could not find option 'nostdin'")) {
+        if (ldebug) SHOW(line);
+        if (contains(line, "Could not find option 'nostdin'")) {
           Warning("Version of external program 'ffmpeg' may be too old");
           continue;
         }
-        if (contains(sline, "Duration:")) {
+        if (contains(line, "Duration:")) {
           //  Duration: 00:00:05.00, start: 0.000000, bitrate: 32842 kb/s  (some mp4 files)
           //  Duration: 00:00:03.02, start: 0.023021, bitrate: 258 kb/s   (mp3; should be 3.0sec)
           //  Duration: 00:00:05.03, bitrate: 100505 kb/s
           //  Duration: N/A, bitrate: N/A  (invalid.mp4)
-          if (contains(sline, "Duration: N/A")) throw std::runtime_error("Invalid audio in file '" + filename + "'");
+          if (contains(line, "Duration: N/A")) throw std::runtime_error("Invalid audio in file '" + filename + "'");
           {
             int vh, vm, vs, vcs;
-            assertx(sscanf(sline.c_str(), " Duration: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',');
+            assertx(sscanf(line.c_str(), " Duration: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',');
             duration = vh * 3600. + vm * 60. + vs + vcs * .01;
             if (ldebug) SHOW(vh, vm, vs, vcs, duration);
-            string::size_type i = sline.find(" start: ");
+            string::size_type i = line.find(" start: ");
             if (i != string::npos) {
               double start;
-              if (sscanf(sline.c_str() + i, " start: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',') {
+              if (sscanf(line.c_str() + i, " start: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',') {
                 start = vh * 3600. + vm * 60. + vs + vcs * .01;
-              } else if (sscanf(sline.c_str() + i, " start: %lg%c", &start, &vch) == 2 && vch == ',') {
+              } else if (sscanf(line.c_str() + i, " start: %lg%c", &start, &vch) == 2 && vch == ',') {
               } else {
-                SHOW(sline.c_str() + i);
+                SHOW(line.c_str() + i);
                 assertnever("?");
               }
               if (ldebug) SHOW(vh, vm, vs, vcs, duration, start, duration - start);
@@ -156,7 +156,7 @@ void Audio::read_file(const string& pfilename) {
             }
           }
         }
-        if (contains(sline, "Stream #0:") && contains(sline, ": Audio:") && contains(sline, "kb/s")) {
+        if (contains(line, "Stream #0:") && contains(line, ": Audio:") && contains(line, "kb/s")) {
           // Stream #0:1(eng): Audio: aac (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 128 kb/s (default)
           // Stream #0:1(und): Audio: aac (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 63 kb/s (default)
           // Stream #0:1(eng): Audio: pcm_s16le (sowt / 0x74776F73), 44100 Hz, mono, s16, 705 kb/s (default)
@@ -165,28 +165,28 @@ void Audio::read_file(const string& pfilename) {
           // Stream #0:0(eng): Audio: wmav2 (a[1][0][0] / 0x0161), 44100 Hz, 2 channels, fltp, 96 kb/s
           // Stream #0:1(und): Audio: aac (mp4a / 0x6134706D), 48000 Hz, stereo, fltp (default) -- no audio
           string::size_type i;
-          i = sline.find(" Hz");
+          i = line.find(" Hz");
           assertx(i != string::npos);
           if (audio_samplerate >= 0.) assertnever("Multiple audio streams inside media container");
-          i = sline.rfind(", ", i);
+          i = line.rfind(", ", i);
           assertx(i != string::npos);
-          assertx(sscanf(sline.c_str() + i, ", %d H%c", &audio_samplerate, &vch) == 2 && vch == 'z');
-          if (contains(sline, " mono,"))
+          assertx(sscanf(line.c_str() + i, ", %d H%c", &audio_samplerate, &vch) == 2 && vch == 'z');
+          if (contains(line, " mono,"))
             audio_nchannels = 1;
-          else if (contains(sline, " stereo,"))
+          else if (contains(line, " stereo,"))
             audio_nchannels = 2;
-          i = sline.find(" channels");
+          i = line.find(" channels");
           if (i != string::npos) {
             assertx(audio_nchannels < 0);
-            i = sline.rfind(", ", i);
+            i = line.rfind(", ", i);
             assertx(i != string::npos);
-            assertx(sscanf(sline.c_str() + i, ", %d channel%c", &audio_nchannels, &vch) == 2 && vch == 's');
+            assertx(sscanf(line.c_str() + i, ", %d channel%c", &audio_nchannels, &vch) == 2 && vch == 's');
           }
-          i = sline.find(" kb/s");
+          i = line.find(" kb/s");
           assertx(i != string::npos);
-          i = sline.rfind(", ", i);
+          i = line.rfind(", ", i);
           assertx(i != string::npos);
-          assertx(sscanf(sline.c_str() + i, ", %lg kb/%c", &audio_bitrate, &vch) == 2 && vch == 's');
+          assertx(sscanf(line.c_str() + i, ", %lg kb/%c", &audio_bitrate, &vch) == 2 && vch == 's');
           audio_bitrate *= 1000.;
         }
       }

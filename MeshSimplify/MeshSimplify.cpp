@@ -941,7 +941,7 @@ int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
 
 // Create vertex and corner strings representing wedge info on vertex v.
 // Possibly force all info onto corners even if vertex has unique wedge.
-void create_vertex_corner_strings(Vertex v, bool force_on_corners = false) {
+void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners = false) {
   int num = 0, g_wid;
   dummy_init(g_wid);
   bool same_wid = true;
@@ -954,10 +954,9 @@ void create_vertex_corner_strings(Vertex v, bool force_on_corners = false) {
     }
   }
   assertx(num);
-  string str;
   if (!force_on_corners && same_wid) {
     int wid = g_wid;
-    mesh.update_string(v, "wid", sform("%d", wid).c_str());
+    mesh.update_string(v, "wid", csform(str, "%d", wid));
     const WedgeInfo& wi = gwinfo[wid];
     const A3dColor& col = wi.col;
     if (col[0] != k_undefined) mesh.update_string(v, "rgb", csform_vec(str, col));
@@ -969,7 +968,7 @@ void create_vertex_corner_strings(Vertex v, bool force_on_corners = false) {
     for (Corner c : mesh.corners(v)) {
       int wid = c_wedge_id(c);
       const WedgeInfo& wi = gwinfo[wid];
-      mesh.update_string(c, "wid", sform("%d", wid).c_str());
+      mesh.update_string(c, "wid", csform(str, "%d", wid));
       const A3dColor& col = wi.col;
       if (col[0] != k_undefined) mesh.update_string(c, "rgb", csform_vec(str, col));
       const Vector& nor = wi.nor;
@@ -999,13 +998,13 @@ void clear_mesh_strings() {
 
 // Write current mesh.
 void write_mesh(std::ostream& os) {
-  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v);
+  string str;
+  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str);
   for (Vertex v : mesh.vertices()) {
     if (v_global(v)) mesh.update_string(v, "global", "");
   }
   for (Face f : mesh.faces()) create_face_string(f);
   if (sphericalparam) {
-    string str;
     for (Vertex v : mesh.vertices()) {
       const Point& sph = v_sph(v);
       assertx(is_unit(sph));
@@ -4209,6 +4208,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     std::ostream& os = (*wfile_prog)();
     os << "# Beg REcol\n";
     // adapted from write_mesh() and GMesh::write():
+    string str;
     for_int(i, 2) {
       Face f = !i ? fl : fr;
       if (!f) {
@@ -4216,7 +4216,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         continue;
       }
       Vertex vo = mesh.opp_vertex(e, f);
-      create_vertex_corner_strings(vo, true);
+      create_vertex_corner_strings(vo, str, true);
       Corner c = mesh.corner(vo, f);
       const char* sinfo = mesh.get_string(c);
       if (sinfo)
@@ -4225,7 +4225,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
     for_int(i, 2) {
       Vertex v = !i ? vs : vt;
-      create_vertex_corner_strings(v, true);
+      create_vertex_corner_strings(v, str, true);
       const Point& p = mesh.point(v);
       os << "MVertex " << mesh.vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2] << "\n";
       for (Corner c : mesh.corners(v)) {
@@ -4334,7 +4334,8 @@ EcolResult try_ecol(Edge e, bool commit) {
   if (wfile_prog) {
     std::ostream& os = (*wfile_prog)();
     // Faces are gone.
-    create_vertex_corner_strings(vs, true);
+    string str;
+    create_vertex_corner_strings(vs, str, true);
     const Point& p = mesh.point(vs);
     os << "MVertex " << mesh.vertex_id(vs) << "  " << p[0] << " " << p[1] << " " << p[2];
     if (const char* sinfo = mesh.get_string(vs)) os << " {" << sinfo << "}";
@@ -4987,9 +4988,9 @@ int main(int argc, const char** argv) {
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
     HH_TIMER("_readmesh");
     RFile fi(filename);
-    for (string sline; fi().peek() == '#';) {
-      assertx(my_getline(fi(), sline));
-      if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+    for (string line; fi().peek() == '#';) {
+      assertx(my_getline(fi(), line));
+      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
     }
     showdf("%s", args.header().c_str());
     mesh = GMesh(fi());

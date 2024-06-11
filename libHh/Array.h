@@ -337,7 +337,7 @@ inline Bndrule parse_boundaryrule(const string& s) {
     case 'c': bndrule = Bndrule::clamped; break;
     case 'b': bndrule = Bndrule::border; break;
     case '1': bndrule = Bndrule::reflected101; break;
-    default: assertnever(string() + "Boundary rule '" + s + "' not recognized");
+    default: assertnever("Boundary rule '" + s + "' not recognized");
   }
   if (s.size() > 1) assertx(s == boundaryrule_name(bndrule));
   return bndrule;

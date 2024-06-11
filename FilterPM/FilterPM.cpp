@@ -1511,9 +1511,9 @@ int main(int argc, const char** argv) {
   {
     HH_TIMER("FilterPM");
     if (!ParseArgs::special_arg(arg0)) {
-      for (string sline; fi().peek() == '#';) {
-        assertx(my_getline(fi(), sline));
-        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      for (string line; fi().peek() == '#';) {
+        assertx(my_getline(fi(), line));
+        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
       assertx(fi().peek() == 'P' || fi().peek() == 'S');
       bool srm_input = fi().peek() == 'S';

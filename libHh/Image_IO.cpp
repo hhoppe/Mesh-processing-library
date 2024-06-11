@@ -45,29 +45,29 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     string scontainer;
     bool has_alpha = false;
     int nlines = 0;
-    string sline;
-    while (my_getline(fi(), sline, false)) {
+    string line;
+    while (my_getline(fi(), line, false)) {
       nlines++;
-      if (ldebug) SHOW(sline);
-      if (contains(sline, "Could not find option 'nostdin'")) {
+      if (ldebug) SHOW(line);
+      if (contains(line, "Could not find option 'nostdin'")) {
         Warning("Version of external program 'ffmpeg' may be too old");
         continue;
       }
-      if (contains(sline, "Input #0, ")) nimages++;
-      if (contains(sline, "Stream #0:0: Video: ")) {
-        string::size_type i = sline.find(": Video: ");
+      if (contains(line, "Input #0, ")) nimages++;
+      if (contains(line, "Stream #0:0: Video: ")) {
+        string::size_type i = line.find(": Video: ");
         assertt(i != string::npos);
         i += strlen(": Video: ");
-        string::size_type j = sline.find(',', i);
+        string::size_type j = line.find(',', i);
         assertt(j != string::npos);
-        scontainer = sline.substr(i, j - i);
+        scontainer = line.substr(i, j - i);
         i = j;
         for (;;) {
-          i = sline.find(',', i + 1);
+          i = line.find(',', i + 1);
           if (i == string::npos) break;
-          if (sscanf(sline.c_str() + i, ", %dx%d", &dims[1], &dims[0]) == 2) break;
+          if (sscanf(line.c_str() + i, ", %dx%d", &dims[1], &dims[0]) == 2) break;
         }
-        if (contains(sline, ", rgba,")) has_alpha = true;
+        if (contains(line, ", rgba,")) has_alpha = true;
       }
     }
     if (ldebug) SHOW(nlines, nimages, dims, scontainer, has_alpha);

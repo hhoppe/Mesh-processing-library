@@ -25,9 +25,9 @@ void read_pms() {
       string filename = sform("%s.x%d.y%d.pm", rootname.c_str(), bx, by);
       RFile fi(filename);
       if (!bx && !by) {
-        for (string sline; fi().peek() == '#';) {
-          assertx(my_getline(fi(), sline));
-          if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+        for (string line; fi().peek() == '#';) {
+          assertx(my_getline(fi(), line));
+          if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
         }
       }
       pmeshes[bx][by].read(fi());

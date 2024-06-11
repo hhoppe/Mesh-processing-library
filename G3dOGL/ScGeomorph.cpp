@@ -257,8 +257,7 @@ void ScGeomorph::read(std::istream& is) {
     // old area
     const char* soa = GMesh::string_key(str, v->get_string(), "Oarea");
     if (soa) {
-      float area;
-      assertx(sscanf(soa, "%g", &area) == 1);
+      float area = to_float(soa);
       aold.enter(v, area);
 
       // old material
@@ -270,8 +269,7 @@ void ScGeomorph::read(std::istream& is) {
     if (v->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, v->get_string(), "Narea"));
-        float area;
-        assertx(sscanf(sna, "%g", &area) == 1);
+        float area = to_float(sna);
         anew.enter(v, area);
       } else {
         anew.enter(v, v->getArea());
@@ -285,8 +283,7 @@ void ScGeomorph::read(std::istream& is) {
     // old area
     const char* soa = GMesh::string_key(str, e->get_string(), "Oarea");
     if (soa) {
-      float area;
-      assertx(sscanf(soa, "%g", &area) == 1);
+      float area = to_float(soa);
       aold.enter(e, area);
 
       // old material
@@ -297,8 +294,7 @@ void ScGeomorph::read(std::istream& is) {
     if (e->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, e->get_string(), "Narea"));
-        float area;
-        assertx(sscanf(sna, "%g", &area) == 1);
+        float area = to_float(sna);
         anew.enter(e, area);
       } else {
         anew.enter(e, e->getArea());

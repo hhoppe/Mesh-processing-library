@@ -1,8 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Args.h"
 
-#include <cctype>   // std::isdigit()
-#include <cstdlib>  // std::atoi()
+#include <cctype>  // std::isdigit()
 
 #include "libHh/FileIO.h"   // is_pipe(), is_url()
 #include "libHh/RangeOp.h"  // contains()
@@ -14,11 +13,6 @@ namespace {
 
 inline bool convert_bool(const string& s) { return s == "1" || s == "true"; }
 inline char convert_char(const string& s) { return s[0]; }
-inline int convert_int(const string& s) { return std::atoi(s.c_str()); }  // Or std::stoi(s) or std::to_int(s.c_str()).
-inline float convert_float(const string& s) { return float(std::atof(s.c_str())); }  // Or std::stof(s).
-inline double convert_double(const string& s) {
-  return std::atof(s.c_str());  // Or stod(s) or strtod(s.c_str(), nullptr).
-}
 inline string show_bool(bool b) { return b ? "true" : "false"; }
 
 inline string show_float(float f) {
@@ -85,19 +79,19 @@ char Args::get_char() {
 int Args::get_int() {
   const string& s = get_string();
   if (!check_int(s)) problem("invalid int");
-  return convert_int(s);
+  return to_int(s);
 }
 
 float Args::get_float() {
   const string& s = get_string();
   if (!check_float(s)) problem("invalid float");
-  return convert_float(s);
+  return to_float(s);
 }
 
 double Args::get_double() {
   const string& s = get_string();
   if (!check_double(s)) problem("invalid double");
-  return convert_double(s);
+  return to_double(s);
 }
 
 const string& Args::get_string() {
@@ -123,17 +117,17 @@ char Args::parse_char(const string& s) {
 
 int Args::parse_int(const string& s) {
   if (!check_int(s)) assertnever("Argument '" + s + "' is not an integer");
-  return convert_int(s);
+  return to_int(s);
 }
 
 float Args::parse_float(const string& s) {
   if (!check_float(s)) assertnever("Argument '" + s + "' is not a single-precision floating-point");
-  return convert_float(s);
+  return to_float(s);
 }
 
 double Args::parse_double(const string& s) {
   if (!check_double(s)) assertnever("Argument '" + s + "' is not a double-precision floating-point");
-  return convert_double(s);
+  return to_double(s);
 }
 
 void Args::problem(const string& s) {

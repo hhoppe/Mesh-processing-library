@@ -358,7 +358,7 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 // I/O
 
 GMesh::GMesh(std::istream& is) {
-  for (string sline; my_getline(is, sline);) read_line(const_cast<char*>(sline.c_str()));
+  for (string line; my_getline(is, line);) read_line(const_cast<char*>(line.c_str()));
   if (debug() >= 1) ok();
 }
 
@@ -376,8 +376,7 @@ void GMesh::read_line(char* sline) {
   }
   switch (sline[0]) {
     case 'V':
-      if (!strncmp(sline, "Vertex ", 7)) {
-        const char* s = sline + 7;
+      if (const char* s = after_prefix(sline, "Vertex ")) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
@@ -390,15 +389,13 @@ void GMesh::read_line(char* sline) {
         }
         return;
       }
-      if (!strncmp(sline, "Vspl ", 5)) {
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Vspl ")) {
         const int vi = int_from_chars(s), vs1i = int_from_chars(s), vs2i = int_from_chars(s), vni = int_from_chars(s);
         assert_no_more_chars(s);
         split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
         return;
       }
-      if (!strncmp(sline, "Vmerge ", 7)) {
-        const char* s = sline + 7;
+      if (const char* s = after_prefix(sline, "Vmerge ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
         assert_no_more_chars(s);
         merge_vertices(id_vertex(vi1), id_vertex(vi2));
@@ -406,10 +403,9 @@ void GMesh::read_line(char* sline) {
       }
       break;
     case 'F':
-      if (!strncmp(sline, "Face ", 5)) {
-        PArray<Vertex, 6> va;
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Face ")) {
         const int fi = int_from_chars(s);
+        PArray<Vertex, 6> va;
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s) break;
@@ -437,8 +433,7 @@ void GMesh::read_line(char* sline) {
       }
       break;
     case 'C':
-      if (!strncmp(sline, "Corner ", 7)) {
-        const char* s = sline + 7;
+      if (const char* s = after_prefix(sline, "Corner ")) {
         const int vi = int_from_chars(s), fi = int_from_chars(s);
         assert_no_more_chars(s);
         Vertex v = id_retrieve_vertex(vi);
@@ -452,8 +447,7 @@ void GMesh::read_line(char* sline) {
         }
         return;
       }
-      if (!strncmp(sline, "CVertex ", 8)) {
-        const char* s = sline + 8;
+      if (const char* s = after_prefix(sline, "CVertex ")) {
         const int vi = int_from_chars(s);
         assert_no_more_chars(s);
         create_vertex_private(vi);
@@ -461,8 +455,7 @@ void GMesh::read_line(char* sline) {
       }
       break;
     case 'E':
-      if (!strncmp(sline, "Edge ", 5)) {
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Edge ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
         assert_no_more_chars(s);
         Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
@@ -473,8 +466,7 @@ void GMesh::read_line(char* sline) {
         }
         return;
       }
-      if (!strncmp(sline, "Ecol ", 5)) {
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Ecol ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
         assert_no_more_chars(s);
         // collapse_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)));
@@ -482,15 +474,13 @@ void GMesh::read_line(char* sline) {
         collapse_edge_vertex(edge(vs, vt), vs);
         return;
       }
-      if (!strncmp(sline, "Eswa ", 5)) {
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Eswa ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
         assert_no_more_chars(s);
         assertx(swap_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2))));
         return;
       }
-      if (!strncmp(sline, "Espl ", 5)) {
-        const char* s = sline + 5;
+      if (const char* s = after_prefix(sline, "Espl ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s), vi3 = int_from_chars(s);
         assert_no_more_chars(s);
         split_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)), vi3);
@@ -498,8 +488,7 @@ void GMesh::read_line(char* sline) {
       }
       break;
     case 'M':
-      if (!strncmp(sline, "MVertex ", 8)) {
-        const char* s = sline + 8;
+      if (const char* s = after_prefix(sline, "MVertex ")) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
@@ -511,15 +500,13 @@ void GMesh::read_line(char* sline) {
       }
       break;
     case 'D':
-      if (!strncmp(sline, "DVertex ", 8)) {
-        const char* s = sline + 8;
+      if (const char* s = after_prefix(sline, "DVertex ")) {
         const int vi = int_from_chars(s);
         assert_no_more_chars(s);
         destroy_vertex(id_vertex(vi));
         return;
       }
-      if (!strncmp(sline, "DFace ", 6)) {
-        const char* s = sline + 6;
+      if (const char* s = after_prefix(sline, "DFace ")) {
         const int fi = int_from_chars(s);
         assert_no_more_chars(s);
         destroy_face(id_face(fi));

@@ -69,13 +69,13 @@ void try_it(const string& stest) {
       my_setenv("FORCE_CMD", sbu);
     }
     RFile fi(tmpf);
-    string sline;
-    assertx(my_getline(fi(), sline));
-    // SHOW(sline);
-    // Once saw the error "method=1 stest=a b c sline=a\ b\ c"; it was due to a setting of env
+    string line;
+    assertx(my_getline(fi(), line));
+    // SHOW(line);
+    // Once saw the error "method=1 stest=a b c line=a\ b\ c"; it was due to a setting of env
     //  variable CYGWIN="noglob nodosfilewarning" likely set during an interrupted Emacs grep -- since fixed.
-    if (sline != stest) SHOW(method, stest, sline);
-    assertx(sline == stest);
+    if (line != stest) SHOW(method, stest, line);
+    assertx(line == stest);
   }
 }
 
@@ -604,9 +604,9 @@ line2)";
   }
   if (1) {
     RFile fi("echo ' abc' |");  // Test to verify that we read the first space using my_getline().
-    string sline;
-    assertx(my_getline(fi(), sline));
-    assertx(sline == " abc");
+    string line;
+    assertx(my_getline(fi(), line));
+    assertx(line == " abc");
   }
   {
     // test std::forward in assertx()

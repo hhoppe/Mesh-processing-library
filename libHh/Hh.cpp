@@ -359,32 +359,32 @@ void aligned_free(void* p) {
 #endif
 }
 
-std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings) {
+std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings) {
   if (0) {  // Slower.
-    sline.clear();
+    line.clear();
     for (;;) {
       char ch;
       is.get(ch);
       if (!is) return is;
       if (ch == '\n') break;
-      sline.push_back(ch);
+      line.push_back(ch);
     }
     return is;
   }
   if (0) {  // On Visual Studio, ~1.05x faster than std::getline(); On clang, ~1.1x slower.
-    char line[500];
-    is.get(line, sizeof(line) - 1, '\n');
+    char buffer[500];
+    is.get(buffer, sizeof(buffer) - 1, '\n');
     if (!is) return is;
     char ch;
     is.get(ch);
     assertx(ch == '\n');
-    sline = line;
+    line = buffer;
     return is;
   }
   // Note that getline() always begins by clearing the string.
-  std::getline(is, sline);  // Already creates its own sentry project (with noskipws == true).
-  if (is && sline.size() && sline.back() == '\r') {
-    sline.pop_back();
+  std::getline(is, line);  // Already creates its own sentry project (with noskipws == true).
+  if (is && line.size() && line.back() == '\r') {
+    line.pop_back();
     if (dos_eol_warnings) {
       static const bool ignore_dos_eol = getenv_bool("IGNORE_DOS_EOL");
       if (!ignore_dos_eol) Warning("my_getline: stripping out control-M from DOS file");
@@ -439,7 +439,7 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
       promised = true;
     } else {
       assertx(n == -1);
-      assertnever(string() + "vsform: likely a format error in '" + format + "'");
+      assertnever("vsform: likely a format error in '" + string(format) + "'");
     }
     vecbuf.resize(size);
     buf = vecbuf.data();
@@ -467,7 +467,7 @@ static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, s
       promised = true;
     } else {
       assertx(n == -1);
-      assertnever(string() + "ssform: likely a format error in '" + format + "'");
+      assertnever("ssform: likely a format error in '" + string(format) + "'");
     }
   }
 }
@@ -655,6 +655,16 @@ float float_from_chars(const char*& s) {
   return value;
 }
 
+double double_from_chars(const char*& s) {
+  // C++17: Use std::from_chars(), once available more broadly.
+  char* end;
+  errno = 0;
+  const double value = std::strtod(s, &end);
+  if (errno) assertnever("Cannot parse double in '" + string(s) + "'");
+  s = end;
+  return value;
+}
+
 void assert_no_more_chars(const char* s) {
   while (std::isspace(*s)) s++;
   if (*s) assertnever("Unexpected extra characters in '" + string(s) + "'");
@@ -668,30 +678,30 @@ static bool check_bool(const char* s) {
   return false;
 }
 
-static bool check_int(const char* s) {
-  if (*s == '-' || *s == '+') s++;
-  for (; *s; s++)
-    if (!std::isdigit(*s)) return false;
-  return true;
-}
-
-static bool check_float(const char* s) {
-  for (; *s; s++)
-    if (!std::isdigit(*s) && *s != '-' && *s != '+' && *s != '.' && *s != 'e') return false;
-  return true;
-}
-
 int to_int(const char* s) {
-  assertx(s);
-  if (!check_int(s)) assertnever(string() + "'" + s + "' not int");
-  return std::atoi(s);
+  int value = int_from_chars(s);
+  assert_no_more_chars(s);
+  return value;
+}
+
+float to_float(const char* s) {
+  float value = float_from_chars(s);
+  assert_no_more_chars(s);
+  return value;
+}
+
+double to_double(const char* s) {
+  double value = double_from_chars(s);
+  assert_no_more_chars(s);
+  return value;
 }
 
 #if defined(_WIN32)
 
 static void unsetenv(const char* name) {
   // Note: In Unix, deletion would use sform("%s", name).
-  const char* s = make_unique_c_string(sform("%s=", name).c_str()).release();  // Never deleted.
+  string str;
+  const char* s = make_unique_c_string(csform(str, "%s=", name)).release();  // Never deleted.
   assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
 }
 
@@ -702,7 +712,8 @@ static void setenv(const char* name, const char* value, int change_flag) {
     // Note: In Unix, deletion would use sform("%s", name).
     unsetenv(name);
   } else {
-    const char* s = make_unique_c_string(sform("%s=%s", name, value).c_str()).release();  // Never deleted.
+    string str;
+    const char* s = make_unique_c_string(csform(str, "%s=%s", name, value)).release();  // Never deleted.
     assertx(!HH_POSIX(putenv)(s));  // NOLINT(clang-analyzer-cplusplus.NewDeleteLeaks)
   }
 }
@@ -738,8 +749,7 @@ int getenv_int(const string& varname, int vdefault, bool warn) {
 float getenv_float(const string& varname, float vdefault, bool warn) {
   const char* s = getenv(varname.c_str());
   if (!s) return vdefault;
-  assertx(*s && check_float(s));
-  float v = float(std::atof(s));
+  float v = to_float(s);
   // static std::unordered_map<string, int> map; if (warn && !map[varname]++) ..
   if (warn) showf("Environment variable '%s=%g' overrides default value '%g'\n", varname.c_str(), v, vdefault);
   return v;

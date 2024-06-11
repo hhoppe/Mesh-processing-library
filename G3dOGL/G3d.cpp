@@ -215,12 +215,12 @@ bool try_finding_it(const string& name) {
   string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
   try {
     RFile fi(com);  // may throw
-    string sline;
-    if (!my_getline(fi(), sline) || sline == "") {
+    string line;
+    if (!my_getline(fi(), line) || line == "") {
       if (k_debug) std::cerr << "(s3dname did not function)\n";
       return false;
     }
-    statefile = sline;
+    statefile = line;
   } catch (const std::runtime_error& ex) {
     if (k_debug) std::cerr << string("Could not launch s3dname: ") + ex.what();
     return false;

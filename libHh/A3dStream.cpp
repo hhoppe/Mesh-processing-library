@@ -112,7 +112,7 @@ void RA3dStream::read(A3dElem& el) {
     } else if (type == A3dElem::EType::polygon || type == A3dElem::EType::polyline) {
       break;
     } else {
-      assertnever(string() + "RA3dStream: type '" + ctype + "' unknown");
+      assertnever(string("RA3dStream: type '") + ctype + "' unknown");
     }
   }
   assertx(is_zero(normal));
@@ -136,7 +136,7 @@ void RA3dStream::read(A3dElem& el) {
     } else if (A3dElem::status_type(type)) {
       set_current_color(ctype, f);
     } else {
-      assertnever(string() + "RA3dStream: type '" + ctype + "' unexpected within polygon");
+      assertnever(string("RA3dStream: type '") + ctype + "' unexpected within polygon");
     }
   }
   assertx(is_zero(normal));
@@ -188,9 +188,9 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
   } else {
     assertx(_is.peek() == ' ');
     if (1) {
-      string sline;
-      assertx(my_getline(_is, sline));
-      const char* s = sline.c_str();
+      string line;
+      assertx(my_getline(_is, line));
+      const char* s = line.c_str();
       for_int(c, 3) f[c] = float_from_chars(s);
       assert_no_more_chars(s);
     } else {

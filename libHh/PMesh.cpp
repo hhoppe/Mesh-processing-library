@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/PMesh.h"
 
-#include <cstring>  // strncmp() etc.
-
 #include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
 #include "libHh/GMesh.h"      // in extract_gmesh()
 #include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
@@ -189,9 +187,13 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
   _materials.read(is);
   int nvertices, nwedges, nfaces;
   {
-    string sline;
-    assertx(my_getline(is, sline));
-    assertx(sscanf(sline.c_str(), "nvertices=%d nwedges=%d nfaces=%d", &nvertices, &nwedges, &nfaces) == 3);
+    string line;
+    assertx(my_getline(is, line));
+    const char* s = line.c_str();
+    s = assertx(after_prefix(s, "nvertices=")), nvertices = int_from_chars(s);
+    s = assertx(after_prefix(s, " nwedges=")), nwedges = int_from_chars(s);
+    s = assertx(after_prefix(s, " nfaces=")), nfaces = int_from_chars(s);
+    assert_no_more_chars(s);
   }
   _vertices.init(nvertices);
   _wedges.init(nwedges);
@@ -1578,10 +1580,10 @@ void PMesh::write(std::ostream& os) const {
 
 PMeshInfo PMesh::read_header(std::istream& is) {
   PMeshInfo pminfo;
-  for (string sline;;) {
-    assertx(my_getline(is, sline));
-    if (sline == "" || sline[0] == '#') continue;
-    assertx(sline == "PM");
+  for (string line;;) {
+    assertx(my_getline(is, line));
+    if (line == "" || line[0] == '#') continue;
+    assertx(line == "PM");
     break;
   }
   // default for version 1 compatibility
@@ -1598,41 +1600,52 @@ PMeshInfo PMesh::read_header(std::istream& is) {
   pminfo._full_nfaces = 0;
   pminfo._full_bbox[0] = Point(BIGFLOAT, BIGFLOAT, BIGFLOAT);
   pminfo._full_bbox[1] = Point(BIGFLOAT, BIGFLOAT, BIGFLOAT);
-  for (string sline;;) {
-    assertx(my_getline(is, sline));
-    const char* s2 = sline.c_str();
-    if (0) {
-    } else if (!strncmp(s2, "version=", 8)) {
-      assertx(sscanf(s2, "version=%d", &pminfo._read_version) == 1);
-    } else if (!strncmp(s2, "nvsplits=", 9)) {
-      assertx(sscanf(s2, "nvsplits=%d nvertices=%d nwedges=%d nfaces=%d", &pminfo._tot_nvsplits,
-                     &pminfo._full_nvertices, &pminfo._full_nwedges, &pminfo._full_nfaces) == 4);
-    } else if (!strncmp(s2, "bbox ", 5)) {
-      auto& bbox = pminfo._full_bbox;
-      assertx(sscanf(s2, "bbox %g %g %g  %g %g %g", &bbox[0][0], &bbox[0][1], &bbox[0][2], &bbox[1][0], &bbox[1][1],
-                     &bbox[1][2]) == 6);
-    } else if (!strncmp(s2, "has_rgb=", 8)) {
-      int i;
-      assertx(sscanf(s2, "has_rgb=%d", &i) == 1);
-      pminfo._has_rgb = narrow_cast<bool>(i);
-    } else if (!strncmp(s2, "has_uv=", 7)) {
-      int i;
-      assertx(sscanf(s2, "has_uv=%d", &i) == 1);
-      pminfo._has_uv = narrow_cast<bool>(i);
-    } else if (!strncmp(s2, "has_resid=", 10)) {
-      int i;
-      assertx(sscanf(s2, "has_resid=%d", &i) == 1);
-      pminfo._has_resid = narrow_cast<bool>(i);
-    } else if (!strncmp(s2, "has_wad2=", 9)) {
-      int i;
-      assertx(sscanf(s2, "has_wad2=%d", &i) == 1);
-      pminfo._has_wad2 = narrow_cast<bool>(i);
-    } else if (!strcmp(s2, "PM base mesh:")) {
-      break;
-    } else {
-      Warning("PMesh header string unknown");
-      showf("PMesh header string not recognized '%s'\n", s2);
+  for (string line;;) {
+    assertx(my_getline(is, line));
+    const char* sline = line.c_str();
+    if (const char* s = after_prefix(sline, "version=")) {
+      pminfo._read_version = int_from_chars(s);
+      assert_no_more_chars(s);
+      continue;
     }
+    if (const char* s = after_prefix(sline, "nvsplits=")) {
+      pminfo._tot_nvsplits = int_from_chars(s);
+      s = assertx(after_prefix(s, " nvertices=")), pminfo._full_nvertices = int_from_chars(s);
+      s = assertx(after_prefix(s, " nwedges=")), pminfo._full_nwedges = int_from_chars(s);
+      s = assertx(after_prefix(s, " nfaces=")), pminfo._full_nfaces = int_from_chars(s);
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "bbox ")) {
+      for_int(i, 2) for_int(j, 3) pminfo._full_bbox[i][j] = float_from_chars(s);
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "has_rgb=")) {
+      pminfo._has_rgb = narrow_cast<bool>(int_from_chars(s));
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "has_uv=")) {
+      pminfo._has_uv = narrow_cast<bool>(int_from_chars(s));
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "has_resid=")) {
+      pminfo._has_resid = narrow_cast<bool>(int_from_chars(s));
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "has_wad2=")) {
+      pminfo._has_wad2 = narrow_cast<bool>(int_from_chars(s));
+      assert_no_more_chars(s);
+      continue;
+    }
+    if (!strcmp(sline, "PM base mesh:")) {
+      break;
+    }
+    Warning("PMesh header string unknown");
+    showf("PMesh header string not recognized '%s'\n", sline);
   }
   // assertw(pminfo._tot_nvsplits);
   assertw(pminfo._full_nvertices);

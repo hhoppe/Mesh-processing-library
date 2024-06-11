@@ -432,11 +432,17 @@ HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ..
 // Allocate a duplicate of a C "char*" string, using make_unique<char[]>.
 unique_ptr<char[]> make_unique_c_string(const char* s);
 
+// If line begins with prefix string, return remaining string.
+const char* after_prefix(const char* sline, const char* prefix);
+
 // Eat up whitespace, parse an integer from the string, and advance `s` to the next character beyond, or die.
 int int_from_chars(const char*& s);
 
 // Eat up whitespace, parse a float from the string, and advance `s` to the next character beyond, or die.
 float float_from_chars(const char*& s);
+
+// Eat up whitespace, parse a double from the string, and advance `s` to the next character beyond, or die.
+double double_from_chars(const char*& s);
 
 // Eat up whitespace and assert that there are not more remaining characters.
 void assert_no_more_chars(const char* s);
@@ -446,6 +452,18 @@ int to_int(const char* s);
 
 // Convert string to integer value, or crash if invalid.
 inline int to_int(const string& s) { return to_int(s.c_str()); }
+
+// Convert string to float value, or crash if invalid.
+float to_float(const char* s);
+
+// Convert string to float value, or crash if invalid.
+inline float to_float(const string& s) { return to_float(s.c_str()); }
+
+// Convert string to double value, or crash if invalid.
+double to_double(const char* s);
+
+// Convert string to double value, or crash if invalid.
+inline double to_double(const string& s) { return to_double(s.c_str()); }
 
 // Allocate an aligned memory block (returns nullptr if fails).  Portable std::aligned_alloc().
 void* aligned_malloc(size_t alignment, size_t size);
@@ -460,7 +478,7 @@ template <typename T> T* aligned_new(size_t n);
 template <typename T> void aligned_delete(T* p);
 
 // Read a line of input (trailing "\n" is discarded).
-std::istream& my_getline(std::istream& is, string& sline, bool dos_eol_warnings = true);
+std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings = true);
 
 // Set an environment variable; the variable is removed from the environment if value == "".
 void my_setenv(const string& varname, const string& value);
@@ -759,6 +777,13 @@ template <typename T> string make_string(const T& e) {
   std::ostringstream oss;
   oss << e;
   return assertx(oss).str();
+}
+
+inline const char* after_prefix(const char* sline, const char* prefix) {
+  for (;;) {
+    if (!*prefix) return sline;
+    if (*sline++ != *prefix++) return nullptr;
+  }
 }
 
 template <typename T> T* aligned_new(size_t n) {

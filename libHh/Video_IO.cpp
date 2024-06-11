@@ -866,59 +866,59 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       double framerate = -1.;
       bool yuv444p = false;
       int nlines = 0;
-      string sline;
-      while (my_getline(fi(), sline, false)) {
+      string line;
+      while (my_getline(fi(), line, false)) {
         nlines++;
-        if (ldebug) SHOW(sline);
+        if (ldebug) SHOW(line);
         char vch;
-        if (contains(sline, "Could not find option 'nostdin'")) {
+        if (contains(line, "Could not find option 'nostdin'")) {
           Warning("Version of external program 'ffmpeg' may be too old");
           continue;
         }
         {
-          auto i = sline.find(", bitrate:");
-          if (i != string::npos && !starts_with(sline.substr(i), ", bitrate: N/A")) {
-            assertx(sscanf(sline.c_str() + i, ", bitrate: %lg kb/%c", &total_bitrate, &vch) == 2 && vch == 's');
+          auto i = line.find(", bitrate:");
+          if (i != string::npos && !starts_with(line.substr(i), ", bitrate: N/A")) {
+            assertx(sscanf(line.c_str() + i, ", bitrate: %lg kb/%c", &total_bitrate, &vch) == 2 && vch == 's');
             total_bitrate *= 1000.;
           }
         }
-        if (contains(sline, "Stream #0:")) {
-          if (contains(sline, ": Video:") && !dims[2]) {
+        if (contains(line, "Stream #0:")) {
+          if (contains(line, ": Video:") && !dims[2]) {
             for (string::size_type i = 0;;) {
-              i = sline.find(',', i + 1);
+              i = line.find(',', i + 1);
               assertx(i != string::npos);
-              if (sscanf(sline.c_str() + i, ", %dx%d", &dims[2], &dims[1]) == 2) break;
+              if (sscanf(line.c_str() + i, ", %dx%d", &dims[2], &dims[1]) == 2) break;
             }
-            string::size_type i = sline.find(" kb/s");
+            string::size_type i = line.find(" kb/s");
             if (i != string::npos) {
-              i = sline.rfind(", ", i);
+              i = line.rfind(", ", i);
               if (i != string::npos) {
-                assertx(sscanf(sline.c_str() + i, ", %lg kb/%c", &video_bitrate, &vch) == 2 && vch == 's');
+                assertx(sscanf(line.c_str() + i, ", %lg kb/%c", &video_bitrate, &vch) == 2 && vch == 's');
                 video_bitrate *= 1000.;
               }
             }
-            i = sline.find(" fps");
+            i = line.find(" fps");
             if (i != string::npos) {
-              i = sline.rfind(", ", i);
+              i = line.rfind(", ", i);
               assertx(i != string::npos);
-              assertx(sscanf(sline.c_str() + i, ", %lg fp%c", &framerate, &vch) == 2 && vch == 's');
+              assertx(sscanf(line.c_str() + i, ", %lg fp%c", &framerate, &vch) == 2 && vch == 's');
             } else {
-              i = sline.find(" tbr");
+              i = line.find(" tbr");
               assertx(i != string::npos);
-              i = sline.rfind(", ", i);
+              i = line.rfind(", ", i);
               assertx(i != string::npos);
-              assertx(sscanf(sline.c_str() + i, ", %lg tb%c", &framerate, &vch) == 2 && vch == 'r');
+              assertx(sscanf(line.c_str() + i, ", %lg tb%c", &framerate, &vch) == 2 && vch == 'r');
             }
-            if (sline.find("yuv444p") != string::npos) yuv444p = true;
+            if (line.find("yuv444p") != string::npos) yuv444p = true;
             if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
           }
-          if (contains(sline, ": Audio:") && contains(sline, "kb/s")) {
+          if (contains(line, ": Audio:") && contains(line, "kb/s")) {
             expect_audio = true;
           }
         }
         {
-          string::size_type i = sline.rfind("frame=");
-          if (i != string::npos) assertx(sscanf(sline.c_str() + i, "frame=%d%c", &dims[0], &vch) == 2 && vch == ' ');
+          string::size_type i = line.rfind("frame=");
+          if (i != string::npos) assertx(sscanf(line.c_str() + i, "frame=%d%c", &dims[0], &vch) == 2 && vch == ' ');
         }
       }
       if (!nlines) throw std::runtime_error("ffmpeg is unable to read video file '" + filename + "'");

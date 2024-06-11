@@ -21,10 +21,10 @@ class Materials {
     assertx(!_matstrings.num());
     int nmaterials;
     {
-      string sline;
-      assertx(my_getline(is, sline));
-      assertx(remove_at_start(sline, "nmaterials="));
-      nmaterials = to_int(sline);
+      string line;
+      assertx(my_getline(is, line));
+      assertx(remove_at_start(line, "nmaterials="));
+      nmaterials = to_int(line);
     }
     _matstrings.init(nmaterials);
     for_int(matid, nmaterials) assertx(my_getline(is, _matstrings[matid]));

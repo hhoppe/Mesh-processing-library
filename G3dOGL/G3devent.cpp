@@ -52,10 +52,10 @@ void read_state() {
   ExpandStateFilename();
   try {
     RFile fi(statefile);  // may throw
-    string sline;
+    string line;
     while (fi().peek() >= 0) {
       if (fi().peek() == '#') {
-        assertx(my_getline(fi(), sline));
+        assertx(my_getline(fi(), line));
         continue;
       }
       const auto object_frame = assertw(FrameIO::read(fi()));

@@ -21,11 +21,11 @@ struct frame_binary_buf {
 };
 
 void decode(std::istream& is, ObjectFrame& object_frame) {
-  string sline;
-  assertx(my_getline(is, sline));
-  assertx(sline != "");
-  assertx(sline[0] == 'F' && sline[1] == ' ');
-  const char* s = sline.c_str() + 2;
+  string line;
+  assertx(my_getline(is, line));
+  assertx(line != "");
+  assertx(line[0] == 'F' && line[1] == ' ');
+  const char* s = line.c_str() + 2;
   object_frame.obn = int_from_chars(s);
   for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = float_from_chars(s);
   object_frame.zoom = float_from_chars(s);

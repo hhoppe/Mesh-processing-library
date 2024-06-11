@@ -31,8 +31,8 @@ void test(MatrixView<float> mi) {
 
 void read_data(Matrix<float>& mi) {
   RFile fi("lvl00.greencells_161b_tor.nontrsf.txt");
-  string sline;
-  for_int(i, 4) assertx(my_getline(fi(), sline));
+  string line;
+  for_int(i, 4) assertx(my_getline(fi(), line));
   const int m = 4096, n = 75;
   mi.init(m, n);
   for_int(j, n) for_int(i, m) assertx(fi() >> mi[i][j]);

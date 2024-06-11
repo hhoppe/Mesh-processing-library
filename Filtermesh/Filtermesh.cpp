@@ -374,7 +374,7 @@ GMesh geometric_merge(const GMesh& mo) {
         mn.set_point(vn, mo.point(vo));
         mn.flags(vn) = mo.flags(vo);
         mn.set_string(vn, mo.get_string(vo));
-        // mn.update_string(vn, "Ovi", sform("%d", mn.vertex_id(vn)).c_str());
+        // mn.update_string(vn, "Ovi", csform(str, "%d", mn.vertex_id(vn)));
         if (i == gva.num()) gva.push(vn);
       } else {
         assertx(gva.ok(i));
@@ -2937,7 +2937,7 @@ void do_norgroup() {
         queuef.enqueue(ff);
         while (!queuef.empty()) {
           Face f = queuef.dequeue();
-          // mesh.update_string(f, "norgroup", sform("%d", norgroup).c_str());
+          // mesh.update_string(f, "norgroup", csform(str, "%d", norgroup));
           for (Edge e : mesh.edges(f)) {
             if (mesh.is_boundary(e)) continue;
             if (!ng_orig_sharp(e)) {
@@ -4176,10 +4176,9 @@ void do_fromObj(Args& args) {
   int v = 0, gid = 1;
   Set<Face> group;
   string str;
-  for (string sline; my_getline(fi(), sline);) {
-    const char* line = sline.c_str();
-    if (strncmp(line, "v ", 2) == 0) {
-      const char* s = line + 2;
+  for (string line; my_getline(fi(), line);) {
+    const char* sline = line.c_str();
+    if (const char* s = after_prefix(sline, "v ")) {
       Point p;
       for_int(c, 3) p[c] = float_from_chars(s);
       assert_no_more_chars(s);
@@ -4188,20 +4187,23 @@ void do_fromObj(Args& args) {
       Vertex vv = mesh.id_vertex(v);
       mesh.set_point(vv, p);
       mesh.update_string(vv, "group", csform(str, "%d", gid));
-    } else if (strncmp(line, "vt ", 3) == 0) {
-      const char* s = line + 3;
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "vt ")) {
       UV uv;
       for_int(c, 2) uv[c] = float_from_chars(s);
       assert_no_more_chars(s);
       ar_uv.push(uv);
-    } else if (strncmp(line, "vn ", 3) == 0) {
-      const char* s = line + 3;
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "vn ")) {
       Vector nor;
       for_int(c, 3) nor[c] = float_from_chars(s);
       assert_no_more_chars(s);
       ar_nor.push(nor);
-    } else if (strncmp(line, "f ", 2) == 0) {
-      const char* s = line + 2;
+      continue;
+    }
+    if (const char* s = after_prefix(sline, "f ")) {
       Vector fn{};
       Array<Vertex> va;
       Polygon pp;
@@ -4227,7 +4229,7 @@ void do_fromObj(Args& args) {
       if (mesh.legal_create_face(va)) {
         Face f = mesh.create_face(va);
         group.add(f);
-        s = line + 2;  // Rewind and parse again, to update corner attributes, if supplied.
+        s = sline + 2;  // Rewind and parse again, to update corner attributes, if supplied.
         while (*s) {
           const int i = int_from_chars(s);
           assertx(*s++ == '/');
@@ -4242,10 +4244,13 @@ void do_fromObj(Args& args) {
       } else {
         Warning("Illegal face");
       }
-    } else if (strncmp(line, "s ", 2) == 0) {
+      continue;
+    }
+    if (after_prefix(sline, "s ")) {
       gid++;
       if (flip) convex_group_flip_faces(group);
       group.clear();
+      continue;
     }
   }
 
@@ -4524,9 +4529,9 @@ int main(int argc, const char** argv) {
       if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
       RFile fi(filename);
       HH_TIMER("_readmesh");
-      for (string sline; fi().peek() == '#';) {
-        assertx(my_getline(fi(), sline));
-        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      for (string line; fi().peek() == '#';) {
+        assertx(my_getline(fi(), line));
+        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
       mesh = GMesh(fi());
       showff("%s", args.header().c_str());

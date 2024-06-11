@@ -2447,7 +2447,7 @@ void GxObject::add(const A3dElem& el) {
       append(std::move(n));
       break;
     }
-    default: assertnever(string() + "unknown type '" + narrow_cast<char>(el.type()) + "'");
+    default: assertnever(string("unknown type '") + narrow_cast<char>(el.type()) + "'");
   }
 }
 
@@ -3420,7 +3420,7 @@ bool sr_morph_active;
 void read_sr(const string& filename) {
   HH_TIMER("_read_sr");
   RFile fi(filename);
-  for (string sline; fi().peek() == '#';) assertx(my_getline(fi(), sline));
+  for (string line; fi().peek() == '#';) assertx(my_getline(fi(), line));
   assertx(fi().peek() == 'P' || fi().peek() == 'S');
   bool srm_input = fi().peek() == 'S';
   if (!srm_input) {
@@ -4532,9 +4532,9 @@ void draw_sc() {
 
 // ScGeomorph stuff
 bool grab_sc_gm(std::istream& is, std::stringstream& grab_stream) {
-  for (string sline; my_getline(is, sline);) {
-    if (starts_with(sline, "[SC Geomorph]")) return true;
-    grab_stream << sline << "\n";
+  for (string line; my_getline(is, line);) {
+    if (starts_with(line, "[SC Geomorph]")) return true;
+    grab_stream << line << "\n";
   }
   return false;
 }
@@ -4932,9 +4932,9 @@ void read_ply(const string& filename) {
   // HH_TIMER("_read_ply");
   RFile fi(filename);
   std::istream& is = fi();
-  string sline;
-  assertx(my_getline(is, sline));
-  assertx(sline == "ply");
+  string line;
+  assertx(my_getline(is, line));
+  assertx(line == "ply");
   const Map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
                                         {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
   bool binary = false;
@@ -4945,24 +4945,24 @@ void read_ply(const string& filename) {
   int len_nfv = 0;  // Size in bytes of number of vertex indices in each face.
   int fnskip = 0, fnskipb = 0, fnother = 0, fnotherb = 0;
   for (;;) {
-    assertx(my_getline(is, sline));
+    assertx(my_getline(is, line));
     if (0) {
-    } else if (sline == "format ascii 1.0") {
+    } else if (line == "format ascii 1.0") {
       assertx(element == "");
-    } else if (sline == "format binary_big_endian 1.0") {
+    } else if (line == "format binary_big_endian 1.0") {
       assertx(element == "");
       binary = true;
       bigendian = true;
-    } else if (sline == "format binary_little_endian 1.0") {
+    } else if (line == "format binary_little_endian 1.0") {
       assertx(element == "");
       binary = true;
-    } else if (starts_with(sline, "comment ")) {
+    } else if (starts_with(line, "comment ")) {
       assertw(element == "");
-    } else if (starts_with(sline, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
+    } else if (starts_with(line, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
       assertw(element == "");
 
-    } else if (starts_with(sline, "element ")) {
-      std::istringstream iss(sline.substr(std::strlen("element ")));
+    } else if (starts_with(line, "element ")) {
+      std::istringstream iss(line.substr(std::strlen("element ")));
       int count;
       assertx(iss >> element >> count && iss.eof());
       assertx(count >= 0);
@@ -4980,9 +4980,9 @@ void read_ply(const string& filename) {
       }
       num_element++;
 
-    } else if (starts_with(sline, "property list ")) {
+    } else if (starts_with(line, "property list ")) {
       assertx(element == "face");
-      std::istringstream iss(sline.substr(std::strlen("property list ")));
+      std::istringstream iss(line.substr(std::strlen("property list ")));
       string sizetype, dtype, name;
       assertx(iss >> sizetype >> dtype >> name && iss.eof());
       if (name == "vertex_indices") {
@@ -4997,9 +4997,9 @@ void read_ply(const string& filename) {
         assertnever("ply: property list not recognized");
       }
 
-    } else if (starts_with(sline, "property ")) {
+    } else if (starts_with(line, "property ")) {
       assertx(element != "");
-      std::istringstream iss(sline.substr(std::strlen("property ")));
+      std::istringstream iss(line.substr(std::strlen("property ")));
       string dtype, name;
       assertx(iss >> dtype >> name && iss.eof());
       const int dsize = dsizes.get(dtype);
@@ -5038,10 +5038,10 @@ void read_ply(const string& filename) {
         // Ignore data after the faces.
       }
 
-    } else if (sline == "end_header") {
+    } else if (line == "end_header") {
       break;
     } else {
-      assertnever("ply: field unknown in '" + sline + "'");
+      assertnever("ply: field unknown in '" + line + "'");
     }
   }
   assertx(vnpos == 3);

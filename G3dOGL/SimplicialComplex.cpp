@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "G3dOGL/SimplicialComplex.h"
 
-#include <cstdlib>  // atof()
-
 #include "libHh/RangeOp.h"  // compare()
 #include "libHh/Set.h"
 #include "libHh/Stack.h"  // also vec_contains()
@@ -594,29 +592,28 @@ void SimplicialComplex::write(std::ostream& os) const {
 }
 
 void SimplicialComplex::read(std::istream& is) {
-  string sline;
+  string line;
   auto parse_line = &SimplicialComplex::readLine;
   for (;;) {
-    if (!my_getline(is, sline)) break;
-    if (sline == "") continue;
-    if (sline == "#") break;        // done parsing simplex, before vsplit records
-    if (sline[0] == '#') continue;  // skip comment
+    if (!my_getline(is, line)) break;
+    if (line == "") continue;
+    if (line == "#") break;        // done parsing simplex, before vsplit records
+    if (line[0] == '#') continue;  // skip comment
     // if attribute change state and read next line
-    if (starts_with(sline, "[Attributes]")) {
+    if (starts_with(line, "[Attributes]")) {
       parse_line = &SimplicialComplex::attrReadLine;
       continue;
     }
 
-    if (starts_with(sline, "[EndAttributes]")) {
+    if (starts_with(line, "[EndAttributes]")) {
       parse_line = &SimplicialComplex::readLine;
       continue;
     }
-    (this->*parse_line)(sline.c_str());
+    (this->*parse_line)(line.c_str());
   }
 }
 
 void SimplicialComplex::readLine(const char* str) {
-  int dim, sid;
   char* sline = const_cast<char*>(str);
   if (sline[0] == '#') return;
   char* va_field = strchr(sline, '{');
@@ -629,21 +626,19 @@ void SimplicialComplex::readLine(const char* str) {
     } else
       *s = 0;
   }
-  if (sline[0] == 'S' && !strncmp(sline, "Simplex ", 8)) {
-    std::istringstream iss(sline + 8);
-    assertx(iss >> dim >> sid);
+  if (const char* s = after_prefix(sline, "Simplex ")) {
+    const int dim = int_from_chars(s), sid = int_from_chars(s);
     Simplex sd = assertx(createSimplex(dim, sid));
     // read and update children pointers
     if (dim == 0) {
       // read position
       Point pos;
-      for_int(i, 3) assertx(iss >> pos[i]);
+      for_int(i, 3) pos[i] = float_from_chars(s);
       sd->setPosition(pos);
     } else {  // dim != 0
       // read connectivity
       for_int(i, dim + 1) {
-        int child;
-        assertx(iss >> child);
+        const int child = int_from_chars(s);
         Simplex spxChild = assertx(getSimplex(dim - 1, child));
         sd->setChild(i, spxChild);
       }
@@ -651,6 +646,8 @@ void SimplicialComplex::readLine(const char* str) {
       ForScSimplexChild(sd, c) { c->addParent(sd); }
       EndFor;
     }
+    while (std::isspace(*s)) s++;
+    assert_no_more_chars(s);
 
     // read in vattributes
     sd->set_string(va_field);
@@ -660,14 +657,16 @@ void SimplicialComplex::readLine(const char* str) {
     if (attrid) sd->setVAttribute(to_int(attrid));
 
     const char* area = GMesh::string_key(str2, va_field, "area");
-    if (area) sd->setArea(float(std::atof(area)));
-  } else if (!strncmp(sline, "Unify ", 6)) {
-    int vi1, vi2;
-    assertx(sscanf(sline, "Unify %d %d", &vi1, &vi2) == 2);
-    unify(getSimplex(0, vi1), getSimplex(0, vi2));
-  } else {
-    // default
+    if (area) sd->setArea(to_float(area));
+    return;
   }
+  if (const char* s = after_prefix(sline, "Unify ")) {
+    const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
+    assert_no_more_chars(s);
+    unify(getSimplex(0, vi1), getSimplex(0, vi2));
+    return;
+  }
+  assertnever("Unrecognized line '" + string(sline) + "'");
 }
 
 void SimplicialComplex::attrReadLine(const char* str) {
@@ -715,11 +714,13 @@ void SimplicialComplex::readQHull(std::istream& is) {
   }
 
   // for all facets for triangulation
-  string sline;
+  string line;
   for_int(i, n) {
-    if (!my_getline(is, sline)) break;
-    int v[4];
-    assertx(sscanf(sline.c_str(), "%d %d %d %d", &v[0], &v[1], &v[2], &v[3]) == 4);
+    if (!my_getline(is, line)) break;
+    Vec4<int> v;
+    const char* s = line.c_str();
+    for_int(k, 4) v[k] = int_from_chars(s);
+    assert_no_more_chars(s);
     for_int(j, 3) {
       if (v[j] >= verts) continue;
 
@@ -748,22 +749,22 @@ void SimplicialComplex::readQHull(std::istream& is) {
 
 #if 0
 void SimplicialComplex::attrReadLine(char* sline) {
-  int dim, sid;
   if (sline[0] == '#') return;
-  if (sline[0] == 'S' && !strncmp(sline, "Simplex ", 8)) {
-    std::istringstream iss(sline + 8);
-    assertx(iss >> dim >> sid);
+  if (const char* s = after_prefix(sline, "Simplex ")) {
+    const int dim = int_from_chars(s), sid = int_from_chars(s);
     // update position for 0-simplices
     if (dim == 0) {
       Point pos;
-      for_int(i, 3) assertx(iss >> pos[i]);
+      for_int(i, 3) pos[i] = float_from_chars(s);
       getSimplex(dim, sid)->setPosition(pos);
     }
     // read and update color for 0,1,2-simp
-    Point rgb;
-    for_int(i, 3) iss >> rgb[i];
-    if (!iss) return;
-    getSimplex(dim, sid)->setColor(rgb);
+    if (*s) {
+      Point rgb;
+      for_int(i, 3) rgb[i] = float_from_chars(s);
+      getSimplex(dim, sid)->setColor(rgb);
+    }
+    assert_no_more_chars();
   }
 }
 #endif

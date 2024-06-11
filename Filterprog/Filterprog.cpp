@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
-#include <cctype>   // isspace(), isdigit(), etc.
-#include <cstdlib>  // atoi()
-#include <cstring>  // strncmp() etc.
+#include <cctype>  // isspace()
 
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
@@ -298,11 +296,10 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
       }
       return true;
     case 'R':
-      if (!strncmp(sline, "REcol ", 6)) {
+      if (const char* s = after_prefix(sline, "REcol ")) {
         assertx(!after_vsplit);
         assertx(!save0.skip_current);
         after_vsplit = true;
-        const char* s = sline + 6;
         const int vni = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
         assert_no_more_chars(s);
@@ -363,65 +360,55 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
       }
       break;
     case 'F':
-      if (!strncmp(sline, "Face ", 5)) {
+      if (const char* s = after_prefix(sline, "Face ")) {
         if (save0.skip_current) return true;
-        string orig_sline;
-        if (record_changes) orig_sline = sline;
+        string orig_line;
+        if (record_changes) orig_line = sline;
         const char* sinfo = get_sinfo(sline);  // note side-effect!
-        PArray<Vertex, 8> va;
-        char* s = sline + 4;
-        int fi = -1;
+        const int fi = int_from_chars(s);
+        PArray<Vertex, 3> va;
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s) break;
-          char* beg = s;
-          while (std::isdigit(*s)) s++;
-          assertx(!*s || std::isspace(*s));
-          int j = to_int(beg);
-          if (fi < 0) {
-            fi = j;
-            continue;
-          }
-          va.push(mesh.id_vertex(vlineage.existing_id(j)));
+          const int vi = int_from_chars(s);
+          va.push(mesh.id_vertex(vlineage.existing_id(vi)));
         }
         assertx(va.num() == 3);
-        assertx(mesh.legal_create_face(va));
+        ASSERTX(mesh.legal_create_face(va));
         assertx(fi >= 1);
         Face f = mesh.create_face_private(fi, va);
         if (sinfo) mesh.set_string(f, sinfo);
-        if (record_changes) std::cout << orig_sline << '\n';
+        if (record_changes) std::cout << orig_line << '\n';
         return true;
       }
       break;
     case 'E':
-      if (!strncmp(sline, "Edge ", 5)) assertnever("Edge flags not used anymore");
+      if (after_prefix(sline, "Edge ")) assertnever("Edge flags not used anymore");
       break;
     case 'M':
-      if (!strncmp(sline, "MVertex ", 8)) {
+      if (const char* s = after_prefix(sline, "MVertex ")) {
         if (save0.skip_current) return true;
         if (!after_vsplit) {
           // assertx(mesh.point(v) == p);
           return true;
         }
-        const char* s = sline + 8;
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
         assert_no_more_chars(s);
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
         mesh.set_point(v, p);
-        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
+        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.  ??
         if (record_changes) std::cout << sline << '\n';
         return true;
       }
       break;
     case 'C':
-      if (!strncmp(sline, "Corner ", 7)) {
+      if (const char* s = after_prefix(sline, "Corner ")) {
         if (save0.skip_current) return true;
         if (!after_vsplit) return true;
-        string orig_sline;
-        if (record_changes) orig_sline = sline;
-        const char* s = sline + 7;
+        string orig_line;
+        if (record_changes) orig_line = sline;
         const int vi = int_from_chars(s), fi = int_from_chars(s);
         // assert_no_more_chars(s);  // ??
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
@@ -446,7 +433,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
           mesh.set_string(c, nullptr);
           gcwinfo.set(wid, wi);
         }
-        if (record_changes) std::cout << orig_sline << '\n';
+        if (record_changes) std::cout << orig_line << '\n';
         return true;
       }
       break;
@@ -457,8 +444,8 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
 // Read and parse a vsplit record.
 void read_record(std::istream& is, bool carry_old) {
   bool after_vsplit = false;
-  for (string sline; my_getline(is, sline);) {
-    if (!parse_line(const_cast<char*>(sline.c_str()), after_vsplit, carry_old)) break;
+  for (string line; my_getline(is, line);) {
+    if (!parse_line(const_cast<char*>(line.c_str()), after_vsplit, carry_old)) break;
   }
   if (is) assertx(after_vsplit);
 }
@@ -646,31 +633,43 @@ void do_fbasemesh(Args& args) {
     // HH_TIMER("_read_mesh");
     RFile fi(args.get_filename());
     int nmaterials = 0;
-    for (string sline; fi().peek() == '#';) {
-      assertx(my_getline(fi(), sline));
+    for (string line; fi().peek() == '#';) {
+      assertx(my_getline(fi(), line));
       if (nmaterials) {
         --nmaterials;
-        assertx(sline.size() > 1);
-        pm_material_strings.push(sline.substr(2));
+        assertx(line.size() > 1);
+        pm_material_strings.push(line.substr(2));
         continue;
       }
-      if (sline.size() < 2) continue;
-      showff("|%s\n", sline.substr(2).c_str());
-      int n1, n2, n3;
-      Bbox<float, 3> bbox;
-      if (sscanf(sline.c_str(), "# nmaterials=%d", &n1) == 1) {
-        nmaterials = n1;
-      } else if (sscanf(sline.c_str(), "# PM: nvertices=%d nwedges=%d nfaces=%d", &n1, &n2, &n3) == 3) {
-        pm_nvertices = n1;
-        pm_nwedges = n2;
-        pm_nfaces = n3;
-      } else if (sscanf(sline.c_str(), "# PM: necols=%d", &n1) == 1) {
-        pm_nvsplits = n1;
-      } else if (sscanf(sline.c_str(), "# PM: bounding box %g %g %g  %g %g %g", &bbox[0][0], &bbox[0][1], &bbox[0][2],
-                        &bbox[1][0], &bbox[1][1], &bbox[1][2]) == 6) {
-        pm_bbox = bbox;
-      } else if (starts_with(sline, "# PM: has_wad2")) {
+      if (line.size() < 2) continue;
+      showff("|%s\n", line.substr(2).c_str());
+      const char* sline = line.c_str();
+      if (const char* s = after_prefix(sline, "# nmaterials=")) {
+        nmaterials = int_from_chars(s);
+        assert_no_more_chars(s);
+        continue;
+      }
+      if (const char* s = after_prefix(sline, "# PM: nvertices=")) {
+        pm_nvertices = int_from_chars(s);
+        s = assertx(after_prefix(s, " nwedges=")), pm_nwedges = int_from_chars(s);
+        s = assertx(after_prefix(s, " nfaces=")), pm_nfaces = int_from_chars(s);
+        assert_no_more_chars(s);
+        continue;
+      }
+      if (const char* s = after_prefix(sline, "# PM: necols=")) {
+        pm_nvsplits = int_from_chars(s);
+        assert_no_more_chars(s);
+        continue;
+      }
+      if (const char* s = after_prefix(sline, "# PM: bounding box ")) {
+        for_int(i, 2) for_int(j, 3) pm_bbox[i][j] = float_from_chars(s);
+        assert_no_more_chars(s);
+        continue;
+      }
+      if (const char* s = after_prefix(sline, "# PM: has_wad2")) {
+        assert_no_more_chars(s);
         pm_has_wad2 = true;
+        continue;
       }
     }
     showff("%s", g_header.c_str());
@@ -1124,8 +1123,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         process_vsplit();
         return false;
       }
-      if (!strncmp(sline, "# Residuals", 11)) {
-        const char* s = sline + 11;
+      if (const char* s = after_prefix(sline, "# Residuals ")) {
         vspl.resid_uni = float_from_chars(s);
         vspl.resid_dir = float_from_chars(s);
         assert_no_more_chars(s);
@@ -1133,10 +1131,9 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       }
       return true;
     case 'R':
-      if (!strncmp(sline, "REcol ", 6)) {
+      if (const char* s = after_prefix(sline, "REcol ")) {
         assertx(!after_vsplit);
         after_vsplit = true;
-        const char* s = sline + 6;
         const int voi = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
         assert_no_more_chars(s);
@@ -1205,25 +1202,17 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       }
       break;
     case 'F':
-      if (!strncmp(sline, "Face ", 5)) {
+      if (const char* s = after_prefix(sline, "Face ")) {
         // NOTE: because of reverselines, face2 arrives before face1!
         // Note: still true with std::swap(vs, vt) and collapse_edge_vertex
         const char* sinfo = get_sinfo(sline);  // note side-effect!
-        PArray<Vertex, 8> va;
-        char* s = sline + 4;
-        int fi = -1;
+        PArray<Vertex, 3> va;
+        const int fi = int_from_chars(s);
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s) break;
-          char* beg = s;
-          while (std::isdigit(*s)) s++;
-          assertx(!*s || isspace(*s));
-          int j = std::atoi(beg);  // terminated by ' ' so cannot use to_int()
-          if (fi < 0) {
-            fi = j;
-            continue;
-          }
-          va.push(mesh.id_vertex(j));
+          const int vi = int_from_chars(s);
+          va.push(mesh.id_vertex(vi));
         }
         assertx(va.num() == 3);
         assertx(mesh.legal_create_face(va));
@@ -1288,26 +1277,24 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       }
       break;
     case 'E':
-      if (!strncmp(sline, "Edge ", 5)) assertnever("Edge flags not used anymore");
+      if (after_prefix(sline, "Edge ")) assertnever("Edge flags not used anymore");
       break;
     case 'M':
-      if (!strncmp(sline, "MVertex ", 8)) {
+      if (const char* s = after_prefix(sline, "MVertex ")) {
         if (!after_vsplit) return true;
-        const char* s = sline + 8;
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
         assert_no_more_chars(s);
         Vertex v = mesh.id_vertex(vi);
         mesh.set_point(v, p);
-        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
+        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.  ??
         return true;
       }
       break;
     case 'C':
-      if (!strncmp(sline, "Corner ", 7)) {
+      if (const char* s = after_prefix(sline, "Corner ")) {
         if (!after_vsplit) return true;
-        const char* s = sline + 7;
         const int vi = int_from_chars(s), fi = int_from_chars(s);
         // assert_no_more_chars(s);  // ??
         Vertex v = mesh.id_vertex(vi);
@@ -1333,7 +1320,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       }
       break;
   }
-  assertnever(string() + "Cannot parse line '" + sline + "'");
+  assertnever("Cannot parse line '" + string(sline) + "'");
 }
 
 void do_pm_encode() {
@@ -1451,8 +1438,8 @@ void do_pm_encode() {
       vspl.resid_uni = 0.f;
       vspl.resid_dir = 0.f;
       bool after_vsplit = false;
-      for (string sline; my_getline(is, sline);) {
-        if (!parse_line2(const_cast<char*>(sline.c_str()), after_vsplit)) break;
+      for (string line; my_getline(is, line);) {
+        if (!parse_line2(const_cast<char*>(line.c_str()), after_vsplit)) break;
       }
       if (!is) {
         assertx(!after_vsplit);

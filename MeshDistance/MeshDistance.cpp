@@ -73,7 +73,7 @@ struct PStats {
 };
 
 void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const Vector& psnor, const GMesh& mesh_d,
-                   const PolygonFaceSpatial& psp, Vertex vv, PStats& pstats) {
+                   const PolygonFaceSpatial& psp, Vertex vv, string& str, PStats& pstats) {
   SpatialSearch<PolygonFace*> ss(&psp, ps * xform);
   PolygonFace* polyface = ss.next();
   Face fd = polyface->face;
@@ -95,13 +95,13 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
       // showdf("val %f first cut %f d2 %f\n", val, bbdiag / 100, d2 * 100);
       // if (val < 1.f)
       if (val < bbdiag / 100) {
-        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, max(0.f, 1.f - val), max(0.f, 1.f - val)).c_str());
+        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", 1.f, max(0.f, 1.f - val), max(0.f, 1.f - val)));
       } else if (val < bbdiag / 50) {  // else if (val < 2.f)
-        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", 1.f, min(val - 1.f, 1.f), 0.f).c_str());
+        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", 1.f, min(val - 1.f, 1.f), 0.f));
       } else {
         // val = val - 2;
         if (0) val /= g_MK;
-        mesh_s.update_string(vv, "rgb", sform("(%g %g %g)", max(0.f, 1.f - val), 0.f, 0.f).c_str());
+        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", max(0.f, 1.f - val), 0.f, 0.f));
       }
     }
   }
@@ -110,14 +110,14 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
 }
 
 void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const PolygonFaceSpatial& psp,
-                   Vertex vv, PStats& pstats) {
+                   Vertex vv, string& str, PStats& pstats) {
   dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
   Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
                     mesh_s.point(mesh_s.corner_vertex(cas[2])), barys[0], barys[1]);
   A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys[0], barys[1]);
   Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys[0], barys[1]);
-  project_point(mesh_s, ps, pscol, psnor, mesh_d, psp, vv, pstats);
+  project_point(mesh_s, ps, pscol, psnor, mesh_d, psp, vv, str, pstats);
 }
 
 void print_it(const string& s, const PStats& pstats) {
@@ -194,13 +194,14 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
     const int num_threads = use_parallelism ? get_max_threads() : 1;
     Array<PStats> ar_pstats(num_threads);
     parallel_for_chunk(range(numpts), num_threads, [&](int thread_index, auto subrange) {
+      string str;
       for (const int i : subrange) {
         const int face_index = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
         Face f = fface[face_index];
         float a = randoms[i * 3 + 1], b = randoms[i * 3 + 2];
         if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
         Bary bary(a, b, 1.f - a - b);
-        project_point(mesh_s, f, bary, mesh_d, psp, nullptr, ar_pstats[thread_index]);
+        project_point(mesh_s, f, bary, mesh_d, psp, nullptr, str, ar_pstats[thread_index]);
       }
     });
     for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
@@ -213,10 +214,11 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
       const int num_threads = use_parallelism ? get_max_threads() : 1;
       Array<PStats> ar_pstats(num_threads);
       parallel_for_chunk(Array<Vertex>(mesh_s.vertices()), num_threads, [&](int thread_index, auto subrange) {
+        string str;
         for (Vertex v : subrange) {
           const A3dColor pscol(0.f, 0.f, 0.f);
           const Vector& psnor = v_normal(v);
-          project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, ar_pstats[thread_index]);
+          project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, str, ar_pstats[thread_index]);
         }
       });
       for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);

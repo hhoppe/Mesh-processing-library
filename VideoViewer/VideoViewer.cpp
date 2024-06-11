@@ -3081,22 +3081,22 @@ void render_image() {
     if (!is_init) {
       is_init = true;
       {
-        auto func_get_line = [](const string& slines, int line) -> string {
+        auto func_get_line = [](const string& lines, int line_index) -> string {
           string::size_type i = 0;
-          for_int(count, line - 1) {
-            i = slines.find('\n', i);
+          for_int(count, line_index - 1) {
+            i = lines.find('\n', i);
             if (i == string::npos) return "";
             i++;
           }
-          string::size_type j = slines.find('\n', i);
-          return slines.substr(i, j - i + 1);
+          string::size_type j = lines.find('\n', i);
+          return lines.substr(i, j - i + 1);
         };
         auto func_err = [&](const string& shadertype, const string& shader, const string& serr) {
           showf("OpenGL %s compilation error: %s", shadertype.c_str(), serr.data());
-          int line;
-          if (sscanf(serr.c_str(), "0(%d)", &line) == 1) {
-            string sline = func_get_line(shader, line);
-            if (sline != "") showf("%s", sline.c_str());
+          int line_index;
+          if (sscanf(serr.c_str(), "0(%d)", &line_index) == 1) {
+            string line = func_get_line(shader, line_index);
+            if (line != "") showf("%s", line.c_str());
           }
           exit_immediately(1);
         };
@@ -3660,13 +3660,12 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
         // --------------------+----------------------------------------------------------
         // EXIF data contains a thumbnail (22890 bytes).
         ar.push("EXIF:");
-        string sline;
-        while (my_getline(fi(), sline)) {
-          if (contains(sline, "-----") || sline == "" || starts_with(sline, "Tag   ") ||
-              starts_with(sline, "EXIF tags"))
+        string line;
+        while (my_getline(fi(), line)) {
+          if (contains(line, "-----") || line == "" || starts_with(line, "Tag   ") || starts_with(line, "EXIF tags"))
             continue;
-          if (!starts_with(sline, "EXIF tags")) sline = "  " + sline;
-          ar.push(sline);
+          if (!starts_with(line, "EXIF tags")) line = "  " + line;
+          ar.push(line);
         }
       }
       if (1 && ob._video.attrib().audio.size()) {

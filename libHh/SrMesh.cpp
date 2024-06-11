@@ -831,18 +831,22 @@ void SrMesh::read_srm(std::istream& is) {
   assertx(!_base_vertices.num());
   assertx(!_refine_morph_time && !_coarsen_morph_time);  // just to be safe
   // Read past comments.
-  for (string sline;;) {
-    assertx(my_getline(is, sline));
-    if (sline == "" || sline[0] == '#') continue;
-    assertx(sline == "SRM");
+  for (string line;;) {
+    assertx(my_getline(is, line));
+    if (line == "" || line[0] == '#') continue;
+    assertx(line == "SRM");
     break;
   }
   // Read in sizes.
   {
+    string line;
+    assertx(my_getline(is, line));
+    const char* s = line.c_str();
     int bnv, bnf, nvspl;
-    string sline;
-    assertx(my_getline(is, sline));
-    assertx(sscanf(sline.c_str(), "base_nvertices=%d base_nfaces=%d nvsplits=%d", &bnv, &bnf, &nvspl) == 3);
+    s = assertx(after_prefix(s, "base_nvertices=")), bnv = int_from_chars(s);
+    s = assertx(after_prefix(s, " base_nfaces=")), bnf = int_from_chars(s);
+    s = assertx(after_prefix(s, " nvsplits=")), nvspl = int_from_chars(s);
+    assert_no_more_chars(s);
     _vertices.init(bnv + 2 * nvspl);
     _faces.init(bnf + 2 * nvspl);
     _vsplits.init(nvspl);
@@ -853,10 +857,11 @@ void SrMesh::read_srm(std::istream& is) {
   }
   // Read in bounding box.
   {
-    string sline;
-    assertx(my_getline(is, sline));
-    assertx(sscanf(sline.c_str(), "bbox %g %g %g  %g %g %g", &_bbox[0][0], &_bbox[0][1], &_bbox[0][2], &_bbox[1][0],
-                   &_bbox[1][1], &_bbox[1][2]) == 6);
+    string line;
+    assertx(my_getline(is, line));
+    const char* s = assertx(after_prefix(line.c_str(), "bbox "));
+    for_int(i, 2) for_int(j, 3) _bbox[i][j] = float_from_chars(s);
+    assert_no_more_chars(s);
   }
   // Read in materials.
   _materials.read(is);

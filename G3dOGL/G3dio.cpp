@@ -72,7 +72,7 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
       case A3dElem::EType::polygon: total_gons++; break;
       case A3dElem::EType::polyline: total_lines++; break;
       case A3dElem::EType::point: total_points++; break;
-      default: assertnever(string() + "unknown type '" + narrow_cast<char>(elt) + "'");
+      default: assertnever(string("unknown type '") + narrow_cast<char>(elt) + "'");
     }
     for_int(i, el.num()) g_obs[robn].enter_point(el[i].p);
     HB::segment_add_object(el);

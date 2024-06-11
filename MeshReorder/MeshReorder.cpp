@@ -1549,9 +1549,9 @@ int main(int argc, const char** argv) {
       gfilename = filename;
       RFile fi(filename);
       HH_TIMER("_readmesh");
-      for (string sline; fi().peek() == '#';) {
-        assertx(my_getline(fi(), sline));
-        if (sline.size() > 1) showff("|%s\n", sline.substr(2).c_str());
+      for (string line; fi().peek() == '#';) {
+        assertx(my_getline(fi(), line));
+        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
       mesh = GMesh(fi());
       showff("%s", args.header().c_str());

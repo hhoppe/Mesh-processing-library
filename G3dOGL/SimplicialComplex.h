@@ -337,7 +337,8 @@ inline float ISimplex::getArea() const { return _area; }
 // inline const Point& ISimplex::getColor() const {
 //     string str;
 //     const char* s = assertx(GMesh::string_key(str, getVAttribute(), "rgb"));
-//     Point co; assertx(sscanf(s, "( %g %g %g )", &co[0], &co[1], &co[2]) == 3);
+//     Point co; for_int(c, 3) co[c] = float_from_chars(s);
+//     assert_no_more_chars(s);
 //     return co;
 // }
 

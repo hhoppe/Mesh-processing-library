@@ -94,7 +94,7 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
 }
 
 void read_mesh_line(char* s) {
-  int fi = 0, vi = 0, vi1 = 0, vi2 = 0, vspl1 = 0, vspl2 = 0, vspl3 = 0, vspl4 = 0;
+  int fi = 0, vi = 0, vi1 = 0, vi2 = 0, vspl1 = 0, vspl2 = 0, vspl3 = 0, vspl4 = 0;  // Yuck??
   open_if_closed();
   GMesh& mesh = *g_obs[robn].get_mesh();
   if (!((s[0] == 'V' && sscanf(s, "Vertex %d", &vi) == 1) ||  //

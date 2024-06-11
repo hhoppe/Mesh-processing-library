@@ -25,10 +25,11 @@ void decode(std::istream& is, ObjectFrame& object_frame) {
   assertx(my_getline(is, sline));
   assertx(sline != "");
   assertx(sline[0] == 'F' && sline[1] == ' ');
-  Frame& f = object_frame.frame;
-  assertx(sscanf(sline.c_str() + 1, "%d  %f %f %f  %f %f %f  %f %f %f  %f %f %f  %f",  // + 1 to skip ch
-                 &object_frame.obn, &f[0][0], &f[0][1], &f[0][2], &f[1][0], &f[1][1], &f[1][2], &f[2][0], &f[2][1],
-                 &f[2][2], &f[3][0], &f[3][1], &f[3][2], &object_frame.zoom) == 14);
+  const char* s = sline.c_str() + 2;
+  object_frame.obn = int_from_chars(s);
+  for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = float_from_chars(s);
+  object_frame.zoom = float_from_chars(s);
+  assert_no_more_chars(s);
   object_frame.binary = false;
 }
 

@@ -285,150 +285,173 @@ _save0 save0;
 // Read and parse a single line of a vsplit record.
 bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
   // Adapted from GMesh::read_line().
-  if (!strcmp(sline, "# Beg REcol")) {
-    if (!save0.skip_current) {
-      if (carry_old) carry_old_corner_info(mesh.edge(save0.vs, save0.vt));
-      if (record_changes) std::cout << "# frame\n";
-    }
-    save0.skip_current = false;
-    save0.wid_read.clear();
-    return false;
+  switch (sline[0]) {
+    case '#':
+      if (!strcmp(sline, "# Beg REcol")) {
+        if (!save0.skip_current) {
+          if (carry_old) carry_old_corner_info(mesh.edge(save0.vs, save0.vt));
+          if (record_changes) std::cout << "# frame\n";
+        }
+        save0.skip_current = false;
+        save0.wid_read.clear();
+        return false;
+      }
+      return true;
+    case 'R':
+      if (!strncmp(sline, "REcol ", 6)) {
+        assertx(!after_vsplit);
+        assertx(!save0.skip_current);
+        after_vsplit = true;
+        const char* s = sline + 6;
+        const int vni = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
+        const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
+        assert_no_more_chars(s);
+        assertx(vni == vsi);  // redundancy
+        dummy_use(fli, fri);
+        int vsie = vlineage.existing_id(vsi);
+        int vlie = vlineage.existing_id(vli);
+        int vrie = vri ? vlineage.existing_id(vri) : 0;
+        Vertex vs = mesh.id_vertex(vsie);
+        Vertex vl = mesh.id_vertex(vlie);
+        Vertex vr = vrie ? mesh.id_vertex(vrie) : nullptr;
+        bool possible = true;
+        if (stringent) {
+          // SIGGRAPH 96 conditions (1) and (2)
+          if (vsie != vsi) possible = false;
+          if (vl && vlie != vli) possible = false;
+          if (vr && vrie != vri) possible = false;
+        } else {
+          // With conditions (1\') and (2), the edges (vs, vl) or (vs, vr)
+          //  may not exist.
+          // See notes 1996-06-21.  There does not seem to be an easy fix for this.
+          if (0) {
+            // SIGGRAPH 1996 conditions (1\') and (2)
+            if (vsie != vsi) possible = false;
+            if (vl && (vs == vl || !mesh.query_edge(vs, vl))) possible = false;
+            if (vr && (vs == vr || !mesh.query_edge(vs, vr))) possible = false;
+            if (vl == vr) possible = false;
+          } else {
+            // Even less stringent:
+            //   vertex vs need not exist, if so then use its ancestor.
+            // Note: exposes explicit dependency of this vsplit on
+            //  exactly 2 prior vsplits that distinguish vs, vl, and vr.
+            if (vsie == vlie) possible = false;
+            if (vsie == vrie) possible = false;
+            if (vlie == vrie) possible = false;
+            // Problem: the edge (vs, vl) may not be present.
+            if (possible && vl && !mesh.query_edge(vs, vl)) possible = false;
+            if (possible && vr && !mesh.query_edge(vs, vr)) possible = false;
+            // Overall, this looks nicer than the SIGGRAPH 1996 (1\') and (2) criteria; 1996-06-21.
+          }
+        }
+        if (!possible || !should_perform_vsplit(vs)) {
+          assertx(sel_refinement);
+          vlineage.set_descendant(vti, vsie);
+          save0.skip_current = true;
+          return true;
+        }
+        vlineage.set_vertex(vti);
+        // DO IT:
+        if (record_changes) mesh.record_changes(&std::cout);
+        Vertex vt = mesh.split_vertex(vs, vl, vr, vti);
+        if (record_changes) mesh.record_changes(nullptr);
+        save0.vs = vs;
+        save0.vt = vt;
+        save0.ii = ii;
+        if (carry_old) v_opos(vt) = v_opos(vs);
+        return true;
+      }
+      break;
+    case 'F':
+      if (!strncmp(sline, "Face ", 5)) {
+        if (save0.skip_current) return true;
+        string orig_sline;
+        if (record_changes) orig_sline = sline;
+        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        PArray<Vertex, 8> va;
+        char* s = sline + 4;
+        int fi = -1;
+        for (;;) {
+          while (std::isspace(*s)) s++;
+          if (!*s) break;
+          char* beg = s;
+          while (std::isdigit(*s)) s++;
+          assertx(!*s || std::isspace(*s));
+          int j = to_int(beg);
+          if (fi < 0) {
+            fi = j;
+            continue;
+          }
+          va.push(mesh.id_vertex(vlineage.existing_id(j)));
+        }
+        assertx(va.num() == 3);
+        assertx(mesh.legal_create_face(va));
+        assertx(fi >= 1);
+        Face f = mesh.create_face_private(fi, va);
+        if (sinfo) mesh.set_string(f, sinfo);
+        if (record_changes) std::cout << orig_sline << '\n';
+        return true;
+      }
+      break;
+    case 'E':
+      if (!strncmp(sline, "Edge ", 5)) assertnever("Edge flags not used anymore");
+      break;
+    case 'M':
+      if (!strncmp(sline, "MVertex ", 8)) {
+        if (save0.skip_current) return true;
+        if (!after_vsplit) {
+          // assertx(mesh.point(v) == p);
+          return true;
+        }
+        const char* s = sline + 8;
+        const int vi = int_from_chars(s);
+        Point p;
+        for_int(c, 3) p[c] = float_from_chars(s);
+        assert_no_more_chars(s);
+        Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
+        mesh.set_point(v, p);
+        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
+        if (record_changes) std::cout << sline << '\n';
+        return true;
+      }
+      break;
+    case 'C':
+      if (!strncmp(sline, "Corner ", 7)) {
+        if (save0.skip_current) return true;
+        if (!after_vsplit) return true;
+        string orig_sline;
+        if (record_changes) orig_sline = sline;
+        const char* s = sline + 7;
+        const int vi = int_from_chars(s), fi = int_from_chars(s);
+        // assert_no_more_chars(s);  // ??
+        Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
+        Corner c = nullptr;
+        for (Corner cc : mesh.corners(v)) {
+          if (mesh.face_id(mesh.corner_face(cc)) == fi) {
+            c = cc;
+            break;
+          }
+        }
+        if (!c) {
+          Warning("Skipping non-existent corner");
+          return true;
+        }
+        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        string str;
+        int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
+        c_cwedge_id(c) = wid;
+        if (save0.wid_read.add(wid)) {
+          mesh.set_string(c, sinfo);
+          WedgeInfo wi = create_winfo(c);
+          mesh.set_string(c, nullptr);
+          gcwinfo.set(wid, wi);
+        }
+        if (record_changes) std::cout << orig_sline << '\n';
+        return true;
+      }
+      break;
   }
-  if (sline[0] == '#') return true;
-  string orig_sline;
-  if (record_changes) orig_sline = sline;
-  if (!strncmp(sline, "REcol ", 6)) {
-    assertx(!after_vsplit);
-    assertx(!save0.skip_current);
-    after_vsplit = true;
-    int vni, vsi, vti, vli, vri, fli, fri, ii;
-    assertx(sscanf(sline, "REcol %d %d %d %d %d %d %d %d", &vni, &vsi, &vti, &vli, &vri, &fli, &fri, &ii) == 8);
-    assertx(vni == vsi);  // redundancy
-    int vsie = vlineage.existing_id(vsi);
-    int vlie = vlineage.existing_id(vli);
-    int vrie = vri ? vlineage.existing_id(vri) : 0;
-    Vertex vs = mesh.id_vertex(vsie);
-    Vertex vl = mesh.id_vertex(vlie);
-    Vertex vr = vrie ? mesh.id_vertex(vrie) : nullptr;
-    bool possible = true;
-    if (stringent) {
-      // SIGGRAPH 96 conditions (1) and (2)
-      if (vsie != vsi) possible = false;
-      if (vl && vlie != vli) possible = false;
-      if (vr && vrie != vri) possible = false;
-    } else {
-      // With conditions (1\') and (2), the edges (vs, vl) or (vs, vr)
-      //  may not exist.
-      // See notes 1996-06-21.  There does not seem to be an easy fix for this.
-      if (0) {
-        // SIGGRAPH 1996 conditions (1\') and (2)
-        if (vsie != vsi) possible = false;
-        if (vl && (vs == vl || !mesh.query_edge(vs, vl))) possible = false;
-        if (vr && (vs == vr || !mesh.query_edge(vs, vr))) possible = false;
-        if (vl == vr) possible = false;
-      } else {
-        // Even less stringent:
-        //   vertex vs need not exist, if so then use its ancestor.
-        // Note: exposes explicit dependency of this vsplit on
-        //  exactly 2 prior vsplits that distinguish vs, vl, and vr.
-        if (vsie == vlie) possible = false;
-        if (vsie == vrie) possible = false;
-        if (vlie == vrie) possible = false;
-        // Problem: the edge (vs, vl) may not be present.
-        if (possible && vl && !mesh.query_edge(vs, vl)) possible = false;
-        if (possible && vr && !mesh.query_edge(vs, vr)) possible = false;
-        // Overall, this looks nicer than the SIGGRAPH 1996 (1\') and (2) criteria; 1996-06-21.
-      }
-    }
-    if (!possible || !should_perform_vsplit(vs)) {
-      assertx(sel_refinement);
-      vlineage.set_descendant(vti, vsie);
-      save0.skip_current = true;
-      return true;
-    }
-    vlineage.set_vertex(vti);
-    // DO IT:
-    if (record_changes) mesh.record_changes(&std::cout);
-    Vertex vt = mesh.split_vertex(vs, vl, vr, vti);
-    if (record_changes) mesh.record_changes(nullptr);
-    save0.vs = vs;
-    save0.vt = vt;
-    save0.ii = ii;
-    if (carry_old) v_opos(vt) = v_opos(vs);
-  } else if (sline[0] == 'F' && !strncmp(sline, "Face ", 5)) {
-    if (save0.skip_current) return true;
-    const char* sinfo = get_sinfo(sline);  // note side-effect!
-    PArray<Vertex, 8> va;
-    char* s = sline + 4;
-    int fi = -1;
-    for (;;) {
-      while (std::isspace(*s)) s++;
-      if (!*s) break;
-      char* beg = s;
-      while (std::isdigit(*s)) s++;
-      assertx(!*s || std::isspace(*s));
-      int j = to_int(beg);
-      if (fi < 0) {
-        fi = j;
-        continue;
-      }
-      va.push(mesh.id_vertex(vlineage.existing_id(j)));
-    }
-    assertx(va.num() == 3);
-    assertx(mesh.legal_create_face(va));
-    assertx(fi >= 1);
-    Face f = mesh.create_face_private(fi, va);
-    if (sinfo) mesh.set_string(f, sinfo);
-    if (record_changes) std::cout << orig_sline << '\n';
-  } else if (sline[0] == 'E' && !strncmp(sline, "Edge ", 5)) {
-    assertnever("Edge flags not used anymore");
-  } else if (!strncmp(sline, "MVertex ", 8)) {
-    if (save0.skip_current) return true;
-    if (!after_vsplit) {
-      // assertx(mesh.point(v) == p);
-      return true;
-    }
-    Point p;
-    int vi;
-    assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
-    Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
-    mesh.set_point(v, p);
-    assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
-    if (record_changes) std::cout << sline << '\n';
-  } else if (sline[0] == 'C' && !strncmp(sline, "Corner ", 7)) {
-    if (save0.skip_current) return true;
-    if (!after_vsplit) return true;
-    int vi;
-    int fi;
-    assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
-    Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
-    Corner c = nullptr;
-    for (Corner cc : mesh.corners(v)) {
-      if (mesh.face_id(mesh.corner_face(cc)) == fi) {
-        c = cc;
-        break;
-      }
-    }
-    if (!c) {
-      Warning("Skipping non-existent corner");
-      return true;
-    }
-    const char* sinfo = get_sinfo(sline);  // note side-effect!
-    string str;
-    int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
-    c_cwedge_id(c) = wid;
-    if (save0.wid_read.add(wid)) {
-      mesh.set_string(c, sinfo);
-      WedgeInfo wi = create_winfo(c);
-      mesh.set_string(c, nullptr);
-      gcwinfo.set(wid, wi);
-    }
-    if (record_changes) std::cout << orig_sline << '\n';
-  } else {
-    assertnever(string() + "Cannot parse line '" + sline + "'");
-  }
-  // Can return earlier!
-  return true;
+  assertnever("Cannot parse line '" + string(sline) + "'");
 }
 
 // Read and parse a vsplit record.
@@ -1102,7 +1125,10 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         return false;
       }
       if (!strncmp(sline, "# Residuals", 11)) {
-        assertx(sscanf(sline, "# Residuals %g %g", &vspl.resid_uni, &vspl.resid_dir) == 2);
+        const char* s = sline + 11;
+        vspl.resid_uni = float_from_chars(s);
+        vspl.resid_dir = float_from_chars(s);
+        assert_no_more_chars(s);
         has_resid = true;
       }
       return true;
@@ -1110,9 +1136,12 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       if (!strncmp(sline, "REcol ", 6)) {
         assertx(!after_vsplit);
         after_vsplit = true;
-        int voi, vsi, vti, vli, vri, fli, fri, ii;
-        assertx(sscanf(sline, "REcol %d %d %d %d %d %d %d %d", &voi, &vsi, &vti, &vli, &vri, &fli, &fri, &ii) == 8);
+        const char* s = sline + 6;
+        const int voi = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
+        const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
+        assert_no_more_chars(s);
         assertx(voi == vsi);  // redundancy
+        dummy_use(fli, fri);
         Vertex vs = mesh.id_vertex(vsi);
         Vertex vl = mesh.id_vertex(vli), vr = vri ? mesh.id_vertex(vri) : nullptr;
         unsigned code = 0;
@@ -1264,9 +1293,11 @@ bool parse_line2(char* sline, bool& after_vsplit) {
     case 'M':
       if (!strncmp(sline, "MVertex ", 8)) {
         if (!after_vsplit) return true;
+        const char* s = sline + 8;
+        const int vi = int_from_chars(s);
         Point p;
-        int vi;
-        assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+        for_int(c, 3) p[c] = float_from_chars(s);
+        assert_no_more_chars(s);
         Vertex v = mesh.id_vertex(vi);
         mesh.set_point(v, p);
         assertx(!get_sinfo(sline));  // No longer supported.  Too hard.
@@ -1276,9 +1307,9 @@ bool parse_line2(char* sline, bool& after_vsplit) {
     case 'C':
       if (!strncmp(sline, "Corner ", 7)) {
         if (!after_vsplit) return true;
-        int vi;
-        int fi;
-        assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
+        const char* s = sline + 7;
+        const int vi = int_from_chars(s), fi = int_from_chars(s);
+        // assert_no_more_chars(s);  // ??
         Vertex v = mesh.id_vertex(vi);
         Corner c = nullptr;
         for (Corner cc : mesh.corners(v)) {
@@ -1288,7 +1319,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
           }
         }
         assertx(c);
-        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        const char* sinfo = get_sinfo(sline);
         string str;
         int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
         c_cwedge_id(c) = wid;

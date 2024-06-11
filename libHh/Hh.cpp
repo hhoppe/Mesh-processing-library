@@ -634,6 +634,32 @@ unique_ptr<char[]> make_unique_c_string(const char* s) {
   return s2;
 }
 
+int int_from_chars(const char*& s) {
+  // C++17: Use std::from_chars(), once available more broadly.
+  char* end;
+  errno = 0;
+  const int base = 10;
+  const long long_value = std::strtol(s, &end, base);
+  if (errno) assertnever("Cannot parse int in '" + string(s) + "'");
+  s = end;
+  return sizeof(long_value) == sizeof(int) ? long_value : assert_narrow_cast<int>(long_value);
+}
+
+float float_from_chars(const char*& s) {
+  // C++17: Use std::from_chars(), once available more broadly.
+  char* end;
+  errno = 0;
+  const float value = std::strtof(s, &end);
+  if (errno) assertnever("Cannot parse float in '" + string(s) + "'");
+  s = end;
+  return value;
+}
+
+void assert_no_more_chars(const char* s) {
+  while (std::isspace(*s)) s++;
+  if (*s) assertnever("Unexpected extra characters in '" + string(s) + "'");
+}
+
 static bool check_bool(const char* s) {
   if (!strcmp(s, "0")) return true;
   if (!strcmp(s, "1")) return true;

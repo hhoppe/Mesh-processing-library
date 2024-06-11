@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/BufferedA3dStream.h"
 
-#include <cstdio>  // sscanf()
-
 namespace hh {
 
 // *** RBufferedA3dStream
@@ -33,7 +31,9 @@ bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, st
     return true;
   }
   assertx(str.size() > 1 && str[1] == ' ');
-  assertx(sscanf(str.c_str() + 2, "%g %g %g", &f[0], &f[1], &f[2]) == 3);
+  const char* s = str.c_str() + 2;
+  for_int(c, 3) f[c] = float_from_chars(s);
+  assert_no_more_chars(s);
   return true;
 }
 

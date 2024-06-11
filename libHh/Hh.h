@@ -432,6 +432,15 @@ HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ..
 // Allocate a duplicate of a C "char*" string, using make_unique<char[]>.
 unique_ptr<char[]> make_unique_c_string(const char* s);
 
+// Eat up whitespace, parse an integer from the string, and advance `s` to the next character beyond, or die.
+int int_from_chars(const char*& s);
+
+// Eat up whitespace, parse a float from the string, and advance `s` to the next character beyond, or die.
+float float_from_chars(const char*& s);
+
+// Eat up whitespace and assert that there are not more remaining characters.
+void assert_no_more_chars(const char* s);
+
 // Convert string to integer value, or crash if invalid.
 int to_int(const char* s);
 

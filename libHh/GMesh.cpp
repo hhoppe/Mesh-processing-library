@@ -2,8 +2,6 @@
 #include "libHh/GMesh.h"
 
 #include <cctype>   // std::isalnum()
-#include <cstdio>   // sscanf()
-#include <cstdlib>  // atoi()
 #include <cstring>  // strncmp(), strlen(), std::memmove(), etc.
 
 #include "libHh/A3dStream.h"
@@ -141,29 +139,13 @@ inline const char* str_chr(const char* s, char ch) {
   }
 }
 
-bool parse_aux(const char* s, ArrayView<float> ar) {
-  float a, b, c, d;
-  char ch;
-  switch (ar.num()) {
-    case 1:
-      if (!assertw(sscanf(s, "(%g%c", &a, &ch) == 2 && ch == ')')) return false;
-      ar[0] = a;
-      break;
-    case 2:
-      if (!assertw(sscanf(s, "(%g %g%c", &a, &b, &ch) == 3 && ch == ')')) return false;
-      ar[0] = a, ar[1] = b;
-      break;
-    case 3:
-      if (!assertw(sscanf(s, "(%g %g %g%c", &a, &b, &c, &ch) == 4 && ch == ')')) return false;
-      ar[0] = a, ar[1] = b, ar[2] = c;
-      break;
-    case 4:
-      if (!assertw(sscanf(s, "(%g %g %g %g%c", &a, &b, &c, &d, &ch) == 5 && ch == ')')) return false;
-      ar[0] = a, ar[1] = b, ar[2] = c, ar[3] = d;
-      break;
-    default: assertnever("");
+void parse_aux(const char* s, ArrayView<float> ar) {
+  assertx(*s++ == '(');
+  for_int(c, ar.num()) {
+    if (c) assertx(*s++ == ' ');
+    ar[c] = float_from_chars(s);
   }
-  return true;
+  assertx(*s++ == ')');
 }
 
 }  // namespace
@@ -244,7 +226,8 @@ bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar) {
   string str;
   const char* s = GMesh::string_key(str, ss, key);
   if (!s) return false;
-  return parse_aux(s, ar);
+  parse_aux(s, ar);
+  return true;
 }
 
 bool GMesh::parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const {
@@ -252,7 +235,8 @@ bool GMesh::parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar)
   string str;
   const char* s = corner_key(str, c, key);
   if (!s) return false;
-  return parse_aux(s, ar);
+  parse_aux(s, ar);
+  return true;
 }
 
 const char* GMesh::corner_key(string& str, Corner c, const char* key) const {
@@ -393,22 +377,11 @@ void GMesh::read_line(char* sline) {
   switch (sline[0]) {
     case 'V':
       if (!strncmp(sline, "Vertex ", 7)) {
-        int vi;
+        const char* s = sline + 7;
+        const int vi = int_from_chars(s);
         Point p;
-#if 1
-        assertx(sscanf(sline, "Vertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
-#else
-        const char* s = sline + 7;  // ??
-        assertx(std::isdigit(*s));
-        vi = std::atoi(s);
-        while (std::isdigit(*s)) s++;
-        for_int(c, 3) {
-          while (std::isspace(*s)) s++;
-          assertx(*s);
-          p[c] = std::atof(s);
-          while (*s && !std::isspace(*s)) s++;
-        }
-#endif
+        for_int(c, 3) p[c] = float_from_chars(s);
+        assert_no_more_chars(s);
         Vertex v = create_vertex_private(vi);
         set_point(v, p);
         if (sinfo) {
@@ -418,14 +391,16 @@ void GMesh::read_line(char* sline) {
         return;
       }
       if (!strncmp(sline, "Vspl ", 5)) {
-        int vi, vs1i, vs2i, vni;
-        assertx(sscanf(sline, "Vspl %d %d %d %d", &vi, &vs1i, &vs2i, &vni) == 4);
+        const char* s = sline + 5;
+        const int vi = int_from_chars(s), vs1i = int_from_chars(s), vs2i = int_from_chars(s), vni = int_from_chars(s);
+        assert_no_more_chars(s);
         split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
         return;
       }
       if (!strncmp(sline, "Vmerge ", 7)) {
-        int vi1, vi2;
-        assertx(sscanf(sline, "Vmerge %d %d", &vi1, &vi2) == 2);
+        const char* s = sline + 7;
+        const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
+        assert_no_more_chars(s);
         merge_vertices(id_vertex(vi1), id_vertex(vi2));
         return;
       }
@@ -433,25 +408,15 @@ void GMesh::read_line(char* sline) {
     case 'F':
       if (!strncmp(sline, "Face ", 5)) {
         PArray<Vertex, 6> va;
-        char* s = sline + 5;
-        int fi = -1;
+        const char* s = sline + 5;
+        const int fi = int_from_chars(s);
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s) break;
-          char* beg = s;
-          while (std::isdigit(*s)) s++;
-          if (*s && !std::isspace(*s)) {
-            SHOW(sline, *s);
-            assertnever("");
-          }
-          int j = std::atoi(beg);  // terminated by ' ' so cannot use to_int()
-          if (fi < 0) {
-            fi = j;
-            continue;
-          }
-          Vertex v = id_retrieve_vertex(j);
+          const int vi = int_from_chars(s);
+          Vertex v = id_retrieve_vertex(vi);
           if (!v) {
-            SHOW(sline, j);
+            SHOW(sline, vi);
             assertnever("Vertex does not exist");
           }
           va.push(v);
@@ -473,9 +438,9 @@ void GMesh::read_line(char* sline) {
       break;
     case 'C':
       if (!strncmp(sline, "Corner ", 7)) {
-        int vi;
-        int fi;
-        assertx(sscanf(sline, "Corner %d %d", &vi, &fi) == 2);
+        const char* s = sline + 7;
+        const int vi = int_from_chars(s), fi = int_from_chars(s);
+        assert_no_more_chars(s);
         Vertex v = id_retrieve_vertex(vi);
         Face f = id_retrieve_face(fi);
         if (!v) {
@@ -483,20 +448,23 @@ void GMesh::read_line(char* sline) {
         } else if (!f) {
           Warning("Corner face does not exist");
         } else {
-          Corner c = corner(v, f);
-          if (sinfo) set_string(c, sinfo);
+          if (sinfo) set_string(corner(v, f), sinfo);
         }
         return;
       }
       if (!strncmp(sline, "CVertex ", 8)) {
-        create_vertex_private(to_int(sline + 8));
+        const char* s = sline + 8;
+        const int vi = int_from_chars(s);
+        assert_no_more_chars(s);
+        create_vertex_private(vi);
         return;
       }
       break;
     case 'E':
       if (!strncmp(sline, "Edge ", 5)) {
-        int vi1, vi2;
-        assertx(sscanf(sline, "Edge %d %d", &vi1, &vi2) == 2);
+        const char* s = sline + 5;
+        const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
+        assert_no_more_chars(s);
         Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
         if (!e) Warning("GMesh::read_line(): Did not find edge in mesh");
         if (e && sinfo) {
@@ -506,31 +474,36 @@ void GMesh::read_line(char* sline) {
         return;
       }
       if (!strncmp(sline, "Ecol ", 5)) {
-        int vi1, vi2;
-        assertx(sscanf(sline, "Ecol %d %d", &vi1, &vi2) == 2);
+        const char* s = sline + 5;
+        const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
+        assert_no_more_chars(s);
         // collapse_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)));
         Vertex vs = id_vertex(vi1), vt = id_vertex(vi2);
         collapse_edge_vertex(edge(vs, vt), vs);
         return;
       }
       if (!strncmp(sline, "Eswa ", 5)) {
-        int vi1, vi2;
-        assertx(sscanf(sline, "Eswa %d %d", &vi1, &vi2) == 2);
+        const char* s = sline + 5;
+        const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
+        assert_no_more_chars(s);
         assertx(swap_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2))));
         return;
       }
       if (!strncmp(sline, "Espl ", 5)) {
-        int vi1, vi2, vi3;
-        assertx(sscanf(sline, "Espl %d %d %d", &vi1, &vi2, &vi3) == 3);
+        const char* s = sline + 5;
+        const int vi1 = int_from_chars(s), vi2 = int_from_chars(s), vi3 = int_from_chars(s);
+        assert_no_more_chars(s);
         split_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)), vi3);
         return;
       }
       break;
     case 'M':
       if (!strncmp(sline, "MVertex ", 8)) {
+        const char* s = sline + 8;
+        const int vi = int_from_chars(s);
         Point p;
-        int vi;
-        assertx(sscanf(sline, "MVertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+        for_int(c, 3) p[c] = float_from_chars(s);
+        assert_no_more_chars(s);
         Vertex v = id_vertex(vi);
         set_point(v, p);
         if (sinfo) set_string(v, sinfo);
@@ -539,11 +512,17 @@ void GMesh::read_line(char* sline) {
       break;
     case 'D':
       if (!strncmp(sline, "DVertex ", 8)) {
-        destroy_vertex(id_vertex(to_int(sline + 8)));
+        const char* s = sline + 8;
+        const int vi = int_from_chars(s);
+        assert_no_more_chars(s);
+        destroy_vertex(id_vertex(vi));
         return;
       }
       if (!strncmp(sline, "DFace ", 6)) {
-        destroy_face(id_face(to_int(sline + 6)));
+        const char* s = sline + 6;
+        const int fi = int_from_chars(s);
+        assert_no_more_chars(s);
+        destroy_face(id_face(fi));
         return;
       }
       break;

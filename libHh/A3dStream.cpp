@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/A3dStream.h"
 
-#include <cstdio>  // sscanf()
-
 #include "libHh/BinaryIO.h"
 #include "libHh/NetworkOrder.h"
 #include "libHh/Polygon.h"
@@ -192,7 +190,9 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     if (1) {
       string sline;
       assertx(my_getline(_is, sline));
-      assertx(sscanf(sline.c_str(), "%g %g %g", &f[0], &f[1], &f[2]) == 3);  // 2013-12-20 added assertx()
+      const char* s = sline.c_str();
+      for_int(c, 3) f[c] = float_from_chars(s);
+      assert_no_more_chars(s);
     } else {
       assertx(_is >> f[0] >> f[1] >> f[2]);
       _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // likely needed

@@ -2261,17 +2261,15 @@ void do_renamekey(Args& args) {
     } else if (!strcmp(nkey, "P")) {
       for (Vertex v : mesh.vertices()) {
         const char* s = assertx(GMesh::string_key(str, mesh.get_string(v), okey));
-        Point p;
-        char ch;
-        if (sscanf(s, "( %g %g %g %c", &p[0], &p[1], &p[2], &ch) == 4 && ch == ')') {
-          //
-        } else if (sscanf(s, "( %g %g %c", &p[0], &p[1], &ch) == 3 && ch == ')') {
-          p[2] = 0.f;
-        } else if (sscanf(s, "( %g %c", &p[0], &ch) == 2 && ch == ')') {
-          p[1] = p[2] = 0.f;
-        } else {
-          assertnever("cannot parse key '" + string(s) + "' into P");
+        assertx(*s++ == '(');
+        Point p{};
+        for_int(c, 3) {
+          p[c] = float_from_chars(s);
+          if (*s == ')') break;  // We support value vectors of length 1, 2, or 3.
+          assertx(*s++ == ' ');
         }
+        assertx(*s++ == ')');
+        assert_no_more_chars(s);
         mesh.set_point(v, p);
         mesh.update_string(v, okey, nullptr);
       }
@@ -4167,8 +4165,8 @@ void convex_group_flip_faces(const Set<Face>& group) {
 void do_fromObj(Args& args) {
   // build mesh from Obj input. Specify <flip> to flip face to point to
   //  the outside of convex components
-  Array<Vector> nor;
-  Array<UV> uv;
+  Array<Vector> ar_nor;
+  Array<UV> ar_uv;
   RFile fi(args.get_filename());
   bool flip = false;
   if (args.num() && args.peek_string() == "flip") {
@@ -4176,58 +4174,70 @@ void do_fromObj(Args& args) {
     flip = true;
   }
   int v = 0, gid = 1;
-  Point p;
   Set<Face> group;
   string str;
   for (string sline; my_getline(fi(), sline);) {
     const char* line = sline.c_str();
     if (strncmp(line, "v ", 2) == 0) {
-      assertx(sscanf(line + 2, "%f %f %f", &p[0], &p[1], &p[2]) == 3);
+      const char* s = line + 2;
+      Point p;
+      for_int(c, 3) p[c] = float_from_chars(s);
+      assert_no_more_chars(s);
       mesh.create_vertex();
       v++;
       Vertex vv = mesh.id_vertex(v);
       mesh.set_point(vv, p);
       mesh.update_string(vv, "group", csform(str, "%d", gid));
     } else if (strncmp(line, "vt ", 3) == 0) {
-      UV newuv;
-      assertx(sscanf(line + 3, "%f %f", &newuv[0], &newuv[1]) == 2);
-      uv.push(newuv);
+      const char* s = line + 3;
+      UV uv;
+      for_int(c, 2) uv[c] = float_from_chars(s);
+      assert_no_more_chars(s);
+      ar_uv.push(uv);
     } else if (strncmp(line, "vn ", 3) == 0) {
-      Vector n;
-      assertx(sscanf(line + 3, "%f %f %f", &n[0], &n[1], &n[2]) == 3);
-      nor.push(n);
+      const char* s = line + 3;
+      Vector nor;
+      for_int(c, 3) nor[c] = float_from_chars(s);
+      assert_no_more_chars(s);
+      ar_nor.push(nor);
     } else if (strncmp(line, "f ", 2) == 0) {
-      int n = 2, l = int(strlen(line));  // jump over "f "
+      const char* s = line + 2;
       Vector fn{};
       Array<Vertex> va;
       Polygon pp;
       bool have_nors = true;
-      while (n < l - 1) {
-        int i, j, k, n1;
-        assertx(sscanf(line + n, " %d/%d/%d %n", &i, &j, &k, &n1) == 4);
-        n += n1;
-        if (k - 1 < nor.num())
-          fn += nor[k - 1];  // -1: arrays are 0-based
+      while (*s) {
+        const int i = int_from_chars(s);  // It is 1-based.
+        assertx(*s++ == '/');
+        const int j = int_from_chars(s) - 1;  // Convert from 1-based to 0-based.
+        assertx(*s++ == '/');
+        const int k = int_from_chars(s) - 1;
+        dummy_use(j);
+        if (k < ar_nor.num())
+          fn += ar_nor[k];
         else
           have_nors = false;
         Vertex vv = mesh.id_vertex(i);
         va.push(vv);
         pp.push(mesh.point(vv));
+        while (std::isspace(*s)) s++;
       }
       // maybe flip face winding to match the vertex normals orientation
       if (have_nors && dot(fn, pp.get_normal()) < 0) reverse(va);
       if (mesh.legal_create_face(va)) {
         Face f = mesh.create_face(va);
         group.add(f);
-        n = 2;
-        while (n < l - 1) {  // update corner attributes, if supplied
-          int i, j, k, n1;
-          assertx(sscanf(line + n, " %d/%d/%d %n", &i, &j, &k, &n1) == 4);
-          n += n1;
+        s = line + 2;  // Rewind and parse again, to update corner attributes, if supplied.
+        while (*s) {
+          const int i = int_from_chars(s);
+          assertx(*s++ == '/');
+          const int j = int_from_chars(s) - 1;  // Convert from 1-based to 0-based.
+          assertx(*s++ == '/');
+          const int k = int_from_chars(s) - 1;
           Corner c = mesh.corner(mesh.id_vertex(i), f);
-          --k, --j;  // arrays are 0-based
-          if (k < nor.num()) mesh.update_string(c, "normal", csform_vec(str, nor[k]));
-          if (j < uv.num()) mesh.update_string(c, "uv", csform_vec(str, uv[j]));
+          if (k < ar_nor.num()) mesh.update_string(c, "normal", csform_vec(str, ar_nor[k]));
+          if (j < ar_uv.num()) mesh.update_string(c, "uv", csform_vec(str, ar_uv[j]));
+          while (std::isspace(*s)) s++;
         }
       } else {
         Warning("Illegal face");

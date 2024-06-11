@@ -658,7 +658,7 @@ static bool check_float(const char* s) {
 int to_int(const char* s) {
   assertx(s);
   if (!check_int(s)) assertnever(string() + "'" + s + "' not int");
-  return atoi(s);
+  return std::atoi(s);
 }
 
 #if defined(_WIN32)
@@ -713,7 +713,7 @@ float getenv_float(const string& varname, float vdefault, bool warn) {
   const char* s = getenv(varname.c_str());
   if (!s) return vdefault;
   assertx(*s && check_float(s));
-  float v = float(atof(s));
+  float v = float(std::atof(s));
   // static std::unordered_map<string, int> map; if (warn && !map[varname]++) ..
   if (warn) showf("Environment variable '%s=%g' overrides default value '%g'\n", varname.c_str(), v, vdefault);
   return v;

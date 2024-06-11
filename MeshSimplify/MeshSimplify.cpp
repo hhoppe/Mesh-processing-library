@@ -570,7 +570,7 @@ bool same_discrete(Face f1, Face f2) { return f_matid(f1) == f_matid(f2); }
 
 // Return: exists discrete attribute discontinuity across edge e.
 bool edge_discrete_bnd(Edge e) {
-  assertx(!mesh.is_boundary(e));
+  ASSERTX(!mesh.is_boundary(e));
   return !same_discrete(mesh.face1(e), mesh.face2(e));
 }
 
@@ -579,12 +579,17 @@ bool same_scalar(Corner c1, Corner c2) { return c_wedge_id(c1) == c_wedge_id(c2)
 
 // Return: exists scalar attribute discontinuity at edge e near vertex v.
 bool hedge_scalar_bnd(Vertex v, Edge e) {
-  assertx(!mesh.is_boundary(e));
+  ASSERTX(!mesh.is_boundary(e));
   return !same_scalar(mesh.ccw_corner(v, e), mesh.clw_corner(v, e));
 }
 
 // Return: exists scalar attribute discontinuity across edge.
-bool edge_scalar_bnd(Edge e) { return hedge_scalar_bnd(mesh.vertex1(e), e) || hedge_scalar_bnd(mesh.vertex2(e), e); }
+bool edge_scalar_bnd(Edge e) {
+  ASSERTX(!mesh.is_boundary(e));
+  if (0) return hedge_scalar_bnd(mesh.vertex1(e), e) || hedge_scalar_bnd(mesh.vertex2(e), e);
+  Mesh::HEdge he = e->_herep, he2 = he->_sym;
+  return !same_scalar(he, he2->_prev) || !same_scalar(he->_prev, he2);
+}
 
 // Return: edge is sharp.
 bool edge_sharp(Edge e) { return mesh.is_boundary(e) || edge_discrete_bnd(e) || edge_scalar_bnd(e); }
@@ -592,19 +597,16 @@ bool edge_sharp(Edge e) { return mesh.is_boundary(e) || edge_discrete_bnd(e) || 
 // Return: number of incident sharp edges on vertex v.
 int vertex_num_sharpe(Vertex v) {
   int nsharpe = 0;
-  for (Edge e : mesh.edges(v)) {
+  for (Edge e : mesh.edges(v))
     if (edge_sharp(e)) nsharpe++;
-  }
   return nsharpe;
 }
 
 // Return: vertex v has more than one wedge.
-int vertex_num_hedge_scalar_bnd(Vertex v) {
-  int num = 0;
-  for (Edge e : mesh.edges(v)) {
-    if (mesh.is_boundary(e) || hedge_scalar_bnd(v, e)) num++;
-  }
-  return num;
+bool vertex_has_hedge_scalar_bnd(Vertex v) {
+  for (Edge e : mesh.edges(v))
+    if (mesh.is_boundary(e) || hedge_scalar_bnd(v, e)) return true;
+  return false;
 }
 
 inline void get_grid_point(const Point& p, Vec2<int>& pyx, float& pz) {
@@ -1456,7 +1458,7 @@ void sample_pts() {
     Array<Vertex> va;
     Array<Face> fa;  // for jittering
     for (Vertex v : mesh.vertices()) {
-      bool define_scalars = !vertex_num_hedge_scalar_bnd(v);
+      bool define_scalars = !vertex_has_hedge_scalar_bnd(v);
       Face f;
       if (jittervertices) {
         fa.init(0);
@@ -1963,13 +1965,13 @@ bool gather_nn_valid(Edge e) {
   bool thru_sr = cvsfro && c_wedge_id(cvsfr) == c_wedge_id(cvsfro);
   bool thru_tl = cvtflo && c_wedge_id(cvtfl) == c_wedge_id(cvtflo);
   bool thru_tr = cvtfro && c_wedge_id(cvtfr) == c_wedge_id(cvtfro);
-  int vs_num_wedge_bnd = vertex_num_hedge_scalar_bnd(vs);
-  int vt_num_wedge_bnd = vertex_num_hedge_scalar_bnd(vt);
-  if (thru_sl && thru_sr && c_wedge_id(cvsfl) == c_wedge_id(cvsfr) && vs_num_wedge_bnd && vt_num_wedge_bnd) {
+  bool vs_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vs);
+  bool vt_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vt);
+  if (thru_sl && thru_sr && c_wedge_id(cvsfl) == c_wedge_id(cvsfr) && vs_has_wedge_bnd && vt_has_wedge_bnd) {
     if (verb >= 2) Warning("Edge collapse would fragment wedge around vs");
     return false;
   }
-  if (thru_tl && thru_tr && c_wedge_id(cvtfl) == c_wedge_id(cvtfr) && vt_num_wedge_bnd && vs_num_wedge_bnd) {
+  if (thru_tl && thru_tr && c_wedge_id(cvtfl) == c_wedge_id(cvtfr) && vt_has_wedge_bnd && vs_has_wedge_bnd) {
     if (verb >= 2) Warning("Edge collapse would fragment wedge around vt");
     return false;
   }
@@ -3598,7 +3600,10 @@ struct EcolResult {
 // Consider the edge collapse of edge e.
 EcolResult try_ecol(Edge e, bool commit) {
   EcolResult ecol_result;
-  if (!mesh.nice_edge_collapse(e)) return {R_illegal};
+  if (commit)
+    ASSERTX(mesh.nice_edge_collapse(e));
+  else if (!mesh.nice_edge_collapse(e))
+    return {R_illegal};
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // f2 could be nullptr
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);  // vo2 could be nullptr
@@ -4566,8 +4571,10 @@ void parallel_optimize() {
       } else {
         ar_j = {0, 1};
       }
-      for (const int j : ar_j)
-        for (Edge ee : invalidations_v1_v2[j]) invalidated_edges.add(ee);
+      for (const int j : ar_j) {
+        // for (Edge ee : invalidations_v1_v2[j]) invalidated_edges.add(ee);
+        invalidated_edges.merge(invalidations_v1_v2[j]);
+      }
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

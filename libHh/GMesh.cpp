@@ -395,7 +395,20 @@ void GMesh::read_line(char* sline) {
       if (!strncmp(sline, "Vertex ", 7)) {
         int vi;
         Point p;
+#if 1
         assertx(sscanf(sline, "Vertex %d %g %g %g", &vi, &p[0], &p[1], &p[2]) == 4);
+#else
+        const char* s = sline + 7;  // ??
+        assertx(std::isdigit(*s));
+        vi = std::atoi(s);
+        while (std::isdigit(*s)) s++;
+        for_int(c, 3) {
+          while (std::isspace(*s)) s++;
+          assertx(*s);
+          p[c] = std::atof(s);
+          while (*s && !std::isspace(*s)) s++;
+        }
+#endif
         Vertex v = create_vertex_private(vi);
         set_point(v, p);
         if (sinfo) {
@@ -420,18 +433,18 @@ void GMesh::read_line(char* sline) {
     case 'F':
       if (!strncmp(sline, "Face ", 5)) {
         PArray<Vertex, 6> va;
-        char* s = sline + 4;
+        char* s = sline + 5;
         int fi = -1;
         for (;;) {
-          while (*s && isspace(*s)) s++;
+          while (std::isspace(*s)) s++;
           if (!*s) break;
           char* beg = s;
-          while (*s && isdigit(*s)) s++;
-          if (*s && !isspace(*s)) {
+          while (std::isdigit(*s)) s++;
+          if (*s && !std::isspace(*s)) {
             SHOW(sline, *s);
             assertnever("");
           }
-          int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
+          int j = std::atoi(beg);  // terminated by ' ' so cannot use to_int()
           if (fi < 0) {
             fi = j;
             continue;

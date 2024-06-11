@@ -500,7 +500,7 @@ bool Mesh::legal_edge_swap(Edge e) const {
 }
 
 void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
-  assertx(legal_edge_collapse(e));
+  ASSERTX(legal_edge_collapse(e));
   HEdge he1 = hedge_from_ev1(e, vs);
   HEdge he2 = hedge_from_ev2(e, vs);
   Vertex vt = he1 ? he1->_vert : assertx(he2)->_prev->_vert;

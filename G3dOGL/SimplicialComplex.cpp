@@ -660,7 +660,7 @@ void SimplicialComplex::readLine(const char* str) {
     if (attrid) sd->setVAttribute(to_int(attrid));
 
     const char* area = GMesh::string_key(str2, va_field, "area");
-    if (area) sd->setArea(float(atof(area)));
+    if (area) sd->setArea(float(std::atof(area)));
   } else if (!strncmp(sline, "Unify ", 6)) {
     int vi1, vi2;
     assertx(sscanf(sline, "Unify %d %d", &vi1, &vi2) == 2);

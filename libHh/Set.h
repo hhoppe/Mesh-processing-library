@@ -104,6 +104,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   const_iterator begin() const { return _set.begin(); }
   iterator end() { return _set.end(); }
   const_iterator end() const { return _set.end(); }
+  void merge(type& other) { _set.merge(other._set); }  // Elements are moved from `other` if not already in *this.
 
  private:
   base _set;

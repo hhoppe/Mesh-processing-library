@@ -362,11 +362,11 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
     char* s = sline + 4;
     int fi = -1;
     for (;;) {
-      while (*s && isspace(*s)) s++;
+      while (std::isspace(*s)) s++;
       if (!*s) break;
       char* beg = s;
-      while (*s && isdigit(*s)) s++;
-      assertx(!*s || isspace(*s));
+      while (std::isdigit(*s)) s++;
+      assertx(!*s || std::isspace(*s));
       int j = to_int(beg);
       if (fi < 0) {
         fi = j;
@@ -1184,12 +1184,12 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         char* s = sline + 4;
         int fi = -1;
         for (;;) {
-          while (*s && isspace(*s)) s++;
+          while (std::isspace(*s)) s++;
           if (!*s) break;
           char* beg = s;
-          while (*s && isdigit(*s)) s++;
+          while (std::isdigit(*s)) s++;
           assertx(!*s || isspace(*s));
-          int j = atoi(beg);  // terminated by ' ' so cannot use to_int()
+          int j = std::atoi(beg);  // terminated by ' ' so cannot use to_int()
           if (fi < 0) {
             fi = j;
             continue;

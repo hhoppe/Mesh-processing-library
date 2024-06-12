@@ -93,44 +93,46 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
   return elt;
 }
 
-void read_mesh_line(char* s) {
-  int fi = 0, vi = 0, vi1 = 0, vi2 = 0, vspl1 = 0, vspl2 = 0, vspl3 = 0, vspl4 = 0;  // Yuck??
+void read_mesh_line(char* sline) {
   open_if_closed();
   GMesh& mesh = *g_obs[robn].get_mesh();
-  if (!((s[0] == 'V' && sscanf(s, "Vertex %d", &vi) == 1) ||  //
-        (s[0] == 'M' && sscanf(s, "MVertex %d", &vi) == 1)))
-    vi = 0;
-  if (!(s[0] == 'F' && sscanf(s, "Face %d", &fi) == 1)) fi = 0;
-  if (!(s[0] == 'E' && sscanf(s, "Ecol %d %d", &vi1, &vi2) == 2)) vi1 = vi2 = 0;
-  if (!(s[0] == 'V' && sscanf(s, "Vspl %d %d %d %d", &vspl1, &vspl2, &vspl3, &vspl4) == 4))
-    vspl1 = vspl2 = vspl3 = vspl4 = 0;
-  mesh.read_line(s);
+  mesh.read_line(sline);
+  switch (sline[0]) {
+    case 'V':
+      if (const char* s = after_prefix(sline, "Vertex ")) {
+        const int vi = int_from_chars(s);
+        total_vertices++;
+        Vertex v = mesh.id_vertex(vi);
+        g_obs[robn].enter_point(mesh.point(v));
+        mesh.flags(v).flag(vflag_ok) = false;
+        if (GMesh::string_has_key(mesh.get_string(v), "Opos")) {
+          if (!lod_mode && 0) Warning("Entering lod_mode");
+          lod_mode = true;
+          Point po;
+          assertx(parse_key_vec(mesh.get_string(v), "Opos", po));
+          g_obs[robn].enter_point(po);
+        }
+      }
+      // Ignore "Vspl ".
+      // mesh.flags(mesh.id_vertex(vspl1)).flag(vflag_ok) = false;
+      break;
+    case 'F':
+      if (const char* s = after_prefix(sline, "Face ")) {
+        const int fi = int_from_chars(s);
+        total_faces++;
+        Face f = mesh.id_retrieve_face(fi);  // it may not have been created if !legal_create_face()
+        if (f) mesh.flags(f).flag(fflag_ok) = false;
+      }
+      break;
+    case 'E':
+      if (const char* s = after_prefix(sline, "Edge ")) {
+        const int vi1 = int_from_chars(s);  // , vi2 = int_from_chars(s).
+        mesh.flags(mesh.id_vertex(vi1)).flag(vflag_ok) = false;
+        for (Face f : mesh.faces(mesh.id_vertex(vi1))) mesh.flags(f).flag(fflag_ok) = false;
+      }
+      break;
+  }
   // (Note: Not all mesh transformations clear vflag_ok, fflag_ok flags.)
-  if (vi1) {
-    mesh.flags(mesh.id_vertex(vi1)).flag(vflag_ok) = false;
-    for (Face f : mesh.faces(mesh.id_vertex(vi1))) mesh.flags(f).flag(fflag_ok) = false;
-  }
-  if (vi) {
-    total_vertices++;
-    Vertex v = mesh.id_vertex(vi);
-    g_obs[robn].enter_point(mesh.point(v));
-    mesh.flags(v).flag(vflag_ok) = false;
-    if (GMesh::string_has_key(mesh.get_string(v), "Opos")) {
-      if (!lod_mode && 0) Warning("Entering lod_mode");
-      lod_mode = true;
-      Point po;
-      assertx(parse_key_vec(mesh.get_string(v), "Opos", po));
-      g_obs[robn].enter_point(po);
-    }
-  }
-  if (fi) {
-    total_faces++;
-    Face f = mesh.id_retrieve_face(fi);  // it may not have been created if !legal_create_face()
-    if (f) mesh.flags(f).flag(fflag_ok) = false;
-  }
-  if (vspl1) {
-    mesh.flags(mesh.id_vertex(vspl1)).flag(vflag_ok) = false;
-  }
   mesh.gflags().flag(mflag_ok) = false;
 }
 

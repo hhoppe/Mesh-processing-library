@@ -1604,8 +1604,7 @@ PMeshInfo PMesh::read_header(std::istream& is) {
     assertx(my_getline(is, line));
     const char* sline = line.c_str();
     if (const char* s = after_prefix(sline, "version=")) {
-      pminfo._read_version = int_from_chars(s);
-      assert_no_more_chars(s);
+      pminfo._read_version = to_int(s);
       continue;
     }
     if (const char* s = after_prefix(sline, "nvsplits=")) {
@@ -1622,23 +1621,19 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       continue;
     }
     if (const char* s = after_prefix(sline, "has_rgb=")) {
-      pminfo._has_rgb = narrow_cast<bool>(int_from_chars(s));
-      assert_no_more_chars(s);
+      pminfo._has_rgb = narrow_cast<bool>(to_int(s));
       continue;
     }
     if (const char* s = after_prefix(sline, "has_uv=")) {
-      pminfo._has_uv = narrow_cast<bool>(int_from_chars(s));
-      assert_no_more_chars(s);
+      pminfo._has_uv = narrow_cast<bool>(to_int(s));
       continue;
     }
     if (const char* s = after_prefix(sline, "has_resid=")) {
-      pminfo._has_resid = narrow_cast<bool>(int_from_chars(s));
-      assert_no_more_chars(s);
+      pminfo._has_resid = narrow_cast<bool>(to_int(s));
       continue;
     }
     if (const char* s = after_prefix(sline, "has_wad2=")) {
-      pminfo._has_wad2 = narrow_cast<bool>(int_from_chars(s));
-      assert_no_more_chars(s);
+      pminfo._has_wad2 = narrow_cast<bool>(to_int(s));
       continue;
     }
     if (!strcmp(sline, "PM base mesh:")) {

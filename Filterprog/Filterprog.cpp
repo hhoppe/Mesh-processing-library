@@ -257,19 +257,17 @@ bool should_perform_vsplit(Vertex vs) {
   return (use_silhouette && near_silhouette) || (use_area && sufficient_area);
 }
 
-// Get the string within the braces.  Note the side-effect on str!
-const char* get_sinfo(char* str) {
-  char* sinfo = strchr(str, '{');
-  if (sinfo) {
-    *sinfo++ = 0;
-    char* s = strchr(sinfo, '}');
-    if (!s) {
-      if (Warning("Mesh info string has no matching '}'")) SHOW(str, sinfo);
-      return nullptr;
-    }
-    *s = 0;
-  }
-  return sinfo;
+// Get the string within the braces.  Note the side-effect on `s`!  This function is copied elsewhere too.
+static const char* get_sinfo(const char* s_const) {
+  char* s = const_cast<char*>(s_const);
+  while (std::isspace(*s)) s++;
+  if (!*s) return nullptr;
+  if (*s != '{') assertnever("Unexpected character (not '{') at start of '" + string(s) + "'");
+  char* s2 = strchr(s + 1, '}');
+  if (!s2) assertnever("No matching '}' in '" + string(s) + "'");
+  *s++ = 0;
+  *s2 = 0;
+  return s;
 }
 
 struct _save0 {
@@ -362,14 +360,12 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
     case 'F':
       if (const char* s = after_prefix(sline, "Face ")) {
         if (save0.skip_current) return true;
-        string orig_line;
-        if (record_changes) orig_line = sline;
-        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        if (record_changes) std::cout << sline << '\n';
         const int fi = int_from_chars(s);
         PArray<Vertex, 3> va;
         for (;;) {
           while (std::isspace(*s)) s++;
-          if (!*s) break;
+          if (!*s || *s == '{') break;
           const int vi = int_from_chars(s);
           va.push(mesh.id_vertex(vlineage.existing_id(vi)));
         }
@@ -377,8 +373,8 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         ASSERTX(mesh.legal_create_face(va));
         assertx(fi >= 1);
         Face f = mesh.create_face_private(fi, va);
-        if (sinfo) mesh.set_string(f, sinfo);
-        if (record_changes) std::cout << orig_line << '\n';
+        if (const char* sinfo = get_sinfo(s))
+          mesh.set_string(f, sinfo);
         return true;
       }
       break;
@@ -398,7 +394,6 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         assert_no_more_chars(s);
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
         mesh.set_point(v, p);
-        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.  ??
         if (record_changes) std::cout << sline << '\n';
         return true;
       }
@@ -407,23 +402,19 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
       if (const char* s = after_prefix(sline, "Corner ")) {
         if (save0.skip_current) return true;
         if (!after_vsplit) return true;
-        string orig_line;
-        if (record_changes) orig_line = sline;
         const int vi = int_from_chars(s), fi = int_from_chars(s);
-        // assert_no_more_chars(s);  // ??
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
-        Corner c = nullptr;
-        for (Corner cc : mesh.corners(v)) {
-          if (mesh.face_id(mesh.corner_face(cc)) == fi) {
-            c = cc;
-            break;
-          }
-        }
+        Corner c = [&]() -> Corner {
+          for (Corner cc : mesh.corners(v))
+            if (mesh.face_id(mesh.corner_face(cc)) == fi) return cc;
+          return nullptr;
+        }();
         if (!c) {
           Warning("Skipping non-existent corner");
           return true;
         }
-        const char* sinfo = get_sinfo(sline);  // note side-effect!
+        if (record_changes) std::cout << sline << '\n';
+        const char* sinfo = assertx(get_sinfo(s));
         string str;
         int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
         c_cwedge_id(c) = wid;
@@ -433,7 +424,6 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
           mesh.set_string(c, nullptr);
           gcwinfo.set(wid, wi);
         }
-        if (record_changes) std::cout << orig_line << '\n';
         return true;
       }
       break;
@@ -645,8 +635,7 @@ void do_fbasemesh(Args& args) {
       showff("|%s\n", line.substr(2).c_str());
       const char* sline = line.c_str();
       if (const char* s = after_prefix(sline, "# nmaterials=")) {
-        nmaterials = int_from_chars(s);
-        assert_no_more_chars(s);
+        nmaterials = to_int(s);
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: nvertices=")) {
@@ -657,8 +646,7 @@ void do_fbasemesh(Args& args) {
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: necols=")) {
-        pm_nvsplits = int_from_chars(s);
-        assert_no_more_chars(s);
+        pm_nvsplits = to_int(s);
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: bounding box ")) {
@@ -1205,12 +1193,11 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       if (const char* s = after_prefix(sline, "Face ")) {
         // NOTE: because of reverselines, face2 arrives before face1!
         // Note: still true with std::swap(vs, vt) and collapse_edge_vertex
-        const char* sinfo = get_sinfo(sline);  // note side-effect!
         PArray<Vertex, 3> va;
         const int fi = int_from_chars(s);
         for (;;) {
           while (std::isspace(*s)) s++;
-          if (!*s) break;
+          if (!*s || *s == '{') break;
           const int vi = int_from_chars(s);
           va.push(mesh.id_vertex(vi));
         }
@@ -1272,7 +1259,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
           append_f_vsi_offset.access(old_f_num);
           append_f_vsi_offset[old_f_num] = voffset;
         }
-        if (sinfo) mesh.set_string(f, sinfo);
+        if (const char* sinfo = get_sinfo(s)) mesh.set_string(f, sinfo);
         return true;
       }
       break;
@@ -1288,7 +1275,6 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         assert_no_more_chars(s);
         Vertex v = mesh.id_vertex(vi);
         mesh.set_point(v, p);
-        assertx(!get_sinfo(sline));  // No longer supported.  Too hard.  ??
         return true;
       }
       break;
@@ -1296,17 +1282,13 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       if (const char* s = after_prefix(sline, "Corner ")) {
         if (!after_vsplit) return true;
         const int vi = int_from_chars(s), fi = int_from_chars(s);
-        // assert_no_more_chars(s);  // ??
+        const char* sinfo = assertx(get_sinfo(s));
         Vertex v = mesh.id_vertex(vi);
-        Corner c = nullptr;
-        for (Corner cc : mesh.corners(v)) {
-          if (mesh.face_id(mesh.corner_face(cc)) == fi) {
-            c = cc;
-            break;
-          }
-        }
-        assertx(c);
-        const char* sinfo = get_sinfo(sline);
+        Corner c = [&]() {
+          for (Corner cc : mesh.corners(v))
+            if (mesh.face_id(mesh.corner_face(cc)) == fi) return cc;
+          assertnever("");
+        }();
         string str;
         int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
         c_cwedge_id(c) = wid;

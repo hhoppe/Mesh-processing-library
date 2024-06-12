@@ -114,17 +114,18 @@ void Mesh::destroy_vertex(Vertex v) {
 }
 
 bool Mesh::legal_create_face(CArrayView<Vertex> va) const {
+  // Note: Even though this function appears costly when running the profiler, most of the cost is due to cache
+  // misses when traversing va[i]->_arhe and accessing the contents of those half-edges.  Omitting this function
+  // simply transfers that cache miss cost to enter_hedge(), without any reduction in execution time.
   assertx(va.num() >= 3);
-  if (debug() >= 1) {
+  if (debug() >= 1)
     for (Vertex v : va) valid(v);
-  }
   if (va.num() == 3) {  // cheap check
     if (va[0] == va[1] || va[1] == va[2] || va[0] == va[2]) return false;
   } else {
     Set<Vertex> setv;
-    for (Vertex v : va) {
+    for (Vertex v : va)
       if (!setv.add(v)) return false;
-    }
   }
   Vertex vo = va.last();
   for_int(i, va.num()) {
@@ -1109,9 +1110,8 @@ Mesh::HEdge Mesh::get_hedge(Vertex v, Face f) const {
 }
 
 Mesh::HEdge Mesh::query_hedge(Vertex v1, Vertex v2) const {
-  for (HEdge he : v1->_arhe) {
+  for (HEdge he : v1->_arhe)
     if (he->_vert == v2) return he;
-  }
   return nullptr;
 }
 

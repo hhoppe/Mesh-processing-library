@@ -1,8 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/GMesh.h"
 
-#include <cctype>   // std::isalnum()
-#include <cstring>  // strncmp(), strlen(), std::memmove(), etc.
+#include <cctype>    // std::isalnum()
+#include <charconv>  // std::to_chars()
+#include <cstring>   // strncmp(), strlen(), std::memmove(), etc.
 
 #include "libHh/A3dStream.h"
 #include "libHh/Array.h"
@@ -362,25 +363,28 @@ GMesh::GMesh(std::istream& is) {
   if (debug() >= 1) ok();
 }
 
+// Get the string within the braces.  Note the side-effect on `s`!  This function is copied elsewhere too.
+static const char* get_sinfo(const char* s_const) {
+  char* s = const_cast<char*>(s_const);
+  while (std::isspace(*s)) s++;
+  if (!*s) return nullptr;
+  if (*s != '{') assertnever("Unexpected character (not '{') at start of '" + string(s) + "'");
+  char* s2 = strchr(s + 1, '}');
+  if (!s2) assertnever("No matching '}' in '" + string(s) + "'");
+  *s++ = 0;
+  *s2 = 0;
+  return s;
+}
+
 void GMesh::read_line(char* sline) {
   if (sline[0] == '#') return;
-  char* sinfo = const_cast<char*>(str_chr(sline, '{'));
-  if (sinfo) {
-    *sinfo++ = 0;
-    char* s = const_cast<char*>(str_chr(sinfo, '}'));
-    if (!s) {
-      if (Warning("Mesh info string has no matching '}'")) SHOW(sline, sinfo);
-      sinfo = nullptr;
-    } else
-      *s = 0;
-  }
   switch (sline[0]) {
     case 'V':
       if (const char* s = after_prefix(sline, "Vertex ")) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
-        assert_no_more_chars(s);
+        const char* sinfo = get_sinfo(s);
         Vertex v = create_vertex_private(vi);
         set_point(v, p);
         if (sinfo) {
@@ -408,59 +412,50 @@ void GMesh::read_line(char* sline) {
         PArray<Vertex, 6> va;
         for (;;) {
           while (std::isspace(*s)) s++;
-          if (!*s) break;
+          if (!*s || *s == '{') break;
           const int vi = int_from_chars(s);
           Vertex v = id_retrieve_vertex(vi);
-          if (!v) {
-            SHOW(sline, vi);
-            assertnever("Vertex does not exist");
-          }
+          if (!v) assertnever("Vertex in '" + string(sline) + "' does not exist");
           va.push(v);
         }
         if (!assertw(va.num() >= 3)) return;
-        if (1 && !assertw(legal_create_face(va))) {  // Unfortunately, somewhat expensive.
-          if (0) {
-            SHOWL;
-            SHOW(va.num());
-            SHOW(sline);
-            for (Vertex v : va) SHOW(vertex_id(v));
-          }
+        if (!assertw(legal_create_face(va))) {  // Profiler shows as costly, but not really -- just cache-priming.
+          if (0) SHOW(sline, va);
           return;
         }
         Face f = fi ? create_face_private(fi, va) : create_face(va);
-        if (sinfo) set_string(f, sinfo);
+        if (const char* sinfo = get_sinfo(s)) set_string(f, sinfo);
         return;
       }
       break;
     case 'C':
       if (const char* s = after_prefix(sline, "Corner ")) {
         const int vi = int_from_chars(s), fi = int_from_chars(s);
-        assert_no_more_chars(s);
         Vertex v = id_retrieve_vertex(vi);
         Face f = id_retrieve_face(fi);
+        const char* sinfo = assertx(get_sinfo(s));
         if (!v) {
           Warning("Corner vertex does not exist");
         } else if (!f) {
           Warning("Corner face does not exist");
         } else {
-          if (sinfo) set_string(corner(v, f), sinfo);
+          set_string(corner(v, f), sinfo);
         }
         return;
       }
       if (const char* s = after_prefix(sline, "CVertex ")) {
-        const int vi = int_from_chars(s);
-        assert_no_more_chars(s);
-        create_vertex_private(vi);
+        create_vertex_private(to_int(s));
         return;
       }
       break;
     case 'E':
       if (const char* s = after_prefix(sline, "Edge ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
-        assert_no_more_chars(s);
+        const char* sinfo = get_sinfo(s);
         Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
-        if (!e) Warning("GMesh::read_line(): Did not find edge in mesh");
-        if (e && sinfo) {
+        if (!e)
+          Warning("GMesh::read_line(): Did not find edge in mesh");
+        else if (sinfo) {
           set_string(e, sinfo);
           flags(e).flag(eflag_sharp) = string_has_key(sinfo, "sharp");
         }
@@ -492,7 +487,7 @@ void GMesh::read_line(char* sline) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
-        assert_no_more_chars(s);
+        const char* sinfo = get_sinfo(s);
         Vertex v = id_vertex(vi);
         set_point(v, p);
         if (sinfo) set_string(v, sinfo);
@@ -501,15 +496,11 @@ void GMesh::read_line(char* sline) {
       break;
     case 'D':
       if (const char* s = after_prefix(sline, "DVertex ")) {
-        const int vi = int_from_chars(s);
-        assert_no_more_chars(s);
-        destroy_vertex(id_vertex(vi));
+        destroy_vertex(id_vertex(to_int(s)));
         return;
       }
       if (const char* s = after_prefix(sline, "DFace ")) {
-        const int fi = int_from_chars(s);
-        assert_no_more_chars(s);
-        destroy_face(id_face(fi));
+        destroy_face(id_face(to_int(s)));
         return;
       }
       break;
@@ -538,36 +529,131 @@ bool GMesh::recognize_line(const char* s) {
 }
 
 void GMesh::write(std::ostream& os) const {
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
+  // https://en.cppreference.com/w/cpp/compiler_support/17
+  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
   for (Vertex v : ordered_vertices()) {
     const Point& p = point(v);
     os << "Vertex " << vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2];
     const char* sinfo = get_string(v);
     if (sinfo) os << " {" << sinfo << "}";
-    os << "\n";
-    assertx(os);
+    assertx(os << "\n");
   }
+
   for (Face f : ordered_faces()) {
     os << "Face " << face_id(f) << " ";
     for (Vertex v : vertices(f)) os << " " << vertex_id(v);
     const char* sinfo = get_string(f);
     if (sinfo) os << " {" << sinfo << "}";
-    os << "\n";
-    assertx(os);
+    assertx(os << "\n");
   }
+
+  for (Edge e : edges()) {
+    const char* sinfo = get_string(e);
+    if (sinfo)
+      assertx(os << "Edge " << vertex_id(vertex1(e)) << " " << vertex_id(vertex2(e)) << " {" << sinfo << "}\n");
+  }
+
+  for (Face f : ordered_faces()) {
+    for (Corner c : corners(f)) {
+      const char* sinfo = get_string(c);
+      if (sinfo)
+        assertx(os << "Corner " << vertex_id(corner_vertex(c)) << " " << face_id(f) << " {" << sinfo << "}\n");
+    }
+  }
+
+#else
+  constexpr int capacity = 500;
+  char buffer[capacity];
+  char* const end = buffer + capacity;
+
+  strcpy(buffer, "Vertex ");
+  char* beg = buffer + strlen(buffer);
+  for (Vertex v : ordered_vertices()) {
+    char* s = beg;
+    s = std::to_chars(s, end, vertex_id(v)).ptr;
+    *s++ = ' ';
+    const Point& p = point(v);
+    for_int(c, 3) {
+      *s++ = ' ';
+      constexpr int precision = 6;  // Default for printf("%g").
+      s = std::to_chars(s, end, p[c], std::chars_format::general, precision).ptr;
+    }
+    if (const char* sinfo = get_string(v)) {
+      *s++ = ' ';
+      *s++ = '{';
+      assertx(s + strlen(sinfo) + 4 < end);
+      while (*sinfo) *s++ = *sinfo++;
+      *s++ = '}';
+    }
+    *s++ = '\n';
+    *s = '\0';
+    assertx(os << buffer);
+  }
+
+  strcpy(buffer, "Face ");
+  beg = buffer + strlen(buffer);
+  for (Face f : ordered_faces()) {
+    char* s = beg;
+    s = std::to_chars(s, end, face_id(f)).ptr;
+    *s++ = ' ';
+    for (Vertex v : vertices(f)) {
+      *s++ = ' ';
+      s = std::to_chars(s, end, vertex_id(v)).ptr;
+      assertx(s < end - 4);
+    }
+    if (const char* sinfo = get_string(f)) {
+      *s++ = ' ';
+      *s++ = '{';
+      assertx(s + strlen(sinfo) + 4 < end);
+      while (*sinfo) *s++ = *sinfo++;
+      *s++ = '}';
+    }
+    *s++ = '\n';
+    *s = '\0';
+    assertx(os << buffer);
+  }
+
+  strcpy(buffer, "Edge ");
+  beg = buffer + strlen(buffer);
   for (Edge e : edges()) {
     const char* sinfo = get_string(e);
     if (!sinfo) continue;
-    os << "Edge " << vertex_id(vertex1(e)) << " " << vertex_id(vertex2(e)) << " {" << sinfo << "}\n";
-    assertx(os);
+    char* s = beg;
+    s = std::to_chars(s, end, vertex_id(vertex1(e))).ptr;
+    *s++ = ' ';
+    s = std::to_chars(s, end, vertex_id(vertex2(e))).ptr;
+    *s++ = ' ';
+    *s++ = '{';
+    assertx(s + strlen(sinfo) + 4 < end);
+    while (*sinfo) *s++ = *sinfo++;
+    *s++ = '}';
+    *s++ = '\n';
+    *s = '\0';
+    assertx(os << buffer);
   }
+
+  strcpy(buffer, "Corner ");
+  beg = buffer + strlen(buffer);
   for (Face f : ordered_faces()) {
     for (Corner c : corners(f)) {
       const char* sinfo = get_string(c);
       if (!sinfo) continue;
-      os << "Corner " << vertex_id(corner_vertex(c)) << " " << face_id(f) << " {" << sinfo << "}\n";
-      assertx(os);
+      char* s = beg;
+      s = std::to_chars(s, end, vertex_id(corner_vertex(c))).ptr;
+      *s++ = ' ';
+      s = std::to_chars(s, end, face_id(f)).ptr;
+      *s++ = ' ';
+      *s++ = '{';
+      assertx(s + strlen(sinfo) + 4 < end);
+      while (*sinfo) *s++ = *sinfo++;
+      *s++ = '}';
+      *s++ = '\n';
+      *s = '\0';
+      assertx(os << buffer);
     }
   }
+#endif
   os.flush();
 }
 

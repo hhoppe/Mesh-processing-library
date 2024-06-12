@@ -584,8 +584,7 @@ void SimplicialComplex::write(std::ostream& os) const {
       }
 
       if (!out.empty()) os << "  {" << out << "}";
-      os << "\n";
-      assertx(os);
+      assertx(os << "\n");
     }
     EndFor;
   }

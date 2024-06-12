@@ -162,7 +162,7 @@ void all_reset() {
 // turn viewing direction toward world point (zeroes the roll)
 void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[obview].t().p()); }
 
-[[maybe_unused]] void enter_aim() {
+void enter_aim() {
   int obn = cob != obview ? cob : 1;
   Point paim = g_obs[obn].center() * g_obs[obn].t();
   Vector vaim = paim - g_obs[obview].t().p();
@@ -976,6 +976,10 @@ bool KeyPressed(const string& ps) {
       break;
     case '|':
       rotate_around();
+      HB::redraw_now();
+      break;
+    case 'A':
+      enter_aim();
       HB::redraw_now();
       break;
     case 'i':

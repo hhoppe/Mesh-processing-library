@@ -10,8 +10,6 @@
 
 namespace g3d {
 extern const hh::FlagMask mflag_ok;
-extern const hh::FlagMask vflag_ok;
-extern const hh::FlagMask fflag_ok;
 }  // namespace g3d
 
 namespace hh {

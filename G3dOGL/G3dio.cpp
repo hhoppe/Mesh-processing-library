@@ -104,7 +104,6 @@ void read_mesh_line(char* sline) {
         total_vertices++;
         Vertex v = mesh.id_vertex(vi);
         g_obs[robn].enter_point(mesh.point(v));
-        mesh.flags(v).flag(vflag_ok) = false;
         if (GMesh::string_has_key(mesh.get_string(v), "Opos")) {
           if (!lod_mode && 0) Warning("Entering lod_mode");
           lod_mode = true;
@@ -113,26 +112,11 @@ void read_mesh_line(char* sline) {
           g_obs[robn].enter_point(po);
         }
       }
-      // Ignore "Vspl ".
-      // mesh.flags(mesh.id_vertex(vspl1)).flag(vflag_ok) = false;
       break;
     case 'F':
-      if (const char* s = after_prefix(sline, "Face ")) {
-        const int fi = int_from_chars(s);
-        total_faces++;
-        Face f = mesh.id_retrieve_face(fi);  // it may not have been created if !legal_create_face()
-        if (f) mesh.flags(f).flag(fflag_ok) = false;
-      }
-      break;
-    case 'E':
-      if (const char* s = after_prefix(sline, "Edge ")) {
-        const int vi1 = int_from_chars(s);  // , vi2 = int_from_chars(s).
-        mesh.flags(mesh.id_vertex(vi1)).flag(vflag_ok) = false;
-        for (Face f : mesh.faces(mesh.id_vertex(vi1))) mesh.flags(f).flag(fflag_ok) = false;
-      }
+      if (const char* s = after_prefix(sline, "Face ")) total_faces++;
       break;
   }
-  // (Note: Not all mesh transformations clear vflag_ok, fflag_ok flags.)
   mesh.gflags().flag(mflag_ok) = false;
 }
 

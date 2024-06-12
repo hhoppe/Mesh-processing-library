@@ -639,18 +639,9 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
 
 void mesh_init(GMesh& mesh) {
   if (mesh.gflags().flag(g3d::mflag_ok).set(true)) return;
-  Set<Face> fredo;
-  for (Vertex v : mesh.vertices()) {
-    if (mesh.flags(v).flag(g3d::vflag_ok).set(true)) continue;
-    v_coord(v).init(mesh.point(v));
-    for (Face f : mesh.faces(v)) fredo.add(f);
-  }
-  for (Face f : mesh.faces()) {
-    if (!mesh.flags(f).flag(g3d::fflag_ok)) fredo.add(f);
-  }
+  for (Vertex v : mesh.vertices()) v_coord(v).init(mesh.point(v));
   Polygon poly;
-  for (Face f : fredo) {
-    mesh.flags(f).flag(g3d::fflag_ok) = true;
+  for (Face f : mesh.faces()) {
     mesh.polygon(f, poly);
     f_info(f).p = poly[0];
     f_info(f).v = poly.get_normal_dir();

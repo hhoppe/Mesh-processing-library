@@ -211,7 +211,6 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
         }
       }
     }
-    if (subdivmode && obn == 1) break;  // no more objects
   }
   if (selected_vertex.v) return selected_vertex;
   return {};
@@ -255,7 +254,6 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
       const Point inter = interp(p2, p1, a);  // Not correct for perspective!
       selected_edge = {obn, &mesh, e, inter};
     }
-    if (subdivmode && obn == 1) break;  // no more objects
   }
   if (selected_edge.e) return selected_edge;
   return {};
@@ -299,7 +297,6 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         selected_face = {obn, &mesh, f};
       }
     }
-    if (subdivmode && obn == 1) break;  // no more objects
   }
   if (selected_face.f) return selected_face;
   return {};
@@ -322,11 +319,8 @@ void swap_edge() {
     return;
   }
   Edge enew = mesh->swap_edge(e);
+  dummy_use(enew);
   mesh->gflags().flag(mflag_ok) = false;
-  for (Face f : mesh->faces(enew)) {
-    for (Vertex v : mesh->vertices(f)) mesh->flags(v).flag(vflag_ok) = false;
-  }
-  if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
 
@@ -345,8 +339,6 @@ void split_edge() {
   Vertex vnew = mesh->split_edge(e);
   mesh->set_point(vnew, inter);
   mesh->gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh->vertices(vnew)) mesh->flags(v).flag(vflag_ok) = false;
-  if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
 
@@ -372,8 +364,6 @@ void collapse_edge(bool tovertex) {
   if (tovertex) inter = dist2(p1, inter) < dist2(inter, p2) ? p1 : p2;
   mesh->set_point(v1, inter);
   mesh->gflags().flag(mflag_ok) = false;
-  mesh->flags(v1).flag(vflag_ok) = false;
-  if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
 
@@ -387,7 +377,6 @@ bool try_toggle_vertex() {
     mesh->flags(v).flag(GMesh::vflag_cusp) = !tagged;
     mesh->set_string(v, mesh->flags(v).flag(GMesh::vflag_cusp) ? "cusp" : nullptr);
     mesh->gflags().flag(mflag_ok) = false;
-    mesh->flags(v).flag(vflag_ok) = false;
     return true;
   }
   return false;
@@ -404,7 +393,6 @@ bool try_toggle_edge() {
     mesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
     mesh->set_string(e, mesh->flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
     mesh->gflags().flag(mflag_ok) = false;
-    for (Vertex v : mesh->vertices(e)) mesh->flags(v).flag(vflag_ok) = false;
     return true;
   }
   return false;
@@ -416,7 +404,6 @@ void toggle_tag() {
     HB::beep();
     return;
   }
-  if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
 
@@ -432,7 +419,6 @@ void untag(GMesh& mesh, Edge e) {
   mesh.flags(e).flag(GMesh::eflag_sharp) = false;
   mesh.set_string(e, nullptr);
   mesh.gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh.vertices(e)) mesh.flags(v).flag(vflag_ok) = false;
 }
 
 void untag_cut() {
@@ -441,7 +427,6 @@ void untag_cut() {
   if (auto selected_edge = select_edge(yx)) {
     const auto& [_, mesh, e, unused] = *selected_edge;
     if (!mesh->flags(e).flag(GMesh::eflag_sharp)) return;
-    if (subdivmode) ClearSubMesh();
     HB::redraw_later();
     {
       untag(*mesh, e);
@@ -486,10 +471,8 @@ void destroy_face() {
     return;
   }
   const auto& [_, mesh, f] = *selected_face;
-  for (Vertex v : mesh->vertices(f)) mesh->flags(v).flag(vflag_ok) = false;
   mesh->destroy_face(f);
   mesh->gflags().flag(mflag_ok) = false;
-  if (subdivmode) ClearSubMesh();
   HB::redraw_later();
 }
 
@@ -589,8 +572,6 @@ void reinit() {
   if (!assertw(cob >= g_obs.first)) return;
   GMesh& mesh = *g_obs[cob].get_mesh();
   mesh.gflags().flag(mflag_ok) = false;
-  for (Vertex v : mesh.vertices()) mesh.flags(v).flag(vflag_ok) = false;
-  for (Face f : mesh.faces()) mesh.flags(f).flag(fflag_ok) = false;
   HB::redraw_now();
 }
 

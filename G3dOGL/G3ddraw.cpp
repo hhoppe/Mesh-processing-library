@@ -7,7 +7,6 @@
 #include "libHh/Quaternion.h"
 #include "libHh/Random.h"
 #include "libHh/StringOp.h"
-#include "libHh/SubMesh.h"
 using namespace hh;
 
 namespace g3d {
@@ -15,7 +14,6 @@ namespace g3d {
 constexpr float k_globe_radius = .65f;  // radius on screen (max = 1)
 
 static int screenrate;
-static unique_ptr<SubMesh> smesh;
 static HH_STATNP(Sipf);
 static HH_STATNP(Sspf);
 static float cumtime = 0.f;
@@ -23,27 +21,20 @@ static float cumtime = 0.f;
 static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
 static const bool g_g3d_demofly = getenv_bool("G3D_DEMOFLY");
 
-static void recompute_sharpe(GMesh& mesh, const Set<Edge>& eredo) {
+template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const RangeEdges& range_edges) {
   assertx(anglethresh >= 0);
   float vcos = std::cos(to_rad(anglethresh));
-  for (Edge e : eredo) {
+  for (Edge e : range_edges) {
     if (mesh.is_boundary(e)) continue;
     bool is_sharp = edge_dihedral_angle_cos(mesh, e) < vcos;
     if (mesh.flags(e).flag(GMesh::eflag_sharp) == is_sharp) continue;
     mesh.flags(e).flag(GMesh::eflag_sharp) = is_sharp;
     mesh.set_string(e, is_sharp ? "sharp" : nullptr);
-    mesh.flags(mesh.vertex1(e)).flag(vflag_ok) = false;
-    mesh.flags(mesh.vertex2(e)).flag(vflag_ok) = false;
     mesh.gflags().flag(mflag_ok) = false;
   }
-  if (subdivmode) ClearSubMesh();
 }
 
-void RecomputeSharpEdges(GMesh& mesh) {
-  Set<Edge> eredo;
-  for (Edge e : mesh.edges()) eredo.enter(e);
-  recompute_sharpe(mesh, eredo);
-}
+void RecomputeSharpEdges(GMesh& mesh) { recompute_sharpe(mesh, mesh.edges()); }
 
 static void recompute_all_sharpe() {
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
@@ -85,15 +76,12 @@ void Applyq(const Frame& tq) {
     auto& [_, mesh, v] = *selected.selected_vertex;
     Point p = mesh->point(v) * fm * ~told;
     mesh->set_point(v, p);
-    mesh->flags(v).flag(vflag_ok) = false;
     mesh->gflags().flag(mflag_ok) = false;
     if (sizemode && anglethresh >= 0) {
       Set<Edge> eredo;
       for (Edge e : mesh->edges(v)) eredo.enter(e);
-      for (Face f : mesh->faces(v)) {
-        if (!mesh->is_triangle(f)) continue;
-        eredo.enter(mesh->opp_edge(v, f));
-      }
+      for (Face f : mesh->faces(v))
+        if (mesh->is_triangle(f)) eredo.enter(mesh->opp_edge(v, f));
       recompute_sharpe(*mesh, eredo);
     }
   }
@@ -848,56 +836,6 @@ static void show_globe() {
   }
 }
 
-static void compute_subdivmode() {
-  if (!g_obs[2].visible()) return;
-  const int nsub = getenv_int("G3DNSUB", 2);
-  bool force_recompute = false;
-  if (!smesh || &smesh->orig_mesh() != g_obs[1].get_mesh()) {
-    SHOW("doing mesh refinement");
-    g_obs.last = 2;
-    g_obs[2].update();
-    // g_obs[2].override_mesh(nullptr);  // prevent clear() from deleting the mesh
-    g_obs[2].clear();
-    HB::clear_segment(2);
-    HB::open_segment(2);
-    const GMesh& mesh = *g_obs[1].get_mesh();
-    // Give a rough idea of what the mesh extents will be
-    for (Vertex v : mesh.vertices()) g_obs[2].enter_point(mesh.point(v));
-    HB::close_segment();
-    g_obs[2].update_stats();
-    GMesh& omesh = *g_obs[1].get_mesh();
-    for (Vertex v : omesh.vertices()) omesh.flags(v).flag(SubMesh::vflag_variable) = true;
-    smesh = make_unique<SubMesh>(omesh);
-    smesh->subdivide_n(nsub, 1);
-    g_obs[2].override_mesh(&smesh->mesh());
-    force_recompute = true;
-  }
-  GMesh& mesh0 = smesh->orig_mesh();
-  GMesh& meshn = smesh->mesh();
-  Set<Vertex> v0redo;
-  for (Vertex v : mesh0.vertices()) {
-    if (!mesh0.flags(v).flag(vflag_ok)) v0redo.enter(v);
-  }
-  if (force_recompute || v0redo.num()) meshn.gflags().flag(mflag_ok) = false;
-  if (force_recompute || v0redo.num() > 3) {
-    SHOW("recompute all");
-    for (Vertex vn : meshn.vertices()) {
-      smesh->update_vertex_position(vn);
-      meshn.flags(vn).flag(vflag_ok) = false;
-    }
-  } else {
-    for (Vertex v : v0redo) {
-      for (Vertex vn : meshn.vertices()) {
-        const Combvh& comb = smesh->combination(vn);
-        if (!comb.c[v]) continue;
-        // we could be smarter and displace the vertex if we knew how much v had changed
-        smesh->update_vertex_position(vn);
-        meshn.flags(vn).flag(vflag_ok) = false;
-      }
-    }
-  }
-}
-
 void Draw() {
   if (keystring != "") {
     for (char ch : keystring) KeyPressed(string(1, ch));
@@ -948,7 +886,6 @@ void Draw() {
   if (output) WriteOutput();
   set_viewing();
   update_segs();
-  if (subdivmode) compute_subdivmode();
   if (lod_mode) {
     static bool is_init = false;
     if (!is_init) {
@@ -968,11 +905,6 @@ void Draw() {
     cur_needs_redraw = true;
   }
   prev_needed_redraw = cur_needs_redraw;
-}
-
-void ClearSubMesh() {
-  smesh = nullptr;
-  g_obs[2].override_mesh(nullptr);
 }
 
 }  // namespace g3d

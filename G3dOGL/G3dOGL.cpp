@@ -65,6 +65,7 @@ extern void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 extern void update_lod();
 extern bool keep_stdin_open;
 extern float override_frametime;
+extern bool lod_mode;
 
 }  // namespace g3d
 
@@ -1503,38 +1504,29 @@ Map<const GMesh*, Array<Face>> map_mfa;
 
 void mesh_init(GMesh& mesh) {
   static Set<const GMesh*> have_vnors, have_fnors;
-  Set<Vertex> vredo;
-  Set<Face> fredo;
   Polygon poly;
-  bool meshmodified = !mesh.gflags().flag(g3d::mflag_ok).set(true);
-  if (meshmodified) {
+  bool mesh_modified = !mesh.gflags().flag(g3d::mflag_ok).set(true);
+  if (mesh_modified) {
     // Could free up mesh strings after use; useful?
     // For future: mesh.gflags().flag(mflag_f_colors) = false;
-    // Clear the NON-current mode
-    if (!lsmooth) have_vnors.remove(&mesh);
-    if (lsmooth) have_fnors.remove(&mesh);
-    map_mfa.remove(&mesh);  // remove may return empty array
+    have_vnors.remove(&mesh);
+    have_fnors.remove(&mesh);
+    map_mfa.remove(&mesh);  // Remove may return empty array.
     for (Vertex v : mesh.vertices()) {
-      if (mesh.flags(v).flag(g3d::vflag_ok).set(true)) continue;
-      vredo.add(v);
-      for (Vertex w : mesh.vertices(v)) vredo.add(w);
-      for (Face f : mesh.faces(v)) fredo.add(f);
-    }
-    for (Vertex v : vredo) {
       VertexLOD& vlod = v_lod(v);
-      if (parse_key_vec(mesh.get_string(v), "Opos", vlod.Opos)) {
-        vlod.Npos = mesh.point(v);
-      }
+      if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Opos", vlod.Opos)) vlod.Npos = mesh.point(v);
       A3dColor co;
       if (parse_key_vec(mesh.get_string(v), "rgb", co)) {
         mesh.gflags().flag(mflag_v_colors) = true;
         mesh.flags(v).flag(vflag_color) = true;
         v_color(v) = pack_color(co);
-        vlod.Nd = v_color(v);
-        if (parse_key_vec(mesh.get_string(v), "Orgb", co)) {
-          vlod.Od = pack_color(co);
-        } else {
-          vlod.Od = pack_color(A3dColor(1.f, 1.f, 0.f));  // yellow
+        if (g3d::lod_mode) {
+          vlod.Nd = v_color(v);
+          if (parse_key_vec(mesh.get_string(v), "Orgb", co)) {
+            vlod.Od = pack_color(co);
+          } else {
+            vlod.Od = pack_color(A3dColor(1.f, 1.f, 0.f));  // yellow
+          }
         }
       }
       const bool has_c_color =
@@ -1549,39 +1541,37 @@ void mesh_init(GMesh& mesh) {
             co = A3dColor(0.f, 0.f, 0.f);
           }
           c_color(c) = pack_color(co);
-          c_lod(c).Nd = c_color(c);
-          if (parse_key_vec(mesh.get_string(c), "Orgb", co)) {
-            c_lod(c).Od = pack_color(co);
-          } else {
-            c_lod(c).Od = pack_color(A3dColor(1.f, .8f, .5f));  // orange
+          if (g3d::lod_mode) {
+            c_lod(c).Nd = c_color(c);
+            if (parse_key_vec(mesh.get_string(c), "Orgb", co)) {
+              c_lod(c).Od = pack_color(co);
+            } else {
+              c_lod(c).Od = pack_color(A3dColor(1.f, .8f, .5f));  // Orange.
+            }
           }
         }
       }
       if (1) {
         UV vuv(BIGFLOAT, BIGFLOAT);
         if (parse_key_vec(mesh.get_string(v), "uv", vuv)) {
-          // is now stored in vuv
           mesh.gflags().flag(mflag_uv) = true;
+          if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Ouv", v_lod(v).Ouv))
+            assertx(parse_key_vec(mesh.get_string(v), "uv", v_lod(v).Nuv));
         }
         for (Corner c : mesh.corners(v)) {
           UV& uv = c_uv(c);
-          if (parse_key_vec(mesh.get_string(c), "uv", uv)) {
-            // is now stored in uv
+          if (parse_key_vec(mesh.get_string(c), "uv", uv))
             mesh.gflags().flag(mflag_uv) = true;
-          } else {
+          else
             uv = vuv;
-          }
         }
       }
     }
     for (Face f : mesh.faces()) {
-      if (!mesh.flags(f).flag(g3d::fflag_ok).set(true)) fredo.add(f);
-    }
-    for (Face f : fredo) {
-      if (!mesh.is_triangle(f)) {
-        mesh.polygon(f, poly);
-        if (!poly.is_convex() && !num_concave++) Warning("Have concave polygons in mesh");
-      }
+      // if (!mesh.is_triangle(f)) {
+      //   mesh.polygon(f, poly);
+      //   if (!poly.is_convex() && !num_concave++) Warning("Have concave polygons in mesh");
+      // }
       A3dColor co;
       if (parse_key_vec(mesh.get_string(f), "rgb", co)) {
         mesh.gflags().flag(mflag_f_colors) = true;
@@ -1590,10 +1580,8 @@ void mesh_init(GMesh& mesh) {
       }
     }
   }
-  if (lsmooth) {
-    if (have_vnors.add(&mesh))
-      for (Vertex v : mesh.vertices()) vredo.add(v);
-    for (Vertex v : vredo) {
+  if (lsmooth && have_vnors.add(&mesh)) {
+    for (Vertex v : mesh.vertices()) {
       Vnors vnors(mesh, v);
       bool uniquenors = true;
       int num = 0;
@@ -1601,7 +1589,7 @@ void mesh_init(GMesh& mesh) {
       dummy_init(gOnor, gNnor);
       for (Corner c : mesh.corners(v)) {
         c_nor(c) = vnors.get_nor(mesh.corner_face(c));
-        if (Vector onor; mesh.parse_corner_key_vec(c, "Onormal", onor)) {
+        if (Vector onor; g3d::lod_mode && mesh.parse_corner_key_vec(c, "Onormal", onor)) {
           CornerLOD& clod = c_lod(c);
           clod.Nnor = c_nor(c);
           clod.Onor = onor;
@@ -1622,38 +1610,26 @@ void mesh_init(GMesh& mesh) {
       // HH_SSTAT(Suniquenors, uniquenors);
       if (uniquenors) {
         mesh.flags(v).flag(vflag_unique_nors) = true;
-        VertexLOD& vlod = v_lod(v);
-        vlod.Onor = gOnor;
-        vlod.Nnor = gNnor;
+        if (g3d::lod_mode) {
+          VertexLOD& vlod = v_lod(v);
+          vlod.Onor = gOnor;
+          vlod.Nnor = gNnor;
+        }
       }
     }
   }
-  if (1) {
-    for (Vertex v : vredo) {
-      if (parse_key_vec(mesh.get_string(v), "Ouv", v_lod(v).Ouv)) {
-        assertx(parse_key_vec(mesh.get_string(v), "uv", v_lod(v).Nuv));
-        assertx(mesh.gflags().flag(mflag_uv));
-      }
-    }
-  }
-  if (!lsmooth || ((ledges || strip_lines) && cullbackedges && lcullface)) {
-    if (have_fnors.add(&mesh))
-      for (Face f : mesh.faces()) fredo.add(f);
-    for (Face f : fredo) {
-      mesh.flags(f).flag(g3d::fflag_ok) = true;
+  if ((!lsmooth || ((ledges || strip_lines) && cullbackedges && lcullface)) && have_fnors.add(&mesh)) {
+    for (Face f : mesh.faces()) {
       mesh.polygon(f, poly);
       f_pnor(f) = poly.get_normal();
     }
   }
-  if (0 && strip_lines && !map_mfa.contains(&mesh)) {
-    map_mfa.enter(&mesh, Array<Face>(mesh.ordered_faces()));
-  }
+  if (0 && strip_lines && !map_mfa.contains(&mesh)) map_mfa.enter(&mesh, Array<Face>(mesh.ordered_faces()));
   if (strip_lines) {
     bool is_new;
     Array<Face>& fa = map_mfa.enter(&mesh, Array<Face>(), is_new);
-    if (is_new) {
+    if (is_new)
       for (Face f : mesh.ordered_faces()) fa.push(f);
-    }
   }
 }
 

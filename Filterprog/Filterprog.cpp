@@ -373,8 +373,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         ASSERTX(mesh.legal_create_face(va));
         assertx(fi >= 1);
         Face f = mesh.create_face_private(fi, va);
-        if (const char* sinfo = get_sinfo(s))
-          mesh.set_string(f, sinfo);
+        if (const char* sinfo = get_sinfo(s)) mesh.set_string(f, sinfo);
         return true;
       }
       break;

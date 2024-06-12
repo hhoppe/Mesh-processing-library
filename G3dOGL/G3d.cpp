@@ -65,15 +65,12 @@ extern string g_filename;  // used in G3dOGL.cpp
 string g_filename;
 bool ob1_updated = false;
 float anglethresh = -1.f;  // no angle threshold set
-bool subdivmode = false;
 bool lod_mode = false;
 float lod_level = 1.f;  // used to be default 0.f
 float override_frametime = 0.f;
 Point rec_point;
 
 const FlagMask mflag_ok = Mesh::allocate_flag();
-const FlagMask vflag_ok = Mesh::allocate_Vertex_flag();
-const FlagMask fflag_ok = Mesh::allocate_Face_flag();
 
 // *** object
 
@@ -137,18 +134,12 @@ void object::update() {
 }
 
 GMesh* object::get_mesh() {
-  if (_override_mesh) return _override_mesh;
   if (!_mesh) {
     _mesh = make_unique<GMesh>();
     _mesh->gflags().flag(g3d::mflag_ok) = true;
     HB::segment_attach_mesh(_obn, _mesh.get());
   }
   return _mesh.get();
-}
-
-void object::override_mesh(GMesh* mesh) {
-  _override_mesh = mesh;
-  HB::segment_attach_mesh(_obn, get_mesh());
 }
 
 // *** objects
@@ -286,7 +277,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(frame, "'frame' : change an object's frame");
   HH_ARGSF(input, ": read stdin even if have filenames");
   HH_ARGSF(asynchronousinput, ": update between EndFrames");
-  HH_ARGSF(subdivmode, ": object 2 := subdiv. surface of 1");
   HH_ARGSP(anglethresh, "angle : sharp dihedral angle");
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;

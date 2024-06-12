@@ -112,7 +112,6 @@ extern bool ob1_updated;
 
 // mesh manipulation
 extern float anglethresh;  // dihedral angle threshold
-extern bool subdivmode;    // subdivision surface editing mode
 
 // level of detail
 extern bool lod_mode;
@@ -139,9 +138,8 @@ class object {
   const Point& center() const;  // mode-dependent center in world coordinates
   const Bbox<float, 3>& bbox() const;
   float radius() const;
-  void update();                    // update HB if necessary
-  GMesh* get_mesh();                // creates if non-existent
-  void override_mesh(GMesh* mesh);  // nullptr ends override
+  void update();      // update HB if necessary
+  GMesh* get_mesh();  // creates if non-existent
  private:
   friend class objects;
   int _obn;
@@ -154,7 +152,6 @@ class object {
   bool _needs_update{true};  // wants HB update
   Vec3<Stat> _stat_coord;    // statistics on each coordinate
   unique_ptr<GMesh> _mesh;
-  GMesh* _override_mesh{nullptr};
 };
 
 class objects {
@@ -188,7 +185,6 @@ void Applyq(const Frame& tq);
 void Draw();
 void ShowInfo();
 void RecomputeSharpEdges(GMesh& mesh);
-void ClearSubMesh();
 void Dolly(const Vec2<float>& yxq);
 void update_lod();
 

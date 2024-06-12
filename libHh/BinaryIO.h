@@ -27,9 +27,7 @@ template <typename T> std::istream& read_binary_raw(std::istream& is, ArrayView<
 
 // Read an array of elements and perform Endian conversion from network (Big Endian) to native order.
 template <typename T> std::istream& read_binary_std(std::istream& is, ArrayView<T> ar) {
-  if (read_binary_raw(is, ar)) {
-    for_int(i, ar.num()) from_std(&ar[i]);
-  }
+  if (read_binary_raw(is, ar)) for_int(i, ar.num()) from_std(&ar[i]);
   return is;
 }
 

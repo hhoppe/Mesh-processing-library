@@ -163,9 +163,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
     glEnd();
   }
   if (write_ntstrips) SHOW(ntstrips);
-  if (0) {
-    for_int(f, _faces.num()) assertx((_faces[f].attrib.matid & k_Face_visited_mask) == _cur_frame_mask);
-  }
+  if (0) for_int(f, _faces.num()) assertx((_faces[f].attrib.matid & k_Face_visited_mask) == _cur_frame_mask);
 }
 
 static inline void pm_draw_segment(int v0, int v1, int fn, const Point& p0, const Point& p1) {

@@ -28,9 +28,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
   avg_norm = fct_pnor[corner_fct->getId()];
 
-  if (skip_degenerate && degenerate(verts) == 3) {
-    skip_degenerate = false;
-  }
+  if (skip_degenerate && degenerate(verts) == 3) skip_degenerate = false;
 
   // go around in one direction averaging normals
   // of adjacent facets with same normal group

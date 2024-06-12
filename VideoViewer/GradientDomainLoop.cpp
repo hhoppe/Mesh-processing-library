@@ -786,9 +786,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       Matrix<Pixel> sframe;
       if (videoloop_nv12.size()) sframe.init(sdims);
       ConsoleProgress cprogress("Video assembly");
-      if (disable_write && pwvideo) {
-        pwvideo->write(Grid<2, Pixel>(sdims, Pixel::white()));
-      }
+      if (disable_write && pwvideo) pwvideo->write(Grid<2, Pixel>(sdims, Pixel::white()));
       for_int(iloop, num_loops) {
         for_int(f, nnf) {
           cprogress.update(float(f) / nnf);

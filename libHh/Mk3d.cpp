@@ -19,9 +19,7 @@ Mk3d::~Mk3d() {
 
 void Mk3d::scale(float x, float y, float z) {
   if ((x <= 0 && x != -1) || (y <= 0 && y != -1) || (z <= 0 && z != -1)) {
-    if (Warning("mk3d: strange scale()")) {
-      SHOW(x, y, z);
-    }
+    if (Warning("mk3d: strange scale()")) SHOW(x, y, z);
   }
   apply(Frame::scaling(V(x, y, z)));
 }

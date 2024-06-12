@@ -756,12 +756,10 @@ Vertex GMesh::split_edge(Edge e, int id) {
   Vertex vn = Mesh::split_edge(e, id);
   flags(edge(v1, vn)).flag(eflag_sharp) = flag_e;
   flags(edge(v2, vn)).flag(eflag_sharp) = flag_e;
-  if (fstring1) {
+  if (fstring1)
     for (Face f : faces(edge(vn, vo1))) set_string(f, fstring1.get());
-  }
-  if (fstring2) {
+  if (fstring2)
     for (Face f : faces(edge(vn, vo2))) set_string(f, fstring2.get());
-  }
   set_point(vn, interp(point(v1), point(v2)));  // (_os == nullptr)
   if (tos) {
     _os = tos;
@@ -780,9 +778,8 @@ Edge GMesh::swap_edge(Edge e) {
   if (get_string(f1) && get_string(f2) && !strcmp(get_string(f1), get_string(f2)))
     fstring = make_unique_c_string(get_string(f1));
   Edge ne = Mesh::swap_edge(e);
-  if (fstring) {
+  if (fstring)
     for (Face f : faces(ne)) set_string(f, fstring.get());
-  }
   if (tos) {
     _os = tos;
     *_os << "Eswa " << vertex_id(v1) << ' ' << vertex_id(v2) << '\n';
@@ -811,9 +808,7 @@ Vertex GMesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
 }
 
 void GMesh::merge_vertices(Vertex vs, Vertex vt) {
-  if (_os) {
-    *_os << "Vmerge " << vertex_id(vs) << ' ' << vertex_id(vt) << '\n';
-  }
+  if (_os) *_os << "Vmerge " << vertex_id(vs) << ' ' << vertex_id(vt) << '\n';
   Mesh::merge_vertices(vs, vt);
 }
 
@@ -855,9 +850,8 @@ Vertex GMesh::center_split_face(Face f) {
   if (have_col) update_string(vn, "rgb", csform_vec(str, scol));
   if (have_nor) update_string(vn, "normal", csform_vec(str, snor));
   if (have_uv) update_string(vn, "uv", csform_vec(str, suv));
-  if (fstring) {
+  if (fstring)
     for (Face fn : faces(vn)) set_string(fn, fstring.get());
-  }
   if (mvs.num()) {
     for (Face fn : faces(vn)) {
       for (Corner cc : corners(fn)) {
@@ -879,9 +873,8 @@ Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
   }
   Edge en = Mesh::split_face(f, v1, v2);
   // f = nullptr;  // now undefined
-  if (fstring) {
+  if (fstring)
     for (Face ff : faces(en)) set_string(ff, fstring.get());
-  }
   if (mvs.num()) {
     for (Face ff : faces(en)) {
       for (Corner cc : corners(ff)) {

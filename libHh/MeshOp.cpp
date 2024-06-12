@@ -771,9 +771,7 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
   }
   HH_SSTAT(Sprojnei, ni);
   HH_SSTAT(Sprojf, nvis);
-  if (ni > 0) {
-    HH_SSTAT(Sprojunexp, !nearedge);
-  }
+  if (ni > 0) HH_SSTAT(Sprojunexp, !nearedge);
   ret_bary = minbary;
   return mind2;
 }

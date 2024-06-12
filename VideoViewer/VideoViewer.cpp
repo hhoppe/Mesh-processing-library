@@ -662,9 +662,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
   g_frametime = frametime;
   int nframenum = getob(cob)._nframes_loaded ? clamp(int(floor(g_frametime)), 0, getob(cob)._nframes_loaded - 1) : -1;
   if (cob == g_cob && nframenum == g_framenum && !force_refresh) return;
-  if (cob != g_cob) {
-    g_cob = cob;
-  }
+  if (cob != g_cob) g_cob = cob;
   Object& o = getob();
   g_framenum = nframenum;
   o._framenum = g_framenum;
@@ -2832,9 +2830,7 @@ void upload_image_to_texture() {
   g_tex_active_dims = g_frame_dims;
   auto get_desired_dims = [&] {
     Vec2<int> dims = g_tex_active_dims + g_background_padding_width * 2;
-    if (!supports_non_power_of_two_textures) for_int(c, 2) {
-        while (!is_pow2(dims[c])) dims[c]++;
-      }
+    if (!supports_non_power_of_two_textures) for_int(c, 2) while (!is_pow2(dims[c])) dims[c]++;
     return dims;
   };
   Vec2<int> desired_dims = get_desired_dims();
@@ -3347,14 +3343,11 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     process_keystring(g_keystring);
   }
   if (!product(g_win_dims)) return;
-  if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation) {
+  if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation)
     while (!g_videoloop_ready_obj) my_sleep(.001);
-  }
   if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
     std::lock_guard<std::mutex> lock(g_mutex_obs);
-    if (g_vlp_ready_obj) {
-      add_object(std::move(g_vlp_ready_obj));  // insert right after current video
-    }
+    if (g_vlp_ready_obj) add_object(std::move(g_vlp_ready_obj));  // insert right after current video
     {
       add_object(std::move(g_videoloop_ready_obj));  // insert right after current video (or as first video)
       set_video_frame(g_cob, k_before_start);        // set to first frame
@@ -3668,9 +3661,7 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
           ar.push(line);
         }
       }
-      if (1 && ob._video.attrib().audio.size()) {
-        ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
-      }
+      if (1 && ob._video.attrib().audio.size()) ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
     }
     int top_rows = 4;
     int left_pixels = 6;
@@ -4303,9 +4294,8 @@ void DerivedHW::drag_and_drop(CArrayView<string> filenames) {
       }
     }
     if (nread) set_video_frame(getobnum() - nread, k_before_start);
-    if (g_cob >= 0 && (1 || g_cob == 0)) {  // resize window appropriately
-      reset_window(determine_default_window_dims(g_frame_dims));
-    }
+    if (g_cob >= 0 && (1 || g_cob == 0))
+      reset_window(determine_default_window_dims(g_frame_dims));  // Resize window appropriately.
   }
 }
 

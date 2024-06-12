@@ -246,12 +246,8 @@ void HW::open() {
   pxsh->x += 3;
   pxsh->y += 22;
 #endif
-  if (bitmask & (XValue | YValue)) {
-    pxsh->flags |= USPosition;
-  }
-  if (bitmask & (WidthValue | HeightValue)) {
-    pxsh->flags |= USSize;
-  }
+  if (bitmask & (XValue | YValue)) pxsh->flags |= USPosition;
+  if (bitmask & (WidthValue | HeightValue)) pxsh->flags |= USSize;
   _win_dims = V(pxsh->height, pxsh->width);
   {
     XSetWindowAttributes swa = {};
@@ -548,9 +544,7 @@ void HW::handle_event() {
       const bool shift = (_event.xbutton.state & ShiftMask) != 0;
       dummy_use(shift);
       if (butnum == 4 || butnum == 5) {
-        if (pressed) {
-          wheel_turn(butnum == 4 ? +1.f : -1.f);
-        }
+        if (pressed) wheel_turn(butnum == 4 ? +1.f : -1.f);
       } else {
         if (butnum == 8) butnum = 4;  // Back button
         if (butnum == 9) butnum = 5;  // Forward button
@@ -649,9 +643,7 @@ void HW::handle_key() {
         default: void();
       }
     }
-    if (_hwdebug) {
-      SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size()))));
-    }
+    if (_hwdebug) SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size()))));
   }
   // (keysym>=XK_space && keysym<=XK_asciitilde)
   if (s == "") return;  // e.g. 'shift' key
@@ -889,9 +881,7 @@ void HW::set_window_title(string ps) {
   assertx(_state == EState::init || _state == EState::open);
   _window_title = std::move(ps);
   if (_state == EState::open) {
-    if (1) {
-      XStoreName(_display, _win, _window_title.c_str());
-    }
+    if (1) XStoreName(_display, _win, _window_title.c_str());
     if (0) {
       XTextProperty prop;
       if (0) {

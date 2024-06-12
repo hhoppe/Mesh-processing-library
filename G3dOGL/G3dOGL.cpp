@@ -984,9 +984,7 @@ void load_texturemaps() {
       glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border, GL_RGBA,
                    GL_UNSIGNED_BYTE, itexture.data());
       USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
-      if (glGenerateMipmap && define_mipmap) {
-        glGenerateMipmap(GL_TEXTURE_2D);  // not supported on Remote Desktop
-      }
+      if (glGenerateMipmap && define_mipmap) glGenerateMipmap(GL_TEXTURE_2D);  // not supported on Remote Desktop
     }
     {
       int w, h, r, g, b, a;
@@ -1026,9 +1024,7 @@ void load_texturemaps() {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);  // default
       glEnable(GL_ALPHA_TEST);
       glAlphaFunc(GL_GREATER, 0.0);  // discard fragments with zero alpha if partially transparent texture
-      if (getenv_bool("G3D_TEX_CLAMP")) {
-        Warning("G3D_TEX_CLAMP now obsolete; enabled by -texturescale 0");
-      }
+      if (getenv_bool("G3D_TEX_CLAMP")) Warning("G3D_TEX_CLAMP now obsolete; enabled by -texturescale 0");
       if (!texturescale) {
         // showf("Setting texture clamp mode\n");
         unsigned wrap_mode = GL_CLAMP_TO_EDGE;
@@ -1128,9 +1124,7 @@ void load_texturemaps() {
         glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border, GL_RGBA, GL_UNSIGNED_BYTE,
                      etexture.data());
         USE_GL_EXT_MAYBE(glGenerateMipmap, PFNGLGENERATEMIPMAPPROC);
-        if (glGenerateMipmap) {
-          glGenerateMipmap(GL_TEXTURE_1D);  // not supported on Remote Desktop
-        }
+        if (glGenerateMipmap) glGenerateMipmap(GL_TEXTURE_1D);  // not supported on Remote Desktop
         // To map it to elevation (in meters) use
         //   z = 10 x - 7995
         // where z is the elevation and x is the horizontal index of the
@@ -1855,16 +1849,15 @@ void draw_mesh(GMesh& mesh) {
       if (nquads) glEnd();      // GL_QUADS
     } else if (defining_dl && !lquickmode && !cannot_strip) {
       // Invest time to form triangle strips.
-      HH_STATNP(Sstriplen);
+      HH_STAT_NP(Sstriplen);
       if (getenv_bool("STRIPS_DEBUG")) Sstriplen.set_print(true);
       // toggle visited flag (to avoid a pass to clear all the flags)
       static const FlagMask mflag_fvisited = Mesh::allocate_flag();
       static const FlagMask fflag_visited = Mesh::allocate_Face_flag();
       bool vis_new_state = !mesh.gflags().flag(mflag_fvisited);
       mesh.gflags().flag(mflag_fvisited) = vis_new_state;
-      if (k_debug) {
+      if (k_debug)
         for (Face f : mesh.faces()) assertx(mesh.flags(f).flag(fflag_visited) != vis_new_state);
-      }
       for (Face f : mesh.faces()) {
         if (mesh.flags(f).flag(fflag_visited) == vis_new_state) continue;
         mesh.flags(f).flag(fflag_visited) = vis_new_state;
@@ -2272,9 +2265,8 @@ void process_print() {
   // drawmode(); NORMALDRAW is fine
   glPushAttrib(GL_PIXEL_MODE_BIT);
   {                            // save GL_READ_BUFFER
-    if (0) {                   // 2016-09-07 disabled because we do want most-recent rendering which is in backbuffer
+    if (0)                     // 2016-09-07 disabled because we do want most-recent rendering which is in backbuffer
       glReadBuffer(GL_FRONT);  // default is GL_BACK if doublebuffered
-    }
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     // glPixelStorei(GL_PACK_ROW_LENGTH, nxpix*3);
     if (nxpix < 44) {
@@ -3424,9 +3416,8 @@ void sr_regulator() {
   }
   float pixtol = sr_screen_thresh * min(win_dims) * .5f;
   static int count;
-  if (++count > 50) {  // ignore the transient behavior in the first 50 frames
+  if (++count > 50)  // Ignore the transient behavior in the first 50 frames.
     HH_SSTAT(Stau, pixtol);
-  }
 }
 
 void sr_adapt_refinement() {
@@ -4586,9 +4577,7 @@ void sc_gm_wrap_draw(bool show) {
         default: assertnever("");
       }
       sc_gm_lod_level = clamp(sc_gm_lod_level, 0.f, 1.f);
-      if (sc_gm_lod_level != oldval) {
-        sc_gm_update_lod();
-      }
+      if (sc_gm_lod_level != oldval) sc_gm_update_lod();
       hw.redraw_later();
     }
   } else {

@@ -66,9 +66,7 @@ int buf_fd;
 DWORD WINAPI buf_thread_func(void* param) {
   dummy_use(param);
   for (;;) {
-    if (1) {
-      assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);
-    }
+    if (1) assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);
     assertx(buf_buffern == 0);
     int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
     if (nread < 0 && errno == EINVAL && GetLastError() == ERROR_NO_DATA) {
@@ -169,9 +167,7 @@ RBuffer::ERefill RBuffer::refill() {
     nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], ntoread);
     if (nread < 0) {
       if (errno == EINTR) continue;  // for ATT UNIX (hpux)
-      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) {
-        return ERefill::no;
-      }
+      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) return ERefill::no;
     }
     if (nread < 0) {
       _err = true;
@@ -247,9 +243,7 @@ WBuffer::EFlush WBuffer::flush(int nb) {
     nwritten = HH_POSIX(write)(_fd, &_ar[_beg], unsigned(nb));
     if (nwritten < 0) {
       if (errno == EINTR) continue;
-      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) {
-        return EFlush::part;
-      }
+      if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) return EFlush::part;
       _err = true;
       return EFlush::other;
     }

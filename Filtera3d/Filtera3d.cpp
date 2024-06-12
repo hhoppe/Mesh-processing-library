@@ -104,15 +104,15 @@ struct S_outlier {
   Array<Point> pa;
 } g_outlier;
 
-HH_STATNP(Slnvert);     // polyline # of vertices
-HH_STATNP(Sledgel);     // polyline edge length
-HH_STATNP(Slclosed);    // polyline closed
-HH_STATNP(Spnvert);     // polygon # of vertices
-HH_STATNP(Spedgel);     // polygon edge length
-HH_STATNP(Sqdiagl);     // quad diagonal length
-HH_STATNP(Sparea);      // polygon area
-HH_STATNP(Splanar);     // polygon planarity (0=planar)
-HH_STATNP(Sptnor);      // point, existence of normal
+HH_STAT_NP(Slnvert);    // polyline # of vertices
+HH_STAT_NP(Sledgel);    // polyline edge length
+HH_STAT_NP(Slclosed);   // polyline closed
+HH_STAT_NP(Spnvert);    // polygon # of vertices
+HH_STAT_NP(Spedgel);    // polygon edge length
+HH_STAT_NP(Sqdiagl);    // quad diagonal length
+HH_STAT_NP(Sparea);     // polygon area
+HH_STAT_NP(Splanar);    // polygon planarity (0=planar)
+HH_STAT_NP(Sptnor);     // point, existence of normal
 Bbox<float, 3> g_bbox;  // box extent
 float fsplit;           // fsplit=split; { fsplit*=speedup; }
 Vec2<float> colorheight;
@@ -524,9 +524,7 @@ bool loop(A3dElem& el) {
       }
       if (!is_zero(nor)) el[i].p += nor * offset;
     }
-    if (noise) for_int(c, 3) {
-        el[i].p[c] += Random::G.gauss() * noise;
-      }
+    if (noise) for_int(c, 3) el[i].p[c] += Random::G.gauss() * noise;
   }
   if (randcolor) {
     A3dColor col;

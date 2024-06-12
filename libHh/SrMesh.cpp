@@ -1249,9 +1249,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
     vua->activev.link_before(n);
   }
   if (is_splitable(vt)) {
-    if (n != &vta->activev) {
-      vta->activev.relink_after(n);
-    }
+    if (n != &vta->activev) vta->activev.relink_after(n);
   } else {
     if (n == &vta->activev) pn = n->next();
   }
@@ -1312,9 +1310,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
       SrVertex* vlpt = get_vt(vlp->vspli);
       SrAVertex* vlpta = (vlpt + 0)->avertex;
       if (vlpta && (vlpt + 1)->avertex) {
-        if (n != &vlpta->activev) {
-          vlpta->activev.relink_after(n);
-        }
+        if (n != &vlpta->activev) vlpta->activev.relink_after(n);
       }
     }
   }
@@ -1326,9 +1322,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
       SrVertex* vrpt = get_vt(vrp->vspli);
       SrAVertex* vrpta = (vrpt + 0)->avertex;
       if (vrpta && (vrpt + 1)->avertex) {
-        if (n != &vrpta->activev) {
-          vrpta->activev.relink_after(n);
-        }
+        if (n != &vrpta->activev) vrpta->activev.relink_after(n);
       }
     }
   }
@@ -1341,9 +1335,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
       SrAVertex* vspta = (vspt + 0)->avertex;
       if (vspta && (vspt + 1)->avertex) {
         // Reconsider vspt + 0 if not next node.
-        if (n != &vspta->activev) {
-          vspta->activev.relink_after(n);
-        }
+        if (n != &vspta->activev) vspta->activev.relink_after(n);
       } else {
         // Skip past vsa if current node.
         if (n == &vsa->activev) pn = n->next();

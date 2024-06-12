@@ -540,9 +540,8 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
     gridref.reinit(gr);
   }
   assertx(gridref.data() == gr.data());
-  if (njustspline) {
+  if (njustspline)
     for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // expand rage
-  }
   return std::move(gr);
 }
 

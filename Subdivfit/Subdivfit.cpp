@@ -1058,9 +1058,8 @@ EResult try_esha(Edge eg, double& edrss) {
     build_lmesh1(setgmv, setbadfg, lmesh, setpts, setbadpts, rssf);
   }
   float minb = BIGFLOAT;
-  if (testdih) {
+  if (testdih)
     for (Vertex v : gmesh.vertices(eg)) minb = min(minb, min_dihedral_about_vertices(gmesh, v));
-  }
   Edge e = tremm(eg, gmesh, lmesh);
   lmesh.flags(e).flag(GMesh::eflag_sharp) = !is_sharp;
   Set<Vertex> setmv;
@@ -1354,9 +1353,7 @@ void do_stoc() {
       double nedis = get_edis(), netot = get_etot();
       // showf("edis:%g->%g  etot:%g->%g\n", cedis, nedis, cetot, netot);
       HH_SSTAT(Sechange, netot - cetot);
-      if (!assertw(netot <= cetot)) {
-        HH_SSTAT(HHH_PECHANGE, netot - cetot);
-      }
+      if (!assertw(netot <= cetot)) HH_SSTAT(HHH_PECHANGE, netot - cetot);
       cedis = nedis;
       cetot = netot;
     }
@@ -1450,9 +1447,8 @@ int main(int argc, const char** argv) {
   if (outn) {
     assertx(gmesh.num_vertices());
     for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = false;
-    if (markcuts) {
+    if (markcuts)
       for (Edge e : gmesh.edges()) gmesh.flags(e).flag(eflag_cut) = true;
-    }
     SubMesh smesh(gmesh);
     subdivide(smesh, false);
     smesh.update_vertex_positions();

@@ -31,9 +31,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   template <typename Range, typename = enable_if_range_t<Range>>
   explicit PArray(Range&& range) : PArray(range.begin(), range.end()) {}
   ~PArray() {
-    if (_cap != pcap) {
-      delete[] _a;
-    }
+    if (_cap != pcap) delete[] _a;
   }
   auto& operator=(CArrayView<T> ar) {
     if (!(ar.data() == _a && ar.num() == _n)) {
@@ -126,9 +124,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   bool remove_unordered(const T& e) {  // Return: was there.
     for_int(i, _n) {
       if (_a[i] == e) {
-        if (i < _n - 1) {
-          _a[i] = std::move(_a[_n - 1]);
-        }
+        if (i < _n - 1) _a[i] = std::move(_a[_n - 1]);
         sub(1);
         return true;
       }

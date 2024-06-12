@@ -95,9 +95,8 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
     // if vs is at a former midpoint need to update vs as well
-    if (_pos_bit == 0) {  // midpoint
+    if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
-    }
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }
@@ -244,9 +243,8 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
     // if vs is at a former midpoint need to update vs as well
-    if (_pos_bit == 0) {  // midpoint
+    if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
-    }
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }
@@ -395,9 +393,8 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
     // if vs is at a former midpoint need to update vs as well
-    if (_pos_bit == 0) {  // midpoint
+    if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
-    }
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }

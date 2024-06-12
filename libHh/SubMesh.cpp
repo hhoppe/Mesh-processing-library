@@ -81,9 +81,7 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
       co.c[v] += val;
     } else {
       co.h += comb.h * val;
-      if (comb.c.num()) {
-        for_combination(comb.c, [&](Vertex v2, float val2) { co.c[v2] += val2 * val; });
-      }
+      if (comb.c.num()) for_combination(comb.c, [&](Vertex v2, float val2) { co.c[v2] += val2 * val; });
     }
   });
   return co;
@@ -345,9 +343,8 @@ void SubMesh::refine(Mvcvh& mconv) {
         for (Corner c : _m.corners(vc)) _m.update_string(c, "imagen", csform(str, "%d", inc));
       }
     }
-    if (has_imagen) {
+    if (has_imagen)
       for (Vertex v : _m.vertices()) _m.update_string(v, "imagen", nullptr);
-    }
   } else {
     for (Face f : arf) {  // was ForStack which went in reverse order
       Vec3<Vertex> va = _m.triangle_vertices(f);

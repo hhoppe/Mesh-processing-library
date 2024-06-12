@@ -268,9 +268,7 @@ double get_erep() { return crep * (mesh.num_vertices() + get_nbv() * (crbf - 1))
 double show_energies(const string& s) {
   double edis = get_edis(), espr = get_espr(), edih = get_edih();
   double etot = edis + espr + edih;
-  if (s != "") {
-    showdf("%s F=%-12g S=%-12g D=%-12g T=%-12g\n", s.c_str(), edis, espr, edih, etot);
-  }
+  if (s != "") showdf("%s F=%-12g S=%-12g D=%-12g T=%-12g\n", s.c_str(), edis, espr, edih, etot);
   return etot;
 }
 
@@ -433,9 +431,7 @@ void global_project_aux() {
         Polygon poly(4);
         mesh.polygon(f, poly);
         assertx(poly.num() == 4);
-        if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor)) {
-          rotate(poly, poly[1]);
-        }
+        if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor)) rotate(poly, poly[1]);
         ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[1], poly[2])), f));
         ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[2], poly[3])), f));
       }

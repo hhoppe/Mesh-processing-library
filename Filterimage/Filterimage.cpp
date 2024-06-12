@@ -2497,9 +2497,7 @@ void do_procedure(Args& args) {
     }
     if (1) {  // check for pixels that are static (period0) but have nonzero temporal cost
       for (const auto& yx : range(image.dims())) {
-        if (image_periods[yx] == period_zero) {
-          HH_SSTAT(Sp0tcost, image[yx][0]);
-        }
+        if (image_periods[yx] == period_zero) HH_SSTAT(Sp0tcost, image[yx][0]);
         // # Sp0tcost:           (79313  )          0:255         av=8.1941299      sd=35.532955
       }
     }
@@ -2919,9 +2917,7 @@ inline Vector4 LAB_to_RGB(const Vector4& pv) {
       v[i] = 1.055f * (pow(v[i], (1.0f / 2.4f))) - 0.055f;
     else
       v[i] *= 12.92f;
-    if (1) {  // HH
-      v[i] = clamp(v[i], 0.f, 255.999f);
-    }
+    if (1) v[i] = clamp(v[i], 0.f, 255.999f);  // HH
   }
   return v;
 }

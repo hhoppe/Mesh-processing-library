@@ -151,14 +151,10 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 [[noreturn]] void my_abort_handler(int signal_num) {
   dummy_use(signal_num);
 #if defined(_MSC_VER) || defined(__MINGW32__)
-  if (1) {
-    show_call_stack();
-  }
+  if (1) show_call_stack();
 #endif
 #if defined(_WIN32)
-  if (IsDebuggerPresent()) {
-    DebugBreak();
-  }
+  if (IsDebuggerPresent()) DebugBreak();
   possibly_sleep();
 #else
   bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");

@@ -912,9 +912,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
             if (line.find("yuv444p") != string::npos) yuv444p = true;
             if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
           }
-          if (contains(line, ": Audio:") && contains(line, "kb/s")) {
-            expect_audio = true;
-          }
+          if (contains(line, ": Audio:") && contains(line, "kb/s")) expect_audio = true;
         }
         {
           string::size_type i = line.rfind("frame=");
@@ -956,9 +954,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     assertx(frame.dims() == sdims);
     if (!_rvideo._use_nv12) {
       if (!read_binary_raw((*_pfi)(), frame.array_view())) return false;
-      if (0) {
-        for_int(i, int(product(sdims))) frame.flat(i)[3] = 255;
-      }
+      if (0) for_int(i, int(product(sdims))) frame.flat(i)[3] = 255;
     } else {
       _ar_tmp.init(assert_narrow_cast<int>(product(sdims) + product(sdims) / 2));  // NV12
       if (!read_binary_raw((*_pfi)(), _ar_tmp)) return false;

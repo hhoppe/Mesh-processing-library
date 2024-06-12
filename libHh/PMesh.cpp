@@ -211,9 +211,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
     A3dColor& rgb = _wedges[w].attrib.rgb;
     UV& uv = _wedges[w].attrib.uv;
     const float* p = buf.data();
-    if (1) {
-      for_int(c, 3) nor[c] = *p++;
-    }
+    for_int(c, 3) nor[c] = *p++;
     if (pminfo._has_rgb) {
       for_int(c, 3) rgb[c] = *p++;
     } else {
@@ -345,13 +343,9 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
       const Vector& nor = _wedges[wr].attrib.normal;
       gmesh.update_string(gv, "normal", csform_vec(str, nor));
       const A3dColor& rgb = _wedges[wr].attrib.rgb;
-      if (pminfo._has_rgb) {
-        gmesh.update_string(gv, "rgb", csform_vec(str, rgb));
-      }
+      if (pminfo._has_rgb) gmesh.update_string(gv, "rgb", csform_vec(str, rgb));
       const UV& uv = _wedges[wr].attrib.uv;
-      if (pminfo._has_uv) {
-        gmesh.update_string(gv, "uv", csform_vec(str, uv));
-      }
+      if (pminfo._has_uv) gmesh.update_string(gv, "uv", csform_vec(str, uv));
     }
   }
   Array<Vertex> gva;
@@ -374,13 +368,9 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
       const Vector& nor = _wedges[w].attrib.normal;
       gmesh.update_string(gc, "normal", csform_vec(str, nor));
       const A3dColor& rgb = _wedges[w].attrib.rgb;
-      if (pminfo._has_rgb) {
-        gmesh.update_string(gc, "rgb", csform_vec(str, rgb));
-      }
+      if (pminfo._has_rgb) gmesh.update_string(gc, "rgb", csform_vec(str, rgb));
       const UV& uv = _wedges[w].attrib.uv;
-      if (pminfo._has_uv) {
-        gmesh.update_string(gc, "uv", csform_vec(str, uv));
-      }
+      if (pminfo._has_uv) gmesh.update_string(gc, "uv", csform_vec(str, uv));
     }
   }
   return gmesh;
@@ -443,9 +433,7 @@ void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
     A3dColor& rgb = ar_wad[i].drgb;
     UV& uv = ar_wad[i].duv;
     float* p = &buf[bufw];
-    if (1) {
-      for_int(c, 3) nor[c] = *p++;
-    }
+    for_int(c, 3) nor[c] = *p++;
     if (pminfo._has_rgb) {
       for_int(c, 3) rgb[c] = *p++;
     } else {
@@ -1030,10 +1018,8 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(!isr || (attrib_ok(_wedges[wvsfr].attrib), true));
   ASSERTX(!isr || (attrib_ok(_wedges[wvrfr].attrib), true));
   // Deal with ancestry
-  if (ancestry) {
-    apply_vsplit_ancestry(ancestry, vs, isr, onumwedges, code, wvlfl, wvrfr, wvsfl, wvsfr, wvtfl, wvtfr);
-  }
-  // Final check.
+  if (ancestry) apply_vsplit_ancestry(ancestry, vs, isr, onumwedges, code, wvlfl, wvrfr, wvsfl, wvsfr, wvtfl, wvtfr);
+    // Final check.
 #if defined(HH_DEBUG)
   {
     int wvsflo = flccw == k_undefined ? k_undefined : get_wvf(vs, flccw);
@@ -1636,9 +1622,7 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       pminfo._has_wad2 = narrow_cast<bool>(to_int(s));
       continue;
     }
-    if (!strcmp(sline, "PM base mesh:")) {
-      break;
-    }
+    if (!strcmp(sline, "PM base mesh:")) break;
     Warning("PMesh header string unknown");
     showf("PMesh header string not recognized '%s'\n", sline);
   }
@@ -1693,9 +1677,7 @@ void PMeshRStream::read_base_mesh(AWMesh* bmesh) {
     assertx(_pm);
     if (bmesh) *bmesh = _pm->_base_mesh;
   } else {
-    if (!_pm & !bmesh) {
-      Warning("strange, why are we doing this?");
-    }
+    if (!_pm & !bmesh) Warning("strange, why are we doing this?");
     unique_ptr<AWMesh> tbmesh = !_pm && !bmesh ? make_unique<AWMesh>() : nullptr;
     AWMesh& rbmesh = _pm ? _pm->_base_mesh : bmesh ? *bmesh : *tbmesh;
     rbmesh.read(*_is, _info);

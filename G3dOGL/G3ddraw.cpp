@@ -14,8 +14,8 @@ namespace g3d {
 constexpr float k_globe_radius = .65f;  // radius on screen (max = 1)
 
 static int screenrate;
-static HH_STATNP(Sipf);
-static HH_STATNP(Sspf);
+static HH_STAT_NP(Sipf);
+static HH_STAT_NP(Sspf);
 static float cumtime = 0.f;
 
 static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
@@ -100,9 +100,7 @@ static void get_time() {
     if (!hist_spf) hist_spf = make_unique<Histogram>("G3d_hist_spf.txt", 20);
     hist_spf->add(fchange);
   }
-  if (timestat) {
-    Sspf.enter(fchange);
-  }
+  if (timestat) Sspf.enter(fchange);
   if (fchange > 1.f) fchange = 1.f;
   nscreens++;
   static double lastsec;
@@ -379,9 +377,8 @@ static void fly_g3d_demofly(Vec2<float>& yxf) {
     turn_rate = 0.f;
     seeking_point = false;
     if (obview != 0 || !tview.is_ident()) yxf[0] = .5f;  // if top-view, do not climb or dive
-    if (out_of_idle) {
+    if (out_of_idle)
       while (demofly_mode) KeyPressed(" ");
-    }
   } else {
     yxf = twice(.5f);
     //
@@ -715,9 +712,7 @@ static void set_viewing() {
   if (g_g3d_demofly && obview != 0) vzoom = 0.2f;
   // HB::set_camera(tpos, zoom, tcam, vzoom);
   HB::set_camera(g_obs[0].t(), zoom, tcam, vzoom);
-  if (1 && g_obs.first == 0) {
-    g_obs[0].set_vis(is_view || obview != 0);
-  }
+  if (1 && g_obs.first == 0) g_obs[0].set_vis(is_view || obview != 0);
   if (auto_hither) {
     Bbox<float, 3> gbb;
     Frame tcami = inverse(tcam);

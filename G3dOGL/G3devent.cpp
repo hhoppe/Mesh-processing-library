@@ -785,9 +785,8 @@ bool KeyPressed(const string& ps) {
   if (b_g3d_demofly && contains(" Zf", ch)) {
     if (demofly_idle_time > demofly_idle_time_thresh) {
       demofly_idle_time = 0.f;  // avoid infinite recursion
-      if (ch != ' ') {
+      if (ch != ' ')
         while (demofly_mode) KeyPressed(" ");
-      }
     } else {
       demofly_idle_time = 0.f;
     }
@@ -1150,9 +1149,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
       SHOW(butnum);
       return;
     }
-    if (flightmode == EFlightmode::automatic) {  // added 2002-05-01
-      flightmode = EFlightmode::none;
-    }
+    if (flightmode == EFlightmode::automatic) flightmode = EFlightmode::none;
     keep_active = false;
     button_active = butnum;
     selected.shift = shift;

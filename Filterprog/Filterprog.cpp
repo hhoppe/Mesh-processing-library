@@ -527,9 +527,7 @@ void write_init_vertex(Vertex v, bool write_morph) {
 void write_mesh(bool write_morph = false) {
   // Write separator if multiple writes.
   static int nwrites = 0;
-  if (nwrites++) {
-    std::cout << "o 1 1 0\n";  // object separator
-  }
+  if (nwrites++) std::cout << "o 1 1 0\n";  // object separator
   if (splitcorners) {
     GMesh nmesh;
     Map<Corner, Vertex> mcv;

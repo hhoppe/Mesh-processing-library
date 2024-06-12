@@ -238,9 +238,7 @@ class DeltaEncoding {
       if (nb > max_nbits) max_nbits = nb;
     }
     enter_bits(max_nbits * n);
-    if (max_nbits) {
-      for_int(c, n) enter_sign(val_sign(ar[c]));
-    }
+    if (max_nbits) for_int(c, n) enter_sign(val_sign(ar[c]));
   }
 
   float total_entropy() const {

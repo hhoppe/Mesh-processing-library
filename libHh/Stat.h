@@ -14,10 +14,10 @@
   }
   HH_SSTAT(Svanum, va.num());
   SHOW(Stat(V(1., 4., 5., 6.)).sdv());
-  // getenv_bool("STAT_FILES") -> store all data values in ./Stat.* files.
+  // getenv_bool("STAT_FILES") : If true, store all entered data values in ./Stat.* files.
   Stat::set_show_stats(-1);  // Or "export SHOW_STATS=-1": only print in showff().
   Stat::set_show_stats(-2);  // Or "export SHOW_STATS=-2": disable printing of all statistics.
-  // getenv_bool("HH_HIDE_SUMMARIES") : if true, omit summary of statistics.
+  // getenv_bool("HH_HIDE_SUMMARIES") : If true, omit summary of statistics.
 }
 #endif
 
@@ -28,25 +28,20 @@ class Stat {
  public:
   explicit Stat(string pname = "", bool print = false, bool is_static = false);
   explicit Stat(const char* pname, bool print = false, bool is_static = false);
-  Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // not default
+  Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // Not "= default".
   template <typename Range, typename = enable_if_range_t<Range>> explicit Stat(Range&& range);
   ~Stat();
-  Stat& operator=(Stat&& s) noexcept {
-    _pofs = nullptr;
-    _print = false;
-    swap(*this, s);
-    return *this;
-  }
-  void set_name(string pname) { _name = std::move(pname); }
+  Stat& operator=(Stat&& s) noexcept;
+  void set_name(string name_) { _name = std::move(name_); }
   void set_print(bool print) { _print = print; }
-  void set_rms() { _setrms = true; }  // show rms instead of sdv
+  void set_rms() { _use_rms = true; }  // Show rms instead of sdv.
   void zero();
-  void enter(float f);
-  void enter(double f);
-  void enter(int f) { enter(float(f)); }
-  void enter(unsigned f) { enter(float(f)); }
-  void enter_multiple(float f, int fac);  // fac could be negative
-  void remove(float f) { enter_multiple(f, -1); }
+  void enter(float value);
+  void enter(double value);
+  void enter(int value) { enter(double(value)); }
+  void enter(unsigned value) { enter(double(value)); }
+  void enter_multiple(float value, int factor);  // Factor may be negative.
+  void remove(float value) { enter_multiple(value, -1); }
   void add(const Stat& st);
   const string& name() const { return _name; }
   int64_t num() const { return _n; }
@@ -54,14 +49,14 @@ class Stat {
   float min() const { return _min; }
   float max() const { return _max; }
   float avg() const;
-  float var() const;  // sample variance (rather than population variance)
+  float var() const;  // Sample variance (rather than population variance).
   float sdv() const { return sqrt(var()); }
   float ssd() const;
   float sum() const { return float(_sum); }
   float rms() const;
   float max_abs() const { return std::max(abs(min()), abs(max())); }
-  string short_string() const;  // no leading name, no trailing '\n'
-  string name_string() const;   // operator<<() uses namestring format
+  string short_string() const;  // No leading name, no trailing '\n'.
+  string name_string() const;   // Used by operator<<().
   friend void swap(Stat& l, Stat& r) noexcept;
   friend std::ostream& operator<<(std::ostream& os, const Stat& st) { return os << st.name_string(); }
   //
@@ -70,18 +65,18 @@ class Stat {
 
  private:
   string _name;
-  bool _print;  // print statistics in destructor
-  bool _setrms{false};
+  bool _print;  // Print statistics in destructor.
+  bool _use_rms{false};
   int64_t _n;
   double _sum;
   double _sum2;
   float _min;
   float _max;
-  unique_ptr<std::ofstream> _pofs;  // if getenv_bool("STAT_FILES")
+  unique_ptr<std::ofstream> _ofs;  // Defined if getenv_bool("STAT_FILES").
   static int _s_show;
-  // if add any member variables, be sure to update swap()
+  // If add any member variables, be sure to update member function swap().
   friend class Stats;
-  void output(float f) const;
+  void output(float value) const;
   void summary_terminate();
 };
 
@@ -101,10 +96,10 @@ template <typename Range, typename = enable_if_range_t<Range>> Range standardize
 
 #define HH_STAT(S) \
   hh::Stat S { #S, true }
-#define HH_STATNP(S) \
-  hh::Stat S { #S, false }  // no print
+#define HH_STAT_NP(S) \
+  hh::Stat S { #S, false }  // No print.
 
-// static Stat
+// Static Stat, which gets reported at program termination (or in hh_clean_up()).
 #define HH_SSTAT(S, v)                                  \
   do {                                                  \
     static hh::Stat& S = *new hh::Stat(#S, true, true); \
@@ -117,7 +112,7 @@ template <typename Range, typename = enable_if_range_t<Range>> Range standardize
     S.enter(v);                                         \
   } while (false)
 
-// range Stat
+// Range Stat.
 #define HH_RSTAT(S, range) \
   do {                     \
     HH_STAT(S);            \
@@ -140,36 +135,41 @@ template <typename Range, typename> Stat::Stat(Range&& range) : Stat{} {
   for (const auto& e : range) enter(e);
 }
 
-inline void Stat::enter(float f) {
+inline Stat& Stat::operator=(Stat&& s) noexcept {
+  _ofs = nullptr;
+  _print = false;
+  swap(*this, s);
+  return *this;
+}
+
+inline void Stat::enter(float value) {
   _n++;
-  const double d = f;
+  const double d = value;
   _sum += d;
   _sum2 += square(d);
-  if (f < _min) _min = f;
-  if (f > _max) _max = f;
-  if (_pofs) output(f);
+  if (value < _min) _min = value;
+  if (value > _max) _max = value;
+  if (_ofs) output(value);
 }
 
 inline void Stat::enter(double d) {
   _n++;
   _sum += d;
   _sum2 += square(d);
-  const float f = float(d);
-  if (f < _min) _min = f;
-  if (f > _max) _max = f;
-  if (_pofs) output(f);
+  const float value = float(d);
+  if (value < _min) _min = value;
+  if (value > _max) _max = value;
+  if (_ofs) output(value);
 }
 
-inline void Stat::enter_multiple(float f, int fac) {
-  _n += fac;
-  const double d = f;
-  _sum += d * fac;
-  _sum2 += square(d) * fac;
-  if (f < _min) _min = f;
-  if (f > _max) _max = f;
-  if (_pofs) for_int(i, fac) {
-      output(f);
-    }
+inline void Stat::enter_multiple(float value, int factor) {
+  _n += factor;
+  const double d = value;
+  _sum += d * factor;
+  _sum2 += square(d) * factor;
+  if (value < _min) _min = value;
+  if (value > _max) _max = value;
+  if (_ofs) for_int(i, factor) output(value);
 }
 
 inline float Stat::avg() const {
@@ -204,7 +204,7 @@ inline float Stat::rms() const {
   return sqrt(float(_sum2 / _n));
 }
 
-// Specialized in Multigrid.h
+// Specialized in Multigrid.h.
 template <typename Range, typename> Stat range_stat(const Range& range) { return Stat(range); }
 
 template <typename Range, typename> Range standardize(Range&& range) {

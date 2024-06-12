@@ -123,9 +123,7 @@ bool process_frame(ObjectFrame& object_frame) {
   if (tobinary) object_frame.binary = true;
   if (statistics) {
     static Point plast;
-    if (icount > 1) {
-      HH_SSTAT(Sdisp, dist(t.p(), plast));
-    }
+    if (icount > 1) HH_SSTAT(Sdisp, dist(t.p(), plast));
     plast = t.p();
     HH_SSTAT(Sxlen, mag(t.v(0)));
     HH_SSTAT(Sylen, mag(t.v(1)));

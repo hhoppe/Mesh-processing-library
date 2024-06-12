@@ -204,9 +204,8 @@ bool Mesh::is_nice(Vertex v) const {
     he = clw_hedge(he);
     if (!he || he == her) break;
   }
-  if (he != her) {
+  if (he != her)
     for (he = her; (he = ccw_hedge(he)) != nullptr;) nhe++;
-  }
   return nhe == v->_arhe.num();
 }
 
@@ -1101,11 +1100,8 @@ Mesh::HEdge Mesh::most_ccw_hedge(Vertex v) const {
 }
 
 Mesh::HEdge Mesh::get_hedge(Vertex v, Face f) const {
-  for (Corner he : corners(v)) {
-    if (he->_face == f) {
-      return he;
-    }
-  }
+  for (Corner he : corners(v))
+    if (he->_face == f) return he;
   assertnever("Face not adjacent to Vertex");
 }
 

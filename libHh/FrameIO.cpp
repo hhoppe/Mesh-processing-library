@@ -40,9 +40,7 @@ namespace FrameIO {
 ERecognize recognize(RBuffer& b) {
   if (b.num() < 2) return ERecognize::no;
   if (b[0] == k_binary_code) return b.num() >= 14 * 4 ? ERecognize::yes : ERecognize::partial;  // binary record
-  if (b[0] == 'F' && b[1] == ' ') {
-    return b.has_line() ? ERecognize::yes : ERecognize::partial;
-  }
+  if (b[0] == 'F' && b[1] == ' ') return b.has_line() ? ERecognize::yes : ERecognize::partial;
   return ERecognize::no;
 }
 

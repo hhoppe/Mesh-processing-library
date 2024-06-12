@@ -419,18 +419,14 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   std::vector<char> vecbuf;  // Dynamic buffer just in case; do not take dependency on Array.h or PArray.h .
   char* buf = stackbuf;
   bool promised = false;  // Precise size was promised.
-  if (0) {
-    std::cerr << "format=" << format << "\n";
-  }
+  if (0) std::cerr << "format=" << format << "\n";
   std::va_list ap2;
   for (;;) {
     va_copy(ap2, ap);
     int n = vsnprintf(buf, size, format, ap2);  // NOLINT(clang-analyzer-valist.Uninitialized)
     va_end(ap2);
     // SHOW(size, promised, n, int(buf[size-1]));
-    if (0) {
-      std::cerr << "n=" << n << " size=" << size << " format=" << format << "\n";
-    }
+    if (0) std::cerr << "n=" << n << " size=" << size << " format=" << format << "\n";
     if (promised) assertx(n == size - 1);
     if (n >= 0) {
       // if (n<size) SHOW(string(buf, n));

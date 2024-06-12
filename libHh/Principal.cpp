@@ -168,9 +168,7 @@ static void compute_eigenvectors(MatrixView<float> a, MatrixView<float> mo, Arra
   for_int(i, n) {
     if (eimag[i] < 0.f) {
       assertw(eimag[i] >= -1e-5f);
-      if (eimag[i] < -1e-5f) {
-        HH_SSTAT(Spca_negv, eimag[i]);
-      }
+      if (eimag[i] < -1e-5f) HH_SSTAT(Spca_negv, eimag[i]);
       eimag[i] = 0.f;
     }
   }

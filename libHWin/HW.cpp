@@ -1223,9 +1223,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
         assertnever("wglChoosePixelFormatARB failed");
       }
     }
-    if (_multisample != orig_multisample) {
-      showf("HW: had to downgrade to multisample=%d\n", _multisample);
-    }
+    if (_multisample != orig_multisample) showf("HW: had to downgrade to multisample=%d\n", _multisample);
     //
     // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
@@ -1412,9 +1410,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
 
 std::optional<Image> HW::copy_clipboard_to_image() {
   std::optional<Image> optional_image;
-  if (IsClipboardFormatAvailable(CF_BITMAP)) {
-    Warning("ignoring CF_BITMAP for now");
-  }
+  if (IsClipboardFormatAvailable(CF_BITMAP)) Warning("ignoring CF_BITMAP for now");
   if (IsClipboardFormatAvailable(CF_DIB)) {
     if (!assertw(OpenClipboard(nullptr))) return {};
     HANDLE hGlobal = assertx(GetClipboardData(CF_DIB));

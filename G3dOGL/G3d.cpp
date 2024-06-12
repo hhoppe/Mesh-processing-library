@@ -288,9 +288,8 @@ int main(int argc, const char** argv) {
   if (yonder >= 0) HB::set_yonder(yonder);
   if (eyeob) g_obs.first = 0;
   if (g_aargs1.num() == 0) {
-    if (!g_obs[1].defined()) {  // not UpdateOb1Bbox()
+    if (!g_obs[1].defined())  // Not UpdateOb1Bbox().
       input = true;
-    }
   }
   if (g_aargs1.contains("-")) keep_stdin_open = true;
   if (input) {
@@ -333,9 +332,7 @@ int main(int argc, const char** argv) {
   }
   HB::set_current_object(cob);
   HB::open();
-  if (!k_debug) {  // Faster exit, without destruction of Pool data, etc.
-    exit_immediately(0);
-  }
+  if (!k_debug) exit_immediately(0);  // Faster exit, without destruction of Pool data, etc.
   for (int i = g_obs.first; i <= g_obs.last; i++) {
     g_obs[i].clear();
     HB::clear_segment(i);

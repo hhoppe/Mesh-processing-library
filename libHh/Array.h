@@ -511,9 +511,7 @@ template <typename T> bool Array<T>::remove_ordered(const T& e) {
 template <typename T> bool Array<T>::remove_unordered(const T& e) {
   for_int(i, _n) {
     if (_a[i] == e) {
-      if (i < _n - 1) {
-        _a[i] = std::move(_a[_n - 1]);
-      }
+      if (i < _n - 1) _a[i] = std::move(_a[_n - 1]);
       sub(1);
       return true;
     }

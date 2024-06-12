@@ -495,18 +495,12 @@ void do_gmerge() {
 bool sharp_vertex_edge(const GMesh& mo, Vertex v, Edge e, bool split_matbnd) {
   Face f1 = mo.face1(e), f2 = mo.face2(e);
   if (!f2) return true;
-  if (split_matbnd) {
-    return !same_string(mo.get_string(f1), mo.get_string(f2));
-  }
+  if (split_matbnd) return !same_string(mo.get_string(f1), mo.get_string(f2));
   if (mo.flags(e).flag(GMesh::eflag_sharp)) return true;
   // This may split unnecessarily, eg. based on "groups" key string!
   //  eg. you support multiple normals per vertex, but want colors split.
-  if (0) {
-    if (!same_string(mo.get_string(f1), mo.get_string(f2))) return true;
-  }
-  {
-    if (!same_string(mo.get_string(mo.corner(v, f1)), mo.get_string(mo.corner(v, f2)))) return true;
-  }
+  if (0 && !same_string(mo.get_string(f1), mo.get_string(f2))) return true;
+  if (!same_string(mo.get_string(mo.corner(v, f1)), mo.get_string(mo.corner(v, f2)))) return true;
   return false;
 }
 
@@ -1629,17 +1623,12 @@ void do_fillholes(Args& args) {
     Sbndlen.enter(ne);
     Set<Face> setf = mesh_remove_boundary(mesh, e);
     Sbndsub.enter(setf.num());
-    if (1) {
-      for (Face f : setf) mesh.set_string(f, es);
-    }
-    if (getenv_bool("WRITE_HOLE")) {
+    for (Face f : setf) mesh.set_string(f, es);
+    if (getenv_bool("WRITE_HOLE"))
       for (Face f : setf) mesh.update_string(f, "hole", "");
-    }
-    if (getenv_bool("HOLE_SHARP")) {
-      for (Face f : setf) {
+    if (getenv_bool("HOLE_SHARP"))
+      for (Face f : setf)
         for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
-      }
-    }
     if (0)
       for (Face f : setf) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
   }
@@ -2233,15 +2222,12 @@ void do_removekey(Args& args) {
   for (Vertex v : mesh.vertices()) mesh.update_string(v, key, nullptr);
   for (Face f : mesh.faces()) mesh.update_string(f, key, nullptr);
   for (Edge e : mesh.edges()) mesh.update_string(e, key, nullptr);
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     for (Corner c : mesh.corners(f)) mesh.update_string(c, key, nullptr);
-  }
-  if (!strcmp(key, "sharp")) {
+  if (!strcmp(key, "sharp"))
     for (Edge e : mesh.edges()) mesh.flags(e).flag(GMesh::eflag_sharp) = false;
-  }
-  if (!strcmp(key, "cusp")) {
+  if (!strcmp(key, "cusp"))
     for (Edge v : mesh.edges()) mesh.flags(v).flag(GMesh::vflag_cusp) = false;
-  }
 }
 
 void do_renamekey(Args& args) {
@@ -2310,20 +2296,15 @@ void do_copykey(Args& args) {
   string snkey = args.get_string();
   const char* nkey = snkey.c_str();
   string str;
-  if (contains(elems, 'v')) {
+  if (contains(elems, 'v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
-  }
-  if (contains(elems, 'f')) {
+  if (contains(elems, 'f'))
     for (Face f : mesh.faces()) mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
-  }
-  if (contains(elems, 'e')) {
+  if (contains(elems, 'e'))
     for (Edge e : mesh.edges()) mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
-  }
-  if (contains(elems, 'c')) {
-    for (Face f : mesh.faces()) {
+  if (contains(elems, 'c'))
+    for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
-    }
-  }
 }
 
 void do_assignkey(Args& args) {
@@ -2333,20 +2314,15 @@ void do_assignkey(Args& args) {
   const char* key = skey.c_str();
   string svalue = args.get_string();
   const char* value = svalue.c_str();
-  if (contains(elems, 'v')) {
+  if (contains(elems, 'v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, key, value);
-  }
-  if (contains(elems, 'f')) {
+  if (contains(elems, 'f'))
     for (Face f : mesh.faces()) mesh.update_string(f, key, value);
-  }
-  if (contains(elems, 'e')) {
+  if (contains(elems, 'e'))
     for (Edge e : mesh.edges()) mesh.update_string(e, key, value);
-  }
-  if (contains(elems, 'c')) {
-    for (Face f : mesh.faces()) {
+  if (contains(elems, 'c'))
+    for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, key, value);
-    }
-  }
 }
 
 const char* copy_normal_to_rgb(string& str, const char* s) {

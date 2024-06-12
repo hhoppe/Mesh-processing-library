@@ -87,9 +87,7 @@ template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim);
 template <int D> size_t product_dims(const int* ar) {
   static_assert(D > 0);
   size_t v = ar[0];
-  if (D > 1) {
-    for_intL(i, 1, D) v *= ar[i];
-  }
+  if (D > 1) for_intL(i, 1, D) v *= ar[i];
   return v;
 }
 

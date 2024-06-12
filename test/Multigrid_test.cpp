@@ -71,18 +71,10 @@ void setup_rhs2(CGridView<2, T> grid_orig, GridView<2, T> grid_rhs, float gradie
       [&](const int y) {
         for_int(x, nx) {
           T vrhs = -screening_weight * grid_orig[y][x];
-          if (y > 0) {
-            vrhs += (grid_orig[y - 1][x] - grid_orig[y][x]) * gradient_sharpening;
-          }
-          if (y < ny - 1) {
-            vrhs += (grid_orig[y + 1][x] - grid_orig[y][x]) * gradient_sharpening;
-          }
-          if (x > 0) {
-            vrhs += (grid_orig[y][x - 1] - grid_orig[y][x]) * gradient_sharpening;
-          }
-          if (x < nx - 1) {
-            vrhs += (grid_orig[y][x + 1] - grid_orig[y][x]) * gradient_sharpening;
-          }
+          if (y > 0) vrhs += (grid_orig[y - 1][x] - grid_orig[y][x]) * gradient_sharpening;
+          if (y < ny - 1) vrhs += (grid_orig[y + 1][x] - grid_orig[y][x]) * gradient_sharpening;
+          if (x > 0) vrhs += (grid_orig[y][x - 1] - grid_orig[y][x]) * gradient_sharpening;
+          if (x < nx - 1) vrhs += (grid_orig[y][x + 1] - grid_orig[y][x]) * gradient_sharpening;
           grid_rhs[y][x] = vrhs;
         }
       },
@@ -344,18 +336,10 @@ int main(int argc, const char** argv) {
           for_int(x, dims[1]) {
             int label = grid_labels[y][x];
             double vrhs = -screening_weight * grids[label][y][x][c];
-            if (y > 0) {
-              func_stitch(y, x, y - 1, x + 0, vrhs);
-            }
-            if (y < dims[0] - 1) {
-              func_stitch(y, x, y + 1, x + 0, vrhs);
-            }
-            if (x > 0) {
-              func_stitch(y, x, y + 0, x - 1, vrhs);
-            }
-            if (x < dims[1] - 1) {
-              func_stitch(y, x, y + 0, x + 1, vrhs);
-            }
+            if (y > 0) func_stitch(y, x, y - 1, x + 0, vrhs);
+            if (y < dims[0] - 1) func_stitch(y, x, y + 1, x + 0, vrhs);
+            if (x > 0) func_stitch(y, x, y + 0, x - 1, vrhs);
+            if (x < dims[1] - 1) func_stitch(y, x, y + 0, x + 1, vrhs);
             multigrid.rhs()[y][x] = float(vrhs);
           }
         });

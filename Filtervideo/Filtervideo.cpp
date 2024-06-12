@@ -262,9 +262,8 @@ void assemble_videos(MatrixView<Video> videos) {
     assertw(videos[yx].nframes() == videos[0][0].nframes());
   }
   CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
-  if (0) {
+  if (0)
     for (const Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
-  }
   video = assemble(gvideos, gcolor);
 }
 
@@ -301,9 +300,8 @@ void do_assemble(Args& args) {
     assertw(videos[yx].attrib().framerate == videos[0][0].attrib().framerate);
     apply_assemble_operations(videos[yx], yx, videos.dims());
   });  // we can assume that parallelism is justified
-  if (0) {
+  if (0)
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
-  }
   ConsoleProgress::set_all_silent(prev_silent);
   assemble_videos(videos);
   video.attrib() = videos[0][0].attrib();  // including audio
@@ -1183,9 +1181,8 @@ void do_loadpj(Args& args) {
   HH_TIMER("_loadpj");
   string filename = args.get_filename();
   auto pfi = make_unique<RFile>(filename);
-  if ((*pfi)().peek() == 31) {  // decompress a gzip-compressed pjo/pjr file
+  if ((*pfi)().peek() == 31)  // Decompress a gzip-compressed pjo/pjr file.
     pfi = make_unique<RFile>("gzip -d -c <" + filename + " |");
-  }
   std::istream& is = (*pfi)();
   g_lp.mat_static.init(video.spatial_dims());
   g_lp.mat_start.init(video.spatial_dims());
@@ -1337,9 +1334,7 @@ void do_compressloop() {
     int period = g_lp.mat_period[yx];  // period == 1 for a static pixel
     float deltatime = get_deltatime(period, nnf);
     float new_period = period / deltatime;
-    if (period > 1) {
-      HH_SSTAT(Snew_period, new_period);
-    }
+    if (period > 1) HH_SSTAT(Snew_period, new_period);
     for_int(f, video.nframes()) {
       if (b_compress_magenta) {
         if (f > new_period) video[f][yx] = Pixel(255, 0, 255);
@@ -1520,14 +1515,11 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
         },
         20);
   }
-  if (have_func_dtime) {
+  if (have_func_dtime)
     if (max(g_lp.mat_start) > 0) Warning("Should have run remap to obtain temporal crossfading");
-  }
   // could be Array<float> indexed by iregion
   Matrix<float> mat_time;
-  if (have_func_dtime) {
-    mat_time.init(video.spatial_dims(), 0.f);
-  }
+  if (have_func_dtime) mat_time.init(video.spatial_dims(), 0.f);
   for_int(f, nnf) {
     parallel_for_coords(
         nvideo.spatial_dims(),
@@ -1872,8 +1864,9 @@ void process_gen(Args& args) {
       sradius = .3f;
     } else if (name == "checker3") {
       sradius = .3f;
-    } else
+    } else {
       assertnever("");
+    }
     int mode;
     assertx(sscanf(name.c_str(), "checker%d", &mode) == 1);
     float motion_amplitude = speriod * 1.5f;
@@ -1960,8 +1953,9 @@ void process_gen(Args& args) {
       n = 200;
       radius = 25.f;
       velrange = .03f;
-    } else
+    } else {
       assertnever("");
+    }
     fill(video, Pixel::black());  // default black usually
     using F2 = Vec2<float>;
     Array<F2> ar_point0(n);
@@ -2157,18 +2151,10 @@ void do_procedure(Args& args) {
         parallel_for_each(range(ny), [&](const int y) {
           for_int(x, nx) {
             Vector4 vrhs = -screening_weight * (mask[y][x] ? grid0 : gridf)[y][x];
-            if (y > 0) {
-              func_stitch(y, x, y - 1, x + 0, vrhs);
-            }
-            if (y < ny - 1) {
-              func_stitch(y, x, y + 1, x + 0, vrhs);
-            }
-            if (x > 0) {
-              func_stitch(y, x, y + 0, x - 1, vrhs);
-            }
-            if (x < nx - 1) {
-              func_stitch(y, x, y + 0, x + 1, vrhs);
-            }
+            if (y > 0) func_stitch(y, x, y - 1, x + 0, vrhs);
+            if (y < ny - 1) func_stitch(y, x, y + 1, x + 0, vrhs);
+            if (x > 0) func_stitch(y, x, y + 0, x - 1, vrhs);
+            if (x < nx - 1) func_stitch(y, x, y + 0, x + 1, vrhs);
             multigrid.rhs()[y][x] = vrhs;
           }
         });

@@ -215,9 +215,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
         HB::redraw_later();
         cur_needs_redraw = true;
       }
-      if (ret == ETryInput::eof) {
-        return true;
-      }
+      if (ret == ETryInput::eof) return true;
       if (ret == ETryInput::success_frame || wait_command) {  // end of frame
         HB::redraw_later();
         cur_needs_redraw = true;
@@ -259,9 +257,8 @@ void CloseIfOpen() {
   g_obs[robn].update_stats();
   if (!terse) {
     string s = sform("G3d: (%d) File:%s", robn, filename.c_str());
-    if (total_gons + total_lines + total_points) {
+    if (total_gons + total_lines + total_points)
       showf("%s %dgons %dlines %dpts\n", s.c_str(), total_gons, total_lines, total_points);
-    }
     if (total_vertices + total_faces) {
       const GMesh& mesh = *g_obs[robn].get_mesh();
       if (total_vertices == mesh.num_vertices()) {

@@ -398,9 +398,7 @@ bool SvdLls::solve_aux() {
   // _s contains singular values in decreasing order.
   assertx(_s[_n - 1]);
   float cond = _s[0] / _s[_n - 1];
-  if (cond > k_float_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
+  if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   {
     float* bp = _fb.data();
     for_int(d, _nd) {
@@ -436,9 +434,7 @@ bool SvdDoubleLls::solve_aux() {
   // _s contains singular values in decreasing order.
   assertx(_s[_n - 1]);
   double cond = _s[0] / _s[_n - 1];
-  if (cond > k_double_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
+  if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   {
     double* bp = _fb.data();
     for_int(d, _nd) {
@@ -507,9 +503,7 @@ bool SvdLls::solve_aux() {
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   float cond = _mS[0] / _mS.last();
-  if (cond > k_float_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
+  if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   // SHOW(_a, _b, _mU, _mS, _mVT);
   // SHOW(mat_mul(mat_mul(_mU, diag_mat(_mS)), transpose(_mVT)));
   for (float& s : _mS) s = 1.f / s;
@@ -531,9 +525,7 @@ bool SvdDoubleLls::solve_aux() {
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   double cond = _mS[0] / _mS.last();
-  if (cond > k_double_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
+  if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (double& s : _mS) s = 1. / s;
   for_int(d, _nd) {
     _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // slow
@@ -549,9 +541,7 @@ bool QrdLls::solve_aux() {
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
   float cond = _mS[0] / _mS.last();
-  if (cond > k_float_cond_warning) {
-    HH_SSTAT(Ssvdlls_cond, cond);
-  }
+  if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (float& s : _mS) s = 1.f / s;
   for_int(d, _nd) {
     // _x[d].assign(mat_mul(_mVT, mat_mul(_b[d], _mU) * _mS));

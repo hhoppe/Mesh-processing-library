@@ -758,9 +758,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
   // Length squared does not seem like the right thing to do here.  Instead, should perhaps normalize geometry to
   // unit cube and use simply edge length.
   // Note: scaling nor by length is equivalent to scaling qem by length^2.
-  if (qemweight) {
-    nor *= (mesh.length(e) / (frac_diam * gdiam));
-  }
+  if (qemweight) nor *= (mesh.length(e) / (frac_diam * gdiam));
   // Weight qem on sharp edges by a factor of neptfac.
   nor *= sqrt_neptfac;
   float d = -pvdot(mesh.point(mesh.vertex1(e)), nor);
@@ -1262,9 +1260,7 @@ void do_progressive(Args& args) {
   if (wfile_prog) {
     Warning("Second '-prog' ignored");
   } else {
-    if (filename != "") {
-      wfile_prog = make_unique<WFile>(filename);
-    }
+    if (filename != "") wfile_prog = make_unique<WFile>(filename);
   }
 }
 
@@ -1581,9 +1577,7 @@ void perhaps_initialize() {
     norfac = 0.f;
     rnor001 = true;
   }
-  if (minarea || minvolume || minedgelength || minvdist || minqem || minaps || minrandom) {
-    numpts = 0;
-  }
+  if (minarea || minvolume || minedgelength || minvdist || minqem || minaps || minrandom) numpts = 0;
   {
     HH_TIMER("_parsemesh");
     parse_mesh();
@@ -1800,9 +1794,7 @@ float compute_spring(const NewMeshNei& nn) {
   // if (1) spring = 1e-8f;
   // No, that doesn't give good results for meshes >sq100. We go back to higher spring constants.
   if (gspring != -1) spring = gspring;
-  if (spring > 0.f) {
-    SSTATV2(Slogspring, log10f(spring));
-  }
+  if (spring > 0.f) SSTATV2(Slogspring, log10f(spring));
   return spring;
 }
 
@@ -2082,8 +2074,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
             if (1 && c_wedge_id(pc) == c_wedge_id(pc1)) {  // 2009-04-15
               assertx(mesh.corner_face(c1) == mesh.face1(e) || mesh.corner_face(c1) == mesh.face2(e));
               Vertex vo = mesh.corner_vertex(c1);
-              if (0) {
-              } else if (vo == v1)
+              if (vo == v1)
                 rwid_v1 = c_wedge_id(c1);
               else if (vo == v2)
                 rwid_v2 = c_wedge_id(c1);
@@ -2120,9 +2111,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
     assertx(nn.ar_rwid_v1.num() == 1);
     assertx(nn.ar_rwid_v2.num() == 1);
   }
-  if (sdebug) {
-    for_int(i, nn.ar_corners.num()) assertx(nn.ar_rwid_v1.ok(nn.ar_nwid[i]));
-  }
+  if (sdebug) for_int(i, nn.ar_corners.num()) assertx(nn.ar_rwid_v1.ok(nn.ar_nwid[i]));
   return true;
 }
 
@@ -2173,9 +2162,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
         return false;
       }
     }
-    if (eoretire[0] || eoretire[1]) {
-      SSTATV2(Seoretire, (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0));
-    }
+    if (eoretire[0] || eoretire[1]) SSTATV2(Seoretire, (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0));
   }
   {
     // Retire edge e iff neither v1 nor v2 is a crease vertex
@@ -2185,9 +2172,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
       int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
       if (v1nse != dnse && v2nse != dnse) eretire = true;
     }
-    if (eretire) {
-      SSTATV2(Seretire, eretire);
-    }
+    if (eretire) SSTATV2(Seretire, eretire);
   }
   // Gather ar_vdisc, ar_epts, ar_eptv, ar_eptretire.
   {
@@ -2377,9 +2362,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
     param.ar_mini[pi] = min_i;
     param.ar_bary[pi] = min_bary;
   }
-  if (np) {
-    SSTATV2(Snproj, float(nproj) / np);
-  }
+  if (np) SSTATV2(Snproj, float(nproj) / np);
 }
 
 // Optimize the position newp of v1 given fixed parameterizations of the face points (param).
@@ -2447,9 +2430,7 @@ double evaluate_geom(const NewMeshNei& nn, const Param& param, float spring, con
     }
     rss1 += min_d2;
   }
-  if (spring) {
-    for_int(i, nw - closed) rss1 += spring * dist2(mesh.point(nn.va[i]), newp);
-  }
+  if (spring) for_int(i, nw - closed) rss1 += spring * dist2(mesh.point(nn.va[i]), newp);
   return rss1;
 }
 
@@ -2881,9 +2862,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
     }
     assertw(vnormal.normalize());
   }
-  if (rnor001) {
-    vnormal = Vector(0.f, 0.f, 1.f);
-  }
+  if (rnor001) vnormal = Vector(0.f, 0.f, 1.f);
   Array<Vector> ar_resid;
   Array<float> ar_normaldist2;
   {
@@ -3073,9 +3052,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   {
     Polygon poly;
     bool closed = nn.va[0] == nn.va.last();
-    if (!closed) {
-      Warning("compute_hull not designed for boundaries");
-    }
+    if (!closed) Warning("compute_hull not designed for boundaries");
     for_int(i, nn.va.num() - closed) poly.push(mesh.point(nn.va[i]));
     link_normal = poly.get_normal_dir();
     // Normalize for numerical precision in simplx.
@@ -3322,9 +3299,7 @@ Array<CacheEntry> tvc_get_e_cacheentry(Edge e, bool edir) {
   Array<CacheEntry> ar_ce;
   if (1) {
     // Current PM face vertex order.
-    if (csl) {
-      ar_ce.push_array(V(CacheEntry(csl), CacheEntry(ctl), CacheEntry(cll)));
-    }
+    if (csl) ar_ce.push_array(V(CacheEntry(csl), CacheEntry(ctl), CacheEntry(cll)));
     if (csr) {
       if (add_duplicates || !csl || (!tvcowid && c_wedge_id(csr) != ar_ce[0].wid) ||
           (tvcowid && c_tvc_owid(csr) != ar_ce[0].owid))
@@ -3342,9 +3317,7 @@ Array<CacheEntry> tvc_get_e_cacheentry(Edge e, bool edir) {
   if (!add_duplicates) {
     for_int(i, ar_ce.num()) {
       for_intL(j, i + 1, ar_ce.num()) {
-        if (!tvcowid) {
-          ASSERTX(ar_ce[i].wid != ar_ce[j].wid);
-        }
+        if (!tvcowid) ASSERTX(ar_ce[i].wid != ar_ce[j].wid);
         ASSERTX(ar_ce[i].owid != ar_ce[j].owid);
       }
     }
@@ -3524,9 +3497,7 @@ bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
   int matf2 = fnei2 ? f_matid(fnei2) : -1;
   // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
   // so all is OK.
-  if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) {
-    return true;
-  }
+  if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) return true;
   // If all neighbors same, face is not along any boundary, and is OK.
   if (matf0 == matf1 && matf0 == matf2 && matf1 == matf2) {
     if (matf0 == -1) {
@@ -4024,9 +3995,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         Warning("Not tested");
         rssac = evaluate_color(nn, param, ar_wi);
       }
-      if (have_cnormals && gnorc) {
-        rssan = evaluate_normal(nn, param, ar_wi);
-      }
+      if (have_cnormals && gnorc) rssan = evaluate_normal(nn, param, ar_wi);
       rssa = rssag + rssac + rssan + rssapenalty;
     }
     if (bspherefac) {
@@ -4094,9 +4063,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   float raw_cost;
   raw_cost = float(min_rssa - rssf);
   ecol_result.cost = raw_cost + offset_cost;
-  if (raw_cost < 0) {
-    SSTATV2(Snegcost, raw_cost);
-  }
+  if (raw_cost < 0) SSTATV2(Snegcost, raw_cost);
   const float smallcost = 1e-20f;
   if (ecol_result.cost < smallcost) ecol_result.cost = smallcost;
   if (invertexorder == 2) {
@@ -4265,9 +4232,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         int rwid = ar_rwid[i];
         assertx(rwid == (!bswap ? nn.ar_rwid_v1[i] : nn.ar_rwid_v2[i]));
         int orwid = !bswap ? nn.ar_rwid_v2[i] : nn.ar_rwid_v1[i];
-        if (orwid != rwid) {
-          gwq[orwid] = nullptr;
-        }
+        if (orwid != rwid) gwq[orwid] = nullptr;
       }
       // remaining affected gwq are updated after edge collapse
     }
@@ -4279,9 +4244,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   replace_wi(nn, min_ar_wi, ar_rwid);
   v_desn(vs) = new_desn;
   v_desh(vs) = new_desh;
-  if (bspherefac) {
-    v_bsphere(vs) = new_bsphere;
-  }
+  if (bspherefac) v_bsphere(vs) = new_bsphere;
   if (minqem) {
     if (qemlocal) {
       if (qemcache)
@@ -4437,9 +4400,7 @@ void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir) {
   if (tvccost0 == tvccost1) {
     tvccost = tvccost0;
     edir = false;
-    if (1) {
-      edir = ((mesh.vertex_id(mesh.vertex1(e)) + mesh.vertex_id(mesh.vertex2(e))) & 1) != 0;
-    }
+    if (1) edir = ((mesh.vertex_id(mesh.vertex1(e)) + mesh.vertex_id(mesh.vertex2(e))) & 1) != 0;
   } else if (tvccost0 < tvccost1) {
     tvccost = tvccost0;
     edir = false;

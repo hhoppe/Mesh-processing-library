@@ -149,9 +149,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     for_int(i, nrows) from_std(&rowstart[i]);
     assertt(read_raw(file, rowsize));
     for_int(i, nrows) from_std(&rowsize[i]);
-    if (0) {
-      for_int(i, nrows) SHOW(i, rowstart[i], rowsize[i]);
-    }
+    if (0) for_int(i, nrows) SHOW(i, rowstart[i], rowsize[i]);
     // Test y-z or z-y order (ideally, sort on rowstart for all y and z).
     bool yzorder =
         image.ysize() && image.zsize() > 1 && rowstart[1 * image.ysize() + 0] < rowstart[0 * image.ysize() + 1];
@@ -211,12 +209,10 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
       }
     }
   }
-  if (image.zsize() == 1) {
+  if (image.zsize() == 1)
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx][2] = image[yx][1] = image[yx][0]; });
-  }
-  if (image.zsize() < 4) {
+  if (image.zsize() < 4)
     for (Pixel& pix : image) pix[3] = 255;
-  }
   if (1) image.reverse_y();  // because *.rgb format has image origin at lower-left
 }
 
@@ -463,13 +459,10 @@ EXTERN(void) jpeg_write_marker JPP((j_compress_ptr cinfo, int marker, const JOCT
 
 {
   // Save comments except under NONE option
-  if (option != JCOPYOPT_NONE) {
-    jpeg_save_markers(srcinfo, JPEG_COM, 0xFFFF);
-  }
+  if (option != JCOPYOPT_NONE) jpeg_save_markers(srcinfo, JPEG_COM, 0xFFFF);
   // Save all types of APPn markers iff ALL option
-  if (option == JCOPYOPT_ALL) {
+  if (option == JCOPYOPT_ALL)
     for (m = 0; m < 16; m++) jpeg_save_markers(srcinfo, JPEG_APP0 + m, 0xFFFF);
-  }
   jpeg_read_header(&srcinfo, TRUE);
 }
 
@@ -542,9 +535,7 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
     assertw(cinfo.jpeg_color_space == JCS_YCbCr);
     assertw(int(cinfo.write_JFIF_header));
   }
-  if (image.zsize() == 4) {
-    Warning("JPEG with alpha is non-standard; color space will likely look wrong");
-  }
+  if (image.zsize() == 4) Warning("JPEG with alpha is non-standard; color space will likely look wrong");
   // Now you can set any non-default parameters you wish to.
   // Here we just illustrate the use of quality (quantization table) scaling:
   if (1) {
@@ -1110,9 +1101,8 @@ void ImageLibs::read_png(Image& image, FILE* file) {
         // image[y][x][0] = image[y][x][z] ? 255 : 0;
       }
     }
-    if (image.zsize() < 4) {
+    if (image.zsize() < 4)
       for (Pixel& pix : image) pix[3] = 255;
-    }
   }
   png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 }
@@ -1212,9 +1202,8 @@ void Image::read_file_libs(const string& filename, bool bgra) {
 }
 
 void Image::write_file_libs(const string& filename, bool bgra) const {
-  if (const ImageFiletype* filetype = recognize_filetype(filename)) {
+  if (const ImageFiletype* filetype = recognize_filetype(filename))
     const_cast<Image&>(*this).set_suffix(filetype->suffix);  // mutable
-  }
   if (suffix() == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
   WFile fi(filename);
   FILE* file = fi.cfile();

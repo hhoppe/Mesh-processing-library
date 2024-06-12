@@ -181,9 +181,8 @@ Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignm
   static_assert(std::is_base_of_v<CGridView<D, T>, U>);
   Vec<Array<int>, D> max_sizes;  // max size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)]
   for_int(d, D) max_sizes[d].init(grids.dim(d), 0);
-  for (const auto& u : range(grids.dims())) {
+  for (const auto& u : range(grids.dims()))
     for_int(d, D) max_sizes[d][u[d]] = max(max_sizes[d][u[d]], grids[u].dim(d));
-  }
   Vec<Array<int>, D> locs;  // start locations on each axis; [d = 0 .. D - 1][0 .. grids.dim(d)]
   for_int(d, D) {
     int tot = 0;
@@ -358,9 +357,8 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
     const int low = lu.Uidiag.num() - 1;
     if (cx - 2 - lastspecial >= low) {
       T vprev = rowv[cx - 2 - lastspecial + 1];
-      for (int x = cx - 2 - lastspecial; x >= low; --x) {
+      for (int x = cx - 2 - lastspecial; x >= low; --x)
         rowv[x] = vprev = cfast1 * (rowv[x] - cfast2 * vprev);  // OPT:ic2
-      }
     }
     for (int x = min(lu.Uidiag.num() - 2, cx - 2 - lastspecial); x >= 0; --x) {  // special initial elements
       rowv[x] = lu.Uidiag[x] * (rowv[x] - lu.Uupper * rowv[x + 1]);

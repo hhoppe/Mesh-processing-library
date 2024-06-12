@@ -486,9 +486,8 @@ Object& check_saved_object() {
 }
 
 void check_all_objects() {
-  for (auto& pob : g_obs) {
+  for (auto& pob : g_obs)
     if (!is_unlocked(*pob)) throw pob->stype() + " " + pob->_filename + "is locked due to background processing";
-  }
 }
 
 // No lock on g_mutex_obs.
@@ -2298,9 +2297,8 @@ bool DerivedHW::key_press(string skey) {
               });
             }
             string s;
-            for (const Slider& slider : g_sliders) {
+            for (const Slider& slider : g_sliders)
               if (*slider.pval != 1.f) s += "_" + slider.name + sform("%g", *slider.pval);
-            }
             add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, s)));
             reset_sliders();

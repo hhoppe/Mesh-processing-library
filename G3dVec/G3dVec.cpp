@@ -657,9 +657,7 @@ void mesh_transform(GMesh& mesh) {
 }
 
 void mesh_visibility(GMesh& mesh) {
-  for (Face f : mesh.faces()) {
-    mesh.flags(f).flag(fflag_invisible) = cullface && is_cull(f_info(f).p, f_info(f).v);
-  }
+  for (Face f : mesh.faces()) mesh.flags(f).flag(fflag_invisible) = cullface && is_cull(f_info(f).p, f_info(f).v);
 }
 
 void enter_mesh_hidden_polygons(GMesh& mesh) {
@@ -770,9 +768,8 @@ void draw_all() {
 
 void toggle_attribute(Vec<bool, k_max_object>& attrib) {
   bool allvis = true;
-  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
+  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++)
     if (g_xobs.defined(i) && !g_xobs.vis[i]) allvis = false;
-  }
   for_int(i, k_max_object) {
     if (!allvis && (!g_xobs.defined(i) || !g_xobs.vis[i])) continue;
     bool& val = attrib[i];
@@ -782,9 +779,8 @@ void toggle_attribute(Vec<bool, k_max_object>& attrib) {
 
 void toggle_attribute(Vec<int, k_max_object>& attrib, int numstates) {
   bool allvis = true;
-  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
+  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++)
     if (g_xobs.defined(i) && !g_xobs.vis[i]) allvis = false;
-  }
   for_int(i, k_max_object) {
     if (!allvis && (!g_xobs.defined(i) || !g_xobs.vis[i])) continue;
     int& val = attrib[i];

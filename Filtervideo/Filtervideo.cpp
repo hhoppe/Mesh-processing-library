@@ -703,9 +703,8 @@ void do_tcrossfade(Args& args) {
       }
     } else {  // good code with gcc
       auto videofbc = video[fbc], videofec = video[fbc];
-      for (const auto& yx : range(video.spatial_dims())) {
+      for (const auto& yx : range(video.spatial_dims()))
         for_int(z, nz) tvideo[i][yx][z] = uint8_t((1.f - alpha) * videofbc[yx][z] + alpha * videofec[yx][z] + .5f);
-      }
     }
   });
   parallel_for_each(range(tradius), [&](const int i) { video[fbeg + i].assign(tvideo[tradius + i]); });
@@ -1147,9 +1146,8 @@ void verify_loop_parameters() {
     HH_RSTAT(Sactivation, g_lp.mat_activation);
     {
       HH_STAT(Speriodd);
-      for (const auto e : g_lp.mat_period) {
+      for (const auto e : g_lp.mat_period)
         if (e > 1) Speriodd.enter(e);  // dynamic
-      }
     }
     {
       HH_STAT(Send);
@@ -1451,19 +1449,14 @@ void compute_looping_regions() {
   for (auto& pix : g_lp.region_color) pix = random_color(Random::G);
   if (getenv_bool("LOOPING_REGIONS_IMAGE")) {
     Image image(video.spatial_dims());
-    for (const auto& yx : range(video.spatial_dims())) {
-      image[yx] = g_lp.region_color[g_lp.mat_iregion[yx]];
-    }
+    for (const auto& yx : range(video.spatial_dims())) image[yx] = g_lp.region_color[g_lp.mat_iregion[yx]];
     image.write_file("looping_regions.png");
   }
   {
     Array<Homogeneous> arh(g_lp.region_color.num());
-    for (const auto& yx : range(video.spatial_dims())) {
+    for (const auto& yx : range(video.spatial_dims()))
       arh[g_lp.mat_iregion[yx]] += Point(float(yx[0]), float(yx[1]), 0.f);
-    }
-    for (const Homogeneous& h : arh) {
-      g_lp.region_centroid.push(to_Point(normalized(h)));
-    }
+    for (const Homogeneous& h : arh) g_lp.region_centroid.push(to_Point(normalized(h)));
   }
   if (getenv_bool("LOOPING_REGIONS_DIST_IMAGE")) {
     Image image(video.spatial_dims());
@@ -2209,9 +2202,8 @@ void do_transf(Args& args) {
 
 void do_noisegaussian(Args& args) {
   float sd = args.get_float();
-  for (Pixel& pix : video) {
+  for (Pixel& pix : video)
     for_int(z, nz) pix[z] = clamp_to_uint8(int(to_float(pix[z]) + Random::G.gauss() * sd + .5f));
-  }
 }
 
 Vector frame_median(CMatrixView<Pixel> frame) {
@@ -2228,9 +2220,7 @@ Vector frame_median(CMatrixView<Pixel> frame) {
 
 Vector frame_mean(CMatrixView<Pixel> frame) {
   Array<Stat> stat_pixels(nz);
-  for (const Pixel& pix : frame) {
-    for_int(z, nz) stat_pixels[z].enter(pix[z]);
-  }
+  for (const Pixel& pix : frame) for_int(z, nz) stat_pixels[z].enter(pix[z]);
   return Vector(stat_pixels[0].avg(), stat_pixels[1].avg(), stat_pixels[2].avg());
 }
 

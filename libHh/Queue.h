@@ -38,9 +38,8 @@ template <typename T> class Queue {
   bool empty() const { return _dq.empty(); }
   int length() const { return narrow_cast<int>(_dq.size()); }
   bool contains(const T& e) const {
-    for (const T& v : *this) {
+    for (const T& v : *this)
       if (v == e) return true;
-    }
     return false;
   }
   void add_to_end(Queue<T>& q) {

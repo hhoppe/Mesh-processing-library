@@ -66,9 +66,8 @@ float get_edis() {
 
 float get_espr() {
   double espr = 0.;
-  for (vertex v : verts) {
+  for (vertex v : verts)
     if (v->v[1]) espr += spring * dist2(v->p, v->v[1]->p);
-  }
   return float(espr);
 }
 
@@ -223,9 +222,8 @@ void global_fit() {
   }
   int m = pt.n, n = verts.num();
   if (spring) {
-    for (vertex v : verts) {
+    for (vertex v : verts)
       if (v->v[1]) m++;
-    }
   }
   if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
   SparseLls lls(m, n, 3);
@@ -499,9 +497,8 @@ void do_sample(Args& args) {
   int n = args.get_int();
   // Note: could add sample points from the polygon based on edge length.
   Array<vertex> arv;
-  for (vertex v : verts) {
+  for (vertex v : verts)
     if (v->v[1]) arv.push(v);
-  }
   for_int(i, n) {
     vertex v = arv[Random::G.get_unsigned(arv.num())];
     enter_point(interp(v->p, v->v[1]->p, Random::G.unif()), v);
@@ -580,9 +577,8 @@ void do_stoc() {
   fill(opstat.nor, 0);
   {
     int i = 0, nbad = 0, lasti = -std::numeric_limits<int>::max();
-    for (vertex v : verts) {
+    for (vertex v : verts)
       if (v->v[1]) ecand.enter(v);
-    }
     while (!ecand.empty()) {
       i++;
       vertex v = ecand.remove_random(Random::G);

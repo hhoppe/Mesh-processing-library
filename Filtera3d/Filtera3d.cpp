@@ -637,12 +637,10 @@ void join_lines() {
     // for directed search, candidate vertices are ones with no in_edges
     Graph<int> opp_graph;
     for (int v : graph.vertices()) opp_graph.enter(v);
-    for (int v1 : graph.vertices()) {
+    for (int v1 : graph.vertices())
       for (int v2 : graph.edges(v1)) opp_graph.enter(v2, v1);
-    }
-    for (int v : opp_graph.vertices()) {
+    for (int v : opp_graph.vertices())
       if (graph.out_degree(v) > opp_graph.out_degree(v)) candv.enter(v);
-    }
     for (;;) {
       int vi;
       if (!candv.empty()) {

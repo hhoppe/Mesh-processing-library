@@ -286,9 +286,7 @@ class Warnings {
     std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
     const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
     show_local("Summary of warnings:\n");
-    for (auto [s, n] : sorted_map) {
-      show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
-    }
+    for (auto [s, n] : sorted_map) show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     _map.clear();
   }
   std::unordered_map<const char*, int> _map;

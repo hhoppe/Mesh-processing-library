@@ -409,9 +409,8 @@ void toggle_tag() {
 
 auto get_sharp_edges(GMesh& mesh, Vertex v) {
   Array<Edge> are;
-  for (Edge e : mesh.edges(v)) {
+  for (Edge e : mesh.edges(v))
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) are.push(e);
-  }
   return are;
 }
 
@@ -545,9 +544,8 @@ void crop_mesh_to_view() {
   }
   {
     Array<Vertex> ar_destroy;
-    for (Vertex v : mesh.vertices()) {
+    for (Vertex v : mesh.vertices())
       if (!mesh.degree(v)) ar_destroy.push(v);
-    }
     for (Vertex v : ar_destroy) mesh.destroy_vertex(v);
     showf(" and %d vertices removed\n", ar_destroy.num());
   }

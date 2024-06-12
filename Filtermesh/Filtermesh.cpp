@@ -794,12 +794,8 @@ void do_record() {
 }
 
 void do_mark() {
-  for (Vertex v : mesh.vertices()) {
-    mesh.update_string(v, "cusp", mesh.flags(v).flag(GMesh::vflag_cusp) ? "" : nullptr);
-  }
-  for (Edge e : mesh.edges()) {
-    mesh.update_string(e, "sharp", mesh.flags(e).flag(GMesh::eflag_sharp) ? "" : nullptr);
-  }
+  for (Vertex v : mesh.vertices()) mesh.update_string(v, "cusp", mesh.flags(v).flag(GMesh::vflag_cusp) ? "" : nullptr);
+  for (Edge e : mesh.edges()) mesh.update_string(e, "sharp", mesh.flags(e).flag(GMesh::eflag_sharp) ? "" : nullptr);
 }
 
 // *** delaunay
@@ -1135,17 +1131,15 @@ void do_silsubdiv() {
   const Array<Face> arf(mesh.faces());
   // Determine which edges will be subdivided.
   Set<Edge> subde;  // edges to subdivide
-  for (Edge e : mesh.edges()) {
+  for (Edge e : mesh.edges())
     if (sharp(e)) subde.enter(e);
-  }
   Queue<Face> queuef;
   for (Face f : arf) queuef.enqueue(f);
   while (!queuef.empty()) {
     Face f = queuef.dequeue();
     int nnew = 0;
-    for (Edge e : mesh.edges(f)) {
+    for (Edge e : mesh.edges(f))
       if (subde.contains(e)) nnew++;
-    }
     if (nnew != 2) continue;  // ok, no propagating changes
     for (Edge e : mesh.edges(f)) {
       if (!subde.add(e)) continue;
@@ -1246,9 +1240,8 @@ void do_taubinsmooth(Args& args) {
     mu = -0.34f;
   }
   int nnewv = 0;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (GMesh::string_has_key(mesh.get_string(v), "newvertex")) nnewv++;
-  }
   if (nnewv) Warning("Only smoothing new vertices");
   Map<Vertex, Point> mvp;
   for (Vertex v : mesh.vertices()) mvp.enter(v, Point());
@@ -1380,9 +1373,8 @@ Vertex farthest_vertex(CArrayView<Vertex> bndverts, Vertex v0) {
 Vec2<Vertex> find_diameter_of_boundary_vertices() {
   Vec2<Vertex> vb(nullptr, nullptr);
   Array<Vertex> bndverts;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (mesh.is_boundary(v)) bndverts.push(v);
-  }
   assertx(bndverts.num() >= 2);
   if (0) {
     Vertex v0 = bndverts[0];
@@ -1608,9 +1600,8 @@ void do_fillholes(Args& args) {
   HH_TIMER("_fillholes");
   int maxnume = args.get_int();  // == maxnumv
   Set<Edge> setbe;
-  for (Edge e : mesh.edges()) {
+  for (Edge e : mesh.edges())
     if (mesh.is_boundary(e)) setbe.enter(e);
-  }
   HH_STAT(Sbndlen);
   HH_STAT(Sbndsub);
   while (!setbe.empty()) {
@@ -1669,9 +1660,8 @@ void do_triangulate() {
         continue;
       }
       Edge enew = mesh.split_face(f, va[0], va[2]);
-      for (Face fnew : mesh.faces(enew)) {
+      for (Face fnew : mesh.faces(enew))
         if (mesh.num_vertices(fnew) > 3) stackf.push(fnew);
-      }
     } else {
       mesh.center_split_face(f);
     }
@@ -1685,9 +1675,8 @@ void do_splitvalence(Args& args) {
   const bool write_hole = getenv_bool("WRITE_HOLE");
   HPqueue<Vertex> pqv;
   int large_int = 1 << 24;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (mesh.degree(v) >= maxvalence) pqv.enter(v, float(large_int - mesh.degree(v)));
-  }
   int nsplit = 0;
   while (!pqv.empty()) {
     Vertex v = pqv.remove_min();
@@ -1722,9 +1711,8 @@ void do_splitvalence(Args& args) {
 
 void do_splitbnd2valence() {
   Set<Vertex> setv;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (mesh.degree(v) == 2) setv.enter(v);
-  }
   SHOW(setv.num());
   for (Vertex v : setv) {
     if (!assertw(mesh.degree(v) == 2)) continue;
@@ -1750,9 +1738,8 @@ enum class ETriType { dshort, dlong, alternating, xuvdiag, duvdiag, odddiag };
 
 void triangulate_quads(ETriType type) {
   Stack<Face> stackf;
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     if (mesh.num_vertices(f) == 4) stackf.push(f);
-  }
   showdf("Found %d quads to triangulate\n", stackf.height());
   Array<Vertex> va;
   Polygon poly;
@@ -1884,9 +1871,8 @@ void do_rmcomp(Args& args) {
   for (Set<Face>& setf : ar_setf) Svertsrem.enter(remove_component(setf));
   showdf("Removed %d mesh components\n", Sfacesrem.inum());
   Set<Vertex> vdestroy;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (!mesh.degree(v)) vdestroy.enter(v);
-  }
   for (Vertex v : vdestroy) mesh.destroy_vertex(v);
   if (vdestroy.num()) showdf("Removed %d isolated vertices\n", vdestroy.num());
 }
@@ -1898,9 +1884,8 @@ float try_coalesce(Edge e) {
   if (mesh.is_boundary(e)) return BIGFLOAT;
   if (!mesh.legal_coalesce_faces(e)) return BIGFLOAT;
   Array<Point> pa;
-  for (Face f : mesh.faces(e)) {
+  for (Face f : mesh.faces(e))
     for (Vertex v : mesh.vertices(f)) pa.push(mesh.point(v));
-  }
   Frame frame;
   Vec3<float> eimag;
   principal_components(pa, frame, eimag);
@@ -1927,9 +1912,8 @@ void do_coalesce(Args& args) {
     // All systems go.
     // Neighboring edges may change, so remove them from sete
     //  (especially if > 1 common edges between 2 faces!).
-    for (Face f : mesh.faces(e)) {
+    for (Face f : mesh.faces(e))
       for (Edge ee : mesh.edges(f)) sete.remove(ee);
-    }
     Face fnew = mesh.coalesce_faces(e);
     nerem++;
     // Reenter affected edges.
@@ -1967,9 +1951,8 @@ void do_makequads(Args& args) {
     Edge e = pqe.remove_min();
     // All systems go.
     // Remove neighboring edges from pqe.
-    for (Face f : mesh.faces(e)) {
+    for (Face f : mesh.faces(e))
       for (Edge ee : mesh.edges(f)) pqe.remove(ee);
-    }
     // Coalesce faces into new face fnew.
     Face fnew = mesh.coalesce_faces(e);
     dummy_use(fnew);
@@ -2151,9 +2134,8 @@ void do_flip() {
 
 void do_fixvertices() {
   Array<Vertex> arv;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (!mesh.is_nice(v)) arv.push(v);
-  }
   HH_STAT(Svnrings);
   for (Vertex v : arv) {
     Array<Vertex> new_vertices = mesh.fix_vertex(v);
@@ -2164,9 +2146,8 @@ void do_fixvertices() {
 
 void do_fixfaces() {
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     if (!mesh.is_nice(f)) arf.push(f);
-  }
   int nf = 0;
   for (Face f : arf) {
     if (mesh.is_nice(f)) continue;  // other face may be gone now
@@ -2211,9 +2192,8 @@ void do_removeinfo() {
     mesh.set_string(e, nullptr);
     mesh.flags(e) = 0;
   }
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
-  }
 }
 
 void do_removekey(Args& args) {
@@ -2341,9 +2321,8 @@ const char* copy_normal_to_rgb(string& str, const char* s) {
 void do_copynormaltorgb() {
   string str;
   for (Vertex v : mesh.vertices()) mesh.update_string(v, "rgb", copy_normal_to_rgb(str, mesh.get_string(v)));
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", copy_normal_to_rgb(str, mesh.get_string(c)));
-  }
 }
 
 void do_info() {
@@ -2501,9 +2480,8 @@ void do_obtusesplit() {
     if (!want_split) continue;
     // ALL GO.
     Vec2<Vertex> va{mesh.vertex1(e), mesh.vertex2(e)};
-    for (Face f : mesh.faces(e)) {
+    for (Face f : mesh.faces(e))
       for (Edge ee : mesh.edges(f)) pqe.remove(ee);
-    }
     Vertex vnew = mesh.split_edge(e);
     e = nullptr;
     nsplit++;
@@ -2520,11 +2498,9 @@ void do_obtusesplit() {
       Point dp = interp(get_dp(va[0]), get_dp(va[1]), bary0);
       mesh.update_string(vnew, "domainp", csform_vec(str, dp));
     }
-    for (Face f : mesh.faces(vnew)) {
-      for (Edge ee : mesh.edges(f)) {
+    for (Face f : mesh.faces(vnew))
+      for (Edge ee : mesh.edges(f))
         if (pqe.retrieve(ee) < 0.f) pqe.enter(ee, maxelen - mesh.length(ee));
-      }
-    }
   }
   showdf("obtusesplit split %d edges on %s\n", nsplit, is_sphere ? "sphere" : "surface");
 }
@@ -3001,9 +2977,8 @@ void do_keepsphere(Args& args) {
   }
   for (Face f : setfrem) mesh.destroy_face(f);
   Set<Vertex> vdestroy;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (!mesh.degree(v)) vdestroy.enter(v);
-  }
   for (Vertex v : vdestroy) mesh.destroy_vertex(v);
 }
 
@@ -3120,9 +3095,8 @@ void do_normaltransf(Args& args) {
 void do_rmfarea(Args& args) {
   float area = args.get_float();
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     if (mesh.area(f) < area) arf.push(f);
-  }
   showdf("Removing %d faces with area <%g\n", arf.num(), area);
   for (Face f : arf) mesh.destroy_face(f);
 }
@@ -3130,9 +3104,8 @@ void do_rmfarea(Args& args) {
 void do_rmflarea(Args& args) {
   float area = args.get_float();
   Array<Face> arf;
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     if (mesh.area(f) > area) arf.push(f);
-  }
   showdf("Removing %d faces with area >%g\n", arf.num(), area);
   for (Face f : arf) mesh.destroy_face(f);
 }
@@ -3316,9 +3289,8 @@ void do_procedure(Args& args) {
     }
     for (Face f : setfrem) mesh.destroy_face(f);
     Set<Vertex> vdestroy;
-    for (Vertex v : mesh.vertices()) {
+    for (Vertex v : mesh.vertices())
       if (!mesh.degree(v)) vdestroy.enter(v);
-    }
     for (Vertex v : vdestroy) mesh.destroy_vertex(v);
   } else if (name == "create_sphere") {
     assertx(!mesh.num_vertices());
@@ -3952,9 +3924,8 @@ void do_shootrays(Args& args) {
       if (parse_key_vec(mesh.get_string(v), "normal", nor)) {
       } else {
         Warning("No vertex normal; looking for a corner normal");
-        for (Corner c : mesh.corners(v)) {
+        for (Corner c : mesh.corners(v))
           if (parse_key_vec(mesh.get_string(c), "normal", nor)) break;
-        }
         assertx(!is_zero(nor));
       }
       mesh.update_string(v, "Onormal", csform_vec(str, nor));
@@ -4101,11 +4072,9 @@ void convex_group_flip_faces(const Set<Face>& group) {
   // compute centroid
   Homogeneous h;
   Set<Vertex> setv;
-  for (Face f : group) {
-    for (Vertex v : mesh.vertices(f)) {
+  for (Face f : group)
+    for (Vertex v : mesh.vertices(f))
       if (setv.add(v)) h += mesh.point(v);
-    }
-  }
   Point ctr = to_Point(normalized(h));
   int vote_flip = 0, vote_keep = 0;
   for (Face f : group) {

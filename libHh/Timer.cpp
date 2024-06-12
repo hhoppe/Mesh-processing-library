@@ -166,9 +166,8 @@ class Timers {
   ~Timers() = delete;
   void flush_internal() {
     if (_vec_timer_info.empty()) return;
-    for (const auto& timer_info : _vec_timer_info) {
+    for (const auto& timer_info : _vec_timer_info)
       if (timer_info.stat_cpu_times.num() > 1) _have_some_mult = true;
-    }
     if (_have_some_mult || Timer::show_times() > 0) {
       const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
       show_local("Summary of timers (%s):\n", timing_host().c_str());

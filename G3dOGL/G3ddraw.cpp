@@ -37,9 +37,7 @@ template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const R
 void RecomputeSharpEdges(GMesh& mesh) { recompute_sharpe(mesh, mesh.edges()); }
 
 static void recompute_all_sharpe() {
-  for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
-    RecomputeSharpEdges(*g_obs[obn].get_mesh());
-  }
+  for (int obn = g_obs.first; obn <= g_obs.last; obn++) RecomputeSharpEdges(*g_obs[obn].get_mesh());
 }
 
 void Applyq(const Frame& tq) {

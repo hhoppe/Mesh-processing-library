@@ -150,9 +150,8 @@ WedgeInfo create_winfo(Corner c) {
 // Upon application of a vertex split, for affected corners of the mesh, record their "ancestor" wedge id's.
 // With non-strict PM, some of these ancestor wid's may be assigned 0 to indicate that no ancestor corner exists.
 void carry_old_corner_info(Edge e) {
-  for (Face f : mesh.faces(e)) {
+  for (Face f : mesh.faces(e))
     for (Corner c : mesh.corners(f)) c_owedge_id(c) = 0;
-  }
   for (Face ff : mesh.faces(e)) {
     for (Corner crep : mesh.corners(ff)) {
       int crepcwid = c_cwedge_id(crep);
@@ -433,9 +432,8 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
 // Read and parse a vsplit record.
 void read_record(std::istream& is, bool carry_old) {
   bool after_vsplit = false;
-  for (string line; my_getline(is, line);) {
+  for (string line; my_getline(is, line);)
     if (!parse_line(const_cast<char*>(line.c_str()), after_vsplit, carry_old)) break;
-  }
   if (is) assertx(after_vsplit);
 }
 
@@ -517,9 +515,8 @@ void write_init_vertex(Vertex v, bool write_morph) {
     mesh.set_string(v, write_pa_string(v, u_nwid, u_owid, write_morph).c_str());
   } else {
     mesh.set_string(v, write_morph ? write_p_string(v).c_str() : nullptr);
-    for (Corner c : mesh.corners(v)) {
+    for (Corner c : mesh.corners(v))
       mesh.set_string(c, write_a_string(c_cwedge_id(c), c_owedge_id(c), write_morph).c_str());
-    }
   }
 }
 
@@ -1417,9 +1414,8 @@ void do_pm_encode() {
       vspl.resid_uni = 0.f;
       vspl.resid_dir = 0.f;
       bool after_vsplit = false;
-      for (string line; my_getline(is, line);) {
+      for (string line; my_getline(is, line);)
         if (!parse_line2(const_cast<char*>(line.c_str()), after_vsplit)) break;
-      }
       if (!is) {
         assertx(!after_vsplit);
         break;

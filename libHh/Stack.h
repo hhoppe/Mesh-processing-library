@@ -19,9 +19,8 @@ namespace hh {
 // Does a vector contain an element?
 template <typename T> bool vec_contains(const std::vector<T>& vec, const T& e) {
   // return std::find(vec.begin(), vec.end(), e) != vec.end();
-  for (const T& ee : vec) {
+  for (const T& ee : vec)
     if (e == ee) return true;
-  }
   return false;
 }
 // Remove an element from a vector; return was_there.

@@ -42,9 +42,8 @@ int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, 
     if (!mesh.legal_edge_swap(e)) continue;
     if (!fdoswap(mesh, e)) continue;
     if (fdel) fdel(mesh, e);
-    for (Face f : mesh.faces(e)) {
+    for (Face f : mesh.faces(e))
       for (Edge ee : mesh.edges(f)) sete.remove(ee);
-    }
     Edge ne = mesh.swap_edge(e);
     // e = nullptr;  // now undefined
     neswapped++;
@@ -84,9 +83,8 @@ Set<Face> gather_component(const Mesh& mesh, Face f) {
   Queue<Face> queue;
   setf.enter(f);
   for (;;) {
-    for (Face f2 : mesh.faces(f)) {
+    for (Face f2 : mesh.faces(f))
       if (setf.add(f2)) queue.enqueue(f2);
-    }
     if (queue.empty()) break;
     f = queue.dequeue();
   }
@@ -98,11 +96,9 @@ Set<Face> gather_component_v(const Mesh& mesh, Face f) {
   Queue<Face> queue;
   setf.enter(f);
   for (;;) {
-    for (Vertex v : mesh.vertices(f)) {
-      for (Face f2 : mesh.faces(v)) {
+    for (Vertex v : mesh.vertices(f))
+      for (Face f2 : mesh.faces(v))
         if (setf.add(f2)) queue.enqueue(f2);
-      }
-    }
     if (queue.empty()) break;
     f = queue.dequeue();
   }
@@ -183,12 +179,10 @@ string mesh_genus_string(const Mesh& mesh) {
   int ec = nv - ne + nf;  // euler characteristic
   float genus = (nc * 2 - ec - nb) / 2.f;
   int nse = 0, ncv = 0;
-  for (Edge e : mesh.edges()) {
+  for (Edge e : mesh.edges())
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) nse++;
-  }
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (mesh.flags(v).flag(GMesh::vflag_cusp)) ncv++;
-  }
   return sform("Genus: c=%d b=%d  v=%d f=%d e=%d  genus=%g%s",  //
                nc, nb, nv, nf, ne, genus, (nse + ncv) ? sform("  sharpe=%d cuspv=%d", nse, ncv).c_str() : "");
 }
@@ -413,9 +407,8 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
 int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
   hash_edge he{mesh};
   SetEdge sete(he);
-  for (Edge e : mesh.edges()) {
+  for (Edge e : mesh.edges())
     if (!mesh.is_boundary(e)) sete.enter(e);
-  }
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
@@ -702,9 +695,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
   assertw(!slow_project);
   if (slow_project) fast = false;
   bool pfsmooth = fast;
-  for (Edge e : mesh.edges(pf)) {
+  for (Edge e : mesh.edges(pf))
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;
-  }
   const float bnearedge = .08f;
   Set<Face> setfvis;
   Polygon poly;
@@ -731,9 +723,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
     assertx(va.num() == 3);
     for_int(j, 3) {
       if (pfsmooth && minbary[mod3(j + 1)] > bnearedge && minbary[mod3(j + 2)] > bnearedge) continue;
-      for (Face f : mesh.faces(va[j])) {
+      for (Face f : mesh.faces(va[j]))
         if (!setfvis.contains(f)) setf.add(f);
-      }
     }
     struct S {
       Face f;
@@ -762,9 +753,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
       minbary = bary;
       ret_clp = clp;
       pfsmooth = fast;
-      for (Edge e : mesh.edges(pf)) {
+      for (Edge e : mesh.edges(pf))
         if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;
-      }
     }
     if (setfvis.contains(pf)) break;
     for (Face f : setf) setfvis.enter(f);

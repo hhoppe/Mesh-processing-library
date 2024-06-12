@@ -99,9 +99,7 @@ class ObjectSpatial : public Spatial {
   explicit ObjectSpatial(int gn) : Spatial(gn) {}
   ~ObjectSpatial() override { ObjectSpatial::clear(); }
   void clear() override {
-    for (auto& cell : _map.values()) {
-      HH_SSTAT(Sospcelln, cell.num());
-    }
+    for (auto& cell : _map.values()) HH_SSTAT(Sospcelln, cell.num());
   }
   // id != 0
   // Enter an object that comes with a containment function: the function returns true if the object lies
@@ -281,9 +279,8 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
       bool present;
       auto& cell = _map.retrieve(en, present);
       if (!present) continue;
-      for (Univ e : cell) {
+      for (Univ e : cell)
         if (set.add(e) && ftest(e)) should_stop = true;
-      }
     }
     if (i == ni || should_stop) break;
     pci = cci;

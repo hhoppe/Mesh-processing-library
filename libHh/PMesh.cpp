@@ -1540,9 +1540,8 @@ PMesh::PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo) : _base_mesh(std::move(aw
 void PMesh::read(std::istream& is) {
   PMeshRStream pmrs(is, this);
   pmrs.read_base_mesh();
-  for (;;) {
+  for (;;)
     if (!pmrs.next_vsplit()) break;
-  }
 }
 
 void PMesh::write(std::ostream& os) const {
@@ -1926,12 +1925,9 @@ bool Geomorph::construct_goto_nfaces(PMeshIter& pmi, int nfaces) { return constr
 void Geomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
   const float frac1 = 1.f - alpha;
-  for (const PmVertexAttribG& ag : _vgattribs) {
+  for (const PmVertexAttribG& ag : _vgattribs)
     interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], frac1);
-  }
-  for (const PmWedgeAttribG& ag : _wgattribs) {
-    interp(_wedges[ag.wedge].attrib, ag.attribs[0], ag.attribs[1], frac1);
-  }
+  for (const PmWedgeAttribG& ag : _wgattribs) interp(_wedges[ag.wedge].attrib, ag.attribs[0], ag.attribs[1], frac1);
 }
 
 // *** SMesh
@@ -2008,9 +2004,8 @@ SGeomorph::SGeomorph(const Geomorph& geomorph) : SMesh(geomorph) {
 void SGeomorph::evaluate(float alpha) {
   assertx(alpha >= 0.f && alpha < 1.f);
   const float frac1 = 1.f - alpha;
-  for (const PmSVertexAttribG& ag : _vgattribs) {
+  for (const PmSVertexAttribG& ag : _vgattribs)
     interp(_vertices[ag.vertex].attrib, ag.attribs[0], ag.attribs[1], frac1);
-  }
 }
 
 GMesh SGeomorph::extract_gmesh(int has_rgb, int has_uv) const {

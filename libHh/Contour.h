@@ -389,9 +389,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
         // Gather 4 cube vertices in a consistent order
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
           int sw = cd[d] ^ cd[d1];  // 0 or 1
-          for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) {
-            naf[i++] = na[cd[0]][cd[1]][cd[2]];
-          }
+          for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) naf[i++] = na[cd[0]][cd[1]][cd[2]];
         }
       }
       int nneg = 0;

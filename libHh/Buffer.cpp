@@ -203,9 +203,8 @@ bool RBuffer::has_line() const {
 bool RBuffer::extract_line(string& str) {
   const char* par = &_ar[_beg];  // optimization
   int i = 0;
-  for (; i < _n; i++) {
+  for (; i < _n; i++)
     if (par[i] == '\n') break;
-  }
   if (i == _n) return false;  // no complete line yet
   str.assign(par, i);         // skip trailing '\n'
   extract(i + 1);             // including trailing '\n'

@@ -998,9 +998,8 @@ void clear_mesh_strings() {
 void write_mesh(std::ostream& os) {
   string str;
   for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str);
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (v_global(v)) mesh.update_string(v, "global", "");
-  }
   for (Face f : mesh.faces()) create_face_string(f);
   if (sphericalparam) {
     for (Vertex v : mesh.vertices()) {
@@ -1178,9 +1177,8 @@ void parse_mesh_wedge_identifiers() {
         }
       }
     }
-    for (Corner c : mesh.corners(v)) {
+    for (Corner c : mesh.corners(v))
       if (c_winfo(c).col[0] != k_undefined) nccolors++;
-    }
   }
   if (nccolors) {
     have_ccolors = true;
@@ -1558,9 +1556,8 @@ void sample_pts() {
 }
 
 void do_tvcreinit() {
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     for (Corner c : mesh.corners(f)) c_tvc_owid(c) = c_wedge_id(c);
-  }
   // Note: in the current Mesh implementation, Mesh::collapse_edge() preserves attributes of Corners,
   // so c_tvc_owid(c) is propagated correctly through simplification.
   for_int(i, tvc_cache.num()) tvc_cache[i].owid = tvc_cache[i].wid;
@@ -3327,9 +3324,8 @@ Array<CacheEntry> tvc_get_e_cacheentry(Edge e, bool edir) {
 
 void tvc_print_cache() {
   std::cerr << "cache={\n";
-  for (const CacheEntry& ce : tvc_cache) {
+  for (const CacheEntry& ce : tvc_cache)
     std::cerr << sform(" (wid=%d, v=%d, owid=%d)\n", ce.wid, (ce.v ? mesh.vertex_id(ce.v) : 0), ce.owid);
-  }
   std::cerr << "}\n";
 }
 
@@ -3765,9 +3761,8 @@ EcolResult try_ecol(Edge e, bool commit) {
           Edge ee = mesh.edge(tv2, v);
           int imat = f_matid(mesh.face1(ee));
           if (mesh.face2(ee) && f_matid(mesh.face2(ee)) == imat) {
-            for (Face f : mesh.faces(v)) {
+            for (Face f : mesh.faces(v))
               if (f_matid(f) != imat && v1mats.contains(f_matid(f))) return false;  // From lambda.
-            }
           }
         }
         return true;  // From lambda.
@@ -4165,9 +4160,8 @@ EcolResult try_ecol(Edge e, bool commit) {
       point_change_edge(pept, nullptr);
       pept->dist2 = 0.f;
     }
-    for (Vertex v : mesh.vertices(e)) {
+    for (Vertex v : mesh.vertices(e))
       for (Edge ee : mesh.edges(v)) assertx(e_setpts(ee).empty());
-    }
     for (fptinfo* pfpt : nn.ar_fpts) point_change_face(pfpt, nullptr);
     for (Face f : mesh.faces(e)) assertx(f_setpts(f).empty());
   }
@@ -4342,9 +4336,8 @@ EcolResult try_ecol(Edge e, bool commit) {
       Vertex vv1 = mesh.vertex1(ee);
       Vertex vv2 = mesh.vertex2(ee);
       Set<int> v1mats;
-      for (Face f : mesh.faces(vv1)) {
+      for (Face f : mesh.faces(vv1))
         if (f_matid(f) != imat) v1mats.add(f_matid(f));
-      }
       for (Face f : mesh.faces(vv2)) assertx(!v1mats.contains(f_matid(f)));
     }
   }
@@ -4677,11 +4670,9 @@ void optimize() {
     }
     // READY TO COMMIT.
     if (!invertexorder) {
-      for (Vertex v : mesh.vertices(e)) {
-        for (Edge ee : mesh.edges(v)) {
+      for (Vertex v : mesh.vertices(e))
+        for (Edge ee : mesh.edges(v))
           if (ee != e) assertx(pqecost.remove(ee) >= 0);
-        }
-      }
     }
     // COMMIT.
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -4748,9 +4739,8 @@ void do_simplify() {
     int num_wedges;
     {
       Set<int> set_wid;
-      for (Face f : mesh.faces()) {
+      for (Face f : mesh.faces())
         for (Corner c : mesh.corners(f)) set_wid.add(c_wedge_id(c));
-      }
       num_wedges = set_wid.num();
     }
     showdf("PM: nvertices=%d nwedges=%d nfaces=%d\n", mesh.num_vertices(), num_wedges, mesh.num_faces());
@@ -4830,9 +4820,8 @@ void do_removesharp() {
     mesh.set_string(e, nullptr);
     mesh.flags(e) = 0;
   }
-  for (Face f : mesh.faces()) {
+  for (Face f : mesh.faces())
     for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
-  }
 }
 
 void do_removeinfo() {

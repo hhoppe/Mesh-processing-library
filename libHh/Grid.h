@@ -653,9 +653,7 @@ template <int D, typename T> struct grid_output {
     os << "Grid<" << type_name<T>() << ">(";
     for_int(i, g.dims().num()) os << (i ? ", " : "") << g.dims()[i];
     os << ") {\n";
-    for (const auto& p : range(g.dims())) {
-      os << "  " << p << " = " << g[p] << (has_ostream_eol<T>() ? "" : "\n");
-    }
+    for (const auto& p : range(g.dims())) os << "  " << p << " = " << g[p] << (has_ostream_eol<T>() ? "" : "\n");
     return os << "}\n";
   }
 };

@@ -17,11 +17,9 @@ namespace hh {
 
 // Add edges to a graph to make it symmetric.
 template <typename T> void graph_symmetric_closure(Graph<T>& g) {
-  for (const T& v1 : g.vertices()) {
-    for (const T& v2 : g.edges(v1)) {
+  for (const T& v1 : g.vertices())
+    for (const T& v2 : g.edges(v1))
       if (!g.contains(v2, v1)) g.enter(v2, v1);
-    }
-  }
 }
 
 // Given a graph (possibly directed), return vertices in order of increasing graph distance from vs.
@@ -187,9 +185,8 @@ inline Graph<int> graph_quick_emst(CArrayView<Point> pa, const PointSpatial<int>
 // Return statistics about graph edge lengths.  If undirected, edges stats are duplicated.
 template <typename T, typename Func = float(const T&, const T&)> Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
   Stat stat;
-  for (const T& v1 : g.vertices()) {
+  for (const T& v1 : g.vertices())
     for (const T& v2 : g.edges(v1)) stat.enter(fdist(v1, v2));
-  }
   return stat;
 }
 
@@ -230,13 +227,11 @@ template <typename T> class GraphComponent : noncopyable {
     queue.enqueue(*_vcur);
     while (!queue.empty()) {
       T v = queue.dequeue();
-      for (const T& v2 : _g.edges(v)) {
+      for (const T& v2 : _g.edges(v))
         if (_set.add(v2)) queue.enqueue(v2);
-      }
     }
-    for (++_vcur; _vcur != _vend; ++_vcur) {
+    for (++_vcur; _vcur != _vend; ++_vcur)
       if (!_set.contains(*_vcur)) break;
-    }
   }
 
  private:

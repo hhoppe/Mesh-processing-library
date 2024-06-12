@@ -233,9 +233,7 @@ void replace_mesh() {
       }
       nmesh.create_face(va);
     }
-    for (Vertex v : mesh.vertices()) {
-      nmesh.set_point(nmesh.id_vertex(movivi.get(mesh.vertex_id(v))), mesh.point(v));
-    }
+    for (Vertex v : mesh.vertices()) nmesh.set_point(nmesh.id_vertex(movivi.get(mesh.vertex_id(v))), mesh.point(v));
     // For now, ignore all string information.
     mesh.copy(nmesh);
     return;
@@ -307,9 +305,8 @@ void replace_mesh() {
   for (Edge e : mesh.edges()) assertx(!mesh.get_string(e));  // not handled at present
   mesh.copy(nmesh);
   if (color_forder) {
-    for (Face f : mesh.faces()) {
+    for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", nullptr);
-    }
     int nf = 0;
     Face fo = nullptr;
     for_int(fi, mesh.num_faces()) {
@@ -348,9 +345,8 @@ void replace_mesh() {
       }
       mesh.update_string(f, "rgb", color_nmiss[nmiss]);
     }
-    for (Face f : mesh.faces()) {
+    for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", nullptr);
-    }
   } else if (color_corners && cache_type != VertexCache::EType::notype) {
     HH_PTIMER("__color_corners");
     auto up_vcache = VertexCache::make(cache_type, 1 + mesh.num_vertices(), cache_size);
@@ -799,9 +795,8 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
       int vi = vci.next();
       if (!vi) break;
       Vertex v = mesh.id_vertex(vi);
-      for (Face f : mesh.faces(v)) {
+      for (Face f : mesh.faces(v))
         if (!processed(f)) setf.add(f);
-      }
     }
   }
   HH_SSTAT(Sinitnf, setf.num());
@@ -866,9 +861,8 @@ void do_greedy_stripify() {
     if (!f) break;
     face_vertices_neighbors(f, va, fa);
     int i;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 3; i++)
       if (fa[i] && !ms.processed(fa[i])) break;
-    }
     // Current approach: last two vertices output for triangle are the
     //  ones that get reused in the next triangle if the strip continues.
     // Alternative approach would have been to always set first two

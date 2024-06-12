@@ -1736,9 +1736,8 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
   _was_modified = is_modified;
   bool visited_whole_list = n == ndelim;
   dummy_use(visited_whole_list);
-  for (SrVertex* vs : _ar_tobevisible) {
+  for (SrVertex* vs : _ar_tobevisible)
     if (vs->avertex) vs->avertex->visible = true;
-  }
   // Move beginning of list right before next node.
   if (n != ndelim) ndelim->relink_before(n);
   if (k_debug && visited_whole_list) verify_optimality();
@@ -1909,16 +1908,13 @@ int SrMesh::num_vertices_refine_morphing() const { return _num_vertices_refine_m
 int SrMesh::num_vertices_coarsen_morphing() const { return _num_vertices_coarsen_morphing; }
 
 bool SrMesh::verify_all_faces_visited() const {
-  for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+  for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef))
     assertx((unsigned(f->matid) & k_Face_visited_mask) == _cur_frame_mask);
-  }
   return true;
 }
 
 bool SrMesh::verify_all_vertices_uncached() const {
-  for (SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
-    assertx(v->cached_time < _cache_time);
-  }
+  for (SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) assertx(v->cached_time < _cache_time);
   return true;
 }
 
@@ -1928,9 +1924,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   assertx(!_refine_morph_time && !_coarsen_morph_time);
   Map<SrVertex*, SrVertexGeometry> m_v_vg;
   // Record the geometry of the current set of active vertices.
-  for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
-    m_v_vg.enter(va->vertex, va->vgeom);
-  }
+  for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) m_v_vg.enter(va->vertex, va->vgeom);
   // Apply vspl's.
   {
     HH_ATIMER("__geo_vspls");
@@ -1968,9 +1962,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
     }
   }
   // Record the geometry of the current set of active vertices.
-  for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
-    m_v_vg.enter(va->vertex, va->vgeom);
-  }
+  for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) m_v_vg.enter(va->vertex, va->vgeom);
   // Undo ecol's by traversing sequence backwards.
   for (int i = seq_ecols.num() - 1; i >= 0; --i) {
     SrVertex* vs = seq_ecols[i];

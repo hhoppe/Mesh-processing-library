@@ -111,9 +111,8 @@ int main() {
     SHOW("face face: 4, 2");
     for (Face ff : mesh.faces(f)) SHOW(mesh.face_id(ff));
     SHOW("face edge: (1, 5), (3, 5), (3, 1)");
-    for (Edge e : mesh.edges(f)) {
+    for (Edge e : mesh.edges(f))
       showf("edge (%d, %d)\n", mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e)));
-    }
   }
   {
     mesh.ok();
@@ -123,9 +122,8 @@ int main() {
     SHOW("vertex face: 2, 3");
     for (Face f : mesh.faces(v)) SHOW(mesh.face_id(f));
     SHOW("vertex edge: (3, 5), (2, 3), (3, 1)");
-    for (Edge e : mesh.edges(v)) {
+    for (Edge e : mesh.edges(v))
       showf("edge (%d, %d)\n", mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e)));
-    }
   }
   {
     Edge e = mesh.edge(v1, v5);

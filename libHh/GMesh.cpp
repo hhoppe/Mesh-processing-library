@@ -522,9 +522,8 @@ bool GMesh::recognize_line(const char* s) {
       "Vertex ",  "Face ",  "Corner ", "Edge ", "MVertex ", "CVertex ",
       "DVertex ", "DFace ", "Ecol ",   "Eswa ", "Espl ",    "Vspl",
   };
-  for (const char* prefix : prefixes) {
+  for (const char* prefix : prefixes)
     if (strprefix(s, prefix)) return true;
-  }
   return false;
 }
 
@@ -721,9 +720,8 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
   int isbs = is_boundary(vs), isbt = is_boundary(vt), sumb = isbs + isbt;
   Point p = sumb == 0 || sumb == 2 ? Point(interp(point(vs), point(vt))) : isbs ? point(vs) : point(vt);
   Set<Vertex> vsharp;
-  for (Edge ee : edges(vt)) {
+  for (Edge ee : edges(vt))
     if (ee != e && flags(ee).flag(eflag_sharp)) vsharp.enter(opp_vertex(vt, ee));
-  }
   Mesh::collapse_edge_vertex(e, vs);  // vs is kept
   // e = nullptr;  // now undefined
   set_point(vs, p);  // (_os == nullptr)

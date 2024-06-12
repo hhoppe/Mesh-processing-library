@@ -15,9 +15,8 @@
   Mesh mesh;
   Vertex v1 = mesh.create_vertex(), v2 = mesh.create_vertex(), v3 = mesh.create_vertex();
   Face f1 = mesh.create_face(v1, v2, v3);
-  for (Face f : mesh.ordered_faces()) {
+  for (Face f : mesh.ordered_faces())
     for (Vertex v : mesh.vertices(f)) process(f, v);
-  }
 }
 #endif
 

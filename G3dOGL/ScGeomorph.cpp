@@ -8,11 +8,9 @@ using namespace hh;
 int ScGeomorph::degenerate(Simplex v[3]) {
   int i, j;
   int cnt = 0;
-  for (i = 0; i < 2; i++) {
-    for (j = i + 1; j < 3; j++) {
+  for (i = 0; i < 2; i++)
+    for (j = i + 1; j < 3; j++)
       if (vold[v[i]->getId()] == vold[v[j]->getId()]) cnt++;
-    }
-  }
   assertx(cnt != 2);
   return cnt;
 }

@@ -192,9 +192,8 @@ void do_tomesh(Args& args) {
   verts.init(end_yx1 - beg_yx);
   const int begy = beg_yx[0], begx = beg_yx[1];
   const int endy1 = end_yx1[0], endx1 = end_yx1[1];
-  for (int y = 0; y < endy1 - begy; y += s) {
+  for (int y = 0; y < endy1 - begy; y += s)
     for (int x = 0; x < endx1 - begx; x += s) verts[y][x] = nullptr;
-  }
   const bool uniform_scaling = true;
   if (!uniform_scaling) {
     scale_yx = 1.f / convert<float>(image.dims() - 1);
@@ -206,16 +205,13 @@ void do_tomesh(Args& args) {
     for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(endy1 - s, x));
     for (int y = begy + s; y < endy1 - s; y += s) assign_vertex(mesh, verts, V(y, begx));
     for (int y = begy + s; y < endy1 - s; y += s) assign_vertex(mesh, verts, V(y, endx1 - s));
-    for (int y = begy + s; y < endy1 - s; y += s) {
+    for (int y = begy + s; y < endy1 - s; y += s)
       for (int x = begx + s; x < endx1 - s; x += s) assign_vertex(mesh, verts, V(y, x));
-    }
-    for (int y = 0; y < endy1 - begy; y += s) {
+    for (int y = 0; y < endy1 - begy; y += s)
       for (int x = 0; x < endx1 - begx; x += s) assertx(verts[y][x]);
-    }
   } else {
-    for (int y = begy; y < endy1; y += s) {
+    for (int y = begy; y < endy1; y += s)
       for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(y, x));
-    }
   }
   bool yeven = false;
   for (int y = 0; y < endy1 - begy - s; y += s) {
@@ -1474,9 +1470,8 @@ void do_cycle(Args& args) {
   const int low = 0, high = 255, offset = low, vrange = high - low;
   // use "-cycle 5" to see all the detail.
   int term = vrange / ncycle;
-  for (const auto& yx : range(image.dims())) {
+  for (const auto& yx : range(image.dims()))
     for_int(z, image.zsize()) image[yx][z] = uint8_t(offset + (image[yx][z] % ncycle) * term);
-  }
 }
 
 void do_transf(Args& args) {
@@ -1656,9 +1651,8 @@ void do_homogenize(Args& args) {
     for_int(z, image.zsize()) {
       Matrix<double> ar(V(n, n), 0.);
       // TODO: parallelize by allocating Matrix ar per-thread, and then summing them.
-      for (const auto& yx : range(image.dims())) {
+      for (const auto& yx : range(image.dims()))
         for_int(ky, n) for_int(kx, n) ar[ky][kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * image[yx][z];
-      }
       ar[0][0] = 0.0;  // do not project out the DC term
       parallel_for_coords(
           image.dims(),
@@ -1673,9 +1667,8 @@ void do_homogenize(Args& args) {
     }
   } else {  // version with alpha-channel cropping
     const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
-    for (const auto& yx : range(image.dims())) {
+    for (const auto& yx : range(image.dims()))
       assertx(image[yx][3] == 0 || image[yx][3] == 255);  // no fractional alpha values
-    }
     // Derivation:
     //  We have  v = B * x  where rows of B are non-orthogonal,  bb = B * B^T
     //  Assume B^T = Q * R,  where columns of Q are orthogonal.
@@ -2064,9 +2057,8 @@ void output_contour(int gn, float contour_value) {
   };
   Contour2D contour(gn, func_eval, func_contour);
   contour.set_vertex_tolerance(.0001f);
-  for (const auto& yx : range(twice(gn - 1))) {                   // visit all contour cells
+  for (const auto& yx : range(twice(gn - 1)))                     // visit all contour cells
     contour.march_from((convert<float>(yx) + 1.f) * (1.f / gn));  // center of contour cell
-  }
   nooutput = true;
 }
 
@@ -2276,9 +2268,8 @@ void do_poisson() {
         mesh.update_string(v, "Opos", csform_vec(str, opos));
       }
     }
-    for (const auto& yx : range(image.dims() - 1)) {
+    for (const auto& yx : range(image.dims() - 1))
       mesh.create_face(V(matv[yx + V(0, 0)], matv[yx + V(0, 1)], matv[yx + V(1, 1)], matv[yx + V(1, 0)]));
-    }
     // WFile fi("mesh.m"); mesh.write(fi());
     hh_clean_up();
     mesh.write(std::cout);
@@ -2399,9 +2390,8 @@ void do_procedure(Args& args) {
       mesh.update_string(v, "rgb", csform_vec(str, nvrgb));
       mesh.update_string(v, "Orgb", csform_vec(str, vrgb));
     }
-    for (const auto& yx : range(image.dims() - 1)) {
+    for (const auto& yx : range(image.dims() - 1))
       mesh.create_face(V(matv[yx], matv[yx + V(0, 1)], matv[yx + V(1, 1)], matv[yx + V(1, 0)]));
-    }
     hh_clean_up();
     mesh.write(std::cout);
     std::cout.flush();
@@ -2747,9 +2737,8 @@ void do_maxdiff(Args& args) {
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
   int maxdiff = 0;
-  for (const auto& yx : range(image.dims())) {
+  for (const auto& yx : range(image.dims()))
     for_int(z, nz) maxdiff = max(maxdiff, abs(int(image[yx][z]) - int(image2[yx][z])));
-  }
   if (maxdiff > thresh) {
     SHOW(maxdiff, thresh);
     assertnever("maxdiff threshold exceeded");
@@ -2763,9 +2752,7 @@ void do_maxrmsdiff(Args& args) {
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
   Stat stat;
-  for (const auto& yx : range(image.dims())) {
-    for_int(z, nz) stat.enter(int(image[yx][z]) - int(image2[yx][z]));
-  }
+  for (const auto& yx : range(image.dims())) for_int(z, nz) stat.enter(int(image[yx][z]) - int(image2[yx][z]));
   if (0 || getenv_int("SHOW_MAX_RMS_DIFF")) SHOW(stat.rms());
   if (stat.rms() > thresh) {
     SHOW(stat.rms(), thresh);
@@ -2801,9 +2788,8 @@ void do_compare(Args& args) {
     showf("Effective spatial standard deviation of windowed Gaussian is %f\n", sqrt(var));
   }
   int allmax = 0;
-  for (const auto& yx : range(image.dims())) {
+  for (const auto& yx : range(image.dims()))
     for_int(z, image.zsize()) allmax = max(allmax, abs(image1[yx][z] - image2[yx][z]));
-  }
   Array<double> ar_err2(image.zsize()), ar_mssim(image.zsize());
   parallel_for_each(range(image.zsize()), [&](const int z) {
     double err2 = 0.;
@@ -3248,9 +3234,7 @@ void do_pyramid(Args& args) {
   // Create the Gaussian image pyramid of the fine-scale image.
   if (ld > 0) {
     HH_TIMER("__pyramid_downsample");
-    for (int l = lf - 1; l >= lc; --l) {
-      mat_gaussianf[l] = downsample_image(mat_gaussianf[l + 1]);
-    }
+    for (int l = lf - 1; l >= lc; --l) mat_gaussianf[l] = downsample_image(mat_gaussianf[l + 1]);
   }
   if (ld > 0) output_image(mat_gaussianf[lc], rootname + ".down.png");
   // Convert the coarse-scale image.

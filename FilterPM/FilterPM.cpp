@@ -1088,9 +1088,8 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       }
       for (int ivsplnext : gidep.edges(ivspl)) {
         bool legal = true;
-        for (int ivsplnextdep : gdep.edges(ivsplnext)) {
+        for (int ivsplnextdep : gdep.edges(ivsplnext))
           if (!ivspl_done[ivsplnextdep]) legal = false;
-        }
         if (!legal) continue;
         Sivspl n;
         n.ivspl = ivsplnext;

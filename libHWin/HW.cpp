@@ -191,9 +191,8 @@ void HW::open() {
   }
   ogl_create_window(yxpos);
   if (_offscreen == "") {
-    for (;;) {
+    for (;;)
       if (loop()) break;
-    }
   } else {
     _exposed = true;
     // Due to interaction with window events or double-buffering, first draw_it() produces only background color.

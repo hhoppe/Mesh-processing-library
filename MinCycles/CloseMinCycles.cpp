@@ -147,9 +147,8 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
       _mesh.update_string(vn, "filledcenter", "");
     }
     // Clean-up / initialize the edge data.
-    for (Face f : _mesh.faces(vn)) {
-      for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;  // e_joined(e) will be initialized shortly
-    }
+    for (Face f : _mesh.faces(vn))
+      for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;      // e_joined(e) will be initialized shortly
     for (Vertex v : _mesh.vertices(vn)) v_dist(v) = 0.f;  // any value != BIGFLOAT
     if (1) {  // heuristically characterize as handle/tunnel based on geometric embedding
       for (Face f : _mesh.faces(vn)) {
@@ -252,9 +251,8 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
       int count = 0;
       Vec2<Array<Edge>> esides;
       for_int(i, 2) {
-        for (Edge e : _mesh.edges(_mesh.face(e12, i))) {
+        for (Edge e : _mesh.edges(_mesh.face(e12, i)))
           if (!e_joined(e)) esides[i].push(e);
-        }
       }
       for_int(i, 2) {
         if (esides[i].num() != 1) continue;
@@ -267,11 +265,9 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
           assertx(v_dist(_mesh.vertex2(ec)) != BIGFLOAT);
           e_joined(ec) = true;
           ++count;
-          for (Face f : _mesh.faces(ec)) {
-            for (Edge e : _mesh.edges(f)) {
+          for (Face f : _mesh.faces(ec))
+            for (Edge e : _mesh.edges(f))
               if (!e_joined(e)) queue.enqueue(e);
-            }
-          }
         }
       }
       HH_SSTAT(Szipper, count);
@@ -483,9 +479,8 @@ void CloseMinCycles::find_cycles() {
     int num_edges;
     min_cycle_from_vertex(_mesh.id_vertex(49), true, sr, vfarthest, num_edges);
     SHOW(sr);
-    for (Vertex v : _mesh.vertices()) {
+    for (Vertex v : _mesh.vertices())
       if (v_dist(v) != BIGFLOAT) showf("vdist(%d)=%g\n", _mesh.vertex_id(v), v_dist(v));
-    }
     return;
   }
   HPqueue<Vertex> pqvlbsr;  // lower-bound on search radius for min cycle about vertex
@@ -618,9 +613,8 @@ void CloseMinCycles::compute() {
   if (1) {  // deal with mesh boundaries
     HH_TIMER("_fillholes");
     Set<Edge> setbe;
-    for (Edge e : _mesh.edges()) {
+    for (Edge e : _mesh.edges())
       if (_mesh.is_boundary(e)) setbe.enter(e);
-    }
     while (!setbe.empty()) {
       Edge e = setbe.get_one();
       Queue<Edge> queuee = gather_boundary(_mesh, e);

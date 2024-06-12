@@ -82,9 +82,8 @@ void test_stack() {
 // *** from Queue_test.cpp
 
 template <typename T> bool queue_contains(const std::deque<T>& queue, const T& e) {
-  for (auto& ee : queue) {
+  for (auto& ee : queue)
     if (e == ee) return true;
-  }
   return false;
 }
 
@@ -125,9 +124,8 @@ void test_queue() {
 // *** from HList_test
 
 template <typename T> bool list_contains(const std::list<T>& l, const T& e) {
-  for (const auto& ee : l) {
+  for (const auto& ee : l)
     if (e == ee) return true;
-  }
   return false;
 }
 

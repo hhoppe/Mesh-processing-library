@@ -292,7 +292,8 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
       bool allow_case_independent_wildcard = true;
       if (o.str != to_lower(o.str)) allow_case_independent_wildcard = false;
       if (ends_with(allow_case_independent_wildcard ? to_lower(s) : s, o.str.substr(1)) &&
-          (!omatch || o.str.size() > omatch->str.size())) omatch = &o;
+          (!omatch || o.str.size() > omatch->str.size()))
+        omatch = &o;
       continue;
     }
     if (o.str[0] == '-' && skip_options) continue;

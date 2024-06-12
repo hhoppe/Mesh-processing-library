@@ -11,9 +11,8 @@ namespace {
 template <typename Range, typename = enable_if_range_t<Range>> Range truncate_small_floats(Range&& range) {
   using T = iterator_t<Range>;
   static_assert(std::is_floating_point_v<T>, "range must contain elements of type float/double");
-  for (auto& e : range) {
+  for (auto& e : range)
     if (abs(e) < 1e-6f) e = 0.f;
-  }
   return std::forward<Range>(range);
 }
 

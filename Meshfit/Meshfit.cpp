@@ -198,9 +198,8 @@ void compute_xform() {
 
 int get_nbv() {
   int nbv = 0;
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : mesh.vertices())
     if (mesh.is_boundary(v)) nbv++;
-  }
   return nbv;
 }
 
@@ -306,9 +305,7 @@ void remove_face(Face f) {
 }
 
 void mark_mesh() {
-  for (Edge e : mesh.edges()) {
-    mesh.set_string(e, mesh.flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
-  }
+  for (Edge e : mesh.edges()) mesh.set_string(e, mesh.flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
 }
 
 // *** projection
@@ -1058,9 +1055,8 @@ bool edge_sharp(Edge e) { return mesh.is_boundary(e) || mesh.flags(e).flag(GMesh
 
 int vertex_num_sharp_edges(Vertex v) {
   int nsharpe = 0;
-  for (Edge e : mesh.edges(v)) {
+  for (Edge e : mesh.edges(v))
     if (edge_sharp(e)) nsharpe++;
-  }
   return nsharpe;
 }
 
@@ -1108,9 +1104,8 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   }
   for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
   for (Vertex v : mesh.vertices(v1)) rssf += spring_energy(v1, v);
-  for (Vertex v : mesh.vertices(v2)) {
+  for (Vertex v : mesh.vertices(v2))
     if (v != v1) rssf += spring_energy(v2, v);
-  }
   // Find the best starting location by exploring one iteration.
   double minrss1 = BIGFLOAT;
   int minii = -1;
@@ -1175,9 +1170,8 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
       mesh.update_string(v1, "uv", csform_vec(str, uvn));
     }
   }
-  for (Vertex v : mesh.vertices(e)) {
+  for (Vertex v : mesh.vertices(e))
     for (Edge ee : mesh.edges(v)) ecand.remove(ee);
-  }
   remove_face(f1);
   if (f2) remove_face(f2);
   mesh.collapse_edge(e);  // v1 kept
@@ -1214,19 +1208,15 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   if (drss >= 0) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   HH_STIMER("__doespl");
-  for (Face f : mesh.faces(e)) {
-    for (Edge ee : mesh.edges(f)) {  // one duplication
+  for (Face f : mesh.faces(e))
+    for (Edge ee : mesh.edges(f))  // one duplication
       ecand.remove(ee);
-    }
-  }
   Vertex v = mesh.split_edge(e);
   mesh.set_point(v, newp);
   // add 8 edges (5 if boundary)
-  for (Face f : mesh.faces(v)) {
-    for (Edge ee : mesh.edges(f)) {  // four duplications
+  for (Face f : mesh.faces(v))
+    for (Edge ee : mesh.edges(f))  // four duplications
       ecand.add(ee);
-    }
-  }
   // Since ar_pts project onto f1 + f2 (which are still there), it is easy to update the projections:
   fit_ring(v, 2);
   cleanup_neighborhood(v, nri);

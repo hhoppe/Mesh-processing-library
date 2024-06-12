@@ -727,9 +727,7 @@ template <typename C> class stream_range {
   explicit stream_range(const C& c) : _c(c) {}
   friend std::ostream& operator<<(std::ostream& os, const stream_range& sc) {
     os << type_name<C>() << "={\n";
-    for (const auto& e : sc._c) {
-      os << "  " << e << (has_ostream_eol<decltype(e)>() ? "" : "\n");
-    }
+    for (const auto& e : sc._c) os << "  " << e << (has_ostream_eol<decltype(e)>() ? "" : "\n");
     return os << "}\n";
   }
 

@@ -499,9 +499,8 @@ void orient_tp() {
     while (!queue.empty()) {
       int i = queue.dequeue();
       assertx(setnotvis.remove(i));
-      for (int j : gpcpseudo->edges(i)) {
+      for (int j : gpcpseudo->edges(i))
         if (nodes.add(j)) queue.enqueue(j);
-      }
     }
     pScorr = make_unique<Stat>("Scorr", true);
     orient_set(nodes);

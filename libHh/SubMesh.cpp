@@ -63,9 +63,8 @@ Point Combvh::evaluate(const GMesh& mesh) const {
 // *** Mvcvh
 
 bool Mvcvh::is_convolution() const {
-  for (const Combvh& comb : values()) {
+  for (const Combvh& comb : values())
     if (!is_zero(comb.h)) return false;
-  }
   return true;
 }
 
@@ -148,9 +147,8 @@ SubMesh::SubMesh(GMesh& pmesh) : _omesh(pmesh) {
   }
   for (Vertex v : _m.vertices()) {
     int nsharpe = 0;
-    for (Edge e : _m.edges(v)) {
+    for (Edge e : _m.edges(v))
       if (sharp(e)) nsharpe++;
-    }
     vinfo(v).nume = _m.degree(v);
     vinfo(v).numsharpe = nsharpe;
   }
@@ -390,17 +388,15 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   Array<Face> arf(_m.faces());
   // Determine which edges will be subdivided
   Set<Edge> subde;  // edges to subdivide
-  for (Edge e : _m.edges()) {
+  for (Edge e : _m.edges())
     if (sharp(e) || edge_dihedral_angle_cos(_m, e) <= cosang) subde.enter(e);
-  }
   Queue<Face> queuef;
   for (Face f : arf) queuef.enqueue(f);
   while (!queuef.empty()) {
     Face f = queuef.dequeue();
     int nnew = 0;
-    for (Edge e : _m.edges(f)) {
+    for (Edge e : _m.edges(f))
       if (subde.contains(e)) nnew++;
-    }
     if (nnew != 2) continue;  // ok, no propagating changes
     for (Edge e : _m.edges(f)) {
       if (!subde.add(e)) continue;
@@ -475,9 +471,8 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   if (1) {  // need to fix up some values
     for (Vertex v : _m.vertices()) {
       int nsharpe = 0;
-      for (Edge e : _m.edges(v)) {
+      for (Edge e : _m.edges(v))
         if (sharp(e)) nsharpe++;
-      }
       vinfo(v).nume = _m.degree(v);
       vinfo(v).numsharpe = nsharpe;
     }

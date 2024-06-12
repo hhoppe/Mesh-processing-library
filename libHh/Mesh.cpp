@@ -217,9 +217,8 @@ int Mesh::degree(Vertex v) const {
 
 int Mesh::num_boundaries(Vertex v) const {
   int n = 0;
-  for (HEdge he : v->_arhe) {
+  for (HEdge he : v->_arhe)
     if (is_boundary(he)) n++;
-  }
   return n;
 }
 
@@ -341,9 +340,8 @@ int Mesh::num_vertices(Face f) const {
 }
 
 bool Mesh::is_boundary(Face f) const {
-  for (Vertex v : vertices(f)) {
+  for (Vertex v : vertices(f))
     if (is_boundary(v)) return true;
-  }
   return false;
 }
 
@@ -364,9 +362,8 @@ void Mesh::get_vertices(Face f, Array<Vertex>& va) const {
 Vertex Mesh::vertex(Face f, int i) const {
   assertx(i >= 0);
   int j = 0;
-  for (Vertex v : vertices(f)) {
+  for (Vertex v : vertices(f))
     if (j++ == i) return v;
-  }
   SHOW(i, num_vertices(f));
   assertnever("Face has too few vertices");
 }
@@ -479,12 +476,10 @@ bool Mesh::nice_edge_collapse(Edge e) const {
   // * 2 - For all vertices adjacent to both v1 and v2, exists a face
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
   Set<Vertex> set;
-  for (Vertex v : vertices(v1)) {
+  for (Vertex v : vertices(v1))
     if (v != vo1 && v != vo2) set.enter(v);
-  }
-  for (Vertex v : vertices(v2)) {
+  for (Vertex v : vertices(v2))
     if (v != vo1 && v != vo2 && !set.add(v)) return false;
-  }
   // * 3 - two small base cases: single face and tetrahedron
   if (set.num() == 2 && is_boundary(e)) return false;                        // single face
   if (set.num() == 2 && !is_boundary(v1) && !is_boundary(v2)) return false;  // tetrahedron
@@ -541,11 +536,9 @@ Vertex Mesh::split_edge(Edge e, int id) {
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);  // implies triangles
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (Face f : faces(e)) {
-    for (HEdge he : corners(f)) {
+  for (Face f : faces(e))
+    for (HEdge he : corners(f))
       if (he->_edge != e) ar_he.push(he);
-    }
-  }
   create_bogus_hedges(ar_he);  // note: temporarily causes mesh.ok() to fail
   // Destroy faces
   destroy_face(f1);
@@ -570,9 +563,8 @@ Edge Mesh::swap_edge(Edge e) {
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);  // implies triangles
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (Face f : faces(e)) {
+  for (Face f : faces(e))
     for (HEdge he : corners(f)) ar_he.push(he);
-  }
   create_bogus_hedges(ar_he);
   // Destroy faces
   destroy_face(f1);
@@ -735,9 +727,8 @@ bool Mesh::legal_coalesce_faces(Edge e) {
   Array<Vertex> va = gather_edge_coalesce_vertices(e);
   {  // check for duplicate vertices
     Set<Vertex> setv;
-    for (Vertex v : va) {
+    for (Vertex v : va)
       if (!setv.add(v)) return false;
-    }
   }
   {  // check that we get a "nice" face
     Face f1 = face1(e), f2 = face2(e);
@@ -777,9 +768,8 @@ Face Mesh::coalesce_faces(Edge e) {
   for (Vertex v : vertices(f2)) vbefore.add(v);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (Face f : faces(e)) {
+  for (Face f : faces(e))
     for (HEdge he : corners(f)) ar_he.push(he);
-  }
   create_bogus_hedges(ar_he);
   // Destroy faces
   destroy_face(f1);
@@ -801,9 +791,8 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
   if (debug() >= 1) valid(e);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (Face f : faces(e)) {
+  for (Face f : faces(e))
     for (HEdge he : corners(f)) ar_he.push(he);
-  }
   create_bogus_hedges(ar_he);
   Vertex v1 = vertex1(e), v2 = vertex2(e);
   Face f1 = face1(e), f2 = face2(e);
@@ -839,9 +828,8 @@ Edge Mesh::remove_vertex_between_edges(Vertex vr) {
   Array<Face> fa(ccw_faces(vr));
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
-  for (Face f : fa) {
+  for (Face f : fa)
     for (HEdge he : corners(f)) ar_he.push(he);
-  }
   create_bogus_hedges(ar_he);
   Vec2<Array<Vertex>> va;
   for_int(i, fa.num()) {
@@ -904,12 +892,10 @@ Array<Vertex> Mesh::fix_vertex(Vertex v) {
 }
 
 bool Mesh::is_nice() const {
-  for (Vertex v : vertices()) {
+  for (Vertex v : vertices())
     if (!is_nice(v)) return false;
-  }
-  for (Face f : faces()) {
+  for (Face f : faces())
     if (!is_nice(f)) return false;
-  }
   return true;
 }
 

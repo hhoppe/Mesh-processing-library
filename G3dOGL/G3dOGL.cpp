@@ -2300,9 +2300,8 @@ void process_print() {
 
 void toggle_attribute(Vec<bool, k_max_object>& attrib) {
   bool allvis = true;
-  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
+  for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++)
     if (g_xobs.defined(i) && !g_xobs.vis[i]) allvis = false;
-  }
   for_int(i, k_max_object) {
     if (!allvis && (!g_xobs.defined(i) || !g_xobs.vis[i])) continue;
     bool& val = attrib[i];

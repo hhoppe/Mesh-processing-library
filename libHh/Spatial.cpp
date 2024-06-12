@@ -30,9 +30,7 @@ namespace hh {
 // *** BPointSpatial
 
 void BPointSpatial::clear() {
-  for (auto& cell : _map.values()) {
-    HH_SSTAT(Spspcelln, cell.num());
-  }
+  for (auto& cell : _map.values()) HH_SSTAT(Spspcelln, cell.num());
   _map.clear();
 }
 
@@ -95,9 +93,7 @@ IPointSpatial::IPointSpatial(int gn, CArrayView<Point> arp) : Spatial(gn), _pp(a
 }
 
 void IPointSpatial::clear() {
-  for (auto& cell : _map.values()) {
-    HH_SSTAT(Spspcelln, cell.num());
-  }
+  for (auto& cell : _map.values()) HH_SSTAT(Spspcelln, cell.num());
   _map.clear();
 }
 

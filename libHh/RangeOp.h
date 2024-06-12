@@ -382,9 +382,8 @@ SumType product(const Range& range) {
 
 // Are all elements exactly zero?
 template <typename Range, typename = enable_if_range_t<Range>> bool is_zero(const Range& range) {
-  for (const auto& e : range) {
+  for (const auto& e : range)
     if (e) return false;
-  }
   return true;
 }
 
@@ -484,9 +483,8 @@ int compare(const Range1& range1, const Range2& range2, const Iterator& toleranc
 // Check if a container contains an element.
 template <typename Range, typename = enable_if_range_t<Range>>
 bool contains(const Range& range, const iterator_t<Range>& elem) {
-  for (const iterator_t<Range>& e : range) {
+  for (const iterator_t<Range>& e : range)
     if (e == elem) return true;
-  }
   return false;
 }
 

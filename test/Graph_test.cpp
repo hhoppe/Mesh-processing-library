@@ -10,9 +10,8 @@ void show_graph(const Graph<int>& g) {
   SHOW("Graph: vertices {");
   for (int i : sort(Array<int>(g.vertices().begin(), g.vertices().end()))) showf("  vertex %d\n", i);
   SHOW("}, edges {");
-  for (int i : sort(Array<int>(g.vertices().begin(), g.vertices().end()))) {
+  for (int i : sort(Array<int>(g.vertices().begin(), g.vertices().end())))
     for (int j : sort(Array<int>(g.edges(i).begin(), g.edges(i).end()))) showf(" edge (%d, %d)\n", i, j);
-  }
   SHOW("}");
 }
 

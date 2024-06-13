@@ -596,22 +596,25 @@ template <typename T> T assertw_aux(T&& val, const char* s) {
 
 void show_cerr_and_debug(const string& s);
 
-#define HH_SHOW_0(sargs, prec, arg1) hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), prec)
+#define HH_SHOW_0(sargs, high_precision, arg1) \
+  hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), high_precision)
 
-#define HH_SHOW_1(sargs, prec, ...)                                            \
-  do {                                                                         \
-    std::ostringstream HH_ID(oss);                                             \
-    if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
-    hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
+#define HH_SHOW_1(sargs, high_precision, ...)                                            \
+  do {                                                                                   \
+    std::ostringstream HH_ID(oss);                                                       \
+    if (high_precision) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
+    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";            \
+    hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());                         \
   } while (false)
-// C++20 allows lambda capture of structured bindings, so this would work and be an expression rather than statement:
-// #define HH_SHOW_1(sargs, prec, ...)                                            \
-//   [&]() {                                                                      \
-//     std::ostringstream HH_ID(oss);                                             \
-//     if (prec) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";  \
-//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());               \
+
+// C++20 allows lambda capture of structured bindings, so this would let it be an expression rather than a statement.
+// However, CONFIG=clang 17.0 (2023) with -std=c++20: "capturing a structured binding is not yet supported in OpenMP".
+// #define HH_SHOW_1(sargs, high_precision, ...)                                            \
+//   [&]() {                                                                                \
+//     std::ostringstream HH_ID(oss);                                                       \
+//     if (high_precision) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
+//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";            \
+//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());                         \
 //   }()
 
 #define HH_SHOW_M(x) (#x[0] == '"' ? "" : #x "=") << (x)

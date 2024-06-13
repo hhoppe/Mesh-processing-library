@@ -1,6 +1,8 @@
 rel ?= 1#  0=debug or 1=release (usually 1).
 x64 = 1#  32-bit is not supported by mingw64.
 
+# CXX_STD = c++2a#  Compatible with -std=c++20
+
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
 # To locate: PATH="/Program Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin:$PATH" which g++

@@ -23,53 +23,63 @@ namespace hh {
 
 namespace details {
 template <typename T> struct has_begin;
+template <typename T> struct range_iterator;
 template <typename T> struct range_value;
 template <typename T, typename = std::void_t<>> struct range_has_size;
-template <typename T> struct has_random_access;
 }  // namespace details
 
-// Determine if type T is a range (i.e. supports begin()).
+// Identify the category of Iterator.
+template <typename Iterator> using iterator_category_t = typename std::iterator_traits<Iterator>::iterator_category;
+
+// Determine if Iterator supports random access.
+template <typename Iterator>
+inline constexpr bool random_access_iterator_v =
+    std::is_same_v<iterator_category_t<Iterator>, std::random_access_iterator_tag>;
+
+// Determine if type T is a range (i.e. supports begin() as either a member or friend function).
 template <typename T> inline constexpr bool is_range_v = details::has_begin<T>::value;
 
 // SFINAE construct to enable a member function only if type T is a range (i.e. supports begin()).
 template <typename T> using enable_if_range_t = std::enable_if_t<is_range_v<T>>;
 
-// Identify the type of element in given range type.
+// Identify the Iterator type for Range.
+template <typename Range> using range_iterator_t = typename details::range_iterator<Range>::type;
+
+// Identify the element type in Range.
 template <typename Range> using range_value_t = typename details::range_value<Range>::type;
 
-// Detect if Range has a size() member function.
+// Detect if Range supports size() as either a member or friend function.
 template <typename Range> inline constexpr bool range_has_size_v = details::range_has_size<Range>::value;
 
-// Detect if Range supports random-access iterators.
-template <typename Range> inline constexpr bool range_has_random_access_v = details::has_random_access<Range>::value;
+// Detect if the iterators for Range support random access.
+template <typename Range>
+inline constexpr bool random_access_range_v = random_access_iterator_v<range_iterator_t<Range>>;
 
 //----------------------------------------------------------------------------
 
 namespace details {
 
+// Fallbacks for Argument-Dependent Lookup (ADL):
+using std::begin;
+using std::size;
+
 // https://stackoverflow.com/questions/9402476
-using std::begin;                                                  // fallback for ADL
 template <typename T> auto adl_begin(T& t) -> decltype(begin(t));  // only for type signature
 template <typename T> auto adl_begin(const T& t) -> decltype(begin(t));
+
 template <typename T> struct has_begin {  // trait to identify if T has a begin(T) function.
   template <typename U> static char deduce(decltype(adl_begin(std::declval<const U&>()))*);
   template <typename> static void deduce(...);
   static constexpr bool value = !std::is_void_v<decltype(deduce<T>(nullptr))>;
 };
 
-template <typename Range> struct range_value {
-  using type = std::decay_t<decltype(*begin(std::declval<Range&>()))>;
-};
+template <typename Range> struct range_iterator { using type = decltype(begin(std::declval<Range>())); };
+
+template <typename Range> struct range_value { using type = std::decay_t<decltype(*begin(std::declval<Range&>()))>; };
 
 template <typename, typename> struct range_has_size : std::false_type {};
 template <typename Range>
-struct range_has_size<Range, std::void_t<decltype(std::declval<Range>().size())>> : std::true_type {};
-
-template <typename Range> using range_iterator_t = decltype(std::begin(std::declval<Range>()));
-template <typename Iterator> using iterator_category_t = typename std::iterator_traits<Iterator>::iterator_category;
-template <typename Range>
-struct has_random_access
-    : std::is_same<iterator_category_t<range_iterator_t<Range>>, std::random_access_iterator_tag> {};
+struct range_has_size<Range, std::void_t<decltype(size(std::declval<Range>()))>> : std::true_type {};
 
 }  // namespace details
 

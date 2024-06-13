@@ -125,7 +125,7 @@ override_goal := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),$(if $(.DEFAULT_GOAL),$(.D
 $(override_goal):
 #	for a in $(build_configs); do echo "**** CONFIG=$$a"; make CONFIG=$$a -j $(MAKECMDGOALS); sleep 1; done
 #	$(foreach a,$(build_configs),echo "**** CONFIG=$(a)" && $(MAKE) CONFIG=$(a) -j $(MAKECMDGOALS) && sleep 1 && ) true
-	@RESULT=0; $(foreach a,$(if $(filter clean deepclean,$(MAKECMDGOALS)),$(configs),$(build_configs)),echo "**** CONFIG=$(a)"; $(MAKE) CONFIG=$(a) $(MAKECMDGOALS); RESULT=$$((RESULT + $$?)); sleep $(if $(filter clean deepclean,$(MAKECMDGOALS)),0,0.8); ) (exit $$RESULT)
+	@RESULT=0; $(foreach a,$(if $(filter clean deepclean,$(MAKECMDGOALS)),$(configs),$(build_configs)),$(if $(filter clean deepclean,$(MAKECMDGOALS)),,echo "**** CONFIG=$(a)"; )$(MAKE) CONFIG=$(a) $(MAKECMDGOALS); RESULT=$$((RESULT + $$?)); sleep $(if $(filter clean deepclean,$(MAKECMDGOALS)),0,0.8); ) (exit $$RESULT)
 .PHONY: $(override_goal)
 
 else  # ifeq ($(CONFIG),all)  # For the rest of this file.

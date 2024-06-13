@@ -369,6 +369,11 @@ template <int D> class Vec_range {
   Vec_range(const Vec<int, D>& uU) : _uU(uU) {}
   Vec_iterator<D> begin() const { return Vec_iterator<D>(ntimes<D>(0), _uU); }
   Vec_iterator<D> end() const { return Vec_iterator<D>(_uU, _uU); }
+  size_t size() const {
+    size_t product = 1;
+    for_int(c, D) product *= _uU[c];
+    return product;
+  }
 
  private:
   Vec<int, D> _uU;
@@ -413,6 +418,11 @@ template <int D> class VecL_range {
   VecL_range(const Vec<int, D>& uL, const Vec<int, D>& uU) : _uL(uL), _uU(uU) {}
   VecL_iterator<D> begin() const { return VecL_iterator<D>(_uL, _uU); }
   VecL_iterator<D> end() const { return VecL_iterator<D>(_uU, _uU); }
+  size_t size() const {
+    size_t product = 1;
+    for_int(c, D) product *= _uU[c] - _uL[c];
+    return product;
+  }
 
  private:
   Vec<int, D> _uL, _uU;

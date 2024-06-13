@@ -29,7 +29,7 @@ struct Pixel : Vec4<uint8_t> {
 };
 
 template <typename Range, typename = enable_if_range_t<Range>> void convert_rgba_bgra(Range&& range) {
-  static_assert(std::is_same_v<iterator_t<Range>, Pixel>);
+  static_assert(std::is_same_v<range_value_t<Range>, Pixel>);
   for (Pixel& p : range) std::swap(p[0], p[2]);
 }
 

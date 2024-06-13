@@ -1045,16 +1045,12 @@ bool Mesh::valid(Corner c) const {
 
 // *** Iterators
 
-Mesh::OrderedVertices_range::OrderedVertices_range(const Mesh& mesh) {
-  _vertices.reserve(mesh.num_vertices());
-  for (Vertex v : mesh.vertices()) _vertices.push(v);
+Mesh::OrderedVertices_range::OrderedVertices_range(const Mesh& mesh) : _vertices(mesh.vertices()) {
   const auto by_increasing_vertex_id = [&](Vertex v1, Vertex v2) { return mesh.vertex_id(v1) < mesh.vertex_id(v2); };
   sort(_vertices, by_increasing_vertex_id);
 }
 
-Mesh::OrderedFaces_range::OrderedFaces_range(const Mesh& mesh) {
-  _faces.reserve(mesh.num_faces());
-  for (Face f : mesh.faces()) _faces.push(f);
+Mesh::OrderedFaces_range::OrderedFaces_range(const Mesh& mesh) : _faces(mesh.faces()) {
   const auto by_increasing_face_id = [&](Face f1, Face f2) { return mesh.face_id(f1) < mesh.face_id(f2); };
   sort(_faces, by_increasing_face_id);
 }

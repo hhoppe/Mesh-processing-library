@@ -204,7 +204,7 @@ template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
     case 4: return csform(str, "(%g %g %g %g)", vec[0], vec[1], vec[2], vec[3]);
     default: HH_UNREACHABLE;
   }
-#else  // C++17.
+#else  // C++17 std::to_chars().
   constexpr int size = 100;
   static_assert(n * 15 < size);
   str.resize(size);

@@ -17,7 +17,7 @@ class Polygon : public PArray<Point, 4> {
   Polygon() = default;
   Polygon(const Polygon& p) = default;
   Polygon& operator=(const Polygon& p) = default;
-  using base::base;               // C++11 inherit constructors
+  using base::base;               // Inherit constructors.
   Vector get_normal_dir() const;  // non-normalized normal
   Vector get_normal() const;      // user should check !is_zero()
   float get_planec(const Vector& pnor) const;

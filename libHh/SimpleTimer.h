@@ -53,7 +53,8 @@ class SimpleTimer {
 //----------------------------------------------------------------------------
 
 #if 0 && _MSC_VER >= 1900
-#define HH_USE_HIGH_RESOLUTION_CLOCK  // C++11 (but slightly slower)
+// Standard C++.  However, it is less efficient and less precise than QueryPerformanceCounter() or clock_gettime().
+#define HH_USE_HIGH_RESOLUTION_CLOCK
 #endif
 
 #if defined(HH_USE_HIGH_RESOLUTION_CLOCK)

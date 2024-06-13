@@ -183,8 +183,13 @@ template <typename T> class Array : public ArrayView<T> {
     if constexpr (std::is_same_v<iterator_category, std::random_access_iterator_tag>) reserve(narrow_cast<int>(e - b));
     for (; b != e; ++b) push(*b);
   }
-  template <typename Range, typename = enable_if_range_t<Range>>
-  explicit Array(Range&& range) : Array(range.begin(), range.end()) {}
+  template <typename Range, typename = enable_if_range_t<Range>> explicit Array(Range&& range) {
+    if constexpr (range_has_size_v<Range>)
+      reserve(narrow_cast<int>(range.size()));
+    else if constexpr (range_has_random_access_v<Range>)
+      reserve(narrow_cast<int>(range.end() - range.begin()));
+    for (const auto& e : range) push(e);
+  }
   ~Array() { delete[] _a; }
   type& operator=(CArrayView<T> ar) {
     init(ar.num());

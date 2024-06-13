@@ -225,11 +225,12 @@ template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
                         uint64_t estimated_cycles_per_element = k_parallelism_always) {
   assertx(num_threads >= 1);
-  using std::begin, std::end;
+  using std::begin, std::end, std::size;
   const auto begin_range = begin(range);
   const auto end_range = end(range);
+  // const auto num_elements = end_range - begin_range;
+  const auto num_elements = size(range);  // Note that num_elements be larger than size_t (e.g., uint64_t on win32).
   using Iterator = decltype(begin_range);
-  const auto num_elements = end_range - begin_range;  // Could be larger than size_t (e.g., uint64_t on win32).
   const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =

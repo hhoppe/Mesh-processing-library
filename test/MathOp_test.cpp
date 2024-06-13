@@ -8,17 +8,17 @@ using namespace hh;
 // (float)-zero        0x80000000  (-1/1e20/1e20)
 // (float)-1           0xbf800000
 // (float)-3           0xc0400000
-// (float)1.#INF       0x7f800000  (+1/0)   (C++11: INFINITY)
-// (float)-1.#INF      0xff800000  (-1/0)
-// (float)-1.#IND      0xffc00000  (acos(2), 0/0)  (std::isnan())
-//                     0x00400000 always forced on by hardware for any nanf (x86)
+// (float)1.#INF       0x7f800000  (+1.f/0.f)  (C++11: INFINITY, std::numeric_limits<float>::infinity())
+// (float)-1.#INF      0xff800000  (-1.f/0.f)
+// (float)-1.#IND      0xffc00000  (0.f/0.f)  (C++11: NAN, std::numeric_limits<float>::quiet_NaN(), std::nanf(""))
+//                     0x00400000  always forced on by hardware for any nanf (x86)
 
 // Create an infinite float value.
 inline float create_infinityf() {
   if (0) {
-    // return INFINITY;            // C++11; warning: overflow in constant arithmetic
+    // return INFINITY;            // Warning: overflow in constant arithmetic.
   } else if (1) {
-    return std::numeric_limits<float>::infinity();  // also C++11
+    return std::numeric_limits<float>::infinity();
   } else {
     union {
       float f;
@@ -31,7 +31,7 @@ inline float create_infinityf() {
 
 // Create a not-a-number float value which encodes integer i (0..4194303 or 22 bits).
 inline float create_nanf(unsigned i = 0) {
-  if (0 && i == 0) return NAN;  // C++11, equivalent to std::numeric_limits<float>::quiet_NaN()
+  if (0 && i == 0) return NAN;  // Equivalent to std::numeric_limits<float>::quiet_NaN().
   ASSERTXX((i & 0xffc00000) == 0);
   // Could in principle retrieve 0x80000000 (sign) bit from i and use it, but forget it.
   union {

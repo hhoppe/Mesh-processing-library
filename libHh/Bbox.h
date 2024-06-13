@@ -130,7 +130,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
 template <typename T, int n> Bbox(const Vec<T, n>&, const Vec<T, n>&) -> Bbox<T, n>;
 template <typename T, int n> Bbox(const Vec2<Vec<T, n>>&) -> Bbox<T, n>;
 
-template <typename Range, typename = enable_if_range_t<Range>, typename VecT = iterator_t<Range>>
+template <typename Range, typename = enable_if_range_t<Range>, typename VecT = range_value_t<Range>>
 Bbox(Range&& range) -> Bbox<typename VecT::value_type, VecT::Num>;
 
 }  // namespace hh

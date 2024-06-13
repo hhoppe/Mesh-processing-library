@@ -1035,8 +1035,8 @@ void unload_current_object() {
   }
 }
 
-template <typename R> Array<float> to_luminance(const R& range) {
-  static_assert(std::is_same_v<iterator_t<R>, Pixel>);
+template <typename Range> Array<float> to_luminance(const Range& range) {
+  static_assert(std::is_same_v<range_value_t<Range>, Pixel>);
   Array<float> ar;
   ar.reserve(int(distance(range)));
   for (const Pixel& pix : range) ar.push(RGB_to_Y(pix));

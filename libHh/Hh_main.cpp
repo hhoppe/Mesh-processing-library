@@ -40,7 +40,8 @@ double get_precise_time() {
 }
 
 #if 0 && _MSC_VER >= 1900
-#define USE_HIGH_RESOLUTION_CLOCK  // C++11 (slightly slower)
+// Standard C++.  However, it is less efficient and less precise than QueryPerformanceCounter() or clock_gettime().
+#define USE_HIGH_RESOLUTION_CLOCK
 #endif
 
 int64_t get_precise_counter() {
@@ -99,8 +100,8 @@ void my_sleep(double sec) {
     SHOW("my_sleep", sec);
     sec = 0.;
   }
-#if 0  // C++11
-  // On Windows, only precise up to 1/60 sec.
+#if 0
+  // Standard C++.  However, on Windows it is only precise up to 1/60 sec.
   std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec});
 #elif defined(_WIN32)
   if (!sec) {

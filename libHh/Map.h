@@ -152,6 +152,7 @@ class Map {
     keys_range(const type& map) : _map(map) {}
     keys_iterator begin() const { return keys_iterator(_map.begin()); }
     keys_iterator end() const { return keys_iterator(_map.end()); }
+    size_t size() const { return _map.size(); }
 
    private:
     const type& _map;
@@ -183,6 +184,7 @@ class Map {
     cvalues_range(const type& map) : _map(map) {}
     cvalues_iterator begin() const { return cvalues_iterator(_map.begin()); }
     cvalues_iterator end() const { return cvalues_iterator(_map.end()); }
+    size_t size() const { return _map.size(); }
 
    private:
     const type& _map;
@@ -214,6 +216,7 @@ class Map {
     values_range(type& map) : _map(map) {}
     values_iterator begin() const { return values_iterator(_map._map.begin()); }
     values_iterator end() const { return values_iterator(_map._map.end()); }
+    size_t size() const { return _map.size(); }
 
    private:
     type& _map;

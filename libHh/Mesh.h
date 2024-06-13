@@ -371,6 +371,7 @@ class Mesh : noncopyable {
     Edges_range(const Mesh& m) : _m(m) {}
     Edges_iterator begin() const { return Edges_iterator(_m, true); }
     Edges_iterator end() const { return Edges_iterator(_m, false); }
+    int size() const { return _m.num_edges(); }
 
    private:
     const Mesh& _m;
@@ -381,6 +382,7 @@ class Mesh : noncopyable {
     OrderedVertices_range(const Mesh& mesh);
     Container::iterator begin() const { return const_cast<Container&>(_vertices).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_vertices).end(); }
+    int size() const { return _vertices.num(); }
 
    private:
     Container _vertices;
@@ -391,6 +393,7 @@ class Mesh : noncopyable {
     OrderedFaces_range(const Mesh& mesh);
     Container::iterator begin() const { return const_cast<Container&>(_faces).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_faces).end(); }
+    int size() const { return _faces.num(); }
 
    private:
     Container _faces;
@@ -461,6 +464,7 @@ class Mesh : noncopyable {
     VF_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VF_iterator begin() const { return VF_iterator(_ar.begin()); }
     VF_iterator end() const { return VF_iterator(_ar.end()); }
+    int size() const { return _ar.num(); }
 
    private:
     CArrayView<HEdge> _ar;
@@ -498,6 +502,7 @@ class Mesh : noncopyable {
     VE_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VE_iterator begin() const { return VE_iterator(_ar.begin()); }
     VE_iterator end() const { return VE_iterator(_ar.end()); }
+    // Note that size() is not trivially computable.
 
    private:
     CArrayView<HEdge> _ar;
@@ -529,6 +534,7 @@ class Mesh : noncopyable {
     VC_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VC_iterator begin() const { return VC_iterator(_ar.begin()); }
     VC_iterator end() const { return VC_iterator(_ar.end()); }
+    int size() const { return _ar.num(); }
 
    private:
     CArrayView<HEdge> _ar;
@@ -564,6 +570,7 @@ class Mesh : noncopyable {
     FV_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FV_iterator begin() const { return FV_iterator(_herep, true); }
     FV_iterator end() const { return FV_iterator(_herep, false); }
+    // Note that size() is not trivially computable.
 
    private:
     HEdge _herep;
@@ -611,6 +618,7 @@ class Mesh : noncopyable {
     FF_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FF_iterator begin() const { return FF_iterator(_herep, true); }
     FF_iterator end() const { return FF_iterator(_herep, false); }
+    // Note that size() is not trivially computable.
 
    private:
     HEdge _herep;
@@ -644,6 +652,7 @@ class Mesh : noncopyable {
     FE_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FE_iterator begin() const { return FE_iterator(_herep, true); }
     FE_iterator end() const { return FE_iterator(_herep, false); }
+    // Note that size() is not trivially computable.
 
    private:
     HEdge _herep;
@@ -677,6 +686,7 @@ class Mesh : noncopyable {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FC_iterator begin() const { return FC_iterator(_herep, true); }
     FC_iterator end() const { return FC_iterator(_herep, false); }
+    // Note that size() is not trivially computable.
 
    private:
     HEdge _herep;
@@ -692,7 +702,7 @@ class Mesh : noncopyable {
     }
   };
 
-  struct EF_range : PArray<Face, 2> {  // 0 or 1 face
+  struct EF_range : PArray<Face, 2> {  // 1 or 2 faces
     EF_range(const Mesh& m, Edge e) {
       HEdge he = m.herep(e);
       push(he->_face);

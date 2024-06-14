@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/GMesh.h"
+
+#include "libHh/FileIO.h"
 using namespace hh;
 
 namespace {
@@ -76,7 +78,8 @@ int main() {
     SHOW(GMesh::string_update(s3, "sharp", ""));
   }
   {
-    GMesh mesh(std::cin);
+    GMesh mesh;
+    mesh.read(RFile("-")());
     showmesh(mesh);
     SHOW("original");
     mesh.write(std::cout);

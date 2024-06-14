@@ -766,7 +766,8 @@ int SimplicialComplex::compare_normal(const GMesh& mesh, Corner c1, Corner c2) {
 }
 
 void SimplicialComplex::readGMesh(std::istream& is) {
-  GMesh mesh(is);
+  GMesh mesh;
+  mesh.read(is);
   Simplex s0, s1, s2;
   Map<Vertex, Simplex> v2s0;
   Map<Edge, Simplex> e2s1;

@@ -358,7 +358,7 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 
 // I/O
 
-GMesh::GMesh(std::istream& is) {
+void GMesh::read(std::istream& is) {
   for (string line; my_getline(is, line);) read_line(const_cast<char*>(line.c_str()));
   if (debug() >= 1) ok();
 }

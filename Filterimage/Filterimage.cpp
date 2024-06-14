@@ -3303,7 +3303,8 @@ void do_structuretransfer(Args& args) {
 void do_resamplemesh(Args& args) {
   string mfile = args.get_filename();
   assertx(min(image.dims()) >= 2);
-  GMesh mesh{RFile(mfile)()};
+  GMesh mesh;
+  mesh.read(RFile(mfile)());
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = g_filterbs;

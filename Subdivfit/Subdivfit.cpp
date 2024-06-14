@@ -99,7 +99,7 @@ void mark_mesh(GMesh& m) {
 
 void do_mfilename(Args& args) {
   assertx(!gmesh.num_vertices());
-  gmesh = GMesh(RFile(args.get_filename())());
+  gmesh.read(RFile(args.get_filename())());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
   for (Vertex v : gmesh.vertices()) gbbox.union_with(gmesh.point(v));
   if (getenv_bool("FORCE_GLOBAL_PROJECT")) {

@@ -310,7 +310,7 @@ class GxObject {
     assertx(!_opened);
     return _arn;
   }
-  GMesh* pmesh{nullptr};
+  GMesh* _pmesh{nullptr};
 
  private:
   bool _opened{false};
@@ -2119,7 +2119,7 @@ void draw_all() {
     is_init = true;
     for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
       if (!setup_ob(i)) continue;
-      if (g_xobs[i].pmesh) mesh_init(*g_xobs[i].pmesh);
+      if (g_xobs[i]._pmesh) mesh_init(*g_xobs[i]._pmesh);
     }
   }
   static const bool no_dl = getenv_bool("G3D_NO_DL");
@@ -2142,7 +2142,7 @@ void draw_all() {
     //   .tmpm textured     6.4 -> 53.3
     //
     // If the mesh has been modified since cached, turn off all caching.
-    if (use_dl && svalid_dl.contains(i) && g_xobs[i].pmesh && !g_xobs[i].pmesh->gflags().flag(g3d::mflag_ok)) {
+    if (use_dl && svalid_dl.contains(i) && g_xobs[i]._pmesh && !g_xobs[i]._pmesh->gflags().flag(g3d::mflag_ok)) {
       svalid_dl.remove(i);
       static const bool g3d_force_dl1 = getenv_bool("G3D_FORCE_DL1");
       if (!g3d_force_dl1) use_dl = false;
@@ -2185,10 +2185,10 @@ void draw_all() {
       draw_ply();
 #endif
     } else {
-      if (g_xobs[i].pmesh) draw_mesh(*g_xobs[i].pmesh);
+      if (g_xobs[i]._pmesh) draw_mesh(*g_xobs[i]._pmesh);
       draw_list(g_xobs[i].traverse());
     }
-    if (g_xobs[i].pmesh) g_xobs[i].pmesh->gflags().flag(g3d::mflag_ok) = true;  // if sc_mode, psc_mode, etc.
+    if (g_xobs[i]._pmesh) g_xobs[i]._pmesh->gflags().flag(g3d::mflag_ok) = true;  // if sc_mode, psc_mode, etc.
     //
     if (defining_dl) {
       defining_dl = false;
@@ -2437,7 +2437,7 @@ void GxObject::close() {
 
 void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.f is old
   use_dl = false;
-  GMesh& mesh = *pmesh;
+  GMesh& mesh = *_pmesh;
   mesh_init(mesh);
   bool has_v_color = mesh.gflags().flag(mflag_v_colors);
   bool has_c_color = mesh.gflags().flag(mflag_c_colors);
@@ -3119,7 +3119,7 @@ void HB::close_segment() { g_xobs.close(); }
 
 void HB::segment_attach_mesh(int segn, GMesh* pmesh) {
   if (!assertw(g_xobs.defined(segn))) return;
-  g_xobs[segn].pmesh = pmesh;
+  g_xobs[segn]._pmesh = pmesh;
 }
 
 void HB::make_segment_link(int oldsegn, int newsegn) { g_xobs.make_link(oldsegn, newsegn); }

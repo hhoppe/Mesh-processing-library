@@ -181,7 +181,7 @@ class GxObject {
     assertx(!_opened);
     return _arn;
   }
-  GMesh* mesh{nullptr};
+  GMesh* _mesh{nullptr};
 
  private:
   bool _opened{false};
@@ -747,7 +747,7 @@ void draw_all() {
       if (!setup_ob(i)) continue;
       frame++;
       enter_hidden_polygons(g_xobs[i].traverse());
-      if (g_xobs[i].mesh) enter_mesh_hidden_polygons(*g_xobs[i].mesh);
+      if (g_xobs[i]._mesh) enter_mesh_hidden_polygons(*g_xobs[i]._mesh);
     }
     frame = oldframe;
   }
@@ -757,7 +757,7 @@ void draw_all() {
     if (!setup_ob(i)) continue;
     frame++;
     draw_list(g_xobs[i].traverse());
-    if (g_xobs[i].mesh) draw_mesh(*g_xobs[i].mesh);
+    if (g_xobs[i]._mesh) draw_mesh(*g_xobs[i]._mesh);
     if (postscript) postscript->flush_write("% EndG3dObject\n");
   }
   if (lhlrmode) {
@@ -1226,7 +1226,7 @@ void HB::segment_add_object(const A3dElem& el) { g_xobs.add(el); }
 
 void HB::close_segment() { g_xobs.close(); }
 
-void HB::segment_attach_mesh(int segn, GMesh* pmesh) { g_xobs[segn].mesh = pmesh; }
+void HB::segment_attach_mesh(int segn, GMesh* pmesh) { g_xobs[segn]._mesh = pmesh; }
 
 void HB::make_segment_link(int oldsegn, int newsegn) { g_xobs.make_link(oldsegn, newsegn); }
 

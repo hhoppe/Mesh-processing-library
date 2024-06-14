@@ -52,8 +52,8 @@ int main(int argc, const char** argv) {
       assertx(my_getline(fi(), line));
       if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
     }
-    mesh = GMesh(fi());
     showff("%s", args.header().c_str());
+    mesh.read(fi());
   }
   args.parse();
   hh_clean_up();

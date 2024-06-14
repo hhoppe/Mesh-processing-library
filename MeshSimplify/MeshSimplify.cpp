@@ -4943,7 +4943,7 @@ int main(int argc, const char** argv) {
       if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
     }
     showdf("%s", args.header().c_str());
-    mesh = GMesh(fi());
+    mesh.read(fi());
     orig_nf = mesh.num_faces();
   }
   args.parse();

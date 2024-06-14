@@ -632,4 +632,9 @@ line2)";
     SHOW(sizeof(Array<char>));       // 24 on win; 16 on mingw (pleasant surprise), 12 on clang (32-bit)
                                      // see ~/git/hh_src/test/native/bug_size.cpp
   }
+  {
+    int i = 3, j = 4;
+    assertx(SSHOW(i) == "i = 3");
+    assertx(SSHOW(i, j) == "i=3 j=4");
+  }
 }

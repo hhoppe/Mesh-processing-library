@@ -287,19 +287,27 @@ extern int g_unoptimized_zero;
   showf("%s: Argument '%s' ambiguous, '%s' assumed\n", argv[0], arg.c_str(), assumed.c_str());
   std::cerr << sform(" Endprogram: %dgons %dlines\n", ngons, nlines);
   SHOW(x, y, x * y);
-  SHOW_PRECISE(point + vector);  // Show value with greater precision.
-  SHOWL;                         // Show current filename and line number.
+  Point point2 = SHOW_PRECISE(point + vector);  // Show value with greater precision.
+  SHOWL;                                        // Show current filename and line number.
+  assertnever("Unexpected " + SSHOW(point, vector));
 }
 #endif
 
-// With one expression, show "expr = value" on stderr and return expr; may require parentheses: SHOW((ntimes<3>(1))).
-// With multiple expressions, show on stderr a sequence of "expr=value" on a single line.
+// With one expression `expr1`, show "expr1 = value1\n" on std::cerr and return expr.
+// With multiple expressions, show "expr1=value1 expr2=value ...\n" on std::cerr and return void.
 #define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
-// Show expression(s) like SHOW(expr) but with more digits of floating-point precision.
+// Show expression(s) on stcerr like SHOW(...) but with more digits of floating-point precision.
 #define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
-// Show current file and line number.
+// SSHOW(expr1, ...) returns a string "expr1 = value1" (single arg) or "expr1=value1 expr2=value2 ..." (multiple args).
+// All the *SHOW*() macros may require extra inner parentheses, e.g., SSHOW((ntimes<3>(1))).
+#define SSHOW(...) HH_PRIMITIVE_CAT((HH_SSHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
+
+// Return a string like SSHOW(...) but with more digits of floating-point precision.
+#define SSHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SSHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
+
+// Show current file and line number on std::cerr.
 #define SHOWL \
   hh::details::show_cerr_and_debug(hh::details::forward_slash("Now in " __FILE__ " at line " HH_STR2(__LINE__) "\n"))
 
@@ -332,7 +340,7 @@ template <typename T> struct has_ostream_eol_aux { static constexpr bool value =
     static constexpr bool value = true;     \
   }
 
-// Identifies if a type T ends its stream output (i.e. operator<<(std::ostream)) with a newline character "\n".
+// Identifies if a type T ends its stream output (i.e. operator<<(std::ostream)) with a newline character '\n'.
 template <typename T> constexpr bool has_ostream_eol() {
   // (function template cannot partially specialize, e.g. Array<T>)
   return has_ostream_eol_aux<std::remove_cv_t<std::remove_reference_t<T>>>::value;
@@ -477,7 +485,7 @@ template <typename T> T* aligned_new(size_t n);
 // Deallocate aligned memory.
 template <typename T> void aligned_delete(T* p);
 
-// Read a line of input (trailing "\n" is discarded).
+// Read a line of input (trailing '\n' is discarded).
 std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings = true);
 
 // Set an environment variable; the variable is removed from the environment if value == "".
@@ -596,28 +604,34 @@ template <typename T> T assertw_aux(T&& val, const char* s) {
 
 void show_cerr_and_debug(const string& s);
 
+class MyOStringStream {
+ public:
+  MyOStringStream(bool high_precision) {
+    if (high_precision) _oss.precision(std::numeric_limits<double>::max_digits10);
+  }
+  template <typename T> MyOStringStream& append(const T& value) {
+    _oss << value;
+    return *this;
+  }
+  std::string str() const { return _oss.str(); }
+
+ private:
+  std::ostringstream _oss;
+};
+
 #define HH_SHOW_0(sargs, high_precision, arg1) \
   hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), high_precision)
 
-#define HH_SHOW_1(sargs, high_precision, ...)                                            \
-  do {                                                                                   \
-    std::ostringstream HH_ID(oss);                                                       \
-    if (high_precision) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-    HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";            \
-    hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());                         \
-  } while (false)
+#define HH_SHOW_1(sargs, high_precision, ...) \
+  hh::details::show_cerr_and_debug(HH_SSHOW_1(sargs, high_precision, __VA_ARGS__) + '\n')
 
-// C++20 allows lambda capture of structured bindings, so this would let it be an expression rather than a statement.
-// However, CONFIG=clang 17.0 (2023) with -std=c++20: "capturing a structured binding is not yet supported in OpenMP".
-// #define HH_SHOW_1(sargs, high_precision, ...)                                            \
-//   [&]() {                                                                                \
-//     std::ostringstream HH_ID(oss);                                                       \
-//     if (high_precision) HH_ID(oss).precision(std::numeric_limits<double>::max_digits10); \
-//     HH_ID(oss) << HH_MAP_REDUCE((HH_SHOW_M, << " " <<, __VA_ARGS__)) << "\n";            \
-//     hh::details::show_cerr_and_debug(assertx(HH_ID(oss)).str());                         \
-//   }()
+#define HH_SSHOW_0(sargs, high_precision, arg1) \
+  hh::details::MyOStringStream{high_precision}.append(sargs " = ").append(arg1).str()
 
-#define HH_SHOW_M(x) (#x[0] == '"' ? "" : #x "=") << (x)
+#define HH_SSHOW_1(sargs, high_precision, ...) \
+  hh::details::MyOStringStream{high_precision} HH_MAP_REDUCE((HH_SSHOW_M, .append(' '), __VA_ARGS__)).str()
+
+#define HH_SSHOW_M(expr) .append(#expr[0] == '"' ? "" : #expr "=").append(expr)
 
 template <typename T> T show_aux(string str, T&& val, bool has_eol, bool high_precision) {
   std::ostringstream oss;

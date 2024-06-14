@@ -22,6 +22,7 @@ CC = cl
 # cxxall += -EP  # Copies preprocessor output to standard output.
 
 ccommon += -openmp -EHsc
+cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
 
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
@@ -40,7 +41,6 @@ ifeq ($(plain_compiler),)
   # ccommon += -D_CRT_DECLARE_NONSTDC_NAMES=1#  Obviate the need for HH_POSIX(fdopen) (but still needed for clang).
   # cxxall += -GR-#  Could disable RTTI.
   # cxxall += -showIncludes#  Show all included header files.
-  cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
   commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy $(if $(wholeopt:0=),-GL,)
   commondbg += -Od $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi   -RTC1
   # Avoid shared e.g. vc140.pdb; required for parallel make if >1 exe in same directory.

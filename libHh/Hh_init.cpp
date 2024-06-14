@@ -178,7 +178,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     // https://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
     // Unfortunately, cygwin does not have backtrace/execinfo.
     // void *ar[10]; size_t size = backtrace(ar, 10);  // Get void*'s for all entries on the stack.
-    // backtrace_symbols_fd(ar, size, 2);  // Print out all the frames to stderr.
+    // backtrace_symbols_fd(ar, size, 2);  // Print out all the frames to std::cerr.
     //
     // mingw uses the Windows calling stack, so obviously incompatible with libgcc backtrace().
   }

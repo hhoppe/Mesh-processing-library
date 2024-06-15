@@ -877,7 +877,7 @@ void do_compute_nor() {
     if (!pcvspl) break;
     Vsplit& vspl = *const_cast<Vsplit*>(pcvspl);
     assertx(pmrs->next_vsplit());
-    const int k_undefined = -std::numeric_limits<int>::max();
+    const int k_undefined = std::numeric_limits<int>::min();
     unsigned code = vspl.code;
     // int ii = (code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
     bool isr = vspl.adds_two_faces();

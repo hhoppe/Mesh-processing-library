@@ -452,11 +452,8 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
     if (0 && k_debug) {
       bool discontinuous = filter().is_discontinuous();
       double thresh = is_magnify ? (filter().name() == "gaussian" ? .1 : 1e-5) : (discontinuous ? 1. : .2);
-      if (abs(sum - 1.) > thresh) {  // e.g. fails for "quadratic" cx=2 nx=3 x=1
-        SHOW(cx, nx, filter().name(), nk, x, sum);
-        SHOW(mat_weights);
-        assertnever("");
-      }
+      if (abs(sum - 1.) > thresh)  // e.g. fails for "quadratic" cx=2 nx=3 x=1
+        assertnever(SSHOW(cx, nx, filter().name(), nk, x, sum, mat_weights));
     }
     mat_weights[x] /= float(sum);
   }

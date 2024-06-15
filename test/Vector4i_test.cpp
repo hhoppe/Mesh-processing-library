@@ -60,7 +60,7 @@ int main() {
     SHOW((Vector4i(pix) - std::numeric_limits<int>::max()).pixel());
   }
   {
-    Array<int> ar1{31, std::numeric_limits<int>::max(), -std::numeric_limits<int>::max(), 0};
+    Array<int> ar1{31, std::numeric_limits<int>::max(), std::numeric_limits<int>::min(), 0};
     SHOW(ar1);
     Vector4i v;
     v.load_unaligned(ar1.data());
@@ -69,7 +69,7 @@ int main() {
     SHOW(ar1);
   }
   {
-    Vec4<int> ar1{31, std::numeric_limits<int>::max(), -std::numeric_limits<int>::max(), 0};
+    Vec4<int> ar1{31, std::numeric_limits<int>::max(), std::numeric_limits<int>::min(), 0};
     SHOW(ar1);
     Vector4i v;
     v.load_unaligned(ar1.data());

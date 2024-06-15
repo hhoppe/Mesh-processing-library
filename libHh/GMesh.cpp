@@ -170,16 +170,10 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   const char* send;
   if (ch == '(') {
     send = str_chr(_s + nch + 2, ')');
-    if (!send) {
-      SHOW(_s, _s + nch + 2);
-      assertnever("No matching ')'");
-    }
+    if (!send) assertnever("No matching ')' " + SSHOW(_s, _s + nch + 2));
   } else if (ch == '"') {
     send = str_chr(_s + nch + 2, '"');
-    if (!send) {
-      SHOW(_s, _s + nch + 2);
-      assertnever("No matching '\"'");
-    }
+    if (!send) assertnever("No matching '\"' " + SSHOW(_s, _s + nch + 2));
   } else if (std::isalnum(ch)) {
     send = str_last_non_space(_s + nch + 2);
   } else {
@@ -277,10 +271,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     }
     bool found = static_cast<size_t>(kl) == keyl && !strncmp(kb, key, kl);
     if (found) {
-      if (fkb) {
-        SHOW(sso, kb, kl, vb, vl, key, val);
-        assertnever("dup key");
-      }
+      if (fkb) assertnever("dup key: " + SSHOW(sso, kb, kl, vb, vl, key, val));
       fkb = kb;
       fvl = vl;
     }
@@ -341,10 +332,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     p += frbl;
   }
   *p = '\0';
-  if (p != p0 + newl) {
-    SHOW(sso, p0, p - p0, newl);
-    assertnever("");
-  }
+  if (p != p0 + newl) assertnever(SSHOW(sso, p0, p - p0, newl));
   if (arnew) ss = std::move(arnew);
 }
 

@@ -81,10 +81,9 @@ DWORD WINAPI buf_thread_func(void* param) {
       continue;
     }
     buf_buffern = nread;
-    if (nread < 0) {
-      SHOW("read", buf_fd, reinterpret_cast<uintptr_t>(buf_buffer.data()), buf_buffer.num(), nread, errno);
-      assertnever("buffer_read");
-    }
+    if (nread < 0)
+      assertnever(
+          SSHOW("read", buf_fd, reinterpret_cast<uintptr_t>(buf_buffer.data()), buf_buffer.num(), nread, errno));
     assertx(SetEvent(g_buf_event_data_available));
     if (nread == 0) break;
     assertx(WaitForSingleObject(buf_event_data_copied, INFINITE) == WAIT_OBJECT_0);

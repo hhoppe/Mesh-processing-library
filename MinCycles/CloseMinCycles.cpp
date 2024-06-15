@@ -561,10 +561,7 @@ void CloseMinCycles::find_cycles() {
         }
       }
       lbsr = pqvlbsr.min_priority();
-      if (!(ubsr >= lbsr)) {
-        SHOW(_mesh.vertex_id(pqvlbsr.min()), lbsr);
-        assertnever("");
-      }
+      if (!(ubsr >= lbsr)) assertnever(SSHOW(_mesh.vertex_id(pqvlbsr.min()), lbsr));
     }
     if (sr == BIGFLOAT) continue;  // no more cycles in this connected component of the mesh
     // Process the cycle if its radius is within some fraction of the lower-bound minimal cycle radius lbsr.

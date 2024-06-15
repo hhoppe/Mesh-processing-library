@@ -576,7 +576,7 @@ void do_stoc() {
   fill(opstat.ns, 0);
   fill(opstat.nor, 0);
   {
-    int i = 0, nbad = 0, lasti = -std::numeric_limits<int>::max();
+    int i = 0, nbad = 0, lasti = std::numeric_limits<int>::min();
     for (vertex v : verts)
       if (v->v[1]) ecand.enter(v);
     while (!ecand.empty()) {

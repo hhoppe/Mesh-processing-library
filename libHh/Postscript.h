@@ -29,10 +29,10 @@ class Postscript : noncopyable {
   int _nxpix;
   int _nypix;
   enum class EState { undef, point, line } _state{EState::undef};  // state for line width
-  int _bbx0{+std::numeric_limits<int>::max()};
-  int _bbx1{-std::numeric_limits<int>::max()};
-  int _bby0{+std::numeric_limits<int>::max()};
-  int _bby1{-std::numeric_limits<int>::max()};
+  int _bbx0{std::numeric_limits<int>::max()};
+  int _bbx1{std::numeric_limits<int>::min()};
+  int _bby0{std::numeric_limits<int>::max()};
+  int _bby1{std::numeric_limits<int>::min()};
   float _curw{0.f};  // current line width
   Frame _ctm;
   int _opx, _opy;  // old pen position if LINE

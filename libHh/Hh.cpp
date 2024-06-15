@@ -206,36 +206,23 @@ string extract_function_type_name(string s) {
   // GOOGLE3: versioned libstdc++ or libc++
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
   if (remove_at_start(s, "hh::details::TypeNameAux<")) {  // VC
-    if (!remove_at_end(s, ">::name")) {
-      SHOW(s);
-      assertnever("");
-    }
+    if (!remove_at_end(s, ">::name")) assertnever(SSHOW(s));
     remove_at_end(s, " ");  // Possible space for complex types.
   } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC.
-    if (!remove_at_end(s, "; std::string = std::basic_string<char>]")) {
-      SHOW(s);
-      assertnever("");
-    }
+    if (!remove_at_end(s, "; std::string = std::basic_string<char>]")) assertnever(SSHOW(s));
   } else if (remove_at_start(s, "static string hh::details::TypeNameAux<T>::name() [with T = ")) {  // Google opt.
     auto i = s.find("; ");
-    if (i == string::npos) {
-      SHOW(s);
-      assertnever("");
-    }
+    if (i == string::npos) assertnever(SSHOW(s));
     s.erase(i);
     remove_at_end(s, " ");  // Possible space.
   } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<") ||
              remove_at_start(s, "static string hh::details::TypeNameAux<")) {  // clang.
     auto i = s.find(">::name() [T = ");
-    if (i == string::npos) {
-      SHOW(s);
-      assertnever("");
-    }
+    if (i == string::npos) assertnever(SSHOW(s));
     s.erase(i);
     remove_at_end(s, " ");  // Possible space for complex types.
   } else if (s == "name") {
-    SHOW(s);
-    assertnever("");
+    assertnever(SSHOW(s));
   }
   s = beautify_type_name(s);
   return s;

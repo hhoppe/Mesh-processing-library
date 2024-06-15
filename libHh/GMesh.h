@@ -106,7 +106,7 @@ class GMesh : public Mesh {
 
   // ** Standard I/O for my meshes (see format below):
   void read(std::istream& is);  // read a whole mesh, discard comments
-  void read_line(char* s);  // no '\n' required
+  void read_line(char* s);      // no '\n' required
   static bool recognize_line(const char* s);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;

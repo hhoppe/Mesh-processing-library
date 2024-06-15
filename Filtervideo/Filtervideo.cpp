@@ -1161,15 +1161,10 @@ void verify_loop_parameters() {
         g_lp.mat_static.dims(),
         [&](const Vec2<int>& yx) {
           int staticf = g_lp.mat_static[yx], start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
-          if (video.nframes() && !(period > 0 && start + period <= video.nframes())) {
-            SHOW(staticf, start, period);
-            assertnever("");
-          }
-          if (1 && !(staticf >= start && staticf < start + period)) {
-            SHOW(staticf, start, period);
-            assertnever("");
-          }
-          if (period > 1 && period < 20) assertnever("period too short?");
+          if (video.nframes() && !(period > 0 && start + period <= video.nframes()))
+            assertnever(SSHOW(staticf, start, period));
+          if (1 && !(staticf >= start && staticf < start + period)) assertnever(SSHOW(staticf, start, period));
+          if (period > 1 && period < 20) assertnever("period too short? " + SSHOW(period));
         },
         20);
   }

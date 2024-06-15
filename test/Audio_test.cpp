@@ -56,10 +56,7 @@ int main() {
       for_int(i, audio2.nsamples()) for_int(ch, audio2.nchannels()) {
         if (i >= audio1.nsamples()) continue;
         float diff = audio2(ch, i) - audio1(ch, i);
-        if (abs(diff) > thresh) {
-          SHOW(i, diff);
-          assertnever("?");
-        }
+        if (abs(diff) > thresh) assertnever(SSHOW(i, diff));
       }
     }
     assertx(remove_file("Audio_test.wav"));

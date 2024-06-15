@@ -2443,16 +2443,14 @@ void do_procedure(Args& args) {
       int l = image[yx][0];
       uint8_t v;
       uint8_t a = 255;
-      if (l == 255) {
+      if (l == 255)
         v = 255;  // v = 0; a = 0;
-      } else if (l % 20 == 0) {
+      else if (l % 20 == 0)
         v = uint8_t(l / 20);
-      } else if ((l + 256) % 20 == 0) {
+      else if ((l + 256) % 20 == 0)
         v = uint8_t((l + 256) / 20);
-      } else {
-        SHOW(l);
-        assertnever("");
-      }
+      else
+        assertnever(SSHOW(l));
       for_int(z, 3) image[yx][z] = v;
       image[yx][3] = a;
     }
@@ -2739,10 +2737,7 @@ void do_maxdiff(Args& args) {
   int maxdiff = 0;
   for (const auto& yx : range(image.dims()))
     for_int(z, nz) maxdiff = max(maxdiff, abs(int(image[yx][z]) - int(image2[yx][z])));
-  if (maxdiff > thresh) {
-    SHOW(maxdiff, thresh);
-    assertnever("maxdiff threshold exceeded");
-  }
+  if (maxdiff > thresh) assertnever("maxdiff threshold exceeded " + SSHOW(maxdiff, thresh));
 }
 
 void do_maxrmsdiff(Args& args) {
@@ -2754,10 +2749,7 @@ void do_maxrmsdiff(Args& args) {
   Stat stat;
   for (const auto& yx : range(image.dims())) for_int(z, nz) stat.enter(int(image[yx][z]) - int(image2[yx][z]));
   if (0 || getenv_int("SHOW_MAX_RMS_DIFF")) SHOW(stat.rms());
-  if (stat.rms() > thresh) {
-    SHOW(stat.rms(), thresh);
-    assertnever("rms threshold exceeded");
-  }
+  if (stat.rms() > thresh) assertnever("rms threshold exceeded " + SSHOW(stat.rms(), thresh));
 }
 
 void do_compare(Args& args) {

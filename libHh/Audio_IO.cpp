@@ -147,8 +147,7 @@ void Audio::read_file(const string& pfilename) {
                 start = vh * 3600. + vm * 60. + vs + vcs * .01;
               } else if (sscanf(line.c_str() + i, " start: %lg%c", &start, &vch) == 2 && vch == ',') {
               } else {
-                SHOW(line.c_str() + i);
-                assertnever("?");
+                assertnever(SSHOW(line, line.c_str() + i));
               }
               if (ldebug) SHOW(vh, vm, vs, vcs, duration, start, duration - start);
               duration -= start;

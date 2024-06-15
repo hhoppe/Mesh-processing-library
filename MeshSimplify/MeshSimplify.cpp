@@ -1929,11 +1929,9 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
     assertx(nn.ar_corners.num() == nn.va.num() - 1);
     int nfexpect =
         mesh.degree(v1) - mesh.is_boundary(v1) + mesh.degree(v2) - mesh.is_boundary(v2) - 2 * (1 + (f2 != nullptr));
-    if (nfexpect != nn.ar_corners.num()) {
-      SHOW(mesh.degree(v1), mesh.is_boundary(v1), mesh.degree(v2), mesh.is_boundary(v2));
-      SHOW(f2 != nullptr, nn.ar_corners.num());
-      assertnever("");
-    }
+    if (nfexpect != nn.ar_corners.num())
+      assertnever(SSHOW(mesh.degree(v1), mesh.is_boundary(v1), mesh.degree(v2), mesh.is_boundary(v2), f2 != nullptr,
+                        nn.ar_corners.num()));
   }
 }
 
@@ -4514,10 +4512,8 @@ void parallel_optimize() {
         assertx(minii2 && no_fit_geom);
       }
       // assertx(ecol_result.cost == cost);
-      if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0) {
-        SHOW(err, cost);
-        assertnever("?");
-      }
+      if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
+        assertnever(SSHOW(err, cost));
       const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
       Array<int> ar_j;

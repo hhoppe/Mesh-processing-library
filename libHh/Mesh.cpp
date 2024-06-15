@@ -364,8 +364,7 @@ Vertex Mesh::vertex(Face f, int i) const {
   int j = 0;
   for (Vertex v : vertices(f))
     if (j++ == i) return v;
-  SHOW(i, num_vertices(f));
-  assertnever("Face has too few vertices");
+  assertnever("Face has too few vertices: " + SSHOW(i, num_vertices(f)));
 }
 
 // *** Edge

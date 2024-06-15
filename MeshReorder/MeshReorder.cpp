@@ -1548,8 +1548,8 @@ int main(int argc, const char** argv) {
         assertx(my_getline(fi(), line));
         if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
-      mesh.read(fi());
       showff("%s", args.header().c_str());
+      mesh.read(fi());
       fixup_mesh();
       extract_mesh();
     }

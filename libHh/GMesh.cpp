@@ -527,7 +527,8 @@ void GMesh::write(std::ostream& os) const {
     assertx(os << "\n");
   }
 
-  for (Face f : ordered_faces()) {
+  Array<Face> ar_faces{ordered_faces()};
+  for (Face f : ar_faces) {
     os << "Face " << face_id(f) << " ";
     for (Vertex v : vertices(f)) os << " " << vertex_id(v);
     const char* sinfo = get_string(f);
@@ -541,7 +542,7 @@ void GMesh::write(std::ostream& os) const {
       assertx(os << "Edge " << vertex_id(vertex1(e)) << " " << vertex_id(vertex2(e)) << " {" << sinfo << "}\n");
   }
 
-  for (Face f : ordered_faces()) {
+  for (Face f : ar_faces) {
     for (Corner c : corners(f)) {
       const char* sinfo = get_string(c);
       if (sinfo)
@@ -578,9 +579,10 @@ void GMesh::write(std::ostream& os) const {
     assertx(os << buffer);
   }
 
+  Array<Face> ar_faces{ordered_faces()};
   strcpy(buffer, "Face ");
   beg = buffer + strlen(buffer);
-  for (Face f : ordered_faces()) {
+  for (Face f : ar_faces) {
     char* s = beg;
     s = std::to_chars(s, end, face_id(f)).ptr;
     *s++ = ' ';
@@ -622,7 +624,7 @@ void GMesh::write(std::ostream& os) const {
 
   strcpy(buffer, "Corner ");
   beg = buffer + strlen(buffer);
-  for (Face f : ordered_faces()) {
+  for (Face f : ar_faces) {
     for (Corner c : corners(f)) {
       const char* sinfo = get_string(c);
       if (!sinfo) continue;

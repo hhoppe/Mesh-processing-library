@@ -50,6 +50,7 @@ class Vector4 {
   explicit Vector4(float v) { fill(v); }
   explicit Vector4(const Pixel& pix) { *this = to_Vector4_norm(pix.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
+  size_t size() const { return 4; }
   float& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
   const float& operator[](int i) const { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
   Vector4 with(int i, float f) const {

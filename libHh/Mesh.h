@@ -433,6 +433,7 @@ class Mesh : noncopyable {
     VV_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
     VV_iterator begin() const { return VV_iterator(_ar.begin()); }
     VV_iterator end() const { return VV_iterator(_ar.end()); }
+    // Note that size() is not trivially computable.
 
    private:
     CArrayView<HEdge> _ar;

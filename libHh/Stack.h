@@ -53,6 +53,7 @@ template <typename T> class Stack {
   const T& top() const { return _s.back(); }
   bool empty() const { return _s.empty(); }
   int height() const { return narrow_cast<int>(_s.size()); }
+  size_t size() const { return _s.size(); }
   bool contains(const T& e) const { return vec_contains(_s, e); }
   bool remove(const T& e) { return vec_remove_ordered(_s, e); }
   using value_type = T;

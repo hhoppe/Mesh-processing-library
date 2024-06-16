@@ -27,6 +27,8 @@ template <typename T, typename Less = std::less<T>> class STree : noncopyable {
  public:
   void clear() { _s.clear(); }
   bool empty() const { return _s.empty(); }
+  int num() const { return narrow_cast<int>(_s.size()); }
+  size_t size() const { return _s.size(); }
   // To avoid ambiguity, e should not equal T{}.
   bool enter(const T& e) {  // ret: is_new
     auto [it, is_new] = _s.insert(e);

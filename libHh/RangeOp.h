@@ -537,6 +537,10 @@ template <typename Range, typename Func> struct TransformedRange {
     using Iterator = std::decay_t<decltype(begin(_range))>;
     return TransformedIterator<Iterator, Func>{end(_range), _func};
   }
+  auto size() const {
+    using std::size;
+    return size(_range);
+  }
 };
 }  // namespace details
 
@@ -582,6 +586,10 @@ template <typename Range1, typename Range2> struct ConcatenatedRange {
     using Iterator1 = std::decay_t<decltype(begin(_range1))>;
     using Iterator2 = std::decay_t<decltype(begin(_range2))>;
     return ConcatenatedIterator<Iterator1, Iterator2>{end(_range1), end(_range1), end(_range2)};
+  }
+  auto size() const {
+    using std::size;
+    return size(_range1) + size(_range2);
   }
 };
 }  // namespace details

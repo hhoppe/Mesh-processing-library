@@ -129,6 +129,7 @@ template <typename T> class ArrayView : public CArrayView<T> {
   const T* data() const { return _a; }
   using base::map_inside;
   using base::num;
+  using base::size;
   using base::ok;
 
  protected:

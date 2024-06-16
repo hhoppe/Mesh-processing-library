@@ -16,6 +16,7 @@
 #endif
 
 #include <array>
+#include <atomic>
 #include <cctype>  // std::isdigit()
 #include <cerrno>  // errno
 #include <chrono>
@@ -276,7 +277,7 @@ class Warnings {
     for (auto [s, n] : sorted_map) show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     _map.clear();
   }
-  std::unordered_map<const char*, int> _map;
+  std::unordered_map<const char*, std::atomic<int>> _map;
 };
 
 }  // namespace

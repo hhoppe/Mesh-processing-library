@@ -6,7 +6,6 @@
 #include <unistd.h>  // dup2()
 #endif
 
-#include <atomic>
 #include <cmath>
 #include <functional>  // function<>
 #include <mutex>
@@ -26,6 +25,7 @@
 #include "libHh/Image.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"     // is_pow2()
+#include "libHh/Parallel.h"
 #include "libHh/Polygon.h"    // intersect_poly_poly()
 #include "libHh/Principal.h"  // principal_components()
 #include "libHh/SGrid.h"

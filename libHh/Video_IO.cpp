@@ -46,6 +46,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
 //----------------------------------------------------------------------------
 
+#include <atomic>
 #include <cstring>  // std::memcpy()
 
 #include "libHh/ConsoleProgress.h"

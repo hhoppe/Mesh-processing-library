@@ -2,6 +2,7 @@
 #include "libHh/Mesh.h"
 
 #include "libHh/Array.h"
+#include "libHh/Parallel.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
@@ -891,11 +892,15 @@ Array<Vertex> Mesh::fix_vertex(Vertex v) {
 }
 
 bool Mesh::is_nice() const {
-  for (Vertex v : vertices())
-    if (!is_nice(v)) return false;
-  for (Face f : faces())
-    if (!is_nice(f)) return false;
-  return true;
+  std::atomic<bool> ok = true;
+  parallel_for_each(Array<Vertex>{vertices()}, [&](Vertex v) {
+    if (!is_nice(v)) ok = false;
+  });
+  if (!ok) return false;
+  parallel_for_each(Array<Face>{faces()}, [&](Face f) {
+    if (!is_nice(f)) ok = false;
+  });
+  return ok;
 }
 
 void Mesh::renumber() {

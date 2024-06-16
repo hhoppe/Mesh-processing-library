@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include <charconv>  // to_chars(), chars_format
 
 #include "MeshSimplify/BQem.h"
 #include "libHh/A3dStream.h"  // A3dColor
@@ -18,6 +19,7 @@
 #include "libHh/MathOp.h"
 #include "libHh/Matrix.h"
 #include "libHh/MeshOp.h"  // Vnors
+#include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
 #include "libHh/Pqueue.h"
 #include "libHh/Random.h"
@@ -773,10 +775,10 @@ void init_qem() {
   assertx(minqem);
   if (qemlocal) {
     if (qemcache) {
-      for (Face f : mesh.faces()) {
+      parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) {
         f_qem_p(f) = make_qem();
         get_face_qem(f, f_qem(f));
-      }
+      });
     }
   } else {
     assertx(!gwq.num());
@@ -989,9 +991,10 @@ void clear_face_string(Face f) { mesh.set_string(f, nullptr); }
 
 // Clear all mesh strings except on faces.
 void clear_mesh_strings() {
-  for (Vertex v : mesh.vertices()) clear_vertex_corner_strings(v);
-  for (Edge e : mesh.edges()) mesh.update_string(e, "sharp", nullptr);
-  for (Face f : mesh.faces()) clear_face_string(f);  // encoded by f_matid and material_strings
+  parallel_for_each(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { clear_vertex_corner_strings(v); });
+  parallel_for_each(Array<Edge>{mesh.edges()}, [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
+  // Encoded by f_matid and material_strings.
+  parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) { clear_face_string(f); });
 }
 
 // Write current mesh.
@@ -1050,136 +1053,154 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
 
 void parse_mesh_material_identifiers() {
   // If matid keys present in input file, use them, else add new ones after the maximum found.
-  // This is useful if output of simplification is re-simplified.
-  // See identical code in SimplicialComplex.cpp
-  Set<string> hashstring;
-  Map<Face, const string*> mfsrep;
-  for (Face f : mesh.faces()) {
-    assertx(mesh.is_triangle(f));
-    if (!mesh.get_string(f)) mesh.set_string(f, "");
-    bool is_new;
-    const string& srep = hashstring.enter(mesh.get_string(f), is_new);
-    mfsrep.enter(f, &srep);
+  // This is useful if the output of simplification is re-simplified.
+  Array<Face> ar_faces{mesh.faces()};
+  Set<string> unique_strings;
+  {
+    const int num_threads = get_max_threads();
+    Array<Set<string>> chunk_unique_strings(num_threads);
+    parallel_for_chunk(ar_faces, num_threads, [&](const int thread_index, auto subrange) {
+      Set<string>& unique_strings = chunk_unique_strings[thread_index];
+      for (Face f : subrange) {
+        assertx(mesh.is_triangle(f));
+        if (!mesh.get_string(f)) mesh.set_string(f, "");
+        unique_strings.add(mesh.get_string(f));
+      }
+    });
+    for (Set<string>& set : chunk_unique_strings) unique_strings.merge(set);
   }
-  Map<const string*, int> msrepmatid;
-  string str;
-  for (const string& srep : hashstring) {
-    const char* smat = GMesh::string_key(str, srep.c_str(), "matid");
-    if (!smat) continue;
-    int matid = to_int(smat);
-    assertx(matid >= 0);
-    material_strings.access(matid);
-    assertx(material_strings[matid] == "");  // no duplicate matid's
-    material_strings[matid] = srep;
-    msrepmatid.enter(&srep, matid);
+  Map<string, int> matid_of_string;
+  for (const string& face_str : unique_strings) {
+    string str;
+    if (const char* smat = GMesh::string_key(str, face_str.c_str(), "matid")) {
+      int matid = to_int(smat);
+      assertx(matid >= 0);
+      material_strings.access(matid);
+      assertx(material_strings[matid] == "");  // No duplicate matid.
+      material_strings[matid] = face_str;
+      matid_of_string.enter(face_str, matid);
+    }
   }
-  const int nexistingmatidempty = material_strings.num() - msrepmatid.num();
-  int nfirst = msrepmatid.num();
-  for (const string& srep : hashstring) {
-    if (GMesh::string_has_key(srep.c_str(), "matid")) continue;  // handled above
-    int matid = material_strings.add(1);
-    material_strings[matid] = GMesh::string_update(srep, "matid", csform(str, "%d", matid));
-    msrepmatid.enter(&srep, matid);
+  const int nexistingmatidempty = material_strings.num() - matid_of_string.num();
+  int nfirst = matid_of_string.num();
+  for (const string& face_str : unique_strings) {
+    if (GMesh::string_has_key(face_str.c_str(), "matid")) continue;  // Already handled above.
+    const int matid = material_strings.add(1);
+    string str;
+    material_strings[matid] = GMesh::string_update(face_str, "matid", csform(str, "%d", matid));
+    matid_of_string.enter(face_str, matid);
   }
   showdf("Materials=%d: %d with matid (%d unused), %d without matid\n",  //
          material_strings.num(), nfirst, nexistingmatidempty, material_strings.num() - nfirst);
   showff("nmaterials=%d\n", material_strings.num());
   for_int(i, material_strings.num()) showff("%s\n", material_strings[i].c_str());
-  for (Face f : mesh.faces()) f_matid(f) = msrepmatid.get(mfsrep.get(f));
+  parallel_for_each(ar_faces, [&](Face f) { f_matid(f) = matid_of_string.get(mesh.get_string(f)); });
 }
 
 void parse_mesh_wedge_identifiers() {
-  // If wid keys present in input file, use them, else add new ones
-  //  after the maximum found.
+  Array<Vertex> ar_vertices{mesh.vertices()};
+  // If wid keys present in input file, use them, else add new ones after the maximum found.
   // This is useful if output of simplification is re-simplified.
-  int nwidfound = 0, maxwidfound = 0;
-  int max_vid = 1;
-  string str;
-  for (Vertex v : mesh.vertices()) {
-    max_vid = max(max_vid, mesh.vertex_id(v));
-    for (Corner c : mesh.corners(v)) {
-      const char* swid = mesh.corner_key(str, c, "wid");
-      if (!swid) continue;
-      nwidfound++;
-      int wid = to_int(swid);
-      assertx(wid > 0);
-      if (wid > maxwidfound) maxwidfound = wid;
+  const int num_threads = get_max_threads();
+  Array<int> chunk_max_vid(num_threads, 1), chunk_nwidfound(num_threads, 0), chunk_maxwidfound(num_threads, 0);
+  parallel_for_chunk(ar_vertices, num_threads, [&](const int thread_index, auto subrange) {
+    string str;
+    int& max_vid = chunk_max_vid[thread_index];
+    int& nwidfound = chunk_nwidfound[thread_index];
+    int& maxwidfound = chunk_maxwidfound[thread_index];
+    for (Vertex v : subrange) {
+      max_vid = max(max_vid, mesh.vertex_id(v));
+      for (Corner c : mesh.corners(v)) {
+        const char* swid = mesh.corner_key(str, c, "wid");
+        if (!swid) continue;
+        nwidfound++;
+        int wid = to_int(swid);
+        assertx(wid > 0);
+        if (wid > maxwidfound) maxwidfound = wid;
+      }
     }
-  }
+  });
+  const int max_vid = max(chunk_max_vid), nwidfound = sum<int>(chunk_nwidfound), maxwidfound = max(chunk_maxwidfound);
   showff("Found %d/%d existing wid's\n", nwidfound, maxwidfound);
   assertx(!nwidfound || nwidfound == mesh.num_faces() * 3);
-  if (!nwidfound) {
-    // The first set of gwinfo records correspond 1-1 with vertices.
-    // skip gwinfo[0] (wid start at 1)
-    gwinfo.init(1 + max_vid);  // to be filled in below
-  }
-  int nccolors = 0;
-  for (Vertex v : mesh.vertices()) {
-    // Vnors will get normals from vertex&corner strings if present.
-    // Remove normals which are explicitly zero.
-    for (;;) {
-      Vector nor;
-      if (!parse_key_vec(mesh.get_string(v), "normal", nor)) break;
-      if (!is_zero(nor)) break;
-      Warning("Removing explicit zero normal from vertex");
-      mesh.update_string(v, "normal", nullptr);
-      break;
-    }
-    for (Corner c : mesh.corners(v)) {
-      Vector nor;
-      if (!parse_key_vec(mesh.get_string(c), "normal", nor)) continue;
-      if (!is_zero(nor)) continue;
-      Warning("Removing explicit zero normal from corner");
-      mesh.update_string(c, "normal", nullptr);
-    }
-    Vnors vnors(mesh, v);
-    Set<Corner> setcvis;
-    for (Corner crep : mesh.corners(v)) {
-      if (!setcvis.add(crep)) continue;
-      WedgeInfo wi = construct_wi(crep, vnors);
-      int wid;
-      if (nwidfound) {
-        wid = assertx(to_int(mesh.corner_key(str, crep, "wid")));
-        gwinfo.access(wid);
-      } else if (setcvis.num() == 1) {
-        wid = mesh.vertex_id(v);
-      } else {
-        wid = gwinfo.num();
-        gwinfo.add(1);
+  // Initial gwinfo based on wid; more entries are added later if !nwidfound and vertices have multiple wedges.
+  gwinfo.init(1 + (nwidfound ? maxwidfound : max_vid));  // Skip gwinfo[0] (wid start at 1).
+  std::mutex mutex;
+  Array<int> chunk_nccolors(num_threads, 0);
+  parallel_for_chunk(ar_vertices, num_threads, [&](const int thread_index, auto subrange) {
+    string str;
+    int& nccolors = chunk_nccolors[thread_index];
+    for (Vertex v : subrange) {
+      // Vnors will get normals from vertex and corner strings if present.
+      // Remove normals which are explicitly zero.
+      for (;;) {
+        Vector nor;
+        if (!parse_key_vec(mesh.get_string(v), "normal", nor)) break;
+        if (!is_zero(nor)) break;
+        Warning("Removing explicit zero normal from vertex");
+        mesh.update_string(v, "normal", nullptr);
+        break;
       }
-      gwinfo[wid] = wi;
-      c_wedge_id(crep) = wid;
-      int matid = f_matid(mesh.corner_face(crep));
-      for_int(dir, 2) {  // two directions (CCW, CLW)
-        Corner c = crep;
-        for (;;) {
-          c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
-          if (!c || c == crep) break;
-          WedgeInfo wi2 = construct_wi(c, vnors);
-          bool diff = ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || compare_wi(wi, wi2));
-          if (nwidfound && sdebug) {
-            int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
-            assertx(diff == (wid != wid2));
+      for (Corner c : mesh.corners(v)) {
+        Vector nor;
+        if (!parse_key_vec(mesh.get_string(c), "normal", nor)) continue;
+        if (!is_zero(nor)) continue;
+        Warning("Removing explicit zero normal from corner");
+        mesh.update_string(c, "normal", nullptr);
+      }
+      const Vnors vnors(mesh, v);  // const??
+      Set<Corner> setcvis;
+      for (Corner crep : mesh.corners(v)) {
+        if (!setcvis.add(crep)) continue;
+        const WedgeInfo wi = construct_wi(crep, vnors);
+        int wid;
+        if (nwidfound) {
+          // Array gwinfo is never resized, so locking is unnecessary.
+          wid = assertx(to_int(mesh.corner_key(str, crep, "wid")));
+          gwinfo[wid] = wi;
+        } else {
+          std::lock_guard<std::mutex> lock(mutex);
+          if (setcvis.num() == 1) {
+            wid = mesh.vertex_id(v);
+          } else {
+            wid = gwinfo.add(1);
           }
-          if (diff) break;
-          // assertx(setcvis.add(c));
-          if (!setcvis.add(c)) {
-            // Very rare case when attributes are very close:
-            //  illustration: 0 1 2 2 2 with k_tol == 1;
-            //  first set: (0, 1), second set (2, 2, 2, error:1)
+          gwinfo[wid] = wi;
+        }
+        c_wedge_id(crep) = wid;
+        int matid = f_matid(mesh.corner_face(crep));
+        for_int(dir, 2) {  // two directions (CCW, CLW)
+          Corner c = crep;
+          for (;;) {
+            c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
+            if (!c || c == crep) break;
+            WedgeInfo wi2 = construct_wi(c, vnors);
+            bool diff = ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || compare_wi(wi, wi2));
+            if (nwidfound && sdebug) {
+              int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
+              assertx(diff == (wid != wid2));
+            }
+            if (diff) break;
+            // assertx(setcvis.add(c));
+            if (!setcvis.add(c)) {
+              // Very rare case when attributes are very close:
+              //  illustration: 0 1 2 2 2 with k_tol == 1;
+              //  first set: (0, 1), second set (2, 2, 2, error:1)
+              break;
+            }
+            c_wedge_id(c) = wid;
+          }
+          if (c == crep) {
+            assertx(dir == 0);
             break;
           }
-          c_wedge_id(c) = wid;
-        }
-        if (c == crep) {
-          assertx(dir == 0);
-          break;
         }
       }
+      for (Corner c : mesh.corners(v))
+        if (c_winfo(c).col[0] != k_undefined) nccolors++;
     }
-    for (Corner c : mesh.corners(v))
-      if (c_winfo(c).col[0] != k_undefined) nccolors++;
-  }
+  });
+  const int nccolors = sum<int>(chunk_nccolors);
   if (nccolors) {
     have_ccolors = true;
     assertx(nccolors == mesh.num_faces() * 3);
@@ -1332,14 +1353,18 @@ void add_edge_point(Edge e, float bary) {
 // Write out the complexity of the current mesh and statistics on fit errors.
 void analyze_mesh(const char* s) {
   int nv = mesh.num_vertices(), nf = mesh.num_faces(), ne = mesh.num_edges();
-  int nshae = 0, nbnde = 0, ndise = 0, nscae = 0;
-  for (Edge e : mesh.edges()) {
+  std::atomic<int> nshae = 0, nbnde = 0, ndise = 0, nscae = 0;
+  parallel_for_each(Array<Edge>{mesh.edges()}, [&](Edge e) {
     if (edge_sharp(e)) nshae++;
-    if (mesh.is_boundary(e)) nbnde++;
-    if (!mesh.is_boundary(e) && edge_discrete_bnd(e)) ndise++;
-    if (!mesh.is_boundary(e) && edge_scalar_bnd(e)) nscae++;
-  }
-  showff("%-12s: v=%d f=%d e=%d (sha=%d: bnd=%d dis=%d sca=%d)\n", s, nv, nf, ne, nshae, nbnde, ndise, nscae);
+    if (mesh.is_boundary(e)) {
+      nbnde++;
+    } else {
+      if (edge_discrete_bnd(e)) ndise++;
+      if (edge_scalar_bnd(e)) nscae++;
+    }
+  });
+  showff("%-12s: v=%d f=%d e=%d (sha=%d: bnd=%d dis=%d sca=%d)\n",  //
+         s, nv, nf, ne, int(nshae), int(nbnde), int(ndise), int(nscae));
   if (minqem || minaps) return;
   {
     float efdis = 0.f;
@@ -3554,6 +3579,58 @@ float trishape_quality(const Point& p0, const Point& p1, const Point& p2) {
   return pow(aspect_ratio(p0, p1, p2), trishapepow);
 }
 
+void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
+  const Point& p = mesh.point(v);
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
+  // https://en.cppreference.com/w/cpp/compiler_support/17
+  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
+  os << "MVertex " << mesh.vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2];
+  if (sinfo) os << " {" << sinfo << "}";
+  os << "\n";
+#else
+  constexpr int capacity = 80;
+  char buffer[capacity];
+  char* const end = buffer + capacity;
+  strcpy(buffer, "MVertex ");
+  char* s = buffer + 8;
+  s = std::to_chars(s, end, mesh.vertex_id(v)).ptr;
+  *s++ = ' ';
+  for_int(c, 3) {
+    *s++ = ' ';
+    constexpr int precision = 6;  // Default for printf("%g").
+    s = std::to_chars(s, end, p[c], std::chars_format::general, precision).ptr;
+  }
+  *s++ = '\n';
+  *s = '\0';
+  os << buffer;
+#endif
+}
+
+void write_corner(std::ostream& os, Vertex v, Corner c) {
+  const char* sinfo = mesh.get_string(c);
+  assertx(sinfo);
+  if (0) {
+    os << "Corner " << mesh.vertex_id(v) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
+  } else {
+    constexpr int capacity = 160;
+    char buffer[capacity];
+    char* const end = buffer + capacity;
+    strcpy(buffer, "Corner ");
+    char* s = buffer + 7;
+    s = std::to_chars(s, end, mesh.vertex_id(v)).ptr;
+    *s++ = ' ';
+    s = std::to_chars(s, end, mesh.face_id(mesh.corner_face(c))).ptr;
+    *s++ = ' ';
+    *s++ = '{';
+    assertx(s + strlen(sinfo) + 4 < end);
+    while (*sinfo) *s++ = *sinfo++;
+    *s++ = '}';
+    *s++ = '\n';
+    *s = '\0';
+    os << buffer;
+  }
+}
+
 struct EcolResult {
   EResult result;
   float cost{k_bad_cost};
@@ -4185,14 +4262,8 @@ EcolResult try_ecol(Edge e, bool commit) {
     for_int(i, 2) {
       Vertex v = !i ? vs : vt;
       create_vertex_corner_strings(v, str, true);
-      const Point& p = mesh.point(v);
-      os << "MVertex " << mesh.vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2] << "\n";
-      for (Corner c : mesh.corners(v)) {
-        const char* sinfo = mesh.get_string(c);
-        assertw(sinfo);  // normals must be present
-        if (!sinfo) continue;
-        os << "Corner " << mesh.vertex_id(v) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
-      }
+      write_mvertex(os, v, nullptr);
+      for (Corner c : mesh.corners(v)) write_corner(os, v, c);
       clear_vertex_corner_strings(v);
     }
     for_int(i, 2) {
@@ -4291,15 +4362,8 @@ EcolResult try_ecol(Edge e, bool commit) {
     // Faces are gone.
     string str;
     create_vertex_corner_strings(vs, str, true);
-    const Point& p = mesh.point(vs);
-    os << "MVertex " << mesh.vertex_id(vs) << "  " << p[0] << " " << p[1] << " " << p[2];
-    if (const char* sinfo = mesh.get_string(vs)) os << " {" << sinfo << "}";
-    os << "\n";
-    for (Corner c : mesh.corners(vs)) {
-      const char* sinfo = mesh.get_string(c);
-      if (!sinfo) continue;
-      os << "Corner " << mesh.vertex_id(vs) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
-    }
+    write_mvertex(os, vs, mesh.get_string(vs));
+    for (Corner c : mesh.corners(vs)) write_corner(os, vs, c);
     os << sform("# Residuals %g %g\n", uni_error, dir_error);
     os << sform("# End REcol\n");
     assertx(os);

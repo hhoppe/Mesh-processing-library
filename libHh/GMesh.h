@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GMESH_H_
 #define MESH_PROCESSING_LIBHH_GMESH_H_
 
-#include <charconv>  // std::to_chars()
-#include <cstring>   // std::memcpy()
+#include <charconv>  // to_chars(), chars_format
+#include <cstring>   // memcpy()
 
 #include "libHh/Mesh.h"
 #include "libHh/Polygon.h"

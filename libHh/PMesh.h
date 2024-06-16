@@ -361,8 +361,9 @@ class PMesh : noncopyable {
   PMeshInfo _info;
 
  private:
+  static constexpr uchar k_magic_first_byte = 0xFF;  // (Network-order first byte (MSB) of int flclw is <= 127.)
   static PMeshInfo read_header(std::istream& is);
-  static bool at_trailer(std::istream& is);
+  static bool at_trailer(std::istream& is) { return is.peek() == k_magic_first_byte; }
   // const AWMesh& base_mesh const { return _base_mesh; }
 };
 
@@ -556,10 +557,11 @@ inline int WMesh::get_jvf(int v, int f) const {
 inline int WMesh::get_wvf(int v, int f) const { return _faces[f].wedges[get_jvf(v, f)]; }
 #else
 inline int WMesh::get_jvf(int v, int f) const {
-  // return (_wedges[_faces[f].wedges[0]].vertex == v ? 0 :
-  //         _wedges[_faces[f].wedges[1]].vertex == v ? 1 :
-  //         2);
-  return ((_wedges[_faces[f].wedges[1]].vertex == v) + (_wedges[_faces[f].wedges[2]].vertex == v) * 2);
+  // Slower on clang:
+  // return ((_wedges[_faces[f].wedges[1]].vertex == v) + (_wedges[_faces[f].wedges[2]].vertex == v) * 2);
+  return (_wedges[_faces[f].wedges[0]].vertex == v ? 0 :
+          _wedges[_faces[f].wedges[1]].vertex == v ? 1 :
+          2);
 }
 inline int WMesh::get_wvf(int v, int f) const {
   int w0 = _faces[f].wedges[0];

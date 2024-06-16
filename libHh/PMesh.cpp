@@ -49,12 +49,6 @@ constexpr int k_undefined = k_debug ? std::numeric_limits<int>::min() : -1;
 //  D3D mesh : 44n bytes
 //  PM  mesh : 40n + 60m bytes
 
-// *** Globals
-
-// k_magic_first_byte works because in network order, the first byte of the
-//  integer flclw is the MSB, which should be much smaller than 0xFF.
-constexpr int k_magic_first_byte = 0xFF;
-
 // *** Misc
 
 namespace {
@@ -1558,7 +1552,7 @@ void PMesh::write(std::ostream& os) const {
   os << "PM base mesh:\n";
   _base_mesh.write(os, _info);
   for_int(i, _vsplits.num()) _vsplits[i].write(os, _info);
-  os << '\xFF';
+  os << uchar(k_magic_first_byte);
   os << "End of PM\n";
   assertx(os);
 }
@@ -1633,8 +1627,6 @@ PMeshInfo PMesh::read_header(std::istream& is) {
   return pminfo;
 }
 
-bool PMesh::at_trailer(std::istream& is) { return is.peek() == k_magic_first_byte; }
-
 void PMesh::truncate_beyond(PMeshIter& pmi) {
   PMeshRStream& pmrs = pmi._pmrs;
   _vsplits.resize(pmrs._vspliti);
@@ -1708,9 +1700,10 @@ const Vsplit* PMeshRStream::peek_next_vsplit() {
   if (PMesh::at_trailer(*_is)) return nullptr;
   Vsplit* pvspl;
   if (_pm) {
-    if (!_pm->_vsplits.num()) _pm->_vsplits.reserve(_pm->_info._tot_nvsplits);
-    _pm->_vsplits.access(_vspliti);
-    pvspl = &_pm->_vsplits[_vspliti];
+    Array<Vsplit>& vsplits = _pm->_vsplits;
+    if (!vsplits.num()) vsplits.reserve(_pm->_info._tot_nvsplits);  // Note: initializes all ar_wad members.
+    vsplits.access(_vspliti);
+    pvspl = &vsplits[_vspliti];
   } else {
     pvspl = &_tmp_vspl;
     _vspl_ready = true;
@@ -1722,9 +1715,10 @@ const Vsplit* PMeshRStream::peek_next_vsplit() {
 const Vsplit* PMeshRStream::next_vsplit() {
   assertx(_vspliti >= 0);
   if (_pm) {
-    if (_vspliti < _pm->_vsplits.num()) {
+    Array<Vsplit>& vsplits = _pm->_vsplits;
+    if (_vspliti < vsplits.num()) {
       _vspliti++;
-      return &_pm->_vsplits[_vspliti - 1];
+      return &vsplits[_vspliti - 1];
     }
     if (!_is) return nullptr;  // end of array
   } else if (_vspl_ready) {
@@ -1736,10 +1730,11 @@ const Vsplit* PMeshRStream::next_vsplit() {
   if (PMesh::at_trailer(*_is)) return nullptr;
   Vsplit* pvspl;
   if (_pm) {
-    if (!_pm->_vsplits.num()) _pm->_vsplits.reserve(_pm->_info._tot_nvsplits);
+    Array<Vsplit>& vsplits = _pm->_vsplits;
+    if (!vsplits.num()) vsplits.reserve(_pm->_info._tot_nvsplits);
     _vspliti++;
-    _pm->_vsplits.resize(_vspliti);
-    pvspl = &_pm->_vsplits[_vspliti - 1];
+    vsplits.resize(_vspliti);
+    pvspl = &vsplits.last();
   } else {
     pvspl = &_tmp_vspl;
   }

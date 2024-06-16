@@ -3600,6 +3600,13 @@ void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
     constexpr int precision = 6;  // Default for printf("%g").
     s = std::to_chars(s, end, p[c], std::chars_format::general, precision).ptr;
   }
+  if (sinfo) {
+    *s++ = ' ';
+    *s++ = '{';
+    assertx(s + strlen(sinfo) + 4 < end);
+    while (*sinfo) *s++ = *sinfo++;
+    *s++ = '}';
+  }
   *s++ = '\n';
   *s = '\0';
   os << buffer;

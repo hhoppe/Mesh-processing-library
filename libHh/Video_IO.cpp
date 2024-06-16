@@ -32,7 +32,7 @@ HH_REFERENCE_LIB("mfreadwrite.lib");  // MFCreateSourceReaderFromByteStream()
 HH_REFERENCE_LIB("mfuuid.lib");       // MF_MT_DEFAULT_STRIDE
 HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
-#include <mutex>  // std::once_flag, std::call_once()
+#include <mutex>  // once_flag, call_once()
 
 #include "libHh/windows_com.h"  // com_ptr<>
 
@@ -47,7 +47,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 //----------------------------------------------------------------------------
 
 #include <atomic>
-#include <cstring>  // std::memcpy()
+#include <cstring>  // memcpy()
 
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"

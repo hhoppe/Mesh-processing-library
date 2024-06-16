@@ -17,13 +17,13 @@
 
 #include <array>
 #include <atomic>
-#include <cctype>  // std::isdigit()
+#include <cctype>  // isdigit()
 #include <cerrno>  // errno
 #include <chrono>
-#include <cstdarg>  // std::va_list
-#include <cstring>  // std::memcpy(), strlen(), std::strerror()
+#include <cstdarg>  // va_list
+#include <cstring>  // memcpy(), strlen(), strerror()
 #include <map>
-#include <mutex>  // std::once_flag, std::call_once()
+#include <mutex>  // once_flag, call_once()
 #include <regex>
 #include <unordered_map>
 #include <vector>

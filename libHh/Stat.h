@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_STAT_H_
 #define MESH_PROCESSING_LIBHH_STAT_H_
 
-#include <fstream>  // std::ofstream
+#include <fstream>  // ofstream
 
 #include "libHh/Range.h"  // enable_if_range_t<>
 

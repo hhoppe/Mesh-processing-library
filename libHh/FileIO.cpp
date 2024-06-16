@@ -42,9 +42,9 @@ HH_REFERENCE_LIB("urlmon.lib");   // URLDownloadToCacheFile()
 #endif
 
 #include <atomic>
-#include <cctype>   // std::isalnum()
-#include <cstring>  // std::memmove()
-#include <fstream>  // std::ifstream, std::ofstream
+#include <cctype>   // isalnum()
+#include <cstring>  // memmove()
+#include <fstream>  // ifstream, ofstream
 #include <mutex>    // mutex, lock_guard
 
 #include "libHh/RangeOp.h"  // contains()

@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/HashFloat.h"
 
-#include <iomanip>  // std::setprecision()
+#include <iomanip>  // setprecision()
 
 #include "libHh/ArrayOp.h"  // concat()
 #include "libHh/RangeOp.h"  // sum()

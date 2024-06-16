@@ -11,8 +11,8 @@
 
 #include <clocale>  // setlocale()
 #include <csignal>  // signal()
-#include <cstring>  // std::strerror
-#include <mutex>    // std::once_flag, std::call_once()
+#include <cstring>  // strerror
+#include <mutex>    // once_flag, call_once()
 #include <new>      // set_new_handler()
 
 #include "Hh.h"

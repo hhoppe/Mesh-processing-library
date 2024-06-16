@@ -17,7 +17,7 @@
 #endif
 
 #include <cerrno>   // errno, EINTR, etc.
-#include <cstring>  // std::memcpy(), std::memmove()
+#include <cstring>  // memcpy(), memmove()
 
 #include "libHh/NetworkOrder.h"
 #include "libHh/StringOp.h"

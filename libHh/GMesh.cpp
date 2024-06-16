@@ -1,9 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/GMesh.h"
 
-#include <cctype>    // std::isalnum()
-#include <charconv>  // std::to_chars()
-#include <cstring>   // strncmp(), strlen(), std::memmove(), etc.
+#include <cctype>    // isalnum()
+#include <charconv>  // to_chars()
+#include <cstring>   // strncmp(), strlen(), memmove(), etc.
 
 #include "libHh/A3dStream.h"
 #include "libHh/Array.h"

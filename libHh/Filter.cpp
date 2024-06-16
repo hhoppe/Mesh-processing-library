@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Filter.h"
 
-#include <mutex>  // std::once_flag, std::call_once()
+#include <mutex>  // once_flag, call_once()
 
 #include "libHh/MathOp.h"  // gaussian()
 

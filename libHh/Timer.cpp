@@ -10,9 +10,9 @@ HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyExA()
 #endif             // defined(_WIN32)
 
 #include <array>
-#include <cctype>  // std::isdigit()
-#include <mutex>   // std::once_flag, std::call_once()
-#include <thread>  // std::thread::hardware_concurrency()
+#include <cctype>  // isdigit()
+#include <mutex>   // once_flag, call_once()
+#include <thread>  // thread::hardware_concurrency()
 #include <unordered_map>
 #include <vector>
 

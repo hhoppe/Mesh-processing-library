@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Vector4.h"
 
-// #include <iomanip>  // std::setprecision()
+// #include <iomanip>  // setprecision()
 
 #include "libHh/Array.h"
 #include "libHh/Vec.h"

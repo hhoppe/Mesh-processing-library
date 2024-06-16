@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Pqueue.h"
 
-#include <random>  // std::default_random_engine
+#include <random>  // default_random_engine
 
 using namespace hh;
 

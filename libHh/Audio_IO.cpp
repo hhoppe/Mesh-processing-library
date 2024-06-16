@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Audio.h"
 
-#include <mutex>  // std::once_flag, std::call_once()
+#include <mutex>  // once_flag, call_once()
 
 #include "libHh/BinaryIO.h"
 #include "libHh/FileIO.h"

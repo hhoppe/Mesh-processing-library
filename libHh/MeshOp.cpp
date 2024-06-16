@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/MeshOp.h"
 
-#include <mutex>  // std::once_flag, std::call_once()
+#include <mutex>  // once_flag, call_once()
 
 #include "libHh/Array.h"
 #include "libHh/Facedistance.h"  // lb_dist_point_triangle(), project_point_triangle2()

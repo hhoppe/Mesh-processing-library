@@ -3,7 +3,7 @@
 
 #include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
 #include "libHh/GMesh.h"      // in extract_gmesh()
-#include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
+#include "libHh/HashTuple.h"  // hash<pair<...>>
 #include "libHh/PArray.h"     // ar_pwedge
 #include "libHh/RangeOp.h"    // fill()
 #include "libHh/Set.h"

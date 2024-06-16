@@ -14,7 +14,7 @@
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"  // dihedral_angle_cos()
 #include "libHh/HashPoint.h"
-#include "libHh/HashTuple.h"  // std::hash<std::pair<...>>
+#include "libHh/HashTuple.h"  // hash<pair<...>>
 #include "libHh/Homogeneous.h"
 #include "libHh/Image.h"
 #include "libHh/LinearFunc.h"

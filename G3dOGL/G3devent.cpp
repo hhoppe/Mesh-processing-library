@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include <cctype>  // std::isdigit()
+#include <cctype>  // isdigit()
 
 #include "G3dOGL/G3d.h"
 #include "libHh/FileIO.h"

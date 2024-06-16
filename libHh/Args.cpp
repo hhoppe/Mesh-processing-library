@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Args.h"
 
-#include <cctype>  // std::isdigit()
+#include <cctype>  // isdigit()
 
 #include "libHh/FileIO.h"   // is_pipe(), is_url()
 #include "libHh/RangeOp.h"  // contains()

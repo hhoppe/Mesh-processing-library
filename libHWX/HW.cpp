@@ -12,7 +12,7 @@ extern "C" {
 
 #include <cerrno>
 #include <csignal>  // signal()
-#include <cstring>  // strlen(), std::strerror()
+#include <cstring>  // strlen(), strerror()
 #include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 #include "HW.xbm"

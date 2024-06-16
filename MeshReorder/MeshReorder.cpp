@@ -1536,19 +1536,20 @@ int main(int argc, const char** argv) {
   HH_ARGSD(meshify10, ": like 9, go clockwise after restart (simpler, faster, and even better)");
   HH_ARGSD(timingtest, "niter : run timing test");
   {
-    HH_TIMER("MeshReorder");
     string arg0 = args.num() ? args.peek_string() : "";
-    if (!ParseArgs::special_arg(arg0)) {
-      string filename = "-";
-      if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-      gfilename = filename;
-      RFile fi(filename);
+    if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+    string filename = "-";
+    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+    gfilename = filename;
+    RFile fi(filename);
+    for (string line; fi().peek() == '#';) {
+      assertx(my_getline(fi(), line));
+      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    }
+    showff("%s", args.header().c_str());
+    HH_TIMER("MeshReorder");
+    {
       HH_TIMER("_readmesh");
-      for (string line; fi().peek() == '#';) {
-        assertx(my_getline(fi(), line));
-        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-      }
-      showff("%s", args.header().c_str());
       mesh.read(fi());
       fixup_mesh();
       extract_mesh();

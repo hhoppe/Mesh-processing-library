@@ -4472,9 +4472,9 @@ int main(int argc, const char** argv) {
   {
     HH_TIMER("Filtermesh");
     string arg0 = args.num() ? args.peek_string() : "";
-    if (ParseArgs::special_arg(arg0)) {
-    } else if (arg0 != "-froma3d" && arg0 != "-rawfroma3d" && arg0 != "-creategrid" && arg0 != "-fromgrid" &&
-               arg0 != "-frompointgrid" && arg0 != "-createobject") {
+    if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+    if (arg0 != "-froma3d" && arg0 != "-rawfroma3d" && arg0 != "-creategrid" && arg0 != "-fromgrid" &&
+        arg0 != "-frompointgrid" && arg0 != "-createobject") {
       string filename = "-";
       if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
       RFile fi(filename);

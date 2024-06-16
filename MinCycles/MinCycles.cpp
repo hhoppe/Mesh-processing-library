@@ -41,21 +41,24 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(closecycles, ": perform topological simplification");
   HH_ARGSF(nooutput, ": do not print mesh at program end");
-  HH_TIMER("main");
   string arg0 = args.num() ? args.peek_string() : "";
-  if (!ParseArgs::special_arg(arg0)) {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-    RFile fi(filename);
-    HH_TIMER("_readmesh");
-    for (string line; fi().peek() == '#';) {
-      assertx(my_getline(fi(), line));
-      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-    }
-    showff("%s", args.header().c_str());
-    mesh.read(fi());
+  if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+  string filename = "-";
+  if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  RFile fi(filename);
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
-  args.parse();
+  showff("%s", args.header().c_str());
+  {
+    HH_TIMER("MinCycles");
+    {
+      HH_TIMER("_readmesh");
+      mesh.read(fi());
+    }
+    args.parse();
+  }
   hh_clean_up();
   if (!nooutput) {
     HH_TIMER("_writemesh");

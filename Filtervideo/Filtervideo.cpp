@@ -2368,8 +2368,9 @@ int main(int argc, const char** argv) {
     }
   }
   string arg0 = args.num() ? args.peek_string() : "";
-  if (!ParseArgs::special_arg(arg0) && arg0 != "-nostdin" && arg0 != "-create" && !starts_with(arg0, "-as") &&
-      arg0 != "-startframe" && arg0 != "-fromimages" && arg0 != "-readnv12") {
+  if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+  if (arg0 != "-nostdin" && arg0 != "-create" && !starts_with(arg0, "-as") && arg0 != "-startframe" &&
+      arg0 != "-fromimages" && arg0 != "-readnv12") {
     string filename = "-";
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
     read_video(filename, false);

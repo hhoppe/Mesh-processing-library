@@ -4535,10 +4535,7 @@ void parallel_optimize() {
       Edge e;
       float cost;
     };
-    // Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
-    Array<EdgeCost> ar_edgecost;
-    ar_edgecost.reserve(mesh.num_edges());
-    for (Edge e : mesh.edges()) ar_edgecost.push(EdgeCost{e, 0.f});
+    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
 
     {
       HH_STIMER("__opt_cost");
@@ -4997,22 +4994,22 @@ int main(int argc, const char** argv) {
     Args targs{"1"};
     do_verb(targs);
   }
-  Timer timer("MeshSimplify", Timer::EMode::always);
-  int orig_nf = 0;
   string arg0 = args.num() ? args.peek_string() : "";
-  if (!ParseArgs::special_arg(arg0)) {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-    HH_TIMER("_readmesh");
-    RFile fi(filename);
-    for (string line; fi().peek() == '#';) {
-      assertx(my_getline(fi(), line));
-      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-    }
-    showdf("%s", args.header().c_str());
-    mesh.read(fi());
-    orig_nf = mesh.num_faces();
+  if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+  string filename = "-";
+  if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  RFile fi(filename);
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
+  showdf("%s", args.header().c_str());
+  Timer timer("MeshSimplify", Timer::EMode::always);
+  {
+    HH_TIMER("_readmesh");
+    mesh.read(fi());
+  }
+  const int orig_nf = mesh.num_faces();
   args.parse();
   perhaps_initialize();
   wrap_up();

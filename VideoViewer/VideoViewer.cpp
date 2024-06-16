@@ -24,7 +24,7 @@
 #include "libHh/GridPixelOp.h"  // spatially_scale_Grid_Pixel()
 #include "libHh/Image.h"
 #include "libHh/Map.h"
-#include "libHh/MathOp.h"     // is_pow2()
+#include "libHh/MathOp.h"  // is_pow2()
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"    // intersect_poly_poly()
 #include "libHh/Principal.h"  // principal_components()

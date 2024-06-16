@@ -1503,30 +1503,29 @@ int main(int argc, const char** argv) {
   HH_ARGSF(nooutput, ": do not output final PM");
 
   string arg0 = args.num() ? args.peek_string() : "";
+  if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   string filename = "-";
   if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
   gfilename = filename;
   RFile fi(filename);  // opened out here because &fi is captured below
   {
     HH_TIMER("FilterPM");
-    if (!ParseArgs::special_arg(arg0)) {
-      for (string line; fi().peek() == '#';) {
-        assertx(my_getline(fi(), line));
-        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-      }
-      assertx(fi().peek() == 'P' || fi().peek() == 'S');
-      bool srm_input = fi().peek() == 'S';
-      showff("%s", args.header().c_str());
-      if (arg0 == "-tosrm") {
-        // it will do its own efficient parsing
-        pfi = &fi;
-      } else if (srm_input) {
-        nooutput = true;
-        pfi = &fi;
-      } else {
-        pmrs = make_unique<PMeshRStream>(fi(), &pmesh);
-        pmi = make_unique<PMeshIter>(*pmrs);
-      }
+    for (string line; fi().peek() == '#';) {
+      assertx(my_getline(fi(), line));
+      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    }
+    assertx(fi().peek() == 'P' || fi().peek() == 'S');
+    bool srm_input = fi().peek() == 'S';
+    showff("%s", args.header().c_str());
+    if (arg0 == "-tosrm") {
+      // it will do its own efficient parsing
+      pfi = &fi;
+    } else if (srm_input) {
+      nooutput = true;
+      pfi = &fi;
+    } else {
+      pmrs = make_unique<PMeshRStream>(fi(), &pmesh);
+      pmi = make_unique<PMeshIter>(*pmrs);
     }
     args.parse();
     if (!nooutput) ensure_pm_loaded();

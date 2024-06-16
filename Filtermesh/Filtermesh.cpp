@@ -4470,24 +4470,25 @@ int main(int argc, const char** argv) {
   HH_ARGSD(bndpts, "n : print n points on each boundary edge");
   HH_ARGSD(addmesh, ": output a3d endfile + mesh now");
   {
-    HH_TIMER("Filtermesh");
     string arg0 = args.num() ? args.peek_string() : "";
     if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-    if (arg0 != "-froma3d" && arg0 != "-rawfroma3d" && arg0 != "-creategrid" && arg0 != "-fromgrid" &&
-        arg0 != "-frompointgrid" && arg0 != "-createobject") {
+    const bool from_other = contains(
+        V<string>("-froma3d", "-rawfroma3d", "-creategrid", "-fromgrid", "-frompointgrid", "-createobject"), arg0);
+    if (!from_other) {
       string filename = "-";
       if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
       RFile fi(filename);
-      HH_TIMER("_readmesh");
       for (string line; fi().peek() == '#';) {
         assertx(my_getline(fi(), line));
         if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
       showff("%s", args.header().c_str());
+      HH_TIMER("_readmesh");
       mesh.read(fi());
     } else {
       showff("%s", args.header().c_str());
     }
+    HH_TIMER("Filtermesh_postread");
     args.parse();
   }
   hh_clean_up();

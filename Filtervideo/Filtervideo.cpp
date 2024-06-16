@@ -274,7 +274,6 @@ void do_assemble(Args& args) {
   // Filtervideo -nostdin -color 255 0 0 -assemble 3 -1 ~/data/video/HD*.mp4 | vv -
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx >= -1 && ny >= -1);
-  if (nx > 0 && ny > 0) args.ensure_at_least(nx * ny);
   Array<string> lfilenames;
   while (args.num() && args.peek_string()[0] != '-') lfilenames.push(args.get_filename());
   if (nx <= 0 && ny <= 0) {
@@ -283,6 +282,8 @@ void do_assemble(Args& args) {
     nx = (lfilenames.num() - 1) / ny + 1;
   } else if (ny <= 0) {
     ny = (lfilenames.num() - 1) / nx + 1;
+  } else if (lfilenames.num() != nx * ny) {
+    args.problem(sform("-assemble expected %dx%d filenames and found %d", nx, ny, lfilenames.num()));
   }
   Matrix<Video> videos(V(ny, nx));
   assertx(videos.size() >= lfilenames.size());

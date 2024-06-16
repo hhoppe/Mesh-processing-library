@@ -41,8 +41,6 @@ class Args {
   virtual ~Args() {}
   int num() const { return _args.num() - _iarg; }  // Number of arguments left.
   size_t size() const { return _args.size() - _iarg; }
-  void restart() { _iarg = 0; }
-  void ensure_at_least(int n);  // Asserts num() >= n.
   const string& peek_string() const { return (assertx(num() > 0), _args[_iarg]); }
   bool get_bool();
   char get_char();

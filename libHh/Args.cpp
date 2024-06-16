@@ -29,11 +29,6 @@ inline string show_double(double f) {
 
 }  // namespace
 
-void Args::ensure_at_least(int n) {
-  assertx(n >= 0);
-  if (num() < n) problem(sform("need %d arguments", n));
-}
-
 bool Args::check_bool(const string& s) { return s == "0" || s == "1" || s == "true" || s == "false"; }
 
 bool Args::check_char(const string& s) { return s.size() == 1; }

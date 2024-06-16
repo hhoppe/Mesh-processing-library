@@ -871,7 +871,6 @@ void do_assemble(Args& args) {
   // (cd $HOMEPATH/Dropbox/Pictures/2014/india; Filterimage -nostdin -color 0 0 0 255 -as_fit 640 640 -as_cropsides -4 -4 -4 -4 -assemble -1 -1 2*.jpg | vv -)
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx >= -1 && ny >= -1);
-  if (nx > 0 && ny > 0) args.ensure_at_least(nx * ny);
   Array<string> lfilenames;
   while (args.num() && args.peek_string()[0] != '-') lfilenames.push(args.get_filename());
   if (nx <= 0 && ny <= 0) {
@@ -880,6 +879,8 @@ void do_assemble(Args& args) {
     nx = (lfilenames.num() - 1) / ny + 1;
   } else if (ny <= 0) {
     ny = (lfilenames.num() - 1) / nx + 1;
+  } else if (lfilenames.num() != nx * ny) {
+    args.problem(sform("-assemble expected %dx%d filenames and found %d", nx, ny, lfilenames.num()));
   }
   Matrix<Image> images(V(ny, nx));
   assertx(images.size() >= lfilenames.size());

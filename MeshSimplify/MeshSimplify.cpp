@@ -330,6 +330,8 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, bool, v_global);  // vertex is feature
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);  // sphericalparam
 
+HH_SAC_ALLOCATE_FUNC(Mesh::MEdge, int, e_index);  // Index into sorted array.
+
 // Information relating to the mesh neighborhood following a speculative edge collapse.
 // Note that this information is independent of orientation of edge (v1, v2).
 struct NewMeshNei : noncopyable {
@@ -3579,6 +3581,54 @@ float trishape_quality(const Point& p0, const Point& p1, const Point& p2) {
   return pow(aspect_ratio(p0, p1, p2), trishapepow);
 }
 
+bool desire_edge_orientation_swap(Edge e, int min_ii) {
+  bool bswap = false;
+  Face f2 = mesh.face2(e);
+  // Old test: encouraged min_ii == 2 if possible:
+  // if (f2 && min_ii == 0) bswap = true;
+  // New test: encourage short CLW rotation from vl to vr:
+  if (f2) {
+    Vertex vs = mesh.vertex1(e), vt = mesh.vertex2(e);
+    Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
+    int dir = -1;  // 0 == CCW, 1 == CLW
+    int jmin = std::numeric_limits<int>::max();
+    Vec<bool, 2> ar_ok = {false, false};
+    for_int(i, 2) {
+      if (minii2) {
+        if (min_ii == 0 && i == 1) continue;  // force swap
+        if (min_ii == 2 && i == 0) continue;  // disallow swap
+      }
+      Vertex v = vl;
+      int j = 0;
+      for (;;) {
+        j++;
+        v = !i ? mesh.ccw_vertex(vs, v) : mesh.clw_vertex(vt, v);
+        assertx(v != vl);
+        if (!v || v == vr) break;
+      }
+      if (v != vr) continue;
+      ar_ok[i] = true;
+      if (j <= jmin) {
+        jmin = j;
+        dir = i;
+      }
+    }
+    assertx(dir >= 0 && dir <= 1);
+    assertx(jmin >= 1);
+    if (dir == 0) bswap = true;
+    if (tvcfac) {
+      float tvccost;
+      bool edir;
+      get_tvc_cost_edir(e, tvccost, edir);
+      assertx(ar_ok[edir ? 0 : 1]);
+      bswap = edir;
+      SSTATV2(Sswap, bswap);
+    }
+  }
+  // bswap = false; if (f2 && min_ii == 0) bswap = true;
+  return bswap;
+}
+
 void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   const Point& p = mesh.point(v);
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
@@ -4149,6 +4199,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     int voi = mesh.vertex_id(vo);
     ecol_result.cost = float(voi);
   }
+  ecol_result.min_ii = min_ii;  // May change below due to bswap.
   ecol_result.result = R_success;
   if (!commit) return ecol_result;
 
@@ -4179,49 +4230,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   // Consider swapping the orientation of the edge.
-  bool bswap = false;
-  // Old test: encouraged min_ii == 2 if possible:
-  // if (f2 && min_ii == 0) bswap = true;
-  // New test: encourage short CLW rotation from vl to vr:
-  if (f2) {
-    Vertex vs = mesh.vertex1(e), vt = mesh.vertex2(e);
-    Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
-    int dir = -1;  // 0 == CCW, 1 == CLW
-    int jmin = std::numeric_limits<int>::max();
-    Vec<bool, 2> ar_ok = {false, false};
-    for_int(i, 2) {
-      if (minii2) {
-        if (min_ii == 0 && i == 1) continue;  // force swap
-        if (min_ii == 2 && i == 0) continue;  // disallow swap
-      }
-      Vertex v = vl;
-      int j = 0;
-      for (;;) {
-        j++;
-        v = !i ? mesh.ccw_vertex(vs, v) : mesh.clw_vertex(vt, v);
-        assertx(v != vl);
-        if (!v || v == vr) break;
-      }
-      if (v != vr) continue;
-      ar_ok[i] = true;
-      if (j <= jmin) {
-        jmin = j;
-        dir = i;
-      }
-    }
-    assertx(dir >= 0 && dir <= 1);
-    assertx(jmin >= 1);
-    if (dir == 0) bswap = true;
-    if (tvcfac) {
-      float tvccost;
-      bool edir;
-      get_tvc_cost_edir(e, tvccost, edir);
-      assertx(ar_ok[edir ? 0 : 1]);
-      bswap = edir;
-      SSTATV2(Sswap, bswap);
-    }
-  }
-  // bswap = false; if (f2 && min_ii == 0) bswap = true;
+  const bool bswap = desire_edge_orientation_swap(e, min_ii);
   Vertex vs = !bswap ? v1 : v2;
   Vertex vt = !bswap ? v2 : v1;
   Vertex vl = !bswap ? vo1 : vo2;
@@ -4533,16 +4542,19 @@ void parallel_optimize() {
 
     struct EdgeCost {
       Edge e;
-      float cost;
+      float cost{0.f};
+      int min_ii{-1};
     };
-    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e, 0.f}; })};
+    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e}; })};
 
     {
       HH_STIMER("__opt_cost");
       parallel_for_each(range(ar_edgecost.num()), [&](int index) {
-        Edge e = ar_edgecost[index].e;
+        auto& edge_cost = ar_edgecost[index];
+        Edge e = edge_cost.e;
         const EcolResult ecol_result = try_ecol(e, false);
-        ar_edgecost[index].cost = ecol_result.cost;
+        edge_cost.cost = ecol_result.cost;
+        edge_cost.min_ii = ecol_result.min_ii;
       });
     }
     {
@@ -4550,50 +4562,47 @@ void parallel_optimize() {
       const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
       sort(ar_edgecost, by_increasing_cost);
     }
+    parallel_for_each(range(ar_edgecost.num()), [&](int index) { e_index(ar_edgecost[index].e) = index; });
 
     HH_STIMER("__opt_ecols");
     Set<Edge> invalidated_edges;
     const float k_fraction_edges = 0.15f;
+    const bool vs_never_changes = minqem && minii2 && no_fit_geom;
     int num_edges_considered = 0, num_edges_collapsed = 0;
     for_int(index, ar_edgecost.num()) {
       if (num_edges_collapsed > 0 && index > int(k_fraction_edges * ar_edgecost.num())) break;
-      const auto& [e, cost] = ar_edgecost[index];
+      const auto& [e, cost, min_ii] = ar_edgecost[index];
       if (cost == k_bad_cost) break;
       if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
       num_edges_considered++;
       if (invalidated_edges.contains(e)) continue;
       // COMMIT.
+      mesh.valid(e);
+      const bool bswap = desire_edge_orientation_swap(e, min_ii);
       num_edges_collapsed++;
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-      Vec2<Set<Edge>> invalidations_v1_v2;
+      Vertex vs = !bswap ? v1 : v2;
+      const int j_vt = 1 - hh::index(V(v1, v2), vs);
+      Set<Edge> new_invalidated_edges;
       for_int(j, 2) {
+        if (vs_never_changes && j != j_vt) continue;
         Vertex v = V(v1, v2)[j];
         for (Vertex vv : mesh.vertices(v))
-          for (Edge ee : mesh.edges(vv)) invalidations_v1_v2[j].add(ee);
+          for (Edge ee : mesh.edges(vv)) new_invalidated_edges.add(ee);
       }
-      mesh.valid(e);
       const EcolResult ecol_result = try_ecol(e, true);
       // Note: Edge e is now undefined.
       assertx(ecol_result.result == R_success);
+      assertx(ecol_result.vs == vs);
       if (minqem) {
         assertx(ecol_result.min_ii == 2);
         assertx(minii2 && no_fit_geom);
       }
-      // assertx(ecol_result.cost == cost);
+      // assertx(ecol_result.cost == cost);  // ??
       if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
         assertnever(SSHOW(err, cost));
-      const int j_vt = 1 - hh::index(V(v1, v2), ecol_result.vs);
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
-      Array<int> ar_j;
-      if (minqem && minii2 && no_fit_geom) {
-        ar_j = {j_vt};
-      } else {
-        ar_j = {0, 1};
-      }
-      for (const int j : ar_j) {
-        // for (Edge ee : invalidations_v1_v2[j]) invalidated_edges.add(ee);
-        invalidated_edges.merge(invalidations_v1_v2[j]);
-      }
+      invalidated_edges.merge(new_invalidated_edges);
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

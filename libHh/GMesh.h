@@ -207,7 +207,7 @@ template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
 #else  // C++17 std::to_chars().
   constexpr int size = 100;
   static_assert(n * 15 < size);
-  str.resize(size);
+  if (str.size() < size) str.resize(size);
   char* p = str.data();
   char* end = p + size;
   *p++ = '(';

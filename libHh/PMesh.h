@@ -559,9 +559,7 @@ inline int WMesh::get_wvf(int v, int f) const { return _faces[f].wedges[get_jvf(
 inline int WMesh::get_jvf(int v, int f) const {
   // Slower on clang:
   // return ((_wedges[_faces[f].wedges[1]].vertex == v) + (_wedges[_faces[f].wedges[2]].vertex == v) * 2);
-  return (_wedges[_faces[f].wedges[0]].vertex == v ? 0 :
-          _wedges[_faces[f].wedges[1]].vertex == v ? 1 :
-          2);
+  return (_wedges[_faces[f].wedges[0]].vertex == v ? 0 : _wedges[_faces[f].wedges[1]].vertex == v ? 1 : 2);
 }
 inline int WMesh::get_wvf(int v, int f) const {
   int w0 = _faces[f].wedges[0];

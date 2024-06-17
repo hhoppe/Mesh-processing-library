@@ -944,20 +944,21 @@ int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
 // Create vertex and corner strings representing wedge info on vertex v.
 // Possibly force all info onto corners even if vertex has unique wedge.
 void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners = false) {
-  int num = 0, g_wid;
-  dummy_init(g_wid);
-  bool same_wid = true;
-  for (Corner c : mesh.corners(v)) {
-    int wid = c_wedge_id(c);
-    if (!num++) {
-      g_wid = wid;
-    } else {
-      if (g_wid != wid) same_wid = false;
+  int common_wid = [&]() {
+    if (force_on_corners) return -1;
+    int g_wid = -1;
+    for (Corner c : mesh.corners(v)) {
+      const int wid = c_wedge_id(c);
+      if (g_wid < 0)
+        g_wid = wid;
+      else if (wid != g_wid)
+        return -1;
     }
-  }
-  assertx(num);
-  if (!force_on_corners && same_wid) {
-    int wid = g_wid;
+    assertx(g_wid >= 0);
+    return g_wid;
+  }();
+  if (common_wid >= 0) {
+    const int wid = common_wid;
     mesh.update_string(v, "wid", csform(str, "%d", wid));
     const WedgeInfo& wi = gwinfo[wid];
     const A3dColor& col = wi.col;
@@ -968,7 +969,7 @@ void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners =
     if (uv[0] != k_undefined) mesh.update_string(v, "uv", csform_vec(str, uv));
   } else {
     for (Corner c : mesh.corners(v)) {
-      int wid = c_wedge_id(c);
+      const int wid = c_wedge_id(c);
       const WedgeInfo& wi = gwinfo[wid];
       mesh.update_string(c, "wid", csform(str, "%d", wid));
       const A3dColor& col = wi.col;
@@ -1150,7 +1151,7 @@ void parse_mesh_wedge_identifiers() {
         Warning("Removing explicit zero normal from corner");
         mesh.update_string(c, "normal", nullptr);
       }
-      const Vnors vnors(mesh, v);  // const??
+      const Vnors vnors(mesh, v);
       Set<Corner> setcvis;
       for (Corner crep : mesh.corners(v)) {
         if (!setcvis.add(crep)) continue;
@@ -4270,9 +4271,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       Vertex vo = mesh.opp_vertex(e, f);
       create_vertex_corner_strings(vo, str, true);
       Corner c = mesh.corner(vo, f);
-      const char* sinfo = mesh.get_string(c);
-      if (sinfo)
-        os << "Corner " << mesh.vertex_id(vo) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
+      if (mesh.get_string(c)) write_corner(os, vo, c);
       clear_vertex_corner_strings(vo);
     }
     for_int(i, 2) {
@@ -4565,7 +4564,6 @@ void parallel_optimize() {
     parallel_for_each(range(ar_edgecost.num()), [&](int index) { e_index(ar_edgecost[index].e) = index; });
 
     HH_STIMER("__opt_ecols");
-    Set<Edge> invalidated_edges;
     const float k_fraction_edges = 0.15f;
     const bool vs_never_changes = minqem && minii2 && no_fit_geom;
     int num_edges_considered = 0, num_edges_collapsed = 0;
@@ -4575,20 +4573,17 @@ void parallel_optimize() {
       if (cost == k_bad_cost) break;
       if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
       num_edges_considered++;
-      if (invalidated_edges.contains(e)) continue;
+      if (e_index(e) != index) continue;  // Edge was invalidated.
       // COMMIT.
-      mesh.valid(e);
+      if (k_debug) mesh.valid(e);
       const bool bswap = desire_edge_orientation_swap(e, min_ii);
       num_edges_collapsed++;
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Vertex vs = !bswap ? v1 : v2;
-      const int j_vt = 1 - hh::index(V(v1, v2), vs);
-      Set<Edge> new_invalidated_edges;
-      for_int(j, 2) {
-        if (vs_never_changes && j != j_vt) continue;
-        Vertex v = V(v1, v2)[j];
+      for (Vertex v : V(v1, v2)) {
+        if (vs_never_changes && v == vs) continue;
         for (Vertex vv : mesh.vertices(v))
-          for (Edge ee : mesh.edges(vv)) new_invalidated_edges.add(ee);
+          for (Edge ee : mesh.edges(vv)) e_index(ee) = -1;  // Invalidate the edge.
       }
       const EcolResult ecol_result = try_ecol(e, true);
       // Note: Edge e is now undefined.
@@ -4598,11 +4593,10 @@ void parallel_optimize() {
         assertx(ecol_result.min_ii == 2);
         assertx(minii2 && no_fit_geom);
       }
-      // assertx(ecol_result.cost == cost);  // ??
+      // assertx(ecol_result.cost == cost);  // reexamine??
       if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
         assertnever(SSHOW(err, cost));
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
-      invalidated_edges.merge(new_invalidated_edges);
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

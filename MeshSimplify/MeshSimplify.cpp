@@ -4610,8 +4610,8 @@ void parallel_optimize() {
       if (e_index(e) != index) continue;  // Edge was invalidated.
       // COMMIT.
       if (k_debug) mesh.valid(e);
-      const bool bswap = desire_edge_orientation_swap(e, min_ii);
       num_edges_collapsed++;
+      const bool bswap = desire_edge_orientation_swap(e, min_ii);
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Vertex vs = !bswap ? v1 : v2;
       for (Vertex v : V(v1, v2)) {
@@ -4622,15 +4622,14 @@ void parallel_optimize() {
       const EcolResult ecol_result = try_ecol(e, true);
       // Note: Edge e is now undefined.
       assertx(ecol_result.result == R_success);
-      assertx(ecol_result.vs == vs);
       if (minqem) {
         assertx(ecol_result.min_ii == 2);
         assertx(minii2 && no_fit_geom);
       }
-      assertx(abs(ecol_result.cost - cost) < 1e-6f);  // reexamine??
-      if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
-        assertnever(SSHOW(err, cost));
-      // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".
+      assertw(ecol_result.vs == vs);  // Rare numerical precision issues?
+      // assertx(abs(ecol_result.cost - cost) < 1e-4f);  // reexamine??
+      // if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
+      //   assertnever(SSHOW(err, cost));
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

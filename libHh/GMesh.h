@@ -208,18 +208,17 @@ template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
   constexpr int size = 100;
   static_assert(n * 15 < size);
   if (str.size() < size) str.resize(size);
-  char* p = str.data();
-  char* end = p + size;
-  *p++ = '(';
+  char* s = str.data();
+  char* end = s + size;
+  *s++ = '(';
   for_int(i, n) {
-    if (i) *p++ = ' ';
+    if (i) *s++ = ' ';
     constexpr int precision = 6;  // Default for printf("%g").
-    const auto result = std::to_chars(p, end, vec[i], std::chars_format::general, precision);
-    p = result.ptr;
-    ASSERTXX(p < end - 2);
+    s = std::to_chars(s, end, vec[i], std::chars_format::general, precision).ptr;
+    ASSERTXX(s < end - 2);
   }
-  *p++ = ')';
-  *p++ = char{0};
+  *s++ = ')';
+  *s++ = char{0};
   return str.c_str();
 #endif
 }

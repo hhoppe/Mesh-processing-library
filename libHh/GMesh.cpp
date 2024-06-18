@@ -290,49 +290,49 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     SHOW(vall);
   }
   unique_ptr<char[]> arnew;
-  char* p0;
+  char* s0;
   if (newl == 0) {  // new string is null (""), so clear it
     ss = nullptr;
     return;
   } else if (sso && newl <= ssol) {  // new string fits, so copy in-place
-    p0 = ss.get();                   // "char*" whereas sso is "const char*"
+    s0 = ss.get();                   // "char*" whereas sso is "const char*"
   } else {                           // string needs to grow
     arnew = make_unique<char[]>(newl + 1);
-    p0 = arnew.get();
+    s0 = arnew.get();
   }
-  char* p = p0;
-  ASSERTX(p);
+  char* s = s0;
+  ASSERTX(s);
   if (fkb) {
     ASSERTX(sso);  // logic implies it
     if (fkb > sso) {
-      if (p != sso) std::memcpy(p, sso, fkb - sso - 1);  // does not write '\0'
-      p += fkb - sso - 1;
+      if (s != sso) std::memcpy(s, sso, fkb - sso - 1);  // does not write '\0'
+      s += fkb - sso - 1;
     }
   } else {
     if (sso) {
-      ASSERTX(p != sso);
-      std::memcpy(p, sso, ssol);
-      p += ssol;
+      ASSERTX(s != sso);
+      std::memcpy(s, sso, ssol);
+      s += ssol;
     }
   }
   if (val) {
-    if (p > p0) *p++ = ' ';
-    std::memmove(p, key, keyl);
-    p += keyl;
+    if (s > s0) *s++ = ' ';
+    std::memmove(s, key, keyl);
+    s += keyl;
     if (*val) {
-      *p++ = '=';
-      std::memmove(p, val, vall);
-      p += vall;
+      *s++ = '=';
+      std::memmove(s, val, vall);
+      s += vall;
     }
   }
   if (frb) {
-    if (p > p0) *p++ = ' ';
+    if (s > s0) *s++ = ' ';
     size_t frbl = strlen(frb);  // frb may be partially overwritten by next std::memmove()
-    if (p != frb) std::memmove(p, frb, frbl);
-    p += frbl;
+    if (s != frb) std::memmove(s, frb, frbl);
+    s += frbl;
   }
-  *p = '\0';
-  if (p != p0 + newl) assertnever(SSHOW(sso, p0, p - p0, newl));
+  *s = '\0';
+  if (s != s0 + newl) assertnever(SSHOW(sso, s0, s - s0, newl));
   if (arnew) ss = std::move(arnew);
 }
 
@@ -809,34 +809,34 @@ Vertex GMesh::center_split_face(Face f) {
     Vertex v = corner_vertex(c);
     if (get_string(c)) mvs.enter(v, extract_string(c));
   }
-  Vector scol{};
-  bool have_col = true;
   Vector snor{};
   bool have_nor = true;
+  Vector scol{};
+  bool have_col = true;
   UV suv{};
   bool have_uv = true;
   for (Corner c : corners(f)) {
-    if (Vector col; parse_corner_key_vec(c, "rgb", col))
-      scol += col;
-    else
-      have_col = false;
     if (Vector nor; parse_corner_key_vec(c, "normal", nor))
       snor += nor;
     else
       have_nor = false;
+    if (Vector col; parse_corner_key_vec(c, "rgb", col))
+      scol += col;
+    else
+      have_col = false;
     if (UV uv; parse_corner_key_vec(c, "uv", uv))
       suv += uv;
     else
       have_uv = false;
   }
-  scol /= float(poly.num());
   snor /= float(poly.num());
+  scol /= float(poly.num());
   suv /= float(poly.num());
   Vertex vn = Mesh::center_split_face(f);
   set_point(vn, mean(poly));
   string str;
-  if (have_col) update_string(vn, "rgb", csform_vec(str, scol));
   if (have_nor) update_string(vn, "normal", csform_vec(str, snor));
+  if (have_col) update_string(vn, "rgb", csform_vec(str, scol));
   if (have_uv) update_string(vn, "uv", csform_vec(str, suv));
   if (fstring)
     for (Face fn : faces(vn)) set_string(fn, fstring.get());

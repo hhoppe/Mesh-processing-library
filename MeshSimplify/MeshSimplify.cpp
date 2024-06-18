@@ -941,9 +941,50 @@ int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
   return compare(wi1.col, wi2.col, k_tol) || compare(wi1.nor, wi2.nor, k_tol) || compare(wi1.uv, wi2.uv, k_tol);
 }
 
+const char* generate_corner_string(Corner c, string& str) {
+  const int wid = c_wedge_id(c);
+  const WedgeInfo& wi = gwinfo[wid];
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
+  // https://en.cppreference.com/w/cpp/compiler_support/17
+  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
+  string str1;
+  str = ssform(str1, "wid=%d", wid);
+  str = GMesh::string_update(str, "normal", csform_vec(str1, wi.nor));
+  if (wi.col[0] != k_undefined) str = GMesh::string_update(str, "rgb", csform_vec(str1, wi.col));
+  if (wi.uv[0] != k_undefined) str = GMesh::string_update(str, "uv", csform_vec(str1, wi.uv));
+#else  // C++17 std::to_chars().
+  constexpr int size = 200;
+  if (str.size() < size) str.resize(size);
+  char* s = str.data();
+  char* end = s + size;
+  const auto consider = [&](const char* key, const auto& vec) {
+    if (vec[0] == k_undefined) return;
+    *s++ = ' ';
+    while (*key) *s++ = *key++;
+    *s++ = '=';
+    *s++ = '(';
+    for_int(i, vec.num()) {
+      if (i) *s++ = ' ';
+      constexpr int precision = 6;  // Default for printf("%g").
+      s = std::to_chars(s, end, vec[i], std::chars_format::general, precision).ptr;
+      ASSERTXX(s < end - 4);
+    }
+    *s++ = ')';
+  };
+  const char* s1 = "wid=";
+  while (*s1) *s++ = *s1++;
+  s = std::to_chars(s, end, wid).ptr;
+  consider("normal", wi.nor);
+  consider("rgb", wi.col);
+  consider("uv", wi.uv);
+  *s++ = char{0};
+#endif
+  return str.c_str();
+}
+
 // Create vertex and corner strings representing wedge info on vertex v.
 // Possibly force all info onto corners even if vertex has unique wedge.
-void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners = false) {
+void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners) {
   int common_wid = [&]() {
     if (force_on_corners) return -1;
     int g_wid = -1;
@@ -961,31 +1002,29 @@ void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners =
     const int wid = common_wid;
     mesh.update_string(v, "wid", csform(str, "%d", wid));
     const WedgeInfo& wi = gwinfo[wid];
-    const A3dColor& col = wi.col;
-    if (col[0] != k_undefined) mesh.update_string(v, "rgb", csform_vec(str, col));
     const Vector& nor = wi.nor;
     if (nor[0] != k_undefined) mesh.update_string(v, "normal", csform_vec(str, nor));
+    const A3dColor& col = wi.col;
+    if (col[0] != k_undefined) mesh.update_string(v, "rgb", csform_vec(str, col));
     const UV& uv = wi.uv;
     if (uv[0] != k_undefined) mesh.update_string(v, "uv", csform_vec(str, uv));
   } else {
     for (Corner c : mesh.corners(v)) {
-      const int wid = c_wedge_id(c);
-      const WedgeInfo& wi = gwinfo[wid];
-      mesh.update_string(c, "wid", csform(str, "%d", wid));
-      const A3dColor& col = wi.col;
-      if (col[0] != k_undefined) mesh.update_string(c, "rgb", csform_vec(str, col));
-      const Vector& nor = wi.nor;
-      if (nor[0] != k_undefined) mesh.update_string(c, "normal", csform_vec(str, nor));
-      const UV& uv = wi.uv;
-      if (uv[0] != k_undefined) mesh.update_string(c, "uv", csform_vec(str, uv));
+      if (0) {
+        const int wid = c_wedge_id(c);
+        const WedgeInfo& wi = gwinfo[wid];
+        mesh.update_string(c, "wid", csform(str, "%d", wid));
+        const Vector& nor = wi.nor;
+        if (nor[0] != k_undefined) mesh.update_string(c, "normal", csform_vec(str, nor));
+        const A3dColor& col = wi.col;
+        if (col[0] != k_undefined) mesh.update_string(c, "rgb", csform_vec(str, col));
+        const UV& uv = wi.uv;
+        if (uv[0] != k_undefined) mesh.update_string(c, "uv", csform_vec(str, uv));
+      } else {
+        mesh.set_string(c, generate_corner_string(c, str));
+      }
     }
   }
-}
-
-// Clear vertex and corner strings of vertex v.
-void clear_vertex_corner_strings(Vertex v) {
-  mesh.set_string(v, nullptr);
-  for (Corner c : mesh.corners(v)) mesh.set_string(c, nullptr);
 }
 
 void create_face_string(Face f) { mesh.set_string(f, material_strings[f_matid(f)].c_str()); }
@@ -994,16 +1033,19 @@ void clear_face_string(Face f) { mesh.set_string(f, nullptr); }
 
 // Clear all mesh strings except on faces.
 void clear_mesh_strings() {
-  parallel_for_each(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { clear_vertex_corner_strings(v); });
+  parallel_for_each(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { mesh.set_string(v, nullptr); });
   parallel_for_each(Array<Edge>{mesh.edges()}, [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
   // Encoded by f_matid and material_strings.
-  parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) { clear_face_string(f); });
+  parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) {
+    clear_face_string(f);
+    for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
+  });
 }
 
 // Write current mesh.
 void write_mesh(std::ostream& os) {
   string str;
-  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str);
+  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str, false);
   for (Vertex v : mesh.vertices())
     if (v_global(v)) mesh.update_string(v, "global", "");
   for (Face f : mesh.faces()) create_face_string(f);
@@ -1030,9 +1072,6 @@ void write_mesh(std::ostream& os) {
 // Parse wedge attributes at corner c, using computed normals in vnors if corner doesn't have an explicit normal.
 WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
   WedgeInfo wi;
-  A3dColor& col = wi.col;
-  fill(col, k_undefined);
-  mesh.parse_corner_key_vec(c, "rgb", col);
   Vector& nor = wi.nor;
   nor = vnors.get_nor(mesh.corner_face(c));
   // Normalize normals if necessary.
@@ -1048,6 +1087,9 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
   }
   // disabled next line 2001-08-23
   if (0 && rnor001) nor = Vector(0.f, 0.f, 1.f);
+  A3dColor& col = wi.col;
+  fill(col, k_undefined);
+  mesh.parse_corner_key_vec(c, "rgb", col);
   UV& uv = wi.uv;
   fill(uv, k_undefined);
   mesh.parse_corner_key_vec(c, "uv", uv);
@@ -3639,7 +3681,7 @@ void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   if (sinfo) os << " {" << sinfo << "}";
   os << "\n";
 #else
-  constexpr int capacity = 80;
+  constexpr int capacity = 200;
   char buffer[capacity];
   char* const end = buffer + capacity;
   strcpy(buffer, "MVertex ");
@@ -3664,13 +3706,11 @@ void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
 #endif
 }
 
-void write_corner(std::ostream& os, Vertex v, Corner c) {
-  const char* sinfo = mesh.get_string(c);
-  assertx(sinfo);
+void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {
   if (0) {
     os << "Corner " << mesh.vertex_id(v) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
   } else {
-    constexpr int capacity = 160;
+    constexpr int capacity = 200;
     char buffer[capacity];
     char* const end = buffer + capacity;
     strcpy(buffer, "Corner ");
@@ -3680,7 +3720,7 @@ void write_corner(std::ostream& os, Vertex v, Corner c) {
     s = std::to_chars(s, end, mesh.face_id(mesh.corner_face(c))).ptr;
     *s++ = ' ';
     *s++ = '{';
-    assertx(s + strlen(sinfo) + 4 < end);
+    ASSERTXX(s + strlen(sinfo) + 4 < end);
     while (*sinfo) *s++ = *sinfo++;
     *s++ = '}';
     *s++ = '\n';
@@ -4269,17 +4309,13 @@ EcolResult try_ecol(Edge e, bool commit) {
         continue;
       }
       Vertex vo = mesh.opp_vertex(e, f);
-      create_vertex_corner_strings(vo, str, true);
       Corner c = mesh.corner(vo, f);
-      if (mesh.get_string(c)) write_corner(os, vo, c);
-      clear_vertex_corner_strings(vo);
+      write_corner(os, vo, c, generate_corner_string(c, str));
     }
     for_int(i, 2) {
       Vertex v = !i ? vs : vt;
-      create_vertex_corner_strings(v, str, true);
       write_mvertex(os, v, nullptr);
-      for (Corner c : mesh.corners(v)) write_corner(os, v, c);
-      clear_vertex_corner_strings(v);
+      for (Corner c : mesh.corners(v)) write_corner(os, v, c, generate_corner_string(c, str));
     }
     for_int(i, 2) {
       Face f = !i ? fl : fr;
@@ -4376,13 +4412,11 @@ EcolResult try_ecol(Edge e, bool commit) {
     std::ostream& os = (*wfile_prog)();
     // Faces are gone.
     string str;
-    create_vertex_corner_strings(vs, str, true);
     write_mvertex(os, vs, mesh.get_string(vs));
-    for (Corner c : mesh.corners(vs)) write_corner(os, vs, c);
+    for (Corner c : mesh.corners(vs)) write_corner(os, vs, c, generate_corner_string(c, str));
     os << sform("# Residuals %g %g\n", uni_error, dir_error);
     os << sform("# End REcol\n");
     assertx(os);
-    clear_vertex_corner_strings(vs);
   }
   if (k_debug) {
     for (fptinfo* pfpt : nn.ar_fpts) mesh.valid(assertx(pfpt->cmf));
@@ -4593,7 +4627,7 @@ void parallel_optimize() {
         assertx(ecol_result.min_ii == 2);
         assertx(minii2 && no_fit_geom);
       }
-      // assertx(ecol_result.cost == cost);  // reexamine??
+      assertx(abs(ecol_result.cost - cost) < 1e-6f);  // reexamine??
       if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
         assertnever(SSHOW(err, cost));
       // for (const int j : {0, 1})  // Achieves strict "assertx(ecol_result.cost == cost)".

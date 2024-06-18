@@ -1549,13 +1549,13 @@ void do_genpattern(Args& args) {
   string pattern = args.get_string();
   for (const auto& yx : range(image.dims())) {
     const int y = yx[0], x = yx[1];
-    const char* p = pattern.c_str();  // inefficient re-parsing but OK.
+    const char* s = pattern.c_str();  // inefficient re-parsing but OK.
     float v;
-    if (*p == 'B') {  // examine bilinear reconstruction for PL image
-      p++;
+    if (*s == 'B') {  // examine bilinear reconstruction for PL image
+      s++;
       float xf = float(x) / (image.xsize() - 1.f);
       float yf = float(y) / (image.ysize() - 1.f);
-      switch (*p++) {
+      switch (*s++) {
         case 'd': {  // diagonal, black at (0, 0), (1, 1)
           const float vA = 0.f, vB = 1.f, vC = 0.f, vD = 1.f;
           v = (1 - yf) * ((1 - xf) * vA + xf * vB) + (yf) * ((1 - xf) * vD + xf * vC);
@@ -1570,7 +1570,7 @@ void do_genpattern(Args& args) {
       }
     } else {
       float r;
-      switch (*p++) {
+      switch (*s++) {
         case 'x': r = float(x) / (image.xsize() - 1.f); break;
         case 'y': r = float(y) / (image.ysize() - 1.f); break;
         case 'd':  // diagonal
@@ -1590,11 +1590,11 @@ void do_genpattern(Args& args) {
         }
         default: assertnever("error parsing genpattern name");
       }
-      while (*p == 'h') {  // hat
-        p++;
+      while (*s == 'h') {  // hat
+        s++;
         r = r <= .5f ? r * 2.f : 1.f - (r - .5f) * 2.f;
       }
-      switch (*p++) {
+      switch (*s++) {
         case 's':  // step
           v = r < .5f ? 0.f : 1.f;
           break;

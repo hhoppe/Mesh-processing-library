@@ -983,10 +983,8 @@ const char* generate_corner_string(Corner c, string& str) {
 }
 
 // Create vertex and corner strings representing wedge info on vertex v.
-// Possibly force all info onto corners even if vertex has unique wedge.
-void create_vertex_corner_strings(Vertex v, string& str, bool force_on_corners) {
+void create_vertex_corner_strings(Vertex v, string& str) {
   int common_wid = [&]() {
-    if (force_on_corners) return -1;
     int g_wid = -1;
     for (Corner c : mesh.corners(v)) {
       const int wid = c_wedge_id(c);
@@ -1045,7 +1043,7 @@ void clear_mesh_strings() {
 // Write current mesh.
 void write_mesh(std::ostream& os) {
   string str;
-  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str, false);
+  for (Vertex v : mesh.vertices()) create_vertex_corner_strings(v, str);
   for (Vertex v : mesh.vertices())
     if (v_global(v)) mesh.update_string(v, "global", "");
   for (Face f : mesh.faces()) create_face_string(f);

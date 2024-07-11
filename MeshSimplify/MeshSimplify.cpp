@@ -3729,6 +3729,23 @@ void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {
   }
 }
 
+void write_corners(std::ostream& os, Vertex v, string& str) {
+  if (0) {
+    for (Corner c : mesh.corners(v)) write_corner(os, v, c, generate_corner_string(c, str));
+  } else {
+    int prev_wid = -1;
+    const char* s = nullptr;
+    for (Corner c : mesh.corners(v)) {
+      const int wid = c_wedge_id(c);
+      if (wid != prev_wid) {
+        s = generate_corner_string(c, str);
+        prev_wid = wid;
+      }
+      write_corner(os, v, c, s);
+    }
+  }
+}
+
 struct EcolResult {
   EResult result;
   float cost{k_bad_cost};
@@ -4315,7 +4332,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     for_int(i, 2) {
       Vertex v = !i ? vs : vt;
       write_mvertex(os, v, nullptr);
-      for (Corner c : mesh.corners(v)) write_corner(os, v, c, generate_corner_string(c, str));
+      write_corners(os, v, str);
     }
     for_int(i, 2) {
       Face f = !i ? fl : fr;
@@ -4413,7 +4430,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     // Faces are gone.
     string str;
     write_mvertex(os, vs, mesh.get_string(vs));
-    for (Corner c : mesh.corners(vs)) write_corner(os, vs, c, generate_corner_string(c, str));
+    write_corners(os, vs, str);
     os << sform("# Residuals %g %g\n", uni_error, dir_error);
     os << sform("# End REcol\n");
     assertx(os);
@@ -4578,7 +4595,12 @@ void parallel_optimize() {
       float cost{0.f};
       int min_ii{-1};
     };
-    Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e}; })};
+    // Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e}; })};
+    Array<EdgeCost> ar_edgecost(mesh.num_edges());
+    {
+      int edge_index = 0;
+      for (Edge e : mesh.edges()) ar_edgecost[edge_index++].e = e;
+    }
 
     {
       HH_STIMER("__opt_cost");

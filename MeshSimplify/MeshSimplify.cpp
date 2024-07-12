@@ -95,59 +95,12 @@ namespace {
 //  get size=14108 rss=12000  (tested using su -c "squeeze -m 15")
 //  uses about 192 MiB  -> 765 bytes/vertex
 
-/* HPIX
-// set o=fandisk.m r=fandisk.test; hpix MeshSimplify $o -numpts 10000 \
-// -nf 4000 -simp -outm $r.nf4000.m.gz -nf 2000 -simp -outm $r.nf2000.m.gz \
-// -nf 1000 -simp -outm $r.nf1000.m.gz -nf 400 -simp -outm $r.nf400.m.gz \
-// -nf 200 -simp -outm $r.nf200.m.gz -nf 100 -simp -outm $r.nf100.m.gz \
-// -nooutput > $r.simp.ou
-*/
-// Date: Mon Feb 12 15:30:24 PST 1996
-//     cycles %cycles  cumu%    instrs  cycles   calls     cycles procedure
-//                                      /inst               /call
-// 11137545181  30.1%  30.1% 6055440361    1.8    51659     215597 project_fpts(const NewMeshNei&,const Point&,Param&)
-// 6027550578  16.3%  46.4% 2583226130    2.3 15171951        397 project_point_triangle2(const Point&,const Point&,const Point&,const Point&,Bary&,Point&)
-// 2344203287   6.3%  52.7% 1195859417    2.0  9109779        257 projecth(const Point&,const Point&,const Point&,const Point&,Bary&,Point&,const Point&,float,float,float)
-// 1550061548   4.2%  56.9%  946647852    1.6    51659      30006 fit_geom(const NewMeshNei&,const Param&,float,Point&)
-// 1517734548   4.1%  61.0%  914471669    1.7    77801      19508 gather_nn(MEdge*,NewMeshNei&)
-// 1085097886   2.9%  63.9%  598116639    1.8     6423     168939 reproject_locally(const NewMeshNei&)
-// 1028811173   2.8%  66.7%  483863549    2.1  2780370        370 dihedral_angle_cos(const Point&,const Point&,const Point&,const Point&)
-//  844822024   2.3%  69.0%  258140104    3.3  5866823        144 __sqrt
-//  632873419   1.7%  70.7%  231134422    2.7   402354       1573 BHPqueue::adjust(int,int,int)
-//  593372951   1.6%  72.3%  295282680    2.0  2472386        240 project_point_seg2(const Point&,const Point&,const Point&,float*)
-//  575498969   1.6%  73.8%  439056127    1.3  3478247        165 _lmalloc
-//  567826149   1.5%  75.4%  264785199    2.1  8257721         69 Mesh::query_hedge(MVertex*,MVertex*) const
-//  542184958   1.5%  76.8%  399972510    1.4  8888278         61 hedge_scalar_bnd(MVertex*,MEdge*)
-//  441385895   1.2%  78.0%  227603595    1.9  3478106        127 _lfree
-
-// HPIXPC for terrain simplification (gcanyon_sq200):
-//  simplification rate: 184.38 faces / sec
-//  (MeshSimplify:          429.54)
-//  429633 4.3e+02s R10000 R10010 195.0MHz   1      1.0ms     2(bytes)
-// samples   time(%)      cumu time(%)     procedure (dso:file)
-//   29631    30s(  6.9)   30s(  6.9) BHPqueue::adjust
-//   22902    23s(  5.3)   53s( 12.2) evaluate_terrain_resid
-//   16214    16s(  3.8)   69s( 16.0) Mesh::query_hedge
-//   15445    15s(  3.6)   84s( 19.6)       _lmalloc
-//   15353    15s(  3.6) 1e+02s( 23.2)    BMap::clear
-//   11312    11s(  2.6) 1.1e+02s( 25.8) hedge_scalar_bnd
-//   11171    11s(  2.6) 1.2e+02s( 28.4)        _doprnt
-//   10816    11s(  2.5) 1.3e+02s( 30.9)       optimize
-//    9912   9.9s(  2.3) 1.4e+02s( 33.2)         _times
-//    9715   9.7s(  2.3) 1.5e+02s( 35.5) BHPqueue::retrieve
-//    9583   9.6s(  2.2) 1.6e+02s( 37.7)      gather_nn
-//    7788   7.8s(  1.8) 1.7e+02s( 39.5)       try_ecol
-//    7334   7.3s(  1.7) 1.8e+02s( 41.2) VertexEdgeIter::next
-//    7326   7.3s(  1.7) 1.8e+02s( 42.9)         _lfree
-//    7130   7.1s(  1.7) 1.9e+02s( 44.6)     edge_sharp
-//    7129   7.1s(  1.7) 2e+02s( 46.3) Mesh::clw_corner
-//    7100   7.1s(  1.7) 2.1e+02s( 47.9)   BMap::resize
-//    6703   6.7s(  1.6) 2.1e+02s( 49.5)    _BSD_getime
-// --> evaluate_terrain_resid should be bottleneck, so speedup of nearly 20 should be possible -> 4000 faces / sec!
-
 // Notes:
 // - springs seem somewhat useful; they cannot be removed entirely.
 //    (e.g. in key.np10000.crep1e-5.spr0.m , the ring starts folding inwards, and there are several bad folds)
+
+// With -vsgeom and !qemgh98 and qemlocal, omit introducing any Qem struct, and let qemcache default back to false?
+// Instead, develop a new WMeshSimplify program.
 
 // Gather a ring of vertices around vertex v.
 auto gather_vertex_ring(const GMesh& mesh, Vertex v) {

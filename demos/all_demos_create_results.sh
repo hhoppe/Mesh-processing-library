@@ -28,6 +28,8 @@ create_topologically_simplified.sh
 
 create_vertexcache_bunny.sh
 
+create_spherical_param_bunny.sh
+
 create_rendered_mechpart_image.sh
 create_rendered_mechpart_video.sh
 create_voronoi_fillin.sh

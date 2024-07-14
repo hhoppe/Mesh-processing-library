@@ -13,4 +13,4 @@ echo '.'
 
 bin/meshtopm.sh data/gcanyon_sq200.orig.m -vsgeom -terrain >data/gcanyon_sq200.pm
 
-echo 'Use view_sr_terrain.bat to see geomorphs on the view-dependent terrain.'
+echo 'Use view_sr_terrain.sh to see geomorphs on the view-dependent terrain.'

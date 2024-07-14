@@ -31,6 +31,7 @@ prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
   MeshSimplify reverselines Filterprog FilterPM StitchPM \
   MinCycles MeshReorder \
+  SphereParam SphereSample \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \
   G3dOGL G3dVec VideoViewer \
 

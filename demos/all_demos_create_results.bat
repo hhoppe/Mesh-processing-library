@@ -26,6 +26,8 @@ if .==. (
 
   call create_vertexcache_bunny.bat
 
+  call create_spherical_param_bunny.bat
+
   call create_rendered_mechpart_image.bat
   call create_rendered_mechpart_video.bat
   call create_voronoi_fillin.bat

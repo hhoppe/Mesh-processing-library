@@ -4336,8 +4336,8 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   // sanity checks
-  if (minaps) check_ccw(vs);
   if (k_debug) {
+    if (minaps) check_ccw(vs);
     {
       for_int(i, nn.ar_corners.num()) {
         Corner c = nn.ar_corners[i][2];

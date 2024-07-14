@@ -36,6 +36,11 @@ data\gcanyon_sq129_b44.l2.pm ^
 data\create_terrain_hierarchy.log ^
 data\office.nf200000.mincycles.m ^
 data\bunny.vertexcache.m ^
+data\bunny.sphparam.m ^
+data\bunny.spheresample.remesh.m ^
+data\bunny.spheresample.octaflat.unrotated.normalmap.png ^
+data\bunny.lonlat.unrotated.normalmap.png ^
+data\bunny.split_meridian.pm ^
 data\mechpart.image.bmp ^
 data\mechpart.video.mp4 ^
 data\mechpart.hlr.ps ^

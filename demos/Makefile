@@ -30,6 +30,7 @@ create_scripts = \
   create_terrain_hierarchy.sh \
   create_topologically_simplified.sh \
   create_vertexcache_bunny.sh \
+  create_spherical_param_bunny.sh \
   create_rendered_mechpart_image.sh \
   create_rendered_mechpart_video.sh \
   create_voronoi_fillin.sh \
@@ -53,6 +54,7 @@ view_scripts = \
   view_psc_drumset.sh \
   view_topologically_simplified.sh \
   view_vertexcache_bunny.sh \
+  view_spherical_param_bunny.sh \
   view_rendered_mechpart_image.sh \
   view_rendered_mechpart_video.sh \
   view_voronoi_fillin.sh \

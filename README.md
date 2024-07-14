@@ -12,7 +12,7 @@ Nice docs in http://daringfireball.net/projects/markdown/syntax
 ## Overview
 
 This package contains C++ libraries and programs demonstrating mesh processing research
-published in ACM SIGGRAPH (1992&ndash;1999):
+published in ACM SIGGRAPH (1992&ndash;2003):
 
 - <em>surface reconstruction</em> (from unorganized, unoriented points)
 - <em>mesh optimization</em>
@@ -24,6 +24,7 @@ published in ACM SIGGRAPH (1992&ndash;1999):
 - <em>smooth terrain LOD</em>
 - <em>progressive simplicial complexes</em>
 - <em>optimized mesh traversal</em> (for transparent vertex caching)
+- <em>spherical parameterization</em>
 
 The source code has been updated to modern C++ style and for cross-platform use.
 
@@ -106,7 +107,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/recon/">Surface reconstruction from unorganized points</a>.</div>
    <div class="authors">Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, Werner Stuetzle.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1992 Proceedings</cite>, 71-78.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1992 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div class="desc"><em>Signed-distance field estimated from a set of unoriented noisy points.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_recon"><code>Recon</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_recon_*.{sh,bat}</code>, <code>view_recon_*.{sh,bat}</code></div>
@@ -120,7 +121,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/meshopt/">Mesh optimization</a>.</div>
    <div class="authors">Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, Werner Stuetzle.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1993 Proceedings</cite>, 19-26.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1993 Proceedings</cite>.</div>
    <div class="desc"><em>Traversing the space of triangle meshes to optimize model fidelity and conciseness.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_Meshfit"><code>Meshfit</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_recon_*</code>, <code>view_recon_*</code>, <code>create_simplified_using_meshopt</code>, <code>view_simplified_using_meshopt</code></div>
@@ -134,7 +135,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psrecon/">Piecewise Smooth Surface Reconstruction</a>.</div>
    <div class="authors">Hugues Hoppe, Tony DeRose, Tom Duchamp, Michael Halstead, Hubert Jin, John McDonald, Jean Schweitzer, Werner Stuetzle.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1994 Proceedings</cite>, 295-302.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1994 Proceedings</cite>.</div>
    <div class="desc"><em>Subdivision surfaces with sharp features, and their automatic creation by data fitting.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_Subdivfit"><code>Subdivfit</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_recon_cactus</code>, <code>view_recon_cactus</code></div>
@@ -148,7 +149,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/pm/">Progressive meshes</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1996 Proceedings</cite>, 99-108.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div class="desc"><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="#prog_reverselines"><code>reverselines</code></a>, <a href="#prog_Filterprog"><code>Filterprog</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_geomorphs</code>, <code>view_geomorphs</code>
@@ -162,7 +163,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/efficientpm/">Efficient implementation of progressive meshes</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
-   <div class="pub"><cite>Computers &amp; Graphics</cite>, 22(1), 1998, 27-36.</div>
+   <div class="pub"><cite>Computers &amp; Graphics</cite>, 22(1), 1998.</div>
    <div class="desc"><em>Progressive mesh data structures compatible with GPU vertex buffers.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_FilterPM"><code>FilterPM</code></a>, <a href="#prog_G3dOGL"><code>G3dOGL</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_pm_club</code>, <code>view_pm_club</code>, <code>determine_approximation_error</code></div>
@@ -176,7 +177,7 @@ For instance, the line
      <td class="rcell">
       <div class="title"><a href="https://hhoppe.com/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
       <div class="authors">Hugues Hoppe.</div>
-      <div class="pub"><cite>IEEE Visualization 1999 Conference</cite>, 59-66.</div>
+      <div class="pub"><cite>IEEE Visualization 1999 Conference</cite>.</div>
       <div class="desc"><em>Efficient simplification metric designed around correspondence in 3D space.</em></div>
       <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
       <div class="demos"><span class="sdemos">Demos:</span> <code>create_pm_gaudipark</code>, <code>view_pm_gaudipark</code></div>
@@ -190,7 +191,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/vdrpm/">View-dependent refinement of progressive meshes</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1997 Proceedings</cite>, 189-198.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1997 Proceedings</cite>.</div>
    <div class="desc"><em>Lossless multiresolution structure for incremental local refinement/coarsening.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_FilterPM"><code>FilterPM</code></a>, <a href="#prog_G3dOGL"><code>G3dOGL</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_sr_office</code>, <code>view_sr_office</code></div>
@@ -204,7 +205,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/svdlod/">Smooth view-dependent level-of-detail control and its application to terrain rendering</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
-   <div class="pub"><cite>IEEE Visualization 1998 Conference</cite>, 35-42.</div>
+   <div class="pub"><cite>IEEE Visualization 1998 Conference</cite>. (<a href="https://ieeevis.org/year/2023/info/awards/test-of-time-awards#scivis"><em>2023 Test of Time Award</em></a>.)</div>
    <div class="desc"><em>Visually smooth adaptation of mesh refinement using cascaded temporal geomorphs.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_StitchPM"><code>StitchPM</code></a>, <a href="#prog_G3dOGL"><code>G3dOGL</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_terrain_hierarchy</code>, <code>view_terrain_hierarchy</code>, <code>create_sr_terrain</code>, <code>view_sr_terrain</code>, <code>view_gcanyon_*</code></div>
@@ -218,7 +219,7 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psc/">Progressive simplicial complexes</a>.</div>
    <div class="authors">Jovan Popovic, Hugues Hoppe.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1997 Proceedings</cite>, 217-224.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1997 Proceedings</cite>.</div>
    <div class="desc"><em>Progressive encoding of both topology and geometry.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_G3dOGL"><code>G3dOGL</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>view_psc_drumset</code></div>
@@ -232,10 +233,24 @@ For instance, the line
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
-   <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>, 269-276.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 1999 Proceedings</cite>.</div>
    <div class="desc"><em>Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshReorder"><code>MeshReorder</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_vertexcache_bunny</code>, <code>view_vertexcache_bunny</code></div>
+  </td>
+ </tr>
+
+ <tr id="pub_sphereparam">
+  <td class="lcell">
+   <img class="thumbnail" src="thumbnails/sphereparam.red.jpg" alt=""/>
+  </td>
+  <td class="rcell">
+   <div class="title"><a href="https://hhoppe.com/proj/sphereparam/">Spherical parameterization and remeshing</a>.</div>
+   <div class="authors">Emil Praun, Hugues Hoppe.</div>
+   <div class="pub"><cite>ACM SIGGRAPH 2003 Proceedings</cite>.</div>
+   <div class="desc"><em>Robust mapping of a surface onto a sphere, allowing 2D-grid resampling.</em></div>
+   <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_SphereParam"><code>SphereParam</code></a>, <a href="#prog_SphereSample"><code>SphereSample</code></a></div>
+   <div class="demos"><span class="sdemos">Demos:</span> <code>create_spherical_param_bunny</code>, <code>view_spherical_param_bunny</code></div>
   </td>
  </tr>
 
@@ -275,9 +290,9 @@ All programs recognize the argument `--help` (or `-?`) to show their many option
 
 The programs `Filterimage`, `Filtermesh`, `Filtervideo`,
 `FilterPM`, and `Filterframe` are all designed to:
-- read media from `std::cin` (or from files or procedures specified as initial arguments),
+- read media from `stdin` (or from files or procedures specified as initial arguments),
 - perform operations specified by arguments, and
-- write media to `std::cout` (unless `-nooutput` is specified).
+- write media to `stdout` (unless `-nooutput` is specified).
 
 For example, the **`Filterimage`** command<a id="prog_Filterimage"></a>
 ```shell
@@ -293,7 +308,7 @@ Filterimage demos/data/gaudipark.png -rotate 20 -cropleft 100 -cropright 100 \
 - adds a 20-pixel blue border on all sides,
 - adds an alpha channel and creates an undefined (`alpha=0`) rectangular region in the image center,
 - fills this region using gradient-domain smoothing,
-- outputs some statistics on pixel colors (to `std::cerr`), and
+- outputs some statistics on pixel colors (to `stderr`), and
 - writes the result to a file under a different encoding.
 
 As another example, the **`FilterPM`** command<a id="prog_FilterPM"></a>
@@ -343,7 +358,7 @@ Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -t
 - spatially crops a centered rectangle with width 400 pixels and height 240 pixels,
 - adjusts the color gamma,
 - sets the output bitrate to 10 megabits/sec, and
-- shows the result (`-` for `std::cin`) together with the original video in an interactive viewer,
+- shows the result (`-` for `stdin`) together with the original video in an interactive viewer,
 - with keypress <kbd>=</kbd> to scale the window by 2, <kbd>a</kbd> to loop all (two) videos,
   and <kbd>n</kbd> to initially select the next video.
 
@@ -649,11 +664,75 @@ MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_cor
 - reports the updated cache miss rate, and
 - writes the mesh with corner colors that identify cache misses.
 
-Then, within `dmeos/view_vertexcache_bunny`,
+Then, within `demos/view_vertexcache_bunny`,
 ```shell
 G3dOGL data/bunny.vertexcache.m -st data/bunny.s3d -key DmDTDTDC
 ```
 visualizes the resulting sequence of triangle strips and cache misses.
+
+
+## <a id="prog_SphereParam"></a>Spherical parameterization
+
+The program **`SphereParam`** computes spherical coordinates `sph` at the mesh vertices
+so as to minimize parametric stretch from the sphere to the surface mesh.
+
+For example, within `demos/create_spherical_param_bunny`,
+```shell
+meshtopm.{sh,bat} data/bunny.orig.m -minqem -vsgeom -dihallow | \
+  SphereParam - -rot data/bunny.s3d >data/bunny.sphparam.m
+```
+- creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
+- runs a coarse-to-fine spherical parameterization optimization,
+- aligning the spherical coordinates to the model's default view (`bunny.s3d`), and
+- writes the spherically parameterized mesh.
+
+Then, within `demos/view_spherical_param_bunny`,
+```shell
+Filtermesh data/bunny.sphparam.m -renamekey v sph P | \
+  G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ
+```
+- transfers each vertex's spherical coordinates `sph` to its position `P`,
+- visualizes the resulting triangulated sphere domain,
+- showing mesh edges (`De`) and rotating slowly (`J`) about the object axis (`o`).
+
+
+## <a id="prog_SphereSample"></a>Spherical resampling
+
+The program **`SphereSample`** computes uniform samplings of a spherically parameterized mesh.
+
+For example, within `demos/create_create_spherical_param_bunny`,
+```shell
+SphereSample -egrid 128 -domain octaflat -scheme best -param data/bunny.sphparam.m \
+    -rot data/bunny.s3d -keys imageuv -remesh | \
+  Filtermesh -renamekey v imageuv uv >data/bunny.spheresample.remesh.m
+```
+- defines an effective 128&times;128 regular grid
+- using a flat-octahedron domain mapped on the sphere,
+- maps these samples onto the bunny mesh using its spherical parameterization,
+- generates a remesh where vertices include image-space coordinates (`imageuv`),
+- renames those coordinates to `uv` coordinates, and
+- writes the final remesh.
+
+Also,
+```shell
+SphereSample -egrid 1024 -omit_faces -domain octaflat -scheme best -param data/bunny.sphparam.m \
+    -rot data/identity.s3d -signal N -write_texture \
+    data/bunny.spheresample.octaflat.unrotated.normalmap.png
+```
+- defines an effective 1024&times;1024 regular grid
+- using a flat-octahedron domain mapped on the sphere,
+- maps these samples onto the bunny mesh using its spherical parameterization,
+- samples the surface normal (`N`) field, and
+- writes these sampled normal vectors as RGB colors in a normap-map `png` image.
+
+Then, within `demos/view_vertexcache_bunny`,
+```shell
+G3dOGL data/bunny.spheresample.remesh.m -st data/bunny.s3d \
+    -texturemap data/bunny.spheresample.octaflat.unrotated.normalmap.png \
+    -texturenormal 1 -key DmDe -hwkey '(DtDe)' -hwdelay 1.0
+```
+- renders the remesh using flat shading (`Dm`) and mesh edges (`De`), and
+- after 1 second, enables normal-mapping using the normals stored in the `png` image.
 
 
 ## <a id="prog_G3dOGL"></a>Geometry viewer
@@ -794,14 +873,14 @@ elements in the array named `ar`,
 and the function call `hh::mean(matrix)` computes the average value of all entries in the
 named `matrix`.
 
-The debugging macro <code><b>SHOW</b>(expr)</code> outputs `expr = ...` on `std::cerr`
+The debugging macro <code><b>SHOW</b>(expr)</code> outputs `expr = ...` on `stderr`
 and also returns `expr`.
 It also accepts multiple arguments in which case it returns `void`.
 For example, `SHOW(min(1, 2), "hello", 3*2)` outputs the line `min(1, 2)=1 hello 3*2=6`.
 Note the special treatment of literal string values.
 
 Unicode strings are stored using <b>UTF-8</b> encoding into ordinary `std::string` variables.
-The functions `hh::widen()` and `hh::narrow()` convert to and from the
+The functions `hh::utf16_from_utf8()` and `hh::utf8_from_utf16()` convert to and from the
 `std::wstring` UTF-16 encodings used in `Win32` system calls.
 
 All files use end-of-line encodings based on Unix `'\n'` LF (rather than DOS `'\r\n'` CR+LF).

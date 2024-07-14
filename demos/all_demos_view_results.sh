@@ -29,6 +29,8 @@ view_topologically_simplified.sh
 
 view_vertexcache_bunny.sh
 
+view_spherical_param_bunny.sh
+
 view_rendered_mechpart_image.sh
 view_rendered_mechpart_video.sh
 view_voronoi_fillin.sh

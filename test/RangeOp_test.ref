@@ -119,3 +119,13 @@ result = Array<int>(17) {
   16
   17
 }
+indices = Array<int>(3) {
+  0
+  1
+  2
+}
+chars = Array<char>(3) {
+  A
+  B
+  C
+}

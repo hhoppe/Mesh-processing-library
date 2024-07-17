@@ -136,6 +136,16 @@ int main() {
     assertx(index(V(3, 5, 7), 5) == 1);
   }
   {
+    Array<int> indices;
+    Array<char> chars;
+    for (const auto& [i, ch] : enumerate(string("ABC"))) {
+      indices.push(i);
+      chars.push(ch);
+    }
+    SHOW(indices);
+    SHOW(chars);
+  }
+  {
     static_assert(is_range_v<Array<float>>);
     static_assert(std::is_same_v<range_value_t<Array<float>>, float>);
     static_assert(!is_range_v<std::pair<float, float>>);

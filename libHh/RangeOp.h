@@ -504,6 +504,7 @@ auto narrow_convert(const Range& c) {
 }
 
 namespace details {
+
 template <typename Iterator, typename Func> struct TransformedIterator {
   using type = TransformedIterator<Iterator, Func>;
   using iterator_category = std::forward_iterator_tag;
@@ -542,6 +543,7 @@ template <typename Range, typename Func> struct TransformedRange {
     return size(_range);
   }
 };
+
 }  // namespace details
 
 template <typename Range, typename Func, typename = enable_if_range_t<Range>>
@@ -550,6 +552,7 @@ auto transform(Range&& range, Func&& func = Func{}) {
 }
 
 namespace details {
+
 template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
   using type = ConcatenatedIterator<Iterator1, Iterator2>;
   using iterator_category = std::forward_iterator_tag;
@@ -592,10 +595,56 @@ template <typename Range1, typename Range2> struct ConcatenatedRange {
     return size(_range1) + size(_range2);
   }
 };
+
 }  // namespace details
 
 template <typename Range1, typename Range2> auto concatenate(Range1&& range1, Range2&& range2) {
   return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
+}
+
+namespace details {
+
+template <typename Iterator, typename Index> struct EnumeratedIterator {
+  using type = EnumeratedIterator<Iterator, Index>;
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = typename std::iterator_traits<Iterator>::value_type;
+  using difference_type = typename std::iterator_traits<Iterator>::difference_type;
+  using pointer = value_type*;
+  using reference = value_type&;
+  Iterator _iter;
+  Index _index{0};
+  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
+  decltype(auto) operator*() const { return std::make_tuple(_index, *_iter); }
+  type& operator++() { return ++_iter, ++_index, *this; }
+  type& operator=(const type& rhs) {
+    if (this != &rhs) _iter = rhs._iter, _index = rhs._index;
+    return *this;
+  }
+};
+
+template <typename Range, typename Index> struct EnumeratedRange {
+  Range _range;
+  auto begin() const {
+    using std::begin;
+    using Iterator = std::decay_t<decltype(begin(_range))>;
+    return EnumeratedIterator<Iterator, Index>{begin(_range)};
+  }
+  auto end() const {
+    using std::begin, std::end;
+    using Iterator = std::decay_t<decltype(begin(_range))>;
+    return EnumeratedIterator<Iterator, Index>{end(_range)};
+  }
+  auto size() const {
+    using std::size;
+    return size(_range);
+  }
+};
+
+}  // namespace details
+
+template <typename Index = size_t, typename Range, typename = enable_if_range_t<Range>> auto enumerate(Range&& range) {
+  return details::EnumeratedRange<Range, Index>{std::forward<Range>(range)};
 }
 
 }  // namespace hh

@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "G3dOGL/SplitRecord.h"
-using namespace hh;
+
+namespace hh {
 
 void SplitRecord::write(std::ostream& os) const {
   os << _vsid << " " << _vtid << "\n";
@@ -520,3 +521,5 @@ void SplitRecord::applyUnify(SimplicialComplex& K) const {
   K.unify(vs, vt);
   vs->setPosition(new_pos);
 }
+
+}  // namespace hh

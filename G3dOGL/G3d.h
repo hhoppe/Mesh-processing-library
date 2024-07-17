@@ -121,10 +121,6 @@ extern float override_frametime;  // if nonzero, constant frame time
 
 extern Point rec_point;
 
-extern int demofly_mode;
-extern float demofly_idle_time;
-extern float demofly_idle_time_thresh;
-
 class object {
  public:
   void clear();  // (re)-initialize for definition

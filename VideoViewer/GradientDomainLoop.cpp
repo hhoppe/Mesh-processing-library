@@ -17,11 +17,11 @@ using namespace hh;
 
 // TODO: solve Multigrid using streaming, and skip downsampling + relaxation away from discontinuities.
 
-static const int verbose = 0;
-
 namespace hh {
 
 namespace {
+
+constexpr int verbose = 0;
 
 inline void write_video(CGridView<3, Pixel> grid, const string& filename) {  // for debugging
   Video video;

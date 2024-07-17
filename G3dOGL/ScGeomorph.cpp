@@ -2,7 +2,8 @@
 #include "G3dOGL/ScGeomorph.h"
 
 #include "libHh/GMesh.h"
-using namespace hh;
+
+namespace hh {
 
 // Determine whether triangle defined by verts is degenerate.
 int ScGeomorph::degenerate(Simplex v[3]) {
@@ -367,3 +368,5 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha 
     }
   }
 }
+
+}  // namespace hh

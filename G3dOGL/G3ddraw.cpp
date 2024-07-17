@@ -19,7 +19,6 @@ static HH_STAT_NP(Sspf);
 static float cumtime = 0.f;
 
 static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
-static const bool g_g3d_demofly = getenv_bool("G3D_DEMOFLY");
 
 template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const RangeEdges& range_edges) {
   assertx(anglethresh >= 0);
@@ -360,118 +359,9 @@ static void act_button() {
   if (ratemode == ERatemode::step) button_active = 0;
 }
 
-static void fly_g3d_demofly(Vec2<float>& yxf) {
-  bool cursor_is_high = yxf[0] < 0.f;
-  static bool idle_mode;
-  bool new_idle_mode = (yxf[1] < 0.f || yxf[1] > 1.f || yxf[0] < 0.f || yxf[0] > 1.f);
-  bool out_of_idle = idle_mode && !new_idle_mode;
-  idle_mode = new_idle_mode;
-  static float idle_dist;
-  static bool seeking_point = false;
-  static float turn_rate;  // -1.f to 1.f;  0.f == straight
-  if (!idle_mode) {
-    demofly_idle_time = 0.f;
-    idle_dist = 0.f;
-    turn_rate = 0.f;
-    seeking_point = false;
-    if (obview != 0 || !tview.is_ident()) yxf[0] = .5f;  // if top-view, do not climb or dive
-    if (out_of_idle)
-      while (demofly_mode) KeyPressed(" ");
-  } else {
-    yxf = twice(.5f);
-    //
-    if (seeking_point) turn_rate = 0.f;
-    if (turn_rate) yxf[1] = .5f + turn_rate * .07f;
-    //
-    const Frame& frame = g_obs[0].t();
-    Vec3<float> ang = frame_to_euler_angles(frame);
-    //
-    float pitch = ang[1];                 // positive == going_down!
-    const float min_pitch = to_rad(6.f);  // 6 degrees
-    if (frame.p()[2] < .014f && pitch > -min_pitch) {
-      if (0) showf("Pulling up pitch=%f\n", pitch);
-      yxf[0] = .4f;
-    }
-    if (frame.p()[2] > .025f && pitch < +min_pitch) {
-      if (0) showf("Pushing down pitch=%f\n", pitch);
-      yxf[0] = .6f;
-    }
-    //
-    static Point point_desired;
-    const float margin = 0.1f;
-    bool within_margins = (frame.p()[0] > 0.f + margin && frame.p()[0] < 1.f - margin && frame.p()[1] > 0.f + margin &&
-                           frame.p()[1] < 1.f - margin);
-    if (seeking_point && within_margins) {
-      seeking_point = false;
-      if (0) SHOW("seeking_point false");
-    }
-    if (!seeking_point && !within_margins) {
-      seeking_point = true;
-      for_int(c, 2) point_desired[c] = .2f + .6f * Random::G.unif();
-      assertx(!point_desired[2]);
-      if (0) SHOW(point_desired);
-    }
-    if (seeking_point) {
-      float yaw_angle_desired = std::atan2(point_desired[1] - frame.p()[1], point_desired[0] - frame.p()[0]);
-      float yaw_angle_diff = yaw_angle_desired - ang[0];
-      if (yaw_angle_diff < -TAU / 2) yaw_angle_diff += TAU;
-      if (yaw_angle_diff > +TAU / 2) yaw_angle_diff -= TAU;
-      float abs_diff = abs(yaw_angle_diff);
-      assertx(abs_diff <= TAU / 2);
-      bool large_diff = abs_diff > to_rad(10.f);
-      bool small_diff = abs_diff > to_rad(4.f);
-      static bool honing;
-      if (large_diff) honing = true;
-      if (!small_diff) honing = false;
-      if (honing) {
-        if (yaw_angle_diff > 0.f) {
-          yxf[1] = .5f - .25f * (ddistance / .0625f);  // turning left
-        } else {
-          yxf[1] = .5f + .25f * (ddistance / .0625f);  // turning right
-        }
-      }
-    }
-    float prev_idle_time = demofly_idle_time, prev_idle_dist = idle_dist;
-    demofly_idle_time += fchange;
-    idle_dist += ddistance / .015625f * fchange;
-    if (cursor_is_high && demofly_idle_time > demofly_idle_time_thresh) {
-      if (int(demofly_idle_time) != int(prev_idle_time) && int(demofly_idle_time) % 4 == 0) {
-        static int nskip;
-        if (demofly_mode == 0 && nskip < 1) {
-          nskip++;
-        } else {
-          nskip = 0;
-          float bu_demofly_idle_time = demofly_idle_time;
-          demofly_idle_time = 0.f;
-          KeyPressed(" ");
-          demofly_idle_time = bu_demofly_idle_time;
-        }
-      }
-    }
-    if (1) {
-      if (int(idle_dist) != int(prev_idle_dist) && 1) {
-        turn_rate += (-1.f + 2.f * Random::G.unif()) * .3f;
-        turn_rate = clamp(turn_rate, -1.f, +1.f);
-      }
-    }
-  }
-  if (1) {
-    Frame f = g_obs[0].t();
-    const float tol = 0.023f, min_z = 0.f, max_z = 0.06f;
-    if (f.p()[2] < min_z) f.p()[2] = min_z;
-    if (f.p()[2] > max_z) f.p()[2] = max_z;
-    if (f.p()[0] < 0.f - tol) f.p()[0] = 1.f + tol;
-    if (f.p()[0] > 1.f + tol) f.p()[0] = 0.f - tol;
-    if (f.p()[1] < 0.f - tol) f.p()[1] = 1.f + tol;
-    if (f.p()[1] > 1.f + tol) f.p()[1] = 0.f - tol;
-    g_obs[0].tm() = f;
-  }
-}
-
 static void act_fly() {
   Vec2<float> yxf;
   if (viewmode || button_active || !HB::get_pointer(yxf)) yxf = twice(.5f);
-  if (g_g3d_demofly) fly_g3d_demofly(yxf);
   yxf = max(min(yxf, twice(1.f)), twice(0.f));
   // convert form (0..1)screen to (-1..1)math
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
@@ -707,7 +597,6 @@ static void set_viewing() {
     const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f);  // 2017-02-21
     if (g3d_view_zoom) vzoom = g3d_view_zoom;                        // was 0.2f
   }
-  if (g_g3d_demofly && obview != 0) vzoom = 0.2f;
   // HB::set_camera(tpos, zoom, tcam, vzoom);
   HB::set_camera(g_obs[0].t(), zoom, tcam, vzoom);
   if (1 && g_obs.first == 0) g_obs[0].set_vis(is_view || obview != 0);
@@ -779,21 +668,6 @@ void ShowInfo() {
       }
     }
     HB::draw_row_col_text(V(1, 0), str);
-  }
-  if (info && g_g3d_demofly) {
-    // velocity = 0.05 * ddistance * 10 * fchange  units/frame
-    // fchange = sec / frame
-    // -> velocity = 0.05 * ddistance * 10  units / sec
-    // 1 unit = 10 m * 16384
-    // 1 mach = 1220 km / hour = 338.889 m / sec
-    // -> velocity = 0.05 * ddistance * 10 * (10 * 16384) = ddistance * 81920 m/sec
-    // -> velocity = above / 338.889 = ddistance * 241.73 mach
-    float mach = ddistance * 241.73f;
-    string s = sform("Mach: %.1f (-/=)", mach);
-    HB::draw_row_col_text(V(4, 0), s);
-    int alt = int(g_obs[0].t().p()[2] * 10 * 16384 / 0.3048f);
-    string s2 = sform(" Alt: %d ft", alt);
-    HB::draw_row_col_text(V(5, 0), s2);
   }
 }
 

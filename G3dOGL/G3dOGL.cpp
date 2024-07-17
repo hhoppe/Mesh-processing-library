@@ -31,25 +31,14 @@
 
 using namespace hh;
 
+#define ALLOW_LOD  // Comment this out to minimize space usage
+
 namespace hh {
+
 extern bool g_is_ati;  // used in PMesh_ogl.cpp
 bool g_is_ati = false;
+
 }  // namespace hh
-
-extern float ambient;  // used in G3devent.cpp
-float ambient;
-
-#if defined(_WIN32) && !defined(_WIN64)
-// Problem: with __MINGW32__, restarting GL_TRIANGLES seems to require reinitializing some color state.
-//   Same problem with Win32 build.  e.g.:
-// FilterPM ~/git/mesh_processing/demos/data/cessna.pm -nf 3000 -geom_nf 5000 | ~/git/mesh_processing/bin/win32/G3dOGL -st ~/git/mesh_processing/demos/data/cessna.s3d -key ,S
-// ~/git/mesh_processing/bin/win32/G3dOGL ~/git/mesh_processing/demos/data/standingblob.geomorphs -key PDeS -lightambient .5 -thickboundary 1
-constexpr bool force_color_update = true;
-#else
-constexpr bool force_color_update = false;
-#endif
-
-#define ALLOW_LOD  // Comment this out to minimize space usage
 
 namespace g3d {
 
@@ -70,6 +59,16 @@ extern bool lod_mode;
 }  // namespace g3d
 
 namespace {
+
+#if defined(_WIN32) && !defined(_WIN64)
+// Problem: with __MINGW32__, restarting GL_TRIANGLES seems to require reinitializing some color state.
+//   Same problem with Win32 build.  e.g.:
+// FilterPM ~/git/mesh_processing/demos/data/cessna.pm -nf 3000 -geom_nf 5000 | ~/git/mesh_processing/bin/win32/G3dOGL -st ~/git/mesh_processing/demos/data/cessna.s3d -key ,S
+// ~/git/mesh_processing/bin/win32/G3dOGL ~/git/mesh_processing/demos/data/standingblob.geomorphs -key PDeS -lightambient .5 -thickboundary 1
+constexpr bool force_color_update = true;
+#else
+constexpr bool force_color_update = false;
+#endif
 
 struct Slider {
   string name;
@@ -126,6 +125,7 @@ bool outside_frustum;
 float frustum_frac = 1.4f;
 float hither;
 float yonder;
+float ambient;
 float lightsource;
 Vec3<float> backfacec;
 float fdisplacepolygon = 1.f;

@@ -5,7 +5,8 @@
 #include "libHh/Set.h"
 #include "libHh/Stack.h"  // also vec_contains()
 #include "libHh/StringOp.h"
-using namespace hh;
+
+namespace hh {
 
 namespace {
 
@@ -1000,3 +1001,5 @@ void ISimplex::polygon(Polygon& poly) const {
   }
   return;
 }
+
+}  // namespace hh

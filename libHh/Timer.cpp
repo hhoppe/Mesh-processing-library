@@ -20,9 +20,6 @@ HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyExA()
 #include "libHh/Stat.h"
 #endif
 
-// Return the effective number of cores (or 0 if unknown).
-inline unsigned std_thread_hardware_concurrency() { return std::thread::hardware_concurrency(); }
-
 // Overhead for use of Timer:
 // TTIMER_COUNT=1000000 Timer_test  # Look at oneabbrev and abbrev.
 //  on mips R?3000/20Mhz Ultrix:
@@ -45,6 +42,9 @@ namespace hh {
 #if !defined(HH_NO_TIMERS_CLASS)
 
 namespace {
+
+// Return the effective number of cores (or 0 if unknown).
+inline unsigned std_thread_hardware_concurrency() { return std::thread::hardware_concurrency(); }
 
 #if defined(_WIN32)
 // Use of QueryProcessCycleTime() should provide more precise CPU process times, but it comes with two drawbacks:

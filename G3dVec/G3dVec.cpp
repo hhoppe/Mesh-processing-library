@@ -20,9 +20,6 @@ namespace g3d {
 extern string statefile;
 }  // namespace g3d
 
-extern float ambient;  // used in G3devent.cpp
-float ambient;
-
 namespace {
 
 constexpr int k_max_object = 1024;  // should be >= objects::MAX

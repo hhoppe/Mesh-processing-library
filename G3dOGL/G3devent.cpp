@@ -12,19 +12,11 @@
 #include "libHh/StringOp.h"
 using namespace hh;
 
-extern float ambient;  // access from G3dOGL
-
 namespace g3d {
-
-int demofly_mode = 0;
-float demofly_idle_time = 0.f;
-float demofly_idle_time_thresh = 17.f;
 
 namespace {
 
 bool keylock;
-
-const bool b_g3d_demofly = getenv_bool("G3D_DEMOFLY");
 
 void press_keys(const string& str) {
   for (char ch : str) KeyPressed(string(1, ch));
@@ -116,10 +108,6 @@ void reset_hither_yonder() {
 }
 
 void all_reset() {
-  if (b_g3d_demofly) {
-    demofly_idle_time = 0.f;
-    while (demofly_mode) KeyPressed(" ");
-  }
   for (int i = 0; i <= g_obs.last; i++) g_obs[i].tm() = Frame::identity();
   tview = Frame::identity();
   cob = 1;
@@ -137,7 +125,7 @@ void all_reset() {
   mode_centroid = true;
   output = false;
   keylock = false;
-  if (!b_g3d_demofly) reset_hither_yonder();
+  reset_hither_yonder();
   obview = 0;
   for (int i = g_obs.first; i <= g_obs.last; i++) {
     g_obs[i].set_vis(true);
@@ -149,14 +137,6 @@ void all_reset() {
   geomorph = true;
   timingtest_nframes = 0;
   assertw(HB::special_keypress('Z'));
-  if (b_g3d_demofly) {
-    press_keys(",eoDe0------lDtDrDbDrDb");
-    zoom = .79f;
-    auto_hither = false;
-    HB::set_hither(.0001f);
-    HB::set_yonder(0.f);
-    // ambient = .7f;
-  }
 }
 
 // turn viewing direction toward world point (zeroes the roll)
@@ -617,37 +597,6 @@ void show_all_info() {
   SHOW(g_obs.first, g_obs.last, HB::get_hither(), HB::get_yonder(), obview, cob);
 }
 
-void do_g3d_demofly() {
-  static float bu_hither;
-  static float bu_ambient;
-  demofly_mode++;
-  switch (demofly_mode) {
-    case 1:  // turn off texture, showing edges
-      press_keys("Dt");
-      break;
-    case 2:  // zoom out
-      press_keys("Do");
-      break;
-    case 3:  // go to upper view
-      press_keys("Do");
-      obview = 2;
-      // zoom is taken care of in set_viewing()
-      bu_hither = HB::get_hither();
-      HB::set_hither(.05f);
-      bu_ambient = ambient;
-      ambient = .3f;
-      break;
-    case 4:  // back to normal view
-      demofly_mode = 0;
-      press_keys("Dt");
-      obview = 0;
-      HB::set_hither(bu_hither);
-      ambient = bu_ambient;
-      break;
-    default: assertnever("");
-  }
-}
-
 void show_help() {
   const string s = &R"(
    Commands:
@@ -780,15 +729,6 @@ bool KeyPressed(const string& ps) {
   if (s == "<f5>") s = "r";
   if (s.size() != 1) return false;
   char ch = s[0];
-  if (b_g3d_demofly && contains(" Zf", ch)) {
-    if (demofly_idle_time > demofly_idle_time_thresh) {
-      demofly_idle_time = 0.f;  // avoid infinite recursion
-      if (ch != ' ')
-        while (demofly_mode) KeyPressed(" ");
-    } else {
-      demofly_idle_time = 0.f;
-    }
-  }
   static char lastch;
   char thisch = ch;
   if (keylock && !contains("-=_+xd\tc~ Di? BQ[] avV be ol ^\x03", ch)) return false;
@@ -1023,7 +963,6 @@ bool KeyPressed(const string& ps) {
       break;
     case '.':
     case '>':
-      if (0 && b_g3d_demofly) break;
       save_state();
       break;
     case '&': obinary = !obinary; break;
@@ -1039,10 +978,6 @@ bool KeyPressed(const string& ps) {
       break;
     case ' ':
       if (spacekill) HB::quit();
-      if (b_g3d_demofly) {
-        do_g3d_demofly();
-        HB::redraw_now();
-      }
       break;
     case 'w':
       // prefix code

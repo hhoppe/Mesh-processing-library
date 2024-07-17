@@ -21,7 +21,7 @@ class SplitRecord {
   SplitRecord& operator=(SplitRecord&&) = default;
   bool read(std::istream& is);
   void write(std::ostream& os) const;
-  void reset();
+  void reset() { _outcome_index = 0, _material_index = 0; }
   int getNextOutcome() { return _outcome[_outcome_index++]; }
   void applySplit(SimplicialComplex& K);
 
@@ -34,7 +34,7 @@ class SplitRecord {
   void applyUnify(SimplicialComplex& K) const;
 
   // access
-  CArrayView<AreaData> getAreas();
+  CArrayView<AreaData> getAreas() { return _area; }
   int getVs() const { return _vsid; }
   int getVt() const { return _vtid; }
   int vsp() const { return _pos_bit; }
@@ -72,13 +72,6 @@ class SplitRecord {
   int _outcome_index;
   int _material_index;
 };
-
-inline void SplitRecord::reset() {
-  _outcome_index = 0;
-  _material_index = 0;
-}
-
-inline CArrayView<AreaData> SplitRecord::getAreas() { return _area; }
 
 }  // namespace hh
 

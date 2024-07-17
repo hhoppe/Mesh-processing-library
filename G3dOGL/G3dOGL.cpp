@@ -3839,13 +3839,12 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
   bool done = false;
   while (e->isManifold()) {
     // find other facet around e
-    ForScSimplexParent(e, f) {
+    for (Simplex f : e->getParents()) {
       if (f != fct) {
         fct = f;
         break;
       }
     }
-    EndFor;
     // if the new fct is the corner_fct made a full circle
     // nothing left to do
     if (fct == corner_fct) {
@@ -3883,13 +3882,12 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     fct = corner_fct;
     while (e->isManifold()) {
       // find other facet around e
-      ForScSimplexParent(e, f) {
+      for (Simplex f : e->getParents()) {
         if (f != fct) {
           fct = f;
           break;
         }
       }
-      EndFor;
       // cannot make a full circle this way
       assertx(fct != corner_fct);
       // if new facet does not have same smoothing group
@@ -3933,27 +3931,21 @@ void read_sc(const string& filename) {
     s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : meshcolor.d;
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
-  ForScSimplex(Kmesh, 2, s2) {
+  for (Simplex s2 : Kmesh.simplices_dim(2)) {
     Vec3<Simplex> v;
     s2->vertices(v.data());
     fct_pnor[s2->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
-  EndFor;
-  ForScSimplex(Kmesh, 2, s2) {
+  for (Simplex s2 : Kmesh.simplices_dim(2)) {
     Vec3<Simplex> verts;
     s2->vertices(verts.data());
     for_int(i, 3) vertSmoothNormal(verts[i], s2, corner_pnor[3 * s2->getId() + i]);
   }
-  EndFor;
   // initialize principal verts and edges set
-  ForScSimplex(Kmesh, 0, v) {
+  for (Simplex v : Kmesh.simplices_dim(0))
     if (v->isPrincipal()) psc_principal_verts.enter(v);
-  }
-  EndFor;
-  ForScSimplex(Kmesh, 1, e) {
+  for (Simplex e : Kmesh.simplices_dim(1))
     if (e->isPrincipal()) psc_principal_edges.enter(e);
-  }
-  EndFor;
   toggle_attribute(g_xobs.cullface);
   // no bbox information yet.
   // g3d::UpdateOb1Bbox(...);
@@ -3968,8 +3960,7 @@ void read_psc(const string& filename) {
   Kmesh.read(fin());
   assertx(Kmesh.num(0) == 1 && Kmesh.num(1) == 0 && Kmesh.num(2) == 0);
   // initialize principal verts and edges set
-  ForScSimplex(Kmesh, 0, v) { psc_principal_verts.enter(v); }
-  EndFor;
+  for (Simplex v : Kmesh.simplices_dim(0)) psc_principal_verts.enter(v);
   s_color.init(Kmesh.materialNum());
   s_norgroup.init(Kmesh.materialNum());
   string str;
@@ -4039,20 +4030,14 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.remove(vs);
       } else {
-        ForScSimplexParent(vs, e) {
-          if (!e->isPrincipal()) continue;
-          psc_principal_edges.remove(e);
-        }
-        EndFor;
+        for (Simplex e : vs->getParents())
+          if (e->isPrincipal()) psc_principal_edges.remove(e);
       }
       if (vt->isPrincipal()) {
         psc_principal_verts.remove(vt);
       } else {
-        ForScSimplexParent(vt, e) {
-          if (!e->isPrincipal()) continue;
-          psc_principal_edges.remove(e);
-        }
-        EndFor;
+        for (Simplex e : vt->getParents())
+          if (e->isPrincipal()) psc_principal_edges.remove(e);
       }
       // do unify
       vsplit.applyUnify(Kmesh);
@@ -4060,11 +4045,8 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.enter(vs);
       } else {
-        ForScSimplexParent(vs, e) {
-          if (!e->isPrincipal()) continue;
-          psc_principal_edges.enter(e);
-        }
-        EndFor;
+        for (Simplex e : vs->getParents())
+          if (e->isPrincipal()) psc_principal_edges.enter(e);
       }
       if (psc_unify_normal_list[i]) {
         // if normals cached use them
@@ -4079,18 +4061,17 @@ void psc_update_lod() {
       } else {
         // otherwise, compute and cache
         int cnt = 0;
-        ForScVertexFace(vs, f) {
+        for (Simplex f : vs->faces_of_vertex()) {
           dummy_use(f);
           cnt++;
         }
-        EndFor;
         Array<NormalRecord>& anr = *new Array<NormalRecord>;
         psc_unify_normal_list[i] = &anr;
         anr.reserve(cnt);
         Vec3<Simplex> verts;
         NormalRecord nr;
         // calculate facet normals
-        ForScVertexFace(vs, s2) {
+        for (Simplex s2 : vs->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
           nr.fid = s2->getId();
           s2->vertices(verts.data());
@@ -4099,12 +4080,11 @@ void psc_update_lod() {
           fct_pnor[nr.fid] = nr.fct_nor;
           anr.push(nr);
         }
-        EndFor;
         // Note: to be completely correct, we should also recalculate corners just outside starbar of vs, but
         // we do not bother.
         // Revisit facets in same order and calculate corner normals.
         int ii = 0;
-        ForScVertexFace(vs, s2) {
+        for (Simplex s2 : vs->faces_of_vertex()) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4114,7 +4094,6 @@ void psc_update_lod() {
           }
           ii++;
         }
-        EndFor;
       }
       assertx(psc_unify_area_list[i]);
       for (AreaData& ar : *psc_unify_area_list[i]) {
@@ -4134,8 +4113,7 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.remove(vs);
       } else {
-        ForScSimplexParent(vs, e) { psc_principal_edges.remove(e); }
-        EndFor;
+        for (Simplex e : vs->getParents()) psc_principal_edges.remove(e);
       }
       // do split
       vsplit.applySplit(Kmesh);
@@ -4144,21 +4122,17 @@ void psc_update_lod() {
       if (vs->isPrincipal()) {
         psc_principal_verts.enter(vs);
       } else {
-        ForScSimplexParent(vs, e) {
-          if (!e->isPrincipal()) continue;
-          psc_principal_edges.enter(e);
-        }
-        EndFor;
+        for (Simplex e : vs->getParents())
+          if (e->isPrincipal()) psc_principal_edges.enter(e);
       }
       if (vt->isPrincipal()) {
         psc_principal_verts.enter(vt);
       } else {
         Simplex vsvt = vs->edgeTo(vt);
-        ForScSimplexParent(vt, e) {
+        for (Simplex e : vt->getParents()) {
           if (e == vsvt || !e->isPrincipal()) continue;
           psc_principal_edges.enter(e);
         }
-        EndFor;
       }
       if (psc_split_normal_list[i]) {
         // if normals cached use them
@@ -4172,23 +4146,21 @@ void psc_update_lod() {
         }
       } else {
         int cnt = 0;
-        ForScVertexFace(vs, f) {
+        for (Simplex f : vs->faces_of_vertex()) {
           dummy_use(f);
           cnt++;
         }
-        EndFor;
-        ForScVertexFace(vt, f) {
+        for (Simplex f : vt->faces_of_vertex()) {
           dummy_use(f);
           cnt++;
         }
-        EndFor;
         Array<NormalRecord>& anr = *new Array<NormalRecord>;
         psc_split_normal_list[i] = &anr;
         anr.reserve(cnt);
         NormalRecord nr;
         Vec3<Simplex> verts;
         // calculate facet normals
-        ForScVertexFace(vs, s2) {
+        for (Simplex s2 : vs->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
           s2->vertices(verts.data());
           nr.fid = s2->getId();
@@ -4197,8 +4169,7 @@ void psc_update_lod() {
           fct_pnor[nr.fid] = nr.fct_nor;
           anr.push(nr);
         }
-        EndFor;
-        ForScVertexFace(vt, s2) {
+        for (Simplex s2 : vt->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
           s2->vertices(verts.data());
           nr.fid = s2->getId();
@@ -4207,10 +4178,9 @@ void psc_update_lod() {
           fct_pnor[nr.fid] = nr.fct_nor;
           anr.push(nr);
         }
-        EndFor;
         // revisit facets in same order and calculate corner normals
         int ii = 0;
-        ForScVertexFace(vs, s2) {
+        for (Simplex s2 : vs->faces_of_vertex()) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4220,8 +4190,7 @@ void psc_update_lod() {
           }
           ii++;
         }
-        EndFor;
-        ForScVertexFace(vt, s2) {
+        for (Simplex s2 : vt->faces_of_vertex()) {
           Vec3<Simplex> verts2;
           s2->vertices(verts2.data());
           corner_pnor.access(3 * anr[ii].fid + 2);
@@ -4231,7 +4200,6 @@ void psc_update_lod() {
           }
           ii++;
         }
-        EndFor;
       }
       if (!psc_unify_area_list[i + 1]) {
         Array<AreaData>& aar = *new Array<AreaData>;
@@ -4391,7 +4359,7 @@ void draw_sc() {
     assertw(lsmooth);
     glBegin(GL_TRIANGLES);
     int i = 0;
-    ForScSimplex(Kmesh, 2, s2) {
+    for (Simplex s2 : Kmesh.simplices_dim(2)) {
       if ((++i & 0x7F) == 0 && i) {
         glEnd();
         glBegin(GL_TRIANGLES);
@@ -4416,7 +4384,6 @@ void draw_sc() {
       glNormal3fv(n2.data());
       glVertex3fv(p2.data());
     }
-    EndFor;
     glEnd();
     // draw all 1-simplices with no parents
     psc_orphan_nedges = 0;
@@ -4483,14 +4450,13 @@ void draw_sc() {
     initialize_unlit();
     set_thickness(thicknormal);
     glBegin(GL_LINES);
-    ForScSimplex(Kmesh, 1, s) {
+    for (Simplex s : Kmesh.simplices_dim(1)) {
       update_cur_color(s->hasColor() ? s_color[s->getVAttribute()] : pix_edgecolor);
       Point p0 = s->getChild(0)->getPosition();
       Point p1 = s->getChild(1)->getPosition();
       glVertex3fv(p0.data());
       glVertex3fv(p1.data());
     }
-    EndFor;
     glEnd();
     set_thickness(thicka3d);
   }
@@ -4634,7 +4600,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     assertw(lsmooth);
     glBegin(GL_TRIANGLES);
     int i = 0;
-    ForScSimplex(kmesh, 2, s2) {
+    for (Simplex s2 : kmesh.simplices_dim(2)) {
       if ((++i & 0x7F) == 0 && i) {
         glEnd();
         glBegin(GL_TRIANGLES);
@@ -4659,14 +4625,13 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
       glNormal3fv(n2.data());
       glVertex3fv(p2.data());
     }
-    EndFor;
     glEnd();
     // draw all 1-simplices with no parents
     psc_orphan_nedges = 0;
     glPushAttrib(GL_TRANSFORM_BIT);
     {  // save GL_NORMALIZE
       glEnable(GL_NORMALIZE);
-      ForScSimplex(kmesh, 1, s1) {
+      for (Simplex s1 : kmesh.simplices_dim(1)) {
         if (s1->getArea() < 1e-3f) continue;
         psc_orphan_nedges++;
         const Point& vj = s1->getChild(0)->getPosition();
@@ -4707,12 +4672,11 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
           cyl.draw(vj, vk, rad);
         }
       }
-      EndFor;
     }
     glPopAttrib();
     // draw all 0-simplices with no parents
     psc_orphan_nverts = 0;
-    ForScSimplex(kmesh, 0, s0) {
+    for (Simplex s0 : kmesh.simplices_dim(0)) {
       if (s0->getArea() < 1e-3f) continue;
       psc_orphan_nverts++;
       maybe_update_mat_diffuse(s_color[s0->getVAttribute()]);
@@ -4721,7 +4685,6 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
       if (area < 1e-3f) continue;
       draw_point(s0->getPosition(), area);
     }
-    EndFor;
   }
   if (ledges) {
     // Options cullbackedges, lquickmode not handled.
@@ -4729,14 +4692,13 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     initialize_unlit();
     set_thickness(thicknormal);
     glBegin(GL_LINES);
-    ForScSimplex(kmesh, 1, s) {
+    for (Simplex s : kmesh.simplices_dim(1)) {
       update_cur_color(s->hasColor() ? s_color[s->getVAttribute()] : pix_edgecolor);
       Point p0 = s->getChild(0)->getPosition();
       Point p1 = s->getChild(1)->getPosition();
       glVertex3fv(p0.data());
       glVertex3fv(p1.data());
     }
-    EndFor;
     glEnd();
     set_thickness(thicka3d);
   }

@@ -67,9 +67,8 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
-  EndFor;
+  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
     SimplicialComplex sb;
@@ -165,7 +164,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForScSimplexChildIndex(f, e, ei) {
+      for (auto [ei, e] : enumerate<int>(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -177,7 +176,6 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
           newe->addParent(f);
         }
       }
-      EndFor;
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
       Simplex verts[3];
@@ -213,9 +211,8 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
-  EndFor;
+  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
     SimplicialComplex sb;
@@ -313,7 +310,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForScSimplexChildIndex(f, e, ei) {
+      for (auto [ei, e] : enumerate<int>(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -325,7 +322,6 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
           newe->addParent(f);
         }
       }
-      EndFor;
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
       new_facets.push_back(splitf);
@@ -362,9 +358,8 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[MAX_DIM + 1];
-  ForScSimplexStar(vs, spx) { pq[spx->getDim()].enter_unsorted(spx, float(spx->getId())); }
-  EndFor;
+  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
     SimplicialComplex sb;
@@ -466,7 +461,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      ForScSimplexChildIndex(f, e, ei) {
+      for (auto [ei, e] : enumerate<int>(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -478,7 +473,6 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
           newe->addParent(f);
         }
       }
-      EndFor;
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
       new_simplices.push_back(splitf);

@@ -962,9 +962,7 @@ bool KeyPressed(const string& ps) {
       HB::redraw_now();
       break;
     case '.':
-    case '>':
-      save_state();
-      break;
+    case '>': save_state(); break;
     case '&': obinary = !obinary; break;
     case '#': show_all_info(); break;
     case '^': keylock = !keylock; break;

@@ -51,13 +51,12 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   bool done = false;
   while (e->isManifold()) {
     // find other facet around e
-    ForScSimplexParent(e, f) {
+    for (Simplex f : e->getParents()) {
       if (f != fct) {
         fct = f;
         break;
       }
     }
-    EndFor;
 
     // if the new fct is the corner_fct made a full circle
     // nothing left to do
@@ -148,13 +147,12 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
     while (e->isManifold()) {
       // find other facet around e
-      ForScSimplexParent(e, f) {
+      for (Simplex f : e->getParents()) {
         if (f != fct) {
           fct = f;
           break;
         }
       }
-      EndFor;
 
       // cannot make a full circle this way
       assertx(fct != corner_fct);
@@ -243,7 +241,7 @@ void ScGeomorph::read(std::istream& is) {
   }
 
   // verts
-  ForScSimplex(K, 0, v) {
+  for (Simplex v : K.simplices_dim(0)) {
     // new pos
     vnew[v->getId()] = v->getPosition();
 
@@ -273,10 +271,9 @@ void ScGeomorph::read(std::istream& is) {
       }
     }
   }
-  EndFor;
 
   // edges
-  ForScSimplex(K, 1, e) {
+  for (Simplex e : K.simplices_dim(1)) {
     // old area
     const char* soa = GMesh::string_key(str, e->get_string(), "Oarea");
     if (soa) {
@@ -298,10 +295,9 @@ void ScGeomorph::read(std::istream& is) {
       }
     }
   }
-  EndFor;
 
   // facets for corner normals
-  ForScSimplex(K, 2, f) {
+  for (Simplex f : K.simplices_dim(2)) {
     Simplex v[3];
     f->vertices(v);
 
@@ -310,30 +306,26 @@ void ScGeomorph::read(std::istream& is) {
       assertx(parse_key_vec(f->get_string(), csform(str, "Onorm%d", v[i]->getId()), on));
     }
   }
-  EndFor;
 
   // corner normals
   // new normals
-  ForScSimplex(K, 2, f) {
+  for (Simplex f : K.simplices_dim(2)) {
     Simplex v[3];
     f->vertices(v);
     fct_pnor[f->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
-  EndFor;
 
-  ForScSimplex(K, 2, f) {
+  for (Simplex f : K.simplices_dim(2)) {
     Simplex verts[3];
     f->vertices(verts);
     for_int(i, 3) vertSmoothNormal(verts[i], f, nnew[3 * f->getId() + i]);
   }
-  EndFor;
 }
 
 // Interpolate between old and new using alpha parameter.
 void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
   // verts
-  ForScSimplex(K, 0, v) { v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha)); }
-  EndFor;
+  for (Simplex v : K.simplices_dim(0)) v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha));
 
   // area
   for (auto& [s, narea] : anew) {

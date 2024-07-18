@@ -507,7 +507,7 @@ class SphereMapper::Implementation {
       fill(ar_displacement, 3.f);  // Some value larger than the unit sphere diameter.
       int num_active = nv;
       for (int update_iter = 0;; update_iter++) {
-        if (!assertw(update_iter < 1000) || !num_active) break;
+        if (!assertw(update_iter < 2000) || !num_active) break;
 
         ArrayView<int> active_vertices = ar_vertex.head(num_active);
         for (const int v : active_vertices) for_int(c, 2) ar_random[v][c] = Random::G.unif();

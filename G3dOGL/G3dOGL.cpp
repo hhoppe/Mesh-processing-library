@@ -946,9 +946,9 @@ void load_texturemaps() {
       texture_active = false;
       return;
     }
-    if (contains(s, ".nor")) texturenormal = true;
     texturemaps.push(s);
   }
+  if (any_of(texturemaps, [](const string& name) { return contains(name, ".nor"); })) texturenormal = true;
   assertx(!g_textures.num());
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {

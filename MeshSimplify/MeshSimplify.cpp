@@ -3423,40 +3423,29 @@ bool intersect_lines(Point p1, Point p2, Point p3, Point p4, float& ia, float& i
 inline Point c_uv(Corner c) { return Point(c_winfo(c).uv[0], c_winfo(c).uv[1], 0.f); }
 
 void check_ccw(Vertex v) {
-  Vec3<Point> p;
   for (Face f : mesh.faces(v)) {
-    int i = 0;
-    for (Vertex vv : mesh.vertices(f)) p[i++] = c_uv(mesh.corner(vv, f));
+    const Vec3<Point> p = map(mesh.triangle_corners(f), [&](Corner c) { return c_uv(c); });
     assertw(cross(p[0], p[1], p[2])[2] >= 0.f);
   }
 }
 
 bool valid_aps(Edge e, Vertex v1, Vertex v2) {
-  Vec3<Point> pa;
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
   for (Corner c : mesh.corners(v1)) {
-    Face f = mesh.corner_face(c);
     Corner cs1 = mesh.ccw_face_corner(c);
     Corner cs2 = mesh.clw_face_corner(c);
     Vertex vs1 = mesh.corner_vertex(cs1);
     Vertex vs2 = mesh.corner_vertex(cs2);
     if (vs1 == v2 || vs2 == v2) continue;
-    Face ft;
-    if (f_matid(f) == f_matid(mesh.face1(e))) {
-      ft = mesh.face1(e);
-    } else {
-      assertx(mesh.face2(e) && f_matid(f) == f_matid(mesh.face2(e)));
-      ft = mesh.face2(e);
-    }
-    pa[0] = c_uv(mesh.corner(v2, ft));
-    pa[1] = c_uv(cs1);
-    pa[2] = c_uv(cs2);
+    Face f = mesh.corner_face(c);
+    Face ft = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
+    const Vec3<Point> pa{c_uv(mesh.corner(v2, ft)), c_uv(cs1), c_uv(cs2)};  // TODO: Use 2D coordinates.
     if (my_sqrt(area2(pa)) == 0.f) {
-      // This shouldn't be necessary because "strict_sharp 2" also takes care of it
-      Warning("Not valid APS - Area");
+      Warning("Not valid APS - Area");  // In principle, should never occur with strict_sharp = 2.
       return false;
     }
-    Vector vv = cross(pa[0], pa[1], pa[2]);
-    if (vv[2] < 0) {
+    const Vector vv = cross(pa[0], pa[1], pa[2]);
+    if (vv[2] < 0.f) {
       Warning("Not valid APS - Cross");
       return false;
     }
@@ -3465,48 +3454,52 @@ bool valid_aps(Edge e, Vertex v1, Vertex v2) {
 }
 
 int inside_triangle(const Point& tc, const Vec3<Point>& cs) {
-  return (cross(cs[1] - cs[0], tc - cs[0])[2] >= -.000001f && cross(cs[2] - cs[1], tc - cs[1])[2] >= -.000001f &&
-          cross(cs[0] - cs[2], tc - cs[2])[2] >= -.000001f);
+  const float eps = 1e-6f;
+  return (cross(cs[1] - cs[0], tc - cs[0])[2] >= -eps && cross(cs[2] - cs[1], tc - cs[1])[2] >= -eps &&
+          cross(cs[0] - cs[2], tc - cs[2])[2] >= -eps);
 }
 
+// Return the squared geometric distance from the 3D position of vertex v1 to the surface mesh point with the same
+// parametric coordinate after the collapse of the edge e = {v1, v2} into the vertex v2.
 float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
   float max_mag2 = -1.f;
-  for (Face f : mesh.faces(v1)) {
-    Face fout;
-    if (f_matid(f) == f_matid(mesh.face1(e))) {
-      fout = mesh.face1(e);
-    } else {
-      assertx(mesh.face2(e) && f_matid(f) == f_matid(mesh.face2(e)));
-      fout = mesh.face2(e);
-    }
-    Vec3<Point> pt, pv;
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
+  for (Corner c1 : mesh.corners(v1)) {
+    Face f = mesh.corner_face(c1);
+    if (f == f1 || f == f2) continue;  // Skip f for speedup as it becomes degenerate anyways.
+    Face fout = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
+    Vec3<Point> pv, pt;  // TODO: use 2D coordinates and operations for pt.
     int i = 0;
-    for (Vertex v : mesh.vertices(f)) {
+    for (Corner c : mesh.corners(f)) {
+      Vertex v = mesh.corner_vertex(c);
       if (v == v1) {
         pv[i] = mesh.point(v2);
         pt[i] = c_uv(mesh.corner(v2, fout));
       } else {
         pv[i] = mesh.point(v);
-        pt[i] = c_uv(mesh.corner(v, f));
+        pt[i] = c_uv(c);
       }
       i++;
     }
-    if (inside_triangle(c_uv(mesh.corner(v1, f)), pt)) {
+    if (inside_triangle(c_uv(c1), pt)) {
       Bary bary;
       Point clp;
-      project_point_triangle2(c_uv(mesh.corner(v1, f)), pt[0], pt[1], pt[2], bary, clp);
-      Point pe = interp(pv[0], pv[1], pv[2], bary);
+      project_point_triangle2(c_uv(c1), pt[0], pt[1], pt[2], bary, clp);
+      const Point pe = interp(pv[0], pv[1], pv[2], bary);
       max_mag2 = max(max_mag2, dist2(pe, mesh.point(v1)));
     }
   }
-  if (max_mag2 == -1.f) Warning("Vertex is not inside any new face in texture plane");
+  if (max_mag2 == -1.f) Warning("Vertex is not inside any new face in the texture domain");
   return max_mag2;
 }
 
+// Return the maximum displacement of any point on the mesh surface to its corresponding point with the same
+// parametric coordinate after the collapse of the edge e at position ii which is 0 or 2.
+// This max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
 double evaluate_aps(Edge e, int ii) {
-  Vertex v1 = (ii == 2) ? mesh.vertex2(e) : mesh.vertex1(e);
-  Vertex v2 = (ii == 2) ? mesh.vertex1(e) : mesh.vertex2(e);
-  // v1 is vertex removed
+  assertx(ii == 0 || ii == 2);
+  Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // v1 is the removed vertex.
+  Vertex v2 = ii == 2 ? mesh.vertex1(e) : mesh.vertex2(e);
   if (!valid_aps(e, v1, v2)) return -1.;
   double max_mag2 = aps_dist2_v1(e, v1, v2);
   if (max_mag2 == -1.) return -1.;
@@ -3535,7 +3528,7 @@ double evaluate_aps(Edge e, int ii) {
       Point pp = c_uv(mesh.corner(vv, mesh.face(vv, v1)));
       float ia, ib;
       if (intersect_lines(p1, p, p2, pp, ia, ib)) {
-        Vector vec = (interp(mesh.point(v1), pv, ia) - interp(mesh.point(v2), mesh.point(vv), ib));
+        Vector vec = interp(mesh.point(v1), pv, ia) - interp(mesh.point(v2), mesh.point(vv), ib);
         max_mag2 = max(max_mag2, double(mag2(vec)));
       }
     }
@@ -4099,8 +4092,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         rssa = max(v, 0.);
       }
     } else if (minaps) {
-      assertx(ii == 0 || ii == 2);
-      // ii == 2 means new vertex equals mesh.vertex1(e)
+      assertx(ii == 0 || ii == 2);  // ii == 2 means that the new vertex equals mesh.vertex1(e).
       rssa = evaluate_aps(e, ii);
       if (rssa == -1.) continue;
     } else if (minrandom) {

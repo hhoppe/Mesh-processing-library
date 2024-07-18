@@ -420,7 +420,7 @@ bool gridushorts = false;
 Vec2<int> grid_dims{0, 0};  // dimensions of grid if original mesh is grid
 float gridzscale = 1.f;
 bool minqem = false;          // use quadric error metric
-bool minaps = false;          // use APS
+bool minaps = false;          // use appearance-space simplification (APS)
 bool minrandom = false;       // random sequence
 bool qemgh98 = false;         // use QEM from G&H98 paper (vs. my own)
 bool qemlocal = true;         // memoryless QEM
@@ -3503,34 +3503,6 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
   return max_mag2;
 }
 
-// return: is_legal
-bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
-  assertx(fc);
-  int matfc = f_matid(fc);
-  int matf0 = fnei0 ? f_matid(fnei0) : -1;
-  int matf1 = fnei1 ? f_matid(fnei1) : -1;
-  int matf2 = fnei2 ? f_matid(fnei2) : -1;
-  // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
-  // so all is OK.
-  if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) return true;
-  // If all neighbors same, face is not along any boundary, and is OK.
-  if (matf0 == matf1 && matf0 == matf2 && matf1 == matf2) {
-    if (matf0 == -1) {
-      // OK to have single chart surrounded by surface boundaries
-    } else {
-      // cannot have isolated triangle chart without 3 corners.
-      assertx(matfc == matf0);
-    }
-    return true;
-  }
-  // two neighbors are the same, and one is different.
-  // then center face must have same material as the two same neighbors.
-  if (matf0 == matf1) return matfc == matf0;
-  if (matf0 == matf2) return matfc == matf0;
-  if (matf1 == matf2) return matfc == matf1;
-  assertnever("");
-}
-
 double evaluate_aps(Edge e, int ii) {
   Vertex v1 = (ii == 2) ? mesh.vertex2(e) : mesh.vertex1(e);
   Vertex v2 = (ii == 2) ? mesh.vertex1(e) : mesh.vertex2(e);
@@ -3569,6 +3541,34 @@ double evaluate_aps(Edge e, int ii) {
     }
   }
   return sqrt(max_mag2);
+}
+
+// return: is_legal
+bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
+  assertx(fc);
+  int matfc = f_matid(fc);
+  int matf0 = fnei0 ? f_matid(fnei0) : -1;
+  int matf1 = fnei1 ? f_matid(fnei1) : -1;
+  int matf2 = fnei2 ? f_matid(fnei2) : -1;
+  // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
+  // so all is OK.
+  if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) return true;
+  // If all neighbors same, face is not along any boundary, and is OK.
+  if (matf0 == matf1 && matf0 == matf2 && matf1 == matf2) {
+    if (matf0 == -1) {
+      // OK to have single chart surrounded by surface boundaries
+    } else {
+      // cannot have isolated triangle chart without 3 corners.
+      assertx(matfc == matf0);
+    }
+    return true;
+  }
+  // two neighbors are the same, and one is different.
+  // then center face must have same material as the two same neighbors.
+  if (matf0 == matf1) return matfc == matf0;
+  if (matf0 == matf2) return matfc == matf0;
+  if (matf1 == matf2) return matfc == matf1;
+  assertnever("");
 }
 
 float trishape_quality(const Point& p0, const Point& p1, const Point& p2) {

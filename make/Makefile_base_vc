@@ -1,14 +1,29 @@
-# Note: this file sets up variables for Visual C++.
+# Note: this file sets up variables for Microsoft Visual Studio.
 # It is included by ./Makefile_config_win
 
 # cl.exe uses environment variables CL and INCLUDE.
 # link.exe (usually invoked from cl.exe) uses environment variables LINK, LIB, PATH, and TMP.
 
-ifeq ($(msvc),2019)
+ifeq ($(msvc),2022)
+
+  msvcbuild = 14.40.33807
+  windowskit = 10.0.22621.0
+  export INCLUDE := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;
+  $(call prepend_PATH,c:/WINDOWS/Microsoft.NET/Framework64/v4.0.30319)
+  $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/$(windowskit)/x64)
+  $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/x64)
+  $(call prepend_PATH,c:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
+  ifeq ($(x64),1)
+    export LIB := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
+  else
+    $(call prepend_PATH,c:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
+    export LIB := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x86;
+  endif
+
+else ifeq ($(msvc),2019)
 
   msvcbuild = 14.29.30133
   windowskit = 10.0.19041.0
-  cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
   export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\winrt;
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/Tools/)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/)
@@ -19,10 +34,8 @@ ifeq ($(msvc),2019)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/Common7/IDE/VC/VCPackages)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
   ifeq ($(x64),1)
-    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat".
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
   else
-    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat".
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x86;
   endif
@@ -31,7 +44,6 @@ else ifeq ($(msvc),2017)
 
   msvcbuild = 14.15.26726
   windowskit = 10.0.17134.0
-  cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
   export INCLUDE := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\include;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\include\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\winrt;
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/Tools/)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/)
@@ -42,16 +54,14 @@ else ifeq ($(msvc),2017)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/Common7/IDE/VC/VCPackages)
   $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
   ifeq ($(x64),1)
-    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvars64.bat".
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x64;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
   else
-    # See: %comspec% /k "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsamd64_x86.bat".
     $(call prepend_PATH,c:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x86)
     export LIB := C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\ATLMFC\lib\x86;C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x86;C:\Program Files (x86)\Windows Kits\NETFXSDK\4.6.1\lib\um\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x86;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x86;
   endif
 
 else
 
-  $(error msvc_unrecognized)
+  $(error msvc '$(msvc)' unrecognized)
 
 endif

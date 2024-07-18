@@ -270,7 +270,7 @@ void split_awmesh_vertices_along_meridian(AWMesh& awmesh) {
   const Array<int> someface = awmesh.gather_someface();
   for_int(w, awmesh._wedges.num()) {
     const Point sph = sph_from_lonlat(awmesh._wedges[w].attrib.uv);
-    const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
+    const bool near_prime_meridian = abs(sph[k_axis0]) < eps && sph[k_axis1] > -eps;
     if (!near_prime_meridian) continue;
     const int v = awmesh._wedges[w].vertex;
     const int wnew = awmesh._wedges.add(1);

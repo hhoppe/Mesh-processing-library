@@ -5,7 +5,7 @@ use_dll ?= 1#                   (Usually 1: DLL_runtime (-MD or -MDd), versus 0:
 use_vs_libs ?= 0#  0 or 1       (Usually 0; else use libraries generated from Visual Studio using msbuild).
 use_pch ?= 1#                   (Usually 1; use precompiled headers).
 
-msvc ?= 2019
+msvc ?= 2022
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
 
 extobj = obj
@@ -23,6 +23,7 @@ CC = cl
 
 ccommon += -openmp -EHsc
 cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
+cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
 
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355

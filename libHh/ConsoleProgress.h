@@ -91,7 +91,7 @@ inline void ConsoleProgress::update_i(float f) {
             str += "\r";  // bad because it could erase shell prompt
           } else {
             const int n = narrow_cast<int>(_task_name.size()) + 6;
-            for_int(i, n) str += '\b';
+            str.append(n, '\b');
           }
         }
         str += "#" + _task_name + ":" + sform("%02d%% ", val);
@@ -120,11 +120,11 @@ inline void ConsoleProgress::clear() {
         if (0) {
           str += "\r";
         } else {
-          for_int(i, n) str += '\b';
+          str.append(n, '\b');
         }
         // For cmd.exe console, must erase remainder of line.
-        for_int(i, n) str += ' ';
-        for_int(i, n) str += '\b';
+        str.append(n, ' ');
+        str.append(n, '\b');
       } else {
         // For cmd.exe console, must overwrite "\b" with spaces.
         str = "\b\b\b\b    \b\b\b\b";

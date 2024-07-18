@@ -417,12 +417,12 @@ void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12V
     uint8_t* pd = nv12v.get_Y().data();
     for_int(y, ny) {
       const uint8_t* ps = pData + y * stride;
-      for_int(x, nx) { *pd++ = *ps++; }
+      for_int(x, nx) *pd++ = *ps++;
     }
     pd = nv12v.get_UV().data()->data();
     for_int(y, ny / 2) {
       const uint8_t* ps = pData + offsetUV + y * stride;
-      for_int(x, nx) { *pd++ = *ps++; }
+      for_int(x, nx) *pd++ = *ps++;
     }
   }
 }

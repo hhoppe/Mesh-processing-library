@@ -139,7 +139,7 @@
 #define for_T(T, i, start, stop) traditional_for_T(T, i, start, stop)
 #else
 #if defined(_MSC_VER)
-#pragma warning(disable : 4701 4703)  // Several: warning C4701: potentially uninitialized local variable.
+#pragma warning(disable : 4701 4703 4189)  // potentially uninitialized local variable; initialized but not referenced.
 #endif
 #define for_T(T, i, start, stop) for (const T i : hh::range<T>(start, stop))  // In Debug, check "const T i" works.
 #endif

@@ -155,23 +155,17 @@ int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2) { return compare
 int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol) { return compare(a1.point, a2.point, tol); }
 
 int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
-  int r;
-  r = compare(a1.normal, a2.normal);
-  if (r) return r;
-  r = compare(a1.rgb, a2.rgb);
-  if (r) return r;
-  r = compare(a1.uv, a2.uv);
-  return r;
+  if (int r = compare(a1.normal, a2.normal); r != 0) return r;
+  if (int r = compare(a1.rgb, a2.rgb); r != 0) return r;
+  if (int r = compare(a1.uv, a2.uv); r != 0) return r;
+  return 0;
 }
 
 int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol) {
-  int r;
-  r = compare(a1.normal, a2.normal, tol);
-  if (r) return r;
-  r = compare(a1.rgb, a2.rgb, tol);
-  if (r) return r;
-  r = compare(a1.uv, a2.uv, tol);
-  return r;
+  if (int r = compare(a1.normal, a2.normal, tol); r != 0) return r;
+  if (int r = compare(a1.rgb, a2.rgb, tol); r != 0) return r;
+  if (int r = compare(a1.uv, a2.uv, tol); r != 0) return r;
+  return 0;
 }
 
 // *** WMesh

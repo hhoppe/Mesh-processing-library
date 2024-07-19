@@ -890,9 +890,11 @@ WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
 }
 
 // Are two wedge attributes different?
-bool compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
-  return (compare(wi1.col, wi2.col, k_tol) != 0 || compare(wi1.nor, wi2.nor, k_tol) != 0 ||
-          compare(wi1.uv, wi2.uv, k_tol) != 0);
+int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
+  if (int r = compare(wi1.col, wi2.col, k_tol); r != 0) return r;
+  if (int r = compare(wi1.nor, wi2.nor, k_tol); r != 0) return r;
+  if (int r = compare(wi1.uv, wi2.uv, k_tol); r != 0) return r;
+  return 0;
 }
 
 const char* generate_corner_string(Corner c, string& str) {
@@ -1172,7 +1174,7 @@ void parse_mesh_wedge_identifiers() {
             c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
             if (!c || c == crep) break;
             WedgeInfo wi2 = construct_wi(c, vnors);
-            bool diff = ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || compare_wi(wi, wi2));
+            bool diff = ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || compare_wi(wi, wi2) != 0);
             if (nwidfound && sdebug) {
               int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
               assertx(diff == (wid != wid2));

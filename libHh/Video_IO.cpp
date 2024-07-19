@@ -297,7 +297,7 @@ WVideo::WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib att
       _pfilename(_filename) {
   if (_attrib.suffix == "") _attrib.suffix = to_lower(get_path_extension(_filename));
   if (_attrib.suffix == "")
-    throw std::runtime_error("Video '" + filename + "': no filename suffix specified for writing");
+    throw std::runtime_error("Video '" + _filename + "': no filename suffix specified for writing");
   if (file_requires_pipe(_filename)) {
     if (_filename == "-") my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
     _tmpfile = make_unique<TmpFile>(_attrib.suffix);

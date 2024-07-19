@@ -890,8 +890,9 @@ WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
 }
 
 // Are two wedge attributes different?
-int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
-  return compare(wi1.col, wi2.col, k_tol) || compare(wi1.nor, wi2.nor, k_tol) || compare(wi1.uv, wi2.uv, k_tol);
+bool compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
+  return (compare(wi1.col, wi2.col, k_tol) != 0 || compare(wi1.nor, wi2.nor, k_tol) != 0 ||
+          compare(wi1.uv, wi2.uv, k_tol) != 0);
 }
 
 const char* generate_corner_string(Corner c, string& str) {
@@ -3453,10 +3454,10 @@ bool valid_aps(Edge e, Vertex v1, Vertex v2) {
   return true;
 }
 
-int inside_triangle(const Point& tc, const Vec3<Point>& cs) {
+int inside_triangle(const Point& pt1, const Vec3<Point>& pt) {
   const float eps = 1e-6f;
-  return (cross(cs[1] - cs[0], tc - cs[0])[2] >= -eps && cross(cs[2] - cs[1], tc - cs[1])[2] >= -eps &&
-          cross(cs[0] - cs[2], tc - cs[2])[2] >= -eps);
+  return (cross(pt[1] - pt[0], pt1 - pt[0])[2] >= -eps && cross(pt[2] - pt[1], pt1 - pt[1])[2] >= -eps &&
+          cross(pt[0] - pt[2], pt1 - pt[2])[2] >= -eps);
 }
 
 // Return the squared geometric distance from the 3D position of vertex v1 to the surface mesh point with the same
@@ -3466,13 +3467,13 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
   for (Corner c1 : mesh.corners(v1)) {
     Face f = mesh.corner_face(c1);
-    if (f == f1 || f == f2) continue;  // Skip f for speedup as it becomes degenerate anyways.
-    Face fout = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
+    if (f == f1 || f == f2) continue;  // For speedup, skip face as it becomes degenerate after the edge collapse.
     Vec3<Point> pv, pt;  // TODO: use 2D coordinates and operations for pt.
     int i = 0;
     for (Corner c : mesh.corners(f)) {
       Vertex v = mesh.corner_vertex(c);
       if (v == v1) {
+        Face fout = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
         pv[i] = mesh.point(v2);
         pt[i] = c_uv(mesh.corner(v2, fout));
       } else {
@@ -3481,10 +3482,12 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
       }
       i++;
     }
-    if (inside_triangle(c_uv(c1), pt)) {
+    const Point pt1 = c_uv(c1);
+    if (inside_triangle(pt1, pt)) {
       Bary bary;
       Point clp;
-      project_point_triangle2(c_uv(c1), pt[0], pt[1], pt[2], bary, clp);
+      const float d2 = project_point_triangle2(pt1, pt[0], pt[1], pt[2], bary, clp);
+      dummy_use(d2);
       const Point pe = interp(pv[0], pv[1], pv[2], bary);
       max_mag2 = max(max_mag2, dist2(pe, mesh.point(v1)));
     }
@@ -3494,41 +3497,39 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
 }
 
 // Return the maximum displacement of any point on the mesh surface to its corresponding point with the same
-// parametric coordinate after the collapse of the edge e at position ii which is 0 or 2.
+// parametric coordinate after the collapse of the edge e at position ii which is 0 or 2, or -1. if illegal.
 // This max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
 double evaluate_aps(Edge e, int ii) {
   assertx(ii == 0 || ii == 2);
   Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // v1 is the removed vertex.
   Vertex v2 = ii == 2 ? mesh.vertex1(e) : mesh.vertex2(e);
   if (!valid_aps(e, v1, v2)) return -1.;
+  // Obtain displacement at removed vertex v1.
   double max_mag2 = aps_dist2_v1(e, v1, v2);
   if (max_mag2 == -1.) return -1.;
+  // Also consider displacements at edge-edge crossings.
   for (Vertex v : mesh.vertices(v1)) {
     if (v == v2) continue;
-    {
-      Edge ee = mesh.edge(v1, v);
-      if (!mesh.face2(ee) || f_matid(mesh.face1(ee)) != f_matid(mesh.face2(ee))) continue;
-    }
+    if (edge_sharp(mesh.edge(v1, v))) continue;
     Point p = c_uv(mesh.corner(v, mesh.face(v, v1)));
     Point p1 = c_uv(mesh.corner(v1, mesh.face(v, v1)));
     Point pv = mesh.point(v);
     for (Vertex vv : mesh.vertices(v1)) {
-      if (vv == v2) continue;
-      {
-        Edge ee = mesh.edge(v1, vv);
-        if (!mesh.face2(ee) || f_matid(mesh.face1(ee)) != f_matid(mesh.face2(ee))) continue;
-      }
+      if (vv == v2 || vv == v) continue;
+      if (edge_sharp(mesh.edge(v1, vv))) continue;
+      Corner cv1f1 = mesh.corner(v1, mesh.face1(e)), cv1f2 = mesh.corner(v1, mesh.face2(e));
+      Corner cvv = mesh.ccw_corner(v1, mesh.edge(v1, vv));
       Point p2;
-      if (f_matid(mesh.face(v2, v1)) != f_matid(mesh.face(vv, v1))) {
-        assertx(f_matid(mesh.face(v1, v2)) == f_matid(mesh.face(vv, v1)));
-        p2 = c_uv(mesh.corner(v2, mesh.face(v1, v2)));
+      if (c_wedge_id(cvv) == c_wedge_id(cv1f1)) {
+        p2 = c_uv(mesh.corner(v2, mesh.face1(e)));
       } else {
-        p2 = c_uv(mesh.corner(v2, mesh.face(v2, v1)));
+        assertx(c_wedge_id(cvv) == c_wedge_id(cv1f2));
+        p2 = c_uv(mesh.corner(v2, mesh.face2(e)));
       }
-      Point pp = c_uv(mesh.corner(vv, mesh.face(vv, v1)));
+      const Point pp = c_uv(mesh.corner(vv, mesh.face(vv, v1)));
       float ia, ib;
       if (intersect_lines(p1, p, p2, pp, ia, ib)) {
-        Vector vec = interp(mesh.point(v1), pv, ia) - interp(mesh.point(v2), mesh.point(vv), ib);
+        const Vector vec = interp(mesh.point(v1), pv, ia) - interp(mesh.point(v2), mesh.point(vv), ib);
         max_mag2 = max(max_mag2, double(mag2(vec)));
       }
     }

@@ -64,7 +64,9 @@ EReduceCriterion reducecrit = EReduceCriterion::undefined;
 
 bool sharp(Edge e) { return mesh.is_boundary(e) || mesh.flags(e).flag(GMesh::eflag_sharp); }
 
-inline bool same_string(const char* s1, const char* s2) { return !s1 && !s2 ? true : !s1 || !s2 ? false : !strcmp(s1, s2); }
+inline bool same_string(const char* s1, const char* s2) {
+  return !s1 && !s2 ? true : !s1 || !s2 ? false : !strcmp(s1, s2);
+}
 
 void output_mesh_as_a3d() { mesh.write(oa3d, k_surf_color); }
 

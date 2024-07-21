@@ -3470,7 +3470,7 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
   for (Corner c1 : mesh.corners(v1)) {
     Face f = mesh.corner_face(c1);
     if (f == f1 || f == f2) continue;  // For speedup, skip face as it becomes degenerate after the edge collapse.
-    Vec3<Point> pv, pt;  // TODO: use 2D coordinates and operations for pt.
+    Vec3<Point> pv, pt;                // TODO: use 2D coordinates and operations for pt.
     int i = 0;
     for (Corner c : mesh.corners(f)) {
       Vertex v = mesh.corner_vertex(c);

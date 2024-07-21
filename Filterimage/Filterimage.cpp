@@ -259,7 +259,8 @@ void do_tomesh(Args& args) {
 void do_tofloats(Args& args) {
   string filename = args.get_filename();
   WFile fi(filename);
-  auto begyx = V(0, 0), endyx1 = image.dims();
+  Vec2<int> begyx = V(0, 0);
+  Vec2<int> endyx1 = image.dims();
   if (blocks) {
     begyx = V(bynum, bxnum) * blocks;
     endyx1 = begyx + blocks + 1;
@@ -974,7 +975,7 @@ void do_gridcrop(Args& args) {
         im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
         apply_assemble_operations(im, yx, images.dims());
       },
-      sy * sx * 4);
+      int64_t{sy} * sx * 4);
   assemble_images(images);
 }
 
@@ -1664,7 +1665,7 @@ void do_homogenize(Args& args) {
             double newval = oldval - fitval;
             image[yx][z] = clamp_to_uint8(int(newval + .5));
           },
-          n * n * 4);
+          int64_t{n} * n * 4);
     }
   } else {  // version with alpha-channel cropping
     const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
@@ -1718,7 +1719,7 @@ void do_homogenize(Args& args) {
             v += dc;  // reintroduce DC term
             image[yx][z] = clamp_to_uint8(int(v + .5));
           },
-          n * n * 3);
+          int64_t{n} * n * 3);
     }
   }
 }
@@ -2492,7 +2493,7 @@ void do_procedure(Args& args) {
     }
     Matrix<Vec2<int>> mvec(image.dims());
     {  // compute vectors to closest pixel in the mask
-      const auto undefined_dist = mvec.dims();
+      const auto& undefined_dist = mvec.dims();
       parallel_for_coords(
           image.dims(),
           [&](const Vec2<int>& yx) { mvec[yx] = image[yx][0] >= cost_threshold ? V(0, 0) : undefined_dist; }, 8);
@@ -2963,7 +2964,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
           }
           mat_C[yx] = sum;
         },
-        kn * kn * 10);
+        int64_t{kn} * kn * 10);
   } else {  // faster: first downsample horizontally, then vertically
     // Possible optimization: lift boundary testing outside of loops.
     Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // non-square
@@ -2975,7 +2976,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
           for_int(ix, kn) sum += fkernel[ix] * mat_F.inside(V(yx[0], xf0 + ix), k_reflected2);
           mtmp[yx] = sum;
         },
-        kn * 8);
+        int64_t{kn} * 8);
     parallel_for_coords(
         mat_C.dims(),
         [&](const Vec2<int>& yx) {
@@ -2984,7 +2985,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
           for_int(iy, kn) sum += fkernel[iy] * mtmp.inside(V(yf0 + iy, yx[1]), k_reflected2);
           mat_C[yx] = sum;
         },
-        kn * 8);
+        int64_t{kn} * 8);
   }
   return mat_C;
 }
@@ -3017,7 +3018,7 @@ auto upsample_image(CMatrixView<Vector4> mat_C) {
         }
         mat_F[yx] = sum;
       },
-      kn * kn * 10);
+      int64_t{kn} * kn * 10);
   return mat_F;
 }
 
@@ -3126,7 +3127,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
           mat_zscore[y][x] = zscore * (255.0f / 6.0f);
         }
       },
-      mat_s.xsize() * 2 * window_radius * 20);
+      int64_t{mat_s.xsize()} * 2 * window_radius * 20);
   if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 
@@ -3180,7 +3181,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
           mat_out[yx][ch] = val;
           mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
         },
-        square(window_diam) * 20);
+        square(int64_t{window_diam}) * 20);
   }
   if (use_lab) mat_out = convert_to_RGB(mat_out);
 }

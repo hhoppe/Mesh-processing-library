@@ -798,8 +798,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
             for_int(hx, hnx) {
               int fi = get_framei(f * hmat_deltatime(hy, hx), hmat_start(hy, hx), hmat_period(hy, hx));
               Vector4i offset = Vector4i(hvideo_offset(f / DT, hy, hx)) - 128;
-              auto videofi = video[fi];
-              auto lnframe = nframe;  // local view to help optimizer
+              const CMatrixView<Pixel> videofi = video[fi];
+              MatrixView<Pixel> lnframe = nframe;  // local view to help optimizer
               for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
                 const Pixel& pix = videofi(y, x);
                 Pixel& npix = lnframe(y, x);

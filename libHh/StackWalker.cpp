@@ -687,7 +687,7 @@ class StackWalkerInternal {
     return GetModuleListPSAPI(hProcess);
   }
 
-  BOOL GetModuleInfo(HANDLE hProcess, DWORD64 baseAddr, IMAGEHLP_MODULE64_V2* pModuleInfo) {
+  BOOL GetModuleInfo(HANDLE hProcess, DWORD64 baseAddr, IMAGEHLP_MODULE64_V2* pModuleInfo) const {
     if (this->pSGMI == NULL) {
       SetLastError(ERROR_DLL_INIT_FAILED);
       return FALSE;

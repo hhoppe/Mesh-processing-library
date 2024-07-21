@@ -170,7 +170,7 @@ void do_create(Args& args) {
           MatrixView<Pixel> frame = video[f];
           fill(frame, gcolor);  // white by default
         },
-        video.ysize() * video.xsize() * 4);
+        int64_t{video.ysize()} * video.xsize() * 4);
   }
   // video.set_filename() is not called, so no default file extension.
 }
@@ -1059,7 +1059,7 @@ void do_gridcrop(Args& args) {
         vid = crop(video, V(0, vt, vl), V(0, vb, vr), thrice(bndrule), &gcolor);
         apply_assemble_operations(vid, yx, videos.dims());
       },
-      video.nframes() * sy * sx * 4);
+      int64_t{video.nframes()} * sy * sx * 4);
   assemble_videos(videos);
 }
 

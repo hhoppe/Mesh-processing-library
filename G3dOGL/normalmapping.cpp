@@ -120,7 +120,7 @@ class NormalMapping_ogl2 final : public NormalMapping {
  private:
   GLuint program_id;
   GLuint fragment_shader_id;
-  GLint get_loc(const char* name) {
+  GLint get_loc(const char* name) const {
     USE_GL_EXT(glGetUniformLocation, PFNGLGETUNIFORMLOCATIONPROC);
     GLuint loc = glGetUniformLocation(program_id, name);
     assertx(loc >= 0);

@@ -543,7 +543,7 @@ static void g3d_ellipse2() {
     Point pabove = Point(0.f, 0.f, obradius * 1.8f) * fellipse;
     const auto [zs, xys] = HB::world_to_vdc(pabove);
     if (xys) {
-      auto [xs, ys] = *xys;
+      const auto& [xs, ys] = *xys;
       HB::draw_text(V(ys - .01f, xs), sform("%d", nfaces));
     } else {
       SHOW(pabove);

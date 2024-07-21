@@ -1662,7 +1662,7 @@ void PMeshRStream::read_base_mesh(AWMesh* bmesh) {
     assertx(_pm);
     if (bmesh) *bmesh = _pm->_base_mesh;
   } else {
-    if (!_pm & !bmesh) Warning("strange, why are we doing this?");
+    if (!_pm && !bmesh) Warning("strange, why are we doing this?");
     unique_ptr<AWMesh> tbmesh = !_pm && !bmesh ? make_unique<AWMesh>() : nullptr;
     AWMesh& rbmesh = _pm ? _pm->_base_mesh : bmesh ? *bmesh : *tbmesh;
     rbmesh.read(*_is, _info);

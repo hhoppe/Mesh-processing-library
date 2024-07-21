@@ -183,7 +183,7 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
       Point p = mesh.point(v) * g_obs[obn].t();
       const auto [zs, xys] = HB::world_to_vdc(p);
       if (xys) {
-        const auto [xs, ys] = *xys;
+        const auto& [xs, ys] = *xys;
         const float d = abs(xs - ps[0]) + abs(ys - ps[1]);
         if (d <= maxd && zs <= minz) {
           minz = zs;

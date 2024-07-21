@@ -139,7 +139,7 @@ int main() {
     Array<int> indices;
     Array<char> chars;
     for (const auto& [i, ch] : enumerate(string("ABC"))) {
-      indices.push(i);
+      indices.push(int(i));
       chars.push(ch);
     }
     SHOW(indices);

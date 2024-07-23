@@ -2,7 +2,7 @@
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Bbox.h"
-#include "libHh/Encoding.h"  // Encoding and DeltaEncoding
+#include "libHh/Encoding.h"  // Encoding, DeltaEncoding
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
@@ -86,7 +86,7 @@ void do_nfaces(Args& args) {
 }
 
 int count_nedges(const AWMesh& mesh) {
-  int nedges_t2 = 0;  // twice the number of edges
+  int nedges_t2 = 0;  // Twice the number of edges.
   for_int(i, mesh._faces.num()) for_int(j, 3) nedges_t2 += mesh._fnei[i].faces[j] >= 0 ? 1 : 2;
   assertx(nedges_t2 % 2 == 0);
   return nedges_t2 / 2;
@@ -98,8 +98,7 @@ void do_nedges(Args& args) {
   for (;;) {
     int cnedges = count_nedges(*pmi);
     if (cnedges >= nedges) break;
-    // Conservative upper bound on how many vsplits we can safely
-    //  advance without exceeding requested number of edges.
+    // Conservative upper bound on how many vsplits we can safely advance without exceeding requested number of edges.
     int nextra = (nedges - cnedges) / 3 - 1;
     if (!pmi->next()) break;
     for_int(i, nextra) {
@@ -190,19 +189,19 @@ void do_outbbox() {
   gmesh.set_point(va[5], Point(bbox[1][0], bbox[0][1], bbox[1][2]));
   gmesh.set_point(va[6], Point(bbox[1][0], bbox[1][1], bbox[1][2]));
   gmesh.set_point(va[7], Point(bbox[0][0], bbox[1][1], bbox[1][2]));
-  gmesh.create_face(va[0], va[3], va[1]);  // front
+  gmesh.create_face(va[0], va[3], va[1]);  // Front.
   gmesh.create_face(va[1], va[3], va[2]);
-  gmesh.create_face(va[1], va[6], va[5]);  // right
+  gmesh.create_face(va[1], va[6], va[5]);  // Right.
   gmesh.create_face(va[6], va[1], va[2]);
-  gmesh.create_face(va[7], va[2], va[3]);  // top
+  gmesh.create_face(va[7], va[2], va[3]);  // Top.
   gmesh.create_face(va[6], va[2], va[7]);
-  gmesh.create_face(va[3], va[4], va[7]);  // left
+  gmesh.create_face(va[3], va[4], va[7]);  // Left.
   gmesh.create_face(va[0], va[4], va[3]);
-  gmesh.create_face(va[0], va[1], va[4]);  // bottom
+  gmesh.create_face(va[0], va[1], va[4]);  // Bottom.
   gmesh.create_face(va[1], va[5], va[4]);
-  gmesh.create_face(va[7], va[5], va[6]);  // back
+  gmesh.create_face(va[7], va[5], va[6]);  // Back.
   gmesh.create_face(va[7], va[4], va[5]);
-  // emphasize centroid of bboxi
+  // Emphasize centroid of bboxi.
   for_int(i, 100) {
     Vertex v = gmesh.create_vertex();
     gmesh.set_point(v, Point(interp(bboxi[0], bboxi[1])));
@@ -211,7 +210,7 @@ void do_outbbox() {
   nooutput = true;
 }
 
-// *** SR
+// *** Selective Refinement
 
 void read_srmesh() {
   if (pmi) {
@@ -233,7 +232,7 @@ void do_srout(Args& args) {
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
     views[i].set_hither(0.f);
-    // Note: hither and yonder may be different in G3dOGL
+    // Note: hither and yonder may be different in G3dOGL.
   }
   HH_TIMER("_srout");
   read_srmesh();
@@ -260,7 +259,7 @@ void do_srgeomorph(Args& args) {
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
     views[i].set_hither(0.f);
-    // Note: hither and yonder may be different in G3dOGL
+    // Note: hither and yonder may be different in G3dOGL.
   }
   HH_TIMER("_srgeomorph");
   read_srmesh();
@@ -306,7 +305,7 @@ void do_srfly(Args& args) {
     view.set_zooms(twice(object_frame->zoom));
     view.set_screen_thresh(screen_thresh);
     view.set_hither(0.f);
-    // Note: hither and yonder may be different in G3dOGL
+    // Note: hither and yonder may be different in G3dOGL.
     srmesh.set_view_params(view);
     srmesh.adapt_refinement();
     HH_SSTAT(Sflynfaces, srmesh.num_active_faces());
@@ -328,7 +327,7 @@ void do_tosrm() {
   nooutput = true;
 }
 
-// *** modify PM
+// *** Modify PM.
 
 void do_truncate_beyond() {
   if (1) {
@@ -492,7 +491,7 @@ void do_compression() {
   if (verb >= 2) SHOW(bits_basemesh);
   if (verb >= 2) SHOW(bits_basemesh / base_nv);
   ensure_pm_loaded();
-  pmi->goto_nvertices(std::numeric_limits<int>::max());  // goto fully detailed mesh
+  pmi->goto_nvertices(std::numeric_limits<int>::max());  // Goto fully detailed mesh.
   int full_nv = pmesh._info._full_nvertices;
   int full_nw = pmesh._info._full_nwedges;
   int full_nf = pmesh._info._full_nfaces;
@@ -503,18 +502,16 @@ void do_compression() {
   if (verb >= 2) SHOW(bits_fullmesh / full_nv);
   float bits_m_mesh = 0.f, bits_g_mesh = 0.f, bits_e_mesh = 0.f;
   float bits_m_pmesh = 0.f, bits_g_pmesh = 0.f, bits_e_pmesh = 0.f;
-  {  // consider memory-resident Mesh
-    // Does not include fnei field!
+  {  // Consider memory-resident Mesh.  Does not include fnei field!
     int bits = full_nv * (3 * 32) + full_nw * (1 * 32 + 5 * 32) + full_nf * (3 * 32 + 16);
     showf("Memory Mesh: %d bits (%.1f bits/vertex)\n", bits, float(bits) / full_nv);
     bits_m_mesh = float(bits) / full_nv;
   }
-  {  // consider encoded Mesh
-    // Does not include fnei field!
+  {  // Consider encoded Mesh.  Does not include fnei field!
     showf("Encoded mesh: %d bits (%.1f bits/vertex)\n", bits_fullmesh, float(bits_fullmesh) / full_nv);
     bits_e_mesh = float(bits_fullmesh) / full_nv;
   }
-  {  // consider memory-resident PMesh
+  {  // Consider memory-resident PMesh.
     int bits = base_nv * (3 * 32) + base_nw * (1 * 32 + 5 * 32) + base_nf * (6 * 32 + 16);
     for_int(vspli, nvsplits) {
       const Vsplit& vspl = pmesh._vsplits[vspli];
@@ -523,7 +520,7 @@ void do_compression() {
     showf("Memory PMesh: %d bits (%.1f bits/vertex)\n", bits, float(bits) / full_nv);
     bits_m_pmesh = float(bits) / full_nv;
   }
-  {  // consider Encoded PMesh
+  {  // Consider Encoded PMesh.
     int nwads = 0;
     float bits_flclw = 0.f;
     DeltaEncoding de_dflclw;
@@ -532,8 +529,8 @@ void do_compression() {
     Encoding<int> enc_corners_ii_matp;
     Encoding<int> enc_flr_matid;
     Encoding<int> enc_just_flrn;
-    DeltaEncoding de_pl;  // vad_l, using 3*max_bits(coord)
-    DeltaEncoding de_ps;  // vad_s
+    DeltaEncoding de_pl;  // vad_l, using 3*max_bits(coord).
+    DeltaEncoding de_ps;  // vad_s.
     DeltaEncoding de_n;
     DeltaEncoding de_uv;
     int flclwo = 0;
@@ -605,7 +602,7 @@ void do_compression() {
       pmi->_materials = no_materials;
       quantize_mesh_int(*pmi, pmi->rstream()._info);
       pmi->write(fo(), pmi->rstream()._info);
-      // pmi is messed up, so clear it
+      // pmi is messed up, so clear it.
       pmi->_vertices.init(0);
       pmi->_wedges.init(0);
       pmi->_faces.init(0);
@@ -653,13 +650,13 @@ void do_gcompression() {
   assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
   pmi->goto_nvertices(0);
   ensure_pm_loaded();
-  DeltaEncoding de_p;     // vad_l, before pred., using 3*max_bits(coord)
-  DeltaEncoding de_pp;    // after prediction
-  DeltaEncoding de_ppc;   // after prediction, separate coordinates
-  DeltaEncoding de_ppl;   // after prediction, local frame
-  DeltaEncoding de_pplx;  // after prediction, local frame, per coord
-  DeltaEncoding de_pply;  // after prediction, local frame, per coord
-  DeltaEncoding de_pplz;  // after prediction, local frame, per coord
+  DeltaEncoding de_p;     // vad_l, before pred., using 3*max_bits(coord).
+  DeltaEncoding de_pp;    // After prediction.
+  DeltaEncoding de_ppc;   // After prediction, separate coordinates.
+  DeltaEncoding de_ppl;   // After prediction, local frame.
+  DeltaEncoding de_pplx;  // After prediction, local frame, per coord.
+  DeltaEncoding de_pply;  // After prediction, local frame, per coord.
+  DeltaEncoding de_pplz;  // After prediction, local frame, per coord.
   Polygon polygon;
   for_int(vspli, pmesh._vsplits.num()) {
     const Vsplit& vspl = pmesh._vsplits[vspli];
@@ -675,10 +672,10 @@ void do_gcompression() {
     int vs = pmi->_wedges[pmi->_faces[f].wedges[vs_index]].vertex;
     int nrot = vspl.vlr_offset1 - 1;
     polygon.push(pmi->_vertices[vs].attrib.point);
-    if (nrot < 0) {          // extend beyond a corner.
-                             // Use only vs itself as prediction (this makes sense).
-    } else if (nrot == 0) {  // along a boundary
-      // Use vs and the next vertex along the boundary.
+    if (nrot < 0) {
+      // Extend beyond a corner.  Use only vs itself as prediction (this makes sense).
+    } else if (nrot == 0) {
+      // Along a boundary.  Use vs and the next vertex along the boundary.
       for (;;) {  // rotate clw
         int j = pmi->get_jvf(vs, f);
         int fn = pmi->_fnei[f].faces[mod3(j + 2)];
@@ -688,14 +685,14 @@ void do_gcompression() {
       int j = pmi->get_jvf(vs, f);
       int vo = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 1)]].vertex;
       polygon.push(pmi->_vertices[vo].attrib.point);
-    } else {  // interior vertex
-      // Note: polygon will be oriented clockwise.
+    } else {
+      // Interior vertex.  Note: polygon will be oriented clockwise.
       {  // first add vl
         int j = pmi->get_jvf(vs, f);
         int vl = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 2)]].vertex;
         polygon.push(pmi->_vertices[vl].attrib.point);
       }
-      // Now add remaining vertices on ring
+      // Now add remaining vertices on ring.
       for_int(i, nrot) {
         assertx(f >= 0);
         int j = pmi->get_jvf(vs, f);
@@ -710,20 +707,20 @@ void do_gcompression() {
     Point pvs = pmi->_vertices[vs].attrib.point;
     Point pnew = pvs + vspl.vad_large.dpoint;
     Vector vdiff = pnew - pcentroid;
-    // Compute local frame
+    // Compute local frame.
     Frame lframe;
     if (polygon.num() < 3) {
       Warning("Using identity local frame");
       lframe = Frame::identity();
     } else {
-      // orientation of frame does not matter, as long as consistent
-      lframe.v(0) = polygon.get_normal();  // pointing in; does not matter
+      // Orientation of frame does not matter, as long as it is consistent.
+      lframe.v(0) = polygon.get_normal();  // Pointing in; does not matter.
       assertx(!is_zero(lframe.v(0)));
-      // lframe.v(1) = polygon[1] - pvs;  // vl - vs
+      // lframe.v(1) = polygon[1] - pvs;  // Equal to vl - vs.
       lframe.v(1) = pcentroid - pvs;
       assertx(lframe.v(1).normalize());
       lframe.v(2) = cross(lframe.v(0), lframe.v(1));
-      lframe.p() = Point(0.f, 0.f, 0.f);  // unused
+      lframe.p() = Point(0.f, 0.f, 0.f);  // Unused.
     }
     // SHOW(vdiff);
     Vector vdiffl = vdiff * ~lframe;
@@ -754,9 +751,9 @@ void do_testiterate(Args& args) {
   {
     SHOW("loading file");
     ensure_pm_loaded();
-    pmi->goto_nvertices(std::numeric_limits<int>::max());  // go to end
+    pmi->goto_nvertices(std::numeric_limits<int>::max());  // Go to end.
     SHOW("file loaded");
-    pmi->goto_nvertices(0);  // go back to base mesh
+    pmi->goto_nvertices(0);  // Go back to base mesh.
     SHOW("back to base mesh");
   }
   Timer timer_max;
@@ -789,7 +786,7 @@ void do_zero_vadsmall() {
   for (;;) {
     const Vsplit* pcvspl = pmrs->prev_vsplit();
     if (!pcvspl) break;
-    Vsplit& vspl = *const_cast<Vsplit*>(pcvspl);  // vspl modified by diff() below
+    Vsplit& vspl = *const_cast<Vsplit*>(pcvspl);  // Vertex split modified by diff() below.
     assertx(pmrs->next_vsplit());
     unsigned code = vspl.code;
     int ii = (code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
@@ -803,17 +800,17 @@ void do_zero_vadsmall() {
     switch (ii) {
       case 2:
         diff(vspl.vad_large, va_t, va_s);
-        diff(vspl.vad_small, va_s, va_s);  // set to zero.
+        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
         break;
       case 0:
         diff(vspl.vad_large, va_s, va_t);
-        diff(vspl.vad_small, va_s, va_s);  // set to zero.
+        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
         break;
       case 1: {
         PmVertexAttrib va_m;
         interp(va_m, va_s, va_t, 0.5f);
         diff(vspl.vad_large, va_t, va_m);
-        diff(vspl.vad_small, va_s, va_s);  // set to zero.
+        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
         break;
       }
       default: assertnever("");
@@ -864,7 +861,7 @@ void do_zero_resid() {
   pmesh._info._has_resid = false;
 }
 
-PmWedgeAttrib zero_wad;  // cannot declare const because default constructor leaves uninitialized
+PmWedgeAttrib zero_wad;  // Cannot declare const because default constructor leaves uninitialized.
 
 void do_compute_nor() {
   if (1) assertnever("compute_nor() abandoned for now");
@@ -901,13 +898,13 @@ void do_compute_nor() {
         diff(ar_wad[lnum++], pmi->_wedges[wvtfl].attrib, zero_wad);
         diff(ar_wad[lnum++], pmi->_wedges[wvsfl].attrib, zero_wad);
       } else {
-        // abandoned for now...
+        // Abandoned for now.
         dummy_use(wvlfl, wvsfr, wvtfr, wvrfr, vs);
       }
     }
     if (isr) {
     }
-    // abandoned for now...
+    // Abandoned for now.
     assertx(pmi->prev());
   }
   // Save normals of base mesh.
@@ -936,7 +933,7 @@ auto gather_faces(int vs, int f0) {
   faces.push(f0);
   int f;
   if (1) {
-    // Rotate clw
+    // Rotate clw.
     f = f0;
     for (;;) {
       int j = pmi->get_jvf(vs, f);
@@ -946,7 +943,7 @@ auto gather_faces(int vs, int f0) {
     }
   }
   if (f < 0) {
-    // Rotate ccw
+    // Rotate ccw.
     f = f0;
     for (;;) {
       int j = pmi->get_jvf(vs, f);
@@ -966,22 +963,21 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   assertx(first_ivspl < last_ivspl);
   assertx(last_ivspl <= pmesh._info._tot_nvsplits);
   // ivspl refers to number of vsplits after first_ivspl !
-  // Compute dependency graphs.
-  // And also record fl's in original sequence, and set up face renaming.
-  Graph<int> gdep;       // ivspl -> previous ivspl on which it depends
-  Graph<int> gidep;      // inverse relation of above
-  Array<int> ivspl_fl;   // ivspl -> face fl it creates
-  Array<int> oldf_newf;  // new face indexing (renaming) used later.
+  // Compute dependency graphs, record fl's in original sequence, and set up face renaming.
+  Graph<int> gdep;       // ivspl -> previous ivspl on which it depends.
+  Graph<int> gidep;      // Inverse relation of above.
+  Array<int> ivspl_fl;   // ivspl -> face fl it creates.
+  Array<int> oldf_newf;  // New face indexing (renaming) used later.
   {
     HH_ATIMER("__compute_depend");
     pmi->goto_nvertices(pmesh._base_mesh._vertices.num() + first_ivspl);
-    Array<int> f_ivspldep;  // for each face, ivspl it depends on (or -1)
+    Array<int> f_ivspldep;  // For each face, ivspl it depends on (or -1).
     for_int(f, pmi->_faces.num()) f_ivspldep.push(-1);
     for_int(f, pmi->_faces.num()) oldf_newf.push(f);
     Array<int> faces;
     for_int(ivspl, last_ivspl - first_ivspl) {
       const Vsplit& vspl = pmesh._vsplits[first_ivspl + ivspl];
-      int f0 = vspl.flclw;  // some face adjacent to vs
+      int f0 = vspl.flclw;  // Some face adjacent to vs.
       unsigned code = vspl.code;
       int vs_index = (code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
       int vs = pmi->_wedges[pmi->_faces[f0].wedges[vs_index]].vertex;
@@ -991,12 +987,12 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       gidep.enter(ivspl);
       for (int f : faces) {
         assertx(f_ivspldep.ok(f));
-        int ivspldep = f_ivspldep[f];  // vsplit is dependent on ivspldep
+        int ivspldep = f_ivspldep[f];  // vsplit is dependent on ivspldep.
         if (ivspldep >= 0 && !gdep.contains(ivspl, ivspldep)) {
           gdep.enter(ivspl, ivspldep);
           gidep.enter(ivspldep, ivspl);
         }
-        f_ivspldep[f] = ivspl;  // face now depends on this vsplit
+        f_ivspldep[f] = ivspl;  // The face now depends on this vsplit.
       }
       // new 1 or 2 faces depend on this vsplit
       f_ivspldep.push(ivspl);
@@ -1244,8 +1240,7 @@ int analyze_mesh(int cs) {
 
 void analyze_strips(int& pnverts, int& pnstrips) {
   const bool debug = false;
-  // newway: vertices reused from prev face are in vid[0..1]
-  //          expected_j: 1, 2, 1, 2, ...
+  // newway: vertices reused from prev face are in vid[0..1]; expected_j: 1, 2, 1, 2, ...
   // Assumption: turn face1-face2-face3 is expected to be ccw.
   const int first_expected_j = 1;
   const int sum_expected_j = 3;
@@ -1260,7 +1255,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     int matid = pmi->_faces[fi].attrib.matid;
     if (matid != last_matid) {
       last_matid = matid;
-      // force new strip at mat boundary
+      // Force new strip at mat boundary.
       fill(ovid, -1);
     }
     int j = 3;
@@ -1270,7 +1265,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
         break;
       }
     }
-    if (j == 3) {  // not face-face connected
+    if (j == 3) {  // Not face-face connected.
       if (debug) std::cerr << " H";
       nstrips++;
       if (fi) nverts += k_strip_restart_nvindices;
@@ -1283,7 +1278,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     } else if (j == sum_expected_j - expected_j) {
       if (debug) std::cerr << ":";
       nverts += 2;
-      // expected_j stays the same:  LRLR*R*LRLR
+      // expected_j stays the same:  LRLR*R*LRLR.
     } else {
       if (debug) std::cerr << "*";
       if (0) Warning("Strip turns on itself");
@@ -1395,20 +1390,20 @@ void do_polystream() {
 Point convert_to_sph(const UV& uv) {
   assertx(uv[0] >= 0.f && uv[0] <= 1.f);
   assertx(uv[1] >= 0.f && uv[1] <= 1.f);
-  float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2
-  float lat = (uv[1] - .5f) * (TAU / 2);  // -TAU / 4 .. +TAU / 4
-  // my coordinate system
+  float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2.
+  float lat = (uv[1] - .5f) * (TAU / 2);  // -TAU / 4 .. +TAU / 4.
+  // My coordinate system.
   return Point(std::cos(lon) * std::cos(lat), std::sin(lon) * std::cos(lat), std::sin(lat));
 }
 
 // Problems that make this visualization useless:
-// - base tetrahedron is not at all regular
-// - currently, the PM file does not have the final registration
-//    rotation that the .sphparam.m file does, so normals are all wrong.
+// - The base tetrahedron is not at all regular.
+// - Currently, the PM file does not have the final registration rotation that the .sphparam.m file does, so the
+//   normals are all wrong.
 void do_uvsphtopos() {
-  // assumes: 1 wedge per vertex, ii == 2 everywhere
+  // Assumes: 1 wedge per vertex, ii == 2 everywhere.
   assertx(pmesh._info._has_uv);
-  Array<int> array_vs;  // vspli -> vs
+  Array<int> array_vs;  // vspli -> vs.
   ensure_pm_loaded();
   pmi->goto_nvertices(0);
   for_int(vspli, pmesh._vsplits.num()) {
@@ -1440,7 +1435,7 @@ void do_uvsphtopos() {
     assertx(is_zero(vspl.vad_small.dpoint));
   }
   pmesh._info._full_bbox = Bbox{sphpoints};
-  pmesh._info._has_uv = false;  // clear the uv coordinates
+  pmesh._info._has_uv = false;  // Clear the uv coordinates.
 }
 
 }  // namespace
@@ -1507,7 +1502,7 @@ int main(int argc, const char** argv) {
   string filename = "-";
   if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
   gfilename = filename;
-  RFile fi(filename);  // opened out here because &fi is captured below
+  RFile fi(filename);  // Opened out here because &fi is captured below.
   {
     HH_TIMER("FilterPM");
     for (string line; fi().peek() == '#';) {
@@ -1518,7 +1513,7 @@ int main(int argc, const char** argv) {
     bool srm_input = fi().peek() == 'S';
     showff("%s", args.header().c_str());
     if (arg0 == "-tosrm") {
-      // it will do its own efficient parsing
+      // It will do its own efficient parsing.
       pfi = &fi;
     } else if (srm_input) {
       nooutput = true;

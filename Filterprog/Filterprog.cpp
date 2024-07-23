@@ -43,9 +43,9 @@ bool pm_has_wad2 = false;
 
 string g_header;
 
-constexpr float k_undefined = BIGFLOAT;  // undefined scalar attribute
+constexpr float k_undefined = BIGFLOAT;  // Undefined scalar attribute.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_opos);  // for morph, old vertex position
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_opos);  // For morph, old vertex position.
 
 struct WedgeInfo {
   Vector nor;
@@ -77,16 +77,16 @@ void MapWedgeInfo::copy_from(const MapWedgeInfo& mwi) {
   for (auto& [wid, wi] : mwi._map) set(wid, wi);
 }
 
-MapWedgeInfo gcwinfo;  // current wedge information
-MapWedgeInfo gowinfo;  // old wedge information
+MapWedgeInfo gcwinfo;  // Current wedge information.
+MapWedgeInfo gowinfo;  // Old wedge information.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_cwedge_id);  // current wedge id's
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_owedge_id);  // old wedge id's (for morph)
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_cwedge_id);  // Current wedge id's.
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_owedge_id);  // Old wedge id's (for morph).
 
 // Used to store the closest living ancestor of vertices.
 // If !sel_refinement, this is the identity map.
-// If sel_refinement, some vertices in PM may not exist in mesh; this map
-//  finds their closest ancestor that does exist in mesh.
+// If sel_refinement, some vertices in PM may not exist in mesh; this map finds their closest ancestor that
+//  does exist in mesh.
 class LivingAncestor {
  public:
   int existing_id(int vid) const { return _is_active ? _mapvidvid.get(vid) : vid; }
@@ -98,7 +98,7 @@ class LivingAncestor {
 
  private:
   bool _is_active{false};
-  Map<int, int> _mapvidvid;  // vid -> closest living ancestor vid
+  Map<int, int> _mapvidvid;  // vid -> closest living ancestor vid.
 };
 
 void LivingAncestor::activate() {
@@ -113,7 +113,7 @@ void LivingAncestor::set_descendant(int vnew, int vold) {
   _mapvidvid.enter(vnew, vold);
 }
 
-LivingAncestor vlineage;  // closest living ancestor relation
+LivingAncestor vlineage;  // Closest living ancestor relation.
 
 // *** Beginning of app functions.
 
@@ -133,7 +133,7 @@ WedgeInfo create_winfo(Corner c) {
   Vector& nor = wi.nor;
   fill(nor, k_undefined);
   mesh.parse_corner_key_vec(c, "normal", nor);
-  assertx(nor[0] != k_undefined);  // normals always present
+  assertx(nor[0] != k_undefined);  // Normals are always present.
   if (abs(mag2(nor) - 1.f) > 1e-4f) {
     Warning("Renormalizing normal");
     assertw(nor.normalize());
@@ -171,7 +171,7 @@ void carry_old_corner_info(Edge e) {
       if (owid) {
         c_owedge_id(crep) = owid;
       } else {
-        // hopefully, will be found below in opposite corner
+        // Hopefully, will be found below in opposite corner.
       }
     }
   }
@@ -188,8 +188,7 @@ void carry_old_corner_info(Edge e) {
         if (sdebug) {
           // It's ok, there was a non-strict edge collapse.
           Warning("New wedge not morphed");
-          // Will use the final value as old one -> constant.
-          // Keep c_owedge_id(co) == 0 to indicate this.
+          // Will use the final value as old one -> constant.  Keep c_owedge_id(co) == 0 to indicate this.
         }
       }
     }
@@ -235,13 +234,13 @@ bool should_perform_vsplit(Vertex vs) {
   float area2 = 0.f;
   for_int(i, ar_pscreen.num()) {
     int i1 = (i + 1) % ar_pscreen.num();
-    if (!i1 && mesh.is_boundary(vs)) continue;                      // not a face
-    if (ar_pscreen[i][0] <= 0 || ar_pscreen[i1][0] <= 0) continue;  // behind viewer
+    if (!i1 && mesh.is_boundary(vs)) continue;                      // Not a face.
+    if (ar_pscreen[i][0] <= 0 || ar_pscreen[i1][0] <= 0) continue;  // Behind viewer.
     float x1 = p1screen[1], y1 = p1screen[2];
     float x2 = ar_pscreen[i][1], y2 = ar_pscreen[i][2];
     float x3 = ar_pscreen[i1][1], y3 = ar_pscreen[i1][2];
-    float vcross = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);  // expansion about 1st p
-    vcross = -vcross;                                              // -x axis towards viewer
+    float vcross = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);  // Expansion about first point.
+    vcross = -vcross;                                              // Use -x axis towards viewer.
     if (vcross >= 0)
       facing_front = true;
     else
@@ -300,7 +299,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         const int vni = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
         assert_no_more_chars(s);
-        assertx(vni == vsi);  // redundancy
+        assertx(vni == vsi);  // Redundancy.
         dummy_use(fli, fri);
         int vsie = vlineage.existing_id(vsi);
         int vlie = vlineage.existing_id(vli);
@@ -310,25 +309,23 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         Vertex vr = vrie ? mesh.id_vertex(vrie) : nullptr;
         bool possible = true;
         if (stringent) {
-          // SIGGRAPH 96 conditions (1) and (2)
+          // SIGGRAPH 96 conditions (1) and (2).
           if (vsie != vsi) possible = false;
           if (vl && vlie != vli) possible = false;
           if (vr && vrie != vri) possible = false;
         } else {
-          // With conditions (1\') and (2), the edges (vs, vl) or (vs, vr)
-          //  may not exist.
+          // With conditions (1\') and (2), the edges (vs, vl) or (vs, vr) may not exist.
           // See notes 1996-06-21.  There does not seem to be an easy fix for this.
           if (0) {
-            // SIGGRAPH 1996 conditions (1\') and (2)
+            // SIGGRAPH 1996 conditions (1\') and (2).
             if (vsie != vsi) possible = false;
             if (vl && (vs == vl || !mesh.query_edge(vs, vl))) possible = false;
             if (vr && (vs == vr || !mesh.query_edge(vs, vr))) possible = false;
             if (vl == vr) possible = false;
           } else {
-            // Even less stringent:
-            //   vertex vs need not exist, if so then use its ancestor.
-            // Note: exposes explicit dependency of this vsplit on
-            //  exactly 2 prior vsplits that distinguish vs, vl, and vr.
+            // Even less stringent: vertex vs need not exist, if so then use its ancestor.
+            // Note: exposes explicit dependency of this vsplit on exactly 2 prior vsplits that
+            //  distinguish vs, vl, and vr.
             if (vsie == vlie) possible = false;
             if (vsie == vrie) possible = false;
             if (vlie == vrie) possible = false;
@@ -437,8 +434,7 @@ void read_record(std::istream& is, bool carry_old) {
   if (is) assertx(after_vsplit);
 }
 
-// Look around a vertex to see if the corners have a unique wid.
-// Return -1 if they don't.
+// Look around a vertex to see if the corners have a unique wid.  Return -1 if they don't.
 int get_unique_wid(Vertex v, bool use_old) {
   int num = 0, u_wid;
   dummy_init(u_wid);
@@ -468,7 +464,7 @@ string create_attrib_string(const WedgeInfo& wi, bool old_flag) {
   return sret;
 }
 
-// Create the Opos portion of the corner or vertex string
+// Create the Opos portion of the corner or vertex string.
 string write_p_string(Vertex v) {
   const Point& op = v_opos(v);
   return sform("Opos=(%g %g %g)", op[0], op[1], op[2]);
@@ -496,13 +492,12 @@ string write_pa_string(Vertex v, int wid, int owid, bool write_morph) {
 void write_init_vertex(Vertex v, bool write_morph) {
   int u_nwid = get_unique_wid(v, false);
   int u_owid = write_morph ? get_unique_wid(v, true) : 0;
-  assertx(u_nwid != 0);  // impossible
+  assertx(u_nwid != 0);  // Impossible.
   if (u_nwid > 0 && u_owid < 0) {
     for (Corner c : mesh.corners(v)) {
       // int nwid = c_cwedge_id(c);
       int owid = c_owedge_id(c);
-      // Rare case in which partial sharp edge collapses into
-      //  a boundary vertex.
+      // Rare case in which partial sharp edge collapses into a boundary vertex.
       if (owid && owid != u_nwid) {
         Warning("Rare case of u_nwid > 0 && u_owid < 0");
         u_nwid = 0;
@@ -524,7 +519,7 @@ void write_init_vertex(Vertex v, bool write_morph) {
 void write_mesh(bool write_morph = false) {
   // Write separator if multiple writes.
   static int nwrites = 0;
-  if (nwrites++) std::cout << "o 1 1 0\n";  // object separator
+  if (nwrites++) std::cout << "o 1 1 0\n";  // Object separator.
   if (splitcorners) {
     GMesh nmesh;
     Map<Corner, Vertex> mcv;
@@ -605,8 +600,8 @@ bool next_morph(int nfaces) {
   // Clear old info.
   gowinfo.clear();
   for (Vertex v : mesh.vertices()) {
-    v_opos(v) = Point(k_undefined, k_undefined, k_undefined);  // optional
-    for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;      // optional
+    v_opos(v) = Point(k_undefined, k_undefined, k_undefined);  // Optional.
+    for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;      // Optional.
   }
   return !!is;
 }
@@ -731,8 +726,8 @@ void do_from(Args& args) {
   }
 }
 
-// Parse a fixed number of vsplit records.  (Useful for considering a fixed
-//  PM prefix in conjunction with sel_refinement.)
+// Parse a fixed number of vsplit records.  (Useful for considering a fixed PM prefix in conjunction with
+// sel_refinement.)
 void do_consider(Args& args) {
   int nrecords = args.get_int();
   RFile& fi_prog = *assertx(pfi_prog);
@@ -760,7 +755,7 @@ void do_at(Args& args) {
 
 // Begin sel_refinement using the specified s3d file as viewing parameter.
 void do_view(Args& args) {
-  string filename = args.get_string();  // may be "" on next line
+  string filename = args.get_string();
   if (filename == "") {
     sel_refinement = false;
     return;
@@ -774,7 +769,7 @@ void do_view(Args& args) {
       Warning("Skipping non-object0 frame");
       continue;
     }
-    sel_refinement = true;  // must activate vlineage!
+    sel_refinement = true;  // Must activate vlineage!
     vlineage.activate();
     view_frame = object_frame->frame;
     view_zoom = object_frame->zoom;
@@ -868,7 +863,7 @@ PmWedgeAttrib get_wattrib(Corner c) {
 
 PmWedgeAttrib retrieve_wattrib(Corner c) {
   if (c) return get_wattrib(c);
-  // to help debug
+  // To help debug.
   PmWedgeAttrib wa;
   fill(wa.normal, BIGFLOAT);
   fill(wa.rgb, BIGFLOAT);
@@ -883,26 +878,26 @@ PmWedgeAttribD diff(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
 }
 
 PmWedgeAttribD diff_zero(const PmWedgeAttrib& a1) {
-  static PmWedgeAttrib zero;  // cannot declare const because default constructor leaves uninitialized
+  static PmWedgeAttrib zero;  // Cannot declare const because default constructor leaves uninitialized.
   PmWedgeAttribD ad;
   diff(ad, a1, zero);
   return ad;
 }
 
-Map<Face, int> mfrenumber;  // contains index of Face (starting with 0)
+Map<Face, int> mfrenumber;  // Contains index of Face (starting with 0).
 
 // For append_old_pm, information for faces in old base mesh; these have been modified.
-Array<int> append_f_renumber;    // old face index -> new face index
-Array<int> append_f_vsi_offset;  // old face index -> offset for vsindex
+Array<int> append_f_renumber;    // Old face index -> new face index.
+Array<int> append_f_vsi_offset;  // Old face index -> offset for vsindex.
 
 struct _save {
-  // Prior to vsplit
+  // Prior to vsplit.
   PmVertexAttrib vaovs;
   PmWedgeAttrib wavtflo, wavsflo, wavtfro, wavsfro;
-  // Vsplit parameters
-  Vertex vs, vt, vl, vr;  // vr may be nullptr
+  // Vsplit parameters.
+  Vertex vs, vt, vl, vr;  // vr may be nullptr.
   int ii;
-  // After vsplit
+  // After vsplit.
   Set<int> wid_read;
 };
 _save save;
@@ -1094,8 +1089,7 @@ void process_vsplit() {
   if (sdebug) vspl.ok();
 }
 
-// Read and parse a single line of a vsplit record.
-// Ret: false at end_of_record.
+// Read and parse a single line of a vsplit record.  Return: false at end_of_record.
 bool parse_line2(char* sline, bool& after_vsplit) {
   // Adapted from GMesh::read_line().
   switch (sline[0]) {
@@ -1119,7 +1113,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         const int voi = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
         assert_no_more_chars(s);
-        assertx(voi == vsi);  // redundancy
+        assertx(voi == vsi);  // Redundancy.
         dummy_use(fli, fri);
         Vertex vs = mesh.id_vertex(vsi);
         Vertex vl = mesh.id_vertex(vli), vr = vri ? mesh.id_vertex(vri) : nullptr;
@@ -1132,9 +1126,9 @@ bool parse_line2(char* sline, bool& after_vsplit) {
           if (!vr) {
             // No vr, so simply pick one existing face adjacent to esl.
             if (mesh.clw_face(vs, esl)) {
-              vspl.vlr_offset1 = 1;  // special code
+              vspl.vlr_offset1 = 1;  // Special code.
             } else if (mesh.ccw_face(vs, esl)) {
-              vspl.vlr_offset1 = 0;  // special code; flclw does not exist!
+              vspl.vlr_offset1 = 0;  // Special code; flclw does not exist!
             } else {
               assertnever("");
             }
@@ -1174,7 +1168,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         save.wavsfro = retrieve_wattrib(!esr ? nullptr : mesh.clw_corner(vs, esr));
         // DO IT:
         Vertex vt = mesh.split_vertex(vs, vl, vr, vti);
-        // Save what was done
+        // Save what was done.
         save.vs = vs;
         save.vt = vt;
         save.ii = ii;
@@ -1240,7 +1234,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         Face f = mesh.create_face_private(fi, va);
         int renum;
         if (save.vr) {
-          // reverse the order
+          // Reverse the order.
           renum = mesh.num_faces() + (is_face2 ? 0 : -2);
         } else {
           renum = mesh.num_faces() - 1;
@@ -1319,14 +1313,14 @@ void do_pm_encode() {
     for (Corner c : mesh.corners(f)) {
       int wid = c_cwedge_id(c);
       const WedgeInfo& wi = gcwinfo.get(wid);
-      // has_normal=true already.
+      // Note that has_normal=true already.
       if (wi.col[0] != k_undefined) has_rgb = true;
       if (wi.uv[0] != k_undefined && wi.uv[0] && wi.uv[1]) has_uv = true;
     }
   }
   Map<int, int> mwrenumber;
   {
-    bmesh._wedges.init(mesh.num_vertices());  // will likely increase!
+    bmesh._wedges.init(mesh.num_vertices());  // Will likely increase!
     int i0 = 0;
     // Ordered for StitchPM.
     for (Vertex v : mesh.ordered_vertices()) {
@@ -1366,10 +1360,10 @@ void do_pm_encode() {
         mfrenumber.enter(f, i);
         if (append_old_pm != "") {
           int old_f_num = mesh.face_id(f) - 1;
-          // face renumbered
+          // Face renumbered.
           append_f_renumber.access(old_f_num);
           append_f_renumber[old_f_num] = i;
-          // vertex order within face unchanged
+          // Vertex order within face unchanged.
           append_f_vsi_offset.access(old_f_num);
           append_f_vsi_offset[old_f_num] = 0;
         }
@@ -1429,13 +1423,13 @@ void do_pm_encode() {
   pmesh._info._has_resid = has_resid;
   if (append_old_pm != "") {
     showdf("Now appending file %s\n", append_old_pm.c_str());
-    {  // reclaim memory
+    {  // Reclaim memory.
       mvrenumber.clear();
       mwrenumber.clear();
       mfrenumber.clear();
       gcwinfo.clear();
     }
-    {  // reclaim memory
+    {  // Reclaim memory.
       HH_TIMER("_mesh_clear");
       mesh.clear();
     }
@@ -1457,13 +1451,12 @@ void do_pm_encode() {
       assertx(pmrs._info._has_rgb == has_rgb);
       assertx(pmrs._info._has_uv == has_uv);
       assertx(pmrs._info._has_resid == has_resid);
-      // Sanity check
+      // Sanity check.
       assertx(append_f_renumber.num() == old_bmesh._faces.num());
       assertx(append_f_vsi_offset.num() == old_bmesh._faces.num());
       num_old_bmesh_faces = old_bmesh._faces.num();
     }
-    // Append the vsplits from old pm onto current pm,
-    //  while renumbering the flclw and vsindex fields if necessary.
+    // Append the vsplits from old pm onto current pm, while renumbering the flclw and vsindex fields if necessary.
     for (;;) {
       const Vsplit* pvspl = pmrs.next_vsplit();
       if (!pvspl) break;
@@ -1475,7 +1468,7 @@ void do_pm_encode() {
       assertx(old_vsindex >= 0 && old_vsindex <= 2);
       int new_vsindex = mod3(old_vsindex + append_f_vsi_offset[old_flclw]);
       vspl1.code = narrow_cast<ushort>((vspl1.code & ~Vsplit::VSINDEX_MASK) | (new_vsindex << Vsplit::VSINDEX_SHIFT));
-      // note 'continue' above.
+      // Note 'continue' above.
     }
     pmesh._info._tot_nvsplits += pmrs._info._tot_nvsplits;
     pmesh._info._full_nvertices = pmrs._info._full_nvertices;
@@ -1485,7 +1478,7 @@ void do_pm_encode() {
   }
   pmesh.write(std::cout);
   std::cout.flush();
-  if (!k_debug) exit_immediately(0);  // no destruction of GMesh and PMesh
+  if (!k_debug) exit_immediately(0);  // No destruction of GMesh and PMesh.
 }
 
 }  // namespace

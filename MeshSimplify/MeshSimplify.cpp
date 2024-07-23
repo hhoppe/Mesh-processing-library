@@ -35,25 +35,25 @@ using namespace hh;
 
 namespace {
 
-// If disabled, use "-minqem" instead of point sampling.  (usually defined)
+// If disabled, use "-minqem" instead of point sampling.  (usually defined).
 #define ENABLE_FACEPTS
 
-// If disabled, avoid meshes with color to avoid fptcolor.  (usually not defined) (but needed for demos mandrill)
+// If disabled, avoid meshes with color to avoid fptcolor.  (usually not defined) (but needed for demos mandrill).
 #define ENABLE_FPTCOLOR
 
-// If disabled, use "-minqem" or "-norfac 0" to avoid ftpnor.  (usually defined)
+// If disabled, use "-minqem" or "-norfac 0" to avoid ftpnor.  (usually defined).
 #define ENABLE_FPTNOR
 
-// If disabled, use "-minqem" or "-neptfac 0" to avoid edge points.  (usually defined)
+// If disabled, use "-minqem" or "-neptfac 0" to avoid edge points.  (usually defined).
 #define ENABLE_EDGEPTS
 
-// If disabled, do not use "-qemcache" (cache quadric error metric on faces).  (usually defined)
+// If disabled, do not use "-qemcache" (cache quadric error metric on faces).  (usually defined).
 #define ENABLE_QEMCACHE
 
-// If disabled, uses single-precision QEM floats. (usually defined)
+// If disabled, uses single-precision QEM floats. (usually defined).
 #define QEM_DOUBLE
 
-//  (usually undefined)
+//  (usually undefined).
 // #define ENABLE_TVC
 
 // ***
@@ -123,7 +123,7 @@ float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& 
   assertx(nw > 1);
   bool open = va[0] != va.last();
   float min_dih = 10.f;
-  // Remember: !open -> va[0] is repeated at end of va!
+  // Remember: !open -> va[0] is repeated at end of va!.
   for_intL(i, 1, nw - open) {
     int im1 = i - 1, ip1 = i + 1;
     if (ip1 == nw) ip1 = 1;
@@ -156,8 +156,8 @@ struct fptinfo {
   const float& nordist2() const { return _nordist2; }
 
  private:
-  Vector _ptnor;    // k_undefined if undefined
-  float _nordist2;  // always 0.f if ptnor undefined
+  Vector _ptnor;    // k_undefined if undefined.
+  float _nordist2;  // Always 0.f if ptnor undefined.
  public:
 #else
   Vector& ptnor() const { assertnever(""); }
@@ -170,8 +170,8 @@ struct fptinfo {
   const float& coldist2() const { return _coldist2; }
 
  private:
-  A3dColor _ptcol;  // k_undefined if undefined
-  float _coldist2;  // always 0.f if ptcol undefined
+  A3dColor _ptcol;  // k_undefined if undefined.
+  float _coldist2;  // Always 0.f if ptcol undefined.
  public:
 #else
   A3dColor& ptcol() const {
@@ -186,14 +186,14 @@ struct fptinfo {
   }
 #endif
 };
-Array<fptinfo> fpts;  // set $X$ of points sampled on faces
+Array<fptinfo> fpts;  // Set $X$ of points sampled on faces.
 
 struct eptinfo {
   Point p;
-  Edge cme;  // nullptr if retired
+  Edge cme;  // Equals nullptr if retired.
   float dist2;
 };
-Array<eptinfo> epts;  // set $X_{disc}$ sampled on sharp edges
+Array<eptinfo> epts;  // Set $X_{disc}$ sampled on sharp edges.
 
 struct struct_f_setpts {
   ~struct_f_setpts() { ASSERTX(setpts.empty()); }
@@ -262,11 +262,11 @@ struct WedgeInfo {
   UV uv;
 };
 
-Array<WedgeInfo> gwinfo;  // indexed by c_wedge_id, gwinfo[0] not used!
+Array<WedgeInfo> gwinfo;  // Indexed by c_wedge_id; gwinfo[0] is not used!
 
-Array<unique_ptr<BQemT>> gwq;  // empty() if !minqem || qemlocal.  indexed by c_wedge_id
+Array<unique_ptr<BQemT>> gwq;  // Is empty() if !minqem || qemlocal; indexed by c_wedge_id.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // wedge id's of mesh corners
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // wedge id's of mesh corners.
 
 inline WedgeInfo& c_winfo(Corner c) { return gwinfo[c_wedge_id(c)]; }
 
@@ -274,14 +274,14 @@ struct P2WedgeInfo {
   Vec2<const WedgeInfo*> wi;
 };
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, int, v_desn);  // number of descendants
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, int, v_desh);  // height of descendant tree
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, int, v_desn);  // Number of descendants.
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, int, v_desh);  // Height of descendant tree.
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, BoundingSphere, v_bsphere);
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, bool, v_global);  // vertex is feature
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, bool, v_global);  // The vertex is a feature.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);  // sphericalparam
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);  // Spherical parameterization.
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MEdge, int, e_index);  // Index into sorted array.
 
@@ -291,30 +291,30 @@ struct NewMeshNei : noncopyable {
   ~NewMeshNei() {
     for (BQemT* qemp : ar_wq) delete qemp;
   }
-  Array<Vertex> va;                // CCW, va[0] repeated if closed (== #faces + 1)
-  Array<int> ar_vdisc;             // sharp edges, indices into va[]
-  Array<Vec3<Corner>> ar_corners;  // 3 corners for each face (third is center)
+  Array<Vertex> va;                // CCW, va[0] repeated if closed (== #faces + 1).
+  Array<int> ar_vdisc;             // Sharp edges, indices into va[].
+  Array<Vec3<Corner>> ar_corners;  // 3 corners for each face (third is center).
   //
-  Array<P2WedgeInfo> ar_p2wi;  // winfo of outside ar_corners
+  Array<P2WedgeInfo> ar_p2wi;  // winfo of outside ar_corners.
   //
-  Array<int> ar_nwid;     // for each new corner, new fake wedge id
-  Array<int> ar_rwid_v1;  // for each nwid, would-be real wid on v1
-  Array<int> ar_rwid_v2;  // for each nwid, would-be real wid on v2
+  Array<int> ar_nwid;     // For each new corner, new fake wedge id.
+  Array<int> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
+  Array<int> ar_rwid_v2;  // For each nwid, would-be real wid on v2.
   //
-  Array<fptinfo*> ar_fpts;  // face points projecting onto neighborhood
+  Array<fptinfo*> ar_fpts;  // Face points projecting onto neighborhood.
   //
-  Array<eptinfo*> ar_epts;       // edge points (excluding eptretire)
-  Array<eptinfo*> ar_eptretire;  // edge points to retire
-  Array<int> ar_eptv;            // for ar_epts[], index in va of sharp edge
+  Array<eptinfo*> ar_epts;       // Edge points (excluding eptretire).
+  Array<eptinfo*> ar_eptretire;  // Edge points to retire.
+  Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
   //
   Array<BQemT*> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
-                        //    DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*()
+                        //  DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*().
 };
 
 // Parameterization of face points on would-be neighborhood.
 struct Param {
-  Array<int> ar_mini;   // closest face, index into ar_corners
-  Array<Bary> ar_bary;  // coordinates on face (using ar_corners)
+  Array<int> ar_mini;   // Closest face, index into ar_corners.
+  Array<Bary> ar_bary;  // Coordinates on face (using ar_corners).
 };
 
 constexpr float k_bad_dih = 1e28f;
@@ -379,108 +379,108 @@ class LHPqueue : public HPqueue<Edge> {
   int _ntot{0};
 };
 
-int numpts = -1;              // # random sample pts (in addition to verts)
-int nfaces = 0;               // simplify to this # of faces
-int nvertices = 0;            // simplify to this # of vertices
-bool nooutput = false;        // do not write final mesh out
-int verb = 1;                 // verbosity level
-int affectpq = 2;             // after ecol, quantity of cost updates
-bool miniiall = false;        // always consider all 3 optim. starting pts
-bool minii1 = false;          // consider only minii == 1 starting point
-bool nominii1 = false;        // consider only minii == {0, 2} starting points
-bool minii2 = false;          // constrain minii == 2 in output file
-bool no_simp_bnd = false;     // never involve boundary vertices
-bool keepuvcorners = false;   // for geometry image corners
-bool keepglobalv = false;     // keep vertices tagged global
-bool sphericalparam = false;  // keep valid spherical param (using vert sph)
-bool attrib_project = false;  // project vunified to update wedge attribs
-int strict_sharp = 0;         // disallow disc. curve topo type changes {0, 1, 2}
-float colfac = .1f;           // color rms (0..sqrt(3)) to dist/diam rms
-float norfac = .02f;          // normal error (0..2) to dist/diam rms
-float desdfac = 0.f;          // penalize diff max #desc to balance tree
-float desnfac = 0.f;          // penalize sum #desc to balance tree
-float bspherefac = 0.f;       // penalize hierarchical bounding spheres
-float edgepathfac = 0.f;      // penalize edge path error
-float trishapepow = 1.f;      // exponent on aspect ratio
-float trishapefac = 0.f;      // penalize aspect ratio of triangles
-float trishapeafac = 0.f;     // penalize aspect ratio times area
-float bndfac = 0.f;           // encourage boundary edge removal
-bool tvcpqa = false;          // use tvcfac*priority_queue_average_cost
-float tvcfac = 0.f;           // encourage transparent vertex caching
-bool tvcowid = false;         // compare tvc wedges in original mesh
-float neptfac = -1.f;         // scale number of sharp edge samples
-float gspring = 0.f;          // force spring constant to this setting
-float gmindih = -1.f / 3.f;   // minimum dihedral angle (== tetrahedron angle)
-bool rnor001 = false;         // compute residuals wrt Vector(0.f, 0.f, 1.f)
-bool relerror = false;        // measure relative instead of new error (OLD)
-bool maxerr = false;          // use maximum error of point samples
-bool terrain = false;         // max error wrt grid
-string ter_grid;              // terrain grid file
+int numpts = -1;              // Number of random sample pts (in addition to verts).
+int nfaces = 0;               // Simplify to this # of faces.
+int nvertices = 0;            // Simplify to this # of vertices.
+bool nooutput = false;        // Do not write final mesh out.
+int verb = 1;                 // Verbosity level.
+int affectpq = 2;             // After ecol, quantity of cost updates.
+bool miniiall = false;        // Always consider all 3 optimization starting points.
+bool minii1 = false;          // Consider only minii == 1 starting point.
+bool nominii1 = false;        // Consider only minii == {0, 2} starting points.
+bool minii2 = false;          // Constrain minii == 2 in output file.
+bool no_simp_bnd = false;     // Never involve boundary vertices.
+bool keepuvcorners = false;   // For geometry image corners.
+bool keepglobalv = false;     // Keep vertices that are tagged global.
+bool sphericalparam = false;  // Maintain valid spherical param (using vertex "sph" keys).
+bool attrib_project = false;  // Project vunified to update wedge attribs.
+int strict_sharp = 0;         // Disallow discontinuity curve topological type changes {0, 1, 2}.
+float colfac = .1f;           // Color rms (0..sqrt(3)) to dist/diam rms.
+float norfac = .02f;          // Normal error (0..2) to dist/diam rms.
+float desdfac = 0.f;          // Penalize diff max #desc to balance tree.
+float desnfac = 0.f;          // Penalize sum #desc to balance tree.
+float bspherefac = 0.f;       // Penalize hierarchical bounding spheres.
+float edgepathfac = 0.f;      // Penalize edge path error.
+float trishapepow = 1.f;      // Exponent on aspect ratio.
+float trishapefac = 0.f;      // Penalize aspect ratio of triangles.
+float trishapeafac = 0.f;     // Penalize aspect ratio times area.
+float bndfac = 0.f;           // Encourage boundary edge removal.
+bool tvcpqa = false;          // Use tvcfac*priority_queue_average_cost.
+float tvcfac = 0.f;           // Encourage transparent vertex caching.
+bool tvcowid = false;         // Compare tvc wedges in original mesh.
+float neptfac = -1.f;         // Scale number of sharp edge samples.
+float gspring = 0.f;          // Force spring constant to this setting.
+float gmindih = -1.f / 3.f;   // Minimum dihedral angle (== tetrahedron angle).
+bool rnor001 = false;         // Compute residuals wrt Vector(0.f, 0.f, 1.f).
+bool relerror = false;        // Measure relative instead of new error (OLD).
+bool maxerr = false;          // Use maximum error of point samples.
+bool terrain = false;         // Max error wrt grid.
+string ter_grid;              // Terrain grid file.
 bool gridushorts = false;
-Vec2<int> grid_dims{0, 0};  // dimensions of grid if original mesh is grid
+Vec2<int> grid_dims{0, 0};  // Dimensions of grid if original mesh is grid.
 float gridzscale = 1.f;
-bool minqem = false;          // use quadric error metric
-bool minaps = false;          // use appearance-space simplification (APS)
-bool minrandom = false;       // random sequence
-bool qemgh98 = false;         // use QEM from G&H98 paper (vs. my own)
-bool qemlocal = true;         // memoryless QEM
-bool qemvolume = true;        // linearly constrained to preserve volume
-bool qemweight = true;        // scale QEM with face_area / edge_len^2
-bool qemcache = true;         // cache qem at faces (for qemlocal); faster execution but uses more memory.
-bool no_fit_geom = false;     // do not optimize geometry (e.g. mandrill)
-bool fit_colors = false;      // optimize colors (otherwise, still use in metric) 2024-06-17:false
-bool fit_normals = false;     // optimize normals (otherwise, still use in metric)
-bool jittervertices = false;  // when sampling vertex points, jitter
-bool innerhull = false;       // construct inner hull instead of outer
-bool hull = false;            // build progressive hull
-bool minvolume = false;       // minimize volume (no point samples)
-bool minarea = false;         // minimize area (no point samples)
-bool minedgelength = false;   // pick shortest edge
-bool minvdist = false;        // minimize dist(vunified, previous_mesh)
-float mresid = 0.f;           // stop simplification if residual exceeded
-int maxvalence = 32;          // maximum vertex valence as result of ecol
-bool poszfacenormal = false;  // prevent edge collapses that would create face normals with negative z
-bool dihallow = false;        // penalize but allow bad dihedral angles
-int invertexorder = 0;        // remove vertices in reverse order (2=fix_edges)
-bool wedge_materials = true;  // material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25
+bool minqem = false;          // Use quadric error metric.
+bool minaps = false;          // Use appearance-space simplification (APS).
+bool minrandom = false;       // Random sequence.
+bool qemgh98 = false;         // Use QEM from G&H98 paper (vs. my own).
+bool qemlocal = true;         // Memoryless QEM.
+bool qemvolume = true;        // Linearly constrained to preserve volume.
+bool qemweight = true;        // Scale QEM with face_area / edge_len^2.
+bool qemcache = true;         // Cache qem at faces (for qemlocal); faster execution but uses more memory..
+bool no_fit_geom = false;     // Do not optimize geometry (e.g. mandrill).
+bool fit_colors = false;      // Optimize colors (otherwise, still use in metric) 2024-06-17:false.
+bool fit_normals = false;     // Optimize normals (otherwise, still use in metric).
+bool jittervertices = false;  // When sampling vertex points, jitter.
+bool innerhull = false;       // Construct inner hull instead of outer.
+bool hull = false;            // Build progressive hull.
+bool minvolume = false;       // Minimize volume (no point samples).
+bool minarea = false;         // Minimize area (no point samples).
+bool minedgelength = false;   // Pick shortest edge.
+bool minvdist = false;        // Minimize dist(vunified, previous_mesh).
+float mresid = 0.f;           // Stop simplification if residual exceeded.
+int maxvalence = 32;          // Maximum vertex valence as result of ecol.
+bool poszfacenormal = false;  // Prevent edge collapses that would create face normals with negative z.
+bool dihallow = false;        // Penalize but allow bad dihedral angles.
+int invertexorder = 0;        // Remove vertices in reverse order (2=fix_edges).
+bool wedge_materials = true;  // Material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25.
 constexpr bool use_parallelism = true;
 
-// failed attempt at signed_dihedral_angle():
+// Failed attempt at signed_dihedral_angle():
 //  const float gmindih = -to_rad(109.471);
 
 constexpr float k_jitter_bary_max = 0.5f;
 
-constexpr float k_tol = 1e-6f;           // scalar attribute equality tolerance
-constexpr float k_bad_cost = BIGFLOAT;   // illegal cost (very high)
-constexpr float k_undefined = BIGFLOAT;  // undefined scalar attributes
+constexpr float k_tol = 1e-6f;           // Scalar attribute equality tolerance.
+constexpr float k_bad_cost = BIGFLOAT;   // Illegal cost (very high).
+constexpr float k_undefined = BIGFLOAT;  // Undefined scalar attributes.
 
-GMesh mesh;                    // current mesh
-Bbox<float, 3> gbbox;          // bbox of original mesh
-float gdiam;                   // diameter of original mesh
-float gcolc;                   // constant in front of color error term
-float gnorc;                   // constant in front of normal error term
-int g_necols;                  // number of edge collapses
-unique_ptr<WFile> wfile_prog;  // PM stream output (may be nullptr)
-bool have_ccolors = false;     // have color scalar attributes
+GMesh mesh;                    // Current mesh.
+Bbox<float, 3> gbbox;          // Bbox of original mesh.
+float gdiam;                   // Diameter of original mesh.
+float gcolc;                   // Constant in front of color error term.
+float gnorc;                   // Constant in front of normal error term.
+int g_necols;                  // Number of edge collapses.
+unique_ptr<WFile> wfile_prog;  // Pm stream output (may be nullptr).
+bool have_ccolors = false;     // Have color scalar attributes.
 constexpr bool have_cnormals = true;
-float offset_cost;  // offset zero in pqe cost
+float offset_cost;  // Offset zero in pqe cost.
 const bool sdebug = getenv_bool("MESHSIMPLIFY_DEBUG");
-Frame grid_frame;        // position of grid in world
-float inv_grid_frame00;  // 1.f / grid_frame[0][0]
-float inv_grid_frame11;  // 1.f / grid_frame[1][1]
+Frame grid_frame;        // Position of grid in world.
+float inv_grid_frame00;  // 1.f / grid_frame[0][0].
+float inv_grid_frame11;  // 1.f / grid_frame[1][1].
 bool has_wad2 = false;
 float sqrt_neptfac;
-int qems;  // size of QEM as supported in make_qem()
+int qems;  // Size of QEM as supported in make_qem().
 
-LHPqueue pqecost;  // conservative estimate of cost of ecol
+LHPqueue pqecost;  // Conservative estimate of cost of ecol.
 
-Matrix<float> g_gridf;   // if terrain, grid of height values
-Matrix<ushort> g_gridu;  // if -gridushorts
+Matrix<float> g_gridf;   // If terrain, grid of height values.
+Matrix<ushort> g_gridu;  // If -gridushorts.
 
 // ***
 
 #if defined(ENABLE_TVC)
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_tvc_owid);  // original wedge id of mesh corner
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_tvc_owid);  // Original wedge id of mesh corner.
 #else
 int& c_tvc_owid(Corner c) {
   dummy_use(c);
@@ -490,10 +490,10 @@ int& c_tvc_owid(Corner c) {
 }
 #endif
 
-constexpr int tvc_fudge = 0;  // since not real FIFO simulation
+constexpr int tvc_fudge = 0;  // Since not real FIFO simulation.
 constexpr int tvc_realcachesize = 16;
 constexpr int tvc_cachesize = tvc_realcachesize - tvc_fudge;
-// index 0 is most recently added; empty entries have {wid = -1, v = 0}.
+// Index 0 is most recently added; empty entries have {wid = -1, v = 0}.
 struct CacheEntry {
   CacheEntry() = default;
   explicit CacheEntry(Corner c) {
@@ -508,7 +508,7 @@ struct CacheEntry {
 };
 Array<CacheEntry> tvc_cache{tvc_cachesize};
 constexpr float tvc_max_improvement = 6.f;
-constexpr int tvc_maxcare = 0;  // could be 3
+constexpr int tvc_maxcare = 0;  // Could be 3.
 int tvc_ncachemiss = 0;
 
 // ***
@@ -521,8 +521,7 @@ void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir);
 
 // *** Functions
 
-// Return: two faces have same discrete attributes.
-//  Currently based on equality of Face strings.
+// Return: two faces have same discrete attributes.  Currently based on equality of Face strings.
 bool same_discrete(Face f1, Face f2) { return f_matid(f1) == f_matid(f2); }
 
 // Return: exists discrete attribute discontinuity across edge e.
@@ -700,7 +699,7 @@ void get_face_qem(Face f, BQemT& qem) {
 }
 
 void get_sharp_edge_qem(Edge e, BQemT& qem) {
-  Vector nor{};  // average normal of adjacent 1 or 2 faces.
+  Vector nor{};  // Average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
     Vec3<Vertex> va = mesh.triangle_vertices(f);
     Vector fnor = cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
@@ -713,8 +712,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
   }
   assertw(nor.normalize());  // is_zero(nor) is OK below.
   // Length squared does not seem like the right thing to do here.  Instead, should perhaps normalize geometry to
-  // unit cube and use simply edge length.
-  // Note: scaling nor by length is equivalent to scaling qem by length^2.
+  // unit cube and use simply edge length.  Note: scaling nor by length is equivalent to scaling qem by length^2.
   if (qemweight) nor *= (mesh.length(e) / (frac_diam * gdiam));
   // Weight qem on sharp edges by a factor of neptfac.
   nor *= sqrt_neptfac;
@@ -750,7 +748,7 @@ void init_qem() {
         for (Corner c : mesh.corners(f)) gwq[c_wedge_id(c)]->add(qem);
       }
     }
-    // Add perpendicular constraints along sharp edges
+    // Add perpendicular constraints along sharp edges.
     if (neptfac) {
       if (sizeof(L_QEM_T) == sizeof(float)) assertw(neptfac <= 30.f);
       auto up_qem = make_qem();
@@ -758,7 +756,7 @@ void init_qem() {
       for (Edge e : mesh.edges()) {
         if (!edge_sharp(e)) continue;
         get_sharp_edge_qem(e, qem);
-        if (!mesh.is_boundary(e)) qem.scale(0.5f);  // since now added to wedges on both sides
+        if (!mesh.is_boundary(e)) qem.scale(0.5f);  // Since now added to wedges on both sides.
         for (Vertex v : mesh.vertices(e)) {
           for (Face f : mesh.faces(e)) {
             Corner c = mesh.corner(v, f);
@@ -767,7 +765,7 @@ void init_qem() {
         }
       }
     }
-    if (1) {  // Verify QEM's are initially zero
+    if (1) {  // Verify QEM's are initially zero.
       HH_TIMER("_qem_verify0");
       for (Vertex v : mesh.vertices()) {
         for (Corner c : mesh.corners(v)) {
@@ -788,13 +786,13 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
   assertx(nw);
   nn.ar_wq.init(nw);
   for_int(i, nw) {
-    nn.ar_wq[i] = make_qem().release();  // (Qem not zero'ed) (deleted in ~NewMeshNei())
+    nn.ar_wq[i] = make_qem().release();  // (Qem not zero'ed) (deleted in ~NewMeshNei()).
   }
   if (qemlocal) {
     for_int(i, nw) nn.ar_wq[i]->set_zero();
     auto up_ql = make_qem();
     BQemT& ql = *up_ql;
-    // First consider all faces besides f1 & f2
+    // First consider all faces besides f1 and f2.
     for_int(fi, nn.ar_corners.num()) {
       const int nwid = nn.ar_nwid[fi];
       Corner c = nn.ar_corners[fi][2];
@@ -806,21 +804,21 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
         nn.ar_wq[nwid]->add(ql);
       }
     }
-    // Now consider f1 & f2.  Try all neighboring corners with same wedge id to see if any survive.
+    // Now consider f1 and f2.  Try all neighboring corners with same wedge id to see if any survive.
     for (Face f : mesh.faces(e)) {
       const int nwid = [&] {
         for (Vertex v : mesh.vertices(e)) {
           Corner ci = mesh.corner(v, f);
           assertx(retrieve_nwid(nn, ci) < 0);
           int wid = c_wedge_id(ci);
-          for (Corner c = ci;;) {  // try ccw
+          for (Corner c = ci;;) {  // Try ccw.
             c = mesh.ccw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
             int nwid2 = retrieve_nwid(nn, c);
             if (nwid2 >= 0) return nwid2;
           }
-          for (Corner c = ci;;) {  // try clw
+          for (Corner c = ci;;) {  // Try clw.
             c = mesh.clw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
@@ -880,7 +878,7 @@ template <int n> Vec<float, n> interp_floats(const Vec<float, n>& ar1, const Vec
   }
 }
 
-// Interpolate two wedge scalar attributes.  ii == 0: v2, ii == 2: v1, ii == 1: midp
+// Interpolate two wedge scalar attributes.  ii == 0: v2, ii == 2: v1, ii == 1: midp.
 WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
   WedgeInfo wio{interp_floats(wi1.col, wi2.col, ii), interp_floats(wi1.nor, wi2.nor, ii),
                 interp_floats(wi1.uv, wi2.uv, ii)};
@@ -1009,7 +1007,7 @@ void write_mesh(std::ostream& os) {
       assertx(is_unit(sph));
       mesh.update_string(v, "sph", csform_vec(str, sph));
     }
-    if (1) {  // sanity check
+    if (1) {  // Sanity check.
       for (Face f : mesh.faces()) {
         Vec3<Vertex> va = mesh.triangle_vertices(f);
         Vec3<Point> poly;
@@ -1029,7 +1027,7 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
   Vector& nor = wi.nor;
   nor = vnors.get_nor(mesh.corner_face(c));
   // Normalize normals if necessary.
-  assertx(nor[0] != k_undefined);  // normals always present
+  assertx(nor[0] != k_undefined);  // Normals are always present.
   if (0 && abs(mag2(nor) - 1.f) > 1e-4f) {
     Warning("Renormalizing original normal");
     assertw(nor.normalize());
@@ -1039,7 +1037,7 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
     Warning("Normal is zero, setting arbitrarily to (1.f, 0.f, 0.f)");
     nor = Vector(1.f, 0.f, 0.f);
   }
-  // disabled next line 2001-08-23
+  // Disabled next line 2001-08-23.
   if (0 && rnor001) nor = Vector(0.f, 0.f, 1.f);
   A3dColor& col = wi.col;
   fill(col, k_undefined);
@@ -1168,7 +1166,7 @@ void parse_mesh_wedge_identifiers() {
         }
         c_wedge_id(crep) = wid;
         int matid = f_matid(mesh.corner_face(crep));
-        for_int(dir, 2) {  // two directions (CCW, CLW)
+        for_int(dir, 2) {  // Two directions (CCW, CLW).
           Corner c = crep;
           for (;;) {
             c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
@@ -1184,7 +1182,7 @@ void parse_mesh_wedge_identifiers() {
             if (!setcvis.add(c)) {
               // Very rare case when attributes are very close:
               //  illustration: 0 1 2 2 2 with k_tol == 1;
-              //  first set: (0, 1), second set (2, 2, 2, error:1)
+              //  first set: (0, 1), second set (2, 2, 2, error:1).
               break;
             }
             c_wedge_id(c) = wid;
@@ -1218,9 +1216,9 @@ void parse_mesh() {
   //  - scalar attributes: either normals, color, or uv differences
   assertx(mesh.num_faces());
   assertx(mesh.is_nice());
-  // Encode material identifiers (f_matid(f))
+  // Encode material identifiers (f_matid(f)).
   parse_mesh_material_identifiers();
-  // Encode wedge id's (c_wedge_id(c))
+  // Encode wedge id's (c_wedge_id(c)).
   parse_mesh_wedge_identifiers();
   // Clear edge flags now that normals have been computed.
   for (Edge e : mesh.edges()) mesh.flags(e) = 0;
@@ -1253,10 +1251,10 @@ void parse_mesh() {
   }
   // Initialize descendant information.
   for (Vertex v : mesh.vertices()) {
-    v_desn(v) = 1;  // each vertex has one descendant (itself)
-    v_desh(v) = 1;  // height of tree
+    v_desn(v) = 1;  // Each vertex has one descendant (itself).
+    v_desh(v) = 1;  // Height of tree.
   }
-  // Construct bounding spheres
+  // Construct bounding spheres.
   if (bspherefac) {
     for (Vertex v : mesh.vertices()) {
       const Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
@@ -1309,8 +1307,7 @@ void point_change_edge(eptinfo* pept, Edge newe) {
   if (newe) e_setpts(newe).enter(pept);
 }
 
-// Sample a face point of face f, possibly sampling color.
-// Must later do point_change_face()!
+// Sample a face point of face f, possibly sampling color.  Must later do point_change_face()!
 void add_face_point(Face f, Bary bary, bool define_scalars) {
   fpts.add(1);
   fptinfo& fpt = fpts.last();
@@ -1386,7 +1383,7 @@ void analyze_mesh(const char* s) {
            epts.num(), edrms, edrms / gdiam * 100, edmax, edmax / gdiam * 100);
   }
   if (have_ccolors) {
-    // Compute color errors (Euclidean distance in RGB unit cube)
+    // Compute color errors (Euclidean distance in RGB unit cube).
     int nptcol = 0;
     float efdis = 0.f, dmax2 = 0.f;
     for (const fptinfo& fpt : fpts) {
@@ -1400,7 +1397,7 @@ void analyze_mesh(const char* s) {
     showff(" fcoldist(%d): rms=%g max=%g\n", nptcol, fdrms, fdmax);
   }
   if (have_cnormals && norfac) {
-    // Compute normal errors (Euclidean distance)
+    // Compute normal errors (Euclidean distance).
     int nptnor = 0;
     float efdis = 0.f, dmax2 = 0.f;
     for (const fptinfo& fpt : fpts) {
@@ -1437,17 +1434,17 @@ void sample_pts() {
     numpts = mesh.num_faces();
     showff("Setting number of random points to %d\n", numpts);
   }
-  {  // reserve space to prevent over-allocation
+  {  // Reserve space to prevent over-allocation.
     assertx(!fpts.num());
     fpts.init(numpts + mesh.num_vertices());
     fpts.init(0);
   }
   // Random sampling.
   if (numpts) {
-    Array<Face> fface;    // Face of this index (nf)
-    Array<float> fcarea;  // cumulative area (nf + 1)
+    Array<Face> fface;    // Face of this index (nf).
+    Array<float> fcarea;  // Cumulative area (nf + 1).
     {
-      double sumarea = 0.;  // for accuracy
+      double sumarea = 0.;  // For accuracy.
       for (Face f : mesh.faces()) {
         float area = mesh.area(f);
         fface.push(f);
@@ -1473,7 +1470,7 @@ void sample_pts() {
   // Vertex sampling.
   {
     Array<Vertex> va;
-    Array<Face> fa;  // for jittering
+    Array<Face> fa;  // For jittering.
     for (Vertex v : mesh.vertices()) {
       bool define_scalars = !vertex_has_hedge_scalar_bnd(v);
       Face f;
@@ -1520,8 +1517,8 @@ void sample_pts() {
     const bool edge_regular_sampling = true;
     const bool edge_random_sampling = false;
     float mesh_elen;
-    Array<Edge> eedge;   // Edge of this index
-    Array<float> eclen;  // cumulative length
+    Array<Edge> eedge;   // Edge of this index.
+    Array<float> eclen;  // Cumulative length.
     {
       double sumlen = 0.;
       for (Edge e : mesh.edges()) {
@@ -1535,7 +1532,7 @@ void sample_pts() {
       for_int(i, eedge.num()) eclen[i] /= mesh_elen;
       eclen.push(1.00001f);
     }
-    {  // for a square patch, perimeter_ratio is 4
+    {  // For a square patch, perimeter_ratio is 4.
       float perimeter_ratio = mesh_elen / (my_sqrt(mesh_area));
       showff("perimeter_ratio=%g\n", perimeter_ratio);
     }
@@ -1759,7 +1756,7 @@ void perhaps_initialize() {
   }
   qems = 0;
   if (minqem) {
-    qems += 3;  // geometry
+    qems += 3;  // Geometry.
     if (norfac) qems += 3;
     if (colfac) qems += 3;
     showdf("Qems=%d\n", qems);
@@ -1800,12 +1797,12 @@ float compute_spring(const NewMeshNei& nn) {
   // #corners == #faces
   int nf = nn.ar_corners.num(), np;
   if (0) {
-    // old way: poor: biases simplification at boundary.
+    // Old way: poor: biases simplification at boundary.
     np = nn.ar_fpts.num() + nn.ar_epts.num();
   } else {
     np = nn.ar_fpts.num();
   }
-  // spring as a function of #points and #faces?
+  // Spring as a function of #points and #faces?
   // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2 .
   // Let frac = np / nf
   //  spring = frac<4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
@@ -1822,28 +1819,25 @@ float compute_spring(const NewMeshNei& nn) {
 // *** ULls
 // Solve a linear least squares problem involving a single variable in which the problem decomposes into nd
 //  independent univariate LLS problems.
-// The system is Ux=b,
-//  the design matrix U is a column vector with m rows
+// The system is Ux=b, where the design matrix U is a column vector with m rows
 //  (the m constraints coming from either the springs or the projected points).
 // The unknown x is simply a scalar (actually, one scalar for each dimension).
 // The vector b is also a column vector with m rows.
-// To solve it using (UtU)x=Utb, note that UtU is simply the norm of U,
-//  and Utb is simply the dot product of U and b.
+// To solve it using (UtU)x=Utb, note that UtU is simply the norm of U, and Utb is simply the dot product of U and b.
 // To do this efficiently, UtU and Utb can be accumulated for all nd coordinates simultaneously,
 //  while traversing U and b row-by-row.
 // To compute the rss (||Ux-b||^2), Werner observed that rss= ||b||^2-||Ux||^2 = ||b||^2 - x^2*||U||^2.
 class ULls : noncopyable {
  public:
   ULls(float* sol, int nd);
-  // Constraint between point pdata and the point on triangle (p1, p2, p)
-  //  with barycentric coordinates (param1, param2, 1-param1-param2).
+  // Constraint between point pdata and the point on triangle (p1, p2, p) with barycentric
+  //  coordinates (param1, param2, 1-param1-param2).
   void enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2, float param1,
                          float param2);
-  // Constraint between point pdata and the point on edge (p, p1)
-  //  with barycentric coordinates (1-param1, param1).
+  // Constraint between point pdata and the point on edge (p, p1) with barycentric coordinates (1-param1, param1).
   void enter_eprojection(const Point& pdata, const Point& p1, float param1);
   void enter_spring(const Point& pother, float sqrt_spring);
-  void solve(double& rss1);  // updates point pp!
+  void solve(double& rss1);  // Updates point pp!
  private:
   float* _sol;
   int _nd;
@@ -1900,16 +1894,16 @@ void ULls::solve(double& prss1) {
 // ***
 
 void gather_nn_1(Edge e, NewMeshNei& nn) {
-  // modified gather_edge_ring()
+  // Modified version of gather_edge_ring().
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
-  // current Mesh implementation boundary Edge direction
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // Note that f2 could be nullptr.
+  // Current Mesh implementation boundary Edge direction.
   if (mesh.is_boundary(e)) assertx(mesh.most_ccw_vertex(v2) == v1);
-  Vertex cv = (mesh.is_boundary(e) ? v2 :  // current vertex for rotation
+  Vertex cv = (mesh.is_boundary(e) ? v2 :  // Current vertex for rotation.
                    !mesh.is_boundary(v1) ? v2
                : !mesh.is_boundary(v2)   ? v1
                                          : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
-  Vertex ov = mesh.opp_vertex(cv, e);  // other vertex of rotation (v1 or v2)
+  Vertex ov = mesh.opp_vertex(cv, e);  // Other vertex of rotation (v1 or v2).
   Vertex w = assertx(mesh.most_clw_vertex(cv));
   if (!mesh.is_boundary(cv)) {
     // Find starting point such that all edges ee are visited!
@@ -1927,7 +1921,7 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
         // nn.ar_faces += f;
         Corner c0 = mesh.corner(v, f);
         Corner c1 = mesh.ccw_face_corner(c0);
-        Corner c2 = mesh.clw_face_corner(c0);  // the inside corner
+        Corner c2 = mesh.clw_face_corner(c0);  // The inside corner.
         nn.ar_corners.push(Vec3<Corner>(c0, c1, c2));
         P2WedgeInfo p2wi;
         p2wi.wi[0] = &c_winfo(c0);
@@ -1961,7 +1955,7 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
 
 bool gather_nn_valid(Edge e) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // Notet that f2 could be nullptr.
   Vertex vs = v1, vt = v2;
   Face fl = f1;
   Corner cvsfl = mesh.corner(vs, fl), cvtfl = mesh.ccw_face_corner(cvsfl);
@@ -1987,8 +1981,7 @@ bool gather_nn_valid(Edge e) {
   }
   if ((thru_sl && thru_sr && c_wedge_id(cvsfl) == c_wedge_id(cvsfr) && c_wedge_id(cvtfl) != c_wedge_id(cvtfr)) ||
       (thru_tl && thru_tr && c_wedge_id(cvtfl) == c_wedge_id(cvtfr) && c_wedge_id(cvsfl) != c_wedge_id(cvsfr))) {
-    // Problem is that there are two different attributes that
-    //  resulting wedge could take on -> problem in encoding.
+    // Problem is that there are two different attributes that resulting wedge could take on -> problem in encoding.
     if (verb >= 2) Warning("Edge collapse would squash dart");
     return false;
   }
@@ -2019,9 +2012,9 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
     nn.ar_nwid[irep] = wid;
     int rwid_v1 = c_wedge_id(crep);
     int rwid_v2 = c_wedge_id(crep);
-    for_int(dir, 2) {  // two directions (CCW, CLW)
+    for_int(dir, 2) {  // Two directions (CCW, CLW).
       int i = irep;
-      Corner pc = crep;  // previous corner
+      Corner pc = crep;  // Previous corner.
       for (;;) {
         if (!dir) {
           if (++i >= nf) {
@@ -2071,11 +2064,10 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
         Corner pc1 = !dir ? mesh.ccw_corner(pc) : mesh.clw_corner(pc);
         assertx(c1 && pc1);
         assertx((c1 == pc) == (pc1 == c));
-        if (c1 == pc) {  // two faces adjacent on same vertex
+        if (c1 == pc) {  // Two faces adjacent on same vertex.
           bool same = c_wedge_id(c) == c_wedge_id(pc);
           if (cnwid >= 0 && same != (wid == cnwid)) {
-            // Equivalence of wid's across edges above v2
-            //  (or below v1) would be violated.
+            // Equivalence of wid's across edges above v2 (or below v1) would be violated.
             assertnever("Edge collapse would cause problem1");
           }
           // if (cnwid >= 0) break;
@@ -2084,7 +2076,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
             assertx(cnwid == wid);
             break;
           }
-        } else {  // two faces across from {f1|f2}
+        } else {  // Two faces across from {f1|f2}.
           // if (cnwid >= 0) break;
           if (!dir) assertx(mesh.ccw_face_corner(c1) == pc1);
           if (dir) assertx(mesh.clw_face_corner(c1) == pc1);
@@ -2137,7 +2129,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
 // To consider the edge collapse of e, gather information about the neighborhood that would result.
 bool gather_nn(Edge e, NewMeshNei& nn) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // Note that f2 could be nullptr.
   // Gather va, ar_corners.
   gather_nn_1(e, nn);
   // Test validity with respect to wedges.
@@ -2165,10 +2157,10 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
       assertx(mesh.corner_face(cc0) != mesh.corner_face(cc1));
       Vertex vo = mesh.corner_vertex(c0);
       bool expect_sharp = edge_sharp(mesh.edge(vc0, vo)) || (vc1 != vc0 && edge_sharp(mesh.edge(vc1, vo)));
-      if (!expect_sharp) continue;  // no problem
+      if (!expect_sharp) continue;  // No problem.
       bool will_be_sharp = (!same_discrete(mesh.corner_face(cc0), mesh.corner_face(cc1)) || !same_scalar(c0, c1) ||
                             nn.ar_nwid[i] != nn.ar_nwid[j]);
-      if (will_be_sharp) continue;  // no problem
+      if (will_be_sharp) continue;  // No problem.
       // Problem: edge will in fact retire.
       if (vo == vo1) {
         eoretire[0] = true;
@@ -2187,7 +2179,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
     // Retire edge e iff neither v1 nor v2 is a crease vertex
     //  (where a crease vertex has exactly 1 non-retiring sharp edge).
     if (edge_sharp(e)) {
-      int dnse = 2 + (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0);  // desired # sharp edges
+      int dnse = 2 + (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0);  // Desired # sharp edges.
       int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
       if (v1nse != dnse && v2nse != dnse) eretire = true;
     }
@@ -2196,22 +2188,22 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   // Gather ar_vdisc, ar_epts, ar_eptv, ar_eptretire.
   {
     Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
-    int vcreasei = -1;  // crease continuation; 1 of possibly 2 edges
+    int vcreasei = -1;  // Crease continuation; 1 of possibly 2 edges.
     Vertex cv = (mesh.is_boundary(e)     ? v2
                  : !mesh.is_boundary(v1) ? v2
                  : !mesh.is_boundary(v2) ? v1
                                          : (assertnever_ret(""), implicit_cast<Vertex>(nullptr)));
-    Vertex ov = mesh.opp_vertex(cv, e);  // other vertex of rotation (v1 or v2)
+    Vertex ov = mesh.opp_vertex(cv, e);  // Other vertex of rotation (v1 or v2).
     Vertex w = assertx(mesh.most_clw_vertex(cv));
     if (!mesh.is_boundary(cv)) {
-      // Find starting point such that all edges ee are visited!
+      // Find starting point such that all edges ee are visited!.
       while (w == ov || mesh.clw_vertex(cv, w) == ov) w = assertx(mesh.clw_vertex(cv, w));
     }
     Vertex wf = w;
     int nva = 0;
     for (;;) {
       nva++;
-      for_int(i, 2) {  // run this at most 2 times (usually once)
+      for_int(i, 2) {  // Run this at most 2 times (usually once).
         Edge ee = mesh.edge(cv, w);
         assertx(ee != e);
         if (!edge_sharp(ee)) {
@@ -2227,7 +2219,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
             }
             if (!nn.ar_vdisc.contains(vi)) nn.ar_vdisc.push(vi);
             int dnse = 2 + eoretire[0] + eoretire[1];
-            if (edge_sharp(e) && vertex_num_sharpe(cv) == dnse) vcreasei = vi;  // could be set twice (ok)
+            if (edge_sharp(e) && vertex_num_sharpe(cv) == dnse) vcreasei = vi;  // Could be set twice (ok).
           }
         }
         Vertex w2 = mesh.ccw_vertex(cv, w);
@@ -2266,14 +2258,13 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   return true;
 }
 
-// Given that optimization starts at position ii between v1 and v2,
-//  update scalar wedge attributes around new would-be vertex.
+// Given that optimization starts at position ii between v1 and v2, update scalar wedge attributes around
+// the new would-be vertex.
 void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& ar_wi) {
   {
     ar_wi.init(0);
     for_int(i, nn.ar_rwid_v1.num()) {
-      // It doesn't matter here if ar_rwid_v2 would be chosen since it
-      //  is interpolated as need be below.
+      // It doesn't matter here if ar_rwid_v2 would be chosen since it is interpolated as need be below.
       int rwid = nn.ar_rwid_v1[i];
       ar_wi.push(gwinfo[rwid]);
     }
@@ -2320,7 +2311,7 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
 
 // Commit the optimized scalar wedge attributes to the new mesh.
 void replace_wi(const NewMeshNei& nn, CArrayView<WedgeInfo> ar_wi, CArrayView<int> ar_rwid) {
-  assertx(ar_wi.num() == ar_rwid.num());  // optional
+  assertx(ar_wi.num() == ar_rwid.num());  // Optional.
   for_int(i, nn.ar_corners.num()) {
     int rwid = ar_rwid[nn.ar_nwid[i]];
     c_wedge_id(nn.ar_corners[i][2]) = rwid;
@@ -2334,7 +2325,7 @@ void replace_wi(const NewMeshNei& nn, CArrayView<WedgeInfo> ar_wi, CArrayView<in
 // Project the points onto the faces described by nn and newp, and store the results as param.
 void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   int nf = nn.ar_corners.num();
-  assertx(nf);  // at least one face
+  assertx(nf);  // At least one face.
   int np = nn.ar_fpts.num();
   assertw(np);
   Array<Bbox<float, 3>> ar_bbox(nf);
@@ -2346,7 +2337,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
   for_int(pi, np) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
     const Point& p = fpt.p;
-    // about 1.9 cycles/instr
+    // About 1.9 cycles/instr.
     // For X3.m, had nf=7 np=50
     // -> expect 47*7*50*1.9 == ~31255 out of 81500 cycles (38% of local_fit)
     //  observed it is about 40% of cycles in local_fit.
@@ -2359,7 +2350,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
     Bary min_bary;
     dummy_init(min_bary);
     for (;;) {
-      // For X3.m, had nproj = 2.16 -> (2.16 + 1) * 50 * 7 * 9 * 1.9 == ~18900 (23%)
+      // For X3.m, had nproj = 2.16 -> (2.16 + 1) * 50 * 7 * 9 * 1.9 == ~18900 (23%).
       int tmin_i = arg_min(ar_d2);
       float tmin_d2 = ar_d2[tmin_i];
       if (tmin_d2 >= min_d2) break;
@@ -2396,7 +2387,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
     const fptinfo& fpt = *nn.ar_fpts[pi];
     int mini = param.ar_mini[pi];
     const Bary& bary = param.ar_bary[pi];
-    // 50 * (21 + 42 * 3) == ~14000 (17%)
+    // 50 * (21 + 42 * 3) == ~14000 (17%).
     ulls.enter_fprojection(fpt.p, mesh.point(nn.va[mini]), mesh.point(nn.va[mini + 1]), bary[0], bary[1]);
   }
   for_int(i, nn.ar_epts.num()) {
@@ -2477,8 +2468,8 @@ double evaluate_maxerr(const NewMeshNei& nn, const Param& param, const Point& ne
 
 double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
   using std::swap;
-  const float epsilon = .05f;  // epsilon on integer grid coordinates
-  // still safe for puget.16k with single precision
+  const float epsilon = .05f;  // Epsilon on integer grid coordinates.
+  // Still safe for puget.16k with single precision.
   assertx(epsilon / float(max(grid_dims)) > 1e-6f);
   double max_d2;
   Vec2<int> npyx;
@@ -2492,7 +2483,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     float d2 = square(npz - get_grid_value(npyx));
     max_d2 = d2;
     if (lverb) showf(" centerpoint (%d, %d)=%g grid=%g\n", npyx[1], npyx[0], npz, get_grid_value(npyx));
-    // should be on gridpoint, so zero error
+    // Should be on gridpoint, so zero error.
     assertx(d2 < square(1e-5f));
   }
   // Consider the grid points strictly within the triangles, and verify that triangles are not flipped or degenerate.
@@ -2511,7 +2502,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     get_grid_point(mesh.point(nn.va[fi + 1]), p2yx, p2z);
     int p1y = p1yx[0], p1x = p1yx[1], p2y = p2yx[0], p2x = p2yx[1];
     if ((p1x - p0x) * (p2y - p0y) <= (p1y - p0y) * (p2x - p0x)) {
-      // Warning("face would flip or degenerate");
+      // Warning("Face would flip or degenerate");
       return k_bad_cost;
     }
     ASSERTX(!((p0x == p1x && p1x == p2x) || (p0y == p1y && p1y == p2y)));
@@ -2533,11 +2524,11 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     ASSERTX(p2y >= p1y && p1y >= p0y && p2y > p0y);
     if (lverb)
       showf(" triangle (%d, %d, %g) (%d, %d, %g) (%d, %d, %g)\n", p2x, p2y, p2z, p1x, p1y, p1z, p0x, p0y, p0z);
-    if (p2y - p0y < 2) continue;  // no interior grid points
+    if (p2y - p0y < 2) continue;  // No interior grid points.
     float p20i = 1.f / (p2y - p0y);
     float cxrinc = (p0x - p2x) * p20i;
     float czrinc = (p0z - p2z) * p20i;
-    // upper triangle, plus middle horizontal segment!
+    // Upper triangle, plus middle horizontal segment!
     if (p2y > p1y + 0) {
       float xrinc = cxrinc;
       float zrinc = czrinc;
@@ -2548,7 +2539,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         swap(xlinc, xrinc);
         swap(zlinc, zrinc);
       }
-      bool extra = (p1y > p0y);  // include middle horizontal segment
+      bool extra = (p1y > p0y);  // Include middle horizontal segment.
       for_intL(i, 1, p2y - p1y + extra) {
         int y = p2y - i;
         float xl = p2x + i * xlinc;
@@ -2566,7 +2557,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         }
       }
     }
-    // lower triangle
+    // Lower triangle.
     if (p1y > p0y + 1) {
       float xrinc = -cxrinc;
       float zrinc = -czrinc;
@@ -2608,7 +2599,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     get_grid_point(mesh.point(nn.va[ei]), p1yx, p1z);
     int p1y = p1yx[0], p1x = p1yx[1];
     if (lverb) showf(" edge (%d, %d, %g) (%d, %d, %g)\n", p0x, p0y, p0z, p1x, p1y, p1z);
-    // vertical lines
+    // Vertical lines.
     if (p1x < p0x) {
       swap(p0x, p1x);
       swap(p0y, p1y);
@@ -2632,7 +2623,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         if (lverb) showf("  vedge(%d, %g)=%g grid=%g d2=%g\n", x, yf, z, zg, d2);
       }
     }
-    // horizontal lines
+    // Horizontal lines.
     if (p1y < p0y) {
       swap(p0x, p1x);
       swap(p0y, p1y);
@@ -2656,7 +2647,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         if (lverb) showf("  hedge(%g, %d)=%g grid=%g d2=%g\n", xf, y, z, zg, d2);
       }
     }
-    // diagonal lines
+    // Diagonal lines.
     int p0l = p0y - p0x;
     int p1l = p1y - p1x;
     if (p1l < p0l) {
@@ -2679,11 +2670,11 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         float xr = xf - x;
         float yr = yf - y;
         if (yr > xr + .5f) {
-          ASSERTX(yr > xr + 1.f - epsilon);  // numerical imprecision
+          ASSERTX(yr > xr + 1.f - epsilon);  // Numerical imprecision.
           y++;
           // yr = 0.f;
         } else if (xr > yr + .5f) {
-          ASSERTX(xr > yr + 1.f - epsilon);  // numerical imprecision
+          ASSERTX(xr > yr + 1.f - epsilon);  // Numerical imprecision.
           x++;
           xr = 0.f;
         }
@@ -2717,14 +2708,14 @@ double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> 
     ASSERTX(nn.ar_rwid_v1.ok(nwid));
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
-    // ignore gcolc factor for now
+    // Ignore gcolc factor for now.
     ar_ulls[nwid]->enter_fprojection(fpt.ptcol(), p2wi.wi[0]->col, p2wi.wi[1]->col, bary[0], bary[1]);
   }
   double rss1 = 0.;
   int cliprgb = 0;
   for_int(i, ar_wi.num()) {
     double rssp1 = 0.;
-    // May have 0 points projecting -> ill-defined -> keeps same value.
+    // May have 0 points projecting -> ill-defined -> keeps same value..
     ar_ulls[i]->solve(rssp1);
     rss1 += rssp1;
     A3dColor& newcolor = ar_wi[i].col;
@@ -2739,7 +2730,7 @@ double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> 
     }
   }
   SSTATV2(Scliprgb, cliprgb);
-  if (cliprgb) {  // have some clipped rgb values
+  if (cliprgb) {  // Have some clipped rgb values.
     rss1 = 0.;
     for_int(pi, nn.ar_fpts.num()) {
       const fptinfo& fpt = *nn.ar_fpts[pi];
@@ -2748,7 +2739,7 @@ double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> 
       int nwid = nn.ar_nwid[mini];
       const Bary& bary = param.ar_bary[pi];
       const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
-      // ignore gcolc factor for now
+      // Ignore gcolc factor for now.
       rss1 += dist2(fpt.ptcol(), interp(p2wi.wi[0]->col, p2wi.wi[1]->col, ar_wi[nwid].col, bary));
     }
   }
@@ -2766,7 +2757,7 @@ double evaluate_color(const NewMeshNei& nn, const Param& param, CArrayView<Wedge
     int nwid = nn.ar_nwid[mini];
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
-    // ignore gcolc factor for now
+    // Ignore gcolc factor for now.
     rss1 += dist2(fpt.ptcol(), interp(p2wi.wi[0]->col, p2wi.wi[1]->col, ar_wi[nwid].col, bary));
   }
   return rss1 * gcolc;
@@ -2783,7 +2774,7 @@ double evaluate_normal(const NewMeshNei& nn, const Param& param, CArrayView<Wedg
     int nwid = nn.ar_nwid[mini];
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
-    // ignore gnorc factor for now
+    // Ignore gnorc factor for now.
     rss1 += dist2(fpt.ptnor(), ok_normalized(interp(p2wi.wi[0]->nor, p2wi.wi[1]->nor, ar_wi[nwid].nor, bary)));
   }
   return rss1 * gnorc;
@@ -2798,7 +2789,7 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
     return;
   }
   const float accept_factor = 2.f;
-  int npnormal = 0;  // number of possible normal projections
+  int npnormal = 0;  // Number of possible normal projections.
   int nnormal = 0;
   float bb_x = 0.f, bb_y = 0.f;
   for_int(i, ar_resid.num()) {
@@ -2825,7 +2816,7 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
   } else {
     float ratio_bb = !bb_x ? 1000.f : !bb_y ? 0.f : bb_y / bb_x;
     if (ratio_bb <= 1.001f) ratio_bb = 1.001f;
-    // (when ratio_bb<=1.f, only the uniform error component matters.)
+    // (When ratio_bb<=1.f, only the uniform error component matters.)
     float vtan = 1.f / my_sqrt(square(ratio_bb) - 1.f);
     float max_u = 0.f;
     for_int(i, ar_resid.num()) {
@@ -2841,16 +2832,16 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
       }
       if (!x) {
         if (y > max_u * ratio_bb) max_u = y / ratio_bb;
-        // yes, checked equivalence with below
+        // Yes, checked equivalence with below.
       } else {
         float ratio_yx = y / x;
         if (ratio_yx <= vtan) {
-          // bounded by uniform component
+          // Bounded by uniform component.
           float m = my_sqrt(m2);
           if (m > max_u) max_u = m;
-          // yes, checked equivalence with below at ratio_yx == vtan
+          // Yes, checked equivalence with below at ratio_yx == vtan.
         } else {
-          // bounded by directional component
+          // Bounded by directional component.
           float desired_d = y + x / vtan;
           if (desired_d > max_u * ratio_bb) max_u = desired_d / ratio_bb;
         }
@@ -2892,7 +2883,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   // Current problem with rnor001:
   //  Both the distance evaluation in fit_geom() and evaluate_geom() and the reprojection here do not use
   //  the (0, 0, 1) vector direction.
-  //  That mis-reprojection is why we sometimes see a uniform error component here.
+  //  That mis-reprojection is the reason that we sometimes see a uniform error component here.
   {
     int nf = nn.ar_corners.num();
     Array<Bbox<float, 3>> ar_bbox(nf);
@@ -3000,21 +2991,20 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   if (handle_residuals) compute_residual(ar_resid, ar_normaldist2, vnormal, uni_error, dir_error);
 }
 
-// ret: success
+// Return: success.
 bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   if (nn.va.num() == 2) {
     Warning("hull: ignoring boundary 'corner' vertex");
     return false;
   }
-  // Set up a linear programming problem.
-  // Recall that all variables are expected to be >= 0, annoying!
-  //  workaround: translate all variables into (x, y, z) > 0 octant
-  // simplx: epsilon is not scale-invariant -> scale data as well.
-  // p' = p * scale + translate .   p' in range [border, border + size]
+  // Set up a linear programming problem.  Recall that all variables are expected to be >= 0, annoying!
+  // Workaround: translate all variables into (x, y, z) > 0 octant.
+  // simplx(): epsilon is not scale-invariant -> scale data as well.
+  // p' = p * scale + translate .   p' in range [border, border + size].
   float scale;
   Vector translate;
-  const float transf_border = 10.f;  // allow vertex to go anywhere
-  // const float transf_border = .25f;  // severely constrain the vertex
+  const float transf_border = 10.f;  // Allow vertex to go anywhere.
+  // const float transf_border = .25f;  // Severely constrain the vertex.
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
@@ -3055,8 +3045,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     }
   }
   if (1) {
-    // See if (v1 + v2) / 2 satisfies the constraints.
-    // (Useful in the case of complete planarity.)
+    // See if (v1 + v2) / 2 satisfies the constraints.  (Useful in the case of complete planarity.)
     Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
     Point pcandnew = to_Point(to_Vector(pcand) * scale) + translate;
     const bool ok = all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
@@ -3082,15 +3071,15 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     if (innerhull) link_normal = -link_normal;
   }
 #if defined(HH_HAVE_SIMPLEX)
-  // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0
+  // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0.
   int n_m1 = 0;
   for_int(i, ar_lf.num()) {
     if (ar_lf[i].offset > 0) n_m1++;
   }
-  // Use Numerical Recipes code (converted to double precision)
-  int n = 3;                                       // number of variables (x, y, z)
-  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // '<=', '>=', '==' constraints
-  int m = m1 + m2 + m3;                            // total number of constraints
+  // Use Numerical Recipes code (converted to double precision).
+  int n = 3;                                       // Number of variables (x, y, z).
+  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // Number of '<=', '>=', '==' constraints
+  int m = m1 + m2 + m3;                            // Total number of constraints.
   double** a = dmatrix(1, m + 2, 1, n + 1);
   int* iposv = ivector(1, m);
   int* izrov = ivector(1, n);
@@ -3100,9 +3089,9 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   a[1][2] = -link_normal[0];
   a[1][3] = -link_normal[1];
   a[1][4] = -link_normal[2];
-  // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0
-  //  equivalently, lf[0] * x + lf[1] * y + lf[2] * z >= -lf[3]
-  //  or possibly, -lf[0] * x - lf[1] * y - lf[2] * z <= lf[3]
+  // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0;
+  //  equivalently, lf[0] * x + lf[1] * y + lf[2] * z >= -lf[3].
+  //  or possibly, -lf[0] * x - lf[1] * y - lf[2] * z <= lf[3].
   {
     int nr = 0;
     for_int(i, ar_lf.num()) {
@@ -3142,7 +3131,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Warning("simplx: objective function is unbounded");
   } else {
     // A finite solution is found.
-    Point pnew(0.f, 0.f, 0.f);  // must be initialized to zero's.
+    Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
       if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
@@ -3251,10 +3240,10 @@ int estimate_ii(Vertex v1, Vertex v2, const Point& newp) {
 
 void project_vnew_nn(Edge e, const Point& newp, Face& pcf, Bary& pbary, Point& pclp) {
   Vertex v2 = mesh.vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // f2 could be nullptr
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // Note that f2 could be nullptr.
   Polygon poly;
   float min_d2 = BIGFLOAT;
-  pcf = f1;  // dummy assignment for clang-tidy
+  pcf = f1;  // Dummy assignment for clang-tidy.
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
@@ -3329,9 +3318,9 @@ Array<CacheEntry> tvc_get_e_cacheentry(Edge e, bool edir) {
         ar_ce.push(CacheEntry(ctr));
     }
   } else {
-    // Would-be possibly better order for PM face order
+    // Could be possibly better order for PM face order.
     assertnever("");
-    // Process in order: cll, csl, ctl,  ctr, csr, crr
+    // Process in order: cll, csl, ctl,  ctr, csr, crr.
   }
   if (!add_duplicates) {
     for_int(i, ar_ce.num()) {
@@ -3503,7 +3492,7 @@ float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
 // This max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
 double evaluate_aps(Edge e, int ii) {
   assertx(ii == 0 || ii == 2);
-  Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // v1 is the removed vertex.
+  Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // v1 is the removed vertex..
   Vertex v2 = ii == 2 ? mesh.vertex1(e) : mesh.vertex2(e);
   if (!valid_aps(e, v1, v2)) return -1.;
   // Obtain displacement at removed vertex v1.
@@ -3539,7 +3528,7 @@ double evaluate_aps(Edge e, int ii) {
   return sqrt(max_mag2);
 }
 
-// return: is_legal
+// Return: is_legal.
 bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
   assertx(fc);
   int matfc = f_matid(fc);
@@ -3552,14 +3541,14 @@ bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
   // If all neighbors same, face is not along any boundary, and is OK.
   if (matf0 == matf1 && matf0 == matf2 && matf1 == matf2) {
     if (matf0 == -1) {
-      // OK to have single chart surrounded by surface boundaries
+      // OK to have single chart surrounded by surface boundaries.
     } else {
-      // cannot have isolated triangle chart without 3 corners.
+      // We cannot have isolated triangle chart without 3 corners.
       assertx(matfc == matf0);
     }
     return true;
   }
-  // two neighbors are the same, and one is different.
+  // Two neighbors are the same, and one is different.
   // then center face must have same material as the two same neighbors.
   if (matf0 == matf1) return matfc == matf0;
   if (matf0 == matf2) return matfc == matf0;
@@ -3580,13 +3569,13 @@ bool desire_edge_orientation_swap(Edge e, int min_ii) {
   if (f2) {
     Vertex vs = mesh.vertex1(e), vt = mesh.vertex2(e);
     Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
-    int dir = -1;  // 0 == CCW, 1 == CLW
+    int dir = -1;  // 0 == CCW, 1 == CLW.
     int jmin = std::numeric_limits<int>::max();
     Vec<bool, 2> ar_ok = {false, false};
     for_int(i, 2) {
       if (minii2) {
-        if (min_ii == 0 && i == 1) continue;  // force swap
-        if (min_ii == 2 && i == 0) continue;  // disallow swap
+        if (min_ii == 0 && i == 1) continue;  // Force swap.
+        if (min_ii == 2 && i == 0) continue;  // Disallow swap.
       }
       Vertex v = vl;
       int j = 0;
@@ -3708,8 +3697,8 @@ EcolResult try_ecol(Edge e, bool commit) {
   else if (!mesh.nice_edge_collapse(e))
     return {R_illegal};
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // f2 could be nullptr
-  Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);  // vo2 could be nullptr
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // Note that f2 could be nullptr.
+  Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);  // Note that vo2 could be nullptr.
   int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
   if (!try_ecol_legal(e, v1, v2, v1nse, v2nse)) return {R_illegal};
   NewMeshNei nn;
@@ -3740,7 +3729,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (spring) {
       for (Vertex v : mesh.vertices(e)) {
         for (Edge ee : mesh.edges(v)) {
-          if (v == v2 && ee == e) continue;  // count e exactly once
+          if (v == v2 && ee == e) continue;  // Count e exactly once.
           rssfg += spring * mesh.length2(ee);
         }
       }
@@ -3759,9 +3748,9 @@ EcolResult try_ecol(Edge e, bool commit) {
     float rssfpenalty = 0.f;
     for (eptinfo* pept : nn.ar_eptretire) {
       dummy_use(pept);
-      // do not create benefit! pept->dist2 could be > length2(e)!
+      // Do not create benefit! pept->dist2 could be > length2(e)!
       //  not: rssfg += pept->dist2;
-      rssfpenalty += mesh.length2(e);  // penalty for retirement
+      rssfpenalty += mesh.length2(e);  // Penalty for retirement.
     }
     if (desdfac) rssfpenalty += square(gdiam * desdfac) * abs(v_desh(v1) - v_desh(v2));
     if (desnfac) rssfpenalty += square(gdiam * desnfac) * (v_desn(v1) + v_desn(v2));
@@ -3866,11 +3855,10 @@ EcolResult try_ecol(Edge e, bool commit) {
         if (0 && !mesh.is_boundary(e)) {
           if (ii != 1 && !miniiall && !nominii1 && !minii2) continue;
         }
-        // Try all 3 ii's in order to preserve discontinuity
-        //  curve corners (not just boundary curve corners).
+        // Try all 3 ii's in order to preserve discontinuity curve corners (not just boundary curve corners).
       }
     }
-    if (strict_sharp >= 2) {  // chart-compliant
+    if (strict_sharp >= 2) {  // Chart-compliant.
       assertx(ii != 1);       // 0 or 2
       Vertex tv1 = v1, tv2 = v2;
       if (ii == 0) std::swap(tv1, tv2);
@@ -3879,20 +3867,20 @@ EcolResult try_ecol(Edge e, bool commit) {
         for (Face f : mesh.faces(e)) {
           Vertex vv = mesh.opp_vertex(e, f);  // side_vertex1|2
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
-          // if (v2, vv) is boundary, ecol should be disallowed
+          // If (v2, vv) is boundary, ecol should be disallowed.
           assertx(fc);
           assertx(f_matid(fc) == f_matid(f));
           Vertex vvv = mesh.opp_vertex(mesh.edge(tv2, vv), fc);
-          // note: Face fc is (tv2, vv, vvv)
+          // Note: Face fc is (tv2, vv, vvv).
           Face fnei0 = mesh.opp_face(fc, mesh.edge(tv2, vvv));
           Face fnei1 = mesh.opp_face(fc, mesh.edge(vv, vvv));
           Face fnei2 = mesh.opp_face(f, mesh.edge(tv1, vv));
           if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) return false;  // From lambda.
         }
-        // Gather materials adjacent to v1
+        // Gather materials adjacent to v1.
         Set<int> v1mats;
         for (Face f : mesh.faces(tv1)) v1mats.add(f_matid(f));
-        // Check whether any other vertex around v1 is on the same boundary as v1
+        // Check whether any other vertex around v1 is on the same boundary as v1.
         for (Vertex v : mesh.vertices(tv2)) {
           if (v == tv1 || v == mesh.side_vertex1(e) || v == mesh.side_vertex2(e)) continue;
           Edge ee = mesh.edge(tv2, v);
@@ -3927,11 +3915,11 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (!ok) continue;
     }
     Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    Array<WedgeInfo> ar_wi;  // indexed by nn.ar_nwid
+    Array<WedgeInfo> ar_wi;  // indexed by nn.ar_nwid.
     update_initial_wi(e, nn, ii, ar_wi);
     if (hull) {
       if (!compute_hull_point(e, nn, newp)) continue;
-      // Estimate ii from v1, v2, newp
+      // Estimate ii from v1, v2, newp.
       if (!strict_ii) ii = estimate_ii(v1, v2, newp);
       SSTATV2(Sestii, ii);
       update_initial_wi(e, nn, ii, ar_wi);
@@ -3963,7 +3951,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (hull && innerhull) rssa = -rssa;
     } else if (minarea) {
       rssa = compute_area_after(nn, newp);
-      // Truncate this to ignore increases in area
+      // Truncate this to ignore increases in area.
       // if (rssa<rssf) rssa = rssf;
     } else if (minedgelength) {
       rssa = mesh.length2(e);
@@ -3996,7 +3984,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         }
         {
           float sum2 = mag2(lfvol.v);
-          if (sum2 < square(gdiam * 1e-6f)) {  // was 1e-4f
+          if (sum2 < square(gdiam * 1e-6f)) {  // Was 1e-4f.
             lfvol_ok = false;
           } else {
             float fac = 1.f / sqrt(sum2);
@@ -4065,7 +4053,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           for_int(i, nw) {
             Point dummy_p;
             WedgeInfo wi;
-            extract_qem_vector(minp[i].data(), dummy_p, wi);  // just want wi
+            extract_qem_vector(minp[i].data(), dummy_p, wi);  // Just want wi.
             assertx(dummy_p == newp);
             if (fit_colors) {
               for_int(c, 3) {
@@ -4082,7 +4070,7 @@ EcolResult try_ecol(Edge e, bool commit) {
               }
             }
             if (fit_normals) {
-              wi.nor.normalize();  // will be checked later
+              wi.nor.normalize();  // Will be checked later.
               ar_wi[i].nor = wi.nor;
             }
           }
@@ -4135,11 +4123,11 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
     if (edgepathfac) {
       assertx(ii == 0 || ii == 2);
-      // if ii == 0, vertex kept is v2
-      // if ii == 2, vertex kept is v1
+      // If ii == 0, vertex kept is v2.
+      // If ii == 2, vertex kept is v1.
       for (Vertex vv : mesh.vertices(ii == 0 ? v1 : v2)) {
         if (vv == v1 || vv == v2 || vv == vo1 || vv == vo2) continue;
-        // loop over vertices vv adjacent to v1|v2
+        // Loop over vertices vv adjacent to v1|v2.
         float area = sqrt(area2(mesh.point(v1), mesh.point(v2), mesh.point(vv)));
         rssa += edgepathfac * area;
       }
@@ -4248,7 +4236,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   ecol_result.min_ii = min_ii;
   ecol_result.vs = vs;
   CArrayView<int> ar_rwid = !bswap ? nn.ar_rwid_v1 : nn.ar_rwid_v2;
-  // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // now undefined
+  // v1 = v2 = nullptr; vo1 = vo2 = nullptr; f1 = f2 = nullptr;  // Variables are now undefined.
   if (!minqem) {
     for (eptinfo* pept : nn.ar_epts) point_change_edge(pept, nullptr);
     for (eptinfo* pept : nn.ar_eptretire) {
@@ -4263,7 +4251,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   if (wfile_prog) {
     std::ostream& os = (*wfile_prog)();
     os << "# Beg REcol\n";
-    // adapted from write_mesh() and GMesh::write():
+    // Adapted from write_mesh() and GMesh::write():
     string str;
     for_int(i, 2) {
       Face f = !i ? fl : fr;
@@ -4302,7 +4290,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (qemlocal) {
       if (qemcache) {
         // for (Face f : mesh.faces(e)) { delete f_qem_p(f); f_qem_p(f) = nullptr; }
-        // remaining affected faces are updated after edge collapse
+        // Remaining affected faces are updated after edge collapse.
       }
     } else {
       for_int(i, ar_rwid.num()) {
@@ -4311,7 +4299,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         int orwid = !bswap ? nn.ar_rwid_v2[i] : nn.ar_rwid_v1[i];
         if (orwid != rwid) gwq[orwid] = nullptr;
       }
-      // remaining affected gwq are updated after edge collapse
+      // Remaining affected gwq are updated after edge collapse.
     }
   }
   if (tvcfac) tvc_update_cache(e);
@@ -4390,18 +4378,17 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   if (strict_sharp >= 2) {
     // Check that there are no degenerate faces.
-    // A face is degenerate if it has all 3 vertices on chart boundary,
-    //  or equivalently that two of its neighbors have the same matid
-    //   but that matid is different from its current matid.
+    // A face is degenerate if it has all 3 vertices on chart boundary, or equivalently that two of its neighbors
+    // have the same matid but that matid is different from its current matid.
     for (Face f : mesh.faces(vs)) {
       Vec3<Face> fn;
       int i = 0;
       if (0) {
         for (Face ff : mesh.faces(f)) fn[i++] = ff;
       } else {
-        for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
+        for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // Note that fn[i] can be nullptr.
       }
-      // Can occur if at corner of terrain grid && !terrain
+      // Can occur if at corner of terrain grid && !terrain.
       assertw(strict_mat_neighbors(f, fn[0], fn[1], fn[2]));
     }
     for (Edge ee : mesh.edges(vs)) {
@@ -4420,9 +4407,9 @@ EcolResult try_ecol(Edge e, bool commit) {
 
 float get_tvc_cost(Edge e, bool edir) {
   if (!edir) {
-    if (!mesh.is_boundary(e) && mesh.is_boundary(mesh.vertex2(e))) return BIGFLOAT;  // illegal in this direction
+    if (!mesh.is_boundary(e) && mesh.is_boundary(mesh.vertex2(e))) return BIGFLOAT;  // Illegal in this direction.
   } else {
-    if (mesh.is_boundary(e) || mesh.is_boundary(mesh.vertex1(e))) return BIGFLOAT;  // illegal in this direction
+    if (mesh.is_boundary(e) || mesh.is_boundary(mesh.vertex1(e))) return BIGFLOAT;  // Illegal in this direction.
   }
   Array<CacheEntry> ar_ce = tvc_get_e_cacheentry(e, edir);
   int nincache = 0;
@@ -4499,9 +4486,8 @@ void consider_tvc(Edge& edefault, float costdefault) {
   }
   SSTATV2(Stvcsete, sete.num());
   for (Edge e : sete) {
-    float cost = pqecost.retrieve(e);
+    float cost = pqecost.retrieve(e);  // Note that cost could equal k_bad_cost.
     ASSERTX(cost >= 0.f);
-    // (cost could be k_bad_cost)
     float max_improvement =
         (tvc_max_improvement *
          (tvcpqa ? (!pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num()))
@@ -4614,10 +4600,10 @@ void optimize() {
     for (Face f : mesh.faces()) {
       Vec3<Face> fn;
       int i = 0;
-      for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // fn[i] can be nullptr
+      for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // Note that fn[i] can be nullptr.
       if (strict_mat_neighbors(f, fn[0], fn[1], fn[2])) continue;
       if (int(!fn[0]) + int(!fn[1]) + int(!fn[2]) >= 2) {
-        // Can occur if at corner of terrain grid && !terrain
+        // Can occur if at corner of terrain grid && !terrain.
         Warning("Valence 2 vertex on boundary will be degenerate");
       } else {
         assertnever("!strict_mat_neighbors prior to optimize()");
@@ -4747,7 +4733,7 @@ void optimize() {
     const auto& [result, unused_cost, unused_min_ii, vs] = try_ecol(e, true);
     assertx(result == R_success);
     if (invertexorder) assertx(mesh.vertex_id(vs) <= mesh.num_vertices());
-    // e = nullptr;  // now undefined
+    // e = nullptr;  // Now undefined.
     nsuccess++;
     if (tvcfac) {
       Vertex vo = v1 == vs ? v2 : v1;
@@ -4794,7 +4780,7 @@ void optimize() {
   if (verb >= 2)
     showdf("Operations successful: %d/%d  (%.1f%%)\n", nsuccess, ntested, float(nsuccess) / max(ntested, 1) * 100.f);
   if (tvcfac) showdf("Number of cache misses: %d\n", tvc_ncachemiss);
-  nfaces = 0, nvertices = 0;  // default for next '-simplify'
+  nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
 }
 
 // Simplify the mesh until it has <=nfaces or <=nvertices.

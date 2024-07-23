@@ -143,7 +143,7 @@ inline const char* str_chr(const char* s, char ch) {
 void parse_aux(const char* s, ArrayView<float> ar) {
   assertx(*s++ == '(');
   for_int(c, ar.num()) {
-    if (c) assertx(*s++ == ' ');
+    if (c && *s++ != ' ') assertnever(string("got: ") + s);
     ar[c] = float_from_chars(s);
   }
   assertx(*s++ == ')');

@@ -443,6 +443,7 @@ bool poszfacenormal = false;  // Prevent edge collapses that would create face n
 bool dihallow = false;        // Penalize but allow bad dihedral angles.
 int invertexorder = 0;        // Remove vertices in reverse order (2=fix_edges).
 bool wedge_materials = true;  // Material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25.
+string original_indices;      // Write the PM's original vertex indices in order to a file.
 constexpr bool use_parallelism = true;
 
 // Failed attempt at signed_dihedral_angle():
@@ -471,6 +472,7 @@ float inv_grid_frame11;  // 1.f / grid_frame[1][1].
 bool has_wad2 = false;
 float sqrt_neptfac;
 int qems;  // Size of QEM as supported in make_qem().
+Array<int> ar_vt_indices;
 
 LHPqueue pqecost;  // Conservative estimate of cost of ecol.
 
@@ -1414,13 +1416,13 @@ void analyze_mesh(const char* s) {
 
 // Sample the original mesh to obtain the set of face points and edge points.
 void sample_pts() {
-  HH_TIMER("_sample_pts");
   if (terrain || minarea || minvolume || minedgelength || minvdist || minqem || minaps || minrandom) {
     assertx(!fpts.num());
     assertx(!numpts);
     showff("No points sampled.\n");
     return;
   }
+  HH_TIMER("_sample_pts");
 #if !defined(ENABLE_FACEPTS)
   assertnever("ENABLE_FACEPTS was not set during compile");
 #endif
@@ -1770,6 +1772,7 @@ void perhaps_initialize() {
     }
     do_tvcreinit();
   }
+  if (original_indices != "") ar_vt_indices.reserve(mesh.num_vertices());
 }
 
 // End of program.
@@ -4303,6 +4306,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   if (tvcfac) tvc_update_cache(e);
+  if (original_indices != "") ar_vt_indices.push(mesh.vertex_id(vt));
   // ***DO IT
   mesh.collapse_edge_vertex(e, vs);  // vs kept
   mesh.set_point(vs, min_p);
@@ -4890,6 +4894,14 @@ void do_removeinfo() {
   do_removesharp();
 }
 
+void write_original_indices() {
+  const Array<int> base_mesh_indices{transform(mesh.ordered_vertices(), [&](Vertex v) { return mesh.vertex_id(v); })};
+  WFile fi(original_indices);
+  fi() << sform("%d\n", base_mesh_indices.num() + ar_vt_indices.num());
+  for (int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices)))
+    fi() << sform("%d\n", vi);
+}
+
 }  // namespace
 
 int main(int argc, const char** argv) {
@@ -4980,6 +4992,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(mresid, "maxresidual : then stop simplification");
   HH_ARGSP(maxvalence, "val : prevent ecols creating verts >valence");
   HH_ARGSF(poszfacenormal, ": prevent facenormal from having nor_z < 0");
+  HH_ARGSP(original_indices, "file.txt : output original vertex indices in creation order");
   {
     Args targs{"1"};
     do_verb(targs);
@@ -5009,6 +5022,7 @@ int main(int argc, const char** argv) {
   timer.terminate();
   hh_clean_up();
   if (!nooutput) write_mesh(std::cout);
+  if (original_indices != "") write_original_indices();
   wfile_prog = nullptr;
   gwinfo.clear();
   if (!k_debug) exit_immediately(0);

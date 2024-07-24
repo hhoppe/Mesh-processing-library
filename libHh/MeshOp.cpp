@@ -676,6 +676,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
     for (Corner c : mesh.corners(v)) {
       Vector nor;
       if (!parse_key_vec(mesh.get_string(c), "normal", nor)) {
+        // SHOW(c);
         if (hasvnor)
           Warning("Missing corner normal, using vertex normal");
         else

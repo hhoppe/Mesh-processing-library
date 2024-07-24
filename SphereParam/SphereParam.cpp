@@ -13,6 +13,9 @@ using namespace hh;
 
 namespace {
 
+string orig_mesh;
+string orig_indices;
+
 // Read a rotation frame from the specified filename and snap its axes to the canonical axes.
 Frame get_rotate_frame(const string& rotate_s3d) {
   if (rotate_s3d == "") return Frame::identity();
@@ -118,22 +121,52 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   Array<Vertex> new_vertices;
   string str;
 
-  auto split_edge = [&](Edge e, int axis) {
-    const Point sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
-    const Point p1 = mesh.point(mesh.vertex1(e)), p2 = mesh.point(mesh.vertex2(e));
-    Vector nor1, nor2;
-    const bool have_nor = (parse_key_vec(mesh.get_string(mesh.vertex1(e)), "normal", nor1) &&
-                           parse_key_vec(mesh.get_string(mesh.vertex2(e)), "normal", nor2));
+  const auto split_edge = [&](Edge e, int axis) {
+    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e), vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
+    Face f1 = mesh.face1(e), f2 = mesh.face2(e);
+    const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
+    Vector nor_v1f1, nor_v2f1, nor_v1f2, nor_v2f2, nor_vs1f1, nor_vs2f2;
+    int nnors = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "normal", nor_v1f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "normal", nor_v2f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "normal", nor_v1f2)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "normal", nor_v2f2)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "normal", nor_vs1f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "normal", nor_vs2f2)));
+    assertx(nnors == 0 || nnors == 6);
     Vertex v = mesh.split_edge(e);
     new_vertices.push(v);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
     const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     v_sph(v) = sph_new;
-    mesh.set_point(v, interp(p1, p2, frac1));
-    if (have_nor) {
-      const Vector nor = normalized(nor1 * frac1 + nor2 * (1.f - frac1));
-      mesh.update_string(v, "normal", csform_vec(str, nor));
+    mesh.set_point(v, interp(mesh.point(v1), mesh.point(v2), frac1));
+    if (nnors) {
+      const char* s_vf1 = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
+      const char* s_vf2 = csform_vec(str, normalized(nor_v1f2 * frac1 + nor_v2f2 * (1.f - frac1)));
+      if (nor_v1f1 == nor_v1f2 && nor_v2f1 == nor_v2f2) {
+        mesh.update_string(v, "normal", s_vf1);
+      } else {
+        mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, v2)), "normal", s_vf1);
+        mesh.update_string(mesh.clw_corner(v, mesh.edge(v, v1)), "normal", s_vf1);
+        mesh.update_string(mesh.clw_corner(v, mesh.edge(v, v2)), "normal", s_vf2);
+        mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, v1)), "normal", s_vf2);
+      }
+      if (!GMesh::string_has_key(mesh.get_string(v1), "normal")) {
+        mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f1));
+        mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f2));
+      }
+      if (!GMesh::string_has_key(mesh.get_string(v2), "normal")) {
+        mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f1));
+        mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f2));
+      }
+      if (!GMesh::string_has_key(mesh.get_string(vs1), "normal")) {
+        mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
+        mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
+      }
+      if (!GMesh::string_has_key(mesh.get_string(vs2), "normal")) {
+        mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
+        mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
+      }
     }
   };
 
@@ -180,15 +213,11 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   }
 }
 
-// Extract a GMesh from the progressive mesh iterator, add "sph" and "uv" strings, and write it to std::cout.
-void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
-  GMesh gmesh = pmi.extract_gmesh();
-  for (Vertex v : gmesh.vertices()) v_sph(v) = sphmap[gmesh.vertex_id(v) - 1];
+// Given a GMesh, add "sph" and "uv" strings, optionally split its meridian, and write it to std::cout.
+void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
-
   string str;
   for (Vertex v : gmesh.vertices()) {
-    gmesh.update_string(v, "wid", nullptr);
     const Point& sph = v_sph(v);
     gmesh.update_string(v, "sph", csform_vec(str, sph));
     // Replace any "uv" with longitude-latitude.
@@ -211,6 +240,44 @@ void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool spli
   }
   gmesh.write(std::cout);
   if (!k_debug) exit_immediately(0);  // Skip GMesh destruction for speedup.
+}
+
+// Extract a GMesh from the progressive mesh iterator, add "sph" and "uv" strings, and write it to std::cout.
+void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
+  GMesh gmesh = pmi.extract_gmesh();
+  for (Vertex v : gmesh.vertices()) {
+    gmesh.update_string(v, "wid", nullptr);
+    v_sph(v) = sphmap[gmesh.vertex_id(v) - 1];
+  }
+  write_parameterized_gmesh(gmesh, split_meridian);
+}
+
+// Read the PM's original mesh and original_vertex_indices.txt, add "sph" and "uv" strings, and write it to std::cout.
+void write_orig_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
+  assertx(orig_mesh != "");
+  assertx(orig_indices != "");
+  Array<int> orig_vertex_indices;
+  {
+    RFile fi(orig_indices);
+    string str;
+    assertx(my_getline(fi(), str));
+    const int num_vertices = to_int(str);
+    assertx(num_vertices == pmi._vertices.num());
+    for_int(vi, num_vertices) {
+      assertx(my_getline(fi(), str));
+      orig_vertex_indices.push(to_int(str));
+    }
+  }
+  GMesh gmesh;
+  {
+    gmesh.read(RFile{orig_mesh}());
+    for_int(vi, pmi._vertices.num()) {
+      const int orig_vi = orig_vertex_indices[vi];  // (Index starting at 1.)
+      Vertex v = gmesh.id_vertex(orig_vi);
+      v_sph(v) = sphmap[vi];
+    }
+  }
+  write_parameterized_gmesh(gmesh, split_meridian);
 }
 
 // *** PMesh output.
@@ -365,7 +432,9 @@ int main(int argc, const char** argv) {
   HH_ARGSP(rotate_s3d, "file.s3d : rotate spherical param using view (snapped to axes)");
   HH_ARGSF(no_rot_align, ": do not rotationally align map with face normals");
   HH_ARGSF(split_meridian, ": split mesh faces at prime meridian (zero lon)");
-  HH_ARGSP(to, "format : set mesh output (mesh, pm, ply)");
+  HH_ARGSP(orig_mesh, "file.m : file containing the original mesh");
+  HH_ARGSP(orig_indices, "file.txt : file containing the original vertex indices");
+  HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, orig_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");
   HH_ARGSC("Examples:");
   HH_ARGSC("  SphereParam cow.pm -rot s3d/cow.s3d >cow.sphparam.m");
@@ -386,8 +455,10 @@ int main(int argc, const char** argv) {
   args.parse();
 
   const Frame rotate_frame = get_rotate_frame(rotate_s3d);
-  const Map<string, decltype(&write_parameterized_mesh)> output_formatters{
-      {"mesh", &write_parameterized_mesh}, {"pm", &write_parameterized_pm}, {"ply", &write_parameterized_ply}};
+  const Map<string, decltype(&write_parameterized_mesh)> output_formatters{{"mesh", &write_parameterized_mesh},
+                                                                           {"pm", &write_parameterized_pm},
+                                                                           {"ply", &write_parameterized_ply},
+                                                                           {"orig_mesh", &write_orig_mesh}};
   assertx(output_formatters.contains(to));
 
   PMeshRStream pmrs(fi());

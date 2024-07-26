@@ -444,7 +444,6 @@ bool dihallow = false;        // Penalize but allow bad dihedral angles.
 int invertexorder = 0;        // Remove vertices in reverse order (2=fix_edges).
 bool wedge_materials = true;  // Material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25.
 string original_indices;      // Write the PM's original vertex indices in order to a file.
-constexpr bool use_parallelism = true;
 
 // Failed attempt at signed_dihedral_angle():
 //  const float gmindih = -to_rad(109.471);
@@ -3502,6 +3501,7 @@ double evaluate_aps(Edge e, int ii) {
   double max_mag2 = aps_dist2_v1(e, v1, v2);
   if (max_mag2 == -1.) return -1.;
   // Also consider displacements at edge-edge crossings.
+  Corner cv1f1 = mesh.corner(v1, mesh.face1(e)), cv1f2 = mesh.corner(v1, mesh.face2(e));
   for (Vertex v : mesh.vertices(v1)) {
     if (v == v2) continue;
     if (edge_sharp(mesh.edge(v1, v))) continue;
@@ -3511,7 +3511,6 @@ double evaluate_aps(Edge e, int ii) {
     for (Vertex vv : mesh.vertices(v1)) {
       if (vv == v2 || vv == v) continue;
       if (edge_sharp(mesh.edge(v1, vv))) continue;
-      Corner cv1f1 = mesh.corner(v1, mesh.face1(e)), cv1f2 = mesh.corner(v1, mesh.face2(e));
       Corner cvv = mesh.ccw_corner(v1, mesh.edge(v1, vv));
       Point p2;
       if (c_wedge_id(cvv) == c_wedge_id(cv1f1)) {
@@ -4614,7 +4613,7 @@ void optimize() {
       }
     }
   }
-  if (use_parallelism) {
+  if (get_max_threads() > 1) {
     const bool qem_compatible = minii2;  // The only Qem method used is evaluate() which is thread-safe.
     const bool can_use_parallelism = !invertexorder && !tvcfac && (!minqem || qem_compatible);
     if (can_use_parallelism) {

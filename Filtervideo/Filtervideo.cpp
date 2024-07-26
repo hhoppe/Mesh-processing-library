@@ -1129,7 +1129,7 @@ void possibly_rescale_loop_parameters() {
            make_string(g_lp.mat_static.dims()).c_str(), make_string(video.spatial_dims()).c_str());
   }
   FilterBnd tfilterb(Filter::get("impulse"), Bndrule::reflected);
-  auto func_scale_Matrix_int = [&](Matrix<int>& m) {
+  const auto func_scale_Matrix_int = [&](Matrix<int>& m) {
     m = scale_filter_nearest(m, video.spatial_dims(), std::move(m));
   };
   func_scale_Matrix_int(g_lp.mat_static);
@@ -1600,7 +1600,7 @@ void do_render_loops(Args& args) {
       HH_SSTAT(Sdeltatime, deltatime);
       mat_deltatime[yx] = deltatime;
     }
-    auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
+    const auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
       dummy_use(f);
       return mat_deltatime[yx];
     };
@@ -1616,7 +1616,7 @@ void do_render_wind(Args& args) {
   compute_looping_regions();
   do_remap();                                                // for temporal crossfading
   static const bool no_regions = getenv_bool("NO_REGIONS");  // show lack of phase coherence when done per-pixel
-  auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
+  const auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
     const float ssdv = .25f;
     Point pcentroid = g_lp.region_centroid[g_lp.mat_iregion[yx]];  // (y, x, 0.f)
     if (no_regions) pcentroid = Point(float(yx[0]), float(yx[1]), 0.f);
@@ -1670,7 +1670,7 @@ void do_render_harmonize(Args& args) {
     ar_deltaftime[iregion] = deltaftime;
   }
   HH_RSTAT(Sdeltaftime, ar_deltaftime);
-  auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
+  const auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
     dummy_use(f);
     return ar_deltaftime[g_lp.mat_iregion[yx]];
   };
@@ -1817,8 +1817,8 @@ void process_gen(Args& args) {
   string name = args.get_string();
   int ncolors = 3;
   if (name == "slits3" || name == "slits4" || name == "stars5") ncolors = 5;
-  auto func_get_color = [&](int i) {
-    static Array<Pixel> ar_colors = {
+  const auto func_get_color = [&](int i) {
+    static const Array<Pixel> ar_colors = {
         Pixel::red(), Pixel::green(), Pixel::blue(), Pixel(255, 255, 0), Pixel(0, 255, 255),
     };
     i = i % ncolors;
@@ -2130,7 +2130,7 @@ void do_procedure(Args& args) {
       }
       Multigrid<2, Vector4> multigrid(dims);
       {
-        auto func_stitch = [&](int y0, int x0, int y1, int x1, Vector4& vrhs) {  // change to yx0, yx1
+        const auto func_stitch = [&](int y0, int x0, int y1, int x1, Vector4& vrhs) {  // change to yx0, yx1
           if (mask[y0][x0] || mask[y1][x1])
             vrhs += grid0[y1][x1] - grid0[y0][x0];
           else

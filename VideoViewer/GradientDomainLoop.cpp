@@ -146,8 +146,8 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
     }
     {
       HH_STIMER("_fast_relax2");  // compute the right-hand-side of the multigrid system for the output frame f
-      auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const Vector4& pix0, int fi0,
-                            int fi1, int y0, int x0, int y1, int x1, Vector4& vrhs) {
+      const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const Vector4& pix0,
+                                  int fi0, int fi1, int y0, int x0, int y1, int x1, Vector4& vrhs) {
         Vector4 t = Vector4(videofi0(y1, x1)) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (Vector4(video2(fi1, y1, x1)) - Vector4(video2(fi1, y0, x0)))) * .5f;
       };
@@ -190,7 +190,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
       const float wL = 1.f, w = wL, rwL6 = 1.f / (screening_weight + 6.f * w);
       //
       MatrixView<Pixel> mat_videoloopf(videoloop[f]);
-      auto func_update = [&](int y, int x) {
+      const auto func_update = [&](int y, int x) {
         float vnum = screening_weight;
         Vector4 vnei = w * (Vector4(videoloop(fp1, y, x)) + Vector4(videoloop(fm1, y, x)));
         vnum += w * 2.f;
@@ -213,7 +213,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
         Vector4 result = (vnei - mat_rhs(y, x)) / vnum;
         mat_videoloopf(y, x) = result.pixel();
       };
-      auto func_update_interior = [&](int y, int x) {
+      const auto func_update_interior = [&](int y, int x) {
         Vector4 vnei = (Vector4(videoloop(fp1, y, x)) + Vector4(videoloop(fm1, y, x)) +
                         Vector4(mat_videoloopf(y - 1, x)) + Vector4(mat_videoloopf(y + 1, x)) +
                         Vector4(mat_videoloopf(y, x - 1)) + Vector4(mat_videoloopf(y, x + 1)));
@@ -261,8 +261,8 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     if (0) {  // simpler, slightly slower code
       HH_TIMER("__setup_rhs");
       // speedup: for each f, stream rows: extract Matrix<EType> and compute difference values on edges
-      auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
-                            int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
+      const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
+                                  int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
         EType t = MG::get(videofi0(y1, x1), zz) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (MG::get(video2(fi1, y1, x1), zz) - MG::get(video2(fi1, y0, x0), zz))) * .5f;
       };
@@ -466,8 +466,8 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
     Multigrid<3, EType, MultigridPeriodicTemporally> multigrid(dims);
     Timer timer_setup_rhs("__setup_rhs");
     if (0) {  // slower reference implementation
-      auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
-                            int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
+      const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
+                                  int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
         if (fi0 == fi1) return;
         const EType& A = pix0;
         const EType& B = MG::get(videofi0(y1, x1), zz);
@@ -936,7 +936,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   Array<Nv12> rvideoframes(totstreams);  // current image frame in each video stream
   for (auto& frame : rvideoframes) frame.init(sdims);
   Array<int> rvideo_fi(totstreams, std::numeric_limits<int>::max());  // current frame index in each video stream
-  auto func_get_si = [&](int pi, int streami) {
+  const auto func_get_si = [&](int pi, int streami) {
     ASSERTX(pi >= 1 && ar_nstreams.ok(pi));
     ASSERTX(streami >= 0 && streami < ar_nstreams[pi]);
     int si = 0;

@@ -185,7 +185,7 @@ inline void HWbase::redraw_now() {
 inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style, const Pixel& back_color, bool wrap) {
   if (!s.size()) return;
   // use uchar{127} to render all non-ascii characters.
-  auto func_is_nonascii = [](const string& ss) {
+  const auto func_is_nonascii = [](const string& ss) {
     for_size_t(i, ss.size()) {
       uchar ch = static_cast<uchar>(ss[i]);
       if (!(ch >= 32 && ch <= 127)) return true;

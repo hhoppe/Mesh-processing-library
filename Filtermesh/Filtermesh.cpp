@@ -3477,7 +3477,7 @@ void do_signeddistcontour(Args& args) {
   }
   PolygonFaceSpatial psp(30);
   for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
-  auto func_mesh_signed_distance = [&](const Vec3<float>& p) {
+  const auto func_mesh_signed_distance = [&](const Vec3<float>& p) {
     SpatialSearch<PolygonFace*> ss(&psp, p);
     PolygonFace* polyface = ss.next();
     Face f = polyface->face;

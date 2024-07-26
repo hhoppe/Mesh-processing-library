@@ -184,7 +184,7 @@ SHOW(t5);
 }
 {
   // Can a class derived from Vec be automatically converted to a CArrayView argument? yes.
-  auto func = [](CArrayView<int> a) {
+  const auto func = [](CArrayView<int> a) {
     assertx(a.num() == 2);
     SHOW(a[1]);
   };
@@ -264,10 +264,10 @@ SHOW(t5);
   SHOW(ar.tail<3>());
 }
 {
-  auto ar0 = Vec<int, 5>::create([](int i) { return i * 5 + 3; });
+  const auto ar0 = Vec<int, 5>::create([](int i) { return i * 5 + 3; });
   SHOW(ar0);
   auto ar1 = V(1, 2, 3, 4, 5);
-  auto ar2 = map(ar1, [](int e) { return e * 10; });
+  const auto ar2 = map(ar1, [](int e) { return e * 10; });
   SHOW(ar2);
 }
 {

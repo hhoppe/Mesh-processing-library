@@ -8,7 +8,7 @@ int main() {
     ~ST() { showf("~ST(%d)\n", _i); }
     int _i;
   };
-  auto func_construct_array = [](int i0, int n) {  // -> PArray<unique_ptr<ST>, 2>
+  const auto func_construct_array = [](int i0, int n) {  // -> PArray<unique_ptr<ST>, 2>
     PArray<unique_ptr<ST>, 2> ar;
     for_int(i, n) ar.push(make_unique<ST>(i0 + i));
     return ar;
@@ -78,7 +78,7 @@ int main() {
     ar1.push(4);
     ar1.push(3);
     SHOW(ar1);
-    auto func = [](int v) { return v * 1.5f; };
+    const auto func = [](int v) { return v * 1.5f; };
     SHOW(map(ar1, func));
     PArray<int, 3> ar2;
     ar2.push(11);

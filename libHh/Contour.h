@@ -12,7 +12,7 @@
 
 #if 0
 {
-  auto func_eval = [](const Vec3<float>& p) {
+  const auto func_eval = [](const Vec3<float>& p) {
     return p[0] < .3f ? k_Contour_undefined : dist(p, Point(.6f, .6f, .6f)) - .4f;
   };
   if (1) {
@@ -24,7 +24,7 @@
     struct func_contour {
       void operator()(CArrayView<Vec3<float>>){...};
     };
-    auto func_border = [](CArrayView<Vec3<float>>) { ... };
+    const auto func_border = [](CArrayView<Vec3<float>>) { ... };
     Contour3D contour(50, func_eval, func_contour(), func_border);
     contour.march_from(Point(.9f, .6f, .6f));
   }

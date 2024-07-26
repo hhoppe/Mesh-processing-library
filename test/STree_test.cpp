@@ -43,7 +43,7 @@ int main() {
       }
       Vec<int, 2> a;
     };
-    auto func_compare_astruct = [](const astruct& s1, const astruct& s2) {
+    const auto func_compare_astruct = [](const astruct& s1, const astruct& s2) {
       if (s1.a[0] != s2.a[0]) return s1.a[0] - s2.a[0];
       return s1.a[1] - s2.a[1];
     };

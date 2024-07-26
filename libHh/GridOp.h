@@ -386,7 +386,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   int ioutmax = nx;
   while (ioutmax > ioutmin && ar_pixelindex0[ioutmax - 1] + nk > cx) --ioutmax;
   assertx(0 <= ioutmin && ioutmin <= ioutmax && ioutmax <= nx);
-  auto func = [&](const Vec<int, D>& u) {
+  const auto func = [&](const Vec<int, D>& u) {
     int x = u[d];
     T v;
     my_zero(v);
@@ -397,7 +397,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     }
     ngrid[u] = v;
   };
-  auto func_interior = [&](const Vec<int, D>& u) {
+  const auto func_interior = [&](const Vec<int, D>& u) {
     int x = u[d];
     const Vec<int, D> u0 = u.with(d, ar_pixelindex0[x]);
     size_t i0 = ravel_index(dims, u0);
@@ -583,7 +583,7 @@ template <int D, typename T, int DD>
 void scale_filter_nearest_aux(Specialize<DD>, CGridView<D, T> grid, GridView<D, T> ngrid,
                               const Vec<Array<int>, D>& maps) {
   assertx(D != 2 && D != 3);  // specialized below
-  auto func = [&](const Vec<int, D>& u) {
+  const auto func = [&](const Vec<int, D>& u) {
     Vec<int, D> uu;
     for_int(d, D) uu[d] = maps[d][u[d]];
     ngrid[u] = grid[uu];
@@ -723,7 +723,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
   int ioutmin = min(r, nx);
   int ioutmax = max(ioutmin, nx - r);
   assertx(0 <= ioutmin && ioutmin <= ioutmax && ioutmax <= nx);
-  auto func = [&](const Vec<int, D>& u) {
+  const auto func = [&](const Vec<int, D>& u) {
     int x = u[d];
     Vector4i v{0};
     for_int(k, nk) {
@@ -734,7 +734,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     }
     ngrid[u] = ((v + fach) >> ishift).pixel();
   };
-  auto func_interior = [&](const Vec<int, D>& u) {
+  const auto func_interior = [&](const Vec<int, D>& u) {
     int x = u[d];
     const Vec<int, D> u0 = u.with(d, x - r);
     size_t i0 = ravel_index(dims, u0);

@@ -170,7 +170,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
   assertx(reinterpret_cast<uintptr_t>(bufP) % 4 == 0);
   // Filtervideo ~/proj/videoloops/data/test/HDbrink8h.mp4 -stat   _read_video times for routines below:
   // 0.27 sec (no conversion), 1.00 sec, 0.70 sec, 0.55 sec, 0.48 sec, 0.34 sec
-  auto clamp_4 = [](int a, int b, int c, int d) {
+  const auto clamp_4 = [](int a, int b, int c, int d) {
     return ((clamp_to_uint8(a) << 0) | (clamp_to_uint8(b) << 8) | (clamp_to_uint8(c) << 16) |
             (clamp_to_uint8(d) << 24));
   };
@@ -314,7 +314,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     {
       const uint8_t* p = frame.data()->data();
       assertx(reinterpret_cast<uintptr_t>(p) % 4 == 0);
-      auto func_enc_Y = [](const uint8_t* pp) {
+      const auto func_enc_Y = [](const uint8_t* pp) {
         return uint8_t(((66 * int(pp[0]) + 129 * int(pp[1]) + 25 * int(pp[2]) + 128) >> 8) + 16);
       };
       for_int(i, frame.ysize() * frame.xsize() / 4) {
@@ -375,7 +375,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       }
     }
   } else if (0) {
-    auto func_enc_Y = [](int r, int g, int b) { return uint8_t(((66 * r + 129 * g + 25 * b + 128) >> 8) + 16); };
+    const auto func_enc_Y = [](int r, int g, int b) { return uint8_t(((66 * r + 129 * g + 25 * b + 128) >> 8) + 16); };
     for_int(y, frame.ysize() / 2) {
       const uint8_t* bufP0 = frame[y * 2 + 0].data()->data();
       const uint8_t* bufP1 = frame[y * 2 + 1].data()->data();
@@ -400,8 +400,10 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         // bufUV[1] = RGB_to_V(avg);
         int ravg = (r00 + r01 + r10 + r11 + 2) / 4, gavg = (g00 + g01 + g10 + g11 + 2) / 4,
             bavg = (b00 + b01 + b10 + b11 + 2) / 4;
-        auto enc_U = [](int r, int g, int b) { return uint8_t(((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128); };
-        auto enc_V = [](int r, int g, int b) { return uint8_t(((112 * r - 94 * g - 18 * b + 128) >> 8) + 128); };
+        const auto enc_U = [](int r, int g, int b) {
+          return uint8_t(((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128);
+        };
+        const auto enc_V = [](int r, int g, int b) { return uint8_t(((112 * r - 94 * g - 18 * b + 128) >> 8) + 128); };
         bufUV[0] = enc_U(ravg, gavg, bavg);
         bufUV[1] = enc_V(ravg, gavg, bavg);
         bufUV += 2;

@@ -24,7 +24,7 @@ int main() {
     assertx(!set.contains("third"));
   }
   {
-    auto func_get = [](const Set<Vector>& hs, const Vector& p) {
+    const auto func_get = [](const Set<Vector>& hs, const Vector& p) {
       SHOW("");
       SHOW(p);
       bool present;

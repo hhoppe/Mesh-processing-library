@@ -17,7 +17,7 @@ int main() {
   SHOW(hlr.draw_point(Point(.20f, .25f, .3f)));
   SHOW(hlr.draw_point(Point(.35f, .25f, .3f)));
   SHOW(hlr.draw_point(Point(.45f, .25f, .3f)));
-  auto func_cbfunc = [](const Point& p1, const Point& p2) {
+  const auto func_cbfunc = [](const Point& p1, const Point& p2) {
     showf("Segment between:\n");
     SHOW(p1);
     SHOW(p2);

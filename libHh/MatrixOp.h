@@ -469,7 +469,7 @@ template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec) {
   //    Georgia Tech TR GIT-GVU-99-37, 1999.
   // See also version in HTest.cpp function do_lloyd_relax() which supports spatially non-uniform metric.
   // Lower precision than RangeOp.h template mag2<>
-  auto lmag2 = [](const Vec2<T>& v) { return square(v[0]) + square(v[1]); };
+  const auto lmag2 = [](const Vec2<T>& v) { return square(v[0]) + square(v[1]); };
   for_intL(y, 1, mvec.ysize()) {
     for_int(x, mvec.xsize()) {
       auto vt = mvec[y - 1][x] + V(T{-1}, T{0});

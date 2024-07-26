@@ -340,7 +340,7 @@ class Multigrid : noncopyable {
     const float wL = get_wL(dims), rwLnum = 1.f / ((2.f * D * wL) + _screening_weight);
     // const bool is_finest = same_size(grid_rhs, _grid_rhs);
     // atomic<int64_t> g_nfast{0}, g_nslow{0};
-    auto func_update = [&](const Vec<int, D>& u) {  // Gauss-Seidel update of value at u
+    const auto func_update = [&](const Vec<int, D>& u) {  // Gauss-Seidel update of value at u
       // ++g_nslow;
       T vnei;
       my_zero(vnei);
@@ -367,7 +367,7 @@ class Multigrid : noncopyable {
       grid_result[u] = (vnei - grid_rhs[u]) / vnum;
     };
     const Vec<int, D> ar_interior_offsets = generate_interior_offsets(dims);
-    auto func_update_interior = [&](size_t i) {
+    const auto func_update_interior = [&](size_t i) {
       // added "true &&" to prevent taking a reference to the constexpr
       // added "if (1)" to avoid warnings about unreachable code
       if (1) ASSERTX(true && b_default_metric);
@@ -426,7 +426,7 @@ class Multigrid : noncopyable {
         const bool local_iter = true;
         for (const auto& eo : range(even_odd)) {  // { 0|1, 0, 0, ... }
           // SHOW(eo);
-          auto func_relax_column = [&](const Vec<int, D>& coli) {
+          const auto func_relax_column = [&](const Vec<int, D>& coli) {
             Vec<int, D> uL = general_clamp((coli * even_odd + eo + 0) * col_dims - voverlap, ntimes<D>(0), dims);
             Vec<int, D> uU = general_clamp((coli * even_odd + eo + 1) * col_dims + voverlap, ntimes<D>(0), dims);
             // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
@@ -496,7 +496,7 @@ class Multigrid : noncopyable {
     const Vec<int, D> dims = grid_rhs.dims();
     int ny = dims[0], nx = dims[1];
     const float wL = get_wL(dims), rwL4 = 1.f / (4.f * wL + _screening_weight);
-    auto func_update = [&](int y, int x) {
+    const auto func_update = [&](int y, int x) {
       T vnei;
       my_zero(vnei);
       float w, vnum = _screening_weight;  // or 0.f
@@ -532,7 +532,7 @@ class Multigrid : noncopyable {
       }
       grid_result[y][x] = (vnei - grid_rhs[y][x]) / vnum;
     };
-    auto func_update_interior = [&](int y, int x) {
+    const auto func_update_interior = [&](int y, int x) {
       if (1) ASSERTX(true && b_default_metric);
       grid_result[y][x] = (((grid_result[y - 1][x + 0] + grid_result[y + 1][x + 0] + grid_result[y + 0][x - 1] +
                              grid_result[y + 0][x + 1]) *
@@ -591,7 +591,7 @@ class Multigrid : noncopyable {
     const Vec<int, D> dims = grid_rhs.dims();
     const float wL = get_wL(dims);
     Grid<D, T> grid_residual(dims);
-    auto func = [&](const Vec<int, D>& u) {
+    const auto func = [&](const Vec<int, D>& u) {
       T vnei;
       my_zero(vnei);
       float vnum = _screening_weight;  // or 0.f
@@ -616,7 +616,7 @@ class Multigrid : noncopyable {
       grid_residual[u] = grid_rhs[u] - (vnei - vnum * grid_result[u]);  // residual of Laplacian
     };
     const Vec<int, D> ar_interior_offsets = generate_interior_offsets(dims);
-    auto func_interior = [&](size_t i) {
+    const auto func_interior = [&](size_t i) {
       if (1) ASSERTX(true && b_default_metric);
       T vnei;
       my_zero(vnei);
@@ -656,7 +656,7 @@ class Multigrid : noncopyable {
     int ny = dims[0], nx = dims[1];
     const float wL = get_wL(dims), wL4 = (_screening_weight + wL * 4.f);
     Grid<D, T> grid_residual(dims);
-    auto func = [&](int y, int x) {
+    const auto func = [&](int y, int x) {
       T vnei;
       my_zero(vnei);
       float w, vnum = _screening_weight;  // or 0.f

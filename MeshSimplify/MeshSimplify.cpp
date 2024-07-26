@@ -4897,8 +4897,7 @@ void write_original_indices() {
   const Array<int> base_mesh_indices{transform(mesh.ordered_vertices(), [&](Vertex v) { return mesh.vertex_id(v); })};
   WFile fi(original_indices);
   fi() << sform("%d\n", base_mesh_indices.num() + ar_vt_indices.num());
-  for (int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices)))
-    fi() << sform("%d\n", vi);
+  for (int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices))) fi() << sform("%d\n", vi);
 }
 
 }  // namespace

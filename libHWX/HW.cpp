@@ -813,7 +813,7 @@ bool HW::get_pointer(Vec2<int>& yx) {
 bool HW::get_key_modifier(EModifier modifier) {
   Vec<char, 32> keys;
   XQueryKeymap(_display, keys.data());
-  auto key_pressed = [&](KeySym keysym) {
+  const auto key_pressed = [&](KeySym keysym) {
     int keycode = XKeysymToKeycode(_display, keysym);
     return !!(keys[keycode / 8] & (1 << (keycode % 8)));
   };

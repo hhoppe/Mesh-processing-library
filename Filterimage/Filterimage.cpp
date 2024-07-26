@@ -1758,7 +1758,7 @@ void do_superresolution(Args& args) {
         Vec2<int> iyx = convert<int>(floor(fyx));
         // Get target sample itself.
         float slum = to_YIQ(pix)[0];  // for bilinear, =bilinear(mlum, fy, fx);
-        auto func_minmax = [&](float v) {
+        const auto func_minmax = [&](float v) {
           if (v < lmin) lmin = v;
           if (v > lmax) lmax = v;
         };
@@ -1812,7 +1812,7 @@ void do_istoroidal() {
       matrix = transpose(omatrix);
     }
     Stat stat_int, stat_bnd, stat_rnd;
-    auto func_diff_rows = [&](int i1, int i0) {
+    const auto func_diff_rows = [&](int i1, int i0) {
       double diff = 0.;
       for_int(ix, matrix.xsize()) {
         float err2 = 0.f;
@@ -1954,7 +1954,7 @@ void do_gdfill() {
   HH_TIMER("_gdfill");
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has visible difference
   assertx(image.zsize() == 4);
-  auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
+  const auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
   Vector4 vmean{};
   {
     for_coords(image.dims(), [&](const Vec2<int>& yx) {  // sequential due to reduction
@@ -2047,9 +2047,11 @@ void output_contour(int gn, float contour_value) {
   Vec2<FilterBnd> filterbs = g_filterbs;
   if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
     filterbs = inverse_convolution(matrix, filterbs);
-  auto func_eval = [&](const Vec2<float>& p) -> float { return sample_domain(matrix, p, filterbs) - contour_value; };
+  const auto func_eval = [&](const Vec2<float>& p) -> float {
+    return sample_domain(matrix, p, filterbs) - contour_value;
+  };
   A3dElem el;
-  auto func_contour = [&](CArrayView<Vec2<float>> poly) {
+  const auto func_contour = [&](CArrayView<Vec2<float>> poly) {
     el.init(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
       Point p(poly[i][1], poly[i][0], 0.f);
@@ -2091,7 +2093,7 @@ void do_poisson() {
   // Incorporate both gradient-matching and conformality (LSCM) constraints.
   assertx(min(image.dims()) >= 2);
   const int nconstraints = !fixedbnd ? 2 : image.xsize() * 2 + image.ysize() * 2;
-  auto func_default_pos = [&](const Vec2<int>& yx) {
+  const auto func_default_pos = [&](const Vec2<int>& yx) {
     int maxn = max(image.dims());
     return Point(((maxn - image.dim(1)) / 2.f + yx[1]) / (maxn - 1.f),
                  ((maxn - image.dim(0)) / 2.f + yx[0]) / (maxn - 1.f), 0.f);

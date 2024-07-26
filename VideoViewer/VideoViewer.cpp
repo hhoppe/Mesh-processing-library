@@ -318,7 +318,7 @@ class DirMediaFilenames {
     if (cur_time > s.time_updated + k_max_time_before_refresh || !file_found) {
       s.time_updated = cur_time;
       s.filenames = sort_dir(directory, get_files_in_directory(directory));
-      auto func_not_media = [](const string& s2) { return !filename_is_media(s2); };
+      const auto func_not_media = [](const string& s2) { return !filename_is_media(s2); };
       s.filenames.erase(std::remove_if(s.filenames.begin(), s.filenames.end(), func_not_media), s.filenames.end());
     }
     return s.filenames;
@@ -1149,7 +1149,7 @@ bool DerivedHW::key_press(string skey) {
   static string prev_skey1, prev_skey2;
   prev_skey2 = prev_skey1;
   prev_skey1 = skey;
-  auto func_switch_ob = [&](int obi) {
+  const auto func_switch_ob = [&](int obi) {
     int framenum = getob(obi)._framenum;
     if (getob(obi)._dims == getob()._dims) framenum = g_framenum;  // stay synchronized
     set_video_frame(obi, float(framenum));
@@ -2150,7 +2150,9 @@ bool DerivedHW::key_press(string skey) {
           Video nvideo;
           VideoNv12 nvideo_nv12;
           const float contrast = getenv_float("DIFFERENCE_CONTRAST", 4.f);
-          auto difference = [contrast](uint8_t a, uint8_t b) { return clamp_to_uint8(int((a - b) * contrast) + 128); };
+          const auto difference = [contrast](uint8_t a, uint8_t b) {
+            return clamp_to_uint8(int((a - b) * contrast) + 128);
+          };
           if (ob1._video.size()) {
             nvideo.init(ob1._video.dims());
             parallel_for_each(range(nvideo.size()), [&](const size_t i) {
@@ -3075,7 +3077,7 @@ void render_image() {
     if (!is_init) {
       is_init = true;
       {
-        auto func_get_line = [](const string& lines, int line_index) -> string {
+        const auto func_get_line = [](const string& lines, int line_index) -> string {
           string::size_type i = 0;
           for_int(count, line_index - 1) {
             i = lines.find('\n', i);
@@ -3085,7 +3087,7 @@ void render_image() {
           string::size_type j = lines.find('\n', i);
           return lines.substr(i, j - i + 1);
         };
-        auto func_err = [&](const string& shadertype, const string& shader, const string& serr) {
+        const auto func_err = [&](const string& shadertype, const string& shader, const string& serr) {
           showf("OpenGL %s compilation error: %s", shadertype.c_str(), serr.data());
           int line_index;
           if (sscanf(serr.c_str(), "0(%d)", &line_index) == 1) {
@@ -3094,7 +3096,7 @@ void render_image() {
           }
           exit_immediately(1);
         };
-        auto func_compile_shader = [&](GLuint shader_id, const string& shader_string, GLenum shaderType) {
+        const auto func_compile_shader = [&](GLuint shader_id, const string& shader_string, GLenum shaderType) {
           glShaderSource(shader_id, 1, ArView(shader_string.c_str()).data(),
                          ArView(GLint(shader_string.size())).data());
           glCompileShader(shader_id);

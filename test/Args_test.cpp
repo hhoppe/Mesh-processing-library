@@ -47,13 +47,13 @@ void phase1(int argc, const char** argv) {
 }
 
 void phase2(int argc, const char** argv) {
-  auto do_showar = [](Args& args) {
+  const auto do_showar = [](Args& args) {
     int i = args.get_int();
     SHOW("showar", i, vec2[i]);
   };
-  auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), vec2); };
-  auto do_file = [](Args& args) { SHOW("reading file", args.get_filename(), vec2); };
-  auto do_string = [](Args& args) { SHOW("string", args.get_string(), vec2); };
+  const auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), vec2); };
+  const auto do_file = [](Args& args) { SHOW("reading file", args.get_filename(), vec2); };
+  const auto do_string = [](Args& args) { SHOW("string", args.get_string(), vec2); };
   SHOW(ArView(argv, argc));
   ParseArgs args(argc, argv);
   HH_ARGSF(flag2, ": enable flag");

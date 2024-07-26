@@ -38,7 +38,7 @@ class PolygonSpatial : public ObjectSpatial<details::polygon_approx_distance2, d
     assertx(ppoly->num() == 3);
     Polygon poly = *ppoly;  // copied because modified below
     const Bbox bbox{poly};
-    auto func_polygon_in_bbox = [&](const auto& spatial_bbox) -> bool {
+    const auto func_polygon_in_bbox = [&](const auto& spatial_bbox) -> bool {
       for_int(c, 3) {
         if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
       }
@@ -53,7 +53,7 @@ class PolygonSpatial : public ObjectSpatial<details::polygon_approx_distance2, d
     Vector vray = p2 - p1;
     bool foundint = false;
     float ret_fmin;
-    auto func_test_polygon_with_ray = [&](Univ id) -> bool {
+    const auto func_test_polygon_with_ray = [&](Univ id) -> bool {
       const Polygon* ppoly = Conv<const Polygon*>::d(id);
       Point pint;
       if (!ppoly->intersect_segment(p1, p2, pint)) return false;

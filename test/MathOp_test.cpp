@@ -71,7 +71,7 @@ int main() {
   }
   if (0) {
     float g_float_zero = g_unoptimized_zero ? 1.f : 0.f;
-    auto func_show_float = [](float a) {
+    const auto func_show_float = [](float a) {
       union {
         float f;
         uint32_t ui;

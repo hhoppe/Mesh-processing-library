@@ -12,7 +12,7 @@ void PolygonFaceSpatial::enter(const PolygonFace* ppolyface) {
   assertx(opoly.num() == 3);
   Polygon poly = opoly;
   const Bbox bbox{poly};
-  auto func_polygonface_in_bbox = [&](const Bbox<float, 3>& spatial_bbox) -> bool {
+  const auto func_polygonface_in_bbox = [&](const Bbox<float, 3>& spatial_bbox) -> bool {
     for_int(c, 3) {
       if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
     }
@@ -30,7 +30,7 @@ bool PolygonFaceSpatial::first_along_segment(const Point& p1, const Point& p2, c
   bool found_intersection = false;
   float ret_fmin;
   dummy_init(ret_fmin);
-  auto func_test_polygonface_with_ray = [&](Univ id) -> bool {
+  const auto func_test_polygonface_with_ray = [&](Univ id) -> bool {
     const PolygonFace* ppolyface = Conv<const PolygonFace*>::d(id);
     const Polygon& poly = ppolyface->poly;
     Point pint;

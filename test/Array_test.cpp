@@ -12,7 +12,7 @@ int main() {
     ~ST() { showf("~ST(%d)\n", _i); }
     int _i;
   };
-  auto func_make_array = [](int i0, int n) {  // -> Array<unique_ptr<ST>>
+  const auto func_make_array = [](int i0, int n) {  // -> Array<unique_ptr<ST>>
     Array<unique_ptr<ST>> ar;
     for_int(i, n) ar.push(make_unique<ST>(i0 + i));
     return ar;

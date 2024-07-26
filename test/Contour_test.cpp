@@ -18,7 +18,7 @@ void test2D() {
       return f;
     }
   };
-  auto func_polylinetoa3d = [](CArrayView<Vec2<float>> poly, A3dElem& el) {
+  const auto func_polylinetoa3d = [](CArrayView<Vec2<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
       el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]), Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
@@ -30,11 +30,11 @@ void test2D() {
   WFile fborder("Contour_test.2Dborder");
   WSA3dStream wborder(fborder());
   A3dElem el;
-  auto func_contour = [&](CArrayView<Vec2<float>> poly) {
+  const auto func_contour = [&](CArrayView<Vec2<float>> poly) {
     func_polylinetoa3d(poly, el);
     wcontour.write(el);
   };
-  auto func_border = [&](CArrayView<Vec2<float>> poly) {
+  const auto func_border = [&](CArrayView<Vec2<float>> poly) {
     func_polylinetoa3d(poly, el);
     wborder.write(el);
   };
@@ -61,16 +61,16 @@ void test3D() {
   WSA3dStream wcontour(fcontour());
   WFile fborder("Contour_test.3Dborder");
   WSA3dStream wborder(fborder());
-  auto func_polygontoa3d = [](CArrayView<Vec3<float>> poly, A3dElem& el) {
+  const auto func_polygontoa3d = [](CArrayView<Vec3<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polygon);
     for_int(i, poly.num()) el.push(A3dVertex(poly[i], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
   };
   A3dElem el;
-  auto func_contour = [&](CArrayView<Vec3<float>> poly) {
+  const auto func_contour = [&](CArrayView<Vec3<float>> poly) {
     func_polygontoa3d(poly, el);
     wcontour.write(el);
   };
-  auto func_border = [&](CArrayView<Vec3<float>> poly) {
+  const auto func_border = [&](CArrayView<Vec3<float>> poly) {
     func_polygontoa3d(poly, el);
     wborder.write(el);
   };
@@ -140,7 +140,7 @@ void do_densemonkey() {
 
 void do_sphere() {
   static constexpr float k_radius = .4f;
-  auto func_sphere = [](const Vec3<float>& p) {
+  const auto func_sphere = [](const Vec3<float>& p) {
     float r = dist(p, V(.5f, .5f, .5f));
     if (0) {
       return square(r) - square(k_radius);
@@ -164,7 +164,7 @@ void do_sphere() {
 int main() {
   if (0) {
   } else if (getenv_bool("PARTIAL_SPHERE")) {
-    auto func_eval = [](const Point& p) {
+    const auto func_eval = [](const Point& p) {
       return p[0] < .3f ? k_Contour_undefined : dist(p, Point(.5f, .5f, .5f)) - .4f;
     };
     GMesh mesh;

@@ -186,8 +186,8 @@ int main(int argc, const char** argv) {
     return 0;
   }
   if (0) {  // debug the iterators with normal and interior functions
-    auto func_norm = [&](int y, int x) { showf("(%2d, %2d) norm\n", y, x); };
-    auto func_interior = [&](int y, int x) { showf("(%2d, %2d) interior\n", y, x); };
+    const auto func_norm = [&](int y, int x) { showf("(%2d, %2d) norm\n", y, x); };
+    const auto func_interior = [&](int y, int x) { showf("(%2d, %2d) interior\n", y, x); };
     SHOW("beg");
     for_2DL_interior(0, 4, 0, 4, func_norm, func_interior);
     SHOW("beg");
@@ -207,8 +207,8 @@ int main(int argc, const char** argv) {
     return 0;
   }
   if (0) {  // debug the iterators with normal and interior functions
-    auto func_norm = [&](const Vec2<int>& u) { showf("%s norm\n", make_string(u).c_str()); };
-    auto func_interior = [&](size_t i) {
+    const auto func_norm = [&](const Vec2<int>& u) { showf("%s norm\n", make_string(u).c_str()); };
+    const auto func_interior = [&](size_t i) {
       Vec2<int> u{int(i / 5), int(i % 5)};
       showf("%s interior\n", make_string(u).c_str());
     };
@@ -326,7 +326,7 @@ int main(int argc, const char** argv) {
       double mean_orig;
       {
         // HH_TIMER("_setup_stitch");
-        auto func_stitch = [&](int y0, int x0, int y1, int x1, double& vrhs) {
+        const auto func_stitch = [&](int y0, int x0, int y1, int x1, double& vrhs) {
           int label0 = grid_labels[y0][x0];
           int label1 = grid_labels[y1][x1];
           if (1) vrhs += (grids[label0][y1][x1][c] - grids[label0][y0][x0][c]) * .5f;

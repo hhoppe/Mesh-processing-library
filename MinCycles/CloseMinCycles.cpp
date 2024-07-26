@@ -357,7 +357,7 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
   farthest_vertex = nullptr;
   num_edges = std::numeric_limits<int>::max();
   Map<Vertex, Vertex> map_vtouch;
-  auto v_vtouch = [&](Vertex v) -> Vertex& { return map_vtouch[v]; };
+  const auto v_vtouch = [&](Vertex v) -> Vertex& { return map_vtouch[v]; };
   // The priority queue on Vertex v contains two types of prioritized events:
   // (1) the BFS/Dijkstra advancing front (priority is Dijkstra path distance from vseed to v)
   //       through sequence of v_vprev(v) relationships.

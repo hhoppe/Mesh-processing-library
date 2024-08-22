@@ -667,8 +667,7 @@ template <typename Iterator, typename Func> struct FilteredIterator {
   decltype(auto) operator*() const { return *_iter; }
   type& operator++() {
     ++_iter;
-    while (_iter != _end && !_func(*_iter))
-      ++_iter;
+    while (_iter != _end && !_func(*_iter)) ++_iter;
     return *this;
   }
   type& operator=(const type& rhs) {
@@ -685,8 +684,7 @@ template <typename Range, typename Func> struct FilteredRange {
     using std::begin, std::end;
     using Iterator = std::decay_t<decltype(begin(_range))>;
     auto iterator = FilteredIterator<Iterator, Func>{begin(_range), end(_range), _func};
-    while (iterator != this->end() && !_func(*iterator))
-      ++iterator;
+    while (iterator != this->end() && !_func(*iterator)) ++iterator;
     return iterator;
   }
   auto end() const {

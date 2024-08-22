@@ -231,7 +231,7 @@ void split_mesh_along_octa(GMesh& mesh) {
 
   const auto split_edge = [&](Edge e, int axis) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    const Point& sph1 = v_sph(v1), sph2 = v_sph(v2);
+    const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
     const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
@@ -253,7 +253,7 @@ void split_mesh_along_octa(GMesh& mesh) {
   for (Vertex v : new_vertices) {
     for (Edge e : mesh.edges(v)) {
       Vertex v2 = mesh.opp_vertex(v, e);
-      if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {  // was 1e-6f ??
+      if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
         Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
         mesh.collapse_edge_vertex(e, v2);
         break;
@@ -262,7 +262,7 @@ void split_mesh_along_octa(GMesh& mesh) {
   }
 }
 
-// Next two functions copied from SphereSample.cpp ?
+// Next two functions copied from SphereSample.cpp ??
 Bary get_bary(const Point& p, const Vec<Point, 3>& pt) {
   // Spherically project the point onto the triangle spanning pt[3],
   //  i.e. intersect the segment (origin, p) with the triangle.
@@ -375,7 +375,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), [&](Vertex v2) { return v_sph(v2); });
             const Point sph_center = mean(sphs);
             Point sph_perturbed = normalized(interp(sph, sph_center, 1.f - .2f));
-            hintf = nullptr;                                                         // ??
+            hintf = nullptr;  // ??
             auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
             search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
             // Now use the obtained face f but search for the unperturbed sph.
@@ -606,7 +606,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(split_meridian, ": split mesh faces at prime meridian (zero lon)");
   HH_ARGSP(orig_mesh, "file.m : file containing the original mesh");
   HH_ARGSP(orig_indices, "file.txt : file containing the original vertex indices");
-  HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph by mapping thru inverse of a spherical map");
+  HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph by mapping through inverse of a spherical map");
   HH_ARGSP(keep_uv, "bool : do not overwrite GMesh uv with lonlat coordinates");
   HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, orig_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");

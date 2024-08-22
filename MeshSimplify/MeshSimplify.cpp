@@ -3486,8 +3486,7 @@ double evaluate_aps(Edge e, int ii) {
       const auto result = intersect_segments(p1, p, p2, pp);
       if (result) {
         const auto& [intersection, t12, t34] = result.value();
-        const Point pp1 = interp(pv, mesh.point(v1), t12),
-                    pp2 = interp(mesh.point(vv), mesh.point(v2), t34);
+        const Point pp1 = interp(pv, mesh.point(v1), t12), pp2 = interp(mesh.point(vv), mesh.point(v2), t34);
         max_mag2 = max(max_mag2, dist2<double>(pp1, pp2));
       }
     }

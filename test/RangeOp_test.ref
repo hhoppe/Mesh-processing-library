@@ -119,6 +119,10 @@ result = Array<int>(17) {
   16
   17
 }
+ar2 = Array<int>(2) {
+  4
+  5
+}
 indices = Array<int>(3) {
   0
   1

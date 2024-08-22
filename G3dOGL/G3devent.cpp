@@ -778,7 +778,7 @@ bool KeyPressed(const string& ps) {
       case '@':
         ch = 0;
         if (!assertw(cob >= g_obs.first)) return true;
-        if (!g_obs[cob].get_mesh()->num_vertices()) {
+        if (g_obs[cob].get_mesh()->empty()) {
           SHOW("empty mesh");
           break;
         }

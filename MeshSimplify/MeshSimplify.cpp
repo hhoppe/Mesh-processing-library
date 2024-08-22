@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <charconv>  // to_chars(), chars_format
+#include <optional>
 
 #include "MeshSimplify/BQem.h"
 #include "libHh/A3dStream.h"  // A3dColor
@@ -616,7 +617,7 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
     }
   }
   float penalty = dihallow ? k_bad_dih : BIGFLOAT;
-  return bad ? penalty : 0;
+  return bad ? penalty : 0.f;
 }
 
 // Given a corner, find its new wedge_id in nn.
@@ -3402,131 +3403,96 @@ bool try_ecol_legal(Edge e, Vertex v1, Vertex v2, int v1nse, int v2nse) {
   return true;
 }
 
-bool intersect_lines(Point p1, Point p2, Point p3, Point p4, float& ia, float& ib) {
-  p1[2] = p2[2] = p3[2] = p4[2] = 1.f;
-  Point pi = to_Point(cross(cross(to_Vector(p1), to_Vector(p2)), cross(to_Vector(p3), to_Vector(p4))));
-  if (!pi[2]) return false;
-  pi[0] /= pi[2];
-  pi[1] /= pi[2];
-  pi[2] = 0;
-  ia = 1.f - dot(p2 - p1, pi - p1) / dot(p2 - p1, p2 - p1);
-  ib = 1.f - dot(p4 - p3, pi - p3) / dot(p4 - p3, p4 - p3);
-  return ia >= 0.f && ia <= 1.f && ib >= 0.f && ib <= 1.f;
-}
+template <typename Precision = double>
+std::optional<std::tuple<UV, float, float>> intersect_segments(const UV& p1, const UV& p2, const UV& p3,
+                                                               const UV& p4) {
+  const Precision dx12 = Precision{p2[0]} - p1[0];
+  const Precision dy12 = Precision{p2[1]} - p1[1];
+  const Precision dx34 = Precision{p4[0]} - p3[0];
+  const Precision dy34 = Precision{p4[1]} - p3[1];
+  const Precision denominator = dx12 * dy34 - dy12 * dx34;
+  if (denominator == 0.0f) return {};  // The segments are parallel or collinear.
 
-inline Point c_uv(Corner c) { return Point(c_winfo(c).uv[0], c_winfo(c).uv[1], 0.f); }
+  const Precision dx13 = Precision{p3[0]} - p1[0];
+  const Precision dy13 = Precision{p3[1]} - p1[1];
+  const Precision t12 = (dx13 * dy34 - dy13 * dx34) / denominator;
+  const Precision t34 = (dx13 * dy12 - dy13 * dx12) / denominator;
+  if (t12 < 0.0f || t12 > 1.0f || t34 < 0.0f || t34 > 1.0f) return {};  // The intersection is outside the segments.
+
+  const UV intersection{float(p1[0] + t12 * dx12), float(p1[1] + t12 * dy12)};
+  return std::make_tuple(intersection, float(t12), float(t34));
+}
 
 void check_ccw(Vertex v) {
   for (Face f : mesh.faces(v)) {
-    const Vec3<Point> p = map(mesh.triangle_corners(f), [&](Corner c) { return c_uv(c); });
-    assertw(cross(p[0], p[1], p[2])[2] >= 0.f);
+    const Vec3<UV> pt = map(mesh.triangle_corners(f), [&](Corner c) { return c_winfo(c).uv; });
+    assertw(signed_area(pt[0], pt[1], pt[2]) >= 0.f);
   }
-}
-
-bool valid_aps(Edge e, Vertex v1, Vertex v2) {
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  for (Corner c : mesh.corners(v1)) {
-    Corner cs1 = mesh.ccw_face_corner(c);
-    Corner cs2 = mesh.clw_face_corner(c);
-    Vertex vs1 = mesh.corner_vertex(cs1);
-    Vertex vs2 = mesh.corner_vertex(cs2);
-    if (vs1 == v2 || vs2 == v2) continue;
-    Face f = mesh.corner_face(c);
-    Face ft = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
-    const Vec3<Point> pa{c_uv(mesh.corner(v2, ft)), c_uv(cs1), c_uv(cs2)};  // TODO: Use 2D coordinates.
-    if (my_sqrt(area2(pa)) == 0.f) {
-      Warning("Not valid APS - Area");  // In principle, should never occur with strict_sharp = 2.
-      return false;
-    }
-    const Vector vv = cross(pa[0], pa[1], pa[2]);
-    if (vv[2] < 0.f) {
-      Warning("Not valid APS - Cross");
-      return false;
-    }
-  }
-  return true;
-}
-
-int inside_triangle(const Point& pt1, const Vec3<Point>& pt) {
-  const float eps = 1e-6f;
-  return (cross(pt[1] - pt[0], pt1 - pt[0])[2] >= -eps && cross(pt[2] - pt[1], pt1 - pt[1])[2] >= -eps &&
-          cross(pt[0] - pt[2], pt1 - pt[2])[2] >= -eps);
-}
-
-// Return the squared geometric distance from the 3D position of vertex v1 to the surface mesh point with the same
-// parametric coordinate after the collapse of the edge e = {v1, v2} into the vertex v2.
-float aps_dist2_v1(Edge e, Vertex v1, Vertex v2) {
-  float max_mag2 = -1.f;
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  for (Corner c1 : mesh.corners(v1)) {
-    Face f = mesh.corner_face(c1);
-    if (f == f1 || f == f2) continue;  // For speedup, skip face as it becomes degenerate after the edge collapse.
-    Vec3<Point> pv, pt;                // TODO: use 2D coordinates and operations for pt.
-    int i = 0;
-    for (Corner c : mesh.corners(f)) {
-      Vertex v = mesh.corner_vertex(c);
-      if (v == v1) {
-        Face fout = f_matid(f) == f_matid(f1) ? f1 : (assertx(f2 && f_matid(f) == f_matid(f2)), f2);
-        pv[i] = mesh.point(v2);
-        pt[i] = c_uv(mesh.corner(v2, fout));
-      } else {
-        pv[i] = mesh.point(v);
-        pt[i] = c_uv(c);
-      }
-      i++;
-    }
-    const Point pt1 = c_uv(c1);
-    if (inside_triangle(pt1, pt)) {
-      Bary bary;
-      Point clp;
-      const float d2 = project_point_triangle2(pt1, pt[0], pt[1], pt[2], bary, clp);
-      dummy_use(d2);
-      const Point pe = interp(pv[0], pv[1], pv[2], bary);
-      max_mag2 = max(max_mag2, dist2(pe, mesh.point(v1)));
-    }
-  }
-  if (max_mag2 == -1.f) Warning("Vertex is not inside any new face in the texture domain");
-  return max_mag2;
 }
 
 // Return the maximum displacement of any point on the mesh surface to its corresponding point with the same
-// parametric coordinate after the collapse of the edge e at position ii which is 0 or 2, or -1. if illegal.
-// This max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
+// parametric coordinate after the collapse of the edge e at position ii (0 or 2), or return -1.0 if illegal.
+// This metric corresponds to "Appearance-preserving simplification" [Cohen et al 1998].
+// The max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
+// TODO: Use 2D coordinates.
 double evaluate_aps(Edge e, int ii) {
   assertx(ii == 0 || ii == 2);
-  Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // v1 is the removed vertex..
+  Vertex v1 = ii == 2 ? mesh.vertex2(e) : mesh.vertex1(e);  // The removed vertex is v1.
   Vertex v2 = ii == 2 ? mesh.vertex1(e) : mesh.vertex2(e);
-  if (!valid_aps(e, v1, v2)) return -1.;
-  // Obtain displacement at removed vertex v1.
-  double max_mag2 = aps_dist2_v1(e, v1, v2);
-  if (max_mag2 == -1.) return -1.;
-  // Also consider displacements at edge-edge crossings.
-  Corner cv1f1 = mesh.corner(v1, mesh.face1(e)), cv1f2 = mesh.corner(v1, mesh.face2(e));
-  for (Vertex v : mesh.vertices(v1)) {
-    if (v == v2) continue;
-    if (edge_sharp(mesh.edge(v1, v))) continue;
-    Point p = c_uv(mesh.corner(v, mesh.face(v, v1)));
-    Point p1 = c_uv(mesh.corner(v1, mesh.face(v, v1)));
-    Point pv = mesh.point(v);
-    for (Vertex vv : mesh.vertices(v1)) {
-      if (vv == v2 || vv == v) continue;
-      if (edge_sharp(mesh.edge(v1, vv))) continue;
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
+  Corner cv1f1 = mesh.corner(v1, f1), cv1f2 = f2 ? mesh.corner(v1, f2) : nullptr;
+  const int wid_v1f1 = c_wedge_id(cv1f1), wid_v1f2 = f2 ? c_wedge_id(cv1f2) : -1;
+
+  // Obtain the squared displacement at the removed vertex v1, and verify parametric bijectivity.
+  double max_mag2 = -1.;
+  for (Corner c : mesh.corners(v1)) {
+    Corner cs1 = mesh.ccw_face_corner(c), cs2 = mesh.clw_face_corner(c);
+    Vertex vs1 = mesh.corner_vertex(cs1), vs2 = mesh.corner_vertex(cs2);
+    if (vs1 == v2 || vs2 == v2) continue;  // Skip the face as it becomes degenerate after the edge collapse.
+    Face f = mesh.corner_face(c);
+    Face ft = c_wedge_id(c) == wid_v1f1 ? f1 : (assertx(f2 && c_wedge_id(c) == wid_v1f2), f2);
+    assertx(f_matid(f) == f_matid(ft));  // (Necessary but not sufficient.)
+    const Vec3<UV> pt{c_winfo(mesh.corner(v2, ft)).uv, c_winfo(cs1).uv, c_winfo(cs2).uv};
+    if (signed_area(pt[0], pt[1], pt[2]) <= 0.f) return -1.;  // Parametric foldover (non-bijectivity).
+    const UV& pt1 = c_winfo(c).uv;
+    const float b0 = signed_area(pt1, pt[1], pt[2]);
+    const float b1 = signed_area(pt1, pt[2], pt[0]);
+    const float b2 = signed_area(pt1, pt[0], pt[1]);
+    if (b0 >= 0.f && b1 >= 0.f && b2 >= 0.f) {
+      const float reciprocal = 1.f / (b0 + b1 + b2);
+      const Bary bary(b0 * reciprocal, b1 * reciprocal, b2 * reciprocal);
+      const Point v1_correspondence = interp(mesh.point(v2), mesh.point(vs1), mesh.point(vs2), bary);
+      max_mag2 = max(max_mag2, dist2<double>(v1_correspondence, mesh.point(v1)));
+    }
+  }
+  if (max_mag2 == -1.) {
+    Warning("Not valid APS - Vertex is not inside any new face in the texture domain");
+    return -1.;
+  }
+
+  // Also consider the displacements at all edge-edge crossings.
+  const Array<Vertex> verts{
+      filter(mesh.vertices(v1), [&](Vertex v) { return v != v2 && !edge_sharp(mesh.edge(v1, v)); })};
+  for (Vertex v : verts) {
+    const UV& p = c_winfo(mesh.corner(v, mesh.face(v, v1))).uv;
+    const UV& p1 = c_winfo(mesh.corner(v1, mesh.face(v, v1))).uv;
+    const Point pv = mesh.point(v);
+    for (Vertex vv : verts) {
+      if (vv == v) continue;
       Corner cvv = mesh.ccw_corner(v1, mesh.edge(v1, vv));
-      Point p2;
-      if (c_wedge_id(cvv) == c_wedge_id(cv1f1)) {
-        p2 = c_uv(mesh.corner(v2, mesh.face1(e)));
-      } else {
-        assertx(c_wedge_id(cvv) == c_wedge_id(cv1f2));
-        p2 = c_uv(mesh.corner(v2, mesh.face2(e)));
-      }
-      const Point pp = c_uv(mesh.corner(vv, mesh.face(vv, v1)));
-      float ia, ib;
-      if (intersect_lines(p1, p, p2, pp, ia, ib)) {
-        const Vector vec = interp(mesh.point(v1), pv, ia) - interp(mesh.point(v2), mesh.point(vv), ib);
-        max_mag2 = max(max_mag2, double(mag2(vec)));
+      Face ft = c_wedge_id(cvv) == wid_v1f1 ? f1 : (assertx(c_wedge_id(cvv) == wid_v1f2), f2);
+      const UV& p2 = c_winfo(mesh.corner(v2, ft)).uv;
+      const UV& pp = c_winfo(mesh.corner(vv, mesh.face(vv, v1))).uv;
+      const auto result = intersect_segments(p1, p, p2, pp);
+      if (result) {
+        const auto& [intersection, t12, t34] = result.value();
+        const Point pp1 = interp(pv, mesh.point(v1), t12),
+                    pp2 = interp(mesh.point(vv), mesh.point(v2), t34);
+        max_mag2 = max(max_mag2, dist2<double>(pp1, pp2));
       }
     }
   }
+
   return sqrt(max_mag2);
 }
 

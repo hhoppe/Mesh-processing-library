@@ -13,6 +13,7 @@ namespace hh {
 template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   using type = VectorF;
   // We derive from the two Vec classes to benefit from "empty base class optimization".
+  // (A possible alternative might be to use the [[no_unique_address]] attribute in C++20.)
   static constexpr int m = n / 4;
   static constexpr int p = n % 4;
   static constexpr int max_unroll = 4;

@@ -16,14 +16,13 @@
 #endif
 
 #include <array>
-#include <atomic>
 #include <cctype>  // isdigit()
 #include <cerrno>  // errno
 #include <chrono>
 #include <cstdarg>  // va_list
 #include <cstring>  // memcpy(), strlen(), strerror()
 #include <map>
-#include <mutex>  // once_flag, call_once()
+#include <mutex>  // once_flag, call_once(), lock_guard
 #include <regex>
 #include <unordered_map>
 #include <vector>
@@ -254,7 +253,7 @@ class CleanUp {
 
 class Warnings {
  public:
-  static int increment_count(const char* s) { return ++instance()._map[s]; }
+  static int increment_count(const char* s) { return instance().increment_count_(s); }
   static void flush() { instance().flush_internal(); }
 
  private:
@@ -264,6 +263,10 @@ class Warnings {
   }
   Warnings() { hh_at_clean_up(Warnings::flush); }
   ~Warnings() = delete;
+  int increment_count_(const char* s) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    return ++_map[s];
+  }
   void flush_internal() {
     if (_map.empty()) return;
     struct string_less {  // Lexicographic comparison; deterministic, unlike pointer comparison.
@@ -277,7 +280,8 @@ class Warnings {
     for (const auto& [s, n] : sorted_map) show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
     _map.clear();
   }
-  std::unordered_map<const char*, std::atomic<int>> _map;
+  std::mutex _mutex;
+  std::unordered_map<const char*, int> _map;
 };
 
 }  // namespace

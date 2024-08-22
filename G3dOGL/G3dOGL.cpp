@@ -4861,8 +4861,9 @@ void read_ply(const string& filename) {
   string line;
   assertx(my_getline(is, line));
   assertx(line == "ply");
-  const Map<std::string, int> dsizes = {{"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2},
-                                        {"int", 4},  {"uint", 4},  {"float", 4}, {"double", 8}};
+  const Map<std::string, int> dsizes = {
+      {"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2}, {"int", 4}, {"uint", 4}, {"float", 4}, {"double", 8},
+  };
   bool binary = false;
   bool bigendian = false;
   int num_element = 0;

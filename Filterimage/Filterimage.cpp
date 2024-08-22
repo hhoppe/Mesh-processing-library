@@ -3133,10 +3133,10 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
   if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 
-struct VXY {
+struct ValueWeight {
   float v, w;
 };
-bool operator<(const VXY& a, const VXY& b) { return a.v < b.v; }
+bool operator<(const ValueWeight& a, const ValueWeight& b) { return a.v < b.v; }
 
 // Same but use rank rather than z-score.
 void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0, Matrix<Vector4>& mat_out,
@@ -3148,7 +3148,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   // Convert both the color image and the structure image from RGB space to LAB space.
   Matrix<Vector4> mat_s(use_lab ? convert_to_LAB(mat_s0) : mat_s0);
   Matrix<Vector4> mat_c(use_lab ? convert_to_LAB(mat_c0) : mat_c0);
-  Array<VXY> ar(square(window_diam));
+  Array<ValueWeight> ar(square(window_diam));
   mat_out.init(mat_s.dims());
   mat_zscore.init(mat_s.dims());
   assertw(use_lab);
@@ -3165,10 +3165,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
             float sv = mat_s.inside(yx - window_radius + iyx, k_reflected2)[ch];
             float cv = mat_c.inside(yx - window_radius + iyx, k_reflected2)[ch];
             if (sv < scenterv) scenterrank += w;
-            VXY vxy;
-            vxy.v = cv;
-            vxy.w = w;
-            ar.push(vxy);
+            ar.push(ValueWeight{cv, w});
           }
           sort(ar);
           float f = scenterrank;

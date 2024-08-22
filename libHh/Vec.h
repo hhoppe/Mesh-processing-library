@@ -544,9 +544,10 @@ TT G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return
 TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
   G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+TT G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
   G g; F { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
+TT G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
   // Vec3<float> == Bary;  may have bary[0] + bary[1] + bary[2] != 1.f
   G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;

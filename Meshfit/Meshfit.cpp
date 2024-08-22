@@ -485,7 +485,7 @@ void initial_projection() {
 
 void do_mfilename(Args& args) {
   HH_TIMER("_mfilename");
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   mesh.read(RFile(args.get_filename())());
   for (Face f : mesh.faces()) {
     int nv = mesh.num_vertices(f);
@@ -515,7 +515,7 @@ void do_filename(Args& args) {
 }
 
 void perhaps_initialize() {
-  assertx(pt.co.num() && mesh.num_vertices());
+  assertx(pt.co.num() && !mesh.empty());
   assertw(spring > 0);    // just warn user
   if (pt.cmf[0]) return;  // already initialized
   compute_xform();
@@ -638,7 +638,7 @@ void do_fgfit(Args& args) {
   perhaps_initialize();
   HH_TIMER("_fgfit");
   int niter = args.get_int();
-  assertx(pt.co.num() && mesh.num_vertices());
+  assertx(pt.co.num() && !mesh.empty());
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
   // Evaluation objective for nonlinear optimization.

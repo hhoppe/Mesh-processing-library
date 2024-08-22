@@ -754,7 +754,7 @@ void create(bool b_triangulate) {
     assertnever("scheme not recognized: " + scheme);
   }
   //
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   //
   HH_TIMER("_create");
   ConsoleProgress cprogress;
@@ -1003,14 +1003,14 @@ void do_echeckern(Args& args) {
 }
 
 void do_mesh_sphere() {
-  if (!mesh.num_vertices()) create(true);
+  if (mesh.empty()) create(true);
   is_remeshed = true;
 }
 
 // A remesh is a mesh with vertices in raster-scan order within each domain face.
 // The vertex positions are on a resampled surface.
 void do_load_remesh(Args& args) {
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   assertx(!gridn);
   GMesh remesh;
   {
@@ -1113,7 +1113,7 @@ GMesh read_param_mesh(const string& filename) {
 // A map is a gmerged mesh with vertex positions on domain, and sph strings for parameterization on sphere.
 void do_load_map(Args& args) {
   assertx(!gridn);
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   const GMesh param_mesh = read_param_mesh(args.get_filename());
   gridn = get_gridn(param_mesh.num_vertices());
   assertx(scheme == "");  // Not modified on command line.
@@ -1148,7 +1148,7 @@ void do_load_map(Args& args) {
 
 void do_sample_map(Args& args) {
   assertx(gridn);
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   const GMesh param_mesh = read_param_mesh(args.get_filename());
   const MeshSearch msearch(param_mesh, {true});
   if (scheme == "") scheme = "domain";
@@ -1351,7 +1351,7 @@ void internal_remesh() {
   options.allow_local_project = true;
   options.allow_off_surface = true;
   const MeshSearch msearch(param_mesh, options);
-  if (!mesh.num_vertices()) {
+  if (mesh.empty()) {
     // Create domain grid mesh.
     HH_STIMER("_create_tess");
     create(false);
@@ -1529,7 +1529,7 @@ void do_write_lonlat_texture(Args& args) {
   assertx(gridn);
   assertx(param_file != "");
   assertx(signal_ != "");
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   const Frame rotate_frame = get_rotate_frame();
   mesh = read_param_mesh(param_file);
   for (Vertex v : mesh.vertices()) {
@@ -1654,7 +1654,7 @@ void do_test_properties() {
   const Point refp1(0.f, 1.f, 0.f), refp2(-1.f, 0.f, 0.f);
   const Point refp3 = normalized(Point(-.3f, 0.f, .9f)), refp4 = normalized(Point(.4f, -.8f, .3f));
   //
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   const SGrid<Point, 3, 3> faces = {
       {refp1, refp2, refp3},
       {refp3, refp2, refp4},  // Shares the same boundary vertices iff edge-continuous. (check visually).
@@ -1691,7 +1691,7 @@ void do_test_properties() {
 }
 
 void do_create_lonlat_sphere() {
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   assertx(gridn >= 2);
   Matrix<Vertex> matv(gridn, gridn);
   string str;
@@ -1728,7 +1728,7 @@ void do_create_lonlat_checker(Args& args) {
   if (!gridn) gridn = 128;
   {
     HH_TIMER("_create_tess2");
-    if (!mesh.num_vertices()) {
+    if (mesh.empty()) {
       create(true);
     } else {
       if (domain == "cube") triangulate_short_diag();
@@ -1823,8 +1823,8 @@ int main(int argc, const char** argv) {
   HH_ARGSF(omit_faces, ": let remesh have only vertices (faster write_texture)");
   HH_ARGSD(mesh_sphere, ": map domain grid onto sphere");
   HH_ARGSD(load_remesh, "mesh.remesh.m : load a previous remesh");
-  HH_ARGSD(load_map, "domain.invmap.m : domain -> sphere, instead of scheme");
-  HH_ARGSD(sample_map, "domain.invmap.m : domain -> sphere, sampled using gridn");
+  HH_ARGSD(load_map, "domain.inv.sphparam.m : domain -> sphere, instead of scheme");
+  HH_ARGSD(sample_map, "domain.inv.sphparam.m : domain -> sphere, sampled using gridn");
   HH_ARGSP(param_file, "mesh.sphparam.m : specify surface parameterization");
   HH_ARGSP(rotate_s3d, "file.s3d : rotate normals based on view (snapped to axes)");
   HH_ARGSD(keys, "comma_separated_keys : mesh fields: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");

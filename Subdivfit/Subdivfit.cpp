@@ -98,7 +98,7 @@ void mark_mesh(GMesh& m) {
 }
 
 void do_mfilename(Args& args) {
-  assertx(!gmesh.num_vertices());
+  assertx(gmesh.empty());
   gmesh.read(RFile(args.get_filename())());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
   for (Vertex v : gmesh.vertices()) gbbox.union_with(gmesh.point(v));
@@ -335,7 +335,7 @@ void do_record(Args& args) {
 }
 
 void do_gfit(Args& args) {
-  assertx(co.num() && gmesh.num_vertices());
+  assertx(co.num() && !gmesh.empty());
   initialize();
   std::ostream* os = gmesh.record_changes(nullptr);
   if (verb >= 2) showdf("\n");
@@ -373,7 +373,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 void do_fgfit(Args& args) {
   HH_TIMER("_fgfit");
   int niter = args.get_int();
-  assertx(co.num() && gmesh.num_vertices());
+  assertx(co.num() && !gmesh.empty());
   initialize();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("fgfit with %d iterations\n", niter);
@@ -521,7 +521,7 @@ void do_fgfit(Args& args) {
 }
 
 void do_interp() {
-  assertx(gmesh.num_vertices());
+  assertx(!gmesh.empty());
   initialize();
   if (verb >= 2) showdf("\n");
   HH_TIMER("_interp");
@@ -569,7 +569,7 @@ void do_interp() {
 }
 
 void do_imagefit() {
-  assertx(co.num() && gmesh.num_vertices());
+  assertx(co.num() && !gmesh.empty());
   initialize();
   HH_TIMER("_imagefit");
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
@@ -1278,7 +1278,7 @@ void stoc_end() {
 void do_stoc() {
   if (verb >= 2) showdf("\n");
   HH_TIMER("_stoc");
-  assertx(co.num() && gmesh.num_vertices());
+  assertx(co.num() && !gmesh.empty());
   initialize();
   if (verb >= 1) showdf("Stoc, crep=%g csharp=%g wcrep=%g wcsharp=%g\n", crep, csharp, wcrep, wcsharp);
   stoc_init();
@@ -1419,7 +1419,7 @@ int main(int argc, const char** argv) {
   showdf("%s", args.header().c_str());
   args.parse();
   if (outn) {
-    assertx(gmesh.num_vertices());
+    assertx(!gmesh.empty());
     for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = false;
     if (markcuts)
       for (Edge e : gmesh.edges()) gmesh.flags(e).flag(eflag_cut) = true;

@@ -602,11 +602,12 @@ TT G max(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = max(g1[i], g2[i]); } r
 TT G interp(CG g1, CG g2, float f1 = 0.5f) {
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+TT G interp(CG g1, CG g2, CG g3, float f1, float f2) {
   ASSERTX(same_size(g1, g2) && same_size(g1, g3));
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Avoid dependency on Vec.
+TT G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
+// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Omit to avoid dependency on Vec.
 
 // clang-format on
 #undef F

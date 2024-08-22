@@ -132,6 +132,11 @@ int main() {
     SHOW(result);
   }
   {
+    const Array<int> ar1{3, 4, 5, 6};
+    const Array<int> ar2{filter(ar1, [](int i) { return i != 3 && i != 6; })};
+    SHOW(ar2);
+  }
+  {
     assertx(index(range(10), 3) == 3);
     assertx(index(V(3, 5, 7), 5) == 1);
   }

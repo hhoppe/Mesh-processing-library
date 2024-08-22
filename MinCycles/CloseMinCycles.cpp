@@ -605,7 +605,7 @@ void CloseMinCycles::find_cycles() {
 void CloseMinCycles::compute() {
   assertx(_frac_cycle_length >= 1.f);
   assertx(_cgenus == std::numeric_limits<int>::max());
-  if (!_mesh.num_vertices()) return;
+  if (_mesh.empty()) return;
   Array<Vertex> ar_boundary_centers;
   if (1) {  // deal with mesh boundaries
     HH_TIMER("_fillholes");

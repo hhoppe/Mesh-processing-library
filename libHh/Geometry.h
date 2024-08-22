@@ -161,6 +161,10 @@ Point slerp(const Point& p1, const Point& p2, float ba);
 // Spherical triangle area.
 float spherical_triangle_area(const Vec3<Point>& pa);
 
+// Return signed area of 2D triangle (positive if counter-clockwise).
+template <typename Precision = double>
+float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
+
 // Get barycentric coordinates of point p within triangle pa, or return false if p not in plane of triangle.
 bool get_bary(const Point& p, const Vec3<Point>& pa, Bary& bary);
 
@@ -229,6 +233,12 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
                  float v) {
   // return qinterp(a0, a1, a2, a3, Bary((1.f - u) * (1.f - v), u * (1.f - v), u * v));
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
+}
+
+template <typename Precision>
+float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
+  const Precision y1 = p1[1], y2 = p2[1], y3 = p3[1];
+  return 0.5f * float(p1[0] * (y2 - y3) + p2[0] * (y3 - y1) + p3[0] * (y1 - y2));
 }
 
 }  // namespace hh

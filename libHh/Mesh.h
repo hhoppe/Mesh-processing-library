@@ -196,6 +196,7 @@ class Mesh : noncopyable {
   Face face(Vertex v, Vertex vccw) const { return clw_face(vccw, edge(v, vccw)); }  // may return nullptr
 
   // ** Counting routines (fast):
+  bool empty() const { return !num_vertices(); }
   int num_vertices() const { return _id2vertex.num(); }
   int num_faces() const { return _id2face.num(); }
   int num_edges() const { return _nedges; }

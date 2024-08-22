@@ -546,6 +546,7 @@ template <typename Range, typename Func> struct TransformedRange {
 
 }  // namespace details
 
+// Return a view range in which all elements are mapped through a function `func`.
 template <typename Range, typename Func, typename = enable_if_range_t<Range>>
 auto transform(Range&& range, Func&& func = Func{}) {
   return details::TransformedRange<Range, Func>{std::forward<Range>(range), std::forward<Func>(func)};
@@ -598,6 +599,7 @@ template <typename Range1, typename Range2> struct ConcatenatedRange {
 
 }  // namespace details
 
+// Return a view range that concatenates the elements of two ranges.
 template <typename Range1, typename Range2> auto concatenate(Range1&& range1, Range2&& range2) {
   return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
 }
@@ -643,8 +645,64 @@ template <typename Range, typename Index> struct EnumeratedRange {
 
 }  // namespace details
 
+// Return a view range containing a sequence of tuples [index, element] for all elements in `range`.
 template <typename Index = size_t, typename Range, typename = enable_if_range_t<Range>> auto enumerate(Range&& range) {
   return details::EnumeratedRange<Range, Index>{std::forward<Range>(range)};
+}
+
+namespace details {
+
+template <typename Iterator, typename Func> struct FilteredIterator {
+  using type = FilteredIterator<Iterator, Func>;
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = typename std::iterator_traits<Iterator>::value_type;
+  using difference_type = typename std::iterator_traits<Iterator>::difference_type;
+  using pointer = value_type*;
+  using reference = value_type&;
+  Iterator _iter;
+  Iterator _end;
+  const Func& _func;
+  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
+  decltype(auto) operator*() const { return *_iter; }
+  type& operator++() {
+    ++_iter;
+    while (_iter != _end && !_func(*_iter))
+      ++_iter;
+    return *this;
+  }
+  type& operator=(const type& rhs) {
+    if (this != &rhs) _iter = rhs._iter, _end = rhs._end;
+    // Note that _func is a reference and there is no need to assign it.
+    return *this;
+  }
+};
+
+template <typename Range, typename Func> struct FilteredRange {
+  Range _range;
+  Func _func;
+  auto begin() const {
+    using std::begin, std::end;
+    using Iterator = std::decay_t<decltype(begin(_range))>;
+    auto iterator = FilteredIterator<Iterator, Func>{begin(_range), end(_range), _func};
+    while (iterator != this->end() && !_func(*iterator))
+      ++iterator;
+    return iterator;
+  }
+  auto end() const {
+    using std::begin, std::end;
+    using Iterator = std::decay_t<decltype(begin(_range))>;
+    return FilteredIterator<Iterator, Func>{end(_range), end(_range), _func};
+  }
+  // size() is unknown.
+};
+
+}  // namespace details
+
+// Return a view range that filters the elements in `range` according to a predicate `func`.
+template <typename Range, typename Func, typename = enable_if_range_t<Range>>
+auto filter(Range&& range, Func func = Func{}) {
+  return details::FilteredRange<Range, Func>{std::forward<Range>(range), std::forward<Func>(func)};
 }
 
 }  // namespace hh

@@ -67,7 +67,7 @@ void Mesh::clear() {
   while (num_faces()) {
     destroy_face(_id2face.get_one_value());
   }
-  while (num_vertices()) {
+  while (!empty()) {
     destroy_vertex(_id2vertex.get_one_value());
   }
   _vertexnum = 1;

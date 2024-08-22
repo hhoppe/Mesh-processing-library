@@ -117,7 +117,7 @@ bool mesh_single_disk() {
 void do_creategrid(Args& args) {
   int ny = args.get_int(), nx = args.get_int();
   assertx(ny > 0 && nx > 0);
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   Matrix<Vertex> matv(ny, nx);
   for_int(y, ny) for_int(x, nx) {
     matv[y][x] = mesh.create_vertex();
@@ -132,7 +132,7 @@ void do_fromgrid(Args& args) {
   int ny = args.get_int(), nx = args.get_int();
   assertx(ny > 0 && nx > 0);
   string filename = args.get_filename();
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   Matrix<Vertex> matv(ny, nx);
   RFile fi(filename);
   for_int(y, ny) for_int(x, nx) {
@@ -155,7 +155,7 @@ void do_frompointgrid(Args& args) {
   int ny = args.get_int(), nx = args.get_int();
   assertx(ny > 0 && nx > 0);
   string filename = args.get_filename();
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   Matrix<Vertex> matv(ny, nx);
   RFile fi(filename);
   RSA3dStream a3dstream(fi());
@@ -179,7 +179,7 @@ void do_frompointgrid(Args& args) {
 inline float lerp(float a, float b, float f) { return (1.f - f) * a + f * b; }
 
 void do_createobject(Args& args) {
-  assertx(!mesh.num_vertices());
+  assertx(mesh.empty());
   string obname = args.get_string();
   Matrix<Vertex> matv;
   bool closed = false;
@@ -2379,7 +2379,7 @@ void do_info() {
     bool alltriangles = true;
     // To make volume meaningful on mesh with boundaries, use centroid.
     Point centroid(0.f, 0.f, 0.f);
-    if (mesh.num_vertices()) {
+    if (!mesh.empty()) {
       Homogeneous h;
       for (Vertex v : mesh.vertices()) h += mesh.point(v);
       centroid = to_Point(normalized(h));
@@ -3296,7 +3296,7 @@ void do_procedure(Args& args) {
       if (!mesh.degree(v)) vdestroy.enter(v);
     for (Vertex v : vdestroy) mesh.destroy_vertex(v);
   } else if (name == "create_sphere") {
-    assertx(!mesh.num_vertices());
+    assertx(mesh.empty());
     const int nlat = 31, nlon = 60;
     Matrix<Vertex> mv(nlat, nlon);
     string str;
@@ -3723,7 +3723,7 @@ void do_alignmentframe(Args& args) {
   showdf("  %s\n", mesh_genus_string(cmesh).c_str());
   showdf("with mesh %s:\n", filename.c_str());
   showdf("  %s\n", mesh_genus_string(nmesh).c_str());
-  assertx(cmesh.num_vertices() && nmesh.num_vertices());
+  assertx(!cmesh.empty() && !nmesh.empty());
   assertw(cmesh.num_vertices() == nmesh.num_vertices());  // just warn
   assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
   const Bbox cbb{transform(cmesh.vertices(), [&](Vertex v) { return cmesh.point(v); })};
@@ -3892,7 +3892,7 @@ void do_shootrays(Args& args) {
   GMesh omesh;  // Original mesh.
   omesh.read(RFile(filename)());
   showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
-  assertx(mesh.num_vertices() && omesh.num_vertices());
+  assertx(!mesh.empty() && !omesh.empty());
   const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
   Frame xform = bbox.get_frame_to_small_cube(0.5f);
   Frame xformi = ~xform;
@@ -4000,7 +4000,7 @@ void do_transferkeysfrom(Args& args) {
   GMesh omesh;
   omesh.read(RFile(filename)());
   showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
-  assertx(mesh.num_vertices() && omesh.num_vertices());
+  assertx(!mesh.empty() && !omesh.empty());
   HashPoint hp;  // (4, 0.f, 1.f);
   Array<Vertex> arv;
   const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
@@ -4054,7 +4054,7 @@ void do_transferwidkeysfrom(Args& args) {
   GMesh omesh;  // An original mesh containing a superset of vertices.
   omesh.read(RFile(filename)());
   showdf("Transferring strings from: %s\n", mesh_genus_string(omesh).c_str());
-  assertx(mesh.num_vertices() && omesh.num_vertices());
+  assertx(!mesh.empty() && !omesh.empty());
   assertx(omesh.num_vertices() >= mesh.num_vertices());
   Map<int, const char*> mwidstring;
   string str;
@@ -4257,7 +4257,7 @@ void do_trim(Args& args) {
 void do_trimpts(Args& args) {
   string filename = args.get_filename();
   float dtrim = args.get_float();
-  assertx(mesh.num_vertices());
+  assertx(!mesh.empty());
   const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
   PointSpatial<int> psp(800);

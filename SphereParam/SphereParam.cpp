@@ -6,6 +6,7 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"
+#include "libHh/MeshSearch.h"
 #include "libHh/PMesh.h"
 #include "libHh/Set.h"
 #include "libHh/Timer.h"
@@ -15,6 +16,9 @@ namespace {
 
 string orig_mesh;
 string orig_indices;
+bool keep_uv = false;
+
+GMesh mesh_uv;
 
 // Read a rotation frame from the specified filename and snap its axes to the canonical axes.
 Frame get_rotate_frame(const string& rotate_s3d) {
@@ -86,7 +90,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
       assertx(is_unit(base_sphmap[v]));
     }
 
-  } else if (base_param_scheme == "mesh") {  // Use the 'sph' keys in the mesh file named mesh_for_base.
+  } else if (base_param_scheme == "mesh") {  // Use the 'sph' keys in the mesh file named by mesh_for_base.
     assertx(mesh_for_base != "");
     RFile fi2(mesh_for_base);
     for (string line; fi2().peek() == '#';) {
@@ -115,59 +119,68 @@ constexpr int k_axis0 = 0;  // Axis whose zero value defines the plane of the pr
 constexpr int k_axis1 = 1;  // Axis whose positive range defines the halfspace containing the prime meridian.
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_uv);
+
+Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
+  Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e), vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
+  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
+  assertx(vs2 && f2);
+  Vector nor_v1f1, nor_v2f1, nor_v1f2, nor_v2f2, nor_vs1f1, nor_vs2f2;
+  int num_nors = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "normal", nor_v1f1)) +
+                  int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "normal", nor_v2f1)) +
+                  int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "normal", nor_v1f2)) +
+                  int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "normal", nor_v2f2)) +
+                  int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "normal", nor_vs1f1)) +
+                  int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "normal", nor_vs2f2)));
+  assertx(num_nors == 0 || num_nors == 6);
+  Vertex v = mesh.split_edge(e);
+  mesh.set_point(v, interp(mesh.point(v1), mesh.point(v2), frac1));
+  if (num_nors) {
+    string str;
+    if (nor_v1f1 == nor_v1f2 && nor_v2f1 == nor_v2f2) {
+      const char* s_vf = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
+      mesh.update_string(v, "normal", s_vf);
+    } else {
+      const char* s_vf1 = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
+      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
+      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
+      const char* s_vf2 = csform_vec(str, normalized(nor_v1f2 * frac1 + nor_v2f2 * (1.f - frac1)));
+      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
+      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
+    }
+    if (!GMesh::string_has_key(mesh.get_string(v1), "normal")) {
+      mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f1));
+      mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f2));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(v2), "normal")) {
+      mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f1));
+      mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f2));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(vs1), "normal")) {
+      mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
+      mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(vs2), "normal")) {
+      mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
+      mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
+    }
+  }
+  return v;
+}
 
 // Split some `mesh` edges (by adding new vertices) such that no triangle face straddles the prime meridian.
 void split_mesh_along_prime_meridian(GMesh& mesh) {
   Array<Vertex> new_vertices;
-  string str;
 
   const auto split_edge = [&](Edge e, int axis) {
-    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e), vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
-    Face f1 = mesh.face1(e), f2 = mesh.face2(e);
+    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
-    Vector nor_v1f1, nor_v2f1, nor_v1f2, nor_v2f2, nor_vs1f1, nor_vs2f2;
-    int nnors = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "normal", nor_v1f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "normal", nor_v2f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "normal", nor_v1f2)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "normal", nor_v2f2)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "normal", nor_vs1f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "normal", nor_vs2f2)));
-    assertx(nnors == 0 || nnors == 6);
-    Vertex v = mesh.split_edge(e);
-    new_vertices.push(v);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
     const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
+    Vertex v = split_mesh_edge(mesh, e, frac1);
+    new_vertices.push(v);
     v_sph(v) = sph_new;
-    mesh.set_point(v, interp(mesh.point(v1), mesh.point(v2), frac1));
-    if (nnors) {
-      const char* s_vf1 = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
-      const char* s_vf2 = csform_vec(str, normalized(nor_v1f2 * frac1 + nor_v2f2 * (1.f - frac1)));
-      if (nor_v1f1 == nor_v1f2 && nor_v2f1 == nor_v2f2) {
-        mesh.update_string(v, "normal", s_vf1);
-      } else {
-        mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, v2)), "normal", s_vf1);
-        mesh.update_string(mesh.clw_corner(v, mesh.edge(v, v1)), "normal", s_vf1);
-        mesh.update_string(mesh.clw_corner(v, mesh.edge(v, v2)), "normal", s_vf2);
-        mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, v1)), "normal", s_vf2);
-      }
-      if (!GMesh::string_has_key(mesh.get_string(v1), "normal")) {
-        mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f1));
-        mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f2));
-      }
-      if (!GMesh::string_has_key(mesh.get_string(v2), "normal")) {
-        mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f1));
-        mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f2));
-      }
-      if (!GMesh::string_has_key(mesh.get_string(vs1), "normal")) {
-        mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
-        mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
-      }
-      if (!GMesh::string_has_key(mesh.get_string(vs2), "normal")) {
-        mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
-        mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
-      }
-    }
   };
 
   // Split the mesh edges on faces overlapping the zero meridian (along the plane x = 0, in halfspace y > 0).
@@ -213,31 +226,187 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   }
 }
 
-// Given a GMesh, add "sph" and "uv" strings, optionally split its meridian, and write it to std::cout.
-void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
-  if (split_meridian) split_mesh_along_prime_meridian(gmesh);
-  string str;
-  for (Vertex v : gmesh.vertices()) {
-    const Point& sph = v_sph(v);
-    gmesh.update_string(v, "sph", csform_vec(str, sph));
-    // Replace any "uv" with longitude-latitude.
-    const UV lonlat = lonlat_from_sph(sph);
-    const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
-    if (!near_prime_meridian) {
-      // If not near the discontinuity on the +Y (k_axis1) axis.
-      gmesh.update_string(v, "uv", csform_vec(str, lonlat));
-    } else {
-      // Tweak texture coordinates for correct rendering assuming split_mesh_along_prime_meridian has been called.
-      gmesh.update_string(v, "uv", nullptr);
-      for (Corner c : gmesh.corners(v)) {
-        Face f = gmesh.corner_face(c);
-        const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
-        const Point center = mean(sphs);
-        const float lon2 = center[0] < 0.f ? 0.f : 1.f;
-        gmesh.update_string(c, "uv", csform_vec(str, UV(lon2, lonlat[1])));
+void split_mesh_along_octa(GMesh& mesh) {
+  Array<Vertex> new_vertices;
+
+  const auto split_edge = [&](Edge e, int axis) {
+    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+    const Point& sph1 = v_sph(v1), sph2 = v_sph(v2);
+    const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
+    const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
+    const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
+    Vertex v = split_mesh_edge(mesh, e, frac1);
+    new_vertices.push(v);
+    v_sph(v) = sph_new;
+  };
+
+  const float eps = 1e-5f;
+  for_int(axis, 3) {
+    Set<Edge> edges_to_split;
+    for (Edge e : mesh.edges()) {
+      const Bbox bbox{V(v_sph(mesh.vertex1(e)), v_sph(mesh.vertex2(e)))};
+      if (bbox[0][axis] < -eps && bbox[1][axis] > eps) edges_to_split.add(e);
+    }
+    for (Edge e : edges_to_split) split_edge(e, axis);
+  }
+
+  for (Vertex v : new_vertices) {
+    for (Edge e : mesh.edges(v)) {
+      Vertex v2 = mesh.opp_vertex(v, e);
+      if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {  // was 1e-6f ??
+        Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
+        mesh.collapse_edge_vertex(e, v2);
+        break;
       }
     }
   }
+}
+
+// Next two functions copied from SphereSample.cpp ?
+Bary get_bary(const Point& p, const Vec<Point, 3>& pt) {
+  // Spherically project the point onto the triangle spanning pt[3],
+  //  i.e. intersect the segment (origin, p) with the triangle.
+  Polygon poly(3);
+  for_int(i, 3) poly[i] = pt[i];
+  const Point origin(0.f, 0.f, 0.f);
+  Point pint;
+  if (!poly.intersect_segment(origin, p, pint)) {
+    // Warning("widening polygon");
+    if (0) SHOW(poly, spherical_triangle_area(poly));
+    widen_triangle(poly, 1e-4f);
+    if (0) SHOW(poly);
+    if (!poly.intersect_segment(origin, p, pint)) {
+      // Warning("intersect_segment failed again");
+      // Well, resort to closest point if necessary.
+      Bary bary;
+      project_point_triangle2(p, pt[0], pt[1], pt[2], bary, pint);
+    }
+  }
+  // Compute bary for the intersection point pint.
+  Bary bary;
+  Point clp;
+  const float d2 = project_point_triangle2(pint, pt[0], pt[1], pt[2], bary, clp);
+  assertw(d2 < 1e-10f);
+  return bary;
+}
+
+// Given point p on sphere, and some nearby spherical triangle f in mesh2, find the true spherical
+// triangle f containing p, and the barycentric coordinates of p in f.
+void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
+  Vec3<Point> points;
+  {
+    // Find the spherical triangle f containing p.
+    int nfchanges = 0;
+    for (;;) {
+      points = mesh2.triangle_points(f);
+      // Adapted from MeshSearch.cpp .
+      const float dotcross_eps = 2e-7f;
+      Vec<bool, 3> outside;
+      for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
+      int noutside = sum<int>(outside);
+      if (noutside == 0) break;
+      const Vec<Vertex, 3> va = mesh2.triangle_vertices(f);
+      if (noutside == 2) {
+        const int side = index(outside, false);
+        // Fastest: jump across the vertex.
+        Vertex v = va[side];
+        const int val = mesh2.degree(v);
+        // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
+        constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
+        const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
+        for_int(i, nrot) f = assertx(mesh2.ccw_face(v, f));
+      } else if (noutside == 1) {
+        const int side = index(outside, true);
+        Face f2 = mesh2.opp_face(va[side], f);
+        if (!assertw(f2)) break;
+        f = f2;
+      } else {
+        assertnever("");
+      }
+      nfchanges++;
+      assertx(nfchanges < 200);
+    }
+    HH_SSTAT(Snfchanges, nfchanges);
+  }
+  bary = get_bary(p, points);
+}
+
+UV snap_uv(UV uv) {
+  for_int(c, 2) if (abs(uv[c]) < 1e-8f) uv[c] = 0.f;
+  return uv;
+}
+
+// Given a GMesh, add "sph" and "uv" strings, optionally split its meridian, and write it to std::cout.
+void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
+  assertx(!(split_meridian && !mesh_uv.empty()));
+  if (split_meridian) split_mesh_along_prime_meridian(gmesh);
+  if (!mesh_uv.empty()) {
+    split_mesh_along_octa(gmesh);  // TODO: instead, use mesh_uv discontinuities.
+  }
+  MeshSearch::Options options;
+  options.allow_local_project = true;
+  options.allow_off_surface = true;
+  options.allow_internal_boundaries = true;
+  const MeshSearch msearch(mesh_uv, options);
+
+  const int num_threads = get_max_threads();
+  parallel_for_chunk(Array<Vertex>(gmesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
+    dummy_use(thread_index);
+    string str;
+    Face hintf = nullptr;
+    for (Vertex v : subrange) {
+      const Point& sph = v_sph(v);
+      gmesh.update_string(v, "sph", csform_vec(str, sph));
+      if (keep_uv) {
+      } else if (!mesh_uv.empty()) {
+        // const bool near_a_cut = any_of(sph, [](float v) { return abs(v) < 1e-5f; });
+        const bool near_a_cut = (abs(sph[1]) < 1e-5f || abs(sph[2]) < 1e-5f) && sph[0] > -1e-5f;
+        if (!near_a_cut) {
+          auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
+          search_bary(sph, mesh_uv, f, bary);  // May modify f.
+          hintf = f;
+          const Vec3<UV> uvs = map(mesh_uv.triangle_vertices(f), [&](Vertex v) { return v_uv(v); });
+          const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+          gmesh.update_string(v, "uv", csform_vec(str, uv));
+        } else {
+          gmesh.update_string(v, "uv", nullptr);
+          for (Corner c : gmesh.corners(v)) {
+            Face gf = gmesh.corner_face(c);
+            const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), [&](Vertex v2) { return v_sph(v2); });
+            const Point sph_center = mean(sphs);
+            Point sph_perturbed = normalized(interp(sph, sph_center, 1.f - .2f));
+            hintf = nullptr;                                                         // ??
+            auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
+            search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
+            // Now use the obtained face f but search for the unperturbed sph.
+            search_bary(sph, mesh_uv, f, bary);  // May modify f.
+            hintf = f;
+            const Vec3<UV> uvs = map(mesh_uv.triangle_vertices(f), [&](Vertex v) { return v_uv(v); });
+            const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+            gmesh.update_string(c, "uv", csform_vec(str, uv));
+          }
+        }
+      } else {  // Replace any "uv" with longitude-latitude.
+        const UV lonlat = lonlat_from_sph(sph);
+        const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
+        if (!near_prime_meridian) {
+          // If not near the discontinuity on the +Y (k_axis1) axis.
+          gmesh.update_string(v, "uv", csform_vec(str, lonlat));
+        } else {
+          // Tweak texture coordinates for correct rendering assuming split_mesh_along_prime_meridian has been called.
+          gmesh.update_string(v, "uv", nullptr);
+          for (Corner c : gmesh.corners(v)) {
+            Face f = gmesh.corner_face(c);
+            const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
+            const Point center = mean(sphs);
+            const float lon2 = center[0] < 0.f ? 0.f : 1.f;
+            gmesh.update_string(c, "uv", csform_vec(str, UV(lon2, lonlat[1])));
+          }
+        }
+      }
+    }
+  });
+  hh_clean_up();
   gmesh.write(std::cout);
   if (!k_debug) exit_immediately(0);  // Skip GMesh destruction for speedup.
 }
@@ -366,7 +535,7 @@ void split_awmesh_along_prime_meridian(AWMesh& awmesh) {
   split_awmesh_vertices_along_meridian(awmesh);
 }
 
-// Write a single-resolution progressive mesh, encoding the spherical parameteriztion as lat-lon uv coordinates.
+// Write a single-resolution progressive mesh, encoding the spherical parameterization as lat-lon uv coordinates.
 void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
   dummy_use(split_meridian);
   PMeshInfo pminfo = pmi.rstream()._info;
@@ -376,13 +545,14 @@ void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_
     pmi._wedges[w].attrib.uv = lonlat_from_sph(sphmap[v]);
   }
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
+  hh_clean_up();
   PMesh pmesh(std::move(pmi), pminfo);
   pmesh.write(std::cout);
 }
 
 // *** Ply output.
 
-// Write a *.ply mesh file, encoding the spherical parameteriztion as lat-lon uv coordinates on corners.
+// Write a *.ply mesh file, encoding the spherical parameterization as lat-lon uv coordinates on corners.
 void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
   dummy_use(split_meridian);
   PMeshInfo& pminfo = pmi.rstream()._info;
@@ -392,6 +562,7 @@ void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split
     pmi._wedges[w].attrib.uv = lonlat_from_sph(sphmap[v]);
   }
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
+  hh_clean_up();
   const bool binary = true;
   pmi.write_ply(std::cout, pminfo, binary);
 }
@@ -413,6 +584,7 @@ int main(int argc, const char** argv) {
   string rotate_s3d;
   bool no_rot_align = false;
   bool split_meridian = false;
+  string uv_map;
   string to = "mesh";
   bool nooutput = false;
 
@@ -423,8 +595,8 @@ int main(int argc, const char** argv) {
   HH_ARGSF_O(visualize, ": pipe interactive parameterization to G3dOGL viewer");
   HH_ARGSF_O(fix_base, ": freeze all vertices of the base mesh");
   HH_ARGSF_O(optimize_inverse, ": minimize reciprocal stretch sphere_dist/mesh_dist");
-  HH_ARGSP_O(conformal_weight, "w : weight for added regularization energy term");
-  HH_ARGSP_O(hole_weight, "w : factor for any faces marked with 'hole'");
+  HH_ARGSP_O(conformal_weight, "w : weight for regularization energy term");
+  HH_ARGSP_O(hole_weight, "w : factor for faces marked with 'hole'");
   HH_ARGSF_O(respect_sharp_edges, ": for consistent parameterization");
   HH_ARGSF_O(flatten_to_x0, ": set surface coordinate x = 0 (for flat octahedron)");
   HH_ARGSP(base_param_scheme, "method : Base mesh map: tetra, projection, uv, coord, or mesh");
@@ -434,6 +606,8 @@ int main(int argc, const char** argv) {
   HH_ARGSF(split_meridian, ": split mesh faces at prime meridian (zero lon)");
   HH_ARGSP(orig_mesh, "file.m : file containing the original mesh");
   HH_ARGSP(orig_indices, "file.txt : file containing the original vertex indices");
+  HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph by mapping thru inverse of a spherical map");
+  HH_ARGSP(keep_uv, "bool : do not overwrite GMesh uv with lonlat coordinates");
   HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, orig_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");
   HH_ARGSC("Examples:");
@@ -455,11 +629,23 @@ int main(int argc, const char** argv) {
   args.parse();
 
   const Frame rotate_frame = get_rotate_frame(rotate_s3d);
-  const Map<string, decltype(&write_parameterized_mesh)> output_formatters{{"mesh", &write_parameterized_mesh},
-                                                                           {"pm", &write_parameterized_pm},
-                                                                           {"ply", &write_parameterized_ply},
-                                                                           {"orig_mesh", &write_orig_mesh}};
-  assertx(output_formatters.contains(to));
+  if (uv_map != "") {
+    mesh_uv.read(RFile{uv_map}());
+    for (Vertex v : mesh_uv.vertices()) {
+      assertx(!mesh_uv.point(v)[2]);  // The point at each mesh vertex should be a UV coordinate, i.e. (x, y, 0.f).
+      v_uv(v) = mesh_uv.point(v).head<2>();
+      Point sph;
+      assertx(parse_key_vec(mesh_uv.get_string(v), "sph", sph));
+      mesh_uv.set_point(v, sph);
+    }
+  }
+  const Map<string, decltype(&write_parameterized_mesh)> output_formatters{
+      {"mesh", &write_parameterized_mesh},
+      {"pm", &write_parameterized_pm},
+      {"ply", &write_parameterized_ply},
+      {"orig_mesh", &write_orig_mesh},
+  };
+  const auto output_formatter = output_formatters.get(to);
 
   PMeshRStream pmrs(fi());
   PMeshIter pmi(pmrs);
@@ -482,7 +668,7 @@ int main(int argc, const char** argv) {
       const Frame frame = mapper.frame_aligning_sphmap_to_surface_normals() * rotate_frame;
       for (Point& sph : sphmap) sph *= frame;
     }
-    output_formatters.get(to)(std::move(pmi), sphmap, split_meridian);
+    output_formatter(std::move(pmi), sphmap, split_meridian);
   }
   return 0;
 }

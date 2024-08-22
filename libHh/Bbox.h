@@ -17,7 +17,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
 
   Bbox() { clear(); }
   constexpr Bbox(const PointD& pmin, const PointD& pmax) : Vec2<PointD>(pmin, pmax) {}
-  constexpr Bbox(Vec2<PointD> bbox) : Vec2<PointD>(std::move(bbox)) {}
+  constexpr Bbox(const type& bbox) : Bbox(bbox[0], bbox[1]) {}
   template <typename Range, typename = enable_if_range_t<Range>> explicit Bbox(Range&& range) : Bbox() {
     using std::begin, std::end;
     auto b = begin(range), e = end(range);

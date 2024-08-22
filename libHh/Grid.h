@@ -744,10 +744,11 @@ TT G max(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = max(g1.flat(i), 
 TT G interp(CG g1, CG g2, float f1 = 0.5f) {
   SS; G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + (1.f - f1) * g2.flat(i); } return g;
 }
-TT G interp(CG g1, CG g2, CG g3, float f1 = 1.f / 3.f, float f2 = 1.f / 3.f) {
+TT G interp(CG g1, CG g2, CG g3, float f1, float f2) {
   ASSERTX(same_size(g1, g2) && same_size(g1, g3));
   G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
+TT G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
   // Vec3<float> == Bary;   May have bary[0] + bary[1] + bary[2] != 1.f.
   ASSERTX(same_size(g1, g2) && same_size(g1, g3));

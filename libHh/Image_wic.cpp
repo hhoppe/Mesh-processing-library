@@ -58,15 +58,15 @@ void wic_init() {
   AS(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wic_factory)));
 }
 
-struct PSG {
+struct SuffixGuid {
   string suffix;
   const GUID* guid;
 };
-const Array<PSG> k_ar_suffix_container = {
-    PSG{"bmp", &GUID_ContainerFormatBmp},  PSG{"png", &GUID_ContainerFormatPng},
-    PSG{"jpg", &GUID_ContainerFormatJpeg}, PSG{"jpeg", &GUID_ContainerFormatJpeg},
-    PSG{"tif", &GUID_ContainerFormatTiff}, PSG{"tiff", &GUID_ContainerFormatTiff},
-    PSG{"gif", &GUID_ContainerFormatGif},  PSG{"wmp", &GUID_ContainerFormatWmp},
+const Array<SuffixGuid> k_ar_suffix_container = {
+    SuffixGuid{"bmp", &GUID_ContainerFormatBmp},  SuffixGuid{"png", &GUID_ContainerFormatPng},
+    SuffixGuid{"jpg", &GUID_ContainerFormatJpeg}, SuffixGuid{"jpeg", &GUID_ContainerFormatJpeg},
+    SuffixGuid{"tif", &GUID_ContainerFormatTiff}, SuffixGuid{"tiff", &GUID_ContainerFormatTiff},
+    SuffixGuid{"gif", &GUID_ContainerFormatGif},  SuffixGuid{"wmp", &GUID_ContainerFormatWmp},
 };
 
 const GUID* get_container_format(const string& suffix) {

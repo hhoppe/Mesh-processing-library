@@ -50,8 +50,8 @@ class GMesh : public Mesh {
   void merge(const GMesh& mo, Map<Vertex, Vertex>* mvvn = nullptr);
   void destroy_vertex(Vertex v) override;
   void destroy_face(Face f) override;
-  // do appropriate actions with geometry, eflag_sharp, and face strings
-  void collapse_edge_vertex(Edge e, Vertex vs) override;
+  // Do appropriate actions with geometry, eflag_sharp, and face strings
+  void collapse_edge_vertex(Edge e, Vertex vs) override;  // Vertex vs is kept.
   void collapse_edge(Edge e) override;
   Vertex split_edge(Edge e, int id = 0) override;
   Edge swap_edge(Edge e) override;

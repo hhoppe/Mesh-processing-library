@@ -76,14 +76,12 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
 MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
   Result result;
   Face f = nullptr;
-  Polygon poly;
   if (_options.allow_local_project && hintf) {
     f = hintf;
     int nfchanges = 0;
     for (;;) {
-      _mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
+      Vec3<Point> points = _mesh.triangle_points(f);
+      result.d2 = project_point_triangle2(p, points[0], points[1], points[2], result.bary, result.clp);
       float dfrac = sqrt(result.d2) * _ftospatial[0][0];
       // if (!nfchanges) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // Failure.
@@ -111,12 +109,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
           side = -1;
         }
       } else {
-        for_int(i, 3) {
-          if (result.bary[i] == 0.f) {
-            side = i;
-            break;
-          }
-        }
+        side = result.bary.const_view().index(0.f);
         if (side < 0) {
           if (_options.allow_off_surface) break;     // Success.
           if (_options.allow_internal_boundaries) {  // Failure.
@@ -139,13 +132,12 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
   }
   HH_SSTAT(Sms_loc, !!f);
   if (!f) {
-    Point pbb = p * _ftospatial;
+    const Point pbb = p * _ftospatial;
     SpatialSearch<PolygonFace*> ss(_ppsp.get(), pbb);
     const PolygonFace& polyface = *assertx(ss.next());
     f = polyface.face;
-    _mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    result.d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], result.bary, result.clp);
+    Vec3<Point> points = _mesh.triangle_points(f);
+    result.d2 = project_point_triangle2(p, points[0], points[1], points[2], result.bary, result.clp);
   }
   result.f = f;
   return result;

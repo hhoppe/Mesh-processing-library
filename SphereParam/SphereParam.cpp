@@ -202,13 +202,18 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   edges_to_split.clear();
 
   for (Vertex v : new_vertices) {
-    for (Edge e : mesh.edges(v)) {
-      Vertex v2 = mesh.opp_vertex(v, e);
-      if (dist(v_sph(v), v_sph(v2)) < 1e-6f) {
-        Warning("Collapsing a zero-param-length edge adjacent to a newly introduced meridian vertex");
-        mesh.collapse_edge_vertex(e, v2);
-        break;
+    for (;;) {
+      bool modified = false;
+      for (Edge e : mesh.edges(v)) {
+        Vertex v2 = mesh.opp_vertex(v, e);
+        if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
+          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced meridian vertex");
+          mesh.collapse_edge_vertex(e, v);  // The just-introduced vertex v is kept.
+          modified = true;
+          break;
+        }
       }
+      if (!modified) break;
     }
   }
 
@@ -251,13 +256,18 @@ void split_mesh_along_octa(GMesh& mesh) {
   }
 
   for (Vertex v : new_vertices) {
-    for (Edge e : mesh.edges(v)) {
-      Vertex v2 = mesh.opp_vertex(v, e);
-      if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
-        Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
-        mesh.collapse_edge_vertex(e, v2);
-        break;
+    for (;;) {
+      bool modified = false;
+      for (Edge e : mesh.edges(v)) {
+        Vertex v2 = mesh.opp_vertex(v, e);
+        if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
+          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
+          mesh.collapse_edge_vertex(e, v);  // The just-introduced vertex v is kept.
+          modified = true;
+          break;
+        }
       }
+      if (!modified) break;
     }
   }
 }
@@ -302,7 +312,9 @@ void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
       // Adapted from MeshSearch.cpp .
       const float dotcross_eps = 2e-7f;
       Vec<bool, 3> outside;
-      for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
+      // What is the logic of the next line??
+      // for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
+      for_int(i, 3) outside[i] = dot(Vector(p), cross(points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
       int noutside = sum<int>(outside);
       if (noutside == 0) break;
       const Vec<Vertex, 3> va = mesh2.triangle_vertices(f);
@@ -344,13 +356,13 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
     split_mesh_along_octa(gmesh);  // TODO: instead, use mesh_uv discontinuities.
   }
   MeshSearch::Options options;
-  options.allow_local_project = true;
+  options.allow_local_project = false;  // was true; ??
   options.allow_off_surface = true;
   options.allow_internal_boundaries = true;
   const MeshSearch msearch(mesh_uv, options);
 
   const int num_threads = get_max_threads();
-  parallel_for_chunk(Array<Vertex>(gmesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
+  parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
     string str;
     Face hintf = nullptr;
@@ -374,7 +386,9 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             Face gf = gmesh.corner_face(c);
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), [&](Vertex v2) { return v_sph(v2); });
             const Point sph_center = mean(sphs);
-            Point sph_perturbed = normalized(interp(sph, sph_center, 1.f - .2f));
+            // Flaky especially when the face is a sliver near the boundary??  e.g. venus.sphparam.m v.s3d
+            // const Point sph_perturbed = normalized(interp(sph, sph_center, 1.f - .2f));
+            const Point sph_perturbed = normalized(sph + normalized(sph_center - sph) * 3e-4f);  // ??
             hintf = nullptr;  // ??
             auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
             search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.

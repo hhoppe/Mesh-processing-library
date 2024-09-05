@@ -662,7 +662,7 @@ class MeshStatus {
   void sim_visit_face(Face f);
 
  private:
-  Vec<EList, 4> _l_unp_nnei;         // unprocessed faces with 0..3 unpr. neighbors
+  Vec4<EList> _l_unp_nnei;           // unprocessed faces with 0..3 unpr. neighbors
   EList _l_uco;                      // faces within unvisited components
   int _sim_num{0};                   // simulation number
   bool initialize_next_component();  // ret: true=success, false=no_more

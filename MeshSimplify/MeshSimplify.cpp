@@ -3538,7 +3538,7 @@ bool desire_edge_orientation_swap(Edge e, int min_ii) {
     Vertex vl = mesh.side_vertex1(e), vr = mesh.side_vertex2(e);
     int dir = -1;  // 0 == CCW, 1 == CLW.
     int jmin = std::numeric_limits<int>::max();
-    Vec<bool, 2> ar_ok = {false, false};
+    Vec2<bool> ar_ok = {false, false};
     for_int(i, 2) {
       if (minii2) {
         if (min_ii == 0 && i == 1) continue;  // Force swap.

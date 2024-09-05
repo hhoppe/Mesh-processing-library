@@ -298,7 +298,7 @@ struct PrefetchImage {
   uint64_t file_modification_time{0};  // 0 == load_never_attempted
   unique_ptr<Image> pimage;            // nullptr could indicate a load error; bgra format iff k_use_bgra
 };
-Vec<PrefetchImage, 2> g_prefetch_image;  // {0 == next, 1 == prev}
+Vec2<PrefetchImage> g_prefetch_image;  // {0 == next, 1 == prev}
 std::mutex g_mutex_prefetch;
 
 bool filename_is_media(const string& s) { return filename_is_image(s) || filename_is_video(s); }

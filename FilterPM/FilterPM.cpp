@@ -1165,7 +1165,7 @@ void do_stat() {
   int nvsplits = pmesh._info._tot_nvsplits;
   showdf("Nvsplits=%d\n", nvsplits);
   if (nvsplits) {
-    Vec<int, 3> ar_ii;
+    Vec3<int> ar_ii;
     fill(ar_ii, 0);
     int vlroffsetn1 = 0, vlroffset00 = 0;
     HH_STAT(Sresidu);
@@ -1245,7 +1245,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
   const int first_expected_j = 1;
   const int sum_expected_j = 3;
   int last_matid = -1;
-  Vec<int, 3> ovid;
+  Vec3<int> ovid;
   fill(ovid, -1);
   int expected_j;
   dummy_init(expected_j);

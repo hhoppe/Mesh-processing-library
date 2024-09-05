@@ -924,7 +924,7 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
   if (!popen_pid) popen_pid = new intptr_t[tot_fd];  // Never deleted.
   int stdhdl = is_read ? 1 : 0;
   const int bufsize = 1024;  // Tried larger size for faster mp4 read in FF_RVideo_Implementation, but no effect.
-  Vec<int, 2> pipes;
+  Vec2<int> pipes;
   assertx(!_pipe(pipes.data(), bufsize, O_BINARY | O_NOINHERIT));
   assertx(pipes[0] > 2 && pipes[0] < tot_fd && pipes[1] > 2 && pipes[1] < tot_fd);
   int new_stdhdl = pipes[is_read ? 1 : 0];

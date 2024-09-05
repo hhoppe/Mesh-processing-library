@@ -19,6 +19,7 @@ string orig_indices;
 bool keep_uv = false;
 
 GMesh mesh_uv;
+Map<Corner, UV> map_c_uv;  // From a sparse set of corners in mesh_uv to UV coordinates.
 
 // Read a rotation frame from the specified filename and snap its axes to the canonical axes.
 Frame get_rotate_frame(const string& rotate_s3d) {
@@ -117,6 +118,8 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
 
 constexpr int k_axis0 = 0;  // Axis whose zero value defines the plane of the prime meridian.
 constexpr int k_axis1 = 1;  // Axis whose positive range defines the halfspace containing the prime meridian.
+
+constexpr float k_uv_undefined = -1.f;
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_uv);
@@ -272,27 +275,47 @@ void split_mesh_along_octa(GMesh& mesh) {
   }
 }
 
+template <typename Precision = double>
+bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance = 0.f) {
+  // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
+  //  (1.f/6.f) * dot(p1, cross(p2, p3).
+  // return dot(pt[0], cross(pt[1], pt[2])) < 0.f;
+  const Point& p1 = pt[1];
+  const Point& p2 = pt[2];
+  Vec3<Precision> vcross(Precision(p1[1]) * p2[2] - Precision(p1[2]) * p2[1],
+                         Precision(p1[2]) * p2[0] - Precision(p1[0]) * p2[2],
+                         Precision(p1[0]) * p2[1] - Precision(p1[1]) * p2[0]);
+  return dot<Precision>(pt[0], vcross) < -tolerance;
+}
+
 // Next two functions copied from SphereSample.cpp ??
-Bary get_bary(const Point& p, const Vec<Point, 3>& pt) {
-  // Spherically project the point onto the triangle spanning pt[3],
-  //  i.e. intersect the segment (origin, p) with the triangle.
+
+// Given the point p on the unit sphere and a spherical triangle pt assumed to enclose it, return the barycentric
+// coordinates of the spherical projection of p onto the triangle.
+Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& pt) {
+  // Compute the Intersection `pint` of the segment (origin, p) with the triangle.
   Polygon poly(3);
   for_int(i, 3) poly[i] = pt[i];
   const Point origin(0.f, 0.f, 0.f);
+  const Point further_p = p * 1.01f;  // Extend the segment to remove any ambiguity at its endpoint.
   Point pint;
-  if (!poly.intersect_segment(origin, p, pint)) {
-    // Warning("widening polygon");
-    if (0) SHOW(poly, spherical_triangle_area(poly));
-    widen_triangle(poly, 1e-4f);
-    if (0) SHOW(poly);
-    if (!poly.intersect_segment(origin, p, pint)) {
-      // Warning("intersect_segment failed again");
-      // Well, resort to closest point if necessary.
+  if (!poly.intersect_segment(origin, further_p, pint)) {
+    if (0) Warning("widening polygon");
+    const bool debug = false;
+    if (debug) SHOW(p, further_p);
+    if (debug) SHOW(poly, spherical_triangle_area(poly));
+    const Polygon poly_bu = poly;
+    widen_triangle(poly, 1e-3f);  // Larger due to nonzero `tolerance` below.
+    if (debug) SHOW(poly);
+    if (!poly.intersect_segment(origin, further_p, pint)) {
+      Warning("intersect_segment failed again");
+      if (1) SHOW_PRECISE(p, further_p, poly_bu, poly);
+      // In this unexpected worst case, fall back to computing the closest point.
       Bary bary;
       project_point_triangle2(p, pt[0], pt[1], pt[2], bary, pint);
     }
   }
-  // Compute bary for the intersection point pint.
+  // Compute the barycentric coordinates of the intersection point `pint`.
   Bary bary;
   Point clp;
   const float d2 = project_point_triangle2(pint, pt[0], pt[1], pt[2], bary, clp);
@@ -300,25 +323,22 @@ Bary get_bary(const Point& p, const Vec<Point, 3>& pt) {
   return bary;
 }
 
-// Given point p on sphere, and some nearby spherical triangle f in mesh2, find the true spherical
-// triangle f containing p, and the barycentric coordinates of p in f.
-void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
-  Vec3<Point> points;
+// Given point p on the unit sphere, and some "nearby" spherical triangle f in mesh2, find the actual spherical
+// triangle f containing p, and the barycentric coordinates of the spherical projection of p onto f.
+void gnomonic_search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary, float tolerance = 0.f) {
+  Vec3<Point> pt;
   {
-    // Find the spherical triangle f containing p.
+    // Find the spherical triangle f (with vertex points pt) containing p.
     int nfchanges = 0;
     for (;;) {
-      points = mesh2.triangle_points(f);
+      pt = mesh2.triangle_points(f);
       // Adapted from MeshSearch.cpp .
-      const float dotcross_eps = 2e-7f;
-      Vec<bool, 3> outside;
-      // What is the logic of the next line??
-      // for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
-      for_int(i, 3) outside[i] = dot(Vector(p), cross(points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
-      int noutside = sum<int>(outside);
-      if (noutside == 0) break;
-      const Vec<Vertex, 3> va = mesh2.triangle_vertices(f);
-      if (noutside == 2) {
+      Vec3<bool> outside;
+      for_int(i, 3) outside[i] = spherical_triangle_is_flipped(V(p, pt[mod3(i + 1)], pt[mod3(i + 2)]), tolerance);
+      int num_outside = sum<int>(outside);
+      if (num_outside == 0) break;
+      const Vec3<Vertex> va = mesh2.triangle_vertices(f);
+      if (num_outside == 2) {
         const int side = index(outside, false);
         // Fastest: jump across the vertex.
         Vertex v = va[side];
@@ -327,7 +347,7 @@ void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
         constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
         const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
         for_int(i, nrot) f = assertx(mesh2.ccw_face(v, f));
-      } else if (noutside == 1) {
+      } else if (num_outside == 1) {
         const int side = index(outside, true);
         Face f2 = mesh2.opp_face(va[side], f);
         if (!assertw(f2)) break;
@@ -340,7 +360,7 @@ void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
     }
     HH_SSTAT(Snfchanges, nfchanges);
   }
-  bary = get_bary(p, points);
+  bary = gnomonic_get_bary(p, pt);
 }
 
 UV snap_uv(UV uv) {
@@ -348,17 +368,21 @@ UV snap_uv(UV uv) {
   return uv;
 }
 
-// Given a GMesh, add "sph" and "uv" strings, optionally split its meridian, and write it to std::cout.
+template <int n> Vec<float, n> normalized_double(const Vec<float, n>& vec) {
+  double val = assertx(mag<double>(vec));
+  return vec / float(val);
+}
+
+// Given a GMesh, add "sph" and "uv" strings, optionally split its domain discontinuities, and write it to std::cout.
 void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   assertx(!(split_meridian && !mesh_uv.empty()));
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
   if (!mesh_uv.empty()) {
-    split_mesh_along_octa(gmesh);  // TODO: instead, use mesh_uv discontinuities.
+    if (0) for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
+    split_mesh_along_octa(gmesh);  // TODO: instead, use mesh_uv "uv" discontinuities.
   }
   MeshSearch::Options options;
-  options.allow_local_project = false;  // was true; ??
   options.allow_off_surface = true;
-  options.allow_internal_boundaries = true;
   const MeshSearch msearch(mesh_uv, options);
 
   const int num_threads = get_max_threads();
@@ -371,13 +395,19 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
       gmesh.update_string(v, "sph", csform_vec(str, sph));
       if (keep_uv) {
       } else if (!mesh_uv.empty()) {
+        const auto get_uvs = [&](Face f) {
+          return map(mesh_uv.triangle_corners(f), [&](Corner c) {
+            Vertex vv = mesh_uv.corner_vertex(c);
+            return v_uv(vv)[0] != k_uv_undefined ? v_uv(vv) : map_c_uv.get(c);
+          });
+        };
         // const bool near_a_cut = any_of(sph, [](float v) { return abs(v) < 1e-5f; });
         const bool near_a_cut = (abs(sph[1]) < 1e-5f || abs(sph[2]) < 1e-5f) && sph[0] > -1e-5f;
         if (!near_a_cut) {
           auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
-          search_bary(sph, mesh_uv, f, bary);  // May modify f.
+          gnomonic_search_bary(sph, mesh_uv, f, bary);  // May modify f.
           hintf = f;
-          const Vec3<UV> uvs = map(mesh_uv.triangle_vertices(f), [&](Vertex v) { return v_uv(v); });
+          const Vec3<UV> uvs = get_uvs(f);
           const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
           gmesh.update_string(v, "uv", csform_vec(str, uv));
         } else {
@@ -385,22 +415,25 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           for (Corner c : gmesh.corners(v)) {
             Face gf = gmesh.corner_face(c);
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), [&](Vertex v2) { return v_sph(v2); });
+            // Compute a sphere point that is perturbed slightly toward the centroid of the adjacent face, to find
+            // an initial face f on the correct side of the parametric uv discontinuity.
             const Point sph_center = mean(sphs);
-            // Flaky especially when the face is a sliver near the boundary??  e.g. venus.sphparam.m v.s3d
-            // const Point sph_perturbed = normalized(interp(sph, sph_center, 1.f - .2f));
-            const Point sph_perturbed = normalized(sph + normalized(sph_center - sph) * 3e-4f);  // ??
+            const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);  // ??
             hintf = nullptr;  // ??
             auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
-            search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
-            // Now use the obtained face f but search for the unperturbed sph.
-            search_bary(sph, mesh_uv, f, bary);  // May modify f.
+            gnomonic_search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
+            // Now use the obtained face f but search for the unperturbed sph and use some nonzero tolerance to
+            // hopefully avoid crossing over to the wrong side of the parametric uv discontinuity.
+            const float tolerance = 1e-7f;
+            gnomonic_search_bary(sph, mesh_uv, f, bary, tolerance);  // May modify f.
             hintf = f;
-            const Vec3<UV> uvs = map(mesh_uv.triangle_vertices(f), [&](Vertex v) { return v_uv(v); });
+            const Vec3<UV> uvs = get_uvs(f);
             const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
             gmesh.update_string(c, "uv", csform_vec(str, uv));
           }
         }
       } else {  // Replace any "uv" with longitude-latitude.
+        // Note the rendering challenges with lonlat parameterization: https://gamedev.stackexchange.com/a/197936.
         const UV lonlat = lonlat_from_sph(sph);
         const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
         if (!near_prime_meridian) {
@@ -645,9 +678,16 @@ int main(int argc, const char** argv) {
   const Frame rotate_frame = get_rotate_frame(rotate_s3d);
   if (uv_map != "") {
     mesh_uv.read(RFile{uv_map}());
+    string str;
     for (Vertex v : mesh_uv.vertices()) {
-      assertx(!mesh_uv.point(v)[2]);  // The point at each mesh vertex should be a UV coordinate, i.e. (x, y, 0.f).
-      v_uv(v) = mesh_uv.point(v).head<2>();
+      if (!parse_key_vec(mesh_uv.get_string(v), "uv", v_uv(v))) {
+        v_uv(v) = twice(k_uv_undefined);
+        for (Corner c : mesh_uv.corners(v)) {
+          UV uv;
+          assertx(parse_key_vec(mesh_uv.get_string(c), "uv", uv));
+          map_c_uv.enter(c, uv);
+        }
+      }
       Point sph;
       assertx(parse_key_vec(mesh_uv.get_string(v), "sph", sph));
       mesh_uv.set_point(v, sph);

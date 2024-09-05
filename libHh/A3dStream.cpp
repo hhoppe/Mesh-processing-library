@@ -15,9 +15,9 @@ namespace {
 const A3dColor k_color_undefined{-1.f, 0.f, 0.f};
 
 struct a3d_binary_buf {
-  Vec<char, 2> magic;
+  Vec2<char> magic;
   ushort utype;
-  Vec<float, 3> f;
+  Vec3<float> f;
 };
 
 }  // namespace

@@ -174,7 +174,7 @@ class SphereMapper::Implementation {
     for_int(i, 3) for_int(j, 3) n[i + 1][j + 1] = i == j ? (2 * cov[i][i] - trace) : (cov[i][j] + cov[j][i]);
 
     SGrid<float, 4, 4> u, vt;
-    Vec<float, 4> s;
+    Vec4<float> s;
     assertx(singular_value_decomposition(n.const_view(), u.view(), s.view(), vt.view()));
     sort_singular_values(u.view(), s.view(), vt.view());
     // (Because matrix n is symmetric, the vectors in u and vt are generally identical.)

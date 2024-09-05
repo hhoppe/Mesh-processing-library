@@ -568,7 +568,7 @@ void compute_intersect() {
     Polygon& poly = *ppoly;
     Bbox bbox{poly};
     for_int(min_max, 2) static_cast<Point&>(bbox[min_max]) *= f;
-    const auto func_considerpoly = [&](Polygon* const& id, Vec<float, 3>& bb0, Vec<float, 3>& bb1, KD::CBloc floc) {
+    const auto func_considerpoly = [&](Polygon* const& id, Vec3<float>& bb0, Vec3<float>& bb1, KD::CBloc floc) {
       dummy_use(bb0, bb1, floc);
       const Polygon& p1 = *id;
       const Polygon& p2 = poly;

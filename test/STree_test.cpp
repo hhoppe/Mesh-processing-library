@@ -41,7 +41,7 @@ int main() {
         a[0] = x;
         a[1] = y;
       }
-      Vec<int, 2> a;
+      Vec2<int> a;
     };
     const auto func_compare_astruct = [](const astruct& s1, const astruct& s2) {
       if (s1.a[0] != s2.a[0]) return s1.a[0] - s2.a[0];

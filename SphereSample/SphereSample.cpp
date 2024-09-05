@@ -71,9 +71,9 @@ const Pixel k_pixel_orange{255, 153, 0, 255};
 
 // *** General functions.
 
-inline Point bilerp(const Vec<Point, 4>& pa, float u, float v) { return bilerp(pa[0], pa[1], pa[2], pa[3], u, v); }
+inline Point bilerp(const Vec4<Point>& pa, float u, float v) { return bilerp(pa[0], pa[1], pa[2], pa[3], u, v); }
 
-bool in_spheretri(const Point& p, const Vec<Point, 3>& tri) {
+bool in_spheretri(const Point& p, const Vec3<Point>& tri) {
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(tri[i]));
   const float dotcross_eps = 2e-7f;
@@ -152,8 +152,8 @@ Array<DomainFace> get_domain_faces() {
     domain_faces[1].facecolor = Pixel::blue();
     domain_faces[2].facecolor = Pixel::red();
     domain_faces[3].facecolor = k_pixel_orange;
-    const Vec<Vector, 4> vtmp = []() {
-      Vec<Vector, 4> v;
+    const Vec4<Vector> vtmp = []() {
+      Vec4<Vector> v;
       v[0] = Vector(-1.f / sqrt(3.f), 0.f, 0.f);
       v[1] = Vector(+sqrt(3.f) / 6.f, +.5f, 0.f);
       v[2] = Vector(+sqrt(3.f) / 6.f, -.5f, 0.f);
@@ -500,48 +500,48 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
 
 // *** Maps.
 
-using Trispheremap = Point (*)(const Vec<Point, 3>& pt, const Bary& bary);
+using Trispheremap = Point (*)(const Vec3<Point>& pt, const Bary& bary);
 
-Point map_sphere(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_sphere(const Vec3<Point>& pt, const Bary& bary) {
   // return normalized(interp(pt[0], pt[1], pt[2], bary[0], bary[1]));
   return spheremap_linear_reproject(pt[0], pt[1], pt[2], bary);
 }
 
-Point map_2slerp0(const Vec<Point, 3>& pt, const Bary& bary) { return spheremap_2slerp0(pt[0], pt[1], pt[2], bary); }
+Point map_2slerp0(const Vec3<Point>& pt, const Bary& bary) { return spheremap_2slerp0(pt[0], pt[1], pt[2], bary); }
 
-Point map_2slerp1(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_2slerp1(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_2slerp0(pt[1], pt[2], pt[0], Bary(bary[1], bary[2], bary[0]));
 }
 
-Point map_2slerp2(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_2slerp2(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_2slerp0(pt[2], pt[0], pt[1], Bary(bary[2], bary[0], bary[1]));
 }
 
-Point map_2slerps(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_2slerps(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_sym_2slerps(pt[0], pt[1], pt[2], bary);
 }
 
-Point map_arvo0(const Vec<Point, 3>& pt, const Bary& bary) { return spheremap_arvo0(pt[0], pt[1], pt[2], bary); }
+Point map_arvo0(const Vec3<Point>& pt, const Bary& bary) { return spheremap_arvo0(pt[0], pt[1], pt[2], bary); }
 
-Point map_arvo1(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_arvo1(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_arvo0(pt[1], pt[2], pt[0], Bary(bary[1], bary[2], bary[0]));
 }
 
-Point map_arvo2(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_arvo2(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_arvo0(pt[2], pt[0], pt[1], Bary(bary[2], bary[0], bary[1]));
 }
 
-Point map_arvos(const Vec<Point, 3>& pt, const Bary& bary) { return spheremap_sym_arvo(pt[0], pt[1], pt[2], bary); }
+Point map_arvos(const Vec3<Point>& pt, const Bary& bary) { return spheremap_sym_arvo(pt[0], pt[1], pt[2], bary); }
 
-Point map_buss(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_buss(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_sym_buss_fillmore(pt[0], pt[1], pt[2], bary);
 }
 
-Point map_area(const Vec<Point, 3>& pt, const Bary& bary) { return spheremap_area_ratio(pt[0], pt[1], pt[2], bary); }
+Point map_area(const Vec3<Point>& pt, const Bary& bary) { return spheremap_area_ratio(pt[0], pt[1], pt[2], bary); }
 
-Point map_trisub(const Vec<Point, 3>& pt, const Bary& bary) {
+Point map_trisub(const Vec3<Point>& pt, const Bary& bary) {
   ASSERTX(bary.is_convex());
-  Vec<Point, 3> pc = pt;
+  Vec3<Point> pc = pt;
   Bary bc = bary;
   for_int(iter, 100) {
     for_int(i, 3) ASSERTX(bc[i] >= 0.f && bc[i] <= 1.f);
@@ -586,7 +586,7 @@ Trispheremap get_map(const string& tmapname) {
 // *** domain -> sphere grid mapping.
 
 // Given uv coordinates within spherical quad, return a spherical triangle pt and barycentric coordinates within it.
-void split_quad_2tris(const Vec<Point, 4>& po, float fi, float fj, Vec<Point, 3>& pt, Bary& bary) {
+void split_quad_2tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary) {
   if (fi + fj <= 1.f) {
     pt = V(po[0], po[1], po[3]);
     bary = Bary(1.f - fi - fj, fj, fi);
@@ -596,7 +596,7 @@ void split_quad_2tris(const Vec<Point, 4>& po, float fi, float fj, Vec<Point, 3>
   }
 }
 
-void split_quad_4tris(const Vec<Point, 4>& po, float fi, float fj, Vec<Point, 3>& pt, Bary& bary) {
+void split_quad_4tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary) {
   // Find wedge in face, adjacent to vertices {q, q + 1}.
   int q;
   float bq0, bq1, bc;
@@ -630,8 +630,7 @@ void split_quad_4tris(const Vec<Point, 4>& po, float fi, float fj, Vec<Point, 3>
   bary = Bary(bq0, bq1, bc);
 }
 
-void split_quad_8tris(const Vec<Point, 4>& po, float fi, float fj, Vec<Point, 3>& pt, Bary& bary,
-                      Trispheremap trimap) {
+void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary, Trispheremap trimap) {
   // Find quadrant in face, adjacent to vertex q = 0..3.
   int q;
   float s, t;
@@ -911,7 +910,7 @@ void create(bool b_triangulate) {
         assertx(gridn >= 2 && (gridn / 2) * 2 == gridn);
       }
       for_int(i, gridn + 1) for_int(j, !quad_domain ? gridn - i + 1 : gridn + 1) {
-        Vec<Point, 3> pt;  // Desired spherical triangle vertices.
+        Vec3<Point> pt;  // Desired spherical triangle vertices.
         Bary bary;         // Barycentric coordinates within pt.
         const float fi = float(i) / gridn, fj = float(j) / gridn;
         if (!quad_domain) {
@@ -953,7 +952,7 @@ void create(bool b_triangulate) {
       }
     } else {
       for_int(i, gridn) for_int(j, gridn) {
-        const Vec<Vertex, 4> va{verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i + 1][j + 1], verts[i + 1][j + 0]};
+        const Vec4<Vertex> va{verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i + 1][j + 1], verts[i + 1][j + 0]};
         Face f;
         if (!b_triangulate) {
           f = mesh.create_face(va);
@@ -1171,13 +1170,13 @@ void do_sample_map(Args& args) {
   }
 }
 
-Bary get_bary_sub(const Point& p, const Vec<Point, 3>& pt, Trispheremap trimap) {
+Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
   assertx(trimap == &map_sphere);
   // Problem is that most maps do not have the property that pn[] are on spherical arcs of pc[]!
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(pt[i]));
-  Vec<Bary, 3> bc;
-  Vec<Point, 3> pc;
+  Vec3<Bary> bc;
+  Vec3<Point> pc;
   for_int(i, 3) {
     bc[i] = Bary(i == 0, i == 1, i == 2);
     pc[i] = pt[i];
@@ -1186,14 +1185,14 @@ Bary get_bary_sub(const Point& p, const Vec<Point, 3>& pt, Trispheremap trimap) 
     const float eps = 2e-7f;
     if (dist2(pc[0], pc[1]) < square(eps) && dist2(pc[0], pc[2]) < square(eps) && dist2(pc[1], pc[2]) < square(eps))
       return bc[0];
-    Vec<Bary, 3> bn;
-    Vec<Point, 3> pn;
+    Vec3<Bary> bn;
+    Vec3<Point> pn;
     for_int(i, 3) {
       bn[i] = interp(bc[mod3(i + 1)], bc[mod3(i + 2)]);
       pn[i] = trimap(pt, bn[i]);
     }
     for_int(i, 3) {
-      const Vec<Point, 3> pp{pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
+      const Vec3<Point> pp{pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
       if (in_spheretri(p, pp)) {
         bc = {bc[i], bn[mod3(i + 2)], bn[mod3(i + 1)]};
         pc = {pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
@@ -1209,7 +1208,7 @@ Bary get_bary_sub(const Point& p, const Vec<Point, 3>& pt, Trispheremap trimap) 
   assertnever("no convergence");
 }
 
-Bary get_bary(const Point& p, const Vec<Point, 3>& pt, Trispheremap trimap) {
+Bary get_bary(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
   ASSERTX(in_spheretri(p, pt));
   // Hard-code the inverse-map for map_sphere.
   assertx(trimap == &map_sphere);
@@ -1251,11 +1250,11 @@ void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
       points = mesh2.triangle_points(f);
       // Adapted from MeshSearch.cpp .
       const float dotcross_eps = 2e-7f;
-      Vec<bool, 3> outside;
+      Vec3<bool> outside;
       for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
       int noutside = sum<int>(outside);
       if (noutside == 0) break;
-      const Vec<Vertex, 3> va = mesh2.triangle_vertices(f);
+      const Vec3<Vertex> va = mesh2.triangle_vertices(f);
       if (noutside == 2) {
         const int side = index(outside, false);
         // Fastest: jump across the vertex.
@@ -1617,7 +1616,7 @@ void do_write_lonlat_texture(Args& args) {
 }
 
 // Tessellate a single spherical triangle.
-void generate_tess(const Vec<Point, 3>& pa, int n, Trispheremap trimap) {
+void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
   for_int(i, 3) assertx(is_unit(pa[i]));
   Matrix<Vertex> verts(n + 1, n + 1);  // Upper-left half is defined.
   for_int(i, n + 1) for_int(j, n - i + 1) {
@@ -1661,7 +1660,7 @@ void do_test_properties() {
       {refp2, refp3, refp1}   // This rotated first face is identical iff symmetric. (check visually).
   };
   for_int(domainf, faces.num()) {
-    Vec<Point, 3> pt;
+    Vec3<Point> pt;
     for_int(k, 3) pt[k] = normalized(faces[domainf][k]);
     generate_tess(pt, gridn, trimap);
   }

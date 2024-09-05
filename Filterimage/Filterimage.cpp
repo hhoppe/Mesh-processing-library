@@ -2640,7 +2640,7 @@ void do_procedure(Args& args) {
     // creates v.static.png v.start.png v.period.png v.activation.png
     string rootname = args.get_filename();
     assertx(image.size() > 0);
-    const Vec<string, 4> channel_name{"static", "start", "period", "activation"};
+    const Vec4<string> channel_name{"static", "start", "period", "activation"};
     int est_num_input_frames = 0;
     for_coords(image.dims(), [&](const Vec2<int>& yx) {
       int staticframe = image[yx][0], start = image[yx][1], period = image[yx][2];

@@ -147,7 +147,7 @@ int main() {
     SHOW(ar[2]);  // out-of-bounds error
   }
   {
-    using Array3 = Vec<Array<int>, 3>;
+    using Array3 = Vec3<Array<int>>;
     Array3 ar;
     ar[0].push(1);
 #if 0

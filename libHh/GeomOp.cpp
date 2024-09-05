@@ -247,9 +247,9 @@ Frame make_horiz(const Frame& f) {
 
 void widen_triangle(ArrayView<Point> poly, float eps) {
   assertx(poly.num() == 3);
-  Point p0 = interp(poly[0], poly[1], poly[2], 1.f + eps, -eps * 0.5f);
-  Point p1 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, 1.f + eps);
-  Point p2 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, -eps * 0.5f);
+  const Point p0 = interp(poly[0], poly[1], poly[2], 1.f + eps, -eps * 0.5f);
+  const Point p1 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, 1.f + eps);
+  const Point p2 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, -eps * 0.5f);
   poly[0] = p0;
   poly[1] = p1;
   poly[2] = p2;

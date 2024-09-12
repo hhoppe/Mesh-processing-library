@@ -11,7 +11,7 @@
 #include <mutex>
 #include <thread>
 
-#include "HW.h"
+#include "Hw.h"
 #include "VideoViewer/GradientDomainLoop.h"
 #include "libHh/Args.h"
 #include "libHh/ArrayOp.h"  // median()

@@ -9,7 +9,7 @@
 #include "G3dOGL/SimplicialComplex.h"  // DEF_SC
 #include "G3dOGL/SplitRecord.h"        // DEF_SC
 #include "G3dOGL/normalmapping.h"
-#include "HW.h"
+#include "Hw.h"
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Array.h"

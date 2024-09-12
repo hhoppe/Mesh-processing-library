@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HW.h"
+#include "Hw.h"
 #include "libHh/GMesh.h"  // GMesh::string_key()
 #include "libHh/PMesh.h"
 

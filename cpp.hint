@@ -22,10 +22,9 @@
 #define HH_ATIMER(x)
 #define HH_STIMER(x)
 #define HH_PTIMER(x)
-#define HH_TIMER_END(x)
 
 #define HH_STAT(S) hh::Stat S(#S, true)
-#define HH_STATNP(S) hh::Stat S(#S, false)
+#define HH_STAT_NP(S) hh::Stat S(#S, false)
 #define HH_SSTAT(S, v) do { static hh::Stat S(#S, true, true); S.enter(v); } while (false)
 #define HH_SSTAT_RMS(S, v) do { static hh::Stat S(#S, true, true); S.set_rms(); S.enter(v); } while (false)
 #define HH_RSTAT(S, range) do { HH_STAT(S); for (auto e : range) { S.enter(e); } } while (false)
@@ -52,19 +51,6 @@
 #define hh_parallel_for(...) HH_PRAGMA_OMP(parallel for) for (__VA_ARGS__)
 #define cond_parallel_for_int(c, i, ub) cond_parallel_for_T(c, int, i, 0, ub)
 #define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, size_t, i, 0, ub)
-
-#define ForSCSimplex(K, dim, s)
-#define ForSCOrderedSimplex(K, dim, s)
-#define ForSCSimplexChildIndex(s, c, i)
-#define ForSCSimplexChild(s, c)
-#define ForSCSimplexFaces(s, c)
-#define ForSCSimplexParent(s, p)
-#define ForSCSimplexStar(s, p)
-#define ForSCVertexFace(v, f)
-#define ForAWVertexFace(mesh, v, f, ff)
-#define ForAWVertexVertex(mesh, v, f, vv, ff)
-
-#define HH_NORETURN
 
 #define HH_PRINTF_ATTRIBUTE(x)
 

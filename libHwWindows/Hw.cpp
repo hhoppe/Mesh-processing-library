@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HW.h"
+#include "Hw.h"
 
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
 #include <ShellScalingApi.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)

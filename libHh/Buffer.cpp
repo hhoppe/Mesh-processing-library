@@ -54,7 +54,7 @@ void Buffer::expand() {
 #if defined(BUFFER_USE_WIN32_THREAD)
 
 extern HANDLE g_buf_event_data_available;
-HANDLE g_buf_event_data_available;  // manual-reset; used in libHWin/HW.cpp
+HANDLE g_buf_event_data_available;  // manual-reset; used in libHwWindows/Hw.cpp
 
 namespace {
 

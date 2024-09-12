@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <mutex>  // once_flag, call_once()
 
-#include "HW.h"
+#include "Hw.h"
 #include "libHh/Array.h"
 #include "libHh/Image.h"
 #include "libHh/StringOp.h"

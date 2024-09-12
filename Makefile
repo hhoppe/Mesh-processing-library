@@ -25,7 +25,7 @@ ifneq ($(CONFIG),all)  # For the rest of this file.
 
 lib_dirs = \
   libHh \
-  lib$(HW)#  Either libHWin (Windows program) or libHWX (X11 program).
+  lib$(Hw)#  Either libHwWindows (Windows program) or libHwX (X11 program).
 
 prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
@@ -37,7 +37,7 @@ prog_dirs = \
 
 dirs = $(lib_dirs) $(prog_dirs)
 dirs+test = $(dirs) test demos
-dirs+test+all = $(sort $(dirs+test) libHWin libHWX)#  Sort to remove duplicates.
+dirs+test+all = $(sort $(dirs+test) libHwWindows libHwX)#  Sort to remove duplicates.
 
 all: progs test
 

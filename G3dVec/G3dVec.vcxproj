@@ -63,7 +63,7 @@
     <ProjectReference Include="..\libHh\libHh.vcxproj">
       <Project>{603dc1d8-0d14-40f0-9788-565f73d5dc54}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libHWin\libHWin.vcxproj">
+    <ProjectReference Include="..\libHwWindows\libHwWindows.vcxproj">
       <Project>{345bb510-e14c-4fdd-8375-0895fedb342b}</Project>
     </ProjectReference>
   </ItemGroup>

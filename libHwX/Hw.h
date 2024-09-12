@@ -13,7 +13,7 @@ extern "C" {
 #endif
 }
 
-#include "libHWin/HWbase.h"
+#include "libHwWindows/HwBase.h"
 
 namespace hh {
 

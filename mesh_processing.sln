@@ -4,7 +4,7 @@ VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libHh", "libHh\libHh.vcxproj", "{603DC1D8-0D14-40F0-9788-565F73D5DC54}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libHWin", "libHWin\libHWin.vcxproj", "{345BB510-E14C-4FDD-8375-0895FEDB342B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libHwWindows", "libHwWindows\libHwWindows.vcxproj", "{345BB510-E14C-4FDD-8375-0895FEDB342B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Recon", "Recon\Recon.vcxproj", "{71F5D634-6F90-49C9-8622-80AAF3599CC1}"
 EndProject

@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_LIBHWIN_HW_H_
-#define MESH_PROCESSING_LIBHWIN_HW_H_
+#ifndef MESH_PROCESSING_LIBHWWINDOWS_HW_H_
+#define MESH_PROCESSING_LIBHWWINDOWS_HW_H_
 
 // #define WIN32_LEAN_AND_MEAN  // not possible
 #undef NOGDI
@@ -15,7 +15,7 @@ extern "C" {
 #include <GL/gl.h>  // glBegin() etc. for users of this class
 }
 
-#include "HWbase.h"
+#include "HwBase.h"
 
 namespace hh {
 
@@ -105,4 +105,4 @@ class Hw : public HwBase {
 
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_LIBHWIN_HW_H_
+#endif  // MESH_PROCESSING_LIBHWWINDOWS_HW_H_

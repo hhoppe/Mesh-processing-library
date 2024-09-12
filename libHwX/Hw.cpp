@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "HW.h"
+#include "Hw.h"
 
 #include <sys/select.h>  // fd_set, select()
 
@@ -15,7 +15,7 @@ extern "C" {
 #include <cstring>  // strlen(), strerror()
 #include <ctime>    // setitimer(), struct itimerval, struct timeval
 
-#include "HW.xbm"
+#include "Hw.xbm"
 #include "libHh/Args.h"
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()

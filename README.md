@@ -857,9 +857,9 @@ The library <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main
 contains the main reusable classes.
 All files include `Hh.h` which sets up a common cross-platform environment.
 
-The libraries <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHWin">`libHWin`</a>
-and <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHWX">`libHWX`</a>
-define different implementations of a simple windowing interface (class `HW`),
+The libraries <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHwWindows">`libHwWindows`</a>
+and <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHwX">`libHwX`</a>
+define different implementations of a simple windowing interface (class `Hw`),
 under `Win32` and `X Windows`, respectively.
 Both implementations support `OpenGL` rendering.
 

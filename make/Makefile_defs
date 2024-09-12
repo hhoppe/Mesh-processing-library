@@ -204,11 +204,11 @@ CPPFLAGS = $(strip $(cppinc) $(includes))
 CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
 CFLAGS = $(strip $(c-all) $(if $(rel:0=),$(crel),$(cdbg)))
 
-# Note: lib$(HW) must be added as prefix to LDLIBS because lib$(HW)/HW.cpp references Image and Buffer in libHh.
+# Note: lib$(Hw) must be added as prefix to LDLIBS because lib$(Hw)/Hw.cpp references Image and Buffer in libHh.
 ifeq ($(win32),1)
-  HW = HWin
+  Hw = HwWindows
 else
-  HW = HWX
+  Hw = HwX
 endif
 
 my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.

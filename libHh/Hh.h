@@ -21,7 +21,7 @@
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 // "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__.
 // For <windows.h>; e.g. 0x0501 == WinXP; 0x0601 == WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__.
-#define _WIN32_WINNT 0x0603  // == _WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHWin/HW.cpp
+#define _WIN32_WINNT 0x0603  // == _WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHwWindows/Hw.cpp
 #endif
 
 #if defined(_MSC_VER)

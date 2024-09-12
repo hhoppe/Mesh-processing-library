@@ -8,9 +8,9 @@ tests="$(cd test && ls *.cpp | sed 's/.cpp//')"
 if [[ ${WINDIR+x} ]]; then      # on Windows
   llvm_bin="c:/progra~1/LLVM/bin"
   cpp="$llvm_bin/clang++" ar="$llvm_bin/llvm-ar" ranlib="$llvm_bin/llvm-ranlib"
-  cppflags="-I.. -I../libHWin -std=c++14 -O3 -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -DHH_NO_IMAGE_IO"
-  libs="libHh libHWin"
-  ldflags="../libHWin/libHWin.a ../libHh/libHh.a -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32"
+  cppflags="-I.. -I../libHwWindows -std=c++14 -O3 -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -DHH_NO_IMAGE_IO"
+  libs="libHh libHwWindows"
+  ldflags="../libHwWindows/libHwWindows.a ../libHh/libHh.a -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32"
   exe=".exe"
 else                            # on Unix
   cpp=clang++ ar=ar ranlib=ranlib

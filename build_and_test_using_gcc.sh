@@ -8,15 +8,15 @@ tests="$(cd test && ls *.cpp | sed 's/.cpp//')"
 if [[ ${WINDIR+x} ]]; then      # on Windows
   gcc_bin="/cygdrive/c/progra~1/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin"
   cpp="$gcc_bin/g++" ar="$gcc_bin/ar" ranlib="$gcc_bin/ranlib"
-  cppflags="-I.. -I../libHWin -std=c++14 -O3 -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -DHH_NO_IMAGE_IO"
-  libs="libHh libHWin"
-  ldflags="../libHWin/libHWin.a ../libHh/libHh.a -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32"
+  cppflags="-I.. -I../libHwWindows -std=c++14 -O3 -DNDEBUG -D_CRT_SECURE_NO_WARNINGS -DHH_NO_IMAGE_IO"
+  libs="libHh libHwWindows"
+  ldflags="../libHwWindows/libHwWindows.a ../libHh/libHh.a -lglu32 -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32"
   exe=".exe"
 else                            # on Unix
   cpp=g++ ar=ar ranlib=ranlib
-  cppflags="-I.. -I../libHWX -std=c++14 -O3 -DNDEBUG -pthread"
-  libs="libHh libHWX"
-  ldflags="../libHWX/libHWX.a ../libHh/libHh.a -lGLU -lGL -lX11 -ljpeg -lpng -lz"
+  cppflags="-I.. -I../libHwX -std=c++14 -O3 -DNDEBUG -pthread"
+  libs="libHh libHwX"
+  ldflags="../libHwX/libHwX.a ../libHh/libHh.a -lGLU -lGL -lX11 -ljpeg -lpng -lz"
   exe=""
 fi
 if [[ -d /Applications ]]; then  # on Mac

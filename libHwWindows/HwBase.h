@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_LIBHWIN_HWBASE_H_
-#define MESH_PROCESSING_LIBHWIN_HWBASE_H_
+#ifndef MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_
+#define MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_
 
 #include <optional>
 
@@ -44,7 +44,7 @@ class HwBase : noncopyable {
   void set_default_background(string s) { assertx(_state == EState::init), _default_background = std::move(s); }
   void set_default_foreground(string s) { assertx(_state == EState::init), _default_foreground = std::move(s); }
   void set_default_geometry(string s) { assertx(_state == EState::init), _default_geometry = std::move(s); }
-  virtual void set_double_buffering(bool newstate) = 0;  // (also allowed after open() in HWX without HH_OGLX)
+  virtual void set_double_buffering(bool newstate) = 0;  // (also allowed after open() in libHwX without HH_OGLX)
 
   // call anytime after init():
   virtual void set_window_title(string s) = 0;  // set text for window title bar
@@ -107,7 +107,7 @@ class HwBase : noncopyable {
   }
 
  private:
-  friend class Hw;  // grant access to HW but not to any DerivedHw
+  friend class Hw;  // grant access to Hw but not to any DerivedHw
   string _default_background{"white"};
   string _default_foreground{"black"};
   string _default_geometry{"200x200+100+0"};
@@ -622,4 +622,4 @@ inline void HwBase::flush_point_ogl() {
 
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_LIBHWIN_HWBASE_H_
+#endif  // MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_

@@ -52,11 +52,11 @@
     <OutDir>$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="HW.cpp" />
+    <ClCompile Include="Hw.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="HW.h" />
-    <ClInclude Include="HWbase.h" />
+    <ClInclude Include="Hw.h" />
+    <ClInclude Include="HwBase.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

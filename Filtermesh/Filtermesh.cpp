@@ -96,8 +96,8 @@ void assign_normals() {
   }
 }
 
-UV get_uv(Vertex v) {
-  UV uv;
+Uv get_uv(Vertex v) {
+  Uv uv;
   assertx(parse_key_vec(mesh.get_string(v), "uv", uv));
   return uv;
 }
@@ -194,7 +194,7 @@ void do_createobject(Args& args) {
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       float ang = xf * TAU;
       mesh.set_point(v, Point(std::cos(ang), std::sin(ang), yf * (TAU / 2)));
-      UV uv(xf * 2.f, 1.f - yf);
+      Uv uv(xf * 2.f, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
   } else if (obname == "cup64") {
@@ -213,7 +213,7 @@ void do_createobject(Args& args) {
       float r = lerp(0.396313f, +0.249999f, yf);
       float z = lerp(0.436485f, -0.480285f, yf);
       mesh.set_point(v, Point(r * std::cos(ang), r * std::sin(ang), z));
-      UV uv(lerp(0.013743f, 0.982733f, xf), lerp(0.005718f, 0.993877f, yf));
+      Uv uv(lerp(0.013743f, 0.982733f, xf), lerp(0.005718f, 0.993877f, yf));
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
   } else if (obname == "wavy64") {
@@ -224,7 +224,7 @@ void do_createobject(Args& args) {
       matv[y][x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       mesh.set_point(v, Point(xf, yf, std::sin(xf * TAU * 3.f) * .05f));
-      UV uv(xf, 1.f - yf);
+      Uv uv(xf, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
   } else if (starts_with(obname, "torus")) {
@@ -1064,7 +1064,7 @@ void do_trisubdiv() {
     // Added just uv support for
     //  Filtermesh brian615e.uv.m -angle 0 -trisubdiv -renumber >brian615e.subdiv.uv.m
     if (0) {
-      UV uv = interp(get_uv(mesh.vertex1(e)), get_uv(mesh.vertex2(e)));
+      Uv uv = interp(get_uv(mesh.vertex1(e)), get_uv(mesh.vertex2(e)));
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
   }
@@ -1492,14 +1492,14 @@ void do_lscm() {
     assertx(i == lls.num_rows());
   }
   for_int(i, a_v.num()) {
-    UV uv(0.f, 0.f);
+    Uv uv(0.f, 0.f);
     lls.enter_xest_rc(i * 2 + 0, 0, uv[0]);
     lls.enter_xest_rc(i * 2 + 1, 0, uv[1]);
   }
   assertx(lls.solve());
   string str;
   for_int(i, a_v.num()) {
-    UV uv;
+    Uv uv;
     uv[0] = lls.get_x_rc(i * 2 + 0, 0);
     uv[1] = lls.get_x_rc(i * 2 + 1, 0);
     mesh.update_string(a_v[i], "uv", csform_vec(str, uv));
@@ -1523,13 +1523,13 @@ void do_poissonparam() {
   lls.set_verbose(1);
   // lls.set_tolerance(1e-8f);
   Vertex v0;
-  UV uv0;
+  Uv uv0;
   dummy_init(v0);
   {
     float minval = BIGFLOAT;
     for (Vertex v : mesh.vertices()) {
-      UV uv = get_uv(v);
-      float val = float(dot(uv, UV(1.f, 1.f)));
+      Uv uv = get_uv(v);
+      float val = float(dot(uv, Uv(1.f, 1.f)));
       if (val < minval) {
         minval = val;
         v0 = v;
@@ -1557,7 +1557,7 @@ void do_poissonparam() {
       assertx(va.num() == 3);
       for_int(j, 3) {
         poly[j] = mesh.point(va[j]);
-        UV uv = get_uv(va[j]);
+        Uv uv = get_uv(va[j]);
         uva[j] = Point(uv[0], uv[1], 0.f);
       }
       for_int(dir, 2) {
@@ -1580,7 +1580,7 @@ void do_poissonparam() {
     assertx(i == lls.num_rows());
   }
   for_int(i, a_v.num()) {
-    UV uv = get_uv(a_v[i]);
+    Uv uv = get_uv(a_v[i]);
     uv[0] -= uv0[0];
     uv[1] -= uv0[1];
     if (1) fill(uv, 0.f);
@@ -1590,7 +1590,7 @@ void do_poissonparam() {
   assertx(lls.solve());
   string str;
   for_int(i, a_v.num()) {
-    UV uv;
+    Uv uv;
     uv[0] = lls.get_x_rc(i * 2 + 0, 0);
     uv[1] = lls.get_x_rc(i * 2 + 1, 0);
     mesh.update_string(a_v[i], "uv", csform_vec(str, uv));
@@ -1753,7 +1753,7 @@ void triangulate_quads(ETriType type) {
     Vertex va0 = va[0], va2 = va[2];
     bool other_diag;
     const auto uv_distance_from_center = [&](int i) {
-      UV uv = get_uv(va[i]);
+      Uv uv = get_uv(va[i]);
       return abs(uv[0] - .5f) + abs(uv[1] - .5f);
     };
     switch (type) {
@@ -2494,7 +2494,7 @@ void do_obtusesplit() {
     if (is_sphere) pint = to_Point(ok_normalized(to_Vector(pint)));
     mesh.set_point(vnew, pint);
     if (GMesh::string_has_key(mesh.get_string(va[0]), "uv")) {
-      UV uv = interp(get_uv(va[0]), get_uv(va[1]), bary0);
+      Uv uv = interp(get_uv(va[0]), get_uv(va[1]), bary0);
       mesh.update_string(vnew, "uv", csform_vec(str, uv));
     }
     if (GMesh::string_has_key(mesh.get_string(va[0]), "domainp")) {
@@ -2524,7 +2524,7 @@ void do_analyzestretch() {
   showf("Analyzing stretch for %s surface\n", is_sphere ? "sphere" : "mesh");
   Array<Vertex> va;
   Polygon poly;
-  Vec3<UV> uvs;
+  Vec3<Uv> uvs;
   double d_l2_integ_stretch = 0.;
   HH_STAT(Stri_isotropy);
   HH_STAT(Stri_li);
@@ -2547,14 +2547,14 @@ void do_analyzestretch() {
         assertx(parse_key_vec(mesh.get_string(v), "domainp", pa[i]));
       }
       const Vector v01 = pa[1] - pa[0], v01n = normalized(v01), v02 = pa[2] - pa[0];
-      uvs[0] = UV(0.f, 0.f);
-      uvs[1] = UV(mag(v01), 0.f);
-      uvs[2] = UV(dot(v02, v01n), mag(v02 - v01n * dot(v02, v01n)));
+      uvs[0] = Uv(0.f, 0.f);
+      uvs[1] = Uv(mag(v01), 0.f);
+      uvs[2] = Uv(dot(v02, v01n), mag(v02 - v01n * dot(v02, v01n)));
     } else {
       num_uv += 1;
       for_int(i, va.num()) {
         Vertex v = va[i];
-        UV& uv = uvs[i];
+        Uv& uv = uvs[i];
         uv = get_uv(v);
       }
     }
@@ -3114,25 +3114,25 @@ void do_rmflarea(Args& args) {
 }
 
 void do_keepfmatid(Args& args) {
-  int keepid = args.get_int();
+  int keep_id = args.get_int();
   Array<Face> arf;
   string str;
   for (Face f : mesh.faces()) {
     const char* s = GMesh::string_key(str, mesh.get_string(f), "matid");
     if (!s) Warning("Found face without any matid");
-    if (!s || to_int(s) != keepid) arf.push(f);
+    if (!s || to_int(s) != keep_id) arf.push(f);
   }
   showdf("Keeping %d out of %d faces\n", mesh.num_faces() - arf.num(), mesh.num_faces());
   for (Face f : arf) mesh.destroy_face(f);
 }
 
 void do_uvtopos() {
-  const bool keepuv = getenv_bool("KEEPUV");
+  const bool keep_uv = getenv_bool("KEEPUV");
   for (Vertex v : mesh.vertices()) {
-    UV uv = get_uv(v);
+    Uv uv = get_uv(v);
     Point p(uv[0], uv[1], 0.f);
     mesh.set_point(v, p);
-    if (!keepuv) mesh.update_string(v, "uv", nullptr);
+    if (!keep_uv) mesh.update_string(v, "uv", nullptr);
   }
 }
 
@@ -3147,7 +3147,7 @@ void do_perturbz(Args& args) {
 
 void do_splitdiaguv() {
   Array<Edge> esplit;
-  Array<UV> uvs;
+  Array<Uv> uvs;
   for (Edge e : mesh.edges()) {
     if (mesh.is_boundary(e)) continue;
     uvs.init(0);
@@ -3165,14 +3165,14 @@ void do_splitdiaguv() {
 
 void do_rmdiaguv() {
   Array<Edge> esplit;
-  Array<UV> uvs;
+  Array<Uv> uvs;
   for (Edge e : mesh.edges()) {
     if (mesh.is_boundary(e)) continue;
     uvs.init(0);
     for (Vertex v : mesh.vertices(e)) {
       // arbitrarily pick one corner
       Corner c = mesh.ccw_corner(v, e);
-      UV uv;
+      Uv uv;
       assertx(mesh.parse_corner_key_vec(c, "uv", uv));
       uvs.push(uv);
     }
@@ -3312,7 +3312,7 @@ void do_procedure(Args& args) {
         float anglon = float(j) / (nlon - 0.f) * TAU;
         Point p(std::cos(anglon) * std::sin(anglat), std::sin(anglon) * std::sin(anglat), std::cos(anglat));
         mesh.set_point(v, p);
-        UV uv(float(j) / (nlon - 1.f), float(i) / (nlat - 1.f));
+        Uv uv(float(j) / (nlon - 1.f), float(i) / (nlat - 1.f));
         mesh.update_string(v, "uv", csform_vec(str, uv));
         if (i == 0) {
           assertx(dist2(mesh.point(v), Point(0.f, 0.f, 1.f)) < 1e-6f);
@@ -4118,7 +4118,7 @@ void do_fromObj(Args& args) {
   // build mesh from Obj input. Specify <flip> to flip face to point to
   //  the outside of convex components
   Array<Vector> ar_nor;
-  Array<UV> ar_uv;
+  Array<Uv> ar_uv;
   RFile fi(args.get_filename());
   bool flip = false;
   if (args.num() && args.peek_string() == "flip") {
@@ -4142,7 +4142,7 @@ void do_fromObj(Args& args) {
       continue;
     }
     if (const char* s = after_prefix(sline, "vt ")) {
-      UV uv;
+      Uv uv;
       for_int(c, 2) uv[c] = float_from_chars(s);
       assert_no_more_chars(s);
       ar_uv.push(uv);

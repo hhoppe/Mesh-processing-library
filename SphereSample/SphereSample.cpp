@@ -23,7 +23,7 @@
 #include "libHh/Timer.h"
 using namespace hh;
 
-// The UV coordinates in this file do not take into account my recent Y flip of Image domain?
+// The Uv coordinates in this file do not take into account my recent Y flip of Image domain?
 
 namespace {
 
@@ -44,8 +44,8 @@ bool nooutput = false;
 
 struct DomainFace {
   Polygon poly;          // Points on regular polyhedron in 3D.
-  Array<UV> stretchuvs;  // For stretch optimization domain -> sphere.
-  Array<UV> imageuvs;    // For texture-mapping.
+  Array<Uv> stretchuvs;  // For stretch optimization domain -> sphere.
+  Array<Uv> imageuvs;    // For texture-mapping.
   Pixel facecolor;
   Pixel pixel_checker;
 };
@@ -56,9 +56,9 @@ bool is_remeshed = false;
 constexpr Vector k_undefined_vector(-2.f, 0.f, 0.f);
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_domainp);
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_stretchuv);
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_imageuv);
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_ijuv);
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_stretchuv);
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_imageuv);
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_ijuv);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_normal);  // May be k_undefined_vector.
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_rgb);     // May be k_undefined_vector.
@@ -177,31 +177,31 @@ Array<DomainFace> get_domain_faces() {
         domain_faces[i].poly[1] = vtmp[1];
         domain_faces[i].poly[2] = vtmp[2];
       }
-      domain_faces[i].stretchuvs[0] = UV(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = UV(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = UV(.5f, .5f * sqrt(3.f));
+      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
+      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
+      domain_faces[i].stretchuvs[2] = Uv(.5f, .5f * sqrt(3.f));
       // The imageuv's are defined below.
     }
     int i = 0;
     // 103: face 1 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = UV(.00f, .00f);
-    domain_faces[i].imageuvs[1] = UV(.50f, .00f);
-    domain_faces[i].imageuvs[2] = UV(.50f, .50f);
+    domain_faces[i].imageuvs[0] = Uv(.00f, .00f);
+    domain_faces[i].imageuvs[1] = Uv(.50f, .00f);
+    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
     i++;
     // 213: face 0 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = UV(.00f, .50f);
-    domain_faces[i].imageuvs[1] = UV(.00f, .00f);
-    domain_faces[i].imageuvs[2] = UV(.50f, .50f);
+    domain_faces[i].imageuvs[0] = Uv(.00f, .50f);
+    domain_faces[i].imageuvs[1] = Uv(.00f, .00f);
+    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
     i++;
     // 023: face 2 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = UV(.50f, .00f);
-    domain_faces[i].imageuvs[1] = UV(1.0f, .50f);
-    domain_faces[i].imageuvs[2] = UV(.50f, .50f);
+    domain_faces[i].imageuvs[0] = Uv(.50f, .00f);
+    domain_faces[i].imageuvs[1] = Uv(1.0f, .50f);
+    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
     i++;
     // 012: face 3 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = UV(.50f, .00f);
-    domain_faces[i].imageuvs[1] = UV(1.0f, .00f);
-    domain_faces[i].imageuvs[2] = UV(1.0f, .50f);
+    domain_faces[i].imageuvs[0] = Uv(.50f, .00f);
+    domain_faces[i].imageuvs[1] = Uv(1.0f, .00f);
+    domain_faces[i].imageuvs[2] = Uv(1.0f, .50f);
     i++;
     assertx(i == domain_faces.num());
   } else if (domain == "octa" || domain == "octaflat") {
@@ -247,15 +247,15 @@ Array<DomainFace> get_domain_faces() {
       domain_faces[i].poly[0] = Point(0.f, -dir0[0], dir0[1]);
       domain_faces[i].poly[1] = Point(0.f, -dir1[0], dir1[1]);
       domain_faces[i].poly[2] = Point(front ? -1.f : +1.f, 0.f, 0.f);
-      domain_faces[i].stretchuvs[0] = UV(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = UV(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = UV(.5f, .5f * sqrt(3.f));
-      domain_faces[i].imageuvs[0] = UV(.5f * (1.f + dir0[0]), .5f * (1.f + dir0[1]));
-      domain_faces[i].imageuvs[1] = UV(.5f * (1.f + dir1[0]), .5f * (1.f + dir1[1]));
+      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
+      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
+      domain_faces[i].stretchuvs[2] = Uv(.5f, .5f * sqrt(3.f));
+      domain_faces[i].imageuvs[0] = Uv(.5f * (1.f + dir0[0]), .5f * (1.f + dir0[1]));
+      domain_faces[i].imageuvs[1] = Uv(.5f * (1.f + dir1[0]), .5f * (1.f + dir1[1]));
       if (front) {
-        domain_faces[i].imageuvs[2] = UV(.5f, .5f);
+        domain_faces[i].imageuvs[2] = Uv(.5f, .5f);
       } else {
-        domain_faces[i].imageuvs[2] = UV(.5f * (1.f + dir0[0] + dir1[0]), .5f * (1.f + dir0[1] + dir1[1]));
+        domain_faces[i].imageuvs[2] = Uv(.5f * (1.f + dir0[0] + dir1[0]), .5f * (1.f + dir0[1] + dir1[1]));
       }
     }
   } else if (domain == "cube") {
@@ -284,12 +284,12 @@ Array<DomainFace> get_domain_faces() {
       domain_faces[i].stretchuvs.init(4);
       domain_faces[i].imageuvs.init(4);
       // Poly's are defined below.
-      domain_faces[i].stretchuvs[0] = UV(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = UV(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = UV(1.f, 1.f);
-      domain_faces[i].stretchuvs[3] = UV(0.f, 1.f);
+      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
+      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
+      domain_faces[i].stretchuvs[2] = Uv(1.f, 1.f);
+      domain_faces[i].stretchuvs[3] = Uv(0.f, 1.f);
       hh::Vec2<float> s;
-      UV uvo;
+      Uv uvo;
       if (!baseball) {  // cross.
         s = twice(1.f / 4.f);
         uvo[0] = s[1] * (i < 4 ? i : 1);
@@ -299,10 +299,10 @@ Array<DomainFace> get_domain_faces() {
         uvo[0] = i < 3 ? 0.f : s[1];
         uvo[1] = s[0] * V(0, 1, 2, 0, 1, 2)[i];
       }
-      domain_faces[i].imageuvs[0] = UV(uvo[0] + 0, uvo[1] + 0);
-      domain_faces[i].imageuvs[1] = UV(uvo[0] + s[1], uvo[1] + 0);
-      domain_faces[i].imageuvs[2] = UV(uvo[0] + s[1], uvo[1] + s[0]);
-      domain_faces[i].imageuvs[3] = UV(uvo[0] + 0, uvo[1] + s[0]);
+      domain_faces[i].imageuvs[0] = Uv(uvo[0] + 0, uvo[1] + 0);
+      domain_faces[i].imageuvs[1] = Uv(uvo[0] + s[1], uvo[1] + 0);
+      domain_faces[i].imageuvs[2] = Uv(uvo[0] + s[1], uvo[1] + s[0]);
+      domain_faces[i].imageuvs[3] = Uv(uvo[0] + 0, uvo[1] + s[0]);
     }
     const float s = sqrt(1.f / 3.f);
     Vec<Vec4<hh::Vec3<int>>, 6> fvcoords;
@@ -330,7 +330,7 @@ Array<DomainFace> get_domain_faces() {
   return domain_faces;
 }
 
-Pixel get_color(const DomainFace& domain_face, UV uv) {
+Pixel get_color(const DomainFace& domain_face, Uv uv) {
   bool is_quad = domain_face.poly.num() == 4;
   int local_checkern = checkern;
   Pixel domain_face_color = domain_face.facecolor;
@@ -350,9 +350,9 @@ Pixel get_color(const DomainFace& domain_face, UV uv) {
       const float d = max(uv[0] + uv[1] - (1.f - eps), 0.f) / sqrt(2.f);
       uv -= d;
       if (uv[0] < eps)
-        uv = UV(eps, 1.f - 2.f * eps);
+        uv = Uv(eps, 1.f - 2.f * eps);
       else if (uv[1] < eps)
-        uv = UV(1.f - 2.f * eps, eps);
+        uv = Uv(1.f - 2.f * eps, eps);
       // (The checker color is incorrect at checker intersections along the diagonal; oh well.)
     }
   }
@@ -797,7 +797,7 @@ void create(bool b_triangulate) {
       }
       v_domainp(v) = p;
       {
-        UV uv;
+        Uv uv;
         if (!quad_domain) {
           uv = interp(df.stretchuvs[0], df.stretchuvs[1], df.stretchuvs[2], bary);
         } else {
@@ -806,17 +806,17 @@ void create(bool b_triangulate) {
         v_stretchuv(v) = uv;
       }
       {
-        UV uv;
+        Uv uv;
         if (!quad_domain) {
           uv = interp(df.imageuvs[0], df.imageuvs[1], df.imageuvs[2], bary);
         } else {
           uv = qinterp(df.imageuvs[0], df.imageuvs[1], df.imageuvs[2], df.imageuvs[3], bary);
         }
-        uv = UV(hashf.enter(uv[0]), hashf.enter(uv[1]));
+        uv = Uv(hashf.enter(uv[0]), hashf.enter(uv[1]));
         v_imageuv(v) = uv;
       }
       if (write_imagen) {
-        const UV& uv = v_imageuv(v);
+        const Uv& uv = v_imageuv(v);
         int imi = int(uv[0] * (2 * gridn) + .5f);
         int imj = int(uv[1] * (2 * gridn) + .5f);
         int imn = imj * (2 * gridn + 1) + imi + 1;
@@ -824,7 +824,7 @@ void create(bool b_triangulate) {
       }
       if ((i == 0 || i == gridn) && (j == 0 || j == gridn) && contains(key_names, "domaincorner"))
         mesh.update_string(v, "domaincorner", "");
-      v_ijuv(v) = UV(float(i) / gridn, float(j) / gridn);
+      v_ijuv(v) = Uv(float(i) / gridn, float(j) / gridn);
       if (checkern) {
         const Pixel& pixel = get_color(df, v_ijuv(v));
         Vector rgb;
@@ -838,7 +838,7 @@ void create(bool b_triangulate) {
       assertx(gridn >= 1);
       for_int(i, gridn + 1) for_int(j, gridn + 1) {
         Vertex v = verts[i][j];
-        const UV uv(float(j) / gridn, float(i) / gridn);
+        const Uv uv(float(j) / gridn, float(i) / gridn);
         Point p;
         if (domain_interp) {
           p = bilerp(po, uv[0], uv[1]);
@@ -861,7 +861,7 @@ void create(bool b_triangulate) {
         const int i = ii * gridn;
         const int j = jj * gridn;
         Vertex v = verts[i][j];
-        const UV uv(float(j) / gridn, float(i) / gridn);
+        const Uv uv(float(j) / gridn, float(i) / gridn);
         const Point p = normalized(bilerp(po, uv[0], uv[1]));  // Corners.
         mesh.set_point(v, p);
       }
@@ -1471,10 +1471,10 @@ void do_write_texture(Args& args) {
   const Frame rotate_frame = get_rotate_frame();
   if (signal_ == "N") assertw(rotate_s3d != "");
   for (Vertex v : mesh.ordered_vertices()) {  // Ordered so as to "consistently" break ties along domain edges.
-    const UV uv = v_imageuv(v);
+    const Uv uv = v_imageuv(v);
     int y = int(uv[1] * scale + .5f);
     const int x = int(uv[0] * scale + .5f);
-    // We flip the image vertically because the OpenGL UV coordinate origin is at the image lower-left.
+    // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
     y = image.ysize() - 1 - y;
     Pixel pixel;
     pixel[3] = 255;
@@ -1567,10 +1567,10 @@ void do_write_lonlat_texture(Args& args) {
     Face hintf = nullptr;
     for (const int y : subrange) {
       for_int(x, image.xsize()) {
-        // We flip the image vertically because the OpenGL UV coordinate origin is at the image lower-left.
+        // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
         const int yy = image.ysize() - 1 - y;
         Pixel& pixel = image[yy][x];
-        const UV lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
+        const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
         const Point sph = sph_from_lonlat(lonlat);
 
         auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
@@ -1624,7 +1624,7 @@ void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
     v_normal(v) = k_undefined_vector;
     v_rgb(v) = k_undefined_vector;
     verts[i][j] = v;
-    v_imageuv(v) = UV(i / float(n) + j / float(n) * .5f, j / float(n) * sqrt(3.f) / 2.f);
+    v_imageuv(v) = Uv(i / float(n) + j / float(n) * .5f, j / float(n) * sqrt(3.f) / 2.f);
     const Bary bary((n - i - j) / float(n), i / float(n), j / float(n));
     const Point p = trimap(pa, bary);
     assertx(is_unit(p));
@@ -1698,7 +1698,7 @@ void do_create_lonlat_sphere() {
     Vertex v = mesh.create_vertex();
     matv[i][j] = v;
     // We reverse the index i to obtain the correct outward orientation of the sphere.
-    const UV lonlat(j / (gridn - 1.f), (gridn - 1 - i) / (gridn - 1.f));
+    const Uv lonlat(j / (gridn - 1.f), (gridn - 1 - i) / (gridn - 1.f));
     const Point sph = sph_from_lonlat(lonlat);
     mesh.set_point(v, sph);
     v_sph(v) = sph;
@@ -1746,17 +1746,17 @@ void do_create_lonlat_checker(Args& args) {
       Face hintf = nullptr;
       for (const int y : subrange) {
         for_int(x, image.xsize()) {
-          // We flip the image vertically because the OpenGL UV coordinate origin is at the image lower-left.
+          // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
           const int yy = image.ysize() - 1 - y;
           Pixel& pixel = image[yy][x];
-          const UV lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
+          const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
           auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
           // Given that `mesh` has disjoint components, this call to search_bary() ought to fail sometimes?
           search_bary(sph, mesh, f, bary);  // May modify f.
           hintf = f;
           const Vec3<Vertex> va = mesh.triangle_vertices(f);
-          UV uv{};
+          Uv uv{};
           for_int(i, 3) uv += bary[i] * v_ijuv(va[i]);
           // Mesh vertices have colors according to checkern; for precision, we ignore these and recompute using uv.
           const int domainf = f_domainf(f);
@@ -1783,7 +1783,7 @@ void add_mesh_strings() {
   if (contains(key_names, "ll"))
     for (Vertex v : mesh.vertices()) {
       const Point& sph = v_sph(v);
-      UV lonlat = lonlat_from_sph(sph);
+      Uv lonlat = lonlat_from_sph(sph);
       const bool near_prime_meridian = abs(sph[0]) < 1e-5f && sph[1] > 1e-5f;
       if (near_prime_meridian) {
         Face f = mesh.most_ccw_face(v);  // Actually, any adjacent face in this connected component.

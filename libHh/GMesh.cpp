@@ -813,7 +813,7 @@ Vertex GMesh::center_split_face(Face f) {
   bool have_nor = true;
   Vector scol{};
   bool have_col = true;
-  UV suv{};
+  Uv suv{};
   bool have_uv = true;
   for (Corner c : corners(f)) {
     if (Vector nor; parse_corner_key_vec(c, "normal", nor))
@@ -824,7 +824,7 @@ Vertex GMesh::center_split_face(Face f) {
       scol += col;
     else
       have_col = false;
-    if (UV uv; parse_corner_key_vec(c, "uv", uv))
+    if (Uv uv; parse_corner_key_vec(c, "uv", uv))
       suv += uv;
     else
       have_uv = false;

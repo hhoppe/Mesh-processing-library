@@ -2264,7 +2264,7 @@ void do_poisson() {
       Vertex v = mesh.create_vertex();
       matv[yx] = v;
       mesh.set_point(v, matp[yx]);
-      UV uv((convert<float>(yx) / convert<float>(image.dims() - 1)).rev());
+      Uv uv((convert<float>(yx) / convert<float>(image.dims() - 1)).rev());
       mesh.update_string(v, "uv", csform_vec(str, uv));
       if (1) {
         mesh.update_string(v, "Ouv", csform_vec(str, uv));
@@ -2621,7 +2621,7 @@ void do_procedure(Args& args) {
       Vec2<float> yxf = (convert<float>(yx) + .5f) / max(convert<float>(image.dims()));
       float fac = 5e-4f;
       mesh.set_point(v, Point(yxf[1], yxf[0], depth * fac));
-      UV uv(yx[1] / (image.dim(1) - 1.f), 1.f - yx[0] / (image.dim(0) - 1.f));
+      Uv uv(yx[1] / (image.dim(1) - 1.f), 1.f - yx[0] / (image.dim(0) - 1.f));
       // = (convert<float>(yx) / convert<float>(image.dims() - 1)).rev();
       mesh.update_string(v, "uv", csform_vec(str, uv));
     });

@@ -197,7 +197,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
     assertx(read_binary_std(is, buf));
     Vector& nor = _wedges[w].attrib.normal;
     A3dColor& rgb = _wedges[w].attrib.rgb;
-    UV& uv = _wedges[w].attrib.uv;
+    Uv& uv = _wedges[w].attrib.uv;
     const float* p = buf.data();
     for_int(c, 3) nor[c] = *p++;
     if (pminfo._has_rgb) {
@@ -332,7 +332,7 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
       gmesh.update_string(gv, "normal", csform_vec(str, nor));
       const A3dColor& rgb = _wedges[wr].attrib.rgb;
       if (pminfo._has_rgb) gmesh.update_string(gv, "rgb", csform_vec(str, rgb));
-      const UV& uv = _wedges[wr].attrib.uv;
+      const Uv& uv = _wedges[wr].attrib.uv;
       if (pminfo._has_uv) gmesh.update_string(gv, "uv", csform_vec(str, uv));
     }
   }
@@ -357,7 +357,7 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
       gmesh.update_string(gc, "normal", csform_vec(str, nor));
       const A3dColor& rgb = _wedges[w].attrib.rgb;
       if (pminfo._has_rgb) gmesh.update_string(gc, "rgb", csform_vec(str, rgb));
-      const UV& uv = _wedges[w].attrib.uv;
+      const Uv& uv = _wedges[w].attrib.uv;
       if (pminfo._has_uv) gmesh.update_string(gc, "uv", csform_vec(str, uv));
     }
   }
@@ -419,7 +419,7 @@ void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
     int bufw = 6 + i * wadlength;
     Vector& nor = ar_wad[i].dnormal;
     A3dColor& rgb = ar_wad[i].drgb;
-    UV& uv = ar_wad[i].duv;
+    Uv& uv = ar_wad[i].duv;
     float* p = &buf[bufw];
     for_int(c, 3) nor[c] = *p++;
     if (pminfo._has_rgb) {
@@ -1948,7 +1948,7 @@ GMesh SMesh::extract_gmesh(int has_rgb, int has_uv) const {
       gmesh.update_string(gv, "rgb", csform_vec(str, col));
     }
     if (has_uv) {
-      const UV& uv = _vertices[v].attrib.w.uv;
+      const Uv& uv = _vertices[v].attrib.w.uv;
       gmesh.update_string(gv, "uv", csform_vec(str, uv));
     }
   }
@@ -2016,7 +2016,7 @@ GMesh SGeomorph::extract_gmesh(int has_rgb, int has_uv) const {
       gmesh.update_string(gv, "Orgb", csform_vec(str, col));
     }
     if (has_uv) {
-      const UV& uv = va0.w.uv;
+      const Uv& uv = va0.w.uv;
       gmesh.update_string(gv, "Ouv", csform_vec(str, uv));
     }
   }

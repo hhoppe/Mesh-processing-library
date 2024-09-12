@@ -264,17 +264,17 @@ float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Poi
   }
 }
 
-UV lonlat_from_sph(const Point& sph) {
+Uv lonlat_from_sph(const Point& sph) {
   // We assume: lon=0 at +Y, lon=.25 at -X, lat=0 at -Z.
-  // We place lat=0 at -Z because the OpenGL UV coordinate origin is at the image lower-left.
+  // We place lat=0 at -Z because the OpenGL Uv coordinate origin is at the image lower-left.
   const float lon = snap_coordinate(std::atan2(sph[0], -sph[1]) / TAU + .5f);  // azimuth; phi.
   const float lat = snap_coordinate(std::asin(sph[2]) / (TAU / 2) + .5f);      // zenith; theta.
-  return UV(lon, lat);
+  return Uv(lon, lat);
 }
 
-Point sph_from_lonlat(const UV& lonlat) {
+Point sph_from_lonlat(const Uv& lonlat) {
   // We assume: lon=0 at +Y, lon=.25 at -X, lat=0 at -Z.
-  // We place lat=0 at -Z because the OpenGL UV coordinate origin is at the image lower-left.
+  // We place lat=0 at -Z because the OpenGL Uv coordinate origin is at the image lower-left.
   const float lon = lonlat[0];
   const float lat = lonlat[1];
   const float ang_lon = lon * TAU;

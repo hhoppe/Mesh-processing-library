@@ -50,7 +50,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_opos);  // For morph, old vertex po
 struct WedgeInfo {
   Vector nor;
   A3dColor col;
-  UV uv;
+  Uv uv;
 };
 
 // Used to store the scalar attributes associate with an integer wedge id.
@@ -141,7 +141,7 @@ WedgeInfo create_winfo(Corner c) {
   A3dColor& col = wi.col;
   fill(col, k_undefined);
   mesh.parse_corner_key_vec(c, "rgb", col);
-  UV& uv = wi.uv;
+  Uv& uv = wi.uv;
   fill(uv, k_undefined);
   mesh.parse_corner_key_vec(c, "uv", uv);
   return wi;
@@ -455,7 +455,7 @@ int get_unique_wid(Vertex v, bool use_old) {
 string create_attrib_string(const WedgeInfo& wi, bool old_flag) {
   const Vector& nor = wi.nor;
   const A3dColor& col = wi.col;
-  const UV& uv = wi.uv;
+  const Uv& uv = wi.uv;
   const char* sflag = old_flag ? "O" : "";
   string sret;
   if (nor[0] != k_undefined) sret += sform(" %snormal=(%g %g %g)", sflag, nor[0], nor[1], nor[2]);

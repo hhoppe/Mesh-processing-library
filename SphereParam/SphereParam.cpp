@@ -19,7 +19,7 @@ string orig_indices;
 bool keep_uv = false;
 
 GMesh mesh_uv;
-Map<Corner, UV> map_c_uv;  // From a sparse set of corners in mesh_uv to UV coordinates.
+Map<Corner, Uv> map_c_uv;  // From a sparse set of corners in mesh_uv to Uv coordinates.
 
 // Read a rotation frame from the specified filename and snap its axes to the canonical axes.
 Frame get_rotate_frame(const string& rotate_s3d) {
@@ -78,7 +78,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
 
   } else if (base_param_scheme == "uv") {  // Use the PMesh uv (lon, lat) values.
     for_int(w, pmi._wedges.num()) {
-      const UV lonlat = pmi._wedges[w].attrib.uv;
+      const Uv lonlat = pmi._wedges[w].attrib.uv;
       const Point sph = sph_from_lonlat(lonlat);
       const int v = pmi._wedges[w].vertex;
       base_sphmap[v] = sph;
@@ -122,7 +122,7 @@ constexpr int k_axis1 = 1;  // Axis whose positive range defines the halfspace c
 constexpr float k_uv_undefined = -1.f;
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);
-HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, UV, v_uv);
+HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_uv);
 
 Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e), vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
@@ -363,7 +363,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bar
   bary = gnomonic_get_bary(p, pt);
 }
 
-UV snap_uv(UV uv) {
+Uv snap_uv(Uv uv) {
   for_int(c, 2) if (abs(uv[c]) < 1e-8f) uv[c] = 0.f;
   return uv;
 }
@@ -407,8 +407,8 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
           gnomonic_search_bary(sph, mesh_uv, f, bary);  // May modify f.
           hintf = f;
-          const Vec3<UV> uvs = get_uvs(f);
-          const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+          const Vec3<Uv> uvs = get_uvs(f);
+          const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
           gmesh.update_string(v, "uv", csform_vec(str, uv));
         } else {
           gmesh.update_string(v, "uv", nullptr);
@@ -427,14 +427,14 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             const float tolerance = 1e-7f;
             gnomonic_search_bary(sph, mesh_uv, f, bary, tolerance);  // May modify f.
             hintf = f;
-            const Vec3<UV> uvs = get_uvs(f);
-            const UV uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+            const Vec3<Uv> uvs = get_uvs(f);
+            const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
             gmesh.update_string(c, "uv", csform_vec(str, uv));
           }
         }
       } else {  // Replace any "uv" with longitude-latitude.
         // Note the rendering challenges with lonlat parameterization: https://gamedev.stackexchange.com/a/197936.
-        const UV lonlat = lonlat_from_sph(sph);
+        const Uv lonlat = lonlat_from_sph(sph);
         const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
         if (!near_prime_meridian) {
           // If not near the discontinuity on the +Y (k_axis1) axis.
@@ -447,7 +447,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
             const Point center = mean(sphs);
             const float lon2 = center[0] < 0.f ? 0.f : 1.f;
-            gmesh.update_string(c, "uv", csform_vec(str, UV(lon2, lonlat[1])));
+            gmesh.update_string(c, "uv", csform_vec(str, Uv(lon2, lonlat[1])));
           }
         }
       }
@@ -683,7 +683,7 @@ int main(int argc, const char** argv) {
       if (!parse_key_vec(mesh_uv.get_string(v), "uv", v_uv(v))) {
         v_uv(v) = twice(k_uv_undefined);
         for (Corner c : mesh_uv.corners(v)) {
-          UV uv;
+          Uv uv;
           assertx(parse_key_vec(mesh_uv.get_string(c), "uv", uv));
           map_c_uv.enter(c, uv);
         }

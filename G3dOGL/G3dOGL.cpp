@@ -205,8 +205,8 @@ struct VertexLOD {
   Vector Nnor;
   Pixel Od;
   Pixel Nd;
-  UV Ouv;
-  UV Nuv;
+  Uv Ouv;
+  Uv Nuv;
 };
 
 struct CornerLOD {
@@ -242,7 +242,7 @@ const FlagMask vflag_unique_nors = Mesh::allocate_Vertex_flag();  // v_lod.{Onor
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, Vector, c_nor);
 
 const FlagMask mflag_uv = Mesh::allocate_flag();
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, UV, c_uv);
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, Uv, c_uv);
 
 const Pixel k_color_invalid{0xCD, 0xAB, 0xFF, 0x00};
 bool lmcad;    // lmcolor() state
@@ -1546,14 +1546,14 @@ void mesh_init(GMesh& mesh) {
         }
       }
       if (1) {
-        UV vuv(BIGFLOAT, BIGFLOAT);
+        Uv vuv(BIGFLOAT, BIGFLOAT);
         if (parse_key_vec(mesh.get_string(v), "uv", vuv)) {
           mesh.gflags().flag(mflag_uv) = true;
           if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Ouv", v_lod(v).Ouv))
             assertx(parse_key_vec(mesh.get_string(v), "uv", v_lod(v).Nuv));
         }
         for (Corner c : mesh.corners(v)) {
-          UV& uv = c_uv(c);
+          Uv& uv = c_uv(c);
           if (parse_key_vec(mesh.get_string(c), "uv", uv))
             mesh.gflags().flag(mflag_uv) = true;
           else
@@ -1650,7 +1650,7 @@ inline void render_corner(const GMesh& mesh, Corner c) {
   Vertex v = mesh.corner_vertex(c);
   if (texture_active) {
     if (mesh.gflags().flag(mflag_uv)) {
-      UV uv = c_uv(c);
+      Uv uv = c_uv(c);
       if (uv[0] != BIGFLOAT) {
         glTexCoord2fv(uv.data());
       } else {
@@ -1998,8 +1998,8 @@ void draw_mesh(GMesh& mesh) {
       if (!nedges) glBegin(GL_LINES);
       nedges++;
       if (uvtopos && mesh.gflags().flag(mflag_uv)) {
-        UV uv11 = c_uv(mesh.corner(mesh.vertex1(e), mesh.face1(e)));
-        UV uv21 = c_uv(mesh.corner(mesh.vertex2(e), mesh.face1(e)));
+        Uv uv11 = c_uv(mesh.corner(mesh.vertex1(e), mesh.face1(e)));
+        Uv uv21 = c_uv(mesh.corner(mesh.vertex2(e), mesh.face1(e)));
         if (1) {
           Point p11(uv11[0], uv11[1], 0.f);
           Point p21(uv21[0], uv21[1], 0.f);
@@ -2007,8 +2007,8 @@ void draw_mesh(GMesh& mesh) {
           glVertex3fv(p21.data());
         }
         if (mesh.face2(e)) {
-          UV uv12 = c_uv(mesh.corner(mesh.vertex1(e), mesh.face2(e)));
-          UV uv22 = c_uv(mesh.corner(mesh.vertex2(e), mesh.face2(e)));
+          Uv uv12 = c_uv(mesh.corner(mesh.vertex1(e), mesh.face2(e)));
+          Uv uv22 = c_uv(mesh.corner(mesh.vertex2(e), mesh.face2(e)));
           if (uv11 != uv12) {
             Point p12(uv12[0], uv12[1], 0.f);
             Point p22(uv22[0], uv22[1], 0.f);
@@ -2472,7 +2472,7 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
       }
     }
     if (texture_active) {
-      UV uv;
+      Uv uv;
       uv[0] = f1 * vlod.Nuv[0] + f2 * vlod.Ouv[0];
       uv[1] = f1 * vlod.Nuv[1] + f2 * vlod.Ouv[1];
       for (Corner c : mesh.corners(v)) c_uv(c) = uv;
@@ -4821,9 +4821,9 @@ using PlyIndices = PArray<int, 4>;
 Array<Point> ply_vpos;
 Array<Vector> ply_vnor;
 Array<Pixel> ply_vrgb;
-Array<UV> ply_vuv;
+Array<Uv> ply_vuv;
 Array<PlyIndices> ply_findices;
-Array<Vec3<UV>> ply_fuv;
+Array<Vec3<Uv>> ply_fuv;
 
 // ply
 // format binary_big_endian 1.0

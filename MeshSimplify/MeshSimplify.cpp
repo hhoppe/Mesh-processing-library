@@ -260,7 +260,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MFace, int, f_matid);
 struct WedgeInfo {
   A3dColor col;
   Vector nor;
-  UV uv;
+  Uv uv;
 };
 
 Array<WedgeInfo> gwinfo;  // Indexed by c_wedge_id; gwinfo[0] is not used!
@@ -960,7 +960,7 @@ void create_vertex_corner_strings(Vertex v, string& str) {
     if (nor[0] != k_undefined) mesh.update_string(v, "normal", csform_vec(str, nor));
     const A3dColor& col = wi.col;
     if (col[0] != k_undefined) mesh.update_string(v, "rgb", csform_vec(str, col));
-    const UV& uv = wi.uv;
+    const Uv& uv = wi.uv;
     if (uv[0] != k_undefined) mesh.update_string(v, "uv", csform_vec(str, uv));
   } else {
     for (Corner c : mesh.corners(v)) {
@@ -972,7 +972,7 @@ void create_vertex_corner_strings(Vertex v, string& str) {
         if (nor[0] != k_undefined) mesh.update_string(c, "normal", csform_vec(str, nor));
         const A3dColor& col = wi.col;
         if (col[0] != k_undefined) mesh.update_string(c, "rgb", csform_vec(str, col));
-        const UV& uv = wi.uv;
+        const Uv& uv = wi.uv;
         if (uv[0] != k_undefined) mesh.update_string(c, "uv", csform_vec(str, uv));
       } else {
         mesh.set_string(c, generate_corner_string(c, str));
@@ -1044,7 +1044,7 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
   A3dColor& col = wi.col;
   fill(col, k_undefined);
   mesh.parse_corner_key_vec(c, "rgb", col);
-  UV& uv = wi.uv;
+  Uv& uv = wi.uv;
   fill(uv, k_undefined);
   mesh.parse_corner_key_vec(c, "uv", uv);
   return wi;
@@ -3225,7 +3225,7 @@ bool is_grid_corner(Vertex v) {
 }
 
 bool is_uv_corner(Corner c) {
-  const UV& uv = c_winfo(c).uv;
+  const Uv& uv = c_winfo(c).uv;
   const float eps = 1e-6f;
   return ((abs(uv[0] - 0.f) < eps || abs(uv[0] - 1.f) < eps) && (abs(uv[1] - 0.f) < eps || abs(uv[1] - 1.f) < eps));
 }
@@ -3404,8 +3404,8 @@ bool try_ecol_legal(Edge e, Vertex v1, Vertex v2, int v1nse, int v2nse) {
 }
 
 template <typename Precision = double>
-std::optional<std::tuple<UV, float, float>> intersect_segments(const UV& p1, const UV& p2, const UV& p3,
-                                                               const UV& p4) {
+std::optional<std::tuple<Uv, float, float>> intersect_segments(const Uv& p1, const Uv& p2, const Uv& p3,
+                                                               const Uv& p4) {
   const Precision dx12 = Precision{p2[0]} - p1[0];
   const Precision dy12 = Precision{p2[1]} - p1[1];
   const Precision dx34 = Precision{p4[0]} - p3[0];
@@ -3419,13 +3419,13 @@ std::optional<std::tuple<UV, float, float>> intersect_segments(const UV& p1, con
   const Precision t34 = (dx13 * dy12 - dy13 * dx12) / denominator;
   if (t12 < 0.0f || t12 > 1.0f || t34 < 0.0f || t34 > 1.0f) return {};  // The intersection is outside the segments.
 
-  const UV intersection{float(p1[0] + t12 * dx12), float(p1[1] + t12 * dy12)};
+  const Uv intersection{float(p1[0] + t12 * dx12), float(p1[1] + t12 * dy12)};
   return std::make_tuple(intersection, float(t12), float(t34));
 }
 
 void check_ccw(Vertex v) {
   for (Face f : mesh.faces(v)) {
-    const Vec3<UV> pt = map(mesh.triangle_corners(f), [&](Corner c) { return c_winfo(c).uv; });
+    const Vec3<Uv> pt = map(mesh.triangle_corners(f), [&](Corner c) { return c_winfo(c).uv; });
     assertw(signed_area(pt[0], pt[1], pt[2]) >= 0.f);
   }
 }
@@ -3452,9 +3452,9 @@ double evaluate_aps(Edge e, int ii) {
     Face f = mesh.corner_face(c);
     Face ft = c_wedge_id(c) == wid_v1f1 ? f1 : (assertx(f2 && c_wedge_id(c) == wid_v1f2), f2);
     assertx(f_matid(f) == f_matid(ft));  // (Necessary but not sufficient.)
-    const Vec3<UV> pt{c_winfo(mesh.corner(v2, ft)).uv, c_winfo(cs1).uv, c_winfo(cs2).uv};
+    const Vec3<Uv> pt{c_winfo(mesh.corner(v2, ft)).uv, c_winfo(cs1).uv, c_winfo(cs2).uv};
     if (signed_area(pt[0], pt[1], pt[2]) <= 0.f) return -1.;  // Parametric foldover (non-bijectivity).
-    const UV& pt1 = c_winfo(c).uv;
+    const Uv& pt1 = c_winfo(c).uv;
     const float b0 = signed_area(pt1, pt[1], pt[2]);
     const float b1 = signed_area(pt1, pt[2], pt[0]);
     const float b2 = signed_area(pt1, pt[0], pt[1]);
@@ -3474,15 +3474,15 @@ double evaluate_aps(Edge e, int ii) {
   const Array<Vertex> verts{
       filter(mesh.vertices(v1), [&](Vertex v) { return v != v2 && !edge_sharp(mesh.edge(v1, v)); })};
   for (Vertex v : verts) {
-    const UV& p = c_winfo(mesh.corner(v, mesh.face(v, v1))).uv;
-    const UV& p1 = c_winfo(mesh.corner(v1, mesh.face(v, v1))).uv;
+    const Uv& p = c_winfo(mesh.corner(v, mesh.face(v, v1))).uv;
+    const Uv& p1 = c_winfo(mesh.corner(v1, mesh.face(v, v1))).uv;
     const Point pv = mesh.point(v);
     for (Vertex vv : verts) {
       if (vv == v) continue;
       Corner cvv = mesh.ccw_corner(v1, mesh.edge(v1, vv));
       Face ft = c_wedge_id(cvv) == wid_v1f1 ? f1 : (assertx(c_wedge_id(cvv) == wid_v1f2), f2);
-      const UV& p2 = c_winfo(mesh.corner(v2, ft)).uv;
-      const UV& pp = c_winfo(mesh.corner(vv, mesh.face(vv, v1))).uv;
+      const Uv& p2 = c_winfo(mesh.corner(v2, ft)).uv;
+      const Uv& pp = c_winfo(mesh.corner(vv, mesh.face(vv, v1))).uv;
       const auto result = intersect_segments(p1, p, p2, pp);
       if (result) {
         const auto& [intersection, t12, t34] = result.value();

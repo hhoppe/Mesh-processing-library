@@ -37,14 +37,14 @@ int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol);
 struct PmWedgeAttrib {
   Vector normal;
   A3dColor rgb;
-  UV uv;
+  Uv uv;
 };
 
 // Wedge attribute deltas.
 struct PmWedgeAttribD {
   Vector dnormal;
   A3dColor drgb;
-  UV duv;
+  Uv duv;
 };
 
 void interp(PmWedgeAttrib& a, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float frac1);

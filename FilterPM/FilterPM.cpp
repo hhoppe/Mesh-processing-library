@@ -366,7 +366,7 @@ void quantize_mesh(WMesh& mesh, const PMeshInfo& pminfo) {
     Vector& n = mesh._wedges[w].attrib.normal;
     for_int(c, 3) n[c] = int(n[c] * k_normal_qf) / k_normal_qf;
     if (pminfo._has_uv) {
-      UV& uv = mesh._wedges[w].attrib.uv;
+      Uv& uv = mesh._wedges[w].attrib.uv;
       for_int(c, 2) uv[c] = int(uv[c] * k_uv_qf) / k_uv_qf;
     }
   }
@@ -383,7 +383,7 @@ void quantize_mesh_int(WMesh& mesh, const PMeshInfo& pminfo) {
     Vector& n = mesh._wedges[w].attrib.normal;
     for_int(c, 3) n[c] = floor(n[c] * k_normal_qf);
     if (pminfo._has_uv) {
-      UV& uv = mesh._wedges[w].attrib.uv;
+      Uv& uv = mesh._wedges[w].attrib.uv;
       for_int(c, 2) uv[c] = floor(uv[c] * k_uv_qf);
     }
   }
@@ -404,7 +404,7 @@ void quantize_vsplit(Vsplit& vspl, const PMeshInfo& pminfo) {
     Vector& n = vspl.ar_wad[i].dnormal;
     for_int(c, 3) n[c] = int(n[c] * k_normal_qf) / k_normal_qf;
     if (pminfo._has_uv) {
-      UV& uv = vspl.ar_wad[i].duv;
+      Uv& uv = vspl.ar_wad[i].duv;
       for_int(c, 2) uv[c] = int(uv[c] * k_uv_qf) / k_uv_qf;
     }
   }
@@ -425,7 +425,7 @@ void quantize_vsplit_int(Vsplit& vspl, const PMeshInfo& pminfo) {
     Vector& n = vspl.ar_wad[i].dnormal;
     for_int(c, 3) n[c] = floor(n[c] * k_normal_qf);
     if (pminfo._has_uv) {
-      UV& uv = vspl.ar_wad[i].duv;
+      Uv& uv = vspl.ar_wad[i].duv;
       for_int(c, 2) uv[c] = floor(uv[c] * k_uv_qf);
     }
   }
@@ -450,8 +450,8 @@ Vector encode_dpoint(const Vector& v) {
 
 Vector encode_dnormal(const Vector& v) { return v * k_normal_qf; }
 
-UV encode_uv(const UV& uv) {
-  UV ruv;
+Uv encode_uv(const Uv& uv) {
+  Uv ruv;
   ruv[0] = uv[0] * k_uv_qf;
   ruv[1] = uv[1] * k_uv_qf;
   return ruv;
@@ -556,7 +556,7 @@ void do_compression() {
       for_int(j, vspl.ar_wad.num()) {
         nwads++;
         de_n.enter_vector(encode_dnormal(vspl.ar_wad[j].dnormal));
-        UV tuv = encode_uv(vspl.ar_wad[j].duv);
+        Uv tuv = encode_uv(vspl.ar_wad[j].duv);
         de_uv.enter_vector(tuv);
       }
       cur_nf += vspl.adds_two_faces() ? 2 : 1;
@@ -839,12 +839,12 @@ void do_zero_uvrgb() {
     Vsplit& vspl = pmesh._vsplits[vspli];
     for_int(j, vspl.ar_wad.num()) {
       vspl.ar_wad[j].drgb = A3dColor(0.f, 0.f, 0.f);
-      vspl.ar_wad[j].duv = UV(0.f, 0.f);
+      vspl.ar_wad[j].duv = Uv(0.f, 0.f);
     }
   }
   for_int(w, pmesh._base_mesh._wedges.num()) {
     pmesh._base_mesh._wedges[w].attrib.rgb = A3dColor(0.f, 0.f, 0.f);
-    pmesh._base_mesh._wedges[w].attrib.uv = UV(0.f, 0.f);
+    pmesh._base_mesh._wedges[w].attrib.uv = Uv(0.f, 0.f);
   }
   implicit_cast<AWMesh&>(*pmi) = pmesh._base_mesh;
   pmesh._info._has_rgb = false;
@@ -1387,7 +1387,7 @@ void do_polystream() {
   nooutput = true;
 }
 
-Point convert_to_sph(const UV& uv) {
+Point convert_to_sph(const Uv& uv) {
   assertx(uv[0] >= 0.f && uv[0] <= 1.f);
   assertx(uv[1] >= 0.f && uv[1] <= 1.f);
   float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2.
@@ -1421,7 +1421,7 @@ void do_uvsphtopos() {
   Array<Point> sphpoints(pmi->_wedges.num());
   for_int(w, pmi->_wedges.num()) {
     assertx(pmi->_wedges[w].vertex == w);
-    const UV& uv = pmi->_wedges[w].attrib.uv;
+    const Uv& uv = pmi->_wedges[w].attrib.uv;
     Point sph = convert_to_sph(uv);
     sphpoints[w] = sph;
   }

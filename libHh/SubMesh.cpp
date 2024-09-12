@@ -302,23 +302,23 @@ void SubMesh::refine(Mvcvh& mconv) {
         ar.push(fn);
       }
       if (has_uv) {
-        Vec4<UV> uva;
+        Vec4<Uv> uva;
         Face* fna = &ar[unsigned(ar.num()) - 4];  // unsigned to avoid -Werror=strict-overflow
         for_int(i, 4) {
           Corner c = _m.corner(va[i], f);
-          UV& uv = uva[i];
+          Uv& uv = uva[i];
           assertx(_m.parse_corner_key_vec(c, "uv", uv));
           c = _m.corner(va[i], fna[i]);
           _m.update_string(c, "uv", csform_vec(str, uv));
         }
         for_int(i, 4) {
-          UV uv = interp(uva[i], uva[(i + 1) % 4]);
+          Uv uv = interp(uva[i], uva[(i + 1) % 4]);
           for_int(j, 2) {
             Corner cc = _m.corner(vs[i], fna[(i + j) % 4]);
             _m.update_string(cc, "uv", csform_vec(str, uv));
           }
         }
-        UV uv = interp(interp(uva[0], uva[1]), interp(uva[2], uva[3]));
+        Uv uv = interp(interp(uva[0], uva[1]), interp(uva[2], uva[3]));
         _m.update_string(vc, "uv", csform_vec(str, uv));
       }
       if (has_imagen) {

@@ -69,10 +69,10 @@ void widen_triangle(ArrayView<Point> poly, float eps);
 float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4);
 
 // Return (longitude, latitude) of point on the unit sphere.
-UV lonlat_from_sph(const Point& sph);
+Uv lonlat_from_sph(const Point& sph);
 
 // Return point on the unit sphere given (longitude, latitude).
-Point sph_from_lonlat(const UV& lonlat);
+Point sph_from_lonlat(const Uv& lonlat);
 
 }  // namespace hh
 

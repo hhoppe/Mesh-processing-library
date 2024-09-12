@@ -1047,7 +1047,7 @@ void do_spawn(Args& args) {
 
 int get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
 
-int get_vertex_uv(Vertex v, UV& ret_uv) { return parse_key_vec(mesh.get_string(v), "uv", ret_uv); }
+int get_vertex_uv(Vertex v, Uv& ret_uv) { return parse_key_vec(mesh.get_string(v), "uv", ret_uv); }
 
 // *** stoc
 
@@ -1157,7 +1157,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   HH_STIMER("__doecol");
   if (k_simp96) {
     Vector nor1, nor2, nnor;
-    UV uv1, uv2, uvn;
+    Uv uv1, uv2, uvn;
     string str;
     if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
       nnor = w1 * nor1 + (1.f - w1) * nor2;

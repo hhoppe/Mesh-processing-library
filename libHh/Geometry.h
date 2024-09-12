@@ -127,14 +127,14 @@ struct Bary : Vec3<float> {
 };
 
 // *** Texture coordinates; usually defined over unit square [0, 1]^2.
-// In DirectX, Metal, and Vulkan, the UV origin is at the top left corner of a texture image, whereas
-// in OpenGL the UV origin at the lower left.
+// In DirectX, Metal, and Vulkan, the Uv origin is at the top left corner of a texture image, whereas
+// in OpenGL the Uv origin at the lower left.
 // Unfortunately, my code/results uses the OpenGL convention (even though my yx pixel coordinates have their
 // origin at the top left of the image).
-struct UV : Vec2<float> {
-  UV() = default;
-  constexpr UV(float u, float v) : Vec2<float>(u, v) {}
-  constexpr UV(Vec2<float> v) : Vec2<float>(v) {}
+struct Uv : Vec2<float> {
+  Uv() = default;
+  constexpr Uv(float u, float v) : Vec2<float>(u, v) {}
+  constexpr Uv(Vec2<float> v) : Vec2<float>(v) {}
 };
 
 // *** Misc operations
@@ -213,7 +213,7 @@ inline bool Bary::is_convex() const {
   return self[0] >= 0.f && self[0] <= 1.f && self[1] >= 0.f && self[1] <= 1.f && self[2] >= 0.f && self[2] <= 1.f;
 }
 
-// *** UV
+// *** Uv
 
 // *** Misc
 

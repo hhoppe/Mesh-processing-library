@@ -3,17 +3,17 @@
 using namespace hh;
 
 int main() {
-  struct ST {
-    explicit ST(int i) : _i(i) { showf("ST(%d)\n", _i); }
-    ~ST() { showf("~ST(%d)\n", _i); }
+  struct S {
+    explicit S(int i) : _i(i) { showf("S(%d)\n", _i); }
+    ~S() { showf("~S(%d)\n", _i); }
     int _i;
   };
   {
-    Stack<const ST*> s;
+    Stack<const S*> s;
     assertx(s.empty());
-    s.push(new ST(1));  // never deleted
-    s.push(new ST(2));
-    s.push(new ST(3));
+    s.push(new S(1));  // never deleted
+    s.push(new S(2));
+    s.push(new S(3));
     SHOW(s.top()->_i);
     assertx(!s.empty());
     assertw(s.pop()->_i == 3);
@@ -75,10 +75,10 @@ int main() {
   }
   {
     SHOW("beg");
-    Stack<unique_ptr<ST>> stack;
-    stack.push(make_unique<ST>(4));
-    stack.push(make_unique<ST>(5));
-    stack.push(make_unique<ST>(6));
+    Stack<unique_ptr<S>> stack;
+    stack.push(make_unique<S>(4));
+    stack.push(make_unique<S>(5));
+    stack.push(make_unique<S>(6));
     for (auto& e : stack) SHOW(e->_i);
     for (auto& e : stack) e = nullptr;  // otherwise, ~Stack() may destroy elements in unknown order
     SHOW("end");

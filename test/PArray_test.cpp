@@ -3,52 +3,52 @@
 using namespace hh;
 
 int main() {
-  struct ST {
-    explicit ST(int i) : _i(i) { showf("ST(%d)\n", _i); }
-    ~ST() { showf("~ST(%d)\n", _i); }
+  struct S {
+    explicit S(int i) : _i(i) { showf("S(%d)\n", _i); }
+    ~S() { showf("~S(%d)\n", _i); }
     int _i;
   };
-  const auto func_construct_array = [](int i0, int n) {  // -> PArray<unique_ptr<ST>, 2>
-    PArray<unique_ptr<ST>, 2> ar;
-    for_int(i, n) ar.push(make_unique<ST>(i0 + i));
+  const auto func_construct_array = [](int i0, int n) {  // -> PArray<unique_ptr<S>, 2>
+    PArray<unique_ptr<S>, 2> ar;
+    for_int(i, n) ar.push(make_unique<S>(i0 + i));
     return ar;
   };
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar;
-    ar.push(make_unique<ST>(4));
+    PArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar;
-    ar.push(make_unique<ST>(4));
-    ar.push(make_unique<ST>(5));
+    PArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
+    ar.push(make_unique<S>(5));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar;
-    ar.push(make_unique<ST>(4));
-    ar.push(make_unique<ST>(5));
-    ar.push(make_unique<ST>(6));
+    PArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
+    ar.push(make_unique<S>(5));
+    ar.push(make_unique<S>(6));
     for (auto& e : ar) SHOW(e->_i);
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar;
-    for_int(i, 20) ar.push(make_unique<ST>(i));
+    PArray<unique_ptr<S>, 2> ar;
+    for_int(i, 20) ar.push(make_unique<S>(i));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar(func_construct_array(100, 2));
+    PArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<ST>, 2> ar;
+    PArray<unique_ptr<S>, 2> ar;
     ar = func_construct_array(500, 2);
     SHOW(ar[0]->_i);
     ar = func_construct_array(600, 3);

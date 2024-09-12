@@ -642,14 +642,14 @@ void do_fgfit(Args& args) {
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
   // Evaluation objective for nonlinear optimization.
-  struct FG {
+  struct EvalGrad {
     Map<Vertex, int> _mvi;  // vertex -> index in _x
     Array<Vertex> _iv;      // index -> mesh vertex
     Array<double> _x;       // linearized unknown vertex coordinates
     int _iter{0};
     int _niter;
     double _etot{0.};
-    FG() {
+    EvalGrad() {
       for (Vertex v : mesh.vertices()) {
         if (boundaryfixed && mesh.is_boundary(v)) continue;
         _mvi.enter(v, _iv.num());
@@ -737,15 +737,15 @@ void do_fgfit(Args& args) {
       return _etot;
     }
   };
-  FG fg;
-  fg._niter = niter;
+  EvalGrad eval_grad;
+  eval_grad._niter = niter;
   if (getenv_string("NLOPT_DEBUG") == "") my_setenv("NLOPT_DEBUG", "1");
-  const auto func_eval = [&](ArrayView<double> ret_grad) { return fg.feval(ret_grad); };
-  NonlinearOptimization opt(fg._x, func_eval);
+  const auto func_eval = [&](ArrayView<double> ret_grad) { return eval_grad.feval(ret_grad); };
+  NonlinearOptimization opt(eval_grad._x, func_eval);
   assertx(niter > 0);
   opt.set_max_neval(niter + 1);
   assertw(opt.solve());
-  if (0) fg.unpack_vertices();  // unnecessary because fg._x was the last state evaluated using FG::feval()
+  if (0) eval_grad.unpack_vertices();  // Unnecessary because _x was the last state evaluated using EvalGrad::feval().
   if (verb >= 2) show_energies("end    ");
   if (verb >= 2) analyze_mesh("after_fgfit");
 }

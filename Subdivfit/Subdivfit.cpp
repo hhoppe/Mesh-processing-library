@@ -385,7 +385,7 @@ void do_fgfit(Args& args) {
   smesh.update_vertex_positions();
   global_all_project(smesh);
   if (verb >= 2) analyze_mesh("fgfit_before");
-  struct FG {
+  struct EvalGrad {
     Map<Vertex, int> _mvi;  // vertex -> index in _x
     Array<Vertex> _iv;      // index -> mesh vertex
     Array<double> _x;       // linearized unknown vertex coordinates
@@ -394,7 +394,7 @@ void do_fgfit(Args& args) {
     int _niter;
     double _etot{0.};
     bool _desire_global_project{false};
-    explicit FG(SubMesh& smesh) : _smesh(smesh) {
+    explicit EvalGrad(SubMesh& smesh) : _smesh(smesh) {
       for (Vertex v : gmesh.vertices()) {
         _mvi.enter(v, _iv.num());
         _iv.push(v);
@@ -503,11 +503,11 @@ void do_fgfit(Args& args) {
       return _etot;
     }
   };
-  FG fg(smesh);
-  fg._niter = niter;
+  EvalGrad eval_grad(smesh);
+  eval_grad._niter = niter;
   if (getenv_string("NLOPT_DEBUG") == "") my_setenv("NLOPT_DEBUG", "1");
-  const auto func_eval = [&](ArrayView<double> ret_grad) { return fg.feval(ret_grad); };
-  NonlinearOptimization opt(fg._x, func_eval);
+  const auto func_eval = [&](ArrayView<double> ret_grad) { return eval_grad.feval(ret_grad); };
+  NonlinearOptimization opt(eval_grad._x, func_eval);
   assertx(niter > 0);
   opt.set_max_neval(niter + 1);
   assertw(opt.solve());

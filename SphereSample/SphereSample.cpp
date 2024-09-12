@@ -517,9 +517,7 @@ Point map_2slerp2(const Vec3<Point>& pt, const Bary& bary) {
   return spheremap_2slerp0(pt[2], pt[0], pt[1], Bary(bary[2], bary[0], bary[1]));
 }
 
-Point map_2slerps(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_sym_2slerps(pt[0], pt[1], pt[2], bary);
-}
+Point map_2slerps(const Vec3<Point>& pt, const Bary& bary) { return spheremap_sym_2slerps(pt[0], pt[1], pt[2], bary); }
 
 Point map_arvo0(const Vec3<Point>& pt, const Bary& bary) { return spheremap_arvo0(pt[0], pt[1], pt[2], bary); }
 
@@ -911,7 +909,7 @@ void create(bool b_triangulate) {
       }
       for_int(i, gridn + 1) for_int(j, !quad_domain ? gridn - i + 1 : gridn + 1) {
         Vec3<Point> pt;  // Desired spherical triangle vertices.
-        Bary bary;         // Barycentric coordinates within pt.
+        Bary bary;       // Barycentric coordinates within pt.
         const float fi = float(i) / gridn, fj = float(j) / gridn;
         if (!quad_domain) {
           for_int(c, 3) pt[c] = po[c];
@@ -1149,24 +1147,24 @@ void do_sample_map(Args& args) {
   assertx(gridn);
   assertx(mesh.empty());
   const GMesh param_mesh = read_param_mesh(args.get_filename());
-  const MeshSearch msearch(param_mesh, {true});
+
   if (scheme == "") scheme = "domain";
   create(scheme != "domain");
-  {
-    HH_TIMER("_resample0");
-    ConsoleProgress cprogress;
-    int nv = 0;
-    Face hintf = nullptr;
-    for (Vertex v : mesh.ordered_vertices()) {
-      if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / mesh.num_vertices());
-      auto [param_f, bary, unused_clp, d2] = msearch.search(v_domainp(v), hintf);
-      hintf = param_f;
-      assertx(d2 < 1e-12f);
-      Vector sum{};
-      const Vec3<Vertex> param_face_vertices = param_mesh.triangle_vertices(param_f);
-      for_int(i, 3) sum += bary[i] * v_sph(param_face_vertices[i]);
-      mesh.set_point(v, normalized(sum));
-    }
+
+  const MeshSearch msearch(param_mesh, {true});
+  HH_TIMER("_resample0");
+  ConsoleProgress cprogress;
+  int nv = 0;
+  Face hintf = nullptr;
+  for (Vertex v : mesh.ordered_vertices()) {
+    if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / mesh.num_vertices());
+    auto [param_f, bary, unused_clp, d2] = msearch.search(v_domainp(v), hintf);
+    hintf = param_f;
+    assertx(d2 < 1e-12f);
+    Vector sum{};
+    const Vec3<Vertex> param_face_vertices = param_mesh.triangle_vertices(param_f);
+    for_int(i, 3) sum += bary[i] * v_sph(param_face_vertices[i]);
+    mesh.set_point(v, normalized(sum));
   }
 }
 
@@ -1332,8 +1330,14 @@ Vector interp_f_rgb(const GMesh& mesh2, Face f, const Bary& bary) {
 
 void internal_remesh() {
   if (is_remeshed) return;
-  assertx(param_file != "");
   GMesh param_mesh = read_param_mesh(param_file);
+
+  if (mesh.empty()) {
+    // Create domain grid mesh.
+    HH_STIMER("_create_tess");
+    create(false);
+  }
+
   // This mesh has vertex positions on original model surface, and sph strings for parameterization on sphere.
   for (Vertex param_v : param_mesh.vertices()) {
     v_domainp(param_v) = param_mesh.point(param_v);
@@ -1345,56 +1349,37 @@ void internal_remesh() {
     if (!parse_key_vec(param_mesh.get_string(param_v), "rgb", rgb)) rgb = k_undefined_vector;
     v_rgb(param_v) = rgb;
   }
-  // int spgrid = max({10, int(sqrt(param_mesh.num_faces() * .05f)), gridn / 2});
   MeshSearch::Options options;
   options.allow_local_project = true;
   options.allow_off_surface = true;
   const MeshSearch msearch(param_mesh, options);
-  if (mesh.empty()) {
-    // Create domain grid mesh.
-    HH_STIMER("_create_tess");
-    create(false);
-  }
-  {
-    HH_TIMER("_resample");
-    // ConsoleProgress cprogress;
-    // int nv = 0;
-    // HashFloat hashf1;  // For -slowcornermerge of sph.
-    // HashFloat hashf2;  // For -slowcornermerge of normal.
-    const int num_threads = get_max_threads();
-    parallel_for_chunk(Array<Vertex>(mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
-      dummy_use(thread_index);
-      string str;
-      Face hintf = nullptr;
-      for (Vertex v : subrange) {
-        // if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / mesh.num_vertices());
-        Point p = mesh.point(v);  // Point on sphere.
-        assertx(is_unit(p));
-        auto [param_f, bary, unused_clp, unused_d2] = msearch.search(p, hintf);
-        search_bary(p, param_mesh, param_f, bary);  // May modify param_f.
-        hintf = param_f;
-        const Vec3<Point> points = map(mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
-        const Point newp = interp(points[0], points[1], points[2], bary);
-        mesh.set_point(v, newp);
-        // for_int(i, 3) p[i] = hashf1.enter(p[i]);
-        v_sph(v) = p;
-        v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
-        if (checkern) {
-          // Ignore mesh color since checkering.
-        } else {
-          Vector rgb = interp_f_rgb(param_mesh, param_f, bary);
-          if (rgb == k_undefined_vector)
-            if (Vector rgb2; parse_key_vec(param_mesh.get_string(param_f), "rgb", rgb2)) rgb = rgb2;
-          v_rgb(v) = rgb;
-        }
-        // Before: { uv=stretchuv  imageuv }.
-        // After:  { uv=imageuv  stretchuv }.
-        // mesh.update_string(v, "stretchuv", assertx(GMesh::string_key(str, mesh.get_string(v), "uv")));
-        // mesh.update_string(v, "uv", assertx(GMesh::string_key(str, mesh.get_string(v), "imageuv")));
-        // mesh.update_string(v, "imageuv", nullptr);
+
+  HH_TIMER("_resample");
+  const int num_threads = get_max_threads();
+  parallel_for_chunk(Array<Vertex>(mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
+    dummy_use(thread_index);
+    string str;
+    Face hintf = nullptr;
+    for (Vertex v : subrange) {
+      const Point& sph = mesh.point(v);  // Point on sphere.
+      assertx(is_unit(sph));
+      auto [param_f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
+      search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
+      hintf = param_f;
+      const Vec3<Point> points = map(mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
+      const Point newp = interp(points[0], points[1], points[2], bary);
+      mesh.set_point(v, newp);
+      v_sph(v) = sph;
+      v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
+      if (checkern) {
+        // Ignore mesh color since checkering.
+      } else {
+        Vector rgb = interp_f_rgb(param_mesh, param_f, bary), rgb2;
+        if (rgb == k_undefined_vector && parse_key_vec(param_mesh.get_string(param_f), "rgb", rgb2)) rgb = rgb2;
+        v_rgb(v) = rgb;
       }
-    });
-  }
+    }
+  });
   is_remeshed = true;
 }
 

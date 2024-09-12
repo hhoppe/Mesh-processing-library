@@ -378,7 +378,8 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   assertx(!(split_meridian && !mesh_uv.empty()));
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
   if (!mesh_uv.empty()) {
-    if (0) for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
+    if (0)
+      for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
     split_mesh_along_octa(gmesh);  // TODO: instead, use mesh_uv "uv" discontinuities.
   }
   MeshSearch::Options options;
@@ -418,7 +419,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             // Compute a sphere point that is perturbed slightly toward the centroid of the adjacent face, to find
             // an initial face f on the correct side of the parametric uv discontinuity.
             const Point sph_center = mean(sphs);
-            const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);  // ??
+            const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);
             hintf = nullptr;  // ??
             auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
             gnomonic_search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.

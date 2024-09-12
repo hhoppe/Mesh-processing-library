@@ -235,8 +235,7 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
 }
 
-template <typename Precision>
-float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
+template <typename Precision> float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
   const Precision y1 = p1[1], y2 = p2[1], y3 = p3[1];
   return 0.5f * float(p1[0] * (y2 - y3) + p2[0] * (y3 - y1) + p3[0] * (y1 - y2));
 }

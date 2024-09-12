@@ -18,9 +18,9 @@ extern "C" {
 namespace hh {
 
 // X Windows implementation of abstract windowing interface.
-class HW : public HWbase {
+class Hw : public HwBase {
  public:
-  HW();
+  Hw();
 
   // call after init() before open():
   void set_double_buffering(bool newstate) override;
@@ -94,7 +94,7 @@ class HW : public HWbase {
   void deallocate_buf();
   void get_color(string colorname, unsigned long& pixel, Pixel& color);
   void set_keyintr() { _is_keyintr = true; }
-  friend void set_keyintr(HW& hw);
+  friend void set_keyintr(Hw& hw);
 };
 
 }  // namespace hh

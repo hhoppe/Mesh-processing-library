@@ -20,9 +20,9 @@ extern "C" {
 namespace hh {
 
 // Win32 implementation of abstract windowing interface.
-class HW : public HWbase {
+class Hw : public HwBase {
  public:
-  HW() = default;
+  Hw() = default;
 
   // call anytime after init() before open():
   void set_double_buffering(bool newstate) override;

@@ -64,13 +64,13 @@ extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
 
 // Solutions in https://stackoverflow.com/questions/117792/best-method-for-storing-this-pointer-for-use-in-wndproc
 //  seems too complicated.  We can assume a single-window model.
-static HW* pHW;
+static Hw* g_hw;
 
-bool HW::init_aux(Array<string>& aargs) {
+bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
   bool minimize = false;
-  ParseArgs args(aargs, "HW");
+  ParseArgs args(aargs, "Hw");
   args.p("-geom[etry", _user_geometry, "geom : set window geometry (e.g. 640x480)");
   args.f("-icon[ic", _iconic, ": set initial window state");
   args.p("-back[ground", _backcolor, "color : set backcolor (e.g. white or #5987B3)");
@@ -94,7 +94,7 @@ bool HW::init_aux(Array<string>& aargs) {
   assertx(aargs.num());
   _argv0 = aargs[0];
   if (minimize) _iconic = true;
-  pHW = this;
+  g_hw = this;
   //
   _hInstance = GetModuleHandle(nullptr);
   if (0) {
@@ -166,7 +166,7 @@ bool HW::init_aux(Array<string>& aargs) {
   return true;
 }
 
-void HW::open() {
+void Hw::open() {
   assertx(_state == EState::init);
   _state = EState::open;
   // Create a window
@@ -233,7 +233,7 @@ void HW::open() {
   }
   _state = EState::uninit;
   // Cleanup/un-initialization
-  if (_hwdebug) SHOW("HW::open Cleanup");
+  if (_hwdebug) SHOW("Hw::open Cleanup");
   assertw(!gl_report_errors());
   assertx(wglMakeCurrent(_hRenderDC, nullptr));
   assertx(wglDeleteContext(_hRC));
@@ -247,7 +247,7 @@ void HW::open() {
   assertx(DestroyWindow(_hwnd));
 }
 
-bool HW::loop() {
+bool Hw::loop() {
   for (;;) {
     // handle all possible types of events
     if (_update == EUpdate::quit) return true;
@@ -284,25 +284,25 @@ bool HW::loop() {
   return false;
 }
 
-void HW::handle_events() {
+void Hw::handle_events() {
   while (got_event() && _update != EUpdate::quit) {
     handle_event();
   }
 }
 
-void HW::handle_event() {
+void Hw::handle_event() {
   _gotevent = false;
   TranslateMessage(&_msg);
   DispatchMessage(&_msg);
   // Won't return from here until the window proc finishes processing message -- so ok.
 }
 
-// This wrapper to avoid the problem where can't access 'HW' class members from a non-class function -- yuck!
+// This wrapper to avoid the problem where can't access 'Hw' class members from a non-class function -- yuck!
 LRESULT CALLBACK wndProc_wrapper(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam) {
   if (0) SHOW(hwnd, iMsg, wParam, lParam);
-  if (pHW->_hwnd == k_bogus_hwnd) pHW->_hwnd = hwnd;
-  assertx(hwnd == pHW->_hwnd);
-  return pHW->wndProc(iMsg, wParam, lParam);
+  if (g_hw->_hwnd == k_bogus_hwnd) g_hw->_hwnd = hwnd;
+  assertx(hwnd == g_hw->_hwnd);
+  return g_hw->wndProc(iMsg, wParam, lParam);
 }
 
 // Windows 7 Touch Input:
@@ -313,7 +313,7 @@ LRESULT CALLBACK wndProc_wrapper(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lPa
 //  https://msdn.microsoft.com/en-us/library/windows/desktop/dd562199%28v=vs.85%29.aspx samples
 //  https://msdn.microsoft.com/en-us/magazine/ee336016.aspx overview
 
-LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   if (_hwdebug) SHOW("wndProc", iMsg);
   static PAINTSTRUCT ps;  // always zero
   switch (iMsg) {
@@ -522,14 +522,14 @@ LRESULT HW::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   return DefWindowProcW(_hwnd, iMsg, wParam, lParam);
 }
 
-bool HW::got_event() {
+bool Hw::got_event() {
   // If there's a pending event, retrieve it and set flag
   //  (_unless_ we already have an event; in that case, don't fetch another one).
   if (!_gotevent && PeekMessage(&_msg, nullptr, 0, 0, PM_REMOVE)) _gotevent = true;
   return _gotevent;
 }
 
-bool HW::suggests_stop() {
+bool Hw::suggests_stop() {
   assertx(_state == EState::open);
   if (got_event() && _update != EUpdate::quit) handle_events();
   if (_is_keyintr) handle_keyintr();
@@ -545,10 +545,10 @@ void CALLBACK callbackSimuKey(UINT id, UINT msg, DWORD_PTR userData, DWORD_PTR d
   // Set flag, meaning that a "new" keypress (simulated) has occurred.
   // (Basically just "opens the gates", so msg loop will process next simulated key now.
   //  Gives periodic/delayed keypresses this way, instead of all being processed at once -- more like real input).
-  reinterpret_cast<HW*>(userData)->set_keyintr();
+  reinterpret_cast<Hw*>(userData)->set_keyintr();
 }
 
-void HW::start_hwkey() {
+void Hw::start_hwkey() {
   // *** TURN-ON timer (periodic) ***
   UINT timer_delay;    // How long b/w timer events (mSec)
   TIMECAPS time_caps;  // timer capabilities
@@ -566,7 +566,7 @@ void HW::start_hwkey() {
   assertx(_sk_timerID);
 }
 
-void HW::end_hwkey() {
+void Hw::end_hwkey() {
   // *** TURN-OFF timer (periodic) ***
   if (_sk_timerID) {
     assertx(timeKillEvent(_sk_timerID) == TIMERR_NOERROR);
@@ -578,7 +578,7 @@ void HW::end_hwkey() {
   }
 }
 
-void HW::handle_key(int why_called, WPARAM key_data) {
+void Hw::handle_key(int why_called, WPARAM key_data) {
   string s;
   // SHOW(why_called, why_called == WM_KEYDOWN, int(key_data));
   if (why_called == WM_KEYDOWN) {
@@ -633,7 +633,7 @@ void HW::handle_key(int why_called, WPARAM key_data) {
   }
 }
 
-void HW::draw_it() {
+void Hw::draw_it() {
   _update = EUpdate::nothing;
   if (!_exposed) return;
   if (_hwdebug) SHOW("draw_it", _win_dims);
@@ -674,17 +674,17 @@ void HW::draw_it() {
   }
 }
 
-void HW::clear_window() {
+void Hw::clear_window() {
   soft_discard();
   clear_window_ogl();
 }
 
-void HW::beep() {
+void Hw::beep() {
   assertx(_state != EState::uninit);
   Beep(600, 100);
 }
 
-void HW::set_double_buffering(bool newstate) {
+void Hw::set_double_buffering(bool newstate) {
   if (_offscreen != "") newstate = true;  // else multisampling is not supported (bizarre)
   if (!assertw(_state == EState::init)) return;
   _is_glx_dbuf = newstate;
@@ -692,7 +692,7 @@ void HW::set_double_buffering(bool newstate) {
   if (_hwdebug) SHOW(_is_glx_dbuf);
 }
 
-bool HW::get_pointer(Vec2<int>& yx) {
+bool Hw::get_pointer(Vec2<int>& yx) {
   assertx(_state == EState::open);
   POINT pt_screen, pt_client;
   // Get position of mouse cursor (relative to screen, not window).
@@ -710,7 +710,7 @@ bool HW::get_pointer(Vec2<int>& yx) {
   return true;
 }
 
-bool HW::get_key_modifier(EModifier modifier) {
+bool Hw::get_key_modifier(EModifier modifier) {
   int virt_key;
   switch (modifier) {
     case EModifier::shift: virt_key = VK_SHIFT; break;
@@ -722,27 +722,27 @@ bool HW::get_key_modifier(EModifier modifier) {
   return !!(v & (1 << 15));  // high-order bit indicates key down, low-order bit is odd "toggle" state for caps_lock
 }
 
-void HW::set_color_to_foreground() {
+void Hw::set_color_to_foreground() {
   assertx(_state == EState::open);
   glColor3ubv(_color_foreground.data());
 }
 
-void HW::set_color(const Pixel& pix) {
+void Hw::set_color(const Pixel& pix) {
   assertx(_state == EState::open);
   glColor4ubv(pix.data());
 }
 
-void HW::draw_text_internal(const Vec2<int>& yx, const string& s) {
+void Hw::draw_text_internal(const Vec2<int>& yx, const string& s) {
   assertx(_state == EState::open);
   draw_text_ogl(yx, s);
 }
 
-void HW::fill_polygon(CArrayView<Vec2<float>> points) {
+void Hw::fill_polygon(CArrayView<Vec2<float>> points) {
   assertx(_state == EState::open);
   fill_polygon_ogl(points);
 }
 
-void HW::set_window_title(string ps) {
+void Hw::set_window_title(string ps) {
   assertx(_state == EState::init || _state == EState::open);
   _window_title = std::move(ps);
   if (_state == EState::open) {
@@ -753,7 +753,7 @@ void HW::set_window_title(string ps) {
   }
 }
 
-Vec2<int> HW::get_max_window_dims() {
+Vec2<int> Hw::get_max_window_dims() {
   RECT wa_rect;
   assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
   // The above does subtract the taskbar area.
@@ -770,7 +770,7 @@ Vec2<int> HW::get_max_window_dims() {
   return V(int(wa_rect.bottom - wa_rect.top), int(wa_rect.right - wa_rect.left)) - window_borders;
 }
 
-void HW::resize_window(const Vec2<int>& yx) {
+void Hw::resize_window(const Vec2<int>& yx) {
   assertx(_state == EState::open);
   // https://stackoverflow.com/questions/5609486/in-c-windows-api-resize-window-during-runtime
   // https://stackoverflow.com/questions/692742
@@ -799,12 +799,12 @@ void HW::resize_window(const Vec2<int>& yx) {
   //  (approximately 102 pixels) (for the buttons above it).
 }
 
-bool HW::is_fullscreen() {
+bool Hw::is_fullscreen() {
   DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
   return !(style & WS_OVERLAPPEDWINDOW);
 }
 
-void HW::make_fullscreen(bool b) {
+void Hw::make_fullscreen(bool b) {
   if (b == is_fullscreen()) return;
   static WINDOWPLACEMENT g_wp_prev;
   g_wp_prev.length = sizeof(g_wp_prev);
@@ -826,17 +826,17 @@ void HW::make_fullscreen(bool b) {
   }
 }
 
-void HW::grab_focus() {
+void Hw::grab_focus() {
   // assertx(SetFocus(_hwnd));
   // assertw(SetActiveWindow(_hwnd));
   assertw(SetForegroundWindow(_hwnd));
 }
 
-void HW::flush_seg() { flush_seg_ogl(); }
+void Hw::flush_seg() { flush_seg_ogl(); }
 
-void HW::flush_point() { flush_point_ogl(); }
+void Hw::flush_point() { flush_point_ogl(); }
 
-void HW::hard_flush() {
+void Hw::hard_flush() {
   assertx(_state == EState::open);
   soft_flush();
   glFinish();
@@ -849,7 +849,7 @@ void HW::hard_flush() {
   L"*.jpg;*.jpeg;*.png;*.bmp;*.rgb;*.ppm;*.pgm;*.pbm;*.tif;*.tiff;" \
   L"*.jxr;*.hdp;*.wdp;*.wmp;*.webp;*.bpg;*.jp2"
 
-Array<string> HW::query_open_filenames(const string& hint_filename) {
+Array<string> Hw::query_open_filenames(const string& hint_filename) {
   // http://www.winprog.org/tutorial/app_two.html
   std::wstring whint_filename = utf16_from_utf8(hint_filename);
   std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
@@ -894,7 +894,7 @@ Array<string> HW::query_open_filenames(const string& hint_filename) {
   return filenames;
 }
 
-string HW::query_save_filename(const string& hint_filename, bool force) {
+string Hw::query_save_filename(const string& hint_filename, bool force) {
   // https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getsavefilenamea
   std::wstring whint_filename = utf16_from_utf8(hint_filename);
   std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
@@ -920,25 +920,25 @@ string HW::query_save_filename(const string& hint_filename, bool force) {
   return get_canonical_path(utf8_from_utf16(buffer.data()));
 }
 
-void HW::begin_draw_visible() {
+void Hw::begin_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
   glDrawBuffer(GL_FRONT);
 }
 
-void HW::end_draw_visible() {
+void Hw::end_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
   if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
 }
 
-void HW::wake_up() {
+void Hw::wake_up() {
   WPARAM wParam = 0;
   LPARAM lParam = 0;
   if (_exposed) assertw(PostMessage(_hwnd, WM_USER + 0, wParam, lParam));
 }
 
-void HW::set_pixel_format(bool fake_first) {
+void Hw::set_pixel_format(bool fake_first) {
   // https://www.opengl.org/pipeline/article/vol003_7/
   // Windows Vista introduces the new pixelformat flag PFD_SUPPORT_COMPOSITION (defined in the Driver
   //  Development Kit's wingdi.h as 0x00008000).
@@ -1004,7 +1004,7 @@ void HW::set_pixel_format(bool fake_first) {
   assertx(SetPixelFormat(_hRenderDC, iPixelFormat, &pfd));
 }
 
-void HW::ogl_create_window(const Vec2<int>& yxpos) {
+void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   WNDCLASSEXW wnd_class;
   // Setup parameters of window class
   wnd_class.cbSize = sizeof(wnd_class);
@@ -1222,7 +1222,7 @@ void HW::ogl_create_window(const Vec2<int>& yxpos) {
         assertnever("wglChoosePixelFormatARB failed");
       }
     }
-    if (_multisample != orig_multisample) showf("HW: had to downgrade to multisample=%d\n", _multisample);
+    if (_multisample != orig_multisample) showf("Hw: had to downgrade to multisample=%d\n", _multisample);
     //
     // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
@@ -1359,7 +1359,7 @@ struct bmp_BITMAPINFOHEADER {  // size 40
 
 }  // namespace
 
-bool HW::copy_image_to_clipboard(const Image& image) {
+bool Hw::copy_image_to_clipboard(const Image& image) {
   if (!assertw(image.size())) return false;
   int ncomp = image.zsize() == 4 ? 4 : 3;
   int rowsize = image.xsize() * ncomp;
@@ -1407,7 +1407,7 @@ bool HW::copy_image_to_clipboard(const Image& image) {
   return ok;
 }
 
-std::optional<Image> HW::copy_clipboard_to_image() {
+std::optional<Image> Hw::copy_clipboard_to_image() {
   std::optional<Image> optional_image;
   if (IsClipboardFormatAvailable(CF_BITMAP)) Warning("ignoring CF_BITMAP for now");
   if (IsClipboardFormatAvailable(CF_DIB)) {

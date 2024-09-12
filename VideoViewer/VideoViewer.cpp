@@ -74,7 +74,7 @@ const bool k_no_text_wrap = false;        // parameter constant to disable wrapp
 const int k_usual_tex_padding_width = 8;  // > 1 for better memory alignment (to be safe) and better mipmap
 const double k_loop_duration = 5.;        // output loop length in seconds
 
-class DerivedHW : public HW {
+class DerivedHw : public Hw {
  public:
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
@@ -83,7 +83,7 @@ class DerivedHW : public HW {
   void drag_and_drop(CArrayView<string> filenames) override;
 };
 
-DerivedHW hw;
+DerivedHw hw;
 
 struct Object {
   // Create a video object.
@@ -583,9 +583,9 @@ void app_draw_text(const Vec2<int>& yx, const string& s, bool wrap = true) {
   if (s == "") return;
   if (1) {
     const uint8_t alpha_transparency = 150;
-    hw.draw_text(yx, s, HW::EStyle::boxed, g_text_shadow_color.with(3, alpha_transparency), wrap);
+    hw.draw_text(yx, s, Hw::EStyle::boxed, g_text_shadow_color.with(3, alpha_transparency), wrap);
   } else {
-    hw.draw_text(yx, s, HW::EStyle::shadowed, g_text_shadow_color, wrap);
+    hw.draw_text(yx, s, Hw::EStyle::shadowed, g_text_shadow_color, wrap);
   }
 }
 
@@ -1137,7 +1137,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
   return image;
 }
 
-bool DerivedHW::key_press(string skey) {
+bool DerivedHw::key_press(string skey) {
   // HH_TIMER("key_press");
   const auto message_error = [&](const string& s) {
     if (s != "") {
@@ -1155,9 +1155,9 @@ bool DerivedHW::key_press(string skey) {
     set_video_frame(obi, float(framenum));
     message("Switched to " + getob().stype() + " " + get_path_tail(getob()._filename));
   };
-  bool is_shift = get_key_modifier(HW::EModifier::shift);
-  bool is_control = get_key_modifier(HW::EModifier::control);
-  // bool is_alt =     get_key_modifier(HW::EModifier::alt);
+  bool is_shift = get_key_modifier(Hw::EModifier::shift);
+  bool is_control = get_key_modifier(Hw::EModifier::control);
+  // bool is_alt =     get_key_modifier(Hw::EModifier::alt);
   if (0) SHOW(skey, int(skey[0]), is_shift, is_control);
   if (g_cob >= 0 && getob().is_image()) {
     if (skey == "<left>") skey = "<prior>";
@@ -2538,15 +2538,15 @@ void act_timeline(const Vec2<int>& yx) {
   g_playing = false;
 }
 
-void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
+void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
   Vec2<int> yx = pyx;
   if (g_verbose >= 1) SHOW(butnum, pressed, yx);
   if (getobnum() == 0) return;
   if (pressed) {
     if (butnum <= 3) {
       g_selected.button_active = butnum;
-      g_selected.shift_was_pressed = get_key_modifier(HW::EModifier::shift);
-      g_selected.control_was_pressed = get_key_modifier(HW::EModifier::control);
+      g_selected.shift_was_pressed = get_key_modifier(Hw::EModifier::shift);
+      g_selected.control_was_pressed = get_key_modifier(Hw::EModifier::control);
       g_selected.yx_pressed = yx;
       g_selected.yx_last = yx;
       g_selected.axis_constraint = -1;
@@ -2623,7 +2623,7 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
   }
 }
 
-void DerivedHW::wheel_turn(float v) {
+void DerivedHw::wheel_turn(float v) {
   Vec2<int> yx;
   if (get_pointer(yx)) {
     float fac_zoom = pow(k_wheel_zoom_fac, v);
@@ -3286,7 +3286,7 @@ void render_image() {
   }
 }
 
-void DerivedHW::draw_window(const Vec2<int>& dims) {
+void DerivedHw::draw_window(const Vec2<int>& dims) {
   // HH_TIMER("draw_window");
   static bool first = true;
   if (first) {
@@ -3357,8 +3357,8 @@ void DerivedHW::draw_window(const Vec2<int>& dims) {
     assertx(g_selected.button_active <= 3);
     Vec2<int> yx;
     if (!get_pointer(yx)) g_selected.button_active = 0;
-    bool shift_pressed = get_key_modifier(HW::EModifier::shift);
-    bool alt_pressed = get_key_modifier(HW::EModifier::alt);
+    bool shift_pressed = get_key_modifier(Hw::EModifier::shift);
+    bool alt_pressed = get_key_modifier(Hw::EModifier::alt);
     switch (g_selected.button_active) {
       case 0: break;
       case 1: {  // either sliders or timeline
@@ -4274,7 +4274,7 @@ void do_zonal(Args& args) {
   }
 }
 
-void DerivedHW::drag_and_drop(CArrayView<string> filenames) {
+void DerivedHw::drag_and_drop(CArrayView<string> filenames) {
   if (g_verbose >= 1) SHOW(filenames);
   if (filenames.num() == 1 && ends_with(filenames[0], ".vlp")) {
     do_vlp(as_lvalue(Args{filenames[0]}));

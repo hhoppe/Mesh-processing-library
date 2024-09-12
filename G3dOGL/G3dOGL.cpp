@@ -84,7 +84,7 @@ constexpr float k_default_hither = .1f;
 constexpr float k_default_yonder = BIGFLOAT;
 constexpr bool lod_use_nvertices = true;  // lod input/output uses #vertices, not slider
 
-struct DerivedHW : HW {
+struct DerivedHw : Hw {
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;
@@ -95,7 +95,7 @@ struct DerivedHW : HW {
   void (*_finpu)(){nullptr};
 };
 
-DerivedHW hw;
+DerivedHw hw;
 
 bool quickmode;  // draw quick segments
 int quicki;      // draw every quicki'th segment
@@ -588,11 +588,11 @@ void do_texturemap(Args& args) {
   texturemaps.push(filename);
 }
 
-// *** HW callback functions
+// *** Hw callback functions
 
-bool DerivedHW::key_press(string s) { return fkeyp(s); }
+bool DerivedHw::key_press(string s) { return fkeyp(s); }
 
-void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
+void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
   Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
   if (pressed) yx_pointer_old = yxf;
   bool shift = get_key_modifier(EModifier::shift);
@@ -624,9 +624,9 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
   }
 }
 
-void DerivedHW::wheel_turn(float v) { fwheel(v); }
+void DerivedHw::wheel_turn(float v) { fwheel(v); }
 
-void DerivedHW::draw_window(const Vec2<int>& dims) {
+void DerivedHw::draw_window(const Vec2<int>& dims) {
   is_window = true;
   win_dims = dims;
   fdraw();

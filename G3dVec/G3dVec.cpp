@@ -34,7 +34,7 @@ using ConditionCode = unsigned;
 const ConditionCode k_code_hither = 1, k_code_yonder = 2, k_code_right = 4, k_code_left = 8, k_code_down = 16,
                     k_code_up = 32;
 
-struct DerivedHW : HW {
+struct DerivedHw : Hw {
   bool key_press(string s) override;
   void button_press(int butnum, bool pressed, const Vec2<int>& yx) override;
   void wheel_turn(float v) override;
@@ -45,7 +45,7 @@ struct DerivedHW : HW {
   void (*_finpu)(){nullptr};
 };
 
-DerivedHW hw;
+DerivedHw hw;
 
 // per object attributes
 bool cullface;            // cull using polygon normal
@@ -232,11 +232,11 @@ int GxObject::s_nusegments;
 
 GxObjects g_xobs;
 
-// *** HW callback functions
+// *** Hw callback functions
 
-bool DerivedHW::key_press(string s) { return fkeyp(s); }
+bool DerivedHw::key_press(string s) { return fkeyp(s); }
 
-void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
+void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
   Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
   bool shift = get_key_modifier(EModifier::shift);
   fbutp(butnum, pressed, shift, yxf);
@@ -248,9 +248,9 @@ void DerivedHW::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
   }
 }
 
-void DerivedHW::wheel_turn(float v) { fwheel(v); }
+void DerivedHw::wheel_turn(float v) { fwheel(v); }
 
-void DerivedHW::draw_window(const Vec2<int>& dims) {
+void DerivedHw::draw_window(const Vec2<int>& dims) {
   is_window = true;
   win_dims = dims;
   center_yx = dims / 2;

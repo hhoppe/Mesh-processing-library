@@ -82,7 +82,7 @@ class ParseArgs : public Args {
   using PARSE_FUNC0 = void (*)();
 
  public:
-  // e.g. name is "", "HW", "HB_GL".
+  // e.g. name is "", "Hw", "HB_GL".
   // Takes ownership; sets argc = 0, argv = nullptr; ensure_utf8_encoding().
   explicit ParseArgs(int& argc, const char**& argv);
   explicit ParseArgs(CArrayView<string> aargs, string name = "");
@@ -130,7 +130,7 @@ class ParseArgs : public Args {
     void* argp;
     string doc;
   };
-  string _name;  // Name of options (e.g. "HW").
+  string _name;  // Name of options (e.g. "Hw").
   string _argv0;
   bool _other_args_ok{false};
   bool _other_options_ok{false};

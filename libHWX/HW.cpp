@@ -31,25 +31,25 @@ string from_nullptr_or_cstring(const char* s) { return !s ? "" : s; }
 const char* to_nullptr_or_cstring(const string& s) { return s == "" ? nullptr : s.c_str(); }
 }  // namespace
 
-void set_keyintr(HW& hw) { hw.set_keyintr(); }
+void set_keyintr(Hw& hw) { hw.set_keyintr(); }
 
 const string k_font_name = "6x13";
 
-static HW* pHW;  // assumes single-window model; fine.
+static Hw* g_hw;  // assumes single-window model; fine.
 
-HW::HW() {
+Hw::Hw() {
 #if defined(HH_OGLX)
   _oglx = true;
 #endif
 }
 
-bool HW::init_aux(Array<string>& aargs) {
+bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
   string displayname = "";
   bool iconic = false;
   bool minimize = false;
-  ParseArgs args(aargs, "HW");
+  ParseArgs args(aargs, "Hw");
   args.p("-disp[lay", displayname, "name : set DISPLAY");
   args.p("-geom[etry", _user_geometry, "geom : set window geometry (e.g. 640x480)");
   args.f("-icon[ic", iconic, ": set initial window state");
@@ -75,7 +75,7 @@ bool HW::init_aux(Array<string>& aargs) {
   _argv0 = aargs[0];
   if (minimize) iconic = true;
   if (_offscreen != "") iconic = true;  // less distracting; ideally window would be invisible
-  pHW = this;
+  g_hw = this;
   //
   _pwmhints = assertx(XAllocWMHints());  // never freed using XFree()
   // _pwmhints->flags = 0;  // unnecessary
@@ -84,7 +84,7 @@ bool HW::init_aux(Array<string>& aargs) {
     _pwmhints->flags |= StateHint;
   }
   if (!(_display = XOpenDisplay(to_nullptr_or_cstring(displayname)))) {
-    showf("HW: cannot connect to X server '%s'\n", XDisplayName(to_nullptr_or_cstring(displayname)));
+    showf("Hw: cannot connect to X server '%s'\n", XDisplayName(to_nullptr_or_cstring(displayname)));
     _state = EState::uninit;
     return false;
   }
@@ -107,7 +107,7 @@ static int my_io_error_handler(Display* display) {
   return 0;
 }
 
-void HW::get_color(string colorname, unsigned long& pixel, Pixel& color) {
+void Hw::get_color(string colorname, unsigned long& pixel, Pixel& color) {
   if (colorname == "hhblue") colorname = "#5987B3";
   XColor xcolor;
   if (!XParseColor(_display, _cmap, colorname.c_str(), &xcolor)) assertnever("color '" + colorname + "' not found");
@@ -117,7 +117,7 @@ void HW::get_color(string colorname, unsigned long& pixel, Pixel& color) {
   color = Pixel(xcolor.red / 256, xcolor.green / 256, xcolor.blue / 256);
 }
 
-void HW::open() {
+void Hw::open() {
   assertx(_state == EState::init);
   _state = EState::open;
   if (_hwdebug) SHOW("hw: open");
@@ -226,7 +226,7 @@ void HW::open() {
     _user_geometry = from_nullptr_or_cstring(XGetDefault(_display, _argv0.c_str(), "geometry"));
   XFontStruct* font_info;
   if (!(font_info = XLoadQueryFont(_display, k_font_name.c_str()))) {
-    showf("HW: cannot open font '%s'\n", k_font_name.c_str());
+    showf("Hw: cannot open font '%s'\n", k_font_name.c_str());
     return;
   }
   XSizeHints* pxsh = assertx(XAllocSizeHints());  // never freed using XFree()
@@ -262,7 +262,7 @@ void HW::open() {
   _pwmhints->icon_pixmap = icon_pixmap;
   XClassHint* pxclasshint = assertx(XAllocClassHint());  // never freed using XFree()
   pxclasshint->res_name = const_cast<char*>(_argv0.c_str());
-  pxclasshint->res_class = const_cast<char*>("HW");
+  pxclasshint->res_class = const_cast<char*>("Hw");
   Vec2<const char*> largv = {_argv0.c_str(), nullptr};
   const int largc = 1;
   string icon_name = _argv0;
@@ -377,7 +377,7 @@ void HW::open() {
 #endif
   }
   _draw = _win;
-  // TODO: implement HWbase::drag_and_drop()
+  // TODO: implement HwBase::drag_and_drop()
   int force_first_draws = 0;
 #if defined(__CYGWIN__)
   force_first_draws = 3;  // For some unknown reason, first couple draws are corrupt on __CYGWIN__
@@ -430,7 +430,7 @@ void HW::open() {
   XCloseDisplay(_display);
 }
 
-bool HW::loop() {
+bool Hw::loop() {
   for (;;) {
     // handle all possible types of events
     if (_update == EUpdate::quit) return true;
@@ -458,7 +458,7 @@ bool HW::loop() {
           continue;
         }
         if (errno == EINTR) continue;
-        std::cerr << "HW: error in select(): " << std::strerror(errno) << "\n";
+        std::cerr << "Hw: error in select(): " << std::strerror(errno) << "\n";
         return true;
       }
       if (_watch_fd0 && FD_ISSET(0, &fdr)) input_received();
@@ -469,13 +469,13 @@ bool HW::loop() {
   return false;
 }
 
-void HW::handle_events() {
+void Hw::handle_events() {
   while (got_event() && _update != EUpdate::quit) {
     handle_event();
   }
 }
 
-void HW::handle_event() {
+void Hw::handle_event() {
   _gotevent = false;
   if (_hwdebug) SHOW(_event.type);
   switch (_event.type) {
@@ -569,13 +569,13 @@ void HW::handle_event() {
   }
 }
 
-bool HW::got_event() {
+bool Hw::got_event() {
   // If connection to X server is lost, XCheckMaskEvent generates an IO error here.
   if (!_gotevent && XCheckMaskEvent(_display, 0xfffffff, &_event)) _gotevent = true;
   return _gotevent;
 }
 
-bool HW::suggests_stop() {
+bool Hw::suggests_stop() {
   assertx(_state == EState::open);
   if (got_event() && _update != EUpdate::quit) handle_events();
   if (_is_keyintr) handle_keyintr();
@@ -584,10 +584,10 @@ bool HW::suggests_stop() {
 
 static void handle_alarm(int) {
   signal(SIGALRM, handle_alarm);  // for ATT unix
-  set_keyintr(*pHW);
+  set_keyintr(*g_hw);
 }
 
-void HW::start_hwkey() {
+void Hw::start_hwkey() {
   struct itimerval ti;
   struct timeval tv;
   signal(SIGALRM, handle_alarm);
@@ -597,10 +597,10 @@ void HW::start_hwkey() {
   ti.it_value = tv;
   ti.it_interval = tv;
   if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
-    std::cerr << "HW: setitimer: " << std::strerror(errno) << "\n";
+    std::cerr << "Hw: setitimer: " << std::strerror(errno) << "\n";
 }
 
-void HW::end_hwkey() {
+void Hw::end_hwkey() {
   struct itimerval ti;
   struct timeval tv;
   tv.tv_sec = 0;
@@ -608,12 +608,12 @@ void HW::end_hwkey() {
   ti.it_value = tv;
   ti.it_interval = tv;
   if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
-    std::cerr << "HW: setitimer2: " << std::strerror(errno) << "\n";
+    std::cerr << "Hw: setitimer2: " << std::strerror(errno) << "\n";
   // SIGALRM not reset to SIG_DFL just to be sure
   // signal(SIGALRM, SIG_DFL);
 }
 
-void HW::handle_key() {
+void Hw::handle_key() {
   string s;
   {
     Vec<char, 20> buf;
@@ -658,7 +658,7 @@ void HW::handle_key() {
   }
 }
 
-void HW::draw_it() {
+void Hw::draw_it() {
   _update = EUpdate::nothing;
   if (!_exposed) return;  // user events before X expose event
   if (_hwdebug) SHOW("draw_it", _win_dims);
@@ -739,7 +739,7 @@ void HW::draw_it() {
 #endif
 }
 
-void HW::clear_window() {
+void Hw::clear_window() {
   soft_discard();
   if (_oglx) {
 #if defined(HH_OGLX)
@@ -753,7 +753,7 @@ void HW::clear_window() {
   }
 }
 
-void HW::toggle_buffering() {
+void Hw::toggle_buffering() {
   assertx(!_async && _state == EState::open && !_oglx);
   if (!_is_pixbuf) {
     allocate_buf();
@@ -762,14 +762,14 @@ void HW::toggle_buffering() {
   }
 }
 
-void HW::allocate_buf() {
+void Hw::allocate_buf() {
   assertx(!_is_pixbuf && !_oglx);
   if (_hwdebug) SHOW("allocating double buffer", _depth);
   _bbuf = XCreatePixmap(_display, _win, _win_dims[1], _win_dims[0], _depth);
   _is_pixbuf = true;
 }
 
-void HW::deallocate_buf() {
+void Hw::deallocate_buf() {
   assertx(_is_pixbuf);
   if (_hwdebug) SHOW("deallocating double buffer");
   XFreePixmap(_display, _bbuf);
@@ -777,12 +777,12 @@ void HW::deallocate_buf() {
   _is_pixbuf = false;
 }
 
-void HW::beep() {
+void Hw::beep() {
   assertx(_state != EState::uninit);
   XBell(_display, 0);
 }
 
-void HW::set_double_buffering(bool newstate) {
+void Hw::set_double_buffering(bool newstate) {
   if (_offscreen != "") newstate = false;
   if (_oglx) {
     if (!assertw(_state == EState::init)) return;
@@ -802,7 +802,7 @@ void HW::set_double_buffering(bool newstate) {
   }
 }
 
-bool HW::get_pointer(Vec2<int>& yx) {
+bool Hw::get_pointer(Vec2<int>& yx) {
   assertx(_state == EState::open);
   int rx, ry;
   unsigned mask;
@@ -810,7 +810,7 @@ bool HW::get_pointer(Vec2<int>& yx) {
   return XQueryPointer(_display, _win, &rw, &cw, &rx, &ry, &yx[1], &yx[0], &mask);
 }
 
-bool HW::get_key_modifier(EModifier modifier) {
+bool Hw::get_key_modifier(EModifier modifier) {
   Vec<char, 32> keys;
   XQueryKeymap(_display, keys.data());
   const auto key_pressed = [&](KeySym keysym) {
@@ -825,7 +825,7 @@ bool HW::get_key_modifier(EModifier modifier) {
   }
 }
 
-void HW::set_color_to_foreground() {
+void Hw::set_color_to_foreground() {
   assertx(_state == EState::open);
   if (_oglx) {
 #if defined(HH_OGLX)
@@ -836,7 +836,7 @@ void HW::set_color_to_foreground() {
   }
 }
 
-void HW::set_color(const Pixel& pix) {
+void Hw::set_color(const Pixel& pix) {
   assertx(_state == EState::open);
   if (_oglx) {
 #if defined(HH_OGLX)
@@ -853,7 +853,7 @@ void HW::set_color(const Pixel& pix) {
   }
 }
 
-void HW::draw_text_internal(const Vec2<int>& yx, const string& s) {
+void Hw::draw_text_internal(const Vec2<int>& yx, const string& s) {
   assertx(_state == EState::open);
   if (_oglx) {
     draw_text_ogl(yx, s);
@@ -862,7 +862,7 @@ void HW::draw_text_internal(const Vec2<int>& yx, const string& s) {
   }
 }
 
-void HW::fill_polygon(CArrayView<Vec2<float>> points) {
+void Hw::fill_polygon(CArrayView<Vec2<float>> points) {
   assertx(_state == EState::open);
   if (_oglx) {
     fill_polygon_ogl(points);
@@ -877,7 +877,7 @@ void HW::fill_polygon(CArrayView<Vec2<float>> points) {
   }
 }
 
-void HW::set_window_title(string ps) {
+void Hw::set_window_title(string ps) {
   assertx(_state == EState::init || _state == EState::open);
   _window_title = std::move(ps);
   if (_state == EState::open) {
@@ -905,7 +905,7 @@ void HW::set_window_title(string ps) {
   }
 }
 
-Vec2<int> HW::get_max_window_dims() {
+Vec2<int> Hw::get_max_window_dims() {
   XWindowAttributes attribs;
   assertx(XGetWindowAttributes(_display, DefaultRootWindow(_display), &attribs));
   // cygwin: ignores taskbar and returns V(1600, 2560).
@@ -916,16 +916,16 @@ Vec2<int> HW::get_max_window_dims() {
   return V(attribs.height, attribs.width) - window_borders;
 }
 
-void HW::resize_window(const Vec2<int>& yx) {
+void Hw::resize_window(const Vec2<int>& yx) {
   assertx(_state == EState::open);
-  if (_hwdebug) SHOW("HW resize", yx);
+  if (_hwdebug) SHOW("Hw resize", yx);
   XResizeWindow(_display, _win, yx[1], yx[0]);
   // XMoveResizeWindow(_display, _win, new_left, new_top, yx[1], yx[0])
 }
 
-bool HW::is_fullscreen() { return _is_fullscreen; }
+bool Hw::is_fullscreen() { return _is_fullscreen; }
 
-void HW::make_fullscreen(bool b) {
+void Hw::make_fullscreen(bool b) {
   if (b == _is_fullscreen) return;
   _is_fullscreen = b;
 #if defined(__cygwin__) || defined(__APPLE__)
@@ -975,7 +975,7 @@ void HW::make_fullscreen(bool b) {
   }
 }
 
-void HW::flush_seg() {
+void Hw::flush_seg() {
   if (!_ar_seg.num()) return;
   if (_oglx) {
 #if defined(HH_OGLX)
@@ -994,7 +994,7 @@ void HW::flush_seg() {
   }
 }
 
-void HW::flush_point() {
+void Hw::flush_point() {
   if (!_ar_point.num()) return;
   if (_oglx) {
 #if defined(HH_OGLX)
@@ -1011,7 +1011,7 @@ void HW::flush_point() {
   }
 }
 
-void HW::hard_flush() {
+void Hw::hard_flush() {
   assertx(_state == EState::open);
   soft_flush();
   if (_oglx) {
@@ -1022,7 +1022,7 @@ void HW::hard_flush() {
   XFlush(_display);
 }
 
-void HW::begin_draw_visible() {
+void Hw::begin_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
   if (_oglx) {
@@ -1034,7 +1034,7 @@ void HW::begin_draw_visible() {
   }
 }
 
-void HW::end_draw_visible() {
+void Hw::end_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
   if (_oglx) {
@@ -1046,7 +1046,7 @@ void HW::end_draw_visible() {
   }
 }
 
-void HW::wake_up() {
+void Hw::wake_up() {
   // Warning("untested");
   // https://stackoverflow.com/questions/10785491/how-to-allow-a-worker-thread-to-updata-an-x11-window
   // https://ubuntuforums.org/archive/index.php/t-570702.html
@@ -1062,7 +1062,7 @@ void HW::wake_up() {
     XSendEvent(_display, _win, False, ExposureMask, &event);
     XFlush(_display);
   }
-  // Instead, rely on timeout within select() call in HW::loop().
+  // Instead, rely on timeout within select() call in Hw::loop().
   redraw_later();
 }
 

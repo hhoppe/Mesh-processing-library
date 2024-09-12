@@ -26,10 +26,10 @@ namespace hh {
 
 // Base class for abstracting the windowing interface (X Windows and Win32).
 // Window coordinates have origin at upper left.  Floating-point coordinates have pixels at half integers.
-class HWbase : noncopyable {
+class HwBase : noncopyable {
  public:
-  HWbase() {}
-  virtual ~HWbase() {}
+  HwBase() {}
+  virtual ~HwBase() {}
   bool init(Array<string>& aargs) { return init_aux(aargs); }  // ret: success
 
   // Callbacks:
@@ -56,7 +56,7 @@ class HWbase : noncopyable {
   virtual void open() = 0;
 
   // call after open():
-  virtual bool suggests_stop() = 0;             // ret: HW requests program to stop drawing
+  virtual bool suggests_stop() = 0;             // ret: Hw requests program to stop drawing
   virtual bool get_pointer(Vec2<int>& yx) = 0;  // ret success
   enum class EModifier { shift, control, alt };
   virtual bool get_key_modifier(EModifier modifier) = 0;
@@ -107,7 +107,7 @@ class HWbase : noncopyable {
   }
 
  private:
-  friend class HW;  // grant access to HW but not to any DerivedHW
+  friend class Hw;  // grant access to HW but not to any DerivedHw
   string _default_background{"white"};
   string _default_foreground{"black"};
   string _default_geometry{"200x200+100+0"};
@@ -172,17 +172,17 @@ Pixel parse_color(const string& scolor);
 
 //----------------------------------------------------------------------------
 
-inline void HWbase::redraw_later() {
+inline void HwBase::redraw_later() {
   if (0) assertx(_state != EState::uninit);  // could occur in a background thread after quit()
   if (_update == EUpdate::nothing) _update = EUpdate::redrawlater;
 }
 
-inline void HWbase::redraw_now() {
+inline void HwBase::redraw_now() {
   assertx(_state != EState::uninit);
   if (_update == EUpdate::nothing || _update == EUpdate::redrawlater) _update = EUpdate::redrawnow;
 }
 
-inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style, const Pixel& back_color, bool wrap) {
+inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style, const Pixel& back_color, bool wrap) {
   if (!s.size()) return;
   // use uchar{127} to render all non-ascii characters.
   const auto func_is_nonascii = [](const string& ss) {
@@ -234,26 +234,26 @@ inline void HWbase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
   draw_text_internal(yx, s);
 }
 
-inline void HWbase::fill_rectangle(const Vec2<float>& top_left, const Vec2<float>& bot_right) {
+inline void HwBase::fill_rectangle(const Vec2<float>& top_left, const Vec2<float>& bot_right) {
   auto top_right = V(top_left[0], bot_right[1]);
   auto bot_left = V(bot_right[0], top_left[1]);
   fill_polygon(V(top_left, bot_left, bot_right, top_right));
 }
 
-inline void HWbase::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {
+inline void HwBase::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {
   ASSERTX(_state == EState::open);
   _ar_seg.push(V(yx1, yx2));
   if (_ar_seg.num() >= 256) flush_seg();
 }
 
-inline void HWbase::draw_point(const Vec2<float>& yx) {
+inline void HwBase::draw_point(const Vec2<float>& yx) {
   ASSERTX(_state == EState::open);
   _ar_point.push(yx);
   if (_ar_point.num() >= 1024) flush_point();
 }
 
 // Only reads keys from _hwkey
-inline void HWbase::handle_keyintr() {
+inline void HwBase::handle_keyintr() {
   if (!_is_keyintr) return;
   _is_keyintr = false;
   bool skip = false;
@@ -299,19 +299,19 @@ inline void HWbase::handle_keyintr() {
   }
 }
 
-inline void HWbase::soft_flush() {
+inline void HwBase::soft_flush() {
   assertx(_state == EState::open);
   flush_seg();
   flush_point();
 }
 
-inline void HWbase::soft_discard() {
+inline void HwBase::soft_discard() {
   assertx(_state == EState::open);
   _ar_seg.init(0);
   _ar_point.init(0);
 }
 
-inline void HWbase::process_keystring(string& keystring) {
+inline void HwBase::process_keystring(string& keystring) {
   for (string::size_type i = 0;;) {
     char ch = keystring[i];
     if (!ch) {
@@ -330,7 +330,7 @@ inline void HWbase::process_keystring(string& keystring) {
   }
 }
 
-inline void HWbase::query_keypress(string s) {
+inline void HwBase::query_keypress(string s) {
   if (s == "<left>") s = "\b";
   char ch = s[0];
   if (ch == '\b') {                              // <backspace>/C-h key (== uchar{8} == 'H' - 64)
@@ -360,7 +360,7 @@ inline void HWbase::query_keypress(string s) {
   }
 }
 
-inline bool HWbase::query(const Vec2<int>& yx, string prompt, string& buffer) {
+inline bool HwBase::query(const Vec2<int>& yx, string prompt, string& buffer) {
   assertx(_state == EState::open);
   _query = true;
   _query_yx = yx;
@@ -377,27 +377,27 @@ inline bool HWbase::query(const Vec2<int>& yx, string prompt, string& buffer) {
   return _query_success;
 }
 
-inline bool HWbase::query(const Vec2<int>& yx, string prompt, float& f) {
+inline bool HwBase::query(const Vec2<int>& yx, string prompt, float& f) {
   string s = sform("%g", f);
   bool success = query(yx, std::move(prompt), s);
   if (success) f = to_float(s);
   return success;
 }
 
-inline bool HWbase::query(const Vec2<int>& yx, string prompt, int& i) {
+inline bool HwBase::query(const Vec2<int>& yx, string prompt, int& i) {
   string s = sform("%d", i);
   bool success = query(yx, std::move(prompt), s);
   if (success) i = to_int(s);
   return success;
 }
 
-inline Array<string> HWbase::query_open_filenames(const string& hint_filename) {
+inline Array<string> HwBase::query_open_filenames(const string& hint_filename) {
   string filename = hint_filename;
   if (query(V(20, 10), "Open file:", filename)) return {std::move(filename)};
   return {};
 }
 
-inline string HWbase::query_save_filename(const string& hint_filename, bool force) {
+inline string HwBase::query_save_filename(const string& hint_filename, bool force) {
   string filename = hint_filename;
   if (query(V(20, 10), "Save file:", filename)) {
     bool ok = force || !file_exists(filename);
@@ -555,7 +555,7 @@ inline const string& gl_extensions_string() {
   return s_string;
 }
 
-inline void HWbase::clear_window_ogl() {
+inline void HwBase::clear_window_ogl() {
   glViewport(0, 0, _win_dims[1], _win_dims[0]);
   if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
   if (_first_draw) {
@@ -574,7 +574,7 @@ inline void HWbase::clear_window_ogl() {
   set_color_to_foreground();
 }
 
-inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
+inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
   glListBase(_listbase_font);
   USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC);  // not supported on Remote Desktop
   if (glWindowPos2i) {
@@ -588,13 +588,13 @@ inline void HWbase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
   }
 }
 
-inline void HWbase::fill_polygon_ogl(CArrayView<Vec2<float>> points) {
+inline void HwBase::fill_polygon_ogl(CArrayView<Vec2<float>> points) {
   glBegin(points.num() == 3 ? GL_TRIANGLES : points.num() == 4 ? GL_QUADS : GL_POLYGON);
   for (const Vec2<float>& p : points) glVertex2f(p[1], p[0]);
   glEnd();
 }
 
-inline void HWbase::flush_seg_ogl() {
+inline void HwBase::flush_seg_ogl() {
   if (!_ar_seg.num()) return;
   glBegin(GL_LINES);
   for (const auto& s : _ar_seg) {
@@ -607,7 +607,7 @@ inline void HWbase::flush_seg_ogl() {
   _ar_seg.init(0);
 }
 
-inline void HWbase::flush_point_ogl() {
+inline void HwBase::flush_point_ogl() {
   if (!_ar_point.num()) return;
   glBegin(GL_POINTS);
   for (const auto& p : _ar_point) {

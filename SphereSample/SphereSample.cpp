@@ -141,122 +141,65 @@ Array<DomainFace> get_domain_faces() {
   } else if (domain == "tetra") {
     // Tetrahedron: vertex 3 at +Z (0, 0, 1), and vertex 0 along -X direction.
     //  image order   (edge 1-2 occluded)
-    /*
-        //   2 - 3 - 2        / 3 \
-        //   | / | / |       1  |  2
-        //   1 - 0 - 1        \ 0 /
-        */
-    // Tetrahedral faces are 103, 213, 023, 012.
-    domain_faces.init(4);
-    domain_faces[0].facecolor = Pixel::green();
-    domain_faces[1].facecolor = Pixel::blue();
-    domain_faces[2].facecolor = Pixel::red();
-    domain_faces[3].facecolor = k_pixel_orange;
-    const Vec4<Vector> vtmp = []() {
-      Vec4<Vector> v;
-      v[0] = Vector(-1.f / sqrt(3.f), 0.f, 0.f);
-      v[1] = Vector(+sqrt(3.f) / 6.f, +.5f, 0.f);
-      v[2] = Vector(+sqrt(3.f) / 6.f, -.5f, 0.f);
-      v[3] = Vector(0.f, 0.f, sqrt(6.f) / 3.f);
-      for_int(i, 4) {
-        v[i] -= v[3] / 4.f;
-        v[i].normalize();
-      }
+    //
+    //   2 - 3 - 2        / 3 \
+    //   | / | / |       1  |  2
+    //   1 - 0 - 1        \ 0 /
+    const Vec4<Point> vtmp = []() {
+      Vec4<Point> v{
+          Vector(-1.f / sqrt(3.f), 0.f, 0.f),
+          Vector(+sqrt(3.f) / 6.f, +.5f, 0.f),
+          Vector(+sqrt(3.f) / 6.f, -.5f, 0.f),
+          Vector(0.f, 0.f, sqrt(6.f) / 3.f),
+      };
+      for_int(i, 4) v[i] = normalized(v[i] - v[3] / 4.f);
       return v;
     }();
+    domain_faces.init(4);  // Tetrahedral faces are 103, 213, 023, 012.
     for_int(i, domain_faces.num()) {
-      domain_faces[i].poly.init(3);
-      domain_faces[i].stretchuvs.init(3);
-      domain_faces[i].imageuvs.init(3);
+      domain_faces[i].facecolor = V(Pixel::green(), Pixel::blue(), Pixel::red(), k_pixel_orange)[i];
       if (i < 3) {
-        domain_faces[i].poly[0] = vtmp[mod3(i + 1)];
-        domain_faces[i].poly[1] = vtmp[i];
-        domain_faces[i].poly[2] = vtmp[3];
+        domain_faces[i].poly = V(vtmp[mod3(i + 1)], vtmp[i], vtmp[3]);
       } else {
-        domain_faces[i].poly[0] = vtmp[0];
-        domain_faces[i].poly[1] = vtmp[1];
-        domain_faces[i].poly[2] = vtmp[2];
+        domain_faces[i].poly = V(vtmp[0], vtmp[1], vtmp[2]);
       }
-      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = Uv(.5f, .5f * sqrt(3.f));
+      domain_faces[i].stretchuvs = V(Uv(0.f, 0.f), Uv(1.f, 0.f), Uv(.5f, .5f * sqrt(3.f)));
       // The imageuv's are defined below.
     }
-    int i = 0;
     // 103: face 1 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = Uv(.00f, .00f);
-    domain_faces[i].imageuvs[1] = Uv(.50f, .00f);
-    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
-    i++;
+    domain_faces[0].imageuvs = V(Uv(.00f, .00f), Uv(.50f, .00f), Uv(.50f, .50f));
     // 213: face 0 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = Uv(.00f, .50f);
-    domain_faces[i].imageuvs[1] = Uv(.00f, .00f);
-    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
-    i++;
+    domain_faces[1].imageuvs = V(Uv(.00f, .50f), Uv(.00f, .00f), Uv(.50f, .50f));
     // 023: face 2 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = Uv(.50f, .00f);
-    domain_faces[i].imageuvs[1] = Uv(1.0f, .50f);
-    domain_faces[i].imageuvs[2] = Uv(.50f, .50f);
-    i++;
+    domain_faces[2].imageuvs = V(Uv(.50f, .00f), Uv(1.0f, .50f), Uv(.50f, .50f));
     // 012: face 3 in left-to-right image order.
-    domain_faces[i].imageuvs[0] = Uv(.50f, .00f);
-    domain_faces[i].imageuvs[1] = Uv(1.0f, .00f);
-    domain_faces[i].imageuvs[2] = Uv(1.0f, .50f);
-    i++;
-    assertx(i == domain_faces.num());
+    domain_faces[3].imageuvs = V(Uv(.50f, .00f), Uv(1.0f, .00f), Uv(1.0f, .50f));
   } else if (domain == "octa" || domain == "octaflat") {
     // Image face order:
     //  -X vertex at image center,
     //  +X vertex at 4 image corners,
     //  (-Y, +Z) to image (+X, +Y).
-    domain_faces.init(8);
-    if (octa8colors) {
-      domain_faces[0].facecolor = Pixel::red();
-      domain_faces[1].facecolor = Pixel::green();
-      domain_faces[2].facecolor = Pixel::blue();
-      domain_faces[3].facecolor = k_pixel_orange;
-      domain_faces[4].facecolor = Pixel(70, 20, 180);
-      domain_faces[5].facecolor = Pixel(190, 153, 190);
-      domain_faces[6].facecolor = Pixel(180, 70, 20);
-      domain_faces[7].facecolor = Pixel(20, 180, 70);
-    } else {
-      domain_faces[0].facecolor = Pixel::red();
-      domain_faces[1].facecolor = Pixel::green();
-      domain_faces[2].facecolor = Pixel::blue();
-      domain_faces[3].facecolor = k_pixel_orange;
-      for_int(i, 4) domain_faces[4 + i].facecolor = domain_faces[(i + 2) % 4].facecolor;
-    }
-    domain_faces[0].pixel_checker = Pixel::red();
-    domain_faces[1].pixel_checker = Pixel::green();
-    domain_faces[2].pixel_checker = Pixel::blue();
-    domain_faces[3].pixel_checker = k_pixel_orange;
-    domain_faces[4].pixel_checker = Pixel(120, 190, 190);
-    domain_faces[5].pixel_checker = Pixel(180, 180, 120);
-    domain_faces[6].pixel_checker = Pixel(190, 110, 190);
-    domain_faces[7].pixel_checker = Pixel(160, 190, 120);
     constexpr Vec4<Vector> dir =
         V(Vector(+1.f, 0.f, 0.f), Vector(0.f, +1.f, 0.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f));
+    domain_faces.init(8);
     for_int(i, domain_faces.num()) {
-      domain_faces[i].poly.init(3);
-      domain_faces[i].stretchuvs.init(3);
-      domain_faces[i].imageuvs.init(3);
+      domain_faces[i].facecolor = V(Pixel::red(), Pixel::green(), Pixel::blue(), k_pixel_orange, Pixel(70, 20, 180),
+                                    Pixel(190, 153, 190), Pixel(180, 70, 20), Pixel(20, 180, 70))[i];
+      if (!octa8colors && i >= 4) domain_faces[i].facecolor = domain_faces[(i + 2) % 4].facecolor;
+      domain_faces[i].pixel_checker =
+          V(Pixel::red(), Pixel::green(), Pixel::blue(), k_pixel_orange, Pixel(120, 190, 190), Pixel(180, 180, 120),
+            Pixel(190, 110, 190), Pixel(160, 190, 120))[i];
       const bool front = i < 4;
       const int q = front ? i : i - 4;
       Vector dir0 = dir[q], dir1 = dir[(q + 1) % 4];
       if (!front) std::swap(dir0, dir1);
-      domain_faces[i].poly[0] = Point(0.f, -dir0[0], dir0[1]);
-      domain_faces[i].poly[1] = Point(0.f, -dir1[0], dir1[1]);
-      domain_faces[i].poly[2] = Point(front ? -1.f : +1.f, 0.f, 0.f);
-      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = Uv(.5f, .5f * sqrt(3.f));
-      domain_faces[i].imageuvs[0] = Uv(.5f * (1.f + dir0[0]), .5f * (1.f + dir0[1]));
-      domain_faces[i].imageuvs[1] = Uv(.5f * (1.f + dir1[0]), .5f * (1.f + dir1[1]));
-      if (front) {
-        domain_faces[i].imageuvs[2] = Uv(.5f, .5f);
-      } else {
-        domain_faces[i].imageuvs[2] = Uv(.5f * (1.f + dir0[0] + dir1[0]), .5f * (1.f + dir0[1] + dir1[1]));
-      }
+      domain_faces[i].poly =
+          V(Point(0.f, -dir0[0], dir0[1]), Point(0.f, -dir1[0], dir1[1]), Point(front ? -1.f : +1.f, 0.f, 0.f));
+      domain_faces[i].stretchuvs = V(Uv(0.f, 0.f), Uv(1.f, 0.f), Uv(.5f, .5f * sqrt(3.f)));
+      domain_faces[i].imageuvs =
+          V(Uv(.5f * (1.f + dir0[0]), .5f * (1.f + dir0[1])),  //
+            Uv(.5f * (1.f + dir1[0]), .5f * (1.f + dir1[1])),
+            front ? Uv(.5f, .5f) : Uv(.5f * (1.f + dir0[0] + dir1[0]), .5f * (1.f + dir0[1] + dir1[1])));
     }
   } else if (domain == "cube") {
     // First  vertex in each face is (lower-left)  in below diagrams.
@@ -273,40 +216,26 @@ Array<DomainFace> get_domain_faces() {
     // Fully supporting baseball would require changes in adjust_for_domain(), non 1-1 mapping in do_write_texture(),
     //  etc.
     domain_faces.init(6);
-    domain_faces[0].facecolor = Pixel::green();
-    domain_faces[1].facecolor = Pixel::red();
-    domain_faces[2].facecolor = Pixel::green();
-    domain_faces[3].facecolor = Pixel::red();
-    domain_faces[4].facecolor = Pixel::blue();
-    domain_faces[5].facecolor = Pixel::blue();
     for_int(i, domain_faces.num()) {
-      domain_faces[i].poly.init(4);
-      domain_faces[i].stretchuvs.init(4);
-      domain_faces[i].imageuvs.init(4);
-      // Poly's are defined below.
-      domain_faces[i].stretchuvs[0] = Uv(0.f, 0.f);
-      domain_faces[i].stretchuvs[1] = Uv(1.f, 0.f);
-      domain_faces[i].stretchuvs[2] = Uv(1.f, 1.f);
-      domain_faces[i].stretchuvs[3] = Uv(0.f, 1.f);
-      hh::Vec2<float> s;
+      domain_faces[i].facecolor =
+          V(Pixel::green(), Pixel::red(), Pixel::green(), Pixel::red(), Pixel::blue(), Pixel::blue())[i];
+      domain_faces[i].poly.init(4);  // Defined later below.
+      domain_faces[i].stretchuvs = V(Uv(0.f, 0.f), Uv(1.f, 0.f), Uv(1.f, 1.f), Uv(0.f, 1.f));
+      Vec2<float> s;
       Uv uvo;
-      if (!baseball) {  // cross.
+      if (!baseball) {  // Cross.
         s = twice(1.f / 4.f);
-        uvo[0] = s[1] * (i < 4 ? i : 1);
-        uvo[1] = s[0] * (i < 4 ? 1 : i == 4 ? 0 : 2);
-      } else {  // baseball.
+        uvo = Uv(s[1] * (i < 4 ? i : 1), s[0] * (i < 4 ? 1 : i == 4 ? 0 : 2));
+      } else {  // Baseball.
         s = V(1.f / 3.f, 1.f / 2.f);
-        uvo[0] = i < 3 ? 0.f : s[1];
-        uvo[1] = s[0] * V(0, 1, 2, 0, 1, 2)[i];
+        uvo = Uv(i < 3 ? 0.f : s[1], s[0] * V(0, 1, 2, 0, 1, 2)[i]);
       }
-      domain_faces[i].imageuvs[0] = Uv(uvo[0] + 0, uvo[1] + 0);
-      domain_faces[i].imageuvs[1] = Uv(uvo[0] + s[1], uvo[1] + 0);
-      domain_faces[i].imageuvs[2] = Uv(uvo[0] + s[1], uvo[1] + s[0]);
-      domain_faces[i].imageuvs[3] = Uv(uvo[0] + 0, uvo[1] + s[0]);
+      domain_faces[i].imageuvs = V(Uv(uvo[0] + 0, uvo[1] + 0), Uv(uvo[0] + s[1], uvo[1] + 0),
+                                   Uv(uvo[0] + s[1], uvo[1] + s[0]), Uv(uvo[0] + 0, uvo[1] + s[0]));
     }
     const float s = sqrt(1.f / 3.f);
-    Vec<Vec4<hh::Vec3<int>>, 6> fvcoords;
-    if (!baseball) {                                                               // cross.
+    Vec<Vec4<Vec3<int>>, 6> fvcoords;
+    if (!baseball) {                                                               // Cross.
       fvcoords = V(V(V(+1, +1, -1), V(-1, +1, -1), V(-1, +1, +1), V(+1, +1, +1)),  // Y+
                    V(V(-1, +1, -1), V(-1, -1, -1), V(-1, -1, +1), V(-1, +1, +1)),  // X-
                    V(V(-1, -1, -1), V(+1, -1, -1), V(+1, -1, +1), V(-1, -1, +1)),  // Y-
@@ -314,7 +243,7 @@ Array<DomainFace> get_domain_faces() {
                    V(V(+1, +1, -1), V(+1, -1, -1), V(-1, -1, -1), V(-1, +1, -1)),  // Z-
                    V(V(-1, +1, +1), V(-1, -1, +1), V(+1, -1, +1), V(+1, +1, +1))   // Z+
       );
-    } else {                                                                       // baseball.
+    } else {                                                                       // Baseball.
       fvcoords = V(V(V(+1, +1, +1), V(+1, +1, -1), V(-1, +1, -1), V(-1, +1, +1)),  // Y+
                    V(V(-1, +1, +1), V(-1, +1, -1), V(-1, -1, -1), V(-1, -1, +1)),  // X-
                    V(V(-1, -1, +1), V(-1, -1, -1), V(+1, -1, -1), V(+1, -1, +1)),  // Y-
@@ -1095,13 +1024,13 @@ GMesh read_param_mesh(const string& filename) {
   showdf("surface -> sphere map: nv=%d nf=%d\n", param_mesh.num_vertices(), param_mesh.num_faces());
   const bool normsph = getenv_bool("SPHERESAMPLE_NORMSPH");
   for (Vertex v : param_mesh.vertices()) {
-    Point p;  // On sphere.
-    assertx(parse_key_vec(param_mesh.get_string(v), "sph", p));
+    Point sph;
+    assertx(parse_key_vec(param_mesh.get_string(v), "sph", sph));
     if (!normsph)
-      assertx(is_unit(p));
+      assertx(is_unit(sph));
     else
-      p = normalized(p);
-    v_sph(v) = p;
+      sph = normalized(sph);
+    v_sph(v) = sph;
   }
   verify_good_sphparam(param_mesh);
   return param_mesh;
@@ -1338,7 +1267,7 @@ void internal_remesh() {
     create(false);
   }
 
-  // This mesh has vertex positions on original model surface, and sph strings for parameterization on sphere.
+  // This mesh has vertex positions on original model surface, and parameterization v_sph(v) on sphere.
   for (Vertex param_v : param_mesh.vertices()) {
     v_domainp(param_v) = param_mesh.point(param_v);
     param_mesh.set_point(param_v, v_sph(param_v));
@@ -1362,6 +1291,7 @@ void internal_remesh() {
     Face hintf = nullptr;
     for (Vertex v : subrange) {
       const Point& sph = mesh.point(v);  // Point on sphere.
+      v_sph(v) = sph;
       assertx(is_unit(sph));
       auto [param_f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
       search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
@@ -1369,7 +1299,6 @@ void internal_remesh() {
       const Vec3<Point> points = map(mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
       const Point newp = interp(points[0], points[1], points[2], bary);
       mesh.set_point(v, newp);
-      v_sph(v) = sph;
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
       if (checkern) {
         // Ignore mesh color since checkering.

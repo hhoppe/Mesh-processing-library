@@ -1128,7 +1128,7 @@ void do_trisubdiv() {
 // *** silsubdiv
 
 void do_silsubdiv() {
-  // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d
+  // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d - -st cat -key De
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_silsubdiv");
   const Array<Face> arf(mesh.faces());
@@ -3199,7 +3199,7 @@ void do_rmdiaguv() {
   }
 }
 
-// Filtermesh ~/data/simplify/bunny.orig.m -projectimage "`cat ~/data/s3d/bunny.s3d`" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d -st bunny.s3d -lighta 1 -lights 0
+// Filtermesh ~/data/simplify/bunny.orig.m -projectimage "`cat ~/data/s3d/bunny.s3d`" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d - -st bunny.s3d -lighta 1 -lights 0
 void do_projectimage(Args& args) {
   const string framestring = args.get_string();
   const string imagename = args.get_filename();
@@ -3457,8 +3457,9 @@ float signed_distance(const Point& p, Face f) {
 }
 
 void do_signeddistcontour(Args& args) {
-  // e.g.:  Filtermesh ~/data/mesh/icosahedron.m -signeddistcontour 50 | G3d -key DmDe
-  // Filtermesh -createobject torus1 -transf "`Filterframe -create_euler 18 23 37`" -triang -signeddistcontour 40 | G3d -key DmDe
+  // e.g.:
+  // Filtermesh ~/data/mesh/icosahedron.m -signeddistcontour 50 | G3d - -key DmDe
+  // Filtermesh -createobject torus1 -transf "`Filterframe -create_euler 18 23 37`" -triang -signeddistcontour 40 | G3d - -key DmDe
   int grid = args.get_int();
   assertx(grid >= 2);
   {
@@ -3695,7 +3696,7 @@ Point compute_hull_point(Vertex v, float offset) {
 #endif  // defined(HH_HAVE_SIMPLEX)
 }
 
-// set f = ~/data/mesh/bunny.nf400.m; Filtermesh $f -hull 5e-3 | G3d $f -input -key DmDeNN
+// E.g.: (f=~/data/mesh/bunny.nf400.m; Filtermesh $f -hull 5e-3 | G3dOGL $f -input -key DmDeNN)
 void do_hull(Args& args) {
   float offset = args.get_float();
   Map<Vertex, Point> mapvp;
@@ -3886,7 +3887,7 @@ void do_subsamplegim(Args& args) {
   mesh.copy(nmesh);
 }
 
-// Filtermesh ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.ohull.nf10000.m -shootrays ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.wids.m | G3dOGL -key DmDe -st ~/prevproj/2009/catwalk/data/manikin_ballerina_filter.s3d
+// (cd ~/prevproj/2009/catwalk/data; Filtermesh manikin_ballerina_filter.ohull.nf10000.m -shootrays manikin_ballerina_filter.wids.m | G3d - -key DmDe -st manikin_ballerina_filter.s3d)
 void do_shootrays(Args& args) {
   string filename = args.get_filename();
   GMesh omesh;  // Original mesh.
@@ -4210,8 +4211,7 @@ void do_fromObj(Args& args) {
 }
 
 void do_sphparam_to_tangentfield(Args& args) {
-  // Filtermesh $r.sphparam.m -sphparam_to_tang 0 0 1 >v.m
-  // Filtermesh v.m -renamekey f dir Vup -procedure show_vup | G3d -lighta 1 -lights 0
+  // Filtermesh ~/proj/sphere/sphparams/cow.sphparam.m -sphparam_to_tang 0 0 1 -renamekey f dir Vup -procedure show_vup | G3d - -st cow -lighta 1 -lights 0
   Vector gdir;
   for_int(c, 3) gdir[c] = args.get_float();
   Polygon poly;

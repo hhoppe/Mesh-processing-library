@@ -703,7 +703,8 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
       //   the LC_ALL, LC_CTYPE or LANG environment variables."
       // Not very understandable: https://cygwin.com/cygwin-ug-net/setup-locale.html
       // This next line seems to enable the launch of ffmpeg on ~/data/video/braille_*HDbrink8h.mp4
-      if (1) my_setenv("LC_ALL", "en_US.CP437");
+      // However, when launching exiftool, it reports "perl: warning: setting locale failed.".
+      if (0) my_setenv("LC_ALL", "en_US.CP437");
     }
     if (!b_client_cmd && starts_with(sargv[0], "cmd")) Warning("Unexpected cmd command");
     if (b_client_cmd && !(sargv.num() == 3 && sargv[1] == "/s/c")) {

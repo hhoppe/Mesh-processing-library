@@ -558,7 +558,7 @@ bool loop(A3dElem& el) {
 using KD = Kdtree<Polygon*, 3>;
 
 void compute_intersect() {
-  // e.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3d ~/data/mesh/peedy.orig.m -input -key NN
+  // e.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3dOGL ~/data/mesh/peedy.orig.m -input -key NN
   if (!g_inter.vpoly.num()) return;
   Frame f = g_inter.bbox.get_frame_to_cube();
   KD kd(8);

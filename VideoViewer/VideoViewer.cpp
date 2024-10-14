@@ -58,6 +58,7 @@ using namespace hh;
 
 namespace {
 
+const bool k_no_dos_eol_warnings = false;  // Ignore end-of-line warnings when reading.
 const bool k_prefer_nv12 = 1;  // read videos using NV12 format (if even dimensions) to save memory and improve speed
 const bool k_use_bgra = 1;     // read images using BGRA (rather than RGBA) channel order to improve speed
 const Pixel k_background_color = Pixel::black();
@@ -883,8 +884,10 @@ void view_externally() {
       "display",                                        // ImageMagick
   };
   const Array<string> video_programs = {
-      "vlc", "c:/Program Files/VideoLAN/VLC/vlc.exe", "c:/Program Files (x86)/VideoLAN/VLC/vlc.exe",
-      "totem",  // default program for "Videos" on Gnome
+      "vlc",                                          // Maybe on Linux.
+      "c:/Program Files/VideoLAN/VLC/vlc.exe",        //
+      "c:/Program Files (x86)/VideoLAN/VLC/vlc.exe",  //
+      "totem",                                        // default program for "Videos" on Gnome
   };
   const bool is_image = getob().is_image();
   for (const string& program : concat(programs, is_image ? image_programs : video_programs)) {
@@ -1742,6 +1745,7 @@ bool DerivedHw::key_press(string skey) {
             add_object(make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_resampled")));
             g_fit_view_to_window = true;
+            g_show_grid = false;
             message("Resampled " + ob.stype());
             // if (nsdims != osdims) reset_window(determine_default_window_dims(g_frame_dims));
           } else {  // no rotation, so crop without resampling
@@ -2321,7 +2325,7 @@ bool DerivedHw::key_press(string skey) {
           initiate_loop_request();
           break;
         }
-        case 'G': {  // generate optimized seamless loop
+        case 'G' + 257: {  // generate optimized seamless loop; disabled
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw "too few video frames";
@@ -2338,7 +2342,7 @@ bool DerivedHw::key_press(string skey) {
           initiate_loop_request();
           break;
         }
-        case 'G' + 256: {  // generate optimized seamless loop synchronously; disabled
+        case 'G' + 258: {  // generate optimized seamless loop synchronously; disabled
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw "too few video frames";
@@ -2441,6 +2445,28 @@ bool DerivedHw::key_press(string skey) {
           g_obs.push(make_unique<Object>(std::move(*image), filename, bgra, unsaved));
           set_video_frame(getobnum() - 1, k_before_start);
           reset_window(determine_default_window_dims(g_frame_dims));
+          break;
+        }
+        case 'G': {  // Open Google Maps at the GPS coordinates of the object.
+          Object& ob = check_object();
+          RFile fi("exiftool -ignoreMinorErrors -GPSPosition -coordFormat '%-.6f' " +
+                   quote_arg_for_shell(ob._filename) + " 2>&1 |");
+          string line;
+          if (!my_getline(fi(), line, k_no_dos_eol_warnings)) throw "cannot get GPS coords";
+          // GPS Position                    : 47.584306, -122.247126
+          if (!starts_with(line, "GPS Position  ")) throw "invalid position: " + line;
+          const size_t pos = line.find(": ");
+          assertt(pos != std::string::npos);
+          const string coords = replace_all(line.substr(pos + 2), ", ", "%2C+");
+          const string url = "https://www.google.com/maps/search/" + coords + "?hl=en&source=opensearch&authuser=0";
+          bool ok = false;
+          for (const string& launcher : V<string>("start", "cygstart", "xdg-open", "open")) {
+            if (!my_spawn(V(launcher, url), true)) {
+              ok = true;
+              break;
+            }
+          }
+          if (!ok) throw "Could not launch Google Maps on " + url;
           break;
         }
         case 'i': {  // info
@@ -3622,14 +3648,14 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         " <pgdn>next_file   <pgup>prev_file   <s>ort_order   <C-o>pen   <C-s>ave   <C-S-s>overwrite",
         " <f2>rename   <f5>reload   <f7>move   <f8>copy   <C-n>ew_window   <d>irectory",
         " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <W>hite_crop",
-        " <v>iew_externally   <i>nfo   <g>rid  <e>xif   <H>checker   <~>console   <esc>quit",
+        " <v>iew_externally   <i>nfo   <g>rid   <e>xif   <H>checker  <G>ps_map   <~>console   <esc>quit",
         "Video:",
         " <spc>play/pause   <l>oop   <a>ll_loop   <m>irror_loop",
         " <left>frame-1   <right>frame+1   <home>first   <end>last",
         " <[>slower   <]>faster   <1>normal   <2>twice   <5>half   <F>ramerate   <B>itrate",
         " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split    <&>merge   <M>irror",
         " <D>ifference",
-        " <R>esample_temporally   <G>en_seamless_loop   <C-g>high-quality_loop   <L>oop",
+        " <R>esample_temporally   <C-g>high-quality_loop   <L>oop",
         " <I>mage_from_frame   <V>ideo_from_images   <#>from_image_files%03d",
     };
     for_int(i, ar.num()) app_draw_text(V((4 + i) * (font_height + 4), 6), ar[i], k_no_text_wrap);
@@ -3640,10 +3666,22 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
       ar.push("Filter kernel: " + k_kernel_string[int(g_kernel)]);
       ar.push("File: " + ob._filename);
       ar.push(string("Status: ") + (ob._unsaved ? "unsaved" : "saved"));
+      if (1 && ob._video.attrib().audio.size()) ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
       string lower_filename = to_lower(ob._filename);
-      if (1 && (ends_with(lower_filename, ".jpg") || ends_with(lower_filename, ".jpeg")) &&
-          command_exists_in_path("exif")) {
-        RFile fi("exif '" + ob._filename + "' 2>&1 |");
+      if (1 && command_exists_in_path("exiftool")) {
+        // (Omit some tags using "--tagname"; but not --ExifToolVersion.)
+        RFile fi("exiftool --system:all --file:all -coordFormat '%-.6f' " + quote_arg_for_shell(ob._filename) +
+                 " 2>&1 |");
+        // ExifTool Version Number         : 12.98
+        // JFIF Version                    : 1.01
+        // Make                            : Canon
+        // ...
+        ar.push("EXIFTOOL:");
+        string line;
+        while (my_getline(fi(), line, k_no_dos_eol_warnings)) ar.push(" " + line);
+      } else if (1 && (ends_with(lower_filename, ".jpg") || ends_with(lower_filename, ".jpeg")) &&
+                 command_exists_in_path("exif")) {
+        RFile fi("exif " + quote_arg_for_shell(ob._filename) + " 2>&1 |");
         // EXIF tags in 'c:/hh/desktop/christmas_tmp/20151225_103357.jpg' ('Intel' byte order):
         // --------------------+----------------------------------------------------------
         // Tag                 |Value
@@ -3657,11 +3695,10 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         while (my_getline(fi(), line)) {
           if (contains(line, "-----") || line == "" || starts_with(line, "Tag   ") || starts_with(line, "EXIF tags"))
             continue;
-          if (!starts_with(line, "EXIF tags")) line = "  " + line;
+          if (!starts_with(line, "EXIF tags")) line = " " + line;
           ar.push(line);
         }
       }
-      if (1 && ob._video.attrib().audio.size()) ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
     }
     int top_rows = 4;
     int left_pixels = 6;

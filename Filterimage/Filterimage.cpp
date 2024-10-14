@@ -2067,15 +2067,15 @@ void output_contour(int gn, float contour_value) {
 }
 
 void do_contour(Args& args) {
-  // e.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d -st imageup
-  // e.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d -st imageup
-  // e.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d -st imageup
+  // e.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d - -st imageup
+  // e.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d - -st imageup
+  // e.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d - -st imageup
   int gn = args.get_int();
   output_contour(gn, 127.5f);
 }
 
 void do_mcontours(Args& args) {
-  // e.g.: Filterimage ~/data/image/lake.png -scaletox 32 -mcontours 256 10 | Filtera3d -joinlines | G3d -st imageup
+  // e.g.: Filterimage ~/data/image/lake.png -scaletox 32 -mcontours 256 10 | Filtera3d -joinlines | G3d - -st imageup
   int gn = args.get_int();
   int ncontours = args.get_int();
   for_int(i, ncontours) {
@@ -3292,7 +3292,7 @@ void do_structuretransfer(Args& args) {
   image = convert_mat_image(mat_xfer);
 }
 
-// (cd ~/proj/morph/data/quadmesh; Filterimage image2.png -filter k -boundaryrule r -resamplemesh 128_mesh2.m | G3d -lighta 1 -lights 0 -st imagenew)
+// (cd ~/prevproj/2014/morph/data/quadmesh; Filterimage image2.png -filter k -boundaryrule r -resamplemesh 128_mesh2.m | G3d - -lighta 1 -lights 0 -st imagenew)
 void do_resamplemesh(Args& args) {
   string mfile = args.get_filename();
   assertx(min(image.dims()) >= 2);

@@ -34,24 +34,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
+  <PropertyGroup>
     <ProjectGuid>{73504DF2-9608-46DD-9608-E478F3C53DAB}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <LocalRoot>..</LocalRoot>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Label="Configuration">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
+  <Import Project="$(LocalRoot)\hhmain_first.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\hhmain.props" />
-  </ImportGroup>
+  <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  <Import Project="$(LocalRoot)\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="FilterPM.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libHh\libHh.vcxproj">
+    <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">
       <Project>{603dc1d8-0d14-40f0-9788-565f73d5dc54}</Project>
     </ProjectReference>
   </ItemGroup>

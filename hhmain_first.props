@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This file is intended for use after the import of $(VCTargetsPath)\Microsoft.Cpp.Default.props and
+       before the import of $(VCTargetsPath)\Microsoft.Cpp.props -->
+  <!-- See MSBuild Conditions: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions -->
+  <PropertyGroup>
+    <PlatformToolset>must_be_defined_in_hhmain_first.props</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '14.0'"> <!-- VS 2015 -->
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '15.0'"> <!-- VS 2017 -->
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '16.0'"> <!-- VS 2019 -->
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '17.0'"> <!-- VS 2022 -->
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '18.0'"> <!-- VS 2025? -->
+    <PlatformToolset>v144</PlatformToolset>
+  </PropertyGroup>
+</Project>
+<!-- For Emacs:
+     Local Variables:
+     nxml-child-indent: 2
+     End:
+-->

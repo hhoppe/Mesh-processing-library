@@ -34,23 +34,15 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
+  <PropertyGroup>
     <ProjectGuid>{CEA9C771-F7F8-49E3-B4A3-890A535B122B}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <LocalRoot>..</LocalRoot>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Label="Configuration">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
+  <Import Project="$(LocalRoot)\hhmain_first.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\hhmain.props" />
-  </ImportGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
-    </ClCompile>
-  </ItemDefinitionGroup>
+  <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  <Import Project="$(LocalRoot)\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="GradientDomainLoop.cpp" />
     <ClCompile Include="VideoViewer.cpp">
@@ -58,10 +50,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libHh\libHh.vcxproj">
+    <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">
       <Project>{603dc1d8-0d14-40f0-9788-565f73d5dc54}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libHwWindows\libHwWindows.vcxproj">
+    <ProjectReference Include="$(MeshRoot)\libHwWindows\libHwWindows.vcxproj">
       <Project>{345bb510-e14c-4fdd-8375-0895fedb342b}</Project>
     </ProjectReference>
   </ItemGroup>

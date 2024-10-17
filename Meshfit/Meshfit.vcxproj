@@ -34,24 +34,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals">
+  <PropertyGroup>
     <ProjectGuid>{FC76D6BC-2EFD-4E4A-BDD9-5EDB5CDCD1FE}</ProjectGuid>
-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <LocalRoot>..</LocalRoot>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Label="Configuration">
-    <PlatformToolset>v143</PlatformToolset>
-  </PropertyGroup>
+  <Import Project="$(LocalRoot)\hhmain_first.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\hhmain.props" />
-  </ImportGroup>
+  <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+  <Import Project="$(LocalRoot)\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="Meshfit.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libHh\libHh.vcxproj">
+    <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">
       <Project>{603dc1d8-0d14-40f0-9788-565f73d5dc54}</Project>
     </ProjectReference>
   </ItemGroup>

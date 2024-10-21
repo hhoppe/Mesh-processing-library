@@ -870,11 +870,11 @@ inline std::ostream& operator<<(std::ostream& os, Face f) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, Edge e) {
-  return os << sform("Edge{%d, %d}", e->_herep->_prev->_vert->_id, e->_herep->_vert->_id);  // v1, v2
+  return os << sform("Edge{%d, %d}", e->_herep->_prev->_vert->_id, e->_herep->_vert->_id);  // vertex1(e), vertex2(e).
 }
 
 inline std::ostream& operator<<(std::ostream& os, Corner he) {
-  return os << sform("Corner{v=%d, f=%d}", he->_prev->_vert->_id, he->_face->_id);
+  return os << sform("Corner{v=%d, f=%d}", he->_vert->_id, he->_face->_id);  // corner_vertex(c), corner_face(c).
 }
 
 //----------------------------------------------------------------------------

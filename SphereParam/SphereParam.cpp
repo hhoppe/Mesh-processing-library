@@ -171,6 +171,47 @@ Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
   return v;
 }
 
+// The vertex v is kept.
+void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
+  const bool v_has_corner_normals =
+      any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "normal"); });
+  Vertex v2 = mesh.opp_vertex(v, e);
+  Map<Face, Vector> face_normal;
+  if (v_has_corner_normals)
+    for (Corner c : mesh.corners(v2))
+      if (Face f = mesh.corner_face(c); f != mesh.face1(e) && f != mesh.face2(e))
+        if (Vector normal; mesh.parse_corner_key_vec(c, "normal", normal))
+          face_normal.enter(mesh.corner_face(c), normal);
+  mesh.collapse_edge_vertex(e, v);
+  string str;
+  if (v_has_corner_normals) {
+    for (Corner c : mesh.corners(v))
+      if (Face f = mesh.corner_face(c); face_normal.contains(f))
+        mesh.update_string(c, "normal", csform_vec(str, face_normal.get(f)));
+  } else {
+    for (Corner c : mesh.corners(v))
+      mesh.update_string(c, "normal", nullptr);
+  }
+}
+
+void collapse_zero_param_length_edges(GMesh& mesh, CArrayView<Vertex> new_vertices) {
+  for (Vertex v : new_vertices) {
+    for (;;) {
+      bool modified = false;
+      for (Edge e : mesh.edges(v)) {
+        Vertex v2 = mesh.opp_vertex(v, e);
+        if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
+          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
+          collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept.
+          modified = true;
+          break;
+        }
+      }
+      if (!modified) break;
+    }
+  }
+}
+
 // Split some `mesh` edges (by adding new vertices) such that no triangle face straddles the prime meridian.
 void split_mesh_along_prime_meridian(GMesh& mesh) {
   Array<Vertex> new_vertices;
@@ -204,21 +245,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   for (Edge e : edges_to_split) split_edge(e, k_axis0);
   edges_to_split.clear();
 
-  for (Vertex v : new_vertices) {
-    for (;;) {
-      bool modified = false;
-      for (Edge e : mesh.edges(v)) {
-        Vertex v2 = mesh.opp_vertex(v, e);
-        if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
-          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced meridian vertex");
-          mesh.collapse_edge_vertex(e, v);  // The just-introduced vertex v is kept.
-          modified = true;
-          break;
-        }
-      }
-      if (!modified) break;
-    }
-  }
+  collapse_zero_param_length_edges(mesh, new_vertices);
 
   if (0) {  // There seems to be no clean solution near the pole.
     // Split the (generally two) edges containing either of the two poles.
@@ -258,21 +285,7 @@ void split_mesh_along_octa(GMesh& mesh) {
     for (Edge e : edges_to_split) split_edge(e, axis);
   }
 
-  for (Vertex v : new_vertices) {
-    for (;;) {
-      bool modified = false;
-      for (Edge e : mesh.edges(v)) {
-        Vertex v2 = mesh.opp_vertex(v, e);
-        if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
-          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
-          mesh.collapse_edge_vertex(e, v);  // The just-introduced vertex v is kept.
-          modified = true;
-          break;
-        }
-      }
-      if (!modified) break;
-    }
-  }
+  collapse_zero_param_length_edges(mesh, new_vertices);
 }
 
 template <typename Precision = double>
@@ -420,7 +433,6 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             // an initial face f on the correct side of the parametric uv discontinuity.
             const Point sph_center = mean(sphs);
             const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);
-            hintf = nullptr;  // ??
             auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
             gnomonic_search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
             // Now use the obtained face f but search for the unperturbed sph and use some nonzero tolerance to
@@ -654,7 +666,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(split_meridian, ": split mesh faces at prime meridian (zero lon)");
   HH_ARGSP(orig_mesh, "file.m : file containing the original mesh");
   HH_ARGSP(orig_indices, "file.txt : file containing the original vertex indices");
-  HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph by mapping through inverse of a spherical map");
+  HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph using inverse of a spherical map");
   HH_ARGSP(keep_uv, "bool : do not overwrite GMesh uv with lonlat coordinates");
   HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, orig_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");

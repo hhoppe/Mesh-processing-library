@@ -2,6 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_MESHSEARCH_H_
 #define MESH_PROCESSING_LIBHH_MESHSEARCH_H_
 
+#include <optional>
+
+#include "libHh/Bbox.h"
 #include "libHh/Facedistance.h"
 #include "libHh/GMesh.h"
 #include "libHh/Spatial.h"
@@ -64,6 +67,7 @@ class MeshSearch {
     bool allow_local_project{false};
     bool allow_internal_boundaries{false};
     bool allow_off_surface{false};
+    std::optional<Bbox<float, 3>> bbox;
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
 

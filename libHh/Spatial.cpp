@@ -38,7 +38,7 @@ void BPointSpatial::enter(Univ id, const Point* pp) {
   Ind ci = point_to_indices(*pp);
   assertx(indices_inbounds(ci));
   int en = encode(ci);
-  _map[en].push(Node{id, pp});  // first creates empty Array<Node> if not present
+  _map[en].push(Node{id, pp});  // First create empty Array<Node> if not present.
 }
 
 void BPointSpatial::remove(Univ id, const Point* pp) {
@@ -86,7 +86,7 @@ IPointSpatial::IPointSpatial(int gn, CArrayView<Point> arp) : Spatial(gn), _pp(a
     Ind ci = point_to_indices(arp[i]);
     assertx(indices_inbounds(ci));
     int en = encode(ci);
-    _map[en].push(i);  //  first creates empty Array<int> if not present
+    _map[en].push(i);  //  First create empty Array<int> if not present.
   }
   if (0)
     for (auto& cell : _map.values()) cell.shrink_to_fit();
@@ -135,7 +135,7 @@ bool BSpatialSearch::done() {
 Univ BSpatialSearch::next(float* pdis2) {
   Univ u;
   for (;;) {
-    if (_pq.empty()) assertx(!done());  // refill _pq
+    if (_pq.empty()) assertx(!done());  // Refill _pq.
     float dis2 = _pq.min_priority();
     if (dis2 > _disbv2) {
       expand_search_space();
@@ -164,6 +164,7 @@ void BSpatialSearch::get_closest_next_cell() {
   for_int(c, 3) {
     if (_ssi[0][c] > 0) {
       float a = _pcenter[c] - _sp.index_to_float(_ssi[0][c]);
+      assertx(a >= 0.f);
       if (a < mindis) {
         mindis = a;
         _axis = c;
@@ -172,6 +173,7 @@ void BSpatialSearch::get_closest_next_cell() {
     }
     if (_ssi[1][c] < _sp._gn - 1) {
       float a = _sp.index_to_float(_ssi[1][c] + 1) - _pcenter[c];
+      assertx(a >= 0.f);
       if (a < mindis) {
         mindis = a;
         _axis = c;
@@ -179,17 +181,17 @@ void BSpatialSearch::get_closest_next_cell() {
       }
     }
   }
-  // mindis may be big if all of space has been searched
+  // The value mindis may be large if all of space has been searched.
   _disbv2 = square(mindis);
 }
 
 void BSpatialSearch::expand_search_space() {
   ASSERTX(_axis >= 0 && _axis < 3 && _dir >= 0 && _dir <= 1);
   // SHOW("expand", _axis, _dir, _ssi);
-  Vec2<Ind> bi = _ssi;
   _ssi[_dir][_axis] += _dir ? 1 : -1;
+  Vec2<Ind> bi = _ssi;
   bi[0][_axis] = bi[1][_axis] = _ssi[_dir][_axis];
-  // consider the layer whose axis's value is _ssi[_dir][_axis]
+  // Consider the layer whose axis's value is _ssi[_dir][_axis].
   for (const Ind& cit : range(bi[0], bi[1] + 1)) consider(cit);
   get_closest_next_cell();
 }

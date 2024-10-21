@@ -34,10 +34,11 @@ int checkern = 0;
 bool octa8colors = false;
 bool baseball = false;
 bool omit_faces = false;
-string param_file;  // Filename for param_mesh.
-string rotate_s3d;  // Filename for s3d file.
-string signal_;     // Surface signal {G, N, C} (for geometry, normal, or color).
-Array<string> key_names{"sph"};
+string domain_file;              // Filename for domain_mesh (D -> S).
+string param_file;               // Filename for param_mesh (M -> S and after inversion, S -> M).
+string rotate_s3d;               // Filename for s3d file.
+string signal_;                  // Surface signal ("G", "N", or "C") (for geometry, normal, or color).
+Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
 int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
@@ -50,7 +51,7 @@ struct DomainFace {
   Pixel pixel_checker;
 };
 
-GMesh mesh;
+GMesh g_mesh;
 bool is_remeshed = false;
 
 constexpr Vector k_undefined_vector(-2.f, 0.f, 0.f);
@@ -680,7 +681,7 @@ void create(bool b_triangulate) {
     assertnever("scheme not recognized: " + scheme);
   }
   //
-  assertx(mesh.empty());
+  assertx(g_mesh.empty());
   //
   HH_TIMER("_create");
   ConsoleProgress cprogress;
@@ -697,7 +698,7 @@ void create(bool b_triangulate) {
 
     Matrix<Vertex> verts(gridn + 1, gridn + 1);
     for_int(i, gridn + 1) for_int(j, !quad_domain ? gridn - i + 1 : gridn + 1) {
-      Vertex v = mesh.create_vertex();
+      Vertex v = g_mesh.create_vertex();
       verts[i][j] = v;
       v_normal(v) = k_undefined_vector;
       v_rgb(v) = k_undefined_vector;
@@ -747,10 +748,10 @@ void create(bool b_triangulate) {
         int imi = int(uv[0] * (2 * gridn) + .5f);
         int imj = int(uv[1] * (2 * gridn) + .5f);
         int imn = imj * (2 * gridn + 1) + imi + 1;
-        mesh.update_string(v, "imagen", csform(str, "%d", imn));
+        g_mesh.update_string(v, "imagen", csform(str, "%d", imn));
       }
       if ((i == 0 || i == gridn) && (j == 0 || j == gridn) && contains(key_names, "domaincorner"))
-        mesh.update_string(v, "domaincorner", "");
+        g_mesh.update_string(v, "domaincorner", "");
       v_ijuv(v) = Uv(float(i) / gridn, float(j) / gridn);
       if (checkern) {
         const Pixel& pixel = get_color(df, v_ijuv(v));
@@ -772,7 +773,7 @@ void create(bool b_triangulate) {
         } else {  // Sphere map.
           p = normalized(bilerp(po, uv[0], uv[1]));
         }
-        mesh.set_point(v, p);
+        g_mesh.set_point(v, p);
       }
 
     } else if (quad_interp) {
@@ -790,28 +791,28 @@ void create(bool b_triangulate) {
         Vertex v = verts[i][j];
         const Uv uv(float(j) / gridn, float(i) / gridn);
         const Point p = normalized(bilerp(po, uv[0], uv[1]));  // Corners.
-        mesh.set_point(v, p);
+        g_mesh.set_point(v, p);
       }
       // Perform recursive quad subdivision.
       for (int s = gridn / 2; s >= 1; s /= 2) {
         for (int i = 0; i <= gridn; i += s * 2) {
           for (int j = s; j < gridn; j += s * 2) {
-            const Point p = normalized(interp(mesh.point(verts[i][j - s]), mesh.point(verts[i][j + s])));
-            mesh.set_point(verts[i][j], p);
+            const Point p = normalized(interp(g_mesh.point(verts[i][j - s]), g_mesh.point(verts[i][j + s])));
+            g_mesh.set_point(verts[i][j], p);
           }
         }
         for (int j = 0; j <= gridn; j += s * 2) {
           for (int i = s; i < gridn; i += s * 2) {
-            const Point p = normalized(interp(mesh.point(verts[i - s][j]), mesh.point(verts[i + s][j])));
-            mesh.set_point(verts[i][j], p);
+            const Point p = normalized(interp(g_mesh.point(verts[i - s][j]), g_mesh.point(verts[i + s][j])));
+            g_mesh.set_point(verts[i][j], p);
           }
         }
         for (int i = s; i < gridn; i += s * 2) {
           for (int j = s; j < gridn; j += s * 2) {
-            const Point& p00 = mesh.point(verts[i - s][j - s]);
-            const Point& p01 = mesh.point(verts[i - s][j + s]);
-            const Point& p10 = mesh.point(verts[i + s][j - s]);
-            const Point& p11 = mesh.point(verts[i + s][j + s]);
+            const Point& p00 = g_mesh.point(verts[i - s][j - s]);
+            const Point& p01 = g_mesh.point(verts[i - s][j + s]);
+            const Point& p10 = g_mesh.point(verts[i + s][j - s]);
+            const Point& p11 = g_mesh.point(verts[i + s][j + s]);
             Point p;
             if (0) {
             } else if (is_warp) {  // Centroid of 4 points.
@@ -824,7 +825,7 @@ void create(bool b_triangulate) {
               assertnever("");
             }
             p = normalized(p);
-            mesh.set_point(verts[i][j], p);
+            g_mesh.set_point(verts[i][j], p);
           }
         }
       }
@@ -860,7 +861,7 @@ void create(bool b_triangulate) {
           p = trimap(pt, bary);
           assertx(is_unit(p));
         }
-        mesh.set_point(verts[i][j], p);
+        g_mesh.set_point(verts[i][j], p);
       }
     }
 
@@ -869,11 +870,11 @@ void create(bool b_triangulate) {
     } else if (!quad_domain) {
       for_int(i, gridn) for_int(j, gridn - i) {
         if (1) {
-          Face f = mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
+          Face f = g_mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
           f_domainf(f) = domainf;
         }
         if (i) {
-          Face f = mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
+          Face f = g_mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
           f_domainf(f) = domainf;
         }
       }
@@ -882,13 +883,13 @@ void create(bool b_triangulate) {
         const Vec4<Vertex> va{verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i + 1][j + 1], verts[i + 1][j + 0]};
         Face f;
         if (!b_triangulate) {
-          f = mesh.create_face(va);
+          f = g_mesh.create_face(va);
           f_domainf(f) = domainf;
         } else {
           const int k = ((i >= gridn / 2) ^ (j >= gridn / 2));
-          f = mesh.create_face(va[(k + 0) % 4], va[(k + 1) % 4], va[(k + 2) % 4]);
+          f = g_mesh.create_face(va[(k + 0) % 4], va[(k + 1) % 4], va[(k + 2) % 4]);
           f_domainf(f) = domainf;
-          f = mesh.create_face(va[(k + 0) % 4], va[(k + 2) % 4], va[(k + 3) % 4]);
+          f = g_mesh.create_face(va[(k + 0) % 4], va[(k + 2) % 4], va[(k + 3) % 4]);
           f_domainf(f) = domainf;
         }
       }
@@ -929,14 +930,14 @@ void do_echeckern(Args& args) {
 }
 
 void do_mesh_sphere() {
-  if (mesh.empty()) create(true);
+  if (g_mesh.empty()) create(true);
   is_remeshed = true;
 }
 
 // A remesh is a mesh with vertices in raster-scan order within each domain face.
 // The vertex positions are on a resampled surface.
 void do_load_remesh(Args& args) {
-  assertx(mesh.empty());
+  assertx(g_mesh.empty());
   assertx(!gridn);
   GMesh remesh;
   {
@@ -965,13 +966,13 @@ void do_load_remesh(Args& args) {
   assertx(scheme == "");  // Not modified on command line.
   scheme = "domain";      // Any scheme will do.
   create(false);
-  assertx(mesh.num_vertices() == remesh.num_vertices());
+  assertx(g_mesh.num_vertices() == remesh.num_vertices());
   Array<char> key, val;
   for (Vertex vp : remesh.vertices()) {
-    Vertex v = assertx(mesh.id_retrieve_vertex(remesh.vertex_id(vp)));
-    mesh.set_point(v, remesh.point(vp));
+    Vertex v = assertx(g_mesh.id_retrieve_vertex(remesh.vertex_id(vp)));
+    g_mesh.set_point(v, remesh.point(vp));
     // Copy normal, rgb, etc.
-    for_cstring_key_value(remesh.get_string(vp), key, val, [&] { mesh.update_string(v, key.data(), val.data()); });
+    for_cstring_key_value(remesh.get_string(vp), key, val, [&] { g_mesh.update_string(v, key.data(), val.data()); });
   }
   is_remeshed = true;
 }
@@ -997,10 +998,10 @@ int get_gridn(int numverts) {
   return n;
 }
 
-void verify_good_sphparam(const GMesh& mesh2) {
-  for (Vertex v : mesh2.vertices()) assertx(is_unit(v_sph(v)));
-  for (Face f : mesh2.faces()) {
-    const Vec3<Point> sphs = map(mesh2.triangle_vertices(f), [&](Vertex v) { return v_sph(v); });
+void verify_good_sphparam(const GMesh& mesh) {
+  for (Vertex v : mesh.vertices()) assertx(is_unit(v_sph(v)));
+  for (Face f : mesh.faces()) {
+    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), [&](Vertex v) { return v_sph(v); });
     const float sarea = spherical_triangle_area(sphs);
     HH_SSTAT(Ssarea, sarea);
     if (!(sarea < TAU)) SHOW(sarea, sphs);
@@ -1010,8 +1011,8 @@ void verify_good_sphparam(const GMesh& mesh2) {
   }
 }
 
-GMesh read_param_mesh(const string& filename) {
-  HH_TIMER("_read_param_mesh");
+GMesh read_sphparam_mesh(const string& filename) {
+  HH_TIMER("_read_sphparam_mesh");
   assertx(filename != "");
   RFile fi(filename);
   for (string line; fi().peek() == '#';) {
@@ -1021,7 +1022,7 @@ GMesh read_param_mesh(const string& filename) {
   GMesh param_mesh;
   param_mesh.read(fi());
   assertx(param_mesh.num_faces());
-  showdf("surface -> sphere map: nv=%d nf=%d\n", param_mesh.num_vertices(), param_mesh.num_faces());
+  showdf("sphere map: nv=%d nf=%d\n", param_mesh.num_vertices(), param_mesh.num_faces());
   const bool normsph = getenv_bool("SPHERESAMPLE_NORMSPH");
   for (Vertex v : param_mesh.vertices()) {
     Point sph;
@@ -1039,23 +1040,23 @@ GMesh read_param_mesh(const string& filename) {
 // A map is a gmerged mesh with vertex positions on domain, and sph strings for parameterization on sphere.
 void do_load_map(Args& args) {
   assertx(!gridn);
-  assertx(mesh.empty());
-  const GMesh param_mesh = read_param_mesh(args.get_filename());
-  gridn = get_gridn(param_mesh.num_vertices());
+  assertx(g_mesh.empty());
+  const GMesh domain_mesh = read_sphparam_mesh(args.get_filename());  // Map: domain D -> sphere S (v -> v_sph(v)).
+  gridn = get_gridn(domain_mesh.num_vertices());
   assertx(scheme == "");  // Not modified on command line.
   scheme = "domain";      // Any scheme will do.
   create(false);
-  for (Vertex v : mesh.vertices()) mesh.set_point(v, Point(BIGFLOAT, 0.f, 0.f));
+  for (Vertex v : g_mesh.vertices()) g_mesh.set_point(v, Point(BIGFLOAT, 0.f, 0.f));
   Array<Point> arp;
-  arp.reserve(mesh.num_vertices());  // Necessary to prevent reallocation.
+  arp.reserve(g_mesh.num_vertices());  // Necessary to prevent reallocation.
   PointSpatial<Vertex> psp(max(10, gridn));
-  for (Vertex v : mesh.vertices()) {
+  for (Vertex v : g_mesh.vertices()) {
     arp.push(v_domainp(v) * k_fdomain_to_spatialbb);
     psp.enter(v, &arp.last());
   }
-  for (Vertex param_v : param_mesh.vertices()) {
-    const Point& sphp = v_sph(param_v);
-    const Point& domainp = param_mesh.point(param_v);
+  for (Vertex domain_v : domain_mesh.vertices()) {
+    const Point& sphp = v_sph(domain_v);
+    const Point& domainp = domain_mesh.point(domain_v);
     int nfaces = 0;
     SpatialSearch<Vertex> ss(&psp, domainp * k_fdomain_to_spatialbb);
     for (;;) {
@@ -1063,37 +1064,37 @@ void do_load_map(Args& args) {
       Vertex vv = ss.next(&dis2);
       if (dis2 > 1e-12f) break;
       nfaces++;
-      assertx(mesh.point(vv)[0] == BIGFLOAT);
-      mesh.set_point(vv, sphp);
+      assertx(g_mesh.point(vv)[0] == BIGFLOAT);
+      g_mesh.set_point(vv, sphp);
     }
     if (nfaces < 1 || nfaces > 4) SHOW(nfaces, domainp, sphp);
     assertx(nfaces >= 1 && nfaces <= 4);  // Max valence is 3 or 4.
   }
-  for (Vertex v : mesh.vertices()) assertx(mesh.point(v)[0] != BIGFLOAT);
+  for (Vertex v : g_mesh.vertices()) assertx(g_mesh.point(v)[0] != BIGFLOAT);
 }
 
 void do_sample_map(Args& args) {
   assertx(gridn);
-  assertx(mesh.empty());
-  const GMesh param_mesh = read_param_mesh(args.get_filename());
+  assertx(g_mesh.empty());
+  const GMesh domain_mesh = read_sphparam_mesh(args.get_filename());  // Map: domain D -> sphere S (v -> v_sph(v)).
 
   if (scheme == "") scheme = "domain";
   create(scheme != "domain");
 
-  const MeshSearch msearch(param_mesh, {true});
+  const MeshSearch msearch(domain_mesh, {true});
   HH_TIMER("_resample0");
   ConsoleProgress cprogress;
   int nv = 0;
   Face hintf = nullptr;
-  for (Vertex v : mesh.ordered_vertices()) {
-    if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / mesh.num_vertices());
-    auto [param_f, bary, unused_clp, d2] = msearch.search(v_domainp(v), hintf);
-    hintf = param_f;
+  for (Vertex v : g_mesh.ordered_vertices()) {
+    if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / g_mesh.num_vertices());
+    auto [domain_f, bary, unused_clp, d2] = msearch.search(v_domainp(v), hintf);
+    hintf = domain_f;
     assertx(d2 < 1e-12f);
     Vector sum{};
-    const Vec3<Vertex> param_face_vertices = param_mesh.triangle_vertices(param_f);
-    for_int(i, 3) sum += bary[i] * v_sph(param_face_vertices[i]);
-    mesh.set_point(v, normalized(sum));
+    const Vec3<Vertex> domain_face_vertices = domain_mesh.triangle_vertices(domain_f);
+    for_int(i, 3) sum += bary[i] * v_sph(domain_face_vertices[i]);
+    g_mesh.set_point(v, normalized(sum));
   }
 }
 
@@ -1165,35 +1166,35 @@ Bary get_bary(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
   return bary;
 }
 
-// Given point p on sphere, and some nearby spherical triangle f in mesh2, find the true spherical
+// Given point p on sphere, and some nearby spherical triangle f in mesh, find the true spherical
 // triangle f containing p, and the barycentric coordinates of p in f.
-void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
+void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
   const Trispheremap trimap = &map_sphere;
   Vec3<Point> points;
   {
     // Find the spherical triangle f containing p.
     int nfchanges = 0;
     for (;;) {
-      points = mesh2.triangle_points(f);
+      points = mesh.triangle_points(f);
       // Adapted from MeshSearch.cpp .
       const float dotcross_eps = 2e-7f;
       Vec3<bool> outside;
       for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
       int noutside = sum<int>(outside);
       if (noutside == 0) break;
-      const Vec3<Vertex> va = mesh2.triangle_vertices(f);
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
       if (noutside == 2) {
         const int side = index(outside, false);
         // Fastest: jump across the vertex.
         Vertex v = va[side];
-        const int val = mesh2.degree(v);
+        const int val = mesh.degree(v);
         // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
         constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
         const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
-        for_int(i, nrot) f = assertx(mesh2.ccw_face(v, f));
+        for_int(i, nrot) f = assertx(mesh.ccw_face(v, f));
       } else if (noutside == 1) {
         const int side = index(outside, true);
-        f = assertx(mesh2.opp_face(va[side], f));
+        f = assertx(mesh.opp_face(va[side], f));
       } else {
         assertnever("");
       }
@@ -1210,16 +1211,16 @@ void search_bary(const Point& p, const GMesh& mesh2, Face& f, Bary& bary) {
 }
 
 // Returns k_undefined_vector if undefined.
-Vector interp_f_normal(const GMesh& mesh2, Face f, const Bary& bary) {
-  const Vec3<Corner> corners = mesh2.triangle_corners(f);
+Vector interp_f_normal(const GMesh& mesh, Face f, const Bary& bary) {
+  const Vec3<Corner> corners = mesh.triangle_corners(f);
   Vector sum_normal{};
   int num_defined = 0;
   for_int(i, 3) {
     Corner c = corners[i];
     Vector normal;
-    if (GMesh::string_has_key(mesh2.get_string(c), "normal")) {
-      assertx(mesh2.parse_corner_key_vec(c, "normal", normal));
-    } else if (Vertex v = mesh2.corner_vertex(c); v_normal(v) != k_undefined_vector) {
+    if (GMesh::string_has_key(mesh.get_string(c), "normal")) {
+      assertx(mesh.parse_corner_key_vec(c, "normal", normal));
+    } else if (Vertex v = mesh.corner_vertex(c); v_normal(v) != k_undefined_vector) {
       normal = v_normal(v);
     } else {
       continue;
@@ -1233,16 +1234,16 @@ Vector interp_f_normal(const GMesh& mesh2, Face f, const Bary& bary) {
 }
 
 // Returns k_undefined_vector if undefined.
-Vector interp_f_rgb(const GMesh& mesh2, Face f, const Bary& bary) {
-  const Vec3<Corner> corners = mesh2.triangle_corners(f);
+Vector interp_f_rgb(const GMesh& mesh, Face f, const Bary& bary) {
+  const Vec3<Corner> corners = mesh.triangle_corners(f);
   Vector sum_rgb{};
   int num_defined = 0;
   for_int(i, 3) {
     Corner c = corners[i];
     Vector rgb;
-    if (GMesh::string_has_key(mesh2.get_string(c), "rgb")) {
-      assertx(mesh2.parse_corner_key_vec(c, "rgb", rgb));
-    } else if (Vertex v = mesh2.corner_vertex(c); v_rgb(v) != k_undefined_vector) {
+    if (GMesh::string_has_key(mesh.get_string(c), "rgb")) {
+      assertx(mesh.parse_corner_key_vec(c, "rgb", rgb));
+    } else if (Vertex v = mesh.corner_vertex(c); v_rgb(v) != k_undefined_vector) {
       rgb = v_rgb(v);
     } else {
       continue;
@@ -1259,9 +1260,9 @@ Vector interp_f_rgb(const GMesh& mesh2, Face f, const Bary& bary) {
 
 void internal_remesh() {
   if (is_remeshed) return;
-  GMesh param_mesh = read_param_mesh(param_file);
+  GMesh param_mesh = read_sphparam_mesh(param_file);
 
-  if (mesh.empty()) {
+  if (g_mesh.empty()) {
     // Create domain grid mesh.
     HH_STIMER("_create_tess");
     create(false);
@@ -1285,20 +1286,20 @@ void internal_remesh() {
 
   HH_TIMER("_resample");
   const int num_threads = get_max_threads();
-  parallel_for_chunk(Array<Vertex>(mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
+  parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
     string str;
     Face hintf = nullptr;
     for (Vertex v : subrange) {
-      const Point& sph = mesh.point(v);  // Point on sphere.
+      const Point& sph = g_mesh.point(v);  // Point on sphere.
       v_sph(v) = sph;
       assertx(is_unit(sph));
       auto [param_f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
       search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
       hintf = param_f;
-      const Vec3<Point> points = map(mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
+      const Vec3<Point> points = map(g_mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
       const Point newp = interp(points[0], points[1], points[2], bary);
-      mesh.set_point(v, newp);
+      g_mesh.set_point(v, newp);
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
       if (checkern) {
         // Ignore mesh color since checkering.
@@ -1315,22 +1316,24 @@ void internal_remesh() {
 void triangulate_short_diag() {
   HH_STIMER("_triangulate_short");
   Array<Vertex> va;
-  for (Face f : Array<Face>(mesh.faces())) {
-    mesh.get_vertices(f, va);
+  for (Face f : Array<Face>(g_mesh.faces())) {
+    g_mesh.get_vertices(f, va);
     if (va.num() == 3) continue;
     assertx(va.num() == 4);
     Vertex va0 = va[0], va2 = va[2];
-    const bool other_diag = dist2(mesh.point(va[1]), mesh.point(va[3])) < dist2(mesh.point(va[0]), mesh.point(va[2]));
+    const bool other_diag =
+        dist2(g_mesh.point(va[1]), g_mesh.point(va[3])) < dist2(g_mesh.point(va[0]), g_mesh.point(va[2]));
     if (other_diag) {
       va0 = va[1];
       va2 = va[3];
     }
     const int domainf = f_domainf(f);
-    Edge e = mesh.split_face(f, va0, va2);
-    for (Face ff : mesh.faces(e)) f_domainf(ff) = domainf;
+    Edge e = g_mesh.split_face(f, va0, va2);
+    for (Face ff : g_mesh.faces(e)) f_domainf(ff) = domainf;
   }
 }
 
+// Sets key_names.
 void do_keys(Args& args) {
   const string keys = args.get_string();
   const std::regex pattern(",");  // Pattern for splitting keys.
@@ -1355,16 +1358,136 @@ void do_signal(Args& args) {
   assertx(contains(V<string>("G", "N", "C"), signal_));
 }
 
+void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
+                   const Bary& bary) {
+  pixel[3] = 255;
+  switch (signal_[0]) {
+    case 'G': {
+      const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
+      Point p_m{};
+      for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
+      for_int(z, 3) {
+        const float frac = (p_m[z] - bbox[0][z]) / (bbox[1][z] - bbox[0][z]);
+        assertx(frac >= 0.f && frac <= 1.f);
+        pixel[z] = uint8_t(frac * 255.f + .5f);
+      }
+      break;
+    }
+    case 'N': {
+      const Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
+      for_int(z, 3) {
+        assertx(abs(normal[z]) <= 1.f + 1e-6f);
+        pixel[z] = uint8_t((normal[z] * .5f + .5f) * 255.f + .5f);
+      }
+      break;
+    }
+    case 'C': {
+      Vector rgb = interp_f_rgb(mesh, f, bary);
+      for_int(z, 3) {
+        assertx(rgb[z] >= 0.f && rgb[z] <= 1.f + 1e-6f);
+        pixel[z] = uint8_t(rgb[z] * 255.f + .5f);
+      }
+      break;
+    }
+    default: assertnever("signal '" + signal_ + "' not recognized");
+  }
+}
+
+void do_write_dual_texture(Args& args) {
+  const string imagename = args.get_filename();
+  assertx(signal_ != "");
+  assertx(domain_file != "");
+  assertx(param_file != "");
+  assertx(gridn);
+  assertx(g_mesh.empty());
+
+  const GMesh domain_mesh = read_sphparam_mesh(domain_file);  // Map: domain D -> sphere S (v -> v_sph(v)).
+  GMesh param_mesh = read_sphparam_mesh(param_file);          // Map (initially): mesh M -> sphere S (v -> v_sph(v)).
+  const Bbox bbox{transform(g_mesh.vertices(), [&](Vertex v) { return g_mesh.point(v); })};
+  const Frame rotate_frame = get_rotate_frame();
+
+  GMesh mesh_i;  // Map: image I -> domain D  (v -> v_domainp(v)).
+  {
+    const int orig_gridn = std::exchange(gridn, 1);  // Create an untessellated domain mesh.
+    scheme = "domain";  // The choice does not matter because the domain is not tessellated.
+    create(true);
+    gridn = orig_gridn;
+    //
+    mesh_i.copy(g_mesh);
+    for (Vertex v : mesh_i.vertices()) {
+      Vertex vv = g_mesh.id_vertex(g_mesh.vertex_id(v));
+      v_domainp(v) = g_mesh.point(vv);
+      mesh_i.set_point(v, concat(v_imageuv(vv), V(0.f)));
+    }
+  }
+
+  // Invert the mapping of param_mesh to create the map: sphere S -> mesh M (v -> v_domainp(v)).
+  for (Vertex v : param_mesh.vertices()) {
+    v_domainp(v) = param_mesh.point(v);
+    param_mesh.set_point(v, v_sph(v));
+    Vector normal;
+    if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
+    v_normal(v) = normal;
+    Vector rgb;
+    if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
+    v_rgb(v) = rgb;
+  }
+
+  MeshSearch::Options options_i;
+  options_i.bbox = Bbox(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f));
+  const MeshSearch msearch_i(mesh_i, options_i);                // Map: image I -> domain D (v -> v_domainp(v)).
+  const MeshSearch msearch_d(domain_mesh, {true});              // Map: domain D -> sphere S (v -> v_sph(v)).
+  const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
+
+  HH_TIMER("_dual_texture");
+  const int imagesize = gridn;
+  Image image(V(imagesize, imagesize));
+  const int num_threads = get_max_threads();
+  // for_int(y, image.ysize()) {
+  parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
+    dummy_use(thread_index);
+    Face hintf_d = nullptr, hintf_s = nullptr;
+    for (const int y : subrange) {
+      for_int(x, image.xsize()) {
+        // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
+        const int yy = image.ysize() - 1 - y;
+        Pixel& pixel = image[yy][x];
+        Point p_i, p_d, p_s;
+        p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
+        {
+          auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
+          if (d2 > 0.f) {
+            pixel = Pixel(255, 255, 255, 255);
+            continue;
+          }
+          const Vec3<Point> points = map(mesh_i.triangle_vertices(f), [&](Vertex v) { return v_domainp(v); });
+          p_d = interp(points[0], points[1], points[2], bary);
+        }
+        {
+          auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hintf_d);
+          hintf_d = f;
+          if (d2 >= 1e-12f) assertnever(SSHOW(p_i, p_d, f, bary, unused_clp, d2));
+          const Vec3<Vertex> face_vertices = domain_mesh.triangle_vertices(f);
+          Vector sum{};
+          for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
+          p_s = normalized(sum);
+        }
+        auto [f, bary, unused_clp, d2] = msearch_s.search(p_s, hintf_s);
+        search_bary(p_s, param_mesh, f, bary);  // May modify f.
+        hintf_s = f;
+        assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
+      }
+    }
+  });
+  image.write_file(imagename);
+  nooutput = true;
+}
+
 void do_write_texture(Args& args) {
   const string imagename = args.get_filename();
   assertx(signal_ != "");
   internal_remesh();
-  // Note that the samples from the remesh match 1-to-1 with the geometric vertices, which does NOT correspond
-  //  to current texture-mapping hardware.
-  // To do things correctly, we would have to offset the imageuv coords taking into account the resolution of
-  //  the normal-map.
-  // However, this would NOT work for coarse normal-maps since the samples between adjacent domain faces
-  //  must be shared.
+  // Note that the "primal" remesh vertices do not correspond to the "dual" sampling of texture-mapping hardware.
   HH_TIMER("_write_texture");
   assertx(gridn);
   // For tetra and cube, the righthand boundary of the image correctly wraps around to the lefthand boundary,
@@ -1381,10 +1504,10 @@ void do_write_texture(Args& args) {
   const Pixel background = Pixel::white();  // Outside color.
   Image image(V(imagesize, imagesize), background);
   Image image_right_column(V(image.ysize(), 1), background);
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{transform(g_mesh.vertices(), [&](Vertex v) { return g_mesh.point(v); })};
   const Frame rotate_frame = get_rotate_frame();
   if (signal_ == "N") assertw(rotate_s3d != "");
-  for (Vertex v : mesh.ordered_vertices()) {  // Ordered so as to "consistently" break ties along domain edges.
+  for (Vertex v : g_mesh.ordered_vertices()) {  // Ordered so as to "consistently" break ties along domain edges.
     const Uv uv = v_imageuv(v);
     int y = int(uv[1] * scale + .5f);
     const int x = int(uv[0] * scale + .5f);
@@ -1394,7 +1517,7 @@ void do_write_texture(Args& args) {
     pixel[3] = 255;
     switch (signal_[0]) {
       case 'G': {
-        const Point& p = mesh.point(v);
+        const Point& p = g_mesh.point(v);
         for_int(z, 3) {
           assertx(p[z] >= bbox[0][z] && p[z] <= bbox[1][z]);
           const float f = (p[z] - bbox[0][z]) / (bbox[1][z] - bbox[0][z]);
@@ -1442,35 +1565,35 @@ void do_write_lonlat_texture(Args& args) {
   assertx(gridn);
   assertx(param_file != "");
   assertx(signal_ != "");
-  assertx(mesh.empty());
+  assertx(g_mesh.empty());
   const Frame rotate_frame = get_rotate_frame();
-  mesh = read_param_mesh(param_file);
-  for (Vertex v : mesh.vertices()) {
-    v_domainp(v) = mesh.point(v);
-    mesh.set_point(v, v_sph(v));
+  GMesh param_mesh = read_sphparam_mesh(param_file);
+  for (Vertex v : param_mesh.vertices()) {
+    v_domainp(v) = param_mesh.point(v);
+    param_mesh.set_point(v, v_sph(v));
   }
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return param_mesh.point(v); })};
   switch (signal_[0]) {
     case 'G': break;
     case 'N':
       assertw(rotate_s3d != "");
-      for (Vertex v : mesh.vertices()) {
+      for (Vertex v : param_mesh.vertices()) {
         Vector normal;
-        if (!parse_key_vec(mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
+        if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
         v_normal(v) = normal;
       }
       break;
     case 'C':
-      for (Vertex v : mesh.vertices()) {
+      for (Vertex v : param_mesh.vertices()) {
         Vector rgb;
-        if (!parse_key_vec(mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
+        if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
         v_rgb(v) = rgb;
       }
       break;
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
 
-  const MeshSearch msearch(mesh, {true});
+  const MeshSearch msearch(param_mesh, {true});
 
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
@@ -1489,38 +1612,8 @@ void do_write_lonlat_texture(Args& args) {
 
         auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
         hintf = f;
-        search_bary(sph, mesh, f, bary);  // May modify f.
-        switch (signal_[0]) {
-          case 'G': {
-            const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
-            Point p{};
-            for_int(i, 3) p += bary[i] * v_domainp(face_vertices[i]);
-            for_int(z, 3) {
-              assertx(p[z] >= bbox[0][z] && p[z] <= bbox[1][z]);
-              const float frac = (p[z] - bbox[0][z]) / (bbox[1][z] - bbox[0][z]);
-              pixel[z] = uint8_t(frac * 255.f + .5f);
-            }
-            break;
-          }
-          case 'N': {
-            Vector normal = interp_f_normal(mesh, f, bary);
-            normal *= rotate_frame;
-            for_int(z, 3) {
-              assertx(abs(normal[z]) <= 1.f + 1e-6f);
-              pixel[z] = uint8_t((normal[z] * .5f + .5f) * 255.f + .5f);
-            }
-            break;
-          }
-          case 'C': {
-            Vector rgb = interp_f_rgb(mesh, f, bary);
-            for_int(z, 3) {
-              assertx(rgb[z] >= 0.f && rgb[z] <= 1.f + 1e-6f);
-              pixel[z] = uint8_t(rgb[z] * 255.f + .5f);
-            }
-            break;
-          }
-          default: assertnever("signal '" + signal_ + "' not recognized");
-        }
+        search_bary(sph, param_mesh, f, bary);  // May modify f.
+        assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
       }
     }
   });
@@ -1534,7 +1627,7 @@ void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
   for_int(i, 3) assertx(is_unit(pa[i]));
   Matrix<Vertex> verts(n + 1, n + 1);  // Upper-left half is defined.
   for_int(i, n + 1) for_int(j, n - i + 1) {
-    Vertex v = mesh.create_vertex();
+    Vertex v = g_mesh.create_vertex();
     v_normal(v) = k_undefined_vector;
     v_rgb(v) = k_undefined_vector;
     verts[i][j] = v;
@@ -1542,12 +1635,12 @@ void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
     const Bary bary((n - i - j) / float(n), i / float(n), j / float(n));
     const Point p = trimap(pa, bary);
     assertx(is_unit(p));
-    mesh.set_point(v, p);
+    g_mesh.set_point(v, p);
     v_sph(v) = p;
   }
   for_int(i, n) for_int(j, n - i) {
-    if (1) mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
-    if (i) mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
+    if (1) g_mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
+    if (i) g_mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
   }
 }
 
@@ -1567,7 +1660,7 @@ void do_test_properties() {
   const Point refp1(0.f, 1.f, 0.f), refp2(-1.f, 0.f, 0.f);
   const Point refp3 = normalized(Point(-.3f, 0.f, .9f)), refp4 = normalized(Point(.4f, -.8f, .3f));
   //
-  assertx(mesh.empty());
+  assertx(g_mesh.empty());
   const SGrid<Point, 3, 3> faces = {
       {refp1, refp2, refp3},
       {refp3, refp2, refp4},  // Shares the same boundary vertices iff edge-continuous. (check visually).
@@ -1604,28 +1697,28 @@ void do_test_properties() {
 }
 
 void do_create_lonlat_sphere() {
-  assertx(mesh.empty());
+  assertx(g_mesh.empty());
   assertx(gridn >= 2);
   Matrix<Vertex> matv(gridn, gridn);
   string str;
   for_int(i, gridn) for_int(j, gridn) {
-    Vertex v = mesh.create_vertex();
+    Vertex v = g_mesh.create_vertex();
     matv[i][j] = v;
     // We reverse the index i to obtain the correct outward orientation of the sphere.
     const Uv lonlat(j / (gridn - 1.f), (gridn - 1 - i) / (gridn - 1.f));
     const Point sph = sph_from_lonlat(lonlat);
-    mesh.set_point(v, sph);
+    g_mesh.set_point(v, sph);
     v_sph(v) = sph;
     v_normal(v) = sph;
     v_rgb(v) = k_undefined_vector;
-    mesh.update_string(v, "uv", csform_vec(str, lonlat));
+    g_mesh.update_string(v, "uv", csform_vec(str, lonlat));
   }
   for_int(i, gridn - 1) for_int(j, gridn - 1) {
     if (0) {
-      mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
+      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
     } else {
-      mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1]));
-      mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
+      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1]));
+      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
     }
   }
 }
@@ -1641,7 +1734,7 @@ void do_create_lonlat_checker(Args& args) {
   if (!gridn) gridn = 128;
   {
     HH_TIMER("_create_tess2");
-    if (mesh.empty()) {
+    if (g_mesh.empty()) {
       create(true);
     } else {
       if (domain == "cube") triangulate_short_diag();
@@ -1649,7 +1742,7 @@ void do_create_lonlat_checker(Args& args) {
   }
   MeshSearch::Options options;
   options.allow_off_surface = true;
-  const MeshSearch msearch(mesh, options);
+  const MeshSearch msearch(g_mesh, options);
   const Array<DomainFace> domain_faces = get_domain_faces();
   {
     HH_TIMER("_create_image");
@@ -1666,10 +1759,10 @@ void do_create_lonlat_checker(Args& args) {
           const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
           auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
-          // Given that `mesh` has disjoint components, this call to search_bary() ought to fail sometimes?
-          search_bary(sph, mesh, f, bary);  // May modify f.
+          // Given that `g_mesh` has disjoint components, this call to search_bary() ought to fail sometimes?
+          search_bary(sph, g_mesh, f, bary);  // May modify f.
           hintf = f;
-          const Vec3<Vertex> va = mesh.triangle_vertices(f);
+          const Vec3<Vertex> va = g_mesh.triangle_vertices(f);
           Uv uv{};
           for_int(i, 3) uv += bary[i] * v_ijuv(va[i]);
           // Mesh vertices have colors according to checkern; for precision, we ignore these and recompute using uv.
@@ -1687,35 +1780,35 @@ void add_mesh_strings() {
   // Use HashFloat on sph and normal?
   string str;
   if (contains(key_names, "domainp"))
-    for (Vertex v : mesh.vertices()) mesh.update_string(v, "domainp", csform_vec(str, v_domainp(v)));
+    for (Vertex v : g_mesh.vertices()) g_mesh.update_string(v, "domainp", csform_vec(str, v_domainp(v)));
   if (contains(key_names, "stretchuv"))
-    for (Vertex v : mesh.vertices()) mesh.update_string(v, "stretchuv", csform_vec(str, v_stretchuv(v)));
+    for (Vertex v : g_mesh.vertices()) g_mesh.update_string(v, "stretchuv", csform_vec(str, v_stretchuv(v)));
   if (contains(key_names, "imageuv"))
-    for (Vertex v : mesh.vertices()) mesh.update_string(v, "imageuv", csform_vec(str, v_imageuv(v)));
+    for (Vertex v : g_mesh.vertices()) g_mesh.update_string(v, "imageuv", csform_vec(str, v_imageuv(v)));
   if (contains(key_names, "sph"))
-    for (Vertex v : mesh.vertices()) mesh.update_string(v, "sph", csform_vec(str, v_sph(v)));
+    for (Vertex v : g_mesh.vertices()) g_mesh.update_string(v, "sph", csform_vec(str, v_sph(v)));
   if (contains(key_names, "ll"))
-    for (Vertex v : mesh.vertices()) {
+    for (Vertex v : g_mesh.vertices()) {
       const Point& sph = v_sph(v);
       Uv lonlat = lonlat_from_sph(sph);
       const bool near_prime_meridian = abs(sph[0]) < 1e-5f && sph[1] > 1e-5f;
       if (near_prime_meridian) {
-        Face f = mesh.most_ccw_face(v);  // Actually, any adjacent face in this connected component.
-        const Vec3<Point> sphs = map(mesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
+        Face f = g_mesh.most_ccw_face(v);  // Actually, any adjacent face in this connected component.
+        const Vec3<Point> sphs = map(g_mesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
         const Point center = mean(sphs);
         lonlat[0] = center[0] < 0.f ? 0.f : 1.f;
       }
-      mesh.update_string(v, "ll", csform_vec(str, lonlat));
+      g_mesh.update_string(v, "ll", csform_vec(str, lonlat));
     }
   if (1) {
-    for (Vertex v : mesh.vertices()) {
-      if (v_normal(v) != k_undefined_vector) mesh.update_string(v, "normal", csform_vec(str, v_normal(v)));
-      if (v_rgb(v) != k_undefined_vector) mesh.update_string(v, "rgb", csform_vec(str, v_rgb(v)));
+    for (Vertex v : g_mesh.vertices()) {
+      if (v_normal(v) != k_undefined_vector) g_mesh.update_string(v, "normal", csform_vec(str, v_normal(v)));
+      if (v_rgb(v) != k_undefined_vector) g_mesh.update_string(v, "rgb", csform_vec(str, v_rgb(v)));
     }
   }
   // Note: "domaincorner" was handled earlier.
   if (contains(key_names, "domainf"))
-    for (Face f : mesh.faces()) mesh.update_string(f, "domainf", csform(str, "%d", f_domainf(f)));
+    for (Face f : g_mesh.faces()) g_mesh.update_string(f, "domainf", csform(str, "%d", f_domainf(f)));
 }
 
 }  // namespace
@@ -1738,11 +1831,14 @@ int main(int argc, const char** argv) {
   HH_ARGSD(load_remesh, "mesh.remesh.m : load a previous remesh");
   HH_ARGSD(load_map, "domain.inv.sphparam.m : domain -> sphere, instead of scheme");
   HH_ARGSD(sample_map, "domain.inv.sphparam.m : domain -> sphere, sampled using gridn");
-  HH_ARGSP(param_file, "mesh.sphparam.m : specify surface parameterization");
+  HH_ARGSP(domain_file, "mesh.inv.sphparam.m : specify domain-to-sphere map (D->S)");
+  HH_ARGSP(param_file, "mesh.sphparam.m : specify surface parameterization (M->S)");
   HH_ARGSP(rotate_s3d, "file.s3d : rotate normals based on view (snapped to axes)");
-  HH_ARGSD(keys, "comma_separated_keys : mesh fields: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");
+  HH_ARGSD(keys, "comma_separated_keys : fields to write in output mesh (default: sph)");
+  HH_ARGSC("   possible keys: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");
   HH_ARGSD(remesh, ": resample mesh and triangulate");
   HH_ARGSD(signal, "l : select G, N, or C");
+  HH_ARGSD(write_dual_texture, "domain.inv.sphparam.m image : resample signal as texturemap");
   HH_ARGSD(write_texture, "image : resample signal as texturemap");
   HH_ARGSD(write_lonlat_texture, "image : resample signal as (lon, lat) texture");
   HH_ARGSC(HH_ARGS_INDENT "Misc:");
@@ -1761,7 +1857,7 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   if (!nooutput) {
     add_mesh_strings();
-    mesh.write(std::cout);
+    g_mesh.write(std::cout);
     std::cout.flush();
   }
   if (!k_debug) exit_immediately(0);

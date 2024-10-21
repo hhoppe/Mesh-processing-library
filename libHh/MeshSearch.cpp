@@ -58,8 +58,9 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
   if (_options.allow_local_project) psp_size /= 2;
   psp_size = clamp(10, psp_size, 150);
   HH_STIMER("__meshsearch_build");
-  const Bbox bbox{transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); })};
-  _ftospatial = bbox.get_frame_to_small_cube();
+  if (!_options.bbox)
+    _options.bbox.emplace(transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); }));;
+  _ftospatial = _options.bbox->get_frame_to_small_cube();
   int fi = 0;
   for (Face f : _mesh.faces()) {
     Polygon poly(3);

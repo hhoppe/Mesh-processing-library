@@ -51,9 +51,10 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   PArray<float, 10> sa(num());
   int num_intersections = 0;
   for_int(i, num()) {
-    sa[i] = dot(self[i] - hp, hn);
-    if (sa[i] >= 0) num_intersections++;
+    sa[i] = dot(self[i] - hp, hn) + 1e-7f;
+    if (sa[i] >= 0.f) num_intersections++;
   }
+  // SHOW(sa);
   if (num_intersections == num()) return false;
   if (num_intersections == 0) {
     init(0);

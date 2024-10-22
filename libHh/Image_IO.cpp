@@ -42,7 +42,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     //     Stream #0:0: Video: png, rgba, 1024x1024, 25 tbr, 25 tbn, 25 tbc
     Vec2<int> dims{0, 0};
     int nimages = 0;
-    string scontainer;
+    string container;
     bool has_alpha = false;
     int nlines = 0;
     string line;
@@ -60,7 +60,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
         i += strlen(": Video: ");
         string::size_type j = line.find(',', i);
         assertt(j != string::npos);
-        scontainer = line.substr(i, j - i);
+        container = line.substr(i, j - i);
         i = j;
         for (;;) {
           i = line.find(',', i + 1);
@@ -70,31 +70,31 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
         if (contains(line, ", rgba,")) has_alpha = true;
       }
     }
-    if (ldebug) SHOW(nlines, nimages, dims, scontainer, has_alpha);
+    if (ldebug) SHOW(nlines, nimages, dims, container, has_alpha);
     if (!nlines || nimages != 1 || !product(dims))
       throw std::runtime_error("ffmpeg is unable to read image file '" + filename + "'");
-    assertt(scontainer != "");
+    assertt(container != "");
     init(dims);
-    if (scontainer == "mjpeg") scontainer = "jpg";
-    if (scontainer == "mjpeg (Baseline)") scontainer = "jpg";
-    if (scontainer == "sgi") scontainer = "rgb";
-    string suf = to_lower(get_path_extension(filename));
-    if (suf != "" && suf != scontainer) {
-      SHOW(suf, scontainer);
+    if (container == "mjpeg") container = "jpg";
+    if (container == "mjpeg (Baseline)") container = "jpg";
+    if (container == "sgi") container = "rgb";
+    string suffix = to_lower(get_path_extension(filename));
+    if (suffix != "" && suffix != container) {
+      SHOW(suffix, container);
       Warning("Image read: encoded content does not match filename suffix");
     }
-    set_suffix(scontainer);
+    set_suffix(container);
     set_zsize(has_alpha ? 4 : 3);
     // Reading exif is not possible using "ffmpeg -i input.jpg -f ffmetadata metadata.txt"
     // There is sufficient information in "ffprobe -show_frames input.jpg" but this requires ffprobe.
     // Another option is the separate tool "exifutil".
   }
   {
-    string spixfmt = bgra ? "bgra" : "rgba";
-    string scmd = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) + " -f image2pipe -pix_fmt " +
-                   spixfmt + " -vcodec rawvideo - |");
-    if (ldebug) SHOW(scmd);
-    RFile fi(scmd);
+    string pix_fmt = bgra ? "bgra" : "rgba";
+    string command = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) + " -f image2pipe -pix_fmt " +
+                      pix_fmt + " -vcodec rawvideo - |");
+    if (ldebug) SHOW(command);
+    RFile fi(command);
     if (!read_binary_raw(fi(), array_view()))
       throw std::runtime_error("Error reading pixels from image '" + filename + "'");
   }
@@ -115,7 +115,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
   if (attrib().exif_data.num()) Warning("Image EXIF data lost in image_write_file_ffmpeg");
   if (zsize() == 4 && (suffix() == "bmp" || suffix() == "jpg"))
     Warning("Image format likely does not support alpha channel");
-  string scompression;
+  string s_compression;
   if (suffix() == "jpg") {
     int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
     assertt(quality > 0 && quality <= 100);
@@ -137,7 +137,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
                  : quality >= 15 ? 21
                                  : 32;
     // Note: it appears that we cannot approach jpeg_set_quality() with quality > 93 or quality < 13.
-    scompression = sform(" -qscale:v %d", qscale);
+    s_compression = sform(" -qscale:v %d", qscale);
   }
   if (suffix() == "png" && getenv("PNG_COMPRESSION_LEVEL")) {
     int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  // 0-9; 0=none
@@ -145,16 +145,16 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     level = clamp(level * 17, 0, 100);  // default 6 should map to ffmpeg default 100
     // Note: it appears that we cannot approach the high compression ratio of
     //  png_set_compression_level(png_ptr, level) with level > 6.
-    scompression = sform(" -compression_level %d", level);
+    s_compression = sform(" -compression_level %d", level);
   }
   {
-    string spixfmt = bgra ? "bgra" : "rgba";
-    string sopixfmt = zsize() == 4 ? "rgba" : "rgb24";
-    string scmd =
-        ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + spixfmt + sform(" -s %dx%d", xsize(), ysize()) +
-         " -i - -pix_fmt " + sopixfmt + scompression + " -y " + quote_arg_for_shell(filename));
-    if (ldebug) SHOW(scmd);
-    WFile fi(scmd);
+    string pix_fmt = bgra ? "bgra" : "rgba";
+    string output_pix_fmt = zsize() == 4 ? "rgba" : "rgb24";
+    string command =
+        ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + pix_fmt + sform(" -s %dx%d", xsize(), ysize()) +
+         " -i - -pix_fmt " + output_pix_fmt + s_compression + " -y " + quote_arg_for_shell(filename));
+    if (ldebug) SHOW(command);
+    WFile fi(command);
     if (!write_binary_raw(fi(), array_view()))
       throw std::runtime_error("Error writing pixels to image '" + filename + "'");
   }

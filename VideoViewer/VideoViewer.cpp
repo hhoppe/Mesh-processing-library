@@ -428,9 +428,9 @@ bool image_is_not_visible() {
 string append_to_filename(const string& filename, const string& smodif) {
   if (file_requires_pipe(filename)) return filename;
   if (filename == "") return {};
-  string sroot = get_path_root(filename), sext = get_path_extension(filename);
-  if (0 && ends_with(sroot, smodif)) return filename;  // possibly only add if not already present
-  return sroot + smodif + (sext != "" ? ("." + sext) : "");
+  string root = get_path_root(filename), ext = get_path_extension(filename);
+  if (0 && ends_with(root, smodif)) return filename;  // possibly only add if not already present
+  return root + smodif + (ext != "" ? ("." + ext) : "");
 }
 
 bool is_unlocked(const Object& ob) {
@@ -642,8 +642,8 @@ void app_set_window_title() {
   string s = "VideoViewer";
   if (g_cob >= 0) {
     string filename = getob()._filename;
-    string sname = file_requires_pipe(filename) ? filename : get_path_tail(filename);
-    s = sname + (getob()._unsaved ? " (unsaved)" : "") + " - " + s;
+    string short_name = file_requires_pipe(filename) ? filename : get_path_tail(filename);
+    s = short_name + (getob()._unsaved ? " (unsaved)" : "") + " - " + s;
     if (!g_fit_view_to_window && !view_has_rotation() && !image_is_fully_visible()) {
       Vec2<int> yxL, yxU;
       fully_visible_image_rectangle(yxL, yxU);
@@ -942,15 +942,15 @@ bool replace_with_other_object_in_directory(int increment) {
     skip_first_advance = true;
     i0 = filenames.num() - 1;
   }
-  string smess;
-  double mess_time = 4.;
+  string s_message;
+  double message_time = 4.;
   for (int i = i0;;) {
     if (skip_first_advance) {
       skip_first_advance = false;
     } else {
       i = my_mod(i + increment, filenames.num());
       if (i == i0) {
-        message(smess + "No other video/image in " + directory, mess_time);
+        message(s_message + "No other video/image in " + directory, message_time);
         return false;
       }
     }
@@ -974,27 +974,27 @@ bool replace_with_other_object_in_directory(int increment) {
         g_prefetch_image[ii].pimage = make_unique<Image>(std::move(image));
       }
       g_obs[g_cob] = std::move(pob);
-      if (0) smess += "Loaded " + getob().stype() + " " + filename_tail;
-      message(smess, mess_time);  // may be "", in which case we clear messages
+      if (0) s_message += "Loaded " + getob().stype() + " " + filename_tail;
+      message(s_message, message_time);  // may be "", in which case we clear messages
       set_video_frame(g_cob, k_before_start, k_force_refresh);
       return true;
     } catch (std::runtime_error& ex) {
-      smess += "(Error opening " + filename_tail + " : " + ex.what() + ") ";
-      mess_time = 10;
+      s_message += "(Error opening " + filename_tail + " : " + ex.what() + ") ";
+      message_time = 10;
     }
   }
 }
 
 Array<string> get_image_sequence(const string& filename) {
   assertx(!file_requires_pipe(filename));
-  string rootname = get_path_root(filename);
+  string root_name = get_path_root(filename);
   string extension = get_path_extension(filename);
-  string::size_type i = rootname.find_last_not_of("0123456789");
+  string::size_type i = root_name.find_last_not_of("0123456789");
   i = i == string::npos ? 0 : i + 1;  // point to first digit
-  string base = rootname.substr(0, i);
-  int ndigits = narrow_cast<int>(rootname.size() - i);
+  string base = root_name.substr(0, i);
+  int ndigits = narrow_cast<int>(root_name.size() - i);
   if (!ndigits) return {};
-  int val = to_int(&rootname[i]);
+  int val = to_int(&root_name[i]);
   Array<string> ar;
   for (;;) {
     string s = base + sform("%0*d", ndigits, val) + "." + extension;
@@ -1198,10 +1198,10 @@ bool DerivedHw::key_press(string skey) {
         Vec2<int> osdims = ob0.spatial_dims();
         for (;;) {
           if (file_requires_pipe(filename) || file_exists(filename)) break;
-          string sroot = get_path_root(filename);
-          auto i = sroot.rfind('_');
+          string root = get_path_root(filename);
+          auto i = root.rfind('_');
           if (i == string::npos) throw "cannot find file for " + ob0._filename;
-          filename = sroot.substr(0, i) + "." + get_path_extension(filename);
+          filename = root.substr(0, i) + "." + get_path_extension(filename);
         }
         try {
           g_obs[obi] = ob0._is_image ? object_reading_image(filename) : object_reading_video(filename);
@@ -1601,11 +1601,11 @@ bool DerivedHw::key_press(string skey) {
                                      : get_current_directory() + '/');
           Array<string> filenames = query_open_filenames(cur_filename);
           int first_cob_loaded = -1;
-          string smess;
+          string s_message;
           for (const string& pfilename : filenames) {
             string filename = get_path_absolute(pfilename);
             if (!file_exists(filename)) {
-              smess += " (File '" + filename + "' not found)";
+              s_message += " (File '" + filename + "' not found)";
               continue;
             }
             std::lock_guard<std::mutex> lock(g_mutex_obs);
@@ -1614,14 +1614,14 @@ bool DerivedHw::key_press(string skey) {
               set_video_frame(g_cob, k_before_start);     // set to first frame
               if (first_cob_loaded < 0) first_cob_loaded = g_cob;
             } catch (std::runtime_error& ex) {
-              smess += " (Error reading file " + filename + " : " + ex.what() + ")";
+              s_message += " (Error reading file " + filename + " : " + ex.what() + ")";
             }
           }
           if (first_cob_loaded >= 0) {
             set_video_frame(first_cob_loaded, k_before_start);
             reset_window(determine_default_window_dims(g_frame_dims));
           }
-          if (smess != "") throw smess;
+          if (s_message != "") throw s_message;
           break;
         }
         case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file
@@ -1876,18 +1876,18 @@ bool DerivedHw::key_press(string skey) {
           }
           reverse(ob._dims.tail<2>());
           {
-            string sroot = get_path_root(ob._filename), sext = get_path_extension(ob._filename);
+            string root = get_path_root(ob._filename), ext = get_path_extension(ob._filename);
             const Array<string> ar{"_ccw", "_rot180", "_clw", ""};
             int cur = -1;
             for_int(i, ar.num()) {
-              if (ends_with(sroot, ar[i])) {
+              if (ends_with(root, ar[i])) {
                 cur = i;
                 break;
               }
             }
             assertx(cur >= 0);
-            assertx(remove_at_end(sroot, ar[cur]));
-            ob._filename = sroot + ar[my_mod(cur + (rot_degrees / 90), 4)] + "." + sext;
+            assertx(remove_at_end(root, ar[cur]));
+            ob._filename = root + ar[my_mod(cur + (rot_degrees / 90), 4)] + "." + ext;
             ob._unsaved = cur != 2 || !file_exists(ob._filename);
           }
           if (!is_fullscreen()) {
@@ -2132,8 +2132,8 @@ bool DerivedHw::key_press(string skey) {
           set_video_frame(g_cob, new_cur_frame);
           g_obs.erase(g_cob - 2, 2);  // unload both the old videos
           g_cob -= 2;
-          string stmp = get_path_root(ob2._filename);
-          if (remove_at_end(stmp, "_mirror") && stmp == get_path_root(ob1._filename)) {
+          string s_tmp = get_path_root(ob2._filename);
+          if (remove_at_end(s_tmp, "_mirror") && s_tmp == get_path_root(ob1._filename)) {
             getob()._filename = append_to_filename(ob1._filename, "_mirrorloop");
             message("Here is the resulting mirror loop; use '|' to undo.", 6.);
             if (g_looping == ELooping::mirror) g_looping = ELooping::one;
@@ -2849,9 +2849,9 @@ void upload_image_to_texture() {
            supports_texture_edge_clamp, supports_filter_anisotropic);
     // On Windows Remote Desktop: non_power_of_two_textures=0 pbuffer=0 BGRA=1 texture_edge_clamp=0 anisotropic=0
     if (!supports_texture_edge_clamp) g_background_padding_width = k_usual_tex_padding_width;
-    unsigned texname0;
-    glGenTextures(1, &texname0);
-    glBindTexture(GL_TEXTURE_2D, texname0);
+    unsigned texture_name0;
+    glGenTextures(1, &texture_name0);
+    glBindTexture(GL_TEXTURE_2D, texture_name0);
   }
   g_tex_active_dims = g_frame_dims;
   auto get_desired_dims = [&] {
@@ -3573,62 +3573,63 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     {
       const auto& ob = getob();
       assertx(ob.size());
-      string sobcount;
+      string s_obcount;
       {
-        if (getobnum() > 1) sobcount = sform("(%d of %d)  ", g_cob + 1, getobnum());
+        if (getobnum() > 1) s_obcount = sform("(%d of %d)  ", g_cob + 1, getobnum());
       }
-      string sdir;
+      string s_dir;
       {
         const string& filename = getob()._filename;
         if (!file_requires_pipe(filename) && file_exists(filename)) {
           CArrayView<string> filenames = get_directory_media_filenames(filename);
           int i0 = filenames.index(get_path_tail(filename));
-          if (i0 >= 0 && filenames.num() > 1) sdir = sform("[%d/%d]  ", i0 + 1, filenames.num());
+          if (i0 >= 0 && filenames.num() > 1) s_dir = sform("[%d/%d]  ", i0 + 1, filenames.num());
         }
       }
-      string sframe;  // + speed + framerate for video
+      string s_frame;  // + speed + framerate for video
       if (!ob.is_image()) {
         const double video_framerate = ob._video.attrib().framerate ? ob._video.attrib().framerate : 30.;
         double dtime = g_framenum / video_framerate;
         int nmin = narrow_cast<int>(static_cast<uint64_t>(dtime) / 60);
         int nsec = narrow_cast<int>(static_cast<uint64_t>(dtime) % 60);
         int nmsec = int((dtime - floor(dtime)) * 1000.);
-        string stime = sform("%d:%02d.%03d", nmin, nsec, nmsec);
+        string s_time = sform("%d:%02d.%03d", nmin, nsec, nmsec);
         const int iframerate = int(video_framerate + .5);
-        sframe = sform("%03d/%03d %s  %gx %dfps  ", int(g_framenum), ob.nframes(), stime.c_str(), g_speed, iframerate);
+        s_frame =
+            sform("%03d/%03d %s  %gx %dfps  ", int(g_framenum), ob.nframes(), s_time.c_str(), g_speed, iframerate);
       }
-      string smiddle = get_szoom() + sform(" %dx%d ", g_frame_dims[1], g_frame_dims[0]);
-      string smodes;
+      string s_middle = get_szoom() + sform(" %dx%d ", g_frame_dims[1], g_frame_dims[0]);
+      string s_modes;
       {
-        smodes = (ob.is_image() ? ""
-                                : sform(" [%s] ", (g_looping == ELooping::all      ? "a"
-                                                   : g_looping == ELooping::one    ? "l"
-                                                   : g_looping == ELooping::mirror ? "m"
-                                                                                   : " ")));
+        s_modes = (ob.is_image() ? ""
+                                 : sform(" [%s] ", (g_looping == ELooping::all      ? "a"
+                                                    : g_looping == ELooping::one    ? "l"
+                                                    : g_looping == ELooping::mirror ? "m"
+                                                                                    : " ")));
       }
-      string sname;
+      string s_name;
       {
-        if (is_fullscreen()) sname = " " + getob()._filename;
+        if (is_fullscreen()) s_name = " " + getob()._filename;
       }
-      string sbitrate;
+      string s_bitrate;
       {
         const int bitrate = ob._video.attrib().bitrate;
-        sbitrate = (ob.is_image()         ? ""
-                    : bitrate > 1'000'000 ? sform(" %.2fMbps", bitrate / 1'000'000.f)
-                    : bitrate > 1000      ? sform(" %.2fKbps", bitrate / 1000.f)
-                    : bitrate > 0         ? sform(" %dbps", bitrate)
-                                          : "");
+        s_bitrate = (ob.is_image()         ? ""
+                     : bitrate > 1'000'000 ? sform(" %.2fMbps", bitrate / 1'000'000.f)
+                     : bitrate > 1000      ? sform(" %.2fKbps", bitrate / 1000.f)
+                     : bitrate > 0         ? sform(" %dbps", bitrate)
+                                           : "");
       }
-      string sloaded;
+      string s_loaded;
       {
         int nremaining = 0;
         for_int(obi, getobnum()) nremaining += getob(obi).nframes() - getob(obi)._nframes_loaded;
         if (0 && nremaining) {
-          sloaded = sform(" (%d frames to read)", nremaining);
+          s_loaded = sform(" (%d frames to read)", nremaining);
           redraw_later();
         }
       }
-      s = sobcount + sdir + sframe + smiddle + smodes + sname + sbitrate + sloaded;
+      s = s_obcount + s_dir + s_frame + s_middle + s_modes + s_name + s_bitrate + s_loaded;
     }
     const int left = 6;
     s = s.substr(0, (g_win_dims[1] - left) / get_font_dims()[1]);

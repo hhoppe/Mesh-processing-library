@@ -28,7 +28,7 @@ class RFile : noncopyable {
 // Supports "-" (std::cout), ".Z", ".gz", and "| command args...".
 class WFile : noncopyable {
  public:
-  explicit WFile(const string& filename);
+  explicit WFile(string filename);
   ~WFile();
   std::ostream& operator()() const { return *_os; }
   FILE* cfile() { return _file; }
@@ -108,7 +108,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait);
 // Run command s (already properly quoted) using shell sh or csh or cmd, in that order.
 // (The quoting in s may be fragile if we must resort to shell cmd.)
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
-intptr_t my_sh(const string& scmd, bool wait = true);
+intptr_t my_sh(const string& command, bool wait = true);
 
 // Run command words sargv (after quoting them) using shell sh or csh or cmd, in that order.
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).

@@ -112,9 +112,9 @@ void Audio::read_file(const string& pfilename) {
     if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to read audio content");
     const bool expect_exact_num_samples = attrib().suffix == "wav";
     {  // read header for attributes
-      string scmd = "ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |";
-      if (ldebug) SHOW(scmd);
-      RFile fi(scmd);
+      string command = "ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |";
+      if (ldebug) SHOW(command);
+      RFile fi(command);
       double duration = -1.;
       int audio_samplerate = -1;
       double audio_bitrate = -1.;
@@ -204,10 +204,10 @@ void Audio::read_file(const string& pfilename) {
     {  // read data
       if (ldebug) SHOW(diagnostic_string());
       // f32be is Big Endian which is standard network order (also s16be == int16_t and u8be == uint8_t)
-      string scmd = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) + " -f f32be -acodec pcm_f32be" +
-                     sform(" -af atrim=end_sample=%d", nsamples()) + " - |");
-      if (ldebug) SHOW(scmd);
-      RFile fi(scmd);
+      string command = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) +
+                        " -f f32be -acodec pcm_f32be" + sform(" -af atrim=end_sample=%d", nsamples()) + " - |");
+      if (ldebug) SHOW(command);
+      RFile fi(command);
       int nread = 0;
       Array<value_type> sample(nchannels());
       for_int(i, nsamples()) {
@@ -284,16 +284,16 @@ void Audio::write_file(const string& pfilename) const {
 #if defined(HH_AUDIO_HAVE_FFMPEG)
     if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to write audio content");
     {
-      string scodec;
+      string codec;
       if (attrib().suffix == "wav") {
-        if (0) scodec = " -acodec pcm_s16le";  // ffmpeg default int16_t encoding for *.wav container
-        if (1) scodec = " -acodec pcm_f32le";  // lossless float representation
+        if (0) codec = " -acodec pcm_s16le";  // ffmpeg default int16_t encoding for *.wav container
+        if (1) codec = " -acodec pcm_f32le";  // lossless float representation
       }
-      string scmd = ("| ffmpeg -v panic -f f32be" +
-                     sform(" -ar %g -ac %d -i - -ab %d", attrib().samplerate, nchannels(), attrib().bitrate) + scodec +
-                     " -y " + quote_arg_for_shell(filename));
-      if (ldebug) SHOW(scmd);
-      WFile fi(scmd);
+      string command = ("| ffmpeg -v panic -f f32be" +
+                        sform(" -ar %g -ac %d -i - -ab %d", attrib().samplerate, nchannels(), attrib().bitrate) +
+                        codec + " -y " + quote_arg_for_shell(filename));
+      if (ldebug) SHOW(command);
+      WFile fi(command);
       if (!write_binary_std(fi(), transpose(*this).array_view()))
         throw std::runtime_error("Failed to write audio data");
     }

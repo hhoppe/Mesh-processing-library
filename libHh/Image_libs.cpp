@@ -81,7 +81,7 @@ static const ImageFiletype* recognize_filetype(const string& pfilename) {
   size_t imax = 0;
   const ImageFiletype* filetype = nullptr;
   for (auto& imagefiletype : k_image_filetypes) {
-    auto i = filename.rfind(string(".") + imagefiletype.suffix);  // supports rootname.bmp.gz
+    auto i = filename.rfind(string(".") + imagefiletype.suffix);  // supports root_name.bmp.gz
     if (i != string::npos && i > imax) {
       imax = i;
       filetype = &imagefiletype;

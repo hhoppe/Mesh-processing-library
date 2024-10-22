@@ -118,7 +118,7 @@ Frame get_rotate_frame() {
 
   RFile fi(rotate_s3d);
   for (string line; fi().peek() == '#';) assertx(my_getline(fi(), line));
-  const ObjectFrame object_frame = *assertx(FrameIO::read(fi()));
+  const ObjectFrame object_frame = FrameIO::read(fi()).value();
   Frame frame = object_frame.frame;
   assertw(mag(cross(frame.v(0), frame.v(1)) - frame.v(2)) < 1e-4f);
   frame = ~frame;
@@ -430,7 +430,7 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
 
 // *** Maps.
 
-using Trispheremap = Point (*)(const Vec3<Point>& pt, const Bary& bary);
+using TriangleSpheremap = Point (*)(const Vec3<Point>& pt, const Bary& bary);
 
 Point map_sphere(const Vec3<Point>& pt, const Bary& bary) {
   // return normalized(interp(pt[0], pt[1], pt[2], bary[0], bary[1]));
@@ -492,23 +492,23 @@ Point map_trisub(const Vec3<Point>& pt, const Bary& bary) {
   assertnever("no convergence: " + SSHOW(dist(pc[0], pc[1]), dist(pc[1], pc[2]), dist(pc[2], pc[0])));
 }
 
-struct S_Trispheremaps {
+struct S_TriangleSpheremap {
   const char* name;
-  Trispheremap map;
+  TriangleSpheremap map;
 };
 
-const Array<S_Trispheremaps> k_trispheremaps = {
 #define E(x) \
   { #x, map_##x }
+const Array<S_TriangleSpheremap> k_triangle_maps = {
     E(sphere), E(2slerp0), E(2slerp1), E(2slerp2), E(2slerps), E(arvo0),
     E(arvo1),  E(arvo2),   E(arvos),   E(buss),    E(area),    E(trisub),
 #undef E
 };
 
-Trispheremap get_map(const string& tmapname) {
-  for (const auto& trispheremap : k_trispheremaps)
-    if (tmapname == trispheremap.name) return trispheremap.map;
-  assertnever("map '" + tmapname + "' not found");
+TriangleSpheremap get_map(const string& triangle_map_name) {
+  for (const auto& triangle_map : k_triangle_maps)
+    if (triangle_map_name == triangle_map.name) return triangle_map.map;
+  assertnever("map '" + triangle_map_name + "' not found");
 }
 
 // *** domain -> sphere grid mapping.
@@ -558,7 +558,8 @@ void split_quad_4tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt
   bary = Bary(bq0, bq1, bc);
 }
 
-void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary, Trispheremap trimap) {
+void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary,
+                      TriangleSpheremap triangle_map) {
   // Find quadrant in face, adjacent to vertex q = 0..3.
   int q;
   float s, t;
@@ -588,10 +589,10 @@ void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt
   if (t <= s) {
     pt = V(po[q], normalized(interp(po[q], po[(q + 1) % 4])), normalized(bilerp(po, .5f, .5f)));
   } else {
-    // Flip the triangle to obtain symmetry --- that is OK with most trimap function.
+    // Flip the triangle to obtain symmetry --- that is OK with most triangle_map functions.
     pt = V(po[q], normalized(interp(po[q], po[(q + 3) % 4])), normalized(bilerp(po, .5f, .5f)));
     bary = Bary(max(0.f, 1.f - t), t - s, s);
-    if (trimap == map_area) {
+    if (triangle_map == map_area) {
       // Flipped triangles not handled correctly by current map_area. Since it is symmetric, undoing reflection is OK.
       std::swap(pt[0], pt[1]);
       std::swap(bary[0], bary[1]);
@@ -642,14 +643,14 @@ void create(bool b_triangulate) {
   int split_quad_ntris = 0;
   bool domain_interp = false;
   bool quad_interp = false;
-  string qmapname;
-  Trispheremap trimap = nullptr;
+  string quad_map_name;
+  TriangleSpheremap triangle_map = nullptr;
   switch (scheme[0]) {
     case 'Q':
       assertx(quad_domain);
       quad_interp = true;
-      qmapname = scheme.substr(1);
-      if (qmapname == "domain") domain_interp = true;
+      quad_map_name = scheme.substr(1);
+      if (quad_map_name == "domain") domain_interp = true;
       break;
     case '2':
       assertx(quad_domain);
@@ -671,11 +672,11 @@ void create(bool b_triangulate) {
   if (quad_interp) {
   } else if (scheme[0] == 'T') {
     if (quad_domain) assertx(split_quad_ntris);
-    string mapname = scheme.substr(1);
-    if (mapname == "domain") {
+    string map_name = scheme.substr(1);
+    if (map_name == "domain") {
       domain_interp = true;
     } else {
-      trimap = get_map(mapname);
+      triangle_map = get_map(map_name);
     }
   } else {
     assertnever("scheme not recognized: " + scheme);
@@ -761,7 +762,7 @@ void create(bool b_triangulate) {
       }
     }
 
-    if (quad_interp && (domain_interp || qmapname == "sphere")) {
+    if (quad_interp && (domain_interp || quad_map_name == "sphere")) {
       // Quad rasterization.
       assertx(gridn >= 1);
       for_int(i, gridn + 1) for_int(j, gridn + 1) {
@@ -780,9 +781,9 @@ void create(bool b_triangulate) {
       // Recursive quad subdivision.
       if (!is_pow2(gridn)) SHOW(gridn);
       assertx(gridn >= 1 && is_pow2(gridn));
-      const bool is_warp = qmapname == "warp";
-      const bool is_diags = qmapname == "diags";
-      const bool is_diagl = qmapname == "diagl";
+      const bool is_warp = quad_map_name == "warp";
+      const bool is_diags = quad_map_name == "diags";
+      const bool is_diagl = quad_map_name == "diagl";
       assertx(is_warp || is_diags || is_diagl);
       // First assign corners.
       for_int(ii, 2) for_int(jj, 2) {
@@ -849,7 +850,7 @@ void create(bool b_triangulate) {
         } else if (split_quad_ntris == 4) {
           split_quad_4tris(po, fi, fj, pt, bary);
         } else if (split_quad_ntris == 8) {
-          split_quad_8tris(po, fi, fj, pt, bary, trimap);
+          split_quad_8tris(po, fi, fj, pt, bary, triangle_map);
         } else {
           assertnever("");
         }
@@ -858,7 +859,7 @@ void create(bool b_triangulate) {
         if (domain_interp) {
           p = interp(pt[0], pt[1], pt[2], bary);
         } else {
-          p = trimap(pt, bary);
+          p = triangle_map(pt, bary);
           assertx(is_unit(p));
         }
         g_mesh.set_point(verts[i][j], p);
@@ -1098,8 +1099,8 @@ void do_sample_map(Args& args) {
   }
 }
 
-Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
-  assertx(trimap == &map_sphere);
+Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, TriangleSpheremap triangle_map) {
+  assertx(triangle_map == &map_sphere);
   // Problem is that most maps do not have the property that pn[] are on spherical arcs of pc[]!
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(pt[i]));
@@ -1117,7 +1118,7 @@ Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
     Vec3<Point> pn;
     for_int(i, 3) {
       bn[i] = interp(bc[mod3(i + 1)], bc[mod3(i + 2)]);
-      pn[i] = trimap(pt, bn[i]);
+      pn[i] = triangle_map(pt, bn[i]);
     }
     for_int(i, 3) {
       const Vec3<Point> pp{pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
@@ -1136,10 +1137,10 @@ Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
   assertnever("no convergence");
 }
 
-Bary get_bary(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
+Bary get_bary(const Point& p, const Vec3<Point>& pt, TriangleSpheremap triangle_map) {
   ASSERTX(in_spheretri(p, pt));
   // Hard-code the inverse-map for map_sphere.
-  assertx(trimap == &map_sphere);
+  assertx(triangle_map == &map_sphere);
   // Spherically project the point onto the triangle spanning pt[3],
   //  i.e. intersect the segment (origin, p) with the triangle.
   Polygon poly(3);
@@ -1169,7 +1170,7 @@ Bary get_bary(const Point& p, const Vec3<Point>& pt, Trispheremap trimap) {
 // Given point p on sphere, and some nearby spherical triangle f in mesh, find the true spherical
 // triangle f containing p, and the barycentric coordinates of p in f.
 void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
-  const Trispheremap trimap = &map_sphere;
+  const TriangleSpheremap triangle_map = &map_sphere;
   Vec3<Point> points;
   {
     // Find the spherical triangle f containing p.
@@ -1204,9 +1205,9 @@ void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
     HH_SSTAT(Snfchanges, nfchanges);
   }
   if (1) {
-    bary = get_bary(p, points, trimap);
+    bary = get_bary(p, points, triangle_map);
   } else {
-    bary = get_bary_sub(p, points, trimap);
+    bary = get_bary_sub(p, points, triangle_map);
   }
 }
 
@@ -1394,7 +1395,7 @@ void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, 
 }
 
 void do_write_dual_texture(Args& args) {
-  const string imagename = args.get_filename();
+  const string image_name = args.get_filename();
   assertx(signal_ != "");
   assertx(domain_file != "");
   assertx(param_file != "");
@@ -1479,12 +1480,12 @@ void do_write_dual_texture(Args& args) {
       }
     }
   });
-  image.write_file(imagename);
+  image.write_file(image_name);
   nooutput = true;
 }
 
 void do_write_texture(Args& args) {
-  const string imagename = args.get_filename();
+  const string image_name = args.get_filename();
   assertx(signal_ != "");
   internal_remesh();
   // Note that the "primal" remesh vertices do not correspond to the "dual" sampling of texture-mapping hardware.
@@ -1556,12 +1557,12 @@ void do_write_texture(Args& args) {
       if (pixel != background) assertw(pixel == image[y][0]);
     }
   }
-  image.write_file(imagename);
+  image.write_file(image_name);
   nooutput = true;
 }
 
 void do_write_lonlat_texture(Args& args) {
-  const string imagename = args.get_filename();
+  const string image_name = args.get_filename();
   assertx(gridn);
   assertx(param_file != "");
   assertx(signal_ != "");
@@ -1618,12 +1619,12 @@ void do_write_lonlat_texture(Args& args) {
     }
   });
 
-  image.write_file(imagename);
+  image.write_file(image_name);
   nooutput = true;
 }
 
 // Tessellate a single spherical triangle.
-void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
+void generate_tess(const Vec3<Point>& pa, int n, TriangleSpheremap triangle_map) {
   for_int(i, 3) assertx(is_unit(pa[i]));
   Matrix<Vertex> verts(n + 1, n + 1);  // Upper-left half is defined.
   for_int(i, n + 1) for_int(j, n - i + 1) {
@@ -1633,7 +1634,7 @@ void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
     verts[i][j] = v;
     v_imageuv(v) = Uv(i / float(n) + j / float(n) * .5f, j / float(n) * sqrt(3.f) / 2.f);
     const Bary bary((n - i - j) / float(n), i / float(n), j / float(n));
-    const Point p = trimap(pa, bary);
+    const Point p = triangle_map(pa, bary);
     assertx(is_unit(p));
     g_mesh.set_point(v, p);
     v_sph(v) = p;
@@ -1647,14 +1648,14 @@ void generate_tess(const Vec3<Point>& pa, int n, Trispheremap trimap) {
 void do_triface1() {
   assertx(gridn > 0);
   assertx(scheme[0] == 'T');
-  const Trispheremap trimap = get_map(scheme.substr(1));
+  const TriangleSpheremap triangle_map = get_map(scheme.substr(1));
   const Point refp1(0.f, 1.f, 0.f), refp2(-1.f, 0.f, 0.f), refp3 = normalized(Point(-.2f, -.8f, .4f));
-  generate_tess(V(refp1, refp2, refp3), gridn, trimap);
+  generate_tess(V(refp1, refp2, refp3), gridn, triangle_map);
 }
 
 void do_test_properties() {
   assertx(scheme[0] == 'T');
-  const Trispheremap trimap = get_map(scheme.substr(1));
+  const TriangleSpheremap triangle_map = get_map(scheme.substr(1));
   if (!gridn) gridn = 16;
   //
   const Point refp1(0.f, 1.f, 0.f), refp2(-1.f, 0.f, 0.f);
@@ -1669,14 +1670,14 @@ void do_test_properties() {
   for_int(domainf, faces.num()) {
     Vec3<Point> pt;
     for_int(k, 3) pt[k] = normalized(faces[domainf][k]);
-    generate_tess(pt, gridn, trimap);
+    generate_tess(pt, gridn, triangle_map);
   }
   {
     Point po;
     dummy_init(po);
     for_int(i, gridn) {
       const Bary bary((gridn - i) / float(gridn), i / float(gridn), 0.f);
-      const Point p = trimap(faces[0], bary);
+      const Point p = triangle_map(faces[0], bary);
       if (i) HH_SSTAT(Sbndlen, dist(p, po));
       // These lengths are identical iff arc-length boundaries.
       po = p;
@@ -1685,11 +1686,11 @@ void do_test_properties() {
   for_int(i, 3) {
     Bary bary{};
     bary[i] = 1.f;
-    const Point p0 = trimap(faces[0], bary);
+    const Point p0 = triangle_map(faces[0], bary);
     const float eps = 1e-7f;
     bary[i] -= eps;
     bary[mod3(i + 1)] += eps;
-    const Point p1 = trimap(faces[0], bary);
+    const Point p1 = triangle_map(faces[0], bary);
     SHOW(dist(p0, p1));
     // This length will be abnormally large iff unbounded derivatives.
   }
@@ -1728,7 +1729,7 @@ void do_create_lonlat_sphere() {
 void do_create_lonlat_checker(Args& args) {
   int imagesize = args.get_int();
   assertx(imagesize > 1);
-  string imagename = args.get_filename();
+  string image_name = args.get_filename();
   //
   assertx(checkern);
   if (!gridn) gridn = 128;
@@ -1771,7 +1772,7 @@ void do_create_lonlat_checker(Args& args) {
         }
       }
     });
-    image.write_file(imagename);
+    image.write_file(image_name);
   }
   nooutput = true;
 }

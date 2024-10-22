@@ -221,13 +221,13 @@ bool ParseArgs::special_arg(const string& s) {
 }
 
 void ParseArgs::print_help() {
-  std::cerr << get_ename() << " Options:" << (_disallow_prefixes ? " (no implicit prefixes)" : "") << "\n";
+  std::cerr << get_executable_name() << " Options:" << (_disallow_prefixes ? " (no implicit prefixes)" : "") << "\n";
   for (const option& o : _aroptions) {
-    string sdefault;
+    string s_default;
     if (o.parse_func == &ParseArgs::fquestion && _name != "") continue;
     if (contains(o.doc, "(<unlisted>)")) continue;
     if (o.narg > 0) {
-      sdefault = "[";
+      s_default = "[";
       for_int(i, o.narg) {
         string s0 = (o.parse_func == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
                      : o.parse_func == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
@@ -236,10 +236,10 @@ void ParseArgs::print_help() {
                      : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
                      : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
                                                            : "?");
-        if (i > 0) sdefault += " ";
-        sdefault += s0;
+        if (i > 0) s_default += " ";
+        s_default += s0;
       }
-      sdefault += "]";
+      s_default += "]";
     }
     auto i = o.doc.find(':');
     int pref = i != string::npos ? int(i) : 0;
@@ -248,12 +248,12 @@ void ParseArgs::print_help() {
     if (contains(o.str, '[') && !contains(o.str, ']')) s1 += "]";
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
     s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);
-    if (sdefault != "") s1 = sform("%-84s %s", s1.c_str(), sdefault.c_str());
+    if (s_default != "") s1 = sform("%-84s %s", s1.c_str(), s_default.c_str());
     std::cerr << s1.c_str() << "\n";
   }
 }
 
-string ParseArgs::get_ename() {
+string ParseArgs::get_executable_name() {
   string s = get_path_tail(_argv0);
   if (_name != "") s += " " + _name;
   return s;
@@ -382,7 +382,7 @@ bool ParseArgs::parse_and_extract(Array<string>& aargs) {
 }
 
 void ParseArgs::problem(const string& s) {
-  string mes = get_ename() + " : ParseArgs error : " + s;
+  string mes = get_executable_name() + " : ParseArgs error : " + s;
   if (_iarg && _iarg - 1 != _icur) mes += " at '" + _args[_iarg - 1] + "'";
   if (_icur >= 0) mes += " when parsing option '" + _args[_icur] + "'";
   if (_curopt && _args[_icur] != _curopt->str) mes += " (interpreted as '" + _curopt->str + "')";
@@ -491,7 +491,7 @@ void ParseArgs::fversion(Args& args) {
 }
 
 string ParseArgs::header() {
-  string smain = "Created at " + get_header_info() + " using:\n";
+  string s_main = "Created at " + get_header_info() + " using:\n";
   const int thresh_line_len = 120 - 5;
   int len = 0;
   string s = g_comment_prefix_string;
@@ -505,7 +505,7 @@ string ParseArgs::header() {
     s = s + " " + arg;
   }
   s = s + "\n";
-  return smain + s;
+  return s_main + s;
 }
 
 }  // namespace hh

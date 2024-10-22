@@ -300,9 +300,9 @@ class NormalMapping_dot3 final : public NormalMapping {
       glMatrixMode(GL_TEXTURE);
       glLoadIdentity();
       glMatrixMode(GL_MODELVIEW);
-      GLuint texname1;
-      glGenTextures(1, &texname1);
-      glBindTexture(GL_TEXTURE_2D, texname1);
+      GLuint texture_name1;
+      glGenTextures(1, &texture_name1);
+      glBindTexture(GL_TEXTURE_2D, texture_name1);
       Image itexture(V(2, 2), Pixel::black());
       int level = 0, border = 0;
       GLenum internal_format = GL_RGBA8;
@@ -482,9 +482,8 @@ NormalMapping* NormalMapping::get() {
   assertx(normalmappings.num());
   string desired_name = getenv_string("NORMAL_MAPPING");
   for (NormalMapping* normalmapping : normalmappings) {
-    string fname = normalmapping->name();
     if (desired_name != "") {
-      if (fname == desired_name) {
+      if (normalmapping->name() == desired_name) {
         assertx(normalmapping->is_supported());
         return normalmapping;
       }

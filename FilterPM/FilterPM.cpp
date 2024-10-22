@@ -227,7 +227,7 @@ void do_srout(Args& args) {
   Vec<SrViewParams, 1> views;
   for_int(i, views.num()) {
     std::istringstream iss(args.get_string());
-    const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+    const ObjectFrame object_frame = FrameIO::read(iss).value();
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());
@@ -254,7 +254,7 @@ void do_srgeomorph(Args& args) {
   Vec2<SrViewParams> views;
   for_int(i, views.num()) {
     std::istringstream iss(args.get_string());
-    const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+    const ObjectFrame object_frame = FrameIO::read(iss).value();
     views[i].set_frame(object_frame.frame);
     views[i].set_zooms(twice(object_frame.zoom));
     views[i].set_screen_thresh(args.get_float());

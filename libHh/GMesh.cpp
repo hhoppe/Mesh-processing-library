@@ -247,8 +247,8 @@ string GMesh::string_update(const string& s, const char* key, const char* val) {
   // inefficient (seldom used)
   unique_ptr<char[]> ss = s != "" ? make_unique_c_string(s.c_str()) : nullptr;
   update_string_ptr(ss, key, val);
-  string snew = ss ? ss.get() : "";
-  return snew;
+  string s_new = ss ? ss.get() : "";
+  return s_new;
 }
 
 void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val) {

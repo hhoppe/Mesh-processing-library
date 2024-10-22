@@ -116,7 +116,7 @@ bool picture;
 bool inpicture;
 unique_ptr<ConsoleProgress> movie_cprogress;
 int movie_nframes;
-string movie_rootname;
+string movie_root_name;
 bool movie_desire_video;
 unique_ptr<Video> movie_video;
 int movie_frame;
@@ -290,7 +290,7 @@ struct NodePoint : Node {
 };
 
 struct Texture {
-  GLuint texname;
+  GLuint texture_name;
 };
 
 Array<Texture> g_textures;
@@ -565,7 +565,7 @@ void do_movie(Args& args) {
   if (!g3d::override_frametime) g3d::override_frametime = 1.f / 60.f;  // 60fps
   movie_nframes = args.get_int();
   assertx(movie_nframes >= 2);
-  movie_rootname = args.get_filename();
+  movie_root_name = args.get_filename();
   movie_cprogress = make_unique<ConsoleProgress>();
   movie_desire_video = false;
   if (0) use_dl = false;
@@ -577,7 +577,7 @@ void do_video(Args& args) {
   if (!g3d::override_frametime) g3d::override_frametime = 1.f / 60.f;  // 60fps
   movie_nframes = args.get_int();
   assertx(movie_nframes >= 2);
-  movie_rootname = args.get_filename();
+  movie_root_name = args.get_filename();
   movie_cprogress = make_unique<ConsoleProgress>();
   movie_desire_video = true;
   if (0) use_dl = false;
@@ -953,8 +953,8 @@ void load_texturemaps() {
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {
     if (debug) SHOW("defining texture", i);
-    glGenTextures(1, &g_textures[i].texname);
-    glBindTexture(GL_TEXTURE_2D, g_textures[i].texname);
+    glGenTextures(1, &g_textures[i].texture_name);
+    glBindTexture(GL_TEXTURE_2D, g_textures[i].texture_name);
     const string filename = texturemaps[i];
     Image itexture(filename);
     if (1) itexture.reverse_y();  // because glTexImage2D() has image pixel-grid origin at lower-left
@@ -1081,9 +1081,9 @@ void load_texturemaps() {
       assertx(max_texture_units >= 2);
       glActiveTexture(GL_TEXTURE1);
       glEnable(GL_TEXTURE_1D);
-      GLuint texname1;
-      glGenTextures(1, &texname1);
-      glBindTexture(GL_TEXTURE_1D, texname1);
+      GLuint texture_name1;
+      glGenTextures(1, &texture_name1);
+      glBindTexture(GL_TEXTURE_1D, texture_name1);
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       GLenum internal_format2 = GL_RGBA8;
       if (0) {
@@ -1351,7 +1351,7 @@ bool setup_ob(int i) {
   int texture_id = i - 1;
   if (texture_active && texture_id >= 0 && (texture_id < g_textures.num() || all_textured)) {
     if (texture_id >= g_textures.num()) texture_id = g_textures.num() - 1;
-    glBindTexture(GL_TEXTURE_2D, g_textures[texture_id].texname);
+    glBindTexture(GL_TEXTURE_2D, g_textures[texture_id].texture_name);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
@@ -2289,7 +2289,7 @@ void process_print() {
     (*movie_video)[movie_frame].assign(image);
   } else {
     string name = imagefilename;
-    if (movie_nframes) name = sform("%s.%03d.bmp", movie_rootname.c_str(), movie_frame);
+    if (movie_nframes) name = sform("%s.%03d.bmp", movie_root_name.c_str(), movie_frame);
     if (name[0] == '|') image.set_suffix("bmp");
     if (!movie_nframes) SHOW(name);
     if (movie_nframes) image.set_silent_io_progress(true);
@@ -2631,7 +2631,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   args.p("-imagen[ame]", imagefilename, "image_filename : set 'DP' name");
   HH_ARGSP(dbuffer, "val : set double buffering");
   HH_ARGSF(picture, ": output picture and end");
-  HH_ARGSD(movie, "nframes rootname : create movie as set of rootname.%03d.bmp files");
+  HH_ARGSD(movie, "nframes root_name : create movie as set of root_name.%03d.bmp files");
   HH_ARGSD(video, "nframes name.mp4 : create movie (360 frames for one 'J' rotation)");
   args.p("-thickb[oundary]", thickboundary, "i : width of bnd edges");
   args.p("-thicks[harp]", thicksharp, "i : width of sharp edges");
@@ -2887,7 +2887,7 @@ void HB::draw_space() {
         movie_cprogress = nullptr;
         inpicture = false;
         if (movie_video) {
-          movie_video->write_file(movie_rootname);
+          movie_video->write_file(movie_root_name);
           movie_video = nullptr;
         }
         HB::quit();
@@ -3134,7 +3134,7 @@ void HB::segment_morph_mesh(int segn, float finterp) {
 }
 
 void HB::reload_textures() {
-  for_int(i, g_textures.num()) glDeleteTextures(1, &g_textures[i].texname);
+  for_int(i, g_textures.num()) glDeleteTextures(1, &g_textures[i].texture_name);
   g_textures.clear();
   textures_loaded = false;
 }

@@ -26,8 +26,8 @@ namespace hh {
 // Accumulate statistics for a stream of arithmetic values.
 class Stat {
  public:
-  explicit Stat(string pname = "", bool print = false, bool is_static = false);
-  explicit Stat(const char* pname, bool print = false, bool is_static = false);
+  explicit Stat(string name_ = "", bool print = false, bool is_static = false);
+  explicit Stat(const char* name_, bool print = false, bool is_static = false);
   Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // Not "= default".
   template <typename Range, typename = enable_if_range_t<Range>> explicit Stat(Range&& range);
   ~Stat();

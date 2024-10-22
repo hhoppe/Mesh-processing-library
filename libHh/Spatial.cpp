@@ -164,7 +164,7 @@ void BSpatialSearch::get_closest_next_cell() {
   for_int(c, 3) {
     if (_ssi[0][c] > 0) {
       float a = _pcenter[c] - _sp.index_to_float(_ssi[0][c]);
-      assertx(a >= 0.f);
+      if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
         _axis = c;
@@ -173,7 +173,7 @@ void BSpatialSearch::get_closest_next_cell() {
     }
     if (_ssi[1][c] < _sp._gn - 1) {
       float a = _sp.index_to_float(_ssi[1][c] + 1) - _pcenter[c];
-      assertx(a >= 0.f);
+      if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
         _axis = c;

@@ -866,8 +866,8 @@ void assemble_images(CMatrixView<Image> images) {
 }
 
 void do_assemble(Args& args) {
-  // Filterimage ~/data/image/lake.png -disassemble 128 128 rootname
-  // Filterimage -assemble 2 2 rootname.{0.0,1.0,0.1,1.1}.png >lake.same.png
+  // Filterimage ~/data/image/lake.png -disassemble 128 128 root_name
+  // Filterimage -assemble 2 2 root_name.{0.0,1.0,0.1,1.1}.png >lake.same.png
   // Filterimage -as_fit 480 320 -as_cropsides -8 -8 -8 -8 -assemble 2 2 ~/data/image/lake.png{,,,} | vv -
   // (cd $HOMEPATH/Dropbox/Pictures/2014/india; Filterimage -nostdin -color 0 0 0 255 -as_fit 640 640 -as_cropsides -4 -4 -4 -4 -assemble -1 -1 2*.jpg | vv -)
   int nx = args.get_int(), ny = args.get_int();
@@ -980,15 +980,15 @@ void do_gridcrop(Args& args) {
 }
 
 void do_disassemble(Args& args) {
-  // Filterimage ~/data/image/lake.png -disassemble 128 128 rootname
-  // Filterimage -assemble 2 2 rootname.{0.0,1.0,0.1,1.1}.png >lake.same.png
+  // Filterimage ~/data/image/lake.png -disassemble 128 128 root_name
+  // Filterimage -assemble 2 2 root_name.{0.0,1.0,0.1,1.1}.png >lake.same.png
   int tilex = args.get_int();
   assertx(tilex > 0);
   int tiley = args.get_int();
   assertx(tiley > 0);
   const Vec2<int> tiledims(tiley, tilex), atiles = image.dims() / tiledims;
   assertx(atiles * tiledims == image.dims());
-  string rootname = args.get_filename();
+  string root_name = args.get_filename();
   string suffix = image.suffix();
   assertx(suffix != "");
   parallel_for_coords(atiles, [&](const Vec2<int>& yx) {
@@ -996,7 +996,7 @@ void do_disassemble(Args& args) {
     nimage.attrib() = image.attrib();
     for (const auto& yxd : range(tiledims)) nimage[yxd] = image[yx * tiledims + yxd];
     nimage.set_silent_io_progress(true);
-    nimage.write_file(sform("%s.%d.%d.%s", rootname.c_str(), yx[1], yx[0], suffix.c_str()));
+    nimage.write_file(sform("%s.%d.%d.%s", root_name.c_str(), yx[1], yx[0], suffix.c_str()));
   });
   nooutput = true;
 }
@@ -1490,9 +1490,9 @@ void do_transf(Args& args) {
 }
 
 void do_composite(Args& args) {
-  string opname = args.get_string();
+  string op_name = args.get_string();
   float weight = args.get_float();
-  string bfilename = args.get_filename();  // background image
+  string background_filename = args.get_filename();
   Array<string> ops;
 #define E(x)    \
   ops.push(#x); \
@@ -1505,15 +1505,15 @@ void do_composite(Args& args) {
   E(sub);
   E(unblend);
 #undef E
-  int op = ops.index(opname);
-  if (op < 0) assertnever("composite operation '" + opname + "' unrecognized");
-  Image bimage(bfilename);
-  assertx(same_size(bimage, image));
-  assertx(bimage.zsize() == image.zsize());
+  int op = ops.index(op_name);
+  if (op < 0) assertnever("composite operation '" + op_name + "' unrecognized");
+  Image background_image(background_filename);
+  assertx(same_size(background_image, image));
+  assertx(background_image.zsize() == image.zsize());
   for (const auto& yx : range(image.dims())) {
     for_int(z, image.zsize()) {
       float vf = image[yx][z] / 255.f;
-      float vb = bimage[yx][z] / 255.f;
+      float vb = background_image[yx][z] / 255.f;
       float vr;
       // cannot use "switch (op)" because Op_* are not compile-time constants.
       if (0) {
@@ -1521,7 +1521,7 @@ void do_composite(Args& args) {
         vr = vf * weight + vb * (1 - weight);
       } else if (op == Op_special) {
         int fred = image[yx][2] < 200;
-        int bblue = bimage[yx][0] < 50;
+        int bblue = background_image[yx][0] < 50;
         vr = fred && !bblue ? vf : vb;
       } else if (op == Op_shlomo) {
         // Shlomo formula:
@@ -2565,25 +2565,25 @@ void do_procedure(Args& args) {
     image.clear();
     string name_image_list = args.get_filename();
     int size = args.get_int();
-    Array<string> imagenames;
+    Array<string> image_names;
     {
       RFile fi(name_image_list);
       string str;
       while (my_getline(fi(), str)) {
         if (!file_exists(str)) assertnever("image file '" + str + "' does not exist");
-        imagenames.push(str);
+        image_names.push(str);
       }
-      assertx(imagenames.num() >= 1);
+      assertx(image_names.num() >= 1);
     }
-    Array<Image> ar_thumbnails(imagenames.num());
+    Array<Image> ar_thumbnails(image_names.num());
     {
       ConsoleProgress cprogress;
       std::atomic<int> count{0};
-      parallel_for_each(range(imagenames.num()), [&](const int i) {
-        cprogress.update(float(count++) / imagenames.num());
+      parallel_for_each(range(image_names.num()), [&](const int i) {
+        cprogress.update(float(count++) / image_names.num());
         Image& limage = ar_thumbnails[i];
         limage.set_silent_io_progress(true);
-        limage.read_file(imagenames[i]);
+        limage.read_file(image_names[i]);
         // Downscale to maximum size.
         limage.scale(twice(float(size) / assertx(max(limage.dims()))), g_filterbs, &gcolor);
         // Fill to square.
@@ -2595,8 +2595,8 @@ void do_procedure(Args& args) {
     }
     Matrix<Image> grid_thumbnails;
     {
-      int ncol = int(sqrt(imagenames.num() - 1)) + 1;  // number of columns
-      grid_thumbnails.init(V((imagenames.num() - 1) / ncol + 1, ncol));
+      int ncol = int(sqrt(image_names.num() - 1)) + 1;  // number of columns
+      grid_thumbnails.init(V((image_names.num() - 1) / ncol + 1, ncol));
       int i = 0;
       for_coords(grid_thumbnails.dims(), [&](const Vec2<int>& yx) {
         grid_thumbnails[yx] = (ar_thumbnails.ok(i) ? std::move(ar_thumbnails[i++]) : Image(twice(size), gcolor));
@@ -2638,7 +2638,7 @@ void do_procedure(Args& args) {
   } else if (name == "vlp_to_color_ramps") {
     // Filterimage ~/proj/videoloops/data/ReallyFreakinAll/out/HDdunravenpass1_loop.vlp -proc vlp_to_color_ramps v -noo
     // creates v.static.png v.start.png v.period.png v.activation.png
-    string rootname = args.get_filename();
+    string root_name = args.get_filename();
     assertx(image.size() > 0);
     const Vec4<string> channel_name{"static", "start", "period", "activation"};
     int est_num_input_frames = 0;
@@ -2657,7 +2657,7 @@ void do_procedure(Args& args) {
         if (z < 3) val = clamp_to_uint8(int(val * 255.f / (est_num_input_frames - 1) + .5f));
         image2[yx] = is_static ? Pixel::gray(230) : k_color_ramp[val];
       });
-      image2.write_file(rootname + "." + channel_name[z] + ".png");
+      image2.write_file(root_name + "." + channel_name[z] + ".png");
     }
   } else if (name == "vlp_mask_to_color") {
     // Filterimage ~/proj/fastloops/data/test/HDmorningsteam1_vlp_level0_opt0.png -proc vlp_mask_to_color ~/proj/fastloops/data/test/HDmorningsteam1_mask_level0_opt0.png >v.png
@@ -3209,9 +3209,9 @@ void do_pyramid(Args& args) {
   // e.g.  (cd ~/tmp; cp -p ~/data/image/misc/city.input.{13,17}.jpg .; Filterimage city.input.13.jpg -pyramid city.input.17.jpg; ls -al)
   string ffilename = args.get_filename();  // argument is fine-scale image
   HH_TIMER("_pyramid");
-  string rootname = ffilename;
-  assertx(contains(rootname, '.'));
-  rootname.erase(rootname.find('.'));  // unlike get_path_root(), remove multiple extensions
+  string root_name = ffilename;
+  assertx(contains(root_name, '.'));
+  root_name.erase(root_name.find('.'));  // unlike get_path_root(), remove multiple extensions
   Image& imagec = image;
   Image imagef(ffilename);
   int sizeratio = imagef.ysize() / imagec.ysize();
@@ -3229,22 +3229,22 @@ void do_pyramid(Args& args) {
     HH_TIMER("__pyramid_downsample");
     for (int l = lf - 1; l >= lc; --l) mat_gaussianf[l] = downsample_image(mat_gaussianf[l + 1]);
   }
-  if (ld > 0) output_image(mat_gaussianf[lc], rootname + ".down.png");
+  if (ld > 0) output_image(mat_gaussianf[lc], root_name + ".down.png");
   // Convert the coarse-scale image.
   Matrix<Vector4> mat_c = convert_image_mat(imagec);
   // Perform structure transfer, combining detail of the downsampled fine image and color of the coarse image.
   Matrix<Vector4> mat_xfer, mat_zscore;
   structure_transfer(mat_gaussianf[lc], mat_c, mat_xfer, mat_zscore);
-  if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, rootname + ".Z.png");
+  if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, root_name + ".Z.png");
   // Downsample the structure-transferred image and output.
   if (ld > 0) {
     Matrix<Vector4> mat_tmp1 = downsample_image(mat_xfer);
     Matrix<Vector4> mat_tmp2 = downsample_image(mat_tmp1);
-    output_image(mat_tmp2, sform("%s.out.%02d.png", rootname.c_str(), lbase - 2));
-    output_image(mat_tmp1, sform("%s.out.%02d.png", rootname.c_str(), lbase - 1));
-    output_image(mat_xfer, sform("%s.out.%02d.png", rootname.c_str(), lbase + 0));
+    output_image(mat_tmp2, sform("%s.out.%02d.png", root_name.c_str(), lbase - 2));
+    output_image(mat_tmp1, sform("%s.out.%02d.png", root_name.c_str(), lbase - 1));
+    output_image(mat_xfer, sform("%s.out.%02d.png", root_name.c_str(), lbase + 0));
   } else {
-    output_image(mat_xfer, sform("%s.xfer.png", rootname.c_str()));
+    output_image(mat_xfer, sform("%s.xfer.png", root_name.c_str()));
   }
   // Iteratively upsample and blend the difference image.
   const int iskipfinest = 1;                 // since will be unmodified
@@ -3272,7 +3272,7 @@ void do_pyramid(Args& args) {
     }
   }
   for_intL(l, lc + 1, lf - iskipfinest + 1) {
-    output_image(mat_gaussianf[l], sform("%s.out.%02d.png", rootname.c_str(), lbase + (l - lc)));
+    output_image(mat_gaussianf[l], sform("%s.out.%02d.png", root_name.c_str(), lbase + (l - lc)));
   }
   nooutput = true;
 }
@@ -3281,11 +3281,11 @@ void do_pyramid(Args& args) {
 //  perform structure transfer.
 void do_structuretransfer(Args& args) {
   // Filterimage ~/data/image/misc/city.input.13.jpg -structuretransfer ~/data/image/misc/city.down.png | imgv
-  string sfilename = args.get_filename();  // argument is structure image
-  Image& cimage = image;
-  Image simage(sfilename);
-  Matrix<Vector4> mat_c = convert_image_mat(cimage);
-  Matrix<Vector4> mat_s = convert_image_mat(simage);
+  string structure_filename = args.get_filename();  // argument is structure image
+  Image& color_image = image;
+  Image structure_image(structure_filename);
+  Matrix<Vector4> mat_c = convert_image_mat(color_image);
+  Matrix<Vector4> mat_s = convert_image_mat(structure_image);
   Matrix<Vector4> mat_xfer, mat_zscore;
   structure_transfer(mat_s, mat_c, mat_xfer, mat_zscore);
   if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, "zscore.png");
@@ -3375,7 +3375,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(rotate, "ang : rotate ccw by ang degrees");
   HH_ARGSD(gtransf, "'frame' : geometrically transform image using (y, x, 0) 3D-coordinates)");
   HH_ARGSD(tile, "nx ny : grid repeat");
-  HH_ARGSD(disassemble, "tilex tiley rootname : break up into multiple image files of this size");
+  HH_ARGSD(disassemble, "tilex tiley root_name : break up into multiple image files of this size");
   HH_ARGSD(gridcrop, "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
   HH_ARGSC("", ":");
   HH_ARGSD(overlayimage, "xl yt image : place image above current one");

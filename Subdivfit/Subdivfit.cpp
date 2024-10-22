@@ -76,10 +76,10 @@ Array<Bary> gbary;  // barycentric coordinates in some_smesh
 Array<Point> gclp;  // closest point on some_smesh
 
 enum EOperation { OP_ecol, OP_espl, OP_eswa, OP_esha, OP_NUM };
-const Vec<string, OP_NUM> opname = {"ecol", "espl", "eswa", "esha"};
+const Vec<string, OP_NUM> op_name = {"ecol", "espl", "eswa", "esha"};
 enum EResult { R_success, R_energy, R_dih, R_sharp, R_illegal, R_NUM };
-const Vec<string, R_NUM> orname = {"success", "positive_energy", "bad_dihedral", "bad_sharp", "illegal_move"};
-SGrid<int, OP_NUM, R_NUM> opstat;
+const Vec<string, R_NUM> op_result_name = {"success", "positive_energy", "bad_dihedral", "bad_sharp", "illegal_move"};
+SGrid<int, OP_NUM, R_NUM> op_stat;
 
 struct hash_edge {
   size_t operator()(Edge e) const {
@@ -1220,7 +1220,7 @@ EResult try_op(Edge e, EOperation op, double& edrss) {
             : op == OP_eswa ? try_eswa(e, edrss)
             : op == OP_espl ? try_espl(e, edrss)
                             : (assertnever(""), R_success));
-  opstat[op][result]++;
+  op_stat[op][result]++;
   return result;
 }
 
@@ -1244,24 +1244,24 @@ void stoc_init() {
       gdis2[i] = dist_point_triangle2(co[i], mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
     }
   }
-  fill(opstat, 0);
+  fill(op_stat, 0);
 }
 
 void stoc_end() {
   showdf("Summary of attempts and results:\n");
   {
     string s = sform("%20s", "");
-    for_int(i, opname.num()) s += sform("%10s", opname[i].c_str());
+    for_int(i, op_name.num()) s += sform("%10s", op_name[i].c_str());
     showdf("%s\n", s.c_str());
   }
   {
     string s = sform("%20s", " total_attempts");
-    for_int(i, opstat.num()) s += sform("%10d", narrow_cast<int>(sum(opstat[i])));
+    for_int(i, op_stat.num()) s += sform("%10d", narrow_cast<int>(sum(op_stat[i])));
     showdf("%s\n", s.c_str());
   }
-  for_int(j, opstat.dim(1)) {
-    string s = sform("%20s", orname[j].c_str());
-    for_int(i, opstat.dim(0)) s += sform("%10d", opstat[i][j]);
+  for_int(j, op_stat.dim(1)) {
+    string s = sform("%20s", op_result_name[j].c_str());
+    for_int(i, op_stat.dim(0)) s += sform("%10d", op_stat[i][j]);
     showdf("%s\n", s.c_str());
   }
   {
@@ -1315,10 +1315,10 @@ void do_stoc() {
     if (result == R_success) wf_frame();
     if (verb >= 3)
       showf("# it %5d, %s (after %3d) [%5d/%-5d] %s\n",  //
-            i, opname[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
+            i, op_name[op].c_str(), nbad, ecand.num(), gmesh.num_edges(),
             (result == R_success  ? sform("* success e=%e", edrss).c_str()
              : result == R_energy ? sform("positive e=%e", edrss).c_str()
-                                  : orname[result].c_str()));
+                                  : op_result_name[result].c_str()));
     if (result == R_success)
       nbad = 0;
     else

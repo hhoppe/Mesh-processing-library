@@ -65,8 +65,8 @@ namespace {
 
 std::mutex s_mutex;  // For all popen(), pclose() operations in this file.
 
-FILE* my_popen(const string& scmd, const string& mode);
-FILE* my_popen(CArrayView<string> scmd, const string& mode);
+FILE* my_popen(const string& command, const string& mode);
+FILE* my_popen(CArrayView<string> sargv, const string& mode);
 int my_pclose(FILE* file);
 
 inline bool character_requires_quoting(char ch) {
@@ -305,38 +305,39 @@ RFile::RFile(string filename) {
 #endif
   }
 
-  string sfor = get_canonical_path(filename);
+  const string original_filename = filename;
+  filename = get_canonical_path(filename);
   const string mode = "r";
   if (ends_with(filename, "|")) {
     _file_ispipe = true;
-    _file = my_popen(filename.substr(0, filename.size() - 1), mode);  // No quoting at all.
+    _file = my_popen(original_filename.substr(0, original_filename.size() - 1), mode);  // No quoting at all.
   } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
     _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", sfor), mode);  // gzip supports .Z (replacement for zcat).
+    _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // gzip supports .Z (replacement for zcat).
   } else if (filename == "-") {
     // assertw(!HH_POSIX(isatty)(0));
     _file = stdin;
     _is = &std::cin;
-  } else if (file_exists(sfor)) {
-    if (!assertw(!file_exists(sfor + ".Z")) || !assertw(!file_exists(sfor + ".gz")))
-      showdf("** Using uncompressed version of '%s'\n", sfor.c_str());
+  } else if (file_exists(filename)) {
+    if (!assertw(!file_exists(filename + ".Z")) || !assertw(!file_exists(filename + ".gz")))
+      showdf("** Using uncompressed version of '%s'\n", filename.c_str());
 #if defined(_WIN32)
-    _file = _wfopen(utf16_from_utf8(sfor).c_str(), L"rb");
+    _file = _wfopen(utf16_from_utf8(filename).c_str(), L"rb");
 #else
-    _file = fopen(sfor.c_str(), "rb");
+    _file = fopen(filename.c_str(), "rb");
 #endif
-  } else if (file_exists(sfor + ".gz")) {
+  } else if (file_exists(filename + ".gz")) {
     _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", sfor + ".gz"), mode);
-  } else if (file_exists(sfor + ".Z")) {
+    _file = my_popen(V<string>("gzip", "-d", "-c", filename + ".gz"), mode);
+  } else if (file_exists(filename + ".Z")) {
     _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", sfor + ".Z"), mode);
+    _file = my_popen(V<string>("gzip", "-d", "-c", filename + ".Z"), mode);
   }
   if (_file && !_is) {
     _impl = make_unique<Implementation>(_file);
     _is = _impl->get_stream();
   }
-  if (!_is) throw std::runtime_error("Could not open file '" + filename + "' for reading");
+  if (!_is) throw std::runtime_error("Could not open file '" + original_filename + "' for reading");
 }
 
 RFile::~RFile() {
@@ -362,35 +363,36 @@ RFile::~RFile() {
 
 // *** WFile.
 
-WFile::WFile(const string& filename) {
+WFile::WFile(string filename) {
   std::lock_guard<std::mutex> lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
   assertx(filename != "");
-  string sfor = get_canonical_path(filename);
+  const string original_filename = filename;
+  filename = get_canonical_path(filename);
   const string mode = "w";
   if (starts_with(filename, "|")) {
     _file_ispipe = true;
-    _file = my_popen(filename.substr(1), mode);  // No quoting at all.
+    _file = my_popen(original_filename.substr(1), mode);  // No quoting at all.
   } else if (ends_with(filename, ".Z")) {
     _file_ispipe = true;
-    _file = my_popen(("compress >" + portable_simple_quote(sfor)), mode);
+    _file = my_popen(("compress >" + portable_simple_quote(filename)), mode);
   } else if (ends_with(filename, ".gz")) {
     _file_ispipe = true;
-    _file = my_popen(("gzip >" + portable_simple_quote(sfor)), mode);
+    _file = my_popen(("gzip >" + portable_simple_quote(filename)), mode);
   } else if (filename == "-") {
     _file = stdout;
     _os = &std::cout;
   } else {
 #if defined(_WIN32)
-    _file = _wfopen(utf16_from_utf8(sfor).c_str(), L"wb");
+    _file = _wfopen(utf16_from_utf8(filename).c_str(), L"wb");
 #else
-    _file = fopen(sfor.c_str(), "wb");
+    _file = fopen(filename.c_str(), "wb");
 #endif
   }
   if (_file && !_os) {
     _impl = make_unique<Implementation>(_file);
     _os = _impl->get_stream();
   }
-  if (!(_os && *_os)) throw std::runtime_error("Could not open file '" + filename + "' for writing");
+  if (!(_os && *_os)) throw std::runtime_error("Could not open file '" + original_filename + "' for writing");
 }
 
 WFile::~WFile() {
@@ -796,24 +798,25 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
 }
 
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
-intptr_t my_sh(const string& scmd, bool wait) {
-  assertx(scmd != "");
+intptr_t my_sh(const string& command, bool wait) {
+  assertx(command != "");
   const bool debug = getenv_bool("MY_SH_DEBUG");
   intptr_t ret = -1;
-  if (debug) SHOW(scmd, getenv_string("PATH"));
+  if (debug) SHOW(command, getenv_string("PATH"));
   // SH
-  if (ret < 0) ret = my_spawn(V<string>("sh", "-c", scmd), wait);
+  if (ret < 0) ret = my_spawn(V<string>("sh", "-c", command), wait);
   if (ret < 0 && debug) Warning("Shell 'sh' not found");
   // CSH
-  if (ret < 0) ret = my_spawn(V<string>("csh", "-c", scmd), wait);
+  if (ret < 0) ret = my_spawn(V<string>("csh", "-c", command), wait);
   if (ret < 0 && debug) Warning("Shell 'csh' not found");
   if (ret < 0) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
   // CMD
-  if (0 && ret < 0) SHOW(scmd);
+  if (0 && ret < 0) SHOW(command);
 #if !defined(_WIN32)
   if (ret < 0) Warning("Failed to find sh/csh (outside WIN32); highly odd");
 #endif
-  if (ret < 0) ret = my_spawn(V<string>("cmd", "/s/c", scmd), wait);  // my_spawn() adds double-quotes for /s option.
+  if (ret < 0)
+    ret = my_spawn(V<string>("cmd", "/s/c", command), wait);  // my_spawn() adds double-quotes for /s option.
   if (ret < 0 && debug) Warning("Shell 'cmd' not found");
   if (ret < 0) Warning("Could not spawn shell command (sh/csh/cmd)");
   return ret;
@@ -821,37 +824,37 @@ intptr_t my_sh(const string& scmd, bool wait) {
 
 intptr_t my_sh(CArrayView<string> sargv, bool wait) {
   assertx(sargv.num() > 0);
-  string scmd;
+  string command;
   for_int(i, sargv.num()) {
-    if (i) scmd += ' ';
-    scmd += quote_arg_for_sh(sargv[i]);
+    if (i) command += ' ';
+    command += quote_arg_for_sh(sargv[i]);
   }
-  if (0) return my_sh(scmd, wait);  // Inferior path because would not adapt quoting to cmd.
+  if (0) return my_sh(command, wait);  // Inferior path because would not adapt quoting to cmd.
   // Adapt the quoting of the arguments depending on which shell is invoked.
   const bool debug = getenv_bool("MY_SH_DEBUG");
   intptr_t ret = -1;
-  if (debug) SHOW(sargv, scmd, getenv_string("PATH"));
+  if (debug) SHOW(sargv, command, getenv_string("PATH"));
   // SH
   if (ret < 0) {
-    ret = my_spawn(V<string>("sh", "-c", scmd), wait);
+    ret = my_spawn(V<string>("sh", "-c", command), wait);
     if (ret < 0 && debug) Warning("Shell 'sh' not found");
   }
   // CSH
   if (ret < 0) {
-    ret = my_spawn(V<string>("csh", "-c", scmd), wait);
+    ret = my_spawn(V<string>("csh", "-c", command), wait);
     if (ret < 0 && debug) Warning("Shell 'csh' not found");
   }
   // CMD
   // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; set path=(. ~/git/mesh_processing/bin c:/windows/system32 c:/windows); Filtermesh ~/data/mesh/"complex file name.m" -stat)
   if (ret < 0) {
     if (1) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
-    scmd = "";
+    command = "";
     for_int(i, sargv.num()) {
-      if (i) scmd += ' ';
-      scmd += windows_spawn_quote(sargv[i]);  // Unsure about this.
+      if (i) command += ' ';
+      command += windows_spawn_quote(sargv[i]);  // Unsure about this.
     }
-    if (0) SHOW(scmd);
-    ret = my_spawn(V<string>("cmd", "/s/c", scmd), wait);  // my_spawn() adds double-quotes for /s option.
+    if (0) SHOW(command);
+    ret = my_spawn(V<string>("cmd", "/s/c", command), wait);  // my_spawn() adds double-quotes for /s option.
     if (ret < 0 && debug) Warning("Shell 'cmd' not found");
   }
   if (ret < 0) Warning("Could not spawn shell command (sh/csh/cmd)");
@@ -881,15 +884,15 @@ namespace {
 
 #if !defined(_WIN32)
 
-FILE* my_popen(const string& scmd, const string& mode) { return popen(scmd.c_str(), mode.c_str()); }
+FILE* my_popen(const string& command, const string& mode) { return popen(command.c_str(), mode.c_str()); }
 
 FILE* my_popen(CArrayView<string> sargv, const string& mode) {
-  string scmd;
+  string command;
   for_int(i, sargv.num()) {
-    if (i) scmd += ' ';
-    scmd += quote_arg_for_sh(sargv[i]);
+    if (i) command += ' ';
+    command += quote_arg_for_sh(sargv[i]);
   }
-  return my_popen(scmd, mode);
+  return my_popen(command, mode);
 }
 
 int my_pclose(FILE* file) { return pclose(file); }
@@ -975,14 +978,14 @@ int my_pclose_internal(FILE* file) {
   return termstat;
 }
 
-FILE* my_popen(const string& scmd, const string& mode) {
+FILE* my_popen(const string& command, const string& mode) {
   string mode2 = mode + "b";  // Always binary format.
-  return my_popen_internal(scmd, mode2);
+  return my_popen_internal(command, mode2);
 }
 
-FILE* my_popen(CArrayView<string> scmd, const string& mode) {
+FILE* my_popen(CArrayView<string> sargv, const string& mode) {
   string mode2 = mode + "b";  // Always binary format.
-  return my_popen_internal(scmd, mode2);
+  return my_popen_internal(sargv, mode2);
 }
 
 int my_pclose(FILE* file) { return my_pclose_internal(file); }

@@ -388,8 +388,8 @@ const Filter& Filter::get(const string& name) {
   std::call_once(flag, initialize_filters);
   assertx(filters.num());
   for (const Filter* filter : filters) {
-    string fname = filter->name();
-    if (fname == name || (name.size() == 1 && name[0] != 'j' && fname[0] == name[0])) return *filter;
+    string filter_name = filter->name();
+    if (filter_name == name || (name.size() == 1 && name[0] != 'j' && filter_name[0] == name[0])) return *filter;
   }
   assertnever("Filter '" + name + "' not recognized");
 }

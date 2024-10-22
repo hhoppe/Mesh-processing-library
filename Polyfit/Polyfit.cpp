@@ -42,16 +42,16 @@ bool nooutput = false;
 int verb = 1;
 
 WSA3dStream g_oa3d{std::cout};
-Frame xform;   // original verts + pts -> verts + pts in unit cube
-Frame xformi;  // inverse
+Frame xform;  // original verts + pts -> verts + pts in unit cube
+Frame xform_inverse;
 enum EOperation { OP_ecol, OP_espl, OP_NUM };
-const Vec<string, OP_NUM> opname = {"ecol", "espl"};
+const Vec<string, OP_NUM> op_name = {"ecol", "espl"};
 enum EResult { R_success, R_energy, R_illegal, R_NUM };
-const Vec<string, R_NUM> orname = {"success", "positive_energy", "illegal"};
-struct S_opstat {
+const Vec<string, R_NUM> op_result_name = {"success", "positive_energy", "illegal"};
+struct S_op_stat {
   Vec<int, OP_NUM> na, ns;
   Vec<int, R_NUM> nor;
-} opstat;
+} op_stat;
 
 const Array<float> spring_sched = {1e-2f, 1e-3f, 1e-4f, 1e-8f};
 constexpr int k_max_gfit_iter = 30;
@@ -94,7 +94,7 @@ void compute_xform() {
   const Bbox bbox{concatenate(pt.co, transform(verts, [](vertex v) { return v->p; }))};
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-  xformi = ~xform;
+  xform_inverse = ~xform;
   for_int(i, pt.n) pt.co[i] *= xform;
   poly_transform(xform);
 }
@@ -133,7 +133,7 @@ void perhaps_initialize() {
 
 void output_poly(WSA3dStream& oa3d, bool clearobject = false) {
   perhaps_initialize();
-  poly_transform(xformi);
+  poly_transform(xform_inverse);
   if (clearobject) oa3d.write_clear_object();
   A3dElem el;
   Set<vertex> setv;
@@ -441,9 +441,9 @@ EResult try_op(vertex v, EOperation op, float& edrss) {
   result = (op == OP_ecol   ? try_ecol(v, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
             : op == OP_espl ? try_espl(v, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
                             : (assertnever(""), R_success));
-  opstat.na[op]++;
-  if (result == R_success) opstat.ns[op]++;
-  opstat.nor[result]++;
+  op_stat.na[op]++;
+  if (result == R_success) op_stat.ns[op]++;
+  op_stat.nor[result]++;
   return result;
 }
 
@@ -572,9 +572,9 @@ void do_stoc() {
   HH_STIMER("_stoc");
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning stoc, spring=%g, fliter=%g\n", spring, fliter);
-  fill(opstat.na, 0);
-  fill(opstat.ns, 0);
-  fill(opstat.nor, 0);
+  fill(op_stat.na, 0);
+  fill(op_stat.ns, 0);
+  fill(op_stat.nor, 0);
   {
     int i = 0, nbad = 0, lasti = std::numeric_limits<int>::min();
     for (vertex v : verts)
@@ -602,7 +602,7 @@ void do_stoc() {
       }
       if (verb >= 3 || (verb >= 2 && i >= lasti + 100)) {
         showdf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
-               i, opname[op].c_str(), nbad, ecand.num(), verts.num(), edrss);
+               i, op_name[op].c_str(), nbad, ecand.num(), verts.num(), edrss);
         lasti = i;
       }
       if (a3d_spawn) output_poly(*a3d_spawn, true);
@@ -610,13 +610,13 @@ void do_stoc() {
     }
     if (verb >= 2) showdf("it %d, last search: %d wasted attempts\n", i, nbad);
   }
-  const int nat = narrow_cast<int>(sum(opstat.na));
-  const int nst = narrow_cast<int>(sum(opstat.ns));
+  const int nat = narrow_cast<int>(sum(op_stat.na));
+  const int nst = narrow_cast<int>(sum(op_stat.ns));
   if (verb >= 2) {
     showdf("Endstoc:  (col=%d/%d, espl=%d/%d tot=%d/%d)\n",  //
-           opstat.ns[OP_ecol], opstat.na[OP_ecol], opstat.ns[OP_espl], opstat.na[OP_espl], nst, nat);
+           op_stat.ns[OP_ecol], op_stat.na[OP_ecol], op_stat.ns[OP_espl], op_stat.na[OP_espl], nst, nat);
     showdf("Result of %d attempted operations:\n", nat);
-    for_int(i, R_NUM) showdf("  %5d %s\n", opstat.nor[i], orname[i].c_str());
+    for_int(i, R_NUM) showdf("  %5d %s\n", op_stat.nor[i], op_result_name[i].c_str());
   }
   if (verb >= 2) analyze_poly(0, "after_stoc");
 }

@@ -686,7 +686,7 @@ void join_lines() {
 void compute_outlier() {
   Array<bool> ar_is_outlier(g_outlier.pa.num(), false);
   const Bbox bbox{g_outlier.pa};
-  Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
+  Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   PointSpatial<int> SPp(30);
   for_int(i, g_outlier.pa.num()) {
     g_outlier.pa[i] *= xform;
@@ -701,7 +701,7 @@ void compute_outlier() {
       assertx(!ss.done());
       ss.next(&dis2);
     }
-    float dis = my_sqrt(dis2) * xformi[0][0];
+    float dis = my_sqrt(dis2) * xform_inverse[0][0];
     HH_SSTAT(Soutlierd, dis);
     if (dis >= outlierd) {
       ar_is_outlier[i] = true;

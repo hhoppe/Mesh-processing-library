@@ -180,12 +180,12 @@ inline float lerp(float a, float b, float f) { return (1.f - f) * a + f * b; }
 
 void do_createobject(Args& args) {
   assertx(mesh.empty());
-  string obname = args.get_string();
+  string ob_name = args.get_string();
   Matrix<Vertex> matv;
   bool closed = false;
   string str;
   if (0) {
-  } else if (obname == "cylinder64") {
+  } else if (ob_name == "cylinder64") {
     const int ny = 64, nx = 64;
     matv.init(ny, nx);
     for_int(y, ny) for_int(x, nx) {
@@ -197,7 +197,7 @@ void do_createobject(Args& args) {
       Uv uv(xf * 2.f, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
-  } else if (obname == "cup64") {
+  } else if (ob_name == "cup64") {
     // for ravg cup sdkmesh
     // r1 = 0.396313    y1 = 0.436485
     // r2 = 0.249999    y2 = -0.480285
@@ -216,7 +216,7 @@ void do_createobject(Args& args) {
       Uv uv(lerp(0.013743f, 0.982733f, xf), lerp(0.005718f, 0.993877f, yf));
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
-  } else if (obname == "wavy64") {
+  } else if (ob_name == "wavy64") {
     const int ny = 64, nx = 64;
     matv.init(ny, nx);
     for_int(y, ny) for_int(x, nx) {
@@ -227,13 +227,13 @@ void do_createobject(Args& args) {
       Uv uv(xf, 1.f - yf);
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
-  } else if (starts_with(obname, "torus")) {
+  } else if (starts_with(ob_name, "torus")) {
     const int ny = 64, nx = 64;
     matv.init(ny, nx);
     closed = true;
     float rx_major = 1.5f, ry_major = 1.f;
-    if (obname == "torus1") {
-    } else if (obname == "torus2") {
+    if (ob_name == "torus1") {
+    } else if (ob_name == "torus2") {
       rx_major = 1.f;
     } else {
       assertnever("");
@@ -2200,8 +2200,8 @@ void do_removeinfo() {
 }
 
 void do_removekey(Args& args) {
-  string skey = args.get_string();
-  const char* key = skey.c_str();
+  string s_key = args.get_string();
+  const char* key = s_key.c_str();
   for (Vertex v : mesh.vertices()) mesh.update_string(v, key, nullptr);
   for (Face f : mesh.faces()) mesh.update_string(f, key, nullptr);
   for (Edge e : mesh.edges()) mesh.update_string(e, key, nullptr);
@@ -2216,10 +2216,10 @@ void do_removekey(Args& args) {
 void do_renamekey(Args& args) {
   string elems = args.get_string();
   assertx(elems.find_first_not_of("vfec") == string::npos);
-  string sokey = args.get_string();
-  const char* okey = sokey.c_str();
-  string snkey = args.get_string();
-  const char* nkey = snkey.c_str();
+  string s_okey = args.get_string();
+  const char* okey = s_okey.c_str();
+  string s_nkey = args.get_string();
+  const char* nkey = s_nkey.c_str();
   string str;
   if (contains(elems, 'v')) {
     if (!strcmp(okey, "P")) {
@@ -2274,10 +2274,10 @@ void do_renamekey(Args& args) {
 void do_copykey(Args& args) {
   string elems = args.get_string();
   assertx(elems.find_first_not_of("vfec") == string::npos);
-  string sokey = args.get_string();
-  const char* okey = sokey.c_str();
-  string snkey = args.get_string();
-  const char* nkey = snkey.c_str();
+  string s_okey = args.get_string();
+  const char* okey = s_okey.c_str();
+  string s_nkey = args.get_string();
+  const char* nkey = s_nkey.c_str();
   string str;
   if (contains(elems, 'v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
@@ -2293,10 +2293,10 @@ void do_copykey(Args& args) {
 void do_assignkey(Args& args) {
   string elems = args.get_string();
   assertx(elems.find_first_not_of("vfec") == string::npos);
-  string skey = args.get_string();
-  const char* key = skey.c_str();
-  string svalue = args.get_string();
-  const char* value = svalue.c_str();
+  string s_key = args.get_string();
+  const char* key = s_key.c_str();
+  string s_value = args.get_string();
+  const char* value = s_value.c_str();
   if (contains(elems, 'v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, key, value);
   if (contains(elems, 'f'))
@@ -3201,12 +3201,12 @@ void do_rmdiaguv() {
 
 // Filtermesh ~/data/simplify/bunny.orig.m -projectimage "`cat ~/data/s3d/bunny.s3d`" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d - -st bunny.s3d -lighta 1 -lights 0
 void do_projectimage(Args& args) {
-  const string framestring = args.get_string();
-  const string imagename = args.get_filename();
-  std::istringstream iss(framestring);
-  const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+  const string frame_string = args.get_string();
+  const string image_name = args.get_filename();
+  std::istringstream iss(frame_string);
+  const ObjectFrame object_frame = FrameIO::read(iss).value();
   const Frame frameinv = ~object_frame.frame;
-  const Image image(imagename);
+  const Image image(image_name);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
   Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
@@ -3235,7 +3235,7 @@ void do_quantizeverts(Args& args) {
   int nbits = args.get_int();
   assertx(nbits >= 1 && nbits <= 32);
   const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
-  const Frame xform = bbox.get_frame_to_cube(), xformi = ~xform;
+  const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   const float scale = pow(2.f, float(nbits));
   const float eps = 1e-6f;
   for (Vertex v : mesh.vertices()) {
@@ -3249,7 +3249,7 @@ void do_quantizeverts(Args& args) {
       assertx(f >= 0.f && f <= 1.f);
       p[c] = f;
     }
-    p *= xformi;
+    p *= xform_inverse;
     mesh.set_point(v, p);
   }
 }
@@ -3896,7 +3896,7 @@ void do_shootrays(Args& args) {
   assertx(!mesh.empty() && !omesh.empty());
   const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
   Frame xform = bbox.get_frame_to_small_cube(0.5f);
-  Frame xformi = ~xform;
+  Frame xform_inverse = ~xform;
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(omesh.num_faces());
   bool has_blend = false;
@@ -3965,13 +3965,13 @@ void do_shootrays(Args& args) {
       // Point minpint = p + nor * mindist;
       if (up_oa3d) {
         A3dElem el(A3dElem::EType::polyline, 0);
-        el.push(A3dVertex(p * xformi, nor, A3dVertexColor(Pixel::black())));
-        el.push(A3dVertex(minp * xformi, nor, A3dVertexColor(Pixel::black())));
+        el.push(A3dVertex(p * xform_inverse, nor, A3dVertexColor(Pixel::black())));
+        el.push(A3dVertex(minp * xform_inverse, nor, A3dVertexColor(Pixel::black())));
         up_oa3d->write(el);
       }
       Point op = mesh.point(v);
       mesh.update_string(v, "Opos", csform_vec(str, op));
-      mesh.set_point(v, minp * xformi);
+      mesh.set_point(v, minp * xform_inverse);
       mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));
       if (has_blend && minof) {
         Polygon poly;
@@ -3980,7 +3980,7 @@ void do_shootrays(Args& args) {
         Vec3<Corner> ca = omesh.triangle_corners(minof);
         Bary bary;
         Point clp;
-        project_point_triangle2(minp * xformi, poly[0], poly[1], poly[2], bary, clp);
+        project_point_triangle2(minp * xform_inverse, poly[0], poly[1], poly[2], bary, clp);
         mesh.update_string(v, "blendi", assertx(omesh.corner_key(str, ca[0], "blendi")));
         // transfer 4-tuple blendw
         Vec4<float> blendw;

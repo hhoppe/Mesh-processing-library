@@ -315,13 +315,13 @@ void do_assemble(Args& args) {
 }
 
 void do_fromimages(Args& args) {
-  string rootname = args.get_filename();
-  assertx(contains(rootname, '%'));  // rootname.%03d.png
+  string root_name = args.get_filename();
+  assertx(contains(root_name, '%'));  // root_name.%03d.png
   int first_named_file = startframe;
   int nframes = 0;
   {
     for (;;) {
-      string s = sform_nonliteral(rootname.c_str(), first_named_file + nframes);
+      string s = sform_nonliteral(root_name.c_str(), first_named_file + nframes);
       if (file_exists(s)) {
         nframes++;
         continue;
@@ -338,17 +338,17 @@ void do_fromimages(Args& args) {
   if (1) {  // first frame must be read sequentially before others to get dimensions
     Image image;
     image.set_silent_io_progress(true);
-    image.read_file(sform_nonliteral(rootname.c_str(), first_named_file + 0));
+    image.read_file(sform_nonliteral(root_name.c_str(), first_named_file + 0));
     video.init(nframes, image.dims());
     assertx(image.zsize() >= nz);
     assertw(image.zsize() != 4);
     video[0].assign(image);
   }
   parallel_for_each(range(nframes - 1), [&](const int f1) {
-    string fname = sform_nonliteral(rootname.c_str(), first_named_file + 1 + f1);
+    string filename = sform_nonliteral(root_name.c_str(), first_named_file + 1 + f1);
     Image image;
     image.set_silent_io_progress(true);
-    image.read_file(fname);
+    image.read_file(filename);
     assertx(same_size(image, video[0]));
     assertx(image.zsize() >= nz);
     assertw(image.zsize() != 4);
@@ -430,14 +430,14 @@ void do_append(Args& args) {
 }
 
 void do_toimages(Args& args) {
-  string rootname = args.get_filename();
-  assertx(contains(rootname, '%'));                                            // rootname.%03d.png
-  assertx(!file_exists(sform_nonliteral(rootname.c_str(), video.nframes())));  // last + 1 should not exist
+  string root_name = args.get_filename();
+  assertx(contains(root_name, '%'));                                            // root_name.%03d.png
+  assertx(!file_exists(sform_nonliteral(root_name.c_str(), video.nframes())));  // last + 1 should not exist
   parallel_for_each(range(video.nframes()), [&](const int f) {
     Image image(video.spatial_dims());
     image.set_silent_io_progress(true);
     image = video[f];
-    image.write_file(sform_nonliteral(rootname.c_str(), f));
+    image.write_file(sform_nonliteral(root_name.c_str(), f));
   });
   nooutput = true;
 }
@@ -1021,7 +1021,7 @@ void do_disassemble(Args& args) {
   assertw(video.ysize() % tiley == 0);
   assertw(video.xsize() % tilex == 0);
   const Vec2<int> tiledims(tiley, tilex), atiles = video.spatial_dims() / tiledims;
-  string rootname = args.get_filename();
+  string root_name = args.get_filename();
   string suffix = video.attrib().suffix;
   assertx(suffix != "");
   if (video.attrib().audio.size()) Warning("Duplicating audio");
@@ -1033,7 +1033,7 @@ void do_disassemble(Args& args) {
         for_int(f, video.nframes()) for (const auto& yx : range(tiledims)) {
           nvideo[f][yx] = video[f][tyx * tiledims + yx];
         }
-        nvideo.write_file(sform_nonliteral("%s.%d.%d.%s", rootname.c_str(), tyx[1], tyx[0], suffix.c_str()));
+        nvideo.write_file(sform_nonliteral("%s.%d.%d.%s", root_name.c_str(), tyx[1], tyx[0], suffix.c_str()));
       },
       video.nframes() * product(tiledims) * 4);
   nooutput = true;
@@ -2269,7 +2269,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(as_tnframes, "nf : when assembling, temporally scale to specified number of frames");
   HH_ARGSD(assemble, "nx ny videos_lr_bt_order : concatenate grid of videos");
   HH_ARGSP(startframe, "i : start %d numbering at i");
-  HH_ARGSD(fromimages, "rootname.%03d.png : read frame images");
+  HH_ARGSD(fromimages, "root_name.%03d.png : read frame images");
   HH_ARGSC("", ":");
   HH_ARGSD(framerate, "fps : set video frame rate");
   HH_ARGSD(bitrate, "bps : set video bit rate (bits / sec)");
@@ -2277,7 +2277,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(bpp, "v : set video bit rate (bits / pixel)");
   HH_ARGSD(outfile, "filename : output an intermediate video");
   HH_ARGSD(append, "filename : append another video");
-  HH_ARGSD(toimages, "rootname.%03d.png : output frame images");
+  HH_ARGSD(toimages, "root_name.%03d.png : output frame images");
   HH_ARGSD(writeframe, "frameindex : output selected frame (0 == first) as png image");
   HH_ARGSF(nooutput, ": do not output final video on stdout");
   HH_ARGSD(info, ": print video statistics");
@@ -2328,7 +2328,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");
-  HH_ARGSD(disassemble, "tilex tiley rootname : break up into multiple video files of this size");
+  HH_ARGSD(disassemble, "tilex tiley root_name : break up into multiple video files of this size");
   HH_ARGSD(gridcrop, "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
   HH_ARGSC("", ":");
   HH_ARGSD(replace, "r g b : replace all pixels matching specified color with this color");
@@ -2349,7 +2349,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(gdloopfile, "nframes output_file : same but stream directly to output file");
   HH_ARGSD(gdloopstream, "nframes input_file output_file : same but stream both input and output");
   HH_ARGSD(gdlooperr, "nframes : analyze solver error");
-  HH_ARGSD(saveloopframe, "frameindex imagename : output specified frame of the video loop");
+  HH_ARGSD(saveloopframe, "frameindex image_name : output specified frame of the video loop");
   HH_ARGSC("", ":");
   HH_ARGSD(procedure, "name... : apply named procedure to video");
   HH_ARGSD(diff, "video2 : compute difference 128 + video - video2");

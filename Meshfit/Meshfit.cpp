@@ -134,17 +134,17 @@ float feswaasym = .01f;
 WSA3dStream oa3d{std::cout};
 const int sdebug = getenv_int("MESHFIT_DEBUG");  // 0, 1, or 2
 Frame xform;                                     // original mesh + pts -> mesh + pts in unit cube
-Frame xformi;                                    // inverse
+Frame xform_inverse;
 enum EOperation { OP_ecol, OP_espl, OP_eswa, OP_NUM };
-const Vec<string, OP_NUM> opname = {"ecol", "espl", "eswa"};
+const Vec<string, OP_NUM> op_name = {"ecol", "espl", "eswa"};
 enum EResult { R_success, R_energy, R_dih, R_illegal, R_NUM };
-const Vec<string, R_NUM> orname = {"success", "positive_energy", "bad_dihedral", "illegal_move"};
+const Vec<string, R_NUM> op_result_name = {"success", "positive_energy", "bad_dihedral", "illegal_move"};
 
-struct S_opstat {
+struct S_op_stat {
   Vec<int, OP_NUM> na, ns;
   Vec<int, R_NUM> nor;
   int notswaps;
-} opstat;
+} op_stat;
 
 constexpr float k_gim_diagonal_factor = 1.0f;  // was 1.1f
 constexpr bool k_simp96 = true;                // improvements
@@ -191,7 +191,7 @@ void compute_xform() {
   gdiam = bbox.max_side();
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-  xformi = ~xform;
+  xform_inverse = ~xform;
   for_int(i, pt.co.num()) pt.co[i] *= xform;
   mesh_transform(xform);
 }
@@ -278,9 +278,9 @@ void analyze_mesh(const string& s) {
   showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",  //
          s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
   showdf("  F=%g S=%g D=%g R=%g T=%g\n", edis, espr, edih, erep, etot);
-  float drms = float(sqrt(edis / pt.co.num()) * xformi[0][0]), dmax2 = 0.f;
+  float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0][0]), dmax2 = 0.f;
   for_int(i, pt.co.num()) dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i]));
-  float dmax = my_sqrt(dmax2) * xformi[0][0];
+  float dmax = my_sqrt(dmax2) * xform_inverse[0][0];
   showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
          drms, drms / gdiam * 100, dmax, dmax / gdiam * 100);
 }
@@ -1010,7 +1010,7 @@ void do_four1split() {
 void do_outmesh(Args& args) {
   perhaps_initialize();
   WFile os(args.get_filename());
-  mesh_transform(xformi);
+  mesh_transform(xform_inverse);
   mark_mesh();
   mesh.write(os());
   mesh_transform(xform);
@@ -1023,8 +1023,8 @@ void do_pclp() {
   for_int(i, pt.co.num()) {
     el.init(A3dElem::EType::polyline);
     Point pco = pt.co[i], pclp = pt.clp[i];
-    pco *= xformi;
-    pclp *= xformi;
+    pco *= xform_inverse;
+    pclp *= xform_inverse;
     el.push(A3dVertex(pco, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     el.push(A3dVertex(pclp, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     oa3d.write(el);
@@ -1338,9 +1338,9 @@ EResult try_op(Edge e, EOperation op, float& edrss) {
             : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
             : op == OP_eswa ? try_eswa(e, int(3.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
                             : (assertnever(""), R_success));
-  opstat.na[op]++;
-  if (result == R_success) opstat.ns[op]++;
-  opstat.nor[result]++;
+  op_stat.na[op]++;
+  if (result == R_success) op_stat.ns[op]++;
+  op_stat.nor[result]++;
   return result;
 }
 
@@ -1350,10 +1350,10 @@ void do_stoc() {
   assertx(!dihfac);
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning stoc, spring=%g, fliter=%g\n", spring, fliter);
-  fill(opstat.na, 0);
-  fill(opstat.ns, 0);
-  fill(opstat.nor, 0);
-  opstat.notswaps = 0;
+  fill(op_stat.na, 0);
+  fill(op_stat.ns, 0);
+  fill(op_stat.nor, 0);
+  op_stat.notswaps = 0;
   int ni = 0, nbad = 0, lecol = 0, lespl = 0, leswa = 0;
   for (Edge e : mesh.edges()) ecand.enter(e);
   while (!ecand.empty()) {
@@ -1380,11 +1380,11 @@ void do_stoc() {
     }
     if (verb >= 2 && ni % 100 == 0) {
       showdf("it %5d, ecol=%2d  espl=%2d  eswa=%2d   [%5d/%-5d]\n",  //
-             ni, opstat.ns[OP_ecol] - lecol, opstat.ns[OP_espl] - lespl, opstat.ns[OP_eswa] - leswa, ecand.num(),
+             ni, op_stat.ns[OP_ecol] - lecol, op_stat.ns[OP_espl] - lespl, op_stat.ns[OP_eswa] - leswa, ecand.num(),
              mesh.num_edges());
-      lecol = opstat.ns[OP_ecol];
-      lespl = opstat.ns[OP_espl];
-      leswa = opstat.ns[OP_eswa];
+      lecol = op_stat.ns[OP_ecol];
+      lespl = op_stat.ns[OP_espl];
+      leswa = op_stat.ns[OP_eswa];
     }
     if (result != R_success) {
       nbad++;
@@ -1392,20 +1392,20 @@ void do_stoc() {
     }
     if (verb >= 3)
       showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
-            ni, opname[op].c_str(), nbad, ecand.num(), mesh.num_edges(), edrss);
+            ni, op_name[op].c_str(), nbad, ecand.num(), mesh.num_edges(), edrss);
     if (file_spawn) (*file_spawn)().flush();
     nbad = 0;
   }
   if (verb >= 2) showdf("it %d, last search: %d wasted attempts\n", ni, nbad);
-  const int nat = narrow_cast<int>(sum(opstat.na));
-  const int nst = narrow_cast<int>(sum(opstat.ns));
+  const int nat = narrow_cast<int>(sum(op_stat.na));
+  const int nst = narrow_cast<int>(sum(op_stat.ns));
   if (verb >= 2) {
     showdf("%s(ecol=%d/%d, espl=%d/%d eswa=%d/%d tot=%d/%d)\n", "Endstoc: ",  //
-           opstat.ns[OP_ecol], opstat.na[OP_ecol], opstat.ns[OP_espl], opstat.na[OP_espl], opstat.ns[OP_eswa],
-           opstat.na[OP_eswa], nst, nat);
-    showdf("         (otswaps=%d)\n", opstat.notswaps);
+           op_stat.ns[OP_ecol], op_stat.na[OP_ecol], op_stat.ns[OP_espl], op_stat.na[OP_espl], op_stat.ns[OP_eswa],
+           op_stat.na[OP_eswa], nst, nat);
+    showdf("         (otswaps=%d)\n", op_stat.notswaps);
     showdf("Result of %d attempted operations:\n", nat);
-    for_int(i, opstat.nor.num()) showdf("  %5d %s\n", opstat.nor[i], orname[i].c_str());
+    for_int(i, op_stat.nor.num()) showdf("  %5d %s\n", op_stat.nor[i], op_result_name[i].c_str());
     analyze_mesh("after_stoc");
   }
 }
@@ -1520,7 +1520,7 @@ int main(int argc, const char** argv) {
   }
   hh_clean_up();
   if (!nooutput) {
-    mesh_transform(xformi);
+    mesh_transform(xform_inverse);
     mark_mesh();
     mesh.write(std::cout);
   }

@@ -141,7 +141,7 @@ class ParseArgs : public Args {
   Array<string> _unrecognized_args;
   bool parse_internal();  // Returns success (false if "-?" is found).
   void common_construction();
-  string get_ename();
+  string get_executable_name();
   void iadd(option o);
   const option* match(const string& s, bool skip_options);
   static void fbool(Args& args);

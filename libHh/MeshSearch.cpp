@@ -16,9 +16,9 @@ void PolygonFaceSpatial::enter(const PolygonFace* ppolyface) {
     for_int(c, 3) {
       if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
     }
-    int modif = poly.intersect_bbox(spatial_bbox);
-    bool ret = poly.num() > 0;
-    if (modif) poly = opoly;
+    const bool modified = poly.intersect_bbox(spatial_bbox);
+    const bool ret = poly.num() > 0;
+    if (modified) poly = opoly;
     return ret;
   };
   ObjectSpatial::enter(Conv<const PolygonFace*>::e(ppolyface), ppolyface->poly[0], func_polygonface_in_bbox);
@@ -58,8 +58,8 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
   if (_options.allow_local_project) psp_size /= 2;
   psp_size = clamp(10, psp_size, 150);
   HH_STIMER("__meshsearch_build");
-  if (!_options.bbox)
-    _options.bbox.emplace(transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); }));;
+  if (!_options.bbox) _options.bbox.emplace(transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); }));
+  ;
   _ftospatial = _options.bbox->get_frame_to_small_cube();
   int fi = 0;
   for (Face f : _mesh.faces()) {

@@ -457,11 +457,11 @@ string create_attrib_string(const WedgeInfo& wi, bool old_flag) {
   const A3dColor& col = wi.col;
   const Uv& uv = wi.uv;
   const char* sflag = old_flag ? "O" : "";
-  string sret;
-  if (nor[0] != k_undefined) sret += sform(" %snormal=(%g %g %g)", sflag, nor[0], nor[1], nor[2]);
-  if (col[0] != k_undefined) sret += sform(" %srgb=(%g %g %g)", sflag, col[0], col[1], col[2]);
-  if (uv[0] != k_undefined) sret += sform(" %suv=(%g %g)", sflag, uv[0], uv[1]);
-  return sret;
+  string s;
+  if (nor[0] != k_undefined) s += sform(" %snormal=(%g %g %g)", sflag, nor[0], nor[1], nor[2]);
+  if (col[0] != k_undefined) s += sform(" %srgb=(%g %g %g)", sflag, col[0], col[1], col[2]);
+  if (uv[0] != k_undefined) s += sform(" %suv=(%g %g)", sflag, uv[0], uv[1]);
+  return s;
 }
 
 // Create the Opos portion of the corner or vertex string.

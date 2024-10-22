@@ -3483,9 +3483,8 @@ double evaluate_aps(Edge e, int ii) {
       Face ft = c_wedge_id(cvv) == wid_v1f1 ? f1 : (assertx(c_wedge_id(cvv) == wid_v1f2), f2);
       const Uv& p2 = c_winfo(mesh.corner(v2, ft)).uv;
       const Uv& pp = c_winfo(mesh.corner(vv, mesh.face(vv, v1))).uv;
-      const auto result = intersect_segments(p1, p, p2, pp);
-      if (result) {
-        const auto& [intersection, t12, t34] = result.value();
+      if (const auto result = intersect_segments(p1, p, p2, pp)) {
+        const auto& [intersection, t12, t34] = *result;
         const Point pp1 = interp(pv, mesh.point(v1), t12), pp2 = interp(mesh.point(vv), mesh.point(v2), t34);
         max_mag2 = max(max_mag2, dist2<double>(pp1, pp2));
       }

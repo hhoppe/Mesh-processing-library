@@ -43,16 +43,16 @@ inline bool remove_at_end(string& s, const string& se) {
 
 // Replace all instances of substring with the replacement substring.
 static inline string replace_all(const string& str, const string& substring, const string& sreplacement) {
-  string sres;
+  string result;
   string::size_type i = 0;
   for (;;) {
     auto j = str.find(substring, i);
-    sres += str.substr(i, j - i);
+    result += str.substr(i, j - i);
     if (j == string::npos) break;
-    sres += sreplacement;
+    result += sreplacement;
     i = j + substring.size();
   }
-  return sres;
+  return result;
 }
 
 // Convert a string to lowercase.

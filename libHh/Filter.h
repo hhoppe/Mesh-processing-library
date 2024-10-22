@@ -11,8 +11,8 @@ using KernelFunc = double (*)(double);
 
 class Filter : noncopyable {
  public:
-  explicit Filter(string pname, KernelFunc pfunc, double pradius)
-      : _name(std::move(pname)), _func(pfunc), _radius(pradius) {}
+  explicit Filter(string name_, KernelFunc func_, double radius_)
+      : _name(std::move(name_)), _func(func_), _radius(radius_) {}
   virtual ~Filter() {}
   string name() const { return _name; }
   KernelFunc func() const { return assertx(_func); }

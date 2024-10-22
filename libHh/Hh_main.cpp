@@ -214,13 +214,13 @@ string get_current_datetime() {
   return sform("%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second);
 }
 
-string get_hostname() {
+string get_host_name() {
   string host;
 #if !defined(_WIN32)
   {
-    char hostname[100];
-    assertx(!gethostname(hostname, sizeof(hostname) - 1));
-    host = hostname;
+    char host_name[100];
+    assertx(!gethostname(host_name, sizeof(host_name) - 1));
+    host = host_name;
   }
 #endif
   if (host == "") host = getenv_string("HOSTNAME");
@@ -233,7 +233,7 @@ string get_hostname() {
 
 string get_header_info() {
   string datetime = get_current_datetime();
-  string host = get_hostname();
+  string host = get_host_name();
   // Number of cores: std_thread_hardware_concurrency().
   string config;
 #if defined(__clang__)

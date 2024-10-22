@@ -52,7 +52,7 @@ class Timer : noncopyable {
   //
   // If a name is given in the constructor, the timer is automatically started.
   // Otherwise, mode is overridden to EMode::noprint and the timer is not started.
-  explicit Timer(string pname = "", EMode mode = EMode::normal);
+  explicit Timer(string name_ = "", EMode mode = EMode::normal);
   ~Timer() { terminate(); }
   void terminate();  // finish the timer earlier than its end of scope
   void stop();

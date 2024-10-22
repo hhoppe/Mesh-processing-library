@@ -123,11 +123,11 @@ void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_
 void print_it(const string& s, const PStats& pstats) {
   if (1) {
     float vg = my_sqrt(pstats.Sgd2.avg());
-    string sg = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
-                 : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
-                             : sform(" L2=%#-10.5f", vg));
+    string s_g = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
+                  : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
+                              : sform(" L2=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cL2=%#-10.4g  nL2=%#-10.4g\n",  //
-           s.c_str(), pstats.Sgd2.inum(), sg.c_str(), my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
+           s.c_str(), pstats.Sgd2.inum(), s_g.c_str(), my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
     {
       float d = vg;
       float peak = g_diag0;
@@ -138,11 +138,11 @@ void print_it(const string& s, const PStats& pstats) {
   }
   if (maxerror) {
     float vg = my_sqrt(pstats.Sgd2.max());
-    string sg = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
-                 : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
-                             : sform(" Li=%#-10.5f", vg));
+    string s_g = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
+                  : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
+                              : sform(" Li=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cLi=%#-10.4g  nLi=%#-10.4g\n",  //
-           s.c_str(), pstats.Sgd2.inum(), sg.c_str(), my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
+           s.c_str(), pstats.Sgd2.inum(), s_g.c_str(), my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
   }
 }
 

@@ -46,11 +46,11 @@ Hw::Hw() {
 bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
-  string displayname = "";
+  string display_name = "";
   bool iconic = false;
   bool minimize = false;
   ParseArgs args(aargs, "Hw");
-  args.p("-disp[lay", displayname, "name : set DISPLAY");
+  args.p("-disp[lay", display_name, "name : set DISPLAY");
   args.p("-geom[etry", _user_geometry, "geom : set window geometry (e.g. 640x480)");
   args.f("-icon[ic", iconic, ": set initial window state");
   args.p("-back[ground", _backcolor, "color : set backcolor (e.g. white or #5987B3)");
@@ -83,8 +83,8 @@ bool Hw::init_aux(Array<string>& aargs) {
     _pwmhints->initial_state = IconicState;
     _pwmhints->flags |= StateHint;
   }
-  if (!(_display = XOpenDisplay(to_nullptr_or_cstring(displayname)))) {
-    showf("Hw: cannot connect to X server '%s'\n", XDisplayName(to_nullptr_or_cstring(displayname)));
+  if (!(_display = XOpenDisplay(to_nullptr_or_cstring(display_name)))) {
+    showf("Hw: cannot connect to X server '%s'\n", XDisplayName(to_nullptr_or_cstring(display_name)));
     _state = EState::uninit;
     return false;
   }
@@ -107,10 +107,10 @@ static int my_io_error_handler(Display* display) {
   return 0;
 }
 
-void Hw::get_color(string colorname, unsigned long& pixel, Pixel& color) {
-  if (colorname == "hhblue") colorname = "#5987B3";
+void Hw::get_color(string color_name, unsigned long& pixel, Pixel& color) {
+  if (color_name == "hhblue") color_name = "#5987B3";
   XColor xcolor;
-  if (!XParseColor(_display, _cmap, colorname.c_str(), &xcolor)) assertnever("color '" + colorname + "' not found");
+  if (!XParseColor(_display, _cmap, color_name.c_str(), &xcolor)) assertnever("color '" + color_name + "' not found");
   assertx(XAllocColor(_display, _cmap, &xcolor));
   pixel = xcolor.pixel;
   // The red, green, blue color fields in XColor are in range [0, 65535].
@@ -318,24 +318,25 @@ void Hw::open() {
     if (_hwdebug) SHOW(glGetString(GL_VERSION));
     if (_hwdebug) SHOW(gl_extensions_string());
     {
-      string fontname = (!_bigfont ?
-                                   // "9x15bold"
-                             // iris13 (close to IrisGL default font)
-                             // "-*-iris-medium-r-normal--*-130-*-*-m-*-iso8859-1" // latest on SGI
-                             // "-*-courier-*-r-*-*-*-100-*-*-*-*-*-*" // works on CYGWIN; has width=9
-                             // "-*-courier-*-r-*-*-*-190-*-*-*-*-*-*" // looks like width16 on SGI
-                             // "fixed"
-                             "9x15bold"
-                                   :
-                                   // "12x24" // yuck
-                             "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // not all that large
+      const string regular_font_name = (
+          // "9x15bold"
+          // iris13 (close to IrisGL default font)
+          // "-*-iris-medium-r-normal--*-130-*-*-m-*-iso8859-1" // latest on SGI
+          // "-*-courier-*-r-*-*-*-100-*-*-*-*-*-*" // works on CYGWIN; has width=9
+          // "-*-courier-*-r-*-*-*-190-*-*-*-*-*-*" // looks like width16 on SGI
+          // "fixed"
+          "9x15bold");
+      const string big_font_name = (
+          // "12x24" // yuck
+          "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // not all that large
       );
+      string font_name = _bigfont ? big_font_name : regular_font_name;
       XFontStruct* font_info2;
-      font_info2 = XLoadQueryFont(_display, fontname.c_str());
+      font_info2 = XLoadQueryFont(_display, font_name.c_str());
       if (!font_info2) {
-        showf("XLoadQueryFont failed on font '%s', so reverting to font 'fixed'\n", fontname.c_str());
-        fontname = "fixed";  // == "6x13"
-        font_info2 = assertx(XLoadQueryFont(_display, fontname.c_str()));
+        showf("XLoadQueryFont failed on font '%s', so reverting to font 'fixed'\n", font_name.c_str());
+        font_name = "fixed";  // == "6x13"
+        font_info2 = assertx(XLoadQueryFont(_display, font_name.c_str()));
       }
       Font id = font_info2->fid;
       int first = font_info2->min_char_or_byte2;
@@ -352,7 +353,7 @@ void Hw::open() {
         }
       }
       assertx(!gl_report_errors());
-      if (fontname == "fixed") {
+      if (font_name == "fixed") {
         _font_dims = V(13 + 2, 6);
       } else if (!_bigfont) {
         _font_dims = V(15 + 3, 9);  // (to be compatible with IrisGL)

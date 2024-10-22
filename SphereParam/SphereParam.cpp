@@ -27,7 +27,7 @@ Frame get_rotate_frame(const string& rotate_s3d) {
 
   RFile fi(rotate_s3d);
   for (string line; fi().peek() == '#';) assertx(my_getline(fi(), line));
-  const ObjectFrame object_frame = *assertx(FrameIO::read(fi()));
+  const ObjectFrame object_frame = FrameIO::read(fi()).value();
   Frame frame = object_frame.frame;
   assertw(mag(cross(frame.v(0), frame.v(1)) - frame.v(2)) < 1e-4f);
   frame = ~frame;
@@ -189,8 +189,7 @@ void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
       if (Face f = mesh.corner_face(c); face_normal.contains(f))
         mesh.update_string(c, "normal", csform_vec(str, face_normal.get(f)));
   } else {
-    for (Corner c : mesh.corners(v))
-      mesh.update_string(c, "normal", nullptr);
+    for (Corner c : mesh.corners(v)) mesh.update_string(c, "normal", nullptr);
   }
 }
 

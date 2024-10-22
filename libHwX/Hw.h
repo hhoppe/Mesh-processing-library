@@ -92,7 +92,7 @@ class Hw : public HwBase {
   void toggle_buffering();
   void allocate_buf();
   void deallocate_buf();
-  void get_color(string colorname, unsigned long& pixel, Pixel& color);
+  void get_color(string color_name, unsigned long& pixel, Pixel& color);
   void set_keyintr() { _is_keyintr = true; }
   friend void set_keyintr(Hw& hw);
 };

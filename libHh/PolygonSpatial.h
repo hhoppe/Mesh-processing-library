@@ -42,9 +42,9 @@ class PolygonSpatial : public ObjectSpatial<details::polygon_approx_distance2, d
       for_int(c, 3) {
         if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
       }
-      int modif = poly.intersect_bbox(spatial_bbox);
-      bool ret = poly.num() > 0;
-      if (modif) poly = *ppoly;
+      const bool modified = poly.intersect_bbox(spatial_bbox);
+      const bool ret = poly.num() > 0;
+      if (modified) poly = *ppoly;
       return ret;
     };
     ObjectSpatial::enter(Conv<const Polygon*>::e(ppoly), poly[0], func_polygon_in_bbox);

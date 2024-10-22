@@ -48,8 +48,8 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   }
   {  // random samples of unity field all reproduce unity
     for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic}) {
-      for (string filtername : {"spline", "omoms"}) {
-        const Filter& filter = Filter::get(filtername);
+      for (string filter_name : {"spline", "omoms"}) {
+        const Filter& filter = Filter::get(filter_name);
         Grid<D, float> grid(dims, 1.f);
         Vec<FilterBnd, D> nfilterbs = inverse_convolution(grid, ntimes<D>(FilterBnd(filter, bndrule)));
         // SHOW(Stat(grid));

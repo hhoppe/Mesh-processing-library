@@ -168,7 +168,7 @@ float determ2d(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& 
 }
 
 std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
-  SelectedVertex selected_vertex{};
+  std::optional<SelectedVertex> selected_vertex;
   const Vec2<float> ps = yx.rev();
   Vec2<int> win_dims = HB::get_extents();
   // must be this close (4 pixel radius)
@@ -192,12 +192,11 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
       }
     }
   }
-  if (selected_vertex.v) return selected_vertex;
-  return {};
+  return selected_vertex;
 }
 
 std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
-  SelectedEdge selected_edge{};
+  std::optional<SelectedEdge> selected_edge;
   Vec2<int> win_dims = HB::get_extents();
   // must be this close (3 pixels)
   // for all vertices in that range, pick closest one
@@ -235,12 +234,11 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
       selected_edge = {obn, &mesh, e, inter};
     }
   }
-  if (selected_edge.e) return selected_edge;
-  return {};
+  return selected_edge;
 }
 
 std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
-  SelectedFace selected_face{};
+  std::optional<SelectedFace> selected_face;
   const Vec2<float> ps = yx.rev();
   float minz = BIGFLOAT;
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
@@ -278,8 +276,7 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
       }
     }
   }
-  if (selected_face.f) return selected_face;
-  return {};
+  return selected_face;
 }
 
 void swap_edge() {

@@ -706,45 +706,45 @@ static void setenv(const char* name, const char* value, int change_flag) {
 
 #endif  // defined(_WIN32)
 
-void my_setenv(const string& varname, const string& value) {
-  assertx(varname != "");
+void my_setenv(const string& name, const string& value) {
+  assertx(name != "");
   if (value == "")
-    unsetenv(varname.c_str());
+    unsetenv(name.c_str());
   else
-    setenv(varname.c_str(), value.c_str(), 1);
+    setenv(name.c_str(), value.c_str(), 1);
 }
 
-bool getenv_bool(const string& varname, bool vdefault, bool warn) {
-  const char* s = getenv(varname.c_str());
+bool getenv_bool(const string& name, bool vdefault, bool warn) {
+  const char* s = getenv(name.c_str());
   if (!s) return vdefault;
   if (!*s) return true;
   assertx(check_bool(s));
-  if (warn) showf("Environment variable '%s=%s' overrides default value '%d'\n", varname.c_str(), s, vdefault);
+  if (warn) showf("Environment variable '%s=%s' overrides default value '%d'\n", name.c_str(), s, vdefault);
   return !strcmp(s, "1") || !strcmp(s, "true");
 }
 
-int getenv_int(const string& varname, int vdefault, bool warn) {
-  const char* s = getenv(varname.c_str());
+int getenv_int(const string& name, int vdefault, bool warn) {
+  const char* s = getenv(name.c_str());
   if (!s) return vdefault;
   if (!*s) return 1;
   int v = to_int(s);
-  if (warn) showf("Environment variable '%s=%d' overrides default value '%d'\n", varname.c_str(), v, vdefault);
+  if (warn) showf("Environment variable '%s=%d' overrides default value '%d'\n", name.c_str(), v, vdefault);
   return v;
 }
 
-float getenv_float(const string& varname, float vdefault, bool warn) {
-  const char* s = getenv(varname.c_str());
+float getenv_float(const string& name, float vdefault, bool warn) {
+  const char* s = getenv(name.c_str());
   if (!s) return vdefault;
   float v = to_float(s);
-  // static std::unordered_map<string, int> map; if (warn && !map[varname]++) ..
-  if (warn) showf("Environment variable '%s=%g' overrides default value '%g'\n", varname.c_str(), v, vdefault);
+  // static std::unordered_map<string, int> map; if (warn && !map[name]++) ..
+  if (warn) showf("Environment variable '%s=%g' overrides default value '%g'\n", name.c_str(), v, vdefault);
   return v;
 }
 
-string getenv_string(const string& varname, const string& vdefault, bool warn) {
-  const char* s = getenv(varname.c_str());
+string getenv_string(const string& name, const string& vdefault, bool warn) {
+  const char* s = getenv(name.c_str());
   if (!s) return vdefault;
-  if (warn) showf("Environment variable '%s=%s' overrides default value '%s'\n", varname.c_str(), s, vdefault.c_str());
+  if (warn) showf("Environment variable '%s=%s' overrides default value '%s'\n", name.c_str(), s, vdefault.c_str());
   return s;
 }
 

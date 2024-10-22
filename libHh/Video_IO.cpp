@@ -943,10 +943,10 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       }
     }
     string pixfmt = _rvideo._use_nv12 ? "nv12" : "rgba";  // was rgb24
-    string scmd = ("ffmpeg -v panic -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
-                   " -f image2pipe -pix_fmt " + pixfmt + " -vcodec rawvideo - |");
-    if (ldebug) SHOW(scmd);
-    _pfi = make_unique<RFile>(scmd);
+    string command = ("ffmpeg -v panic -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
+                      " -f image2pipe -pix_fmt " + pixfmt + " -vcodec rawvideo - |");
+    if (ldebug) SHOW(command);
+    _pfi = make_unique<RFile>(command);
   }
   ~Ffmpeg_RVideo_Implementation() override = default;
   string name() const override { return "ffmpeg"; }
@@ -1051,12 +1051,12 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
         SHOW("Failed to write audio within video", ex.what());
       }
     }
-    string scmd =
+    string command =
         ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + ipixfmt +
          sform(" -s %dx%d -r %g", sdims[1], sdims[0], attrib.framerate) + " -i -" + str_audio + sfilecontainer +
          ocodec + " -pix_fmt " + opixfmt + sform(" -vb %d", attrib.bitrate) + " -y " + quote_arg_for_shell(filename));
-    if (ldebug) SHOW(scmd);
-    _pfi = make_unique<WFile>(scmd);
+    if (ldebug) SHOW(command);
+    _pfi = make_unique<WFile>(command);
   }
   ~Ffmpeg_WVideo_Implementation() override = default;
   string name() const override { return "ffmpeg"; }

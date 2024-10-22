@@ -245,10 +245,10 @@ int main(int argc, const char** argv) {
     gradient_sharpening = 3.f, screening_weight = 10.f;   // good gradient amplification
     gradient_sharpening = .7f, screening_weight = 1.f;    // good gradient attenuation
     gradient_sharpening = 1.5f, screening_weight = 1.f;   // good gradient amplification
-    string imagename;
-    imagename = "multigrid/rampart256.png";
-    imagename = "multigrid/rampart2048.png";
-    Image image(imagename);
+    string image_name;
+    image_name = "multigrid/rampart256.png";
+    image_name = "multigrid/rampart2048.png";
+    Image image(image_name);
     Grid<2, Vector4> grid_orig;
     read_image(image, grid_orig);
     const Vec2<int> dims = grid_orig.dims();
@@ -267,19 +267,19 @@ int main(int argc, const char** argv) {
     as_image(grid_result).write_file("image_result.bmp");
   }
   if (0) {  // reconstruct image from its Laplacian
-    string imagename;
-    imagename = "multigrid/lake16.png";
-    imagename = "multigrid/lake256.png";
-    imagename = "multigrid/rampart237.png";
-    imagename = "multigrid/rampart255.png";
-    imagename = "multigrid/rampart256.png";
-    imagename = "multigrid/rampart256r.png";
-    imagename = "multigrid/rampart257r.png";
-    imagename = "multigrid/rampart2048x64.png";
-    imagename = "multigrid/rampart2048x48.png";
-    imagename = "multigrid/rampart257.png";
-    imagename = "multigrid/rampart2048.png";
-    Image image(imagename);
+    string image_name;
+    image_name = "multigrid/lake16.png";
+    image_name = "multigrid/lake256.png";
+    image_name = "multigrid/rampart237.png";
+    image_name = "multigrid/rampart255.png";
+    image_name = "multigrid/rampart256.png";
+    image_name = "multigrid/rampart256r.png";
+    image_name = "multigrid/rampart257r.png";
+    image_name = "multigrid/rampart2048x64.png";
+    image_name = "multigrid/rampart2048x48.png";
+    image_name = "multigrid/rampart257.png";
+    image_name = "multigrid/rampart2048.png";
+    Image image(image_name);
     Grid<2, Vector4> grid_orig;
     read_image(image, grid_orig);
     const Vec2<int> dims = grid_orig.dims();
@@ -298,15 +298,15 @@ int main(int argc, const char** argv) {
       as_image(Vector4(.5f) + standardize_rms(grid_result - grid_orig) * Vector4(.1f)).write_file("image_err.bmp");
   }
   if (1) {  // stitch two images together
-    string imagename0, imagename1;
-    imagename0 = "multigrid/rampart237.png";
-    imagename1 = "multigrid/prismatic237.png";
-    imagename0 = "multigrid/rampart2048.png";
-    imagename1 = "multigrid/prismatic2048.png";
+    string image_name0, image_name1;
+    image_name0 = "multigrid/rampart237.png";
+    image_name1 = "multigrid/prismatic237.png";
+    image_name0 = "multigrid/rampart2048.png";
+    image_name1 = "multigrid/prismatic2048.png";
     Vec3<Grid<2, Vector4>> grids;
-    Image image0(imagename0);
+    Image image0(image_name0);
     read_image(image0, grids[0]);
-    Image image1(imagename1);
+    Image image1(image_name1);
     read_image(image1, grids[1]);
     assertx(same_size(grids[0], grids[1]));
     const Vec2<int> dims = grids[0].dims();

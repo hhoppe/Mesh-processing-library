@@ -63,10 +63,10 @@ void try_it(const string& stest) {
       // string s2 = "echo " + s1cmd + " >" + tmpf;  // DOS eol; extra space at eol; echo ignores quotes
       // string s2 = "/cygwin/bin/echo " + s1cmd + " >" + tmpf;  // cygwin quote parsing is poor
       string s2 = "/mingw/msys/1.0/bin/echo " + s1cmd + " >" + tmpf;  // still does not handle double-quotes
-      string sbu = getenv_string("FORCE_CMD");                        // "" if undefined
+      string s_bu = getenv_string("FORCE_CMD");                       // "" if undefined
       my_setenv("FORCE_CMD", "1");
       assertx(!my_sh(s2));
-      my_setenv("FORCE_CMD", sbu);
+      my_setenv("FORCE_CMD", s_bu);
     }
     RFile fi(tmpf);
     string line;

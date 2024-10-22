@@ -117,19 +117,19 @@ string timing_host() {
   if (cpu == "") cpu = "?";
   const int ncores = std_thread_hardware_concurrency();
   if (ncores) cpu += sform("(%d)", ncores);
-  const string host = get_hostname();
+  const string host = get_host_name();
   return "cpu=" + cpu + " host=" + host;
 }
 
 string create_parallelism_string(double process_time, double real_time, int64_t num_calls) {
-  string sparallel = "       ";  // e.g., "  x23.6".
+  string s = "       ";  // e.g., "  x23.6".
   if (process_time && real_time) {
     const bool meaningful = process_time / num_calls > .02;  // CPU times are often quantized to 16 milliseconds.
     const int ncores = std_thread_hardware_concurrency();
     const double parallelism = min(process_time / real_time, double(ncores));
-    if (meaningful && parallelism > 1.1) sparallel = sform("  x%4.1f", parallelism);
+    if (meaningful && parallelism > 1.1) s = sform("  x%4.1f", parallelism);
   }
-  return sparallel;
+  return s;
 }
 
 }  // namespace
@@ -177,14 +177,14 @@ class Timers {
         const double sum_process_time = timer_info.sum_process_times;
         const double sum_cpu_time = stat.sum();
         const double sum_real_time = timer_info.sum_real_times;
-        const string sparallel = create_parallelism_string(sum_process_time, sum_real_time, stat.num());
+        const string s_parallel = create_parallelism_string(sum_process_time, sum_real_time, stat.num());
         const int64_t n = stat.num();
         const long long ln = n;  // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
-        const string smin = n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ";
-        const string smax = n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ";
+        const string s_min = n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ";
+        const string s_max = n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ";
         show_local(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",  //
-                   sform("%.19s:", stat.name().c_str()).c_str(), ln, smin.c_str(), smax.c_str(), precision, stat.avg(),
-                   precision, sum_cpu_time, sparallel.c_str(), precision, sum_real_time);
+                   sform("%.19s:", stat.name().c_str()).c_str(), ln, s_min.c_str(), s_max.c_str(), precision,
+                   stat.avg(), precision, sum_cpu_time, s_parallel.c_str(), precision, sum_real_time);
         if (stat.num() > 1000 && stat.num() * 1e-6 > sum_process_time)
           showdf("**Timer '%s' created more overhead than measured!\n", stat.name().c_str());
       }
@@ -208,7 +208,7 @@ class Timers {
 
 int Timer::_s_show = getenv_int("SHOW_TIMES");
 
-Timer::Timer(string pname, EMode mode) : _name(std::move(pname)), _mode(mode) {
+Timer::Timer(string name_, EMode mode) : _name(std::move(name_)), _mode(mode) {
   if (_name == "") {
     _mode = EMode::noprint;
   } else {
@@ -234,14 +234,14 @@ void Timer::terminate() {
 #if !defined(HH_NO_TIMERS_CLASS)
   if (Timers::record(*this, cmode)) return;
 #endif
-  const string sname = sform("%.19s:", _name.c_str());
+  const string truncated_name = sform("%.19s:", _name.c_str());
   const double process_time = _process_cpu_time;
   const double cpu_time = cpu();
   const double real_time = real();
-  const string sparallel = create_parallelism_string(process_time, real_time, 1);
+  const string s_parallel = create_parallelism_string(process_time, real_time, 1);
   const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // Number of fractional decimal digits.
   const string s = sform(" (%-20.20s %8.*f%s %8.*f)\n",              //
-                         sname.c_str(), precision, cpu_time, sparallel.c_str(), precision, real_time);
+                         truncated_name.c_str(), precision, cpu_time, s_parallel.c_str(), precision, real_time);
   if (cmode == EMode::normal) {
     showdf("%s", s.c_str());
   } else {

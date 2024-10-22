@@ -489,22 +489,22 @@ template <typename T> void aligned_delete(T* p);
 std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings = true);
 
 // Set an environment variable; the variable is removed from the environment if value == "".
-void my_setenv(const string& varname, const string& value);
+void my_setenv(const string& name, const string& value);
 
 // Return false if environment variable is {undefined, "0", or "false"}, true if {"", "1", or "true"), else abort.
-bool getenv_bool(const string& varname, bool vdefault = false, bool warn = false);
+bool getenv_bool(const string& name, bool vdefault = false, bool warn = false);
 
-// Return vdefault if environment variable varname is not defined, 1 if "", value if integer, else abort.
-int getenv_int(const string& varname, int vdefault = 0, bool warn = false);
+// Return vdefault if environment variable `name` is not defined, 1 if "", value if integer, else abort.
+int getenv_int(const string& name, int vdefault = 0, bool warn = false);
 
-// Return vdefault if environment variable varname is not defined, value if float, else abort.
-float getenv_float(const string& varname, float vdefault, bool warn = false);
+// Return vdefault if environment variable `name` is not defined, value if float, else abort.
+float getenv_float(const string& name, float vdefault, bool warn = false);
 
-// Return string value of environment variable varname, or "" if not defined.
-string getenv_string(const string& varname, const string& vdefault = "", bool warn = false);
+// Return string value of environment variable `name`, or "" if not defined.
+string getenv_string(const string& name, const string& vdefault = "", bool warn = false);
 
-// Return typed value of environment variable varname.
-template <typename T> T getenv_type(const string& varname, T vdefault, bool warn = false);
+// Return typed value of environment variable `name`.
+template <typename T> T getenv_type(const string& name, T vdefault, bool warn = false);
 template <> inline bool getenv_type<bool>(const string& var, bool vdefault, bool warn) {
   return getenv_bool(var, vdefault, warn);
 }
@@ -551,7 +551,7 @@ string get_current_directory();
 string get_current_datetime();
 
 // Return machine name, in lowercase.
-string get_hostname();
+string get_host_name();
 
 // String with date, time, machine, build parameters.
 string get_header_info();

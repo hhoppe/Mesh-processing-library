@@ -181,7 +181,7 @@ void do_key(Args& args) { keystring += args.get_string(); }
 
 void do_frame(Args& args) {
   std::istringstream iss(args.get_string());
-  const ObjectFrame object_frame = *assertx(FrameIO::read(iss));
+  const ObjectFrame object_frame = FrameIO::read(iss).value();
   UpdateFrame(object_frame);
 }
 
@@ -197,12 +197,12 @@ bool try_finding_it(const string& name) {
   // Added "<$nul" so that "G3dOGL ~/data/mesh/cat.m &" does not freeze.  (Nowadays we use "G3d ~/data/mesh".)
   // However, it still seems to freeze.  Added "close(STDIN)" inside s3dname.
   // #if 0 && defined(_WIN32)
-  //   const string snul = "nul";
+  //   const string s_nul = "nul";
   // #else
-  //   const string snul = "/dev/null";
+  //   const string s_nul = "/dev/null";
   // #endif
   // bash:  0<&- or <&-  close stdin.
-  // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + snul + " |";
+  // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + s_nul + " |";
   string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
   try {
     RFile fi(com);  // may throw

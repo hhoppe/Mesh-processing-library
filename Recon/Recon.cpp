@@ -65,7 +65,7 @@ bool have_normals;  // data contains normal information
 
 string g_header;  // header to place at top of output files
 Frame xform;      // original pts -> pts in unit cube
-Frame xformi;     // inverse
+Frame xform_inverse;
 
 unique_ptr<PointSpatial<int>> SPp;   // spatial partition on co
 unique_ptr<PointSpatial<int>> SPpc;  // spatial partition on pcorg
@@ -143,7 +143,7 @@ void compute_xform() {
   if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
   float xform_scale = xform[0][0];
   showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-  xformi = ~xform;
+  xform_inverse = ~xform;
   for_int(i, num) co[i] *= xform;
   // nor[] is unchanged
   samplingd *= xform_scale;
@@ -226,7 +226,7 @@ void print_principal(const Frame& f) {
     iob->specular(.5f, .5f, .5f);
     iob->phong(4.f);
     iob->push();
-    iob->apply(f * xformi);
+    iob->apply(f * xform_inverse);
     draw_pc_extent(*iob);
     iob->pop();
   }
@@ -237,7 +237,7 @@ void print_principal(const Frame& f) {
     iof->begin_force_polyline(true);
     {
       iof->push();
-      iof->apply(f * xformi);
+      iof->apply(f * xform_inverse);
       draw_pc_linear(*iof);
       iof->pop();
     }
@@ -248,7 +248,7 @@ void print_principal(const Frame& f) {
     iou->specular(.6f, .6f, .2f);
     iou->phong(3.f);
     iou->push();
-    iou->apply(f * xformi);
+    iou->apply(f * xform_inverse);
     draw_pc_linear(*iou);
     iou->pop();
   }
@@ -291,8 +291,8 @@ void process_principal() {
     iod->specular(0.f, 0.f, 0.f);
     iod->phong(1.f);
     for_int(i, num) {
-      iod->point(co[i] * xformi);
-      iod->point(pcorg[i] * xformi);
+      iod->point(co[i] * xform_inverse);
+      iod->point(pcorg[i] * xform_inverse);
       iod->end_polyline();
     }
   }
@@ -381,9 +381,9 @@ void show_propagation(int i, int j, float dotp) {
   iop->diffuse(.2f + .8f * f, .8f + .2f * f, .5f + .5f * f);
   iop->specular(0.f, 0.f, 0.f);
   iop->phong(3.f);
-  iop->point(pcorg[i] * xformi);
+  iop->point(pcorg[i] * xform_inverse);
   iop->normal(pcnor[i]);
-  iop->point(pcorg[j] * xformi);
+  iop->point(pcorg[j] * xform_inverse);
   iop->normal(pcnor[j]);
   iop->end_polyline();
 }
@@ -436,7 +436,7 @@ void draw_oriented_tps() {
       f.v(0) = -f.v(0);
     }
     ioo->push();
-    ioo->apply(f * xformi);
+    ioo->apply(f * xform_inverse);
     draw_pc_linear(*ioo);
     if (!is_3D) {
       ioo->point(0.f, 0.f, 0.f);
@@ -451,9 +451,9 @@ void print_graph(Mk3d& mk, const Graph<int>& g, CArrayView<Point> pa, CArrayView
   for_int(i, num) {
     for (int j : g.edges(i)) {
       if (j >= i) continue;
-      mk.point(pa[i] * xformi);
+      mk.point(pa[i] * xform_inverse);
       if (pn) mk.normal((*pn)[i]);
-      mk.point(pa[j] * xformi);
+      mk.point(pa[j] * xform_inverse);
       if (pn) mk.normal((*pn)[j]);
       mk.end_polyline();
     }
@@ -573,9 +573,9 @@ void print_directed_seg(Mk3d& mk, const Point& p1, const Point& p2, const A3dCol
   mk.diffuse(col);
   mk.specular(0.f, 0.f, 0.f);
   mk.phong(3.f);
-  mk.point(p1 * xformi);
+  mk.point(p1 * xform_inverse);
   mk.normal(v);
-  mk.point(p2 * xformi);
+  mk.point(p2 * xform_inverse);
   mk.normal(v);
   mk.end_polyline();
 }
@@ -605,7 +605,7 @@ struct output_border3D {
     assertx(ioc);
     A3dElem el(A3dElem::EType::polygon);
     for_int(i, poly.num()) {
-      el.push(A3dVertex(Point(poly[i]) * xformi, Vector(0.f, 0.f, 0.f),
+      el.push(A3dVertex(Point(poly[i]) * xform_inverse, Vector(0.f, 0.f, 0.f),
                         A3dVertexColor(A3dColor(1.f, .16f, 0.f), A3dColor(1.f, .5f, .3f), A3dColor(3.f, 0.f, 0.f))));
     }
     ioc->oa3d().write(el);
@@ -618,7 +618,7 @@ struct output_border2D {
     ASSERTX(poly.num() == 2);
     A3dElem el(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
-      el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]) * xformi, Vector(0.f, 0.f, 0.f),
+      el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]) * xform_inverse, Vector(0.f, 0.f, 0.f),
                         A3dVertexColor(A3dColor(1.f, .16f, 0.f), A3dColor(1.f, .5f, .3f), A3dColor(3.f, 0.f, 0.f))));
     }
     ioc->oa3d().write(el);
@@ -631,7 +631,7 @@ struct output_contour2D {
     ASSERTX(poly.num() == 2);
     A3dElem el(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
-      el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]) * xformi, Vector(0.f, 0.f, 0.f),
+      el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]) * xform_inverse, Vector(0.f, 0.f, 0.f),
                         A3dVertexColor(A3dColor(.7f, .3f, .1f))));
     }
     iom->oa3d().write(el);
@@ -761,7 +761,7 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   // We close iom here so that the mesh comes after everything else in the file.
   if (iom && is_3D) {
-    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xformi);
+    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform_inverse);
     // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // note: would require RTTI
     mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
   }

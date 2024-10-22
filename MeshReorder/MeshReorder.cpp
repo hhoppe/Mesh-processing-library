@@ -1119,7 +1119,7 @@ void do_meshify5() {
   Queue<Corner> qnextc;
   Corner c = nullptr;
   int stripnf = 0;
-  string sstatus;
+  string status;
   const int initial_best_nfcont = (cache_type == VertexCache::EType::fifo  ? cache_size / 2
                                    : cache_type == VertexCache::EType::lru ? cache_size / 2
                                                                            : (assertnever(""), 0));
@@ -1129,11 +1129,11 @@ void do_meshify5() {
     if (!c) {
       // Restart a strip.
       if (stripnf) {
-        if (verb >= 2) showdf(" [%s]\n", sstatus.c_str());
+        if (verb >= 2) showdf(" [%s]\n", status.c_str());
         HH_SSTAT(Sstripnf, stripnf);
       }
       stripnf = 0;
-      sstatus = "";
+      status = "";
       best_nfcont = initial_best_nfcont;
       if (verb >= 3) SHOW("*Restart\n");
       for (;;) {
@@ -1208,7 +1208,7 @@ void do_meshify5() {
     }
     stripnf++;
     if (verb == 1) cprogress.update(float(ar_faces.num()) / mesh.num_faces());
-    if (verb >= 2) sstatus += sform("%d", nfmiss);
+    if (verb >= 2) status += sform("%d", nfmiss);
     Corner cint = mesh.ccw_corner(c);
     Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
     bool fintnei = cint && !ms.processed(mesh.corner_face(cint));

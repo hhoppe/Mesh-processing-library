@@ -38,9 +38,9 @@ double feval(ArrayView<double> ret_grad) {
   }
   if (0) {
     // was %18.12g but then get differences between different CONFIG
-    string sx;
-    for_int(i, g_x.num()) sx += sform("%s %11.5g", (i ? "," : ""), g_x[i]);
-    showf("x=(%s) f=%11.5g mag(g)=%11.3g)\n", sx.c_str(), f, mag(ret_grad));
+    string s_x;
+    for_int(i, g_x.num()) s_x += sform("%s %11.5g", (i ? "," : ""), g_x[i]);
+    showf("x=(%s) f=%11.5g mag(g)=%11.3g)\n", s_x.c_str(), f, mag(ret_grad));
   }
   return f;
 }

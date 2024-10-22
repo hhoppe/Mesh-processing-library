@@ -133,8 +133,7 @@ template <typename T> class Encoding : noncopyable {
         float prob = max_prob - pq.min_priority();
         cumu_prob += prob;
         T e = pq.remove_min();
-        string ename = cb_entry_name(e);
-        showdf("  %20s  %.5f  cumu %.5f\n", ename.c_str(), prob / tot_prob, cumu_prob / tot_prob);
+        showdf("  %20s  %.5f  cumu %.5f\n", cb_entry_name(e).c_str(), prob / tot_prob, cumu_prob / tot_prob);
       }
     } else {
       struct P {
@@ -152,9 +151,8 @@ template <typename T> class Encoding : noncopyable {
       for_int(i, min(ntop, ar.num())) {
         const P& p = ar[i];
         float prob = p.prob;
-        string ename = p.str;
         cumu_prob += prob;
-        showdf("  %20s  %.5f  cumu %.5f\n", ename.c_str(), prob / tot_prob, cumu_prob / tot_prob);
+        showdf("  %20s  %.5f  cumu %.5f\n", p.str.c_str(), prob / tot_prob, cumu_prob / tot_prob);
       }
     }
     showdf("} normalized_entropy=%f\n", entropy() / tot_prob);

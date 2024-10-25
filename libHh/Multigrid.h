@@ -205,7 +205,7 @@ class Multigrid : noncopyable {
     T bordervalue;
     my_zero(bordervalue);
     // Easy inside part [0, dims / 2 - 1]:
-    parallel_for_coords({uint64_t(product(vrange) * 2)}, dims / 2, [&](const Vec<int, D>& u) {
+    parallel_for_coords({uint64_t(product(vrange)) * 2}, dims / 2, [&](const Vec<int, D>& u) {
       T v;
       my_zero(v);
       for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid[ut];
@@ -248,7 +248,7 @@ class Multigrid : noncopyable {
         if (dims[0] % 2 == 1) ngrid[ndims[0] - 1][x] = grid[(ndims[0] - 1) * 2][x] * 1.f;  // .5f or 1.f; don't care
       }
     } else {
-      parallel_for_each({uint64_t(dims[1] * 4)}, range(dims[0] / 2), [&](const int y) {
+      parallel_for_each({uint64_t(dims[1]) * 4}, range(dims[0] / 2), [&](const int y) {
         for_int(x, dims[1] / 2) {
           ngrid[y][x] = ((grid[y * 2 + 0][x * 2 + 0] + grid[y * 2 + 0][x * 2 + 1] + grid[y * 2 + 1][x * 2 + 0] +
                           grid[y * 2 + 1][x * 2 + 1]) *
@@ -296,7 +296,7 @@ class Multigrid : noncopyable {
     assertx(ndims[1] == dims[1] * 2 || ndims[1] == dims[1] * 2 - 1);
     Grid<D, T> ngrid(ndims);
     // transpose of box filter: tensor({(1 0), (0 1)})
-    parallel_for_each({uint64_t(ndims[1] * 1)}, range(ndims[0]), [&](const int y) {  //
+    parallel_for_each({uint64_t(ndims[1]) * 1}, range(ndims[0]), [&](const int y) {  //
       for_int(x, ndims[1]) ngrid[y][x] = grid[y / 2][x / 2];
     });
     return ngrid;
@@ -692,7 +692,7 @@ class Multigrid : noncopyable {
     dummy_use(func_interior);
     // VS2012: does not inline lambda in any case; all similar; first choice is slightly better.
     // gcc4.8.1: always produces good code (even creating func_interior() automatically).
-    if (1) parallel_for_each({uint64_t(nx * 10)}, range(ny), [&](const int y) { for_int(x, nx) func(y, x); });
+    if (1) parallel_for_each({uint64_t(nx) * 10}, range(ny), [&](const int y) { for_int(x, nx) func(y, x); });
     if (0) parallel_for_2DL(0, ny, 0, nx, func);
     if (0) parallel_for_2DL_interior(0, ny, 0, nx, func, func_interior);
     return grid_residual;

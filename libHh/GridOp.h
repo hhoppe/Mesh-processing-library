@@ -589,7 +589,7 @@ template <int D, typename T>
 void scale_filter_nearest_aux(Specialize<2>, CGridView<D, T> grid, GridView<D, T> ngrid,
                               const Vec<Array<int>, D>& maps) {
   const Vec<int, D> ndims = ngrid.dims();
-  parallel_for_each({uint64_t(ndims[1] * 3)}, range(ndims[0]), [&](const int y) {
+  parallel_for_each({uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
     int yy = maps[0][y];
     for_int(x, ndims[1]) ngrid(y, x) = grid(yy, maps[1][x]);
   });
@@ -599,7 +599,7 @@ template <int D, typename T>
 void scale_filter_nearest_aux(Specialize<3>, CGridView<D, T> grid, GridView<D, T> ngrid,
                               const Vec<Array<int>, D>& maps) {
   const Vec<int, D> ndims = ngrid.dims();
-  parallel_for_each({uint64_t(ndims[1] * ndims[2] * 3)}, range(ndims[0]), [&](const int z) {
+  parallel_for_each({uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
     int zz = maps[0][z];
     for_int(y, ndims[1]) {
       int yy = maps[1][y];

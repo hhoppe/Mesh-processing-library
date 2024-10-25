@@ -1041,7 +1041,7 @@ void do_gridcrop(Args& args) {
   int sx = args.get_int(), sy = args.get_int();
   assertx(sx >= 0 && sx <= video.xsize() && sy >= 0 && sy <= video.ysize());
   Matrix<Video> videos(ny, nx);
-  parallel_for_coords({uint64_t(video.nframes() * sy * sx * 4)}, videos.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({uint64_t(video.nframes() * sy * sx) * 4}, videos.dims(), [&](const Vec2<int>& yx) {
     int vl = int((video.xsize() - sx) * float(yx[1]) / (nx - 1) + .5f);
     int vt = int((video.ysize() - sy) * float(yx[0]) / (ny - 1) + .5f);
     int vr = video.xsize() - vl - sx;

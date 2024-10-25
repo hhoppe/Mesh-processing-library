@@ -103,8 +103,9 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
   }
   newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
   if (product(newdims)) {
-    parallel_for_each(range(newvideo_nv12.nframes()),
-                      [&](const int f) { scale(video_nv12[f], filterbs, bordervalue, newvideo_nv12[f]); });
+    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {  //
+      scale(video_nv12[f], filterbs, bordervalue, newvideo_nv12[f]);
+    });
   }
   return newvideo_nv12;
 }

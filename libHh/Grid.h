@@ -242,14 +242,14 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   void reverse_y() {
     static_assert(D == 2);
     const int ny = this->ysize();
-    parallel_for_each(
-        range(ny / 2), [&](const int y) { swap_ranges((*this)[y], (*this)[ny - 1 - y]); }, this->xsize() * 2);
+    parallel_for_each({uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
+      swap_ranges((*this)[y], (*this)[ny - 1 - y]);
+    });
   }
   void reverse_x() {
     static_assert(D == 2);
     const int ny = this->ysize();
-    parallel_for_each(
-        range(ny), [&](const int y) { reverse((*this)[y]); }, this->xsize() * 2);
+    parallel_for_each({uint64_t(this->xsize()) * 2}, range(ny), [&](const int y) { reverse((*this)[y]); });
   }
 
  protected:
@@ -698,9 +698,7 @@ template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Impleme
 #define CG CGridView<D, T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for_size_t(i, g.size())
-#define PF(g, code)  \
-  parallel_for_each( \
-      range(g.size()), [&](const size_t i) { code; }, 1)
+#define PF(g, code) parallel_for_each({1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 
 TT G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }

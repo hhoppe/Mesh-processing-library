@@ -553,8 +553,9 @@ GMesh split_corners(const GMesh& mo, bool split_matbnd) {
       mn.set_string(vn, mo.get_string(vo));
       if (!split_matbnd) {
         // Corner attributes no longer needed in new mesh.
-        for_cstring_key_value(mo.get_string(mo.corner(vo, forep)), key, val,
-                              [&] { mn.update_string(vn, key.data(), val.data()); });
+        for_cstring_key_value(mo.get_string(mo.corner(vo, forep)), key, val, [&] {  //
+          mn.update_string(vn, key.data(), val.data());
+        });
       }
       Face fo = forep;
       for (;;) {  // find f: most_clw, or frep if closed

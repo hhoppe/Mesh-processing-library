@@ -125,15 +125,16 @@ template <int D, typename Func = void(const Vec<int, D>&)> void for_coords(Vec<i
   for_coordsL(ntimes<D>(0), dims, func);
 }
 
+// *** General D.
+
 template <int D, typename Func = void(const Vec<int, D>&)>
-void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func,
-                          uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
+void parallel_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
   const Vec<int, D> dims = uU - uL;
-  if (est_cycles_per_elem >= k_parallel_many_cycles_per_elem) {
+  if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
     parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
-  } else if (product(dims) * est_cycles_per_elem >= k_parallel_thresh) {
+  } else if (product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
     parallel_for_each(range(uL[0], uU[0]), [&](const int r) {
       for_coordsL(uL.with(0, r), uU.with(0, r + 1), func);  // parallelism in first dimension
     });
@@ -142,26 +143,37 @@ void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func,
   }
 }
 
+template <int D, typename Func = void(const Vec<int, D>&)>
+void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
+  parallel_for_coordsL({}, uL, uU, func);
+}
+
+// *** D = 1.
+
 template <typename Func = void(const Vec1<int>&)>
-void parallel_for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func,
-                          uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
+void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int> uU, Func func) {
   int dim0 = uU[0] - uL[0];
-  if (dim0 * est_cycles_per_elem >= k_parallel_thresh) {
+  if (dim0 * options.cycles_per_elem >= k_parallel_thresh) {
     parallel_for_each(range(uL[0], uU[0]), [&](const int i) { func(V(i)); });
   } else {
     for_coordsL(uL, uU, func);  // no parallelism
   }
 }
 
+template <typename Func = void(const Vec1<int>&)> void parallel_for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func) {
+  parallel_for_coordsL({}, uL, uU, func);
+}
+
+// *** D = 2.
+
 template <typename Func = void(const Vec2<int>&)>
-void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func,
-                          uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
+void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int> uU, Func func) {
   const Vec2<int> dims = uU - uL;
-  if (est_cycles_per_elem >= k_parallel_many_cycles_per_elem) {
+  if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
     parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
-  } else if (dims[0] >= k_parallel_min_iterations && product(dims) * est_cycles_per_elem >= k_parallel_thresh) {
+  } else if (dims[0] >= k_parallel_min_iterations && product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
     parallel_for_each(range(uL[0], uU[0]), [&](const int y) {
       Vec2<int> yx;
       yx[0] = y;
@@ -170,7 +182,7 @@ void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func,
         func(yx);
       }
     });
-  } else if (dims[1] * est_cycles_per_elem >= k_parallel_thresh) {
+  } else if (dims[1] * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(y, uL[0], uU[0]) {
       parallel_for_each(range(uL[1], uU[1]), [&](const int x) { func(V(y, x)); });
     }
@@ -179,15 +191,20 @@ void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func,
   }
 }
 
+template <typename Func = void(const Vec2<int>&)> void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func) {
+  parallel_for_coordsL({}, uL, uU, func);
+}
+
+// *** D = 3.
+
 template <typename Func = void(const Vec3<int>&)>
-void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func,
-                          uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
+void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int> uU, Func func) {
   const Vec3<int> dims = uU - uL;
-  if (est_cycles_per_elem >= k_parallel_many_cycles_per_elem) {
+  if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
     parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
-  } else if (dims[0] >= k_parallel_min_iterations && product(dims) * est_cycles_per_elem >= k_parallel_thresh) {
+  } else if (dims[0] >= k_parallel_min_iterations && product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
     parallel_for_each(range(uL[0], uU[0]), [&](const int z) {
       Vec3<int> u;
       u[0] = z;
@@ -200,7 +217,7 @@ void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func,
       }
     });
   } else if (dims[1] >= k_parallel_min_iterations &&
-             product(dims.tail<2>()) * est_cycles_per_elem >= k_parallel_thresh) {
+             product(dims.tail<2>()) * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(z, uL[0], uU[0]) {
       parallel_for_each(range(uL[1], uU[1]), [&](const int y) {
         Vec3<int> u(z, y, 0);
@@ -210,7 +227,7 @@ void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func,
         }
       });
     }
-  } else if (dims[2] * est_cycles_per_elem >= k_parallel_thresh) {
+  } else if (dims[2] * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(z, uL[0], uU[0]) for_intL(y, uL[1], uU[1]) {
       parallel_for_each(range(uL[2], uU[2]), [&](const int x) { func(V(z, y, x)); });
     }
@@ -219,19 +236,33 @@ void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func,
   }
 }
 
+template <typename Func = void(const Vec3<int>&)> void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func) {
+  parallel_for_coordsL({}, uL, uU, func);
+}
+
+// *** Others.
+
 template <int D, typename Func = void(const Vec<int, D>&)>
-void parallel_for_coords(Vec<int, D> dims, Func func, uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
-  parallel_for_coordsL(ntimes<D>(0), dims, func, est_cycles_per_elem);
+void parallel_for_coords(const ParallelOptions& options, Vec<int, D> dims, Func func) {
+  parallel_for_coordsL(options, ntimes<D>(0), dims, func);
+}
+
+template <int D, typename Func = void(const Vec<int, D>&)> void parallel_for_coords(Vec<int, D> dims, Func func) {
+  parallel_for_coords({}, dims, func);
 }
 
 template <int D, typename Func = void(const Vec<int, D>&)>
-void parallel_tiled_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func,
-                                uint64_t est_cycles_per_elem = k_parallel_many_cycles_per_elem) {
-  if (product(uU - uL) * est_cycles_per_elem >= k_parallel_thresh) {
+void parallel_tiled_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
+  if (product(uU - uL) * options.cycles_per_elem >= k_parallel_thresh) {
     assertnever("TODO");
   } else {
     for_coordsL(uL, uU, func);
   }
+}
+
+template <int D, typename Func = void(const Vec<int, D>&)>
+void parallel_tiled_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
+  parallel_tiled_for_coordsL({}, uL, uU, func);
 }
 
 template <int D, typename FuncRaster = void(size_t)>

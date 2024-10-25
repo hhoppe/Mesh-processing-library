@@ -44,14 +44,11 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
       if (max_i != i) swap_ranges(t[i], t[max_i]);
     }
     if (!t[i][i]) return false;
-    parallel_for_each(
-        range(n),
-        [&](const int j) {
-          if (j == i) return;  // must be done outside the parallel loop
-          T a = -t[j][i] / t[i][i];
-          for_int(k, 2 * n) t[j][k] += a * t[i][k];
-        },
-        n * 2);
+    parallel_for_each({uint64_t(n) * 2}, range(n), [&](const int j) {
+      if (j == i) return;  // must be done outside the parallel loop
+      T a = -t[j][i] / t[i][i];
+      for_int(k, 2 * n) t[j][k] += a * t[i][k];
+    });
     if (1) {
       int j = i;
       T a = T{1} / t[i][i];
@@ -72,18 +69,15 @@ template <typename T> Matrix<T> inverse(CMatrixView<T> mi) {
 // Multiply matrix m1 by matrix m2 and store the result into matrix mo:  mo = m1 * m2.
 template <typename T> void mat_mul(CMatrixView<T> m1, CMatrixView<T> m2, MatrixView<T> mo) {
   assertx(m1.ysize() && m1.xsize() && m1.xsize() == m2.ysize() && m2.xsize());
-  parallel_for_each(
-      range(m1.ysize()),
-      [&](const int i) {
-        // Note: for faster memory performance, it would be best to swap the j and k loops;
-        //  however this would require a temporary double[m2.xsize()] buffer allocated per thread.
-        for_int(j, m2.xsize()) {
-          double sum = 0.;
-          for_int(k, m1.xsize()) sum += m1[i][k] * m2[k][j];
-          mo[i][j] = static_cast<T>(sum);
-        }
-      },
-      m2.xsize() * 1);
+  parallel_for_each({uint64_t(m2.xsize() * 1)}, range(m1.ysize()), [&](const int i) {
+    // Note: for faster memory performance, it would be best to swap the j and k loops;
+    //  however this would require a temporary double[m2.xsize()] buffer allocated per thread.
+    for_int(j, m2.xsize()) {
+      double sum = 0.;
+      for_int(k, m1.xsize()) sum += m1[i][k] * m2[k][j];
+      mo[i][j] = static_cast<T>(sum);
+    }
+  });
 }
 
 // Multiply matrix m1 by matrix m2 and return the result m1 * m2.
@@ -97,14 +91,11 @@ template <typename T> Matrix<T> mat_mul(CMatrixView<T> m1, CMatrixView<T> m2) {
 template <typename T> void mat_mul(CMatrixView<T> m, CArrayView<T> vi, ArrayView<T> vo) {
   assertx(m.ysize() && m.xsize() && m.xsize() == vi.num() && m.ysize() == vo.num());
   assertx(!have_overlap(vi, vo));
-  parallel_for_each(
-      range(m.ysize()),
-      [&](const int i) {
-        double sum = 0.;
-        for_int(j, m.xsize()) sum += m[i][j] * vi[j];
-        vo[i] = static_cast<T>(sum);
-      },
-      m.xsize() * 1);
+  parallel_for_each({uint64_t(m.xsize()) * 1}, range(m.ysize()), [&](const int i) {
+    double sum = 0.;
+    for_int(j, m.xsize()) sum += m[i][j] * vi[j];
+    vo[i] = static_cast<T>(sum);
+  });
 }
 
 // Multiply matrix m by column vector vi and return the resulting column vector m * vi.
@@ -120,14 +111,11 @@ template <typename T> void mat_mul(CArrayView<T> vi, CMatrixView<T> m, ArrayView
   assertx(!have_overlap(vi, vo));
   // Note: for faster memory performance, it would be best to swap the j and i loops;
   //  however this would require a temporary double[m.xsize()] buffer allocated per thread.
-  parallel_for_each(
-      range(m.xsize()),
-      [&](const int j) {
-        double sum = 0.;
-        for_int(i, m.ysize()) sum += vi[i] * m[i][j];
-        vo[j] = static_cast<T>(sum);
-      },
-      m.ysize() * 1);
+  parallel_for_each({uint64_t(m.ysize()) * 1}, range(m.xsize()), [&](const int j) {
+    double sum = 0.;
+    for_int(i, m.ysize()) sum += vi[i] * m[i][j];
+    vo[j] = static_cast<T>(sum);
+  });
 }
 
 // Multiply row vector vi by matrix m and return the resulting row vector m * vi.
@@ -263,40 +251,37 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
         }
         // SHOW(src_kernel_radii);
       }
-      parallel_for_each(
-          range(nm.ysize()),
-          [&](const int y) {
-            for_int(x, nm.xsize()) {
-              Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
-              Vec2<float> tp = transform_about_center(p, frame);
-              Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // in coordinates [0 .. m.dims() - 1]
-              int num = 0;
-              T val;
-              my_zero(val);
-              double sumw = 0.;
-              for (const Vec2<int> yx : range(convert<int>(floor(psrc - src_kernel_radii)),
-                                              convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
-                Vec2<float> dyx = convert<float>(yx) - psrc;
-                Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
-                float w = 1.f;
-                if (!transform_filter_radial) {  // normal tensor-product of kernels
-                  for_int(c, 2) w *= float(kernels[c](dst_dyx[c]));
-                } else {  // single kernel based on radial distance
-                  w = float(kernels[0](mag(dst_dyx)));
-                }
-                // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
-                if (!w) continue;
-                val += w * m.inside(yx, bndrules, bordervalue);
-                sumw += w;
-                num++;
-              }
-              dummy_use(num);
-              // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
-              nm[y][x] = val / assertx(float(sumw));
-              // SHOW(num, sumw, nm[y][x]); assertnever("");
+      parallel_for_each({uint64_t(nm.xsize() * 10'000)}, range(nm.ysize()), [&](const int y) {
+        for_int(x, nm.xsize()) {
+          Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
+          Vec2<float> tp = transform_about_center(p, frame);
+          Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // in coordinates [0 .. m.dims() - 1]
+          int num = 0;
+          T val;
+          my_zero(val);
+          double sumw = 0.;
+          for (const Vec2<int> yx :
+               range(convert<int>(floor(psrc - src_kernel_radii)), convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
+            Vec2<float> dyx = convert<float>(yx) - psrc;
+            Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
+            float w = 1.f;
+            if (!transform_filter_radial) {  // normal tensor-product of kernels
+              for_int(c, 2) w *= float(kernels[c](dst_dyx[c]));
+            } else {  // single kernel based on radial distance
+              w = float(kernels[0](mag(dst_dyx)));
             }
-          },
-          nm.xsize() * 10'000);
+            // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
+            if (!w) continue;
+            val += w * m.inside(yx, bndrules, bordervalue);
+            sumw += w;
+            num++;
+          }
+          dummy_use(num);
+          // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
+          nm[y][x] = val / assertx(float(sumw));
+          // SHOW(num, sumw, nm[y][x]); assertnever("");
+        }
+      });
     } else {
       // Approach 2: supersample uniformly in kernel window of destination image, evaluating reconstruction
       //  kernels at corresponding points in source image (expensive!).
@@ -307,39 +292,36 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           V(FilterBnd(recon_kernel, filterbs[0].bndrule()), FilterBnd(recon_kernel, filterbs[1].bndrule()));
       // for (const Vec2<int>& yx : range(nm.dims())) {
       // { const int y = 500, x = 400;
-      parallel_for_each(
-          range(nm.ysize()),
-          [&](const int y) {
-            for_int(x, nm.xsize()) {
-              const Vec2<int> yx = V(y, x);
-              int num = 0;
-              T val;
-              my_zero(val);
-              double sumw = 0.;
-              for (const Vec2<int>& sample_yx : range(num_samples)) {
-                const Vec2<float> sample_offset =
-                    ((convert<float>(sample_yx) + .5f) / convert<float>(num_samples) * 2.f - 1.f) *
-                    kernel_radii;  // pixels
-                float w = 1.f;
-                if (!transform_filter_radial) {  // normal tensor-product of kernels
-                  for_int(c, 2) w *= float(kernels[c](sample_offset[c]));
-                } else {  // single kernel based on radial distance
-                  w = float(kernels[0](mag(sample_offset)));
-                }
-                Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
-                Vec2<float> tp = transform_about_center(p, frame);
-                val += w * sample_domain(m, tp, fb_reconstruction, bordervalue);
-                // SHOW(yx, sample_yx, w, p, tp, sample_offset);
-                sumw += w;
-                num++;
-              }
-              dummy_use(num);
-              // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
-              nm[yx] = val / assertx(float(sumw));
-              // SHOW(num, sumw, nm[yx]); assertnever("");
+      parallel_for_each({uint64_t(nm.xsize() * 10'000)}, range(nm.ysize()), [&](const int y) {
+        for_int(x, nm.xsize()) {
+          const Vec2<int> yx = V(y, x);
+          int num = 0;
+          T val;
+          my_zero(val);
+          double sumw = 0.;
+          for (const Vec2<int>& sample_yx : range(num_samples)) {
+            const Vec2<float> sample_offset =
+                ((convert<float>(sample_yx) + .5f) / convert<float>(num_samples) * 2.f - 1.f) *
+                kernel_radii;  // pixels
+            float w = 1.f;
+            if (!transform_filter_radial) {  // normal tensor-product of kernels
+              for_int(c, 2) w *= float(kernels[c](sample_offset[c]));
+            } else {  // single kernel based on radial distance
+              w = float(kernels[0](mag(sample_offset)));
             }
-          },
-          nm.xsize() * 10'000);
+            Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
+            Vec2<float> tp = transform_about_center(p, frame);
+            val += w * sample_domain(m, tp, fb_reconstruction, bordervalue);
+            // SHOW(yx, sample_yx, w, p, tp, sample_offset);
+            sumw += w;
+            num++;
+          }
+          dummy_use(num);
+          // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
+          nm[yx] = val / assertx(float(sumw));
+          // SHOW(num, sumw, nm[yx]); assertnever("");
+        }
+      });
     }
     return;
   }
@@ -352,14 +334,11 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     tfilterbs = inverse_convolution(tm, filterbs);
     mr.reinit(tm);
   }
-  parallel_for_coords(
-      nm.dims(),
-      [&](const Vec2<int>& yx) {
-        Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
-        Vec2<float> tp = transform_about_center(p, frame);
-        nm[yx] = sample_domain(mr, tp, tfilterbs, bordervalue);
-      },
-      500);
+  parallel_for_coords({500}, nm.dims(), [&](const Vec2<int>& yx) {
+    Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
+    Vec2<float> tp = transform_about_center(p, frame);
+    nm[yx] = sample_domain(mr, tp, tfilterbs, bordervalue);
+  });
 }
 
 // Input: mvec[y][x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.
@@ -381,14 +360,11 @@ Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T
   assertx(ark.num() % 2 == 1);
   const int xxm = ark.num() / 2;
   Array<T> nar(ar.num());
-  parallel_for_each(
-      range(ar.num()),
-      [&](const int x) {
-        Precise v{0};
-        for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, bordervalue)}; }
-        nar[x] = static_cast<T>(v);
-      },
-      ark.num() * 2);
+  parallel_for_each({uint64_t(ark.num() * 2)}, range(ar.num()), [&](const int x) {
+    Precise v{0};
+    for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, bordervalue)}; }
+    nar[x] = static_cast<T>(v);
+  });
   return nar;
 }
 
@@ -400,18 +376,15 @@ Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, co
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
   const Vec2<int> pm = matk.dims() / 2;
   Matrix<T> nmat(mat.dims());
-  parallel_for_each(
-      range(mat.yxsize()),
-      [&](const int y) {
-        for_int(x, mat.xsize()) {
-          Precise v{0};
-          for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {
-            v += matk[yy][xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, bordervalue)};
-          }
-          nmat[y][x] = static_cast<T>(v);
-        }
-      },
-      mat.xsize() * matk.size() * 2);
+  parallel_for_each({uint64_t(mat.xsize() * matk.size() * 2)}, range(mat.yxsize()), [&](const int y) {
+    for_int(x, mat.xsize()) {
+      Precise v{0};
+      for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {
+        v += matk[yy][xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, bordervalue)};
+      }
+      nmat[y][x] = static_cast<T>(v);
+    }
+  });
   return nmat;
 }
 

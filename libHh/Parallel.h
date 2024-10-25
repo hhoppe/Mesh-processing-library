@@ -127,18 +127,26 @@ template <typename Iterator> class Subrange {
 
 }  // namespace details
 
+struct ParallelOptions {
+  // Estimated number of CPU cycles required to process each element in the parallel loop.
+  // If the total number of cycles across all range elements is estimated to be lower than `k_parallel_thresh`,
+  // the loop is executed sequentially to avoid the overhead of synchronizing parallel threads.
+  // With the default value, the loop is always executed in parallel.
+  uint64_t cycles_per_elem = k_parallel_thresh;
+};
+
 // Divide `range` into `num_threads` chunks (i.e., subranges) and call `process_chunk(thread_index, subrange)` in
 // parallel over the different chunks using a cached thread pool.  The range must support begin/end functions
 // returning random-access iterators.
-// Parallelism is disabled if the estimated cost `estimated_cycles_per_element * size(range)` is less than some
+// Parallelism is disabled if the estimated cost `options.cycles_per_elem * size(range)` is less than some
 // internal threshold, or if we are already executing (nested) within another parallel_for_*() loop.
 // Exceptions within process_chunk() cause program termination as they are not caught.  One drawback over OpenMP
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessChunk>
-void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
-                        uint64_t estimated_cycles_per_element = k_parallel_thresh) {
+void parallel_for_chunk(const ParallelOptions& options, const Range& range, int num_threads,
+                        const ProcessChunk& process_chunk) {
   assertx(num_threads >= 1);
   using std::begin, std::end, std::size;
   const auto begin_range = begin(range);
@@ -146,7 +154,7 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
   // const auto num_elements = end_range - begin_range;
   const auto num_elements = size(range);  // Note that num_elements be larger than size_t (e.g., uint64_t on win32).
   using Iterator = decltype(begin_range);
-  const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
+  const uint64_t total_num_cycles = num_elements * options.cycles_per_elem;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_parallel_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
       desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
@@ -168,17 +176,22 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
   }
 }
 
+// See previous function.
+template <typename Range, typename ProcessChunk>
+void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk) {
+  parallel_for_chunk(ParallelOptions{}, range, num_threads, process_chunk);
+}
+
 // Evaluates process_element(element) for each element in range by parallelizing across chunks of elements using
 // a cached thread pool.  The range must support begin/end functions returning random-access iterators.
-// Parallelism is disabled if the estimated cost (estimated_cycles_per_element * size(range)) is less than some
+// Parallelism is disabled if the estimated cost (options.cycles_per_elem * size(range)) is less than some
 // internal threshold, or if we are already executing (nested) within another parallel_for_*() loop.
 // Exceptions within process_chunk() cause program termination as they are not caught.  One drawback over OpenMP
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessElement>
-void parallel_for_each(const Range& range, const ProcessElement& process_element,
-                       uint64_t estimated_cycles_per_element = k_parallel_thresh) {
+void parallel_for_each(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
   using std::size;
   const auto num_elements = size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   using NumElements = decltype(num_elements);
@@ -188,7 +201,13 @@ void parallel_for_each(const Range& range, const ProcessElement& process_element
     dummy_use(thread_index);
     for (auto& element : subrange) process_element(element);
   };
-  parallel_for_chunk(range, num_threads, process_chunk, estimated_cycles_per_element);
+  parallel_for_chunk(options, range, num_threads, process_chunk);
+}
+
+// See previous function.
+template <typename Range, typename ProcessElement>
+void parallel_for_each(const Range& range, const ProcessElement& process_element) {
+  parallel_for_each(ParallelOptions{}, range, process_element);
 }
 
 }  // namespace hh

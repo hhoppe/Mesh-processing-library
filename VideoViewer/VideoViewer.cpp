@@ -2195,8 +2195,9 @@ bool DerivedHw::key_press(string skey) {
           VideoNv12 nvideo_nv12;
           if (ob._video.size()) {
             nvideo.init(ob._dims);
-            parallel_for_each(range(ob.nframes()),
-                              [&](const int f) { nvideo[f].assign(ob._video[ob.nframes() - 1 - f]); });
+            parallel_for_each(range(ob.nframes()), [&](const int f) {  //
+              nvideo[f].assign(ob._video[ob.nframes() - 1 - f]);
+            });
           } else if (ob._video_nv12.size()) {
             nvideo_nv12.init(ob._dims);
             parallel_for_each(range(ob.nframes()), [&](const int f) {

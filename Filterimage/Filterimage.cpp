@@ -746,22 +746,19 @@ void do_permutecolors() {
   //   factors 53
   Vec<uint8_t, 256> lookup;
   for_int(i, 256) lookup[i] = (i * 53) % 256;
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { for_int(z, image.zsize()) image[yx][z] = lookup[image[yx][z]]; }, 10);
+  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {  //
+    for_int(z, image.zsize()) image[yx][z] = lookup[image[yx][z]];
+  });
 }
 
 void do_randomizeRGB() {
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        unsigned v =
-            unsigned(image[yx][0] * (53 + 113 * 256 + 43 * 65536) + image[yx][1] * (97 + 89 * 256 + 107 * 65536) +
-                     image[yx][2] * (11 + 61 * 256 + 47 * 65536)) %
-            (1 << 24);
-        image[yx] = Pixel(narrow_cast<uint8_t>((v >> 0) & 255), narrow_cast<uint8_t>((v >> 8) & 255),
-                          narrow_cast<uint8_t>((v >> 16) & 255));
-      },
-      20);
+  parallel_for_coords({20}, image.dims(), [&](const Vec2<int>& yx) {
+    unsigned v = unsigned(image[yx][0] * (53 + 113 * 256 + 43 * 65536) + image[yx][1] * (97 + 89 * 256 + 107 * 65536) +
+                          image[yx][2] * (11 + 61 * 256 + 47 * 65536)) %
+                 (1 << 24);
+    image[yx] = Pixel(narrow_cast<uint8_t>((v >> 0) & 255), narrow_cast<uint8_t>((v >> 8) & 255),
+                      narrow_cast<uint8_t>((v >> 16) & 255));
+  });
 }
 
 void do_noisegaussian(Args& args) {
@@ -798,18 +795,14 @@ void do_blur(Args& args) {
       }
     }
     Grid<2, Vector4> grid(image.dims());
-    parallel_for_coords(
-        image.dims(), [&](const Vec2<int>& yx) { grid[yx] = Vector4(image[yx]); }, 6);
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          Vector4 vec{};
-          for_coordsL(twice(-r), twice(r + 1), [&](const Vec2<int>& dyx) {
-            vec += ar_gauss[dyx[0] + r] * ar_gauss[dyx[1] + r] * grid.inside(yx + dyx, g_bndrules);
-          });
-          image[yx] = vec.pixel();
-        },
-        1000);
+    parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) { grid[yx] = Vector4(image[yx]); });
+    parallel_for_coords({1000}, image.dims(), [&](const Vec2<int>& yx) {
+      Vector4 vec{};
+      for_coordsL(twice(-r), twice(r + 1), [&](const Vec2<int>& dyx) {
+        vec += ar_gauss[dyx[0] + r] * ar_gauss[dyx[1] + r] * grid.inside(yx + dyx, g_bndrules);
+      });
+      image[yx] = vec.pixel();
+    });
   } else {
     ar_gauss /= float(sum(ar_gauss));
     // SHOW(ar_gauss); SHOW(sum(ar_gauss));
@@ -963,19 +956,16 @@ void do_gridcrop(Args& args) {
   int sx = args.get_int(), sy = args.get_int();
   assertx(sx >= 0 && sx <= image.xsize() && sy >= 0 && sy <= image.ysize());
   Matrix<Image> images(V(ny, nx));
-  parallel_for_coords(
-      images.dims(),
-      [&](const Vec2<int>& yx) {
-        int vl = int((image.xsize() - sx) * float(yx[1]) / (images.dims()[1] - 1) + .5f);
-        int vt = int((image.ysize() - sy) * float(yx[0]) / (images.dims()[0] - 1) + .5f);
-        int vr = image.xsize() - vl - sx;
-        int vb = image.ysize() - vt - sy;
-        if (0) showf("vl=%d vt=%d  vr=%d vb=%d\n", vl, vt, vr, vb);
-        Grid<2, Pixel>& im = images[yx];
-        im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
-        apply_assemble_operations(im, yx, images.dims());
-      },
-      int64_t{sy} * sx * 4);
+  parallel_for_coords({uint64_t(sy * sx * 4)}, images.dims(), [&](const Vec2<int>& yx) {
+    int vl = int((image.xsize() - sx) * float(yx[1]) / (images.dims()[1] - 1) + .5f);
+    int vt = int((image.ysize() - sy) * float(yx[0]) / (images.dims()[0] - 1) + .5f);
+    int vr = image.xsize() - vl - sx;
+    int vb = image.ysize() - vt - sy;
+    if (0) showf("vl=%d vt=%d  vr=%d vb=%d\n", vl, vt, vr, vb);
+    Grid<2, Pixel>& im = images[yx];
+    im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
+    apply_assemble_operations(im, yx, images.dims());
+  });
   assemble_images(images);
 }
 
@@ -1007,12 +997,9 @@ void do_tile(Args& args) {
   const Vec2<int> atiles(ny, nx);
   Image timage(image);
   image.init(timage.dims() * atiles);
-  parallel_for_coords(
-      atiles,
-      [&](const Vec2<int>& yx) {
-        for (const auto& yxd : range(timage.dims())) image[yx * timage.dims() + yxd] = timage[yxd];
-      },
-      product(timage.dims()) * 4);
+  parallel_for_coords({uint64_t(product(timage.dims()) * 4)}, atiles, [&](const Vec2<int>& yx) {
+    for (const auto& yxd : range(timage.dims())) image[yx * timage.dims() + yxd] = timage[yxd];
+  });
 }
 
 void do_replace(Args& args) {
@@ -1037,8 +1024,9 @@ void do_gamma(Args& args) {
   float gamma = args.get_float();
   Vec<uint8_t, 256> transf;
   for_int(i, 256) transf[i] = uint8_t(clamp(pow(i / 255.f, gamma), 0.f, 1.f) * 255.f + .5f);
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { for_int(z, image.zsize()) image[yx][z] = transf[image[yx][z]]; }, 10);
+  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {  //
+    for_int(z, image.zsize()) image[yx][z] = transf[image[yx][z]];
+  });
 }
 
 void do_tobw() { image.to_bw(); }
@@ -1054,32 +1042,25 @@ void do_hue() {
   // choice of the RGB primaries, but are typical). The formula (11*R + 16*G + 5*B) /32 is also popular since it
   // can be efficiently implemented using only integer operations.
   const float gamma = 2.2f;
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        Vec3<float> af;
-        for_int(z, 3) af[z] = pow(image[yx][z] + 0.5f, gamma);
-        float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
-        for_int(z, 3) af[z] = af[z] * pow(128.f, gamma) / gray;
-        for_int(z, 3) image[yx][z] = clamp_to_uint8(int(pow(af[z], 1.f / gamma) + .5f));
-      },
-      50);
+  parallel_for_coords({50}, image.dims(), [&](const Vec2<int>& yx) {
+    Vec3<float> af;
+    for_int(z, 3) af[z] = pow(image[yx][z] + 0.5f, gamma);
+    float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
+    for_int(z, 3) af[z] = af[z] * pow(128.f, gamma) / gray;
+    for_int(z, 3) image[yx][z] = clamp_to_uint8(int(pow(af[z], 1.f / gamma) + .5f));
+  });
 }
 
 void do_noalpha() {
   if (image.zsize() == 4) {
     // Assume alpha is an independent channel; RGB not premultiplied by alpha.
-    parallel_for_coords(
-        image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = 255; }, 30);
+    parallel_for_coords({30}, image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = 255; });
   } else if (image.zsize() == 1) {
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          image[yx][1] = image[yx][0];
-          image[yx][2] = image[yx][0];
-          image[yx][3] = 255;
-        },
-        3);
+    parallel_for_coords({3}, image.dims(), [&](const Vec2<int>& yx) {
+      image[yx][1] = image[yx][0];
+      image[yx][2] = image[yx][0];
+      image[yx][3] = 255;
+    });
   }
   image.set_zsize(3);
 }
@@ -1087,15 +1068,12 @@ void do_noalpha() {
 void do_undoalpha() {
   if (image.zsize() == 4) {
     // Composite any transparent color above current gcolor.  Assume premultiplied alpha.
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          for_int(z, 3) {
-            // C_new = C_f * alpha_f + C_b * alpha_b * (1 - alpha_f)
-            image[yx][z] = clamp_to_uint8(int(image[yx][z] + (1.f - image[yx][3] / 255.f) * gcolor[z]));
-          }
-        },
-        30);
+    parallel_for_coords({30}, image.dims(), [&](const Vec2<int>& yx) {
+      for_int(z, 3) {
+        // C_new = C_f * alpha_f + C_b * alpha_b * (1 - alpha_f)
+        image[yx][z] = clamp_to_uint8(int(image[yx][z] + (1.f - image[yx][3] / 255.f) * gcolor[z]));
+      }
+    });
   }
   do_noalpha();
 }
@@ -1108,13 +1086,10 @@ void do_readalpha(Args& args) {
   }
   Image ialpha(filename);
   assertx(same_size(ialpha, image));
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        image[yx][3] = ialpha[yx][0];
-        for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // premultiplied alpha
-      },
-      10);
+  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+    image[yx][3] = ialpha[yx][0];
+    for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // premultiplied alpha
+  });
 }
 
 void do_setalpha(Args& args) {
@@ -1124,14 +1099,12 @@ void do_setalpha(Args& args) {
     assertx(image.zsize() == 3);
     image.set_zsize(4);
   }
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = uint8_t(av); }, 1);
+  parallel_for_coords({1}, image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = uint8_t(av); });
 }
 
 void do_getalpha() {
   assertx(image.zsize() == 4);
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { image[yx] = Pixel::gray(image[yx][3]); }, 2);
+  parallel_for_coords({2}, image.dims(), [&](const Vec2<int>& yx) { image[yx] = Pixel::gray(image[yx][3]); });
   image.set_zsize(3);
 }
 
@@ -1140,8 +1113,7 @@ void do_matchtoalpha() {
     assertx(image.zsize() == 3);
     image.set_zsize(4);
   }
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = image[yx] == gcolor ? 255 : 0; }, 2);
+  parallel_for_coords({2}, image.dims(), [&](const Vec2<int>& yx) { image[yx][3] = image[yx] == gcolor ? 255 : 0; });
 }
 
 // *** quadpullpush
@@ -1478,15 +1450,12 @@ void do_cycle(Args& args) {
 
 void do_transf(Args& args) {
   Frame frame = FrameIO::parse_frame(args.get_string());
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        Point p{};
-        for_int(z, image.zsize()) p[z] = image[yx][z] / 255.f;
-        p *= frame;
-        for_int(z, image.zsize()) image[yx][z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);
-      },
-      30);
+  parallel_for_coords({30}, image.dims(), [&](const Vec2<int>& yx) {
+    Point p{};
+    for_int(z, image.zsize()) p[z] = image[yx][z] / 255.f;
+    p *= frame;
+    for_int(z, image.zsize()) image[yx][z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);
+  });
 }
 
 void do_composite(Args& args) {
@@ -1656,16 +1625,13 @@ void do_homogenize(Args& args) {
       for (const auto& yx : range(image.dims()))
         for_int(ky, n) for_int(kx, n) ar[ky][kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * image[yx][z];
       ar[0][0] = 0.0;  // do not project out the DC term
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) {
-            double oldval = image[yx][z];
-            double fitval = 0.;
-            for_int(ky, n) for_int(kx, n) fitval += ar[ky][kx] * table[0][ky][yx[0]] * table[1][kx][yx[1]];
-            double newval = oldval - fitval;
-            image[yx][z] = clamp_to_uint8(int(newval + .5));
-          },
-          int64_t{n} * n * 4);
+      parallel_for_coords({uint64_t(n * n * 4)}, image.dims(), [&](const Vec2<int>& yx) {
+        double oldval = image[yx][z];
+        double fitval = 0.;
+        for_int(ky, n) for_int(kx, n) fitval += ar[ky][kx] * table[0][ky][yx[0]] * table[1][kx][yx[1]];
+        double newval = oldval - fitval;
+        image[yx][z] = clamp_to_uint8(int(newval + .5));
+      });
     }
   } else {  // version with alpha-channel cropping
     const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
@@ -1710,16 +1676,13 @@ void do_homogenize(Args& args) {
       }
       Array<double> arn = mat_mul(invbb, bx);  // (B * B^T)^-1 * B * x
       double dc = bx[0] / bb[0][0];            // DC term
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) {
-            if (!image[yx][3] && !modify_unselected_too) return;
-            double v = image[yx][z];
-            for_int(ky, n) for_int(kx, n) v -= table[0][ky][yx[0]] * table[1][kx][yx[1]] * arn[ky * n + kx];
-            v += dc;  // reintroduce DC term
-            image[yx][z] = clamp_to_uint8(int(v + .5));
-          },
-          int64_t{n} * n * 3);
+      parallel_for_coords({uint64_t(n * n * 3)}, image.dims(), [&](const Vec2<int>& yx) {
+        if (!image[yx][3] && !modify_unselected_too) return;
+        double v = image[yx][z];
+        for_int(ky, n) for_int(kx, n) v -= table[0][ky][yx[0]] * table[1][kx][yx[1]] * arn[ky * n + kx];
+        v += dc;  // reintroduce DC term
+        image[yx][z] = clamp_to_uint8(int(v + .5));
+      });
     }
   }
 }
@@ -1747,55 +1710,52 @@ void do_superresolution(Args& args) {
   Image oimage = std::move(image);
   image = scale(oimage, twice(fac), g_filterbs, &gcolor);
   // Now add super-res adaptive sharpening.
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        auto fyx = (convert<float>(yx) + .5f) * convert<float>(oimage.dims()) / convert<float>(image.dims()) - .5f;
-        // Get regularly magnified pixel.
-        Vector4 pix = to_Vector4_raw(image[yx]);
-        // Find continuous neighborhood min/max statistics on luminance.
-        float lmin = BIGFLOAT, lmax = -BIGFLOAT;
-        Vec2<int> iyx = convert<int>(floor(fyx));
-        // Get target sample itself.
-        float slum = to_YIQ(pix)[0];  // for bilinear, =bilinear(mlum, fy, fx);
-        const auto func_minmax = [&](float v) {
-          if (v < lmin) lmin = v;
-          if (v > lmax) lmax = v;
-        };
-        func_minmax(slum);
-        // The next calls are highly unoptimized!  Ideally, the bounds checking should happen only once,
-        //  and source samples should be re-used between calls.
-        // 4 exact nearest pixels
-        func_minmax(mlum.inside(iyx + V(0, 0), k_reflected2));
-        func_minmax(mlum.inside(iyx + V(0, 1), k_reflected2));
-        func_minmax(mlum.inside(iyx + V(1, 0), k_reflected2));
-        func_minmax(mlum.inside(iyx + V(1, 1), k_reflected2));
-        // 4 bilinear samples
-        func_minmax(sample_grid(mlum, fyx + V(-1.f, -1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
-        // 8 linear samples (naively use expensive bilinear function)
-        func_minmax(sample_grid(mlum, fyx + V(-1.f, +0.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, +0.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+0.f, -1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+0.f, +1.f), fb_bilinear2));
-        func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
-        float delta = lmax - lmin;
-        const float threshold = .1f * 255.f;  // 1e-20f is sharpest
-        if (delta >= threshold) {
-          float lmid = (lmin + lmax) * .5f;
-          const float C = 1.0f * 4.f;
-          Vector4 yiq = to_YIQ(pix);
-          yiq[0] += C * (slum - lmin) * (lmax - slum) * (slum - lmid) / (delta * delta);
-          pix = general_clamp(to_RGB(yiq), Vector4(0.f), Vector4(255.99f));
-          image[yx] = pix.raw_pixel();
-        }
-      },
-      1000);
+  parallel_for_coords({1000}, image.dims(), [&](const Vec2<int>& yx) {
+    auto fyx = (convert<float>(yx) + .5f) * convert<float>(oimage.dims()) / convert<float>(image.dims()) - .5f;
+    // Get regularly magnified pixel.
+    Vector4 pix = to_Vector4_raw(image[yx]);
+    // Find continuous neighborhood min/max statistics on luminance.
+    float lmin = BIGFLOAT, lmax = -BIGFLOAT;
+    Vec2<int> iyx = convert<int>(floor(fyx));
+    // Get target sample itself.
+    float slum = to_YIQ(pix)[0];  // for bilinear, =bilinear(mlum, fy, fx);
+    const auto func_minmax = [&](float v) {
+      if (v < lmin) lmin = v;
+      if (v > lmax) lmax = v;
+    };
+    func_minmax(slum);
+    // The next calls are highly unoptimized!  Ideally, the bounds checking should happen only once,
+    //  and source samples should be re-used between calls.
+    // 4 exact nearest pixels
+    func_minmax(mlum.inside(iyx + V(0, 0), k_reflected2));
+    func_minmax(mlum.inside(iyx + V(0, 1), k_reflected2));
+    func_minmax(mlum.inside(iyx + V(1, 0), k_reflected2));
+    func_minmax(mlum.inside(iyx + V(1, 1), k_reflected2));
+    // 4 bilinear samples
+    func_minmax(sample_grid(mlum, fyx + V(-1.f, -1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
+    // 8 linear samples (naively use expensive bilinear function)
+    func_minmax(sample_grid(mlum, fyx + V(-1.f, +0.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, +0.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+0.f, -1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+0.f, +1.f), fb_bilinear2));
+    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
+    float delta = lmax - lmin;
+    const float threshold = .1f * 255.f;  // 1e-20f is sharpest
+    if (delta >= threshold) {
+      float lmid = (lmin + lmax) * .5f;
+      const float C = 1.0f * 4.f;
+      Vector4 yiq = to_YIQ(pix);
+      yiq[0] += C * (slum - lmin) * (lmax - slum) * (slum - lmid) / (delta * delta);
+      pix = general_clamp(to_RGB(yiq), Vector4(0.f), Vector4(255.99f));
+      image[yx] = pix.raw_pixel();
+    }
+  });
 }
 
 void do_istoroidal() {
@@ -1864,8 +1824,7 @@ void do_gdtoroidal() {
   // e.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
   assertx(image.zsize() == 3);
   Grid<2, Vector4> grid_orig(image.dims());
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); }, 6);
+  parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
   Multigrid<2, Vector4, MultigridPeriodicAll<2>> multigrid(image.dims());
   if (0) {  // solve for color values
     multigrid.initial_estimate().assign(grid_orig);
@@ -1874,46 +1833,41 @@ void do_gdtoroidal() {
     // To create a toroidal image, we compute the image Laplacian using reflected boundary conditions
     //  and find the image whose periodic-boundary Laplacian matches it.
     const Vec2<Bndrule> bndrules = twice(Bndrule::reflected);
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          Vector4 vrhs{};
-          vrhs += grid_orig.inside(yx + V(-1, 0), bndrules) - grid_orig[yx];
-          vrhs += grid_orig.inside(yx + V(+1, 0), bndrules) - grid_orig[yx];
-          vrhs += grid_orig.inside(yx + V(0, -1), bndrules) - grid_orig[yx];
-          vrhs += grid_orig.inside(yx + V(0, +1), bndrules) - grid_orig[yx];
-          multigrid.rhs()[yx] = vrhs;
-        },
-        50);
+    parallel_for_coords({50}, image.dims(), [&](const Vec2<int>& yx) {
+      Vector4 vrhs{};
+      vrhs += grid_orig.inside(yx + V(-1, 0), bndrules) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(+1, 0), bndrules) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(0, -1), bndrules) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(0, +1), bndrules) - grid_orig[yx];
+      multigrid.rhs()[yx] = vrhs;
+    });
     if (0) multigrid.set_verbose(true);
     multigrid.solve();
     auto grid_result = multigrid.result();
-    parallel_for_coords(
-        image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid_result[yx].pixel(); }, 6);
+    parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid_result[yx].pixel(); });
   } else {  // instead solve for color value offsets
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     // To create a toroidal image, we compute the sparse change in Laplacian across the periodic boundaries.
     const Vec2<Bndrule> bndrules = twice(Bndrule::periodic);
     fill(multigrid.rhs(), Vector4(0.f));
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {  // (highly inefficient implementation)
-          Vector4 vrhs{};
-          for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
-            auto yxn = yx + yxd;
-            if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
-            assertx(grid_orig.map_inside(yxn, bndrules));
-            vrhs += (grid_orig[yx] - grid_orig[yxn]);
-          }
-          multigrid.rhs()[yx] = vrhs;
-        },
-        50);
+    parallel_for_coords({50}, image.dims(), [&](const Vec2<int>& yx) {
+      // (Highly inefficient implementation.)
+      Vector4 vrhs{};
+      for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
+        auto yxn = yx + yxd;
+        if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
+        assertx(grid_orig.map_inside(yxn, bndrules));
+        vrhs += (grid_orig[yx] - grid_orig[yxn]);
+      }
+      multigrid.rhs()[yx] = vrhs;
+    });
     if (0) multigrid.set_verbose(true);
     multigrid.solve();
     auto grid_result = multigrid.result();
-    parallel_for_coords(
-        image.dims(), [&](const Vec2<int>& yx) { image[yx] = (grid_orig[yx] + grid_result[yx]).pixel(); }, 6);
+    parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) {  //
+      image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();
+    });
   }
 }
 
@@ -1923,29 +1877,24 @@ void do_gradientsharpen(Args& args) {
   float screening_weight = 1.f;
   assertx(image.zsize() == 3);
   Grid<2, Vector4> grid_orig(image.dims());
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); }, 6);
+  parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
   Multigrid<2, Vector4> multigrid(image.dims());
   multigrid.initial_estimate().assign(grid_orig);
   multigrid.set_desired_mean(mean(grid_orig));
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        const int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
-        Vector4 vrhs = -screening_weight * grid_orig[yx];
-        if (yx[0] > 0) vrhs += (grid_orig[yx + V(-1, 0)] - grid_orig[yx]) * gradient_sharpening;
-        if (yx[0] < ny - 1) vrhs += (grid_orig[yx + V(+1, 0)] - grid_orig[yx]) * gradient_sharpening;
-        if (yx[1] > 0) vrhs += (grid_orig[yx + V(0, -1)] - grid_orig[yx]) * gradient_sharpening;
-        if (yx[1] < nx - 1) vrhs += (grid_orig[yx + V(0, +1)] - grid_orig[yx]) * gradient_sharpening;
-        multigrid.rhs()[yx] = vrhs;
-      },
-      30);
+  parallel_for_coords({30}, image.dims(), [&](const Vec2<int>& yx) {
+    const int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
+    Vector4 vrhs = -screening_weight * grid_orig[yx];
+    if (yx[0] > 0) vrhs += (grid_orig[yx + V(-1, 0)] - grid_orig[yx]) * gradient_sharpening;
+    if (yx[0] < ny - 1) vrhs += (grid_orig[yx + V(+1, 0)] - grid_orig[yx]) * gradient_sharpening;
+    if (yx[1] > 0) vrhs += (grid_orig[yx + V(0, -1)] - grid_orig[yx]) * gradient_sharpening;
+    if (yx[1] < nx - 1) vrhs += (grid_orig[yx + V(0, +1)] - grid_orig[yx]) * gradient_sharpening;
+    multigrid.rhs()[yx] = vrhs;
+  });
   if (0) multigrid.set_verbose(true);
   multigrid.set_screening_weight(screening_weight);
   multigrid.solve();
   auto grid_result = multigrid.result();
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid_result[yx].pixel(); }, 6);
+  parallel_for_coords({6}, image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid_result[yx].pixel(); });
 }
 
 void do_gdfill() {
@@ -1963,76 +1912,65 @@ void do_gdfill() {
     vmean /= vmean[3];  // SHOW(vmean);
   }
   Grid<2, Vector4> grid_orig(image.dims());
-  parallel_for_coords(
-      image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = masked(yx) ? vmean : Vector4(image[yx]); }, 10);
+  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {  //
+    grid_orig[yx] = masked(yx) ? vmean : Vector4(image[yx]);
+  });
   Multigrid<2, Vector4> multigrid(image.dims());
   if (0) {  // solve for color values
     multigrid.initial_estimate().assign(grid_orig);
     multigrid.set_desired_mean(vmean);
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          const int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
-          Vector4 vrhs = -screening_weight * grid_orig[yx];
-          if (!masked(yx)) {
-            if (yx[0] > 0) {
-              auto p = yx + V(-1, 0);
-              if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
-            }
-            if (yx[0] < ny - 1) {
-              auto p = yx + V(+1, 0);
-              if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
-            }
-            if (yx[1] > 0) {
-              auto p = yx + V(0, -1);
-              if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
-            }
-            if (yx[1] < nx - 1) {
-              auto p = yx + V(0, +1);
-              if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
-            }
-          }
-          multigrid.rhs()[yx] = vrhs;
-        },
-        50);
+    parallel_for_coords({50}, image.dims(), [&](const Vec2<int>& yx) {
+      const int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
+      Vector4 vrhs = -screening_weight * grid_orig[yx];
+      if (!masked(yx)) {
+        if (yx[0] > 0) {
+          auto p = yx + V(-1, 0);
+          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+        }
+        if (yx[0] < ny - 1) {
+          auto p = yx + V(+1, 0);
+          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+        }
+        if (yx[1] > 0) {
+          auto p = yx + V(0, -1);
+          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+        }
+        if (yx[1] < nx - 1) {
+          auto p = yx + V(0, +1);
+          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+        }
+      }
+      multigrid.rhs()[yx] = vrhs;
+    });
     if (1) multigrid.set_verbose(true);
     multigrid.set_screening_weight(screening_weight);
     multigrid.set_num_vcycles(1);  // default 5, then was 2
     multigrid.solve();
     auto grid_result = multigrid.result();
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          image[yx] = grid_result[yx].pixel();  // alpha mask is overwritten with 1
-        },
-        10);
+    parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+      image[yx] = grid_result[yx].pixel();  // alpha mask is overwritten with 1
+    });
   } else {  // instead solve for offsets; rhs becomes sparse; so does residual; TODO: perhaps avoid storing residual
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          Vector4 vrhs{};
-          for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
-            auto yxn = yx + yxd;
-            if (!grid_orig.ok(yxn)) continue;
-            if (masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
-          }
-          multigrid.rhs()[yx] = vrhs;
-        },
-        100);
+    parallel_for_coords({100}, image.dims(), [&](const Vec2<int>& yx) {
+      Vector4 vrhs{};
+      for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
+        auto yxn = yx + yxd;
+        if (!grid_orig.ok(yxn)) continue;
+        if (masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
+      }
+      multigrid.rhs()[yx] = vrhs;
+    });
     if (1) multigrid.set_verbose(true);
     multigrid.set_screening_weight(screening_weight);
     multigrid.set_num_vcycles(1);
     multigrid.solve();
     auto grid_result = multigrid.result();
     for_coords(grid_result.dims(), [&](const Vec2<int>& yx) { HH_SSTAT(Sgrid_result0, grid_result[yx][0]); });
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // alpha mask is overwritten with 1
-        },
-        10);
+    parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+      image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // alpha mask is overwritten with 1
+    });
   }
   image.set_zsize(3);  // remove alpha channel
 }
@@ -2289,21 +2227,15 @@ void do_procedure(Args& args) {
     assertx(image.size() && image.xsize() == 4 * image.ysize());
     Image timage(image);
     image.init(twice(timage.ysize()));
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          image[yx] = timage[yx[0] < timage.ysize() ? yx : image.dims() - 1 - yx + V(0, timage.xsize() / 2)];
-        },
-        2);
+    parallel_for_coords({2}, image.dims(), [&](const Vec2<int>& yx) {
+      image[yx] = timage[yx[0] < timage.ysize() ? yx : image.dims() - 1 - yx + V(0, timage.xsize() / 2)];
+    });
   } else if (name == "premultiply_alpha") {
     assertx(image.zsize() == 4);
-    parallel_for_coords(
-        image.dims(),
-        [&](const Vec2<int>& yx) {
-          auto alpha = image[yx][3];
-          for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * alpha / 255.f + .5f);
-        },
-        10);
+    parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+      auto alpha = image[yx][3];
+      for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * alpha / 255.f + .5f);
+    });
   } else if (name == "interleavecols") {
     Image image1(image);
     Image image2(args.get_filename());
@@ -2479,12 +2411,9 @@ void do_procedure(Args& args) {
     const Pixel period_zero(128, 128, 255, 255);
     {
       Image image_initial_mask(image.dims(), Pixel::white());
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) {
-            if (image[yx][0] >= cost_threshold) image_initial_mask[yx] = Pixel::black();
-          },
-          8);
+      parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {
+        if (image[yx][0] >= cost_threshold) image_initial_mask[yx] = Pixel::black();
+      });
       image_initial_mask.write_file("mask_initial.png");
     }
     if (1) {  // check for pixels that are static (period0) but have nonzero temporal cost
@@ -2496,20 +2425,17 @@ void do_procedure(Args& args) {
     Matrix<Vec2<int>> mvec(image.dims());
     {  // compute vectors to closest pixel in the mask
       const auto& undefined_dist = mvec.dims();
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) { mvec[yx] = image[yx][0] >= cost_threshold ? V(0, 0) : undefined_dist; }, 8);
+      parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {
+        mvec[yx] = image[yx][0] >= cost_threshold ? V(0, 0) : undefined_dist;
+      });
       euclidean_distance_map(mvec);
     }
     {  // dilate the mask by a radius that is the square-root of radius2_threshold
       Image image_dilated(image.dims());
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) {
-            bool in_mask = mag2(mvec[yx]) <= radius2_threshold;
-            image_dilated[yx] = Pixel::gray(in_mask ? 0 : 255);
-          },
-          8);
+      parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {
+        bool in_mask = mag2(mvec[yx]) <= radius2_threshold;
+        image_dilated[yx] = Pixel::gray(in_mask ? 0 : 255);
+      });
       image_dilated.write_file("mask_dilated.png");
     }
     Matrix<bool> visited(image.dims(), false);
@@ -2538,20 +2464,18 @@ void do_procedure(Args& args) {
     }
     {
       Image image_bfs(image.dims());
-      parallel_for_coords(
-          image.dims(), [&](const Vec2<int>& yx) { image_bfs[yx] = Pixel::gray(visited[yx] ? 0 : 255); }, 8);
+      parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {  //
+        image_bfs[yx] = Pixel::gray(visited[yx] ? 0 : 255);
+      });
       image_bfs.write_file("mask_bfs.png");
     }
     {  // Let the mask be a dilation unioned with the bfs result but limited to a maximum radius
       Image image_final(image.dims());
-      parallel_for_coords(
-          image.dims(),
-          [&](const Vec2<int>& yx) {
-            int radius2 = narrow_cast<int>(mag2(mvec[yx]));
-            bool in_mask = (radius2 <= radius2_threshold || (visited[yx] && radius2 <= radius2_max));
-            image_final[yx] = Pixel::gray(in_mask ? 0 : 255);
-          },
-          8);
+      parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {
+        int radius2 = narrow_cast<int>(mag2(mvec[yx]));
+        bool in_mask = (radius2 <= radius2_threshold || (visited[yx] && radius2 <= radius2_max));
+        image_final[yx] = Pixel::gray(in_mask ? 0 : 255);
+      });
       image_final.write_file("mask_final.png");
     }
     nooutput = true;
@@ -2724,12 +2648,9 @@ void do_diff(Args& args) {
   Image image2(filename);
   assertx(same_size(image, image2) && image.zsize() == image2.zsize());
   const int nz = image.zsize();
-  parallel_for_coords(
-      image.dims(),
-      [&](const Vec2<int>& yx) {
-        for_int(z, nz) image[yx][z] = clamp_to_uint8(128 + int(image[yx][z]) - int(image2[yx][z]));
-      },
-      20);
+  parallel_for_coords({20}, image.dims(), [&](const Vec2<int>& yx) {
+    for_int(z, nz) image[yx][z] = clamp_to_uint8(128 + int(image[yx][z]) - int(image2[yx][z]));
+  });
 }
 
 void do_maxdiff(Args& args) {
@@ -2907,35 +2828,30 @@ inline Vector4 LAB_to_RGB(const Vector4& pv) {
 // Color-space conversion of an image.
 auto convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
   Matrix<Vector4> mat_LAB(mat_RGB.dims());
-  parallel_for_coords(
-      mat_RGB.dims(), [&](const Vec2<int>& yx) { mat_LAB[yx] = RGB_to_LAB(mat_RGB[yx]); }, 50);
+  parallel_for_coords({50}, mat_RGB.dims(), [&](const Vec2<int>& yx) { mat_LAB[yx] = RGB_to_LAB(mat_RGB[yx]); });
   return mat_LAB;
 }
 
 // Color-space conversion of an image.
 auto convert_to_RGB(CMatrixView<Vector4> mat_LAB) {
   Matrix<Vector4> mat_RGB(mat_LAB.dims());
-  parallel_for_coords(
-      mat_LAB.dims(), [&](const Vec2<int>& yx) { mat_RGB[yx] = LAB_to_RGB(mat_LAB[yx]); }, 50);
+  parallel_for_coords({50}, mat_LAB.dims(), [&](const Vec2<int>& yx) { mat_RGB[yx] = LAB_to_RGB(mat_LAB[yx]); });
   return mat_RGB;
 }
 
 auto convert_image_mat(CMatrixView<Pixel> im) {
   Matrix<Vector4> mat(im.dims());
-  parallel_for_coords(
-      im.dims(),
-      [&](const Vec2<int>& yx) {
-        mat[yx] = to_Vector4_raw(im[yx].data());  // range [0.f, 255.f]
-      },
-      5);
+  parallel_for_coords({5}, im.dims(), [&](const Vec2<int>& yx) {
+    mat[yx] = to_Vector4_raw(im[yx].data());  // range [0.f, 255.f]
+  });
   return mat;
 }
 
 auto convert_mat_image(CMatrixView<Vector4> mat) {
   Matrix<Pixel> im(mat.dims());
-  parallel_for_coords(
-      mat.dims(),
-      [&](const Vec2<int>& yx) { im[yx] = general_clamp(mat[yx], Vector4(0.f), Vector4(255.99f)).raw_pixel(); }, 5);
+  parallel_for_coords({5}, mat.dims(), [&](const Vec2<int>& yx) {
+    im[yx] = general_clamp(mat[yx], Vector4(0.f), Vector4(255.99f)).raw_pixel();
+  });
   return im;
 }
 
@@ -2956,38 +2872,29 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
   }
   //
   if (0) {  // slow implementation
-    parallel_for_coords(
-        mat_C.dims(),
-        [&](const Vec2<int>& yx) {
-          const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;
-          Vector4 sum{};
-          for_int(iy, kn) for_int(ix, kn) {
-            sum += (fkernel[iy] * fkernel[ix]) * mat_F.inside(yxf0 + V(iy, ix), k_reflected2);
-          }
-          mat_C[yx] = sum;
-        },
-        int64_t{kn} * kn * 10);
+    parallel_for_coords({uint64_t(kn * kn * 10)}, mat_C.dims(), [&](const Vec2<int>& yx) {
+      const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;
+      Vector4 sum{};
+      for_int(iy, kn) for_int(ix, kn) {
+        sum += (fkernel[iy] * fkernel[ix]) * mat_F.inside(yxf0 + V(iy, ix), k_reflected2);
+      }
+      mat_C[yx] = sum;
+    });
   } else {  // faster: first downsample horizontally, then vertically
     // Possible optimization: lift boundary testing outside of loops.
     Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // non-square
-    parallel_for_coords(
-        mtmp.dims(),
-        [&](const Vec2<int>& yx) {
-          int xf0 = yx[1] * 2 - kn / 2 + 1;
-          Vector4 sum{};
-          for_int(ix, kn) sum += fkernel[ix] * mat_F.inside(V(yx[0], xf0 + ix), k_reflected2);
-          mtmp[yx] = sum;
-        },
-        int64_t{kn} * 8);
-    parallel_for_coords(
-        mat_C.dims(),
-        [&](const Vec2<int>& yx) {
-          int yf0 = yx[0] * 2 - kn / 2 + 1;
-          Vector4 sum{};
-          for_int(iy, kn) sum += fkernel[iy] * mtmp.inside(V(yf0 + iy, yx[1]), k_reflected2);
-          mat_C[yx] = sum;
-        },
-        int64_t{kn} * 8);
+    parallel_for_coords({uint64_t(kn * 8)}, mtmp.dims(), [&](const Vec2<int>& yx) {
+      int xf0 = yx[1] * 2 - kn / 2 + 1;
+      Vector4 sum{};
+      for_int(ix, kn) sum += fkernel[ix] * mat_F.inside(V(yx[0], xf0 + ix), k_reflected2);
+      mtmp[yx] = sum;
+    });
+    parallel_for_coords({uint64_t(kn * 8)}, mat_C.dims(), [&](const Vec2<int>& yx) {
+      int yf0 = yx[0] * 2 - kn / 2 + 1;
+      Vector4 sum{};
+      for_int(iy, kn) sum += fkernel[iy] * mtmp.inside(V(yf0 + iy, yx[1]), k_reflected2);
+      mat_C[yx] = sum;
+    });
   }
   return mat_C;
 }
@@ -3010,17 +2917,14 @@ auto upsample_image(CMatrixView<Vector4> mat_C) {
   fkernels[0] = fkernel;
   fkernels[1] = reverse(clone(fkernel));
   // Possible optimization: lift boundary testing outside of loops.
-  parallel_for_coords(
-      mat_F.dims(),
-      [&](const Vec2<int>& yx) {
-        const Vec2<int> yxc = (yx + 1) / 2, yxodd = (yx + 1) - (yxc * 2), yxc0 = yxc - kn / 2;
-        Vector4 sum{};
-        for_int(iy, kn) for_int(ix, kn) {
-          sum += (fkernels[yxodd[0]][iy] * fkernels[yxodd[1]][ix]) * mat_C.inside(yxc0 + V(iy, ix), k_reflected2);
-        }
-        mat_F[yx] = sum;
-      },
-      int64_t{kn} * kn * 10);
+  parallel_for_coords({uint64_t(kn * kn * 10)}, mat_F.dims(), [&](const Vec2<int>& yx) {
+    const Vec2<int> yxc = (yx + 1) / 2, yxodd = (yx + 1) - (yxc * 2), yxc0 = yxc - kn / 2;
+    Vector4 sum{};
+    for_int(iy, kn) for_int(ix, kn) {
+      sum += (fkernels[yxodd[0]][iy] * fkernels[yxodd[1]][ix]) * mat_C.inside(yxc0 + V(iy, ix), k_reflected2);
+    }
+    mat_F[yx] = sum;
+  });
   return mat_F;
 }
 
@@ -3062,74 +2966,71 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
     if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
   }
   const bool optimized = true;
-  parallel_for_each(
-      range(mat_s.ysize()),
-      [&](const int y) {
-        Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
-        Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
-        if (optimized) {
-          // HH_ATIMER("___rows");
-          fill(fscolsum, Vector4{});
-          fill(fscolsum2, Vector4{});
-          fill(fccolsum, Vector4{});
-          fill(fccolsum2, Vector4{});
-          for_int(iy, window_diam) {
-            float w = fwindow[iy];
-            int yy = y - window_radius + iy;
-            assertx(map_boundaryrule_1D(yy, mat_s.ysize(), k_reflected));
-            for_int(x, mat_s.xsize()) {
-              Vector4 sv = mat_s[yy][x];
-              fscolsum[x] += w * sv;
-              fscolsum2[x] += w * square(sv);
-              Vector4 cv = mat_c[yy][x];
-              fccolsum[x] += w * cv;
-              fccolsum2[x] += w * square(cv);
-            }
-          }
-        }
-        // HH_ATIMER("___rest");
+  parallel_for_each({uint64_t(mat_s.xsize() * 2 * window_radius * 20)}, range(mat_s.ysize()), [&](const int y) {
+    Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
+    Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
+    if (optimized) {
+      // HH_ATIMER("___rows");
+      fill(fscolsum, Vector4{});
+      fill(fscolsum2, Vector4{});
+      fill(fccolsum, Vector4{});
+      fill(fccolsum2, Vector4{});
+      for_int(iy, window_diam) {
+        float w = fwindow[iy];
+        int yy = y - window_radius + iy;
+        assertx(map_boundaryrule_1D(yy, mat_s.ysize(), k_reflected));
         for_int(x, mat_s.xsize()) {
-          Vector4 ssum{}, ssum2{};  // structure sum and sum squared
-          Vector4 csum{}, csum2{};  // color sum and sum squared
-          if (!optimized) {
-            // Gather window statistics in structure image (downsampled fine image).
-            for_int(iy, window_diam) for_int(ix, window_diam) {
-              Vector4 v = mat_s.inside(y - window_radius + iy, x - window_radius + ix, k_reflected);  // pixel val
-              float w = fwindow[iy] * fwindow[ix];                                                    // weight
-              ssum += w * v;
-              ssum2 += w * square(v);
-            }
-            // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); }  // note: LAB have broader range.
-            // Gather window statistics in color image (coarse image).
-            for_int(iy, window_diam) for_int(ix, window_diam) {
-              Vector4 v = mat_c.inside(y - window_radius + iy, x - window_radius + ix, k_reflected);  // pixel val
-              float w = fwindow[iy] * fwindow[ix];                                                    // weight
-              csum += w * v;
-              csum2 += w * square(v);
-            }
-          } else {
-            for_int(ix, window_diam) {
-              float w = fwindow[ix];
-              int xx = x - window_radius + ix;
-              bool b = map_boundaryrule_1D(xx, mat_s.xsize(), k_reflected);
-              ASSERTX(b);
-              ssum += w * fscolsum[xx];
-              ssum2 += w * fscolsum2[xx];
-              csum += w * fccolsum[xx];
-              csum2 += w * fccolsum2[xx];
-            }
-          }
-          Vector4 smean = ssum;
-          Vector4 ssdv = sqrt(max(ssum2 - square(ssum), minsvar));
-          Vector4 cmean = csum;
-          Vector4 csdv = sqrt(max(csum2 - square(csum), Vector4(0.f)));
-          Vector4 zscore = (mat_s[y][x] - smean) / ssdv;
-          mat_out[y][x] = cmean + zscore * csdv * zscore_scale;
-          if (use_lab) zscore = Vector4(zscore[0]);  // Z score based on luminance only
-          mat_zscore[y][x] = zscore * (255.0f / 6.0f);
+          Vector4 sv = mat_s[yy][x];
+          fscolsum[x] += w * sv;
+          fscolsum2[x] += w * square(sv);
+          Vector4 cv = mat_c[yy][x];
+          fccolsum[x] += w * cv;
+          fccolsum2[x] += w * square(cv);
         }
-      },
-      int64_t{mat_s.xsize()} * 2 * window_radius * 20);
+      }
+    }
+    // HH_ATIMER("___rest");
+    for_int(x, mat_s.xsize()) {
+      Vector4 ssum{}, ssum2{};  // structure sum and sum squared
+      Vector4 csum{}, csum2{};  // color sum and sum squared
+      if (!optimized) {
+        // Gather window statistics in structure image (downsampled fine image).
+        for_int(iy, window_diam) for_int(ix, window_diam) {
+          Vector4 v = mat_s.inside(y - window_radius + iy, x - window_radius + ix, k_reflected);  // pixel val
+          float w = fwindow[iy] * fwindow[ix];                                                    // weight
+          ssum += w * v;
+          ssum2 += w * square(v);
+        }
+        // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); }  // note: LAB have broader range.
+        // Gather window statistics in color image (coarse image).
+        for_int(iy, window_diam) for_int(ix, window_diam) {
+          Vector4 v = mat_c.inside(y - window_radius + iy, x - window_radius + ix, k_reflected);  // pixel val
+          float w = fwindow[iy] * fwindow[ix];                                                    // weight
+          csum += w * v;
+          csum2 += w * square(v);
+        }
+      } else {
+        for_int(ix, window_diam) {
+          float w = fwindow[ix];
+          int xx = x - window_radius + ix;
+          bool b = map_boundaryrule_1D(xx, mat_s.xsize(), k_reflected);
+          ASSERTX(b);
+          ssum += w * fscolsum[xx];
+          ssum2 += w * fscolsum2[xx];
+          csum += w * fccolsum[xx];
+          csum2 += w * fccolsum2[xx];
+        }
+      }
+      Vector4 smean = ssum;
+      Vector4 ssdv = sqrt(max(ssum2 - square(ssum), minsvar));
+      Vector4 cmean = csum;
+      Vector4 csdv = sqrt(max(csum2 - square(csum), Vector4(0.f)));
+      Vector4 zscore = (mat_s[y][x] - smean) / ssdv;
+      mat_out[y][x] = cmean + zscore * csdv * zscore_scale;
+      if (use_lab) zscore = Vector4(zscore[0]);  // Z score based on luminance only
+      mat_zscore[y][x] = zscore * (255.0f / 6.0f);
+    }
+  });
   if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
 
@@ -3154,33 +3055,30 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   assertw(use_lab);
   const int NCH = 3;
   for_int(ch, NCH) {
-    parallel_for_coords(
-        mat_s.dims(),
-        [&](const Vec2<int>& yx) {
-          ar.init(0);                      // (initially unsorted) pdf of color image window
-          float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
-          float scenterrank = 0.f;         // center pixel rank in structure image
-          for (const auto& iyx : range(twice(window_diam))) {
-            float w = fwindow[iyx[0]] * fwindow[iyx[1]];
-            float sv = mat_s.inside(yx - window_radius + iyx, k_reflected2)[ch];
-            float cv = mat_c.inside(yx - window_radius + iyx, k_reflected2)[ch];
-            if (sv < scenterv) scenterrank += w;
-            ar.push(ValueWeight{cv, w});
-          }
-          sort(ar);
-          float f = scenterrank;
-          float val = ar[square(window_diam) - 1].v;
-          for_int(idx, square(window_diam)) {
-            f -= ar[idx].w;
-            if (f <= 0.f) {
-              val = ar[idx].v;
-              break;
-            }
-          }
-          mat_out[yx][ch] = val;
-          mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
-        },
-        square(int64_t{window_diam}) * 20);
+    parallel_for_coords({square(uint64_t(window_diam)) * 20}, mat_s.dims(), [&](const Vec2<int>& yx) {
+      ar.init(0);                      // (initially unsorted) pdf of color image window
+      float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
+      float scenterrank = 0.f;         // center pixel rank in structure image
+      for (const auto& iyx : range(twice(window_diam))) {
+        float w = fwindow[iyx[0]] * fwindow[iyx[1]];
+        float sv = mat_s.inside(yx - window_radius + iyx, k_reflected2)[ch];
+        float cv = mat_c.inside(yx - window_radius + iyx, k_reflected2)[ch];
+        if (sv < scenterv) scenterrank += w;
+        ar.push(ValueWeight{cv, w});
+      }
+      sort(ar);
+      float f = scenterrank;
+      float val = ar[square(window_diam) - 1].v;
+      for_int(idx, square(window_diam)) {
+        f -= ar[idx].w;
+        if (f <= 0.f) {
+          val = ar[idx].v;
+          break;
+        }
+      }
+      mat_out[yx][ch] = val;
+      mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
+    });
   }
   if (use_lab) mat_out = convert_to_RGB(mat_out);
 }
@@ -3252,22 +3150,24 @@ void do_pyramid(Args& args) {
     for_intL(l, lc + 1, lf - iskipfinest + 1) {
       Matrix<Vector4> mat_tmp = upsample_image(mat_xfer);
       float alpha = (float(lf) - float(l)) / (float(lf) - float(lc));
-      parallel_for_coords(
-          mat_tmp.dims(),
-          [&](const Vec2<int>& yx) { mat_gaussianf[l][yx] += (mat_tmp[yx] - mat_gaussianf[l][yx]) * alpha; }, 4);
+      parallel_for_coords({4}, mat_tmp.dims(), [&](const Vec2<int>& yx) {
+        mat_gaussianf[l][yx] += (mat_tmp[yx] - mat_gaussianf[l][yx]) * alpha;
+      });
       if (l < lf - iskipfinest) mat_xfer = mat_tmp;
     }
   } else {  // Clipped Laplacian blending is best
     // Compute the coarse-scale difference image.
     Matrix<Vector4> mat_diff(imagec.dims());
-    parallel_for_coords(
-        imagec.dims(), [&](const Vec2<int>& yx) { mat_diff[yx] = mat_xfer[yx] - mat_gaussianf[lc][yx]; }, 2);
+    parallel_for_coords({2}, imagec.dims(), [&](const Vec2<int>& yx) {  //
+      mat_diff[yx] = mat_xfer[yx] - mat_gaussianf[lc][yx];
+    });
     HH_TIMER("__upsample_blend");
     for_intL(l, lc + 1, lf - iskipfinest + 1) {
       Matrix<Vector4> mat_tmp = upsample_image(mat_diff);
       float alpha = (float(lf) - float(l)) / (float(lf) - float(lc));
-      parallel_for_coords(
-          mat_tmp.dims(), [&](const Vec2<int>& yx) { mat_gaussianf[l][yx] += mat_tmp[yx] * alpha; }, 2);
+      parallel_for_coords({2}, mat_tmp.dims(), [&](const Vec2<int>& yx) {  //
+        mat_gaussianf[l][yx] += mat_tmp[yx] * alpha;
+      });
       if (l < lf - iskipfinest) mat_diff = mat_tmp;
     }
   }

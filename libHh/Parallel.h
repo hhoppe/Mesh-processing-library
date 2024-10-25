@@ -179,7 +179,7 @@ void parallel_for_chunk(const ParallelOptions& options, const Range& range, int 
 // See previous function.
 template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk) {
-  parallel_for_chunk(ParallelOptions{}, range, num_threads, process_chunk);
+  parallel_for_chunk({}, range, num_threads, process_chunk);
 }
 
 // Evaluates process_element(element) for each element in range by parallelizing across chunks of elements using
@@ -207,7 +207,7 @@ void parallel_for_each(const ParallelOptions& options, const Range& range, const
 // See previous function.
 template <typename Range, typename ProcessElement>
 void parallel_for_each(const Range& range, const ProcessElement& process_element) {
-  parallel_for_each(ParallelOptions{}, range, process_element);
+  parallel_for_each({}, range, process_element);
 }
 
 }  // namespace hh

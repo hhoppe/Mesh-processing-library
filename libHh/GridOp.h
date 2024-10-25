@@ -409,7 +409,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     ngrid[u] = v;
   };
   // TODO: use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.
-  if (ngrid.size() * 20 < k_omp_thresh) {
+  if (ngrid.size() * 20 < k_parallel_thresh) {
     for_coords(ndims, func);
   } else if (0) {
     parallel_for_coords(ndims, func);  // not so slow
@@ -750,7 +750,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     // Filterimage ~/data/image/lake.png -tile 10 10 -info -blur 1 -info | imgv
     // Filterimage ~/data/image/lake.png -tile 2 2 -info `perl -e 'binmode(STDOUT); for (1..10) { print " -blur 1"; }'` -info | imgv
     for_coordsL(ntimes<D>(0).with(d, 0), dims.with(d, ioutmin), func);
-    if (!parallel || ngrid.size() * nk * 5 < k_omp_thresh)
+    if (!parallel || ngrid.size() * nk * 5 < k_parallel_thresh)
       for_coordsL(ntimes<D>(0).with(d, ioutmin), dims.with(d, ioutmax), func_interior);
     else
       parallel_for_coordsL(ntimes<D>(0).with(d, ioutmin), dims.with(d, ioutmax), func_interior);

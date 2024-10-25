@@ -343,21 +343,13 @@ int main(int argc, const char** argv) {
             multigrid.rhs()[y][x] = float(vrhs);
           }
         });
-        double vsum = 0.f;
-        if (0) {
-          omp_parallel_for_T(reduction(+ : vsum), int, y, 0, dims[0]) for_int(x, dims[1]) {
-            vsum += grids[grid_labels[y][x]][y][x][c];
-          }
-        } else {
-          Array<double> sums(dims[0], 0.);
-          parallel_for_each(range(dims[0]), [&](const int y) {
-            double sum = 0.f;
-            for_int(x, dims[1]) sum += grids[grid_labels[y][x]][y][x][c];
-            sums[y] = sum;
-          });
-          vsum = sum(sums);
-        }
-        mean_orig = vsum * (1.f / grid_labels.size());
+        Array<double> sums(dims[0], 0.);
+        parallel_for_each(range(dims[0]), [&](const int y) {
+          double sum = 0.f;
+          for_int(x, dims[1]) sum += grids[grid_labels[y][x]][y][x][c];
+          sums[y] = sum;
+        });
+        mean_orig = sum(sums) / grid_labels.size();
       }
       multigrid.set_desired_mean(mean_orig);
       fill(multigrid.initial_estimate(), 0.f);

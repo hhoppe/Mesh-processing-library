@@ -21,7 +21,8 @@ CC = cl
 
 # cxxall += -EP  # Copies preprocessor output to standard output.
 
-ccommon += -openmp -EHsc
+# ccommon += -openmp
+ccommon += -EHsc
 cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
 cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
 

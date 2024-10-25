@@ -28,14 +28,16 @@ endif
 
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
-  build_configs ?= win mingw clang cygwin w32#  Default set for "make makeall" or "make CONFIG=all".
+  # We place "win" last so that the last-built libraries are for the default config.
+  build_configs ?= w32 mingw clang cygwin win#  Default set for "make makeall" or "make CONFIG=all".
   configs ?=       $(build_configs) $(nonworking_configs)
 else
   build_configs ?= unix
   configs ?=       unix
 endif
 # Set CONFIG to a default if not already set.
-export CONFIG ?= $(word 1,$(build_configs))
+# export CONFIG ?= $(word 1,$(build_configs))# Select the first config as default.
+export CONFIG ?= $(word $(words $(build_configs)),$(build_configs))# Select the last config as default.
 $(if $(filter $(CONFIG),all $(configs)),,$(error CONFIG=$(CONFIG) is not recognized among [all $(configs)]))
 
 win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1,)#  Hopefully equivalent to defined(_WIN32).
@@ -86,7 +88,6 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_HAVE_VIDEO_LOOP
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
-# cppinc += -DHH_NO_OPENMP
 # cppinc += -DHH_NO_SSE41
 # cppinc += -DHH_NO_IMAGE_WIC#  Option for CONFIG=win/w32/clang.
 # cppinc += -DHH_IMAGE_LIBS_TOO#  Option for CONFIG=win/w32/clang; default is to just use WIC.

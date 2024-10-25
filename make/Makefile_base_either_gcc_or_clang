@@ -18,7 +18,7 @@ machine_arch = -march=native#  Fastest code on the local machine.
 # For debugging, echo complete compiler commands:
 # ccommon += -v
 
-LDFLAGS += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
+# LDFLAGS += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
 
 ifeq ($(plain_compiler),)
   cwarnings = $(if $(ignore_compile_warnings:0=),,-Werror)
@@ -28,7 +28,7 @@ ifeq ($(plain_compiler),)
   cxxwarnings = -Woverloaded-virtual
   #  -Winline -Wconversion
   # (-pedantic-errors == -Werror -Wpedantic)
-  ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
+  # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
   ccommon += $(machine_arch) -ffast-math -mfpmath=sse
   ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
   cxxall += -fno-rtti

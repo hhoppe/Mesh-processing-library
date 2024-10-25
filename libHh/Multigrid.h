@@ -59,9 +59,8 @@ template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type
     Warning("Zero-size grid");
     return v;
   }
-  constexpr bool avoid_threadpool = false;
-  if (avoid_threadpool || g.size() * 1 < k_omp_thresh) {
-    omp_parallel_for_T(reduction(+ : v) if (g.size() * 1 >= k_omp_thresh), intptr_t, i, 0, size) { v += g.flat(i); }
+  if (g.size() * 1 < k_parallel_thresh) {
+    for (intptr_t i : range(size)) v += g.flat(i);
   } else {
     const int num_threads = get_max_threads();
     Array<MeanType> means(num_threads);
@@ -399,7 +398,7 @@ class Multigrid : noncopyable {
       grid_result.flat(i) = (vnei * wL - grid_rhs.flat(i)) * rwLnum;  // OPT:relax
     };
     for_int(iter, niter) {
-      if (0 || (grid_rhs.size() * 10 < k_omp_thresh && 1)) {
+      if (0 || (grid_rhs.size() * 10 < k_parallel_thresh && 1)) {
         if (1 && b_default_metric) {
           for_coordsL_interior(dims, ntimes<D>(0), dims, func_update, func_update_interior);
         } else {
@@ -442,7 +441,7 @@ class Multigrid : noncopyable {
         const int sync_rows = 1;  // rows per chunk to omit in first pass to avoid synchronization issues
         int dim0 = dims[0], d0chunk = max((dims[0] - 1) / nthreads + 1, sync_rows * 2);
         nthreads = (dim0 + d0chunk - 1) / d0chunk;
-        parallel_for_each(range(nthreads), [&](const int thread) {  // k_omp_thresh already tested above
+        parallel_for_each(range(nthreads), [&](const int thread) {  // k_parallel_thresh already tested above
           const Vec<int, D> uL = ntimes<D>(0).with(0, thread * d0chunk);
           const Vec<int, D> uU = dims.with(0, min((thread + 1) * d0chunk, dim0) - sync_rows);
           if (1 && b_default_metric) {
@@ -541,7 +540,7 @@ class Multigrid : noncopyable {
                            rwL4);  // OPT:relax2
     };
     for_int(iter, niter) {
-      if (0 || (grid_rhs.size() * 10 < k_omp_thresh && 1)) {  // simple sequential version
+      if (0 || (grid_rhs.size() * 10 < k_parallel_thresh && 1)) {  // simple sequential version
         for_int(y, ny) for_int(x, nx) func_update(y, x);
       } else {  // two-stage row-based synchronization to preserve determinism
         int nthreads = get_max_threads();

@@ -32,7 +32,6 @@
 // Code analysis:
 #pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
 #pragma warning(disable : 6286)   // <non-zero constant> || <expression> is always a non-zero constant.
-#pragma warning(disable : 6993)   // Code analysis ignores OpenMP constructs; analyzing single-threaded code.
 #pragma warning(disable : 26439)  // Declare a function noexcept.
 #pragma warning(disable : 26444)  // Avoid unnamed objects with custom construction and destruction.
 #pragma warning(disable : 26451)  // Using operator on a 4 byte value and then casting the result to a 8 byte value.
@@ -75,16 +74,12 @@
 #define HH_IGNORE(identifier) HH_EAT_SEMICOLON  // Macro used just for documentation; ignores `identifier`.
 
 // Safest to indirect once through these.  https://www.parashift.com/c++-faq-lite/macros-with-token-pasting.html
-#define HH_STR(e) #e
-#define HH_STR2(e) HH_STR(e)
-#define HH_CAT(a, b) a##b
-#define HH_CAT2(a, b) HH_CAT(a, b)
+#define HH_STR(e) #e                // Results in "e" (no variable expansion).
+#define HH_STR2(e) HH_STR(e)        // Macro-expands the token `e` before converting the expansion to a string.
+#define HH_CAT(a, b) a##b           // Results in `ab` (no variable expansion).
+#define HH_CAT2(a, b) HH_CAT(a, b)  // Macro-expands the tokens `a` and `b` before concatenating the expansions.
 
-#if defined(_MSC_VER)
-#define HH_PRAGMA(...) __pragma(__VA_ARGS__)  // _Pragma() causes compiler internal error with OpenMP in VS 2019.
-#else
 #define HH_PRAGMA(...) _Pragma(HH_STR(__VA_ARGS__))
-#endif
 
 #if defined(_MSC_VER)
 #define HH_POSIX(x) _##x  // On Windows, Unix functions like open(), read(), dup() have a leading underscore.

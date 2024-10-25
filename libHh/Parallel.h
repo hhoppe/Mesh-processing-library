@@ -11,35 +11,12 @@
 
 #include "libHh/Hh.h"
 
-// This macro can be set here, in Makefile, or at the top of any source file (if careful with precompiled headers).
-// #define HH_NO_OPENMP
-
 #if 0
 {
-  // To disable parallelism: OMP_NUM_THREADS=1
+  // To disable parallelism, set: OMP_NUM_THREADS=1  (admittedly a confusing variable because we do not use OpenMP)
   parallel_for_each(range(n), [&](const int i) { func(i); });
-  parallel_for_int(i, n) func(i);
-  cond_parallel_for_int(n * 1000, i, n) func_1000_instruction_cycles(i);  // only parallelize if beneficial
-  int sum = 0;
-  omp_parallel_for_T(reduction(+ : sum) if (ar.num() > k_omp_thresh), int, i, 0, ar.num()) sum += ar[i];
 }
 #endif
-
-#if !defined(_OPENMP) && !defined(HH_NO_OPENMP)  // If the compiler feature is absent,  we disable the parallel macros.
-#define HH_NO_OPENMP
-#endif
-
-#if !defined(HH_NO_OPENMP)
-#include <omp.h>  // OpenMP
-#endif
-
-// Notes on using OpenMP:
-// - Any OpenMP pragma must immediately precede the "for" statement, so we must embed the OpenMP pragma inside
-//    the omp_parallel_for_T() macro.
-// - With OpenMP, the "for" statement initializer may only declare a single variable, so we must evaluate the
-//    upper-bound ub earlier in the omp_parallel_for_T() macro.
-// - OpenMP version 2.0 (VS2010, 2013, 2015) only allows signed integral index types (version 3.0 allows unsigned
-//    types), so for now we must override the macros for parallel_for_size_t() on VS.
 
 namespace hh {
 
@@ -53,69 +30,9 @@ inline int get_max_threads() {
   return s_value;
 }
 
-#if defined(HH_NO_OPENMP)
-
-#define HH_PRAGMA_OMP(...)
-#define omp_parallel_for_T(omp_args, T, i, lb, ub) traditional_for_T(T, i, lb, ub)
-
-#else  // defined(HH_NO_OPENMP)
-
-#define HH_PRAGMA_OMP(...) HH_PRAGMA(omp __VA_ARGS__)
-
-#if defined(HH_DEBUG) && 1  // Allows more warnings but does not pre-evaluate the upper-bound ub.
-
-#define omp_parallel_for_T(omp_args, T, i, lb, ub) \
-    HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<(ub); i++)
-
-#else
-
-#if defined(__clang__)
-// for "add explicit braces to avoid dangling else"
-#define HH_OMP_PUSH_WARNINGS HH_PRAGMA(clang diagnostic push) HH_PRAGMA(clang diagnostic ignored "-Wdangling-else")
-#define HH_OMP_POP_WARNINGS HH_PRAGMA(clang diagnostic pop)
-#elif defined(__GNUC__)
-#define HH_OMP_PUSH_WARNINGS HH_PRAGMA(GCC diagnostic ignored "-Wparentheses")  // "suggest explicit braces"
-#define HH_OMP_POP_WARNINGS                     // With gcc, the pop would have to occur later outside the macro.
-#pragma GCC diagnostic ignored "-Wparentheses"  // Strange; this alone does not work in a precompiled header.
-#else
-#define HH_OMP_PUSH_WARNINGS
-#define HH_OMP_POP_WARNINGS
-#pragma warning(disable : 4701)  // "potentially uninitialized local variable 'xx' used".
-#endif
-#define omp_parallel_for_T(omp_args, T, i, lb, ub) omp_parallel_for_T_aux(omp_args, T, i, lb, ub, HH_UNIQUE_ID(u))
-#define omp_parallel_for_T_aux(omp_args, T, i, lb, ub, u)                                \
-  HH_OMP_PUSH_WARNINGS if (hh::details::false_capture<T> u{ub}) { HH_UNREACHABLE; } else \
-        HH_OMP_POP_WARNINGS HH_PRAGMA_OMP(parallel for omp_args) for (T i = lb; i<u(); i++)
-
-#endif  // defined(HH_DEBUG)
-
-#endif  // defined(HH_NO_OPENMP)
-
-// ***
-
-#define parallel_for_T(T, i, lb, ub) omp_parallel_for_T(, T, i, lb, ub)
-#define cond_parallel_for_T(c, T, i, lb, ub) omp_parallel_for_T(if ((c) >= hh::k_omp_thresh), T, i, lb, ub)
-
-#define parallel_for_int(i, ub) parallel_for_T(int, i, 0, ub)
-#define parallel_for_intL(i, lb, ub) parallel_for_T(int, i, lb, ub)
-#define parallel_for_size_t(i, ub) parallel_for_T(size_t, i, 0, ub)
-
-#define cond_parallel_for_int(c, i, ub) cond_parallel_for_T(c, int, i, 0, ub)
-#define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, size_t, i, 0, ub)
-
-constexpr uint64_t k_omp_thresh = 100'000;  // Number of instruction cycles above which to parallelize a loop.
-constexpr uint64_t k_omp_many_cycles_per_elem = 400;  // Num of instruction cycles for larger-overhead parallelism.
-constexpr int k_omp_min_iterations = 8;               // Sufficient number of loop iterations for parallelism.
-
-#if _OPENMP < 200805  // (2.0 == 200203; 3.0 == 200805; 4.0 == 201307; VS2015 is still 2.0).
-// Loop variable cannot be unsigned, so use a signed one instead.
-#undef parallel_for_size_t
-#define parallel_for_size_t(i, ub) parallel_for_T(intptr_t, i, 0, static_cast<intptr_t>(ub))
-#undef cond_parallel_for_size_t
-#define cond_parallel_for_size_t(c, i, ub) cond_parallel_for_T(c, intptr_t, i, 0, static_cast<intptr_t>(ub))
-#endif
-
-// ***
+constexpr uint64_t k_parallel_thresh = 100'000;  // Number of instruction cycles above which to parallelize a loop.
+constexpr uint64_t k_parallel_many_cycles_per_elem = 400;  // Num of instr. cycles for larger-overhead parallelism.
+constexpr int k_parallel_min_iterations = 8;               // Sufficient number of loop iterations for parallelism.
 
 namespace details {
 
@@ -210,8 +127,6 @@ template <typename Iterator> class Subrange {
 
 }  // namespace details
 
-constexpr uint64_t k_parallelism_always = k_omp_thresh;
-
 // Divide `range` into `num_threads` chunks (i.e., subranges) and call `process_chunk(thread_index, subrange)` in
 // parallel over the different chunks using a cached thread pool.  The range must support begin/end functions
 // returning random-access iterators.
@@ -223,7 +138,7 @@ constexpr uint64_t k_parallelism_always = k_omp_thresh;
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk,
-                        uint64_t estimated_cycles_per_element = k_parallelism_always) {
+                        uint64_t estimated_cycles_per_element = k_parallel_thresh) {
   assertx(num_threads >= 1);
   using std::begin, std::end, std::size;
   const auto begin_range = begin(range);
@@ -232,7 +147,7 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
   const auto num_elements = size(range);  // Note that num_elements be larger than size_t (e.g., uint64_t on win32).
   using Iterator = decltype(begin_range);
   const uint64_t total_num_cycles = num_elements * estimated_cycles_per_element;
-  const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_omp_thresh;
+  const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_parallel_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
       desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
   if (!thread_pool || thread_pool->already_active()) {
@@ -249,12 +164,7 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
       details::Subrange<Iterator> subrange(begin_chunk, end_chunk);
       process_chunk(thread_index, subrange);
     };
-    constexpr bool use_openmp = false;
-    if (use_openmp) {
-      omp_parallel_for_T(, int, thread_index, 0, num_threads) func(thread_index);
-    } else {
-      thread_pool->execute(num_threads, func);
-    }
+    thread_pool->execute(num_threads, func);
   }
 }
 
@@ -268,7 +178,7 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessElement>
 void parallel_for_each(const Range& range, const ProcessElement& process_element,
-                       uint64_t estimated_cycles_per_element = k_parallelism_always) {
+                       uint64_t estimated_cycles_per_element = k_parallel_thresh) {
   using std::size;
   const auto num_elements = size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   using NumElements = decltype(num_elements);

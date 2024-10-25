@@ -433,7 +433,7 @@ void global_project_aux() {
         ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[2], poly[3])), f));
       }
     }
-    PolygonFaceSpatial psp(nv < 10000 ? 15 : nv < 30000 ? 25 : 35);
+    PolygonFaceSpatial psp(nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35);
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
     for_int(i, pt.co.num()) {
       SpatialSearch<PolygonFace*> ss(&psp, pt.co[i]);

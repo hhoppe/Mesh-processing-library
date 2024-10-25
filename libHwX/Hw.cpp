@@ -450,7 +450,7 @@ bool Hw::loop() {
       if (_watch_fd0) FD_SET(0, &fdr);
       struct timeval tv;
       tv.tv_sec = 0;
-      tv.tv_usec = 30000;  // .03sec; introduced to support wake_up()
+      tv.tv_usec = 30'000;  // .03sec; introduced to support wake_up()
       struct timeval* ptv = 1 ? &tv : nullptr;
       if (select(fd + 1, &fdr, implicit_cast<fd_set*>(nullptr), implicit_cast<fd_set*>(nullptr), ptv) == -1) {
         if (errno == EBADF) {

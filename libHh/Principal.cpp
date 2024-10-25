@@ -182,7 +182,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
   Matrix<float> a(n, n);
   {
     // HH_TIMER("_pca_cov");
-    auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_cov", Timer::EMode::abbrev) : nullptr;
+    auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_cov", Timer::EMode::abbrev) : nullptr;
     if (1) {  // more cache-coherent
       Matrix<double> t(V(n, n), 0.);
       if (0) {  // unoptimized
@@ -255,7 +255,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
   assertx(niter >= 1);
   assertx(eimag.num() == ne);
   //
-  auto up_timer = m * n > 10000 * 100 ? make_unique<Timer>("__pca_inc", Timer::EMode::abbrev) : nullptr;
+  auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_inc", Timer::EMode::abbrev) : nullptr;
   for_int(i, ne) for_int(c, n) mo[i][c] = mi[i][c];
   Array<float> vnorm(ne);
   for_int(i, ne) vnorm[i] = float(assertx(sqrt(mag2(mo[i]))));

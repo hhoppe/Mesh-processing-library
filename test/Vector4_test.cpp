@@ -71,7 +71,7 @@ int main() {
   }
   {
     to_norm(Vector4(0.f, 0.49f / 255.f, 0.51f / 255.f, 1.51f / 255.f));
-    to_norm(Vector4(-10.f, .5f, 10000.f, 0.f));
+    to_norm(Vector4(-10.f, .5f, 1e4f, 0.f));
     to_norm(Vector4(23.f, 37.f, 45.f, 255.f) / 255.f);
     to_norm(Vector4(0.f, 1.f, 2.f, 3.f) / 255.f);
     to_norm(Vector4(100.f, 101.f, 102.f, 103.f) / 255.f);

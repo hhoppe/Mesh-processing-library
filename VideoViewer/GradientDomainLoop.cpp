@@ -272,7 +272,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
         const int fm1 = f > 0 ? f - 1 : nnf - 1;
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
-        // const int max_xwidth = 10000;  // because data fits in L2 cache, it is detrimental to break it up
+        // const int max_xwidth = 10'000;  // because data fits in L2 cache, it is detrimental to break it up
         // for_2D_swaths(y, ny, x, nx, max_xwidth) {
         for_int(y, ny) for_int(x, nx) {
           int fi = grid_frameif(y, x);

@@ -114,7 +114,7 @@ int main() {
     Set<int> s;
     for_int(i, 100) s.enter(i);
     Set<int> s2;
-    for_int(i, 10000) {
+    for_int(i, 10'000) {
       int e = s.get_random(Random::G);
       s2.add(e);
     }

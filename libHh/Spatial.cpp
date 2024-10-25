@@ -3,11 +3,11 @@
 
 namespace hh {
 
-// Given 10000 random data points uniformly sampled over the unit cube,
+// Given 10'000 random data points uniformly sampled over the unit cube,
 // find the closest 10 neighbors:
-// spatialtest -gn ? -pn 10000
+// spatialtest -gn $gn -pn 10000
 // average time
-//      ?       10000           1000
+//      gn      pn=10000        pn=1000
 //      1       1.1745          .14967
 //      2       .25267          .05333
 //      3       .11967          .03883

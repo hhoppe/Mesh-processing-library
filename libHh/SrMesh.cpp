@@ -1604,8 +1604,8 @@ void SrMesh::force_vsplit(SrVertex* vsf, EListNode*& n) {
   }
 }
 
-// Given:   0001110101000
-// Returns: 0000000001000
+// Given:   00011'1010'1000
+// Returns: 00000'0000'1000
 static inline unsigned lsb_mask(unsigned size) {
   int count = 0;
   while ((size & 1) == 0) {

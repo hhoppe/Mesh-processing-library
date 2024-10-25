@@ -99,7 +99,7 @@ void test_spawn() {
   }
   {
     const string arcands = R"(abcdefgh       `~!@#$%^&*()-_=+[{]}\|;:'"",<.>/?)";  // double '"' frequency
-    for_int(itry, 10) {                                                            // tried up to 10000
+    for_int(itry, 10) {                                                            // tried up to 10'000
       const int len = 20;
       string str(len, ' ');
       for_int(i, len) str[i] = arcands[Random::G.get_unsigned(narrow_cast<unsigned>(arcands.size()))];

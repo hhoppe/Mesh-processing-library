@@ -66,7 +66,7 @@ int main() {
   if (1) {
     const unsigned ub = 11;
     Array<unsigned> ar(ub, 0);
-    for_int(i, 10000) {
+    for_int(i, 10'000) {
       unsigned v = Random::G.get_unsigned(ub);
       assertx(v < ub);
       ar[v]++;
@@ -75,7 +75,7 @@ int main() {
   }
   if (1) {
     const unsigned ub = unsigned(float(std::numeric_limits<unsigned>::max()) * .99f);
-    for_int(i, 10000) {
+    for_int(i, 10'000) {
       unsigned v = Random::G.get_unsigned(ub);
       assertx(v < ub);
       HH_SSTAT(S99, v);

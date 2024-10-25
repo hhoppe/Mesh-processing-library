@@ -10,7 +10,7 @@
 #if 0
 {
   ConsoleProgress cprogress;
-  const int n = 10000;
+  const int n = 10'000;
   for_int(i, n) {
     cprogress.update(float(i) / n);
     process(i);

@@ -152,8 +152,8 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
   // PolygonFaceSpatial psp(max(10, int(sqrt(float(mesh_d.num_vertices())) / 5.f + .5f)));
-  int psp_size = (mesh_d.num_vertices() < 20000     ? 25
-                  : mesh_d.num_vertices() < 30000   ? 32
+  int psp_size = (mesh_d.num_vertices() < 20'000    ? 25
+                  : mesh_d.num_vertices() < 30'000  ? 32
                   : mesh_d.num_vertices() < 100'000 ? 40
                   : mesh_d.num_vertices() < 300'000 ? 70
                                                     : 100);

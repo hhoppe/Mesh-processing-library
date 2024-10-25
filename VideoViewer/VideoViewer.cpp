@@ -2678,7 +2678,7 @@ void advance_frame() {
     double vtime = get_precise_time();
     if (!last_frame_time) {
       last_frame_time = vtime;
-      fill(ar_last_frame_times, 10000.);
+      fill(ar_last_frame_times, 10'000.);
     }
     time_since_last_frame = vtime - last_frame_time;
     assertw(time_since_last_frame >= 0.);

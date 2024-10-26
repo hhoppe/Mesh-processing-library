@@ -22,7 +22,7 @@
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"      // Vnors, ...
-#include "libHh/MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/MeshSearch.h"
 #include "libHh/Polygon.h"
 #include "libHh/Pqueue.h"
 #include "libHh/Principal.h"  // principal_components()
@@ -3469,20 +3469,9 @@ void do_signeddistcontour(Args& args) {
     showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
   }
-  Array<PolygonFace> ar_polyface;
-  ar_polyface.reserve(mesh.num_faces());
-  for (Face f : mesh.faces()) {
-    Polygon poly(3);
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    ar_polyface.push(PolygonFace(std::move(poly), f));
-  }
-  PolygonFaceSpatial psp(30);
-  for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
+  const MeshSearch mesh_search(mesh, {});
   const auto func_mesh_signed_distance = [&](const Vec3<float>& p) {
-    SpatialSearch<PolygonFace*> ss(&psp, p);
-    PolygonFace* polyface = ss.next();
-    Face f = polyface->face;
+    Face f = mesh_search.search(p, nullptr).f;
     return signed_distance(p, f);
   };
   GMesh nmesh;
@@ -3492,53 +3481,6 @@ void do_signeddistcontour(Args& args) {
     for (Vertex v : mesh.vertices()) contour.march_from(mesh.point(v));
   }
   mesh.copy(nmesh);
-}
-
-void do_signeddistbmp(Args& args) {
-  int grid = args.get_int();
-  assertx(grid >= 2);
-  {
-    const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
-    const Frame xform = bbox.get_frame_to_small_cube();
-    showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-    for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
-  }
-  Array<PolygonFace> ar_polyface;
-  ar_polyface.reserve(mesh.num_faces());
-  for (Face f : mesh.faces()) {
-    Polygon poly(3);
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    ar_polyface.push(PolygonFace(std::move(poly), f));
-  }
-  PolygonFaceSpatial psp(20);
-  for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
-  for_int(iz, grid) {
-    Image image(V(grid, grid));
-    for_int(ix, grid) {
-      for_int(iy, grid) {
-        Point p((ix + .5f) / grid, (iy + .5f) / grid, (iz + .5f) / grid);
-        SpatialSearch<PolygonFace*> ss(&psp, p);
-        PolygonFace* polyface = ss.next();
-        Face f = polyface->face;
-        float sdist = signed_distance(p, f);
-        uint8_t uc;
-        if (sdist == k_Contour_undefined) {
-          uc = 255;
-        } else {
-          assertx(abs(sdist) <= 1.f);
-          const float amplify = 10.f;
-          sdist *= amplify;
-          if (abs(sdist) > 1.f) sdist = 1.f * sign(sdist);
-          uc = static_cast<uint8_t>(128.f - sdist * 126.f);
-        }
-        image[ix][iy] = Pixel::gray(uc);
-      }
-    }
-    image.set_suffix("bmp");
-    image.write_file(sform("volume.%d.bmp", iz));
-  }
-  nooutput = true;
 }
 
 // *** hull
@@ -3888,7 +3830,7 @@ void do_subsamplegim(Args& args) {
   mesh.copy(nmesh);
 }
 
-// (cd ~/prevproj/2009/catwalk/data; Filtermesh manikin_ballerina_filter.ohull.nf10000.m -shootrays manikin_ballerina_filter.wids.m | G3d - -key DmDe -st manikin_ballerina_filter.s3d)
+// (cd ~/prevproj/2009/catwalk/data; Filtermesh manikin_ballerina_filter.ohull.nf10000.m -shootrays manikin_ballerina_filter.wids.m | G3d manikin_ballerina_filter.ohull.nf10000.m v.a3d - -key DmDe -st manikin_ballerina_filter.s3d; rm v.a3d)  # Press 'P'.
 void do_shootrays(Args& args) {
   string filename = args.get_filename();
   GMesh omesh;  // Original mesh.
@@ -3900,8 +3842,9 @@ void do_shootrays(Args& args) {
   Frame xform_inverse = ~xform;
   Array<PolygonFace> ar_polyface;
   ar_polyface.reserve(omesh.num_faces());
-  bool has_blend = false;
-  PolygonFaceSpatial psp(120);
+  // const int psp_size = 120;
+  const int psp_size = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
+  PolygonFaceSpatial psp(psp_size);  // Not MeshSearch because of widen_triangle().
   {
     HH_TIMER("__create_psp");
     string str;
@@ -3912,8 +3855,6 @@ void do_shootrays(Args& args) {
       if (1) widen_triangle(poly, 1e-4f);
       for_int(i, 3) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), f));
-      for (Corner c : omesh.corners(f))
-        if (omesh.corner_key(str, c, "blendi")) has_blend = true;
     }
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
@@ -3948,7 +3889,6 @@ void do_shootrays(Args& args) {
         const PolygonFace* polyface;
         Point pint;
         bool found = psp.first_along_segment(p1, p2, polyface, pint);
-        // if (found) { assertx(dist(p, pint)<=maxdisp*1.001); }
         if (found && dist(p, pint) < abs(mindist)) {
           mindist = dist(p, pint) * vdir;
           minof = polyface->face;
@@ -3974,25 +3914,6 @@ void do_shootrays(Args& args) {
       mesh.update_string(v, "Opos", csform_vec(str, op));
       mesh.set_point(v, minp * xform_inverse);
       mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));
-      if (has_blend && minof) {
-        Polygon poly;
-        omesh.polygon(minof, poly);
-        // for_int(c, 3) poly[c] *= xform;
-        Vec3<Corner> ca = omesh.triangle_corners(minof);
-        Bary bary;
-        Point clp;
-        project_point_triangle2(minp * xform_inverse, poly[0], poly[1], poly[2], bary, clp);
-        mesh.update_string(v, "blendi", assertx(omesh.corner_key(str, ca[0], "blendi")));
-        // transfer 4-tuple blendw
-        Vec4<float> blendw;
-        fill(blendw, 0.f);
-        for_int(c, 3) {
-          Vec4<float> cblendw;
-          assertx(omesh.parse_corner_key_vec(ca[c], "blendw", cblendw));
-          blendw += bary[c] * cblendw;
-        }
-        mesh.update_string(v, "blendw", csform_vec(str, blendw));
-      }
     }
   }
 }
@@ -4439,7 +4360,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(uvtopos, ": replace vertex positions by uv");
   HH_ARGSD(perturbz, "scale : perturb z positions by [-1, 1]*scale");
   HH_ARGSD(signeddistcontour, "grid : contour signed distance to mesh");
-  HH_ARGSD(signeddistbmp, "grid : write signed distance as images");
   HH_ARGSD(splitdiaguv, ": for uv grid, split diagonal edges");
   HH_ARGSD(rmdiaguv, ": for uv grid, remove diagonal edges");
   HH_ARGSD(obtusesplit, ": split obtuse tris, possibly on sphere");

@@ -703,13 +703,14 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
   HH_STIMER("___lallproject");
   const GMesh& mesh = smesh.mesh();
   Array<PolygonFace> ar_polyface;
-  PolygonFaceSpatial psp(60);
+  PolygonFaceSpatial psp(60);  // Not MeshSearch because of face subset selection using `setgoodf`.
   {
     HH_STIMER("____lmakespatial");
     for (Face f : mesh.faces()) {
       if (!setgoodf.contains(smesh.orig_face(f))) continue;
       Polygon poly(3);
       mesh.polygon(f, poly);
+      assertx(poly.num() == 3);
       for_int(i, poly.num()) poly[i] *= xform;
       ar_polyface.push(PolygonFace(std::move(poly), f));
     }

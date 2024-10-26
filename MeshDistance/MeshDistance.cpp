@@ -8,13 +8,18 @@
 #include "libHh/GMesh.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"      // Vnors
-#include "libHh/MeshSearch.h"  // PolygonFaceSpatial
+#include "libHh/MeshSearch.h"
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Timer.h"
 using namespace hh;
+
+// (cd ~/git/mesh_processing/demos/data; FilterPM club.pm -nfaces 1000 -outmesh | MeshDistance -mfile club.orig.m -mfile - -bothdir 1 -maxerror 1 -verb 2 -distance)
+// #  B(  38272)  dL2=%0.0315      cL2=inf         nL2=0.05242
+// # PSNR=70.0  nPSNR=31.6
+// #  B(  38272)  dLi=%0.2407      cLi=inf         nLi=1.544
 
 namespace {
 
@@ -73,23 +78,14 @@ struct PStats {
 };
 
 void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const Vector& psnor, const GMesh& mesh_d,
-                   const PolygonFaceSpatial& psp, Vertex vv, string& str, PStats& pstats) {
-  SpatialSearch<PolygonFace*> ss(&psp, ps * xform);
-  PolygonFace* polyface = ss.next();
-  Face fd = polyface->face;
-  Vec3<Corner> cad = mesh_d.triangle_corners(fd);
-  Bary baryd;
+                   const MeshSearch& mesh_search, Vertex vv, string& str, PStats& pstats) {
+  const auto& [fd, baryd, unused_clp, d2] = mesh_search.search(ps, nullptr);
   {
-    Point clp;
-    float d2 = project_point_triangle2(ps, mesh_d.point(mesh_d.corner_vertex(cad[0])),
-                                       mesh_d.point(mesh_d.corner_vertex(cad[1])),
-                                       mesh_d.point(mesh_d.corner_vertex(cad[2])), baryd, clp);
     pstats.Sgd2.enter(d2);
     if (errmesh && vv) {
       float g_K = 1'000'000.f / bbdiag;
       float g_MK = 0.f;
       if (0) g_MK = 75.f / bbdiag;
-      d2 = abs(d2);
       float val = g_K * std::log(d2 + 1.f);
       HH_SSTAT(Serrval, val);
       // showdf("val %f first cut %f d2 %f\n", val, bbdiag / 100, d2 * 100);
@@ -105,19 +101,20 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
       }
     }
   }
+  const Vec3<Corner> cad = mesh_d.triangle_corners(fd);
   pstats.Scd2.enter(dist2(pscol, interp(c_color(cad[0]), c_color(cad[1]), c_color(cad[2]), baryd[0], baryd[1])));
   pstats.Snd2.enter(dist2(psnor, interp(c_normal(cad[0]), c_normal(cad[1]), c_normal(cad[2]), baryd[0], baryd[1])));
 }
 
-void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const PolygonFaceSpatial& psp,
-                   Vertex vv, string& str, PStats& pstats) {
+void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const MeshSearch& mesh_search,
+                   string& str, PStats& pstats) {
   dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
   Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
                     mesh_s.point(mesh_s.corner_vertex(cas[2])), barys[0], barys[1]);
   A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys[0], barys[1]);
   Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys[0], barys[1]);
-  project_point(mesh_s, ps, pscol, psnor, mesh_d, psp, vv, str, pstats);
+  project_point(mesh_s, ps, pscol, psnor, mesh_d, mesh_search, nullptr, str, pstats);
 }
 
 void print_it(const string& s, const PStats& pstats) {
@@ -151,27 +148,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
   const Bbox bbox{transform(mesh_d.vertices(), [&](Vertex v) { return mesh_d.point(v); })};
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
-  // PolygonFaceSpatial psp(max(10, int(sqrt(float(mesh_d.num_vertices())) / 5.f + .5f)));
-  int psp_size = (mesh_d.num_vertices() < 20'000    ? 25
-                  : mesh_d.num_vertices() < 30'000  ? 32
-                  : mesh_d.num_vertices() < 100'000 ? 40
-                  : mesh_d.num_vertices() < 300'000 ? 70
-                                                    : 100);
-  psp_size = getenv_int("PSP_SIZE", psp_size, true);
-  Array<PolygonFace> ar_polyface;
-  ar_polyface.reserve(mesh_d.num_faces());
-  PolygonFaceSpatial psp(psp_size);
-  {
-    HH_TIMER("_create_spatial");
-    for (Face fd : mesh_d.faces()) {
-      Polygon poly(3);
-      mesh_d.polygon(fd, poly);
-      assertx(poly.num() == 3);
-      for_int(i, poly.num()) poly[i] *= xform;
-      ar_polyface.push(PolygonFace(std::move(poly), fd));
-    }
-    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
-  }
+  MeshSearch mesh_search(mesh_d, {});
   HH_TIMER("_sample_distances");
   if (numpts) {
     PStats pstats;
@@ -201,7 +178,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
         float a = randoms[i * 3 + 1], b = randoms[i * 3 + 2];
         if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
         Bary bary(a, b, 1.f - a - b);
-        project_point(mesh_s, f, bary, mesh_d, psp, nullptr, str, ar_pstats[thread_index]);
+        project_point(mesh_s, f, bary, mesh_d, mesh_search, str, ar_pstats[thread_index]);
       }
     });
     for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);
@@ -218,7 +195,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
         for (Vertex v : subrange) {
           const A3dColor pscol(0.f, 0.f, 0.f);
           const Vector& psnor = v_normal(v);
-          project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, psp, v, str, ar_pstats[thread_index]);
+          project_point(mesh_s, mesh_s.point(v), pscol, psnor, mesh_d, mesh_search, v, str, ar_pstats[thread_index]);
         }
       });
       for_int(thread_index, num_threads) pstats.add(ar_pstats[thread_index]);

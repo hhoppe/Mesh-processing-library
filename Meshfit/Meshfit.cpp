@@ -417,7 +417,6 @@ void global_project_aux() {
       }
     }
   } else {
-    const int nv = mesh.num_vertices();
     Array<PolygonFace> ar_polyface;
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
@@ -433,7 +432,9 @@ void global_project_aux() {
         ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[2], poly[3])), f));
       }
     }
-    PolygonFaceSpatial psp(nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35);
+    // const int psp_size = nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35
+    const int psp_size = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
+    PolygonFaceSpatial psp(psp_size);  // Not MeshSearch because of quads.
     for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
     for_int(i, pt.co.num()) {
       SpatialSearch<PolygonFace*> ss(&psp, pt.co[i]);

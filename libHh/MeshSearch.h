@@ -21,7 +21,7 @@ namespace hh {
 
 struct PolygonFace {
   PolygonFace() = default;
-  explicit PolygonFace(Polygon p, Face f) : poly(std::move(p)), face(f) {}
+  PolygonFace(Polygon p, Face f) : poly(std::move(p)), face(f) {}
   Polygon poly;
   Face face;
 };
@@ -58,6 +58,13 @@ class PolygonFaceSpatial
   bool first_along_segment(const Point& p1, const Point& p2, const PolygonFace*& ret_ppolyface, Point& ret_pint) const;
 };
 
+struct TriangleFace {
+  TriangleFace() = default;
+  TriangleFace(const Vec3<Point>& points, Face f) : _points(points), _f(f) {}
+  Vec3<Point> _points;
+  Face _f;
+};
+
 // Construct a spatial data structure from a mesh, to enable fast closest-point queries from arbitrary points.
 // Optionally, tries to speed up the search by caching the result of the previous search and incrementally
 // walking over the mesh from that prior result.
@@ -70,6 +77,7 @@ class MeshSearch {
     std::optional<Bbox<float, 3>> bbox;
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
+  ~MeshSearch();
 
   struct Result {
     Face f;
@@ -84,8 +92,9 @@ class MeshSearch {
  private:
   const GMesh& _mesh;
   Options _options;
-  Array<PolygonFace> _ar_polyface;
-  unique_ptr<PolygonFaceSpatial> _ppsp;
+  Array<TriangleFace> _trianglefaces;
+  class TriangleFaceSpatial;
+  unique_ptr<TriangleFaceSpatial> _spatial;
   Frame _ftospatial;
 };
 

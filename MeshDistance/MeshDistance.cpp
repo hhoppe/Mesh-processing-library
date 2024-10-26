@@ -7,7 +7,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/MathOp.h"
-#include "libHh/MeshOp.h"      // Vnors
+#include "libHh/MeshOp.h"  // Vnors
 #include "libHh/MeshSearch.h"
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"

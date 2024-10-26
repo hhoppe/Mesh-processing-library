@@ -21,7 +21,7 @@
 #include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
-#include "libHh/MeshOp.h"      // Vnors, ...
+#include "libHh/MeshOp.h"  // Vnors, ...
 #include "libHh/MeshSearch.h"
 #include "libHh/Polygon.h"
 #include "libHh/Pqueue.h"
@@ -3880,7 +3880,6 @@ void do_shootrays(Args& args) {
       mesh.update_string(v, "normal", nullptr);
       assertx(is_unit(nor));
       float mindist = BIGFLOAT;
-      Face minof = nullptr;
       Point minp = p;
       for_int(dir, 2) {
         float vdir = dir ? 1.f : -1.f;
@@ -3891,7 +3890,6 @@ void do_shootrays(Args& args) {
         bool found = psp.first_along_segment(p1, p2, polyface, pint);
         if (found && dist(p, pint) < abs(mindist)) {
           mindist = dist(p, pint) * vdir;
-          minof = polyface->face;
           minp = pint;
         }
       }

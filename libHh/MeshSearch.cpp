@@ -115,8 +115,7 @@ class MeshSearch::TriangleFaceSpatial : public ObjectSpatial<triangleface_approx
 
 // *** MeshSearch
 
-MeshSearch::MeshSearch(const GMesh& mesh, Options options)
-    : _mesh(mesh), _options(std::move(options)) {
+MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _options(std::move(options)) {
   if (getenv_bool("NO_LOCAL_PROJECT")) {
     Warning("MeshSearch NO_LOCAL_PROJECT");
     _options.allow_local_project = false;

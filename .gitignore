@@ -138,7 +138,6 @@ RCS/
 /test/NetworkOrder_test
 /test/NonlinearOptimization_test
 /test/PArray_test
-/test/PolygonFaceSpatial_test
 /test/Polygon_test
 /test/Pool_test
 /test/Postscript_test
@@ -158,6 +157,7 @@ RCS/
 /test/Stat_test
 /test/StridedArray_test
 /test/Timer_test
+/test/TriangleFaceSpatial_test
 /test/UnionFind_test
 /test/Vec_test
 /test/Vector4_test

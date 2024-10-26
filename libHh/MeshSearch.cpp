@@ -85,7 +85,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
     }
     // HH_SSTAT(Sms_nfchanges, nfchanges);
   }
-  HH_SSTAT(Sms_loc, !!f);
+  HH_SSTAT(Sms_local, !!f);
   if (!f) {
     const Point pbb = p * _xform;
     SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb);

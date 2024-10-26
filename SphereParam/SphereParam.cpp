@@ -397,13 +397,13 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   }
   MeshSearch::Options options;
   options.allow_off_surface = true;
-  const MeshSearch msearch(mesh_uv, options);
+  const MeshSearch mesh_search(mesh_uv, options);
 
   const int num_threads = get_max_threads();
   parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
     string str;
-    Face hintf = nullptr;
+    Face hint_f = nullptr;
     for (Vertex v : subrange) {
       const Point& sph = v_sph(v);
       gmesh.update_string(v, "sph", csform_vec(str, sph));
@@ -418,9 +418,9 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
         // const bool near_a_cut = any_of(sph, [](float v) { return abs(v) < 1e-5f; });
         const bool near_a_cut = (abs(sph[1]) < 1e-5f || abs(sph[2]) < 1e-5f) && sph[0] > -1e-5f;
         if (!near_a_cut) {
-          auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
+          auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
           gnomonic_search_bary(sph, mesh_uv, f, bary);  // May modify f.
-          hintf = f;
+          hint_f = f;
           const Vec3<Uv> uvs = get_uvs(f);
           const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
           gmesh.update_string(v, "uv", csform_vec(str, uv));
@@ -433,13 +433,13 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             // an initial face f on the correct side of the parametric uv discontinuity.
             const Point sph_center = mean(sphs);
             const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);
-            auto [f, bary, unused_clp, unused_d2] = msearch.search(sph_perturbed, hintf);
+            auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph_perturbed, hint_f);
             gnomonic_search_bary(sph_perturbed, mesh_uv, f, bary);  // May modify f.
             // Now use the obtained face f but search for the unperturbed sph and use some nonzero tolerance to
             // hopefully avoid crossing over to the wrong side of the parametric uv discontinuity.
             const float tolerance = 1e-7f;
             gnomonic_search_bary(sph, mesh_uv, f, bary, tolerance);  // May modify f.
-            hintf = f;
+            hint_f = f;
             const Vec3<Uv> uvs = get_uvs(f);
             const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
             gmesh.update_string(c, "uv", csform_vec(str, uv));

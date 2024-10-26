@@ -254,11 +254,11 @@ void analyze_mesh(const string& s) {
 void global_all_project(const SubMesh& smesh) {
   HH_STIMER("___gallproject");
   const GMesh& mesh = smesh.mesh();
-  const MeshSearch msearch(mesh, {});
-  Face hintf = nullptr;
+  const MeshSearch mesh_search(mesh, {});
+  Face hint_f = nullptr;
   for_int(i, co.num()) {
-    const auto result = msearch.search(co[i], hintf);
-    hintf = result.f;
+    const auto result = mesh_search.search(co[i], hint_f);
+    hint_f = result.f;
     gscmf[i] = result.f;
     gbary[i] = result.bary;
     gclp[i] = result.clp;

@@ -23,15 +23,15 @@ int main() {
     SHOW(mesh.face_id(f1));
     Face f2 = mesh.create_face(v1, v3, v4);
     SHOW(mesh.face_id(f2));
-    const MeshSearch msearch(mesh, {false});
-    Face hintf = nullptr;
+    const MeshSearch mesh_search(mesh, {false});
+    Face hint_f = nullptr;
     {
-      const auto& [f, bary, clp, d2] = msearch.search(Point(5.f, 2.f, 0.f), hintf);
+      const auto& [f, bary, clp, d2] = mesh_search.search(Point(5.f, 2.f, 0.f), hint_f);
       SHOW(mesh.face_id(f), bary, clp);
       assertx(d2 < 1e-12f);
     }
     {
-      const auto& [f, bary, clp, d2] = msearch.search(Point(5.f, 9.f, 0.1f), hintf);
+      const auto& [f, bary, clp, d2] = mesh_search.search(Point(5.f, 9.f, 0.1f), hint_f);
       SHOW(mesh.face_id(f), bary, clp, d2);
     }
   }
@@ -48,15 +48,15 @@ int main() {
       mesh.create_face(matv[y][x], matv[y + 1][x + 1], matv[y][x + 1]);
     }
     SHOW(mesh_genus_string(mesh));
-    const MeshSearch msearch(mesh, {true});
-    Face hintf = nullptr;
+    const MeshSearch mesh_search(mesh, {true});
+    Face hint_f = nullptr;
     for_int(i, 8) {
       Point p;
       for_int(c, 3) p[c] = Random::G.unif();
       p[2] *= 1e-7f;  // was 1e-4f
       SHOW(p);
-      const auto& [f, bary, clp, d2] = msearch.search(p, hintf);
-      hintf = f;
+      const auto& [f, bary, clp, d2] = mesh_search.search(p, hint_f);
+      hint_f = f;
       SHOW(mesh.face_id(f), bary, clp, d2);
     }
   }

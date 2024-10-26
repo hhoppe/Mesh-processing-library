@@ -11,9 +11,9 @@
 
 #if 0
 {
-  const MeshSearch msearch(mesh, {true});
-  Face hintf = nullptr;
-  const auto& [f, bary, clp, d2] = msearch(p, hintf);
+  const MeshSearch mesh_search(mesh, {true});
+  Face hint_f = nullptr;
+  const auto& [f, bary, clp, d2] = mesh_search.search(p, hint_f);
 }
 #endif
 
@@ -85,7 +85,7 @@ class MeshSearch {
     Point clp;
     float d2;
   };
-  Result search(const Point& p, Face hintf) const;
+  Result search(const Point& p, Face hint_f) const;
 
   const GMesh& mesh() const { return _mesh; }
 

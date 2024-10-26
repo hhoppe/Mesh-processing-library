@@ -139,11 +139,11 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
 
 MeshSearch::~MeshSearch() {}
 
-MeshSearch::Result MeshSearch::search(const Point& p, Face hintf) const {
+MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   Result result;
   Face f = nullptr;
-  if (_options.allow_local_project && hintf) {
-    f = hintf;
+  if (_options.allow_local_project && hint_f) {
+    f = hint_f;
     int nfchanges = 0;
     for (;;) {
       Vec3<Point> points = _mesh.triangle_points(f);

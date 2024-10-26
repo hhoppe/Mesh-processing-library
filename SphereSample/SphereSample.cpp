@@ -1084,15 +1084,15 @@ void do_sample_map(Args& args) {
   if (scheme == "") scheme = "domain";
   create(scheme != "domain");
 
-  const MeshSearch msearch(domain_mesh, {true});
+  const MeshSearch mesh_search(domain_mesh, {true});
   HH_TIMER("_resample0");
   ConsoleProgress cprogress;
   int nv = 0;
-  Face hintf = nullptr;
+  Face hint_f = nullptr;
   for (Vertex v : g_mesh.ordered_vertices()) {
     if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / g_mesh.num_vertices());
-    auto [domain_f, bary, unused_clp, d2] = msearch.search(v_domainp(v), hintf);
-    hintf = domain_f;
+    auto [domain_f, bary, unused_clp, d2] = mesh_search.search(v_domainp(v), hint_f);
+    hint_f = domain_f;
     assertx(d2 < 1e-12f);
     Vector sum{};
     const Vec3<Vertex> domain_face_vertices = domain_mesh.triangle_vertices(domain_f);
@@ -1285,21 +1285,21 @@ void internal_remesh() {
   MeshSearch::Options options;
   options.allow_local_project = true;
   options.allow_off_surface = true;
-  const MeshSearch msearch(param_mesh, options);
+  const MeshSearch mesh_search(param_mesh, options);
 
   HH_TIMER("_resample");
   const int num_threads = get_max_threads();
   parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
     string str;
-    Face hintf = nullptr;
+    Face hint_f = nullptr;
     for (Vertex v : subrange) {
       const Point& sph = g_mesh.point(v);  // Point on sphere.
       v_sph(v) = sph;
       assertx(is_unit(sph));
-      auto [param_f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
+      auto [param_f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
       search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
-      hintf = param_f;
+      hint_f = param_f;
       const Vec3<Point> points = map(g_mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
       const Point newp = interp(points[0], points[1], points[2], bary);
       g_mesh.set_point(v, newp);
@@ -1516,7 +1516,7 @@ void do_write_dual_texture(Args& args) {
   // for_int(y, image.ysize()) {
   parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
-    Face hintf_d = nullptr, hintf_s = nullptr;
+    Face hint_f_d = nullptr, hint_f_s = nullptr;
     for (const int y : subrange) {
       for_int(x, image.xsize()) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
@@ -1534,17 +1534,17 @@ void do_write_dual_texture(Args& args) {
           p_d = interp(points[0], points[1], points[2], bary);
         }
         {
-          auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hintf_d);
-          hintf_d = f;
+          auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);
+          hint_f_d = f;
           if (d2 >= 1e-12f) assertnever(SSHOW(p_i, p_d, f, bary, unused_clp, d2));
           const Vec3<Vertex> face_vertices = domain_mesh.triangle_vertices(f);
           Vector sum{};
           for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
           p_s = normalized(sum);
         }
-        auto [f, bary, unused_clp, d2] = msearch_s.search(p_s, hintf_s);
+        auto [f, bary, unused_clp, d2] = msearch_s.search(p_s, hint_f_s);
         search_bary(p_s, param_mesh, f, bary);  // May modify f.
-        hintf_s = f;
+        hint_f_s = f;
         assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
       }
     }
@@ -1664,7 +1664,7 @@ void do_write_lonlat_texture(Args& args) {
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
 
-  const MeshSearch msearch(param_mesh, {true});
+  const MeshSearch mesh_search(param_mesh, {true});
 
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
@@ -1672,7 +1672,7 @@ void do_write_lonlat_texture(Args& args) {
   const int num_threads = get_max_threads();
   parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
-    Face hintf = nullptr;
+    Face hint_f = nullptr;
     for (const int y : subrange) {
       for_int(x, image.xsize()) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
@@ -1681,8 +1681,8 @@ void do_write_lonlat_texture(Args& args) {
         const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
         const Point sph = sph_from_lonlat(lonlat);
 
-        auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
-        hintf = f;
+        auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
+        hint_f = f;
         search_bary(sph, param_mesh, f, bary);  // May modify f.
         assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
       }
@@ -1813,7 +1813,7 @@ void do_create_lonlat_checker(Args& args) {
   }
   MeshSearch::Options options;
   options.allow_off_surface = true;
-  const MeshSearch msearch(g_mesh, options);
+  const MeshSearch mesh_search(g_mesh, options);
   const Array<DomainFace> domain_faces = get_domain_faces();
   {
     HH_TIMER("_create_image");
@@ -1821,7 +1821,7 @@ void do_create_lonlat_checker(Args& args) {
     const int num_threads = get_max_threads();
     parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
       dummy_use(thread_index);
-      Face hintf = nullptr;
+      Face hint_f = nullptr;
       for (const int y : subrange) {
         for_int(x, image.xsize()) {
           // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
@@ -1829,10 +1829,10 @@ void do_create_lonlat_checker(Args& args) {
           Pixel& pixel = image[yy][x];
           const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
-          auto [f, bary, unused_clp, unused_d2] = msearch.search(sph, hintf);
+          auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
           // Given that `g_mesh` has disjoint components, this call to search_bary() ought to fail sometimes?
           search_bary(sph, g_mesh, f, bary);  // May modify f.
-          hintf = f;
+          hint_f = f;
           const Vec3<Vertex> va = g_mesh.triangle_vertices(f);
           Uv uv{};
           for_int(i, 3) uv += bary[i] * v_ijuv(va[i]);

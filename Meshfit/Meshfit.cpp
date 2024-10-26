@@ -393,12 +393,12 @@ float project_point_neighb(const Point& p, Face& cf, Bary& ret_bary, Point& ret_
 
 void global_project_aux() {
   if (!have_quads) {
-    const MeshSearch msearch(mesh, {});
+    const MeshSearch mesh_search(mesh, {});
     if (1) {
-      Face hintf = nullptr;
+      Face hint_f = nullptr;
       for_int(i, pt.co.num()) {
-        const auto& [f, bary, clp, d2] = msearch.search(pt.co[i], hintf);
-        hintf = f;
+        const auto& [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
+        hint_f = f;
         point_change_face(i, f);
         pt.clp[i] = clp;
       }
@@ -406,8 +406,8 @@ void global_project_aux() {
       Array<Face> ar_face(pt.co.num());
       Array<Point> ar_clp(pt.co.num());
       parallel_for_each(range(pt.co.num()), [&](const int i) {
-        Face hintf = pt.cmf[i];  // different semantics now
-        const auto& [f, bary, clp, d2] = msearch.search(pt.co[i], hintf);
+        Face hint_f = pt.cmf[i];  // different semantics now
+        const auto& [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
         ar_face[i] = f;
         ar_clp[i] = clp;
       });

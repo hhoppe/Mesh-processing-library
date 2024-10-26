@@ -126,11 +126,11 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options)
   psp_size = clamp(psp_size, 15, 200);  // Revisit upper bound for nefertiti ??
   HH_STIMER("__meshsearch_build");
   if (!_options.bbox) _options.bbox.emplace(transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); }));
-  _ftospatial = _options.bbox->get_frame_to_small_cube();
+  _xform = _options.bbox->get_frame_to_small_cube();
   _trianglefaces.reserve(mesh.num_faces());
   for (Face f : _mesh.faces()) {
     Vec3<Point> points = mesh.triangle_points(f);
-    for_int(i, 3) points[i] *= _ftospatial;
+    for_int(i, 3) points[i] *= _xform;
     _trianglefaces.push({points, f});
   }
   _spatial = make_unique<TriangleFaceSpatial>(psp_size);
@@ -148,7 +148,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
     for (;;) {
       Vec3<Point> points = _mesh.triangle_points(f);
       result.d2 = project_point_triangle2(p, points[0], points[1], points[2], result.bary, result.clp);
-      float dfrac = sqrt(result.d2) * _ftospatial[0][0];
+      float dfrac = sqrt(result.d2) * _xform[0][0];
       // if (!nfchanges) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // Failure.
         f = nullptr;
@@ -198,11 +198,11 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   }
   HH_SSTAT(Sms_loc, !!f);
   if (!f) {
-    const Point pbb = p * _ftospatial;
+    const Point pbb = p * _xform;
     SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb);
     const TriangleFace& triangleface = *assertx(ss.next());
     f = triangleface._f;
-    const Vec3<Point> points = _mesh.triangle_points(f);  // (Without _ftospatial transform.)
+    const Vec3<Point> points = _mesh.triangle_points(f);  // (Without _xform transformation.)
     result.d2 = project_point_triangle2(p, points[0], points[1], points[2], result.bary, result.clp);
   }
   result.f = f;

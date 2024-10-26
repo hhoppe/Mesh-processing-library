@@ -560,14 +560,14 @@ using KD = Kdtree<Polygon*, 3>;
 void compute_intersect() {
   // e.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3dOGL ~/data/mesh/peedy.orig.m -input -key NN
   if (!g_inter.vpoly.num()) return;
-  Frame f = g_inter.bbox.get_frame_to_cube();
+  const Frame xform = g_inter.bbox.get_frame_to_cube();
   KD kd(8);
   A3dElem el;
   Array<Point> pa;
   for (auto& ppoly : g_inter.vpoly) {
     Polygon& poly = *ppoly;
     Bbox bbox{poly};
-    for_int(min_max, 2) static_cast<Point&>(bbox[min_max]) *= f;
+    for_int(min_max, 2) static_cast<Point&>(bbox[min_max]) *= xform;
     const auto func_considerpoly = [&](Polygon* const& id, Vec3<float>& bb0, Vec3<float>& bb1, KD::CBloc floc) {
       dummy_use(bb0, bb1, floc);
       const Polygon& p1 = *id;
@@ -686,7 +686,7 @@ void join_lines() {
 void compute_outlier() {
   Array<bool> ar_is_outlier(g_outlier.pa.num(), false);
   const Bbox bbox{g_outlier.pa};
-  Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
+  const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   PointSpatial<int> SPp(30);
   for_int(i, g_outlier.pa.num()) {
     g_outlier.pa[i] *= xform;

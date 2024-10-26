@@ -95,7 +95,7 @@ class MeshSearch {
   Array<TriangleFace> _trianglefaces;
   class TriangleFaceSpatial;
   unique_ptr<TriangleFaceSpatial> _spatial;
-  Frame _ftospatial;
+  Frame _xform;
 };
 
 }  // namespace hh

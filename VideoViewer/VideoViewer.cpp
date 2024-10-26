@@ -2019,7 +2019,7 @@ bool DerivedHw::key_press(string skey) {
           const int new_cur_frame = g_framenum - trimbeg;
           auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_trim"));
-          newob->_video.attrib().audio.clear();  // TODO
+          newob->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           message("Trimmed video");
@@ -2060,7 +2060,7 @@ bool DerivedHw::key_press(string skey) {
                                                                   : ob._framein);
           auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_cut"));
-          newob->_video.attrib().audio.clear();  // TODO
+          newob->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           message("Cut video");
@@ -2086,11 +2086,11 @@ bool DerivedHw::key_press(string skey) {
           }
           auto newob1 = make_unique<Object>(ob, std::move(nvideo1), std::move(nvideo1_nv12),
                                             append_to_filename(ob._filename, "_split1"));
-          newob1->_video.attrib().audio.clear();  // TODO
+          newob1->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob1));
           auto newob2 = make_unique<Object>(ob, std::move(nvideo2), std::move(nvideo2_nv12),
                                             append_to_filename(ob._filename, "_split2"));
-          newob2->_video.attrib().audio.clear();  // TODO
+          newob2->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob2));
           set_video_frame(g_cob, 0.);  // select the first frame (of the second video)
           g_obs.erase(g_cob - 2, 1);   // unload the old video
@@ -2127,7 +2127,7 @@ bool DerivedHw::key_press(string skey) {
           const Object& ob_attrib = ob1._video.attrib().framerate ? ob1 : ob2;
           auto newob = make_unique<Object>(ob_attrib, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob1._filename, "_merged"));
-          newob->_video.attrib().audio.clear();  // TODO
+          newob->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           g_obs.erase(g_cob - 2, 2);  // unload both the old videos
@@ -2210,7 +2210,7 @@ bool DerivedHw::key_press(string skey) {
           const int new_cur_frame = g_framenum;
           auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_mirror"));
-          newob->_video.attrib().audio.clear();  // TODO
+          newob->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           message("Here is the time-mirrored video; use <&> to append to the original video.", 6.);
@@ -2247,7 +2247,7 @@ bool DerivedHw::key_press(string skey) {
           }
           auto newob = make_unique<Object>(ob, std::move(nvideo), std::move(nvideo_nv12),
                                            append_to_filename(ob._filename, "_rate"));
-          newob->_video.attrib().audio.clear();  // TODO
+          newob->_video.attrib().audio.clear();  // TODO.
           add_object(std::move(newob));
           set_video_frame(g_cob, new_cur_frame);
           message("Here is the time-scaled video.", 6.);

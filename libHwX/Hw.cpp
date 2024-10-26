@@ -378,7 +378,7 @@ void Hw::open() {
 #endif
   }
   _draw = _win;
-  // TODO: implement HwBase::drag_and_drop()
+  // TODO: Implement HwBase::drag_and_drop().
   int force_first_draws = 0;
 #if defined(__CYGWIN__)
   force_first_draws = 3;  // For some unknown reason, first couple draws are corrupt on __CYGWIN__

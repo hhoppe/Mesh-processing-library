@@ -393,7 +393,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
     if (0)
       for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
     split_mesh_along_octa(gmesh);
-    // TODO: instead, use mesh_uv "uv" discontinuities; required for cube and tetra; fewer cuts for octa* ??
+    // TODO: Use mesh_uv "uv" discontinuities; required for cube and tetra; fewer cuts for octa* ??
   }
   MeshSearch::Options options;
   options.allow_off_surface = true;

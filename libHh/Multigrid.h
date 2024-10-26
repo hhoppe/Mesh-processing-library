@@ -758,7 +758,7 @@ class Multigrid : noncopyable {
   void run_multigrid(CGridView<D, T> grid_rhs, GridView<D, T> grid_result) {
     HH_MULTIGRID_TIMER("multigrid");
     assertx(same_size(grid_rhs, grid_result));
-    // TODO: implement a streaming multigrid algorithm (faster and less memory usage)
+    // TODO: Implement a streaming multigrid algorithm (faster and less memory usage).
     if (getenv_bool("MULTIGRID_VERBOSE")) _verbose = true;
     bool is_power_of_2 = true;
     for_int(c, D) {

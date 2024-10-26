@@ -38,7 +38,7 @@ namespace hh {
 //   - surface triangle stream in the unit cube (Contour3D)
 //   - curve polyline stream in the unit square (Contour2D)
 
-// TODO: improving efficiency/generality:
+// TODO: Improve efficiency/generality:
 // - use 64-bit encoding to allow larger grid sizes.
 // - perhaps distinguish  Set<unsigned> cubes_visited and  Map<unsigned, Node>  cube_vertices? and edge_vertices too?
 // - somehow remove _en from Node?

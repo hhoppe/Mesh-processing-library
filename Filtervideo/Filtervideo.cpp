@@ -140,7 +140,7 @@ void read_video(const string& filename, bool use_nv12) {
   }
   if (video.attrib().audio.size() && (trunc_begin || trunc_frames != std::numeric_limits<int>::max())) {
     Warning("Clearing audio");
-    video.attrib().audio.clear();  // TODO
+    video.attrib().audio.clear();  // TODO.
   }
   const int nftruncread = nfread - trunc_begin;
   if (nftruncread < trunc_frames && abs(nfread - trunc_begin - nfexpect) > 1) {
@@ -403,7 +403,7 @@ void do_append(Args& args) {
   assertx(nf2 > 0);
   assertx(same_size(video[0], video2[0]));
   assertx(nf1 >= tradius * 2 && nf2 >= tradius * 2);
-  assertw(!video2.attrib().audio.size());  // TODO
+  assertw(!video2.attrib().audio.size());  // TODO.
   int nnf = nf1 + nf2 - tradius * 2;
   showf("Appending video '%s' (%d frames) new_nframes=%d\n", filename.c_str(), nf2, nnf);
   Video nvideo(nnf, video.spatial_dims());
@@ -538,7 +538,7 @@ void do_start(Args& args) {
   } else if (i) {
     showf("Truncating %d frames from video start.\n", i);
     video = crop(video, V(i, 0, 0), V(0, 0, 0));
-    if (video.attrib().audio.size()) {  // TODO
+    if (video.attrib().audio.size()) {  // TODO.
       Warning("Clearing audio");
       video.attrib().audio.clear();
     }

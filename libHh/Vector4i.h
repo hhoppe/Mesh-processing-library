@@ -122,7 +122,7 @@ class Vector4i {
     int _c[4];
   };
 #elif defined(HH_VECTOR4_NEON)
-  // TODO: implement these as Neon intrinsics.
+  // TODO: Implement these as Neon intrinsics.
   Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }

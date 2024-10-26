@@ -15,7 +15,7 @@ using namespace hh;
 
 // *** loop creation based on gradient-domain optimization
 
-// TODO: solve Multigrid using streaming, and skip downsampling + relaxation away from discontinuities.
+// TODO: Solve Multigrid using streaming, and skip downsampling + relaxation away from discontinuities.
 
 namespace hh {
 
@@ -948,12 +948,12 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   Nv12 sframe;
   if (!videoloop_nv12.size()) sframe.init(sdims);
   ConsoleProgress cprogress("Multistream video assembly and write");
-  // TODO: use seek functionality of IMFSourceReader::SetCurrentPosition() method
+  // TODO: Use seek functionality of IMFSourceReader::SetCurrentPosition() method.
   for_int(iloop, num_loops) {
     for_int(f, nnf) {
       cprogress.update(float(f) / nnf);
       if (verbose) showf("For output frame f=%d\n", f);
-      // TODO: could let any read stream skip ahead if no content is used from it
+      // TODO: Let any read stream skip ahead if no content is used from it.
       Array<int> ar_fi0(periods.num());  // input frame for first stream of each period
       for_int(pi, periods.num()) {
         if (pi == 0) {
@@ -1113,7 +1113,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
     grid_framei = compute_framei(V(nnf, video.dim(1), video.dim(2)), mat_deltatime, mat_start, mat_period);
   }
   const int ny = video.dim(1), nx = video.dim(2);
-  // TODO: should have \gamma (both spatial and temporal), and should have weighting of temporal vs. spatial.
+  // TODO: Should have \gamma (both spatial and temporal), and should have weighting of temporal vs. spatial.
   int64_t spatial_nseams = 0;
   double spatial_sum_cost = 0., spatial_sum_seam_cost = 0.;
   for_int(f, nnf) for_int(y, ny) for_int(x, nx) {

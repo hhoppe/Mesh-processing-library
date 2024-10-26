@@ -401,7 +401,7 @@ inline string HwBase::query_save_filename(const string& hint_filename, bool forc
   string filename = hint_filename;
   if (query(V(20, 10), "Save file:", filename)) {
     bool ok = force || !file_exists(filename);
-    // TODO: verify that file can be written
+    // TODO: Verify that the file can be written.
     if (!ok) {
       string s = "yes";
       if (query(V(20, 10), "File exists!  Overwrite (or <esc>) ? ", s) && s == "yes") ok = true;

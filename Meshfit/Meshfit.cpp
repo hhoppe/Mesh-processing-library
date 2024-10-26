@@ -402,7 +402,7 @@ void global_project_aux() {
         point_change_face(i, f);
         pt.clp[i] = clp;
       }
-    } else {  // TODO: parallel; it crashes?
+    } else {  // TODO: Make this parallel version run without crashing?
       Array<Face> ar_face(pt.co.num());
       Array<Point> ar_clp(pt.co.num());
       parallel_for_each(range(pt.co.num()), [&](const int i) {
@@ -537,8 +537,6 @@ void do_outlierdelete(Args& args) {
   pt.clear();
   for (const Point& p : ar_pt) pt.enter(p);
   initial_projection();
-  // TODO: perform outlier removal during initial projection,
-  //   where vdist is used to set the maximum spatial search radius.
 }
 
 void global_fit() {

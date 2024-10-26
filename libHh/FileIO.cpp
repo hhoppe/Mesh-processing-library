@@ -746,7 +746,6 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
       }
       int status;
       assertx(waitpid(pid, &status, 0) == pid);
-      // TODO: determine which headers to use: sys/types.h  sys/wait.h?
       if (!WIFEXITED(status)) return -1;          // Could have been signal.
       if (WEXITSTATUS(status) == 127) return -1;  // Exit code generated above for failed exec().
       return WEXITSTATUS(status);

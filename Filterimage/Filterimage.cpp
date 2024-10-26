@@ -1621,7 +1621,7 @@ void do_homogenize(Args& args) {
     // Mathematica: Sqrt[Integrate[Cos[k * x * Pi]^2, {x, 0, 1}, Assumptions -> {Integer[k]}]]
     for_int(z, image.zsize()) {
       Matrix<double> ar(V(n, n), 0.);
-      // TODO: parallelize by allocating Matrix ar per-thread, and then summing them.
+      // TODO: Parallelize by allocating Matrix ar per-thread, and then summing them.
       for (const auto& yx : range(image.dims()))
         for_int(ky, n) for_int(kx, n) ar[ky][kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * image[yx][z];
       ar[0][0] = 0.0;  // do not project out the DC term
@@ -1656,7 +1656,7 @@ void do_homogenize(Args& args) {
     // Compute the inner products of the cropped basis functions.
     Matrix<double> bb(V(n2, n2), 0.);  // B * B^T
     {
-      // TODO: parallelize by allocating bb (and arw) per-thread, and then summing the bb.
+      // TODO: Parallelize by allocating bb (and arw) per-thread, and then summing the bb.
       Array<double> arw(n2);  // column of matrix B
       for (const auto& yx : range(image.dims())) {
         if (!image[yx][3]) continue;
@@ -1668,7 +1668,7 @@ void do_homogenize(Args& args) {
     Matrix<double> invbb = inverse(bb);                         // (B * B^T)^-1
     for_int(z, image.zsize()) {
       Array<double> bx(n2, 0.);  // B * x
-      // TODO: parallelize by allocating bx per-thread, and then summing them.
+      // TODO: Parallelize by allocating bx per-thread, and then summing them.
       for (const auto& yx : range(image.dims())) {
         if (!image[yx][3]) continue;
         double v = image[yx][z];
@@ -1950,7 +1950,7 @@ void do_gdfill() {
     parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = grid_result[yx].pixel();  // alpha mask is overwritten with 1
     });
-  } else {  // instead solve for offsets; rhs becomes sparse; so does residual; TODO: perhaps avoid storing residual
+  } else {  // Instead solve for offsets; rhs becomes sparse; so does residual.  TODO: Perhaps avoid storing residual.
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     parallel_for_coords({100}, image.dims(), [&](const Vec2<int>& yx) {

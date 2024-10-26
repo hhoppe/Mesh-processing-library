@@ -302,7 +302,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
   const LUfactorization& lu = filterb.lu_factorization();
   const bool lastspecial = lu.Llastrow.num() > 0;
   const Vec<int, D>& dims = grid.dims();
-  // TODO: always process a coherent swath of the last dimension together for better cache performance.
+  // TODO: Always process a coherent swath of the last dimension together for better cache performance.
   const int cx = grid.dim(d);
   if (cx == 1) return;  // inverse convolution is identity
   const size_t stride = grid_stride(dims, d);
@@ -390,7 +390,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     for_int(k, nk) v += mat_weights_x[k] * grid_i0[k * stride];
     ngrid[u] = v;
   };
-  // TODO: use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.
+  // TODO: Use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.
   if (ngrid.size() * 20 < k_parallel_thresh) {
     for_coords(ndims, func);
   } else if (0) {
@@ -715,7 +715,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     for_int(k, nk) v += kerneli[k] * Vector4i(grid.flat(i0 + k * stride));  // OPT:blur
     ngrid[u] = ((v + fach) >> ishift).pixel();
   };
-  // TODO: use 2D tiling approach so that both grid and kernel fit in cache for wide grids.
+  // TODO: Use 2D tiling approach so that both grid and kernel fit in cache for wide grids.
   if (0) {
     for_coords(dims, func);
   } else {

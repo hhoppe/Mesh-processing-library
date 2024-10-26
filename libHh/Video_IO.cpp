@@ -839,7 +839,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       //  not stop responding.
       // Instead, use -nostdin .  Yes, it works.  Moreover, now do dup2(1, 0) in VideoViewer.
       //
-      // TODO: read and preserve metadata in video:  yes, likely also more robust way to read attributes below.
+      // TODO: Read and preserve metadata in video:  yes, likely also more robust way to read attributes below.
       // https://stackoverflow.com/a/9473239:
       //  https://www.ffmpeg.org/ffmpeg-formats.html#Metadata-1
       // ffmpeg -i input_video -f ffmetadata metadata.txt

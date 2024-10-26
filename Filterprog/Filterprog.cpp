@@ -18,7 +18,7 @@ using namespace hh;
 
 namespace {
 
-// TODO: let REFINE() function look at mesh after vsplit?
+// TODO: Let REFINE() function look at mesh after vsplit?
 
 int maxnfaces = 0;            // number of faces in next request
 bool stringent = false;       // in sel.ref., condition (1) instead of (1')

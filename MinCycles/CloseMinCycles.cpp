@@ -15,7 +15,7 @@
 namespace hh {
 
 // TODO:
-// - ability to find dual cycle, so that we can always fill tunnels, e.g. buddha.orig.m
+// - Introduce ability to find dual cycle, so that we can always fill tunnels, e.g. buddha.orig.m .
 
 // History:
 //

@@ -15,6 +15,10 @@
 
 namespace hh {
 
+namespace details {
+class BSpatialSearch;
+}
+
 // Spatial data structure for efficient queries like "closest_elements" or "find_elements_intersecting_ray".
 class Spatial : noncopyable {            // abstract class
   static constexpr int k_max_gn = 1023;  // 10 bits per coordinate
@@ -27,7 +31,7 @@ class Spatial : noncopyable {            // abstract class
   virtual void clear() = 0;
 
  protected:
-  friend class BSpatialSearch;
+  friend details::BSpatialSearch;
   int _gn;     // grid size
   float _gni;  // 1.f / _gn
   //
@@ -49,16 +53,20 @@ class Spatial : noncopyable {            // abstract class
   Bbox<float, 3> indices_to_bbox(const Ind& ci) const;
   int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied here
   Ind decode(int en) const;
+
   // for BSpatialSearch:
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
   // May use set to avoid duplication.
   virtual void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const = 0;
+
   // Refine distance estimate of first entry in pq (optional)
   virtual void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
+
   virtual Univ pq_id(Univ pqe) const = 0;  // given pq entry, return id
 };
 
-// Spatial data structure for point elements.
+namespace details {
+
 class BPointSpatial : public Spatial {
  public:
   explicit BPointSpatial(int gn) : Spatial(gn) {}
@@ -68,6 +76,7 @@ class BPointSpatial : public Spatial {
   void enter(Univ id, const Point* pp);   // note: pp not copied, no ownership taken
   void remove(Univ id, const Point* pp);  // must exist, else die
   void shrink_to_fit();                   // often just fragments memory
+
  private:
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   Univ pq_id(Univ pqe) const override;
@@ -76,6 +85,16 @@ class BPointSpatial : public Spatial {
     const Point* p;
   };
   Map<int, Array<Node>> _map;  // encoded cube index -> Array
+};
+
+}  // namespace details
+
+// Spatial data structure for point elements.
+template <typename T> class PointSpatial : public details::BPointSpatial {
+ public:
+  explicit PointSpatial(int gn) : BPointSpatial(gn) {}
+  void enter(T id, const Point* pp) { BPointSpatial::enter(Conv<T>::e(id), pp); }
+  void remove(T id, const Point* pp) { BPointSpatial::remove(Conv<T>::e(id), pp); }
 };
 
 // Spatial data structure for point elements indexed by an integer.
@@ -88,6 +107,7 @@ class IPointSpatial : public Spatial {
  private:
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   Univ pq_id(Univ pqe) const override;
+
   const Point* _pp;
   Map<int, Array<int>> _map;  // encoded cube index -> Array of point indices
 };
@@ -105,6 +125,7 @@ class ObjectSpatial : public Spatial {
   // Enter an object that comes with a containment function: the function returns true if the object lies
   // within a given bounding box.  A starting point is also given.
   template <typename Func = bool(const Bbox<float, 3>&)> void enter(Univ id, const Point& startp, Func fcontains);
+
   // Find the objects that could possibly intersect the segment (p1, p2).
   // The objects are not returned in the exact order of intersection!
   // However, once should_stop is set (ftest's return), the procedure
@@ -113,23 +134,26 @@ class ObjectSpatial : public Spatial {
 
  private:
   Map<int, Array<Univ>> _map;  // encoded cube index -> vector
+
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const override;
   Univ pq_id(Univ pqe) const override { return pqe; }
 };
 
-// Search for nearest element(s) from a given query point.
+namespace details {
+
 class BSpatialSearch : noncopyable {
  public:
   // pmaxdis is only a request, you may get objects that lie farther
-  explicit BSpatialSearch(const Spatial* sp, const Point& p, float maxdis = 10.f);
+  explicit BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis = 10.f);
   ~BSpatialSearch();
   bool done();
   Univ next(float* dis2 = nullptr);  // ret id
+
  private:
   friend Spatial;
   using Ind = Vec3<int>;
-  const Spatial& _sp;
+  const Spatial& _spatial;
   const Point _pcenter;
   float _maxdis;
   Pqueue<Univ> _pq;    // pq of entries by distance
@@ -140,10 +164,20 @@ class BSpatialSearch : noncopyable {
   Set<Univ> _setevis;  // may be used by add_cell()
   int _ncellsv{0};
   int _nelemsv{0};
-  //
+
   void get_closest_next_cell();
   void expand_search_space();
   void consider(const Ind& ci);
+};
+
+}  // namespace details
+
+// Search for nearest element(s) from a given query point.
+template <typename T> class SpatialSearch : public details::BSpatialSearch {
+ public:
+  SpatialSearch(const Spatial* pspatial, const Point& pp, float pmaxdis = 10.f)
+      : BSpatialSearch(pspatial, pp, pmaxdis) {}
+  T next(float* dis2 = nullptr) { return Conv<T>::d(BSpatialSearch::next(dis2)); }
 };
 
 //----------------------------------------------------------------------------
@@ -177,19 +211,6 @@ inline Spatial::Ind Spatial::decode(int en) const {
   ci[0] = en;
   return ci;
 }
-
-template <typename T> class PointSpatial : public BPointSpatial {
- public:
-  explicit PointSpatial(int gn) : BPointSpatial(gn) {}
-  void enter(T id, const Point* pp) { BPointSpatial::enter(Conv<T>::e(id), pp); }
-  void remove(T id, const Point* pp) { BPointSpatial::remove(Conv<T>::e(id), pp); }
-};
-
-template <typename T> class SpatialSearch : public BSpatialSearch {
- public:
-  SpatialSearch(const Spatial* psp, const Point& pp, float pmaxdis = 10.f) : BSpatialSearch(psp, pp, pmaxdis) {}
-  T next(float* dis2 = nullptr) { return Conv<T>::d(BSpatialSearch::next(dis2)); }
-};
 
 template <typename Approx2, typename Exact2>
 void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter,

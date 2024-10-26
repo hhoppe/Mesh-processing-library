@@ -62,7 +62,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   using IPoint = Vec<int, D>;    // grid point
   static_assert(D == 2 || D == 3);
   static constexpr int k_max_gn = D == 3 ? 1024 : 65536;  // bits/coordinate == 10 for 3D, 16 for 2D (max 32 bits)
-  explicit ContourBase(int gn) : _gn(gn), _gni(1.f / gn) {
+  explicit ContourBase(int gridn_) : _gn(gridn_), _gni(1.f / gridn_) {
     assertx(_gn > 0);
     assertx(_gn < k_max_gn);  // must leave room for [0 ... _gn] inclusive
     set_vertex_tolerance(_vertex_tol);
@@ -745,13 +745,13 @@ class Contour2D : public ContourBase<2> {
 // Template deduction guides:
 
 template <typename Eval, typename Border>
-Contour3DMesh(int gn, GMesh* pmesh, Eval eval, Border border) -> Contour3DMesh<Eval, Border>;
+Contour3DMesh(int gridn, GMesh* pmesh, Eval eval, Border border) -> Contour3DMesh<Eval, Border>;
 
 template <typename Eval, typename Border>
-Contour3D(int gn, GMesh* pmesh, Eval eval, Border border) -> Contour3D<Eval, Border>;
+Contour3D(int gridn, GMesh* pmesh, Eval eval, Border border) -> Contour3D<Eval, Border>;
 
 template <typename Eval, typename Contour, typename Border>
-Contour2D(int gn, Eval eval, Contour contour, Border border) -> Contour2D<Eval, Contour, Border>;
+Contour2D(int gridn, Eval eval, Contour contour, Border border) -> Contour2D<Eval, Contour, Border>;
 
 }  // namespace hh
 

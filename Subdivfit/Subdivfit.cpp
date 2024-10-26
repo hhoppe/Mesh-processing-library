@@ -702,26 +702,22 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
                        const Set<int>& setbadpts) {
   HH_STIMER("___lallproject");
   const GMesh& mesh = smesh.mesh();
-  Array<PolygonFace> ar_polyface;
-  PolygonFaceSpatial psp(60);  // Not MeshSearch because of face subset selection using `setgoodf`.
-  {
-    HH_STIMER("____lmakespatial");
-    for (Face f : mesh.faces()) {
-      if (!setgoodf.contains(smesh.orig_face(f))) continue;
-      Polygon poly(3);
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      for_int(i, poly.num()) poly[i] *= xform;
-      ar_polyface.push(PolygonFace(std::move(poly), f));
-    }
-    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
+  Array<TriangleFace> trianglefaces;
+  for (Face f : mesh.faces()) {
+    if (!setgoodf.contains(smesh.orig_face(f))) continue;
+    Polygon poly(3);
+    mesh.polygon(f, poly);
+    assertx(poly.num() == 3);
+    for_int(i, poly.num()) poly[i] *= xform;
+    trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
   }
+  TriangleFaceSpatial spatial(trianglefaces, 60);  // Not MeshSearch because of face subset selection using `setgoodf`.
   HH_STIMER("____lspatialproject");
   for (int i : setpts) {
     if (setbadpts.contains(i)) {
-      SpatialSearch<PolygonFace*> ss(&psp, co[i] * xform);
-      PolygonFace* polyface = ss.next();
-      gscmf[i] = polyface->face;
+      SpatialSearch<TriangleFace*> ss(&spatial, co[i] * xform);
+      TriangleFace* triangleface = ss.next();
+      gscmf[i] = triangleface->face;
     } else {
       Face f = trfmm(gcmf[i], gmesh, smesh.orig_mesh());
       gscmf[i] = smesh.get_face(f, gscmfi[i]);

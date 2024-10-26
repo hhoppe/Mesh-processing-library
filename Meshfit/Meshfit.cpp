@@ -23,6 +23,7 @@
 #include "libHh/Set.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
+#include "libHh/TriangleFaceSpatial.h"
 using namespace hh;
 
 namespace {
@@ -417,29 +418,26 @@ void global_project_aux() {
       }
     }
   } else {
-    Array<PolygonFace> ar_polyface;
+    Array<TriangleFace> trianglefaces;
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
-        Polygon poly(3);
-        mesh.polygon(f, poly);
-        ar_polyface.push(PolygonFace(std::move(poly), f));
+        trianglefaces.push({mesh.triangle_points(f), f});
       } else {
         Polygon poly(4);
         mesh.polygon(f, poly);
         assertx(poly.num() == 4);
         if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor)) rotate(poly, poly[1]);
-        ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[1], poly[2])), f));
-        ar_polyface.push(PolygonFace(Polygon(V(poly[0], poly[2], poly[3])), f));
+        trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
+        trianglefaces.push({V(poly[0], poly[2], poly[3]), f});
       }
     }
-    // const int psp_size = nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35
-    const int psp_size = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
-    PolygonFaceSpatial psp(psp_size);  // Not MeshSearch because of quads.
-    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
+    // const int gridn = nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35
+    const int gridn = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
+    TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
     for_int(i, pt.co.num()) {
-      SpatialSearch<PolygonFace*> ss(&psp, pt.co[i]);
-      PolygonFace* polyface = ss.next();
-      Face f = polyface->face;
+      SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
+      TriangleFace* triangleface = ss.next();
+      Face f = triangleface->face;
       point_change_face(i, f);
       project_point(pt.co[i], f, dummy_bary, pt.clp[i]);
     }

@@ -171,7 +171,6 @@
     <ClInclude Include="ParallelCoords.h" />
     <ClInclude Include="Pixel.h" />
     <ClInclude Include="Polygon.h" />
-    <ClInclude Include="PolygonSpatial.h" />
     <ClInclude Include="Pool.h" />
     <ClInclude Include="Postscript.h" />
     <ClInclude Include="Pqueue.h" />
@@ -197,6 +196,7 @@
     <ClInclude Include="StringOp.h" />
     <ClInclude Include="SubMesh.h" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="TriangleFaceSpatial.h" />
     <ClInclude Include="UnionFind.h" />
     <ClInclude Include="Univ.h" />
     <ClInclude Include="VariadicMacros.h" />

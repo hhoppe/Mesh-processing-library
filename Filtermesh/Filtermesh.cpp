@@ -34,6 +34,7 @@
 #include "libHh/Stat.h"
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
+#include "libHh/TriangleFaceSpatial.h"
 using namespace hh;
 
 #if defined(HH_HAVE_SIMPLEX)
@@ -2404,8 +2405,8 @@ void do_info() {
     HH_STAT(Sfinscribedr);
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
-        Vec3<Point> points = mesh.triangle_points(f);
-        Sfinscribedr.enter(inscribed_radius(points[0], points[1], points[2]));
+        Vec3<Point> triangle = mesh.triangle_points(f);
+        Sfinscribedr.enter(inscribed_radius(triangle[0], triangle[1], triangle[2]));
       }
     }
   }
@@ -2935,8 +2936,8 @@ void do_norgroup() {
 }
 
 float face_inscribed_radius(Face f) {
-  Vec3<Point> points = mesh.triangle_points(f);
-  return inscribed_radius(points[0], points[1], points[2]);
+  Vec3<Point> triangle = mesh.triangle_points(f);
+  return inscribed_radius(triangle[0], triangle[1], triangle[2]);
 }
 
 bool is_degenerate(Face f) { return face_inscribed_radius(f) < 1e-6f; }
@@ -3840,79 +3841,75 @@ void do_shootrays(Args& args) {
   const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
   Frame xform = bbox.get_frame_to_small_cube(0.5f);
   Frame xform_inverse = ~xform;
-  Array<PolygonFace> ar_polyface;
-  ar_polyface.reserve(omesh.num_faces());
-  // const int psp_size = 120;
-  const int psp_size = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
-  PolygonFaceSpatial psp(psp_size);  // Not MeshSearch because of widen_triangle().
+  Array<TriangleFace> trianglefaces;
+  trianglefaces.reserve(omesh.num_faces());
   {
-    HH_TIMER("__create_psp");
-    string str;
+    Polygon poly(3);
     for (Face f : omesh.faces()) {
-      Polygon poly(3);
       omesh.polygon(f, poly);
       assertx(poly.num() == 3);
       if (1) widen_triangle(poly, 1e-4f);
       for_int(i, 3) poly[i] *= xform;
-      ar_polyface.push(PolygonFace(std::move(poly), f));
+      trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
     }
-    for (PolygonFace& polyface : ar_polyface) psp.enter(&polyface);
   }
-  {
-    HH_TIMER("__shoot_rays");
-    const bool show_a3d = true;
-    auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
-    auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
-    float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
-    float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
-    string str;
-    for (Vertex v : mesh.vertices()) {
-      Point p = mesh.point(v) * xform;
-      Vector nor(0.f, 0.f, 0.f);
-      if (parse_key_vec(mesh.get_string(v), "normal", nor)) {
-      } else {
-        Warning("No vertex normal; looking for a corner normal");
-        for (Corner c : mesh.corners(v))
-          if (parse_key_vec(mesh.get_string(c), "normal", nor)) break;
-        assertx(!is_zero(nor));
-      }
-      mesh.update_string(v, "Onormal", csform_vec(str, nor));
-      mesh.update_string(v, "normal", nullptr);
-      assertx(is_unit(nor));
-      float mindist = BIGFLOAT;
-      Point minp = p;
-      for_int(dir, 2) {
-        float vdir = dir ? 1.f : -1.f;
-        Point p1 = p + nor * (negdisp * vdir);
-        Point p2 = p + nor * (maxdisp * vdir);
-        const PolygonFace* polyface;
-        Point pint;
-        bool found = psp.first_along_segment(p1, p2, polyface, pint);
-        if (found && dist(p, pint) < abs(mindist)) {
-          mindist = dist(p, pint) * vdir;
-          minp = pint;
-        }
-      }
-      if (mindist == BIGFLOAT) {
-        Warning("No ray intersection");
-        mindist = 0.f;
-        // mindist = .02f;  // for debugging
-      } else {
-        HH_SSTAT(Smindistc, mindist);
-        HH_SSTAT(Smindisto, mindist / xform[0][0]);
-      }
-      // Point minpint = p + nor * mindist;
-      if (up_oa3d) {
-        A3dElem el(A3dElem::EType::polyline, 0);
-        el.push(A3dVertex(p * xform_inverse, nor, A3dVertexColor(Pixel::black())));
-        el.push(A3dVertex(minp * xform_inverse, nor, A3dVertexColor(Pixel::black())));
-        up_oa3d->write(el);
-      }
-      Point op = mesh.point(v);
-      mesh.update_string(v, "Opos", csform_vec(str, op));
-      mesh.set_point(v, minp * xform_inverse);
-      mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));
+  // const int gridn = 120;
+  const int gridn = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
+  TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of widen_triangle().
+
+  HH_TIMER("__shoot_rays");
+  const bool show_a3d = true;
+  auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
+  auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
+  float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
+  float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
+  string str;
+  for (Vertex v : mesh.vertices()) {
+    Point p = mesh.point(v) * xform;
+    Vector nor(0.f, 0.f, 0.f);
+    if (parse_key_vec(mesh.get_string(v), "normal", nor)) {
+    } else {
+      Warning("No vertex normal; looking for a corner normal");
+      for (Corner c : mesh.corners(v))
+        if (parse_key_vec(mesh.get_string(c), "normal", nor)) break;
+      assertx(!is_zero(nor));
     }
+    mesh.update_string(v, "Onormal", csform_vec(str, nor));
+    mesh.update_string(v, "normal", nullptr);
+    assertx(is_unit(nor));
+    float mindist = BIGFLOAT;
+    Point minp = p;
+    for_int(dir, 2) {
+      float vdir = dir ? 1.f : -1.f;
+      Point p1 = p + nor * (negdisp * vdir);
+      Point p2 = p + nor * (maxdisp * vdir);
+      const TriangleFace* triangleface;
+      Point pint;
+      bool found = spatial.first_along_segment(p1, p2, triangleface, pint);
+      if (found && dist(p, pint) < abs(mindist)) {
+        mindist = dist(p, pint) * vdir;
+        minp = pint;
+      }
+    }
+    if (mindist == BIGFLOAT) {
+      Warning("No ray intersection");
+      mindist = 0.f;
+      // mindist = .02f;  // for debugging
+    } else {
+      HH_SSTAT(Smindistc, mindist);
+      HH_SSTAT(Smindisto, mindist / xform[0][0]);
+    }
+    // Point minpint = p + nor * mindist;
+    if (up_oa3d) {
+      A3dElem el(A3dElem::EType::polyline, 0);
+      el.push(A3dVertex(p * xform_inverse, nor, A3dVertexColor(Pixel::black())));
+      el.push(A3dVertex(minp * xform_inverse, nor, A3dVertexColor(Pixel::black())));
+      up_oa3d->write(el);
+    }
+    Point op = mesh.point(v);
+    mesh.update_string(v, "Opos", csform_vec(str, op));
+    mesh.set_point(v, minp * xform_inverse);
+    mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));
   }
 }
 
@@ -4180,7 +4177,7 @@ void do_trimpts(Args& args) {
   assertx(!mesh.empty());
   const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
-  PointSpatial<int> psp(800);
+  PointSpatial<int> spatial(800);
   Array<Point> points;
   {
     RFile fi(filename);
@@ -4203,7 +4200,7 @@ void do_trimpts(Args& args) {
       }
       points.push(p);
     }
-    for_int(i, points.num()) psp.enter(i, &points[i]);
+    for_int(i, points.num()) spatial.enter(i, &points[i]);
     showdf("Read %d inbound points out of %d points from %s\n", points.num(), totpts, filename.c_str());
   }
   if (getenv_bool("CIRCUMRADIUS")) {  // Note: not really the circumradius!
@@ -4216,7 +4213,7 @@ void do_trimpts(Args& args) {
       Point pc = interp(poly[0], poly[1], poly[2]);  // Note: not really the circumcenter!
       float circumd = dist(pc, poly[0]);
       float maxd = circumd * dtrim * xform[0][0];
-      SpatialSearch<int> ss(&psp, pc * xform, maxd);
+      SpatialSearch<int> ss(&spatial, pc * xform, maxd);
       float dis2;
       if (ss.done() || (ss.next(&dis2), dis2 > square(maxd))) dfaces.push(f);
     }
@@ -4229,7 +4226,7 @@ void do_trimpts(Args& args) {
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * xform;
       assertx(p[0] > 0 && p[0] < 1 && p[1] > 0 && p[1] < 1 && p[2] > 0 && p[2] < 1);
-      SpatialSearch<int> ss(&psp, p, maxd);
+      SpatialSearch<int> ss(&spatial, p, maxd);
       float dis2;
       if (ss.done() || (ss.next(&dis2), dis2 > square(maxd))) {
         nvtoofar++;

@@ -91,15 +91,15 @@ void do_ints() {
 void do_points() {
   SHOW("do_points");
   Vec<Point, 20> pa;
-  PointSpatial<int> psp(10);
+  PointSpatial<int> spatial(10);
   for_int(i, 10) {
     pa[i] = Point(.1f, .1f, .1f) + Vector(.3f, .2f, .1f) * (i * .2f);
     pa[i + 10] = Point(.12f, .1f, .1f) + Vector(.2f, .32f, .12f) * (i * .2f);
   }
-  for_int(i, 20) psp.enter(i, &pa[i]);
-  auto gmst = graph_quick_emst(pa, psp);
+  for_int(i, 20) spatial.enter(i, &pa[i]);
+  auto gmst = graph_quick_emst(pa, spatial);
   show_graph(gmst);
-  auto gkcl = graph_euclidean_k_closest(pa, 5, psp);
+  auto gkcl = graph_euclidean_k_closest(pa, 5, spatial);
   show_graph(gkcl, true);
 }
 

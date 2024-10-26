@@ -5,9 +5,9 @@ namespace hh {
 
 // Given 10'000 random data points uniformly sampled over the unit cube,
 // find the closest 10 neighbors:
-// spatialtest -gn $gn -pn 10000
+// spatialtest -gridn $gridn -pn 10000
 // average time
-//      gn      pn=10000        pn=1000
+//      gridn   pn=10000        pn=1000
 //      1       1.1745          .14967
 //      2       .25267          .05333
 //      3       .11967          .03883
@@ -24,8 +24,10 @@ namespace hh {
 // optimal #cells/point:
 //              .1-30           .06-40
 //
-// for 100'000 data points, gn=40, time is .03100 (still very good)
-//                          gn=50, time is .02583
+// for 100'000 data points, gridn=40, time is .03100 (still very good)
+//                          gridn=50, time is .02583
+
+namespace details {
 
 // *** BPointSpatial
 
@@ -79,41 +81,13 @@ Univ BPointSpatial::pq_id(Univ pqe) const {
   return e->id;
 }
 
-// *** IPointSpatial
-
-IPointSpatial::IPointSpatial(int gn, CArrayView<Point> arp) : Spatial(gn), _pp(arp.data()) {
-  for_int(i, arp.num()) {
-    Ind ci = point_to_indices(arp[i]);
-    assertx(indices_inbounds(ci));
-    int en = encode(ci);
-    _map[en].push(i);  //  First create empty Array<int> if not present.
-  }
-  if (0)
-    for (auto& cell : _map.values()) cell.shrink_to_fit();
-}
-
-void IPointSpatial::clear() {
-  for (auto& cell : _map.values()) HH_SSTAT(Spspcelln, cell.num());
-  _map.clear();
-}
-
-void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
-  int en = encode(ci);
-  bool present;
-  const auto& cell = _map.retrieve(en, present);
-  if (!present) return;
-  for (int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
-}
-
-Univ IPointSpatial::pq_id(Univ pqe) const { return pqe; }
-
 // *** SpatialSearch
 
-BSpatialSearch::BSpatialSearch(const Spatial* sp, const Point& p, float maxdis)
-    : _sp(*assertx(sp)), _pcenter(p), _maxdis(maxdis) {
+BSpatialSearch::BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis)
+    : _spatial(*assertx(pspatial)), _pcenter(p), _maxdis(maxdis) {
   // SHOW("search", p, maxdis);
-  Ind ci = _sp.point_to_indices(_pcenter);
-  assertx(_sp.indices_inbounds(ci));
+  Ind ci = _spatial.point_to_indices(_pcenter);
+  assertx(_spatial.indices_inbounds(ci));
   for_int(i, 2) for_int(c, 3) _ssi[i][c] = ci[c];
   consider(ci);
   get_closest_next_cell();
@@ -142,20 +116,20 @@ Univ BSpatialSearch::next(float* pdis2) {
       continue;
     }
     u = _pq.min();
-    _sp.pq_refine(_pq, _pcenter);
+    _spatial.pq_refine(_pq, _pcenter);
     if (_pq.min() != u || _pq.min_priority() != dis2) continue;
     if (pdis2) *pdis2 = _pq.min_priority();
     u = _pq.remove_min();
     break;
   }
-  return _sp.pq_id(u);
+  return _spatial.pq_id(u);
 }
 
 void BSpatialSearch::consider(const Ind& ci) {
   // SHOW("consider", ci);
   _ncellsv++;
   int n = _pq.num();
-  _sp.add_cell(ci, _pq, _pcenter, _setevis);
+  _spatial.add_cell(ci, _pq, _pcenter, _setevis);
   _nelemsv += _pq.num() - n;
 }
 
@@ -163,7 +137,7 @@ void BSpatialSearch::get_closest_next_cell() {
   float mindis = 1e10f;
   for_int(c, 3) {
     if (_ssi[0][c] > 0) {
-      float a = _pcenter[c] - _sp.index_to_float(_ssi[0][c]);
+      float a = _pcenter[c] - _spatial.index_to_float(_ssi[0][c]);
       if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
@@ -171,8 +145,8 @@ void BSpatialSearch::get_closest_next_cell() {
         _dir = 0;
       }
     }
-    if (_ssi[1][c] < _sp._gn - 1) {
-      float a = _sp.index_to_float(_ssi[1][c] + 1) - _pcenter[c];
+    if (_ssi[1][c] < _spatial._gn - 1) {
+      float a = _spatial.index_to_float(_ssi[1][c] + 1) - _pcenter[c];
       if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
@@ -195,5 +169,35 @@ void BSpatialSearch::expand_search_space() {
   for (const Ind& cit : range(bi[0], bi[1] + 1)) consider(cit);
   get_closest_next_cell();
 }
+
+}  // namespace details
+
+// *** IPointSpatial
+
+IPointSpatial::IPointSpatial(int gridn, CArrayView<Point> arp) : Spatial(gridn), _pp(arp.data()) {
+  for_int(i, arp.num()) {
+    Ind ci = point_to_indices(arp[i]);
+    assertx(indices_inbounds(ci));
+    int en = encode(ci);
+    _map[en].push(i);  //  First create empty Array<int> if not present.
+  }
+  if (0)
+    for (auto& cell : _map.values()) cell.shrink_to_fit();
+}
+
+void IPointSpatial::clear() {
+  for (auto& cell : _map.values()) HH_SSTAT(Spspcelln, cell.num());
+  _map.clear();
+}
+
+void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
+  int en = encode(ci);
+  bool present;
+  const auto& cell = _map.retrieve(en, present);
+  if (!present) return;
+  for (int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
+}
+
+Univ IPointSpatial::pq_id(Univ pqe) const { return pqe; }
 
 }  // namespace hh

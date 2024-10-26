@@ -1975,8 +1975,8 @@ void do_gdfill() {
   image.set_zsize(3);  // remove alpha channel
 }
 
-void output_contour(int gn, float contour_value) {
-  if (!gn) gn = max(image.dims());
+void output_contour(int gridn, float contour_value) {
+  if (!gridn) gridn = max(image.dims());
   WSA3dStream wcontour(std::cout);
   // Pixels are at locations [ 0.5 / imagesize, (imagesize - .5) / imagesize ], consistent with sample_domain()
   Matrix<float> matrix(image.dims());
@@ -1997,10 +1997,10 @@ void output_contour(int gn, float contour_value) {
     }
     wcontour.write(el);
   };
-  Contour2D contour(gn, func_eval, func_contour);
+  Contour2D contour(gridn, func_eval, func_contour);
   contour.set_vertex_tolerance(.0001f);
-  for (const auto& yx : range(twice(gn - 1)))                     // visit all contour cells
-    contour.march_from((convert<float>(yx) + 1.f) * (1.f / gn));  // center of contour cell
+  for (const auto& yx : range(twice(gridn - 1)))                     // visit all contour cells
+    contour.march_from((convert<float>(yx) + 1.f) * (1.f / gridn));  // center of contour cell
   nooutput = true;
 }
 
@@ -2008,18 +2008,18 @@ void do_contour(Args& args) {
   // e.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d - -st imageup
   // e.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d - -st imageup
   // e.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d - -st imageup
-  int gn = args.get_int();
-  output_contour(gn, 127.5f);
+  int gridn = args.get_int();
+  output_contour(gridn, 127.5f);
 }
 
 void do_mcontours(Args& args) {
   // e.g.: Filterimage ~/data/image/lake.png -scaletox 32 -mcontours 256 10 | Filtera3d -joinlines | G3d - -st imageup
-  int gn = args.get_int();
+  int gridn = args.get_int();
   int ncontours = args.get_int();
   for_int(i, ncontours) {
     // float contour_value = 255.f * (i + .5f) / ncontours;  // contours lie at center of uniform value intervals
     float contour_value = 255.f * i / (ncontours + 1.f);  // contours delineate uniform partition of pixel values
-    output_contour(gn, contour_value);
+    output_contour(gridn, contour_value);
   }
 }
 

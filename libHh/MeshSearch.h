@@ -5,9 +5,7 @@
 #include <optional>
 
 #include "libHh/Bbox.h"
-#include "libHh/Facedistance.h"
-#include "libHh/GMesh.h"
-#include "libHh/Spatial.h"
+#include "libHh/TriangleFaceSpatial.h"
 
 #if 0
 {
@@ -18,52 +16,6 @@
 #endif
 
 namespace hh {
-
-struct PolygonFace {
-  PolygonFace() = default;
-  PolygonFace(Polygon p, Face f) : poly(std::move(p)), face(f) {}
-  Polygon poly;
-  Face face;
-};
-
-namespace details {
-
-struct polygonface_approx_distance2 {
-  float operator()(const Point& p, Univ id) const {
-    const PolygonFace& polyface = *Conv<const PolygonFace*>::d(id);
-    const Polygon& poly = polyface.poly;
-    ASSERTX(poly.num() == 3);
-    return square(lb_dist_point_triangle(p, poly[0], poly[1], poly[2]));
-  }
-};
-
-struct polygonface_distance2 {
-  float operator()(const Point& p, Univ id) const {
-    const PolygonFace& polyface = *Conv<const PolygonFace*>::d(id);
-    const Polygon& poly = polyface.poly;
-    ASSERTX(poly.num() == 3);
-    return dist_point_triangle2(p, poly[0], poly[1], poly[2]);
-  }
-};
-
-}  // namespace details
-
-// A spatial data structure over a collection of polygons (each associated with a Mesh Face).
-class PolygonFaceSpatial
-    : public ObjectSpatial<details::polygonface_approx_distance2, details::polygonface_distance2> {
- public:
-  explicit PolygonFaceSpatial(int gn) : ObjectSpatial(gn) {}
-  // clear() inherited from ObjectSpatial
-  void enter(const PolygonFace* polyface);  // not copied, no ownership taken
-  bool first_along_segment(const Point& p1, const Point& p2, const PolygonFace*& ret_ppolyface, Point& ret_pint) const;
-};
-
-struct TriangleFace {
-  TriangleFace() = default;
-  TriangleFace(const Vec3<Point>& points, Face f) : _points(points), _f(f) {}
-  Vec3<Point> _points;
-  Face _f;
-};
 
 // Construct a spatial data structure from a mesh, to enable fast closest-point queries from arbitrary points.
 // Optionally, tries to speed up the search by caching the result of the previous search and incrementally
@@ -93,7 +45,6 @@ class MeshSearch {
   const GMesh& _mesh;
   Options _options;
   Array<TriangleFace> _trianglefaces;
-  class TriangleFaceSpatial;
   unique_ptr<TriangleFaceSpatial> _spatial;
   Frame _xform;
 };

@@ -1052,16 +1052,16 @@ void do_load_map(Args& args) {
   for (Vertex v : g_mesh.vertices()) g_mesh.set_point(v, Point(BIGFLOAT, 0.f, 0.f));
   Array<Point> arp;
   arp.reserve(g_mesh.num_vertices());  // Necessary to prevent reallocation.
-  PointSpatial<Vertex> psp(max(10, gridn));
+  PointSpatial<Vertex> spatial(max(10, gridn));
   for (Vertex v : g_mesh.vertices()) {
     arp.push(v_domainp(v) * k_fdomain_to_spatialbb);
-    psp.enter(v, &arp.last());
+    spatial.enter(v, &arp.last());
   }
   for (Vertex domain_v : domain_mesh.vertices()) {
     const Point& sphp = v_sph(domain_v);
     const Point& domainp = domain_mesh.point(domain_v);
     int nfaces = 0;
-    SpatialSearch<Vertex> ss(&psp, domainp * k_fdomain_to_spatialbb);
+    SpatialSearch<Vertex> ss(&spatial, domainp * k_fdomain_to_spatialbb);
     for (;;) {
       float dis2;
       Vertex vv = ss.next(&dis2);
@@ -1173,16 +1173,17 @@ Bary get_bary(const Point& p, const Vec3<Point>& pt, TriangleSpheremap triangle_
 // triangle f containing p, and the barycentric coordinates of p in f.
 void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
   const TriangleSpheremap triangle_map = &map_sphere;
-  Vec3<Point> points;
+  Vec3<Point> triangle;
   {
     // Find the spherical triangle f containing p.
     int nfchanges = 0;
     for (;;) {
-      points = mesh.triangle_points(f);
+      triangle = mesh.triangle_points(f);
       // Adapted from MeshSearch.cpp .
       const float dotcross_eps = 2e-7f;
       Vec3<bool> outside;
-      for_int(i, 3) outside[i] = dot(Vector(p), cross(p, points[mod3(i + 1)], points[mod3(i + 2)])) < -dotcross_eps;
+      for_int(i, 3) outside[i] =
+          dot(Vector(p), cross(p, triangle[mod3(i + 1)], triangle[mod3(i + 2)])) < -dotcross_eps;
       int noutside = sum<int>(outside);
       if (noutside == 0) break;
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
@@ -1207,9 +1208,9 @@ void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
     HH_SSTAT(Snfchanges, nfchanges);
   }
   if (1) {
-    bary = get_bary(p, points, triangle_map);
+    bary = get_bary(p, triangle, triangle_map);
   } else {
-    bary = get_bary_sub(p, points, triangle_map);
+    bary = get_bary_sub(p, triangle, triangle_map);
   }
 }
 
@@ -1300,8 +1301,8 @@ void internal_remesh() {
       auto [param_f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
       search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
       hint_f = param_f;
-      const Vec3<Point> points = map(g_mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
-      const Point newp = interp(points[0], points[1], points[2], bary);
+      const Vec3<Point> triangle = map(g_mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
+      const Point newp = interp(triangle[0], triangle[1], triangle[2], bary);
       g_mesh.set_point(v, newp);
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
       if (checkern) {
@@ -1530,8 +1531,8 @@ void do_write_dual_texture(Args& args) {
             pixel = Pixel(255, 255, 255, 255);
             continue;
           }
-          const Vec3<Point> points = map(mesh_i.triangle_vertices(f), [&](Vertex v) { return v_domainp(v); });
-          p_d = interp(points[0], points[1], points[2], bary);
+          const Vec3<Point> triangle = map(mesh_i.triangle_vertices(f), [&](Vertex v) { return v_domainp(v); });
+          p_d = interp(triangle[0], triangle[1], triangle[2], bary);
         }
         {
           auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);

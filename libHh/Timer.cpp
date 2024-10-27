@@ -43,6 +43,8 @@ namespace hh {
 
 namespace {
 
+constexpr int k_show_undefined = -10;
+
 // Return the effective number of cores (or 0 if unknown).
 inline unsigned std_thread_hardware_concurrency() { return std::thread::hardware_concurrency(); }
 
@@ -168,7 +170,7 @@ class Timers {
     if (_vec_timer_info.empty()) return;
     for (const auto& timer_info : _vec_timer_info)
       if (timer_info.stat_cpu_times.num() > 1) _have_some_mult = true;
-    if (_have_some_mult || Timer::show_times() > 0) {
+    if (_have_some_mult || Timer::get_show_times() > 0) {
       const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
       show_local("Summary of timers (%s):\n", timing_host().c_str());
       const int precision = getenv_int("HH_TIMER_PRECISION", 2, false);  // Number of fractional decimal digits.
@@ -206,9 +208,15 @@ class Timers {
 
 #endif  // !defined(HH_NO_TIMERS_CLASS)
 
-int Timer::_s_show = getenv_int("SHOW_TIMES");
+int Timer::_s_show = k_show_undefined;
+
+int Timer::get_show_times() {
+  if (_s_show == k_show_undefined) _s_show = getenv_int("SHOW_TIMES");
+  return _s_show;
+}
 
 Timer::Timer(string name_, EMode mode) : _name(std::move(name_)), _mode(mode) {
+  (void)get_show_times();
   if (_name == "") {
     _mode = EMode::noprint;
   } else {

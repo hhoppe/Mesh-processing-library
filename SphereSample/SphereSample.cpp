@@ -76,14 +76,6 @@ const Pixel k_pixel_orange{255, 153, 0, 255};
 
 inline Point bilerp(const Vec4<Point>& pa, float u, float v) { return bilerp(pa[0], pa[1], pa[2], pa[3], u, v); }
 
-bool in_spheretri(const Point& p, const Vec3<Point>& tri) {
-  ASSERTX(is_unit(p));
-  for_int(i, 3) ASSERTX(is_unit(tri[i]));
-  const float dotcross_eps = 2e-7f;
-  for_int(i, 3) if (dot(Vector(p), cross(p, tri[i], tri[mod3(i + 1)])) < -dotcross_eps) return false;
-  return true;
-}
-
 float angle_between_unit_vectors_and_sincos(const Vector& v1, const Vector& v2, float& sina, float& cosa) {
   cosa = dot(v1, v2);
   const float thresh = 0.9475f;
@@ -1101,119 +1093,6 @@ void do_sample_map(Args& args) {
   }
 }
 
-Bary get_bary_sub(const Point& p, const Vec3<Point>& pt, TriangleSpheremap triangle_map) {
-  assertx(triangle_map == &map_sphere);
-  // Problem is that most maps do not have the property that pn[] are on spherical arcs of pc[]!
-  ASSERTX(is_unit(p));
-  for_int(i, 3) ASSERTX(is_unit(pt[i]));
-  Vec3<Bary> bc;
-  Vec3<Point> pc;
-  for_int(i, 3) {
-    bc[i] = Bary(i == 0, i == 1, i == 2);
-    pc[i] = pt[i];
-  }
-  for_int(iter, 100) {
-    const float eps = 2e-7f;
-    if (dist2(pc[0], pc[1]) < square(eps) && dist2(pc[0], pc[2]) < square(eps) && dist2(pc[1], pc[2]) < square(eps))
-      return bc[0];
-    Vec3<Bary> bn;
-    Vec3<Point> pn;
-    for_int(i, 3) {
-      bn[i] = interp(bc[mod3(i + 1)], bc[mod3(i + 2)]);
-      pn[i] = triangle_map(pt, bn[i]);
-    }
-    for_int(i, 3) {
-      const Vec3<Point> pp{pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
-      if (in_spheretri(p, pp)) {
-        bc = {bc[i], bn[mod3(i + 2)], bn[mod3(i + 1)]};
-        pc = {pc[i], pn[mod3(i + 2)], pn[mod3(i + 1)]};
-        break;
-      } else if (i == 2) {
-        if (!in_spheretri(p, pn)) SHOW(pt, pc, pn, bc, dist2(pc[0], pc[1]), dist2(pc[0], pc[2]), dist2(pc[1], pc[2]));
-        assertx(in_spheretri(p, pn));
-        bc = bn;
-        pc = pn;
-      }
-    }
-  }
-  assertnever("no convergence");
-}
-
-Bary get_bary(const Point& p, const Vec3<Point>& pt, TriangleSpheremap triangle_map) {
-  ASSERTX(in_spheretri(p, pt));
-  // Hard-code the inverse-map for map_sphere.
-  assertx(triangle_map == &map_sphere);
-  // Spherically project the point onto the triangle spanning pt[3],
-  //  i.e. intersect the segment (origin, p) with the triangle.
-  Polygon poly(3);
-  for_int(i, 3) poly[i] = pt[i];
-  const Point origin(0.f, 0.f, 0.f);
-  Point pint;
-  if (!poly.intersect_segment(origin, p, pint)) {
-    // Warning("widening polygon");
-    if (0) SHOW(poly, spherical_triangle_area(poly));
-    widen_triangle(poly, 1e-4f);
-    if (0) SHOW(poly);
-    if (!poly.intersect_segment(origin, p, pint)) {
-      // Warning("intersect_segment failed again");
-      // Well, resort to closest point if necessary.
-      Bary bary;
-      project_point_triangle2(p, pt[0], pt[1], pt[2], bary, pint);
-    }
-  }
-  // Compute bary for the intersection point pint.
-  Bary bary;
-  Point clp;
-  const float d2 = project_point_triangle2(pint, pt[0], pt[1], pt[2], bary, clp);
-  assertw(d2 < 1e-10f);
-  return bary;
-}
-
-// Given point p on sphere, and some nearby spherical triangle f in mesh, find the true spherical
-// triangle f containing p, and the barycentric coordinates of p in f.
-void search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary) {
-  const TriangleSpheremap triangle_map = &map_sphere;
-  Vec3<Point> triangle;
-  {
-    // Find the spherical triangle f containing p.
-    int nfchanges = 0;
-    for (;;) {
-      triangle = mesh.triangle_points(f);
-      // Adapted from MeshSearch.cpp .
-      const float dotcross_eps = 2e-7f;
-      Vec3<bool> outside;
-      for_int(i, 3) outside[i] =
-          dot(Vector(p), cross(p, triangle[mod3(i + 1)], triangle[mod3(i + 2)])) < -dotcross_eps;
-      int noutside = sum<int>(outside);
-      if (noutside == 0) break;
-      const Vec3<Vertex> va = mesh.triangle_vertices(f);
-      if (noutside == 2) {
-        const int side = index(outside, false);
-        // Fastest: jump across the vertex.
-        Vertex v = va[side];
-        const int val = mesh.degree(v);
-        // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
-        constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
-        const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
-        for_int(i, nrot) f = assertx(mesh.ccw_face(v, f));
-      } else if (noutside == 1) {
-        const int side = index(outside, true);
-        f = assertx(mesh.opp_face(va[side], f));
-      } else {
-        assertnever("");
-      }
-      nfchanges++;
-      assertx(nfchanges < 200);
-    }
-    HH_SSTAT(Snfchanges, nfchanges);
-  }
-  if (1) {
-    bary = get_bary(p, triangle, triangle_map);
-  } else {
-    bary = get_bary_sub(p, triangle, triangle_map);
-  }
-}
-
 // Returns k_undefined_vector if undefined.
 Vector interp_f_normal(const GMesh& mesh, Face f, const Bary& bary) {
   const Vec3<Corner> corners = mesh.triangle_corners(f);
@@ -1298,8 +1177,7 @@ void internal_remesh() {
       const Point& sph = g_mesh.point(v);  // Point on sphere.
       v_sph(v) = sph;
       assertx(is_unit(sph));
-      auto [param_f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
-      search_bary(sph, param_mesh, param_f, bary);  // May modify param_f.
+      auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
       hint_f = param_f;
       const Vec3<Point> triangle = map(g_mesh.triangle_vertices(param_f), [&](Vertex v) { return v_domainp(v); });
       const Point newp = interp(triangle[0], triangle[1], triangle[2], bary);
@@ -1543,8 +1421,7 @@ void do_write_dual_texture(Args& args) {
           for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
           p_s = normalized(sum);
         }
-        auto [f, bary, unused_clp, d2] = msearch_s.search(p_s, hint_f_s);
-        search_bary(p_s, param_mesh, f, bary);  // May modify f.
+        auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
         hint_f_s = f;
         assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
       }
@@ -1682,9 +1559,8 @@ void do_write_lonlat_texture(Args& args) {
         const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
         const Point sph = sph_from_lonlat(lonlat);
 
-        auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
+        auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
         hint_f = f;
-        search_bary(sph, param_mesh, f, bary);  // May modify f.
         assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
       }
     }
@@ -1830,9 +1706,8 @@ void do_create_lonlat_checker(Args& args) {
           Pixel& pixel = image[yy][x];
           const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
-          auto [f, bary, unused_clp, unused_d2] = mesh_search.search(sph, hint_f);
-          // Given that `g_mesh` has disjoint components, this call to search_bary() ought to fail sometimes?
-          search_bary(sph, g_mesh, f, bary);  // May modify f.
+          // Given that `g_mesh` has disjoint components, this ought to fail sometimes?
+          auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
           hint_f = f;
           const Vec3<Vertex> va = g_mesh.triangle_vertices(f);
           Uv uv{};

@@ -1,10 +1,99 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/MeshSearch.h"
 
+#include "libHh/GeomOp.h"  // widen_triangle()
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 
 namespace hh {
+
+namespace {
+
+// make more precise??
+bool in_spheretri(const Point& p, const Vec3<Point>& tri) {
+  ASSERTX(is_unit(p));
+  for_int(i, 3) ASSERTX(is_unit(tri[i]));
+  const float dotcross_eps = 2e-7f;
+  for_int(i, 3) if (dot(Vector(p), cross(p, tri[i], tri[mod3(i + 1)])) < -dotcross_eps) return false;
+  return true;
+}
+
+// Given the point `p` on the unit sphere and a spherical triangle assumed to enclose it, return the barycentric
+// coordinates of the spherical projection of `p` onto the triangle.
+Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
+  assertx(in_spheretri(p, triangle));  // ??
+  // Compute the spherical projection --- the intersection `pint` of the segment (origin, p) with the triangle.
+  const Point further_p = p * 1.01f;  // Extend the segment to remove any ambiguity at its endpoint.
+  Polygon poly(3);
+  for_int(i, 3) poly[i] = triangle[i];
+  const Point origin(0.f, 0.f, 0.f);
+  Point pint;
+  if (!poly.intersect_segment(origin, further_p, pint)) {
+    if (0) Warning("widening polygon");
+    const bool debug = false;
+    if (debug) SHOW(p, further_p);
+    if (debug) SHOW(poly, spherical_triangle_area(poly));
+    const Polygon poly_bu = poly;
+    widen_triangle(poly, 1e-3f);  // Larger due to nonzero `tolerance` below.
+    if (debug) SHOW(poly);
+    if (!poly.intersect_segment(origin, further_p, pint)) {
+      Warning("intersect_segment failed again");
+      if (1) SHOW_PRECISE(p, further_p, poly_bu, poly);
+      // In this unexpected worst case, fall back to computing the closest point.
+      Bary bary;
+      project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, pint);
+    }
+  }
+  // Compute the barycentric coordinates of the intersection point `pint`.
+  Bary bary;
+  Point clp;
+  const float d2 = project_point_triangle2(pint, triangle[0], triangle[1], triangle[2], bary, clp);
+  assertw(d2 < 1e-10f);
+  return bary;
+}
+
+// Given point `p` on the unit sphere, and some "nearby" spherical triangle `f` in `mesh`, find the actual spherical
+// triangle f containing p, and the barycentric coordinates of the spherical projection of p onto f.
+void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary, float tolerance = 0.f) {
+  Vec3<Point> triangle;
+  {
+    // Find the spherical triangle f (with vertex points `triangle`) containing p.
+    int nfchanges = 0;
+    for (;;) {
+      triangle = mesh.triangle_points(f);
+      // Adapted from MeshSearch.cpp .
+      Vec3<bool> outside;
+      for_int(i, 3) outside[i] =
+          spherical_triangle_is_flipped(V(p, triangle[mod3(i + 1)], triangle[mod3(i + 2)]), tolerance);
+      int num_outside = sum<int>(outside);
+      if (num_outside == 0) break;
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      if (num_outside == 2) {
+        const int side = index(outside, false);
+        // Fastest: jump across the vertex.
+        Vertex v = va[side];
+        const int val = mesh.degree(v);
+        // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
+        constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
+        const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
+        for_int(i, nrot) f = assertx(mesh.ccw_face(v, f));
+      } else if (num_outside == 1) {
+        const int side = index(outside, true);
+        Face f2 = mesh.opp_face(va[side], f);
+        if (!assertw(f2)) break;
+        f = f2;
+      } else {
+        assertnever("");
+      }
+      nfchanges++;
+      assertx(nfchanges < 200);
+    }
+    HH_SSTAT(Snfchanges, nfchanges);
+  }
+  bary = gnomonic_get_bary(p, triangle);
+}
+
+}  // namespace
 
 MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _options(std::move(options)) {
   if (getenv_bool("NO_LOCAL_PROJECT")) {
@@ -96,6 +185,18 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   }
   result.f = f;
   return result;
+}
+
+MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hint_f, const Point* final_p) const {
+  auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
+  gnomonic_search_bary(p, _mesh, f, bary);                      // Modifies f and bary.
+  if (final_p) {
+    // Now use the obtained face f but search for the final position final_p and use some nonzero tolerance to
+    // hopefully avoid crossing over to the wrong side of the parametric uv discontinuity.
+    const float tolerance = 1e-7f;
+    gnomonic_search_bary(*final_p, _mesh, f, bary, tolerance);  // Modifies f and bary.
+  }
+  return {f, bary};
 }
 
 }  // namespace hh

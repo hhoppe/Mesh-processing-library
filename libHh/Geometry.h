@@ -161,6 +161,10 @@ Point slerp(const Point& p1, const Point& p2, float ba);
 // Spherical triangle area.
 float spherical_triangle_area(const Vec3<Point>& pa);
 
+// Determine if an oriented spherical triangle spans more than a hemisphere.
+template <typename Precision = double>
+bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance = 0.f);
+
 // Return signed area of 2D triangle (positive if counter-clockwise).
 template <typename Precision = double>
 float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
@@ -233,6 +237,19 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
                  float v) {
   // return qinterp(a0, a1, a2, a3, Bary((1.f - u) * (1.f - v), u * (1.f - v), u * v));
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
+}
+
+template <typename Precision>
+bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance) {
+  // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
+  //  (1.f/6.f) * dot(p1, cross(p2, p3).
+  // return dot(pt[0], cross(pt[1], pt[2])) < 0.f;
+  const Point& p1 = pt[1];
+  const Point& p2 = pt[2];
+  Vec3<Precision> vcross(Precision(p1[1]) * p2[2] - Precision(p1[2]) * p2[1],
+                         Precision(p1[2]) * p2[0] - Precision(p1[0]) * p2[2],
+                         Precision(p1[0]) * p2[1] - Precision(p1[1]) * p2[0]);
+  return dot<Precision>(pt[0], vcross) < -tolerance;
 }
 
 template <typename Precision> float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {

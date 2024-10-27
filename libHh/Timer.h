@@ -62,7 +62,7 @@ class Timer : noncopyable {
   double cpu() const;          // Simulated "single-thread" "user + system" CPU time, in seconds.
   double parallelism() const;  // Effective number of cores that multiply cpu() to obtain the total process CPU time.
   //
-  static int show_times() { return _s_show; }
+  static int get_show_times();
   static void set_show_times(int val) { _s_show = val; }
 
  private:

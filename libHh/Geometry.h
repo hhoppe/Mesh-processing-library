@@ -239,8 +239,7 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
 }
 
-template <typename Precision>
-bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance) {
+template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance) {
   // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
   //  (1.f/6.f) * dot(p1, cross(p2, p3).
   // return dot(pt[0], cross(pt[1], pt[2])) < 0.f;

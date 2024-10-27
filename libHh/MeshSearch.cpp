@@ -189,7 +189,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
 
 MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hint_f, const Point* final_p) const {
   auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
-  gnomonic_search_bary(p, _mesh, f, bary);                      // Modifies f and bary.
+  gnomonic_search_bary(p, _mesh, f, bary);  // Modifies f and bary.
   if (final_p) {
     // Now use the obtained face f but search for the final position final_p and use some nonzero tolerance to
     // hopefully avoid crossing over to the wrong side of the parametric uv discontinuity.

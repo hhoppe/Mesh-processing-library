@@ -1706,7 +1706,8 @@ void do_create_lonlat_checker(Args& args) {
           Pixel& pixel = image[yy][x];
           const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
-          // Given that `g_mesh` has disjoint components, this ought to fail sometimes?
+          // Because `g_mesh` has disjoint components, we get warning "assertw(f2)" in gnomonic_search_bary() for
+          // a tiny fraction of pixels.
           auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
           hint_f = f;
           const Vec3<Vertex> va = g_mesh.triangle_vertices(f);

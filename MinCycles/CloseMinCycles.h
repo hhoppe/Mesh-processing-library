@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
 #define MESH_PROCESSING_MINCYCLES_CLOSEMINCYCLES_H_
 
+#include <optional>
+
 #include "libHh/Array.h"
 #include "libHh/GMesh.h"
 #include "libHh/Map.h"
@@ -29,9 +31,13 @@ class CloseMinCycles {
   void flood_reinitialize(Vertex vseed);
   Array<Vertex> close_cycle(const CArrayView<Vertex> vao);
   bool would_be_nonseparating_cycle(Edge e12, bool exact);
-  bool look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist, int& num_edges);
-  void min_cycle_from_vertex(Vertex vseed, bool process, float& search_radius, Vertex& farthest_vertex,
-                             int& num_edges);
+  std::optional<int> look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist);  // Ret: num_edges.
+  struct MinCycleResult {
+    float search_radius;
+    Vertex farthest_vertex;
+    int num_edges;
+  };
+  std::optional<MinCycleResult> min_cycle_from_vertex(Vertex vseed, bool process);
   void find_cycles();
 };
 

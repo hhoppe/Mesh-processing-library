@@ -280,15 +280,15 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
 // We have reached vertex v1 from vertex v2, both of which have already been visited.
 // Determine if the associated cycle is non-separating (i.e. spans a topological handle).
 // If it is, optionally process the cycle.
-// Return: was_a_nonseparating_cycle.
-bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist, int& num_edges) {
+// If was_a_nonseparating_cycle, return the num_edges.
+std::optional<int> CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist) {
   HH_STIMER("__look_for_cycle");
   if (verb) Warning("Looking for cycle");
   Edge e12 = _mesh.edge(v1, v2);
   assertx(!e_joined(e12));
   if (!would_be_nonseparating_cycle(e12, true)) {
     if (verb) Warning("not a cycle");
-    return false;
+    return {};
   }
   Array<Edge> ecycle;
   {
@@ -303,7 +303,7 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
         v = vn;
       }
     }
-    if (!assertw(epath[1].num())) return false;  // fix 2014-09-11
+    if (!assertw(epath[1].num())) return {};  // fix 2014-09-11
     while (epath[0].last() == epath[1].last()) {
       if (process) Warning("Cycle was not minimal since trimming dart");
       epath[0].sub(1);
@@ -312,7 +312,7 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
     ecycle.push_array(std::move(epath[0]));
     ecycle.push_array(reverse(std::move(epath[1])));
   }
-  num_edges = ecycle.num();
+  const int num_edges = ecycle.num();
   if (process) {
     float len = 0.f;
     for (Edge e : ecycle) len += _mesh.length(e);
@@ -339,23 +339,19 @@ bool CloseMinCycles::look_for_cycle(Vertex v1, Vertex v2, bool process, float ve
     // Re-initialize v_dist() and e_joined() for that portion of the mesh disconnected from vseed.
     flood_reinitialize(van[0]);  // pick any new vertex
   }
-  return true;
+  return {num_edges};
 }
 
 // Find the smallest size cycle containing vertex vseed -- report search radius (BIGFLOAT if no cycle found)
 //   and farthest vertex in cycle from vseed.
 // If parameter "process" is true, modify the mesh to close the cycle.
 // The caller must clean up e_joined() and v_dist() after this function completes.
-void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& search_radius, Vertex& farthest_vertex,
-                                           int& num_edges) {
+auto CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process) -> std::optional<MinCycleResult> {
   if (sdebug) {  // verify that previous search has cleanly reinitialized all fields.
     Warning("sdebug");
     for (Edge e : _mesh.edges()) assertx(!e_joined(e));
     for (Vertex v : _mesh.vertices()) assertx(v_dist(v) == BIGFLOAT);
   }
-  search_radius = BIGFLOAT;
-  farthest_vertex = nullptr;
-  num_edges = std::numeric_limits<int>::max();
   Map<Vertex, Vertex> map_vtouch;
   const auto v_vtouch = [&](Vertex v) -> Vertex& { return map_vtouch[v]; };
   // The priority queue on Vertex v contains two types of prioritized events:
@@ -388,11 +384,12 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
         if (verb) Warning("joined in the meantime");
         continue;
       }
-      if (look_for_cycle(vnew, v_vtouch(vnew), process, vdist, num_edges)) {
-        // we have found a cycle; exit from function
-        search_radius = vdist;
-        farthest_vertex = v_vtouch(vnew);
-        break;
+      if (auto result = look_for_cycle(vnew, v_vtouch(vnew), process, vdist)) {
+        // We have found a cycle; exit from function
+        const float search_radius = vdist;
+        Vertex farthest_vertex = v_vtouch(vnew);
+        const int num_edges = *result;
+        return MinCycleResult{search_radius, farthest_vertex, num_edges};
       }
       continue;  // not a non-separating cycle; ignore this event
     }
@@ -452,6 +449,7 @@ void CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process, float& se
       }
     }
   }
+  return {};
 }
 
 // Intuition:
@@ -474,11 +472,8 @@ void CloseMinCycles::find_cycles() {
     return;
   }
   if (0) {  // debug
-    float sr;
-    Vertex vfarthest;
-    int num_edges;
-    min_cycle_from_vertex(_mesh.id_vertex(49), true, sr, vfarthest, num_edges);
-    SHOW(sr);
+    const auto result = min_cycle_from_vertex(_mesh.id_vertex(49), true);
+    SHOW(result->search_radius);
     for (Vertex v : _mesh.vertices())
       if (v_dist(v) != BIGFLOAT) showf("vdist(%d)=%g\n", _mesh.vertex_id(v), v_dist(v));
     return;
@@ -510,15 +505,12 @@ void CloseMinCycles::find_cycles() {
       break;
     }
     ++iter;
-    float sr;
-    Vertex vfarthest;
-    int num_edges;
-    min_cycle_from_vertex(vseed, false, sr, vfarthest, num_edges);
+    const auto& result = min_cycle_from_vertex(vseed, false);
+    const float sr = result ? result->search_radius : BIGFLOAT;
     ubsr = min(ubsr, sr);  // if find a cycle, possibly reduce the upper-bound on the minimal search radius
     if (verb)
       showf("it=%-4d v=%-7d sr=%-12g nedges=%-4d lb=%-12g ub=%-12g\n",  //
-            iter, _mesh.vertex_id(vseed), sr, (num_edges == std::numeric_limits<int>::max() ? -1 : num_edges), lbsr,
-            ubsr);
+            iter, _mesh.vertex_id(vseed), sr, (result ? result->num_edges : -1), lbsr, ubsr);
     if (!(sr * (1.f + 2e-7f) >= lbsr)) {
       SHOW((lbsr - sr) / sr - 1.f);
       assertx(sr >= lbsr);
@@ -563,23 +555,22 @@ void CloseMinCycles::find_cycles() {
       lbsr = pqvlbsr.min_priority();
       if (!(ubsr >= lbsr)) assertnever(SSHOW(_mesh.vertex_id(pqvlbsr.min()), lbsr));
     }
-    if (sr == BIGFLOAT) continue;  // no more cycles in this connected component of the mesh
+    if (!result) continue;  // no more cycles in this connected component of the mesh
     // Process the cycle if its radius is within some fraction of the lower-bound minimal cycle radius lbsr.
     if (sr <= _frac_cycle_length * lbsr) {  // was: "if (sr == lbsr)"
       if (verb) showdf("After %d iter, processing cycle of length %g\n", iter + 1, sr * 2.f);
-      assertx(num_edges < std::numeric_limits<int>::max());
-      if (num_edges > _max_cycle_nedges) {
-        showdf("Stopping because next cycle has %d>%d edges\n", num_edges, _max_cycle_nedges);
+      assertx(result);
+      if (result->num_edges > _max_cycle_nedges) {
+        showdf("Stopping because next cycle has %d>%d edges\n", result->num_edges, _max_cycle_nedges);
         break;
       }
       bool restart_at_farthest = true;  // may improve loop if _frac_cycle_length > 1.f (e.g. holes3.m)
       if (!assertw(_frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;  // fix 2014-09-11
-      if (restart_at_farthest) vseed = vfarthest;
-      float old_sr = sr;
-      min_cycle_from_vertex(vseed, true, sr, vfarthest, num_edges);
-      assertx(sr <= old_sr * (1.f + 1e-6f));
-      if (!restart_at_farthest) assertx(sr == old_sr);
-      assertw(num_edges <= _max_cycle_nedges);
+      if (restart_at_farthest) vseed = result->farthest_vertex;
+      const auto result2 = assertx(min_cycle_from_vertex(vseed, true));
+      assertx(result2->search_radius <= sr * (1.f + 1e-6f));
+      if (!restart_at_farthest) assertx(result2->search_radius == sr);
+      assertw(result2->num_edges <= _max_cycle_nedges);
       flood_reinitialize(vseed);  // again re-initialize v_dist() and e_joined()
       if (sdebug) {
         Warning("slow");

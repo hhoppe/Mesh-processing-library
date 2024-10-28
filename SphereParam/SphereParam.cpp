@@ -180,9 +180,8 @@ void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
   if (v_has_corner_normals)
     for (Corner c : mesh.corners(v2))
       if (Face f = mesh.corner_face(c); f != mesh.face1(e) && f != mesh.face2(e))
-        if (Vector normal; mesh.parse_corner_key_vec(c, "normal", normal))
-          face_normal.enter(mesh.corner_face(c), normal);
-  mesh.collapse_edge_vertex(e, v);
+        if (Vector normal; mesh.parse_corner_key_vec(c, "normal", normal)) face_normal.enter(f, normal);
+  mesh.collapse_edge_vertex(e, v);  // Vertex v2 is destroyed.
   string str;
   if (v_has_corner_normals) {
     for (Corner c : mesh.corners(v))
@@ -202,8 +201,8 @@ void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
         Vertex v2 = mesh.opp_vertex(v, e);
         if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
           Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
-          collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept.
-          new_vertices.remove(v2);  // (In most cases, it is not present.)
+          collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept; vertex v2 is destroyed.
+          new_vertices.remove(v2);         // (In most cases, it is not present.)
           modified = true;
           break;
         }
@@ -243,7 +242,10 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
         if (edge_crosses_meridian) edges_to_split.add(e);
       }
   }
-  for (Edge e : edges_to_split) split_edge(e, k_axis0);
+  for (Edge e : edges_to_split) {
+    // mesh.valid(e);
+    split_edge(e, k_axis0);  // need to update edges_to_split ??
+  }
   edges_to_split.clear();
 
   collapse_zero_param_length_edges(mesh, new_vertices);

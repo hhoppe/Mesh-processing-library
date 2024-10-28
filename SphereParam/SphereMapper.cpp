@@ -156,11 +156,11 @@ class SphereMapper::Implementation {
     SGrid<float, 3, 3> cov{};  // Weighted covariance matrix.
     for_int(f, _pmi._faces.num()) {
       const Vec3<int> vertices = _pmi.face_vertices(f);
-      const Vec3<Point> points = _pmi.face_points(f);
+      const Vec3<Point> triangle = _pmi.face_points(f);
       const Vec3<Point> sphs = map(vertices, [&](int v) { return _sphmap[v]; });
-      Vector face_normal = cross(points[0], points[1], points[2]);
+      Vector face_normal = get_normal_dir(triangle);
       if (!face_normal.normalize()) continue;
-      const float face_area = sqrt(area2(points));
+      const float face_area = sqrt(area2(triangle));
       const Point sph_center = normalized(sphs[0] + sphs[1] + sphs[2]);
       for_int(i, 3) for_int(j, 3) cov[i][j] += sph_center[i] * face_normal[j] * face_area;
     }
@@ -292,10 +292,10 @@ class SphereMapper::Implementation {
 
   bool face_flipped(int f) const {
     const Vec3<int> vertices = _pmi.face_vertices(f);
-    const Vec3<Point> p = map(vertices, [&](int v) { return _sphmap[v]; });
-    if (0) return -signed_volume(p[0], p[1], p[2], Point(0.f, 0.f, 0.f)) < -1e-5f;  // Slower.
-    const Vector center = mean(p);
-    return dot(center, cross(p[1] - p[0], p[2] - p[0])) < -1e-5f;
+    const Vec3<Point> triangle = map(vertices, [&](int v) { return _sphmap[v]; });
+    if (0) return -signed_volume(triangle[0], triangle[1], triangle[2], Point(0.f, 0.f, 0.f)) < -1e-5f;  // Slower.
+    const Vector center = mean(triangle);
+    return dot(center, cross(triangle[1] - triangle[0], triangle[2] - triangle[0])) < -1e-5f;
   }
 
   bool any_adjacent_face_flipped(int v, int someface) const {
@@ -585,7 +585,7 @@ class SphereMapper::Implementation {
                           const Vec3<Precision>& ps0, const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
     // Determine a local frame on the spherical domain triangle.
     const Vec3<Precision> d_e01 = pd1 - pd0, d_e02 = pd2 - pd0;
-    // Triangle coordinates in a canonical isometric frame: (0, 0), (d_x1, 0), (d_x2, d_y2).
+    // Compute triangle coordinates in a canonical isometric frame: (0, 0), (d_x1, 0), (d_x2, d_y2).
     const Precision d_x1 = mag(d_e01), recip_d_x1 = 1.f / (d_x1 + 1e-20f);
 
     const Precision d_x2 = dot(d_e02, d_e01) * recip_d_x1;

@@ -419,11 +419,11 @@ void global_project_aux() {
     }
   } else {
     Array<TriangleFace> trianglefaces;
+    Polygon poly(4);
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
         trianglefaces.push({mesh.triangle_points(f), f});
       } else {
-        Polygon poly(4);
         mesh.polygon(f, poly);
         assertx(poly.num() == 4);
         if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor)) rotate(poly, poly[1]);
@@ -436,7 +436,7 @@ void global_project_aux() {
     TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
     for_int(i, pt.co.num()) {
       SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
-      TriangleFace* triangleface = ss.next();
+      TriangleFace* triangleface = ss.next().id;
       Face f = triangleface->face;
       point_change_face(i, f);
       project_point(pt.co[i], f, dummy_bary, pt.clp[i]);

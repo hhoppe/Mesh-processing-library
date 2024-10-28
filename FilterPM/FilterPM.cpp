@@ -657,7 +657,7 @@ void do_gcompression() {
   DeltaEncoding de_pplx;  // After prediction, local frame, per coord.
   DeltaEncoding de_pply;  // After prediction, local frame, per coord.
   DeltaEncoding de_pplz;  // After prediction, local frame, per coord.
-  Polygon polygon;
+  Polygon poly;
   for_int(vspli, pmesh._vsplits.num()) {
     const Vsplit& vspl = pmesh._vsplits[vspli];
     int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
@@ -666,12 +666,12 @@ void do_gcompression() {
     de_p.enter_vector(encode_dpoint(vspl.vad_large.dpoint));
     // Traverse faces above vs to find "North" ring of vertices.
     // Then compute centroid of these vertices as prediction for new vt.
-    polygon.init(0);
+    poly.init(0);
     int f = vspl.flclw;
     int vs_index = (vspl.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
     int vs = pmi->_wedges[pmi->_faces[f].wedges[vs_index]].vertex;
     int nrot = vspl.vlr_offset1 - 1;
-    polygon.push(pmi->_vertices[vs].attrib.point);
+    poly.push(pmi->_vertices[vs].attrib.point);
     if (nrot < 0) {
       // Extend beyond a corner.  Use only vs itself as prediction (this makes sense).
     } else if (nrot == 0) {
@@ -684,39 +684,39 @@ void do_gcompression() {
       }
       int j = pmi->get_jvf(vs, f);
       int vo = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 1)]].vertex;
-      polygon.push(pmi->_vertices[vo].attrib.point);
+      poly.push(pmi->_vertices[vo].attrib.point);
     } else {
       // Interior vertex.  Note: polygon will be oriented clockwise.
       {  // first add vl
         int j = pmi->get_jvf(vs, f);
         int vl = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 2)]].vertex;
-        polygon.push(pmi->_vertices[vl].attrib.point);
+        poly.push(pmi->_vertices[vl].attrib.point);
       }
       // Now add remaining vertices on ring.
       for_int(i, nrot) {
         assertx(f >= 0);
         int j = pmi->get_jvf(vs, f);
         int vo = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 1)]].vertex;
-        polygon.push(pmi->_vertices[vo].attrib.point);
+        poly.push(pmi->_vertices[vo].attrib.point);
         f = pmi->_fnei[f].faces[mod3(j + 2)];
       }
     }
-    // SHOW(polygon.num());
-    // for_int(i, polygon.num()) SHOW(polygon[i]);
-    Point pcentroid = mean(polygon);
+    // SHOW(poly.num());
+    // for_int(i, poly.num()) SHOW(poly[i]);
+    Point pcentroid = mean(poly);
     Point pvs = pmi->_vertices[vs].attrib.point;
     Point pnew = pvs + vspl.vad_large.dpoint;
     Vector vdiff = pnew - pcentroid;
     // Compute local frame.
     Frame lframe;
-    if (polygon.num() < 3) {
+    if (poly.num() < 3) {
       Warning("Using identity local frame");
       lframe = Frame::identity();
     } else {
       // Orientation of frame does not matter, as long as it is consistent.
-      lframe.v(0) = polygon.get_normal();  // Pointing in; does not matter.
+      lframe.v(0) = poly.get_normal();  // Pointing in; does not matter.
       assertx(!is_zero(lframe.v(0)));
-      // lframe.v(1) = polygon[1] - pvs;  // Equal to vl - vs.
+      // lframe.v(1) = poly[1] - pvs;  // Equal to vl - vs.
       lframe.v(1) = pcentroid - pvs;
       assertx(lframe.v(1).normalize());
       lframe.v(2) = cross(lframe.v(0), lframe.v(1));

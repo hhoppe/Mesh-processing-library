@@ -354,7 +354,7 @@ Point spheremap_sym_arvo(const Point& pa, const Point& pb, const Point& pc, cons
 
 Point spheremap_sym_buss_fillmore(const Point& pa, const Point& pb, const Point& pc, const Bary& b) {
   ASSERTX(b.is_convex());
-  const Vec3<Point> pp = V(pa, pb, pc);
+  const Vec3<Point> triangle = V(pa, pb, pc);
   Point p = ok_normalized(b[0] * pa + b[1] * pb + b[2] * pc);
   SGrid<float, 3, 3> tp;
   const float eps = 1e-4f;
@@ -363,14 +363,14 @@ Point spheremap_sym_buss_fillmore(const Point& pa, const Point& pb, const Point&
     // Map A, B, C to tangent plane at p using inverse exponential map.
     for_int(v, 3) {
       float sin_theta, cos_theta;
-      const float theta = angle_between_unit_vectors_and_sincos(p, pp[v], sin_theta, cos_theta);
+      const float theta = angle_between_unit_vectors_and_sincos(p, triangle[v], sin_theta, cos_theta);
       if (cos_theta >= 1.f || abs(sin_theta) < eps / 10) {
         ASSERTX(b[v] > 1.f - eps);
-        return pp[v] * b[v];
+        return triangle[v] * b[v];
       }
       ASSERTX(sin_theta != 0.f);
       for_int(k, 3) {
-        tp[v][k] = (pp[v][k] - p[k] * cos_theta) / sin_theta;  // Unit vector perpendicular to p.
+        tp[v][k] = (triangle[v][k] - p[k] * cos_theta) / sin_theta;  // Unit vector perpendicular to p.
         tp[v][k] *= theta;
         q[k] += tp[v][k] * b[v];
       }
@@ -424,46 +424,56 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
 
 // *** Maps.
 
-using TriangleSpheremap = Point (*)(const Vec3<Point>& pt, const Bary& bary);
+using TriangleSpheremap = Point (*)(const Vec3<Point>& triangle, const Bary& bary);
 
-Point map_sphere(const Vec3<Point>& pt, const Bary& bary) {
-  // return normalized(interp(pt[0], pt[1], pt[2], bary[0], bary[1]));
-  return spheremap_linear_reproject(pt[0], pt[1], pt[2], bary);
+Point map_sphere(const Vec3<Point>& triangle, const Bary& bary) {
+  // return normalized(interp(triangle[0], triangle[1], triangle[2], bary[0], bary[1]));
+  return spheremap_linear_reproject(triangle[0], triangle[1], triangle[2], bary);
 }
 
-Point map_2slerp0(const Vec3<Point>& pt, const Bary& bary) { return spheremap_2slerp0(pt[0], pt[1], pt[2], bary); }
-
-Point map_2slerp1(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_2slerp0(pt[1], pt[2], pt[0], Bary(bary[1], bary[2], bary[0]));
+Point map_2slerp0(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_2slerp0(triangle[0], triangle[1], triangle[2], bary);
 }
 
-Point map_2slerp2(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_2slerp0(pt[2], pt[0], pt[1], Bary(bary[2], bary[0], bary[1]));
+Point map_2slerp1(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_2slerp0(triangle[1], triangle[2], triangle[0], Bary(bary[1], bary[2], bary[0]));
 }
 
-Point map_2slerps(const Vec3<Point>& pt, const Bary& bary) { return spheremap_sym_2slerps(pt[0], pt[1], pt[2], bary); }
-
-Point map_arvo0(const Vec3<Point>& pt, const Bary& bary) { return spheremap_arvo0(pt[0], pt[1], pt[2], bary); }
-
-Point map_arvo1(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_arvo0(pt[1], pt[2], pt[0], Bary(bary[1], bary[2], bary[0]));
+Point map_2slerp2(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_2slerp0(triangle[2], triangle[0], triangle[1], Bary(bary[2], bary[0], bary[1]));
 }
 
-Point map_arvo2(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_arvo0(pt[2], pt[0], pt[1], Bary(bary[2], bary[0], bary[1]));
+Point map_2slerps(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_sym_2slerps(triangle[0], triangle[1], triangle[2], bary);
 }
 
-Point map_arvos(const Vec3<Point>& pt, const Bary& bary) { return spheremap_sym_arvo(pt[0], pt[1], pt[2], bary); }
-
-Point map_buss(const Vec3<Point>& pt, const Bary& bary) {
-  return spheremap_sym_buss_fillmore(pt[0], pt[1], pt[2], bary);
+Point map_arvo0(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_arvo0(triangle[0], triangle[1], triangle[2], bary);
 }
 
-Point map_area(const Vec3<Point>& pt, const Bary& bary) { return spheremap_area_ratio(pt[0], pt[1], pt[2], bary); }
+Point map_arvo1(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_arvo0(triangle[1], triangle[2], triangle[0], Bary(bary[1], bary[2], bary[0]));
+}
 
-Point map_trisub(const Vec3<Point>& pt, const Bary& bary) {
+Point map_arvo2(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_arvo0(triangle[2], triangle[0], triangle[1], Bary(bary[2], bary[0], bary[1]));
+}
+
+Point map_arvos(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_sym_arvo(triangle[0], triangle[1], triangle[2], bary);
+}
+
+Point map_buss(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_sym_buss_fillmore(triangle[0], triangle[1], triangle[2], bary);
+}
+
+Point map_area(const Vec3<Point>& triangle, const Bary& bary) {
+  return spheremap_area_ratio(triangle[0], triangle[1], triangle[2], bary);
+}
+
+Point map_trisub(const Vec3<Point>& triangle, const Bary& bary) {
   ASSERTX(bary.is_convex());
-  Vec3<Point> pc = pt;
+  Vec3<Point> pc = triangle;
   Bary bc = bary;
   for_int(iter, 100) {
     for_int(i, 3) ASSERTX(bc[i] >= 0.f && bc[i] <= 1.f);
@@ -507,18 +517,18 @@ TriangleSpheremap get_map(const string& triangle_map_name) {
 
 // *** domain -> sphere grid mapping.
 
-// Given uv coordinates within spherical quad, return a spherical triangle pt and barycentric coordinates within it.
-void split_quad_2tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary) {
+// Given uv coordinates within spherical quad, return a spherical triangle and barycentric coordinates within it.
+void split_quad_2tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& triangle, Bary& bary) {
   if (fi + fj <= 1.f) {
-    pt = V(po[0], po[1], po[3]);
+    triangle = V(po[0], po[1], po[3]);
     bary = Bary(1.f - fi - fj, fj, fi);
   } else {
-    pt = V(po[2], po[3], po[1]);
+    triangle = V(po[2], po[3], po[1]);
     bary = Bary(fi + fj - 1.f, 1.f - fj, 1.f - fi);
   }
 }
 
-void split_quad_4tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary) {
+void split_quad_4tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& triangle, Bary& bary) {
   // Find wedge in face, adjacent to vertices {q, q + 1}.
   int q;
   float bq0, bq1, bc;
@@ -548,11 +558,11 @@ void split_quad_4tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt
     }
   }
   ASSERTX(abs(bq0 + bq1 + bc - 1.f) < 1e-6f);
-  pt = V(po[q], po[(q + 1) % 4], normalized(bilerp(po, .5f, .5f)));
+  triangle = V(po[q], po[(q + 1) % 4], normalized(bilerp(po, .5f, .5f)));
   bary = Bary(bq0, bq1, bc);
 }
 
-void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt, Bary& bary,
+void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& triangle, Bary& bary,
                       TriangleSpheremap triangle_map) {
   // Find quadrant in face, adjacent to vertex q = 0..3.
   int q;
@@ -581,14 +591,14 @@ void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& pt
   assertx(s >= 0.f && s <= 1.f && t >= 0.f && t <= 1.f);
   // Split quadrant into two triangles.
   if (t <= s) {
-    pt = V(po[q], normalized(interp(po[q], po[(q + 1) % 4])), normalized(bilerp(po, .5f, .5f)));
+    triangle = V(po[q], normalized(interp(po[q], po[(q + 1) % 4])), normalized(bilerp(po, .5f, .5f)));
   } else {
     // Flip the triangle to obtain symmetry --- that is OK with most triangle_map functions.
-    pt = V(po[q], normalized(interp(po[q], po[(q + 3) % 4])), normalized(bilerp(po, .5f, .5f)));
+    triangle = V(po[q], normalized(interp(po[q], po[(q + 3) % 4])), normalized(bilerp(po, .5f, .5f)));
     bary = Bary(max(0.f, 1.f - t), t - s, s);
     if (triangle_map == map_area) {
       // Flipped triangles not handled correctly by current map_area. Since it is symmetric, undoing reflection is OK.
-      std::swap(pt[0], pt[1]);
+      std::swap(triangle[0], triangle[1]);
       std::swap(bary[0], bary[1]);
     }
   }
@@ -833,27 +843,27 @@ void create(bool b_triangulate) {
         assertx(gridn >= 2 && (gridn / 2) * 2 == gridn);
       }
       for_int(i, gridn + 1) for_int(j, !quad_domain ? gridn - i + 1 : gridn + 1) {
-        Vec3<Point> pt;  // Desired spherical triangle vertices.
-        Bary bary;       // Barycentric coordinates within pt.
+        Vec3<Point> triangle;  // Desired spherical triangle vertices.
+        Bary bary;             // Barycentric coordinates within triangle.
         const float fi = float(i) / gridn, fj = float(j) / gridn;
         if (!quad_domain) {
-          for_int(c, 3) pt[c] = po[c];
+          for_int(c, 3) triangle[c] = po[c];
           bary = Bary(max(0.f, 1.f - fi - fj), fi, fj);
         } else if (split_quad_ntris == 2) {
-          split_quad_2tris(po, fi, fj, pt, bary);
+          split_quad_2tris(po, fi, fj, triangle, bary);
         } else if (split_quad_ntris == 4) {
-          split_quad_4tris(po, fi, fj, pt, bary);
+          split_quad_4tris(po, fi, fj, triangle, bary);
         } else if (split_quad_ntris == 8) {
-          split_quad_8tris(po, fi, fj, pt, bary, triangle_map);
+          split_quad_8tris(po, fi, fj, triangle, bary, triangle_map);
         } else {
           assertnever("");
         }
-        for_int(c, 3) ASSERTX(is_unit(pt[c]));
+        for_int(c, 3) ASSERTX(is_unit(triangle[c]));
         Point p;
         if (domain_interp) {
-          p = interp(pt[0], pt[1], pt[2], bary);
+          p = interp(triangle[0], triangle[1], triangle[2], bary);
         } else {
-          p = triangle_map(pt, bary);
+          p = triangle_map(triangle, bary);
           assertx(is_unit(p));
         }
         g_mesh.set_point(verts[i][j], p);
@@ -1055,8 +1065,7 @@ void do_load_map(Args& args) {
     int nfaces = 0;
     SpatialSearch<Vertex> ss(&spatial, domainp * k_fdomain_to_spatialbb);
     for (;;) {
-      float dis2;
-      Vertex vv = ss.next(&dis2);
+      const auto [vv, dis2] = ss.next();
       if (dis2 > 1e-12f) break;
       nfaces++;
       assertx(g_mesh.point(vv)[0] == BIGFLOAT);
@@ -1571,8 +1580,8 @@ void do_write_lonlat_texture(Args& args) {
 }
 
 // Tessellate a single spherical triangle.
-void generate_tess(const Vec3<Point>& pa, int n, TriangleSpheremap triangle_map) {
-  for_int(i, 3) assertx(is_unit(pa[i]));
+void generate_tess(const Vec3<Point>& triangle, int n, TriangleSpheremap triangle_map) {
+  for_int(i, 3) assertx(is_unit(triangle[i]));
   Matrix<Vertex> verts(n + 1, n + 1);  // Upper-left half is defined.
   for_int(i, n + 1) for_int(j, n - i + 1) {
     Vertex v = g_mesh.create_vertex();
@@ -1581,7 +1590,7 @@ void generate_tess(const Vec3<Point>& pa, int n, TriangleSpheremap triangle_map)
     verts[i][j] = v;
     v_imageuv(v) = Uv(i / float(n) + j / float(n) * .5f, j / float(n) * sqrt(3.f) / 2.f);
     const Bary bary((n - i - j) / float(n), i / float(n), j / float(n));
-    const Point p = triangle_map(pa, bary);
+    const Point p = triangle_map(triangle, bary);
     assertx(is_unit(p));
     g_mesh.set_point(v, p);
     v_sph(v) = p;
@@ -1615,9 +1624,9 @@ void do_test_properties() {
       {refp2, refp3, refp1}   // This rotated first face is identical iff symmetric. (check visually).
   };
   for_int(domainf, faces.num()) {
-    Vec3<Point> pt;
-    for_int(k, 3) pt[k] = normalized(faces[domainf][k]);
-    generate_tess(pt, gridn, triangle_map);
+    Vec3<Point> triangle;
+    for_int(k, 3) triangle[k] = normalized(faces[domainf][k]);
+    generate_tess(triangle, gridn, triangle_map);
   }
   {
     Point po;

@@ -333,15 +333,13 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
   Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   double qem = 0.;
-  Vec3<Point> poly;
   PArray<Vector, 12> ar_normals;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
-      Vec3<Vertex> va = mesh.triangle_vertices(f);
-      for_int(i, 3) poly[i] = mesh.point(va[i]);
-      Vector normal = ok_normalized(cross(poly[0], poly[1], poly[2]));
-      float d = -pvdot(poly[0], normal);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      Vector normal = ok_normalized(cross(triangle[0], triangle[1], triangle[2]));
+      float d = -pvdot(triangle[0], normal);
       qem += square(pvdot(newp, normal) + d);
       if (f == f1 || f == f2) continue;
       ar_normals.push(normal);
@@ -351,9 +349,11 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (f == f1 || f == f2) continue;
-      Vec3<Vertex> va = mesh.triangle_vertices(f);
-      for_int(i, 3) poly[i] = va[i] == v1 || va[i] == v2 ? newp : mesh.point(va[i]);
-      if (dot(ar_normals[nnor], cross(poly[0], poly[1], poly[2])) < 0.f) return BIGFLOAT;  // flipped normal
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      Vec3<Point> triangle;
+      for_int(i, 3) triangle[i] = va[i] == v1 || va[i] == v2 ? newp : mesh.point(va[i]);
+      if (dot(ar_normals[nnor], cross(triangle[0], triangle[1], triangle[2])) < 0.f)
+        return BIGFLOAT;  // Flipped normal.
       nnor++;
     }
   }

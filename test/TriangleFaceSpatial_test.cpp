@@ -23,8 +23,8 @@ void test2(int gridn) {
     Point p;
     for_int(c, 3) p[c] = .1f + .8f * Random::G.unif();
     SpatialSearch<TriangleFace*> ss(&spatial, p);
-    float dis2;
-    TriangleFace& triangleface = *ss.next(&dis2);
+    const auto [ptriangleface, dis2] = ss.next();
+    const TriangleFace& triangleface = *ptriangleface;
     int found_i = int(reinterpret_cast<intptr_t>(triangleface.face));
     assertx(found_i == &triangleface - trianglefaces.data());
     const Vec3<Point>& triangle1 = triangleface.triangle;
@@ -85,9 +85,8 @@ int main() {
     SpatialSearch<TriangleFace*> ss(&spatial, Point(.4f, .3f, .3f));
     for (;;) {
       if (ss.done()) break;
-      float dis2;
-      TriangleFace* triangleface = ss.next(&dis2);
-      SHOW(dis2, triangleface->triangle);
+      const auto [ptriangleface, dis2] = ss.next();
+      SHOW(dis2, ptriangleface->triangle);
     }
   }
   test2(5);

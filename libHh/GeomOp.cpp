@@ -255,6 +255,38 @@ void widen_triangle(ArrayView<Point> poly, float eps) {
   poly[2] = p2;
 }
 
+// *** Intersections
+
+std::optional<Point> intersect_line(const Vec3<Point>& triangle, const Point& p, const Vector& v) {
+  const Vector dir = get_normal_dir(triangle);
+  if (!assertw(!is_zero(dir))) return {};
+  const float d = pvdot(sum(triangle), dir) / 3.f;
+  const float numerator = d - dir[0] * p[0] - dir[1] * p[1] - dir[2] * p[2];
+  const float denominator = dir[0] * v[0] + dir[1] * v[1] + dir[2] * v[2];
+  // When the line lies in the triangle plane, we report no intersection.  Is this reasonable?
+  if (!denominator) return {};
+  const float alpha = numerator / denominator;
+  const Point pint = p + v * alpha;
+  if (!point_inside(pint, triangle)) return {};
+  return pint;
+}
+
+std::optional<Point> intersect_segment(const Vec3<Point>& triangle, const Point& p1, const Point& p2) {
+  const Vector dir = get_normal_dir(triangle);
+  const float d = pvdot(sum(triangle), dir) / 3.f;
+  const float s1 = pvdot(p1, dir) - d;
+  const float s2 = pvdot(p2, dir) - d;
+  if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};
+  const float denominator = s2 - s1;
+  // When the segment lies in the triangle plane, we report no intersection.  Is this reasonable?
+  if (!denominator) return {};
+  const Point pint = interp(p1, p2, s2 / denominator);
+  if (!point_inside(pint, triangle)) return {};
+  return pint;
+}
+
+// *** Other
+
 float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4) {
   // Formula derived from the scalar triple product of vectors.
   if (0) {

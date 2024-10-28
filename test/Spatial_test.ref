@@ -24,7 +24,7 @@ Found p25  at dis2 0.430003   : [0.5625, 0.75, 0.47046]
 Found p26  at dis2 0.462987   : [0.569, 0.7712, 0.45423]
 Found p27  at dis2 0.497482   : [0.5755, 0.7924, 0.438]
 Found p28  at dis2 0.533487   : [0.582, 0.8136, 0.42177]
-ss1.next(&dis2) = 24
+i2 = 24
 round_fraction_digits(dis2, 1e6f) = 0.083417
-ss1.next(&dis2) = 23
+i2 = 23
 round_fraction_digits(dis2, 1e6f) = 0.083809

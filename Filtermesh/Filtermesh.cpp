@@ -1437,6 +1437,7 @@ Vec2<Vertex> find_diameter_of_boundary_vertices() {
   return vb;
 }
 
+// Filtermesh ~/prevproj/2004/_poissonparam/data/cathead.m -lscm | G3duv -
 void do_lscm() {
   HH_TIMER("_lscm");
   assertx(mesh_single_disk());
@@ -1465,21 +1466,16 @@ void do_lscm() {
   }
   {
     int i = 4;
-    Array<Vertex> va;
-    Vec3<Point> poly;
-    Vec2<Vector> vsa;
-    Vec2<Bary> barya;
     for (Face f : mesh.faces()) {
       float w = sqrt(mesh.area(f));
-      mesh.get_vertices(f, va);
-      assertx(va.num() == 3);
-      for_int(j, 3) poly[j] = mesh.point(va[j]);
-      vsa[0] = normalized(poly[1] - poly[0]);
-      Vector nor = normalized(cross(vsa[0], Vector(poly[2] - poly[0])));
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      Vec2<Vector> vsa;
+      vsa[0] = normalized(triangle[1] - triangle[0]);
+      const Vector nor = normalized(cross(vsa[0], Vector(triangle[2] - triangle[0])));
       vsa[1] = cross(vsa[0], nor);
       assertx(is_unit(vsa[1]));
-      barya[0] = vector_bary(poly, vsa[0]);
-      barya[1] = vector_bary(poly, vsa[1]);
+      const Vec2<Bary> barya{bary_of_vector(triangle, vsa[0]), bary_of_vector(triangle, vsa[1])};
       for_int(d0, 2) {
         int d1 = 1 - d0;
         float s0 = !d0 ? 1.f : -1.f, s1 = 1.f;
@@ -1510,6 +1506,7 @@ void do_lscm() {
 
 // *** Poisson parameterization
 
+// Filtermesh ~/prevproj/2004/_poissonparam/data/cathead.m -lscm -poisson | G3duv -
 void do_poissonparam() {
   HH_TIMER("_poissonparam");
   assertx(mesh_single_disk());
@@ -1550,25 +1547,17 @@ void do_poissonparam() {
   }
   {
     int i = 2;
-    Array<Vertex> va;
-    Vec3<Point> poly;
-    Vec3<Point> uva;
     for (Face f : mesh.faces()) {
-      float w = sqrt(mesh.area(f));
-      mesh.get_vertices(f, va);
-      assertx(va.num() == 3);
-      for_int(j, 3) {
-        poly[j] = mesh.point(va[j]);
-        Uv uv = get_uv(va[j]);
-        uva[j] = Point(uv[0], uv[1], 0.f);
-      }
+      const float w = sqrt(mesh.area(f));
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      const Vec3<Uv> uva = map(va, get_uv);
       for_int(dir, 2) {
-        int d0 = dir, d1 = 1 - dir;
-        Vector vecd(0.f, 0.f, 0.f);
-        vecd[d0] = 1.f;
-        Bary bary = vector_bary(uva, vecd);
-        Vector vecs = bary_vector(poly, bary);
-        float len = mag(vecs);
+        const int d0 = dir, d1 = 1 - dir;
+        const Uv vecd = twice(0.f).with(d0, 1.f);
+        Bary bary = bary_of_vector(convert<Vec2<float>>(uva), vecd);
+        const Vector vecs = vector_from_bary(triangle, bary);
+        const float len = mag(vecs);
         assertx(len);
         for_int(k, 3) bary[k] /= len;
         for_int(j, 3) lls.enter_a_rc(i, m_vi.get(va[j]) * 2 + d0, w * bary[j]);
@@ -1747,7 +1736,6 @@ void triangulate_quads(ETriType type) {
     if (mesh.num_vertices(f) == 4) stackf.push(f);
   showdf("Found %d quads to triangulate\n", stackf.height());
   Array<Vertex> va;
-  Polygon poly;
   while (!stackf.empty()) {
     Face f = stackf.pop();
     mesh.get_vertices(f, va);
@@ -2405,7 +2393,7 @@ void do_info() {
     HH_STAT(Sfinscribedr);
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
-        Vec3<Point> triangle = mesh.triangle_points(f);
+        const Vec3<Point> triangle = mesh.triangle_points(f);
         Sfinscribedr.enter(inscribed_radius(triangle[0], triangle[1], triangle[2]));
       }
     }
@@ -2524,9 +2512,6 @@ void do_analyzestretch() {
     }
   }
   showf("Analyzing stretch for %s surface\n", is_sphere ? "sphere" : "mesh");
-  Array<Vertex> va;
-  Polygon poly;
-  Vec3<Uv> uvs;
   double d_l2_integ_stretch = 0.;
   HH_STAT(Stri_isotropy);
   HH_STAT(Stri_li);
@@ -2537,28 +2522,20 @@ void do_analyzestretch() {
   HH_STAT(Sstarea);
   int num_domainp = 0, num_uv = 0;
   for (Face f : mesh.faces()) {
-    mesh.get_vertices(f, va);
-    assertx(va.num() == 3);
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
+    const Vec3<Vertex> va = mesh.triangle_vertices(f);
+    const Vec3<Point> triangle = mesh.triangle_points(f);
+    Vec3<Uv> uvs;
     if (GMesh::string_has_key(mesh.get_string(va[0]), "domainp")) {
       num_domainp += 1;
-      Vec3<Point> pa;
-      for_int(i, va.num()) {
-        Vertex v = va[i];
-        assertx(parse_key_vec(mesh.get_string(v), "domainp", pa[i]));
-      }
-      const Vector v01 = pa[1] - pa[0], v01n = normalized(v01), v02 = pa[2] - pa[0];
+      Vec3<Point> triangle_d;
+      for_int(i, 3) assertx(parse_key_vec(mesh.get_string(va[i]), "domainp", triangle_d[i]));
+      const Vector v01 = triangle_d[1] - triangle_d[0], v01n = normalized(v01), v02 = triangle_d[2] - triangle_d[0];
       uvs[0] = Uv(0.f, 0.f);
       uvs[1] = Uv(mag(v01), 0.f);
       uvs[2] = Uv(dot(v02, v01n), mag(v02 - v01n * dot(v02, v01n)));
     } else {
       num_uv += 1;
-      for_int(i, va.num()) {
-        Vertex v = va[i];
-        Uv& uv = uvs[i];
-        uv = get_uv(v);
-      }
+      for_int(i, 3) uvs[i] = get_uv(va[i]);
     }
     Vector dfds, dfdt;
     // compute_derivatives(va, uv, dfds, dfdt);
@@ -2571,15 +2548,15 @@ void do_analyzestretch() {
       starea = -starea;
     }
     Sstarea.enter(starea);
-    float surfarea = is_sphere ? spherical_triangle_area(poly) : poly.get_area();
+    float surfarea = is_sphere ? spherical_triangle_area(triangle) : sqrt(area2(triangle));
     Ssurfarea.enter(surfarea);
     float recip_area = .5f / starea;
-    dfds =
-        (poly[0] * (uvs[1][1] - uvs[2][1]) + poly[1] * (uvs[2][1] - uvs[0][1]) + poly[2] * (uvs[0][1] - uvs[1][1])) *
-        recip_area;
-    dfdt =
-        (poly[0] * (uvs[2][0] - uvs[1][0]) + poly[1] * (uvs[0][0] - uvs[2][0]) + poly[2] * (uvs[1][0] - uvs[0][0])) *
-        recip_area;
+    dfds = (triangle[0] * (uvs[1][1] - uvs[2][1]) + triangle[1] * (uvs[2][1] - uvs[0][1]) +
+            triangle[2] * (uvs[0][1] - uvs[1][1])) *
+           recip_area;
+    dfdt = (triangle[0] * (uvs[2][0] - uvs[1][0]) + triangle[1] * (uvs[0][0] - uvs[2][0]) +
+            triangle[2] * (uvs[1][0] - uvs[0][0])) *
+           recip_area;
     double a = dot(dfds, dfds), b = dot(dfds, dfdt), c = dot(dfdt, dfdt);
     double tsqrt = my_sqrt(square(a - c) + 4. * square(b));
     float minsv2 = float(((a + c) - tsqrt) * .5);
@@ -2936,7 +2913,7 @@ void do_norgroup() {
 }
 
 float face_inscribed_radius(Face f) {
-  Vec3<Point> triangle = mesh.triangle_points(f);
+  const Vec3<Point> triangle = mesh.triangle_points(f);
   return inscribed_radius(triangle[0], triangle[1], triangle[2]);
 }
 
@@ -3413,11 +3390,10 @@ void do_procedure(Args& args) {
 // signed distance
 
 float signed_distance(const Point& p, Face f) {
-  Polygon poly;
-  mesh.polygon(f, poly);
+  const Vec3<Point> triangle = mesh.triangle_points(f);
   Bary bary;
   Point clp;
-  float d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, clp);
+  float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, clp);
   int nzero = 0, jzero, jpos;
   dummy_init(jpos, jzero);
   for_int(j, 3) {
@@ -3430,16 +3406,15 @@ float signed_distance(const Point& p, Face f) {
   }
   switch (nzero) {
     case 0: {  // triangle interior
-      // == dot(poly.get_normal(), p-clp)
-      return sqrt(d2) * sign(dot(poly.get_normal_dir(), p - clp));
+      // == dot(get_normal(triangle), p - clp)
+      return sqrt(d2) * sign(dot(get_normal_dir(triangle), p - clp));
     }
     case 1: {  // edge
       Vec3<Vertex> va = mesh.triangle_vertices(f);
       Edge e = mesh.edge(va[mod3(jzero + 1)], va[mod3(jzero + 2)]);
       if (mesh.is_boundary(e)) return k_Contour_undefined;
-      Vector nor = poly.get_normal();
-      mesh.polygon(mesh.opp_face(f, e), poly);
-      nor += poly.get_normal();
+      const Vec3<Point> triangle2 = mesh.triangle_points(mesh.opp_face(f, e));
+      const Vector nor = get_normal(triangle) + get_normal(triangle2);
       return sqrt(d2) * sign(dot(nor, p - clp));
     }
     case 2: {  // vertex
@@ -3447,15 +3422,11 @@ float signed_distance(const Point& p, Face f) {
       Vertex v = va[jpos];
       if (mesh.is_boundary(v)) return k_Contour_undefined;
       Vector nor{};
-      for (Face ff : mesh.faces(v)) {
-        mesh.polygon(ff, poly);
-        nor += poly.get_normal();
-      }
+      for (Face ff : mesh.faces(v)) nor += get_normal(mesh.triangle_points(ff));
       return sqrt(d2) * sign(dot(nor, p - clp));
     }
     default: assertnever("");
   }
-  return 0.f;  // only necessary for gcc debug
 }
 
 void do_signeddistcontour(Args& args) {
@@ -3844,13 +3815,11 @@ void do_shootrays(Args& args) {
   Array<TriangleFace> trianglefaces;
   trianglefaces.reserve(omesh.num_faces());
   {
-    Polygon poly(3);
     for (Face f : omesh.faces()) {
-      omesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      if (1) widen_triangle(poly, 1e-4f);
-      for_int(i, 3) poly[i] *= xform;
-      trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
+      Vec3<Point> triangle = omesh.triangle_points(f);
+      if (1) widen_triangle(triangle, 1e-4f);
+      for_int(i, 3) triangle[i] *= xform;
+      trianglefaces.push({triangle, f});
     }
   }
   // const int gridn = 120;
@@ -4076,7 +4045,7 @@ void do_fromObj(Args& args) {
     if (const char* s = after_prefix(sline, "f ")) {
       Vector fn{};
       Array<Vertex> va;
-      Polygon pp;
+      Polygon poly;
       bool have_nors = true;
       while (*s) {
         const int i = int_from_chars(s);  // It is 1-based.
@@ -4091,11 +4060,11 @@ void do_fromObj(Args& args) {
           have_nors = false;
         Vertex vv = mesh.id_vertex(i);
         va.push(vv);
-        pp.push(mesh.point(vv));
+        poly.push(mesh.point(vv));
         while (std::isspace(*s)) s++;
       }
       // maybe flip face winding to match the vertex normals orientation
-      if (have_nors && dot(fn, pp.get_normal()) < 0) reverse(va);
+      if (have_nors && dot(fn, poly.get_normal()) < 0) reverse(va);
       if (mesh.legal_create_face(va)) {
         Face f = mesh.create_face(va);
         group.add(f);
@@ -4131,44 +4100,35 @@ void do_sphparam_to_tangentfield(Args& args) {
   // Filtermesh ~/proj/sphere/sphparams/cow.sphparam.m -sphparam_to_tang 0 0 1 -renamekey f dir Vup -procedure show_vup | G3d - -st cow -lighta 1 -lights 0
   Vector gdir;
   for_int(c, 3) gdir[c] = args.get_float();
-  Polygon poly;
   string str;
   for (Face f : mesh.faces()) {
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    Vec3<Point> sph;
-    int i = 0;
-    for (Vertex v : mesh.vertices(f)) {
-      assertx(parse_key_vec(mesh.get_string(v), "sph", sph[i]));
-      i++;
-    }
-    Vector splnor = cross(sph[0], sph[1], sph[2]);
-    assertx(splnor.normalize());
-    Vector ssnor = normalized(interp(sph[0], sph[1], sph[2]));
-    Vector sdir;
-    sdir = project_orthogonally(gdir, ssnor);
-    sdir = project_orthogonally(sdir, splnor);
-    assertx(sdir.normalize());
-    Bary bary = vector_bary(sph, sdir);
-    Vector dir = bary_vector(poly, bary);
-    assertx(dir.normalize());
+    const Vec3<Point> triangle = mesh.triangle_points(f);
+    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), [&](Vertex v) {
+      Point sph;
+      assertx(parse_key_vec(mesh.get_string(v), "sph", sph));
+      return sph;
+    });
+    const Vector splnor = get_normal(sphs);
+    const Vector ssnor = normalized(interp(sphs[0], sphs[1], sphs[2]));
+    const Vector sdir = normalized(project_orthogonally(project_orthogonally(gdir, ssnor), splnor));
+    const Bary bary = bary_of_vector(sphs, sdir);
+    const Vector dir = normalized(vector_from_bary(triangle, bary));
     mesh.update_string(f, "dir", csform_vec(str, dir));
   }
 }
 
 void do_trim(Args& args) {
-  float dtrim = args.get_float();
-  float dtrim2 = square(dtrim);
-  Array<Face> dfaces;
-  Polygon poly;
+  const float dtrim = args.get_float();
+  const float dtrim2 = square(dtrim);
+  Array<Face> faces_to_destroy;
   for (Face f : mesh.faces()) {
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    if (dist2(poly[0], poly[1]) >= dtrim2 || dist2(poly[1], poly[2]) >= dtrim2 || dist2(poly[2], poly[0]) >= dtrim2)
-      dfaces.push(f);
+    const Vec3<Point> triangle = mesh.triangle_points(f);
+    if (dist2(triangle[0], triangle[1]) >= dtrim2 || dist2(triangle[1], triangle[2]) >= dtrim2 ||
+        dist2(triangle[2], triangle[0]) >= dtrim2)
+      faces_to_destroy.push(f);
   }
-  showdf("Destroying %d faces\n", dfaces.num());
-  for (Face f : dfaces) mesh.destroy_face(f);
+  showdf("Destroying %d faces\n", faces_to_destroy.num());
+  for (Face f : faces_to_destroy) mesh.destroy_face(f);
 }
 
 void do_trimpts(Args& args) {
@@ -4205,20 +4165,17 @@ void do_trimpts(Args& args) {
   }
   if (getenv_bool("CIRCUMRADIUS")) {  // Note: not really the circumradius!
     // But probably we should use the minimum bounding sphere anyways.
-    Array<Face> dfaces;
-    Polygon poly;
+    Array<Face> faces_to_destroy;
     for (Face f : mesh.faces()) {
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      Point pc = interp(poly[0], poly[1], poly[2]);  // Note: not really the circumcenter!
-      float circumd = dist(pc, poly[0]);
-      float maxd = circumd * dtrim * xform[0][0];
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      const Point pc = interp(triangle[0], triangle[1], triangle[2]);  // Note: not really the circumcenter!
+      const float circumd = dist(pc, triangle[0]);
+      const float maxd = circumd * dtrim * xform[0][0];
       SpatialSearch<int> ss(&spatial, pc * xform, maxd);
-      float dis2;
-      if (ss.done() || (ss.next(&dis2), dis2 > square(maxd))) dfaces.push(f);
+      if (ss.done() || ss.next().dis2 > square(maxd)) faces_to_destroy.push(f);
     }
-    showdf("Destroying %d faces\n", dfaces.num());
-    for (Face f : dfaces) mesh.destroy_face(f);
+    showdf("Destroying %d faces\n", faces_to_destroy.num());
+    for (Face f : faces_to_destroy) mesh.destroy_face(f);
   } else {
     const FlagMask vflag_toofar = Mesh::allocate_Vertex_flag();
     int nvtoofar = 0;
@@ -4227,18 +4184,18 @@ void do_trimpts(Args& args) {
       Point p = mesh.point(v) * xform;
       assertx(p[0] > 0 && p[0] < 1 && p[1] > 0 && p[1] < 1 && p[2] > 0 && p[2] < 1);
       SpatialSearch<int> ss(&spatial, p, maxd);
-      float dis2;
-      if (ss.done() || (ss.next(&dis2), dis2 > square(maxd))) {
+      if (ss.done() || ss.next().dis2 > square(maxd)) {
         nvtoofar++;
         mesh.flags(v).flag(vflag_toofar) = true;
       }
     }
     showdf("Found %d vertices too far\n", nvtoofar);
-    Array<Face> dfaces;
+    Array<Face> faces_to_destroy;
     for (Face f : mesh.faces())
-      if (any_of(mesh.vertices(f), [&](Vertex v) { return mesh.flags(v).flag(vflag_toofar); })) dfaces.push(f);
-    showdf("Destroying %d faces\n", dfaces.num());
-    for (Face f : dfaces) mesh.destroy_face(f);
+      if (any_of(mesh.vertices(f), [&](Vertex v) { return mesh.flags(v).flag(vflag_toofar); }))
+        faces_to_destroy.push(f);
+    showdf("Destroying %d faces\n", faces_to_destroy.num());
+    for (Face f : faces_to_destroy) mesh.destroy_face(f);
   }
 }
 

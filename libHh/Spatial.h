@@ -148,7 +148,11 @@ class BSpatialSearch : noncopyable {
   explicit BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis = 10.f);
   ~BSpatialSearch();
   bool done();
-  Univ next(float* dis2 = nullptr);  // ret id
+  struct Result {
+    Univ id;
+    float dis2;
+  };
+  Result next();
 
  private:
   friend Spatial;
@@ -177,7 +181,14 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
  public:
   SpatialSearch(const Spatial* pspatial, const Point& pp, float pmaxdis = 10.f)
       : BSpatialSearch(pspatial, pp, pmaxdis) {}
-  T next(float* dis2 = nullptr) { return Conv<T>::d(BSpatialSearch::next(dis2)); }
+  struct Result {
+    T id;
+    float dis2;
+  };
+  Result next() {
+    const auto [id, dis2] = BSpatialSearch::next();
+    return {Conv<T>::d(id), dis2};
+  }
 };
 
 //----------------------------------------------------------------------------

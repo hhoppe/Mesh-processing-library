@@ -150,8 +150,7 @@ inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatia
     SpatialSearch<int> ss(&sp, pa[i]);
     for (;;) {
       if (ss.done()) break;
-      float dis2;
-      int j = ss.next(&dis2);
+      const auto [j, dis2] = ss.next();
       if (dis2 > square(thresh)) break;
       if (inset[j]) continue;
       if (pq.enter_update_if_smaller(j, dis2)) closest[j] = i;
@@ -199,8 +198,7 @@ inline Graph<int> graph_euclidean_k_closest(CArrayView<Point> pa, int kcl, const
   for_int(i, pa.num()) {
     SpatialSearch<int> ss(&sp, pa[i]);
     for_int(nn, kcl + 1) {
-      assertx(!ss.done());
-      int j = ss.next();
+      const int j = ss.next().id;
       if (j == i) continue;
       gnew.enter(i, j);
     }

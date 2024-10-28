@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_GEOMOP_H_
 #define MESH_PROCESSING_LIBHH_GEOMOP_H_
 
+#include <optional>
+
 #include "libHh/Geometry.h"
 #include "libHh/Polygon.h"
 
@@ -62,6 +64,14 @@ Frame make_horiz(const Frame& f);
 
 // Affinely broaden the triangle (in all directions) by the factor 1.f + eps * .5f .
 void widen_triangle(ArrayView<Point> poly, float eps);
+
+// *** Intersections
+
+// Given a line spanned by the point p and vector v, find its potential intersection point with the triangle.
+std::optional<Point> intersect_line(const Vec3<Point>& triangle, const Point& p, const Vector& v);
+
+// Given a segment with endpoints p1 and p2, find its potential intersection point with the triangle.
+std::optional<Point> intersect_segment(const Vec3<Point>& triangle, const Point& p1, const Point& p2);
 
 // *** Other
 

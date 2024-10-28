@@ -1012,9 +1012,9 @@ void write_mesh(std::ostream& os) {
     if (1) {  // Sanity check.
       for (Face f : mesh.faces()) {
         Vec3<Vertex> va = mesh.triangle_vertices(f);
-        Vec3<Point> poly;
-        for_int(i, 3) poly[i] = v_sph(va[i]);
-        assertx(spherical_triangle_area(poly) < TAU);
+        Vec3<Point> triangle;
+        for_int(i, 3) triangle[i] = v_sph(va[i]);
+        assertx(spherical_triangle_area(triangle) < TAU);
       }
     }
   }
@@ -1235,10 +1235,10 @@ void parse_mesh() {
       assertx(is_unit(sph));
     }
     for (Face f : mesh.faces()) {
-      Vec3<Vertex> va = mesh.triangle_vertices(f);
-      Vec3<Point> poly;
-      for_int(i, 3) poly[i] = v_sph(va[i]);
-      assertx(spherical_triangle_area(poly) < TAU);
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      Vec3<Point> triangle;
+      for_int(i, 3) triangle[i] = v_sph(va[i]);
+      assertx(spherical_triangle_area(triangle) < TAU);
     }
   }
   // Clear out strings.
@@ -1314,9 +1314,8 @@ void add_face_point(Face f, Bary bary, bool define_scalars) {
   fpts.add(1);
   fptinfo& fpt = fpts.last();
   fpt.cmf = f;
-  Polygon poly;
-  mesh.polygon(f, poly);
-  fpt.p = interp(poly[0], poly[1], poly[2], bary);
+  const Vec3<Point> triangle = mesh.triangle_points(f);
+  fpt.p = interp(triangle[0], triangle[1], triangle[2], bary);
   fpt.dist2 = 0.f;
   if (have_ccolors) {
     if (define_scalars) {
@@ -2894,7 +2893,6 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
       ar_bbox[i] = Bbox{transform(mesh.vertices(f), [&](Vertex v) { return mesh.point(v); })};
     }
-    Polygon poly;
     Array<float> ar_d2(nf);
     for (fptinfo* pfpt : nn.ar_fpts) {
       fptinfo& fpt = *pfpt;
@@ -2910,10 +2908,10 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
         assertx(tmin_d2 != BIGFLOAT);
         ar_d2[tmin_i] = BIGFLOAT;
         Face f = mesh.corner_face(nn.ar_corners[tmin_i][2]);
-        mesh.polygon(f, poly);
+        const Vec3<Point> triangle = mesh.triangle_points(f);
         Bary bary;
         Point dummy_clp;
-        float d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, dummy_clp);
+        float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, dummy_clp);
         if (d2 < min_d2) {
           min_d2 = d2;
           min_f = f;
@@ -2936,24 +2934,23 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       }
       point_change_face(&fpt, min_f);
       if (handle_residuals) {
-        mesh.polygon(min_f, poly);
-        ar_resid.push((p - interp(poly[0], poly[1], poly[2], min_bary)));
-        Point pint;
+        const Vec3<Point> triangle = mesh.triangle_points(min_f);
+        ar_resid.push((p - interp(triangle[0], triangle[1], triangle[2], min_bary)));
         float d2 = BIGFLOAT;
-        if (poly.intersect_line(p, vnormal, pint)) {
-          d2 = dist2(p, pint);
+        if (const auto pint = intersect_line(triangle, p, vnormal); pint) {
+          d2 = dist2(p, *pint);
         } else {
           for_int(i, nf) {
             Face f = mesh.corner_face(nn.ar_corners[i][2]);
-            mesh.polygon(f, poly);
+            Vec3<Point> triangle2 = mesh.triangle_points(f);
             float eps = 1e-3f;
             // We used to have eps=1e-5f, but this would result in Sres_npnor av=.95 for gcanyon_sq200
             // (it should be 1.0 except for the last edge collapse which changes terrain to a triangle).
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
             // It must have been a numerical problem in intersect_line().
-            widen_triangle(poly, eps);
-            if (poly.intersect_line(p, vnormal, pint)) {
-              d2 = dist2(p, pint);
+            widen_triangle(triangle2, eps);
+            if (const auto pint2 = intersect_line(triangle2, p, vnormal); pint2) {
+              d2 = dist2(p, *pint2);
               break;
             }
           }
@@ -3868,13 +3865,10 @@ EcolResult try_ecol(Edge e, bool commit) {
       assertx(minii2);
       // See if new faces are all valid on sphere.
       const bool ok = [&]() {
-        Polygon poly(3);
         Vertex tv1 = ii == 2 ? v1 : v2;
         for_int(i, nn.va.num() - 1) {
-          poly[0] = v_sph(nn.va[i]);
-          poly[1] = v_sph(nn.va[i + 1]);
-          poly[2] = v_sph(tv1);
-          if (spherical_triangle_area(poly) >= TAU) return false;
+          const Vec3<Point> triangle{v_sph(nn.va[i]), v_sph(nn.va[i + 1]), v_sph(tv1)};
+          if (spherical_triangle_area(triangle) >= TAU) return false;
         }
         return true;
       }();
@@ -3898,13 +3892,9 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
     if (poszfacenormal) {
       const bool ok = [&]() {
-        Polygon poly(3);
         for_int(i, nn.va.num() - 1) {
-          poly[0] = mesh.point(nn.va[i]);
-          poly[1] = mesh.point(nn.va[i + 1]);
-          poly[2] = newp;
-          Vector normaldir = poly.get_normal_dir();
-          if (normaldir[2] < 0.f) return false;
+          const Vec3<Point> triangle{mesh.point(nn.va[i]), mesh.point(nn.va[i + 1]), newp};
+          if (get_normal_dir(triangle)[2] < 0.f) return false;
         }
         return true;
       }();

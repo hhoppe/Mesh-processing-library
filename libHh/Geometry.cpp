@@ -13,13 +13,13 @@ namespace hh {
 // *** Vector
 
 Vector operator*(const Vector& v, const Frame& f) {
-  float xi = v[0], yi = v[1], zi = v[2];
+  const float xi = v[0], yi = v[1], zi = v[2];
   return Vector(xi * f[0][0] + yi * f[1][0] + zi * f[2][0], xi * f[0][1] + yi * f[1][1] + zi * f[2][1],
                 xi * f[0][2] + yi * f[1][2] + zi * f[2][2]);
 }
 
 Vector operator*(const Frame& f, const Vector& n) {
-  float xi = n[0], yi = n[1], zi = n[2];
+  const float xi = n[0], yi = n[1], zi = n[2];
   return Vector(f[0][0] * xi + f[0][1] * yi + f[0][2] * zi, f[1][0] * xi + f[1][1] * yi + f[1][2] * zi,
                 f[2][0] * xi + f[2][1] * yi + f[2][2] * zi);
 }
@@ -27,7 +27,7 @@ Vector operator*(const Frame& f, const Vector& n) {
 // *** Point
 
 Point operator*(const Point& p, const Frame& f) {
-  float xi = p[0], yi = p[1], zi = p[2];
+  const float xi = p[0], yi = p[1], zi = p[2];
   return Point(xi * f[0][0] + yi * f[1][0] + zi * f[2][0] + f[3][0],
                xi * f[0][1] + yi * f[1][1] + zi * f[2][1] + f[3][1],
                xi * f[0][2] + yi * f[1][2] + zi * f[2][2] + f[3][2]);
@@ -119,21 +119,19 @@ std::ostream& operator<<(std::ostream& os, const Frame& f) {
 // *** Misc
 
 Point slerp(const Point& p1, const Point& p2, float ba) {
-  Vector v1 = to_Vector(p1), v2 = to_Vector(p2);
-  float ang = angle_between_unit_vectors(v1, v2);
-  ang *= ba;
-  float vdot = dot(v1, v2);
-  Vector vv = v1 - v2 * vdot;  // Tangent at p2 in direction of p1.
-  vv.normalize();
-  Vector v = v2 * std::cos(ang) + vv * std::sin(ang);
+  const Vector v1 = to_Vector(p1), v2 = to_Vector(p2);
+  const float ang = angle_between_unit_vectors(v1, v2) * ba;
+  const float vdot = dot(v1, v2);
+  const Vector vv = ok_normalized(v1 - v2 * vdot);  // Tangent at p2 in direction of p1.
+  const Vector v = v2 * std::cos(ang) + vv * std::sin(ang);
   ASSERTXX(is_unit(v));
   return to_Point(v);
 }
 
 // Spherical triangle area.
-float spherical_triangle_area(const Vec3<Point>& pa) {
-  for_int(i, 3) ASSERTXX(is_unit(pa[i]));
-  float sang = solid_angle(Point(0.f, 0.f, 0.f), pa);
+float spherical_triangle_area(const Vec3<Point>& triangle) {
+  for_int(i, 3) ASSERTXX(is_unit(triangle[i]));
+  const float sang = solid_angle(Point(0.f, 0.f, 0.f), triangle);
   ASSERTX(sang >= -1e-6f && sang <= TAU * 2);
   if (sang < 0.f) {
     assertx(sang >= -1e-6f);
@@ -146,45 +144,65 @@ float spherical_triangle_area(const Vec3<Point>& pa) {
   return sang;
 }
 
-bool get_bary(const Point& p, const Vec3<Point>& pa, Bary& bary) {
-  Vector nor = cross(pa[1] - pa[0], pa[2] - pa[0]);
-  float area = float(mag<double>(nor));
-  if (area <= 1e-10f) {
-    fill(bary, 1.f / 3.f);
-    return false;
-  }
-  for_int(i, 3) {
-    Vector sn = cross(pa[mod3(i + 2)] - pa[mod3(i + 1)], p - pa[mod3(i + 1)]);
-    bary[i] = mag(sn) / area * (dot(sn, nor) > 0.f ? 1.f : -1.f);
-  }
-  if (mag2(to_Vector(pa[0]) * bary[0] + to_Vector(pa[1]) * bary[1] + to_Vector(pa[2]) * bary[2] - to_Vector(p)) >=
-      1e-10f)
-    return false;
-  return true;
+Bary bary_of_point(const Vec3<Point>& triangle, const Point& p) {
+  const auto& [p1, p2, p3] = triangle;
+  const Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
+  const float v2v2 = mag2(v2), v3v3 = mag2(v3), v2v3 = dot(v2, v3);
+  assertx(v2v2);
+  const float denom = v3v3 - v2v3 * v2v3 / v2v2;
+  assertx(denom);
+  const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
+  const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
+  const float b2 = (v2vp - b3 * v2v3) / v2v2;
+  const float b1 = 1.f - b2 - b3;
+  return Bary(b1, b2, b3);
 }
 
-Bary vector_bary(const Vec3<Point>& pa, const Vector& vec) {
-  Vector vn = normalized(vec);
-  Vector v1 = pa[1] - pa[0];
-  Vector v2 = pa[2] - pa[0];
-  Vector fnor = normalized(cross(v1, v2));
-  Vector vortho = cross(fnor, vn);
-  assertx(is_unit(vortho));  // vector must be in plane of triangle.
-  float x1 = dot(v1, vn);
-  float x2 = dot(v2, vn);
-  float y1 = dot(v1, vortho);
-  float y2 = dot(v2, vortho);
-  float scale = mag(vec);
+bool point_inside(const Point& p, const Vec3<Point>& triangle) {
+  Bary bary = bary_of_point(triangle, p);
+  return bary[0] >= 0.f && bary[1] >= 0.f && bary[2] >= 0.f;
+}
+
+Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec) {
+  const Vec2<float> v1 = triangle[1] - triangle[0];
+  const Vec2<float> v2 = triangle[2] - triangle[0];
+  const Vec2<float> vn = normalized(vec);
+  const Vec2<float> vortho = V(-vn[1], vn[0]);
+  const float x1 = dot(v1, vn);
+  const float x2 = dot(v2, vn);
+  const float y1 = dot(v1, vortho);
+  const float y2 = dot(v2, vortho);
+  const float scale = mag(vec);
   float denom = y1 * x2 - y2 * x1;
-  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // sign() does not return zero
-  float fac = scale / denom;
-  float b1 = -y2 * fac, b2 = y1 * fac;
+  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // sign() does not return zero.
+  const float fac = scale / denom;
+  const float b1 = -y2 * fac, b2 = y1 * fac;
   return Bary(-b1 - b2, b1, b2);
 }
 
-Vector bary_vector(const Vec3<Point>& pa, const Bary& bary) {
+Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec) {
+  const Vector v1 = triangle[1] - triangle[0];
+  const Vector v2 = triangle[2] - triangle[0];
+  const Vector vn = normalized(vec);
+  const Vector fnor = normalized(cross(v1, v2));
+  const Vector vortho = cross(fnor, vn);
+  assertx(is_unit(vortho));  // vector must be in plane of triangle.
+  const float x1 = dot(v1, vn);
+  const float x2 = dot(v2, vn);
+  const float y1 = dot(v1, vortho);
+  const float y2 = dot(v2, vortho);
+  const float scale = mag(vec);
+  float denom = y1 * x2 - y2 * x1;
+  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // sign() does not return zero.
+  const float fac = scale / denom;
+  const float b1 = -y2 * fac, b2 = y1 * fac;
+  return Bary(-b1 - b2, b1, b2);
+}
+
+Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary) {
   assertw(abs(bary[0] + bary[1] + bary[2] - 0.f) < 1e-4f);
-  return Vector(interp(pa[0], pa[1], pa[2], bary));  // note that bary[0] + bary[1] + bary[2] == 0.f not 1.f
+  // Note that bary[0] + bary[1] + bary[2] == 0.f not 1.f .
+  return Vector(interp(triangle[0], triangle[1], triangle[2], bary));
 }
 
 }  // namespace hh

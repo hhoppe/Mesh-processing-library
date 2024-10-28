@@ -182,9 +182,7 @@ void compute_tp(int i, int& n, Frame& f) {
   PArray<Point, 40> pa;
   SpatialSearch<int> ss(SPp.get(), co[i]);
   for (;;) {
-    assertx(!ss.done());
-    float dis2;
-    int pi = ss.next(&dis2);
+    const auto [pi, dis2] = ss.next();
     if ((pa.num() >= minkintp && dis2 > square(samplingd)) || pa.num() >= maxkintp) break;
     pa.push(co[pi]);
     if (pi != i && !gpcpseudo->contains(i, pi)) gpcpseudo->enter_undirected(i, pi);
@@ -525,8 +523,7 @@ float compute_unsigned(const Point& p, Point& proj) {
   Homogeneous h;
   const int k = 1;  // make a parameter?
   for_int(i, k) {
-    assertx(!ss.done());
-    int pi = ss.next();
+    const int pi = ss.next().id;
     h += co[pi];
   }
   proj = to_Point(h / float(k));
@@ -540,7 +537,7 @@ float compute_signed(const Point& p, Point& proj) {
   int tpi;
   {
     SpatialSearch<int> ss(SPpc.get(), p);
-    tpi = ss.next();
+    tpi = ss.next().id;
   }
   Vector vptopc = p - pcorg[tpi];
   float dis = dot(vptopc, pcnor[tpi]);
@@ -551,15 +548,12 @@ float compute_signed(const Point& p, Point& proj) {
   if (1) {
     // check that projected point is close to a data point
     SpatialSearch<int> ss(SPp.get(), proj);
-    float dis2;
-    ss.next(&dis2);
-    if (dis2 > square(samplingd)) return k_Contour_undefined;
+    if (ss.next().dis2 > square(samplingd)) return k_Contour_undefined;
   }
   if (prop) {
     // check that grid point is close to a data point
     SpatialSearch<int> ss(SPp.get(), p);
-    float dis2;
-    ss.next(&dis2);
+    const float dis2 = ss.next().dis2;
     float grid_diagonal2 = square(1.f / gridsize) * 3.f;
     const float fudge = 1.2f;
     if (dis2 > grid_diagonal2 * square(fudge)) return k_Contour_undefined;

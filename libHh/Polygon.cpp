@@ -60,15 +60,15 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
     init(0);
     return true;
   }
-  Polygon np;
+  Polygon new_poly;
   for_int(vc, num()) {
     int vp = vc ? vc - 1 : num() - 1;
     bool inc = sa[vc] >= 0.f;
     bool inp = sa[vp] >= 0.f;
-    if (inp ^ inc) np.push(interp(self[vp], self[vc], sa[vc] / (sa[vc] - sa[vp])));
-    if (inc) np.push(self[vc]);
+    if (inp ^ inc) new_poly.push(interp(self[vp], self[vc], sa[vc] / (sa[vc] - sa[vp])));
+    if (inc) new_poly.push(self[vc]);
   }
-  *this = std::move(np);
+  *this = std::move(new_poly);
   return true;
 }
 
@@ -90,25 +90,28 @@ bool Polygon::intersect_bbox(const Bbox<float, 3>& bbox) {
   return modified;
 }
 
-bool Polygon::intersect_segment(const Point& p1, const Point& p2, Point& pint) const {
+std::optional<Point> Polygon::intersect_segment(const Point& p1, const Point& p2) const {
   assertx(num() >= 3);
-  Vector n = get_normal();
-  assertx(!is_zero(n));
-  if (!intersect_plane_segment(n, get_planec(n), p1, p2, pint)) return false;
-  return point_inside(n, pint);
+  Vector nor = get_normal();
+  assertx(!is_zero(nor));
+  const auto pint = intersect_plane_segment(nor, get_planec(nor), p1, p2);
+  if (!pint) return {};
+  if (!point_inside(nor, *pint)) return {};
+  return *pint;
 }
 
-bool Polygon::intersect_line(const Point& p, const Vector& v, Point& pint) const {
+std::optional<Point> Polygon::intersect_line(const Point& p, const Vector& v) const {
   assertx(num() >= 3);
-  Vector n = get_normal();
-  if (!assertw(!is_zero(n))) return false;
-  float d = get_planec(n);
-  float numerator = d - n[0] * p[0] - n[1] * p[1] - n[2] * p[2];
-  float denominator = n[0] * v[0] + n[1] * v[1] + n[2] * v[2];
-  if (!denominator) return false;
-  float alpha = numerator / denominator;
-  pint = p + v * alpha;
-  return point_inside(n, pint);
+  const Vector nor = get_normal();
+  if (!assertw(!is_zero(nor))) return {};
+  const float d = get_planec(nor);
+  const float numerator = d - nor[0] * p[0] - nor[1] * p[1] - nor[2] * p[2];
+  const float denominator = nor[0] * v[0] + nor[1] * v[1] + nor[2] * v[2];
+  if (!denominator) return {};
+  const float alpha = numerator / denominator;
+  const Point pint = p + v * alpha;
+  if (!point_inside(nor, pint)) return {};
+  return pint;
 }
 
 namespace {
@@ -272,14 +275,14 @@ std::ostream& operator<<(std::ostream& os, const Polygon& poly) {
   return os << " }\n";
 }
 
-bool intersect_plane_segment(const Vector& normal, float d, const Point& p1, const Point& p2, Point& pint) {
-  float s1 = pvdot(p1, normal) - d;
-  float s2 = pvdot(p2, normal) - d;
-  if ((s1 < 0 && s2 < 0) || (s1 > 0 && s2 > 0)) return false;
-  // what to do when segment lies in plane?  report nothing?
-  if (!s1 && !s2) return false;
-  pint = interp(p1, p2, s2 / (s2 - s1));
-  return true;
+std::optional<Point> intersect_plane_segment(const Vector& normal, float d, const Point& p1, const Point& p2) {
+  const float s1 = pvdot(p1, normal) - d;
+  const float s2 = pvdot(p2, normal) - d;
+  if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};
+  const float denominator = s2 - s1;
+  // When the segment lies in the polygon plane, we report no intersection.  Is this reasonable?
+  if (!denominator) return {};
+  return interp(p1, p2, s2 / denominator);
 }
 
 Vector orthogonal_vector(const Vector& v) {

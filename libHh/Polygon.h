@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_POLYGON_H_
 #define MESH_PROCESSING_LIBHH_POLYGON_H_
 
+#include <optional>
+
 #include "libHh/Bbox.h"
 #include "libHh/Geometry.h"
 #include "libHh/PArray.h"
@@ -25,14 +27,14 @@ class Polygon : public PArray<Point, 4> {
   float get_area() const;
   // The polygon centroid can be obtained as mean(polygon) using RangeOp.
   // Finds intersection of polygon with halfspace in +hn direction
-  bool intersect_hyperplane(const Point& hp, const Vector& hn);                 // ret: is_modified
-  bool intersect_bbox(const Bbox<float, 3>& bbox);                              // ret: is_modified
-  bool intersect_segment(const Point& p1, const Point& p2, Point& pint) const;  // ret: is_intersection
-  bool intersect_line(const Point& p, const Vector& v, Point& pint) const;      // ret: is_intersection
+  bool intersect_hyperplane(const Point& hp, const Vector& hn);  // ret: is_modified
+  bool intersect_bbox(const Bbox<float, 3>& bbox);               // ret: is_modified
+  std::optional<Point> intersect_segment(const Point& p1, const Point& p2) const;
+  std::optional<Point> intersect_line(const Point& p, const Vector& v) const;
   // Intersect with plane defined by (plane_normal, plane_d, plane_tol); report intersection as array of points pa.
   void intersect_plane(const Vector& poly_normal, const Vector& plane_normal, float plane_d, float plane_tol,
                        Array<Point>& pa) const;
-  bool point_inside(const Vector& pnor, const Point& point) const;  // ret: point_is_inside
+  bool point_inside(const Vector& pnor, const Point& point) const;
   bool is_convex() const;
   using base::operator=;
   HH_POOL_ALLOCATION(Polygon);
@@ -49,8 +51,8 @@ template <> HH_DECLARE_OSTREAM_EOL(Polygon);  // implemented by CArrayView<Point
 
 HH_INITIALIZE_POOL(Polygon);
 
-// Returns is_intersection and if there is, intersection point pint.
-bool intersect_plane_segment(const Vector& normal, float d, const Point& p1, const Point& p2, Point& pint);
+// Returns the intersection point.
+std::optional<Point> intersect_plane_segment(const Vector& normal, float d, const Point& p1, const Point& p2);
 
 // Find a vector perpendicular to v (any such vector).
 Vector orthogonal_vector(const Vector& v);

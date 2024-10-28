@@ -21,17 +21,16 @@ int main() {
     poly.push(Point(0.f, 0.f, 0.f));
     poly.push(Point(1.f, 0.f, 0.f));
     poly.push(Point(0.f, 1.f, 0.f));
-    Point pint;
-    SHOW(poly.intersect_line(Point(.2f, .2f, 1.f), Vector(0.f, 0.f, 1.f), pint));
-    SHOW(pint);
-    SHOW(poly.intersect_line(Point(.7f, .7f, 1.f), Vector(0.f, 0.f, 1.f), pint));
-    SHOW(pint);
-    SHOW(poly.intersect_line(Point(0.f, 0.f, 1.f), Vector(.1f, .3f, -1.f), pint));
-    SHOW(pint);
-    SHOW(poly.intersect_line(Point(0.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f), pint));
-    SHOW(pint);
-    SHOW(poly.intersect_line(Point(0.f, .5f, 0.f), Vector(0.f, 0.f, 1.f), pint));
-    SHOW(pint);
+    const auto test = [&](const Point p1, const Point p2) {
+      auto pint = poly.intersect_line(p1, p2);
+      SHOW(p1, p2, bool(pint));
+      if (pint) SHOW(*pint);
+    };
+    test(Point(.2f, .2f, 1.f), Vector(0.f, 0.f, 1.f));
+    test(Point(.7f, .7f, 1.f), Vector(0.f, 0.f, 1.f));
+    test(Point(0.f, 0.f, 1.f), Vector(.1f, .3f, -1.f));
+    test(Point(0.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f));
+    test(Point(0.f, .5f, 0.f), Vector(0.f, 0.f, 1.f));
   }
   {
     Polygon poly;

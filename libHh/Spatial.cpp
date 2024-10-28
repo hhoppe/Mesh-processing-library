@@ -106,8 +106,7 @@ bool BSpatialSearch::done() {
   }
 }
 
-Univ BSpatialSearch::next(float* pdis2) {
-  Univ u;
+BSpatialSearch::Result BSpatialSearch::next() {
   for (;;) {
     if (_pq.empty()) assertx(!done());  // Refill _pq.
     float dis2 = _pq.min_priority();
@@ -115,14 +114,13 @@ Univ BSpatialSearch::next(float* pdis2) {
       expand_search_space();
       continue;
     }
-    u = _pq.min();
+    Univ u = _pq.min();
     _spatial.pq_refine(_pq, _pcenter);
     if (_pq.min() != u || _pq.min_priority() != dis2) continue;
-    if (pdis2) *pdis2 = _pq.min_priority();
+    dis2 = _pq.min_priority();
     u = _pq.remove_min();
-    break;
+    return {_spatial.pq_id(u), dis2};
   }
-  return _spatial.pq_id(u);
 }
 
 void BSpatialSearch::consider(const Ind& ci) {

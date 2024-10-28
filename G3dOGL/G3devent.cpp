@@ -248,16 +248,13 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
     Array<Vertex> va;
     for (Face f : mesh.faces()) {
       mesh.get_vertices(f, va);
-      for_int(vi, va.num() - 2) {  // for non-triangles, create fan.
-        Vec3<Point> pa;
-        pa[0] = mesh.point(va[0]);
-        pa[1] = mesh.point(va[vi + 1]);
-        pa[2] = mesh.point(va[vi + 2]);
+      for_int(vi, va.num() - 2) {  // For non-triangles, create fan.
+        const Vec3<Point> triangle{mesh.point(va[0]), mesh.point(va[vi + 1]), mesh.point(va[vi + 2])};
         Vec3<Vec2<float>> psa;
         Vec3<float> psz, areas;
         bool all_in = true;
         for_int(i, 3) {
-          auto [zs, xys] = HB::world_to_vdc(pa[i] * t);
+          auto [zs, xys] = HB::world_to_vdc(triangle[i] * t);
           if (xys) {
             psz[i] = zs;
             psa[i] = *xys;

@@ -705,18 +705,16 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
   Array<TriangleFace> trianglefaces;
   for (Face f : mesh.faces()) {
     if (!setgoodf.contains(smesh.orig_face(f))) continue;
-    Polygon poly(3);
-    mesh.polygon(f, poly);
-    assertx(poly.num() == 3);
-    for_int(i, poly.num()) poly[i] *= xform;
-    trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
+    Vec3<Point> triangle = mesh.triangle_points(f);
+    for_int(i, 3) triangle[i] *= xform;
+    trianglefaces.push({triangle, f});
   }
   TriangleFaceSpatial spatial(trianglefaces, 60);  // Not MeshSearch because of face subset selection using `setgoodf`.
   HH_STIMER("____lspatialproject");
   for (int i : setpts) {
     if (setbadpts.contains(i)) {
       SpatialSearch<TriangleFace*> ss(&spatial, co[i] * xform);
-      TriangleFace* triangleface = ss.next();
+      TriangleFace* triangleface = ss.next().id;
       gscmf[i] = triangleface->face;
     } else {
       Face f = trfmm(gcmf[i], gmesh, smesh.orig_mesh());

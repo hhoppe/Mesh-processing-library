@@ -4,6 +4,7 @@
 
 #include "libHh/Facedistance.h"
 #include "libHh/GMesh.h"
+#include "libHh/GeomOp.h"
 #include "libHh/Spatial.h"
 #include "libHh/Timer.h"
 
@@ -63,14 +64,13 @@ class TriangleFaceSpatial
     float tmin = BIGFLOAT;
     const auto func_test_triangleface_with_ray = [&](Univ id) -> bool {
       const TriangleFace* ptriangleface = Conv<const TriangleFace*>::d(id);
-      // TODO: Speed this up by avoiding use of Polygon.
-      const Polygon poly{ptriangleface->triangle};
-      Point pint;
-      if (!poly.intersect_segment(p1, p2, pint)) return false;
-      const float t = dot(pint - p1, vray);
+      const Vec3<Point>& triangle = ptriangleface->triangle;
+      const auto pint = intersect_segment(triangle, p1, p2);
+      if (!pint) return false;
+      const float t = dot(*pint - p1, vray);
       if (t < tmin) {
         tmin = t;
-        ret_pint = pint;
+        ret_pint = *pint;
         ret_ptriangleface = ptriangleface;
       }
       return true;

@@ -61,8 +61,10 @@ inline Vector to_Vector(const Point& p) { return Vector(p[0], p[1], p[2]); }
 inline Point to_Point(const Vector& v) { return Point(v[0], v[1], v[2]); }
 inline float pvdot(const Point& p, const Vector& v) { return dot(to_Vector(p), v); }
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
+inline Vector get_normal_dir(const Vec3<Point>& triangle) { return cross(triangle[0], triangle[1], triangle[2]); }
+inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
 inline float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * mag2(cross(p1, p2, p3)); }
-inline float area2(const Vec3<Point>& pa) { return .25f * mag2(cross(pa[0], pa[1], pa[2])); }
+inline float area2(const Vec3<Point>& triangle) { return area2(triangle[0], triangle[1], triangle[2]); }
 inline float dist2(const Vec3<float>& v1, const Point& v2) {
   return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
 }
@@ -159,24 +161,30 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
 Point slerp(const Point& p1, const Point& p2, float ba);
 
 // Spherical triangle area.
-float spherical_triangle_area(const Vec3<Point>& pa);
+float spherical_triangle_area(const Vec3<Point>& triangle);
 
 // Determine if an oriented spherical triangle spans more than a hemisphere.
 template <typename Precision = double>
-bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance = 0.f);
+bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance = 0.f);
 
 // Return signed area of 2D triangle (positive if counter-clockwise).
 template <typename Precision = double>
 float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
 
-// Get barycentric coordinates of point p within triangle pa, or return false if p not in plane of triangle.
-bool get_bary(const Point& p, const Vec3<Point>& pa, Bary& bary);
+// Given a 3D point in the plane of a triangle, return the point's barycentric coordinates.
+Bary bary_of_point(const Vec3<Point>& triangle, const Point& p);
 
-// Given vector in plane of triangle, return its barycentric coordinates.
-Bary vector_bary(const Vec3<Point>& pa, const Vector& vec);
+// Given a 3D point in the plane of a triangle, return whether the point lies in the triangle convex hull.
+bool point_inside(const Point& p, const Vec3<Point>& triangle);
+
+// Given a 2D vector and a 2D triangle, return the vector's barycentric coordinates.
+Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec);
+
+// Given a 3D vector in the plane of a triangle, return the vector's barycentric coordinates.
+Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec);
 
 // Given a triangle and barycentric coordinates, return the vector.
-Vector bary_vector(const Vec3<Point>& pa, const Bary& bary);
+Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary);
 
 // Convert degrees to radians.
 template <typename T> constexpr T to_rad(T deg) {
@@ -239,16 +247,16 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
 }
 
-template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Point>& pt, float tolerance) {
+template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance) {
   // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
   //  (1.f/6.f) * dot(p1, cross(p2, p3).
-  // return dot(pt[0], cross(pt[1], pt[2])) < 0.f;
-  const Point& p1 = pt[1];
-  const Point& p2 = pt[2];
-  Vec3<Precision> vcross(Precision(p1[1]) * p2[2] - Precision(p1[2]) * p2[1],
-                         Precision(p1[2]) * p2[0] - Precision(p1[0]) * p2[2],
-                         Precision(p1[0]) * p2[1] - Precision(p1[1]) * p2[0]);
-  return dot<Precision>(pt[0], vcross) < -tolerance;
+  // return dot(triangle[0], cross(triangle[1], triangle[2])) < 0.f;
+  const Point& p1 = triangle[1];
+  const Point& p2 = triangle[2];
+  const Vec3<Precision> vcross(Precision(p1[1]) * p2[2] - Precision(p1[2]) * p2[1],
+                               Precision(p1[2]) * p2[0] - Precision(p1[0]) * p2[2],
+                               Precision(p1[0]) * p2[1] - Precision(p1[1]) * p2[0]);
+  return dot<Precision>(triangle[0], vcross) < -tolerance;
 }
 
 template <typename Precision> float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {

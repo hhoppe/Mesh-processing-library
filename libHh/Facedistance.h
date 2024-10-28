@@ -121,61 +121,44 @@ inline float project_aux(const Point& p, const Point& p1, const Point& p2, const
 // - v2v3 * v2v3 == v2v2 * v3v3 (!area but v2 != 0 && v3 != 0) -> project on sides
 inline float project_point_triangle2(const Point& p, const Point& p1, const Point& p2, const Point& p3, Bary& ret_cba,
                                      Point& ret_clp) {
-  dummy_init(ret_cba, ret_clp);
-  // Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
+  // Try moving back to coordinate-free code??
+  // const Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
   // float v2v2 = mag2(v2), v3v3 = mag2(v3), v2v3 = dot(v2, v3);
-  // float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
-  float v2x, v2y, v2z;
-  float v3x, v3y, v3z;
-  float v2v2, v3v3, v2v3;
-  float denom;
-  {
-    {
-      float p1x = p1[0], p1y = p1[1], p1z = p1[2];
-      float lv2x = p2[0] - p1x, lv2y = p2[1] - p1y, lv2z = p2[2] - p1z;
-      float lv3x = p3[0] - p1x, lv3y = p3[1] - p1y, lv3z = p3[2] - p1z;
-      v2v2 = lv2x * lv2x + lv2y * lv2y + lv2z * lv2z;
-      v3v3 = lv3x * lv3x + lv3y * lv3y + lv3z * lv3z;
-      v2v3 = lv2x * lv3x + lv2y * lv3y + lv2z * lv3z;
-      v2x = lv2x;
-      v2y = lv2y;
-      v2z = lv2z;
-      v3x = lv3x;
-      v3y = lv3y;
-      v3z = lv3z;
-    }
-    if (!v2v2) v2v2 = 1.f;  // recover if v2 == 0
-    if (!v3v3) v3v3 = 1.f;  // recover if v3 == 0
-    denom = (v3v3 - v2v3 * v2v3 / v2v2);
-    if (!denom) {
-      // recover if v2v3 * v2v3 == v2v2 * v3v3; project on sides
-      // Note: set a = b = 1e-10 to force projection on 2 sides
-      return details::project_aux(p, p1, p2, p3, ret_cba, ret_clp, p, -1e-10f, -1e-10f, 1.f);
-    }
+  // const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
+  const float px = p[0], py = p[1], pz = p[2];
+  const float p1x = p1[0], p1y = p1[1], p1z = p1[2];
+  const float v2x = p2[0] - p1x, v2y = p2[1] - p1y, v2z = p2[2] - p1z;
+  const float v3x = p3[0] - p1x, v3y = p3[1] - p1y, v3z = p3[2] - p1z;
+  float v2v2 = v2x * v2x + v2y * v2y + v2z * v2z;
+  float v3v3 = v3x * v3x + v3y * v3y + v3z * v3z;
+  const float v2v3 = v2x * v3x + v2y * v3y + v2z * v3z;
+  if (!v2v2) v2v2 = 1.f;  // Recover if v2 == 0.f .
+  if (!v3v3) v3v3 = 1.f;  // Recover if v3 == 0.f .
+  const float denom = v3v3 - v2v3 * v2v3 / v2v2;
+  if (!denom) {
+    // Recover if v2v3 * v2v3 == v2v2 * v3v3; project on sides.
+    // Note: set a = b = 1e-10f to force projection on 2 sides.
+    return details::project_aux(p, p1, p2, p3, ret_cba, ret_clp, p, -1e-10f, -1e-10f, 1.f);
   }
-  // float vpx = p[0] - p1x, vpy = p[1] - p1y, vpz = p[2] - p1z;
-  float vpx = p[0] - p1[0], vpy = p[1] - p1[1], vpz = p[2] - p1[2];
-  float v2vp = v2x * vpx + v2y * vpy + v2z * vpz;
-  float v3vp = v3x * vpx + v3y * vpy + v3z * vpz;
-  float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
-  float b2 = (v2vp - b3 * v2v3) / v2v2;
-  float b1 = 1.f - b2 - b3;
+  const float vpx = px - p1x, vpy = py - p1y, vpz = pz - p1z;
+  const float v2vp = v2x * vpx + v2y * vpy + v2z * vpz;
+  const float v3vp = v3x * vpx + v3y * vpy + v3z * vpz;
+  const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
+  const float b2 = (v2vp - b3 * v2v3) / v2v2;
+  const float b1 = 1.f - b2 - b3;
   if (b1 < 0.f || b2 < 0.f || b3 < 0.f) {
     // Point pp = interp(p1, p2, p3, b1, b2);
-    Point pp(p1[0] + b2 * v2x + b3 * v3x, p1[1] + b2 * v2y + b3 * v3y, p1[2] + b2 * v2z + b3 * v3z);
+    const Point pp(p1x + b2 * v2x + b3 * v3x, p1y + b2 * v2y + b3 * v3y, p1z + b2 * v2z + b3 * v3z);
     return details::project_aux(p, p1, p2, p3, ret_cba, ret_clp, pp, b1, b2, b3);
   }
-  // fast common case (projection into interior)
+  // Fast common case (projection into interior):
   // ret_clp = interp(p1, p2, p3, b1, b2);
-  // float clpx = p1x + b2 * v2x + b3 * v3x;
-  // float clpy = p1y + b2 * v2y + b3 * v3y;
-  // float clpz = p1z + b2 * v2z + b3 * v3z;
-  float clpx = p1[0] + b2 * v2x + b3 * v3x;
-  float clpy = p1[1] + b2 * v2y + b3 * v3y;
-  float clpz = p1[2] + b2 * v2z + b3 * v3z;
-  // dist2(p, clp);
-  float x = p[0] - clpx, y = p[1] - clpy, z = p[2] - clpz;
-  float dis2 = x * x + y * y + z * z;
+  const float clpx = p1x + b2 * v2x + b3 * v3x;
+  const float clpy = p1y + b2 * v2y + b3 * v3y;
+  const float clpz = p1z + b2 * v2z + b3 * v3z;
+  // dis2 = dist2(p, clp);
+  const float x = px - clpx, y = py - clpy, z = pz - clpz;
+  const float dis2 = x * x + y * y + z * z;
   ret_clp = V(clpx, clpy, clpz);
   ret_cba = V(b1, b2, b3);
   return dis2;

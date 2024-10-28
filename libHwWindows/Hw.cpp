@@ -692,22 +692,21 @@ void Hw::set_double_buffering(bool newstate) {
   if (_hwdebug) SHOW(_is_glx_dbuf);
 }
 
-bool Hw::get_pointer(Vec2<int>& yx) {
+std::optional<Vec2<int>> Hw::get_pointer() {
   assertx(_state == EState::open);
   POINT pt_screen, pt_client;
   // Get position of mouse cursor (relative to screen, not window).
-  if (!GetCursorPos(&pt_screen)) return false;
+  if (!GetCursorPos(&pt_screen)) return {};
   // Convert coords so that they're relative to window's client area.
   pt_client = pt_screen;
   assertx(ScreenToClient(_hwnd, &pt_client));
-  // Assign values to the [OUT] arguments.
-  yx = convert<int>(V(pt_client.y, pt_client.x));
+  const Vec2<int> yx = convert<int>(V(pt_client.y, pt_client.x));
   // Return True if mouse pointer is inside window, or False if isn't
   //  (to be consistent with X-windows -- recall that X-windows only activates window if pointer is on it).
-  RECT window_rect;
-  assertx(GetWindowRect(_hwnd, &window_rect));
-  // return PtInRect(&window_rect, pt_screen);
-  return true;
+  // RECT window_rect;
+  // assertx(GetWindowRect(_hwnd, &window_rect));
+  // if (!PtInRect(&window_rect, pt_screen)) return {};
+  return {yx};
 }
 
 bool Hw::get_key_modifier(EModifier modifier) {

@@ -56,8 +56,8 @@ class HwBase : noncopyable {
   virtual void open() = 0;
 
   // call after open():
-  virtual bool suggests_stop() = 0;             // ret: Hw requests program to stop drawing
-  virtual bool get_pointer(Vec2<int>& yx) = 0;  // ret success
+  virtual bool suggests_stop() = 0;  // ret: Hw requests program to stop drawing
+  virtual std::optional<Vec2<int>> get_pointer() = 0;
   enum class EModifier { shift, control, alt };
   virtual bool get_key_modifier(EModifier modifier) = 0;
   virtual void set_color_to_foreground() = 0;

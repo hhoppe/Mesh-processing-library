@@ -277,108 +277,97 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
 }
 
 void swap_edge() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
-    return;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (const auto& selected_edge = select_edge(yx)) {
+      const auto& [_, mesh, e, unused] = *selected_edge;
+      if (mesh->legal_edge_swap(e)) {
+        Edge enew = mesh->swap_edge(e);
+        dummy_use(enew);
+        mesh->gflags().flag(mflag_ok) = false;
+        HB::redraw_later();
+        return;
+      }
+    }
   }
-  const auto& selected_edge = select_edge(yx);
-  if (!selected_edge) {
-    HB::beep();
-    return;
-  }
-  const auto& [_, mesh, e, unused] = *selected_edge;
-  if (!mesh->legal_edge_swap(e)) {
-    HB::beep();
-    return;
-  }
-  Edge enew = mesh->swap_edge(e);
-  dummy_use(enew);
-  mesh->gflags().flag(mflag_ok) = false;
-  HB::redraw_later();
+  HB::beep();
 }
 
 void split_edge() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
-    return;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_edge = select_edge(yx)) {
+      const auto& [_, mesh, e, inter] = *selected_edge;
+      Vertex vnew = mesh->split_edge(e);
+      mesh->set_point(vnew, inter);
+      mesh->gflags().flag(mflag_ok) = false;
+      HB::redraw_later();
+      return;
+    }
   }
-  auto selected_edge = select_edge(yx);
-  if (!selected_edge) {
-    HB::beep();
-    return;
-  }
-  const auto& [_, mesh, e, inter] = *selected_edge;
-  Vertex vnew = mesh->split_edge(e);
-  mesh->set_point(vnew, inter);
-  mesh->gflags().flag(mflag_ok) = false;
-  HB::redraw_later();
+  HB::beep();
 }
 
 void collapse_edge(bool tovertex) {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
-    return;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_edge = select_edge(yx)) {
+      auto& [_, mesh, e, inter] = *selected_edge;
+      if (mesh->legal_edge_collapse(e)) {
+        Vertex v1 = mesh->vertex1(e), v2 = mesh->vertex2(e);
+        Point p1 = mesh->point(v1), p2 = mesh->point(v2);
+        mesh->collapse_edge(e);
+        if (tovertex) inter = dist2(p1, inter) < dist2(inter, p2) ? p1 : p2;
+        mesh->set_point(v1, inter);
+        mesh->gflags().flag(mflag_ok) = false;
+        HB::redraw_later();
+        return;
+      }
+    }
   }
-  auto selected_edge = select_edge(yx);
-  if (!selected_edge) {
-    HB::beep();
-    return;
-  }
-  auto& [_, mesh, e, inter] = *selected_edge;
-  if (!mesh->legal_edge_collapse(e)) {
-    HB::beep();
-    return;
-  }
-  Vertex v1 = mesh->vertex1(e), v2 = mesh->vertex2(e);
-  Point p1 = mesh->point(v1), p2 = mesh->point(v2);
-  mesh->collapse_edge(e);
-  if (tovertex) inter = dist2(p1, inter) < dist2(inter, p2) ? p1 : p2;
-  mesh->set_point(v1, inter);
-  mesh->gflags().flag(mflag_ok) = false;
-  HB::redraw_later();
+  HB::beep();
 }
 
 bool try_toggle_vertex() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) return false;
-  if (auto selected_vertex = select_vertex(yx)) {
-    const auto& [_, mesh, v] = *selected_vertex;
-    bool tagged = mesh->flags(v).flag(GMesh::vflag_cusp);
-    showf("Setting vertex %d tag to %d\n", mesh->vertex_id(v), !tagged);
-    mesh->flags(v).flag(GMesh::vflag_cusp) = !tagged;
-    mesh->set_string(v, mesh->flags(v).flag(GMesh::vflag_cusp) ? "cusp" : nullptr);
-    mesh->gflags().flag(mflag_ok) = false;
-    return true;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_vertex = select_vertex(yx)) {
+      const auto& [_, mesh, v] = *selected_vertex;
+      bool tagged = mesh->flags(v).flag(GMesh::vflag_cusp);
+      showf("Setting vertex %d tag to %d\n", mesh->vertex_id(v), !tagged);
+      mesh->flags(v).flag(GMesh::vflag_cusp) = !tagged;
+      mesh->set_string(v, mesh->flags(v).flag(GMesh::vflag_cusp) ? "cusp" : nullptr);
+      mesh->gflags().flag(mflag_ok) = false;
+      return true;
+    }
   }
   return false;
 }
 
 bool try_toggle_edge() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) return false;
-  if (auto selected_edge = select_edge(yx)) {
-    const auto& [_, mesh, e, unused] = *selected_edge;
-    bool tagged = mesh->flags(e).flag(GMesh::eflag_sharp);
-    showf("Setting edge (%d, %d) tag to %d\n",  //
-          mesh->vertex_id(mesh->vertex1(e)), mesh->vertex_id(mesh->vertex2(e)), !tagged);
-    mesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
-    mesh->set_string(e, mesh->flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
-    mesh->gflags().flag(mflag_ok) = false;
-    return true;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_edge = select_edge(yx)) {
+      const auto& [_, mesh, e, unused] = *selected_edge;
+      bool tagged = mesh->flags(e).flag(GMesh::eflag_sharp);
+      showf("Setting edge (%d, %d) tag to %d\n",  //
+            mesh->vertex_id(mesh->vertex1(e)), mesh->vertex_id(mesh->vertex2(e)), !tagged);
+      mesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
+      mesh->set_string(e, mesh->flags(e).flag(GMesh::eflag_sharp) ? "sharp" : nullptr);
+      mesh->gflags().flag(mflag_ok) = false;
+      return true;
+    }
   }
   return false;
 }
 
 void toggle_tag() {
   static const bool tagvertices = getenv_bool("TAG_VERTICES");
-  if (!(tagvertices && try_toggle_vertex()) && !try_toggle_edge()) {
-    HB::beep();
+  if ((tagvertices && try_toggle_vertex()) || try_toggle_edge()) {
+    HB::redraw_later();
     return;
   }
-  HB::redraw_later();
+  HB::beep();
 }
 
 auto get_sharp_edges(GMesh& mesh, Vertex v) {
@@ -395,98 +384,97 @@ void untag(GMesh& mesh, Edge e) {
 }
 
 void untag_cut() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) return;
-  if (auto selected_edge = select_edge(yx)) {
-    const auto& [_, mesh, e, unused] = *selected_edge;
-    if (!mesh->flags(e).flag(GMesh::eflag_sharp)) return;
-    HB::redraw_later();
-    {
-      untag(*mesh, e);
-      Edge er = e;
-      Array<Edge> are;
-      {
-        Edge ee = er;
-        Vertex v = mesh->vertex1(ee);
-        for (;;) {
-          are = get_sharp_edges(*mesh, v);
-          if (are.num() != 1) break;
-          ee = are[0];
-          if (ee == er) return;  // have loop!
-          untag(*mesh, ee);
-          v = mesh->opp_vertex(v, ee);
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_edge = select_edge(yx)) {
+      const auto& [_, mesh, e, unused] = *selected_edge;
+      if (mesh->flags(e).flag(GMesh::eflag_sharp)) {
+        HB::redraw_later();
+        untag(*mesh, e);
+        Edge er = e;
+        Array<Edge> are;
+        {
+          Edge ee = er;
+          Vertex v = mesh->vertex1(ee);
+          for (;;) {
+            are = get_sharp_edges(*mesh, v);
+            if (are.num() != 1) break;
+            ee = are[0];
+            if (ee == er) return;  // Have loop!
+            untag(*mesh, ee);
+            v = mesh->opp_vertex(v, ee);
+          }
         }
-      }
-      {
-        Edge ee = er;
-        Vertex v = mesh->vertex2(ee);
-        for (;;) {
-          are = get_sharp_edges(*mesh, v);
-          if (are.num() != 1) break;
-          ee = are[0];
-          untag(*mesh, ee);
-          v = mesh->opp_vertex(v, ee);
+        {
+          Edge ee = er;
+          Vertex v = mesh->vertex2(ee);
+          for (;;) {
+            are = get_sharp_edges(*mesh, v);
+            if (are.num() != 1) break;
+            ee = are[0];
+            untag(*mesh, ee);
+            v = mesh->opp_vertex(v, ee);
+          }
         }
+        return;
       }
     }
   }
+  HB::beep();
 }
 
 void destroy_face() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
-    return;
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    if (auto selected_face = select_face(yx)) {
+      const auto& [_, mesh, f] = *selected_face;
+      mesh->destroy_face(f);
+      mesh->gflags().flag(mflag_ok) = false;
+      HB::redraw_later();
+      return;
+    }
   }
-  auto selected_face = select_face(yx);
-  if (!selected_face) {
-    HB::beep();
-    return;
-  }
-  const auto& [_, mesh, f] = *selected_face;
-  mesh->destroy_face(f);
-  mesh->gflags().flag(mflag_ok) = false;
-  HB::redraw_later();
+  HB::beep();
 }
 
 void print_info_mesh_elements() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    SHOW("Retrieving info:");
+    auto selected_vertex = select_vertex(yx);
+    if (selected_vertex) {
+      const auto& [_, mesh, v] = *selected_vertex;
+      SHOW(mesh->vertex_id(v), mesh->point(v), mesh->get_string(v));
+    }
+    auto selected_edge = select_edge(yx);
+    if (selected_edge) {
+      const auto& [_, mesh, e, inter] = *selected_edge;
+      const int v1 = mesh->vertex_id(mesh->vertex1(e));
+      const int v2 = mesh->vertex_id(mesh->vertex2(e));
+      SHOW("On edge", v1, v2, inter, mesh->get_string(e));
+    }
+    auto selected_face = select_face(yx);
+    if (selected_face) {
+      const auto& [_, mesh, f] = *selected_face;
+      SHOW(mesh->face_id(f), mesh->get_string(f));
+    }
+    if (selected_vertex && selected_face) {
+      Vertex v = selected_vertex->v;
+      Face f = selected_face->f;
+      // It is possible that v is in a different mesh, or that v and f are not adjacent.
+      GMesh* mesh = selected_face->mesh;
+      Array<Vertex> vertices;
+      mesh->get_vertices(f, vertices);
+      if (vertices.contains(v)) {
+        Corner c = mesh->corner(v, f);
+        SHOW(mesh->get_string(c));
+      } else {
+        SHOW("Vertex is not adjacent to face");
+      }
+    }
     return;
   }
-  SHOW("Retrieving info:");
-  auto selected_vertex = select_vertex(yx);
-  if (selected_vertex) {
-    const auto& [_, mesh, v] = *selected_vertex;
-    SHOW(mesh->vertex_id(v), mesh->point(v), mesh->get_string(v));
-  }
-  auto selected_edge = select_edge(yx);
-  if (selected_edge) {
-    const auto& [_, mesh, e, inter] = *selected_edge;
-    const int v1 = mesh->vertex_id(mesh->vertex1(e));
-    const int v2 = mesh->vertex_id(mesh->vertex2(e));
-    SHOW("On edge", v1, v2, inter, mesh->get_string(e));
-  }
-  auto selected_face = select_face(yx);
-  if (selected_face) {
-    const auto& [_, mesh, f] = *selected_face;
-    SHOW(mesh->face_id(f), mesh->get_string(f));
-  }
-  if (selected_vertex && selected_face) {
-    Vertex v = selected_vertex->v;
-    Face f = selected_face->f;
-    // It is possible that v is in a different mesh, or that v and f are not adjacent.
-    GMesh* mesh = selected_face->mesh;
-    Array<Vertex> vertices;
-    mesh->get_vertices(f, vertices);
-    if (vertices.contains(v)) {
-      Corner c = mesh->corner(v, f);
-      SHOW(mesh->get_string(c));
-    } else {
-      SHOW("Vertex is not adjacent to face");
-    }
-  }
+  HB::beep();
 }
 
 void crop_mesh_to_view() {
@@ -548,35 +536,35 @@ void reinit() {
 }
 
 void set_recpoint() {
-  Vec2<float> yx;
-  if (!HB::get_pointer(yx)) {
-    HB::beep();
-    return;
-  }
-  auto selected_face = select_face(yx);
-  if (!selected_face) {
-    if (!mode_centroid) {
-      rec_point = Point(0.f, 0.f, 0.f);
-      mode_centroid = true;  // turn on mode
-    } else {
-      HB::beep();
+  if (auto pointer = HB::get_pointer()) {
+    const Vec2<float> yx = *pointer;
+    auto selected_face = select_face(yx);
+    if (!selected_face) {
+      if (!mode_centroid) {
+        rec_point = Point(0.f, 0.f, 0.f);
+        mode_centroid = true;  // turn on mode
+      } else {
+        HB::beep();
+      }
+      return;
     }
+    const auto& [obn, mesh, f] = *selected_face;
+    assertx(g_obs[obn].visible());
+    if (obn != cob) {
+      cob = obn;
+      HB::set_current_object(cob);
+    }
+    // Ideally, would compute actual intersection point within face.
+    // For now, just use centroid.
+    Polygon poly;
+    mesh->polygon(f, poly);
+    Point p = mean(poly);
+    if (1) showf("Hit face %d (centroid [%g, %g, %g])\n", mesh->face_id(f), p[0], p[1], p[2]);
+    rec_point = p;
+    mode_centroid = false;
     return;
   }
-  const auto& [obn, mesh, f] = *selected_face;
-  assertx(g_obs[obn].visible());
-  if (obn != cob) {
-    cob = obn;
-    HB::set_current_object(cob);
-  }
-  // Ideally, would compute actual intersection point within face.
-  // For now, just use centroid.
-  Polygon poly;
-  mesh->polygon(f, poly);
-  Point p = mean(poly);
-  if (1) showf("Hit face %d (centroid [%g, %g, %g])\n", mesh->face_id(f), p[0], p[1], p[2]);
-  rec_point = p;
-  mode_centroid = false;
+  HB::beep();
 }
 
 void show_all_info() {

@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_TRIANGLEFACESPATIAL_H_
 #define MESH_PROCESSING_LIBHH_TRIANGLEFACESPATIAL_H_
 
+#include <optional>
+
 #include "libHh/Facedistance.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"
@@ -58,9 +60,13 @@ class TriangleFaceSpatial
   }
   // clear() inherited from ObjectSpatial
 
-  bool first_along_segment(const Point& p1, const Point& p2, const TriangleFace*& ret_ptriangleface,
-                           Point& ret_pint) const {
-    Vector vray = p2 - p1;
+  struct SegmentResult {
+    const TriangleFace* triangleface;
+    Point pint;
+  };
+  std::optional<SegmentResult> first_along_segment(const Point& p1, const Point& p2) const {
+    std::optional<SegmentResult> result;
+    const Vector vray = p2 - p1;
     float tmin = BIGFLOAT;
     const auto func_test_triangleface_with_ray = [&](Univ id) -> bool {
       const TriangleFace* ptriangleface = Conv<const TriangleFace*>::d(id);
@@ -70,14 +76,12 @@ class TriangleFaceSpatial
       const float t = dot(*pint - p1, vray);
       if (t < tmin) {
         tmin = t;
-        ret_pint = *pint;
-        ret_ptriangleface = ptriangleface;
+        result = {ptriangleface, *pint};
       }
       return true;
     };
     search_segment(p1, p2, func_test_triangleface_with_ray);
-    const bool found_intersection = tmin < BIGFLOAT;
-    return found_intersection;
+    return result;
   }
 };
 

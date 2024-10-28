@@ -187,7 +187,8 @@ template <int n, typename T> constexpr Vec<T, n> ntimes(const T& v) { return Vec
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, int n, typename Func> auto map(const Vec<T, n>& c, Func func) {
-  Vec<decltype(func(std::declval<T>())), n> nc;
+  using T2 = std::decay_t<decltype(func(std::declval<T>()))>;
+  Vec<T2, n> nc;
   for_int(i, n) nc[i] = func(c[i]);
   return nc;
 }

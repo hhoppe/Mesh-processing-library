@@ -2608,7 +2608,11 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
               }
               prev_yxi = yxi;
             }
-            if (suggests_stop() || !get_pointer(yx) || g_selected.button_active != 1) break;
+            if (suggests_stop()) break;
+            const auto pointer = get_pointer();
+            if (!pointer) break;
+            yx = *pointer;
+            if (g_selected.button_active != 1) break;
           }
           g_selected.button_active = 0;
           app_set_window_title();
@@ -2651,8 +2655,8 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
 }
 
 void DerivedHw::wheel_turn(float v) {
-  Vec2<int> yx;
-  if (get_pointer(yx)) {
+  if (auto pointer = get_pointer()) {
+    const Vec2<int> yx = *pointer;
     float fac_zoom = pow(k_wheel_zoom_fac, v);
     perform_zoom_at_cursor(fac_zoom, yx);
     const Vec2<float> arzoom = get_zooms();
@@ -3383,7 +3387,11 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
   if (g_selected.button_active && g_cob >= 0) {  // drag operation using one of the three mouse buttons.
     assertx(g_selected.button_active <= 3);
     Vec2<int> yx;
-    if (!get_pointer(yx)) g_selected.button_active = 0;
+    dummy_init(yx);
+    if (const auto pointer = get_pointer())
+      yx = *pointer;
+    else
+      g_selected.button_active = 0;
     bool shift_pressed = get_key_modifier(Hw::EModifier::shift);
     bool alt_pressed = get_key_modifier(Hw::EModifier::alt);
     switch (g_selected.button_active) {

@@ -40,7 +40,7 @@ void quit();  // user requests open() to return
 void redraw_later();
 void redraw_now();
 Vec2<int> get_extents();
-bool get_pointer(Vec2<float>& yxf);  // ret: false if no info
+std::optional<Vec2<float>> get_pointer();  // (0, 0)=(top, left).
 void set_camera(const Frame& p_real_t, float p_real_zoom, const Frame& p_view_t, float p_view_zoom);
 float get_hither();
 float get_yonder();

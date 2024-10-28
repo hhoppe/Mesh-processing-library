@@ -193,8 +193,9 @@ void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
   }
 }
 
-void collapse_zero_param_length_edges(GMesh& mesh, CArrayView<Vertex> new_vertices) {
-  for (Vertex v : new_vertices) {
+void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
+  for (Vertex v : Array<Vertex>{new_vertices}) {
+    if (!new_vertices.contains(v)) continue;
     for (;;) {
       bool modified = false;
       for (Edge e : mesh.edges(v)) {
@@ -202,6 +203,7 @@ void collapse_zero_param_length_edges(GMesh& mesh, CArrayView<Vertex> new_vertic
         if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
           Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
           collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept.
+          new_vertices.remove(v2);  // (In most cases, it is not present.)
           modified = true;
           break;
         }
@@ -213,7 +215,7 @@ void collapse_zero_param_length_edges(GMesh& mesh, CArrayView<Vertex> new_vertic
 
 // Split some `mesh` edges (by adding new vertices) such that no triangle face straddles the prime meridian.
 void split_mesh_along_prime_meridian(GMesh& mesh) {
-  Array<Vertex> new_vertices;
+  Set<Vertex> new_vertices;
 
   const auto split_edge = [&](Edge e, int axis) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -222,7 +224,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
-    new_vertices.push(v);
+    new_vertices.enter(v);
     v_sph(v) = sph_new;
   };
 
@@ -230,7 +232,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   const float eps = 1e-5f;
   Set<Edge> edges_to_split;
   for (Face f : mesh.faces()) {
-    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), [&](Vertex v) { return v_sph(v); });
+    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), v_sph);
     const Bbox bbox{sphs};
     const bool face_overlaps_meridian = bbox[0][k_axis0] < -eps && bbox[1][k_axis0] > eps && bbox[1][k_axis1] > eps;
     if (face_overlaps_meridian)
@@ -261,7 +263,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
 }
 
 void split_mesh_along_octa(GMesh& mesh) {
-  Array<Vertex> new_vertices;
+  Set<Vertex> new_vertices;
 
   const auto split_edge = [&](Edge e, int axis) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -270,7 +272,7 @@ void split_mesh_along_octa(GMesh& mesh) {
     const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
-    new_vertices.push(v);
+    new_vertices.enter(v);
     v_sph(v) = sph_new;
   };
 
@@ -339,7 +341,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           gmesh.update_string(v, "uv", nullptr);
           for (Corner c : gmesh.corners(v)) {
             Face gf = gmesh.corner_face(c);
-            const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), [&](Vertex v2) { return v_sph(v2); });
+            const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), v_sph);
             // Compute a sphere point that is perturbed slightly toward the centroid of the adjacent face, to find
             // an initial face f on the correct side of the parametric uv discontinuity.
             const Point sph_center = mean(sphs);
@@ -363,7 +365,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           gmesh.update_string(v, "uv", nullptr);
           for (Corner c : gmesh.corners(v)) {
             Face f = gmesh.corner_face(c);
-            const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), [&](Vertex v2) { return v_sph(v2); });
+            const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), v_sph);
             const Point center = mean(sphs);
             const float lon2 = center[0] < 0.f ? 0.f : 1.f;
             gmesh.update_string(c, "uv", csform_vec(str, Uv(lon2, lonlat[1])));

@@ -36,7 +36,7 @@ class Hw : public HwBase {
 
   // call after open():
   bool suggests_stop() override;
-  bool get_pointer(Vec2<int>& yx) override;
+  std::optional<Vec2<int>> get_pointer() override;
   bool get_key_modifier(EModifier modifier) override;
   void set_color_to_foreground() override;
   void set_color(const Pixel& pix) override;

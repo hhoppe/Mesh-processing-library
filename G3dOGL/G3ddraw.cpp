@@ -318,11 +318,12 @@ static void act_button3(const Vec2<float>& yxq) {
 
 static void act_button() {
   assertx(button_active);
-  Vec2<float> yx;  // (0, 0)=(top, left)
-  if (!assertw(HB::get_pointer(yx))) {
+  const auto pointer = assertw(HB::get_pointer());
+  if (!pointer) {
     if (!keep_active) button_active = 0;
     return;
   }
+  const Vec2<float> yx = *pointer;
   selected.yx = yx;
   Vec2<float> yxi;
   if (ratemode == ERatemode::step) {
@@ -360,10 +361,10 @@ static void act_button() {
 }
 
 static void act_fly() {
-  Vec2<float> yxf;
-  if (viewmode || button_active || !HB::get_pointer(yxf)) yxf = twice(.5f);
-  yxf = max(min(yxf, twice(1.f)), twice(0.f));
-  // convert form (0..1)screen to (-1..1)math
+  Vec2<float> yxf = twice(.5f);
+  if (const auto pointer = HB::get_pointer())
+    if (!viewmode && !button_active) yxf = min(max(*pointer, twice(0.f)), twice(1.f));
+  // Convert from (0..1)screen to (-1..1)math.
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
   const float a = .1f;
   yxf *= a;
@@ -382,10 +383,10 @@ static void act_fly() {
 }
 
 static void act_flight() {
-  Vec2<float> yxf;
-  if (viewmode || button_active || !HB::get_pointer(yxf)) yxf = twice(.5f);
-  yxf = max(min(yxf, twice(1.f)), twice(0.f));
-  // convert form (0..1)screen to (-1..1)math
+  Vec2<float> yxf = twice(.5f);
+  if (const auto pointer = HB::get_pointer())
+    if (!viewmode && !button_active) yxf = min(max(*pointer, twice(0.f)), twice(1.f));
+  // Convert from (0..1)screen to (-1..1)math.
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
   // following coded adapted from g3dfly.c
   float speed = .7f;

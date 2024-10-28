@@ -1032,11 +1032,12 @@ void HB::redraw_now() { hw.redraw_now(); }
 
 Vec2<int> HB::get_extents() { return win_dims; }
 
-bool HB::get_pointer(Vec2<float>& yxf) {
-  Vec2<int> yx;
-  if (!hw.get_pointer(yx)) return false;
-  yxf = convert<float>(yx) / convert<float>(win_dims);
-  return true;
+std::optional<Vec2<float>> HB::get_pointer() {
+  if (auto pointer = hw.get_pointer()) {
+    const Vec2<int> yx = *pointer;
+    return {convert<float>(yx) / convert<float>(win_dims)};
+  }
+  return {};
 }
 
 void HB::set_camera(const Frame& p_real_t, float p_real_zoom, const Frame& p_view_t, float p_view_zoom) {

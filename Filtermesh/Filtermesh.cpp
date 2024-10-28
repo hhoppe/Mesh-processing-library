@@ -3810,8 +3810,8 @@ void do_shootrays(Args& args) {
   showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
   assertx(!mesh.empty() && !omesh.empty());
   const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
-  Frame xform = bbox.get_frame_to_small_cube(0.5f);
-  Frame xform_inverse = ~xform;
+  const Frame xform = bbox.get_frame_to_small_cube(0.5f);
+  const Frame xform_inverse = ~xform;
   Array<TriangleFace> trianglefaces;
   trianglefaces.reserve(omesh.num_faces());
   {
@@ -3824,17 +3824,17 @@ void do_shootrays(Args& args) {
   }
   // const int gridn = 120;
   const int gridn = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
-  TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of widen_triangle().
+  const TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of widen_triangle().
 
   HH_TIMER("__shoot_rays");
   const bool show_a3d = true;
-  auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
-  auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
-  float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
-  float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
+  const auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
+  const auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
+  const float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
+  const float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
   string str;
   for (Vertex v : mesh.vertices()) {
-    Point p = mesh.point(v) * xform;
+    const Point p = mesh.point(v) * xform;
     Vector nor(0.f, 0.f, 0.f);
     if (parse_key_vec(mesh.get_string(v), "normal", nor)) {
     } else {
@@ -3849,15 +3849,14 @@ void do_shootrays(Args& args) {
     float mindist = BIGFLOAT;
     Point minp = p;
     for_int(dir, 2) {
-      float vdir = dir ? 1.f : -1.f;
-      Point p1 = p + nor * (negdisp * vdir);
-      Point p2 = p + nor * (maxdisp * vdir);
-      const TriangleFace* triangleface;
-      Point pint;
-      bool found = spatial.first_along_segment(p1, p2, triangleface, pint);
-      if (found && dist(p, pint) < abs(mindist)) {
-        mindist = dist(p, pint) * vdir;
-        minp = pint;
+      const float vdir = dir ? 1.f : -1.f;
+      const Point p1 = p + nor * (negdisp * vdir);
+      const Point p2 = p + nor * (maxdisp * vdir);
+      if (const auto result = spatial.first_along_segment(p1, p2)) {
+        if (const Point pint = result->pint; dist(p, pint) < abs(mindist)) {
+          mindist = dist(p, pint) * vdir;
+          minp = pint;
+        }
       }
     }
     if (mindist == BIGFLOAT) {
@@ -3875,7 +3874,7 @@ void do_shootrays(Args& args) {
       el.push(A3dVertex(minp * xform_inverse, nor, A3dVertexColor(Pixel::black())));
       up_oa3d->write(el);
     }
-    Point op = mesh.point(v);
+    const Point op = mesh.point(v);
     mesh.update_string(v, "Opos", csform_vec(str, op));
     mesh.set_point(v, minp * xform_inverse);
     mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));

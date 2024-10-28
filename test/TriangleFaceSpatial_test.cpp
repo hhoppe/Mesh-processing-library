@@ -60,11 +60,10 @@ int main() {
   {
     Point p1(.1f, .5f, .3f);
     Point p2(.9f, .5f, .3f);
-    const TriangleFace* triangleface;
-    Point pint;
-    bool ret = spatial.first_along_segment(p1, p2, triangleface, pint);
-    SHOW(ret);
-    if (ret) {
+    const auto result = spatial.first_along_segment(p1, p2);
+    SHOW(bool(result));
+    if (result) {
+      const auto [triangleface, pint] = *result;
       SHOW(pint);
       SHOW(triangleface->triangle);
     }
@@ -72,11 +71,10 @@ int main() {
   {
     Point p1(.19f, .38f, .44f);
     Point p2(.85f, .7f, .3f);
-    const TriangleFace* triangleface;
-    Point pint;
-    bool ret = spatial.first_along_segment(p1, p2, triangleface, pint);
-    SHOW(ret);
-    if (ret) {
+    const auto result = spatial.first_along_segment(p1, p2);
+    SHOW(bool(result));
+    if (result) {
+      const auto [triangleface, pint] = *result;
       SHOW(pint);
       SHOW(triangleface->triangle);
     }

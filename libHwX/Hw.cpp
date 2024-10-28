@@ -803,12 +803,14 @@ void Hw::set_double_buffering(bool newstate) {
   }
 }
 
-bool Hw::get_pointer(Vec2<int>& yx) {
+std::optional<Vec2<int>> Hw::get_pointer() {
   assertx(_state == EState::open);
   int rx, ry;
   unsigned mask;
   Window rw, cw;
-  return XQueryPointer(_display, _win, &rw, &cw, &rx, &ry, &yx[1], &yx[0], &mask);
+  Vec2<int> yx;
+  if (!XQueryPointer(_display, _win, &rw, &cw, &rx, &ry, &yx[1], &yx[0], &mask)) return {};
+  return {yx};
 }
 
 bool Hw::get_key_modifier(EModifier modifier) {

@@ -2239,8 +2239,7 @@ void wrap_draw(bool show) {
   };
   if (!show) {
     if (button_active) {
-      Vec2<float> yxf;
-      assertx(HB::get_pointer(yxf));
+      const Vec2<float> yxf = *assertx(HB::get_pointer());
       float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
       int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
       *sliders[i].val *= dval;
@@ -2762,12 +2761,12 @@ void HB::redraw_now() { hw.redraw_now(); }
 
 Vec2<int> HB::get_extents() { return win_dims; }
 
-bool HB::get_pointer(Vec2<float>& yxf) {
-  Vec2<int> yx;
-  if (!hw.get_pointer(yx)) return false;
-  yxf = convert<float>(yx) / convert<float>(win_dims);
-  if (0) SHOW(yxf);
-  return true;
+std::optional<Vec2<float>> HB::get_pointer() {
+  if (auto pointer = hw.get_pointer()) {
+    const Vec2<int> yx = *pointer;
+    return {convert<float>(yx) / convert<float>(win_dims)};
+  }
+  return {};
 }
 
 void HB::set_camera(const Frame& p_real_t, float p_real_zoom, const Frame& p_view_t, float p_view_zoom) {
@@ -3223,8 +3222,7 @@ void pm_wrap_draw(bool show) {
   if (!slidermode) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      Vec2<float> yxf;
-      assertx(HB::get_pointer(yxf));
+      const Vec2<float> yxf = *assertx(HB::get_pointer());
       float oldval = pm_lod_level;
       switch (button_active) {
         case 1: {
@@ -3621,8 +3619,7 @@ void sr_wrap_draw(bool show) {
     if (outside_frustum) sliders.push(Slider{"frustum_frac", &frustum_frac});
     if (!show) {
       if (button_active) {
-        Vec2<float> yxf;
-        assertx(HB::get_pointer(yxf));
+        const Vec2<float> yxf = *assertx(HB::get_pointer());
         float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
         int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
         *sliders[i].val *= dval;
@@ -4231,8 +4228,7 @@ void psc_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       float oldval = psc_lod_level;
-      Vec2<float> yxf;
-      assertx(HB::get_pointer(yxf));
+      const Vec2<float> yxf = *assertx(HB::get_pointer());
       switch (button_active) {
         case 1: {
           psc_lod_level = 1.1f - (yxf[0]) * 1.2f;
@@ -4525,8 +4521,7 @@ void sc_gm_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       float oldval = sc_gm_lod_level;
-      Vec2<float> yxf;
-      assertx(HB::get_pointer(yxf));
+      const Vec2<float> yxf = *assertx(HB::get_pointer());
       switch (button_active) {
         case 1: {
           sc_gm_lod_level = 1.1f - (yxf[0]) * 1.2f;

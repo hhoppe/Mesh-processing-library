@@ -1042,9 +1042,9 @@ void do_spawn(Args& args) {
   mesh.record_changes(&(*file_spawn)());
 }
 
-int get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
+bool get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
 
-int get_vertex_uv(Vertex v, Uv& ret_uv) { return parse_key_vec(mesh.get_string(v), "uv", ret_uv); }
+bool get_vertex_uv(Vertex v, Uv& ret_uv) { return parse_key_vec(mesh.get_string(v), "uv", ret_uv); }
 
 // *** stoc
 
@@ -1153,17 +1153,15 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   HH_SSTAT(Sminii, minii == 1);
   HH_STIMER("__doecol");
   if (k_simp96) {
-    Vector nor1, nor2, nnor;
-    Uv uv1, uv2, uvn;
     string str;
+    Vector nor1, nor2;
     if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
-      nnor = w1 * nor1 + (1.f - w1) * nor2;
-      assertx(nnor.normalize());
+      const Vector nnor = normalized(w1 * nor1 + (1.f - w1) * nor2);
       mesh.update_string(v1, "normal", csform_vec(str, nnor));
     }
+    Uv uv1, uv2;
     if (get_vertex_uv(v1, uv1) && get_vertex_uv(v2, uv2)) {
-      uvn[0] = w1 * uv1[0] + (1.f - w1) * uv2[0];
-      uvn[1] = w1 * uv1[1] + (1.f - w1) * uv2[1];
+      const Uv uvn{w1 * uv1[0] + (1.f - w1) * uv2[0], w1 * uv1[1] + (1.f - w1) * uv2[1]};
       mesh.update_string(v1, "uv", csform_vec(str, uvn));
     }
   }

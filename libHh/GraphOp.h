@@ -245,41 +245,6 @@ template <typename T> int graph_num_components(const Graph<T>& g) {
   return n;
 }
 
-// *** Graph coloring
-
-// Color a graph (heuristically since optimal is NP-hard).
-// Assign colors (starting with 1).  Return number colors assigned.
-template <typename T> int graph_color(const Graph<T>& graph, Map<T, int>& ret_colors) {
-  int num_colors = 0;
-  ret_colors.clear();
-  for (const T& vv : graph) {
-    bool is_new;
-    ret_colors.enter(vv, 0, is_new);
-    if (!is_new) continue;
-    Queue<T> queue;
-    queue.enqueue(vv);
-    while (!queue.empty()) {
-      T v = queue.dequeue();
-      ASSERTXX(ret_colors.get(v) == 0);
-      Set<int> setcol;
-      for (const T& v2 : graph.edges(v)) {
-        bool is_new2;
-        int col2 = ret_colors.enter(v2, 0, is_new2);
-        if (is_new2) {
-          queue.enqueue(v2);
-        } else {
-          if (col2) setcol.enter(col2);
-        }
-      }
-      int col = 1;
-      while (setcol.contains(col)) col++;
-      ret_colors.replace(v, col);
-      if (col > num_colors) num_colors = col;
-    }
-  }
-  return num_colors;
-}
-
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_GRAPHOP_H_

@@ -2239,7 +2239,7 @@ void wrap_draw(bool show) {
   };
   if (!show) {
     if (button_active) {
-      const Vec2<float> yxf = *assertx(HB::get_pointer());
+      const Vec2<float> yxf = HB::get_pointer().value();
       float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
       int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
       *sliders[i].val *= dval;
@@ -3222,7 +3222,7 @@ void pm_wrap_draw(bool show) {
   if (!slidermode) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      const Vec2<float> yxf = *assertx(HB::get_pointer());
+      const Vec2<float> yxf = HB::get_pointer().value();
       float oldval = pm_lod_level;
       switch (button_active) {
         case 1: {
@@ -3619,7 +3619,7 @@ void sr_wrap_draw(bool show) {
     if (outside_frustum) sliders.push(Slider{"frustum_frac", &frustum_frac});
     if (!show) {
       if (button_active) {
-        const Vec2<float> yxf = *assertx(HB::get_pointer());
+        const Vec2<float> yxf = HB::get_pointer().value();
         float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
         int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
         *sliders[i].val *= dval;
@@ -4228,7 +4228,7 @@ void psc_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       float oldval = psc_lod_level;
-      const Vec2<float> yxf = *assertx(HB::get_pointer());
+      const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
           psc_lod_level = 1.1f - (yxf[0]) * 1.2f;
@@ -4521,7 +4521,7 @@ void sc_gm_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       float oldval = sc_gm_lod_level;
-      const Vec2<float> yxf = *assertx(HB::get_pointer());
+      const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
           sc_gm_lod_level = 1.1f - (yxf[0]) * 1.2f;

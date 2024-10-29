@@ -362,7 +362,7 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
 }
 
 Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
-  Set<Face> ret_setf;
+  Set<Face> setf;
   Queue<Edge> queuee = gather_boundary(mesh, erep);
   while (!queuee.empty()) {
     Queue<Edge> qc;
@@ -396,10 +396,10 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
       // vertex1(e) ok but slower
       for (Edge e : qc) va.push(mesh.vertex2(e));
       Face fn = mesh.create_face(va);
-      ret_setf.enter(fn);
+      setf.enter(fn);
     }
   }
-  return ret_setf;
+  return setf;
 }
 
 // *** Retriangulate

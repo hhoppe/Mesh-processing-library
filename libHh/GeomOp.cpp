@@ -273,10 +273,11 @@ std::optional<Point> intersect_line(const Vec3<Point>& triangle, const Point& p,
 
 std::optional<Point> intersect_segment(const Vec3<Point>& triangle, const Point& p1, const Point& p2) {
   const Vector dir = get_normal_dir(triangle);
+  if (!assertw(!is_zero(dir))) return {};
   const float d = pvdot(sum(triangle), dir) / 3.f;
   const float s1 = pvdot(p1, dir) - d;
   const float s2 = pvdot(p2, dir) - d;
-  if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};
+  if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};  // Equivalent to "s1 * s2 > 0.f"?
   const float denominator = s2 - s1;
   // When the segment lies in the triangle plane, we report no intersection.  Is this reasonable?
   if (!denominator) return {};

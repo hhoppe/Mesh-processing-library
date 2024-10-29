@@ -2,6 +2,7 @@
 #include "libHh/Geometry.h"
 
 #include "libHh/Array.h"
+#include "libHh/Facedistance.h"
 #include "libHh/GeomOp.h"       // solid_angle()
 #include "libHh/Homogeneous.h"  // centroid
 #include "libHh/Matrix.h"
@@ -9,6 +10,24 @@
 #include "libHh/SGrid.h"
 
 namespace hh {
+
+namespace {
+
+std::optional<Bary> bary_of_point(const Vec3<Point>& triangle, const Point& p) {
+  const auto& [p1, p2, p3] = triangle;
+  const Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
+  const float v2v2 = mag2(v2), v3v3 = mag2(v3), v2v3 = dot(v2, v3);
+  if (!v2v2) return {};
+  const float denom = v3v3 - v2v3 * v2v3 / v2v2;
+  if (!denom) return {};
+  const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
+  const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
+  const float b2 = (v2vp - b3 * v2v3) / v2v2;
+  const float b1 = 1.f - b2 - b3;
+  return Bary(b1, b2, b3);
+}
+
+}  // namespace
 
 // *** Vector
 
@@ -144,23 +163,16 @@ float spherical_triangle_area(const Vec3<Point>& triangle) {
   return sang;
 }
 
-Bary bary_of_point(const Vec3<Point>& triangle, const Point& p) {
-  const auto& [p1, p2, p3] = triangle;
-  const Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
-  const float v2v2 = mag2(v2), v3v3 = mag2(v3), v2v3 = dot(v2, v3);
-  assertx(v2v2);
-  const float denom = v3v3 - v2v3 * v2v3 / v2v2;
-  assertx(denom);
-  const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
-  const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
-  const float b2 = (v2vp - b3 * v2v3) / v2v2;
-  const float b1 = 1.f - b2 - b3;
-  return Bary(b1, b2, b3);
-}
-
 bool point_inside(const Point& p, const Vec3<Point>& triangle) {
-  Bary bary = bary_of_point(triangle, p);
-  return bary[0] >= 0.f && bary[1] >= 0.f && bary[2] >= 0.f;
+  if (const auto result = bary_of_point(triangle, p)) {
+    const Bary& bary = *result;
+    return bary[0] >= 0.f && bary[1] >= 0.f && bary[2] >= 0.f;
+  }
+  // If the triangle is degenerate, we defer to the more complicated algorithm that considers the triangle sides.
+  Bary cba;
+  Point clp;
+  const float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], cba, clp);
+  return d2 < 1e-12f;
 }
 
 Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec) {

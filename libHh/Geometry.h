@@ -171,9 +171,6 @@ bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance 
 template <typename Precision = double>
 float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
 
-// Given a 3D point in the plane of a triangle, return the point's barycentric coordinates.
-Bary bary_of_point(const Vec3<Point>& triangle, const Point& p);
-
 // Given a 3D point in the plane of a triangle, return whether the point lies in the triangle convex hull.
 bool point_inside(const Point& p, const Vec3<Point>& triangle);
 

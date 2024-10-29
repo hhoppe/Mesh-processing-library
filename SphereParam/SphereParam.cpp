@@ -244,8 +244,8 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     if (!face_overlaps_meridian) continue;
     for (Edge e : mesh.edges(f)) {
       const Vector sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
-      const bool edge_crosses_meridian =
-        (sph1[k_axis0] < -eps && sph2[k_axis0] > eps) || (sph2[k_axis0] < -eps && sph1[k_axis0] > eps);
+      const bool edge_crosses_meridian = ((sph1[k_axis0] < -eps && sph2[k_axis0] > eps) ||  //
+                                          (sph2[k_axis0] < -eps && sph1[k_axis0] > eps));
       if (!edge_crosses_meridian) continue;
       for (Face f2 : mesh.faces(e)) to_visit.remove(f2);
       Vertex v = split_edge(e, k_axis0);

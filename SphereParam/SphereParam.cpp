@@ -193,18 +193,22 @@ void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
 }
 
 void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
-  for (Vertex v : Array<Vertex>{new_vertices}) {
-    if (!new_vertices.contains(v)) continue;
+  while (!new_vertices.empty()) {
+    Vertex v = new_vertices.remove_one();
     for (;;) {
       bool modified = false;
       for (Edge e : mesh.edges(v)) {
         Vertex v2 = mesh.opp_vertex(v, e);
         if (dist(v_sph(v), v_sph(v2)) < 1e-5f) {
-          Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
-          collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept; vertex v2 is destroyed.
-          new_vertices.remove(v2);         // (In most cases, it is not present.)
-          modified = true;
-          break;
+          if (!mesh.legal_edge_collapse(e)) {
+            if (0) Warning("Skipping an illegal edge collapse of a zero-param-length edge");
+          } else {
+            Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
+            new_vertices.remove(v2);         // (In most cases, it is not present.)
+            collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept; vertex v2 is destroyed.
+            modified = true;
+            break;
+          }
         }
       }
       if (!modified) break;
@@ -216,7 +220,7 @@ void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
 void split_mesh_along_prime_meridian(GMesh& mesh) {
   Set<Vertex> new_vertices;
 
-  const auto split_edge = [&](Edge e, int axis) {
+  const auto split_edge = [&](Edge e, int axis) -> Vertex {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
@@ -225,43 +229,32 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     Vertex v = split_mesh_edge(mesh, e, frac1);
     new_vertices.enter(v);
     v_sph(v) = sph_new;
+    return v;
   };
 
   // Split the mesh edges on faces overlapping the zero meridian (along the plane x = 0, in halfspace y > 0).
   const float eps = 1e-5f;
-  Set<Edge> edges_to_split;
-  for (Face f : mesh.faces()) {
+  Set<Face> to_visit;
+  for (Face f : mesh.faces()) to_visit.enter(f);
+  while (!to_visit.empty()) {
+    Face f = to_visit.remove_one();
     const Vec3<Point> sphs = map(mesh.triangle_vertices(f), v_sph);
     const Bbox bbox{sphs};
     const bool face_overlaps_meridian = bbox[0][k_axis0] < -eps && bbox[1][k_axis0] > eps && bbox[1][k_axis1] > eps;
-    if (face_overlaps_meridian)
-      for (Edge e : mesh.edges(f)) {
-        const Vector sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
-        const bool edge_crosses_meridian =
-            (sph1[k_axis0] < -eps && sph2[k_axis0] > eps) || (sph2[k_axis0] < -eps && sph1[k_axis0] > eps);
-        if (edge_crosses_meridian) edges_to_split.add(e);
-      }
+    if (!face_overlaps_meridian) continue;
+    for (Edge e : mesh.edges(f)) {
+      const Vector sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
+      const bool edge_crosses_meridian =
+        (sph1[k_axis0] < -eps && sph2[k_axis0] > eps) || (sph2[k_axis0] < -eps && sph1[k_axis0] > eps);
+      if (!edge_crosses_meridian) continue;
+      for (Face f2 : mesh.faces(e)) to_visit.remove(f2);
+      Vertex v = split_edge(e, k_axis0);
+      for (Face f2 : mesh.faces(v)) to_visit.enter(f2);
+      break;
+    }
   }
-  for (Edge e : edges_to_split) {
-    // mesh.valid(e);
-    split_edge(e, k_axis0);  // need to update edges_to_split ??
-  }
-  edges_to_split.clear();
 
   collapse_zero_param_length_edges(mesh, new_vertices);
-
-  if (0) {  // There seems to be no clean solution near the pole.
-    // Split the (generally two) edges containing either of the two poles.
-    for (Vertex new_vert : new_vertices) {
-      for (Vertex vv : mesh.vertices(new_vert)) {
-        if (abs(v_sph(vv)[k_axis0]) < eps && mesh.vertex_id(vv) < mesh.vertex_id(new_vert)) {
-          const float val1 = v_sph(new_vert)[k_axis1], val2 = v_sph(vv)[k_axis1];
-          if ((val1 < -eps && val2 > eps) || (val2 < -eps && val1 > eps)) edges_to_split.add(mesh.edge(new_vert, vv));
-        }
-      }
-    }
-    for (Edge e : edges_to_split) split_edge(e, k_axis1);
-  }
 }
 
 void split_mesh_along_octa(GMesh& mesh) {

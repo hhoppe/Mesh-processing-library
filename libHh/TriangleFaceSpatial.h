@@ -71,7 +71,7 @@ class TriangleFaceSpatial
     const auto func_test_triangleface_with_ray = [&](Univ id) -> bool {
       const TriangleFace* ptriangleface = Conv<const TriangleFace*>::d(id);
       const Vec3<Point>& triangle = ptriangleface->triangle;
-      const auto pint = intersect_segment(triangle, p1, p2);
+      const auto pint = intersect_segment_with_triangle(p1, p2, triangle);
       if (!pint) return false;
       const float t = dot(*pint - p1, vray);
       if (t < tmin) {

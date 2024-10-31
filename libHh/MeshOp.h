@@ -117,7 +117,7 @@ class Vnors {
 
 // *** Projection onto mesh
 
-// If fast != 0 and point p projects within interior of face and edges of face are not sharp,
+// If fast is true and point p projects within interior of face and edges of face are not sharp,
 //   do not consider neighboring faces.
 float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp, bool fast);
 

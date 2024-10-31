@@ -139,6 +139,24 @@ struct Uv : Vec2<float> {
   constexpr Uv(Vec2<float> v) : Vec2<float>(v) {}
 };
 
+// Line in 3D; is_on_line(Point p) = p == line.point + t * line.vec  (for some arbitrary float t).
+struct Line {
+  Point point;
+  Vector vec;
+};
+
+// Plane in 3D; is_on_plane(Point p) = pvdot(p, plane.nor) == plane.d;
+struct Plane {
+  Vector nor;
+  float d;
+};
+
+inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
+  const Vector nor = normalized(get_normal_dir(triangle));
+  const float d = pvdot(sum(triangle), nor) / 3.f;
+  return {nor, d};
+}
+
 // *** Misc operations
 
 // Project v into plane orthogonal to unitdir.

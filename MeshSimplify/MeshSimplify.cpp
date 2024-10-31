@@ -2936,8 +2936,9 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       if (handle_residuals) {
         const Vec3<Point> triangle = mesh.triangle_points(min_f);
         ar_resid.push((p - interp(triangle[0], triangle[1], triangle[2], min_bary)));
+        const Line line{p, vnormal};
         float d2 = BIGFLOAT;
-        if (const auto pint = intersect_line(triangle, p, vnormal); pint) {
+        if (const auto pint = intersect_line_with_triangle(line, triangle); pint) {
           d2 = dist2(p, *pint);
         } else {
           for_int(i, nf) {
@@ -2949,7 +2950,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
             // It must have been a numerical problem in intersect_line().
             widen_triangle(triangle2, eps);
-            if (const auto pint2 = intersect_line(triangle2, p, vnormal); pint2) {
+            if (const auto pint2 = intersect_line_with_triangle(line, triangle2); pint2) {
               d2 = dist2(p, *pint2);
               break;
             }
@@ -3400,9 +3401,14 @@ bool try_ecol_legal(Edge e, Vertex v1, Vertex v2, int v1nse, int v2nse) {
   return true;
 }
 
+struct SegmentIntersection {
+  Uv intersection;
+  float t12;
+  float t34;
+};
+
 template <typename Precision = double>
-std::optional<std::tuple<Uv, float, float>> intersect_segments(const Uv& p1, const Uv& p2, const Uv& p3,
-                                                               const Uv& p4) {
+std::optional<SegmentIntersection> intersect_segments(const Uv& p1, const Uv& p2, const Uv& p3, const Uv& p4) {
   const Precision dx12 = Precision{p2[0]} - p1[0];
   const Precision dy12 = Precision{p2[1]} - p1[1];
   const Precision dx34 = Precision{p4[0]} - p3[0];
@@ -3417,7 +3423,7 @@ std::optional<std::tuple<Uv, float, float>> intersect_segments(const Uv& p1, con
   if (t12 < 0.0f || t12 > 1.0f || t34 < 0.0f || t34 > 1.0f) return {};  // The intersection is outside the segments.
 
   const Uv intersection{float(p1[0] + t12 * dx12), float(p1[1] + t12 * dy12)};
-  return std::make_tuple(intersection, float(t12), float(t34));
+  return SegmentIntersection{intersection, float(t12), float(t34)};
 }
 
 void check_ccw(Vertex v) {

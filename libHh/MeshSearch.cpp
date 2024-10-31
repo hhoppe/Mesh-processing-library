@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/MeshSearch.h"
 
-#include "libHh/GeomOp.h"  // widen_triangle()
+#include "libHh/GeomOp.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 
@@ -9,7 +9,6 @@ namespace hh {
 
 namespace {
 
-// make more precise??
 bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(triangle[i]));
@@ -19,37 +18,16 @@ bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
 }
 
 // Given the point `p` on the unit sphere and a spherical triangle assumed to enclose it, return the barycentric
-// coordinates of the spherical projection of `p` onto the triangle.
+// coordinates of the spherical projection of `p` onto the planar triangle.
 Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
-  assertx(in_spherical_triangle(p, triangle));  // ??
-  // Compute the spherical projection --- the intersection `pint` of the segment (origin, p) with the triangle.
-  const Point further_p = p * 1.01f;  // Extend the segment to remove any ambiguity at its endpoint.
-  const Point origin(0.f, 0.f, 0.f);
-  auto pint = intersect_segment(triangle, origin, further_p);
-  if (!pint) {
-    if (0) Warning("widening triangle");
-    const bool debug = false;
-    if (debug) SHOW(p, further_p);
-    if (debug) SHOW(triangle, spherical_triangle_area(triangle));
-    Vec3<Point> widened_triangle = triangle;
-    widen_triangle(widened_triangle, 1e-3f);  // Larger due to nonzero `tolerance` below.
-    if (debug) SHOW(widened_triangle);
-    pint = intersect_segment(widened_triangle, origin, further_p);
-    if (!pint) {
-      Warning("intersect_segment failed again");
-      if (1) SHOW_PRECISE(p, further_p, triangle, widened_triangle);
-      // In this unexpected worst case, fall back to computing the closest point.
-      Bary bary;
-      Point pint2;
-      project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, pint2);
-      pint = pint2;
-    }
-  }
-  // Compute the barycentric coordinates of the intersection point `pint`.  TODO: Faster version.
+  assertx(in_spherical_triangle(p, triangle));
+  const Line line{Point(0.f, 0.f, 0.f), p};
+  const Plane plane = plane_of_triangle(triangle);
+  const Point pint = intersect_line_with_plane(line, plane).value();
   Bary bary;
   Point clp;
-  const float d2 = project_point_triangle2(*pint, triangle[0], triangle[1], triangle[2], bary, clp);
-  assertw(d2 < 1e-10f);
+  const float d2 = project_point_triangle2(pint, triangle[0], triangle[1], triangle[2], bary, clp);
+  assertx(d2 < 1e-10f);
   return bary;
 }
 

@@ -67,11 +67,17 @@ void widen_triangle(ArrayView<Point> poly, float eps);
 
 // *** Intersections
 
-// Given a line spanned by the point p and vector v, find its potential intersection point with the triangle.
-std::optional<Point> intersect_line(const Vec3<Point>& triangle, const Point& p, const Vector& v);
+// Return the intersection point of a line with a plane, or none if they are parallel.
+std::optional<Point> intersect_line_with_plane(const Line& line, const Plane& plane);
 
-// Given a segment with endpoints p1 and p2, find its potential intersection point with the triangle.
-std::optional<Point> intersect_segment(const Vec3<Point>& triangle, const Point& p1, const Point& p2);
+// Return the intersection point of a segment (p1, p2) with a plane, if it exists.
+std::optional<Point> intersect_segment_with_plane(const Point& p1, const Point& p2, const Plane& plane);
+
+// Return the intersection point of a line with a triangle.
+std::optional<Point> intersect_line_with_triangle(const Line& line, const Vec3<Point>& triangle);
+
+// Return the intersection point of a segment (p1, p2) with a triangle.
+std::optional<Point> intersect_segment_with_triangle(const Point& p1, const Point& p2, const Vec3<Point>& triangle);
 
 // *** Other
 

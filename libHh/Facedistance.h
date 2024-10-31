@@ -107,6 +107,7 @@ inline bool project_point_seg(int i, float b, const Point& pi0, const Point& pi1
 inline float project_aux(const Point& p, const Point& p1, const Point& p2, const Point& p3, Bary& ret_cba,
                          Point& ret_clp, const Point& proj, float b1, float b2, float b3) {
   // Variable mind2 necessary since p may project onto 2 different vertices (even in non-degenerate case).
+  // I don't believe this anymore??
   float mind2 = BIGFLOAT;
   bool stop = project_point_seg(0, b3, p1, p2, proj, ret_cba, ret_clp, mind2);
   if (!stop) stop = project_point_seg(1, b1, p2, p3, proj, ret_cba, ret_clp, mind2);

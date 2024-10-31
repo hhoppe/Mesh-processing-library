@@ -717,7 +717,7 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
   setfvis.enter(pf);
   int ni = 0;
   for (;; ni++) {
-    // Look at faces adjacent to vertices with minbary>bnearvertex
+    // Look at faces adjacent to vertices with minbary > bnearvertex.
     Set<Face> setf;
     Array<Vertex> va;
     mesh.get_vertices(pf, va);

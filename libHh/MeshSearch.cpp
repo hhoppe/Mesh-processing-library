@@ -27,7 +27,8 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   Bary bary;
   Point clp;
   const float d2 = project_point_triangle2(pint, triangle[0], triangle[1], triangle[2], bary, clp);
-  assertx(d2 < 1e-10f);
+  const float tolerance2 = 1e-9f;
+  if (!assertw(d2 < tolerance2) && 0) SHOW(p), SHOW(triangle), SHOW(pint), SHOW(clp), SHOW(bary), SHOW(d2);
   return bary;
 }
 

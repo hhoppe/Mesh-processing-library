@@ -29,29 +29,6 @@ std::optional<Bary> bary_of_point(const Vec3<Point>& triangle, const Point& p) {
 
 }  // namespace
 
-// *** Vector
-
-Vector operator*(const Vector& v, const Frame& f) {
-  const float xi = v[0], yi = v[1], zi = v[2];
-  return Vector(xi * f[0][0] + yi * f[1][0] + zi * f[2][0], xi * f[0][1] + yi * f[1][1] + zi * f[2][1],
-                xi * f[0][2] + yi * f[1][2] + zi * f[2][2]);
-}
-
-Vector operator*(const Frame& f, const Vector& n) {
-  const float xi = n[0], yi = n[1], zi = n[2];
-  return Vector(f[0][0] * xi + f[0][1] * yi + f[0][2] * zi, f[1][0] * xi + f[1][1] * yi + f[1][2] * zi,
-                f[2][0] * xi + f[2][1] * yi + f[2][2] * zi);
-}
-
-// *** Point
-
-Point operator*(const Point& p, const Frame& f) {
-  const float xi = p[0], yi = p[1], zi = p[2];
-  return Point(xi * f[0][0] + yi * f[1][0] + zi * f[2][0] + f[3][0],
-               xi * f[0][1] + yi * f[1][1] + zi * f[2][1] + f[3][1],
-               xi * f[0][2] + yi * f[1][2] + zi * f[2][2] + f[3][2]);
-}
-
 // *** Frame
 
 Frame Frame::translation(const Vec3<float>& ar) {
@@ -138,13 +115,12 @@ std::ostream& operator<<(std::ostream& os, const Frame& f) {
 // *** Misc
 
 Point slerp(const Point& p1, const Point& p2, float ba) {
-  const Vector v1 = to_Vector(p1), v2 = to_Vector(p2);
-  const float ang = angle_between_unit_vectors(v1, v2) * ba;
-  const float vdot = dot(v1, v2);
-  const Vector vv = ok_normalized(v1 - v2 * vdot);  // Tangent at p2 in direction of p1.
-  const Vector v = v2 * std::cos(ang) + vv * std::sin(ang);
+  const float ang = angle_between_unit_vectors(p1, p2) * ba;
+  const float vdot = dot<float>(p1, p2);
+  const Vector vv = ok_normalized(p1 - p2 * vdot);  // Tangent at p2 in direction of p1.
+  const Vector v = p2 * std::cos(ang) + vv * std::sin(ang);
   ASSERTXX(is_unit(v));
-  return to_Point(v);
+  return v;
 }
 
 // Spherical triangle area.
@@ -169,10 +145,7 @@ bool point_inside(const Point& p, const Vec3<Point>& triangle) {
     return bary[0] >= 0.f && bary[1] >= 0.f && bary[2] >= 0.f;
   }
   // If the triangle is degenerate, we defer to the more complicated algorithm that considers the triangle sides.
-  Bary cba;
-  Point clp;
-  const float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], cba, clp);
-  return d2 < 1e-12f;
+  return project_point_triangle(p, triangle).d2 < 1e-12f;
 }
 
 Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec) {
@@ -213,8 +186,8 @@ Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec) {
 
 Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary) {
   assertw(abs(bary[0] + bary[1] + bary[2] - 0.f) < 1e-4f);
-  // Note that bary[0] + bary[1] + bary[2] == 0.f not 1.f .
-  return Vector(interp(triangle[0], triangle[1], triangle[2], bary));
+  // Note that bary[0] + bary[1] + bary[2] == 0.f, not 1.f .
+  return Vector(interp(triangle, bary));
 }
 
 }  // namespace hh

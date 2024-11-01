@@ -23,8 +23,8 @@ struct Vector : Vec3<float> {
   constexpr Vector(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Vector(Vec3<float> v) : Vec3<float>(v) {}
 };
-Vector operator*(const Vector& v, const Frame& f);
-Vector operator*(const Frame& f, const Vector& normal);
+inline Vector operator*(const Vector& v, const Frame& f);
+inline Vector operator*(const Frame& f, const Vector& nor);
 inline Vector& operator*=(Vector& v, const Frame& f) { return v = v * f; }
 constexpr Vector cross(const Vector& v1, const Vector& v2);
 inline Vector normalized(Vector v) {
@@ -55,11 +55,8 @@ struct Point : Vec3<float> {
   constexpr Point(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Point(Vec3<float> p) : Vec3<float>(p) {}
 };
-Point operator*(const Point& p, const Frame& f);
+inline Point operator*(const Point& p, const Frame& f);
 inline Point& operator*=(Point& p, const Frame& f) { return p = p * f; }
-inline Vector to_Vector(const Point& p) { return Vector(p[0], p[1], p[2]); }
-inline Point to_Point(const Vector& v) { return Point(v[0], v[1], v[2]); }
-inline float pvdot(const Point& p, const Vector& v) { return dot(to_Vector(p), v); }
 Vector cross(const Point& p1, const Point& p2, const Point& p3);
 inline Vector get_normal_dir(const Vec3<Point>& triangle) { return cross(triangle[0], triangle[1], triangle[2]); }
 inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
@@ -79,6 +76,8 @@ inline float dist(const Point& v1, const Vec3<float>& v2) { return sqrt(dist2(v1
 inline float dist(const Point& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
 
 inline bool is_unit(const Vec3<float>& v) { return abs(mag2(v) - 1.f) < 1e-4f; }
+
+inline constexpr float dot(const Point& v1, const Vector& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; }
 
 // *** Frame: either coordinate frame or transformation frame.
 //  Affine transformation from 3D to 3D.  (new_Point, 1.f) = (Point, 1.f) * Frame,
@@ -145,7 +144,7 @@ struct Line {
   Vector vec;
 };
 
-// Plane in 3D; is_on_plane(Point p) = pvdot(p, plane.nor) == plane.d;
+// Plane in 3D; is_on_plane(Point p) = dot(p, plane.nor) == plane.d;
 struct Plane {
   Vector nor;
   float d;
@@ -153,7 +152,7 @@ struct Plane {
 
 inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
   const Vector nor = normalized(get_normal_dir(triangle));
-  const float d = pvdot(sum(triangle), nor) / 3.f;
+  const float d = dot(sum(triangle), nor) / 3.f;
   return {nor, d};
 }
 
@@ -163,7 +162,7 @@ inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
 Vector project_orthogonally(const Vector& v, const Vector& unitdir);
 
 // General affine combination of 4 points.  Note that interpolation domain is 3-dimensional (non-planar).
-// "bary[3]" == 1.f - bary[0] - bary[1] - bary[2]
+// "bary[3]" == 1.f - bary[0] - bary[1] - bary[2].
 template <typename T, int n>
 Vec<T, n> qinterp(const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, const Vec<T, n>& a4,
                   const Bary& bary);
@@ -217,20 +216,24 @@ template <typename T> constexpr T to_deg(T rad) {
 
 // *** Vector
 
+inline Vector operator*(const Vector& v, const Frame& f) { return v[0] * f[0] + v[1] * f[1] + v[2] * f[2]; }
+
+inline Vector operator*(const Frame& f, const Vector& nor) {
+  return Vector(dot(f[0], nor), dot(f[1], nor), dot(f[2], nor));
+}
+
 inline constexpr Vector cross(const Vector& v1, const Vector& v2) {
   return Vector(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 }
 
 // *** Point
 
+inline Point operator*(const Point& p, const Frame& f) { return p[0] * f[0] + p[1] * f[1] + p[2] * f[2] + f[3]; }
+
 inline Vector cross(const Point& p1, const Point& p2, const Point& p3) {
-  // return cross(p2 - p1, p3 - p1);
   // It once seemed that "double" was needed below to overcome an apparent problem with poorly computed surface
   // normals.  However, the problem lay in the geometry. Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
-  float p1x = p1[0], p1y = p1[1], p1z = p1[2];
-  float v1x = p2[0] - p1x, v1y = p2[1] - p1y, v1z = p2[2] - p1z;
-  float v2x = p3[0] - p1x, v2y = p3[1] - p1y, v2z = p3[2] - p1z;
-  return Vector(v1y * v2z - v1z * v2y, v1z * v2x - v1x * v2z, v1x * v2y - v1y * v2x);
+  return cross(p2 - p1, p3 - p1);
 }
 
 // *** Bary

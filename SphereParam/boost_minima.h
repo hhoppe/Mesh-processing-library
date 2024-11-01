@@ -38,9 +38,13 @@
 
 namespace boost_minima {
 
-// Returns std::pair(min_x, min_f_x).
+template <typename T> struct BrentResult {
+  T min_x;
+  T min_f_x;
+};
+
 template <typename F, typename T>
-std::pair<T, T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& max_iter) noexcept {
+BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& max_iter) noexcept {
   // bits = (std::min)(policies::digits<T, policies::policy<> >() / 2, bits);  // 12 for T == float.
   // 2**(1 - bits); equals 4.8828125e-4 for bits=12.
   T tolerance = static_cast<T>(ldexp(1.0, 1 - bits));
@@ -135,7 +139,7 @@ std::pair<T, T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& m
   } while (--count);
 
   max_iter -= count;
-  return std::pair(x, fx);
+  return {x, fx};
 }
 
 }  // namespace boost_minima

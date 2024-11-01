@@ -100,7 +100,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     Vector center;
     for_int(c, 3) center[c] = (1.f - di[c] / maxdi) * .5f;
     center[2] = 0.f;  // objects lie at bottom of cube
-    return Frame::translation(-to_Vector(self[0])) * Frame::scaling(thrice(1.f / maxdi)) * Frame::translation(center);
+    return Frame::translation(-self[0]) * Frame::scaling(thrice(1.f / maxdi)) * Frame::translation(center);
   }
 
   template <int D = dim, typename = std::enable_if_t<D == 3>>

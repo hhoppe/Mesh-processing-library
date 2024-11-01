@@ -148,7 +148,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
   }
   // Introduce the geometric error quadric component (adapted from set_d2_from_plane).
   {
-    // float d = -pvdot(Point(p0[0], p0[1], p0[2]), nor);
+    // float d = -dot(Point(p0[0], p0[1], p0[2]), nor);
     T d = -(p0[0] * nor[0] + p0[1] * nor[1] + p0[2] * nor[2]);
     {
       T* pa = _a.data();

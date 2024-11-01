@@ -25,13 +25,13 @@ inline Homogeneous normalized(const Homogeneous& h) { return h / assertx(h[3]); 
 inline Point to_Point(const Homogeneous& h) {
   const float tolerance = 1e-5f;
   if (abs(h[3] - 1.f) >= tolerance) assertnever(make_string(h) + " not a Point");
-  return Point(h[0], h[1], h[2]);
+  return h.head<3>();
 }
 
 inline Vector to_Vector(const Homogeneous& h) {
   const float tolerance = 1e-5f;
   if (abs(h[3]) >= tolerance) assertnever(make_string(h) + " not a Vector");
-  return Vector(h[0], h[1], h[2]);
+  return h.head<3>();
 }
 
 inline Homogeneous& operator+=(Homogeneous& h, const Point& p) {

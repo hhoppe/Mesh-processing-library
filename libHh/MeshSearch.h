@@ -11,7 +11,7 @@
 {
   const MeshSearch mesh_search(mesh, {true});
   Face hint_f = nullptr;
-  const auto& [f, bary, clp, d2] = mesh_search.search(p, hint_f);
+  const auto [f, bary, clp, d2] = mesh_search.search(p, hint_f);
 }
 #endif
 

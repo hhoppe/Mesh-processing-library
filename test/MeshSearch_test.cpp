@@ -26,12 +26,12 @@ int main() {
     const MeshSearch mesh_search(mesh, {false});
     Face hint_f = nullptr;
     {
-      const auto& [f, bary, clp, d2] = mesh_search.search(Point(5.f, 2.f, 0.f), hint_f);
+      const auto [f, bary, clp, d2] = mesh_search.search(Point(5.f, 2.f, 0.f), hint_f);
       SHOW(mesh.face_id(f), bary, clp);
       assertx(d2 < 1e-12f);
     }
     {
-      const auto& [f, bary, clp, d2] = mesh_search.search(Point(5.f, 9.f, 0.1f), hint_f);
+      const auto [f, bary, clp, d2] = mesh_search.search(Point(5.f, 9.f, 0.1f), hint_f);
       SHOW(mesh.face_id(f), bary, clp, d2);
     }
   }
@@ -55,7 +55,7 @@ int main() {
       for_int(c, 3) p[c] = Random::G.unif();
       p[2] *= 1e-7f;  // was 1e-4f
       SHOW(p);
-      const auto& [f, bary, clp, d2] = mesh_search.search(p, hint_f);
+      const auto [f, bary, clp, d2] = mesh_search.search(p, hint_f);
       hint_f = f;
       SHOW(mesh.face_id(f), bary, clp, d2);
     }

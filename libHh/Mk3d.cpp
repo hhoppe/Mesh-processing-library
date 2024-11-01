@@ -25,8 +25,8 @@ void Mk3d::scale(float x, float y, float z) {
 }
 
 void Mk3d::scale_color(float sr, float sg, float sb) {
-  _cc.d[0] *= sr, _cc.d[1] *= sg, _cc.d[2] *= sb;
-  _cc.s[0] *= sr, _cc.s[1] *= sg, _cc.s[2] *= sb;
+  _cc.d *= V(sr, sg, sb);
+  _cc.s *= V(sr, sg, sb);
 }
 
 void Mk3d::normal(const Vector& normal) {

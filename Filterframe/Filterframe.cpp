@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Args.h"
 #include "libHh/FrameIO.h"
-#include "libHh/GeomOp.h"      // euler_angles_to_frame()
+#include "libHh/GeomOp.h"
 #include "libHh/Quaternion.h"  // pow(Frame, float)
 #include "libHh/RangeOp.h"
 #include "libHh/Stat.h"
@@ -39,8 +39,7 @@ void do_create_euler(Args& args) {
   const float pitch = to_rad(args.get_float());
   const float roll = to_rad(args.get_float());
   const Vec3<float> angles(yaw, pitch, roll);
-  Frame frame = Frame::identity();
-  euler_angles_to_frame(angles, frame);
+  const Frame frame = frame_from_euler_angles(angles, Frame::identity());
   assertx(FrameIO::write(std::cout, ObjectFrame{frame}));
   noinput = true;
 }

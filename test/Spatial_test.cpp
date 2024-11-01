@@ -19,15 +19,15 @@ int main() {
     for (int i = 8; i < pa.num(); i += 7) sp.remove(i, &pa[i]);
     SpatialSearch<int> ss(&sp, Point(.7f, .2f, .8f));
     while (!ss.done()) {
-      const auto [i, dis2] = ss.next();
-      std::cerr << sform("Found p%-3d at dis2 %-9g  : ", i, dis2) << pa[i] << "\n";
+      const auto [i, d2] = ss.next();
+      std::cerr << sform("Found p%-3d at d2=%-9g  : ", i, d2) << pa[i] << "\n";
     }
     {
       SpatialSearch<int> ss1(&sp, Point(.72f, .55f, .33f));
       for_int(i, 2) {
-        const auto [i2, dis2] = ss1.next();
+        const auto [i2, d2] = ss1.next();
         SHOW(i2);
-        SHOW(round_fraction_digits(dis2, 1e6f));
+        SHOW(round_fraction_digits(d2, 1e6f));
       }
     }
   }
@@ -47,7 +47,7 @@ int main() {
     int i;
     for (i = 0;; i++) {
       if (ss.done()) break;
-      const float d2 = ss.next().dis2;
+      const float d2 = ss.next().d2;
       assertx(d2 < 5.f && d2 >= od2);
       od2 = d2;
     }

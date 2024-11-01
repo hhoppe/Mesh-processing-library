@@ -1001,7 +1001,7 @@ bool edge_matbnd(Edge e) {
     if (!parse_key_vec(mesh.get_string(mesh.face1(e)), "rgb", f1) ||
         !parse_key_vec(mesh.get_string(mesh.face2(e)), "rgb", f2))
       return false;
-    return f1[0] != f2[0] || f1[1] != f2[1] || f1[2] != f2[2];
+    return f1 != f2;
   }
 }
 
@@ -1396,7 +1396,7 @@ Vec2<Vertex> find_diameter_of_boundary_vertices() {
         float mindot = BIGFLOAT, maxdot = -BIGFLOAT;
         Vertex vmin = nullptr, vmax = nullptr;
         for (Vertex v : bndverts) {
-          float vdot = pvdot(mesh.point(v), dir);
+          float vdot = dot(mesh.point(v), dir);
           if (vdot < mindot) {
             mindot = vdot;
             vmin = v;
@@ -2366,7 +2366,7 @@ void do_info() {
   }
   {
     double vol = 0.;
-    bool alltriangles = true;
+    bool have_all_triangles = true;
     // To make volume meaningful on mesh with boundaries, use centroid.
     Point centroid(0.f, 0.f, 0.f);
     if (!mesh.empty()) {
@@ -2378,13 +2378,13 @@ void do_info() {
     for (Face f : mesh.faces()) {
       mesh.polygon(f, poly);
       if (poly.num() != 3) {
-        alltriangles = false;
+        have_all_triangles = false;
         continue;
       }
       vol += dot(cross(poly[0] - centroid, poly[1] - centroid), poly[2] - centroid);
     }
     vol /= 6.f;  // divide by factorial(ndimensions)
-    if (alltriangles)
+    if (have_all_triangles)
       showdf("Volume is %g\n", vol);
     else
       showdf("Non-triangular faces; volume not computed.\n");
@@ -2458,8 +2458,8 @@ void do_obtusesplit() {
         Point p2 = mesh.point(mesh.vertex2(e));
         Vector vto1, vto2;
         if (is_sphere) {  // Spherical angle within triangle.
-          vto1 = project_orthogonally(p1 - po, to_Vector(po));
-          vto2 = project_orthogonally(p2 - po, to_Vector(po));
+          vto1 = project_orthogonally(p1 - po, po);
+          vto2 = project_orthogonally(p2 - po, po);
         } else {
           vto1 = p1 - po;
           vto2 = p2 - po;
@@ -2481,7 +2481,7 @@ void do_obtusesplit() {
     if (nsplit > 500) break;  // ?
     float bary0 = .5f;
     Point pint = interp(mesh.point(va[0]), mesh.point(va[1]), bary0);
-    if (is_sphere) pint = to_Point(ok_normalized(to_Vector(pint)));
+    if (is_sphere) pint = ok_normalized(pint);
     mesh.set_point(vnew, pint);
     if (GMesh::string_has_key(mesh.get_string(va[0]), "uv")) {
       Uv uv = interp(get_uv(va[0]), get_uv(va[1]), bary0);
@@ -2770,19 +2770,18 @@ void do_randpts(Args& args) {
   fcarea.push(1.00001f);
   Map<Vertex, Vnors> mvnors;
   for (Vertex v : mesh.vertices()) mvnors.enter(v, Vnors(mesh, v));
-  Array<Vertex> va;
   for_int(i, npoints) {
     int fi = discrete_binary_search(fcarea, 0, nf, Random::G.unif());
     Face f = fface[fi];
-    mesh.get_vertices(f, va);
-    assertx(va.num() == 3);
     Bary bary(Random::G.unif(), Random::G.unif(), 0.f);
     if (bary[0] + bary[1] > 1.f) {
       bary[0] = 1.f - bary[0];
       bary[1] = 1.f - bary[1];
     }
     bary[2] = 1.f - bary[0] - bary[1];
-    Point p = interp(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]), bary);
+    Vec3<Vertex> va = mesh.triangle_vertices(f);
+    Vec3<Point> triangle = mesh.triangle_points(f);
+    Point p = interp(triangle, bary);
     Vector nor{};
     for_int(j, 3) nor += mvnors.get(va[j]).get_nor(f) * bary[j];
     assertx(nor.normalize());
@@ -3391,9 +3390,7 @@ void do_procedure(Args& args) {
 
 float signed_distance(const Point& p, Face f) {
   const Vec3<Point> triangle = mesh.triangle_points(f);
-  Bary bary;
-  Point clp;
-  float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, clp);
+  const auto [d2, bary, clp] = project_point_triangle(p, triangle);
   int nzero = 0, jzero, jpos;
   dummy_init(jpos, jzero);
   for_int(j, 3) {
@@ -3474,26 +3471,24 @@ Point compute_hull_point(Vertex v, float offset) {
     Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
     bbox[1] += Vector(abs(offset), abs(offset), abs(offset));
-    assertx(bbox.max_side());
-    scale = transf_size / bbox.max_side();
+    scale = transf_size / assertx(bbox.max_side());
     translate = (Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale);
   }
   // Gather constraints.
   Array<LinearFunc> ar_lf;
   {
-    Polygon poly;
     for (Face f : mesh.faces(v)) {
-      mesh.polygon(f, poly);
-      Vector normal = poly.get_normal_dir();
+      Vec3<Point> triangle = mesh.triangle_points(f);
+      Vector normal = get_normal_dir(triangle);
       // Normalize normal for numerical precision in simplx.
       if (!normal.normalize()) {
         Warning("Degenerate face ignored");
         continue;
       }
-      Point pold = poly[0];
+      Point pold = triangle[0];
       pold += normal * offset;
       if (offset < 0.f) normal = -normal;
-      Point pnew = to_Point(to_Vector(pold) * scale) + translate;
+      Point pnew = pold * scale + translate;
       for_int(c, 3) assertx(pnew[c] > transf_border - 1e-4f && pnew[c] < transf_border + transf_size + 1e-4f);
       ar_lf.push(LinearFunc(normal, pnew));
     }
@@ -3596,7 +3591,7 @@ Point compute_hull_point(Vertex v, float offset) {
       }
     }
     if (good) {
-      newpoint = to_Point(to_Vector(pnew - translate) * (1.f / scale));
+      newpoint = (pnew - translate) / scale;
       ret = true;
     }
   }
@@ -3817,7 +3812,7 @@ void do_shootrays(Args& args) {
   {
     for (Face f : omesh.faces()) {
       Vec3<Point> triangle = omesh.triangle_points(f);
-      if (1) widen_triangle(triangle, 1e-4f);
+      if (1) triangle = widen_triangle(triangle, 1e-4f);
       for_int(i, 3) triangle[i] *= xform;
       trianglefaces.push({triangle, f});
     }
@@ -3877,7 +3872,7 @@ void do_shootrays(Args& args) {
     const Point op = mesh.point(v);
     mesh.update_string(v, "Opos", csform_vec(str, op));
     mesh.set_point(v, minp * xform_inverse);
-    mesh.update_string(v, "sdisp", csform(str, "(%g)", mindist / xform[0][0]));
+    mesh.update_string(v, "sdisp", csform_vec(str, V(mindist / xform[0][0])));
   }
 }
 
@@ -4108,7 +4103,7 @@ void do_sphparam_to_tangentfield(Args& args) {
       return sph;
     });
     const Vector splnor = get_normal(sphs);
-    const Vector ssnor = normalized(interp(sphs[0], sphs[1], sphs[2]));
+    const Vector ssnor = normalized(interp(sphs));
     const Vector sdir = normalized(project_orthogonally(project_orthogonally(gdir, ssnor), splnor));
     const Bary bary = bary_of_vector(sphs, sdir);
     const Vector dir = normalized(vector_from_bary(triangle, bary));
@@ -4153,7 +4148,7 @@ void do_trimpts(Args& args) {
       }
       totpts++;
       Point p = el[0].p * xform;
-      if (p[0] <= 0 || p[0] >= 1 || p[1] <= 0 || p[1] >= 1 || p[2] <= 0 || p[2] >= 1) {
+      if (p[0] <= 0.f || p[0] >= 1.f || p[1] <= 0.f || p[1] >= 1.f || p[2] <= 0.f || p[2] >= 1.f) {
         Warning("point out of bounds");
         continue;
       }
@@ -4167,11 +4162,11 @@ void do_trimpts(Args& args) {
     Array<Face> faces_to_destroy;
     for (Face f : mesh.faces()) {
       const Vec3<Point> triangle = mesh.triangle_points(f);
-      const Point pc = interp(triangle[0], triangle[1], triangle[2]);  // Note: not really the circumcenter!
+      const Point pc = interp(triangle);  // Note: not really the circumcenter!
       const float circumd = dist(pc, triangle[0]);
       const float maxd = circumd * dtrim * xform[0][0];
       SpatialSearch<int> ss(&spatial, pc * xform, maxd);
-      if (ss.done() || ss.next().dis2 > square(maxd)) faces_to_destroy.push(f);
+      if (ss.done() || ss.next().d2 > square(maxd)) faces_to_destroy.push(f);
     }
     showdf("Destroying %d faces\n", faces_to_destroy.num());
     for (Face f : faces_to_destroy) mesh.destroy_face(f);
@@ -4181,9 +4176,9 @@ void do_trimpts(Args& args) {
     float maxd = dtrim * xform[0][0];
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * xform;
-      assertx(p[0] > 0 && p[0] < 1 && p[1] > 0 && p[1] < 1 && p[2] > 0 && p[2] < 1);
+      assertx(p[0] > 0.f && p[0] < 1.f && p[1] > 0.f && p[1] < 1.f && p[2] > 0.f && p[2] < 1.f);
       SpatialSearch<int> ss(&spatial, p, maxd);
-      if (ss.done() || ss.next().dis2 > square(maxd)) {
+      if (ss.done() || ss.next().d2 > square(maxd)) {
         nvtoofar++;
         mesh.flags(v).flag(vflag_toofar) = true;
       }

@@ -756,7 +756,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
     SrVertex* vs = &_vertices[vi];
     if (!is_splitable(vs)) continue;
     SrVsplit* vspl = &_vsplits[vs->vspli];
-    Vector dir_b = to_Vector(ar_nsphere[vi].point);
+    Vector dir_b = ar_nsphere[vi].point;
     Vector nor_b = dir_b;
     assertw(nor_b.normalize());
     float r_b = ar_nsphere[vi].radius;
@@ -1012,11 +1012,11 @@ inline bool SrMesh::is_visible(const SrVertexGeometry* vg, const SrVsplit* vspl)
   const Point& e = _refp._eye;
   const Point pe = p - e;
   const Vector& vnor = vg->vnormal;
-  float vdot = pe[0] * vnor[0] + pe[1] * vnor[1] + pe[2] * vnor[2];
-  float pem2 = pe[0] * pe[0] + pe[1] * pe[1] + pe[2] * pe[2];
+  const float vdot = dot(pe, vnor);
+  const float pem2 = mag2<float>(pe);
   if (vdot > 0.f && square(vdot) > pem2 * vspl->sin2alpha) return false;
 #endif
-  float rneg = vspl->radius_neg;
+  const float rneg = vspl->radius_neg;
   for_int(i, _refp._nplanes) {
     if (_refp._planes[i].eval(p) < rneg) return false;
   }
@@ -1027,37 +1027,37 @@ inline bool SrMesh::big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) 
 #if !defined(SR_NOR001)
   // The original SIGGRAPH 97 definition.
   const Point& p = vg->point;
-  float px = p[0], py = p[1], pz = p[2];
+  const float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
-  float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
-  float pem2 = pex * pex + pey * pey + pez * pez;
-  float rhs1 = _refp._tz2 * pem2;
+  const float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
+  const float pem2 = pex * pex + pey * pey + pez * pez;
+  const float rhs1 = _refp._tz2 * pem2;
   const Vector& vnor = vg->vnormal;
-  float vdot = pex * vnor[0] + pey * vnor[1] + pez * vnor[2];
+  const float vdot = pex * vnor[0] + pey * vnor[1] + pez * vnor[2];
   return vspl->uni_error_mag2 >= rhs1 || vspl->dir_error_mag2 * (pem2 - square(vdot)) >= rhs1 * pem2;
 #elif 0
   // SIGGRAPH 97 definition specialized to a height field.
   const Point& p = vg->point;
-  float px = p[0], py = p[1], pz = p[2];
+  const float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
-  float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
-  float pez2 = pez * pez;
-  float pem2 = pex * pex + pey * pey + pez2;
-  float rhs1 = _refp._tz2 * pem2;
+  const float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
+  const float pez2 = pez * pez;
+  const float pem2 = pex * pex + pey * pey + pez2;
+  const float rhs1 = _refp._tz2 * pem2;
   return vspl->dir_error_mag2 * (pem2 - pez2) >= rhs1 * pem2;
 #elif 0
   // Remove the term that checks the z direction of the view direction.
   const Point& p = vg->point;
-  float px = p[0], py = p[1], pz = p[2];
+  const float px = p[0], py = p[1], pz = p[2];
   const Point& e = _refp._eye;
-  float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
-  float pem2 = pex * pex + pey * pey + pez * pez;
-  float rhs1 = _refp._tz2 * pem2;
+  const float pex = px - e[0], pey = py - e[1], pez = pz - e[2];
+  const float pem2 = pex * pex + pey * pey + pez * pez;
+  const float rhs1 = _refp._tz2 * pem2;
   return vspl->dir_error_mag2 >= rhs1;
 #else
   // Try linear functional instead of Euclidean (z direction still ignored).
   // This allows eyepoint anticipation for correct geomorphs.
-  float lf = _refp._eyedir.eval(vg->point);
+  const float lf = _refp._eyedir.eval(vg->point);
   return vspl->dir_error_mag2 >= _refp._tz2 * square(lf);
 #endif
 }
@@ -1767,7 +1767,7 @@ void SrMesh::start_coarsen_morphing(SrVertex* vt) {
     int time = _coarsen_morph_time;
     vm->time = static_cast<short>(time - 1);
     float frac = 1.f / time;
-    vm->vginc.point = to_Point((coarsened_vg->point - va->vgeom.point) * frac);
+    vm->vginc.point = (coarsened_vg->point - va->vgeom.point) * frac;
     if (!b_nor001) vm->vginc.vnormal = (coarsened_vg->vnormal - va->vgeom.vnormal) * frac;
     // const float* cp = va->vgeom.point.data();
     // const float* gp = coarsened_vg->point.data();
@@ -1790,7 +1790,7 @@ void SrMesh::abort_coarsen_morphing(SrVertex* vc) {
     int time = _refine_morph_time;
     vm->time = static_cast<short>(time - 1);
     float frac = 1.f / time;
-    vm->vginc.point = to_Point((vm->vgrefined.point - va->vgeom.point) * frac);
+    vm->vginc.point = (vm->vgrefined.point - va->vgeom.point) * frac;
     if (!b_nor001) vm->vginc.vnormal = (vm->vgrefined.vnormal - va->vgeom.vnormal) * frac;
     // const float* cp = va->vgeom.point.data();
     // const float* gp = vm->vgrefined.point.data();

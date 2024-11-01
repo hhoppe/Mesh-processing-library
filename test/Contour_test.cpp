@@ -48,7 +48,7 @@ void test2D() {
 struct feval3D {
   float operator()(const Vec3<float>& p) const {
     // Compute at double-precision to avoid numerical differences between different CONFIG.
-    Vec3<double> pd(p[0], p[1], p[2]);
+    Vec3<double> pd = convert<double>(p);
     float f = float((dist(pd, V(.2, .3, .3)) - .15) * (dist(pd, V(.6, .65, .7)) - .35));
     if (dist2(pd, V(.53, .53, .53)) < square(.15)) f = k_Contour_undefined;
     return f;
@@ -104,15 +104,11 @@ void testmesh() {
 
 struct fmonkey {
   float operator()(const Point& p) const {
-    // Monkey saddle, z=x^3-3y^2x
-    float x = p[0], y = p[1], z = p[2];
-    x = x * 2 - 1;
-    y = y * 2 - 1;
-    z = z * 2 - 1;
-    float s = 4;
-    x *= s;
-    y *= s;
-    z *= s;
+    // Monkey saddle, z = x^3 - 3 y^2 x
+    const float s = 4.f;
+    const Point pp = (p * 2.f - 1.f) * s;
+    // const auto& [x, y, z] = pp;  // Somehow enable structure binding on classes derived from Vec<T, n> ??
+    const float x = pp[0], y = pp[1], z = pp[2];
     float f = z - pow(x, 3.f) + 3.f * y * y * x;
     return f;
   }

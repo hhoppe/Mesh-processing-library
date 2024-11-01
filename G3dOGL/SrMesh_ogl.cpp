@@ -25,21 +25,20 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
   glBegin(GL_TRIANGLES);
   if (unlit_texture) {
     for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+      const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
-      if (!f->vertices[0]->visible && !f->vertices[1]->visible && !f->vertices[2]->visible) continue;
+      if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
 #endif
-      const SrAVertex* v0 = f->vertices[0];
-      glVertex3fv(get_point(v0).data());
-      const SrAVertex* v1 = f->vertices[1];
-      glVertex3fv(get_point(v1).data());
-      const SrAVertex* v2 = f->vertices[2];
-      glVertex3fv(get_point(v2).data());
+      glVertex3fv(get_point(vertices[0]).data());
+      glVertex3fv(get_point(vertices[1]).data());
+      glVertex3fv(get_point(vertices[2]).data());
     }
   } else {
     int omatid = -1;
     for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+      const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
-      if (!f->vertices[0]->visible && !f->vertices[1]->visible && !f->vertices[2]->visible) continue;
+      if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
 #endif
       int matid = f->matid;  // material of f
       if (matid != omatid) {
@@ -47,13 +46,13 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
         int rmatid = matid & ~k_Face_visited_mask;  // strip off high bit
         glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
       }
-      const SrAVertex* v0 = f->vertices[0];
+      const SrAVertex* v0 = vertices[0];
       glNormal3fv(get_normal(v0).data());
       glVertex3fv(get_point(v0).data());
-      const SrAVertex* v1 = f->vertices[1];
+      const SrAVertex* v1 = vertices[1];
       glNormal3fv(get_normal(v1).data());
       glVertex3fv(get_point(v1).data());
-      const SrAVertex* v2 = f->vertices[2];
+      const SrAVertex* v2 = vertices[2];
       glNormal3fv(get_normal(v2).data());
       glVertex3fv(get_point(v2).data());
     }
@@ -74,7 +73,8 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
   assertx(offsetof(SrAFace, activef) == 0);
   for (EListNode* n = ndelim->next();;) {
     if (n == ndelim) break;
-    SrAFace* f = HH_ELIST_OUTER(SrAFace, activef, n);
+    SrAFace* const f = HH_ELIST_OUTER(SrAFace, activef, n);
+    const auto& vertices = f->vertices;
     n = n->next();
     int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
@@ -89,8 +89,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
     const SrAVertex* v2n;
     SrAFace* fn;  // next neighboring face
 #if defined(SR_SW_CULLING)
-    int sw_culling_3bits =
-        ((f->vertices[0]->visible << 0) | (f->vertices[1]->visible << 1) | (f->vertices[2]->visible << 2));
+    int sw_culling_3bits = ((vertices[0]->visible << 0) | (vertices[1]->visible << 1) | (vertices[2]->visible << 2));
     if (!sw_culling_3bits) continue;
 #endif
     // 1997-12-20 explored only trying the first neighboring face test, hoping that it would reduce computation.
@@ -98,42 +97,42 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
     // in vertex transforms in OpenGL (1.3% of total cycles)    (tstrips: 4.21 -> 2.8 faces/strip).
     if (fn = f->fnei[0], fn->matid == matid) {
       glBegin(GL_TRIANGLE_STRIP);
-      draw_vertex(f->vertices[0], use_texture);
-      draw_vertex(f->vertices[1], use_texture);
-      draw_vertex(f->vertices[2], use_texture);
-      v1n = f->vertices[2];
-      v2n = f->vertices[1];
+      draw_vertex(vertices[0], use_texture);
+      draw_vertex(vertices[1], use_texture);
+      draw_vertex(vertices[2], use_texture);
+      v1n = vertices[2];
+      v2n = vertices[1];
 #if defined(SR_SW_CULLING)
       // 210 -> 210
       sw_culling_3bits = sw_culling_3bits;
 #endif
     } else if (fn = f->fnei[1], fn->matid == matid) {
       glBegin(GL_TRIANGLE_STRIP);
-      draw_vertex(f->vertices[1], use_texture);
-      draw_vertex(f->vertices[2], use_texture);
-      draw_vertex(f->vertices[0], use_texture);
-      v1n = f->vertices[0];
-      v2n = f->vertices[2];
+      draw_vertex(vertices[1], use_texture);
+      draw_vertex(vertices[2], use_texture);
+      draw_vertex(vertices[0], use_texture);
+      v1n = vertices[0];
+      v2n = vertices[2];
 #if defined(SR_SW_CULLING)
       // 210 -> 02d
       sw_culling_3bits = (sw_culling_3bits >> 1) | ((sw_culling_3bits & 0x1) << 2);
 #endif
     } else if (fn = f->fnei[2], fn->matid == matid) {
       glBegin(GL_TRIANGLE_STRIP);
-      draw_vertex(f->vertices[2], use_texture);
-      draw_vertex(f->vertices[0], use_texture);
-      draw_vertex(f->vertices[1], use_texture);
-      v1n = f->vertices[1];
-      v2n = f->vertices[0];
+      draw_vertex(vertices[2], use_texture);
+      draw_vertex(vertices[0], use_texture);
+      draw_vertex(vertices[1], use_texture);
+      v1n = vertices[1];
+      v2n = vertices[0];
 #if defined(SR_SW_CULLING)
       // 210 -> 10d
       sw_culling_3bits = ((sw_culling_3bits & 0x3) << 1);
 #endif
     } else {
       glBegin(GL_TRIANGLES);
-      draw_vertex(f->vertices[0], use_texture);
-      draw_vertex(f->vertices[1], use_texture);
-      draw_vertex(f->vertices[2], use_texture);
+      draw_vertex(vertices[0], use_texture);
+      draw_vertex(vertices[1], use_texture);
+      draw_vertex(vertices[2], use_texture);
       glEnd();
       continue;
     }
@@ -198,9 +197,9 @@ int SrMesh::ogl_render_striplines() {
   // doesn't need to be all that fast, so not carefully optimized.
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   for (SrAFace* ff : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
-    SrAFace* f = ff;       // current face
-    int matid = f->matid;  // material of f
-    SrAFace* fn;           // next neighboring face
+    SrAFace* const f = ff;  // current face
+    int matid = f->matid;   // material of f
+    SrAFace* fn;            // next neighboring face
     if ((matid & k_Face_visited_mask) == _cur_frame_mask) continue;
     ntstrips++;
     int matidv = matid ^ k_Face_visited_mask;

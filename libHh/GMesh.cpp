@@ -96,7 +96,7 @@ float GMesh::area(Face f) const {
   if (is_triangle(f)) {
     return sqrt(area2(triangle_points(f)));
   } else {
-    Polygon& poly = _tmp_poly;
+    Polygon poly;
     polygon(f, poly);
     return poly.get_area();
   }

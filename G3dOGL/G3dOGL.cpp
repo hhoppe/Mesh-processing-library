@@ -258,8 +258,8 @@ const A3dVertexColor k_default_poly_color{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f,
 
 // default color for mesh polygons (now defined in meshcold, meshcols, meshcolp, meshca)
 // const A3dVertexColor MESHCOL{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
-Color meshcolor;
-Color cuspcolor;
+Color mesh_color;
+Color cusp_color;
 
 struct Node : noncopyable {
   virtual ~Node() = default;
@@ -504,13 +504,13 @@ bool normalmap_init() {
   if (pnormalmap->name() == "dot3") {
     Warning("Resorting to 'dot3' for normal-mapping");
     if (1) {  // make material brighter
-      uint8_t meshca = meshcolor.d[3];
+      uint8_t meshca = mesh_color.d[3];
       A3dColor material;
-      for_int(c, 3) material[c] = meshcolor.d[c] / 255.f;
+      for_int(c, 3) material[c] = mesh_color.d[c] / 255.f;
       float maxv = assertx(max(material));
       material /= maxv;
-      meshcolor.d = pack_color(material);
-      meshcolor.d[3] = meshca;
+      mesh_color.d = pack_color(material);
+      mesh_color.d[3] = meshca;
     }
   }
   if (0) SHOW(pnormalmap->name());
@@ -518,7 +518,7 @@ bool normalmap_init() {
 }
 
 void normalmap_setlight(const Vector& lightdirmodel, const Vector& eyedirmodel, float lambient) {
-  assertx(pnormalmap)->set_parameters(lightdirmodel, eyedirmodel, lambient, lightsource, meshcolor.s);
+  assertx(pnormalmap)->set_parameters(lightdirmodel, eyedirmodel, lambient, lightsource, mesh_color.s);
 }
 
 void normalmap_activate() { assertx(pnormalmap)->activate(); }
@@ -532,6 +532,7 @@ bool bigfont() { return HB::get_font_dims()[1] > 9; }
 void invalidate_dls() { svalid_dl.clear(); }
 
 inline Vector interp_normal(const Vector& n1, const Vector& n2, float f1, float f2) {
+  // simplify this ??
   float n1x = n1[0], n1y = n1[1], n1z = n1[2];
   float n2x = n2[0], n2y = n2[1], n2z = n2[2];
   float nx, ny, nz;
@@ -1641,7 +1642,7 @@ inline void setup_face(const GMesh& mesh, Face f) {
       maybe_update_mat_diffuse(f_color(f));
     } else if (mesh.gflags().flag(mflag_f_colors)) {
       Warning("face without color");
-      maybe_update_mat_diffuse(meshcolor.d);
+      maybe_update_mat_diffuse(mesh_color.d);
     }
   }
 }
@@ -1668,7 +1669,7 @@ inline void render_corner(const GMesh& mesh, Corner c) {
       maybe_update_mat_diffuse(v_color(v));
     } else if (!mesh.flags(mesh.corner_face(c)).flag(fflag_color)) {
       // this may be optional.
-      maybe_update_mat_diffuse(meshcolor.d);
+      maybe_update_mat_diffuse(mesh_color.d);
     }
     if (lsmooth) glNormal3fv(c_nor(c).data());
   }
@@ -1760,7 +1761,7 @@ void draw_mesh(GMesh& mesh) {
     glShadeModel(smooth_shade_model ? GL_SMOOTH : GL_FLAT);
     bool cannot_strip = !lsmooth && smooth_shade_model;
     initialize_lit();
-    update_mat_color(meshcolor);
+    update_mat_color(mesh_color);
     if (texture_active) {
       if (mesh.gflags().flag(mflag_uv)) {
         glDisable(GL_TEXTURE_GEN_S);
@@ -1769,7 +1770,7 @@ void draw_mesh(GMesh& mesh) {
       if (!texture_lit) {
         glShadeModel(GL_FLAT);
         initialize_unlit();
-        update_cur_color(meshcolor.d);
+        update_cur_color(mesh_color.d);
         set_light_ambient(0.f);
         if (texturenormal) normalmap_activate();
       }
@@ -1928,7 +1929,7 @@ void draw_mesh(GMesh& mesh) {
             ntriangles = 0;
           }
           if (!ntriangles) {
-            if (0) update_mat_color(meshcolor);  // would obviate force_color_update just for this case
+            if (0) update_mat_color(mesh_color);  // would obviate force_color_update just for this case
             glBegin(GL_TRIANGLES);
           }
           ntriangles++;
@@ -2034,7 +2035,7 @@ void draw_mesh(GMesh& mesh) {
       }
       glShadeModel(GL_SMOOTH);
       initialize_lit();
-      update_mat_color(cuspcolor);
+      update_mat_color(cusp_color);
       for (Vertex v : mesh.vertices()) {
         if (!mesh.flags(v).flag(GMesh::vflag_cusp)) continue;
         render_sphere(mesh.point(v), sphereradius * mesh_radius, 8, 8);
@@ -2048,15 +2049,13 @@ void draw_mesh(GMesh& mesh) {
     initialize_unlit();
     update_cur_color(pix_sharpedgecolor);
     set_thickness(thicksharp);
-    Array<Vertex> va;
-    Point p;
     Point pp;
     Face fp = nullptr;
     bool stripstarted = false;
     CArrayView<Face> fa = map_mfa.get(&mesh);
     for (Face f : fa) {
-      mesh.get_vertices(f, va);
-      p = interp(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
+      const Vec3<Point>& triangle = mesh.triangle_points(f);
+      Point p = interp(triangle);
       if (1) p = interp(feyetomodel.p(), p, edgeoffset);
       int afound = 0;
       if (1) {
@@ -2489,29 +2488,9 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
       glEnable(GL_NORMALIZE);  // Hopefully not reset anywhere.
       ogl_normalize = true;
       for (Face f : mesh.faces()) {
-        Corner c1;
-        dummy_init(c1);
-        for (Corner c : mesh.corners(f)) {
-          c1 = c;
-          if (1) break;
-        }
-        Corner c2 = mesh.ccw_face_corner(c1);
-        Corner c3 = mesh.ccw_face_corner(c2);
-        if (!assertw(mesh.ccw_face_corner(c3) == c1)) continue;
-        const Point& p1 = mesh.point(mesh.corner_vertex(c1));
-        const Point& p2 = mesh.point(mesh.corner_vertex(c2));
-        const Point& p3 = mesh.point(mesh.corner_vertex(c3));
-        Vector& v = f_pnor(f);
-        // from cross()
-        float p1x = p1[0], p1y = p1[1], p1z = p1[2];
-        float v1x = p2[0] - p1x, v1y = p2[1] - p1y, v1z = p2[2] - p1z;
-        float v2x = p3[0] - p1x, v2y = p3[1] - p1y, v2z = p3[2] - p1z;
-        float vx = v1y * v2z - v1z * v2y;
-        float vy = v1z * v2x - v1x * v2z;
-        float vz = v1x * v2y - v1y * v2x;
-        v[0] = vx;
-        v[1] = vy;
-        v[2] = vz;
+        if (!assertw(mesh.is_triangle(f))) continue;
+        const Vec3<Point> triangle = mesh.triangle_points(f);
+        f_pnor(f) = get_normal_dir(triangle);
       }
     }
   }
@@ -2670,16 +2649,13 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   pix_edgecolor = parse_color(edgecolor);
   pix_sharpedgecolor = parse_color(sharpedgecolor);
   pix_bndedgecolor = parse_color(bndedgecolor);
-  bool cuspbright = spherecolor[0] + spherecolor[1] + spherecolor[2] > 2.f;
-  cuspcolor = create_mat_color(A3dVertexColor(A3dColor(spherecolor[0], spherecolor[1], spherecolor[2]),
-                                              A3dColor(spherecolor[0], spherecolor[1], spherecolor[2]),
-                                              A3dColor((cuspbright ? 1.f : 7.f), 0.f, 0.f)));
-  meshcolor = create_mat_color(A3dVertexColor(A3dColor(meshcold[0], meshcold[1], meshcold[2]),
-                                              A3dColor(meshcols[0], meshcols[1], meshcols[2]),
-                                              A3dColor(meshcolp[0], meshcolp[1], meshcolp[2])));
+  const bool cusp_bright = sum(spherecolor) > 2.f;
+  cusp_color = create_mat_color(
+      A3dVertexColor(A3dColor(spherecolor), A3dColor(spherecolor), A3dColor((cusp_bright ? 1.f : 7.f), 0.f, 0.f)));
+  mesh_color = create_mat_color(A3dVertexColor(A3dColor(meshcold), A3dColor(meshcols), A3dColor(meshcolp)));
   int mesha = int(meshcola[0] * 255.f + .5f);
   assertx(mesha >= 0 && mesha <= 255);
-  meshcolor.d[3] = uint8_t(mesha);
+  mesh_color.d[3] = uint8_t(mesha);
   if (picture) nice_rendering = true;
   if (pm_filename != "") {
 #if defined(DEF_PM)
@@ -3081,12 +3057,12 @@ string HB::show_info() {
                           : ' ');
 }
 
-std::pair<float, std::optional<Vec2<float>>> HB::world_to_vdc(const Point& pi) {
-  std::pair<float, std::optional<Vec2<float>>> pair;
-  Point p = pi * tcami;
-  pair.first = p[0];
-  if (p[0] >= hither) pair.second = V(.5f - p[1] / p[0] * tzp[1], .5f - p[2] / p[0] * tzp[0]);
-  return pair;
+HB::VdcResult HB::vdc_from_world(const Point& pi) {
+  HB::VdcResult result;
+  const Point p = pi * tcami;
+  result.zs = p[0];
+  if (p[0] >= hither) result.xys = V(.5f - p[1] / p[0] * tzp[1], .5f - p[2] / p[0] * tzp[0]);
+  return result;
 }
 
 void HB::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {
@@ -3305,12 +3281,12 @@ void draw_pm() {
     if (!pmesh._info._has_rgb) assertw(lsmooth);
     glShadeModel(lsmooth || pmesh._info._has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
-    update_mat_color(meshcolor);
+    update_mat_color(mesh_color);
     if (texture_active) {
       if (!texture_lit) {
         glShadeModel(GL_FLAT);
         initialize_unlit();
-        update_cur_color(meshcolor.d);
+        update_cur_color(mesh_color.d);
         set_light_ambient(0.f);
         if (texturenormal) normalmap_activate();
       }
@@ -3502,12 +3478,12 @@ void draw_sr() {
     assertw(lsmooth);
     glShadeModel(lsmooth ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
-    update_mat_color(meshcolor);
+    update_mat_color(mesh_color);
     if (texture_active) {
       if (!texture_lit) {
         glShadeModel(GL_FLAT);
         initialize_unlit();  // disable lighting
-        update_cur_color(meshcolor.d);
+        update_cur_color(mesh_color.d);
         set_light_ambient(0.f);
         if (texturenormal) normalmap_activate();
       }
@@ -3925,7 +3901,7 @@ void read_sc(const string& filename) {
   for_int(attrid, Kmesh.materialNum()) {
     const char* s = Kmesh.getMaterial(attrid);
     A3dColor co;
-    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : meshcolor.d;
+    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : mesh_color.d;
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
   for (Simplex s2 : Kmesh.simplices_dim(2)) {
@@ -3964,7 +3940,7 @@ void read_psc(const string& filename) {
   for_int(attrid, Kmesh.materialNum()) {
     const char* s = Kmesh.getMaterial(attrid);
     A3dColor co;
-    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : meshcolor.d;
+    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : mesh_color.d;
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
   int last = psc_lod_list.add(1);
@@ -4349,7 +4325,7 @@ void draw_sc() {
   if (defining_dl) Warning("Display lists should be off ('DC') if zooming in/out");
   glShadeModel(GL_SMOOTH);
   initialize_lit();
-  update_mat_color(meshcolor);
+  update_mat_color(mesh_color);
   if (!ledges || lshading) {
     // Options lsmooth, lquickmode not handled.
     assertw(lsmooth);
@@ -4420,7 +4396,7 @@ void draw_sc() {
           glVertex3fv(vk.data());
           glEnd();
           initialize_lit();
-          update_mat_color(meshcolor);
+          update_mat_color(mesh_color);
         } else {
           // draw as cylinder
           maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
@@ -4496,7 +4472,7 @@ void read_sc_gm(const string& filename) {
   for_int(attrid, Kmesh2.materialNum()) {
     const char* s = Kmesh2.getMaterial(attrid);
     A3dColor co;
-    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : meshcolor.d;
+    s_color[attrid] = parse_key_vec(s, "rgb", co) ? pack_color(co) : mesh_color.d;
   }
   Gmorphs[sc_gm_morph].update(sc_gm_lod_level, corner_pnor);
   toggle_attribute(g_xobs.cullface);
@@ -4589,7 +4565,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
   if (defining_dl) Warning("Display lists should be off ('DC') if zooming in/out");
   glShadeModel(GL_SMOOTH);
   initialize_lit();
-  update_mat_color(meshcolor);
+  update_mat_color(mesh_color);
   if (!ledges || lshading) {
     // Options lsmooth, lquickmode not handled.
     assertw(lsmooth);
@@ -4660,7 +4636,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
           glVertex3fv(vk.data());
           glEnd();
           initialize_lit();
-          update_mat_color(meshcolor);
+          update_mat_color(mesh_color);
         } else {
           // draw as cylinder
           maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
@@ -4769,11 +4745,11 @@ void Cylinder::draw() {
 }
 
 void Cylinder::draw(const Point& p1, const Point& p2, float r) {
-  float D = dist(p1, p2);
-  Vector u = (p2 - p1) / D;
-  float d = sqrt(u[0] * u[0] + u[1] * u[1]);
+  const float D = dist(p1, p2);
+  const Vector u = (p2 - p1) / D;
+  const float d = sqrt(u[0] * u[0] + u[1] * u[1]);
   // Matrix4 m;
-  SGrid<float, 4, 4> m = {
+  const SGrid<float, 4, 4> m = {
       {-u[1] / d, u[0] / d, 0.f, 0.f},
       {-(u[0] * u[2]) / d, -(u[1] * u[2]) / d, d, 0.f},
       {u[0], u[1], u[2], 0.f},
@@ -5075,12 +5051,12 @@ void draw_ply() {
   if (!ledges || lshading) {
     glShadeModel(lsmooth || has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
-    update_mat_color(meshcolor);
+    update_mat_color(mesh_color);
     if (texture_active) {
       if (!texture_lit) {
         glShadeModel(GL_FLAT);
         initialize_unlit();
-        update_cur_color(meshcolor.d);
+        update_cur_color(mesh_color.d);
         set_light_ambient(0.f);
         if (texturenormal) normalmap_activate();
       }
@@ -5088,7 +5064,8 @@ void draw_ply() {
     const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
     int ntriangles = 0;
     for_int(i, ply_findices.num()) {
-      if (ply_findices[i].num() == 3) {
+      const auto& indices = ply_findices[i];
+      if (indices.num() == 3) {
         if (ntriangles == buffer_ntriangles) {
           glEnd();
           ntriangles = 0;
@@ -5103,12 +5080,11 @@ void draw_ply() {
         glBegin(GL_POLYGON);
       }
       if (!lsmooth) {
-        Vector fnormal = ok_normalized(
-            cross(ply_vpos[ply_findices[i][0]], ply_vpos[ply_findices[i][1]], ply_vpos[ply_findices[i][2]]));
+        Vector fnormal = ok_normalized(cross(ply_vpos[indices[0]], ply_vpos[indices[1]], ply_vpos[indices[2]]));
         glNormal3fv(fnormal.data());
       }
-      for_int(j, ply_findices[i].num()) {
-        int vi = ply_findices[i][j];
+      for_int(j, indices.num()) {
+        int vi = indices[j];
         if (texture_active) {
           if (ply_fuv.num())
             glTexCoord2fv(ply_fuv[i][j].data());
@@ -5145,12 +5121,12 @@ void draw_ply() {
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
     glBegin(GL_LINES);
-    for_int(i, ply_findices.num()) {
-      int n = ply_findices[i].num();
+    for (const auto& indices : ply_findices) {
+      int n = indices.num();
       for_int(j, n) {
         // draws most edges twice :-(
-        glVertex3fv(ply_vpos[ply_findices[i][(j + 0) % n]].data());
-        glVertex3fv(ply_vpos[ply_findices[i][(j + 1) % n]].data());
+        glVertex3fv(ply_vpos[indices[j]].data());
+        glVertex3fv(ply_vpos[indices[(j + 1) % n]].data());
       }
     }
     glEnd();

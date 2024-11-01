@@ -108,7 +108,7 @@ void initial_projection() {
       vertex mine = nullptr;
       for (vertex v : verts) {
         if (!v->v[1]) continue;
-        float d2 = project_point_seg2(pt.co[i], v->p, v->v[1]->p);
+        const float d2 = project_point_segment(pt.co[i], v->p, v->v[1]->p).d2;
         if (d2 < mind2) {
           mind2 = d2;
           mine = v;
@@ -117,7 +117,7 @@ void initial_projection() {
       pt.cle[i] = assertx(mine);
     }
     vertex v = pt.cle[i];
-    pt.dis2[i] = project_point_seg2(pt.co[i], v->p, v->v[1]->p);
+    pt.dis2[i] = project_point_segment(pt.co[i], v->p, v->v[1]->p).d2;
     v->pts.enter(i);
   }
   analyze_poly(0, "INITIAL");
@@ -191,13 +191,13 @@ void reproject_locally(int pi) {
   vertex v = assertx(pt.cle[pi]);
   assertx(v->pts.contains(pi));  // optional
   assertx(v->v[1]);              // optional
-  float a, mind2 = project_point_seg2(pt.co[pi], v->p, v->v[1]->p);
+  float a, mind2 = project_point_segment(pt.co[pi], v->p, v->v[1]->p).d2;
   vertex mine = v;
-  if (v->v[0] && (a = project_point_seg2(pt.co[pi], v->v[0]->p, v->p)) < mind2) {
+  if (v->v[0] && (a = project_point_segment(pt.co[pi], v->v[0]->p, v->p).d2) < mind2) {
     mind2 = a;
     mine = v->v[0];
   }
-  if (v->v[1]->v[1] && (a = project_point_seg2(pt.co[pi], v->v[1]->p, v->v[1]->v[1]->p)) < mind2) {
+  if (v->v[1]->v[1] && (a = project_point_segment(pt.co[pi], v->v[1]->p, v->v[1]->v[1]->p).d2) < mind2) {
     mind2 = a;
     mine = v->v[1];
   }
@@ -231,8 +231,7 @@ void global_fit() {
   for_int(i, pt.n) {
     vertex cle = assertx(pt.cle[i]);
     Vec2<vertex> v{cle, assertx(cle->v[1])};
-    float bary;
-    project_point_seg2(pt.co[i], v[0]->p, v[1]->p, &bary);
+    const float bary = project_point_segment(pt.co[i], v[0]->p, v[1]->p).bary;
     for_int(j, 2) lls.enter_a_rc(i, mvi.get(v[j]), (!j ? bary : 1.f - bary));
     lls.enter_b_r(i, pt.co[i]);
   }
@@ -275,16 +274,15 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
     // Enter projections
     for (int pi : arpts) {
       const Point& p = pt.co[pi];
-      float bary0, bary1;
-      dummy_init(bary0, bary1);
-      float d0 = v[0] ? project_point_seg2(p, v[0]->p, newp, &bary0) : BIGFLOAT;
-      float d1 = v[1] ? project_point_seg2(p, v[1]->p, newp, &bary1) : BIGFLOAT;
-      int mini = d0 < d1 ? 0 : 1;
+      const Vec2<SegmentProjectionResult> results{
+          v[0] ? project_point_segment(p, v[0]->p, newp) : SegmentProjectionResult{BIGFLOAT, 0.f, Point{}},
+          v[1] ? project_point_segment(p, v[1]->p, newp) : SegmentProjectionResult{BIGFLOAT, 0.f, Point{}}};
+      const int mini = results[0].d2 < results[1].d2 ? 0 : 1;
       assertx(v[mini]);
-      float bary = mini ? bary1 : bary0;
-      double u = 1.f - bary;
+      const float bary = results[mini].bary;
+      const double u = 1.f - bary;
       for_int(c, 3) {
-        double b = p[c] - bary * v[mini]->p[c];
+        const double b = p[c] - bary * v[mini]->p[c];
         UtU[c] += u * u;
         Utb[c] += u * b;
         btb[c] += b * b;

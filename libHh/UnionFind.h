@@ -19,7 +19,7 @@ template <typename T> class UnionFind {
   void promote(T e);             // ensure that e becomes the label for its equivalence class
  private:
   // Default operator=() and copy constructor are safe.
-  mutable Map<T, T> _m;
+  mutable Map<T, T> _m;  // Mutable because "equal(e1, e2)" can perform path compression.
   T irep(T e, bool& present) const;
 };
 

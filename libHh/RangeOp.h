@@ -483,12 +483,12 @@ int compare(const Range1& range1, const Range2& range2, const Iterator& toleranc
 // Check if a container contains an element.
 template <typename Range, typename = enable_if_range_t<Range>>
 bool contains(const Range& range, const range_value_t<Range>& elem) {
-  for (const range_value_t<Range>& e : range)
+  for (const auto& e : range)
     if (e == elem) return true;
   return false;
 }
 
-// For any container Range (e.g. Vec, Array, PArray, Grid, SGrid) supporting map(Range&, [](const T&) -> T)
+// For any container Range (e.g. Vec, Array, PArray, Grid, SGrid) supporting map(Range&, [](const T&) -> T):
 
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2)) == V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.

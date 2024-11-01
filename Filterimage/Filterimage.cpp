@@ -168,8 +168,7 @@ inline void assign_vertex(GMesh& mesh, MatrixView<Vertex> verts, const Vec2<int>
       yx2[0] = image.ysize() - 1 - yx[0];
     }
     mesh.set_point(v, p);
-    const float scalergb = 1.f / 255.f;
-    Vector vrgb = Vector(image[yx2][0], image[yx2][1], image[yx2][2]) * scalergb;
+    Vector vrgb = convert<float>(image[yx2].head<3>()) / 255.f;
     string str;
     mesh.update_string(v, "rgb", csform(str, "(%.3f %.3f %.3f)", vrgb[0], vrgb[1], vrgb[2]));
   }
@@ -1045,7 +1044,7 @@ void do_hue() {
   parallel_for_coords({50}, image.dims(), [&](const Vec2<int>& yx) {
     Vec3<float> af;
     for_int(z, 3) af[z] = pow(image[yx][z] + 0.5f, gamma);
-    float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
+    float gray = dot(af, V(.30f, .59f, .11f));
     for_int(z, 3) af[z] = af[z] * pow(128.f, gamma) / gray;
     for_int(z, 3) image[yx][z] = clamp_to_uint8(int(pow(af[z], 1.f / gamma) + .5f));
   });
@@ -2318,8 +2317,8 @@ void do_procedure(Args& args) {
       Point np = pcenter + r * Vector(std::cos(a), std::sin(a), 0.f);
       mesh.set_point(v, np);
       mesh.update_string(v, "Opos", csform_vec(str, p));
-      Vector vrgb = Vector(image[yx][0], image[yx][1], image[yx][2]) / 255.f;
-      // Vector nvrgb = Vector(image2[yx][0], image2[yx][1], image2[yx][2]) / 255.f;
+      Vector vrgb = convert<float>(image[yx].head<3>()) / 255.f;
+      // Vector nvrgb = convert<float>(image2[yx].head<3>()) / 255.f;
       Vector4 vec4 = sample_domain(image2v, V(np[1], np[0]), filterbs);
       vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
       Vector nvrgb(vec4[0], vec4[1], vec4[2]);
@@ -2764,7 +2763,7 @@ void do_compare(Args& args) {
 // *** Pyramid  (see also Pyramid.cpp)
 
 // Color-space conversion of a single pixel (each channel in range [0.f, 255.f]).
-inline Vector4 RGB_to_LAB(const Vector4& pv) {
+inline Vector4 LAB_from_RGB(const Vector4& pv) {
   Vector4 v = pv;
   const float eps = 0.008856f;
   const float k = 903.3f;
@@ -2793,7 +2792,7 @@ inline Vector4 RGB_to_LAB(const Vector4& pv) {
 }
 
 // Color-space conversion of a single pixel (each channel in range [0.f, 255.f]).
-inline Vector4 LAB_to_RGB(const Vector4& pv) {
+inline Vector4 RGB_from_LAB(const Vector4& pv) {
   Vector4 v = pv;
   float Y = (v[0] + 16.f) / 116.f;
   float X = (v[1] / 500.f) + Y;
@@ -2826,16 +2825,16 @@ inline Vector4 LAB_to_RGB(const Vector4& pv) {
 }
 
 // Color-space conversion of an image.
-auto convert_to_LAB(CMatrixView<Vector4> mat_RGB) {
+auto LAB_from_RGB(CMatrixView<Vector4> mat_RGB) {
   Matrix<Vector4> mat_LAB(mat_RGB.dims());
-  parallel_for_coords({50}, mat_RGB.dims(), [&](const Vec2<int>& yx) { mat_LAB[yx] = RGB_to_LAB(mat_RGB[yx]); });
+  parallel_for_coords({50}, mat_RGB.dims(), [&](const Vec2<int>& yx) { mat_LAB[yx] = LAB_from_RGB(mat_RGB[yx]); });
   return mat_LAB;
 }
 
 // Color-space conversion of an image.
-auto convert_to_RGB(CMatrixView<Vector4> mat_LAB) {
+auto RGB_from_LAB(CMatrixView<Vector4> mat_LAB) {
   Matrix<Vector4> mat_RGB(mat_LAB.dims());
-  parallel_for_coords({50}, mat_LAB.dims(), [&](const Vec2<int>& yx) { mat_RGB[yx] = LAB_to_RGB(mat_LAB[yx]); });
+  parallel_for_coords({50}, mat_LAB.dims(), [&](const Vec2<int>& yx) { mat_RGB[yx] = RGB_from_LAB(mat_LAB[yx]); });
   return mat_RGB;
 }
 
@@ -2954,8 +2953,8 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
   const int window_radius = (window_diam - 1) / 2;
   // Convert both the color image and the structure image from RGB space to LAB space.
   assertw(use_lab);
-  Matrix<Vector4> mat_s(use_lab ? convert_to_LAB(mat_s0) : mat_s0);
-  Matrix<Vector4> mat_c(use_lab ? convert_to_LAB(mat_c0) : mat_c0);
+  Matrix<Vector4> mat_s(use_lab ? LAB_from_RGB(mat_s0) : mat_s0);
+  Matrix<Vector4> mat_c(use_lab ? LAB_from_RGB(mat_c0) : mat_c0);
   static const float zscore_scale = getenv_float("ZSCORE_SCALE", 1.f, true);
   mat_out.init(mat_s.dims());
   mat_zscore.init(mat_s.dims());
@@ -3031,7 +3030,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
       mat_zscore[y][x] = zscore * (255.0f / 6.0f);
     }
   });
-  if (use_lab) mat_out = convert_to_RGB(mat_out);
+  if (use_lab) mat_out = RGB_from_LAB(mat_out);
 }
 
 struct ValueWeight {
@@ -3047,8 +3046,8 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   const int window_diam = fwindow.num();
   const int window_radius = (window_diam - 1) / 2;
   // Convert both the color image and the structure image from RGB space to LAB space.
-  Matrix<Vector4> mat_s(use_lab ? convert_to_LAB(mat_s0) : mat_s0);
-  Matrix<Vector4> mat_c(use_lab ? convert_to_LAB(mat_c0) : mat_c0);
+  Matrix<Vector4> mat_s(use_lab ? LAB_from_RGB(mat_s0) : mat_s0);
+  Matrix<Vector4> mat_c(use_lab ? LAB_from_RGB(mat_c0) : mat_c0);
   Array<ValueWeight> ar(square(window_diam));
   mat_out.init(mat_s.dims());
   mat_zscore.init(mat_s.dims());
@@ -3080,7 +3079,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
       mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
     });
   }
-  if (use_lab) mat_out = convert_to_RGB(mat_out);
+  if (use_lab) mat_out = RGB_from_LAB(mat_out);
 }
 
 void structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4>& mat_c, Matrix<Vector4>& mat_out,

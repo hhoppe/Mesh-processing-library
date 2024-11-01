@@ -4,7 +4,7 @@
 #include <mutex>  // once_flag, call_once()
 
 #include "libHh/Array.h"
-#include "libHh/Facedistance.h"  // lb_dist_point_triangle(), project_point_triangle2()
+#include "libHh/Facedistance.h"
 #include "libHh/GeomOp.h"
 #include "libHh/MathOp.h"  // Trig
 #include "libHh/Polygon.h"
@@ -257,29 +257,23 @@ float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e) {
   }
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  Polygon poly;
   Array<Vector> ar_normals;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (f == f1 || f == f2) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      ar_normals.push(poly.get_normal_dir());
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      ar_normals.push(get_normal_dir(triangle));
     }
   }
   Point newp = interp(mesh.point(v1), mesh.point(v2));
-  Array<Vertex> va;
   int nnor = 0;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (f == f1 || f == f2) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      mesh.get_vertices(f, va);
-      for_int(i, 3) {
-        if (va[i] == v1 || va[i] == v2) poly[i] = newp;
-      }
-      if (dot(ar_normals[nnor], poly.get_normal_dir()) < 0) return BIGFLOAT;  // flipped normal
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      Vec3<Point> triangle = mesh.triangle_points(f);
+      for_int(i, 3) if (va[i] == v1 || va[i] == v2) triangle[i] = newp;
+      if (dot(ar_normals[nnor], get_normal_dir(triangle)) < 0.f) return BIGFLOAT;  // Flipped normal.
       nnor++;
     }
   }
@@ -291,34 +285,28 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
   if (mesh.is_boundary(v1) || mesh.is_boundary(v2)) return BIGFLOAT;
-  Polygon poly;
   Array<Vector> ar_normals;
   float vol_b = 0.f;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      vol_b += dot(cross(to_Vector(poly[0]), to_Vector(poly[1])), to_Vector(poly[2]));
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      vol_b += dot<float>(cross(triangle[0], triangle[1]), triangle[2]);
       if (f == f1 || f == f2) continue;
-      ar_normals.push(poly.get_normal_dir());
+      ar_normals.push(get_normal_dir(triangle));
     }
   }
   Point newp = interp(mesh.point(v1), mesh.point(v2));
-  Array<Vertex> va;
   int nnor = 0;
   float vol_a = 0.f;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (f == f1 || f == f2) continue;
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      mesh.get_vertices(f, va);
-      for_int(i, 3) {
-        if (va[i] == v1 || va[i] == v2) poly[i] = newp;
-      }
-      vol_a += dot(cross(to_Vector(poly[0]), to_Vector(poly[1])), to_Vector(poly[2]));
-      if (dot(ar_normals[nnor], poly.get_normal_dir()) < 0.f) return BIGFLOAT;  // flipped normal
+      const Vec3<Vertex> va = mesh.triangle_vertices(f);
+      Vec3<Point> triangle = mesh.triangle_points(f);
+      for_int(i, 3) if (va[i] == v1 || va[i] == v2) triangle[i] = newp;
+      vol_a += dot<float>(cross(triangle[0], triangle[1]), triangle[2]);
+      if (dot(ar_normals[nnor], get_normal_dir(triangle)) < 0.f) return BIGFLOAT;  // flipped normal
       nnor++;
     }
   }
@@ -339,8 +327,8 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
       if (v == v2 && (f == f1 || f == f2)) continue;
       const Vec3<Point> triangle = mesh.triangle_points(f);
       Vector normal = ok_normalized(cross(triangle[0], triangle[1], triangle[2]));
-      float d = -pvdot(triangle[0], normal);
-      qem += square(pvdot(newp, normal) + d);
+      float d = -dot(triangle[0], normal);
+      qem += square(dot(newp, normal) + d);
       if (f == f1 || f == f2) continue;
       ar_normals.push(normal);
     }
@@ -560,7 +548,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
     // It once seemed that "double" was needed below to overcome an apparent problem with poorly computed surface
     // normals.  However, the problem lay in the geometry. Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
     // EType::angle still seems like a good scheme.
-    Polygon& poly = _tmp_poly;
+    Polygon poly;
     switch (nortype) {
       case EType::angle:
         for_int(i, af.num()) {
@@ -700,13 +688,12 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;
   const float bnearedge = .08f;
   Set<Face> setfvis;
-  Polygon poly;
-  mesh.polygon(pf, poly);
-  Bary minbary;
-  float mind2 = project_point_triangle2(p, poly[0], poly[1], poly[2], minbary, ret_clp);
-  float nearestedge = min(min(minbary[0], minbary[1]), minbary[2]);
-  ASSERTX(nearestedge >= 0 && nearestedge < .34f);  // optional
-  bool nearedge = nearestedge < bnearedge;
+  const Vec3<Point> triangle1 = mesh.triangle_points(pf);
+  auto [mind2, minbary, clp1] = project_point_triangle(p, triangle1);
+  ret_clp = clp1;
+  float nearest_edge = min(minbary);
+  ASSERTX(nearest_edge >= 0.f && nearest_edge < .34f);  // optional
+  bool nearedge = nearest_edge < bnearedge;
   bool projquick = pfsmooth && !nearedge;
   HH_SSTAT(Sprojquick, projquick);
   if (projquick) {
@@ -734,8 +721,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
     Array<S> ar;
     ar.reserve(setf.num());
     for (Face f : setf) {
-      mesh.polygon(f, poly);
-      float d2 = square(lb_dist_point_triangle(p, poly[0], poly[1], poly[2]));
+      const Vec3<Point> triangle2 = mesh.triangle_points(f);
+      const float d2 = square(lb_dist_point_triangle(p, triangle2));
       ar.push(S{f, d2});
     }
     nvis += ar.num();
@@ -744,10 +731,8 @@ float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& re
     for (const auto& pa : ar) {
       if (pa.d2 >= mind2) break;
       Face f = pa.f;
-      mesh.polygon(f, poly);
-      Bary bary;
-      Point clp;
-      float d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary, clp);
+      const Vec3<Point> triangle2 = mesh.triangle_points(f);
+      const auto [d2, bary, clp] = project_point_triangle(p, triangle2);
       if (d2 >= mind2) continue;
       pf = f;
       mind2 = d2;

@@ -9,8 +9,8 @@
 
 #if 0
 {
-  Vec3<float> ang = frame_to_euler_angles(f);
-  euler_angles_to_frame(ang, f);
+  Vec3<float> ang = euler_angles_from_frame(f);
+  Frame f = frame_from_euler_angles(ang, f);
 }
 #endif
 
@@ -47,10 +47,10 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 // *** Frames and Euler angles
 
 // Compute Euler angles of f.
-Vec3<float> frame_to_euler_angles(const Frame& f);
+Vec3<float> euler_angles_from_frame(const Frame& f);
 
-// Modify f by setting v[0..2] according to Euler angles.  f.p() is unchanged.
-void euler_angles_to_frame(const Vec3<float>& ang, Frame& f);
+// Modify f by setting v[0..2] according to Euler angles, keeping origin and axes scaling of prev_frame.
+[[nodiscard]] Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame);
 
 // Modify f so that its x axis points towards p and its y axis is vertical;
 // f.p() is ignored and unchanged.
@@ -63,7 +63,7 @@ Frame make_level(const Frame& f);
 Frame make_horiz(const Frame& f);
 
 // Affinely broaden the triangle (in all directions) by the factor 1.f + eps * .5f .
-void widen_triangle(ArrayView<Point> poly, float eps);
+[[nodiscard]] Vec3<Point> widen_triangle(const Vec3<Point>& triangle, float eps);
 
 // *** Intersections
 

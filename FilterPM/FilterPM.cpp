@@ -1387,7 +1387,7 @@ void do_polystream() {
   nooutput = true;
 }
 
-Point convert_to_sph(const Uv& uv) {
+Point sph_from_lonlat(const Uv& uv) {
   assertx(uv[0] >= 0.f && uv[0] <= 1.f);
   assertx(uv[1] >= 0.f && uv[1] <= 1.f);
   float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2.
@@ -1422,7 +1422,7 @@ void do_uvsphtopos() {
   for_int(w, pmi->_wedges.num()) {
     assertx(pmi->_wedges[w].vertex == w);
     const Uv& uv = pmi->_wedges[w].attrib.uv;
-    Point sph = convert_to_sph(uv);
+    Point sph = sph_from_lonlat(uv);
     sphpoints[w] = sph;
   }
   AWMesh& bmesh = pmesh._base_mesh;

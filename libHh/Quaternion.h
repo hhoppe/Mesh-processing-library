@@ -80,7 +80,8 @@ std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
 // Frame origin f.p() is ignored
 inline Quaternion::Quaternion(const Frame& f) {
-  float tr = f[0][0] + f[1][1] + f[2][2], s;
+  const float tr = f[0][0] + f[1][1] + f[2][2];
+  float s;
   if (tr > 0) {
     s = my_sqrt(tr + 1.f);
     _c[3] = s * .5f;
@@ -126,11 +127,11 @@ inline void Quaternion::angle_axis(float& angle, Vector& axis) const {
   // angle = my_acos(_c[3]) * 2.f;
   // float a = std::sin(angle * .5f);
   // a = a ? 1.f / a : 1.f;
-  // axis = Vector(_c[0] * a, _c[1] * a, _c[2] * a);
-  float xyz = sqrt(square(_c[0]) + square(_c[1]) + square(_c[2]));
+  // axis = _c.head<3>() * a;
+  const float xyz = mag(_c.head<3>());
   angle = my_asin(xyz) * 2.f;
-  float a = xyz ? 1.f / xyz : 1.f;
-  axis = Vector(_c[0] * a, _c[1] * a, _c[2] * a);
+  const float a = xyz ? 1.f / xyz : 1.f;
+  axis = _c.head<3>() * a;
 }
 
 inline float Quaternion::angle() const {
@@ -138,7 +139,7 @@ inline float Quaternion::angle() const {
   if (0) {
     return my_acos(_c[3]) * 2.f;
   } else {
-    float xyz = sqrt(square(_c[0]) + square(_c[1]) + square(_c[2]));
+    const float xyz = mag(_c.head<3>());
     return my_asin(xyz) * 2.f;
   }
 }
@@ -147,9 +148,9 @@ inline Vector Quaternion::axis() const {
   ASSERTXX(is_unit());
   // float a = my_sqrt(1.f - _c[3] * _c[3]);  // == std::sin(angle() * .5)
   // a = a ? 1.f / a : 1.f;
-  float xyz = sqrt(square(_c[0]) + square(_c[1]) + square(_c[2]));
+  float xyz = mag(_c.head<3>());
   float a = xyz ? 1.f / xyz : 1.f;
-  return Vector(_c[0] * a, _c[1] * a, _c[2] * a);
+  return _c.head<3>() * a;
 }
 
 // Frame origin is set to zero!
@@ -176,11 +177,10 @@ inline bool Quaternion::is_unit() const { return abs(mag2(*this) - 1.f) <= 1e-6f
 
 inline Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
   ASSERTXX(q1.is_unit() && q2.is_unit());
-  Quaternion q;
-  q[3] = q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2];
-  q[0] = q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1];
-  q[1] = q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2];
-  q[2] = q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0];
+  Quaternion q(q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1],
+               q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2],
+               q1[3] * q2[2] + q1[2] * q2[3] + q1[0] * q2[1] - q1[1] * q2[0],
+               q1[3] * q2[3] - q1[0] * q2[0] - q1[1] * q2[1] - q1[2] * q2[2]);
   q.normalize();
   return q;
 }
@@ -207,13 +207,13 @@ inline Quaternion pow(const Quaternion& qi, float e) {
   } else {
     // 2007-06-15 much more numerically stable
     // The important case is small angles, for which all the precision is in qi[0..2].
-    float xyzo = sqrt(square(qi[0]) + square(qi[1]) + square(qi[2]));
+    float xyzo = mag(qi._c.head<3>());
     float ango = my_asin(xyzo) * 2.f;
     float angn = ango * e;
     float xyzn = std::sin(angn * .5f);
     float a = xyzo ? xyzn / xyzo : 1.f;
     for_int(i, 3) q[i] = qi[i] * a;
-    q[3] = my_sqrt(1.f - (square(q[0]) + square(q[1]) + square(q[2])));
+    q[3] = my_sqrt(1.f - mag2(q._c.head<3>()));
   }
   return q;
 }
@@ -222,26 +222,25 @@ inline Frame pow(const Frame& fi, float v) {
   Frame f;
   Point tra = fi.p();
   f = to_Frame(pow(Quaternion(fi), v));
-  f.p() = Point(tra[0] * v, tra[1] * v, tra[2] * v);
+  f.p() = tra * v;
   return f;
 }
 
 inline Vector log(const Quaternion& qi) {
-  Vector v;
   ASSERTXX(qi.is_unit());
-  float scale = sqrt(square(qi[0]) + square(qi[1]) + square(qi[2]));
+  float scale = mag(qi._c.head<3>());
   assertx(scale || qi[3]);
-  float theta = std::atan2(scale, qi[3]);
-  if (scale > 0) scale = theta / scale;
-  for_int(i, 3) v[i] = qi[i] * scale;
+  const float theta = std::atan2(scale, qi[3]);
+  if (scale > 0.f) scale = theta / scale;
+  const Vector v = qi._c.head<3>() * scale;
   return v;
 }
 
 inline Quaternion exp(const Vector& v) {
   Quaternion q;
-  float theta = sqrt(square(v[0]) + square(v[1]) + square(v[2]));
-  float scale = theta > 1e-6f ? std::sin(theta) / theta : 1;
-  for_int(i, 3) q[i] = v[i] * scale;
+  const float theta = mag(v);
+  const float scale = theta > 1e-6f ? std::sin(theta) / theta : 1.f;
+  q._c.head<3>() = v * scale;
   q[3] = std::cos(theta);
   return q;
 }

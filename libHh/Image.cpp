@@ -171,7 +171,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     for_int(y, frame.ysize()) {
       for_int(x, frame.xsize()) {
         frame[y][x] =
-            YUV_to_RGB_Pixel(nv12v.get_Y()[y][x], nv12v.get_UV()[y / 2][x / 2][0], nv12v.get_UV()[y / 2][x / 2][1]);
+            RGB_Pixel_from_YUV(nv12v.get_Y()[y][x], nv12v.get_UV()[y / 2][x / 2][0], nv12v.get_UV()[y / 2][x / 2][1]);
       }
     }
   } else if (0) {
@@ -179,8 +179,8 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
       if (y % 2) buf_UV -= frame.xsize();  // reuse UV row on odd lines
       for_int(x, frame.xsize() / 2) {
         uint8_t u = buf_UV[0], v = buf_UV[1];
-        buf_P[0] = YUV_to_RGB_Pixel(buf_Y[0], u, v);  // OPT:YUV1
-        buf_P[1] = YUV_to_RGB_Pixel(buf_Y[1], u, v);
+        buf_P[0] = RGB_Pixel_from_YUV(buf_Y[0], u, v);  // OPT:YUV1
+        buf_P[1] = RGB_Pixel_from_YUV(buf_Y[1], u, v);
         buf_P += 2;
         buf_Y += 2;
         buf_UV += 2;
@@ -286,7 +286,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   // Tried other optimizations too.  Note that all the implementations take about the same elapsed time.
   if (0) {
     uint8_t* __restrict buf_Y = nv12v.get_Y().data();
-    for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = RGB_to_Y(frame[y][x]); }
+    for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = Y_from_RGB(frame[y][x]); }
     for_int(yb, frame.ysize() / 2) {
       int y = yb * 2;
       for_int(xb, frame.xsize() / 2) {
@@ -297,13 +297,13 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
           for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi][x + xi][z];
           avg[z] = uint8_t((sum + 2) / 4);
         }
-        *buf_UV++ = RGB_to_U(avg);
-        *buf_UV++ = RGB_to_V(avg);
+        *buf_UV++ = U_from_RGB(avg);
+        *buf_UV++ = V_from_RGB(avg);
       }
     }
   } else if (0) {
     uint8_t* __restrict buf_Y = nv12v.get_Y().data();
-    // for_size_t(i, frame.size()) { *buf_Y++ = RGB_to_Y(frame.flat(i)); }
+    // for_size_t(i, frame.size()) { *buf_Y++ = Y_from_RGB(frame.flat(i)); }
     {
       const uint8_t* p = frame.data()->data();
       assertx(reinterpret_cast<uintptr_t>(p) % 4 == 0);
@@ -327,8 +327,8 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
           for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi][x + xi][z];
           avg[z] = uint8_t((sum + 2) / 4);
         }
-        *buf_UV++ = RGB_to_U(avg);
-        *buf_UV++ = RGB_to_V(avg);
+        *buf_UV++ = U_from_RGB(avg);
+        *buf_UV++ = V_from_RGB(avg);
       }
     }
   } else if (1) {
@@ -390,8 +390,8 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         buf_y1 += 2;
         // Pixel avg((r00 + r01 + r10 + r11 + 2) / 4, (g00 + g01 + g10 + g11 + 2) / 4,
         //           (b00 + b01 + b10 + b11 + 2) / 4);
-        // buf_UV[0] = RGB_to_U(avg);
-        // buf_UV[1] = RGB_to_V(avg);
+        // buf_UV[0] = U_from_RGB(avg);
+        // buf_UV[1] = V_from_RGB(avg);
         int ravg = (r00 + r01 + r10 + r11 + 2) / 4, gavg = (g00 + g01 + g10 + g11 + 2) / 4,
             bavg = (b00 + b01 + b10 + b11 + 2) / 4;
         const auto enc_U = [](int r, int g, int b) {
@@ -414,9 +414,9 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
   float borderY;
   Vector4 borderUV;
   if (bordervalue) {
-    uint8_t borderYt = RGB_to_Y(*bordervalue);
+    uint8_t borderYt = Y_from_RGB(*bordervalue);
     convert(CGrid1View(borderYt), Grid1View(borderY));
-    Vec2<uint8_t> borderUVt = V(RGB_to_U(*bordervalue), RGB_to_V(*bordervalue));
+    Vec2<uint8_t> borderUVt = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
     convert(CGrid1View(borderUVt), Grid1View(borderUV));
   }
   {

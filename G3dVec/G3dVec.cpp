@@ -283,9 +283,9 @@ bool setup_ob(int i) {
   return true;
 }
 
-Point point_to_hlr_point(const Point& p) { return Point(p[0], .5f + p[1] * tzp1, .5f + p[2] * tzp2); }
+Point hlr_point_from_point(const Point& p) { return Point(p[0], .5f + p[1] * tzp1, .5f + p[2] * tzp2); }
 
-Point coord_to_hlr_point(const coord* c) { return point_to_hlr_point(c->pp); }
+Point hlr_point_from_coord(const coord* c) { return hlr_point_from_point(c->pp); }
 
 void transf2(coord* c) {
   const Point& pt = c->pt;
@@ -371,16 +371,14 @@ bool clip2(coord* c, const coord* c2) {
 }
 
 inline bool is_cull(const Point& wp, const Vector& nor) {
-  // float a = dot(wp-conor, nor);
-  const Point& con = conor;
-  float a = ((wp[0] - con[0]) * nor[0] + (wp[1] - con[1]) * nor[1] + (wp[2] - con[2]) * nor[2]);
-  return reverse_cull ? (a < 0) : (a > 0);
+  const float a = dot(wp - conor, nor);
+  return reverse_cull ? (a < 0.f) : (a > 0.f);
 }
 
 void draw_point(coord* c) {
   transf(c);
   if (c->ccode) return;
-  if (lhlrmode && !hlr.draw_point(coord_to_hlr_point(c))) return;
+  if (lhlrmode && !hlr.draw_point(hlr_point_from_coord(c))) return;
   float c1s0 = center_yx[1] + c->pp[1] * tzs1;  // no need for + .5f because center_yx already centered
   float c1s1 = center_yx[0] + c->pp[2] * tzs2;
   hw.draw_point(V(c1s1, c1s0));
@@ -443,7 +441,7 @@ void slow_draw_seg(coord* c1, coord* c2) {
     }
   }
   if (lhlrmode) {
-    hlr.draw_segment(coord_to_hlr_point(c1), coord_to_hlr_point(c2));
+    hlr.draw_segment(hlr_point_from_coord(c1), hlr_point_from_coord(c2));
     return;
   }
   if (fisheye) {
@@ -589,11 +587,9 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
   }
   for (auto& p : poly) {
     if (!assertw(p[0] > 0)) return;
-    float a = 1.f / p[0];
-    p[0] = -a;
-    p[1] = p[1] * a;
-    p[2] = p[2] * a;
-    p = point_to_hlr_point(p);
+    const float a = 1.f / p[0];
+    const Point pp(-a, p[1] * a, p[2] * a);
+    p = hlr_point_from_point(pp);
   }
   // Note: polygons that are within hither/yonder are not clipped to
   // sides of screen -> so they may extend outside (0..1) range.
@@ -1189,12 +1185,12 @@ string HB::show_info() {
                           : ' ');
 }
 
-std::pair<float, std::optional<Vec2<float>>> HB::world_to_vdc(const Point& pi) {
-  std::pair<float, std::optional<Vec2<float>>> pair;
+HB::VdcResult HB::vdc_from_world(const Point& pi) {
+  HB::VdcResult result;
   Point p = pi * tcami;
-  pair.first = p[0];
-  if (p[0] >= hither) pair.second = V(.5f - p[1] / p[0] * tzp1, .5f - p[2] / p[0] * tzp2);
-  return pair;
+  result.zs = p[0];
+  if (p[0] >= hither) result.xys = V(.5f - p[1] / p[0] * tzp1, .5f - p[2] / p[0] * tzp2);
+  return result;
 }
 
 void HB::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {

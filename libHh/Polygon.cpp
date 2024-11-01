@@ -24,7 +24,7 @@ Vector Polygon::get_normal() const { return ok_normalized(get_normal_dir()); }
 float Polygon::get_planec(const Vector& pnor) const {
   assertx(num() >= 3);
   float sumd = 0.f;
-  for_int(i, num()) sumd += pvdot((*this)[i], pnor);
+  for_int(i, num()) sumd += dot((*this)[i], pnor);
   return sumd / num();
 }
 
@@ -32,7 +32,7 @@ float Polygon::get_tolerance(const Vector& pnor, float d) const {
   assertx(num() >= 3);
   float tol = 0.f;
   for_int(i, num()) {
-    float od = abs(pvdot((*this)[i], pnor) - d);
+    float od = abs(dot((*this)[i], pnor) - d);
     if (od > tol) tol = od;
   }
   return tol;
@@ -105,8 +105,8 @@ std::optional<Point> Polygon::intersect_line(const Point& p, const Vector& v) co
   const Vector nor = get_normal();
   if (!assertw(!is_zero(nor))) return {};
   const float d = get_planec(nor);
-  const float numerator = d - nor[0] * p[0] - nor[1] * p[1] - nor[2] * p[2];
-  const float denominator = nor[0] * v[0] + nor[1] * v[1] + nor[2] * v[2];
+  const float numerator = d - dot(p, nor);
+  const float denominator = dot(nor, v);
   if (!denominator) return {};
   const float alpha = numerator / denominator;
   const Point pint = p + v * alpha;
@@ -117,8 +117,8 @@ std::optional<Point> Polygon::intersect_line(const Point& p, const Vector& v) co
 namespace {
 
 int cmp_inter(const Point& p1, const Point& p2, const Vector& vint) {
-  float a1 = pvdot(p1, vint);
-  float a2 = pvdot(p2, vint);
+  float a1 = dot(p1, vint);
+  float a2 = dot(p2, vint);
   return a1 < a2 ? -1 : a1 > a2 ? 1 : 0;
 }
 
@@ -139,7 +139,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
   const auto& self = *this;
   PArray<float, 8> sa(num());
   for_int(i, num()) {
-    float sc = pvdot(self[i], plane_normal) - plane_d;
+    float sc = dot(self[i], plane_normal) - plane_d;
     if (abs(sc) <= plane_tol) sc = 0.f;
     sa[i] = sc;
   }
@@ -276,8 +276,8 @@ std::ostream& operator<<(std::ostream& os, const Polygon& poly) {
 }
 
 std::optional<Point> intersect_plane_segment(const Vector& normal, float d, const Point& p1, const Point& p2) {
-  const float s1 = pvdot(p1, normal) - d;
-  const float s2 = pvdot(p2, normal) - d;
+  const float s1 = dot(p1, normal) - d;
+  const float s2 = dot(p2, normal) - d;
   if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};
   const float denominator = s2 - s1;
   // When the segment lies in the polygon plane, we report no intersection.  Is this reasonable?

@@ -1381,10 +1381,10 @@ void compute_looping_regions() {
               p1sum[c] += to_float(video(f, y0, x0)[c]);
               p1sum2[c] += square(to_float(video(f, y0, x0)[c]));  // again at same pixel [y0][x0]
             }
-            Vector vmul(p0sum[0] * p1sum[0], p0sum[1] * p1sum[1], p0sum[2] * p1sum[2]);
+            Vector vmul = p0sum * p1sum;
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
             for_int(z, 3) { HH_SSTAT(Stotz, vtot[z]); }
-            scost2 += vtot[0] + vtot[1] + vtot[2];
+            scost2 += sum<float>(vtot);
           }
           HH_SSTAT(Sscost2, scost2);
           image[y0 + y1][x0 + x1] = Pixel::gray(clamp_to_uint8(int(255.5f - scost2 * .01f)));

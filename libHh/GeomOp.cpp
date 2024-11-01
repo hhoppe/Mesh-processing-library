@@ -27,9 +27,9 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   // s = (a + b + c) / 2
   using Precision = double;
   Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  Precision s = (a + b + c) * .5;
+  Precision s = (a + b + c) * .5f;
   Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.) {
+  if (d2 <= 0.f) {
     Warning("inscribed_radius degenerate");
     return 0.f;
   }
@@ -188,20 +188,18 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2
 //      ?             ?             sin(p)cos(b)
 //      ?             ?             cos(p)cos(b)
 
-Vec3<float> frame_to_euler_angles(const Frame& f) {
-  Vec3<float> ang;
-  ang[0] = my_atan2(f[0][1], f[0][0]);
-  ang[1] = my_atan2(-f[0][2], std::hypot(f[0][0], f[0][1]));
-  ang[2] = my_atan2(f[1][2] / sqrt(square(f[1][0]) + square(f[1][1]) + square(f[1][2])),
-                    f[2][2] / sqrt(square(f[2][0]) + square(f[2][1]) + square(f[2][2])));
-  return ang;
+Vec3<float> euler_angles_from_frame(const Frame& f) {
+  return V(my_atan2(f[0][1], f[0][0]),                        //
+           my_atan2(-f[0][2], std::hypot(f[0][0], f[0][1])),  //
+           my_atan2(f[1][2] / mag(f[1]), f[2][2] / mag(f[2])));
 }
 
-void euler_angles_to_frame(const Vec3<float>& ang, Frame& f) {
-  Frame fr = Frame::identity();  // note: not modifying f but local temporary (to preserve f.p())
-  for_int(c, 3) fr[c][c] = mag(f.v(c));
-  for_int(c, 3) fr = fr * Frame::rotation(c, ang[2 - c]);  // world Z yaw, then world Y pitch, then world X roll
-  for_int(c, 3) f[c] = fr[c];
+Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
+  Frame fr = Frame::identity();  // Note: modifying local rather than prev_frame to preserve axes scale and origin.
+  for_int(c, 3) fr[c][c] = mag(prev_frame.v(c));
+  for_int(c, 3) fr = fr * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
+  fr.p() = prev_frame.p();
+  return fr;
 }
 
 void frame_aim_at(Frame& f, const Vector& v) {
@@ -209,7 +207,7 @@ void frame_aim_at(Frame& f, const Vector& v) {
   ang[0] = my_atan2(v[1], v[0]);
   ang[1] = my_atan2(-v[2], std::hypot(v[0], v[1]));
   ang[2] = 0.f;
-  euler_angles_to_frame(ang, f);
+  f = frame_from_euler_angles(ang, f);
 }
 
 Frame make_level(const Frame& f) {
@@ -218,9 +216,9 @@ Frame make_level(const Frame& f) {
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   if (world_zxy) fnew *= ~from_zxy;
-  Vec3<float> ang = frame_to_euler_angles(fnew);
+  Vec3<float> ang = euler_angles_from_frame(fnew);
   ang[2] = 0.f;
-  euler_angles_to_frame(ang, fnew);
+  fnew = frame_from_euler_angles(ang, fnew);
   if (world_zxy) {
     fnew *= from_zxy;
     fnew.p() = f.p();
@@ -234,10 +232,10 @@ Frame make_horiz(const Frame& f) {
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   if (world_zxy) fnew *= ~from_zxy;
-  Vec3<float> ang = frame_to_euler_angles(fnew);
+  Vec3<float> ang = euler_angles_from_frame(fnew);
   ang[1] = 0.f;
   ang[2] = 0.f;
-  euler_angles_to_frame(ang, fnew);
+  fnew = frame_from_euler_angles(ang, fnew);
   if (world_zxy) {
     fnew *= from_zxy;
     fnew.p() = f.p();
@@ -245,20 +243,16 @@ Frame make_horiz(const Frame& f) {
   return fnew;
 }
 
-void widen_triangle(ArrayView<Point> poly, float eps) {
-  assertx(poly.num() == 3);
-  const Point p0 = interp(poly[0], poly[1], poly[2], 1.f + eps, -eps * 0.5f);
-  const Point p1 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, 1.f + eps);
-  const Point p2 = interp(poly[0], poly[1], poly[2], -eps * 0.5f, -eps * 0.5f);
-  poly[0] = p0;
-  poly[1] = p1;
-  poly[2] = p2;
+Vec3<Point> widen_triangle(const Vec3<Point>& triangle, float eps) {
+  return V<Point>(interp(triangle, 1.f + eps, -eps * 0.5f),  //
+                  interp(triangle, -eps * 0.5f, 1.f + eps),  //
+                  interp(triangle, -eps * 0.5f, -eps * 0.5f));
 }
 
 // *** Intersections
 
 std::optional<Point> intersect_line_with_plane(const Line& line, const Plane& plane) {
-  const float numerator = plane.d - pvdot(line.point, plane.nor);
+  const float numerator = plane.d - dot(line.point, plane.nor);
   const float denominator = dot(plane.nor, line.vec);
   // When the line lies in the triangle plane, we report no intersection.  Is this reasonable?
   if (!denominator) return {};
@@ -268,8 +262,8 @@ std::optional<Point> intersect_line_with_plane(const Line& line, const Plane& pl
 }
 
 std::optional<Point> intersect_segment_with_plane(const Point& p1, const Point& p2, const Plane& plane) {
-  const float s1 = pvdot(p1, plane.nor) - plane.d;
-  const float s2 = pvdot(p2, plane.nor) - plane.d;
+  const float s1 = dot(p1, plane.nor) - plane.d;
+  const float s2 = dot(p2, plane.nor) - plane.d;
   if ((s1 < 0.f && s2 < 0.f) || (s1 > 0.f && s2 > 0.f)) return {};  // Equivalent to "s1 * s2 > 0.f"?
   const float denominator = s2 - s1;
   // When the segment lies in the plane, we report no intersection.  Is this reasonable?

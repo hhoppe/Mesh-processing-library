@@ -11,7 +11,7 @@
 #include "libHh/BinarySearch.h"
 #include "libHh/BoundingSphere.h"
 #include "libHh/ConsoleProgress.h"
-#include "libHh/Facedistance.h"  // project_point_triangle2(), project_point_seg2()
+#include "libHh/Facedistance.h"
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"  // dihedral_angle_cos()
@@ -693,18 +693,18 @@ void get_face_qem(Face f, BQemT& qem) {
     qem.set_distance_hh99(pa[0].data(), pa[1].data(), pa[2].data());
   }
   if (qemweight) {
-    float facearea = mag(cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2])));
+    float face_area = mag(cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2])));
     // Remember that QEM itself is squared on scale.  If weigh faces by area, then cost is O(scale^4).
-    facearea *= 1.f / square(frac_diam * gdiam);
-    qem.scale(facearea);
+    face_area *= 1.f / square(frac_diam * gdiam);
+    qem.scale(face_area);
   }
 }
 
 void get_sharp_edge_qem(Edge e, BQemT& qem) {
   Vector nor{};  // Average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
-    Vec3<Vertex> va = mesh.triangle_vertices(f);
-    Vector fnor = cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
+    Vec3<Point> triangle = mesh.triangle_points(f);
+    Vector fnor = get_normal_dir(triangle);
     assertw(fnor.normalize());
     nor += fnor;
   }
@@ -718,7 +718,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
   if (qemweight) nor *= (mesh.length(e) / (frac_diam * gdiam));
   // Weight qem on sharp edges by a factor of neptfac.
   nor *= sqrt_neptfac;
-  float d = -pvdot(mesh.point(mesh.vertex1(e)), nor);
+  float d = -dot(mesh.point(mesh.vertex1(e)), nor);
   Vec<float, k_qemsmax> enor;
   for_int(i, 3) enor[i] = nor[i];
   for_intL(i, 3, qems) enor[i] = 0.f;
@@ -1315,7 +1315,7 @@ void add_face_point(Face f, Bary bary, bool define_scalars) {
   fptinfo& fpt = fpts.last();
   fpt.cmf = f;
   const Vec3<Point> triangle = mesh.triangle_points(f);
-  fpt.p = interp(triangle[0], triangle[1], triangle[2], bary);
+  fpt.p = interp(triangle, bary);
   fpt.dist2 = 0.f;
   if (have_ccolors) {
     if (define_scalars) {
@@ -1501,7 +1501,7 @@ void sample_pts() {
           bary[mod3(i + 2)] = b;
         }
       }
-      assertx(abs(bary[0] + bary[1] + bary[2] - 1.f) < 1e-6f);
+      assertx(abs(sum<float>(bary) - 1.f) < 1e-6f);
       add_face_point(f, bary, define_scalars);
     }
     showff("Created %d points at vertices\n", mesh.num_vertices());
@@ -2359,10 +2359,8 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
       assertx(tmin_d2 != BIGFLOAT);
       ar_d2[tmin_i] = BIGFLOAT;
       nproj++;
-      Bary bary;
-      Point dummy_clp;
-      float d2 =
-          project_point_triangle2(p, mesh.point(nn.va[tmin_i]), mesh.point(nn.va[tmin_i + 1]), newp, bary, dummy_clp);
+      const auto [d2, bary, _] =
+          project_point_triangle(p, mesh.point(nn.va[tmin_i]), mesh.point(nn.va[tmin_i + 1]), newp);
       if (d2 < min_d2) {
         min_d2 = d2;
         min_i = tmin_i;
@@ -2396,14 +2394,12 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
     const eptinfo& ept = *nn.ar_epts[i];
     const Point& p = ept.p;
     int mini = nn.ar_eptv[i];
-    float min_bary;
-    float min_d2 = project_point_seg2(p, mesh.point(nn.va[mini]), newp, &min_bary);
+    auto [min_d2, min_bary, _] = project_point_segment(p, mesh.point(nn.va[mini]), newp);
     if (nn.ar_vdisc.num() == 2) {
       int ovi = other_creasevi(nn, mini);
-      float bary;
-      float d2 = project_point_seg2(p, mesh.point(nn.va[ovi]), newp, &bary);
+      const auto [d2, bary, unused_clp] = project_point_segment(p, mesh.point(nn.va[ovi]), newp);
       if (d2 < min_d2) {
-        // min_d2 = d2;
+        min_d2 = d2;  // Why was this commented??
         mini = ovi;
         min_bary = bary;
       }
@@ -2434,10 +2430,10 @@ double evaluate_geom(const NewMeshNei& nn, const Param& param, float spring, con
   for_int(i, nn.ar_epts.num()) {
     const eptinfo& ept = *nn.ar_epts[i];
     int mini = nn.ar_eptv[i];
-    float min_d2 = project_point_seg2(ept.p, mesh.point(nn.va[mini]), newp);
+    float min_d2 = project_point_segment(ept.p, mesh.point(nn.va[mini]), newp).d2;
     if (nn.ar_vdisc.num() == 2) {
       int ovi = other_creasevi(nn, mini);
-      float d2 = project_point_seg2(ept.p, mesh.point(nn.va[ovi]), newp);
+      const float d2 = project_point_segment(ept.p, mesh.point(nn.va[ovi]), newp).d2;
       if (d2 < min_d2) min_d2 = d2;
     }
     rss1 += min_d2;
@@ -2457,10 +2453,10 @@ double evaluate_maxerr(const NewMeshNei& nn, const Param& param, const Point& ne
   for_int(i, nn.ar_epts.num()) {
     const eptinfo& ept = *nn.ar_epts[i];
     int mini = nn.ar_eptv[i];
-    float min_d2 = project_point_seg2(ept.p, mesh.point(nn.va[mini]), newp);
+    float min_d2 = project_point_segment(ept.p, mesh.point(nn.va[mini]), newp).d2;
     if (nn.ar_vdisc.num() == 2) {
       int ovi = other_creasevi(nn, mini);
-      float d2 = project_point_seg2(ept.p, mesh.point(nn.va[ovi]), newp);
+      const float d2 = project_point_segment(ept.p, mesh.point(nn.va[ovi]), newp).d2;
       if (d2 < min_d2) min_d2 = d2;
     }
     rss1 = max(rss1, min_d2);
@@ -2909,9 +2905,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
         ar_d2[tmin_i] = BIGFLOAT;
         Face f = mesh.corner_face(nn.ar_corners[tmin_i][2]);
         const Vec3<Point> triangle = mesh.triangle_points(f);
-        Bary bary;
-        Point dummy_clp;
-        float d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], bary, dummy_clp);
+        const auto [d2, bary, _] = project_point_triangle(p, triangle);
         if (d2 < min_d2) {
           min_d2 = d2;
           min_f = f;
@@ -2922,20 +2916,19 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       fpt.dist2 = min_d2;
       if (have_ccolors && fpt.ptcol()[0] != k_undefined) {
         Vec3<Corner> ca = mesh.triangle_corners(min_f);
-        fpt.coldist2() =
-            dist2(interp(c_winfo(ca[0]).col, c_winfo(ca[1]).col, c_winfo(ca[2]).col, min_bary[0], min_bary[1]),
-                  Point(fpt.ptcol()));
+        const auto interp_color = interp(c_winfo(ca[0]).col, c_winfo(ca[1]).col, c_winfo(ca[2]).col, min_bary);
+        fpt.coldist2() = dist2(interp_color, Point(fpt.ptcol()));
       }
       if (have_cnormals && norfac && fpt.ptnor()[0] != k_undefined) {
         Vec3<Corner> ca = mesh.triangle_corners(min_f);
-        Vector nor = ok_normalized(
-            interp(c_winfo(ca[0]).nor, c_winfo(ca[1]).nor, c_winfo(ca[2]).nor, min_bary[0], min_bary[1]));
-        fpt.nordist2() = mag2(nor - fpt.ptnor());
+        const Vector interp_nor =
+            ok_normalized(interp(c_winfo(ca[0]).nor, c_winfo(ca[1]).nor, c_winfo(ca[2]).nor, min_bary));
+        fpt.nordist2() = mag2(interp_nor - fpt.ptnor());
       }
       point_change_face(&fpt, min_f);
       if (handle_residuals) {
         const Vec3<Point> triangle = mesh.triangle_points(min_f);
-        ar_resid.push((p - interp(triangle[0], triangle[1], triangle[2], min_bary)));
+        ar_resid.push((p - interp(triangle, min_bary)));
         const Line line{p, vnormal};
         float d2 = BIGFLOAT;
         if (const auto pint = intersect_line_with_triangle(line, triangle); pint) {
@@ -2949,7 +2942,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
             // (it should be 1.0 except for the last edge collapse which changes terrain to a triangle).
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
             // It must have been a numerical problem in intersect_line().
-            widen_triangle(triangle2, eps);
+            triangle2 = widen_triangle(triangle2, eps);
             if (const auto pint2 = intersect_line_with_triangle(line, triangle2); pint2) {
               d2 = dist2(p, *pint2);
               break;
@@ -2967,10 +2960,10 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       eptinfo& ept = *nn.ar_epts[i];
       const Point& p = ept.p;
       int mini = nn.ar_eptv[i];
-      float min_d2 = project_point_seg2(p, mesh.point(nn.va[mini]), newp);
+      float min_d2 = project_point_segment(p, mesh.point(nn.va[mini]), newp).d2;
       if (nn.ar_vdisc.num() == 2) {
         int ovi = other_creasevi(nn, mini);
-        float d2 = project_point_seg2(p, mesh.point(nn.va[ovi]), newp);
+        const float d2 = project_point_segment(p, mesh.point(nn.va[ovi]), newp).d2;
         if (d2 < min_d2) {
           min_d2 = d2;
           mini = ovi;
@@ -2982,9 +2975,8 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       // if (mesh.vertex2(e) != v1) min_bary = 1.f - min_bary;
       point_change_edge(&ept, e);
       if (handle_residuals) {
-        float cba;
-        project_point_seg2(p, mesh.point(nn.va[mini]), newp, &cba);
-        ar_resid.push((p - interp(mesh.point(nn.va[mini]), newp, cba)));
+        const Point clp = project_point_segment(p, mesh.point(nn.va[mini]), newp).clp;
+        ar_resid.push(p - clp);
         ar_normaldist2.push(BIGFLOAT);
       }
     }
@@ -3035,7 +3027,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
         }
         if (innerhull) normal = -normal;
         Point pold = poly[0];
-        Point pnew = to_Point(to_Vector(pold) * scale) + translate;
+        Point pnew = pold * scale + translate;
         if (1) {
           for_int(c, 3) {
             if (pnew[c] <= transf_border - 1e-4f || pnew[c] >= transf_border + transf_size + 1e-4f) assertnever("");
@@ -3048,7 +3040,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   if (1) {
     // See if (v1 + v2) / 2 satisfies the constraints.  (Useful in the case of complete planarity.)
     Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
-    Point pcandnew = to_Point(to_Vector(pcand) * scale) + translate;
+    Point pcandnew = pcand * scale + translate;
     const bool ok = all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
     if (ok) {
       Warning("Using midpoint as hull point");
@@ -3160,7 +3152,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
       }
     }
     if (good) {
-      newpoint = to_Point(to_Vector(pnew - translate) * (1.f / scale));
+      newpoint = (pnew - translate) / scale;
       ret = true;
     }
   }
@@ -3177,12 +3169,11 @@ float compute_volume_before(Edge e) {
   float vol = 0.f;
   Vertex v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  Polygon poly;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
-      mesh.polygon(f, poly);
-      vol += dot(cross(to_Vector(poly[0]), to_Vector(poly[1])), to_Vector(poly[2]));
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      vol += dot<float>(cross(triangle[0], triangle[1]), triangle[2]);
     }
   }
   return vol;
@@ -3190,9 +3181,7 @@ float compute_volume_before(Edge e) {
 
 float compute_volume_after(const NewMeshNei& nn, const Point& newp) {
   float vol = 0.f;
-  for_int(i, nn.va.num() - 1) {
-    vol += dot(cross(to_Vector(mesh.point(nn.va[i])), to_Vector(mesh.point(nn.va[i + 1]))), to_Vector(newp));
-  }
+  for_int(i, nn.va.num() - 1) vol += dot<float>(cross(mesh.point(nn.va[i]), mesh.point(nn.va[i + 1])), newp);
   return vol;
 }
 
@@ -3242,16 +3231,13 @@ int estimate_ii(Vertex v1, Vertex v2, const Point& newp) {
 void project_vnew_nn(Edge e, const Point& newp, Face& pcf, Bary& pbary, Point& pclp) {
   Vertex v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);  // Note that f2 could be nullptr.
-  Polygon poly;
   float min_d2 = BIGFLOAT;
   pcf = f1;  // Dummy assignment for clang-tidy.
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
-      mesh.polygon(f, poly);
-      Bary bary;
-      Point clp;
-      float d2 = project_point_triangle2(newp, poly[0], poly[1], poly[2], bary, clp);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      const auto [d2, bary, clp] = project_point_triangle(newp, triangle);
       if (d2 < min_d2) {
         min_d2 = d2;
         pcf = f;
@@ -3487,7 +3473,7 @@ double evaluate_aps(Edge e, int ii) {
       const Uv& p2 = c_winfo(mesh.corner(v2, ft)).uv;
       const Uv& pp = c_winfo(mesh.corner(vv, mesh.face(vv, v1))).uv;
       if (const auto result = intersect_segments(p1, p, p2, pp)) {
-        const auto& [intersection, t12, t34] = *result;
+        const auto [intersection, t12, t34] = *result;
         const Point pp1 = interp(pv, mesh.point(v1), t12), pp2 = interp(mesh.point(vv), mesh.point(v2), t34);
         max_mag2 = max(max_mag2, dist2<double>(pp1, pp2));
       }
@@ -3498,12 +3484,12 @@ double evaluate_aps(Edge e, int ii) {
 }
 
 // Return: is_legal.
-bool strict_mat_neighbors(Face fc, Face fnei0, Face fnei1, Face fnei2) {
+bool strict_mat_neighbors(Face fc, const Vec3<Face>& fnei) {
   assertx(fc);
   int matfc = f_matid(fc);
-  int matf0 = fnei0 ? f_matid(fnei0) : -1;
-  int matf1 = fnei1 ? f_matid(fnei1) : -1;
-  int matf2 = fnei2 ? f_matid(fnei2) : -1;
+  int matf0 = fnei[0] ? f_matid(fnei[0]) : -1;
+  int matf1 = fnei[1] ? f_matid(fnei[1]) : -1;
+  int matf2 = fnei[2] ? f_matid(fnei[2]) : -1;
   // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
   // so all is OK.
   if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) return true;
@@ -3841,10 +3827,9 @@ EcolResult try_ecol(Edge e, bool commit) {
           assertx(f_matid(fc) == f_matid(f));
           Vertex vvv = mesh.opp_vertex(mesh.edge(tv2, vv), fc);
           // Note: Face fc is (tv2, vv, vvv).
-          Face fnei0 = mesh.opp_face(fc, mesh.edge(tv2, vvv));
-          Face fnei1 = mesh.opp_face(fc, mesh.edge(vv, vvv));
-          Face fnei2 = mesh.opp_face(f, mesh.edge(tv1, vv));
-          if (!strict_mat_neighbors(fc, fnei0, fnei1, fnei2)) return false;  // From lambda.
+          const Vec3<Face> fnei = V(mesh.opp_face(fc, mesh.edge(tv2, vvv)), mesh.opp_face(fc, mesh.edge(vv, vvv)),
+                                    mesh.opp_face(f, mesh.edge(tv1, vv)));
+          if (!strict_mat_neighbors(fc, fnei)) return false;  // From lambda.
         }
         // Gather materials adjacent to v1.
         Set<int> v1mats;
@@ -3934,13 +3919,12 @@ EcolResult try_ecol(Edge e, bool commit) {
       LinearFunc lfvol(Vector(0.f, 0.f, 0.f), Point(0.f, 0.f, 0.f));
       bool lfvol_ok = true;
       if (fakeii == 3 && qemvolume) {
-        Polygon poly;
         for (Vertex v : mesh.vertices(e)) {
           for (Face f : mesh.faces(v)) {
             if (v == v2 && (f == f1 || f == f2)) continue;
-            mesh.polygon(f, poly);
-            Vector vc = cross(poly[0], poly[1], poly[2]);
-            LinearFunc lf1(vc, poly[0]);
+            const Vec3<Point> triangle = mesh.triangle_points(f);
+            const Vector vc = get_normal_dir(triangle);
+            LinearFunc lf1(vc, triangle[0]);
             lfvol.add(lf1);
           }
         }
@@ -4352,7 +4336,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // Note that fn[i] can be nullptr.
       }
       // Can occur if at corner of terrain grid && !terrain.
-      assertw(strict_mat_neighbors(f, fn[0], fn[1], fn[2]));
+      assertw(strict_mat_neighbors(f, fn));
     }
     for (Edge ee : mesh.edges(vs)) {
       int imat = f_matid(mesh.face1(ee));
@@ -4561,10 +4545,9 @@ void optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
   if (strict_sharp == 2) {
     for (Face f : mesh.faces()) {
-      Vec3<Face> fn;
-      int i = 0;
-      for (Vertex v : mesh.vertices(f)) fn[i++] = mesh.opp_face(v, f);  // Note that fn[i] can be nullptr.
-      if (strict_mat_neighbors(f, fn[0], fn[1], fn[2])) continue;
+      const Vec3<Face> fn = map(mesh.triangle_vertices(f), [&](Vertex v) { return mesh.opp_face(v, f); });
+      // Note that some fn[i] can be nullptr.
+      if (strict_mat_neighbors(f, fn)) continue;
       if (int(!fn[0]) + int(!fn[1]) + int(!fn[2]) >= 2) {
         // Can occur if at corner of terrain grid && !terrain.
         Warning("Valence 2 vertex on boundary will be degenerate");
@@ -4662,7 +4645,7 @@ void optimize() {
     float thresh_cost = expect_cost + (nexte_cost - expect_cost) * a_factor + 1e-20f;
     ntested++;
     {
-      const auto& [result, cost, unused_min_ii, unused_vs] = try_ecol(e, false);
+      const auto [result, cost, unused_min_ii, unused_vs] = try_ecol(e, false);
       if (verb >= 4)
         showdf("op, expect=%e got=%e thresh=%e %s\n",  //
                expect_cost, cost, thresh_cost,
@@ -4693,7 +4676,7 @@ void optimize() {
     }
     // COMMIT.
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    const auto& [result, unused_cost, unused_min_ii, vs] = try_ecol(e, true);
+    const auto [result, unused_cost, unused_min_ii, vs] = try_ecol(e, true);
     assertx(result == R_success);
     if (invertexorder) assertx(mesh.vertex_id(vs) <= mesh.num_vertices());
     // e = nullptr;  // Now undefined.
@@ -4795,13 +4778,10 @@ void do_fpclp(Args& args) {
   WSA3dStream oa3d(fi());
   perhaps_initialize();
   A3dElem el;
-  Polygon poly;
   for (const fptinfo& fpt : fpts) {
     if (!assertw(fpt.cmf)) continue;
-    mesh.polygon(fpt.cmf, poly);
-    Bary dummy_bary;
-    Point clp;
-    project_point_triangle2(fpt.p, poly[0], poly[1], poly[2], dummy_bary, clp);
+    const Vec3<Point> triangle = mesh.triangle_points(fpt.cmf);
+    const Point clp = project_point_triangle(fpt.p, triangle).clp;
     el.init(A3dElem::EType::polyline);
     el.push(A3dVertex(fpt.p, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     el.push(A3dVertex(clp, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
@@ -4819,9 +4799,8 @@ void do_epclp(Args& args) {
   A3dElem el;
   for (const eptinfo& ept : epts) {
     if (!ept.cme) continue;
-    float bary;
-    project_point_seg2(ept.p, mesh.point(mesh.vertex1(ept.cme)), mesh.point(mesh.vertex2(ept.cme)), &bary);
-    Point clp = interp(mesh.point(mesh.vertex1(ept.cme)), mesh.point(mesh.vertex2(ept.cme)), bary);
+    const Point clp =
+        project_point_segment(ept.p, mesh.point(mesh.vertex1(ept.cme)), mesh.point(mesh.vertex2(ept.cme))).clp;
     el.init(A3dElem::EType::polyline);
     el.push(A3dVertex(ept.p, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::green())));
     el.push(A3dVertex(clp, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::green())));

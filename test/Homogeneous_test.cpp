@@ -8,10 +8,10 @@ int main() {
     Vector v(1.f, 2.f, 3.f), w(1.f, 0.f, 1.f), x(0.f, 1.f, 0.f), y = x;
     SHOW(p, q, v, w, y);
     SHOW(Homogeneous(p) + Homogeneous(q));
-    SHOW(to_Point((p + p * 2.f + p) / 4.f));
-    SHOW(to_Point((p + p) / 2.f));
-    SHOW(to_Point((p * 2.f) / 2.f));
-    SHOW(to_Point((p + q) / 2.f));
+    SHOW(to_Point((Homogeneous(p) + Homogeneous(p) * 2.f + Homogeneous(p)) / 4.f));
+    SHOW(to_Point((Homogeneous(p) + Homogeneous(p)) / 2.f));
+    SHOW(to_Point((Homogeneous(p) * 2.f) / 2.f));
+    SHOW(to_Point((Homogeneous(p) + Homogeneous(q)) / 2.f));
   }
   {
     const Homogeneous h1(1.f, 2.f, 3.f, 4.f);

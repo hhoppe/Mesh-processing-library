@@ -749,7 +749,6 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
       mesh.get_vertices(gscmf[pi], va);
       assertx(va.num() == 3);
       const Bary& bary = gbary[pi];
-      double b0 = bary[0], b1 = bary[1], b2 = bary[2];
       Vec3<const Combvih*> cviha;
       for_int(c, 3) cviha[c] = &v_combvih(va[c]);
       Vec3<const float*> cvihcf;
@@ -757,10 +756,9 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
       Vec3<const float*> cvihhf;
       for_int(c, 3) cvihhf[c] = cviha[c]->h.data();
       Vec3<double> h;
-      h[0] = b0 * cvihhf[0][0] + b1 * cvihhf[1][0] + b2 * cvihhf[2][0];
-      h[1] = b0 * cvihhf[0][1] + b1 * cvihhf[1][1] + b2 * cvihhf[2][1];
-      h[2] = b0 * cvihhf[0][2] + b1 * cvihhf[1][2] + b2 * cvihhf[2][2];
-      for_int(j, n) lls.enter_a_rc(rowi, j, float(b0 * cvihcf[0][j] + b1 * cvihcf[1][j] + b2 * cvihcf[2][j]));
+      for_int(k, 3) h[k] = bary[0] * cvihhf[0][k] + bary[1] * cvihhf[1][k] + bary[2] * cvihhf[2][k];
+      for_int(j, n)
+          lls.enter_a_rc(rowi, j, float(bary[0] * cvihcf[0][j] + bary[1] * cvihcf[1][j] + bary[2] * cvihcf[2][j]));
       // Homogeneous hrh = Homogeneous(co[pi]) - h;
       Vector vrh;
       for_int(c, 3) vrh[c] = float(co[pi][c] - h[c]);
@@ -862,12 +860,10 @@ void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Se
     Vertex vg = v == v1l ? v1g : trvmm(v, lmesh, gmesh);
     gmesh.set_point(vg, lmesh.point(v));
   }
-  Array<Vertex> va;
   for (int pi : setpts) {
     const GMesh& mesh = smesh.mesh();
-    mesh.get_vertices(gscmf[pi], va);
-    assertx(va.num() == 3);
-    gdis2[pi] = dist_point_triangle2(co[pi], mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
+    Vec3<Point> triangle = mesh.triangle_points(gscmf[pi]);
+    gdis2[pi] = project_point_triangle(co[pi], triangle).d2;
     Face fl;
     int index;
     smesh.orig_face_index(gscmf[pi], fl, index);
@@ -1230,13 +1226,11 @@ void stoc_init() {
     global_all_project(smesh);
     // Build up global projection information
     const GMesh& mesh = smesh.mesh();
-    Array<Vertex> va;
     for_int(i, co.num()) {
       smesh.orig_face_index(gscmf[i], gcmf[i], gscmfi[i]);
       mfpts.get(gcmf[i]).enter(i);
-      mesh.get_vertices(gscmf[i], va);
-      assertx(va.num() == 3);
-      gdis2[i] = dist_point_triangle2(co[i], mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
+      const Vec3<Point> triangle = mesh.triangle_points(gscmf[i]);
+      gdis2[i] = project_point_triangle(co[i], triangle).d2;
     }
   }
   fill(op_stat, 0);

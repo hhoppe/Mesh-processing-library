@@ -51,7 +51,7 @@ auto compute_deltatime(CMatrixView<int> mat_period, int nnf) {
 auto compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime, CMatrixView<int> mat_start,
                     CMatrixView<int> mat_period) {
   Grid<3, short> grid_framei(dims);
-  int nnf = dims[0], ny = dims[1], nx = dims[2];
+  const int nnf = dims[0], ny = dims[1], nx = dims[2];
   Vec2<int> sdims = dims.tail<2>();
   assertx(sdims == mat_start.dims());
   assertx(sdims == mat_period.dims());
@@ -633,6 +633,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                          CVideoNv12View video_nv12, CMatrixView<int> mat_start, CMatrixView<int> mat_period, int nnf,
                          WVideo* pwvideo, GridView<3, Pixel> videoloop, VideoNv12View videoloop_nv12, int num_loops) {
   const int onf = odims[0], ny = odims[1], nx = odims[2];
+  // const auto [nf, ny, nx] = odims;  // C++20 allows it to be captured within the lambda function below.
   const Vec2<int> sdims(ny, nx);
   const Vec3<int> ndims(nnf, ny, nx);
   assertx(int(video_filename != "") + int(!!video.size()) + int(!!video_nv12.size()) == 1);
@@ -839,7 +840,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       Nv12 sframe;
       if (videoloop.size()) sframe.init(sdims);
       ConsoleProgress cprogress("Video assembly");
-      const Vector4i YUV_zero_offset(RGB_to_YUV_Vector4i(128, 128, 128));
+      const Vector4i YUV_zero_offset(YUV_Vector4i_from_RGB(128, 128, 128));
       // SHOW(YUV_zero_offset);  // Pixel(126, 128, 128, 255)
       const int DSh = DS / 2;
       assertx(DSh * 2 == DS);
@@ -853,7 +854,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               for_int(hx, hnx) {
                 int fi = get_framei(f * hmat_deltatime(hy, hx), hmat_start(hy, hx), hmat_period(hy, hx));
                 const Pixel& poff = hvideo_offset(f / DT, hy, hx);
-                Vector4i offset_YUV = RGB_to_YUV_Vector4i(poff[0], poff[1], poff[2]) - YUV_zero_offset;
+                Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
                 for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
                   nframe.get_Y()(y, x) = clamp_to_uint8(video_nv12.get_Y()(fi, y, x) + offset_YUV[0]);
                 }
@@ -873,7 +874,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               for_int(hx, hnx) {
                 int fi = get_framei(f * hmat_deltatimehy[hx], hmat_starthy[hx], hmat_periodhy[hx]);
                 const Pixel& poff = hvideo_offsethy[hx];
-                Vector4i offset_YUV = RGB_to_YUV_Vector4i(poff[0], poff[1], poff[2]) - YUV_zero_offset;
+                Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
                 auto video_nv12_Yfi = lvideo_nv12_Y[fi];
                 for_intL(y, hy * DS, hy * DS + DS) {
                   auto* nframeYy = nframe.get_Y()[y].data();
@@ -998,7 +999,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         }
       }
       Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : sframe);
-      const Vector4i YUV_zero_offset(RGB_to_YUV_Vector4i(128, 128, 128));
+      const Vector4i YUV_zero_offset(YUV_Vector4i_from_RGB(128, 128, 128));
       const int DSh = DS / 2;
       assertx(DS == 1 || DSh * 2 == DS);
       parallel_for_each(range(hny), [&](const int hy) {
@@ -1025,7 +1026,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
           MatrixView<uint8_t> nframeY = nframe.get_Y();
           MatrixView<Vec2<uint8_t>> nframeUV = nframe.get_UV();
           const CNv12View videofi(si < 0 ? static_frame : rvideoframes[si]);
-          const Vector4i offset_YUV = RGB_to_YUV_Vector4i(hpix[0], hpix[1], hpix[2]) - YUV_zero_offset;
+          const Vector4i offset_YUV = YUV_Vector4i_from_RGB(hpix[0], hpix[1], hpix[2]) - YUV_zero_offset;
           for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
             nframeY(y, x) = clamp_to_uint8(videofi.get_Y()(y, x) + offset_YUV[0]);  // OPT:reconY
           }
@@ -1204,7 +1205,7 @@ template <int dyh, int dxh> void integrally_downscale_Nv12_to_Image_aux(CNv12Vie
       }
       sumY = (sumY + Dyx2 / 2) / Dyx2;
       sumUV = (sumUV + Dyxh2 / 2) / Dyxh2;
-      nmatrixp(y, x) = YUV_to_RGB_Pixel(sumY, sumUV[0], sumUV[1]);
+      nmatrixp(y, x) = RGB_Pixel_from_YUV(sumY, sumUV[0], sumUV[1]);
     }
   });
 }
@@ -1246,7 +1247,7 @@ void integrally_downscale_Nv12_to_Image(CNv12View nv12, MatrixView<Pixel> nmatri
         }
         sumY = (sumY + Dyx2 / 2) / Dyx2;
         sumUV = (sumUV + Dyxh2 / 2) / Dyxh2;
-        nmatrixp(y, x) = YUV_to_RGB_Pixel(sumY, sumUV[0], sumUV[1]);
+        nmatrixp(y, x) = RGB_Pixel_from_YUV(sumY, sumUV[0], sumUV[1]);
       }
     });
   }

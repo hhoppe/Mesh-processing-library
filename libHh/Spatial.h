@@ -38,19 +38,19 @@ class Spatial : noncopyable {            // abstract class
   using Ind = Vec3<int>;
   int inbounds(int i) const { return i >= 0 && i < _gn; }
   int indices_inbounds(const Ind& ci) const { return inbounds(ci[0]) && inbounds(ci[1]) && inbounds(ci[2]); }
-  int float_to_index(float fd) const;
-  float index_to_float(int i) const { return i * _gni; }
-  Ind point_to_indices(const Point& p) const {
+  int index_from_float(float fd) const;
+  float float_from_index(int i) const { return i * _gni; }
+  Ind indices_from_point(const Point& p) const {
     Ind ci;
-    for_int(c, 3) ci[c] = float_to_index(p[c]);
+    for_int(c, 3) ci[c] = index_from_float(p[c]);
     return ci;
   }
-  Point indices_to_point(const Ind& ci) const {
+  Point point_from_indices(const Ind& ci) const {
     Point p;
-    for_int(c, 3) p[c] = index_to_float(ci[c]);
+    for_int(c, 3) p[c] = float_from_index(ci[c]);
     return p;
   }
-  Bbox<float, 3> indices_to_bbox(const Ind& ci) const;
+  Bbox<float, 3> bbox_of_indices(const Ind& ci) const;
   int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied here
   Ind decode(int en) const;
 
@@ -150,7 +150,7 @@ class BSpatialSearch : noncopyable {
   bool done();
   struct Result {
     Univ id;
-    float dis2;
+    float d2;  // Squared distance.
   };
   Result next();
 
@@ -183,17 +183,17 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
       : BSpatialSearch(pspatial, pp, pmaxdis) {}
   struct Result {
     T id;
-    float dis2;
+    float d2;  // Squared distance
   };
   Result next() {
-    const auto [id, dis2] = BSpatialSearch::next();
-    return {Conv<T>::d(id), dis2};
+    const auto [id, d2] = BSpatialSearch::next();
+    return {Conv<T>::d(id), d2};
   }
 };
 
 //----------------------------------------------------------------------------
 
-inline int Spatial::float_to_index(float fd) const {
+inline int Spatial::index_from_float(float fd) const {
   float f = fd;
   if (f < 0.f) {
     ASSERTX(f > -.01f);
@@ -206,8 +206,8 @@ inline int Spatial::float_to_index(float fd) const {
   return int(f * _gn);
 }
 
-inline Bbox<float, 3> Spatial::indices_to_bbox(const Ind& ci) const {
-  const Point bb0 = indices_to_point(ci);
+inline Bbox<float, 3> Spatial::bbox_of_indices(const Ind& ci) const {
+  const Point bb0 = point_from_indices(ci);
   const float eps = 1e-7f;
   return Bbox{bb0 - eps, bb0 + thrice(_gni + eps)};
 }
@@ -255,7 +255,7 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
   Set<int> set;
   Queue<int> queue;
   int ncubes = 0;
-  Ind ci = point_to_indices(startp);
+  Ind ci = indices_from_point(startp);
   assertx(indices_inbounds(ci));
   int enf = encode(ci);
   set.enter(enf);
@@ -263,7 +263,7 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
   while (!queue.empty()) {
     int en = queue.dequeue();
     ci = decode(en);
-    Bbox bbox = indices_to_bbox(ci);
+    Bbox bbox = bbox_of_indices(ci);
     const bool in_cell = fcontains(bbox);
     if (en == enf) assertx(in_cell);
     if (!in_cell) continue;
@@ -292,13 +292,13 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
     assertx(p2[c] >= 0.f && p2[c] <= 1.f);
   }
   float maxe = max_abs_element(p2 - p1);
-  int ni = float_to_index(maxe) + 2;  // 2 there just to be safe
+  int ni = index_from_float(maxe) + 2;  // Add 2 there just to be safe.
   Vector v = (p2 - p1) * ((1.f + 1e-7f) / float(ni));
   Point p = p1;
-  Ind pci = point_to_indices(p);
+  Ind pci = indices_from_point(p);
   int pen = -1;
   for (int i = 0;; i++) {
-    Ind cci = point_to_indices(p);
+    Ind cci = indices_from_point(p);
     ASSERTX(indices_inbounds(cci));
     Vec2<Ind> bi;
     for_int(c, 3) {

@@ -181,9 +181,9 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
     GMesh& mesh = *g_obs[obn].get_mesh();
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * g_obs[obn].t();
-      const auto [zs, xys] = HB::world_to_vdc(p);
+      const auto [zs, xys] = HB::vdc_from_world(p);
       if (xys) {
-        const auto& [xs, ys] = *xys;
+        const auto [xs, ys] = *xys;
         const float d = abs(xs - ps[0]) + abs(ys - ps[1]);
         if (d <= maxd && zs <= minz) {
           minz = zs;
@@ -211,8 +211,8 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
     for (Edge e : mesh.edges()) {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Point p1 = mesh.point(v1), p2 = mesh.point(v2);
-      const auto [zs1, xys1] = HB::world_to_vdc(p1 * t);
-      const auto [zs2, xys2] = HB::world_to_vdc(p2 * t);
+      const auto [zs1, xys1] = HB::vdc_from_world(p1 * t);
+      const auto [zs2, xys2] = HB::vdc_from_world(p2 * t);
       if (!xys1 || !xys2) continue;
       const auto xys = yx.rev();
       const Vec2<float> vd = ok_normalized(*xys2 - *xys1);
@@ -225,7 +225,7 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
         Polygon poly;
         mesh.polygon(f, poly);
         Point pn = p1 + poly.get_normal_dir();
-        const auto [zs, _] = HB::world_to_vdc(pn * t);
+        const auto [zs, _] = HB::vdc_from_world(pn * t);
         minzsn = min(minzsn, zs);
       }
       if (minzsn > zs1 && prune_backfacing) continue;
@@ -254,7 +254,7 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         Vec3<float> psz, areas;
         bool all_in = true;
         for_int(i, 3) {
-          auto [zs, xys] = HB::world_to_vdc(triangle[i] * t);
+          const auto [zs, xys] = HB::vdc_from_world(triangle[i] * t);
           if (xys) {
             psz[i] = zs;
             psa[i] = *xys;
@@ -266,7 +266,7 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         if (!all_in) continue;
         for_int(i, 3) areas[i] = determ2d(psa[mod3(i + 1)], psa[i], ps) * .5f;
         if (areas[0] < 0.f || areas[1] < 0.f || areas[2] < 0.f) continue;
-        float z = max({psz[0], psz[1], psz[2]});
+        float z = max(psz);
         if (z > minz) continue;
         minz = z;
         selected_face = {obn, &mesh, f};
@@ -279,8 +279,8 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
 void swap_edge() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
-    if (const auto& selected_edge = select_edge(yx)) {
-      const auto& [_, mesh, e, unused] = *selected_edge;
+    if (const auto selected_edge = select_edge(yx)) {
+      const auto [_, mesh, e, unused] = *selected_edge;
       if (mesh->legal_edge_swap(e)) {
         Edge enew = mesh->swap_edge(e);
         dummy_use(enew);
@@ -297,7 +297,7 @@ void split_edge() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_edge = select_edge(yx)) {
-      const auto& [_, mesh, e, inter] = *selected_edge;
+      const auto [_, mesh, e, inter] = *selected_edge;
       Vertex vnew = mesh->split_edge(e);
       mesh->set_point(vnew, inter);
       mesh->gflags().flag(mflag_ok) = false;
@@ -332,7 +332,7 @@ bool try_toggle_vertex() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_vertex = select_vertex(yx)) {
-      const auto& [_, mesh, v] = *selected_vertex;
+      const auto [_, mesh, v] = *selected_vertex;
       bool tagged = mesh->flags(v).flag(GMesh::vflag_cusp);
       showf("Setting vertex %d tag to %d\n", mesh->vertex_id(v), !tagged);
       mesh->flags(v).flag(GMesh::vflag_cusp) = !tagged;
@@ -348,7 +348,7 @@ bool try_toggle_edge() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_edge = select_edge(yx)) {
-      const auto& [_, mesh, e, unused] = *selected_edge;
+      const auto [_, mesh, e, unused] = *selected_edge;
       bool tagged = mesh->flags(e).flag(GMesh::eflag_sharp);
       showf("Setting edge (%d, %d) tag to %d\n",  //
             mesh->vertex_id(mesh->vertex1(e)), mesh->vertex_id(mesh->vertex2(e)), !tagged);
@@ -387,7 +387,7 @@ void untag_cut() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_edge = select_edge(yx)) {
-      const auto& [_, mesh, e, unused] = *selected_edge;
+      const auto [_, mesh, e, unused] = *selected_edge;
       if (mesh->flags(e).flag(GMesh::eflag_sharp)) {
         HB::redraw_later();
         untag(*mesh, e);
@@ -427,7 +427,7 @@ void destroy_face() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_face = select_face(yx)) {
-      const auto& [_, mesh, f] = *selected_face;
+      const auto [_, mesh, f] = *selected_face;
       mesh->destroy_face(f);
       mesh->gflags().flag(mflag_ok) = false;
       HB::redraw_later();
@@ -443,19 +443,19 @@ void print_info_mesh_elements() {
     SHOW("Retrieving info:");
     auto selected_vertex = select_vertex(yx);
     if (selected_vertex) {
-      const auto& [_, mesh, v] = *selected_vertex;
+      const auto [_, mesh, v] = *selected_vertex;
       SHOW(mesh->vertex_id(v), mesh->point(v), mesh->get_string(v));
     }
     auto selected_edge = select_edge(yx);
     if (selected_edge) {
-      const auto& [_, mesh, e, inter] = *selected_edge;
+      const auto [_, mesh, e, inter] = *selected_edge;
       const int v1 = mesh->vertex_id(mesh->vertex1(e));
       const int v2 = mesh->vertex_id(mesh->vertex2(e));
       SHOW("On edge", v1, v2, inter, mesh->get_string(e));
     }
     auto selected_face = select_face(yx);
     if (selected_face) {
-      const auto& [_, mesh, f] = *selected_face;
+      const auto [_, mesh, f] = *selected_face;
       SHOW(mesh->face_id(f), mesh->get_string(f));
     }
     if (selected_vertex && selected_face) {
@@ -489,7 +489,7 @@ void crop_mesh_to_view() {
     for (Face f : mesh.faces()) {
       bool all_out = true;
       for (Vertex v : mesh.vertices(f)) {
-        auto [zs, xys] = HB::world_to_vdc(mesh.point(v) * t);
+        const auto [zs, xys] = HB::vdc_from_world(mesh.point(v) * t);
         if (xys && (*xys)[0] >= 0.f && (*xys)[0] <= 1.f && (*xys)[1] >= 0.f && (*xys)[1] <= 1.f) {
           all_out = false;
           break;
@@ -548,7 +548,7 @@ void set_recpoint() {
       }
       return;
     }
-    const auto& [obn, mesh, f] = *selected_face;
+    const auto [obn, mesh, f] = *selected_face;
     assertx(g_obs[obn].visible());
     if (obn != cob) {
       cob = obn;

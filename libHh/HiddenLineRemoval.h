@@ -74,7 +74,7 @@ class HiddenLineRemoval {
       const HlrPolygon& hp = _polygons[pn];
       if (p[0] < hp.bbox[0][0]) return KD::ECallbackReturn::nothing;  // point in front of bbox of polygon
       const Polygon& poly = hp.poly;
-      float d = pvdot(p, hp.nor) - hp.d;
+      float d = dot(p, hp.nor) - hp.d;
       if (d <= hp.tol) return KD::ECallbackReturn::nothing;  // point in front of plane of polygon
       return point_in_polygon(p, poly) ? KD::ECallbackReturn::stop : KD::ECallbackReturn::nothing;
     };
@@ -136,29 +136,29 @@ class HiddenLineRemoval {
   //  else do not touch inputs and return false.
   static bool intersect_seg_side(HlrSegment& s, const Point& p0, const Point& p1, HlrSegment& news) {
     // Code adapted from Gems III p. 200 and p. 500.
-    float x1 = s.p[0][1], y1 = s.p[0][2], x2 = s.p[1][1], y2 = s.p[1][2];
-    float x3 = p0[1], y3 = p0[2], x4 = p1[1], y4 = p1[2];
-    float Ax = x2 - x1, Bx = x3 - x4, Ay = y2 - y1, By = y3 - y4;
-    float f = Ay * Bx - Ax * By;
+    const float x1 = s.p[0][1], y1 = s.p[0][2], x2 = s.p[1][1], y2 = s.p[1][2];
+    const float x3 = p0[1], y3 = p0[2], x4 = p1[1], y4 = p1[2];
+    const float Ax = x2 - x1, Bx = x3 - x4, Ay = y2 - y1, By = y3 - y4;
+    const float f = Ay * Bx - Ax * By;
     if (!f) return false;  // colinear segments
-    float Cx = x1 - x3;
-    float Cy = y1 - y3;
-    float d = By * Cx - Bx * Cy;
-    if (f > 0) {
-      if (d < 0 || d > f) return false;
+    const float Cx = x1 - x3;
+    const float Cy = y1 - y3;
+    const float d = By * Cx - Bx * Cy;
+    if (f > 0.f) {
+      if (d < 0.f || d > f) return false;
     } else {
-      if (d > 0 || d < f) return false;
+      if (d > 0.f || d < f) return false;
     }
-    float e = Ax * Cy - Ay * Cx;
+    const float e = Ax * Cy - Ay * Cx;
     if (f > 0) {
-      if (e < 0 || e > f) return false;
+      if (e < 0.f || e > f) return false;
     } else {
-      if (e > 0 || e < f) return false;
+      if (e > 0.f || e < f) return false;
     }
-    float g = d / f;
+    const float g = d / f;
     if (g < k_epsilon_a || g > 1.f - k_epsilon_a) return false;
-    float x5 = x1 + g * Ax, y5 = y1 + g * Ay;
-    Point newp(s.p[0][0] + g * (s.p[1][0] - s.p[0][0]), x5, y5);
+    const float x5 = x1 + g * Ax, y5 = y1 + g * Ay;
+    const Point newp(s.p[0][0] + g * (s.p[1][0] - s.p[0][0]), x5, y5);
     if (square(x1 - x5) + square(y1 - y5) < k_epsilon_b) return false;
     if (square(x2 - x5) + square(y2 - y5) < k_epsilon_b) return false;
     news.p[0] = newp;
@@ -175,13 +175,13 @@ class HiddenLineRemoval {
     int no = 0;  // number in subset of ni that are visible
     _gsa[0] = s;
     const Polygon& poly = hp.poly;
-    int pnum = poly.num();
+    const int pnum = poly.num();
     int il = pnum - 1;
     const Point& pt0 = poly[il];
     float y0 = pt0[1], z0 = pt0[2];
     for_int(i, pnum) {
       const Point& pt = poly[i];
-      float y1 = pt[1], z1 = pt[2];
+      const float y1 = pt[1], z1 = pt[2];
       float miy, may, miz, maz;
       if (y0 < y1) {
         miy = y0, may = y1;
@@ -193,11 +193,10 @@ class HiddenLineRemoval {
       } else {
         miz = z1, maz = z0;
       }
-      int tni = ni;
-      for_int(j, tni) {
+      for_int(j, ni) {
         const Point* sp = _gsa[j].p.data();
-        float sy0 = sp[0][1], sz0 = sp[0][2];
-        float sy1 = sp[1][1], sz1 = sp[1][2];
+        const float sy0 = sp[0][1], sz0 = sp[0][2];
+        const float sy1 = sp[1][1], sz1 = sp[1][2];
         if (sy0 < sy1) {
           if (sy0 > may || sy1 < miy) continue;
         } else {
@@ -216,7 +215,7 @@ class HiddenLineRemoval {
     }
     for_int(i, ni) {
       const Point* sp = _gsa[i].p.data();
-      Point midp = interp(sp[0], sp[1]);
+      const Point midp = interp(sp[0], sp[1]);
       if (!point_in_polygon(midp, poly)) _gsret[no++] = _gsa[i];
     }
     return no;
@@ -250,8 +249,8 @@ class HiddenLineRemoval {
   // ret: nothing=no_effect, bbshrunk=continue_with_changed_seg, stop=seg_gone.
   KD::ECallbackReturn handle_polygon(HlrSegment& s, int pn, KD::CBloc kdloc) {
     const HlrPolygon& hp = _polygons[pn];
-    float d0 = pvdot(s.p[0], hp.nor) - hp.d;
-    float d1 = pvdot(s.p[1], hp.nor) - hp.d;
+    float d0 = dot(s.p[0], hp.nor) - hp.d;
+    float d1 = dot(s.p[1], hp.nor) - hp.d;
     float tol = hp.tol;
     if (d0 <= tol && d1 <= tol) return KD::ECallbackReturn::nothing;
     if (d0 > 0 && d1 < 0) {

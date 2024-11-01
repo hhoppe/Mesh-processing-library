@@ -23,7 +23,7 @@ struct triangleface_approx_distance2 {
   float operator()(const Point& p, Univ id) const {
     const TriangleFace& triangleface = *Conv<const TriangleFace*>::d(id);
     const Vec3<Point>& triangle = triangleface.triangle;
-    return square(lb_dist_point_triangle(p, triangle[0], triangle[1], triangle[2]));
+    return square(lb_dist_point_triangle(p, triangle));
   }
 };
 
@@ -31,7 +31,7 @@ struct triangleface_distance2 {
   float operator()(const Point& p, Univ id) const {
     const TriangleFace& triangleface = *Conv<const TriangleFace*>::d(id);
     const Vec3<Point>& triangle = triangleface.triangle;
-    return dist_point_triangle2(p, triangle[0], triangle[1], triangle[2]);
+    return project_point_triangle(p, triangle).d2;
   }
 };
 

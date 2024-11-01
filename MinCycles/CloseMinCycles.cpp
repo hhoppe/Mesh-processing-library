@@ -505,7 +505,7 @@ void CloseMinCycles::find_cycles() {
       break;
     }
     ++iter;
-    const auto& result = min_cycle_from_vertex(vseed, false);
+    const auto result = min_cycle_from_vertex(vseed, false);
     const float sr = result ? result->search_radius : BIGFLOAT;
     ubsr = min(ubsr, sr);  // if find a cycle, possibly reduce the upper-bound on the minimal search radius
     if (verb)

@@ -37,14 +37,14 @@ void BPointSpatial::clear() {
 }
 
 void BPointSpatial::enter(Univ id, const Point* pp) {
-  Ind ci = point_to_indices(*pp);
+  Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
   int en = encode(ci);
   _map[en].push(Node{id, pp});  // First create empty Array<Node> if not present.
 }
 
 void BPointSpatial::remove(Univ id, const Point* pp) {
-  Ind ci = point_to_indices(*pp);
+  Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
   int en = encode(ci);
   Array<Node>& ar = _map.get(en);
@@ -86,7 +86,7 @@ Univ BPointSpatial::pq_id(Univ pqe) const {
 BSpatialSearch::BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis)
     : _spatial(*assertx(pspatial)), _pcenter(p), _maxdis(maxdis) {
   // SHOW("search", p, maxdis);
-  Ind ci = _spatial.point_to_indices(_pcenter);
+  Ind ci = _spatial.indices_from_point(_pcenter);
   assertx(_spatial.indices_inbounds(ci));
   for_int(i, 2) for_int(c, 3) _ssi[i][c] = ci[c];
   consider(ci);
@@ -135,7 +135,7 @@ void BSpatialSearch::get_closest_next_cell() {
   float mindis = 1e10f;
   for_int(c, 3) {
     if (_ssi[0][c] > 0) {
-      float a = _pcenter[c] - _spatial.index_to_float(_ssi[0][c]);
+      float a = _pcenter[c] - _spatial.float_from_index(_ssi[0][c]);
       if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
@@ -144,7 +144,7 @@ void BSpatialSearch::get_closest_next_cell() {
       }
     }
     if (_ssi[1][c] < _spatial._gn - 1) {
-      float a = _spatial.index_to_float(_ssi[1][c] + 1) - _pcenter[c];
+      float a = _spatial.float_from_index(_ssi[1][c] + 1) - _pcenter[c];
       if (a < 0.f) assertx(a > -1e-7f), a = 0.f;
       if (a < mindis) {
         mindis = a;
@@ -174,7 +174,7 @@ void BSpatialSearch::expand_search_space() {
 
 IPointSpatial::IPointSpatial(int gridn, CArrayView<Point> arp) : Spatial(gridn), _pp(arp.data()) {
   for_int(i, arp.num()) {
-    Ind ci = point_to_indices(arp[i]);
+    Ind ci = indices_from_point(arp[i]);
     assertx(indices_inbounds(ci));
     int en = encode(ci);
     _map[en].push(i);  //  First create empty Array<int> if not present.

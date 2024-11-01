@@ -112,7 +112,6 @@ class Vnors {
  private:
   unique_ptr<Map<Face, Vector>> _mfnor;  // If !_mfnor, the unique normal is stored in _nor.
   Vector _nor{};
-  Polygon _tmp_poly;
 };
 
 // *** Projection onto mesh

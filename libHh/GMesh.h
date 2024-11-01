@@ -127,7 +127,6 @@ class GMesh : public Mesh {
 
  private:
   std::ostream* _os{nullptr};  // for record_changes
-  mutable Polygon _tmp_poly;
 };
 
 // Format a vector string "(%g ... %g)".

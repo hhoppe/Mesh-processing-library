@@ -482,6 +482,30 @@ template <typename T, int n> struct has_ostream_eol_aux<Vec<T, n>> {
 
 //----------------------------------------------------------------------------
 
+namespace details {
+
+template <typename, typename = std::void_t<>> struct has_value_type : std::false_type {};
+
+template <typename Class> struct has_value_type<Class, std::void_t<typename Class::value_type>> : std::true_type {};
+
+template <typename, typename = std::void_t<>> struct has_num : std::false_type {};
+
+template <typename Class>
+struct has_num<Class, std::void_t<decltype(Class::Num)>>
+    : std::bool_constant<std::is_same_v<decltype(Class::Num), const int>> {};
+
+template <typename Class, typename Enable = void> struct is_derived_from_vec : std::false_type {};
+
+template <typename Class>
+struct is_derived_from_vec<Class, std::enable_if_t<has_value_type<Class>::value && has_num<Class>::value>>
+    : std::is_base_of<Vec<typename Class::value_type, Class::Num>, Class> {};
+
+}  // namespace details
+
+template <typename Class> inline constexpr bool is_derived_from_vec_v = details::is_derived_from_vec<Class>::value;
+
+//----------------------------------------------------------------------------
+
 // These Vec operations may be more efficient than similar ArrayView operations because
 //  (1) n is known, and
 //  (2) there is no heap allocation.
@@ -548,7 +572,7 @@ TT G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
 }
 TT G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
-  // Vec3<float> == Bary;  may have bary[0] + bary[1] + bary[2] != 1.f
+  // Vec3<float> == Bary;  may have sum(bary) != 1.f
   G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;
 }
 
@@ -557,12 +581,28 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 #undef G
 #undef TT
 
+template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
+SomeVec interp(const Vec3<SomeVec>& triple, float f1, float f2) {
+  return interp(triple[0], triple[1], triple[2], f1, f2);
+}
+template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
+SomeVec interp(const Vec3<SomeVec>& triple) {
+  return interp(triple[0], triple[1], triple[2]);
+}
+template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
+SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
+  return interp(triple[0], triple[1], triple[2], bary);
+}
+
 }  // namespace hh
 
 // Enable structured bindings.
 namespace std {
+
 template <typename T, int n> struct tuple_size<hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
+
 template <std::size_t Index, typename T, int n> struct tuple_element<Index, hh::Vec<T, n>> { using type = T; };
+
 }  // namespace std
 
 //----------------------------------------------------------------------------

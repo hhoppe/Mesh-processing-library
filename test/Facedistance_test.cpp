@@ -22,11 +22,9 @@ void test1() {
     for_int(i, 100) {
       Point p;
       for_int(c, 3) p[c] = Random::G.unif();
-      Bary bary1, bary2, bary3;
-      Point clp1, clp2, clp3;
-      float d1 = project_point_triangle2(p, p1, p2, p3, bary1, clp1);
-      float d2 = project_point_triangle2(p, p2, p3, p1, bary2, clp2);
-      float d3 = project_point_triangle2(p, p3, p1, p2, bary3, clp3);
+      const auto [d1, bary1, clp1] = project_point_triangle(p, p1, p2, p3);
+      const auto [d2, bary2, clp2] = project_point_triangle(p, p2, p3, p1);
+      const auto [d3, bary3, clp3] = project_point_triangle(p, p3, p1, p2);
       float dmin = min({d1, d2, d3});
       float dmax = max({d1, d2, d3});
       if (dmax - dmin < 3e-7) continue;
@@ -55,18 +53,16 @@ void test2() {
   const float vround = 1e2f;
   for_int(i, 21) {
     Point p = interp(Point(-1.f, 3.f, 5.f), Point(10.f, 7.f, 7.f), i / 20.f);
-    Bary cba;
-    Point clp;
-    float dis2 = project_point_triangle2(p, p1, p2, p3, cba, clp);
+    auto [d2, bary, clp] = project_point_triangle(p, p1, p2, p3);
     SHOW("");
     round_elements(p, vround);
     round_elements(clp, vround);
-    round_elements(ArView(dis2), vround);
-    round_elements(cba, vround);
+    round_elements(ArView(d2), vround);
+    round_elements(bary, vround);
     SHOW(p);
     SHOW(clp);
-    SHOW(dis2);
-    showf("cba = (%g, %g, %g)\n", cba[0], cba[1], cba[2]);
+    SHOW(d2);
+    SHOW(bary);
     A3dElem el(A3dElem::EType::polyline, false, 2);
     el[0] = A3dVertex(p, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red()));
     el[1] = A3dVertex(clp, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red()));

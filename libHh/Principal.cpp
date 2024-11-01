@@ -89,7 +89,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     if (!v) v = 1e-15f;  // very small but non-zero vector
     f.v(i) = v * vec[i];
   }
-  f.p() = Point(avgp[0], avgp[1], avgp[2]);
+  f.p() = avgp;
   f.make_right_handed();
 }
 

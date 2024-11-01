@@ -40,7 +40,7 @@ static void recompute_all_sharpe() {
 }
 
 void Applyq(const Frame& tq) {
-  Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : to_Vector(g_obs[cob].center());
+  Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
     Frame f = Frame::identity();
     for_int(c, 3) f[c][c] = std::exp(tq.p()[c] / ddistance);
@@ -58,7 +58,7 @@ void Applyq(const Frame& tq) {
     // Complicated change-of-frame to apply the correct transformation.
     const int ob = obview;
     Frame f = Frame::translation(vtran) * fm * ~g_obs[ob].t();
-    Vector vtran2 = to_Vector(f.p());
+    Vector vtran2 = f.p();
     f *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
     fm = Frame::translation(-vtran) * f * g_obs[ob].t();
   } else {
@@ -392,7 +392,7 @@ static void act_flight() {
   float speed = .7f;
   float fturn = abs(speed) > .1f ? .8f / pow(abs(speed), .7f) : .3f;
   Frame& obframe = g_obs[cob].tm();
-  Vec3<float> ang = frame_to_euler_angles(obframe);
+  Vec3<float> ang = euler_angles_from_frame(obframe);
   {
     Frame f1 = Frame::rotation(0, yxf[1] * fturn * .037f);         // roll
     Frame f2 = Frame::rotation(1, yxf[0] * fturn * .037f);         // pitch
@@ -409,7 +409,7 @@ static void act_flight() {
     // Doing "translation * rotation * ~translation" is incorrect!
     // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that problem.
     Point savep = obframe.p();
-    Frame f1 = Frame::translation(-to_Vector(obframe.p()));
+    Frame f1 = Frame::translation(-obframe.p());
     const float yaw_factor = 0.032f;                                                  // was 0.025f in g3dfly.c
     Frame f2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
     Frame f = f1 * f2;
@@ -542,9 +542,9 @@ static void g3d_ellipse2() {
     obi = i * nlod + obi;
     int nfaces = g_obs[obi].get_mesh()->num_faces();
     Point pabove = Point(0.f, 0.f, obradius * 1.8f) * fellipse;
-    const auto [zs, xys] = HB::world_to_vdc(pabove);
+    const auto [zs, xys] = HB::vdc_from_world(pabove);
     if (xys) {
-      const auto& [xs, ys] = *xys;
+      const auto [xs, ys] = *xys;
       HB::draw_text(V(ys - .01f, xs), sform("%d", nfaces));
     } else {
       SHOW(pabove);
@@ -623,7 +623,7 @@ static void update_segs() {
 
 void ShowInfo() {
   if (info) {
-    Vec3<float> ang = frame_to_euler_angles(g_obs[obview].t());
+    Vec3<float> ang = euler_angles_from_frame(g_obs[obview].t());
     const Point& p = g_obs[obview].t().p();
     string s;
     s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",  //

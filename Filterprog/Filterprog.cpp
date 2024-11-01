@@ -215,7 +215,7 @@ Point compute_screenpoint(Vertex v) {
 
 // Do screen coordinates lie within view frustum?
 bool screenpoint_within_frustum(const Point& pscreen) {
-  return pscreen[0] > 0 && abs(pscreen[1]) <= 1 && abs(pscreen[2]) <= 1;
+  return pscreen[0] > 0.f && abs(pscreen[1]) <= 1.f && abs(pscreen[2]) <= 1.f;
 }
 
 // REFINE(vs) function.
@@ -453,21 +453,24 @@ int get_unique_wid(Vertex v, bool use_old) {
 
 // Create a portion of the corner string from a wedge info.
 string create_attrib_string(const WedgeInfo& wi, bool old_flag) {
-  const Vector& nor = wi.nor;
-  const A3dColor& col = wi.col;
-  const Uv& uv = wi.uv;
-  const char* sflag = old_flag ? "O" : "";
-  string s;
-  if (nor[0] != k_undefined) s += sform(" %snormal=(%g %g %g)", sflag, nor[0], nor[1], nor[2]);
-  if (col[0] != k_undefined) s += sform(" %srgb=(%g %g %g)", sflag, col[0], col[1], col[2]);
-  if (uv[0] != k_undefined) s += sform(" %suv=(%g %g)", sflag, uv[0], uv[1]);
+  string s, s2;
+  const auto add = [&](const char* key, const auto& vec) -> void {
+    if (vec[0] == k_undefined) return;
+    s += old_flag ? " O" : " ";
+    s += key;
+    s += '=';
+    s += csform_vec(s2, vec);
+  };
+  add("normal", wi.nor);
+  add("rgb", wi.col);
+  add("uv", wi.uv);
   return s;
 }
 
 // Create the Opos portion of the corner or vertex string.
 string write_p_string(Vertex v) {
-  const Point& op = v_opos(v);
-  return sform("Opos=(%g %g %g)", op[0], op[1], op[2]);
+  string str;
+  return string("OPos=") + csform_vec(str, v_opos(v));
 }
 
 string write_a_string(int wid, int owid, int write_morph) {

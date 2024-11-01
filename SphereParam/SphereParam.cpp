@@ -203,7 +203,7 @@ void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
           if (!mesh.legal_edge_collapse(e)) {
             if (0) Warning("Skipping an illegal edge collapse of a zero-param-length edge");
           } else {
-            Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
+            if (0) Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
             new_vertices.remove(v2);         // (In most cases, it is not present.)
             collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept; vertex v2 is destroyed.
             modified = true;
@@ -330,7 +330,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
           hint_f = f;
           const Vec3<Uv> uvs = get_uvs(f);
-          const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+          const Uv uv = snap_uv(interp(uvs, bary));
           gmesh.update_string(v, "uv", csform_vec(str, uv));
         } else {
           gmesh.update_string(v, "uv", nullptr);
@@ -344,7 +344,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             auto [f, bary] = mesh_search.search_on_sphere(sph_perturbed, hint_f, &sph);
             hint_f = f;
             const Vec3<Uv> uvs = get_uvs(f);
-            const Uv uv = snap_uv(interp(uvs[0], uvs[1], uvs[2], bary));
+            const Uv uv = snap_uv(interp(uvs, bary));
             gmesh.update_string(c, "uv", csform_vec(str, uv));
           }
         }

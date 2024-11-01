@@ -318,7 +318,7 @@ void SubMesh::refine(Mvcvh& mconv) {
             _m.update_string(cc, "uv", csform_vec(str, uv));
           }
         }
-        Uv uv = interp(interp(uva[0], uva[1]), interp(uva[2], uva[3]));
+        Uv uv = mean(uva);
         _m.update_string(vc, "uv", csform_vec(str, uv));
       }
       if (has_imagen) {
@@ -356,7 +356,7 @@ void SubMesh::refine(Mvcvh& mconv) {
         _mfindex.enter(fn, ar.num());
         ar.push(fn);
       }
-      Face fn = _m.create_face(vs[0], vs[1], vs[2]);
+      Face fn = _m.create_face(vs);
       _mforigf.enter(fn, forig);
       _mfindex.enter(fn, ar.num());
       ar.push(fn);
@@ -459,7 +459,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
       _m.create_face(vs[i0], va[i1], va[i2]);
     } else {
       for_int(i, 3) _m.create_face(va[i], vs[i], vs[mod3(i + 2)]);
-      _m.create_face(vs[0], vs[1], vs[2]);
+      _m.create_face(vs);
     }
   }
   for (auto& [vv, nvf] : mvvnewv) {

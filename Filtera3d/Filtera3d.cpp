@@ -214,13 +214,13 @@ void compute_stats(const A3dElem& el) {
     float sumd = 0.f;
     for_int(i, el.num()) {
       const Point& p = el[i].p;
-      sumd += pvdot(p, vt);
+      sumd += dot(p, vt);
     }
     float d = sumd / el.num();
     float tol = 0.f;
     for_int(i, el.num()) {
       const Point& p = el[i].p;
-      tol = max(tol, pvdot(p, vt) - d);
+      tol = max(tol, dot(p, vt) - d);
     }
     Splanar.enter(tol / sqrt(area));
   }
@@ -359,7 +359,7 @@ bool compute_mindis(const Point& p) {
   static unique_ptr<PointSpatial<int>> SPp;
   if (!SPp) SPp = make_unique<PointSpatial<int>>(30);
   SpatialSearch<int> ss(SPp.get(), p, mindis);  // Look no farther than mindis.
-  if (!ss.done() && ss.next().dis2 < square(mindis)) return true;
+  if (!ss.done() && ss.next().d2 < square(mindis)) return true;
   SPp->enter(pn++, new Point(p));  // never deleted
   return false;
 }
@@ -691,13 +691,13 @@ void compute_outlier() {
   int num_outliers = 0;
   for_int(i, g_outlier.pa.num()) {
     SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
-    float dis2;
-    dummy_init(dis2);
+    float d2;
+    dummy_init(d2);
     for_int(j, outliern + 1)  // + 1 to include this point
-        dis2 = ss.next().dis2;
-    float dis = my_sqrt(dis2) * xform_inverse[0][0];
-    HH_SSTAT(Soutlierd, dis);
-    if (dis >= outlierd) {
+        d2 = ss.next().d2;
+    float d = my_sqrt(d2) * xform_inverse[0][0];
+    HH_SSTAT(Soutlierd, d);
+    if (d >= outlierd) {
       ar_is_outlier[i] = true;
       num_outliers++;
     }
@@ -831,7 +831,7 @@ int main(int argc, const char** argv) {
     crestrictf = FrameIO::parse_frame(restrictf);
   }
   cusphr = cullsphere[3];
-  if (cusphr) cusphc = Point(cullsphere[0], cullsphere[1], cullsphere[2]);
+  if (cusphr) cusphc = cullsphere.head<3>();
   if (outlier[0]) {
     outliern = int(outlier[0]);
     outlierd = outlier[1];

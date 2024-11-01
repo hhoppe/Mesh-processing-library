@@ -706,7 +706,7 @@ Pixel get_frame_pix(const Vec2<int>& yx) {
     CNv12View nv12v = getob()._video_nv12[g_framenum];
     uint8_t y = nv12v.get_Y()[yx];
     const Vec2<uint8_t>& uv = nv12v.get_UV()[yx / 2];
-    return YUV_to_RGB_Pixel(y, uv[0], uv[1]);
+    return RGB_Pixel_from_YUV(y, uv[0], uv[1]);
   } else {
     Pixel pix = getob()._video[g_framenum][yx];
     const bool bgra = getob().is_image() && getob()._image_is_bgra;
@@ -1042,7 +1042,7 @@ template <typename Range> Array<float> to_luminance(const Range& range) {
   static_assert(std::is_same_v<range_value_t<Range>, Pixel>);
   Array<float> ar;
   ar.reserve(int(distance(range)));
-  for (const Pixel& pix : range) ar.push(RGB_to_Y(pix));
+  for (const Pixel& pix : range) ar.push(Y_from_RGB(pix));
   return ar;
 }
 
@@ -1093,7 +1093,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
           int w = 0;
           for (; w < wmax; w++) {
             u[axis] = side == 0 ? w : wmax - 1 - w;
-            if (RGB_to_Y(image[u]) < luminance_thresh) break;
+            if (Y_from_RGB(image[u]) < luminance_thresh) break;
           }
           ar_w[i] = w;
         }
@@ -2276,14 +2276,14 @@ bool DerivedHw::key_press(string skey) {
               parallel_for_each(range(ob._video.size()), [&](const size_t i) {
                 Pixel pix = ob._video.flat(i);
                 if (bgra) std::swap(pix[0], pix[2]);
-                Pixel yuv = RGB_to_YUV_Pixel(pix[0], pix[1], pix[2]);
+                Pixel yuv = YUV_Pixel_from_RGB(pix[0], pix[1], pix[2]);
                 float y = yuv[0] / 255.f;
                 y = pow(y, g_gamma);
                 y *= contrast_fac;
                 y += brightness_term;
                 yuv[0] = clamp_to_uint8(int(y * 255.f + .5f));
                 for_intL(c, 1, 3) yuv[c] = clamp_to_uint8(int(128.5f + (yuv[c] - 128.f) * saturation_fac));
-                pix = YUV_to_RGB_Pixel(yuv[0], yuv[1], yuv[2]);
+                pix = RGB_Pixel_from_YUV(yuv[0], yuv[1], yuv[2]);
                 if (bgra) std::swap(pix[0], pix[2]);
                 nvideo.flat(i) = pix;
               });
@@ -3776,7 +3776,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
 //  and save these in g_lp.
 void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovideo, CVideoNv12View ovideo_nv12,
                                 int nnf) {
-  const int onf = odims[0], ny = odims[1], nx = odims[2];
+  const auto [onf, ny, nx] = odims;
   // const int DT = 4, log2DT = 2; assertx((1 << log2DT) == DT);
   int DT = 4;  // temporal downsampling factor
   if (onf <= 50) {
@@ -4259,8 +4259,8 @@ void do_stripe(Args& args) {
   const Vec3<int> dims = V(nframes, ysize, xsize);
   const Pixel back_color = Pixel::white();
   const Pixel stripe_color = Pixel::black();
-  // SHOW(int(RGB_to_Y(back_color)), int(RGB_to_U(back_color)), int(RGB_to_V(back_color)));
-  // SHOW(int(RGB_to_Y(stripe_color)), int(RGB_to_U(stripe_color)), int(RGB_to_V(stripe_color)));
+  // SHOW(int(Y_from_RGB(back_color)), int(U_from_RGB(back_color)), int(V_from_RGB(back_color)));
+  // SHOW(int(Y_from_RGB(stripe_color)), int(U_from_RGB(stripe_color)), int(V_from_RGB(stripe_color)));
   Video video;
   VideoNv12 video_nv12;
   const bool use_nv12 = k_prefer_nv12 && is_zero(dims.tail<2>() % 2);
@@ -4275,13 +4275,13 @@ void do_stripe(Args& args) {
     }
   } else {
     video_nv12.init(dims);
-    fill(video_nv12.get_Y(), RGB_to_Y(back_color));
+    fill(video_nv12.get_Y(), Y_from_RGB(back_color));
     fill(video_nv12.get_UV(), twice(uint8_t{128}));  // both Pixel::black() and Pixel::white() have this UV
     for_int(f, nframes) {
       const int stripe_width = 2;
       int x0 = int(float(f) / max(nframes - 1, 1) * (xsize - stripe_width) + .5f);
       assertx(x0 + stripe_width <= xsize);
-      for_int(dx, stripe_width) fill(column(video_nv12[f].get_Y(), x0 + dx), RGB_to_Y(stripe_color));
+      for_int(dx, stripe_width) fill(column(video_nv12[f].get_Y(), x0 + dx), Y_from_RGB(stripe_color));
     }
   }
   video.attrib().framerate = framerate;

@@ -161,7 +161,7 @@ class SphereMapper::Implementation {
       Vector face_normal = get_normal_dir(triangle);
       if (!face_normal.normalize()) continue;
       const float face_area = sqrt(area2(triangle));
-      const Point sph_center = normalized(sphs[0] + sphs[1] + sphs[2]);
+      const Point sph_center = normalized(sum(sphs));
       for_int(i, 3) for_int(j, 3) cov[i][j] += sph_center[i] * face_normal[j] * face_area;
     }
 
@@ -412,7 +412,7 @@ class SphereMapper::Implementation {
 
       const int bits = 12;  // Should not exceed half the number of bits in the mantissa of T (thus, 12 for float).
       std::uintmax_t max_iter = _optim_line_search_iter;
-      const auto& [tbest, fmin] = boost_minima::brent_find_minima(stretch_on_neighborhood, tmin, tmax, bits, max_iter);
+      const auto [tbest, fmin] = boost_minima::brent_find_minima(stretch_on_neighborhood, tmin, tmax, bits, max_iter);
       // const int num_iterations = int(_optim_line_search_iter - max_iter);
 
       if (fmin > stretch_on_neighborhood(0.f)) {
@@ -715,9 +715,9 @@ class SphereMapper::Implementation {
     gmesh.write(os);
   }
 
-  void update_visualizer_vertex_position(std::ostream& os, int v, const char* sinfo = nullptr) const {
+  void update_visualizer_vertex_position(std::ostream& os, int v, const char* sinfo) const {
     const Point& sph = _sphmap[v];
-    os << sform("MVertex %d %g %g %g%s\n", v + 1, sph[0], sph[1], sph[2], sinfo ? sinfo : "");
+    os << sform("MVertex %d %g %g %g%s\n", v + 1, sph[0], sph[1], sph[2], sinfo);
   }
 
   void update_visualizer_vsplit(int vs, int vt, int vl, int vr, int fnew) {
@@ -729,9 +729,9 @@ class SphereMapper::Implementation {
     if (vr >= 0) os << "Face 0  " << vs + 1 << " " << vr + 1 << " " << vt + 1 << "\n";
     string str;
     const Vector normal = average_normal_for_vertex(_pmi, vt, fnew);
-    const char* sinfo = csform(str, " {normal=(%g %g %g)}", normal[0], normal[1], normal[2]);
-    update_visualizer_vertex_position(os, vt, sinfo);
-    for (const auto& [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) update_visualizer_vertex_position(os, vv);
+    const string sinfo = string(" {normal=") + csform_vec(str, normal) + "}";
+    update_visualizer_vertex_position(os, vt, sinfo.c_str());
+    for (const auto& [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) update_visualizer_vertex_position(os, vv, "");
     const int nf = _pmi._faces.num();
     const int nsplits_threshold = max(1, int((nf - 1000) * .03f));
     if (++_visualizer_nsplits_since_end_frame >= nsplits_threshold) {
@@ -746,7 +746,7 @@ class SphereMapper::Implementation {
   void update_visualizer_optimize_all() {
     if (!_visualizer) return;
     std::ostream& os = (*_visualizer)();
-    for_int(v, _pmi._vertices.num()) update_visualizer_vertex_position(os, v);
+    for_int(v, _pmi._vertices.num()) update_visualizer_vertex_position(os, v, "");
     os << "f 0 0 0\n" << std::flush;
     _visualizer_nsplits_since_end_frame = 0;
   }

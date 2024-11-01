@@ -56,12 +56,17 @@ template <typename T, typename Func_dist> Dijkstra(const Graph<T>* g, T vs, Func
 
 // *** Kruskal MST
 
+template <typename T> struct MstResult {
+  Graph<T> tree;
+  bool is_connected;
+};
+
 // Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
 // Implementation: Kruskal's algorithm, O(e log(e))  (Prim's algorithm is recommended when e=~n^2, see below.)
 template <typename T, typename Func = float(const T&, const T&)>
 auto graph_mst(const Graph<T>& undirectedg, Func fdist) {
-  std::pair<Graph<T>, bool> pair;
-  Graph<T>& gnew = pair.first;
+  MstResult<T> result;
+  Graph<T>& gnew = result.tree;
   for (const T& v : undirectedg.vertices()) gnew.enter(v);
   int nv = 0, nebefore = 0;
   struct tedge {
@@ -90,8 +95,8 @@ auto graph_mst(const Graph<T>& undirectedg, Func fdist) {
     if (neadded == nv - 1) break;
   }
   showf("graph_mst: %d vertices, %d/%d edges considered, %d output\n", nv, neconsidered, nebefore, neadded);
-  pair.second = neadded == nv - 1;
-  return pair;
+  result.is_connected = neadded == nv - 1;
+  return result;
 }
 
 // *** Prim MST
@@ -150,10 +155,10 @@ inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatia
     SpatialSearch<int> ss(&sp, pa[i]);
     for (;;) {
       if (ss.done()) break;
-      const auto [j, dis2] = ss.next();
-      if (dis2 > square(thresh)) break;
+      const auto [j, d2] = ss.next();
+      if (d2 > square(thresh)) break;
       if (inset[j]) continue;
-      if (pq.enter_update_if_smaller(j, dis2)) closest[j] = i;
+      if (pq.enter_update_if_smaller(j, d2)) closest[j] = i;
     }
   }
   int nfound = 0;

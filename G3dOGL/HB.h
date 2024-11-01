@@ -49,9 +49,15 @@ void set_yonder(float y);
 void set_current_object(int obn);  // hook for lighting specific.
 void update_seg(int segn, const Frame& f, bool vis);
 void draw_space();
-bool special_keypress(char ch);                                              // ret: recognized
-string show_info();                                                          // info line state string
-std::pair<float, std::optional<Vec2<float>>> world_to_vdc(const Point& pi);  // [zs, pi_in_front ? (xs, ys) : {}]
+bool special_keypress(char ch);  // ret: recognized
+string show_info();              // info line state string
+
+struct VdcResult {
+  float zs;
+  std::optional<Vec2<float>> xys;  // in_front ? (xs, ys) : {}.
+};
+VdcResult vdc_from_world(const Point& pi);
+
 void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);
 Vec2<int> get_font_dims();  // height, width
 void draw_text(const Vec2<float>& yx, const string& s);

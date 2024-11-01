@@ -563,8 +563,8 @@ inline void HwBase::clear_window_ogl() {
     glDrawBuffer(GL_FRONT_AND_BACK);
   }
   {
-    Vector4 v(_color_background);
-    glClearColor(v[0], v[1], v[2], 1.f);
+    const Vector4 v(_color_background.with(3, 255));
+    glClearColor(v[0], v[1], v[2], v[3]);
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   if (_is_glx_dbuf)

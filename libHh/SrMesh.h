@@ -335,7 +335,7 @@ class SrMesh {
 //----------------------------------------------------------------------------
 
 inline int SrMesh::get_vf_j0(const SrAVertex* v, const SrAFace* f) const {
-  ASSERTX(f->vertices[0] == v || f->vertices[1] == v || f->vertices[2] == v);
+  ASSERTX(f->vertices[0] == v || f->vertices[1] == v || f->vertices[2] == v);  // (contains() fails on non-const.)
   return (f->vertices[1] == v) + (f->vertices[2] == v) * 2;
 }
 

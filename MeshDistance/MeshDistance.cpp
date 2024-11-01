@@ -3,7 +3,7 @@
 #include "libHh/Args.h"
 #include "libHh/Bbox.h"
 #include "libHh/BinarySearch.h"
-#include "libHh/Facedistance.h"  // project_point_triangle2()
+#include "libHh/Facedistance.h"
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/MathOp.h"
@@ -79,7 +79,7 @@ struct PStats {
 
 void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const Vector& psnor, const GMesh& mesh_d,
                    const MeshSearch& mesh_search, Vertex vv, string& str, PStats& pstats) {
-  const auto& [fd, baryd, unused_clp, d2] = mesh_search.search(ps, nullptr);
+  const auto [fd, baryd, unused_clp, d2] = mesh_search.search(ps, nullptr);
   {
     pstats.Sgd2.enter(d2);
     if (errmesh && vv) {
@@ -90,20 +90,20 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
       HH_SSTAT(Serrval, val);
       // showdf("val %f first cut %f d2 %f\n", val, bbdiag / 100, d2 * 100);
       // if (val < 1.f)
-      if (val < bbdiag / 100) {
-        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", 1.f, max(0.f, 1.f - val), max(0.f, 1.f - val)));
-      } else if (val < bbdiag / 50) {  // else if (val < 2.f)
-        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", 1.f, min(val - 1.f, 1.f), 0.f));
+      if (val < bbdiag / 100.f) {
+        mesh_s.update_string(vv, "rgb", csform_vec(str, V(1.f, max(0.f, 1.f - val), max(0.f, 1.f - val))));
+      } else if (val < bbdiag / 50.f) {  // else if (val < 2.f)
+        mesh_s.update_string(vv, "rgb", csform_vec(str, V(1.f, min(val - 1.f, 1.f), 0.f)));
       } else {
-        // val = val - 2;
+        // val = val - 2.f;
         if (0) val /= g_MK;
-        mesh_s.update_string(vv, "rgb", csform(str, "(%g %g %g)", max(0.f, 1.f - val), 0.f, 0.f));
+        mesh_s.update_string(vv, "rgb", csform_vec(str, V(max(0.f, 1.f - val), 0.f, 0.f)));
       }
     }
   }
   const Vec3<Corner> cad = mesh_d.triangle_corners(fd);
-  pstats.Scd2.enter(dist2(pscol, interp(c_color(cad[0]), c_color(cad[1]), c_color(cad[2]), baryd[0], baryd[1])));
-  pstats.Snd2.enter(dist2(psnor, interp(c_normal(cad[0]), c_normal(cad[1]), c_normal(cad[2]), baryd[0], baryd[1])));
+  pstats.Scd2.enter(dist2(pscol, interp(c_color(cad[0]), c_color(cad[1]), c_color(cad[2]), baryd)));
+  pstats.Snd2.enter(dist2(psnor, interp(c_normal(cad[0]), c_normal(cad[1]), c_normal(cad[2]), baryd)));
 }
 
 void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const MeshSearch& mesh_search,
@@ -111,9 +111,9 @@ void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_
   dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
   Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
-                    mesh_s.point(mesh_s.corner_vertex(cas[2])), barys[0], barys[1]);
-  A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys[0], barys[1]);
-  Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys[0], barys[1]);
+                    mesh_s.point(mesh_s.corner_vertex(cas[2])), barys);
+  A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys);
+  Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys);
   project_point(mesh_s, ps, pscol, psnor, mesh_d, mesh_search, nullptr, str, pstats);
 }
 

@@ -24,9 +24,7 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   const Line line{Point(0.f, 0.f, 0.f), p};
   const Plane plane = plane_of_triangle(triangle);
   const Point pint = intersect_line_with_plane(line, plane).value();
-  Bary bary;
-  Point clp;
-  const float d2 = project_point_triangle2(pint, triangle[0], triangle[1], triangle[2], bary, clp);
+  const auto [d2, bary, clp] = project_point_triangle(pint, triangle);
   const float tolerance2 = 1e-9f;
   if (!assertw(d2 < tolerance2) && 0) SHOW(p), SHOW(triangle), SHOW(pint), SHOW(clp), SHOW(bary), SHOW(d2);
   return bary;
@@ -105,7 +103,8 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
     int nfchanges = 0;
     for (;;) {
       const Vec3<Point> triangle = _mesh.triangle_points(f);
-      result.d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], result.bary, result.clp);
+      const auto proj = project_point_triangle(p, triangle);
+      result.d2 = proj.d2, result.bary = proj.bary, result.clp = proj.clp;
       const float dfrac = sqrt(result.d2) * _xform[0][0];
       // if (!nfchanges) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // Failure.
@@ -161,7 +160,8 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
     const TriangleFace& triangleface = *ss.next().id;
     f = triangleface.face;
     const Vec3<Point> triangle = _mesh.triangle_points(f);  // (Without _xform transformation.)
-    result.d2 = project_point_triangle2(p, triangle[0], triangle[1], triangle[2], result.bary, result.clp);
+    const auto proj = project_point_triangle(p, triangle);
+    result.d2 = proj.d2, result.bary = proj.bary, result.clp = proj.clp;
   }
   result.f = f;
   return result;

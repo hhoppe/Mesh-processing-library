@@ -156,7 +156,7 @@ Array<DomainFace> get_domain_faces() {
       if (i < 3) {
         domain_faces[i].poly = V(vtmp[mod3(i + 1)], vtmp[i], vtmp[3]);
       } else {
-        domain_faces[i].poly = V(vtmp[0], vtmp[1], vtmp[2]);
+        domain_faces[i].poly = vtmp.head<3>();
       }
       domain_faces[i].stretchuvs = V(Uv(0.f, 0.f), Uv(1.f, 0.f), Uv(.5f, .5f * sqrt(3.f)));
       // The imageuv's are defined below.
@@ -427,7 +427,7 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
 using TriangleSpheremap = Point (*)(const Vec3<Point>& triangle, const Bary& bary);
 
 Point map_sphere(const Vec3<Point>& triangle, const Bary& bary) {
-  // return normalized(interp(triangle[0], triangle[1], triangle[2], bary[0], bary[1]));
+  // return normalized(interp(triangle, bary));
   return spheremap_linear_reproject(triangle[0], triangle[1], triangle[2], bary);
 }
 
@@ -861,7 +861,7 @@ void create(bool b_triangulate) {
         for_int(c, 3) ASSERTX(is_unit(triangle[c]));
         Point p;
         if (domain_interp) {
-          p = interp(triangle[0], triangle[1], triangle[2], bary);
+          p = interp(triangle, bary);
         } else {
           p = triangle_map(triangle, bary);
           assertx(is_unit(p));
@@ -1065,8 +1065,8 @@ void do_load_map(Args& args) {
     int nfaces = 0;
     SpatialSearch<Vertex> ss(&spatial, domainp * k_fdomain_to_spatialbb);
     for (;;) {
-      const auto [vv, dis2] = ss.next();
-      if (dis2 > 1e-12f) break;
+      const auto [vv, d2] = ss.next();
+      if (d2 > 1e-12f) break;
       nfaces++;
       assertx(g_mesh.point(vv)[0] == BIGFLOAT);
       g_mesh.set_point(vv, sphp);
@@ -1189,7 +1189,7 @@ void internal_remesh() {
       auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
       hint_f = param_f;
       const Vec3<Point> triangle = map(g_mesh.triangle_vertices(param_f), v_domainp);
-      const Point newp = interp(triangle[0], triangle[1], triangle[2], bary);
+      const Point newp = interp(triangle, bary);
       g_mesh.set_point(v, newp);
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
       if (checkern) {
@@ -1419,7 +1419,7 @@ void do_write_dual_texture(Args& args) {
             continue;
           }
           const Vec3<Point> triangle = map(mesh_i.triangle_vertices(f), v_domainp);
-          p_d = interp(triangle[0], triangle[1], triangle[2], bary);
+          p_d = interp(triangle, bary);
         }
         {
           auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);

@@ -170,7 +170,6 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp);
 
 void DataPts::ok() const {
   HH_DTIMER("__pt_ok");
-  Polygon poly;
   for_int(i, co.num()) {
     Face f = assertx(cmf[i]);
     mesh.valid(f);
@@ -318,7 +317,9 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
   Polygon poly;
   mesh.polygon(f, poly);
   if (poly.num() == 3) {
-    return project_point_triangle2(p, poly[0], poly[1], poly[2], ret_bary, ret_clp);
+    const auto proj = project_point_triangle(p, poly[0], poly[1], poly[2]);
+    ret_bary = proj.bary, ret_clp = proj.clp;
+    return proj.d2;
   } else {
     assertx(poly.num() == 4);
     const bool other_diag = (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor));
@@ -329,31 +330,24 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
       poly[2] = poly[3];
       poly[3] = pp;
     }
-    Bary bary0;
-    Point clp0;
-    float d0 = project_point_triangle2(p, poly[0], poly[1], poly[2], bary0, clp0);
-    Bary bary1;
-    Point clp1;
-    float d1 = project_point_triangle2(p, poly[0], poly[2], poly[3], bary1, clp1);
+    auto [d0, bary0, clp0] = project_point_triangle(p, poly[0], poly[1], poly[2]);
+    auto [d1, bary1, clp1] = project_point_triangle(p, poly[0], poly[2], poly[3]);
     if (d1 < d0) {
       d0 = d1;
       clp0 = clp1;
       bary0[0] = bary1[0];
       bary0[1] = 0.f;
       bary0[2] = bary1[1];
-      float bary3 = bary1[2];
-      assertx(abs(1.f - bary0[0] - bary0[1] - bary0[2] - bary3) < 1e-6f);
+      const float bary3 = bary1[2];
+      assertx(abs(sum<float>(bary0) + bary3 - 1.f) < 1e-6f);
     } else {
-      float bary3 = 0.f;
-      assertx(abs(1.f - bary0[0] - bary0[1] - bary0[2] - bary3) < 1e-6f);
+      assertx(abs(sum<float>(bary0) - 1.f) < 1e-6f);
     }
     ret_bary = bary0;
     ret_clp = clp0;
     if (other_diag) {
-      float bary3 = 1.f - bary0[0] - bary0[1] - bary0[2];
-      ret_bary[0] = bary3;
-      ret_bary[1] = bary0[0];
-      ret_bary[2] = bary0[1];
+      const float bary3 = 1.f - sum<float>(bary0);
+      ret_bary = V(bary3, bary0[0], bary0[1]);
     }
     return d0;
   }
@@ -362,9 +356,6 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
 float project_point_neighb(const Point& p, Face& cf, Bary& ret_bary, Point& ret_clp) {
   if (1 && !have_quads) {
     float d2 = project_point_neighb(mesh, p, cf, ret_bary, ret_clp, false);
-    Polygon poly;
-    mesh.polygon(cf, poly);
-    assertx(poly.num() == 3);
     return d2;
   }
   // For now, slow method to re-project on all neighboring faces.
@@ -398,7 +389,7 @@ void global_project_aux() {
     if (1) {
       Face hint_f = nullptr;
       for_int(i, pt.co.num()) {
-        const auto& [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
+        const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
         hint_f = f;
         point_change_face(i, f);
         pt.clp[i] = clp;
@@ -408,7 +399,7 @@ void global_project_aux() {
       Array<Point> ar_clp(pt.co.num());
       parallel_for_each(range(pt.co.num()), [&](const int i) {
         Face hint_f = pt.cmf[i];  // different semantics now
-        const auto& [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
+        const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
         ar_face[i] = f;
         ar_clp[i] = clp;
       });
@@ -550,14 +541,11 @@ void global_fit() {
   SparseLls lls(m, n, 3);
   lls.set_max_iter(200);
   // Add point constraints
-  Array<Vertex> va;
   for_int(i, pt.co.num()) {
     Face cmf = assertx(pt.cmf[i]);
-    mesh.get_vertices(cmf, va);
-    assertx(va.num() == 3);
-    Bary bary;
-    Point clp;
-    project_point_triangle2(pt.co[i], mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]), bary, clp);
+    const Vec3<Vertex> va = mesh.triangle_vertices(cmf);
+    const Vec3<Point> triangle = mesh.triangle_points(cmf);
+    const Bary bary = project_point_triangle(pt.co[i], triangle).bary;
     for_int(j, 3) lls.enter_a_rc(i, mvi.get(va[j]), bary[j]);
     lls.enter_b_r(i, pt.co[i]);
   }
@@ -706,7 +694,7 @@ void do_fgfit(Args& args) {
         project_point(pt.co[i], pt.cmf[i], bary, clp);
         Vector vtop = pt.co[i] - clp;
         for_int(k, va.num()) {
-          float baryk = k < 3 ? bary[k] : 1.f - bary[0] - bary[1] - bary[2];
+          float baryk = k < 3 ? bary[k] : 1.f - sum<float>(bary);
           Vector vd = vtop * (-2.f * baryk);
           bool present;
           int vi = _mvi.retrieve(va[k], present);
@@ -822,7 +810,6 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
   const auto face_bbox = [&](Face f) { return Bbox{transform(mesh.vertices(f), vertex_point)}; };
   const Array<Bbox<float, 3>> ar_bbox{transform(ar_faces, face_bbox)};
-  Polygon poly;
   for (int pi : ar_pts) {
     const Point& p = pt.co[pi];
     static Array<float> ar_d2;
@@ -837,10 +824,8 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
       if (tmind2 >= mind2) break;
       ar_d2[tmini] = BIGFLOAT;
       Face f = ar_faces[tmini];
-      mesh.polygon(f, poly);
-      assertx(poly.num() == 3);
-      Point clp;
-      float d2 = project_point_triangle2(p, poly[0], poly[1], poly[2], dummy_bary, clp);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
+      const auto [d2, _, clp] = project_point_triangle(p, triangle);
       if (d2 < mind2) {
         mind2 = d2;
         minf = f;
@@ -898,9 +883,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
         if (tmind2 == BIGFLOAT) break;  // ok, no more triangles to consider
         if (tmind2 >= mind2) break;
         ar_d2[tmini] = BIGFLOAT;
-        Bary bary;
-        Point dummy_clp;
-        float d2 = project_point_triangle2(p, newp, *wa[tmini], *wa[tmini + 1], bary, dummy_clp);
+        const auto [d2, bary, _] = project_point_triangle(p, newp, *wa[tmini], *wa[tmini + 1]);
         nproj++;
         if (d2 < mind2) {
           mind2 = d2;
@@ -994,7 +977,7 @@ void do_four1split() {
       ar_faces.push(ff);
     }
     {
-      Face ff = mesh.create_face(vs[0], vs[1], vs[2]);
+      Face ff = mesh.create_face(vs);
       ar_faces.push(ff);
     }
     reproject_locally(ar_pts, ar_faces);

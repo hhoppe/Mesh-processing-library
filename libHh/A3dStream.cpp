@@ -106,7 +106,7 @@ void RA3dStream::read(A3dElem& el) {
       el.f() = f;
       return;
     } else if (type == A3dElem::EType::point) {
-      el.push(A3dVertex(Point(f[0], f[1], f[2]), normal, _curcol));
+      el.push(A3dVertex(f, normal, _curcol));
       normal = Vector(0.f, 0.f, 0.f);
       return;
     } else if (type == A3dElem::EType::polygon || type == A3dElem::EType::polyline) {

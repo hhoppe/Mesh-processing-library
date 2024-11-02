@@ -84,15 +84,11 @@ namespace details {
 // Within the triangle plane, project `proj` onto the segment (pi0, pi1).
 inline bool project_onto_seg(const Point& proj, int i, float b, const Point& pi0, const Point& pi1,
                              TriangleProjectionResult& result, float& min_inplane_d2) {
-  // simplify??
   if (b >= 0.f) return false;
-  float vix = pi1[0] - pi0[0], viy = pi1[1] - pi0[1], viz = pi1[2] - pi0[2];
-  // float vpx = proj[0] - pi0[0], vpy = proj[1] - pi0[1], vpz = proj[2] - pi0[2];
-  float d12sq = vix * vix + viy * viy + viz * viz;
-  // float don12 = vix * vpx + viy * vpy + viz * vpz;
-  float don12 = vix * (proj[0] - pi0[0]) + viy * (proj[1] - pi0[1]) + viz * (proj[2] - pi0[2]);
+  const Vector vi = pi1 - pi0;
+  const float d12sq = mag2(vi);
+  const float don12 = dot(vi, proj - pi0);
   if (don12 <= 0.f) {
-    // float in_plane_d2 = vpx * vpx + vpy * vpy +  vpz * vpz;  // optimized anyways
     const float in_plane_d2 = dist2(proj, pi0);
     if (in_plane_d2 < min_inplane_d2) {
       min_inplane_d2 = in_plane_d2;
@@ -113,11 +109,11 @@ inline bool project_onto_seg(const Point& proj, int i, float b, const Point& pi0
     }
     return false;
   } else {
-    const float a = don12 / d12sq;
+    const float a = don12 / d12sq;  // Note that d12sq > 0.f, else don12 == 0.f, which is detected earlier.
     result.bary[i] = 1.f - a;
     result.bary[mod3(i + 1)] = a;
     result.bary[mod3(i + 2)] = 0.f;
-    result.clp = pi0 + V(vix, viy, viz) * a;
+    result.clp = pi0 + vi * a;
     return true;
   }
 }
@@ -145,47 +141,26 @@ inline TriangleProjectionResult project_aux(const Point& p, const Point& p1, con
 // - v2v3 * v2v3 == v2v2 * v3v3 (!area but v2 != 0 && v3 != 0) -> project on sides
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2,
                                                        const Point& p3) {
-  // Try moving back to coordinate-free code??
-  // const Vector v2 = p2 - p1, v3 = p3 - p1, vp = p - p1;
-  // float v2v2 = mag2(v2), v3v3 = mag2(v3), v2v3 = dot(v2, v3);
-  // const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
-  const float px = p[0], py = p[1], pz = p[2];
-  const float p1x = p1[0], p1y = p1[1], p1z = p1[2];
-  const float v2x = p2[0] - p1x, v2y = p2[1] - p1y, v2z = p2[2] - p1z;
-  const float v3x = p3[0] - p1x, v3y = p3[1] - p1y, v3z = p3[2] - p1z;
-  float v2v2 = v2x * v2x + v2y * v2y + v2z * v2z;
-  float v3v3 = v3x * v3x + v3y * v3y + v3z * v3z;
-  const float v2v3 = v2x * v3x + v2y * v3y + v2z * v3z;
-  if (!v2v2) v2v2 = 1.f;  // Recover if v2 == 0.f .
-  if (!v3v3) v3v3 = 1.f;  // Recover if v3 == 0.f .
-  const float denom = v3v3 - v2v3 * v2v3 / v2v2;
-  if (!denom) {
-    // Recover if v2v3 * v2v3 == v2v2 * v3v3; project on sides.
-    // Note: set a = b = 1e-10f to force projection on 2 sides.
+  const Vector v2 = p2 - p1, v3 = p3 - p1;
+  float v2v2 = mag2(v2), v3v3 = mag2(v3);
+  const float v2v3 = dot(v2, v3);
+  float denom;
+  if (!v2v2 || !v3v3 || !(denom = v3v3 - v2v3 * v2v3 / v2v2)) {
+    // Triangle is degenerate, so project on its sides.  Set b1 = b2 = -1e-10f to force projection on 2 sides.
     return details::project_aux(p, p1, p2, p3, p, -1e-10f, -1e-10f, 1.f);
   }
-  const float vpx = px - p1x, vpy = py - p1y, vpz = pz - p1z;
-  const float v2vp = v2x * vpx + v2y * vpy + v2z * vpz;
-  const float v3vp = v3x * vpx + v3y * vpy + v3z * vpz;
+  const Vector vp = p - p1;
+  const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
   const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
   const float b2 = (v2vp - b3 * v2v3) / v2v2;
   const float b1 = 1.f - b2 - b3;
-  if (b1 < 0.f || b2 < 0.f || b3 < 0.f) {
-    // Point pp = interp(p1, p2, p3, b1, b2);
-    const Point pp(p1x + b2 * v2x + b3 * v3x, p1y + b2 * v2y + b3 * v3y, p1z + b2 * v2z + b3 * v3z);
-    return details::project_aux(p, p1, p2, p3, pp, b1, b2, b3);
-  }
+  // const Point proj = interp(p1, p2, p3, b1, b2);
+  const Point proj = p1 + b2 * v2 + b3 * v3;
+  if (b1 < 0.f || b2 < 0.f || b3 < 0.f) return details::project_aux(p, p1, p2, p3, proj, b1, b2, b3);
   // Fast common case (projection into interior):
-  // ret_clp = interp(p1, p2, p3, b1, b2);
-  const float clpx = p1x + b2 * v2x + b3 * v3x;
-  const float clpy = p1y + b2 * v2y + b3 * v3y;
-  const float clpz = p1z + b2 * v2z + b3 * v3z;
-  // d2 = dist2(p, clp);
-  const float x = px - clpx, y = py - clpy, z = pz - clpz;
-  const float d2 = x * x + y * y + z * z;
+  const float d2 = dist2(p, proj);
   const Bary bary = V(b1, b2, b3);
-  const Point clp = V(clpx, clpy, clpz);
-  return {d2, bary, clp};
+  return {d2, bary, proj};
 }
 
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Vec3<Point>& triangle) {
@@ -193,16 +168,12 @@ inline TriangleProjectionResult project_point_triangle(const Point& p, const Vec
 }
 
 inline SegmentProjectionResult project_point_segment(const Point& p, const Point& p1, const Point& p2) {
-  // simplify??
-  // Vector v12 = p2 - p1, v1p = p - p1;
-  // float d122 = mag2(v12), vdot = dot(v12, v1p);
-  float v12x = p2[0] - p1[0], v12y = p2[1] - p1[1], v12z = p2[2] - p1[2];
-  float d122 = square(v12x) + square(v12y) + square(v12z);
-  float v1px = p[0] - p1[0], v1py = p[1] - p1[1], v1pz = p[2] - p1[2];
-  float vdot = v12x * v1px + v12y * v1py + v12z * v1pz;
-  // had float don12 = vdot / sqrt(d122);
-  const float bary = !d122 ? .5f : clamp(1.f - vdot / d122, 0.f, 1.f);
-  const Point clp = interp(p1, p2, bary);
+  const Vector v12 = p2 - p1, v1p = p - p1;
+  const float d12sq = mag2(v12), vdot = dot(v12, v1p);
+  const float bary2 = !d12sq ? .5f : clamp(vdot / d12sq, 0.f, 1.f);
+  const float bary = 1.f - bary2;
+  // const Point clp = interp(p1, p2, bary);
+  const Point clp = p1 + bary2 * v12;
   const float d2 = dist2(p, clp);
   return {d2, bary, clp};
 }

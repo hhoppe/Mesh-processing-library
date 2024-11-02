@@ -107,7 +107,6 @@ struct fmonkey {
     // Monkey saddle, z = x^3 - 3 y^2 x
     const float s = 4.f;
     const Point pp = (p * 2.f - 1.f) * s;
-    // const auto& [x, y, z] = pp;  // Somehow enable structure binding on classes derived from Vec<T, n> ??
     const float x = pp[0], y = pp[1], z = pp[2];
     float f = z - pow(x, 3.f) + 3.f * y * y * x;
     return f;

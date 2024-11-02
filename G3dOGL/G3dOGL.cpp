@@ -532,26 +532,7 @@ bool bigfont() { return HB::get_font_dims()[1] > 9; }
 void invalidate_dls() { svalid_dl.clear(); }
 
 inline Vector interp_normal(const Vector& n1, const Vector& n2, float f1, float f2) {
-  // simplify this ??
-  float n1x = n1[0], n1y = n1[1], n1z = n1[2];
-  float n2x = n2[0], n2y = n2[1], n2z = n2[2];
-  float nx, ny, nz;
-  if (n1x == n2x && n1y == n2y && n1z == n2z) {
-    nx = n1x;
-    ny = n1y;
-    nz = n1z;
-  } else {
-    nx = f1 * n1[0] + f2 * n2[0];
-    ny = f1 * n1[1] + f2 * n2[1];
-    nz = f1 * n1[2] + f2 * n2[2];
-    float denom = sqrt(nx * nx + ny * ny + nz * nz);
-    if (denom) {
-      nx /= denom;
-      ny /= denom;
-      nz /= denom;
-    }
-  }
-  return Vector(nx, ny, nz);
+  return ok_normalized(f1 * n1 + f2 * n2);
 }
 
 inline Pixel interp_color(const Pixel& c1, const Pixel& c2, int f1, int f2) {

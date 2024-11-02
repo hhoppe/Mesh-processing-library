@@ -328,8 +328,8 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       cd[d] = i ? 1 : -1;
       cd[d1] = cd[d2] = 0;
       IPoint ci = cc + cd;  // indices of node for neighboring cube;
-      // note: vmin < 0 since 0 is arbitrarily taken to be positive
-      if (vmax != k_Contour_undefined && vmin < 0 && vmax >= 0 && cube_inbounds(ci)) {
+      // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
+      if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
         unsigned en = encode(ci);
         bool is_new;
         Node* n2 = const_cast<Node*>(&_m.enter(Node(en), is_new));
@@ -396,12 +396,12 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
       double sumval = 0.;
       for_int(i, 4) {
         float val = naf[i]->_val;
-        if (val < 0) nneg++;
+        if (val < 0.f) nneg++;
         sumval += val;  // If pedantic, could sort the vals before summing.
       }
       for_int(i, 4) {
         int i1 = mod4(i + 1), i2 = mod4(i + 2), i3 = mod4(i + 3);
-        if (!(naf[i]->_val < 0 && naf[i1]->_val >= 0)) continue;
+        if (!(naf[i]->_val < 0.f && naf[i1]->_val >= 0.f)) continue;
         // have start of edge
         ASSERTX(nneg >= 1 && nneg <= 3);
         int ie;  // end of edge
@@ -409,9 +409,9 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
           ie = i3;
         } else if (nneg == 3) {
           ie = i1;
-        } else if (naf[i2]->_val >= 0) {
+        } else if (naf[i2]->_val >= 0.f) {
           ie = i2;
-        } else if (sumval < 0) {
+        } else if (sumval < 0.) {
           ie = i1;
         } else {
           ie = i3;
@@ -510,15 +510,15 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
   void contour_tetrahedron(Vec4<Node*> n4) {
     int nposi = 0;
     for_int(i, 4) {
-      if (n4[i]->_val >= 0) nposi++;
+      if (n4[i]->_val >= 0.f) nposi++;
     }
     if (nposi == 0 || nposi == 4) return;
     for (int i = 0, j = 3; i < j;) {
-      if (n4[i]->_val >= 0) {
+      if (n4[i]->_val >= 0.f) {
         i++;
         continue;
       }
-      if (n4[j]->_val < 0) {
+      if (n4[j]->_val < 0.f) {
         --j;
         continue;
       }
@@ -680,8 +680,8 @@ class Contour2D : public ContourBase<2> {
       cd[d] = i ? 1 : -1;
       cd[d1] = 0;
       IPoint ci = cc + cd;  // indices of node for neighboring cube;
-      // note: vmin < 0 since 0 is arbitrarily taken to be positive
-      if (vmax != k_Contour_undefined && vmin < 0 && vmax >= 0 && cube_inbounds(ci)) {
+      // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
+      if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
         unsigned en = encode(ci);
         bool is_new;
         Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
@@ -705,15 +705,15 @@ class Contour2D : public ContourBase<2> {
   void contour_triangle(Vec3<Node*> n3) {
     int nposi = 0;
     for_int(i, 3) {
-      if (n3[i]->_val >= 0) nposi++;
+      if (n3[i]->_val >= 0.f) nposi++;
     }
     if (nposi == 0 || nposi == 3) return;
     for (int i = 0, j = 2; i < j;) {
-      if (n3[i]->_val >= 0) {
+      if (n3[i]->_val >= 0.f) {
         i++;
         continue;
       }
-      if (n3[j]->_val < 0) {
+      if (n3[j]->_val < 0.f) {
         --j;
         continue;
       }
@@ -737,7 +737,7 @@ class Contour2D : public ContourBase<2> {
     }
     Vec2<float> v = poly[1] - poly[0];
     Vec2<float> normal(-v[1], v[0]);  // 90 degree rotation
-    if (dot(normal, n2[0][0]->_p - n2[0][1]->_p) < 0.) std::swap(poly[0], poly[1]);
+    if (dot(normal, n2[0][0]->_p - n2[0][1]->_p) < 0.f) std::swap(poly[0], poly[1]);
     _contour(poly);
   }
 };

@@ -1949,7 +1949,7 @@ void draw_mesh(GMesh& mesh) {
         Vector vtoe = p - feyetomodel.p();
         bool cull = true;
         for (Face f : mesh.faces(e)) {
-          if (dot(vtoe, f_pnor(f)) < 0) {
+          if (dot(vtoe, f_pnor(f)) < 0.f) {
             cull = false;
             break;
           }
@@ -2058,9 +2058,9 @@ void draw_mesh(GMesh& mesh) {
       }
       if (strip_always_connect && fp && !afound) afound = 2;
       if (afound && cullbackedges && lcullface) {
-        if (dot(p - feyetomodel.p(), f_pnor(f)) > 0)
+        if (dot(p - feyetomodel.p(), f_pnor(f)) > 0.f)
           afound = 0;
-        else if (dot(pp - feyetomodel.p(), f_pnor(fp)) > 0)
+        else if (dot(pp - feyetomodel.p(), f_pnor(fp)) > 0.f)
           afound = 0;
       }
       if (afound) {

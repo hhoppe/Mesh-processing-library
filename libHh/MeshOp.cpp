@@ -587,7 +587,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           if (avn > 2) {  // from Polygon::get_normal_dir()
             Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-            if (dot(vec, pnor) < 0) {
+            if (dot(vec, pnor) < 0.f) {
               Warning("flipnor_corner");
               vec = -vec;
             }
@@ -602,7 +602,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           {  // direction could be wrong (very bad case)
             Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-            if (dot(vec, pnor) < 0) {
+            if (dot(vec, pnor) < 0.f) {
               Warning("flipnor_regcrease");
               vec = -vec;
             }
@@ -624,7 +624,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           if (avn > 2) {
             Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
-            if (dot(vec, pnor) < 0) {
+            if (dot(vec, pnor) < 0.f) {
               Warning("flipnor_crease");
               vec = -vec;
             }

@@ -245,7 +245,7 @@ template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance 
 template <typename T> constexpr Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
   return Vec3<T>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 }
-template <typename T> constexpr T cross(const Vec2<T>& v1, const Vec2<T>& v2) { return v1[0] * v2[1] - v2[0] * v1[1]; }
+// ?? template <typename T> constexpr T cross(const Vec2<T>& v1, const Vec2<T>& v2) { return v1[0] * v2[1] - v2[0] * v1[1]; }
 // More robust than acos(dot()) for small angles!
 template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
   ASSERTXX(is_unit(v1) && is_unit(v2));

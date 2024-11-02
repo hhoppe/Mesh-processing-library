@@ -269,7 +269,7 @@ void process_principal() {
     if (ioo) pctrans[i] = f;
     Snei.enter(n);
     float len0 = mag(f.v(0)), len1 = mag(f.v(1)), len2 = mag(f.v(2));
-    assertx(len2 > 0);  // principal_components() should do this
+    assertx(len2 > 0.f);  // principal_components() should do this
     Slen0.enter(len0);
     Slen1.enter(len1);
     Slen2.enter(len2);
@@ -373,7 +373,7 @@ void remove_exterior_orientation() {
 }
 
 void show_propagation(int i, int j, float dotp) {
-  assertx(i >= 0 && i <= num && j >= 0 && j < num && dotp >= 0);
+  assertx(i >= 0 && i <= num && j >= 0 && j < num && dotp >= 0.f);
   if (i == num || !iop) return;
   float f = min((1.f - dotp) * 10.f, 1.f);  // low dotp, high f are signific.
   iop->diffuse(.2f + .8f * f, .8f + .2f * f, .5f + .5f * f);
@@ -395,7 +395,7 @@ void propagate_along_path(int i) {
     if (j == num || pciso[j]) continue;  // immediate caller
     float corr = pc_dot(i, j);
     pScorr->enter(abs(corr));
-    if (corr < 0) pcnor[j] = -pcnor[j];
+    if (corr < 0.f) pcnor[j] = -pcnor[j];
     pciso[j] = true;
     show_propagation(i, j, abs(corr));
     propagate_along_path(j);
@@ -428,7 +428,7 @@ void draw_oriented_tps() {
   ioo->phong(3.f);
   for_int(i, num) {
     Frame& f = pctrans[i];
-    if (dot(f.v(minora), pcnor[i]) < 0) {
+    if (dot(f.v(minora), pcnor[i]) < 0.f) {
       // flip 2 of the axes to keep right hand rule
       f.v(minora) = -f.v(minora);
       f.v(0) = -f.v(0);
@@ -586,7 +586,7 @@ template <int D> struct eval_point {
     float dis = unsigneddis ? compute_unsigned(p, proj) : compute_signed(p, proj);
     if (dis == k_Contour_undefined) return dis;
     if (iol) {
-      if (dis < 0)
+      if (dis < 0.f)
         print_directed_seg(*iol, p, proj, A3dColor(1.f, 1.f, .3f));
       else
         print_directed_seg(*iol, proj, p, A3dColor(1.f, 1.f, 1.f));

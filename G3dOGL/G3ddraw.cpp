@@ -21,7 +21,7 @@ static float cumtime = 0.f;
 static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
 
 template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const RangeEdges& range_edges) {
-  assertx(anglethresh >= 0);
+  assertx(anglethresh >= 0.f);
   float vcos = std::cos(to_rad(anglethresh));
   for (Edge e : range_edges) {
     if (mesh.is_boundary(e)) continue;
@@ -74,7 +74,7 @@ void Applyq(const Frame& tq) {
     Point p = mesh->point(v) * fm * ~told;
     mesh->set_point(v, p);
     mesh->gflags().flag(mflag_ok) = false;
-    if (sizemode && anglethresh >= 0) {
+    if (sizemode && anglethresh >= 0.f) {
       Set<Edge> eredo;
       for (Edge e : mesh->edges(v)) eredo.enter(e);
       for (Face f : mesh->faces(v))
@@ -186,8 +186,8 @@ static void handle_sliders(bool show, float yq) {
     else
       *val *= std::exp(-yq);
     if (val == &anglethresh) {
-      if (anglethresh <= 0) anglethresh = 45;
-      if (anglethresh > 180) anglethresh = 180;
+      if (anglethresh <= 0.f) anglethresh = 45.f;
+      if (anglethresh > 180.f) anglethresh = 180.f;
       recompute_all_sharpe();
     } else if (val == &lod_level) {
       lod_level = clamp(lod_level, 0.f, 1.f);

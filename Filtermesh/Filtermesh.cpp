@@ -1936,7 +1936,7 @@ void do_makequads(Args& args) {
     const Point& p2 = mesh.point(mesh.vertex2(e));
     const Point& po1 = mesh.point(mesh.side_vertex1(e));
     const Point& po2 = mesh.point(mesh.side_vertex2(e));
-    if (dihedral_angle_cos(po1, po2, p2, p1) < 0) continue;  // quad not convex
+    if (dihedral_angle_cos(po1, po2, p2, p1) < 0.f) continue;  // quad not convex
     const float smalloffset = 1.f;
     pqe.enter(e, deviation + smalloffset);
   }
@@ -3526,7 +3526,7 @@ Point compute_hull_point(Vertex v, float offset) {
     int nr = 0;
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
-      if (!(lf.offset > 0)) continue;
+      if (!(lf.offset > 0.f)) continue;
       a[2 + nr][1] = lf.offset;
       a[2 + nr][2] = lf.v[0];
       a[2 + nr][3] = lf.v[1];
@@ -3536,7 +3536,7 @@ Point compute_hull_point(Vertex v, float offset) {
     assertx(nr == m1);
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
-      if (lf.offset > 0) continue;
+      if (lf.offset > 0.f) continue;
       a[2 + nr][1] = -lf.offset;
       a[2 + nr][2] = -lf.v[0];
       a[2 + nr][3] = -lf.v[1];
@@ -3970,7 +3970,7 @@ void convex_group_flip_faces(const Set<Face>& group) {
     for (Vertex v : mesh.vertices(f)) toctr += ctr - mesh.point(v);
     Polygon poly;
     mesh.polygon(f, poly);
-    if (dot(toctr, poly.get_normal()) > 0)
+    if (dot(toctr, poly.get_normal()) > 0.f)
       vote_flip++;
     else
       vote_keep++;
@@ -4058,7 +4058,7 @@ void do_fromObj(Args& args) {
         while (std::isspace(*s)) s++;
       }
       // maybe flip face winding to match the vertex normals orientation
-      if (have_nors && dot(fn, poly.get_normal()) < 0) reverse(va);
+      if (have_nors && dot(fn, poly.get_normal()) < 0.f) reverse(va);
       if (mesh.legal_create_face(va)) {
         Face f = mesh.create_face(va);
         group.add(f);

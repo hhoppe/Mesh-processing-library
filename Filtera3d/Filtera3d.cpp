@@ -139,7 +139,7 @@ A3dVertex get_vertex_combination(const A3dElem& el, int i, int j, int k, int nt)
 
 void delay_frame() {
   if (!frdelay) return;
-  assertx(frdelay > 0);
+  assertx(frdelay > 0.);
   my_sleep(frdelay);
 }
 
@@ -467,16 +467,16 @@ bool loop(A3dElem& el) {
     if (nonormals || (optnormals && !compare(el[i].n, pnor, 1e-6f))) el[i].n = Vector(0.f, 0.f, 0.f);
     if (nocolor) el[i].c = A3dVertexColor{};
     bool validcol = false;
-    if (cdiff[0] >= 0) {
+    if (cdiff[0] >= 0.f) {
       el[i].c.d = cdiff;
       validcol = true;
     }
-    if (cspec[0] >= 0) {
+    if (cspec[0] >= 0.f) {
       el[i].c.s = cspec;
       validcol = true;
     }
     if (validcol && !el[i].c.g[0]) el[i].c.g[0] = 1.f;
-    if (cphong[0] >= 0) el[i].c.g = cphong;
+    if (cphong[0] >= 0.f) el[i].c.g = cphong;
     if (colorheight[1] != colorheight[0]) {
       float c = (el[i].p[2] - colorheight[0]) / (colorheight[1] - colorheight[0]);
       c = clamp(c, 0.f, 1.f);
@@ -504,7 +504,7 @@ bool loop(A3dElem& el) {
   }
   if (flipnormals) flip_polygon(el);
   if (stretch && polyl && el.num() == 2) {
-    if (stretch > 0) {
+    if (stretch > 0.f) {
       el[1].p += (el[1].p - el[0].p) * stretch;
     } else {
       el[0].p += (el[0].p - el[1].p) * stretch;

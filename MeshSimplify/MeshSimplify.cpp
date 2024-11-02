@@ -610,7 +610,7 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
     for_int(i, nn.ar_corners.num()) {
       Vector dir = cross(mesh.point(mesh.corner_vertex(nn.ar_corners[i][0])),
                          mesh.point(mesh.corner_vertex(nn.ar_corners[i][1])), newp);
-      if (dot(dir, dih.ar_dirs[i]) <= 0) {
+      if (dot(dir, dih.ar_dirs[i]) <= 0.f) {
         bad = true;
         break;
       }
@@ -1888,7 +1888,7 @@ void ULls::solve(double& prss1) {
     _sol[c] = float(newv);
     double a = _btb[c] - _vUtU[c] * square(newv);
     assertw(a > -1e-8);
-    if (a > 0) rss1 += a;
+    if (a > 0.) rss1 += a;
   }
   prss1 = rss1;
 }
@@ -3067,7 +3067,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0.
   int n_m1 = 0;
   for_int(i, ar_lf.num()) {
-    if (ar_lf[i].offset > 0) n_m1++;
+    if (ar_lf[i].offset > 0.f) n_m1++;
   }
   // Use Numerical Recipes code (converted to double precision).
   int n = 3;                                       // Number of variables (x, y, z).
@@ -3089,7 +3089,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     int nr = 0;
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
-      if (!(lf.offset > 0)) continue;
+      if (!(lf.offset > 0.f)) continue;
       a[2 + nr][1] = lf.offset;
       a[2 + nr][2] = lf.v[0];
       a[2 + nr][3] = lf.v[1];
@@ -3099,7 +3099,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     assertx(nr == m1);
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
-      if (lf.offset > 0) continue;
+      if (lf.offset > 0.f) continue;
       a[2 + nr][1] = -lf.offset;
       a[2 + nr][2] = -lf.v[0];
       a[2 + nr][3] = -lf.v[1];
@@ -4125,10 +4125,9 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   if (min_ii < 0) return {R_dih};  // No dihedrally admissible configuration.
-  float raw_cost;
-  raw_cost = float(min_rssa - rssf);
+  float raw_cost = float(min_rssa - rssf);
   ecol_result.cost = raw_cost + offset_cost;
-  if (raw_cost < 0) SSTATV2(Snegcost, raw_cost);
+  if (raw_cost < 0.f) SSTATV2(Snegcost, raw_cost);
   const float smallcost = 1e-20f;
   if (ecol_result.cost < smallcost) ecol_result.cost = smallcost;
   if (invertexorder == 2) {

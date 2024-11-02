@@ -205,7 +205,7 @@ void carry_old_corner_info(Edge e) {
 // Project v onto the screen and return screen coordinates.
 Point compute_screenpoint(Vertex v) {
   Point pview = mesh.point(v) * view_iframe;
-  if (pview[0] > 0) {
+  if (pview[0] > 0.f) {
     float denom = pview[0] * view_zoom;
     pview[1] /= denom;
     pview[2] /= denom;
@@ -241,11 +241,11 @@ bool should_perform_vsplit(Vertex vs) {
     float x3 = ar_pscreen[i1][1], y3 = ar_pscreen[i1][2];
     float vcross = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);  // Expansion about first point.
     vcross = -vcross;                                              // Use -x axis towards viewer.
-    if (vcross >= 0)
+    if (vcross >= 0.f)
       facing_front = true;
     else
       facing_back = true;
-    if (vcross >= 0) area2 += vcross;
+    if (vcross >= 0.f) area2 += vcross;
   }
   bool near_silhouette = facing_front && facing_back;
   const float frac_screen = 80.f / 500.f;

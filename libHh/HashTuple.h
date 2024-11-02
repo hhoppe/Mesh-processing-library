@@ -9,8 +9,7 @@
 // Define hash functions for std::tuple<> and std::pair<>.
 // Also define std::ostream operators for std::tuple<>.   (std::ostream for std::pair<> is in Hh.h)
 
-namespace hh {
-namespace details {
+namespace hh::details {
 
 // Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
 template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_hash {
@@ -34,8 +33,7 @@ template <typename TU> struct tuple_write<TU, 0> {
   void operator()(std::ostream& os, const TU& tu) const { os << std::get<0>(tu); }
 };
 
-}  // namespace details
-}  // namespace hh
+}  // namespace hh::details
 
 namespace std {
 

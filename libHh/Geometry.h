@@ -98,7 +98,7 @@ class Frame : public SGrid<float, 4, 3> {
   bool is_ident() const;
   bool invert();
   void make_right_handed() {
-    if (dot(cross(v(0), v(1)), v(2)) < 0) v(0) = -v(0);
+    if (dot(cross(v(0), v(1)), v(2)) < 0.f) v(0) = -v(0);
   }
   static Frame translation(const Vec3<float>& ar);
   static Frame rotation(int axis, float angle);
@@ -137,6 +137,13 @@ struct Uv : Vec2<float> {
   constexpr Uv(float u, float v) : Vec2<float>(u, v) {}
   constexpr Uv(Vec2<float> v) : Vec2<float>(v) {}
 };
+
+// Note that the signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
+template <typename DesiredType = void, typename T,
+          typename Precision = std::conditional_t<std::is_same_v<DesiredType, void>, T, DesiredType>>
+inline Precision cross(const Vec2<T>& v1, const Vec2<T>& v2) {
+  return Precision(v1[0]) * v2[1] - Precision(v1[1]) * v2[0];
+}
 
 // Line in 3D; is_on_line(Point p) = p == line.point + t * line.vec  (for some arbitrary float t).
 struct Line {
@@ -267,19 +274,14 @@ Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, 
 
 template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance) {
   // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
-  //  (1.f/6.f) * dot(p1, cross(p2, p3).
-  // return dot(triangle[0], cross(triangle[1], triangle[2])) < 0.f;
-  const Point& p1 = triangle[1];
-  const Point& p2 = triangle[2];
-  const Vec3<Precision> vcross(Precision(p1[1]) * p2[2] - Precision(p1[2]) * p2[1],
-                               Precision(p1[2]) * p2[0] - Precision(p1[0]) * p2[2],
-                               Precision(p1[0]) * p2[1] - Precision(p1[1]) * p2[0]);
-  return dot<Precision>(triangle[0], vcross) < -tolerance;
+  //  (1.f / 6.f) * dot(p1, cross(p2, p3)).
+  const auto triangle2 = map(triangle, [](const Point& p) { return convert<Precision>(p); });
+  return dot(triangle2[0], cross(triangle2[1], triangle2[2])) < -tolerance;
 }
 
 template <typename Precision> float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
-  const Precision y1 = p1[1], y2 = p2[1], y3 = p3[1];
-  return 0.5f * float(p1[0] * (y2 - y3) + p2[0] * (y3 - y1) + p3[0] * (y1 - y2));
+  const auto v1 = convert<Precision>(p1), v2 = convert<Precision>(p2), v3 = convert<Precision>(p3);
+  return 0.5f * float(cross(v2 - v1, v3 - v1));
 }
 
 }  // namespace hh

@@ -94,9 +94,9 @@ void Mklib::polygonU(int n) {
 }
 
 void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
-  assertx((r0 > 0 || r1 > 0) && r0 >= 0 && r1 >= 0);
+  assertx((r0 > 0.f || r1 > 0.f) && r0 >= 0.f && r1 >= 0.f);
   mk_save;
-  if (r0 <= 0) {
+  if (r0 <= 0.f) {
     mk.translate(0, 0, h);
     mk.rotate(Mk3d::Axis::x, TAU / 2);
     ringU(n, h, r1, r0, -a1, -a0);

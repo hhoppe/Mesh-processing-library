@@ -894,7 +894,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   }
   HH_SSTAT(Soptnit, ni);
   edrss = rss1 - threshrss;
-  if (edrss >= 0) return false;
+  if (edrss >= 0.) return false;
   // do some more fitting
   while (ni < maxni) {
     optimize_local(smesh, setmv, setpts, mvcvih, rss1);
@@ -905,7 +905,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   }
   HH_SSTAT(Soptnig, ni);
   edrss = rss1 - threshrss;
-  if (edrss >= 0) {
+  if (edrss >= 0.) {
     Warning("try_opt strange");
     return false;
   }

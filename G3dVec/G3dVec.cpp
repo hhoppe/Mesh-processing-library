@@ -296,12 +296,12 @@ void transf2(coord* c) {
     c->pp[0] = -a;
     c->pp[1] = pp1 = pt[1] * a;
     c->pp[2] = pp2 = pt[2] * a;
-    if (pp1 < 0) {
+    if (pp1 < 0.f) {
       if (pp1 < -tclip1) ccode |= k_code_right;
     } else {
       if (pp1 > tclip1) ccode |= k_code_left;
     }
-    if (pp2 < 0) {
+    if (pp2 < 0.f) {
       if (pp2 < -tclip2) ccode |= k_code_down;
     } else {
       if (pp2 > tclip2) ccode |= k_code_up;
@@ -339,7 +339,7 @@ void inbound(coord* c, const coord* c2) {
 bool clip_side(coord* c1, const coord* c2, int axis, float val) {
   float s1 = c1->pt[0] + val * c1->pt[axis];
   float s2 = c2->pt[0] + val * c2->pt[axis];
-  if ((s1 <= 0 && s2 <= 0) || (s1 >= 0 && s2 >= 0)) {
+  if ((s1 <= 0.f && s2 <= 0.f) || (s1 >= 0.f && s2 >= 0.f)) {
     return true;  // numerical problem
   } else {
     c1->pt = interp(c1->pt, c2->pt, s2 / (s2 - s1));
@@ -586,7 +586,7 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
     if (!poly.num()) return;
   }
   for (auto& p : poly) {
-    if (!assertw(p[0] > 0)) return;
+    if (!assertw(p[0] > 0.f)) return;
     const float a = 1.f / p[0];
     const Point pp(-a, p[1] * a, p[2] * a);
     p = hlr_point_from_point(pp);

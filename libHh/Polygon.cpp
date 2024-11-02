@@ -161,7 +161,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
     assertx(sa[i]);
     int i0 = i;
     int i1 = i + 1 < num() ? i + 1 : 0;
-    if (sa[i0] * sa[i1] > 0) continue;
+    if (sa[i0] * sa[i1] > 0.f) continue;
     pa.push(interp(self[i0], self[i1], sa[i1] / (sa[i1] - sa[i0])));
   }
   assertx((pa.num() & 0x1) == 0);
@@ -243,14 +243,14 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
   for (int i = 0; i < num(); i++, y0 = y1, z0 = z1) {
     y1 = self[i][ax0] - py;
     z1 = self[i][ax1] - pz;
-    if (z0 >= 0 && z1 >= 0) continue;
-    if (z0 < 0 && z1 < 0) continue;
-    if (y0 < 0 && y1 < 0) continue;
-    if (y0 >= 0 && y1 >= 0) {
+    if (z0 >= 0.f && z1 >= 0.f) continue;
+    if (z0 < 0.f && z1 < 0.f) continue;
+    if (y0 < 0.f && y1 < 0.f) continue;
+    if (y0 >= 0.f && y1 >= 0.f) {
       num_intersectionst++;
       continue;
     }
-    if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0) num_intersectionst++;
+    if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0.f) num_intersectionst++;
   }
   return (num_intersectionst & 0x1) != 0;
 }
@@ -262,10 +262,10 @@ bool Polygon::is_convex() const {
   unsigned n = num();  // unsigned to avoid -Werror=strict-overflow
   Vector dir = get_normal_dir();
   for_int(i, int(n - 2)) {
-    if (dot(cross(self[i], self[i + 1], self[i + 2]), dir) < 0) return false;
+    if (dot(cross(self[i], self[i + 1], self[i + 2]), dir) < 0.f) return false;
   }
-  if (dot(cross(self[n - 2], self[n - 1], self[0]), dir) < 0) return false;
-  if (dot(cross(self[n - 1], self[0], self[1]), dir) < 0) return false;
+  if (dot(cross(self[n - 2], self[n - 1], self[0]), dir) < 0.f) return false;
+  if (dot(cross(self[n - 1], self[0], self[1]), dir) < 0.f) return false;
   return true;
 }
 
@@ -312,7 +312,7 @@ void vector_standard_direction(Vector& v) {
     }
   }
   assertx(maxa);
-  if (v[maxc] < 0) v = -v;
+  if (v[maxc] < 0.f) v = -v;
 }
 
 }  // namespace hh

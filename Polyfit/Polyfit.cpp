@@ -126,7 +126,7 @@ void initial_projection() {
 void perhaps_initialize() {
   if (xform[0][0]) return;  // already initialized
   assertx(pt.n && verts.num());
-  assertw(spring > 0);  // just warn user
+  assertw(spring > 0.f);  // just warn user
   compute_xform();
   initial_projection();
 }
@@ -306,7 +306,7 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
       newp[c] = float(newv);
       double a = btb[c] - UtU[c] * square(newv);
       assertw(a > -1e-8);
-      if (a > 0) rss1 += a;
+      if (a > 0.) rss1 += a;
     }
     assertw(rss1 - rss0 < 1e-13);
     if (!ni) prss0 = rss0;
@@ -382,7 +382,7 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   double drss = rss1 - rssf - double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, rss1, drss);
-  if (drss >= 0) return R_energy;  // energy function does not decrease
+  if (drss >= 0.) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   // move points off to other segment and reproject later
   for (int pi : v->pts) {
@@ -415,7 +415,7 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
   double drss = rss1 - rssf + double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
-  if (drss >= 0) return R_energy;  // energy function does not decrease
+  if (drss >= 0.) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   vertex vn = new mvertex;
   verts.enter(vn);
@@ -552,7 +552,7 @@ void do_gfit(Args& args) {
     }
     float necsc = get_edis() + get_espr();
     float echange = necsc - ecsc;
-    assertw(echange < 0);
+    assertw(echange < 0.f);
     if (verb >= 4) {
       analyze_poly(2, "gfit_iter");
       showdf(" change in energy=%g\n", echange);

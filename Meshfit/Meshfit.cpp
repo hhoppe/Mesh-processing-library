@@ -1131,7 +1131,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, minrss1, drss);
-  if (drss >= 0) return R_energy;  // energy function does not decrease
+  if (drss >= 0.) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   HH_SSTAT(Sminii, minii == 1);
   HH_STIMER("__doecol");
@@ -1183,7 +1183,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
-  if (drss >= 0) return R_energy;  // energy function does not decrease
+  if (drss >= 0.) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   HH_STIMER("__doespl");
   for (Face f : mesh.faces(e))

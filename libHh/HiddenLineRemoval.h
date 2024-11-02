@@ -55,7 +55,7 @@ class HiddenLineRemoval {
   void enter_i(Polygon poly) {
     Vector nor = poly.get_normal();
     if (is_zero(nor)) return;
-    if (nor[0] < 0) nor = -nor;
+    if (nor[0] < 0.f) nor = -nor;
     int pn = _polygons.add(1);
     HlrPolygon& hp = _polygons[pn];
     hp.poly = std::move(poly);
@@ -96,14 +96,14 @@ class HiddenLineRemoval {
       const Point& pt = poly[i];
       y1 = pt[1] - py;
       z1 = pt[2] - pz;
-      if (z0 >= 0 && z1 >= 0) continue;
-      if (z0 < 0 && z1 < 0) continue;
-      if (y0 < 0 && y1 < 0) continue;
-      if (y0 >= 0 && y1 >= 1) {
+      if (z0 >= 0.f && z1 >= 0.f) continue;
+      if (z0 < 0.f && z1 < 0.f) continue;
+      if (y0 < 0.f && y1 < 0.f) continue;
+      if (y0 >= 0.f && y1 >= 1.f) {
         nint++;
         continue;
       }
-      if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0) nint++;
+      if (y0 - (y1 - y0) / (z1 - z0) * z0 >= 0.f) nint++;
     }
     return (nint & 0x1) != 0;
   }
@@ -150,7 +150,7 @@ class HiddenLineRemoval {
       if (d > 0.f || d < f) return false;
     }
     const float e = Ax * Cy - Ay * Cx;
-    if (f > 0) {
+    if (f > 0.f) {
       if (e < 0.f || e > f) return false;
     } else {
       if (e > 0.f || e < f) return false;
@@ -223,7 +223,7 @@ class HiddenLineRemoval {
   static void orient_segment(HlrSegment& s) {
     for_int(c, 3) {
       float d = s.p[0][c] - s.p[1][c];
-      if (d < 0) std::swap(s.p[0], s.p[1]);
+      if (d < 0.f) std::swap(s.p[0], s.p[1]);
       if (d) break;
     }
   }
@@ -253,7 +253,7 @@ class HiddenLineRemoval {
     float d1 = dot(s.p[1], hp.nor) - hp.d;
     float tol = hp.tol;
     if (d0 <= tol && d1 <= tol) return KD::ECallbackReturn::nothing;
-    if (d0 > 0 && d1 < 0) {
+    if (d0 > 0.f && d1 < 0.f) {
       std::swap(s.p[0], s.p[1]);
       std::swap(d0, d1);
     }

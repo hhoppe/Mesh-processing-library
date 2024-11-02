@@ -7,8 +7,7 @@
 
 namespace hh {
 
-namespace details {
-namespace PQ {
+namespace details::PQ {
 template <typename T> struct Node {
   Node() = default;
   explicit Node(const T& e, float pri) : _e(e), _pri(pri) {}
@@ -21,15 +20,14 @@ template <typename T> struct Node {
   T _e;
   float _pri;
 };
-}  // namespace PQ
-}  // namespace details
+}  // namespace details::PQ
 
 // Self-resizing priority queue.  Note: much code duplicated in HPqueue!
 template <typename T> class Pqueue : noncopyable {
  public:
   void clear() { _ar.clear(); }
-  void enter(const T& e, float pri) { ASSERTX(pri >= 0), enter_i(e, pri); }
-  void enter(T&& e, float pri) { ASSERTX(pri >= 0), enter_i(std::move(e), pri); }
+  void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
+  void enter(T&& e, float pri) { ASSERTX(pri >= 0.f), enter_i(std::move(e), pri); }
   void reserve(int size) { _ar.reserve(size); }
   int num() const { return _ar.num(); }
   size_t size() const { return _ar.size(); }
@@ -37,8 +35,8 @@ template <typename T> class Pqueue : noncopyable {
   const T& min() const { return (ASSERTXX(!empty()), _ar[0]._e); }
   float min_priority() const { return (ASSERTXX(!empty()), _ar[0]._pri); }
   T remove_min() { return (ASSERTXX(!empty()), remove_min_i()); }
-  void enter_unsorted(const T& e, float pri) { return (ASSERTX(pri >= 0), _ar.push(Node(e, pri))); }
-  void enter_unsorted(T&& e, float pri) { ASSERTX(pri >= 0), _ar.push(Node(std::move(e), pri)); }
+  void enter_unsorted(const T& e, float pri) { return (ASSERTX(pri >= 0.f), _ar.push(Node(e, pri))); }
+  void enter_unsorted(T&& e, float pri) { ASSERTX(pri >= 0.f), _ar.push(Node(std::move(e), pri)); }
   void sort() { sort_i(); }
 
  private:
@@ -138,7 +136,7 @@ template <typename T> class Pqueue : noncopyable {
 template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> class HPqueue : noncopyable {
  public:
   void clear() { _ar.clear(), _m.clear(); }
-  void enter(const T& e, float pri) { ASSERTX(pri >= 0), enter_i(e, pri); }
+  void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
   void reserve(int size) { _ar.reserve(size); }
   int num() const { return _ar.num(); }
   size_t size() const { return _ar.size(); }
@@ -146,13 +144,13 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   const T& min() const { return (ASSERTXX(!empty()), _ar[0]._e); }
   float min_priority() const { return (ASSERTXX(!empty()), _ar[0]._pri); }
   T remove_min() { return (ASSERTXX(!empty()), remove_min_i()); }
-  void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0), _m.enter(e, num()), _ar.push(Node(e, pri)); }
+  void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, num()), _ar.push(Node(e, pri)); }
   void sort() { return sort_i(); }
   bool contains(const T& e) const { return _m.contains(e); }
   float retrieve(const T& e) const { return retrieve_i(e); }
-  float remove(const T& e) { return remove_i(e); }                                       // ret pri or < 0
-  float update(const T& e, float pri) { return (ASSERTX(pri >= 0), update_i(e, pri)); }  // ret prevpri or < 0
-  float enter_update(const T& e, float pri) { return (ASSERTX(pri >= 0), enter_update_i(e, pri)); }  // prevpri or < 0
+  float remove(const T& e) { return remove_i(e); }                                         // ret pri or < 0.f
+  float update(const T& e, float pri) { return (ASSERTX(pri >= 0.f), update_i(e, pri)); }  // ret prevpri or < 0.f
+  float enter_update(const T& e, float pri) { return enter_update_i(e, pri); }             // ret prevpri or < 0.f
   bool enter_update_if_smaller(const T& e, float pri) { return enter_update_if_smaller_i(e, pri); }
   bool enter_update_if_greater(const T& e, float pri) { return enter_update_if_greater_i(e, pri); }
 
@@ -307,6 +305,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return oldpri;
   }
   float enter_update_i(const T& e, float pri) {
+    ASSERTX(pri >= 0.f);
     bool present;
     int i = _m.retrieve(e, present);
     if (!present) {
@@ -325,7 +324,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     }
   }
   bool enter_update_if_smaller_i(const T& e, float pri) {
-    ASSERTX(pri >= 0);
+    ASSERTX(pri >= 0.f);
     bool present;
     int i = _m.retrieve(e, present);
     if (!present) {
@@ -344,7 +343,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return false;
   }
   bool enter_update_if_greater_i(const T& e, float pri) {
-    ASSERTX(pri >= 0);
+    ASSERTX(pri >= 0.f);
     bool present;
     int i = _m.retrieve(e, present);
     if (!present) {

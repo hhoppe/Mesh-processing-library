@@ -281,11 +281,11 @@ int main(int argc, const char** argv) {
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;
   g_aargs1.shift();  // ignore argv0
-  if (hither >= 0) {
+  if (hither >= 0.f) {
     auto_hither = false;
     HB::set_hither(hither);
   }
-  if (yonder >= 0) HB::set_yonder(yonder);
+  if (yonder >= 0.f) HB::set_yonder(yonder);
   if (eyeob) g_obs.first = 0;
   if (g_aargs1.num() == 0) {
     if (!g_obs[1].defined())  // Not UpdateOb1Bbox().

@@ -7,6 +7,25 @@
 
 namespace hh {
 
+// For these templated functions, the caller should convert<> the inputs to obtain higher precision.
+
+// Return the vector cross-product in 2D.  The signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
+template <typename T> T cross(const Vec2<T>& v1, const Vec2<T>& v2) {
+  static_assert(std::is_floating_point_v<T>);
+  return v1[0] * v2[1] - v1[1] * v2[0];
+}
+
+// Return the vector cross-product in 3D.
+template <typename T> Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
+  static_assert(std::is_floating_point_v<T>);
+  return Vec3<T>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
+}
+
+// Return the Unnormalized cross-product given by three 3D points.
+template <typename T> Vec3<T> cross(const Vec3<T>& p1, const Vec3<T>& p2, const Vec3<T>& p3) {
+  return cross(p2 - p1, p3 - p1);
+}
+
 class Frame;
 struct Point;
 
@@ -17,73 +36,68 @@ struct Point;
 //   OpenGL was long ago derived from SGI's proprietary graphics library 'Irix GL'
 //   In its docs, matrix ops were specified as operating on row vectors on the matrix left.
 
-// *** Vector (lives in 3D linear space; represents translation rather than position).
+// *** Vector
+
+// A vector in a 3D linear space; it represents translation rather than position.
 struct Vector : Vec3<float> {
   Vector() = default;
   constexpr Vector(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Vector(Vec3<float> v) : Vec3<float>(v) {}
 };
-inline Vector operator*(const Vector& v, const Frame& f);
-inline Vector operator*(const Frame& f, const Vector& nor);
-inline Vector& operator*=(Vector& v, const Frame& f) { return v = v * f; }
-constexpr Vector cross(const Vector& v1, const Vector& v2);
-inline Vector normalized(Vector v) {
-  assertx(v.normalize());
-  return v;
-}
-inline Vector ok_normalized(Vector v) {
-  v.normalize();
-  return v;
-}
-// Vec.h defines explicit low-precision versions of these functions for Vec3<T>.  Because Vector only inherits from
-// Vec3<float>, we must overload several versions to hide the influence of the templated functions in RangeOp.h.
-inline constexpr float dot(const Vec3<float>& v1, const Vector& v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-inline constexpr float dot(const Vector& v1, const Vec3<float>& v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-inline constexpr float dot(const Vector& v1, const Vector& v2) {
-  return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2];
-}
-inline constexpr float mag2(const Vector& v1) { return dot(v1, v1); }
-inline float mag(const Vector& v1) { return sqrt(mag2(v1)); }
 
-// *** Point (lives in 3D affine space; represents position rather than translation).
+inline Vector operator*(const Vector& v, const Frame& f);    // Transform a vector by a frame.
+inline Vector operator*(const Frame& f, const Vector& nor);  // Transform a normal by a frame.
+inline Vector& operator*=(Vector& v, const Frame& f) { return v = v * f; }
+
+inline Vector normalized(Vector v) { return assertx(v.normalize()), v; }
+inline Vector ok_normalized(Vector v) { return v.normalize(), v; }
+
+// Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
+inline float dot(const Vec3<float>& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+inline float dot(const Vector& v1, const Vec3<float>& v2) { return dot(v1.vec(), v2.vec()); }
+inline float dot(const Vector& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+inline float mag2(const Vector& v1) { return mag2(v1.vec()); }
+inline float mag(const Vector& v1) { return mag(v1.vec()); }
+inline bool is_unit(const Vector& v) { return is_unit(v.vec()); }
+
+// *** Point
+
+// A point in a 3D affine space; it represents position rather than translation.
 struct Point : Vec3<float> {
   Point() = default;
   constexpr Point(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Point(Vec3<float> p) : Vec3<float>(p) {}
 };
-inline Point operator*(const Point& p, const Frame& f);
+
+inline Point operator*(const Point& p, const Frame& f);  // Transform a point by a frame.
 inline Point& operator*=(Point& p, const Frame& f) { return p = p * f; }
-Vector cross(const Point& p1, const Point& p2, const Point& p3);
+
 inline Vector get_normal_dir(const Vec3<Point>& triangle) { return cross(triangle[0], triangle[1], triangle[2]); }
 inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
+
 inline float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * mag2(cross(p1, p2, p3)); }
 inline float area2(const Vec3<Point>& triangle) { return area2(triangle[0], triangle[1], triangle[2]); }
-inline float dist2(const Vec3<float>& v1, const Point& v2) {
-  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
-}
-inline float dist2(const Point& v1, const Vec3<float>& v2) {
-  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
-}
-inline float dist2(const Point& v1, const Point& v2) {
-  return square(v1[0] - v2[0]) + square(v1[1] - v2[1]) + square(v1[2] - v2[2]);
-}
-inline float dist(const Vec3<float>& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
-inline float dist(const Point& v1, const Vec3<float>& v2) { return sqrt(dist2(v1, v2)); }
-inline float dist(const Point& v1, const Point& v2) { return sqrt(dist2(v1, v2)); }
 
-inline bool is_unit(const Vec3<float>& v) { return abs(mag2(v) - 1.f) < 1e-4f; }
+// Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
+inline float dist2(const Vec3<float>& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
+inline float dist2(const Point& v1, const Vec3<float>& v2) { return dist2(v1.vec(), v2.vec()); }
+inline float dist2(const Point& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
+inline float dist(const Vec3<float>& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
+inline float dist(const Point& v1, const Vec3<float>& v2) { return dist(v1.vec(), v2.vec()); }
+inline float dist(const Point& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
+inline float dot(const Point& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+inline bool is_unit(const Point& p) { return is_unit(p.vec()); }
 
-inline constexpr float dot(const Point& v1, const Vector& v2) { return v1[0] * v2[0] + v1[1] * v2[1] + v1[2] * v2[2]; }
+// *** Frame
 
-// *** Frame: either coordinate frame or transformation frame.
-//  Affine transformation from 3D to 3D.  (new_Point, 1.f) = (Point, 1.f) * Frame,
-//    where (Point, 1.f) is *row* 4-vector.
-//  Can be interpreted as 4x3 matrix where rows 0..2 are mappings of axes 0..2, and row 3 is mapping of origin.
-//  Note that Vector * Frame correctly assumes a row 4-vector (Vector, 0.f).
+// It encodes a 4x3 matrix representing either a coordinate frame or an affine transformation frame.
+// This matrix is applied to the *right* of a *row* vector:
+//   rows 0..2 are mappings of the axes 0..2, and row 3 is the mapping of the origin.
+// For the computation { Point p; Frame frame; Point newp = p * frame; },
+//   the evaluation is:   (newp[0], newp[1], newp[2], 1.f) = (p[0], p[1], p[2], 1.f) * frame,
+//   where (p[0], p[1], p[2], 1.f) is a *row* 4-vector.
+// For the computation { Vector v; Frame frame; Vector newv = v * frame; },
+//   the evaluation is:   (newv[0], newv[1], newv[2], 0.f) = (v[0], v[1], v[2], 0.f) * frame.
 class Frame : public SGrid<float, 4, 3> {
   using base = SGrid<float, 4, 3>;
 
@@ -105,8 +119,10 @@ class Frame : public SGrid<float, 4, 3> {
   static Frame scaling(const Vec3<float>& ar);
   static Frame identity();
 };
-Frame operator*(const Frame& f1, const Frame& f2);
+
+Frame operator*(const Frame& f1, const Frame& f2);  // Compose two frames (f2 after f1).
 inline Frame& operator*=(Frame& f1, const Frame& f2) { return f1 = f1 * f2; }
+
 bool invert(const Frame& fi, Frame& fo);
 inline Frame inverse(const Frame& f) {
   Frame fr;
@@ -114,12 +130,17 @@ inline Frame inverse(const Frame& f) {
   return fr;
 }
 inline Frame operator~(const Frame& f) { return inverse(f); }
+
 Frame transpose(const Frame& f);
+
 std::ostream& operator<<(std::ostream& os, const Frame& f);
 template <> HH_DECLARE_OSTREAM_EOL(Frame);
 
-// *** Barycentric coordinates; sum to 1.f when expressing a Point as combination of 3 Points
-//   or a Vector as a combination of 3 Vectors, but sums to 0.f when expressing a Vector as combination of 3 Points.
+// *** Bary
+
+// Barycentric coordinates;
+// The coords sum to 1.f when expressing a Point as a combination of 3 Points, or a Vector as a combo of 3 Vectors.
+// The coords sum to 0.f when expressing a Vector as combination of 3 Points.
 struct Bary : Vec3<float> {
   Bary() = default;
   constexpr Bary(float x, float y, float z) : Vec3<float>(x, y, z) {}
@@ -127,7 +148,9 @@ struct Bary : Vec3<float> {
   bool is_convex() const;
 };
 
-// *** Texture coordinates; usually defined over unit square [0, 1]^2.
+// *** Uv
+
+// 2D coordinates, often used to represent texture coordinates; usually defined over unit square [0, 1]^2.
 // In DirectX, Metal, and Vulkan, the Uv origin is at the top left corner of a texture image, whereas
 // in OpenGL the Uv origin at the lower left.
 // Unfortunately, my code/results uses the OpenGL convention (even though my yx pixel coordinates have their
@@ -138,12 +161,7 @@ struct Uv : Vec2<float> {
   constexpr Uv(Vec2<float> v) : Vec2<float>(v) {}
 };
 
-// Note that the signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
-template <typename DesiredType = void, typename T,
-          typename Precision = std::conditional_t<std::is_same_v<DesiredType, void>, T, DesiredType>>
-inline Precision cross(const Vec2<T>& v1, const Vec2<T>& v2) {
-  return Precision(v1[0]) * v2[1] - Precision(v1[1]) * v2[0];
-}
+// *** Misc
 
 // Line in 3D; is_on_line(Point p) = p == line.point + t * line.vec  (for some arbitrary float t).
 struct Line {
@@ -162,8 +180,6 @@ inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
   const float d = dot(sum(triangle), nor) / 3.f;
   return {nor, d};
 }
-
-// *** Misc operations
 
 // Project v into plane orthogonal to unitdir.
 Vector project_orthogonally(const Vector& v, const Vector& unitdir);
@@ -208,13 +224,13 @@ Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec);
 Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary);
 
 // Convert degrees to radians.
-template <typename T> constexpr T to_rad(T deg) {
+template <typename T> constexpr T rad_from_deg(T deg) {
   static_assert(std::is_floating_point_v<T>);
   return deg * static_cast<T>(D_TAU / 360);
 }
 
 // Convert radians to degrees.
-template <typename T> constexpr T to_deg(T rad) {
+template <typename T> constexpr T deg_from_rad(T rad) {
   static_assert(std::is_floating_point_v<T>);
   return rad * static_cast<T>(360 / D_TAU);
 }
@@ -229,19 +245,9 @@ inline Vector operator*(const Frame& f, const Vector& nor) {
   return Vector(dot(f[0], nor), dot(f[1], nor), dot(f[2], nor));
 }
 
-inline constexpr Vector cross(const Vector& v1, const Vector& v2) {
-  return Vector(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
-}
-
 // *** Point
 
 inline Point operator*(const Point& p, const Frame& f) { return p[0] * f[0] + p[1] * f[1] + p[2] * f[2] + f[3]; }
-
-inline Vector cross(const Point& p1, const Point& p2, const Point& p3) {
-  // It once seemed that "double" was needed below to overcome an apparent problem with poorly computed surface
-  // normals.  However, the problem lay in the geometry. Prefiltering with "Filtermesh -taubinsmooth 4" solved it.
-  return cross(p2 - p1, p3 - p1);
-}
 
 // *** Bary
 

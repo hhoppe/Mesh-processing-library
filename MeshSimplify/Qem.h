@@ -63,6 +63,13 @@ template <typename T, int n> class Qem {
 
 template <typename T, int n> HH_DECLARE_OSTREAM_EOL(Qem<T, n>);
 
+extern template class Qem<float, 3>;
+extern template class Qem<double, 3>;
+extern template class Qem<float, 6>;
+extern template class Qem<double, 6>;
+extern template class Qem<float, 9>;
+extern template class Qem<double, 9>;
+
 //----------------------------------------------------------------------------
 
 template <typename T, int n> void Qem<T, n>::add(const Qem<T, n>& qem) {

@@ -112,7 +112,6 @@
     <ClInclude Include="Args.h" />
     <ClInclude Include="Array.h" />
     <ClInclude Include="ArrayOp.h" />
-    <ClInclude Include="AtomicOperate.h" />
     <ClInclude Include="Audio.h" />
     <ClInclude Include="Bbox.h" />
     <ClInclude Include="BinaryIO.h" />

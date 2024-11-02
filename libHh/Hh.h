@@ -672,6 +672,7 @@ template <typename T> class Range {
     using reference = value_type&;
     iterator(T start, T stop) : _v(start), _stop(stop) {}
     iterator(const type& iter) = default;
+    type& operator=(const type&) = default;
     bool operator==(const type& rhs) const { return _v == rhs._v; }
     bool operator!=(const type& rhs) const { return !(*this == rhs); }
     bool operator<(const type& rhs) const { return _v < rhs._v; }
@@ -696,14 +697,14 @@ template <typename T> class Range {
 
   using value_type = T;
   using const_iterator = iterator;
-  using size_type = size_t;
+  using size_type = T;
   explicit Range(T stop) : Range(T{0}, stop) {}
   Range(T start, T stop) : _start(min(start, stop)), _stop(stop) {}
   iterator begin() const { return iterator(_start, _stop); }
   iterator end() const { return iterator(_stop, _stop); }
   iterator cbegin() const { return iterator(_start, _stop); }
   iterator cend() const { return iterator(_stop, _stop); }
-  size_t size() const { return _stop - _start; }
+  size_type size() const { return _stop - _start; }
   bool empty() const { return _stop == _start; }
 
  private:

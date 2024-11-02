@@ -22,7 +22,7 @@ static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
 
 template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const RangeEdges& range_edges) {
   assertx(anglethresh >= 0.f);
-  float vcos = std::cos(to_rad(anglethresh));
+  float vcos = std::cos(rad_from_deg(anglethresh));
   for (Edge e : range_edges) {
     if (mesh.is_boundary(e)) continue;
     bool is_sharp = edge_dihedral_angle_cos(mesh, e) < vcos;
@@ -402,7 +402,7 @@ static void act_flight() {
     obframe = f * obframe;
   }
   {
-    float a = to_deg(ang[2]);
+    float a = deg_from_rad(ang[2]);
     if (abs(a) > 90.f) a = (180.f - abs(a)) * sign(a);
     if (abs(a) > 45.f) a = 45.f * sign(a);
     a = sign(a) * pow(abs(a) / 45.f, .5f);
@@ -646,7 +646,8 @@ void ShowInfo() {
               output ? 'O' : ' ', HB::show_info().c_str(), screenrate,
               (info != 2 ? ""
                          : sform(" [%5.2f] x%12g y%12g z%12g a%+4.0f b%+4.0f p%+4.0f",  //
-                                 zoom, p[0], p[1], p[2], to_deg(ang[0]), to_deg(ang[1]), to_deg(ang[2]))
+                                 zoom, p[0], p[1], p[2],                                //
+                                 deg_from_rad(ang[0]), deg_from_rad(ang[1]), deg_from_rad(ang[2]))
                                .c_str()));
     static const bool show_fps = getenv_bool("G3D_SHOW_FPS");
     // if (HB::get_font_dims()[1] > 9 ...)

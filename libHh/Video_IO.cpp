@@ -20,6 +20,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // required by Media Foundation; must appear before other headers.
 
+#pragma warning(disable : 5204 5246)  // for <mfapi.h>
+
 #include <VersionHelpers.h>  // IsWindows8OrGreater()
 #include <codecapi.h>        // CODECAPI_AVEncMPVGOPSize, etc.
 #include <mfapi.h>
@@ -329,8 +331,6 @@ void WVideo::write(CNv12View frame) {
 //----------------------------------------------------------------------------
 // *** Video I/O
 
-#define AS(expr) assertx(SUCCEEDED(expr))
-
 //----------------------------------------------------------------------------
 // *** using Media Foundation
 #if defined(HH_VIDEO_HAVE_MF)
@@ -338,6 +338,8 @@ void WVideo::write(CNv12View frame) {
 // Supported Media Formats in Media Foundation
 // https://learn.microsoft.com/en-us/windows/win32/medfound/supported-media-formats-in-media-foundation
 // Containers: 3gp, asf, wma, wmv, aac, adts, avi, mp3, m4a, v4v, mov, mp4, sami, smi, wav
+
+#define AS(expr) assertx(SUCCEEDED(expr))
 
 namespace {
 

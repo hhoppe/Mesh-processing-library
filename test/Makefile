@@ -1,5 +1,5 @@
 # Use make (GNU gmake), e.g.:
-#  make CONFIG=win -j8
+#  make CONFIG=win -j12
 #  make clean Stack_test.ou
 
 MeshRoot = ..

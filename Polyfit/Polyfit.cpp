@@ -192,6 +192,7 @@ void reproject_locally(int pi) {
   assertx(v->pts.contains(pi));  // optional
   assertx(v->v[1]);              // optional
   float a, mind2 = project_point_segment(pt.co[pi], v->p, v->v[1]->p).d2;
+  dummy_init(a);
   vertex mine = v;
   if (v->v[0] && (a = project_point_segment(pt.co[pi], v->v[0]->p, v->p).d2) < mind2) {
     mind2 = a;

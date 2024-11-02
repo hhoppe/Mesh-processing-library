@@ -117,10 +117,12 @@ class BoundedIntervals {
   int _interv{0};
 };
 
+#if 0
 // Traverse a 2D grid using a sequence of bounded-width swaths instead of simple raster-scan order.
 #define for_2D_swaths(y, ny, x, nx, xwidth)                             \
   for (BoundedIntervals HH_ID(bi)(nx, xwidth); *HH_ID(bi); ++HH_ID(bi)) \
   for_int(y, ny) for_intL(x, HH_ID(bi).l(), HH_ID(bi).u())
+#endif
 
 // Given estimated output videoloop, improve its values to better match gradients from the input video,
 //  by performing relaxation only at the current (finest) resolution level.

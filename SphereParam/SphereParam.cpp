@@ -482,8 +482,8 @@ void split_awmesh_vertices_along_meridian(AWMesh& awmesh) {
     awmesh._wedges[wnew].attrib.uv[0] = 1.f;  // Rightmost longitude.
     for (const int f : awmesh.ccw_faces(v, someface[v])) {
       const Vec3<Point> sphs{map(V(0, 1, 2), [&](int j) {
-        const int w = awmesh._faces[f].wedges[j];
-        return sph_from_lonlat(awmesh._wedges[w].attrib.uv);
+        const int w2 = awmesh._faces[f].wedges[j];
+        return sph_from_lonlat(awmesh._wedges[w2].attrib.uv);
       })};
       const Point center = mean(sphs);
       if (center[0] <= 0.f) continue;  // Keep current assignment of face to wedge w; else change it to wnew.

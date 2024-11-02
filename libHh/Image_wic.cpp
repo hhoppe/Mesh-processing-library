@@ -112,6 +112,14 @@ class my_HGLOBAL {
   HGLOBAL _hMem{nullptr};
 };
 
+string canonical_pathname(string s) {
+  s = get_canonical_path(s);
+  if (starts_with(s, "/")) s = "C:" + s;
+  if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = static_cast<char>(std::toupper(s[0]));
+  if (s.size() < 3 || s[2] != '/') assertnever("unexpected pathname in " + s);
+  return s;
+}
+
 }  // namespace
 
 void Image::read_file_wic(const string& filename, bool bgra) {
@@ -248,14 +256,6 @@ void Image::read_file_wic(const string& filename, bool bgra) {
   } else {
     Warning("Non-default image orientation not recognized");
   }
-}
-
-string canonical_pathname(string s) {
-  s = get_canonical_path(s);
-  if (starts_with(s, "/")) s = "C:" + s;
-  if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = static_cast<char>(std::toupper(s[0]));
-  if (s.size() < 3 || s[2] != '/') assertnever("unexpected pathname in " + s);
-  return s;
 }
 
 void Image::write_file_wic(const string& filename, bool bgra) const {

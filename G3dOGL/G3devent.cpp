@@ -18,10 +18,6 @@ namespace {
 
 bool keylock;
 
-void press_keys(const string& str) {
-  for (char ch : str) KeyPressed(string(1, ch));
-}
-
 void save_state() {
   ExpandStateFilename();
   try {

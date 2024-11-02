@@ -23,6 +23,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     auto b = begin(range), e = end(range);
     for (; b != e; ++b) union_with(*b);
   }
+  type& operator=(const type&) = default;
 
   void clear() {
     (*this)[0] = PointD::all(std::numeric_limits<T>::max());

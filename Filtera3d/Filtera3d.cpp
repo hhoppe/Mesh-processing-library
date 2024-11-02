@@ -446,7 +446,7 @@ bool loop(A3dElem& el) {
         Vector n2 = el[i].p - el[i1].p;
         ar_sharp.push((n1.normalize() && n2.normalize() &&
                        angle_between_unit_vectors(normalized(el[i0].p - el[i].p), normalized(el[i].p - el[i1].p)) >
-                           to_rad(sharpthresh)));
+                           rad_from_deg(sharpthresh)));
       }
       for_int(i, el.num()) {
         if (ar_sharp[i]) {

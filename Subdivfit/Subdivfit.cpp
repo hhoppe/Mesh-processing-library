@@ -154,7 +154,7 @@ void wf_frame() {
 void subdivide(SubMesh& smesh, bool triang) {
   HH_STIMER("___submesh");
   smesh.mask_parameters(s222, weighta);
-  smesh.subdivide_n(nsubdiv, !nolimit, std::cos(to_rad(selective)), triang);
+  smesh.subdivide_n(nsubdiv, !nolimit, std::cos(rad_from_deg(selective)), triang);
 }
 
 // translate Vertex from one Mesh to another Mesh
@@ -748,7 +748,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
     for (int pi : setpts) {
       mesh.get_vertices(gscmf[pi], va);
       assertx(va.num() == 3);
-      const Bary& bary = gbary[pi];
+      const Vec3<double> baryd = convert<double>(gbary[pi]);
       Vec3<const Combvih*> cviha;
       for_int(c, 3) cviha[c] = &v_combvih(va[c]);
       Vec3<const float*> cvihcf;
@@ -756,9 +756,9 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
       Vec3<const float*> cvihhf;
       for_int(c, 3) cvihhf[c] = cviha[c]->h.data();
       Vec3<double> h;
-      for_int(k, 3) h[k] = bary[0] * cvihhf[0][k] + bary[1] * cvihhf[1][k] + bary[2] * cvihhf[2][k];
+      for_int(k, 3) h[k] = baryd[0] * cvihhf[0][k] + baryd[1] * cvihhf[1][k] + baryd[2] * cvihhf[2][k];
       for_int(j, n)
-          lls.enter_a_rc(rowi, j, float(bary[0] * cvihcf[0][j] + bary[1] * cvihcf[1][j] + bary[2] * cvihcf[2][j]));
+          lls.enter_a_rc(rowi, j, float(baryd[0] * cvihcf[0][j] + baryd[1] * cvihcf[1][j] + baryd[2] * cvihcf[2][j]));
       // Homogeneous hrh = Homogeneous(co[pi]) - h;
       Vector vrh;
       for_int(c, 3) vrh[c] = float(co[pi][c] - h[c]);
@@ -1014,7 +1014,7 @@ EResult try_esha(Edge eg, double& edrss) {
   if (gmesh.is_boundary(eg)) return R_illegal;
   bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   float vcos = edge_dihedral_angle_cos(gmesh, eg);
-  static const float k_cos30d = std::cos(to_rad(30.f));
+  static const float k_cos30d = std::cos(rad_from_deg(30.f));
   if (!is_sharp && vcos > k_cos30d) return R_sharp;  // quick culling
   // if is_sharp then always consider smoothing it
   HH_STIMER("__try_esha");

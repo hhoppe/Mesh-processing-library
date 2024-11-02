@@ -7,7 +7,7 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
 ifeq ($(plain_compiler),)
   cwarnings += -Wtrampolines -Wlogical-op -Wvector-operation-performance -Wno-double-promotion
-  cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wno-literal-suffix -Wuseless-cast
+  cxxwarnings += -Wzero-as-null-pointer-constant -Wold-style-cast -Wuseless-cast
   cxxwarnings += -fsized-deallocation -Wsized-deallocation
 endif
 

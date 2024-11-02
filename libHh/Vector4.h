@@ -7,7 +7,8 @@
 #elif defined(_M_ARM) && _M_ARM_FP >= 40 || \
     defined(__ARM_NEON__)  // From win and clang respectively; maybe __aarch64__.
 #define HH_VECTOR4_NEON
-#elif _M_IX86_FP >= 2 || defined(_M_X64) || defined(__SSE2__)  // (_M_IX86_FP is undefined for x64)
+#elif (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || defined(_M_X64) || defined(__SSE2__)
+// (Note that _M_IX86_FP is undefined for x64.)
 #define HH_VECTOR4_SSE
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(__SSE4_1__)
 #define HH_NO_SSE41

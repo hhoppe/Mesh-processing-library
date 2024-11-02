@@ -726,7 +726,8 @@ void do_rotate(Args& args) {
   if (ang == iang && my_mod(iang, 90) == 0 && abs(iang) <= 270) {
     image = rotate_ccw(image, iang);
   } else {
-    Frame f_rot = Frame::rotation(2, -to_rad(ang));  // backward map from new image to old image (but y, x reversed)
+    // backward map from new image to old image (but y, x reversed)
+    Frame f_rot = Frame::rotation(2, -rad_from_deg(ang));
     Frame frame;
     if (0) {  // anisometric rotation if image is rectangle rather than square!
       frame = f_rot;
@@ -2311,8 +2312,8 @@ void do_procedure(Args& args) {
       Vector vr = p - pcenter;
       float r = mag(vr);
       float a = std::atan2(vr[1], vr[0]);
-      // Point np = (p - pcenter) * Frame::rotation(2, to_rad(20.f)) + pcenter;
-      a += to_rad(20.f - abs(r - 0.5f) * 20.f);
+      // Point np = (p - pcenter) * Frame::rotation(2, rad_from_deg(20.f)) + pcenter;
+      a += rad_from_deg(20.f - abs(r - 0.5f) * 20.f);
       r = (.6f + smooth_step(r / .707f) * .5f) * r;
       Point np = pcenter + r * Vector(std::cos(a), std::sin(a), 0.f);
       mesh.set_point(v, np);

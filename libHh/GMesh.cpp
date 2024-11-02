@@ -492,6 +492,7 @@ void GMesh::read_line(char* sline) {
         return;
       }
       break;
+    default: break;
   }
   if (Warning("GMesh::read: cannot parse line")) SHOW(sline);
 }

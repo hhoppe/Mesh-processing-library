@@ -422,6 +422,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         return true;
       }
       break;
+    default: break;
   }
   assertnever("Cannot parse line '" + string(sline) + "'");
 }
@@ -1292,6 +1293,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         return true;
       }
       break;
+    default: break;
   }
   assertnever("Cannot parse line '" + string(sline) + "'");
 }

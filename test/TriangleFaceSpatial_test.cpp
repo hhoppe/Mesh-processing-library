@@ -34,11 +34,11 @@ void test2(int gridn) {
     int mini = 0;
     for_int(i, np) {
       const Vec3<Point>& triangle2 = trianglefaces[i].triangle;
-      float d2 = project_point_triangle(p, triangle2).d2;
+      float tmp_d2 = project_point_triangle(p, triangle2).d2;
       float lbd2 = square(lb_dist_point_triangle(p, triangle2));
-      assertw(d2 >= lbd2 - 1e-12);
-      if (d2 < mind2) {
-        mind2 = d2;
+      assertw(tmp_d2 >= lbd2 - 1e-12f);
+      if (tmp_d2 < mind2) {
+        mind2 = tmp_d2;
         mini = i;
       }
     }

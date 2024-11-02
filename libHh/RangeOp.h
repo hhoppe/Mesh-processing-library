@@ -514,15 +514,17 @@ template <typename Iterator, typename Func> struct TransformedIterator {
   using reference = value_type&;
   Iterator _iter;
   const Func& _func;
-  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
-  decltype(auto) operator*() const { return _func(*_iter); }
-  type& operator++() { return ++_iter, *this; }
+  TransformedIterator(Iterator iter, const Func& func) : _iter(iter), _func(func) {}
+  TransformedIterator(const type&) = default;
   type& operator=(const type& rhs) {
     if (this != &rhs) _iter = rhs._iter;
     // Note that _func is a reference and there is no need to assign it.
     return *this;
   }
+  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
+  decltype(auto) operator*() const { return _func(*_iter); }
+  type& operator++() { return ++_iter, *this; }
 };
 
 template <typename Range, typename Func> struct TransformedRange {
@@ -531,12 +533,12 @@ template <typename Range, typename Func> struct TransformedRange {
   auto begin() const {
     using std::begin;
     using Iterator = std::decay_t<decltype(begin(_range))>;
-    return TransformedIterator<Iterator, Func>{begin(_range), _func};
+    return TransformedIterator<Iterator, Func>(begin(_range), _func);
   }
   auto end() const {
     using std::begin, std::end;
     using Iterator = std::decay_t<decltype(begin(_range))>;
-    return TransformedIterator<Iterator, Func>{end(_range), _func};
+    return TransformedIterator<Iterator, Func>(end(_range), _func);
   }
   auto size() const {
     using std::size;
@@ -615,14 +617,16 @@ template <typename Iterator, typename Index> struct EnumeratedIterator {
   using reference = value_type&;
   Iterator _iter;
   Index _index{0};
-  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
-  decltype(auto) operator*() const { return std::make_tuple(_index, *_iter); }
-  type& operator++() { return ++_iter, ++_index, *this; }
+  EnumeratedIterator(Iterator iter) : _iter(iter) {}
+  EnumeratedIterator(const type&) = default;
   type& operator=(const type& rhs) {
     if (this != &rhs) _iter = rhs._iter, _index = rhs._index;
     return *this;
   }
+  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
+  bool operator!=(const type& rhs) const { return !(*this == rhs); }
+  decltype(auto) operator*() const { return std::make_tuple(_index, *_iter); }
+  type& operator++() { return ++_iter, ++_index, *this; }
 };
 
 template <typename Range, typename Index> struct EnumeratedRange {
@@ -630,12 +634,12 @@ template <typename Range, typename Index> struct EnumeratedRange {
   auto begin() const {
     using std::begin;
     using Iterator = std::decay_t<decltype(begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>{begin(_range)};
+    return EnumeratedIterator<Iterator, Index>(begin(_range));
   }
   auto end() const {
     using std::begin, std::end;
     using Iterator = std::decay_t<decltype(begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>{end(_range)};
+    return EnumeratedIterator<Iterator, Index>(end(_range));
   }
   auto size() const {
     using std::size;
@@ -662,17 +666,19 @@ template <typename Iterator, typename Func> struct FilteredIterator {
   Iterator _iter;
   Iterator _end;
   const Func& _func;
+  FilteredIterator(Iterator iter, Iterator end, const Func& func) : _iter(iter), _end(end), _func(func) {}
+  FilteredIterator(const type&) = default;
+  type& operator=(const type& rhs) {
+    if (this != &rhs) _iter = rhs._iter, _end = rhs._end;
+    // Note that _func is a reference and there is no need to assign it.
+    return *this;
+  }
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
   bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return *_iter; }
   type& operator++() {
     ++_iter;
     while (_iter != _end && !_func(*_iter)) ++_iter;
-    return *this;
-  }
-  type& operator=(const type& rhs) {
-    if (this != &rhs) _iter = rhs._iter, _end = rhs._end;
-    // Note that _func is a reference and there is no need to assign it.
     return *this;
   }
 };

@@ -2000,10 +2000,10 @@ void do_procedure(Args& args) {
     for_int(f, video.nframes()) {
       Frame frame;
       {
-        float ang = to_rad(f * degrees_per_frame);
-        frame =
-            (Frame::translation(V(-video.xsize() / 2.f, -video.ysize() / 2.f, 0.f)) *
-             Frame::rotation(2, -to_rad(ang)) * Frame::scaling(V(1.f / pixels_per_grid, 1.f / pixels_per_grid, 1.f)));
+        float ang = rad_from_deg(f * degrees_per_frame);
+        frame = (Frame::translation(V(-video.xsize() / 2.f, -video.ysize() / 2.f, 0.f)) *
+                 Frame::rotation(2, -rad_from_deg(ang)) *
+                 Frame::scaling(V(1.f / pixels_per_grid, 1.f / pixels_per_grid, 1.f)));
       }
       parallel_for_coords({50}, video.spatial_dims(), [&](const Vec2<int>& yx) {
         Point p = Point(float(yx[1]), float(yx[0]), 0.f) * frame;

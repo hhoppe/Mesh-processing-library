@@ -53,9 +53,9 @@ template <typename T, int D> class Kdtree : noncopyable {
   struct Node {
     int _axis;  // 0 .. D - 1
     float _val;
-    Stack<int> _stackei;  // Entry indices
-    int _l{-1};           // lower-valued subtree
-    int _h{-1};           // higher-valued subtree
+    Stack<int> _stackei{};  // Entry indices
+    int _l{-1};             // lower-valued subtree
+    int _h{-1};             // higher-valued subtree
   };
   Array<Entry> _arentry;
   Array<Node> _arnode;

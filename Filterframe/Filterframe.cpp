@@ -35,9 +35,9 @@ int icount = 0;
 int ocount = 0;
 
 void do_create_euler(Args& args) {
-  const float yaw = to_rad(args.get_float());
-  const float pitch = to_rad(args.get_float());
-  const float roll = to_rad(args.get_float());
+  const float yaw = rad_from_deg(args.get_float());
+  const float pitch = rad_from_deg(args.get_float());
+  const float roll = rad_from_deg(args.get_float());
   const Vec3<float> angles(yaw, pitch, roll);
   const Frame frame = frame_from_euler_angles(angles, Frame::identity());
   assertx(FrameIO::write(std::cout, ObjectFrame{frame}));

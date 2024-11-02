@@ -114,8 +114,12 @@ void read_mesh_line(char* sline) {
       }
       break;
     case 'F':
-      if (const char* s = after_prefix(sline, "Face ")) total_faces++;
+      if (const char* s = after_prefix(sline, "Face ")) {
+        dummy_use(s);
+        total_faces++;
+      }
       break;
+    default: break;
   }
   mesh.gflags().flag(mflag_ok) = false;
 }

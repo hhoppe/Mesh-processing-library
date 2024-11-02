@@ -137,9 +137,9 @@ Array<DomainFace> get_domain_faces() {
     // Tetrahedron: vertex 3 at +Z (0, 0, 1), and vertex 0 along -X direction.
     //  image order   (edge 1-2 occluded)
     //
-    //   2 - 3 - 2        / 3 \
-    //   | / | / |       1  |  2
-    //   1 - 0 - 1        \ 0 /
+    //   2 - 3 - 2        / 3 \      |
+    //   | / | / |       1  |  2     |
+    //   1 - 0 - 1        \ 0 /      |
     const Vec4<Point> vtmp = []() {
       Vec4<Point> v{
           Vector(-1.f / sqrt(3.f), 0.f, 0.f),

@@ -26,7 +26,7 @@ class MeshSearch {
     bool allow_local_project{false};
     bool allow_internal_boundaries{false};
     bool allow_off_surface{false};
-    std::optional<Bbox<float, 3>> bbox;
+    std::optional<Bbox<float, 3>> bbox{};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
   ~MeshSearch();

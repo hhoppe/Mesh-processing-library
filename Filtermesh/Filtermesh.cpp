@@ -676,7 +676,7 @@ void record_sharpe() {
   for (Edge e : mesh.edges()) {
     if (mesh.is_boundary(e)) continue;
     float angcos = edge_dihedral_angle_cos(mesh, e);
-    float ang = to_deg(my_acos(angcos));
+    float ang = deg_from_rad(my_acos(angcos));
     Sang.enter(ang);
     if (angcos > cosangle) {
       Ssmooth.enter(ang);
@@ -699,7 +699,7 @@ void record_cuspv() {
 void do_angle(Args& args) {
   float angle = args.get_float();
   assertx(angle >= 0.f && angle <= 180.f);
-  cosangle = std::cos(to_rad(angle));
+  cosangle = std::cos(rad_from_deg(angle));
   record_sharpe();
 }
 
@@ -2442,7 +2442,7 @@ void do_obtusesplit() {
   maxelen *= 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
-  const float thresh_ang = to_rad(135.f);  // TAU * (3.f / 8.f)
+  const float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
   HPqueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
   for (Edge e : mesh.edges()) pqe.enter_unsorted(e, maxelen - mesh.length(e));

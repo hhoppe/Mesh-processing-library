@@ -13,19 +13,18 @@ ifeq ($(plain_compiler),)
   # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  For my test suite.
   # cxxall += -msse4.1
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
-  cwarnings += -Weverything -Wno-undef -Wno-c++98-compat-pedantic -Wno-global-constructors \
-    -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-sign-conversion \
-    -Wno-unused-macros -Wno-padded -Wno-shadow \
-    -Wno-conversion -Wno-exit-time-destructors \
-    -Wno-float-equal -Wno-missing-prototypes -Wno-missing-noreturn -Wno-weak-vtables \
-    -Wno-disabled-macro-expansion -Wno-comma -Wno-double-promotion -Wno-language-extension-token \
-    -Wno-atomic-implicit-seq-cst -Wno-undefined-func-template
-  ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
-  ifneq ($(is_mac),1)
-    cwarnings += -Wno-unreachable-code-return -Wno-unreachable-code-break \
-      -Wno-unsafe-buffer-usage -Wno-reserved-id-macro
-    # cwarnings += -Wno-source-uses-openmp
+  cwarnings += -Weverything -Wno-unknown-warning-option -Wno-c++98-compat-pedantic -Wno-comma \
+    -Wno-weak-vtables -Wno-padded -Wno-unsafe-buffer-usage \
+    -Wno-global-constructors -Wno-exit-time-destructors \
+    -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-missing-noreturn \
+    -Wno-unreachable-code-return -Wno-unreachable-code-break \
+    -Wno-unused-macros -Wno-disabled-macro-expansion \
+    -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion
+  # -Wno-source-uses-openmp -Wno-reserved-id-macro
+  ifeq ($(is_mswin),1)
+    cwarnings += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier
   endif
+  ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
 endif
 
 # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax

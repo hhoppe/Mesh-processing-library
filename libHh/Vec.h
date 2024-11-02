@@ -60,6 +60,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   ArrayView<T> view() { return ArrayView<T>(a(), n); }
   CArrayView<T> view() const { return CArrayView<T>(a(), n); }
   CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
+  type& vec() { return *this; }
+  const type& vec() const { return *this; }
   template <int s> Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2).
   template <int s> const Vec<T, s>& head() const { return segment<s>(0); }
   ArrayView<T> head(int s) { return segment(0, s); }
@@ -226,10 +228,13 @@ template <typename T, int n> T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
   for_int(i, n) sum += v1[i] * v2[i];
   return sum;
 }
+
 template <typename T, int n> T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
 template <typename T, int n> T mag(const Vec<T, n>& vec) { return sqrt(mag2(vec)); }
+
 template <typename T, int n> T dist2(const Vec<T, n>& v1, const Vec<T, n>& v2) { return mag2(v1 - v2); }
 template <typename T, int n> T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) { return sqrt(dist2(v1, v2)); }
+
 template <typename T, int n> Vec<T, n> normalized(Vec<T, n> vec) {
   assertx(vec.normalize());
   return vec;
@@ -239,13 +244,11 @@ template <typename T, int n> Vec<T, n> ok_normalized(Vec<T, n> vec) {
   return vec;
 }
 template <typename T, int n> Vec<T, n> fast_normalized(const Vec<T, n>& vec) { return vec / mag(vec); }
+
 template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
   return abs(mag2(vec) - 1.f) <= tolerance;
 }
-template <typename T> constexpr Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
-  return Vec3<T>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
-}
-// ?? template <typename T> constexpr T cross(const Vec2<T>& v1, const Vec2<T>& v2) { return v1[0] * v2[1] - v2[0] * v1[1]; }
+
 // More robust than acos(dot()) for small angles!
 template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
   ASSERTXX(is_unit(v1) && is_unit(v2));

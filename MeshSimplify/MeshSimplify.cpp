@@ -447,7 +447,7 @@ bool wedge_materials = true;  // Material boundaries imply wedge boundaries; int
 string original_indices;      // Write the PM's original vertex indices in order to a file.
 
 // Failed attempt at signed_dihedral_angle():
-//  const float gmindih = -to_rad(109.471);
+//  const float gmindih = -rad_from_deg(109.471);
 
 constexpr float k_jitter_bary_max = 0.5f;
 
@@ -1059,11 +1059,11 @@ void parse_mesh_material_identifiers() {
     const int num_threads = get_max_threads();
     Array<Set<string>> chunk_unique_strings(num_threads);
     parallel_for_chunk(ar_faces, num_threads, [&](const int thread_index, auto subrange) {
-      Set<string>& unique_strings = chunk_unique_strings[thread_index];
+      Set<string>& unique_strings2 = chunk_unique_strings[thread_index];
       for (Face f : subrange) {
         assertx(mesh.is_triangle(f));
         if (!mesh.get_string(f)) mesh.set_string(f, "");
-        unique_strings.add(mesh.get_string(f));
+        unique_strings2.add(mesh.get_string(f));
       }
     });
     for (Set<string>& set : chunk_unique_strings) unique_strings.merge(set);

@@ -271,7 +271,7 @@ void global_neighb_project(const SubMesh& smesh) {
   if (g_force_global_project) {
     global_all_project(smesh);
   } else {
-    for_int(i, co.num()) gdis2[i] = project_point_neighb(smesh.mesh(), co[i], gscmf[i], gbary[i], gclp[i], true);
+    for_int(i, co.num()) gdis2[i] = project_point_neighborhood(smesh.mesh(), co[i], gscmf[i], gbary[i], gclp[i], true);
   }
 }
 
@@ -733,7 +733,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
     HH_STIMER("____lneighproject");
     for (int pi : setpts) {
       Point dummy_clp;
-      project_point_neighb(mesh, co[pi], gscmf[pi], gbary[pi], dummy_clp, true);
+      project_point_neighborhood(mesh, co[pi], gscmf[pi], gbary[pi], dummy_clp, true);
     }
   }
   int m = setpts.num(), n = mvcvih.iv.num();

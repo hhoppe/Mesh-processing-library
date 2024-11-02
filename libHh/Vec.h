@@ -7,17 +7,17 @@
 namespace hh {
 
 namespace details {
-template <typename T, int n> struct Vec_base;
+template <typename T, int n> struct VecBase;
 template <int D> class Vec_range;
 template <int D> class VecL_range;
 }  // namespace details
 
 // Allocated fixed-size 1D array with n elements of type T.
 // Like std::array<T, n>, but with constructors and "empty base class optimization" support for n == 0.
-template <typename T, int n> class Vec : details::Vec_base<T, n> {
+template <typename T, int n> class Vec : details::VecBase<T, n> {
   static_assert(n >= 0);
   using type = Vec<T, n>;
-  using base = details::Vec_base<T, n>;
+  using base = details::VecBase<T, n>;
 
  public:
   Vec() = default;
@@ -289,9 +289,9 @@ template <typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> 
 
 namespace details {
 
-template <typename T, int n> struct Vec_base {  // Allocates a member variable only if n > 0.
-  Vec_base() = default;
-  template <typename... Args> constexpr Vec_base(void*, Args&&... args) noexcept : _a{std::forward<Args>(args)...} {
+template <typename T, int n> struct VecBase {  // Allocates a member variable only if n > 0.
+  VecBase() = default;
+  template <typename... Args> constexpr VecBase(void*, Args&&... args) noexcept : _a{std::forward<Args>(args)...} {
     static_assert(sizeof...(args) == n, "#args");
   }
   T _a[n];
@@ -301,9 +301,9 @@ template <typename T, int n> struct Vec_base {  // Allocates a member variable o
   constexpr const T& operator[](int i) const { return _a[i]; }
 };
 
-template <typename T> struct Vec_base<T, 0> {
-  Vec_base() = default;
-  template <typename... Args> Vec_base(void*, Args&&... args) noexcept = delete;
+template <typename T> struct VecBase<T, 0> {
+  VecBase() = default;
+  template <typename... Args> VecBase(void*, Args&&... args) noexcept = delete;
   T* a() noexcept { return nullptr; }
   const T* a() const noexcept { return nullptr; }
   T& operator[](int) { return *implicit_cast<T*>(nullptr); }
@@ -512,13 +512,14 @@ template <typename Class> inline constexpr bool is_derived_from_vec_v = details:
 
 #if 0
 // We could define the following:
-template <typename T, typename T2, int n, typename RT = Vec<std::common_type_t<T, T2>>>
-Vec<RT, n> operator+(const Vec<T, n>& a1, const Vec<T2, n>& a2) {
-  Vec<RT, n> ar;
-  for_int(i, n) ar[i] = a1[i] + a2[i];
+template <typename T, typename T2, int n>
+auto operator+(const Vec<T, n>& g1, const Vec<T2, n>& g2) {
+  // using ReturnType = std::common_type_t<T, T2>;
+  using ReturnType = std::decay_t<decltype(std::declval<T>() + std::declval<T2>())>;
+  Vec<ReturnType, n> ar;
+  for_int(i, n) ar[i] = g1[i] + g2[i];
   return ar;
 }
-// (Stroustrup book had dubious value_type:  = Vec<Common_type<Value_type<T>, Value_type<T2>>, n>.)
 #endif
 
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h

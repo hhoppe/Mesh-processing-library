@@ -81,9 +81,9 @@ inline float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox) {
 
 namespace details {
 
-// Project proj onto segment (pi0, pi1).
-inline bool project_point_seg(int i, float b, const Point& pi0, const Point& pi1, const Point& proj, Bary& ret_cba,
-                              Point& ret_clp, float& mind2) {
+// Within the triangle plane, project `proj` onto the segment (pi0, pi1).
+inline bool project_onto_seg(const Point& proj, int i, float b, const Point& pi0, const Point& pi1,
+                             TriangleProjectionResult& result, float& min_inplane_d2) {
   // simplify??
   if (b >= 0.f) return false;
   float vix = pi1[0] - pi0[0], viy = pi1[1] - pi0[1], viz = pi1[2] - pi0[2];
@@ -92,45 +92,48 @@ inline bool project_point_seg(int i, float b, const Point& pi0, const Point& pi1
   // float don12 = vix * vpx + viy * vpy + viz * vpz;
   float don12 = vix * (proj[0] - pi0[0]) + viy * (proj[1] - pi0[1]) + viz * (proj[2] - pi0[2]);
   if (don12 <= 0.f) {
-    // float d2 = vpx * vpx + vpy * vpy +  vpz * vpz;  // optimized anyways
-    float d2 = dist2(proj, pi0);
-    if (d2 >= mind2) return false;
-    mind2 = d2;
-    ret_cba[i] = 1.f;
-    ret_cba[mod3(i + 1)] = 0.f;
-    ret_cba[mod3(i + 2)] = 0.f;
-    ret_clp = pi0;
+    // float in_plane_d2 = vpx * vpx + vpy * vpy +  vpz * vpz;  // optimized anyways
+    const float in_plane_d2 = dist2(proj, pi0);
+    if (in_plane_d2 < min_inplane_d2) {
+      min_inplane_d2 = in_plane_d2;
+      result.bary[i] = 1.f;
+      result.bary[mod3(i + 1)] = 0.f;
+      result.bary[mod3(i + 2)] = 0.f;
+      result.clp = pi0;
+    }
     return false;
   } else if (don12 >= d12sq) {
-    float d2 = dist2(proj, pi1);
-    if (d2 >= mind2) return false;
-    mind2 = d2;
-    ret_cba[i] = 0.f;
-    ret_cba[mod3(i + 1)] = 1.f;
-    ret_cba[mod3(i + 2)] = 0.f;
-    ret_clp = pi1;
+    const float in_plane_d2 = dist2(proj, pi1);
+    if (in_plane_d2 < min_inplane_d2) {
+      min_inplane_d2 = in_plane_d2;
+      result.bary[i] = 0.f;
+      result.bary[mod3(i + 1)] = 1.f;
+      result.bary[mod3(i + 2)] = 0.f;
+      result.clp = pi1;
+    }
     return false;
   } else {
-    float a = don12 / d12sq;
-    ret_cba[i] = 1.f - a;
-    ret_cba[mod3(i + 1)] = a;
-    ret_cba[mod3(i + 2)] = 0.f;
-    ret_clp = pi0 + V(vix, viy, viz) * a;
+    const float a = don12 / d12sq;
+    result.bary[i] = 1.f - a;
+    result.bary[mod3(i + 1)] = a;
+    result.bary[mod3(i + 2)] = 0.f;
+    result.clp = pi0 + V(vix, viy, viz) * a;
     return true;
   }
 }
 
-// Projection lies outside triangle, so more work is needed.
+// The planar projection lies outside the triangle, so more work is needed.
 inline TriangleProjectionResult project_aux(const Point& p, const Point& p1, const Point& p2, const Point& p3,
                                             const Point& proj, float b1, float b2, float b3) {
   TriangleProjectionResult result;
-  // Variable mind2 is necessary because p may project onto 2 different vertices (even in non-degenerate case).
-  // For triangle ABC, on line AB it may project to B, then on line AC it may project to C, then on line BC it may
-  // project inside the segment.
-  float mind2 = BIGFLOAT;
-  bool stop = project_point_seg(0, b3, p1, p2, proj, result.bary, result.clp, mind2);
-  if (!stop) stop = project_point_seg(1, b1, p2, p3, proj, result.bary, result.clp, mind2);
-  if (!stop) project_point_seg(2, b2, p3, p1, proj, result.bary, result.clp, mind2);
+  // We must track min_in_plane_d2 because p may project onto 2 different vertices.  For triangle ABC, on line AB it
+  // may project to B, then on line AC it may project to C, then on line BC it may project inside the segment.
+  float min_inplane_d2 = BIGFLOAT;  // (Distance within the plane, from proj, not from p.)
+  bool stop = project_onto_seg(proj, 0, b3, p1, p2, result, min_inplane_d2);
+  if (!stop) {
+    stop = project_onto_seg(proj, 1, b1, p2, p3, result, min_inplane_d2);
+    if (!stop) project_onto_seg(proj, 2, b2, p3, p1, result, min_inplane_d2);
+  }
   result.d2 = dist2(p, result.clp);
   return result;
 }

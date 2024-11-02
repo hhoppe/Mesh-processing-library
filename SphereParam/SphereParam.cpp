@@ -94,9 +94,12 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
   } else if (base_param_scheme == "mesh") {  // Use the 'sph' keys in the mesh file named by mesh_for_base.
     assertx(mesh_for_base != "");
     RFile fi2(mesh_for_base);
-    for (string line; fi2().peek() == '#';) {
-      assertx(my_getline(fi2(), line));
-      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    if (1) {
+      showff("Header information from %s:\n", mesh_for_base.c_str());
+      for (string line; fi2().peek() == '#';) {
+        assertx(my_getline(fi2(), line));
+        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+      }
     }
     GMesh mesh;
     mesh.read(fi2());

@@ -2399,7 +2399,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
       int ovi = other_creasevi(nn, mini);
       const auto [d2, bary, unused_clp] = project_point_segment(p, mesh.point(nn.va[ovi]), newp);
       if (d2 < min_d2) {
-        min_d2 = d2;  // Why was this commented??
+        min_d2 = d2;
         mini = ovi;
         min_bary = bary;
       }

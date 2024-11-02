@@ -679,7 +679,8 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
 
 // *** Project Point near face
 
-float project_point_neighb(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp, bool fast) {
+float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Bary& ret_bary, Point& ret_clp,
+                                 bool fast) {
   static const bool slow_project = getenv_bool("SLOW_PROJECT");
   assertw(!slow_project);
   if (slow_project) fast = false;

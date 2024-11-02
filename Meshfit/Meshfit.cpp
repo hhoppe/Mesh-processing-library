@@ -353,9 +353,9 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
   }
 }
 
-float project_point_neighb(const Point& p, Face& cf, Bary& ret_bary, Point& ret_clp) {
+float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary, Point& ret_clp) {
   if (1 && !have_quads) {
-    float d2 = project_point_neighb(mesh, p, cf, ret_bary, ret_clp, false);
+    float d2 = project_point_neighborhood(mesh, p, cf, ret_bary, ret_clp, false);
     return d2;
   }
   // For now, slow method to re-project on all neighboring faces.
@@ -441,7 +441,7 @@ void local_project_aux() {
     if (restrictfproject) {
       project_point(pt.co[i], cf, dummy_bary, pt.clp[i]);
     } else {
-      project_point_neighb(pt.co[i], cf, dummy_bary, pt.clp[i]);
+      project_point_neighborhood_helper(pt.co[i], cf, dummy_bary, pt.clp[i]);
     }
     point_change_face(i, cf);
   }

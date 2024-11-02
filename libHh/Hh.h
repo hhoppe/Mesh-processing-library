@@ -773,6 +773,7 @@ inline uint8_t clamp_to_uint8(int v) {
 }
 
 inline int mod3(int j) {
+  // C++23: maybe use "if consteval".
   static const int ar_mod3[6] = {0, 1, 2, 0, 1, 2};
   ASSERTX(j >= 0 && j < 6);
 #if defined(_MSC_VER)

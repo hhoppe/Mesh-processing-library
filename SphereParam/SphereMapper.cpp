@@ -691,7 +691,7 @@ class SphereMapper::Implementation {
 
   void create_visualizer() {
     my_setenv("G3D_TWOLIGHTS", "1");  // Exported environment variable; enables two-sided lighting in G3dOGL.
-    string filename = "| G3dOGL -geom 1500x1500 -terse -st none -key CDe---";
+    string filename = "| G3dOGL -geom 1500x1500 -terse -hither 0.1 -st none -key CDe---";
     if (0) filename = "debug_output.txt";
     _visualizer = new WFile(filename);
   }

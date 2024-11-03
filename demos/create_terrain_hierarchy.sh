@@ -20,13 +20,13 @@ for x in {0..3}; do
     echo Constructing $r.l-1.x$x.y$y.pm and $rl.pm
     rm -f ${rl}* >/dev/null
     (Filterimage $r.elev.png -tobw -elevation -step 1 -scalez 0.000694722 -removekinks \
-      -blocks 32 -bx $x -by $y -tomesh | \
-      Filtermesh -assign_normals >$rl.orig.m) 2>>$log
+                 -blocks 32 -bx $x -by $y -tomesh |
+       Filtermesh -assign_normals >$rl.orig.m) 2>>$log
     # SRcreate $rl -terrain -no_simp_bnd
     bin/meshtopm.sh $rl.orig.m -vsgeom -terrain -no_simp_bnd >$rl.pm 2>>$log
     rm -f $rl.orig.m
     FilterPM $rl.pm -maxresid .30e-3 -truncate_prior >$r.l-1.x$x.y$y.pm 2>>$log
-    FilterPM $rl.pm -maxresid .40e-3 -truncate_prior -maxresidd .30e-3 -truncate_beyond >v.pm 2>>$log && \
+    FilterPM $rl.pm -maxresid .40e-3 -truncate_prior -maxresidd .30e-3 -truncate_beyond >v.pm 2>>$log &&
       mv v.pm $rl.pm
   done
 done
@@ -55,9 +55,10 @@ for x in {0..1}; do
     (( cropyl = $y * 64 ))
     (( cropyh = (1 - $y) * 64 ))
     Filterimage $r.elev.png -tobw -cropsides $cropxl $cropxh $cropyl $cropyh \
-      -step 1 -scalez 0.000694722 -removekinks -tofloats $rl.floats 2>>$log
+                -step 1 -scalez 0.000694722 -removekinks -tofloats $rl.floats 2>>$log
     echo Simplifying stitched progressive mesh $rl.stitched.pm
-    bin/PMsimplify $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 -no_simp_bnd -ter_grid $rl.floats 2>>$log
+    bin/PMsimplify $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 \
+                   -no_simp_bnd -ter_grid $rl.floats 2>>$log
     nf=`FilterPM $rl.stitched.pm -stat 2>&1 | grep 'Basemesh' | sed 's/^.*nf=//'`
     echo nf=$nf >>$log
     mv $rl{.stitched.new,.full}.pm

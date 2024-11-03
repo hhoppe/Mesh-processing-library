@@ -122,6 +122,8 @@ class SphereMapper::Implementation {
 
   CArrayView<Point> compute(CArrayView<Point> base_sphmap) {
     assertx(base_sphmap.num() == _pmi._vertices.num());
+    assertx(_optim_movetol > 0.f);
+    assertx(_optim_nv_ratio > 1.f);    
     _sphmap.init(_pmi.rstream()._info._full_nvertices);
     _sphmap.head(_pmi._vertices.num()).assign(base_sphmap);
     for_int(f, _pmi._faces.num()) assertx(!face_flipped(f));
@@ -543,26 +545,27 @@ class SphereMapper::Implementation {
     }
   }
 
-  void goto_nverts(int n) {
-    n = min(n, _pmi.rstream()._info._full_nvertices);
-    assertx(_pmi._vertices.num() <= n);
-    if (_pmi._vertices.num() == n) return;
+  void goto_nverts(int target_nv) {
+    target_nv = min(target_nv, _pmi.rstream()._info._full_nvertices);
+    assertx(_pmi._vertices.num() <= target_nv);
+    if (_pmi._vertices.num() == target_nv) return;
     optimize_all();
 
-    const int n0 = _pmi._vertices.num();
-    int nv_last_optimize_all = n0;
+    const int orig_nv = _pmi._vertices.num();
+    int nv_next_optimize_all = orig_nv;
     ConsoleProgress cprogress;
     for (;;) {
-      if (_pmi._vertices.num() == n) break;
+      if (_pmi._vertices.num() == target_nv) break;
       if (!apply_vsplit()) break;
       const int nv = _pmi._vertices.num();
-      cprogress.update(float(nv - n0) / (n - n0));
-      const int nv_next_optimize_all = int(nv_last_optimize_all * _optim_nv_ratio + 0.5f);
-      bool want_optimize_all = nv >= nv_next_optimize_all;
-      if (want_optimize_all) {
+      cprogress.update(float(nv - orig_nv) / (target_nv - orig_nv));
+      if (nv >= nv_next_optimize_all) {
         if (_options.verbose >= 2) cprogress.clear();
         optimize_all();
-        nv_last_optimize_all = nv;
+        const int few_vertices = 100;
+        // Extra optimization at coarse resolution was needed to reliably create domains/tetra_eg*.uv.sphparam.m .
+        const float nv_ratio = nv <= few_vertices ? pow(_optim_nv_ratio, 0.5f) : _optim_nv_ratio;
+        nv_next_optimize_all = int(nv * nv_ratio + 0.5f);
       }
     }
     if (_options.verbose >= 2) cprogress.clear();

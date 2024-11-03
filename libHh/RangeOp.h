@@ -90,7 +90,7 @@ void swap_ranges(Range1&& range1, Range2&& range2) {
     std::swap_ranges(iter1, itend1, iter2);
   } else {  // Instead we require that they have the same size.
     auto it = std::swap_ranges(iter1, itend1, iter2);
-    ASSERTX(it == itend2);  // verify they have the same number of elements
+    ASSERTX(it == itend2);  // Verify they have the same number of elements.
   }
 }
 
@@ -106,7 +106,7 @@ Range fill(Range&& range, const Iterator& v) {
 template <typename Range, typename = enable_if_range_t<Range>> Range reverse(Range&& range_) {
   using std::begin, std::end;
   auto b = begin(range_), e = end(range_);
-  ASSERTX(e >= b);  // requires random-access iterator
+  ASSERTX(e >= b);  // Requires random-access iterator.
   // std::reverse(b, e);
   size_t num = e - b;
   for_size_t(i, num / 2) {
@@ -158,17 +158,18 @@ template <typename Range, typename = enable_if_range_t<Range>> std::ptrdiff_t di
   return std::distance(begin(range), end(range));
 }
 
-// Also from std: find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal()
-//  is_permutation(), search(), search_n(), copy(), copy_if(), copy_backward(), move(), move_backward()
+// Also from std:
+//  find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal(),
+//  is_permutation(), search(), search_n(), copy(), copy_if(), copy_backward(), move(), move_backward(),
 //  transform(), replace(), replace_if(), replace_copy(), replace_copy_if(),
 //  generate(), remove(), remove_if(), remove_copy(), remove_copy_if(), unique(), unique_copy(),
-//  reverse_copy(), rotate_copy(), shuffle()
-//  is_partitioned(), partition(), stable_partition(), partition_copy(), partition_move()
+//  reverse_copy(), rotate_copy(), shuffle(),
+//  is_partitioned(), partition(), stable_partition(), partition_copy(), partition_move(),
 //  stable_sort(), partial_sort(), partial_sort_copy(), is_sorted(), is_sorted_until(), nth_element(),
 //  lower_bound(), upper_bound(), equal_range(), binary_search(),
 //  merge(), merge_move(), inplace_merge(), includes(),
-//  set_union(), set_intersection(), set_difference(), set_symmetric_difference(), *heap*()
-//  minmax(), minmax_element(), lexicographical_compare(), next_permutation(), prev_permutation()
+//  set_union(), set_intersection(), set_difference(), set_symmetric_difference(), *heap*(),
+//  minmax(), minmax_element(), lexicographical_compare(), next_permutation(), prev_permutation().
 
 // *** My custom range operations:
 
@@ -423,7 +424,7 @@ SumType dist2(const Range1& range1, const Range2& range2) {
   SumType v;
   my_zero(v);
   for (; iter1 != itend1; ++iter1, ++iter2) v += square(SumType(*iter1) - SumType(*iter2));
-  ASSERTX(iter2 == itend2);  // verify they have the same number of elements
+  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return v;
 }
 
@@ -446,7 +447,7 @@ SumType dot(const Range1& range1, const Range2& range2) {
   SumType v;
   my_zero(v);
   for (; iter1 != itend1; ++iter1, ++iter2) v += SumType(*iter1) * SumType(*iter2);
-  ASSERTX(iter2 == itend2);  // verify they have the same number of elements
+  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return v;
 }
 
@@ -460,7 +461,7 @@ int compare(const Range1& range1, const Range2& range2) {
     auto d = *iter1 - *iter2;
     if (d) return d < 0 ? -1 : +1;
   }
-  ASSERTX(iter2 == itend2);  // verify they have the same number of elements
+  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return 0;
 }
 
@@ -476,7 +477,7 @@ int compare(const Range1& range1, const Range2& range2, const Iterator& toleranc
     if (d < -tolerance) return -1;
     if (d > tolerance) return +1;
   }
-  ASSERTX(iter2 == itend2);  // verify they have the same number of elements
+  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return 0;
 }
 
@@ -698,7 +699,7 @@ template <typename Range, typename Func> struct FilteredRange {
     using Iterator = std::decay_t<decltype(begin(_range))>;
     return FilteredIterator<Iterator, Func>{end(_range), end(_range), _func};
   }
-  // size() is unknown.
+  // Note that size() is unknown.
 };
 
 }  // namespace details

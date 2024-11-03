@@ -169,7 +169,7 @@ struct Line {
   Vector vec;
 };
 
-// Plane in 3D; is_on_plane(Point p) = dot(p, plane.nor) == plane.d;
+// Plane in 3D; is_on_plane(Point p) = dot(p, plane.nor) == plane.d.
 struct Plane {
   Vector nor;
   float d;
@@ -235,6 +235,34 @@ template <typename T> constexpr T deg_from_rad(T rad) {
   return rad * static_cast<T>(360 / D_TAU);
 }
 
+// More robust than acos(dot()) for small angles.
+template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
+  ASSERTXX(is_unit(v1) && is_unit(v2));
+  const T vdot = dot(v1, v2);
+  const float thresh = 0.9475f;  // Empirically from Python determine_crossover_for_acos_angle_approximation().
+  if (vdot > +thresh) {
+    return std::asin(mag(cross(v1, v2)));
+  } else if (vdot < -thresh) {
+    return T(D_TAU / 2) - std::asin(mag(cross(v1, v2)));
+  } else {
+    return std::acos(vdot);
+  }
+}
+
+// More robust than acos(dot()) for small angles.
+template <typename T> T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2<T>& v2) {
+  ASSERTXX(is_unit(v1) && is_unit(v2));
+  const T vdot = dot(v1, v2);
+  const float thresh = 0.9475f;
+  if (vdot > +thresh) {
+    return std::asin(cross(v1, v2));
+  } else if (vdot < -thresh) {
+    return T(D_TAU / 2) - std::asin(cross(v1, v2));
+  } else {
+    return std::acos(vdot);
+  }
+}
+
 //----------------------------------------------------------------------------
 
 // *** Vector
@@ -252,7 +280,7 @@ inline Point operator*(const Point& p, const Frame& f) { return p[0] * f[0] + p[
 // *** Bary
 
 inline bool Bary::is_convex() const {
-  auto& self = *this;
+  const auto& self = *this;
   return self[0] >= 0.f && self[0] <= 1.f && self[1] >= 0.f && self[1] <= 1.f && self[2] >= 0.f && self[2] <= 1.f;
 }
 

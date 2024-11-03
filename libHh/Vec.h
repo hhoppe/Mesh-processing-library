@@ -93,9 +93,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   ArrayView<T> slice(int ib, int ie) { return segment(ib, ie - ib); }
   CArrayView<T> slice(int ib, int ie) const { return segment(ib, ie - ib); }
   template <typename U> Vec<U, n> cast() const {
-    Vec<U, n> v;
-    for_int(i, n) v[i] = static_cast<U>((*this)[i]);
-    return v;
+    return map([](const auto& e) { return static_cast<U>(e); });
   }
   using value_type = T;
   using iterator = T*;
@@ -158,7 +156,6 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // Default operator=() and copy_constructor are safe.
 };
 
-template <typename T, int n> using SArray = Vec<T, n>;  // Backwards compatibility.
 template <typename T> using Vec0 = Vec<T, 0>;
 template <typename T> using Vec1 = Vec<T, 1>;
 template <typename T> using Vec2 = Vec<T, 2>;
@@ -249,43 +246,16 @@ template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance 
   return abs(mag2(vec) - 1.f) <= tolerance;
 }
 
-// More robust than acos(dot()) for small angles!
-template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
-  ASSERTXX(is_unit(v1) && is_unit(v2));
-  T vdot = dot(v1, v2);
-  const float thresh = 0.9475f;  // Empirically from Python determine_crossover_for_acos_angle_approximation().
-  if (vdot > +thresh) {
-    return std::asin(mag(cross(v1, v2)));
-  } else if (vdot < -thresh) {
-    return T(D_TAU / 2) - std::asin(mag(cross(v1, v2)));
-  } else {
-    return std::acos(vdot);
-  }
-}
-template <typename T> T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2<T>& v2) {
-  ASSERTXX(is_unit(v1) && is_unit(v2));
-  T vdot = dot(v1, v2);
-  const float thresh = 0.9475f;
-  if (vdot > +thresh) {
-    return std::asin(cross(v1, v2));
-  } else if (vdot < -thresh) {
-    return T(D_TAU / 2) - std::asin(cross(v1, v2));
-  } else {
-    return std::acos(vdot);
-  }
-}
-
 template <typename T> [[nodiscard]] T snap_coordinate(T value) {
   const T eps = 1e-6f;
-  if (abs(value - 0.f) < eps) value = 0.f;
-  if (abs(value - 1.f) < eps) value = 1.f;
-  if (abs(value + 1.f) < eps) value = -1.f;
+  if (abs(value - 0.f) < eps) return 0.f;
+  if (abs(value - 1.f) < eps) return 1.f;
+  if (abs(value + 1.f) < eps) return -1.f;
   return value;
 }
 
 template <typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> vec) {
-  for_int(i, n) vec[i] = snap_coordinate(vec[i]);
-  return vec;
+  return map(vec, [](const T& e) { return snap_coordinate(e); });
 }
 
 //----------------------------------------------------------------------------

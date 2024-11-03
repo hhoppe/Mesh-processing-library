@@ -3577,12 +3577,12 @@ void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   char* const end = buffer + capacity;
   strcpy(buffer, "MVertex ");
   char* s = buffer + 8;
-  s = std::to_chars(s, end, mesh.vertex_id(v)).ptr;
+  s = std::to_chars(s, end - 4, mesh.vertex_id(v)).ptr;
   *s++ = ' ';
   for_int(c, 3) {
     *s++ = ' ';
     constexpr int precision = 6;  // Default for printf("%g").
-    s = std::to_chars(s, end, p[c], std::chars_format::general, precision).ptr;
+    s = std::to_chars(s, end - 4, p[c], std::chars_format::general, precision).ptr;
   }
   if (sinfo) {
     *s++ = ' ';
@@ -3606,9 +3606,9 @@ void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {
     char* const end = buffer + capacity;
     strcpy(buffer, "Corner ");
     char* s = buffer + 7;
-    s = std::to_chars(s, end, mesh.vertex_id(v)).ptr;
+    s = std::to_chars(s, end - 4, mesh.vertex_id(v)).ptr;
     *s++ = ' ';
-    s = std::to_chars(s, end, mesh.face_id(mesh.corner_face(c))).ptr;
+    s = std::to_chars(s, end - 4, mesh.face_id(mesh.corner_face(c))).ptr;
     *s++ = ' ';
     *s++ = '{';
     ASSERTXX(s + strlen(sinfo) + 4 < end);

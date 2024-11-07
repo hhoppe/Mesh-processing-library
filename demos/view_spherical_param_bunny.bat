@@ -10,7 +10,7 @@ set G3D_TWOLIGHTS=1
 :: Filtermesh data/bunny.sphparam.m -renamekey v sph P | G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ %G3DARGS%
 
 
-bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -nooutput
+bin\meshtopm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -wait_on_visualizer -nooutput
 
 
 VideoViewer data/bunny.spheresample.octaflat.unrotated.normalmap.png

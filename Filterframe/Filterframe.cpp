@@ -12,7 +12,7 @@ namespace {
 int every = 0;
 int object = -1;
 bool g_inverse = false;
-bool orthonormalize = false;
+bool b_orthonormalize = false;
 bool snap_to_axes = false;
 float induce_roll = 0.f;
 float lowpass = 1.f;  // Note that 1.f == no filtering.
@@ -88,13 +88,7 @@ bool process_frame(ObjectFrame& object_frame) {
     to = t;
     zo = object_frame.zoom;
   }
-  if (orthonormalize) {
-    for_int(i, 3) assertw(t.v(i).normalize());
-    const Vector v2 = cross(t.v(0), t.v(1));
-    const float vdot = dot(v2, t.v(2));
-    assertx(abs(vdot) > .99f);
-    t.v(2) = v2 * sign(vdot);
-  }
+  if (b_orthonormalize) orthonormalize(t);
   if (snap_to_axes) {
     for_int(i, 3) {
       Vector& vec = t.v(i);
@@ -163,7 +157,7 @@ void process_frames() {
 int main(int argc, const char** argv) {
   string transf;
   string pretransf;
-  bool frame = false, stat = false;
+  bool orthonormalize = false, frame = false, stat = false;
   ParseArgs args(argc, argv);
   HH_ARGSC("A frame stream is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(create_euler, "yaw pitch roll : create frame from Euler angles (degrees)");
@@ -194,6 +188,7 @@ int main(int argc, const char** argv) {
     is_transf = true;
     ctransf = FrameIO::parse_frame(transf);
   }
+  b_orthonormalize = orthonormalize;
   statistics = stat;
   b_frame = frame;
   if (!noinput) process_frames();

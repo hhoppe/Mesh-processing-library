@@ -107,6 +107,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
   assertx(vao.num() >= 3);
   // First, create the new vertices by splitting the old ones, creating two mesh boundaries.
   Array<Vertex> van;  // new vertices
+  van.reserve(vao.num());
   for_int(i, vao.num()) {
     // Careful: note the mixed references to arrays vao and van.
     Vertex vo = vao[i];
@@ -123,24 +124,33 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
     }
     _mesh.set_point(vn, p);
     _mesh.set_string(vn, _mesh.get_string(vo));
+    // Note that all corner (and their strings) are preserved in split_vertex().
     v_dist(vn) = 0.f;  // any value != BIGFLOAT
     // Note: Vertex vn is not entered into pqvlbsr, because its corresponding old vertex is already there.
     for (Edge e : _mesh.edges(vn)) e_bfsnum(e) = 0;  // e_joined(e) will be initialized shortly
     // On corners and faces, all sacs, strings, and flags are preserved.
   }
-  // Next, fill the two boundaries with center_split().
+  // Next, fill the two boundaries with create_face() and center_split().
   reverse(van);  // Topologically, we must close the ring of new vertices in the opposite direction.
   Vec2<float> sum_dih = twice(0.f);  // sum of edge dihedral angles after closure, to estimate handle vs. tunnel
   for_int(fi, 2) {
-    Face fn = _mesh.create_face(fi == 0 ? vao : van);
+    CArrayView<Vertex> va = fi == 0 ? vao : van;
+    Face fn = _mesh.create_face(va);
+    // We must assign string information to the inner corners if defined on the outer corners.
+    for (Corner c : _mesh.corners(fn)) {
+      Corner c2 = _mesh.ccw_corner(c);  // Arbitrarily choose one of the two adjacent corners.
+      _mesh.set_string(c, _mesh.get_string(c2));
+    }
     Vertex vn = _mesh.center_split_face(fn);
     v_dist(vn) = 0.f;  // any value != BIGFLOAT
-    if (1) {
+    if (_mark_edges_sharp) {
       // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
       for (Face f : _mesh.faces(vn)) {
         Edge e = _mesh.opp_edge(vn, f);
         _mesh.update_string(e, "sharp", "");
       }
+    }
+    if (_mark_faces_filled) {
       // For all faces in the two fans after the closure, label them with the "filled" attribute.
       for (Face f : _mesh.faces(vn)) _mesh.update_string(f, "filled", "");
       // Label the two vertices at the centers of the face fans.
@@ -161,7 +171,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vao) {
   if (1) {
     float len = 0.f;
     for_int(i, vao.num()) len += _mesh.length(_mesh.edge(vao[i], vao[(i + 1) % vao.num()]));
-    bool is_handle = sum_dih[0] > 0.f;  // else tunnel
+    bool is_handle = sum(sum_dih) > 0.f;  // else tunnel
     showdf("Closing cycle: edges=%-3d length=%-12g is_handle=%d\n", vao.num(), len, is_handle);
     if (verb) showdf(" (dih0=%.1f dih1=%.1f)\n", sum_dih[0], sum_dih[1]);
     if (is_handle)

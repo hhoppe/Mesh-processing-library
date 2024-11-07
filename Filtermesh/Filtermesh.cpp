@@ -667,6 +667,36 @@ void do_debugsplitcorners() {
   mesh.copy(nmesh);
 }
 
+void do_checkcorners(Args& args) {
+  const char* key = args.get_string().c_str();
+  int nv_none = 0, nv_just_v = 0, nv_all_c = 0, nv_both_v_and_c = 0, nv_some_c = 0;
+  for (Vertex v : mesh.vertices()) {
+    const bool has_v = GMesh::string_has_key(mesh.get_string(v), key);
+    int num_f = 0, num_c = 0;
+    for (Corner c : mesh.corners(v)) {
+      num_f++;
+      num_c += GMesh::string_has_key(mesh.get_string(c), key);
+    }
+    if (!has_v) {
+      if (!num_c)
+        nv_none++;
+      else if (num_c < num_f)
+        nv_some_c++;
+      else
+        nv_all_c++;
+    } else {
+      if (!num_c)
+        nv_just_v++;
+      else
+        nv_both_v_and_c++;
+    }
+  }
+  showdf("Key=%-8s nv_none=%d nv_just_v=%d nv_all_c=%d  nv_both_v_and_c=%d nv_some_c=%d\n",  //
+         key, nv_none, nv_just_v, nv_all_c, nv_both_v_and_c, nv_some_c);
+  assertw(!nv_both_v_and_c);
+  assertw(!nv_some_c);
+}
+
 void record_sharpe() {
   assertx(cosangle != k_undefined_cosangle);
   assertw(cosangle >= -1.f && cosangle <= 1.f);
@@ -1829,45 +1859,53 @@ void do_quadodddiag() {
 
 // *** rmcomponents
 
-int remove_component(const Set<Face>& setf) {
+void remove_component(const Set<Face>& setf) {
   Set<Vertex> setv;
   for (Face f : setf) {
-    for (Vertex v : mesh.vertices(f)) setv.add(v);  // may already be there
+    for (Vertex v : mesh.vertices(f)) setv.add(v);  // May already be there.
     mesh.destroy_face(f);
   }
-  int nvrem = 0;
-  for (Vertex v : setv) {
-    if (mesh.degree(v)) continue;
-    nvrem++;
-    mesh.destroy_vertex(v);
-  }
-  return nvrem;
+  for (Vertex v : setv)
+    if (!mesh.degree(v)) mesh.destroy_vertex(v);
+}
+
+void remove_isolated_vertices() {
+  Array<Vertex> vdestroy;
+  for (Vertex v : mesh.vertices())
+    if (!mesh.degree(v)) vdestroy.push(v);
+  for (Vertex v : vdestroy) mesh.destroy_vertex(v);
+  if (vdestroy.num()) showdf("Removed %d isolated vertices\n", vdestroy.num());
 }
 
 void do_rmcomp(Args& args) {
-  // Component is assumed face-face connected (do not jump bowtie).
-  HH_TIMER("_rmcomponents");
+  HH_TIMER("_rmcomp");
   int maxnumf = args.get_int();
-  HH_STAT(Svertsrem);
+  const Array<Set<Face>> components = gather_components(mesh);
   HH_STAT(Sfacesrem);
-  Set<Face> setfvis;  // faces already considered
-  Array<Set<Face>> ar_setf;
-  for (Face f : mesh.faces()) {
-    if (setfvis.contains(f)) continue;
-    Set<Face> setf = gather_component(mesh, f);
-    for (Face ff : setf) setfvis.enter(ff);
-    int nf = setf.num();
-    if (nf > maxnumf) continue;
-    ar_setf.push(std::move(setf));
+  for (const Set<Face>& setf : components) {
+    const int nf = setf.num();
+    if (nf >= maxnumf) continue;
     Sfacesrem.enter(nf);
+    remove_component(setf);
   }
-  for (Set<Face>& setf : ar_setf) Svertsrem.enter(remove_component(setf));
-  showdf("Removed %d mesh components\n", Sfacesrem.inum());
-  Set<Vertex> vdestroy;
-  for (Vertex v : mesh.vertices())
-    if (!mesh.degree(v)) vdestroy.enter(v);
-  for (Vertex v : vdestroy) mesh.destroy_vertex(v);
-  if (vdestroy.num()) showdf("Removed %d isolated vertices\n", vdestroy.num());
+  showdf("Removed %d out of %d mesh components\n", Sfacesrem.inum(), components.num());
+  remove_isolated_vertices();
+}
+
+void do_rmcompn(Args& args) {
+  HH_TIMER("_rmcompn");
+  const int ncomp = args.get_int();
+  HH_STAT(Sfacesrem);
+  const Array<Set<Face>> components = gather_components(mesh);
+  const int num_to_remove = max(components.num() - ncomp, 0);
+  for_int(i, num_to_remove) {
+    const Set<Face>& setf = components[i];
+    const int nf = setf.num();
+    Sfacesrem.enter(nf);
+    remove_component(setf);
+  }
+  showdf("Removed %d out of %d mesh components\n", Sfacesrem.inum(), components.num());
+  remove_isolated_vertices();
 }
 
 // *** coalesce
@@ -2209,15 +2247,15 @@ void do_renamekey(Args& args) {
   string s_okey = args.get_string();
   const char* okey = s_okey.c_str();
   string s_nkey = args.get_string();
-  const char* nkey = s_nkey.c_str();
+  const char* nkey = s_nkey == "" ? nullptr : s_nkey.c_str();
   string str;
   if (contains(elems, 'v')) {
-    if (!strcmp(okey, "P")) {
+    if (s_okey == "P") {
       for (Vertex v : mesh.vertices()) {
         const Point& p = mesh.point(v);
         mesh.update_string(v, nkey, csform_vec(str, p));
       }
-    } else if (!strcmp(nkey, "P")) {
+    } else if (s_nkey == "P") {
       for (Vertex v : mesh.vertices()) {
         const char* s = assertx(GMesh::string_key(str, mesh.get_string(v), okey));
         assertx(*s++ == '(');
@@ -2234,27 +2272,27 @@ void do_renamekey(Args& args) {
       }
     } else {
       for (Vertex v : mesh.vertices()) {
-        mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
+        if (nkey) mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
         mesh.update_string(v, okey, nullptr);
       }
     }
   }
   if (contains(elems, 'f')) {
     for (Face f : mesh.faces()) {
-      mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
+      if (nkey) mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
       mesh.update_string(f, okey, nullptr);
     }
   }
   if (contains(elems, 'e')) {
     for (Edge e : mesh.edges()) {
-      mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
+      if (nkey) mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
       mesh.update_string(e, okey, nullptr);
     }
   }
   if (contains(elems, 'c')) {
     for (Face f : mesh.faces()) {
       for (Corner c : mesh.corners(f)) {
-        mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
+        if (nkey) mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
         mesh.update_string(c, okey, nullptr);
       }
     }
@@ -2613,6 +2651,7 @@ void do_renormalizenor() {
 // *** reduce
 
 float reduce_criterion(Edge e) {
+  // Check attribute_safe_edge_collapse()??
   if (!mesh.nice_edge_collapse(e)) return BIGFLOAT;
   switch (reducecrit) {
     case EReduceCriterion::length: return mesh.length(e);
@@ -2650,6 +2689,7 @@ void do_reduce_old_sequential() {
     for (Vertex v : mesh.vertices(e))
       for (Vertex v2 : mesh.vertices(v))
         for (Edge e2 : mesh.edges(v2)) pqe.remove(e2);
+    // Use attribute info to determine which vertex to keep??
     Vertex vkept = mesh.vertex1(e);
     const Point newp = [&]() {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -2706,23 +2746,27 @@ void do_reduce() {
     if (pqe.min_priority() > maxcrit && !edges_to_update.num()) break;
     Edge e = pqe.remove_min();
     for (Vertex v : mesh.vertices(e))
-      for (Vertex v2 : mesh.vertices(v))
-        for (Edge e2 : mesh.edges(v2))
+      for (Vertex vv : mesh.vertices(v))
+        for (Edge e2 : mesh.edges(vv))
           if (pqe.remove(e2) < 0.f) edges_to_update.remove(e2);
-    Vertex vkept = mesh.vertex1(e);
-    const Point newp = [&]() {
-      Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-      bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
-      int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
-      return interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    }();
-    mesh.collapse_edge(e);
+    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+    const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
+    const int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
+    const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+    Vertex vkept = ii == 0 ? v2 : v1;
+    mesh.collapse_edge_vertex_saving_attribs(e, vkept);
     e = nullptr;
     mesh.set_point(vkept, newp);
     for (Vertex v : mesh.vertices(vkept))
       for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
   }
   cprogress.clear();
+}
+
+void do_normalized_maxcrit(Args& args) {
+  const float value = args.get_float();
+  const float avg_elen = float(mean(transform(mesh.edges(), [](Edge e) { return mesh.length(e); })));
+  maxcrit = value * square(avg_elen);
 }
 
 void do_lengthc() { reducecrit = EReduceCriterion::length; }
@@ -2918,6 +2962,7 @@ float face_inscribed_radius(Face f) {
 
 bool is_degenerate(Face f) { return face_inscribed_radius(f) < 1e-6f; }
 
+// Preserve normal and uv strings??
 void do_swapdegendiag() {
   Set<Edge> set_bad_edges;
   for (Face f : mesh.faces())
@@ -4279,6 +4324,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(quadduvdiag, ": triangulate quads using diamond uv pattern");
   HH_ARGSD(quadodddiag, ": triangulate quads to form odd-valence vertices");
   HH_ARGSD(rmcomp, "nfaces : remove components with <=nfaces");
+  HH_ARGSD(rmcompn, "ncomp : remove components until <= ncomp");
   HH_ARGSD(coalesce, "fcrit : coalesce planar faces into polygons");
   HH_ARGSD(makequads, "p_tol : coalesce coplanar tris into quads");
   HH_ARGSF(bndmerge, ":  only allow gmerge at boundary vertices");
@@ -4288,6 +4334,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(slowcornermerge, ": merge info at vertices if possible");
   HH_ARGSD(splitcorners, ": split corners into vertices if different");
   HH_ARGSD(debugsplitcorners, ": split corners into vertices if different");
+  HH_ARGSD(checkcorners, "key : count key strings at vertices and corners");
   HH_ARGSD(facemerge, ": merge info at faces if possible");
   HH_ARGSD(rgbvertexmerge, ": merge rgb at vertices if possible");
   HH_ARGSD(rgbfacemerge, ": merge rgb at faces if possible");
@@ -4326,7 +4373,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(procedure, "name... : apply named procedure to mesh");
   HH_ARGSC("", ":");
   HH_ARGSP(nfaces, "n :  stop when mesh has <=n faces");
-  HH_ARGSP(maxcrit, "f :  stop when edge crit >=f");
+  HH_ARGSD(normalized_maxcrit, "f :  stop when edge crit >= f * avg_elen^2");
+  HH_ARGSP(maxcrit, "f :  stop when edge crit >= f");
   HH_ARGSD(lengthc, ":  use edge length as reduction criterion");
   HH_ARGSD(inscribedc, ":  use face inscribed radius as criterion");
   HH_ARGSD(volumec, ":  use preservation of volume criterion");

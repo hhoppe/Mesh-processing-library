@@ -37,6 +37,7 @@ data\create_terrain_hierarchy.log ^
 data\office.nf200000.mincycles.m ^
 data\bunny.vertexcache.m ^
 data\bunny.sphparam.m ^
+data\octaflat_eg128.uv.sphparam.m ^
 data\bunny.spheresample.remesh.m ^
 data\bunny.spheresample.octaflat.unrotated.normalmap.png ^
 data\bunny.lonlat.unrotated.normalmap.png ^

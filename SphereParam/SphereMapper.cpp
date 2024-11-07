@@ -123,7 +123,7 @@ class SphereMapper::Implementation {
   CArrayView<Point> compute(CArrayView<Point> base_sphmap) {
     assertx(base_sphmap.num() == _pmi._vertices.num());
     assertx(_optim_movetol > 0.f);
-    assertx(_optim_nv_ratio > 1.f);    
+    assertx(_optim_nv_ratio > 1.f);
     _sphmap.init(_pmi.rstream()._info._full_nvertices);
     _sphmap.head(_pmi._vertices.num()).assign(base_sphmap);
     for_int(f, _pmi._faces.num()) assertx(!face_flipped(f));
@@ -688,8 +688,7 @@ class SphereMapper::Implementation {
 
   // *** Visualizer.
 
-  static constexpr bool wait_for_user_to_close_visualizer_window = false;
-  WFile* _visualizer{nullptr};  // (Never deleted if !wait_for_user_to_close_visualizer_window.)
+  WFile* _visualizer{nullptr};  // (Never deleted if !_options.wait_on_visualizer.)
   int _visualizer_nsplits_since_end_frame{0};
 
   void create_visualizer() {
@@ -762,7 +761,7 @@ class SphereMapper::Implementation {
     os << "f 0 0 0\nkeys DCDC\n";  // Hack to get display-list caching to reset properly.
     os << "keys J\n";              // Start rotating.
     os << std::flush;
-    if (wait_for_user_to_close_visualizer_window) {
+    if (_options.wait_on_visualizer) {
       delete _visualizer;
       _visualizer = nullptr;
     }

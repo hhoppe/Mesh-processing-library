@@ -170,6 +170,14 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2
 
 }  // namespace
 
+void orthonormalize(Frame& frame) {
+  assertx(frame.v(0).normalize());
+  const Vector v1 = normalized(cross(frame.v(2), frame.v(0)));
+  frame.v(1) = dot(v1, frame.v(1)) > 0.f ? v1 : Vector(-v1);
+  const Vector v2 = normalized(cross(frame.v(0), frame.v(1)));
+  frame.v(2) = dot(v2, frame.v(2)) > 0.f ? v2 : Vector(-v2);
+}
+
 // See https://en.wikipedia.org/wiki/Euler_angles
 //  Tait-Bryan angles / Nautical angles / Cardan angles : sometimes called Euler angles, not "proper Euler angles"
 //
@@ -195,11 +203,13 @@ Vec3<float> euler_angles_from_frame(const Frame& f) {
 }
 
 Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
-  Frame fr = Frame::identity();  // Note: modifying local rather than prev_frame to preserve axes scale and origin.
-  for_int(c, 3) fr[c][c] = mag(prev_frame.v(c));
-  for_int(c, 3) fr = fr * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
-  fr.p() = prev_frame.p();
-  return fr;
+  Frame frame = Frame::identity();  // Note: modifying local rather than prev_frame to preserve axes scale and origin.
+  Vec3<float> prev_mags = map(prev_frame.head<3>(), [](const Vec3<float>& v) { return float(mag<double>(v)); });
+  for_int(c, 3) frame[c][c] = prev_mags[c];
+  for_int(c, 3) frame = frame * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
+  if (all_of(prev_mags, [](float mag) { return abs(mag - 1.f) < 1e-4f; })) orthonormalize(frame);
+  frame.p() = prev_frame.p();
+  return frame;
 }
 
 void frame_aim_at(Frame& f, const Vector& v) {

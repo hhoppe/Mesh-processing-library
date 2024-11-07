@@ -17,6 +17,7 @@ class SphereMapper {
     int verbose{1};                   // 0=quiet; 1=default; 2=more.
     int effort{2};                    // Level (0..5) of thoroughness in optimization (slower but more accurate).
     bool visualize{false};            // Launch a piped process to visualize progress of spherical parameterization.
+    bool wait_on_visualizer{false};   // Wait for user to close the visualizer window.
     bool fix_base{false};             // Never update the sph values of the base mesh vertices.
     bool optimize_inverse{false};     // Minimize inverse stretch (from sph to surface) instead of regular stretch.
     float conformal_weight{1e-4f};    // Small amount of inverse stretch for regularization.

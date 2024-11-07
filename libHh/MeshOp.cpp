@@ -105,6 +105,21 @@ Set<Face> gather_component_v(const Mesh& mesh, Face f) {
   return setf;
 }
 
+Array<Set<Face>> gather_components(const Mesh& mesh) {
+  Array<Set<Face>> components;
+  Set<Face> setfvis;  // Faces already considered.
+  for (Face f : mesh.faces()) {
+    if (setfvis.contains(f)) continue;
+    components.push(gather_component(mesh, f));
+    const Set<Face>& setf = components.last();
+    if (setf.num() == mesh.num_faces()) return components;  // Shortcut for single component.
+    for (Face ff : setf) setfvis.enter(ff);
+  }
+  const auto by_increasing_size = [](const Set<Face>& a, const Set<Face>& b) { return a.num() < b.num(); };
+  sort(components, by_increasing_size);
+  return components;
+}
+
 Stat mesh_stat_boundaries(const Mesh& mesh) {
   Stat Sbound;
   Set<Edge> setevis;  // boundary edges already considered

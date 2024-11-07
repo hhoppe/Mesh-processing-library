@@ -52,6 +52,7 @@ class GMesh : public Mesh {
   void destroy_face(Face f) override;
   // Do appropriate actions with geometry, eflag_sharp, and face strings
   void collapse_edge_vertex(Edge e, Vertex vs) override;  // Vertex vs is kept.
+  void collapse_edge_vertex_saving_attribs(Edge e, Vertex vs);
   void collapse_edge(Edge e) override;
   Vertex split_edge(Edge e, int id = 0) override;
   Edge swap_edge(Edge e) override;
@@ -124,6 +125,8 @@ class GMesh : public Mesh {
 
   // ** Misc:
   friend void swap(GMesh& l, GMesh& r) noexcept;
+
+  void show_keys(Vertex v) const;
 
  private:
   std::ostream* _os{nullptr};  // for record_changes

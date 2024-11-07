@@ -5,7 +5,7 @@ source bin/_initdemos.sh
 
 # Filtermesh data/bunny.sphparam.m -renamekey v sph P | G3D_TWOLIGHTS=1 G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ $G3DARGS
 
-bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -nooutput
+bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -wait_on_visualizer -nooutput
 
 
 VideoViewer data/bunny.spheresample.octaflat.unrotated.normalmap.png

@@ -40,7 +40,7 @@ string param_file;               // Filename for param_mesh (M -> S and after in
 string rotate_s3d;               // Filename for s3d file.
 Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
 string signal_;                  // Surface signal ("G", "N", or "C") (for geometry, normal, or color).
-bool feather_texture = true;     // Blend texture discontinuities in write_dual_texture.
+bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
 int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
@@ -208,8 +208,8 @@ Array<DomainFace> get_domain_faces() {
     //  2Y- 5Z-
     //  1X- 4X+
     //  0Y+ 3Z+
-    // Fully supporting baseball would require changes in adjust_for_domain(), non 1-1 mapping in do_write_texture(),
-    //  etc.
+    // Fully supporting baseball would require changes in adjust_for_domain(), non 1-1 mapping in
+    // do_write_primal_texture(),  etc.
     domain_faces.init(6);
     for_int(i, domain_faces.num()) {
       domain_faces[i].facecolor =
@@ -1351,7 +1351,7 @@ void apply_feathering(Image& image) {
   }
 }
 
-void do_write_dual_texture(Args& args) {
+void do_write_texture(Args& args) {
   const string image_name = args.get_filename();
   assertx(signal_ != "");
   assertx(domain_file != "");
@@ -1361,7 +1361,7 @@ void do_write_dual_texture(Args& args) {
 
   const GMesh domain_mesh = read_sphparam_mesh(domain_file);  // Map: domain D -> sphere S (v -> v_sph(v)).
   GMesh param_mesh = read_sphparam_mesh(param_file);          // Map (initially): mesh M -> sphere S (v -> v_sph(v)).
-  const Bbox bbox{transform(g_mesh.vertices(), [&](Vertex v) { return g_mesh.point(v); })};
+  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return param_mesh.point(v); })};
   const Frame rotate_frame = get_rotate_frame();
 
   GMesh mesh_i;  // Map: image I -> domain D  (v -> v_domainp(v)).
@@ -1397,7 +1397,7 @@ void do_write_dual_texture(Args& args) {
   const MeshSearch msearch_d(domain_mesh, {true});              // Map: domain D -> sphere S (v -> v_sph(v)).
   const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
-  HH_TIMER("_dual_texture");
+  HH_TIMER("_write_texture");
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
   const int num_threads = get_max_threads();
@@ -1411,7 +1411,7 @@ void do_write_dual_texture(Args& args) {
         const int yy = image.ysize() - 1 - y;
         Pixel& pixel = image[yy][x];
         Point p_i, p_d, p_s;
-        p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
+        p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
         {
           auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
           if (d2 > 0.f) {
@@ -1441,12 +1441,12 @@ void do_write_dual_texture(Args& args) {
   nooutput = true;
 }
 
-void do_write_texture(Args& args) {
+void do_write_primal_texture(Args& args) {
   const string image_name = args.get_filename();
   assertx(signal_ != "");
   internal_remesh();
   // Note that the "primal" remesh vertices do not correspond to the "dual" sampling of texture-mapping hardware.
-  HH_TIMER("_write_texture");
+  HH_TIMER("_write_primal_texture");
   assertx(gridn);
   // For tetra and cube, the righthand boundary of the image correctly wraps around to the lefthand boundary,
   //  and the top boundary of the domain is still in the interior.
@@ -1464,13 +1464,11 @@ void do_write_texture(Args& args) {
   Image image_right_column(V(image.ysize(), 1), background);
   const Bbox bbox{transform(g_mesh.vertices(), [&](Vertex v) { return g_mesh.point(v); })};
   const Frame rotate_frame = get_rotate_frame();
-  if (signal_ == "N") assertw(rotate_s3d != "");
   for (Vertex v : g_mesh.ordered_vertices()) {  // Ordered so as to "consistently" break ties along domain edges.
     const Uv uv = v_imageuv(v);
-    int y = int(uv[1] * scale + .5f);
-    const int x = int(uv[0] * scale + .5f);
+    const int y0 = int(uv[1] * scale + .5f), x = int(uv[0] * scale + .5f);  // Primal sampling.
     // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
-    y = image.ysize() - 1 - y;
+    const int yy = image.ysize() - 1 - y0;
     Pixel pixel;
     pixel[3] = 255;
     switch (signal_[0]) {
@@ -1503,9 +1501,9 @@ void do_write_texture(Args& args) {
     }
     if (x == image.xsize()) {
       // Ignore last column; verify later that it equals first column.
-      image_right_column[y][0] = pixel;
+      image_right_column[yy][0] = pixel;
     } else {
-      image[y][x] = pixel;
+      image[yy][x] = pixel;
     }
   }
   if (!checkern) {
@@ -1534,7 +1532,6 @@ void do_write_lonlat_texture(Args& args) {
   switch (signal_[0]) {
     case 'G': break;
     case 'N':
-      assertw(rotate_s3d != "");
       for (Vertex v : param_mesh.vertices()) {
         Vector normal;
         if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
@@ -1565,9 +1562,8 @@ void do_write_lonlat_texture(Args& args) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
         const int yy = image.ysize() - 1 - y;
         Pixel& pixel = image[yy][x];
-        const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
+        const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());  // Dual sampling.
         const Point sph = sph_from_lonlat(lonlat);
-
         auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
         hint_f = f;
         assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
@@ -1783,7 +1779,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(octa8colors, ": use 8 instead of 4 face colors");
   HH_ARGSF(baseball, ": use baseball cube unwrapping instead of cross");
   HH_ARGSC(HH_ARGS_INDENT "Sample sphere:");
-  HH_ARGSF(omit_faces, ": let remesh have only vertices (faster write_texture)");
+  HH_ARGSF(omit_faces, ": let remesh have only vertices (faster write_primal_texture)");
   HH_ARGSD(mesh_sphere, ": map domain grid onto sphere");
   HH_ARGSD(load_remesh, "mesh.remesh.m : load a previous remesh");
   HH_ARGSD(load_map, "domain.uv.sphparam.m : domain -> sphere, instead of scheme");
@@ -1796,8 +1792,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(remesh, ": resample mesh and triangulate");
   HH_ARGSD(signal, "l : select G, N, or C");
   HH_ARGSP(feather_texture, "bool : blend across texture border discontinuities");
-  HH_ARGSD(write_dual_texture, "image : resample signal as texturemap");
-  HH_ARGSD(write_texture, "image : resample signal as texturemap");
+  HH_ARGSD(write_texture, "image : resample signal as texturemap (dual sampling)");
+  HH_ARGSD(write_primal_texture, "image : resample signal as texturemap (primal sampling)");
   HH_ARGSD(write_lonlat_texture, "image : resample signal as (lon, lat) texture");
   HH_ARGSC(HH_ARGS_INDENT "Misc:");
   HH_ARGSP(verbose, "level : verbosity level (1=normal)");

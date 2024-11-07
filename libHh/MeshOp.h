@@ -22,6 +22,9 @@ Set<Face> gather_component(const Mesh& mesh, Face f);
 // Given a mesh face, find all faces connected through vertices (at least as large as gather_component).
 Set<Face> gather_component_v(const Mesh& mesh, Face f);
 
+// Gather all connected components (connected through Face-Edge-Face), in order of increasing size.
+Array<Set<Face>> gather_components(const Mesh& mesh);
+
 // Return statistics on number of edges in each gather_boundary() loop.
 Stat mesh_stat_boundaries(const Mesh& mesh);
 

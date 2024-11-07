@@ -12,6 +12,8 @@ int maxcyclenedges = std::numeric_limits<int>::max();
 int ncycles = std::numeric_limits<int>::max();
 int genus = 0;
 float fraccyclelength = 1.f;
+bool mark_edges_sharp = true;
+bool mark_faces_filled = true;
 bool nooutput = false;
 
 GMesh mesh;
@@ -23,6 +25,8 @@ void do_closecycles() {
   cmc._ncycles = ncycles;
   cmc._desired_genus = genus;
   cmc._frac_cycle_length = fraccyclelength;
+  cmc._mark_edges_sharp = mark_edges_sharp;
+  cmc._mark_faces_filled = mark_faces_filled;
   cmc.compute();
 }
 
@@ -33,11 +37,13 @@ int main(int argc, const char** argv) {
   HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Criteria for stopping topological simplification:");
   HH_ARGSP(maxcyclelength, "len : when smallest cycle exceeds specified length");
-  HH_ARGSP(maxcyclenedges, "n : when smallest cycle has >n edges");
+  HH_ARGSP(maxcyclenedges, "n : when smallest cycle has > n edges");
   HH_ARGSP(ncycles, "n : after removing this number of cycles");
-  HH_ARGSP(genus, "g : when mesh genus <=g");
+  HH_ARGSP(genus, "g : when mesh genus <= g");
   HH_ARGSC("", ":");
-  HH_ARGSP(fraccyclelength, "frac>=1 : allow finding cycles with length fractionally greater than minimal");
+  HH_ARGSP(fraccyclelength, "frac>=1. : allow finding cycles with length fractionally greater than minimal");
+  HH_ARGSP(mark_edges_sharp, "bool : mark loops of edges using 'sharp' key string");
+  HH_ARGSP(mark_faces_filled, "bool : mark rings of new faces using 'filled' key string");
   HH_ARGSC("", ":");
   HH_ARGSD(closecycles, ": perform topological simplification");
   HH_ARGSF(nooutput, ": do not print mesh at program end");

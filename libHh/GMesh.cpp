@@ -730,6 +730,38 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
   }
 }
 
+void GMesh::collapse_edge_vertex_saving_attribs(Edge e, Vertex vs) {
+  Vertex v2 = opp_vertex(vs, e);
+  string str;
+  const bool v_has_corner_normals =
+      any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "normal"); });
+  const bool v_has_corner_uvs =
+      any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "uv"); });
+  Map<Face, string> face_normal;
+  Map<Face, string> face_uv;
+  if (v_has_corner_normals)
+    for (Corner c : corners(v2))
+      if (Face f = corner_face(c); f != face1(e) && f != face2(e))
+        if (const char* s = corner_key(str, c, "normal")) face_normal.enter(f, s);
+  if (v_has_corner_uvs)
+    for (Corner c : corners(v2))
+      if (Face f = corner_face(c); f != face1(e) && f != face2(e))
+        if (const char* s = corner_key(str, c, "uv")) face_uv.enter(f, s);
+  collapse_edge_vertex(e, vs);  // Vertex v2 is destroyed.
+  if (v_has_corner_normals) {
+    for (Corner c : corners(vs))
+      if (Face f = corner_face(c); face_normal.contains(f)) update_string(c, "normal", face_normal.get(f).c_str());
+  } else {
+    for (Corner c : corners(vs)) update_string(c, "normal", nullptr);
+  }
+  if (v_has_corner_uvs) {
+    for (Corner c : corners(vs))
+      if (Face f = corner_face(c); face_uv.contains(f)) update_string(c, "uv", face_uv.get(f).c_str());
+  } else {
+    for (Corner c : corners(vs)) update_string(c, "uv", nullptr);
+  }
+}
+
 void GMesh::collapse_edge(Edge e) { collapse_edge_vertex(e, vertex1(e)); }
 
 Vertex GMesh::split_edge(Edge e, int id) {
@@ -802,43 +834,44 @@ void GMesh::merge_vertices(Vertex vs, Vertex vt) {
 }
 
 Vertex GMesh::center_split_face(Face f) {
-  Polygon poly;
-  polygon(f, poly);
   auto fstring = make_unique_c_string(get_string(f));  // often nullptr
-  Map<Vertex, unique_ptr<char[]>> mvs;
+  Map<Vertex, string> mvs;
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);
-    if (get_string(c)) mvs.enter(v, extract_string(c));
+    if (const char* s = get_string(c)) mvs.enter(v, s);
   }
-  Vector snor{};
-  bool have_nor = true;
-  Vector scol{};
-  bool have_col = true;
-  Uv suv{};
+  Polygon poly;
+  polygon(f, poly);
+  Vector sum_normal{};
+  bool have_normal = true;
+  Vector sum_rgb{};
+  bool have_rgb = true;
+  Uv sum_uv{};
   bool have_uv = true;
   for (Corner c : corners(f)) {
-    if (Vector nor; parse_corner_key_vec(c, "normal", nor))
-      snor += nor;
+    if (Vector normal; parse_corner_key_vec(c, "normal", normal))
+      sum_normal += normal;
     else
-      have_nor = false;
-    if (Vector col; parse_corner_key_vec(c, "rgb", col))
-      scol += col;
+      have_normal = false;
+    if (Vector rgb; parse_corner_key_vec(c, "rgb", rgb))
+      sum_rgb += rgb;
     else
-      have_col = false;
+      have_rgb = false;
     if (Uv uv; parse_corner_key_vec(c, "uv", uv))
-      suv += uv;
+      sum_uv += uv;
     else
       have_uv = false;
   }
-  snor /= float(poly.num());
-  scol /= float(poly.num());
-  suv /= float(poly.num());
   Vertex vn = Mesh::center_split_face(f);
   set_point(vn, mean(poly));
   string str;
-  if (have_nor) update_string(vn, "normal", csform_vec(str, snor));
-  if (have_col) update_string(vn, "rgb", csform_vec(str, scol));
-  if (have_uv) update_string(vn, "uv", csform_vec(str, suv));
+  if (have_normal) {
+    sum_normal = normalized(sum_normal);
+    if (1) sum_normal = poly.get_normal();  // More useful.
+    update_string(vn, "normal", csform_vec(str, sum_normal));
+  }
+  if (have_rgb) update_string(vn, "rgb", csform_vec(str, sum_rgb / float(poly.num())));
+  if (have_uv) update_string(vn, "uv", csform_vec(str, sum_uv / float(poly.num())));
   if (fstring)
     for (Face fn : faces(vn)) set_string(fn, fstring.get());
   if (mvs.num()) {
@@ -846,7 +879,8 @@ Vertex GMesh::center_split_face(Face f) {
       for (Corner cc : corners(fn)) {
         Vertex vv = corner_vertex(cc);
         if (vv == vn) continue;
-        if (mvs.contains(vv)) set_string(cc, std::move(mvs.get(vv)));  // may be nullptr
+        // Each original corner string should get assigned to two different corners.
+        if (mvs.contains(vv)) set_string(cc, mvs.get(vv).c_str());
       }
     }
   }
@@ -905,6 +939,11 @@ Array<Vertex> GMesh::fix_vertex(Vertex v) {
     set_point(vnew, point(v));
   }
   return new_vertices;
+}
+
+void GMesh::show_keys(Vertex v) const {
+  SHOW(v, get_string(v));
+  for (Corner c : corners(v)) SHOW(c, get_string(c));
 }
 
 }  // namespace hh

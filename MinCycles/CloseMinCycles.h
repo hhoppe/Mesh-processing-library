@@ -20,6 +20,8 @@ class CloseMinCycles {
   int _ncycles{std::numeric_limits<int>::max()};           // by default, perform as many cycle closures as possible
   int _desired_genus{0};                                   // by default, simplify mesh topology to genus zero
   float _frac_cycle_length{1.f};  // by default, find exact minimal cycles (> 1.f means approximate)
+  bool _mark_edges_sharp{true};
+  bool _mark_faces_filled{true};
   void compute();
 
  private:

@@ -595,7 +595,7 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
     }
   }
   for (Corner cc : stackc) {
-    // ends up deleting and recreating MEdge structures, which is great.
+    // Ends up deleting and recreating MEdge structures, which is great.  All corners are preserved.
     HEdge he = cc;
     remove_hedge(he, he->_prev->_vert);
     remove_hedge(he->_next, he->_vert);
@@ -603,7 +603,7 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
     enter_hedge(he, he->_prev->_vert);
     enter_hedge(he->_next, he->_vert);
   }
-  // info on edges around v1 still valid; edges on v2 all new
+  // Info on edges around v1 still valid; edges on v2 are all new; corners are preserved.
   return v2;
 }
 

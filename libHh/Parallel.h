@@ -147,7 +147,7 @@ struct ParallelOptions {
 template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const ParallelOptions& options, const Range& range, int num_threads,
                         const ProcessChunk& process_chunk) {
-  assertx(num_threads >= 1);
+  if (num_threads < 1) assertnever(SSHOW(num_threads));
   using std::begin, std::end, std::size;
   const auto begin_range = begin(range);
   const auto end_range = end(range);
@@ -194,6 +194,7 @@ template <typename Range, typename ProcessElement>
 void parallel_for_each(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
   using std::size;
   const auto num_elements = size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
+  if (!num_elements) return;
   using NumElements = decltype(num_elements);
   const int max_num_threads = get_max_threads();
   const int num_threads = int(std::min(NumElements(max_num_threads), num_elements));

@@ -139,18 +139,26 @@ Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
                   int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "normal", nor_vs1f1)) +
                   int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "normal", nor_vs2f2)));
   assertx(num_nors == 0 || num_nors == 6);
+  Uv uv_v1f1, uv_v2f1, uv_v1f2, uv_v2f2, uv_vs1f1, uv_vs2f2;
+  int num_uvs = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "uv", uv_v1f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "uv", uv_v2f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "uv", uv_v1f2)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "uv", uv_v2f2)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "uv", uv_vs1f1)) +
+                 int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "uv", uv_vs2f2)));
+  assertx(num_uvs == 0 || num_uvs == 6);
   Vertex v = mesh.split_edge(e);
   mesh.set_point(v, interp(mesh.point(v1), mesh.point(v2), frac1));
   if (num_nors) {
     string str;
     if (nor_v1f1 == nor_v1f2 && nor_v2f1 == nor_v2f2) {
-      const char* s_vf = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
+      const char* s_vf = csform_vec(str, normalized(interp(nor_v1f1, nor_v2f1, frac1)));
       mesh.update_string(v, "normal", s_vf);
     } else {
-      const char* s_vf1 = csform_vec(str, normalized(nor_v1f1 * frac1 + nor_v2f1 * (1.f - frac1)));
+      const char* s_vf1 = csform_vec(str, normalized(interp(nor_v1f1, nor_v2f1, frac1)));
       mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
       mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
-      const char* s_vf2 = csform_vec(str, normalized(nor_v1f2 * frac1 + nor_v2f2 * (1.f - frac1)));
+      const char* s_vf2 = csform_vec(str, normalized(interp(nor_v1f2, nor_v2f2, frac1)));
       mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
       mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
     }
@@ -171,28 +179,37 @@ Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
       mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
     }
   }
-  return v;
-}
-
-// The vertex v is kept.
-void collapse_mesh_edge(GMesh& mesh, Edge e, Vertex v) {
-  const bool v_has_corner_normals =
-      any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "normal"); });
-  Vertex v2 = mesh.opp_vertex(v, e);
-  Map<Face, Vector> face_normal;
-  if (v_has_corner_normals)
-    for (Corner c : mesh.corners(v2))
-      if (Face f = mesh.corner_face(c); f != mesh.face1(e) && f != mesh.face2(e))
-        if (Vector normal; mesh.parse_corner_key_vec(c, "normal", normal)) face_normal.enter(f, normal);
-  mesh.collapse_edge_vertex(e, v);  // Vertex v2 is destroyed.
-  string str;
-  if (v_has_corner_normals) {
-    for (Corner c : mesh.corners(v))
-      if (Face f = mesh.corner_face(c); face_normal.contains(f))
-        mesh.update_string(c, "normal", csform_vec(str, face_normal.get(f)));
-  } else {
-    for (Corner c : mesh.corners(v)) mesh.update_string(c, "normal", nullptr);
+  if (num_uvs) {
+    string str;
+    if (uv_v1f1 == uv_v1f2 && uv_v2f1 == uv_v2f2) {
+      const char* s_vf = csform_vec(str, interp(uv_v1f1, uv_v2f1, frac1));
+      mesh.update_string(v, "uv", s_vf);
+    } else {
+      const char* s_vf1 = csform_vec(str, interp(uv_v1f1, uv_v2f1, frac1));
+      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs1)), "uv", s_vf1);
+      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs1)), "uv", s_vf1);
+      const char* s_vf2 = csform_vec(str, interp(uv_v1f2, uv_v2f2, frac1));
+      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs2)), "uv", s_vf2);
+      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs2)), "uv", s_vf2);
+    }
+    if (!GMesh::string_has_key(mesh.get_string(v1), "uv")) {
+      mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "uv", csform_vec(str, uv_v1f1));
+      mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "uv", csform_vec(str, uv_v1f2));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(v2), "uv")) {
+      mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "uv", csform_vec(str, uv_v2f1));
+      mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "uv", csform_vec(str, uv_v2f2));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(vs1), "uv")) {
+      mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "uv", csform_vec(str, uv_vs1f1));
+      mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "uv", csform_vec(str, uv_vs1f1));
+    }
+    if (!GMesh::string_has_key(mesh.get_string(vs2), "uv")) {
+      mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "uv", csform_vec(str, uv_vs2f2));
+      mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "uv", csform_vec(str, uv_vs2f2));
+    }
   }
+  return v;
 }
 
 void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
@@ -207,8 +224,9 @@ void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
             if (0) Warning("Skipping an illegal edge collapse of a zero-param-length edge");
           } else {
             if (0) Warning("Collapsing a zero-param-length edge adjacent to a newly introduced vertex");
-            new_vertices.remove(v2);         // (In most cases, it is not present.)
-            collapse_mesh_edge(mesh, e, v);  // The just-introduced vertex v is kept; vertex v2 is destroyed.
+            new_vertices.remove(v2);  // (In most cases, it is not present.)
+            // The just-introduced vertex v is kept; vertex v2 is destroyed.
+            mesh.collapse_edge_vertex_saving_attribs(e, v);
             modified = true;
             break;
           }
@@ -299,13 +317,14 @@ template <int n> Vec<float, n> normalized_double(const Vec<float, n>& vec) {
 
 // Given a GMesh, add "sph" and "uv" strings, optionally split its domain discontinuities, and write it to std::cout.
 void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
-  assertx(!(split_meridian && !mesh_uv.empty()));
+  assertx(!(split_meridian && !mesh_uv.empty()));  // (!mesh_uv.empty() uses split_mesh_along_octa() instead.)
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
   if (!mesh_uv.empty()) {
     if (0)
       for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
     split_mesh_along_octa(gmesh);
-    // TODO: Use mesh_uv "uv" discontinuities; required for cube and tetra; fewer cuts for octa* ??
+    // Ideally, we should use mesh_uv "uv" discontinuities to perform splitting; this would be required for
+    // cube and tetra domains; also it would result in fewer cuts for octa and octaflat.
   }
   MeshSearch::Options options;
   options.allow_off_surface = true;
@@ -319,8 +338,14 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
     for (Vertex v : subrange) {
       const Point& sph = v_sph(v);
       gmesh.update_string(v, "sph", csform_vec(str, sph));
-      if (keep_uv) {
-      } else if (!mesh_uv.empty()) {
+      if (keep_uv) continue;
+      gmesh.update_string(v, "Ouv", GMesh::string_key(str, gmesh.get_string(v), "uv"));
+      gmesh.update_string(v, "uv", nullptr);
+      for (Corner c : gmesh.corners(v)) {
+        gmesh.update_string(c, "Ouv", GMesh::string_key(str, gmesh.get_string(c), "uv"));
+        gmesh.update_string(c, "uv", nullptr);
+      }
+      if (!mesh_uv.empty()) {
         const auto get_uvs = [&](Face f) {
           return map(mesh_uv.triangle_corners(f), [&](Corner c) {
             Vertex vv = mesh_uv.corner_vertex(c);
@@ -559,6 +584,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(verbose, "level : set output verbosity level (0..2)");
   HH_ARGSP_O(effort, "val : adjust optimization thoroughness (0..5)");
   HH_ARGSF_O(visualize, ": pipe interactive parameterization to G3dOGL viewer");
+  HH_ARGSF_O(wait_on_visualizer, ": exit only after user closes G3dOGL viewer");
   HH_ARGSF_O(fix_base, ": freeze all vertices of the base mesh");
   HH_ARGSF_O(optimize_inverse, ": minimize reciprocal stretch sphere_dist/mesh_dist");
   HH_ARGSP_O(conformal_weight, "w : weight for regularization energy term");

@@ -46,6 +46,9 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 
 // *** Frames and Euler angles
 
+// Make the three vectors of `frame` be unit length and orthogonal.
+void orthonormalize(Frame& frame);
+
 // Compute Euler angles of f.
 Vec3<float> euler_angles_from_frame(const Frame& f);
 

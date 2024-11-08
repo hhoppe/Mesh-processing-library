@@ -127,88 +127,74 @@ constexpr float k_uv_undefined = -1.f;
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_uv);
 
+template <int n, bool need_normalize> class SaveSplitEdgeAttrib {
+  using VecF = Vec<float, n>;
+
+ public:
+  SaveSplitEdgeAttrib(GMesh& mesh_, Edge e, const char* key_) : _mesh(mesh_), _key(key_) {
+    _v1 = _mesh.vertex1(e), _v2 = _mesh.vertex2(e), _vs1 = _mesh.side_vertex1(e), _vs2 = _mesh.side_vertex2(e);
+    Face f1 = _mesh.face1(e), f2 = _mesh.face2(e);
+    assertx(_vs2 && f2);
+    int num_defined = (int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f1), _key, _vec_v1f1)) +
+                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f1), _key, _vec_v2f1)) +
+                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f2), _key, _vec_v1f2)) +
+                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f2), _key, _vec_v2f2)) +
+                       int(_mesh.parse_corner_key_vec(_mesh.corner(_vs1, f1), _key, _vec_vs1f1)) +
+                       int(_mesh.parse_corner_key_vec(_mesh.corner(_vs2, f2), _key, _vec_vs2f2)));
+    assertx(num_defined == 0 || num_defined == 6);
+    _is_defined = num_defined > 0;
+  }
+  void reintroduce_after_split_edge(Vertex v, float frac1) {
+    if (!_is_defined) return;
+    const auto norm = [](const VecF& vec) { return need_normalize ? normalized(vec) : vec; };
+    string str;
+    if (_vec_v1f1 == _vec_v1f2 && _vec_v2f1 == _vec_v2f2) {
+      const char* s_vf = csform_vec(str, norm(interp(_vec_v1f1, _vec_v2f1, frac1)));
+      _mesh.update_string(v, _key, s_vf);
+    } else {
+      const char* s_vf1 = csform_vec(str, norm(interp(_vec_v1f1, _vec_v2f1, frac1)));
+      _mesh.update_string(_mesh.ccw_corner(v, _mesh.edge(v, _vs1)), _key, s_vf1);
+      _mesh.update_string(_mesh.clw_corner(v, _mesh.edge(v, _vs1)), _key, s_vf1);
+      const char* s_vf2 = csform_vec(str, norm(interp(_vec_v1f2, _vec_v2f2, frac1)));
+      _mesh.update_string(_mesh.ccw_corner(v, _mesh.edge(v, _vs2)), _key, s_vf2);
+      _mesh.update_string(_mesh.clw_corner(v, _mesh.edge(v, _vs2)), _key, s_vf2);
+    }
+    if (!GMesh::string_has_key(_mesh.get_string(_v1), _key)) {
+      _mesh.update_string(_mesh.ccw_corner(_v1, _mesh.edge(_v1, v)), _key, csform_vec(str, _vec_v1f1));
+      _mesh.update_string(_mesh.clw_corner(_v1, _mesh.edge(_v1, v)), _key, csform_vec(str, _vec_v1f2));
+    }
+    if (!GMesh::string_has_key(_mesh.get_string(_v2), _key)) {
+      _mesh.update_string(_mesh.clw_corner(_v2, _mesh.edge(_v2, v)), _key, csform_vec(str, _vec_v2f1));
+      _mesh.update_string(_mesh.ccw_corner(_v2, _mesh.edge(_v2, v)), _key, csform_vec(str, _vec_v2f2));
+    }
+    if (!GMesh::string_has_key(_mesh.get_string(_vs1), _key)) {
+      _mesh.update_string(_mesh.ccw_corner(_vs1, _mesh.edge(_vs1, v)), _key, csform_vec(str, _vec_vs1f1));
+      _mesh.update_string(_mesh.clw_corner(_vs1, _mesh.edge(_vs1, v)), _key, csform_vec(str, _vec_vs1f1));
+    }
+    if (!GMesh::string_has_key(_mesh.get_string(_vs2), _key)) {
+      _mesh.update_string(_mesh.ccw_corner(_vs2, _mesh.edge(_vs2, v)), _key, csform_vec(str, _vec_vs2f2));
+      _mesh.update_string(_mesh.clw_corner(_vs2, _mesh.edge(_vs2, v)), _key, csform_vec(str, _vec_vs2f2));
+    }
+  }
+
+ private:
+  GMesh& _mesh;
+  const char* _key;
+  Vertex _v1, _v2, _vs1, _vs2;
+  bool _is_defined;
+  VecF _vec_v1f1, _vec_v2f1, _vec_v1f2, _vec_v2f2, _vec_vs1f1, _vec_vs2f2;
+};
+
 Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
-  Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e), vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
-  Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  assertx(vs2 && f2);
-  Vector nor_v1f1, nor_v2f1, nor_v1f2, nor_v2f2, nor_vs1f1, nor_vs2f2;
-  int num_nors = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "normal", nor_v1f1)) +
-                  int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "normal", nor_v2f1)) +
-                  int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "normal", nor_v1f2)) +
-                  int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "normal", nor_v2f2)) +
-                  int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "normal", nor_vs1f1)) +
-                  int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "normal", nor_vs2f2)));
-  assertx(num_nors == 0 || num_nors == 6);
-  Uv uv_v1f1, uv_v2f1, uv_v1f2, uv_v2f2, uv_vs1f1, uv_vs2f2;
-  int num_uvs = (int(mesh.parse_corner_key_vec(mesh.corner(v1, f1), "uv", uv_v1f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f1), "uv", uv_v2f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v1, f2), "uv", uv_v1f2)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(v2, f2), "uv", uv_v2f2)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(vs1, f1), "uv", uv_vs1f1)) +
-                 int(mesh.parse_corner_key_vec(mesh.corner(vs2, f2), "uv", uv_vs2f2)));
-  assertx(num_uvs == 0 || num_uvs == 6);
+  SaveSplitEdgeAttrib<3, true> save_normal(mesh, e, "normal");
+  SaveSplitEdgeAttrib<2, false> save_uv(mesh, e, "uv");
+  SaveSplitEdgeAttrib<3, false> save_rgb(mesh, e, "rgb");
+  const Point newp = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)), frac1);
   Vertex v = mesh.split_edge(e);
-  mesh.set_point(v, interp(mesh.point(v1), mesh.point(v2), frac1));
-  if (num_nors) {
-    string str;
-    if (nor_v1f1 == nor_v1f2 && nor_v2f1 == nor_v2f2) {
-      const char* s_vf = csform_vec(str, normalized(interp(nor_v1f1, nor_v2f1, frac1)));
-      mesh.update_string(v, "normal", s_vf);
-    } else {
-      const char* s_vf1 = csform_vec(str, normalized(interp(nor_v1f1, nor_v2f1, frac1)));
-      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
-      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs1)), "normal", s_vf1);
-      const char* s_vf2 = csform_vec(str, normalized(interp(nor_v1f2, nor_v2f2, frac1)));
-      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
-      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs2)), "normal", s_vf2);
-    }
-    if (!GMesh::string_has_key(mesh.get_string(v1), "normal")) {
-      mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f1));
-      mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "normal", csform_vec(str, nor_v1f2));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(v2), "normal")) {
-      mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f1));
-      mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "normal", csform_vec(str, nor_v2f2));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(vs1), "normal")) {
-      mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
-      mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "normal", csform_vec(str, nor_vs1f1));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(vs2), "normal")) {
-      mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
-      mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "normal", csform_vec(str, nor_vs2f2));
-    }
-  }
-  if (num_uvs) {
-    string str;
-    if (uv_v1f1 == uv_v1f2 && uv_v2f1 == uv_v2f2) {
-      const char* s_vf = csform_vec(str, interp(uv_v1f1, uv_v2f1, frac1));
-      mesh.update_string(v, "uv", s_vf);
-    } else {
-      const char* s_vf1 = csform_vec(str, interp(uv_v1f1, uv_v2f1, frac1));
-      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs1)), "uv", s_vf1);
-      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs1)), "uv", s_vf1);
-      const char* s_vf2 = csform_vec(str, interp(uv_v1f2, uv_v2f2, frac1));
-      mesh.update_string(mesh.ccw_corner(v, mesh.edge(v, vs2)), "uv", s_vf2);
-      mesh.update_string(mesh.clw_corner(v, mesh.edge(v, vs2)), "uv", s_vf2);
-    }
-    if (!GMesh::string_has_key(mesh.get_string(v1), "uv")) {
-      mesh.update_string(mesh.ccw_corner(v1, mesh.edge(v1, v)), "uv", csform_vec(str, uv_v1f1));
-      mesh.update_string(mesh.clw_corner(v1, mesh.edge(v1, v)), "uv", csform_vec(str, uv_v1f2));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(v2), "uv")) {
-      mesh.update_string(mesh.clw_corner(v2, mesh.edge(v2, v)), "uv", csform_vec(str, uv_v2f1));
-      mesh.update_string(mesh.ccw_corner(v2, mesh.edge(v2, v)), "uv", csform_vec(str, uv_v2f2));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(vs1), "uv")) {
-      mesh.update_string(mesh.ccw_corner(vs1, mesh.edge(vs1, v)), "uv", csform_vec(str, uv_vs1f1));
-      mesh.update_string(mesh.clw_corner(vs1, mesh.edge(vs1, v)), "uv", csform_vec(str, uv_vs1f1));
-    }
-    if (!GMesh::string_has_key(mesh.get_string(vs2), "uv")) {
-      mesh.update_string(mesh.ccw_corner(vs2, mesh.edge(vs2, v)), "uv", csform_vec(str, uv_vs2f2));
-      mesh.update_string(mesh.clw_corner(vs2, mesh.edge(vs2, v)), "uv", csform_vec(str, uv_vs2f2));
-    }
-  }
+  save_normal.reintroduce_after_split_edge(v, frac1);
+  save_uv.reintroduce_after_split_edge(v, frac1);
+  save_rgb.reintroduce_after_split_edge(v, frac1);
+  mesh.set_point(v, newp);
   return v;
 }
 

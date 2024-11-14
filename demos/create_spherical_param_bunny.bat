@@ -10,6 +10,7 @@ call bin/meshtopm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam 
 
 
 echo Compute a mapping from the flat octahedron to the sphere that is optimized for inverse stretch.
+:: Because a pipe command is run in a subshell, the syntax "call script.bat" is unnecessary (and wrong) here.
 SphereSample -domain octaflat -scheme domain -egrid 128 -keys domaincorner,imageuv -mesh_sphere | Filtermesh -gmerge -removekey Ovi -cornermerge -renamekey v domaincorner global -renamekey vc imageuv uv -assign_normals -removekey sharp | bin\meshtopm.bat -minqem -qemvolume 0 -dihallow -affectpq 3 -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -strict_sharp 2 >data/v_sharp.pm
 
 SphereParam data/v_sharp.pm -base coord -flatten_to_x0 -fix_base -optimize_inverse -respect_sharp_edges -keep_uv 1 >data/v.m

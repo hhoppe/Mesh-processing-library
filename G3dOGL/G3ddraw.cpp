@@ -42,36 +42,36 @@ static void recompute_all_sharpe() {
 void Applyq(const Frame& tq) {
   Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
-    Frame f = Frame::identity();
-    for_int(c, 3) f[c][c] = std::exp(tq.p()[c] / ddistance);
-    g_obs[cob].tm() = Frame::translation(-vtran) * f * Frame::translation(vtran) * g_obs[cob].t();
+    Frame frame = Frame::identity();
+    for_int(c, 3) frame[c][c] = std::exp(tq.p()[c] / ddistance);
+    g_obs[cob].tm() = Frame::translation(-vtran) * frame * Frame::translation(vtran) * g_obs[cob].t();
     return;
   }
-  static Frame fedit;
+  static Frame frame_edit;
   bool ledit = editmode && button_active != 1;  // button1 has old semantics
   if (ledit && !(button_active && selected.selected_vertex)) return;
-  if (ledit) fedit = g_obs[selected.selected_vertex->obn].t();
-  Frame& fm = ledit ? fedit : viewmode ? tview : g_obs[cob].tm();
+  if (ledit) frame_edit = g_obs[selected.selected_vertex->obn].t();
+  Frame& frame_to_modify = ledit ? frame_edit : viewmode ? tview : g_obs[cob].tm();
   bool is_eye_move = eye_move && !viewmode && !ledit && cob != obview;
-  Frame told = fm;
+  Frame frame_old = frame_to_modify;
   if (object_mode) {
     // Complicated change-of-frame to apply the correct transformation.
     const int ob = obview;
-    Frame f = Frame::translation(vtran) * fm * ~g_obs[ob].t();
-    Vector vtran2 = f.p();
-    f *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
-    fm = Frame::translation(-vtran) * f * g_obs[ob].t();
+    Frame frame = Frame::translation(vtran) * frame_to_modify * ~g_obs[ob].t();
+    Vector vtran2 = frame.p();
+    frame *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
+    frame_to_modify = Frame::translation(-vtran) * frame * g_obs[ob].t();
   } else {
     Frame frel = selected.frel * Frame::translation(vtran);
-    fm = ~frel * tq * frel * fm;
+    frame_to_modify = ~frel * tq * frel * frame_to_modify;
   }
   if (is_eye_move) {
-    g_obs[obview].tm() *= ~g_obs[cob].t() * told;
-    g_obs[cob].tm() = told;
+    g_obs[obview].tm() *= ~g_obs[cob].t() * frame_old;
+    g_obs[cob].tm() = frame_old;
   }
   if (ledit) {
     auto& [_, mesh, v] = *selected.selected_vertex;
-    Point p = mesh->point(v) * fm * ~told;
+    Point p = mesh->point(v) * frame_to_modify * ~frame_old;
     mesh->set_point(v, p);
     mesh->gflags().flag(mflag_ok) = false;
     if (sizemode && anglethresh >= 0.f) {
@@ -368,18 +368,18 @@ static void act_fly() {
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
   const float a = .1f;
   yxf *= a;
-  Frame f1 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));
-  Frame f2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), mag(yxf)));
-  Frame f = f1 * f2;
+  Frame frame1 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));
+  Frame frame2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), mag(yxf)));
+  Frame frame = frame1 * frame2;
   static const bool g3d_fly_use_frame_speed = getenv_bool("G3D_FLY_USE_FRAME_SPEED");
   assertw(!g3d_fly_use_frame_speed);
   if (!g3d_fly_use_frame_speed) {
-    f = pow(f, 10.f * fchange);
+    frame = pow(frame, 10.f * fchange);
   } else {
     const float frame_rate = 32.f;  // frames / sec;
-    f = pow(f, 10.f * (1.f / frame_rate));
+    frame = pow(frame, 10.f * (1.f / frame_rate));
   }
-  Applyq(f);
+  Applyq(frame);
 }
 
 static void act_flight() {
@@ -394,12 +394,12 @@ static void act_flight() {
   Frame& obframe = g_obs[cob].tm();
   Vec3<float> ang = euler_angles_from_frame(obframe);
   {
-    Frame f1 = Frame::rotation(0, yxf[1] * fturn * .037f);         // roll
-    Frame f2 = Frame::rotation(1, yxf[0] * fturn * .037f);         // pitch
-    Frame f3 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));  // forward
-    Frame f = f3 * f2 * f1;
-    f = pow(f, 10.f * fchange);
-    obframe = f * obframe;
+    Frame frame1 = Frame::rotation(0, yxf[1] * fturn * .037f);         // roll
+    Frame frame2 = Frame::rotation(1, yxf[0] * fturn * .037f);         // pitch
+    Frame frame3 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));  // forward
+    Frame frame = frame3 * frame2 * frame1;
+    frame = pow(frame, 10.f * fchange);
+    obframe = frame * obframe;
   }
   {
     float a = deg_from_rad(ang[2]);
@@ -409,12 +409,12 @@ static void act_flight() {
     // Doing "translation * rotation * ~translation" is incorrect!
     // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that problem.
     Point savep = obframe.p();
-    Frame f1 = Frame::translation(-obframe.p());
+    Frame frame1 = Frame::translation(-obframe.p());
     const float yaw_factor = 0.032f;                                                  // was 0.025f in g3dfly.c
-    Frame f2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
-    Frame f = f1 * f2;
-    f = pow(f, 10.f * fchange);
-    obframe = obframe * f;
+    Frame frame2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
+    Frame frame = frame1 * frame2;
+    frame = pow(frame, 10.f * fchange);
+    obframe = obframe * frame;
     obframe.p() = savep;
   }
 }
@@ -514,10 +514,10 @@ static void g3d_ellipse1() {
   int nlod = g_obs.last / ninst;
   assertx(nlod * ninst == g_obs.last);
   for_int(i, ninst) {
-    Frame fellipse, frame;
+    Frame frame_ellipse, frame;
     int obi;
     float finterp;
-    ellipse_config(i, nlod, fellipse, frame, obi, finterp);
+    ellipse_config(i, nlod, frame_ellipse, frame, obi, finterp);
     obi = i * nlod + obi;
     for_int(j, nlod) {
       int ob = 1 + i * nlod + j;
@@ -535,13 +535,13 @@ static void g3d_ellipse2() {
   assertx(nlod * ninst == g_obs.last);
   float obradius = g_obs[nlod].radius();
   for_int(i, ninst) {
-    Frame fellipse, frame;
+    Frame frame_ellipse, frame;
     int obi;
     float finterp;
-    ellipse_config(i, nlod, fellipse, frame, obi, finterp);
+    ellipse_config(i, nlod, frame_ellipse, frame, obi, finterp);
     obi = i * nlod + obi;
     int nfaces = g_obs[obi].get_mesh()->num_faces();
-    Point pabove = Point(0.f, 0.f, obradius * 1.8f) * fellipse;
+    Point pabove = Point(0.f, 0.f, obradius * 1.8f) * frame_ellipse;
     const auto [zs, xys] = HB::vdc_from_world(pabove);
     if (xys) {
       const auto [xs, ys] = *xys;
@@ -592,21 +592,21 @@ static void set_viewing() {
   if (g3d_radar && is_view && auto_level)  // auto_level radar view
     thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
   if (is_view) thead = tview * thead;
-  Frame tcam = thead;  // final camera transform
+  Frame frame_camera = thead;  // final camera transform
   float vzoom = zoom;
   if (is_view) {
     const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f);  // 2017-02-21
     if (g3d_view_zoom) vzoom = g3d_view_zoom;                        // was 0.2f
   }
-  // HB::set_camera(tpos, zoom, tcam, vzoom);
-  HB::set_camera(g_obs[0].t(), zoom, tcam, vzoom);
+  // HB::set_camera(tpos, zoom, frame_camera, vzoom);
+  HB::set_camera(g_obs[0].t(), zoom, frame_camera, vzoom);
   if (1 && g_obs.first == 0) g_obs[0].set_vis(is_view || obview != 0);
   if (auto_hither) {
     Bbox<float, 3> gbb;
-    Frame tcami = inverse(tcam);
+    Frame frame_camera_inv = inverse(frame_camera);
     int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++)
-      gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * tcami));
+      gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv));
     float minx = gbb[0][0];          // could be negative
     if (minx > 0.f) minx *= .9999f;  // for -key ojo on zero-height data.
     float diam = gbb.max_side();

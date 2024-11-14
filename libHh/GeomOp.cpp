@@ -196,10 +196,10 @@ void orthonormalize(Frame& frame) {
 //      ?             ?             sin(p)cos(b)
 //      ?             ?             cos(p)cos(b)
 
-Vec3<float> euler_angles_from_frame(const Frame& f) {
-  return V(my_atan2(f[0][1], f[0][0]),                        //
-           my_atan2(-f[0][2], std::hypot(f[0][0], f[0][1])),  //
-           my_atan2(f[1][2] / mag(f[1]), f[2][2] / mag(f[2])));
+Vec3<float> euler_angles_from_frame(const Frame& frame) {
+  return V(my_atan2(frame[0][1], frame[0][0]),                            //
+           my_atan2(-frame[0][2], std::hypot(frame[0][0], frame[0][1])),  //
+           my_atan2(frame[1][2] / mag(frame[1]), frame[2][2] / mag(frame[2])));
 }
 
 Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
@@ -212,45 +212,45 @@ Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
   return frame;
 }
 
-void frame_aim_at(Frame& f, const Vector& v) {
+void frame_aim_at(Frame& frame, const Vector& v) {
   Vec3<float> ang;
   ang[0] = my_atan2(v[1], v[0]);
   ang[1] = my_atan2(-v[2], std::hypot(v[0], v[1]));
   ang[2] = 0.f;
-  f = frame_from_euler_angles(ang, f);
+  frame = frame_from_euler_angles(ang, frame);
 }
 
-Frame make_level(const Frame& f) {
-  Frame fnew = f;
+Frame make_level(const Frame& frame) {
+  Frame frame_new = frame;
   static const bool world_zxy = getenv_bool("WORLD_ZXY");  // z forward, -x left, -y up
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
-  if (world_zxy) fnew *= ~from_zxy;
-  Vec3<float> ang = euler_angles_from_frame(fnew);
+  if (world_zxy) frame_new *= ~from_zxy;
+  Vec3<float> ang = euler_angles_from_frame(frame_new);
   ang[2] = 0.f;
-  fnew = frame_from_euler_angles(ang, fnew);
+  frame_new = frame_from_euler_angles(ang, frame_new);
   if (world_zxy) {
-    fnew *= from_zxy;
-    fnew.p() = f.p();
+    frame_new *= from_zxy;
+    frame_new.p() = frame.p();
   }
-  return fnew;
+  return frame_new;
 }
 
-Frame make_horiz(const Frame& f) {
-  Frame fnew = f;
+Frame make_horiz(const Frame& frame) {
+  Frame frame_new = frame;
   static const bool world_zxy = getenv_bool("WORLD_ZXY");  // z forward, -x left, -y up
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
-  if (world_zxy) fnew *= ~from_zxy;
-  Vec3<float> ang = euler_angles_from_frame(fnew);
+  if (world_zxy) frame_new *= ~from_zxy;
+  Vec3<float> ang = euler_angles_from_frame(frame_new);
   ang[1] = 0.f;
   ang[2] = 0.f;
-  fnew = frame_from_euler_angles(ang, fnew);
+  frame_new = frame_from_euler_angles(ang, frame_new);
   if (world_zxy) {
-    fnew *= from_zxy;
-    fnew.p() = f.p();
+    frame_new *= from_zxy;
+    frame_new.p() = frame.p();
   }
-  return fnew;
+  return frame_new;
 }
 
 Vec3<Point> widen_triangle(const Vec3<Point>& triangle, float eps) {

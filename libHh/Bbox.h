@@ -106,14 +106,14 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
 
   template <int D = dim, typename = std::enable_if_t<D == 3>>
   Frame get_frame_to_small_cube(float cubesize = .8f) const {
-    Frame f = get_frame_to_cube();
+    Frame frame = get_frame_to_cube();
     float bnd = (1.f - cubesize) / 2.f;
-    f = f * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
+    frame = frame * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
     for_int(i, 3) {
-      if (abs(f[i][i] - 1.f) < .05f) f[i][i] = 1.f;
-      if (abs(f[3][i]) < .05f) f[3][i] = 0.f;
+      if (abs(frame[i][i] - 1.f) < .05f) frame[i][i] = 1.f;
+      if (abs(frame[3][i]) < .05f) frame[3][i] = 0.f;
     }
-    return f;
+    return frame;
   }
 
   template <int D = dim, typename = std::enable_if_t<D == 3>> [[nodiscard]] type transform(const Frame& frame) const {

@@ -84,10 +84,10 @@ float tzs1, tzs2;
 float tzp1, tzp2;
 float tclip1, tclip2;
 float trclip1, trclip2;
-int frame = 0;   // current frame number
-Frame tcur;      // current transform: object -> viewing
-Point conor;     // point to use in computing normal culling
-bool want_plot;  // user wants postscript plot
+int frame_index = 0;  // current frame number
+Frame tcur;           // current transform: object -> viewing
+Point conor;          // point to use in computing normal culling
+bool want_plot;       // user wants postscript plot
 string psfile;
 unique_ptr<Postscript> postscript;  // currently drawing postscript
 HiddenLineRemoval hlr;
@@ -311,8 +311,8 @@ void transf2(coord* c) {
 }
 
 void transf(coord* c) {
-  if (c->frame != frame) {
-    c->frame = frame;
+  if (c->frame != frame_index) {
+    c->frame = frame_index;
     c->pt = c->p * tcur;
     transf2(c);
   }
@@ -511,8 +511,8 @@ void draw_node(const Node* un) {
       const auto* n = down_cast<const NodePolygon*>(un);
       if (!(cullface && is_cull(n->repc->p, n->pnor))) {
         for (segment* s : n->ars) {
-          if (s->frame == frame) continue;
-          s->frame = frame;
+          if (s->frame == frame_index) continue;
+          s->frame = frame_index;
           transf(s->c1);
           transf(s->c2);
           draw_segment(s->c1, s->c2);
@@ -523,9 +523,10 @@ void draw_node(const Node* un) {
     case Node::EType::linenor: {
       const auto* n = down_cast<const NodeLineNor*>(un);
       segment* s = n->s;
-      if (s->frame != frame && !((culledge == 1 && (is_cull(s->c1->p, n->nor[0]) && is_cull(s->c2->p, n->nor[1]))) ||
-                                 (culledge == 2 && (is_cull(s->c1->p, n->nor[0]) || is_cull(s->c2->p, n->nor[1]))))) {
-        s->frame = frame;
+      if (s->frame != frame_index &&
+          !((culledge == 1 && (is_cull(s->c1->p, n->nor[0]) && is_cull(s->c2->p, n->nor[1]))) ||
+            (culledge == 2 && (is_cull(s->c1->p, n->nor[0]) || is_cull(s->c2->p, n->nor[1]))))) {
+        s->frame = frame_index;
         transf(s->c1);
         transf(s->c2);
         draw_segment(s->c1, s->c2);
@@ -535,8 +536,8 @@ void draw_node(const Node* un) {
     case Node::EType::line: {
       const auto* n = down_cast<const NodeLine*>(un);
       segment* s = n->s;
-      if (s->frame != frame) {
-        s->frame = frame;
+      if (s->frame != frame_index) {
+        s->frame = frame_index;
         transf(s->c1);
         transf(s->c2);
         draw_segment(s->c1, s->c2);
@@ -731,24 +732,24 @@ void draw_all() {
   lquickmode = quickmode || (butquick && button_active);
   lhlrmode = hlrmode || (buthlr && !button_active);
   if (lhlrmode) {
-    int oldframe = frame;
+    int oldframe = frame_index;
     hlr.clear();
     hlr.set_draw_seg_cb(hlr_draw_seg);
     for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
       if (!postscript && hw.suggests_stop()) break;
       if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
       if (!setup_ob(i)) continue;
-      frame++;
+      frame_index++;
       enter_hidden_polygons(g_xobs[i].traverse());
       if (g_xobs[i]._mesh) enter_mesh_hidden_polygons(*g_xobs[i]._mesh);
     }
-    frame = oldframe;
+    frame_index = oldframe;
   }
   for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
     if (!postscript && hw.suggests_stop()) break;
     if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
     if (!setup_ob(i)) continue;
-    frame++;
+    frame_index++;
     draw_list(g_xobs[i].traverse());
     if (g_xobs[i]._mesh) draw_mesh(*g_xobs[i]._mesh);
     if (postscript) postscript->flush_write("% EndG3dObject\n");
@@ -1061,9 +1062,9 @@ void HB::set_current_object(int obn) {
   dummy_use(obn);  // no lighting feature in g3dX
 }
 
-void HB::update_seg(int segn, const Frame& f, bool vis) {
+void HB::update_seg(int segn, const Frame& frame, bool vis) {
   assertx(segn >= 0 && segn < k_max_object);
-  g_xobs.t[segn] = f;
+  g_xobs.t[segn] = frame;
   g_xobs.vis[segn] = vis;
 }
 

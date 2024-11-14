@@ -9,8 +9,8 @@
 
 #if 0
 {
-  Vec3<float> ang = euler_angles_from_frame(f);
-  Frame f = frame_from_euler_angles(ang, f);
+  Vec3<float> ang = euler_angles_from_frame(frame);
+  Frame frame = frame_from_euler_angles(ang, frame);
 }
 #endif
 
@@ -49,21 +49,21 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 // Make the three vectors of `frame` be unit length and orthogonal.
 void orthonormalize(Frame& frame);
 
-// Compute Euler angles of f.
-Vec3<float> euler_angles_from_frame(const Frame& f);
+// Compute Euler angles of frame.
+Vec3<float> euler_angles_from_frame(const Frame& frame);
 
-// Modify f by setting v[0..2] according to Euler angles, keeping origin and axes scaling of prev_frame.
+// Modify frame by setting v[0..2] according to Euler angles, keeping origin and axes scaling of prev_frame.
 [[nodiscard]] Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame);
 
-// Modify f so that its x axis points towards p and its y axis is vertical;
-// f.p() is ignored and unchanged.
-void frame_aim_at(Frame& f, const Vector& v);
+// Modify frame so that its x axis points towards p and its y axis is vertical;
+// frame.p() is ignored and unchanged.
+void frame_aim_at(Frame& frame, const Vector& v);
 
 // Modify frame so that its y axis lies in the xy plane.
-Frame make_level(const Frame& f);
+Frame make_level(const Frame& frame);
 
-// Modify f so that its x and y axes lie in the xy plane.
-Frame make_horiz(const Frame& f);
+// Modify frame so that its x and y axes lie in the xy plane.
+Frame make_horiz(const Frame& frame);
 
 // Affinely broaden the triangle (in all directions) by the factor 1.f + eps * .5f .
 [[nodiscard]] Vec3<Point> widen_triangle(const Vec3<Point>& triangle, float eps);

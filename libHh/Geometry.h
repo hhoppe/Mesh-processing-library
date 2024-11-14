@@ -45,9 +45,9 @@ struct Vector : Vec3<float> {
   constexpr Vector(Vec3<float> v) : Vec3<float>(v) {}
 };
 
-inline Vector operator*(const Vector& v, const Frame& f);    // Transform a vector by a frame.
-inline Vector operator*(const Frame& f, const Vector& nor);  // Transform a normal by a frame.
-inline Vector& operator*=(Vector& v, const Frame& f) { return v = v * f; }
+inline Vector operator*(const Vector& v, const Frame& frame);    // Transform a vector by a frame.
+inline Vector operator*(const Frame& frame, const Vector& nor);  // Transform a normal by a frame.
+inline Vector& operator*=(Vector& v, const Frame& frame) { return v = v * frame; }
 
 inline Vector normalized(Vector v) { return assertx(v.normalize()), v; }
 inline Vector ok_normalized(Vector v) { return v.normalize(), v; }
@@ -69,8 +69,8 @@ struct Point : Vec3<float> {
   constexpr Point(Vec3<float> p) : Vec3<float>(p) {}
 };
 
-inline Point operator*(const Point& p, const Frame& f);  // Transform a point by a frame.
-inline Point& operator*=(Point& p, const Frame& f) { return p = p * f; }
+inline Point operator*(const Point& p, const Frame& frame);  // Transform a point by a frame.
+inline Point& operator*=(Point& p, const Frame& frame) { return p = p * frame; }
 
 inline Vector get_normal_dir(const Vec3<Point>& triangle) { return cross(triangle[0], triangle[1], triangle[2]); }
 inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
@@ -120,20 +120,20 @@ class Frame : public SGrid<float, 4, 3> {
   static Frame identity();
 };
 
-Frame operator*(const Frame& f1, const Frame& f2);  // Compose two frames (f2 after f1).
-inline Frame& operator*=(Frame& f1, const Frame& f2) { return f1 = f1 * f2; }
+Frame operator*(const Frame& frame1, const Frame& frame2);  // Compose two frames (frame2 after frame1).
+inline Frame& operator*=(Frame& frame1, const Frame& frame2) { return frame1 = frame1 * frame2; }
 
-bool invert(const Frame& fi, Frame& fo);
-inline Frame inverse(const Frame& f) {
-  Frame fr;
-  assertx(invert(f, fr));
-  return fr;
+bool invert(const Frame& frame, Frame& frame_inv);
+inline Frame inverse(const Frame& frame) {
+  Frame frame_inv;
+  assertx(invert(frame, frame_inv));
+  return frame_inv;
 }
-inline Frame operator~(const Frame& f) { return inverse(f); }
+inline Frame operator~(const Frame& frame) { return inverse(frame); }
 
-Frame transpose(const Frame& f);
+Frame transpose(const Frame& frame);
 
-std::ostream& operator<<(std::ostream& os, const Frame& f);
+std::ostream& operator<<(std::ostream& os, const Frame& frame);
 template <> HH_DECLARE_OSTREAM_EOL(Frame);
 
 // *** Bary
@@ -267,15 +267,19 @@ template <typename T> T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2
 
 // *** Vector
 
-inline Vector operator*(const Vector& v, const Frame& f) { return v[0] * f[0] + v[1] * f[1] + v[2] * f[2]; }
+inline Vector operator*(const Vector& v, const Frame& frame) {
+  return v[0] * frame[0] + v[1] * frame[1] + v[2] * frame[2];
+}
 
-inline Vector operator*(const Frame& f, const Vector& nor) {
-  return Vector(dot(f[0], nor), dot(f[1], nor), dot(f[2], nor));
+inline Vector operator*(const Frame& frame, const Vector& nor) {
+  return Vector(dot(frame[0], nor), dot(frame[1], nor), dot(frame[2], nor));
 }
 
 // *** Point
 
-inline Point operator*(const Point& p, const Frame& f) { return p[0] * f[0] + p[1] * f[1] + p[2] * f[2] + f[3]; }
+inline Point operator*(const Point& p, const Frame& frame) {
+  return p[0] * frame[0] + p[1] * frame[1] + p[2] * frame[2] + frame[3];
+}
 
 // *** Bary
 

@@ -43,30 +43,30 @@ Frame Frame::identity() {
   return Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), Point(0.f, 0.f, 0.f));
 }
 
-Frame operator*(const Frame& f1, const Frame& f2) {
-  return Frame(f1.v(0)[0] * f2.v(0) + f1.v(0)[1] * f2.v(1) + f1.v(0)[2] * f2.v(2),
-               f1.v(1)[0] * f2.v(0) + f1.v(1)[1] * f2.v(1) + f1.v(1)[2] * f2.v(2),
-               f1.v(2)[0] * f2.v(0) + f1.v(2)[1] * f2.v(1) + f1.v(2)[2] * f2.v(2),
-               f1.p()[0] * f2.v(0) + f1.p()[1] * f2.v(1) + f1.p()[2] * f2.v(2) + f2.p());
+Frame operator*(const Frame& frame1, const Frame& frame2) {
+  return Frame(frame1.v(0)[0] * frame2.v(0) + frame1.v(0)[1] * frame2.v(1) + frame1.v(0)[2] * frame2.v(2),
+               frame1.v(1)[0] * frame2.v(0) + frame1.v(1)[1] * frame2.v(1) + frame1.v(1)[2] * frame2.v(2),
+               frame1.v(2)[0] * frame2.v(0) + frame1.v(2)[1] * frame2.v(1) + frame1.v(2)[2] * frame2.v(2),
+               frame1.p()[0] * frame2.v(0) + frame1.p()[1] * frame2.v(1) + frame1.p()[2] * frame2.v(2) + frame2.p());
 }
 
-bool invert(const Frame& fi, Frame& fo) {
-  // &fi == &fo is ok
-  SGrid<float, 4, 4> m = to_Matrix(fi);
+bool invert(const Frame& frame, Frame& frame_inv) {
+  // &frame == &frame_inv is ok
+  SGrid<float, 4, 4> m = to_Matrix(frame);
   if (!invert(m.const_view(), m.view())) return false;
-  fo = to_Frame(m);
+  frame_inv = to_Frame(m);
   return true;
 }
 
 bool Frame::invert() { return hh::invert(const_cast<const Frame&>(*this), *this); }
 
-Frame transpose(const Frame& f) {
-  assertx(f.p() == Point(0.f, 0.f, 0.f));
-  Frame fo = f;
-  std::swap(fo[1][0], fo[0][1]);
-  std::swap(fo[2][0], fo[0][2]);
-  std::swap(fo[2][1], fo[1][2]);
-  return fo;
+Frame transpose(const Frame& frame) {
+  assertx(frame.p() == Point(0.f, 0.f, 0.f));
+  Frame frame2 = frame;
+  std::swap(frame2[1][0], frame2[0][1]);
+  std::swap(frame2[2][0], frame2[0][2]);
+  std::swap(frame2[2][1], frame2[1][2]);
+  return frame2;
 }
 
 bool Frame::is_ident() const {
@@ -76,40 +76,40 @@ bool Frame::is_ident() const {
 
 Frame Frame::rotation(int axis, float angle) {
   assertx(axis >= 0 && axis < 3);
-  Frame f = Frame::identity();
+  Frame frame = Frame::identity();
   float c = std::cos(angle), s = std::sin(angle);
   if (abs(c) < 1e-6f) c = 0.f;
   if (abs(s) < 1e-6f) s = 0.f;
   switch (axis) {
     case 0:
-      f[0][0] = 1.f;
-      f[1][1] = c;
-      f[1][2] = s;
-      f[2][1] = -s;
-      f[2][2] = c;
+      frame[0][0] = 1.f;
+      frame[1][1] = c;
+      frame[1][2] = s;
+      frame[2][1] = -s;
+      frame[2][2] = c;
       break;
     case 1:
-      f[1][1] = 1.f;
-      f[2][2] = c;
-      f[2][0] = s;
-      f[0][2] = -s;
-      f[0][0] = c;
+      frame[1][1] = 1.f;
+      frame[2][2] = c;
+      frame[2][0] = s;
+      frame[0][2] = -s;
+      frame[0][0] = c;
       break;
     case 2:
-      f[2][2] = 1.f;
-      f[0][0] = c;
-      f[0][1] = s;
-      f[1][0] = -s;
-      f[1][1] = c;
+      frame[2][2] = 1.f;
+      frame[0][0] = c;
+      frame[0][1] = s;
+      frame[1][0] = -s;
+      frame[1][1] = c;
       break;
     default: assertnever("");
   }
-  return f;
+  return frame;
 }
 
-std::ostream& operator<<(std::ostream& os, const Frame& f) {
-  return os << "Frame {\n  v0 = " << f.v(0) << "\n  v1 = " << f.v(1) << "\n  v2 = " << f.v(2) << "\n  p = " << f.p()
-            << "\n}\n";
+std::ostream& operator<<(std::ostream& os, const Frame& frame) {
+  return os << "Frame {\n  v0 = " << frame.v(0) << "\n  v1 = " << frame.v(1) << "\n  v2 = " << frame.v(2)
+            << "\n  p = " << frame.p() << "\n}\n";
 }
 
 // *** Misc

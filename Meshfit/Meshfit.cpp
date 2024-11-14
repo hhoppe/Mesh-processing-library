@@ -182,8 +182,8 @@ void DataPts::ok() const {
 
 // *** utility
 
-void mesh_transform(const Frame& f) {
-  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * f);
+void mesh_transform(const Frame& frame) {
+  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * frame);
 }
 
 void compute_xform() {

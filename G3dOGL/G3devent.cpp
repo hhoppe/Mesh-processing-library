@@ -22,12 +22,12 @@ void save_state() {
   ExpandStateFilename();
   try {
     WFile fi(statefile);  // may throw
-    Frame ft = FrameIO::get_not_a_frame();
+    Frame frame_not_a_frame = FrameIO::get_not_a_frame();
     for (int i = 0; i <= g_obs.last; i++) {
       bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
-      const Frame& f = is_vis ? g_obs[i].t() : ft;
-      if (i && f.is_ident()) continue;
-      assertw(FrameIO::write(fi(), ObjectFrame{f, i, (!i ? zoom : 0.f)}));
+      const Frame& frame = is_vis ? g_obs[i].t() : frame_not_a_frame;
+      if (i && frame.is_ident()) continue;
+      assertw(FrameIO::write(fi(), ObjectFrame{frame, i, (!i ? zoom : 0.f)}));
     }
     if (!tview.is_ident()) assertw(FrameIO::write(fi(), ObjectFrame{tview, -1}));
     assertw(fi());
@@ -630,15 +630,15 @@ void select_frel() {
   Frame& frel = selected.frel;
   float f1 = -1.f, f2 = -1.f;  // best axis correlation
   int oax1 = -1, oax2 = -1, vax1 = -1, vax2 = -1, sign1 = 0, sign2 = 0;
-  Frame fob = g_obs[cob].t();
-  Frame vob = g_obs[obview].t();
+  Frame frame_cob = g_obs[cob].t();
+  Frame frame_view = g_obs[obview].t();
   for_int(i, 3) {
-    assertw(fob.v(i).normalize());
-    assertw(vob.v(i).normalize());
+    assertw(frame_cob.v(i).normalize());
+    assertw(frame_view.v(i).normalize());
   }
   for_int(i, 3) {
     for_int(j, 3) {
-      float v = dot(fob.v(i), vob.v(j));
+      float v = dot(frame_cob.v(i), frame_view.v(j));
       int sign = 1;
       if (v < 0) {
         v = -v;

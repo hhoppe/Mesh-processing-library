@@ -85,8 +85,8 @@ void analyze_poly(int indent, const string& s) {
   showdf("%s  energies: edis=%g espr=%g erep=%g etot=%g\n", str.c_str(), edis, espr, erep, etot);
 }
 
-void poly_transform(const Frame& f) {
-  for (vertex v : verts) v->p *= f;
+void poly_transform(const Frame& frame) {
+  for (vertex v : verts) v->p *= frame;
 }
 
 void compute_xform() {

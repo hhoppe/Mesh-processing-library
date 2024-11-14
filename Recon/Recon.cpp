@@ -178,7 +178,7 @@ void init_output() {
   iom = process_arg('m');
 }
 
-void compute_tp(int i, int& n, Frame& f) {
+void compute_tp(int i, int& n, Frame& frame) {
   PArray<Point, 40> pa;
   SpatialSearch<int> ss(SPp.get(), co[i]);
   for (;;) {
@@ -188,7 +188,7 @@ void compute_tp(int i, int& n, Frame& f) {
     if (pi != i && !gpcpseudo->contains(i, pi)) gpcpseudo->enter_undirected(i, pi);
   }
   Vec3<float> eimag;
-  principal_components(pa, f, eimag);
+  principal_components(pa, frame, eimag);
   n = pa.num();
 }
 
@@ -217,14 +217,14 @@ void draw_pc_linear(Mk3d& mk) {
   }
 }
 
-void print_principal(const Frame& f) {
+void print_principal(const Frame& frame) {
   if (iob) {
     // iob->diffuse(.8f, .5f, .4f); iob->specular(.5f, .5f, .5f); iob->phong(3.f);
     iob->diffuse(.6f, .6f, .6f);
     iob->specular(.5f, .5f, .5f);
     iob->phong(4.f);
     iob->push();
-    iob->apply(f * xform_inverse);
+    iob->apply(frame * xform_inverse);
     draw_pc_extent(*iob);
     iob->pop();
   }
@@ -235,7 +235,7 @@ void print_principal(const Frame& f) {
     iof->begin_force_polyline(true);
     {
       iof->push();
-      iof->apply(f * xform_inverse);
+      iof->apply(frame * xform_inverse);
       draw_pc_linear(*iof);
       iof->pop();
     }
@@ -246,7 +246,7 @@ void print_principal(const Frame& f) {
     iou->specular(.6f, .6f, .2f);
     iou->phong(3.f);
     iou->push();
-    iou->apply(f * xform_inverse);
+    iou->apply(frame * xform_inverse);
     draw_pc_linear(*iou);
     iou->pop();
   }
@@ -264,11 +264,11 @@ void process_principal() {
   HH_STAT(Snei);
   for_int(i, num) {
     int n;
-    Frame f;
-    compute_tp(i, n, f);
-    if (ioo) pctrans[i] = f;
+    Frame frame;
+    compute_tp(i, n, frame);
+    if (ioo) pctrans[i] = frame;
     Snei.enter(n);
-    float len0 = mag(f.v(0)), len1 = mag(f.v(1)), len2 = mag(f.v(2));
+    float len0 = mag(frame.v(0)), len1 = mag(frame.v(1)), len2 = mag(frame.v(2));
     assertx(len2 > 0.f);  // principal_components() should do this
     Slen0.enter(len0);
     Slen1.enter(len1);
@@ -276,10 +276,10 @@ void process_principal() {
     Sr10.enter(len1 / len0);
     Sr20.enter(len2 / len0);
     Sr21.enter(len2 / len1);
-    pcorg[i] = f.p();
-    pcnor[i] = usenormals < 3 ? f.v(minora) : nor[i];
+    pcorg[i] = frame.p();
+    pcnor[i] = usenormals < 3 ? frame.v(minora) : nor[i];
     assertx(pcnor[i].normalize());
-    print_principal(f);
+    print_principal(frame);
   }
   close_mk(iob);
   close_mk(iof);
@@ -427,14 +427,14 @@ void draw_oriented_tps() {
   ioo->specular(.6f, .6f, .2f);
   ioo->phong(3.f);
   for_int(i, num) {
-    Frame& f = pctrans[i];
-    if (dot(f.v(minora), pcnor[i]) < 0.f) {
+    Frame& frame = pctrans[i];
+    if (dot(frame.v(minora), pcnor[i]) < 0.f) {
       // flip 2 of the axes to keep right hand rule
-      f.v(minora) = -f.v(minora);
-      f.v(0) = -f.v(0);
+      frame.v(minora) = -frame.v(minora);
+      frame.v(0) = -frame.v(0);
     }
     ioo->push();
-    ioo->apply(f * xform_inverse);
+    ioo->apply(frame * xform_inverse);
     draw_pc_linear(*ioo);
     if (!is_3D) {
       ioo->point(0.f, 0.f, 0.f);

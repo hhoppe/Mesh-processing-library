@@ -5,25 +5,25 @@ exp(log(q1) * .28f) = Quaternion(0.0583012, 0.116602, 0.174904, 0.975917)
 round_elements(clone(q1.axis())) = [0.26726, 0.53452, 0.80178]
 q1.angle() = 1.5708
 round(pow(q1, .25f) * pow(q1, .75f)) = Quaternion(0.18898, 0.37796, 0.56695, 0.70711)
-round(f) = Frame {
+round(frame) = Frame {
   v0 = [0.0714, 0.9446, -0.3202]
   v1 = [-0.6589, 0.2857, 0.6958]
   v2 = [0.7488, 0.1613, 0.6429]
   p = [0, 0, 0]
 }
-fhalf = Frame {
+frame_half = Frame {
   v0 = [0.728028, 0.608789, -0.315202]
   v1 = [-0.525105, 0.790791, 0.314508]
   v2 = [0.440727, -0.0634566, 0.895395]
   p = [0, 0, 0]
 }
-round(fhalf * fhalf) = Frame {
+round(frame_half * frame_half) = Frame {
   v0 = [0.0714, 0.9446, -0.3202]
   v1 = [-0.6589, 0.2857, 0.6958]
   v2 = [0.7488, 0.1613, 0.6429]
   p = [0, 0, 0]
 }
-round(pow(f, .5f)) = Frame {
+round(pow(frame, .5f)) = Frame {
   v0 = [0.728, 0.6088, -0.3152]
   v1 = [-0.5251, 0.7908, 0.3145]
   v2 = [0.4407, -0.0635, 0.8954]
@@ -31,7 +31,7 @@ round(pow(f, .5f)) = Frame {
 }
 qq.angle() = 1.5708
 round_elements(clone(qq.axis())) = [0.26726, 0.53452, 0.80178]
-Quaternion(f) = Quaternion(0.188978, 0.377957, 0.566935, 0.707122)
+Quaternion(frame) = Quaternion(0.188978, 0.377957, 0.566935, 0.707122)
 round(to_Frame(q1 * inverse(q1))) = Frame {
   v0 = [1, 0, 0]
   v1 = [0, 1, 0]

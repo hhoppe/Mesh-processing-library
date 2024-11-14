@@ -727,14 +727,14 @@ void do_rotate(Args& args) {
     image = rotate_ccw(image, iang);
   } else {
     // backward map from new image to old image (but y, x reversed)
-    Frame f_rot = Frame::rotation(2, -rad_from_deg(ang));
+    Frame frame_rotation = Frame::rotation(2, -rad_from_deg(ang));
     Frame frame;
     if (0) {  // anisometric rotation if image is rectangle rather than square!
-      frame = f_rot;
+      frame = frame_rotation;
     } else {  // rigid rotation
       float vmin = float(min(image.dims()));
-      Frame fscaling = Frame::scaling(V(image.ysize() / vmin, image.xsize() / vmin, 1.f));
-      frame = fscaling * f_rot * ~fscaling;
+      Frame frame_scaling = Frame::scaling(V(image.ysize() / vmin, image.xsize() / vmin, 1.f));
+      frame = frame_scaling * frame_rotation * ~frame_scaling;
     }
     apply_frame(frame);
   }

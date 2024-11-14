@@ -14,7 +14,7 @@ class Quaternion {
  public:
   Quaternion() { zero(); }
   Quaternion(const Quaternion& q) = default;
-  explicit Quaternion(const Frame& f);  // mapping from Frame::identity() to f; Frame origin f.p() is ignored
+  explicit Quaternion(const Frame& frame);  // mapping from Frame::identity() to frame; origin frame.p() is ignored.
   explicit Quaternion(const Vector& axis, float angle);
   explicit Quaternion(const Vector& vf, const Vector& vt);  // resulting quaternion is 2 times rotation from vf to vt!
   Quaternion& operator=(const Quaternion&) = default;
@@ -28,7 +28,7 @@ class Quaternion {
   friend Quaternion inverse(const Quaternion& qi);
   friend Frame to_Frame(const Quaternion& q);
   friend Quaternion pow(const Quaternion& qi, float e);
-  friend Frame pow(const Frame& fi, float e);
+  friend Frame pow(const Frame& frame, float e);
   friend Vector log(const Quaternion& q);
   friend Quaternion exp(const Vector& v);
   friend Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t);
@@ -58,9 +58,9 @@ Quaternion inverse(const Quaternion& qi);
 inline Quaternion& operator*=(Quaternion& q1, const Quaternion& q2) { return q1 = q1 * q2; }
 Frame to_Frame(const Quaternion& q);  // Frame origin is set to zero!
 Quaternion pow(const Quaternion& qi, float e);
-Frame pow(const Frame& fi, float e);  // Power of Frame
-Vector log(const Quaternion& q);      // ? log(Quaternion) == ?what type.   a Vector? vo[3] == 0!
-Quaternion exp(const Vector& v);      // ? meaning of exponentiation
+Frame pow(const Frame& frame, float e);  // Power of Frame
+Vector log(const Quaternion& q);         // ? log(Quaternion) == ?what type.   a Vector? vo[3] == 0!
+Quaternion exp(const Vector& v);         // ? meaning of exponentiation
 
 // NOTE:    pow(qi, e) == slerp(Quaternion(Vector(0.f, 0.f, 0.f), 0.f), qi, e) == exp(log(qi) * e)
 // spherical linear interpolation of unit quaternion.
@@ -78,29 +78,29 @@ std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
 //----------------------------------------------------------------------------
 
-// Frame origin f.p() is ignored
-inline Quaternion::Quaternion(const Frame& f) {
-  const float tr = f[0][0] + f[1][1] + f[2][2];
+// Frame origin frame.p() is ignored
+inline Quaternion::Quaternion(const Frame& frame) {
+  const float tr = frame[0][0] + frame[1][1] + frame[2][2];
   float s;
   if (tr > 0) {
     s = my_sqrt(tr + 1.f);
     _c[3] = s * .5f;
     s = .5f / s;
-    _c[0] = (f[1][2] - f[2][1]) * s;
-    _c[1] = (f[2][0] - f[0][2]) * s;
-    _c[2] = (f[0][1] - f[1][0]) * s;
+    _c[0] = (frame[1][2] - frame[2][1]) * s;
+    _c[1] = (frame[2][0] - frame[0][2]) * s;
+    _c[2] = (frame[0][1] - frame[1][0]) * s;
   } else {
     int i = 0, j, k;
-    if (f[1][1] > f[0][0]) i = 1;
-    if (f[2][2] > f[i][i]) i = 2;
+    if (frame[1][1] > frame[0][0]) i = 1;
+    if (frame[2][2] > frame[i][i]) i = 2;
     j = mod3(i + 1);
     k = mod3(i + 2);
-    s = my_sqrt((f[i][i] - (f[j][j] + f[k][k])) + 1.f);
+    s = my_sqrt((frame[i][i] - (frame[j][j] + frame[k][k])) + 1.f);
     _c[i] = s * .5f;
     s = .5f / s;
-    _c[3] = (f[j][k] - f[k][j]) * s;
-    _c[j] = (f[i][j] + f[j][i]) * s;
-    _c[k] = (f[i][k] + f[k][i]) * s;
+    _c[3] = (frame[j][k] - frame[k][j]) * s;
+    _c[j] = (frame[i][j] + frame[j][i]) * s;
+    _c[k] = (frame[i][k] + frame[k][i]) * s;
   }
   normalize();  // optional; just to be sure
 }
@@ -218,12 +218,10 @@ inline Quaternion pow(const Quaternion& qi, float e) {
   return q;
 }
 
-inline Frame pow(const Frame& fi, float v) {
-  Frame f;
-  Point tra = fi.p();
-  f = to_Frame(pow(Quaternion(fi), v));
-  f.p() = tra * v;
-  return f;
+inline Frame pow(const Frame& frame, float v) {
+  Frame frame2 = to_Frame(pow(Quaternion(frame), v));
+  frame2.p() = frame.p() * v;
+  return frame2;
 }
 
 inline Vector log(const Quaternion& qi) {

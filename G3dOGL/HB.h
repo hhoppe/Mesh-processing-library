@@ -47,7 +47,7 @@ float get_yonder();
 void set_hither(float h);
 void set_yonder(float y);
 void set_current_object(int obn);  // hook for lighting specific.
-void update_seg(int segn, const Frame& f, bool vis);
+void update_seg(int segn, const Frame& frame, bool vis);
 void draw_space();
 bool special_keypress(char ch);  // ret: recognized
 string show_info();              // info line state string

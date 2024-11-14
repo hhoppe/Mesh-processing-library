@@ -155,22 +155,22 @@ template <typename T> Matrix<T> identity_mat(const Vec2<int>& dims) {
 template <typename T> Matrix<T> identity_mat(int n) { return identity_mat<T>(twice(n)); }
 
 // Convert an affine 4x3 matrix to a 4x4 Matrix.
-inline SGrid<float, 4, 4> to_Matrix(const Frame& f) {
-  return V(V(f[0][0], f[0][1], f[0][2], 0.f), V(f[1][0], f[1][1], f[1][2], 0.f), V(f[2][0], f[2][1], f[2][2], 0.f),
-           V(f[3][0], f[3][1], f[3][2], 1.f));
+inline SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
+  return V(V(frame[0][0], frame[0][1], frame[0][2], 0.f), V(frame[1][0], frame[1][1], frame[1][2], 0.f),
+           V(frame[2][0], frame[2][1], frame[2][2], 0.f), V(frame[3][0], frame[3][1], frame[3][2], 1.f));
 }
 
 // Convert a 4x4 Matrix to an affine 4x3 matrix.
 inline Frame to_Frame(CMatrixView<float> m) {
   assertx(m.ysize() == 4 && m.xsize() == 4);
-  Frame f;
+  Frame frame;
   const float tolerance = 1e-5f;
   if (abs(m[0][3]) > tolerance || abs(m[1][3]) > tolerance || abs(m[2][3]) > tolerance ||
       abs(m[3][3] - 1.f) > tolerance) {
     if (Warning("Frame matrix strange")) SHOW(m);
   }
-  for_int(i, 4) for_int(j, 3) f[i][j] = m[i][j];
-  return f;
+  for_int(i, 4) for_int(j, 3) frame[i][j] = m[i][j];
+  return frame;
 }
 
 // Transform a 2D vector by a frame.

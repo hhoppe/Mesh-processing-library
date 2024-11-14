@@ -2765,9 +2765,9 @@ void HB::set_current_object(int obn) {
   cob = obn;
 }
 
-void HB::update_seg(int segn, const Frame& f, bool vis) {
+void HB::update_seg(int segn, const Frame& frame, bool vis) {
   assertx(segn >= 0 && segn < k_max_object);
-  g_xobs.t[segn] = f;
+  g_xobs.t[segn] = frame;
   g_xobs.vis[segn] = vis;
 }
 

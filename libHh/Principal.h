@@ -12,10 +12,10 @@ namespace hh {
 //   will always have non-zero (albeit very small) lengths.
 // The values eimag will be zero for the axes that should be zero.
 // The frame f is also guaranteed to be right-handed.
-void principal_components(CArrayView<Point> pa, Frame& f, Vec3<float>& eimag);
+void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag);
 
-// Same but for vectors va[].  Note that the origin f.p() of frame f will therefore be thrice(0.f).
-void principal_components(CArrayView<Vector> va, Frame& f, Vec3<float>& eimag);
+// Same but for vectors va[].  Note that the origin frame.p() of frame frame will therefore be thrice(0.f).
+void principal_components(CArrayView<Vector> va, Frame& frame, Vec3<float>& eimag);
 
 // Given mi[m][n] (m data points of dimension n),
 //   compute mo[n][n] (n orthonormal eigenvectors rows, by decreasing eigenv.) and eigenvalues eimag[n].

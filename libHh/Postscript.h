@@ -71,19 +71,21 @@ class Postscript : noncopyable {
     constexpr float k_py = 10.5f;
     float rpx = !landscape ? k_px : k_py;
     float rpy = !landscape ? k_py : k_px;
-    Frame f = (rpy / rpx > float(_nypix) / _nxpix
-                   ? (Frame::translation(V(0.f, (rpy / rpx * _nxpix / _nypix - 1.f) * k_max, 0.f)) *
-                      Frame::scaling(V(72.f * rpx / (k_max * 2), 72.f * rpx / (k_max * 2.f) * _nypix / _nxpix, 1.f)))
-                   : (Frame::translation(V((rpx / rpy * _nypix / _nxpix - 1.f) * k_max, 0.f, 0.f)) *
-                      Frame::scaling(V(72.f * rpy / (k_max * 2) * _nxpix / _nypix, 72.f * rpy / (k_max * 2), 1.f))));
+    Frame frame =
+        (rpy / rpx > float(_nypix) / _nxpix
+             ? (Frame::translation(V(0.f, (rpy / rpx * _nxpix / _nypix - 1.f) * k_max, 0.f)) *
+                Frame::scaling(V(72.f * rpx / (k_max * 2), 72.f * rpx / (k_max * 2.f) * _nypix / _nxpix, 1.f)))
+             : (Frame::translation(V((rpx / rpy * _nypix / _nxpix - 1.f) * k_max, 0.f, 0.f)) *
+                Frame::scaling(V(72.f * rpy / (k_max * 2) * _nxpix / _nypix, 72.f * rpy / (k_max * 2), 1.f))));
     if (!landscape) {
-      f = f * Frame::translation(V(20.f, 15.f, 0.f));
+      frame = frame * Frame::translation(V(20.f, 15.f, 0.f));
     } else {
-      f = f * Frame::translation(V(15.f, 20.f, 0.f)) * Frame::translation(V(0.f, -8.5f * 72.f, 0.f)) *
-          Frame::rotation(2, TAU / 4);
+      frame = frame * Frame::translation(V(15.f, 20.f, 0.f)) * Frame::translation(V(0.f, -8.5f * 72.f, 0.f)) *
+              Frame::rotation(2, TAU / 4);
     }
-    _os << sform("[%g %g  %g %g  %g %g] concat\n", f[0][0], f[0][1], f[1][0], f[1][1], f.p()[0], f.p()[1]);
-    _ctm = f;
+    _os << sform("[%g %g  %g %g  %g %g] concat\n",  //
+                 frame[0][0], frame[0][1], frame[1][0], frame[1][1], frame.p()[0], frame.p()[1]);
+    _ctm = frame;
     _os << "%%EndPageSetup\n";
     _os << "% hps.c created from Postscript.h in libHh\n";
     _os << "% Initialize procedures\n";

@@ -16,7 +16,7 @@ inline void rotate(float& v1, float& v2, float tau, float vsin) {
   v2 += vsin * (t1 - t2 * tau);
 }
 
-void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, Frame& f, Vec3<float>& eimag) {
+void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, Frame& frame, Vec3<float>& eimag) {
   // Note that this builds on version of compute_eigenvectors() specialized to n = 3.
   const int n = 3;
   SGrid<float, n, n> a;
@@ -87,25 +87,25 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     v = sqrt(v);
     eimag[i] = v;
     if (!v) v = 1e-15f;  // very small but non-zero vector
-    f.v(i) = v * vec[i];
+    frame.v(i) = v * vec[i];
   }
-  f.p() = avgp;
-  f.make_right_handed();
+  frame.p() = avgp;
+  frame.make_right_handed();
 }
 
 }  // namespace
 
-void principal_components(CArrayView<Point> pa, Frame& f, Vec3<float>& eimag) {
+void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag) {
   assertx(pa.num() > 0);
   Homogeneous hp;
   for_int(i, pa.num()) hp += pa[i];
   Point avgp = to_Point(hp / float(pa.num()));
-  principal_components(CArrayView<Vec3<float>>(pa.data(), pa.num()), avgp, f, eimag);
+  principal_components(CArrayView<Vec3<float>>(pa.data(), pa.num()), avgp, frame, eimag);
 }
 
-void principal_components(CArrayView<Vector> va, Frame& f, Vec3<float>& eimag) {
+void principal_components(CArrayView<Vector> va, Frame& frame, Vec3<float>& eimag) {
   assertx(va.num() > 0);
-  principal_components(CArrayView<Vec3<float>>(va.data(), va.num()), Point(0.f, 0.f, 0.f), f, eimag);
+  principal_components(CArrayView<Vec3<float>>(va.data(), va.num()), Point(0.f, 0.f, 0.f), frame, eimag);
 }
 
 void subtract_mean(MatrixView<float> mi) {

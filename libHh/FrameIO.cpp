@@ -131,10 +131,10 @@ bool write(WBuffer& b, const ObjectFrame& object_frame) {
 
 string create_string(const ObjectFrame& object_frame) {
   // 2014-05-02: changed from %.7g .
-  const Frame& f = object_frame.frame;
+  const Frame& frame = object_frame.frame;
   return sform("F %d  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g\n",  //
-               object_frame.obn, f[0][0], f[0][1], f[0][2], f[1][0], f[1][1], f[1][2], f[2][0], f[2][1], f[2][2],
-               f[3][0], f[3][1], f[3][2], object_frame.zoom);
+               object_frame.obn, frame[0][0], frame[0][1], frame[0][2], frame[1][0], frame[1][1], frame[1][2],
+               frame[2][0], frame[2][1], frame[2][2], frame[3][0], frame[3][1], frame[3][2], object_frame.zoom);
 }
 
 Frame parse_frame(const string& s) {
@@ -144,12 +144,12 @@ Frame parse_frame(const string& s) {
   return object_frame->frame;
 }
 
-bool is_not_a_frame(const Frame& f) { return f[0][0] == k_Frame_fnan; }
+bool is_not_a_frame(const Frame& frame) { return frame[0][0] == k_Frame_fnan; }
 
 Frame get_not_a_frame() {
-  Frame f = Frame::identity();
-  f[0][0] = k_Frame_fnan;
-  return f;
+  Frame frame = Frame::identity();
+  frame[0][0] = k_Frame_fnan;
+  return frame;
 }
 
 }  // namespace FrameIO

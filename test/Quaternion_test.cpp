@@ -26,18 +26,18 @@ int main() {
     SHOW(round_elements(clone(q1.axis())));
     SHOW(q1.angle());
     SHOW(round(pow(q1, .25f) * pow(q1, .75f)));
-    Frame f = to_Frame(q1);
-    SHOW(round(f));
-    Frame fhalf = to_Frame(pow(q1, .5f));
-    SHOW(fhalf);
-    SHOW(round(fhalf * fhalf));
-    SHOW(round(pow(f, .5f)));
-    Quaternion qq(pow(pow(f, .25f), 4.f));
+    Frame frame = to_Frame(q1);
+    SHOW(round(frame));
+    Frame frame_half = to_Frame(pow(q1, .5f));
+    SHOW(frame_half);
+    SHOW(round(frame_half * frame_half));
+    SHOW(round(pow(frame, .5f)));
+    Quaternion qq(pow(pow(frame, .25f), 4.f));
     // SHOW(qq);  // rounding differences
     SHOW(qq.angle());
     SHOW(round_elements(clone(qq.axis())));
-    f = round(f);
-    SHOW(Quaternion(f));
+    frame = round(frame);
+    SHOW(Quaternion(frame));
     SHOW(round(to_Frame(q1 * inverse(q1))));
   }
   {

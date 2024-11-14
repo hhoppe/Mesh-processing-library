@@ -33,7 +33,7 @@ Frame parse_frame(const string& s);
 string create_string(const ObjectFrame& object_frame);
 
 // Detect special frames.
-bool is_not_a_frame(const Frame& f);
+bool is_not_a_frame(const Frame& frame);
 Frame get_not_a_frame();
 
 }  // namespace FrameIO

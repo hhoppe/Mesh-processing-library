@@ -1,5 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Args.h"
+#include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
 #include "libHh/GeomOp.h"
 #include "libHh/Quaternion.h"  // pow(Frame, float)
@@ -46,12 +47,12 @@ void do_create_euler(Args& args) {
 
 void do_inverse() { g_inverse = true; }
 
-void apply_induce_roll(Frame& t) {
+void apply_induce_roll(Frame& frame) {
   static int icount1 = 0;
   static Point p0, p1, p2;
   p0 = p1;
   p1 = p2;
-  p2 = t.p();
+  p2 = frame.p();
   p2[2] = 0;  // Set elevations to zero.
   icount1++;
   if (icount1 < 3) return;
@@ -66,64 +67,64 @@ void apply_induce_roll(Frame& t) {
   sa[num - 1] = sarea;
   const float s = float(sum(sa)) / num;
   const float bank = s * induce_roll;
-  t = Frame::rotation(0, bank) * t;
+  frame = Frame::rotation(0, bank) * frame;
   HH_SSTAT(Sbank, bank);
   // Not used: it couldn't estimate curvature well enough from my gcanyon_4k2k_fly2.frame file.
 }
 
 bool process_frame(ObjectFrame& object_frame) {
-  Frame& t = object_frame.frame;
+  Frame& frame = object_frame.frame;
   icount++;
   if (object >= 0) object_frame.obn = object;
-  if (g_inverse) assertw(t.invert());
-  if (is_pretransf) t = cpretransf * t;
-  if (is_transf) t = t * ctransf;
+  if (g_inverse) assertw(frame.invert());
+  if (is_pretransf) frame = cpretransf * frame;
+  if (is_transf) frame = frame * ctransf;
   if (lowpass != 1.f) {
-    static Frame to;
-    static float zo;
+    static Frame frame_prev;
+    static float zoom_prev;
     if (icount > 1) {
-      t = to * pow(~to * t, lowpass);
-      object_frame.zoom = zo * (1.f - lowpass) + object_frame.zoom * lowpass;
+      frame = frame_prev * pow(~frame_prev * frame, lowpass);
+      object_frame.zoom = zoom_prev * (1.f - lowpass) + object_frame.zoom * lowpass;
     }
-    to = t;
-    zo = object_frame.zoom;
+    frame_prev = frame;
+    zoom_prev = object_frame.zoom;
   }
-  if (b_orthonormalize) orthonormalize(t);
+  if (b_orthonormalize) orthonormalize(frame);
   if (snap_to_axes) {
     for_int(i, 3) {
-      Vector& vec = t.v(i);
+      Vector& vec = frame.v(i);
       const int axis = arg_max(abs(vec));
       for_int(j, 3) vec[j] = j == axis ? sign(vec[j]) : 0.f;
     }
-    t.p() = Point(0.f, 0.f, 0.f);
+    frame.p() = Point(0.f, 0.f, 0.f);
     object_frame.zoom = 0.f;
   }
-  if (induce_roll) apply_induce_roll(t);
+  if (induce_roll) apply_induce_roll(frame);
   if (add_mid_frames) {
-    static Frame to;
-    static float zo;
+    static Frame frame_prev;
+    static float zoom_prev;
     if (icount > 1) {
-      Frame tn = to * pow(~to * t, .5f);
-      tn.p() = interp(to.p(), t.p(), .5f);
-      const float zn = (object_frame.zoom + zo) * .5f;
-      const ObjectFrame object_frame_new{tn, object_frame.obn, zn, object_frame.binary};
+      Frame frame_new = frame_prev * pow(~frame_prev * frame, .5f);
+      frame_new.p() = interp(frame_prev.p(), frame.p(), .5f);
+      const float zoom_new = (object_frame.zoom + zoom_prev) * .5f;
+      const ObjectFrame object_frame_new{frame_new, object_frame.obn, zoom_new, object_frame.binary};
       if (!FrameIO::write(std::cout, object_frame_new)) return true;
     }
-    to = t;
-    zo = object_frame.zoom;
+    frame_prev = frame;
+    zoom_prev = object_frame.zoom;
   }
   if (toasciit) object_frame.binary = false;
   if (tobinary) object_frame.binary = true;
   if (statistics) {
-    static Point plast;
-    if (icount > 1) HH_SSTAT(Sdisp, dist(t.p(), plast));
-    plast = t.p();
-    HH_SSTAT(Sxlen, mag(t.v(0)));
-    HH_SSTAT(Sylen, mag(t.v(1)));
-    HH_SSTAT(Szlen, mag(t.v(2)));
-    HH_SSTAT(Sxydot, dot(t.v(0), t.v(1)));
-    HH_SSTAT(Syzdot, dot(t.v(1), t.v(2)));
-    HH_SSTAT(Szxdot, dot(t.v(2), t.v(0)));
+    static Point origin_prev;
+    if (icount > 1) HH_SSTAT(Sdisp, dist(frame.p(), origin_prev));
+    origin_prev = frame.p();
+    HH_SSTAT(Sxlen, mag(frame.v(0)));
+    HH_SSTAT(Sylen, mag(frame.v(1)));
+    HH_SSTAT(Szlen, mag(frame.v(2)));
+    HH_SSTAT(Sxydot, dot(frame.v(0), frame.v(1)));
+    HH_SSTAT(Syzdot, dot(frame.v(1), frame.v(2)));
+    HH_SSTAT(Szxdot, dot(frame.v(2), frame.v(0)));
     return false;
   }
   for_int(irepeat, repeat) {
@@ -137,13 +138,13 @@ bool process_frame(ObjectFrame& object_frame) {
   return false;
 }
 
-void process_frames() {
+void process_frames(std::istream& is) {
   for (;;) {
-    auto object_frame = FrameIO::read(std::cin);
+    auto object_frame = FrameIO::read(is);
     if (!object_frame) break;
     process_frame(*object_frame);
   }
-  if (!std::cin.good() && !std::cin.eof()) {
+  if (!is.good() && !is.eof()) {
     assertnever("Read error");
   } else if (!std::cout.good()) {
     assertnever("Write error");
@@ -179,6 +180,12 @@ int main(int argc, const char** argv) {
   HH_ARGSF(eof1, ": introduce 'q 0 0 0' after frame 1");
   HH_ARGSF(toasciit, ": force output to be ascii text");
   HH_ARGSF(tobinary, ": force output to be binary");
+  string arg0 = args.num() ? args.peek_string() : "";
+  if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+  string filename = "-";
+  if (arg0 != "-create_euler") {
+    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  }
   args.parse();
   if (pretransf != "") {
     is_pretransf = true;
@@ -191,6 +198,7 @@ int main(int argc, const char** argv) {
   b_orthonormalize = orthonormalize;
   statistics = stat;
   b_frame = frame;
-  if (!noinput) process_frames();
+  RFile fi(filename);
+  if (!noinput) process_frames(fi());
   return 0;
 }

@@ -410,7 +410,7 @@ static void act_flight() {
     // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that problem.
     Point savep = obframe.p();
     Frame frame1 = Frame::translation(-obframe.p());
-    const float yaw_factor = 0.032f;                                                  // was 0.025f in g3dfly.c
+    const float yaw_factor = 0.032f;                                                      // was 0.025f in g3dfly.c
     Frame frame2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
     Frame frame = frame1 * frame2;
     frame = pow(frame, 10.f * fchange);

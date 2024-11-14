@@ -638,7 +638,7 @@ specified criterion (cycle length, number of cycle edges, number of cycles, or m
 For example, within `demos/create_topologically_simplified.{sh,bat}`, <a id="prog_MinCycles"></a>
 ```shell
 FilterPM demos/data/office.pm -nf 200000 -outmesh | \
-  MinCycles - -fraccyclelength 1.2 -maxcyclelen 0.10 -closecycles | \
+  MinCycles - -frac_cycle_length 1.2 -max_cycle_length 0.10 | \
   G3dOGL -st demos/data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9
 ```
 - extracts a mesh of 200000 faces from a progressive mesh,

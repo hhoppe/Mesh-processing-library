@@ -154,27 +154,23 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
     for (Face f : _mesh.faces(vn))
       for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;      // Note that e_joined(e) will be initialized shortly.
     for (Vertex v : _mesh.vertices(vn)) v_dist(v) = 0.f;  // It can be any value != BIGFLOAT.
-    if (1) {  // Heuristically characterize as handle or tunnel based on geometric embedding.
-      for (Face f : _mesh.faces(vn)) {
-        Edge e = _mesh.opp_edge(vn, f);
-        // Face f2 = _mesh.opp_face(f, e);
-        const float dih = edge_signed_dihedral_angle(_mesh, e);
-        // SHOW(dih);
-        sum_dih[fi] += dih;
-      }
+    // Heuristically characterize the loop as a handle or tunnel based on the geometric embedding.
+    for (Face f : _mesh.faces(vn)) {
+      Edge e = _mesh.opp_edge(vn, f);
+      // Face f2 = _mesh.opp_face(f, e);
+      const float dih = edge_signed_dihedral_angle(_mesh, e);
+      // SHOW(dih);
+      sum_dih[fi] += dih;
     }
   }
-  if (1) {
+  const bool is_handle = sum(sum_dih) > 0.f;  // Else it is a tunnel.
+  (is_handle ? _total_handles : _total_tunnels) += 1;
+  {
     float len = 0.f;
     for_int(i, vertex_loop.num()) len +=
         _mesh.length(_mesh.edge(vertex_loop[i], vertex_loop[(i + 1) % vertex_loop.num()]));
-    const bool is_handle = sum(sum_dih) > 0.f;  // Else it is a tunnel.
     showdf("Closing cycle: edges=%-3d length=%-12g is_handle=%d\n", vertex_loop.num(), len, is_handle);
     if (verb) showdf(" (dih0=%.1f dih1=%.1f)\n", sum_dih[0], sum_dih[1]);
-    if (is_handle)
-      ++_total_handles;
-    else
-      ++_total_tunnels;
   }
   return new_vertices;
 }

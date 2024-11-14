@@ -1497,10 +1497,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(uvsphtopos, ": transfer uv longlat to sphere pos");
   HH_ARGSF(nooutput, ": do not output final PM");
 
-  string arg0 = args.num() ? args.peek_string() : "";
+  const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  string filename = "-";
-  if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   gfilename = filename;
   RFile fi(filename);  // Opened out here because &fi is captured below.
   {

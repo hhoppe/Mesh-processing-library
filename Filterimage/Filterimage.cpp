@@ -3350,12 +3350,12 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tomesh, ": output mesh on stdout");
   HH_ARGSD(tofloats, "f.floats : output file of binary elevations");
   HH_ARGSD(tofmp, "f.fmp : output (X, Y, Z) binary floating-point");
-  string arg0 = args.num() ? args.peek_string() : "";
+  const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  if (arg0 != "-nostdin" && arg0 != "-create" && !starts_with(arg0, "-as") && arg0 != "-fromtxt" &&
-      arg0 != "-invideo") {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  const bool from_other = contains(
+      V<string>("-nostdin", "-create", "-as_fit", "-as_cropsides", "-assemble", "-fromtxt", "-invideo"), arg0);
+  if (!from_other) {
+    const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
     image.read_file(filename);
   }
   g_parseargs = &args;

@@ -1536,10 +1536,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(meshify10, ": like 9, go clockwise after restart (simpler, faster, and even better)");
   HH_ARGSD(timingtest, "niter : run timing test");
   {
-    string arg0 = args.num() ? args.peek_string() : "";
+    const string arg0 = args.num() ? args.peek_string() : "";
     if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+    const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
     gfilename = filename;
     RFile fi(filename);
     for (string line; fi().peek() == '#';) {

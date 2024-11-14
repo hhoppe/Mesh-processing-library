@@ -180,13 +180,11 @@ int main(int argc, const char** argv) {
   HH_ARGSF(eof1, ": introduce 'q 0 0 0' after frame 1");
   HH_ARGSF(toasciit, ": force output to be ascii text");
   HH_ARGSF(tobinary, ": force output to be binary");
-  string arg0 = args.num() ? args.peek_string() : "";
+  const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  string filename = "-";
-  if (arg0 != "-create_euler") {
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-  }
+  const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   args.parse();
+  if (noinput) exit(0);
   if (pretransf != "") {
     is_pretransf = true;
     cpretransf = FrameIO::parse_frame(pretransf);
@@ -199,6 +197,6 @@ int main(int argc, const char** argv) {
   statistics = stat;
   b_frame = frame;
   RFile fi(filename);
-  if (!noinput) process_frames(fi());
+  process_frames(fi());
   return 0;
 }

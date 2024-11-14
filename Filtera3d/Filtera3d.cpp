@@ -820,11 +820,8 @@ int main(int argc, const char** argv) {
   HH_ARGSP(eldelay, "fsec : pause after each element");
   HH_ARGSF(toasciit, ": make output be ascii text");
   HH_ARGSF(tobinary, ": make output be binary");
-  string arg0 = args.num() ? args.peek_string() : "";
-  string filename = "-";
-  if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
-  RFile is(filename);
-  RSA3dStream ia3d(is());
+  const string arg0 = args.num() ? args.peek_string() : "";
+  const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   args.parse();
   if (restrictf != "") {
     is_restrictf = true;
@@ -857,6 +854,8 @@ int main(int argc, const char** argv) {
   assertx(!(toasciit && tobinary));
   if (toasciit) my_setenv("A3D_BINARY", "0");
   if (tobinary) my_setenv("A3D_BINARY", "1");
+  RFile is(filename);
+  RSA3dStream ia3d(is());
   process(ia3d);
   return 0;
 }

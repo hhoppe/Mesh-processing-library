@@ -2324,12 +2324,13 @@ int main(int argc, const char** argv) {
       break;
     }
   }
-  string arg0 = args.num() ? args.peek_string() : "";
+  const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  if (arg0 != "-nostdin" && arg0 != "-create" && !starts_with(arg0, "-as") && arg0 != "-startframe" &&
-      arg0 != "-fromimages" && arg0 != "-readnv12") {
-    string filename = "-";
-    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  const bool from_other = contains(V<string>("-nostdin", "-create", "-readnv12", "-as_fit", "-as_cropsides",
+                                             "-as_tnframes", "-assemble", "-startframe", "-fromimages"),
+                                   arg0);
+  if (!from_other) {
+    const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
     read_video(filename, false);
   }
   args.parse();

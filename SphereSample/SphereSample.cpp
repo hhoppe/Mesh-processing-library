@@ -24,8 +24,6 @@
 #include "libHh/Vector4.h"
 using namespace hh;
 
-// The Uv coordinates in this file do not take into account my recent Y flip of Image domain?
-
 namespace {
 
 string domain = "octa";  // {tetra, octa, cube, octaflat}.
@@ -39,8 +37,9 @@ string domain_file;              // Filename for domain_mesh (D -> S).
 string param_file;               // Filename for param_mesh (M -> S and after inversion, S -> M).
 string rotate_s3d;               // Filename for s3d file.
 Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
-string signal_;                  // Surface signal ("G", "N", or "C") (for geometry, normal, or color).
+string signal_;                  // Surface signal ("G", "N", "C", "T") (for geometry, normal, color, texture).
 bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
+Matrix<Vector4> texture_image_vector4;
 int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
@@ -57,6 +56,7 @@ GMesh g_mesh;
 bool is_remeshed = false;
 
 constexpr Vector k_undefined_vector(-2.f, 0.f, 0.f);
+constexpr Uv k_undefined_uv(-2.f, 0.f);
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_domainp);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Uv, v_stretchuv);
@@ -1148,6 +1148,23 @@ Vector interp_f_rgb(const GMesh& mesh, Face f, const Bary& bary) {
   return sum_rgb;
 }
 
+// Returns k_undefined_uv if undefined.
+Uv interp_f_uv(const GMesh& mesh, Face f, const Bary& bary) {
+  const Vec3<Corner> corners = mesh.triangle_corners(f);
+  Uv sum_uv{};
+  int num_defined = 0;
+  for_int(i, 3) {
+    Corner c = corners[i];
+    Uv uv;
+    if (!mesh.parse_corner_key_vec(c, "Ouv", uv)) continue;
+    num_defined++;
+    sum_uv += uv * bary[i];
+  }
+  if (num_defined == 0) return k_undefined_uv;
+  assertx(num_defined == 3);
+  return sum_uv;
+}
+
 // *** Inverse map.
 
 void internal_remesh() {
@@ -1246,7 +1263,14 @@ void do_remesh() {
 
 void do_signal(Args& args) {
   signal_ = args.get_string();
-  assertx(contains(V<string>("G", "N", "C"), signal_));
+  assertx(contains(V<string>("G", "N", "C", "T"), signal_));
+}
+
+void do_texture_file(Args& args) {
+  string filename = args.get_string();
+  Image texture_image{filename};
+  texture_image_vector4.init(texture_image.dims());
+  convert(texture_image, texture_image_vector4);
 }
 
 void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
@@ -1278,6 +1302,16 @@ void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, 
         assertx(rgb[z] >= 0.f && rgb[z] <= 1.f + 1e-6f);
         pixel[z] = uint8_t(rgb[z] * 255.f + .5f);
       }
+      break;
+    }
+    case 'T': {
+      assertx(texture_image_vector4.ysize());
+      const Uv uv = interp_f_uv(mesh, f, bary);
+      // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
+      const Uv yx = Uv(1.f - uv[1], uv[0]);  // Also, we expect (y, x) sampling order.
+      const string filtername = 1 ? "keys" : "triangle";
+      const auto filterbs = twice(FilterBnd(Filter::get(filtername), Bndrule::reflected));
+      pixel = sample_domain(texture_image_vector4, yx, filterbs).pixel();
       break;
     }
     default: assertnever("signal '" + signal_ + "' not recognized");
@@ -1497,6 +1531,7 @@ void do_write_primal_texture(Args& args) {
         }
         break;
       }
+      case 'T': assertnever("Unsupported");
       default: assertnever("signal '" + signal_ + "' not recognized");
     }
     if (x == image.xsize()) {
@@ -1545,6 +1580,7 @@ void do_write_lonlat_texture(Args& args) {
         v_rgb(v) = rgb;
       }
       break;
+    case 'T': break;
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
 
@@ -1790,7 +1826,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(keys, "comma_separated_keys : fields to write in output mesh (default: sph)");
   HH_ARGSC("   possible keys: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");
   HH_ARGSD(remesh, ": resample mesh and triangulate");
-  HH_ARGSD(signal, "l : select G, N, or C");
+  HH_ARGSD(signal, "ch : select G=geometry, N=normal, C=color, T=texture");
+  HH_ARGSD(texture_file, "imagefile : source content for 'T' signal");
   HH_ARGSP(feather_texture, "bool : blend across texture border discontinuities");
   HH_ARGSD(write_texture, "image : resample signal as texturemap (dual sampling)");
   HH_ARGSD(write_primal_texture, "image : resample signal as texturemap (primal sampling)");

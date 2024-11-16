@@ -3280,6 +3280,14 @@ void do_quantizeverts(Args& args) {
 void do_procedure(Args& args) {
   string name = args.get_string();
   if (0) {
+
+  } else if (name == "remove_filled_faces") {
+    Array<Face> ar_faces;
+    for (Face f : mesh.faces())
+      if (GMesh::string_has_key(mesh.get_string(f), "filled")) ar_faces.push(f);
+    showdf("Removing %d out of %d faces\n", ar_faces.num(), mesh.num_faces());
+    for (Face f : ar_faces) mesh.destroy_face(f);
+
   } else if (name == "remove_yellow_vertices") {
     Set<Vertex> setv;
     Set<Face> setf;
@@ -3293,6 +3301,7 @@ void do_procedure(Args& args) {
     }
     for (Face f : setf) mesh.destroy_face(f);
     for (Vertex v : setv) mesh.destroy_vertex(v);
+
   } else if (name == "mark_holes") {
     const int large_vertex_degree = args.get_int();
     for (Vertex v : mesh.vertices()) {
@@ -3300,6 +3309,7 @@ void do_procedure(Args& args) {
       showdf("Marking hole faces around a vertex with degree %d\n", mesh.degree(v));
       for (Face f : mesh.faces(v)) mesh.update_string(f, "hole", "");
     }
+
   } else if (name == "remove_stmatface_genus_5") {
     Set<Face> setfrem;
     for (Face f : mesh.faces()) {
@@ -3318,6 +3328,7 @@ void do_procedure(Args& args) {
     for (Vertex v : mesh.vertices())
       if (!mesh.degree(v)) vdestroy.enter(v);
     for (Vertex v : vdestroy) mesh.destroy_vertex(v);
+
   } else if (name == "create_sphere") {
     assertx(mesh.empty());
     const int nlat = 31, nlon = 60;
@@ -3375,12 +3386,14 @@ void do_procedure(Args& args) {
         mesh.set_string(e, "sharp");
       }
     }
+
   } else if (name == "get_vup") {
     for (Face f : mesh.faces()) {
       Vector vec;
       assertx(parse_key_vec(mesh.get_string(f), "Vup", vec));
       HH_SSTAT(Slen, mag(vec));
     }
+
   } else if (name == "show_vup") {
     Polygon poly;
     A3dElem el;
@@ -3419,6 +3432,7 @@ void do_procedure(Args& args) {
       el.push(A3dVertex(pc + vec, nor, A3dVertexColor(Pixel::red())));
       oa3d.write(el);
     }
+
   } else if (name == "print_bnd_verts") {
     for (Vertex v : mesh.vertices()) {
       if (mesh.is_boundary(v)) {
@@ -3426,6 +3440,7 @@ void do_procedure(Args& args) {
         SHOW(mesh.point(v));
       }
     }
+
   } else {
     args.problem("procedure '" + name + "' unrecognized");
   }

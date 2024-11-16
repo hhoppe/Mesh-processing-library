@@ -1,6 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corp; see LICENSE.
 #include "SphereMapper.h"
-
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"

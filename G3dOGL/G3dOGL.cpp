@@ -4936,36 +4936,37 @@ void read_ply(const string& filename) {
   if (binary) {
     const auto read_value = [&](auto& value) {
       assertx(read_binary_raw(is, ArView(value)));
-      bigendian ? from_std(&value) : from_dos(&value);
+      if constexpr (sizeof(value) >= 2)
+        bigendian ? from_std(&value) : from_dos(&value);
     };
     for_int(i, ply_vpos.num()) {
       for_int(c, 3) read_value(ply_vpos[i][c]);
       if (vnnor) for_int(c, vnnor) read_value(ply_vnor[i][c]);
-      for_int(c, vnrgb) assertx(read_binary_raw(is, ArView(ply_vrgb[i][c])));
-      for_int(c, vnuv) assertx(read_binary_std(is, ArView(ply_vuv[i][c])));
+      for_int(c, vnrgb) read_value(ply_vrgb[i][c]);
+      for_int(c, vnuv) read_value(ply_vuv[i][c]);
       if (vnotherb) is.ignore(vnotherb);
     }
     for_int(i, ply_findices.num()) {
       if (fnskipb) is.ignore(fnskipb);
       int nfv;
       if (len_nfv == 1) {
-        uchar vi = 0;
-        assertx(read_binary_raw(is, ArView(vi)));
+        uchar vi;
+        read_value(vi);
         nfv = vi;
       } else if (len_nfv == 4) {
-        int32_t vi = 0;
-        assertx(read_binary_std(is, ArView(vi)));
+        int32_t vi;
+        read_value(vi);
         nfv = vi;
-        assertw(nfv >= 3);
       } else {
         assertnever("");
       }
+      assertw(nfv >= 3);
       ply_findices[i].init(nfv);
       for_int(j, nfv) read_value(ply_findices[i][j]);
       for_int(j, nfv) assertx(ply_findices[i][j] < ply_vpos.num());
       if (ply_fuv.num()) {
-        uchar n = 0;
-        assertx(read_binary_raw(is, ArView(n)));
+        uchar n;
+        read_value(n);
         assertx(n == 6);
         for_int(j, 3) for_int(c, 2) read_value(ply_fuv[i][j][c]);
       }

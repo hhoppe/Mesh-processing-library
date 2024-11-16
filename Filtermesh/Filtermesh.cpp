@@ -1626,8 +1626,8 @@ void do_fillholes(Args& args) {
   Set<Edge> setbe;
   for (Edge e : mesh.edges())
     if (mesh.is_boundary(e)) setbe.enter(e);
-  HH_STAT(Sbndlen);
-  HH_STAT(Sbndsub);
+  HH_STAT(Sbndlen);  // Length of each boundary edge loop.
+  HH_STAT(Sbndsub);  // Number of sub-holes, i.e., number of multisided faces created for each boundary edge loop.
   while (!setbe.empty()) {
     Edge e = setbe.get_one();
     const char* es = mesh.get_string(mesh.face1(e));

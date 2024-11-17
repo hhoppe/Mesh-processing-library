@@ -24,7 +24,7 @@
   grid.flat(ravel_index(grid.dims(), V(18, 8))) = 4;
   for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y][x] *= 2;  // Iterate using individual coordinates.
   for (const auto& u : range(grid.dims())) grid[u] *= 2;            // Iterate using array of coordinate indices.
-  for_size_t(i, grid.size()) grid.flat(i) *= 2;                     // Iterate using raster order (fastest).
+  for (const size_t i : range(grid.size())) grid.flat(i) *= 2;      // Iterate using raster order (fastest).
   for (auto& e : grid) e *= 2;                                      // Iterate over elements (also fastest).
 }
 #endif
@@ -344,7 +344,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <int D, typename T, typename Func> auto map(CGridView<D, T> c, Func func) {
   Grid<D, decltype(func(std::declval<T>()))> nc(c.dims());
-  for_size_t(i, c.size()) nc.flat(i) = func(c.flat(i));
+  for (const size_t i : range(c.size())) nc.flat(i) = func(c.flat(i));
   return nc;
 }
 
@@ -590,7 +590,7 @@ const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderva
 template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) {
   assertx(same_size(*this, g));
   if (g.data() == data()) return;
-  // for_size_t(i, size()) _a[i] = g.flat(i);
+  // for (const size_t i : range(size())) _a[i] = g.flat(i);
   // if (_a) std::memcpy(_a, g.begin(), (g.end() - g.begin()) * sizeof(T));  // No faster, and unsafe for general T.
   if (_a) std::copy(g.begin(), g.end(), _a);
 }
@@ -697,7 +697,7 @@ template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Impleme
 #define G Grid<D, T>
 #define CG CGridView<D, T>
 #define SS ASSERTX(same_size(g1, g2))
-#define F(g) for_size_t(i, g.size())
+#define F(g) for (const size_t i : range(g.size()))
 #define PF(g, code) parallel_for_each({1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 

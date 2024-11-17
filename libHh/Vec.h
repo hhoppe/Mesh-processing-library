@@ -485,8 +485,7 @@ template <typename Class> inline constexpr bool is_derived_from_vec_v = details:
 
 #if 0
 // We could define the following:
-template <typename T, typename T2, int n>
-auto operator+(const Vec<T, n>& g1, const Vec<T2, n>& g2) {
+template <typename T, typename T2, int n> auto operator+(const Vec<T, n>& g1, const Vec<T2, n>& g2) {
   // using ReturnType = std::common_type_t<T, T2>;
   using ReturnType = std::decay_t<decltype(std::declval<T>() + std::declval<T2>())>;
   Vec<ReturnType, n> ar;

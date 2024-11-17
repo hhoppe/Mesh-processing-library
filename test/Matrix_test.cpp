@@ -163,7 +163,7 @@ int main() {
   }
   {
     Matrix<int> m(V(7, 5));
-    for_size_t(i, m.size()) m.flat(i) = int((i * 3371) % 577);
+    for (const size_t i : range(m.size())) m.flat(i) = int((i * 3371) % 577);
     assertx(dist2(rotate_ccw(m, 0), m) == 0);
     assertx(rotate_ccw(m, 90).dims() == V(5, 7));
     assertx(dist2(rotate_ccw(rotate_ccw(rotate_ccw(rotate_ccw(m, 90), 180), 270), 180), m) == 0);

@@ -562,8 +562,9 @@ class SphereMapper::Implementation {
       if (nv >= nv_next_optimize_all) {
         if (_options.verbose >= 2) cprogress.clear();
         optimize_all();
-        const int few_vertices = 100;
         // Extra optimization at coarse resolution was needed to reliably create domains/tetra_eg*.uv.sphparam.m .
+        // It also proved useful to overcome intermittent failure in lucy model (increased from 100 to 1000).
+        const int few_vertices = 1000;
         const float nv_ratio = nv <= few_vertices ? pow(_optim_nv_ratio, 0.5f) : _optim_nv_ratio;
         nv_next_optimize_all = int(nv * nv_ratio + 0.5f);
       }

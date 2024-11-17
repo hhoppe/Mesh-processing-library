@@ -61,7 +61,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   bool operator!=(const type& p) const { return !(*this == p); }
   static type all(const T& e) {
     type g;
-    for_size_t(i, vol) g.flat(i) = e;
+    for (const size_t i : range(vol)) g.flat(i) = e;
     return g;
   }
   operator GridView<D, T>() { return view(); }
@@ -105,23 +105,22 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   }
   void assign(CGridView<D, T> g) {
     ASSERTX(dims() == g.dims());
-    for_size_t(i, vol) flat(i) = g.flat(i);
+    for (const size_t i : range(vol)) flat(i) = g.flat(i);
   }
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename Func, typename T, int d0, int... od> auto map(const SGrid<T, d0, od...>& c, Func func) {
   SGrid<decltype(func(std::declval<T>())), d0, od...> nc;
-  for_size_t(i, c.size()) nc.flat(i) = func(c.flat(i));
+  for (const size_t i : range(c.size())) nc.flat(i) = func(c.flat(i));
   return nc;
 }
 
 //----------------------------------------------------------------------------
 
 template <typename T, int d0, int... od> bool SGrid<T, d0, od...>::operator==(const type& p) const {
-  for_size_t(i, vol) {
+  for (const size_t i : range(vol))
     if (flat(i) != p.flat(i)) return false;
-  }
   return true;
 }
 
@@ -137,7 +136,7 @@ template <typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <typename T, int d0, int... od>
 #define G SGrid<T, d0, od...>
-#define F for_size_t(i, g1.size())
+#define F for (const size_t i : range(g1.size()))
 // clang-format off
 
 TT G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }

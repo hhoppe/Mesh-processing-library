@@ -16,7 +16,7 @@ int main() {
     SHOW(grid_stride(grid.dims(), 0));
     SHOW(grid_stride(grid.dims(), 1));
     SHOW(grid_stride(grid.dims(), 2));
-    for_size_t(i, grid.size()) SHOW(grid.flat(i));
+    for (const size_t i : range(grid.size())) SHOW(grid.flat(i));
     for (const auto& u : range(grid.dims())) SHOW(u, grid[u]);
     SHOW(grid(0, 0, 1));
     SHOW(grid(1, 0, 0));
@@ -87,7 +87,7 @@ int main() {
   }
   {
     Grid<3, int> grid(thrice(3));
-    for_size_t(i, grid.size()) grid.flat(i) = int(i);
+    for (const size_t i : range(grid.size())) grid.flat(i) = int(i);
     SHOW(grid[0]);
     SHOW(grid[0][0]);
     SHOW(grid[0][0][0]);
@@ -96,7 +96,7 @@ int main() {
   }
   {
     Grid<3, Vec2<int>> grid(thrice(3));
-    for_size_t(i, grid.size()) grid.flat(i) = V(int(i * 10), int(i * 10 + 1));
+    for (const size_t i : range(grid.size())) grid.flat(i) = V(int(i * 10), int(i * 10 + 1));
     SHOW(grid[0]);
     SHOW(grid[0][0]);
     SHOW(grid[0][0][0]);

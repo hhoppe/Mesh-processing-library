@@ -186,7 +186,7 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
   if (!s.size()) return;
   // use uchar{127} to render all non-ascii characters.
   const auto func_is_nonascii = [](const string& ss) {
-    for_size_t(i, ss.size()) {
+    for (const size_t i : range(ss.size())) {
       uchar ch = static_cast<uchar>(ss[i]);
       if (!(ch >= 32 && ch <= 127)) return true;
     }
@@ -195,7 +195,7 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
   if (func_is_nonascii(s)) {
     Warning("Non-ASCII characters present in string will not be displayed properly in window");
     string s2;
-    for_size_t(i, s.size()) {
+    for (const size_t i : range(s.size())) {
       uchar ch = static_cast<uchar>(s[i]);
       s2 += static_cast<uchar>(ch >= 32 && ch <= 126 ? s[i] : 127);
     }

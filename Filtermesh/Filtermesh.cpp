@@ -2651,7 +2651,7 @@ void do_renormalizenor() {
 // *** reduce
 
 float reduce_criterion(Edge e) {
-  // Check attribute_safe_edge_collapse()??
+  // Create a function attribute_safe_edge_collapse() and check it?
   if (!mesh.nice_edge_collapse(e)) return BIGFLOAT;
   switch (reducecrit) {
     case EReduceCriterion::length: return mesh.length(e);
@@ -2662,58 +2662,7 @@ float reduce_criterion(Edge e) {
   }
 }
 
-void do_reduce_old_sequential() {
-  HH_TIMER("_reduce");
-  assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
-  HPqueue<Edge> pqe;
-  {
-    HH_TIMER("__initpq");
-    if (0) {
-      for (Edge e : mesh.edges()) pqe.enter_unsorted(e, reduce_criterion(e));
-    } else {  // ~2.3x parallelism speedup.
-      Array<Edge> ar_edge(mesh.edges());
-      Array<float> ar_cost(ar_edge.num());
-      parallel_for_each(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
-      for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
-    }
-    pqe.sort();
-  }
-  int orig_nf = mesh.num_faces();
-  ConsoleProgress cprogress;
-  for (;;) {
-    if (mesh.num_faces() <= nfaces) break;
-    cprogress.update(float(orig_nf - mesh.num_faces()) / max(orig_nf - nfaces, 1));
-    float crit = pqe.min_priority();
-    if (crit > maxcrit) break;
-    Edge e = pqe.remove_min();
-    for (Vertex v : mesh.vertices(e))
-      for (Vertex v2 : mesh.vertices(v))
-        for (Edge e2 : mesh.edges(v2)) pqe.remove(e2);
-    // Use attribute info to determine which vertex to keep??
-    Vertex vkept = mesh.vertex1(e);
-    const Point newp = [&]() {
-      Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-      bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
-      int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
-      return interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    }();
-    mesh.collapse_edge(e);
-    e = nullptr;
-    mesh.set_point(vkept, newp);
-    Set<Edge> edges_to_update;
-    for (Vertex v : mesh.vertices(vkept))
-      for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
-    // Applying parallel_for_each() is slower because the parallelism is too fine-grained and memory-incoherent.
-    for (Edge e2 : edges_to_update) pqe.enter_update(e2, reduce_criterion(e2));
-  }
-  cprogress.clear();
-}
-
 void do_reduce() {
-  if (0) {
-    do_reduce_old_sequential();
-    return;
-  }
   HH_TIMER("_reduce");
   assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
   HPqueue<Edge> pqe;
@@ -2753,6 +2702,7 @@ void do_reduce() {
     const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
     const int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
     const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+    // Use attribute info to determine which vertex to keep?
     Vertex vkept = ii == 0 ? v2 : v1;
     mesh.collapse_edge_vertex_saving_attribs(e, vkept);
     e = nullptr;
@@ -2962,7 +2912,7 @@ float face_inscribed_radius(Face f) {
 
 bool is_degenerate(Face f) { return face_inscribed_radius(f) < 1e-6f; }
 
-// Preserve normal and uv strings??
+// Should check if the swap is attribute-safe?  And then preserve normal and uv strings.
 void do_swapdegendiag() {
   Set<Edge> set_bad_edges;
   for (Face f : mesh.faces())

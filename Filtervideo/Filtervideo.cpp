@@ -1141,7 +1141,7 @@ void verify_loop_parameters() {
     }
     {
       HH_STAT(Send);
-      for_size_t(i, g_lp.mat_start.size()) Send.enter(g_lp.mat_start.flat(i) + g_lp.mat_period.flat(i));
+      for (const size_t i : range(g_lp.mat_start.size())) Send.enter(g_lp.mat_start.flat(i) + g_lp.mat_period.flat(i));
       if (video.nframes() && int(Send.max()) > video.nframes())
         Warning("Some loop ends extend beyond the video length");
     }

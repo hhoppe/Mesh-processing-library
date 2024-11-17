@@ -28,7 +28,7 @@ int main() {
     fill(grid[1][2], 12);
     SHOW(grid);
     SHOW(grid == grid);
-    for_size_t(i, grid.size()) { grid.flat(i) = int(i); }
+    for (const size_t i : range(grid.size())) { grid.flat(i) = int(i); }
     SHOW(grid);
   }
   {

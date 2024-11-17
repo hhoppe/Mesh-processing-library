@@ -31,7 +31,7 @@ void Image::init(const Vec2<int>& pdims, Pixel pix) {
   } else {
     const uint32_t upix = reinterpret_cast<uint32_t&>(pix);
     uint32_t* p = reinterpret_cast<uint32_t*>(data());
-    for_size_t(i, size()) p[i] = upix;
+    for (const size_t i : range(size())) p[i] = upix;
     // Generates "rep stosd" which is like 32-bit std::memset(), but no faster than fill() because memory-limited.
     // (Note that parallelism overhead would actually make this slower.)
   }
@@ -303,7 +303,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     }
   } else if (0) {
     uint8_t* __restrict buf_Y = nv12v.get_Y().data();
-    // for_size_t(i, frame.size()) { *buf_Y++ = Y_from_RGB(frame.flat(i)); }
+    // for (const size_t i : range(frame.size())) { *buf_Y++ = Y_from_RGB(frame.flat(i)); }
     {
       const uint8_t* p = frame.data()->data();
       assertx(reinterpret_cast<uintptr_t>(p) % 4 == 0);

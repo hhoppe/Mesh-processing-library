@@ -109,10 +109,8 @@ template <typename Range, typename = enable_if_range_t<Range>> Range reverse(Ran
   ASSERTX(e >= b);  // Requires random-access iterator.
   // std::reverse(b, e);
   size_t num = e - b;
-  for_size_t(i, num / 2) {
-    using std::swap;
-    swap(b[i], b[num - 1 - i]);
-  }
+  using std::swap;
+  for (const size_t i : range(num / 2)) swap(b[i], b[num - 1 - i]);
   return std::forward<Range>(range_);
 }
 // Range reversed(const Range& range) { return reverse(clone(range)); }

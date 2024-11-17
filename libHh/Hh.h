@@ -140,7 +140,6 @@
 #endif
 #define for_int(i, stop) for_T(int, i, 0, stop)
 #define for_intL(i, start, stop) for_T(int, i, start, stop)
-#define for_size_t(i, stop) for_T(std::size_t, i, 0, stop)
 
 // *** Check for identifier conflicts.
 

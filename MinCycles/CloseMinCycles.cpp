@@ -127,6 +127,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
   // Next, fill the two boundaries with create_face() and center_split().
   reverse(new_vertices);  // Topologically, we must close the ring of new vertices in the opposite direction.
   Vec2<float> sum_dih = twice(0.f);  // Sum of edge dihedral angles after closure, to estimate handle vs. tunnel.
+  Vec2<Vertex> center_vertices;
   for_int(fi, 2) {
     CArrayView<Vertex> va = fi == 0 ? vertex_loop : new_vertices;
     Face fn = _mesh.create_face(va);
@@ -136,20 +137,8 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
       _mesh.set_string(c, _mesh.get_string(c2));
     }
     Vertex vn = _mesh.center_split_face(fn);
+    center_vertices[fi] = vn;
     v_dist(vn) = 0.f;  // It can be any value != BIGFLOAT.
-    if (_options.mark_edges_sharp) {
-      // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
-      for (Face f : _mesh.faces(vn)) {
-        Edge e = _mesh.opp_edge(vn, f);
-        _mesh.update_string(e, "sharp", "");
-      }
-    }
-    if (_options.mark_faces_filled) {
-      // For all faces in the two fans after the closure, label them with the "filled" attribute.
-      for (Face f : _mesh.faces(vn)) _mesh.update_string(f, "filled", "");
-      // Label the two vertices at the centers of the face fans.
-      _mesh.update_string(vn, "filledcenter", "");
-    }
     // Clean-up / initialize the edge data.
     for (Face f : _mesh.faces(vn))
       for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;      // Note that e_joined(e) will be initialized shortly.
@@ -165,6 +154,25 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
   }
   const bool is_handle = sum(sum_dih) > 0.f;  // Else it is a tunnel.
   (is_handle ? _total_handles : _total_tunnels) += 1;
+  for (Vertex vn : center_vertices) {
+    if (_options.mark_edges_sharp) {
+      // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
+      for (Face f : _mesh.faces(vn)) {
+        Edge e = _mesh.opp_edge(vn, f);
+        _mesh.update_string(e, "sharp", "");
+      }
+    }
+    if (_options.mark_faces_filled) {
+      // For all faces in the two fans after the closure, label them with the "filled" attribute.
+      for (Face f : _mesh.faces(vn)) {
+        _mesh.update_string(f, "filled", "");
+        const char* key = is_handle ? "handle" : "tunnel";
+        _mesh.update_string(f, key, "");
+      }
+      // Label the two vertices at the centers of the face fans.
+      _mesh.update_string(vn, "filledcenter", "");
+    }
+  }
   {
     float len = 0.f;
     for_int(i, vertex_loop.num()) len +=

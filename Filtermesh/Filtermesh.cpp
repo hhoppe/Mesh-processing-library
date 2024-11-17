@@ -3281,6 +3281,13 @@ void do_procedure(Args& args) {
   string name = args.get_string();
   if (0) {
 
+  } else if (name == "remove_hole_faces") {
+    Array<Face> ar_faces;
+    for (Face f : mesh.faces())
+      if (GMesh::string_has_key(mesh.get_string(f), "hole")) ar_faces.push(f);
+    showdf("Removing %d out of %d faces\n", ar_faces.num(), mesh.num_faces());
+    for (Face f : ar_faces) mesh.destroy_face(f);
+
   } else if (name == "remove_filled_faces") {
     Array<Face> ar_faces;
     for (Face f : mesh.faces())

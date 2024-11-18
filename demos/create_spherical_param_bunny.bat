@@ -5,10 +5,6 @@ cd "%~p0"
 call bin/_initdemos.bat
 
 
-echo From the original mesh data/bunny.orig.m, compute a progressive mesh, then the spherical parameterization data/bunny.sphparam.m.
-call bin/meshtopm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -rot data/bunny.s3d -split_meridian >data/bunny.sphparam.m
-
-
 echo Compute a mapping from the flat octahedron to the sphere that is optimized for inverse stretch.
 :: Because a pipe command is run in a subshell, the syntax "call script.bat" is unnecessary (and wrong) here.
 SphereSample -domain octaflat -scheme domain -egrid 128 -keys domaincorner,imageuv -mesh_sphere | Filtermesh -gmerge -removekey Ovi -cornermerge -renamekey v domaincorner global -renamekey vc imageuv uv -assign_normals -removekey sharp | bin\meshtopm.bat -minqem -qemvolume 0 -dihallow -affectpq 3 -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -strict_sharp 2 >data/v_sharp.pm
@@ -20,11 +16,15 @@ FilterPM data/v_sharp.pm -finest -truncate_prior | SphereParam -mesh_for_base da
 del data\v_sharp.pm data\v.m
 
 
-echo Resample this spherical parameterization into a remesh and an associated normal map.
+echo From the original mesh data/bunny.orig.m, compute a progressive mesh, then the spherical parameterization data/bunny.sphparam.m.
+bin\meshtopm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -rot data/bunny.s3d -split_meridian >data/bunny.sphparam.m
 
-SphereSample -egrid 128 -domain octaflat -scheme best -param data/bunny.sphparam.m -rot data/bunny.s3d -keys imageuv -remesh | Filtermesh -renamekey v imageuv uv >data/bunny.spheresample.remesh.m
 
-SphereSample -grid 1024 -domain octaflat -domain_file data/octaflat_eg128.uv.sphparam.m -param data/bunny.sphparam.m -signal N -write_texture data/bunny.spheresample.octaflat.unrotated.normalmap.png
+echo Resample the bunny spherical parameterization into a remesh and an associated normal map.
+
+SphereSample -domain octaflat -egrid 128 -sample_map data/octaflat_eg128.uv.sphparam.m -param data/bunny.sphparam.m -rot data/bunny.s3d -keys imageuv -remesh | Filtermesh -renamekey v imageuv uv >data/bunny.spheresample.remesh.m
+
+SphereSample -domain octaflat -grid 1024 -domain_file data/octaflat_eg128.uv.sphparam.m -param data/bunny.sphparam.m -signal N -write_texture data/bunny.spheresample.octaflat.unrotated.normalmap.png
 
 
 echo Create a longitude-latitude normal map to use on the original mesh.

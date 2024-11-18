@@ -81,7 +81,7 @@ inline int RBuffer::get_int(int bi) const {
     int32_t i;
     char s[4];
   } u;
-  for_int(c, 4) u.s[c] = p[c];
+  for (int c = 0; c < 4; c++) u.s[c] = p[c];  // "for (const int c : range(4))" confuses clang-tidy.
   from_std(&u.i);
   return u.i;
 }
@@ -93,7 +93,7 @@ inline short RBuffer::get_short(int bi) const {
     int16_t i;
     char s[2];
   } u;
-  for_int(c, 2) u.s[c] = p[c];
+  for (int c = 0; c < 2; c++) u.s[c] = p[c];  // "for (const int c : range(2))" confuses clang-tidy.
   from_std(&u.i);
   return u.i;
 }
@@ -105,7 +105,7 @@ inline float RBuffer::get_float(int bi) const {
     float f;
     char s[4];
   } u;
-  for_int(c, 4) u.s[c] = p[c];
+  for (int c = 0; c < 4; c++) u.s[c] = p[c];  // "for (const int c : range(4))" confuses clang-tidy.
   from_std(&u.f);
   return u.f;
 }

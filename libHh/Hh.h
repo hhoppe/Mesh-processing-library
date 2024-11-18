@@ -128,18 +128,8 @@
 
 // *** Syntactic sugar.
 
-#define traditional_for_T_aux(T, i, start, stop, stop_var) for (T stop_var = stop, i = start; i < stop_var; i++)
-#define traditional_for_T(T, i, start, stop) traditional_for_T_aux(T, i, start, stop, HH_UNIQUE_ID(stop_var))
-#if !defined(HH_DEBUG)
-#define for_T(T, i, start, stop) traditional_for_T(T, i, start, stop)
-#else
-#if defined(_MSC_VER)
-#pragma warning(disable : 4701 4703 4189)  // potentially uninitialized local variable; initialized but not referenced.
-#endif
-#define for_T(T, i, start, stop) for (const T i : hh::range<T>(start, stop))  // In Debug, check "const T i" works.
-#endif
-#define for_int(i, stop) for_T(int, i, 0, stop)
-#define for_intL(i, start, stop) for_T(int, i, start, stop)
+#define for_int(index, stop) for ([[maybe_unused]] const int index : hh::range<int>(stop))
+#define for_intL(index, start, stop) for ([[maybe_unused]] const int index : hh::range<int>(start, stop))
 
 // *** Check for identifier conflicts.
 

@@ -512,12 +512,11 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
     ASSERTX(ne == _m.degree(v));
     // (1, 2, 1) x (1, 2, 1)
     comb.c[v] = 4.f / 16.f;
-    for_int(nweight, 1 + (ne == 2)) {
-      for (Vertex vv : _m.vertices(v)) {
-        comb.c[vv] += 2.f / 16.f;
-        Vertex vo = assertx(_m.clw_vertex(vv, v));
-        comb.c[vo] += 1.f / 16.f;
-      }
+    const float weight = ne == 2 ? 2.f : 1.f;
+    for (Vertex vv : _m.vertices(v)) {
+      comb.c[vv] += weight * (2.f / 16.f);
+      Vertex vo = assertx(_m.clw_vertex(vv, v));
+      comb.c[vo] += weight * (1.f / 16.f);
     }
     ASSERTX(comb.is_combination());
     return;
@@ -627,12 +626,11 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     ASSERTX(ne == _m.degree(v));
     // (1, 4, 1) x (1, 4, 1)
     comb.c[v] = 16.f / 36.f;
-    for_int(nweight, 1 + (ne == 2)) {
-      for (Vertex vv : _m.vertices(v)) {
-        comb.c[vv] += 4.f / 36.f;
-        Vertex vo = assertx(_m.clw_vertex(vv, v));
-        comb.c[vo] += 1.f / 36.f;
-      }
+    const float weight = ne == 2 ? 2.f : 1.f;
+    for (Vertex vv : _m.vertices(v)) {
+      comb.c[vv] += weight * (4.f / 36.f);
+      Vertex vo = assertx(_m.clw_vertex(vv, v));
+      comb.c[vo] += weight * (1.f / 36.f);
     }
     ASSERTX(comb.is_combination());
     return;

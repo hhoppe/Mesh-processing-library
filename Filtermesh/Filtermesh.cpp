@@ -3230,6 +3230,7 @@ void do_quantizeverts(Args& args) {
 void do_procedure(Args& args) {
   string name = args.get_string();
   if (0) {
+    //
 
   } else if (name == "remove_hole_faces") {
     Array<Face> ar_faces;

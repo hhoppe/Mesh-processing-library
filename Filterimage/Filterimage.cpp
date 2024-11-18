@@ -1004,6 +1004,7 @@ void do_tile(Args& args) {
 
 void do_replace(Args& args) {
   Pixel newcolor;
+  dummy_init(newcolor);
   for_int(i, 4) {
     int v = args.get_int();
     assertx(v >= 0 && v <= 255);
@@ -2679,7 +2680,7 @@ void do_maxrmsdiff(Args& args) {
 
 void do_compare(Args& args) {
   string filename = args.get_filename();
-  Image image2(filename);
+  const Image image2(filename);
   const Image& image1 = image;
   assertx(same_size(image1, image2) && image1.zsize() == image2.zsize());
   const int r = 5;                    // window radius
@@ -2705,10 +2706,10 @@ void do_compare(Args& args) {
     showf("Effective spatial standard deviation of windowed Gaussian is %f\n", sqrt(var));
   }
   int allmax = 0;
-  for (const auto& yx : range(image.dims()))
-    for_int(z, image.zsize()) allmax = max(allmax, abs(image1[yx][z] - image2[yx][z]));
-  Array<double> ar_err2(image.zsize()), ar_mssim(image.zsize());
-  parallel_for_each(range(image.zsize()), [&](const int z) {
+  for (const auto& yx : range(image1.dims()))
+    for_int(z, image1.zsize()) allmax = max(allmax, abs(image1[yx][z] - image2[yx][z]));
+  Array<double> ar_err2(image1.zsize()), ar_mssim(image1.zsize());
+  parallel_for_each(range(image1.zsize()), [&](const int z) {
     double err2 = 0.;
     double mssim = 0.;
     for_int(y, image1.ysize()) for_int(x, image1.xsize()) {
@@ -2746,7 +2747,7 @@ void do_compare(Args& args) {
     ar_mssim[z] = mssim / image1.size();
   });
   double allerr2 = 0., allmssim = 0.;
-  for_int(z, image.zsize()) {
+  for_int(z, image1.zsize()) {
     double err2 = ar_err2[z];
     double mssim = ar_mssim[z];
     const double psnr = 20. * std::log10(255. / (my_sqrt(err2) + 1e-10));
@@ -2754,8 +2755,8 @@ void do_compare(Args& args) {
     allerr2 += err2;
     allmssim += mssim;
   }
-  allerr2 /= image.zsize();
-  allmssim /= image.zsize();
+  allerr2 /= image1.zsize();
+  allmssim /= image1.zsize();
   const double psnr = 20. * std::log10(255. / (my_sqrt(allerr2) + 1e-10));
   showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
   nooutput = true;

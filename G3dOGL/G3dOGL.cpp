@@ -4936,8 +4936,7 @@ void read_ply(const string& filename) {
   if (binary) {
     const auto read_value = [&](auto& value) {
       assertx(read_binary_raw(is, ArView(value)));
-      if constexpr (sizeof(value) >= 2)
-        bigendian ? from_std(&value) : from_dos(&value);
+      if constexpr (sizeof(value) >= 2) bigendian ? from_std(&value) : from_dos(&value);
     };
     for_int(i, ply_vpos.num()) {
       for_int(c, 3) read_value(ply_vpos[i][c]);

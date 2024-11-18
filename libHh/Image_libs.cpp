@@ -851,8 +851,9 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize());
-      int yy = image.ysize() - 1 - y;  // because *.bmp format has image origin at lower-left
-      for_int(x, image.xsize()) {
+      // Invert vertical coordinate because *.bmp format has image origin at lower-left.
+      int yy = image.ysize() - 1 - y;
+      for (int x = 0; x < image.xsize(); x++) {  // Index x gets modified within loop.
         int count = 1;
         for_intL(xx, x + 1, image.xsize()) {
           if (image[yy][xx][0] != image[yy][x][0]) break;

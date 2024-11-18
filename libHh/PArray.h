@@ -21,9 +21,9 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       _cap = n;
     }
   }
-  explicit PArray(const PArray<T, pcap>& ar) : PArray() { *this = ar; }
+  explicit PArray(const type& ar) : PArray() { *this = ar; }
   explicit PArray(CArrayView<T> ar) : PArray() { *this = ar; }
-  PArray(PArray<T, pcap>&& ar) : PArray() { *this = std::move(ar); }
+  PArray(type&& ar) : PArray() { *this = std::move(ar); }
   PArray(std::initializer_list<T> l) : PArray(CArrayView<T>(l)) {}
   template <typename I> explicit PArray(I b, I e) : PArray() {
     for (; b != e; ++b) push(*b);
@@ -31,7 +31,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   template <typename Range, typename = enable_if_range_t<Range>>
   explicit PArray(Range&& range) : PArray(range.begin(), range.end()) {}
   ~PArray() {
-    if (_cap != pcap) delete[] _a;
+    if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }
   auto& operator=(CArrayView<T> ar) {
     if (!(ar.data() == _a && ar.num() == _n)) {
@@ -40,14 +40,14 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
     return *this;
   }
-  auto& operator=(const PArray<T, pcap>& ar) {
+  auto& operator=(const type& ar) {
     if (&ar != this) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
     }
     return *this;
   }
-  auto& operator=(PArray<T, pcap>&& ar) noexcept {
+  auto& operator=(type&& ar) noexcept {
     clear();
     if (ar._cap != pcap) {
       std::swap(_a, ar._a);
@@ -62,7 +62,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   }
   void clear() noexcept {
     _n = 0;
-    if (_cap != pcap) {
+    if (_a != _pa) {
       delete[] _a;
       _a = _pa;
       _cap = pcap;
@@ -71,10 +71,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   void init(int n) {  // Allocate n, DISCARD old values if too small.
     ASSERTX(n >= 0);
     if (n > _cap) {
-      if (_cap != pcap) {
-        delete[] _a;
-        _cap = pcap;
-      }
+      if (_a != _pa) delete[] _a;
       _a = new T[narrow_cast<size_t>(n)];
       _cap = n;
     }
@@ -173,13 +170,13 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     insert_i(0, n);
     for_int(i, n) _a[i] = std::move(ar[i]);
   }
-  friend void swap(PArray<T, pcap>& l, PArray<T, pcap>& r) noexcept {
+  friend void swap(type& l, type& r) noexcept {
     if (l._cap > pcap) {
       if (r._cap > pcap) {
         std::swap(l._a, r._a);
         std::swap(l._cap, r._cap);
         std::swap(l._n, r._n);
-        // _pa is undefined in both.
+        // Contents of _pa remains undefined in both.
       } else {
         std::move(r._pa, r._pa + r._n, l._pa);
         r._a = l._a;
@@ -197,7 +194,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       } else {
         std::swap_ranges(l._pa, l._pa + max(l._n, r._n), r._pa);
         std::swap(l._n, r._n);
-        // _a and _cap are unchanged.
+        // Fields _a and _cap are unchanged in both.
       }
     }
   }
@@ -211,7 +208,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   void set_capacity(int ncap) {
     ASSERTX(_n <= ncap);
     if (ncap <= pcap) {
-      if (_cap == pcap) return;
+      if (_a == _pa) return;
       std::move(_a, _a + _n, _pa);
       delete[] _a;
       _a = _pa;
@@ -219,7 +216,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     } else {
       T* na = new T[narrow_cast<size_t>(ncap)];
       std::move(_a, _a + _n, na);
-      if (_cap != pcap) delete[] _a;
+      if (_a != _pa) delete[] _a;
       _a = na;
       _cap = ncap;
     }
@@ -240,8 +237,8 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     } else {
       ASSERTX(_cap == pcap);
       ASSERTX(_a == _pa);
-      ASSERTX(_n <= pcap);
     }
+    ASSERTX(_n <= _cap);
   }
   type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
 };

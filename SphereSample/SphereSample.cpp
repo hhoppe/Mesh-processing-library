@@ -760,8 +760,7 @@ void create(bool b_triangulate) {
       v_ijuv(v) = Uv(float(i) / gridn, float(j) / gridn);
       if (checkern) {
         const Pixel& pixel = get_color(df, v_ijuv(v));
-        Vector rgb;
-        for_int(c, 3) rgb[c] = float(pixel[c]) / 255.f;
+        const Vector rgb = convert<float>(pixel.head<3>()) / 255.f;
         v_rgb(v) = rgb;
       }
     }

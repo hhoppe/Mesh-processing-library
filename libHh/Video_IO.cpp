@@ -419,12 +419,12 @@ void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12V
     uint8_t* pd = nv12v.get_Y().data();
     for_int(y, ny) {
       const uint8_t* ps = pData + y * stride;
-      for_int(x, nx) { *pd++ = *ps++; }
+      for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;
     }
     pd = nv12v.get_UV().data()->data();
     for_int(y, ny / 2) {
       const uint8_t* ps = pData + offsetUV + y * stride;
-      for_int(x, nx) { *pd++ = *ps++; }
+      for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;
     }
   }
 }
@@ -733,16 +733,14 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       if (!_impl_nv12) {
         uint8_t* pd = pData;
         const uint8_t* ps = frame.data()->data();
-        for_int(y, sdims[0]) {
-          for_int(x, sdims[1]) {
-            // RGBA to BGRA
-            pd[0] = ps[2];
-            pd[1] = ps[1];
-            pd[2] = ps[0];
-            pd[3] = 0;
-            pd += 4;
-            ps += 4;
-          }
+        for_int(i, sdims[0] * sdims[1]) {
+          // RGBA to BGRA
+          pd[0] = ps[2];
+          pd[1] = ps[1];
+          pd[2] = ps[0];
+          pd[3] = 0;
+          pd += 4;
+          ps += 4;
         }
       } else {
         // Media Foundation MP4 encoding under Win7 may have poor quality -- independent of this workaround.

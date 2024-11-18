@@ -524,6 +524,7 @@ bool loop(A3dElem& el) {
   }
   if (randcolor) {
     A3dColor col;
+    dummy_init(col);
     for_int(c, 3) col[c] = Random::G.unif();
     for_int(i, el.num()) el[i].c.d = col;
   }

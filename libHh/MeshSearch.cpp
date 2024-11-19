@@ -46,7 +46,12 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
       int num_outside = sum<int>(outside);
       if (num_outside == 0) break;
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
-      if (num_outside == 2) {
+      if (num_outside == 1) {
+        const int side = index(outside, true);
+        Face f2 = mesh.opp_face(va[side], f);
+        if (!assertw(f2)) break;
+        f = f2;
+      } else if (num_outside == 2) {
         const int side = index(outside, false);
         // Fastest: jump across the vertex.
         Vertex v = va[side];
@@ -55,11 +60,15 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
         const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
         for_int(i, nrot) f = assertx(mesh.ccw_face(v, f));
-      } else if (num_outside == 1) {
-        const int side = index(outside, true);
-        Face f2 = mesh.opp_face(va[side], f);
-        if (!assertw(f2)) break;
-        f = f2;
+      } else if (num_outside == 3) {
+        // Occurred on:
+        // SphereSample -domain octaflat -grid 4096 -domain_file domains/octaflat_eg128.uv.sphparam.m -param $tmp/$r.octaflat.sphparam.m -signal N -write_texture images/$r.octaflat.unrotated.normalmap.png
+        // SHOW(gnomonic_get_bary(p, triangle)), SHOW_PRECISE(spherical_triangle_area(triangle));
+        assertw(spherical_triangle_is_flipped(triangle));
+        assertw(spherical_triangle_area(triangle) == 0.f);
+        assertw(in_spherical_triangle(p, triangle));
+        Warning("num_outside=3; likely a degenerate spherical triangle");
+        break;
       } else {
         assertnever("");
       }

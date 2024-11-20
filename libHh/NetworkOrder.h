@@ -69,7 +69,7 @@ template <typename T> void my_swap_bytes(T* p) {
   static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2);
   // First attempt was to use "volatile T* p", but that is not robust.  The use of "union" is required for gcc;
   // otherwise it changes value in memory but not in register -- see NetworkOrder_test.cpp.
-  if (sizeof(T) == 8) {
+  if constexpr (sizeof(T) == 8) {
     union {
       uint64_t ui;
       T t;
@@ -77,8 +77,7 @@ template <typename T> void my_swap_bytes(T* p) {
     u.t = *p;
     u.ui = swap_8bytes(u.ui);
     *p = u.t;
-  }
-  if (sizeof(T) == 4) {
+  } else if constexpr (sizeof(T) == 4) {
     union {
       uint32_t ui;
       T t;
@@ -86,8 +85,7 @@ template <typename T> void my_swap_bytes(T* p) {
     u.t = *p;
     u.ui = swap_4bytes(u.ui);
     *p = u.t;
-  }
-  if (sizeof(T) == 2) {
+  } else if constexpr (sizeof(T) == 2) {
     union {
       uint16_t ui;
       T t;
@@ -95,6 +93,8 @@ template <typename T> void my_swap_bytes(T* p) {
     u.t = *p;
     u.ui = swap_2bytes(u.ui);
     *p = u.t;
+  } else {
+    static_assert(sizeof(T) != sizeof(T), "Unsupported type size");  // (Delay evaluation until instantiation.)
   }
 }
 

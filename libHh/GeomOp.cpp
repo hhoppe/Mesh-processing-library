@@ -170,12 +170,62 @@ template <typename T> T my_atan2(T y, T x) { return !y && !x ? T{0} : std::atan2
 
 }  // namespace
 
-void orthonormalize(Frame& frame) {
-  assertx(frame.v(0).normalize());
-  const Vector v1 = normalized(cross(frame.v(2), frame.v(0)));
-  frame.v(1) = dot(v1, frame.v(1)) > 0.f ? v1 : Vector(-v1);
-  const Vector v2 = normalized(cross(frame.v(0), frame.v(1)));
-  frame.v(2) = dot(v2, frame.v(2)) > 0.f ? v2 : Vector(-v2);
+bool nearly_orthogonal(const Frame& frame, float tolerance) {
+  if (abs(dot(frame.v(0), frame.v(1))) > tolerance) return false;
+  if (abs(dot(frame.v(1), frame.v(2))) > tolerance) return false;
+  if (abs(dot(frame.v(2), frame.v(0))) > tolerance) return false;
+  return true;
+}
+
+bool nearly_orthonormal(const Frame& frame, float tolerance) {
+  for_int(c, 3) if (abs(mag2(frame.v(c)) - 1.f) > tolerance) return false;
+  return nearly_orthogonal(frame, tolerance);
+}
+
+Frame orthogonalized(const Frame& frame) {
+  // Use Gram-Schmidt orthogonalization, but preserve original magnitudes.  Handles both left and right handedness.
+  using Precision = double;
+  const Vec3<Precision> v0 = convert<Precision>(frame.v(0));
+  Vec3<Precision> v1 = convert<Precision>(frame.v(1));
+  Vec3<Precision> v2 = convert<Precision>(frame.v(2));
+  const Precision orig_v1_mag2 = mag2(v1);
+  const Precision orig_v2_mag2 = mag2(v2);
+
+  // Make v1 orthogonal to v0.
+  const Precision v0_inv_mag2 = 1.f / mag2(v0);
+  v1 -= v0 * (dot(v1, v0) * v0_inv_mag2);
+
+  // Make v2 orthogonal to both v0 and v1.
+  const Precision v1_inv_mag2 = 1.f / mag2(v1);
+  v2 -= v0 * (dot(v2, v0) * v0_inv_mag2);
+  v2 -= v1 * (dot(v2, v1) * v1_inv_mag2);
+
+  // Rescale v1 and v2 to their original magnitudes.
+  v1 *= sqrt(orig_v1_mag2 * v1_inv_mag2);
+  v2 *= sqrt(orig_v2_mag2 / mag2(v2));
+
+  return Frame(frame.v(0), convert<float>(v1), convert<float>(v2), frame.p());
+}
+
+Frame orthonormalized(const Frame& frame) {
+  // Use Gram-Schmidt orthonormalization.  It correctly handles both left and right handedness.
+  using Precision = double;
+  const Vec3<Precision> v0_orig = convert<Precision>(frame.v(0));
+  const Vec3<Precision> v1_orig = convert<Precision>(frame.v(1));
+  const Vec3<Precision> v2_orig = convert<Precision>(frame.v(2));
+  const Vec3<Precision> v0 = normalized(v0_orig);
+  const Vec3<Precision> v1 = normalized(v1_orig - dot(v1_orig, v0) * v0);
+  const Vec3<Precision> v2a = v2_orig - dot(v2_orig, v0) * v0;
+  const Vec3<Precision> v2 = normalized(v2a - dot(v2a, v1) * v1);
+  return Frame(convert<float>(v0), convert<float>(v1), convert<float>(v2), frame.p());
+}
+
+Frame normalized_frame(const Frame& frame, float tolerance) {
+  if (nearly_orthonormal(frame, tolerance))
+    return orthonormalized(frame);
+  if (nearly_orthogonal(frame, tolerance))
+    return orthogonalized(frame);
+  return frame;
 }
 
 // See https://en.wikipedia.org/wiki/Euler_angles
@@ -207,7 +257,7 @@ Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
   Vec3<float> prev_mags = map(prev_frame.head<3>(), [](const Vec3<float>& v) { return float(mag<double>(v)); });
   for_int(c, 3) frame[c][c] = prev_mags[c];
   for_int(c, 3) frame = frame * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
-  if (all_of(prev_mags, [](float mag) { return abs(mag - 1.f) < 1e-4f; })) orthonormalize(frame);
+  if (1) frame = orthogonalized(frame);                          // Optional, for precision.
   frame.p() = prev_frame.p();
   return frame;
 }

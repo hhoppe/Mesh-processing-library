@@ -13,7 +13,8 @@ namespace {
 int every = 0;
 int object = -1;
 bool g_inverse = false;
-bool b_orthonormalize = false;
+float check_orthonormal = -1.f;  // If >= 0.f, tolerance to check.
+bool b_normalize = false;
 bool snap_to_axes = false;
 float induce_roll = 0.f;
 float lowpass = 1.f;  // Note that 1.f == no filtering.
@@ -89,7 +90,8 @@ bool process_frame(ObjectFrame& object_frame) {
     frame_prev = frame;
     zoom_prev = object_frame.zoom;
   }
-  if (b_orthonormalize) orthonormalize(frame);
+  if (check_orthonormal >= 0.f) assertx(nearly_orthonormal(frame, check_orthonormal));
+  if (b_normalize) frame = normalized_frame(frame, 1e-2f);
   if (snap_to_axes) {
     for_int(i, 3) {
       Vector& vec = frame.v(i);
@@ -139,7 +141,13 @@ bool process_frame(ObjectFrame& object_frame) {
 }
 
 void process_frames(std::istream& is) {
+  string line;
   for (;;) {
+    if (is.peek() == '#') {
+      assertx(my_getline(is, line));
+      std::cout << line << "\n";
+      continue;
+    }
     auto object_frame = FrameIO::read(is);
     if (!object_frame) break;
     process_frame(*object_frame);
@@ -158,7 +166,7 @@ void process_frames(std::istream& is) {
 int main(int argc, const char** argv) {
   string transf;
   string pretransf;
-  bool orthonormalize = false, frame = false, stat = false;
+  bool normalize = false, frame = false, stat = false;
   ParseArgs args(argc, argv);
   HH_ARGSC("A frame stream is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(create_euler, "yaw pitch roll : create frame from Euler angles (degrees)");
@@ -168,7 +176,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(inverse, ": replace each frame by its inverse");
   HH_ARGSP(pretransf, "'frame' : pre-transform by frame");
   HH_ARGSP(transf, "'frame' : post-transform by frame");
-  HH_ARGSF(orthonormalize, ": orthonormalize frame");
+  HH_ARGSP(check_orthonormal, "tolerance : if non-negative, assert each frame is orthonormal");
+  HH_ARGSF(normalize, ": apply orthogonalization and/or normalization");
   HH_ARGSF(snap_to_axes, ": change each frame vector to the nearest axis");
   HH_ARGSP(induce_roll, "factor : for flight over terrain");
   HH_ARGSP(lowpass, "factor : contribution of new frame [0..1]");
@@ -193,7 +202,7 @@ int main(int argc, const char** argv) {
     is_transf = true;
     ctransf = FrameIO::parse_frame(transf);
   }
-  b_orthonormalize = orthonormalize;
+  b_normalize = normalize;
   statistics = stat;
   b_frame = frame;
   RFile fi(filename);

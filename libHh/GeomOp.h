@@ -46,8 +46,20 @@ float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 
 // *** Frames and Euler angles
 
-// Make the three vectors of `frame` be unit length and orthogonal.
-void orthonormalize(Frame& frame);
+// Check if the three vectors of `frame` are nearly orthogonal.
+bool nearly_orthogonal(const Frame& frame, float tolerance);
+
+// Check if the three vectors of `frame` are nearly orthogonal and unit length.
+bool nearly_orthonormal(const Frame& frame, float tolerance);
+
+// Make the three vectors of `frame` be orthogonal (but keep their magnitudes).
+Frame orthogonalized(const Frame& frame);
+
+// Make the three vectors of `frame` be orthogonal and unit length.
+Frame orthonormalized(const Frame& frame);
+
+// Return orthogonalized() or orthonormalized() if nearly so.
+Frame normalized_frame(const Frame& frame, float tolerance = 1e-4f);
 
 // Compute Euler angles of frame.
 Vec3<float> euler_angles_from_frame(const Frame& frame);

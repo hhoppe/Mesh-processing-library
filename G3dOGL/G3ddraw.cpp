@@ -42,9 +42,10 @@ static void recompute_all_sharpe() {
 void Applyq(const Frame& tq) {
   Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
-    Frame frame = Frame::identity();
-    for_int(c, 3) frame[c][c] = std::exp(tq.p()[c] / ddistance);
-    g_obs[cob].tm() = Frame::translation(-vtran) * frame * Frame::translation(vtran) * g_obs[cob].t();
+    Frame xform = Frame::identity();
+    for_int(c, 3) xform[c][c] = std::exp(tq.p()[c] / ddistance);
+    Frame& frame = g_obs[cob].tm();
+    frame = normalized_frame(Frame::translation(-vtran) * xform * Frame::translation(vtran) * frame);
     return;
   }
   static Frame frame_edit;
@@ -57,16 +58,17 @@ void Applyq(const Frame& tq) {
   if (object_mode) {
     // Complicated change-of-frame to apply the correct transformation.
     const int ob = obview;
-    Frame frame = Frame::translation(vtran) * frame_to_modify * ~g_obs[ob].t();
-    Vector vtran2 = frame.p();
-    frame *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
-    frame_to_modify = Frame::translation(-vtran) * frame * g_obs[ob].t();
+    Frame xform = Frame::translation(vtran) * frame_to_modify * ~g_obs[ob].t();
+    Vector vtran2 = xform.p();
+    xform *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
+    frame_to_modify = normalized_frame(Frame::translation(-vtran) * xform * g_obs[ob].t());
   } else {
     Frame frel = selected.frel * Frame::translation(vtran);
-    frame_to_modify = ~frel * tq * frel * frame_to_modify;
+    frame_to_modify = normalized_frame(~frel * tq * frel * frame_to_modify);
   }
   if (is_eye_move) {
-    g_obs[obview].tm() *= ~g_obs[cob].t() * frame_old;
+    Frame& frame = g_obs[obview].tm();
+    frame = normalized_frame(frame * ~g_obs[cob].t() * frame_old);
     g_obs[cob].tm() = frame_old;
   }
   if (ledit) {
@@ -399,7 +401,7 @@ static void act_flight() {
     Frame frame3 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));  // forward
     Frame frame = frame3 * frame2 * frame1;
     frame = pow(frame, 10.f * fchange);
-    obframe = frame * obframe;
+    obframe = normalized_frame(frame * obframe);
   }
   {
     float a = deg_from_rad(ang[2]);
@@ -414,7 +416,7 @@ static void act_flight() {
     Frame frame2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
     Frame frame = frame1 * frame2;
     frame = pow(frame, 10.f * fchange);
-    obframe = obframe * frame;
+    obframe = normalized_frame(obframe * frame);
     obframe.p() = savep;
   }
 }

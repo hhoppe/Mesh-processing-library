@@ -25,6 +25,7 @@ void save_state() {
     Frame frame_not_a_frame = FrameIO::get_not_a_frame();
     for (int i = 0; i <= g_obs.last; i++) {
       bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
+      if (is_vis) g_obs[i].tm() = normalized_frame(g_obs[i].t());
       const Frame& frame = is_vis ? g_obs[i].t() : frame_not_a_frame;
       if (i && frame.is_ident()) continue;
       assertw(FrameIO::write(fi(), ObjectFrame{frame, i, (!i ? zoom : 0.f)}));
@@ -154,6 +155,7 @@ void enter_aim() {
   frame.p() = Point(0.f, 0.f, 0.f);
   frame *= to_Frame(rot);
   frame.p() = pt;
+  frame = normalized_frame(frame);
 }
 
 void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }

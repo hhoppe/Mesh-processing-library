@@ -221,10 +221,8 @@ Frame orthonormalized(const Frame& frame) {
 }
 
 Frame normalized_frame(const Frame& frame, float tolerance) {
-  if (nearly_orthonormal(frame, tolerance))
-    return orthonormalized(frame);
-  if (nearly_orthogonal(frame, tolerance))
-    return orthogonalized(frame);
+  if (nearly_orthonormal(frame, tolerance)) return orthonormalized(frame);
+  if (nearly_orthogonal(frame, tolerance)) return orthogonalized(frame);
   return frame;
 }
 

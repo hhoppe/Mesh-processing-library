@@ -909,7 +909,7 @@ template <typename T> Grid<3, T> rotate_ccw(CGridView<3, T> grid, int rot_degree
   const Vec2<int> sdims = grid.dims().template tail<2>();
   const Vec2<int> nsdims = my_mod(rot_degrees, 180) == 0 ? sdims : sdims.rev();
   Grid<3, T> ngrid(concat(V(grid.dim(0)), nsdims));
-  parallel_for_each(range(grid.dim(0)), [&](const int i) { rotate_ccw(grid[i], rot_degrees, ngrid[i]); });
+  parallel_for(range(grid.dim(0)), [&](const int i) { rotate_ccw(grid[i], rot_degrees, ngrid[i]); });
   return ngrid;
 }
 
@@ -1718,7 +1718,7 @@ bool DerivedHw::key_press(string skey) {
             VideoNv12 nvideo_nv12;
             if (ob._video.size()) {
               nvideo.init(concat(V(ob.nframes()), nsdims));
-              parallel_for_each(range(ob.nframes()), [&](const int f) {
+              parallel_for(range(ob.nframes()), [&](const int f) {
                 Matrix<Vector4> matv(osdims);
                 convert(ob._video[f], matv);
                 Matrix<Vector4> nmatv(nsdims);
@@ -1727,14 +1727,14 @@ bool DerivedHw::key_press(string skey) {
               });
             } else {
               nvideo_nv12.init(concat(V(ob.nframes()), nsdims));
-              parallel_for_each(range(ob.nframes()), [&](const int f) {
+              parallel_for(range(ob.nframes()), [&](const int f) {
                 Matrix<float> matv(osdims);
                 convert(ob._video_nv12.get_Y()[f], matv);
                 Matrix<float> nmatv(nsdims);
                 transform(matv, frame, twice(filterb), nmatv);
                 convert(nmatv, nvideo_nv12.get_Y()[f]);
               });
-              parallel_for_each(range(ob.nframes()), [&](const int f) {
+              parallel_for(range(ob.nframes()), [&](const int f) {
                 Matrix<Vector4> matv(osdims / 2);
                 convert(ob._video_nv12.get_UV()[f], matv);
                 Matrix<Vector4> nmatv(nsdims / 2);
@@ -1912,7 +1912,7 @@ bool DerivedHw::key_press(string skey) {
           if (n < 2) throw "must have at least one next same-size image to create a video";
           string filename = get_path_root(ob._filename) + ".mp4";
           Video video(n, ob.spatial_dims());
-          parallel_for_each(range(n), [&](const int f) {
+          parallel_for(range(n), [&](const int f) {
             video[f].assign(g_obs[ibeg + f]->_video[0]);
             if (g_obs[ibeg + f]->_image_is_bgra) convert_bgra_rgba(video[f]);
           });
@@ -1948,7 +1948,7 @@ bool DerivedHw::key_press(string skey) {
           Video nvideo(!use_nv12 ? dims : thrice(0));
           VideoNv12 nvideo_nv12(use_nv12 ? dims : thrice(0));
           std::atomic<bool> ok{true};
-          parallel_for_each(range(nframes), [&](const int f) {
+          parallel_for(range(nframes), [&](const int f) {
             if (!ok) return;
             Image image(filenames[f]);  // not bgra
             if (image.dims() != dims.tail<2>()) {
@@ -2159,18 +2159,18 @@ bool DerivedHw::key_press(string skey) {
           };
           if (ob1._video.size()) {
             nvideo.init(ob1._video.dims());
-            parallel_for_each(range(nvideo.size()), [&](const size_t i) {
+            parallel_for(range(nvideo.size()), [&](const size_t i) {
               for_int(c, 3) nvideo.flat(i)[c] = difference(ob1._video.flat(i)[c], ob2._video.flat(i)[c]);
             });
           } else if (ob1._video_nv12.size()) {
             nvideo_nv12.init(ob1._video_nv12.get_Y().dims());
             // Here we compute the (128-biased) difference within each of the YUV channels, which is
             // different from differences in RGB space but still useful.
-            parallel_for_each(range(nvideo_nv12.get_Y().size()), [&](const size_t i) {
+            parallel_for(range(nvideo_nv12.get_Y().size()), [&](const size_t i) {
               nvideo_nv12.get_Y().flat(i) =
                   difference(ob1._video_nv12.get_Y().flat(i), ob2._video_nv12.get_Y().flat(i));
             });
-            parallel_for_each(range(nvideo_nv12.get_UV().size()), [&](const size_t i) {
+            parallel_for(range(nvideo_nv12.get_UV().size()), [&](const size_t i) {
               for_int(c, 2) {
                 nvideo_nv12.get_UV().flat(i)[c] =
                     difference(ob1._video_nv12.get_UV().flat(i)[c], ob2._video_nv12.get_UV().flat(i)[c]);
@@ -2195,12 +2195,12 @@ bool DerivedHw::key_press(string skey) {
           VideoNv12 nvideo_nv12;
           if (ob._video.size()) {
             nvideo.init(ob._dims);
-            parallel_for_each(range(ob.nframes()), [&](const int f) {  //
+            parallel_for(range(ob.nframes()), [&](const int f) {  //
               nvideo[f].assign(ob._video[ob.nframes() - 1 - f]);
             });
           } else if (ob._video_nv12.size()) {
             nvideo_nv12.init(ob._dims);
-            parallel_for_each(range(ob.nframes()), [&](const int f) {
+            parallel_for(range(ob.nframes()), [&](const int f) {
               nvideo_nv12.get_Y()[f].assign(ob._video_nv12.get_Y()[ob.nframes() - 1 - f]);
               nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[ob.nframes() - 1 - f]);
             });
@@ -2233,13 +2233,13 @@ bool DerivedHw::key_press(string skey) {
           VideoNv12 nvideo_nv12;
           if (ob._video.size()) {
             nvideo.init(ndims);
-            parallel_for_each(range(nnf), [&](const int f) {
+            parallel_for(range(nnf), [&](const int f) {
               int of = int(f / fac);  // not + .5f !
               nvideo[f].assign(ob._video[of]);
             });
           } else {
             nvideo_nv12.init(ndims);
-            parallel_for_each(range(nnf), [&](const int f) {
+            parallel_for(range(nnf), [&](const int f) {
               int of = int(f / fac);  // not + .5f !
               nvideo_nv12.get_Y()[f].assign(ob._video_nv12.get_Y()[of]);
               nvideo_nv12.get_UV()[f].assign(ob._video_nv12.get_UV()[of]);
@@ -2273,7 +2273,7 @@ bool DerivedHw::key_press(string skey) {
             if (ob._video.size()) {
               nvideo.init(ob._video.dims());
               const bool bgra = ob.is_image() && ob._image_is_bgra;
-              parallel_for_each(range(ob._video.size()), [&](const size_t i) {
+              parallel_for(range(ob._video.size()), [&](const size_t i) {
                 Pixel pix = ob._video.flat(i);
                 if (bgra) std::swap(pix[0], pix[2]);
                 Pixel yuv = YUV_Pixel_from_RGB(pix[0], pix[1], pix[2]);
@@ -2289,14 +2289,14 @@ bool DerivedHw::key_press(string skey) {
               });
             } else {
               nvideo_nv12.init(ob._video_nv12.get_Y().dims());
-              parallel_for_each(range(ob._video_nv12.get_Y().size()), [&](const size_t i) {
+              parallel_for(range(ob._video_nv12.get_Y().size()), [&](const size_t i) {
                 float y = ob._video_nv12.get_Y().flat(i) / 255.f;
                 y = pow(y, g_gamma);
                 y *= contrast_fac;
                 y += brightness_term;
                 nvideo_nv12.get_Y().flat(i) = clamp_to_uint8(int(y * 255.f + .5f));
               });
-              parallel_for_each(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
+              parallel_for(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
                 for_int(c, 2) {
                   nvideo_nv12.get_UV().flat(i)[c] =
                       clamp_to_uint8(int(128.5f + (ob._video_nv12.get_UV().flat(i)[c] - 128.f) * saturation_fac));
@@ -3826,7 +3826,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     hvideo.init(concat(V(hnf), hdims));
     {
       HH_TIMER("__scale_temporally");
-      parallel_for_each(range(hnf), [&](const int f) {
+      parallel_for(range(hnf), [&](const int f) {
         for_int(y, hdims[0]) for_int(x, hdims[1]) {
           Vector4i v(0);
           for_int(df, DT) v += Vector4i(hvideo1(f * DT + df, y, x));  // OPT:DT

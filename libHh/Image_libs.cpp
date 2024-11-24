@@ -1029,7 +1029,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     image.set_zsize(ncomp);
     png_bytep* row_pointers;  // [height]
     row_pointers = png_get_rows(png_ptr, info_ptr);
-    parallel_for_each(range(image.ysize()), [&](const int y) {
+    parallel_for(range(image.ysize()), [&](const int y) {
       uchar* buf = row_pointers[y];
       for_int(x, image.xsize()) {
         Pixel& pix = image[y][x];
@@ -1147,7 +1147,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
   if (0) {                      // high-level write
     Matrix<uchar> matrix(V(image.ysize(), image.xsize() * image.zsize()));
     Array<png_bytep> row_pointers(image.ysize());
-    parallel_for_each(range(image.ysize()), [&](const int y) {
+    parallel_for(range(image.ysize()), [&](const int y) {
       row_pointers[y] = matrix[y].data();
       uchar* buf = matrix[y].data();
       for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }

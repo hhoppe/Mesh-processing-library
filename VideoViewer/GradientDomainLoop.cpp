@@ -153,7 +153,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
         Vector4 t = Vector4(videofi0(y1, x1)) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (Vector4(video2(fi1, y1, x1)) - Vector4(video2(fi1, y0, x0)))) * .5f;
       };
-      parallel_for_each(range(ny), [&](const int y) {
+      parallel_for(range(ny), [&](const int y) {
         for_int(x, nx) {
           int fi = mat_framei(y, x);
           CMatrixView<Pixel> videofi = video[fi];
@@ -227,7 +227,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
         const int sync_rows = 1;  // rows per chunk to omit in first pass to avoid synchronization issues
         int ychunk = max((ny - 1) / nthreads + 1, sync_rows * 2);
         nthreads = (ny + ychunk - 1) / ychunk;
-        parallel_for_each(range(nthreads), [&](const int thread) {  // pass 1
+        parallel_for(range(nthreads), [&](const int thread) {  // pass 1
           const int y0 = thread * ychunk, yn = min((thread + 1) * ychunk, ny) - sync_rows;
           if (0) for_intL(y, y0, yn) for_int(x, nx) func_update(y, x);
           for_2DL_interior(y0, yn, 0, nx, func_update, func_update_interior);
@@ -268,7 +268,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         EType t = MG::get(videofi0(y1, x1), zz) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (MG::get(video2(fi1, y1, x1), zz) - MG::get(video2(fi1, y0, x0), zz))) * .5f;
       };
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         CMatrixView<short> grid_frameif = grid_framei[f];
         MatrixView<EType> mrhs = multigrid.rhs()[f];
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
@@ -311,7 +311,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
       });
     } else {
       HH_TIMER("__setup_rhs2");  // surprisingly, only a little faster than the simpler version above
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         CMatrixView<short> grid_frameif = grid_framei[f];
         MatrixView<EType> mrhs = multigrid.rhs()[f];
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
@@ -390,7 +390,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     }
     if (have_est) {
       HH_TIMER("_videoloop_est");
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
         CMatrixView<Pixel> mest2 = videoloop[f];
         for_int(y, ny) for_int(x, nx) mest(y, x) = MG::get(mest2(y, x), z);
@@ -413,14 +413,14 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     }
     HH_TIMER("__put");
     CGridView<3, EType> grid_result = multigrid.result();
-    parallel_for_each(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) MG::put(videoloop(f, y, x), z, grid_result(f, y, x));
     });
   }
   if (0) {
     Grid<3, Pixel> ref_video(nnf, ny, nx);
     Grid<3, Pixel> diff_video(nnf, ny, nx);
-    parallel_for_each(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) {
         int fi = grid_framei(f, y, x);
         ref_video(f, y, x) = video(fi, y, x);
@@ -478,7 +478,7 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
         // initial difference is D - A,  desired difference is ((B - A) / 2 + (D - C) / 2)
         vrhs += (A + B - C - D) * .5f;  // desired change
       };
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         CMatrixView<short> grid_frameif = grid_framei[f];
         MatrixView<EType> mrhs = multigrid.rhs()[f];
         fill(multigrid.initial_estimate()[f], EType{0});
@@ -536,15 +536,15 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
       });
     } else {  // Speed up the above by instead traversing just the discontinuities.
       // This initialization of mest is actually slower than computing the rhs!
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         fill(multigrid.initial_estimate()[f], EType{0});  // OPT:fill
       });
-      parallel_for_each(range(nnf), [&](const int f) { fill(multigrid.rhs()[f], EType{0}); });
+      parallel_for(range(nnf), [&](const int f) { fill(multigrid.rhs()[f], EType{0}); });
       // Find temporal discontinuities.
       const int nphase = nnf % 2 ? 3 : 2;  // run in phases to avoid race condition
       for_int(iphase, nphase) {
         // (With just two phases, race condition exists on frame 0 in iphase == 0 if nnf is odd.)
-        parallel_for_each(range((nnf - 1 - iphase) / nphase + 1), [&](const int hf) {
+        parallel_for(range((nnf - 1 - iphase) / nphase + 1), [&](const int hf) {
           int f0 = hf * nphase + iphase;
           int f1 = (f0 + 1) % nnf;
           CMatrixView<short> grid_frameif0 = grid_framei[f0];
@@ -576,7 +576,7 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
       }
       // Find spatial discontinuities.
       for_int(iphase, 2) {  // run in two phases to avoid race conditions
-        parallel_for_each(range((ny - 1 - iphase) / 2 + 1), [&](const int yh) {
+        parallel_for(range((ny - 1 - iphase) / 2 + 1), [&](const int yh) {
           for_int(x, nx) {
             int y = yh * 2 + iphase;
             Vec2<int> yx = V(y, x);
@@ -617,13 +617,13 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
     }
     HH_TIMER("__put");
     CGridView<3, EType> grid_result = multigrid.result();
-    parallel_for_each(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) MG::put(video_offset(f, y, x), z, grid_result(f, y, x) + MG::k_offset_zero);
     });
   }
   if (!V4) {
     const EType k_offset_zero{MG::k_offset_zero};  // to avoid warning of redundant cast below
-    parallel_for_each(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) MG::put(video_offset(f, y, x), 3, k_offset_zero);
     });
   }
@@ -649,7 +649,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
     Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
     Grid<3, Pixel> video_offset(ndims);
     solve_using_offsets_aux<false>(video, mat_start_highres, mat_period_highres, video_offset);
-    parallel_for_each(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) {
         videoloop(f, y, x) =
             (Vector4(videoloop(f, y, x)) + Vector4(video_offset(f, y, x)) - k_vec_zero_offset).pixel();
@@ -721,7 +721,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         assertx(DS == 1 || DSh * 2 == DS);
         integrally_downscale_Nv12_to_Image(frame, hvideo[f]);
         if (assume_mod2_static_frames && f % 4 != 2) continue;
-        parallel_for_each(range(hny), [&](const int hy) {
+        parallel_for(range(hny), [&](const int hy) {
           for_int(hx, hnx) {
             if (hmat_period(hy, hx) != 1 || hmat_start(hy, hx) != f) continue;
             for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
@@ -774,7 +774,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
         grid_framei = compute_framei(ndims, mat_deltatime, mat_start_highres, mat_period_highres);
       }
-      parallel_for_each(range(nnf), [&](const int f) {
+      parallel_for(range(nnf), [&](const int f) {
         for_int(y, ny) for_int(x, nx) {
           int fi = grid_framei(f, y, x);
           const Pixel& pix = video(fi, y, x);
@@ -797,7 +797,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
           MatrixView<Pixel> nframe(videoloop.size()        ? videoloop[f]
                                    : videoloop_nv12.size() ? sframe
                                                            : queue_frames.rear());
-          parallel_for_each(range(hny), [&](const int hy) {
+          parallel_for(range(hny), [&](const int hy) {
             for_int(hx, hnx) {
               int fi = get_framei(f * hmat_deltatime(hy, hx), hmat_start(hy, hx), hmat_period(hy, hx));
               Vector4i offset = Vector4i(hvideo_offset(f / DT, hy, hx)) - 128;
@@ -852,7 +852,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
           if (pwvideo) queue_frames.enqueue(Nv12{sdims});
           Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : videoloop.size() ? sframe : queue_frames.rear());
           if (0) {
-            parallel_for_each(range(hny), [&](const int hy) {
+            parallel_for(range(hny), [&](const int hy) {
               for_int(hx, hnx) {
                 int fi = get_framei(f * hmat_deltatime(hy, hx), hmat_start(hy, hx), hmat_period(hy, hx));
                 const Pixel& poff = hvideo_offset(f / DT, hy, hx);
@@ -866,7 +866,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               }
             });
           } else {
-            parallel_for_each(range(hny), [&](const int hy) {
+            parallel_for(range(hny), [&](const int hy) {
               auto hmat_deltatimehy = hmat_deltatime[hy];
               auto hmat_starthy = hmat_start[hy];
               auto hmat_periodhy = hmat_period[hy];
@@ -1004,7 +1004,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       const Vector4i YUV_zero_offset(YUV_Vector4i_from_RGB(128, 128, 128));
       const int DSh = DS / 2;
       assertx(DS == 1 || DSh * 2 == DS);
-      parallel_for_each(range(hny), [&](const int hy) {
+      parallel_for(range(hny), [&](const int hy) {
         for_int(hx, hnx) {
           int period = hmat_period(hy, hx);
           int pi = index(periods, period);
@@ -1073,7 +1073,7 @@ void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CM
   }
   const int ny = video.dim(1), nx = video.dim(2);
   Image image(V(ny, nx));
-  parallel_for_each(range(ny), [&](const int y) {
+  parallel_for(range(ny), [&](const int y) {
     for_int(x, nx) {
       float cost = 0.f;
       for_int(f, nnf) {
@@ -1190,7 +1190,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
 
 template <int dyh, int dxh> void integrally_downscale_Nv12_to_Image_aux(CNv12View nv12, MatrixView<Pixel> nmatrixp) {
   const int Dyx2 = dyh * 2 * dxh * 2, Dyxh2 = dyh * dxh;
-  parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+  parallel_for(range(nmatrixp.ysize()), [&](const int y) {
     for_int(x, nmatrixp.xsize()) {
       int sumY = 0;
       Vec2<int> sumUV(0, 0);
@@ -1232,7 +1232,7 @@ void integrally_downscale_Nv12_to_Image(CNv12View nv12, MatrixView<Pixel> nmatri
     integrally_downscale_Nv12_to_Image_aux<4, 4>(nv12, nmatrixp);
   } else {
     const int Dyx2 = Dyx[0] * Dyx[1], Dyxh2 = Dyxh[0] * Dyxh[1];
-    parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+    parallel_for(range(nmatrixp.ysize()), [&](const int y) {
       for_int(x, nmatrixp.xsize()) {
         int sumY = 0;
         Vec2<int> sumUV(0, 0);
@@ -1312,7 +1312,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         for_int(iloop, num_loops) {
           for_int(f, nnf) {
             auto frame = videoloop.size() ? videoloop[f] : sframe;
-            parallel_for_each(range(ny), [&](const int y) {  //
+            parallel_for(range(ny), [&](const int y) {  //
               for_int(x, nx) frame(y, x) = video(grid_framei(f, y, x), y, x);
             });
             if (pwvideo) pwvideo->write(sframe);
@@ -1331,7 +1331,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         for_int(iloop, num_loops) {
           for_int(f, nnf) {
             auto frame = videoloop_nv12.size() ? videoloop_nv12[f] : sframe;
-            parallel_for_each(range(ny), [&](const int y) {
+            parallel_for(range(ny), [&](const int y) {
               for_int(x, nx) {
                 const int fi = grid_framei(f, y, x);
                 frame.get_Y()(y, x) = ivideo.get_Y()(fi, y, x);

@@ -514,7 +514,7 @@ class SphereMapper::Implementation {
         ArrayView<int> active_vertices = ar_vertex.head(num_active);
         for (const int v : active_vertices) for_int(c, 2) ar_random[v][c] = Random::G.unif();
 
-        parallel_for_each({10'000}, range(num_active), [&](int i) {
+        parallel_for({10'000}, range(num_active), [&](int i) {
           const int v = active_vertices[i];
           ar_sph[v] = optimize_vertex_rand(v, someface[v], ar_random[v][0], ar_random[v][1]);
           ar_displacement[v] += dist(ar_sph[v], _sphmap[v]);

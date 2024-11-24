@@ -248,7 +248,7 @@ class Multigrid : noncopyable {
         if (dims[0] % 2 == 1) ngrid[ndims[0] - 1][x] = grid[(ndims[0] - 1) * 2][x] * 1.f;  // .5f or 1.f; don't care
       }
     } else {
-      parallel_for_each({uint64_t(dims[1]) * 4}, range(dims[0] / 2), [&](const int y) {
+      parallel_for({uint64_t(dims[1]) * 4}, range(dims[0] / 2), [&](const int y) {
         for_int(x, dims[1] / 2) {
           ngrid[y][x] = ((grid[y * 2 + 0][x * 2 + 0] + grid[y * 2 + 0][x * 2 + 1] + grid[y * 2 + 1][x * 2 + 0] +
                           grid[y * 2 + 1][x * 2 + 1]) *
@@ -296,7 +296,7 @@ class Multigrid : noncopyable {
     assertx(ndims[1] == dims[1] * 2 || ndims[1] == dims[1] * 2 - 1);
     Grid<D, T> ngrid(ndims);
     // transpose of box filter: tensor({(1 0), (0 1)})
-    parallel_for_each({uint64_t(ndims[1]) * 1}, range(ndims[0]), [&](const int y) {  //
+    parallel_for({uint64_t(ndims[1]) * 1}, range(ndims[0]), [&](const int y) {  //
       for_int(x, ndims[1]) ngrid[y][x] = grid[y / 2][x / 2];
     });
     return ngrid;
@@ -436,7 +436,7 @@ class Multigrid : noncopyable {
         const int sync_rows = 1;  // rows per chunk to omit in first pass to avoid synchronization issues
         int dim0 = dims[0], d0chunk = max((dims[0] - 1) / nthreads + 1, sync_rows * 2);
         nthreads = (dim0 + d0chunk - 1) / d0chunk;
-        parallel_for_each(range(nthreads), [&](const int thread) {  // k_parallel_thresh already tested above
+        parallel_for(range(nthreads), [&](const int thread) {  // k_parallel_thresh already tested above
           const Vec<int, D> uL = ntimes<D>(0).with(0, thread * d0chunk);
           const Vec<int, D> uU = dims.with(0, min((thread + 1) * d0chunk, dim0) - sync_rows);
           if (1 && b_default_metric) {
@@ -447,7 +447,7 @@ class Multigrid : noncopyable {
           }
         });
         // parallel is useful for small dimension likes video frames
-        parallel_for_each(range(nthreads), [&](const int thread) {
+        parallel_for(range(nthreads), [&](const int thread) {
           const int overlap = 0;  // = {1, 2} does not seem to help much over = 0.
           const Vec<int, D> uL = ntimes<D>(0).with(0, min((thread + 1) * d0chunk, dim0) - sync_rows);
           const Vec<int, D> uU = dims.with(0, min((thread + 1) * d0chunk + overlap, dim0));
@@ -542,7 +542,7 @@ class Multigrid : noncopyable {
         const int sync_rows = 1;  // rows per chunk to omit in first pass to avoid synchronization issues
         int ychunk = max((ny - 1) / nthreads + 1, sync_rows * 2);
         nthreads = (ny + ychunk - 1) / ychunk;
-        parallel_for_each(range(nthreads), [&](const int thread) {
+        parallel_for(range(nthreads), [&](const int thread) {
           const int y0 = thread * ychunk, yn = min((thread + 1) * ychunk, ny) - sync_rows;
           if (0) for_intL(y, y0, yn) for_int(x, nx) func_update(y, x);
           if (1 && b_default_metric) {
@@ -553,7 +553,7 @@ class Multigrid : noncopyable {
           // mingw 4096 4096: for_intL: 0.58 sec* for_2DL_interior: 0.64 sec  for_2DL: 0.83 sec
           // win   4096 4096: for_intL: 1.84 sec  for_2DL_interior: 1.19 sec* for_2DL: 1.83 sec
         });
-        parallel_for_each({uint64_t(nx * size_t{sync_rows} * 10 / nthreads)}, range(nthreads), [&](const int thread) {
+        parallel_for({uint64_t(nx * size_t{sync_rows} * 10 / nthreads)}, range(nthreads), [&](const int thread) {
           const int overlap = 0;  // = {1, 2} does not seem to help much over = 0.
           int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk + overlap, ny);
           for_2DL(y0, yn, 0, nx, func_update);
@@ -692,7 +692,7 @@ class Multigrid : noncopyable {
     dummy_use(func_interior);
     // VS2012: does not inline lambda in any case; all similar; first choice is slightly better.
     // gcc4.8.1: always produces good code (even creating func_interior() automatically).
-    if (1) parallel_for_each({uint64_t(nx) * 10}, range(ny), [&](const int y) { for_int(x, nx) func(y, x); });
+    if (1) parallel_for({uint64_t(nx) * 10}, range(ny), [&](const int y) { for_int(x, nx) func(y, x); });
     if (0) parallel_for_2DL(0, ny, 0, nx, func);
     if (0) parallel_for_2DL_interior(0, ny, 0, nx, func, func_interior);
     return grid_residual;

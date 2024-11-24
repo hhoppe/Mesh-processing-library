@@ -44,7 +44,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
       if (max_i != i) swap_ranges(t[i], t[max_i]);
     }
     if (!t[i][i]) return false;
-    parallel_for_each({uint64_t(n) * 2}, range(n), [&](const int j) {
+    parallel_for({uint64_t(n) * 2}, range(n), [&](const int j) {
       if (j == i) return;  // must be done outside the parallel loop
       T a = -t[j][i] / t[i][i];
       for_int(k, 2 * n) t[j][k] += a * t[i][k];
@@ -69,7 +69,7 @@ template <typename T> Matrix<T> inverse(CMatrixView<T> mi) {
 // Multiply matrix m1 by matrix m2 and store the result into matrix mo:  mo = m1 * m2.
 template <typename T> void mat_mul(CMatrixView<T> m1, CMatrixView<T> m2, MatrixView<T> mo) {
   assertx(m1.ysize() && m1.xsize() && m1.xsize() == m2.ysize() && m2.xsize());
-  parallel_for_each({uint64_t(m2.xsize()) * 1}, range(m1.ysize()), [&](const int i) {
+  parallel_for({uint64_t(m2.xsize()) * 1}, range(m1.ysize()), [&](const int i) {
     // Note: for faster memory performance, it would be best to swap the j and k loops;
     //  however this would require a temporary double[m2.xsize()] buffer allocated per thread.
     for_int(j, m2.xsize()) {
@@ -91,7 +91,7 @@ template <typename T> Matrix<T> mat_mul(CMatrixView<T> m1, CMatrixView<T> m2) {
 template <typename T> void mat_mul(CMatrixView<T> m, CArrayView<T> vi, ArrayView<T> vo) {
   assertx(m.ysize() && m.xsize() && m.xsize() == vi.num() && m.ysize() == vo.num());
   assertx(!have_overlap(vi, vo));
-  parallel_for_each({uint64_t(m.xsize()) * 1}, range(m.ysize()), [&](const int i) {
+  parallel_for({uint64_t(m.xsize()) * 1}, range(m.ysize()), [&](const int i) {
     double sum = 0.;
     for_int(j, m.xsize()) sum += m[i][j] * vi[j];
     vo[i] = static_cast<T>(sum);
@@ -111,7 +111,7 @@ template <typename T> void mat_mul(CArrayView<T> vi, CMatrixView<T> m, ArrayView
   assertx(!have_overlap(vi, vo));
   // Note: for faster memory performance, it would be best to swap the j and i loops;
   //  however this would require a temporary double[m.xsize()] buffer allocated per thread.
-  parallel_for_each({uint64_t(m.ysize()) * 1}, range(m.xsize()), [&](const int j) {
+  parallel_for({uint64_t(m.ysize()) * 1}, range(m.xsize()), [&](const int j) {
     double sum = 0.;
     for_int(i, m.ysize()) sum += vi[i] * m[i][j];
     vo[j] = static_cast<T>(sum);
@@ -251,7 +251,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
         }
         // SHOW(src_kernel_radii);
       }
-      parallel_for_each({uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
+      parallel_for({uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
         for_int(x, nm.xsize()) {
           Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
           Vec2<float> tp = transform_about_center(p, frame);
@@ -292,7 +292,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           V(FilterBnd(recon_kernel, filterbs[0].bndrule()), FilterBnd(recon_kernel, filterbs[1].bndrule()));
       // for (const Vec2<int>& yx : range(nm.dims())) {
       // { const int y = 500, x = 400;
-      parallel_for_each({uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
+      parallel_for({uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
         for_int(x, nm.xsize()) {
           const Vec2<int> yx = V(y, x);
           int num = 0;
@@ -360,7 +360,7 @@ Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T
   assertx(ark.num() % 2 == 1);
   const int xxm = ark.num() / 2;
   Array<T> nar(ar.num());
-  parallel_for_each({ark.size() * 2}, range(ar.num()), [&](const int x) {
+  parallel_for({ark.size() * 2}, range(ar.num()), [&](const int x) {
     Precise v{0};
     for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, bordervalue)}; }
     nar[x] = static_cast<T>(v);
@@ -376,7 +376,7 @@ Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, co
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
   const Vec2<int> pm = matk.dims() / 2;
   Matrix<T> nmat(mat.dims());
-  parallel_for_each({uint64_t(mat.xsize() * matk.size()) * 2}, range(mat.yxsize()), [&](const int y) {
+  parallel_for({uint64_t(mat.xsize() * matk.size()) * 2}, range(mat.yxsize()), [&](const int y) {
     for_int(x, mat.xsize()) {
       Precise v{0};
       for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {

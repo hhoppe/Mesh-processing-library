@@ -14,7 +14,7 @@
 #if 0
 {
   // To disable parallelism, set: OMP_NUM_THREADS=1  (admittedly a confusing variable because we do not use OpenMP)
-  parallel_for_each(range(n), [&](const int i) { func(i); });
+  parallel_for(range(n), [&](const int i) { func(i); });
 }
 #endif
 
@@ -182,6 +182,15 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
   parallel_for_chunk({}, range, num_threads, process_chunk);
 }
 
+// See previous function.
+template <typename Range, typename ProcessChunk>
+void parallel_for_chunk(const Range& range, const ProcessChunk& process_chunk) {
+  parallel_for_chunk(range, get_max_threads(), [&](int thread_index, auto subrange) {
+    dummy_use(thread_index);
+    process_chunk(subrange);
+  });
+}
+
 // Evaluates process_element(element) for each element in range by parallelizing across chunks of elements using
 // a cached thread pool.  The range must support begin/end functions returning random-access iterators.
 // Parallelism is disabled if the estimated cost (options.cycles_per_elem * size(range)) is less than some
@@ -191,7 +200,7 @@ void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk&
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessElement>
-void parallel_for_each(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
+void parallel_for(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
   using std::size;
   const auto num_elements = size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   if (!num_elements) return;
@@ -207,8 +216,8 @@ void parallel_for_each(const ParallelOptions& options, const Range& range, const
 
 // See previous function.
 template <typename Range, typename ProcessElement>
-void parallel_for_each(const Range& range, const ProcessElement& process_element) {
-  parallel_for_each({}, range, process_element);
+void parallel_for(const Range& range, const ProcessElement& process_element) {
+  parallel_for({}, range, process_element);
 }
 
 }  // namespace hh

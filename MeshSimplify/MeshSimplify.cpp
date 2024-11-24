@@ -730,7 +730,7 @@ void init_qem() {
   assertx(minqem);
   if (qemlocal) {
     if (qemcache) {
-      parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) {
+      parallel_for(Array<Face>{mesh.faces()}, [&](Face f) {
         f_qem_p(f) = make_qem();
         get_face_qem(f, f_qem(f));
       });
@@ -987,10 +987,10 @@ void clear_face_string(Face f) { mesh.set_string(f, nullptr); }
 
 // Clear all mesh strings except on faces.
 void clear_mesh_strings() {
-  parallel_for_each(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { mesh.set_string(v, nullptr); });
-  parallel_for_each(Array<Edge>{mesh.edges()}, [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
+  parallel_for(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { mesh.set_string(v, nullptr); });
+  parallel_for(Array<Edge>{mesh.edges()}, [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
   // Encoded by f_matid and material_strings.
-  parallel_for_each(Array<Face>{mesh.faces()}, [&](Face f) {
+  parallel_for(Array<Face>{mesh.faces()}, [&](Face f) {
     clear_face_string(f);
     for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
   });
@@ -1093,7 +1093,7 @@ void parse_mesh_material_identifiers() {
          material_strings.num(), nfirst, nexistingmatidempty, material_strings.num() - nfirst);
   showff("nmaterials=%d\n", material_strings.num());
   for_int(i, material_strings.num()) showff("%s\n", material_strings[i].c_str());
-  parallel_for_each(ar_faces, [&](Face f) { f_matid(f) = matid_of_string.get(mesh.get_string(f)); });
+  parallel_for(ar_faces, [&](Face f) { f_matid(f) = matid_of_string.get(mesh.get_string(f)); });
 }
 
 void parse_mesh_wedge_identifiers() {
@@ -1351,7 +1351,7 @@ void add_edge_point(Edge e, float bary) {
 void analyze_mesh(const char* s) {
   int nv = mesh.num_vertices(), nf = mesh.num_faces(), ne = mesh.num_edges();
   std::atomic<int> nshae = 0, nbnde = 0, ndise = 0, nscae = 0;
-  parallel_for_each(Array<Edge>{mesh.edges()}, [&](Edge e) {
+  parallel_for(Array<Edge>{mesh.edges()}, [&](Edge e) {
     if (edge_sharp(e)) nshae++;
     if (mesh.is_boundary(e)) {
       nbnde++;
@@ -4482,7 +4482,7 @@ void parallel_optimize() {
 
     {
       HH_STIMER("__opt_cost");
-      parallel_for_each(range(ar_edgecost.num()), [&](int index) {
+      parallel_for(range(ar_edgecost.num()), [&](int index) {
         auto& edge_cost = ar_edgecost[index];
         Edge e = edge_cost.e;
         const EcolResult ecol_result = try_ecol(e, false);
@@ -4495,7 +4495,7 @@ void parallel_optimize() {
       const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
       sort(ar_edgecost, by_increasing_cost);
     }
-    parallel_for_each(range(ar_edgecost.num()), [&](int index) { e_index(ar_edgecost[index].e) = index; });
+    parallel_for(range(ar_edgecost.num()), [&](int index) { e_index(ar_edgecost[index].e) = index; });
 
     HH_STIMER("__opt_ecols");
     const float k_fraction_edges = 0.15f;

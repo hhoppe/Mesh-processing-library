@@ -25,7 +25,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
   if (filterbs[0].filter().is_trivial_magnify() && filterbs[1].filter().is_trivial_magnify() &&
       nmatrixp.dims() == matrixp.dims() * 2) {
     const int cx = matrixp.xsize();
-    parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+    parallel_for(range(nmatrixp.ysize()), [&](const int y) {
       // for_int(x, nx) nmatrixp(y, x) = matrixp(y / 2, x / 2);
       Pixel* __restrict an = nmatrixp[y].data();
       const Pixel* __restrict ao = matrixp[y / 2].data();
@@ -40,7 +40,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
     if (nmatrixp.dims() * 2 == matrixp.dims()) {
       constexpr int DS = 2, DS2 = DS * DS;  // square(DS);
       const int nx = nmatrixp.xsize();
-      parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+      parallel_for(range(nmatrixp.ysize()), [&](const int y) {
         Pixel* __restrict an = nmatrixp[y].data();
         const Pixel* __restrict ao0 = matrixp[y * DS + 0].data();
         const Pixel* __restrict ao1 = matrixp[y * DS + 1].data();
@@ -56,7 +56,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
     if (nmatrixp.dims() * 4 == matrixp.dims()) {
       constexpr int DS = 4, DS2 = DS * DS;  // square(DS)
       const int nx = nmatrixp.xsize();
-      parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+      parallel_for(range(nmatrixp.ysize()), [&](const int y) {
         Pixel* __restrict an = nmatrixp[y].data();
         const Pixel* __restrict ao0 = matrixp[y * DS + 0].data();
         const Pixel* __restrict ao1 = matrixp[y * DS + 1].data();
@@ -77,7 +77,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
     Vec2<int> Dyx = matrixp.dims() / nmatrixp.dims();
     if (nmatrixp.dims() * Dyx == matrixp.dims()) {
       const int Dyx2 = Dyx[0] * Dyx[1], nx = nmatrixp.xsize();
-      parallel_for_each(range(nmatrixp.ysize()), [&](const int y) {
+      parallel_for(range(nmatrixp.ysize()), [&](const int y) {
         for_int(x, nx) {
           Vec4<int> sums = ntimes<4>(Dyx2 / 2);
           for_int(dy, Dyx[0]) {

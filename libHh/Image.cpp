@@ -27,7 +27,7 @@ void Image::init(const Vec2<int>& pdims, Pixel pix) {
   if (0) {
     fill(*this, pix);
   } else if (0) {
-    parallel_for_each({4}, range(size()), [&](const size_t i) { flat(i) = pix; });
+    parallel_for({4}, range(size()), [&](const size_t i) { flat(i) = pix; });
   } else {
     const uint32_t upix = reinterpret_cast<uint32_t&>(pix);
     uint32_t* p = reinterpret_cast<uint32_t*>(data());

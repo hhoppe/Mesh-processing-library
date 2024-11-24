@@ -63,7 +63,7 @@ void setup_rhs2(CGridView<2, T> grid_orig, GridView<2, T> grid_rhs, float gradie
   // HH_TIMER("_setup_rhs2");
   assertx(same_size(grid_orig, grid_rhs));
   int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
-  parallel_for_each({uint64_t(nx) * 10}, range(ny), [&](const int y) {
+  parallel_for({uint64_t(nx) * 10}, range(ny), [&](const int y) {
     for_int(x, nx) {
       T vrhs = -screening_weight * grid_orig[y][x];
       if (y > 0) vrhs += (grid_orig[y - 1][x] - grid_orig[y][x]) * gradient_sharpening;
@@ -326,7 +326,7 @@ int main(int argc, const char** argv) {
           if (1) vrhs += (grids[label0][y1][x1][c] - grids[label0][y0][x0][c]) * .5f;
           if (1) vrhs += (grids[label1][y1][x1][c] - grids[label1][y0][x0][c]) * .5f;  // necessary!
         };
-        parallel_for_each(range(dims[0]), [&](const int y) {
+        parallel_for(range(dims[0]), [&](const int y) {
           for_int(x, dims[1]) {
             int label = grid_labels[y][x];
             double vrhs = -screening_weight * grids[label][y][x][c];
@@ -338,7 +338,7 @@ int main(int argc, const char** argv) {
           }
         });
         Array<double> sums(dims[0], 0.);
-        parallel_for_each(range(dims[0]), [&](const int y) {
+        parallel_for(range(dims[0]), [&](const int y) {
           double sum = 0.f;
           for_int(x, dims[1]) sum += grids[grid_labels[y][x]][y][x][c];
           sums[y] = sum;

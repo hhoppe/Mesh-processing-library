@@ -2502,7 +2502,7 @@ void do_procedure(Args& args) {
     {
       ConsoleProgress cprogress;
       std::atomic<int> count{0};
-      parallel_for_each(range(image_names.num()), [&](const int i) {
+      parallel_for(range(image_names.num()), [&](const int i) {
         cprogress.update(float(count++) / image_names.num());
         Image& limage = ar_thumbnails[i];
         limage.set_silent_io_progress(true);
@@ -2707,7 +2707,7 @@ void do_compare(Args& args) {
   for (const auto& yx : range(image1.dims()))
     for_int(z, image1.zsize()) allmax = max(allmax, abs(image1[yx][z] - image2[yx][z]));
   Array<double> ar_err2(image1.zsize()), ar_mssim(image1.zsize());
-  parallel_for_each(range(image1.zsize()), [&](const int z) {
+  parallel_for(range(image1.zsize()), [&](const int z) {
     double err2 = 0.;
     double mssim = 0.;
     for_int(y, image1.ysize()) for_int(x, image1.xsize()) {
@@ -2965,7 +2965,7 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
     if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
   }
   const bool optimized = true;
-  parallel_for_each({uint64_t(mat_s.xsize() * 2 * window_radius * 20)}, range(mat_s.ysize()), [&](const int y) {
+  parallel_for({uint64_t(mat_s.xsize() * 2 * window_radius * 20)}, range(mat_s.ysize()), [&](const int y) {
     Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
     Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
     if (optimized) {

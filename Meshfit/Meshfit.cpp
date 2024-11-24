@@ -397,7 +397,7 @@ void global_project_aux() {
     } else {  // TODO: Make this parallel version run without crashing?
       Array<Face> ar_face(pt.co.num());
       Array<Point> ar_clp(pt.co.num());
-      parallel_for_each(range(pt.co.num()), [&](const int i) {
+      parallel_for(range(pt.co.num()), [&](const int i) {
         Face hint_f = pt.cmf[i];  // different semantics now
         const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
         ar_face[i] = f;

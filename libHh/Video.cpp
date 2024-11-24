@@ -62,12 +62,12 @@ string video_suffix_for_magic_byte(uchar c) {
 
 void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3, Pixel> video) {
   assertx(vnv12.nframes() == video.dim(0));
-  parallel_for_each(range(video.dim(0)), [&](const int f) { convert_Nv12_to_Image(vnv12[f], video[f]); });
+  parallel_for(range(video.dim(0)), [&](const int f) { convert_Nv12_to_Image(vnv12[f], video[f]); });
 }
 
 void convert_Video_to_VideoNv12(CGridView<3, Pixel> video, VideoNv12View vnv12) {
   assertx(vnv12.nframes() == video.dim(0));
-  parallel_for_each(range(video.dim(0)), [&](const int f) { convert_Image_to_Nv12(video[f], vnv12[f]); });
+  parallel_for(range(video.dim(0)), [&](const int f) { convert_Image_to_Nv12(video[f], vnv12[f]); });
 }
 
 //----------------------------------------------------------------------------
@@ -103,7 +103,7 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
   }
   newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
   if (product(newdims)) {
-    parallel_for_each(range(newvideo_nv12.nframes()), [&](const int f) {  //
+    parallel_for(range(newvideo_nv12.nframes()), [&](const int f) {  //
       scale(video_nv12[f], filterbs, bordervalue, newvideo_nv12[f]);
     });
   }

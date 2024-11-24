@@ -2670,7 +2670,7 @@ void do_reduce() {
     HH_TIMER("__initpq");
     Array<Edge> ar_edge(mesh.edges());
     Array<float> ar_cost(ar_edge.num());
-    parallel_for_each(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
+    parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
     for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
     pqe.sort();
   }
@@ -2688,7 +2688,7 @@ void do_reduce() {
       Array<float> ar_cost(ar_edge.num());
       if (0) sort(ar_edge);  // No resulting improvement in memory access coherence.
       // With parallelism, 1.3x faster than original version; without parallelism, 1.6x slower.
-      parallel_for_each(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
+      parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
       for_int(i, ar_edge.num()) pqe.enter(ar_edge[i], ar_cost[i]);
       edges_to_update.clear();
     }

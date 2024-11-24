@@ -1194,9 +1194,7 @@ void internal_remesh() {
   const MeshSearch mesh_search(param_mesh, options);
 
   HH_TIMER("_resample");
-  const int num_threads = get_max_threads();
-  parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), num_threads, [&](const int thread_index, auto subrange) {
-    dummy_use(thread_index);
+  parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), [&](auto subrange) {
     string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {
@@ -1483,9 +1481,7 @@ void do_write_texture(Args& args) {
 
   Image image(V(gridn, gridn));
   HH_TIMER("_write_pixels");
-  const int num_threads = get_max_threads();
-  parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
-    dummy_use(thread_index);
+  parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
     Face hint_f_d = nullptr, hint_f_s = nullptr;
     for (const int y : subrange) {
       for_int(x, image.xsize()) {
@@ -1638,9 +1634,7 @@ void do_write_lonlat_texture(Args& args) {
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
 
-  const int num_threads = get_max_threads();
-  parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
-    dummy_use(thread_index);
+  parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
     Face hint_f = nullptr;
     for (const int y : subrange) {
       for_int(x, image.xsize()) {
@@ -1786,9 +1780,7 @@ void do_create_lonlat_checker(Args& args) {
   {
     HH_TIMER("_create_image");
     Image image(V(imagesize, imagesize));
-    const int num_threads = get_max_threads();
-    parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
-      dummy_use(thread_index);
+    parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
       Face hint_f = nullptr;
       for (const int y : subrange) {
         for_int(x, image.xsize()) {

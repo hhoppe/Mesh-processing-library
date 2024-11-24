@@ -32,11 +32,11 @@ template <typename Func = void(int, int)> void for_2DL(int y0, int yn, int x0, i
 }
 
 template <typename Func = void(int, int)> void parallel_for_2D(int yn, int xn, Func func) {
-  parallel_for_each(range(yn), [&](const int y) { for_int(x, xn) func(y, x); });
+  parallel_for(range(yn), [&](const int y) { for_int(x, xn) func(y, x); });
 }
 
 template <typename Func = void(int, int)> void parallel_for_2DL(int y0, int yn, int x0, int xn, Func func) {
-  parallel_for_each(range(y0, yn), [&](const int y) { for_intL(x, x0, xn) func(y, x); });
+  parallel_for(range(y0, yn), [&](const int y) { for_intL(x, x0, xn) func(y, x); });
 }
 
 template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
@@ -68,7 +68,7 @@ void parallel_for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncIn
     int y = y0;
     if (y < yn) for_intL(x, x0, xn) func(y, x);
   }
-  parallel_for_each(range(y0 + 1, yn - 1), [&](const int y) {
+  parallel_for(range(y0 + 1, yn - 1), [&](const int y) {
     {
       int x = x0;
       if (x0 < xn) func(y, x);
@@ -131,11 +131,11 @@ template <int D, typename Func = void(const Vec<int, D>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
   const Vec<int, D> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
-    parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
+    parallel_for(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
   } else if (product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
-    parallel_for_each(range(uL[0], uU[0]), [&](const int r) {
+    parallel_for(range(uL[0], uU[0]), [&](const int r) {
       for_coordsL(uL.with(0, r), uU.with(0, r + 1), func);  // parallelism in first dimension
     });
   } else {
@@ -154,7 +154,7 @@ template <typename Func = void(const Vec1<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int> uU, Func func) {
   int dim0 = uU[0] - uL[0];
   if (dim0 * options.cycles_per_elem >= k_parallel_thresh) {
-    parallel_for_each(range(uL[0], uU[0]), [&](const int i) { func(V(i)); });
+    parallel_for(range(uL[0], uU[0]), [&](const int i) { func(V(i)); });
   } else {
     for_coordsL(uL, uU, func);  // no parallelism
   }
@@ -170,11 +170,11 @@ template <typename Func = void(const Vec2<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int> uU, Func func) {
   const Vec2<int> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
-    parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
+    parallel_for(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
   } else if (dims[0] >= k_parallel_min_iterations && product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
-    parallel_for_each(range(uL[0], uU[0]), [&](const int y) {
+    parallel_for(range(uL[0], uU[0]), [&](const int y) {
       Vec2<int> yx;
       yx[0] = y;
       for_intL(x, uL[1], uU[1]) {  // efficient parallelism in first dimension
@@ -184,7 +184,7 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int
     });
   } else if (dims[1] * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(y, uL[0], uU[0]) {
-      parallel_for_each(range(uL[1], uU[1]), [&](const int x) { func(V(y, x)); });
+      parallel_for(range(uL[1], uU[1]), [&](const int x) { func(V(y, x)); });
     }
   } else {
     for_coordsL(uL, uU, func);  // no parallelism
@@ -201,11 +201,11 @@ template <typename Func = void(const Vec3<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int> uU, Func func) {
   const Vec3<int> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
-    parallel_for_each(range(size_t(product(dims))), [&](const size_t i) {
+    parallel_for(range(size_t(product(dims))), [&](const size_t i) {
       func(uL + unravel_index(dims, i));  // most parallelism but with higher overhead
     });
   } else if (dims[0] >= k_parallel_min_iterations && product(dims) * options.cycles_per_elem >= k_parallel_thresh) {
-    parallel_for_each(range(uL[0], uU[0]), [&](const int z) {
+    parallel_for(range(uL[0], uU[0]), [&](const int z) {
       Vec3<int> u;
       u[0] = z;
       for_intL(y, uL[1], uU[1]) {
@@ -219,7 +219,7 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int
   } else if (dims[1] >= k_parallel_min_iterations &&
              product(dims.tail<2>()) * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(z, uL[0], uU[0]) {
-      parallel_for_each(range(uL[1], uU[1]), [&](const int y) {
+      parallel_for(range(uL[1], uU[1]), [&](const int y) {
         Vec3<int> u(z, y, 0);
         for_intL(x, uL[2], uU[2]) {
           u[2] = x;
@@ -229,7 +229,7 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int
     }
   } else if (dims[2] * options.cycles_per_elem >= k_parallel_thresh) {
     for_intL(z, uL[0], uU[0]) for_intL(y, uL[1], uU[1]) {
-      parallel_for_each(range(uL[2], uU[2]), [&](const int x) { func(V(z, y, x)); });
+      parallel_for(range(uL[2], uU[2]), [&](const int x) { func(V(z, y, x)); });
     }
   } else {
     for_coordsL(uL, uU, func);  // no parallelism
@@ -315,7 +315,7 @@ void parallel_d0_for_coordsL_interior(Vec<int, D> dims, Vec<int, D> uL, Vec<int,
   ASSERTX(uL.in_range(dims) && uU.in_range(dims + 1));
   int nthreads = get_max_threads(), ny = uU[0] - uL[0], ychunk = (ny - 1) / nthreads + 1;
   nthreads = (ny + ychunk - 1) / ychunk;
-  parallel_for_each(range(nthreads), [&](const int thread) {
+  parallel_for(range(nthreads), [&](const int thread) {
     for_coordsL_interior(dims, uL.with(0, uL[0] + thread * ychunk),
                          uU.with(0, min(uL[0] + (thread + 1) * ychunk, uU[0])), func, func_interior);
   });

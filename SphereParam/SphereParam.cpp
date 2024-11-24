@@ -315,9 +315,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   options.allow_off_surface = true;
   const MeshSearch mesh_search(mesh_uv, options);
 
-  const int num_threads = get_max_threads();
-  parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, num_threads, [&](const int thread_index, auto subrange) {
-    dummy_use(thread_index);
+  parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, [&](auto subrange) {
     string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {

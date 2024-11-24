@@ -1320,16 +1320,16 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
   return pixel;
 }
 
-void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
+void set_filled_pixels_to_pink(Image& image)  {
   assertx(k_color_special_filled[3] == 0);
-  if (getenv_bool("FILLED_AS_PINK")) {
-    const Pixel k_color_pink(255, 192, 203, 255);
-    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-      if (image[yx][3] == 0) image[yx] = k_color_pink;
-    });
-    return;
-  }
-  // Gradient-domain fill; adapted from "Filterimage -gdfill".
+  const Pixel k_color_pink(255, 192, 203, 255);
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+    if (image[yx][3] == 0) image[yx] = k_color_pink;
+  });
+}
+
+void set_filled_pixels_using_gradient_domain_diffusion(Image& image) {
+ // Adapted from "Filterimage -gdfill".
   HH_TIMER("_gdfill");
   Grid<2, Vector4> grid_orig(image.dims());
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
@@ -1350,7 +1350,7 @@ void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
     Vector4 vrhs{};
     for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
       const auto yxn = yx + yxd;
-      if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
+      if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += grid_orig[yx] - grid_orig[yxn];
     }
     multigrid.rhs()[yx] = vrhs;
   });
@@ -1361,6 +1361,13 @@ void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
     image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // (Alpha value is overwritten with 255.)
   });
 }
+
+void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
+  if (getenv_bool("FILLED_AS_PINK"))
+    set_filled_pixels_to_pink(image);
+  else
+    set_filled_pixels_using_gradient_domain_diffusion(image);
+ }
 
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
   const Pixel average_pixel = interp(Vector4(pixel0), Vector4(pixel1)).pixel();

@@ -1859,7 +1859,7 @@ void do_gdtoroidal() {
         auto yxn = yx + yxd;
         if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
         assertx(grid_orig.map_inside(yxn, bndrules));
-        vrhs += (grid_orig[yx] - grid_orig[yxn]);
+        vrhs += grid_orig[yx] - grid_orig[yxn];
       }
       multigrid.rhs()[yx] = vrhs;
     });
@@ -1925,19 +1925,19 @@ void do_gdfill() {
       if (!masked(yx)) {
         if (yx[0] > 0) {
           auto p = yx + V(-1, 0);
-          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+          if (!masked(p)) vrhs += grid_orig[p] - grid_orig[yx];
         }
         if (yx[0] < ny - 1) {
           auto p = yx + V(+1, 0);
-          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+          if (!masked(p)) vrhs += grid_orig[p] - grid_orig[yx];
         }
         if (yx[1] > 0) {
           auto p = yx + V(0, -1);
-          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+          if (!masked(p)) vrhs += grid_orig[p] - grid_orig[yx];
         }
         if (yx[1] < nx - 1) {
           auto p = yx + V(0, +1);
-          if (!masked(p)) vrhs += (grid_orig[p] - grid_orig[yx]);
+          if (!masked(p)) vrhs += grid_orig[p] - grid_orig[yx];
         }
       }
       multigrid.rhs()[yx] = vrhs;
@@ -1957,7 +1957,7 @@ void do_gdfill() {
       Vector4 vrhs{};
       for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
         const auto yxn = yx + yxd;
-        if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
+        if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += grid_orig[yx] - grid_orig[yxn];
       }
       multigrid.rhs()[yx] = vrhs;
     });

@@ -162,7 +162,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
           const int start = mat_start(y, x), period = mat_period(y, x);
           int fm1i = get_framei(lmat_deltatime(y, x) * fm1, start, period);
           if (fm1i <= fi) {
-            vrhs += (Vector4(video(fm1i, y, x)) - pixv);
+            vrhs += Vector4(video(fm1i, y, x)) - pixv;
           } else {
             int ft = fm1i - period;
             if (ft >= 0) vrhs += (Vector4(video(ft, y, x)) - pixv) * .5f;
@@ -171,7 +171,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
           }
           int fp1i = get_framei(lmat_deltatime(y, x) * fp1, start, period);
           if (fp1i >= fi) {  // OPT:fast_relax_simple
-            vrhs += (Vector4(video(fp1i, y, x)) - pixv);
+            vrhs += Vector4(video(fp1i, y, x)) - pixv;
           } else {
             int ft = fp1i + period;
             if (ft < onf) vrhs += (Vector4(video(ft, y, x)) - pixv) * .5f;
@@ -285,7 +285,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
           // It is important to use grid_framei rather than deltat (e.g. brink2s loop example).
           int fm1i = grid_framei(fm1, y, x);
           if (fm1i <= fi) {
-            vrhs += (MG::get(video(fm1i, y, x), z) - pixv);
+            vrhs += MG::get(video(fm1i, y, x), z) - pixv;
           } else {
             int ft = fm1i - period;
             if (ft >= 0) vrhs += (MG::get(video(ft, y, x), z) - pixv) * .5f;
@@ -294,7 +294,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
           }
           int fp1i = grid_framei(fp1, y, x);
           if (fp1i >= fi) {
-            vrhs += (MG::get(video(fp1i, y, x), z) - pixv);
+            vrhs += MG::get(video(fp1i, y, x), z) - pixv;
           } else {
             int ft = fp1i + period;
             if (ft < onf) vrhs += (MG::get(video(ft, y, x), z) - pixv) * .5f;
@@ -362,7 +362,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               // It is important to use grid_framei rather than deltat (e.g. brink2s loop example).
               int fm1i = grid_framei(fm1, y, x);
               if (fm1i <= fi) {
-                vrhs += (MG::get(video(fm1i, y, x), z) - pixv);
+                vrhs += MG::get(video(fm1i, y, x), z) - pixv;
               } else {
                 int ft = fm1i - period;
                 if (ft >= 0) vrhs += (MG::get(video(ft, y, x), z) - pixv) * .5f;
@@ -371,7 +371,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               }
               int fp1i = grid_framei(fp1, y, x);
               if (fp1i >= fi) {
-                vrhs += (MG::get(video(fp1i, y, x), z) - pixv);
+                vrhs += MG::get(video(fp1i, y, x), z) - pixv;
               } else {
                 int ft = fp1i + period;
                 if (ft < onf) vrhs += (MG::get(video(ft, y, x), z) - pixv) * .5f;
@@ -498,12 +498,12 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
             int ft = fm1i - period;
             if (ft >= 0) {
               count++;
-              v += (MG::get(video(ft, y, x), z) - MG::get(video(fm1i, y, x), z));
+              v += MG::get(video(ft, y, x), z) - MG::get(video(fm1i, y, x), z);
             }
             ft = fi + period;
             if (ft < onf) {
               count++;
-              v += (pixv - MG::get(video(ft, y, x), z));
+              v += pixv - MG::get(video(ft, y, x), z);
             }
             assertx(count > 0);
             if (count == 2) v *= .5f;
@@ -516,12 +516,12 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
             int ft = fp1i + period;
             if (ft < onf) {
               count++;
-              v += (MG::get(video(ft, y, x), z) - MG::get(video(fp1i, y, x), z));
+              v += MG::get(video(ft, y, x), z) - MG::get(video(fp1i, y, x), z);
             }
             ft = fi - period;
             if (ft >= 0) {
               count++;
-              v += (pixv - MG::get(video(ft, y, x), z));
+              v += pixv - MG::get(video(ft, y, x), z);
             }
             assertx(count > 0);
             if (count == 2) v *= .5f;

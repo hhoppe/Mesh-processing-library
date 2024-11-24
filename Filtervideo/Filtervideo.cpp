@@ -757,10 +757,10 @@ void do_makeloop(Args& args) {
               if (f == nf - 1) v = (v + to_float(video(fbeg, y, x)[z]) - to_float(video(fbeg - 1, y, x)[z])) * .5f;
               vrhs += v * wtemporal;
             }
-            if (y > 0) vrhs += (to_float(video(fi, y - 1, x)[z]) - pixv);
-            if (y < ny - 1) vrhs += (to_float(video(fi, y + 1, x)[z]) - pixv);
-            if (x > 0) vrhs += (to_float(video(fi, y, x - 1)[z]) - pixv);
-            if (x < nx - 1) vrhs += (to_float(video(fi, y, x + 1)[z]) - pixv);
+            if (y > 0) vrhs += to_float(video(fi, y - 1, x)[z]) - pixv;
+            if (y < ny - 1) vrhs += to_float(video(fi, y + 1, x)[z]) - pixv;
+            if (x > 0) vrhs += to_float(video(fi, y, x - 1)[z]) - pixv;
+            if (x < nx - 1) vrhs += to_float(video(fi, y, x + 1)[z]) - pixv;
             multigrid.rhs()(f, y, x) = vrhs;
             multigrid.initial_estimate()(f, y, x) = pixv;
           }

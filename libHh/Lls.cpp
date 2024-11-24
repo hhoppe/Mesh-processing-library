@@ -403,7 +403,7 @@ bool SvdLls::solve_aux() {
     float* bp = _fb.data();
     for_int(d, _nd) {
       for_int(j, _n) _x[d][j] = *bp++;
-      bp += (_m - _n);
+      bp += _m - _n;
     }
   }
   return true;
@@ -439,7 +439,7 @@ bool SvdDoubleLls::solve_aux() {
     double* bp = _fb.data();
     for_int(d, _nd) {
       for_int(j, _n) _x[d][j] = float(*bp++);
-      bp += (_m - _n);
+      bp += _m - _n;
     }
   }
   return true;
@@ -485,7 +485,7 @@ bool QrdLls::solve_aux() {
     float* bp = _fb.data();
     for_int(d, _nd) {
       for_int(j, _n) _x[d][j] = *bp++;
-      bp += (_m - _n);
+      bp += _m - _n;
     }
   }
   return true;

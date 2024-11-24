@@ -20,11 +20,11 @@ class BSpatialSearch;
 }
 
 // Spatial data structure for efficient queries like "closest_elements" or "find_elements_intersecting_ray".
-class Spatial : noncopyable {            // abstract class
-  static constexpr int k_max_gn = 1023;  // 10 bits per coordinate
+class Spatial : noncopyable {  // abstract class
  public:
+  static constexpr int k_max_gn = 1023;  // 10 bits per coordinate
   explicit Spatial(int gn) : _gn(gn) {
-    assertx(_gn <= k_max_gn);
+    assertx(_gn > 0 && _gn <= k_max_gn);
     _gni = 1.f / float(_gn);
   }
   virtual ~Spatial() {}  // not = default because gcc "looser throw specified" in derived

@@ -2,6 +2,7 @@
 #include "MinCycles/CloseMinCycles.h"
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"
+#include "libHh/MeshOp.h"
 #include "libHh/Timer.h"
 using namespace hh;
 
@@ -41,6 +42,7 @@ int main(int argc, const char** argv) {
     CloseMinCycles close_min_cycles(mesh, options);
     close_min_cycles.compute();
   }
+  showdf("%s\n", mesh_genus_string(mesh).c_str());
   hh_clean_up();
   if (!nooutput) {
     HH_TIMER("_writemesh");

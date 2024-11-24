@@ -64,11 +64,28 @@ Mesh& Mesh::operator=(Mesh&& m) noexcept {
 
 void Mesh::clear() {
   if (debug() >= 1) ok();
-  while (num_faces()) {
-    destroy_face(_id2face.get_one_value());
-  }
-  while (!empty()) {
-    destroy_vertex(_id2vertex.get_one_value());
+  if (0) {
+    while (num_faces()) {
+      destroy_face(_id2face.get_one_value());
+    }
+    while (!empty()) {
+      destroy_vertex(_id2vertex.get_one_value());
+    }
+  } else {  // Faster.
+    for (Face f : _id2face.values()) {
+      HEdge he = assertx(herep(f)), hef = he;
+      for (;;) {
+        if (he->_edge->_herep == he) delete he->_edge;
+        HEdge hen = he->_next;
+        delete he;
+        he = hen;
+        if (he == hef) break;
+      }
+      delete f;
+    }
+    for (Vertex v : _id2vertex.values()) delete v;
+    _id2face.clear();
+    _id2vertex.clear();
   }
   _vertexnum = 1;
   _facenum = 1;

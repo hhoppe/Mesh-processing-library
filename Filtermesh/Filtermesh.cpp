@@ -4108,6 +4108,10 @@ void do_fromObj(Args& args) {
   if (flip) convex_group_flip_faces(group);
 }
 
+void do_to_obj() {
+  // ??
+}
+
 void do_sphparam_to_tangentfield(Args& args) {
   // Filtermesh ~/proj/sphere/sphparams/cow.sphparam.m -sphparam_to_tang 0 0 1 -renamekey f dir Vup -procedure show_vup | G3d - -st cow -lighta 1 -lights 0
   Vector gdir;
@@ -4242,6 +4246,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(toa3d, ": output a3d version of mesh");
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
+  HH_ARGSD(to_obj, ": output Alias/Wavefront .obj file");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");

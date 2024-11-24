@@ -30,6 +30,14 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   return bary;
 }
 
+// Return the squared distance from p to its "closest" gnonomic projection onto the spherical triangle.
+float gnomonic_dist2(const Point& p, const Vec3<Point>& triangle) {
+  const Line line{Point(0.f, 0.f, 0.f), p};
+  const Plane plane = plane_of_triangle(triangle);
+  const Point pint = intersect_line_with_plane(line, plane).value();
+  return project_point_triangle(pint, triangle).d2;
+}
+
 // Given point `p` on the unit sphere, and some "nearby" spherical triangle `f` in `mesh`, find the actual spherical
 // triangle f containing p, and the barycentric coordinates of the spherical projection of p onto f.
 void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary, float tolerance = 0.f) {
@@ -46,21 +54,27 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
       int num_outside = sum<int>(outside);
       if (num_outside == 0) break;
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
-      if (num_outside == 1) {
+
+      if (num_outside == 1) {  // Jump across the edge.
         const int side = index(outside, true);
         Face f2 = mesh.opp_face(va[side], f);
         if (!assertw(f2)) break;
         f = f2;
-      } else if (num_outside == 2) {
+
+      } else if (num_outside == 2) {  // Jump across the vertex.
         const int side = index(outside, false);
-        // Fastest: jump across the vertex.
         Vertex v = va[side];
-        const int val = mesh.degree(v);
-        // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
-        constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
-        const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges % pseudo_randoms.Num];
-        for_int(i, nrot) f = assertx(mesh.ccw_face(v, f));
-      } else if (num_outside == 3) {
+        // We find the face with smallest distance from p.
+        float min_d2 = BIGFLOAT;
+        Face min_f{};
+        for (Face f2 : mesh.faces(v)) {
+          if (f2 == f) continue;
+          const Vec3<Point> triangle2 = mesh.triangle_points(f2);
+          if (const float d2 = gnomonic_dist2(p, triangle2); d2 < min_d2) min_d2 = d2, min_f = f2;
+        }
+        f = min_f;
+
+      } else if (num_outside == 3) {  // Likely a degenerate spherical triangle.
         // Occurred on:
         // SphereSample -domain octaflat -grid 4096 -domain_file domains/octaflat_eg128.uv.sphparam.m -param $tmp/$r.octaflat.sphparam.m -signal N -write_texture images/$r.octaflat.unrotated.normalmap.png
         // SHOW(gnomonic_get_bary(p, triangle)), SHOW_PRECISE(spherical_triangle_area(triangle));
@@ -69,6 +83,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         assertw(in_spherical_triangle(p, triangle));
         Warning("num_outside=3; likely a degenerate spherical triangle");
         break;
+
       } else {
         assertnever("");
       }
@@ -96,9 +111,9 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
     for_int(i, 3) triangle[i] *= _xform;
     _trianglefaces.push({triangle, f});
   }
-  int gridn = int(sqrt(_mesh.num_faces() * .05f));
+  int gridn = int(sqrt(_mesh.num_faces() * .02f));  // Was .05f.
   if (_options.allow_local_project) gridn /= 2;
-  gridn = clamp(gridn, 15, 200);  // Revisit upper bound for nefertiti ??
+  gridn = clamp(gridn, 10, Spatial::k_max_gn);
   _spatial = make_unique<TriangleFaceSpatial>(_trianglefaces, gridn);
 }
 

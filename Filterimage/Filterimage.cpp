@@ -1904,17 +1904,16 @@ void do_gdfill() {
   HH_TIMER("_gdfill");
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has visible difference
   assertx(image.zsize() == 4);
+  Grid<2, Vector4> grid_orig(image.dims());
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
   const auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
   Vector4 vmean{};
-  {
-    for_coords(image.dims(), [&](const Vec2<int>& yx) {  // sequential due to reduction
-      if (!masked(yx)) vmean += Vector4(image[yx]);
-    });
-    vmean /= vmean[3];  // SHOW(vmean);
-  }
-  Grid<2, Vector4> grid_orig(image.dims());
-  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {  //
-    grid_orig[yx] = masked(yx) ? vmean : Vector4(image[yx]);
+  for_coords(image.dims(), [&](const Vec2<int>& yx) {  // Sequential because of reduction.
+    if (!masked(yx)) vmean += Vector4(image[yx]);
+  });
+  vmean /= vmean[3];  // SHOW(vmean);
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+    if (masked(yx)) grid_orig[yx] = vmean;
   });
   Multigrid<2, Vector4> multigrid(image.dims());
   if (0) {  // solve for color values
@@ -1948,18 +1947,17 @@ void do_gdfill() {
     multigrid.set_num_vcycles(1);  // default 5, then was 2
     multigrid.solve();
     auto grid_result = multigrid.result();
-    parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = grid_result[yx].pixel();  // alpha mask is overwritten with 1
     });
-  } else {  // Instead solve for offsets; rhs becomes sparse; so does residual.  TODO: Perhaps avoid storing residual.
+  } else {  // Instead solve for color offsets; rhs and residual are sparse.  TODO: Perhaps avoid storing residual.
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     parallel_for_coords({100}, image.dims(), [&](const Vec2<int>& yx) {
       Vector4 vrhs{};
       for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
-        auto yxn = yx + yxd;
-        if (!grid_orig.ok(yxn)) continue;
-        if (masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
+        const auto yxn = yx + yxd;
+        if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
       }
       multigrid.rhs()[yx] = vrhs;
     });
@@ -1969,8 +1967,8 @@ void do_gdfill() {
     multigrid.solve();
     auto grid_result = multigrid.result();
     for_coords(grid_result.dims(), [&](const Vec2<int>& yx) { HH_SSTAT(Sgrid_result0, grid_result[yx][0]); });
-    parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
-      image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // alpha mask is overwritten with 1
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+      image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // (Alpha value is overwritten with 255.)
     });
   }
   image.set_zsize(3);  // remove alpha channel

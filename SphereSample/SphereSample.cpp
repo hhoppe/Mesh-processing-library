@@ -15,6 +15,7 @@
 #include "libHh/Matrix.h"
 #include "libHh/MeshOp.h"
 #include "libHh/MeshSearch.h"
+#include "libHh/Multigrid.h"
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
@@ -71,6 +72,8 @@ const Frame k_fdomain_to_spatialbb{Vector(.4f, .0f, .0f), Vector(.0f, .4f, .0f),
                                    Point(.5f, .5f, .5f)};
 const Pixel k_pixel_gray = Pixel::gray(235);
 const Pixel k_pixel_orange{255, 153, 0, 255};
+
+constexpr Pixel k_color_special_filled{0, 0, 0, 0};  // Transparent.
 
 // *** General functions.
 
@@ -1180,12 +1183,10 @@ void internal_remesh() {
   for (Vertex param_v : param_mesh.vertices()) {
     v_domainp(param_v) = param_mesh.point(param_v);
     param_mesh.set_point(param_v, v_sph(param_v));
-    Vector normal;
+    Vector& normal = v_normal(param_v);
     if (!parse_key_vec(param_mesh.get_string(param_v), "normal", normal)) normal = k_undefined_vector;
-    v_normal(param_v) = normal;
-    Vector rgb;
+    Vector& rgb = v_rgb(param_v);
     if (!parse_key_vec(param_mesh.get_string(param_v), "rgb", rgb)) rgb = k_undefined_vector;
-    v_rgb(param_v) = rgb;
   }
   MeshSearch::Options options;
   options.allow_local_project = true;
@@ -1272,9 +1273,10 @@ void do_texture_file(Args& args) {
   convert(texture_image, texture_image_vector4);
 }
 
-void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
-                   const Bary& bary) {
-  pixel[3] = 255;
+Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
+                    const Bary& bary) {
+  if (GMesh::string_has_key(mesh.get_string(f), "filled")) return k_color_special_filled;
+  Pixel pixel(255, 255, 255, 255);
   switch (signal_[0]) {
     case 'G': {
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
@@ -1315,6 +1317,49 @@ void assign_signal(Pixel& pixel, const GMesh& mesh, const Bbox<float, 3>& bbox, 
     }
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
+  return pixel;
+}
+
+void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
+  assertx(k_color_special_filled[3] == 0);
+  if (getenv_bool("FILLED_AS_PINK")) {
+    const Pixel k_color_pink(255, 192, 203, 255);
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+      if (image[yx][3] == 0) image[yx] = k_color_pink;
+    });
+    return;
+  }
+  // Gradient-domain fill; adapted from "Filterimage -gdfill".
+  HH_TIMER("_gdfill");
+  Grid<2, Vector4> grid_orig(image.dims());
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
+  const auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
+  Vector4 vmean{};
+  for_coords(image.dims(), [&](const Vec2<int>& yx) {  // Sequential because of reduction.
+    if (!masked(yx)) vmean += grid_orig[yx];
+  });
+  vmean /= vmean[3];
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+    if (masked(yx)) grid_orig[yx] = vmean;
+  });
+  Multigrid<2, Vector4> multigrid(image.dims());
+  // Solve for color offsets; rhs and residual are sparse.
+  fill(multigrid.initial_estimate(), Vector4(0.f));
+  multigrid.set_desired_mean(Vector4(0.f));
+  parallel_for_coords({100}, image.dims(), [&](const Vec2<int>& yx) {
+    Vector4 vrhs{};
+    for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
+      const auto yxn = yx + yxd;
+      if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += (grid_orig[yx] - grid_orig[yxn]);
+    }
+    multigrid.rhs()[yx] = vrhs;
+  });
+  multigrid.set_num_vcycles(1);
+  multigrid.solve();
+  auto grid_result = multigrid.result();
+  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
+    image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // (Alpha value is overwritten with 255.)
+  });
 }
 
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
@@ -1392,6 +1437,7 @@ void do_write_texture(Args& args) {
   assertx(gridn);
   assertx(g_mesh.empty());
 
+  HH_TIMER("_write_texture");
   const GMesh domain_mesh = read_sphparam_mesh(domain_file);  // Map: domain D -> sphere S (v -> v_sph(v)).
   GMesh param_mesh = read_sphparam_mesh(param_file);          // Map (initially): mesh M -> sphere S (v -> v_sph(v)).
   const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return param_mesh.point(v); })};
@@ -1416,12 +1462,10 @@ void do_write_texture(Args& args) {
   for (Vertex v : param_mesh.vertices()) {
     v_domainp(v) = param_mesh.point(v);
     param_mesh.set_point(v, v_sph(v));
-    Vector normal;
+    Vector& normal = v_normal(v);
     if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
-    v_normal(v) = normal;
-    Vector rgb;
+    Vector& rgb = v_rgb(v);
     if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
-    v_rgb(v) = rgb;
   }
 
   MeshSearch::Options options_i;
@@ -1430,11 +1474,9 @@ void do_write_texture(Args& args) {
   const MeshSearch msearch_d(domain_mesh, {true});              // Map: domain D -> sphere S (v -> v_sph(v)).
   const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
-  HH_TIMER("_write_texture");
-  const int imagesize = gridn;
-  Image image(V(imagesize, imagesize));
+  Image image(V(gridn, gridn));
+  HH_TIMER("_write_pixels");
   const int num_threads = get_max_threads();
-  // for_int(y, image.ysize()) {
   parallel_for_chunk(range(image.ysize()), num_threads, [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
     Face hint_f_d = nullptr, hint_f_s = nullptr;
@@ -1465,13 +1507,16 @@ void do_write_texture(Args& args) {
         }
         auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
         hint_f_s = f;
-        assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
+        pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
       }
     }
   });
+
+  handle_zero_alpha_pixels_for_filled_faces(image);
   if (feather_texture) apply_feathering(image);
   image.write_file(image_name);
   nooutput = true;
+  if (1 && !k_debug) hh_clean_up(), exit_immediately(0);  // Avoid ~Mesh().  We lose running timers though.
 }
 
 void do_write_primal_texture(Args& args) {
@@ -1567,16 +1612,14 @@ void do_write_lonlat_texture(Args& args) {
     case 'G': break;
     case 'N':
       for (Vertex v : param_mesh.vertices()) {
-        Vector normal;
+        Vector& normal = v_normal(v);
         if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
-        v_normal(v) = normal;
       }
       break;
     case 'C':
       for (Vertex v : param_mesh.vertices()) {
-        Vector rgb;
+        Vector& rgb = v_rgb(v);
         if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
-        v_rgb(v) = rgb;
       }
       break;
     case 'T': break;
@@ -1601,11 +1644,12 @@ void do_write_lonlat_texture(Args& args) {
         const Point sph = sph_from_lonlat(lonlat);
         auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
         hint_f = f;
-        assign_signal(pixel, param_mesh, bbox, rotate_frame, f, bary);
+        pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
       }
     }
   });
 
+  handle_zero_alpha_pixels_for_filled_faces(image);
   image.write_file(image_name);
   nooutput = true;
 }

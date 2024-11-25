@@ -574,7 +574,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(hole_weight, "w : factor for faces marked with 'hole'");
   HH_ARGSF_O(respect_sharp_edges, ": for consistent parameterization");
   HH_ARGSF_O(flatten_to_x0, ": set surface coordinate x = 0 (for flat octahedron)");
-  HH_ARGSP(base_param_scheme, "method : Base mesh map: tetra, projection, uv, coord, or mesh");
+  HH_ARGSP(base_param_scheme, "method : Base mesh map: tetra, projection, uv, coord, mesh");
   HH_ARGSP(mesh_for_base, "mesh.m : To use with '-base_param_scheme mesh'");
   HH_ARGSP(rotate_s3d, "file.s3d : rotate spherical param using view (snapped to axes)");
   HH_ARGSF(no_rot_align, ": do not rotationally align map with face normals");

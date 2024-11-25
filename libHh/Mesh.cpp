@@ -73,13 +73,13 @@ void Mesh::clear() {
     }
   } else {  // Faster.
     for (Face f : _id2face.values()) {
-      HEdge he = assertx(herep(f)), hef = he;
+      HEdge he = assertx(herep(f)), he_first = he;
       for (;;) {
         if (he->_edge->_herep == he) delete he->_edge;
         HEdge hen = he->_next;
         delete he;
         he = hen;
-        if (he == hef) break;
+        if (he == he_first) break;
       }
       delete f;
     }
@@ -191,7 +191,7 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
 
 void Mesh::destroy_face(Face f) {
   {
-    HEdge he = assertx(herep(f)), hef = he;
+    HEdge he = assertx(herep(f)), he_first = he;
     Vertex v1 = he->_prev->_vert;
     for (;;) {
       HEdge hen = he->_next;
@@ -200,7 +200,7 @@ void Mesh::destroy_face(Face f) {
       delete he;
       he = hen;
       v1 = v1n;
-      if (he == hef) break;
+      if (he == he_first) break;
     }
   }
   assertx(_id2face.remove(f->_id));
@@ -446,14 +446,14 @@ Face Mesh::random_face(Random& r) const {
 Edge Mesh::random_edge(Random& r) const {
   Face f = random_face(r);
   int vi = r.get_unsigned(num_vertices(f));
-  HEdge hef = nullptr;
+  HEdge he_first = nullptr;
   for (HEdge he : corners(f)) {
     if (!vi--) {
-      hef = he;
+      he_first = he;
       break;
     }
   }
-  return assertx(hef)->_edge;
+  return assertx(he_first)->_edge;
 }
 
 // *** Mesh operations
@@ -1082,9 +1082,9 @@ Mesh::HEdge Mesh::most_clw_hedge(Vertex v) const {
   assertx(is_nice(v));
   HEdge he = herep(v);
   if (!he) return nullptr;
-  for (HEdge hef = he;;) {
+  for (HEdge he_first = he;;) {
     HEdge hen = clw_hedge(he);
-    if (!hen || hen == hef) break;
+    if (!hen || hen == he_first) break;
     he = hen;
   }
   return he;
@@ -1094,9 +1094,9 @@ Mesh::HEdge Mesh::most_ccw_hedge(Vertex v) const {
   assertx(is_nice(v));
   HEdge he = herep(v);
   if (!he) return nullptr;
-  for (HEdge hef = he;;) {
+  for (HEdge he_first = he;;) {
     HEdge hen = ccw_hedge(he);
-    if (!hen || hen == hef) break;
+    if (!hen || hen == he_first) break;
     he = hen;
   }
   return he;

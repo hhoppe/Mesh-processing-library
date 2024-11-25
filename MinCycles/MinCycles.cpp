@@ -17,9 +17,10 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(num_cycles, "n : after removing this number of cycles");
   HH_ARGSP_O(genus, "g : when mesh genus <= g");
   HH_ARGSC(HH_ARGS_INDENT "Other topological simplification parameters:");
-  HH_ARGSP_O(frac_cycle_length, "frac>=1. : allow finding cycles with length fractionally greater than minimal");
+  HH_ARGSP_O(frac_cycle_length, "frac>=1. : allow cycles to have length greater than minimal");
   HH_ARGSP_O(mark_edges_sharp, "bool : mark loops of edges using 'sharp' key string");
   HH_ARGSP_O(mark_faces_filled, "bool : mark rings of new faces using 'filled' key string");
+  HH_ARGSP_O(frac_offset, "float : Interpenetrate closed cycles by a fraction of bbox");
   HH_ARGSC("", ":");
   HH_ARGSF(nooutput, ": do not write mesh at program end");
   const string arg0 = args.num() ? args.peek_string() : "";

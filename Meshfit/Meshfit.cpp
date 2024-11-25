@@ -1470,7 +1470,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(dihpower, "pow : set edge dihedral energy exponent");
   HH_ARGSP(restrictfproject, "int : 0=never, 1=first_iter, 2=always");
   HH_ARGSC("", ":");
-  HH_ARGSD(outlierdelete, "dist : remove points more than given distance from initial mesh");
+  HH_ARGSD(outlierdelete, "dist : remove points farther than dist from initial mesh");
   HH_ARGSD(gfit, "niter : do global fit (0=until convergence)");
   HH_ARGSD(fgfit, "niter : use conjugate gradients");
   HH_ARGSD(stoc, ": do local stochastic mesh operations");

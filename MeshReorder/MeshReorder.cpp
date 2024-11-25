@@ -1533,7 +1533,7 @@ int main(int argc, const char** argv) {
   // HH_ARGSD(meshify7,       ": obsolete");
   HH_ARGSD(meshify8, ": fast heuristic per ring");
   HH_ARGSD(meshify9, ": like 8, queue of restarts");
-  HH_ARGSD(meshify10, ": like 9, go clockwise after restart (simpler, faster, and even better)");
+  HH_ARGSD(meshify10, ": like 9, clw after restart; simpler, faster, better");
   HH_ARGSD(timingtest, "niter : run timing test");
   {
     const string arg0 = args.num() ? args.peek_string() : "";

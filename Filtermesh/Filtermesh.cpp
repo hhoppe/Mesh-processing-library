@@ -4335,7 +4335,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(rmdiaguv, ": for uv grid, remove diagonal edges");
   HH_ARGSD(obtusesplit, ": split obtuse tris, possibly on sphere");
   HH_ARGSD(projectimage, "transf image : color mesh vertices");
-  HH_ARGSD(quantizeverts, "bits : apply quantization to each coord.");
+  HH_ARGSD(quantizeverts, "bits : apply quantization to each coordinate");
   HH_ARGSD(hull, "r : morphological bloat/shrink");
   HH_ARGSD(alignmentframe, "mesh : output rigid frame to align with mesh");
   HH_ARGSD(smoothgim, "nsubdiv : tessellate bicubic gim");

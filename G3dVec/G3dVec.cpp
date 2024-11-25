@@ -999,7 +999,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   HH_ARGSF(nohash, ": turn off vertex hashing");
   args.p("-thicks[harp]", thicksharp, "f : width of sharp edges");
   args.p("-thickn[ormal]", thicknormal, "f : width of edges");
-  HH_ARGSF(silhouette, ": in hidden-line, draw only silh.");
+  HH_ARGSF(silhouette, ": in hidden-line, draw only silhoutte");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();

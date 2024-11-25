@@ -1326,45 +1326,26 @@ void set_filled_pixels_to_pink(Image& image)  {
   });
 }
 
-void set_filled_pixels_using_gradient_domain_diffusion(Image& image) {
- // Adapted from "Filterimage -gdfill".
-  HH_TIMER("_gdfill");
-  Grid<2, Vector4> grid_orig(image.dims());
-  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
-  const auto masked = [&](const Vec2<int>& yx) { return image[yx][3] < 255; };
-  Vector4 vmean{};
-  for_coords(image.dims(), [&](const Vec2<int>& yx) {  // Sequential because of reduction.
-    if (!masked(yx)) vmean += grid_orig[yx];
-  });
-  vmean /= vmean[3];
-  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-    if (masked(yx)) grid_orig[yx] = vmean;
-  });
-  Multigrid<2, Vector4> multigrid(image.dims());
-  // Solve for color offsets; rhs and residual are sparse.
-  fill(multigrid.initial_estimate(), Vector4(0.f));
-  multigrid.set_desired_mean(Vector4(0.f));
-  parallel_for_coords({100}, image.dims(), [&](const Vec2<int>& yx) {
-    Vector4 vrhs{};
-    for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
-      const auto yxn = yx + yxd;
-      if (grid_orig.ok(yxn) && masked(yx) != masked(yxn)) vrhs += grid_orig[yx] - grid_orig[yxn];
-    }
-    multigrid.rhs()[yx] = vrhs;
-  });
-  multigrid.set_num_vcycles(1);
-  multigrid.solve();
-  auto grid_result = multigrid.result();
-  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-    image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // (Alpha value is overwritten with 255.)
-  });
+void set_filled_pixels_using_voronoi_dilate(Image& image) {
+ // Adapted from "Filterimage -voronoidilate".
+  HH_TIMER("_voronoi_dilate");
+  Matrix<Vec2<int>> mvec(image.dims(), image.dims());
+  for (const auto& yx : range(image.dims())) {
+    bool is_undef = image[yx][3] == 0;
+    if (!is_undef) mvec[yx] = V(0, 0);
+  }
+  euclidean_distance_map(mvec);
+  // Fill in unfilled pixels.
+  for (const auto& yx : range(image.dims()))
+    if (!is_zero(mvec[yx])) image[yx] = image[yx + mvec[yx]];
 }
 
 void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
+  // I also tried gradient-domain diffusion, but this altered the normals near the fill boundary and looked poor.
   if (getenv_bool("FILLED_AS_PINK"))
     set_filled_pixels_to_pink(image);
   else
-    set_filled_pixels_using_gradient_domain_diffusion(image);
+    set_filled_pixels_using_voronoi_dilate(image);
  }
 
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
@@ -1480,46 +1461,51 @@ void do_write_texture(Args& args) {
   const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
   Image image(V(gridn, gridn));
-  HH_TIMER("_write_pixels");
-  parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
-    Face hint_f_d = nullptr, hint_f_s = nullptr;
-    for (const int y : subrange) {
-      for_int(x, image.xsize()) {
-        // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
-        const int yy = image.ysize() - 1 - y;
-        Pixel& pixel = image[yy][x];
-        Point p_i, p_d, p_s;
-        p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
-        {
-          auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
-          if (d2 > 0.f) {
-            pixel = Pixel(255, 255, 255, 255);
-            continue;
+  {
+    HH_TIMER("_write_pixels");
+    parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
+      Face hint_f_d = nullptr, hint_f_s = nullptr;
+      for (const int y : subrange) {
+        for_int(x, image.xsize()) {
+          // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
+          const int yy = image.ysize() - 1 - y;
+          Pixel& pixel = image[yy][x];
+          Point p_i, p_d, p_s;
+          p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
+          {
+            auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
+            if (d2 > 0.f) {
+              pixel = Pixel(255, 255, 255, 255);
+              continue;
+            }
+            const Vec3<Point> triangle = map(mesh_i.triangle_vertices(f), v_domainp);
+            p_d = interp(triangle, bary);
           }
-          const Vec3<Point> triangle = map(mesh_i.triangle_vertices(f), v_domainp);
-          p_d = interp(triangle, bary);
+          {
+            auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);
+            hint_f_d = f;
+            if (d2 >= 1e-12f) assertnever(SSHOW(p_i, p_d, f, bary, unused_clp, d2));
+            const Vec3<Vertex> face_vertices = domain_mesh.triangle_vertices(f);
+            Vector sum{};
+            for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
+            p_s = normalized(sum);
+          }
+          auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
+          hint_f_s = f;
+          pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
         }
-        {
-          auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);
-          hint_f_d = f;
-          if (d2 >= 1e-12f) assertnever(SSHOW(p_i, p_d, f, bary, unused_clp, d2));
-          const Vec3<Vertex> face_vertices = domain_mesh.triangle_vertices(f);
-          Vector sum{};
-          for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
-          p_s = normalized(sum);
-        }
-        auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
-        hint_f_s = f;
-        pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
       }
-    }
-  });
+    });
+  }
 
   handle_zero_alpha_pixels_for_filled_faces(image);
   if (feather_texture) apply_feathering(image);
   image.write_file(image_name);
   nooutput = true;
-  if (1 && !k_debug) hh_clean_up(), exit_immediately(0);  // Avoid ~Mesh().  We lose running timers though.
+  if (1 && !k_debug) {  // Avoid ~Mesh() and ~MeshSearch().  We lose running timers though.
+    hh_clean_up();
+    exit_immediately(0);
+  }
 }
 
 void do_write_primal_texture(Args& args) {
@@ -1857,7 +1843,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(octa8colors, ": use 8 instead of 4 face colors");
   HH_ARGSF(baseball, ": use baseball cube unwrapping instead of cross");
   HH_ARGSC(HH_ARGS_INDENT "Sample sphere:");
-  HH_ARGSF(omit_faces, ": let remesh have only vertices (faster write_primal_texture)");
+  HH_ARGSF(omit_faces, ": remesh only vertices (faster write_primal_texture)");
   HH_ARGSD(mesh_sphere, ": map domain grid onto sphere");
   HH_ARGSD(load_remesh, "mesh.remesh.m : load a previous remesh");
   HH_ARGSD(load_map, "domain.uv.sphparam.m : domain -> sphere, instead of scheme");

@@ -2220,9 +2220,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(readnv12, "filename : read video into NV12 grids rather than RGB grid");
   HH_ARGSD(trunc_begin, "nframes : skip the first nframes frames");
   HH_ARGSD(trunc_frames, "nframes : read no more than nframes frames");
-  HH_ARGSD(as_fit, "nx ny : when assembling, scale each frame uniformly to fit into this size");
-  HH_ARGSD(as_cropsides, "l r t b : when assembling, crop each frame");
-  HH_ARGSD(as_tnframes, "nf : when assembling, temporally scale to specified number of frames");
+  HH_ARGSD(as_fit, "nx ny : in assemble, scale each frame uniformly to fit");
+  HH_ARGSD(as_cropsides, "l r t b : in assemble, crop each frame");
+  HH_ARGSD(as_tnframes, "nframes : in assemble, temporally scale to frame count");
   HH_ARGSD(assemble, "nx ny videos_lr_bt_order : concatenate grid of videos");
   HH_ARGSP(startframe, "i : start %d numbering at i");
   HH_ARGSD(fromimages, "root_name.%03d.png : read frame images");
@@ -2243,23 +2243,24 @@ int main(int argc, const char** argv) {
   HH_ARGSD(sizes, ": print 'nframes width height'");
   HH_ARGSD(tscale, "fac : temporal scaling");
   HH_ARGSD(tnframes, "nframes : temporally scale to specified number of frames");
-  HH_ARGSD(start, "frameindex : trim video prior  (frames or time) (eg. 30 or -1 or 2s or 10%)");
-  HH_ARGSD(end, "frameindex : trim video beyond (frames or time) (eg. 30 or -1 or 2s or 10%)");
+  HH_ARGSD(start, "frame_or_time : trim video prior (eg. 30 or -1 or 2s or 10%)");
+  HH_ARGSD(end, "frame_or_time : trim video beyond (eg. 30 or -1 or 2s or 10%)");
   HH_ARGSD(interval, "f1 f2 : trim video to interval [f1, f2)");
-  HH_ARGSD(trimbeg, "nframes : temporally crop beginning using boundaryrule (nframes < 0 to extend)");
-  HH_ARGSD(trimend, "nframes : temporally crop end using boundaryrule (nframes < 0 to extend)");
+  HH_ARGSD(trimbeg, "nframes : temporally crop beg using boundaryrule (<0 to extend)");
+  HH_ARGSD(trimend, "nframes : temporally crop end using boundaryrule (<0 to extend)");
   HH_ARGSD(loop, "n : repeat n times (1=no_op)");
-  HH_ARGSD(mirror, "n : repeat n times (n is even to make periodic; =2 for simple mirror)");
+  HH_ARGSD(mirror, "n : repeat n times (2 for simple mirror)");
   HH_ARGSD(reverse, ": reverse order of frames");
   HH_ARGSD(phaseoffset, "startframe : apply circular shift to frames of loop");
   HH_ARGSP(tradius, "nframes : set temporal crossfade radius");
   HH_ARGSD(tcrossfade, "fbegin fend : temporal crossfade to create loop");
   HH_ARGSD(makeloop, "fbegin fend : gradient-domain loop");
   HH_ARGSC("", ":");
-  HH_ARGSD(color, "r g b : set default color for various operations (default 255's)");
+  HH_ARGSD(color, "r g b : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
-  HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(first_frame, left, top))");
-  HH_ARGSD(boundaryrule, "c : reflected/periodic/clamped/border (for scaling or negative trim/crop)");
+  HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(frame0, left, top))");
+  HH_ARGSD(boundaryrule, "c : reflected/periodic/clamped/border");
+  HH_ARGSC("", "   (for scaling or negative trim/crop)");
   HH_ARGSC("", ":");
   HH_ARGSD(cropsides, "l r t b : crop frames (introduce default color if negative)");
   HH_ARGSD(cropl, "l : crop frames");
@@ -2273,7 +2274,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : imp/box/tri/quad/mitchell/keys/spline/omoms/gauss/preprocess/justspline");
+  HH_ARGSD(filter, "c : set kernel: imp/box/tri/quad/mitchell/keys/spline/");
+  HH_ARGSC("", ":    omoms/gauss/preprocess/justspline (def. spline)");
   HH_ARGSD(scaleunif, "fac : zoom video (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
   HH_ARGSD(scaletox, "x : uniform scale to x width");
@@ -2284,10 +2286,10 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");
-  HH_ARGSD(disassemble, "tilex tiley root_name : break up into multiple video files of this size");
+  HH_ARGSD(disassemble, "tilex tiley root_name : break into multiple video files of this size");
   HH_ARGSD(gridcrop, "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
   HH_ARGSC("", ":");
-  HH_ARGSD(replace, "r g b : replace all pixels matching specified color with this color");
+  HH_ARGSD(replace, "r g b : replace pixels matching '-color' with this color");
   HH_ARGSD(gamma, "v : gammawarp video");
   HH_ARGSC("", ":");
   HH_ARGSD(loadpj, "file.pj{o,r} : read progressive video project file");
@@ -2297,7 +2299,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(savestaticloop, "imagefile : write image for static loop");
   HH_ARGSD(pjcompression, ": analyze compression");
   HH_ARGSD(compressloop, ": compress/decompress loop");
-  HH_ARGSD(remap, ": make all loops start at beginning and pad resulting video");
+  HH_ARGSD(remap, ": make all loops start at beg and pad resulting video");
   HH_ARGSD(render_loops, "nframes : output a video with looping content");
   HH_ARGSD(render_wind, "nframes : introduce temporal warping to simulate wind");
   HH_ARGSD(render_harmonize, "nframes : try to make dynamism uniform");
@@ -2311,8 +2313,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(diff, "video2 : compute difference 128 + video - video2");
   HH_ARGSD(transf, "'frame' : post-multiply RGB vector by a matrix (ranges [0..1])");
   HH_ARGSD(noisegaussian, "sd : introduce white Gaussian noise (in range 0..255)");
-  HH_ARGSD(equalizemedians, ": shift image values at each frame to make frame medians identical");
-  HH_ARGSD(equalizemeans, ": shift image values at each frame to make frame means identical");
+  HH_ARGSD(equalizemedians, ": shift image values to make frame medians identical");
+  HH_ARGSD(equalizemeans, ": shift image values to make frame means identical");
   for (;;) {
     if (args.num() >= 2 && args.peek_string() == "-trunc_begin") {
       args.get_string();

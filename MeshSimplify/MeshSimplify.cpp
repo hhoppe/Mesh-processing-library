@@ -1154,7 +1154,7 @@ void parse_mesh_wedge_identifiers() {
         const WedgeInfo wi = construct_wi(crep, vnors);
         int wid;
         if (nwidfound) {
-          // Array gwinfo is never resized, so locking is unnecessary.
+          // If nwidfound, Array gwinfo is never resized, so locking is unnecessary.
           wid = assertx(to_int(mesh.corner_key(str, crep, "wid")));
           gwinfo[wid] = wi;
         } else {

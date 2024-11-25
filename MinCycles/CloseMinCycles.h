@@ -20,8 +20,9 @@ class CloseMinCycles {
     int num_cycles{std::numeric_limits<int>::max()};        // Maximum number of found cycles.
     int genus{0};                                           // Minimum genus of topologically simplified mesh.
     float frac_cycle_length{1.f};  // By default, find exact minimal cycles (> 1.f means approximate).
-    bool mark_edges_sharp{true};
-    bool mark_faces_filled{true};
+    bool mark_edges_sharp{true};   // Set "sharp" on closed edge cycles.
+    bool mark_faces_filled{true};  // Set "filled" and "handle"/"tunnel" on faces, "filledcenter" on vertex.
+    float frac_offset = 0.f;       // If nonzero, interpenetrate the closed cycles by a fraction of the object bbox.
   };
 
   CloseMinCycles(GMesh& mesh, Options options);
@@ -33,6 +34,7 @@ class CloseMinCycles {
   int _current_genus{std::numeric_limits<int>::max()};
   int _total_handles{0};
   int _total_tunnels{0};
+  float _offset_magnitude{0.f};
   Flag e_joined(Edge e);
   void flood_reinitialize(Vertex vseed);
   Array<Vertex> close_cycle(const CArrayView<Vertex> vertex_loop);

@@ -48,6 +48,11 @@ namespace hh {
 //
 //  Note: After finding shortest cycle, we could keep expanding the BFS for a while so as to update the lower-bound
 //  of additional vertices.  No, this does not help because it does not raise the lower-bound above zero.
+//
+// Example tunnel:
+// MinCycles ~/data/mesh/torus10x10.m -frac_offset .1 | Filtermesh -proc remove_filled_faces | G3d - -key Dm -st torus
+// Example handle:
+// MkApp torus | Filtermesh -froma3d -triang | MinCycles - -frac_offset .1 | Filtermesh -proc remove_filled_faces | G3d - -key Dm -st torus
 
 namespace {
 
@@ -70,7 +75,12 @@ bool difference_is_within_relative_eps(float a, float b, float eps) { return abs
 
 }  // namespace
 
-CloseMinCycles::CloseMinCycles(GMesh& mesh, Options options) : _mesh(mesh), _options(std::move(options)) {}
+CloseMinCycles::CloseMinCycles(GMesh& mesh, Options options) : _mesh(mesh), _options(std::move(options)) {
+  if (_options.frac_offset) {
+    const Bbox bbox{transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); })};
+    _offset_magnitude = _options.frac_offset * bbox.max_side();
+  }
+}
 
 inline Flag CloseMinCycles::e_joined(Edge e) { return _mesh.flags(e).flag(eflag_joined); }
 
@@ -171,6 +181,11 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
       }
       // Label the two vertices at the centers of the face fans.
       _mesh.update_string(vn, "filledcenter", "");
+    }
+    if (_options.frac_offset) {
+      const Vector normal = Vnors(_mesh, vn).unique_nor();
+      const Vector offset_vector = normal * _offset_magnitude * (is_handle ? 1.f : -1.f);
+      for (Vertex v : concatenate(V(vn), _mesh.vertices(vn))) _mesh.set_point(v, _mesh.point(v) + offset_vector);
     }
   }
   {

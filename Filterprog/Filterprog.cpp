@@ -1506,9 +1506,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(view, "s3d_filename : selective refinement");
   HH_ARGSD(consider, "nrecords : skip until at least nrecords");
   HH_ARGSD(animateto, "nfaces : animate vsplits up to nfaces");
-  HH_ARGSP(stringent, "bool : use stringent test for sel. refin.");
-  HH_ARGSF(use_silhouette, ": sel. refin. based on silhouette");
-  HH_ARGSF(use_area, ": sel. refin. based on face area");
+  HH_ARGSP(stringent, "bool : use stringent test for selective refinment");
+  HH_ARGSF(use_silhouette, ": selective refinement based on silhouette");
+  HH_ARGSF(use_area, ": selective refinement based on face area");
   HH_ARGSP(splitcorners, "b : split corners into vertices");
   // HH_TIMER("Filterprog");
   g_header = args.header();

@@ -592,7 +592,8 @@ void CloseMinCycles::find_cycles() {
         break;
       }
       bool restart_at_farthest = true;  // May improve loop if _options.frac_cycle_length > 1.f (e.g. holes3.m).
-      if (!assertw(_options.frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;
+      // if (!assertw(_options.frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;
+      if (!(_options.frac_cycle_length > (1.f + 1e-6f))) restart_at_farthest = false;
       if (restart_at_farthest) vseed = result->farthest_vertex;
       const auto result2 = assertx(min_cycle_from_vertex(vseed, true));
       assertx(result2->search_radius <= sr * (1.f + 1e-6f));

@@ -623,7 +623,7 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
   }
   if (!V4) {
     const EType k_offset_zero{MG::k_offset_zero};  // to avoid warning of redundant cast below
-    parallel_for(range(nnf), [&](const int f) {
+    parallel_for(range(nnf), [&](const int f) {    //
       for_int(y, ny) for_int(x, nx) MG::put(video_offset(f, y, x), 3, k_offset_zero);
     });
   }

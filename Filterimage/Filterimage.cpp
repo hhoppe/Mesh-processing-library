@@ -16,6 +16,7 @@
 #include "libHh/MathOp.h"  // smooth_step(), floor(Vec<>)
 #include "libHh/Matrix.h"
 #include "libHh/MatrixOp.h"  // euclidean_distance_map()
+#include "libHh/MeshSearch.h"
 #include "libHh/Multigrid.h"
 #include "libHh/Parallel.h"
 #include "libHh/Random.h"
@@ -1436,6 +1437,52 @@ void do_shadefancy(Args& args) {
     }
     for_int(c, 3) pix[c] = uint8_t(clamp(vcol[c], 0.f, 1.f) * 255.f + .5f);
   }
+}
+
+Vector interp_f_vector(const GMesh& mesh, Face f, const char* key, const Bary& bary) {
+  const Vec3<Vertex> vertices = mesh.triangle_vertices(f);
+  Vector sum{};
+  for_int(i, 3) {
+    Vertex v = vertices[i];
+    Vector vector;
+    assertx(parse_key_vec(mesh.get_string(v), key, vector));
+    sum += vector * bary[i];
+  }
+  return sum;  // Unnormalized!
+}
+
+// Convert from object-space normal map to tangent-space normal map.
+void do_object_to_tangent_normals(Args& args) {
+  const string mesh_file = args.get_filename();
+  // The mesh must have been processed using "Filtermesh -splitcorners" so that "normal" and "tangent" keys are
+  // defined on vertices rather than corners.  Also, the mesh must have been processed using "Filtermesh
+  // -renamekey v uv P" so that the uv coordinates have replaced the vertex positions.
+  GMesh mesh;
+  mesh.read(RFile(mesh_file)());
+  assertx(all_of(mesh.vertices(), [&](Vertex v) { return GMesh::string_has_key(mesh.get_string(v), "normal"); }));
+  assertx(all_of(mesh.vertices(), [&](Vertex v) { return GMesh::string_has_key(mesh.get_string(v), "tangent"); }));
+  assertx(all_of(mesh.vertices(), [&](Vertex v) { return mesh.point(v)[2] == 0.f; }));
+  const MeshSearch mesh_search(mesh, {});
+  Face hint_f = nullptr;
+  string str;
+  for_coords(image.dims(), [&](const Vec2<int>& yx) {  // parallel??
+    const Pixel& pixel = image[yx];
+    Vector object_space_normal;
+    for_int(c, 3) object_space_normal[c] = float(pixel[c]) / 255.f * 2.f - 1.f;
+    const Point domain_point = concat((convert<float>(yx) + .5f) / convert<float>(image.dims()), V(0.f));
+    auto [f, bary, unused_clp, d2] = mesh_search.search(domain_point, hint_f);
+    hint_f = f;
+    assertx(d2 < 1e-12f);
+    const Vector normal = interp_f_vector(mesh, f, "normal", bary);
+    const Vector tangent = interp_f_vector(mesh, f, "tangent", bary);
+    Vector bitangent = cross(normal, tangent);
+    if (const char* value = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
+      const int sign = to_int(value);
+      assertx(abs(sign) == 1);
+      if (sign < 0) bitangent = -bitangent;
+    }
+    // Create a frame and transform the normal vector??
+  });
 }
 
 void do_cycle(Args& args) {
@@ -3300,6 +3347,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(normalizenor, ": for normal map, normalize |(r, g, b)| to 1");
   HH_ARGSD(shadenor, "dx dy dz : shade normal map given light_dir");
   HH_ARGSD(shadefancy, "'frame' : shade using multiple lights");
+  HH_ARGSD(object_to_tangent_normals, "mesh.m : use mesh tangents to redefine normal map");
   HH_ARGSD(cycle, "n : cycle through colors");
   HH_ARGSD(transf, "'frame' : post-multiply RGB vector by a matrix (ranges [0..1])");
   HH_ARGSD(genpattern, "pat : create procedural pattern ([xydr]h+[slqc])");

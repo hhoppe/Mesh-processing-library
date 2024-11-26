@@ -1318,7 +1318,7 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
   return pixel;
 }
 
-void set_filled_pixels_to_pink(Image& image)  {
+void set_filled_pixels_to_pink(Image& image) {
   assertx(k_color_special_filled[3] == 0);
   const Pixel k_color_pink(255, 192, 203, 255);
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
@@ -1327,7 +1327,7 @@ void set_filled_pixels_to_pink(Image& image)  {
 }
 
 void set_filled_pixels_using_voronoi_dilate(Image& image) {
- // Adapted from "Filterimage -voronoidilate".
+  // Adapted from "Filterimage -voronoidilate".
   HH_TIMER("_voronoi_dilate");
   Matrix<Vec2<int>> mvec(image.dims(), image.dims());
   for (const auto& yx : range(image.dims())) {
@@ -1346,7 +1346,7 @@ void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
     set_filled_pixels_to_pink(image);
   else
     set_filled_pixels_using_voronoi_dilate(image);
- }
+}
 
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
   const Pixel average_pixel = interp(Vector4(pixel0), Vector4(pixel1)).pixel();

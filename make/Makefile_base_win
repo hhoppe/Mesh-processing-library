@@ -23,8 +23,8 @@ CC = cl
 
 # ccommon += -openmp
 ccommon += -EHsc
+ccommon += -FS#  Serialize access to *.pdb files for parallel builds.
 cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
-cxxall += -FS#  Serialize access to *.pdb files for parallel builds.
 
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355
@@ -33,6 +33,7 @@ ifeq ($(plain_compiler),)
   disable_other_warnings += -wd5026 -wd5027# VS 2015
   disable_other_warnings += -wd4599#  "command line argument number ... does not match precompiled header".
   disable_other_warnings += -wd5039 -wd5045 -wd5040#  VS 2019 has bug disabling 5045.
+  disable_other_warnings += -wd4701#  "potentially uninitialized variable" when Vec<> is filled using for_int().
   cxx_thorough_warnings = -Wall $(disable_warnings_in_headers) $(disable_my_warnings) $(disable_other_warnings)
   # cxx_not_needed = -Zc:wchar_t -Zc.forScope -Gd -errorReport:queue
   cwarnings = -W4 $(cxx_thorough_warnings)
@@ -55,6 +56,8 @@ cxxall += $(ccommon)
 c-all += $(ccommon) -wd4255#  For "no function prototype given: converting '()' to '(void)'".
 crel += $(commonrel)
 cdbg += $(commondbg)
+
+cxx_disable_all_warnings = -w
 
 # Define rules for *.obj.
 # %.o : %.cpp

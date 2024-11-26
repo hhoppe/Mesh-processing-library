@@ -48,6 +48,8 @@ c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)
 cdbg += $(commondbg)
 
+cxx_disable_all_warnings = -w
+
 # Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations).
 gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
   -fsigned-zeros -ftrapping-math -fno-associative-math -fno-reciprocal-math

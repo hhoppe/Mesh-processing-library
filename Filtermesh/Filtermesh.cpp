@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <cstring>  // strcmp(), strlen(), etc.
 
+#include "mikktspace.h"
+
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -2824,6 +2826,57 @@ void do_bndpts(Args& args) {
 
 void do_assign_normals() { assign_normals(); }
 
+void do_assign_tangents() {
+  // http://mikktspace.com/
+  // https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.h
+  // https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.c
+  // http://image.diku.dk/projects/media/morten.mikkelsen.08.pdf
+  // https://github.com/KhronosGroup/glTF/issues/1252
+  const auto get_num_faces = [](const SMikkTSpaceContext*) { return mesh.num_faces(); };
+  const auto get_num_vertices_of_face = [](const SMikkTSpaceContext*, int face_index) {
+    Face f = mesh.id_face(face_index + 1);
+    return mesh.num_vertices(f);
+  };
+  const auto get_position = [](const SMikkTSpaceContext*, float position_out[], int face_index, int vert_index) {
+    Face f = mesh.id_face(face_index + 1);
+    const Point& p = mesh.triangle_points(f)[vert_index];
+    ArView(position_out, 3).assign(p);
+  };
+  const auto get_normal = [](const SMikkTSpaceContext*, float normal_out[], int face_index, int vert_index) {
+    Face f = mesh.id_face(face_index + 1);
+    Corner c = mesh.triangle_corners(f)[vert_index];
+    Vector normal;
+    assertx(mesh.parse_corner_key_vec(c, "normal", normal));
+    ArView(normal_out, 3).assign(normal);
+  };
+  const auto get_tex_coord = [](const SMikkTSpaceContext*, float tex_out[], int face_index, int vert_index) {
+    Face f = mesh.id_face(face_index + 1);
+    Corner c = mesh.triangle_corners(f)[vert_index];
+    Uv uv;
+    assertx(mesh.parse_corner_key_vec(c, "uv", uv));
+    ArView(tex_out, 2).assign(uv);
+  };
+  const auto set_tspace_basic = [](const SMikkTSpaceContext*, const float tangent_in[], float sign, int face_index,
+                                   int vert_index) {
+    Face f = mesh.id_face(face_index + 1);
+    Corner c = mesh.triangle_corners(f)[vert_index];
+    const Vector tangent(ArView(tangent_in, 3));
+    string str;
+    mesh.update_string(c, "tangent", csform_vec(str, tangent));
+    assertx(abs(sign) == 1.f);
+    if (sign < 0.f) {
+      if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) assertx(to_int(s) == -1);
+      mesh.update_string(f, "bitangent_sign", "-1");
+    }
+  };
+  SMikkTSpaceInterface interface{
+      get_num_faces, get_num_vertices_of_face, get_position, get_normal, get_tex_coord, set_tspace_basic, nullptr,
+  };
+  const SMikkTSpaceContext context{&interface, nullptr};
+  assertx(genTangSpaceDefault(&context));
+  // Usually followed by "-slowcornermerge", to transfer "tangent" strings to a vertex if same at all its corners.
+}
+
 // *** norgroup
 
 bool ng_orig_sharp(Edge e) {
@@ -3231,6 +3284,29 @@ void do_procedure(Args& args) {
   string name = args.get_string();
   if (0) {
     //
+
+  } else if (name == "show_tangents") {
+    const float max_side = Bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })}.max_side();
+    const A3dVertexColor col = A3dVertexColor(Pixel::blue());
+    const float segment_length = max_side * .01f;
+    for (Vertex v : mesh.vertices()) {
+      Vector tangent;
+      const auto output_segment = [&]() {
+        const Point p1 = mesh.point(v), p2 = p1 + tangent * segment_length;
+        A3dElem el(A3dElem::EType::polyline);
+        el.push(A3dVertex(p1, Vector(0.f, 0.f, 0.f), col));
+        el.push(A3dVertex(p2, Vector(0.f, 0.f, 0.f), col));
+        oa3d.write(el);
+      };
+      if (parse_key_vec(mesh.get_string(v), "tangent", tangent)) {
+        output_segment();
+      } else {
+        for (Corner c : mesh.corners(v)) {
+          assertx(mesh.parse_corner_key_vec(c, "tangent", tangent));
+          output_segment();
+        }
+      }
+    }
 
   } else if (name == "remove_hole_faces") {
     Array<Face> ar_faces;
@@ -4108,8 +4184,70 @@ void do_fromObj(Args& args) {
   if (flip) convex_group_flip_faces(group);
 }
 
-void do_to_obj() {
-  // ??
+string get_first_material_name(const string& mtl_filename) {
+  if (!file_exists(mtl_filename)) return "default_material";
+  RFile fi(mtl_filename);
+  string line;
+  while (my_getline(fi(), line))
+    if (remove_at_start(line, "newmtl ")) return line;
+  assertnever("No 'newmtl' found in '" + mtl_filename + "'");
+}
+
+void do_to_obj(Args& args) {
+  const string mtl_filename = args.get_filename();
+  assertx(!contains(mtl_filename, '/'));  // The material file must be in the local directory.
+
+  const auto add_unique = [&](Vertex v, const char* key, auto& array, auto& indices) {
+    std::decay_t<decltype(array[0])> value;
+    for (Corner c : mesh.corners(v)) {
+      if (mesh.parse_corner_key_vec(c, key, value)) {
+        bool is_new;
+        indices.enter(value, array.num(), is_new);
+        if (is_new) array.push(value);
+      }
+    }
+  };
+
+  Array<Point> points;
+  Array<Uv> uvs;
+  Array<Vector> normals;
+  Map<Vertex, int> index_of_vertex;
+  Map<Vec2<float>, int> index_of_uv;
+  Map<Vec3<float>, int> index_of_normal;
+  for (Vertex v : mesh.ordered_vertices()) {
+    index_of_vertex.enter(v, points.num());
+    points.push(mesh.point(v));
+    add_unique(v, "uv", uvs, index_of_uv);
+    add_unique(v, "normal", normals, index_of_normal);
+  }
+
+  std::cout << sform("# v=%d vt=%d vn=%d f=%d\n", points.num(), uvs.num(), normals.num(), mesh.num_faces());
+  std::cout << sform("mtllib %s\n", mtl_filename.c_str());
+  const string material_name = get_first_material_name(mtl_filename);
+  std::cout << sform("usemtl %s\n", material_name.c_str());
+  for (const Point& p : points) std::cout << sform("v %g %g %g\n", p[0], p[1], p[2]);
+  for (const Uv& uv : uvs) std::cout << sform("vt %g %g\n", uv[0], uv[1]);
+  for (const Vector& normal : normals) std::cout << sform("vn %g %g %g\n", normal[0], normal[1], normal[2]);
+
+  const auto get_index = [&](Corner c, const char* key, const auto& indices) {
+    std::decay_t<decltype(indices.get_one_key())> value;
+    if (!mesh.parse_corner_key_vec(c, key, value)) return 0;
+    return indices.get(value) + 1;
+  };
+
+  for (Face f : mesh.ordered_faces()) {
+    std::cout << "f";
+    for (Corner c : mesh.corners(f)) {
+      std::cout << " " << index_of_vertex.get(mesh.corner_vertex(c)) + 1;
+      const int uv_index = get_index(c, "uv", index_of_uv);
+      const int normal_index = get_index(c, "normal", index_of_normal);
+      if (uv_index > 0) std::cout << "/" << uv_index;
+      if (uv_index == 0 && normal_index > 0) std::cout << "/";
+      if (normal_index > 0) std::cout << "/" << normal_index;
+    }
+    std::cout << "\n";
+  }
+  nooutput = true;
 }
 
 void do_sphparam_to_tangentfield(Args& args) {
@@ -4272,6 +4410,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(mark, ": mark tagged elements on output");
   HH_ARGSD(assign_normals, ": save normals as strings on {v, c}");
+  HH_ARGSD(assign_tangents, ": compute tangent vectors on {v, c}");
   HH_ARGSD(removeinfo, ": remove all info (keys, tags) at {v, f, e, c}");
   HH_ARGSD(removekey, "key : remove key strings on all elements");
   HH_ARGSD(renamekey, "elems oldkey newkey : elems=string{vfec}");

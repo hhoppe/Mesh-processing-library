@@ -45,6 +45,10 @@
   <Import Project="$(LocalRoot)\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="Filtermesh.cpp" />
+    <ClCompile Include="mikktspace.c"><WarningLevel>TurnOffAllWarnings</WarningLevel><!-- /W0 --></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="mikktspace.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">

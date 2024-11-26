@@ -252,7 +252,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
   }
   {
     Array<char> buftmp(k_rgb_header_length - sizeof(rgb_IMAGE), 0);
-    assertt(write_raw(file, ArView(buftmp)));
+    assertt(write_raw(file, buftmp));
   }
   if (!product(image.dims())) return;
   Array<uchar> row(image.xsize());

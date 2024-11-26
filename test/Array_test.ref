@@ -133,7 +133,7 @@ CArrayView<int>(a) = Array<int>(5) {
   13
   14
 }
-ArView(a) = Array<int>(5) {
+CArrayView(a) = Array<int>(5) {
   10
   11
   12
@@ -143,42 +143,42 @@ ArView(a) = Array<int>(5) {
 var(ar) = 2.5
 sqrt(var(ar)) = 1.58114
 rms(ar - 12) = 1.41421
-reverse(ArView(a)) = Array<int>(5) {
+reverse(ArrayView(a)) = Array<int>(5) {
   14
   13
   12
   11
   10
 }
-ArView(a) = Array<int>(5) {
+CArrayView(a) = Array<int>(5) {
   14
   13
   12
   11
   10
 }
-sort(ArView(a)) = Array<int>(5) {
+sort(ArrayView(a)) = Array<int>(5) {
   10
   11
   12
   13
   14
 }
-ArView(a) = Array<int>(5) {
+CArrayView(a) = Array<int>(5) {
   10
   11
   12
   13
   14
 }
-ArView(a) = Array<int>(5) {
+CArrayView(a) = Array<int>(5) {
   14
   13
   12
   11
   10
 }
-ArView(a) = Array<int>(5) {
+CArrayView(a) = Array<int>(5) {
   16
   16
   16

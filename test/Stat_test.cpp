@@ -36,9 +36,9 @@ int main() {
   }
   {
     float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array
-    SHOW(ArView(values));
+    SHOW(CArrayView(values));
     for (float v : values) SHOW(v);
-    HH_RSTAT(Svalues, ArView(values));
+    HH_RSTAT(Svalues, CArrayView(values));
   }
   {
     const float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array

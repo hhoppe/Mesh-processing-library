@@ -95,19 +95,19 @@ int main() {
   {
     int a[5] = {10, 11, 12, 13, 14};  // test C-array
     SHOW(CArrayView<int>(a));
-    SHOW(ArView(a));
+    SHOW(CArrayView(a));
     CArrayView<int> ar(a);
     SHOW(var(ar));
     SHOW(sqrt(var(ar)));
     SHOW(rms(ar - 12));  // rms() and var() have slightly different denominators
-    SHOW(reverse(ArView(a)));
-    SHOW(ArView(a));
-    SHOW(sort(ArView(a)));
-    SHOW(ArView(a));
+    SHOW(reverse(ArrayView(a)));
+    SHOW(CArrayView(a));
+    SHOW(sort(ArrayView(a)));
+    SHOW(CArrayView(a));
     reverse(a);
-    SHOW(ArView(a));
+    SHOW(CArrayView(a));
     fill(a, 16);
-    SHOW(ArView(a));
+    SHOW(CArrayView(a));
   }
   {
     Vec3<int> a(10, 11, 12);

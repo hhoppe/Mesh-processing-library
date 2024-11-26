@@ -146,12 +146,6 @@ template <typename T> CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e
 // Create an ArrayView<T> referencing the single specified element.
 template <typename T> ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
 
-// Construct a CArrayView<T> using a bounded C-array; for use on arguments to help template function deduction.
-template <typename T, size_t n> CArrayView<T> ArView(const T (&a)[n]) { return CArrayView<T>(a, narrow_cast<int>(n)); }
-
-// Construct an ArrayView<T> using a bounded C-array; for use on arguments to help template function deduction.
-template <typename T, size_t n> ArrayView<T> ArView(T (&a)[n]) { return ArrayView<T>(a, narrow_cast<int>(n)); }
-
 // Determine if two views have any overlap (to avoid aliasing issues).
 template <typename T> bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
   return v1.begin() < v2.end() && v2.begin() < v1.end();
@@ -551,7 +545,10 @@ template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // Implemented by C
 
 // Template deduction guides:
 template <typename T> CArrayView(const T* a, int) -> CArrayView<T>;
+template <typename T, size_t n> CArrayView(const T (&)[n]) -> CArrayView<T>;
+template <typename T, size_t n> CArrayView(T (&)[n]) -> CArrayView<T>;
 template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
+template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
 
 //----------------------------------------------------------------------------
 

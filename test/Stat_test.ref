@@ -8,7 +8,7 @@ end
 before Stot
 # Svar:               (100    )           0:99           av=49.5           sd=29.011492
 # Ssquare:            (100    )           0:99           av=49.5           sd=29.011492
-ArView(values) = Array<float>(5) {
+CArrayView(values) = Array<float>(5) {
   2
   4
   4

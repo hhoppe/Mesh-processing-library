@@ -9,9 +9,9 @@
   const auto xydata = {V(0.f, 4.f), V(1.f, 4.f), V(2.f, 5.f), V(3.f, 4.f)};
   using Eval = LinearRegressionPolynomialOrder<2>;
   LinearRegression<2, 1, Eval> regression(xydata.num());
-  for (auto xy : xydata) regression.enter(ArView(xy[0]), xy[1]);
+  for (auto xy : xydata) regression.enter(xy.head<1>(), xy[1]);
   auto ar = regression.get_solution();
-  for (auto xy : xydata) showf("x=%g y=%g yfit=%g\n", xy[0], xy[1], dot(ar, Eval()(ArView(xy[0]))));
+  for (auto xy : xydata) showf("x=%g y=%g yfit=%g\n", xy[0], xy[1], dot(ar, Eval()(xy.head<1>())));
 }
 #endif
 

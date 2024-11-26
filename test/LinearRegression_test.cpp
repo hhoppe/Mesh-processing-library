@@ -9,11 +9,11 @@ namespace {
 template <int N> void try_xy(CArrayView<Vec2<float>> xydata) {
   using Eval = LinearRegressionPolynomialOrder<N>;
   LinearRegression<N, 1, Eval> regression(xydata.num());
-  for (auto xy : xydata) regression.enter(ArView(xy[0]), xy[1]);
+  for (auto xy : xydata) regression.enter(xy.head<1>(), xy[1]);
   auto ar = regression.get_solution();
   SHOW(ar);
   for (auto xy : xydata) {
-    float yfit = float(dot(ar, Eval()(ArView(xy[0]))));
+    float yfit = float(dot(ar, Eval()(xy.head<1>())));
     showf("x=%g  y=%g  yfit=%8g\n", xy[0], xy[1], yfit);
   }
 }

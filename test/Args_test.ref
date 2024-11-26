@@ -1,7 +1,7 @@
 args.get_string() = string
 args.get_int() = 3
 ****
-ArView(argv, argc) = Array<const char*>(1) {
+CArrayView(argv, argc) = Array<const char*>(1) {
   Args_test
 }
 optsparse=1 ar_unrecog=Array<std::string>(1) {
@@ -13,7 +13,7 @@ fa[0]=0 fa[1]=0
 fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ****
-ArView(argv, argc) = Array<const char*>(2) {
+CArrayView(argv, argc) = Array<const char*>(2) {
   Args_test
   -?
 }
@@ -39,7 +39,7 @@ fa[0]=0 fa[1]=0
 fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ****
-ArView(argv, argc) = Array<const char*>(9) {
+CArrayView(argv, argc) = Array<const char*>(9) {
   Args_test
   -unkflag
   u1
@@ -64,7 +64,7 @@ fa[0]=0 fa[1]=0
 fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ****
-ArView(argv, argc) = Array<const char*>(8) {
+CArrayView(argv, argc) = Array<const char*>(8) {
   Args_test
   -farc
   2
@@ -87,7 +87,7 @@ fa[0]=0 fa[1]=0
 fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ****
-ArView(argv, argc) = Array<const char*>(3) {
+CArrayView(argv, argc) = Array<const char*>(3) {
   Args_test
   -flap
   -flag
@@ -101,7 +101,7 @@ fa[0]=0 fa[1]=0
 fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ****
-ArView(argv, argc) = Array<const char*>(2) {
+CArrayView(argv, argc) = Array<const char*>(2) {
   Args_test
   -show1p1
 }
@@ -116,7 +116,7 @@ fb[0]=0 fb[1]=0
 fc[0]=0 fc[1]=0
 ******
 ****
-ArView(argv, argc) = Array<const char*>(18) {
+CArrayView(argv, argc) = Array<const char*>(18) {
   Args_test
   file
   file.vlp
@@ -148,7 +148,7 @@ reading file args.get_filename()=file.png vec2=[1, 2]
 optsparse = 1
 flag2=1 vec2=[1, 2]
 ****
-ArView(argv, argc) = Array<const char*>(6) {
+CArrayView(argv, argc) = Array<const char*>(6) {
   Args_test
   file
   file.vlp
@@ -161,7 +161,7 @@ reading vlp args.get_filename()=file.vlp vec2=[0, 0]
 Args_test : ParseArgs error : option not recognized at '-unknown.string'.
 (Use 'Args_test -?' to view options.)
 ****
-ArView(argv, argc) = Array<const char*>(7) {
+CArrayView(argv, argc) = Array<const char*>(7) {
   Args_test
   file
   --
@@ -176,7 +176,7 @@ string args.get_string()=-unknown.string vec2=[0, 0]
 Args_test : ParseArgs error : invalid filename when parsing option '-showar' (interpreted as '*').
 (Use 'Args_test -?' to view options.)
 ****
-ArView(argv, argc) = Array<const char*>(6) {
+CArrayView(argv, argc) = Array<const char*>(6) {
   Args_test
   file
   --

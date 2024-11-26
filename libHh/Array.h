@@ -140,12 +140,6 @@ template <typename T> class ArrayView : public CArrayView<T> {
   type& operator=(const type&) = default;
 };
 
-// Construct a CArrayView<T> using a base pointer and number of elements, inferring type T automatically.
-template <typename T> CArrayView<T> ArView(const T* a, int n) { return CArrayView<T>(a, n); }
-
-// Construct an ArrayView<T> using a base pointer and number of elements, inferring type T automatically.
-template <typename T> ArrayView<T> ArView(T* a, int n) { return ArrayView<T>(a, n); }
-
 // Create a CArrayView<T> referencing the single specified element.
 template <typename T> CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
 
@@ -554,6 +548,10 @@ template <typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a
 template <typename T> HH_DECLARE_OSTREAM_EOL(CArrayView<T>);
 template <typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>);  // Implemented by CArrayView<T>.
 template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // Implemented by CArrayView<T>.
+
+// Template deduction guides:
+template <typename T> CArrayView(const T* a, int) -> CArrayView<T>;
+template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
 
 //----------------------------------------------------------------------------
 

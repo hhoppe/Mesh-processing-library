@@ -180,9 +180,9 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     lls.enter_a_rc(1, 3, 1.f);
     lls.enter_a_rc(2, 3, 1.f);
     lls.enter_a_rc(3, 3, 0.f);
-    lls.enter_b_r(0, ArView(&p0[ngeom], nattrib));
-    lls.enter_b_r(1, ArView(&p1[ngeom], nattrib));
-    lls.enter_b_r(2, ArView(&p2[ngeom], nattrib));
+    lls.enter_b_r(0, CArrayView(&p0[ngeom], nattrib));
+    lls.enter_b_r(1, CArrayView(&p1[ngeom], nattrib));
+    lls.enter_b_r(2, CArrayView(&p2[ngeom], nattrib));
     // Row 3 of right-hand-side is kept zero.
     if (!lls.solve()) {
       Warning("set_distance_hh99: lls.solve() failed");
@@ -263,7 +263,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   }
   for_int(i, n) lls.enter_b_rc(i, 0, float(-_b[i]));
   if (!lls.solve()) return false;
-  lls.get_x_c(0, ArView(minp, n));
+  lls.get_x_c(0, ArrayView(minp, n));
   return true;
 }
 
@@ -299,7 +299,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   }
   for_int(i, n - nf) lls.enter_b_rc(i, 0, float(b[i]));
   if (!lls.solve()) return false;
-  lls.get_x_c(0, ArView(&minp[nf], n - nf));
+  lls.get_x_c(0, ArrayView(&minp[nf], n - nf));
   return true;
 }
 
@@ -369,10 +369,10 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     for_int(k, n) v += -zt[i][k] * _b[k];
     lls.enter_b_rc(i, 0, float(v));
   }
-  lls.enter_a_r(n - 1, ArView(lf, n));
+  lls.enter_a_r(n - 1, CArrayView(lf, n));
   lls.enter_b_rc(n - 1, 0, -lf[n]);
   if (!lls.solve()) return false;
-  lls.get_x_c(0, ArView(minp, n));
+  lls.get_x_c(0, ArrayView(minp, n));
   return true;
 }
 

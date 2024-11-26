@@ -421,7 +421,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
         assertt(marker->data_length >= 2);
         if (marker->data[0] == 'E' && marker->data[1] == 'x') {
           if (env_jpg_debug()) SHOWL;
-          image.attrib().exif_data = ArView(marker->data, marker->data_length);  // copy the data
+          image.attrib().exif_data = CArrayView(marker->data, marker->data_length);  // copy the data
         }
       }
     }

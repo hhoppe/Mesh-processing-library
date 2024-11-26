@@ -18,7 +18,7 @@ bool flag2 = false;
 Vec2<int> vec2 = {0, 0};
 
 void phase1(int argc, const char** argv) {
-  SHOW(ArView(argv, argc));
+  SHOW(CArrayView(argv, argc));
   ParseArgs args(argc, argv);
   bool flag = false, flap = false, flac = false;
   int val1 = 0, val2 = 0;
@@ -54,7 +54,7 @@ void phase2(int argc, const char** argv) {
   const auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), vec2); };
   const auto do_file = [](Args& args) { SHOW("reading file", args.get_filename(), vec2); };
   const auto do_string = [](Args& args) { SHOW("string", args.get_string(), vec2); };
-  SHOW(ArView(argv, argc));
+  SHOW(CArrayView(argv, argc));
   ParseArgs args(argc, argv);
   HH_ARGSF(flag2, ": enable flag");
   HH_ARGSP(vec2, "i1 i2 : set two coefficients");

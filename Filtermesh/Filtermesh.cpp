@@ -2840,27 +2840,27 @@ void do_assign_tangents() {
   const auto get_position = [](const SMikkTSpaceContext*, float position_out[], int face_index, int vert_index) {
     Face f = mesh.id_face(face_index + 1);
     const Point& p = mesh.triangle_points(f)[vert_index];
-    ArView(position_out, 3).assign(p);
+    ArrayView(position_out, 3).assign(p);
   };
   const auto get_normal = [](const SMikkTSpaceContext*, float normal_out[], int face_index, int vert_index) {
     Face f = mesh.id_face(face_index + 1);
     Corner c = mesh.triangle_corners(f)[vert_index];
     Vector normal;
     assertx(mesh.parse_corner_key_vec(c, "normal", normal));
-    ArView(normal_out, 3).assign(normal);
+    ArrayView(normal_out, 3).assign(normal);
   };
   const auto get_tex_coord = [](const SMikkTSpaceContext*, float tex_out[], int face_index, int vert_index) {
     Face f = mesh.id_face(face_index + 1);
     Corner c = mesh.triangle_corners(f)[vert_index];
     Uv uv;
     assertx(mesh.parse_corner_key_vec(c, "uv", uv));
-    ArView(tex_out, 2).assign(uv);
+    ArrayView(tex_out, 2).assign(uv);
   };
   const auto set_tspace_basic = [](const SMikkTSpaceContext*, const float tangent_in[], float sign, int face_index,
                                    int vert_index) {
     Face f = mesh.id_face(face_index + 1);
     Corner c = mesh.triangle_corners(f)[vert_index];
-    const Vector tangent(ArView(tangent_in, 3));
+    const Vector tangent(CArrayView(tangent_in, 3));
     string str;
     mesh.update_string(c, "tangent", csform_vec(str, tangent));
     assertx(abs(sign) == 1.f);

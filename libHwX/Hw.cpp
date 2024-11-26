@@ -644,7 +644,7 @@ void Hw::handle_key() {
         default: void();
       }
     }
-    if (_hwdebug) SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(ArView<char>(s.data(), s.size()))));
+    if (_hwdebug) SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(CArrayView<char>(s.data(), s.size()))));
   }
   // (keysym>=XK_space && keysym<=XK_asciitilde)
   if (s == "") return;  // e.g. 'shift' key

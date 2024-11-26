@@ -3959,7 +3959,7 @@ EcolResult try_ecol(Edge e, bool commit) {
             for_int(c, k_qemsmax) constr[c] = 0.f;
             for_int(c, 3) constr[c] = lfvol.v[c];
             constr[qems] = lfvol.offset;
-            // auto constrv = ArView(constr, qems + 1);
+            // auto constrv = ArrayView(constr, qems + 1);
             if (1 && nw == 1) {
               success = nn.ar_wq[0]->fast_minp_constr_lf(minp[0].data(), constr.data());
               // 2005-10-19 sometimes never returns success if qemvolume == 1 and mesh has boundaries.

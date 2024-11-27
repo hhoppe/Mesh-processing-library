@@ -1,6 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <charconv>  // to_chars(), chars_format
-#include <optional>
 
 #include "MeshSimplify/BQem.h"
 #include "libHh/A3dStream.h"  // A3dColor

@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHWWINDOWS_HW_H_
 #define MESH_PROCESSING_LIBHWWINDOWS_HW_H_
 
-#include <optional>
-
 // #define WIN32_LEAN_AND_MEAN  // not possible
 #undef NOGDI
 #define Polygon Win32_Polygon  // avoid name collision on symbol Polygon

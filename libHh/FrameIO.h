@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_FRAMEIO_H_
 #define MESH_PROCESSING_LIBHH_FRAMEIO_H_
 
-#include <optional>
-
 #include "libHh/Geometry.h"
 
 namespace hh {

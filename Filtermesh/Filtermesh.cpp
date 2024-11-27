@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <cstring>  // strcmp(), strlen(), etc.
 
-#include "mikktspace.h"
+#include "mikktspace.h"  // Canonical computation of tangent vectors at mesh corners.
 
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
@@ -2879,7 +2879,7 @@ void do_assign_tangents() {
 
 // *** norgroup
 
-bool ng_orig_sharp(Edge e) {
+bool norgroup_orig_sharp(Edge e) {
   assertx(!mesh.is_boundary(e));
   if (mesh.flags(e).flag(GMesh::eflag_sharp)) return true;
   if (!same_string(mesh.get_string(mesh.ccw_corner(mesh.vertex1(e), e)),
@@ -2920,7 +2920,7 @@ void do_norgroup() {
           // mesh.update_string(f, "norgroup", csform(str, "%d", norgroup));
           for (Edge e : mesh.edges(f)) {
             if (mesh.is_boundary(e)) continue;
-            if (!ng_orig_sharp(e)) {
+            if (!norgroup_orig_sharp(e)) {
               Face f2 = mesh.opp_face(f, e);
               bool is_new;
               mapfg.enter(f2, norgroup, is_new);
@@ -2942,7 +2942,7 @@ void do_norgroup() {
       int norgroup2 = mapfg.get(mesh.face2(e));
       bool b_edge_sharp = norgroup1 != norgroup2;
       // bool b_edge_sharp = !same_string(mesh.get_string(mesh.face1(e)), mesh.get_string(mesh.face2(e)));
-      if (!ng_orig_sharp(e)) {
+      if (!norgroup_orig_sharp(e)) {
         if (b_edge_sharp) ncreasenew++;
       } else {
         ncrease++;

@@ -118,8 +118,9 @@ class ThreadPoolIndexedTask : noncopyable {
 template <typename Iterator> class Subrange {
  public:
   Subrange(Iterator begin_, Iterator end_) : _begin(begin_), _end(end_) {}
-  auto begin() { return _begin; }
-  auto end() { return _end; }
+  auto begin() const { return _begin; }
+  auto end() const { return _end; }
+  auto size() const { return end() - begin(); }
 
  private:
   Iterator _begin, _end;

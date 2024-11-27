@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_G3DOGL_HB_H_
 #define MESH_PROCESSING_G3DOGL_HB_H_
 
-#include <optional>
-
 #include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"

@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_POLYGON_H_
 #define MESH_PROCESSING_LIBHH_POLYGON_H_
 
-#include <optional>
-
 #include "libHh/Bbox.h"
 #include "libHh/Geometry.h"
 #include "libHh/PArray.h"

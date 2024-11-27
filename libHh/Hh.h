@@ -58,6 +58,7 @@
 #include <iostream>   // ostream, cout, operator<<(ostream&), etc.
 #include <limits>     // numeric_limits<>
 #include <memory>     // unique_ptr<>
+#include <optional>   // optional
 #include <sstream>    // stringstream
 #include <stdexcept>  // runtime_error
 #include <string>     // string
@@ -385,6 +386,12 @@ template <typename T> details::Range<T> range(T stop) { return details::Range<T>
 
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
+
+// Create an optional object if and only if condition is true.
+template <typename T, typename... Args> std::optional<T> make_optional_if(bool condition, Args&&... args) {
+  if (condition) return std::make_optional<T>(std::forward<Args>(args)...);
+  return {};
+}
 
 // *** Functions defined in Hh.cpp.
 

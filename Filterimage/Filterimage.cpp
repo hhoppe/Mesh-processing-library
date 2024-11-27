@@ -1439,7 +1439,7 @@ void do_shadefancy(Args& args) {
   }
 }
 
-Vector interp_f_vector(const GMesh& mesh, Face f, const char* key, const Bary& bary) {
+Vector unnormalized_interpolated_vector(const GMesh& mesh, Face f, const char* key, const Bary& bary) {
   const Vec3<Vertex> vertices = mesh.triangle_vertices(f);
   Vector sum{};
   for_int(i, 3) {
@@ -1448,40 +1448,112 @@ Vector interp_f_vector(const GMesh& mesh, Face f, const char* key, const Bary& b
     assertx(parse_key_vec(mesh.get_string(v), key, vector));
     sum += vector * bary[i];
   }
-  return sum;  // Unnormalized!
+  return sum;
 }
 
-// Convert from object-space normal map to tangent-space normal map.
+int face_bitangent_sign(const GMesh& mesh, Face f, string& str) {
+  const int k_default_sign = 1;
+  if (const char* value = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
+    const int sign = to_int(value);
+    assertx(abs(sign) == 1);
+    return sign;
+  }
+  return k_default_sign;
+}
+
+// The mesh must have been processed using "Filtermesh -splitcorners -renamekey v uv P" so that (1) "normal"
+// and "tangent" keys are defined on (split) vertices rather than corners and (2) the uv coordinates have been
+// copied to the vertex positions.
+//
+// References:
+// https://www.reddit.com/r/GraphicsProgramming/comments/z2khzc/gltf_tangent_space_normals_with_directx_11/
+// http://www.thetenthplanet.de/archives/1180
+// https://github.com/KhronosGroup/glTF/issues/2056
+// Nice: https://bgolus.medium.com/generating-perfect-normal-maps-for-unity-f929e673fc57
+// - Always triangulate, to avoid quad ambiguities.
+// - Do not explicitly store tangents; assume that they are computed by the viewer using MikkTSpace.
+// - Use OpenGL X+Y+Z+ for normal map orientation.
+//    - Right-handed, positive green channel: OpenGL apps, Blender, Maya, Modo, Toolbag, Unity.
+//    - Left-handed, negative green channel: DirectX apps, 3DStudio Max, CryEngine, Source Engine, Unreal Engine.
+// - Normalize the pixel-interpolated normal and tangent in the pixel shader?  No.
+// - Compute the bitangent per-vertex or per-pixel/fragment?  The trend is per-pixel.  Blender is per-pixel.
+// https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+// https://80.lv/articles/tutorial-types-of-normal-maps-common-problems/
+//
+// k_flip_green_channel: true for Windows 3D viewer; false for Blender (unless inverting Green using RGB Curves).
+
+// Convert an object-space normal map to a tangent-space normal map.
 void do_object_to_tangent_normals(Args& args) {
   const string mesh_file = args.get_filename();
-  // The mesh must have been processed using "Filtermesh -splitcorners" so that "normal" and "tangent" keys are
-  // defined on vertices rather than corners.  Also, the mesh must have been processed using "Filtermesh
-  // -renamekey v uv P" so that the uv coordinates have replaced the vertex positions.
+  const bool k_flip_green_channel = false;
+  const bool k_per_pixel_bitangent = false;
+  const bool k_renormalize_tbn_per_pixel = false;
+  const bool k_assume_positive_sign = true;
   GMesh mesh;
   mesh.read(RFile(mesh_file)());
-  assertx(all_of(mesh.vertices(), [&](Vertex v) { return GMesh::string_has_key(mesh.get_string(v), "normal"); }));
-  assertx(all_of(mesh.vertices(), [&](Vertex v) { return GMesh::string_has_key(mesh.get_string(v), "tangent"); }));
-  assertx(all_of(mesh.vertices(), [&](Vertex v) { return mesh.point(v)[2] == 0.f; }));
-  const MeshSearch mesh_search(mesh, {});
-  Face hint_f = nullptr;
-  string str;
-  for_coords(image.dims(), [&](const Vec2<int>& yx) {  // parallel??
-    const Pixel& pixel = image[yx];
-    Vector object_space_normal;
-    for_int(c, 3) object_space_normal[c] = float(pixel[c]) / 255.f * 2.f - 1.f;
-    const Point domain_point = concat((convert<float>(yx) + .5f) / convert<float>(image.dims()), V(0.f));
-    auto [f, bary, unused_clp, d2] = mesh_search.search(domain_point, hint_f);
-    hint_f = f;
-    assertx(d2 < 1e-12f);
-    const Vector normal = interp_f_vector(mesh, f, "normal", bary);
-    const Vector tangent = interp_f_vector(mesh, f, "tangent", bary);
-    Vector bitangent = cross(normal, tangent);
-    if (const char* value = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
-      const int sign = to_int(value);
-      assertx(abs(sign) == 1);
-      if (sign < 0) bitangent = -bitangent;
+  {
+    string str;
+    if (k_assume_positive_sign)
+      for (Face f : mesh.faces()) assertx(face_bitangent_sign(mesh, f, str) == 1);
+    for (Vertex v : mesh.vertices()) {
+      assertx(mesh.point(v)[2] == 0.f);
+      Vector normal, tangent;
+      assertx(parse_key_vec(mesh.get_string(v), "normal", normal));
+      assertx(parse_key_vec(mesh.get_string(v), "tangent", tangent));
+      assertx(k_assume_positive_sign);
+      const Vector bitangent = cross(normal, tangent);
+      mesh.update_string(v, "bitangent", csform_vec(str, bitangent));
     }
-    // Create a frame and transform the normal vector??
+  }
+  const MeshSearch mesh_search(mesh, {});
+  // const int thread_index = 0; for_each(V(range(image.ysize())), [&](auto subrange) {
+  parallel_for_chunk(range(image.ysize()), get_max_threads(), [&](int thread_index, auto subrange) {
+    string str;
+    Face hint_f = nullptr;
+    SGrid<float, 3, 3> tbn_inverse;
+    auto cprogress = make_optional_if<ConsoleProgress>(!thread_index);
+    for (const int y : subrange) {
+      if (cprogress) cprogress->update(float(y - *subrange.begin()) / subrange.size());
+      for_int(x, image.xsize()) {
+        // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
+        const int yy = image.ysize() - 1 - y;
+        Pixel& pixel = image[yy][x];
+        Vector object_space_detail_normal = normalized(convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f);
+        if (0) object_space_detail_normal *= 0.45f;  // Try avoiding clamping of the coordinates; it does not help.
+        const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
+        auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
+        hint_f = f;
+        assertx(d2 < 1e-10f);
+        const auto renorm = [&](const Vector& vec) { return k_renormalize_tbn_per_pixel ? normalized(vec) : vec; };
+        const Vector normal = renorm(unnormalized_interpolated_vector(mesh, f, "normal", bary));
+        const Vector tangent = renorm(unnormalized_interpolated_vector(mesh, f, "tangent", bary));
+        const Vector interpolated_bitangent = unnormalized_interpolated_vector(mesh, f, "bitangent", bary);
+        const Vector pixel_computed_bitangent = cross(normal, tangent) * float(face_bitangent_sign(mesh, f, str));
+        const Vector bitangent = renorm(k_per_pixel_bitangent ? pixel_computed_bitangent : interpolated_bitangent);
+        // Although the normal and tangent at each vertex are orthogonal, the interpolated normal and tangent are not.
+        const SGrid<float, 3, 3> tbn_non_ortho = V<Vec3<float>>(tangent, bitangent, normal);
+        Vector detail_normal_in_tbn;
+        if (0) {  // Simple projection, which (incorrectly) assumes that the TBN frame is orthogonal.
+          mat_mul(tbn_non_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
+        } else if (1) {  // Map through the transpose of the TBN frame inverse.
+          assertx(invert(tbn_non_ortho.const_view(), tbn_inverse.view()));
+          mat_mul(object_space_detail_normal.const_view(), tbn_inverse.const_view(), detail_normal_in_tbn.view());
+        } else {  // Solution suggested in https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.h
+          assertx(!k_renormalize_tbn_per_pixel);
+          // Is it really an "exact inverse of pixel shader"?
+          const SGrid<float, 3, 3> tbn_ortho =
+              V<Vec3<float>>(cross(bitangent, normal), cross(normal, tangent), cross(tangent, bitangent));
+          const float sign = dot(tangent, tbn_ortho[0]) < 0.f ? -1.f : 1.f;
+          if (k_assume_positive_sign) assertx(sign == 1.f);
+          mat_mul(tbn_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
+          if (!k_assume_positive_sign) detail_normal_in_tbn = sign * detail_normal_in_tbn;
+        }
+        // It is always OK to rescale the vector because the 3x3 transform is linear even if non-orthogonal.
+        if (1) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
+        if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
+        pixel = Vector4(concat((detail_normal_in_tbn + 1.f) / 2.f, V(1.f))).pixel();
+      }
+    }
   });
 }
 

@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_G3DOGL_G3D_H_
 #define MESH_PROCESSING_G3DOGL_G3D_H_
 
-#include <optional>
-
 #include "G3dOGL/HB.h"
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"

@@ -2,8 +2,6 @@
 #ifndef MESH_PROCESSING_LIBHH_TRIANGLEFACESPATIAL_H_
 #define MESH_PROCESSING_LIBHH_TRIANGLEFACESPATIAL_H_
 
-#include <optional>
-
 #include "libHh/Facedistance.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"

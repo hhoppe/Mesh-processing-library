@@ -1506,8 +1506,10 @@ void do_object_to_tangent_normals(Args& args) {
     }
   }
   const MeshSearch mesh_search(mesh, {});
+  const int num_threads = get_max_threads();
+  // By-value capture of `k_per_pixel_bitangent` to overcome internal compiler bug in mingw.
   // const int thread_index = 0; for_each(V(range(image.ysize())), [&](auto subrange) {
-  parallel_for_chunk(range(image.ysize()), get_max_threads(), [&](int thread_index, auto subrange) {
+  parallel_for_chunk(range(image.ysize()), num_threads, [&, k_per_pixel_bitangent](int thread_index, auto subrange) {
     string str;
     Face hint_f = nullptr;
     SGrid<float, 3, 3> tbn_inverse;
@@ -1519,7 +1521,6 @@ void do_object_to_tangent_normals(Args& args) {
         const int yy = image.ysize() - 1 - y;
         Pixel& pixel = image[yy][x];
         Vector object_space_detail_normal = normalized(convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f);
-        if (0) object_space_detail_normal *= 0.45f;  // Try avoiding clamping of the coordinates; it does not help.
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
         auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
         hint_f = f;

@@ -224,7 +224,7 @@ void SubMesh::subdivide_n(int nsubdiv, int limit, float cosang, bool triang) {
 
 void SubMesh::subdivide_aux(float cosang, Mvcvh* pmconv) {
   {
-    unique_ptr<Mvcvh> tmconv = !pmconv ? make_unique<Mvcvh>() : nullptr;
+    auto tmconv = make_optional_if<Mvcvh>(!pmconv);
     Mvcvh& mconv = pmconv ? *pmconv : *tmconv;
     if (cosang < .99999f) {
       // Update geometry so that EdgeDihedralCos makes sense.

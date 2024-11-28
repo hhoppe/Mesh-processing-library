@@ -2,7 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_VEC_H_
 #define MESH_PROCESSING_LIBHH_VEC_H_
 
-#include "libHh/Array.h"  // ArrayView<>, CArrayView<>
+#include "libHh/Advanced.h"  // my_hash(), hash_combine()
+#include "libHh/Array.h"     // ArrayView<>, CArrayView<>
 
 namespace hh {
 
@@ -572,19 +573,19 @@ SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
 // Enable structured bindings.
 namespace std {
 
-template <typename T, int n> struct tuple_size<hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
+template <typename T, int n> struct tuple_size<::hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
 
-template <std::size_t Index, typename T, int n> struct tuple_element<Index, hh::Vec<T, n>> { using type = T; };
+template <std::size_t Index, typename T, int n> struct tuple_element<Index, ::hh::Vec<T, n>> { using type = T; };
 
 }  // namespace std
 
 //----------------------------------------------------------------------------
 
 namespace std {
-template <typename T, int n> struct hash<hh::Vec<T, n>> {
-  size_t operator()(const hh::Vec<T, n>& ar) const {
-    size_t h = hash<T>()(ar[0]);
-    for_intL(i, 1, n) h = h * 2039 + hash<T>()(ar[i]);
+template <typename T, int n> struct hash<::hh::Vec<T, n>> {
+  size_t operator()(const ::hh::Vec<T, n>& ar) const {
+    size_t h = 0;
+    for_int(i, n) h = ::hh::hash_combine(h, ar[i]);
     return h;
   }
 };

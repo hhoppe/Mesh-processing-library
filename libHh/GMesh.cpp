@@ -47,7 +47,7 @@ void GMesh::copy(const GMesh& m) {
 }
 
 void GMesh::merge(const GMesh& mo, Map<Vertex, Vertex>* pmvvn) {
-  unique_ptr<Map<Vertex, Vertex>> tmvvn = !pmvvn ? make_unique<Map<Vertex, Vertex>>() : nullptr;
+  auto tmvvn = make_optional_if<Map<Vertex, Vertex>>(!pmvvn);
   Map<Vertex, Vertex>& mvvn = pmvvn ? *pmvvn : *tmvvn;
   for (Vertex vo : mo.ordered_vertices()) {
     Vertex vn = create_vertex();

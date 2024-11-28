@@ -16,7 +16,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
   string filename = pfilename;
   const bool ldebug = getenv_bool("FFMPEG_DEBUG");
   if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to read image content");
-  unique_ptr<TmpFile> tmpfile;
+  std::optional<TmpFile> tmpfile;
   if (file_requires_pipe(filename)) {
     RFile fi(filename);
     int c = fi().peek();
@@ -25,7 +25,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     if (attrib().suffix == "")
       throw std::runtime_error(
           sform("Peeked image format (c=%d) in pipe '%s' is not recognized", c, filename.c_str()));
-    tmpfile = make_unique<TmpFile>(attrib().suffix, fi());
+    tmpfile.emplace(attrib().suffix, fi());
     filename = tmpfile->filename();
   }
   if (!file_exists(filename)) throw std::runtime_error("Image file '" + filename + "' does not exist");
@@ -107,9 +107,9 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
   if (suffix() == "") const_cast<Image&>(*this).set_suffix(to_lower(get_path_extension(filename)));  // mutable
   if (suffix() == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
   if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to write image content");
-  unique_ptr<TmpFile> tmpfile;
+  std::optional<TmpFile> tmpfile;
   if (file_requires_pipe(filename)) {
-    tmpfile = make_unique<TmpFile>(suffix());
+    tmpfile.emplace(suffix());
     filename = tmpfile->filename();
   }
   if (attrib().exif_data.num()) Warning("Image EXIF data lost in image_write_file_ffmpeg");

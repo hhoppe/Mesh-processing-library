@@ -2869,7 +2869,7 @@ void do_assign_tangents() {
       mesh.update_string(f, "bitangent_sign", "-1");
     }
   };
-  SMikkTSpaceInterface interface{
+  SMikkTSpaceInterface interface = {
       get_num_faces, get_num_vertices_of_face, get_position, get_normal, get_tex_coord, set_tspace_basic, nullptr,
   };
   const SMikkTSpaceContext context{&interface, nullptr};

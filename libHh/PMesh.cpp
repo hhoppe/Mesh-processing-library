@@ -1663,7 +1663,7 @@ void PMeshRStream::read_base_mesh(AWMesh* bmesh) {
     if (bmesh) *bmesh = _pm->_base_mesh;
   } else {
     if (!_pm && !bmesh) Warning("strange, why are we doing this?");
-    unique_ptr<AWMesh> tbmesh = !_pm && !bmesh ? make_unique<AWMesh>() : nullptr;
+    auto tbmesh = make_optional_if<AWMesh>(!_pm && !bmesh);
     AWMesh& rbmesh = _pm ? _pm->_base_mesh : bmesh ? *bmesh : *tbmesh;
     rbmesh.read(*_is, _info);
     if (_pm && bmesh) *bmesh = _pm->_base_mesh;

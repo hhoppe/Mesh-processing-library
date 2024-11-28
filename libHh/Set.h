@@ -15,7 +15,7 @@
     unsigned _v1, _v2;
   };
   struct hash_mypair {
-    size_t operator()(const mypair& e) const { return hash_combine(my_hash(e._v1), e._v2); }
+    size_t operator()(const mypair& e) const { return hash_combine(hash_combine(0, e._v1), e._v2); }
   };
   struct equal_mypair {
     bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1 == e2._v1 && e1._v2 == e2._v2; }

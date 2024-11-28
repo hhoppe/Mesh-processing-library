@@ -9,11 +9,11 @@
 using namespace hh;
 
 namespace std {
-template <> struct hash<Vector> {
-  size_t operator()(const Vector& p) const { return std::hash<float>()(p[0]); }
+template <> struct hash<::hh::Vector> {
+  size_t operator()(const ::hh::Vector& p) const { return ::hh::my_hash(p[0]); }
 };
-template <> struct equal_to<Vector> {
-  bool operator()(const Vector& p1, const Vector& p2) const { return !compare(p1, p2, 1e-4f); }
+template <> struct equal_to<::hh::Vector> {
+  bool operator()(const ::hh::Vector& p1, const ::hh::Vector& p2) const { return !::hh::compare(p1, p2, 1e-4f); }
 };
 }  // namespace std
 

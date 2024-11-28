@@ -3,6 +3,7 @@
 
 #include <type_traits>
 
+#include "libHh/Advanced.h"
 #include "libHh/Array.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Set.h"
@@ -230,8 +231,8 @@ SHOW(t5);
 {
   Set<size_t> set;
   for_int(i, 100) for_int(j, 100) {
-    size_t h = std::hash<Vec2<int>>()(V(i, j));
-    // SHOW(h);
+    size_t h = my_hash(V(i, j));
+    // SHOW(i, j, h);
     assertx(set.add(h));  // all 10'000 are unique
   }
 }

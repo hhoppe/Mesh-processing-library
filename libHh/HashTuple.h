@@ -12,14 +12,14 @@
 namespace hh::details {
 
 // Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
-template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_hash {
+template <typename TU, size_t Index = std::tuple_size_v<TU>> struct tuple_hash {
   size_t operator()(const TU& tu) const {
-    return hh::hash_combine(tuple_hash<TU, Index - 1>()(tu), std::get<Index>(tu));
+    return hh::hash_combine(tuple_hash<TU, Index - 1>()(tu), std::get<Index - 1>(tu));
   }
 };
 
 template <typename TU> struct tuple_hash<TU, 0> {
-  size_t operator()(const TU& tu) const { return hh::my_hash(std::get<0>(tu)); }
+  size_t operator()(const TU&) const { return 0; }
 };
 
 template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_write {
@@ -39,16 +39,18 @@ namespace std {
 
 template <typename... Types> struct hash<std::tuple<Types...>> {
   using TU = std::tuple<Types...>;
-  size_t operator()(TU const& tu) const { return hh::details::tuple_hash<TU>()(tu); }
+  size_t operator()(TU const& tu) const { return ::hh::details::tuple_hash<TU>()(tu); }
 };
 
 template <typename T1, typename T2> struct hash<std::pair<T1, T2>> {
-  size_t operator()(const std::pair<T1, T2>& p) const { return ::hh::hash_combine(::hh::my_hash(p.first), p.second); }
+  size_t operator()(const std::pair<T1, T2>& p) const {
+    return ::hh::hash_combine(::hh::hash_combine(0, p.first), p.second);
+  }
 };
 
 template <typename... Types> std::ostream& operator<<(std::ostream& os, const std::tuple<Types...>& tu) {
   os << "tuple<";
-  hh::details::tuple_write<std::tuple<Types...>>()(os, tu);
+  ::hh::details::tuple_write<std::tuple<Types...>>()(os, tu);
   os << ">";
   return os;
 }

@@ -58,7 +58,7 @@ template <typename T> size_t my_hash(const T& v) { return std::hash<T>()(v); }
 #if 0  // Adapted from older version of boost; may be intended for 32-bit size_t.
 
 template <typename T> size_t hash_combine(size_t seed, const T& v) {
-  return seed ^ (std::hash<T>()(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
+  return seed ^ (my_hash(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
 }
 
 #else  // Adapted from newer version of boost.
@@ -101,7 +101,7 @@ inline void boost_hash_combine_size_t(std::size_t& seed, std::size_t value) {
 }  // namespace details
 
 template <typename T> size_t hash_combine(size_t seed, const T& v) {
-  details::boost_hash_combine_size_t(seed, std::hash<T>()(v));
+  details::boost_hash_combine_size_t(seed, my_hash(v));
   return seed;
 }
 

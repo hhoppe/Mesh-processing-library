@@ -39,22 +39,22 @@ class Vector4i {
 #if defined(HH_VECTOR4_SSE)
   Vector4i(const Vector4i& v) : _r(v._r) {}
   Vector4i(int x, int y, int z, int w) { _r = _mm_set_epi32(w, z, y, x); }  // Note reverse ordering.
-  explicit Vector4i(const Pixel& pix) {
+  explicit Vector4i(const Pixel& pixel) {
 #if defined(HH_NO_SSE41)
-    for_int(c, 4) _c[c] = pix[c];
+    for_int(c, 4) _c[c] = pixel[c];
 #else
-    __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pix));
-    // Same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pix.data())));
+    __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pixel));
+    // Same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pixel.data())));
     _r = _mm_cvtepu8_epi32(in);          // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
 #endif
   }
   Pixel pixel() const {
-    Pixel pix;
+    Pixel pixel;
     __m128i t2 = _mm_packs_epi32(_r, _r);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
     __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
-    reinterpret_cast<int&>(pix) = _mm_cvtsi128_si32(t3);
-    // Worse: _mm_store_ss(reinterpret_cast<float*>(pix.data()), _mm_castsi128_ps(t3));
-    return pix;
+    reinterpret_cast<int&>(pixel) = _mm_cvtsi128_si32(t3);
+    // Worse: _mm_store_ss(reinterpret_cast<float*>(pixel.data()), _mm_castsi128_ps(t3));
+    return pixel;
   }
   void load_unaligned(const int* pSrc) { _r = _mm_loadu_si128(reinterpret_cast<const __m128i*>(pSrc)); }
   void store_unaligned(int* pDst) const { _mm_storeu_si128(reinterpret_cast<__m128i*>(pDst), _r); }
@@ -125,7 +125,7 @@ class Vector4i {
   // TODO: Implement these as Neon intrinsics.
   Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
-  explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }
+  explicit Vector4i(const Pixel& pixel) { for_int(c, 4) _c[c] = pixel[c]; }
   Pixel pixel() const {
     Pixel v;
     for_int(c, 4) v[c] = clamp_to_uint8(_c[c]);
@@ -185,7 +185,7 @@ class Vector4i {
 #else   // Neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON).
   Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
-  explicit Vector4i(const Pixel& pix) { for_int(c, 4) _c[c] = pix[c]; }
+  explicit Vector4i(const Pixel& pixel) { for_int(c, 4) _c[c] = pixel[c]; }
   Pixel pixel() const {
     Pixel v;
     for_int(c, 4) v[c] = clamp_to_uint8(_c[c]);

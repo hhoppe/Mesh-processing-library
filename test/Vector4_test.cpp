@@ -4,6 +4,7 @@
 // #include <iomanip>  // setprecision()
 
 #include "libHh/Array.h"
+#include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 using namespace hh;
 
@@ -14,9 +15,8 @@ using namespace hh;
 
 static void to_norm(const Vector4& v) {
   SHOW(v);
-  Pixel pix = v.pixel();
-  Vec4<int> ar;
-  for_int(c, 4) ar[c] = pix[c];
+  Pixel pixel = v.pixel();
+  Vec4<int> ar = convert<int>(pixel);
   SHOW(ar);
 }
 

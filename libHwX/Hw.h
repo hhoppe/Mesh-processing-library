@@ -35,7 +35,7 @@ class Hw : public HwBase {
   std::optional<Vec2<int>> get_pointer() override;
   bool get_key_modifier(EModifier modifier) override;
   void set_color_to_foreground() override;
-  void set_color(const Pixel& pix) override;
+  void set_color(const Pixel& pixel) override;
   void fill_polygon(CArrayView<Vec2<float>> points) override;
   Vec2<int> get_max_window_dims() override;
   void resize_window(const Vec2<int>& yx) override;

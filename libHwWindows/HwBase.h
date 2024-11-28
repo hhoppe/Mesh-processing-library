@@ -59,7 +59,7 @@ class HwBase : noncopyable {
   enum class EModifier { shift, control, alt };
   virtual bool get_key_modifier(EModifier modifier) = 0;
   virtual void set_color_to_foreground() = 0;
-  virtual void set_color(const Pixel& pix) = 0;
+  virtual void set_color(const Pixel& pixel) = 0;
   Vec2<int> get_font_dims() { return _font_dims; }
   Vec2<int> get_window_dims() { return _win_dims; }
   enum class EStyle { regular, shadowed, boxed };

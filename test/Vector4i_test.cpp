@@ -45,19 +45,19 @@ int main() {
     SHOW(v1);
   }
   {
-    Pixel pix(11, 0, 255, 1);
-    SHOW(pix);
-    SHOW(Vector4i(pix));
-    SHOW(Vector4i(pix).pixel());
-    SHOW((Vector4i(pix) + 15).pixel());
-    SHOW((Vector4i(pix) + 250).pixel());
-    SHOW((Vector4i(pix) + 100'000).pixel());
-    SHOW((Vector4i(pix) + (std::numeric_limits<int>::max() - 255)).pixel());
-    if (0) SHOW((Vector4i(pix) + std::numeric_limits<int>::max()).pixel());  // (overflows silently)
-    SHOW((Vector4i(pix) - 1).pixel());
-    SHOW((Vector4i(pix) - 15).pixel());
-    SHOW((Vector4i(pix) - 100'000).pixel());
-    SHOW((Vector4i(pix) - std::numeric_limits<int>::max()).pixel());
+    Pixel pixel(11, 0, 255, 1);
+    SHOW(pixel);
+    SHOW(Vector4i(pixel));
+    SHOW(Vector4i(pixel).pixel());
+    SHOW((Vector4i(pixel) + 15).pixel());
+    SHOW((Vector4i(pixel) + 250).pixel());
+    SHOW((Vector4i(pixel) + 100'000).pixel());
+    SHOW((Vector4i(pixel) + (std::numeric_limits<int>::max() - 255)).pixel());
+    if (0) SHOW((Vector4i(pixel) + std::numeric_limits<int>::max()).pixel());  // (overflows silently)
+    SHOW((Vector4i(pixel) - 1).pixel());
+    SHOW((Vector4i(pixel) - 15).pixel());
+    SHOW((Vector4i(pixel) - 100'000).pixel());
+    SHOW((Vector4i(pixel) - std::numeric_limits<int>::max()).pixel());
   }
   {
     Array<int> ar1{31, std::numeric_limits<int>::max(), std::numeric_limits<int>::min(), 0};

@@ -7,7 +7,8 @@
 namespace hh {
 
 // Return a reference to a unique pointer object.  This reference may be invalid if the pointer is null!
-// auto up_p = b ? make_unique<Point>(1.f, 2.f, 3.f) : nullptr;  Point& p = optional_reference(up_p);
+// auto up_p = b ? make_unique<Point>(1.f, 2.f, 3.f) : nullptr;
+// Point& p = optional_reference(up_p);
 template <typename T> T& optional_reference(const std::unique_ptr<T>& up) {
   return up ? *up : *implicit_cast<T*>(nullptr);
 }

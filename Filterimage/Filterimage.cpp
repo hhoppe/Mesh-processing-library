@@ -1121,7 +1121,10 @@ void do_matchtoalpha() {
 // *** quadpullpush
 
 template <int D> int64_t count_undef(CGridView<D, Pixel> grid) {
-  const auto is_undefined = [](const Pixel& pix) { return assertx(pix[3] == 0 || pix[3] == 255), pix[3] == 0; };
+  const auto is_undefined = [](const Pixel& pixel) {
+    assertx(pixel[3] == 0 || pixel[3] == 255);
+    return pixel[3] == 0;
+  };
   return count_if(grid, is_undefined);
 }
 
@@ -1138,14 +1141,14 @@ template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
     for (const auto& ud : range(ntimes<D>(2))) {
       Vec<int, D> u = hu * 2 + ud;
       if (!grid.ok(u)) continue;
-      const Pixel& pix = grid[u];
-      if (pix[3]) {
-        for_int(c, 3) accum[c] += pix[c];
+      const Pixel& pixel = grid[u];
+      if (pixel[3]) {
+        accum += convert<int>(pixel.head<3>());
         num_def++;
       }
     }
     if (num_def) {
-      for_int(c, 3) hgrid[hu][c] = uint8_t(accum[c] / num_def);
+      hgrid[hu].template head<3>() = convert<uint8_t>(accum / num_def);
       hgrid[hu][3] = 255;
     } else {
       hgrid[hu][3] = 0;
@@ -1157,10 +1160,10 @@ template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
     for (const auto& ud : range(ntimes<D>(2))) {
       Vec<int, D> u = hu * 2 + ud;
       if (!grid.ok(u)) continue;
-      Pixel& pix = grid[u];
-      if (pix[3]) continue;
-      pix = hgrid[hu];
-      ASSERTX(pix[3] != 0);  // now defined
+      Pixel& pixel = grid[u];
+      if (pixel[3]) continue;
+      pixel = hgrid[hu];
+      ASSERTX(pixel[3] != 0);  // now defined
     }
   }
 }
@@ -1364,11 +1367,10 @@ void do_featureoffsets() {
 void do_normalizenor() {
   assertx(image.zsize() == 3);  // no alpha
   for (const auto& yx : range(image.dims())) {
-    Pixel& pix = image[yx];
-    Vector v;
-    for_int(c, 3) v[c] = float(pix[c]) / 255.f * 2.f - 1.f;
+    Pixel& pixel = image[yx];
+    Vector v = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
     assertw(v.normalize());
-    for_int(c, 3) pix[c] = uint8_t((v[c] + 1.f) / 2.f * 255.f + .5f);
+    pixel.head<3>() = convert<uint8_t>((v + 1.f) / 2.f * 255.f + .5f);
   }
 }
 
@@ -1378,16 +1380,15 @@ void do_shadenor(Args& args) {
   assertx(image.zsize() == 3);  // no alpha
   const bool twolights = getenv_bool("G3D_TWOLIGHTS");
   for (const auto& yx : range(image.dims())) {
-    Pixel& pix = image[yx];
-    Vector vnor;
-    for_int(c, 3) vnor[c] = float(pix[c]) / 255.f * 2.f - 1.f;
+    Pixel& pixel = image[yx];
+    Vector vnor = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
     if (vnor == Vector(-1.f, -1.f, -1.f)) {
       Warning("not shading black pixel");
     } else {
       float vdot = dot(vnor, lightdir);
       if (twolights && vdot < 0.f) vdot = -vdot;
       vdot = clamp(vdot, .05f, 1.f);
-      for_int(c, 3) pix[c] = uint8_t(vdot * 255.f + .5f);
+      fill(pixel.head<3>(), uint8_t(vdot * 255.f + .5f));
     }
   }
 }
@@ -1425,9 +1426,8 @@ void do_shadefancy(Args& args) {
     ld[i] *= frame;
   }
   for (const auto& yx : range(image.dims())) {
-    Pixel& pix = image[yx];
-    Vector vnor;
-    for_int(c, 3) vnor[c] = float(pix[c]) / 255.f * 2.f - 1.f;
+    Pixel& pixel = image[yx];
+    Vector vnor = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
     Vector vcol{};
     for_int(i, ld.num()) {
       float vdot = dot(vnor, ld[i]);
@@ -1435,7 +1435,7 @@ void do_shadefancy(Args& args) {
       vdot = pow(vdot, ls[i]);
       vcol += vdot * li[i] * lc[i];
     }
-    for_int(c, 3) pix[c] = uint8_t(clamp(vcol[c], 0.f, 1.f) * 255.f + .5f);
+    pixel.head<3>() = convert<uint8_t>(clamp(vcol, 0.f, 1.f) * 255.f + .5f);
   }
 }
 
@@ -1808,13 +1808,15 @@ void do_homogenize(Args& args) {
   }
 }
 
-inline Vector4 to_YIQ(const Vector4& pix) {
-  return Vector4(dot(pix, Vector4(+0.299f, +0.587f, +0.114f, 0.f)), dot(pix, Vector4(+0.596f, -0.274f, -0.322f, 0.f)),
-                 dot(pix, Vector4(+0.211f, -0.523f, +0.312f, 0.f)), 255.f);
+inline Vector4 to_YIQ(const Vector4& pixel) {
+  return Vector4(dot(pixel, Vector4(+0.299f, +0.587f, +0.114f, 0.f)),  //
+                 dot(pixel, Vector4(+0.596f, -0.274f, -0.322f, 0.f)),  //
+                 dot(pixel, Vector4(+0.211f, -0.523f, +0.312f, 0.f)), 255.f);
 }
 
 inline Vector4 to_RGB(const Vector4& yiq) {
-  return Vector4(dot(yiq, Vector4(+1.000f, +0.956f, +0.621f, 0.f)), dot(yiq, Vector4(+1.000f, -0.272f, -0.647f, 0.f)),
+  return Vector4(dot(yiq, Vector4(+1.000f, +0.956f, +0.621f, 0.f)),  //
+                 dot(yiq, Vector4(+1.000f, -0.272f, -0.647f, 0.f)),  //
                  dot(yiq, Vector4(+1.000f, -1.106f, +1.703f, 0.f)), 255.f);
 }
 
@@ -1834,12 +1836,12 @@ void do_superresolution(Args& args) {
   parallel_for_coords({1000}, image.dims(), [&](const Vec2<int>& yx) {
     auto fyx = (convert<float>(yx) + .5f) * convert<float>(oimage.dims()) / convert<float>(image.dims()) - .5f;
     // Get regularly magnified pixel.
-    Vector4 pix = to_Vector4_raw(image[yx]);
+    Vector4 pixel = to_Vector4_raw(image[yx]);
     // Find continuous neighborhood min/max statistics on luminance.
     float lmin = BIGFLOAT, lmax = -BIGFLOAT;
     Vec2<int> iyx = convert<int>(floor(fyx));
     // Get target sample itself.
-    float slum = to_YIQ(pix)[0];  // for bilinear, =bilinear(mlum, fy, fx);
+    float slum = to_YIQ(pixel)[0];  // for bilinear, =bilinear(mlum, fy, fx);
     const auto func_minmax = [&](float v) {
       if (v < lmin) lmin = v;
       if (v > lmax) lmax = v;
@@ -1871,10 +1873,10 @@ void do_superresolution(Args& args) {
     if (delta >= threshold) {
       float lmid = (lmin + lmax) * .5f;
       const float C = 1.0f * 4.f;
-      Vector4 yiq = to_YIQ(pix);
+      Vector4 yiq = to_YIQ(pixel);
       yiq[0] += C * (slum - lmin) * (lmax - slum) * (slum - lmid) / (delta * delta);
-      pix = general_clamp(to_RGB(yiq), Vector4(0.f), Vector4(255.99f));
-      image[yx] = pix.raw_pixel();
+      pixel = general_clamp(to_RGB(yiq), Vector4(0.f), Vector4(255.99f));
+      image[yx] = pixel.raw_pixel();
     }
   });
 }
@@ -2459,23 +2461,23 @@ void do_procedure(Args& args) {
       for (const auto& yx : range(twice(n))) {
         const int beat = 8;
         const uint8_t greyv = 60;
-        Pixel pix(greyv, greyv, greyv, 255);
+        Pixel pixel(greyv, greyv, greyv, 255);
         bool is_on = ((yx[1] / beat) + (yx[0] / beat)) % 2 == 1;
         if (is_on) {
           if (0)
             void();
           else if (yxi == V(0, 0))
-            pix = Pixel(255, 130, 130);
+            pixel = Pixel(255, 130, 130);
           else if (yxi == V(0, 1))
-            pix = Pixel(40, 255, 40);
+            pixel = Pixel(40, 255, 40);
           else if (yxi == V(1, 0))
-            pix = Pixel(150, 150, 255);
+            pixel = Pixel(150, 150, 255);
           else if (yxi == V(1, 1))
-            pix = Pixel(255, 40, 255);
+            pixel = Pixel(255, 40, 255);
           else
             assertnever("");
         }
-        image[yxi * n + yx] = pix;
+        image[yxi * n + yx] = pixel;
       }
     }
   } else if (name == "gradchecker") {
@@ -2488,8 +2490,9 @@ void do_procedure(Args& args) {
       const Vec2<float> yxf = (convert<float>(yx) + .5f) / float(size);
       const Vec2<int> yxi = convert<int>(yxf * float(gridn));
       const bool is_on = sum(yxi) % 2 == 1;
-      Pixel pix = !is_on ? pixel_gray : Pixel(uint8_t(yxf[0] * 255.f + .5f), uint8_t((1.f - yxf[0]) * 255.f + .5f), 0);
-      image[yx] = pix;
+      Pixel pixel =
+          !is_on ? pixel_gray : Pixel(uint8_t(yxf[0] * 255.f + .5f), uint8_t((1.f - yxf[0]) * 255.f + .5f), 0);
+      image[yx] = pixel;
     }
   } else if (name == "fix_agarwala") {
     // streaming multigrid: fix Aseem Agarwala labels file
@@ -2727,11 +2730,11 @@ void do_procedure(Args& args) {
       int period = timage[yx][2];
       float fstart = float(start) / (est_num_input_frames - period - 1);
       float fperiod = float(period) / (est_num_input_frames - 1);
-      Pixel pix = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
-      for_int(c, 3) pix[c] = clamp_to_uint8(int(pix[c] * (.4f + .6f * fstart)));
-      if (is_static) pix = Pixel::gray(have_mask ? 180 : 230);  // there are so few, make them more prominent
-      if (is_masked) pix = Pixel::white();
-      image[yx] = pix;
+      Pixel pixel = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
+      for_int(c, 3) pixel[c] = clamp_to_uint8(int(pixel[c] * (.4f + .6f * fstart)));
+      if (is_static) pixel = Pixel::gray(have_mask ? 180 : 230);  // there are so few, make them more prominent
+      if (is_masked) pixel = Pixel::white();
+      image[yx] = pixel;
     });
   } else if (name == "entropy") {
     // Filterimage -create 256 20 -proc color_ramp -to png >~/data/image/color_ramp.png

@@ -726,9 +726,9 @@ void Hw::set_color_to_foreground() {
   glColor3ubv(_color_foreground.data());
 }
 
-void Hw::set_color(const Pixel& pix) {
+void Hw::set_color(const Pixel& pixel) {
   assertx(_state == EState::open);
-  glColor4ubv(pix.data());
+  glColor4ubv(pixel.data());
 }
 
 void Hw::draw_text_internal(const Vec2<int>& yx, const string& s) {
@@ -1381,12 +1381,12 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
       for_int(y, image.ysize()) {
         int yy = image.ysize() - 1 - y;  // because bmp has image origin at lower-left
         for_int(x, image.xsize()) {
-          const Pixel& pix = image[yy][x];
+          const Pixel& pixel = image[yy][x];
           // RGBA to BGRA
-          *p++ = pix[2];
-          *p++ = pix[1];
-          *p++ = pix[0];
-          if (ncomp == 4) *p++ = pix[3];
+          *p++ = pixel[2];
+          *p++ = pixel[1];
+          *p++ = pixel[0];
+          if (ncomp == 4) *p++ = pixel[3];
         }
         while (reinterpret_cast<uintptr_t>(p) & 3) *p++ = uint8_t{0};
       }
@@ -1429,15 +1429,15 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         for_int(y, image.ysize()) {
           int yy = image.ysize() - 1 - y;  // flip vertically
           for_int(x, image.xsize()) {
-            Pixel& pix = image[yy][x];
+            Pixel& pixel = image[yy][x];
             // BGRA to RGBA
-            pix[2] = *p++;
-            pix[1] = *p++;
-            pix[0] = *p++;
+            pixel[2] = *p++;
+            pixel[1] = *p++;
+            pixel[0] = *p++;
             if (ncomp == 4)
-              pix[3] = *p++;
+              pixel[3] = *p++;
             else
-              pix[3] = 255;
+              pixel[3] = 255;
           }
           while (reinterpret_cast<uintptr_t>(p) & 3) p++;
         }

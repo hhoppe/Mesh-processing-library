@@ -70,13 +70,13 @@ template <bool V4> struct MG_sample;
 template <> struct MG_sample<true> {
   using EType = Vector4;
   static constexpr int nz = 1;
-  static EType get(const Pixel& pix, int z) {
+  static EType get(const Pixel& pixel, int z) {
     ASSERTX(z == 0);
-    return Vector4(pix);
+    return Vector4(pixel);
   }
-  static void put(Pixel& pix, int z, const EType& result) {
+  static void put(Pixel& pixel, int z, const EType& result) {
     ASSERTX(z == 0);
-    pix = result.pixel();
+    pixel = result.pixel();
   }
   static const float k_offset_zero;
 };
@@ -85,8 +85,8 @@ const float MG_sample<true>::k_offset_zero = k_vec_zero_offset;
 template <> struct MG_sample<false> {
   using EType = float;
   static constexpr int nz = 3;
-  static EType get(const Pixel& pix, int z) { return to_float(pix[z]); }
-  static void put(Pixel& pix, int z, const EType& result) { pix[z] = clamp_to_uint8(int(result + .5f)); }
+  static EType get(const Pixel& pixel, int z) { return to_float(pixel[z]); }
+  static void put(Pixel& pixel, int z, const EType& result) { pixel[z] = clamp_to_uint8(int(result + .5f)); }
   static const float k_offset_zero;
 };
 const float MG_sample<false>::k_offset_zero = k_vec_zero_offset * 255.f;
@@ -777,9 +777,9 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       parallel_for(range(nnf), [&](const int f) {
         for_int(y, ny) for_int(x, nx) {
           int fi = grid_framei(f, y, x);
-          const Pixel& pix = video(fi, y, x);
+          const Pixel& pixel = video(fi, y, x);
           videoloop(f, y, x) =
-              (Vector4(pix) + Vector4(hvideo_offset(f / DT, y / DS, x / DS)) - k_vec_zero_offset).pixel();
+              (Vector4(pixel) + Vector4(hvideo_offset(f / DT, y / DS, x / DS)) - k_vec_zero_offset).pixel();
         }
       });
     } else if (video.size()) {  // faster version of above, for RGB representation
@@ -804,9 +804,9 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               const CMatrixView<Pixel> videofi = video[fi];
               MatrixView<Pixel> lnframe = nframe;  // local view to help optimizer
               for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
-                const Pixel& pix = videofi(y, x);
+                const Pixel& pixel = videofi(y, x);
                 Pixel& npix = lnframe(y, x);
-                npix = (Vector4i(pix) + offset).pixel();  // OPT:recon2
+                npix = (Vector4i(pixel) + offset).pixel();  // OPT:recon2
               }
             }
           });

@@ -668,7 +668,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
   o._framenum = g_framenum;
   g_frame_dims = o.spatial_dims();
   g_frame_has_transparency = 1 && o.is_image() && o._image_attrib.zsize == 4 &&
-                             find_if(o._video[0], [](const Pixel& pix) { return pix[3] != 255; });
+                             find_if(o._video[0], [](const Pixel& pixel) { return pixel[3] != 255; });
   if (0 && o.is_image()) g_playing = false;
   g_refresh_texture = true;
   if (1 && o.is_image() && !file_requires_pipe(o._filename)) {
@@ -700,7 +700,7 @@ void add_object(unique_ptr<Object> pob) {
   set_video_frame(g_cob + 1, g_framenum);
 }
 
-Pixel get_frame_pix(const Vec2<int>& yx) {
+Pixel get_frame_pixel(const Vec2<int>& yx) {
   assertx(g_cob >= 0 && g_framenum >= 0);
   if (getob()._video_nv12.size()) {
     CNv12View nv12v = getob()._video_nv12[g_framenum];
@@ -708,10 +708,10 @@ Pixel get_frame_pix(const Vec2<int>& yx) {
     const Vec2<uint8_t>& uv = nv12v.get_UV()[yx / 2];
     return RGB_Pixel_from_YUV(y, uv[0], uv[1]);
   } else {
-    Pixel pix = getob()._video[g_framenum][yx];
+    Pixel pixel = getob()._video[g_framenum][yx];
     const bool bgra = getob().is_image() && getob()._image_is_bgra;
-    if (bgra) std::swap(pix[0], pix[2]);
-    return pix;
+    if (bgra) std::swap(pixel[0], pixel[2]);
+    return pixel;
   }
 }
 
@@ -1042,7 +1042,7 @@ template <typename Range> Array<float> to_luminance(const Range& range) {
   static_assert(std::is_same_v<range_value_t<Range>, Pixel>);
   Array<float> ar;
   ar.reserve(int(distance(range)));
-  for (const Pixel& pix : range) ar.push(Y_from_RGB(pix));
+  for (const Pixel& pixel : range) ar.push(Y_from_RGB(pixel));
   return ar;
 }
 
@@ -2274,18 +2274,18 @@ bool DerivedHw::key_press(string skey) {
               nvideo.init(ob._video.dims());
               const bool bgra = ob.is_image() && ob._image_is_bgra;
               parallel_for(range(ob._video.size()), [&](const size_t i) {
-                Pixel pix = ob._video.flat(i);
-                if (bgra) std::swap(pix[0], pix[2]);
-                Pixel yuv = YUV_Pixel_from_RGB(pix[0], pix[1], pix[2]);
+                Pixel pixel = ob._video.flat(i);
+                if (bgra) std::swap(pixel[0], pixel[2]);
+                Pixel yuv = YUV_Pixel_from_RGB(pixel[0], pixel[1], pixel[2]);
                 float y = yuv[0] / 255.f;
                 y = pow(y, g_gamma);
                 y *= contrast_fac;
                 y += brightness_term;
                 yuv[0] = clamp_to_uint8(int(y * 255.f + .5f));
                 for_intL(c, 1, 3) yuv[c] = clamp_to_uint8(int(128.5f + (yuv[c] - 128.f) * saturation_fac));
-                pix = RGB_Pixel_from_YUV(yuv[0], yuv[1], yuv[2]);
-                if (bgra) std::swap(pix[0], pix[2]);
-                nvideo.flat(i) = pix;
+                pixel = RGB_Pixel_from_YUV(yuv[0], yuv[1], yuv[2]);
+                if (bgra) std::swap(pixel[0], pixel[2]);
+                nvideo.flat(i) = pixel;
               });
             } else {
               nvideo_nv12.init(ob._video_nv12.get_Y().dims());
@@ -2596,8 +2596,8 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
               if (!yxi.in_range(g_frame_dims)) {
                 s += "outside image bounds";
               } else {
-                Pixel pix = get_frame_pix(yxi);
-                Vec4<int> p = convert<int>(pix);
+                Pixel pixel = get_frame_pixel(yxi);
+                Vec4<int> p = convert<int>(pixel);
                 s += sform("RGB:(%d, %d, %d, %d), HTML:(#%02X%02X%02X%02X)",  //
                            p[0], p[1], p[2], p[3], p[0], p[1], p[2], p[3]);
               }
@@ -3526,14 +3526,14 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     const Bbox bbox{transform(bbox_corners(Bbox(twice(-eps), convert<float>(g_win_dims) + eps)), &get_image_yx)};
     for (const Vec2<int> tex_yx : range(bbox[0], bbox[1] + 1)) {
       if (!tex_yx.in_range(g_frame_dims)) continue;
-      const Pixel pix = get_frame_pix(tex_yx);
+      const Pixel pixel = get_frame_pixel(tex_yx);
       const Vec2<int> win_yx = get_win_yx(convert<float>(tex_yx) + .5f);
       if (show_4x1rgba_yx) {
         const auto yxsep = V(10, min_zoom < 120.f ? 6 : min_zoom < 140.f ? 7 : 8);
         for_int(c, 4) {
           auto yx =
               win_yx + V(-fdims[0] - yxsep[0] / 2, (c - 2) * (fdims[1] * 2 + yxsep[1]) + yxsep[1] / 2) + V(-3, -1);
-          app_draw_text(yx, sform("%02X", pix[c]), k_no_text_wrap);
+          app_draw_text(yx, sform("%02X", pixel[c]), k_no_text_wrap);
         }
         string s = sform("%d,%d", tex_yx[1], tex_yx[0]);
         auto yx = win_yx + V(yxsep[0] / 2, -fdims[1] * narrow_cast<int>(s.size()) / 2) + V(-3, -1);
@@ -3543,7 +3543,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           auto yxsep = V(4, min_zoom < 54.f ? 4 : min_zoom < 70.f ? 5 : 6);
           auto dyx = V(c / 2, c % 2);
           auto yx = win_yx + (dyx - 1) * (V(1, 2) * fdims + yxsep) + yxsep / 2 + V(-3, -1);
-          string s = sform("%02X", pix[c]);
+          string s = sform("%02X", pixel[c]);
           app_draw_text(yx, s, k_no_text_wrap);
         }
       }
@@ -4043,13 +4043,13 @@ void background_work(bool asynchronous) {
             int period = g_lp.mat_period[yx];
             float fstart = float(start) / (num_input_frames - period - 1);
             float fperiod = float(period) / (num_input_frames - 1);
-            Pixel pix = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
-            for_int(c, 3) pix[c] = clamp_to_uint8(int(pix[c] * (.4f + .6f * fstart)));
+            Pixel pixel = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
+            for_int(c, 3) pixel[c] = clamp_to_uint8(int(pixel[c] * (.4f + .6f * fstart)));
             const bool have_mask = false;
             const bool is_masked = false;
-            if (period == 1) pix = Pixel::gray(have_mask ? 180 : 230);
-            if (is_masked) pix = Pixel::white();
-            image_vlp[yx] = pix;
+            if (period == 1) pixel = Pixel::gray(have_mask ? 180 : 230);
+            if (is_masked) pixel = Pixel::white();
+            image_vlp[yx] = pixel;
           });
           const bool bgra = false;
           g_vlp_ready_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgra);

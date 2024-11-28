@@ -855,9 +855,13 @@ using Face = Mesh::Face;
 using Corner = Mesh::Corner;
 using Edge = Mesh::Edge;
 
-inline std::ostream& operator<<(std::ostream& os, Vertex v) { return os << sform("Vertex{%d}", v->_id); }
+inline std::ostream& operator<<(std::ostream& os, Vertex v) {
+  if (!v) return os << "Vertex{null}";
+  return os << sform("Vertex{%d}", v->_id);
+}
 
 inline std::ostream& operator<<(std::ostream& os, Face f) {
+  if (!f) return os << "Face{null}";
   os << sform("Face{%d}=[", f->_id);
   Mesh::HEdge herep = f->_herep;
   for (Mesh::HEdge he = herep;;) {
@@ -870,10 +874,12 @@ inline std::ostream& operator<<(std::ostream& os, Face f) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, Edge e) {
+  if (!e) return os << "Edge{null}";
   return os << sform("Edge{%d, %d}", e->_herep->_prev->_vert->_id, e->_herep->_vert->_id);  // vertex1(e), vertex2(e).
 }
 
 inline std::ostream& operator<<(std::ostream& os, Corner he) {
+  if (!he) return os << "Corner{null}";
   return os << sform("Corner{v=%d, f=%d}", he->_vert->_id, he->_face->_id);  // corner_vertex(c), corner_face(c).
 }
 

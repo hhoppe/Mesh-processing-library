@@ -538,6 +538,8 @@ TT G operator-(const G& g1) { G g; F { g[i] = -g1[i]; } return g; }
 TT G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return g; }
 TT G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
 
+TT G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
+
 TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
   G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }

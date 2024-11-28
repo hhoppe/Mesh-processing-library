@@ -10,7 +10,7 @@
 #if 0
 {
   Video video(nframes, V(ysize, xsize)), video2(video.dims()), video3(video.nframes() * 2, video.spatial_dims());
-  Pixel& pix = video(f, y, x);    // As in Image, [y = 0][x = 0] is at upper-left corner of each image frame.
+  Pixel& pixel = video(f, y, x);  // As in Image, [y = 0][x = 0] is at upper-left corner of each image frame.
   uint8_t c = video(f, y, x)[z];  // z = [0..2].
 
   // Video read/write is performed using: Windows Media Foundation (mf) or ffmpeg (ffmpeg).

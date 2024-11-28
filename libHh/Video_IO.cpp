@@ -567,7 +567,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       } else {
         if (stride == sdims[1] * 4) {
           MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uint8_t*>(pData)), sdims);
-          for (Pixel& pix : mat) std::swap(pix[0], pix[2]);  // BGRA to RGBA
+          for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // BGRA to RGBA
           convert_Image_to_Nv12(mat, nv12v);
         } else {  // slower path
           Matrix<Pixel> mat(sdims);
@@ -779,7 +779,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       } else {
         MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(pData), _wvideo.spatial_dims());
         convert_Nv12_to_Image(nv12v, mat);
-        for (Pixel& pix : mat) std::swap(pix[0], pix[2]);  // RGBA to BGRA
+        for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // RGBA to BGRA
       }
     }
     AS(pBuffer->SetCurrentLength(cbBuffer));

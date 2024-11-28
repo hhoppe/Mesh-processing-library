@@ -49,7 +49,7 @@ class Vector4 {
  public:
   Vector4() = default;  // Was: { fill(0.f); }.
   explicit Vector4(float v) { fill(v); }
-  explicit Vector4(const Pixel& pix) { *this = to_Vector4_norm(pix.data()); }
+  explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
   size_t size() const { return 4; }
   float& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }

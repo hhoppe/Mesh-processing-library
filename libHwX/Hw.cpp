@@ -839,17 +839,17 @@ void Hw::set_color_to_foreground() {
   }
 }
 
-void Hw::set_color(const Pixel& pix) {
+void Hw::set_color(const Pixel& pixel) {
   assertx(_state == EState::open);
   if (_oglx) {
 #if defined(HH_OGLX)
-    glColor4ubv(pix.data());
+    glColor4ubv(pixel.data());
 #endif
   } else {
     XColor xcolor;
-    xcolor.red = pix[0] * 256;
-    xcolor.green = pix[1] * 256;
-    xcolor.blue = pix[2] * 256;
+    xcolor.red = pixel[0] * 256;
+    xcolor.green = pixel[1] * 256;
+    xcolor.blue = pixel[2] * 256;
     xcolor.flags = DoRed | DoGreen | DoBlue;
     XAllocColor(_display, _cmap, &xcolor);
     XSetForeground(_display, _gc, xcolor.pixel);

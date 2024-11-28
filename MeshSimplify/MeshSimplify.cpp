@@ -3822,7 +3822,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           Vertex vv = mesh.opp_vertex(e, f);  // side_vertex1|2
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
           // If (v2, vv) is boundary, ecol should be disallowed.
-          assertx(fc);
+          if (!fc) return false;  // From lambda.
           assertx(f_matid(fc) == f_matid(f));
           Vertex vvv = mesh.opp_vertex(mesh.edge(tv2, vv), fc);
           // Note: Face fc is (tv2, vv, vvv).

@@ -885,7 +885,7 @@ void gather_follow_seg(Face f, Map<Face, int>& mfseg, int segnum, int& pnf, Poin
 
 void gather_segments(Map<Face, int>& mfseg, Array<Face>& arepf) {
   assertx(mfseg.empty() && !arepf.num());
-  HPqueue<Face> pq;
+  Pqueue<Face> pq;
   {
     HH_STAT(Sseg);
     int segnum = 0;
@@ -900,10 +900,7 @@ void gather_segments(Map<Face, int>& mfseg, Array<Face>& arepf) {
       pq.enter(f, pri);
     }
   }
-  while (!pq.empty()) {
-    Face f = pq.remove_min();
-    arepf.push(f);
-  }
+  while (!pq.empty()) arepf.push(pq.remove_min());
 }
 
 void edge_angle_stats(const Map<Face, int>& mfseg) {
@@ -1700,7 +1697,7 @@ void do_splitvalence(Args& args) {
   assertx(maxvalence > 6);
   const bool write_hole = getenv_bool("WRITE_HOLE");
   HPqueue<Vertex> pqv;
-  int large_int = 1 << 24;
+  int large_int = 1 << 24;  // Precision of float in HPqueue.
   for (Vertex v : mesh.vertices())
     if (mesh.degree(v) >= maxvalence) pqv.enter(v, float(large_int - mesh.degree(v)));
   int nsplit = 0;
@@ -2477,15 +2474,13 @@ void do_obtusesplit() {
       break;
     }
   }
-  float maxelen = 0.f;
-  for (Edge e : mesh.edges()) maxelen = max(maxelen, mesh.length(e));
-  maxelen *= 1.1f;
+  const float max_elen = max(transform(mesh.edges(), [&](Edge e) { return mesh.length(e); })) * 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
   const float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
   HPqueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
-  for (Edge e : mesh.edges()) pqe.enter_unsorted(e, maxelen - mesh.length(e));
+  for (Edge e : mesh.edges()) pqe.enter_unsorted(e, max_elen - mesh.length(e));
   int nsplit = 0;
   pqe.sort();
   string str;
@@ -2533,7 +2528,7 @@ void do_obtusesplit() {
     }
     for (Face f : mesh.faces(vnew))
       for (Edge ee : mesh.edges(f))
-        if (pqe.retrieve(ee) < 0.f) pqe.enter(ee, maxelen - mesh.length(ee));
+        if (pqe.retrieve(ee) < 0.f) pqe.enter(ee, max_elen - mesh.length(ee));
   }
   showdf("obtusesplit split %d edges on %s\n", nsplit, is_sphere ? "sphere" : "surface");
 }

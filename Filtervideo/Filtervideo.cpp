@@ -51,10 +51,10 @@ template <int D> Vec<float, D> MultigridMetricAnisotropic<D>::_metricw;
 // ***
 
 inline Pixel random_color(Random& random) {
-  Pixel pix;
-  pix[3] = 255;
-  for_int(c, 3) pix[c] = static_cast<uint8_t>(80.f + random.unif() * 150.f + .5f);
-  return pix;
+  Pixel pixel;
+  pixel[3] = 255;
+  for_int(c, 3) pixel[c] = static_cast<uint8_t>(80.f + random.unif() * 150.f + .5f);
+  return pixel;
 }
 
 // ***
@@ -459,15 +459,15 @@ void do_info() {
   for_int(z, nz) stat_pixels.push(Stat(sform("Component%d", z)));
   if (0) {
     for (const auto& fyx : range(video.dims())) {
-      const Pixel& pix = video[fyx];
-      for_int(z, nz) stat_pixels[z].enter(pix[z]);
+      const Pixel& pixel = video[fyx];
+      for_int(z, nz) stat_pixels[z].enter(pixel[z]);
     }
   } else {
     Matrix<Stat> framestats(video.nframes(), nz);
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
-        const Pixel& pix = video[f][yx];
-        for_int(z, nz) framestats[f][z].enter(pix[z]);  // OPT_info
+        const Pixel& pixel = video[f][yx];
+        for_int(z, nz) framestats[f][z].enter(pixel[z]);  // OPT_info
       }
     });
     for_int(f, video.nframes()) for_int(z, nz) stat_pixels[z].add(framestats[f][z]);
@@ -1063,10 +1063,10 @@ void do_replace(Args& args) {
   }
   newcolor[3] = 255;
   int count = 0;
-  for (Pixel& pix : video) {
-    if (equal(pix, gcolor, nz) ^ g_not) {
+  for (Pixel& pixel : video) {
+    if (equal(pixel, gcolor, nz) ^ g_not) {
       count++;
-      pix = newcolor;
+      pixel = newcolor;
     }
   }
   showf("Replaced %d pixels\n", count);
@@ -1422,7 +1422,7 @@ void compute_looping_regions() {
       }
     }
   }
-  for (auto& pix : g_lp.region_color) pix = random_color(Random::G);
+  for (auto& pixel : g_lp.region_color) pixel = random_color(Random::G);
   if (getenv_bool("LOOPING_REGIONS_IMAGE")) {
     Image image(video.spatial_dims());
     for (const auto& yx : range(video.spatial_dims())) image[yx] = g_lp.region_color[g_lp.mat_iregion[yx]];
@@ -1438,11 +1438,11 @@ void compute_looping_regions() {
     Image image(video.spatial_dims());
     for (const auto& yx : range(video.spatial_dims())) {
       int iregion = g_lp.mat_iregion[yx];
-      Pixel pix = g_lp.region_color[iregion];
+      Pixel pixel = g_lp.region_color[iregion];
       const Point& pcentroid = g_lp.region_centroid[iregion];
       float fac = clamp(dist(Point(float(yx[0]), float(yx[1]), 0.f), pcentroid) * .1f, 0.f, 1.f);
-      for_int(c, 3) pix[c] = uint8_t(pix[c] * fac);
-      image[yx] = pix;
+      pixel.head<3>() = convert<uint8_t>(convert<float>(pixel.head<3>()) * fac);
+      image[yx] = pixel;
     }
     image.write_file("looping_regions_dist.png");
   }
@@ -1835,10 +1835,10 @@ void process_gen(Args& args) {
         auto pf = p - floor(p);
         auto pi = convert<int>(floor(p));
         float r = mag(pf - V(.5f, .5f));
-        Pixel& pix = video[f][yx];
-        if (mode == 1 && (pi[0] + pi[1]) % 2 == 0) pix = Pixel::white();
-        if (mode == 2 && r < sradius) pix = Pixel::white();
-        if (mode == 3 && r < sradius) pix = func_get_color(pi[0] + pi[1] * 37);
+        Pixel& pixel = video[f][yx];
+        if (mode == 1 && (pi[0] + pi[1]) % 2 == 0) pixel = Pixel::white();
+        if (mode == 2 && r < sradius) pixel = Pixel::white();
+        if (mode == 3 && r < sradius) pixel = func_get_color(pi[0] + pi[1] * 37);
       }
     });
   } else if (name == "slit1_x") {
@@ -1871,14 +1871,14 @@ void process_gen(Args& args) {
           t = (yx[0] - video.ysize() / 2.f) * std::cos(f / rotperiod * TAU) -
               (yx[1] - video.xsize() / 2.f) * std::sin(f / rotperiod * TAU);
         float v = t * nsperiods / video.ysize() + f / tperiod;
-        Pixel& pix = video[f][yx];
-        pix = Pixel::black();
+        Pixel& pixel = video[f][yx];
+        pixel = Pixel::black();
         int i = int(floor(v));
         if (frac(v) < fsperiod) {
           if (name == "slits1")
-            pix = Pixel::white();
+            pixel = Pixel::white();
           else
-            pix = func_get_color(i);
+            pixel = func_get_color(i);
         }
       }
     });
@@ -1918,14 +1918,14 @@ void process_gen(Args& args) {
     for_int(i, n) {
       for_int(c, 2) ar_point0[i][c] = Random::G.unif();
       for_int(c, 2) ar_velocity[i][c] = (Random::G.unif() * 2.f - 1.f) * velrange;
-      auto& pix = ar_color[i];
+      auto& pixel = ar_color[i];
       if (0) {
         for (;;) {
-          for_int(c, 3) pix[c] = static_cast<uint8_t>(20.f + Random::G.unif() * 235.f + .5f);
-          if (mag(pix) > 350 && max(pix) > 150 && min(pix) < 100) break;
+          for_int(c, 3) pixel[c] = static_cast<uint8_t>(20.f + Random::G.unif() * 235.f + .5f);
+          if (mag(pixel) > 350 && max(pixel) > 150 && min(pixel) < 100) break;
         }
       } else {
-        pix = func_get_color(i);
+        pixel = func_get_color(i);
       }
     }
     parallel_for(range(video.nframes()), [&](const int f) {
@@ -1981,10 +1981,7 @@ auto get_black_border_mask(CMatrixView<Pixel> image) {
   Matrix<bool> mask(dims, false);
   for_coords(dims, [&](const Vec2<int>& yx) {
     const Pixel& pixel = image[yx];
-    bool is_black = true;
-    for_int(c, 3) {
-      if (pixel[c] >= 80) is_black = false;
-    }
+    const bool is_black = all_of(pixel, [](uchar value) { return value < 80; });
     mask[yx] = is_black;
   });
   // Instead, grow BFS from all 4 images sides.
@@ -2143,19 +2140,18 @@ void do_diff(Args& args) {
 void do_transf(Args& args) {
   Frame frame = FrameIO::parse_frame(args.get_string());
   parallel_for(range(video.nframes()), [&](const int f) {
-    for (Pixel& pix : video[f]) {
-      Point p{};
-      for_int(z, nz) p[z] = pix[z] / 255.f;
+    for (Pixel& pixel : video[f]) {
+      Point p = convert<float>(pixel.head<3>()) / 255.f;
       p *= frame;
-      for_int(z, nz) pix[z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);
+      pixel.head<3>() = convert<uint8_t>(clamp(p, 0.f, 1.f) * 255.f + .5f);
     }
   });
 }
 
 void do_noisegaussian(Args& args) {
   float sd = args.get_float();
-  for (Pixel& pix : video)
-    for_int(z, nz) pix[z] = clamp_to_uint8(int(to_float(pix[z]) + Random::G.gauss() * sd + .5f));
+  for (Pixel& pixel : video)
+    for_int(z, nz) pixel[z] = clamp_to_uint8(int(to_float(pixel[z]) + Random::G.gauss() * sd + .5f));
 }
 
 Vector frame_median(CMatrixView<Pixel> frame) {
@@ -2164,7 +2160,7 @@ Vector frame_median(CMatrixView<Pixel> frame) {
   ar_tmp.reserve(assert_narrow_cast<int>(product(frame.dims())));
   for_int(z, nz) {
     ar_tmp.init(0);
-    for (const Pixel& pix : frame) ar_tmp.push(pix[z]);
+    for (const Pixel& pixel : frame) ar_tmp.push(pixel[z]);
     vmedian[z] = float(median(ar_tmp));
   }
   return vmedian;
@@ -2172,7 +2168,7 @@ Vector frame_median(CMatrixView<Pixel> frame) {
 
 Vector frame_mean(CMatrixView<Pixel> frame) {
   Array<Stat> stat_pixels(nz);
-  for (const Pixel& pix : frame) for_int(z, nz) stat_pixels[z].enter(pix[z]);
+  for (const Pixel& pixel : frame) for_int(z, nz) stat_pixels[z].enter(pixel[z]);
   return Vector(stat_pixels[0].avg(), stat_pixels[1].avg(), stat_pixels[2].avg());
 }
 
@@ -2182,8 +2178,8 @@ void do_equalizemedians() {
   Vector mean_of_medians = mean(ar_medians);
   SHOW(mean_of_medians);
   for (auto& vec : ar_medians) vec -= mean_of_medians;
-  for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
-    for_int(z, nz) pix[z] = clamp_to_uint8(int(pix[z] - ar_medians[f][z] + .5f));
+  for_int(f, video.nframes()) for (Pixel& pixel : video[f]) {
+    for_int(z, nz) pixel[z] = clamp_to_uint8(int(pixel[z] - ar_medians[f][z] + .5f));
   }
 }
 
@@ -2193,8 +2189,8 @@ void do_equalizemeans() {
   Vector mean_of_means = mean(ar_means);
   SHOW(mean_of_means);
   for (auto& vec : ar_means) vec -= mean_of_means;
-  for_int(f, video.nframes()) for (Pixel& pix : video[f]) {
-    for_int(z, nz) pix[z] = clamp_to_uint8(int(pix[z] - ar_means[f][z] + .5f));
+  for_int(f, video.nframes()) for (Pixel& pixel : video[f]) {
+    for_int(z, nz) pixel[z] = clamp_to_uint8(int(pixel[z] - ar_means[f][z] + .5f));
   }
 }
 

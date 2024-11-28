@@ -27,8 +27,8 @@ struct A3dColor : Vec3<float> {
 struct A3dVertexColor {
   A3dVertexColor() = default;
   constexpr explicit A3dVertexColor(A3dColor pd) : d(pd), s(1.f, 1.f, 1.f), g(1.f, 0.f, 0.f) {}
-  constexpr explicit A3dVertexColor(const Pixel& pix)
-      : A3dVertexColor(A3dColor(pix[0] / 255.f, pix[1] / 255.f, pix[2] / 255.f)) {}
+  constexpr explicit A3dVertexColor(const Pixel& pixel)
+      : A3dVertexColor(A3dColor(pixel[0] / 255.f, pixel[1] / 255.f, pixel[2] / 255.f)) {}
   constexpr A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) {}
   A3dColor d;  // diffuse
   A3dColor s;  // specular

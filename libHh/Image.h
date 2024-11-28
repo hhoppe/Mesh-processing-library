@@ -14,7 +14,7 @@
 {
   Image image(V(ysize, xsize)), image2(image.dims(), Pixel(65, 66, 67, 200));
   image2.set_zsize(4);
-  Pixel& pix = image[y][x];
+  Pixel& pixel = image[y][x];
   uint8_t c = image(y, x)[z];
   // ysize() == #rows, xsize() == #columns, zsize() == #channels.
   // Valid values for zsize(): 1: grayscale image: Red == Green == Blue  (Alpha is undefined);
@@ -41,7 +41,7 @@ class Image : public Matrix<Pixel> {
  public:
   struct Attrib;
   explicit Image(const Vec2<int>& pdims = V(0, 0));
-  explicit Image(const Vec2<int>& pdims, Pixel pix) : Image(pdims) { fill(*this, pix); }
+  explicit Image(const Vec2<int>& pdims, Pixel pixel) : Image(pdims) { fill(*this, pixel); }
   explicit Image(const Image&) = default;
   explicit Image(const base& image) : base(image.dims()) { base::assign(image); }
   explicit Image(const string& filename) { read_file(filename); }
@@ -52,7 +52,7 @@ class Image : public Matrix<Pixel> {
   Image& operator=(const Image&) = default;
   void operator=(CMatrixView<Pixel> image) { base::assign(image); }
   void init(const Vec2<int>& pdims) { base::init(pdims); }
-  void init(const Vec2<int>& pdims, Pixel pix);
+  void init(const Vec2<int>& pdims, Pixel pixel);
   void clear() { init(twice(0)); }
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
@@ -222,18 +222,18 @@ class CNv12View {
 // Also, it condenses Y to range [16, 235]; strange.  Thus Y_from_RGB(Pixel::gray(128)) == 126.
 
 // Convert RGB Pixel to luminance Y value.
-inline uint8_t Y_from_RGB(const Pixel& pix) {  // LumaFromRGB_CCIR601YCbCr.
-  return narrow_cast<uint8_t>((66 * int{pix[0]} + 129 * int{pix[1]} + 25 * int{pix[2]} + 128 + 16 * 256) >> 8);
+inline uint8_t Y_from_RGB(const Pixel& pixel) {  // LumaFromRGB_CCIR601YCbCr.
+  return narrow_cast<uint8_t>((66 * int{pixel[0]} + 129 * int{pixel[1]} + 25 * int{pixel[2]} + 128 + 16 * 256) >> 8);
 }
 
 // Convert RGB Pixel to chroma U value.
-inline uint8_t U_from_RGB(const Pixel& pix) {  // CbFromRGB_CCIR601YCbCr.
-  return narrow_cast<uint8_t>((-38 * pix[0] - 74 * pix[1] + 112 * pix[2] + 128 + 128 * 256) >> 8);
+inline uint8_t U_from_RGB(const Pixel& pixel) {  // CbFromRGB_CCIR601YCbCr.
+  return narrow_cast<uint8_t>((-38 * pixel[0] - 74 * pixel[1] + 112 * pixel[2] + 128 + 128 * 256) >> 8);
 }
 
 // Convert RGB Pixel to chroma V value.
-inline uint8_t V_from_RGB(const Pixel& pix) {  // CrFromRGB_CCIR601YCbCr.
-  return narrow_cast<uint8_t>((112 * pix[0] - 94 * pix[1] - 18 * pix[2] + 128 + 128 * 256) >> 8);
+inline uint8_t V_from_RGB(const Pixel& pixel) {  // CrFromRGB_CCIR601YCbCr.
+  return narrow_cast<uint8_t>((112 * pixel[0] - 94 * pixel[1] - 18 * pixel[2] + 128 + 128 * 256) >> 8);
 }
 
 // Convert {R, G, B} values to YUV Vector4i.

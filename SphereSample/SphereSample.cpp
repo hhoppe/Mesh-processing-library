@@ -1280,27 +1280,17 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
       for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
-      for_int(z, 3) {
-        const float frac = (p_m[z] - bbox[0][z]) / (bbox[1][z] - bbox[0][z]);
-        assertx(frac >= 0.f && frac <= 1.f);
-        pixel[z] = uint8_t(frac * 255.f + .5f);
-      }
+      pixel.head<3>() = narrow_convert<uint8_t>((p_m - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
       break;
     }
     case 'N': {
       const Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
-      for_int(z, 3) {
-        assertx(abs(normal[z]) <= 1.f + 1e-6f);
-        pixel[z] = uint8_t((normal[z] * .5f + .5f) * 255.f + .5f);
-      }
+      pixel.head<3>() = narrow_convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
       break;
     }
     case 'C': {
       Vector rgb = interp_f_rgb(mesh, f, bary);
-      for_int(z, 3) {
-        assertx(rgb[z] >= 0.f && rgb[z] <= 1.f + 1e-6f);
-        pixel[z] = uint8_t(rgb[z] * 255.f + .5f);
-      }
+      pixel.head<3>() = narrow_convert<uint8_t>(rgb * 255.f + .5f);
       break;
     }
     case 'T': {
@@ -1541,27 +1531,17 @@ void do_write_primal_texture(Args& args) {
     switch (signal_[0]) {
       case 'G': {
         const Point& p = g_mesh.point(v);
-        for_int(z, 3) {
-          assertx(p[z] >= bbox[0][z] && p[z] <= bbox[1][z]);
-          const float f = (p[z] - bbox[0][z]) / (bbox[1][z] - bbox[0][z]);
-          pixel[z] = uint8_t(f * 255.f + .5f);
-        }
+        pixel.head<3>() = narrow_convert<uint8_t>((p - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
         break;
       }
       case 'N': {
         const Vector normal = v_normal(v) * rotate_frame;
-        for_int(z, 3) {
-          assertx(abs(normal[z]) <= 1.f + 1e-6f);
-          pixel[z] = uint8_t((normal[z] * .5f + .5f) * 255.f + .5f);
-        }
+        pixel.head<3>() = narrow_convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
         break;
       }
       case 'C': {
         const Vector& rgb = v_rgb(v);
-        for_int(z, 3) {
-          assertx(rgb[z] >= 0.f && rgb[z] <= 1.f + 1e-6f);
-          pixel[z] = uint8_t(rgb[z] * 255.f + .5f);
-        }
+        pixel.head<3>() = narrow_convert<uint8_t>(rgb * 255.f + .5f);
         break;
       }
       case 'T': assertnever("Unsupported");

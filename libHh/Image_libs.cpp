@@ -36,7 +36,7 @@ HH_REFERENCE_LIB("libpng.lib");
 HH_REFERENCE_LIB("libz.lib");
 
 #if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wstringop-overflow"  // for "for_int(z, image.zsize()) pix[z] = *p++;"
+#pragma GCC diagnostic ignored "-Wstringop-overflow"  // for "for_int(z, image.zsize()) pixel[z] = *p++;"
 #endif
 
 namespace hh {
@@ -212,7 +212,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
   if (image.zsize() == 1)
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx][2] = image[yx][1] = image[yx][0]; });
   if (image.zsize() < 4)
-    for (Pixel& pix : image) pix[3] = 255;
+    for (Pixel& pixel : image) pixel[3] = 255;
   if (1) image.reverse_y();  // because *.rgb format has image origin at lower-left
 }
 
@@ -405,10 +405,10 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
     assertt(jpeg_read_scanlines(&cinfo, row_pointer, 1) == 1);
     uchar* p = row.data();
     for_int(x, image.xsize()) {
-      Pixel& pix = image[y][x];
-      for_int(z, image.zsize()) pix[z] = *p++;
-      if (image.zsize() == 1) pix[2] = pix[1] = pix[0];
-      if (image.zsize() < 4) pix[3] = 255;
+      Pixel& pixel = image[y][x];
+      for_int(z, image.zsize()) pixel[z] = *p++;
+      if (image.zsize() == 1) pixel[2] = pixel[1] = pixel[0];
+      if (image.zsize() < 4) pixel[3] = 255;
     }
   }
 
@@ -709,18 +709,18 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
       switch (bmih.biBitCount) {
         case 32:
           for_int(x, image.xsize()) {
-            Pixel& pix = image[y][x];
+            Pixel& pixel = image[y][x];
             // convert BGRA to RGBA
-            for_int(z, 3) pix[2 - z] = *p++;
-            pix[3] = *p++;
+            for_int(z, 3) pixel[2 - z] = *p++;
+            pixel[3] = *p++;
           }
           break;
         case 24:
           for_int(x, image.xsize()) {
-            Pixel& pix = image[y][x];
+            Pixel& pixel = image[y][x];
             // convert BGR to RGB
-            for_int(z, 3) pix[2 - z] = *p++;
-            pix[3] = 255;
+            for_int(z, 3) pixel[2 - z] = *p++;
+            pixel[3] = 255;
           }
           break;
         case 1: {
@@ -914,10 +914,10 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
       int yy = image.ysize() - 1 - y;  // because *.bmp format has image origin at lower-left
       int i = 0;
       for_int(x, image.xsize()) {
-        const Pixel& pix = image[yy][x];
+        const Pixel& pixel = image[yy][x];
         // convert RGB to BGR, or RGBA to BGRA
-        for_int(z, 3) row[i++] = pix[2 - z];
-        if (ncomp == 4) row[i++] = pix[3];
+        for_int(z, 3) row[i++] = pixel[2 - z];
+        if (ncomp == 4) row[i++] = pixel[3];
       }
       assertt(write_raw(file, row));
     }
@@ -959,10 +959,10 @@ void ImageLibs::read_ppm(Image& image, FILE* file) {
     assertt(read_raw(file, row));
     uchar* p = row.data();
     for_int(x, image.xsize()) {
-      Pixel& pix = image[y][x];
-      for_int(z, image.zsize()) pix[z] = *p++;
-      if (image.zsize() == 1) pix[2] = pix[1] = pix[0];
-      if (image.zsize() < 4) pix[3] = 255;
+      Pixel& pixel = image[y][x];
+      for_int(z, image.zsize()) pixel[z] = *p++;
+      if (image.zsize() == 1) pixel[2] = pixel[1] = pixel[0];
+      if (image.zsize() < 4) pixel[3] = 255;
     }
   }
 }
@@ -1032,10 +1032,10 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     parallel_for(range(image.ysize()), [&](const int y) {
       uchar* buf = row_pointers[y];
       for_int(x, image.xsize()) {
-        Pixel& pix = image[y][x];
-        for_int(z, ncomp) pix[z] = *buf++;
-        if (ncomp == 1) pix[2] = pix[1] = pix[0];
-        if (ncomp < 4) pix[3] = 255;
+        Pixel& pixel = image[y][x];
+        for_int(z, ncomp) pixel[z] = *buf++;
+        if (ncomp == 1) pixel[2] = pixel[1] = pixel[0];
+        if (ncomp < 4) pixel[3] = 255;
       }
     });
   } else {  // lower-level read, directly into image.
@@ -1103,7 +1103,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
       }
     }
     if (image.zsize() < 4)
-      for (Pixel& pix : image) pix[3] = 255;
+      for (Pixel& pixel : image) pixel[3] = 255;
   }
   png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
 }

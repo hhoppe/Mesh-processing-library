@@ -136,40 +136,40 @@ struct Vsplit {
   };
   enum EMask : unsigned {
     VSINDEX_SHIFT = 0,
-    VSINDEX_MASK = (0x0003 << VSINDEX_SHIFT),
+    VSINDEX_MASK = 0x0003 << VSINDEX_SHIFT,
     //
     II_SHIFT = 2,
-    II_MASK = (0x0003 << II_SHIFT),
+    II_MASK = 0x0003 << II_SHIFT,
     //
     S_SHIFT = 4,
-    S_MASK = (B_STMASK << S_SHIFT),
-    S_LSAME = (B_LSAME << S_SHIFT),
-    S_RSAME = (B_RSAME << S_SHIFT),
-    S_CSAME = (B_CSAME << S_SHIFT),
+    S_MASK = B_STMASK << S_SHIFT,
+    S_LSAME = B_LSAME << S_SHIFT,
+    S_RSAME = B_RSAME << S_SHIFT,
+    S_CSAME = B_CSAME << S_SHIFT,
     //
     T_SHIFT = 7,
-    T_MASK = (B_STMASK << T_SHIFT),
-    T_LSAME = (B_LSAME << T_SHIFT),
-    T_RSAME = (B_RSAME << T_SHIFT),
-    T_CSAME = (B_CSAME << T_SHIFT),
+    T_MASK = B_STMASK << T_SHIFT,
+    T_LSAME = B_LSAME << T_SHIFT,
+    T_RSAME = B_RSAME << T_SHIFT,
+    T_CSAME = B_CSAME << T_SHIFT,
     //
     L_SHIFT = 10,
-    L_MASK = (B_LRMASK << L_SHIFT),
-    L_ABOVE = (B_ABOVE << L_SHIFT),
-    L_BELOW = (B_BELOW << L_SHIFT),
-    L_NEW = (B_NEW << L_SHIFT),
+    L_MASK = B_LRMASK << L_SHIFT,
+    L_ABOVE = B_ABOVE << L_SHIFT,
+    L_BELOW = B_BELOW << L_SHIFT,
+    L_NEW = B_NEW << L_SHIFT,
     //
     R_SHIFT = 12,
-    R_MASK = (B_LRMASK << R_SHIFT),
-    R_ABOVE = (B_ABOVE << R_SHIFT),
-    R_BELOW = (B_BELOW << R_SHIFT),
-    R_NEW = (B_NEW << R_SHIFT),
+    R_MASK = B_LRMASK << R_SHIFT,
+    R_ABOVE = B_ABOVE << R_SHIFT,
+    R_BELOW = B_BELOW << R_SHIFT,
+    R_NEW = B_NEW << R_SHIFT,
     //
     FLN_SHIFT = 14,
-    FLN_MASK = (1u << FLN_SHIFT),
+    FLN_MASK = 1u << FLN_SHIFT,
     //
     FRN_SHIFT = 15,
-    FRN_MASK = (1u << FRN_SHIFT),
+    FRN_MASK = 1u << FRN_SHIFT,
   };
   // *** Documentation:
   // vs_index: 0..2: index of vs within flace flclw

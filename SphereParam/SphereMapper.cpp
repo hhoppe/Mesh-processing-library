@@ -18,6 +18,7 @@ namespace {
 
 // Return spherical area of ordered triangle, in the range [0, 2 * TAU].
 template <typename T> T spherical_triangle_area(const Vec3<T>& pd0, const Vec3<T>& pd1, const Vec3<T>& pd2) {
+  static_assert(std::is_floating_point_v<T>);
   using TT = double;
   // Calculate the angular lengths of the triangle sides using the norms of the cross products of the vertices.
   const Vec3<T> cross_a = cross(pd1, pd2);

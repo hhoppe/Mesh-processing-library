@@ -2595,7 +2595,7 @@ void do_procedure(Args& args) {
       Image image_final(image.dims());
       parallel_for_coords({8}, image.dims(), [&](const Vec2<int>& yx) {
         int radius2 = narrow_cast<int>(mag2(mvec[yx]));
-        bool in_mask = (radius2 <= radius2_threshold || (visited[yx] && radius2 <= radius2_max));
+        bool in_mask = radius2 <= radius2_threshold || (visited[yx] && radius2 <= radius2_max);
         image_final[yx] = Pixel::gray(in_mask ? 0 : 255);
       });
       image_final.write_file("mask_final.png");
@@ -2645,7 +2645,7 @@ void do_procedure(Args& args) {
       grid_thumbnails.init(V((image_names.num() - 1) / ncol + 1, ncol));
       int i = 0;
       for_coords(grid_thumbnails.dims(), [&](const Vec2<int>& yx) {
-        grid_thumbnails[yx] = (ar_thumbnails.ok(i) ? std::move(ar_thumbnails[i++]) : Image(twice(size), gcolor));
+        grid_thumbnails[yx] = ar_thumbnails.ok(i) ? std::move(ar_thumbnails[i++]) : Image(twice(size), gcolor);
         apply_assemble_operations(grid_thumbnails[yx], yx, grid_thumbnails.dims());
       });
     }

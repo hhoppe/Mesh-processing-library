@@ -345,7 +345,7 @@ template <typename... A> constexpr void dummy_use(const A&...) {}
 // or to an explicit MeshRoot environment variable that does not match the current tree.
 
 // Avoid warnings of uninitialized variables.
-template <typename T> void dummy_init(T& v) { v = T(); }
+template <typename T> void dummy_init(T& v) { v = T{}; }
 template <typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}, dummy_init(a...); }
 
 // Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
@@ -766,7 +766,7 @@ inline uint8_t clamp_to_uint8(int v) {
   // return clamp(v, 0, 255);
   // https://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
   v &= -(v >= 0);
-  return static_cast<uint8_t>(v | ((255 - v) >> 31));
+  return uint8_t(v | ((255 - v) >> 31));
 }
 
 inline int mod3(int j) {

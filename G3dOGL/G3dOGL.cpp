@@ -3387,7 +3387,7 @@ void sr_adapt_refinement() {
       vp.set_zooms(real_zoom * convert<float>(win_dims) / float(min(win_dims)));
     }
     vp.set_screen_thresh(sr_screen_thresh);
-    float true_hither = (!sr_radar ? hither : hither < 1.f ? hither : sr_radar_old_hither);
+    float true_hither = !sr_radar ? hither : hither < 1.f ? hither : sr_radar_old_hither;
     vp.set_hither(true_hither);
     vp.set_yonder(yonder == k_default_yonder ? -1.f : yonder);
     srmesh.set_view_params(vp);

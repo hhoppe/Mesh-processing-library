@@ -226,17 +226,18 @@ Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary);
 // Convert degrees to radians.
 template <typename T> constexpr T rad_from_deg(T deg) {
   static_assert(std::is_floating_point_v<T>);
-  return deg * static_cast<T>(D_TAU / 360);
+  return deg * T(D_TAU / 360);
 }
 
 // Convert radians to degrees.
 template <typename T> constexpr T deg_from_rad(T rad) {
   static_assert(std::is_floating_point_v<T>);
-  return rad * static_cast<T>(360 / D_TAU);
+  return rad * T(360 / D_TAU);
 }
 
 // More robust than acos(dot()) for small angles.
 template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
+  static_assert(std::is_floating_point_v<T>);
   ASSERTXX(is_unit(v1) && is_unit(v2));
   const T vdot = dot(v1, v2);
   const float thresh = 0.9475f;  // Empirically from Python determine_crossover_for_acos_angle_approximation().
@@ -251,6 +252,7 @@ template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3
 
 // More robust than acos(dot()) for small angles.
 template <typename T> T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2<T>& v2) {
+  static_assert(std::is_floating_point_v<T>);
   ASSERTXX(is_unit(v1) && is_unit(v2));
   const T vdot = dot(v1, v2);
   const float thresh = 0.9475f;
@@ -300,17 +302,20 @@ inline Vector project_orthogonally(const Vector& v, const Vector& unitdir) {
 template <typename T, int n>
 Vec<T, n> qinterp(const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, const Vec<T, n>& a4,
                   const Bary& bary) {
+  static_assert(std::is_floating_point_v<T>);
   return bary[0] * a1 + bary[1] * a2 + bary[2] * a3 + (1.f - bary[0] - bary[1] - bary[2]) * a4;
 }
 
 template <typename T, int n>
 Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, float u,
                  float v) {
+  static_assert(std::is_floating_point_v<T>);
   // return qinterp(a0, a1, a2, a3, Bary((1.f - u) * (1.f - v), u * (1.f - v), u * v));
   return interp(interp(a0, a1, 1.f - u), interp(a3, a2, 1.f - u), 1.f - v);
 }
 
 template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance) {
+  static_assert(std::is_floating_point_v<Precision>);
   // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
   //  (1.f / 6.f) * dot(p1, cross(p2, p3)).
   const auto triangle2 = map(triangle, [](const Point& p) { return convert<Precision>(p); });
@@ -318,6 +323,7 @@ template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Poin
 }
 
 template <typename Precision> float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
+  static_assert(std::is_floating_point_v<Precision>);
   const auto v1 = convert<Precision>(p1), v2 = convert<Precision>(p2), v3 = convert<Precision>(p3);
   return 0.5f * float(cross(v2 - v1, v3 - v1));
 }

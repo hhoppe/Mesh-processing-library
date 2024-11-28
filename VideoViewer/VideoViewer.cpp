@@ -3599,8 +3599,8 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
       if (!ob.is_image()) {
         const double video_framerate = ob._video.attrib().framerate ? ob._video.attrib().framerate : 30.;
         double dtime = g_framenum / video_framerate;
-        int nmin = narrow_cast<int>(static_cast<uint64_t>(dtime) / 60);
-        int nsec = narrow_cast<int>(static_cast<uint64_t>(dtime) % 60);
+        int nmin = narrow_cast<int>(uint64_t(dtime) / 60);
+        int nsec = narrow_cast<int>(uint64_t(dtime) % 60);
         int nmsec = int((dtime - floor(dtime)) * 1000.);
         string s_time = sform("%d:%02d.%03d", nmin, nsec, nmsec);
         const int iframerate = int(video_framerate + .5);

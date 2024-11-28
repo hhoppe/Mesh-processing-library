@@ -89,7 +89,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
     const SrAVertex* v2n;
     SrAFace* fn;  // next neighboring face
 #if defined(SR_SW_CULLING)
-    int sw_culling_3bits = ((vertices[0]->visible << 0) | (vertices[1]->visible << 1) | (vertices[2]->visible << 2));
+    int sw_culling_3bits = (vertices[0]->visible << 0) | (vertices[1]->visible << 1) | (vertices[2]->visible << 2);
     if (!sw_culling_3bits) continue;
 #endif
     // 1997-12-20 explored only trying the first neighboring face test, hoping that it would reduce computation.
@@ -126,7 +126,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
       v2n = vertices[0];
 #if defined(SR_SW_CULLING)
       // 210 -> 10d
-      sw_culling_3bits = ((sw_culling_3bits & 0x3) << 1);
+      sw_culling_3bits = (sw_culling_3bits & 0x3) << 1;
 #endif
     } else {
       glBegin(GL_TRIANGLES);

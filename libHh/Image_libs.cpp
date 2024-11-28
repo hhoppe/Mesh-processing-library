@@ -172,7 +172,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
       for (;;) {
         ushort pixel = row[i++];
         int count;
-        count = (pixel & 0x7f);
+        count = pixel & 0x7f;
         if (!count) break;
         if (pixel & 0x80) {
           while (count--) image[y][x++][z] = row[i++];
@@ -839,7 +839,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
   to_dos(&bmih.biPlanes);
   bmih.biBitCount = narrow_cast<ushort>(ncomp * 8);
   to_dos(&bmih.biBitCount);
-  bmih.biCompression = (ncomp == 1);
+  bmih.biCompression = ncomp == 1;
   to_dos(&bmih.biCompression);
   if (ncomp == 1) {
     bmih.biClrUsed = 256;

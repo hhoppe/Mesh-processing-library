@@ -224,7 +224,7 @@ struct Filter_spline final : Filter {  // cubic B-spline
     if (x >= 2.) {
       return 0.;
     } else if (x >= 1.) {
-      double t = (x - 2.);
+      double t = x - 2.;
       return (-1. / 6.) * t * t * t;
     } else {
       return ((0.5 * x - 1.) * x) * x + 2. / 3.;

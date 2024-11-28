@@ -893,7 +893,7 @@ void create(bool b_triangulate) {
           f = g_mesh.create_face(va);
           f_domainf(f) = domainf;
         } else {
-          const int k = ((i >= gridn / 2) ^ (j >= gridn / 2));
+          const int k = (i >= gridn / 2) ^ (j >= gridn / 2);
           f = g_mesh.create_face(va[(k + 0) % 4], va[(k + 1) % 4], va[(k + 2) % 4]);
           f_domainf(f) = domainf;
           f = g_mesh.create_face(va[(k + 0) % 4], va[(k + 2) % 4], va[(k + 3) % 4]);

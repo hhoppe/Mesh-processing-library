@@ -708,7 +708,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
     nor += fnor;
   }
   {
-    Vector evec = (mesh.point(mesh.vertex2(e)) - mesh.point(mesh.vertex1(e)));
+    Vector evec = mesh.point(mesh.vertex2(e)) - mesh.point(mesh.vertex1(e));
     nor = cross(nor, evec);
   }
   assertw(nor.normalize());  // is_zero(nor) is OK below.
@@ -1807,7 +1807,7 @@ float compute_spring(const NewMeshNei& nn) {
   // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2 .
   // Let frac = np / nf
   //  spring = frac<4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
-  float spring = (np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f);
+  float spring = np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f;
   // Variable spring constants tends to produce patches of large faces, which gives poor behavior for selective
   // refinement.  So now 1997-08-27 we use constant springs.
   // if (1) spring = 1e-8f;
@@ -3006,7 +3006,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
       return false;
     }
     scale = transf_size / bbox.max_side();
-    translate = (Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale);
+    translate = Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale;
   }
   // Gather constraints.
   Array<LinearFunc> ar_lf;
@@ -3219,7 +3219,7 @@ bool is_uv_corner(Corner c) {
 int estimate_ii(Vertex v1, Vertex v2, const Point& newp) {
   const Point& p1 = mesh.point(v1);
   const Point& p2 = mesh.point(v2);
-  Vector vp = (p2 - p1);
+  Vector vp = p2 - p1;
   float vpm2 = mag2(vp);
   if (!vpm2) return 1;
   float a = dot(newp - p1, vp) / vpm2;
@@ -3394,6 +3394,7 @@ struct SegmentIntersection {
 
 template <typename Precision = double>
 std::optional<SegmentIntersection> intersect_segments(const Uv& p1, const Uv& p2, const Uv& p3, const Uv& p4) {
+  static_assert(std::is_floating_point_v<Precision>);
   const Precision dx12 = Precision{p2[0]} - p1[0];
   const Precision dy12 = Precision{p2[1]} - p1[1];
   const Precision dx34 = Precision{p4[0]} - p3[0];

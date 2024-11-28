@@ -269,7 +269,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
       frb = kb;
       if (!k_debug) return true;
     }
-    bool found = static_cast<size_t>(kl) == keyl && !strncmp(kb, key, kl);
+    bool found = size_t(kl) == keyl && !strncmp(kb, key, kl);
     if (found) {
       if (fkb) assertnever("dup key: " + SSHOW(sso, kb, kl, vb, vl, key, val));
       fkb = kb;

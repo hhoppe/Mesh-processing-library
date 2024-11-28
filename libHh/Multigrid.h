@@ -645,7 +645,7 @@ class Multigrid : noncopyable {
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     int ny = dims[0], nx = dims[1];
-    const float wL = get_wL(dims), wL4 = (_screening_weight + wL * 4.f);
+    const float wL = get_wL(dims), wL4 = _screening_weight + wL * 4.f;
     Grid<D, T> grid_residual(dims);
     const auto func = [&](int y, int x) {
       T vnei;
@@ -710,9 +710,9 @@ class Multigrid : noncopyable {
     Precise mean_result = mean(_grid_result);
     double rms_resid = mag_e(rms(compute_residual(_grid_rhs, _grid_result)));
     double rms_err =
-        !have_orig() ? 0 : mag_e(rms(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result)));
+        !have_orig() ? 0. : mag_e(rms(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result)));
     double max_abs_err =
-        (!have_orig() ? 0
+        (!have_orig() ? 0.
                       : max_e(max_abs_element(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result))));
     string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result - _mean_desired));
     showf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",  //

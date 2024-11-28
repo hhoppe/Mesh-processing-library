@@ -45,6 +45,7 @@ template <typename T> struct BrentResult {
 
 template <typename F, typename T>
 BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& max_iter) noexcept {
+  static_assert(std::is_floating_point_v<T>);
   // bits = (std::min)(policies::digits<T, policies::policy<> >() / 2, bits);  // 12 for T == float.
   // 2**(1 - bits); equals 4.8828125e-4 for bits=12.
   T tolerance = static_cast<T>(ldexp(1.0, 1 - bits));

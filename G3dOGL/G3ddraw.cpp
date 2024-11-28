@@ -130,7 +130,7 @@ static void to_spherical(Vector& v) {
 static void act_globe(const Vec2<float>& yxi, const Vec2<float>& yxi_d) {
   Vector vori(0.f, 1.f - selected.yxpressed[1] * 2.f, 1.f - selected.yxpressed[0] * 2.f);
   Vector vnew = vori - Vector(0.f, yxi[1], yxi[0]);
-  Vector vold = (ratemode == ERatemode::move) ? vori : vori - Vector(0.f, yxi[1] - yxi_d[1], yxi[0] - yxi_d[0]);
+  Vector vold = ratemode == ERatemode::move ? vori : vori - Vector(0.f, yxi[1] - yxi_d[1], yxi[0] - yxi_d[0]);
   to_spherical(vold);
   to_spherical(vnew);
   Quaternion q(vold, vnew);  // twice rotation from vold to vnew

@@ -838,7 +838,7 @@ int face_prediction(Face f, Face fa, Face fb, int ii) {
   int m = parse_matid(f);
   int ma = fa ? parse_matid(fa) : -1;
   int mb = fb ? parse_matid(fb) : -1;
-  int predicted_matid = (ii == 0 ? (mb >= 0 ? mb : ma) : (ma >= 0 ? ma : mb));
+  int predicted_matid = ii == 0 ? (mb >= 0 ? mb : ma) : (ma >= 0 ? ma : mb);
   return m == predicted_matid ? -1 : m;
 }
 

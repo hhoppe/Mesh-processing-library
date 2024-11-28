@@ -50,7 +50,7 @@ template <> inline uint32_t Random::get_int<4>() { return (*_impl)(); }
 
 template <> inline uint64_t Random::get_int<8>() {
   uint64_t v = get_int<4>();
-  return v | (static_cast<uint64_t>(get_int<4>()) << 32);
+  return v | (uint64_t(get_int<4>()) << 32);
 }
 
 // https://stackoverflow.com/questions/11603818/why-is-there-ambiguity-between-uint32-t-and-uint64-t-when-using-size-t-on-mac-os
@@ -93,13 +93,14 @@ float Random::unif() { return get_unif<float>(); }
 double Random::dunif() { return get_unif<double>(); }
 
 template <typename T> T Random::get_gauss() {
+  static_assert(std::is_floating_point_v<T>);
   // See experiments in test/opt/test_random.cpp   (Box-Muller transform is best)
   if (0) {
     const int k_ngauss = 10;  // number of uniform randoms to obtain Gaussian
     const double gauss_factor = sqrt(12.) / sqrt(double(k_ngauss));
     double acc = 0.;
     for_int(i, k_ngauss) acc += get_unif<T>();
-    return static_cast<T>((acc - k_ngauss * .5) * gauss_factor);
+    return T((acc - k_ngauss * .5) * gauss_factor);
   } else if (0) {  // unfortunately, implementation-dependent
     static std::normal_distribution<T> distrib(T{0}, T{1});
     return distrib(*this);
@@ -114,7 +115,7 @@ template <typename T> T Random::get_gauss() {
     // The 2D point (v1, v2) lies inside the unit-radius circle.
     T a = sqrt(T{-2} * std::log(s) / s);
     return a * v1;
-    // (there is an additional random sample number: a*v2)
+    // (there is an additional random sample number: a * v2)
   }
 }
 

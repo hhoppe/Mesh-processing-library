@@ -135,7 +135,7 @@ void do_stitch() {
   // - first, (blocky + 1) rows of length (blockx * blocks + 1)
   // - next, (blockx + 1) broken columns of length (blocky * (blocks - 1))
   // - finally, internal vertices of blocks
-  int tot_bnd_vertices = ((blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1)));
+  int tot_bnd_vertices = (blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1));
   bmesh._vertices.init(tot_bnd_vertices);
   bmesh._wedges.init(tot_bnd_vertices);
   for_int(bx, blockx) {

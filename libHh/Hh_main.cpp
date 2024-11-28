@@ -141,8 +141,7 @@ void my_sleep(double sec) {
     }
   }
 #else
-  if (!assertw(!usleep(static_cast<useconds_t>(sec * 1e6))))
-    assertx(errno == EINTR);  // Possibly might be interrupted by a signal?
+  if (!assertw(!usleep(useconds_t(sec * 1e6)))) assertx(errno == EINTR);  // Possibly might be interrupted by a signal?
 #endif  // defined(_WIN32)
 }
 
@@ -166,7 +165,7 @@ size_t available_memory() {
   assertx(!sysinfo(&sysi));  // https://linux.die.net/man/2/sysinfo
   uint64_t unit = sysi.mem_unit;
   uint64_t physical_avail = sysi.freeram * unit;
-  uint64_t virtual_avail = static_cast<size_t>(-1);
+  uint64_t virtual_avail = size_t(-1);
   if (ldebug) SHOW("sysinfo", physical_avail, virtual_avail);
   size_t ret = min(physical_avail, virtual_avail);
   return ret;

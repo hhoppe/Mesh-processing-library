@@ -52,7 +52,7 @@ void Image::to_bw() {
     uint8_t value;
     if (0) {
       // equivalent to 0.3086, 0.6094, 0.0820
-      value = ((pixel[0] * 79 + pixel[1] * 156 + pixel[2] * 21) >> 8);
+      value = (pixel[0] * 79 + pixel[1] * 156 + pixel[2] * 21) >> 8;
     } else {
       const float gamma = 2.2f;
       Vec3<float> af;

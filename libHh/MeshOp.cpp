@@ -651,7 +651,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
             Vertex vo = mesh.clw_vertex(av[i], v);
             assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // is_quad
           }
-          const Vector t2 = (mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v)));
+          const Vector t2 = mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v));
           vec = cross(t1, t2);
         } else {  // interior or dart
           Vector v1{}, v2{};

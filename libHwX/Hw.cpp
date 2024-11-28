@@ -179,26 +179,26 @@ void Hw::open() {
     visual = visinfo->visual;
     if (_hwdebug) {
       SHOW(_depth, _screen, visinfo->visualid, visinfo->bits_per_rgb);
-#define T(attrib)                                              \
+#define E(attrib)                                              \
   {                                                            \
     int value;                                                 \
     assertx(!glXGetConfig(_display, visinfo, attrib, &value)); \
     SHOW(#attrib, value);                                      \
   }                                                            \
   HH_EAT_SEMICOLON
-      T(GLX_USE_GL);
-      T(GLX_BUFFER_SIZE);
-      T(GLX_LEVEL);
-      T(GLX_RGBA);
-      T(GLX_DOUBLEBUFFER);
-      T(GLX_STEREO);
-      T(GLX_RED_SIZE);
-      T(GLX_ALPHA_SIZE);
-      T(GLX_DEPTH_SIZE);
-      T(GLX_STENCIL_SIZE);
-      T(GLX_ACCUM_RED_SIZE);
-      T(GLX_ACCUM_ALPHA_SIZE);
-#undef T
+      E(GLX_USE_GL);
+      E(GLX_BUFFER_SIZE);
+      E(GLX_LEVEL);
+      E(GLX_RGBA);
+      E(GLX_DOUBLEBUFFER);
+      E(GLX_STEREO);
+      E(GLX_RED_SIZE);
+      E(GLX_ALPHA_SIZE);
+      E(GLX_DEPTH_SIZE);
+      E(GLX_STENCIL_SIZE);
+      E(GLX_ACCUM_RED_SIZE);
+      E(GLX_ACCUM_ALPHA_SIZE);
+#undef E
     }
     // If glXCreateContext fails when launching client over "ssh -Y", it may be because X server
     //  was launched without "+iglx" option.

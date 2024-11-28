@@ -115,7 +115,7 @@ class my_HGLOBAL {
 string canonical_pathname(string s) {
   s = get_canonical_path(s);
   if (starts_with(s, "/")) s = "C:" + s;
-  if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = static_cast<char>(std::toupper(s[0]));
+  if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = char(std::toupper(s[0]));
   if (s.size() < 3 || s[2] != '/') assertnever("unexpected pathname in " + s);
   return s;
 }
@@ -379,7 +379,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     AS(frame_encode->SetSize(xsize(), ysize()));
     double dpi_X = 95.986602783203125, dpi_Y = 95.986602783203125;
     AS(frame_encode->SetResolution(dpi_X, dpi_Y));
-    WICPixelFormatGUID pixel_format = (zsize() == 4 ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat24bppBGR);
+    WICPixelFormatGUID pixel_format = zsize() == 4 ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat24bppBGR;
     if (zsize() == 4 && suffix() != "png" && suffix() != "tif" && suffix() != "tiff" && suffix() != "wmp") {
       Warning("Image format likely does not support alpha channel");
       if (0) pixel_format = GUID_WICPixelFormat24bppBGR;

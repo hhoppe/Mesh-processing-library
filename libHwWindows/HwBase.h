@@ -185,7 +185,7 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
   // use uchar{127} to render all non-ascii characters.
   const auto func_is_nonascii = [](const string& ss) {
     for (const size_t i : range(ss.size())) {
-      uchar ch = static_cast<uchar>(ss[i]);
+      uchar ch = uchar(ss[i]);
       if (!(ch >= 32 && ch <= 127)) return true;
     }
     return false;
@@ -194,8 +194,8 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     Warning("Non-ASCII characters present in string will not be displayed properly in window");
     string s2;
     for (const size_t i : range(s.size())) {
-      uchar ch = static_cast<uchar>(s[i]);
-      s2 += static_cast<uchar>(ch >= 32 && ch <= 126 ? s[i] : 127);
+      uchar ch = uchar(s[i]);
+      s2 += uchar(ch >= 32 && ch <= 126 ? s[i] : 127);
     }
     return draw_text(yx, s2, style, back_color, wrap);
   }
@@ -350,7 +350,7 @@ inline void HwBase::query_keypress(string s) {
     _query = false;
     _query_success = true;
     redraw_later();
-  } else if (s.size() > 1 || !(static_cast<uchar>(ch) >= 32 && static_cast<uchar>(ch) <= 127)) {
+  } else if (s.size() > 1 || !(uchar(ch) >= 32 && uchar(ch) <= 127)) {
     beep();
   } else {
     _query_buffer += ch;

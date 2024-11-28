@@ -906,7 +906,7 @@ string Hw::query_save_filename(const string& hint_filename, bool force) {
   {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = _hwnd;
-    ofn.lpstrFilter = (L"All Files (*.*)\0*.*\0");
+    ofn.lpstrFilter = L"All Files (*.*)\0*.*\0";
     ofn.lpstrFile = buffer.data();
     ofn.nMaxFile = buffer.num();
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_HIDEREADONLY | (force ? 0 : OFN_OVERWRITEPROMPT);
@@ -1444,7 +1444,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         if (0) SHOW(size, p - buf, image.dims(), bmih.biBitCount, image.zsize());
         // e.g. fails with size=837180 p-buf=837168 image.dims()=[389, 538] bmih.biBitCount=32 image.zsize()=4
         if (0) assertx(narrow_cast<size_t>(p - buf) == size);
-        if (1) assertw(abs((p - buf) - static_cast<ptrdiff_t>(size)) < 32);
+        if (1) assertw(abs((p - buf) - ptrdiff_t(size)) < 32);
       }
       GlobalUnlock(hGlobal);  // decrement reference count; nonzero because still owned by clipboard
     }

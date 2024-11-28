@@ -329,9 +329,8 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
             if (y1 < ny) apix1[xl] = MG::get(video(grid_frameif(y1, xl), y1, xl), z);
             if (xl > 0 && xl < xu) {
               int fi1 = grid_frameif(y, xl), fi2 = grid_frameif(y, xl - 1);
-              asx[xl] = (MG::get(video(fi1, y, xl), z) - MG::get(video(fi1, y, xl - 1), z) +
-                         MG::get(video(fi2, y, xl), z) - MG::get(video(fi2, y, xl - 1), z)) *
-                        .5f;
+              asx[xl] = .5f * (MG::get(video(fi1, y, xl), z) - MG::get(video(fi1, y, xl - 1), z) +
+                               MG::get(video(fi2, y, xl), z) - MG::get(video(fi2, y, xl - 1), z));
             }
             for_intL(x, xl, xu) {  // apix1[x] has [y1][x]; asx[xl] has [y][xl] - [y][xl - 1]
               int x1 = x + 1;

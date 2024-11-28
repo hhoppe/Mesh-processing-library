@@ -389,7 +389,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   // (g_v, d_v, and gm are the volume-preservation constraint)
   // (b is [-b1; -b2])
   // The procedure is:
-  //   C1 = (C - B * B^T / al);
+  //   C1 = C - B * B^T / al;
   //   [p; gm] = [C1 g; g^T 0]^(-1) * [b1 - B * b2 / al; -d_v];
   //   s = (b2 - B^T * p) / al;
   static Matrix<double> c;

@@ -1086,7 +1086,7 @@ void do_trisubdiv() {
   for (Edge e : are) {
     Vertex v = mesh.create_vertex();
     menewv.enter(e, v);
-    Homogeneous h = (3.f * Homogeneous(mesh.point(mesh.vertex1(e))) + 3.f * Homogeneous(mesh.point(mesh.vertex2(e))));
+    Homogeneous h = 3.f * Homogeneous(mesh.point(mesh.vertex1(e))) + 3.f * Homogeneous(mesh.point(mesh.vertex2(e)));
     if (!sharp(e)) {
       h += mesh.point(mesh.side_vertex1(e));
       h += mesh.point(mesh.side_vertex2(e));
@@ -3050,9 +3050,9 @@ void do_colorbizarre() {
       a = (a - lfb[i][0]) / (lfb[i][1] - lfb[i][0]);
       float c;
       switch (i) {
-        case 0: c = (a < .25f ? 0.f + a * 4.f : a < .50f ? 0.f : 1.f - square(a - .75f) * 16.f); break;
-        case 1: c = (a < .25f ? 0.f + a * 4.f : a < .50f ? 1.f : a < .75f ? 1.f - (a - .5f) * 4.f : 0.f); break;
-        case 2: c = (a < .25f ? 1.f - a * 4.f : 1.f - (a - .25f) * 1.33333f); break;
+        case 0: c = a < .25f ? 0.f + a * 4.f : a < .50f ? 0.f : 1.f - square(a - .75f) * 16.f; break;
+        case 1: c = a < .25f ? 0.f + a * 4.f : a < .50f ? 1.f : a < .75f ? 1.f - (a - .5f) * 4.f : 0.f; break;
+        case 2: c = a < .25f ? 1.f - a * 4.f : 1.f - (a - .25f) * 1.33333f; break;
         default: assertnever("");
       }
       if (0) assertx(c >= 0.f && c <= 1.f);
@@ -3561,7 +3561,7 @@ Point compute_hull_point(Vertex v, float offset) {
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
     bbox[1] += Vector(abs(offset), abs(offset), abs(offset));
     scale = transf_size / assertx(bbox.max_side());
-    translate = (Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale);
+    translate = Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale;
   }
   // Gather constraints.
   Array<LinearFunc> ar_lf;

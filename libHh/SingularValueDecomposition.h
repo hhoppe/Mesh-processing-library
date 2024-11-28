@@ -55,7 +55,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
         b += square(TT{U(k, j)});
         c += TT{U(k, i)} * TT{U(k, j)};
       }
-      T e = static_cast<T>(abs(c) / sqrt(a * b));
+      T e = T(abs(c) / sqrt(a * b));
       max_e = max(max_e, e);  // measure non-orthogonality of pair of columns
       // SHOW(iter, j, i, a, b, c, e);
       if (c == TT{0}) continue;  // columns are already orthogonal
@@ -63,8 +63,8 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
       {  // compute Jacobi rotation parameters: cos(theta), sin(theta)
         TT z = (b - a) / (TT{2} * c);
         TT t = sign(z) / (abs(z) + std::hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero
-        cs = T{1} / static_cast<T>(std::hypot(TT{1}, t));
-        sn = static_cast<T>(TT{cs} * t);
+        cs = T{1} / T(std::hypot(TT{1}, t));
+        sn = T(TT{cs} * t);
         // SHOW(z, t, cs, sn);
       }
       for_int(k, m) {  // apply Jacobi rotation to U
@@ -90,7 +90,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
     }
   }
   for_int(i, n) {
-    S[i] = static_cast<T>(mag(column(U, i)));  // singular value is norm of column vector of U
+    S[i] = T(mag(column(U, i)));  // singular value is norm of column vector of U
     // normalize the column vector
     if (S[i]) {
       T recip = T{1} / S[i];

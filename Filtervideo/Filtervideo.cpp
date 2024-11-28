@@ -53,7 +53,7 @@ template <int D> Vec<float, D> MultigridMetricAnisotropic<D>::_metricw;
 inline Pixel random_color(Random& random) {
   Pixel pixel;
   pixel[3] = 255;
-  for_int(c, 3) pixel[c] = static_cast<uint8_t>(80.f + random.unif() * 150.f + .5f);
+  for_int(c, 3) pixel[c] = uint8_t(80.f + random.unif() * 150.f + .5f);
   return pixel;
 }
 
@@ -1075,7 +1075,7 @@ void do_replace(Args& args) {
 void do_gamma(Args& args) {
   float gamma = args.get_float();
   Vec<uint8_t, 256> transf;
-  for_int(i, 256) transf[i] = static_cast<uint8_t>(255.f * pow(i / 255.f, gamma) + 0.5f);
+  for_int(i, 256) transf[i] = uint8_t(255.f * pow(i / 255.f, gamma) + 0.5f);
   if (1) {
     parallel_for({10}, range(video.size()), [&](const size_t i) {
       for_int(z, nz) video.flat(i)[z] = transf[video.flat(i)[z]];  // fastest
@@ -1803,7 +1803,7 @@ void process_gen(Args& args) {
     float tperiod = 20.f;   // was 20.f then 60.f
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
-        float v = (frac(yx[0] / speriod - f / tperiod) > .5f ? 1.f : 0.f);
+        float v = frac(yx[0] / speriod - f / tperiod) > .5f ? 1.f : 0.f;
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
@@ -1921,7 +1921,7 @@ void process_gen(Args& args) {
       auto& pixel = ar_color[i];
       if (0) {
         for (;;) {
-          for_int(c, 3) pixel[c] = static_cast<uint8_t>(20.f + Random::G.unif() * 235.f + .5f);
+          for_int(c, 3) pixel[c] = uint8_t(20.f + Random::G.unif() * 235.f + .5f);
           if (mag(pixel) > 350 && max(pixel) > 150 && min(pixel) < 100) break;
         }
       } else {

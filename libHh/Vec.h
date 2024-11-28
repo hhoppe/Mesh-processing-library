@@ -228,10 +228,16 @@ template <typename T, int n> T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
 }
 
 template <typename T, int n> T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
-template <typename T, int n> T mag(const Vec<T, n>& vec) { return sqrt(mag2(vec)); }
+template <typename T, int n> T mag(const Vec<T, n>& vec) {
+  static_assert(std::is_floating_point_v<T>);
+  return sqrt(mag2(vec));
+}
 
 template <typename T, int n> T dist2(const Vec<T, n>& v1, const Vec<T, n>& v2) { return mag2(v1 - v2); }
-template <typename T, int n> T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) { return sqrt(dist2(v1, v2)); }
+template <typename T, int n> T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) {
+  static_assert(std::is_floating_point_v<T>);
+  return sqrt(dist2(v1, v2));
+}
 
 template <typename T, int n> Vec<T, n> normalized(Vec<T, n> vec) {
   assertx(vec.normalize());
@@ -244,10 +250,12 @@ template <typename T, int n> Vec<T, n> ok_normalized(Vec<T, n> vec) {
 template <typename T, int n> Vec<T, n> fast_normalized(const Vec<T, n>& vec) { return vec / mag(vec); }
 
 template <typename T, int n> bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
+  static_assert(std::is_floating_point_v<T>);
   return abs(mag2(vec) - 1.f) <= tolerance;
 }
 
 template <typename T> [[nodiscard]] T snap_coordinate(T value) {
+  static_assert(std::is_floating_point_v<T>);
   const T eps = 1e-6f;
   if (abs(value - 0.f) < eps) return 0.f;
   if (abs(value - 1.f) < eps) return 1.f;

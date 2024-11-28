@@ -165,7 +165,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
   int vpeek = _is.peek();
   if (vpeek < 0) return false;
   assertx(_is);
-  ch = static_cast<char>(vpeek);
+  ch = char(vpeek);
   binary = ch == k_a3d_binary_code;
   if (binary) {
     a3d_binary_buf buf;
@@ -219,7 +219,7 @@ void WA3dStream::write(const A3dElem& el) {
     // common case, skip for now
   } else if (A3dElem::command_type(type)) {
     if (!binary && !_pblank) blank_line();
-    output(binary, static_cast<char>(type), el.f());
+    output(binary, char(type), el.f());
     if (!binary) {
       blank_line();
       _pblank = true;
@@ -232,7 +232,7 @@ void WA3dStream::write(const A3dElem& el) {
     _pblank = false;
     return;
   } else {
-    assertnever(sform("Unrecognized type '%c'", static_cast<char>(type)));
+    assertnever(sform("Unrecognized type '%c'", char(type)));
   }
   if (type == A3dElem::EType::polygon)
     assertx(el.num() >= 3);
@@ -242,7 +242,7 @@ void WA3dStream::write(const A3dElem& el) {
     assertx(el.num() == 1);
   if (type == A3dElem::EType::polygon || type == A3dElem::EType::polyline) {
     if (!binary && !_pblank) blank_line();
-    output(binary, static_cast<char>(type), V(0.f, 0.f, 0.f));
+    output(binary, char(type), V(0.f, 0.f, 0.f));
   }
   for_int(i, el.num()) {
     if (_curcol.d != el[i].c.d) {

@@ -322,7 +322,7 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
     return proj.d2;
   } else {
     assertx(poly.num() == 4);
-    const bool other_diag = (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor));
+    const bool other_diag = dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor);
     if (other_diag) {
       Point pp = poly[0];
       poly[0] = poly[1];

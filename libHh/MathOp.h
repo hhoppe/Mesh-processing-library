@@ -90,7 +90,7 @@ template <typename T> T frac(T f) {
 // Evaluate a Gaussian function.
 template <typename T> T gaussian(T x, T sdv = T{1}) {
   static_assert(std::is_floating_point_v<T>);
-  return std::exp(-square(x / sdv) / T{2}) / (sqrt(static_cast<T>(D_TAU)) * sdv);
+  return std::exp(-square(x / sdv) / T{2}) / (sqrt(T(D_TAU)) * sdv);
 }
 
 // Like std::acos() but prevent NaN's from appearing due to roundoff errors.

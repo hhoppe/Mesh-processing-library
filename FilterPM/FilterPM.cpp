@@ -1056,7 +1056,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
         Sivspl n2 = stivspl.succ(nlast);
         if (!n1.flclw1) n1 = stivspl.max();
         if (!n2.flclw1) n2 = stivspl.min();
-        nmin = (abs(n1.flclw1 - nlast.flclw1) < abs(n2.flclw1 - nlast.flclw1) ? n1 : n2);
+        nmin = abs(n1.flclw1 - nlast.flclw1) < abs(n2.flclw1 - nlast.flclw1) ? n1 : n2;
       } else {
         nmin = stivspl.succ_eq(nlast);
         if (!nmin.flclw1) nmin = stivspl.min();

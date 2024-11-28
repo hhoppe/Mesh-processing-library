@@ -564,7 +564,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
         if (0) assertw(_materials.ok(matid));
       }
       // 2012-12-12 added mask (_isolated_aface.matid == k_illegal_matid or bad matid)
-      f_matid.push(static_cast<short>(matid & 0xFFFF));
+      f_matid.push(short(matid & 0xFFFF));
       if (!i || cr2faces) (fl + i)->aface->matid = _base_faces.num() + 2 * vspli + i;
       if (!i || cr2faces) f_pm2sr.push(_base_faces.num() + 2 * vspli + i);
     }
@@ -1105,7 +1105,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
     SrVertexMorph* vm = vua->vmorph;
     vm->coarsening = false;
     int time = _refine_morph_time;
-    vm->time = static_cast<short>(time - 1);
+    vm->time = short(time - 1);
     float frac = 1.f / time;
     // vm->vgrefined = vspl->vu_vgeom;
     // vua->vgeom = vta->vgeom;
@@ -1765,7 +1765,7 @@ void SrMesh::start_coarsen_morphing(SrVertex* vt) {
     }
     vm->coarsening = true;
     int time = _coarsen_morph_time;
-    vm->time = static_cast<short>(time - 1);
+    vm->time = short(time - 1);
     float frac = 1.f / time;
     vm->vginc.point = (coarsened_vg->point - va->vgeom.point) * frac;
     if (!b_nor001) vm->vginc.vnormal = (coarsened_vg->vnormal - va->vgeom.vnormal) * frac;
@@ -1788,7 +1788,7 @@ void SrMesh::abort_coarsen_morphing(SrVertex* vc) {
     // Now set the vertex to refine-morph to its desired position.
     vm->coarsening = false;
     int time = _refine_morph_time;
-    vm->time = static_cast<short>(time - 1);
+    vm->time = short(time - 1);
     float frac = 1.f / time;
     vm->vginc.point = (vm->vgrefined.point - va->vgeom.point) * frac;
     if (!b_nor001) vm->vginc.vnormal = (vm->vgrefined.vnormal - va->vgeom.vnormal) * frac;

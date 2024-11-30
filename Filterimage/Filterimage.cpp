@@ -2351,17 +2351,20 @@ void do_procedure(Args& args) {
     parallel_for_coords({2}, image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = timage[yx[0] < timage.ysize() ? yx : image.dims() - 1 - yx + V(0, timage.xsize() / 2)];
     });
+
   } else if (name == "premultiply_alpha") {
     assertx(image.zsize() == 4);
     parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
       auto alpha = image[yx][3];
       for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * alpha / 255.f + .5f);
     });
+
   } else if (name == "interleavecols") {
     Image image1(image);
     Image image2(args.get_filename());
     assertx(same_size(image1, image2));
     for (const auto& yx : range(image.dims())) image[yx] = yx[1] % 2 == 0 ? image1[yx] : image2[yx];
+
   } else if (name == "stereo_purple") {
     const int n = 800;
     const int nobj = 8;
@@ -2393,6 +2396,7 @@ void do_procedure(Args& args) {
     images[0][0] = image1;
     images[0][1] = image2;
     assemble_images(images);
+
   } else if (name == "benchmark") {
     HH_TIMER("_overall");
     const float s = 1.01f;
@@ -2400,6 +2404,7 @@ void do_procedure(Args& args) {
       // HH_TIMER("__scale");
       image.scale(twice(s), g_filterbs, &gcolor);
     }
+
   } else if (name == "mark_dark") {
     const int thresh = args.get_int();
     if (image.zsize() < 4) {
@@ -2410,6 +2415,7 @@ void do_procedure(Args& args) {
       int lum = image[yx][0] + image[yx][1] + image[yx][2];
       image[yx][3] = lum > thresh ? 0 : 255;
     }
+
   } else if (name == "test1") {
     // ~/proj/morph/data/quadmesh/Notes.txt
     // Filterimage image1.png -procedure test1 image2.png >mesh.m
@@ -2453,6 +2459,7 @@ void do_procedure(Args& args) {
     mesh.write(std::cout);
     std::cout.flush();
     nooutput = true;
+
   } else if (name == "checkers4") {
     // Filterimage -create 128 128 -proc checkers4 | imgv
     const int n = image.ysize() / 2;
@@ -2480,6 +2487,7 @@ void do_procedure(Args& args) {
         image[yxi * n + yx] = pixel;
       }
     }
+
   } else if (name == "gradchecker") {
     // Filterimage -create 512 512 -proc gradchecker 5 -to png | imgv
     int gridn = args.get_int();
@@ -2494,6 +2502,7 @@ void do_procedure(Args& args) {
           !is_on ? pixel_gray : Pixel(uint8_t(yxf[0] * 255.f + .5f), uint8_t((1.f - yxf[0]) * 255.f + .5f), 0);
       image[yx] = pixel;
     }
+
   } else if (name == "fix_agarwala") {
     // streaming multigrid: fix Aseem Agarwala labels file
     // Filterimage labels.png -proc fix_agarwala >labels.fixed.png
@@ -2512,6 +2521,7 @@ void do_procedure(Args& args) {
       for_int(z, 3) image[yx][z] = v;
       image[yx][3] = a;
     }
+
   } else if (name == "red_green_ramp") {
     // Filterimage -create 512 512 -procedure red_green_ramp -to png >~/data/image/ramp_red_green.png
     for (const auto& yx : range(image.dims())) {
@@ -2519,6 +2529,7 @@ void do_procedure(Args& args) {
       image[yx][2] = 0;
       image[yx][3] = 255;
     }
+
   } else if (name == "test_videoloop_mask_dilation") {
     // cd ~/proj/videoloops/data/test_bfs_mask_expansion
     // Filterimage TDpoolpalms_temp_opt0_3.png -procedure test_videoloop_mask_dilation
@@ -2601,6 +2612,7 @@ void do_procedure(Args& args) {
       image_final.write_file("mask_final.png");
     }
     nooutput = true;
+
   } else if (name == "assemble_thumbnails") {
     // ls $HOMEPATH/Dropbox/Pictures/2014/arboretum/*.jpg | arg Filterimage -create 1 1 -as_cropsides -1 -1 -1 -1 -procedure assemble_thumbnails -stdin 128 -to png >v.png
     // for y in "$(cygpath -u "$HOMEPATH")"/Dropbox/Pictures/2*; do yy="$(tname "$y")"; echo $yy; for i in "$y"/**/*.jpg; do echo "$i"; done | arg Filterimage -create 1 1 -as_cropsides -1 -1 -1 -1 -procedure assemble_thumbnails -stdin 128 -to png >$yy.thumbs.png; done
@@ -2650,6 +2662,7 @@ void do_procedure(Args& args) {
       });
     }
     assemble_images(grid_thumbnails);
+
   } else if (name == "teddy1") {
     GMesh mesh;
     Matrix<Vertex> matv(image.dims());
@@ -2681,6 +2694,7 @@ void do_procedure(Args& args) {
     });
     WFile fi("mesh.m");
     mesh.write(fi());
+
   } else if (name == "vlp_to_color_ramps") {
     // Filterimage ~/proj/videoloops/data/ReallyFreakinAll/out/HDdunravenpass1_loop.vlp -proc vlp_to_color_ramps v -noo
     // creates v.static.png v.start.png v.period.png v.activation.png
@@ -2705,6 +2719,7 @@ void do_procedure(Args& args) {
       });
       image2.write_file(root_name + "." + channel_name[z] + ".png");
     }
+
   } else if (name == "vlp_mask_to_color") {
     // Filterimage ~/proj/fastloops/data/test/HDmorningsteam1_vlp_level0_opt0.png -proc vlp_mask_to_color ~/proj/fastloops/data/test/HDmorningsteam1_mask_level0_opt0.png >v.png
     assertx(image.size() > 0);
@@ -2736,6 +2751,7 @@ void do_procedure(Args& args) {
       if (is_masked) pixel = Pixel::white();
       image[yx] = pixel;
     });
+
   } else if (name == "entropy") {
     // Filterimage -create 256 20 -proc color_ramp -to png >~/data/image/color_ramp.png
     assertx(image.size() > 0);
@@ -2748,6 +2764,7 @@ void do_procedure(Args& args) {
     });
     std::cout << encoding.norm_entropy() << "\n";
     nooutput = true;
+
   } else if (name == "color_ramp") {
     Grid<1, Vector4> color_ramp(V(k_color_ramp.num()));
     convert(CGridView<1, Pixel>(k_color_ramp), color_ramp);
@@ -2756,10 +2773,12 @@ void do_procedure(Args& args) {
     for_coords(image.dims(), [&](const Vec2<int>& yx) {
       image[yx] = sample_domain(color_ramp, V((yx[1] + .5f) / image.xsize()), g_filterbs.head<1>(), &vgcolor).pixel();
     });
+
   } else if (name == "compress_yuv420") {
     Nv12 nv12(image.dims());
     convert_Image_to_Nv12(image, nv12);
     convert_Nv12_to_Image(nv12, image);
+
   } else {
     args.problem("procedure '" + name + "' unrecognized");
   }

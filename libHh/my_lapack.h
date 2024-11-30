@@ -20,39 +20,9 @@ using lapack_int = lapack::integer;
 #else  // cygwin or WIN32
 
 #if defined(__CYGWIN__)
-
-// cygwin: c:/cygwin/usr/src/lapack-3.5.0.tgz
-//  lapacke_config.h
-// #ifndef lapack_int
-// #if defined(LAPACK_ILP64)
-// #define lapack_int long
-// #else
-// #define lapack_int int
-// #endif
-// #endif
-//
-//  lapacke.h:  "#define lapack_int int"
-// #define LAPACK_sgelss LAPACK_GLOBAL(sgelss, SGELSS)
-// void LAPACK_sgelss( lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a,
-//                     lapack_int* lda, float* b, lapack_int* ldb, float* s,
-//                     float* rcond, lapack_int* rank, float* work,
-//                     lapack_int* lwork, lapack_int* info );
-
-//  c:/cygwin/usr/src/lapack-3.5.0.tgz!lapack-3.5.0/lapacke/example/example_DGELS_colmajor.c
-// #include <lapacke.h>
-// {
-//    double A[5][3] = {1, 2, 3, 4, 5, 1, 3, 5, 2, 4, 1, 4, 2, 5, 3};
-//    double b[5][2] = {-10, 12, 14, 16, 18, -3, 14, 12, 16, 16};
-//    lapack_int m = 5, n = 3, lda = 5, ldb = 5, nrhs = 2;
-//    lapack_int info = LAPACKE_dgels(LAPACK_COL_MAJOR, 'N', m, n, nrhs, *A, lda, *b, ldb);
-// }
-
 using lapack_int = int;
-
 #else  // _WIN32
-
 using lapack_int = long;  // was defined as "integer" in f2c.h
-
 #endif
 
 // Continue: cygwin or WIN32

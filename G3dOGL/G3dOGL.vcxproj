@@ -52,7 +52,7 @@
       <!-- I often comment out the following line -->
       <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
     </ClCompile>
-    <ClCompile Include="normalmapping.cpp" />
+    <ClCompile Include="NormalMapping.cpp" />
     <ClCompile Include="PMesh_ogl.cpp" />
     <ClCompile Include="ScGeomorph.cpp" />
     <ClCompile Include="SimplicialComplex.cpp" />
@@ -62,7 +62,7 @@
   <ItemGroup>
     <ClInclude Include="G3d.h" />
     <ClInclude Include="HB.h" />
-    <ClInclude Include="normalmapping.h" />
+    <ClInclude Include="NormalMapping.h" />
     <ClInclude Include="ScGeomorph.h" />
     <ClInclude Include="SimplicialComplex.h" />
     <ClInclude Include="SplitRecord.h" />

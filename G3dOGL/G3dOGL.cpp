@@ -8,7 +8,7 @@
 #include "G3dOGL/ScGeomorph.h"         // DEF_SC
 #include "G3dOGL/SimplicialComplex.h"  // DEF_SC
 #include "G3dOGL/SplitRecord.h"        // DEF_SC
-#include "G3dOGL/normalmapping.h"
+#include "G3dOGL/NormalMapping.h"
 #include "Hw.h"
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"

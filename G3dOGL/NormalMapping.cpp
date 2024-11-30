@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <mutex>  // once_flag, call_once()
 
+#include "G3dOGL/NormalMapping.h"
 #include "Hw.h"
 #include "libHh/Array.h"
 #include "libHh/Image.h"
 #include "libHh/StringOp.h"
-#include "normalmapping.h"
 
 // NORMAL_MAPPING=ogl2 G3dOGL ~/data/mesh/buddhaf.nf10000.m -key Dt  # Also: frag1 nvrc dot3.
 

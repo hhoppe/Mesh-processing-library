@@ -76,7 +76,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
 
       } else if (num_outside == 3) {  // Likely a degenerate spherical triangle.
         // Occurred on:
-        // SphereSample -domain octaflat -grid 4096 -domain_file domains/octaflat_eg128.uv.sphparam.m -param $tmp/$r.octaflat.sphparam.m -signal N -write_texture images/$r.octaflat.unrotated.normalmap.png
+        // SphereSample -domain octaflat -grid 4096 -domain_file domains/octaflat_eg128.uv.sphparam.m -param $tmp/$r.octaflat.sphparam.m -signal N -write_texture images/$r.octaflat.normalmap.png
         // SHOW(gnomonic_get_bary(p, triangle)), SHOW_PRECISE(spherical_triangle_area(triangle));
         assertw(spherical_triangle_is_flipped(triangle));
         assertw(spherical_triangle_area(triangle) == 0.f);

@@ -252,6 +252,6 @@ int main(int argc, const char** argv) {
   args.parse();
   hh_clean_up();
   if (errmesh) meshes[0].write(std::cout);
-  if (!k_debug) exit_immediately(0);
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

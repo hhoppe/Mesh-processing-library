@@ -1483,7 +1483,7 @@ void do_pm_encode() {
   }
   pmesh.write(std::cout);
   std::cout.flush();
-  if (!k_debug) exit_immediately(0);  // No destruction of GMesh and PMesh.
+  if (!k_debug) hh_clean_up(), exit_immediately(0);  // Skip ~GMesh() and ~PMesh().
 }
 
 }  // namespace

@@ -111,7 +111,7 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
     for_int(i, 3) triangle[i] *= _xform;
     _trianglefaces.push({triangle, f});
   }
-  int gridn = int(sqrt(_mesh.num_faces() * .02f));  // Was .05f.
+  int gridn = int(sqrt(_mesh.num_faces() * .02f) * _options.gridn_factor);  // Was .05f.
   if (_options.allow_local_project) gridn /= 2;
   gridn = clamp(gridn, 10, Spatial::k_max_gn);
   _spatial = make_unique<TriangleFaceSpatial>(_trianglefaces, gridn);

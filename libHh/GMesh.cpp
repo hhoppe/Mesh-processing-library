@@ -174,7 +174,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   } else if (ch == '"') {
     send = str_chr(_s + nch + 2, '"');
     if (!send) assertnever("No matching '\"' " + SSHOW(_s, _s + nch + 2));
-  } else if (std::isalnum(ch)) {
+  } else if (std::isalnum(ch) || ch == '-') {
     send = str_last_non_space(_s + nch + 2);
   } else {
     if (Warning("Cannot parse StringKey value")) SHOW(_str, _s + nch + 1);

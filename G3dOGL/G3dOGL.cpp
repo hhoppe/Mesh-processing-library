@@ -3155,7 +3155,15 @@ void read_pm(const string& filename) {
   pmrs = make_unique<PMeshRStream>((*g_fi)(), &pmesh);
   pmi = make_unique<PMeshIter>(*pmrs);
   if (0 && pm_lod_level == 0.f) pm_lod_level = 1.f;
-  pmi->goto_nvertices(pmrs->base_mesh()._vertices.num() + int(pmrs->_info._tot_nvsplits * pm_lod_level + .5f));
+  const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
+  const int base_nv = pmrs->base_mesh()._vertices.num();
+  const int full_nv = pmrs->_info._full_nvertices;
+  if (pm_lod_num_faces > 0) {
+    pmi->goto_nfaces(pm_lod_num_faces);
+    pm_lod_level = clamp(float(pmi->_vertices.num() - base_nv) / max(full_nv - base_nv, 1), 0.f, 1.f);
+  } else {
+    pmi->goto_nvertices(base_nv + int(pmrs->_info._tot_nvsplits * pm_lod_level + .5f));
+  }
   slidermode = pmrs->_info._tot_nvsplits > 0;
   showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), pmrs->_info._full_nvertices, pmrs->_info._full_nfaces);
   g3d::UpdateOb1Bbox(pmrs->_info._full_bbox);

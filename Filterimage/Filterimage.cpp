@@ -1488,19 +1488,15 @@ void do_object_to_tangent_normals(Args& args) {
   const bool k_flip_green_channel = false;
   const bool k_per_pixel_bitangent = false;
   const bool k_renormalize_tbn_per_pixel = false;
-  const bool k_assume_positive_sign = true;
   GMesh mesh;
   mesh.read(RFile(mesh_file)());
   {
     string str;
-    if (k_assume_positive_sign)
-      for (Face f : mesh.faces()) assertx(face_bitangent_sign(mesh, f, str) == 1);
     for (Vertex v : mesh.vertices()) {
       assertx(mesh.point(v)[2] == 0.f);
       Vector normal, tangent;
       assertx(parse_key_vec(mesh.get_string(v), "normal", normal));
       assertx(parse_key_vec(mesh.get_string(v), "tangent", tangent));
-      assertx(k_assume_positive_sign);
       const Vector bitangent = cross(normal, tangent);
       mesh.update_string(v, "bitangent", csform_vec(str, bitangent));
     }
@@ -1524,19 +1520,21 @@ void do_object_to_tangent_normals(Args& args) {
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
         auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
         hint_f = f;
-        assertx(d2 < 1e-10f);
+        if (0) assertw(d2 < 1e-10f);  // The model mesh may contain boundaries (holes) or cut handles/tunnels.
         const auto renorm = [&](const Vector& vec) { return k_renormalize_tbn_per_pixel ? normalized(vec) : vec; };
         const Vector normal = renorm(unnormalized_interpolated_vector(mesh, f, "normal", bary));
         const Vector tangent = renorm(unnormalized_interpolated_vector(mesh, f, "tangent", bary));
         const Vector interpolated_bitangent = unnormalized_interpolated_vector(mesh, f, "bitangent", bary);
-        const Vector pixel_computed_bitangent = cross(normal, tangent) * float(face_bitangent_sign(mesh, f, str));
-        const Vector bitangent = renorm(k_per_pixel_bitangent ? pixel_computed_bitangent : interpolated_bitangent);
+        const Vector pixel_computed_bitangent = cross(normal, tangent);
+        const Vector bitangent0 = renorm(k_per_pixel_bitangent ? pixel_computed_bitangent : interpolated_bitangent);
+        const int bitangent_sign = face_bitangent_sign(mesh, f, str);
+        const Vector bitangent = float(bitangent_sign) * bitangent0;
         // Although the normal and tangent at each vertex are orthogonal, the interpolated normal and tangent are not.
         const SGrid<float, 3, 3> tbn_non_ortho = V<Vec3<float>>(tangent, bitangent, normal);
         Vector detail_normal_in_tbn;
         if (0) {  // Simple projection, which (incorrectly) assumes that the TBN frame is orthogonal.
           mat_mul(tbn_non_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
-        } else if (1) {  // Map through the transpose of the TBN frame inverse.
+        } else if (0) {  // Map through the transpose of the TBN frame inverse.
           assertx(invert(tbn_non_ortho.const_view(), tbn_inverse.view()));
           mat_mul(object_space_detail_normal.const_view(), tbn_inverse.const_view(), detail_normal_in_tbn.view());
         } else {  // Solution suggested in https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.h
@@ -1544,12 +1542,11 @@ void do_object_to_tangent_normals(Args& args) {
           // Is it really an "exact inverse of pixel shader"?
           const SGrid<float, 3, 3> tbn_ortho =
               V<Vec3<float>>(cross(bitangent, normal), cross(normal, tangent), cross(tangent, bitangent));
-          const float sign = dot(tangent, tbn_ortho[0]) < 0.f ? -1.f : 1.f;
-          if (k_assume_positive_sign) assertx(sign == 1.f);
           mat_mul(tbn_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
-          if (!k_assume_positive_sign) detail_normal_in_tbn = sign * detail_normal_in_tbn;
+          const float sign = dot(tangent, tbn_ortho[0]) < 0.f ? -1.f : 1.f;
+          detail_normal_in_tbn = sign * detail_normal_in_tbn;
         }
-        // It is always OK to rescale the vector because the 3x3 transform is linear even if non-orthogonal.
+        // It is always OK to rescale the vector because the 3x3 transform is linear even if non-orthogonal?
         if (1) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
         if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
         pixel = Vector4(concat((detail_normal_in_tbn + 1.f) / 2.f, V(1.f))).pixel();

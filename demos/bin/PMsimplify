@@ -10,8 +10,8 @@ function ename { local t="$(tname "$1")"; [[ $t = *.* ]] && echo "${t##*.}" || e
 function rname { echo "${1%.$(ename "$1")}"; }
 
 inroot="$1"; shift
-if [[ "$(ename "$inroot")" == gz ]]; then inroot="$(rname "$inroot")"; fi
-if [[ "$(ename "$inroot")" != pm ]]; then echo "$0 : first argument not *.pm" 1>&2; exit 1; fi
+if [[ $(ename "$inroot") == gz ]]; then inroot="$(rname "$inroot")"; fi
+if [[ $(ename "$inroot") != pm ]]; then echo "$0 : first argument not *.pm" 1>&2; exit 1; fi
 inroot="$(rname "$inroot")"
 
 outroot="$inroot.new"

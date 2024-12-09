@@ -13,8 +13,8 @@ using namespace hh;
 
 namespace {
 
-string orig_mesh;
-string orig_indices;
+string original_mesh;
+string original_indices;
 bool keep_uv = false;
 
 GMesh mesh_uv;
@@ -382,7 +382,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   });
   hh_clean_up();
   gmesh.write(std::cout);
-  if (!k_debug) exit_immediately(0);  // Skip GMesh destruction for speedup.
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
 }
 
 // Extract a GMesh from the progressive mesh iterator, add "sph" and "uv" strings, and write it to std::cout.
@@ -396,27 +396,27 @@ void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool spli
 }
 
 // Read the PM's original mesh and original_vertex_indices.txt, add "sph" and "uv" strings, and write it to std::cout.
-void write_orig_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
-  assertx(orig_mesh != "");
-  assertx(orig_indices != "");
-  Array<int> orig_vertex_indices;
+void write_original_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
+  assertx(original_mesh != "");
+  assertx(original_indices != "");
+  Array<int> original_vertex_indices;
   {
-    RFile fi(orig_indices);
+    RFile fi(original_indices);
     string str;
     assertx(my_getline(fi(), str));
     const int num_vertices = to_int(str);
     assertx(num_vertices == pmi._vertices.num());
     for_int(vi, num_vertices) {
       assertx(my_getline(fi(), str));
-      orig_vertex_indices.push(to_int(str));
+      original_vertex_indices.push(to_int(str));
     }
   }
   GMesh gmesh;
   {
-    gmesh.read(RFile{orig_mesh}());
+    gmesh.read(RFile{original_mesh}());
     for_int(vi, pmi._vertices.num()) {
-      const int orig_vi = orig_vertex_indices[vi];  // (Index starting at 1.)
-      Vertex v = gmesh.id_vertex(orig_vi);
+      const int original_vi = original_vertex_indices[vi];  // (Index starting at 1.)
+      Vertex v = gmesh.id_vertex(original_vi);
       v_sph(v) = sphmap[vi];
     }
   }
@@ -579,11 +579,11 @@ int main(int argc, const char** argv) {
   HH_ARGSP(rotate_s3d, "file.s3d : rotate spherical param using view (snapped to axes)");
   HH_ARGSF(no_rot_align, ": do not rotationally align map with face normals");
   HH_ARGSF(split_meridian, ": split mesh faces at prime meridian (zero lon)");
-  HH_ARGSP(orig_mesh, "file.m : file containing the original mesh");
-  HH_ARGSP(orig_indices, "file.txt : file containing the original vertex indices");
+  HH_ARGSP(original_mesh, "file.m : file containing the original mesh");
+  HH_ARGSP(original_indices, "file.txt : file containing the original vertex indices");
   HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph using inverse of a spherical map");
   HH_ARGSP(keep_uv, "bool : do not overwrite GMesh uv with lonlat coordinates");
-  HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, orig_mesh)");
+  HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, original_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");
   HH_ARGSC("Examples:");
   HH_ARGSC("  SphereParam cow.pm -rot s3d/cow.s3d >cow.sphparam.m");
@@ -624,7 +624,7 @@ int main(int argc, const char** argv) {
       {"mesh", &write_parameterized_mesh},
       {"pm", &write_parameterized_pm},
       {"ply", &write_parameterized_ply},
-      {"orig_mesh", &write_orig_mesh},
+      {"original_mesh", &write_original_mesh},
   };
   const auto output_formatter = output_formatters.get(to);
 

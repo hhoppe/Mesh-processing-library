@@ -334,7 +334,7 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
   }
   if (!_os) {
     showf("Write failed, maybe due to broken pipe.\n");
-    exit_immediately(0);
+    hh_clean_up(), exit_immediately(0);
   }
 }
 

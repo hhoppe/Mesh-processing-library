@@ -333,7 +333,7 @@ void WriteOutput() {
   if (!FrameIO::write(std::cout, ObjectFrame{frame, obn, z, obinary})) {
     // No SIGPIPE to terminate process in Win32.
     showf("Write failed, maybe due to broken pipe.\n");
-    exit_immediately(1);
+    hh_clean_up(), exit_immediately(1);  // Skip destruction of Pool data, etc.
   }
   std::cout.flush();
 }

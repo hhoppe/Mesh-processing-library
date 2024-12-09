@@ -2859,8 +2859,9 @@ void do_assign_tangents() {
     string str;
     mesh.update_string(c, "tangent", csform_vec(str, tangent));
     assertx(abs(sign) == 1.f);
-    if (sign < 0.f) {
-      if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) assertx(to_int(s) == -1);
+    if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
+      assertx(to_int(s) == int(sign));
+    } else if (sign < 0.f) {
       mesh.update_string(f, "bitangent_sign", "-1");
     }
   };
@@ -2869,7 +2870,7 @@ void do_assign_tangents() {
   };
   const SMikkTSpaceContext context{&interface, nullptr};
   assertx(genTangSpaceDefault(&context));
-  // Usually followed by "-slowcornermerge", to transfer "tangent" strings to a vertex if same at all its corners.
+  // Usually followed by "-slowcornermerge", to transfer "tangent" strings from corners to vertices if all same.
 }
 
 // *** norgroup
@@ -4526,6 +4527,6 @@ int main(int argc, const char** argv) {
   }
   mesh.record_changes(nullptr);  // do not record mesh destruction
   oa3d.flush();
-  if (!k_debug) exit_immediately(0);
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

@@ -49,6 +49,6 @@ int main(int argc, const char** argv) {
     HH_TIMER("_writemesh");
     mesh.write(std::cout);
   }
-  if (!k_debug) exit_immediately(0);
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

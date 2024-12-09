@@ -10,14 +10,14 @@
 # Concerns:
 # - on Mac, old version of mktemp does not support "--suffix".
 # - on Cygwin, mktemp sometimes uses /tmp even with my TMPDIR override.
-# if [[ -n "$TEMP" ]]; then export TMPDIR="$TEMP"; fi  # sometimes necessary to prevent Cygwin mktemp from using /tmp
+# if [[ -n $TEMP ]]; then export TMPDIR="$TEMP"; fi  # sometimes necessary to prevent Cygwin mktemp from using /tmp
 # tmpprog=$(mktemp --suffix=.prog)
 # tmpbase=$(mktemp --suffix=.base.m)
 # tmprprog=$(mktemp --suffix=.rprog)
 
 tmpd=/tmp
-if [[ -d "$TMPDIR" ]]; then tmpd="${TMPDIR%/}"; fi  # remove any trailing /
-if [[ -d "$TEMP" ]]; then tmpd="$TEMP"; fi
+if [[ -d $TMPDIR ]]; then tmpd="${TMPDIR%/}"; fi  # remove any trailing /
+if [[ -d $TEMP ]]; then tmpd="$TEMP"; fi
 tmproot="$tmpd"/v.$$
 tmpprog="$tmproot".prog
 tmpbase="$tmproot".base.m

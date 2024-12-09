@@ -7,7 +7,7 @@
 
 # If running from a Makefile, prefer the selected CONFIG.
 if [[ ${CONFIG+x} ]]; then
-  PATH=../${CONFIG}/bin:$PATH
+  PATH=../$CONFIG/bin:$PATH
 else # Otherwise, explicitly set the desired build directory here.
   # Add all possible build directories as fallback if not specified below.
   PATH=../bin:../bin/debug:../bin/Win32:../bin/Win32/debug:../bin/win:../bin/w32:../bin/mingw:../bin/clang../bin/cygwin:../bin/mingw32:../bin/unix:$PATH
@@ -33,13 +33,13 @@ export G3DARGS="-geom 750x600"
 export G3DARGS="-geom 900x700 -bigfont"
 export G3DARGS="-geom 1100x850+50+50 -bigfont"
 export G3DARGS="-geom 1100x850+100+50 -bigfont"
-if [[ "${BASH_VERSINFO[5]}" == *-apple-* ]]; then
+if [[ ${BASH_VERSINFO[5]} == *-apple-* ]]; then
 export G3DARGS="-geom 1000x750+0+0 -bigfont"
 fi
 
 # For models with texture, use smaller window, depending on graphics memory.
 export TEXGEOMETRY="-geom 1000x800+50+50"
 export TEXGEOMETRY="-geom 1000x800+100+50"
-if [[ "${BASH_VERSINFO[5]}" == *-apple-* ]]; then
+if [[ ${BASH_VERSINFO[5]} == *-apple-* ]]; then
 export TEXGEOMETRY="-geom 1000x800+0+0"
 fi

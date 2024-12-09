@@ -1491,11 +1491,12 @@ void do_write_texture(Args& args) {
   handle_zero_alpha_pixels_for_filled_faces(image);
   if (feather_texture) apply_feathering(image);
   image.write_file(image_name);
+  if (!k_debug && !args.num()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
+  // (Immediate exit loses running timers though.)
   nooutput = true;
-  if (1 && !k_debug) {  // Avoid ~Mesh() and ~MeshSearch().  We lose running timers though.
-    hh_clean_up();
-    exit_immediately(0);
-  }
+  // Reinitialize to allow more subsequent do_write_texture():
+  signal_ = "";
+  g_mesh.clear();
 }
 
 void do_write_primal_texture(Args& args) {
@@ -1595,7 +1596,10 @@ void do_write_lonlat_texture(Args& args) {
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
 
-  const MeshSearch mesh_search(param_mesh, {true});
+  MeshSearch::Options options;
+  options.allow_local_project = true;
+  options.gridn_factor = 4.f;
+  const MeshSearch mesh_search(param_mesh, options);
 
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
@@ -1859,6 +1863,6 @@ int main(int argc, const char** argv) {
     g_mesh.write(std::cout);
     std::cout.flush();
   }
-  if (!k_debug) exit_immediately(0);
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

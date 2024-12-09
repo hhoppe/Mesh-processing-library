@@ -1790,7 +1790,7 @@ void wrap_up() {
     ASSERTX(mesh.valid(ept.cme));
     point_change_edge(&ept, nullptr);
   }
-  showff("number of retired edge points: %d/%d\n", nretired, epts.num());
+  if (epts.num()) showff("number of retired edge points: %d/%d\n", nretired, epts.num());
 }
 
 // Compute a local spring constant for the would-be neighborhood nn.
@@ -3455,7 +3455,7 @@ double evaluate_aps(Edge e, int ii) {
     }
   }
   if (max_mag2 == -1.) {
-    Warning("Not valid APS - Vertex is not inside any new face in the texture domain");
+    if (verb >= 2) Warning("Not valid APS - Vertex is not inside any new face in the texture domain");
     return -1.;
   }
 
@@ -4960,6 +4960,6 @@ int main(int argc, const char** argv) {
   if (original_indices != "") write_original_indices();
   wfile_prog = nullptr;
   gwinfo.clear();
-  if (!k_debug) exit_immediately(0);
+  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

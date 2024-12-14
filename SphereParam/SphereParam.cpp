@@ -140,7 +140,7 @@ template <int n, bool need_normalize> class SaveSplitEdgeAttrib {
                        int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f2), _key, _vec_v2f2)) +
                        int(_mesh.parse_corner_key_vec(_mesh.corner(_vs1, f1), _key, _vec_vs1f1)) +
                        int(_mesh.parse_corner_key_vec(_mesh.corner(_vs2, f2), _key, _vec_vs2f2)));
-    assertx(num_defined == 0 || num_defined == 6);
+    if (!(num_defined == 0 || num_defined == 6)) assertnever(SSHOW(_key, num_defined));
     _is_defined = num_defined > 0;
   }
   void reintroduce_after_split_edge(Vertex v, float frac1) {

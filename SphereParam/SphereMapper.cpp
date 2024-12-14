@@ -717,6 +717,7 @@ class SphereMapper::Implementation {
       gmesh.update_string(gmesh.id_vertex(v + 1), "normal", csform_vec(str, normal));
     }
     gmesh.write(os);
+    assertx(os);
   }
 
   void update_visualizer_vertex_position(std::ostream& os, int v, const char* sinfo) const {
@@ -745,6 +746,7 @@ class SphereMapper::Implementation {
       os << "f 0 0 0\n" << std::flush;
       _visualizer_nsplits_since_end_frame = 0;
     }
+    assertx(os);
   }
 
   void update_visualizer_optimize_all() {
@@ -752,6 +754,7 @@ class SphereMapper::Implementation {
     std::ostream& os = (*_visualizer)();
     for_int(v, _pmi._vertices.num()) update_visualizer_vertex_position(os, v, "");
     os << "f 0 0 0\n" << std::flush;
+    assertx(os);
     _visualizer_nsplits_since_end_frame = 0;
   }
 

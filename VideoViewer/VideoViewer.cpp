@@ -502,7 +502,7 @@ Object& verify_video() {
 unique_ptr<Object> object_reading_video(string filename) {
   try {
     if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
-    bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi");
+    bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi") && !ends_with(filename, ".gif");
     auto prvideo = make_unique<RVideo>(filename, use_nv12);  // may throw
     Vec3<int> dims = prvideo->dims();                        // should allocate extra padframes?
     if (use_nv12 && !is_zero(dims.tail<2>() % 2)) {

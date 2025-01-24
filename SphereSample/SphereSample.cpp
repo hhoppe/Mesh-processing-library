@@ -1359,7 +1359,7 @@ void apply_feathering(Image& image) {
     for (const int i : range(h)) blend_pixels(image[h * 2 - 1][i], image[h * 2 - 1][h * 2 - 1 - i]);
 
   } else if (domain == "octa" || domain == "octaflat") {
-    // For each of the four image boundaries, we must establish mirror symmmetry within the pixels on the boundary.
+    // For each of the four image boundaries, we must establish mirror symmetry within the pixels on the boundary.
     // This leads to a narrow (1-texel width) band of zero-derivative signal across the texture boundary, but this
     // is much better than leaving a visible discontinuity.
     for (const int axis : {0, 1})

@@ -105,7 +105,7 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
       buf_fd = HH_POSIX(dup)(_fd);
       assertx(buf_fd != _fd);
       assertx(!HH_POSIX(close)(_fd));
-      // Create a dummy open file so fd0 is not re-used
+      // Create a dummy open file so fd0 is not reused
       assertx(HH_POSIX(open)("NUL", O_RDONLY) == 0);  // (never freed)
     }
     // Only one RBuffer on fd 0 allowed.

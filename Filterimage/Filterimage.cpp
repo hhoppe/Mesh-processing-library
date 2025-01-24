@@ -1845,7 +1845,7 @@ void do_superresolution(Args& args) {
     };
     func_minmax(slum);
     // The next calls are highly unoptimized!  Ideally, the bounds checking should happen only once,
-    //  and source samples should be re-used between calls.
+    //  and source samples should be reused between calls.
     // 4 exact nearest pixels
     func_minmax(mlum.inside(iyx + V(0, 0), k_reflected2));
     func_minmax(mlum.inside(iyx + V(0, 1), k_reflected2));

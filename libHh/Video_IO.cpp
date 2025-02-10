@@ -50,6 +50,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
 #include <atomic>
 #include <cstring>  // memcpy()
+#include <regex>
 
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
@@ -833,6 +834,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     bool expect_audio = false;
     // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
     string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
+
     {  // read header for dimensions and attributes (ignore video and audio data)
       // 2>&1 works on both Unix bash shell and Windows cmd shell: https://stackoverflow.com/questions/1420965/
       // Ideally, <nul and/or </dev/null so that "vv ~/proj/fastloops/data/assembled_all_loops_uhd.mp4" does
@@ -867,7 +869,12 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       double framerate = -1.;
       bool yuv444p = false;
       int nlines = 0;
+      int rotation = 0;
       string line;
+      std::smatch matches;
+      const std::regex pattern_rotation_of{R"(rotation of ([-+]?\d+).?\d*\s*degrees)"};
+      const std::regex pattern_rotate{R"(rotate:\s*([-+]?\d+))"};
+
       while (my_getline(fi(), line, false)) {
         nlines++;
         if (ldebug) SHOW(line);
@@ -883,7 +890,11 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
             total_bitrate *= 1000.;
           }
         }
-        if (contains(line, "Stream #0:")) {
+        if (std::regex_search(line, matches, pattern_rotation_of)) {
+          rotation = to_int(matches[1]);
+        } else if (std::regex_search(line, matches, pattern_rotate)) {
+          rotation = to_int(matches[1]);
+        } else if (contains(line, "Stream #0:")) {
           if (contains(line, ": Video:") && !dims[2]) {
             for (string::size_type i = 0;;) {
               i = line.find(',', i + 1);
@@ -926,13 +937,15 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       if (framerate < 0.) throw std::runtime_error("no framerate in video file '" + filename + "'");
       if (ends_with(filename, ".gif") && framerate >= 21. && framerate <= 29.) framerate = 60.;
       if (video_bitrate < 0.) video_bitrate = total_bitrate;
-      if (ldebug) SHOW(dims, total_bitrate, video_bitrate, framerate);
+      if (abs(rotation) == 90 || abs(rotation) == 270) std::swap(dims[1], dims[2]);
+      if (ldebug) SHOW(dims, total_bitrate, video_bitrate, framerate, rotation);
       assertx(product(dims) > 0);
       _rvideo._dims = dims;
       _rvideo._attrib.bitrate = int(video_bitrate);
       _rvideo._attrib.framerate = framerate;
       if (yuv444p && _rvideo._use_nv12) Warning("Reading NV12 from a Video encoded with yuv444p");
     }
+
     if (expect_audio) {
       try {
         Audio& audio = _rvideo._attrib.audio;

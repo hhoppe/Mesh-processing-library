@@ -27,7 +27,7 @@ void Image::init(const Vec2<int>& pdims, Pixel pixel) {
   if (0) {
     fill(*this, pixel);
   } else if (0) {
-    parallel_for({4}, range(size()), [&](const size_t i) { flat(i) = pixel; });
+    parallel_for({.cycles_per_elem = 4}, range(size()), [&](const size_t i) { flat(i) = pixel; });
   } else {
     const uint32_t upix = reinterpret_cast<uint32_t&>(pixel);
     uint32_t* p = reinterpret_cast<uint32_t*>(data());
@@ -47,7 +47,7 @@ void Image::set_zsize(int n) {
 void Image::to_bw() {
   if (zsize() == 1) return;
   assertx(zsize() >= 3);
-  parallel_for_coords({10}, dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 10}, dims(), [&](const Vec2<int>& yx) {
     Pixel& pixel = (*this)[yx];
     uint8_t value;
     if (0) {
@@ -69,7 +69,7 @@ void Image::to_bw() {
 void Image::to_color() {
   if (zsize() >= 3) return;
   assertx(zsize() == 1);
-  parallel_for_coords({1}, dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 1}, dims(), [&](const Vec2<int>& yx) {
     Pixel& pixel = (*this)[yx];
     fill(pixel.head<3>(), pixel[0]);
   });

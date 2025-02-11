@@ -634,7 +634,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                          CVideoNv12View video_nv12, CMatrixView<int> mat_start, CMatrixView<int> mat_period, int nnf,
                          WVideo* pwvideo, GridView<3, Pixel> videoloop, VideoNv12View videoloop_nv12, int num_loops) {
   const int onf = odims[0], ny = odims[1], nx = odims[2];
-  // const auto [nf, ny, nx] = odims;  // C++20 allows it to be captured within the lambda function below.
+  // const auto [onf, ny, nx] = odims;  // Full C++20 support should allow this.
   const Vec2<int> sdims(ny, nx);
   const Vec3<int> ndims(nnf, ny, nx);
   assertx(int(video_filename != "") + int(!!video.size()) + int(!!video_nv12.size()) == 1);

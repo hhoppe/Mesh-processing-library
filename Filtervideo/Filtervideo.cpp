@@ -1077,11 +1077,11 @@ void do_gamma(Args& args) {
   Vec<uint8_t, 256> transf;
   for_int(i, 256) transf[i] = uint8_t(255.f * pow(i / 255.f, gamma) + 0.5f);
   if (1) {
-    parallel_for({10}, range(video.size()), [&](const size_t i) {
+    parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
       for_int(z, nz) video.flat(i)[z] = transf[video.flat(i)[z]];  // fastest
     });
   } else if (0) {
-    parallel_for_coords({10}, video.dims(), [&](const Vec3<int>& fyx) {  //
+    parallel_for_coords({.cycles_per_elem = 10}, video.dims(), [&](const Vec3<int>& fyx) {  //
       for_int(z, nz) video[fyx][z] = transf[video[fyx][z]];
     });
   } else {
@@ -1147,7 +1147,7 @@ void verify_loop_parameters() {
     }
   }
   if (1) {
-    parallel_for_coords({20}, g_lp.mat_static.dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = 20}, g_lp.mat_static.dims(), [&](const Vec2<int>& yx) {
       int staticf = g_lp.mat_static[yx], start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
       if (video.nframes() && !(period > 0 && start + period <= video.nframes()))
         assertnever(SSHOW(staticf, start, period));
@@ -1290,7 +1290,7 @@ void do_pjcompression() {
   assertx(g_lp.mat_activation.ysize() > 0);
   Image image(g_lp.mat_start.dims());
   image.set_zsize(4);
-  parallel_for_coords({30}, g_lp.mat_start.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 30}, g_lp.mat_start.dims(), [&](const Vec2<int>& yx) {
     int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx], staticf = g_lp.mat_static[yx];
     float activation = g_lp.mat_activation[yx];
     assertx(start <= 255);
@@ -1332,7 +1332,7 @@ void compute_temporal_costs() {
   assertx(max(g_lp.mat_start) > 0);  // cannot evaluate temporal cost if video is already remapped
   g_lp.mat_tcost.init(video.spatial_dims());
   const int onf = video.nframes();
-  parallel_for_coords({30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
     int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
     float temporal_cost = float(rgb_dist2(video[(start + period) % onf][yx], video[start][yx]) +
                                 rgb_dist2(video[start + period - 1][yx], video[(start + onf - 1) % onf][yx]));
@@ -1473,7 +1473,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
   bool have_func_dtime = !std::is_same_v<Func, NormalDeltaTime>;
   if (!have_func_dtime && pixel_adapted_trad) {
     compute_temporal_costs();
-    parallel_for_coords({20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = 20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
       int period = g_lp.mat_period[yx];
       bool big_temporal_cost = g_lp.mat_tcost[yx] > 2.f * 3.f * square(10.f);
       int pixtradius = big_temporal_cost ? tradius : 0;  // temporal crossfading radius
@@ -1487,7 +1487,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
   Matrix<float> mat_time;
   if (have_func_dtime) mat_time.init(video.spatial_dims(), 0.f);
   for_int(f, nnf) {
-    parallel_for_coords({100}, nvideo.spatial_dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = 100}, nvideo.spatial_dims(), [&](const Vec2<int>& yx) {
       const int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
       if (is_remap && f >= period) {
         nvideo[f][yx] = false ? Pixel::pink() : nvideo[period - 1][yx];
@@ -1548,7 +1548,7 @@ void do_remap() {
   if (max(g_lp.mat_start) == 0) return;  // already remapped (quite possible)
   int nnf = max(g_lp.mat_period);        // maximum period
   internal_render_loops(nnf, true);
-  parallel_for_coords({6}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 6}, video.spatial_dims(), [&](const Vec2<int>& yx) {
     g_lp.mat_static[yx] = g_lp.mat_static[yx] % g_lp.mat_period[yx];
     g_lp.mat_start[yx] = 0;
   });
@@ -1603,7 +1603,7 @@ void do_render_harmonize(Args& args) {
   compute_looping_regions();
   do_remap();  // for temporal crossfading
   Matrix<float> mat_avgdyn(video.spatial_dims(), 0.f);
-  parallel_for_coords({30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
     int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
     for_int(ii, period == 1 ? 0 : period) {
       int fi0 = start + ii + 0;
@@ -1667,7 +1667,7 @@ void do_gdloop(Args& args) {
                  nullptr, videoloop, dummy_vnv12, 1);
   video = std::move(videoloop);
   video_nv12.clear();
-  parallel_for_coords({8}, g_lp.mat_static.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 8}, g_lp.mat_static.dims(), [&](const Vec2<int>& yx) {
     g_lp.mat_static[yx] = g_lp.mat_static[yx] % g_lp.mat_period[yx];
     g_lp.mat_start[yx] = 0;
   });
@@ -2002,7 +2002,7 @@ void do_procedure(Args& args) {
                  Frame::rotation(2, -rad_from_deg(ang)) *
                  Frame::scaling(V(1.f / pixels_per_grid, 1.f / pixels_per_grid, 1.f)));
       }
-      parallel_for_coords({50}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+      parallel_for_coords({.cycles_per_elem = 50}, video.spatial_dims(), [&](const Vec2<int>& yx) {
         Point p = Point(float(yx[1]), float(yx[0]), 0.f) * frame;
         // rather inexact: box-filtering against non-rotated pixel square
         float flx = floor(p[0]);
@@ -2022,7 +2022,7 @@ void do_procedure(Args& args) {
     const float magnitude = 25.f;  // in [0..255] range
     const float sradius = 60.f;    // in pixels
     for_int(f, video.nframes()) {
-      parallel_for_coords({20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
+      parallel_for_coords({.cycles_per_elem = 20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
         float d = mag(convert<float>(yx) - convert<float>(video.spatial_dims()) * .5f);
         float vdrift = std::sin(f / period * TAU) * magnitude * smooth_step(clamp(1.f - d / sradius, 0.f, 1.f));
         for_int(z, nz) video[f][yx][z] = clamp_to_uint8(int(video[f][yx][z] + vdrift + .5f));
@@ -2132,7 +2132,7 @@ void do_diff(Args& args) {
   string filename = args.get_filename();
   Video video2(filename);
   assertx(same_size(video, video2));
-  parallel_for_coords({20}, video.dims(), [&](const Vec3<int>& fyx) {
+  parallel_for_coords({.cycles_per_elem = 20}, video.dims(), [&](const Vec3<int>& fyx) {
     for_int(z, nz) video[fyx][z] = clamp_to_uint8(128 + int(video[fyx][z]) - int(video2[fyx][z]));
   });
 }

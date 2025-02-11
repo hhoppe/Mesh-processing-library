@@ -46,7 +46,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <!-- Warning C6319: Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects -->
       <DisableSpecificWarnings Condition="'$(VisualStudioVersion)'&gt;='17.0'">6319</DisableSpecificWarnings>
     </ClCompile>

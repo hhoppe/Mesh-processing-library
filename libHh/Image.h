@@ -136,7 +136,7 @@ template <typename T> Image as_image(CMatrixView<T> matrix) {
 // Specialize as_image() to grid of Vector4.
 inline Image as_image(CMatrixView<Vector4> grid) {
   Image image(grid.dims());
-  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {
     image[yx] = grid[yx].pixel();
     if (0) image[yx][3] = 255;
     if (image[yx][3] != 255) image.set_zsize(4);
@@ -147,7 +147,7 @@ inline Image as_image(CMatrixView<Vector4> grid) {
 // Specialize as_image() to grid of Vec3<float>.
 inline Image as_image(CMatrixView<Vec3<float>> grid) {
   Image image(grid.dims());
-  parallel_for_coords({10}, image.dims(), [&](const Vec2<int>& yx) {  //
+  parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {  //
     image[yx] = Vector4(concat(grid[yx], V(1.f))).pixel();
   });
   return image;

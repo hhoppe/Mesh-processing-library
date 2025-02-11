@@ -43,7 +43,6 @@ int main() {
     SHOW(count(ar2, 0));
     SHOW(count(ar2, 3));
     SHOW(count(ar2, 99));
-    // SHOW(count_if(ar2, [](uchar uc) { return uc > 5; }));  // Error (lambda used in decltype of SHOW); needs C++20.
     const auto func_gt5 = [](uchar uc) { return uc > 5; };
     SHOW(count_if(ar2, func_gt5));
   }

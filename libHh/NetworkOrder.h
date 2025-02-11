@@ -2,6 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 #define MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 
+#if !defined(__GNUC__)
+#include <bit>  // std::endian.
+#endif
+
 #include "libHh/Hh.h"
 
 namespace hh {
@@ -49,22 +53,6 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 
 #endif
 
-// See https://stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine
-// #define HH_LITTLE_ENDIAN 0x41424344UL
-// #define HH_BIG_ENDIAN    0x44434241UL
-// #define HH_ENDIAN_ORDER  ('ABCD')  // GCC: error: multi-character character constant [-Werror=multichar]
-// #define HH_IS_BIG_ENDIAN ENDIAN_ORDER == BIG_ENDIAN
-// #define HH_IS_BIG_ENDIAN (*(uint16_t*)"\0\xff" < 0x100)  // Error
-// no satisfactory portable solution for #if preprocessor macro
-
-// #define HH_IS_BIG_ENDIAN (1 != *(unsigned char *)&(const int){1})
-#define HH_IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100)
-// It does not seem possible to determine endianness in a constexpr:
-//  https://stackoverflow.com/questions/1583791/constexpr-and-endianness
-// Update: it is possible in C++20 (https://stackoverflow.com/a/8197886):
-// #include <type_traits>
-// constexpr bool is_big_endian = std::endian::native == std::endian::big;
-
 template <typename T> void my_swap_bytes(T* p) {
   static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2);
   // First attempt was to use "volatile T* p", but that is not robust.  The use of "union" is required for gcc;
@@ -98,7 +86,12 @@ template <typename T> void my_swap_bytes(T* p) {
   }
 }
 
+#if defined(__GNUC__)  // C++20 std::endian is not yet supported.
+#define HH_IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100)
 static const bool k_is_big_endian = HH_IS_BIG_ENDIAN;
+#else
+constexpr bool k_is_big_endian = std::endian::native == std::endian::big;
+#endif
 
 // Convert from native to network order.
 template <typename T> void to_std(T* p) {

@@ -698,7 +698,7 @@ template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Impleme
 #define CG CGridView<D, T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for (const size_t i : range(g.size()))
-#define PF(g, code) parallel_for({1}, range(g.size()), [&](const size_t i) { code; })
+#define PF(g, code) parallel_for({.cycles_per_elem = 1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 
 TT G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }

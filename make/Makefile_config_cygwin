@@ -1,8 +1,8 @@
 rel ?= 1#  0=debug or 1=release  (usually 1; debug has bug: "-g" on getline() causes crash.)
 x64 = 1
 
-# Within CYGWIN, -std=c++17 (or c++14) omits: popen(), pclose(), usleep(), gethostname(), setenv(), getenv().
-CXX_STD = gnu++17
+# Within CYGWIN, -std=c++20 (or c++14 or c++17) omits: popen(), pclose(), usleep(), gethostname(), setenv(), getenv().
+CXX_STD = gnu++20
 
 ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang

@@ -334,7 +334,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     tfilterbs = inverse_convolution(tm, filterbs);
     mr.reinit(tm);
   }
-  parallel_for_coords({500}, nm.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = 500}, nm.dims(), [&](const Vec2<int>& yx) {
     Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
     Vec2<float> tp = transform_about_center(p, frame);
     nm[yx] = sample_domain(mr, tp, tfilterbs, bordervalue);

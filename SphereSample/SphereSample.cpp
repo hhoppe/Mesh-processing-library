@@ -1188,10 +1188,7 @@ void internal_remesh() {
     Vector& rgb = v_rgb(param_v);
     if (!parse_key_vec(param_mesh.get_string(param_v), "rgb", rgb)) rgb = k_undefined_vector;
   }
-  MeshSearch::Options options;
-  options.allow_local_project = true;
-  options.allow_off_surface = true;
-  const MeshSearch mesh_search(param_mesh, options);
+  const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .allow_off_surface = true});
 
   HH_TIMER("_resample");
   parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), [&](auto subrange) {
@@ -1444,8 +1441,7 @@ void do_write_texture(Args& args) {
     if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
   }
 
-  MeshSearch::Options options_i;
-  options_i.bbox = Bbox(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f));
+  const MeshSearch::Options options_i{.bbox = Bbox(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f))};
   const MeshSearch msearch_i(mesh_i, options_i);                // Map: image I -> domain D (v -> v_domainp(v)).
   const MeshSearch msearch_d(domain_mesh, {true});              // Map: domain D -> sphere S (v -> v_sph(v)).
   const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
@@ -1596,10 +1592,7 @@ void do_write_lonlat_texture(Args& args) {
     default: assertnever("signal '" + signal_ + "' not recognized");
   }
 
-  MeshSearch::Options options;
-  options.allow_local_project = true;
-  options.gridn_factor = 4.f;
-  const MeshSearch mesh_search(param_mesh, options);
+  const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .gridn_factor = 4.f});
 
   const int imagesize = gridn;
   Image image(V(imagesize, imagesize));
@@ -1743,9 +1736,7 @@ void do_create_lonlat_checker(Args& args) {
       if (domain == "cube") triangulate_short_diag();
     }
   }
-  MeshSearch::Options options;
-  options.allow_off_surface = true;
-  const MeshSearch mesh_search(g_mesh, options);
+  const MeshSearch mesh_search(g_mesh, {.allow_off_surface = true});
   const Array<DomainFace> domain_faces = get_domain_faces();
   {
     HH_TIMER("_create_image");

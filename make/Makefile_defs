@@ -96,8 +96,9 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
-# Also update clang-tidy command in clean_all, and CXX_STD in Makefile_config_{mingw,cygwin}.
-CXX_STD ?= c++17
+# Also update CXX_STD in Makefile_config_cygwin, clang-tidy command in clean_all, LanguageStandard in hhmain.props
+# and in LoopAPILib.vcxproj.
+CXX_STD ?= c++20
 
 # PEDANTIC ?= 1
 

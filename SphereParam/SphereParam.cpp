@@ -311,9 +311,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
     // Ideally, we should use mesh_uv "uv" discontinuities to perform splitting; this would be required for
     // cube and tetra domains; also it would result in fewer cuts for octa and octaflat.
   }
-  MeshSearch::Options options;
-  options.allow_off_surface = true;
-  const MeshSearch mesh_search(mesh_uv, options);
+  const MeshSearch mesh_search(mesh_uv, {.allow_off_surface = true});
 
   parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, [&](auto subrange) {
     string str;

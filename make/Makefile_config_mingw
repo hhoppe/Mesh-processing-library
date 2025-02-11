@@ -1,7 +1,7 @@
 rel ?= 1#  0=debug or 1=release (usually 1).
 x64 = 1#  32-bit is not supported by mingw64.
 
-# CXX_STD = c++2a#  Compatible with -std=c++20
+CXX_STD = c++2a#  Compatible with -std=c++20
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 

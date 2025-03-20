@@ -532,6 +532,9 @@ double get_seconds_per_counter();
 // Delay for some number of seconds.
 void my_sleep(double sec);
 
+// Delay for some number of seconds.
+void my_imprecise_sleep(double sec);
+
 // Get number of bytes of available memory (min of free virtual and physical space), or 0 if unavailable.
 size_t available_memory();
 

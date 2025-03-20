@@ -201,7 +201,7 @@ void Hw::open() {
     draw_it();  // necessary 2021-03-21
     // glFlush();
     glFinish();
-    // my_sleep(0.2);
+    // my_imprecise_sleep(0.2);
     Image image(_win_dims);
     if (!_pbuffer) {
       assertx(!_is_glx_dbuf);

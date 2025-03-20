@@ -436,7 +436,7 @@ string append_to_filename(const string& filename, const string& smodif) {
 bool is_unlocked(const Object& ob) {
   while (ob._locked_by_background_thread) {
     if (g_request_loop) return false;  // Waiting for background thread to finish could take several seconds
-    my_sleep(.001);                    // Wait for background thread to finish reading a frame
+    my_imprecise_sleep(.001);          // Wait for background thread to finish reading a frame
   }
   return true;
 }
@@ -2750,7 +2750,7 @@ void advance_frame() {
     if (g_verbose >= 2) SHOW("wait", g_frametime, ob._nframes_loaded, ob.nframes());
     // We have advanced past the number of loaded frames, so wait until at least some forward progress.
     while (old_framenum == ob._nframes_loaded - 1) {
-      my_sleep(.001);
+      my_imprecise_sleep(.001);
     }
     assertx(old_framenum < ob._nframes_loaded - 1);
     g_frametime = ob._nframes_loaded - 1.;  // reset the desired time
@@ -3361,7 +3361,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     set_video_frame(0, desired_frametime);
     if (g_framenum < int(floor(desired_frametime)) && o._nframes_loaded < o.nframes()) {
       // show blank window while waiting to seek to requested initial frame
-      my_sleep(.1);
+      my_imprecise_sleep(.1);
       redraw_later();
       return;
     } else {
@@ -3375,7 +3375,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
   }
   if (!product(g_win_dims)) return;
   if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation)
-    while (!g_videoloop_ready_obj) my_sleep(.001);
+    while (!g_videoloop_ready_obj) my_imprecise_sleep(.001);
   if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
     std::lock_guard<std::mutex> lock(g_mutex_obs);
     if (g_vlp_ready_obj) add_object(std::move(g_vlp_ready_obj));  // insert right after current video
@@ -3935,7 +3935,7 @@ void background_work(bool asynchronous) {
 #else
   // see https://stackoverflow.com/questions/10876342/equivalent-of-setthreadpriority-on-linux-pthreads
 #endif
-  if (0) my_sleep(2.);  // test delay in video read
+  if (0) my_imprecise_sleep(2.);  // test delay in video read
   for (;;) {
     {  // Identify a video with frames not yet loaded, prioritizing the current video object.
       Object* pob = nullptr;
@@ -3980,9 +3980,9 @@ void background_work(bool asynchronous) {
           hw.wake_up();
           if (asynchronous && g_playing && (!is_cob || ob._nframes_loaded > g_framenum + 5)) {
             if (g_framenum < 0) {
-              if (g_framenum < 0) my_sleep(.01);  // help main thread get started
+              if (g_framenum < 0) my_imprecise_sleep(.01);  // help main thread get started
             } else {
-              my_sleep(.001);  // help main thread catch up if it can
+              my_imprecise_sleep(.001);  // help main thread catch up if it can
             }
           }
         }
@@ -4110,7 +4110,7 @@ void background_work(bool asynchronous) {
       }
     }
     if (!asynchronous) break;
-    my_sleep(.1);  // nothing to do, so wait
+    my_imprecise_sleep(.1);  // nothing to do, so wait
     if (0) break;  // never let thread terminate, so that it can still handle new files from drag-and-drop.
   }
   // Asynchronous thread would terminate after returning from this function.

@@ -94,7 +94,7 @@ double get_seconds_per_counter() {
 #endif
 }
 
-void my_sleep(double sec) {
+void internal_sleep(double sec, bool precise) {
   // We sometimes get -5.8985e+307 in background thread of VideoViewer.
   if (sec < 0.) {
     SHOW("my_sleep", sec);
@@ -107,6 +107,9 @@ void my_sleep(double sec) {
   if (!sec) {
     // The aim is likely to give up time slice to another thread.
     SleepEx(0, TRUE);  // milliseconds; allow wake up for events.
+  } else if (!precise) {
+    const int num_ms = int(sec * 1000. + 0.5);
+    SleepEx(num_ms, TRUE);
   } else {
     // Inspired from discussion at
     //  https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
@@ -144,6 +147,10 @@ void my_sleep(double sec) {
   if (!assertw(!usleep(useconds_t(sec * 1e6)))) assertx(errno == EINTR);  // Possibly might be interrupted by a signal?
 #endif  // defined(_WIN32)
 }
+
+void my_sleep(double sec) { internal_sleep(sec, true); }
+
+void my_imprecise_sleep(double sec) { internal_sleep(sec, false); }
 
 size_t available_memory() {
   const bool ldebug = getenv_bool("MEMORY_DEBUG");

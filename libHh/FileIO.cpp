@@ -15,6 +15,11 @@
 #include <urlmon.h>               // URLDownloadToCacheFile()
 HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 HH_REFERENCE_LIB("urlmon.lib");   // URLDownloadToCacheFile()
+// #define USE_IFILEOPERATION 1  // Else use older SHFileOperation().
+#if defined(USE_IFILEOPERATION)
+#include <shobjidl.h>             // IFileOperation: SHCreateItemFromParsingName, etc.
+HH_REFERENCE_LIB("ole32.lib");    // IFileOperation.
+#endif
 
 #else
 
@@ -566,6 +571,32 @@ bool recycle_path(const string& pathname) {
     wfilenames = utf16_from_utf8(name);
     wfilenames.push_back(0);  // For double-null termination.
   }
+#if defined(USE_IFILEOPERATION)
+  // Default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED.
+  HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  assertx(SUCCEEDED(hr) || hr == S_FALSE);  // May equal S_FALSE if COM was previously initialized.
+  IFileOperation* file_op{};
+  assertx(SUCCEEDED(CoCreateInstance(CLSID_FileOperation, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&file_op))));
+  assertx(SUCCEEDED(file_op->SetOperationFlags(FOF_ALLOWUNDO | FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI |
+                                               FOF_NOCONFIRMMKDIR)));
+  IShellItem* item{};
+  hr = SHCreateItemFromParsingName(wfilenames.c_str(), nullptr, IID_PPV_ARGS(&item));
+  if (SUCCEEDED(hr)) {
+    hr = file_op->DeleteItem(item, nullptr);  // To Recycle Bin.
+    if (SUCCEEDED(hr)) {
+      hr = file_op->PerformOperations();  // (May mysteriously hang for a few sec?).
+      if (!SUCCEEDED(hr) && 1) SHOW("PerformOperations failed", pathname);
+    } else {
+      if (1) SHOW("DeleteItem failed", pathname);
+    }
+    item->Release();
+  } else {
+    if (1) SHOW("SHCreateItemFromParsingName failed", pathname);
+  }
+  file_op->Release();
+  return SUCCEEDED(hr);
+  // CoUninitialize() is unnecessary.
+#else
   SHFILEOPSTRUCTW op = {};
   op.hwnd = nullptr;     // Hopefully this handle is not used when specifying FOF_NO_UI.
   op.wFunc = FO_DELETE;  // Use Recycle Bin if possible.
@@ -573,10 +604,11 @@ bool recycle_path(const string& pathname) {
   op.fFlags = FOF_ALLOWUNDO;
   // FOF_NO_UI equivalent to FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR but not on clang.
   op.fFlags |= FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
-  int ret = SHFileOperationW(&op);
+  int ret = SHFileOperationW(&op);  // (May mysteriously hang for a few sec?).
   if (1 && ret) SHOW("SHFileOperation failed", pathname, ret);
   if (!ret) assertx(!op.fAnyOperationsAborted);
   return !ret;
+#endif
 #else
   return remove_file(pathname);
 #endif

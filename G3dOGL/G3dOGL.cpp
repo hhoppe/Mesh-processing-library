@@ -3443,11 +3443,11 @@ void sr_pre_space() {
     static const int g3d_dump_frame = getenv_int("G3D_DUMP_FRAME");
     static int frame;
     if (g3d_dump_frame && frame++ == g3d_dump_frame) {
-      SHOW("dumping v.m and my_sleep(10.)");
+      SHOW("dumping v.m and sleep 10 s");
       GMesh gmesh = srmesh.extract_gmesh();
       WFile fi("v.m");
       gmesh.write(fi());
-      my_sleep(10.);
+      my_imprecise_sleep(10.);
     }
   }
   if (!sr_freeze) {

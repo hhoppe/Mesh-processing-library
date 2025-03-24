@@ -94,7 +94,8 @@ double get_seconds_per_counter() {
 #endif
 }
 
-void internal_sleep(double sec, bool precise) {
+static void internal_sleep(double sec, bool precise) {
+  dummy_use(precise);
   // We sometimes get -5.8985e+307 in background thread of VideoViewer.
   if (sec < 0.) {
     SHOW("my_sleep", sec);

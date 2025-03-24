@@ -17,8 +17,8 @@ HH_REFERENCE_LIB("shell32.lib");  // SHFileOperation()
 HH_REFERENCE_LIB("urlmon.lib");   // URLDownloadToCacheFile()
 // #define USE_IFILEOPERATION 1  // Else use older SHFileOperation().
 #if defined(USE_IFILEOPERATION)
-#include <shobjidl.h>             // IFileOperation: SHCreateItemFromParsingName, etc.
-HH_REFERENCE_LIB("ole32.lib");    // IFileOperation.
+#include <shobjidl.h>           // IFileOperation: SHCreateItemFromParsingName, etc.
+HH_REFERENCE_LIB("ole32.lib");  // IFileOperation.
 #endif
 
 #else

@@ -4110,8 +4110,8 @@ void background_work(bool asynchronous) {
       }
     }
     if (!asynchronous) break;
-    my_imprecise_sleep(.1);  // nothing to do, so wait
-    if (0) break;  // never let thread terminate, so that it can still handle new files from drag-and-drop.
+    my_imprecise_sleep(.1);  // Nothing to do, so wait.
+    if (0) break;            // Never let thread terminate, so that it can still handle new files from drag-and-drop.
   }
   // Asynchronous thread would terminate after returning from this function.
 }

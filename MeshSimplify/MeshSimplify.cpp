@@ -416,11 +416,12 @@ bool relerror = false;        // Measure relative instead of new error (OLD).
 bool maxerr = false;          // Use maximum error of point samples.
 bool terrain = false;         // Max error wrt grid.
 string ter_grid;              // Terrain grid file.
-bool gridushorts = false;
-Vec2<int> grid_dims{0, 0};  // Dimensions of grid if original mesh is grid.
-float gridzscale = 1.f;
+bool gridushorts = false;     // Terrain grid contains ushort instead of float.
+Vec2<int> grid_dims{0, 0};    // Dimensions of grid if original mesh is grid.
+float gridzscale = 1.f;       // Scaling of grid height values.
 bool minqem = false;          // Use quadric error metric.
 bool minaps = false;          // Use appearance-space simplification (APS).
+float aps_bnd_fac = 3.f;      // Increase perceptual importance of boundaries.
 bool minrandom = false;       // Random sequence.
 bool qemgh98 = false;         // Use QEM from G&H98 paper (vs. my own).
 bool qemlocal = true;         // Memoryless QEM.
@@ -3480,7 +3481,9 @@ double evaluate_aps(Edge e, int ii) {
     }
   }
 
-  return sqrt(max_mag2);
+  double max_mag = sqrt(max_mag2);
+  if (mesh.is_boundary(v1)) max_mag *= aps_bnd_fac;
+  return max_mag;
 }
 
 // Return: is_legal.
@@ -4916,6 +4919,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(minvdist, ": minimize dist(vunified, previous_mesh)");
   HH_ARGSF(minqem, ": use quadric error metric");
   HH_ARGSF(minaps, ": use appearance-preserving simplification");
+  HH_ARGSP(aps_bnd_fac, "factor : boost perceptual importance of boundary vertices");
   HH_ARGSF(minrandom, ": use random simplification");
   HH_ARGSP(qemgh98, "bool : use scalar QEM from G&H98 (vs. HH99)");
   HH_ARGSP(qemlocal, "bool : use memoryless QEM");

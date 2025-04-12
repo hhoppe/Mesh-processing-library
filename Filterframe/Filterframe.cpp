@@ -168,7 +168,7 @@ int main(int argc, const char** argv) {
   string pretransf;
   bool normalize = false, frame = false, stat = false;
   ParseArgs args(argc, argv);
-  HH_ARGSC("A frame stream is read from stdin or first arg except with the following arguments:");
+  HH_ARGSC("A frame stream is read from stdin or filename in first arg except with the following arguments:");
   HH_ARGSD(create_euler, "yaw pitch roll : create frame from Euler angles (degrees)");
   HH_ARGSC("", ":");
   HH_ARGSP(every, "i : use only every ith element");

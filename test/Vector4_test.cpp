@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Vector4.h"
 
-// #include <iomanip>  // setprecision()
+#include <iomanip>  // setprecision()
 
 #include "libHh/Array.h"
 #include "libHh/RangeOp.h"
@@ -21,11 +21,13 @@ static void to_norm(const Vector4& v) {
 }
 
 int main() {
+  if (0) {
+    // Setting the precision has no effect on SHOW() because it now uses a temporary std::ostringstream .
+    std::cerr << std::setprecision(4) << std::setiosflags(std::ios::fixed);
+    std::cerr.precision(4);
+    std::cerr.setf(std::ios::fixed);
+  }
   {
-      // Setting the precision has no effect on SHOW() because it now uses a temporary std::ostringstream .
-      // std::cerr << std::setprecision(4) << std::setiosflags(std::ios::fixed);
-      // std::cerr.precision(4); std::cerr.setf(std::ios::fixed);
-  } {
     Vector4 v1(1.f, 2.f, 3.f, 4.f), v2(8.f, 7.f, 6.f, 5.f);
     SHOW(v1);
     SHOW(v2);

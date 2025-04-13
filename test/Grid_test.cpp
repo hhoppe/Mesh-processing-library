@@ -48,9 +48,10 @@ int main() {
     SHOW((Grid<3, int>{{{1, 2, 3}, {4, 5, 6}}}));
     SHOW((Grid<3, int>{{{1, 2, 3}, {4, 5, 6}}, {{1, 2, 3}, {4, 5, 6}}}));
   }
+  if (0) {
+    // Grid<3, float> grid(3, 4.f, 2); SHOW(grid);  // correctly fails to compile
+  }
   {
-      // Grid<3, float> grid(3, 4.f, 2); SHOW(grid);  // correctly fails to compile
-  } {
     Grid<1, int> grid1(256);
     SHOW(ravel_index_list(grid1.dims(), 7));
     SHOW(unravel_index(grid1.dims(), ravel_index_list(grid1.dims(), 7)));

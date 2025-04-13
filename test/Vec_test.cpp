@@ -101,212 +101,216 @@ int main() {
     S3 dummy1, dummy2(1, 2);
     dummy_use(dummy1, dummy2);
   }
-  {{constexpr Vec<int, 5> ar1 = concat(V(1), V(2), V(3, 4, 5));
-  SHOW(ar1);
-}
-{
-  constexpr Vec<int, 5> ar2 = concat(V(1, 2), V(3, 4, 5));
-  SHOW(ar2);
-}
-{
-  constexpr Vec<int, 5> ar3 = concat(V(1, 2), V(3, 4), V(5));
-  SHOW(ar3);
-}
-{
-  constexpr Vec<int, 5> ar4 = concat(V(1, 2, 3, 4, 5));
-  SHOW(ar4);
-}
-}
-{{constexpr Vec<int, 2> ar = V(4, 5);
-constexpr int t5 = ar[1];
-SHOW(t5);
-}
-{
-  constexpr Vec<int, 3> rest654 = V_rest(V(7, 6, 5, 4));
-  SHOW(rest654);
-}
-{
-  constexpr Vec<int, 2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2);
-  SHOW(segment54);
-}
-{
-  constexpr size_t dotslow = V_dot_slow(V(7, 5), V(3, 1));
-  SHOW(dotslow);
-}
-{
-  constexpr size_t dot = V_dot(V(7, 5), V(3, 1));
-  SHOW(dot);
-}
-{
-  constexpr Vec<int, 5> iota5 = V_iota<5>();
-  SHOW(iota5);
-}
-{
-  constexpr Vec<int, 5> reviota5 = V_rev_iota<5>();
-  SHOW(reviota5);
-}
-}
-{
-  Vec<char, 2> magic{'B', 'M'};
-  static_assert(sizeof(magic) == 2);
-  Vec<uchar, 4> buf2{uchar{0}, uchar{0}, uchar{0}, uchar{0}};
-  static_assert(sizeof(buf2) == 4);
-}
-{
-  Vec2<float> p(1.f, 2.f), q(8.f, 7.f), r;
-  SHOW(p);
-  SHOW(q);
-  SHOW(p - q);
-  SHOW(p + q);
-  SHOW(dot(p, q));
-  SHOW(p * q);
-  SHOW(mag(p));
-  SHOW(2.f * p + 3.f * q);
-  r = p + q;
-  SHOW(r);
+  if (1) {
+    {
+      constexpr Vec<int, 5> ar1 = concat(V(1), V(2), V(3, 4, 5));
+      SHOW(ar1);
+    }
+    {
+      constexpr Vec<int, 5> ar2 = concat(V(1, 2), V(3, 4, 5));
+      SHOW(ar2);
+    }
+    {
+      constexpr Vec<int, 5> ar3 = concat(V(1, 2), V(3, 4), V(5));
+      SHOW(ar3);
+    }
+    {
+      constexpr Vec<int, 5> ar4 = concat(V(1, 2, 3, 4, 5));
+      SHOW(ar4);
+    }
+  }
+  if (1) {
+    {
+      constexpr Vec<int, 2> ar = V(4, 5);
+      constexpr int t5 = ar[1];
+      SHOW(t5);
+    }
+    {
+      constexpr Vec<int, 3> rest654 = V_rest(V(7, 6, 5, 4));
+      SHOW(rest654);
+    }
+    {
+      constexpr Vec<int, 2> segment54 = V_segment<2>(V(7, 6, 5, 4, 3), 2);
+      SHOW(segment54);
+    }
+    {
+      constexpr size_t dotslow = V_dot_slow(V(7, 5), V(3, 1));
+      SHOW(dotslow);
+    }
+    {
+      constexpr size_t dot = V_dot(V(7, 5), V(3, 1));
+      SHOW(dot);
+    }
+    {
+      constexpr Vec<int, 5> iota5 = V_iota<5>();
+      SHOW(iota5);
+    }
+    {
+      constexpr Vec<int, 5> reviota5 = V_rev_iota<5>();
+      SHOW(reviota5);
+    }
+  }
   {
-    using std::swap;
-    swap(p, q);
+    Vec<char, 2> magic{'B', 'M'};
+    static_assert(sizeof(magic) == 2);
+    Vec<uchar, 4> buf2{uchar{0}, uchar{0}, uchar{0}, uchar{0}};
+    static_assert(sizeof(buf2) == 4);
+  }
+  {
+    Vec2<float> p(1.f, 2.f), q(8.f, 7.f), r;
     SHOW(p);
     SHOW(q);
+    SHOW(p - q);
+    SHOW(p + q);
+    SHOW(dot(p, q));
+    SHOW(p * q);
+    SHOW(mag(p));
+    SHOW(2.f * p + 3.f * q);
+    r = p + q;
+    SHOW(r);
+    {
+      using std::swap;
+      swap(p, q);
+      SHOW(p);
+      SHOW(q);
+    }
   }
-}
-{
-  Vec<int, 3> a1;
-  fill(a1, 1);
-  Vec<int, 3> a2 = {2, 1, 3};
-  SHOW(product(a1), sum(a1));
-  SHOW(product(a2), sum(a2));
-  SHOW(a1 == ntimes<3>(1));
-  SHOW(a1 == ntimes<3>(2));
-  SHOW(a2 == ntimes<3>(1));
-  SHOW(a2.rev());
-  SHOW(a2[2]);
-}
-{
-  // Can a class derived from Vec be automatically converted to a CArrayView argument? yes.
-  const auto func = [](CArrayView<int> a) {
-    assertx(a.num() == 2);
-    SHOW(a[1]);
-  };
-  S s;
-  s[0] = 11;
-  s[1] = 12;
-  func(s);
-}
-{
-  Vec3<int> a1(3, 4, 5);
-  SHOW(a1);
+  {
+    Vec<int, 3> a1;
+    fill(a1, 1);
+    Vec<int, 3> a2 = {2, 1, 3};
+    SHOW(product(a1), sum(a1));
+    SHOW(product(a2), sum(a2));
+    SHOW(a1 == ntimes<3>(1));
+    SHOW(a1 == ntimes<3>(2));
+    SHOW(a2 == ntimes<3>(1));
+    SHOW(a2.rev());
+    SHOW(a2[2]);
+  }
+  {
+    // Can a class derived from Vec be automatically converted to a CArrayView argument? yes.
+    const auto func = [](CArrayView<int> a) {
+      assertx(a.num() == 2);
+      SHOW(a[1]);
+    };
+    S s;
+    s[0] = 11;
+    s[1] = 12;
+    func(s);
+  }
+  {
+    Vec3<int> a1(3, 4, 5);
+    SHOW(a1);
 #if 0  // Fails because a1 contains int and 3.f is a float.
   SHOW(a1 / 3.f);
   Vec3<float> a2 = a1 / 3.f;
   SHOW(a2);
 #endif
-}
-{
-  Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // Test both ways.
-  SHOW(pp);
-  SHOW((pp + V(10, 10)));
-  SHOW((Vec2<int>(10, 10) - pp));
-  SHOW(-pp);
-}
-{
-  static_assert(std::is_standard_layout_v<Vec3<int>> == true);
-  static_assert(std::is_trivially_default_constructible_v<Vec3<int>> == true);
-  static_assert(std::is_trivially_copyable_v<Vec3<int>> == true);
-  static_assert(std::is_trivially_copyable_v<S> == true);
-  static_assert(std::is_trivially_copyable_v<S3> == true);
-  static_assert(std::is_trivially_copyable_v<S4> == true);
-  static_assert(std::is_trivial_v<Vec3<int>> == true);
-  static_assert(std::is_trivial_v<S> == true);
-  static_assert(std::is_trivial_v<S3> == true);
-  static_assert(std::is_standard_layout_v<Vec3<int>> == true);
-  static_assert(std::is_standard_layout_v<S> == true);
-  static_assert(std::is_standard_layout_v<S3> == true);
-  static_assert(std::is_standard_layout_v<S2> == true);
-  static_assert(std::is_trivial_v<S2> == true);
-  static_assert(std::is_standard_layout_v<S4> == true);
-  static_assert(std::is_trivial_v<S4> == true);
-}
-{
-  Set<size_t> set;
-  for_int(i, 100) for_int(j, 100) {
-    size_t h = my_hash(V(i, j));
-    // SHOW(i, j, h);
-    assertx(set.add(h));  // all 10'000 are unique
   }
-}
-{
-  constexpr auto ar1 = V(4, 5, 6);
-  constexpr int v5 = ar1[1];
-  SHOW(v5);
-  constexpr auto triple6a = Vec3<float>::all(6);
-  SHOW(triple6a, type_name(triple6a));
-  constexpr auto triple6b = ntimes<3>(6);
-  SHOW(triple6b, type_name(triple6b));
-  constexpr auto triple6c = ntimes<3>(6.f);
-  SHOW(triple6c, type_name(triple6c));
-  constexpr auto triple7 = thrice(7);
-  SHOW(triple7);
-  constexpr auto ntimes7 = ntimes<3>(7);
-  SHOW(ntimes7);
-  const auto vonly3is2 = ntimes<5>(0).with(3, 2);
-  SHOW(vonly3is2);
-}
-{
-  Vec<int, 3> ar(1, 2, 3);
-  my_zero(ar);
-  SHOW(ar);
-}
-{
-  auto ar = V(1, 2, 3, 4, 5);
-  SHOW(ar.segment<3>(2));
-  SHOW(ar.head<3>());
-  SHOW(ar.tail<3>());
-}
-{
-  const auto ar0 = Vec<int, 5>::create([](int i) { return i * 5 + 3; });
-  SHOW(ar0);
-  auto ar1 = V(1, 2, 3, 4, 5);
-  const auto ar2 = map(ar1, [](int e) { return e * 10; });
-  SHOW(ar2);
-}
-{
-  struct P {
-    P() { SHOW("P::P()"); }
-    ~P() { SHOW("P::~P()"); }
-    P(const P& /*unused*/) { SHOW("P::P(const P&)"); }
-    P(P&& /*unused*/) noexcept { SHOW("P::P(P&&)"); }
-    P& operator=(const P& /*unused*/) {
-      SHOW("P::operator=(const P&)");
-      return *this;
+  {
+    Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // Test both ways.
+    SHOW(pp);
+    SHOW((pp + V(10, 10)));
+    SHOW((Vec2<int>(10, 10) - pp));
+    SHOW(-pp);
+  }
+  {
+    static_assert(std::is_standard_layout_v<Vec3<int>> == true);
+    static_assert(std::is_trivially_default_constructible_v<Vec3<int>> == true);
+    static_assert(std::is_trivially_copyable_v<Vec3<int>> == true);
+    static_assert(std::is_trivially_copyable_v<S> == true);
+    static_assert(std::is_trivially_copyable_v<S3> == true);
+    static_assert(std::is_trivially_copyable_v<S4> == true);
+    static_assert(std::is_trivial_v<Vec3<int>> == true);
+    static_assert(std::is_trivial_v<S> == true);
+    static_assert(std::is_trivial_v<S3> == true);
+    static_assert(std::is_standard_layout_v<Vec3<int>> == true);
+    static_assert(std::is_standard_layout_v<S> == true);
+    static_assert(std::is_standard_layout_v<S3> == true);
+    static_assert(std::is_standard_layout_v<S2> == true);
+    static_assert(std::is_trivial_v<S2> == true);
+    static_assert(std::is_standard_layout_v<S4> == true);
+    static_assert(std::is_trivial_v<S4> == true);
+  }
+  {
+    Set<size_t> set;
+    for_int(i, 100) for_int(j, 100) {
+      size_t h = my_hash(V(i, j));
+      // SHOW(i, j, h);
+      assertx(set.add(h));  // all 10'000 are unique
     }
-    // P& operator=(P&&) { SHOW("P::operator=(P&&)"); return *this; }
-  };
-  static_assert(std::is_trivial_v<P> == false);
-  static_assert(std::is_trivial_v<Vec1<P>> == false);
-  static_assert(std::is_trivially_copyable_v<P> == false);
-  static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
-  Vec1<P> s1;
-  Vec1<P> s2 = s1;
-  Vec1<P> s3 = std::move(s1);
-}
-{
-  using SU2 = Vec2<unique_ptr<int>>;
-  SU2 s1 = V(make_unique<int>(1), make_unique<int>(2));
-  assertx(*s1[0] == 1);
-  assertx(*s1[1] == 2);
-  SU2 s2 = std::move(s1);
-  assertx(*s2[0] == 1);
-  assertx(*s2[1] == 2);
-  assertx(!s1[0]);  // NOLINT(bugprone-use-after-move, hicpp-invalid-access-moved, clang-analyzer-cplusplus.Move)
-  assertx(!s1[1]);
-}
-{
-  Vec<int, 0> v0;
-  SHOW(v0);
-  SHOW(V<int>());
-}
+  }
+  {
+    constexpr auto ar1 = V(4, 5, 6);
+    constexpr int v5 = ar1[1];
+    SHOW(v5);
+    constexpr auto triple6a = Vec3<float>::all(6);
+    SHOW(triple6a, type_name(triple6a));
+    constexpr auto triple6b = ntimes<3>(6);
+    SHOW(triple6b, type_name(triple6b));
+    constexpr auto triple6c = ntimes<3>(6.f);
+    SHOW(triple6c, type_name(triple6c));
+    constexpr auto triple7 = thrice(7);
+    SHOW(triple7);
+    constexpr auto ntimes7 = ntimes<3>(7);
+    SHOW(ntimes7);
+    const auto vonly3is2 = ntimes<5>(0).with(3, 2);
+    SHOW(vonly3is2);
+  }
+  {
+    Vec<int, 3> ar(1, 2, 3);
+    my_zero(ar);
+    SHOW(ar);
+  }
+  {
+    auto ar = V(1, 2, 3, 4, 5);
+    SHOW(ar.segment<3>(2));
+    SHOW(ar.head<3>());
+    SHOW(ar.tail<3>());
+  }
+  {
+    const auto ar0 = Vec<int, 5>::create([](int i) { return i * 5 + 3; });
+    SHOW(ar0);
+    auto ar1 = V(1, 2, 3, 4, 5);
+    const auto ar2 = map(ar1, [](int e) { return e * 10; });
+    SHOW(ar2);
+  }
+  {
+    struct P {
+      P() { SHOW("P::P()"); }
+      ~P() { SHOW("P::~P()"); }
+      P(const P& /*unused*/) { SHOW("P::P(const P&)"); }
+      P(P&& /*unused*/) noexcept { SHOW("P::P(P&&)"); }
+      P& operator=(const P& /*unused*/) {
+        SHOW("P::operator=(const P&)");
+        return *this;
+      }
+      // P& operator=(P&&) { SHOW("P::operator=(P&&)"); return *this; }
+    };
+    static_assert(std::is_trivial_v<P> == false);
+    static_assert(std::is_trivial_v<Vec1<P>> == false);
+    static_assert(std::is_trivially_copyable_v<P> == false);
+    static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
+    Vec1<P> s1;
+    Vec1<P> s2 = s1;
+    Vec1<P> s3 = std::move(s1);
+  }
+  {
+    using SU2 = Vec2<unique_ptr<int>>;
+    SU2 s1 = V(make_unique<int>(1), make_unique<int>(2));
+    assertx(*s1[0] == 1);
+    assertx(*s1[1] == 2);
+    SU2 s2 = std::move(s1);
+    assertx(*s2[0] == 1);
+    assertx(*s2[1] == 2);
+    assertx(!s1[0]);  // NOLINT(bugprone-use-after-move, hicpp-invalid-access-moved, clang-analyzer-cplusplus.Move)
+    assertx(!s1[1]);
+  }
+  {
+    Vec<int, 0> v0;
+    SHOW(v0);
+    SHOW(V<int>());
+  }
 }
 
 namespace hh {

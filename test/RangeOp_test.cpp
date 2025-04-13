@@ -84,10 +84,11 @@ int main() {
     };
     SHOW(is_range_v<S>);
   }
+  if (0) {
+    // This should fail to compile.
+    // S s; SHOW(mean(s));
+  }
   {
-      // This should fail to compile.
-      // S s; SHOW(mean(s));
-  } {
     SHOW(type_name<mean_type_t<float>>());
     SHOW(type_name<mean_type_t<double>>());
     SHOW(type_name<mean_type_t<char>>());

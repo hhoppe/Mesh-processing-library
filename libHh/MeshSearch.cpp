@@ -12,7 +12,7 @@ namespace {
 bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(triangle[i]));
-  const float dotcross_eps = 2e-7f;
+  const float dotcross_eps = 5e-7f;  // Was 2e-7f.
   for_int(i, 3) if (dot(Vector(p), cross(p, triangle[i], triangle[mod3(i + 1)])) < -dotcross_eps) return false;
   return true;
 }
@@ -20,7 +20,7 @@ bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
 // Given the point `p` on the unit sphere and a spherical triangle assumed to enclose it, return the barycentric
 // coordinates of the spherical projection of `p` onto the planar triangle.
 Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
-  assertx(in_spherical_triangle(p, triangle));
+  assertw(in_spherical_triangle(p, triangle));
   const Line line{Point(0.f, 0.f, 0.f), p};
   const Plane plane = plane_of_triangle(triangle);
   const Point pint = intersect_line_with_plane(line, plane).value();
@@ -40,7 +40,8 @@ float gnomonic_dist2(const Point& p, const Vec3<Point>& triangle) {
 
 // Given point `p` on the unit sphere, and some "nearby" spherical triangle `f` in `mesh`, find the actual spherical
 // triangle f containing p, and the barycentric coordinates of the spherical projection of p onto f.
-void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary, float tolerance = 0.f) {
+void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary, float tolerance = 0.f,
+                          bool avoid_crossing_axial_planes = false) {
   Vec3<Point> triangle;
   {
     // Find the spherical triangle f (with vertex points `triangle`) containing p.
@@ -49,8 +50,15 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
       triangle = mesh.triangle_points(f);
       // Adapted from MeshSearch.cpp .
       Vec3<bool> outside;
-      for_int(i, 3) outside[i] =
-          spherical_triangle_is_flipped(V(p, triangle[mod3(i + 1)], triangle[mod3(i + 2)]), tolerance);
+      for_int(i, 3) {
+        const Point& p1 = triangle[mod3(i + 1)];
+        const Point& p2 = triangle[mod3(i + 2)];
+        outside[i] = spherical_triangle_is_flipped(V(p, p1, p2), tolerance);
+        if (avoid_crossing_axial_planes && outside[i]) {
+          const bool edge_is_along_an_axial_plane = (!p1[0] && !p2[0]) || (!p1[1] && !p2[1]) || (!p1[2] && !p2[2]);
+          if (edge_is_along_an_axial_plane) outside[i] = false;
+        }
+      }
       int num_outside = sum<int>(outside);
       if (num_outside == 0) break;
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
@@ -195,10 +203,10 @@ MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hin
   auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
   gnomonic_search_bary(p, _mesh, f, bary);  // Modifies f and bary.
   if (final_p) {
-    // Now use the obtained face f but search for the final position final_p and use some nonzero tolerance to
-    // hopefully avoid crossing over to the wrong side of the parametric uv discontinuity.
+    // Starting from the obtained face f, repeat the search but (1) search instead for final_p and (2) avoid
+    // crossing the octaflat axial planes (because these may contain parametric uv discontinuities).
     const float tolerance = 1e-7f;
-    gnomonic_search_bary(*final_p, _mesh, f, bary, tolerance);  // Modifies f and bary.
+    gnomonic_search_bary(*final_p, _mesh, f, bary, tolerance, true);  // Modifies f and bary.
   }
   return {f, bary};
 }

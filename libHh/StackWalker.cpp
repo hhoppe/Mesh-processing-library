@@ -1096,6 +1096,7 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& ent
       if (!verbose) return;
     } else {
       //HH
+      if (!verbose && strstr(entry.name, "::my_abort_handler")) return;
       if (!verbose && strstr(entry.name, "hh::StackWalker::ShowCallstack")) return;
       if (!verbose && strstr(entry.name, "::show_call_stack")) return;  // hh::`anonymous namespace'::
       if (!verbose && strstr(entry.name, "hh::details::assertx_aux")) return;

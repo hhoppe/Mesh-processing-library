@@ -1314,6 +1314,7 @@ void set_filled_pixels_to_pink(Image& image) {
 }
 
 void set_filled_pixels_using_voronoi_dilate(Image& image) {
+  // I also tried gradient-domain diffusion, but this altered the normals near the fill boundary and looked poor.
   // Adapted from "Filterimage -voronoidilate".
   HH_TIMER("_voronoi_dilate");
   Matrix<Vec2<int>> mvec(image.dims(), image.dims());
@@ -1322,13 +1323,20 @@ void set_filled_pixels_using_voronoi_dilate(Image& image) {
     if (!is_undef) mvec[yx] = V(0, 0);
   }
   euclidean_distance_map(mvec);
-  // Fill in unfilled pixels.
-  for (const auto& yx : range(image.dims()))
-    if (!is_zero(mvec[yx])) image[yx] = image[yx + mvec[yx]];
+  // Fill in the undefined pixels within a manhattan distance radius of the defined pixels.
+  const int k_max_manhattan_distance = 10000;  // Or, for example, 4.
+  const Pixel k_color_gray = Pixel::gray(160);
+  for (const auto& yx : range(image.dims())) {
+    if (!is_zero(mvec[yx])) {
+      if (sum(abs(mvec[yx])) <= k_max_manhattan_distance)
+        image[yx] = image[yx + mvec[yx]];
+      else
+        image[yx] = k_color_gray;
+    }
+  }
 }
 
 void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
-  // I also tried gradient-domain diffusion, but this altered the normals near the fill boundary and looked poor.
   if (getenv_bool("FILLED_AS_PINK"))
     set_filled_pixels_to_pink(image);
   else

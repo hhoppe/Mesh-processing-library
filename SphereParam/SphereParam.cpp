@@ -342,15 +342,16 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           const Uv uv = snap_uv(interp(uvs, bary));
           gmesh.update_string(v, "uv", csform_vec(str, uv));
         } else {
+          // Near a parametric cut, we store the uv coordinates on corners rather than vertices.
           gmesh.update_string(v, "uv", nullptr);
           for (Corner c : gmesh.corners(v)) {
+            // It is important that we identify the face of mesh_uv that is on the correct side of the cut.
+            // To this end, we first search using the gmesh face centroid (which is guaranteed to not be on the cut),
+            // then we refine the search while avoiding crossing the parametric discontinuity.
             Face gf = gmesh.corner_face(c);
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), v_sph);
-            // Compute a sphere point that is perturbed slightly toward the centroid of the adjacent face, to find
-            // an initial face f on the correct side of the parametric uv discontinuity.
-            const Point sph_center = mean(sphs);
-            const Point sph_perturbed = normalized_double(sph + normalized_double(sph_center - sph) * 5e-4f);
-            auto [f, bary] = mesh_search.search_on_sphere(sph_perturbed, hint_f, &sph);
+            const Point sph_face_center = normalized_double(mean(sphs));
+            auto [f, bary] = mesh_search.search_on_sphere(sph_face_center, hint_f, &sph);
             hint_f = f;
             const Vec3<Uv> uvs = get_uvs(f);
             const Uv uv = snap_uv(interp(uvs, bary));

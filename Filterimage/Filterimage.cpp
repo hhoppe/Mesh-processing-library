@@ -1478,6 +1478,8 @@ int face_bitangent_sign(const GMesh& mesh, Face f, string& str) {
 // Nice: https://bgolus.medium.com/generating-perfect-normal-maps-for-unity-f929e673fc57
 // - Always triangulate, to avoid quad ambiguities.
 // - Do not explicitly store tangents; assume that they are computed by the viewer using MikkTSpace.
+//    [however, this is incompatible with GLTFLoader/three.js because MikkTSpace is not implemented in JS code;
+//     instead, when not provided with tangents, three.js resorts to dFdx() as discussed below.]
 // - Use OpenGL X+Y+Z+ for normal map orientation.
 //    - Right-handed, positive green channel: OpenGL apps, Blender, Maya, Modo, Toolbag, Unity.
 //    - Left-handed, negative green channel: DirectX apps, 3DStudio Max, CryEngine, Source Engine, Unreal Engine.
@@ -1485,6 +1487,16 @@ int face_bitangent_sign(const GMesh& mesh, Face f, string& str) {
 // - Compute the bitangent per-vertex or per-pixel/fragment?  The trend is per-pixel.  Blender is per-pixel.
 // https://learnopengl.com/Advanced-Lighting/Normal-Mapping
 // https://80.lv/articles/tutorial-types-of-normal-maps-common-problems/
+//
+// In three.js:
+// - If vertex tangents are defined, all 3 vectors (normal, tangent, bitangent) are interpolated from
+//   the vertex attributes; the fragment shader normalizes all 3 vectors to create the tbn frame.
+// - Otherwise, the fragment shader estimates tangent and bitangent using dFdx() and dFdy() screen-space differences
+//   by calling getTangentFrame() with uv texture coordinates.
+// References:
+//   https://github.com/mrdoob/three.js/blob/master/src/renderers/shaders/ShaderChunk/normal_pars_fragment.glsl.js
+//   https://github.com/mrdoob/three.js/blob/master/src/renderers/shaders/ShaderChunk/normal_fragment_begin.glsl.js
+//   https://github.com/mrdoob/three.js/blob/master/src/renderers/shaders/ShaderChunk/normalmap_pars_fragment.glsl.js
 //
 // k_flip_green_channel: true for Windows 3D viewer; false for Blender (unless inverting Green using RGB Curves).
 

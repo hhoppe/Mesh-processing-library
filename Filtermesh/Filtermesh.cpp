@@ -4247,7 +4247,7 @@ void do_to_obj(Args& args) {
 }
 
 void do_sphparam_to_tangentfield(Args& args) {
-  // Filtermesh ~/proj/sphere/sphparams/cow.sphparam.m -sphparam_to_tang 0 0 1 -renamekey f dir Vup -procedure show_vup | G3d - -st cow -lighta 1 -lights 0
+  // Filtermesh ~/proj/octaflat/sphparams/cow.sphparam.m -sphparam_to_tang 0 0 1 -renamekey f dir Vup -procedure show_vup | G3d - -st cow -lighta 1 -lights 0
   Vector gdir;
   for_int(c, 3) gdir[c] = args.get_float();
   string str;

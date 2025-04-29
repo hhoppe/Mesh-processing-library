@@ -65,7 +65,7 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);
 float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
 
 // Fill the one or more holes associated with the boundary loop containing erep.  Return the new multisided faces.
-Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep);
+Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep);
 
 // *** Retriangulate
 

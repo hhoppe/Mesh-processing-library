@@ -96,7 +96,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         assertnever("");
       }
       nfchanges++;
-      assertx(nfchanges < 200);
+      assertx(nfchanges < 2000);  // Was 200, but raised due to high-valence vertex at center of triangulated face.
     }
     HH_SSTAT(Snfchanges, nfchanges);
   }

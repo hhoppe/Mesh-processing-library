@@ -1622,6 +1622,8 @@ void do_poissonparam() {
 void do_fillholes(Args& args) {
   HH_TIMER("_fillholes");
   int maxnume = args.get_int();  // == maxnumv
+  const int write_hole = getenv_int("WRITE_HOLE", 0);
+  const bool hole_sharp = getenv_bool("HOLE_SHARP");
   Set<Edge> setbe;
   for (Edge e : mesh.edges())
     if (mesh.is_boundary(e)) setbe.enter(e);
@@ -1638,11 +1640,12 @@ void do_fillholes(Args& args) {
     Set<Face> setf = mesh_remove_boundary(mesh, e);
     Sbndsub.enter(setf.num());
     for (Face f : setf) mesh.set_string(f, es);
-    if (getenv_bool("WRITE_HOLE"))
+    if (write_hole && ne >= write_hole) {
       for (Face f : setf) mesh.update_string(f, "hole", "");
-    if (getenv_bool("HOLE_SHARP"))
-      for (Face f : setf)
-        for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
+      if (hole_sharp)
+        for (Face f : setf)
+          for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
+    }
     if (0)
       for (Face f : setf) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
   }
@@ -1695,7 +1698,7 @@ void do_triangulate() {
 void do_splitvalence(Args& args) {
   int maxvalence = args.get_int();
   assertx(maxvalence > 6);
-  const bool write_hole = getenv_bool("WRITE_HOLE");
+  const int write_hole = getenv_int("WRITE_HOLE", 0);
   HPqueue<Vertex> pqv;
   int large_int = 1 << 24;  // Precision of float in HPqueue.
   for (Vertex v : mesh.vertices())
@@ -2860,7 +2863,7 @@ void do_assign_tangents() {
     mesh.update_string(c, "tangent", csform_vec(str, tangent));
     assertx(abs(sign) == 1.f);
     if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
-      assertx(to_int(s) == int(sign));
+      assertw(to_int(s) == int(sign));
     } else if (sign < 0.f) {
       mesh.update_string(f, "bitangent_sign", "-1");
     }

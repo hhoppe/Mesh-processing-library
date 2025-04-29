@@ -364,7 +364,7 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   return float(qem);
 }
 
-Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
+Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
   Set<Face> setf;
   Queue<Edge> queuee = gather_boundary(mesh, erep);
   while (!queuee.empty()) {
@@ -399,6 +399,17 @@ Set<Face> mesh_remove_boundary(Mesh& mesh, Edge erep) {
       // vertex1(e) ok but slower
       for (Edge e : qc) va.push(mesh.vertex2(e));
       Face fn = mesh.create_face(va);
+      // Heuristically propagate string info from adjacent corners onto new corners.
+      for (Corner c : mesh.corners(fn)) {
+        const char* s1 = mesh.get_string(mesh.ccw_corner(c));
+        const char* s2 = mesh.get_string(mesh.clw_corner(c));
+        if (s1 || s2) {
+          if (!s1 || !s2) Warning("fill_hole: absent corner info");
+          if (!s1) s1 = s2;
+          if (strcmp(s1, s2)) Warning("fill_holes: inconsistent corner info");
+          mesh.set_string(c, s1);
+        }
+      }
       setf.enter(fn);
     }
   }

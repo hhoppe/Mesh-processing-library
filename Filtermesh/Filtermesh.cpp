@@ -1623,7 +1623,7 @@ void do_fillholes(Args& args) {
   HH_TIMER("_fillholes");
   int maxnume = args.get_int();  // == maxnumv
   const int write_hole = getenv_int("WRITE_HOLE", 0);
-  const bool hole_sharp = getenv_bool("HOLE_SHARP");
+  const int hole_sharp = getenv_int("HOLE_SHARP", 0);
   Set<Edge> setbe;
   for (Edge e : mesh.edges())
     if (mesh.is_boundary(e)) setbe.enter(e);
@@ -1640,12 +1640,11 @@ void do_fillholes(Args& args) {
     Set<Face> setf = mesh_remove_boundary(mesh, e);
     Sbndsub.enter(setf.num());
     for (Face f : setf) mesh.set_string(f, es);
-    if (write_hole && ne >= write_hole) {
+    if (write_hole && ne >= write_hole)
       for (Face f : setf) mesh.update_string(f, "hole", "");
-      if (hole_sharp)
-        for (Face f : setf)
-          for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
-    }
+    if (hole_sharp && ne >= hole_sharp)
+      for (Face f : setf)
+        for (Edge ee : mesh.edges(f)) mesh.update_string(ee, "sharp", "");
     if (0)
       for (Face f : setf) showdf(" filling in hole with %d sides\n", mesh.num_vertices(f));
   }
@@ -2650,9 +2649,44 @@ void do_renormalizenor() {
 
 // *** reduce
 
+bool vertex_is_movable(Vertex v) {
+  return !mesh.is_boundary(v) && !any_of(mesh.corners(v), [&](Corner c) { return !!mesh.get_string(c); });
+}
+
+bool attribute_safe_edge_collapse(Edge e) {
+  Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+  if (mesh.is_boundary(v1) && mesh.is_boundary(v2) && !mesh.is_boundary(e))
+    return false;
+  if (!any_of(mesh.corners(v1), [&](Corner c) { return !!mesh.get_string(c); }) ||
+      !any_of(mesh.corners(v2), [&](Corner c) { return !!mesh.get_string(c); }))
+    return true;
+  const auto same = [](const char* s1, const char* s2) {
+    if (!s1 && !s2) return true;
+    if (s1 && s2) return !strcmp(s1, s2);
+    return false;
+  };
+  if (1) {
+    Corner cv1f1 = mesh.corner(mesh.vertex1(e), mesh.face1(e));
+    Corner cv2f1 = mesh.ccw_face_corner(cv1f1);
+    Corner cv1f1o = mesh.ccw_corner(cv1f1);
+    Corner cv2f1o = mesh.clw_corner(cv2f1);
+    if (cv1f1o && !same(mesh.get_string(cv1f1o), mesh.get_string(cv1f1))) return false;
+    if (cv2f1o && !same(mesh.get_string(cv2f1o), mesh.get_string(cv2f1))) return false;
+  }
+  if (mesh.face2(e)) {
+    Corner cv1f2 = mesh.corner(mesh.vertex1(e), mesh.face2(e));
+    Corner cv2f2 = mesh.clw_face_corner(cv1f2);
+    Corner cv1f2o = mesh.clw_corner(cv1f2);
+    Corner cv2f2o = mesh.ccw_corner(cv2f2);
+    if (cv1f2o && !same(mesh.get_string(cv1f2o), mesh.get_string(cv1f2))) return false;
+    if (cv2f2o && !same(mesh.get_string(cv2f2o), mesh.get_string(cv2f2))) return false;
+  }
+  return true;
+}
+
 float reduce_criterion(Edge e) {
-  // Create a function attribute_safe_edge_collapse() and check it?
   if (!mesh.nice_edge_collapse(e)) return BIGFLOAT;
+  if (0 && !attribute_safe_edge_collapse(e)) return BIGFLOAT;  // Be conservative, e.g. for uv atlas. ??
   switch (reducecrit) {
     case EReduceCriterion::length: return mesh.length(e);
     case EReduceCriterion::inscribed: return collapse_edge_inscribed_criterion(mesh, e);
@@ -2699,10 +2733,8 @@ void do_reduce() {
         for (Edge e2 : mesh.edges(vv))
           if (pqe.remove(e2) < 0.f) edges_to_update.remove(e2);
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
-    const int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2
+    const int ii = !vertex_is_movable(v1) ? 2 : !vertex_is_movable(v2) ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2.
     const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    // Use attribute info to determine which vertex to keep?
     Vertex vkept = ii == 0 ? v2 : v1;
     mesh.collapse_edge_vertex_saving_attribs(e, vkept);
     e = nullptr;

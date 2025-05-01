@@ -128,7 +128,7 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
 MeshSearch::~MeshSearch() {}
 
 MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
-  Result result;
+  Result result{};
   Face f = nullptr;
   if (_options.allow_local_project && hint_f) {
     f = hint_f;
@@ -188,12 +188,19 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   HH_SSTAT(Sms_local, !!f);
   if (!f) {
     const Point pbb = p * _xform;
-    SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb);
-    const TriangleFace& triangleface = *ss.next().id;
-    f = triangleface.face;
-    const Vec3<Point> triangle = _mesh.triangle_points(f);  // (Without _xform transformation.)
-    const auto proj = project_point_triangle(p, triangle);
-    result.d2 = proj.d2, result.bary = proj.bary, result.clp = proj.clp;
+    const float max_dis_bb = _options.max_dis * _xform[0][0];
+    SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb, max_dis_bb);
+    if (ss.done()) {  // No triangle within max_dis;
+      result.bary = thrice(NAN);
+      result.clp = thrice(NAN);
+      result.d2 = NAN;
+    } else {
+      const TriangleFace& triangleface = *ss.next().id;
+      f = triangleface.face;
+      const Vec3<Point> triangle = _mesh.triangle_points(f);  // (Without _xform transformation.)
+      const auto proj = project_point_triangle(p, triangle);
+      result.bary = proj.bary, result.clp = proj.clp, result.d2 = proj.d2;
+    }
   }
   result.f = f;
   return result;

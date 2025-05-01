@@ -61,6 +61,7 @@ Vec2<FilterBnd> g_filterbs =
 
 constexpr Bndrule k_reflected = Bndrule::reflected;
 constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected);
+constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
   assertx(s != "" && size);
@@ -1515,11 +1516,12 @@ void do_object_to_tangent_normals(Args& args) {
       Vector normal, tangent;
       assertx(parse_key_vec(mesh.get_string(v), "normal", normal));
       assertx(parse_key_vec(mesh.get_string(v), "tangent", tangent));
-      const Vector bitangent = cross(normal, tangent);
+      const Vector bitangent = normalized(cross(normal, tangent));
       mesh.update_string(v, "bitangent", csform_vec(str, bitangent));
     }
   }
-  const MeshSearch mesh_search(mesh, {});
+  const float k_max_dis = 1e-5f;
+  const MeshSearch mesh_search(mesh, {.max_dis = k_max_dis});
   const int num_threads = get_max_threads();
   // By-value capture of `k_per_pixel_bitangent` to overcome internal compiler bug in mingw.
   // const int thread_index = 0; for_each(V(range(image.ysize())), [&](auto subrange) {
@@ -1527,7 +1529,7 @@ void do_object_to_tangent_normals(Args& args) {
     string str;
     Face hint_f = nullptr;
     SGrid<float, 3, 3> tbn_inverse;
-    auto cprogress = make_optional_if<ConsoleProgress>(!thread_index);
+    auto cprogress = make_optional_if<ConsoleProgress>(thread_index == num_threads / 2);
     for (const int y : subrange) {
       if (cprogress) cprogress->update(float(y - *subrange.begin()) / subrange.size());
       for_int(x, image.xsize()) {
@@ -1537,8 +1539,11 @@ void do_object_to_tangent_normals(Args& args) {
         Vector object_space_detail_normal = normalized(convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f);
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
         auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
+        if (!f || d2 >= square(k_max_dis)) {
+          pixel = k_color_zero_alpha;  // To indicate undefined color.
+          continue;
+        }
         hint_f = f;
-        if (0) assertw(d2 < 1e-10f);  // The model mesh may contain boundaries (holes) or cut handles/tunnels.
         const auto renorm = [&](const Vector& vec) { return k_renormalize_tbn_per_pixel ? normalized(vec) : vec; };
         const Vector normal = renorm(unnormalized_interpolated_vector(mesh, f, "normal", bary));
         const Vector tangent = renorm(unnormalized_interpolated_vector(mesh, f, "tangent", bary));
@@ -1568,6 +1573,64 @@ void do_object_to_tangent_normals(Args& args) {
         if (1) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
         if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
         pixel = Vector4(concat((detail_normal_in_tbn + 1.f) / 2.f, V(1.f))).pixel();
+      }
+    }
+  });
+}
+
+void do_tangent_to_object_normals(Args& args) {
+  const string mesh_file = args.get_filename();
+  const bool k_flip_green_channel = false;
+  // https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/normal_fragment_begin.glsl.js
+  const bool k_renormalize_tbn_per_pixel = true;
+  GMesh mesh;
+  mesh.read(RFile(mesh_file)());
+  {
+    string str;
+    for (Vertex v : mesh.vertices()) {
+      assertx(mesh.point(v)[2] == 0.f);
+      Vector normal, tangent;
+      assertx(parse_key_vec(mesh.get_string(v), "normal", normal));
+      assertx(parse_key_vec(mesh.get_string(v), "tangent", tangent));
+      const Vector bitangent = normalized(cross(normal, tangent));
+      mesh.update_string(v, "bitangent", csform_vec(str, bitangent));
+    }
+  }
+  const float k_max_dis = 1e-5f;
+  const MeshSearch mesh_search(mesh, {.max_dis = k_max_dis});
+  const int num_threads = get_max_threads();
+  parallel_for_chunk(range(image.ysize()), num_threads, [&](int thread_index, auto subrange) {
+    string str;
+    Face hint_f = nullptr;
+    auto cprogress = make_optional_if<ConsoleProgress>(thread_index == num_threads / 2);
+    for (const int y : subrange) {
+      if (cprogress) cprogress->update(float(y - *subrange.begin()) / subrange.size());
+      for_int(x, image.xsize()) {
+        // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
+        const int yy = image.ysize() - 1 - y;
+        Pixel& pixel = image[yy][x];
+        Vector detail_normal_in_tbn = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
+        if (0) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
+        if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
+        const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
+        auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
+        if (!f || d2 >= square(k_max_dis)) {
+          pixel = k_color_zero_alpha;  // To indicate undefined color.
+          continue;
+        }
+        hint_f = f;
+        const auto renorm = [&](const Vector& vec) { return k_renormalize_tbn_per_pixel ? normalized(vec) : vec; };
+        const Vector normal = renorm(unnormalized_interpolated_vector(mesh, f, "normal", bary));
+        const Vector tangent = renorm(unnormalized_interpolated_vector(mesh, f, "tangent", bary));
+        const Vector bitangent0 = renorm(unnormalized_interpolated_vector(mesh, f, "bitangent", bary));
+        const int bitangent_sign = face_bitangent_sign(mesh, f, str);
+        const Vector bitangent = float(bitangent_sign) * bitangent0;
+        const SGrid<float, 3, 3> tbn = V<Vec3<float>>(tangent, bitangent, normal);
+        Vector object_space_detail_normal;
+        // https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/normal_fragment_maps.glsl.js
+        mat_mul(detail_normal_in_tbn.const_view(), tbn.const_view(), object_space_detail_normal.view());
+        if (1) object_space_detail_normal = normalized(object_space_detail_normal);
+        pixel = Vector4(concat((object_space_detail_normal + 1.f) / 2.f, V(1.f))).pixel();
       }
     }
   });
@@ -3470,6 +3533,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(shadenor, "dx dy dz : shade normal map given light_dir");
   HH_ARGSD(shadefancy, "'frame' : shade using multiple lights");
   HH_ARGSD(object_to_tangent_normals, "mesh.m : use mesh tangents to redefine normal map");
+  HH_ARGSD(tangent_to_object_normals, "mesh.m : use mesh tangents to redefine normal map");
   HH_ARGSD(cycle, "n : cycle through colors");
   HH_ARGSD(transf, "'frame' : post-multiply RGB vector by a matrix (ranges [0..1])");
   HH_ARGSD(genpattern, "pat : create procedural pattern ([xydr]h+[slqc])");

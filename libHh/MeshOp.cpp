@@ -406,6 +406,7 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
         if (s1 || s2) {
           if (!s1 || !s2) Warning("fill_hole: absent corner info");
           if (!s1) s1 = s2;
+          HH_ASSUME(s2);  // For clang-tidy.
           if (strcmp(s1, s2)) Warning("fill_holes: inconsistent corner info");
           mesh.set_string(c, s1);
         }

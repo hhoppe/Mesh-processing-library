@@ -25,6 +25,7 @@ class MeshSearch {
     bool allow_internal_boundaries{false};
     bool allow_off_surface{false};
     float gridn_factor{1.f};
+    float max_dis{1e15f};
     std::optional<Bbox<float, 3>> bbox{};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);

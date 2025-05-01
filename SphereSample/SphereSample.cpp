@@ -73,7 +73,7 @@ const Frame k_fdomain_to_spatialbb{Vector(.4f, .0f, .0f), Vector(.0f, .4f, .0f),
 const Pixel k_pixel_gray = Pixel::gray(235);
 const Pixel k_pixel_orange{255, 153, 0, 255};
 
-constexpr Pixel k_color_special_filled{0, 0, 0, 0};  // Transparent.
+constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};  // For "filled" and "hole" faces.
 
 // *** General functions.
 
@@ -1270,7 +1270,8 @@ void do_texture_file(Args& args) {
 
 Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
                     const Bary& bary) {
-  if (GMesh::string_has_key(mesh.get_string(f), "filled")) return k_color_special_filled;
+  if (GMesh::string_has_key(mesh.get_string(f), "filled")) return k_color_zero_alpha;
+  if (GMesh::string_has_key(mesh.get_string(f), "hole")) return k_color_zero_alpha;
   Pixel pixel(255, 255, 255, 255);
   switch (signal_[0]) {
     case 'G': {
@@ -1306,7 +1307,7 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
 }
 
 void set_filled_pixels_to_pink(Image& image) {
-  assertx(k_color_special_filled[3] == 0);
+  assertx(k_color_zero_alpha[3] == 0);
   const Pixel k_color_pink(255, 192, 203, 255);
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
     if (image[yx][3] == 0) image[yx] = k_color_pink;
@@ -1317,6 +1318,7 @@ void set_filled_pixels_using_voronoi_dilate(Image& image) {
   // I also tried gradient-domain diffusion, but this altered the normals near the fill boundary and looked poor.
   // Adapted from "Filterimage -voronoidilate".
   HH_TIMER("_voronoi_dilate");
+  assertx(k_color_zero_alpha[3] == 0);
   Matrix<Vec2<int>> mvec(image.dims(), image.dims());
   for (const auto& yx : range(image.dims())) {
     bool is_undef = image[yx][3] == 0;

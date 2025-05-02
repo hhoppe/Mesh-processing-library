@@ -546,7 +546,17 @@ bool command_exists_in_path(const string& name) {
   return false;
 }
 
-bool remove_file(const string& name) { return !HH_POSIX(unlink)(name.c_str()); }
+bool remove_file(const string& name) {
+  const int max_attempts = 10;
+  for_int(i, max_attempts) {
+    if (i) my_sleep(0.1);
+    if (!HH_POSIX(unlink)(name.c_str())) return true;  // Success.
+    if (errno != EACCES) return false;
+    // Because a cloud sync service like Dropbox may hold a temporary lock on the file,
+    // we wait and try again a few times.
+  }
+  return false;
+}
 
 bool recycle_path(const string& pathname) {
 #if defined(_WIN32)

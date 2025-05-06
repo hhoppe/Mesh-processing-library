@@ -594,7 +594,7 @@ bool recycle_path(const string& pathname) {
   if (SUCCEEDED(hr)) {
     hr = file_op->DeleteItem(item, nullptr);  // To Recycle Bin.
     if (SUCCEEDED(hr)) {
-      hr = file_op->PerformOperations();  // (May mysteriously hang for a few sec?).
+      hr = file_op->PerformOperations();  // (May mysteriously hang for a few sec?  It is due to Dropbox!).
       if (!SUCCEEDED(hr) && 1) SHOW("PerformOperations failed", pathname);
     } else {
       if (1) SHOW("DeleteItem failed", pathname);

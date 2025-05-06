@@ -224,7 +224,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       //  "Filterimage -assemble 2 2 root_name.{0.0,1.0,0.1,1.1}.png -diff data/lake.png -stat".
       AS(converter->CopyPixels(nullptr, stride, buffer_size, reinterpret_cast<BYTE*>(data())));
     }
-    attrib().orig_filename = get_path_absolute(filename);
+    attrib().orig_filename = filename == "-" ? "-" : get_path_absolute(filename);
     attrib().orig_suffix = suffix();
   }
   if (orientation == 1) {

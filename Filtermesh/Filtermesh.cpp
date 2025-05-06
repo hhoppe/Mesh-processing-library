@@ -62,6 +62,7 @@ int nfaces = 0;
 float maxcrit = 1e20f;
 enum class EReduceCriterion { undefined, length, inscribed, volume, qem };
 EReduceCriterion reducecrit = EReduceCriterion::undefined;
+bool attribute_safe_reduce = false;
 
 // *** helper
 
@@ -2649,47 +2650,49 @@ void do_renormalizenor() {
 
 // *** reduce
 
-bool vertex_is_movable(Vertex v) {
-  return !mesh.is_boundary(v) && !any_of(mesh.corners(v), [&](Corner c) { return !!mesh.get_string(c); });
+bool vertex_is_movable_along_edge(Vertex v, Edge e) {
+  Corner c1 = mesh.clw_corner(v, e), c2 = mesh.ccw_corner(v, e);
+  if (c1) {
+    Corner c = c1;
+    const char* s0 = mesh.get_string(c);
+    for (;;) {
+      c = mesh.clw_corner(c);
+      if (!c) return !c2;
+      if (c == c2) return true;
+      const char* s = mesh.get_string(c);
+      if (!same_string(s, s0)) return c2 && same_string(s, mesh.get_string(c2));
+    }
+  } else {
+    Corner c = c2;
+    const char* s0 = mesh.get_string(c);
+    for (;;) {
+      c = mesh.ccw_corner(c);
+      if (!c) return true;  // == !c1.
+      assertx(c != c2);
+      const char* s = mesh.get_string(c);
+      if (!same_string(s, s0)) return false;
+    }
+  }
 }
 
-bool attribute_safe_edge_collapse(Edge e) {
+// Return: {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
+int ii_for_attribute_safe_edge_collapse(Edge e) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  if (mesh.is_boundary(v1) && mesh.is_boundary(v2) && !mesh.is_boundary(e))
-    return false;
-  if (!any_of(mesh.corners(v1), [&](Corner c) { return !!mesh.get_string(c); }) ||
-      !any_of(mesh.corners(v2), [&](Corner c) { return !!mesh.get_string(c); }))
-    return true;
-  const auto same = [](const char* s1, const char* s2) {
-    if (!s1 && !s2) return true;
-    if (s1 && s2) return !strcmp(s1, s2);
-    return false;
-  };
-  if (1) {
-    Corner cv1f1 = mesh.corner(mesh.vertex1(e), mesh.face1(e));
-    Corner cv2f1 = mesh.ccw_face_corner(cv1f1);
-    Corner cv1f1o = mesh.ccw_corner(cv1f1);
-    Corner cv2f1o = mesh.clw_corner(cv2f1);
-    if (cv1f1o && !same(mesh.get_string(cv1f1o), mesh.get_string(cv1f1))) return false;
-    if (cv2f1o && !same(mesh.get_string(cv2f1o), mesh.get_string(cv2f1))) return false;
-  }
-  if (mesh.face2(e)) {
-    Corner cv1f2 = mesh.corner(mesh.vertex1(e), mesh.face2(e));
-    Corner cv2f2 = mesh.clw_face_corner(cv1f2);
-    Corner cv1f2o = mesh.clw_corner(cv1f2);
-    Corner cv2f2o = mesh.ccw_corner(cv2f2);
-    if (cv1f2o && !same(mesh.get_string(cv1f2o), mesh.get_string(cv1f2))) return false;
-    if (cv2f2o && !same(mesh.get_string(cv2f2o), mesh.get_string(cv2f2))) return false;
-  }
-  return true;
+  const bool v1_is_movable = vertex_is_movable_along_edge(v1, e);
+  const bool v2_is_movable = vertex_is_movable_along_edge(v2, e);
+  return v1_is_movable && v2_is_movable ? 1 : v1_is_movable ? 0 : v2_is_movable ? 2 : -1;
 }
 
 float reduce_criterion(Edge e) {
   if (!mesh.nice_edge_collapse(e)) return BIGFLOAT;
-  if (0 && !attribute_safe_edge_collapse(e)) return BIGFLOAT;  // Be conservative, e.g. for uv atlas. ??
+  int ii = 1;
+  if (attribute_safe_reduce) {
+    ii = ii_for_attribute_safe_edge_collapse(e);
+    if (ii < 0) return BIGFLOAT;
+  }
   switch (reducecrit) {
     case EReduceCriterion::length: return mesh.length(e);
-    case EReduceCriterion::inscribed: return collapse_edge_inscribed_criterion(mesh, e);
+    case EReduceCriterion::inscribed: return collapse_edge_inscribed_criterion(mesh, e, ii);
     case EReduceCriterion::volume: return collapse_edge_volume_criterion(mesh, e);
     case EReduceCriterion::qem: return collapse_edge_qem_criterion(mesh, e);
     default: assertnever("");
@@ -2698,6 +2701,7 @@ float reduce_criterion(Edge e) {
 
 void do_reduce() {
   HH_TIMER("_reduce");
+  attribute_safe_reduce = getenv_bool("ATTRIBUTE_SAFE_REDUCE", false);
   assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
   HPqueue<Edge> pqe;
   {
@@ -2733,7 +2737,14 @@ void do_reduce() {
         for (Edge e2 : mesh.edges(vv))
           if (pqe.remove(e2) < 0.f) edges_to_update.remove(e2);
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    const int ii = !vertex_is_movable(v1) ? 2 : !vertex_is_movable(v2) ? 0 : 1;  // ii == 2 : v1;  ii == 0 : v2.
+    int ii;  // {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
+    if (attribute_safe_reduce) {
+      ii = ii_for_attribute_safe_edge_collapse(e);
+      assertx(ii >= 0);
+    } else {
+      const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
+      ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
+    }
     const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
     Vertex vkept = ii == 0 ? v2 : v1;
     mesh.collapse_edge_vertex_saving_attribs(e, vkept);

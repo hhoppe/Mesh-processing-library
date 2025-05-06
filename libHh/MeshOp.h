@@ -56,7 +56,7 @@ float vertex_solid_angle(const GMesh& mesh, Vertex v);
 // Return a criterion given an edge e that is low if the edge should be collapsed.
 // Use the product of the edge length with the smallest inscribed
 // radius of the two adjacent faces (its dimension is area).
-float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e);
+float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii);
 
 // Return change in volume, but penalize bad dihedral angles.
 float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);

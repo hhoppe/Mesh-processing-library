@@ -260,7 +260,7 @@ float vertex_solid_angle(const GMesh& mesh, Vertex v) {
   return solid_angle(mesh.point(v), pa);
 }
 
-float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e) {
+float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii) {
   const Point& p1 = mesh.point(mesh.vertex1(e));
   const Point& p2 = mesh.point(mesh.vertex2(e));
   const Point& po1 = mesh.point(mesh.side_vertex1(e));
@@ -280,7 +280,7 @@ float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e) {
       ar_normals.push(get_normal_dir(triangle));
     }
   }
-  Point newp = interp(mesh.point(v1), mesh.point(v2));
+  Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   int nnor = 0;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {

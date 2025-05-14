@@ -846,7 +846,7 @@ void Hw::hard_flush() {
   L"*.wmv;*.flv;*.m2v;*.m4v;*.webm;*.ogv;*.3gp;*.mts;*.gif"
 #define IMAGE_EXTS                                                  \
   L"*.jpg;*.jpeg;*.png;*.bmp;*.rgb;*.ppm;*.pgm;*.pbm;*.tif;*.tiff;" \
-  L"*.jxr;*.hdp;*.wdp;*.wmp;*.webp;*.bpg;*.jp2"
+  L"*.jxr;*.hdp;*.wdp;*.wmp;*.webp;*.bpg;*.jp2;*.avif"
 
 Array<string> Hw::query_open_filenames(const string& hint_filename) {
   // http://www.winprog.org/tutorial/app_two.html

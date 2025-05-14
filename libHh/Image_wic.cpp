@@ -12,7 +12,7 @@ void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 #include <Windows.h>  // required by WIC; must appear before other headers.
 
 #include <Shlwapi.h>      // SHCreateMemStream()
-#include <wincodec.h>     // WIC
+#include <wincodec.h>     // WIC; e.g., c:/Program Files (x86)/Windows Kits/10/Include/10.0.19041.0/um/wincodec.h
 #include <wincodecsdk.h>  // IWICMetadataBlockReader
 
 HH_REFERENCE_LIB("ole32.lib");     // CoInitializeEx() and CoCreateInstance()
@@ -42,7 +42,7 @@ namespace hh {
 
 namespace {
 
-const std::wstring orientation_flag = L"/app1/ifd/{ushort=274}";  // EXIF tag for image orientation
+const std::wstring k_orientation_flag = L"/app1/ifd/{ushort=274}";  // EXIF tag for image orientation
 
 #define AS(expr) assertt(SUCCEEDED(expr))
 
@@ -63,10 +63,15 @@ struct SuffixGuid {
   const GUID* guid;
 };
 const Array<SuffixGuid> k_ar_suffix_container = {
-    SuffixGuid{"bmp", &GUID_ContainerFormatBmp},  SuffixGuid{"png", &GUID_ContainerFormatPng},
+    SuffixGuid{"bmp", &GUID_ContainerFormatBmp}, SuffixGuid{"png", &GUID_ContainerFormatPng},
     SuffixGuid{"jpg", &GUID_ContainerFormatJpeg}, SuffixGuid{"jpeg", &GUID_ContainerFormatJpeg},
     SuffixGuid{"tif", &GUID_ContainerFormatTiff}, SuffixGuid{"tiff", &GUID_ContainerFormatTiff},
-    SuffixGuid{"gif", &GUID_ContainerFormatGif},  SuffixGuid{"wmp", &GUID_ContainerFormatWmp},
+    SuffixGuid{"gif", &GUID_ContainerFormatGif}, SuffixGuid{"wmp", &GUID_ContainerFormatWmp},
+    SuffixGuid{"dds", &GUID_ContainerFormatDds}, SuffixGuid{"heif", &GUID_ContainerFormatHeif},
+    // Decoder but no encoder for these:
+    SuffixGuid{"adng", &GUID_ContainerFormatAdng}, SuffixGuid{"webp", &GUID_ContainerFormatWebp},
+    SuffixGuid{"raw", &GUID_ContainerFormatRaw},
+    // Not present: "avif" ?
 };
 
 const GUID* get_container_format(const string& suffix) {
@@ -154,6 +159,33 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     AS(decoder->GetFrameCount(&frame_count));
     assertw(frame_count == 1);
   }
+  if (0) {
+    // This reveals that a *.avif file is parsed by "Microsoft HEIF Decoder" which handles many file suffixes
+    //  (.heic,.heif,.hif,.avci,.heics,.heifs,.avcs,.avif,.avifs) so it does not reveal the codec used.
+    com_ptr<IWICBitmapDecoderInfo> decoderInfo;
+    AS(decoder->GetDecoderInfo(&decoderInfo));
+
+    GUID codecCLSID;
+    AS(decoderInfo->GetCLSID(&codecCLSID));
+
+    UINT nameLength = 0;
+    AS(decoderInfo->GetFriendlyName(0, nullptr, &nameLength));
+
+    std::vector<WCHAR> friendlyName(nameLength);
+    AS(decoderInfo->GetFriendlyName(nameLength, friendlyName.data(), &nameLength));
+
+    string codecName = utf8_from_utf16(friendlyName.data());
+    SHOW(codecName);
+
+    UINT numFileExtensions = 0;
+    AS(decoderInfo->GetFileExtensions(0, nullptr, &numFileExtensions));
+
+    std::vector<WCHAR> fileExtensions(numFileExtensions);
+    AS(decoderInfo->GetFileExtensions(numFileExtensions, fileExtensions.data(), &numFileExtensions));
+
+    string supportedExtensions = utf8_from_utf16(fileExtensions.data());
+    SHOW(supportedExtensions);
+  }
   {
     GUID container_format;
     AS(decoder->GetContainerFormat(&container_format));
@@ -166,6 +198,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       Warning("Image read: encoded content does not match filename suffix");
     }
     set_suffix(get_suffix(&container_format));
+    if (suffix() == "heif" && !expected_format) set_suffix("avif");  // Just a guess.
   }
   ushort orientation = 1;  // default is normal orientation (range is 1..8)
   {
@@ -187,11 +220,24 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       if (SUCCEEDED(frame_decode->GetMetadataQueryReader(&pQueryReader))) {
         PROPVARIANT propvariant;
         PropVariantInit(&propvariant);
-        if (SUCCEEDED(pQueryReader->GetMetadataByName(orientation_flag.c_str(), &propvariant)) &&
+        if (SUCCEEDED(pQueryReader->GetMetadataByName(k_orientation_flag.c_str(), &propvariant)) &&
             assertw(propvariant.vt == VT_UI2)) {
           orientation = propvariant.uiVal;  // 1..8; 1 == normal, 6 == rotate_ccw
         }
         PropVariantClear(&propvariant);
+        if (0) {
+          // For HEIF containers, we should try to determine if the codec is HEIC or AV1 (AVIF).
+          // I attempted to retrieve this by querying the metadata, but it is not there, and there are few docs.
+          SHOWL;
+          const std::wstring k_major_brand = L"/app1/ifd/exif/{ushort=16069}";
+          PropVariantInit(&propvariant);
+          if (SUCCEEDED(pQueryReader->GetMetadataByName(k_major_brand.c_str(), &propvariant)) &&
+              assertw(propvariant.vt == VT_LPSTR)) {
+            const string brand = propvariant.pszVal;
+            SHOW(brand);
+          }
+          PropVariantClear(&propvariant);
+        }
       }
     }
     com_ptr<IWICFormatConverter> converter;
@@ -370,7 +416,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
             PROPVARIANT propvariant;
             PropVariantInit(&propvariant);
             propvariant.vt = VT_UI2, propvariant.uiVal = 1;  // reset to default orientation
-            AS(pQueryWriter->SetMetadataByName(orientation_flag.c_str(), &propvariant));
+            AS(pQueryWriter->SetMetadataByName(k_orientation_flag.c_str(), &propvariant));
             PropVariantClear(&propvariant);
           }
         }

@@ -2867,12 +2867,34 @@ void do_bndpts(Args& args) {
 
 void do_assign_normals() { assign_normals(); }
 
+template <bool tangent_4d>
+void template_set_tspace_basic(const SMikkTSpaceContext*, const float tangent_in[], float sign, int face_index,
+                               int vert_index) {
+  Face f = mesh.id_face(face_index + 1);
+  Corner c = mesh.triangle_corners(f)[vert_index];
+  const Vector tangent(CArrayView(tangent_in, 3));
+  assertx(abs(sign) == 1.f);
+  string str;
+  if (tangent_4d) {
+    const Vec4<float> tangent4 = concat(tangent, V(sign));
+    mesh.update_string(c, "tangent", csform_vec(str, tangent4));
+  } else {
+    mesh.update_string(c, "tangent", csform_vec(str, tangent));
+    if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
+      assertw(to_int(s) == int(sign));
+    } else if (sign < 0.f) {
+      mesh.update_string(f, "bitangent_sign", "-1");
+    }
+  }
+}
+
 void do_assign_tangents() {
   // http://mikktspace.com/
   // https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.h
   // https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.c
   // http://image.diku.dk/projects/media/morten.mikkelsen.08.pdf
   // https://github.com/KhronosGroup/glTF/issues/1252
+  const bool tangent_4d = getenv_bool("TANGENT_4D");
   const auto get_num_faces = [](const SMikkTSpaceContext*) { return mesh.num_faces(); };
   const auto get_num_vertices_of_face = [](const SMikkTSpaceContext*, int face_index) {
     Face f = mesh.id_face(face_index + 1);
@@ -2897,20 +2919,7 @@ void do_assign_tangents() {
     assertx(mesh.parse_corner_key_vec(c, "uv", uv));
     ArrayView(tex_out, 2).assign(uv);
   };
-  const auto set_tspace_basic = [](const SMikkTSpaceContext*, const float tangent_in[], float sign, int face_index,
-                                   int vert_index) {
-    Face f = mesh.id_face(face_index + 1);
-    Corner c = mesh.triangle_corners(f)[vert_index];
-    const Vector tangent(CArrayView(tangent_in, 3));
-    string str;
-    mesh.update_string(c, "tangent", csform_vec(str, tangent));
-    assertx(abs(sign) == 1.f);
-    if (const char* s = GMesh::string_key(str, mesh.get_string(f), "bitangent_sign")) {
-      assertw(to_int(s) == int(sign));
-    } else if (sign < 0.f) {
-      mesh.update_string(f, "bitangent_sign", "-1");
-    }
-  };
+  const auto set_tspace_basic = tangent_4d ? template_set_tspace_basic<true> : template_set_tspace_basic<false>;
   SMikkTSpaceInterface interface = {
       get_num_faces, get_num_vertices_of_face, get_position, get_normal, get_tex_coord, set_tspace_basic, nullptr,
   };

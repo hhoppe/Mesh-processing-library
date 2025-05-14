@@ -4401,6 +4401,8 @@ int main(int argc, const char** argv) {
   args.p("*.exr", do_image, ": load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
   args.p("*.tif", do_image, ": load image (<unlisted>)");
   args.p("*.tiff", do_image, ": load image (<unlisted>)");
+  args.p("*.webp", do_image, ": load image (<unlisted>)");
+  args.p("*.avif", do_image, ": load image (<unlisted>)");
   args.p("*.JPG", do_image, ": load image (<unlisted>)");
   args.p("*.JPEG", do_image, ": load image (<unlisted>)");
   args.p("*.PNG", do_image, ": load image (<unlisted>)");

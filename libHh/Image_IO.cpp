@@ -40,6 +40,9 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     // Input #0, image2, from 'c:/hh/data/image/dancer_charts.png':
     //   Duration: 00:00:00.04, start: 0.000000, bitrate: N/A
     //     Stream #0:0: Video: png, rgba, 1024x1024, 25 tbr, 25 tbn, 25 tbc
+    // Input #0, mov,mp4,m4a,3gp,3g2,mj2, from '/hh/desktop/guanglid.octaflat1.albedo.avif':
+    //   Duration: N/A, start: 0.000000, bitrate: N/A
+    //   Stream #0:0[0x1]: Video: av1 (libdav1d) (High) (av01 / 0x31307661), yuv444p(pc, smpte170m/bt709/iec61966-2-1), 8192x8192 [SAR 1:1 DAR 1:1], 1 fps, 1 tbr, 1 tbn (default)
     Vec2<int> dims{0, 0};
     int nimages = 0;
     string container;
@@ -54,11 +57,12 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
         continue;
       }
       if (contains(line, "Input #0, ")) nimages++;
-      if (contains(line, "Stream #0:0: Video: ")) {
+      if (contains(line, "Stream #0:0") && contains(line, ": Video: ")) {
         string::size_type i = line.find(": Video: ");
         assertt(i != string::npos);
         i += strlen(": Video: ");
-        string::size_type j = line.find(',', i);
+        string::size_type j1 = line.find(',', i), j2 = line.find(' ', i);
+        string::size_type j = j1 == string::npos ? j2 : j2 == string::npos ? j1 : min(j1, j2);
         assertt(j != string::npos);
         container = line.substr(i, j - i);
         i = j;
@@ -78,6 +82,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     if (container == "mjpeg") container = "jpg";
     if (container == "mjpeg (Baseline)") container = "jpg";
     if (container == "sgi") container = "rgb";
+    if (container == "av1") container = "avif";
     string suffix = to_lower(get_path_extension(filename));
     if (suffix != "" && suffix != container) {
       SHOW(suffix, container);

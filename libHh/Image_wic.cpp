@@ -128,6 +128,12 @@ string canonical_pathname(string s) {
 }  // namespace
 
 void Image::read_file_wic(const string& filename, bool bgra) {
+  const string filename_suffix = to_lower(get_path_extension(filename));
+  if (contains(V<string>("avif", "heif"), filename_suffix)) {
+    // WIC is providing incorrect colors when decoding; maybe it is a color space issue; resort to ffmpeg.
+    read_file_ffmpeg(filename, bgra);
+    return;
+  }
   wic_init();
   Array<uchar> buffer;
   com_ptr<IStream> input_stream;
@@ -186,10 +192,15 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     string supportedExtensions = utf8_from_utf16(fileExtensions.data());
     SHOW(supportedExtensions);
   }
+  if (0) {  // For the *.avif file I tested, there was no ColorContext found.
+    com_ptr<IWICColorContext> colorContext;
+    unsigned actualCount;
+    AS(decoder->GetColorContexts(1, &colorContext, &actualCount));
+    assertw(actualCount == 1);
+  }
   {
     GUID container_format;
     AS(decoder->GetContainerFormat(&container_format));
-    string filename_suffix = to_lower(get_path_extension(filename));
     const GUID* expected_format = get_container_format(filename_suffix);
     if (expected_format && container_format != *expected_format) {
       string container_suffix = get_suffix(&container_format);
@@ -199,6 +210,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     }
     set_suffix(get_suffix(&container_format));
     if (suffix() == "heif" && !expected_format) set_suffix("avif");  // Just a guess.
+    if (suffix() == "avif") Warning("WIC decoding of *.avif likely gives incorrect pixel values");
   }
   ushort orientation = 1;  // default is normal orientation (range is 1..8)
   {
@@ -310,6 +322,11 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   if (suf == "") suf = to_lower(get_path_extension(filename));
   if (suf == "") suf = suffix();
   if (suf == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
+  if (contains(V<string>("avif", "heif"), suf)) {
+    // WIC lacks encoding for these formats, so resort to ffmpeg.
+    write_file_ffmpeg(filename, bgra);
+    return;
+  }
   const GUID* container_format = get_container_format(suf);
   if (!container_format && file_requires_pipe(filename)) {
     suf = "bmp";

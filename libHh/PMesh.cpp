@@ -313,11 +313,11 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
 
 GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
   GMesh gmesh;
-  const int no_ref = -1, multiple_refs = -2;
-  Array<int> wedgeref(_vertices.num(), no_ref);
+  const int k_no_ref = -1, k_multiple_refs = -2;
+  Array<int> wedgeref(_vertices.num(), k_no_ref);
   for_int(w, _wedges.num()) {
     int v = _wedges[w].vertex;
-    wedgeref[v] = wedgeref[v] == no_ref ? w : multiple_refs;
+    wedgeref[v] = wedgeref[v] == k_no_ref ? w : k_multiple_refs;
   }
   string str;
   for_int(v, _vertices.num()) {
@@ -325,8 +325,8 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
     ASSERTX(gmesh.vertex_id(gv) == v + 1);
     gmesh.set_point(gv, _vertices[v].attrib.point);
     int wr = wedgeref[v];
-    assertx(wr != no_ref);
-    if (wr != multiple_refs) {
+    assertx(wr != k_no_ref);
+    if (wr != k_multiple_refs) {
       gmesh.update_string(gv, "wid", csform(str, "%d", wr + 1));
       const Vector& nor = _wedges[wr].attrib.normal;
       gmesh.update_string(gv, "normal", csform_vec(str, nor));
@@ -350,7 +350,7 @@ GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {
     for_int(j, 3) {
       int w = _faces[f].wedges[j];
       int v = _wedges[w].vertex;
-      if (wedgeref[v] != multiple_refs) continue;
+      if (wedgeref[v] != k_multiple_refs) continue;
       Corner gc = gmesh.corner(gva[j], gf);
       gmesh.update_string(gc, "wid", csform(str, "%d", w + 1));
       const Vector& nor = _wedges[w].attrib.normal;
@@ -1941,16 +1941,9 @@ GMesh SMesh::extract_gmesh(int has_rgb, int has_uv) const {
     Vertex gv = gmesh.create_vertex();
     ASSERTX(gmesh.vertex_id(gv) == v + 1);
     gmesh.set_point(gv, _vertices[v].attrib.v.point);
-    const Vector& nor = _vertices[v].attrib.w.normal;
-    gmesh.update_string(gv, "normal", csform_vec(str, nor));
-    if (has_rgb) {
-      const A3dColor& col = _vertices[v].attrib.w.rgb;
-      gmesh.update_string(gv, "rgb", csform_vec(str, col));
-    }
-    if (has_uv) {
-      const Uv& uv = _vertices[v].attrib.w.uv;
-      gmesh.update_string(gv, "uv", csform_vec(str, uv));
-    }
+    gmesh.update_string(gv, "normal", csform_vec(str, _vertices[v].attrib.w.normal));
+    if (has_rgb) gmesh.update_string(gv, "rgb", csform_vec(str, _vertices[v].attrib.w.rgb));
+    if (has_uv) gmesh.update_string(gv, "uv", csform_vec(str, _vertices[v].attrib.w.uv));
   }
   Array<Vertex> gva;
   for_int(f, _faces.num()) {

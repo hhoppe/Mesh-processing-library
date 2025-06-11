@@ -148,6 +148,14 @@ void do_outmesh() {
   nooutput = true;
 }
 
+void do_outsmesh() {
+  HH_TIMER("_write_smesh");
+  assertx(pmi->_vertices.num() == pmesh._base_mesh._vertices.num());  // It is in the coarsest state.
+  Array<int> parents(pmi->_vertices.num(), -1);
+  // ??
+  nooutput = true;
+}
+
 void do_geom_nfaces(Args& args) {
   int nfaces = args.get_int();
   Geomorph geomorph;
@@ -165,48 +173,6 @@ void do_geom_nfaces(Args& args) {
     GMesh gmesh = sgeomorph.extract_gmesh(pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
     gmesh.write(std::cout);
   }
-  nooutput = true;
-}
-
-void do_outbbox() {
-  // Approximate union bbox(M^0 .. M^n) using bbox(M^0) union bbox(M^i).
-  const Bbox bbox0{transform(pmi->_vertices, [](auto& v) { return v.attrib.point; })};
-  {
-    // int nv = std::numeric_limits<int>::max();
-    int nv = max(4000, pmi->_vertices.num() * 2);
-    pmi->goto_nvertices(nv);
-  }
-  const Bbox bboxi{transform(pmi->_vertices, [](auto& v) { return v.attrib.point; })};
-  const Bbox bbox = bbox_union(bbox0, bboxi);
-  GMesh gmesh;
-  Vec<Vertex, 8> va;
-  for_int(i, 8) va[i] = gmesh.create_vertex();
-  gmesh.set_point(va[0], Point(bbox[0][0], bbox[0][1], bbox[0][2]));
-  gmesh.set_point(va[1], Point(bbox[1][0], bbox[0][1], bbox[0][2]));
-  gmesh.set_point(va[2], Point(bbox[1][0], bbox[1][1], bbox[0][2]));
-  gmesh.set_point(va[3], Point(bbox[0][0], bbox[1][1], bbox[0][2]));
-  gmesh.set_point(va[4], Point(bbox[0][0], bbox[0][1], bbox[1][2]));
-  gmesh.set_point(va[5], Point(bbox[1][0], bbox[0][1], bbox[1][2]));
-  gmesh.set_point(va[6], Point(bbox[1][0], bbox[1][1], bbox[1][2]));
-  gmesh.set_point(va[7], Point(bbox[0][0], bbox[1][1], bbox[1][2]));
-  gmesh.create_face(va[0], va[3], va[1]);  // Front.
-  gmesh.create_face(va[1], va[3], va[2]);
-  gmesh.create_face(va[1], va[6], va[5]);  // Right.
-  gmesh.create_face(va[6], va[1], va[2]);
-  gmesh.create_face(va[7], va[2], va[3]);  // Top.
-  gmesh.create_face(va[6], va[2], va[7]);
-  gmesh.create_face(va[3], va[4], va[7]);  // Left.
-  gmesh.create_face(va[0], va[4], va[3]);
-  gmesh.create_face(va[0], va[1], va[4]);  // Bottom.
-  gmesh.create_face(va[1], va[5], va[4]);
-  gmesh.create_face(va[7], va[5], va[6]);  // Back.
-  gmesh.create_face(va[7], va[4], va[5]);
-  // Emphasize centroid of bboxi.
-  for_int(i, 100) {
-    Vertex v = gmesh.create_vertex();
-    gmesh.set_point(v, Point(interp(bboxi[0], bboxi[1])));
-  }
-  gmesh.write(std::cout);
   nooutput = true;
 }
 
@@ -1456,6 +1422,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
+  HH_ARGSD(outsmesh, ": output simple mesh (split wedges)");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");
   HH_ARGSD(srout, "'frame' srthresh : create SR mesh");
@@ -1484,7 +1451,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(gcompression, ": try improved geometry compression");
   HH_ARGSD(write_resid_uni, ": output uniform residuals");
   HH_ARGSD(write_resid_dir, ": output directional residuals");
-  HH_ARGSD(outbbox, ": output mesh bounding box around model");
   HH_ARGSC(HH_ARGS_INDENT "Vertex caching:");
   HH_ARGSD(fifo, ": set cache type to FIFO");
   HH_ARGSD(lru, ": set cache type to LRU");

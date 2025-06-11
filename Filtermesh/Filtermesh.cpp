@@ -4087,7 +4087,7 @@ void do_transferwidkeysfrom(Args& args) {
   for (Vertex ov : omesh.vertices()) {
     int wid = to_int(assertx(GMesh::string_key(str, assertx(mesh.get_string(ov)), "wid")));
     assertx(wid);
-    mwidstring.enter(wid, mesh.get_string(ov));
+    mwidstring.enter(wid, omesh.get_string(ov));
   }
   Array<char> key, val;
   for (Vertex v : mesh.vertices()) {

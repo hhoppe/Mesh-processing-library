@@ -163,20 +163,14 @@ void do_outsmesh() {
   pmi->goto_nvertices(0);
   const int k_no_parent = -1;
   Array<int> parents(pmi->_wedges.num(), k_no_parent);
-  bool debug;
 
   const auto swap_wedges = [&](const Vec2<int>& wedges, int f) {
-    if (1) SHOW("swap_wedges", wedges);
-    if (debug) SHOW(wedges, f);
     assertx(pmi->_wedges[wedges[0]].vertex != pmi->_wedges[wedges[1]].vertex);
     Set<int> faces;
     for_int(i, 2) for (const int f2 : pmi->ccw_faces(pmi->_wedges[wedges[i]].vertex, f)) faces.add(f2);
-    if (debug) SHOW(faces);
     for (const int f2 : faces) {
-      if (debug) SHOW(f2);
       for_int(j, 3) {
         int& w = pmi->_faces[f2].wedges[j];
-        if (debug) SHOW(j, w, wedges[0], wedges[1]);
         if (w == wedges[0])
           w = wedges[1];
         else if (w == wedges[1])
@@ -187,31 +181,27 @@ void do_outsmesh() {
   };
 
   for_int(vspli, pmesh._info._tot_nvsplits) {
-    debug = vspli == -1;
-    const int wn0 = pmi->_wedges.num();
     const Vsplit& vspl = pmesh._vsplits[vspli];
     const int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
     assertx(ii == 2);  // Assume PM is created using "MeshSimplify -minii2".
     const int isr = vspl.adds_two_faces();
     const int fl = pmi->_faces.num(), fr = isr ? fl + 1 : -1;
+    const int wn0 = pmi->_wedges.num();
 
     pmi->next();
-    assertx((isr ? fr : fl) == pmi->_faces.num() - 1);
     const int num_new_wedges = pmi->_wedges.num() - wn0;
     if (0) SHOW(isr, wn0, num_new_wedges);
     assertx(num_new_wedges == 1 || (isr && num_new_wedges == 2));
+    const bool two_new_wedges = num_new_wedges == 2;
 
     int wvsfl = pmi->_faces[fl].wedges[0], wvtfl = pmi->_faces[fl].wedges[1], wvlfl = pmi->_faces[fl].wedges[2];
     int wvsfr = -1, wvrfr = -1, wvtfr = -1;
     if (isr) wvsfr = pmi->_faces[fr].wedges[0], wvrfr = pmi->_faces[fr].wedges[1], wvtfr = pmi->_faces[fr].wedges[2];
-    if (debug) {
-      SHOW(vspli, isr, wn0, num_new_wedges, fl, fr);
-      SHOW(wvsfl, wvtfl, wvlfl);
-      SHOW(wvsfr, wvrfr, wvtfr);
-    }
-    if (wvsfl >= wn0) {  // A new wedge was added on wrong vertex; we will need to swap it with wvtfl.
+    dummy_use(wvlfl, wvrfr);
+    if (0) SHOW(vspli, isr, wn0, num_new_wedges, fl, fr), SHOW(wvsfl, wvtfl, wvlfl), SHOW(wvsfr, wvrfr, wvtfr);
+    if (wvsfl >= wn0) {  // A new wedge was added on the wrong vertex (vs); we will need to swap it with wvtfl.
       assertx(wvtfl < wn0);
-      if (num_new_wedges > 1) {
+      if (two_new_wedges) {
         if (wvsfr == wvsfl)
           wvsfr = wvtfl;
         else if (wvtfr == wvtfl)
@@ -219,30 +209,27 @@ void do_outsmesh() {
       }
       swap_wedges(V(wvsfl, wvtfl), fl), std::swap(wvsfl, wvtfl);
     }
-    if (num_new_wedges > 1 && wvsfr >= wn0) {  // We will need to swap it with wvtfr.
+    if (two_new_wedges && wvsfr >= wn0) {  // Same check on fr.  We will need to swap the new wedge with wvtfr.
       assertx(wvsfr != wvsfl && wvsfr != wvtfl);
       assertx(wvtfr < wn0);
       swap_wedges(V(wvsfr, wvtfr), fr), std::swap(wvsfr, wvtfr);
     }
     if (0) pmi->ok();
     assertx(wvtfl >= wn0);
-    if (num_new_wedges > 1) assertx(wvtfr >= wn0);
-    if (num_new_wedges > 1 && wvtfl > wvtfr) {
+    if (two_new_wedges) assertx(wvtfr >= wn0);
+    if (two_new_wedges && wvtfl > wvtfr) {      // We need to match the order of wedges pushed onto the parents array.
       if (0) swap_wedges(V(wvsfl, wvsfr), fl);  // Unnecessary.
       std::swap(wvsfl, wvsfr);
     }
     parents.push(wvsfl);
-    if (num_new_wedges > 1) parents.push(wvsfr);
+    if (two_new_wedges) parents.push(wvsfr);
   }
 
   const SMesh smesh(*pmi);  // Split the mesh wedges into vertices.
   GMesh gmesh = smesh.extract_gmesh(pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
   string str;
-  // SHOW(mesh_genus_string(gmesh));
-  // SHOW(parents);
   for_int(v, parents.num()) {
     const int parent = parents[v];
-    // SHOW(v, parent);
     assertx(parent < v);
     gmesh.update_string(gmesh.id_vertex(v + 1), "parent", csform(str, "%d", parent + 1));
   }
@@ -638,7 +625,7 @@ void do_compression() {
       if (verb >= 2) showf("bits de_uv/nvsplits: %.1f\n", b4 / float(nvsplits));
     }
     if (de_dflclw.total_entropy() < bits_flclw) {
-      Warning("Using dflclw for flclw encoding!");
+      if (0) Warning("Using dflclw for flclw encoding!");
       bits_flclw = de_dflclw.total_entropy();
     }
     int tot_bits = int(bits_flclw + bits_vs_index + enc_vlr_offset.entropy() + enc_corners_ii_matp.entropy() +

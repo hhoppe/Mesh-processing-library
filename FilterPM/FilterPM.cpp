@@ -149,10 +149,104 @@ void do_outmesh() {
 }
 
 void do_outsmesh() {
+  // I had forgotten that the PMesh::apply_vsplit() code is annoyingly complicated.
+  // Note that the two new wedges can be on different vertices even though ii == 2; yuck.
+  // cd ~/proj/octaflat; r=fandisk; FilterPM data/$r.octaflat.pm -nf 500 -truncate_beyond -outsmesh >$r.m
+  // ...
+  // vspli=1 isr=1 num_new_wedges=2 wlclw=7 wn1=9 wn2=10
+  // wvsfl=7 wvtfl=9 wvlfl=8
+  // wvsfr=10 wvrfr=2 wvtfr=4
+  // assertion warning: assertw(wvtfr == wn2) in line 201 of file c:/hh/git/mesh_processing/FilterPM/FilterPM.cpp
+
   HH_TIMER("_write_smesh");
-  assertx(pmi->_vertices.num() == pmesh._base_mesh._vertices.num());  // It is in the coarsest state.
-  Array<int> parents(pmi->_vertices.num(), -1);
-  // ??
+  ensure_pm_loaded();
+  pmi->goto_nvertices(0);
+  const int k_no_parent = -1;
+  Array<int> parents(pmi->_wedges.num(), k_no_parent);
+  bool debug;
+
+  const auto swap_wedges = [&](const Vec2<int>& wedges, int f) {
+    if (1) SHOW("swap_wedges", wedges);
+    if (debug) SHOW(wedges, f);
+    assertx(pmi->_wedges[wedges[0]].vertex != pmi->_wedges[wedges[1]].vertex);
+    Set<int> faces;
+    for_int(i, 2) for (const int f2 : pmi->ccw_faces(pmi->_wedges[wedges[i]].vertex, f)) faces.add(f2);
+    if (debug) SHOW(faces);
+    for (const int f2 : faces) {
+      if (debug) SHOW(f2);
+      for_int(j, 3) {
+        int& w = pmi->_faces[f2].wedges[j];
+        if (debug) SHOW(j, w, wedges[0], wedges[1]);
+        if (w == wedges[0])
+          w = wedges[1];
+        else if (w == wedges[1])
+          w = wedges[0];
+      }
+    }
+    std::swap(pmi->_wedges[wedges[0]], pmi->_wedges[wedges[1]]);
+  };
+
+  for_int(vspli, pmesh._info._tot_nvsplits) {
+    debug = vspli == -1;
+    const int wn0 = pmi->_wedges.num();
+    const Vsplit& vspl = pmesh._vsplits[vspli];
+    const int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
+    assertx(ii == 2);  // Assume PM is created using "MeshSimplify -minii2".
+    const int isr = vspl.adds_two_faces();
+    const int fl = pmi->_faces.num(), fr = isr ? fl + 1 : -1;
+
+    pmi->next();
+    assertx((isr ? fr : fl) == pmi->_faces.num() - 1);
+    const int num_new_wedges = pmi->_wedges.num() - wn0;
+    if (0) SHOW(isr, wn0, num_new_wedges);
+    assertx(num_new_wedges == 1 || (isr && num_new_wedges == 2));
+
+    int wvsfl = pmi->_faces[fl].wedges[0], wvtfl = pmi->_faces[fl].wedges[1], wvlfl = pmi->_faces[fl].wedges[2];
+    int wvsfr = -1, wvrfr = -1, wvtfr = -1;
+    if (isr) wvsfr = pmi->_faces[fr].wedges[0], wvrfr = pmi->_faces[fr].wedges[1], wvtfr = pmi->_faces[fr].wedges[2];
+    if (debug) {
+      SHOW(vspli, isr, wn0, num_new_wedges, fl, fr);
+      SHOW(wvsfl, wvtfl, wvlfl);
+      SHOW(wvsfr, wvrfr, wvtfr);
+    }
+    if (wvsfl >= wn0) {  // A new wedge was added on wrong vertex; we will need to swap it with wvtfl.
+      assertx(wvtfl < wn0);
+      if (num_new_wedges > 1) {
+        if (wvsfr == wvsfl)
+          wvsfr = wvtfl;
+        else if (wvtfr == wvtfl)
+          wvtfr = wvsfl;
+      }
+      swap_wedges(V(wvsfl, wvtfl), fl), std::swap(wvsfl, wvtfl);
+    }
+    if (num_new_wedges > 1 && wvsfr >= wn0) {  // We will need to swap it with wvtfr.
+      assertx(wvsfr != wvsfl && wvsfr != wvtfl);
+      assertx(wvtfr < wn0);
+      swap_wedges(V(wvsfr, wvtfr), fr), std::swap(wvsfr, wvtfr);
+    }
+    if (0) pmi->ok();
+    assertx(wvtfl >= wn0);
+    if (num_new_wedges > 1) assertx(wvtfr >= wn0);
+    if (num_new_wedges > 1 && wvtfl > wvtfr) {
+      if (0) swap_wedges(V(wvsfl, wvsfr), fl);  // Unnecessary.
+      std::swap(wvsfl, wvsfr);
+    }
+    parents.push(wvsfl);
+    if (num_new_wedges > 1) parents.push(wvsfr);
+  }
+
+  const SMesh smesh(*pmi);  // Split the mesh wedges into vertices.
+  GMesh gmesh = smesh.extract_gmesh(pmi->rstream()._info._has_rgb, pmi->rstream()._info._has_uv);
+  string str;
+  // SHOW(mesh_genus_string(gmesh));
+  // SHOW(parents);
+  for_int(v, parents.num()) {
+    const int parent = parents[v];
+    // SHOW(v, parent);
+    assertx(parent < v);
+    gmesh.update_string(gmesh.id_vertex(v + 1), "parent", csform(str, "%d", parent + 1));
+  }
+  gmesh.write(std::cout);
   nooutput = true;
 }
 

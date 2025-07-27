@@ -3336,6 +3336,10 @@ void do_procedure(Args& args) {
   if (0) {
     //
 
+  } else if (name == "add_original_vertex_id") {
+    string str;
+    for (Vertex v : mesh.vertices()) mesh.update_string(v, "original", csform(str, "%d", mesh.vertex_id(v)));
+
   } else if (name == "show_tangents") {
     const float max_side = Bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })}.max_side();
     const A3dVertexColor col = A3dVertexColor(Pixel::blue());

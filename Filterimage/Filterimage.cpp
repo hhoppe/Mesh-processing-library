@@ -2584,8 +2584,7 @@ void do_procedure(Args& args) {
       const Vec2<float> yxf = (convert<float>(yx) + .5f) / float(size);
       const Vec2<int> yxi = convert<int>(yxf * float(gridn));
       const bool is_on = sum(yxi) % 2 == 1;
-      Pixel pixel =
-          !is_on ? pixel_gray : Pixel(uint8_t(yxf[0] * 255.f + .5f), uint8_t((1.f - yxf[0]) * 255.f + .5f), 0);
+      Pixel pixel = !is_on ? pixel_gray : Pixel(uint8_t(yxf[1] * 255.f + .5f), uint8_t(yxf[0] * 255.f + .5f), 0);
       image[yx] = pixel;
     }
 

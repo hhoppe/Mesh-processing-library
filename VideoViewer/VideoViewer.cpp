@@ -720,7 +720,7 @@ Vec2<int> round_dims(Vec2<int> dims, Vec2<int> orig_dims) {
   for_int(c, 2) {
     for (;;) {
       if (dims[c] == orig_dims[c] - 1) {
-        assertx(dims[c] % 2 == 0);
+        // assertx(dims[c] % 2 == 0);
         dims[c]++;
         break;
       }

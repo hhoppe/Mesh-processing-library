@@ -152,6 +152,12 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     //  png_set_compression_level(png_ptr, level) with level > 6.
     s_compression = sform(" -compression_level %d", level);
   }
+  if (getenv("FFMPEG_CRF")) {  // Broadly applicable parameter (default value ~32).
+    // FFMPEG_CRF=0 Filterimage ~/data/image/lake.png -to avif | wc -c  # Lossless.
+    const int crf = getenv_int("FFMPEG_CRF");
+    assertt(crf >=0 && crf <= 63);
+    s_compression = sform(" -crf %d", crf);
+  }
   {
     string pix_fmt = bgra ? "bgra" : "rgba";
     string output_pix_fmt = zsize() == 4 ? "rgba" : "rgb24";

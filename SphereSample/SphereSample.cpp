@@ -1275,6 +1275,10 @@ void do_texture_file(Args& args) {
   convert(texture_image, texture_image_vector4);
 }
 
+void project_to_cube(Vector& normal) {
+  normal /= max_abs_element(normal);
+}
+
 Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
                     const Bary& bary) {
   if (GMesh::string_has_key(mesh.get_string(f), "filled")) return k_color_zero_alpha;
@@ -1289,7 +1293,8 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       break;
     }
     case 'N': {
-      const Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
+      Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
+      if (0) project_to_cube(normal);  // An idea to improve compression quality; it does not help.
       pixel.head<3>() = narrow_convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
       break;
     }

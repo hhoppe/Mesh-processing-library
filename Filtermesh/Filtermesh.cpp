@@ -3048,7 +3048,8 @@ void do_keepsphere(Args& args) {
   for (Face f : mesh.faces()) {
     bool keep = true;
     for (Vertex v : mesh.vertices(f)) {
-      if (dist2(mesh.point(v), p) > square(radius)) {
+      const bool inside = dist2(mesh.point(v), p) <= square(radius);
+      if (inside ^ (radius > 0)) {
         keep = false;
         break;
       }
@@ -4447,7 +4448,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tagmateriale, ": tag as sharp edges separating materials");
   HH_ARGSC("", ":");
   HH_ARGSD(transf, "'frame' : affine transform by frame");
-  HH_ARGSD(keepsphere, "x y z r : delete faces with vertex outside");
+  HH_ARGSD(keepsphere, "x y z r : delete faces with vertex outside (inside if r<0)");
   HH_ARGSD(delaunay, ": retriangulate based on circumradii");
   HH_ARGSD(diagonal, ": retriangulate based on diagonal lengths");
   HH_ARGSD(segment, ": segment mesh and output a3d objects");

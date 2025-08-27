@@ -160,30 +160,30 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
   Face f = new MFace(id);
   // f->herep defined below
   _id2face.enter(id, f);
-  HEdge hep = nullptr;
+  HEdge he_prev = nullptr;
   int nv = va.num();
   for_int(i, nv) {
     Vertex v2 = va[i + 1 == nv ? 0 : i + 1];
     HEdge he = new MHEdge;
-    he->_prev = hep;
+    he->_prev = he_prev;
     // he->_next is set below
     he->_vert = v2;
     enter_hedge(he, va[i]);
     // he->_sym and he->_edge were set in enter_hedge
     he->_face = f;
-    hep = he;
+    he_prev = he;
   }
-  assertx(hep);  // HH_ASSUME(hep);
-  HEdge helast = hep;
+  assertx(he_prev);  // HH_ASSUME(he_prev);
+  HEdge he_last = he_prev;
   for (;;) {
-    HEdge hepp = hep->_prev;
-    if (!hepp) break;
-    hepp->_next = hep;
-    hep = hepp;
+    HEdge he_prev_prev = he_prev->_prev;
+    if (!he_prev_prev) break;
+    he_prev_prev->_next = he_prev;
+    he_prev = he_prev_prev;
   }
-  hep->_prev = helast;
-  helast->_next = hep;
-  f->_herep = helast;  // such that f->herep->_vert == va[0]
+  he_prev->_prev = he_last;
+  he_last->_next = he_prev;
+  f->_herep = he_last;  // such that f->herep->_vert == va[0]
   _facenum = max(_facenum, id + 1);
   if (debug() >= 3) ok();
   return f;

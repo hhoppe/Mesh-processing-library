@@ -1275,9 +1275,7 @@ void do_texture_file(Args& args) {
   convert(texture_image, texture_image_vector4);
 }
 
-void project_to_cube(Vector& normal) {
-  normal /= max_abs_element(normal);
-}
+void project_to_cube(Vector& normal) { normal /= max_abs_element(normal); }
 
 Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
                     const Bary& bary) {

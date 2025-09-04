@@ -2902,7 +2902,7 @@ void do_assign_tangents() {
   };
   const auto get_position = [](const SMikkTSpaceContext*, float position_out[], int face_index, int vert_index) {
     Face f = mesh.id_face(face_index + 1);
-    const Point& p = mesh.triangle_points(f)[vert_index];
+    const Point p = mesh.triangle_points(f)[vert_index];
     ArrayView(position_out, 3).assign(p);
   };
   const auto get_normal = [](const SMikkTSpaceContext*, float normal_out[], int face_index, int vert_index) {

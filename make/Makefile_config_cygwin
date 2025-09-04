@@ -1,4 +1,4 @@
-rel ?= 1#  0=debug or 1=release  (usually 1; debug has bug: "-g" on getline() causes crash.)
+rel ?= 1#  0=debug or 1=release  (usually 1)
 x64 = 1
 
 # Within CYGWIN, -std=c++20 (or c++14 or c++17) omits: popen(), pclose(), usleep(), gethostname(), setenv(), getenv().
@@ -8,6 +8,12 @@ ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 else                            # default is gcc compiler
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  # GCC on Cygwin has a long-standing stack alignment problem that makes AVX unusable.
+  # https://stackoverflow.com/questions/55054592/avx-load-instruction-fails-on-cygwin
+  # https://www.mail-archive.com/cygwin@cygwin.com/msg174673.html
+  ccommon += -mno-avx -msse4.2
+  # Too many false positives.
+  cxxall += -Wno-stringop-overflow
 endif
 
 graphics_libs ?= -lGL -lX11 -lopengl32#  -lXext

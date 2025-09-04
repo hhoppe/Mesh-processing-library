@@ -160,7 +160,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");
   if (want_abort) {
     std::cerr << "Signaling true abort\n";
-    signal(SIGABRT, SIG_IGN);
+    signal(SIGABRT, SIG_DFL);
     abort();
   }
 #endif

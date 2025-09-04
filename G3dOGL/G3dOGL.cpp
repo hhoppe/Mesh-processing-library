@@ -2035,7 +2035,7 @@ void draw_mesh(GMesh& mesh) {
     bool stripstarted = false;
     CArrayView<Face> fa = map_mfa.get(&mesh);
     for (Face f : fa) {
-      const Vec3<Point>& triangle = mesh.triangle_points(f);
+      const Vec3<Point> triangle = mesh.triangle_points(f);
       Point p = interp(triangle);
       if (1) p = interp(feyetomodel.p(), p, edgeoffset);
       int afound = 0;

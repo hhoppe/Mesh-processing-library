@@ -23,7 +23,7 @@ template <typename T> class CStridedArrayView {
   using type = CStridedArrayView<T>;
 
  public:
-  explicit CStridedArrayView(const T* a, int n, size_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) {}
+  explicit CStridedArrayView(const T* a, int n, ptrdiff_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) {}
   CStridedArrayView(const type& a) = default;
   int num() const { return _n; }
   size_t size() const { return _n; }
@@ -64,8 +64,8 @@ template <typename T> class CStridedArrayView {
 
    private:
     const T* _p;
-    size_t _stride;
-    iterator(const T* p, size_t stride) : _p(p), _stride(stride) {}
+    ptrdiff_t _stride;
+    iterator(const T* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
     friend CStridedArrayView;
     friend StridedArrayView<T>;
   };
@@ -76,7 +76,7 @@ template <typename T> class CStridedArrayView {
  protected:
   T* _a{nullptr};
   int _n{0};
-  size_t _stride;
+  ptrdiff_t _stride;
   CStridedArrayView() = default;
   type& operator=(const type&) = delete;
 };
@@ -87,7 +87,7 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   using type = StridedArrayView<T>;
 
  public:
-  explicit StridedArrayView(T* a, int n, size_t stride) : base(a, n, stride) {}
+  explicit StridedArrayView(T* a, int n, ptrdiff_t stride) : base(a, n, stride) {}
   StridedArrayView(const type& a) = default;
   T& operator[](int i) { return (HH_CHECK_BOUNDS(i, _n), _a[i * _stride]); }
   const T& operator[](int i) const { return (HH_CHECK_BOUNDS(i, _n), _a[i * _stride]); }
@@ -126,8 +126,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
 
    private:
     T* _p;
-    size_t _stride;
-    iterator(T* p, size_t stride) : _p(p), _stride(stride) {}
+    ptrdiff_t _stride;
+    iterator(T* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
     friend StridedArrayView;
   };
   using const_iterator = typename base::iterator;

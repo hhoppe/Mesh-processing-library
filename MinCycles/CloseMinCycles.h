@@ -20,6 +20,7 @@ class CloseMinCycles {
     float frac_cycle_length{1.f};  // By default, find exact minimal cycles (> 1.f means approximate).
     bool mark_edges_sharp{true};   // Set "sharp" on closed edge cycles.
     bool mark_faces_filled{true};  // Set "filled" and "handle"/"tunnel" on faces, "filledcenter" on vertex.
+    int mark_min_num_edges{0};     // Mark "sharp" and "filled" only if cycle has a minimum number of edges.
     float frac_offset = 0.f;       // If nonzero, interpenetrate the closed cycles by a fraction of the object bbox.
   };
 

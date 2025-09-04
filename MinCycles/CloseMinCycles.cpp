@@ -165,23 +165,28 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
   const bool is_handle = sum(sum_dih) > 0.f;  // Else it is a tunnel.
   (is_handle ? _total_handles : _total_tunnels) += 1;
   for (Vertex vn : center_vertices) {
-    if (_options.mark_edges_sharp) {
-      // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
-      for (Face f : _mesh.faces(vn)) {
-        Edge e = _mesh.opp_edge(vn, f);
-        _mesh.update_string(e, "sharp", "");
+    if (_mesh.degree(vn) >= _options.mark_min_num_edges) {
+      if (_options.mark_edges_sharp) {
+        // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
+        for (Face f : _mesh.faces(vn)) {
+          Edge e = _mesh.opp_edge(vn, f);
+          _mesh.update_string(e, "sharp", "");
+        }
       }
-    }
-    if (_options.mark_faces_filled) {
-      // For all faces in the two fans after the closure, label them with the "filled" attribute.
-      for (Face f : _mesh.faces(vn)) {
-        _mesh.update_string(f, "filled", "");
+      if (_options.mark_faces_filled) {
+        // For all faces in the two fans after the closure, label them with the "filled" attribute.
+        for (Face f : _mesh.faces(vn)) _mesh.update_string(f, "filled", "");
+        // Also label the faces with either "handle" or "tunnel".
         const char* key = is_handle ? "handle" : "tunnel";
-        _mesh.update_string(f, key, "");
+        for (Face f : _mesh.faces(vn)) _mesh.update_string(f, key, "");
+        // Label the two vertices at the centers of the face fans.
+        _mesh.update_string(vn, "filledcenter", "");
       }
-      // Label the two vertices at the centers of the face fans.
-      _mesh.update_string(vn, "filledcenter", "");
     }
+    // For octaflat, we must apply offsets all the time.  Otherwise:
+    // (1) the octa splitting may fail in SphereParam, and
+    // (2) the presence of vertices sharing the same position will confuse Draco compression, resulting in
+    // unexpected new vertices after Draco decompression --- see "original indices are unmapped" in octaviewer.html.
     if (_options.frac_offset) {
       const Vector normal = Vnors(_mesh, vn).unique_nor();
       const Vector offset_vector = normal * _offset_magnitude * (is_handle ? 1.f : -1.f);

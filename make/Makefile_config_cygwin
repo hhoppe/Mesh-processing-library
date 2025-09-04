@@ -14,6 +14,8 @@ else                            # default is gcc compiler
   ccommon += -mno-avx -msse4.2
   # Too many false positives.
   cxxall += -Wno-stringop-overflow
+  # For PEDANTIC=1, false positives on "const T& elem = grid[y][x];" in GCC 13+.  No easy workarounds.
+  cxxall += -Wno-dangling-reference
 endif
 
 graphics_libs ?= -lGL -lX11 -lopengl32#  -lXext

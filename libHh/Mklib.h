@@ -30,8 +30,8 @@ class Mklib : noncopyable {
   void cylinderU(int n);                                // cylinder == tube with closed ends
   void capU(int n);                                     // height 1, radius 1, bottom at origin, peak at (1, 0, 0)
   void coneU(int n);                                    // cone == cap with closed bottom
-  void sphere(int nlat, int nlong);                     // radius 1, #latitudes(>= 2), #longitudes(>= 3)
-  void hemisphere(int nlat, int nlong);                 // radius 1, #latitudes(>= 2), #longitudes(>= 2)
+  void sphere(int nlat, int nlong);                     // radius 1, #latitudes (>= 2), #longitudes (>= 3)
+  void hemisphere(int nlat, int nlong);                 // radius 1, #latitudes (>= 2), #longitudes (>= 2)
   void tetra();                                         // centered at centroid, edge=1 height=sqrt(2 / 3)
   void tetraU();                                        // bottom face centroid at origin, top at (0, 0, sqrt(2 / 3))
   // transformation on object: (-.5, -.5, -.5)..(.5, .5, .5) with primary axis +x, secondary axis +y ("O")

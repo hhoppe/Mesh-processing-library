@@ -1825,7 +1825,7 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   // Note that this construction is not identical to that in Filterprog.cpp, at least for wedges,
   //  since Filterprog.cpp records for each final wedge its original wid
   //  in M^c, or 0 if the wedge was introduced subsequently.
-  // However, a newly added wedge introduced in M^j, j>c, can have further descendants in M^k, k>j,
+  // However, a newly added wedge introduced in M^j, j > c, can have further descendants in M^k, k > j,
   //  with different attributes, and these perhaps should be morphed (between their original values in
   //  j and their final values in k).
   // They are morphed here but not in Filterprog.cpp.

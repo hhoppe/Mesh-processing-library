@@ -70,7 +70,7 @@ class SubMesh {
 
   // split and compute splitting masks:
   void refine(Mvcvh& mconv);  // 1to4 split at edge midpoints
-  // refine near creases, and refine edges with cosdihedral <cosang
+  // refine near creases, and refine edges with cosdihedral < cosang
   void selectively_refine(Mvcvh& mconv, float cosang);
 
   // compute averaging masks:

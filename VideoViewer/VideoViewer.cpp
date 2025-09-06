@@ -1941,7 +1941,7 @@ bool DerivedHw::key_press(string skey) {
           string filename = get_path_root(ob._filename) + ".mp4";
           Array<string> filenames = get_image_sequence(ob._filename);
           int nframes = filenames.num();
-          if (nframes < 2) throw "cannot find an image sequence with >=2 frames";
+          if (nframes < 2) throw "cannot find an image sequence with >= 2 frames";
           immediate_message(sform("Reading %d image frames...", nframes));
           const Vec3<int> dims = concat(V(nframes), ob.spatial_dims());
           const bool use_nv12 = k_prefer_nv12 && is_zero(dims.tail<2>() % 2);
@@ -2070,7 +2070,7 @@ bool DerivedHw::key_press(string skey) {
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           const int nf = ob.nframes();
-          if (g_framenum < 1) throw "splitting requires selecting frame number >=1";
+          if (g_framenum < 1) throw "splitting requires selecting frame number >= 1";
           Video nvideo1, nvideo2;
           VideoNv12 nvideo1_nv12, nvideo2_nv12;
           if (ob._video.size()) {

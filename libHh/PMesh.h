@@ -439,7 +439,7 @@ struct PmWedgeAttribG {
 
 // A geomorph is a mesh which is able to smoothly transition between two endstates.
 // It is a mesh together with a list of vertices and wedges that change and their endstates.
-// It can be evaluated over a continuous blend parameter 0<=alpha<=1.
+// It can be evaluated over a continuous blend parameter 0 <= alpha <= 1.
 // It is created by applying a sequence of vsplits to a PM iterator.
 class Geomorph : public WMesh {
  public:

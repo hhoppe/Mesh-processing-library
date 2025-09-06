@@ -781,12 +781,12 @@ int main(int argc, const char** argv) {
   HH_ARGSF(joinlines, ": join line segments into polyline");
   HH_ARGSP(sharpthresh, "deg : corners in smoothcurves");
   HH_ARGSP(smoothcurves, "iter : smooth the polylines");
-  HH_ARGSP(minverts, "nv : only keep elements with >=nv verts");
+  HH_ARGSP(minverts, "nv : only keep elements with >= nv verts");
   HH_ARGSC("", ":");
   HH_ARGSF(culloutside, ": set to remove points outside");
   HH_ARGSP(cullsphere, "x y z r : remove points within sphere");
   HH_ARGSP(mindis, "f : make no pair of points closer than f");
-  HH_ARGSP(outlier, "n d : remove points if n'th closest >d");
+  HH_ARGSP(outlier, "n d : remove points if n'th closest > d");
   HH_ARGSC("", ":");
   HH_ARGSF(nonormals, ": remove vertex normals");
   HH_ARGSF(optnormals, ": remove unnecessary polygon normals");

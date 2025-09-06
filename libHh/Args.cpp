@@ -127,7 +127,7 @@ double Args::parse_double(const string& s) {
 
 void Args::problem(const string& s) {
   string mes = "Args error : " + s;
-  if (_iarg) mes += " at args[" + sform("%d", _iarg - 1) + "]=='" + _args[_iarg - 1] + "'";
+  if (_iarg) mes += " at args[" + sform("%d", _iarg - 1) + "] == '" + _args[_iarg - 1] + "'";
   assertnever(mes);
 }
 

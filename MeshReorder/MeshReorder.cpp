@@ -1073,11 +1073,11 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
         // bool hit = reinterpret_cast<FifoVertexCache&>(vcache).FifoVertexCache::access_hits(vid);
         bool hit = vcache.access_hits(vid);
         ngood += hit;
-        // if (verb>=4) std::cerr << sform("%c", !hit?'*':'.');
+        // if (verb >= 4) std::cerr << sform("%c", !hit ? '*' : '.');
         cc = mesh.ccw_face_corner(cc);
       }
     }
-    // if (verb>=4) std::cerr << " ";
+    // if (verb >= 4) std::cerr << " ";
     // Corner cint = mesh.ccw_corner(c);
     // Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
     // bool fintnei = cint && !ms.sim_face_visited(mesh.corner_face(cint));

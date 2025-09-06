@@ -129,7 +129,7 @@ int main() {
     // SHOW(Stat(matn));
     Grid<2, float> gridn = scale(mat, V(ny, nx), twice(filterb));
     // SHOW(Stat(gridn));
-    // assertx(dist(matn, gridn)<1e-5f);
+    // assertx(dist(matn, gridn) < 1e-5f);
   }
   {
     Grid<2, int> grid(V(20, 20), 5);

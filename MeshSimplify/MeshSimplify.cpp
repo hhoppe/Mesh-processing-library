@@ -1807,7 +1807,7 @@ float compute_spring(const NewMeshNei& nn) {
   // Spring as a function of #points and #faces?
   // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2 .
   // Let frac = np / nf
-  //  spring = frac<4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
+  //  spring = frac < 4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
   float spring = np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f;
   // Variable spring constants tends to produce patches of large faces, which gives poor behavior for selective
   // refinement.  So now 1997-08-27 we use constant springs.
@@ -2814,7 +2814,7 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
   } else {
     float ratio_bb = !bb_x ? 1000.f : !bb_y ? 0.f : bb_y / bb_x;
     if (ratio_bb <= 1.001f) ratio_bb = 1.001f;
-    // (When ratio_bb<=1.f, only the uniform error component matters.)
+    // (When ratio_bb <= 1.f, only the uniform error component matters.)
     float vtan = 1.f / my_sqrt(square(ratio_bb) - 1.f);
     float max_u = 0.f;
     for_int(i, ar_resid.num()) {
@@ -3902,7 +3902,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     } else if (minarea) {
       rssa = compute_area_after(nn, newp);
       // Truncate this to ignore increases in area.
-      // if (rssa<rssf) rssa = rssf;
+      // if (rssa < rssf) rssa = rssf;
     } else if (minedgelength) {
       rssa = mesh.length2(e);
     } else if (minvdist) {
@@ -4731,7 +4731,7 @@ void optimize() {
   nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
 }
 
-// Simplify the mesh until it has <=nfaces or <=nvertices.
+// Simplify the mesh until it has <= nfaces or <= nvertices.
 void do_simplify() {
   HH_TIMER("_simplify");
   perhaps_initialize();
@@ -4755,7 +4755,7 @@ void do_simplify() {
 // Recompute the priority queue of edge costs,
 //   e.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
 void do_rebuildpq() {
-  if (!pqecost.num()) return; // Note that it is not built if using parallel_optimize().
+  if (!pqecost.num()) return;  // Note that it is not built if using parallel_optimize().
   assertx(pqecost.num() == mesh.num_edges());
   for (Edge e : mesh.edges()) assertw(pqecost.remove(e) == k_bad_cost);
   assertx(!pqecost.num());
@@ -4931,7 +4931,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(removeinfo, ": delete all attributes");
   HH_ARGSP(wedge_materials, "bool : material boundaries imply wedge bnds");
   HH_ARGSP(mresid, "maxresidual : then stop simplification");
-  HH_ARGSP(maxvalence, "val : prevent ecols creating verts >valence");
+  HH_ARGSP(maxvalence, "val : prevent ecols creating verts > valence");
   HH_ARGSF(poszfacenormal, ": prevent facenormal from having nor_z < 0");
   HH_ARGSP(original_indices, "file.txt : output original vertex indices in creation order");
   {

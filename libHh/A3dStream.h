@@ -11,7 +11,7 @@ namespace hh {
 
 // A3dStream is a stream of geometric primitives (points, polylines, polygons) and
 //  directives (comments, endobject, endframe, endfile, editobject).
-// Each geometric primitive contains an array of vertices (1 for point, >=2 for polyline and >=3 for polygon),
+// Each geometric primitive contains an array of vertices (1 for point, >= 2 for polyline and >= 3 for polygon),
 //  where each vertex has position, normal, and color.
 // Color consists of diffuse, specular, and Phong components.
 // An A3dStream can be read/written from a std::stream using RSA3dStream/WSA3dStream or

@@ -16,7 +16,7 @@
 // 1993-04-27: idea: use samplingd for everything, don't use npertp
 //  to estimate tp, gather all points within samplingd
 //  to connect tp, connect tp's whose original co's are within samplingd
-//  signed distance is undefined if projp >samplingd from nearest point
+//  signed distance is undefined if projp more than samplingd from nearest point
 //  no longer need EMST, assume this new graph represents components
 // 1993-09-09: all coordinates transformed internally into unit box.
 

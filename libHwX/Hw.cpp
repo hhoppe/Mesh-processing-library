@@ -149,7 +149,7 @@ void Hw::open() {
         assertw(_multisample == 4 || _multisample == 8 || _multisample == 16);
         attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
         // then becomes enabled by default.
-        // Note: inf_reality balrog has _multisample<=8.
+        // Note: inf_reality balrog has _multisample <= 8.
         // Note: may want to disable multisampling manually before drawing anti-aliased lines.  Actually,
         //  anti-aliased lines look rather poor on inf_reality (too thick); we prefer multisampled aliased lines.
         // Note: do we need glEnable(GL_POLYGON_SMOOTH)? No, it seems that it is an old way of anti-aliasing
@@ -646,7 +646,7 @@ void Hw::handle_key() {
     }
     if (_hwdebug) SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(CArrayView<char>(s.data(), s.size()))));
   }
-  // (keysym>=XK_space && keysym<=XK_asciitilde)
+  // (keysym >= XK_space && keysym <= XK_asciitilde)
   if (s == "") return;  // e.g. 'shift' key
   if (_query) {
     query_keypress(s);

@@ -1082,7 +1082,7 @@ EResult try_eswa(Edge eg, double& edrss) {
   float minb = edge_dihedral_angle_cos(gmesh, eg);
   float mina = dihedral_angle_cos(gmesh.point(vo1g), gmesh.point(vo2g), gmesh.point(v1g), gmesh.point(v2g));
   if (mina < k_min_cos && mina < minb) return R_dih;
-  // could do culling check if mina>cos5 && minb>cos5 ?
+  // could do culling check if mina > cos5 && minb > cos5 ?
   HH_STIMER("__try_eswa");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
@@ -1396,7 +1396,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(nsubdiv, "i : number of subdivision iters");
   HH_ARGSF(nolimit, ": do not send final vertices to limit");
   HH_ARGSC("", ":");
-  HH_ARGSP(selective, "deg : refine sharpe edges and others>deg");
+  HH_ARGSP(selective, "deg : refine sharpe edges and others > deg");
   HH_ARGSF(s222, ": use s222 mask instead of n222");
   HH_ARGSP(weighta, "a : override interior extraord. weight");
   HH_ARGSP(xformsize, "s : override internal xform");

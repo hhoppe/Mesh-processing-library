@@ -473,10 +473,11 @@ void split_valence(GMesh& mesh, int max_valence) {
       Array<char> key, val;
       string str;
       for_cstring_key_value(mesh.get_string(prev_faces[0]), key, val, [&] {
-        if (all_of(prev_faces, [&](Face f) {
+        const bool all_same = all_of(prev_faces, [&](Face f) {
           const char* s = GMesh::string_key(str, mesh.get_string(f), key.data());
           return s && !strcmp(s, val.data());
-        }))
+        });
+        if (all_same)
           for (Face f : new_faces) mesh.update_string(f, key.data(), val.data());
       });
     }

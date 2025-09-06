@@ -570,7 +570,7 @@ class Contour2D : public ContourBase<2> {
   explicit Contour2D(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
       : base(gn), _eval(eval), _contour(contour), _border(border) {}
   ~Contour2D() {}
-  // ret number of new cubes visited: 0=revisit_cube, 1=no_surface, >1=new
+  // ret number of new cubes visited: 0 = revisit_cube, 1 = no_surface, >1 = new
   int march_from(const DPoint& startp) { return march_from_i(startp); }
   // call march_from() on all cells near startp; ret num new cubes visited
   int march_near(const DPoint& startp) { return march_near_i(startp); }

@@ -137,7 +137,7 @@ template <typename Func = float(int, int)> Graph<int> graph_mst(int num, Func fd
 // *** graph_quick_emst
 
 // Try to build the EMST of the num points pa using all edges with length less than thresh.
-// Uses modified Prim's, where only edges of length<thresh are considered.
+// Uses modified Prim's, where only edges of length < thresh are considered.
 // Uses a HPqueue because it can no longer afford to find min in O(n) time.
 // Returns an empty graph if not connected.
 inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatial<int>& sp) {

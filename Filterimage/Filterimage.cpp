@@ -3484,7 +3484,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropall, "i : crop all sides");
   HH_ARGSD(cropsquare, "x y size : crop square centered at (x, y)");
   HH_ARGSD(croprectangle, "x y xsize ysize : crop rectangle centered at (x, y)");
-  HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop box within bounds x0<=x<x1");
+  HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop box within bounds x0 <= x < x1");
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");
   HH_ARGSC("", ":");

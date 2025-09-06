@@ -576,7 +576,7 @@ void do_interval(Args& args) {
     i0 = 0;
   }
   if (i1 > video.nframes()) {
-    Warning("End frame >end, so set to end");
+    Warning("End frame > end, so set to end");
     i1 = video.nframes();
   }
   if (i0 == i1) {
@@ -2242,8 +2242,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(start, "frame_or_time : trim video prior (eg. 30 or -1 or 2s or 10%)");
   HH_ARGSD(end, "frame_or_time : trim video beyond (eg. 30 or -1 or 2s or 10%)");
   HH_ARGSD(interval, "f1 f2 : trim video to interval [f1, f2)");
-  HH_ARGSD(trimbeg, "nframes : temporally crop beg using boundaryrule (<0 to extend)");
-  HH_ARGSD(trimend, "nframes : temporally crop end using boundaryrule (<0 to extend)");
+  HH_ARGSD(trimbeg, "nframes : temporally crop beg using boundaryrule (< 0 to extend)");
+  HH_ARGSD(trimend, "nframes : temporally crop end using boundaryrule (< 0 to extend)");
   HH_ARGSD(loop, "n : repeat n times (1=no_op)");
   HH_ARGSD(mirror, "n : repeat n times (2 for simple mirror)");
   HH_ARGSD(reverse, ": reverse order of frames");
@@ -2266,7 +2266,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropall, "i : crop all frame sides");
   HH_ARGSD(cropsquare, "x y size : crop frame square centered at (x, y)");
   HH_ARGSD(croprectangle, "x y xsize ysize : crop frame rectangle centered at (x, y)");
-  HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop frame box within bounds x0<=x<x1");
+  HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop frame box within bounds x0 <= x < x1");
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
@@ -2276,7 +2276,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
   HH_ARGSD(scaletox, "x : uniform scale to x width");
   HH_ARGSD(scaletoy, "y : uniform scale to y height");
-  HH_ARGSD(scaleifgtmax, "n : uniform scale such that max(width, height)<=n");
+  HH_ARGSD(scaleifgtmax, "n : uniform scale such that max(width, height) <= n");
   HH_ARGSD(scaletodims, "x y : non-uniform scale");
   HH_ARGSD(scaleinside, "x y : uniform scale to become no larger than rectangle");
   HH_ARGSC("", ":");

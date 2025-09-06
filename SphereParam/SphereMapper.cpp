@@ -331,8 +331,8 @@ class SphereMapper::Implementation {
   }
 
   struct OptimizerFace {
-    Vec3<Vec3<Precision>> pd;  // On spherical domain; [0]==sph_value_being_optimized.
-    Vec3<Vec3<Precision>> ps;  // On mesh surface;     [0]==center_vertex.
+    Vec3<Vec3<Precision>> pd;  // On spherical domain; [0] == sph_value_being_optimized.
+    Vec3<Vec3<Precision>> ps;  // On mesh surface;     [0] == center_vertex.
     bool is_hole;
   };
 

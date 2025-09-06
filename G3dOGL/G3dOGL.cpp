@@ -3411,7 +3411,7 @@ void sr_adapt_refinement() {
   // sr_refinement_time = timer.real();
   sr_refinement_time = 0.;
   // if (sr_morph_active) hw.redraw_later();
-  // NOTE: if sr_fractrav<1.f, should somehow detect if the entire active
+  // NOTE: if sr_fractrav < 1.f, should somehow detect if the entire active
   //  vertex list has been traversed over several frames without
   //  any changes!
   if (srmesh.is_still_morphing() || srmesh.is_still_adapting()) hw.redraw_later();

@@ -419,7 +419,7 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
     if (0) std::cerr << "n=" << n << " size=" << size << " format=" << format << "\n";
     if (promised) assertx(n == size - 1);
     if (n >= 0) {
-      // if (n<size) SHOW(string(buf, n));
+      // if (n < size) SHOW(string(buf, n));
       if (n < size) return string(buf, n);  // it fit
       size = n + 1;
       promised = true;

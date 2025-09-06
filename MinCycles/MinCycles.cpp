@@ -18,7 +18,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(num_cycles, "n : after removing this number of cycles");
   HH_ARGSP_O(genus, "g : when mesh genus <= g");
   HH_ARGSC(HH_ARGS_INDENT "Other topological simplification parameters:");
-  HH_ARGSP_O(frac_cycle_length, "frac>=1. : allow cycles to have length greater than minimal");
+  HH_ARGSP_O(frac_cycle_length, "frac >= 1. : allow cycles to have length greater than minimal");
   HH_ARGSP_O(mark_edges_sharp, "bool : mark loops of edges using 'sharp' key string");
   HH_ARGSP_O(mark_faces_filled, "bool : mark rings of new faces using 'filled' key string");
   HH_ARGSP_O(mark_min_num_edges, "n : only mark 'sharp'/'filled' if cycle has >= n edges");

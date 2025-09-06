@@ -1496,7 +1496,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(nfaces, "nfaces : goto mesh with that many faces");
   HH_ARGSD(nedges, "nedges : goto mesh with that many edges");
   HH_ARGSD(nsplits, "nsplits : goto mesh after that many vsplits");
-  HH_ARGSD(maxresidd, "residd : goto mesh with <=resid_dir error");
+  HH_ARGSD(maxresidd, "residd : goto mesh with <= resid_dir error");
   HH_ARGSD(coarsest, ": goto to base mesh");
   HH_ARGSD(finest, ": goto to fully detailed mesh");
   HH_ARGSC(HH_ARGS_INDENT "Act on current mesh:");

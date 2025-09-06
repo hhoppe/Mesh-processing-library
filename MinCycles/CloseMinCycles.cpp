@@ -533,7 +533,7 @@ void CloseMinCycles::find_cycles() {
       break;
     }
     if (lbsr > _options.max_cycle_length / 2.f) {
-      showdf("No more cycles of size <=%g\n", _options.max_cycle_length);
+      showdf("No more cycles of size <= %g\n", _options.max_cycle_length);
       break;
     }
     ++iter;
@@ -593,7 +593,7 @@ void CloseMinCycles::find_cycles() {
       if (verb) showdf("After %d iter, processing cycle of length %g\n", iter + 1, sr * 2.f);
       assertx(result);
       if (result->num_edges > _options.max_cycle_nedges) {
-        showdf("Stopping because next cycle has %d>%d edges\n", result->num_edges, _options.max_cycle_nedges);
+        showdf("Stopping because next cycle has %d > %d edges\n", result->num_edges, _options.max_cycle_nedges);
         break;
       }
       bool restart_at_farthest = true;  // May improve loop if _options.frac_cycle_length > 1.f (e.g. holes3.m).

@@ -139,7 +139,7 @@ class Mesh : noncopyable {
   void get_vertices(Face f, Array<Vertex>& va) const;
   Vec3<Vertex> triangle_vertices(Face f) const;
   Vec3<Corner> triangle_corners(Face f) const;
-  Vertex vertex(Face f, int i) const;  // die if i>=num_vertices(f)
+  Vertex vertex(Face f, int i) const;  // die if i >= num_vertices(f)
   // move about a face
   Edge clw_edge(Face f, Edge e) const { return hedge_from_ef(e, f)->_prev->_edge; }
   Edge ccw_edge(Face f, Edge e) const { return hedge_from_ef(e, f)->_next->_edge; }

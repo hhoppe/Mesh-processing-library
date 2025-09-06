@@ -121,7 +121,7 @@ static void internal_sleep(double sec, bool precise) {
       std::call_once(flag, [] {
         assertnever("");  // Requires another library.
 #if 0
-        // Reduce Sleep/timer resolution from 16ms to <2ms (note: applies system-wide).
+        // Reduce Sleep/timer resolution from 16ms to < 2ms (note: applies system-wide).
         timeBeginPeriod(1);
 #endif
         // Note: should be matched with timeEndPeriod(1) but let program termination handle this.

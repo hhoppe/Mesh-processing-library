@@ -3143,7 +3143,7 @@ void do_rmfarea(Args& args) {
   Array<Face> arf;
   for (Face f : mesh.faces())
     if (mesh.area(f) < area) arf.push(f);
-  showdf("Removing %d faces with area <%g\n", arf.num(), area);
+  showdf("Removing %d faces with area < %g\n", arf.num(), area);
   for (Face f : arf) mesh.destroy_face(f);
 }
 
@@ -3152,7 +3152,7 @@ void do_rmflarea(Args& args) {
   Array<Face> arf;
   for (Face f : mesh.faces())
     if (mesh.area(f) > area) arf.push(f);
-  showdf("Removing %d faces with area >%g\n", arf.num(), area);
+  showdf("Removing %d faces with area > %g\n", arf.num(), area);
   for (Face f : arf) mesh.destroy_face(f);
 }
 
@@ -4413,7 +4413,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tagmateriale, ": tag as sharp edges separating materials");
   HH_ARGSC("", ":");
   HH_ARGSD(transf, "'frame' : affine transform by frame");
-  HH_ARGSD(keepsphere, "x y z r : delete faces with vertex outside (inside if r<0)");
+  HH_ARGSD(keepsphere, "x y z r : delete faces with vertex outside (inside if r < 0)");
   HH_ARGSD(delaunay, ": retriangulate based on circumradii");
   HH_ARGSD(diagonal, ": retriangulate based on diagonal lengths");
   HH_ARGSD(segment, ": segment mesh and output a3d objects");
@@ -4461,7 +4461,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(quadxuvdiag, ": triangulate quads using X pattern in uv");
   HH_ARGSD(quadduvdiag, ": triangulate quads using diamond uv pattern");
   HH_ARGSD(quadodddiag, ": triangulate quads to form odd-valence vertices");
-  HH_ARGSD(rmcomp, "nfaces : remove components with <=nfaces");
+  HH_ARGSD(rmcomp, "nfaces : remove components with <= nfaces");
   HH_ARGSD(rmcompn, "ncomp : remove components until <= ncomp");
   HH_ARGSD(coalesce, "fcrit : coalesce planar faces into polygons");
   HH_ARGSD(makequads, "p_tol : coalesce coplanar tris into quads");
@@ -4485,8 +4485,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(colorbizarre, ": assign vertex rgb interestingly");
   HH_ARGSD(colortransf, "'frame' : affine transform by frame");
   HH_ARGSD(normaltransf, "'frame' : affine transform by frame");
-  HH_ARGSD(rmfarea, "area : remove faces with <area");
-  HH_ARGSD(rmflarea, "area : remove faces with >area");
+  HH_ARGSD(rmfarea, "area : remove faces with < area");
+  HH_ARGSD(rmflarea, "area : remove faces with > area");
   HH_ARGSD(keepfmatid, "id : keep only faces with matid=id");
   HH_ARGSD(uvtopos, ": replace vertex positions by uv");
   HH_ARGSD(perturbz, "scale : perturb z positions by [-1, 1]*scale");
@@ -4510,7 +4510,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(assignwids, ": assign wedge ids");
   HH_ARGSD(procedure, "name... : apply named procedure to mesh");
   HH_ARGSC("", ":");
-  HH_ARGSP(nfaces, "n :  stop when mesh has <=n faces");
+  HH_ARGSP(nfaces, "n :  stop when mesh has <= n faces");
   HH_ARGSD(normalized_maxcrit, "f :  stop when edge crit >= f * avg_elen^2");
   HH_ARGSP(maxcrit, "f :  stop when edge crit >= f");
   HH_ARGSD(lengthc, ":  use edge length as reduction criterion");

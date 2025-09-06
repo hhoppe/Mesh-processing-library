@@ -92,7 +92,7 @@ template <> struct MG_sample<false> {
 const float MG_sample<false>::k_offset_zero = k_vec_zero_offset * 255.f;
 
 // Allows iteration over [0, num) using intervals of at most max_size elements.
-// If more than one interval is required, creates intervals of uniform size (all <max_size).
+// If more than one interval is required, creates intervals of uniform size (all < max_size).
 class BoundedIntervals {
  public:
   BoundedIntervals(int num, int max_size) : _num(num) {

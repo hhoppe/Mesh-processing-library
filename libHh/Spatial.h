@@ -244,7 +244,7 @@ void ObjectSpatial<Approx2, Exact2>::pq_refine(Pqueue<Univ>& pq, const Point& pc
   Exact2 exact2;
   float newv = exact2(pcenter, id);
   if (newv == oldv) return;
-  if (newv < oldv - 1e-12f && Warning("newv<oldv")) SHOW(oldv, newv);
+  if (newv < oldv - 1e-12f && Warning("newv < oldv")) SHOW(oldv, newv);
   assertx(pq.remove_min() == id);
   pq.enter(id, newv);
 }

@@ -128,7 +128,7 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
     }
     _mesh.set_point(vn, p);
     _mesh.set_string(vn, _mesh.get_string(vo));
-    // Note that all corner (and their strings) are preserved in split_vertex().
+    // Note that all corners (and their strings) are preserved in split_vertex().
     v_dist(vn) = 0.f;  // It can be any value != BIGFLOAT.
     // Note: Vertex vn is not entered into pqvlbsr, because its corresponding old vertex is already there.
     for (Edge e : _mesh.edges(vn)) e_bfsnum(e) = 0;  // Note that e_joined(e) will be initialized shortly.

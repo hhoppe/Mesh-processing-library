@@ -9,6 +9,7 @@ using namespace hh;
 int main(int argc, const char** argv) {
   CloseMinCycles::Options options;
   bool nooutput = false;
+  int splitvalence = 0;
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Criteria for stopping topological simplification:");
@@ -23,6 +24,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(mark_min_num_edges, "n : only mark 'sharp'/'filled' if cycle has >= n edges");
   HH_ARGSP_O(frac_offset, "float : Interpenetrate closed cycles by a fraction of bbox");
   HH_ARGSC("", ":");
+  HH_ARGSP(splitvalence, "val : split vertices with valence >= val");
   HH_ARGSF(nooutput, ": do not write mesh at program end");
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
@@ -43,6 +45,10 @@ int main(int argc, const char** argv) {
     }
     CloseMinCycles close_min_cycles(mesh, options);
     close_min_cycles.compute();
+  }
+  if (splitvalence) {
+    const int max_valence = splitvalence;
+    split_valence(mesh, max_valence);
   }
   showdf("%s\n", mesh_genus_string(mesh).c_str());
   hh_clean_up();

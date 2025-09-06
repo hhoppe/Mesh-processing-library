@@ -6,6 +6,7 @@
 #include "libHh/Array.h"
 #include "libHh/Facedistance.h"
 #include "libHh/GeomOp.h"
+#include "libHh/Pqueue.h"
 #include "libHh/MathOp.h"  // Trig
 #include "libHh/Polygon.h"
 #include "libHh/RangeOp.h"  // sort()
@@ -415,6 +416,92 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
     }
   }
   return setf;
+}
+
+void split_valence(GMesh& mesh, int max_valence) {
+  assertx(max_valence > 6);
+  HPqueue<Vertex> pqv;
+  const int large_int = 1 << 24;  // Precision of float in HPqueue.
+  for (Vertex v : mesh.vertices())
+    if (mesh.degree(v) >= max_valence) pqv.enter(v, float(large_int - mesh.degree(v)));
+  int nsplit = 0;
+  while (!pqv.empty()) {
+    Vertex v = pqv.remove_min();
+    assertx(mesh.degree(v) >= max_valence);
+    assertx(!mesh.is_boundary(v));  // Not implemented.
+    HH_SSTAT(Sval, mesh.degree(v));
+    nsplit++;
+    const Array<Face> prev_faces{mesh.faces(v)};
+    const Array<Vertex> va(mesh.ccw_vertices(v));
+    Vertex vs1, vs2;
+    Vector offset{}, offsetn{};
+    if (1) {
+      // Compute the mean of the radial vectors to find the tangent direction towards the most adjacent vertices.
+      // Split the center vertex and push the new vertex in that direction, keeping the old vertex constant.
+      // Determine the two side vertices of the vertex split using -33% and +33% cuts of the adjacent vertices loop,
+      // rather than -25% and +25% cuts as might be desired under a uniform distribution of edges.
+      Vector vec_majority{};
+      for_int(i, va.num()) vec_majority += mesh.point(va[i]) - mesh.point(v);
+      const int j =
+          arg_max(transform(va, [&](Vertex vv) { return dot(mesh.point(vv) - mesh.point(v), vec_majority); }));
+      vs1 = va[(j + va.num() / 3) % va.num()];
+      vs2 = va[(j + va.num() - va.num() / 3) % va.num()];
+      offset = Vector{};
+      if (0) {
+        offsetn = (mesh.point(va[j]) - mesh.point(v)) * 0.2f;
+      } else {
+        const Point centroid = mean(transform(va, [&](Vertex vv) { return mesh.point(vv); }));
+        const float frac1 = 0.7f;
+        offsetn = interp(mesh.point(v), centroid, frac1) - mesh.point(v);
+      }
+    }
+    if (mag2(offsetn) < 1e-8f) {
+      // Use sine weights to compute an arbitrary tangent vector.  This works well with a uniform distribution
+      // of edges.
+      Vector vec{};
+      for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
+      vs1 = va[0];
+      vs2 = va[va.num() / 2];
+      const float frac = 1e-3f;
+      offset = vec * frac;
+      offsetn = -vec * frac;
+    }
+    // Note that all corners (and their strings) are preserved in split_vertex().
+    Vertex vn = mesh.split_vertex(v, vs1, vs2, 0);
+    Vec2<Face> new_faces{mesh.create_face(v, vn, vs1), mesh.create_face(v, vs2, vn)};
+    {
+      Array<char> key, val;
+      string str;
+      for_cstring_key_value(mesh.get_string(prev_faces[0]), key, val, [&] {
+        if (all_of(prev_faces, [&](Face f) {
+          const char* s = GMesh::string_key(str, mesh.get_string(f), key.data());
+          return s && !strcmp(s, val.data());
+        }))
+          for (Face f : new_faces) mesh.update_string(f, key.data(), val.data());
+      });
+    }
+    mesh.set_point(vn, mesh.point(v) + offsetn);
+    mesh.set_point(v, mesh.point(v) + offset);
+    mesh.set_string(vn, mesh.get_string(v));
+    mesh.update_string(vn, "newvertex", "");
+    mesh.update_string(v, "newvertex", "");
+    // We assign string info to new corners if defined on adjacent corners (see also CloseMinCycles::close_cycle()).
+    for (Face f : new_faces) {
+      for (Corner c : mesh.corners(f)) {
+        for (Corner c2 : V(mesh.ccw_corner(c), mesh.clw_corner(c))) {
+          if (const char* s = mesh.get_string(c2)) {
+            mesh.set_string(c, s);
+            break;
+          }
+        }
+      }
+    }
+    pqv.remove(vs1);
+    pqv.remove(vs2);
+    for (Vertex vv : V(vs1, vs2, v, vn))
+      if (mesh.degree(vv) >= max_valence) pqv.enter(vv, float(large_int - mesh.degree(vv)));
+  }
+  showdf("Split high-valence vertices %d times\n", nsplit);
 }
 
 // *** Retriangulate

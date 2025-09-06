@@ -4542,7 +4542,7 @@ void parallel_optimize() {
   nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
 }
 
-// Simplify the mesh until it has <=nfaces or <=nvertices.
+// Simplify the mesh until it has <= nfaces or <= nvertices.
 void optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
   if (strict_sharp == 2) {
@@ -4755,6 +4755,7 @@ void do_simplify() {
 // Recompute the priority queue of edge costs,
 //   e.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
 void do_rebuildpq() {
+  if (!pqecost.num()) return; // Note that it is not built if using parallel_optimize().
   assertx(pqecost.num() == mesh.num_edges());
   for (Edge e : mesh.edges()) assertw(pqecost.remove(e) == k_bad_cost);
   assertx(!pqecost.num());

@@ -67,6 +67,9 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
 // Fill the one or more holes associated with the boundary loop containing erep.  Return the new multisided faces.
 Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep);
 
+// Apply vertex splits such that no vertex has valence > max_valence.
+void split_valence(GMesh& mesh, int max_valence);
+
 // *** Retriangulate
 
 using EDGEF = bool (*)(const GMesh& m, Edge e);

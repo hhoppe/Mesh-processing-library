@@ -59,7 +59,7 @@ class Stat {
   string name_string() const;   // Used by operator<<().
   friend void swap(Stat& l, Stat& r) noexcept;
   friend std::ostream& operator<<(std::ostream& os, const Stat& st) { return os << st.name_string(); }
-  //
+
   static int show_stats() { return _s_show; }
   static void set_show_stats(int val) { _s_show = val; }
 

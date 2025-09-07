@@ -95,7 +95,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   _argv0 = aargs[0];
   if (minimize) _iconic = true;
   g_hw = this;
-  //
+
   _hInstance = GetModuleHandle(nullptr);
   if (0) {
     // Hopefully avoid foreground process priority boost during G3dcmp by making all windows have
@@ -119,7 +119,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     const bool disable = true;
     assertx(SetProcessPriorityBoost(GetCurrentProcess(), disable));
   }
-  //
+
   if (1) {
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)
     // This program is taking care of DPI issues; Windows dwm should never rescale the window contents.
@@ -1025,7 +1025,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   assertx(RegisterClassExW(&wnd_class));
   RECT rect = {0, 0, _win_dims[1], _win_dims[0]};  // left, top, right, bottom
   assertx(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0));
-  //
+
   string wgl_extensions;
   _scr_stencilbits = getenv_int("STENCIL_BITS");  // dynamically updated by my_setenv() in G3dOGL.cpp
   {
@@ -1134,7 +1134,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       }
     }
   }
-  //
+
   if (_fullscreen) {
     _fullscreen = false;
     make_fullscreen(true);
@@ -1157,7 +1157,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   if (_pbuffer || _multisample) {
     // _hRC = assertx(wglCreateContext(_hRenderDC));
     // assertx(wglMakeCurrent(_hRenderDC, _hRC));
-    //
+
     int orig_multisample = _multisample;
     int iPixelFormat;
     for (;;) {
@@ -1176,7 +1176,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       const unsigned WGL_GREEN_BITS_ARB = 0x2017;
       const unsigned WGL_BLUE_BITS_ARB = 0x2019;
       const unsigned WGL_ALPHA_BITS_ARB = 0x201B;
-      //
+
       Array<int> iattribl = {int(WGL_DRAW_TO_WINDOW_ARB), 1, int(WGL_ACCELERATION_ARB), int(WGL_FULL_ACCELERATION_ARB),
                              int(WGL_SUPPORT_OPENGL_ARB), 1,
                              // for unknown reason, disabling double-buffering for _offscreen prevents _multisample > 0
@@ -1222,10 +1222,10 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       }
     }
     if (_multisample != orig_multisample) showf("Hw: had to downgrade to multisample=%d\n", _multisample);
-    //
+
     // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
-    //
+
     if (_pbuffer) {
       const Array<int> attr = {0};
       assertx(wglCreatePbufferARB);

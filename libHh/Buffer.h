@@ -24,7 +24,7 @@ class Buffer : noncopyable {
   int _n{0};    // num of elements in buffer (_beg + _n <= _ar.num())
   bool _eof{false};
   bool _err{false};
-  //
+
   void shift();   // shift data to beginning of buffer
   void expand();  // increase buffer size
 };

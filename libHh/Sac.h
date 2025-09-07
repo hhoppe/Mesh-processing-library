@@ -18,12 +18,12 @@
   HH_SAC_ALLOCATE_FUNC(MVertex, Point, v_point);
   v_point(v) = Point(1.f, 2.f, 3.f);
   SHOW(v_point(v));
-  //
+
   using ArrayInt = Array<int>;
   HH_SACABLE(ArrayInt);
   HH_SAC_ALLOCATE_CD_FUNC(MVertex, ArrayInt, v_ar);  // CD means call constructor and destructor.
   v_ar(v).push(7);
-  //
+
   static int key_a = HH_SAC_ALLOCATE_CD(MVertex, A);
   sac_access<A>(v, key_a).b = 3;
 }

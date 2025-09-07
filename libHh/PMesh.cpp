@@ -1024,7 +1024,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
 #endif
 GOTO_VSPLIT_WAD2:
   void();  // empty statement
-  //
+
   // ok();
 }
 
@@ -1169,7 +1169,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
       assertx(_wedges[_faces[flclw].wedges[vs_index]].vertex == vt);
     assertx(fr == _fnei[fl].faces[2]);
     if (fr >= 0) assertx(_fnei[fr].faces[1] == fl);
-    //
+
     if (!isr) assertx((code & Vsplit::S_RSAME) && !(code & Vsplit::T_CSAME));
     if (!isr) assertx((code & Vsplit::T_RSAME) && !(code & Vsplit::T_CSAME));
     if (isl) {
@@ -1566,7 +1566,7 @@ PMeshInfo PMesh::read_header(std::istream& is) {
   pminfo._has_uv = true;
   pminfo._has_resid = false;
   pminfo._has_wad2 = false;
-  //
+
   pminfo._tot_nvsplits = 0;
   pminfo._full_nvertices = 0;
   pminfo._full_nwedges = 0;

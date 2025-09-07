@@ -327,7 +327,7 @@ class NormalMapping_dot3 final : public NormalMapping {
     // arg1 = L
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT, GL_CONSTANT_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT, GL_SRC_COLOR);
-    //
+
     // TMU1:
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_EXT);
@@ -340,7 +340,7 @@ class NormalMapping_dot3 final : public NormalMapping {
     // arg1 = primary color
     glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB_EXT, GL_PRIMARY_COLOR_EXT);
     glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB_EXT, GL_SRC_COLOR);
-    //
+
     glActiveTextureARB(GL_TEXTURE0_ARB);
   }
 
@@ -383,7 +383,7 @@ class NormalMapping_nvrc final : public NormalMapping {
     //  E = (n * h)
     //  F = (n * h)
     //  OUT = (n * h)^4 + (n * l + a)c
-    //
+
     // input: stage, portion, variable,  input, mapping, componentUsage
     // A = texel normal  (2 * v - 1)
     glCombinerInputNV(GL_COMBINER0_NV, GL_RGB, GL_VARIABLE_A_NV, GL_TEXTURE0_ARB, GL_EXPAND_NORMAL_NV, GL_RGB);
@@ -398,7 +398,7 @@ class NormalMapping_nvrc final : public NormalMapping {
     // SPARE1 = C dot D = dot(normal * vhalf)
     glCombinerOutputNV(GL_COMBINER0_NV, GL_RGB, GL_SPARE0_NV, GL_SPARE1_NV, GL_DISCARD_NV, GL_NONE, GL_NONE, GL_TRUE,
                        GL_TRUE, GL_FALSE);
-    //
+
     // A = SPARE0 = dot(normal * light)
     glCombinerInputNV(GL_COMBINER1_NV, GL_RGB, GL_VARIABLE_A_NV, GL_SPARE0_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB);
     // B = color
@@ -411,7 +411,7 @@ class NormalMapping_nvrc final : public NormalMapping {
     // SPARE0 = A * B + C * D = (dot(normal * light) + ambient) * color
     glCombinerOutputNV(GL_COMBINER1_NV, GL_RGB, GL_DISCARD_NV, GL_DISCARD_NV, GL_SPARE0_NV, GL_NONE, GL_NONE, GL_FALSE,
                        GL_FALSE, GL_FALSE);
-    //
+
     // E = SPARE1 = dot(normal * vhalf)
     glFinalCombinerInputNV(GL_VARIABLE_E_NV, GL_SPARE1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB);
     // F = SPARE1 = dot(normal * vhalf)

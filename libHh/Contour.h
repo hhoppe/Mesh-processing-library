@@ -113,7 +113,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   int _nvundef{0};
   int _nedegen{0};
   Array<DPoint> _tmp_poly;
-  //
+
   bool cube_inbounds(const IPoint& ci) const { return ci.in_range(ntimes<D>(_gn)); }
   DPoint get_point(const IPoint& ci) const {
     // Note: less strict than cube_inbounds() because ci[c] == _gn is OK for a vertex.
@@ -227,7 +227,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   static constexpr bool b_no_border = std::is_same_v<Border, Contour3D_NoBorder>;
   using Node222 = SGrid<Node*, 2, 2, 2>;
   using base::k_not_yet_evaled;
-  //
+
   unsigned encode(const IPoint& ci) const {
     static_assert(k_max_gn <= 1024);
     return (((unsigned(ci[0]) << 10) | unsigned(ci[1])) << 10) | unsigned(ci[2]);
@@ -582,7 +582,7 @@ class Contour2D : public ContourBase<2> {
   static constexpr bool b_no_border = std::is_same_v<Border, Contour2D_NoBorder>;
   using Node22 = SGrid<Node*, 2, 2>;
   using base::k_not_yet_evaled;
-  //
+
   unsigned encode(const IPoint& ci) const {
     static_assert(k_max_gn <= 65536);
     return (unsigned(ci[0]) << 16) | unsigned(ci[1]);

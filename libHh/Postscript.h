@@ -36,7 +36,7 @@ class Postscript : noncopyable {
   float _curw{0.f};  // current line width
   Frame _ctm;
   int _opx, _opy;  // old pen position if LINE
-  //
+
   void init() {
     bool landscape = _nxpix > _nypix;
     // this format actually conforms to PS-Adobe-3.0

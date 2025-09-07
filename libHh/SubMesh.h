@@ -100,11 +100,11 @@ class SubMesh {
   Map<Face, Array<Face>> _mofif;  // face of _omesh -> (int -> face of _m)
   bool _allvvar;                  // if all vertices are vflag_variable
   bool _isquad;
-  //
+
   bool _s222{false};
   float _weighta{0.f};
   bool _selrefine{false};  // no longer used
-  //
+
   bool sharp(Edge e) const;
   int nume(Vertex v) const;
   int num_sharp_edges(Vertex v) const;

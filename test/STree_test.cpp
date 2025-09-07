@@ -17,14 +17,14 @@ int main() {
     assertx(stree.succ(23) == 24);
     assertx(stree.succ(58) == 0);
     assertx(stree.succ(60) == 0);
-    //
+
     assertx(stree.pred(23) == 22);
     assertx(stree.pred(1) == 0);
     assertx(stree.pred(60) == 58);
     assertx(stree.pred(4) == 2);
     assertx(stree.pred(58) == 56);
     assertx(stree.pred(18) == 16);
-    //
+
     assertx(stree.retrieve(12) == 12);
     assertx(stree.enter(88));
     assertx(stree.remove(24));

@@ -34,7 +34,7 @@ class Spatial : noncopyable {  // abstract class
   friend details::BSpatialSearch;
   int _gn;     // grid size
   float _gni;  // 1.f / _gn
-  //
+
   using Ind = Vec3<int>;
   int inbounds(int i) const { return i >= 0 && i < _gn; }
   int indices_inbounds(const Ind& ci) const { return inbounds(ci[0]) && inbounds(ci[1]) && inbounds(ci[2]); }

@@ -427,7 +427,7 @@ static void act_auto() {
   // default at 60fps is fchange=.016667 ddistance=1, so rotation of .016667 / TAU * 360 = 0.954929896 degree/frame
   const float fudge = 1. / 0.954929896;  // desire 1 degree/frame at 60fps -> 360 frames == 6 sec for one rotation
   float ch = fchange * ddistance * fudge;
-  //
+
   if (timingtest_nframes) {
     static unique_ptr<Stat> pstat;
     if (!pstat) {

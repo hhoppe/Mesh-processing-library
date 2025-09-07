@@ -17,7 +17,7 @@
   assertx(&grid.flat(i) == &grid[u]);
   assertx(i == ravel_index_list(grid.dims(), y, x));
   assertx(unravel_index(grid.dims(), i) == u);
-  //
+
   grid[18][5] = 1;
   grid(18, 6) = 2;
   grid[{18, 7}] = 3;
@@ -474,7 +474,7 @@ template <int D, typename T> CGridView<D - 1, T> details::Grid_get<D, T>::cget(c
   static_assert(D >= 4);
   return CGridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));
 }
-//
+
 template <int D, typename T> GridView<D - 1, T> details::Grid_get<D, T>::get(T* a, const int* dims, int r) {
   static_assert(D >= 4);
   return GridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));

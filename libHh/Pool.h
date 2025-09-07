@@ -171,7 +171,7 @@ class Pool : noncopyable {
   Chunk* _chunkh;
   int _nalloc;
   int _offset;
-  //
+
   HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void init() {
     // make allocated size a multiple of sizeof(Link)!
     _esize = ((_esize + sizeof(Link) - 1) / sizeof(Link)) * sizeof(Link);

@@ -179,7 +179,7 @@ inline void assign_vertex(GMesh& mesh, MatrixView<Vertex> verts, const Vec2<int>
 void do_tomesh(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   showff("%s", pargs.header().c_str());
-  //
+
   assertx(image.zsize() == (elevation && !rg_elev ? 1 : 3));
   beg_yx = twice(0);
   Vec2<int> end_yx1 = image.dims();
@@ -3100,7 +3100,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
     fill(fkernel, 0.f);
     fkernel[3] = fkernel[4] = 1.f;
   }
-  //
+
   if (0) {  // slow implementation
     parallel_for_coords({.cycles_per_elem = uint64_t(kn * kn) * 10}, mat_C.dims(), [&](const Vec2<int>& yx) {
       const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;

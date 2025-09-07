@@ -164,7 +164,7 @@ class Multigrid : noncopyable {
   float _screening_weight{0.f};
   Periodic _periodic;
   Metric _metric;
-  //
+
   static constexpr bool b_no_periodicity = std::is_same_v<Periodic, MultigridPeriodicNone<D>>;
   static constexpr bool b_default_metric = std::is_same_v<Metric, MultigridMetricIsotropic<D>>;
   static constexpr bool b_fastest = 0;
@@ -172,10 +172,10 @@ class Multigrid : noncopyable {
   static constexpr int k_num_iter_gauss_seidel = 2;     // 1, 2, 5, 10, 20, 100; note that 1 or 2 is sufficient
   static constexpr int k_default_num_vcycles = 0 ? 25 : std::is_same_v<T, double> ? 12 : 5;  // 5, 12, 16, 25, 50
   static constexpr bool k_enable_specializations = b_no_periodicity && 1;
-  //
+
   bool have_orig() const { return _grid_orig.size() > 0; }
   static constexpr int Z = k_enable_specializations ? D : -1;  // for use in Specialize<Z>
-  //
+
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
     Vec<int, D> ar_interior_offsets;
     for_int(c, D) {
@@ -571,7 +571,7 @@ class Multigrid : noncopyable {
     }
   }
   // Tried implementing the specialization relax_aux(Specialize<1>, ...) but it was no faster for mingw 4.8.1.
-  //
+
   // Compute the residual of the Laplacian:  grid_rhs - Laplacian * grid_result .
   Grid<D, T> compute_residual(CGridView<D, T> grid_rhs, CGridView<D, T> grid_result) {
     return compute_residual_aux(Specialize<Z>{}, grid_rhs, grid_result);

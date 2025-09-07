@@ -190,7 +190,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
       HH_STIMER("_fast_relax3");  // perform niter Gauss-Seidel iterations on frame f using rhs computed above
       const int niter = 2;
       const float wL = 1.f, w = wL, rwL6 = 1.f / (screening_weight + 6.f * w);
-      //
+
       MatrixView<Pixel> mat_videoloopf(videoloop[f]);
       const auto func_update = [&](int y, int x) {
         float vnum = screening_weight;

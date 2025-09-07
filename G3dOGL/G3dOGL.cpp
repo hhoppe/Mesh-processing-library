@@ -1033,7 +1033,7 @@ void load_texturemaps() {
       glLoadMatrixf(m1.data());
       glMatrixMode(GL_MODELVIEW);
     }
-    //
+
     anisotropy = std::numeric_limits<int>::max();
     if (getenv_bool("NO_ANISO")) {
       showdf("NO_ANISO\n");
@@ -1041,14 +1041,14 @@ void load_texturemaps() {
     }
     anisotropy = getenv_int("ANISOTROPY", anisotropy);
     set_anisotropy();
-    //
+
     if (texturenormal) {
       if (!normalmap_init()) {
         Warning("Normal mapping unsupported -> texturenormal=false");
         texturenormal = false;
       }
     }
-    //
+
     bool texture_elev = getenv_bool("TEXTURE_ELEV");
     if (texture_elev && !contains(gl_extensions_string(), "GL_ARB_multitexture")) {
       Warning("GL_ARB_multitexture unsupported -> texture_elev=false");
@@ -1839,7 +1839,7 @@ void draw_mesh(GMesh& mesh) {
       bool vis_new_state = !mesh.gflags().flag(mflag_fvisited);
       mesh.gflags().flag(mflag_fvisited) = vis_new_state;
       if (k_debug)
-        for (Face f : mesh.faces()) assertx(mesh.flags(f).flag(fflag_visited) != vis_new_state);
+        for (Face f : mesh.faces()) assertw(mesh.flags(f).flag(fflag_visited) != vis_new_state);
       for (Face f : mesh.faces()) {
         if (mesh.flags(f).flag(fflag_visited) == vis_new_state) continue;
         mesh.flags(f).flag(fflag_visited) = vis_new_state;
@@ -2107,7 +2107,7 @@ void draw_all() {
     if (hw.suggests_stop() && !inpicture) break;
     if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
     if (!setup_ob(i)) continue;
-    //
+
     // DL Tests 2002-05-28: frames / sec (before use_dl -> after use_dl)
     //  dragonf 200k faces: (-geom 500x500)
     //   .m polygons        3.3 -> 5.8
@@ -2143,7 +2143,7 @@ void draw_all() {
         continue;
       }
     }
-    //
+
     if (i == 1 && pm_mode) {
 #if defined(DEF_PM)
       draw_pm();
@@ -2169,7 +2169,7 @@ void draw_all() {
       draw_list(g_xobs[i].traverse());
     }
     if (g_xobs[i]._pmesh) g_xobs[i]._pmesh->gflags().flag(g3d::mflag_ok) = true;  // if sc_mode, psc_mode, etc.
-    //
+
     if (defining_dl) {
       defining_dl = false;
       static const bool debug_dl = getenv_bool("DL_DEBUG");
@@ -3689,12 +3689,12 @@ bool sr_key_press(char ch) {
       // float diam = srmesh._bbox.max_side();
       // diam == 0.823263 for teapot20.b.pm (for SIGGRAPH 97 images)
       // sr_tview = Frame::scaling(thrice(1.f / diam)) * sr_tview;  doesn't work.
-      //
+
       static Frame radar_old_tview;
       static bool radar_old_edges;
       static bool radar_old_textureactive;
       static bool radar_old_outside_frustum;
-      //
+
       sr_radar = !sr_radar;
       if (sr_radar) {
         radar_old_tview = std::exchange(g3d::tview, sr_tview);
@@ -4719,13 +4719,13 @@ void Cylinder::draw() {
     glVertex3fv(_v[i].data());
   }
   glEnd();
-  //
+
   glBegin(GL_TRIANGLE_FAN);
   glNormal3fv(tn.data());
   glVertex3fv(tc.data());
   for (int i = 0; i < _v.num(); i += 2) glVertex3fv(_v[i].data());
   glEnd();
-  //
+
   glBegin(GL_TRIANGLE_FAN);
   glNormal3fv(bn.data());
   glVertex3fv(bc.data());

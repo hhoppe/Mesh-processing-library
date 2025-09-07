@@ -455,14 +455,14 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   Array<int> f_pm2sr(full_nfaces);  // PM faces index -> SR face index
   f_pm2sr.init(0);
   for_int(fi, _base_faces.num()) f_pm2sr.push(fi);
-  //
+
   Array<short> f_matid(full_nfaces);  // temporary back-up
   f_matid.init(0);
   for_int(fi, _base_faces.num()) {
     f_matid.push(narrow_cast<short>(_faces[fi].aface->matid));
     _faces[fi].aface->matid = fi;  // in the next section, matid is temporarily used to store face indices?
   }
-  //
+
   for_int(vspli, tot_nvsplits) {
     const Vsplit& pm_vspl = *assertx(pmrs.next_vsplit());
     const int code = pm_vspl.code;

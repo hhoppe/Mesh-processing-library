@@ -299,19 +299,19 @@ struct NewMeshNei : noncopyable {
   Array<Vertex> va;                // CCW, va[0] repeated if closed (== #faces + 1).
   Array<int> ar_vdisc;             // Sharp edges, indices into va[].
   Array<Vec3<Corner>> ar_corners;  // 3 corners for each face (third is center).
-  //
+
   Array<P2WedgeInfo> ar_p2wi;  // winfo of outside ar_corners.
-  //
+
   Array<int> ar_nwid;     // For each new corner, new fake wedge id.
   Array<int> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
   Array<int> ar_rwid_v2;  // For each nwid, would-be real wid on v2.
-  //
+
   Array<fptinfo*> ar_fpts;  // Face points projecting onto neighborhood.
-  //
+
   Array<eptinfo*> ar_epts;       // Edge points (excluding eptretire).
   Array<eptinfo*> ar_eptretire;  // Edge points to retire.
   Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
-  //
+
   Array<BQemT*> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
                         //  DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*().
 };
@@ -2279,9 +2279,9 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   // In the case that half_edges (vs, vt) and (vs, vl) are sharp (and possibly half_edge (vs, vr) is sharp) and
   // vertex vt is smooth, then problem occurs since resulting wedge could be assigned two different attribute values.
   // This should have been prevented earlier.
-  //
+
   const int not_used = std::numeric_limits<int>::max();
-  //
+
   Corner cv1f1 = mesh.corner(mesh.vertex1(e), mesh.face1(e));
   Corner cv2f1 = mesh.ccw_face_corner(cv1f1);
   Corner cv1f1o = mesh.ccw_corner(cv1f1);
@@ -2290,7 +2290,7 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   int nwidv2f1o = !cv2f1o ? not_used : find_nwid(nn, cv2f1o);
   bool cv1f1smooth = cv1f1o && c_wedge_id(cv1f1o) == c_wedge_id(cv1f1);
   bool cv2f1smooth = cv2f1o && c_wedge_id(cv2f1o) == c_wedge_id(cv2f1);
-  //
+
   Corner cv1f2 = !mesh.face2(e) ? nullptr : mesh.corner(mesh.vertex1(e), mesh.face2(e));
   Corner cv2f2 = !cv1f2 ? nullptr : mesh.clw_face_corner(cv1f2);
   Corner cv1f2o = !cv1f2 ? nullptr : mesh.clw_corner(cv1f2);
@@ -2299,16 +2299,16 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   int nwidv2f2o = !cv2f2o ? not_used : find_nwid(nn, cv2f2o);
   bool cv1f2smooth = cv1f2o && c_wedge_id(cv1f2o) == c_wedge_id(cv1f2);
   bool cv2f2smooth = cv2f2o && c_wedge_id(cv2f2o) == c_wedge_id(cv2f2);
-  //
+
   assertx(!((cv2f1smooth && cv2f2smooth && nwidv2f1o == nwidv2f2o && c_wedge_id(cv1f1) != c_wedge_id(cv1f2)) ||
             (cv1f1smooth && cv1f2smooth && nwidv1f1o == nwidv1f2o && c_wedge_id(cv2f1) != c_wedge_id(cv2f2))));
-  //
+
   if (cv1f1smooth && cv2f1smooth) assertx(nwidv1f1o == nwidv2f1o);
   if (cv1f1smooth)
     ar_wi[nwidv1f1o] = interp_wi(c_winfo(cv1f1), c_winfo(cv2f1), ii);
   else if (cv2f1smooth)
     ar_wi[nwidv2f1o] = interp_wi(c_winfo(cv1f1), c_winfo(cv2f1), ii);
-  //
+
   if (cv1f2smooth && cv2f2smooth) assertx(nwidv1f2o == nwidv2f2o);
   if (cv1f2smooth)
     ar_wi[nwidv1f2o] = interp_wi(c_winfo(cv1f2), c_winfo(cv2f2), ii);
@@ -4856,7 +4856,7 @@ int main(int argc, const char** argv) {
   //  40000 is the number of points to sample on the surface
   //  20000 is the maximum number of faces to keep in the PM representation
   //  500 is the number of faces of the base mesh in the PM rep
-  //
+
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSP(numpts, "n : set number of random pts to sample");

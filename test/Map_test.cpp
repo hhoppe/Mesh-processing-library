@@ -76,7 +76,7 @@ int main() {
       for_int(i, num) m.remove(i);
       assertx(m.num() == 0);
     }
-    //
+
     m.clear();
     for_int(i, 100) m.enter(i, i);
     for_int(i, 100) {

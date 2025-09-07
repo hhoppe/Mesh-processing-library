@@ -3431,9 +3431,9 @@ void do_procedure(Args& args) {
         }
       }
     }
-    //
+
     do_assign_normals();
-    //
+
     const int cutlon = 20;
     for (int j = 0; j < nlon; j += cutlon) {
       for_int(i, (nlat - 1) / 2) {

@@ -76,7 +76,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   if (minimize) iconic = true;
   if (_offscreen != "") iconic = true;  // less distracting; ideally window would be invisible
   g_hw = this;
-  //
+
   _pwmhints = assertx(XAllocWMHints());  // never freed using XFree()
   // _pwmhints->flags = 0;  // unnecessary
   if (iconic) {
@@ -92,7 +92,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   _depth = DisplayPlanes(_display, _screen);
   if (_hwdebug) SHOW(_screen, _depth, XDisplayCells(_display, _screen));
   _cmap = DefaultColormap(_display, _screen);
-  //
+
   set_window_title(_argv0);
   set_double_buffering(true);
   return true;

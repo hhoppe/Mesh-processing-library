@@ -49,7 +49,7 @@ class Timer : noncopyable {
   // possibly:        never print, do not keep stats (except if SHOW_TIMES)
   // noprint:         never print, do not keep stats
   // always:          showdf() every time even if SHOW_TIMES == -1
-  //
+
   // If a name is given in the constructor, the timer is automatically started.
   // Otherwise, mode is overridden to EMode::noprint and the timer is not started.
   explicit Timer(string name_ = "", EMode mode = EMode::normal);
@@ -61,7 +61,7 @@ class Timer : noncopyable {
   double real() const;         // Elapsed time, in seconds.
   double cpu() const;          // Simulated "single-thread" "user + system" CPU time, in seconds.
   double parallelism() const;  // Effective number of cores that multiply cpu() to obtain the total process CPU time.
-  //
+
   static int get_show_times();
   static void set_show_times(int val) { _s_show = val; }
 

@@ -239,7 +239,7 @@ class Mesh : noncopyable {
   bool nice_edge_collapse(Edge e) const;
   // would edge swap be legal?  (legal implies nice here)
   bool legal_edge_swap(Edge e) const;
-  //
+
   virtual void collapse_edge_vertex(Edge e, Vertex vs);
   // die if !legal_edge_collapse(e)
   // remove f1, [f2], v2, (v2, {*})
@@ -817,7 +817,7 @@ class Mesh : noncopyable {
   int _vertexnum{1};            // id to assign to next new vertex
   int _facenum{1};              // id to assign to next new face
   int _nedges{0};
-  //
+
   HEdge most_clw_hedge(Vertex v) const;                        // is_nice(v), may return nullptr
   HEdge most_ccw_hedge(Vertex v) const;                        // is_nice(v), may return nullptr
   HEdge clw_hedge(HEdge he) const { return he->_next->_sym; }  // may return nullptr

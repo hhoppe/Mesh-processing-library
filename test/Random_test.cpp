@@ -51,7 +51,7 @@ int main() {
     SHOW(vmin, vmax, 1. - vmax);
   }
   SHOW(Random::G.get_unsigned());
-  //
+
   SHOW(r1.get_uint64());
   for_int(i, num) { HH_SSTAT(Suint64, double(r1.get_uint64())); }
   {

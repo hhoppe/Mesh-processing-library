@@ -254,7 +254,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
   assertx(mo.xsize() == n);
   assertx(niter >= 1);
   assertx(eimag.num() == ne);
-  //
+
   auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_inc", Timer::EMode::abbrev) : nullptr;
   for_int(i, ne) for_int(c, n) mo[i][c] = mi[i][c];
   Array<float> vnorm(ne);

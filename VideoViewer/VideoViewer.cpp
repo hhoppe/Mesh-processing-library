@@ -3144,10 +3144,10 @@ void render_image() {
         };
         vertex_shader_id = assertx(glCreateShader(GL_VERTEX_SHADER));
         func_compile_shader(vertex_shader_id, vertex_shader, GL_VERTEX_SHADER);
-        //
+
         fragment_shader_id = assertx(glCreateShader(GL_FRAGMENT_SHADER));
         func_compile_shader(fragment_shader_id, fragment_shader, GL_FRAGMENT_SHADER);
-        //
+
         program_id = assertx(glCreateProgram());
         glAttachShader(program_id, vertex_shader_id);
         glAttachShader(program_id, fragment_shader_id);
@@ -3353,7 +3353,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     g_prev_win_pos = win_pos;
     g_prev_win_dims = g_win_dims;
   }
-  //
+
   if (0 && g_cob < 0 && getobnum()) set_video_frame(0, k_before_start);
   if ((g_cob < 0 || g_initial_time > 0.) && getobnum()) {
     Object& o = getob(0);

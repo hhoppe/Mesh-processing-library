@@ -6,9 +6,9 @@
 #include "libHh/Array.h"
 #include "libHh/Facedistance.h"
 #include "libHh/GeomOp.h"
-#include "libHh/Pqueue.h"
 #include "libHh/MathOp.h"  // Trig
 #include "libHh/Polygon.h"
+#include "libHh/Pqueue.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
 #include "libHh/Stack.h"

@@ -27,7 +27,7 @@ int main() {
   Vertex v3 = mesh.create_vertex();
   Vertex v4 = mesh.create_vertex();
   show_mesh(mesh);
-  //
+
   Face f0, f1;
   f0 = mesh.create_face(V(v1, v2, v3));
   dummy_use(f0);
@@ -42,7 +42,7 @@ int main() {
   //       1
   assertx(mesh.degree(v1) == 3);
   assertx(mesh.degree(v3) == 2);
-  //
+
   Vertex v5;
   {
     mesh.ok();

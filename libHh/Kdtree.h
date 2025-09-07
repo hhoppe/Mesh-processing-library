@@ -59,7 +59,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   };
   Array<Entry> _arentry;
   Array<Node> _arnode;
-  //
+
   void constructor_i() {
     assertx(_maxlevel > 0);
     _fsize = getenv_float("KD_FSIZE", _fsize);

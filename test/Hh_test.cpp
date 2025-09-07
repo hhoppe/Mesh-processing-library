@@ -128,7 +128,7 @@ void test_spawn2() {
     shell0 = shell;
     SHOW("**", shell, shell0);
     if (0) shell0 = "sh";  // Then it behaves differently; it parses args more like cygwin bash!
-    //
+
     E(R"(echo a b)");        // echo         null
     E(R"('echo a b')");      // 'echo        Unmatched '.
     E(R"("echo a b")");      // echo a b     a b
@@ -531,7 +531,7 @@ line2)";
     SHOW(HH_NUM_ARGS(1));
     SHOW(HH_NUM_ARGS(1, 2));
     SHOW(HH_NUM_ARGS(1, 2, 3));
-    //
+
     SHOW(HH_GT1_ARGS(1));
     SHOW(HH_GT1_ARGS(1, 2));
     SHOW(HH_GT1_ARGS(1, 2, 3));
@@ -584,7 +584,7 @@ line2)";
     string str = sform_nonliteral(format.c_str(), 123, "hello");
     assertx(str.size() == len + 3 + 5);
     assertx(ends_with(str, "HHHHHHHHHH123hello"));
-    //
+
     // str.resize(17);
     // ssform(str, format.c_str(), 123, "hello");
     // assertx(str.size() == len + 3 + 5);

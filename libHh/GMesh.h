@@ -56,7 +56,7 @@ class GMesh : public Mesh {
   void collapse_edge(Edge e) override;
   Vertex split_edge(Edge e, int id = 0) override;
   Edge swap_edge(Edge e) override;
-  //
+
   Vertex split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) override;
   void merge_vertices(Vertex vs, Vertex vt) override;
   Vertex center_split_face(Face f) override;

@@ -1431,7 +1431,7 @@ void apply_feathering(Image& image) {
 // Define map: image I -> domain D  (v -> v_domainp(v)).
 GMesh get_map_from_image_to_domain() {
   const int orig_gridn = std::exchange(gridn, 1);  // Create an untessellated domain mesh.
-  scheme = "domain";  // The choice does not matter because the domain is not tessellated.
+  scheme = "domain";  // The scheme choice does not matter because the domain is not tessellated.
   create(true);
   gridn = orig_gridn;
 
@@ -1655,10 +1655,10 @@ void do_test_properties() {
   assertx(scheme[0] == 'T');
   const TriangleSpheremap triangle_map = get_map(scheme.substr(1));
   if (!gridn) gridn = 16;
-  //
+
   const Point refp1(0.f, 1.f, 0.f), refp2(-1.f, 0.f, 0.f);
   const Point refp3 = normalized(Point(-.3f, 0.f, .9f)), refp4 = normalized(Point(.4f, -.8f, .3f));
-  //
+
   assertx(g_mesh.empty());
   const SGrid<Point, 3, 3> faces = {
       {refp1, refp2, refp3},
@@ -1728,7 +1728,7 @@ void do_create_lonlat_checker(Args& args) {
   int imagesize = args.get_int();
   assertx(imagesize > 1);
   string image_name = args.get_filename();
-  //
+
   assertx(checkern);
   if (!gridn) gridn = 128;
   {

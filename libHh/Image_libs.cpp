@@ -1010,7 +1010,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
   // png_set_read_user_chunk_fn(png_ptr, user_chunk_ptr, read_chunk_callback);
   // callback used to control a progress meter
   // png_set_read_status_fn(png_ptr, read_row_callback);
-  //
+
   if (0) {                                          // high-level read
     int png_transforms = (PNG_TRANSFORM_STRIP_16 |  // 16-bit to 8-bit
                           PNG_TRANSFORM_PACKING |   // expand 1, 2, and 4-bit

@@ -46,7 +46,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   assertx(niter >= 1);
   assertx(eimag.num() == ne);
   dummy_use(unused_orthonormalize_rows);
-  //
+
   auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_em", Timer::EMode::abbrev) : nullptr;
   // C = rand(p, k);
   Matrix<float> mc(n, ne);

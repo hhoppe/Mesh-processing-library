@@ -10,7 +10,7 @@
 {
   Set<Edge> sete;
   for (Edge e : set) consider(e);
-  //
+
   struct mypair {
     unsigned _v1, _v2;
   };
@@ -21,7 +21,7 @@
     bool operator()(const mypair& e1, const mypair& e2) const { return e1._v1 == e2._v1 && e1._v2 == e2._v2; }
   };
   Set<mypair, hash_mypair, equal_mypair> setpairs;
-  //
+
   struct hash_edge {  // From MeshOp.cpp.
     ...;
     const GMesh& _mesh;

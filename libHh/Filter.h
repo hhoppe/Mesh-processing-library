@@ -27,7 +27,7 @@ class Filter : noncopyable {
   bool is_preprocess() const { return _is_preprocess; }  // preprocess
   bool is_partition_of_unity() const { return _is_partition_of_unity; }
   bool is_unit_integral() const { return _is_unit_integral; }
-  //
+
   static const Filter& get(const string& name);
   // impulse:     (for nearest-sample minification) (does not support func())
   // box:         (nearest magnification), a.k.a. rectangle/rect func, top-hat, pi func, unit pulse, boxcar)

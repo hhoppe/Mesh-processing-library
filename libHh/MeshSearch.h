@@ -7,7 +7,7 @@
 
 #if 0
 {
-  const MeshSearch mesh_search(mesh, {true});
+  const MeshSearch mesh_search(mesh, {.allow_local_project = true});
   Face hint_f = nullptr;
   const auto [f, bary, clp, d2] = mesh_search.search(p, hint_f);
 }

@@ -54,7 +54,6 @@ struct DomainFace {
 };
 
 GMesh g_mesh;
-GMesh param_mesh;  // Map: sphere S -> mesh M (v -> v_domainp(v)).
 bool is_remeshed = false;
 
 constexpr Vector k_undefined_vector(-2.f, 0.f, 0.f);
@@ -614,6 +613,7 @@ void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& tr
 void create(bool b_triangulate) {
   assertx(gridn > 0);
   assertx(scheme != "");
+  assertx(g_mesh.empty());
   // For cube:
   //  'Q': perform interpolation over quadrilateral faces.
   //  '2T': split each quad into 4 triangles prior to interpolation.
@@ -689,9 +689,7 @@ void create(bool b_triangulate) {
   } else {
     assertnever("scheme not recognized: " + scheme);
   }
-  //
-  assertx(g_mesh.empty());
-  //
+
   HH_TIMER("_create");
   ConsoleProgress cprogress;
   HashFloat hashf;  // For -slowcornermerge of uv.
@@ -1045,19 +1043,27 @@ GMesh read_sphparam_mesh(const string& filename) {
   return sphparam_mesh;
 }
 
-void read_and_invert_param_mesh() {
-  if (!param_mesh.empty()) return;
-  param_mesh = read_sphparam_mesh(param_file);  // M -> S (v -> v_sph(v)).
+// Read param_file defining mesh M -> sphere S; invert this to obtain the map: sphere S -> mesh M (v -> v_domainp(v)).
+const GMesh& get_map_from_sphere_to_mesh() {
+  assertx(param_file != "");
+  static GMesh param_mesh;
+  static string loaded_param_file;
+  if (param_mesh.empty()) {
+    param_mesh = read_sphparam_mesh(param_file);  // M -> S (v -> v_sph(v)).
+    loaded_param_file = param_file;
 
-  // Invert the mapping to obtain S -> M (v -> v_domainp(v)).
-  for (Vertex v : param_mesh.vertices()) {
-    v_domainp(v) = param_mesh.point(v);
-    param_mesh.set_point(v, v_sph(v));
-    Vector& normal = v_normal(v);
-    if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
-    Vector& rgb = v_rgb(v);
-    if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
+    // Invert the mapping to obtain S -> M (v -> v_domainp(v)).
+    for (Vertex v : param_mesh.vertices()) {
+      v_domainp(v) = param_mesh.point(v);
+      param_mesh.set_point(v, v_sph(v));
+      Vector& normal = v_normal(v);
+      if (!parse_key_vec(param_mesh.get_string(v), "normal", normal)) normal = k_undefined_vector;
+      Vector& rgb = v_rgb(v);
+      if (!parse_key_vec(param_mesh.get_string(v), "rgb", rgb)) rgb = k_undefined_vector;
+    }
   }
+  assertx(param_file == loaded_param_file);
+  return param_mesh;
 }
 
 // A map is a gmerged mesh with vertex positions on domain, and sph strings for parameterization on sphere.
@@ -1103,7 +1109,7 @@ void do_sample_map(Args& args) {
   if (scheme == "") scheme = "domain";
   create(scheme != "domain");
 
-  const MeshSearch mesh_search(domain_mesh, {true});
+  const MeshSearch mesh_search(domain_mesh, {.allow_local_project = true});
   HH_TIMER("_resample0");
   ConsoleProgress cprogress;
   int nv = 0;
@@ -1187,7 +1193,7 @@ Uv interp_f_uv(const GMesh& mesh, Face f, const Bary& bary) {
 
 void internal_remesh() {
   if (is_remeshed) return;
-  read_and_invert_param_mesh();
+  const GMesh& param_mesh = get_map_from_sphere_to_mesh();
 
   if (g_mesh.empty()) {
     // Create domain grid mesh.
@@ -1287,18 +1293,18 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
       for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
-      pixel.head<3>() = narrow_convert<uint8_t>((p_m - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
+      pixel.head<3>() = convert<uint8_t>((p_m - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
       break;
     }
     case 'N': {
       Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
       if (0) project_to_cube(normal);  // An idea to improve compression quality; it does not help.
-      pixel.head<3>() = narrow_convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
+      pixel.head<3>() = convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
       break;
     }
     case 'C': {
       Vector rgb = interp_f_rgb(mesh, f, bary);
-      pixel.head<3>() = narrow_convert<uint8_t>(rgb * 255.f + .5f);
+      pixel.head<3>() = convert<uint8_t>(rgb * 255.f + .5f);
       break;
     }
     case 'T': {
@@ -1422,6 +1428,23 @@ void apply_feathering(Image& image) {
   }
 }
 
+// Define map: image I -> domain D  (v -> v_domainp(v)).
+GMesh get_map_from_image_to_domain() {
+  const int orig_gridn = std::exchange(gridn, 1);  // Create an untessellated domain mesh.
+  scheme = "domain";  // The choice does not matter because the domain is not tessellated.
+  create(true);
+  gridn = orig_gridn;
+
+  GMesh mesh_i;
+  mesh_i.copy(g_mesh);
+  for (Vertex v : mesh_i.vertices()) {
+    Vertex vv = g_mesh.id_vertex(mesh_i.vertex_id(v));
+    v_domainp(v) = g_mesh.point(vv);
+    mesh_i.set_point(v, concat(v_imageuv(vv), V(0.f)));
+  }
+  return mesh_i;
+}
+
 void do_write_texture(Args& args) {
   const string image_name = args.get_filename();
   assertx(signal_ != "");
@@ -1431,31 +1454,20 @@ void do_write_texture(Args& args) {
   assertx(g_mesh.empty());
 
   HH_TIMER("_write_texture");
+  const GMesh mesh_i = get_map_from_image_to_domain();        // Map: image I -> domain D  (v -> v_domainp(v)).
   const GMesh domain_mesh = read_sphparam_mesh(domain_file);  // Map: domain D -> sphere S (v -> v_sph(v)).
-
-  read_and_invert_param_mesh();
-  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
-  const Frame rotate_frame = get_rotate_frame();
-
-  GMesh mesh_i;  // Map: image I -> domain D  (v -> v_domainp(v)).
-  {
-    const int orig_gridn = std::exchange(gridn, 1);  // Create an untessellated domain mesh.
-    scheme = "domain";  // The choice does not matter because the domain is not tessellated.
-    create(true);
-    gridn = orig_gridn;
-    //
-    mesh_i.copy(g_mesh);
-    for (Vertex v : mesh_i.vertices()) {
-      Vertex vv = g_mesh.id_vertex(g_mesh.vertex_id(v));
-      v_domainp(v) = g_mesh.point(vv);
-      mesh_i.set_point(v, concat(v_imageuv(vv), V(0.f)));
-    }
-  }
+  const GMesh& param_mesh = get_map_from_sphere_to_mesh();    // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
   const MeshSearch::Options options_i{.bbox = Bbox(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f))};
-  const MeshSearch msearch_i(mesh_i, options_i);                // Map: image I -> domain D (v -> v_domainp(v)).
-  const MeshSearch msearch_d(domain_mesh, {true});              // Map: domain D -> sphere S (v -> v_sph(v)).
-  const MeshSearch msearch_s(param_mesh, {true, false, true});  // Map: sphere S -> mesh M (v -> v_domainp(v)).
+  const MeshSearch::Options options_d{.allow_local_project = true};
+  const MeshSearch::Options options_s{.allow_local_project = true, .allow_off_surface = true};
+
+  const MeshSearch msearch_i(mesh_i, options_i);       // Map: image I -> domain D (v -> v_domainp(v)).
+  const MeshSearch msearch_d(domain_mesh, options_d);  // Map: domain D -> sphere S (v -> v_sph(v)).
+  const MeshSearch msearch_s(param_mesh, options_s);   // Map: sphere S -> mesh M (v -> v_domainp(v)).
+
+  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
+  const Frame rotate_frame = get_rotate_frame();
 
   Image image(V(gridn, gridn));
   {
@@ -1498,9 +1510,11 @@ void do_write_texture(Args& args) {
   handle_zero_alpha_pixels_for_filled_faces(image);
   if (feather_texture) apply_feathering(image);
   image.write_file(image_name);
+  nooutput = true;
+
   if (!k_debug && !args.num()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
   // (Immediate exit loses running timers though.)
-  nooutput = true;
+
   // Reinitialize to allow more subsequent do_write_texture():
   signal_ = "";
   g_mesh.clear();
@@ -1539,17 +1553,17 @@ void do_write_primal_texture(Args& args) {
     switch (signal_[0]) {
       case 'G': {
         const Point& p = g_mesh.point(v);
-        pixel.head<3>() = narrow_convert<uint8_t>((p - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
+        pixel.head<3>() = convert<uint8_t>((p - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
         break;
       }
       case 'N': {
         const Vector normal = v_normal(v) * rotate_frame;
-        pixel.head<3>() = narrow_convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
+        pixel.head<3>() = convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
         break;
       }
       case 'C': {
         const Vector& rgb = v_rgb(v);
-        pixel.head<3>() = narrow_convert<uint8_t>(rgb * 255.f + .5f);
+        pixel.head<3>() = convert<uint8_t>(rgb * 255.f + .5f);
         break;
       }
       case 'T': assertnever("Unsupported");
@@ -1579,7 +1593,7 @@ void do_write_lonlat_texture(Args& args) {
   assertx(signal_ != "");
   assertx(g_mesh.empty());
   const Frame rotate_frame = get_rotate_frame();
-  read_and_invert_param_mesh();
+  const GMesh& param_mesh = get_map_from_sphere_to_mesh();
   const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
   const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .gridn_factor = 4.f});
 

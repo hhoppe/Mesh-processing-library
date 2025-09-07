@@ -164,7 +164,8 @@ void do_create(Args& args) {
   if (0) {
     fill(video, gcolor);  // slower
   } else {
-    parallel_for({uint64_t(video.ysize() * video.xsize()) * 4}, range(video.nframes()), [&](const int f) {
+    const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.ysize() * video.xsize()) * 4};
+    parallel_for(parallel_options, range(video.nframes()), [&](const int f) {
       MatrixView<Pixel> frame = video[f];
       fill(frame, gcolor);  // white by default
     });
@@ -1022,7 +1023,8 @@ void do_disassemble(Args& args) {
   string suffix = video.attrib().suffix;
   assertx(suffix != "");
   if (video.attrib().audio.size()) Warning("Duplicating audio");
-  parallel_for_coords({uint64_t(video.nframes() * product(tiledims)) * 4}, atiles, [&](const Vec2<int>& tyx) {
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes() * product(tiledims)) * 4};
+  parallel_for_coords(parallel_options, atiles, [&](const Vec2<int>& tyx) {
     Video nvideo(video.nframes(), tiledims);
     nvideo.attrib() = video.attrib();
     for_int(f, video.nframes()) for (const auto& yx : range(tiledims)) {
@@ -1041,7 +1043,8 @@ void do_gridcrop(Args& args) {
   int sx = args.get_int(), sy = args.get_int();
   assertx(sx >= 0 && sx <= video.xsize() && sy >= 0 && sy <= video.ysize());
   Matrix<Video> videos(ny, nx);
-  parallel_for_coords({uint64_t(video.nframes() * sy * sx) * 4}, videos.dims(), [&](const Vec2<int>& yx) {
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes() * sy * sx) * 4};
+  parallel_for_coords(parallel_options, videos.dims(), [&](const Vec2<int>& yx) {
     int vl = int((video.xsize() - sx) * float(yx[1]) / (nx - 1) + .5f);
     int vt = int((video.ysize() - sy) * float(yx[0]) / (ny - 1) + .5f);
     int vr = video.xsize() - vl - sx;

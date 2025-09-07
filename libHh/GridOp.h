@@ -157,8 +157,10 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
       if (0) {
         newgrid = grid.slice(dL[0], grid.dim(0) - dU[0]);
       } else {
-        const auto cycles_per_elem = uint64_t(product(newgrid.dims().template tail<D - 1>()));
-        parallel_for({cycles_per_elem}, range(newgrid.dim(0)), [&](const int d0) {  //
+        const ParallelOptions parallel_options{
+            .cycles_per_elem = uint64_t(product(newgrid.dims().template tail<D - 1>())),
+        };
+        parallel_for(parallel_options, range(newgrid.dim(0)), [&](const int d0) {  //
           newgrid[d0].assign(grid[d0 + dL[0]]);
         });
       }
@@ -589,7 +591,7 @@ template <int D, typename T>
 void scale_filter_nearest_aux(Specialize<2>, CGridView<D, T> grid, GridView<D, T> ngrid,
                               const Vec<Array<int>, D>& maps) {
   const Vec<int, D> ndims = ngrid.dims();
-  parallel_for({uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
+  parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
     int yy = maps[0][y];
     for_int(x, ndims[1]) ngrid(y, x) = grid(yy, maps[1][x]);
   });
@@ -599,7 +601,7 @@ template <int D, typename T>
 void scale_filter_nearest_aux(Specialize<3>, CGridView<D, T> grid, GridView<D, T> ngrid,
                               const Vec<Array<int>, D>& maps) {
   const Vec<int, D> ndims = ngrid.dims();
-  parallel_for({uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
+  parallel_for({.cycles_per_elem = uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
     int zz = maps[0][z];
     for_int(y, ndims[1]) {
       int yy = maps[1][y];

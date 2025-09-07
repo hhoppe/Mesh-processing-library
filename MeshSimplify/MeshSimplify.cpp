@@ -58,11 +58,16 @@ namespace {
 
 // ***
 
+#if 1
+#define SSTATV2(Svar, v) dummy_use(v)
+#else
+// Allocating a Stat with is_static=true is not thread-safe, i.e. within a parallel_for().
 #define SSTATV2(Svar, v)                             \
   do {                                               \
     static Stat HH_ID(Svar)(#Svar, verb >= 2, true); \
     if (verb >= 2) HH_ID(Svar).enter(v);             \
   } while (false)
+#endif
 
 // *** MISC
 
@@ -4292,7 +4297,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       }
       assertx(nn.va.num() - closed == mesh.degree(vs));
     }
-    {
+    if (!minqem) {  // 2025-09-26 Disabled otherwise due to "if (minqem) return true;" shortcut in gather_nn().
       bool closed = nn.va[0] == nn.va.last();
       for_int(i, nn.va.num() - closed) {
         bool found = nn.ar_vdisc.contains(i);

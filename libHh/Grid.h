@@ -242,14 +242,16 @@ template <int D, typename T> class GridView : public CGridView<D, T> {
   void reverse_y() {
     static_assert(D == 2);
     const int ny = this->ysize();
-    parallel_for({uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
+    parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
       swap_ranges((*this)[y], (*this)[ny - 1 - y]);
     });
   }
   void reverse_x() {
     static_assert(D == 2);
     const int ny = this->ysize();
-    parallel_for({uint64_t(this->xsize()) * 2}, range(ny), [&](const int y) { reverse((*this)[y]); });
+    parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny), [&](const int y) {  //
+      reverse((*this)[y]);
+    });
   }
 
  protected:

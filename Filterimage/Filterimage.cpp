@@ -960,7 +960,7 @@ void do_gridcrop(Args& args) {
   int sx = args.get_int(), sy = args.get_int();
   assertx(sx >= 0 && sx <= image.xsize() && sy >= 0 && sy <= image.ysize());
   Matrix<Image> images(V(ny, nx));
-  parallel_for_coords({uint64_t(sy * sx) * 4}, images.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = uint64_t(sy * sx) * 4}, images.dims(), [&](const Vec2<int>& yx) {
     int vl = int((image.xsize() - sx) * float(yx[1]) / (images.dims()[1] - 1) + .5f);
     int vt = int((image.ysize() - sy) * float(yx[0]) / (images.dims()[0] - 1) + .5f);
     int vr = image.xsize() - vl - sx;
@@ -1001,7 +1001,7 @@ void do_tile(Args& args) {
   const Vec2<int> atiles(ny, nx);
   Image timage(image);
   image.init(timage.dims() * atiles);
-  parallel_for_coords({uint64_t(product(timage.dims())) * 4}, atiles, [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = uint64_t(product(timage.dims())) * 4}, atiles, [&](const Vec2<int>& yx) {
     for (const auto& yxd : range(timage.dims())) image[yx * timage.dims() + yxd] = timage[yxd];
   });
 }
@@ -1824,7 +1824,7 @@ void do_homogenize(Args& args) {
       for (const auto& yx : range(image.dims()))
         for_int(ky, n) for_int(kx, n) ar[ky][kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * image[yx][z];
       ar[0][0] = 0.0;  // do not project out the DC term
-      parallel_for_coords({uint64_t(n * n) * 4}, image.dims(), [&](const Vec2<int>& yx) {
+      parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 4}, image.dims(), [&](const Vec2<int>& yx) {
         double oldval = image[yx][z];
         double fitval = 0.;
         for_int(ky, n) for_int(kx, n) fitval += ar[ky][kx] * table[0][ky][yx[0]] * table[1][kx][yx[1]];
@@ -1875,7 +1875,7 @@ void do_homogenize(Args& args) {
       }
       Array<double> arn = mat_mul(invbb, bx);  // (B * B^T)^-1 * B * x
       double dc = bx[0] / bb[0][0];            // DC term
-      parallel_for_coords({uint64_t(n * n) * 3}, image.dims(), [&](const Vec2<int>& yx) {
+      parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 3}, image.dims(), [&](const Vec2<int>& yx) {
         if (!image[yx][3] && !modify_unselected_too) return;
         double v = image[yx][z];
         for_int(ky, n) for_int(kx, n) v -= table[0][ky][yx[0]] * table[1][kx][yx[1]] * arn[ky * n + kx];
@@ -3102,7 +3102,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
   }
   //
   if (0) {  // slow implementation
-    parallel_for_coords({uint64_t(kn * kn) * 10}, mat_C.dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = uint64_t(kn * kn) * 10}, mat_C.dims(), [&](const Vec2<int>& yx) {
       const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;
       Vector4 sum{};
       for_int(iy, kn) for_int(ix, kn) {
@@ -3113,13 +3113,13 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
   } else {  // faster: first downsample horizontally, then vertically
     // Possible optimization: lift boundary testing outside of loops.
     Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // non-square
-    parallel_for_coords({uint64_t(kn) * 8}, mtmp.dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = uint64_t(kn) * 8}, mtmp.dims(), [&](const Vec2<int>& yx) {
       int xf0 = yx[1] * 2 - kn / 2 + 1;
       Vector4 sum{};
       for_int(ix, kn) sum += fkernel[ix] * mat_F.inside(V(yx[0], xf0 + ix), k_reflected2);
       mtmp[yx] = sum;
     });
-    parallel_for_coords({uint64_t(kn) * 8}, mat_C.dims(), [&](const Vec2<int>& yx) {
+    parallel_for_coords({.cycles_per_elem = uint64_t(kn) * 8}, mat_C.dims(), [&](const Vec2<int>& yx) {
       int yf0 = yx[0] * 2 - kn / 2 + 1;
       Vector4 sum{};
       for_int(iy, kn) sum += fkernel[iy] * mtmp.inside(V(yf0 + iy, yx[1]), k_reflected2);
@@ -3147,7 +3147,7 @@ auto upsample_image(CMatrixView<Vector4> mat_C) {
   fkernels[0] = fkernel;
   fkernels[1] = reverse(clone(fkernel));
   // Possible optimization: lift boundary testing outside of loops.
-  parallel_for_coords({uint64_t(kn * kn) * 10}, mat_F.dims(), [&](const Vec2<int>& yx) {
+  parallel_for_coords({.cycles_per_elem = uint64_t(kn * kn) * 10}, mat_F.dims(), [&](const Vec2<int>& yx) {
     const Vec2<int> yxc = (yx + 1) / 2, yxodd = (yx + 1) - (yxc * 2), yxc0 = yxc - kn / 2;
     Vector4 sum{};
     for_int(iy, kn) for_int(ix, kn) {
@@ -3196,7 +3196,8 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
     if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
   }
   const bool optimized = true;
-  parallel_for({uint64_t(mat_s.xsize() * 2 * window_radius * 20)}, range(mat_s.ysize()), [&](const int y) {
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(mat_s.xsize() * 2 * window_radius * 20)};
+  parallel_for(parallel_options, range(mat_s.ysize()), [&](const int y) {
     Array<Vector4> fscolsum(mat_s.xsize()), fscolsum2(mat_s.xsize());
     Array<Vector4> fccolsum(mat_c.xsize()), fccolsum2(mat_c.xsize());
     if (optimized) {
@@ -3285,7 +3286,8 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   assertw(use_lab);
   const int NCH = 3;
   for_int(ch, NCH) {
-    parallel_for_coords({square(uint64_t(window_diam)) * 20}, mat_s.dims(), [&](const Vec2<int>& yx) {
+    const ParallelOptions parallel_options{.cycles_per_elem = square(uint64_t(window_diam)) * 20};
+    parallel_for_coords(parallel_options, mat_s.dims(), [&](const Vec2<int>& yx) {
       ar.init(0);                      // (initially unsorted) pdf of color image window
       float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
       float scenterrank = 0.f;         // center pixel rank in structure image

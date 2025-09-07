@@ -492,12 +492,6 @@ auto convert(const Range& c) {
   return map(c, [](const Value& e) { return static_cast<U>(e); });
 }
 
-// Convert all elements of the container with runtime checking, e.g. narrow_convert<int>(V(1.f, 2.f)) == V(1, 2).
-template <typename U, typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
-auto narrow_convert(const Range& c) {
-  return map(c, [](const Value& e) { return narrow_cast<U>(e); });
-}
-
 namespace details {
 
 template <typename Iterator, typename Func> struct TransformedIterator {

@@ -38,7 +38,7 @@ void setup_rhs(CGridView<D, T> grid_orig, Multigrid<D, T, Periodic, Metric>& mul
   assertx(same_size(grid_orig, grid_rhs));
   const Vec<int, D> dims = grid_rhs.dims();
   Periodic periodic;
-  parallel_for_coords({D * 25}, dims, [&](const Vec<int, D>& u) {
+  parallel_for_coords({.cycles_per_elem = D * 25}, dims, [&](const Vec<int, D>& u) {
     T vrhs;
     my_zero(vrhs);
     for_int(c, D) {
@@ -63,7 +63,7 @@ void setup_rhs2(CGridView<2, T> grid_orig, GridView<2, T> grid_rhs, float gradie
   // HH_TIMER("_setup_rhs2");
   assertx(same_size(grid_orig, grid_rhs));
   int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
-  parallel_for({uint64_t(nx) * 10}, range(ny), [&](const int y) {
+  parallel_for({.cycles_per_elem = uint64_t(nx) * 10}, range(ny), [&](const int y) {
     for_int(x, nx) {
       T vrhs = -screening_weight * grid_orig[y][x];
       if (y > 0) vrhs += (grid_orig[y - 1][x] - grid_orig[y][x]) * gradient_sharpening;

@@ -51,23 +51,23 @@ class Map {
   Map(std::initializer_list<std::pair<const Key, Value>> list) : _map(std::move(list)) {}
   void clear() { _map.clear(); }
   void enter(const Key& key, const Value& value) {  // Key must be new!
-    auto [_, is_new] = _map.emplace(key, value);
+    const auto [_, is_new] = _map.emplace(key, value);
     ASSERTX(is_new);
   }
   void enter(Key&& key, const Value& value) {
-    auto [_, is_new] = _map.emplace(std::move(key), value);
+    const auto [_, is_new] = _map.emplace(std::move(key), value);
     ASSERTX(is_new);
   }
   void enter(const Key& key, Value&& value) {
-    auto [_, is_new] = _map.emplace(key, std::move(value));
+    const auto [_, is_new] = _map.emplace(key, std::move(value));
     ASSERTX(is_new);
   }
   void enter(Key&& key, Value&& value) {
-    auto [_, is_new] = _map.emplace(std::move(key), std::move(value));
+    const auto [_, is_new] = _map.emplace(std::move(key), std::move(value));
     ASSERTX(is_new);
   }
   Value& enter(const Key& key, const Value& value, bool& is_new) {  // Does not modify element if it already exists.
-    auto [it, is_new_] = _map.emplace(key, value);
+    const auto [it, is_new_] = _map.emplace(key, value);
     is_new = is_new_;
     return it->second;
   }

@@ -331,7 +331,7 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
       poly[3] = pp;
     }
     auto [d0, bary0, clp0] = project_point_triangle(p, poly[0], poly[1], poly[2]);
-    auto [d1, bary1, clp1] = project_point_triangle(p, poly[0], poly[2], poly[3]);
+    const auto [d1, bary1, clp1] = project_point_triangle(p, poly[0], poly[2], poly[3]);
     if (d1 < d0) {
       d0 = d1;
       clp0 = clp1;

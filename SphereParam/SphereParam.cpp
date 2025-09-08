@@ -336,7 +336,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
         // const bool near_a_cut = any_of(sph, [](float v) { return abs(v) < 1e-5f; });
         const bool near_a_cut = (abs(sph[1]) < 1e-5f || abs(sph[2]) < 1e-5f) && sph[0] > -1e-5f;
         if (!near_a_cut) {
-          auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
+          const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
           hint_f = f;
           const Vec3<Uv> uvs = get_uvs(f);
           const Uv uv = snap_uv(interp(uvs, bary));
@@ -351,7 +351,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             Face gf = gmesh.corner_face(c);
             const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), v_sph);
             const Point sph_face_center = normalized_double(mean(sphs));
-            auto [f, bary] = mesh_search.search_on_sphere(sph_face_center, hint_f, &sph);
+            const auto [f, bary] = mesh_search.search_on_sphere(sph_face_center, hint_f, &sph);
             hint_f = f;
             const Vec3<Uv> uvs = get_uvs(f);
             const Uv uv = snap_uv(interp(uvs, bary));

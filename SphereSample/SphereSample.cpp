@@ -1116,7 +1116,7 @@ void do_sample_map(Args& args) {
   Face hint_f = nullptr;
   for (Vertex v : g_mesh.ordered_vertices()) {
     if ((nv++ & 0xff) == 0) cprogress.update(float(nv) / g_mesh.num_vertices());
-    auto [domain_f, bary, unused_clp, d2] = mesh_search.search(v_domainp(v), hint_f);
+    const auto [domain_f, bary, unused_clp, d2] = mesh_search.search(v_domainp(v), hint_f);
     hint_f = domain_f;
     assertx(d2 < 1e-12f);
     Vector sum{};
@@ -1211,7 +1211,7 @@ void internal_remesh() {
       const Point& sph = g_mesh.point(v);  // Point on sphere.
       v_sph(v) = sph;
       assertx(is_unit(sph));
-      auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
+      const auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
       hint_f = param_f;
       const Vec3<Point> triangle = map(g_mesh.triangle_vertices(param_f), v_domainp);
       const Point newp = interp(triangle, bary);
@@ -1447,10 +1447,7 @@ GMesh get_map_from_image_to_domain() {
 
 void do_write_texture(Args& args) {
   const string image_name = args.get_filename();
-  assertx(signal_ != "");
-  assertx(domain_file != "");
-  assertx(param_file != "");
-  assertx(gridn);
+  assertx(signal_ != ""), assertx(domain_file != ""), assertx(param_file != ""), assertx(gridn);
   assertx(g_mesh.empty());
 
   HH_TIMER("_write_texture");
@@ -1482,7 +1479,7 @@ void do_write_texture(Args& args) {
           Point p_i, p_d, p_s;
           p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
           {
-            auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
+            const auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
             if (d2 > 0.f) {
               pixel = Pixel(255, 255, 255, 255);
               continue;
@@ -1491,7 +1488,7 @@ void do_write_texture(Args& args) {
             p_d = interp(triangle, bary);
           }
           {
-            auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);
+            const auto [f, bary, unused_clp, d2] = msearch_d.search(p_d, hint_f_d);
             hint_f_d = f;
             if (d2 >= 1e-12f) assertnever(SSHOW(p_i, p_d, f, bary, unused_clp, d2));
             const Vec3<Vertex> face_vertices = domain_mesh.triangle_vertices(f);
@@ -1499,7 +1496,7 @@ void do_write_texture(Args& args) {
             for_int(i, 3) sum += bary[i] * v_sph(face_vertices[i]);
             p_s = normalized(sum);
           }
-          auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
+          const auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
           hint_f_s = f;
           pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
         }
@@ -1609,7 +1606,7 @@ void do_write_lonlat_texture(Args& args) {
         Pixel& pixel = image[yy][x];
         const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());  // Dual sampling.
         const Point sph = sph_from_lonlat(lonlat);
-        auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
+        const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
         hint_f = f;
         pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
       }
@@ -1755,7 +1752,7 @@ void do_create_lonlat_checker(Args& args) {
           const Point sph = sph_from_lonlat(lonlat);
           // Because `g_mesh` has disjoint components, we get warning "assertw(f2)" in gnomonic_search_bary() for
           // a tiny fraction of pixels.
-          auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
+          const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
           hint_f = f;
           const Vec3<Vertex> va = g_mesh.triangle_vertices(f);
           Uv uv{};

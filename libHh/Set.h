@@ -50,21 +50,21 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   Set(std::initializer_list<T> list) : _set(std::move(list)) {}
   void clear() { _set.clear(); }
   void enter(const T& e) {  // Element e must be new.
-    auto [_, is_new] = _set.insert(e);
+    const auto [_, is_new] = _set.insert(e);
     ASSERTX(is_new);
   }
   void enter(T&& e) {  // Element e must be new.
-    auto [_, is_new] = _set.insert(std::move(e));
+    const auto [_, is_new] = _set.insert(std::move(e));
     ASSERTX(is_new);
   }
   const T& enter(const T& e, bool& is_new) {
-    auto [it, is_new_] = _set.insert(e);
+    const auto [it, is_new_] = _set.insert(e);
     is_new = is_new_;
     return *it;
   }
   // Omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new.
   bool add(const T& e) {  // Return: is_new.
-    auto [_, is_new] = _set.insert(e);
+    const auto [_, is_new] = _set.insert(e);
     return is_new;
   }
   // Omit "bool add(T&& e)" because e could be lost if !is_new.

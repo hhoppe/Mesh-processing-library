@@ -65,13 +65,13 @@ void do_ints() {
   SHOW("symclosure:");
   show_graph(g, true);
   {
-    auto [gmst, is_connected] = graph_mst(g, fdist());
+    const auto [gmst, is_connected] = graph_mst(g, fdist());
     assertx(is_connected);
     show_graph(gmst);
   }
   g.enter_undirected(5, 6);
   {
-    auto [gmst, is_connected] = graph_mst(g, fdist());
+    const auto [gmst, is_connected] = graph_mst(g, fdist());
     assertx(is_connected);
     show_graph(gmst);
     g.enter(8);
@@ -82,8 +82,10 @@ void do_ints() {
     SHOW(graph_num_components(g));
     g.enter_undirected(9, 7);
     SHOW(graph_num_components(g));
+  }
+  {
     // EMST of 7 points 0..6 on the Real line (easy)
-    gmst = graph_mst(7, fidist());
+    auto gmst = graph_mst(7, fidist());
     show_graph(gmst);
   }
 }

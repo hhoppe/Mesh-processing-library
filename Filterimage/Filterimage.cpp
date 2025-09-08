@@ -1538,7 +1538,7 @@ void do_object_to_tangent_normals(Args& args) {
         Pixel& pixel = image[yy][x];
         Vector object_space_detail_normal = normalized(convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f);
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
-        auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
+        const auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
         if (!f || d2 >= square(k_max_dis)) {
           pixel = k_color_zero_alpha;  // To indicate undefined color.
           continue;
@@ -1613,7 +1613,7 @@ void do_tangent_to_object_normals(Args& args) {
         if (0) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
         if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
-        auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
+        const auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
         if (!f || d2 >= square(k_max_dis)) {
           pixel = k_color_zero_alpha;  // To indicate undefined color.
           continue;

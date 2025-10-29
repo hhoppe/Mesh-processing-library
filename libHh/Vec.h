@@ -201,8 +201,12 @@ template <int D> details::Vec_range<D> range(const Vec<int, D>& uU);
 template <int D> details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<int, D>& uU);
 
 namespace details {
-template <typename T, typename... A> struct concat_n { static constexpr int value = T::Num + concat_n<A...>::value; };
-template <typename T> struct concat_n<T> { static constexpr int value = T::Num; };
+template <typename T, typename... A> struct concat_n {
+  static constexpr int value = T::Num + concat_n<A...>::value;
+};
+template <typename T> struct concat_n<T> {
+  static constexpr int value = T::Num;
+};
 template <typename T, int n1, int n2, size_t... Is>
 constexpr Vec<T, (n1 + n2)> concat_aux(const Vec<T, n1>& a1, const Vec<T, n2>& a2, std::index_sequence<Is...>) {
   return Vec<T, n1 + n2>((narrow_cast<int>(Is) < n1 ? a1[narrow_cast<int>(Is)] : a2[narrow_cast<int>(Is) - n1])...);
@@ -585,7 +589,9 @@ namespace std {
 
 template <typename T, int n> struct tuple_size<::hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
 
-template <std::size_t Index, typename T, int n> struct tuple_element<Index, ::hh::Vec<T, n>> { using type = T; };
+template <std::size_t Index, typename T, int n> struct tuple_element<Index, ::hh::Vec<T, n>> {
+  using type = T;
+};
 
 }  // namespace std
 

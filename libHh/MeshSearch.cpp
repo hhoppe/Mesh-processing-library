@@ -208,6 +208,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
 
 MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hint_f, const Point* final_p) const {
   auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
+  assertx(f);
   gnomonic_search_bary(p, _mesh, f, bary);  // Modifies f and bary.
   if (final_p) {
     // Starting from the obtained face f, repeat the search but (1) search instead for final_p and (2) avoid

@@ -180,7 +180,9 @@ using ushort = unsigned short;
 // *** Forward declaration of implementation details.
 
 namespace details {
-template <typename T> struct identity { using type = T; };
+template <typename T> struct identity {
+  using type = T;
+};
 template <typename T> struct sum_type;
 template <typename T> class Range;
 }  // namespace details
@@ -317,7 +319,9 @@ template <typename A, typename B> std::ostream& operator<<(std::ostream& os, con
 }
 
 // By default, assume that types do not end their stream output with a newline character.
-template <typename T> struct has_ostream_eol_aux { static constexpr bool value = false; };
+template <typename T> struct has_ostream_eol_aux {
+  static constexpr bool value = false;
+};
 
 // Declares that the specified type ends its stream output with a newline character; must be placed in namespace hh.
 #define HH_DECLARE_OSTREAM_EOL(...)         \

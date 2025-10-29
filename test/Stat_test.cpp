@@ -45,7 +45,9 @@ int main() {
     for (float v : values) SHOW(v);
     HH_RSTAT(Svalues, values);
   }
-  { HH_RSTAT(Svalues2, V(2.f, 4.f, 4.f, 5.f, 4.f)); }
+  {
+    HH_RSTAT(Svalues2, V(2.f, 4.f, 4.f, 5.f, 4.f));
+  }
   {
     SHOW(Stat(V(1., 4., 5., 6.)).short_string());
     SHOW(Stat(V(1., 4., 5., 6.)).sdv());

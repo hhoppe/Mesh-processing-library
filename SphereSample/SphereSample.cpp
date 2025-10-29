@@ -38,12 +38,16 @@ string domain_file;              // Filename for domain_mesh (D -> S).
 string param_file;               // Filename for sphparam mesh (M -> S) which is later inverted to param_mesh (S -> M).
 string rotate_s3d;               // Filename for s3d file.
 Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
-string signal_;                  // Surface signal ("G", "N", "C", "T") (for geometry, normal, color, texture).
+string signal_;                  // Surface signal ("G", "N", "C", "T", "V").
+int voxel_grid_resolution = 50;  // 3D checkboard grid resolution for "V" signal.
+int supersample = 1;             // 1 signifies no supersampling.
 bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
 Matrix<Vector4> texture_image_vector4;
 int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
+
+const auto k_downsampling_filter = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
 
 struct DomainFace {
   Polygon poly;          // Points on regular polyhedron in 3D.
@@ -504,9 +508,8 @@ struct S_TriangleSpheremap {
   TriangleSpheremap map;
 };
 
-#define E(x) \
-  { #x, map_##x }
 const Array<S_TriangleSpheremap> k_triangle_maps = {
+#define E(x) {#x, map_##x}
     E(sphere), E(2slerp0), E(2slerp1), E(2slerp2), E(2slerps), E(arvo0),
     E(arvo1),  E(arvo2),   E(arvos),   E(buss),    E(area),    E(trisub),
 #undef E
@@ -1271,7 +1274,7 @@ void do_remesh() {
 
 void do_signal(Args& args) {
   signal_ = args.get_string();
-  assertx(contains(V<string>("G", "N", "C", "T"), signal_));
+  assertx(contains(V<string>("G", "N", "C", "T", "V"), signal_));
 }
 
 void do_texture_file(Args& args) {
@@ -1315,6 +1318,15 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       const string filtername = 1 ? "keys" : "triangle";
       const auto filterbs = twice(FilterBnd(Filter::get(filtername), Bndrule::reflected));
       pixel = sample_domain(texture_image_vector4, yx, filterbs).pixel();
+      break;
+    }
+    case 'V': {
+      const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
+      Point p_m{};
+      for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
+      const Vec3<int> grid_index = convert<int>((p_m - bbox[0]) / (bbox[1] - bbox[0]) * float(voxel_grid_resolution));
+      const bool is_on = bool(sum(grid_index) % 2);
+      pixel = is_on ? Pixel(250, 250, 250) : Pixel(30, 30, 30);
       break;
     }
     default: assertnever("signal '" + signal_ + "' not recognized");
@@ -1445,6 +1457,18 @@ GMesh get_map_from_image_to_domain() {
   return mesh_i;
 }
 
+Point get_surface_point(const GMesh& param_mesh, Face f, const Bary& bary) {
+  const Vec3<Point> triangle = map(param_mesh.triangle_vertices(f), v_domainp);
+  return interp(triangle, bary);
+}
+
+void apply_anisotropic_filtering(Image& image, Matrix<Point>& image_surface_points) {
+  assertx(image.dims() == image_surface_points.dims());
+  // At each image pixel, we compute a finite-difference estimate the Jacobian from the image to the surface.
+  // From the Jacobian, we compute the principal directions and singular values.
+  // We compute the anisotropy of the map as the ratio of the singular values.
+}
+
 void do_write_texture(Args& args) {
   const string image_name = args.get_filename();
   assertx(signal_ != ""), assertx(domain_file != ""), assertx(param_file != ""), assertx(gridn);
@@ -1455,7 +1479,8 @@ void do_write_texture(Args& args) {
   const GMesh domain_mesh = read_sphparam_mesh(domain_file);  // Map: domain D -> sphere S (v -> v_sph(v)).
   const GMesh& param_mesh = get_map_from_sphere_to_mesh();    // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
-  const MeshSearch::Options options_i{.bbox = Bbox(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f))};
+  const Bbox bbox_full_image(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 0.f));  // (For cube and tetra domains.)
+  const MeshSearch::Options options_i{.bbox = bbox_full_image};
   const MeshSearch::Options options_d{.allow_local_project = true};
   const MeshSearch::Options options_s{.allow_local_project = true, .allow_off_surface = true};
 
@@ -1463,10 +1488,13 @@ void do_write_texture(Args& args) {
   const MeshSearch msearch_d(domain_mesh, options_d);  // Map: domain D -> sphere S (v -> v_sph(v)).
   const MeshSearch msearch_s(param_mesh, options_s);   // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
-  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
+  const Bbox tight_bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
+  const Bbox bbox = signal_ == "V" ? tight_bbox.enclosing_hypercube() : tight_bbox;
   const Frame rotate_frame = get_rotate_frame();
 
-  Image image(V(gridn, gridn));
+  Image image(twice(gridn * supersample));
+  const bool anisotropic_filtering = false;
+  Matrix<Point> image_surface_points(anisotropic_filtering ? image.dims() : V(0, 0));
   {
     HH_TIMER("_write_pixels");
     parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
@@ -1499,12 +1527,15 @@ void do_write_texture(Args& args) {
           const auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
           hint_f_s = f;
           pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
+          if (anisotropic_filtering) image_surface_points[yy][x] = get_surface_point(param_mesh, f, bary);
         }
       }
     });
   }
 
   handle_zero_alpha_pixels_for_filled_faces(image);
+  if (anisotropic_filtering) apply_anisotropic_filtering(image, image_surface_points);
+  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_filter);
   if (feather_texture) apply_feathering(image);
   image.write_file(image_name);
   nooutput = true;
@@ -1595,7 +1626,7 @@ void do_write_lonlat_texture(Args& args) {
   const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .gridn_factor = 4.f});
 
   const int imagesize = gridn;
-  Image image(V(imagesize, imagesize));
+  Image image(twice(imagesize * supersample));
 
   parallel_for_chunk(range(image.ysize()), [&](auto subrange) {
     Face hint_f = nullptr;
@@ -1614,6 +1645,7 @@ void do_write_lonlat_texture(Args& args) {
   });
 
   handle_zero_alpha_pixels_for_filled_faces(image);
+  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_filter);
   image.write_file(image_name);
   nooutput = true;
 }
@@ -1829,8 +1861,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(keys, "comma_separated_keys : fields to write in output mesh (default: sph)");
   HH_ARGSC("   possible keys: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");
   HH_ARGSD(remesh, ": resample mesh and triangulate");
-  HH_ARGSD(signal, "ch : select G=geometry, N=normal, C=color, T=texture");
+  HH_ARGSD(signal, "ch : select G=geometry, N=normal, C=color, T=texture, V=voxel");
   HH_ARGSD(texture_file, "imagefile : source content for 'T' signal");
+  HH_ARGSP(voxel_grid_resolution, "n : resolution of 3D checkboard grid for 'V' signal");
+  HH_ARGSP(supersample, "n : sample n * n times for each output texel");
   HH_ARGSP(feather_texture, "bool : blend across texture border discontinuities");
   HH_ARGSD(write_texture, "image : resample signal as texturemap (dual sampling)");
   HH_ARGSD(write_primal_texture, "image : resample signal as texturemap (primal sampling)");

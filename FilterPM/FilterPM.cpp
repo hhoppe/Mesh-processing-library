@@ -610,7 +610,7 @@ void do_compression() {
     }
     showf("Avg |wad| = %.2f\n", float(nwads) / nvsplits);
     showf("bits_flclw: %.1f\n", bits_flclw / nvsplits);
-    { de_dflclw.analyze("de_dflclw"); }
+    de_dflclw.analyze("de_dflclw");
     if (verb >= 2) showf("bits_vs_index: %.1f\n", bits_vs_index / nvsplits);
     enc_vlr_offset.print_top_entries("vlr_offset", 5, print_int);
     enc_corners_ii_matp.print_top_entries("corners_ii_matp", verb >= 2 ? 20 : 5, print_int);
@@ -1574,8 +1574,7 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   if (!nooutput) pmesh.write(std::cout);
   if (filename == "-")  // Read entire input stream to avoid broken pipe.
-    while (pmrs->next_vsplit())
-      ;
+    while (pmrs->next_vsplit());
   pmi = nullptr;
   pmrs = nullptr;
   return 0;

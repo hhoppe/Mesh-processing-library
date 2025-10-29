@@ -6,8 +6,10 @@
 
 ifeq ($(msvc),2022)
 
-  msvcbuild = 14.40.33807
-  windowskit = 10.0.22621.0
+  # msvcbuild = 14.40.33807
+  msvcbuild = 14.44.35207
+  # windowskit = 10.0.22621.0
+  windowskit = 10.0.26100.0
   export INCLUDE := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;
   $(call prepend_PATH,c:/WINDOWS/Microsoft.NET/Framework64/v4.0.30319)
   $(call prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/$(windowskit)/x64)

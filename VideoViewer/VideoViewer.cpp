@@ -2596,10 +2596,9 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
               if (!yxi.in_range(g_frame_dims)) {
                 s += "outside image bounds";
               } else {
-                Pixel pixel = get_frame_pixel(yxi);
-                Vec4<int> p = convert<int>(pixel);
-                s += sform("RGB:(%d, %d, %d, %d), HTML:(#%02X%02X%02X%02X)",  //
-                           p[0], p[1], p[2], p[3], p[0], p[1], p[2], p[3]);
+                const Pixel pixel = get_frame_pixel(yxi);
+                s += sform("RGB:(%u, %u, %u, %u), HTML:(#%02X%02X%02X%02X)",  //
+                           pixel[0], pixel[1], pixel[2], pixel[3], pixel[0], pixel[1], pixel[2], pixel[3]);
               }
               if (!is_fullscreen()) {
                 set_window_title(s);

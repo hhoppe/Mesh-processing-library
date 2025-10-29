@@ -45,7 +45,7 @@ class Vector4i {
 #else
     __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pixel));
     // Same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pixel.data())));
-    _r = _mm_cvtepu8_epi32(in);          // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
+    _r = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
 #endif
   }
   Pixel pixel() const {

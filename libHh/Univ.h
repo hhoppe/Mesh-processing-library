@@ -19,8 +19,8 @@ static_assert(sizeof(Univ) >= sizeof(float));
 template <typename T> struct Conv;
 
 template <typename T> struct Conv<T*> {
-  static Univ e(T* v) { return Univ(v); }                  // encode
-  static T* d(Univ v) { return reinterpret_cast<T*>(v); }  // decode
+  static Univ e(T* v) { return Univ(const_cast<std::remove_const_t<T>*>(v)); }  // Encode.
+  static T* d(Univ v) { return reinterpret_cast<T*>(v); }                       // Decode.
 };
 
 template <> struct Conv<int> {

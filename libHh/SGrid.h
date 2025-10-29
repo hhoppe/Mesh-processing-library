@@ -15,8 +15,12 @@ template <typename T, int d0, int... od> struct SGrid_sslice;
 template <typename T, int d0, int d1, int... od> struct SGrid_sslice<T, d0, d1, od...> {
   using type = Vec<typename SGrid_sslice<T, d1, od...>::type, d1>;
 };
-template <typename T, int d0, int d1> struct SGrid_sslice<T, d0, d1> { using type = Vec<T, d1>; };
-template <typename T, int d0> struct SGrid_sslice<T, d0> { using type = T; };
+template <typename T, int d0, int d1> struct SGrid_sslice<T, d0, d1> {
+  using type = Vec<T, d1>;
+};
+template <typename T, int d0> struct SGrid_sslice<T, d0> {
+  using type = T;
+};
 }  // namespace details
 
 // Self-contained fixed-size multidimensional grid with elements of type T.

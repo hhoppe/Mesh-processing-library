@@ -1007,7 +1007,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(!isr || (attrib_ok(_wedges[wvrfr].attrib), true));
   // Deal with ancestry
   if (ancestry) apply_vsplit_ancestry(ancestry, vs, isr, onumwedges, code, wvlfl, wvrfr, wvsfl, wvsfr, wvtfl, wvtfr);
-    // Final check.
+  // Final check.
 #if defined(HH_DEBUG)
   {
     int wvsflo = flccw == k_undefined ? k_undefined : get_wvf(vs, flccw);

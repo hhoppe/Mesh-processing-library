@@ -163,7 +163,9 @@ void Mklib::volume_ringU(int n, float r1) {
     mk_save;
     mk.scale(r1, r1, 1);
     mk.begin_force_flip(true);
-    { tubeU(n); }
+    {
+      tubeU(n);
+    }
     mk.end_force_flip();
   }
 }

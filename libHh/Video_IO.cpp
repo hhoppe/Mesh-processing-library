@@ -470,8 +470,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
     {
       _impl_nv12 = _rvideo._use_nv12;
       if (1 || !IsWindows8OrGreater())
-        _impl_nv12 = true;  // It may be ~3.5x faster on Windows 7
-                            // Actually it is still 5x faster on Windows 10
+        _impl_nv12 = true;  // It may be ~3.5x faster on Windows 7.  Actually it is still 5x faster on Windows 10.
     }
     {
       com_ptr<IMFMediaType> pType;

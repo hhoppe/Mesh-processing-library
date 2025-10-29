@@ -44,7 +44,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   void union_with(const PointD& pp) {
     auto& self = *this;
     for_int(c, dim) {
-      T v = pp[c];
+      const T v = pp[c];
       if (v < self[0][c]) self[0][c] = v;
       if (v > self[1][c]) self[1][c] = v;
     }
@@ -68,15 +68,13 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 
   bool overlap(const type& bbox) const {
-    auto& self = *this;
-    for_int(c, dim) {
-      if (bbox[0][c] > self[1][c] || bbox[1][c] < self[0][c]) return false;
-    }
+    const auto& self = *this;
+    for_int(c, dim) if (bbox[0][c] > self[1][c] || bbox[1][c] < self[0][c]) return false;
     return true;
   }
 
   T max_side() const {
-    auto& self = *this;
+    const auto& self = *this;
     return max(self[1] - self[0]);
   }
 
@@ -86,28 +84,36 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return bbox;
   }
 
+  Bbox enclosing_hypercube() const {  // Return enclosing (centered) bbox that has all sides equal.
+    const auto& self = *this;
+    const Vector diagonal = self[1] - self[0];
+    const float max_side = max(diagonal);
+    const Vector offset = (max_side - diagonal) * 0.5f;
+    return Bbox(self[0] - offset, self[1] + offset);
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const type& bbox) {
     return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
 
   // ** Functions only for dim == 3:
 
-  // Uniform scaling into unit cube, centered on x & y, rest at z == 0.
+  // Uniform scaling into unit cube, centered on x & y, resting at z == 0.
   template <int D = dim, typename = std::enable_if_t<D == 3>> Frame get_frame_to_cube() const {
-    auto& self = *this;
-    Vector di = self[1] - self[0];
-    float maxdi = max(di);
-    assertx(maxdi);
+    const auto& self = *this;
+    const Vector diagonal = self[1] - self[0];
+    const float max_side = max(diagonal);
+    assertx(max_side);
     Vector center;
-    for_int(c, 3) center[c] = (1.f - di[c] / maxdi) * .5f;
-    center[2] = 0.f;  // objects lie at bottom of cube
-    return Frame::translation(-self[0]) * Frame::scaling(thrice(1.f / maxdi)) * Frame::translation(center);
+    for_int(c, 3) center[c] = (1.f - diagonal[c] / max_side) * .5f;
+    center[2] = 0.f;  // Let the object lie at the bottom of the cube.
+    return Frame::translation(-self[0]) * Frame::scaling(thrice(1.f / max_side)) * Frame::translation(center);
   }
 
   template <int D = dim, typename = std::enable_if_t<D == 3>>
   Frame get_frame_to_small_cube(float cubesize = .8f) const {
     Frame frame = get_frame_to_cube();
-    float bnd = (1.f - cubesize) / 2.f;
+    const float bnd = (1.f - cubesize) / 2.f;
     frame = frame * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
     for_int(i, 3) {
       if (abs(frame[i][i] - 1.f) < .05f) frame[i][i] = 1.f;
@@ -117,8 +123,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 
   template <int D = dim, typename = std::enable_if_t<D == 3>> [[nodiscard]] type transform(const Frame& frame) const {
+    const auto& self = *this;
     type bbox;
-    auto& self = *this;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
       Point corner(i0 ? self[1][0] : self[0][0], i1 ? self[1][1] : self[0][1], i2 ? self[1][2] : self[0][2]);
       bbox.union_with(corner * frame);

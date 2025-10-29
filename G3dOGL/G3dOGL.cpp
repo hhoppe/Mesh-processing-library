@@ -722,8 +722,7 @@ struct glt_format {
 };
 
 const Array<glt_format> k_glt_formats = {
-#define E(f) \
-  { f, #f }
+#define E(f) {f, #f}
     E(GL_COMPRESSED_RGB),
     E(GL_RGB16),
     E(GL_RGBA16),
@@ -884,7 +883,7 @@ void set_anisotropy() {
 
 void update_anisotropy() {
   float max_anisotropy;
-  { glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy); }
+  glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
   anisotropy *= 2;
   if (anisotropy > max_anisotropy) anisotropy = 1;
   set_anisotropy();
@@ -2426,7 +2425,7 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
   int if1 = int(finterp * 256.f), if2 = 256 - if1;
   for (Vertex v : mesh.vertices()) {
     const VertexLOD& vlod = v_lod(v);
-    { mesh.set_point(v, interp(vlod.Npos, vlod.Opos, f1)); }
+    mesh.set_point(v, interp(vlod.Npos, vlod.Opos, f1));
     if (has_only_v_color) {
       v_color(v) = interp_color(vlod.Nd, vlod.Od, if1, if2);
     } else if (has_either_color) {

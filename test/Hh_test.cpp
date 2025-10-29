@@ -193,7 +193,9 @@ void test_implicit_default_virtual_destructor() {
   struct Derived : Base {
     A _a;
   };
-  { Derived derived; }
+  {
+    Derived derived;
+  }
   {
     Base* p = make_unique<Derived>().release();
     delete p;
@@ -444,16 +446,22 @@ line2)";
       ~A() { SHOW("A destruct"); }
     };
     SHOW("1");
-    { A a; }
+    {
+      A a;
+    }
     SHOW("2");
-    { A(); }
+    {
+      A();
+    }
     SHOW("3");
     {
       A a;
       A a2(a);
     }
     SHOW("4");
-    { clone(A()); }
+    {
+      clone(A());
+    }
     SHOW("5");
     {
       A a;

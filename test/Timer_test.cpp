@@ -16,8 +16,12 @@ int main() {
     timer.terminate();
     my_sleep(.05);
   }
-  { Timer timer; }  // Should not print.
-  { Timer timer("should_not_print", Timer::EMode::noprint); }
+  {
+    Timer timer;  // Should not print.
+  }
+  {
+    Timer timer("should_not_print", Timer::EMode::noprint);
+  }
   int count = getenv_int("TTIMER_COUNT");
   if (!count) count = 1000;
   Timer timer("abbrev");
@@ -30,5 +34,7 @@ int main() {
     dummy_use(t5);
   }
   for_int(i, 10) { HH_TIMER("t7"); }
-  { HH_DTIMER("t8"); }
+  {
+    HH_DTIMER("t8");
+  }
 }

@@ -101,7 +101,7 @@ class Pool : noncopyable {
     _nalloc = 0;
     _chunkh = nullptr;
     // static variable sdebug may not yet be initialized.
-    if (getenv_int("POOL_DEBUG") >= 2) showf("Pool %-20s: construct (size=%2d, align=%2d)\n", _name, _esize, _ealign);
+    if (getenv_int("POOL_DEBUG") >= 2) showf("Pool %-20s: construct (size=%2u, align=%2d)\n", _name, _esize, _ealign);
     if (_esize) init();
   }
   void destroy() {
@@ -109,7 +109,7 @@ class Pool : noncopyable {
     int n = 0;
     for (Link* p = _h; p; p = p->next) n++;
     if (sdebug >= 2 || (sdebug && _nalloc) || n != _nalloc)
-      showf("Pool %-20s: (size %2d) %6d/%-6d elements outstanding%s\n",  //
+      showf("Pool %-20s: (size %2u) %6d/%-6d elements outstanding%s\n",  //
             _name, _esize, _nalloc - n, _nalloc, (n != _nalloc ? " **" : ""));
     if (n != _nalloc) return;
     for (Chunk* chunk = _chunkh; chunk;) {
@@ -182,7 +182,7 @@ class Pool : noncopyable {
     _offset = k_chunksize - sizeof(Chunk);
     // static variable sdebug may not yet be initialized.
     if (getenv_int("POOL_DEBUG") >= 2)
-      showf("Pool %-20s: _esize=%d _ealign=%d _offset=%d\n", _name, _esize, _ealign, _offset);
+      showf("Pool %-20s: _esize=%u _ealign=%d _offset=%d\n", _name, _esize, _ealign, _offset);
   }
   void grow() {
     assertx(!_h);

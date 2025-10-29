@@ -63,7 +63,9 @@ template <int DD, typename T> struct Grid_get2 {
 template <int D, typename T> struct nested_initializer_list {
   using type = std::initializer_list<typename nested_initializer_list<D - 1, T>::type>;
 };
-template <typename T> struct nested_initializer_list<0, T> { using type = T; };
+template <typename T> struct nested_initializer_list<0, T> {
+  using type = T;
+};
 template <int D, typename T> using nested_initializer_list_t = typename nested_initializer_list<D, T>::type;
 
 template <int D, typename T> struct nested_list_dims;

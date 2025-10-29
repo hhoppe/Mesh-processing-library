@@ -310,8 +310,8 @@ bool set_fd_no_delay(int fd, bool nodelay) {
   // On SGI, setting nodelay on terminal fd may cause window closure.
   if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
-    // 2014-07-04 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
-    // 2014-08-26 G3dcmp works again now.
+  // 2014-07-04 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
+  // 2014-08-26 G3dcmp works again now.
 #if defined(O_NONBLOCK)
   return fcntl(fd, F_SETFL, nodelay ? O_NONBLOCK : 0) != -1;
 #elif defined(FNDELAY)

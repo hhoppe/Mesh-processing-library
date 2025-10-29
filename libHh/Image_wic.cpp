@@ -475,7 +475,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     size_t size = assertx(GlobalSize(assertx(hMem)));
     bool success;
     void* pv = assertx(GlobalLock(hMem));
-    { success = !!fi().write(reinterpret_cast<char*>(pv), size); }
+    success = !!fi().write(reinterpret_cast<char*>(pv), size);
     assertx(my_GlobalUnlock(hMem));
     // Such error may occur if filename == "-" (std::cout) is a pipe that has already been closed.
     if (!success) throw std::runtime_error("Error writing image to '" + filename + "'");

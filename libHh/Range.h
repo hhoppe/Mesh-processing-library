@@ -73,9 +73,13 @@ template <typename T> struct has_begin {  // trait to identify if T has a begin(
   static constexpr bool value = !std::is_void_v<decltype(deduce<T>(nullptr))>;
 };
 
-template <typename Range> struct range_iterator { using type = decltype(begin(std::declval<Range>())); };
+template <typename Range> struct range_iterator {
+  using type = decltype(begin(std::declval<Range>()));
+};
 
-template <typename Range> struct range_value { using type = std::decay_t<decltype(*begin(std::declval<Range&>()))>; };
+template <typename Range> struct range_value {
+  using type = std::decay_t<decltype(*begin(std::declval<Range&>()))>;
+};
 
 template <typename, typename> struct range_has_size : std::false_type {};
 template <typename Range>

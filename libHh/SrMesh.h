@@ -66,7 +66,7 @@ struct SrVertexGeometry {
 #if !defined(SR_NOR001)
   Vector vnormal;
 #else
-  static const Vector vnormal;        // always (0.f, 0.f, 1.f)
+  static const Vector vnormal;  // always (0.f, 0.f, 1.f)
 #endif
 };
 
@@ -139,7 +139,7 @@ struct SrVsplit {
 #if !defined(SR_NOR001)
   float sin2alpha;  // backface region, square(sin(alpha))
 #else
-  static const float sin2alpha;       // always 0.f
+  static const float sin2alpha;  // always 0.f
 #endif
 };
 

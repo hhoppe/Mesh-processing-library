@@ -47,7 +47,7 @@ void possibly_sleep() {
 // long __stdcall my_top_level_exception_filter(_EXCEPTION_POINTERS* ExceptionInfo) {
 LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   if (0) std::cerr << "my_top_level_exception_filter\n";
-    // Unfortunately, STACK_OVERFLOW does not seem to reach here in _WIN32 DEBUG mode.
+  // Unfortunately, STACK_OVERFLOW does not seem to reach here in _WIN32 DEBUG mode.
 #if 0
   if (getenv_bool("ASSERTX_MESSAGE_BOX"))
     MessageBoxA(nullptr, "Attach debugger, set breakpoint in my_top_level_exception_filter, then close this box",

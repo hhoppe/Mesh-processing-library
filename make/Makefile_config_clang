@@ -5,10 +5,14 @@ x64 = 1
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 
-# 20180911 LLVM 6.0.1 # LLVM-6.0.1-win64.exe from http://releases.llvm.org/download.html
-# 20190922 LLVM 8.0.1 x86_64-pc-windows-msvc (could have been installed by Visual Studio?)
-# 20200603 LLVM-10.0.0-win64.exe from http://releases.llvm.org/download.html
-# 20240513 LLVM-17.0.1-win64.exe from github releases from http://releases.llvm.org/download.html
+# 2018-09-11 LLVM 6.0.1 # LLVM-6.0.1-win64.exe from http://releases.llvm.org/download.html
+# 2019-09-22 LLVM 8.0.1 x86_64-pc-windows-msvc (could have been installed by Visual Studio?)
+# 2020-06-03 LLVM-10.0.0-win64.exe from http://releases.llvm.org/download.html
+# 2024-05-13 LLVM-17.0.1-win64.exe from github releases from http://releases.llvm.org/download.html
+# 2025-10-28 LLVM-20.1.8-win64.exe from https://github.com/llvm/llvm-project/releases
+# "c:/Program Files/LLVM/bin/clang++" --version:
+#  Target: x86_64-pc-windows-msvc
+#  Thread model: posix
 LLVM_ROOT = c:/Progra~1/LLVM
 $(call prepend_PATH,$(LLVM_ROOT)/bin)
 AR = llvm-ar

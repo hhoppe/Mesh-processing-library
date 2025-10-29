@@ -24,7 +24,10 @@ ifeq ($(plain_compiler),)
   ifeq ($(is_mswin),1)
     cwarnings += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier
   endif
-  ccommon += -Wno-overriding-t-option -Wno-constant-logical-operand#  even without $(PEDANTIC)
+  # Even without $(PEDANTIC):
+  ccommon += -Wno-overriding-option#  Was -Wno-overriding-t-option in earlier clang version.
+  ccommon += -fno-finite-math-only#  Enable NAN support even with -ffast-math.
+  ccommon += -Wno-constant-logical-operand
 endif
 
 # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax

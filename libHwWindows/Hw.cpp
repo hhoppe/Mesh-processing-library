@@ -348,7 +348,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
     case WM_PAINT: {
       // (Part of) window requires repaint (like X-windows Expose)
       if (_hwdebug) SHOW("WM_PAINT");
-      if (!_exposed) assertnever("");
+      if (!assertw(_exposed)) return 0;
       // Remove from message queue all other repaint messages.
       // Implicitly "validates" whole window to remove WM_PAINT msgs.
       // Win32 note: only 1 WM_PAINT message will be in queue at a time.
@@ -1038,7 +1038,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     _hDC = assertx(GetDC(_hwnd));
     _hRenderDC = _hDC;
     // No wglGetProcAddress() is valid before wglMakeCurrent() is called!
-    { set_pixel_format(true); }
+    set_pixel_format(true);
     _hRC = assertx(wglCreateContext(_hRenderDC));
     assertx(wglMakeCurrent(_hRenderDC, _hRC));
   }
@@ -1196,7 +1196,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       assertx(wglChoosePixelFormatARB);
       assertx(wglChoosePixelFormatARB(_hRenderDC, iattribl.data(), fattribl.data(), unsigned(iFormats.num()),
                                       iFormats.data(), &numFormats));
-      if (_hwdebug) showf("wglChoosePixelFormatARB found %d [0]==%d\n", numFormats, numFormats > 0 ? iFormats[0] : -1);
+      if (_hwdebug) showf("wglChoosePixelFormatARB found %u [0]==%d\n", numFormats, numFormats > 0 ? iFormats[0] : -1);
       if (numFormats > 0) {
         iPixelFormat = iFormats[0];
         // if (numFormats == 16) iPixelFormat = iFormats[9];

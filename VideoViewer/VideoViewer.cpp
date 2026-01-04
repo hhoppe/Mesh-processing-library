@@ -913,6 +913,11 @@ template <typename T> Grid<3, T> rotate_ccw(CGridView<3, T> grid, int rot_degree
   return ngrid;
 }
 
+// Flip horizontally.
+template <typename T> void reverse_x(GridView<3, T> grid) {
+  parallel_for(range(grid.dim(0)), [&](const int i) { grid[i].reverse_x(); });
+}
+
 // Replace current object with previous/next file in object's directory.  Ret: success.
 bool replace_with_other_object_in_directory(int increment) {
   assertx(abs(increment) == 1 || abs(increment) == std::numeric_limits<int>::max());
@@ -1887,8 +1892,9 @@ bool DerivedHw::key_press(string skey) {
             }
             assertx(cur >= 0);
             assertx(remove_at_end(root, ar[cur]));
-            ob._filename = root + ar[my_mod(cur + (rot_degrees / 90), 4)] + "." + ext;
-            ob._unsaved = cur != 2 || !file_exists(ob._filename);
+            cur = my_mod(cur + (rot_degrees / 90), 4);
+            ob._filename = root + ar[cur] + "." + ext;
+            ob._unsaved = !file_exists(ob._filename);
           }
           if (!is_fullscreen()) {
             reset_window(determine_default_window_dims(ob.spatial_dims()));
@@ -1897,6 +1903,28 @@ bool DerivedHw::key_press(string skey) {
           g_fit_view_to_window = true;
           set_video_frame(g_cob, g_framenum, k_force_refresh);
           message("Rotated " + ob.stype());
+          break;
+        }
+        case 'F' - 64: {  // C-S-f: flip horizontally left-right.
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
+          Object& ob = check_loaded_object();
+          if (ob._video.size()) {  // includes the case of ob.is_image()
+            reverse_x(ob._video);
+          } else {
+            reverse_x(ob._video_nv12.get_Y());
+            reverse_x(ob._video_nv12.get_UV());
+          }
+          {
+            string root = get_path_root(ob._filename), ext = get_path_extension(ob._filename);
+            if (remove_at_end(root, "_flip")) {
+              ob._filename = root + "." + ext;
+            } else {
+              ob._filename = root + "_flip" + "." + ext;
+            }
+            ob._unsaved = !file_exists(ob._filename);
+          }
+          set_video_frame(g_cob, g_framenum, k_force_refresh);
+          message("Flipped " + ob.stype());
           break;
         }
         case 'V': {  // convert sequence of images (starting from current) to a video
@@ -3656,7 +3684,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         " <C-d>unload_object   <C-k>eep_only_cur   <C-c>copy   <C-v>paste",
         " <pgdn>next_file   <pgup>prev_file   <s>ort_order   <C-o>pen   <C-s>ave   <C-S-s>overwrite",
         " <f2>rename   <f5>reload   <f7>move   <f8>copy   <C-n>ew_window   <d>irectory",
-        " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <W>hite_crop",
+        " <C>rop_to_view   <S>cale_using_view   <C-S-l>,<C-S-r>rotate   <C-S-f>flip_LR   <W>hite_crop",
         " <v>iew_externally   <i>nfo   <g>rid   <e>xif   <H>checker  <G>ps_map   <~>console   <esc>quit",
         "Video:",
         " <spc>play/pause   <l>oop   <a>ll_loop   <m>irror_loop",

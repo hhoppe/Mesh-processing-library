@@ -449,9 +449,9 @@ inline Pixel parse_color(const string& scolor) {
     return parse_color("#0000FF");
   } else if (scolor == "hhblue") {
     return parse_color("#5987B3");
-  } else if (1 && to_int(s) > 0) {
+  } else if (1 && to_uint(s) > 0) {
     Warning("Old int32-style color specification; now use #RRGGBBAA");
-    unsigned u = unsigned(to_int(s));
+    unsigned u = to_uint(s);
     return Pixel((u >> 0) & 255, (u >> 8) & 255, (u >> 16) & 255, (u >> 24) & 255);
   } else {
     assertnever("Cannot parse color '" + scolor + "'");

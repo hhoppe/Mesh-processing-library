@@ -631,6 +631,17 @@ int int_from_chars(const char*& s) {
   return sizeof(long_value) == sizeof(int) ? long_value : assert_narrow_cast<int>(long_value);
 }
 
+int uint_from_chars(const char*& s) {
+  // C++17: Use std::from_chars(), once available more broadly.
+  char* end;
+  errno = 0;
+  const int base = 10;
+  const unsigned long long_value = std::strtoul(s, &end, base);
+  if (errno) assertnever("Cannot parse int in '" + string(s) + "'");
+  s = end;
+  return sizeof(long_value) == sizeof(unsigned) ? long_value : assert_narrow_cast<unsigned>(long_value);
+}
+
 float float_from_chars(const char*& s) {
   // C++17: Use std::from_chars(), once available more broadly.
   char* end;
@@ -666,6 +677,12 @@ static bool check_bool(const char* s) {
 
 int to_int(const char* s) {
   int value = int_from_chars(s);
+  assert_no_more_chars(s);
+  return value;
+}
+
+unsigned to_uint(const char* s) {
+  unsigned value = uint_from_chars(s);
   assert_no_more_chars(s);
   return value;
 }

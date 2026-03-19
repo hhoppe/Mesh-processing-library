@@ -456,6 +456,12 @@ int to_int(const char* s);
 // Convert string to integer value, or crash if invalid.
 inline int to_int(const string& s) { return to_int(s.c_str()); }
 
+// Convert string to unsigned value, or crash if invalid.
+unsigned to_uint(const char* s);
+
+// Convert string to unsigned value, or crash if invalid.
+inline int to_uint(const string& s) { return to_uint(s.c_str()); }
+
 // Convert string to float value, or crash if invalid.
 float to_float(const char* s);
 

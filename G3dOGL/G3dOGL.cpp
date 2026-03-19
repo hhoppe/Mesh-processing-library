@@ -158,8 +158,7 @@ void (*fdraw)();
 // string imagefilename="| Filterimage -to jpg | clip";
 // string imagefilename="| Filterimage -to jpg >~/tmp/v.jpg";
 // string imagefilename="| Filterimage -to png >c:/hh/tmp/v.png";
-// string imagefilename = "| Filterimage -to png | csh.exe -c write_to_desktop";
-string imagefilename = "| Filterimage -to png | csh -c write_to_desktop";
+string imagefilename = "| Filterimage -to png | write_to_desktop";
 bool is_window;      // window is open and drawable
 Vec2<int> win_dims;  // window dimensions
 Vec2<float> tzp;

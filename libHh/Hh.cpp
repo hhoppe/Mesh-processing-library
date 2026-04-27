@@ -631,7 +631,7 @@ int int_from_chars(const char*& s) {
   return sizeof(long_value) == sizeof(int) ? long_value : assert_narrow_cast<int>(long_value);
 }
 
-int uint_from_chars(const char*& s) {
+unsigned uint_from_chars(const char*& s) {
   // C++17: Use std::from_chars(), once available more broadly.
   char* end;
   errno = 0;

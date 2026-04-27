@@ -441,6 +441,9 @@ const char* after_prefix(const char* sline, const char* prefix);
 // Eat up whitespace, parse an integer from the string, and advance `s` to the next character beyond, or die.
 int int_from_chars(const char*& s);
 
+// Eat up whitespace, parse an unsigned from the string, and advance `s` to the next character beyond, or die.
+unsigned uint_from_chars(const char*& s);
+
 // Eat up whitespace, parse a float from the string, and advance `s` to the next character beyond, or die.
 float float_from_chars(const char*& s);
 

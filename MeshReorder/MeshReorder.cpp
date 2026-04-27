@@ -670,7 +670,7 @@ class MeshStatus {
 
 inline bool MeshStatus::processed(Face f) const {
   // Cannot do ASSERTX(!f_elist(f).el_uco.linked())
-  // because this may be a neigbhoring face (as in face_nnei()) which
+  // because this may be a neighboring face (as in face_nnei()) which
   // is in l_uco (due to a material boundary).
   // But in this case this function declares the face as processed,
   // which is OK.

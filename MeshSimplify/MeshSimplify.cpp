@@ -2820,7 +2820,7 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
     float ratio_bb = !bb_x ? 1000.f : !bb_y ? 0.f : bb_y / bb_x;
     if (ratio_bb <= 1.001f) ratio_bb = 1.001f;
     // (When ratio_bb <= 1.f, only the uniform error component matters.)
-    float vtan = 1.f / my_sqrt(square(ratio_bb) - 1.f);
+    float vtan = 1.f / sqrt(square(ratio_bb) - 1.f);
     float max_u = 0.f;
     for_int(i, ar_resid.num()) {
       float m2 = mag2(ar_resid[i]);

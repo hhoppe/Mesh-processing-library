@@ -50,12 +50,8 @@ for x in {0..1}; do
     cp -p $r.l0.x$xo1.y$yo1.pm $rl.x1.y1.pm
     echo Stitching 2x2 progressive meshes to form $rl.stitched.pm
     StitchPM -rootname $rl -blockx 2 -blocky 2 -blocks 32 -stitch >$rl.stitched.pm 2>>$log
-    (( cropxl = $x * 64 ))
-    (( cropxh = (1 - $x) * 64 ))
-    (( cropyl = $y * 64 ))
-    (( cropyh = (1 - $y) * 64 ))
-    Filterimage $r.elev.png -tobw -cropsides $cropxl $cropxh $cropyl $cropyh \
-                -step 1 -scalez 0.000694722 -removekinks -tofloats $rl.floats 2>>$log
+    Filterimage $r.elev.png -tobw -step 1 -scalez 0.000694722 -removekinks \
+                -blocks 64 -bx $x -by $y -tofloats $rl.floats 2>>$log
     echo Simplifying stitched progressive mesh $rl.stitched.pm
     bin/PMsimplify $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 \
                    -no_simp_bnd -ter_grid $rl.floats 2>>$log

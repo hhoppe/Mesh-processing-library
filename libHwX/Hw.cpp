@@ -315,6 +315,11 @@ void Hw::open() {
   if (_oglx) {
 #if defined(HH_OGLX)
     glXMakeCurrent(_display, _win, glcx);
+    // 2026-08-03: On WSL, I attempted to cap the framerate to the max display refresh, but it was not possible.
+    // Under WSLg / XWayland, glXQueryExtensionsString() reports no swap_control, video_sync, or OML_sync_control,
+    // and glXSwapIntervalMESA() returns GLX_BAD_CONTEXT even with a current direct context, so vsync is unavailable.
+    // Note that "glxinfo | grep swap_control" matches the client-only list and is misleading; the effective
+    // per-screen list is what matters.  One workaround might be frame pacing in draw_it().
     if (_hwdebug) SHOW(glGetString(GL_VERSION));
     if (_hwdebug) SHOW(gl_extensions_string());
     {

@@ -110,8 +110,8 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
   T& last() { return (*this)[_n - 1]; }
   const T& last() const { return base::last(); }
-  T& inside(int i, Bndrule bndrule) { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
-  const T& inside(int i, Bndrule bndrule) const { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
+  T& inside(int i, Bndrule bndrule) { return (assertx(base::map_inside(i, bndrule)), (*this)[i]); }
+  const T& inside(int i, Bndrule bndrule) const { return (assertx(base::map_inside(i, bndrule)), (*this)[i]); }
   const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   void assign(base ar);
   type head(int n) { return segment(0, n); }
@@ -130,7 +130,6 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   const T* end() const { return _a + _n; }
   T* data() { return _a; }
   const T* data() const { return _a; }
-  using base::map_inside;
   using base::num;
   using base::ok;
   using base::size;
@@ -449,7 +448,7 @@ template <typename T> bool CArrayView<T>::check(int i, int s) const {
 //----------------------------------------------------------------------------
 
 template <typename T> const T& ArrayView<T>::inside(int i, Bndrule bndrule, const T* bordervalue) const {
-  if (!map_inside(i, bndrule)) {
+  if (!base::map_inside(i, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
   }

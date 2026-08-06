@@ -201,10 +201,9 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   template <typename... A> const T& operator()(A... dd) const;
   T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
   const T& flat(size_t i) const { return base::flat(i); }
-  using base::map_inside;
   T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) {
     Vec<int, D> ut(u);
-    bool b = map_inside(ut, bndrules);
+    bool b = base::map_inside(ut, bndrules);
     ASSERTX(b);
     return (*this)[ut];
   }
@@ -231,12 +230,12 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   // For implementation of Matrix (D == 2):
   T& inside(int y, int x, Bndrule bndrule1) {
     // (Renamed bndrule to bndrule1 due to Visual Studio bug "C4459: declaration ... hides global declaration".)
-    bool b = map_inside(y, x, bndrule1);
+    bool b = base::map_inside(y, x, bndrule1);
     ASSERTX(b);
     return (*this)[y][x];
   }
   const T& inside(int y, int x, Bndrule bndrule) const {
-    bool b = map_inside(y, x, bndrule);
+    bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y][x];
   }
@@ -585,7 +584,7 @@ template <int D, typename T> template <typename... A> const T& GridView<D, T>::o
 
 template <int D, typename T>
 const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const {
-  if (!map_inside(y, x, bndrule)) {
+  if (!base::map_inside(y, x, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
   }

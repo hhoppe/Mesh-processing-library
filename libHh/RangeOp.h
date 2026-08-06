@@ -329,12 +329,13 @@ MeanType rms(const Range& range) {
     v += square(MeanType(e));
     num++;
   }
-  if (!num) {
+  if (num) {
+    using Factor = factor_type_t<Value>;
+    v = sqrt(MeanType(v * (Factor(1) / num)));
+  } else {
     Warning("rms() of empty range");
-    return v;
   }
-  using Factor = factor_type_t<Value>;
-  return sqrt(MeanType(v * (Factor(1) / num)));
+  return v;
 }
 
 // Variance of values in a range.
@@ -675,16 +676,17 @@ template <typename Iterator, typename Func> struct FilteredIterator {
 template <typename Range, typename Func> struct FilteredRange {
   Range _range;
   Func _func;
-  auto begin() const {
+  // Type of the expression `_range` in a const member function (const does not apply if Range is a reference).
+  using CRange = std::add_lvalue_reference_t<std::add_const_t<Range>>;
+  using Iterator = std::decay_t<range_iterator_t<CRange>>;
+  auto begin() const -> FilteredIterator<Iterator, Func> {
     using std::begin, std::end;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
     auto iterator = FilteredIterator<Iterator, Func>{begin(_range), end(_range), _func};
     while (iterator != this->end() && !_func(*iterator)) ++iterator;
     return iterator;
   }
-  auto end() const {
+  auto end() const -> FilteredIterator<Iterator, Func> {
     using std::begin, std::end;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
     return FilteredIterator<Iterator, Func>{end(_range), end(_range), _func};
   }
   // Note that size() is unknown.

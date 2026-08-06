@@ -373,7 +373,8 @@ Point spheremap_sym_buss_fillmore(const Point& pa, const Point& pb, const Point&
       const float theta = angle_between_unit_vectors_and_sincos(p, triangle[v], sin_theta, cos_theta);
       if (cos_theta >= 1.f || abs(sin_theta) < eps / 10) {
         ASSERTX(b[v] > 1.f - eps);
-        return triangle[v] * b[v];
+        p = triangle[v] * b[v];
+        return p;
       }
       ASSERTX(sin_theta != 0.f);
       for_int(k, 3) {
@@ -1170,8 +1171,10 @@ Vector interp_f_rgb(const GMesh& mesh, Face f, const Bary& bary) {
     num_defined++;
     sum_rgb += rgb * bary[i];
   }
-  if (num_defined == 0) return k_undefined_vector;
-  assertx(num_defined == 3);
+  if (num_defined == 0)
+    sum_rgb = k_undefined_vector;
+  else
+    assertx(num_defined == 3);
   return sum_rgb;
 }
 
@@ -1187,8 +1190,10 @@ Uv interp_f_uv(const GMesh& mesh, Face f, const Bary& bary) {
     num_defined++;
     sum_uv += uv * bary[i];
   }
-  if (num_defined == 0) return k_undefined_uv;
-  assertx(num_defined == 3);
+  if (num_defined == 0)
+    sum_uv = k_undefined_uv;
+  else
+    assertx(num_defined == 3);
   return sum_uv;
 }
 

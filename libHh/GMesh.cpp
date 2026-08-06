@@ -560,13 +560,13 @@ void GMesh::write(std::ostream& os) const {
   char* beg = buffer + strlen(buffer);
   for (Vertex v : ordered_vertices()) {
     char* s = beg;
-    s = std::to_chars(s, end, vertex_id(v)).ptr;
+    s = std::to_chars(s, end - 4, vertex_id(v)).ptr;
     *s++ = ' ';
     const Point& p = point(v);
     for_int(c, 3) {
       *s++ = ' ';
       constexpr int precision = 6;  // Default for printf("%g").
-      s = std::to_chars(s, end, p[c], std::chars_format::general, precision).ptr;
+      s = std::to_chars(s, end - 4, p[c], std::chars_format::general, precision).ptr;
     }
     if (const char* sinfo = get_string(v)) {
       *s++ = ' ';
@@ -585,11 +585,11 @@ void GMesh::write(std::ostream& os) const {
   beg = buffer + strlen(buffer);
   for (Face f : ar_faces) {
     char* s = beg;
-    s = std::to_chars(s, end, face_id(f)).ptr;
+    s = std::to_chars(s, end - 4, face_id(f)).ptr;
     *s++ = ' ';
     for (Vertex v : vertices(f)) {
       *s++ = ' ';
-      s = std::to_chars(s, end, vertex_id(v)).ptr;
+      s = std::to_chars(s, end - 4, vertex_id(v)).ptr;
       assertx(s < end - 4);
     }
     if (const char* sinfo = get_string(f)) {
@@ -610,9 +610,9 @@ void GMesh::write(std::ostream& os) const {
     const char* sinfo = get_string(e);
     if (!sinfo) continue;
     char* s = beg;
-    s = std::to_chars(s, end, vertex_id(vertex1(e))).ptr;
+    s = std::to_chars(s, end - 4, vertex_id(vertex1(e))).ptr;
     *s++ = ' ';
-    s = std::to_chars(s, end, vertex_id(vertex2(e))).ptr;
+    s = std::to_chars(s, end - 4, vertex_id(vertex2(e))).ptr;
     *s++ = ' ';
     *s++ = '{';
     assertx(s + strlen(sinfo) + 4 < end);
@@ -630,9 +630,9 @@ void GMesh::write(std::ostream& os) const {
       const char* sinfo = get_string(c);
       if (!sinfo) continue;
       char* s = beg;
-      s = std::to_chars(s, end, vertex_id(corner_vertex(c))).ptr;
+      s = std::to_chars(s, end - 4, vertex_id(corner_vertex(c))).ptr;
       *s++ = ' ';
-      s = std::to_chars(s, end, face_id(f)).ptr;
+      s = std::to_chars(s, end - 4, face_id(f)).ptr;
       *s++ = ' ';
       *s++ = '{';
       assertx(s + strlen(sinfo) + 4 < end);

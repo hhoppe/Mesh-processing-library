@@ -133,6 +133,9 @@ class Pool : noncopyable {
   void free(void* pp) {
     if (!pp) return;
     Link* p = static_cast<Link*>(pp);
+    // The analyzer conflates the pointer and size parameters of the class-level sized operator delete(),
+    // yielding a bogus pointer value of sizeof(T).
+    // NOLINTNEXTLINE(clang-analyzer-core.FixedAddressDereference)
     p->next = _h;
     _h = p;
   }

@@ -696,7 +696,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
       int extra = int(bmih.biSizeImage) - expected;
       if (extra)
         showf("Warning: bmih.biSizeImage=%d expected=%d*%d=%d (%d extra bytes)\n",  //
-              bmih.biSizeImage, rowsize, image.ysize(), expected, extra);
+              int(bmih.biSizeImage), rowsize, image.ysize(), expected, extra);
       assertt(extra >= 0);
     }
     Array<uchar> row(rowsize);

@@ -64,7 +64,7 @@ template <typename T> struct MstResult {
 // Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
 // Implementation: Kruskal's algorithm, O(e log(e))  (Prim's algorithm is recommended when e=~n^2, see below.)
 template <typename T, typename Func = float(const T&, const T&)>
-auto graph_mst(const Graph<T>& undirectedg, Func fdist) {
+auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
   MstResult<T> result;
   Graph<T>& gnew = result.tree;
   for (const T& v : undirectedg.vertices()) gnew.enter(v);

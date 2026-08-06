@@ -321,6 +321,7 @@ RFile::RFile(string filename) {
     _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // gzip supports .Z (replacement for zcat).
   } else if (filename == "-") {
     // assertw(!HH_POSIX(isatty)(0));
+    _file_isstd = true;
     _file = stdin;
     _is = &std::cin;
   } else if (file_exists(filename)) {
@@ -361,7 +362,7 @@ RFile::~RFile() {
       dummy_use(ret);
       if (0) assertw(!ret);
     } else {
-      if (_file != stdin) assertw(!fclose(_file));
+      if (!_file_isstd) assertw(!fclose(_file));
     }
   }
 }
@@ -384,6 +385,7 @@ WFile::WFile(string filename) {
     _file_ispipe = true;
     _file = my_popen(("gzip >" + portable_simple_quote(filename)), mode);
   } else if (filename == "-") {
+    _file_isstd = true;
     _file = stdout;
     _os = &std::cout;
   } else {
@@ -410,7 +412,7 @@ WFile::~WFile() {
       int ret = my_pclose(_file);
       assertw(!ret);
     } else {
-      if (_file != stdout) assertw(!fclose(_file));
+      if (!_file_isstd) assertw(!fclose(_file));
     }
   }
 }
@@ -506,6 +508,7 @@ Array<string> get_in_directory(const string& directory, EType type) {
   assertx(FindClose(dir));
 #else
   DIR* dir = opendir(directory.c_str());
+  assertx(dir);
   {
     while (struct dirent* ent = readdir(dir)) {
       string file_name = ent->d_name;

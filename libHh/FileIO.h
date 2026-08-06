@@ -17,6 +17,7 @@ class RFile : noncopyable {
   FILE* cfile() { return _file; }
 
  private:
+  bool _file_isstd{false};
   bool _file_ispipe{false};
   FILE* _file{nullptr};
   class Implementation;
@@ -34,6 +35,7 @@ class WFile : noncopyable {
   FILE* cfile() { return _file; }
 
  private:
+  bool _file_isstd{false};
   bool _file_ispipe{false};
   FILE* _file{nullptr};
   class Implementation;

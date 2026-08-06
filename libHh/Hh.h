@@ -257,15 +257,21 @@ extern int g_unoptimized_zero;
 // Reports string expr as warning once.  Return true if this is the first time the warning is reported.
 #define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
+// ASSERTX(...):  In release build, do not evaluate the expression.
+// ASSERTXX(...): In release build, do not even see the expression -- maximum optimization.
 #if defined(HH_DEBUG)
-#define ASSERTX(...) assertx(__VA_ARGS__)   // In release, do not evaluate expression.
-#define ASSERTXX(...) assertx(__VA_ARGS__)  // In release, do not even see expression -- maximum optimization.
+#define ASSERTX(...) assertx(__VA_ARGS__)
+#define ASSERTXX(...) assertx(__VA_ARGS__)
+#define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
+#elif defined(__clang_analyzer__)
+#define ASSERTX(...) (assertx(__VA_ARGS__), HH_ASSUME(__VA_ARGS__))
+#define ASSERTXX(...) (assertx(__VA_ARGS__), HH_ASSUME(__VA_ARGS__))
 #define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
 #else
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
 #define ASSERTXX(...) (void(0))
 #define HH_CHECK_BOUNDS(i, n) (void(0))
-#endif  // defined(HH_DEBUG)
+#endif
 
 // *** Output functions.
 
@@ -786,13 +792,8 @@ inline uint8_t clamp_to_uint8(int v) {
 }
 
 inline int mod3(int j) {
-  // C++23: maybe use "if consteval".
-  static const int ar_mod3[6] = {0, 1, 2, 0, 1, 2};
   ASSERTX(j >= 0 && j < 6);
-#if defined(_MSC_VER)
-#pragma warning(suppress : 6385)
-#endif
-  return ar_mod3[j];
+  return j < 3 ? j : j - 3;
 }
 
 template <typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }

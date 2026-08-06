@@ -3645,6 +3645,11 @@ void write_corners(std::ostream& os, Vertex v, string& str) {
   }
 }
 
+#if defined(__clang__) && __clang_major__ >= 21
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnrvo"  // Silence warnings on multiple return object constructions in try_ecol().
+#endif
+
 struct EcolResult {
   EResult result;
   float cost{k_bad_cost};
@@ -4401,6 +4406,10 @@ float get_tvc_cost(Edge e, bool edir) {
   }
   return cost;
 }
+
+#if defined(__clang__) && __clang_major__ >= 21
+#pragma clang diagnostic pop
+#endif
 
 void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir) {
   float tvccost0 = get_tvc_cost(e, false);

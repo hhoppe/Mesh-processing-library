@@ -127,6 +127,12 @@
 #define HH_ID(x) HH_CAT(_hh_id_, x)  // Private identifier in a macro definition.
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
+#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 14
+#define HH_NO_DANGLING gnu::no_dangling
+#else
+#define HH_NO_DANGLING
+#endif
+
 // *** Syntactic sugar.
 
 #define for_int(index, stop) for ([[maybe_unused]] const int index : hh::range<int>(stop))

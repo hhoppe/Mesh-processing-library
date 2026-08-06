@@ -500,7 +500,8 @@ struct PmSVertexAttribG {
   Vec2<PmSVertexAttrib> attribs;
 };
 static_assert(std::is_standard_layout_v<PmSVertexAttribG>);
-static_assert(std::is_trivial_v<PmSVertexAttribG>);
+static_assert(std::is_trivially_default_constructible_v<PmSVertexAttribG>);
+static_assert(std::is_trivially_copyable_v<PmSVertexAttribG>);
 
 // Simple mesh: faces -> vertices.
 // Split wedges into independent vertices.

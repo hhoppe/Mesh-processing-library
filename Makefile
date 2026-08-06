@@ -10,12 +10,11 @@
 #  make makeall   # Run all CONFIG   (same as "make CONFIG=all -j12").
 #  make cleanall  # Clean all CONFIG (same as "make CONFIG=all -j12 deepclean").
 #  make CONFIG=cygwin CC=clang -j12  # Use clang compiler under cygwin.
-#  make CONFIG=clang CXX_STD=c++20 -j12  # Test code compatibility with C++20.
-#  make CONFIG=clang CXX_STD=c++2b -j12  # Test code compatibility with future C++.
+#  make CONFIG=clang CXX_STD=c++26 -j12  # Test code compatibility with C++26.
 #  make CONFIG=win CXX_STD=c++latest -j12  # Test compatibility with proposed c++ features.
 #  make CONFIG=all PEDANTIC=1  # Enable most compiler warnings.
-#  make CXX_STD=c++2b PEDANTIC=1 -j12
-#  make CC=gcc CXX_STD=c++2b PEDANTIC=1 -j12
+#  make CXX_STD=c++26 PEDANTIC=1 -j12
+#  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 

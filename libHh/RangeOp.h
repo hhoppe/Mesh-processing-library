@@ -592,7 +592,7 @@ template <typename Range1, typename Range2> struct ConcatenatedRange {
 }  // namespace details
 
 // Return a view range that concatenates the elements of two ranges.
-template <typename Range1, typename Range2> auto concatenate(Range1&& range1, Range2&& range2) {
+template <typename Range1, typename Range2> [[HH_NO_DANGLING]] auto concatenate(Range1&& range1, Range2&& range2) {
   return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
 }
 

@@ -183,7 +183,7 @@ template <int D, typename T> class CGridView {
 };
 
 // View of a contiguous D-dimensional grid with modifiable data of type T; often refers to a Grid<D, T>.
-template <int D, typename T> class GridView : public CGridView<D, T> {
+template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridView<D, T> {
   using type = GridView<D, T>;
   using base = CGridView<D, T>;
 

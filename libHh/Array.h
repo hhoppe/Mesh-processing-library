@@ -59,6 +59,9 @@ template <typename T> class CArrayView {
   void reinit(type a) { *this = a; }
   int num() const { return _n; }
   size_t size() const { return narrow_cast<size_t>(_n); }
+  // template <typename Self> auto& operator[](this Self&& self, int i) {  // C++23; obviates Array::operator[]().
+  //   return HH_CHECK_BOUNDS(i, self.num()), self.data()[i];
+  // }
   const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
   const T& last() const { return (*this)[_n - 1]; }
   bool ok(int i) const { return i >= 0 && i < _n; }
@@ -91,7 +94,7 @@ template <typename T> class CArrayView {
 
 // View of a variable-sized 1D array with modifiable data of type T, e.g. refers to a C-array,
 //  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
-template <typename T> class ArrayView : public CArrayView<T> {
+template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> {
   using base = CArrayView<T>;
   using type = ArrayView<T>;
 

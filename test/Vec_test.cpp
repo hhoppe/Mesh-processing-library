@@ -221,16 +221,18 @@ int main() {
     static_assert(std::is_trivially_copyable_v<S> == true);
     static_assert(std::is_trivially_copyable_v<S3> == true);
     static_assert(std::is_trivially_copyable_v<S4> == true);
-    static_assert(std::is_trivial_v<Vec3<int>> == true);
-    static_assert(std::is_trivial_v<S> == true);
-    static_assert(std::is_trivial_v<S3> == true);
+    static_assert(std::is_trivially_default_constructible_v<Vec3<int>> == true);
+    static_assert(std::is_trivially_default_constructible_v<S> == true);
+    static_assert(std::is_trivially_default_constructible_v<S3> == true);
     static_assert(std::is_standard_layout_v<Vec3<int>> == true);
     static_assert(std::is_standard_layout_v<S> == true);
     static_assert(std::is_standard_layout_v<S3> == true);
     static_assert(std::is_standard_layout_v<S2> == true);
-    static_assert(std::is_trivial_v<S2> == true);
+    static_assert(std::is_trivially_default_constructible_v<S2>);
+    static_assert(std::is_trivially_copyable_v<S2>);
     static_assert(std::is_standard_layout_v<S4> == true);
-    static_assert(std::is_trivial_v<S4> == true);
+    static_assert(std::is_trivially_default_constructible_v<S4>);
+    static_assert(std::is_trivially_copyable_v<S4>);
   }
   {
     Set<size_t> set;
@@ -287,8 +289,8 @@ int main() {
       }
       // P& operator=(P&&) { SHOW("P::operator=(P&&)"); return *this; }
     };
-    static_assert(std::is_trivial_v<P> == false);
-    static_assert(std::is_trivial_v<Vec1<P>> == false);
+    static_assert(std::is_trivially_default_constructible_v<P> == false);
+    static_assert(std::is_trivially_default_constructible_v<Vec1<P>> == false);
     static_assert(std::is_trivially_copyable_v<P> == false);
     static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
     Vec1<P> s1;

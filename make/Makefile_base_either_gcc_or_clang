@@ -30,7 +30,7 @@ ifeq ($(plain_compiler),)
   # (-pedantic-errors == -Werror -Wpedantic)
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
   ccommon += $(machine_arch) -ffast-math -mfpmath=sse
-  ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
+  ccommon += $(if $(PEDANTIC:0=),$(cwarnings))
   cxxall += -fno-rtti
   cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.
   commonrel += -O3 -DNDEBUG
@@ -38,12 +38,12 @@ ifeq ($(plain_compiler),)
   # -fno-trapping-math
   commondbg += -g -D_GLIBCXX_DEBUG#  To enable checking of STL containers in libstdc++.
   cxxexe +=
-  cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings),)
-  cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings),)
+  cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings))
+  cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings))
 endif
 
 ccommon += $(if $(x64:0=),-m64,-m32)
-cxxall += $(strip $(if $(CXX_STD),-std=$(CXX_STD),) $(ccommon))
+cxxall += $(strip $(if $(CXX_STD),-std=$(CXX_STD)) $(ccommon))
 c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)
 cdbg += $(commondbg)
@@ -67,7 +67,6 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 #	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
 %.o : %.cpp
 #	@echo $(CXX) $<
-#	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
 	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
 
 # Use absolute pathnames for source files, to get these in warnings and errors.

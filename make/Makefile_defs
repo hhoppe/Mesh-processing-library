@@ -12,13 +12,13 @@ space := $() $()
 # $(warning Have defined space=[$(space)])
 
 define file_exists
-$(if $(wildcard $(subst $(space),\$(space),$(1))),1,)
+$(if $(wildcard $(subst $(space),\$(space),$(1))),1)
 endef
 
 # Identify the build system.
-is_mswin ?= $(if $(WINDIR)$(windir),1,)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
-is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1,)#  Running under Cygwin?
-is_msys := $(if $(findstring :/c/,:$(PATH)),1,)#  Running under Msys?
+is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
+is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1)#  Running under Cygwin?
+is_msys := $(if $(findstring :/c/,:$(PATH)),1)#  Running under Msys?
 is_mac := $(call file_exists,/.DS_Store)#  Running on Mac OS?
 
 ifeq ($(MeshRoot),)
@@ -40,7 +40,7 @@ endif
 export CONFIG ?= $(word $(words $(build_configs)),$(build_configs))# Select the last config as default.
 $(if $(filter $(CONFIG),all $(configs)),,$(error CONFIG=$(CONFIG) is not recognized among [all $(configs)]))
 
-win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1,)#  Hopefully equivalent to defined(_WIN32).
+win32 ?= $(if $(and $(is_mswin),$(filter-out cygwin,$(CONFIG))),1)#  Hopefully equivalent to defined(_WIN32).
 
 SHELL = bash#   sh is standard ("for i in $var; do; done"); bash is necessary for "shopt nullglob", [[ ]], etc.
 
@@ -72,12 +72,10 @@ prepend = \
 # Function to prepend a directory to the current PATH.  This complicated code verifies the existence of the directory,
 #  removes any drive letter, adds a /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
-# remove the check for clean deepclean cleanall makeall everything ??
 define prepend_PATH
-  $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
-    $(if $(call file_exists,$(1)),, \
-      $(error Directory $(1) does not exist, so cannot be added to PATH)) \
-    $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive,)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):))
+  $(if $(call file_exists,$(1)),, \
+    $(error Directory $(1) does not exist, so cannot be added to PATH)) \
+  $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin)$(is_msys),$(if $(is_cygwin),/cygdrive)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):)
 endef
 
 MAKEFLAGS += --no-print-directory#  Because print-directory is ugly and ineffective with "-j" (see main.el).
@@ -109,10 +107,9 @@ endif
 
 ignore_compile_warnings ?= 1
 
-have_lapack = $(if $(filter -DHH_HAVE_LAPACK,$(cppinc)),1,)
-have_recipes = $(if $(filter -DHH_HAVE_SIMPLEX,$(cppinc)),1,)
+have_lapack = $(if $(filter -DHH_HAVE_LAPACK,$(cppinc)),1)
+have_recipes = $(if $(filter -DHH_HAVE_SIMPLEX,$(cppinc)),1)
 have_image_libs = $(if $(filter -DHH_NO_IMAGE_LIBS,$(cppinc)),,1)
-
 
 # Use CONFIG=all as a way to run gmake successively on all $(build_configs).
 # Note two possible issues:
@@ -153,14 +150,14 @@ dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 # The "rm -f $@" is introduced to delete any Unix executable "$@" in the same location if building "$@.exe", to avoid
 # having that Unix executable being considered when running a *_test.script.
 % : %.cpp
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; ,)$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 % : %.c
-	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; ,)$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
-ifeq ($(filter cleanall makeall everything,$(MAKECMDGOALS)),)
+ifeq ($(filter $(config_setting_goals),$(MAKECMDGOALS)),)
   # Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 endif
@@ -201,7 +198,7 @@ endif
 
 include_make_dep = $(if $(filter depend clean deepclean cleanall,$(MAKECMDGOALS)),,1)
 
-absdrive ?= $(if $(is_mswin),c:,)
+absdrive ?= $(if $(is_mswin),c:)
 
 src_cpp ?= $(wildcard *.cpp)
 src_c ?= $(wildcard *.c)
@@ -227,7 +224,7 @@ my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libH
 LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
 
 ifneq ($(filter cygwin unix,$(CONFIG)),)  # For CONFIG = cygwin or unix.
-  system_libs += $(strip $(if $(have_image_libs),jpeg png z,) $(if $(have_lapack),lapack,))
+  system_libs += $(strip $(if $(have_image_libs),jpeg png z) $(if $(have_lapack),lapack))
   LDLIBS += $(foreach n,$(system_libs),-l$(n))
 endif
 

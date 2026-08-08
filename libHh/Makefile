@@ -1,7 +1,7 @@
 MeshRoot = ..
 include $(MeshRoot)/make/Makefile_lib
 
-Video.$(extobj): includes += $(if $(VisionToolsRoot),-I$(VisionToolsRoot)/inc,)
+Video.$(extobj): includes += $(if $(VisionToolsRoot),-I$(VisionToolsRoot)/inc)
 
 # MathOp.$(extobj): cxxall += $(cxx_list_assembly_code)
 

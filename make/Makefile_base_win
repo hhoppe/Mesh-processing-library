@@ -40,11 +40,11 @@ ifeq ($(plain_compiler),)
   ccommon += $(if $(ignore_compile_warnings:0=),,-WX)
   ccommon += -D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
   ccommon += -nologo -Oi -Gm- -Zc:rvalueCast -fp:fast -FC
-  ccommon += $(if $(PEDANTIC:0=),$(cwarnings),)
+  ccommon += $(if $(PEDANTIC:0=),$(cwarnings))
   # ccommon += -D_CRT_DECLARE_NONSTDC_NAMES=1#  Obviate the need for HH_POSIX(fdopen) (but still needed for clang).
   # cxxall += -GR-#  Could disable RTTI.
   # cxxall += -showIncludes#  Show all included header files.
-  commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy $(if $(wholeopt:0=),-GL,)
+  commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy $(if $(wholeopt:0=),-GL)
   commondbg += -Od $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi   -RTC1
   # Avoid shared e.g. vc140.pdb; required for parallel make if >1 exe in same directory.
   cxxexe += -Fd$(@:%=%.pdb)#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
@@ -93,7 +93,7 @@ cxx_list_assembly_code ?= -FAs
 %.cso : %.cs
 	fxc -nologo -T cs_5_0 -E $(subst -,_,$(notdir $(basename $<))) -Fo$@ $<
 
-ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg,),)#  Link-time code generation.
+ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg))#  Link-time code generation.
 LDFLAGS += -link -nologo $(if $(rel:0=),-incremental:no -opt:ref -opt:icf,-debug) -dynamicbase:no $(ltcg)
 
 graphics_libs ?= user32.lib gdi32.lib

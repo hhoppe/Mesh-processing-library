@@ -36,7 +36,7 @@ libs:
 
 progs: $(exe)
 
-$(exe): $(obj) $(extra_objs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))
+$(exe): $(obj) $(extra_objs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n)))
 	$(CXX) $(LDOUTPUT) $(TARGET_ARCH) $(call add_drive,$(obj) $(extra_objs) $(LDLIBS)) $(LDFLAGS)
 
 test: $(outputs)
@@ -63,7 +63,7 @@ deepclean: clean
 # endif
 
 debug:
-	echo 'exe=$(exe) obj=$(obj) LDLIBS=$(LDLIBS) filter=$(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n),))'
+	echo 'exe=$(exe) obj=$(obj) LDLIBS=$(LDLIBS) filter=$(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n)))'
 
 .PHONY: all depend libs progs test clean deepclean debug
 

@@ -16,7 +16,7 @@
 #  make CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CONFIG=all debug  # Show the compiler paths and versions.
-#  make SHELL='sh -x'  # Show all executed commands.
+#  make SHELL='sh -x -v'  # Show all executed commands.
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 
@@ -41,9 +41,6 @@ dirs+test = $(dirs) test demos
 dirs+test+all = $(sort $(dirs+test) libHwWindows libHwX)#  Sort to remove duplicates.
 
 all: progs test
-
-everything:
-	$(MAKE) makeall
 
 demos: progs                    # Run all demos (after building programs).
 
@@ -113,7 +110,7 @@ timingtest: Filterimage Filtervideo
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
-.PHONY: all everything progs libs $(dirs+test) clean $(clean_dirs) \
+.PHONY: all progs libs $(dirs+test) clean $(clean_dirs) \
   deepclean $(deepclean_dirs) depend $(depend_dirs) debug timingtest
 
 endif  # ifneq ($(CONFIG),all)

@@ -72,6 +72,7 @@ prepend = \
 # Function to prepend a directory to the current PATH.  This complicated code verifies the existence of the directory,
 #  removes any drive letter, adds a /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
+# remove the check for clean deepclean cleanall makeall everything ??
 define prepend_PATH
   $(if $(filter clean deepclean cleanall makeall everything,$(MAKECMDGOALS)),, \
     $(if $(call file_exists,$(1)),, \
@@ -96,8 +97,8 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
-# Also update CXX_STD in Makefile_config_cygwin, clang-tidy command in clean_all, LanguageStandard in hhmain.props
-# and in LoopAPILib.vcxproj.
+# Also update CXX_STD in clean_all (clang-tidy), LanguageStandard in hhmain.props and in LoopAPILib.vcxproj.
+# And, consider the gnu++ conversion in Makefile_config_cygwin and the c++23preview in Makefile_base_win.
 CXX_STD ?= c++20
 
 # PEDANTIC ?= 1
@@ -121,6 +122,12 @@ have_image_libs = $(if $(filter -DHH_NO_IMAGE_LIBS,$(cppinc)),,1)
 # Sleep is added to prevent synchronization bugs when using "-j" on successive make invocations in the same directory.
 
 ifeq ($(CONFIG),all)  # There is an else clause below.
+
+# These targets set CONFIG themselves, so CONFIG=all on the command line is redundant and re-iterates.
+config_setting_goals = everything makeall cleanall
+ifneq ($(filter $(config_setting_goals),$(MAKECMDGOALS)),)
+  $(error CONFIG=all is redundant for: $(filter $(config_setting_goals),$(MAKECMDGOALS)))
+endif
 
 override_goal := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),$(if $(.DEFAULT_GOAL),$(.DEFAULT_GOAL),dummy_all))
 # $(info have CONFIG=all override_goal=$(override_goal))
@@ -153,7 +160,10 @@ dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 	$(if $(plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; ,)$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
+ifeq ($(filter cleanall makeall everything,$(MAKECMDGOALS)),)
+  # Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
+  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
+endif
 
 ifneq ($(call file_exists,$(MeshRoot)/../hh_src/Makefile_local_defs),)
   include $(MeshRoot)/../hh_src/Makefile_local_defs

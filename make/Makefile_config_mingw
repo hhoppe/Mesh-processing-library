@@ -11,7 +11,10 @@ endif
 
 graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
-ccommon += -mno-avx#  Work around g++ 16.1.0 mingw bug: 32-byte-aligned stack stores emitted without stack realignment.
+# Workaround for g++ 16.1.0 mingw bug: 32-byte-aligned stack stores are emitted without stack realignment.
+# Adding -mstackrealign realigns to -mpreferred-stack-boundary, which is capped to 16 bytes, so does not help.
+# (See related issue in Makefile_config_cygwin.)
+ccommon += -mno-avx
 
 # Static linking removes the need to have the compiler directory in PATH at runtime.
 LDFLAGS += -static

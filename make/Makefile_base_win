@@ -24,7 +24,7 @@ CC = cl
 # ccommon += -openmp
 ccommon += -EHsc
 ccommon += -FS#  Serialize access to *.pdb files for parallel builds.
-cxxall += $(if $(CXX_STD),-std:$(CXX_STD),)
+cxxall += $(if $(CXX_STD),-std:$(patsubst c++23,c++23preview,$(CXX_STD)))
 
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355

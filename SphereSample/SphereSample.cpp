@@ -1513,7 +1513,7 @@ void do_write_texture(Args& args) {
           p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
           {
             const auto [f, bary, unused_clp, d2] = msearch_i.search(p_i, nullptr);
-            if (d2 > 0.f) {
+            if (d2 > 1e-12f) {
               pixel = Pixel(255, 255, 255, 255);
               continue;
             }

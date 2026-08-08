@@ -15,6 +15,8 @@
 #  make CONFIG=all PEDANTIC=1  # Enable most compiler warnings.
 #  make CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
+#  make CONFIG=all debug  # Show the compiler paths and versions.
+#  make SHELL='sh -x'  # Show all executed commands.
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 
@@ -83,8 +85,10 @@ $(depend_dirs):                 # Enables "make -j" parallelism.
 	$(MAKE) -C $(@:depend_%=%) $(make_dep)
 
 debug:
-	$(info LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))
-	@echo '$PATH=$(PATH)'
+#	$(info LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))
+	@echo 'PATH=$(PATH)'
+	@which $(CXX)
+	$(CXX) --version
 
 # Location of executable used for timing test.
 rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin)#  CONFIG=win instead uses the release exe created by msbuild.

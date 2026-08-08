@@ -146,7 +146,8 @@ template <typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
   HH_EAT_SEMICOLON
 
 template <typename T, typename T2> T& sac_access(T2& ob, int key) {
-  return *reinterpret_cast<T*>(ob->sac.access(key));  // NOLINT(clang-analyzer-core.CallAndMessage)
+  ASSERTX(ob != nullptr);
+  return *reinterpret_cast<T*>(ob->sac.access(key));
 }
 
 #define HH_SAC_ALLOCATE_CD(sac, type) hh::Sac<sac>::allocate_cd<type>(&sac_construct_##type, &sac_destruct_##type)

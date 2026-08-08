@@ -376,8 +376,8 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     my_zero(v);
     for_int(k, nk) {
       int ii = ar_pixelindex0[x] + k;
-      const T& value = map_boundaryrule_1D(ii, cx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
-      v += mat_weights[x][k] * value;
+      const T* pvalue = map_boundaryrule_1D(ii, cx, bndrule) ? &grid[u.with(d, ii)] : bordervalue;
+      v += mat_weights[x][k] * *pvalue;
     }
     ngrid[u] = v;
   };
@@ -703,9 +703,8 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     Vector4i v{0};
     for_int(k, nk) {
       int ii = x - r + k;
-      // NOLINTNEXTLINE(clang-analyzer-core.NullDereference)
-      const Pixel& value = map_boundaryrule_1D(ii, nx, bndrule) ? grid[u.with(d, ii)] : *bordervalue;
-      v += kerneli[k] * Vector4i(value);
+      const Pixel* pvalue = map_boundaryrule_1D(ii, nx, bndrule) ? &grid[u.with(d, ii)] : bordervalue;
+      v += kerneli[k] * Vector4i(*pvalue);
     }
     ngrid[u] = ((v + fach) >> ishift).pixel();
   };

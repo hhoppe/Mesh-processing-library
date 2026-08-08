@@ -102,16 +102,14 @@
 #define HH_PRINTF_ATTRIBUTE(...)
 #endif
 
-#if 0
-#define HH_ASSUME(...) [[assume(__VA_ARGS__)]]  // C++23.
-#elif defined(__clang__)
+// [[assume(__VA_ARGS__)]] of C++23 is less flexible as it cannot be used as part of an expression.
+#if defined(__clang__)
 #pragma clang diagnostic ignored "-Wassume"  // (Assumed expression can have side effects which will be discarded.)
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(_MSC_VER)
 #define HH_ASSUME(...) __assume(__VA_ARGS__)  // Implies __analysis_assume() but is expression rather than statement.
-#elif 0
-// #define HH_ASSUME(...) [&]() { if (!(__VA_ARGS__)) __builtin_unreachable(); }()  // Maybe for gcc.
-// #define HH_ASSUME(...) void(__builtin_expect(!(__VA_ARGS__), 0))   // In gcc/clang; intended for branch prediction.
+#elif defined(__GNUC__)
+#define HH_ASSUME(...) ((__VA_ARGS__) ? void(0) : __builtin_unreachable())  // GCC has no expression-form assume.
 #else
 #define HH_ASSUME(...) (void(0))
 #endif

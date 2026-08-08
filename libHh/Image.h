@@ -57,7 +57,7 @@ class Image : public Matrix<Pixel> {
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
   void set_zsize(int n);
-  int zsize() const { return attrib().zsize; }
+  int zsize() const { return (HH_ASSUME(attrib().zsize <= 4), attrib().zsize); }
   void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // e.g. "jpg"; for writing '-'.
   const string& suffix() const { return attrib().suffix; }                 // e.g. "rgb"; used for reading '-'.
   void set_silent_io_progress(bool b) { _silent_io_progress = b; }

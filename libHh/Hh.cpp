@@ -410,10 +410,10 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   char* buf = stackbuf;
   bool promised = false;  // Precise size was promised.
   if (0) std::cerr << "format=" << format << "\n";
-  std::va_list ap2;
   for (;;) {
+    std::va_list ap2;
     va_copy(ap2, ap);
-    int n = vsnprintf(buf, size, format, ap2);  // NOLINT(clang-analyzer-valist.Uninitialized)
+    int n = vsnprintf(buf, size, format, ap2);
     va_end(ap2);
     // SHOW(size, promised, n, int(buf[size-1]));
     if (0) std::cerr << "n=" << n << " size=" << size << " format=" << format << "\n";
@@ -437,10 +437,9 @@ static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, s
   const size_t minsize = 40;
   if (str.size() < minsize) str.resize(minsize);
   bool promised = false;  // Precise size was promised.
-  std::va_list ap2;
   for (;;) {
+    std::va_list ap2;
     va_copy(ap2, ap);
-    // NOLINTNEXTLINE(clang-analyzer-valist.Uninitialized)
     int n = vsnprintf(str.data(), str.size(), format, ap2);
     va_end(ap2);
     if (promised) assertx(n == narrow_cast<int>(str.size()) - 1);

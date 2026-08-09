@@ -540,7 +540,7 @@ template <typename Range, typename Func> struct TransformedRange {
 
 // Return a view range in which all elements are mapped through a function `func`.
 template <typename Range, typename Func, typename = enable_if_range_t<Range>>
-auto transform(Range&& range, Func&& func = Func{}) {
+[[HH_NO_DANGLING]] auto transform(Range&& range, Func&& func = Func{}) {
   return details::TransformedRange<Range, Func>{std::forward<Range>(range), std::forward<Func>(func)};
 }
 

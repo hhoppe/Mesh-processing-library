@@ -1013,13 +1013,13 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     int wvsflo = flccw == k_undefined ? k_undefined : get_wvf(vs, flccw);
     int wvsfro = frclw == k_undefined ? k_undefined : get_wvf(vs, frclw);
     assertx((code & Vsplit::S_MASK) ==
-            unsigned((wvsfl == wvsflo ? Vsplit::S_LSAME : 0u) | (wvsfr == wvsfro ? Vsplit::S_RSAME : 0u) |
-                     (wvsfl == wvsfr ? Vsplit::S_CSAME : 0u)));
+            ((wvsfl == wvsflo ? Vsplit::S_LSAME : 0u) | (wvsfr == wvsfro ? Vsplit::S_RSAME : 0u) |
+             (wvsfl == wvsfr ? Vsplit::S_CSAME : 0u)));
     int wvtflo = flclw == k_undefined ? k_undefined : get_wvf(vt, flclw);
     int wvtfro = frccw == k_undefined ? k_undefined : get_wvf(vt, frccw);
     assertx((code & Vsplit::T_MASK) ==
-            unsigned((wvtfl == wvtflo ? Vsplit::T_LSAME : 0u) | (wvtfr == wvtfro ? Vsplit::T_RSAME : 0u) |
-                     (wvtfl == wvtfr ? Vsplit::T_CSAME : 0u)));
+            ((wvtfl == wvtflo ? Vsplit::T_LSAME : 0u) | (wvtfr == wvtfro ? Vsplit::T_RSAME : 0u) |
+             (wvtfl == wvtfr ? Vsplit::T_CSAME : 0u)));
   }
 #endif
 GOTO_VSPLIT_WAD2:

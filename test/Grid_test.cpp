@@ -66,9 +66,9 @@ int main() {
     SHOW(unravel_index(grid4.dims(), ravel_index_list(grid4.dims(), 3, 4, 5, 6)));
   }
   {
-    SHOW((has_ostream_eol<Grid<2, int>>()));
-    SHOW((has_ostream_eol<Vec<int, 5>>()));
-    constexpr bool b = has_ostream_eol<Vec<int, 5>>();
+    SHOW((has_ostream_eol_v<Grid<2, int>>));
+    SHOW((has_ostream_eol_v<Vec<int, 5>>));
+    constexpr bool b = has_ostream_eol_v<Vec<int, 5>>;
     SHOW(b);
   }
   {

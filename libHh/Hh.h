@@ -14,10 +14,6 @@
 #define _CRT_SECURE_NO_WARNINGS  // Do not suggest use of *_s() secure function calls.
 #endif
 
-#if defined(_MSC_VER) && !defined(_SCL_SECURE_NO_WARNINGS)
-#define _SCL_SECURE_NO_WARNINGS  // Allow calls to std::copy(const T*, const T*, T*) and std::move(T*, T*, T*).
-#endif
-
 #if defined(_WIN32) && !defined(_WIN32_WINNT)
 // "#define NTDDI_VERSION NTDDI_WINXP" is no-op on __MINGW32__.
 // For <windows.h>; e.g. 0x0501 == WinXP; 0x0601 == WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__.
@@ -28,7 +24,6 @@
 // Disable some nitpicky level4 warnings (for -W4).
 #pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
 #pragma warning(disable : 4464)  // Allow #include paths containing ".." relative folders (e.g. "../libHh/Video.h").
-#pragma warning(disable : 4512)  // In Release config, assignment operator could not be generated.
 // Code analysis:
 #pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
 #pragma warning(disable : 6286)   // <non-zero constant> || <expression> is always a non-zero constant.
@@ -59,6 +54,7 @@
 #include <limits>     // numeric_limits<>
 #include <memory>     // unique_ptr<>
 #include <optional>   // optional
+#include <ranges>     // views::iota()
 #include <sstream>    // stringstream
 #include <stdexcept>  // runtime_error
 #include <string>     // string
@@ -102,8 +98,9 @@
 #define HH_PRINTF_ATTRIBUTE(...)
 #endif
 
-// [[assume(__VA_ARGS__)]] of C++23 is less flexible as it cannot be used as part of an expression.
-#if defined(__clang__)
+#if 0
+#define HH_ASSUME(...) [[assume(__VA_ARGS__)]]  // C++23, but cannot be used within an expression.
+#elif defined(__clang__)
 #pragma clang diagnostic ignored "-Wassume"  // (Assumed expression can have side effects which will be discarded.)
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(_MSC_VER)
@@ -114,7 +111,7 @@
 #define HH_ASSUME(...) (void(0))
 #endif
 
-#if 0
+#if defined(__cpp_lib_unreachable)
 #define HH_UNREACHABLE std::unreachable()  // C++23.
 #elif defined(_MSC_VER) && !defined(__clang__)
 #define HH_UNREACHABLE __assume(false)  // This path is never taken.
@@ -125,6 +122,7 @@
 #define HH_ID(x) HH_CAT(_hh_id_, x)  // Private identifier in a macro definition.
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 
+// [[HH_NO_DANGLING]] suppresses gcc -Wdangling-reference false positives on funcs returning a view of their argument.
 #if defined(__GNUC__) && !defined(__clang__) && __GNUC__ >= 14
 #define HH_NO_DANGLING gnu::no_dangling
 #else
@@ -184,35 +182,33 @@ using ushort = unsigned short;
 // *** Forward declaration of implementation details.
 
 namespace details {
-template <typename T> struct identity {
-  using type = T;
-};
 template <typename T> struct sum_type;
-template <typename T> class Range;
 }  // namespace details
 
 // *** Generalized casting.
 
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
-template <typename Dest> Dest implicit_cast(typename details::identity<Dest>::type t) { return t; }
+template <typename Dest> [[nodiscard]] Dest implicit_cast(std::type_identity_t<Dest> t) { return t; }
 
 // For use in downcasting to a derived class.
-template <typename Dest, typename Src> Dest down_cast(Src* f) {
+template <typename Dest, typename Src> [[nodiscard]] Dest down_cast(Src* f) {
   static_assert(std::is_base_of_v<Src, std::remove_pointer_t<Dest>>);
   return static_cast<Dest>(f);
 }
 
 // Conversion with bounds-checking in Debug configuration.
-template <typename Target, typename Source> constexpr Target narrow_cast(Source v);
+template <typename Target, typename Source> [[nodiscard]] constexpr Target narrow_cast(Source v);
 
 // Bounds-safe conversion, checked even in Release configuration.
-template <typename Target, typename Source> constexpr Target assert_narrow_cast(Source v);
+template <typename Target, typename Source> [[nodiscard]] constexpr Target assert_narrow_cast(Source v);
 
 // Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
-template <typename Target, typename Source> constexpr Target possible_cast(Source v) { return static_cast<Target>(v); }
+template <typename Target, typename Source> [[nodiscard]] constexpr Target possible_cast(Source v) {
+  return static_cast<Target>(v);
+}
 
 // Cast a temporary as an lvalue; be careful; only use when safe.
-template <typename T> T& as_lvalue(T&& e) { return const_cast<T&>(static_cast<const T&>(e)); }
+template <typename T> [[nodiscard]] T& as_lvalue(T&& e) { return static_cast<T&>(e); }
 
 // *** Constants.
 
@@ -225,9 +221,6 @@ constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; se
 
 // Derive from this class to disable copy constructor and copy assignment.
 struct noncopyable;
-
-// Specialize<i> is a dummy type for function specialization.
-template <int> struct Specialize {};
 
 // *** Assertions, warnings, errors, debug.
 
@@ -329,21 +322,13 @@ template <typename A, typename B> std::ostream& operator<<(std::ostream& os, con
 }
 
 // By default, assume that types do not end their stream output with a newline character.
-template <typename T> struct has_ostream_eol_aux {
-  static constexpr bool value = false;
-};
+template <typename T> constexpr bool has_ostream_eol_aux_v = false;
 
 // Declares that the specified type ends its stream output with a newline character; must be placed in namespace hh.
-#define HH_DECLARE_OSTREAM_EOL(...)         \
-  struct has_ostream_eol_aux<__VA_ARGS__> { \
-    static constexpr bool value = true;     \
-  }
+#define HH_DECLARE_OSTREAM_EOL(...) inline constexpr bool has_ostream_eol_aux_v<__VA_ARGS__> = true
 
 // Identifies if a type T ends its stream output (i.e. operator<<(std::ostream)) with a newline character '\n'.
-template <typename T> constexpr bool has_ostream_eol() {
-  // (function template cannot partially specialize, e.g. Array<T>)
-  return has_ostream_eol_aux<std::remove_cv_t<std::remove_reference_t<T>>>::value;
-}
+template <typename T> constexpr bool has_ostream_eol_v = has_ostream_eol_aux_v<std::remove_cvref_t<T>>;
 
 // For the specified container type, define an ostream operator<<() that iterates over the container's range.
 #define HH_DECLARE_OSTREAM_RANGE(...)                                                                    \
@@ -359,50 +344,52 @@ template <typename... A> constexpr void dummy_use(const A&...) {}
 // or to an explicit MeshRoot environment variable that does not match the current tree.
 
 // Avoid warnings of uninitialized variables.
-template <typename T> void dummy_init(T& v) { v = T{}; }
-template <typename T, typename... A> void dummy_init(T& v, A&... a) { v = T{}, dummy_init(a...); }
+template <typename... T> void dummy_init(T&... variable) { ((variable = T{}), ...); }
 
 // Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
 template <typename T> void my_zero(T& e);
 
 // Returns T{-1} or T{+1} based on sign of expression.
-template <typename T> constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
+template <typename T> [[nodiscard]] constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
 
 // Returns { T{-1}, T{0}, T{+1} } based on sign of expression.
-template <typename T> constexpr T signz(const T& e) { return e > T{0} ? T{1} : e < T{0} ? T{-1} : T{0}; }
+template <typename T> [[nodiscard]] constexpr T signz(const T& e) { return e > T{0} ? T{1} : e < T{0} ? T{-1} : T{0}; }
 
 // Returns a value times itself.
-template <typename T> constexpr T square(const T& e) { return e * e; }
+template <typename T> [[nodiscard]] constexpr T square(const T& e) { return e * e; }
 
 // Like clamp() but slightly less efficient; however, it works on values like Vector4.
-template <typename T> constexpr T general_clamp(const T& v, const T& a, const T& b) { return min(max(v, a), b); }
+template <typename T> [[nodiscard]] constexpr T general_clamp(const T& v, const T& a, const T& b) {
+  return min(max(v, a), b);
+}
 
 // Linearly interpolate between two values (f == 1.f returns v1; f == 0.f returns v2).
-inline constexpr float interp(float v1, float v2, float f = 0.5f);
+[[nodiscard]] inline constexpr float interp(float v1, float v2, float f = 0.5f);
 
 // Linearly interpolate between two values (f == 1. returns v1; f == 0. returns v2).
-inline constexpr double interp(double v1, double v2, double f = 0.5);
+[[nodiscard]] inline constexpr double interp(double v1, double v2, double f = 0.5);
 
 // Returns v clamped to range [0, 255].
-inline uint8_t clamp_to_uint8(int v);
+[[nodiscard]] inline uint8_t clamp_to_uint8(int v);
 
 // Returns j%3 (where j is in [0, 5]).
-inline int mod3(int j);
+[[nodiscard]] inline int mod3(int j);
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
-template <typename T> T round_fraction_digits(T v, T fac = 1e5f) { return floor(v * fac + .5f) / fac; }
+template <typename T> [[nodiscard]] T round_fraction_digits(T v, T fac = 1e5f) { return floor(v * fac + .5f) / fac; }
 
 // Higher-precision type to represent the sum of a set of elements.
 template <typename T> using sum_type_t = typename details::sum_type<T>::type;
 
-// Range of integers as in Python range(stop):  e.g.: for (const int i : range(5)) { SHOW(i); } gives 0..4 .
-template <typename T> details::Range<T> range(T stop) { return details::Range<T>(stop); }
-
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
-template <typename T> details::Range<T> range(T start, T stop) { return details::Range<T>(start, stop); }
+template <typename T> [[nodiscard]] auto range(T start, T stop) { return std::views::iota(start, max(start, stop)); }
+
+// Range of integers as in Python range(stop):  e.g.: for (const int i : range(5)) { SHOW(i); } gives 0..4 .
+template <typename T> [[nodiscard]] auto range(T stop) { return range(T{0}, stop); }
 
 // Create an optional object if and only if condition is true.
-template <typename T, typename... Args> std::optional<T> make_optional_if(bool condition, Args&&... args) {
+template <typename T, typename... Args>
+[[nodiscard]] std::optional<T> make_optional_if(bool condition, Args&&... args) {
   if (condition) return std::make_optional<T>(std::forward<Args>(args)...);
   return {};
 }
@@ -417,84 +404,84 @@ void hh_clean_up();
 
 #if defined(_WIN32)
 // Convert Windows UTF-16 std::wstring to UTF-8 std::string.
-std::string utf8_from_utf16(const std::wstring& wstr);
+[[nodiscard]] std::string utf8_from_utf16(const std::wstring& wstr);
 
 // Convert UTF-8 std::string to Windows UTF-16 std::wstring.
-std::wstring utf16_from_utf8(const std::string& str);
+[[nodiscard]] std::wstring utf16_from_utf8(const std::string& str);
 #endif
 
-// e.g. SHOW(type_name<T>());
-template <typename T> string type_name();
-template <typename T> string type_name(const T&) { return type_name<T>(); }
+// e.g. SHOW(type_name<T>()); await C++26 reflection.
+template <typename T> [[nodiscard]] string type_name();
+template <typename T> [[nodiscard]] string type_name(const T&) { return type_name<T>(); }
 
 // Write an object e to its string representation using operator<<(ostream&, const T&).
-template <typename T> string make_string(const T& e);
+template <typename T> [[nodiscard]] string make_string(const T& e);
 
 // Format a string like sprintf() but directly return an adaptively-sized std::string.
-HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...);
+[[nodiscard]] HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...);
 
 // Format a string like sform() but disable warnings concerning a non-literal format string.
-string sform_nonliteral(const char* format, ...);
+[[nodiscard]] string sform_nonliteral(const char* format, ...);
 
 // Format a string like sprintf() but directly to a reused adaptively-resized output buffer named str.
 HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, ...);
 
 // Shortcut for ssform(str, format, ...).c_str(); like sprintf() but using an adaptively resized buffer str.
-HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ...);
+[[nodiscard]] HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ...);
 
 // Allocate a duplicate of a C "char*" string, using make_unique<char[]>.
-unique_ptr<char[]> make_unique_c_string(const char* s);
+[[nodiscard]] unique_ptr<char[]> make_unique_c_string(const char* s);
 
 // If line begins with prefix string, return remaining string.
-const char* after_prefix(const char* sline, const char* prefix);
+[[nodiscard]] const char* after_prefix(const char* sline, const char* prefix);
 
 // Eat up whitespace, parse an integer from the string, and advance `s` to the next character beyond, or die.
-int int_from_chars(const char*& s);
+[[nodiscard]] int int_from_chars(const char*& s);
 
 // Eat up whitespace, parse an unsigned from the string, and advance `s` to the next character beyond, or die.
-unsigned uint_from_chars(const char*& s);
+[[nodiscard]] unsigned uint_from_chars(const char*& s);
 
 // Eat up whitespace, parse a float from the string, and advance `s` to the next character beyond, or die.
-float float_from_chars(const char*& s);
+[[nodiscard]] float float_from_chars(const char*& s);
 
 // Eat up whitespace, parse a double from the string, and advance `s` to the next character beyond, or die.
-double double_from_chars(const char*& s);
+[[nodiscard]] double double_from_chars(const char*& s);
 
 // Eat up whitespace and assert that there are not more remaining characters.
 void assert_no_more_chars(const char* s);
 
 // Convert string to integer value, or crash if invalid.
-int to_int(const char* s);
+[[nodiscard]] int to_int(const char* s);
 
 // Convert string to integer value, or crash if invalid.
-inline int to_int(const string& s) { return to_int(s.c_str()); }
+[[nodiscard]] inline int to_int(const string& s) { return to_int(s.c_str()); }
 
 // Convert string to unsigned value, or crash if invalid.
-unsigned to_uint(const char* s);
+[[nodiscard]] unsigned to_uint(const char* s);
 
 // Convert string to unsigned value, or crash if invalid.
-inline int to_uint(const string& s) { return to_uint(s.c_str()); }
+[[nodiscard]] inline unsigned to_uint(const string& s) { return to_uint(s.c_str()); }
 
 // Convert string to float value, or crash if invalid.
-float to_float(const char* s);
+[[nodiscard]] float to_float(const char* s);
 
 // Convert string to float value, or crash if invalid.
-inline float to_float(const string& s) { return to_float(s.c_str()); }
+[[nodiscard]] inline float to_float(const string& s) { return to_float(s.c_str()); }
 
 // Convert string to double value, or crash if invalid.
-double to_double(const char* s);
+[[nodiscard]] double to_double(const char* s);
 
 // Convert string to double value, or crash if invalid.
-inline double to_double(const string& s) { return to_double(s.c_str()); }
+[[nodiscard]] inline double to_double(const string& s) { return to_double(s.c_str()); }
 
 // Allocate an aligned memory block (returns nullptr if fails).  Portable std::aligned_alloc().
-void* aligned_malloc(size_t alignment, size_t size);
+[[nodiscard]] void* aligned_malloc(size_t alignment, size_t size);
 
 // Deallocate an aligned memory block previously created by aligned_malloc().  Portable std::free().
 void aligned_free(void* p);
 
 // Allocate n elements of type T, with appropriate memory alignment based on T.
-template <typename T> T* aligned_new(size_t n);
+template <typename T> [[nodiscard]] T* aligned_new(size_t n);
 
 // Deallocate aligned memory.
 template <typename T> void aligned_delete(T* p);
@@ -506,30 +493,29 @@ std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings =
 void my_setenv(const string& name, const string& value);
 
 // Return false if environment variable is {undefined, "0", or "false"}, true if {"", "1", or "true"), else abort.
-bool getenv_bool(const string& name, bool vdefault = false, bool warn = false);
+[[nodiscard]] bool getenv_bool(const string& name, bool vdefault = false, bool warn = false);
 
 // Return vdefault if environment variable `name` is not defined, 1 if "", value if integer, else abort.
-int getenv_int(const string& name, int vdefault = 0, bool warn = false);
+[[nodiscard]] int getenv_int(const string& name, int vdefault = 0, bool warn = false);
 
 // Return vdefault if environment variable `name` is not defined, value if float, else abort.
-float getenv_float(const string& name, float vdefault, bool warn = false);
+[[nodiscard]] float getenv_float(const string& name, float vdefault, bool warn = false);
 
 // Return string value of environment variable `name`, or "" if not defined.
-string getenv_string(const string& name, const string& vdefault = "", bool warn = false);
+[[nodiscard]] string getenv_string(const string& name, const string& vdefault = "", bool warn = false);
 
 // Return typed value of environment variable `name`.
-template <typename T> T getenv_type(const string& name, T vdefault, bool warn = false);
-template <> inline bool getenv_type<bool>(const string& var, bool vdefault, bool warn) {
-  return getenv_bool(var, vdefault, warn);
-}
-template <> inline int getenv_type<int>(const string& var, int vdefault, bool warn) {
-  return getenv_int(var, vdefault, warn);
-}
-template <> inline float getenv_type<float>(const string& var, float vdefault, bool warn) {
-  return getenv_float(var, vdefault, warn);
-}
-template <> inline string getenv_type<string>(const string& var, string vdefault, bool warn) {
-  return getenv_string(var, vdefault, warn);
+template <typename T> [[nodiscard]] T getenv_type(const string& name, T vdefault, bool warn = false) {
+  if constexpr (std::is_same_v<T, bool>)
+    return getenv_bool(name, vdefault, warn);
+  else if constexpr (std::is_same_v<T, int>)
+    return getenv_int(name, vdefault, warn);
+  else if constexpr (std::is_same_v<T, float>)
+    return getenv_float(name, vdefault, warn);
+  else if constexpr (std::is_same_v<T, string>)
+    return getenv_string(name, vdefault, warn);
+  else
+    static_assert(false, "getenv_type<T>: unsupported type T.");
 }
 
 // Show any Win32 error if on _WIN32.
@@ -544,13 +530,13 @@ void show_call_stack();
 // *** Hh_main.cpp.
 
 // Return absolute time, in secs (accuracy at least ~.001).
-double get_precise_time();
+[[nodiscard]] double get_precise_time();
 
 // Return absolute time, in cycle counts.
-int64_t get_precise_counter();
+[[nodiscard]] int64_t get_precise_counter();
 
 // Return seconds/cycle.
-double get_seconds_per_counter();
+[[nodiscard]] double get_seconds_per_counter();
 
 // Delay for some number of seconds.
 void my_sleep(double sec);
@@ -559,25 +545,25 @@ void my_sleep(double sec);
 void my_imprecise_sleep(double sec);
 
 // Get number of bytes of available memory (min of free virtual and physical space), or 0 if unavailable.
-size_t available_memory();
+[[nodiscard]] size_t available_memory();
 
 // Return current directory.
-string get_current_directory();
+[[nodiscard]] string get_current_directory();
 
 // String like "2016-02-15 18:02:28".
-string get_current_datetime();
+[[nodiscard]] string get_current_datetime();
 
 // Return machine name, in lowercase.
-string get_host_name();
+[[nodiscard]] string get_host_name();
 
 // String with date, time, machine, build parameters.
-string get_header_info();
+[[nodiscard]] string get_header_info();
 
 // On Windows, replace the command-line argv with a new one that contains UTF-8 encoded strings; else do nothing.
 void ensure_utf8_encoding(int& argc, const char**& argv);
 
 // Use fcntl() to make read() calls non-blocking; returns false if failure.
-bool set_fd_no_delay(int fd, bool nodelay);
+[[nodiscard]] bool set_fd_no_delay(int fd, bool nodelay);
 
 //----------------------------------------------------------------------------
 
@@ -594,7 +580,7 @@ template <typename T> struct false_capture {
   T _e;
 };
 
-string forward_slash(const string& s);
+[[nodiscard]] string forward_slash(const string& s);
 
 [[noreturn]] void assertx_aux2(const char* s);
 
@@ -602,7 +588,7 @@ string forward_slash(const string& s);
 
 bool assertw_aux2(const char* s);
 
-inline string add_fl(string s, const char* file_line) { return s + file_line; }
+[[nodiscard]] inline string add_fl(string s, const char* file_line) { return s + file_line; }
 
 template <typename T> constexpr T assertx_aux(T&& val, const char* s) {
   if (!val) assertx_aux2(s);
@@ -630,14 +616,14 @@ class MyOStringStream {
     _oss << value;
     return *this;
   }
-  std::string str() const { return _oss.str(); }
+  [[nodiscard]] std::string str() const { return _oss.str(); }
 
  private:
   std::ostringstream _oss;
 };
 
 #define HH_SHOW_0(sargs, high_precision, arg1) \
-  hh::details::show_aux(sargs, arg1, hh::has_ostream_eol<decltype(arg1)>(), high_precision)
+  hh::details::show_aux(sargs, arg1, hh::has_ostream_eol_v<decltype(arg1)>, high_precision)
 
 #define HH_SHOW_1(sargs, high_precision, ...) \
   hh::details::show_cerr_and_debug(HH_SSHOW_1(sargs, high_precision, __VA_ARGS__) + '\n')
@@ -679,60 +665,6 @@ template <typename T> struct sum_type {
                                                      std::conditional_t<std::is_signed_v<T>, int64_t, uint64_t>>>;
 };
 
-// Range of integral elements defined as in Python range(start, stop), where step is 1 and stop is not included.
-template <typename T> class Range {
-  static_assert(std::is_integral_v<T>);  // Must have exact arithmetic for equality testing.
- public:
-  class iterator {
-    using type = iterator;
-
-   public:
-    using iterator_category = std::random_access_iterator_tag;
-    using value_type = T;
-    using difference_type = int64_t;  // (It may be larger than std::ptrdiff_t.)
-    using pointer = value_type*;
-    using reference = value_type&;
-    iterator(T start, T stop) : _v(start), _stop(stop) {}
-    iterator(const type& iter) = default;
-    type& operator=(const type&) = default;
-    bool operator==(const type& rhs) const { return _v == rhs._v; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
-    bool operator<(const type& rhs) const { return _v < rhs._v; }
-    bool operator<=(const type& rhs) const { return _v <= rhs._v; }
-    bool operator>(const type& rhs) const { return _v > rhs._v; }
-    bool operator>=(const type& rhs) const { return _v >= rhs._v; }
-    difference_type operator-(const type& rhs) const { return difference_type(_v) - rhs._v; }
-    type operator+(difference_type n) const { return iterator(*this) += n; }
-    type& operator+=(difference_type n) {
-      ASSERTXX(_v < _stop);
-      _v = T(_v + n);
-      ASSERTXX(_v <= _stop);
-      return *this;
-    }
-    const T& operator*() const { return (ASSERTXX(_v < _stop), _v); }
-    type& operator++() { return *this += T{1}; }
-    T operator[](size_t i) const { return (ASSERTXX(T(_v + i) < _stop), T(_v + i)); }
-
-   private:
-    T _v, _stop;
-  };
-
-  using value_type = T;
-  using const_iterator = iterator;
-  using size_type = T;
-  explicit Range(T stop) : Range(T{0}, stop) {}
-  Range(T start, T stop) : _start(min(start, stop)), _stop(stop) {}
-  iterator begin() const { return iterator(_start, _stop); }
-  iterator end() const { return iterator(_stop, _stop); }
-  iterator cbegin() const { return iterator(_start, _stop); }
-  iterator cend() const { return iterator(_stop, _stop); }
-  size_type size() const { return _stop - _start; }
-  bool empty() const { return _stop == _start; }
-
- private:
-  T _start, _stop;
-};
-
 }  // namespace details
 
 template <typename Target, typename Source> constexpr Target narrow_cast(Source v) {
@@ -762,7 +694,7 @@ template <typename C> class stream_range {
   explicit stream_range(const C& c) : _c(c) {}
   friend std::ostream& operator<<(std::ostream& os, const stream_range& sc) {
     os << type_name<C>() << "={\n";
-    for (const auto& e : sc._c) os << "  " << e << (has_ostream_eol<decltype(e)>() ? "" : "\n");
+    for (const auto& e : sc._c) os << "  " << e << (has_ostream_eol_v<decltype(e)> ? "" : "\n");
     return os << "}\n";
   }
 

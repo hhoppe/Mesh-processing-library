@@ -31,10 +31,10 @@ enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefin
 
 // Convert a string ("reflected", "periodic", "clamped", "border", "101reflected") to a boundary rule by examining
 // its first letter.
-Bndrule parse_boundaryrule(const string& s);
+[[nodiscard]] Bndrule parse_boundaryrule(const string& s);
 
 // Convert a boundary rule to a string.
-string boundaryrule_name(Bndrule bndrule);
+[[nodiscard]] string boundaryrule_name(Bndrule bndrule);
 
 inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
@@ -42,6 +42,15 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
 
 // Modify index i to be within domain [0, n-1] using boundary rule; return false if bndrule == Border and i is outside.
 bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
+
+template <typename T> class CArrayView;
+template <typename T> class ArrayView;
+
+// The view type (const or mutable) corresponding to an element pointer type Ptr.
+template <typename Ptr>
+using array_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Ptr>>,
+                                        CArrayView<std::remove_cv_t<std::remove_pointer_t<Ptr>>>,
+                                        ArrayView<std::remove_pointer_t<Ptr>>>;
 
 // View of a variable-sized 1D array with constant data of type T; e.g. refers to a const C-array,
 //  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], initializer_list<T>, etc.
@@ -59,29 +68,36 @@ template <typename T> class CArrayView {
   void reinit(type a) { *this = a; }
   int num() const { return _n; }
   size_t size() const { return narrow_cast<size_t>(_n); }
-  // template <typename Self> auto& operator[](this Self&& self, int i) {  // C++23; obviates Array::operator[]().
-  //   return HH_CHECK_BOUNDS(i, self.num()), self.data()[i];
-  // }
-  const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
-  const T& last() const { return (*this)[_n - 1]; }
-  bool ok(int i) const { return i >= 0 && i < _n; }
-  bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
+  template <typename Self> [[HH_NO_DANGLING]] auto& operator[](this Self&& self, int i) {
+    HH_CHECK_BOUNDS(i, self.num());
+    return self.data()[i];
+  }
+  template <typename Self> auto& last(this Self&& self) { return self[self.num() - 1]; }
+  [[nodiscard]] bool ok(int i) const { return i >= 0 && i < _n; }
+  [[nodiscard]] bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
   bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
-  const T& inside(int i, Bndrule bndrule) const { return (assertx(map_inside(i, bndrule)), (*this)[i]); }
-  const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
-  bool contains(const T& e) const;
-  int index(const T& e) const;  // Return -1 if not found.
+  template <typename Self> [[nodiscard]] auto& inside(this Self&& self, int i, Bndrule bndrule) {
+    return (assertx(self.map_inside(i, bndrule)), self[i]);
+  }
+  [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
+  [[nodiscard]] bool contains(const T& e) const;
+  [[nodiscard]] int index(const T& e) const;  // Return -1 if not found.
   bool operator==(type rhs) const;
   bool operator!=(type rhs) const { return !(*this == rhs); }
-  type head(int n) const { return segment(0, n); }
-  type tail(int n) const { return segment(_n - n, n); }
-  type segment(int i, int s) const { return (ASSERTXX(check(i, s)), type(_a + i, s)); }
-  type slice(int ib, int ie) const { return segment(ib, ie - ib); }
+  template <typename Self> [[nodiscard]] auto head(this Self&& self, int n) { return self.segment(0, n); }
+  template <typename Self> [[nodiscard]] auto tail(this Self&& self, int n) { return self.segment(self.num() - n, n); }
+  template <typename Self> [[nodiscard]] auto segment(this Self&& self, int i, int s) {
+    ASSERTXX(implicit_cast<const type&>(self).check(i, s));  // Access the protected check() through this base class.
+    return array_view_t<decltype(self.data())>(self.data() + i, s);
+  }
+  template <typename Self> [[nodiscard]] auto slice(this Self&& self, int ib, int ie) {
+    return self.segment(ib, ie - ib);
+  }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  const T* begin() const { return _a; }
-  const T* end() const { return _a + _n; }
+  template <typename Self> auto begin(this Self&& self) { return self.data(); }
+  template <typename Self> auto end(this Self&& self) { return self.data() + self.num(); }
   const T* data() const { return _a; }
 
  protected:
@@ -94,7 +110,7 @@ template <typename T> class CArrayView {
 
 // View of a variable-sized 1D array with modifiable data of type T, e.g. refers to a C-array,
 //  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
-template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> {
+template <typename T> class ArrayView : public CArrayView<T> {
   using base = CArrayView<T>;
   using type = ArrayView<T>;
 
@@ -106,28 +122,9 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template<size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
-  T& operator[](int i) { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
-  const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i]; }
-  T& last() { return (*this)[_n - 1]; }
-  const T& last() const { return base::last(); }
-  T& inside(int i, Bndrule bndrule) { return (assertx(base::map_inside(i, bndrule)), (*this)[i]); }
-  const T& inside(int i, Bndrule bndrule) const { return (assertx(base::map_inside(i, bndrule)), (*this)[i]); }
-  const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   void assign(base ar);
-  type head(int n) { return segment(0, n); }
-  base head(int n) const { return base::head(n); }
-  type tail(int n) { return segment(_n - n, n); }
-  base tail(int n) const { return base::tail(n); }
-  type segment(int i, int n) { return (ASSERTXX(check(i, n)), type(_a + i, n)); }
-  base segment(int i, int n) const { return base::segment(i, n); }
-  type slice(int ib, int ie) { return segment(ib, ie - ib); }
-  base slice(int ib, int ie) const { return base::slice(ib, ie); }
   using iterator = T*;
   using const_iterator = const T*;
-  T* begin() { return _a; }
-  const T* begin() const { return _a; }
-  T* end() { return _a + _n; }
-  const T* end() const { return _a + _n; }
   T* data() { return _a; }
   const T* data() const { return _a; }
   using base::num;
@@ -143,13 +140,13 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
 };
 
 // Create a CArrayView<T> referencing the single specified element.
-template <typename T> CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
+template <typename T> [[nodiscard]] CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
 
 // Create an ArrayView<T> referencing the single specified element.
-template <typename T> ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
+template <typename T> [[nodiscard]] ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
 
 // Determine if two views have any overlap (to avoid aliasing issues).
-template <typename T> bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
+template <typename T> [[nodiscard]] bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
   return v1.begin() < v2.end() && v2.begin() < v1.end();
 }
 
@@ -234,7 +231,7 @@ template <typename T> class Array : public ArrayView<T> {
     ASSERTX(s >= 0);
     if (_cap < s) set_capacity(s);
   }
-  int capacity() const { return _cap; }
+  [[nodiscard]] int capacity() const { return _cap; }
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
   void erase(T* b, T* e) { erase(narrow_cast<int>(b - base::begin()), narrow_cast<int>(e - b)); }
@@ -447,14 +444,6 @@ template <typename T> bool CArrayView<T>::check(int i, int s) const {
 
 //----------------------------------------------------------------------------
 
-template <typename T> const T& ArrayView<T>::inside(int i, Bndrule bndrule, const T* bordervalue) const {
-  if (!base::map_inside(i, bndrule)) {
-    ASSERTX(bordervalue);
-    return *bordervalue;
-  }
-  return (*this)[i];
-}
-
 template <typename T> void ArrayView<T>::assign(base ar) {
   ASSERTX(_n == ar.num());
   // std::memcpy() would be unsafe here for general T.
@@ -542,7 +531,7 @@ template <typename T> Array<T> Array<T>::pop(int n) {
 template <typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a) {
   os << "Array<" << type_name<T>() << ">(" << a.num() << ") {\n";
   for_int(i, a.num()) {
-    os << "  " << a[i] << (has_ostream_eol<T>() ? "" : "\n");  // Skip linefeed if already printed.
+    os << "  " << a[i] << (has_ostream_eol_v<T> ? "" : "\n");  // Skip linefeed if already printed.
   }
   return os << "}\n";
 }

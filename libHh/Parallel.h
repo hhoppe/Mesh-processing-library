@@ -210,7 +210,7 @@ void parallel_for(const ParallelOptions& options, const Range& range, const Proc
   const int num_threads = int(std::min(NumElements(max_num_threads), num_elements));
   const auto process_chunk = [&](const int thread_index, auto subrange) {
     dummy_use(thread_index);
-    for (auto& element : subrange) process_element(element);
+    for (auto&& element : subrange) process_element(element);
   };
   parallel_for_chunk(options, range, num_threads, process_chunk);
 }

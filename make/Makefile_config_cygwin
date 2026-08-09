@@ -14,6 +14,8 @@ else                            # default is gcc compiler
   # https://www.mail-archive.com/cygwin@cygwin.com/msg174673.html
   # (See related issue in Makefile_config_mingw.)
   ccommon += -mno-avx
+  # Hide a few false-positives (including in Filterimage.cpp) due this older gcc compiler.
+  cwarnings += -Wno-stringop-overflow
 endif
 
 graphics_libs ?= -lGL -lX11 -lopengl32

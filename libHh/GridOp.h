@@ -561,57 +561,6 @@ Grid<D, T> scale_primal(CGridView<D, T> grid, const Vec<int, D>& ndims, const Ve
   return details::scale_i(grid, ndims, filterbs, bordervalue, std::move(gr), true);
 }
 
-namespace details {
-
-template <int D, typename T, int DD>
-void scale_filter_nearest_aux(Specialize<DD>, CGridView<D, T> grid, GridView<D, T> ngrid,
-                              const Vec<Array<int>, D>& maps) {
-  assertx(D != 2 && D != 3);  // specialized below
-  const auto func = [&](const Vec<int, D>& u) {
-    Vec<int, D> uu;
-    for_int(d, D) uu[d] = maps[d][u[d]];
-    ngrid[u] = grid[uu];
-  };
-  parallel_for_coords({.cycles_per_elem = 20}, ngrid.dims(), func);
-}
-
-template <int D, typename T>
-void scale_filter_nearest_aux(Specialize<1>, CGridView<D, T> grid, GridView<D, T> ngrid,
-                              const Vec<Array<int>, D>& maps) {
-  ASSERTX(!maps[0].num());
-  const Vec<int, D> dims = grid.dims();
-  const Vec<int, D> ndims = ngrid.dims();
-  parallel_for({.cycles_per_elem = 3}, range(ndims[0]), [&](const int i) {
-    int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
-    ngrid(i) = grid(ii);
-  });
-}
-
-template <int D, typename T>
-void scale_filter_nearest_aux(Specialize<2>, CGridView<D, T> grid, GridView<D, T> ngrid,
-                              const Vec<Array<int>, D>& maps) {
-  const Vec<int, D> ndims = ngrid.dims();
-  parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
-    int yy = maps[0][y];
-    for_int(x, ndims[1]) ngrid(y, x) = grid(yy, maps[1][x]);
-  });
-}
-
-template <int D, typename T>
-void scale_filter_nearest_aux(Specialize<3>, CGridView<D, T> grid, GridView<D, T> ngrid,
-                              const Vec<Array<int>, D>& maps) {
-  const Vec<int, D> ndims = ngrid.dims();
-  parallel_for({.cycles_per_elem = uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
-    int zz = maps[0][z];
-    for_int(y, ndims[1]) {
-      int yy = maps[1][y];
-      for_int(x, ndims[2]) ngrid(z, y, x) = grid(zz, yy, maps[2][x]);
-    }
-  });
-}
-
-}  // namespace details
-
 template <int D, typename T>
 Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D, T>&& gr) {
   HH_GRIDOP_TIMER("__scale_filter_nearest");
@@ -619,14 +568,14 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
     gr.init(ndims);
     return std::move(gr);
   }
-  if (ndims == grid.dims()) {
+  const Vec<int, D> dims = grid.dims();
+  if (ndims == dims) {
     gr = grid;
     return std::move(gr);
   }
   Grid<D, T> ngrid(ndims);
   Vec<Array<int>, D> maps;
   if (D > 1) {
-    Vec<int, D> dims = grid.dims();
     for_int(d, D) {
       Array<int>& map = maps[d];
       map.init(ndims[d]);
@@ -636,7 +585,33 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
       }
     }
   }
-  details::scale_filter_nearest_aux(Specialize<D>{}, grid, ngrid, maps);
+  if constexpr (D == 1) {
+    ASSERTX(!maps[0].num());
+    parallel_for({.cycles_per_elem = 3}, range(ndims[0]), [&](const int i) {
+      int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
+      ngrid(i) = grid(ii);
+    });
+  } else if constexpr (D == 2) {
+    parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
+      int yy = maps[0][y];
+      for_int(x, ndims[1]) ngrid(y, x) = grid(yy, maps[1][x]);
+    });
+  } else if constexpr (D == 3) {
+    parallel_for({.cycles_per_elem = uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
+      int zz = maps[0][z];
+      for_int(y, ndims[1]) {
+        int yy = maps[1][y];
+        for_int(x, ndims[2]) ngrid(z, y, x) = grid(zz, yy, maps[2][x]);
+      }
+    });
+  } else {
+    const auto func = [&](const Vec<int, D>& u) {
+      Vec<int, D> uu;
+      for_int(d, D) uu[d] = maps[d][u[d]];
+      ngrid[u] = grid[uu];
+    };
+    parallel_for_coords({.cycles_per_elem = 20}, ndims, func);
+  }
   return ngrid;
 }
 

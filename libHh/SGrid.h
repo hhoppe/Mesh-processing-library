@@ -51,10 +51,10 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
     assign(g);
     return *this;
   }
-  constexpr int ndim() const { return D; }
-  constexpr Vec<int, D> dims() const { return Vec<int, D>(d0, od...); }
-  constexpr int dim(int c) const { return dims()[c]; }
-  constexpr size_t size() const { return vol; }
+  static constexpr int ndim() { return D; }
+  static constexpr Vec<int, D> dims() { return Vec<int, D>(d0, od...); }
+  static constexpr int dim(int c) { return dims()[c]; }
+  static constexpr size_t size() { return vol; }
   T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
   const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
   slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }

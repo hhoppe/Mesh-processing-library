@@ -106,7 +106,7 @@ template <int D, typename T> class CGridView {
   // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
   void reinit(type g) { *this = g; }
   template <typename T2> friend bool same_size(type g1, CGridView<D, T2> g2) { return g1.dims() == g2.dims(); }
-  constexpr int ndim() const { return D; }
+  static constexpr int ndim() { return D; }
   const Vec<int, D>& dims() const { return _dims; }
   int dim(int c) const { return _dims[c]; }
   size_t size() const { return product_dims<D>(_dims.data()); }
@@ -657,7 +657,7 @@ template <int D, typename T> struct grid_output {
     os << "Grid<" << type_name<T>() << ">(";
     for_int(i, g.dims().num()) os << (i ? ", " : "") << g.dims()[i];
     os << ") {\n";
-    for (const auto& p : range(g.dims())) os << "  " << p << " = " << g[p] << (has_ostream_eol<T>() ? "" : "\n");
+    for (const auto& p : range(g.dims())) os << "  " << p << " = " << g[p] << (has_ostream_eol_v<T> ? "" : "\n");
     return os << "}\n";
   }
 };
@@ -666,7 +666,7 @@ template <typename T> struct grid_output<2, T> {
     const int ny = g.dim(0), nx = g.dim(1);
     os << "Matrix<" << type_name<T>() << ">(" << ny << ", " << nx << ") {\n";
     for_int(y, ny) {
-      if (has_ostream_eol<T>()) {
+      if (has_ostream_eol_v<T>) {
         for_int(x, nx) os << sform("  [%d, %d] = ", y, x) << g[y][x];
       } else {
         os << " ";
@@ -681,7 +681,7 @@ template <typename T> struct grid_output<1, T> {
   std::ostream& operator()(std::ostream& os, CGridView<1, T> g) const {
     const int n = g.dim(0);
     os << "Array<" << type_name<T>() << ">(" << n << ") {\n";
-    for_int(i, n) os << "  " << g[i] << (has_ostream_eol<T>() ? "" : "\n");
+    for_int(i, n) os << "  " << g[i] << (has_ostream_eol_v<T> ? "" : "\n");
     return os << "}\n";
   }
 };

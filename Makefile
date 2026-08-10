@@ -91,24 +91,13 @@ debug:
 rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin)#  CONFIG=win instead uses the release exe created by msbuild.
 
 timingtest: Filterimage Filtervideo
-# hhopped   win: expect 1.0 sec, 22 sec (was 25 sec)
-# hhopped mingw: expect 1.0 sec, 20 sec
-# hhoppew   win: expect 1.0 sec, 15 sec
-# hhoppew mingw: expect 0.8 sec, 13 sec
-# hhoppeh   win: expect 0.8 sec, 20 sec
-# hhoppeh mingw: expect 0.9 sec, 27 sec
-# hhoppeh mingw: expect 0.7 sec, 17 sec (now threadpool rather than OpenMP)
-# hhoppeh clang: expect 0.7 sec, 18 sec
-# hhoppeg   win: expect 0.25 sec, 5.8 sec
-# hhoppeg mingw: expect 0.25 sec, 5.5 sec
-# hhoppeg clang: expect 0.26 sec, 5.7 sec
-# hhoppeg   win: expect 0.33 sec, 6.8 sec (I don't know what changed.)
-# hhoppeg mingw: expect 0.32 sec, 6.8 sec
-# hhoppeg clang: expect 0.33 sec, 6.6 sec
-# hhoppeg  unix: expect 0.35 sec, 7.2 sec
-	$(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo
+# hhoppeg   win: expect 0.44 sec, 7.5 sec
+# hhoppeg mingw: expect 0.42 sec, 7.3 sec
+# hhoppeg clang: expect 0.42 sec, 7.4 sec
+# hhoppeg  unix: expect 0.40 sec, 7.3 sec
+	for i in {1..5}; do $(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo; done
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/proj/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
-	VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
+	for i in {1..5}; do VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'; done
 
 .PHONY: all progs libs $(dirs+test) clean $(clean_dirs) \
   deepclean $(deepclean_dirs) depend $(depend_dirs) debug timingtest

@@ -167,11 +167,11 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 // Note: the functions called here are not async-signal-safe, but the process is terminating anyway.
 void my_signal_handler(int signal_num, siginfo_t* info, void* context) {
   dummy_use(info, context);
-  const char* name = (signal_num == SIGSEGV   ? "SIGSEGV"
-                      : signal_num == SIGBUS  ? "SIGBUS"
-                      : signal_num == SIGILL  ? "SIGILL"
-                      : signal_num == SIGFPE  ? "SIGFPE"
-                                              : "signal");
+  const char* name = (signal_num == SIGSEGV  ? "SIGSEGV"
+                      : signal_num == SIGBUS ? "SIGBUS"
+                      : signal_num == SIGILL ? "SIGILL"
+                      : signal_num == SIGFPE ? "SIGFPE"
+                                             : "signal");
   std::cerr << "Fatal signal error: " << name << "\n";
   show_call_stack();
   if (getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT")) {
@@ -189,7 +189,7 @@ void assign_my_signal_handler() {
   alt_stack.ss_sp = alt_stack_buffer.data();
   alt_stack.ss_size = alt_stack_buffer.size();
   assertx(sigaltstack(&alt_stack, nullptr) == 0);
-  struct sigaction action {};
+  struct sigaction action{};
   action.sa_sigaction = my_signal_handler;
   action.sa_flags = SA_ONSTACK | SA_SIGINFO | SA_RESETHAND;
   assertx(sigemptyset(&action.sa_mask) == 0);

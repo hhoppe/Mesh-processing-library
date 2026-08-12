@@ -49,6 +49,7 @@
 
 #include <algorithm>  // min(), max()
 #include <cmath>      // sqrt(), cos(), pow(), etc.
+#include <concepts>   // integral, convertible_to, same_as
 #include <cstdint>    // int64_t, uint64_t, int32_t, etc.
 #include <iostream>   // ostream, cout, operator<<(ostream&), etc.
 #include <limits>     // numeric_limits<>
@@ -370,22 +371,26 @@ template <typename T> [[nodiscard]] constexpr T general_clamp(const T& v, const 
 [[nodiscard]] inline constexpr double interp(double v1, double v2, double f = 0.5);
 
 // Returns v clamped to range [0, 255].
-[[nodiscard]] inline uint8_t clamp_to_uint8(int v);
+[[nodiscard]] inline constexpr uint8_t clamp_to_uint8(int v);
 
 // Returns j%3 (where j is in [0, 5]).
-[[nodiscard]] inline int mod3(int j);
+[[nodiscard]] inline constexpr int mod3(int j);
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
-template <typename T> [[nodiscard]] T round_fraction_digits(T v, T fac = 1e5f) { return floor(v * fac + .5f) / fac; }
+template <typename T> [[nodiscard]] constexpr T round_fraction_digits(T v, T fac = 1e5f) {
+  return floor(v * fac + .5f) / fac;
+}
 
 // Higher-precision type to represent the sum of a set of elements.
 template <typename T> using sum_type_t = typename details::sum_type<T>::type;
 
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
-template <typename T> [[nodiscard]] auto range(T start, T stop) { return std::views::iota(start, max(start, stop)); }
+template <typename T> [[nodiscard]] constexpr auto range(T start, T stop) {
+  return std::views::iota(start, max(start, stop));
+}
 
 // Range of integers as in Python range(stop):  e.g.: for (const int i : range(5)) { SHOW(i); } gives 0..4 .
-template <typename T> [[nodiscard]] auto range(T stop) { return range(T{0}, stop); }
+template <typename T> [[nodiscard]] constexpr auto range(T stop) { return range(T{0}, stop); }
 
 // Create an optional object if and only if condition is true.
 template <typename T, typename... Args>
@@ -720,14 +725,14 @@ inline constexpr double interp(double v1, double v2, double f) {
   return f * v1 + (1. - f) * v2;  // or v2 + (v1 - v2) * f
 }
 
-inline uint8_t clamp_to_uint8(int v) {
+inline constexpr uint8_t clamp_to_uint8(int v) {
   // return clamp(v, 0, 255);
   // https://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
   v &= -(v >= 0);
   return uint8_t(v | ((255 - v) >> 31));
 }
 
-inline int mod3(int j) {
+inline constexpr int mod3(int j) {
   ASSERTX(j >= 0 && j < 6);
   return j < 3 ? j : j - 3;
 }

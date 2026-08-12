@@ -32,16 +32,16 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   //  it is safest to not include any copy-constructor, not even a default one.
   [[nodiscard]] constexpr int num() const { return n; }
   [[nodiscard]] constexpr size_t size() const { return n; }
-  template <typename Self> [[nodiscard]] constexpr auto& operator[](this Self&& self, int i) {
+  [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
     return (HH_CHECK_BOUNDS(i, n), self.base::operator[](i));
   }
-  [[nodiscard]] T& last() { return (*this)[n - 1]; }
-  [[nodiscard]] const T& last() const { return (*this)[n - 1]; }
-  [[nodiscard]] bool ok(int i) const { return i >= 0 && i < n; }
+  [[nodiscard]] constexpr T& last() { return (*this)[n - 1]; }
+  [[nodiscard]] constexpr const T& last() const { return (*this)[n - 1]; }
+  [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
   void assign(CArrayView<T> ar) { assign_i(ar); }
   [[nodiscard]] constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
-  [[nodiscard]] bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
-  [[nodiscard]] bool in_range(const type& uL, const type& uU) const;  // uL[c] <= [c] < uU[c] for all c in [0, n - 1].
+  [[nodiscard]] constexpr bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
+  [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const;  // uL[c] <= [c] < uU[c] for all c.
   [[nodiscard]] type with(int i, T e) const& {
     type ar(*this);
     ar[i] = std::move(e);
@@ -51,18 +51,18 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     operator[](i) = std::move(e);
     return *this;
   }
-  bool operator==(const type& rhs) const {
+  constexpr bool operator==(const type& rhs) const {
     for_int(i, n) if (!(a()[i] == rhs[i])) return false;
     return true;
   }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
-  operator ArrayView<T>() { return view(); }
-  operator CArrayView<T>() const { return view(); }
-  [[nodiscard]] ArrayView<T> view() { return ArrayView<T>(a(), n); }
-  [[nodiscard]] CArrayView<T> view() const { return CArrayView<T>(a(), n); }
-  [[nodiscard]] CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
-  [[nodiscard]] type& vec() { return *this; }
-  [[nodiscard]] const type& vec() const { return *this; }
+  constexpr bool operator!=(const type& rhs) const { return !(*this == rhs); }
+  constexpr operator ArrayView<T>() { return view(); }
+  constexpr operator CArrayView<T>() const { return view(); }
+  [[nodiscard]] constexpr ArrayView<T> view() { return ArrayView<T>(a(), n); }
+  [[nodiscard]] constexpr CArrayView<T> view() const { return CArrayView<T>(a(), n); }
+  [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
+  [[nodiscard]] constexpr type& vec() { return *this; }
+  [[nodiscard]] constexpr const type& vec() const { return *this; }
   template <int s> [[nodiscard]] Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2).
   template <int s> [[nodiscard]] const Vec<T, s>& head() const { return segment<s>(0); }
   [[nodiscard]] ArrayView<T> head(int s) { return segment(0, s); }
@@ -105,11 +105,11 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   const T* begin() const { return a(); }
   T* end() { return a() + n; }
   const T* end() const { return a() + n; }
-  T* data() { return a(); }
-  const T* data() const { return a(); }
+  constexpr T* data() { return a(); }
+  constexpr const T* data() const { return a(); }
   [[nodiscard]] static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
   static constexpr int Num = n;
-  template <typename Func = T(int)> [[nodiscard]] static type create(Func func) {
+  template <typename Func = T(int)> [[nodiscard]] static constexpr type create(Func func) {
     return create_aux(func, std::make_index_sequence<n>());
   }
   template <typename U = T> std::enable_if_t<std::is_floating_point_v<U>, bool> normalize() {
@@ -287,8 +287,8 @@ template <typename T, int n> struct VecBase {  // Allocates a member variable on
     static_assert(sizeof...(args) == n, "#args");
   }
   T _a[n];
-  T* a() noexcept { return &_a[0]; }
-  const T* a() const noexcept { return &_a[0]; }
+  constexpr T* a() noexcept { return &_a[0]; }
+  constexpr const T* a() const noexcept { return &_a[0]; }
   T& operator[](int i) { return _a[i]; }
   constexpr const T& operator[](int i) const { return _a[i]; }
 };
@@ -296,8 +296,8 @@ template <typename T, int n> struct VecBase {  // Allocates a member variable on
 template <typename T> struct VecBase<T, 0> {
   VecBase() = default;
   template <typename... Args> VecBase(void*, Args&&... args) noexcept = delete;
-  T* a() noexcept { return nullptr; }
-  const T* a() const noexcept { return nullptr; }
+  constexpr T* a() noexcept { return nullptr; }
+  constexpr const T* a() const noexcept { return nullptr; }
   T& operator[](int) { return *implicit_cast<T*>(nullptr); }
   constexpr const T& operator[](int) const { return *implicit_cast<T*>(nullptr); }
   // No member variable at all.
@@ -449,7 +449,7 @@ template <int D>
 
 //----------------------------------------------------------------------------
 
-template <typename T, int n> bool Vec<T, n>::in_range(const Vec<T, n>& uL, const Vec<T, n>& uU) const {
+template <typename T, int n> constexpr bool Vec<T, n>::in_range(const Vec<T, n>& uL, const Vec<T, n>& uU) const {
   for_int(c, n) {
     if ((*this)[c] < uL[c] || (*this)[c] >= uU[c]) return false;
   }

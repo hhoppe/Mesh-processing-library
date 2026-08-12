@@ -38,6 +38,11 @@
 #include "libHh/StackWalker.h"
 #endif
 
+// *** Check required language features.
+
+// static_assert(__cpp_explicit_this_parameter);  // C++23; not reported by VC CL 19.44 even though supported.
+static_assert(__cpp_multidimensional_subscript);  // C++23.
+
 namespace hh {
 
 // Compilation-time tests for assumptions present in my C++ code.

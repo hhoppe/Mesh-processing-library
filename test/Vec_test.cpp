@@ -324,8 +324,8 @@ template class Vec<ushort, 3>;
 
 using U = Vec<unsigned, 2>;
 // Override illegal definitions for U:
-template <> bool Vec<U, 2>::in_range(const Vec<U, 2>&) const { return false; }
-template <> bool Vec<U, 2>::in_range(const Vec<U, 2>&, const Vec<U, 2>&) const { return false; }
+template <> constexpr bool Vec<U, 2>::in_range(const Vec<U, 2>&) const { return false; }
+template <> constexpr bool Vec<U, 2>::in_range(const Vec<U, 2>&, const Vec<U, 2>&) const { return false; }
 template class Vec<U, 2>;
 
 template class Vec<void*, 3>;

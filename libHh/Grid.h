@@ -48,17 +48,6 @@ template <typename T> struct Grid_aux<2, T> {
   using CRet = CArrayView<T>;
   using Ret = ArrayView<T>;
 };
-template <int D, typename T> struct Grid_get {
-  static CGridView<D - 1, T> cget(const T* a, const int* dims, int r);
-  static GridView<D - 1, T> get(T* a, const int* dims, int r);
-};
-template <int DD, typename T> struct Grid_get2 {
-  template <int n>
-  static typename details::Grid_aux<DD + 1, T>::CRet cget2(const T* a, const Vec<int, n + DD>& dims,
-                                                           const Vec<int, n>& u);
-  template <int n>
-  static typename details::Grid_aux<DD + 1, T>::Ret get2(T* a, const Vec<int, n + DD>& dims, const Vec<int, n>& u);
-};
 
 template <int D, typename T> struct nested_initializer_list {
   using type = std::initializer_list<typename nested_initializer_list<D - 1, T>::type>;
@@ -77,20 +66,25 @@ template <int D, typename T> struct nested_list_retrieve;
 template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec<int, D>& u);
 
 // Given a flat index i within a grid with dimensions dims, return its grid coordinates.
-template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i);
+template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i);
 
 // Do the same for a list of coordinates.
-template <int D, typename... A> constexpr size_t ravel_index_list(const Vec<int, D>& dims, A... dd);  // dd... are int.
+template <int D>
+constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0, std::integral auto... dd);
 
 // Find stride (in number of elements) of dimension d in the grid.
-template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim);
+template <int D> constexpr size_t grid_stride(const Vec<int, D>& dims, int dim);
 
 // Compute the size_t product of a small fixed set of numbers.
-template <int D> size_t product_dims(const int* ar) {
-  static_assert(D > 0);
-  size_t v = ar[0];
-  if (D > 1) for_intL(i, 1, D) v *= ar[i];
-  return v;
+template <int D> constexpr size_t product_dims(const int* ar) {
+  static_assert(D >= 0);
+  if constexpr (D == 0) {
+    return 1;
+  } else {
+    size_t v = ar[0];
+    if (D > 1) for_intL(i, 1, D) v *= ar[i];
+    return v;
+  }
 }
 
 // View of a contiguous D-dimensional grid with constant data of type T; often refers to a "const Grid<D, T>".
@@ -110,8 +104,8 @@ template <int D, typename T> class CGridView {
   const Vec<int, D>& dims() const { return _dims; }
   int dim(int c) const { return _dims[c]; }
   size_t size() const { return product_dims<D>(_dims.data()); }
-  typename details::Grid_aux<D, T>::CRet operator[](int r) const;
-  template <int n> typename details::Grid_aux<D - n + 1, T>::CRet operator[](const Vec<int, n>& u) const;
+  template <typename Self> constexpr decltype(auto) operator[](this Self&& self, int r);
+  template <typename Self, int n> constexpr decltype(auto) operator[](this Self&& self, const Vec<int, n>& u);
   template <typename... A> const T& operator()(A... dd) const;  // dd... are int.
   const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
   bool ok(const Vec<int, D>& u) const {
@@ -193,10 +187,6 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
   void reinit(type g) { *this = g; }
   using base::size;
-  typename details::Grid_aux<D, T>::Ret operator[](int r);
-  typename details::Grid_aux<D, T>::CRet operator[](int r) const { return base::operator[](r); }
-  template <int n> typename details::Grid_aux<D - n + 1, T>::Ret operator[](const Vec<int, n>& u);
-  template <int n> typename details::Grid_aux<D - n + 1, T>::CRet operator[](const Vec<int, n>& u) const;
   template <typename... A> T& operator()(A... dd);  // dd... are int.
   template <typename... A> const T& operator()(A... dd) const;
   T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
@@ -354,96 +344,45 @@ auto map(CGridView<D, T> c, Func func) -> Grid<D, decltype(func(std::declval<T>(
 
 //----------------------------------------------------------------------------
 
-namespace details {
-inline constexpr size_t ravel_index_aux2(std::pair<int, int> p) { return p.second; }
-template <typename... P> constexpr size_t ravel_index_aux2(std::pair<int, int> p0, P... ps) {
-  return (ASSERTXX(p0.second >= 0 && p0.second < p0.first), ravel_index_aux2(ps...) * p0.first + p0.second);
-}
-
-template <int D, size_t... Is>
-constexpr size_t ravel_index_aux1(const Vec<int, D>& dims, const Vec<int, D>& u, std::index_sequence<Is...>) {
-  return ravel_index_aux2(std::pair(dims[D - 1 - Is], u[D - 1 - Is])...);
-}
-}  // namespace details
 template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec<int, D>& u) {
-  return details::ravel_index_aux1(dims, u, std::make_index_sequence<D>());
-}
-template <> inline constexpr size_t ravel_index(const Vec3<int>& dims, const Vec3<int>& u) {
-  return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]), HH_CHECK_BOUNDS(u[2], dims[2]),
-          (intptr_t{u[0]} * dims[1] + u[1]) * dims[2] + u[2]);
-}
-template <> inline constexpr size_t ravel_index(const Vec2<int>& dims, const Vec2<int>& u) {
-  return (HH_CHECK_BOUNDS(u[0], dims[0]), HH_CHECK_BOUNDS(u[1], dims[1]), intptr_t{u[0]} * dims[1] + u[1]);
-}
-template <> inline constexpr size_t ravel_index(const Vec1<int>& dims, const Vec1<int>& u) {
-  return (HH_CHECK_BOUNDS(u[0], dims[0]), void(dims),  // dummy_use(dims) returns void so cannot be constexpr.
-          u[0]);
-}
-template <> inline constexpr size_t ravel_index(const Vec<int, 0>& dims, const Vec<int, 0>& u) {
-  dummy_use(dims, u);
-  return 0;  // Used in GridView[V()].
+  if constexpr (D == 0) {
+    return 0;
+  } else {
+    HH_CHECK_BOUNDS(u[0], dims[0]);
+    size_t i = u[0];
+    for_intL(d, 1, D) {
+      HH_CHECK_BOUNDS(u[d], dims[d]);
+      i = i * dims[d] + u[d];
+    }
+    return i;
+  }
 }
 
-template <int D> Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
+template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
   static_assert(D >= 1);
+  ASSERTXX(i < product_dims<D>(dims.data()));
   Vec<int, D> u;
   for (int d = D - 1; d >= 1; --d) {
-    size_t t = i / dims[d];
-    u[d] = narrow_cast<int>(i - t * dims[d]);  // Remainder.
-    i = t;
+    // Using std::div() is unadvised as it does not support unsigned and would introduce a function call on gcc.
+    u[d] = narrow_cast<int>(i % dims[d]);
+    i /= dims[d];
   }
   u[0] = narrow_cast<int>(i);
   return u;
 }
 
-namespace details {
-template <int D> struct ravel_index_rec {
-  template <typename... A> constexpr size_t operator()(size_t v, const Vec<int, D>& dims, int d0, A... dd) const {
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    return ravel_index_rec<D - 1>()((v + d0) * dims[1], dims.template segment<D - 1>(1), dd...);
-  }
-};
-template <> struct ravel_index_rec<1> {
-  constexpr size_t operator()(size_t v, const Vec<int, 1>& dims, int d0) const {
-    dummy_use(dims);
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    return v + d0;
-  }
-};
-template <int D> struct ravel_index_list_aux {
-  template <typename... A> constexpr size_t operator()(const Vec<int, D>& dims, int d0, A... dd) const {
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    return ravel_index_rec<D - 1>()(intptr_t{d0} * dims[1], dims.template segment<D - 1>(1), dd...);
-  }
-};
-template <> struct ravel_index_list_aux<1> {
-  constexpr size_t operator()(const Vec1<int>& dims, int d0) const {
-    dummy_use(dims);
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    return d0;
-  }
-};
-template <> struct ravel_index_list_aux<2> {
-  constexpr size_t operator()(const Vec2<int>& dims, int d0, int d1) const {
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    HH_CHECK_BOUNDS(d1, dims[1]);
-    return intptr_t{d0} * dims[1] + d1;
-  }
-};
-template <> struct ravel_index_list_aux<3> {
-  constexpr size_t operator()(const Vec3<int>& dims, int d0, int d1, int d2) const {
-    HH_CHECK_BOUNDS(d0, dims[0]);
-    HH_CHECK_BOUNDS(d1, dims[1]);
-    HH_CHECK_BOUNDS(d2, dims[2]);
-    return (intptr_t{d0} * dims[1] + d1) * dims[2] + d2;
-  }
-};
-}  // namespace details
-template <int D, typename... A> constexpr size_t ravel_index_list(const Vec<int, D>& dims, A... dd) {
-  return details::ravel_index_list_aux<D>()(dims, dd...);
+template <int D>
+constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0, std::integral auto... dd) {
+  static_assert(1 + sizeof...(dd) == D);
+  HH_CHECK_BOUNDS(narrow_cast<int>(d0), dims[0]);
+  size_t i = d0;
+  int d = 0;
+  dummy_use(d);
+  ((++d, HH_CHECK_BOUNDS(narrow_cast<int>(dd), dims[d]), i = i * dims[d] + dd), ...);
+  return i;
 }
 
-template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim) {
+template <int D> constexpr size_t grid_stride(const Vec<int, D>& dims, int dim) {
   ASSERTXX(dim >= 0 && dim < D);
   if (dim + 1 >= D) return 1;
   size_t i = dims[dim + 1];
@@ -454,81 +393,51 @@ template <int D> size_t grid_stride(const Vec<int, D>& dims, int dim) {
 //----------------------------------------------------------------------------
 
 namespace details {
-template <typename T> struct Grid_get<1, T> {
-  static const T& cget(const T* a, const int*, int r) { return a[r]; }
-  static T& get(T* a, const int*, int r) { return a[r]; }
-};
-template <typename T> struct Grid_get<2, T> {
-  static CArrayView<T> cget(const T* a, const int* dims, int r) {
-    return CArrayView<T>(a + intptr_t{r} * dims[1], dims[1]);
-  }
-  static ArrayView<T> get(T* a, const int* dims, int r) { return ArrayView<T>(a + intptr_t{r} * dims[1], dims[1]); }
-};
-template <typename T> struct Grid_get<3, T> {  // Specialization for speedup.
-  static CGridView<2, T> cget(const T* a, const int* dims, int r) {
-    return CGridView<2, T>(a + intptr_t{r} * dims[1] * dims[2], Vec2<int>(dims[1], dims[2]));
-  }
-  static GridView<2, T> get(T* a, const int* dims, int r) {
-    return GridView<2, T>(a + intptr_t{r} * dims[1] * dims[2], Vec2<int>(dims[1], dims[2]));
-  }
-};
-template <int D, typename T> CGridView<D - 1, T> details::Grid_get<D, T>::cget(const T* a, const int* dims, int r) {
-  static_assert(D >= 4);
-  return CGridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));
+
+// Return type of a subscript yielding rank D over elements of type T, which may be const-qualified.
+template <int D, typename T>
+using grid_ret_t = std::conditional_t<std::is_const_v<T>, typename Grid_aux<D, std::remove_const_t<T>>::CRet,
+                                      typename Grid_aux<D, T>::Ret>;
+
+// Construct the element reference or sub-view of rank D - n at pointer p within a grid with dimensions dims.
+template <int D, int n, typename T> grid_ret_t<D - n + 1, T> grid_view_at(T* p, const Vec<int, D>& dims) {
+  using Ret = grid_ret_t<D - n + 1, T>;
+  if constexpr (n == D)
+    return static_cast<Ret>(*p);
+  else if constexpr (n == D - 1)
+    return Ret(p, dims[n]);
+  else
+    return Ret(p, dims.template segment<n, D - n>());
 }
 
-template <int D, typename T> GridView<D - 1, T> details::Grid_get<D, T>::get(T* a, const int* dims, int r) {
-  static_assert(D >= 4);
-  return GridView<D - 1, T>(a + r * product_dims<D - 1>(&dims[1]), CArrayView<int>(dims + 1, D - 1));
+// Return the element or sub-view at the coordinate prefix u within a grid with dimensions dims.
+template <int D, int n, typename T>
+grid_ret_t<D - n + 1, T> grid_get(T* a, const Vec<int, D>& dims, const Vec<int, n>& u) {
+  static_assert(n >= 0 && n <= D);
+  return grid_view_at<D, n>(a + ravel_index(dims.template head<n>(), u) * product_dims<D - n>(dims.data() + n), dims);
 }
 
-template <typename T> struct Grid_get2<0, T> {
-  template <int n> static const T& cget2(const T* a, const Vec<int, n>& dims, const Vec<int, n>& u) {
-    return a[ravel_index(dims, u)];
-  }
-  template <int n> static T& get2(T* a, const Vec<int, n>& dims, const Vec<int, n>& u) {
-    return a[ravel_index(dims, u)];
-  }
-};
-template <typename T> struct Grid_get2<1, T> {
-  template <int n> static CArrayView<T> cget2(const T* a, const Vec<int, n + 1>& dims, const Vec<int, n>& u) {
-    return CArrayView<T>(a + ravel_index(dims.template head<n>(), u) * dims[n], dims[n]);
-  }
-  template <int n> static ArrayView<T> get2(T* a, const Vec<int, n + 1>& dims, const Vec<int, n>& u) {
-    return ArrayView<T>(a + ravel_index(dims.template head<n>(), u) * dims[n], dims[n]);
-  }
-};
-template <int DD, typename T>
-template <int n>
-typename details::Grid_aux<DD + 1, T>::CRet details::Grid_get2<DD, T>::cget2(const T* a, const Vec<int, n + DD>& dims,
-                                                                             const Vec<int, n>& u) {
-  using T2 = typename details::Grid_aux<DD + 1, T>::CRet;  // Grid dimension D = n + DD.
-  return T2(a + ravel_index(dims.template head<n>(), u) * product_dims<DD>(dims.data() + n),
-            CArrayView<int>(dims.data() + n, DD));
-}
-template <int DD, typename T>
-template <int n>
-typename details::Grid_aux<DD + 1, T>::Ret details::Grid_get2<DD, T>::get2(T* a, const Vec<int, n + DD>& dims,
-                                                                           const Vec<int, n>& u) {
-  using T2 = typename details::Grid_aux<DD + 1, T>::Ret;  // Grid dimension D = n + DD.
-  return T2(a + ravel_index(dims.template head<n>(), u) * product_dims<DD>(dims.data() + n),
-            CArrayView<int>(dims.data() + n, DD));
+// Do the same for a single index in the first dimension.
+template <int D, typename T> grid_ret_t<D, T> grid_get(T* a, const Vec<int, D>& dims, int r) {
+  static_assert(D >= 1);
+  HH_CHECK_BOUNDS(r, dims[0]);
+  return grid_view_at<D, 1>(a + r * product_dims<D - 1>(dims.data() + 1), dims);
 }
 
 }  // namespace details
 
 //----------------------------------------------------------------------------
 
-template <int D, typename T> typename details::Grid_aux<D, T>::CRet CGridView<D, T>::operator[](int r) const {
-  ASSERTXX(check(r));
-  return details::Grid_get<D, T>::cget(_a, _dims.data(), r);
+template <int D, typename T>
+template <typename Self>
+constexpr decltype(auto) CGridView<D, T>::operator[](this Self&& self, int r) {
+  return details::grid_get<D, 1>(self.data(), self.dims(), r);
 }
 
 template <int D, typename T>
-template <int n>
-typename details::Grid_aux<D - n + 1, T>::CRet CGridView<D, T>::operator[](const Vec<int, n>& u) const {
-  static_assert(n >= 0 && n <= D);
-  return details::Grid_get2<D - n, T>::template cget2<n>(_a, _dims, u);
+template <typename Self, int n>
+constexpr decltype(auto) CGridView<D, T>::operator[](this Self&& self, const Vec<int, n>& u) {
+  return details::grid_get<D, n>(self.data(), self.dims(), u);
 }
 
 template <int D, typename T> template <typename... A> const T& CGridView<D, T>::operator()(A... dd) const {
@@ -552,25 +461,6 @@ const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderv
 }
 
 //----------------------------------------------------------------------------
-
-template <int D, typename T> typename details::Grid_aux<D, T>::Ret GridView<D, T>::operator[](int r) {
-  ASSERTXX(check(r));
-  return details::Grid_get<D, T>::get(_a, _dims.data(), r);
-}
-
-template <int D, typename T>
-template <int n>
-typename details::Grid_aux<D - n + 1, T>::Ret GridView<D, T>::operator[](const Vec<int, n>& u) {
-  static_assert(n >= 0 && n <= D);
-  return details::Grid_get2<D - n, T>::template get2<n>(_a, _dims, u);
-}
-
-template <int D, typename T>
-template <int n>
-typename details::Grid_aux<D - n + 1, T>::CRet GridView<D, T>::operator[](const Vec<int, n>& u) const {
-  static_assert(n >= 0 && n <= D);
-  return details::Grid_get2<D - n, T>::template cget2<n>(_a, _dims, u);
-}
 
 template <int D, typename T> template <typename... A> T& GridView<D, T>::operator()(A... dd) {
   static_assert(sizeof...(dd) == D);

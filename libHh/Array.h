@@ -68,15 +68,15 @@ template <typename T> class CArrayView {
   void reinit(type a) { *this = a; }
   int num() const { return _n; }
   size_t size() const { return narrow_cast<size_t>(_n); }
-  template <typename Self> [[HH_NO_DANGLING]] auto& operator[](this Self&& self, int i) {
+  [[HH_NO_DANGLING]] auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
   }
-  template <typename Self> auto& last(this Self&& self) { return self[self.num() - 1]; }
+  auto& last(this auto&& self) { return self[self.num() - 1]; }
   [[nodiscard]] bool ok(int i) const { return i >= 0 && i < _n; }
   [[nodiscard]] bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
   bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
-  template <typename Self> [[nodiscard]] auto& inside(this Self&& self, int i, Bndrule bndrule) {
+  [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
     return (assertx(self.map_inside(i, bndrule)), self[i]);
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
@@ -84,20 +84,18 @@ template <typename T> class CArrayView {
   [[nodiscard]] int index(const T& e) const;  // Return -1 if not found.
   bool operator==(type rhs) const;
   bool operator!=(type rhs) const { return !(*this == rhs); }
-  template <typename Self> [[nodiscard]] auto head(this Self&& self, int n) { return self.segment(0, n); }
-  template <typename Self> [[nodiscard]] auto tail(this Self&& self, int n) { return self.segment(self.num() - n, n); }
-  template <typename Self> [[nodiscard]] auto segment(this Self&& self, int i, int s) {
+  [[nodiscard]] auto head(this auto&& self, int n) { return self.segment(0, n); }
+  [[nodiscard]] auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
+  [[nodiscard]] auto segment(this auto&& self, int i, int s) {
     ASSERTXX(implicit_cast<const type&>(self).check(i, s));  // Access the protected check() through this base class.
     return array_view_t<decltype(self.data())>(self.data() + i, s);
   }
-  template <typename Self> [[nodiscard]] auto slice(this Self&& self, int ib, int ie) {
-    return self.segment(ib, ie - ib);
-  }
+  [[nodiscard]] auto slice(this auto&& self, int ib, int ie) { return self.segment(ib, ie - ib); }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  template <typename Self> auto begin(this Self&& self) { return self.data(); }
-  template <typename Self> auto end(this Self&& self) { return self.data() + self.num(); }
+  auto begin(this auto&& self) { return self.data(); }
+  auto end(this auto&& self) { return self.data() + self.num(); }
   const T* data() const { return _a; }
 
  protected:

@@ -67,9 +67,4 @@ debug:
 
 .PHONY: all depend libs progs test clean deepclean debug
 
-ifeq ($(CXX),cl)
-  # local *.pdb file; it is different from the final one created under ./bin.
-  ccommon += -Fd$(prog).pdb#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
-endif
-
 endif  # ifneq ($(CONFIG),all)

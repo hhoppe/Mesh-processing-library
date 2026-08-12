@@ -23,7 +23,6 @@ CC = cl
 
 # ccommon += -openmp
 ccommon += -EHsc
-ccommon += -FS#  Serialize access to *.pdb files for parallel builds.
 cxxall += $(if $(CXX_STD),-std:$(patsubst c++23,c++23preview,$(CXX_STD)))
 
 ifeq ($(plain_compiler),)
@@ -44,10 +43,8 @@ ifeq ($(plain_compiler),)
   # ccommon += -D_CRT_DECLARE_NONSTDC_NAMES=1#  Obviate the need for HH_POSIX(fdopen) (but still needed for clang).
   # cxxall += -GR-#  Could disable RTTI.
   # cxxall += -showIncludes#  Show all included header files.
-  commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy $(if $(wholeopt:0=),-GL)
-  commondbg += -Od $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Zi   -RTC1
-  # Avoid shared e.g. vc140.pdb; required for parallel make if >1 exe in same directory.
-  cxxexe += -Fd$(@:%=%.pdb)#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
+  commonrel += -O2 $(if $(use_dll:0=),-MD,-MT)   -GS- -D "NDEBUG" -GF -Gy -Z7 $(if $(wholeopt:0=),-GL)
+  commondbg += -Od $(if $(use_dll:0=),-MDd,-MTd) -GS  -D "_DEBUG" -Z7   -RTC1
   cxxrel += $(commonrel)
   cxxdbg += $(commondbg)
 endif  # plain_compiler
@@ -94,21 +91,18 @@ cxx_list_assembly_code ?= -FAs
 	fxc -nologo -T cs_5_0 -E $(subst -,_,$(notdir $(basename $<))) -Fo$@ $<
 
 ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg))#  Link-time code generation.
-LDFLAGS += -link -nologo $(if $(rel:0=),-incremental:no -opt:ref -opt:icf,-debug) -dynamicbase:no $(ltcg)
+LDFLAGS += -link -nologo -debug -incremental:no $(if $(rel:0=),-opt:ref -opt:icf) -dynamicbase:no $(ltcg)
 
 graphics_libs ?= user32.lib gdi32.lib
 # graphics_libs += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib shcore.lib advapi32.lib \
 #   shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib
 # graphics_libs += d3dx9.lib d3d9.lib d3dx11.lib dxerr.lib dxguid.lib winmm.lib comdlg32.lib comctl32.lib d3d11.lib
 
-# For release build, we force-include the precompiled header into every *.cpp file.  For debug build, we
-# force-include it only for the files in libHh (see libHh/Makefile) due to the shared *.pdb file.
+# We force-include the precompiled header into every *.cpp file.
 ifeq ($(use_pch),1)
-  ifeq ($(rel),1)
-    pch_root = $(MeshRoot)/libHh/precompiled_libHh
-    abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
-    cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
-  endif
+  pch_root = $(MeshRoot)/libHh/precompiled_libHh
+  abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
+  cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
 endif
 
 
@@ -161,7 +155,7 @@ endif
 
 ## Precompiled headers:
 # Sharing precompiled headers between projects is difficult in debug configuration, so the only significant
-#  benefit in CONFIG=win is the faster compilation of libHh.
+#  benefit in CONFIG=win is the faster compilation of libHh.  No, with -Z7 it all seems to work.
 # http://social.msdn.microsoft.com/Forums/vstudio/en-US/665d4183-f85c-481d-bada-03283b310099/shared-precompiled-header?forum=vclanguage
 # http://stackoverflow.com/questions/645747/sharing-precompiled-headers-between-projects-in-visual-studio?lq=1
 #

@@ -13,11 +13,7 @@ ifeq ($(use_pch),1)
     $(filter-out $(pch_root).$(extobj),$(obj)) : | $(pch_root).$(extobj)
     # Create precompiled_libHh.pch when compiling this file.
     $(pch_root).$(extobj) : cxxall += -Yc$(abs_pch_file)
-    # For release configuration, Makefile_base_win already force-includes the pch into all *.cpp files.
-    ifeq ($(rel),0)
-      # In debug configuration, for this directory only, we can use precompiled headers due to the shared pdb file.
-      cxxall += -Yu$(abs_pch_file) -FI$(abs_pch_file)
-    endif
+    # Makefile_base_win already force-includes the pch into all *.cpp files.
   endif
   ifeq ($(CXX),g++)
     abs_pch_file = $(pch_root).h

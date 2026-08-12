@@ -18,6 +18,9 @@ $(call prepend_PATH,$(LLVM_ROOT)/bin)
 AR = llvm-ar
 RANLIB = llvm-ranlib
 
+LDFLAGS += -fuse-ld=lld#  Use the (faster) linker from the LLVM toolchain; implies "-Wl,-incremental:no".
+LDFLAGS += -Wl,-debug#  Write a *.pdb file (adjacent to *.exe) to enable stacktrace.
+
 cxxall += -D_CRT_SECURE_NO_WARNINGS
 
 # Note that we require HH_POSIX(fdopen)... because the non-underscore versions do not exist in the clang library.

@@ -161,6 +161,8 @@ class StackWalker {
   LPSTR m_szSymPath;
 
   int m_options;
+  // HH:
+  bool past_main = false;  // Set once the main() frame has been shown, to omit the CRT startup frames below it.
 
   static BOOL __stdcall myReadProcMem(HANDLE hProcess, DWORD64 qwBaseAddress, PVOID lpBuffer, DWORD nSize,
                                       LPDWORD lpNumberOfBytesRead);

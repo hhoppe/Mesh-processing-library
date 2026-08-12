@@ -9,6 +9,7 @@
 #include <io.h>  // _setmode()
 #endif
 
+#include <array>
 #include <clocale>  // setlocale()
 #include <csignal>  // signal()
 #include <cstring>  // strerror
@@ -109,12 +110,8 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     exit_immediately(1);
   }
   if (ExceptionCode != EXCEPTION_BREAKPOINT) {  // Otherwise we have already shown the call stack previously.
-    if (1) {
-      // Sometimes does not show any useful information.
-      // Bad case: Filterimage image1.png -filter i -boundaryrule r -resamplemesh 128_mesh2_v1.m -noo
-      // This also fails on win32 (32-bit).
-      show_call_stack();
-    }
+    show_call_stack();
+    exit_immediately(1);
   }
   if (!k_debug) exit_immediately(1);
   return EXCEPTION_CONTINUE_SEARCH;  // Or EXCEPTION_EXECUTE_HANDLER, EXCEPTION_CONTINUE_EXECUTION.
@@ -138,21 +135,19 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   try {
     throw;
   } catch (const std::exception& ex) {
-    fprintf(stderr, "Terminate: Fatal uncaught C++ exception: %s\n", ex.what());
+    fprintf(stderr, "Fatal uncaught C++ exception: %s\n", ex.what());
     fflush(stderr);
   } catch (...) {
   }
 #endif
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
   show_possible_win32_error();
-  assertnever("my_terminate_handler");
+  abort();
 }
 
 [[noreturn]] void my_abort_handler(int signal_num) {
   dummy_use(signal_num);
-#if defined(_MSC_VER) || defined(__MINGW32__)
-  if (1) show_call_stack();
-#endif
+  show_call_stack();
 #if defined(_WIN32)
   if (IsDebuggerPresent()) DebugBreak();
   possibly_sleep();
@@ -167,35 +162,49 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   exit_immediately(1);
 }
 
-// #include <execinfo.h> // backtrace()
-[[noreturn]] void my_signal_handler(int signal_num) {
-  // Avoid issuing low-level or STDIO.H I/O routines (such as printf and fread).
-  // Avoid heap routines or any routine that uses the heap routines (such as malloc, strdup, putenv).
-  // Avoid any function that generates a system call (e.g., getcwd(), time()).
-  // exit_immediately(213);  // Does not show up at all.
-  SHOW("my_signal_handler", signal_num);
-  if (0) {
-    // https://stackoverflow.com/questions/77005/how-to-generate-a-stacktrace-when-my-gcc-c-app-crashes
-    // Unfortunately, cygwin does not have backtrace/execinfo.
-    // void *ar[10]; size_t size = backtrace(ar, 10);  // Get void*'s for all entries on the stack.
-    // backtrace_symbols_fd(ar, size, 2);  // Print out all the frames to std::cerr.
-    //
-    // mingw uses the Windows calling stack, so obviously incompatible with libgcc backtrace().
+#if !defined(_WIN32)
+
+// Note: the functions called here are not async-signal-safe, but the process is terminating anyway.
+void my_signal_handler(int signal_num, siginfo_t* info, void* context) {
+  dummy_use(info, context);
+  const char* name = (signal_num == SIGSEGV   ? "SIGSEGV"
+                      : signal_num == SIGBUS  ? "SIGBUS"
+                      : signal_num == SIGILL  ? "SIGILL"
+                      : signal_num == SIGFPE  ? "SIGFPE"
+                                              : "signal");
+  std::cerr << "Fatal signal error: " << name << "\n";
+  show_call_stack();
+  if (getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT")) {
+    std::cerr << "Signaling true abort\n";
+    return;  // Re-execute the faulting instruction; SA_RESETHAND then gives the default action (core dump).
   }
-  assertnever("my_signal_handler");
+  exit_immediately(1);
 }
+
+void assign_my_signal_handler() {
+  // An alternate stack lets the handler run even when the fault is a stack overflow.
+  // Its size is a constant because SIGSTKSZ is no longer a compile-time constant in recent glibc.
+  static std::array<char, 64 * 1024> alt_stack_buffer;
+  stack_t alt_stack{};
+  alt_stack.ss_sp = alt_stack_buffer.data();
+  alt_stack.ss_size = alt_stack_buffer.size();
+  assertx(sigaltstack(&alt_stack, nullptr) == 0);
+  struct sigaction action {};
+  action.sa_sigaction = my_signal_handler;
+  action.sa_flags = SA_ONSTACK | SA_SIGINFO | SA_RESETHAND;
+  assertx(sigemptyset(&action.sa_mask) == 0);
+  for (int signal_num : {SIGSEGV, SIGBUS, SIGILL, SIGFPE}) assertx(sigaction(signal_num, &action, nullptr) == 0);
+}
+
+#endif
 
 #if defined(_MSC_VER)
 int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
   // The heap may be corrupt, so cannot do any dynamic allocation here.
-  std::cerr << "my_CrtDbgHook with no debugger present\n";
-  std::cerr << "Failure message: " << szMsg << "\n";
-  if (1) {
-    // Previously we would get "Segmentation fault" due to corrupt heap, but this is resolved now that StackWalker
-    //  has its own local memory buffer.
-    show_call_stack();
-  }
-  std::cerr << "Now after show_call_stack()\n";
+  if (0) std::cerr << "my_CrtDbgHook with no debugger present\n";
+  if (strcmp(szMsg, "abort() has been called")) std::cerr << "No debugger present; failure message: " << szMsg << "\n";
+  show_call_stack();
+  if (0) std::cerr << "Now after show_call_stack()\n";
   if (0) std::cerr << "nReportType=" << nReportType << "\n";
   dummy_use(pnRet);
   possibly_sleep();
@@ -207,28 +216,16 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
 }
 #endif
 
-void assign_my_signal_handler() {
-  // using SignalHandlerPointer = void (*)(int);
-  // c:/cygwin/usr/include/sys/signal.h
-  // This does not seem to work under CYGWIN.
-  // And it does not seem to work under WIN32; cannot catch "Segmentation fault" $status=140.
-  //
-  // The SIGILL, SIGSEGV, and SIGTERM signals are not generated under Windows NT. They are included for
-  //  ANSI compatibility. ... we can also explicitly generate these signals by calling raise.
-  SHOWL;
-  // signal(SIGFPE, my_signal_handler);
-  signal(SIGILL, my_signal_handler);
-  signal(SIGSEGV, my_signal_handler);
-  // signal(SIGTRAP, my_signal_handler);
-}
-
 void setup_exception_hooks() {
-  dummy_use(show_call_stack, my_new_handler, my_terminate_handler, my_signal_handler);
+  dummy_use(my_new_handler, my_terminate_handler);
 #if defined(_WIN32)
   dummy_use(my_top_level_exception_filter);
 #endif
 #if !defined(HH_NO_EXCEPTION_HOOKS)
   if (getenv_bool("HH_NO_EXCEPTION_HOOKS")) return;
+#if !defined(_WIN32)
+  assign_my_signal_handler();
+#endif
 #if defined(__CYGWIN__)
   // The default behavior is to throw std::bad_alloc
   std::set_new_handler(&my_new_handler);  // Else on Cygwin, no diagnostic is reported (other than nonzero exit code).
@@ -242,26 +239,25 @@ void setup_exception_hooks() {
 #endif
 #if defined(_WIN32)
   if (1) {
+    // Pin the symbol path so DbgEng cannot stall on a network symbol server during a crash.
+    SetEnvironmentVariableA("_NT_SYMBOL_PATH", "");
     // SEM_FAILCRITICALERRORS      0x0001
     // unsigned v = SetErrorMode(SEM_FAILCRITICALERRORS); dummy_use(v);
     // assertx(v == SEM_FAILCRITICALERRORS);  // already default!
-    if (1) SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
+    SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
     // It is not the default for Windows apps?
     // Also consider from https://stackoverflow.com/a/467652 :
-    if (1) SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);  // Yes, useful e.g. for mingw32.
+    SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);  // Yes, useful e.g. for mingw32.
   }
   if (1) {
-    // LPTOP_LEVEL_EXCEPTION_FILTER WINAPI SetUnhandledExceptionFilter(
-    //   _In_  LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
     LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);
     dummy_use(v);
     if (0) SHOW(reinterpret_cast<size_t>(v));
     // 0x0041DE18 -- already is an exception filter.  what did it do?
   }
 #endif
-  if (1) std::set_terminate(my_terminate_handler);
-  if (1) signal(SIGABRT, my_abort_handler);
-  if (0) assign_my_signal_handler();
+  std::set_terminate(my_terminate_handler);
+  signal(SIGABRT, my_abort_handler);
 #endif  // !defined(HH_NO_EXCEPTION_HOOKS)
 }
 
@@ -371,7 +367,21 @@ void change_default_io_precision() {
 }
 
 void exercise_errors() {
+  // See also HTest.
   SHOWL;
+  if (0) {
+    if (!g_unoptimized_zero) assertnever("Here in do_assertnever");
+  }
+  if (0) {
+    assertx(g_unoptimized_zero == 1);
+  }
+  if (0) {
+    int* p = reinterpret_cast<int*>(size_t(g_unoptimized_zero));
+    g_unoptimized_zero = *p;
+  }
+  if (0) {
+    g_unoptimized_zero = 1 / g_unoptimized_zero;
+  }
   if (0) {
     float b = 1.f / float(g_unoptimized_zero);  // Silently produces infinity.
     SHOW(b);
@@ -382,15 +392,9 @@ void exercise_errors() {
     SHOW(b);
   }
   if (0) {
-    // *implicit_cast<int*>(nullptr) = 1;  // Error: access violation; CYGWIN+release just crashes.
-  }
-  if (0) {
     throw 0;  // unhandled exception
   }
-  if (0) {
-    int b = 1 / g_unoptimized_zero;  // Error: integer division by zero.
-    SHOW(b);
-  }
+  SHOW(g_unoptimized_zero);
   exit(0);
 }
 

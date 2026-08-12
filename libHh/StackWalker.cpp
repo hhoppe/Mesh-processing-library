@@ -1085,6 +1085,7 @@ void StackWalker::OnLoadModule(LPCSTR img, LPCSTR mod, DWORD64 baseAddr, DWORD s
 void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& entry) {
   CHAR buffer[STACKWALK_MAX_NAMELEN];
   if ((eType != lastEntry) && (entry.offset != 0)) {
+    if (!verbose && past_main) return;
     if (entry.name[0] == 0) strcpy_s(entry.name, "(function-name not available)");
     if (entry.undName[0] != 0) strcpy_s(entry.name, entry.undName);
     if (entry.undFullName[0] != 0) strcpy_s(entry.name, entry.undFullName);
@@ -1102,9 +1103,7 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry& ent
       if (!verbose && strstr(entry.name, "hh::details::assertx_aux")) return;
       if (!verbose && strstr(entry.name, "hh::details::assertx_aux2")) return;
       if (!verbose && strstr(entry.name, "::my_top_level_exception_filter")) return;  // hh::`anonymous namespace'
-      if (!verbose && strstr(entry.name, "CRTStartup")) return;                       // <=VS2013
-      if (!verbose && strstr(entry.name, "__scrt_common_main_seh")) return;           // >=VS2015
-      if (!verbose && strstr(entry.name, "crt\\vcstartup")) return;                   // VS2019
+      if (!strcmp(entry.name, "main")) past_main = true;  // Show this frame but none of those below it.
       // _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "%s (%d): %s\n", entry.lineFileName, entry.lineNumber, entry.name);
       for (char* s = entry.lineFileName; *s; s++)
         if (*s == '\\') *s = '/';

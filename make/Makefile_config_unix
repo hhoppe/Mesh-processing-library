@@ -19,3 +19,5 @@ ifeq ($(CC),gcc)
 endif
 
 graphics_libs ?= -lGL -lX11
+
+last_libs += -lstdc++exp#  For stacktrace.

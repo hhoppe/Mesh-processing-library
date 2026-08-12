@@ -34,7 +34,6 @@ deepclean: clean
 
 ifeq ($(CXX),cl)  # (Was: ifeq ($(extobj),obj))
 
-  ccommon += -Fd$(troot).pdb#  Unfortunately, the filename gets mapped to lowercase by CL.exe; no workaround.
   # Compile library C code using "-Zl" flag to omit reference to standard C (rather than C++) library,
   c-all += -Zl
 

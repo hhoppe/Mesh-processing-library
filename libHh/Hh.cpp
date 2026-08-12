@@ -16,6 +16,7 @@
 #endif
 
 #include <array>
+#include <atomic>
 #include <cctype>  // isdigit()
 #include <cerrno>  // errno
 #include <chrono>
@@ -26,14 +27,14 @@
 #include <regex>
 #include <unordered_map>
 #include <vector>
+#include <version>  // __cpp_lib_stacktrace
 
 #include "libHh/StringOp.h"  // replace_all(), remove_at_start(), remove_at_end()
 
-#if !defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
-#define HH_NO_STACKWALKER
-#endif
-
-#if !defined(HH_NO_STACKWALKER)
+#if defined(__cpp_lib_stacktrace)
+#include <stacktrace>
+#elif defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
+#define HH_USE_STACKWALKER
 #include "libHh/StackWalker.h"
 #endif
 
@@ -54,7 +55,39 @@ int g_unoptimized_zero = 0;
 
 namespace {
 
-#if !defined(HH_NO_STACKWALKER)
+#if defined(__cpp_lib_stacktrace)
+
+// Show the call stack of the current thread; the stacks of any other threads are not accessible.
+void show_call_stack_internal() {
+  const bool verbose = getenv_bool("STACKWALKER_VERBOSE");
+  constexpr size_t max_frames = 30;  // A stack overflow would otherwise report thousands of identical frames.
+  bool past_main = false;
+  for (const std::stacktrace_entry& entry : std::stacktrace::current(0u, max_frames)) {
+    if (past_main) break;
+    string description = entry.description(), file = entry.source_file();
+    // The MSVC implementation returns e.g. "HTest!hh::ParseArgs::parse+0x1f"; libstdc++ omits module and offset.
+    if (const size_t i = description.find('!'); i != string::npos) description.erase(0, i + 1);
+    if (const size_t i = description.rfind("+0x"); i != string::npos) description.erase(i);
+    if (!verbose) {
+      if (file == "" || description == "") continue;  // Omit frames lacking any debug information.
+      // Note that the names may be unqualified, because libstdc++ reports the DWARF name rather than the symbol.
+      const auto matches = [&](const char* s) { return description.find(s) != string::npos; };
+      if (matches("my_abort_handler") || matches("my_signal_handler") || matches("my_top_level_exception_filter") ||
+          matches("my_CrtDbgHook") || matches("my_new_handler") || matches("my_terminate_handler") ||
+          matches("show_call_stack") || matches("assertx_aux") || matches("assertt_aux") ||
+          matches("_CxxThrowException") || matches("__scrt_throw_std_bad_alloc") || matches("__GI_abort") ||
+          matches("__GI_raise") || matches("__pthread_kill") || description == "raise" || description == "abort")
+        continue;
+      if (description == "main") past_main = true;  // Show this frame but none of those below it.
+    }
+    for (char& ch : file)
+      if (ch == '\\') ch = '/';
+    std::cerr << file << "(" << entry.source_line() << "): " << description << "\n";
+  }
+  if (std::stacktrace::current(0u, max_frames).size() == max_frames) std::cerr << "... (truncated) ...\n";
+}
+
+#elif defined(HH_USE_STACKWALKER)
 
 // StackWalk64  https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk  complicated
 // Comment: You can find article and good example of use at:
@@ -115,9 +148,9 @@ void show_call_stack_internal() {
 
 #else
 
-void show_call_stack_internal() { std::cerr << "MyStackWalker is disabled, so call stack is not available.\n"; }
+void show_call_stack_internal() { std::cerr << "Call stack is not available in this configuration.\n"; }
 
-#endif  // !defined(HH_NO_STACKWALKER)
+#endif  // defined(__cpp_lib_stacktrace)
 
 }  // namespace
 
@@ -793,7 +826,12 @@ void show_possible_win32_error() {
 #endif
 }
 
-void show_call_stack() { show_call_stack_internal(); }
+void show_call_stack() {
+  static std::atomic_flag in_progress;
+  if (in_progress.test_and_set()) return;
+  show_call_stack_internal();
+  in_progress.clear();
+}
 
 [[noreturn]] void exit_immediately(int code) { _exit(code); }
 

@@ -20,6 +20,8 @@ endif
 
 graphics_libs ?= -lGL -lX11 -lopengl32
 
+last_libs += -lstdc++exp#  For stacktrace.
+
 # Stack dump:
 # gdb --batch -ex run -ex where --args ~/git/hh_src/bin/cygwin/HTest -dividebyzero
 

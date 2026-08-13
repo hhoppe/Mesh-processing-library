@@ -3,6 +3,7 @@
 
 #include <deque>
 #include <list>
+#include <vector>
 
 using namespace hh;
 

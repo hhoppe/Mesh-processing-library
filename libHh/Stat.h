@@ -113,20 +113,16 @@ template <typename Range, typename = enable_if_range_t<Range>> Range standardize
   } while (false)
 
 // Range Stat.
-#define HH_RSTAT(S, range) \
-  do {                     \
-    HH_STAT(S);            \
-    for (auto e : range) { \
-      S.enter(e);          \
-    }                      \
+#define HH_RSTAT(S, range)           \
+  do {                               \
+    HH_STAT(S);                      \
+    for (auto e : range) S.enter(e); \
   } while (false)
-#define HH_RSTAT_RMS(S, range) \
-  do {                         \
-    HH_STAT(S);                \
-    S.set_rms();               \
-    for (auto e : range) {     \
-      S.enter(e);              \
-    }                          \
+#define HH_RSTAT_RMS(S, range)       \
+  do {                               \
+    HH_STAT(S);                      \
+    S.set_rms();                     \
+    for (auto e : range) S.enter(e); \
   } while (false)
 
 //----------------------------------------------------------------------------

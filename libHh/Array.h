@@ -6,6 +6,9 @@
 
 // Array is a dynamically resizable 1D array like std::vector, but it is derived from CArrayView and ArrayView
 //  and it constructs/destructs elements based on capacity() rather than num().
+//
+// Aliasing: no argument may refer into the array itself, because any operation that changes the size may reallocate
+// the storage and thereby invalidate the argument; e.g. avoid a.push(a[0]), a.push_array(a.head(2)), a = a.tail(3).
 
 #if 0
 {
@@ -100,6 +103,13 @@ template <typename T> class CArrayView {
   constexpr const T* data() const { return _a; }
 
  protected:
+  // The pointer is declared non-const even though CArrayView's elements are logically const.  This lets the derived
+  // ArrayView<T> and Array<T> expose a mutable data() without a second pointer member, so all three classes share a
+  // single layout and derived-to-base conversion is free.  Const-correctness is therefore not enforced by the type of
+  // _a but by the member function signatures: CArrayView never returns _a as non-const, and there is deliberately no
+  // conversion from CArrayView<T> to ArrayView<T>.  Do not add one, and do not expose _a in a public member.
+  T* _a{nullptr};
+  int _n{0};
   [[nodiscard]] constexpr bool check(int i, int s) const {
     if (i >= 0 && s >= 0 && i + s <= _n) return true;
     if !consteval {
@@ -107,8 +117,6 @@ template <typename T> class CArrayView {
     }
     return false;
   }
-  T* _a{nullptr};
-  int _n{0};
   CArrayView() = default;
   type& operator=(const type&) = default;
 };
@@ -241,7 +249,7 @@ template <typename T> class Array : public ArrayView<T> {
   bool remove_ordered(const T& e);    // Return: was there.
   bool remove_unordered(const T& e);  // Return: was there.
   T pop() {
-    ASSERTX(_n);
+    ASSERTXX(_n);
     T e = std::move(_a[_n - 1]);
     sub(1);
     return e;
@@ -304,7 +312,7 @@ template <typename T> class Array : public ArrayView<T> {
     sub(n);
   }
   using base::reinit;                   // Hide it.
-  type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
+  type& operator+=(const T&) = delete;  // Dangerous because meaning is ambiguous (either push() or add to elements).
 };
 
 // See also Vec.h, PArray.h, and Matrix.h.
@@ -467,7 +475,7 @@ template <typename T> void Array<T>::init(int n) {
 }
 
 template <typename T> void Array<T>::access(int i) {
-  ASSERTX(i >= 0);
+  ASSERTXX(i >= 0);
   int n = i + 1;
   if (n > _cap) grow_to_at_least(n);
   if (n > _n) _n = n;
@@ -538,6 +546,9 @@ template <typename T, size_t n> CArrayView(const T (&)[n]) -> CArrayView<T>;
 template <typename T, size_t n> CArrayView(T (&)[n]) -> CArrayView<T>;
 template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
 template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
+template <std::input_iterator Iterator> Array(Iterator, Iterator) -> Array<std::iter_value_t<Iterator>>;
+template <typename Range, typename = enable_if_range_t<Range>> Array(Range&&) -> Array<range_value_t<Range>>;
+// template <std::ranges::input_range Range> Array(Range&&) -> Array<std::ranges::range_value_t<Range>>;
 
 //----------------------------------------------------------------------------
 
@@ -547,7 +558,7 @@ template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
 #define TTN TT [[nodiscard]]
 #define G Array<T>
 #define CG CArrayView<T>
-#define SS ASSERTX(same_size(g1, g2))
+#define SS ASSERTXX(same_size(g1, g2))
 #define F(g) for_int(i, g.num())
 // clang-format off
 
@@ -590,8 +601,8 @@ TTN G interp(CG g1, CG g2, float f1 = 0.5f) {
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
 TTN G interp(CG g1, CG g2, CG g3, float f1, float f2) {
-  ASSERTX(same_size(g1, g3));
-  SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
+  ASSERTXX(same_size(g1, g2) && same_size(g1, g3));
+  G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
 TTN G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 // TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Omit to avoid dependency on Vec.

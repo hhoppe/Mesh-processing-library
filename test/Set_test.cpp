@@ -153,9 +153,7 @@ int main() {
     s.enter(make_unique<int>(37));
     s.enter(make_unique<int>(43));
     Array<int> ar;
-    while (!s.empty()) {
-      ar.push(*s.remove_one());
-    }
+    while (!s.empty()) ar.push(*s.remove_one());
     sort(ar);
     SHOW(ar);
   }

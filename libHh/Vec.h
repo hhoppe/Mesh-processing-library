@@ -37,7 +37,10 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
-  constexpr void assign(CArrayView<T> ar) { assign_i(ar); }
+  constexpr void assign(CArrayView<T> ar) {
+    ASSERTXX(ar.num() == n);
+    std::copy(ar.data(), ar.data() + n, a());
+  }
   [[nodiscard]] constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
   [[nodiscard]] constexpr bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
   [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const;  // uL[c] <= [c] < uU[c] for all c.
@@ -54,6 +57,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     for_int(i, n) if (!(a()[i] == rhs[i])) return false;
     return true;
   }
+  // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
+  [[nodiscard]] friend constexpr auto operator<=>(const type&, const type&) = default;
   [[nodiscard]] constexpr operator ArrayView<T>() { return view(); }
   [[nodiscard]] constexpr operator CArrayView<T>() const { return view(); }
   [[nodiscard]] constexpr auto view(this auto&& self) { return array_view_t<decltype(self.data())>(self.data(), n); }
@@ -126,15 +131,11 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // C++ requires empty classes to have nonzero size to ensure object identity.
   // Therefore, even with an empty struct, it is necessary that sizeof(Vec<T, 0>) > 0.
   // However, using the "empty base class optimization", a class derived from Vec<T, 0> has zero space overhead.
-  // ?? move inline
-  constexpr void assign_i(CArrayView<T> ar) {
-    // ASSERTX(ar.num() == n); for_int(i, n) a()[i] = ar[i];
-    ASSERTX(ar.num() == n);
-    std::copy(ar.data(), ar.data() + n, a());
-  }
-  bool check(int i, int s) const {
+  [[nodiscard]] constexpr bool check(int i, int s) const {
     if (i >= 0 && s >= 0 && i + s <= n) return true;
-    SHOW(i, s, n);
+    if !consteval {
+      SHOW(i, s, n);
+    }
     return false;
   }
   // Deducing `this` deduces the *derived* class, so an unqualified member call on `self` can be hijacked by a
@@ -208,7 +209,7 @@ template <typename T, int n1> [[nodiscard]] constexpr Vec<T, n1> concat(const Ve
 //----------------------------------------------------------------------------
 
 // True for types that behave like numbers; specialize for any custom scalar type.
-template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;
+template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;  // Allows extensibility.
 template <typename T>
 concept Numeric = is_numeric_v<T>;
 
@@ -320,7 +321,7 @@ template <int D> class Vec_iterator {
     ASSERTXX(rhs._u[0] == _uU[0]);
     return _u[0] < _uU[0];  // Quick check against usual end().
   }
-  const Vec<int, D>& operator*() const { return (ASSERTX(_u[0] < _uU[0]), _u); }
+  const Vec<int, D>& operator*() const { return (ASSERTXX(_u[0] < _uU[0]), _u); }
   type& operator++() {
     static_assert(D > 0);
     ASSERTXX(_u[0] < _uU[0]);
@@ -376,13 +377,14 @@ template <int D> class VecL_iterator {
   VecL_iterator(const Vec<int, D>& uL, const Vec<int, D>& uU) : _u(uL), _uL(uL), _uU(uU) {}
   VecL_iterator(const type& iter) = default;
   bool operator!=(const type& rhs) const {
-    ASSERTX(rhs._uU == _uU);
-    ASSERTX(rhs._u[0] == _uU[0]);
+    dummy_use(rhs);
+    ASSERTXX(rhs._uU == _uU);
+    ASSERTXX(rhs._u[0] == _uU[0]);
     return _u[0] < _uU[0];  // Quick check against usual end().
   }
-  const Vec<int, D>& operator*() const { return (ASSERTX(_u[0] < _uU[0]), _u); }
+  const Vec<int, D>& operator*() const { return (ASSERTXX(_u[0] < _uU[0]), _u); }
   type& operator++() {
-    ASSERTX(_u[0] < _uU[0]);
+    ASSERTXX(_u[0] < _uU[0]);
     for (int c = D - 1; c > 0; --c) {
       _u[c]++;
       if (_u[c] < _uU[c]) return *this;
@@ -429,14 +431,14 @@ template <int D> details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<i
 }
 
 // Backwards compatibility; deprecated.
-template <int D> [[deprecated("Use for_coords() instead")]] details::Vec_range<D> coords(const Vec<int, D>& uU) {
+template <int D> [[deprecated("Use hh::for_coords() instead")]] details::Vec_range<D> coords(const Vec<int, D>& uU) {
   return range(uU);
 }
 
 // Backwards compatibility; deprecated.
 template <int D>
-[[deprecated("Use for_coordsL() instead")]] details::VecL_range<D> coordsL(const Vec<int, D>& uL,
-                                                                           const Vec<int, D>& uU) {
+[[deprecated("Use hh::for_coordsL() instead")]] details::VecL_range<D> coordsL(const Vec<int, D>& uL,
+                                                                               const Vec<int, D>& uU) {
   return range(uL, uU);
 }
 
@@ -546,19 +548,23 @@ TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 #undef TTC
 #undef TT
 
-// True if Class is, or derives from, a Vec<T, n>.  (Substitution failure leaves the concept simply unsatisfied.)
 template <typename Class>
 concept DerivedFromVec = std::is_base_of_v<Vec<typename Class::value_type, Class::Num>, Class>;
 
-template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple, float f1, float f2) {
+template <typename T> T interp(const Vec3<T>& triple, float f1, float f2) {
   return interp(triple[0], triple[1], triple[2], f1, f2);
 }
-template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple) {
+template <typename T> T interp(const Vec3<T>& triple) {  //
   return interp(triple[0], triple[1], triple[2]);
 }
+// DerivedFromVec to disambiguate from "Point interp(Point, Point)".
 template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
   return interp(triple[0], triple[1], triple[2], bary);
 }
+
+// Template deduction guides:
+// template <typename T> Vec3(T a, T b, T c) -> Vec3<T>;
+template <typename T, typename... Args> Vec(T, Args...) -> Vec<T, 1 + sizeof...(Args)>;
 
 }  // namespace hh
 

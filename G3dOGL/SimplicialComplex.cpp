@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "G3dOGL/SimplicialComplex.h"
 
+#include <vector>
+
 #include "libHh/RangeOp.h"  // compare()
 #include "libHh/Set.h"
 #include "libHh/Stack.h"  // also vec_contains()

@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Array.h"
 
+#include <vector>
+
 #include "libHh/ArrayOp.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
@@ -110,7 +112,7 @@ int main() {
     SHOW(CArrayView(a));
   }
   {
-    Vec3<int> a(10, 11, 12);
+    Vec3 a(10, 11, 12);
     // SHOW(CArrayView<int>(a));  // internal compiler error in MSVC 2017
     SHOW(a.view());
     CArrayView<int> ar(a);
@@ -133,7 +135,7 @@ int main() {
     for (double rankf : {0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.}) SHOW(rankf, rankf_element(ar, rankf));
   }
   {
-    Array<int> ar1{1, 2};
+    Array ar1{1, 2};
     SHOW(ar1 == V(1, 1 + 1).view());
     SHOW(ar1 == V(1, 2, 3).view());
     SHOW(ar1 == V(1, 3).view());
@@ -156,6 +158,20 @@ int main() {
     Array3 ar2(ar);
     SHOW(ar2[0]);
 #endif
+  }
+  {
+    Array ar(std::vector{1, 2});
+    SHOW(ar);
+  }
+  {
+    std::vector vec{1, 3};
+    Array ar(vec.begin(), vec.end());
+    SHOW(ar);
+  }
+  {
+    std::vector vec{1, 2, 3};
+    fill(ArrayView(vec.data(), 2), 10);
+    SHOW(Array(vec));
   }
 }
 

@@ -20,6 +20,7 @@ HH_REFERENCE_LIB("oleaut32.lib");  // VARIANT; odd: required from command-line c
 HH_REFERENCE_LIB("shlwapi.lib");   // SHCreateMemStream()
 
 #include <cctype>  // isalnum(), toupper()
+#include <vector>
 
 // #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"

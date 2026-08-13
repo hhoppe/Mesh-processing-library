@@ -539,18 +539,12 @@ template <typename T> struct nested_list_retrieve<0, T> {
 
 //----------------------------------------------------------------------------
 
-namespace details {
-template <int D, typename T> struct grid_output {
-  std::ostream& operator()(std::ostream& os, CGridView<D, T> g) const {
-    os << "Grid<" << type_name<T>() << ">(";
-    for_int(i, g.dims().num()) os << (i ? ", " : "") << g.dims()[i];
-    os << ") {\n";
-    for (const auto& p : range(g.dims())) os << "  " << p << " = " << g[p] << (has_ostream_eol_v<T> ? "" : "\n");
+template <int D, typename T> std::ostream& operator<<(std::ostream& os, CGridView<D, T> g) {
+  if constexpr (D == 1) {
+    os << "Array<" << type_name<T>() << ">(" << g.dim(0) << ") {\n";
+    for_int(i, g.dim(0)) os << "  " << g[i] << (has_ostream_eol_v<T> ? "" : "\n");
     return os << "}\n";
-  }
-};
-template <typename T> struct grid_output<2, T> {
-  std::ostream& operator()(std::ostream& os, CGridView<2, T> g) const {
+  } else if constexpr (D == 2) {
     const int ny = g.dim(0), nx = g.dim(1);
     os << "Matrix<" << type_name<T>() << ">(" << ny << ", " << nx << ") {\n";
     for_int(y, ny) {
@@ -563,19 +557,13 @@ template <typename T> struct grid_output<2, T> {
       }
     }
     return os << "}\n";
-  }
-};
-template <typename T> struct grid_output<1, T> {
-  std::ostream& operator()(std::ostream& os, CGridView<1, T> g) const {
-    const int n = g.dim(0);
-    os << "Array<" << type_name<T>() << ">(" << n << ") {\n";
-    for_int(i, n) os << "  " << g[i] << (has_ostream_eol_v<T> ? "" : "\n");
+  } else {
+    os << "Grid<" << type_name<T>() << ">(";
+    for_int(i, g.dims().num()) os << (i ? ", " : "") << g.dims()[i];
+    os << ") {\n";
+    for (const auto& p : range(g.dims())) os << "  " << p << " = " << g[p] << (has_ostream_eol_v<T> ? "" : "\n");
     return os << "}\n";
   }
-};
-}  // namespace details
-template <int D, typename T> std::ostream& operator<<(std::ostream& os, CGridView<D, T> g) {
-  return details::grid_output<D, T>()(os, g);
 }
 template <int D, typename T> HH_DECLARE_OSTREAM_EOL(CGridView<D, T>);
 template <int D, typename T> HH_DECLARE_OSTREAM_EOL(GridView<D, T>);  // Implemented by CGridView<D, T>.
@@ -588,7 +576,7 @@ template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Impleme
 #define TT template <int D, typename T>
 #define G Grid<D, T>
 #define CG CGridView<D, T>
-#define SS ASSERTX(same_size(g1, g2))
+#define SS ASSERTXX(same_size(g1, g2))
 #define F(g) for (const size_t i : range(g.size()))
 #define PF(g, code) parallel_for({.cycles_per_elem = 1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
@@ -635,13 +623,13 @@ TT G interp(CG g1, CG g2, float f1 = 0.5f) {
   SS; G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + (1.f - f1) * g2.flat(i); } return g;
 }
 TT G interp(CG g1, CG g2, CG g3, float f1, float f2) {
-  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+  ASSERTXX(same_size(g1, g2) && same_size(g1, g3));
   G g(g1.dims()); F(g) { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
 TT G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
   // Vec3<float> == Bary;   May have bary[0] + bary[1] + bary[2] != 1.f.
-  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+  ASSERTXX(same_size(g1, g2) && same_size(g1, g3));
   G g(g1.dims()); F(g) { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); }
   return g;
 }

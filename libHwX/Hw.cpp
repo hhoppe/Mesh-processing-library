@@ -476,9 +476,7 @@ bool Hw::loop() {
 }
 
 void Hw::handle_events() {
-  while (got_event() && _update != EUpdate::quit) {
-    handle_event();
-  }
+  while (got_event() && _update != EUpdate::quit) handle_event();
 }
 
 void Hw::handle_event() {
@@ -500,8 +498,7 @@ void Hw::handle_event() {
     case Expose:
       if (_hwdebug) SHOW("Expose", _exposed);
       if (!_exposed) return;
-      while (XCheckTypedEvent(_display, Expose, &_event)) {
-      }
+      while (XCheckTypedEvent(_display, Expose, &_event));
       redraw_now();
       break;
     case ConfigureNotify: {
@@ -534,8 +531,7 @@ void Hw::handle_event() {
       } else {
         XClearWindow(_display, _win);
       }
-      while (XCheckTypedEvent(_display, Expose, &_event)) {
-      }
+      while (XCheckTypedEvent(_display, Expose, &_event));
       break;
     }
     case KeyPress:

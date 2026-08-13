@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
 #define MESH_PROCESSING_G3DOGL_SIMPLICIALCOMPLEX_H_
 
+#include <vector>
+
 #include "libHh/A3dStream.h"
 #include "libHh/Flags.h"
 #include "libHh/GMesh.h"

@@ -2,6 +2,7 @@
 #include "libHh/Vec.h"
 
 #include <type_traits>
+#include <vector>
 
 #include "libHh/Advanced.h"
 #include "libHh/Array.h"
@@ -312,6 +313,14 @@ int main() {
     Vec<int, 0> v0;
     SHOW(v0);
     SHOW(V<int>());
+  }
+  {
+    Vec3 v3(1, 2, 3);
+    SHOW(v3);
+  }
+  {
+    Vec v4(1, 2, 3, 4);
+    SHOW(v4);
   }
 }
 

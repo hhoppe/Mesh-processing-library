@@ -285,9 +285,7 @@ bool Hw::loop() {
 }
 
 void Hw::handle_events() {
-  while (got_event() && _update != EUpdate::quit) {
-    handle_event();
-  }
+  while (got_event() && _update != EUpdate::quit) handle_event();
 }
 
 void Hw::handle_event() {

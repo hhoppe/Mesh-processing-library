@@ -22,24 +22,29 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
 
  public:
   Vec() = default;
-  Vec(CArrayView<T> ar) { assign(ar); }
   // Include arg0 to disambiguate from default constructor.  arg0 may be either const l-value or r-value reference.
   template <typename... Args>
-  constexpr Vec(const T& arg0, Args&&... args1) noexcept : base(nullptr, arg0, std::forward<Args>(args1)...) {}
+  constexpr Vec(const T& arg0, Args&&... args1) noexcept : base{{arg0, std::forward<Args>(args1)...}} {
+    static_assert(sizeof...(args1) + 1 == n, "#args");
+  }
   template <typename... Args>
-  constexpr Vec(T&& arg0, Args&&... args1) noexcept : base(nullptr, std::move(arg0), std::forward<Args>(args1)...) {}
+  constexpr Vec(T&& arg0, Args&&... args1) noexcept : base{{std::move(arg0), std::forward<Args>(args1)...}} {
+    static_assert(sizeof...(args1) + 1 == n, "#args");
+  }
+
+  Vec(CArrayView<T> ar) { assign(ar); }
   // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
   //  it is safest to not include any copy-constructor, not even a default one.
   [[nodiscard]] constexpr int num() const { return n; }
   [[nodiscard]] constexpr size_t size() const { return static_cast<size_t>(n); }
   [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
-    return (HH_CHECK_BOUNDS(i, n), self.base::operator[](i));
+    return (HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i]);
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
   constexpr void assign(CArrayView<T> ar) {
     ASSERTXX(ar.num() == n);
-    std::copy(ar.data(), ar.data() + n, a());
+    std::copy(ar.data(), ar.data() + n, data());
   }
   [[nodiscard]] constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
   [[nodiscard]] constexpr bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
@@ -54,7 +59,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     return std::move(*this);
   }
   [[nodiscard]] constexpr bool operator==(const type& rhs) const {
-    for_int(i, n) if (!(a()[i] == rhs[i])) return false;
+    for_int(i, n) if (!(data()[i] == rhs[i])) return false;
     return true;
   }
   // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
@@ -62,7 +67,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr operator ArrayView<T>() { return view(); }
   [[nodiscard]] constexpr operator CArrayView<T>() const { return view(); }
   [[nodiscard]] constexpr auto view(this auto&& self) { return array_view_t<decltype(self.data())>(self.data(), n); }
-  [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
+  [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(data(), n); }
   [[nodiscard]] constexpr auto& vec(this auto&& self) { return as_vec(self); }
 
   // The segment(), head(), and tail() functions returning Vec<T, s>& reinterpret the s elements starting at index i
@@ -96,12 +101,22 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  [[nodiscard]] constexpr T* begin() { return a(); }
-  [[nodiscard]] constexpr const T* begin() const { return a(); }
-  [[nodiscard]] constexpr T* end() { return a() + n; }
-  [[nodiscard]] constexpr const T* end() const { return a() + n; }
-  [[nodiscard]] constexpr T* data() { return a(); }
-  [[nodiscard]] constexpr const T* data() const { return a(); }
+  [[nodiscard]] constexpr T* begin() { return data(); }
+  [[nodiscard]] constexpr const T* begin() const { return data(); }
+  [[nodiscard]] constexpr T* end() { return data() + n; }
+  [[nodiscard]] constexpr const T* end() const { return data() + n; }
+  [[nodiscard]] constexpr T* data() {
+    if constexpr (n > 0)
+      return this->_a;
+    else
+      return nullptr;
+  }
+  [[nodiscard]] constexpr const T* data() const {
+    if constexpr (n > 0)
+      return this->_a;
+    else
+      return nullptr;
+  }
   [[nodiscard]] static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
   static constexpr int Num = n;
   // E.g.: const auto vec = Vec<float, 3>::create([](int i) { return i * .5f; }).
@@ -122,15 +137,15 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     static_assert(Index < std::size_t{n});
     return std::forward_like<decltype(self)>(self[int{Index}]);
   }
-  // Defining friend functions in-class is convenient but unfortunately _MSC_VER (VS 2019) attempts to instantiate
+  // Defining friend functions in-class is convenient but unfortunately _MSC_VER attempts to instantiate
   // all these and this fails if "T - T" or "sqrt(T)" are undefined.
-  // friend T mag2(const type& vec) { return dot(vec, vec); }
-  // friend T mag(const type& vec) { return sqrt(mag2(vec)); }
+  // [[nodiscard]] friend constexpr T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
 
  private:
   // C++ requires empty classes to have nonzero size to ensure object identity.
   // Therefore, even with an empty struct, it is necessary that sizeof(Vec<T, 0>) > 0.
   // However, using the "empty base class optimization", a class derived from Vec<T, 0> has zero space overhead.
+
   [[nodiscard]] constexpr bool check(int i, int s) const {
     if (i >= 0 && s >= 0 && i + s <= n) return true;
     if !consteval {
@@ -146,12 +161,11 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     return static_cast<copy_const_t<Self, type>&>(self);
   }
   template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const {
-    return type(base::operator[](n - 1 - Is)...);
+    return type(data()[n - 1 - Is]...);
   }
   template <size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) {
     return type((void(Is), e)...);
   }
-  using base::a;
   // Default operator=() and copy_constructor are safe.
 };
 
@@ -262,28 +276,15 @@ template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> snap_c
 
 namespace details {
 
-// Remove VecBase altogether ??
-
-template <typename T, int n> struct VecBase {  // Allocates a member variable only if n > 0.
-  VecBase() = default;
-  template <typename... Args> constexpr VecBase(void*, Args&&... args) noexcept : _a{std::forward<Args>(args)...} {
-    static_assert(sizeof...(args) == n, "#args");
-  }
+// Storage for Vec.  The n == 0 specialization is a truly empty class -- not merely one with a [[no_unique_address]]
+// empty member, which compilers do not agree is eligible for the empty base optimization -- so that Vec<T, 0>, and
+// anything derived from it such as SGrid<T, 0, ...>, occupies no space in a derived class.
+template <typename T, int n> struct VecBase {
   T _a[n];
-  constexpr T* a() noexcept { return &_a[0]; }
-  constexpr const T* a() const noexcept { return &_a[0]; }
-  constexpr T& operator[](int i) { return _a[i]; }
-  constexpr const T& operator[](int i) const { return _a[i]; }
+  friend auto operator<=>(const VecBase&, const VecBase&) = default;
 };
-
 template <typename T> struct VecBase<T, 0> {
-  VecBase() = default;
-  template <typename... Args> VecBase(void*, Args&&... args) noexcept = delete;
-  constexpr T* a() noexcept { return nullptr; }
-  constexpr const T* a() const noexcept { return nullptr; }
-  constexpr T& operator[](int) { assertnever("Vec<T, 0> has no elements"); }
-  constexpr const T& operator[](int) const { assertnever("Vec<T, 0> has no elements"); }
-  // No member variable at all.
+  friend auto operator<=>(const VecBase&, const VecBase&) = default;
 };
 
 }  // namespace details

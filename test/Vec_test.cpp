@@ -311,6 +311,7 @@ int main() {
   }
   {
     Vec<int, 0> v0;
+    dummy_use(v0);
     SHOW(v0);
     SHOW(V<int>());
   }
@@ -321,6 +322,24 @@ int main() {
   {
     Vec v4(1, 2, 3, 4);
     SHOW(v4);
+  }
+  {
+    struct D0 : Vec<int, 0> {
+      int a;
+    };
+    struct SG0 : Vec<int, 0> {};
+    struct D0b : SG0 {
+      int a;
+    };  // Transitive, as for SGrid<T, 0, ...>.
+    struct Du0 : Vec<uint8_t, 0> {
+      uint8_t a;
+    };  // Sharpest: a lost byte has no padding to hide in.
+    static_assert(sizeof(D0) == sizeof(int));
+    static_assert(sizeof(D0b) == sizeof(int));
+    static_assert(sizeof(Du0) == 1);
+    static_assert(sizeof(Vec<float, 3>) == 3 * sizeof(float));
+    static_assert(std::is_trivially_copyable_v<Vec<float, 3>>);
+    static_assert(std::is_standard_layout_v<Vec<float, 3>>);
   }
 }
 

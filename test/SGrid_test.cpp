@@ -85,28 +85,28 @@ int main() {
     SHOW(sizeof(SGrid<int, 1, 3, 1>));
     SHOW(sizeof(SGrid<int, 1, 1, 3>));
     {
-      struct S : SGrid<int, 0> {
+      struct Si0 : SGrid<int, 0> {
         int a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Si0));
     }
     {
-      struct S : SGrid<int, 1, 0> {
+      struct Si10 : SGrid<int, 1, 0> {
         int a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Si10));
     }
     {
-      struct S : SGrid<int, 0, 1> {
+      struct Si01 : SGrid<int, 0, 1> {
         int a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Si01));
     }
     {
-      struct S : SGrid<int, 1, 1> {
+      struct Si11 : SGrid<int, 1, 1> {
         int a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Si11));
     }
     SHOW(sizeof(Vec<uint8_t, 0>));
     SHOW(sizeof(SGrid<uint8_t, 0>));
@@ -128,28 +128,28 @@ int main() {
     SHOW(sizeof(SGrid<uint8_t, 1, 3, 1>));
     SHOW(sizeof(SGrid<uint8_t, 1, 1, 3>));
     {
-      struct S : SGrid<uint8_t, 0> {
+      struct Su0 : SGrid<uint8_t, 0> {
         uint8_t a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Su0));
     }
     {
-      struct S : SGrid<uint8_t, 1, 0> {
+      struct Su10 : SGrid<uint8_t, 1, 0> {
         uint8_t a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Su10));
     }
     {
-      struct S : SGrid<uint8_t, 0, 1> {
+      struct Su01 : SGrid<uint8_t, 0, 1> {
         uint8_t a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Su01));
     }
     {
-      struct S : SGrid<uint8_t, 1, 1> {
+      struct Su11 : SGrid<uint8_t, 1, 1> {
         uint8_t a;
       };
-      SHOW(sizeof(S));
+      SHOW(sizeof(Su11));
     }
   }
   {

@@ -78,7 +78,6 @@ class EList {
     using reference = value_type&;
     Iter(EListNode* node) : _node(node) {}
     bool operator==(const type& rhs) const { return _node == rhs._node; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     EListNode* operator*() const { return _node; }
     type& operator++();
     type& operator--();
@@ -97,7 +96,6 @@ class EList {
     using reference = value_type&;
     ConstIter(const EListNode* node) : _node(node) {}
     bool operator==(const type& rhs) const { return _node == rhs._node; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const EListNode* operator*() const { return _node; }
     type& operator++();
     type& operator--();
@@ -115,7 +113,6 @@ class EList {
    public:
     OuterIter(EListNode* node) : _node(node) {}
     bool operator==(const type& rhs) const { return _node == rhs._node; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset); }
     type& operator++();
     type& operator--();

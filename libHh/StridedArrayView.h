@@ -42,7 +42,6 @@ template <typename T> class CStridedArrayView {
     using reference = value_type&;
     iterator() = default;
     bool operator==(const type& rhs) const { return _p == rhs._p; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const T& operator*() const { return *_p; }
     const T* operator->() const { return _p; }
     type& operator++() {
@@ -104,7 +103,6 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
     using reference = value_type&;
     iterator() = default;
     bool operator==(const type& rhs) const { return _p == rhs._p; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     T& operator*() const { return *_p; }
     T* operator->() const { return _p; }
     type& operator++() {

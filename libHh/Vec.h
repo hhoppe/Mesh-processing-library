@@ -31,98 +31,92 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
   //  it is safest to not include any copy-constructor, not even a default one.
   [[nodiscard]] constexpr int num() const { return n; }
-  [[nodiscard]] constexpr size_t size() const { return n; }
+  [[nodiscard]] constexpr size_t size() const { return static_cast<size_t>(n); }
   [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
     return (HH_CHECK_BOUNDS(i, n), self.base::operator[](i));
   }
-  [[nodiscard]] constexpr T& last() { return (*this)[n - 1]; }
-  [[nodiscard]] constexpr const T& last() const { return (*this)[n - 1]; }
+  [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
-  void assign(CArrayView<T> ar) { assign_i(ar); }
+  constexpr void assign(CArrayView<T> ar) { assign_i(ar); }
   [[nodiscard]] constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
   [[nodiscard]] constexpr bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
   [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const;  // uL[c] <= [c] < uU[c] for all c.
-  [[nodiscard]] type with(int i, T e) const& {
+  [[nodiscard]] constexpr type with(int i, T e) const& {
     type ar(*this);
     ar[i] = std::move(e);
     return ar;
   }
-  [[nodiscard]] type with(int i, T e) && {
+  [[nodiscard]] constexpr type with(int i, T e) && {
     operator[](i) = std::move(e);
-    return *this;
+    return std::move(*this);
   }
-  constexpr bool operator==(const type& rhs) const {
+  [[nodiscard]] constexpr bool operator==(const type& rhs) const {
     for_int(i, n) if (!(a()[i] == rhs[i])) return false;
     return true;
   }
-  constexpr bool operator!=(const type& rhs) const { return !(*this == rhs); }
-  constexpr operator ArrayView<T>() { return view(); }
-  constexpr operator CArrayView<T>() const { return view(); }
-  [[nodiscard]] constexpr ArrayView<T> view() { return ArrayView<T>(a(), n); }
-  [[nodiscard]] constexpr CArrayView<T> view() const { return CArrayView<T>(a(), n); }
+  [[nodiscard]] constexpr operator ArrayView<T>() { return view(); }
+  [[nodiscard]] constexpr operator CArrayView<T>() const { return view(); }
+  [[nodiscard]] constexpr auto view(this auto&& self) { return array_view_t<decltype(self.data())>(self.data(), n); }
   [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(a(), n); }
-  [[nodiscard]] constexpr type& vec() { return *this; }
-  [[nodiscard]] constexpr const type& vec() const { return *this; }
-  template <int s> [[nodiscard]] Vec<T, s>& head() { return segment<s>(0); }  // V(1, 2, 3).head<2>() == V(1, 2).
-  template <int s> [[nodiscard]] const Vec<T, s>& head() const { return segment<s>(0); }
-  [[nodiscard]] ArrayView<T> head(int s) { return segment(0, s); }
-  [[nodiscard]] CArrayView<T> head(int s) const { return segment(0, s); }
-  template <int s> [[nodiscard]] Vec<T, s>& tail() { return segment<s>(n - s); }  // V(1, 2, 3).tail<2>() == V(2, 3).
-  template <int s> [[nodiscard]] const Vec<T, s>& tail() const { return segment<s>(n - s); }
-  [[nodiscard]] ArrayView<T> tail(int s) { return segment(n - s, s); }
-  [[nodiscard]] CArrayView<T> tail(int s) const { return segment(n - s, s); }
-  template <int i, int s> [[nodiscard]] Vec<T, s>& segment() {  // V(1, 2, 3, 4).segment<2, 1> == V(2, 3).
+  [[nodiscard]] constexpr auto& vec(this auto&& self) { return as_vec(self); }
+
+  // The segment(), head(), and tail() functions returning Vec<T, s>& reinterpret the s elements starting at index i
+  // as a Vec<T, s>.  This relies on Vec<T, n> being a standard-layout type whose only storage is a T[n] at offset 0,
+  // so that the two are layout-compatible.  It is not strictly conforming (no Vec<T, s> object is ever created at
+  // that address), which is also why these functions cannot be constexpr; the alternative of returning a copy would
+  // lose the ability to write through the result, e.g. frame.head<3>() = ...
+  // V(1, 2, 3).head<2>() == V(1, 2).
+  template <int i, int s> [[nodiscard]] auto& segment(this auto&& self) {  // V(1, 2, 3, 4).segment<1, 2>() == V(2, 3).
     static_assert(i >= 0 && s >= 0 && i + s <= n);
-    return *reinterpret_cast<Vec<T, s>*>(a() + i);
+    return *reinterpret_cast<copy_const_t<decltype(self), Vec<T, s>>*>(self.data() + i);
   }
-  template <int i, int s> [[nodiscard]] const Vec<T, s>& segment() const {
-    static_assert(i >= 0 && s >= 0 && i + s <= n);
-    return *reinterpret_cast<const Vec<T, s>*>(a() + i);
-  }
-  template <int s> [[nodiscard]] Vec<T, s>& segment(int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3).
+  template <int s> [[nodiscard]] auto& segment(this auto&& self, int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3).
     static_assert(s >= 0 && s <= n);
-    ASSERTXX(check(i, s));
-    return *reinterpret_cast<Vec<T, s>*>(a() + i);
+    ASSERTXX(as_vec(self).check(i, s));
+    return *reinterpret_cast<copy_const_t<decltype(self), Vec<T, s>>*>(self.data() + i);
   }
-  template <int s> [[nodiscard]] const Vec<T, s>& segment(int i) const {
-    static_assert(s >= 0 && s <= n);
-    ASSERTXX(check(i, s));
-    return *reinterpret_cast<const Vec<T, s>*>(a() + i);
+  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) {
+    return (ASSERTXX(as_vec(self).check(i, s)), array_view_t<decltype(self.data())>(self.data() + i, s));
   }
-  [[nodiscard]] ArrayView<T> segment(int i, int s) { return (ASSERTXX(check(i, s)), ArrayView<T>(a() + i, s)); }
-  [[nodiscard]] CArrayView<T> segment(int i, int s) const {
-    return (ASSERTXX(check(i, s)), CArrayView<T>(a() + i, s));
-  }
-  [[nodiscard]] ArrayView<T> slice(int ib, int ie) { return segment(ib, ie - ib); }
-  [[nodiscard]] CArrayView<T> slice(int ib, int ie) const { return segment(ib, ie - ib); }
-  template <typename U> [[nodiscard]] Vec<U, n> cast() const {
-    return map([](const auto& e) { return static_cast<U>(e); });
+  template <int s> [[nodiscard]] auto& head(this auto&& self) { return as_vec(self).template segment<0, s>(); }
+  [[nodiscard]] constexpr auto head(this auto&& self, int s) { return as_vec(self).segment(0, s); }
+  // V(1, 2, 3).tail<2>() == V(2, 3).
+  template <int s> [[nodiscard]] auto& tail(this auto&& self) { return as_vec(self).template segment<n - s, s>(); }
+  [[nodiscard]] constexpr auto tail(this auto&& self, int s) { return as_vec(self).segment(n - s, s); }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) { return as_vec(self).segment(ib, ie - ib); }
+
+  template <typename U> [[nodiscard]] constexpr Vec<U, n> cast() const {
+    return map(*this, [](const auto& e) { return static_cast<U>(e); });
   }
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  T* begin() { return a(); }
-  const T* begin() const { return a(); }
-  T* end() { return a() + n; }
-  const T* end() const { return a() + n; }
-  constexpr T* data() { return a(); }
-  constexpr const T* data() const { return a(); }
+  [[nodiscard]] constexpr T* begin() { return a(); }
+  [[nodiscard]] constexpr const T* begin() const { return a(); }
+  [[nodiscard]] constexpr T* end() { return a() + n; }
+  [[nodiscard]] constexpr const T* end() const { return a() + n; }
+  [[nodiscard]] constexpr T* data() { return a(); }
+  [[nodiscard]] constexpr const T* data() const { return a(); }
   [[nodiscard]] static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
   static constexpr int Num = n;
-  template <typename Func = T(int)> [[nodiscard]] static constexpr type create(Func func) {
-    return create_aux(func, std::make_index_sequence<n>());
+  // E.g.: const auto vec = Vec<float, 3>::create([](int i) { return i * .5f; }).
+  template <typename Func> requires std::is_invocable_r_v<T, Func, int>
+  [[nodiscard]] static constexpr type create(Func func) {
+    return [&]<size_t... Is>(std::index_sequence<Is...>) {
+      return type(func(int{Is})...);
+    }(std::make_index_sequence<n>());
   }
-  template <typename U = T> std::enable_if_t<std::is_floating_point_v<U>, bool> normalize() {
+  constexpr bool normalize() requires std::floating_point<T> {
     auto sum2 = mag2(*this);
     if (!sum2) return false;
     *this *= 1.f / sqrt(sum2);
     return true;
   }
-  // Enable structured bindings:
-  template <std::size_t Index> auto&& get() & { return get_helper<Index>(*this); }
-  template <std::size_t Index> auto&& get() && { return get_helper<Index>(*this); }
-  template <std::size_t Index> auto&& get() const& { return get_helper<Index>(*this); }
-  template <std::size_t Index> auto&& get() const&& { return get_helper<Index>(*this); }
+  // Enable structured bindings.
+  template <std::size_t Index> [[nodiscard]] constexpr auto&& get(this auto&& self) {
+    static_assert(Index < std::size_t{n});
+    return std::forward_like<decltype(self)>(self[int{Index}]);
+  }
   // Defining friend functions in-class is convenient but unfortunately _MSC_VER (VS 2019) attempts to instantiate
   // all these and this fails if "T - T" or "sqrt(T)" are undefined.
   // friend T mag2(const type& vec) { return dot(vec, vec); }
@@ -132,7 +126,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // C++ requires empty classes to have nonzero size to ensure object identity.
   // Therefore, even with an empty struct, it is necessary that sizeof(Vec<T, 0>) > 0.
   // However, using the "empty base class optimization", a class derived from Vec<T, 0> has zero space overhead.
-  void assign_i(CArrayView<T> ar) {
+  // ?? move inline
+  constexpr void assign_i(CArrayView<T> ar) {
     // ASSERTX(ar.num() == n); for_int(i, n) a()[i] = ar[i];
     ASSERTX(ar.num() == n);
     std::copy(ar.data(), ar.data() + n, a());
@@ -142,18 +137,18 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     SHOW(i, s, n);
     return false;
   }
-  template <std::size_t Index, typename TT> auto&& get_helper(TT&& t) const {
-    static_assert(Index >= 0 && Index < n);
-    return std::forward<TT>(t)[Index];
+  // Deducing `this` deduces the *derived* class, so an unqualified member call on `self` can be hijacked by a
+  // same-named member declared there (e.g. SGrid::segment() hides Vec::segment()).  Member calls that must resolve
+  // to Vec's own members therefore go through as_vec().  Unqualified lookup of as_vec() finds this class member, so
+  // ADL is suppressed and the call is never itself hijacked.
+  template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) {
+    return static_cast<copy_const_t<Self, type>&>(self);
   }
   template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const {
     return type(base::operator[](n - 1 - Is)...);
   }
   template <size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) {
     return type((void(Is), e)...);
-  }
-  template <typename Func = T(int), size_t... Is> static type create_aux(Func func, std::index_sequence<Is...>) {
-    return type(func(Is)...);
   }
   using base::a;
   // Default operator=() and copy_constructor are safe.
@@ -165,16 +160,12 @@ template <typename T> using Vec2 = Vec<T, 2>;
 template <typename T> using Vec3 = Vec<T, 3>;
 template <typename T> using Vec4 = Vec<T, 4>;
 
-// Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
-template <typename T, typename... Ts>
-[[nodiscard]] constexpr Vec<std::decay_t<T>, (1 + sizeof...(Ts))> V(const T& t, Ts&&... ts) {
-  return Vec<std::decay_t<T>, 1 + sizeof...(ts)>(t, std::forward<Ts>(ts)...);
-}
-
-// Construct an Vec from an immediate list of elements, inferring the element type and array size automatically.
-template <typename T, typename... Ts>
-[[nodiscard]] constexpr Vec<std::decay_t<T>, (1 + sizeof...(Ts))> V(T&& t, Ts&&... ts) {
-  return Vec<std::decay_t<T>, 1 + sizeof...(ts)>(std::move(t), std::forward<Ts>(ts)...);
+// Construct a Vec from an immediate list of elements, inferring the element type (unless it is explicitly specified)
+// and the array size automatically.
+template <typename T = void, typename Arg0, typename... Args>
+[[nodiscard]] constexpr auto V(Arg0&& arg0, Args&&... args) {
+  using Elem = std::conditional_t<std::is_void_v<T>, std::decay_t<Arg0>, T>;
+  return Vec<Elem, 1 + sizeof...(Args)>(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
 }
 
 // Construct a zero-length Vec.
@@ -190,12 +181,9 @@ template <typename T> [[nodiscard]] constexpr Vec3<T> thrice(const T& v) { retur
 template <int n, typename T> [[nodiscard]] constexpr Vec<T, n> ntimes(const T& v) { return Vec<T, n>::all(v); }
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, int n, typename Func>
-[[nodiscard]] auto map(const Vec<T, n>& c, Func func) -> Vec<std::decay_t<decltype(func(std::declval<T>()))>, n> {
-  using T2 = std::decay_t<decltype(func(std::declval<T>()))>;
-  Vec<T2, n> nc;
-  for_int(i, n) nc[i] = func(c[i]);
-  return nc;
+template <typename T, int n, typename Func> [[nodiscard]] constexpr auto map(const Vec<T, n>& c, Func func) {
+  using T2 = std::decay_t<std::invoke_result_t<Func, const T&>>;
+  return Vec<T2, n>::create([&](int i) { return func(c[i]); });
 }
 
 // Range of coordinates: Vec<int, D>: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
@@ -205,67 +193,59 @@ template <int D> [[nodiscard]] details::Vec_range<D> range(const Vec<int, D>& uU
 // Range of coordinates: Vec<int, D>: uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].
 template <int D> [[nodiscard]] details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<int, D>& uU);
 
-namespace details {
-template <typename T, typename... A> struct concat_n {
-  static constexpr int value = T::Num + concat_n<A...>::value;
-};
-template <typename T> struct concat_n<T> {
-  static constexpr int value = T::Num;
-};
-template <typename T, int n1, int n2, size_t... Is>
-constexpr Vec<T, (n1 + n2)> concat_aux(const Vec<T, n1>& a1, const Vec<T, n2>& a2, std::index_sequence<Is...>) {
-  return Vec<T, n1 + n2>((narrow_cast<int>(Is) < n1 ? a1[narrow_cast<int>(Is)] : a2[narrow_cast<int>(Is) - n1])...);
-}
-}  // namespace details
-
 // Concatenate several Vec's to create single Vec, e.g. concat(V(1, 2), V(3), V(4, 5)) == V(1, 2, 3, 4, 5).
 template <typename T, int n1, int n2, typename... A>
-[[nodiscard]] constexpr Vec<T, (n1 + details::concat_n<Vec<T, n2>, A...>::value)> concat(const Vec<T, n1>& a1,
-                                                                                         const Vec<T, n2>& a2,
-                                                                                         A... arr) {
-  return concat(details::concat_aux(a1, a2, std::make_index_sequence<n1 + n2>()), arr...);
+[[nodiscard]] constexpr Vec<T, (n1 + n2 + (A::Num + ... + 0))> concat(const Vec<T, n1>& a1, const Vec<T, n2>& a2,
+                                                                      const A&... arr) {
+  return concat(
+      [&]<size_t... Is1, size_t... Is2>(std::index_sequence<Is1...>, std::index_sequence<Is2...>) {
+        return Vec<T, n1 + n2>(a1[int{Is1}]..., a2[int{Is2}]...);
+      }(std::make_index_sequence<n1>(), std::make_index_sequence<n2>()),
+      arr...);
 }
 template <typename T, int n1> [[nodiscard]] constexpr Vec<T, n1> concat(const Vec<T, n1>& a1) { return a1; }
 
 //----------------------------------------------------------------------------
 
-// For Numeric T:
+// True for types that behave like numbers; specialize for any custom scalar type.
+template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;
+template <typename T>
+concept Numeric = is_numeric_v<T>;
 
-template <typename T, int n> [[nodiscard]] T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
+template <Numeric T, int n> [[nodiscard]] constexpr T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
   T sum{};
   for_int(i, n) sum += v1[i] * v2[i];
   return sum;
 }
 
-template <typename T, int n> [[nodiscard]] T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
-template <typename T, int n> [[nodiscard]] T mag(const Vec<T, n>& vec) {
-  static_assert(std::is_floating_point_v<T>);
-  return sqrt(mag2(vec));
-}
+template <Numeric T, int n> [[nodiscard]] constexpr T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
+template <std::floating_point T, int n> [[nodiscard]] constexpr T mag(const Vec<T, n>& vec) { return sqrt(mag2(vec)); }
 
-template <typename T, int n> [[nodiscard]] T dist2(const Vec<T, n>& v1, const Vec<T, n>& v2) { return mag2(v1 - v2); }
-template <typename T, int n> [[nodiscard]] T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) {
-  static_assert(std::is_floating_point_v<T>);
+template <Numeric T, int n> [[nodiscard]] constexpr T dist2(const Vec<T, n>& v1, const Vec<T, n>& v2) {
+  return mag2(v1 - v2);
+}
+template <std::floating_point T, int n> [[nodiscard]] constexpr T dist(const Vec<T, n>& v1, const Vec<T, n>& v2) {
   return sqrt(dist2(v1, v2));
 }
 
-template <typename T, int n> [[nodiscard]] Vec<T, n> normalized(Vec<T, n> vec) {
+template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> normalized(Vec<T, n> vec) {
   assertx(vec.normalize());
   return vec;
 }
-template <typename T, int n> [[nodiscard]] Vec<T, n> ok_normalized(Vec<T, n> vec) {
+template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> ok_normalized(Vec<T, n> vec) {
   vec.normalize();
   return vec;
 }
-template <typename T, int n> [[nodiscard]] Vec<T, n> fast_normalized(const Vec<T, n>& vec) { return vec / mag(vec); }
+template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> fast_normalized(const Vec<T, n>& vec) {
+  return vec / mag(vec);
+}
 
-template <typename T, int n> [[nodiscard]] bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
-  static_assert(std::is_floating_point_v<T>);
+template <std::floating_point T, int n>
+[[nodiscard]] constexpr bool is_unit(const Vec<T, n>& vec, float tolerance = 1e-4f) {
   return abs(mag2(vec) - 1.f) <= tolerance;
 }
 
-template <typename T> [[nodiscard]] T snap_coordinate(T value) {
-  static_assert(std::is_floating_point_v<T>);
+template <std::floating_point T> [[nodiscard]] constexpr T snap_coordinate(T value) {
   const T eps = 1e-6f;
   if (abs(value - 0.f) < eps) return 0.f;
   if (abs(value - 1.f) < eps) return 1.f;
@@ -273,13 +253,15 @@ template <typename T> [[nodiscard]] T snap_coordinate(T value) {
   return value;
 }
 
-template <typename T, int n> [[nodiscard]] Vec<T, n> snap_coordinates(Vec<T, n> vec) {
+template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> snap_coordinates(Vec<T, n> vec) {
   return map(vec, [](const T& e) { return snap_coordinate(e); });
 }
 
 //----------------------------------------------------------------------------
 
 namespace details {
+
+// Remove VecBase altogether ??
 
 template <typename T, int n> struct VecBase {  // Allocates a member variable only if n > 0.
   VecBase() = default;
@@ -289,7 +271,7 @@ template <typename T, int n> struct VecBase {  // Allocates a member variable on
   T _a[n];
   constexpr T* a() noexcept { return &_a[0]; }
   constexpr const T* a() const noexcept { return &_a[0]; }
-  T& operator[](int i) { return _a[i]; }
+  constexpr T& operator[](int i) { return _a[i]; }
   constexpr const T& operator[](int i) const { return _a[i]; }
 };
 
@@ -298,14 +280,25 @@ template <typename T> struct VecBase<T, 0> {
   template <typename... Args> VecBase(void*, Args&&... args) noexcept = delete;
   constexpr T* a() noexcept { return nullptr; }
   constexpr const T* a() const noexcept { return nullptr; }
-  T& operator[](int) { return *implicit_cast<T*>(nullptr); }
-  constexpr const T& operator[](int) const { return *implicit_cast<T*>(nullptr); }
+  constexpr T& operator[](int) { assertnever("Vec<T, 0> has no elements"); }
+  constexpr const T& operator[](int) const { assertnever("Vec<T, 0> has no elements"); }
   // No member variable at all.
 };
 
 }  // namespace details
 
 //----------------------------------------------------------------------------
+
+// There is a way to unify Vec_range and VecL_range ??
+
+// ?? The coordinate iterators are not C++20 iterators, so range(grid.dims()) can't feed std::ranges at
+// all. difference_type = void fails std::weakly_incrementable, there's no operator==, no post-increment, and
+// no default construction. Fixing this unlocks range(dims) | std::views::filter(...), std::ranges::for_each,
+// and parallel algorithms. The idiomatic shape also removes the fake end iterator:
+//  using difference_type = std::ptrdiff_t;
+//  bool operator==(std::default_sentinel_t) const { return _u[0] >= _uU[0]; }
+// That also removes the current constraint - undocumented, and enforced only by an ASSERTXX - that iterators
+// may only be compared against end().
 
 namespace details {
 
@@ -472,30 +465,6 @@ template <typename T, int n> inline constexpr bool has_ostream_eol_aux_v<Vec<T, 
 
 //----------------------------------------------------------------------------
 
-namespace details {
-
-template <typename, typename = std::void_t<>> struct has_value_type : std::false_type {};
-
-template <typename Class> struct has_value_type<Class, std::void_t<typename Class::value_type>> : std::true_type {};
-
-template <typename, typename = std::void_t<>> struct has_num : std::false_type {};
-
-template <typename Class>
-struct has_num<Class, std::void_t<decltype(Class::Num)>>
-    : std::bool_constant<std::is_same_v<decltype(Class::Num), const int>> {};
-
-template <typename Class, typename Enable = void> struct is_derived_from_vec : std::false_type {};
-
-template <typename Class>
-struct is_derived_from_vec<Class, std::enable_if_t<has_value_type<Class>::value && has_num<Class>::value>>
-    : std::is_base_of<Vec<typename Class::value_type, Class::Num>, Class> {};
-
-}  // namespace details
-
-template <typename Class> inline constexpr bool is_derived_from_vec_v = details::is_derived_from_vec<Class>::value;
-
-//----------------------------------------------------------------------------
-
 // These Vec operations may be more efficient than similar ArrayView operations because
 //  (1) n is known, and
 //  (2) there is no heap allocation.
@@ -515,55 +484,57 @@ template <typename T, typename T2, int n> auto operator+(const Vec<T, n>& g1, co
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 // See also floor(), ceil(), abs() generalized to Vec<> in MathOp.h.
 #define TT template <typename T, int n>
+#define TTC TT [[nodiscard]] constexpr
+#define TTA TT constexpr
 #define G Vec<T, n>
 #define F for_int(i, n)
 // clang-format off
 
-TT G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i] + g2[i]; } return g; }
-TT G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i] - g2[i]; } return g; }
-TT G operator*(const G& g1, const G& g2) { G g; F { g[i] = g1[i] * g2[i]; } return g; }
-TT G operator/(const G& g1, const G& g2) { G g; F { g[i] = g1[i] / g2[i]; } return g; }
-TT G operator%(const G& g1, const G& g2) { G g; F { g[i] = g1[i] % g2[i]; } return g; }
+TTC G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i] + g2[i]; } return g; }
+TTC G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i] - g2[i]; } return g; }
+TTC G operator*(const G& g1, const G& g2) { G g; F { g[i] = g1[i] * g2[i]; } return g; }
+TTC G operator/(const G& g1, const G& g2) { G g; F { g[i] = g1[i] / g2[i]; } return g; }
+TTC G operator%(const G& g1, const G& g2) { G g; F { g[i] = g1[i] % g2[i]; } return g; }
 
-TT G operator+(const G& g1, T v) { G g; F { g[i] = g1[i] + v; } return g; }
-TT G operator-(const G& g1, T v) { G g; F { g[i] = g1[i] - v; } return g; }
-TT G operator*(const G& g1, T v) { G g; F { g[i] = g1[i] * v; } return g; }
-TT G operator/(const G& g1, T v) { G g; F { g[i] = g1[i] / v; } return g; }
-TT G operator%(const G& g1, T v) { G g; F { g[i] = g1[i] % v; } return g; }
+TTC G operator+(const G& g1, T v) { G g; F { g[i] = g1[i] + v; } return g; }
+TTC G operator-(const G& g1, T v) { G g; F { g[i] = g1[i] - v; } return g; }
+TTC G operator*(const G& g1, T v) { G g; F { g[i] = g1[i] * v; } return g; }
+TTC G operator/(const G& g1, T v) { G g; F { g[i] = g1[i] / v; } return g; }
+TTC G operator%(const G& g1, T v) { G g; F { g[i] = g1[i] % v; } return g; }
 
-TT G operator+(T v, const G& g1) { G g; F { g[i] = v + g1[i]; } return g; }
-TT G operator-(T v, const G& g1) { G g; F { g[i] = v - g1[i]; } return g; }
-TT G operator*(T v, const G& g1) { G g; F { g[i] = v * g1[i]; } return g; }
-TT G operator/(T v, const G& g1) { G g; F { g[i] = v / g1[i]; } return g; }
-TT G operator%(T v, const G& g1) { G g; F { g[i] = v % g1[i]; } return g; }
+TTC G operator+(T v, const G& g1) { G g; F { g[i] = v + g1[i]; } return g; }
+TTC G operator-(T v, const G& g1) { G g; F { g[i] = v - g1[i]; } return g; }
+TTC G operator*(T v, const G& g1) { G g; F { g[i] = v * g1[i]; } return g; }
+TTC G operator/(T v, const G& g1) { G g; F { g[i] = v / g1[i]; } return g; }
+TTC G operator%(T v, const G& g1) { G g; F { g[i] = v % g1[i]; } return g; }
 
-TT G& operator+=(G& g1, const G& g2) { F { g1[i] += g2[i]; } return g1; }
-TT G& operator-=(G& g1, const G& g2) { F { g1[i] -= g2[i]; } return g1; }
-TT G& operator*=(G& g1, const G& g2) { F { g1[i] *= g2[i]; } return g1; }
-TT G& operator/=(G& g1, const G& g2) { F { g1[i] /= g2[i]; } return g1; }
-TT G& operator%=(G& g1, const G& g2) { F { g1[i] %= g2[i]; } return g1; }
+TTA G& operator+=(G& g1, const G& g2) { F { g1[i] += g2[i]; } return g1; }
+TTA G& operator-=(G& g1, const G& g2) { F { g1[i] -= g2[i]; } return g1; }
+TTA G& operator*=(G& g1, const G& g2) { F { g1[i] *= g2[i]; } return g1; }
+TTA G& operator/=(G& g1, const G& g2) { F { g1[i] /= g2[i]; } return g1; }
+TTA G& operator%=(G& g1, const G& g2) { F { g1[i] %= g2[i]; } return g1; }
 
-TT G& operator+=(G& g1, const T& v) { F { g1[i] += v; } return g1; }
-TT G& operator-=(G& g1, const T& v) { F { g1[i] -= v; } return g1; }
-TT G& operator*=(G& g1, const T& v) { F { g1[i] *= v; } return g1; }
-TT G& operator/=(G& g1, const T& v) { F { g1[i] /= v; } return g1; }
-TT G& operator%=(G& g1, const T& v) { F { g1[i] %= v; } return g1; }
+TTA G& operator+=(G& g1, const T& v) { F { g1[i] += v; } return g1; }
+TTA G& operator-=(G& g1, const T& v) { F { g1[i] -= v; } return g1; }
+TTA G& operator*=(G& g1, const T& v) { F { g1[i] *= v; } return g1; }
+TTA G& operator/=(G& g1, const T& v) { F { g1[i] /= v; } return g1; }
+TTA G& operator%=(G& g1, const T& v) { F { g1[i] %= v; } return g1; }
 
-TT G operator-(const G& g1) { G g; F { g[i] = -g1[i]; } return g; }
+TTC G operator-(const G& g1) { G g; F { g[i] = -g1[i]; } return g; }
 
-TT G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return g; }
-TT G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
+TTC G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return g; }
+TTC G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
 
-TT G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
+TTC G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
 
-TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
+TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) {
   G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
+TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
   G g; F { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
-TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
+TTC G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
+TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
   // Vec3<float> == Bary;  may have sum(bary) != 1.f
   G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;
 }
@@ -571,44 +542,42 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 // clang-format on
 #undef F
 #undef G
+#undef TTA
+#undef TTC
 #undef TT
 
-template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
-SomeVec interp(const Vec3<SomeVec>& triple, float f1, float f2) {
+// True if Class is, or derives from, a Vec<T, n>.  (Substitution failure leaves the concept simply unsatisfied.)
+template <typename Class>
+concept DerivedFromVec = std::is_base_of_v<Vec<typename Class::value_type, Class::Num>, Class>;
+
+template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple, float f1, float f2) {
   return interp(triple[0], triple[1], triple[2], f1, f2);
 }
-template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
-SomeVec interp(const Vec3<SomeVec>& triple) {
+template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple) {
   return interp(triple[0], triple[1], triple[2]);
 }
-template <typename SomeVec, typename = std::enable_if_t<is_derived_from_vec_v<SomeVec>>>
-SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
+template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
   return interp(triple[0], triple[1], triple[2], bary);
 }
 
 }  // namespace hh
 
+//----------------------------------------------------------------------------
+
 // Enable structured bindings.
-namespace std {
-
-template <typename T, int n> struct tuple_size<::hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
-
-template <std::size_t Index, typename T, int n> struct tuple_element<Index, ::hh::Vec<T, n>> {
+template <typename T, int n> struct std::tuple_size<hh::Vec<T, n>> : std::integral_constant<std::size_t, n> {};
+template <std::size_t Index, typename T, int n> struct std::tuple_element<Index, hh::Vec<T, n>> {
   using type = T;
 };
 
-}  // namespace std
-
 //----------------------------------------------------------------------------
 
-namespace std {
-template <typename T, int n> struct hash<::hh::Vec<T, n>> {
-  size_t operator()(const ::hh::Vec<T, n>& ar) const {
+template <typename T, int n> struct std::hash<hh::Vec<T, n>> {
+  [[nodiscard]] size_t operator()(const hh::Vec<T, n>& ar) const {
     size_t h = 0;
-    for_int(i, n) h = ::hh::hash_combine(h, ar[i]);
+    for_int(i, n) h = hh::hash_combine(h, ar[i]);
     return h;
   }
 };
-}  // namespace std
 
 #endif  // MESH_PROCESSING_LIBHH_VEC_H_

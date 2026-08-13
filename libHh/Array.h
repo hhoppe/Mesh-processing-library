@@ -31,17 +31,17 @@ enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefin
 
 // Convert a string ("reflected", "periodic", "clamped", "border", "101reflected") to a boundary rule by examining
 // its first letter.
-[[nodiscard]] Bndrule parse_boundaryrule(const string& s);
+[[nodiscard]] constexpr Bndrule parse_boundaryrule(std::string_view s);
 
 // Convert a boundary rule to a string.
-[[nodiscard]] string boundaryrule_name(Bndrule bndrule);
+[[nodiscard]] constexpr std::string_view boundaryrule_name(Bndrule bndrule);
 
 inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
 }
 
 // Modify index i to be within domain [0, n-1] using boundary rule; return false if bndrule == Border and i is outside.
-bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
+[[nodiscard]] constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
 
 template <typename T> class CArrayView;
 template <typename T> class ArrayView;
@@ -64,42 +64,49 @@ template <typename T> class CArrayView {
   template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // For: const T a[n];
   template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
   // template<int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
-  template <typename T2> friend bool same_size(type ar1, CArrayView<T2> ar2) { return ar1.num() == ar2.num(); }
+  template <typename T2> [[nodiscard]] friend constexpr bool same_size(type ar1, CArrayView<T2> ar2) {
+    return ar1.num() == ar2.num();
+  }
   void reinit(type a) { *this = a; }
-  int num() const { return _n; }
-  size_t size() const { return narrow_cast<size_t>(_n); }
-  [[HH_NO_DANGLING]] auto& operator[](this auto&& self, int i) {
+  [[nodiscard]] constexpr int num() const { return _n; }
+  [[nodiscard]] constexpr size_t size() const { return narrow_cast<size_t>(_n); }
+  [[nodiscard]] [[HH_NO_DANGLING]] constexpr auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
   }
-  auto& last(this auto&& self) { return self[self.num() - 1]; }
-  [[nodiscard]] bool ok(int i) const { return i >= 0 && i < _n; }
-  [[nodiscard]] bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
-  bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
+  [[nodiscard]] constexpr auto& last(this auto&& self) { return self[self.num() - 1]; }
+  [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < _n; }
+  [[nodiscard]] constexpr bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
+  [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
   [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
     return (assertx(self.map_inside(i, bndrule)), self[i]);
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
-  [[nodiscard]] bool contains(const T& e) const;
-  [[nodiscard]] int index(const T& e) const;  // Return -1 if not found.
-  bool operator==(type rhs) const;
-  bool operator!=(type rhs) const { return !(*this == rhs); }
-  [[nodiscard]] auto head(this auto&& self, int n) { return self.segment(0, n); }
-  [[nodiscard]] auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
-  [[nodiscard]] auto segment(this auto&& self, int i, int s) {
+  [[nodiscard]] constexpr bool contains(const T& e) const;
+  [[nodiscard]] constexpr int index(const T& e) const;  // Return -1 if not found.
+  [[nodiscard]] constexpr bool operator==(type rhs) const;
+  [[nodiscard]] constexpr auto head(this auto&& self, int n) { return self.segment(0, n); }
+  [[nodiscard]] constexpr auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
+  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) {
     ASSERTXX(implicit_cast<const type&>(self).check(i, s));  // Access the protected check() through this base class.
     return array_view_t<decltype(self.data())>(self.data() + i, s);
   }
-  [[nodiscard]] auto slice(this auto&& self, int ib, int ie) { return self.segment(ib, ie - ib); }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) { return self.segment(ib, ie - ib); }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  auto begin(this auto&& self) { return self.data(); }
-  auto end(this auto&& self) { return self.data() + self.num(); }
-  const T* data() const { return _a; }
+  constexpr auto begin(this auto&& self) { return self.data(); }
+  constexpr auto end(this auto&& self) { return self.data() + self.num(); }
+  constexpr const T* data() const { return _a; }
 
  protected:
-  bool check(int i, int s) const;
+  [[nodiscard]] constexpr bool check(int i, int s) const {
+    if (i >= 0 && s >= 0 && i + s <= _n) return true;
+    if !consteval {
+      SHOW(i, s, _n);
+    }
+    return false;
+  }
   T* _a{nullptr};
   int _n{0};
   CArrayView() = default;
@@ -138,13 +145,13 @@ template <typename T> class ArrayView : public CArrayView<T> {
 };
 
 // Create a CArrayView<T> referencing the single specified element.
-template <typename T> [[nodiscard]] CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
+template <typename T> [[nodiscard]] constexpr CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
 
 // Create an ArrayView<T> referencing the single specified element.
-template <typename T> [[nodiscard]] ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
+template <typename T> [[nodiscard]] constexpr ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
 
 // Determine if two views have any overlap (to avoid aliasing issues).
-template <typename T> [[nodiscard]] bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
+template <typename T> [[nodiscard]] constexpr bool have_overlap(CArrayView<T> v1, CArrayView<T> v2) {
   return v1.begin() < v2.end() && v2.begin() < v1.end();
 }
 
@@ -162,7 +169,7 @@ template <typename T> class Array : public ArrayView<T> {
   explicit Array(const type& ar) : Array(ar.num()) { base::assign(ar); }
   explicit Array(CArrayView<T> ar) : Array(ar.num()) { base::assign(ar); }
   Array(std::initializer_list<T> l) : Array(CArrayView<T>(l)) {}
-  Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr; }
+  Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
   template <typename Iterator, typename = std::enable_if_t<
                                    !std::is_same_v<typename std::iterator_traits<Iterator>::iterator_category, void>>>
   explicit Array(Iterator b, Iterator e) : Array() {
@@ -195,10 +202,8 @@ template <typename T> class Array : public ArrayView<T> {
     return *this;
   }
   void clear() {
-    if (_a) {
-      delete[] _a;
-      _a = nullptr, _n = 0, _cap = 0;
-    }
+    delete[] _a;
+    _a = nullptr, _n = 0, _cap = 0;
   }
   void init(int n);  // Allocate n, DISCARD old values if too small.
   void init(int n, const T& v) {
@@ -283,12 +288,6 @@ template <typename T> class Array : public ArrayView<T> {
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
-  bool operator==(CArrayView<T> rhs) const {
-    return _n == rhs.num() && static_cast<const CArrayView<T>&>(*this) == rhs;
-  }
-  bool operator!=(CArrayView<T> rhs) const { return !(*this == rhs); }
-  bool operator==(const type& rhs) const { return _n == rhs.num() && static_cast<const CArrayView<T>&>(*this) == rhs; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   // Note that Array iterator is inherited from ArrayView.
  private:
   using base::_a;
@@ -311,7 +310,8 @@ template <typename T> class Array : public ArrayView<T> {
 // See also Vec.h, PArray.h, and Matrix.h.
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, typename Func> auto map(CArrayView<T> c, Func func) -> Array<decltype(func(std::declval<T>()))> {
+template <typename T, typename Func>
+[[nodiscard]] auto map(CArrayView<T> c, Func func) -> Array<decltype(func(std::declval<T>()))> {
   Array<decltype(func(std::declval<T>()))> nc(c.num());
   for_int(i, c.num()) nc[i] = func(c[i]);
   return nc;
@@ -319,9 +319,9 @@ template <typename T, typename Func> auto map(CArrayView<T> c, Func func) -> Arr
 
 //----------------------------------------------------------------------------
 
-inline Bndrule parse_boundaryrule(const string& s) {
+[[nodiscard]] inline constexpr Bndrule parse_boundaryrule(const std::string_view s) {
   Bndrule bndrule;
-  // assertx(s.size() == 1);
+  assertx(s.size() >= 1);
   char ch = s[0];
   switch (ch) {
     case 'r': bndrule = Bndrule::reflected; break;
@@ -329,13 +329,13 @@ inline Bndrule parse_boundaryrule(const string& s) {
     case 'c': bndrule = Bndrule::clamped; break;
     case 'b': bndrule = Bndrule::border; break;
     case '1': bndrule = Bndrule::reflected101; break;
-    default: assertnever("Boundary rule '" + s + "' not recognized");
+    default: assertnever("Boundary rule '" + string(s) + "' not recognized");
   }
-  if (s.size() > 1) assertx(s == boundaryrule_name(bndrule));
+  if (s.size() > 1 && s != boundaryrule_name(bndrule)) assertnever("Boundary rule '" + string(s) + "' not recognized");
   return bndrule;
 }
 
-inline string boundaryrule_name(Bndrule bndrule) {
+[[nodiscard]] inline constexpr std::string_view boundaryrule_name(Bndrule bndrule) {
   switch (bndrule) {
     case Bndrule::reflected: return "reflected";
     case Bndrule::periodic: return "periodic";
@@ -347,7 +347,7 @@ inline string boundaryrule_name(Bndrule bndrule) {
   }
 }
 
-inline bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
+inline constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
   ASSERTX(n >= 1);
   switch (bndrule) {
     case Bndrule::reflected:
@@ -400,11 +400,12 @@ inline bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
 
 //----------------------------------------------------------------------------
 
-template <typename T> bool CArrayView<T>::map_inside(int& i, Bndrule bndrule) const {
+template <typename T> [[nodiscard]] bool CArrayView<T>::map_inside(int& i, Bndrule bndrule) const {
   return map_boundaryrule_1D(i, _n, bndrule);
 }
 
-template <typename T> const T& CArrayView<T>::inside(int i, Bndrule bndrule, const T* bordervalue) const {
+template <typename T>
+[[nodiscard]] const T& CArrayView<T>::inside(int i, Bndrule bndrule, const T* bordervalue) const {
   if (!map_inside(i, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
@@ -412,32 +413,26 @@ template <typename T> const T& CArrayView<T>::inside(int i, Bndrule bndrule, con
   return (*this)[i];
 }
 
-template <typename T> bool CArrayView<T>::contains(const T& e) const {
+template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::contains(const T& e) const {
   for_int(i, _n) {
     if (_a[i] == e) return true;
   }
   return false;
 }
 
-template <typename T> int CArrayView<T>::index(const T& e) const {
+template <typename T> [[nodiscard]] constexpr int CArrayView<T>::index(const T& e) const {
   for_int(i, _n) {
     if (_a[i] == e) return i;
   }
   return -1;
 }
 
-template <typename T> bool CArrayView<T>::operator==(type rhs) const {
-  ASSERTX(_n == rhs._n);
+template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(type rhs) const {
+  if (_n != rhs._n) return false;
   for_int(i, _n) {
     if (_a[i] != rhs._a[i]) return false;
   }
   return true;
-}
-
-template <typename T> bool CArrayView<T>::check(int i, int s) const {
-  if (i >= 0 && s >= 0 && i + s <= _n) return true;
-  SHOW(i, s, _n);
-  return false;
 }
 
 //----------------------------------------------------------------------------
@@ -549,29 +544,30 @@ template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <typename T>
+#define TTN TT [[nodiscard]]
 #define G Array<T>
 #define CG CArrayView<T>
 #define SS ASSERTX(same_size(g1, g2))
 #define F(g) for_int(i, g.num())
 // clang-format off
 
-TT G operator+(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] + g2[i]; } return g; }
-TT G operator-(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] - g2[i]; } return g; }
-TT G operator*(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] * g2[i]; } return g; }
-TT G operator/(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] / g2[i]; } return g; }
-TT G operator%(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] % g2[i]; } return g; }
+TTN G operator+(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] + g2[i]; } return g; }
+TTN G operator-(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] - g2[i]; } return g; }
+TTN G operator*(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] * g2[i]; } return g; }
+TTN G operator/(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] / g2[i]; } return g; }
+TTN G operator%(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] % g2[i]; } return g; }
 
-TT G operator+(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] + v; } return g; }
-TT G operator-(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] - v; } return g; }
-TT G operator*(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] * v; } return g; }
-TT G operator/(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] / v; } return g; }
-TT G operator%(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] % v; } return g; }
+TTN G operator+(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] + v; } return g; }
+TTN G operator-(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] - v; } return g; }
+TTN G operator*(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] * v; } return g; }
+TTN G operator/(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] / v; } return g; }
+TTN G operator%(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] % v; } return g; }
 
-TT G operator+(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v + g1[i]; } return g; }
-TT G operator-(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v - g1[i]; } return g; }
-TT G operator*(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v * g1[i]; } return g; }
-TT G operator/(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v / g1[i]; } return g; }
-TT G operator%(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v % g1[i]; } return g; }
+TTN G operator+(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v + g1[i]; } return g; }
+TTN G operator-(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v - g1[i]; } return g; }
+TTN G operator*(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v * g1[i]; } return g; }
+TTN G operator/(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v / g1[i]; } return g; }
+TTN G operator%(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v % g1[i]; } return g; }
 
 TT ArrayView<T> operator+=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] += g2[i]; } return g1; }
 TT ArrayView<T> operator-=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] -= g2[i]; } return g1; }
@@ -585,28 +581,32 @@ TT ArrayView<T> operator*=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] *= v; } 
 TT ArrayView<T> operator/=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] /= v; } return g1; }
 TT ArrayView<T> operator%=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] %= v; } return g1; }
 
-TT G operator-(ArrayView<T> g1) { G g(g1.num()); F(g1) { g[i] = -g1[i]; } return g; }
+TTN G operator-(CG g1) { G g(g1.num()); F(g1) { g[i] = -g1[i]; } return g; }
 
-TT G min(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = min(g1[i], g2[i]); } return g; }
-TT G max(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = max(g1[i], g2[i]); } return g; }
+TTN G min(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = min(g1[i], g2[i]); } return g; }
+TTN G max(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = max(g1[i], g2[i]); } return g; }
 
-TT G interp(CG g1, CG g2, float f1 = 0.5f) {
+TTN G interp(CG g1, CG g2, float f1 = 0.5f) {
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TT G interp(CG g1, CG g2, CG g3, float f1, float f2) {
-  ASSERTX(same_size(g1, g2) && same_size(g1, g3));
+TTN G interp(CG g1, CG g2, CG g3, float f1, float f2) {
+  ASSERTX(same_size(g1, g3));
   SS; G g(g1.num()); F(g) { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-TT G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
-// TT G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Omit to avoid dependency on Vec.
+TTN G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
+// TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Omit to avoid dependency on Vec.
 
 // clang-format on
 #undef F
 #undef SS
 #undef CG
 #undef G
+#undef TTN
 #undef TT
 
 }  // namespace hh
+
+template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::CArrayView<T>> = true;
+template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::ArrayView<T>> = true;
 
 #endif  // MESH_PROCESSING_LIBHH_ARRAY_H_

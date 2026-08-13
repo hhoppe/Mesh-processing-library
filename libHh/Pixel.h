@@ -44,9 +44,6 @@ inline bool operator==(const Pixel& pix1, const Pixel& pix2) {
   return *reinterpret_cast<const uint32_t*>(&pix1) == *reinterpret_cast<const uint32_t*>(&pix2);
 }
 
-// Faster, specialized version of Vec<>::operator!=().
-inline bool operator!=(const Pixel& pix1, const Pixel& pix2) { return !(pix1 == pix2); }
-
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_PIXEL_H_

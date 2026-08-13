@@ -25,7 +25,7 @@ ifeq ($(plain_compiler),)
   cwarnings += -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization
   cwarnings += -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls
   cwarnings += -Wshadow
-  cxxwarnings = -Woverloaded-virtual
+  cxxwarnings = -Woverloaded-virtual -Winvalid-constexpr
   #  -Winline -Wconversion
   # (-pedantic-errors == -Werror -Wpedantic)
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.

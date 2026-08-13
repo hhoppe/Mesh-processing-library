@@ -512,7 +512,6 @@ template <typename Iterator, typename Func> struct TransformedIterator {
     return *this;
   }
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return _func(*_iter); }
   type& operator++() { return ++_iter, *this; }
 };
@@ -557,7 +556,6 @@ template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
   Iterator1 _begin1, _end1;
   Iterator2 _begin2;
   bool operator==(const type& rhs) const { return _begin1 == rhs._begin1 && _begin2 == rhs._begin2; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return _begin1 != _end1 ? *_begin1 : *_begin2; }
   type& operator++() {
     if (_begin1 != _end1)
@@ -614,7 +612,6 @@ template <typename Iterator, typename Index> struct EnumeratedIterator {
     return *this;
   }
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return std::make_tuple(_index, *_iter); }
   type& operator++() { return ++_iter, ++_index, *this; }
 };
@@ -664,7 +661,6 @@ template <typename Iterator, typename Func> struct FilteredIterator {
     return *this;
   }
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  bool operator!=(const type& rhs) const { return !(*this == rhs); }
   decltype(auto) operator*() const { return *_iter; }
   type& operator++() {
     ++_iter;

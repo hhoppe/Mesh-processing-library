@@ -59,6 +59,7 @@
 #include <sstream>    // stringstream
 #include <stdexcept>  // runtime_error
 #include <string>     // string
+#include <tuple>      // tuple
 #include <utility>    // swap(), forward(), move(), declval<>, pair<>, index_sequence<>
 
 // *** Variadic macros.
@@ -211,6 +212,11 @@ template <typename Target, typename Source> [[nodiscard]] constexpr Target possi
 // Cast a temporary as an lvalue; be careful; only use when safe.
 template <typename T> [[nodiscard]] T& as_lvalue(T&& e) { return static_cast<T&>(e); }
 
+// The type U given the constness of the type, reference, or pointer From, e.g. copy_const_t<const T*, Vec<T, s>>.
+template <typename From, typename U>
+using copy_const_t =
+    std::conditional_t<std::is_const_v<std::remove_pointer_t<std::remove_reference_t<From>>>, const U, U>;
+
 // *** Constants.
 
 constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
@@ -320,6 +326,16 @@ inline std::ostream& operator<<(std::ostream& os, const char* s);
 // Nice formatted output of a std::pair<> of objects.
 template <typename A, typename B> std::ostream& operator<<(std::ostream& os, const std::pair<A, B>& p) {
   return os << "[" << p.first << ", " << p.second << "]";
+}
+
+// Nice formatted output of a std::tuple<>.
+template <typename... Types> std::ostream& operator<<(std::ostream& os, const std::tuple<Types...>& tu) {
+  const auto write_elements = [&]<size_t... Is>(std::index_sequence<Is...>) {
+    ((os << (Is ? ", " : "") << std::get<Is>(tu)), ...);
+  };
+  os << "tuple<";
+  write_elements(std::index_sequence_for<Types...>());
+  return os << ">";
 }
 
 // By default, assume that types do not end their stream output with a newline character.

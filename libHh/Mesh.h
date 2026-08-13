@@ -337,7 +337,6 @@ class Mesh : noncopyable {
       next();
     }
     bool operator==(const type& rhs) const { return _hcur == rhs._hcur && _vcur == rhs._vcur; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Edge operator*() const { return (ASSERTX(_hcur != _hend), (*_hcur)->_edge); }
     type& operator++() {
       ASSERTX(_hcur != _hend);
@@ -413,7 +412,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     VV_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._extrav), !_extrav && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Vertex operator*() const { return _extrav ? _extrav : (*_it)->_vert; }
     type& operator++() {
       if (_extrav) {
@@ -451,7 +449,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     VF_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Face operator*() const { return (*_it)->_face; }
     type& operator++() {
       ++_it;
@@ -483,7 +480,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     VE_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._extrae), !_extrae && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Edge operator*() const { return _extrae ? _extrae : (*_it)->_edge; }
     type& operator++() {
       if (_extrae) {
@@ -521,7 +517,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     VC_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Corner operator*() const { return (*_it)->_prev; }
     type& operator++() {
       ++_it;
@@ -555,7 +550,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     FV_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Vertex operator*() const { return _it->_vert; }
     type& operator++() {
       _beg = false;
@@ -598,7 +592,6 @@ class Mesh : noncopyable {
       }
     }
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Face operator*() const { return _it->_sym->_face; }
     type& operator++() {
       HEdge tmp = _beg ? nullptr : _it;
@@ -637,7 +630,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     FE_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Edge operator*() const { return _it->_edge; }
     type& operator++() {
       _beg = false;
@@ -671,7 +663,6 @@ class Mesh : noncopyable {
     using reference = value_type&;
     FC_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Corner operator*() const { return _it; }
     type& operator++() {
       _beg = false;

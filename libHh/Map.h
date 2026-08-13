@@ -137,7 +137,6 @@ class Map {
     keys_iterator() = default;
     keys_iterator(bciter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const Key& operator*() const { return _it->first; }
     type& operator++() {
       ++_it;
@@ -169,7 +168,6 @@ class Map {
     cvalues_iterator() = default;
     cvalues_iterator(bciter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     const Value& operator*() const { return _it->second; }
     type& operator++() {
       ++_it;
@@ -201,7 +199,6 @@ class Map {
     values_iterator() = default;
     values_iterator(biter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
-    bool operator!=(const type& rhs) const { return !(*this == rhs); }
     Value& operator*() const { return _it->second; }
     type& operator++() {
       ++_it;

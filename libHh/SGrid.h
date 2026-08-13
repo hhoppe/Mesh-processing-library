@@ -62,7 +62,6 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
   const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
   bool operator==(const type& p) const;
-  bool operator!=(const type& p) const { return !(*this == p); }
   static type all(const T& e) {
     type g;
     for (const size_t i : range(vol)) g.flat(i) = e;

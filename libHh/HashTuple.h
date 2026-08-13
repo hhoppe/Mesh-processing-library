@@ -9,52 +9,23 @@
 // Define hash functions for std::tuple<> and std::pair<>.
 // Also define std::ostream operators for std::tuple<>.   (std::ostream for std::pair<> is in Hh.h)
 
-namespace hh::details {
-
-// Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
-template <typename TU, size_t Index = std::tuple_size_v<TU>> struct tuple_hash {
-  size_t operator()(const TU& tu) const {
-    return hh::hash_combine(tuple_hash<TU, Index - 1>()(tu), std::get<Index - 1>(tu));
+template <typename... Types> struct std::hash<std::tuple<Types...>> {
+  [[nodiscard]] size_t operator()(const std::tuple<Types...>& tu) const {
+    // Inspired from https://stackoverflow.com/questions/3611951/building-an-unordered-map-with-tuples-as-keys
+    return std::apply(
+        [](const Types&... elements) {
+          size_t h = 0;
+          ((h = hh::hash_combine(h, elements)), ...);
+          return h;
+        },
+        tu);
   }
 };
 
-template <typename TU> struct tuple_hash<TU, 0> {
-  size_t operator()(const TU&) const { return 0; }
-};
-
-template <typename TU, size_t Index = (std::tuple_size_v<TU> - 1)> struct tuple_write {
-  void operator()(std::ostream& os, const TU& tu) const {
-    tuple_write<TU, Index - 1>()(os, tu);
-    os << ", " << std::get<Index>(tu);
+template <typename T1, typename T2> struct std::hash<std::pair<T1, T2>> {
+  [[nodiscard]] size_t operator()(const std::pair<T1, T2>& p) const {
+    return hh::hash_combine(hh::hash_combine(0, p.first), p.second);
   }
 };
-
-template <typename TU> struct tuple_write<TU, 0> {
-  void operator()(std::ostream& os, const TU& tu) const { os << std::get<0>(tu); }
-};
-
-}  // namespace hh::details
-
-namespace std {
-
-template <typename... Types> struct hash<std::tuple<Types...>> {
-  using TU = std::tuple<Types...>;
-  size_t operator()(TU const& tu) const { return ::hh::details::tuple_hash<TU>()(tu); }
-};
-
-template <typename T1, typename T2> struct hash<std::pair<T1, T2>> {
-  size_t operator()(const std::pair<T1, T2>& p) const {
-    return ::hh::hash_combine(::hh::hash_combine(0, p.first), p.second);
-  }
-};
-
-template <typename... Types> std::ostream& operator<<(std::ostream& os, const std::tuple<Types...>& tu) {
-  os << "tuple<";
-  ::hh::details::tuple_write<std::tuple<Types...>>()(os, tu);
-  os << ">";
-  return os;
-}
-
-}  // namespace std
 
 #endif  // MESH_PROCESSING_LIBHH_HASHTUPLE_H_

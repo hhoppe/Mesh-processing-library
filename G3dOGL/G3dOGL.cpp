@@ -2332,8 +2332,6 @@ bool operator==(const A3dVertexColor& c1, const A3dVertexColor& c2) {
   return c1.d == c2.d && c1.s == c2.s && c1.g == c2.g;
 }
 
-bool operator!=(const A3dVertexColor& c1, const A3dVertexColor& c2) { return !(c1 == c2); }
-
 void GxObject::add(const A3dElem& el) {
   assertx(_opened);
   assertx(el.num());

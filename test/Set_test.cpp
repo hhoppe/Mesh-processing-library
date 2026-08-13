@@ -8,14 +8,12 @@
 #include "libHh/RangeOp.h"  // compare()
 using namespace hh;
 
-namespace std {
-template <> struct hash<::hh::Vector> {
-  size_t operator()(const ::hh::Vector& p) const { return ::hh::my_hash(p[0]); }
+template <> struct std::hash<hh::Vector> {
+  size_t operator()(const hh::Vector& p) const { return hh::my_hash(p[0]); }
 };
-template <> struct equal_to<::hh::Vector> {
-  bool operator()(const ::hh::Vector& p1, const ::hh::Vector& p2) const { return !::hh::compare(p1, p2, 1e-4f); }
+template <> struct std::equal_to<hh::Vector> {
+  bool operator()(const hh::Vector& p1, const hh::Vector& p2) const { return !hh::compare(p1, p2, 1e-4f); }
 };
-}  // namespace std
 
 int main() {
   {

@@ -104,8 +104,8 @@ template <int D, typename T> class CGridView {
   const Vec<int, D>& dims() const { return _dims; }
   int dim(int c) const { return _dims[c]; }
   size_t size() const { return product_dims<D>(_dims.data()); }
-  template <typename Self> constexpr decltype(auto) operator[](this Self&& self, int r);
-  template <typename Self, int n> constexpr decltype(auto) operator[](this Self&& self, const Vec<int, n>& u);
+  constexpr decltype(auto) operator[](this auto&& self, int r);
+  template <int n> constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
   template <typename... A> const T& operator()(A... dd) const;  // dd... are int.
   const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
   bool ok(const Vec<int, D>& u) const {
@@ -428,15 +428,13 @@ template <int D, typename T> grid_ret_t<D, T> grid_get(T* a, const Vec<int, D>& 
 
 //----------------------------------------------------------------------------
 
-template <int D, typename T>
-template <typename Self>
-constexpr decltype(auto) CGridView<D, T>::operator[](this Self&& self, int r) {
+template <int D, typename T> constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, int r) {
   return details::grid_get<D, 1>(self.data(), self.dims(), r);
 }
 
 template <int D, typename T>
-template <typename Self, int n>
-constexpr decltype(auto) CGridView<D, T>::operator[](this Self&& self, const Vec<int, n>& u) {
+template <int n>
+constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, const Vec<int, n>& u) {
   return details::grid_get<D, n>(self.data(), self.dims(), u);
 }
 

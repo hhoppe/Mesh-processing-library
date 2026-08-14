@@ -10,7 +10,7 @@ int main() {
     fill(grid, 2.f);
     grid[V(0, 0, 1)] = 3.f;
     grid[V(1, 0, 0)] = 4.f;
-    grid(2, 3, 0) = 5.f;
+    grid[2, 3, 0] = 5.f;
     SHOW(grid.dims());
     SHOW(grid.size());
     SHOW(grid_stride(grid.dims(), 0));
@@ -18,9 +18,9 @@ int main() {
     SHOW(grid_stride(grid.dims(), 2));
     for (const size_t i : range(grid.size())) SHOW(grid.flat(i));
     for (const auto& u : range(grid.dims())) SHOW(u, grid[u]);
-    SHOW(grid(0, 0, 1));
-    SHOW(grid(1, 0, 0));
-    SHOW(grid(2, 3, 0));
+    SHOW((grid[0, 0, 1]));
+    SHOW((grid[1, 0, 0]));
+    SHOW((grid[2, 3, 0]));
     SHOW(grid);
     for (const auto& u : range(V(3, 4, 2), V(5, 5, 6))) SHOW(u);
     SHOW(1);
@@ -108,28 +108,42 @@ int main() {
   {
     {
       Grid<2, int> grid{{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}};
-      SHOW(grid);
-      SHOW(grid[V<int>()]);
-      SHOW(grid[1]);
-      SHOW(grid[V(1)]);
-      SHOW(grid[1][2]);
-      SHOW(grid(1, 2));
-      SHOW(grid[V(1, 2)]);
+      SHOW((grid));
+      // SHOW((grid[]));  // Internal compiler error on _MSC_VER.
+      SHOW((grid[V<int>()]));
+      SHOW((grid[1]));
+      SHOW((grid[V(1)]));
+      SHOW((grid[1, 2]));
+      SHOW((grid[1][2]));
+      SHOW((grid[V(1, 2)]));
     }
     {
       Grid<4, int> grid{{{{1, 2}, {3, 4}}, {{5, 6}, {7, 8}}}, {{{11, 12}, {13, 14}}, {{15, 16}, {17, 18}}}};
-      SHOW(grid);
-      SHOW(grid[1]);
-      SHOW(grid[V(1)]);
-      SHOW(grid[V(1, 1)]);
-      SHOW(grid[V(1, 1, 1)]);
-      SHOW(grid[V(1, 1, 1, 1)]);
-      SHOW(grid[V<int>()][V(1, 1, 1, 1)]);
-      SHOW(grid(1, 1, 1, 1));
-      SHOW(grid[1][V(1, 1)][1]);
-      SHOW(grid[V(1, 1, 1)][1]);
-      SHOW(grid[1][V(1, 1, 1)]);
-      SHOW(grid[V(1, 1)][V(1, 1)]);
+      SHOW((grid));
+      SHOW((grid[1]));
+      SHOW((grid[V(1)]));
+      SHOW((grid[1, 1]));
+      SHOW((grid[1][1]));
+      SHOW((grid[V(1, 1)]));
+
+      SHOW((grid[1, 1, 1]));
+      SHOW((grid[V(1, 1, 1)]));
+      SHOW((grid[1][1][1]));
+      SHOW((grid[1][1, 1]));
+      SHOW((grid[1, 1][1]));
+      SHOW((grid[V(1)][V(1)][V(1)]));
+      SHOW((grid[V(1, 1)][1]));
+      SHOW((grid[1][V(1, 1)]));
+      SHOW((grid[1, 1][V(1)]));
+      SHOW((grid[1][V(1, 1)]));
+
+      SHOW((grid[V(1, 1, 1, 1)]));
+      SHOW((grid[V<int>()][V(1, 1, 1, 1)]));
+      SHOW((grid[1, 1, 1, 1]));
+      SHOW((grid[1][V(1, 1)][1]));
+      SHOW((grid[V(1, 1, 1)][1]));
+      SHOW((grid[1][V(1, 1, 1)]));
+      SHOW((grid[V(1, 1)][V(1, 1)]));
     }
   }
 }

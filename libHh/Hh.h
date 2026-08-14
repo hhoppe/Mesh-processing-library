@@ -25,6 +25,8 @@
 #pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
 #pragma warning(disable : 4459)  // Flawed detection of local name hiding global name in different module.
 #pragma warning(disable : 4464)  // Allow #include paths containing ".." relative folders (e.g. "../libHh/Video.h").
+#pragma warning(disable : 4547)  // Operator before comma: false positive with __cpp_multidimensional_subscript.
+#pragma warning(disable : 4548)  // Expression before comma: false positive with __cpp_multidimensional_subscript.
 // Code analysis:
 #pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
 #pragma warning(disable : 6286)   // <non-zero constant> || <expression> is always a non-zero constant.

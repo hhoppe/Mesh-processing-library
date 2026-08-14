@@ -23,7 +23,8 @@ CC = cl
 
 # ccommon += -openmp
 ccommon += -EHsc
-cxxall += $(if $(CXX_STD),-std:$(patsubst c++23,c++23preview,$(CXX_STD)))
+# On VC 2022, C++23 P2128R6 "Multidimensional subscript operator" requires c++latest rather than c++23preview.
+cxxall += $(if $(CXX_STD),-std:$(patsubst c++23,c++latest,$(CXX_STD)))
 
 ifeq ($(plain_compiler),)
   disable_warnings_in_headers = -wd4820 -wd4986 -wd4514 -wd4710 -wd4668 -wd4917 -wd4350 -wd4265 -wd4571 -wd4355

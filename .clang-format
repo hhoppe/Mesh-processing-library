@@ -13,9 +13,19 @@ DerivePointerAlignment: false               # default is false; Google default i
 ReflowComments: false                       # default is Always; Google default is Always.
 IncludeBlocks: Preserve                     # default is Preserve; Google default is Regroup.
 RequiresClausePosition: SingleLine          # default is OwnLine; Google default is OwnLine.
+
+# ForEachMacros: ['for_int', 'for_intL']
+# # Avoid 'for_int (' using the following:
+# SpaceBeforeParens: Custom
+# SpaceBeforeParensOptions:
+#   AfterControlStatements: true
+#   AfterForeachMacros: false
+#   AfterIfMacros: true
+# # However, "for_int(y, ny) for_int(x, nx)" no longer fits on one line, so give up on this.
+
 # AllowShortBlocksOnASingleLine: Always       # default is Never; Google default is Never.
 # AllowShortCompoundRequirementOnASingleLine: true
-# ForEachMacros: ['foreach', 'Q_FOREACH', 'BOOST_FOREACH', 'for_int', 'for_intL', 'for_size_t']
+# ForEachMacros: ['foreach', 'Q_FOREACH', 'BOOST_FOREACH']
 # SpaceBeforeParens: Custom
 # SpaceBeforeParensOptions:
 #   AfterForeachMacros: false

@@ -698,7 +698,7 @@ void do_tcrossfade(Args& args) {
     int fec = clamp(fe, 0, nframes - 1);
     if (1) {  // good code always
       for_int(y, video.ysize()) for_int(x, video.xsize()) for_int(z, nz) {
-        tvideo(i, y, x)[z] = uint8_t((1.f - alpha) * video(fbc, y, x)[z] + alpha * video(fec, y, x)[z] + .5f);
+        tvideo[i, y, x][z] = uint8_t((1.f - alpha) * video[fbc, y, x][z] + alpha * video[fec, y, x][z] + .5f);
       }
     } else {  // good code with gcc
       auto videofbc = video[fbc], videofec = video[fbc];
@@ -746,24 +746,24 @@ void do_makeloop(Args& args) {
         parallel_for(range(nf), [&](const int f) {
           for_int(y, ny) for_int(x, nx) {
             int fi = fbeg + f;
-            float pixv = to_float(video(fi, y, x)[z]);
+            float pixv = to_float(video[fi, y, x][z]);
             float vrhs = 0.f;
             if (1) {
-              float v = to_float(video(fi - 1, y, x)[z]) - pixv;
-              if (f == 0) v = (v + to_float(video(fend - 1, y, x)[z]) - to_float(video(fend, y, x)[z])) * .5f;
+              float v = to_float(video[fi - 1, y, x][z]) - pixv;
+              if (f == 0) v = (v + to_float(video[fend - 1, y, x][z]) - to_float(video[fend, y, x][z])) * .5f;
               vrhs += v * wtemporal;
             }
             if (1) {
-              float v = to_float(video(fi + 1, y, x)[z]) - pixv;
-              if (f == nf - 1) v = (v + to_float(video(fbeg, y, x)[z]) - to_float(video(fbeg - 1, y, x)[z])) * .5f;
+              float v = to_float(video[fi + 1, y, x][z]) - pixv;
+              if (f == nf - 1) v = (v + to_float(video[fbeg, y, x][z]) - to_float(video[fbeg - 1, y, x][z])) * .5f;
               vrhs += v * wtemporal;
             }
-            if (y > 0) vrhs += to_float(video(fi, y - 1, x)[z]) - pixv;
-            if (y < ny - 1) vrhs += to_float(video(fi, y + 1, x)[z]) - pixv;
-            if (x > 0) vrhs += to_float(video(fi, y, x - 1)[z]) - pixv;
-            if (x < nx - 1) vrhs += to_float(video(fi, y, x + 1)[z]) - pixv;
-            multigrid.rhs()(f, y, x) = vrhs;
-            multigrid.initial_estimate()(f, y, x) = pixv;
+            if (y > 0) vrhs += to_float(video[fi, y - 1, x][z]) - pixv;
+            if (y < ny - 1) vrhs += to_float(video[fi, y + 1, x][z]) - pixv;
+            if (x > 0) vrhs += to_float(video[fi, y, x - 1][z]) - pixv;
+            if (x < nx - 1) vrhs += to_float(video[fi, y, x + 1][z]) - pixv;
+            multigrid.rhs()[f, y, x] = vrhs;
+            multigrid.initial_estimate()[f, y, x] = pixv;
           }
         });
       }
@@ -772,7 +772,7 @@ void do_makeloop(Args& args) {
       if (1) multigrid.set_verbose(true);
       multigrid.solve();
       for_int(f, nf) for_int(y, ny) for_int(x, nx) {
-        nvideo(f, y, x)[z] = clamp_to_uint8(int(multigrid.result()(f, y, x) + .5f));
+        nvideo[f, y, x][z] = clamp_to_uint8(int(multigrid.result()[f, y, x] + .5f));
       }
     } else {  // solve for offsets instead of colors themselves
       const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  // weak screening
@@ -789,15 +789,15 @@ void do_makeloop(Args& args) {
           EType change{0};
           if (fend < video.nframes()) {
             count++;
-            change += video(fend, y, x)[z] - video(fbeg, y, x)[z];
+            change += video[fend, y, x][z] - video[fbeg, y, x][z];
           }
           if (fbeg > 0) {
             count++;
-            change += video(fend - 1, y, x)[z] - video(fbeg - 1, y, x)[z];
+            change += video[fend - 1, y, x][z] - video[fbeg - 1, y, x][z];
           }
           if (count == 2) change *= .5f;
-          mrhs(0, y, x) = -change;
-          mrhs(nf - 1, y, x) = change;
+          mrhs[0, y, x] = -change;
+          mrhs[nf - 1, y, x] = change;
         }
       }
       if (1) multigrid.set_screening_weight(screening_weight);
@@ -806,8 +806,8 @@ void do_makeloop(Args& args) {
       multigrid.solve();
       parallel_for(range(nf), [&](const int f) {
         for_int(y, ny) for_int(x, nx) {
-          nvideo(f, y, x)[z] =
-              clamp_to_uint8(int(to_float(video(fbeg + f, y, x)[z]) + multigrid.result()(f, y, x) + .5f));
+          nvideo[f, y, x][z] =
+              clamp_to_uint8(int(to_float(video[fbeg + f, y, x][z]) + multigrid.result()[f, y, x] + .5f));
         }
       });
     }
@@ -1090,7 +1090,7 @@ void do_gamma(Args& args) {
   } else {
     parallel_for(range(video.nframes()), [&](const int f) {
       for_int(y, video.ysize()) for_int(x, video.xsize()) {
-        for_int(z, nz) video(f, y, x)[z] = transf[video(f, y, x)[z]];
+        for_int(z, nz) video[f, y, x][z] = transf[video[f, y, x][z]];
       }
     });
   }
@@ -1377,12 +1377,12 @@ void compute_looping_regions() {
             Vector p0sum{}, p0sum2{};
             Vector p1sum{}, p1sum2{};
             for_intL(f, start0, start0 + period0) for_int(c, 3) {
-              p0sum[c] += to_float(video(f, y0, x0)[c]);
-              p0sum2[c] += square(to_float(video(f, y0, x0)[c]));
+              p0sum[c] += to_float(video[f, y0, x0][c]);
+              p0sum2[c] += square(to_float(video[f, y0, x0][c]));
             }
             for_intL(f, start1, start1 + period1) for_int(c, 3) {
-              p1sum[c] += to_float(video(f, y0, x0)[c]);
-              p1sum2[c] += square(to_float(video(f, y0, x0)[c]));  // again at same pixel [y0][x0]
+              p1sum[c] += to_float(video[f, y0, x0][c]);
+              p1sum2[c] += square(to_float(video[f, y0, x0][c]));  // again at same pixel [y0][x0]
             }
             Vector vmul = p0sum * p1sum;
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
@@ -1947,9 +1947,9 @@ void process_gen(Args& args) {
         int x0 = int(pp[1]);
         for_intL(yy, y0, min(y0 + 2, mvec.ysize())) for_intL(xx, x0, min(x0 + 2, mvec.xsize())) {
           F2 vt = pp - F2(float(yy), float(xx));
-          if (mag2(vt) < mag2(mvec(yy, xx))) {
-            mvec(yy, xx) = vt;
-            mpixel(yy, xx) = ar_color[i];
+          if (mag2(vt) < mag2(mvec[yy, xx])) {
+            mvec[yy, xx] = vt;
+            mpixel[yy, xx] = ar_color[i];
           }
         }
       }

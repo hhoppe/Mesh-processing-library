@@ -31,7 +31,7 @@ int main() {
         double t2 = t + .5 * (1. / mod_freq) * pow(std::sin(t * mod_freq * TAU), .5);
         v = std::sin(float(t2 * freq * TAU));
       }
-      audio1(ch, i) = v;
+      audio1[ch, i] = v;
     }
     SHOW(audio1.nsamples());
     if (1) {
@@ -55,7 +55,7 @@ int main() {
       SHOW(audio2[1].head(5));
       for_int(i, audio2.nsamples()) for_int(ch, audio2.nchannels()) {
         if (i >= audio1.nsamples()) continue;
-        float diff = audio2(ch, i) - audio1(ch, i);
+        float diff = audio2[ch, i] - audio1[ch, i];
         if (abs(diff) > thresh) assertnever(SSHOW(i, diff));
       }
     }

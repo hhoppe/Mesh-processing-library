@@ -105,7 +105,7 @@ void Audio::read_file(const string& pfilename) {
     float* p = ar.data();
     for_int(i, nsamples()) for_int(ch, nchannels()) {
       from_dos(&p);
-      (*this)(ch, i) = *p++;
+      (*this)[ch, i] = *p++;
     }
   } else {
 #if defined(HH_AUDIO_HAVE_FFMPEG)
@@ -213,7 +213,7 @@ void Audio::read_file(const string& pfilename) {
       for_int(i, nsamples()) {
         if (!read_binary_std(fi(), sample)) break;
         nread++;
-        for_int(ch, nchannels()) (*this)(ch, i) = sample[ch];
+        for_int(ch, nchannels()) { (*this)[ch, i] = sample[ch]; }
       }
       if (ldebug) SHOW(nsamples(), nread, nsamples() - nread);
       if (nsamples() != nread) {
@@ -276,7 +276,7 @@ void Audio::write_file(const string& pfilename) const {
     assertx(write_binary_raw(fi(), ArView(h)));
     Array<float> ar;
     for_int(i, nsamples()) for_int(ch, nchannels()) {
-      ar.push((*this)(ch, i));
+      ar.push((*this)[ch, i]);
       to_dos(&ar.last());
     }
     assertx(write_binary_raw(fi(), ar));

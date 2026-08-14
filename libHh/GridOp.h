@@ -589,19 +589,19 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
     ASSERTX(!maps[0].num());
     parallel_for({.cycles_per_elem = 3}, range(ndims[0]), [&](const int i) {
       int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
-      ngrid(i) = grid(ii);
+      ngrid[i] = grid[ii];
     });
   } else if constexpr (D == 2) {
     parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
       int yy = maps[0][y];
-      for_int(x, ndims[1]) ngrid(y, x) = grid(yy, maps[1][x]);
+      for_int(x, ndims[1]) ngrid[y, x] = grid[yy, maps[1][x]];
     });
   } else if constexpr (D == 3) {
     parallel_for({.cycles_per_elem = uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
       int zz = maps[0][z];
       for_int(y, ndims[1]) {
         int yy = maps[1][y];
-        for_int(x, ndims[2]) ngrid(z, y, x) = grid(zz, yy, maps[2][x]);
+        for_int(x, ndims[2]) ngrid[z, y, x] = grid[zz, yy, maps[2][x]];
       }
     });
   } else {

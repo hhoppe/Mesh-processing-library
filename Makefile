@@ -96,8 +96,8 @@ timingtest: Filterimage Filtervideo
 # hhoppeg clang: expect 0.42 sec, 7.1 sec
 # hhoppeg  unix: expect 0.39 sec, 7.0 sec
 	@for i in {1..5}; do $(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo; done
-ifneq ($(CONFIG),w32)
-	@for i in {1..3}; do VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'; done
+ifeq ($(x64),1)
+	@for i in {1..2}; do VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -6sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'; done
 endif
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 

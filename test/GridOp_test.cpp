@@ -145,7 +145,7 @@ int main() {
     Pixel gcolor(255, 255, 255, 255);
     grid = crop(grid, V(0, 0), V(10, 10), twice(bndrule), &gcolor);
     assertx(grid.dims() == V(10, 10));
-    assertx(grid(9, 9) == Pixel(65, 66, 67, 72));
+    assertx(grid[9, 9] == Pixel(65, 66, 67, 72));
   }
   if (1) {
     string name = "hamming6";

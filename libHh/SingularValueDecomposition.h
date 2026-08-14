@@ -36,7 +36,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
   using TT = mean_type_t<T>;
   U.assign(A);
   fill(VT, T{0});
-  for_int(i, n) VT(i, i) = T{1};
+  for_int(i, n) VT[i, i] = T{1};
   T eps;
   {                        // compute a factor of machine-precision epsilon
     volatile T v1 = T{1};  // otherwise produces eps == 0 on gcc due to compiler optimizations
@@ -51,9 +51,9 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
       // SHOW(U, VT);
       TT a = TT{0}, b = TT{0}, c = TT{0};
       for_int(k, m) {  // construct 2 * 2 submatrix [ a, c; c, b ] of column inner products on U
-        a += square(TT{U(k, i)});
-        b += square(TT{U(k, j)});
-        c += TT{U(k, i)} * TT{U(k, j)};
+        a += square(TT{U[k, i]});
+        b += square(TT{U[k, j]});
+        c += TT{U[k, i]} * TT{U[k, j]};
       }
       T e = T(abs(c) / sqrt(a * b));
       max_e = max(max_e, e);  // measure non-orthogonality of pair of columns
@@ -68,14 +68,14 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
         // SHOW(z, t, cs, sn);
       }
       for_int(k, m) {  // apply Jacobi rotation to U
-        T vlk = U(k, i);
-        U(k, i) = cs * vlk - sn * U(k, j);
-        U(k, j) = sn * vlk + cs * U(k, j);
+        T vlk = U[k, i];
+        U[k, i] = cs * vlk - sn * U[k, j];
+        U[k, j] = sn * vlk + cs * U[k, j];
       }
       for_int(k, n) {  // apply Jacobi rotation to VT
-        T vlk = VT(k, i);
-        VT(k, i) = cs * vlk - sn * VT(k, j);
-        VT(k, j) = sn * vlk + cs * VT(k, j);
+        T vlk = VT[k, i];
+        VT[k, i] = cs * vlk - sn * VT[k, j];
+        VT[k, j] = sn * vlk + cs * VT[k, j];
       }
     }
     // SHOW(max_e);
@@ -94,7 +94,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
     // normalize the column vector
     if (S[i]) {
       T recip = T{1} / S[i];
-      for_int(j, m) U(j, i) *= recip;
+      for_int(j, m) U[j, i] *= recip;
     }
   }
   return true;

@@ -408,10 +408,10 @@ template <typename T> void rotate_ccw(CMatrixView<T> mat, int rot_degrees, Matri
   assertx(nmat.dims() == (my_mod(rot_degrees, 180) == 0 ? mat.dims() : mat.dims().rev()));
   switch (my_mod(rot_degrees, 360)) {
     case 0: nmat.assign(mat); break;
-    case 90: for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat(y, x) = mat(x, nmat.ysize() - 1 - y); break;
-    case 270: for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat(y, x) = mat(nmat.xsize() - 1 - x, y); break;
+    case 90: for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat[y, x] = mat[x, nmat.ysize() - 1 - y]; break;
+    case 270: for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat[y, x] = mat[nmat.xsize() - 1 - x, y]; break;
     case 180:
-      for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat(y, x) = mat(nmat.ysize() - 1 - y, nmat.xsize() - 1 - x);
+      for_int(y, nmat.ysize()) for_int(x, nmat.xsize()) nmat[y, x] = mat[nmat.ysize() - 1 - y, nmat.xsize() - 1 - x];
       break;
     default: assertnever("");
   }

@@ -104,9 +104,13 @@ template <int D, typename T> class CGridView {
   const Vec<int, D>& dims() const { return _dims; }
   int dim(int c) const { return _dims[c]; }
   size_t size() const { return product_dims<D>(_dims.data()); }
-  constexpr decltype(auto) operator[](this auto&& self, int r);
+  template <std::integral... A> constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
-  template <typename... A> const T& operator()(A... dd) const;  // dd... are int.
+  template <std::integral... A>
+  [[deprecated("Use operator[]")]] constexpr decltype(auto) operator()(this auto&& self, A... dd) {
+    static_assert(sizeof...(dd) == D);  // dd... are int.
+    return self[dd...];
+  }
   const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
   bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
@@ -187,8 +191,6 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
   void reinit(type g) { *this = g; }
   using base::size;
-  template <typename... A> T& operator()(A... dd);  // dd... are int.
-  template <typename... A> const T& operator()(A... dd) const;
   T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
   const T& flat(size_t i) const { return base::flat(i); }
   T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) {
@@ -409,37 +411,28 @@ template <int D, int n, typename T> grid_ret_t<D - n + 1, T> grid_view_at(T* p, 
     return Ret(p, dims.template segment<n, D - n>());
 }
 
-// Return the element or sub-view at the coordinate prefix u within a grid with dimensions dims.
-template <int D, int n, typename T>
-grid_ret_t<D - n + 1, T> grid_get(T* a, const Vec<int, D>& dims, const Vec<int, n>& u) {
-  static_assert(n >= 0 && n <= D);
-  return grid_view_at<D, n>(a + ravel_index(dims.template head<n>(), u) * product_dims<D - n>(dims.data() + n), dims);
-}
-
-// Do the same for a single index in the first dimension.
-template <int D, typename T> grid_ret_t<D, T> grid_get(T* a, const Vec<int, D>& dims, int r) {
-  static_assert(D >= 1);
-  HH_CHECK_BOUNDS(r, dims[0]);
-  return grid_view_at<D, 1>(a + r * product_dims<D - 1>(dims.data() + 1), dims);
-}
-
 }  // namespace details
 
 //----------------------------------------------------------------------------
 
-template <int D, typename T> constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, int r) {
-  return details::grid_get<D, 1>(self.data(), self.dims(), r);
+template <int D, typename T>
+template <std::integral... A>
+constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, A... dd) {
+  constexpr int n = sizeof...(dd);
+  static_assert(n <= D);
+  const Vec<int, D>& dims = self.dims();
+  auto* p = self.data();
+  if constexpr (n > 0) p += ravel_index_list(dims.template head<n>(), dd...) * product_dims<D - n>(dims.data() + n);
+  return details::grid_view_at<D, n>(p, dims);
 }
 
 template <int D, typename T>
 template <int n>
 constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, const Vec<int, n>& u) {
-  return details::grid_get<D, n>(self.data(), self.dims(), u);
-}
-
-template <int D, typename T> template <typename... A> const T& CGridView<D, T>::operator()(A... dd) const {
-  static_assert(sizeof...(dd) == D);
-  return _a[ravel_index_list(_dims, dd...)];
+  static_assert(n >= 0 && n <= D);
+  const Vec<int, D>& dims = self.dims();
+  auto* p = self.data() + ravel_index(dims.template head<n>(), u) * product_dims<D - n>(dims.data() + n);
+  return details::grid_view_at<D, n>(p, dims);
 }
 
 template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule) const {
@@ -457,16 +450,6 @@ const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderv
 }
 
 //----------------------------------------------------------------------------
-
-template <int D, typename T> template <typename... A> T& GridView<D, T>::operator()(A... dd) {
-  static_assert(sizeof...(dd) == D);
-  return _a[ravel_index_list(_dims, dd...)];
-}
-
-template <int D, typename T> template <typename... A> const T& GridView<D, T>::operator()(A... dd) const {
-  static_assert(sizeof...(dd) == D);
-  return _a[ravel_index_list(_dims, dd...)];
-}
 
 template <int D, typename T>
 const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const {

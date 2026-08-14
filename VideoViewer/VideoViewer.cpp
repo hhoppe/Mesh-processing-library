@@ -702,13 +702,14 @@ void add_object(unique_ptr<Object> pob) {
 
 Pixel get_frame_pixel(const Vec2<int>& yx) {
   assertx(g_cob >= 0 && g_framenum >= 0);
+  const int framenum = g_framenum;
   if (getob()._video_nv12.size()) {
-    CNv12View nv12v = getob()._video_nv12[g_framenum];
+    CNv12View nv12v = getob()._video_nv12[framenum];
     uint8_t y = nv12v.get_Y()[yx];
     const Vec2<uint8_t>& uv = nv12v.get_UV()[yx / 2];
     return RGB_Pixel_from_YUV(y, uv[0], uv[1]);
   } else {
-    Pixel pixel = getob()._video[g_framenum][yx];
+    Pixel pixel = getob()._video[framenum][yx];
     const bool bgra = getob().is_image() && getob()._image_is_bgra;
     if (bgra) std::swap(pixel[0], pixel[2]);
     return pixel;
@@ -2395,20 +2396,21 @@ bool DerivedHw::key_press(string skey) {
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           if (g_framenum < 0) throw "no current video frame";
+          const int framenum = g_framenum;
           Image image(ob.spatial_dims());
           bool bgra;
           if (ob._video_nv12.size()) {
             bgra = true;
-            convert_Nv12_to_Image_BGRA(ob._video_nv12[g_framenum], image);
+            convert_Nv12_to_Image_BGRA(ob._video_nv12[framenum], image);
           } else {
             bgra = false;
-            image = ob._video[g_framenum];
+            image = ob._video[framenum];
             if (ob.is_image()) {
               bgra = ob._image_is_bgra;
               image.attrib() = ob._image_attrib;
             }
           }
-          string filename = append_to_filename(ob._filename, sform("_frame%d", g_framenum + 0));
+          string filename = append_to_filename(ob._filename, sform("_frame%d", framenum + 0));
           filename = get_path_root(filename) + ".png";
           g_obs.push(make_unique<Object>(std::move(image), filename, bgra));
           message("Saved current frame as new image");
@@ -2449,12 +2451,13 @@ bool DerivedHw::key_press(string skey) {
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           Object& ob = check_object();
           if (g_framenum < 0) throw "no current video frame";
+          const int framenum = g_framenum;
           Image image(ob.spatial_dims());
           bool bgra = false;
           if (ob._video_nv12.size()) {
-            convert_Nv12_to_Image(ob._video_nv12[g_framenum], image);
+            convert_Nv12_to_Image(ob._video_nv12[framenum], image);
           } else {
-            image = ob._video[g_framenum];
+            image = ob._video[framenum];
             if (ob.is_image()) {
               bgra = ob._image_is_bgra;
               image.attrib() = ob._image_attrib;
@@ -2771,7 +2774,7 @@ void advance_frame() {
     showf(
         "frametime=%-11.5f framediff=%-2d dtime=%-9.5f steady=%-9.5f"
         " nloaded=%-3d  centering=%d\n",
-        g_frametime, framediff, time_since_last_frame, steady_time_since_last_frame, ob._nframes_loaded + 0,
+        g_frametime, framediff, time_since_last_frame, steady_time_since_last_frame, int(ob._nframes_loaded),
         centering);
   if (int(floor(g_frametime)) >= ob._nframes_loaded && ob._nframes_loaded < ob.nframes()) {
     if (g_verbose >= 2) SHOW("wait", g_frametime, ob._nframes_loaded, ob.nframes());
@@ -2963,9 +2966,10 @@ void upload_image_to_texture() {
     Vec2<int> offset = twice(g_background_padding_width);
     const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
     const auto copy_view_to_frame = [&](MatrixView<Pixel> frame) {
+      const int framenum = g_framenum;
       GLenum frame_format = format;
       if (getob()._video_nv12.size()) {
-        CNv12View view = getob()._video_nv12[g_framenum];
+        CNv12View view = getob()._video_nv12[framenum];
         Nv12 nv12_tmp;
         if (g_frame_dims != g_tex_active_dims) {
           nv12_tmp.init(g_tex_active_dims);
@@ -2977,8 +2981,8 @@ void upload_image_to_texture() {
         else
           convert_Nv12_to_Image(view, frame);
       } else {
-        // frame.assign(getob()._video[g_framenum]);
-        CMatrixView<Pixel> view(getob()._video[g_framenum]);
+        // frame.assign(getob()._video[framenum]);
+        CMatrixView<Pixel> view(getob()._video[framenum]);
         Matrix<Pixel> image_tmp;
         if (g_frame_dims != g_tex_active_dims) {
           image_tmp.init(g_tex_active_dims);
@@ -3856,8 +3860,8 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
       parallel_for(range(hnf), [&](const int f) {
         for_int(y, hdims[0]) for_int(x, hdims[1]) {
           Vector4i v(0);
-          for_int(df, DT) v += Vector4i(hvideo1(f * DT + df, y, x));  // OPT:DT
-          hvideo(f, y, x) = (v >> log2DT).pixel();
+          for_int(df, DT) v += Vector4i(hvideo1[f * DT + df, y, x]);  // OPT:DT
+          hvideo[f, y, x] = (v >> log2DT).pixel();
         }
       });
     }
@@ -3987,8 +3991,8 @@ void background_work(bool asynchronous) {
         auto& ob = *pob;
         assertx(ob._prvideo);
         if (ob._nframes_loaded < ob.nframes()) {
-          bool success = (ob._video.size() ? ob._prvideo->read(ob._video[ob._nframes_loaded])
-                                           : ob._prvideo->read(ob._video_nv12[ob._nframes_loaded]));
+          bool success = (ob._video.size() ? ob._prvideo->read(ob._video[int(ob._nframes_loaded)])
+                                           : ob._prvideo->read(ob._video_nv12[int(ob._nframes_loaded)]));
           if (g_verbose >= 2) SHOW("background", is_cob, g_framenum, ob._nframes_loaded, success);
           if (success) {
             ob._nframes_loaded++;

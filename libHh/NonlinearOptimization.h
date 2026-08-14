@@ -20,8 +20,7 @@ namespace hh {
 // Eval = double (&)(ArrayView<double>)
 template <typename Eval> class NonlinearOptimization : noncopyable {
  public:
-  // (Renamed x to x_ due to Visual Studio bug "C4459: declaration ... hides global declaration".)
-  explicit NonlinearOptimization(ArrayView<double> x_, Eval eval = Eval()) : NonlinearOptimization(nullptr, x_, eval) {
+  explicit NonlinearOptimization(ArrayView<double> x, Eval eval = Eval()) : NonlinearOptimization(nullptr, x, eval) {
     _debug = getenv_int("NLOPT_DEBUG");
   }
   void set_max_neval(int max_neval) { _max_neval = max_neval; }  // default is -1 which signifies infinity

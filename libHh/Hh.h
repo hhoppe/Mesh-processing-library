@@ -23,6 +23,7 @@
 #if defined(_MSC_VER)
 // Disable some nitpicky level4 warnings (for -W4).
 #pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
+#pragma warning(disable : 4459)  // Flawed detection of local name hiding global name in different module.
 #pragma warning(disable : 4464)  // Allow #include paths containing ".." relative folders (e.g. "../libHh/Video.h").
 // Code analysis:
 #pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
@@ -224,6 +225,13 @@ constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; se
 constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 // #undef PI  // instead, use TAU / 2
 
+// *** Concepts.
+
+// Type that behaves like a number; specialize for any custom scalar type.
+template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;
+template <typename T>
+concept Numeric = is_numeric_v<T>;
+
 // *** Utility classes.
 
 // Derive from this class to disable copy constructor and copy assignment.
@@ -356,7 +364,7 @@ template <typename T> constexpr bool has_ostream_eol_v = has_ostream_eol_aux_v<s
 
 // Avoid warnings of unused variables.
 template <typename... A> constexpr void dummy_use(const A&...) {}
-// Note: any compilation errors about redefinition of dummy_use(), etc. on MS VS may be due to the current
+// Note: any compilation errors about redefinition of dummy_use(), etc. on win _MSC_VER may be due to the current
 // directory being different from that in precompiled header due to symbol links,
 // or to an explicit MeshRoot environment variable that does not match the current tree.
 

@@ -59,7 +59,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     return std::move(*this);
   }
   [[nodiscard]] constexpr bool operator==(const type& rhs) const {
-    for_int(i, n) if (!(data()[i] == rhs[i])) return false;
+    for_int(i, n) if (data()[i] != rhs[i]) return false;
     return true;
   }
   // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
@@ -221,11 +221,6 @@ template <typename T, int n1, int n2, typename... A>
 template <typename T, int n1> [[nodiscard]] constexpr Vec<T, n1> concat(const Vec<T, n1>& a1) { return a1; }
 
 //----------------------------------------------------------------------------
-
-// True for types that behave like numbers; specialize for any custom scalar type.
-template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;  // Allows extensibility.
-template <typename T>
-concept Numeric = is_numeric_v<T>;
 
 template <Numeric T, int n> [[nodiscard]] constexpr T dot(const Vec<T, n>& v1, const Vec<T, n>& v2) {
   T sum{};

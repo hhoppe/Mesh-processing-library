@@ -230,7 +230,7 @@ class ocfstream : public std::ostream {
 
 class RFile::Implementation {
  public:
-  explicit Implementation(FILE* file) : _ifstream(file) {}  // Non-standard extension in VS.
+  explicit Implementation(FILE* file) : _ifstream(file) {}  // Non-standard extension on win _MSC_VER.
   std::istream* get_stream() { return &_ifstream; }
 
  private:
@@ -239,7 +239,7 @@ class RFile::Implementation {
 
 class WFile::Implementation {
  public:
-  explicit Implementation(FILE* file) : _ofstream(file) {}  // Non-standard extension in VS.
+  explicit Implementation(FILE* file) : _ofstream(file) {}  // Non-standard extension on win _MSC_VER.
   std::ostream* get_stream() { return &_ofstream; }
 
  private:

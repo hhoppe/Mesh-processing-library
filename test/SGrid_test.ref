@@ -133,15 +133,20 @@ gridn = Matrix<int>(3, 2) {
   2 3
   4 5
 }
-grid32 = Matrix<int>(3, 2) {
+grid32f = Matrix<int>(3, 2) {
   20 21
   22 23
   24 25
 }
-grid32 = Matrix<int>(3, 2) {
+grid32g = Matrix<int>(3, 2) {
   20 21
   22 23
   24 25
+}
+grid32h = Matrix<int>(3, 2) {
+  10 11
+  12 13
+  14 15
 }
 sizeof(Vec<int, 0>) = 1
 sizeof(SGrid<int, 0>) = 1

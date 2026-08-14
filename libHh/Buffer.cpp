@@ -12,10 +12,6 @@
 #include <unistd.h>      // read(), write()
 #endif
 
-#if defined(_WIN32) && !defined(EWOULDBLOCK)  // undefined in __MINGW32__; was undefined until Visual Studio 2010
-#define EWOULDBLOCK EAGAIN
-#endif
-
 #include <cerrno>   // errno, EINTR, etc.
 #include <cstring>  // memcpy(), memmove()
 

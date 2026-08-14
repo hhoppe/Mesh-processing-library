@@ -40,7 +40,7 @@
 
 // *** Check required language features.
 
-// static_assert(__cpp_explicit_this_parameter);  // C++23; not reported by VC CL 19.44 even though supported.
+// static_assert(__cpp_explicit_this_parameter);  // C++23; not reported by _MSC_VER CL 19.44 even though supported.
 static_assert(__cpp_multidimensional_subscript);  // C++23.
 
 namespace hh {
@@ -243,7 +243,7 @@ string extract_function_type_name(string s) {
   s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string.
   // GOOGLE3: versioned libstdc++ or libc++
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
-  if (remove_at_start(s, "hh::details::TypeNameAux<")) {  // VC
+  if (remove_at_start(s, "hh::details::TypeNameAux<")) {  // _MSC_VER
     if (!remove_at_end(s, ">::name")) assertnever(SSHOW(s));
     remove_at_end(s, " ");  // Possible space for complex types.
   } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<T>::name() [with T = ")) {  // GNUC.
@@ -388,27 +388,6 @@ void aligned_free(void* p) {
 }
 
 std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings) {
-  if (0) {  // Slower.
-    line.clear();
-    for (;;) {
-      char ch;
-      is.get(ch);
-      if (!is) return is;
-      if (ch == '\n') break;
-      line.push_back(ch);
-    }
-    return is;
-  }
-  if (0) {  // On Visual Studio, ~1.05x faster than std::getline(); On clang, ~1.1x slower.
-    char buffer[500];
-    is.get(buffer, sizeof(buffer) - 1, '\n');
-    if (!is) return is;
-    char ch;
-    is.get(ch);
-    assertx(ch == '\n');
-    line = buffer;
-    return is;
-  }
   // Note that getline() always begins by clearing the string.
   std::getline(is, line);  // Already creates its own sentry project (with noskipws == true).
   if (is && line.size() && line.back() == '\r') {

@@ -51,59 +51,63 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
     assign(g);
     return *this;
   }
-  static constexpr int ndim() { return D; }
-  static constexpr Vec<int, D> dims() { return Vec<int, D>(d0, od...); }
-  static constexpr int dim(int c) { return dims()[c]; }
-  static constexpr size_t size() { return vol; }
-  T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
-  const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
-  slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }
-  const slice& operator[](int r) const { return (ASSERTXX(check(r)), b()[r]); }
-  T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
-  const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
-  bool operator==(const type& p) const;
-  static type all(const T& e) {
+  [[nodiscard]] static constexpr int ndim() { return D; }
+  [[nodiscard]] static constexpr Vec<int, D> dims() { return Vec<int, D>(d0, od...); }
+  [[nodiscard]] static constexpr int dim(int c) { return dims()[c]; }
+  [[nodiscard]] static constexpr size_t size() { return vol; }
+  [[nodiscard]] T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
+  [[nodiscard]] const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
+  [[nodiscard]] constexpr slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }
+  [[nodiscard]] constexpr const slice& operator[](int r) const { return (ASSERTXX(check(r)), b()[r]); }
+  [[nodiscard]] T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
+  [[nodiscard]] const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
+  [[nodiscard]] bool operator==(const type& p) const;
+  [[nodiscard]] static type all(const T& e) {
     type g;
     for (const size_t i : range(vol)) g.flat(i) = e;
     return g;
   }
-  operator GridView<D, T>() { return view(); }
-  operator CGridView<D, T>() const { return view(); }
-  GridView<D, T> view() { return GridView<D, T>(data(), dims()); }
-  CGridView<D, T> view() const { return CGridView<D, T>(data(), dims()); }
-  CGridView<D, T> const_view() const { return CGridView<D, T>(data(), dims()); }
-  ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
-  CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
-  CArrayView<T> const_array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
-  template <int s> SGrid<T, s, od...>& segment(int i) {
+  [[nodiscard]] operator GridView<D, T>() { return view(); }
+  [[nodiscard]] operator CGridView<D, T>() const { return view(); }
+  [[nodiscard]] GridView<D, T> view() { return GridView<D, T>(data(), dims()); }
+  [[nodiscard]] CGridView<D, T> view() const { return CGridView<D, T>(data(), dims()); }
+  [[nodiscard]] CGridView<D, T> const_view() const { return CGridView<D, T>(data(), dims()); }
+  [[nodiscard]] ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] CArrayView<T> const_array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  template <int s> [[nodiscard]] SGrid<T, s, od...>& segment(int i) {
     return (ASSERTXX(check(i, s)), *reinterpret_cast<SGrid<T, s, od...>*>(p(i)));
   }
-  template <int s> const SGrid<T, s, od...>& segment(int i) const {
+  template <int s> [[nodiscard]] const SGrid<T, s, od...>& segment(int i) const {
     return (ASSERTXX(check(i, s)), *reinterpret_cast<const SGrid<T, s, od...>*>(p(i)));
   }
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  T* begin() { return data(); }
-  const T* begin() const { return data(); }
-  T* end() { return data() + vol; }
-  const T* end() const { return data() + vol; }
-  T* data() { return reinterpret_cast<T*>(b().data()); }
-  const T* data() const { return reinterpret_cast<const T*>(b().data()); }
+  [[nodiscard]] T* begin() { return data(); }
+  [[nodiscard]] const T* begin() const { return data(); }
+  [[nodiscard]] T* end() { return data() + vol; }
+  [[nodiscard]] const T* end() const { return data() + vol; }
+  [[nodiscard]] T* data() { return reinterpret_cast<T*>(b().data()); }
+  [[nodiscard]] const T* data() const { return reinterpret_cast<const T*>(b().data()); }
 
  private:
-  base& b() { return *this; }
-  const base& b() const { return *this; }
+  constexpr base& b() { return *this; }
+  constexpr const base& b() const { return *this; }
   slice* p(int i) { return b().data() + i; }
   const slice* p(int i) const { return b().data() + i; }
-  bool check(int r) const {
+  constexpr bool check(int r) const {
     if (r >= 0 && r < d0) return true;
-    SHOW(r, dims());
+    if !consteval {
+      SHOW(r, dims());
+    }
     return false;
   }
-  bool check(int i, int s) const {
+  constexpr bool check(int i, int s) const {
     if (i >= 0 && s >= 0 && i + s <= d0) return true;
-    SHOW(i, s, dims());
+    if !consteval {
+      SHOW(i, s, dims());
+    }
     return false;
   }
   void assign(CGridView<D, T> g) {
@@ -113,7 +117,8 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename Func, typename T, int d0, int... od> auto map(const SGrid<T, d0, od...>& c, Func func) {
+template <typename Func, typename T, int d0, int... od>
+[[nodiscard]] constexpr auto map(const SGrid<T, d0, od...>& c, Func func) {
   SGrid<decltype(func(std::declval<T>())), d0, od...> nc;
   for (const size_t i : range(c.size())) nc.flat(i) = func(c.flat(i));
   return nc;
@@ -121,7 +126,7 @@ template <typename Func, typename T, int d0, int... od> auto map(const SGrid<T, 
 
 //----------------------------------------------------------------------------
 
-template <typename T, int d0, int... od> bool SGrid<T, d0, od...>::operator==(const type& p) const {
+template <typename T, int d0, int... od> [[nodiscard]] bool SGrid<T, d0, od...>::operator==(const type& p) const {
   for (const size_t i : range(vol))
     if (flat(i) != p.flat(i)) return false;
   return true;
@@ -138,53 +143,55 @@ template <typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od.
 // Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <typename T, int d0, int... od>
+#define TTC TT [[nodiscard]] constexpr
+#define TTA TT constexpr
 #define G SGrid<T, d0, od...>
 #define F for (const size_t i : range(g1.size()))
 // clang-format off
 
-TT G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }
-TT G operator-(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) - g2.flat(i); } return g; }
-TT G operator*(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) * g2.flat(i); } return g; }
-TT G operator/(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) / g2.flat(i); } return g; }
-TT G operator%(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) % g2.flat(i); } return g; }
+TTC G operator+(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }
+TTC G operator-(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) - g2.flat(i); } return g; }
+TTC G operator*(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) * g2.flat(i); } return g; }
+TTC G operator/(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) / g2.flat(i); } return g; }
+TTC G operator%(const G& g1, const G& g2) { G g; F { g.flat(i) = g1.flat(i) % g2.flat(i); } return g; }
 
-TT G operator+(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) + v; } return g; }
-TT G operator-(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) - v; } return g; }
-TT G operator*(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) * v; } return g; }
-TT G operator/(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) / v; } return g; }
-TT G operator%(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) % v; } return g; }
+TTC G operator+(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) + v; } return g; }
+TTC G operator-(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) - v; } return g; }
+TTC G operator*(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) * v; } return g; }
+TTC G operator/(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) / v; } return g; }
+TTC G operator%(const G& g1, T v) { G g; F { g.flat(i) = g1.flat(i) % v; } return g; }
 
-TT G operator+(T v, const G& g1) { G g; F { g.flat(i) = v + g1.flat(i); } return g; }
-TT G operator-(T v, const G& g1) { G g; F { g.flat(i) = v - g1.flat(i); } return g; }
-TT G operator*(T v, const G& g1) { G g; F { g.flat(i) = v * g1.flat(i); } return g; }
-TT G operator/(T v, const G& g1) { G g; F { g.flat(i) = v / g1.flat(i); } return g; }
-TT G operator%(T v, const G& g1) { G g; F { g.flat(i) = v % g1.flat(i); } return g; }
+TTC G operator+(T v, const G& g1) { G g; F { g.flat(i) = v + g1.flat(i); } return g; }
+TTC G operator-(T v, const G& g1) { G g; F { g.flat(i) = v - g1.flat(i); } return g; }
+TTC G operator*(T v, const G& g1) { G g; F { g.flat(i) = v * g1.flat(i); } return g; }
+TTC G operator/(T v, const G& g1) { G g; F { g.flat(i) = v / g1.flat(i); } return g; }
+TTC G operator%(T v, const G& g1) { G g; F { g.flat(i) = v % g1.flat(i); } return g; }
 
-TT G& operator+=(G& g1, const G& g2) { F { g1.flat(i) += g2.flat(i); } return g1; }
-TT G& operator-=(G& g1, const G& g2) { F { g1.flat(i) -= g2.flat(i); } return g1; }
-TT G& operator*=(G& g1, const G& g2) { F { g1.flat(i) *= g2.flat(i); } return g1; }
-TT G& operator/=(G& g1, const G& g2) { F { g1.flat(i) /= g2.flat(i); } return g1; }
-TT G& operator%=(G& g1, const G& g2) { F { g1.flat(i) %= g2.flat(i); } return g1; }
+TTA G& operator+=(G& g1, const G& g2) { F { g1.flat(i) += g2.flat(i); } return g1; }
+TTA G& operator-=(G& g1, const G& g2) { F { g1.flat(i) -= g2.flat(i); } return g1; }
+TTA G& operator*=(G& g1, const G& g2) { F { g1.flat(i) *= g2.flat(i); } return g1; }
+TTA G& operator/=(G& g1, const G& g2) { F { g1.flat(i) /= g2.flat(i); } return g1; }
+TTA G& operator%=(G& g1, const G& g2) { F { g1.flat(i) %= g2.flat(i); } return g1; }
 
-TT G& operator+=(G& g1, const T& v) { F { g1.flat(i) += v; } return g1; }
-TT G& operator-=(G& g1, const T& v) { F { g1.flat(i) -= v; } return g1; }
-TT G& operator*=(G& g1, const T& v) { F { g1.flat(i) *= v; } return g1; }
-TT G& operator/=(G& g1, const T& v) { F { g1.flat(i) /= v; } return g1; }
-TT G& operator%=(G& g1, const T& v) { F { g1.flat(i) %= v; } return g1; }
+TTA G& operator+=(G& g1, const T& v) { F { g1.flat(i) += v; } return g1; }
+TTA G& operator-=(G& g1, const T& v) { F { g1.flat(i) -= v; } return g1; }
+TTA G& operator*=(G& g1, const T& v) { F { g1.flat(i) *= v; } return g1; }
+TTA G& operator/=(G& g1, const T& v) { F { g1.flat(i) /= v; } return g1; }
+TTA G& operator%=(G& g1, const T& v) { F { g1.flat(i) %= v; } return g1; }
 
-TT G operator-(const G& g1) { G g; F { g.flat(i) = -g1.flat(i); } return g; }
+TTC G operator-(const G& g1) { G g; F { g.flat(i) = -g1.flat(i); } return g; }
 
-TT G min(const G& g1, const G& g2) { G g; F { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
-TT G max(const G& g1, const G& g2) { G g; F { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
+TTC G min(const G& g1, const G& g2) { G g; F { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
+TTC G max(const G& g1, const G& g2) { G g; F { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
 
-TT G interp(const G& g1, const G& g2, float f1 = 0.5f) {
+TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) {
   G g; F { g.flat(i) = f1 * g1.flat(i) + (1.f - f1) * g2.flat(i); } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
+TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) {
   G g; F { g.flat(i) = f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i); } return g;
 }
-TT G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
-TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
+TTC G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
+TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
   // Vec3<float> == Bary;   May have sum(bary) != 1.f.
   G g; F { g.flat(i) = bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i); } return g;
 }
@@ -192,6 +199,8 @@ TT G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 // clang-format on
 #undef F
 #undef G
+#undef TTA
+#undef TTC
 #undef TT
 
 }  // namespace hh

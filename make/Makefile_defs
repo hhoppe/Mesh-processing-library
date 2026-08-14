@@ -204,6 +204,16 @@ src_cpp ?= $(wildcard *.cpp)
 src_c ?= $(wildcard *.c)
 src ?= $(src_cpp) $(src_c)
 obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
+
+ifeq ($(use_pch)$(win_base),11)
+  # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
+  # the linker reports LNK4206 and discards their debug info.  We let all obj files (except precompiled_libHh.obj)
+  # depend on precompiled_libHh.obj.  The $(wildcard) allows it to not exist (for a from-scratch build).
+  prev_goal := $(.DEFAULT_GOAL)
+  $(filter-out %precompiled_libHh.$(extobj),$(obj)) : $(wildcard $(pch_root).$(extobj))
+  .DEFAULT_GOAL := $(prev_goal)#  The rule above must not become the default goal.
+endif
+
 # Problem: if we use (notdir obj), then it compiles using (notdir src), and emacs is confused,
 #         but if use full dir obj, then gmake ignores file modification times.
 #         Compilation directory tracking in emacs does not work with "-j".

@@ -56,12 +56,18 @@ int main() {
     SHOW(gridn);
   }
   {
-    const SGrid<int, 3, 2> grid32(V(V(20, 21), V(22, 23), V(24, 25)));
-    SHOW(grid32);
+    constexpr SGrid<int, 3, 2> grid32f(V(V(20, 21), V(22, 23), V(24, 25)));
+    SHOW(grid32f);
+    constexpr int v11 = grid32f[1][1];
+    static_assert(v11 == 23);
   }
   {
-    const SGrid<int, 3, 2> grid32{V(V(20, 21), V(22, 23), V(24, 25))};
-    SHOW(grid32);
+    constexpr SGrid<int, 3, 2> grid32g{V(V(20, 21), V(22, 23), V(24, 25))};
+    SHOW(grid32g);
+  }
+  {
+    const SGrid<int, 3, 2> grid32h{{10, 11}, {12, 13}, {14, 15}};
+    SHOW(grid32h);
   }
   {
     SHOW(sizeof(Vec<int, 0>));

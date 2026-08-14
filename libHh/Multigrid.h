@@ -50,7 +50,7 @@ inline double max_e(double e) { return e; }
 inline float max_e(const Vector4& e) { return max(e); }
 
 // Specialize mean() of Grid for parallelism.
-template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(CGridView<D, T> g) {
+template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
   using MeanType = mean_type_t<T>;
   MeanType v;
   my_zero(v);
@@ -74,12 +74,8 @@ template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type
   }
   return v * (1. / size);
 }
-template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(GridView<D, T> g) {
-  return mean(static_cast<CGridView<D, T>>(g));
-}
-template <int D, typename T> std::enable_if_t<std::is_arithmetic_v<T>, mean_type_t<T>> mean(const Grid<D, T>& g) {
-  return mean(static_cast<CGridView<D, T>>(g));
-}
+template <int D, Numeric T> mean_type_t<T> mean(GridView<D, T> g) { return mean(static_cast<CGridView<D, T>>(g)); }
+template <int D, Numeric T> mean_type_t<T> mean(const Grid<D, T>& g) { return mean(static_cast<CGridView<D, T>>(g)); }
 
 // *** Specializations for Vector4
 

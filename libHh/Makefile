@@ -9,8 +9,9 @@ ifeq ($(use_pch),1)
   pch_root = precompiled_libHh
   ifeq ($(win_base),1)  # CONFIG = win or w32
     abs_pch_file = $(call add_drive,$(abspath $(pch_root))).h
-    # We must wait until the precompiled header is generated before compiling other files.
-    $(filter-out $(pch_root).$(extobj),$(obj)) : | $(pch_root).$(extobj)
+    # The precompiled header must be built first, and it holds the -Z7 type information shared by all
+    # objects, so any change to it invalidates their debug info (linker warning LNK4206).
+    $(filter-out $(pch_root).$(extobj),$(obj)) : $(pch_root).$(extobj)
     # Create precompiled_libHh.pch when compiling this file.
     $(pch_root).$(extobj) : cxxall += -Yc$(abs_pch_file)
     # Makefile_base_win already force-includes the pch into all *.cpp files.

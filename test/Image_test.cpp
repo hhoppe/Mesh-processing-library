@@ -11,7 +11,7 @@ int main() {
     constexpr Pixel green{0, 255, 0};
     dummy_use(green);
     constexpr Vec4<uint8_t> v{uint8_t{0}, uint8_t{0}, uint8_t{255}, uint8_t{255}};
-    const Pixel blue{v};  // constexpr fails in VS 2015
+    constexpr Pixel blue{v};
     dummy_use(blue);
   }
   if (1) {

@@ -123,14 +123,13 @@ inline int rgb_dist2(const Pixel& pix1, const Pixel& pix2) {
 // Convert float/double matrix (with 0.f == black and 1.f == white) to an image.
 template <typename T> Image as_image(CMatrixView<T> matrix) {
   static_assert(std::is_floating_point_v<T>, "T must be float/double");
-  // (Renamed image to image1 due to Visual Studio bug "C4459: declaration ... hides global declaration".)
-  Image image1(matrix.dims());
-  parallel_for(range(image1.ysize()), [&](const int y) {
-    for_int(x, image1.xsize()) {
-      image1[y][x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y][x], T{0}, T{1}) * 255.f + .5f));
+  Image image(matrix.dims());
+  parallel_for(range(image.ysize()), [&](const int y) {
+    for_int(x, image.xsize()) {
+      image[y][x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y][x], T{0}, T{1}) * 255.f + .5f));
     }
   });
-  return image1;
+  return image;
 }
 
 // Specialize as_image() to grid of Vector4.

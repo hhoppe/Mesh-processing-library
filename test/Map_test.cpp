@@ -69,9 +69,7 @@ int main() {
     m.clear();
     assertx(m.empty());
     {
-      // This is very slow (12 seconds) on VC 2010 x64 debug, for num=10000
-      // Even for num=1000, it requires 0.28 seconds.
-      int num = 1000;
+      int num = 10000;
       for_int(i, num) m.enter(i, 0);
       for_int(i, num) m.remove(i);
       assertx(m.num() == 0);

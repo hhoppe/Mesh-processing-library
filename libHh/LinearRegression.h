@@ -41,7 +41,7 @@ template <int N, int D, typename Eval = Vec<float, N>(const Vec<float, D>&)> cla
     assertx(_row < _lls.num_rows());
     Vec<float, N> ar = _eval(p);
     _lls.enter_a_r(_row, ar);
-    _lls.enter_b_r(_row, ArView(val));
+    _lls.enter_b_r(_row, V(val));
     _row++;
   }
   Vec<float, N> get_solution() {

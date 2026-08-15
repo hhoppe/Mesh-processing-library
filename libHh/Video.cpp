@@ -32,11 +32,11 @@ void Video::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const
 //----------------------------------------------------------------------------
 
 bool filename_is_video(const string& filename) {
-  static const auto& k_extensions = *new Array<string>{
+  static constexpr auto k_extensions = to_Vec<std::string_view>({
       "mpg", "mpeg", "mpe",  "mpv", "mp2", "mpeg2", "mp4", "mpeg4", "mov", "avi", "wmv", "flv",
       "m2v", "m4v",  "webm", "ogv", "3gp", "mts",   "gif", "vob",   "qt",  "asf", "3g2", "webm",
-  };
-  return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
+  });
+  return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
 string video_suffix_for_magic_byte(uchar c) {

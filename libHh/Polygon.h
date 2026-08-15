@@ -45,7 +45,7 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2);  // If c
 // or wrap '#include <Windows.h>' with '#define Polygon Win32_Polygon' and '#undef Polygon'.
 
 std::ostream& operator<<(std::ostream& os, const Polygon& poly);
-template <> HH_DECLARE_OSTREAM_EOL(Polygon);  // implemented by CArrayView<Point>
+template <> HH_DECLARE_OSTREAM_EOL(Polygon);
 
 HH_INITIALIZE_POOL(Polygon);
 

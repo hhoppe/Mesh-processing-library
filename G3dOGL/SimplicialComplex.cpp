@@ -71,7 +71,7 @@ PArray<Simplex, 20> ISimplex::faces_of_vertex() const {
   assertx(s->getDim() == 0);
   for (Simplex e : s->getParents())
     for (Simplex f : e->getParents())
-      if (!simplices.contains(f)) simplices.push(f);
+      if (!contains(simplices, f)) simplices.push(f);
   return simplices;
 }
 

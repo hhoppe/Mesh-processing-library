@@ -1197,7 +1197,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         assertx(mesh.legal_create_face(va));
         bool is_face2 = false;
         int voffset = 0;
-        if (va.contains(save.vl)) {
+        if (contains(va, save.vl)) {
           if (va[0] == save.vs) {
             voffset = 0;
           } else if (va[1] == save.vs) {
@@ -1213,7 +1213,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
           } else {
             assertnever("");
           }
-        } else if (va.contains(save.vr)) {
+        } else if (contains(va, save.vr)) {
           is_face2 = true;
           if (va[0] == save.vs) {
             voffset = 0;

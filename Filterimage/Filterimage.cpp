@@ -268,11 +268,11 @@ void do_tofloats(Args& args) {
   }
   auto numyx = (endyx1 - begyx - 1) / step + 1;
   showdf("Writing floats file of size (%dx%d)\n", numyx[1], numyx[0]);
-  assertx(write_binary_std(fi(), convert<float>(numyx.rev()).const_view()));
+  assertx(write_binary_std(fi(), convert<float>(numyx.rev())));
   for (const auto& iyx : range(numyx)) {
     auto yx = begyx + iyx * step;
     float elev = get_filtered_pixel_value(yx) * scalezaxis + offsetzaxis;
-    assertx(write_binary_std(fi(), ArView(elev)));
+    assertx(write_binary_std(fi(), V(elev)));
   }
   nooutput = true;
 }
@@ -1673,7 +1673,7 @@ void do_composite(Args& args) {
   E(sub);
   E(unblend);
 #undef E
-  int op = ops.index(op_name);
+  int op = maybe_index(ops, op_name);
   if (op < 0) assertnever("composite operation '" + op_name + "' unrecognized");
   Image background_image(background_filename);
   assertx(same_size(background_image, image));

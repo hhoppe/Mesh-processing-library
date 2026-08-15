@@ -49,8 +49,9 @@ void Random::seed(uint32_t seedv) {
 template <> inline uint32_t Random::get_int<4>() { return (*_impl)(); }
 
 template <> inline uint64_t Random::get_int<8>() {
-  uint64_t v = get_int<4>();
-  return v | (uint64_t(get_int<4>()) << 32);
+  uint64_t v1 = get_int<4>();
+  uint64_t v2 = get_int<4>();
+  return v1 | (v2 << 32);
 }
 
 // https://stackoverflow.com/questions/11603818/why-is-there-ambiguity-between-uint32-t-and-uint64-t-when-using-size-t-on-mac-os
@@ -80,19 +81,19 @@ unsigned Random::get_unsigned(unsigned ub) {
 }
 
 template <> inline float Random::get_unif<float>() {
-  const float unif_factor = pow(2.f, -32.f);
+  static const float unif_factor = pow(2.f, -32.f);
   return get_int<4>() * unif_factor + .5f * unif_factor;
 }
 
 template <> inline double Random::get_unif<double>() {
-  const double unif_factor = pow(2., -64.);
+  static const double unif_factor = pow(2., -64.);
   return get_int<8>() * unif_factor + .5 * unif_factor;
 }
 
 float Random::unif() { return get_unif<float>(); }
 double Random::dunif() { return get_unif<double>(); }
 
-template <typename T> T Random::get_gauss() {
+template <typename T> T Random::get_gauss() requires(std::floating_point<T>) {
   static_assert(std::is_floating_point_v<T>);
   // See experiments in test/opt/test_random.cpp   (Box-Muller transform is best)
   if (0) {

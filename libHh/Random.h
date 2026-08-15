@@ -37,9 +37,9 @@ class Random : noncopyable {
  private:
   class Implementation;
   unique_ptr<Implementation> _impl;
-  template <size_t size> std::conditional_t<size == 4, uint32_t, uint64_t> get_int();  // size == 4 or size == 8
-  template <typename T> T get_unif();                                                  // float and double
-  template <typename T> T get_gauss();                                                 // float and double
+  template <size_t size> requires(size == 4 || size == 8) std::conditional_t<size == 4, uint32_t, uint64_t> get_int();
+  template <typename T> T get_unif() requires(std::floating_point<T>);
+  template <typename T> T get_gauss() requires(std::floating_point<T>);
   static int g_init();
   static int _g_init;
 };

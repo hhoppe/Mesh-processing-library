@@ -64,19 +64,27 @@ hf = Matrix<float>(4, 4) {
   0 1 1 0
   5 4 3 1
 }
+p1 = [2, 3, 4]
+p1 * frame = [14, 8, 11]
+p2 = Array<float>(4) {
+  2
+  3
+  4
+  1
+}
+mat_mul(p2, hf.view()) = Array<float>(4) {
+  14
+  8
+  11
+  1
+}
 hf = Matrix<float>(4, 4) {
   0 0 2 0
   3 0 0 4
   0 1 1 0
   5 4 3 0
 }
-p = Array<float>(4) {
-  2
-  3
-  4
-  1
-}
-mat_mul(p, hf.view()) = Array<float>(4) {
+mat_mul(p2, hf.view()) = Array<float>(4) {
   14
   8
   11

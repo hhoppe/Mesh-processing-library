@@ -108,7 +108,7 @@ bool write(std::ostream& os, const ObjectFrame& object_frame) {
     }
     buf.zoom = object_frame.zoom;
     to_std(&buf.zoom);
-    write_binary_raw(os, ArView(buf));
+    write_binary_raw(os, V(buf));
   } else {
     os << create_string(object_frame);
   }

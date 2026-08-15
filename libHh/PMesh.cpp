@@ -186,7 +186,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
   _vertices.init(nvertices);
   _wedges.init(nwedges);
   _faces.init(nfaces);
-  for_int(v, nvertices) assertx(read_binary_std(is, _vertices[v].attrib.point.view()));
+  for_int(v, nvertices) assertx(read_binary_std(is, _vertices[v].attrib.point));
   // PM base_mesh has property that _wedges[w].vertex == w for w < _vertices.num().
   // This could be exploited. optimize.
   const int nrgb = pminfo._read_version < 2 ? 2 : pminfo._has_rgb * 3 + pminfo._has_uv * 2;
@@ -214,7 +214,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
     ASSERTX(p == buf.end());
   }
   for_int(f, nfaces) {
-    assertx(read_binary_std(is, _faces[f].wedges.view()));
+    assertx(read_binary_std(is, _faces[f].wedges));
     ushort lmatid;
     assertx(read_binary_std(is, ArView(lmatid)));
     int& matid = _faces[f].attrib.matid;
@@ -226,18 +226,18 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
 void WMesh::write(std::ostream& os, const PMeshInfo& pminfo) const {
   _materials.write(os);
   os << "nvertices=" << _vertices.num() << " nwedges=" << _wedges.num() << " nfaces=" << _faces.num() << '\n';
-  for_int(v, _vertices.num()) write_binary_std(os, _vertices[v].attrib.point.view());
+  for_int(v, _vertices.num()) write_binary_std(os, _vertices[v].attrib.point);
   for_int(w, _wedges.num()) {
-    write_binary_std(os, ArView(_wedges[w].vertex));
-    if (1) write_binary_std(os, _wedges[w].attrib.normal.view());
-    if (pminfo._has_rgb) write_binary_std(os, _wedges[w].attrib.rgb.view());
-    if (pminfo._has_uv) write_binary_std(os, _wedges[w].attrib.uv.view());
+    write_binary_std(os, V(_wedges[w].vertex));
+    if (1) write_binary_std(os, _wedges[w].attrib.normal);
+    if (pminfo._has_rgb) write_binary_std(os, _wedges[w].attrib.rgb);
+    if (pminfo._has_uv) write_binary_std(os, _wedges[w].attrib.uv);
   }
   for_int(f, _faces.num()) {
-    write_binary_std(os, _faces[f].wedges.view());
+    write_binary_std(os, _faces[f].wedges);
     int matid = _faces[f].attrib.matid & ~AWMesh::k_Face_visited_mask;
     ushort lmatid = narrow_cast<ushort>(matid);
-    write_binary_std(os, ArView(lmatid));
+    write_binary_std(os, V(lmatid));
   }
   assertx(os);
 }
@@ -273,17 +273,17 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
   if (binary) {
     for_int(w, _wedges.num()) {
       const int v = _wedges[w].vertex;
-      write_binary_std(os, _vertices[v].attrib.point.const_view());
-      write_binary_std(os, _wedges[w].attrib.normal.const_view());
-      if (pminfo._has_rgb) write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>().const_view());
-      if (pminfo._has_uv && uv_in_vertex) write_binary_std(os, _wedges[w].attrib.uv.const_view());
+      write_binary_std(os, _vertices[v].attrib.point);
+      write_binary_std(os, _wedges[w].attrib.normal);
+      if (pminfo._has_rgb) write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>());
+      if (pminfo._has_uv && uv_in_vertex) write_binary_std(os, _wedges[w].attrib.uv);
     }
     for_int(f, _faces.num()) {
-      write_binary_raw(os, V(uchar(3)).const_view());
-      write_binary_std(os, _faces[f].wedges.const_view());
+      write_binary_raw(os, V(uchar(3)));
+      write_binary_std(os, _faces[f].wedges);
       if (pminfo._has_uv && !uv_in_vertex) {
-        write_binary_raw(os, V(uchar(6)).const_view());
-        for_int(j, 3) write_binary_std(os, _wedges[_faces[f].wedges[j]].attrib.uv.const_view());
+        write_binary_raw(os, V(uchar(6)));
+        for_int(j, 3) write_binary_std(os, _wedges[_faces[f].wedges[j]].attrib.uv);
       }
     }
   } else {
@@ -444,23 +444,23 @@ void Vsplit::read(std::istream& is, const PMeshInfo& pminfo) {
 }
 
 void Vsplit::write(std::ostream& os, const PMeshInfo& pminfo) const {
-  write_binary_std(os, ArView(flclw));
-  write_binary_std(os, ArView(vlr_offset1));
-  write_binary_std(os, ArView(code));
+  write_binary_std(os, V(flclw));
+  write_binary_std(os, V(vlr_offset1));
+  write_binary_std(os, V(code));
   if (code & (FLN_MASK | FRN_MASK)) {
-    write_binary_std(os, ArView(fl_matid));
-    write_binary_std(os, ArView(fr_matid));
+    write_binary_std(os, V(fl_matid));
+    write_binary_std(os, V(fr_matid));
   }
-  write_binary_std(os, vad_large.dpoint.view());
-  write_binary_std(os, vad_small.dpoint.view());
+  write_binary_std(os, vad_large.dpoint);
+  write_binary_std(os, vad_small.dpoint);
   for (const PmWedgeAttribD& wad : ar_wad) {
-    if (1) write_binary_std(os, wad.dnormal.view());
-    if (pminfo._has_rgb) write_binary_std(os, wad.drgb.view());
-    if (pminfo._has_uv) write_binary_std(os, wad.duv.view());
+    if (1) write_binary_std(os, wad.dnormal);
+    if (pminfo._has_rgb) write_binary_std(os, wad.drgb);
+    if (pminfo._has_uv) write_binary_std(os, wad.duv);
   }
   if (pminfo._has_resid) {
-    write_binary_std(os, ArView(resid_uni));
-    write_binary_std(os, ArView(resid_dir));
+    write_binary_std(os, V(resid_uni));
+    write_binary_std(os, V(resid_dir));
   }
 }
 

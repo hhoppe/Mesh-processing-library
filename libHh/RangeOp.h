@@ -180,6 +180,15 @@ int index(const Range& range, const Value& elem) {
   return assert_narrow_cast<int>(iter - begin(range));
 }
 
+// Return the index of the first matching element, or -1 if not found.
+template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
+int maybe_index(const Range& range, const Value& elem) {
+  using std::begin, std::end;
+  auto iter = std::find(begin(range), end(range), elem);
+  if (iter == end(range)) return -1;
+  return assert_narrow_cast<int>(iter - begin(range));
+}
+
 // Higher-precision type to represent the mean of a set of elements.
 template <typename T> struct mean_type {
   using type = std::conditional_t<
@@ -589,9 +598,14 @@ template <typename Range1, typename Range2> struct ConcatenatedRange {
 
 }  // namespace details
 
-// Return a view range that concatenates the elements of two ranges.
-template <typename Range1, typename Range2> [[HH_NO_DANGLING]] auto concatenate(Range1&& range1, Range2&& range2) {
-  return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
+// Return a view range that concatenates the elements of two or more ranges.
+template <typename Range1, typename Range2, typename... Ranges>
+[[HH_NO_DANGLING]] auto concatenate(Range1&& range1, Range2&& range2, Ranges&&... ranges) {
+  if constexpr (sizeof...(Ranges) == 0)
+    return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
+  else
+    return concatenate(std::forward<Range1>(range1),
+                       concatenate(std::forward<Range2>(range2), std::forward<Ranges>(ranges)...));
 }
 
 namespace details {

@@ -291,7 +291,7 @@ int main(int argc, const char** argv) {
     if (!g_obs[1].defined())  // Not UpdateOb1Bbox().
       input = true;
   }
-  if (g_aargs1.contains("-")) keep_stdin_open = true;
+  if (contains(g_aargs1, "-")) keep_stdin_open = true;
   if (input) {
 #if !defined(_WIN32)
     assertx(set_fd_no_delay(0, true));

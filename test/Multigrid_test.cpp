@@ -16,18 +16,18 @@ namespace {
 //  see also test_Multigrid2D.cpp and test_Multigrid1D.cpp
 
 // Read an image into a grid.  Used reference grid_orig rather than return value for template matching.
-template <int D, typename T> void read_image(Image& image, Grid<D, T>& grid_orig) {
-  static_assert(D == 2, "image only valid in 2D");
-  image.to_bw();
+template <typename T> void read_image(Image& image, Grid<2, T>& grid_orig) {
   grid_orig.init(image.dims());
-  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = T{image[yx][0] / 255.f}; });
-  if (0) HH_RSTAT(Sorig, grid_orig);
-}
-
-template <> inline void read_image(Image& image, Grid<2, Vector4>& grid_orig) {
-  assertx(image.zsize() == 3);
-  grid_orig.init(image.dims());
-  parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
+  if constexpr (std::is_same_v<T, Vector4>) {
+    assertx(image.zsize() == 3);
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
+  } else if constexpr (std::is_floating_point_v<T>) {
+    image.to_bw();
+    parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = T{image[yx][0] / 255.f}; });
+    if (0) HH_RSTAT(Sorig, grid_orig);
+  } else {
+    static_assert(false);
+  }
 }
 
 // Compute the Laplacian of the given original grid.

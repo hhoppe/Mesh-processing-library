@@ -248,7 +248,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     }
     for_int(i, 6) to_std((&rgbi.imagic) + i);
     for_int(i, 3) to_std((&rgbi.vmin) + i);
-    assertt(write_raw(file, ArView(rgbi)));
+    assertt(write_raw(file, V(rgbi)));
   }
   {
     Array<char> buftmp(k_rgb_header_length - sizeof(rgb_IMAGE), 0);
@@ -619,7 +619,7 @@ static inline bool is_gray(const Pixel& p) { return p[0] == p[1] && p[1] == p[2]
 
 void ImageLibs::read_bmp(Image& image, FILE* file) {
   Vec2<char> magic;
-  assertt(read_raw(file, magic.view()));
+  assertt(read_raw(file, magic));
   assertt(magic[0] == 'B' && magic[1] == 'M');
   bool flip_vertical = false;
   bmp_BITMAPFILEHEADER_HH bmfh;
@@ -673,7 +673,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
   bool all_gray = true;
   for_int(i, int(bmih.biClrUsed)) {
     Vec4<char> buf;
-    assertt(read_raw(file, buf.view()));
+    assertt(read_raw(file, buf));
     colormap[i][0] = buf[2];
     colormap[i][1] = buf[1];
     colormap[i][2] = buf[0];
@@ -819,7 +819,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
 
 void ImageLibs::write_bmp(const Image& image, FILE* file) {
   const Vec2<char> magic{'B', 'M'};
-  assertt(write_raw(file, magic.view()));
+  assertt(write_raw(file, magic));
   int ncomp = image.zsize();
   bmp_BITMAPFILEHEADER_HH bmfh;
   static_assert(sizeof(bmfh) == k_size_BITMAPFILEHEADER - magic.num());
@@ -887,11 +887,11 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmfh.bfSize);
     bmih.biSizeImage = buf.num();
     to_dos(&bmih.biSizeImage);
-    assertt(write_raw(file, ArView(bmfh)));
-    assertt(write_raw(file, ArView(bmih)));
+    assertt(write_raw(file, V(bmfh)));
+    assertt(write_raw(file, V(bmih)));
     for_int(i, 256) {
       const Vec4<uchar> buf2{uchar(i), uchar(i), uchar(i), uchar{255}};
-      assertt(write_raw(file, buf2.view()));
+      assertt(write_raw(file, buf2));
     }
     assertt(write_raw(file, buf));
   } else {
@@ -904,8 +904,8 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmfh.bfSize);
     bmih.biSizeImage = rowsize * image.ysize();
     to_dos(&bmih.biSizeImage);
-    assertt(write_raw(file, ArView(bmfh)));
-    assertt(write_raw(file, ArView(bmih)));
+    assertt(write_raw(file, V(bmfh)));
+    assertt(write_raw(file, V(bmih)));
     Array<uchar> row(rowsize, uchar{0});  // make sure any padding region is initialized to zero
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     assertt(ncomp == 3 || ncomp == 4);

@@ -28,7 +28,7 @@
 #include <mfidl.h>
 #include <mfreadwrite.h>
 // #include <wrl/client.h>             // ComPtr<>
-// template<typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
+// template <typename T> using ComPtr = Microsoft::WRL::ComPtr<T>;
 HH_REFERENCE_LIB("mfplat.lib");
 HH_REFERENCE_LIB("mfreadwrite.lib");  // MFCreateSourceReaderFromByteStream()
 HH_REFERENCE_LIB("mfuuid.lib");       // MF_MT_DEFAULT_STRIDE

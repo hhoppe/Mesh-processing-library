@@ -463,7 +463,7 @@ void print_info_mesh_elements() {
       GMesh* mesh = selected_face->mesh;
       Array<Vertex> vertices;
       mesh->get_vertices(f, vertices);
-      if (vertices.contains(v)) {
+      if (contains(vertices, v)) {
         Corner c = mesh->corner(v, f);
         SHOW(mesh->get_string(c));
       } else {

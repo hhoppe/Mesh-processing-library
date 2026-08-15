@@ -113,7 +113,8 @@ int main() {
   }
   {
     Vec3 a(10, 11, 12);
-    // SHOW(CArrayView<int>(a));  // internal compiler error in MSVC 2017
+    SHOW(a);
+    SHOW(CArrayView<int>(a));
     SHOW(a.view());
     CArrayView<int> ar(a);
     SHOW(var(ar));
@@ -121,7 +122,7 @@ int main() {
     SHOW(rms(ar - 12));
   }
   {
-    SHOW(sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10).view()));
+    SHOW(sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10)));
     SHOW(median(V(10, 13, 12, 13, 9, 12, 15, 10)));
     SHOW(median(V(8, 7, 6, 5, 4, 9, 10)));
     SHOW(median_two(V(10, 13, 12, 13, 9, 12, 15, 10)));

@@ -67,13 +67,16 @@ int main() {
     SHOW(frame);
     SGrid<float, 4, 4> hf = to_Matrix(frame);
     SHOW(hf);
+    Point p1(2.f, 3.f, 4.f);
+    SHOW(p1);
+    SHOW(p1 * frame);
+    Array<float> p2{2.f, 3.f, 4.f, 1.f};
+    SHOW(p2);
+    SHOW(mat_mul(p2, hf.view()));
     hf[1][3] = 4.f;
     hf[3][3] = 0.f;
     SHOW(hf);
-    // Point p(2.f, 3.f, 4.f);
-    Array<float> p{2.f, 3.f, 4.f, 1.f};
-    SHOW(p);
-    SHOW(mat_mul(p, hf.view()));
+    SHOW(mat_mul(p2, hf.view()));
   }
   {
     constexpr Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);

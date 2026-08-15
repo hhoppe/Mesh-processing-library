@@ -284,11 +284,11 @@ int main() {
     }
     {
       Array<int> ar(range(0));
-      assertx(ar.num() == 0);
+      assertx(ar == V<int>().view());
     }
     {
       Array<int> ar(range(-1));
-      assertx(ar.num() == 0);
+      assertx(ar == V<int>().view());
     }
     {
       Array<int> ar(range(-2, 0));
@@ -296,15 +296,15 @@ int main() {
     }
     {
       Array<int> ar(range(-2, -2));
-      assertx(ar.num() == 0);
+      assertx(ar == V<int>().view());
     }
     {
       Array<int> ar(range(0, 0));
-      assertx(ar.num() == 0);
+      assertx(ar == V<int>().view());
     }
     {
       Array<int> ar(range(2, 0));
-      assertx(ar.num() == 0);
+      assertx(ar == V<int>().view());
     }
     {
       Array<uchar> ar(range(uchar{4}, uchar{6}));

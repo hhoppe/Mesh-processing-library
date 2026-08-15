@@ -327,7 +327,7 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
       buf.f[c] = f[c];
       to_std(&buf.f[c]);
     }
-    write_binary_raw(_os, ArView(buf));
+    write_binary_raw(_os, V(buf));
   } else {
     // precision determined by that in WFile::WFile()
     _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';

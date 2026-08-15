@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Audio.h"
 
+#include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"  // get_path_extension()
 
 namespace hh {
@@ -17,11 +18,11 @@ string Audio::diagnostic_string() const {
 }
 
 bool filename_is_audio(const string& filename) {
-  static const auto& k_extensions = *new Array<string>{
+  static constexpr auto k_extensions = to_Vec<std::string_view>({
       "wav", "mp3",
       // "pcm",
-  };
-  return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
+  });
+  return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
 string audio_suffix_for_magic_byte(uchar c) {

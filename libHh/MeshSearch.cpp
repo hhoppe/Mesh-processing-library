@@ -2,6 +2,7 @@
 #include "libHh/MeshSearch.h"
 
 #include "libHh/GeomOp.h"
+#include "libHh/RangeOp.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 
@@ -145,7 +146,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
       }
       if (dfrac < 1e-6f) break;  // Success.
       const Vec3<Vertex> va = _mesh.triangle_vertices(f);
-      int side = result.bary.const_view().index(1.f);
+      int side = maybe_index(result.bary, 1.f);
       if (side >= 0) {
         if (0) {  // Slow: randomly choose ccw or clw.
           // side = mod3(side + 1 + (Random::G.unif() < 0.5f));
@@ -164,7 +165,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
           side = -1;
         }
       } else {
-        side = result.bary.const_view().index(0.f);
+        side = maybe_index(result.bary, 0.f);
         if (side < 0) {
           if (_options.allow_off_surface) break;     // Success.
           if (_options.allow_internal_boundaries) {  // Failure.

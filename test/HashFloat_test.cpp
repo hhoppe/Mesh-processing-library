@@ -3,8 +3,7 @@
 
 #include <iomanip>  // setprecision()
 
-#include "libHh/ArrayOp.h"  // concat()
-#include "libHh/RangeOp.h"  // sum()
+#include "libHh/RangeOp.h"  // sum(), concatenate()
 using namespace hh;
 
 namespace {
@@ -103,8 +102,8 @@ void test_io() {
   // printf("%.9g\n", d);    // Round-trippable float, shortest possible
   // printf("%1.16e\n", d);  // Round-trippable double, always with an exponent
   // printf("%.17g\n", d);   // Round-trippable double, shortest possible
-  for (float f : concat(ar1eps, ArView(1023.9932861328125f), ArView(1023.9933471679687f),
-                        V(0.2288884f, 0.228888392f, 0.228888407f).view())) {
+  for (float f : concatenate(ar1eps, V(1023.9932861328125f), V(1023.9933471679687f),
+                             V(0.2288884f, 0.228888392f, 0.228888407f))) {
     float f2 = roundtrip(f, 9);  // was 7; in principle 9 is required!  (17 is sufficient for double)
     // %a (hexadecimal float) is not supported in mingw which uses old MS CRT
     showf("f=%-10.7g %-10.8g %-11.9g %x  f2=%-10.7g %-10.8g %-11.9g %x  f==f2=%d\n",  //

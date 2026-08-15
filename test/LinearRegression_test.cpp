@@ -1,7 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/LinearRegression.h"
 
-#include "libHh/ArrayOp.h"  // concat()
 using namespace hh;
 
 namespace {
@@ -68,7 +67,7 @@ int main() {
     for_int(ix, n) for_int(iy, n) {
       const auto xy = V(float(ix), float(iy));
       const float z = mag(xy - V(n / 2.f, n / 2.f));
-      xyzdata.push(concat(xy.view(), ArView(z)));
+      xyzdata.push(concat(xy, V(z)));
     }
     try_xyz<2>(xyzdata);
     try_xyz<3>(xyzdata);

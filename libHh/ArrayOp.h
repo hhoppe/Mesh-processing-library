@@ -9,7 +9,8 @@
 namespace hh {
 
 // Concatenate two or more array views.
-template <typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... arr) {
+template <typename T, typename... A>
+[[deprecated("Use Array(concatenate(...))")]] Array<T> concat(CArrayView<T> ar1, A&&... arr) {
   Array<T> ar;
   int i = ar1.num();
   ((i += arr.num()), ...);
@@ -22,13 +23,10 @@ template <typename T, typename... A> Array<T> concat(CArrayView<T> ar1, A&&... a
 }
 
 // Return a sorted, uniquified array of values gathered from a range.
-template <typename Range, typename = enable_if_range_t<Range>>
-Array<range_value_t<Range>> sort_unique(const Range& range) {
-  using T = range_value_t<Range>;
-  using std::begin, std::end;
-  Array<T> ar(begin(range), end(range));
+template <typename Range> requires(is_range_v<Range>) decltype(auto) sort_unique(const Range& range) {
+  Array ar(range);
   sort(ar);
-  T* last = std::unique(ar.begin(), ar.end());
+  auto* last = std::unique(ar.begin(), ar.end());
   ar.sub(narrow_cast<int>(ar.end() - last));  // leave it to client to do shrink_to_fit()
   return ar;
 }

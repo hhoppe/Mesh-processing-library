@@ -2,6 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_BINARYIO_H_
 #define MESH_PROCESSING_LIBHH_BINARYIO_H_
 
+#include <ranges>
+#include <span>
+
 #include "libHh/Array.h"
 #include "libHh/NetworkOrder.h"
 
@@ -21,36 +24,41 @@
 namespace hh {
 
 // Read an array of elements without any Endian byte-reordering.
-template <typename T> std::istream& read_binary_raw(std::istream& is, ArrayView<T> ar) {
-  return is.read(reinterpret_cast<char*>(ar.data()), ar.num() * sizeof(T));
+template <std::ranges::contiguous_range R> std::istream& read_binary_raw(std::istream& is, R&& range) {
+  const auto bytes = std::as_writable_bytes(std::span(range));
+  return is.read(reinterpret_cast<char*>(bytes.data()), bytes.size());
 }
 
 // Read an array of elements and perform Endian conversion from network (Big Endian) to native order.
-template <typename T> std::istream& read_binary_std(std::istream& is, ArrayView<T> ar) {
-  if (read_binary_raw(is, ar)) for_int(i, ar.num()) from_std(&ar[i]);
+template <std::ranges::contiguous_range R> std::istream& read_binary_std(std::istream& is, R&& range) {
+  if (read_binary_raw(is, range))
+    for (auto& e : range) from_std(&e);
   return is;
 }
 
 // Write an array of elements without any Endian byte-reordering.
-template <typename T> std::ostream& write_binary_raw(std::ostream& os, CArrayView<T> ar) {
-  return os.write(reinterpret_cast<const char*>(ar.data()), ar.num() * sizeof(T));
+template <std::ranges::contiguous_range R> std::ostream& write_binary_raw(std::ostream& os, const R& range) {
+  const auto bytes = std::as_bytes(std::span(range));
+  return os.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 }
 
 // Write an array of elements after Endian conversion from native to network (Big Endian) order.
-template <typename T> std::ostream& write_binary_std(std::ostream& os, CArrayView<T> ar) {
-  Array<T> ar2(ar);  // copy is slow?
-  for_int(i, ar2.num()) to_std(&ar2[i]);
-  return write_binary_raw(os, ar2);
+template <std::ranges::contiguous_range R> std::ostream& write_binary_std(std::ostream& os, const R& range) {
+  Array<std::ranges::range_value_t<R>> array(range);  // Copy is slow?
+  for (auto& e : array) to_std(&e);
+  return write_binary_raw(os, array);
 }
 
 // Read an array of elements without any Endian byte-reordering.  Ret: success.
-template <typename T> [[nodiscard]] bool read_raw(FILE* file, ArrayView<T> ar) {
-  return fread(ar.data(), ar.num() * sizeof(T), 1, file) == 1;
+template <std::ranges::contiguous_range R> [[nodiscard]] bool read_raw(FILE* file, R&& range) {
+  const auto bytes = std::as_writable_bytes(std::span(range));
+  return fread(bytes.data(), bytes.size(), 1, file) == 1;
 }
 
 // Write an array of elements without any Endian byte-reordering.  Ret: success.
-template <typename T> [[nodiscard]] bool write_raw(FILE* file, CArrayView<T> ar) {
-  return fwrite(ar.data(), ar.num() * sizeof(T), 1, file) == 1;
+template <std::ranges::contiguous_range R> [[nodiscard]] bool write_raw(FILE* file, const R& range) {
+  const auto bytes = std::as_bytes(std::span(range));
+  return fwrite(bytes.data(), bytes.size(), 1, file) == 1;
 }
 
 }  // namespace hh

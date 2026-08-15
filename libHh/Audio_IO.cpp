@@ -273,7 +273,7 @@ void Audio::write_file(const string& pfilename) const {
     to_dos(&h.BitsPerSample);
     to_dos(&h.Subchunk2Size);
     WFile fi(filename);
-    assertx(write_binary_raw(fi(), ArView(h)));
+    assertx(write_binary_raw(fi(), V(h)));
     Array<float> ar;
     for_int(i, nsamples()) for_int(ch, nchannels()) {
       ar.push((*this)[ch, i]);

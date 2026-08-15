@@ -185,6 +185,12 @@ CArrayView(a) = Array<int>(5) {
   16
   16
 }
+a = [10, 11, 12]
+CArrayView<int>(a) = Array<int>(3) {
+  10
+  11
+  12
+}
 a.view() = Array<int>(3) {
   10
   11
@@ -193,7 +199,7 @@ a.view() = Array<int>(3) {
 var(ar) = 1
 sqrt(var(ar)) = 1
 rms(ar - 12) = 1.29099
-sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10).view()) = Array<int>(5) {
+sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10)) = Array<int>(5) {
   9
   10
   12

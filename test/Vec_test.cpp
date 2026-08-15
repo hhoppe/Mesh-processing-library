@@ -31,10 +31,10 @@ template <int n, typename T, int N> constexpr Vec<T, n> V_segment(const Vec<T, N
 }
 
 template <int N> constexpr size_t V_dot_slow(const Vec<int, N>& u1, const Vec<int, N>& u2) {
-  return u1[0] * u2[0] + V_dot_slow(V_rest(u1), V_rest(u2));
-}
-template <> inline constexpr size_t V_dot_slow<1>(const Vec<int, 1>& u1, const Vec<int, 1>& u2) {
-  return u1[0] * u2[0];
+  if constexpr (N == 1)
+    return u1[0] * u2[0];
+  else
+    return u1[0] * u2[0] + V_dot_slow(V_rest(u1), V_rest(u2));
 }
 
 template <typename T> constexpr T list_sum(const T& t0) { return t0; }

@@ -63,7 +63,7 @@ auto compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime, CMatrixV
   return grid_framei;
 }
 
-const float k_vec_zero_offset = .5f;
+constexpr float k_vec_zero_offset = .5f;
 
 // Depending on parameter V4, access either all image channels (z ignored) or individual image channels (z = 0..2).
 template <bool V4> struct MG_sample;
@@ -78,18 +78,16 @@ template <> struct MG_sample<true> {
     ASSERTX(z == 0);
     pixel = result.pixel();
   }
-  static const float k_offset_zero;
+  static constexpr float k_offset_zero = k_vec_zero_offset;
 };
-const float MG_sample<true>::k_offset_zero = k_vec_zero_offset;
 
 template <> struct MG_sample<false> {
   using EType = float;
   static constexpr int nz = 3;
   static EType get(const Pixel& pixel, int z) { return to_float(pixel[z]); }
   static void put(Pixel& pixel, int z, const EType& result) { pixel[z] = clamp_to_uint8(int(result + .5f)); }
-  static const float k_offset_zero;
+  static constexpr float k_offset_zero = k_vec_zero_offset * 255.f;
 };
-const float MG_sample<false>::k_offset_zero = k_vec_zero_offset * 255.f;
 
 // Allows iteration over [0, num) using intervals of at most max_size elements.
 // If more than one interval is required, creates intervals of uniform size (all < max_size).
@@ -247,7 +245,7 @@ template <bool have_est, bool V4>
 void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
                          GridView<3, Pixel> videoloop, bool b_exact) {
   using MG = MG_sample<V4>;
-  using EType = typename MG_sample<V4>::EType;  // "MG::EType" fails on gcc 4.7.3
+  using EType = typename MG::EType;
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = videoloop.dim(0);
   assertx(same_size(video[0], videoloop[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));
   Vec3<int> dims(nnf, ny, nx);
@@ -447,7 +445,7 @@ template <bool V4>
 void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
                              GridView<3, Pixel> video_offset) {
   using MG = MG_sample<V4>;
-  using EType = typename MG_sample<V4>::EType;
+  using EType = typename MG::EType;
   dummy_use(MG_sample<false>::k_offset_zero, MG_sample<true>::k_offset_zero);
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = video_offset.dim(0);
   assertx(same_size(video[0], video_offset[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));

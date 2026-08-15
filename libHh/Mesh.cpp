@@ -470,7 +470,7 @@ bool Mesh::legal_edge_collapse(Edge e) const {
     for (Vertex v : vertices(v2))
       if (v != v1 && v != vo1 && v != vo2) ar_v.push(v);
     for (Vertex v : vertices(v1))
-      if (ar_v.contains(v)) return false;
+      if (contains(ar_v, v)) return false;
   }
   return true;
 }
@@ -1118,7 +1118,7 @@ void Mesh::enter_hedge(HEdge he, Vertex v1) {
   if (debug() >= 1) {
     valid(v1);
     valid(v2);
-    assertx(!query_hedge(v1, v2) && !v1->_arhe.contains(he));
+    assertx(!query_hedge(v1, v2) && !contains(v1->_arhe, he));
   }
   v1->_arhe.push(he);
   HEdge hes = he->_sym = query_hedge(v2, v1);

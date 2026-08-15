@@ -66,7 +66,7 @@ template <typename T> class CArrayView {
   CArrayView(std::initializer_list<T> l) : CArrayView(l.begin(), narrow_cast<int>(l.size())) {}
   template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // For: const T a[n];
   template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
-  // template<int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
+  // template <int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
   template <typename T2> [[nodiscard]] friend constexpr bool same_size(type ar1, CArrayView<T2> ar2) {
     return ar1.num() == ar2.num();
   }
@@ -85,8 +85,7 @@ template <typename T> class CArrayView {
     return (assertx(self.map_inside(i, bndrule)), self[i]);
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
-  [[nodiscard]] constexpr bool contains(const T& e) const;
-  [[nodiscard]] constexpr int index(const T& e) const;  // Return -1 if not found.
+  [[nodiscard]] [[deprecated("Use hh::contains()")]] constexpr bool contains(const T& e) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
   [[nodiscard]] constexpr auto head(this auto&& self, int n) { return self.segment(0, n); }
   [[nodiscard]] constexpr auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
@@ -131,9 +130,9 @@ template <typename T> class ArrayView : public CArrayView<T> {
   explicit ArrayView(T* a, int n) : base(a, n) {}
   template <size_t n> ArrayView(T (&a)[n]) : base(a, n) {}  // For: T a[n];
   ArrayView(const type&) = default;                         // Because it has explicit copy assignment.
-  // template<int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
+  // template <int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
   // ArrayView(std::vector<T>& a) : base(a) { }
-  // template<size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
+  // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
   void assign(base ar);
   using iterator = T*;
@@ -153,7 +152,10 @@ template <typename T> class ArrayView : public CArrayView<T> {
 };
 
 // Create a CArrayView<T> referencing the single specified element.
-template <typename T> [[nodiscard]] constexpr CArrayView<T> ArView(const T& e) { return CArrayView<T>(&e, 1); }
+template <typename T> [[nodiscard]] [[deprecated("Use hh::V()")]] constexpr CArrayView<T> ArView(const T& e) {
+  return CArrayView<T>(&e, 1);
+}
+template <typename T> CArrayView<T> ArView(const T&&) = delete;
 
 // Create an ArrayView<T> referencing the single specified element.
 template <typename T> [[nodiscard]] constexpr ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
@@ -426,13 +428,6 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::contains(const
     if (_a[i] == e) return true;
   }
   return false;
-}
-
-template <typename T> [[nodiscard]] constexpr int CArrayView<T>::index(const T& e) const {
-  for_int(i, _n) {
-    if (_a[i] == e) return i;
-  }
-  return -1;
 }
 
 template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(type rhs) const {

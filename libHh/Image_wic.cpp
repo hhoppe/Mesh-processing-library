@@ -81,11 +81,10 @@ const GUID* get_container_format(const string& suffix) {
   return nullptr;
 }
 
-const string& get_suffix(const GUID* container_format) {
+string get_suffix(const GUID* container_format) {
   for (const auto& p : k_ar_suffix_container)
     if (*p.guid == *container_format) return p.suffix;
-  static const string& k_snull = *new string;
-  return k_snull;
+  return "";
 }
 
 const Array<WICPixelFormatGUID> k_pixel_formats_with_alpha = {
@@ -225,7 +224,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     WICPixelFormatGUID pixel_format;
     my_zero(pixel_format);
     AS(frame_decode->GetPixelFormat(&pixel_format));
-    set_zsize(k_pixel_formats_with_alpha.contains(pixel_format) ? 4 : 3);  // ignore grayscale for now
+    set_zsize(contains(k_pixel_formats_with_alpha, pixel_format) ? 4 : 3);  // ignore grayscale for now
     {
       // https://msdn.microsoft.com/en-us/library/windows/desktop/ee719904%28v=vs.85%29.aspx
       // https://github.com/Microsoft/DirectXTex/blob/master/DirectXTex/DirectXTexWIC.cpp

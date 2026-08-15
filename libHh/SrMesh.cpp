@@ -789,40 +789,40 @@ void SrMesh::write_srm(std::ostream& os) const {
   for_int(vi, _base_vertices.num()) {
     assertx(_vertices[vi].avertex == &_base_vertices[vi]);
     const SrVertexGeometry* vg = &_vertices[vi].avertex->vgeom;
-    write_binary_std(os, vg->point.view());
-    write_binary_std(os, vg->vnormal.view());
+    write_binary_std(os, vg->point);
+    write_binary_std(os, vg->vnormal);
   }
   for_int(fi, _base_faces.num()) {
     const SrAFace* fa = &_base_faces[fi];
-    for_int(j, 3) write_binary_std(os, ArView(narrow_cast<int>(fa->vertices[j] - _base_vertices.data())));
+    for_int(j, 3) write_binary_std(os, V(narrow_cast<int>(fa->vertices[j] - _base_vertices.data())));
     for_int(j, 3) {
       unsigned fni = fa->fnei[j] != &_isolated_aface ? narrow_cast<int>(fa->fnei[j] - _base_faces.data()) + 1 : 0;
-      write_binary_std(os, ArView(fni));
+      write_binary_std(os, V(fni));
     }
-    write_binary_std(os, ArView(unsigned(fa->matid) & ~k_Face_visited_mask));
+    write_binary_std(os, V(unsigned(fa->matid) & ~k_Face_visited_mask));
   }
   // Write out vsplits.
   for_int(vspli, _vsplits.num()) {
     const SrVsplit* vspl = &_vsplits[vspli];
     const SrVertex* vs = assertx(get_vt(vspli)->parent);
-    write_binary_std(os, ArView(narrow_cast<int>(vs - _vertices.data())));
+    write_binary_std(os, V(narrow_cast<int>(vs - _vertices.data())));
     for_int(j, 4) {
       unsigned fni = vspl->fn[j] != &_isolated_face ? narrow_cast<int>(vspl->fn[j] - _faces.data()) + 1 : 0;
-      write_binary_std(os, ArView(fni));
+      write_binary_std(os, V(fni));
     }
 #if !defined(SR_PREDICT_MATID)
-    write_binary_std(os, ArView(narrow_cast<ushort>(unsigned(vspl->fl_matid) & ~k_Face_visited_mask)));
-    write_binary_std(os, ArView(narrow_cast<ushort>(unsigned(vspl->fr_matid) & ~k_Face_visited_mask)));
+    write_binary_std(os, V(narrow_cast<ushort>(unsigned(vspl->fl_matid) & ~k_Face_visited_mask)));
+    write_binary_std(os, V(narrow_cast<ushort>(unsigned(vspl->fr_matid) & ~k_Face_visited_mask)));
 #else
-    write_binary_std(os, ArView(ushort{0}));
-    write_binary_std(os, ArView(ushort{0}));
+    write_binary_std(os, V(ushort(0)));
+    write_binary_std(os, V(ushort(0)));
 #endif
-    write_binary_std(os, ArView(vspl->uni_error_mag2));
-    write_binary_std(os, ArView(vspl->dir_error_mag2));
-    write_binary_std(os, ArView(vspl->radius_neg));
-    write_binary_std(os, ArView(vspl->sin2alpha));
-    write_binary_std(os, vspl->vu_vgeom.point.view());
-    write_binary_std(os, vspl->vu_vgeom.vnormal.view());
+    write_binary_std(os, V(vspl->uni_error_mag2));
+    write_binary_std(os, V(vspl->dir_error_mag2));
+    write_binary_std(os, V(vspl->radius_neg));
+    write_binary_std(os, V(vspl->sin2alpha));
+    write_binary_std(os, vspl->vu_vgeom.point);
+    write_binary_std(os, vspl->vu_vgeom.vnormal);
   }
 }
 
@@ -876,8 +876,8 @@ void SrMesh::read_srm(std::istream& is) {
     // va->vmorph = nullptr;
     va->visible = false;
     va->cached_time = 0;
-    assertx(read_binary_std(is, va->vgeom.point.view()));
-    assertx(read_binary_std(is, va->vgeom.vnormal.view()));
+    assertx(read_binary_std(is, va->vgeom.point));
+    assertx(read_binary_std(is, va->vgeom.vnormal));
     if (b_nor001) assertx(Vector(0.f, 0.f, 1.f) == va->vgeom.vnormal);
   }
   for_int(fi, _base_faces.num()) {
@@ -885,9 +885,9 @@ void SrMesh::read_srm(std::istream& is) {
     _faces[fi].aface = fa;
     fa->activef.link_before(_active_faces.delim());
     Vec3<int> vi;
-    assertx(read_binary_std(is, vi.view()));
+    assertx(read_binary_std(is, vi));
     Vec3<int> fni;
-    assertx(read_binary_std(is, fni.view()));
+    assertx(read_binary_std(is, fni));
     int matid;
     assertx(read_binary_std(is, ArView(matid)));
     for_int(j, 3) fa->vertices[j] = &_base_vertices[vi[j]];

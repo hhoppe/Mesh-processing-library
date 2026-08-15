@@ -186,6 +186,13 @@ template <typename T = void, typename Arg0, typename... Args>
 // Construct a zero-length Vec.
 template <typename T> [[nodiscard]] constexpr Vec<T, 0> V() { return Vec<T, 0>(); }
 
+// Construct a Vec from a braced list, inferring the array size (like std::to_array).
+template <typename T, size_t n> [[nodiscard]] constexpr Vec<T, int(n)> to_Vec(T (&&a)[n]) {
+  return [&]<size_t... i>(std::index_sequence<i...>) {
+    return Vec<T, int(n)>(std::move(a[i])...);
+  }(std::make_index_sequence<n>());
+}
+
 // Construct an Vec with two identical elements, e.g. twice(v) == V(v, v).
 template <typename T> [[nodiscard]] constexpr Vec2<T> twice(const T& v) { return {v, v}; }
 

@@ -4,7 +4,8 @@
 #include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
 #include "libHh/Parallel.h"
 #include "libHh/Random.h"  // for testing
-#include "libHh/Stat.h"    // for testing; HH_SSTAT()
+#include "libHh/RangeOp.h"
+#include "libHh/Stat.h"  // for testing; HH_SSTAT()
 #include "libHh/StringOp.h"
 #include "libHh/Vector4.h"
 #include "libHh/Vector4i.h"
@@ -79,11 +80,11 @@ void Image::to_color() {
 //----------------------------------------------------------------------------
 
 bool filename_is_image(const string& filename) {
-  static const auto& k_extensions = *new Array<string>{
+  static constexpr auto k_extensions = to_Vec<std::string_view>({
       "jpg", "jpeg", "png",  "bmp", "rgb", "ppm", "pgm", "pbm",  "tif",  "tiff", "jxr",  "hdp",
       "wdp", "wmp",  "webp", "bpg", "jp2", "arw", "exr", "heic", "jfif", "ico",  "avif",
-  };
-  return k_extensions.index(to_lower(get_path_extension(filename))) >= 0;
+  });
+  return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
 string image_suffix_for_magic_byte(uchar c) {

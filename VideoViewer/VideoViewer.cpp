@@ -28,6 +28,7 @@
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"    // intersect_poly_poly()
 #include "libHh/Principal.h"  // principal_components()
+#include "libHh/RangeOp.h"
 #include "libHh/SGrid.h"
 #include "libHh/Stat.h"      // HH_RSTAT()
 #include "libHh/StringOp.h"  // get_path_tail()
@@ -213,7 +214,7 @@ bool g_mirror_state_forward = true;  // true if currently advancing forward in m
 enum class ESort { name, date };
 const ESort k_default_sort = ESort::name;
 ESort g_sort = k_default_sort;
-double g_speed = 1.;    // play speed factor relative to real time; usually k_speeds.index(g_speed) >= 0
+double g_speed = 1.;    // play speed factor relative to real time; usually contains(k_speeds, g_speed)
 Pixel g_through_color;  // color visible through partially transparent pixels
 bool g_checker;         // use moving black-white checker as alternative to g_through_color
 enum class EFit { isotropic, anisotropic };
@@ -315,7 +316,7 @@ class DirMediaFilenames {
     S& s = _map.enter(directory, S{}, is_new);
     double cur_time = get_precise_time();
     const double k_max_time_before_refresh = 5.;  // in seconds
-    bool file_found = s.filenames.index(filename_tail) >= 0;
+    bool file_found = contains(s.filenames, filename_tail);
     if (cur_time > s.time_updated + k_max_time_before_refresh || !file_found) {
       s.time_updated = cur_time;
       s.filenames = sort_dir(directory, get_files_in_directory(directory));
@@ -571,7 +572,7 @@ string next_image_in_directory(const string& filename, int increment) {
   string directory = get_path_head(filename);
   string filename_tail = get_path_tail(filename);
   CArrayView<string> filenames = get_directory_media_filenames(filename);
-  int i0 = filenames.index(filename_tail);
+  int i0 = maybe_index(filenames, filename_tail);
   if (!assertw(i0 >= 0)) return "";
   for (int i = i0;;) {
     i = my_mod(i + increment, filenames.num());
@@ -891,7 +892,7 @@ void view_externally() {
       "totem",                                        // default program for "Videos" on Gnome
   };
   const bool is_image = getob().is_image();
-  for (const string& program : concat(programs, is_image ? image_programs : video_programs)) {
+  for (const string& program : concatenate(programs, is_image ? image_programs : video_programs)) {
     string tfilename = filename;
     if (contains(program, "irfan") || contains(program, "i_view")) tfilename = replace_all(tfilename, "/", "\\");
     // Unfortunately, quoting misbehaves and irfanview sees: ""\\"hh"\\"data"\\"image"\\"lake.png"
@@ -931,7 +932,7 @@ bool replace_with_other_object_in_directory(int increment) {
     message("No media files in directory");
     return false;
   }
-  int i0 = filenames.index(filename0_tail);  // i0 is -1 if g_cob < 0 or if ob0 is somehow an unsaved object.
+  int i0 = maybe_index(filenames, filename0_tail);  // i0 is -1 if g_cob < 0 or if ob0 is somehow an unsaved object.
   if (g_verbose >= 1) SHOW(directory, filename0_tail, i0);
   bool skip_first_advance = false;
   if (i0 < 0) {  // cannot find file, so select first file in directory
@@ -1424,15 +1425,16 @@ bool DerivedHw::key_press(string skey) {
         }
         case '{': {  // slow down video among preselected speeds
           if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) - 1, Bndrule::clamped));
-          int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())), 0,
-                                             k_speeds.num(), clamp(g_speed * .999999f, k_speeds[0], k_speeds.last()));
+          const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
+          int index =
+              discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed * .999999f, speeds[0], speeds.last()));
           set_speed(k_speeds.inside(index + 0, Bndrule::clamped));
           break;
         }
         case '}': {  // speed up video among preselected speeds
           if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) + 1, Bndrule::clamped));
-          int index = discrete_binary_search(concat(k_speeds, V(std::numeric_limits<double>::max())), 0,
-                                             k_speeds.num(), clamp(g_speed, k_speeds[0], k_speeds.last()));
+          const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
+          int index = discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed, speeds[0], speeds.last()));
           set_speed(k_speeds.inside(index + 1, Bndrule::clamped));
           break;
         }
@@ -3159,8 +3161,7 @@ void render_image() {
           exit_immediately(1);
         };
         const auto func_compile_shader = [&](GLuint shader_id, const string& shader_string, GLenum shaderType) {
-          glShaderSource(shader_id, 1, ArView(shader_string.c_str()).data(),
-                         ArView(GLint(shader_string.size())).data());
+          glShaderSource(shader_id, 1, V(shader_string.c_str()).data(), V(GLint(shader_string.size())).data());
           glCompileShader(shader_id);
           GLint params;
           glGetShaderiv(shader_id, GL_COMPILE_STATUS, &params);
@@ -3622,7 +3623,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         const string& filename = getob()._filename;
         if (!file_requires_pipe(filename) && file_exists(filename)) {
           CArrayView<string> filenames = get_directory_media_filenames(filename);
-          int i0 = filenames.index(get_path_tail(filename));
+          int i0 = maybe_index(filenames, get_path_tail(filename));
           if (i0 >= 0 && filenames.num() > 1) s_dir = sform("[%d/%d]  ", i0 + 1, filenames.num());
         }
       }

@@ -4,6 +4,7 @@
 
 #include "libHh/Array.h"
 #include "libHh/Map.h"
+#include "libHh/RangeOp.h"
 
 #if 0
 {
@@ -36,17 +37,17 @@ template <typename T> class Graph : noncopyable {
   }
   void clear() { _m.clear(); }
   bool empty() const { return _m.num() == 0; }
-  // enter and remove domain vertices
-  void enter(T v) { _m.enter(v, atype()); }  // vertex v must be new
+  // Enter and remove domain vertices.
+  void enter(T v) { _m.enter(v, atype()); }  // The vertex v must be new.
   bool contains(T v) const { return _m.contains(v); }
-  bool remove(T v);  // must have 0 out_degree, ret: was_there
-  // enter an edge
+  bool remove(T v);  // Must have 0 out_degree, ret: was_there.
+  // Enter an edge.
   void enter(T v1, T v2) { ASSERTXX(!contains(v1, v2)), _m.get(v1).push(v2); }
-  // enter undirected edge
-  void enter_undirected(T v1, T v2) { enter(v1, v2), enter(v2, v1); }  // v1 & v2 present; new edge
-  bool contains(T v1, T v2) const { return _m.get(v1).contains(v2); }  // O(n) slow
-  bool remove(T v1, T v2) { return _m.get(v1).remove_unordered(v2); }  // O(n) , ret: was_there
-  bool remove_undirected(T v1, T v2);                                  // O(n) , ret: was_there
+  // Enter an undirected edge.
+  void enter_undirected(T v1, T v2) { enter(v1, v2), enter(v2, v1); }       // v1 & v2 present; new edge
+  bool contains(T v1, T v2) const { return hh::contains(_m.get(v1), v2); }  // O(n) slow
+  bool remove(T v1, T v2) { return _m.get(v1).remove_unordered(v2); }       // O(n) , ret: was_there
+  bool remove_undirected(T v1, T v2);                                       // O(n) , ret: was_there
   int out_degree(T v) const { return _m.get(v).num(); }
   void add(const Graph<T>& g);
   vertices_range vertices() const { return _m.keys(); }
@@ -80,7 +81,7 @@ template <typename T> void Graph<T>::add(const Graph& g) {
   for (const T& v1 : g.vertices()) {
     for (const T& v2 : g.edges(v1)) {
       atype& ar = _m.get(v1);
-      if (!ar.contains(v2)) ar.push(v2);
+      if (!hh::contains(ar, v2)) ar.push(v2);
     }
   }
 }

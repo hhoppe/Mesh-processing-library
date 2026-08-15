@@ -2224,7 +2224,7 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
               nn.ar_epts.push(pept);
               nn.ar_eptv.push(vi);
             }
-            if (!nn.ar_vdisc.contains(vi)) nn.ar_vdisc.push(vi);
+            if (!contains(nn.ar_vdisc, vi)) nn.ar_vdisc.push(vi);
             int dnse = 2 + eoretire[0] + eoretire[1];
             if (edge_sharp(e) && vertex_num_sharpe(cv) == dnse) vcreasei = vi;  // Could be set twice (ok).
           }
@@ -4305,7 +4305,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (!minqem) {  // 2025-09-26 Disabled otherwise due to "if (minqem) return true;" shortcut in gather_nn().
       bool closed = nn.va[0] == nn.va.last();
       for_int(i, nn.va.num() - closed) {
-        bool found = nn.ar_vdisc.contains(i);
+        bool found = contains(nn.ar_vdisc, i);
         Edge ee = mesh.edge(vs, nn.va[i]);
         assertx(found == edge_sharp(ee));
       }

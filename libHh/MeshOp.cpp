@@ -626,7 +626,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
   const int nsharpe = int(count_if(mesh.edges(v), [&](Edge e) { return sharp(mesh, v, e); }));
   PArray<Face, 10> faces_visited;
   for (Face frep : mesh.faces(v)) {
-    if (faces_visited.contains(frep)) continue;
+    if (contains(faces_visited, frep)) continue;
     bool closed = false;
     PArray<Vertex, 10> av;
     PArray<Face, 10> af;

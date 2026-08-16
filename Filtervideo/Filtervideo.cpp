@@ -701,7 +701,7 @@ void do_tcrossfade(Args& args) {
         tvideo[i, y, x][z] = uint8_t((1.f - alpha) * video[fbc, y, x][z] + alpha * video[fec, y, x][z] + .5f);
       }
     } else {  // good code with gcc
-      auto videofbc = video[fbc], videofec = video[fbc];
+      auto videofbc = video[fbc], videofec = video[fec];
       for (const auto& yx : range(video.spatial_dims()))
         for_int(z, nz) tvideo[i][yx][z] = uint8_t((1.f - alpha) * videofbc[yx][z] + alpha * videofec[yx][z] + .5f);
     }

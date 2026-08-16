@@ -153,12 +153,10 @@ int main() {
     using Array3 = Vec3<Array<int>>;
     Array3 ar;
     ar[0].push(1);
-#if 0
-    // Note: gcc unhappy creating copy constructor for Vec<T, n> if T has explicit copy constructor.
-    // This was my motivation for prior "hh_explicit" macro definition.
-    Array3 ar2(ar);
-    SHOW(ar2[0]);
-#endif
+    SHOW(ar);
+    // Not allowed because Array is not copy-constructible.
+    // Array3 ar2(ar);
+    // SHOW(ar2);
   }
   {
     Array ar(std::vector{1, 2});

@@ -54,9 +54,6 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 #endif
 
 template <typename T> void my_swap_bytes(T* p) {
-  static_assert(sizeof(T) == 8 || sizeof(T) == 4 || sizeof(T) == 2);
-  // First attempt was to use "volatile T* p", but that is not robust.  The use of "union" is required for gcc;
-  // otherwise it changes value in memory but not in register -- see NetworkOrder_test.cpp.
   if constexpr (sizeof(T) == 8) {
     union {
       uint64_t ui;

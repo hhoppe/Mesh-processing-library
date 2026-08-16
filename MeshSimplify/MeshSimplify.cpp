@@ -905,15 +905,6 @@ int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
 const char* generate_corner_string(Corner c, string& str) {
   const int wid = c_wedge_id(c);
   const WedgeInfo& wi = gwinfo[wid];
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
-  // https://en.cppreference.com/w/cpp/compiler_support/17
-  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
-  string str1;
-  str = ssform(str1, "wid=%d", wid);
-  str = GMesh::string_update(str, "normal", csform_vec(str1, wi.nor));
-  if (wi.col[0] != k_undefined) str = GMesh::string_update(str, "rgb", csform_vec(str1, wi.col));
-  if (wi.uv[0] != k_undefined) str = GMesh::string_update(str, "uv", csform_vec(str1, wi.uv));
-#else  // C++17 std::to_chars().
   constexpr int size = 200;
   if (str.size() < size) str.resize(size);
   char* s = str.data();
@@ -939,7 +930,6 @@ const char* generate_corner_string(Corner c, string& str) {
   consider("rgb", wi.col);
   consider("uv", wi.uv);
   *s++ = char{0};
-#endif
   return str.c_str();
 }
 
@@ -3573,13 +3563,6 @@ bool desire_edge_orientation_swap(Edge e, int min_ii) {
 
 void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   const Point& p = mesh.point(v);
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
-  // https://en.cppreference.com/w/cpp/compiler_support/17
-  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
-  os << "MVertex " << mesh.vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2];
-  if (sinfo) os << " {" << sinfo << "}";
-  os << "\n";
-#else
   constexpr int capacity = 200;
   char buffer[capacity];
   char* const end = buffer + capacity;
@@ -3602,7 +3585,6 @@ void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   *s++ = '\n';
   *s = '\0';
   os << buffer;
-#endif
 }
 
 void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {

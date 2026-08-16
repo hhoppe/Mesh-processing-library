@@ -195,18 +195,6 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
 //----------------------------------------------------------------------------
 
 template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
-  // https://en.cppreference.com/w/cpp/compiler_support/17
-  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
-  static_assert(n >= 1 && n <= 4);
-  switch (n) {
-    case 1: return csform(str, "(%g)", vec[0]);
-    case 2: return csform(str, "(%g %g)", vec[0], vec[1]);
-    case 3: return csform(str, "(%g %g %g)", vec[0], vec[1], vec[2]);
-    case 4: return csform(str, "(%g %g %g %g)", vec[0], vec[1], vec[2], vec[3]);
-    default: HH_UNREACHABLE;
-  }
-#else  // C++17 std::to_chars().
   constexpr int size = 100;
   static_assert(n * 15 < size);
   if (str.size() < size) str.resize(size);
@@ -222,7 +210,6 @@ template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
   *s++ = ')';
   *s++ = char{0};
   return str.c_str();
-#endif
 }
 
 inline Vec3<Point> GMesh::triangle_points(Face f) const {

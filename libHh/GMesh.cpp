@@ -517,41 +517,6 @@ bool GMesh::recognize_line(const char* s) {
 }
 
 void GMesh::write(std::ostream& os) const {
-#if defined(__GNUC__) && !defined(__clang__) && __GNUC__ < 11
-  // https://en.cppreference.com/w/cpp/compiler_support/17
-  // GCC libstdc++ lacks float support for elementary string conversions prior to Version 11.
-  for (Vertex v : ordered_vertices()) {
-    const Point& p = point(v);
-    os << "Vertex " << vertex_id(v) << "  " << p[0] << " " << p[1] << " " << p[2];
-    const char* sinfo = get_string(v);
-    if (sinfo) os << " {" << sinfo << "}";
-    assertx(os << "\n");
-  }
-
-  Array<Face> ar_faces{ordered_faces()};
-  for (Face f : ar_faces) {
-    os << "Face " << face_id(f) << " ";
-    for (Vertex v : vertices(f)) os << " " << vertex_id(v);
-    const char* sinfo = get_string(f);
-    if (sinfo) os << " {" << sinfo << "}";
-    assertx(os << "\n");
-  }
-
-  for (Edge e : edges()) {
-    const char* sinfo = get_string(e);
-    if (sinfo)
-      assertx(os << "Edge " << vertex_id(vertex1(e)) << " " << vertex_id(vertex2(e)) << " {" << sinfo << "}\n");
-  }
-
-  for (Face f : ar_faces) {
-    for (Corner c : corners(f)) {
-      const char* sinfo = get_string(c);
-      if (sinfo)
-        assertx(os << "Corner " << vertex_id(corner_vertex(c)) << " " << face_id(f) << " {" << sinfo << "}\n");
-    }
-  }
-
-#else
   constexpr int capacity = 500;
   char buffer[capacity];
   char* const end = buffer + capacity;
@@ -643,7 +608,6 @@ void GMesh::write(std::ostream& os) const {
       assertx(os << buffer);
     }
   }
-#endif
   os.flush();
 }
 

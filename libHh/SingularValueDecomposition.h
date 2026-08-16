@@ -37,14 +37,7 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
   U.assign(A);
   fill(VT, T{0});
   for_int(i, n) VT[i, i] = T{1};
-  T eps;
-  {                        // compute a factor of machine-precision epsilon
-    volatile T v1 = T{1};  // otherwise produces eps == 0 on gcc due to compiler optimizations
-    eps = T{1};
-    while (eps + v1 > v1) eps *= T{0.5};
-    assertx(eps > T{0});
-    eps *= T{8};
-  }
+  const T eps = std::numeric_limits<T>::epsilon() * T{8};
   for (int iter = 0;; iter++) {
     T max_e = T{0};
     for_intL(j, 1, n) for_int(i, j) {  // for indices i < j of columns of U
@@ -108,7 +101,6 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
   assertx(S.num() == n);
   assertx(VT.dims() == V(n, n));
   // Insertion sort
-  if (n < 2) return;  // avoid gcc warning "-Waggressive-loop-optimizations"
   for_int(i0, n - 1) {
     int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;

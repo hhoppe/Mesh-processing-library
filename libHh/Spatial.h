@@ -23,17 +23,14 @@ class BSpatialSearch;
 class Spatial : noncopyable {  // abstract class
  public:
   static constexpr int k_max_gn = 1023;  // 10 bits per coordinate
-  explicit Spatial(int gn) : _gn(gn) {
-    assertx(_gn > 0 && _gn <= k_max_gn);
-    _gni = 1.f / float(_gn);
-  }
-  virtual ~Spatial() {}  // not = default because gcc "looser throw specified" in derived
+  explicit Spatial(int gn) : _gn(gn), _gni(1.f / assertx(gn)) { assertx(_gn > 0 && _gn <= k_max_gn); }
+  virtual ~Spatial() = default;
   virtual void clear() = 0;
 
  protected:
   friend details::BSpatialSearch;
-  int _gn;     // grid size
-  float _gni;  // 1.f / _gn
+  const int _gn;     // grid size
+  const float _gni;  // 1.f / _gn
 
   using Ind = Vec3<int>;
   int inbounds(int i) const { return i >= 0 && i < _gn; }

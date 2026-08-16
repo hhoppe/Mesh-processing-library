@@ -19,10 +19,6 @@
 #include "libHh/StringOp.h"
 #include "libHh/Vec.h"
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wold-style-cast"  // for FD_ZERO() macro
-#endif
-
 namespace hh {
 
 constexpr int k_initial_size = 4096;

@@ -17,8 +17,6 @@
 #else
 #pragma message("warning: untested")
 #endif
-// https://gcc.gnu.org/onlinedocs/gcc-4.7.0/gcc/Vector-Extensions.html
-// typedef int v4si __attribute__((vector_size (16)));
 
 #if defined(HH_VECTOR4_SSE)
 #include <emmintrin.h>  // __m128i

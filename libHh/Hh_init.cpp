@@ -398,7 +398,7 @@ void exercise_errors() {
   exit(0);
 }
 
-void hh_init_aux() {
+void hh_init() {
   setup_exception_hooks();
   use_standard_exponent_format_in_io();
   use_binary_io();
@@ -412,24 +412,7 @@ void hh_init_aux() {
 
 }  // namespace
 
-namespace details {
-// ret: bogus integer
-int hh_init() {
-  if (0) {
-    // This fails intermittently in "reverselines" on Unix gcc 4.8.2;
-    //  it is likely not intended for use in static initialization (of dummy_init_hh).
-    static std::once_flag flag;
-    std::call_once(flag, hh_init_aux);
-  } else {
-    static bool is_init = false;
-    if (!is_init) {
-      is_init = true;
-      hh_init_aux();
-    }
-  }
-  return 0;
-}
-}  // namespace details
+details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init(), true); }
 
 }  // namespace hh
 

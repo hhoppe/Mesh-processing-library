@@ -236,11 +236,9 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
       for_intL(j, i + 1, n) sum2 += *pa++ * T{p[i]} * p[j];
     }
   }
-  // for_int(i, n) sum2 += _b[i] * p[i];  // GCC4.8.1 array subscript is above array bounds
-  const T* bt = _b.data();
-  for_int(i, n) sum2 += bt[i] * p[i];
+  for_int(i, n) sum2 += _b[i] * p[i];
   sum1 += _c;
-  T sum = sum1 + sum2 + sum2;
+  T sum = sum1 + sum2 * 2;
   return float(sum);
 }
 
@@ -281,9 +279,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   }
   SvdDoubleLls& lls = *plls;
   Vec<double, n> b;
-  // for_int(i, n - nf) { b[i] = -_b[nf + i]; } // GCC4.8.1 [-Werror=array-bounds]
-  const T* bt = _b.data();
-  for_int(i, n - nf) b[i] = -bt[nf + i];
+  for_int(i, n - nf) b[i] = -_b[nf + i];
   {
     const T* pa = _a.data();
     for_int(i, n) {

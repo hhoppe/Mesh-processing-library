@@ -419,18 +419,12 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(typ
 
 template <typename T> void ArrayView<T>::assign(base ar) requires(Copyable<T>) {
   ASSERTX(_n == ar.num());
-  // std::memcpy() would be unsafe here for general T.
-  // std::copy() and std::move() perform std::memmove() if std::is_trivially_copyable_v<T>;
-  //  see https://stackoverflow.com/questions/17625635/moving-an-object-in-memory-using-stdmemcpy
   if (ar.data() == data()) return;
-#if 1
-  // With gcc, this avoids a "-Wstringop-overflow" false-positive in "stl_algobase.h", and should be just as fast.
-  // The value of ar.num() might be a compile-time constant even though _n is not.
+#if 0
   for_int(i, ar.num()) _a[i] = ar[i];
 #else
-  // Some C++ standard libraries are unhappy if _a is nullptr even when ar.begin() == ar.end();
-  //  see https://stackoverflow.com/questions/19480609/
-  if (_a) std::copy(ar.begin(), ar.end(), _a);
+  // std::memcpy() would be unsafe for general T; std::copy() uses std::memmove() when T is trivially copyable.
+  std::copy(ar.begin(), ar.end(), _a);
 #endif
 }
 

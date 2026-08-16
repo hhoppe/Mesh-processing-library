@@ -212,9 +212,6 @@ template <typename Target, typename Source> [[nodiscard]] constexpr Target possi
   return static_cast<Target>(v);
 }
 
-// Cast a temporary as an lvalue; be careful; only use when safe.
-template <typename T> [[nodiscard]] T& as_lvalue(T&& e) { return static_cast<T&>(e); }
-
 // The type U given the constness of the type, reference, or pointer From, e.g. copy_const_t<const T*, Vec<T, s>>.
 template <typename From, typename U>
 using copy_const_t =

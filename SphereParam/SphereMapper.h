@@ -40,7 +40,7 @@ class SphereMapper {
   // The surface mesh is represented as a progressive mesh.  The progressive mesh iterator `pmi` must be
   // initialized to the base mesh of the PM sequence.
   SphereMapper(PMeshIter& pmi, Options options);
-  ~SphereMapper();
+  ~SphereMapper();  // Must be explicit because `Implementation` is not yet defined for ~unique_ptr().
 
   // Print a summary of the optimization parameters associated with the requested `options.effort`.
   void show_parameters() const;

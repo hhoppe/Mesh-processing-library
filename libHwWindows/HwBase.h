@@ -27,7 +27,6 @@ namespace hh {
 class HwBase : noncopyable {
  public:
   HwBase() {}
-  virtual ~HwBase() {}
   bool init(Array<string>& aargs) { return init_aux(aargs); }  // ret: success
 
   // Callbacks:
@@ -103,6 +102,9 @@ class HwBase : noncopyable {
     Warning("clipboard not implemented");
     return {};
   }
+
+ protected:
+  virtual ~HwBase() = default;
 
  private:
   friend class Hw;  // grant access to Hw but not to any DerivedHw

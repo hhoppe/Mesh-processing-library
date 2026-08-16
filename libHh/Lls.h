@@ -10,9 +10,10 @@ namespace hh {
 // Solve a linear-least-squares system, i.e., for system A * x = b, find argmin_x |A * x - b|.
 class Lls : noncopyable {
  public:
-  // virtual constructor
+  // Factory: select an Lls implementation based on environment overrides and problem size/sparsity.
   static unique_ptr<Lls> make(int m, int n, int nd, float nonzerofrac);  // A(m, n), x(n, nd), b(m, nd)
-  virtual ~Lls() {}
+
+  virtual ~Lls() = default;
   virtual void clear();
   // All entries will be zero unless entered as below.
   void enter_a(CMatrixView<float> mat);                     // [_m][_n]
@@ -106,7 +107,7 @@ class FullLls : public Lls {
 
  protected:
   Matrix<float> _a;              // [_m][_n]
-  virtual bool solve_aux() = 0;  // abstract class
+  virtual bool solve_aux() = 0;  // Abstract class.
  private:
   double get_rss();
 };

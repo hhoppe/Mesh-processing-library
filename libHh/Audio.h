@@ -38,7 +38,6 @@ class Audio : public Grid<2, float> {
   explicit Audio(const string& filename) { read_file(filename); }
   Audio(Audio&& v) noexcept { swap(*this, v); }
   Audio(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
-  ~Audio() {}
   Audio& operator=(Audio&& v) noexcept {
     clear();
     swap(*this, v);

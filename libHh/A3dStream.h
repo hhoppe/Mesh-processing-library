@@ -132,6 +132,7 @@ class RA3dStream : noncopyable {
 
  protected:
   virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0;  // ret success
+
  private:
   A3dVertexColor _curcol{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
   void set_current_color(char ctype, const Vec3<float>& f);

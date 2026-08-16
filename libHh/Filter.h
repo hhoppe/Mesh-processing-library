@@ -13,7 +13,6 @@ class Filter : noncopyable {
  public:
   explicit Filter(string name_, KernelFunc func_, double radius_)
       : _name(std::move(name_)), _func(func_), _radius(radius_) {}
-  virtual ~Filter() {}
   string name() const { return _name; }
   KernelFunc func() const { return assertx(_func); }
   double radius() const { return _radius; }
@@ -48,12 +47,8 @@ class Filter : noncopyable {
     return os << "Filter{" << filter.name() << "}";
   }
 
- private:
-  string _name;
-  KernelFunc _func;
-  double _radius;
-
  protected:
+  ~Filter() = default;
   bool _is_interpolating{true};
   bool _is_discontinuous{false};
   bool _has_inv_convolution{false};
@@ -64,6 +59,11 @@ class Filter : noncopyable {
   bool _is_preprocess{false};
   bool _is_partition_of_unity{true};
   bool _is_unit_integral{true};
+
+ private:
+  string _name;
+  KernelFunc _func;
+  double _radius;
 };
 
 struct LUfactorization;

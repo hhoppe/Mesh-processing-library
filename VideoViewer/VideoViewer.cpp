@@ -4356,7 +4356,7 @@ void do_zonal(Args& args) {
 void DerivedHw::drag_and_drop(CArrayView<string> filenames) {
   if (g_verbose >= 1) SHOW(filenames);
   if (filenames.num() == 1 && ends_with(filenames[0], ".vlp")) {
-    do_vlp(as_lvalue(Args{filenames[0]}));
+    do_vlp(Args{filenames[0]}.use());
   } else {
     int nread = 0;
     for (const auto& filename : filenames) {

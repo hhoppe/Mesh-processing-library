@@ -12,40 +12,18 @@ namespace hh {
 
 static const int sdebug = getenv_int("LLS_DEBUG");  // 0, 1, or 2
 
-// *** virtual constructor
+// *** Factory: select an Lls implementation based on environment overrides and problem size/sparsity.
 
 unique_ptr<Lls> Lls::make(int m, int n, int nd, float nonzerofrac) {
-  if (getenv_bool("SPARSE_LLS")) {
-    Warning("Using SparseLls");
-    return make_unique<SparseLls>(m, n, nd);
-  }
-  if (getenv_bool("LUD_LLS")) {
-    Warning("Using LudLls");
-    return make_unique<LudLls>(m, n, nd);
-  }
-  if (getenv_bool("GIVENS_LLS")) {
-    Warning("Using GivensLls");
-    return make_unique<GivensLls>(m, n, nd);
-  }
-  if (getenv_bool("SVD_LLS")) {
-    Warning("Using SvdLls");
-    return make_unique<SvdLls>(m, n, nd);
-  }
-  if (getenv_bool("SVD_DOUBLE_LLS")) {
-    Warning("Using SvdDoubleLls");
-    return make_unique<SvdDoubleLls>(m, n, nd);
-  }
-  if (getenv_bool("QRD_LLS")) {
-    Warning("Using QrdLls");
-    return make_unique<QrdLls>(m, n, nd);
-  }
-  int64_t size = int64_t{m} * n;
-  if (size < 1000 * 40) {  // small system
-    return make_unique<QrdLls>(m, n, nd);
-  } else {  // large system
-    if (nonzerofrac < .3f) return make_unique<SparseLls>(m, n, nd);
-    return make_unique<QrdLls>(m, n, nd);
-  }
+  if (getenv_bool("SPARSE_LLS")) return (Warning("Using SparseLls"), make_unique<SparseLls>(m, n, nd));
+  if (getenv_bool("LUD_LLS")) return (Warning("Using LudLls"), make_unique<LudLls>(m, n, nd));
+  if (getenv_bool("GIVENS_LLS")) return (Warning("Using GivensLls"), make_unique<GivensLls>(m, n, nd));
+  if (getenv_bool("SVD_LLS")) return (Warning("Using SvdLls"), make_unique<SvdLls>(m, n, nd));
+  if (getenv_bool("SVD_DOUBLE_LLS")) return (Warning("Using SvdDoubleLls"), make_unique<SvdDoubleLls>(m, n, nd));
+  if (getenv_bool("QRD_LLS")) return (Warning("Using QrdLls"), make_unique<QrdLls>(m, n, nd));
+  const int64_t size = int64_t{m} * n;
+  if (size >= 1000 * 40 && nonzerofrac < .3f) return make_unique<SparseLls>(m, n, nd);
+  return make_unique<QrdLls>(m, n, nd);
 }
 
 // *** Lls

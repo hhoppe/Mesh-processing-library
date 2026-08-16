@@ -35,7 +35,6 @@ class Video : public Grid<3, Pixel> {
   explicit Video(const string& filename) { read_file(filename); }
   Video(Video&& v) noexcept { swap(*this, v); }
   Video(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
-  ~Video() {}
   Video& operator=(Video&& v) noexcept {
     clear();
     swap(*this, v);

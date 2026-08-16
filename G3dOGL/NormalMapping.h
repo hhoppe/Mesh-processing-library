@@ -9,7 +9,7 @@ namespace hh {
 
 class NormalMapping {
  public:
-  virtual ~NormalMapping() {}
+  virtual ~NormalMapping() = default;
   virtual string name() const = 0;
   virtual bool is_supported() const = 0;
   virtual void init() = 0;
@@ -17,6 +17,7 @@ class NormalMapping {
                               float lightsource, const Pixel& meshcolor_s) = 0;
   virtual void activate() = 0;
   virtual void deactivate() = 0;
+
   static NormalMapping* get();
 };
 

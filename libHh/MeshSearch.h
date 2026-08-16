@@ -29,7 +29,6 @@ class MeshSearch {
     std::optional<Bbox<float, 3>> bbox{};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
-  ~MeshSearch();
 
   struct Result {
     Face f;

@@ -1392,16 +1392,16 @@ void do_stoc() {
 
 void apply_schedule() {
   while (spring > k_spring_sched[0]) {
-    do_lfit(as_lvalue(Args{"2", "3"}));  // -lfit 2 3
-    do_stoc();                           // -stoc
-    do_lfit(as_lvalue(Args{"2", "3"}));  // -lfit 2 3
-    spring *= .1f;                       // -spring f
+    do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
+    do_stoc();                      // -stoc
+    do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
+    spring *= .1f;                  // -spring f
   }
   for (float spr : k_spring_sched) {
-    spring = spr;                        // -spring f
-    do_lfit(as_lvalue(Args{"2", "3"}));  // -lfit 2 3
-    do_stoc();                           // -stoc
-    do_lfit(as_lvalue(Args{"2", "3"}));  // -lfit 2 3
+    spring = spr;                   // -spring f
+    do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
+    do_stoc();                      // -stoc
+    do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
   }
 }
 
@@ -1409,8 +1409,8 @@ void do_reconstruct() {
   HH_TIMER("reconstruct");
   if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
-  do_fgfit(as_lvalue(Args{"100"}));  // was "20"
-  do_gfit(as_lvalue(Args{"30"}));    // -gfit 30
+  do_fgfit(Args{"100"}.use());  // -fgfit 100  // was "20"
+  do_gfit(Args{"30"}.use());    // -gfit 30
   apply_schedule();
 }
 
@@ -1428,11 +1428,11 @@ void do_quicksimplify() {
   spring = k_spring_sched2[0];
   perhaps_initialize();
   for_int(i, k_spring_sched2.num()) {
-    spring = k_spring_sched2[i];         // -spring f
-    do_lfit(as_lvalue(Args{"1", "3"}));  // -lfit 1 3
+    spring = k_spring_sched2[i];    // -spring f
+    do_lfit(Args{"1", "3"}.use());  // -lfit 1 3
     fliter = gfliter * (i + 1 < k_spring_sched2.num() ? .50f : .25f);
     do_stoc();
-    do_lfit(as_lvalue(Args{"1", "3"}));  // -lfit 1 3
+    do_lfit(Args{"1", "3"}.use());  // -lfit 1 3
   }
 }
 

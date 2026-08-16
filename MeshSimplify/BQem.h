@@ -13,7 +13,7 @@ template <typename T> class BQem : noncopyable {
   using type = BQem<T>;
 
  public:
-  virtual ~BQem() {}
+  virtual ~BQem() = default;
   virtual void set_zero() = 0;
   virtual void copy(const type& qem) = 0;
   virtual void add(const type& qem) = 0;

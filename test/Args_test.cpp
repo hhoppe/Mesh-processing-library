@@ -10,7 +10,7 @@ void echo_args(Args& args) {
   SHOW(args.get_int());
 }
 
-void phase0() { echo_args(as_lvalue(Args{"string", "3"})); }
+void phase0() { echo_args(Args{"string", "3"}.use()); }
 
 void do_show1p1() { SHOW(1 + 1); }
 

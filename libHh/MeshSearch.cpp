@@ -126,8 +126,6 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
   _spatial = make_unique<TriangleFaceSpatial>(_trianglefaces, gridn);
 }
 
-MeshSearch::~MeshSearch() {}
-
 MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   Result result{};
   Face f = nullptr;

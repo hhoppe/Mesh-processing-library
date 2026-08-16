@@ -38,7 +38,7 @@ class Args {
  public:
   explicit Args(CArrayView<string> aargs) : _args(aargs) {}
   explicit Args(std::initializer_list<string> l) : Args(CArrayView<string>(l.begin(), narrow_cast<int>(l.size()))) {}
-  virtual ~Args() {}
+  virtual ~Args() = default;
   int num() const { return _args.num() - _iarg; }  // Number of arguments left.
   size_t size() const { return _args.size() - _iarg; }
   const string& peek_string() const { return (assertx(num() > 0), _args[_iarg]); }

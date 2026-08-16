@@ -112,11 +112,6 @@ class NormalMapping_ogl2 final : public NormalMapping {
     // glDeleteProgram(program_id);
   }
 
-  static type& instance() {
-    static type& f = *new type;
-    return f;
-  }
-
  private:
   GLuint program_id;
   GLuint fragment_shader_id;
@@ -223,11 +218,6 @@ class NormalMapping_frag1 final : public NormalMapping {
     glDisable(GL_FRAGMENT_PROGRAM_ARB);
     // glDeleteProgramsARB(1, &program_id);
     assertx(!gl_report_errors());
-  }
-
-  static type& instance() {
-    static type& f = *new type;
-    return f;
   }
 
  private:
@@ -354,11 +344,6 @@ class NormalMapping_dot3 final : public NormalMapping {
 
   void activate() override { glDisable(GL_BLEND); }
   void deactivate() override { glEnable(GL_BLEND); }
-
-  static type& instance() {
-    static type& f = *new type;
-    return f;
-  }
 };
 
 class NormalMapping_nvrc final : public NormalMapping {
@@ -462,24 +447,15 @@ class NormalMapping_nvrc final : public NormalMapping {
     // const int GL_REGISTER_COMBINERS_NV = 0x8522;
     glDisable(GL_REGISTER_COMBINERS_NV);
   }
-
-  static type& instance() {
-    static type& f = *new type;
-    return f;
-  }
 };
 
 NormalMapping* NormalMapping::get() {
-  static Array<NormalMapping*> normalmappings;
-  static std::once_flag flag;
-  const auto initialize_normalmappings = [] {
-    normalmappings.push(&NormalMapping_ogl2::instance());
-    normalmappings.push(&NormalMapping_frag1::instance());
-    normalmappings.push(&NormalMapping_nvrc::instance());
-    normalmappings.push(&NormalMapping_dot3::instance());
+  static auto& normalmappings = *new Array<NormalMapping*>{
+      new NormalMapping_ogl2,
+      new NormalMapping_frag1,
+      new NormalMapping_nvrc,
+      new NormalMapping_dot3,
   };
-  std::call_once(flag, initialize_normalmappings);
-  assertx(normalmappings.num());
   string desired_name = getenv_string("NORMAL_MAPPING");
   for (NormalMapping* normalmapping : normalmappings) {
     if (desired_name != "") {

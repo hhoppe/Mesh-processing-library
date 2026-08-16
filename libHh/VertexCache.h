@@ -15,7 +15,7 @@ class VertexCache : noncopyable {
   static string type_string(EType type);
   static unique_ptr<VertexCache> make(EType type, int nverts1, int cs);  // vertex ids begin at 1
 
-  virtual ~VertexCache() {}
+  virtual ~VertexCache() = default;
   virtual EType type() const = 0;
   virtual void init(int nverts1, int cs) = 0;    // vertex ids begin at 1
   virtual void copy(const VertexCache& vc) = 0;  // must be init'ed !
@@ -25,7 +25,7 @@ class VertexCache : noncopyable {
   virtual int location_alt(int vi) const = 0;  // 0 .. cs (0 == recent) (may be slow)
   class Iter : noncopyable {                   // ordering of vertices undefined!
    public:
-    virtual ~Iter() {}
+    virtual ~Iter() = default;
     virtual int next() = 0;  // return 0 if no more vertices
    protected:
     Iter() = default;

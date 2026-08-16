@@ -221,8 +221,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     AS(frame_decode->GetSize(&width, &height));
     init(V(int(height), int(width)));
     // double dpi_X = 0., dpi_Y = 0.; AS(frame_decode->GetResolution(&dpi_X, &dpi_Y));
-    WICPixelFormatGUID pixel_format;
-    my_zero(pixel_format);
+    WICPixelFormatGUID pixel_format{};
     AS(frame_decode->GetPixelFormat(&pixel_format));
     set_zsize(contains(k_pixel_formats_with_alpha, pixel_format) ? 4 : 3);  // ignore grayscale for now
     {
@@ -389,8 +388,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
       if (container_format == &GUID_ContainerFormatJpeg) {
         int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75)
         assertx(quality > 0 && quality <= 100);
-        PROPBAG2 option;
-        my_zero(option);
+        PROPBAG2 option{};
         option.pstrName = const_cast<wchar_t*>(L"ImageQuality");
         VARIANT variant;
         VariantInit(&variant);

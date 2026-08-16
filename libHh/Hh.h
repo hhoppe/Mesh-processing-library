@@ -377,9 +377,6 @@ template <typename... A> constexpr void dummy_use(const A&...) {}
 // Avoid warnings of uninitialized variables.
 template <typename... T> void dummy_init(T&... variable) { ((variable = T{}), ...); }
 
-// Zero-out the variable e; this function is specialized for float, double, Vector4, Vector4i.
-template <typename T> void my_zero(T& e);
-
 // Returns T{-1} or T{+1} based on sign of expression.
 template <typename T> [[nodiscard]] constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
 
@@ -738,14 +735,6 @@ template <typename C> class stream_range {
 };
 
 template <typename C> stream_range(const C& c) -> stream_range<C>;  // Template deduction guide.
-
-template <typename T> void my_zero(T& e) {
-  // e = T{};  // Bad because default constructor can leave object uninitialized, e.g. Vector, Vec<T>, Vector4.
-  static constexpr T k_dummy_zero_object{};
-  e = k_dummy_zero_object;
-}
-template <> inline void my_zero(float& e) { e = 0.f; }
-template <> inline void my_zero(double& e) { e = 0.; }
 
 constexpr float interp(float v1, float v2, float f) {
   return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f

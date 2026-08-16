@@ -37,17 +37,16 @@ Vector4 to_Vector4_norm(const uint8_t p[4]);  // Converts each uint8_t [0, 255] 
 Vector4 to_Vector4_raw(const uint8_t p[4]);   // Converts each uint8_t [0, 255] to [0.f, 255.f].
 
 // Abstraction of a 4-float vector, hopefully accelerated by vectorized CPU instructions.
-// See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel:
-//  https://software.intel.com/sites/products/documentation/studio/composer/en-us/2011Update/compiler_c/cref_cls/common/cppref_class_cpp_simd.htm
+// See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel.
 // And also https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_sse.h
-//  and https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_neon.h
+//      and https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_neon.h
 // See ~/git/CompPhoto/ClassLibs/VisionTools/src/common/SSEonNeon.h
 // https://gcc.gnu.org/onlinedocs/gcc-4.8.1/gcc/ARM-NEON-Intrinsics.html#ARM-NEON-Intrinsics
 class Vector4 {
   using type = Vector4;
 
  public:
-  Vector4() = default;  // Was: { fill(0.f); }.
+  Vector4() = default;
   explicit Vector4(float v) { fill(v); }
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
@@ -95,8 +94,8 @@ class Vector4 {
   static void* operator new[](size_t s) { return aligned_malloc(alignof(type), s); }
   static void operator delete[](void* p, size_t) { aligned_free(p); }
 #endif
+
 #if defined(HH_VECTOR4_SSE)
-  Vector4(const Vector4& v) : _r(v._r) {}
   Vector4(float x, float y, float z, float w) { _r = _mm_set_ps(w, z, y, x); }  // Note reverse ordering.
   void load_unaligned(const float* pSrc) { _r = _mm_loadu_ps(pSrc); }
   void store_unaligned(float* pDst) const { _mm_storeu_ps(pDst, _r); }
@@ -110,10 +109,6 @@ class Vector4 {
   friend Vector4 operator-(const Vector4& v, float f) { return _mm_sub_ps(v._r, _mm_set_ps1(f)); }
   friend Vector4 operator*(const Vector4& v, float f) { return _mm_mul_ps(v._r, _mm_set_ps1(f)); }
   friend Vector4 operator/(const Vector4& v, float f) { return _mm_div_ps(v._r, _mm_set_ps1(f)); }
-  Vector4& operator=(const Vector4& r) {
-    _r = r._r;
-    return *this;
-  }
   void fill(float v) { _r = _mm_set_ps1(v); }  // All components set to same value.
   friend Vector4 min(const Vector4& l, const Vector4& r) { return _mm_min_ps(l._r, r._r); }  // Component-wise min.
   friend Vector4 max(const Vector4& l, const Vector4& r) { return _mm_max_ps(l._r, r._r); }  // Component-wise max.
@@ -144,22 +139,19 @@ class Vector4 {
   //     return _mm_macc_ps(v1._r, v2._r, v3._r); } // AVX FMA4 XMM instruction vfmaddps
   //     // Intel plans to implement FMA3 in processors using its Haswell microarchitecture, due in 2013.
   // }
+
  private:
   Vector4(__m128 v) : _r(v) {}
   Vector4& operator=(const __m128& r) {
     _r = r;
     return *this;
   }
-  // Unfortunately, presence of union leads to !std::is_trivially_copyable_v<Vector4> .
-  // We could remove union and use more complex accessor function as in
-  //  https://stackoverflow.com/questions/12624466/get-member-of-m128-by-index or in <fvec.h>.
-  // However, this seems too complicated for little gain.
   union {
     __m128 _r;  // This could be made public to allow mixing of above overloads and full set of SSE ops.
     float _c[4];
   };
+
 #elif defined(HH_VECTOR4_NEON)
-  Vector4(const Vector4& v) : _r(v._r) {}
   Vector4(float x, float y, float z, float w) {
     float r[4] = {x, y, z, w};
     _r = vld1q_f32(r);
@@ -202,10 +194,6 @@ class Vector4 {
 
  private:
   Vector4(float32x4_t v) : _r(v) {}
-  Vector4& operator=(const float32x4_t& r) {
-    _r = r;
-    return *this;
-  }
   union {
     float32x4_t _r;  // This could be made public to allow mixing of above overloads and full set of Neon ops.
     float _c[4];
@@ -216,8 +204,8 @@ class Vector4 {
     estimate = vmulq_f32(vrecpsq_f32(v._r, estimate), estimate);
     return estimate;
   }
+
 #else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
-  Vector4(const Vector4& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4(float x, float y, float z, float w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   void load_unaligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
   void store_unaligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
@@ -239,10 +227,6 @@ class Vector4 {
   friend Vector4 operator-(const Vector4& v, float f) { return v - Vector4(f); }
   friend Vector4 operator*(const Vector4& v, float f) { return v * Vector4(f); }
   friend Vector4 operator/(const Vector4& v, float f) { return v * (1.f / f); }
-  Vector4& operator=(const Vector4& r) {
-    for_int(c, 4) _c[c] = r._c[c];
-    return *this;
-  }
   void fill(float v) { for_int(c, 4) _c[c] = v; }
   friend Vector4 min(const Vector4& l, const Vector4& r) {
     return Vector4(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
@@ -264,6 +248,7 @@ class Vector4 {
     return Vector4(abs(v[0]), abs(v[1]), abs(v[2]), abs(v[3]));
   }
   // friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1 * v2 + v3; }
+
  private:
   alignas(16)  // Since no __mm128 element to induce 16-byte alignment.
       float _c[4];
@@ -272,10 +257,12 @@ class Vector4 {
 
 inline Vector4 to_Vector4_norm(const uint8_t p[4]) { return to_Vector4_raw(p) * (1.f / 255.f); }
 inline Vector4 to_Vector4_raw(const Pixel& pixel) { return to_Vector4_raw(pixel.data()); }
+
 float mag2(const Vector4& v);
 float dist2(const Vector4& l, const Vector4& r);
 float sum(const Vector4& v);
 float dot(const Vector4& l, const Vector4& r);
+
 Vector4 operator+(const Vector4& l, const Vector4& r);
 Vector4 operator-(const Vector4& l, const Vector4& r);
 Vector4 operator*(const Vector4& l, const Vector4& r);
@@ -284,6 +271,7 @@ Vector4 operator+(const Vector4& v, float f);
 Vector4 operator-(const Vector4& v, float f);
 Vector4 operator*(const Vector4& v, float f);
 Vector4 operator/(const Vector4& v, float f);
+
 inline Vector4 operator*(float f, const Vector4& v) { return v * f; }
 inline Vector4& operator+=(Vector4& l, const Vector4& r) { return l = l + r; }
 inline Vector4& operator-=(Vector4& l, const Vector4& r) { return l = l - r; }
@@ -293,7 +281,7 @@ inline Vector4& operator+=(Vector4& l, float f) { return l = l + f; }
 inline Vector4& operator-=(Vector4& l, float f) { return l = l - f; }
 inline Vector4& operator*=(Vector4& l, float f) { return l = l * f; }
 inline Vector4& operator/=(Vector4& l, float f) { return l = l / f; }
-template <> inline void my_zero(Vector4& v) { v = Vector4(0.f); }
+
 inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { return f1 * v1 + (1.f - f1) * v2; }
 
 //----------------------------------------------------------------------------
@@ -384,6 +372,13 @@ inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
 }
 
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)
+
+// This is required so that "Vector4 v{};" is properly zero-initialized.
+static_assert(std::is_trivially_default_constructible_v<Vector4>);
+
+// The absence of "Vector4& operator=(const Vector4& r)" and "Vector4& operator=(const Vector4& r)" enables this
+// property, which in turn allows more features (e.g., std::bit_cast<Vector4>, memcpy, relocation optimization).
+static_assert(std::is_trivially_copyable_v<Vector4>);
 
 }  // namespace hh
 

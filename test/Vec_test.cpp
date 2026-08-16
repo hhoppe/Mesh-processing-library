@@ -261,7 +261,7 @@ int main() {
   }
   {
     Vec<int, 3> ar(1, 2, 3);
-    my_zero(ar);
+    ar = Vec<int, 3>{};
     SHOW(ar);
   }
   {

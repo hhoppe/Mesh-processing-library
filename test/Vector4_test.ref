@@ -1,3 +1,5 @@
+std::is_trivially_copyable_v<Vector4> = 1
+std::is_trivially_default_constructible_v<Vector4> = 1
 v1 = Vector4(1, 2, 3, 4)
 v2 = Vector4(8, 7, 6, 5)
 v1 + v2 = Vector4(9, 9, 9, 9)

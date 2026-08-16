@@ -13,7 +13,7 @@ class Vector4i {
   using type = Vector4i;
 
  public:
-  Vector4i() = default;  // Could be: { fill(0); }.
+  Vector4i() = default;
   explicit Vector4i(int j) { fill(j); }
   size_t size() const { return 4; }
   int& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
@@ -36,8 +36,8 @@ class Vector4i {
     return os << "Vector4i(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
   }
   static bool ok(int i) { return i >= 0 && i < 4; }
+
 #if defined(HH_VECTOR4_SSE)
-  Vector4i(const Vector4i& v) : _r(v._r) {}
   Vector4i(int x, int y, int z, int w) { _r = _mm_set_epi32(w, z, y, x); }  // Note reverse ordering.
   explicit Vector4i(const Pixel& pixel) {
 #if defined(HH_NO_SSE41)
@@ -78,10 +78,6 @@ class Vector4i {
     return _mm_mullo_epi32(v._r, _mm_set1_epi32(i));
 #endif
   }
-  Vector4i& operator=(const Vector4i& r) {
-    _r = r._r;
-    return *this;
-  }
   void fill(int v) { _r = _mm_set1_epi32(v); }
 #if defined(HH_NO_SSE41)
   friend Vector4i min(const Vector4i& l, const Vector4i& r) {
@@ -111,6 +107,7 @@ class Vector4i {
   static void* operator new[](size_t s) { return aligned_malloc(alignof(type), s); }
   static void operator delete[](void* p, size_t) { aligned_free(p); }
 #endif
+
  private:
   Vector4i(__m128i v) : _r(v) {}
   Vector4i& operator=(const __m128i& r) {
@@ -121,9 +118,9 @@ class Vector4i {
     __m128i _r;
     int _c[4];
   };
+
 #elif defined(HH_VECTOR4_NEON)
   // TODO: Implement these as Neon intrinsics.
-  Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   explicit Vector4i(const Pixel& pixel) { for_int(c, 4) _c[c] = pixel[c]; }
   Pixel pixel() const {
@@ -147,10 +144,6 @@ class Vector4i {
   friend Vector4i operator+(const Vector4i& v, int i) { return v + Vector4i(i); }
   friend Vector4i operator-(const Vector4i& v, int i) { return v - Vector4i(i); }
   friend Vector4i operator*(const Vector4i& v, int i) { return v * Vector4i(i); }  // vmulq_n_s32(v._r, i);
-  Vector4i& operator=(const Vector4i& r) {
-    for_int(c, 4) _c[c] = r._c[c];
-    return *this;
-  }
   void fill(int v) { for_int(c, 4) _c[c] = v; }
   friend Vector4i min(const Vector4i& l, const Vector4i& r) {
     return Vector4i(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
@@ -183,7 +176,6 @@ class Vector4i {
   };
 
 #else   // Neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON).
-  Vector4i(const Vector4i& v) { for_int(c, 4) _c[c] = v._c[c]; }
   Vector4i(int x, int y, int z, int w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   explicit Vector4i(const Pixel& pixel) { for_int(c, 4) _c[c] = pixel[c]; }
   Pixel pixel() const {
@@ -207,10 +199,6 @@ class Vector4i {
   friend Vector4i operator+(const Vector4i& v, int i) { return v + Vector4i(i); }
   friend Vector4i operator-(const Vector4i& v, int i) { return v - Vector4i(i); }
   friend Vector4i operator*(const Vector4i& v, int i) { return v * Vector4i(i); }
-  Vector4i& operator=(const Vector4i& r) {
-    for_int(c, 4) _c[c] = r._c[c];
-    return *this;
-  }
   void fill(int v) { for_int(c, 4) _c[c] = v; }
   friend Vector4i min(const Vector4i& l, const Vector4i& r) {
     return Vector4i(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
@@ -247,6 +235,7 @@ Vector4i operator|(const Vector4i& l, const Vector4i& r);
 Vector4i operator^(const Vector4i& l, const Vector4i& r);
 Vector4i operator<<(const Vector4i& l, int n);
 Vector4i operator>>(const Vector4i& l, int n);
+
 inline Vector4i operator*(int i, const Vector4i& v) { return v * i; }
 inline Vector4i& operator+=(Vector4i& l, const Vector4i& r) { return l = l + r; }
 inline Vector4i& operator-=(Vector4i& l, const Vector4i& r) { return l = l - r; }
@@ -254,7 +243,10 @@ inline Vector4i& operator*=(Vector4i& l, const Vector4i& r) { return l = l * r; 
 inline Vector4i& operator+=(Vector4i& l, int i) { return l = l + i; }
 inline Vector4i& operator-=(Vector4i& l, int i) { return l = l - i; }
 inline Vector4i& operator*=(Vector4i& l, int i) { return l = l * i; }
-template <> inline void my_zero(Vector4i& v) { v = Vector4i(0); }
+
+// See Vector4.
+static_assert(std::is_trivially_default_constructible_v<Vector4i>);
+static_assert(std::is_trivially_copyable_v<Vector4i>);
 
 }  // namespace hh
 

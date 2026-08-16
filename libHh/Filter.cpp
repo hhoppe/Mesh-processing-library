@@ -110,10 +110,6 @@ struct Filter_impulse final : Filter {
     _is_trivial_magnify = true;
     _is_impulse = true;
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_box final : Filter {
@@ -127,10 +123,6 @@ struct Filter_box final : Filter {
     // Discontinuous functions must be treated specially to create half-open intervals.
     return x < -.5 ? 0. : x < .5 ? 1. : 0.;  // 1 over interval [-.5, .5)
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_triangle final : Filter {
@@ -139,10 +131,6 @@ struct Filter_triangle final : Filter {
   static double sfunc(double x) {
     x = abs(x);
     return x < 1. ? -x + 1. : 0.;
-  }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
   }
 };
 
@@ -165,10 +153,6 @@ struct Filter_quadratic final : Filter {
       return -x * x + 1.;
     }
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_mitchell final : Filter {
@@ -187,10 +171,6 @@ struct Filter_mitchell final : Filter {
       return (((7. / 6.) * x - 2.) * x) * x + 8. / 9.;
     }
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_keys final : Filter {  // also known as Catmull-Rom spline
@@ -207,10 +187,6 @@ struct Filter_keys final : Filter {  // also known as Catmull-Rom spline
     } else {
       return ((1.5 * x - 2.5) * x) * x + 1.;
     }
-  }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
   }
 };
 
@@ -229,10 +205,6 @@ struct Filter_spline final : Filter {  // cubic B-spline
     } else {
       return ((0.5 * x - 1.) * x) * x + 2. / 3.;
     }
-  }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
   }
 };
 
@@ -254,10 +226,6 @@ struct Filter_omoms final : Filter {  // cubic OMOMS
       return ((0.5 * x - 1.) * x + 3. / 42.) * x + 26. / 42.;
     }
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_preprocess final : Filter {
@@ -267,19 +235,11 @@ struct Filter_preprocess final : Filter {
     _is_interpolating = false;
     _is_preprocess = true;
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_justspline final : Filter {
   using type = Filter_justspline;
   Filter_justspline() : Filter("justspline", Filter_spline::sfunc, 2.) { _is_interpolating = false; }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_justomoms final : Filter {
@@ -287,10 +247,6 @@ struct Filter_justomoms final : Filter {
   Filter_justomoms() : Filter("justomoms", Filter_omoms::sfunc, 2.) {
     _is_interpolating = false;
     _is_omoms = true;
-  }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
   }
 };
 
@@ -307,10 +263,6 @@ struct Filter_gaussian final : Filter {
     //   0.93503:1.06497     av=1           sd=0.0459424
     return gaussian(x, sdv);
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_lanczos6 final : Filter {
@@ -322,10 +274,6 @@ struct Filter_lanczos6 final : Filter {
   static double sfunc(double x) {
     // lanczos[x, 6]
     return lanczos(x, 3.);
-  }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
   }
 };
 
@@ -339,10 +287,6 @@ struct Filter_lanczos10 final : Filter {
     // lanczos[x, 10]
     return lanczos(x, 5.);
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 struct Filter_hamming6 final : Filter {
@@ -355,40 +299,22 @@ struct Filter_hamming6 final : Filter {
     // hamming[x, 6]
     return hamming(x, 3.);
   }
-  static const type& instance() {
-    static auto& f = *new type;
-    return f;
-  }
 };
 
 }  // namespace
 
 const Filter& Filter::get(const string& name) {
   assertx(name != "");
-  // Careful: Filter::get() may be called by some static constructor.
-  static Array<const Filter*> filters;
-  static std::once_flag flag;
-  const auto initialize_filters = [] {
-    filters.push(&Filter_impulse::instance());
-    filters.push(&Filter_box::instance());
-    filters.push(&Filter_triangle::instance());
-    filters.push(&Filter_quadratic::instance());
-    filters.push(&Filter_mitchell::instance());
-    filters.push(&Filter_keys::instance());
-    filters.push(&Filter_spline::instance());
-    filters.push(&Filter_omoms::instance());
-    filters.push(&Filter_preprocess::instance());
-    filters.push(&Filter_justspline::instance());
-    filters.push(&Filter_justomoms::instance());
-    filters.push(&Filter_gaussian::instance());
-    filters.push(&Filter_lanczos6::instance());
-    filters.push(&Filter_lanczos10::instance());
-    filters.push(&Filter_hamming6::instance());
+  // Careful: Filter::get() may be called by some static constructor, so we use a function-local
+  // static (thread-safe and lazily initialized) and intentionally never destroy the filters.
+  static const auto& filters = *new Array<const Filter*>{
+      new Filter_impulse,   new Filter_box,      new Filter_triangle, new Filter_quadratic,  new Filter_mitchell,
+      new Filter_keys,      new Filter_spline,   new Filter_omoms,    new Filter_preprocess, new Filter_justspline,
+      new Filter_justomoms, new Filter_gaussian, new Filter_lanczos6, new Filter_lanczos10,  new Filter_hamming6,
   };
-  std::call_once(flag, initialize_filters);
   assertx(filters.num());
   for (const Filter* filter : filters) {
-    string filter_name = filter->name();
+    const string& filter_name = filter->name();
     if (filter_name == name || (name.size() == 1 && name[0] != 'j' && filter_name[0] == name[0])) return *filter;
   }
   assertnever("Filter '" + name + "' not recognized");

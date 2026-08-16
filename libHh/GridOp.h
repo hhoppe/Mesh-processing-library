@@ -355,6 +355,7 @@ template <int D, typename T>
 Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pixelindex0,
                              CMatrixView<float> mat_weights, Bndrule bndrule, const T* bordervalue) {
   HH_GRIDOP_TIMER("__evaluate");
+  static_assert(std::is_trivially_default_constructible_v<T>);
   const Vec<int, D>& dims = grid.dims();
   int cx = dims[d];
   int nx = ar_pixelindex0.num();
@@ -372,8 +373,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   assertx(0 <= ioutmin && ioutmin <= ioutmax && ioutmax <= nx);
   const auto func = [&](const Vec<int, D>& u) {
     int x = u[d];
-    T v;
-    my_zero(v);
+    T v{};
     for_int(k, nk) {
       int ii = ar_pixelindex0[x] + k;
       const T* pvalue = map_boundaryrule_1D(ii, cx, bndrule) ? &grid[u.with(d, ii)] : bordervalue;
@@ -385,8 +385,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     int x = u[d];
     const Vec<int, D> u0 = u.with(d, ar_pixelindex0[x]);
     size_t i0 = ravel_index(dims, u0);
-    T v;
-    my_zero(v);
+    T v{};
     const float* mat_weights_x = mat_weights[x].data();
     const T* grid_i0 = grid.data() + i0;
     for_int(k, nk) v += mat_weights_x[k] * grid_i0[k * stride];
@@ -617,6 +616,7 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
 
 template <int D, typename T>
 T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs, const T* bordervalue) {
+  static_assert(std::is_trivially_default_constructible_v<T>);
   Vec<int, D> uL, uU;
   Vec<PArray<float, 10>, D> matw;
   for_int(d, D) {
@@ -630,8 +630,7 @@ T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>
   }
   Vec<Bndrule, D> bndrules;
   for_int(d, D) bndrules[d] = filterbs[d].bndrule();
-  T val;
-  my_zero(val);
+  T val{};
   double sumw = 0.;
   for (const Vec<int, D>& u : range(uL, uU)) {
     float w = 1.f;

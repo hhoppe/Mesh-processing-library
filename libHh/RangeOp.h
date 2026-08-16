@@ -263,14 +263,11 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType sum(const Range& range) {
+  static_assert(std::is_trivially_default_constructible_v<SumType>);
   using std::begin, std::end;
   // return std::accumulate(begin(range), end(range), SumType{});
   auto iter = begin(range), itend = end(range);
-  if (iter == itend) {
-    SumType v;
-    my_zero(v);
-    return v;
-  }
+  if (iter == itend) return SumType{};
   SumType v = *iter;
   for (++iter; iter != itend; ++iter) v += *iter;
   return v;
@@ -281,13 +278,12 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Value>, DesiredType>>
 MeanType mean(const Range& range) {
+  static_assert(std::is_trivially_default_constructible_v<MeanType>);
   using std::begin, std::end;
   auto iter = begin(range), itend = end(range);
   if (iter == itend) {
     Warning("mean");
-    MeanType v;
-    my_zero(v);
-    return v;
+    return MeanType{};
   }
   MeanType v = *iter;
   size_t num = 1;
@@ -304,15 +300,12 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType mag2(const Range& range) {
+  static_assert(std::is_trivially_default_constructible_v<SumType>);
   using std::begin, std::end;
   // return std::accumulate(begin(range), end(range), SumType{},
   //                        [](const SumType& sum, const Value& e) { return sum + square(e); });
   auto iter = begin(range), itend = end(range);
-  if (iter == itend) {
-    SumType v;
-    my_zero(v);
-    return v;
-  }
+  if (iter == itend) return SumType{};
   SumType v = square(SumType(*iter));
   for (++iter; iter != itend; ++iter) v += square(SumType(*iter));
   return v;
@@ -331,8 +324,8 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Value>, DesiredType>>
 MeanType rms(const Range& range) {
-  MeanType v;
-  my_zero(v);
+  static_assert(std::is_trivially_default_constructible_v<MeanType>);
+  MeanType v{};
   size_t num = 0;
   for (const auto& e : range) {
     v += square(MeanType(e));
@@ -352,10 +345,9 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Value>, DesiredType>>
 MeanType var(const Range& range) {
-  MeanType zero, v, v2;
-  my_zero(zero);
-  my_zero(v);
-  my_zero(v2);
+  static_assert(std::is_trivially_default_constructible_v<MeanType>);
+  constexpr MeanType zero{};
+  MeanType v{}, v2{};
   size_t num = 0;
   for (const auto& e : range) {
     v += e;
@@ -422,11 +414,11 @@ template <typename DesiredType = void, typename Range1, typename Range2, typenam
           typename = enable_if_range_t<Range2>, typename Value = range_value_t<Range1>,
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType dist2(const Range1& range1, const Range2& range2) {
+  static_assert(std::is_trivially_default_constructible_v<SumType>);
   using std::begin, std::end;
   auto iter1 = begin(range1), itend1 = end(range1);
   auto iter2 = begin(range2), itend2 = end(range2);
-  SumType v;
-  my_zero(v);
+  SumType v{};
   for (; iter1 != itend1; ++iter1, ++iter2) v += square(SumType(*iter1) - SumType(*iter2));
   ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return v;
@@ -445,11 +437,11 @@ template <typename DesiredType = void, typename Range1, typename Range2, typenam
           typename = enable_if_range_t<Range2>, typename Value = range_value_t<Range1>,
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType dot(const Range1& range1, const Range2& range2) {
+  static_assert(std::is_trivially_default_constructible_v<SumType>);
   using std::begin, std::end;
   auto iter1 = begin(range1), itend1 = end(range1);
   auto iter2 = begin(range2), itend2 = end(range2);
-  SumType v;
-  my_zero(v);
+  SumType v{};
   for (; iter1 != itend1; ++iter1, ++iter2) v += SumType(*iter1) * SumType(*iter2);
   ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return v;

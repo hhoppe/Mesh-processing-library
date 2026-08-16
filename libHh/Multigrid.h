@@ -51,9 +51,9 @@ inline float max_e(const Vector4& e) { return max(e); }
 
 // Specialize mean() of Grid for parallelism.
 template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
+  static_assert(std::is_trivially_default_constructible_v<T>);
   using MeanType = mean_type_t<T>;
-  MeanType v;
-  my_zero(v);
+  MeanType v{};
   intptr_t size = g.size();
   if (!size) {
     Warning("Zero-size grid");
@@ -65,8 +65,7 @@ template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
     const int num_threads = get_max_threads();
     Array<MeanType> means(num_threads);
     parallel_for_chunk(range(size), num_threads, [&](const int thread_index, auto subrange) {
-      MeanType v2;
-      my_zero(v2);
+      MeanType v2{};
       for (const intptr_t i : subrange) v2 += g.flat(i);
       means[thread_index] = v2;
     });
@@ -130,6 +129,7 @@ template <int D, typename T, typename Periodic = MultigridPeriodicNone<D>,
           typename Metric = MultigridMetricIsotropic<D>>
 class Multigrid : noncopyable {
   using Precise = sum_type_t<T>;
+  static_assert(std::is_trivially_default_constructible_v<T>);  // For T{} zero-initialization.
 
  public:
   explicit Multigrid(const Vec<int, D>& dims) : _grid_result(dims), _grid_rhs(dims) {}  // not zero'ed!
@@ -233,12 +233,10 @@ class Multigrid : noncopyable {
         if (d % 2 == 1 && d > largest_odd_size) std::swap(d, largest_odd_size);
         largest_other_size = max(largest_other_size, d);
       }
-      T bordervalue;
-      my_zero(bordervalue);
+      T bordervalue{};
       // Easy inside part [0, dims / 2 - 1]:
       parallel_for_coords({.cycles_per_elem = uint64_t(product(vrange)) * 2}, dims / 2, [&](const Vec<int, D>& u) {
-        T v;
-        my_zero(v);
+        T v{};
         for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid[ut];
         ngrid[u] = v * fac;
       });
@@ -253,8 +251,7 @@ class Multigrid : noncopyable {
         const Vec<int, D> uL = ntimes<D>(0).with(c, dims[c] / 2);
         const Vec<int, D> uU = ndims;
         for (const auto& u : range(uL, uU)) {
-          T v;
-          my_zero(v);
+          T v{};
           for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, bndrules, &bordervalue);
           ngrid[u] = v * fac;
         }
@@ -314,8 +311,7 @@ class Multigrid : noncopyable {
       int ny = dims[0], nx = dims[1];
       const float wL = get_wL(dims), rwL4 = 1.f / (4.f * wL + _screening_weight);
       const auto func_update = [&](int y, int x) {
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         float w, vnum = _screening_weight;  // or 0.f
         w = _metric(wL, 0);
         if (y > 0) {
@@ -399,8 +395,7 @@ class Multigrid : noncopyable {
       // atomic<int64_t> g_nfast{0}, g_nslow{0};
       const auto func_update = [&](const Vec<int, D>& u) {  // Gauss-Seidel update of value at u
         // ++g_nslow;
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         float vnum = _screening_weight;  // or 0.f
         const Vec<int, D> dims2 = dims;
         for_int(c, D) {
@@ -429,8 +424,7 @@ class Multigrid : noncopyable {
         // added "if (1)" to avoid warnings about unreachable code
         if (1) ASSERTX(true && b_default_metric);
         // ++g_nfast;
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         if (0) {
           for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         } else if (D <= 3) {
@@ -561,8 +555,7 @@ class Multigrid : noncopyable {
       int ny = dims[0], nx = dims[1];
       const float wL = get_wL(dims), wL4 = _screening_weight + wL * 4.f;
       const auto func = [&](int y, int x) {
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         float w, vnum = _screening_weight;  // or 0.f
         w = _metric(wL, 0);
         if (y > 0) {
@@ -614,8 +607,7 @@ class Multigrid : noncopyable {
       HH_MULTIGRID_TIMER("_compute_residual");
       const float wL = get_wL(dims);
       const auto func = [&](const Vec<int, D>& u) {
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         float vnum = _screening_weight;  // or 0.f
         for_int(c, D) {
           float w = _metric(wL, c);
@@ -640,8 +632,7 @@ class Multigrid : noncopyable {
       const Vec<int, D> ar_interior_offsets = generate_interior_offsets(dims);
       const auto func_interior = [&](size_t i) {
         if (1) ASSERTX(true && b_default_metric);
-        T vnei;
-        my_zero(vnei);
+        T vnei{};
         if (0) {
           for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         } else {

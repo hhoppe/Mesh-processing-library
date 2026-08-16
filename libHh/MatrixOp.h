@@ -213,6 +213,7 @@ inline Vec2<float> transform_about_center(Vec2<float> p, const Frame& frame) {
 template <typename T>
 void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs, MatrixView<T> nm,
                const T* bordervalue = nullptr) {
+  static_assert(std::is_trivially_default_constructible_v<T>);
   assertx(frame[2][2] == 1.f);
   const Frame frame_inv = inverse(frame);
   float max_shrinkage;
@@ -257,8 +258,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           Vec2<float> tp = transform_about_center(p, frame);
           Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // in coordinates [0 .. m.dims() - 1]
           int num = 0;
-          T val;
-          my_zero(val);
+          T val{};
           double sumw = 0.;
           for (const Vec2<int> yx :
                range(convert<int>(floor(psrc - src_kernel_radii)), convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
@@ -296,8 +296,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
         for_int(x, nm.xsize()) {
           const Vec2<int> yx = V(y, x);
           int num = 0;
-          T val;
-          my_zero(val);
+          T val{};
           double sumw = 0.;
           for (const Vec2<int>& sample_yx : range(num_samples)) {
             const Vec2<float> sample_offset =

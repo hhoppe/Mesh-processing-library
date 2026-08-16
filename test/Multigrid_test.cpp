@@ -33,14 +33,14 @@ template <typename T> void read_image(Image& image, Grid<2, T>& grid_orig) {
 // Compute the Laplacian of the given original grid.
 template <int D, typename T, typename Periodic, typename Metric>
 void setup_rhs(CGridView<D, T> grid_orig, Multigrid<D, T, Periodic, Metric>& multigrid) {
+  static_assert(std::is_trivially_default_constructible_v<T>);
   // HH_TIMER("_setup_rhs");
   GridView<D, T> grid_rhs = multigrid.rhs();
   assertx(same_size(grid_orig, grid_rhs));
   const Vec<int, D> dims = grid_rhs.dims();
   Periodic periodic;
   parallel_for_coords({.cycles_per_elem = D * 25}, dims, [&](const Vec<int, D>& u) {
-    T vrhs;
-    my_zero(vrhs);
+    T vrhs{};
     for_int(c, D) {
       if (u[c] > 0) {
         vrhs += grid_orig[u.with(c, u[c] - 1)] - grid_orig[u];

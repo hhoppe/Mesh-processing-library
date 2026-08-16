@@ -10,8 +10,6 @@
 #include "libHh/Set.h"
 using namespace hh;
 
-namespace hh {
-
 template <typename T, int N, size_t... Is>
 constexpr Vec<T, (N - 1)> V_rest_aux(const Vec<T, N>& u, std::index_sequence<Is...> /*unused*/) {
   return Vec<T, N - 1>(u[Is + 1]...);
@@ -50,21 +48,22 @@ template <typename T, int N> constexpr T V_dot(const Vec<T, N>& u1, const Vec<T,
 }
 
 namespace details {
+
 template <int N, size_t... Is> constexpr Vec<int, N> V_iota_aux(std::index_sequence<Is...> /*unused*/) {
   return Vec<int, N>(int(Is)...);
 }
+
 template <int N, size_t... Is> constexpr Vec<int, N> V_rev_iota_aux(std::index_sequence<Is...> /*unused*/) {
   return Vec<int, N>(int(N - 1 - Is)...);
 }
+
 }  // namespace details
 
-template <int N> constexpr Vec<int, N> V_iota() { return details::V_iota_aux<N>(std::make_index_sequence<N>()); }
+template <int N> constexpr Vec<int, N> V_iota() { return ::details::V_iota_aux<N>(std::make_index_sequence<N>()); }
 
 template <int N> constexpr Vec<int, N> V_rev_iota() {
-  return details::V_rev_iota_aux<N>(std::make_index_sequence<N>());
+  return ::details::V_rev_iota_aux<N>(std::make_index_sequence<N>());
 }
-
-}  // namespace hh
 
 int main() {
   {
@@ -343,19 +342,9 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class Vec<int, 4>;
-template class Vec<double, 1>;
-template class Vec<float, 2>;
-template class Vec<ushort, 3>;
-
-using U = Vec<unsigned, 2>;
-// Override illegal definitions for U:
-template <> constexpr bool Vec<U, 2>::in_range(const Vec<U, 2>&) const { return false; }
-template <> constexpr bool Vec<U, 2>::in_range(const Vec<U, 2>&, const Vec<U, 2>&) const { return false; }
-template class Vec<U, 2>;
-
-template class Vec<void*, 3>;
-
-}  // namespace hh
+template class hh::Vec<int, 4>;
+template class hh::Vec<double, 1>;
+template class hh::Vec<float, 2>;
+template class hh::Vec<ushort, 3>;
+template class hh::Vec<unique_ptr<int>, 2>;
+template class hh::Vec<void*, 3>;

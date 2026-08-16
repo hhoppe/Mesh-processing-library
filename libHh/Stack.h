@@ -47,7 +47,7 @@ template <typename T> class Stack {
 
  public:
   void clear() { _s.clear(); }
-  void push(const T& e) { _s.push_back(e); }
+  void push(const T& e) requires(Copyable<T>) { _s.push_back(e); }
   void push(T&& e) { _s.push_back(std::move(e)); }
   T pop() { return vec_pop(_s); }
   const T& top() const { return _s.back(); }

@@ -96,7 +96,7 @@ template <int D, typename T> class CGridView {
  public:
   explicit CGridView(const T* a, const Vec<int, D>& dims) : _a(const_cast<T*>(a)), _dims(dims) {}
   CGridView(const type&) = default;
-  explicit CGridView(CArrayView<T> ar) : CGridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
+  explicit CGridView(CArrayView<T> ar) requires(D == 1) : CGridView(ar.data(), V(ar.num())) {}
   // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
   void reinit(type g) { *this = g; }
   template <typename T2> friend bool same_size(type g1, CGridView<D, T2> g2) { return g1.dims() == g2.dims(); }
@@ -106,12 +106,7 @@ template <int D, typename T> class CGridView {
   size_t size() const { return product_dims<D>(_dims.data()); }
   template <std::integral... A> constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
-  template <std::integral... A>
-  [[deprecated("Use operator[]")]] constexpr decltype(auto) operator()(this auto&& self, A... dd) {
-    static_assert(sizeof...(dd) == D);  // dd... are int.
-    return self[dd...];
-  }
-  const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
+  template <std::integral... A> const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
   bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
       if (u[c] < 0 || u[c] >= _dims[c]) return false;
@@ -147,21 +142,16 @@ template <int D, typename T> class CGridView {
   const T* data() const { return _a; }
   CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   // For implementation of Matrix (D == 2):
-  int ysize() const {
-    static_assert(D == 2);
-    return dim(0);
-  }
-  int xsize() const {
-    static_assert(D == 2);
-    return dim(1);
-  }
-  bool map_inside(int& y, int& x, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
-  const T& inside(int y, int x, Bndrule bndrule) const {
+  int ysize() const requires(D == 2) { return dim(0); }
+  int xsize() const requires(D == 2) { return dim(1); }
+  // Return false if bndrule == Border and i is outside.
+  bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
+  const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y][x];
   }
-  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const;
+  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
 
  protected:
   T* _a{nullptr};  // [0, _dims[0] - 1] * [0, _dims[1] - 1] * ... * [0, _dims[D - 1] - 1].
@@ -188,12 +178,12 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
  public:
   explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // Stop recursion if ArrayView == GridView.
   GridView(const type&) = default;                                     // Because it has explicit copy assignment.
-  explicit GridView(ArrayView<T> ar) : GridView(ar.data(), V(ar.num())) { static_assert(D == 1); }
+  explicit GridView(ArrayView<T> ar) requires(D == 1) : GridView(ar.data(), V(ar.num())) {}
   void reinit(type g) { *this = g; }
   using base::size;
   T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
   const T& flat(size_t i) const { return base::flat(i); }
-  T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) {
+  T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) requires(D == 2) {
     Vec<int, D> ut(u);
     bool b = base::map_inside(ut, bndrules);
     ASSERTX(b);
@@ -208,7 +198,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
   base slice(int ib, int ie) const { return base::slice(ib, ie); }
-  void assign(CGridView<D, T> g);
+  void assign(CGridView<D, T> g) requires(Copyable<T>);
   using iterator = T*;
   using const_iterator = const T*;
   T* begin() { return _a; }
@@ -220,26 +210,24 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
   CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   // For implementation of Matrix (D == 2):
-  T& inside(int y, int x, Bndrule bndrule) {
+  T& inside(int y, int x, Bndrule bndrule) requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y][x];
   }
-  const T& inside(int y, int x, Bndrule bndrule) const {
+  const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y][x];
   }
-  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const;
-  void reverse_y() {
-    static_assert(D == 2);
+  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
+  void reverse_y() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
       swap_ranges((*this)[y], (*this)[ny - 1 - y]);
     });
   }
-  void reverse_x() {
-    static_assert(D == 2);
+  void reverse_x() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny), [&](const int y) {  //
       reverse((*this)[y]);
@@ -255,10 +243,11 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
 };
 
 // Create a CGridView<1, T> referencing the single specified element.
-template <typename T> CGridView<1, T> CGrid1View(const T& e) { return CGridView<1, T>(&e, V(1)); }
+template <typename T> [[nodiscard]] CGridView<1, T> CGrid1View(const T& e) { return CGridView<1, T>(&e, V(1)); }
+template <typename T> CGridView<1, T> CGrid1View(const T&&) = delete;
 
 // Create an GridView<1, T> referencing the single specified element.
-template <typename T> GridView<1, T> Grid1View(T& e) { return GridView<1, T>(&e, V(1)); }
+template <typename T> [[nodiscard]] GridView<1, T> Grid1View(T& e) { return GridView<1, T>(&e, V(1)); }
 
 // Heap-allocated D-dimensional contiguous grid.  Any or all of the dimensions may be zero.
 // Grid(10, 20) or Grid(V(10, 20)) both create a 10x20 grid, whereas Grid({10, 20}) creates a 1x2 grid.
@@ -273,23 +262,23 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   Grid() = default;
   explicit Grid(const Vec<int, D>& dims) { init(dims); }
   template <typename... A> explicit Grid(int d0, A... dr) { init(d0, dr...); }
-  explicit Grid(const Vec<int, D>& dims, const T& v) { init(dims, v); }
-  explicit Grid(const type& g) : Grid(g.dims()) { base::assign(g); }
-  explicit Grid(CGridView<D, T> g) : Grid(g.dims()) { base::assign(g); }
+  explicit Grid(const Vec<int, D>& dims, const T& v) requires(Copyable<T>) { init(dims, v); }
+  explicit Grid(const type& g) requires(Copyable<T>) : Grid(g.dims()) { base::assign(g); }
+  explicit Grid(CGridView<D, T> g) requires(Copyable<T>) : Grid(g.dims()) { base::assign(g); }
   Grid(type&& g) noexcept { swap(*this, g); }  // Not "== default".
-  Grid(initializer_type l) : Grid() { *this = l; }
+  Grid(initializer_type l) requires(Copyable<T>) : Grid() { *this = l; }
   ~Grid() { clear(); }
-  type& operator=(CGridView<D, T> g) {
+  type& operator=(CGridView<D, T> g) requires(Copyable<T>) {
     init(g.dims());
     base::assign(g);
     return *this;
   }
-  type& operator=(const type& g) {
+  type& operator=(const type& g) requires(Copyable<T>) {
     init(g.dims());
     base::assign(g);
     return *this;
   }
-  type& operator=(initializer_type l) {
+  type& operator=(initializer_type l) requires(Copyable<T>) {
     init(nested_dims()(l));
     nested_retrieve()(*this, l);
     return *this;
@@ -312,7 +301,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     // if (vol != size()) { aligned_delete<T>(_a); _a = vol ? aligned_new<T>(vol) : nullptr; }
     _dims = dims;
   }
-  void init(const Vec<int, D>& dims, const T& v) {
+  void init(const Vec<int, D>& dims, const T& v) requires(Copyable<T>) {
     init(dims);
     fill(*this, v);
   }
@@ -435,13 +424,12 @@ constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, const Vec
   return details::grid_view_at<D, n>(p, dims);
 }
 
-template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule) const {
-  static_assert(D == 2);
+template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2) {
   return map_boundaryrule_1D(y, ysize(), bndrule) && map_boundaryrule_1D(x, xsize(), bndrule);
 }
 
 template <int D, typename T>
-const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const {
+const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2) {
   if (!map_inside(y, x, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
@@ -452,7 +440,7 @@ const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderv
 //----------------------------------------------------------------------------
 
 template <int D, typename T>
-const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const {
+const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2) {
   if (!base::map_inside(y, x, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
@@ -460,7 +448,7 @@ const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderva
   return (*this)[y][x];
 }
 
-template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) {
+template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requires(Copyable<T>) {
   assertx(same_size(*this, g));
   if (g.data() == data()) return;
   // for (const size_t i : range(size())) _a[i] = g.flat(i);

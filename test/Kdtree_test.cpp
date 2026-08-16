@@ -76,16 +76,7 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class Kdtree<unsigned, 1>;
-template class Kdtree<float, 2>;
-template class Kdtree<double, 3>;
-
-using U = unique_ptr<int>;
-// Override illegal definitions for U:
-template <> void Kdtree<U, 2>::enter_i(const U&, const Vec<float, 2>&, const Vec<float, 2>&) {}
-template <> void Kdtree<U, 2>::rec_print(int, int) const {}
-template class Kdtree<U, 2>;
-
-}  // namespace hh
+template class hh::Kdtree<unsigned, 1>;
+template class hh::Kdtree<float, 2>;
+template class hh::Kdtree<double, 3>;
+template class hh::Kdtree<unique_ptr<int>, 2>;

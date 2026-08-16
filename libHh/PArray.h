@@ -21,10 +21,11 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       _cap = n;
     }
   }
-  explicit PArray(const type& ar) : PArray() { *this = ar; }
-  explicit PArray(CArrayView<T> ar) : PArray() { *this = ar; }
+  explicit PArray(const type& ar) requires(Copyable<T>) : PArray() { *this = ar; }
+  explicit PArray(CArrayView<T> ar) requires(Copyable<T>) : PArray() { *this = ar; }
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
-  PArray(std::initializer_list<T> l) : PArray(CArrayView<T>(l)) {}
+  PArray(std::initializer_list<T> l) requires(Copyable<T>)
+      : PArray(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
   template <typename I> explicit PArray(I b, I e) : PArray() {
     for (; b != e; ++b) push(*b);
   }
@@ -33,14 +34,14 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   ~PArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }
-  auto& operator=(CArrayView<T> ar) {
+  auto& operator=(CArrayView<T> ar) requires(Copyable<T>) {
     if (!(ar.data() == _a && ar.num() == _n)) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
     }
     return *this;
   }
-  auto& operator=(const type& ar) {
+  auto& operator=(const type& ar) requires(Copyable<T>) {
     if (&ar != this) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
@@ -134,7 +135,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     sub(1);
     return e;
   }
-  void push(const T& e) {  // Avoid a.push(a[..])!
+  void push(const T& e) requires(Copyable<T>) {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
   }
@@ -142,7 +143,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = std::move(e);
   }
-  void push(CArrayView<T> ar) {
+  void push(CArrayView<T> ar) requires(Copyable<T>) {
     int n = ar.num();
     add(n);
     for_int(i, n) _a[_n - n + i] = ar[i];
@@ -158,9 +159,9 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     erase_i(0, 1);
     return e;
   }
-  void unshift(const T& e) { insert_i(0, 1), _a[0] = e; }
+  void unshift(const T& e) requires(Copyable<T>) { insert_i(0, 1), _a[0] = e; }
   void unshift(T&& e) { insert_i(0, 1), _a[0] = std::move(e); }
-  void unshift(CArrayView<T> ar) {
+  void unshift(CArrayView<T> ar) requires(Copyable<T>) {
     int n = ar.num();
     insert_i(0, n);
     for_int(i, n) _a[i] = ar[i];

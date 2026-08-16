@@ -5,7 +5,7 @@
 #include "libHh/Range.h"
 
 // Array is a dynamically resizable 1D array like std::vector, but it is derived from CArrayView and ArrayView
-//  and it constructs/destructs elements based on capacity() rather than num().
+// and it constructs/destructs elements based on capacity() rather than num().
 //
 // Aliasing: no argument may refer into the array itself, because any operation that changes the size may reallocate
 // the storage and thereby invalidate the argument; e.g. avoid a.push(a[0]), a.push_array(a.head(2)), a = a.tail(3).
@@ -56,14 +56,13 @@ using array_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Pt
                                         ArrayView<std::remove_pointer_t<Ptr>>>;
 
 // View of a variable-sized 1D array with constant data of type T; e.g. refers to a const C-array,
-//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], initializer_list<T>, etc.
+//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
 template <typename T> class CArrayView {
   using type = CArrayView<T>;
 
  public:
   explicit CArrayView(const T* a, int n) : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n >= 0); }
   CArrayView(const type& a) = default;
-  CArrayView(std::initializer_list<T> l) : CArrayView(l.begin(), narrow_cast<int>(l.size())) {}
   template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // For: const T a[n];
   template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
   // template <int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
@@ -85,7 +84,6 @@ template <typename T> class CArrayView {
     return (assertx(self.map_inside(i, bndrule)), self[i]);
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
-  [[nodiscard]] [[deprecated("Use hh::contains()")]] constexpr bool contains(const T& e) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
   [[nodiscard]] constexpr auto head(this auto&& self, int n) { return self.segment(0, n); }
   [[nodiscard]] constexpr auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
@@ -134,7 +132,7 @@ template <typename T> class ArrayView : public CArrayView<T> {
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
-  void assign(base ar);
+  void assign(base ar) requires(Copyable<T>);
   using iterator = T*;
   using const_iterator = const T*;
   T* data() { return _a; }
@@ -150,12 +148,6 @@ template <typename T> class ArrayView : public CArrayView<T> {
   ArrayView() = default;
   type& operator=(const type&) = default;
 };
-
-// Create a CArrayView<T> referencing the single specified element.
-template <typename T> [[nodiscard]] [[deprecated("Use hh::V()")]] constexpr CArrayView<T> ArView(const T& e) {
-  return CArrayView<T>(&e, 1);
-}
-template <typename T> CArrayView<T> ArView(const T&&) = delete;
 
 // Create an ArrayView<T> referencing the single specified element.
 template <typename T> [[nodiscard]] constexpr ArrayView<T> ArView(T& e) { return ArrayView<T>(&e, 1); }
@@ -175,10 +167,11 @@ template <typename T> class Array : public ArrayView<T> {
  public:
   Array() = default;
   explicit Array(int n) : base(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) { ASSERTX(n >= 0); }
-  explicit Array(int n, const T& v) : Array(n) { for_int(i, n) _a[i] = v; }
-  explicit Array(const type& ar) : Array(ar.num()) { base::assign(ar); }
-  explicit Array(CArrayView<T> ar) : Array(ar.num()) { base::assign(ar); }
-  Array(std::initializer_list<T> l) : Array(CArrayView<T>(l)) {}
+  explicit Array(int n, const T& v) requires Copyable<T> : Array(n) { for_int(i, n) _a[i] = v; }
+  explicit Array(const type& ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
+  explicit Array(CArrayView<T> ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
+  Array(std::initializer_list<T> l) requires Copyable<T>
+      : Array(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
   template <typename Iterator, typename = std::enable_if_t<
                                    !std::is_same_v<typename std::iterator_traits<Iterator>::iterator_category, void>>>
@@ -195,17 +188,16 @@ template <typename T> class Array : public ArrayView<T> {
     for (const auto& e : range) push(e);
   }
   ~Array() { delete[] _a; }
-  type& operator=(CArrayView<T> ar) {
+  type& operator=(CArrayView<T> ar) requires Copyable<T> {
     init(ar.num());
     base::assign(ar);
     return *this;
   }
-  type& operator=(const type& ar) {
+  type& operator=(const type& ar) requires Copyable<T> {
     init(ar.num());
     base::assign(ar);
     return *this;
   }
-  type& operator=(std::initializer_list<T> l) { return *this = CArrayView<T>(l); }
   type& operator=(type&& ar) noexcept {
     clear();
     swap(*this, ar);
@@ -216,7 +208,7 @@ template <typename T> class Array : public ArrayView<T> {
     _a = nullptr, _n = 0, _cap = 0;
   }
   void init(int n);  // Allocate n, DISCARD old values if too small.
-  void init(int n, const T& v) {
+  void init(int n, const T& v) requires Copyable<T> {
     init(n);
     for_int(i, n) _a[i] = v;
   }
@@ -257,7 +249,7 @@ template <typename T> class Array : public ArrayView<T> {
     return e;
   }
   type pop(int n);
-  void push(const T& e) {  // Avoid a.push(a[..])!
+  void push(const T& e) requires Copyable<T> {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
   }
@@ -265,17 +257,20 @@ template <typename T> class Array : public ArrayView<T> {
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = std::move(e);
   }
-  void push_array(CArrayView<T> ar) {
-    int n = ar.num();
-    add(n);
-    for_int(i, n) _a[_n - n + i] = ar[i];
+  template <std::ranges::input_range R> requires std::assignable_from<T&, std::ranges::range_reference_t<R>>
+  void push_array(R&& range) {
+    if constexpr (std::ranges::forward_range<R> || std::ranges::sized_range<R>) {
+      const int t = add(narrow_cast<int>(std::ranges::distance(range)));
+      std::ranges::copy(range, _a + t);  // Moves elements only if the caller opts in via std::views::as_rvalue.
+    } else {
+      for (auto&& e : range) push(std::forward<decltype(e)>(e));
+    }
   }
   void push_array(type&& ar) {
     int n = ar.num();
     add(n);
     for_int(i, n) _a[_n - n + i] = std::move(ar[i]);
   }
-  void push_array(std::initializer_list<T> l) { push_array(CArrayView<T>(l)); }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
@@ -283,18 +278,7 @@ template <typename T> class Array : public ArrayView<T> {
     return e;
   }
   type shift(int n);
-  void unshift(const T& e) { insert_i(0, 1), _a[0] = e; }
-  void unshift(T&& e) { insert_i(0, 1), _a[0] = std::move(e); }
-  void unshift(CArrayView<T> ar) {
-    int n = ar.num();
-    insert_i(0, n);
-    for_int(i, n) _a[i] = ar[i];
-  }
-  void unshift(type&& ar) {
-    int n = ar.num();
-    insert_i(0, n);
-    for_int(i, n) _a[i] = std::move(ar[i]);
-  }
+  void unshift(const T& e) requires Copyable<T> { insert_i(0, 1), _a[0] = e; }
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
@@ -423,13 +407,6 @@ template <typename T>
   return (*this)[i];
 }
 
-template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::contains(const T& e) const {
-  for_int(i, _n) {
-    if (_a[i] == e) return true;
-  }
-  return false;
-}
-
 template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(type rhs) const {
   if (_n != rhs._n) return false;
   for_int(i, _n) {
@@ -440,7 +417,7 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(typ
 
 //----------------------------------------------------------------------------
 
-template <typename T> void ArrayView<T>::assign(base ar) {
+template <typename T> void ArrayView<T>::assign(base ar) requires(Copyable<T>) {
   ASSERTX(_n == ar.num());
   // std::memcpy() would be unsafe here for general T.
   // std::copy() and std::move() perform std::memmove() if std::is_trivially_copyable_v<T>;

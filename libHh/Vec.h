@@ -24,7 +24,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   Vec() = default;
   // Include arg0 to disambiguate from default constructor.  arg0 may be either const l-value or r-value reference.
   template <typename... Args>
-  constexpr Vec(const T& arg0, Args&&... args1) noexcept : base{{arg0, std::forward<Args>(args1)...}} {
+  constexpr Vec(const T& arg0, Args&&... args1) noexcept requires(Copyable<T>)
+      : base{{arg0, std::forward<Args>(args1)...}} {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
   template <typename... Args>
@@ -32,7 +33,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
 
-  Vec(CArrayView<T> ar) { assign(ar); }
+  Vec(CArrayView<T> ar) requires(Copyable<T>) { assign(ar); }
   // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
   //  it is safest to not include any copy-constructor, not even a default one.
   [[nodiscard]] constexpr int num() const { return n; }
@@ -42,14 +43,17 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
-  constexpr void assign(CArrayView<T> ar) {
+  constexpr void assign(CArrayView<T> ar) requires(Copyable<T>) {
     ASSERTXX(ar.num() == n);
     std::copy(ar.data(), ar.data() + n, data());
   }
-  [[nodiscard]] constexpr type rev() const { return rev_aux(std::make_index_sequence<n>()); }
-  [[nodiscard]] constexpr bool in_range(const type& dims) const { return in_range(type::all(T{}), dims); }
-  [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const;  // uL[c] <= [c] < uU[c] for all c.
-  [[nodiscard]] constexpr type with(int i, T e) const& {
+  [[nodiscard]] constexpr type rev() const requires(Copyable<T>) { return rev_aux(std::make_index_sequence<n>()); }
+  [[nodiscard]] constexpr bool in_range(const type& dims) const requires(std::integral<T>) {  // [c] < uU[c] for all c.
+    return in_range(type::all(T{}), dims);
+  }
+  // uL[c] <= [c] < uU[c] for all c.
+  [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const requires(std::integral<T>);
+  [[nodiscard]] constexpr type with(int i, T e) const& requires(Copyable<T>) {
     type ar(*this);
     ar[i] = std::move(e);
     return ar;
@@ -117,7 +121,9 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     else
       return nullptr;
   }
-  [[nodiscard]] static constexpr type all(const T& e) { return all_aux(e, std::make_index_sequence<n>()); }
+  [[nodiscard]] static constexpr type all(const T& e) requires(Copyable<T>) {
+    return all_aux(e, std::make_index_sequence<n>());
+  }
   static constexpr int Num = n;
   // E.g.: const auto vec = Vec<float, 3>::create([](int i) { return i * .5f; }).
   template <typename Func> requires std::is_invocable_r_v<T, Func, int>
@@ -160,10 +166,10 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) {
     return static_cast<copy_const_t<Self, type>&>(self);
   }
-  template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const {
+  template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const requires(Copyable<T>) {
     return type(data()[n - 1 - Is]...);
   }
-  template <size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) {
+  template <size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) requires(Copyable<T>) {
     return type((void(Is), e)...);
   }
   // Default operator=() and copy_constructor are safe.
@@ -433,21 +439,10 @@ template <int D> details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<i
   return details::VecL_range<D>(uL, uU);
 }
 
-// Backwards compatibility; deprecated.
-template <int D> [[deprecated("Use hh::for_coords() instead")]] details::Vec_range<D> coords(const Vec<int, D>& uU) {
-  return range(uU);
-}
-
-// Backwards compatibility; deprecated.
-template <int D>
-[[deprecated("Use hh::for_coordsL() instead")]] details::VecL_range<D> coordsL(const Vec<int, D>& uL,
-                                                                               const Vec<int, D>& uU) {
-  return range(uL, uU);
-}
-
 //----------------------------------------------------------------------------
 
-template <typename T, int n> constexpr bool Vec<T, n>::in_range(const Vec<T, n>& uL, const Vec<T, n>& uU) const {
+template <typename T, int n>
+constexpr bool Vec<T, n>::in_range(const Vec<T, n>& uL, const Vec<T, n>& uU) const requires(std::integral<T>) {
   for_int(c, n) {
     if ((*this)[c] < uL[c] || (*this)[c] >= uU[c]) return false;
   }

@@ -55,10 +55,8 @@ int main() {
   }
 }
 
-namespace hh {
-template class MoveToFront<int>;
-template class MoveToFront<int*>;
+template class hh::MoveToFront<int>;
+template class hh::MoveToFront<int*>;
 
-template class Encoding<int>;
-template class Encoding<int*>;
-}  // namespace hh
+template class hh::Encoding<int>;
+template class hh::Encoding<int*>;

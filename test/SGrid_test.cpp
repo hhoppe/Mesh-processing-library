@@ -165,4 +165,7 @@ int main() {
   }
 }
 
+template class hh::SGrid<double*, 1>;
+template class hh::SGrid<float, 10>;
 template class hh::SGrid<int, 2, 3, 3>;
+template class hh::SGrid<unique_ptr<int>, 8, 1, 2>;

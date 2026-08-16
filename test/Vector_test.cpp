@@ -181,3 +181,7 @@ int main() {
   test_queue();
   test_list();
 }
+
+template class std::vector<int>;
+template class std::vector<void*>;
+// template class std::vector<unique_ptr<int>>;  // Full instantiation is unsupported.

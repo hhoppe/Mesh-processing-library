@@ -257,3 +257,8 @@ int main() {
 
 template class hh::Pqueue<unsigned>;
 template class hh::Pqueue<float>;
+template class hh::Pqueue<unique_ptr<int>>;
+
+template class hh::HPqueue<unsigned>;
+template class hh::HPqueue<float>;
+template class hh::HPqueue<double*>;

@@ -234,6 +234,10 @@ template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<
 template <typename T>
 concept Numeric = is_numeric_v<T>;
 
+// Element type that a container can copy into its storage (containers assign rather than construct in place).
+template <typename T>
+concept Copyable = std::is_copy_assignable_v<T>;
+
 // *** Utility classes.
 
 // Derive from this class to disable copy constructor and copy assignment.

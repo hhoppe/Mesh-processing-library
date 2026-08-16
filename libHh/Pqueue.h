@@ -26,7 +26,7 @@ template <typename T> struct Node {
 template <typename T> class Pqueue : noncopyable {
  public:
   void clear() { _ar.clear(); }
-  void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
+  void enter(const T& e, float pri) requires(Copyable<T>) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
   void enter(T&& e, float pri) { ASSERTX(pri >= 0.f), enter_i(std::move(e), pri); }
   void reserve(int size) { _ar.reserve(size); }
   int num() const { return _ar.num(); }
@@ -35,7 +35,9 @@ template <typename T> class Pqueue : noncopyable {
   const T& min() const { return (ASSERTXX(!empty()), _ar[0]._e); }
   float min_priority() const { return (ASSERTXX(!empty()), _ar[0]._pri); }
   T remove_min() { return (ASSERTXX(!empty()), remove_min_i()); }
-  void enter_unsorted(const T& e, float pri) { return (ASSERTX(pri >= 0.f), _ar.push(Node(e, pri))); }
+  void enter_unsorted(const T& e, float pri) requires(Copyable<T>) {
+    return (ASSERTX(pri >= 0.f), _ar.push(Node(e, pri)));
+  }
   void enter_unsorted(T&& e, float pri) { ASSERTX(pri >= 0.f), _ar.push(Node(std::move(e), pri)); }
   void sort() { sort_i(); }
 
@@ -49,7 +51,7 @@ template <typename T> class Pqueue : noncopyable {
   int adjust_up(int n, const float cp) {
     for (;;) {
       if (!n) break;
-      int pn = (n - 1) / 2;  // parent node
+      int pn = (n - 1) / 2;  // Parent node.
       if (cp < _ar[pn]._pri) {
         nmove(n, pn);
         n = pn;
@@ -61,11 +63,11 @@ template <typename T> class Pqueue : noncopyable {
   }
   int adjust_down(int n, const float cp) {
     for (;;) {
-      int ln = n * 2 + 1;      // left child node
-      if (ln >= num()) break;  // no children
+      int ln = n * 2 + 1;      // Left child node.
+      if (ln >= num()) break;  // No children.
       float lp = _ar[ln]._pri;
-      int rn = n * 2 + 2;  // right child node
-      if (rn >= num()) {   // no right child
+      int rn = n * 2 + 2;  // Right child node.
+      if (rn >= num()) {   // No right child.
         if (cp > lp) {
           nmove(n, ln);
           n = ln;
@@ -94,14 +96,14 @@ template <typename T> class Pqueue : noncopyable {
     }
     return n;
   }
-  void enter_i(const T& e, float pri) {
-    _ar.add(1);  // leave this new node uninitialized
+  void enter_i(const T& e, float pri) requires(Copyable<T>) {
+    _ar.add(1);  // Leave this new node uninitialized.
     int j = adjust_up(num() - 1, pri);
     _ar[j]._e = e;
     _ar[j]._pri = pri;
   }
   void enter_i(T&& e, float pri) {
-    _ar.add(1);  // leave this new node uninitialized
+    _ar.add(1);  // Leave this new node uninitialized.
     int j = adjust_up(num() - 1, pri);
     _ar[j]._e = std::move(e);
     _ar[j]._pri = pri;
@@ -133,7 +135,8 @@ template <typename T> class Pqueue : noncopyable {
 };
 
 // Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in Pqueue!
-template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> class HPqueue : noncopyable {
+template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> requires(Copyable<T>)
+class HPqueue : noncopyable {
  public:
   void clear() { _ar.clear(), _m.clear(); }
   void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
@@ -148,16 +151,16 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   void sort() { return sort_i(); }
   bool contains(const T& e) const { return _m.contains(e); }
   float retrieve(const T& e) const { return retrieve_i(e); }
-  float remove(const T& e) { return remove_i(e); }                                         // ret pri or < 0.f
-  float update(const T& e, float pri) { return (ASSERTX(pri >= 0.f), update_i(e, pri)); }  // ret prevpri or < 0.f
-  float enter_update(const T& e, float pri) { return enter_update_i(e, pri); }             // ret prevpri or < 0.f
+  float remove(const T& e) { return remove_i(e); }                                         // Ret pri or < 0.f.
+  float update(const T& e, float pri) { return (ASSERTX(pri >= 0.f), update_i(e, pri)); }  // Ret prevpri or < 0.f.
+  float enter_update(const T& e, float pri) { return enter_update_i(e, pri); }             // Ret prevpri or < 0.f.
   bool enter_update_if_smaller(const T& e, float pri) { return enter_update_if_smaller_i(e, pri); }
   bool enter_update_if_greater(const T& e, float pri) { return enter_update_if_greater_i(e, pri); }
 
  private:
   using Node = details::PQ::Node<T>;
   Array<Node> _ar;
-  Map<T, int, Hash, Equal> _m;  // element -> index in array
+  Map<T, int, Hash, Equal> _m;  // Element -> index in array.
   void consider_shrink() {
     if (0 && num() < _ar.capacity() * .4f && _ar.capacity() > 100) reserve(_ar.capacity() / 2);
   }
@@ -168,7 +171,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   }
   // (cp is the priority of the current node n, which may not be up-to-date in _ar[n])
   // After this call returns index j, if j != n, elements have been shifted,
-  //  and the old element at n should be moved into its new location at j.
+  // and the old element at n should be moved into its new location at j.
   int adjust(int n, const float cp, bool up, bool down) {
     int orig_n = n;
     if (up) {
@@ -186,11 +189,11 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     }
     if (down) {
       for (;;) {
-        int ln = n * 2 + 1;      // left child
-        if (ln >= num()) break;  // no children
+        int ln = n * 2 + 1;      // Left child.
+        if (ln >= num()) break;  // No children.
         float lp = _ar[ln]._pri;
-        int rn = n * 2 + 2;  // right child
-        if (rn >= num()) {   // no right child
+        int rn = n * 2 + 2;  // Right child.
+        if (rn >= num()) {   // No right child.
           if (cp > lp) {
             nmove(n, ln);
             n = ln;
@@ -221,7 +224,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return n;
   }
   void enter_i(const T& e, float pri) {
-    _ar.add(1);  // leave this new node uninitialized
+    _ar.add(1);  // Leave this new node uninitialized.
     int j = adjust(num() - 1, pri, true, false);
     _ar[j]._e = e;
     _ar[j]._pri = pri;
@@ -280,7 +283,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
       int j = _m.remove(e);
       ASSERTX(j == i);
     }
-    if (i < num()) {  // if num() was 1, we have i == 0, num() == 0
+    if (i < num()) {  // If num() was 1, we have i == 0, num() == 0.
       int j = adjust(i, pri, true, true);
       _ar[j]._e = e0;
       _ar[j]._pri = pri;

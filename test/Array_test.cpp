@@ -174,35 +174,47 @@ int main() {
     fill(ArrayView(vec.data(), 2), 10);
     SHOW(Array(vec));
   }
+  {
+    // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
+    std::vector<std::unique_ptr<int>> src;
+    for (int i : range(3)) src.push_back(std::make_unique<int>(i));
+    Array<std::unique_ptr<int>> all;
+    all.push_array(src | std::views::as_rvalue);
+    printf("(1) all=%d,%d,%d   src nulled=%d%d%d\n", *all[0], *all[1], *all[2], !src[0], !src[1], !src[2]);
+
+    // (2) Move only part of an Array, avoiding string copies.
+    Array<std::string> words{"alpha", "beta", "gamma", "delta"};
+    Array<std::string> tail;
+    tail.push_array(std::ranges::subrange(words.tail(2)) | std::views::as_rvalue);
+    printf("(2) tail=%s,%s   words[2..3]='%s','%s' (emptied)\n",  //
+           tail[0].c_str(), tail[1].c_str(), words[2].c_str(), words[3].c_str());
+
+    // (3) Move a filtered subset; std::move() cannot express this at all.
+    Array<std::string> pool{"keep_a", "drop", "keep_b"};
+    Array<std::string> kept;
+    kept.push_array(pool | std::views::filter([](const std::string& s) { return s.starts_with("keep"); }) |
+                    std::views::as_rvalue);
+    printf("(3) kept=%s,%s   pool[0]='%s' (emptied), pool[1]='%s' (untouched)\n", kept[0].c_str(), kept[1].c_str(),
+           pool[0].c_str(), pool[1].c_str());
+
+    // (4) Without as_rvalue, the same call copies and the source is intact.
+    Array<std::string> copied;
+    copied.push_array(std::ranges::subrange(words.head(2)));
+    printf("(4) copied=%s,%s   words[0]='%s' (intact)\n", copied[0].c_str(), copied[1].c_str(), words[0].c_str());
+  }
 }
 
-namespace hh {
+template class hh::CArrayView<unsigned>;
+template class hh::CArrayView<double>;
+template class hh::CArrayView<const int*>;
+template class hh::CArrayView<unique_ptr<int>>;
 
-template class Array<unsigned>;
-template class Array<double>;
-template class Array<const int*>;
+template class hh::ArrayView<unsigned>;
+template class hh::ArrayView<double>;
+template class hh::ArrayView<const int*>;
+template class hh::ArrayView<unique_ptr<int>>;
 
-template class ArrayView<unsigned>;
-template class ArrayView<double>;
-template class ArrayView<const int*>;
-
-template class CArrayView<unsigned>;
-template class CArrayView<double>;
-template class CArrayView<const int*>;
-
-using U = unique_ptr<int>;
-// Override illegal definitions for U:
-template <> Array<U>::Array(int, const U&) {}
-template <> Array<U>::Array(const Array<U>&) : ArrayView() {}
-template <> Array<U>::Array(CArrayView<U>) : ArrayView() {}
-template <> Array<U>::Array(std::initializer_list<U>) : ArrayView() {}
-template <> Array<U>& Array<U>::operator=(CArrayView<U>) { return *this; }
-template <> Array<U>& Array<U>::operator=(const Array<U>&) { return *this; }
-template <> void Array<U>::init(int, const U&) {}
-template <> void Array<U>::push(const U&) {}
-template <> void Array<U>::push_array(CArrayView<U>) {}
-template <> void Array<U>::unshift(const U&) {}
-template <> void Array<U>::unshift(CArrayView<U>) {}
-template class Array<U>;
-
-}  // namespace hh
+template class hh::Array<unsigned>;
+template class hh::Array<double>;
+template class hh::Array<const int*>;
+template class hh::Array<unique_ptr<int>>;

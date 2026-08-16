@@ -41,16 +41,7 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class Queue<unsigned>;
-template class Queue<double>;
-template class Queue<const int*>;
-
-using U = unique_ptr<int>;
-// Override illegal definitions for U:
-template <> void Queue<U>::enqueue(const U&) {}
-template <> void Queue<U>::insert_first(const U&) {}
-template class Queue<U>;
-
-}  // namespace hh
+template class hh::Queue<unsigned>;
+template class hh::Queue<double>;
+template class hh::Queue<const int*>;
+template class hh::Queue<unique_ptr<int>>;

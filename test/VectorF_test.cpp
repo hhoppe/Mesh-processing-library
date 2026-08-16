@@ -61,4 +61,11 @@ int main() {
   }
 }
 
+template class hh::VectorF<1>;
+template class hh::VectorF<2>;
+template class hh::VectorF<3>;
+template class hh::VectorF<4>;
+template class hh::VectorF<5>;
+template class hh::VectorF<8>;
+template class hh::VectorF<9>;
 template class hh::VectorF<37>;

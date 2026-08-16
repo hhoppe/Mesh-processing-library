@@ -51,7 +51,7 @@ int main() {
   if (1) {
     SHOW("try1");
     g_func = 1;
-    g_x = {6. / 11., 5. / 7.};
+    g_x = Array{6. / 11., 5. / 7.};
     // NonlinearOptimization<double(ArrayView<double>)> opt(g_x, feval);  // fails
     // NonlinearOptimization<double (*)(ArrayView<double>)> opt(g_x, feval);  // works
     // NonlinearOptimization<double (&)(ArrayView<double>)> opt(g_x, feval);  // works

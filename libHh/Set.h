@@ -47,9 +47,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   Set() = default;
   explicit Set(Hashf hashf) : _set(0, hashf) {}
   explicit Set(Hashf hashf, Equalf equalf) : _set(0, hashf, equalf) {}
-  Set(std::initializer_list<T> list) : _set(std::move(list)) {}
+  Set(std::initializer_list<T> list) requires(Copyable<T>) : _set(std::move(list)) {}
   void clear() { _set.clear(); }
-  void enter(const T& e) {  // Element e must be new.
+  void enter(const T& e) requires(Copyable<T>) {  // Element e must be new.
     const auto [_, is_new] = _set.insert(e);
     ASSERTX(is_new);
   }
@@ -57,13 +57,13 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     const auto [_, is_new] = _set.insert(std::move(e));
     ASSERTX(is_new);
   }
-  const T& enter(const T& e, bool& is_new) {
+  const T& enter(const T& e, bool& is_new) requires(Copyable<T>) {
     const auto [it, is_new_] = _set.insert(e);
     is_new = is_new_;
     return *it;
   }
   // Omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new.
-  bool add(const T& e) {  // Return: is_new.
+  bool add(const T& e) requires(Copyable<T>) {  // Return: is_new.
     const auto [_, is_new] = _set.insert(e);
     return is_new;
   }

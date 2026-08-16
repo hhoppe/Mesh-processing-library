@@ -11,6 +11,8 @@ namespace hh {
 // incrementally unified into the same class.
 // We use path compression but without weight-balancing  -> worst case O(n log(n)), good case O(n).
 template <typename T> class UnionFind {
+  static_assert(Copyable<T>);
+
  public:
   void clear() { _m.clear(); }
   bool unify(T e1, T e2);        // Put these two elements in the same class; returns: were_different.

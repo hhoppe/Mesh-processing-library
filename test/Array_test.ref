@@ -246,3 +246,7 @@ Array(vec) = Array<int>(3) {
   10
   3
 }
+(1) all=0,1,2   src nulled=111
+(2) tail=gamma,delta   words[2..3]='','' (emptied)
+(3) kept=keep_a,keep_b   pool[0]='' (emptied), pool[1]='drop' (untouched)
+(4) copied=alpha,beta   words[0]='alpha' (intact)

@@ -85,14 +85,7 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class Stack<unsigned>;
-template class Stack<double>;
-template class Stack<const int*>;
-
-using U = unique_ptr<int>;
-template <> void Stack<U>::push(const U&) {}  // Override illegal definition for U.
-template class Stack<U>;
-
-}  // namespace hh
+template class hh::Stack<unsigned>;
+template class hh::Stack<double>;
+template class hh::Stack<const int*>;
+template class hh::Stack<unique_ptr<int>>;

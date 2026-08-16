@@ -148,7 +148,20 @@ int main() {
   }
 }
 
-template class hh::Grid<2, int>;
-// Cannot fully instantiate D != 2 because of Matrix-specialized member functions.
-// template class hh::Grid<4, unsigned>;
-// template class hh::Grid<3, float*>;
+template class hh::CGridView<1, unsigned>;
+template class hh::CGridView<2, double>;
+template class hh::CGridView<2, unique_ptr<int>>;
+template class hh::CGridView<3, const int*>;
+template class hh::CGridView<4, unique_ptr<int>>;
+
+template class hh::GridView<1, unsigned>;
+template class hh::GridView<2, double>;
+template class hh::GridView<2, unique_ptr<int>>;
+template class hh::GridView<3, const int*>;
+template class hh::GridView<4, unique_ptr<int>>;
+
+template class hh::Grid<1, unsigned>;
+template class hh::Grid<2, double>;
+template class hh::Grid<2, unique_ptr<int>>;
+template class hh::Grid<3, const int*>;
+template class hh::Grid<4, unique_ptr<int>>;

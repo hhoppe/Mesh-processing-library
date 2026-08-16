@@ -48,17 +48,18 @@ class Map {
   Map() = default;
   explicit Map(Hashf hashf) : _map(0, hashf) {}
   explicit Map(Hashf hashf, Equalf equalf) : _map(0, hashf, equalf) {}
-  Map(std::initializer_list<std::pair<const Key, Value>> list) : _map(std::move(list)) {}
+  Map(std::initializer_list<std::pair<const Key, Value>> list) requires(Copyable<Key> && Copyable<Value>)
+      : _map(std::move(list)) {}
   void clear() { _map.clear(); }
-  void enter(const Key& key, const Value& value) {  // Key must be new!
+  void enter(const Key& key, const Value& value) requires(Copyable<Key> && Copyable<Value>) {  // Key must be new!
     const auto [_, is_new] = _map.emplace(key, value);
     ASSERTX(is_new);
   }
-  void enter(Key&& key, const Value& value) {
+  void enter(Key&& key, const Value& value) requires(Copyable<Value>) {
     const auto [_, is_new] = _map.emplace(std::move(key), value);
     ASSERTX(is_new);
   }
-  void enter(const Key& key, Value&& value) {
+  void enter(const Key& key, Value&& value) requires(Copyable<Key>) {
     const auto [_, is_new] = _map.emplace(key, std::move(value));
     ASSERTX(is_new);
   }
@@ -66,7 +67,8 @@ class Map {
     const auto [_, is_new] = _map.emplace(std::move(key), std::move(value));
     ASSERTX(is_new);
   }
-  Value& enter(const Key& key, const Value& value, bool& is_new) {  // Does not modify element if it already exists.
+  Value& enter(const Key& key, const Value& value, bool& is_new) requires(Copyable<Key> && Copyable<Value>)
+  {  // Does not modify element if it already exists.
     const auto [it, is_new_] = _map.emplace(key, value);
     is_new = is_new_;
     return it->second;
@@ -96,7 +98,7 @@ class Map {
   }
   // const Value& get(const Key& key) const { return (*this)[key]; } // Bad: throws exception if absent.
   Value remove(const Key& key) { return remove_i(key); }
-  Value replace(const Key& key, const Value& value) {
+  Value replace(const Key& key, const Value& value) requires(Copyable<Key> && Copyable<Value>) {
     auto it = _map.find(key);
     if (it == end()) return Value();
     Value vo = it->second;
@@ -107,8 +109,10 @@ class Map {
   int num() const { return narrow_cast<int>(_map.size()); }
   size_t size() const { return _map.size(); }
   bool empty() const { return _map.empty(); }
-  Value& operator[](const Key& key) { return _map[key]; }  // Introduced for Combination.
-  const Value& operator[](const Key& key) const {
+  Value& operator[](const Key& key) requires(Copyable<Key> && Copyable<Value>) {  // Introduced for Combination.
+    return _map[key];
+  }
+  const Value& operator[](const Key& key) const requires(Copyable<Value>) {
     auto it = _map.find(key);
     return it != end() ? it->second : def();
   }

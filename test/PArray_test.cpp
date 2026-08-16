@@ -119,23 +119,7 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class PArray<unsigned, 4>;
-template class PArray<double, 4>;
-template class PArray<const int*, 4>;
-
-using U = unique_ptr<int>;
-// Override illegal definitions for U:
-template <> PArray<U, 4>::PArray(const PArray<U, 4>&) : ArrayView() {}
-template <> PArray<U, 4>::PArray(CArrayView<U>) : ArrayView() {}
-template <> PArray<U, 4>::PArray(std::initializer_list<U>) : ArrayView() {}
-template <> auto& PArray<U, 4>::operator=(const PArray<U, 4>&) { return *this; }
-template <> auto& PArray<U, 4>::operator=(CArrayView<U>) { return *this; }
-template <> void PArray<U, 4>::push(const U&) {}
-template <> void PArray<U, 4>::push(CArrayView<U>) {}
-template <> void PArray<U, 4>::unshift(const U&) {}
-template <> void PArray<U, 4>::unshift(CArrayView<U>) {}
-template class PArray<U, 4>;
-
-}  // namespace hh
+template class hh::PArray<unsigned, 4>;
+template class hh::PArray<double, 10>;
+template class hh::PArray<const int*, 100>;
+template class hh::PArray<unique_ptr<int>, 2>;

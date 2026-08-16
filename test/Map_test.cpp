@@ -143,22 +143,9 @@ int main() {
   }
 }
 
-namespace hh {
-
-template class Map<int, int>;
-template class Map<Point, int, std::hash<Vec3<float>>>;
-template class Map<string, string>;
-
-using U = unique_ptr<int>;
-// Override illegal definitions for U:
-template <> Map<int, U>::Map(std::initializer_list<std::pair<const int, U>>) {}
-template <> U Map<int, U>::replace(const int&, const U&) { return U(); }
-template <> void Map<int, U>::enter(const int&, const U&) {}
-template <> void Map<int, U>::enter(int&&, const U&) {}
-template <> U& Map<int, U>::enter(const int&, const U&, bool&) {
-  static U u;
-  return u;
-}
-template class Map<int, U>;
-
-}  // namespace hh
+template class hh::Map<int, unsigned>;
+template class hh::Map<Point, int, std::hash<Vec3<float>>>;
+template class hh::Map<string, string>;
+template class hh::Map<void*, unique_ptr<int>>;
+template class hh::Map<unique_ptr<int>, double*>;
+template class hh::Map<unique_ptr<int>, unique_ptr<int>>;

@@ -38,16 +38,16 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
  public:
   SGrid() = default;
   SGrid(const type&) = default;
-  SGrid(initializer_type l) { *this = l; }  // Not constexpr, instead use = V(V(), V(), ...).
-  constexpr explicit SGrid(const base& g) : base(g) {}
+  SGrid(initializer_type l) requires(Copyable<T>) { *this = l; }  // Not constexpr, instead use = V(V(), V(), ...).
+  constexpr explicit SGrid(const base& g) requires(Copyable<T>) : base(g) {}
   constexpr SGrid(base&& g) : base(std::move(g)) {}
-  SGrid(CGridView<D, T> g) { *this = g; }
+  SGrid(CGridView<D, T> g) requires(Copyable<T>) { *this = g; }
   type& operator=(const type& g) = default;
-  type& operator=(initializer_type l) {
-    nested_retrieve()(*this, l);
+  type& operator=(initializer_type l) requires(Copyable<T>) {
+    nested_retrieve()(this->view(), l);
     return *this;
   }
-  type& operator=(CGridView<D, T> g) {
+  type& operator=(CGridView<D, T> g) requires(Copyable<T>) {
     assign(g);
     return *this;
   }
@@ -62,7 +62,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   [[nodiscard]] T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
   [[nodiscard]] const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
   [[nodiscard]] bool operator==(const type& p) const;
-  [[nodiscard]] static type all(const T& e) {
+  [[nodiscard]] static type all(const T& e) requires(Copyable<T>) {
     type g;
     for (const size_t i : range(vol)) g.flat(i) = e;
     return g;
@@ -110,7 +110,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
     }
     return false;
   }
-  void assign(CGridView<D, T> g) {
+  void assign(CGridView<D, T> g) requires(Copyable<T>) {
     ASSERTX(dims() == g.dims());
     for (const size_t i : range(vol)) flat(i) = g.flat(i);
   }

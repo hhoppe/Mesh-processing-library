@@ -162,5 +162,4 @@ int main() {
 template class hh::Set<unsigned>;
 template class hh::Set<const int*>;
 template class hh::Set<Vector>;
-// Full instantiation of Set<unique_ptr<T>> is not possible due to many undefined functions.
-// template <>; look for others.
+template class hh::Set<unique_ptr<int>>;

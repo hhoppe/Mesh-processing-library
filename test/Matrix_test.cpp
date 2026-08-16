@@ -170,7 +170,4 @@ int main() {
   }
 }
 
-// Matrix is an alias for Grid, so it cannot be directly instanced; however, Grid<2, T> is instanced in Grid_test.cpp.
-// namespace hh {
-// template class CMatrixView<unsigned>;
-// }  // namespace hh
+// Matrix*<T> cannot be instanced because aliases for Grid*<2, T>, which however are instanced in Grid_test.cpp.

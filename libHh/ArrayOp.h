@@ -8,22 +8,8 @@
 
 namespace hh {
 
-// Concatenate two or more array views.
-template <typename T, typename... A>
-[[deprecated("Use Array(concatenate(...))")]] Array<T> concat(CArrayView<T> ar1, A&&... arr) {
-  Array<T> ar;
-  int i = ar1.num();
-  ((i += arr.num()), ...);
-  ar.reserve(i);
-  // ar.reserve(ar1.num() + narrow_cast<int>(sum(CArrayView<int>{arr.num()...})));  // requires sum()
-  // Vec<int, sizeof...(arr)> t(arr.num()...); ar.reserve(ar1.num() + narrow_cast<int>(sum(t)));
-  ar.push_array(ar1);
-  (ar.push_array(arr), ...);
-  return ar;
-}
-
 // Return a sorted, uniquified array of values gathered from a range.
-template <typename Range> requires(is_range_v<Range>) decltype(auto) sort_unique(const Range& range) {
+template <typename Range> requires(is_range_v<Range>) Array<range_value_t<Range>> sort_unique(const Range& range) {
   Array ar(range);
   sort(ar);
   auto* last = std::unique(ar.begin(), ar.end());

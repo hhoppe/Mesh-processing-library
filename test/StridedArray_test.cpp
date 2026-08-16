@@ -18,3 +18,9 @@ int main() {
     for (int e : ar10c) assertx(e == 7);
   }
 }
+
+template class hh::CStridedArrayView<unsigned>;
+template class hh::CStridedArrayView<unique_ptr<int>>;
+
+template class hh::StridedArrayView<unsigned>;
+template class hh::StridedArrayView<unique_ptr<int>>;

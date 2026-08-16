@@ -46,9 +46,9 @@ void Random::seed(uint32_t seedv) {
   _impl->seed(seedv);
 }
 
-template <> inline uint32_t Random::get_int<4>() { return (*_impl)(); }
+template <> uint32_t Random::get_int<4>() { return (*_impl)(); }
 
-template <> inline uint64_t Random::get_int<8>() {
+template <> uint64_t Random::get_int<8>() {
   uint64_t v1 = get_int<4>();
   uint64_t v2 = get_int<4>();
   return v1 | (v2 << 32);
@@ -80,12 +80,12 @@ unsigned Random::get_unsigned(unsigned ub) {
   }
 }
 
-template <> inline float Random::get_unif<float>() {
+template <> float Random::get_unif<float>() {
   static const float unif_factor = pow(2.f, -32.f);
   return get_int<4>() * unif_factor + .5f * unif_factor;
 }
 
-template <> inline double Random::get_unif<double>() {
+template <> double Random::get_unif<double>() {
   static const double unif_factor = pow(2., -64.);
   return get_int<8>() * unif_factor + .5 * unif_factor;
 }

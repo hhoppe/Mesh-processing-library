@@ -51,7 +51,7 @@ class Trig {
 };
 
 // Modulo operation.  (The built-in C/C++ remainder operation (a % b) returns negative remainders if a < 0).
-inline constexpr int my_mod(int a, int b) {
+constexpr int my_mod(int a, int b) {
   // https://stackoverflow.com/questions/4003232/
   // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
   ASSERTX(b > 0);
@@ -119,7 +119,7 @@ template <typename T> T my_sqrt(T a) {
 }
 
 // Is the integer i an even power of two?
-inline constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
+constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
 
 // Fast version of int(floor(std::log2(x))).
 inline int int_floor_log2(unsigned x) {

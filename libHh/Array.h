@@ -313,7 +313,7 @@ template <typename T, typename Func>
 
 //----------------------------------------------------------------------------
 
-[[nodiscard]] inline constexpr Bndrule parse_boundaryrule(const std::string_view s) {
+[[nodiscard]] constexpr Bndrule parse_boundaryrule(const std::string_view s) {
   Bndrule bndrule;
   assertx(s.size() >= 1);
   char ch = s[0];
@@ -329,7 +329,7 @@ template <typename T, typename Func>
   return bndrule;
 }
 
-[[nodiscard]] inline constexpr std::string_view boundaryrule_name(Bndrule bndrule) {
+[[nodiscard]] constexpr std::string_view boundaryrule_name(Bndrule bndrule) {
   switch (bndrule) {
     case Bndrule::reflected: return "reflected";
     case Bndrule::periodic: return "periodic";
@@ -341,7 +341,7 @@ template <typename T, typename Func>
   }
 }
 
-inline constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
+constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
   ASSERTX(n >= 1);
   switch (bndrule) {
     case Bndrule::reflected:

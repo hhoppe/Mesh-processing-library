@@ -395,16 +395,16 @@ template <typename T> [[nodiscard]] constexpr T general_clamp(const T& v, const 
 }
 
 // Linearly interpolate between two values (f == 1.f returns v1; f == 0.f returns v2).
-[[nodiscard]] inline constexpr float interp(float v1, float v2, float f = 0.5f);
+[[nodiscard]] constexpr float interp(float v1, float v2, float f = 0.5f);
 
 // Linearly interpolate between two values (f == 1. returns v1; f == 0. returns v2).
-[[nodiscard]] inline constexpr double interp(double v1, double v2, double f = 0.5);
+[[nodiscard]] constexpr double interp(double v1, double v2, double f = 0.5);
 
 // Returns v clamped to range [0, 255].
-[[nodiscard]] inline constexpr uint8_t clamp_to_uint8(int v);
+[[nodiscard]] constexpr uint8_t clamp_to_uint8(int v);
 
 // Returns j%3 (where j is in [0, 5]).
-[[nodiscard]] inline constexpr int mod3(int j);
+[[nodiscard]] constexpr int mod3(int j);
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
 template <typename T> [[nodiscard]] constexpr T round_fraction_digits(T v, T fac = 1e5f) {
@@ -747,22 +747,22 @@ template <typename T> void my_zero(T& e) {
 template <> inline void my_zero(float& e) { e = 0.f; }
 template <> inline void my_zero(double& e) { e = 0.; }
 
-inline constexpr float interp(float v1, float v2, float f) {
+constexpr float interp(float v1, float v2, float f) {
   return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f
 }
 
-inline constexpr double interp(double v1, double v2, double f) {
+constexpr double interp(double v1, double v2, double f) {
   return f * v1 + (1. - f) * v2;  // or v2 + (v1 - v2) * f
 }
 
-inline constexpr uint8_t clamp_to_uint8(int v) {
+constexpr uint8_t clamp_to_uint8(int v) {
   // return clamp(v, 0, 255);
   // https://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
   v &= -(v >= 0);
   return uint8_t(v | ((255 - v) >> 31));
 }
 
-inline constexpr int mod3(int j) {
+constexpr int mod3(int j) {
   ASSERTX(j >= 0 && j < 6);
   return j < 3 ? j : j - 3;
 }

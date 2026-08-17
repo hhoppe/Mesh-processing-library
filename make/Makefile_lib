@@ -20,15 +20,15 @@ ifeq ($(include_make_dep),1)
   -include $(make_dep)
 endif
 
-$(obj): built_ob.$(extobj).$(CONFIG)
-built_ob.$(extobj).$(CONFIG):
+$(obj): built_ob.$(extobj).$(build_variant)
+built_ob.$(extobj).$(build_variant):
 	@rm -f $(obj) $(tlib) $(CRUMBS) built_ob.$(extobj).*
-	@touch built_ob.$(extobj).$(CONFIG)
+	@touch built_ob.$(extobj).$(build_variant)
 
 clean:
-	rm -f $(obj) built_ob.$(extobj).$(CONFIG) $(CRUMBS)
+	rm -f $(obj) $(tlib) built_ob.$(extobj).* $(CRUMBS)
 deepclean: clean
-	rm -f $(make_dep) $(tlib)
+	rm -f $(make_dep)
 
 .PHONY: all depend clean deepclean
 

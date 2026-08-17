@@ -7,8 +7,10 @@ ifeq ($(is_mac),1)
   LDFLAGS += -L/opt/X11/lib#  For XQuartz X11 on Mac.
   CC = clang#  Set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
   omit_omp = 1
+  # Mac uses libc++ (rather than libstdc++) and it does not currently have stacktrace.
 else
   CC = clang#  Set default choice of compiler (clang or gcc); override using "make CC=gcc ...".
+  last_libs += -lstdc++exp#  For stacktrace.
 endif
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
@@ -19,5 +21,3 @@ ifeq ($(CC),gcc)
 endif
 
 graphics_libs ?= -lGL -lX11
-
-last_libs += -lstdc++exp#  For stacktrace.

@@ -10,9 +10,6 @@ void Image_libs_dummy_function_to_avoid_linkage_warnings() {}
 
 #include <cstring>  // strlen()
 
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wuseless-cast"  // for (size_t) cast in two macros in jpeglib.h
-#endif
 extern "C" {
 #include "jpeglib.h"
 #include "png.h"
@@ -27,6 +24,7 @@ extern "C" {
 #include "libHh/StringOp.h"  // to_lower()
 using namespace hh;
 
+// ??
 #if defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wold-style-cast"  // for (size_t) cast in two macros in jpeglib.h
 #endif
@@ -34,10 +32,6 @@ using namespace hh;
 HH_REFERENCE_LIB("libjpeg.lib");
 HH_REFERENCE_LIB("libpng.lib");
 HH_REFERENCE_LIB("libz.lib");
-
-#if defined(__GNUC__) && !defined(__clang__)
-#pragma GCC diagnostic ignored "-Wstringop-overflow"  // for "for_int(z, image.zsize()) pixel[z] = *p++;"
-#endif
 
 namespace hh {
 

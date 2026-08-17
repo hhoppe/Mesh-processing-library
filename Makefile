@@ -16,7 +16,7 @@
 #  make CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CONFIG=all debug  # Show the compiler paths and versions.
-#  make SHELL='sh -x -v'  # Show all executed commands.
+#  make SHELL='bash -x -v'  # Show all executed commands.
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 
@@ -49,7 +49,6 @@ progs: $(dirs)                  # Build all programs.
 libs: $(lib_dirs)               # Build all libraries.
 
 test: $(lib_dirs)               # Run all unit tests (after building libraries).
-
 
 $(dirs+test):                   # Build any subproject by running make in its subdirectory.
 	$(MAKE) -C $@

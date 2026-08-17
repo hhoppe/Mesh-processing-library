@@ -34,10 +34,10 @@ progs: $(exes)
 test: $(outputs)
 	$(cmd_diffs_summary)
 
-$(exes): $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n))) built_ou.$(CONFIG)
-built_ou.$(CONFIG):
-	@rm -f $(obj) $(exe) $(CRUMBS) $(outputs) $(outputs:%.ou=%.diff) built_ou.*
-	@touch built_ou.$(CONFIG)
+$(exes): $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n))) built_ou.$(build_variant)
+built_ou.$(build_variant):
+	@rm -f $(obj) $(exes) $(CRUMBS) $(outputs) $(outputs:%.ou=%.diff) built_ou.*
+	@touch built_ou.$(build_variant)
 
 clean:
 	rm -f $(obj) $(exes) built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)

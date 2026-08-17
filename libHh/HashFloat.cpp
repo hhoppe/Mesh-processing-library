@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/HashFloat.h"
 
+#include <bit>  // bit_cast().
+
 namespace hh {
 
 // Idea:
@@ -21,14 +23,7 @@ constexpr float k_small_val = 1e-30f;
 
 inline float compute_factor(int n) { return 1.f + pow(.5f, 23.f - n) * .49999f; }
 
-inline uint32_t float_bits_to_unsigned(const float& f) {
-  union {
-    uint32_t ui;
-    float f;
-  } u;
-  u.f = f;
-  return u.ui;
-}
+inline constexpr uint32_t float_bits_to_unsigned(float f) { return std::bit_cast<uint32_t>(f); }
 
 }  // namespace
 

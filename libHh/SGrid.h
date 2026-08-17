@@ -57,8 +57,8 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   [[nodiscard]] static constexpr size_t size() { return vol; }
   [[nodiscard]] T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
   [[nodiscard]] const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
-  [[nodiscard]] constexpr slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }
-  [[nodiscard]] constexpr const slice& operator[](int r) const { return (ASSERTXX(check(r)), b()[r]); }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr const slice& operator[](int r) const { return (ASSERTXX(check(r)), b()[r]); }
   [[nodiscard]] T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
   [[nodiscard]] const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
   [[nodiscard]] bool operator==(const type& p) const;

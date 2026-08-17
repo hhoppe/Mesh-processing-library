@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Array.h"
 
+#include <print>  // std::println.
 #include <vector>
 
 #include "libHh/ArrayOp.h"
@@ -192,13 +193,40 @@ int main() {
     Array<std::string> kept;
     kept.push_array(pool | std::views::filter([](const std::string& s) { return s.starts_with("keep"); }) |
                     std::views::as_rvalue);
-    printf("(3) kept=%s,%s   pool[0]='%s' (emptied), pool[1]='%s' (untouched)\n", kept[0].c_str(), kept[1].c_str(),
-           pool[0].c_str(), pool[1].c_str());
+    printf("(3) kept=%s,%s   pool[0]='%s' (emptied), pool[1]='%s' (untouched)\n",  //
+           kept[0].c_str(), kept[1].c_str(), pool[0].c_str(), pool[1].c_str());
 
     // (4) Without as_rvalue, the same call copies and the source is intact.
     Array<std::string> copied;
     copied.push_array(std::ranges::subrange(words.head(2)));
     printf("(4) copied=%s,%s   words[0]='%s' (intact)\n", copied[0].c_str(), copied[1].c_str(), words[0].c_str());
+  }
+  {
+    // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
+    std::vector<std::unique_ptr<int>> src;
+    for (int i : range(3)) src.push_back(std::make_unique<int>(i));
+    Array<std::unique_ptr<int>> all;
+    all.push_array(src | std::views::as_rvalue);
+    std::println("(1) all={},{},{}   src nulled={:d}{:d}{:d}", *all[0], *all[1], *all[2], !src[0], !src[1], !src[2]);
+
+    // (2) Move only part of an Array, avoiding string copies.
+    Array<std::string> words{"alpha", "beta", "gamma", "delta"};
+    Array<std::string> tail;
+    tail.push_array(std::ranges::subrange(words.tail(2)) | std::views::as_rvalue);
+    std::println("(2) tail={},{}   words[2..3]='{}','{}' (emptied)", tail[0], tail[1], words[2], words[3]);
+
+    // (3) Move a filtered subset; std::move() cannot express this at all.
+    Array<std::string> pool{"keep_a", "drop", "keep_b"};
+    Array<std::string> kept;
+    kept.push_array(pool | std::views::filter([](const std::string& s) { return s.starts_with("keep"); }) |
+                    std::views::as_rvalue);
+    std::println("(3) kept={},{}   pool[0]='{}' (emptied), pool[1]='{}' (untouched)",  //
+                 kept[0], kept[1], pool[0], pool[1]);
+
+    // (4) Without as_rvalue, the same call copies and the source is intact.
+    Array<std::string> copied;
+    copied.push_array(std::ranges::subrange(words.head(2)));
+    std::println("(4) copied={},{}   words[0]='{}' (intact)", copied[0], copied[1], words[0]);
   }
 }
 

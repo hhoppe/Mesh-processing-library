@@ -36,9 +36,9 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   Vec(CArrayView<T> ar) requires(Copyable<T>) { assign(ar); }
   // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
   //  it is safest to not include any copy-constructor, not even a default one.
-  [[nodiscard]] constexpr int num() const { return n; }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return n; }
   [[nodiscard]] constexpr size_t size() const { return static_cast<size_t>(n); }
-  [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
     return (HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i]);
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }

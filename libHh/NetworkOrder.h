@@ -2,9 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 #define MESH_PROCESSING_LIBHH_NETWORKORDER_H_
 
-#if !defined(__GNUC__)
-#include <bit>  // std::endian.
-#endif
+#include <bit>  // bit_cast(), std::endian.
 
 #include "libHh/Hh.h"
 
@@ -55,29 +53,11 @@ inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 
 template <typename T> void my_swap_bytes(T* p) {
   if constexpr (sizeof(T) == 8) {
-    union {
-      uint64_t ui;
-      T t;
-    } u;
-    u.t = *p;
-    u.ui = swap_8bytes(u.ui);
-    *p = u.t;
+    *p = std::bit_cast<T>(swap_8bytes(std::bit_cast<uint64_t>(*p)));
   } else if constexpr (sizeof(T) == 4) {
-    union {
-      uint32_t ui;
-      T t;
-    } u;
-    u.t = *p;
-    u.ui = swap_4bytes(u.ui);
-    *p = u.t;
+    *p = std::bit_cast<T>(swap_4bytes(std::bit_cast<uint32_t>(*p)));
   } else if constexpr (sizeof(T) == 2) {
-    union {
-      uint16_t ui;
-      T t;
-    } u;
-    u.t = *p;
-    u.ui = swap_2bytes(u.ui);
-    *p = u.t;
+    *p = std::bit_cast<T>(swap_2bytes(std::bit_cast<uint16_t>(*p)));
   } else {
     static_assert(sizeof(T) != sizeof(T), "Unsupported type size");  // (Delay evaluation until instantiation.)
   }

@@ -486,8 +486,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
 
  private:
   // Need to friend base class for callback access to contour_cube().
-  // friend base;  // somehow insufficient on mingw and clang (whereas somehow sufficient in Contour3DMesh)
-  template <typename, typename, typename, typename> friend class Contour3DBase;
+  friend base;
   Contour _contour;
   using base::_eval;
   using base::_tmp_poly;

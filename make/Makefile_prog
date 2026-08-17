@@ -42,18 +42,18 @@ $(exe): $(obj) $(extra_objs) $(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n
 test: $(outputs)
 	$(cmd_diffs_summary)
 
-$(obj): built_ob.$(extobj).$(CONFIG)
-built_ob.$(extobj).$(CONFIG):
+$(obj): built_ob.$(extobj).$(build_variant)
+built_ob.$(extobj).$(build_variant):
 	@rm -f $(obj) $(exe) $(CRUMBS) built_ob.$(extobj).*
-	@touch built_ob.$(extobj).$(CONFIG)
+	@touch built_ob.$(extobj).$(build_variant)
 
-$(outputs): built_ou.$(CONFIG)
-built_ou.$(CONFIG):
+$(outputs): built_ou.$(build_variant)
+built_ou.$(build_variant):
 	@rm -f $(outputs) $(outputs:%.ou=%.diff) built_ou.*
-	@touch built_ou.$(CONFIG)
+	@touch built_ou.$(build_variant)
 
 clean:
-	rm -f $(obj) built_ob.$(extobj).$(CONFIG) built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)
+	rm -f $(obj) built_ob.$(extobj).* built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)
 deepclean: clean
 	rm -f $(exe) $(exe:%=%.ilk) $(exe:%=%.pdb) $(make_dep)
 

@@ -1007,11 +1007,9 @@ void process_vsplit() {
       }
       default: assertnever("");
     }
-    if (!is_zero(vspl.vad_small.dpoint) && mag2(vspl.vad_small.dpoint) < 1e-15f) {
-      // With "-vsgeom", using clang, there may be a tiny dpoint roundoff error (ii == 2) due to text conversion?
-      // SHOW(save.ii, va_s.point, va_t.point, save.vaovs.point, vspl.vad_small.dpoint);
+    // With "-vsgeom", there may be a tiny dpoint roundoff error (ii == 2); maybe text conversion.
+    if (!is_zero(vspl.vad_small.dpoint) && mag2(vspl.vad_small.dpoint) < 1e-15f)
       vspl.vad_small.dpoint = Vector(0.f, 0.f, 0.f);
-    }
   }
   // Encode wedge attributes.
   vspl.ar_wad.init(0);

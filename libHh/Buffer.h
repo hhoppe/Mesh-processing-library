@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_BUFFER_H_
 #define MESH_PROCESSING_LIBHH_BUFFER_H_
 
+#include <cstring>  // memcpy().
+
 #include "libHh/Array.h"
 #include "libHh/NetworkOrder.h"
 
@@ -76,38 +78,26 @@ inline char RBuffer::get_char(int bi) const { return (*this)[bi]; }
 
 inline int RBuffer::get_int(int bi) const {
   ASSERTX(bi >= 0 && bi + 4 <= _n);
-  const char* p = &_ar[_beg + bi];
-  union {
-    int32_t i;
-    char s[4];
-  } u;
-  for (int c = 0; c < 4; c++) u.s[c] = p[c];  // "for (const int c : range(4))" confuses clang-tidy.
-  from_std(&u.i);
-  return u.i;
+  int32_t i;
+  std::memcpy(&i, &_ar[_beg + bi], sizeof(i));
+  from_std(&i);
+  return i;
 }
 
 inline short RBuffer::get_short(int bi) const {
   ASSERTX(bi >= 0 && bi + 2 <= _n);
-  const char* p = &_ar[_beg + bi];
-  union {
-    int16_t i;
-    char s[2];
-  } u;
-  for (int c = 0; c < 2; c++) u.s[c] = p[c];  // "for (const int c : range(2))" confuses clang-tidy.
-  from_std(&u.i);
-  return u.i;
+  int16_t i;
+  std::memcpy(&i, &_ar[_beg + bi], sizeof(i));
+  from_std(&i);
+  return i;
 }
 
 inline float RBuffer::get_float(int bi) const {
   ASSERTX(bi >= 0 && bi + 4 <= _n);
-  const char* p = &_ar[_beg + bi];
-  union {
-    float f;
-    char s[4];
-  } u;
-  for (int c = 0; c < 4; c++) u.s[c] = p[c];  // "for (const int c : range(4))" confuses clang-tidy.
-  from_std(&u.f);
-  return u.f;
+  float f;
+  std::memcpy(&f, &_ar[_beg + bi], sizeof(f));
+  from_std(&f);
+  return f;
 }
 
 }  // namespace hh

@@ -70,9 +70,9 @@ template <typename T> class CArrayView {
     return ar1.num() == ar2.num();
   }
   void reinit(type a) { *this = a; }
-  [[nodiscard]] constexpr int num() const { return _n; }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return _n; }
   [[nodiscard]] constexpr size_t size() const { return narrow_cast<size_t>(_n); }
-  [[nodiscard]] [[HH_NO_DANGLING]] constexpr auto& operator[](this auto&& self, int i) {
+  [[HH_GNU_PURE]] [[nodiscard]] [[HH_NO_DANGLING]] constexpr auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
   }

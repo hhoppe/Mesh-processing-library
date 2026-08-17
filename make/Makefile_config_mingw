@@ -11,6 +11,11 @@ endif
 
 graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
+# Note: <stacktrace> is unavailable in this package: g++ leaves __cpp_lib_stacktrace undefined (libstdc++ built
+#  without libbacktrace), and the StackWalker fallback in libHh/Hh.cpp requires _MSC_VER.  Recheck using:
+#  echo '#include <version>' | g++ -x c++ -std=c++23 -dM -E - | grep stacktrace
+last_libs += -lstdc++exp#  For the Windows console path of std::print/std::println, not for stacktrace.
+
 # Workaround for g++ 16.1.0 mingw bug: 32-byte-aligned stack stores are emitted without stack realignment.
 # Adding -mstackrealign realigns to -mpreferred-stack-boundary, which is capped to 16 bytes, so does not help.
 # (See related issue in Makefile_config_cygwin.)

@@ -615,8 +615,7 @@ bool recycle_path(const string& pathname) {
   op.wFunc = FO_DELETE;  // Use Recycle Bin if possible.
   op.pFrom = wfilenames.data();
   op.fFlags = FOF_ALLOWUNDO;
-  // FOF_NO_UI equivalent to FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR but not on clang.
-  op.fFlags |= FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+  op.fFlags |= FOF_NO_UI;
   int ret = SHFileOperationW(&op);  // (May mysteriously hang for a few sec?).
   if (1 && ret) SHOW("SHFileOperation failed", pathname, ret);
   if (!ret) assertx(!op.fAnyOperationsAborted);

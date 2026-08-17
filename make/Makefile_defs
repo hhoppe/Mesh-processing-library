@@ -205,6 +205,9 @@ src_c ?= $(wildcard *.c)
 src ?= $(src_cpp) $(src_c)
 obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
 
+# Identify all settings that affect the compiled objects, so that changing any one forces a rebuild.
+build_variant = $(CONFIG)-$(notdir $(CC))-$(subst +,p,$(CXX_STD))$(if $(PEDANTIC:0=),-pedantic)
+
 ifeq ($(use_pch)$(win_base),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
   # the linker reports LNK4206 and discards their debug info.  We let all obj files (except precompiled_libHh.obj)

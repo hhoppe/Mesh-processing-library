@@ -105,15 +105,25 @@
 
 #if 0
 #define HH_ASSUME(...) [[assume(__VA_ARGS__)]]  // C++23, but cannot be used within an expression.
-#elif defined(__clang__)
-#pragma clang diagnostic ignored "-Wassume"  // (Assumed expression can have side effects which will be discarded.)
+#elif defined(__clang__) && 0
+// Clang ignores any __builtin_assume(...) containing function calls, including trivial ones like `ar.num()` (unless
+// marked with [[HH_GNU_PURE]]), so it is not so useful.  Also, we must disable the associated warnings.
+// #pragma clang diagnostic ignored "-Wassume"  // "assumption is ignored because it contains (potential) side-effects"
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
-#elif defined(_MSC_VER)
-#define HH_ASSUME(...) __assume(__VA_ARGS__)  // Implies __analysis_assume() but is expression rather than statement.
+#elif defined(__clang__)
+#define HH_ASSUME(...) ((__VA_ARGS__) ? void(0) : __builtin_unreachable())
 #elif defined(__GNUC__)
 #define HH_ASSUME(...) ((__VA_ARGS__) ? void(0) : __builtin_unreachable())  // GCC has no expression-form assume.
+#elif defined(_MSC_VER)
+#define HH_ASSUME(...) __assume(__VA_ARGS__)  // Implies __analysis_assume() but is expression rather than statement.
 #else
 #define HH_ASSUME(...) (void(0))
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+#define HH_GNU_PURE gnu::pure
+#else
+#define HH_GNU_PURE
 #endif
 
 #if defined(__cpp_lib_unreachable)
@@ -141,6 +151,7 @@
 
 // *** Check for identifier conflicts.
 
+// make cppinc='-DTEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE=1 -D_HAS_STD_BYTE=0' -C ~/git/mesh_processing -j12
 #if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wheader-hygiene"

@@ -58,7 +58,7 @@ static bool win_started_from_console_aux() {
 }  // namespace details
 static bool win_started_from_console() { return details::win_started_from_console_aux(); }
 
-const HWND k_bogus_hwnd = HWND(intptr_t{-7});  // clang: reinterpret_cast<HWND>() is not allowed in a constexpr
+const HWND k_bogus_hwnd = HWND(intptr_t{-7});
 
 extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
 
@@ -941,9 +941,6 @@ void Hw::set_pixel_format(bool fake_first) {
   //  Development Kit's wingdi.h as 0x00008000).
   // Creating an OpenGL context for a pixelformat without this flag will disable composition for the duration
   //  of the process which created the context.  The flag is mutually exclusive with PFD_SUPPORT_GDI.
-#if !defined(PFD_SUPPORT_COMPOSITION)  // e.g. clang
-  const unsigned PFD_SUPPORT_COMPOSITION = 0x00008000;
-#endif
   PIXELFORMATDESCRIPTOR pfd;
   pfd.nSize = sizeof(pfd);
   pfd.nVersion = 1;

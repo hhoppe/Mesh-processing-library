@@ -25,8 +25,14 @@ namespace hh {
 
 // Read an array of elements without any Endian byte-reordering.
 template <std::ranges::contiguous_range R> std::istream& read_binary_raw(std::istream& is, R&& range) {
-  const auto bytes = std::as_writable_bytes(std::span(range));
-  return is.read(reinterpret_cast<char*>(bytes.data()), bytes.size());
+  const auto sp = std::span(range);
+  return is.read(reinterpret_cast<char*>(sp.data()), sp.size_bytes());
+}
+
+// Write an array of elements without any Endian byte-reordering.
+template <std::ranges::contiguous_range R> std::ostream& write_binary_raw(std::ostream& os, const R& range) {
+  const auto sp = std::span(range);
+  return os.write(reinterpret_cast<const char*>(sp.data()), sp.size_bytes());
 }
 
 // Read an array of elements and perform Endian conversion from network (Big Endian) to native order.
@@ -36,29 +42,23 @@ template <std::ranges::contiguous_range R> std::istream& read_binary_std(std::is
   return is;
 }
 
-// Write an array of elements without any Endian byte-reordering.
-template <std::ranges::contiguous_range R> std::ostream& write_binary_raw(std::ostream& os, const R& range) {
-  const auto bytes = std::as_bytes(std::span(range));
-  return os.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
-}
-
 // Write an array of elements after Endian conversion from native to network (Big Endian) order.
 template <std::ranges::contiguous_range R> std::ostream& write_binary_std(std::ostream& os, const R& range) {
-  Array<std::ranges::range_value_t<R>> array(range);  // Copy is slow?
+  Array array(range);  // Copy is slow?
   for (auto& e : array) to_std(&e);
   return write_binary_raw(os, array);
 }
 
 // Read an array of elements without any Endian byte-reordering.  Ret: success.
 template <std::ranges::contiguous_range R> [[nodiscard]] bool read_raw(FILE* file, R&& range) {
-  const auto bytes = std::as_writable_bytes(std::span(range));
-  return fread(bytes.data(), bytes.size(), 1, file) == 1;
+  const auto sp = std::span(range);
+  return fread(sp.data(), sp.size_bytes(), 1, file) == 1;
 }
 
 // Write an array of elements without any Endian byte-reordering.  Ret: success.
 template <std::ranges::contiguous_range R> [[nodiscard]] bool write_raw(FILE* file, const R& range) {
-  const auto bytes = std::as_bytes(std::span(range));
-  return fwrite(bytes.data(), bytes.size(), 1, file) == 1;
+  const auto sp = std::span(range);
+  return fwrite(sp.data(), sp.size_bytes(), 1, file) == 1;
 }
 
 }  // namespace hh

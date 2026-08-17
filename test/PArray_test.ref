@@ -122,7 +122,7 @@ ar1 = Array<int>(5) {
   4
   3
 }
-map(ar1, func) = Array<float>(5) {
+transformed(ar1, func) = Array<float>(5) {
   10.5
   9
   7.5

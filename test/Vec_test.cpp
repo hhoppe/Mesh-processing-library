@@ -274,7 +274,7 @@ int main() {
     const auto ar0 = Vec<int, 5>::create([](int i) { return i * 5 + 3; });
     SHOW(ar0);
     auto ar1 = V(1, 2, 3, 4, 5);
-    const auto ar2 = map(ar1, [](int e) { return e * 10; });
+    const auto ar2 = transformed(ar1, [](int e) { return e * 10; });
     SHOW(ar2);
   }
   {

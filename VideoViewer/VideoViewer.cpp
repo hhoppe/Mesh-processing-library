@@ -421,8 +421,8 @@ bool intersect_poly_poly_2D(CArrayView<Vec2<float>> poly1, CArrayView<Vec2<float
 bool image_is_not_visible() {
   assertx(g_cob >= 0);
   return !intersect_poly_poly_2D(bbox_corners(Bbox(twice(0.f), convert<float>(g_win_dims))),
-                                 map(bbox_corners(Bbox(twice(0.f), convert<float>(g_frame_dims))),
-                                     [](const Vec2<float>& p) { return convert<float>(get_win_yx(p)); }));
+                                 transformed(bbox_corners(Bbox(twice(0.f), convert<float>(g_frame_dims))),
+                                             [](const Vec2<float>& p) { return convert<float>(get_win_yx(p)); }));
 }
 
 // Add a modifier (e.g. "_crop") to the end of the root part of a filename.

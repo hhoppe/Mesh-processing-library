@@ -1011,7 +1011,7 @@ int get_gridn(int numverts) {
 void verify_good_sphparam(const GMesh& mesh) {
   for (Vertex v : mesh.vertices()) assertx(is_unit(v_sph(v)));
   for (Face f : mesh.faces()) {
-    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), v_sph);
+    const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), v_sph);
     const float sarea = spherical_triangle_area(sphs);
     HH_SSTAT(Ssarea, sarea);
     if (!(sarea < TAU)) SHOW(sarea, sphs);
@@ -1221,7 +1221,7 @@ void internal_remesh() {
       assertx(is_unit(sph));
       const auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
       hint_f = param_f;
-      const Vec3<Point> triangle = map(g_mesh.triangle_vertices(param_f), v_domainp);
+      const Vec3<Point> triangle = transformed(g_mesh.triangle_vertices(param_f), v_domainp);
       const Point newp = interp(triangle, bary);
       g_mesh.set_point(v, newp);
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
@@ -1463,7 +1463,7 @@ GMesh get_map_from_image_to_domain() {
 }
 
 Point get_surface_point(const GMesh& param_mesh, Face f, const Bary& bary) {
-  const Vec3<Point> triangle = map(param_mesh.triangle_vertices(f), v_domainp);
+  const Vec3<Point> triangle = transformed(param_mesh.triangle_vertices(f), v_domainp);
   return interp(triangle, bary);
 }
 
@@ -1517,7 +1517,7 @@ void do_write_texture(Args& args) {
               pixel = Pixel(255, 255, 255, 255);
               continue;
             }
-            const Vec3<Point> triangle = map(mesh_i.triangle_vertices(f), v_domainp);
+            const Vec3<Point> triangle = transformed(mesh_i.triangle_vertices(f), v_domainp);
             p_d = interp(triangle, bary);
           }
           {
@@ -1823,7 +1823,7 @@ void add_mesh_strings() {
       const bool near_prime_meridian = abs(sph[0]) < 1e-5f && sph[1] > 1e-5f;
       if (near_prime_meridian) {
         Face f = g_mesh.most_ccw_face(v);  // Actually, any adjacent face in this connected component.
-        const Vec3<Point> sphs = map(g_mesh.triangle_vertices(f), v_sph);
+        const Vec3<Point> sphs = transformed(g_mesh.triangle_vertices(f), v_sph);
         const Point center = mean(sphs);
         lonlat[0] = center[0] < 0.f ? 0.f : 1.f;
       }

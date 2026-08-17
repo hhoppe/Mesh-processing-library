@@ -485,13 +485,13 @@ bool contains(const Range& range, const range_value_t<Range>& elem) {
   return false;
 }
 
-// For any container Range (e.g. Vec, Array, PArray, Grid, SGrid) supporting map(Range&, [](const T&) -> T):
+// For any container Range (e.g. Vec, Array, PArray, Grid, SGrid) supporting transformed(Range&, [](const T&) -> T):
 
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2)) == V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.
 template <typename U, typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 auto convert(const Range& c) {
-  return map(c, [](const Value& e) { return static_cast<U>(e); });
+  return transformed(c, [](const Value& e) { return static_cast<U>(e); });
 }
 
 namespace details {

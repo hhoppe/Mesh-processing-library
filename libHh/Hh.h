@@ -151,8 +151,29 @@
 
 // *** Check for identifier conflicts.
 
-// make cppinc='-DTEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE=1 -D_HAS_STD_BYTE=0' -C ~/git/mesh_processing -j12
+// make cppinc='-DTEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE=1 -D_HAS_STD_BYTE=0' -C ~/git/hh_src -j12 both
+// (We use "_HAS_STD_BYTE=0" to overcome WIN32 name collision on "byte" between <urlmon.h> and std.)
 #if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
+#include <array>
+#include <bitset>
+#include <complex>
+#include <deque>
+#include <forward_list>
+#include <functional>
+#include <list>
+#include <map>
+#include <mdspan>
+#include <optional>
+#include <queue>
+#include <regex>
+#include <set>
+#include <span>
+#include <stack>
+#include <unordered_map>
+#include <unordered_set>
+#include <valarray>
+#include <variant>
+#include <vector>
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif

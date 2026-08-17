@@ -100,7 +100,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) { return as_vec(self).segment(ib, ie - ib); }
 
   template <typename U> [[nodiscard]] constexpr Vec<U, n> cast() const {
-    return map(*this, [](const auto& e) { return static_cast<U>(e); });
+    return transformed(*this, [](const auto& e) { return static_cast<U>(e); });
   }
   using value_type = T;
   using iterator = T*;
@@ -209,7 +209,7 @@ template <typename T> [[nodiscard]] constexpr Vec3<T> thrice(const T& v) { retur
 template <int n, typename T> [[nodiscard]] constexpr Vec<T, n> ntimes(const T& v) { return Vec<T, n>::all(v); }
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, int n, typename Func> [[nodiscard]] constexpr auto map(const Vec<T, n>& c, Func func) {
+template <typename T, int n, typename Func> [[nodiscard]] constexpr auto transformed(const Vec<T, n>& c, Func func) {
   using T2 = std::decay_t<std::invoke_result_t<Func, const T&>>;
   return Vec<T2, n>::create([&](int i) { return func(c[i]); });
 }
@@ -277,7 +277,7 @@ template <std::floating_point T> [[nodiscard]] constexpr T snap_coordinate(T val
 }
 
 template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> snap_coordinates(Vec<T, n> vec) {
-  return map(vec, [](const T& e) { return snap_coordinate(e); });
+  return transformed(vec, [](const T& e) { return snap_coordinate(e); });
 }
 
 //----------------------------------------------------------------------------

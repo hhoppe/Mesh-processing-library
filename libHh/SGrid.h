@@ -118,7 +118,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename Func, typename T, int d0, int... od>
-[[nodiscard]] constexpr auto map(const SGrid<T, d0, od...>& c, Func func) {
+[[nodiscard]] constexpr auto transformed(const SGrid<T, d0, od...>& c, Func func) {
   SGrid<decltype(func(std::declval<T>())), d0, od...> nc;
   for (const size_t i : range(c.size())) nc.flat(i) = func(c.flat(i));
   return nc;

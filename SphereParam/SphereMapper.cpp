@@ -160,7 +160,7 @@ class SphereMapper::Implementation {
     for_int(f, _pmi._faces.num()) {
       const Vec3<int> vertices = _pmi.face_vertices(f);
       const Vec3<Point> triangle = _pmi.face_points(f);
-      const Vec3<Point> sphs = map(vertices, [&](int v) { return _sphmap[v]; });
+      const Vec3<Point> sphs = transformed(vertices, [&](int v) { return _sphmap[v]; });
       Vector face_normal = get_normal_dir(triangle);
       if (!face_normal.normalize()) continue;
       const float face_area = sqrt(area2(triangle));
@@ -295,7 +295,7 @@ class SphereMapper::Implementation {
 
   bool face_flipped(int f) const {
     const Vec3<int> vertices = _pmi.face_vertices(f);
-    const Vec3<Point> triangle = map(vertices, [&](int v) { return _sphmap[v]; });
+    const Vec3<Point> triangle = transformed(vertices, [&](int v) { return _sphmap[v]; });
     if (0) return -signed_volume(triangle[0], triangle[1], triangle[2], Point(0.f, 0.f, 0.f)) < -1e-5f;  // Slower.
     const Vector center = mean(triangle);
     return dot(center, cross(triangle[1] - triangle[0], triangle[2] - triangle[0])) < -1e-5f;
@@ -683,8 +683,8 @@ class SphereMapper::Implementation {
 
   Precision stretch_for_face(int f) const {
     const Vec3<int> vertices = _pmi.face_vertices(f);
-    const auto pd = map(vertices, [&](int v) { return convert<Precision>(_sphmap[v]); });
-    const auto ps = map(_pmi.face_points(f), [&](const Point& p) { return convert<Precision>(p); });
+    const auto pd = transformed(vertices, [&](int v) { return convert<Precision>(_sphmap[v]); });
+    const auto ps = transformed(_pmi.face_points(f), [&](const Point& p) { return convert<Precision>(p); });
     return accurate_stretch_for_spherical_triangle(pd, ps);
   }
 

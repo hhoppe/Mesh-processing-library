@@ -246,7 +246,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, int pcap, typename Func>
-auto map(const PArray<T, pcap>& c, Func func) -> PArray<decltype(func(std::declval<T>())), pcap> {
+auto transformed(const PArray<T, pcap>& c, Func func) -> PArray<decltype(func(std::declval<T>())), pcap> {
   PArray<decltype(func(std::declval<T>())), pcap> nc(c.num());
   for_int(i, c.num()) nc[i] = func(c[i]);
   return nc;

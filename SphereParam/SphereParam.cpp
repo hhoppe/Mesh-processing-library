@@ -244,7 +244,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   for (Face f : mesh.faces()) to_visit.enter(f);
   while (!to_visit.empty()) {
     Face f = to_visit.remove_one();
-    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), v_sph);
+    const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), v_sph);
     const Bbox bbox{sphs};
     const bool face_overlaps_meridian = bbox[0][k_axis0] < -eps && bbox[1][k_axis0] > eps && bbox[1][k_axis1] > eps;
     if (!face_overlaps_meridian) continue;
@@ -328,7 +328,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
       }
       if (!mesh_uv.empty()) {
         const auto get_uvs = [&](Face f) {
-          return map(mesh_uv.triangle_corners(f), [&](Corner c) {
+          return transformed(mesh_uv.triangle_corners(f), [&](Corner c) {
             Vertex vv = mesh_uv.corner_vertex(c);
             return v_uv(vv)[0] != k_uv_undefined ? v_uv(vv) : map_c_uv.get(c);
           });
@@ -349,7 +349,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             // To this end, we first search using the gmesh face centroid (which is guaranteed to not be on the cut),
             // then we refine the search while avoiding crossing the parametric discontinuity.
             Face gf = gmesh.corner_face(c);
-            const Vec3<Point> sphs = map(gmesh.triangle_vertices(gf), v_sph);
+            const Vec3<Point> sphs = transformed(gmesh.triangle_vertices(gf), v_sph);
             const Point sph_face_center = normalized_double(mean(sphs));
             const auto [f, bary] = mesh_search.search_on_sphere(sph_face_center, hint_f, &sph);
             hint_f = f;
@@ -370,7 +370,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
           gmesh.update_string(v, "uv", nullptr);
           for (Corner c : gmesh.corners(v)) {
             Face f = gmesh.corner_face(c);
-            const Vec3<Point> sphs = map(gmesh.triangle_vertices(f), v_sph);
+            const Vec3<Point> sphs = transformed(gmesh.triangle_vertices(f), v_sph);
             const Point center = mean(sphs);
             const float lon2 = center[0] < 0.f ? 0.f : 1.f;
             gmesh.update_string(c, "uv", csform_vec(str, Uv(lon2, lonlat[1])));
@@ -428,7 +428,7 @@ void write_original_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_mer
 void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
   const float eps = 1e-5f;
   for (int f = 0; f < awmesh._faces.num(); f++) {  // Note that awmesh._faces grows within the loop.
-    const Vec3<Point> sphs{map(V(0, 1, 2), [&](int j) {
+    const Vec3<Point> sphs{transformed(V(0, 1, 2), [&](int j) {
       const int w = awmesh._faces[f].wedges[j];
       return sph_from_lonlat(awmesh._wedges[w].attrib.uv);
     })};
@@ -488,7 +488,7 @@ void split_awmesh_vertices_along_meridian(AWMesh& awmesh) {
     awmesh._wedges[w].attrib.uv[0] = 0.f;     // Leftmost longitude.
     awmesh._wedges[wnew].attrib.uv[0] = 1.f;  // Rightmost longitude.
     for (const int f : awmesh.ccw_faces(v, someface[v])) {
-      const Vec3<Point> sphs{map(V(0, 1, 2), [&](int j) {
+      const Vec3<Point> sphs{transformed(V(0, 1, 2), [&](int j) {
         const int w2 = awmesh._faces[f].wedges[j];
         return sph_from_lonlat(awmesh._wedges[w2].attrib.uv);
       })};

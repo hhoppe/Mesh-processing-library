@@ -24,11 +24,6 @@ extern "C" {
 #include "libHh/StringOp.h"  // to_lower()
 using namespace hh;
 
-// ??
-#if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wold-style-cast"  // for (size_t) cast in two macros in jpeglib.h
-#endif
-
 HH_REFERENCE_LIB("libjpeg.lib");
 HH_REFERENCE_LIB("libpng.lib");
 HH_REFERENCE_LIB("libz.lib");

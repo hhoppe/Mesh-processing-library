@@ -252,7 +252,8 @@ Vec3<float> euler_angles_from_frame(const Frame& frame) {
 
 Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
   Frame frame = Frame::identity();  // Note: modifying local rather than prev_frame to preserve axes scale and origin.
-  Vec3<float> prev_mags = map(prev_frame.head<3>(), [](const Vec3<float>& v) { return float(mag<double>(v)); });
+  Vec3<float> prev_mags =
+      transformed(prev_frame.head<3>(), [](const Vec3<float>& v) { return float(mag<double>(v)); });
   for_int(c, 3) frame[c][c] = prev_mags[c];
   for_int(c, 3) frame = frame * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
   if (1) frame = orthogonalized(frame);                          // Optional, for precision.

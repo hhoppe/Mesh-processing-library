@@ -318,7 +318,7 @@ template <typename Precision> bool spherical_triangle_is_flipped(const Vec3<Poin
   static_assert(std::is_floating_point_v<Precision>);
   // The signed volume of the tetrahedron formed by the origin and the points p1, p2, and p3 is given by
   //  (1.f / 6.f) * dot(p1, cross(p2, p3)).
-  const auto triangle2 = map(triangle, [](const Point& p) { return convert<Precision>(p); });
+  const auto triangle2 = transformed(triangle, [](const Point& p) { return convert<Precision>(p); });
   return dot(triangle2[0], cross(triangle2[1], triangle2[2])) < -tolerance;
 }
 

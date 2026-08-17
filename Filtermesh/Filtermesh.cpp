@@ -1581,7 +1581,7 @@ void do_poissonparam() {
       const float w = sqrt(mesh.area(f));
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
       const Vec3<Point> triangle = mesh.triangle_points(f);
-      const Vec3<Uv> uva = map(va, get_uv);
+      const Vec3<Uv> uva = transformed(va, get_uv);
       for_int(dir, 2) {
         const int d0 = dir, d1 = 1 - dir;
         const Uv vecd = twice(0.f).with(d0, 1.f);
@@ -4278,7 +4278,7 @@ void do_sphparam_to_tangentfield(Args& args) {
   string str;
   for (Face f : mesh.faces()) {
     const Vec3<Point> triangle = mesh.triangle_points(f);
-    const Vec3<Point> sphs = map(mesh.triangle_vertices(f), [&](Vertex v) {
+    const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), [&](Vertex v) {
       Point sph;
       assertx(parse_key_vec(mesh.get_string(v), "sph", sph));
       return sph;

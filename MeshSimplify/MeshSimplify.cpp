@@ -3410,7 +3410,7 @@ std::optional<SegmentIntersection> intersect_segments(const Uv& p1, const Uv& p2
 
 void check_ccw(Vertex v) {
   for (Face f : mesh.faces(v)) {
-    const Vec3<Uv> pt = map(mesh.triangle_corners(f), [&](Corner c) { return c_winfo(c).uv; });
+    const Vec3<Uv> pt = transformed(mesh.triangle_corners(f), [&](Corner c) { return c_winfo(c).uv; });
     assertw(signed_area(pt[0], pt[1], pt[2]) >= 0.f);
   }
 }
@@ -4543,7 +4543,7 @@ void optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
   if (strict_sharp == 2) {
     for (Face f : mesh.faces()) {
-      const Vec3<Face> fn = map(mesh.triangle_vertices(f), [&](Vertex v) { return mesh.opp_face(v, f); });
+      const Vec3<Face> fn = transformed(mesh.triangle_vertices(f), [&](Vertex v) { return mesh.opp_face(v, f); });
       // Note that some fn[i] can be nullptr.
       if (strict_mat_neighbors(f, fn)) continue;
       if (int(!fn[0]) + int(!fn[1]) + int(!fn[2]) >= 2) {

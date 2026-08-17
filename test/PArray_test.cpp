@@ -79,7 +79,7 @@ int main() {
     ar1.push(3);
     SHOW(ar1);
     const auto func = [](int v) { return v * 1.5f; };
-    SHOW(map(ar1, func));
+    SHOW(transformed(ar1, func));
     PArray<int, 3> ar2;
     ar2.push(11);
     ar2.push(12);

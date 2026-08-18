@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/HashFloat.h"
 
+#include <bit>      // bit_cast().
 #include <iomanip>  // setprecision()
 
 #include "libHh/RangeOp.h"  // sum(), concatenate()
@@ -82,14 +83,7 @@ template <typename T> T roundtrip(T v, int digits = -1) {
   return v2;
 }
 
-uint32_t as_uint(float f) {
-  union {
-    uint32_t ui;
-    float f;
-  } u;
-  u.f = f;
-  return u.ui;
-}
+uint32_t as_uint(float f) { return std::bit_cast<uint32_t>(f); }
 
 void test_io() {
   const float eps = std::numeric_limits<float>::epsilon();

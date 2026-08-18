@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_HASHPOINT_H_
 #define MESH_PROCESSING_LIBHH_HASHPOINT_H_
 
+#include <bit>  // bit_cast().
+
 #include "libHh/Geometry.h"
 #include "libHh/HashFloat.h"
 #include "libHh/Pool.h"
@@ -31,14 +33,7 @@ class HashPoint {
 
  private:
   Vec3<unique_ptr<HashFloat>> _hf;
-  static uint32_t float_bits_to_unsigned(const float& f) {
-    union {
-      uint32_t ui;
-      float f;
-    } u;
-    u.f = f;
-    return u.ui;
-  }
+  static constexpr uint32_t float_bits_to_unsigned(float f) { return std::bit_cast<uint32_t>(f); }
   struct hash_Point {
     size_t operator()(const Point& p) const {
       size_t h = 0;

@@ -2,6 +2,8 @@
 #include "libHh/MathOp.h"
 using namespace hh;
 
+#include <bit>  // bit_cast().
+
 // (float)0., -0.      0x00000000
 // (float)1            0x3f800000
 // (float)3            0x40400000
@@ -17,15 +19,8 @@ using namespace hh;
 inline float create_infinityf() {
   if (0) {
     // return INFINITY;            // Warning: overflow in constant arithmetic.
-  } else if (1) {
-    return std::numeric_limits<float>::infinity();
   } else {
-    union {
-      float f;
-      uint32_t ui;
-    } u;
-    u.ui = 0x7f800000;
-    return u.f;
+    return std::numeric_limits<float>::infinity();
   }
 }
 
@@ -34,23 +29,15 @@ inline float create_nanf(unsigned i = 0) {
   if (0 && i == 0) return NAN;  // Equivalent to std::numeric_limits<float>::quiet_NaN().
   ASSERTXX((i & 0xffc00000) == 0);
   // Could in principle retrieve 0x80000000 (sign) bit from i and use it, but forget it.
-  union {
-    float f;
-    uint32_t ui;
-  } u;
-  u.ui = 0x7fc00000 | (i & 0x003fffff);
-  return u.f;
+  const uint32_t v = 0x7fc00000 | (i & 0x003fffff);
+  return std::bit_cast<float>(v);
 }
 
 // Retrieve the integer value encoded in the not-a-number value f.
 inline unsigned nanf_value(float f) {
-  union {
-    float f;
-    uint32_t ui;
-  } u;
-  u.f = f;
-  ASSERTXX(std::isnan(u.f));
-  return u.ui & 0x003fffff;
+  ASSERTXX(std::isnan(f));
+  const uint32_t v = std::bit_cast<uint32_t>(f);
+  return v & 0x003fffff;
 }
 
 int main() {
@@ -72,13 +59,9 @@ int main() {
   if (0) {
     float g_float_zero = g_unoptimized_zero ? 1.f : 0.f;
     const auto func_show_float = [](float a) {
-      union {
-        float f;
-        uint32_t ui;
-      } u;
-      u.f = a;
+      const uint32_t v = std::bit_cast<uint32_t>(a);
       showf("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
-            a, u.ui, std::isfinite(a), std::isinf(a), std::isnan(a),
+            a, v, std::isfinite(a), std::isinf(a), std::isnan(a),
             std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
     };
     float a;

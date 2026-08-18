@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_UNIV_H_
 #define MESH_PROCESSING_LIBHH_UNIV_H_
 
+#include <bit>  // bit_cast().
+
 #include "libHh/Hh.h"
 
 namespace hh {
@@ -19,37 +21,23 @@ static_assert(sizeof(Univ) >= sizeof(float));
 template <typename T> struct Conv;
 
 template <typename T> struct Conv<T*> {
-  static Univ e(T* v) { return Univ(const_cast<std::remove_const_t<T>*>(v)); }  // Encode.
-  static T* d(Univ v) { return reinterpret_cast<T*>(v); }                       // Decode.
+  [[nodiscard]] static constexpr Univ e(T* v) { return Univ(const_cast<std::remove_const_t<T>*>(v)); }  // Encode.
+  [[nodiscard]] static constexpr T* d(Univ v) { return reinterpret_cast<T*>(v); }                       // Decode.
 };
 
 template <> struct Conv<int> {
-  static Univ e(int v) { return Univ(intptr_t{v}); }
-  static int d(Univ v) { return narrow_cast<int>(reinterpret_cast<intptr_t>(v)); }
+  [[nodiscard]] static Univ e(int v) { return Univ(intptr_t{v}); }
+  [[nodiscard]] static int d(Univ v) { return narrow_cast<int>(reinterpret_cast<intptr_t>(v)); }
 };
 
 template <> struct Conv<unsigned> {
-  static Univ e(unsigned v) { return Univ(uintptr_t{v}); }
-  static unsigned d(Univ v) { return narrow_cast<unsigned>(reinterpret_cast<uintptr_t>(v)); }
+  [[nodiscard]] static Univ e(unsigned v) { return Univ(uintptr_t{v}); }
+  [[nodiscard]] static unsigned d(Univ v) { return narrow_cast<unsigned>(reinterpret_cast<uintptr_t>(v)); }
 };
 
 template <> struct Conv<float> {
-  static Univ e(float v) {
-    union {
-      uint32_t ui;
-      float f;
-    } u;
-    u.f = v;
-    return Conv<unsigned>::e(u.ui);
-  }
-  static float d(Univ v) {
-    union {
-      uint32_t ui;
-      float f;
-    } u;
-    u.ui = Conv<unsigned>::d(v);
-    return u.f;
-  }
+  [[nodiscard]] static Univ e(float v) { return Conv<unsigned>::e(std::bit_cast<uint32_t>(v)); }
+  [[nodiscard]] static float d(Univ v) { return std::bit_cast<float>(narrow_cast<uint32_t>(Conv<unsigned>::d(v))); }
 };
 
 }  // namespace hh

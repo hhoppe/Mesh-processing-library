@@ -225,10 +225,10 @@ template <typename T> struct sum_type;
 // *** Generalized casting.
 
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
-template <typename Dest> [[nodiscard]] Dest implicit_cast(std::type_identity_t<Dest> t) { return t; }
+template <typename Dest> [[nodiscard]] constexpr Dest implicit_cast(std::type_identity_t<Dest> t) { return t; }
 
 // For use in downcasting to a derived class.
-template <typename Dest, typename Src> [[nodiscard]] Dest down_cast(Src* f) {
+template <typename Dest, typename Src> [[nodiscard]] constexpr Dest down_cast(Src* f) {
   static_assert(std::is_base_of_v<Src, std::remove_pointer_t<Dest>>);
   return static_cast<Dest>(f);
 }

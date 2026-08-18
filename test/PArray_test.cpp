@@ -84,7 +84,7 @@ int main() {
     ar2.push(11);
     ar2.push(12);
     SHOW(ar2);
-    swap(ar1, ar2);
+    ranges::swap(ar1, ar2);
     SHOW("after swap");
     SHOW(ar1);
     SHOW(ar2);
@@ -100,7 +100,7 @@ int main() {
     SHOW("after swap");
     SHOW(ar1);
     SHOW(ar2);
-    swap(ar1, ar2);
+    ranges::swap(ar1, ar2);
     SHOW("after swap back");
     SHOW(ar1);
     SHOW(ar2);

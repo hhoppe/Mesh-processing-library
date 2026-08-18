@@ -397,36 +397,49 @@ void show_cerr_and_debug(const string& s) {
 
 }  // namespace details
 
-// Should not define "sform(const string& format, ...)":
-//  see: https://stackoverflow.com/questions/222195/are-there-gotchas-using-varargs-with-reference-parameters
-// Varargs callee must have two versions:
-//  see: https://www.c-faq.com/varargs/handoff.html   http://www.tin.org/bin/man.cgi?section=3&topic=vsnprintf
+#if 1  // ??
+
 static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list ap) {
-  // Adapted from https://stackoverflow.com/questions/2342162/stdstring-formating-like-sprintf
-  //  and https://stackoverflow.com/questions/69738/c-how-to-get-fprintf-results-as-a-stdstring-w-o-sprintf
-  // asprintf() supported only on BSD/GCC
+  std::array<char, 256> stackbuf;  // Stack-based buffer that is big enough most of the time.
+  std::va_list ap2;
+  va_copy(ap2, ap);
+  const int n = vsnprintf(stackbuf.data(), stackbuf.size(), format, ap2);
+  va_end(ap2);
+  if (n < 0) assertnever("sform: likely a format error in '" + string(format) + "'");
+  string str;
+  if (size_t(n) < stackbuf.size()) {         // It fit (and wrote '\0' at stackbuf[n]).
+    str.assign(stackbuf.data(), size_t(n));  // We do not need to copy the trailing '\0'.
+  } else {  // Grow without zero-initializing the new characters, and format directly into the buffer.
+    int n2 = 0;
+    str.resize_and_overwrite(n + 1, [&](char* p, size_t buf_size) noexcept {
+      n2 = vsnprintf(p, buf_size, format, ap);  // Writes '\0' at p[n], which is within the requested size.
+      return size_t(n);
+    });
+    assertx(n2 == n);
+  }
+  return str;
+}
+
+#else
+
+static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list ap) {
   const int stacksize = 256;
   char stackbuf[stacksize];  // Stack-based buffer that is big enough most of the time.
   int size = stacksize;
   std::vector<char> vecbuf;  // Dynamic buffer just in case; do not take dependency on Array.h or PArray.h .
   char* buf = stackbuf;
   bool promised = false;  // Precise size was promised.
-  if (0) std::cerr << "format=" << format << "\n";
   for (;;) {
     std::va_list ap2;
     va_copy(ap2, ap);
     int n = vsnprintf(buf, size, format, ap2);
     va_end(ap2);
-    // SHOW(size, promised, n, int(buf[size-1]));
-    if (0) std::cerr << "n=" << n << " size=" << size << " format=" << format << "\n";
     if (promised) assertx(n == size - 1);
     if (n >= 0) {
-      // if (n < size) SHOW(string(buf, n));
-      if (n < size) return string(buf, n);  // it fit
+      if (n < size) return string(buf, n);  // It fit.
       size = n + 1;
       promised = true;
     } else {
-      assertx(n == -1);
       assertnever("vsform: likely a format error in '" + string(format) + "'");
     }
     vecbuf.resize(size);
@@ -434,30 +447,46 @@ static HH_PRINTF_ATTRIBUTE(1, 0) string vsform(const char* format, std::va_list 
   }
 }
 
-// Inspired from vinsertf() in https://stackoverflow.com/a/2552973.
+#endif
+
+#if 1  // ??
+
 static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, std::va_list ap) {
-  const size_t minsize = 40;
-  if (str.size() < minsize) str.resize(minsize);
-  bool promised = false;  // Precise size was promised.
-  for (;;) {
-    std::va_list ap2;
-    va_copy(ap2, ap);
-    int n = vsnprintf(str.data(), str.size(), format, ap2);
-    va_end(ap2);
-    if (promised) assertx(n == narrow_cast<int>(str.size()) - 1);
-    if (n >= 0) {
-      if (n < narrow_cast<int>(str.size())) {  // It fit.
-        str.resize(n);
-        return;
-      }
-      str.resize(n + 1);
-      promised = true;
-    } else {
-      assertx(n == -1);
-      assertnever("ssform: likely a format error in '" + string(format) + "'");
-    }
+  std::va_list ap2;
+  va_copy(ap2, ap);
+  // But use capacity??
+  const int n = vsnprintf(str.data(), str.size() + 1, format, ap2);  // May write '\0' at str[str.size()].
+  va_end(ap2);
+  if (n < 0) assertnever("ssform: likely a format error in '" + string(format) + "'");
+  if (static_cast<size_t>(n) <= str.size()) {  // It fit; shrinking is O(1) for char.
+    str.resize(n);
+  } else {  // Grow without zero-initializing the new characters, and format directly into the buffer.
+    int n2 = 0;
+    str.resize_and_overwrite(n + 1, [&](char* p, size_t buf_size) noexcept {
+      n2 = vsnprintf(p, buf_size, format, ap);  // Writes '\0' at p[n], which is within the requested size.
+      return size_t(n);
+    });
+    assertx(n2 == n);
   }
 }
+
+#else
+
+static HH_PRINTF_ATTRIBUTE(2, 0) void vssform(string& str, const char* format, std::va_list ap) {
+  std::va_list ap2;
+  va_copy(ap2, ap);
+  const int n = vsnprintf(str.data(), str.size() + 1, format, ap2);  // May write '\0' at str[str.size()].
+  va_end(ap2);
+  if (n < 0) assertnever("ssform: likely a format error in '" + string(format) + "'");
+  const bool did_fit = n <= narrow_cast<int>(str.size());
+  str.resize(n);
+  if (!did_fit) {
+    const int n2 = vsnprintf(str.data(), str.size() + 1, format, ap);  // Will write '\0' at str[str.size()].
+    assertx(n2 == n);
+  }
+}
+
+#endif
 
 HH_PRINTF_ATTRIBUTE(1, 2) string sform(const char* format, ...) {
   std::va_list ap;

@@ -72,7 +72,7 @@ template <typename T> class CArrayView {
   void reinit(type a) { *this = a; }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return _n; }
   [[nodiscard]] constexpr size_t size() const { return narrow_cast<size_t>(_n); }
-  [[HH_GNU_PURE]] [[nodiscard]] [[HH_NO_DANGLING]] constexpr auto& operator[](this auto&& self, int i) {
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
   }
@@ -120,7 +120,7 @@ template <typename T> class CArrayView {
 
 // View of a variable-sized 1D array with modifiable data of type T, e.g. refers to a C-array,
 //  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
-template <typename T> class ArrayView : public CArrayView<T> {
+template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> {
   using base = CArrayView<T>;
   using type = ArrayView<T>;
 
@@ -133,6 +133,7 @@ template <typename T> class ArrayView : public CArrayView<T> {
   // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
   void assign(base ar) requires(Copyable<T>);
+  using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
   T* data() { return _a; }
@@ -173,6 +174,7 @@ template <typename T> class Array : public ArrayView<T> {
   Array(std::initializer_list<T> l) requires Copyable<T>
       : Array(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
+  // Modernize iterator_category??
   template <typename Iterator, typename = std::enable_if_t<
                                    !std::is_same_v<typename std::iterator_traits<Iterator>::iterator_category, void>>>
   explicit Array(Iterator b, Iterator e) : Array() {
@@ -198,11 +200,7 @@ template <typename T> class Array : public ArrayView<T> {
     base::assign(ar);
     return *this;
   }
-  type& operator=(type&& ar) noexcept {
-    clear();
-    swap(*this, ar);
-    return *this;
-  }
+  type& operator=(type&& ar) noexcept { return (clear(), swap(*this, ar), *this); }
   void clear() {
     delete[] _a;
     _a = nullptr, _n = 0, _cap = 0;
@@ -257,11 +255,11 @@ template <typename T> class Array : public ArrayView<T> {
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = std::move(e);
   }
-  template <std::ranges::input_range R> requires std::assignable_from<T&, std::ranges::range_reference_t<R>>
+  template <ranges::input_range R> requires std::assignable_from<T&, ranges::range_reference_t<R>>
   void push_array(R&& range) {
-    if constexpr (std::ranges::forward_range<R> || std::ranges::sized_range<R>) {
-      const int t = add(narrow_cast<int>(std::ranges::distance(range)));
-      std::ranges::copy(range, _a + t);  // Moves elements only if the caller opts in via std::views::as_rvalue.
+    if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
+      const int t = add(narrow_cast<int>(ranges::distance(range)));
+      ranges::copy(range, _a + t);  // Moves elements only if the caller opts in via std::views::as_rvalue.
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
@@ -514,7 +512,7 @@ template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
 template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
 template <std::input_iterator Iterator> Array(Iterator, Iterator) -> Array<std::iter_value_t<Iterator>>;
 template <typename Range, typename = enable_if_range_t<Range>> Array(Range&&) -> Array<range_value_t<Range>>;
-// template <std::ranges::input_range Range> Array(Range&&) -> Array<std::ranges::range_value_t<Range>>;
+// template <ranges::input_range Range> Array(Range&&) -> Array<ranges::range_value_t<Range>>;
 
 //----------------------------------------------------------------------------
 

@@ -2460,7 +2460,6 @@ double evaluate_maxerr(const NewMeshNei& nn, const Param& param, const Point& ne
 }
 
 double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
-  using std::swap;
   const float epsilon = .05f;  // Epsilon on integer grid coordinates.
   // Still safe for puget.16k with single precision.
   assertx(epsilon / float(max(grid_dims)) > 1e-6f);
@@ -2500,19 +2499,19 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     }
     ASSERTX(!((p0x == p1x && p1x == p2x) || (p0y == p1y && p1y == p2y)));
     if (p1y > p2y) {
-      swap(p1x, p2x);
-      swap(p1y, p2y);
-      swap(p1z, p2z);
+      std::swap(p1x, p2x);
+      std::swap(p1y, p2y);
+      std::swap(p1z, p2z);
     }
     if (p0y > p2y) {
-      swap(p0x, p2x);
-      swap(p0y, p2y);
-      swap(p0z, p2z);
+      std::swap(p0x, p2x);
+      std::swap(p0y, p2y);
+      std::swap(p0z, p2z);
     }
     if (p0y > p1y) {
-      swap(p0x, p1x);
-      swap(p0y, p1y);
-      swap(p0z, p1z);
+      std::swap(p0x, p1x);
+      std::swap(p0y, p1y);
+      std::swap(p0z, p1z);
     }
     ASSERTX(p2y >= p1y && p1y >= p0y && p2y > p0y);
     if (lverb)
@@ -2529,8 +2528,8 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
       float xlinc = (p1x - p2x) * p21i;
       float zlinc = (p1z - p2z) * p21i;
       if (xlinc > xrinc) {
-        swap(xlinc, xrinc);
-        swap(zlinc, zrinc);
+        std::swap(xlinc, xrinc);
+        std::swap(zlinc, zrinc);
       }
       bool extra = (p1y > p0y);  // Include middle horizontal segment.
       for_intL(i, 1, p2y - p1y + extra) {
@@ -2558,8 +2557,8 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
       float xlinc = (p1x - p0x) * p10i;
       float zlinc = (p1z - p0z) * p10i;
       if (xlinc > xrinc) {
-        swap(xlinc, xrinc);
-        swap(zlinc, zrinc);
+        std::swap(xlinc, xrinc);
+        std::swap(zlinc, zrinc);
       }
       for_intL(i, 1, p1y - p0y) {
         int y = p0y + i;
@@ -2594,9 +2593,9 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     if (lverb) showf(" edge (%d, %d, %g) (%d, %d, %g)\n", p0x, p0y, p0z, p1x, p1y, p1z);
     // Vertical lines.
     if (p1x < p0x) {
-      swap(p0x, p1x);
-      swap(p0y, p1y);
-      swap(p0z, p1z);
+      std::swap(p0x, p1x);
+      std::swap(p0y, p1y);
+      std::swap(p0z, p1z);
     }
     if (p1x > p0x + 1) {
       float xdi = 1.f / (p1x - p0x);
@@ -2618,9 +2617,9 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     }
     // Horizontal lines.
     if (p1y < p0y) {
-      swap(p0x, p1x);
-      swap(p0y, p1y);
-      swap(p0z, p1z);
+      std::swap(p0x, p1x);
+      std::swap(p0y, p1y);
+      std::swap(p0z, p1z);
     }
     if (p1y > p0y + 1) {
       float ydi = 1.f / (p1y - p0y);
@@ -2644,10 +2643,10 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     int p0l = p0y - p0x;
     int p1l = p1y - p1x;
     if (p1l < p0l) {
-      swap(p0x, p1x);
-      swap(p0y, p1y);
-      swap(p0z, p1z);
-      swap(p0l, p1l);
+      std::swap(p0x, p1x);
+      std::swap(p0y, p1y);
+      std::swap(p0z, p1z);
+      std::swap(p0l, p1l);
     }
     if (p0l < p1l + 1) {
       float ldi = 1.f / (p1l - p0l);
@@ -3340,7 +3339,7 @@ void tvc_update_cache(Edge e) {
     CacheEntry cetmp = ce;
     bool found = false;
     for_int(j, tvc_cache.num()) {
-      std::swap(tvc_cache[j], cetmp);
+      ranges::swap(tvc_cache[j], cetmp);
       if (cetmp.wid == (!tvcowid ? ce.wid : ce.owid)) {
         found = true;
         break;

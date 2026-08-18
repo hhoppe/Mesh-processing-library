@@ -97,61 +97,55 @@ double get_seconds_per_counter() {
 static void internal_sleep(double sec, bool precise) {
   dummy_use(precise);
   // We sometimes get -5.8985e+307 in background thread of VideoViewer.
-  if (sec < 0.) {
-    SHOW("my_sleep", sec);
-    sec = 0.;
-  }
+  if (!(sec >= 0.) || sec > 1e6) SHOW("my_sleep", sec), sec = 0.;
 #if 0
   // Standard C++.  However, on Windows it is only precise up to 1/60 sec.
   std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<1>>{sec});
 #elif defined(_WIN32)
-  if (!sec) {
-    // The aim is likely to give up time slice to another thread.
-    SleepEx(0, TRUE);  // milliseconds; allow wake up for events.
-  } else if (!precise) {
-    const int num_ms = int(sec * 1000. + 0.5);
-    SleepEx(num_ms, TRUE);
-  } else {
-    // Inspired from discussion at
-    //  https://stackoverflow.com/questions/5801813/c-usleep-is-obsolete-workarounds-for-windows-mingw
-    // Even better at https://www.geisswerks.com/ryan/FAQS/timing.html
-    const bool use_1ms_time_resolution = false;
-    if (use_1ms_time_resolution) {
-      static std::once_flag flag;
-      std::call_once(flag, [] {
-        assertnever("");  // Requires another library.
-#if 0
-        // Reduce Sleep/timer resolution from 16ms to < 2ms (note: applies system-wide).
-        timeBeginPeriod(1);
-#endif
-        // Note: should be matched with timeEndPeriod(1) but let program termination handle this.
-        // https://stackoverflow.com/questions/7590475/
-      });
-    }
-    const double sleep_threshold = use_1ms_time_resolution ? .002 : .03;  // Seconds.
-    // int64_t freq; assertx(QueryPerformanceFrequency(reinterpret_cast<LARGE_INTEGER*>(&freq)));
-    LARGE_INTEGER freq;
-    assertx(QueryPerformanceFrequency(&freq));
-    LARGE_INTEGER count1;
-    assertx(QueryPerformanceCounter(&count1));
-    for (;;) {
-      LARGE_INTEGER count2;
-      assertx(QueryPerformanceCounter(&count2));
-      double elapsed = (count2.QuadPart - count1.QuadPart) / double(freq.QuadPart);  // Seconds.
-      double remaining = sec - elapsed;
-      if (remaining <= 0.) break;
-      if (remaining > sleep_threshold)
-        SleepEx(int((remaining - sleep_threshold) * 1000. + .5), TRUE);  // In milliseconds; see note above.
-    }
+  if (!sec) {          // The aim is likely to give up time slice to another thread.
+    SleepEx(0, TRUE);  // Milliseconds; allow wake up for events.
+    return;
   }
+  // A waitable timer is precise to well under 1 ms, without the system-wide side effects of timeBeginPeriod()
+  // and without any busy-waiting.  The handles are deliberately never closed; a few leak per thread.
+  static thread_local HANDLE precise_timer = CreateWaitableTimerExW(
+      nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_MODIFY_STATE | SYNCHRONIZE);
+  static thread_local HANDLE coarse_timer =
+      CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_MODIFY_STATE | SYNCHRONIZE);
+  const HANDLE timer = precise ? precise_timer : coarse_timer;
+  assertx(timer);
+  LARGE_INTEGER due_time;
+  due_time.QuadPart = -int64_t(sec * 1e7 + .5);  // A negative value is relative time, in units of 100 ns.
+  // A nonzero tolerable delay lets the system coalesce this wakeup with others, which saves power.
+  constexpr double k_tolerable_fraction = .1;  // Allow the wakeup to be late by this fraction of the interval.
+  const ULONG tolerable_delay_ms = precise ? 0 : ULONG(max(sec * 1000. * k_tolerable_fraction, 1.));
+  assertx(SetWaitableTimerEx(timer, &due_time, 0, nullptr, nullptr, nullptr, tolerable_delay_ms));
+  for (;;) {
+    // If an I/O completion callback interrupts the wait, resume it.  The timer keeps its absolute due time.
+    const DWORD ret = WaitForSingleObjectEx(timer, INFINITE, TRUE);
+    if (ret == WAIT_OBJECT_0) break;
+    assertx(ret == WAIT_IO_COMPLETION);
+  }
+#else  // !defined(_WIN32)
+  dummy_use(precise);
+  const auto whole_sec = time_t(sec);
+  struct timespec ts{whole_sec, long((sec - double(whole_sec)) * 1e9)};
+  for (;;) {  // Resume the sleep if it is interrupted by a signal.
+#if defined(__APPLE__)
+    if (!nanosleep(&ts, &ts)) break;  // The remaining time is written back into ts.
+    assertx(errno == EINTR);
 #else
-  if (!assertw(!usleep(useconds_t(sec * 1e6)))) assertx(errno == EINTR);  // Possibly might be interrupted by a signal?
+    const int ret = clock_nanosleep(CLOCK_MONOTONIC, 0, &ts, &ts);  // Returns the error rather than setting errno.
+    if (!ret) break;
+    assertx(ret == EINTR);
+#endif
+  }
 #endif  // defined(_WIN32)
 }
 
-void my_sleep(double sec) { internal_sleep(sec, true); }
+void my_sleep(double sec) { internal_sleep(sec, false); }
 
-void my_imprecise_sleep(double sec) { internal_sleep(sec, false); }
+void my_precise_sleep(double sec) { internal_sleep(sec, true); }
 
 size_t available_memory() {
   const bool ldebug = getenv_bool("MEMORY_DEBUG");

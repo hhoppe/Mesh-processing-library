@@ -14,78 +14,68 @@ namespace hh {
 
 // Check unary predicate against elements; true if range is empty.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>> bool all_of(const Range& range, Pred p) {
-  using std::begin, std::end;
-  return std::all_of(begin(range), end(range), p);
+  return std::all_of(ranges::begin(range), ranges::end(range), p);
 }
 
 // Check unary predicate against elements; false if range is empty.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>> bool any_of(const Range& range, Pred p) {
-  using std::begin, std::end;
-  return std::any_of(begin(range), end(range), p);
+  return std::any_of(ranges::begin(range), ranges::end(range), p);
 }
 
 // Check unary predicate against elements; true if range is empty.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>>
 bool none_of(const Range& range, Pred p) {
-  using std::begin, std::end;
-  return std::none_of(begin(range), end(range), p);
+  return std::none_of(ranges::begin(range), ranges::end(range), p);
 }
 
 // Apply unary functor object to each element and returns functor.
-template <typename Range, typename Func, typename = enable_if_range_t<Range>> Func for_each(Range&& range, Func&& f) {
-  using std::begin, std::end;
-  return std::for_each(begin(range), end(range), std::forward<Func>(f));
+template <typename Range, typename Func, typename = enable_if_range_t<Range>> Func for_each(Range&& range, Func func) {
+  return std::for_each(ranges::begin(range), ranges::end(range), std::move(func));
 }
 
 // Return the address of the first element satisfying condition, or nullptr if none.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Value* find_if(Range&& range, Pred p) {
-  using std::begin, std::end;
-  auto iter = std::find_if(begin(range), end(range), p);
-  return iter == end(range) ? nullptr : &*iter;
+  auto iter = std::find_if(ranges::begin(range), ranges::end(range), p);
+  return iter == ranges::end(range) ? nullptr : &*iter;
 }
 
 // Return the address of the first element not satisfying condition, or nullptr if none.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Value* find_if_not(Range&& range, Pred p) {
-  using std::begin, std::end;
-  auto iter = std::find_if_not(begin(range), end(range), p);
-  return iter == end(range) ? nullptr : &*iter;
+  auto iter = std::find_if_not(ranges::begin(range), ranges::end(range), p);
+  return iter == ranges::end(range) ? nullptr : &*iter;
 }
 
 // Count the number of elements equal to specified one.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 std::ptrdiff_t count(const Range& range, const Value& elem) {
-  using std::begin, std::end;
-  return std::count(begin(range), end(range), elem);
+  return std::count(ranges::begin(range), ranges::end(range), elem);
 }
 
 // Count the number of elements matching predicate.
 template <typename Range, typename Pred, typename = enable_if_range_t<Range>>
 std::ptrdiff_t count_if(const Range& range, Pred p) {
-  using std::begin, std::end;
-  return std::count_if(begin(range), end(range), p);
+  return std::count_if(ranges::begin(range), ranges::end(range), p);
 }
 
 // Return whether two ranges are equal element-wise.
 template <typename Range1, typename Range2, typename Pred = std::equal_to<range_value_t<Range1>>,
           typename = enable_if_range_t<Range1>, typename = enable_if_range_t<Range2>>
 bool equal(const Range1& range1, const Range2& range2, Pred p = Pred{}) {
-  using std::begin, std::end;
-  return std::equal(begin(range1), end(range1), begin(range2), end(range2), p);
+  return std::equal(ranges::begin(range1), ranges::end(range1),  //
+                    ranges::begin(range2), ranges::end(range2), p);
 }
 
 // Swap the contents of two ranges.
 template <typename Range1, typename Range2, typename = enable_if_range_t<Range1>, typename = enable_if_range_t<Range2>>
 void swap_ranges(Range1&& range1, Range2&& range2) {
-  using std::begin, std::end;
-  auto iter1 = begin(range1), itend1 = end(range1);
-  auto iter2 = begin(range2), itend2 = end(range2);
+  auto iter1 = ranges::begin(range1), itend1 = ranges::end(range1);
+  auto iter2 = ranges::begin(range2), itend2 = ranges::end(range2);
   if (0) {  // Draft N4560 swaps the first min(size(range1), size(range2)) elements.
     if (itend2 - iter2 < itend1 - iter1) {
-      using std::swap;
-      swap(iter1, iter2);
-      swap(itend1, itend2);
+      ranges::swap(iter1, iter2);
+      ranges::swap(itend1, itend2);
     }
     std::swap_ranges(iter1, itend1, iter2);
   } else {  // Instead we require that they have the same size.
@@ -97,20 +87,18 @@ void swap_ranges(Range1&& range1, Range2&& range2) {
 // Assign the same value to all elements in a range.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Range fill(Range&& range, const Value& v) {
-  // using std::begin, std::end; std::fill(begin(range), end(range), v);
+  // std::fill(ranges::begin(range), ranges::end(range), v);
   for (auto& e : range) e = v;
   return std::forward<Range>(range);
 }
 
 // Reverse the elements in a randomly accessible range.
 template <typename Range, typename = enable_if_range_t<Range>> Range reverse(Range&& range_) {
-  using std::begin, std::end;
-  auto b = begin(range_), e = end(range_);
+  auto b = ranges::begin(range_), e = ranges::end(range_);
   ASSERTX(e >= b);  // Requires the range iterator to support random access.
   // std::reverse(b, e);
   size_t num = e - b;
-  using std::swap;
-  for (const size_t i : range(num / 2)) swap(b[i], b[num - 1 - i]);
+  for (const size_t i : range(num / 2)) ranges::swap(b[i], b[num - 1 - i]);
   return std::forward<Range>(range_);
 }
 // Range reversed(const Range& range) { return reverse(clone(range)); }
@@ -118,16 +106,14 @@ template <typename Range, typename = enable_if_range_t<Range>> Range reverse(Ran
 // Rotate the elements in a randomly accessible range such that element middle becomes the new first element.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Range rotate(Range&& range, Value& middle) {
-  using std::begin, std::end;
-  std::rotate(begin(range), &middle, end(range));
+  std::rotate(ranges::begin(range), &middle, ranges::end(range));
   return std::forward<Range>(range);
 }
 
 // Sort the elements in a range (by default using less(a, b)).
 template <typename Range, typename Comp = std::less<range_value_t<Range>>, typename = enable_if_range_t<Range>>
 Range sort(Range&& range, Comp comp = Comp{}) {
-  using std::begin, std::end;
-  std::sort(begin(range), end(range), comp);
+  std::sort(ranges::begin(range), ranges::end(range), comp);
   return std::forward<Range>(range);
 }
 // Range sorted(const Range& range) { return sort(clone(range)); }
@@ -136,24 +122,21 @@ Range sort(Range&& range, Comp comp = Comp{}) {
 template <typename Range, typename Comp = std::less<range_value_t<Range>>, typename = enable_if_range_t<Range>,
           typename Value = range_value_t<Range>>
 Value min(const Range& range, Comp comp = Comp{}) {
-  using std::begin, std::end;
-  ASSERTXX(begin(range) != end(range));
-  return *std::min_element(begin(range), end(range), comp);
+  ASSERTXX(ranges::begin(range) != ranges::end(range));
+  return *std::min_element(ranges::begin(range), ranges::end(range), comp);
 }
 
 // Maximum value in a non-empty range (using less(a, b)).
 template <typename Range, typename Comp = std::less<range_value_t<Range>>, typename = enable_if_range_t<Range>,
           typename Value = range_value_t<Range>>
 Value max(const Range& range, Comp comp = Comp{}) {
-  using std::begin, std::end;
-  ASSERTXX(begin(range) != end(range));
-  return *std::max_element(begin(range), end(range), comp);
+  ASSERTXX(ranges::begin(range) != ranges::end(range));
+  return *std::max_element(ranges::begin(range), ranges::end(range), comp);
 }
 
 // Number of elements in a range (could also define size(Range) but for robustness that would require Concepts).
 template <typename Range, typename = enable_if_range_t<Range>> std::ptrdiff_t distance(const Range& range) {
-  using std::begin, std::end;
-  return std::distance(begin(range), end(range));
+  return std::distance(ranges::begin(range), ranges::end(range));
 }
 
 // Also from std:
@@ -174,19 +157,17 @@ template <typename Range, typename = enable_if_range_t<Range>> std::ptrdiff_t di
 // Return the index of the first matching element, or die if not found.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 int index(const Range& range, const Value& elem) {
-  using std::begin, std::end;
-  auto iter = std::find(begin(range), end(range), elem);
-  if (iter == end(range)) assertnever(make_string(elem) + " not found in range");
-  return assert_narrow_cast<int>(iter - begin(range));
+  auto iter = std::find(ranges::begin(range), ranges::end(range), elem);
+  if (iter == ranges::end(range)) assertnever(make_string(elem) + " not found in range");
+  return assert_narrow_cast<int>(iter - ranges::begin(range));
 }
 
 // Return the index of the first matching element, or -1 if not found.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 int maybe_index(const Range& range, const Value& elem) {
-  using std::begin, std::end;
-  auto iter = std::find(begin(range), end(range), elem);
-  if (iter == end(range)) return -1;
-  return assert_narrow_cast<int>(iter - begin(range));
+  auto iter = std::find(ranges::begin(range), ranges::end(range), elem);
+  if (iter == ranges::end(range)) return -1;
+  return assert_narrow_cast<int>(iter - ranges::begin(range));
 }
 
 // Higher-precision type to represent the mean of a set of elements.
@@ -209,26 +190,23 @@ template <typename T> using factor_type_t = typename factor_type<T>::type;
 // Index of minimum value in a non-empty range (using less(a, b)).
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 int arg_min(const Range& range) {
-  using std::begin, std::end;
-  ASSERTX(begin(range) != end(range));
-  auto p = std::min_element(begin(range), end(range));
-  return narrow_cast<int>(std::distance(begin(range), p));
+  ASSERTX(ranges::begin(range) != ranges::end(range));
+  auto p = std::min_element(ranges::begin(range), ranges::end(range));
+  return narrow_cast<int>(std::distance(ranges::begin(range), p));
 }
 
 // Index of maximum value in a non-empty range (using less(a, b)).
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 int arg_max(const Range& range) {
-  using std::begin, std::end;
-  ASSERTXX(begin(range) != end(range));
-  auto p = std::max_element(begin(range), end(range));
-  return narrow_cast<int>(std::distance(begin(range), p));
+  ASSERTXX(ranges::begin(range) != ranges::end(range));
+  auto p = std::max_element(ranges::begin(range), ranges::end(range));
+  return narrow_cast<int>(std::distance(ranges::begin(range), p));
 }
 
 // Minimum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Value transitive_min(const Range& range) {
-  using std::begin, std::end;
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   ASSERTX(iter != itend);
   Value v = *iter;
   for (++iter; iter != itend; ++iter) v = min(v, *iter);
@@ -238,8 +216,7 @@ Value transitive_min(const Range& range) {
 // Maximum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Value transitive_max(const Range& range) {
-  using std::begin, std::end;
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   ASSERTX(iter != itend);
   Value v = *iter;
   for (++iter; iter != itend; ++iter) v = max(v, *iter);
@@ -249,8 +226,7 @@ Value transitive_max(const Range& range) {
 // Maximum absolute value in a non-empty range.
 template <typename Range, typename = enable_if_range_t<Range>, typename Value = range_value_t<Range>>
 Value max_abs_element(const Range& range) {
-  using std::begin, std::end;
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   ASSERTX(iter != itend);
   // return abs(*std::max_element(ibeg, iend, [](Value a, Value b) { return abs(a) < abs(b); }));
   Value v = static_cast<Value>(abs(*iter));
@@ -264,9 +240,8 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType sum(const Range& range) {
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  using std::begin, std::end;
-  // return std::accumulate(begin(range), end(range), SumType{});
-  auto iter = begin(range), itend = end(range);
+  // return std::accumulate(ranges::begin(range), ranges::end(range), SumType{});
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   if (iter == itend) return SumType{};
   SumType v = *iter;
   for (++iter; iter != itend; ++iter) v += *iter;
@@ -279,8 +254,7 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename MeanType = std::conditional_t<std::is_same_v<DesiredType, void>, mean_type_t<Value>, DesiredType>>
 MeanType mean(const Range& range) {
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
-  using std::begin, std::end;
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   if (iter == itend) {
     Warning("mean");
     return MeanType{};
@@ -301,10 +275,9 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType mag2(const Range& range) {
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  using std::begin, std::end;
-  // return std::accumulate(begin(range), end(range), SumType{},
+  // return std::accumulate(ranges::begin(range), ranges::end(range), SumType{},
   //                        [](const SumType& sum, const Value& e) { return sum + square(e); });
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   if (iter == itend) return SumType{};
   SumType v = square(SumType(*iter));
   for (++iter; iter != itend; ++iter) v += square(SumType(*iter));
@@ -367,10 +340,9 @@ template <typename DesiredType = void, typename Range, typename = enable_if_rang
           typename Value = range_value_t<Range>,
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType product(const Range& range) {
-  using std::begin, std::end;
-  auto iter = begin(range), itend = end(range);
+  auto iter = ranges::begin(range), itend = ranges::end(range);
   ASSERTX(iter != itend);
-  // return std::accumulate(begin(range), end(range), SumType{1},
+  // return std::accumulate(ranges::begin(range), ranges::end(range), SumType{1},
   //                        [](const SumType& sum, const Value& e) { return sum * e; });
   SumType v = *iter;
   for (++iter; iter != itend; ++iter) v *= *iter;
@@ -415,9 +387,8 @@ template <typename DesiredType = void, typename Range1, typename Range2, typenam
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType dist2(const Range1& range1, const Range2& range2) {
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  using std::begin, std::end;
-  auto iter1 = begin(range1), itend1 = end(range1);
-  auto iter2 = begin(range2), itend2 = end(range2);
+  auto iter1 = ranges::begin(range1), itend1 = ranges::end(range1);
+  auto iter2 = ranges::begin(range2), itend2 = ranges::end(range2);
   SumType v{};
   for (; iter1 != itend1; ++iter1, ++iter2) v += square(SumType(*iter1) - SumType(*iter2));
   ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
@@ -438,9 +409,8 @@ template <typename DesiredType = void, typename Range1, typename Range2, typenam
           typename SumType = std::conditional_t<std::is_same_v<DesiredType, void>, sum_type_t<Value>, DesiredType>>
 SumType dot(const Range1& range1, const Range2& range2) {
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  using std::begin, std::end;
-  auto iter1 = begin(range1), itend1 = end(range1);
-  auto iter2 = begin(range2), itend2 = end(range2);
+  auto iter1 = ranges::begin(range1), itend1 = ranges::end(range1);
+  auto iter2 = ranges::begin(range2), itend2 = ranges::end(range2);
   SumType v{};
   for (; iter1 != itend1; ++iter1, ++iter2) v += SumType(*iter1) * SumType(*iter2);
   ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
@@ -450,9 +420,8 @@ SumType dot(const Range1& range1, const Range2& range2) {
 // Compare two ranges of algebraic types lexicographically; ret -1, 0, 1 based on sign of range1 - range2.
 template <typename Range1, typename Range2, typename = enable_if_range_t<Range1>, typename = enable_if_range_t<Range2>>
 int compare(const Range1& range1, const Range2& range2) {
-  using std::begin, std::end;
-  auto iter1 = begin(range1), itend1 = end(range1);
-  auto iter2 = begin(range2), itend2 = end(range2);
+  auto iter1 = ranges::begin(range1), itend1 = ranges::end(range1);
+  auto iter2 = ranges::begin(range2), itend2 = ranges::end(range2);
   for (; iter1 != itend1; ++iter1, ++iter2) {
     auto d = *iter1 - *iter2;
     if (d) return d < 0 ? -1 : +1;
@@ -465,9 +434,8 @@ int compare(const Range1& range1, const Range2& range2) {
 template <typename Range1, typename Range2, typename = enable_if_range_t<Range1>, typename = enable_if_range_t<Range2>,
           typename Value = range_value_t<Range1>>
 int compare(const Range1& range1, const Range2& range2, const Value& tolerance) {
-  using std::begin, std::end;
-  auto iter1 = begin(range1), itend1 = end(range1);
-  auto iter2 = begin(range2), itend2 = end(range2);
+  auto iter1 = ranges::begin(range1), itend1 = ranges::end(range1);
+  auto iter2 = ranges::begin(range2), itend2 = ranges::end(range2);
   for (; iter1 != itend1; ++iter1, ++iter2) {
     auto d = *iter1 - *iter2;
     if (d < -tolerance) return -1;
@@ -498,63 +466,47 @@ namespace details {
 
 template <typename Iterator, typename Func> struct TransformedIterator {
   using type = TransformedIterator<Iterator, Func>;
-  using iterator_category = std::forward_iterator_tag;
   using value_type = std::decay_t<decltype(std::declval<Func>()(*std::declval<Iterator>()))>;
   using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  using pointer = value_type*;
-  using reference = value_type&;
   Iterator _iter;
-  const Func& _func;
-  TransformedIterator(Iterator iter, const Func& func) : _iter(iter), _func(func) {}
-  TransformedIterator(const type&) = default;
-  type& operator=(const type& rhs) {
-    if (this != &rhs) _iter = rhs._iter;
-    // Note that _func is a reference and there is no need to assign it.
-    return *this;
-  }
+  const Func* _func{};
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  decltype(auto) operator*() const { return _func(*_iter); }
+  decltype(auto) operator*() const { return (*_func)(*_iter); }
   type& operator++() { return ++_iter, *this; }
+  type operator++(int) { return postfix_increment(*this); }
 };
 
 template <typename Range, typename Func> struct TransformedRange {
   Range _range;
   Func _func;
   auto begin() const {
-    using std::begin;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
-    return TransformedIterator<Iterator, Func>(begin(_range), _func);
+    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
+    return TransformedIterator<Iterator, Func>{ranges::begin(_range), &_func};
   }
   auto end() const {
-    using std::begin, std::end;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
-    return TransformedIterator<Iterator, Func>(end(_range), _func);
+    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
+    return TransformedIterator<Iterator, Func>{ranges::end(_range), &_func};
   }
-  auto size() const {
-    using std::size;
-    return size(_range);
-  }
+  auto size() const { return ranges::size(_range); }
 };
 
 }  // namespace details
 
 // Return a view range in which all elements are mapped through a function `func`.
 template <typename Range, typename Func, typename = enable_if_range_t<Range>>
-[[HH_NO_DANGLING]] auto transform(Range&& range, Func&& func = Func{}) {
-  return details::TransformedRange<Range, Func>{std::forward<Range>(range), std::forward<Func>(func)};
+auto transform(Range&& range, Func func = Func{}) {
+  return details::TransformedRange<Range, Func>{std::forward<Range>(range), std::move(func)};
 }
 
 namespace details {
 
 template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
   using type = ConcatenatedIterator<Iterator1, Iterator2>;
-  using iterator_category = std::forward_iterator_tag;
   using value_type = typename std::iterator_traits<Iterator1>::value_type;
   using difference_type = typename std::iterator_traits<Iterator1>::difference_type;
-  using pointer = typename std::iterator_traits<Iterator1>::pointer;
-  using reference = typename std::iterator_traits<Iterator1>::reference;
   static_assert(std::is_same_v<value_type, typename std::iterator_traits<Iterator2>::value_type>);
-  Iterator1 _begin1, _end1;
+  Iterator1 _begin1;
+  Iterator1 _end1;
   Iterator2 _begin2;
   bool operator==(const type& rhs) const { return _begin1 == rhs._begin1 && _begin2 == rhs._begin2; }
   decltype(auto) operator*() const { return _begin1 != _end1 ? *_begin1 : *_begin2; }
@@ -565,79 +517,67 @@ template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
       ++_begin2;
     return *this;
   }
+  type operator++(int) { return postfix_increment(*this); }
 };
 
 template <typename Range1, typename Range2> struct ConcatenatedRange {
   Range1 _range1;
   Range2 _range2;
   auto begin() const {
-    using std::begin, std::end;
-    using Iterator1 = std::decay_t<decltype(begin(_range1))>;
-    using Iterator2 = std::decay_t<decltype(begin(_range2))>;
-    return ConcatenatedIterator<Iterator1, Iterator2>{begin(_range1), end(_range1), begin(_range2)};
+    using Iterator1 = std::decay_t<decltype(ranges::begin(_range1))>;
+    using Iterator2 = std::decay_t<decltype(ranges::begin(_range2))>;
+    return ConcatenatedIterator<Iterator1, Iterator2>{ranges::begin(_range1), ranges::end(_range1),
+                                                      ranges::begin(_range2)};
   }
   auto end() const {
-    using std::begin, std::end;
-    using Iterator1 = std::decay_t<decltype(begin(_range1))>;
-    using Iterator2 = std::decay_t<decltype(begin(_range2))>;
-    return ConcatenatedIterator<Iterator1, Iterator2>{end(_range1), end(_range1), end(_range2)};
+    using Iterator1 = std::decay_t<decltype(ranges::begin(_range1))>;
+    using Iterator2 = std::decay_t<decltype(ranges::begin(_range2))>;
+    return ConcatenatedIterator<Iterator1, Iterator2>{ranges::end(_range1), ranges::end(_range1),
+                                                      ranges::end(_range2)};
   }
-  auto size() const {
-    using std::size;
-    return size(_range1) + size(_range2);
-  }
+  auto size() const { return ranges::size(_range1) + ranges::size(_range2); }
 };
 
 }  // namespace details
 
 // Return a view range that concatenates the elements of two or more ranges.
 template <typename Range1, typename Range2, typename... Ranges>
-[[HH_NO_DANGLING]] auto concatenate(Range1&& range1, Range2&& range2, Ranges&&... ranges) {
+[[HH_NO_DANGLING]] auto concatenate(Range1&& range1, Range2&& range2, Ranges&&... ranges_) {
+  // ("Dangling" is a false positive, due to the fact that there are >=2 reference-binding parameters.)
   if constexpr (sizeof...(Ranges) == 0)
     return details::ConcatenatedRange<Range1, Range2>{std::forward<Range1>(range1), std::forward<Range2>(range2)};
   else
     return concatenate(std::forward<Range1>(range1),
-                       concatenate(std::forward<Range2>(range2), std::forward<Ranges>(ranges)...));
+                       concatenate(std::forward<Range2>(range2), std::forward<Ranges>(ranges_)...));
 }
 
 namespace details {
 
 template <typename Iterator, typename Index> struct EnumeratedIterator {
   using type = EnumeratedIterator<Iterator, Index>;
-  using iterator_category = std::forward_iterator_tag;
   using value_type = typename std::iterator_traits<Iterator>::value_type;
   using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  using pointer = value_type*;
-  using reference = value_type&;
   Iterator _iter;
   Index _index{0};
-  EnumeratedIterator(Iterator iter) : _iter(iter) {}
-  EnumeratedIterator(const type&) = default;
-  type& operator=(const type& rhs) {
-    if (this != &rhs) _iter = rhs._iter, _index = rhs._index;
-    return *this;
-  }
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  decltype(auto) operator*() const { return std::make_tuple(_index, *_iter); }
+  // Note: "std::make_tuple(_index, *_iter)" would return a copied element.
+  // Here we allow "for (auto&& [i, e] : enumerate(array)) e = int(i);".
+  decltype(auto) operator*() const { return std::tuple<Index, decltype(*_iter)>(_index, *_iter); }
   type& operator++() { return ++_iter, ++_index, *this; }
+  type operator++(int) { return postfix_increment(*this); }
 };
 
 template <typename Range, typename Index> struct EnumeratedRange {
   Range _range;
   auto begin() const {
-    using std::begin;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>(begin(_range));
+    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
+    return EnumeratedIterator<Iterator, Index>{ranges::begin(_range), 0};
   }
   auto end() const {
-    using std::begin, std::end;
-    using Iterator = std::decay_t<decltype(begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>(end(_range));
+    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
+    return EnumeratedIterator<Iterator, Index>{ranges::end(_range), 0};
   }
-  auto size() const {
-    using std::size;
-    return size(_range);
-  }
+  auto size() const { return ranges::size(_range); }
 };
 
 }  // namespace details
@@ -651,28 +591,19 @@ namespace details {
 
 template <typename Iterator, typename Func> struct FilteredIterator {
   using type = FilteredIterator<Iterator, Func>;
-  using iterator_category = std::forward_iterator_tag;
   using value_type = typename std::iterator_traits<Iterator>::value_type;
   using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  using pointer = value_type*;
-  using reference = value_type&;
   Iterator _iter;
   Iterator _end;
-  const Func& _func;
-  FilteredIterator(Iterator iter, Iterator end, const Func& func) : _iter(iter), _end(end), _func(func) {}
-  FilteredIterator(const type&) = default;
-  type& operator=(const type& rhs) {
-    if (this != &rhs) _iter = rhs._iter, _end = rhs._end;
-    // Note that _func is a reference and there is no need to assign it.
-    return *this;
-  }
+  const Func* _func{};
   bool operator==(const type& rhs) const { return _iter == rhs._iter; }
   decltype(auto) operator*() const { return *_iter; }
   type& operator++() {
     ++_iter;
-    while (_iter != _end && !_func(*_iter)) ++_iter;
+    while (_iter != _end && !(*_func)(*_iter)) ++_iter;
     return *this;
   }
+  type operator++(int) { return postfix_increment(*this); }
 };
 
 template <typename Range, typename Func> struct FilteredRange {
@@ -682,14 +613,12 @@ template <typename Range, typename Func> struct FilteredRange {
   using CRange = std::add_lvalue_reference_t<std::add_const_t<Range>>;
   using Iterator = std::decay_t<range_iterator_t<CRange>>;
   auto begin() const -> FilteredIterator<Iterator, Func> {
-    using std::begin, std::end;
-    auto iterator = FilteredIterator<Iterator, Func>{begin(_range), end(_range), _func};
+    auto iterator = FilteredIterator<Iterator, Func>{ranges::begin(_range), ranges::end(_range), &_func};
     while (iterator != this->end() && !_func(*iterator)) ++iterator;
     return iterator;
   }
   auto end() const -> FilteredIterator<Iterator, Func> {
-    using std::begin, std::end;
-    return FilteredIterator<Iterator, Func>{end(_range), end(_range), _func};
+    return FilteredIterator<Iterator, Func>{ranges::end(_range), ranges::end(_range), &_func};
   }
   // Note that size() is unknown.
 };
@@ -699,7 +628,7 @@ template <typename Range, typename Func> struct FilteredRange {
 // Return a view range that filters the elements in `range` according to a predicate `func`.
 template <typename Range, typename Func, typename = enable_if_range_t<Range>>
 auto filter(Range&& range, Func func = Func{}) {
-  return details::FilteredRange<Range, Func>{std::forward<Range>(range), std::forward<Func>(func)};
+  return details::FilteredRange<Range, Func>{std::forward<Range>(range), std::move(func)};
 }
 
 }  // namespace hh

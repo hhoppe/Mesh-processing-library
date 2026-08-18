@@ -194,7 +194,7 @@ Array<DomainFace> get_domain_faces() {
       const bool front = i < 4;
       const int q = front ? i : i - 4;
       Vector dir0 = dir[q], dir1 = dir[(q + 1) % 4];
-      if (!front) std::swap(dir0, dir1);
+      if (!front) ranges::swap(dir0, dir1);
       domain_faces[i].poly =
           V(Point(0.f, -dir0[0], dir0[1]), Point(0.f, -dir1[0], dir1[1]), Point(front ? -1.f : +1.f, 0.f, 0.f));
       domain_faces[i].stretchuvs = V(Uv(0.f, 0.f), Uv(1.f, 0.f), Uv(.5f, .5f * sqrt(3.f)));
@@ -605,8 +605,8 @@ void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& tr
     bary = Bary(max(0.f, 1.f - t), t - s, s);
     if (triangle_map == map_area) {
       // Flipped triangles not handled correctly by current map_area. Since it is symmetric, undoing reflection is OK.
-      std::swap(triangle[0], triangle[1]);
-      std::swap(bary[0], bary[1]);
+      ranges::swap(triangle[0], triangle[1]);
+      ranges::swap(bary[0], bary[1]);
     }
   }
 }

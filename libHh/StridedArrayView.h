@@ -35,11 +35,9 @@ template <typename T> class CStridedArrayView {
     using type = iterator;
 
    public:
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
     iterator() = default;
     bool operator==(const type& rhs) const { return _p == rhs._p; }
     const T& operator*() const { return *_p; }
@@ -52,6 +50,8 @@ template <typename T> class CStridedArrayView {
       _p -= _stride;
       return *this;
     }
+    type operator++(int) { return postfix_increment(*this); }
+    type operator--(int) { return postfix_decrement(*this); }
     type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
     type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
     const T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
@@ -96,11 +96,9 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
     using type = iterator;
 
    public:
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
     iterator() = default;
     bool operator==(const type& rhs) const { return _p == rhs._p; }
     T& operator*() const { return *_p; }
@@ -113,6 +111,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
       _p -= _stride;
       return *this;
     }
+    type operator++(int) { return postfix_increment(*this); }
+    type operator--(int) { return postfix_decrement(*this); }
     type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
     type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
     T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }

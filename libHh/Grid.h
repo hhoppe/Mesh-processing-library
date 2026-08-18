@@ -82,7 +82,7 @@ template <int D> constexpr size_t product_dims(const int* ar) {
     return 1;
   } else {
     size_t v = ar[0];
-    if (D > 1) for_intL(i, 1, D) v *= ar[i];
+    if constexpr (D > 1) for_intL(i, 1, D) v *= ar[i];
     return v;
   }
 }
@@ -199,6 +199,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   }
   base slice(int ib, int ie) const { return base::slice(ib, ie); }
   void assign(CGridView<D, T> g) requires(Copyable<T>);
+  using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
   T* begin() { return _a; }
@@ -283,11 +284,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     nested_retrieve()(*this, l);
     return *this;
   }
-  type& operator=(type&& g) noexcept {
-    clear();
-    swap(*this, g);
-    return *this;
-  }
+  type& operator=(type&& g) noexcept { return (clear(), swap(*this, g), *this); }
   template <typename... A> void init(int d0, A... dr) { init(Vec<int, D>(d0, dr...)); }
   using base::size;
   void init(const Vec<int, D>& dims) {
@@ -309,9 +306,8 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     if (_a) init(ntimes<D>(0));
   }
   friend void swap(Grid& l, Grid& r) noexcept {
-    using std::swap;
-    swap(l._a, r._a);
-    swap(l._dims, r._dims);
+    ranges::swap(l._a, r._a);
+    ranges::swap(l._dims, r._dims);
   }
   void special_reduce_dim0(int i) { assertx(i >= 0 && i <= _dims[0]), _dims[0] = i; }
   // (Must declare template parameters because these functions access private _a of <D - 1, T> and <D + 1, T>.)
@@ -459,8 +455,7 @@ template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requ
 template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) {
   assertx(grid.dim(0) == 1);  // Perhaps could be <= 1.
   Grid<D - 1, T> ngrid;
-  using std::swap;
-  swap(ngrid._a, grid._a);
+  ranges::swap(ngrid._a, grid._a);
   ngrid._dims = grid._dims.template tail<D - 1>();
   grid._dims = ntimes<D>(0);
   return ngrid;
@@ -468,8 +463,7 @@ template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) 
 
 template <int D, typename T> Grid<D + 1, T> increase_grid_rank(Grid<D, T>&& grid) {
   Grid<D + 1, T> ngrid;
-  using std::swap;
-  swap(ngrid._a, grid._a);
+  ranges::swap(ngrid._a, grid._a);
   ngrid._dims = concat(V(1), grid._dims);
   grid._dims = ntimes<D>(0);
   return ngrid;

@@ -149,11 +149,11 @@ template <typename Range, typename ProcessChunk>
 void parallel_for_chunk(const ParallelOptions& options, const Range& range, int num_threads,
                         const ProcessChunk& process_chunk) {
   if (num_threads < 1) assertnever(SSHOW(num_threads));
-  using std::begin, std::end, std::size;
-  const auto begin_range = begin(range);
-  const auto end_range = end(range);
+  const auto begin_range = ranges::begin(range);
+  const auto end_range = ranges::end(range);
+  // Note that num_elements be larger than size_t (e.g., uint64_t on win32).
   // const auto num_elements = end_range - begin_range;
-  const auto num_elements = size(range);  // Note that num_elements be larger than size_t (e.g., uint64_t on win32).
+  const auto num_elements = ranges::size(range);
   using Iterator = decltype(begin_range);
   const uint64_t total_num_cycles = num_elements * options.cycles_per_elem;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_parallel_thresh;
@@ -202,8 +202,7 @@ void parallel_for_chunk(const Range& range, const ProcessChunk& process_chunk) {
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <typename Range, typename ProcessElement>
 void parallel_for(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
-  using std::size;
-  const auto num_elements = size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
+  const auto num_elements = ranges::size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   if (!num_elements) return;
   using NumElements = decltype(num_elements);
   const int max_num_threads = get_max_threads();

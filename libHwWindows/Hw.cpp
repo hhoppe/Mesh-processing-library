@@ -201,7 +201,7 @@ void Hw::open() {
     draw_it();  // necessary 2021-03-21
     // glFlush();
     glFinish();
-    // my_imprecise_sleep(0.2);
+    // my_sleep(0.2);
     Image image(_win_dims);
     if (!_pbuffer) {
       assertx(!_is_glx_dbuf);
@@ -261,7 +261,7 @@ bool Hw::loop() {
       // We've really got nothing to do, so let's pause to avoid CPU usage when nothing is happening.
       if (_hwkey != "") {
         // it would be best if callbackSimuKey() would post a message so we could wait in the MsgWait.
-        const double delay_no_activity = 0.001;  // how long to sleep (in seconds) when there's no activity
+        const double delay_no_activity = 0.001;  // how long to sleep (in seconds) when there is no activity
         my_sleep(delay_no_activity);
         continue;
       }

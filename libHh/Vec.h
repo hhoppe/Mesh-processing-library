@@ -192,7 +192,7 @@ template <typename T = void, typename Arg0, typename... Args>
 // Construct a zero-length Vec.
 template <typename T> [[nodiscard]] constexpr Vec<T, 0> V() { return Vec<T, 0>(); }
 
-// Construct a Vec from a braced list, inferring the array size (like std::to_array).
+// Construct a Vec from a braced list, inferring the size (like std::to_array).
 template <typename T, size_t n> [[nodiscard]] constexpr Vec<T, int(n)> to_Vec(T (&&a)[n]) {
   return [&]<size_t... i>(std::index_sequence<i...>) {
     return Vec<T, int(n)>(std::move(a[i])...);
@@ -317,13 +317,13 @@ template <int D> class Vec_iterator {
   using type = Vec_iterator<D>;
 
  public:
+  // TODO: satisfy the std::ranges concept by defining a proper sentinel type.
   using iterator_category = std::forward_iterator_tag;
   using value_type = Vec<int, D>;
   using difference_type = void;
-  using pointer = value_type*;
-  using reference = value_type&;
   Vec_iterator(const Vec<int, D>& u, const Vec<int, D>& uU) : _u(u), _uU(uU) {}
   Vec_iterator(const type& iter) = default;
+  Vec_iterator() = default;
   bool operator!=(const type& rhs) const {
     dummy_use(rhs);
     ASSERTXX(rhs._uU == _uU);
@@ -334,10 +334,10 @@ template <int D> class Vec_iterator {
   type& operator++() {
     static_assert(D > 0);
     ASSERTXX(_u[0] < _uU[0]);
-    if (D == 1) {
+    if constexpr (D == 1) {
       _u[0]++;
       return *this;
-    } else if (D == 2) {  // Else VC12 does not unroll this tiny loop.
+    } else if constexpr (D == 2) {  // Else VC12 does not unroll this tiny loop.
       if (++_u[1] < _uU[1]) return *this;
       _u[1] = 0;
       ++_u[0];
@@ -352,9 +352,10 @@ template <int D> class Vec_iterator {
       return *this;
     }
   }
+  type operator++(int) { return postfix_increment(*this); }
 
  private:
-  Vec<int, D> _u, _uU;
+  Vec<int, D> _u{}, _uU{};
 };
 
 // Range of coordinates 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
@@ -381,10 +382,9 @@ template <int D> class VecL_iterator {
   using iterator_category = std::forward_iterator_tag;
   using value_type = Vec<int, D>;
   using difference_type = void;
-  using pointer = value_type*;
-  using reference = value_type&;
   VecL_iterator(const Vec<int, D>& uL, const Vec<int, D>& uU) : _u(uL), _uL(uL), _uU(uU) {}
   VecL_iterator(const type& iter) = default;
+  VecL_iterator() = default;
   bool operator!=(const type& rhs) const {
     dummy_use(rhs);
     ASSERTXX(rhs._uU == _uU);
@@ -402,9 +402,10 @@ template <int D> class VecL_iterator {
     _u[0]++;
     return *this;
   }
+  type operator++(int) { return postfix_increment(*this); }
 
  private:
-  Vec<int, D> _u, _uL, _uU;
+  Vec<int, D> _u{}, _uL{}, _uU{};
 };
 
 // Range of coordinates uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].

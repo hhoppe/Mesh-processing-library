@@ -379,8 +379,8 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               mrhs[y, x] = vrhs;
               if (!have_est) mest[y, x] = pixv;  // OPT:rhs_complex
             }
-            swap(apix0, apix1);
-            swap(asy0, asy1);
+            ranges::swap(apix0, apix1);
+            ranges::swap(asy0, asy1);
           }
         }
       });

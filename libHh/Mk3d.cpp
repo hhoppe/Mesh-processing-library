@@ -98,7 +98,7 @@ void Mk3d::output_poly() {
 
 void Mk3d::flip_poly() {
   int n = _el.num();
-  for_intL(i, 1, (n - 1) / 2 + 1) std::swap(_el[i], _el[n - i]);  // slightly different from reverse()
+  for_intL(i, 1, (n - 1) / 2 + 1) ranges::swap(_el[i], _el[n - i]);  // slightly different from reverse()
   for_int(i, n) _el[i].n = -_el[i].n;
 }
 

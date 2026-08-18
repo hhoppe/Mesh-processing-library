@@ -184,7 +184,7 @@ int main() {
     // (2) Move only part of an Array, avoiding string copies.
     Array<std::string> words{"alpha", "beta", "gamma", "delta"};
     Array<std::string> tail;
-    tail.push_array(std::ranges::subrange(words.tail(2)) | std::views::as_rvalue);
+    tail.push_array(ranges::subrange(words.tail(2)) | std::views::as_rvalue);
     printf("(2) tail=%s,%s   words[2..3]='%s','%s' (emptied)\n",  //
            tail[0].c_str(), tail[1].c_str(), words[2].c_str(), words[3].c_str());
 
@@ -198,7 +198,7 @@ int main() {
 
     // (4) Without as_rvalue, the same call copies and the source is intact.
     Array<std::string> copied;
-    copied.push_array(std::ranges::subrange(words.head(2)));
+    copied.push_array(ranges::subrange(words.head(2)));
     printf("(4) copied=%s,%s   words[0]='%s' (intact)\n", copied[0].c_str(), copied[1].c_str(), words[0].c_str());
   }
   {
@@ -212,7 +212,7 @@ int main() {
     // (2) Move only part of an Array, avoiding string copies.
     Array<std::string> words{"alpha", "beta", "gamma", "delta"};
     Array<std::string> tail;
-    tail.push_array(std::ranges::subrange(words.tail(2)) | std::views::as_rvalue);
+    tail.push_array(ranges::subrange(words.tail(2)) | std::views::as_rvalue);
     std::println("(2) tail={},{}   words[2..3]='{}','{}' (emptied)", tail[0], tail[1], words[2], words[3]);
 
     // (3) Move a filtered subset; std::move() cannot express this at all.
@@ -225,7 +225,7 @@ int main() {
 
     // (4) Without as_rvalue, the same call copies and the source is intact.
     Array<std::string> copied;
-    copied.push_array(std::ranges::subrange(words.head(2)));
+    copied.push_array(ranges::subrange(words.head(2)));
     std::println("(4) copied={},{}   words[0]='{}' (intact)", copied[0], copied[1], words[0]);
   }
 }

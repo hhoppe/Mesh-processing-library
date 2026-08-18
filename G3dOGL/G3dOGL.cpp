@@ -3442,7 +3442,7 @@ void sr_pre_space() {
       GMesh gmesh = srmesh.extract_gmesh();
       WFile fi("v.m");
       gmesh.write(fi());
-      my_imprecise_sleep(10.);
+      my_sleep(10.);
     }
   }
   if (!sr_freeze) {

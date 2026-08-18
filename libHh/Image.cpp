@@ -17,10 +17,10 @@ Image::Image(const Vec2<int>& pdims) {
   if (getenv_bool("IMAGE_SILENT_IO_PROGRESS")) _silent_io_progress = true;
 }
 
-Image& Image::operator=(Image&& image) noexcept {
-  clear();
-  swap(*this, image);
-  return *this;
+void swap(Image& l, Image& r) noexcept {
+  ranges::swap(implicit_cast<Image::base&>(l), implicit_cast<Image::base&>(r));
+  ranges::swap(l._attrib, r._attrib);
+  ranges::swap(l._silent_io_progress, r._silent_io_progress);
 }
 
 void Image::init(const Vec2<int>& pdims, Pixel pixel) {

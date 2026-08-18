@@ -6,6 +6,11 @@
 
 namespace hh {
 
+void swap(Audio& l, Audio& r) noexcept {
+  ranges::swap(implicit_cast<Audio::base&>(l), implicit_cast<Audio::base&>(r));
+  ranges::swap(l._attrib, r._attrib);
+}
+
 string Audio::diagnostic_string() const {
   string s = sform("nsamples=%d nchannels=%d (%g Hz)", nsamples(), nchannels(), attrib().samplerate);
   if (attrib().suffix != "") s += " (" + attrib().suffix + ")";

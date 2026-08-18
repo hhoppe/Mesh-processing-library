@@ -30,11 +30,7 @@ template <typename T> class Graph : noncopyable {
   using edge_iterator = const typename atype::const_iterator;
   Graph() {}
   Graph(type&& g) noexcept { swap(*this, g); }
-  type& operator=(type&& g) noexcept {
-    clear();
-    swap(*this, g);
-    return *this;
-  }
+  type& operator=(type&& g) noexcept { return (clear(), swap(*this, g), *this); }
   void clear() { _m.clear(); }
   bool empty() const { return _m.num() == 0; }
   // Enter and remove domain vertices.
@@ -52,10 +48,7 @@ template <typename T> class Graph : noncopyable {
   void add(const Graph<T>& g);
   vertices_range vertices() const { return _m.keys(); }
   edges_range edges(T v) const { return _m.get(v); }
-  friend void swap(Graph& l, Graph& r) noexcept {
-    using std::swap;
-    swap(l._m, r._m);
-  }
+  friend void swap(Graph& l, Graph& r) noexcept { ranges::swap(l._m, r._m); }
 
  private:
   base _m;

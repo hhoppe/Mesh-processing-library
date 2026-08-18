@@ -140,13 +140,13 @@ A3dVertex get_vertex_combination(const A3dElem& el, int i, int j, int k, int nt)
 void delay_frame() {
   if (!frdelay) return;
   assertx(frdelay > 0.);
-  my_sleep(frdelay);
+  my_precise_sleep(frdelay);
 }
 
 void delay_element() {
   if (!eldelay) return;
   assertx(eldelay > 0.);
-  my_sleep(eldelay);
+  my_precise_sleep(eldelay);
 }
 
 bool is_degenerate(const A3dElem& el) {

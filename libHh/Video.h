@@ -24,7 +24,6 @@ class TmpFile;  // libHh/FileIO.h
 // A Video is a 3D grid of RGB pixels, plus attributes like compression type, frame rate, and bit rate.
 class Video : public Grid<3, Pixel> {
   using base = Grid<3, Pixel>;
-  friend void swap(Video& l, Video& r) noexcept;
 
  public:
   struct Attrib;
@@ -35,15 +34,8 @@ class Video : public Grid<3, Pixel> {
   explicit Video(const string& filename) { read_file(filename); }
   Video(Video&& v) noexcept { swap(*this, v); }
   Video(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
-  Video& operator=(Video&& v) noexcept {
-    clear();
-    swap(*this, v);
-    return *this;
-  }
-  void operator=(base&& v) {
-    clear();
-    swap(implicit_cast<base&>(*this), v);
-  }
+  Video& operator=(Video&& v) noexcept { return (clear(), swap(*this, v), *this); }
+  void operator=(base&& v) { clear(), swap(implicit_cast<base&>(*this), v); }
   Video& operator=(const Video&) = default;
   void operator=(CGridView<3, Pixel> video) { base::assign(video); }
   void init(const Vec3<int>& dims);
@@ -66,6 +58,7 @@ class Video : public Grid<3, Pixel> {
     int bitrate{0};        // bits / sec.
     Audio audio;
   };
+  friend void swap(Video& l, Video& r) noexcept;
   static string diagnostic_string(const Vec3<int>& dims, const Attrib& attrib);
 
  private:
@@ -80,17 +73,11 @@ string video_suffix_for_magic_byte(uchar c);
 
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12 : noncopyable {
-  friend void swap(VideoNv12& l, VideoNv12& r) noexcept;
-
  public:
   VideoNv12() = default;
   explicit VideoNv12(const Vec3<int>& dims) { init(dims); }
   VideoNv12(VideoNv12&& vnv12) { swap(*this, vnv12); }
-  VideoNv12& operator=(VideoNv12&& v) noexcept {
-    clear();
-    swap(*this, v);
-    return *this;
-  }
+  VideoNv12& operator=(VideoNv12&& v) noexcept { return (clear(), swap(*this, v), *this); }
   explicit VideoNv12(Grid<3, uint8_t>&& grid_Y, Grid<3, Vec2<uint8_t>>&& grid_UV)
       : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) {
     ok();
@@ -112,6 +99,7 @@ class VideoNv12 : noncopyable {
   void special_reduce_dim0(int i) { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
   void read_file(const string& filename, Video::Attrib* pattrib = nullptr);    // May throw std::runtime_error.
   void write_file(const string& filename, const Video::Attrib& attrib) const;  // May throw std::runtime_error.
+  friend void swap(VideoNv12& l, VideoNv12& r) noexcept;
 
  private:
   Grid<3, uint8_t> _grid_Y;         // Luminance.
@@ -219,20 +207,6 @@ class WVideo {
   friend class Mf_WVideo_Implementation;
   friend class Ffmpeg_WVideo_Implementation;
 };
-
-//----------------------------------------------------------------------------
-
-inline void swap(Video& l, Video& r) noexcept {
-  using std::swap;
-  swap(implicit_cast<Video::base&>(l), implicit_cast<Video::base&>(r));
-  swap(l._attrib, r._attrib);
-}
-
-inline void swap(VideoNv12& l, VideoNv12& r) noexcept {
-  using std::swap;
-  swap(l._grid_Y, r._grid_Y);
-  swap(l._grid_UV, r._grid_UV);
-}
 
 }  // namespace hh
 

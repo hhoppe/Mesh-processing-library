@@ -20,9 +20,9 @@ extern "C" {
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic ignored "-Wold-style-cast"  // for DefaultScreen() etc.
-#endif
+// ?? #if defined(__GNUC__)
+// #pragma GCC diagnostic ignored "-Wold-style-cast"  // for DefaultScreen() etc.
+// #endif
 
 namespace hh {
 
@@ -892,7 +892,7 @@ void Hw::set_window_title(string ps) {
         prop.value = reinterpret_cast<uchar*>(const_cast<char*>(_window_title.c_str()));
         prop.encoding = XA_STRING;
         prop.format = 8;
-        prop.nitems = strlen((char*)prop.value);
+        prop.nitems = strlen(reinterpret_cast<char*>(prop.value));
       } else {
         Vec1<char*> ar(const_cast<char*>(_window_title.c_str()));
         XStringListToTextProperty(ar.data(), ar.num(), &prop);

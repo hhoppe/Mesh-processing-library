@@ -61,16 +61,15 @@ Stat::~Stat() {
 }
 
 void swap(Stat& l, Stat& r) noexcept {
-  using std::swap;
-  swap(l._name, r._name);
-  swap(l._print, r._print);
-  swap(l._use_rms, r._use_rms);
-  swap(l._n, r._n);
-  swap(l._sum, r._sum);
-  swap(l._sum2, r._sum2);
-  swap(l._min, r._min);
-  swap(l._max, r._max);
-  swap(l._ofs, r._ofs);
+  std::swap(l._name, r._name);
+  std::swap(l._print, r._print);
+  std::swap(l._use_rms, r._use_rms);
+  std::swap(l._n, r._n);
+  std::swap(l._sum, r._sum);
+  std::swap(l._sum2, r._sum2);
+  std::swap(l._min, r._min);
+  std::swap(l._max, r._max);
+  std::swap(l._ofs, r._ofs);
 }
 
 void Stat::summary_terminate() {

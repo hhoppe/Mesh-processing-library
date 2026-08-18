@@ -7,14 +7,14 @@ int main() {
   Timer timer_firsthalf("firsthalf");
   {
     HH_TIMER("t1");
-    my_sleep(.1);
+    my_precise_sleep(0.1);
   }
   {
     Timer timer("t2");
     HH_TIMER("t3");
-    my_sleep(.1);
+    my_sleep(0.1);
     timer.terminate();
-    my_sleep(.05);
+    my_sleep(0.05);
   }
   {
     Timer timer;  // Should not print.

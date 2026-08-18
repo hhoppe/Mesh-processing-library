@@ -11,8 +11,5 @@ int main() {
     my_sleep(0.05);
     time_elapsed += timer.elapsed();
   }
-  if (time_elapsed < 0.4 || time_elapsed > 5.0) {
-    fprintf(stderr, "time_elapsed=%g is out of range\n", time_elapsed);
-    exit(1);
-  }
+  if (time_elapsed < 0.4 || time_elapsed > 5.0) assertnever(sform("time_elapsed=%g is out of range", time_elapsed));
 }

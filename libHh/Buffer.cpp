@@ -57,25 +57,22 @@ int buf_fd;
 
 DWORD WINAPI buf_thread_func(void* param) {
   dummy_use(param);
+  bool have_set_pipe_wait = false;
   for (;;) {
     if (1) assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);
     assertx(buf_buffern == 0);
     int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
     if (nread < 0 && errno == EINVAL && GetLastError() == ERROR_NO_DATA) {
-      // Cygwin bash has implemented a pipe using a non-blocking read mode, and there is no data, so we must wait.
-      if (0) {
-        my_sleep(0.005);  // However, busy-waiting wastes CPU cycles.
-      } else {
-        // Instead, we modify the wait mode on the pipe handle from PIPE_NOWAIT to PIPE_WAIT.
-        DWORD mode = PIPE_READMODE_BYTE | PIPE_WAIT;
-        assertx(SetNamedPipeHandleState(HANDLE(_get_osfhandle(buf_fd)), &mode, NULL, NULL));
-      }
+      // Cygwin bash has implemented a pipe using a non-blocking read mode, and there is no data.
+      // We modify the wait mode on the pipe handle from PIPE_NOWAIT to PIPE_WAIT.
+      assertx(!have_set_pipe_wait);
+      DWORD mode = PIPE_READMODE_BYTE | PIPE_WAIT;
+      assertx(SetNamedPipeHandleState(HANDLE(_get_osfhandle(buf_fd)), &mode, NULL, NULL));
+      have_set_pipe_wait = true;
       continue;
     }
     buf_buffern = nread;
-    if (nread < 0)
-      assertnever(
-          SSHOW("read", buf_fd, reinterpret_cast<uintptr_t>(buf_buffer.data()), buf_buffer.num(), nread, errno));
+    if (nread < 0) assertnever(SSHOW("read", buf_fd, nread, errno));
     assertx(SetEvent(g_buf_event_data_available));
     if (nread == 0) break;
     assertx(WaitForSingleObject(buf_event_data_copied, INFINITE) == WAIT_OBJECT_0);

@@ -14,6 +14,16 @@ void Video::init(const Vec3<int>& dims) {
   }
 }
 
+void swap(Video& l, Video& r) noexcept {
+  ranges::swap(implicit_cast<Video::base&>(l), implicit_cast<Video::base&>(r));
+  ranges::swap(l._attrib, r._attrib);
+}
+
+void swap(VideoNv12& l, VideoNv12& r) noexcept {
+  ranges::swap(l._grid_Y, r._grid_Y);
+  ranges::swap(l._grid_UV, r._grid_UV);
+}
+
 string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
   string s = sform("nframes~%d %dx%d (%gfps)", dims[0], dims[2], dims[1], attrib.framerate);
   if (attrib.suffix != "") s += " (" + attrib.suffix + ")";

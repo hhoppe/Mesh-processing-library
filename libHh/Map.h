@@ -129,94 +129,73 @@ class Map {
   bciter end() const { return _map.end(); }
 
  public:
-  class keys_iterator {
+  struct keys_iterator {
     using type = keys_iterator;
-
-   public:
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
     using value_type = Key;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-    keys_iterator() = default;
-    keys_iterator(bciter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     const Key& operator*() const { return _it->first; }
     type& operator++() {
       ++_it;
       return *this;
     }
-
-   private:
+    type operator++(int) { return postfix_increment(*this); }
     bciter _it;
   };
   class keys_range {
    public:
     keys_range(const type& map) : _map(map) {}
-    keys_iterator begin() const { return keys_iterator(_map.begin()); }
-    keys_iterator end() const { return keys_iterator(_map.end()); }
+    keys_iterator begin() const { return keys_iterator{_map.begin()}; }
+    keys_iterator end() const { return keys_iterator{_map.end()}; }
     size_t size() const { return _map.size(); }
 
    private:
     const type& _map;
   };
-  class cvalues_iterator {
+  struct cvalues_iterator {
     using type = cvalues_iterator;
-
-   public:
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-    cvalues_iterator() = default;
-    cvalues_iterator(bciter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     const Value& operator*() const { return _it->second; }
     type& operator++() {
       ++_it;
       return *this;
     }
-
-   private:
+    type operator++(int) { return postfix_increment(*this); }
     bciter _it;
   };
   class cvalues_range {
    public:
     cvalues_range(const type& map) : _map(map) {}
-    cvalues_iterator begin() const { return cvalues_iterator(_map.begin()); }
-    cvalues_iterator end() const { return cvalues_iterator(_map.end()); }
+    cvalues_iterator begin() const { return cvalues_iterator{_map.begin()}; }
+    cvalues_iterator end() const { return cvalues_iterator{_map.end()}; }
     size_t size() const { return _map.size(); }
 
    private:
     const type& _map;
   };
-  class values_iterator {
+  struct values_iterator {
     using type = values_iterator;
-
-   public:
-    using iterator_category = std::forward_iterator_tag;
+    using iterator_concept = std::forward_iterator_tag;
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
-    using pointer = value_type*;
-    using reference = value_type&;
-    values_iterator() = default;
-    values_iterator(biter it) : _it(it) {}
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     Value& operator*() const { return _it->second; }
     type& operator++() {
       ++_it;
       return *this;
     }
-
-   private:
+    type operator++(int) { return postfix_increment(*this); }
     biter _it;
   };
   class values_range {
    public:
     values_range(type& map) : _map(map) {}
-    values_iterator begin() const { return values_iterator(_map._map.begin()); }
-    values_iterator end() const { return values_iterator(_map._map.end()); }
+    values_iterator begin() const { return values_iterator{_map._map.begin()}; }
+    values_iterator end() const { return values_iterator{_map._map.end()}; }
     size_t size() const { return _map.size(); }
 
    private:

@@ -8,6 +8,7 @@ void Image_libs_dummy_function_to_avoid_linkage_warnings() {}
 
 #else
 
+#include <cstdio>   // fprintf()
 #include <cstring>  // strlen()
 
 extern "C" {

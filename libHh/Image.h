@@ -36,7 +36,6 @@ struct ImageLibs;
 
 class Image : public Matrix<Pixel> {
   using base = Matrix<Pixel>;
-  friend void swap(Image& l, Image& r) noexcept;
 
  public:
   struct Attrib;
@@ -47,7 +46,7 @@ class Image : public Matrix<Pixel> {
   explicit Image(const string& filename) { read_file(filename); }
   Image(Image&& m) noexcept { swap(*this, m); }
   Image(base&& m) noexcept { swap(implicit_cast<base&>(*this), m); }
-  Image& operator=(Image&& image) noexcept;
+  Image& operator=(Image&& image) noexcept { return (clear(), swap(*this, image), *this); }
   void operator=(base&& image) { clear(), swap(implicit_cast<base&>(*this), image); }
   Image& operator=(const Image&) = default;
   void operator=(CMatrixView<Pixel> image) { base::assign(image); }
@@ -82,6 +81,7 @@ class Image : public Matrix<Pixel> {
     friend Image;
     friend details::ImageLibs;
   };
+  friend void swap(Image& l, Image& r) noexcept;
 
  private:
   Attrib _attrib;
@@ -293,15 +293,6 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 #if !defined(HH_NO_IMAGE_LIBS)
 #define HH_IMAGE_HAVE_LIBS
 #endif
-
-//----------------------------------------------------------------------------
-
-inline void swap(Image& l, Image& r) noexcept {
-  using std::swap;
-  swap(implicit_cast<Image::base&>(l), implicit_cast<Image::base&>(r));
-  swap(l._attrib, r._attrib);
-  swap(l._silent_io_progress, r._silent_io_progress);
-}
 
 }  // namespace hh
 

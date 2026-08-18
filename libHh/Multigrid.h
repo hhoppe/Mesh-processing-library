@@ -427,17 +427,17 @@ class Multigrid : noncopyable {
         T vnei{};
         if (0) {
           for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
-        } else if (D <= 3) {
+        } else if constexpr (D <= 3) {
           // get rid of &vnei lambda capture which forces stack allocation on VS2013
-          if (D > 0) {
+          if constexpr (D > 0) {
             int o = ar_interior_offsets[0];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
-          if (D > 1) {
+          if constexpr (D > 1) {
             int o = ar_interior_offsets[1];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
-          if (D > 2) {
+          if constexpr (D > 2) {
             int o = ar_interior_offsets[2];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
@@ -523,7 +523,7 @@ class Multigrid : noncopyable {
         // We also tried using custom relaxation kernels near end boundaries but it did not work well.
         for_int(iter, 3) {
           int extra_niter = 30, extra_size = 6;
-          if (D == 3) {  // reduce computational cost on Video
+          if constexpr (D == 3) {  // reduce computational cost on Video
             extra_niter = 5;
             extra_size = 3;
           }
@@ -636,15 +636,15 @@ class Multigrid : noncopyable {
         if (0) {
           for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         } else {
-          if (D > 0) {
+          if constexpr (D > 0) {
             int o = ar_interior_offsets[0];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
-          if (D > 1) {
+          if constexpr (D > 1) {
             int o = ar_interior_offsets[1];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
-          if (D > 2) {
+          if constexpr (D > 2) {
             int o = ar_interior_offsets[2];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }

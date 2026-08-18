@@ -269,14 +269,14 @@ template <int D, typename FuncRaster = void(size_t)>
 void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRaster func_raster) {
   if (min(uU - uL) < 1) return;  // to allow uL[c] == uU[c] == dims[c]
   ASSERTX(uL.in_range(dims) && uU.in_range(dims + 1));
-  if (D == 1) {
+  if constexpr (D == 1) {
     for_intL(d0, uL[0], uU[0]) func_raster(d0);
-  } else if (D == 2) {
+  } else if constexpr (D == 2) {
     for_intL(d0, uL[0], uU[0]) {
       size_t i0 = d0 * dims[1];
       for_intL(d1, uL[1], uU[1]) func_raster(i0 + d1);
     }
-  } else if (D == 3) {  // speed does not increase much
+  } else if constexpr (D == 3) {  // speed does not increase much
     for_intL(d0, uL[0], uU[0]) for_intL(d1, uL[1], uU[1]) {
       // "size_t ib = ravel_index_list(dims, d0, d1, uL[2]);" fails for D != 3
       // "size_t ib = ravel_index<D>(dims, {d0, d1, uL[2]});" fails for D != 3

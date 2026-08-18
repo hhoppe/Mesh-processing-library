@@ -574,7 +574,7 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
   }
   Grid<D, T> ngrid(ndims);
   Vec<Array<int>, D> maps;
-  if (D > 1) {
+  if constexpr (D > 1) {
     for_int(d, D) {
       Array<int>& map = maps[d];
       map.init(ndims[d]);

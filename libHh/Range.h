@@ -13,8 +13,7 @@
   // Count the number of elements equal to specified one; see RangeOp.h for other examples.
   template <typename Range, typename = enable_if_range_t<Range>>
   size_t count(Range && range, const range_value_t<Range>& elem) {
-    using std::begin, std::end;
-    return std::count(begin(range), end(range), elem);
+    return std::count(ranges::begin(range), ranges::end(range), elem);
   }
 }
 #endif

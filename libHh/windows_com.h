@@ -40,10 +40,7 @@ template <typename T> class com_ptr : public unique_ptr<T, void (*)(T*)> {
  public:
   com_ptr() : base(nullptr, SafeRelease) {}
   com_ptr(com_ptr<T>&& p) : base(std::move(p)) {}
-  com_ptr<T>& operator=(com_ptr<T>&& p) {
-    base::operator=(std::move(p));
-    return *this;
-  }
+  com_ptr<T>& operator=(com_ptr<T>&& p) { return (base::operator=(std::move(p)), *this); }
   operator T*() { return base::get(); }
   com_ptr_ref<T> operator&() { return com_ptr_ref<T>(*this); }
 };

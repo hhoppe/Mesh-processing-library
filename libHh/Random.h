@@ -55,10 +55,7 @@ template <typename T> void shuffle(ArrayView<T> ar, Random& r) {
   const int n = ar.num();
   for_int(i, n - 1) {
     int j = i + r.get_unsigned(n - i);
-    if (j != i) {
-      using std::swap;
-      swap(ar[i], ar[j]);
-    }
+    if (j != i) ranges::swap(ar[i], ar[j]);
   }
 }
 

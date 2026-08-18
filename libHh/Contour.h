@@ -544,7 +544,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
     }
     Vector normal = cross(poly[0], poly[1], poly[2]);
     // swap might be unnecessary if we carefully swapped above?
-    if (dot(normal, n3[0][0]->_p - n3[0][1]->_p) < 0.f) std::swap(poly[0], poly[1]);
+    if (dot(normal, n3[0][0]->_p - n3[0][1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }
 };
@@ -734,7 +734,7 @@ class Contour2D : public ContourBase<2> {
     }
     Vec2<float> v = poly[1] - poly[0];
     Vec2<float> normal(-v[1], v[0]);  // 90 degree rotation
-    if (dot(normal, n2[0][0]->_p - n2[0][1]->_p) < 0.f) std::swap(poly[0], poly[1]);
+    if (dot(normal, n2[0][0]->_p - n2[0][1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }
 };

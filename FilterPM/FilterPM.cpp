@@ -177,7 +177,7 @@ void do_outsmesh() {
           w = wedges[0];
       }
     }
-    std::swap(pmi->_wedges[wedges[0]], pmi->_wedges[wedges[1]]);
+    ranges::swap(pmi->_wedges[wedges[0]], pmi->_wedges[wedges[1]]);
   };
 
   for_int(vspli, pmesh._info._tot_nvsplits) {

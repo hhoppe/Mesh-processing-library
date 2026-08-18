@@ -56,10 +56,13 @@ int Mesh::debug() {
 
 Mesh::Mesh() { assertw(debug() == 0); }
 
-Mesh& Mesh::operator=(Mesh&& m) noexcept {
-  clear();
-  swap(*this, m);
-  return *this;
+void swap(Mesh& l, Mesh& r) noexcept {
+  ranges::swap(l._flags, r._flags);
+  ranges::swap(l._id2vertex, r._id2vertex);
+  ranges::swap(l._id2face, r._id2face);
+  ranges::swap(l._vertexnum, r._vertexnum);
+  ranges::swap(l._facenum, r._facenum);
+  ranges::swap(l._nedges, r._nedges);
 }
 
 void Mesh::clear() {

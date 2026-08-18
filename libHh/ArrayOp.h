@@ -21,8 +21,7 @@ template <typename Range> requires(is_range_v<Range>) Array<range_value_t<Range>
 template <typename Range, typename = enable_if_range_t<Range>>
 Vec2<range_value_t<Range>> median_two(const Range& range) {
   using T = range_value_t<Range>;
-  using std::begin, std::end;
-  Array<T> ar(begin(range), end(range));
+  Array<T> ar(ranges::begin(range), ranges::end(range));
   assertx(ar.num());
   const int median_index = ar.num() / 2;
   std::nth_element(ar.begin(), &ar[median_index], ar.end());  // place median element at median location
@@ -42,8 +41,7 @@ mean_type_t<range_value_t<Range>> median(const Range& range) {
 template <typename Range, typename = enable_if_range_t<Range>>
 range_value_t<Range> rank_element(const Range& range, int rank) {
   using T = range_value_t<Range>;
-  using std::begin, std::end;
-  Array<T> ar(begin(range), end(range));
+  Array<T> ar(ranges::begin(range), ranges::end(range));
   assertx(ar.num());
   assertx(ar.ok(rank));
   std::nth_element(ar.begin(), &ar[rank], ar.end());  // place rank element at rank location

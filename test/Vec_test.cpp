@@ -169,8 +169,7 @@ int main() {
     r = p + q;
     SHOW(r);
     {
-      using std::swap;
-      swap(p, q);
+      ranges::swap(p, q);
       SHOW(p);
       SHOW(q);
     }

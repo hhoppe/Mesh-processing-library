@@ -130,7 +130,7 @@ bool process_frame(ObjectFrame& object_frame) {
     return false;
   }
   for_int(irepeat, repeat) {
-    if (delay) my_sleep(delay);
+    if (delay) my_precise_sleep(delay);
     if (!FrameIO::write(std::cout, object_frame)) return true;
     ocount++;
     if (b_frame) std::cout << "f 0 0 0\n";

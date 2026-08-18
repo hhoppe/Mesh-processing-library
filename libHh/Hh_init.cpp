@@ -30,7 +30,7 @@ namespace {
 void possibly_sleep() {
   if (getenv_bool("ASSERT_SLEEP")) {
     std::cerr << "Now sleeping 60 s.\n";
-    my_imprecise_sleep(60.);
+    my_sleep(60.);
     // Give myself time to enter in a different window:
     //  vsjitdebugger -p `ps | grep FilterPM | perl -ane 'print "$F[0]\n"; last;'`
     // or open Visual Studio and then Debug -> Attach to Process.

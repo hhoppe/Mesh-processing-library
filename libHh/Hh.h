@@ -58,7 +58,7 @@
 #include <limits>     // numeric_limits<>
 #include <memory>     // unique_ptr<>
 #include <optional>   // optional
-#include <ranges>     // views::iota()
+#include <ranges>     // ranges, views::iota()
 #include <sstream>    // stringstream
 #include <stdexcept>  // runtime_error
 #include <string>     // string
@@ -106,8 +106,8 @@
 #if 0
 #define HH_ASSUME(...) [[assume(__VA_ARGS__)]]  // C++23, but cannot be used within an expression.
 #elif defined(__clang__) && 0
-// Clang ignores any __builtin_assume(...) containing function calls, including trivial ones like `ar.num()` (unless
-// marked with [[HH_GNU_PURE]]), so it is not so useful.  Also, we must disable the associated warnings.
+// Clang ignores any __builtin_assume(...) containing calls, including trivial ones like `ar.num()` and `ar[i]`
+// (unless marked with [[HH_GNU_PURE]]), so it is not so useful.  Also, we must disable the associated warnings.
 // #pragma clang diagnostic ignored "-Wassume"  // "assumption is ignored because it contains (potential) side-effects"
 #define HH_ASSUME(...) __builtin_assume(__VA_ARGS__)
 #elif defined(__clang__)
@@ -120,6 +120,7 @@
 #define HH_ASSUME(...) (void(0))
 #endif
 
+// (Abandonned) attempt at helping clang look into functions when evaluating __builtin_assume(...).
 #if defined(__GNUC__) || defined(__clang__)
 #define HH_GNU_PURE gnu::pure
 #else
@@ -142,6 +143,24 @@
 #define HH_NO_DANGLING gnu::no_dangling
 #else
 #define HH_NO_DANGLING
+#endif
+
+#if 0  // ??
+#define HH_DEFINE_POSTFIX_INCREMENT \
+  type operator++(int) {            \
+    type old = *this;               \
+    ++*this;                        \
+    return old;                     \
+  }                                 \
+  HH_EAT_SEMICOLON
+//
+#define HH_DEFINE_POSTFIX_DECREMENT \
+  type operator--(int) {            \
+    type old = *this;               \
+    --*this;                        \
+    return old;                     \
+  }                                 \
+  HH_EAT_SEMICOLON
 #endif
 
 // *** Syntactic sugar.
@@ -193,6 +212,8 @@ using namespace hh;
 namespace hh {
 
 // *** Import some standard C++ names into the hh namespace.
+
+namespace ranges = std::ranges;
 
 // Common types:
 using std::make_unique;
@@ -406,6 +427,16 @@ template <typename... A> constexpr void dummy_use(const A&...) {}
 // Avoid warnings of uninitialized variables.
 template <typename... T> void dummy_init(T&... variable) { ((variable = T{}), ...); }
 
+// Return a copy of the iterator prior to advancing it; used to define the postfix operators.
+template <typename Iterator> Iterator postfix_increment(Iterator& iter) {
+  const Iterator old = iter;
+  return ++iter, old;
+}
+template <typename Iterator> Iterator postfix_decrement(Iterator& iter) {
+  const Iterator old = iter;
+  return --iter, old;
+}
+
 // Returns T{-1} or T{+1} based on sign of expression.
 template <typename T> [[nodiscard]] constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
 
@@ -599,11 +630,11 @@ void show_call_stack();
 // Return seconds/cycle.
 [[nodiscard]] double get_seconds_per_counter();
 
-// Delay for some number of seconds.
+// Delay for some number of seconds; a nonzero tolerable delay lets the system coalesce this wakeup with others.
 void my_sleep(double sec);
 
 // Delay for some number of seconds.
-void my_imprecise_sleep(double sec);
+void my_precise_sleep(double sec);
 
 // Get number of bytes of available memory (min of free virtual and physical space), or 0 if unavailable.
 [[nodiscard]] size_t available_memory();

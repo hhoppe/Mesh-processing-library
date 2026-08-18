@@ -40,8 +40,7 @@ int main() {
     SGrid<int, 3, 2> grid32b;
     grid32b = {{10, 11}, {12, 13}, {14, 15}};
     {
-      using std::swap;
-      swap(grid32, grid32b);
+      ranges::swap(grid32, grid32b);
     }
     SHOW(grid32);
     SHOW(grid32b);

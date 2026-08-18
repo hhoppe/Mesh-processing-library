@@ -28,7 +28,6 @@ namespace hh {
 class Audio : public Grid<2, float> {
   // Corresponds to pcm_f32be or pcm_f32le depending on native byte ordering.
   using base = Grid<2, float>;
-  friend void swap(Audio& l, Audio& r) noexcept;
 
  public:
   using value_type = float;
@@ -38,11 +37,7 @@ class Audio : public Grid<2, float> {
   explicit Audio(const string& filename) { read_file(filename); }
   Audio(Audio&& v) noexcept { swap(*this, v); }
   Audio(base&& v) noexcept { swap(implicit_cast<base&>(*this), v); }
-  Audio& operator=(Audio&& v) noexcept {
-    clear();
-    swap(*this, v);
-    return *this;
-  }
+  Audio& operator=(Audio&& v) noexcept { return (clear(), swap(*this, v), *this); }
   void operator=(base&& v) { clear(), swap(implicit_cast<base&>(*this), v); }
   Audio& operator=(const Audio&) = default;
   void operator=(CGridView<2, float> audio) { base::assign(audio); }
@@ -62,6 +57,7 @@ class Audio : public Grid<2, float> {
     double samplerate{0.};  // samples / sec (Hz)
     int bitrate{0};         // bits / sec
   };
+  friend void swap(Audio& l, Audio& r) noexcept;
 
  private:
   Attrib _attrib;
@@ -77,12 +73,6 @@ string audio_suffix_for_magic_byte(uchar c);
 
 // Shared for implementation in Video.cpp
 bool ffmpeg_command_exists();
-
-inline void swap(Audio& l, Audio& r) noexcept {
-  using std::swap;
-  swap(implicit_cast<Audio::base&>(l), implicit_cast<Audio::base&>(r));
-  swap(l._attrib, r._attrib);
-}
 
 }  // namespace hh
 

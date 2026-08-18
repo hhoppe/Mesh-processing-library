@@ -17,8 +17,8 @@ void perform_out() {
     wb.put("a", 1);
     wb.put("b", 1);
     wb.flush();
-    if (i % 2 == 0) my_sleep(0.03);  // was 0.1
-    if (i % 3 == 0) my_sleep(0.06);  // was 0.2
+    if (i % 2 == 0) my_precise_sleep(0.03);
+    if (i % 3 == 0) my_precise_sleep(0.06);
   }
   wb.flush();
 }
@@ -39,7 +39,7 @@ void perform_in() {
     std::cerr << "now contains " << rb.num() << " bytes\n";
     if (ret == RBuffer::ERefill::no) {
       SHOW("blocked");
-      my_sleep(0.14);
+      my_precise_sleep(0.14);
       continue;
     }
     if (ret == RBuffer::ERefill::other && rb.eof()) {

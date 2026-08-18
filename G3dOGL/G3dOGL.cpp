@@ -61,10 +61,9 @@ extern bool lod_mode;
 namespace {
 
 #if defined(_WIN32) && !defined(_WIN64)
-// Problem: with __MINGW32__, restarting GL_TRIANGLES seems to require reinitializing some color state.
-//   Same problem with Win32 build.  e.g.:
-// FilterPM ~/git/mesh_processing/demos/data/cessna.pm -nf 3000 -geom_nf 5000 | ~/git/mesh_processing/bin/win32/G3dOGL -st ~/git/mesh_processing/demos/data/cessna.s3d -key ,S
-// ~/git/mesh_processing/bin/win32/G3dOGL ~/git/mesh_processing/demos/data/standingblob.geomorphs -key PDeS -lightambient .5 -thickboundary 1
+// Problem: with CONFIG=w32, restarting GL_TRIANGLES seems to require reinitializing some color state.  Examples:
+// FilterPM ~/data/simplify/cessna.pm -nf 3000 -geom_nf 5000 | ~/git/mesh_processing/bin/w32/G3dOGL -st ~/data/s3d/cessna.s3d -key ,S -
+// ~/git/mesh_processing/bin/w32/G3dOGL ~/git/mesh_processing/demos/data/standingblob.geomorphs -key PDeS -lightambient .5 -thickboundary 1
 constexpr bool force_color_update = true;
 #else
 constexpr bool force_color_update = false;

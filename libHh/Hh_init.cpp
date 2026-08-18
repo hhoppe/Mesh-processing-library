@@ -264,7 +264,7 @@ void setup_exception_hooks() {
 void use_standard_exponent_format_in_io() {
   // Use standard format for float/double printf("%e"): 2 instead of 3 digits for exponent if possible.
 #if defined(__MINGW32__)
-  // For mingw32, using _set_output_format requires modifying __MSVCRT_VERSION__ on
+  // For mingw, using _set_output_format requires modifying __MSVCRT_VERSION__ on
   //   *all* compiled files (libpng.a etc.), and then getting a dependency on msvcr100.dll .
   // Instead, the my_setenv() works even with the old standard msvcrt.dll .
   my_setenv("PRINTF_EXPONENT_DIGITS", "2");

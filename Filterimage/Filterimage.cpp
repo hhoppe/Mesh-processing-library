@@ -1523,9 +1523,8 @@ void do_object_to_tangent_normals(Args& args) {
   const float k_max_dis = 1e-5f;
   const MeshSearch mesh_search(mesh, {.max_dis = k_max_dis});
   const int num_threads = get_max_threads();
-  // By-value capture of `k_per_pixel_bitangent` to overcome internal compiler bug in mingw.
   // const int thread_index = 0; for_each(V(range(image.ysize())), [&](auto subrange) {
-  parallel_for_chunk(range(image.ysize()), num_threads, [&, k_per_pixel_bitangent](int thread_index, auto subrange) {
+  parallel_for_chunk(range(image.ysize()), num_threads, [&](int thread_index, auto subrange) {
     string str;
     Face hint_f = nullptr;
     SGrid<float, 3, 3> tbn_inverse;

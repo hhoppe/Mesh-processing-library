@@ -357,21 +357,8 @@ void* aligned_malloc(size_t alignment, size_t size) {
   return _aligned_malloc(size, alignment);
 #elif defined(__MINGW32__)  // 2024: mingw also lacks it.
   return __mingw_aligned_malloc(size, alignment);
-#elif 1
-  return std::aligned_alloc(alignment, size);
 #else
-  // Use: posix_memalign(void **memptr, size_t alignment, size_t size)
-  const int min_alignment = 8;  // else get EINVAL on Unix gcc 4.8.1
-  if (alignment < min_alignment) {
-    alignment = min_alignment;
-    size = ((size + alignment - 1) / alignment) * alignment;
-  }
-  void* p = nullptr;
-  if (int ierr = posix_memalign(&p, alignment, size)) {
-    if (0) SHOW(ierr, ierr == EINVAL, ierr == ENOMEM);
-    return nullptr;
-  }
-  return p;
+  return std::aligned_alloc(alignment, size);
 #endif
 }
 
@@ -380,10 +367,8 @@ void aligned_free(void* p) {
   _aligned_free(p);
 #elif defined(__MINGW32__)
   __mingw_aligned_free(p);
-#elif 1
-  std::free(p);
 #else
-  free(p);
+  std::free(p);
 #endif
 }
 

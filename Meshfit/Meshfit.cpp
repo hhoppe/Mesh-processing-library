@@ -501,7 +501,7 @@ void do_filename(Args& args) {
     }
     pt.enter(el[0].p);
   }
-  showdf("%d points read)\n", pt.co.num());
+  showdf("(%d points read)\n", pt.co.num());
 }
 
 void perhaps_initialize() {

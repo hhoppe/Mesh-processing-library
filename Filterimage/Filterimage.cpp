@@ -3285,8 +3285,10 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   assertw(use_lab);
   const int NCH = 3;
   for_int(ch, NCH) {
-    const ParallelOptions parallel_options{.cycles_per_elem = square(uint64_t(window_diam)) * 20};
-    parallel_for_coords(parallel_options, mat_s.dims(), [&](const Vec2<int>& yx) {
+    // ar is not parallel??
+    // const ParallelOptions parallel_options{.cycles_per_elem = square(uint64_t(window_diam)) * 20};
+    // parallel_for_coords(parallel_options, mat_s.dims(), [&](const Vec2<int>& yx) {
+    for_coords(mat_s.dims(), [&](const Vec2<int>& yx) {
       ar.init(0);                      // (initially unsorted) pdf of color image window
       float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
       float scenterrank = 0.f;         // center pixel rank in structure image

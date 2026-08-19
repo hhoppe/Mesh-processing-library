@@ -27,6 +27,31 @@ template <typename T> struct range_value;
 template <typename T, typename = std::void_t<>> struct range_has_size;
 }  // namespace details
 
+#if 1
+
+// Determine if type T is a range.
+template <typename T> inline constexpr bool is_range_v = ranges::range<T>;
+
+// SFINAE construct to enable a member function only if type T is a range.
+template <typename T> using enable_if_range_t = std::enable_if_t<ranges::range<T>>;
+
+// Identify the Iterator type for Range.
+template <typename Range> using range_iterator_t = ranges::iterator_t<Range>;
+
+// Identify the element type in Range.
+template <ranges::range Range> using range_value_t = ranges::range_value_t<Range>;
+
+// Detect if Range supports size().
+template <typename Range> inline constexpr bool range_has_size_v = ranges::sized_range<Range>;
+
+// Detect if the iterators for Range support random access.
+template <typename Range> inline constexpr bool random_access_range_v = ranges::random_access_range<Range>;
+
+// Determine if Iterator supports random access.
+template <typename Iterator> inline constexpr bool random_access_iterator_v = std::random_access_iterator<Iterator>;
+
+#else
+
 // Identify the category of Iterator.
 template <typename Iterator> using iterator_category_t = typename std::iterator_traits<Iterator>::iterator_category;
 
@@ -85,6 +110,8 @@ template <typename Range>
 struct range_has_size<Range, std::void_t<decltype(size(std::declval<Range>()))>> : std::true_type {};
 
 }  // namespace details
+
+#endif
 
 }  // namespace hh
 

@@ -3590,7 +3590,7 @@ void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {
   if (0) {
     os << "Corner " << mesh.vertex_id(v) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
   } else {
-    constexpr int capacity = 200;
+    constexpr int capacity = 300;
     char buffer[capacity];
     char* const end = buffer + capacity;
     strcpy(buffer, "Corner ");
@@ -3614,7 +3614,7 @@ void write_corners(std::ostream& os, Vertex v, string& str) {
     for (Corner c : mesh.corners(v)) write_corner(os, v, c, generate_corner_string(c, str));
   } else {
     int prev_wid = -1;
-    const char* s = nullptr;
+    const char* s = "";
     for (Corner c : mesh.corners(v)) {
       const int wid = c_wedge_id(c);
       if (wid != prev_wid) {

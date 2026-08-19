@@ -114,7 +114,7 @@
 #define HH_ASSUME(...) (void(0))
 #endif
 
-// (Abandonned) attempt at helping clang look into functions when evaluating __builtin_assume(...).
+// (Abandoned) attempt at helping clang look into functions when evaluating __builtin_assume(...).
 #if defined(__GNUC__) || defined(__clang__)
 #define HH_GNU_PURE gnu::pure
 #else

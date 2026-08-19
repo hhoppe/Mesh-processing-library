@@ -19,7 +19,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   constexpr Bbox(const PointD& pmin, const PointD& pmax) : Vec2<PointD>(pmin, pmax) {}
   constexpr Bbox(const type& bbox) : Bbox(bbox[0], bbox[1]) {}
   template <typename Range, typename = enable_if_range_t<Range>> explicit Bbox(Range&& range) : Bbox() {
-    auto b = ranges::begin(range), e = ranges::end(range);
+    auto b = ranges::begin(range);
+    const auto e = ranges::end(range);
     for (; b != e; ++b) union_with(*b);
   }
   type& operator=(const type&) = default;

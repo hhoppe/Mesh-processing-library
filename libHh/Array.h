@@ -175,8 +175,8 @@ template <typename T> class Array : public ArrayView<T> {
       : Array(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
   // Modernize iterator_category??
-  template <typename Iterator, typename = std::enable_if_t<
-                                   !std::is_same_v<typename std::iterator_traits<Iterator>::iterator_category, void>>>
+  template <typename Iterator,
+            typename = std::enable_if_t<!std::is_void_v<typename std::iterator_traits<Iterator>::iterator_category>>>
   explicit Array(Iterator b, Iterator e) : Array() {
     // Note that if an Iterator is a native pointer (T*), it is automatically recognized as a random-access iterator.
     if constexpr (random_access_iterator_v<Iterator>) reserve(narrow_cast<int>(e - b));

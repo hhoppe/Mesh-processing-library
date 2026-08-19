@@ -57,10 +57,10 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   [[nodiscard]] static constexpr size_t size() { return vol; }
   [[nodiscard]] T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
   [[nodiscard]] const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr slice& operator[](int r) { return (ASSERTXX(check(r)), b()[r]); }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr const slice& operator[](int r) const { return (ASSERTXX(check(r)), b()[r]); }
-  [[nodiscard]] T& flat(size_t i) { return (ASSERTXX(i < vol), data()[i]); }
-  [[nodiscard]] const T& flat(size_t i) const { return (ASSERTXX(i < vol), data()[i]); }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr slice& operator[](int r) { return ASSERTXX(check(r)), b()[r]; }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr const slice& operator[](int r) const { return ASSERTXX(check(r)), b()[r]; }
+  [[nodiscard]] T& flat(size_t i) { return ASSERTXX(i < vol), data()[i]; }
+  [[nodiscard]] const T& flat(size_t i) const { return ASSERTXX(i < vol), data()[i]; }
   [[nodiscard]] bool operator==(const type& p) const;
   [[nodiscard]] static type all(const T& e) requires(Copyable<T>) {
     type g;
@@ -76,10 +76,10 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   [[nodiscard]] CArrayView<T> const_array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   template <int s> [[nodiscard]] SGrid<T, s, od...>& segment(int i) {
-    return (ASSERTXX(check(i, s)), *reinterpret_cast<SGrid<T, s, od...>*>(p(i)));
+    return ASSERTXX(check(i, s)), *reinterpret_cast<SGrid<T, s, od...>*>(p(i));
   }
   template <int s> [[nodiscard]] const SGrid<T, s, od...>& segment(int i) const {
-    return (ASSERTXX(check(i, s)), *reinterpret_cast<const SGrid<T, s, od...>*>(p(i)));
+    return ASSERTXX(check(i, s)), *reinterpret_cast<const SGrid<T, s, od...>*>(p(i));
   }
   using value_type = T;
   using iterator = T*;

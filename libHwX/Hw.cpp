@@ -20,10 +20,6 @@ extern "C" {
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()
 
-// ?? #if defined(__GNUC__)
-// #pragma GCC diagnostic ignored "-Wold-style-cast"  // for DefaultScreen() etc.
-// #endif
-
 namespace hh {
 
 namespace {

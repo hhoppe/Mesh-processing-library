@@ -39,7 +39,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return n; }
   [[nodiscard]] constexpr size_t size() const { return static_cast<size_t>(n); }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
-    return (HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i]);
+    return HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i];
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
@@ -90,7 +90,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     return *reinterpret_cast<copy_const_t<decltype(self), Vec<T, s>>*>(self.data() + i);
   }
   [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) {
-    return (ASSERTXX(as_vec(self).check(i, s)), array_view_t<decltype(self.data())>(self.data() + i, s));
+    return ASSERTXX(as_vec(self).check(i, s)), array_view_t<decltype(self.data())>(self.data() + i, s);
   }
   template <int s> [[nodiscard]] auto& head(this auto&& self) { return as_vec(self).template segment<0, s>(); }
   [[nodiscard]] constexpr auto head(this auto&& self, int s) { return as_vec(self).segment(0, s); }
@@ -330,7 +330,7 @@ template <int D> class Vec_iterator {
     ASSERTXX(rhs._u[0] == _uU[0]);
     return _u[0] < _uU[0];  // Quick check against usual end().
   }
-  const Vec<int, D>& operator*() const { return (ASSERTXX(_u[0] < _uU[0]), _u); }
+  const Vec<int, D>& operator*() const { return ASSERTXX(_u[0] < _uU[0]), _u; }
   type& operator++() {
     static_assert(D > 0);
     ASSERTXX(_u[0] < _uU[0]);
@@ -391,7 +391,7 @@ template <int D> class VecL_iterator {
     ASSERTXX(rhs._u[0] == _uU[0]);
     return _u[0] < _uU[0];  // Quick check against usual end().
   }
-  const Vec<int, D>& operator*() const { return (ASSERTXX(_u[0] < _uU[0]), _u); }
+  const Vec<int, D>& operator*() const { return ASSERTXX(_u[0] < _uU[0]), _u; }
   type& operator++() {
     ASSERTXX(_u[0] < _uU[0]);
     for (int c = D - 1; c > 0; --c) {

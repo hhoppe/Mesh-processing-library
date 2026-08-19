@@ -83,7 +83,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     ASSERTXX(it != end());
     return *it;
   }
-  const T& get_one() const { return (ASSERTXX(!empty()), *begin()); }
+  const T& get_one() const { return ASSERTXX(!empty()), *begin(); }
   const T& get_random(Random& r) const {
     auto it = crand(r);
     return *it;

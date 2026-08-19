@@ -72,20 +72,14 @@ class EList {
 
    public:
     using iterator_concept = std::bidirectional_iterator_tag;
-    using value_type = EListNode*;
+    using value_type = EListNode*;  // operator*() yields the pointer, not the node.
     using difference_type = std::ptrdiff_t;
     Iter(EListNode* node) : _node(node) {}
     Iter() = default;
     bool operator==(const type& rhs) const { return _node == rhs._node; }
     EListNode* operator*() const { return _node; }
-    type& operator++() {
-      _node = _node->next();
-      return *this;
-    }
-    type& operator--() {
-      _node = _node->prev();
-      return *this;
-    }
+    type& operator++() { return (_node = _node->next()), *this; }
+    type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
 
@@ -103,14 +97,8 @@ class EList {
     ConstIter() = default;
     bool operator==(const type& rhs) const { return _node == rhs._node; }
     const EListNode* operator*() const { return _node; }
-    type& operator++() {
-      _node = _node->next();
-      return *this;
-    }
-    type& operator--() {
-      _node = _node->prev();
-      return *this;
-    }
+    type& operator++() { return (_node = _node->next()), *this; }
+    type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
 
@@ -132,14 +120,8 @@ class EList {
     OuterIter() = default;
     bool operator==(const type& rhs) const { return _node == rhs._node; }
     Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset); }
-    type& operator++() {
-      _node = _node->next();
-      return *this;
-    }
-    type& operator--() {
-      _node = _node->prev();
-      return *this;
-    }
+    type& operator++() { return (_node = _node->next()), *this; }
+    type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
 

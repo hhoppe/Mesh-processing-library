@@ -871,7 +871,7 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
 // return the index of the other sharp edge.
 int other_creasevi(const NewMeshNei& nn, int vi) {
   assertx(nn.ar_vdisc.num() == 2);
-  return (vi == nn.ar_vdisc[0] ? nn.ar_vdisc[1] : vi == nn.ar_vdisc[1] ? nn.ar_vdisc[0] : (assertnever(""), 0));
+  return vi == nn.ar_vdisc[0] ? nn.ar_vdisc[1] : vi == nn.ar_vdisc[1] ? nn.ar_vdisc[0] : (assertnever(""), 0);
 }
 
 // Interpolate two arrays of floating point values, taking into account that either one could contain

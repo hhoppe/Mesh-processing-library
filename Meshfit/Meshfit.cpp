@@ -223,7 +223,7 @@ Vertex edge_face_opp_vertex(Edge e, Face f) {
   Vertex v1o = mesh.clw_vertex(f, v1);
   // Ideally, test should be based on vertex ordering within face
   //  to break tie correctly if diagonal distances are exactly equal.
-  return (dist2(mesh.point(v1), mesh.point(v2o)) < dist2(mesh.point(v2), mesh.point(v1o)) ? v2o : v1o);
+  return dist2(mesh.point(v1), mesh.point(v2o)) < dist2(mesh.point(v2), mesh.point(v1o)) ? v2o : v1o;
 }
 
 float edge_dihedral_energy(const Point& p1, const Point& p2, const Point& ps1, const Point& ps2) {

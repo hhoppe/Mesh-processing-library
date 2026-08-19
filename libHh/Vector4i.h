@@ -16,8 +16,8 @@ class Vector4i {
   Vector4i() = default;
   explicit Vector4i(int j) { fill(j); }
   size_t size() const { return 4; }
-  int& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
-  const int& operator[](int i) const { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
+  int& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  const int& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
   Vector4i with(int i, int j) const {
     HH_CHECK_BOUNDS(i, 4);
     Vector4i v = *this;

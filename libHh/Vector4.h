@@ -49,8 +49,8 @@ class Vector4 {
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
   size_t size() const { return 4; }
-  [[HH_GNU_PURE]] float& operator[](int i) { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
-  [[HH_GNU_PURE]] const float& operator[](int i) const { return (HH_CHECK_BOUNDS(i, 4), _c[i]); }
+  [[HH_GNU_PURE]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  [[HH_GNU_PURE]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
   Vector4 with(int i, float f) const {
     HH_CHECK_BOUNDS(i, 4);
     Vector4 v = *this;

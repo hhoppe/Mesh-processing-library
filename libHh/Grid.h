@@ -106,7 +106,7 @@ template <int D, typename T> class CGridView {
   size_t size() const { return product_dims<D>(_dims.data()); }
   template <std::integral... A> constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
-  template <std::integral... A> const T& flat(size_t i) const { return (ASSERTXX(i < size()), _a[i]); }
+  template <std::integral... A> const T& flat(size_t i) const { return ASSERTXX(i < size()), _a[i]; }
   bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
       if (u[c] < 0 || u[c] >= _dims[c]) return false;
@@ -127,7 +127,7 @@ template <int D, typename T> class CGridView {
   }
   const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
     Vec<int, D> ut(u);
-    if (!map_inside(ut, bndrules)) return (ASSERTX(bordervalue), *bordervalue);
+    if (!map_inside(ut, bndrules)) return ASSERTX(bordervalue), *bordervalue;
     return (*this)[ut];
   }
   type slice(int ib, int ie) const {  // View of grid truncated in 0th dimension.
@@ -181,7 +181,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   explicit GridView(ArrayView<T> ar) requires(D == 1) : GridView(ar.data(), V(ar.num())) {}
   void reinit(type g) { *this = g; }
   using base::size;
-  T& flat(size_t i) { return (ASSERTXX(i < size()), _a[i]); }
+  T& flat(size_t i) { return ASSERTXX(i < size()), _a[i]; }
   const T& flat(size_t i) const { return base::flat(i); }
   T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) requires(D == 2) {
     Vec<int, D> ut(u);
@@ -284,7 +284,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     nested_retrieve()(*this, l);
     return *this;
   }
-  type& operator=(type&& g) noexcept { return (clear(), swap(*this, g), *this); }
+  type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }
   template <typename... A> void init(int d0, A... dr) { init(Vec<int, D>(d0, dr...)); }
   using base::size;
   void init(const Vec<int, D>& dims) {

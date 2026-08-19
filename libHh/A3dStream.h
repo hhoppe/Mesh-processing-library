@@ -89,8 +89,8 @@ class A3dElem {
   const string& comment() const;
 
   // For command_type():
-  Vec3<float>& f() { return (assertx(command_type(_type)), _f); }
-  const Vec3<float>& f() const { return (assertx(command_type(_type)), _f); }
+  Vec3<float>& f() { return assertx(command_type(_type)), _f; }
+  const Vec3<float>& f() const { return assertx(command_type(_type)), _f; }
 
  private:
   EType _type{EType::polygon};

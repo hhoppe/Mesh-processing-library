@@ -81,7 +81,7 @@ class Mesh : noncopyable {
   Mesh();
   Mesh(Mesh&& m) noexcept { swap(*this, m); }
   virtual ~Mesh() { clear(); }
-  Mesh& operator=(Mesh&& m) noexcept { return (clear(), swap(*this, m), *this); }
+  Mesh& operator=(Mesh&& m) noexcept { return clear(), swap(*this, m), *this; }
   void clear();
   void copy(const Mesh& m);  // not a GMesh!  carries flags (but not sac fields), hence not named operator=().
 
@@ -152,19 +152,17 @@ class Mesh : noncopyable {
   bool is_boundary(Edge e) const { return !herep(e)->_sym; }
   Vertex vertex1(Edge e) const { return herep(e)->_prev->_vert; }
   Vertex vertex2(Edge e) const { return herep(e)->_vert; }
-  Vertex vertex(Edge e, int i) const { return (ASSERTX(i == 0 || i == 1), i == 0 ? vertex1(e) : vertex2(e)); }
+  Vertex vertex(Edge e, int i) const { return ASSERTX(i == 0 || i == 1), i == 0 ? vertex1(e) : vertex2(e); }
   Face face1(Edge e) const { return herep(e)->_face; }
   Face face2(Edge e) const {
     HEdge he = herep(e);
     return he->_sym ? he->_sym->_face : nullptr;
   }
-  Face face(Edge e, int i) const { return (ASSERTX(i == 0 || i == 1), i == 0 ? face1(e) : face2(e)); }
+  Face face(Edge e, int i) const { return ASSERTX(i == 0 || i == 1), i == 0 ? face1(e) : face2(e); }
   // i == 0 or i == 1; ret nullptr if i == 1 && is_boundary(e)
   Vertex side_vertex1(Edge e) const { return opp_vertex(e, face1(e)); }  // is_triangle(face1())
   Vertex side_vertex2(Edge e) const { return face2(e) ? opp_vertex(e, face2(e)) : nullptr; }
-  Vertex side_vertex(Edge e, int i) const {
-    return (ASSERTX(i == 0 || i == 1), !i ? side_vertex1(e) : side_vertex2(e));
-  }
+  Vertex side_vertex(Edge e, int i) const { return ASSERTX(i == 0 || i == 1), !i ? side_vertex1(e) : side_vertex2(e); }
   Vertex opp_vertex(Edge e, Face f) const;                                 // is_triangle(f)
   Edge opp_boundary(Edge e, Vertex v) const;                               // is_boundary(e)
   Edge clw_boundary(Edge e) const { return opp_boundary(e, vertex2(e)); }  // is_boundary(e)
@@ -326,7 +324,7 @@ class Mesh : noncopyable {
     using type = Edges_iterator;
 
    public:
-    using iterator_concept = std::forward_iterator_tag;  // necessary??
+    using iterator_concept = std::forward_iterator_tag;
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
     Edges_iterator(const Mesh& m, bool beg) {
@@ -336,7 +334,7 @@ class Mesh : noncopyable {
     }
     Edges_iterator() = default;
     bool operator==(const type& rhs) const { return _hcur == rhs._hcur && _vcur == rhs._vcur; }
-    Edge operator*() const { return (ASSERTX(_hcur != _hend), (*_hcur)->_edge); }
+    Edge operator*() const { return ASSERTX(_hcur != _hend), (*_hcur)->_edge; }
     type& operator++() {
       ASSERTX(_hcur != _hend);
       ++_hcur;
@@ -449,10 +447,7 @@ class Mesh : noncopyable {
     VF_iterator() = default;
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     Face operator*() const { return (*_it)->_face; }
-    type& operator++() {
-      ++_it;
-      return *this;
-    }
+    type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
 
    private:
@@ -517,10 +512,7 @@ class Mesh : noncopyable {
     VC_iterator() = default;
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     Corner operator*() const { return (*_it)->_prev; }
-    type& operator++() {
-      ++_it;
-      return *this;
-    }
+    type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
 
    private:
@@ -627,6 +619,7 @@ class Mesh : noncopyable {
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
     FE_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
+    FE_iterator() = default;
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
     Edge operator*() const { return _it->_edge; }
     type& operator++() {
@@ -659,6 +652,7 @@ class Mesh : noncopyable {
     using value_type = Corner;
     using difference_type = std::ptrdiff_t;
     FC_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
+    FC_iterator() = default;
     bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
     Corner operator*() const { return _it; }
     type& operator++() {

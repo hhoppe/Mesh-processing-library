@@ -116,8 +116,8 @@ class Map {
     auto it = _map.find(key);
     return it != end() ? it->second : def();
   }
-  const Key& get_one_key() const { return (ASSERTXX(!empty()), begin()->first); }
-  const Value& get_one_value() const { return (ASSERTXX(!empty()), begin()->second); }
+  const Key& get_one_key() const { return ASSERTXX(!empty()), begin()->first; }
+  const Value& get_one_value() const { return ASSERTXX(!empty()), begin()->second; }
   const Key& get_random_key(Random& random) const { return crand(random)->first; }
   const Value& get_random_value(Random& random) const { return crand(random)->second; }
   keys_range keys() const { return keys_range(*this); }  // Keys are always constant.
@@ -136,12 +136,9 @@ class Map {
     using difference_type = std::ptrdiff_t;
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     const Key& operator*() const { return _it->first; }
-    type& operator++() {
-      ++_it;
-      return *this;
-    }
+    type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
-    bciter _it;
+    bciter _it{};
   };
   class keys_range {
    public:
@@ -160,12 +157,9 @@ class Map {
     using difference_type = std::ptrdiff_t;
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     const Value& operator*() const { return _it->second; }
-    type& operator++() {
-      ++_it;
-      return *this;
-    }
+    type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
-    bciter _it;
+    bciter _it{};
   };
   class cvalues_range {
    public:
@@ -184,12 +178,9 @@ class Map {
     using difference_type = std::ptrdiff_t;
     bool operator==(const type& rhs) const { return _it == rhs._it; }
     Value& operator*() const { return _it->second; }
-    type& operator++() {
-      ++_it;
-      return *this;
-    }
+    type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
-    biter _it;
+    biter _it{};
   };
   class values_range {
    public:

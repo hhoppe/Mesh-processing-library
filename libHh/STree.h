@@ -55,8 +55,8 @@ template <typename T, typename Less = std::less<T>> requires(Copyable<T>) class 
     auto it = _s.lower_bound(e);
     return it != end() ? *it : def();
   }
-  const T& min() const { return (ASSERTXX(!empty()), *begin()); }
-  const T& max() const { return (ASSERTXX(!empty()), *--end()); }
+  const T& min() const { return ASSERTXX(!empty()), *begin(); }
+  const T& max() const { return ASSERTXX(!empty()), *--end(); }
   using value_type = T;
   using iterator = typename base::iterator;
   using const_iterator = typename base::const_iterator;

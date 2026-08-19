@@ -14,12 +14,6 @@
 #define _CRT_SECURE_NO_WARNINGS  // Do not suggest use of *_s() secure function calls.
 #endif
 
-#if 0 && defined(_WIN32) && !defined(_WIN32_WINNT)  // ??
-// "#define NTDDI_VERSION NTDDI_WINXP" is no-op on mingw
-// For <windows.h>; e.g. 0x0501 == WinXP; 0x0601 == WIN7; latest constants _WIN32_WINNT_* not defined in __MINGW32__.
-#define _WIN32_WINNT 0x0603  // == _WIN32_WINNT_WINBLUE; required for SetProcessDpiAwareness() in libHwWindows/Hw.cpp
-#endif
-
 #if defined(_MSC_VER)
 // Disable some nitpicky level4 warnings (for -W4).
 #pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
@@ -143,24 +137,6 @@
 #define HH_NO_DANGLING gnu::no_dangling
 #else
 #define HH_NO_DANGLING
-#endif
-
-#if 0  // ??
-#define HH_DEFINE_POSTFIX_INCREMENT \
-  type operator++(int) {            \
-    type old = *this;               \
-    ++*this;                        \
-    return old;                     \
-  }                                 \
-  HH_EAT_SEMICOLON
-//
-#define HH_DEFINE_POSTFIX_DECREMENT \
-  type operator--(int) {            \
-    type old = *this;               \
-    --*this;                        \
-    return old;                     \
-  }                                 \
-  HH_EAT_SEMICOLON
 #endif
 
 // *** Syntactic sugar.

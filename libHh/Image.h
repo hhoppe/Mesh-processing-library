@@ -46,7 +46,7 @@ class Image : public Matrix<Pixel> {
   explicit Image(const string& filename) { read_file(filename); }
   Image(Image&& m) noexcept { swap(*this, m); }
   Image(base&& m) noexcept { swap(implicit_cast<base&>(*this), m); }
-  Image& operator=(Image&& image) noexcept { return (clear(), swap(*this, image), *this); }
+  Image& operator=(Image&& image) noexcept { return clear(), swap(*this, image), *this; }
   void operator=(base&& image) { clear(), swap(implicit_cast<base&>(*this), image); }
   Image& operator=(const Image&) = default;
   void operator=(CMatrixView<Pixel> image) { base::assign(image); }
@@ -56,7 +56,7 @@ class Image : public Matrix<Pixel> {
   const Attrib& attrib() const { return _attrib; }
   Attrib& attrib() { return _attrib; }
   void set_zsize(int n);
-  int zsize() const { return (HH_ASSUME(attrib().zsize <= 4), attrib().zsize); }
+  int zsize() const { return HH_ASSUME(attrib().zsize <= 4), attrib().zsize; }
   void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // e.g. "jpg"; for writing '-'.
   const string& suffix() const { return attrib().suffix; }                 // e.g. "rgb"; used for reading '-'.
   void set_silent_io_progress(bool b) { _silent_io_progress = b; }

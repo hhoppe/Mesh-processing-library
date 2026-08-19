@@ -39,7 +39,7 @@ class GMesh : public Mesh {
   GMesh() = default;
   GMesh(GMesh&& m) noexcept { swap(*this, m); }
   ~GMesh() override = default;
-  GMesh& operator=(GMesh&& m) noexcept { return (clear(), swap(*this, m), *this); }
+  GMesh& operator=(GMesh&& m) noexcept { return clear(), swap(*this, m), *this; }
 
   // ** Extend functionality:
   void copy(const GMesh& m);  // carries flags (but not sac fields), hence not named operator=().

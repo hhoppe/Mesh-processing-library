@@ -81,7 +81,7 @@ template <typename T> class CArrayView {
   [[nodiscard]] constexpr bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
   [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
   [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
-    return (assertx(self.map_inside(i, bndrule)), self[i]);
+    return assertx(self.map_inside(i, bndrule)), self[i];
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
@@ -200,7 +200,7 @@ template <typename T> class Array : public ArrayView<T> {
     base::assign(ar);
     return *this;
   }
-  type& operator=(type&& ar) noexcept { return (clear(), swap(*this, ar), *this); }
+  type& operator=(type&& ar) noexcept { return clear(), swap(*this, ar), *this; }
   void clear() {
     delete[] _a;
     _a = nullptr, _n = 0, _cap = 0;

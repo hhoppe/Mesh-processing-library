@@ -23,11 +23,13 @@ template <typename T> class CStridedArrayView {
   using type = CStridedArrayView<T>;
 
  public:
-  explicit CStridedArrayView(const T* a, int n, ptrdiff_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) {}
+  explicit CStridedArrayView(const T* a, int n, ptrdiff_t stride) : _a(const_cast<T*>(a)), _n(n), _stride(stride) {
+    ASSERTX(_stride > 0);  // Else <=>() uses "_stride > 0 ? _p <=> rhs._p : rhs._p <=> _p".
+  }
   CStridedArrayView(const type& a) = default;
   int num() const { return _n; }
   size_t size() const { return _n; }
-  const T& operator[](int i) const { return (HH_CHECK_BOUNDS(i, _n), _a[i * _stride]); }
+  const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
   const T& last() const { return (*this)[_n - 1]; }
   bool ok(int i) const { return i >= 0 && i < _n; }
   using value_type = T;
@@ -42,24 +44,22 @@ template <typename T> class CStridedArrayView {
     bool operator==(const type& rhs) const { return _p == rhs._p; }
     const T& operator*() const { return *_p; }
     const T* operator->() const { return _p; }
-    type& operator++() {
-      _p += _stride;
-      return *this;
-    }
-    type& operator--() {
-      _p -= _stride;
-      return *this;
-    }
+    type& operator++() { return (_p += _stride), *this; }
+    type& operator--() { return (_p -= _stride), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
-    type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
-    type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
+    type& operator+=(std::ptrdiff_t i) { return (_p += i * _stride), *this; }
+    type& operator-=(std::ptrdiff_t i) { return (_p -= i * _stride), *this; }
+    type operator+(std::ptrdiff_t i) const { return type(_p + i * _stride, _stride); }
+    type operator-(std::ptrdiff_t i) const { return type(_p - i * _stride, _stride); }
+    friend type operator+(std::ptrdiff_t i, const type& rhs) { return rhs + i; }
     const T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
     std::ptrdiff_t operator-(const type& rhs) const {
-      return (ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride);
+      return ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride;
     }
-    bool operator<(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p < rhs._p); }
-    bool operator<=(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p <= rhs._p); }
+    std::strong_ordering operator<=>(const type& rhs) const {
+      return ASSERTXX((_p - rhs._p) % _stride == 0), _p <=> rhs._p;
+    }
 
    private:
     const T* _p;
@@ -88,8 +88,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
  public:
   explicit StridedArrayView(T* a, int n, ptrdiff_t stride) : base(a, n, stride) {}
   StridedArrayView(const type& a) = default;
-  T& operator[](int i) { return (HH_CHECK_BOUNDS(i, _n), _a[i * _stride]); }
-  const T& operator[](int i) const { return (HH_CHECK_BOUNDS(i, _n), _a[i * _stride]); }
+  T& operator[](int i) { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
+  const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
   T& last() { return (*this)[_n - 1]; }
   const T& last() const { return base::last(); }
   class iterator {
@@ -103,24 +103,22 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
     bool operator==(const type& rhs) const { return _p == rhs._p; }
     T& operator*() const { return *_p; }
     T* operator->() const { return _p; }
-    type& operator++() {
-      _p += _stride;
-      return *this;
-    }
-    type& operator--() {
-      _p -= _stride;
-      return *this;
-    }
+    type& operator++() { return (_p += _stride), *this; }
+    type& operator--() { return (_p -= _stride), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
-    type operator+(std::ptrdiff_t i) { return type(_p + i * _stride, _stride); }
-    type operator-(std::ptrdiff_t i) { return type(_p - i * _stride, _stride); }
+    type& operator+=(std::ptrdiff_t i) { return (_p += i * _stride), *this; }
+    type& operator-=(std::ptrdiff_t i) { return (_p -= i * _stride), *this; }
+    type operator+(std::ptrdiff_t i) const { return type(_p + i * _stride, _stride); }
+    type operator-(std::ptrdiff_t i) const { return type(_p - i * _stride, _stride); }
+    friend type operator+(std::ptrdiff_t i, const type& rhs) { return rhs + i; }
     T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
     std::ptrdiff_t operator-(const type& rhs) const {
-      return (ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride);
+      return ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride;
     }
-    bool operator<(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p < rhs._p); }
-    bool operator<=(const type& rhs) const { return (ASSERTXX((_p - rhs._p) % _stride == 0), _p <= rhs._p); }
+    std::strong_ordering operator<=>(const type& rhs) const {
+      return ASSERTXX((_p - rhs._p) % _stride == 0), _p <=> rhs._p;
+    }
 
    private:
     T* _p;

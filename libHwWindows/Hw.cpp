@@ -262,7 +262,7 @@ bool Hw::loop() {
       if (_hwkey != "") {
         // it would be best if callbackSimuKey() would post a message so we could wait in the MsgWait.
         const double delay_no_activity = 0.001;  // how long to sleep (in seconds) when there is no activity
-        my_sleep(delay_no_activity);
+        my_precise_sleep(delay_no_activity);
         continue;
       }
       if (_watch_fd0) {

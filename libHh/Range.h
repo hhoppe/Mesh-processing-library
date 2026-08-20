@@ -30,7 +30,7 @@ namespace hh {
 // template <typename R> using range_iterator_t = ranges::iterator_t<R>;
 
 // Identify the element type in range R.
-template <ranges::range R> using range_value_t = ranges::range_value_t<R>;
+// template <ranges::range R> using range_value_t = ranges::range_value_t<R>;
 
 // Detect if range R supports size().
 // template <typename R> inline constexpr bool range_has_size_v = ranges::sized_range<R>;

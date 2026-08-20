@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_RANGEOP_H_
 #define MESH_PROCESSING_LIBHH_RANGEOP_H_
 
-#include "libHh/Range.h"
+#include "libHh/Hh.h"
 
 namespace hh {
 
@@ -80,10 +80,13 @@ template <ranges::input_range R1, ranges::input_range R2> void swap_ranges(R1&& 
 #endif
 }
 
-// Assign the same value to all elements in a range.
-template <ranges::forward_range R> R fill(R&& range, const range_value_t<R>& v) {
-  // std::fill(ranges::begin(range), ranges::end(range), v);
-  for (auto& e : range) e = v;
+// Assign `value` to every element; returns the range for chaining.
+template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const T& value) {
+  // In the future, I could replace the return type from "R" to "R&&", to remove one move operation, and
+  // similarly for all functions that apply 'std::forward<' on a '&&' parameter.
+  // However, for a few uses in GraphOp_test and Multigrid_test, this requires P2718 (range-based for loop
+  // lifetime extension) which Cygwin's gcc 14 (< 15) still lacks.
+  ranges::fill(range, value);
   return std::forward<R>(range);
 }
 
@@ -97,7 +100,7 @@ template <ranges::forward_range R> R reverse(R&& range_) {
   for (const size_t i : range(num / 2)) ranges::swap(b[i], b[num - 1 - i]);
   return std::forward<R>(range_);
 }
-// R reversed(const R& range) { return reverse(clone(range)); }
+// auto reversed(const R& range) { return reverse(clone(range)); }
 
 // Rotate the elements in a randomly accessible range such that element middle becomes the new first element.
 template <ranges::forward_range R> R rotate(R&& range, range_value_t<R>& middle) {
@@ -111,7 +114,7 @@ requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp 
   std::sort(ranges::begin(range), ranges::end(range), comp);
   return std::forward<R>(range);
 }
-// R sorted(const R& range) { return sort(clone(range)); }
+// auto sorted(const R& range) { return sort(clone(range)); }
 
 // Minimum value in a non-empty range (by default using less(a, b)).
 template <typename R, typename Comp = std::less<>>
@@ -373,7 +376,7 @@ template <ranges::forward_range R> R normalize(R&& range) {
   for (auto& e : range) e = static_cast<Value>(e * v);
   return std::forward<R>(range);
 }
-// R normalized(const R& range) { return normalize(clone(range)); }
+// auto normalized(const R& range) { return normalize(clone(range)); }
 
 // Round the values in a range to the nearest 1/fac increment (by default fac == 1e5f).
 template <ranges::forward_range R> R round_elements(R&& range, range_value_t<R> fac = 1e5f) {

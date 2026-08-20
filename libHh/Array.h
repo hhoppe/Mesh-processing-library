@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_ARRAY_H_
 #define MESH_PROCESSING_LIBHH_ARRAY_H_
 
-#include "libHh/Range.h"
+#include "libHh/Hh.h"
 
 // Array is a dynamically resizable 1D array like std::vector, but it is derived from CArrayView and ArrayView
 // and it constructs/destructs elements based on capacity() rather than num().
@@ -172,12 +172,11 @@ template <typename T> class Array : public ArrayView<T> {
   explicit Array(const type& ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
   Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l.begin(), l.end())) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
-  template <ranges::input_range R>
-  requires(!std::same_as<std::remove_cvref_t<R>, type> && std::convertible_to<ranges::range_reference_t<R>, T>)
+  template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit Array(R&& range) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
     if constexpr (ranges::sized_range<R>) {
       init(narrow_cast<int>(ranges::size(range)));
-      ranges::copy(range, base::begin());
+      ranges::copy(range, _a);
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
@@ -494,12 +493,11 @@ template <typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>);  // Implemented by C
 template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // Implemented by CArrayView<T>.
 
 // Template deduction guides:
-template <typename T> CArrayView(const T* a, int) -> CArrayView<T>;
+template <typename T> CArrayView(const T*, int) -> CArrayView<T>;
 template <typename T, size_t n> CArrayView(const T (&)[n]) -> CArrayView<T>;
 template <typename T, size_t n> CArrayView(T (&)[n]) -> CArrayView<T>;
-template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
+template <typename T> ArrayView(T*, int) -> ArrayView<T>;
 template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
-template <std::input_iterator I, std::sentinel_for<I> S> Array(I, S) -> Array<std::iter_value_t<I>>;
 template <ranges::input_range R> Array(R&&) -> Array<range_value_t<R>>;
 
 //----------------------------------------------------------------------------

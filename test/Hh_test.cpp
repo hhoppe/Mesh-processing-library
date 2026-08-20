@@ -617,7 +617,7 @@ line2)";
     assertx(line == " abc");
   }
   {
-    // test std::forward in assertx()
+    // Test std::forward in assertx().
     constexpr int i = assertx(55);
     assertx(i == 55);
     int j = 56;

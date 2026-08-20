@@ -189,8 +189,6 @@ namespace hh {
 
 // *** Import some standard C++ names into the hh namespace.
 
-namespace ranges = std::ranges;
-
 // Common types:
 using std::make_unique;
 using std::size_t;  // (It may be already imported.)
@@ -207,6 +205,9 @@ using std::min;  // Avoid fmin().
 // Other common math functions:
 using std::pow;
 using std::sqrt;
+
+namespace ranges = std::ranges;
+template <typename R> using range_value_t = ranges::range_value_t<R>;
 
 // *** Useful type abbreviations.
 
@@ -263,6 +264,18 @@ concept Numeric = is_numeric_v<T>;
 // Element type that a container can copy into its storage (containers assign rather than construct in place).
 template <typename T>
 concept Copyable = std::is_copy_assignable_v<T>;
+
+// Range whose elements are (exactly) T.
+template <typename R, typename T>
+concept input_range_of = ranges::input_range<R> && std::same_as<ranges::range_value_t<R>, T>;
+
+// Range whose elements are readable as T (accepts proxies, conversions).
+template <typename R, typename T>
+concept input_range_to = ranges::input_range<R> && std::convertible_to<ranges::range_reference_t<R>, T>;
+
+// Range of exactly T whose elements can be read and written in place.
+template <typename R, typename T>
+concept mutable_range_of = ranges::forward_range<R> && std::same_as<ranges::range_reference_t<R>, T&>;
 
 // *** Utility classes.
 
@@ -770,7 +783,8 @@ template <typename C> class stream_range {
   const C& _c;
 };
 
-template <typename C> stream_range(const C& c) -> stream_range<C>;  // Template deduction guide.
+// Template deduction guide:
+template <typename C> stream_range(const C&) -> stream_range<C>;
 
 constexpr float interp(float v1, float v2, float f) {
   return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f

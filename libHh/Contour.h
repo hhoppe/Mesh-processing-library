@@ -740,15 +740,10 @@ class Contour2D : public ContourBase<2> {
 };
 
 // Template deduction guides:
-
-template <typename Eval, typename Border>
-Contour3DMesh(int gridn, GMesh* pmesh, Eval eval, Border border) -> Contour3DMesh<Eval, Border>;
-
-template <typename Eval, typename Border>
-Contour3D(int gridn, GMesh* pmesh, Eval eval, Border border) -> Contour3D<Eval, Border>;
-
+template <typename Eval, typename Border> Contour3DMesh(int, GMesh*, Eval, Border) -> Contour3DMesh<Eval, Border>;
+template <typename Eval, typename Border> Contour3D(int, GMesh*, Eval, Border) -> Contour3D<Eval, Border>;
 template <typename Eval, typename Contour, typename Border>
-Contour2D(int gridn, Eval eval, Contour contour, Border border) -> Contour2D<Eval, Contour, Border>;
+Contour2D(int, Eval, Contour, Border) -> Contour2D<Eval, Contour, Border>;
 
 }  // namespace hh
 

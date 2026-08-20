@@ -24,8 +24,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   explicit PArray(const type& ar) requires(Copyable<T>) : PArray() { *this = ar; }
   PArray(std::initializer_list<T> l) requires(Copyable<T>) : PArray(ranges::subrange(l.begin(), l.end())) {}
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
-  template <ranges::input_range R>
-  requires(!std::same_as<std::remove_cvref_t<R>, type> && std::convertible_to<ranges::range_reference_t<R>, T>)
+  template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
     for (auto&& e : range) push(std::forward<decltype(e)>(e));
   }

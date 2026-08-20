@@ -1045,8 +1045,9 @@ void unload_current_object() {
   }
 }
 
-template <ranges::forward_range R> Array<float> to_luminance(const R& range) {
-  static_assert(std::is_same_v<range_value_t<R>, Pixel>);
+// Replace by a "transformed"??
+template <ranges::forward_range R> requires std::same_as<range_value_t<R>, Pixel>
+Array<float> to_luminance(const R& range) {
   Array<float> ar;
   ar.reserve(int(distance(range)));
   for (const Pixel& pixel : range) ar.push(Y_from_RGB(pixel));

@@ -1473,7 +1473,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
   showf("Rendering looping video of %d frames.\n", nnf);
   const bool pixel_adapted_trad = true;                 // perform temporal crossfading only if temporal cost is high
   Matrix<int> mat_trad(video.spatial_dims(), tradius);  // temporal crossfading radius
-  bool have_func_dtime = !std::is_same_v<Func, NormalDeltaTime>;
+  constexpr bool have_func_dtime = !std::is_same_v<Func, NormalDeltaTime>;
   if (!have_func_dtime && pixel_adapted_trad) {
     compute_temporal_costs();
     parallel_for_coords({.cycles_per_elem = 20}, video.spatial_dims(), [&](const Vec2<int>& yx) {

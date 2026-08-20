@@ -140,7 +140,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
 };
 
 // Template deduction guide:
-template <typename Eval> NonlinearOptimization(ArrayView<double> x_, Eval eval) -> NonlinearOptimization<Eval>;
+template <typename Eval> NonlinearOptimization(ArrayView<double>, Eval) -> NonlinearOptimization<Eval>;
 
 }  // namespace hh
 

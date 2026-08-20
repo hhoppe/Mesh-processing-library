@@ -28,12 +28,11 @@ struct Pixel : Vec4<uint8_t> {
   }
 };
 
-template <ranges::input_range R> void convert_rgba_bgra(R&& range) {
-  static_assert(std::is_same_v<range_value_t<R>, Pixel>);
+template <input_range_to<Pixel> R> void convert_rgba_bgra(R&& range) {
   for (Pixel& p : range) std::swap(p[0], p[2]);
 }
 
-template <ranges::input_range R> void convert_bgra_rgba(R&& range) {
+template <input_range_to<Pixel> R> void convert_bgra_rgba(R&& range) {
   convert_rgba_bgra(std::forward<R>(range));  // Same implementation.
 }
 

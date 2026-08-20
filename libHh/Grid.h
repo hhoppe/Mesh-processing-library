@@ -533,8 +533,8 @@ template <int D, typename T> HH_DECLARE_OSTREAM_EOL(GridView<D, T>);  // Impleme
 template <int D, typename T> HH_DECLARE_OSTREAM_EOL(Grid<D, T>);      // Implemented by CGridView<D, T>.
 
 // Template deduction guides:
-// For most constructions, we cannot infer both the rank and the element type.
-template <int D, typename T> Grid(const Vec<int, D>& dims, const T& v) -> Grid<D, T>;
+// For most constructions, we cannot infer both the rank and the element type.  ??
+template <int D, typename T> Grid(const Vec<int, D>&, const T&) -> Grid<D, T>;
 
 //----------------------------------------------------------------------------
 

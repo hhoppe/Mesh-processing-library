@@ -3,7 +3,6 @@
 #define MESH_PROCESSING_LIBHH_BBOX_H_
 
 #include "libHh/Geometry.h"
-#include "libHh/Range.h"
 
 namespace hh {
 
@@ -96,10 +95,10 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
 
-  // ** Functions only for dim == 3 && std::is_same_v<T, float>:
+  // ** Functions only for dim == 3 && std::same_as<T, float>:
 
   // Uniform scaling into unit cube, centered on x & y, resting at z == 0.
-  [[nodiscard]] Frame get_frame_to_cube() const requires(dim == 3 && std::is_same_v<T, float>) {
+  [[nodiscard]] Frame get_frame_to_cube() const requires(dim == 3 && std::same_as<T, float>) {
     const auto& self = *this;
     const Vector diagonal = self[1] - self[0];
     const float max_side = max(diagonal);
@@ -110,8 +109,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return Frame::translation(-self[0]) * Frame::scaling(thrice(1.f / max_side)) * Frame::translation(center);
   }
 
-  [[nodiscard]] Frame get_frame_to_small_cube(float cubesize = .8f) const
-      requires(dim == 3 && std::is_same_v<T, float>) {
+  [[nodiscard]] Frame get_frame_to_small_cube(float cubesize = .8f) const requires(dim == 3 && std::same_as<T, float>)
+  {
     Frame frame = get_frame_to_cube();
     const float bnd = (1.f - cubesize) / 2.f;
     frame = frame * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
@@ -122,7 +121,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return frame;
   }
 
-  [[nodiscard]] type transform(const Frame& frame) const requires(dim == 3 && std::is_same_v<T, float>) {
+  [[nodiscard]] type transform(const Frame& frame) const requires(dim == 3 && std::same_as<T, float>) {
     const auto& self = *this;
     type bbox;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
@@ -133,10 +132,9 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 };
 
-// Template deduction guides:
+// Template deduction guides:a
 template <typename T, int n> Bbox(const Vec<T, n>&, const Vec<T, n>&) -> Bbox<T, n>;
 template <typename T, int n> Bbox(const Vec2<Vec<T, n>>&) -> Bbox<T, n>;
-
 template <ranges::input_range R>
 Bbox(R&&) -> Bbox<typename ranges::range_value_t<R>::value_type, ranges::range_value_t<R>::Num>;
 

@@ -8,54 +8,51 @@
 
 namespace hh {
 
-// Return a sorted, uniquified array of values gathered from a range.
-template <typename Range> requires(is_range_v<Range>) Array<range_value_t<Range>> sort_unique(const Range& range) {
+// Return a sorted, uniquified array of values gathered from a range.  Caller can subsequently call shrink_to_fit().
+template <ranges::input_range R, typename Comp = std::less<>>
+Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
   Array ar(range);
-  sort(ar);
-  auto* last = std::unique(ar.begin(), ar.end());
-  ar.sub(narrow_cast<int>(ar.end() - last));  // leave it to client to do shrink_to_fit()
+  sort(ar, comp);
+  auto subspan_of_extras = ranges::unique(ar);
+  ar.sub(narrow_cast<int>(ranges::size(subspan_of_extras)));
   return ar;
 }
 
 // Return the two closest values to the median of a list (or the same value twice if the list length is odd).
-template <typename Range, typename = enable_if_range_t<Range>>
-Vec2<range_value_t<Range>> median_two(const Range& range) {
-  using T = range_value_t<Range>;
-  Array<T> ar(ranges::begin(range), ranges::end(range));
+template <ranges::input_range R> auto median_two(const R& range) -> Vec2<range_value_t<R>> {
+  Array ar(range);
   assertx(ar.num());
   const int median_index = ar.num() / 2;
-  std::nth_element(ar.begin(), &ar[median_index], ar.end());  // place median element at median location
-  T val0 = ar[median_index];
+  ranges::nth_element(ar, &ar[median_index]);  // Place median element at median location.
+  const auto val0 = ar[median_index];
   // List is partially sorted about the median value, so find the min of the second half.
-  T val1 = ar.num() % 2 == 1 ? val0 : *std::min_element(&ar[median_index + 1], ar.end());
+  const auto val1 = ar.num() % 2 == 1 ? val0 : min(ar.slice(median_index + 1, ar.num()));
   return V(val0, val1);
 }
 
 // Return the median value of a list (or the mean of the two nearest values if the list length is even).
-template <typename Range, typename = enable_if_range_t<Range>>
-mean_type_t<range_value_t<Range>> median(const Range& range) {
+template <ranges::input_range R> auto median(const R& range) -> mean_type_t<range_value_t<R>> {
   return mean(median_two(range));
 }
 
 // Return the element with specified rank within range (where 0 <= rank < size(range) and rank == 0 is min element).
-template <typename Range, typename = enable_if_range_t<Range>>
-range_value_t<Range> rank_element(const Range& range, int rank) {
-  using T = range_value_t<Range>;
-  Array<T> ar(ranges::begin(range), ranges::end(range));
+template <ranges::input_range R> range_value_t<R> rank_element(const R& range, int rank) {
+  Array ar(range);
   assertx(ar.num());
   assertx(ar.ok(rank));
-  std::nth_element(ar.begin(), &ar[rank], ar.end());  // place rank element at rank location
+  ranges::nth_element(ar, &ar[rank]);  // Place rank element at rank location.
   return ar[rank];
 }
 
 // Return element with fractional ranking within range (where 0. <= rankf <= 1. and rankf == 0. is min element).
-template <typename Range, typename = enable_if_range_t<Range>>
-range_value_t<Range> rankf_element(const Range& range, double rankf) {
+template <ranges::input_range R> range_value_t<R> rankf_element(const R& range, double rankf) {
   assertx(rankf >= 0. && rankf <= 1.);
-  int num = narrow_cast<int>(distance(range));
-  int rank = int(floor(rankf * num));
-  if (rank == num) rank--;
-  return rank_element(range, rank);
+  Array ar(range);
+  assertx(ar.num());
+  int rank = int(floor(rankf * ar.num()));
+  if (rank == ar.num()) rank--;
+  ranges::nth_element(ar, &ar[rank]);  // Place rank element at rank location.
+  return ar[rank];
 }
 
 }  // namespace hh

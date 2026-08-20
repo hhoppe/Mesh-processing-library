@@ -20,98 +20,26 @@
 
 namespace hh {
 
-namespace details {
-template <typename T> struct has_begin;
-template <typename T> struct range_iterator;
-template <typename T> struct range_value;
-template <typename T, typename = std::void_t<>> struct range_has_size;
-}  // namespace details
-
-#if 1
-
 // Determine if type T is a range.
-template <typename T> inline constexpr bool is_range_v = ranges::range<T>;
+// template <typename T> inline constexpr bool is_range_v = ranges::range<T>;
 
 // SFINAE construct to enable a member function only if type T is a range.
-template <typename T> using enable_if_range_t = std::enable_if_t<ranges::range<T>>;
+// template <typename T> using enable_if_range_t = std::enable_if_t<ranges::range<T>>;
 
-// Identify the Iterator type for Range.
-template <typename Range> using range_iterator_t = ranges::iterator_t<Range>;
+// Identify the Iterator type for range R.
+// template <typename R> using range_iterator_t = ranges::iterator_t<R>;
 
-// Identify the element type in Range.
-template <ranges::range Range> using range_value_t = ranges::range_value_t<Range>;
+// Identify the element type in range R.
+template <ranges::range R> using range_value_t = ranges::range_value_t<R>;
 
-// Detect if Range supports size().
-template <typename Range> inline constexpr bool range_has_size_v = ranges::sized_range<Range>;
+// Detect if range R supports size().
+// template <typename R> inline constexpr bool range_has_size_v = ranges::sized_range<R>;
 
-// Detect if the iterators for Range support random access.
-template <typename Range> inline constexpr bool random_access_range_v = ranges::random_access_range<Range>;
-
-// Determine if Iterator supports random access.
-template <typename Iterator> inline constexpr bool random_access_iterator_v = std::random_access_iterator<Iterator>;
-
-#else
-
-// Identify the category of Iterator.
-template <typename Iterator> using iterator_category_t = typename std::iterator_traits<Iterator>::iterator_category;
+// Detect if the iterators for range R support random access.
+// template <typename R> inline constexpr bool random_access_range_v = ranges::random_access_range<R>;
 
 // Determine if Iterator supports random access.
-template <typename Iterator>
-inline constexpr bool random_access_iterator_v =
-    std::is_same_v<iterator_category_t<Iterator>, std::random_access_iterator_tag>;
-
-// Determine if type T is a range (i.e. supports begin() as either a member or friend function).
-template <typename T> inline constexpr bool is_range_v = details::has_begin<T>::value;
-
-// SFINAE construct to enable a member function only if type T is a range (i.e. supports begin()).
-template <typename T> using enable_if_range_t = std::enable_if_t<is_range_v<T>>;
-
-// Identify the Iterator type for Range.
-template <typename Range> using range_iterator_t = typename details::range_iterator<Range>::type;
-
-// Identify the element type in Range.
-template <typename Range> using range_value_t = typename details::range_value<Range>::type;
-
-// Detect if Range supports size() as either a member or friend function.
-template <typename Range> inline constexpr bool range_has_size_v = details::range_has_size<Range>::value;
-
-// Detect if the iterators for Range support random access.
-template <typename Range>
-inline constexpr bool random_access_range_v = random_access_iterator_v<range_iterator_t<Range>>;
-
-//----------------------------------------------------------------------------
-
-namespace details {
-
-// Fallbacks for Argument-Dependent Lookup (ADL):
-using std::begin;
-using std::size;
-
-// https://stackoverflow.com/questions/9402476
-template <typename T> auto adl_begin(T& t) -> decltype(begin(t));  // only for type signature
-template <typename T> auto adl_begin(const T& t) -> decltype(begin(t));
-
-template <typename T> struct has_begin {  // trait to identify if T has a begin(T) function.
-  template <typename U> static char deduce(decltype(adl_begin(std::declval<const U&>()))*);
-  template <typename> static void deduce(...);
-  static constexpr bool value = !std::is_void_v<decltype(deduce<T>(nullptr))>;
-};
-
-template <typename Range> struct range_iterator {
-  using type = decltype(begin(std::declval<Range>()));
-};
-
-template <typename Range> struct range_value {
-  using type = std::decay_t<decltype(*begin(std::declval<Range&>()))>;
-};
-
-template <typename, typename> struct range_has_size : std::false_type {};
-template <typename Range>
-struct range_has_size<Range, std::void_t<decltype(size(std::declval<Range>()))>> : std::true_type {};
-
-}  // namespace details
-
-#endif
+// template <typename Iterator> inline constexpr bool random_access_iterator_v = std::random_access_iterator<Iterator>;
 
 }  // namespace hh
 

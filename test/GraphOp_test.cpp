@@ -21,8 +21,8 @@ struct fidist {
 void show_graph(const Graph<int>& g, bool directed = false) {
   float cost = 0.f;
   SHOW("Graph: edges {");
-  for (int i : sort(Array<int>(g.vertices().begin(), g.vertices().end()))) {
-    for (int j : sort(Array<int>(g.edges(i).begin(), g.edges(i).end()))) {
+  for (int i : sort(Array<int>(g.vertices()))) {
+    for (int j : sort(Array<int>(g.edges(i)))) {
       if (!directed && i > j) continue;
       showf(" edge (%d, %d)\n", i, j);
       cost += fidist()(i, j);

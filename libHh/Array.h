@@ -170,24 +170,17 @@ template <typename T> class Array : public ArrayView<T> {
   explicit Array(int n) : base(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) { ASSERTX(n >= 0); }
   explicit Array(int n, const T& v) requires Copyable<T> : Array(n) { for_int(i, n) _a[i] = v; }
   explicit Array(const type& ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
-  explicit Array(CArrayView<T> ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
-  Array(std::initializer_list<T> l) requires Copyable<T>
-      : Array(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
+  Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l.begin(), l.end())) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
-  // Modernize iterator_category??
-  template <typename Iterator,
-            typename = std::enable_if_t<!std::is_void_v<typename std::iterator_traits<Iterator>::iterator_category>>>
-  explicit Array(Iterator b, Iterator e) : Array() {
-    // Note that if an Iterator is a native pointer (T*), it is automatically recognized as a random-access iterator.
-    if constexpr (random_access_iterator_v<Iterator>) reserve(narrow_cast<int>(e - b));
-    for (; b != e; ++b) push(*b);
-  }
-  template <typename Range, typename = enable_if_range_t<Range>> explicit Array(Range&& range) {
-    if constexpr (range_has_size_v<Range>)
-      reserve(narrow_cast<int>(range.size()));
-    else if constexpr (random_access_range_v<Range>)
-      reserve(narrow_cast<int>(range.end() - range.begin()));
-    for (const auto& e : range) push(e);
+  template <ranges::input_range R>
+  requires(!std::same_as<std::remove_cvref_t<R>, type> && std::convertible_to<ranges::range_reference_t<R>, T>)
+  explicit Array(R&& range) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
+    if constexpr (ranges::sized_range<R>) {
+      init(narrow_cast<int>(ranges::size(range)));
+      ranges::copy(range, base::begin());
+    } else {
+      for (auto&& e : range) push(std::forward<decltype(e)>(e));
+    }
   }
   ~Array() { delete[] _a; }
   type& operator=(CArrayView<T> ar) requires Copyable<T> {
@@ -418,12 +411,8 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(typ
 template <typename T> void ArrayView<T>::assign(base ar) requires(Copyable<T>) {
   ASSERTX(_n == ar.num());
   if (ar.data() == data()) return;
-#if 0
-  for_int(i, ar.num()) _a[i] = ar[i];
-#else
   // std::memcpy() would be unsafe for general T; std::copy() uses std::memmove() when T is trivially copyable.
   std::copy(ar.begin(), ar.end(), _a);
-#endif
 }
 
 //----------------------------------------------------------------------------
@@ -510,9 +499,8 @@ template <typename T, size_t n> CArrayView(const T (&)[n]) -> CArrayView<T>;
 template <typename T, size_t n> CArrayView(T (&)[n]) -> CArrayView<T>;
 template <typename T> ArrayView(T* a, int) -> ArrayView<T>;
 template <typename T, size_t n> ArrayView(T (&)[n]) -> ArrayView<T>;
-template <std::input_iterator Iterator> Array(Iterator, Iterator) -> Array<std::iter_value_t<Iterator>>;
-template <typename Range, typename = enable_if_range_t<Range>> Array(Range&&) -> Array<range_value_t<Range>>;
-// template <ranges::input_range Range> Array(Range&&) -> Array<ranges::range_value_t<Range>>;
+template <std::input_iterator I, std::sentinel_for<I> S> Array(I, S) -> Array<std::iter_value_t<I>>;
+template <ranges::input_range R> Array(R&&) -> Array<range_value_t<R>>;
 
 //----------------------------------------------------------------------------
 

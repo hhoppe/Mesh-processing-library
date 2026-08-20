@@ -78,12 +78,12 @@ int main() {
     SHOW(mean(ar));
   }
   {
-    SHOW(is_range_v<Array<float>> ? 1 : 0);
-    SHOW(is_range_v<std::fstream> ? 1 : 0);
+    SHOW(ranges::range<Array<float>> ? 1 : 0);
+    SHOW(ranges::range<std::fstream> ? 1 : 0);
     struct S {
       int _a;
     };
-    SHOW(is_range_v<S>);
+    SHOW(ranges::range<S>);
   }
   if (0) {
     // This should fail to compile.
@@ -152,34 +152,34 @@ int main() {
     SHOW(chars);
   }
   {
-    static_assert(is_range_v<Array<float>>);
+    static_assert(ranges::range<Array<float>>);
     static_assert(std::is_same_v<range_value_t<Array<float>>, float>);
-    static_assert(!is_range_v<std::pair<float, float>>);
-    static_assert(range_has_size_v<Array<float>>);
-    static_assert(random_access_range_v<Array<float>>);
-    static_assert(range_has_size_v<PArray<int, 3>>);
-    static_assert(random_access_range_v<PArray<int, 3>>);
+    static_assert(!ranges::range<std::pair<float, float>>);
+    static_assert(ranges::sized_range<Array<float>>);
+    static_assert(ranges::random_access_range<Array<float>>);
+    static_assert(ranges::sized_range<PArray<int, 3>>);
+    static_assert(ranges::random_access_range<PArray<int, 3>>);
     Map<int, float> map;
-    static_assert(range_has_size_v<decltype(map.keys())>);
-    static_assert(!random_access_range_v<decltype(map.keys())>);
+    static_assert(ranges::sized_range<decltype(map.keys())>);
+    static_assert(!ranges::random_access_range<decltype(map.keys())>);
     Mesh mesh;
-    static_assert(range_has_size_v<decltype(mesh.vertices())>);
-    static_assert(!random_access_range_v<decltype(mesh.vertices())>);
-    static_assert(range_has_size_v<decltype(mesh.ordered_vertices())>);
-    static_assert(random_access_range_v<decltype(mesh.ordered_vertices())>);
-    static_assert(range_has_size_v<decltype(mesh.faces())>);
-    static_assert(!random_access_range_v<decltype(mesh.faces())>);
-    static_assert(range_has_size_v<decltype(mesh.ordered_faces())>);
-    static_assert(random_access_range_v<decltype(mesh.ordered_faces())>);
-    static_assert(range_has_size_v<decltype(mesh.edges())>);
+    static_assert(ranges::sized_range<decltype(mesh.vertices())>);
+    static_assert(!ranges::random_access_range<decltype(mesh.vertices())>);
+    static_assert(ranges::sized_range<decltype(mesh.ordered_vertices())>);
+    static_assert(ranges::random_access_range<decltype(mesh.ordered_vertices())>);
+    static_assert(ranges::sized_range<decltype(mesh.faces())>);
+    static_assert(!ranges::random_access_range<decltype(mesh.faces())>);
+    static_assert(ranges::sized_range<decltype(mesh.ordered_faces())>);
+    static_assert(ranges::random_access_range<decltype(mesh.ordered_faces())>);
+    static_assert(ranges::sized_range<decltype(mesh.edges())>);
     Vertex v = mesh.create_vertex();
-    static_assert(range_has_size_v<decltype(mesh.faces(v))>);
-    static_assert(!random_access_range_v<decltype(mesh.faces(v))>);
-    static_assert(!range_has_size_v<decltype(mesh.vertices(v))>);
-    static_assert(!random_access_range_v<decltype(mesh.vertices(v))>);
+    static_assert(ranges::sized_range<decltype(mesh.faces(v))>);
+    static_assert(!ranges::random_access_range<decltype(mesh.faces(v))>);
+    static_assert(!ranges::sized_range<decltype(mesh.vertices(v))>);
+    static_assert(!ranges::random_access_range<decltype(mesh.vertices(v))>);
     Edge e = nullptr;
-    static_assert(range_has_size_v<decltype(mesh.vertices(e))>);
-    static_assert(random_access_range_v<decltype(mesh.vertices(e))>);
+    static_assert(ranges::sized_range<decltype(mesh.vertices(e))>);
+    static_assert(ranges::random_access_range<decltype(mesh.vertices(e))>);
     dummy_use(map, v, e);
   }
 }

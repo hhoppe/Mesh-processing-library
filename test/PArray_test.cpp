@@ -117,6 +117,12 @@ int main() {
     SHOW(ar1);
     SHOW(ar2);
   }
+  {
+    PArray<int, 2> ar1{1};
+    SHOW(ar1);
+    PArray<int, 2> ar2{1, 2, 3};
+    SHOW(ar2);
+  }
 }
 
 template class hh::PArray<unsigned, 4>;

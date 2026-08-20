@@ -18,10 +18,9 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   Bbox() { clear(); }
   constexpr Bbox(const PointD& pmin, const PointD& pmax) : Vec2<PointD>(pmin, pmax) {}
   constexpr Bbox(const type& bbox) : Bbox(bbox[0], bbox[1]) {}
-  template <typename Range, typename = enable_if_range_t<Range>> explicit Bbox(Range&& range) : Bbox() {
-    auto b = ranges::begin(range);
-    const auto e = ranges::end(range);
-    for (; b != e; ++b) union_with(*b);
+  template <ranges::input_range R> requires std::convertible_to<ranges::range_reference_t<R>, PointD>
+  explicit Bbox(R&& range) : Bbox() {
+    for (const auto& e : range) union_with(e);
   }
   type& operator=(const type&) = default;
 
@@ -84,11 +83,12 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return bbox;
   }
 
-  [[nodiscard]] Bbox enclosing_hypercube() const {  // Return enclosing (centered) bbox that has all sides equal.
+  // Return enclosing (centered) bbox that has all sides equal.
+  [[nodiscard]] Bbox enclosing_hypercube() const requires std::is_floating_point_v<T> {
     const auto& self = *this;
-    const Vector diagonal = self[1] - self[0];
-    const float max_side = max(diagonal);
-    const Vector offset = (max_side - diagonal) * 0.5f;
+    const PointD diagonal = self[1] - self[0];
+    const T max_side = max(diagonal);
+    const PointD offset = (max_side - diagonal) * T(0.5f);
     return Bbox(self[0] - offset, self[1] + offset);
   }
 
@@ -96,10 +96,10 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return os << "Bbox{" << bbox[0] << ", " << bbox[1] << "}";
   }
 
-  // ** Functions only for dim == 3:
+  // ** Functions only for dim == 3 && std::is_same_v<T, float>:
 
   // Uniform scaling into unit cube, centered on x & y, resting at z == 0.
-  [[nodiscard]] Frame get_frame_to_cube() const requires(dim == 3) {
+  [[nodiscard]] Frame get_frame_to_cube() const requires(dim == 3 && std::is_same_v<T, float>) {
     const auto& self = *this;
     const Vector diagonal = self[1] - self[0];
     const float max_side = max(diagonal);
@@ -110,7 +110,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return Frame::translation(-self[0]) * Frame::scaling(thrice(1.f / max_side)) * Frame::translation(center);
   }
 
-  [[nodiscard]] Frame get_frame_to_small_cube(float cubesize = .8f) const requires(dim == 3) {
+  [[nodiscard]] Frame get_frame_to_small_cube(float cubesize = .8f) const
+      requires(dim == 3 && std::is_same_v<T, float>) {
     Frame frame = get_frame_to_cube();
     const float bnd = (1.f - cubesize) / 2.f;
     frame = frame * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
@@ -121,7 +122,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return frame;
   }
 
-  [[nodiscard]] type transform(const Frame& frame) const requires(dim == 3) {
+  [[nodiscard]] type transform(const Frame& frame) const requires(dim == 3 && std::is_same_v<T, float>) {
     const auto& self = *this;
     type bbox;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
@@ -136,8 +137,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
 template <typename T, int n> Bbox(const Vec<T, n>&, const Vec<T, n>&) -> Bbox<T, n>;
 template <typename T, int n> Bbox(const Vec2<Vec<T, n>>&) -> Bbox<T, n>;
 
-template <typename Range, typename = enable_if_range_t<Range>, typename VecT = range_value_t<Range>>
-Bbox(Range&& range) -> Bbox<typename VecT::value_type, VecT::Num>;
+template <ranges::input_range R>
+Bbox(R&&) -> Bbox<typename ranges::range_value_t<R>::value_type, ranges::range_value_t<R>::Num>;
 
 }  // namespace hh
 

@@ -22,15 +22,13 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
   }
   explicit PArray(const type& ar) requires(Copyable<T>) : PArray() { *this = ar; }
-  explicit PArray(CArrayView<T> ar) requires(Copyable<T>) : PArray() { *this = ar; }
+  PArray(std::initializer_list<T> l) requires(Copyable<T>) : PArray(ranges::subrange(l.begin(), l.end())) {}
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
-  PArray(std::initializer_list<T> l) requires(Copyable<T>)
-      : PArray(CArrayView<T>(l.begin(), narrow_cast<int>(l.size()))) {}
-  template <typename I> explicit PArray(I b, I e) : PArray() {
-    for (; b != e; ++b) push(*b);
+  template <ranges::input_range R>
+  requires(!std::same_as<std::remove_cvref_t<R>, type> && std::convertible_to<ranges::range_reference_t<R>, T>)
+  explicit PArray(R&& range) : PArray() {
+    for (auto&& e : range) push(std::forward<decltype(e)>(e));
   }
-  template <typename Range, typename = enable_if_range_t<Range>>
-  explicit PArray(Range&& range) : PArray(range.begin(), range.end()) {}
   ~PArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }

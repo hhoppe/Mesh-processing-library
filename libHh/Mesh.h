@@ -367,6 +367,7 @@ class Mesh : noncopyable {
 
   struct Edges_range {
     Edges_range(const Mesh& m) : _m(m) {}
+    using value_type = Edge;
     Edges_iterator begin() const { return Edges_iterator(_m, true); }
     Edges_iterator end() const { return Edges_iterator(_m, false); }
     int size() const { return _m.num_edges(); }
@@ -378,6 +379,7 @@ class Mesh : noncopyable {
   struct OrderedVertices_range {
     using Container = Array<Vertex>;
     OrderedVertices_range(const Mesh& mesh);
+    using value_type = Vertex;
     Container::iterator begin() const { return const_cast<Container&>(_vertices).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_vertices).end(); }
     int size() const { return _vertices.num(); }
@@ -389,6 +391,7 @@ class Mesh : noncopyable {
   struct OrderedFaces_range {
     using Container = Array<Face>;
     OrderedFaces_range(const Mesh& mesh);
+    using value_type = Face;
     Container::iterator begin() const { return const_cast<Container&>(_faces).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_faces).end(); }
     int size() const { return _faces.num(); }

@@ -1045,8 +1045,8 @@ void unload_current_object() {
   }
 }
 
-template <typename Range> Array<float> to_luminance(const Range& range) {
-  static_assert(std::is_same_v<range_value_t<Range>, Pixel>);
+template <ranges::forward_range R> Array<float> to_luminance(const R& range) {
+  static_assert(std::is_same_v<range_value_t<R>, Pixel>);
   Array<float> ar;
   ar.reserve(int(distance(range)));
   for (const Pixel& pixel : range) ar.push(Y_from_RGB(pixel));
@@ -4401,7 +4401,7 @@ void test() {
 //   VideoViewer ~/data/image/lake.png
 int main(int argc, const char** argv) {
   ensure_utf8_encoding(argc, argv);
-  Array<string> aargs(argv, argv + argc);
+  Array<string> aargs(ArrayView(argv, argc));
   g_argv0 = get_canonical_path(aargs[0]);
   if (!contains(aargs, "-")) {
     // For Windows app started from emacs shell, close stdin but do not leave fd0 empty in case we open another file.

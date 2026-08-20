@@ -4,7 +4,7 @@
 
 #include <fstream>  // ofstream
 
-#include "libHh/Range.h"  // enable_if_range_t<>
+#include "libHh/Hh.h"
 
 #if 0
 {
@@ -29,7 +29,7 @@ class Stat {
   explicit Stat(string name_ = "", bool print = false, bool is_static = false);
   explicit Stat(const char* name_, bool print = false, bool is_static = false);
   Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // Not "= default".
-  template <typename Range, typename = enable_if_range_t<Range>> explicit Stat(Range&& range);
+  template <ranges::input_range R> explicit Stat(R&& range);
   ~Stat();
   Stat& operator=(Stat&& s) noexcept;
   void set_name(string name_) { _name = std::move(name_); }
@@ -83,16 +83,16 @@ class Stat {
 template <> HH_DECLARE_OSTREAM_EOL(Stat);
 
 // Like Stat(range), but later specialized to operate on magnitude of Vector4 elements.
-template <typename Range, typename = enable_if_range_t<Range>> Stat range_stat(const Range& range);
+template <ranges::input_range R> Stat range_stat(const R& range);
 
 // Scale and offset a range of values such that they have mean == 0 and sdv == 1.
 // This is equivalent to converting each value to its z-score in the distribution.
 // Note that this modifies the range in-place, so use standardize(clone(range)) to preserve it.
-template <typename Range, typename = enable_if_range_t<Range>> Range standardize(Range&& range);
+template <ranges::forward_range R> R standardize(R&& range);
 
 // Scale a range of values such that they have rms == 1.
 // Note that this modifies the range in-place, so use standardize_rms(clone(range)) to preserve it.
-template <typename Range, typename = enable_if_range_t<Range>> Range standardize_rms(Range&& range);
+template <ranges::forward_range R> R standardize_rms(R&& range);
 
 #define HH_STAT(S) \
   hh::Stat S { #S, true }
@@ -127,7 +127,7 @@ template <typename Range, typename = enable_if_range_t<Range>> Range standardize
 
 //----------------------------------------------------------------------------
 
-template <typename Range, typename> Stat::Stat(Range&& range) : Stat{} {
+template <ranges::input_range R> Stat::Stat(R&& range) : Stat{} {
   for (const auto& e : range) enter(e);
 }
 
@@ -201,9 +201,9 @@ inline float Stat::rms() const {
 }
 
 // Specialized in Multigrid.h.
-template <typename Range, typename> Stat range_stat(const Range& range) { return Stat(range); }
+template <ranges::input_range R> Stat range_stat(const R& range) { return Stat(range); }
 
-template <typename Range, typename> Range standardize(Range&& range) {
+template <ranges::forward_range R> R standardize(R&& range) {
   Stat stat = range_stat(range);
   const float sdv = stat.sdv();
   if (!sdv) {
@@ -212,11 +212,11 @@ template <typename Range, typename> Range standardize(Range&& range) {
     const float avg = stat.avg(), rsdv = 1.f / sdv;
     for (float& e : range) e = (e - avg) * rsdv;
   }
-  return std::forward<Range>(range);
+  return std::forward<R>(range);
 }
-// Range standardized(const Range& range) { return standardize(clone(range)); }
+// R standardized(const R& range) { return standardize(clone(range)); }
 
-template <typename Range, typename> Range standardize_rms(Range&& range) {
+template <ranges::forward_range R> R standardize_rms(R&& range) {
   Stat stat = range_stat(range);
   const float rms = stat.rms();
   if (!rms) {
@@ -225,9 +225,9 @@ template <typename Range, typename> Range standardize_rms(Range&& range) {
     const float rrms = 1.f / rms;
     for (auto& e : range) e *= rrms;
   }
-  return std::forward<Range>(range);
+  return std::forward<R>(range);
 }
-// Range standardized_rms(const Range& range) { return standardize_rms(clone(range)); }
+// R standardized_rms(const R& range) { return standardize_rms(clone(range)); }
 
 }  // namespace hh
 

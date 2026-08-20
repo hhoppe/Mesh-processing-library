@@ -1260,9 +1260,7 @@ void triangulate_short_diag() {
 // Sets key_names.
 void do_keys(Args& args) {
   const string keys = args.get_string();
-  const std::regex pattern(",");  // Pattern for splitting keys.
-  key_names =
-      Array<string>(std::sregex_token_iterator(keys.begin(), keys.end(), pattern, -1), std::sregex_token_iterator());
+  key_names = Array(keys | std::views::split(',') | std::views::transform(ranges::to<string>()));
   if (key_names.num() == 1 && key_names[0] == "") key_names.clear();
   const std::regex alphanumeric("^[a-zA-Z]+$");
   const auto k_valid_keys = V<string>("domainp", "stretchuv", "imageuv", "sph", "ll", "domaincorner", "domainf");

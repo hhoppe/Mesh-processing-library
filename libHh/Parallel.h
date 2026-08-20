@@ -145,8 +145,8 @@ struct ParallelOptions {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <typename Range, typename ProcessChunk>
-void parallel_for_chunk(const ParallelOptions& options, const Range& range, int num_threads,
+template <typename R, typename ProcessChunk>
+void parallel_for_chunk(const ParallelOptions& options, const R& range, int num_threads,
                         const ProcessChunk& process_chunk) {
   if (num_threads < 1) assertnever(SSHOW(num_threads));
   const auto begin_range = ranges::begin(range);
@@ -178,14 +178,14 @@ void parallel_for_chunk(const ParallelOptions& options, const Range& range, int 
 }
 
 // See previous function.
-template <typename Range, typename ProcessChunk>
-void parallel_for_chunk(const Range& range, int num_threads, const ProcessChunk& process_chunk) {
+template <typename R, typename ProcessChunk>
+void parallel_for_chunk(const R& range, int num_threads, const ProcessChunk& process_chunk) {
   parallel_for_chunk({}, range, num_threads, process_chunk);
 }
 
 // See previous function.
-template <typename Range, typename ProcessChunk>
-void parallel_for_chunk(const Range& range, const ProcessChunk& process_chunk) {
+template <typename R, typename ProcessChunk>
+void parallel_for_chunk(const R& range, const ProcessChunk& process_chunk) {
   parallel_for_chunk(range, get_max_threads(), [&](int thread_index, auto subrange) {
     dummy_use(thread_index);
     process_chunk(subrange);
@@ -200,8 +200,8 @@ void parallel_for_chunk(const Range& range, const ProcessChunk& process_chunk) {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <typename Range, typename ProcessElement>
-void parallel_for(const ParallelOptions& options, const Range& range, const ProcessElement& process_element) {
+template <typename R, typename ProcessElement>
+void parallel_for(const ParallelOptions& options, const R& range, const ProcessElement& process_element) {
   const auto num_elements = ranges::size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   if (!num_elements) return;
   using NumElements = decltype(num_elements);
@@ -215,8 +215,8 @@ void parallel_for(const ParallelOptions& options, const Range& range, const Proc
 }
 
 // See previous function.
-template <typename Range, typename ProcessElement>
-void parallel_for(const Range& range, const ProcessElement& process_element) {
+template <typename R, typename ProcessElement>
+void parallel_for(const R& range, const ProcessElement& process_element) {
   parallel_for({}, range, process_element);
 }
 

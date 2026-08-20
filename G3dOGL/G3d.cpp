@@ -251,7 +251,7 @@ using namespace g3d;
 
 int main(int argc, const char** argv) {
   ensure_utf8_encoding(argc, argv);
-  Array<string> aargs(argv, argv + argc);
+  Array<string> aargs(ArrayView(argv, argc));
   lod_level = getenv_float("LOD_LEVEL", lod_level);
   override_frametime = getenv_float("G3D_FRAMETIME", override_frametime);
   selected.frel = Frame::identity();

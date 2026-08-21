@@ -173,10 +173,12 @@ template <typename T> class Array : public ArrayView<T> {
   Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l.begin(), l.end())) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
-  explicit Array(R&& range) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
-    if constexpr (ranges::sized_range<R>) {
-      init(narrow_cast<int>(ranges::size(range)));
-      ranges::copy(range, _a);
+  explicit Array(R&& range) : base(nullptr, 0) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
+    if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
+      size_t size = size_t(ranges::distance(range));
+      _a = new T[size];
+      _n = _cap = narrow_cast<int>(size);
+      ranges::copy(range, _a);  // Moves elements only if the caller opts in via std::views::as_rvalue.
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }

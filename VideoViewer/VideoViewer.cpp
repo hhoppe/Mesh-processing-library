@@ -1049,7 +1049,7 @@ void unload_current_object() {
 template <ranges::forward_range R> requires std::same_as<range_value_t<R>, Pixel>
 Array<float> to_luminance(const R& range) {
   Array<float> ar;
-  ar.reserve(int(distance(range)));
+  ar.reserve(int(ranges::distance(range)));
   for (const Pixel& pixel : range) ar.push(Y_from_RGB(pixel));
   return ar;
 }
@@ -2719,7 +2719,7 @@ void advance_frame() {
     }
     time_since_last_frame = vtime - last_frame_time;
     assertw(time_since_last_frame >= 0.);
-    rotate(ar_last_frame_times, ar_last_frame_times.last());  // shift towards rear
+    rotate(ar_last_frame_times, ar_last_frame_times.end() - 1);  // shift towards rear
     ar_last_frame_times[0] = time_since_last_frame;
     steady_time_since_last_frame = sqrt(var(ar_last_frame_times)) > .008 ? -1. : median(ar_last_frame_times);
     const double slowest_monitor_refresh_fps = 20.;

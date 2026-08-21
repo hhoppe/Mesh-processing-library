@@ -26,7 +26,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
-    for (auto&& e : range) push(std::forward<decltype(e)>(e));
+    push(std::forward<R>(range));
   }
   ~PArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
@@ -149,18 +149,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  void push(type&& ar) { push(std::move(ar) | std::views::as_rvalue); }  // necessary??
-  // ??
-  // void push(CArrayView<T> ar) requires Copyable<T> {
-  //   int n = ar.num();
-  //   add(n);
-  //   for_int(i, n) _a[_n - n + i] = ar[i];
-  // }
-  // void push(type&& ar) {
-  //   int n = ar.num();
-  //   add(n);
-  //   for_int(i, n) _a[_n - n + i] = std::move(ar[i]);
-  // }
+  void push(type&& ar) { push(std::move(ar) | std::views::as_rvalue); }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
@@ -178,17 +167,6 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       static_assert(false, "Unshifting elements one-at-a-time would be too inefficient.");
     }
   }
-  // ??
-  // void unshift(CArrayView<T> ar) requires Copyable<T> {
-  //   int n = ar.num();
-  //   insert_i(0, n);
-  //   for_int(i, n) _a[i] = ar[i];
-  // }
-  // void unshift(type&& ar) {
-  //   int n = ar.num();
-  //   insert_i(0, n);
-  //   for_int(i, n) _a[i] = std::move(ar[i]);
-  // }
   friend void swap(type& l, type& r) noexcept {
     if (l._cap > pcap) {
       if (r._cap > pcap) {

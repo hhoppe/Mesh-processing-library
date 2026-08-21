@@ -21,7 +21,7 @@ template <typename T> class MoveToFront : noncopyable {
     }
     //  (An alternative faster implementation would be to randomly swap with another element closer to front,
     //   or to rotate k elements instead of the whole prefix set of elements.)
-    rotate(_list, _list[ifound]);  // Rotate to place element [ifound] to at element [0].
+    rotate(_list, _list.begin() + ifound);  // Rotate to place element [ifound] at element [0].
     return ifound;
   }
 

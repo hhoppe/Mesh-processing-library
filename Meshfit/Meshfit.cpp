@@ -417,7 +417,8 @@ void global_project_aux() {
       } else {
         mesh.polygon(f, poly);
         assertx(poly.num() == 4);
-        if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor)) rotate(poly, poly[1]);
+        if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor))
+          rotate(poly, poly.begin() + 1);
         trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
         trianglefaces.push({V(poly[0], poly[2], poly[3]), f});
       }

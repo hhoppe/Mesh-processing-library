@@ -668,7 +668,7 @@ void do_phaseoffset(Args& args) {
   int nframes = video.nframes();
   assertx(fbeg >= 0 && fbeg < nframes);
   if (fbeg == 0) return;
-  // rotate(video, video[fbeg]);  // make fbeg the new frame 0 (using old Array<Matrix<Pixel>> representation)
+  // rotate(video, video.begin() + fbeg);  // make fbeg the new frame 0 (using old Array<Matrix<Pixel>> repr.)
   Video nvideo(nframes, video.spatial_dims());
   nvideo.attrib() = video.attrib();
   if (nvideo.attrib().audio.size()) {

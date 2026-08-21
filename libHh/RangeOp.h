@@ -14,70 +14,57 @@ namespace hh {
 
 // Check unary predicate against elements; true if range is empty.
 template <ranges::input_range R, typename Pred> bool all_of(const R& range, Pred pred) {
-  return std::all_of(ranges::begin(range), ranges::end(range), pred);
+  return ranges::all_of(range, pred);
 }
 
 // Check unary predicate against elements; false if range is empty.
 template <ranges::input_range R, typename Pred> bool any_of(const R& range, Pred pred) {
-  return std::any_of(ranges::begin(range), ranges::end(range), pred);
+  return ranges::any_of(range, pred);
 }
 
 // Check unary predicate against elements; true if range is empty.
 template <ranges::input_range R, typename Pred> bool none_of(const R& range, Pred pred) {
-  return std::none_of(ranges::begin(range), ranges::end(range), pred);
+  return ranges::none_of(range, pred);
 }
 
 // Apply unary functor object to each element and returns functor.
 template <ranges::input_range R, typename Func> Func for_each(R&& range, Func func) {
-  return std::for_each(ranges::begin(range), ranges::end(range), std::move(func));
+  return ranges::for_each(range, std::move(func));
 }
 
 // Return the address of the first element satisfying condition, or nullptr if none.
 template <ranges::input_range R, typename Pred> auto find_if(R&& range, Pred pred) -> range_value_t<R>* {
-  auto iter = std::find_if(ranges::begin(range), ranges::end(range), pred);
+  auto iter = ranges::find_if(range, pred);
   return iter == ranges::end(range) ? nullptr : &*iter;
 }
 
 // Return the address of the first element not satisfying condition, or nullptr if none.
 template <ranges::input_range R, typename Pred> auto find_if_not(R&& range, Pred pred) -> range_value_t<R> {
-  auto iter = std::find_if_not(ranges::begin(range), ranges::end(range), pred);
+  auto iter = ranges::find_if_not(range, pred);
   return iter == ranges::end(range) ? nullptr : &*iter;
 }
 
 // Count the number of elements equal to specified one.
 template <ranges::input_range R> std::ptrdiff_t count(const R& range, const range_value_t<R>& elem) {
-  return std::count(ranges::begin(range), ranges::end(range), elem);
+  return ranges::count(range, elem);
 }
 
 // Count the number of elements matching predicate.
 template <ranges::input_range R, typename Pred> std::ptrdiff_t count_if(const R& range, Pred pred) {
-  return std::count_if(ranges::begin(range), ranges::end(range), pred);
+  return ranges::count_if(range, pred);
 }
 
 // Return whether two ranges are equal element-wise.
 template <ranges::input_range R1, ranges::input_range R2, typename Pred = std::equal_to<range_value_t<R1>>>
 bool equal(const R1& range1, const R2& range2, Pred pred = Pred{}) {
-  return std::equal(ranges::begin(range1), ranges::end(range1), ranges::begin(range2), ranges::end(range2), pred);
+  return ranges::equal(range1, range2, pred);
 }
 
-// Swap the contents of two ranges.  ?? modifies the range -> input_range still OK?
+// Swap the contents of two ranges.
 template <ranges::input_range R1, ranges::input_range R2> void swap_ranges(R1&& range1, R2&& range2) {
-  auto iter1 = ranges::begin(range1);
-  const auto itend1 = ranges::end(range1);
-  auto iter2 = ranges::begin(range2);
-  const auto itend2 = ranges::end(range2);
-#if 0  // ??
-  // Draft N4560 swaps the first min(size(range1), size(range2)) elements.
-  if (itend2 - iter2 < itend1 - iter1) {
-    ranges::swap(iter1, iter2);
-    ranges::swap(itend1, itend2);
-  }
-  std::swap_ranges(iter1, itend1, iter2);
-#else
-  // Instead we require that they have the same size.
-  auto it = std::swap_ranges(iter1, itend1, iter2);
-  ASSERTX(it == itend2);  // Verify they have the same number of elements.
-#endif
+  auto result = ranges::swap_ranges(range1, range2);
+  // Verify they have the same number of elements.
+  ASSERTX(result.in1 == ranges::end(range1) && result.in2 == ranges::end(range2));
 }
 
 // Assign `value` to every element; returns the range for chaining.
@@ -90,50 +77,48 @@ template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const 
   return std::forward<R>(range);
 }
 
-// Reverse the elements in a randomly accessible range.
-template <ranges::forward_range R> R reverse(R&& range_) {
-  auto b = ranges::begin(range_);
-  const auto e = ranges::end(range_);
-  ASSERTX(e >= b);  // Requires the range iterator to support random access. ??
-  // std::reverse(b, e);
-  size_t num = e - b;
-  for (const size_t i : range(num / 2)) ranges::swap(b[i], b[num - 1 - i]);
-  return std::forward<R>(range_);
+// Reverse the elements in-place in a randomly accessible range.
+template <ranges::random_access_range R> R reverse(R&& range) {
+  ranges::reverse(range);
+  return std::forward<R>(range);
 }
 // auto reversed(const R& range) { return reverse(clone(range)); }
 
 // Rotate the elements in a randomly accessible range such that element middle becomes the new first element.
-template <ranges::forward_range R> R rotate(R&& range, range_value_t<R>& middle) {
-  std::rotate(ranges::begin(range), &middle, ranges::end(range));
+template <ranges::random_access_range R> R rotate(R&& range, ranges::iterator_t<R> middle) {
+  ranges::rotate(range, middle);
   return std::forward<R>(range);
 }
 
-// Sort the elements in a range (by default using less(a, b)).
+// Sort the elements in a range (by default using std::less(a, b)).
 template <ranges::random_access_range R, typename Comp = std::less<>>
 requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp = Comp{}) {
-  std::sort(ranges::begin(range), ranges::end(range), comp);
+  ranges::sort(range, comp);
   return std::forward<R>(range);
 }
 // auto sorted(const R& range) { return sort(clone(range)); }
 
-// Minimum value in a non-empty range (by default using less(a, b)).
+// Minimum value in a non-empty range (by default using std::less(a, b)).
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
 auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
-  ASSERTXX(ranges::begin(range) != ranges::end(range));
-  return *std::min_element(ranges::begin(range), ranges::end(range), comp);
+  auto iter = ranges::min_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return *iter;
 }
 
-// Maximum value in a non-empty range (using less(a, b)).
+// Maximum value in a non-empty range (using std::less(a, b)).
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
 auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
-  ASSERTXX(ranges::begin(range) != ranges::end(range));
-  return *std::max_element(ranges::begin(range), ranges::end(range), comp);
+  auto iter = ranges::max_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return *iter;
 }
 
 // Number of elements in a range (could also define size(R) but for robustness that would require Concepts).
-template <ranges::input_range R> std::ptrdiff_t distance(const R& range) {
+template <ranges::input_range R>
+[[deprecated("Use ranges::size(range) or ranges::distance(range)")]] std::ptrdiff_t distance(const R& range) {
   return std::distance(ranges::begin(range), ranges::end(range));
 }
 
@@ -153,30 +138,53 @@ template <ranges::input_range R> std::ptrdiff_t distance(const R& range) {
 // *** My custom range operations:
 
 // Return the index of the first matching element, or die if not found.
-template <ranges::input_range R> int index(const R& range, const range_value_t<R>& elem) {
-  auto iter = std::find(ranges::begin(range), ranges::end(range), elem);
-  if (iter == ranges::end(range)) assertnever(make_string(elem) + " not found in range");
-  return assert_narrow_cast<int>(iter - ranges::begin(range));
+// template <ranges::input_range R> int index(const R& range, const range_value_t<R>& elem) {
+//   auto iter = ranges::find(range, elem);
+//   if (iter == ranges::end(range)) assertnever(make_string(elem) + " not found in range");
+//   return assert_narrow_cast<int>(std::distance(ranges::begin(range), iter));  // Avoid this cost??
+// }
+
+// Return the index of the first matching element, or die if not found.
+template <ranges::input_range R> int index(R&& range, const range_value_t<R>& elem) {
+  if constexpr (ranges::random_access_range<R>) {
+    auto iter = ranges::find(range, elem);
+    if (iter != ranges::end(range)) return assert_narrow_cast<int>(iter - ranges::begin(range));
+  } else {
+    int i = 0;
+    for (auto&& e : range) {
+      if (e == elem) return i;
+      ++i;
+    }
+  }
+  assertnever(make_string(elem) + " not found in range");
 }
 
 // Return the index of the first matching element, or -1 if not found.
 template <ranges::input_range R> int maybe_index(const R& range, const range_value_t<R>& elem) {
-  auto iter = std::find(ranges::begin(range), ranges::end(range), elem);
-  if (iter == ranges::end(range)) return -1;
-  return assert_narrow_cast<int>(iter - ranges::begin(range));
+  if constexpr (ranges::random_access_range<R>) {
+    auto iter = ranges::find(range, elem);
+    if (iter != ranges::end(range)) return assert_narrow_cast<int>(iter - ranges::begin(range));
+  } else {
+    int i = 0;
+    for (auto&& e : range) {
+      if (e == elem) return i;
+      ++i;
+    }
+  }
+  return -1;
 }
 
-// Index of minimum value in a non-empty range (using less(a, b)).
+// Index of minimum value in a non-empty range.
 template <ranges::input_range R> int arg_min(const R& range) {
-  ASSERTX(ranges::begin(range) != ranges::end(range));
-  auto iter = std::min_element(ranges::begin(range), ranges::end(range));
+  auto iter = ranges::min_element(range);
+  ASSERTX(iter != ranges::end(range));
   return narrow_cast<int>(std::distance(ranges::begin(range), iter));
 }
 
-// Index of maximum value in a non-empty range (using less(a, b)).
+// Index of maximum value in a non-empty range.
 template <ranges::input_range R> int arg_max(const R& range) {
-  ASSERTXX(ranges::begin(range) != ranges::end(range));
-  auto iter = std::max_element(ranges::begin(range), ranges::end(range));
+  auto iter = ranges::max_element(range);
+  ASSERTX(iter != ranges::end(range));
   return narrow_cast<int>(std::distance(ranges::begin(range), iter));
 }
 
@@ -205,7 +213,6 @@ template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
   ASSERTX(iter != itend);
-  // return abs(*std::max_element(ibeg, iend, [](auto a, auto b) { return abs(a) < abs(b); }));
   auto v = static_cast<range_value_t<R>>(abs(*iter));
   for (++iter; iter != itend; ++iter) v = max(v, static_cast<range_value_t<R>>(abs(*iter)));
   return v;
@@ -238,17 +245,18 @@ using sum_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, sum_type_
 template <typename DesiredType = void, ranges::input_range R> sum_type_for_t<DesiredType, R> sum(const R& range) {
   using SumType = sum_type_for_t<DesiredType, R>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  // return implicit_cast<SumType>(ranges::fold_left(range, SumType{}, std::plus<>{}));
-  auto iter = ranges::begin(range);
-  const auto itend = ranges::end(range);
-  SumType v;
-  if (iter == itend) {
-    v = SumType{};
-  } else {
-    v = *iter;
-    for (++iter; iter != itend; ++iter) v += *iter;
-  }
-  return v;
+  return implicit_cast<SumType>(ranges::fold_left(range, SumType{}, std::plus<>{}));
+  // ??
+  // auto iter = ranges::begin(range);
+  // const auto itend = ranges::end(range);
+  // SumType v;
+  // if (iter == itend) {
+  //   v = SumType{};
+  // } else {
+  //   v = *iter;
+  //   for (++iter; iter != itend; ++iter) v += *iter;
+  // }
+  // return v;
 }
 
 // Average of values in a range.
@@ -259,7 +267,7 @@ auto mean(const R& range) -> mean_type_for_t<DesiredType, R> {
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
   if (iter == itend) {
-    Warning("mean");
+    Warning("mean() of empty range");
     return MeanType{};
   }
   MeanType v = *iter;

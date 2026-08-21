@@ -104,7 +104,7 @@ int main() {
     Array<float> ar1 = {2.7f, -3.3f, 5.1f, -6.2f, 0.f};
     {
       auto ar = clone(ar1);
-      rotate(ar, ar[2]);
+      rotate(ar, ar.begin() + 2);
       SHOW(ar);
     }
     {

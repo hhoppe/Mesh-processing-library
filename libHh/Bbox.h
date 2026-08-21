@@ -132,11 +132,12 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   }
 };
 
-// Template deduction guides:a
+// Template deduction guides:
 template <typename T, int n> Bbox(const Vec<T, n>&, const Vec<T, n>&) -> Bbox<T, n>;
 template <typename T, int n> Bbox(const Vec2<Vec<T, n>>&) -> Bbox<T, n>;
 template <ranges::input_range R>
-Bbox(R&&) -> Bbox<typename ranges::range_value_t<R>::value_type, ranges::range_value_t<R>::Num>;
+requires std::derived_from<range_value_t<R>, Vec<typename range_value_t<R>::value_type, range_value_t<R>::Num>>
+Bbox(R&&) -> Bbox<typename range_value_t<R>::value_type, range_value_t<R>::Num>;
 
 }  // namespace hh
 

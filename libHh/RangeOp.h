@@ -117,16 +117,16 @@ requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp 
 // auto sorted(const R& range) { return sort(clone(range)); }
 
 // Minimum value in a non-empty range (by default using less(a, b)).
-template <typename R, typename Comp = std::less<>>
-requires ranges::forward_range<const R&> && std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
 auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
   ASSERTXX(ranges::begin(range) != ranges::end(range));
   return *std::min_element(ranges::begin(range), ranges::end(range), comp);
 }
 
 // Maximum value in a non-empty range (using less(a, b)).
-template <typename R, typename Comp = std::less<>>
-requires ranges::forward_range<const R&> && std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
 auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
   ASSERTXX(ranges::begin(range) != ranges::end(range));
   return *std::max_element(ranges::begin(range), ranges::end(range), comp);

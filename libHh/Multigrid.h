@@ -63,13 +63,13 @@ template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
     for (intptr_t i : range(size)) v += g.flat(i);
   } else {
     const int num_threads = get_max_threads();
-    Array<MeanType> means(num_threads);
+    Array<MeanType> sums(num_threads);
     parallel_for_chunk(range(size), num_threads, [&](const int thread_index, auto subrange) {
-      MeanType v2{};
-      for (const intptr_t i : subrange) v2 += g.flat(i);
-      means[thread_index] = v2;
+      MeanType chunk_sum{};
+      for (const intptr_t i : subrange) chunk_sum += g.flat(i);
+      sums[thread_index] = chunk_sum;
     });
-    for_int(thread_index, num_threads) v += means[thread_index];
+    v = sum(sums);
   }
   return v * (1. / size);
 }

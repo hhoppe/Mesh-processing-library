@@ -368,7 +368,7 @@ void add_exterior_orientation(const Set<int>& nodes) {
 }
 
 void remove_exterior_orientation() {
-  for (int i : Array<int>(gpcpseudo->edges(num))) gpcpseudo->remove_undirected(num, i);
+  for (int i : Array(gpcpseudo->edges(num))) gpcpseudo->remove_undirected(num, i);
   gpcpseudo->remove(num);
 }
 

@@ -2122,7 +2122,7 @@ void do_flip() {
     arva.add(1);
     mesh.get_vertices(f, arva.last());
   }
-  for (Face f : Array<Face>(mesh.faces())) mesh.destroy_face(f);
+  for (Face f : Array(mesh.faces())) mesh.destroy_face(f);
   for (Array<Vertex>& va : arva) {
     reverse(va);
     mesh.create_face(va);

@@ -26,7 +26,7 @@ template <typename T> struct Node {
 template <typename T> class Pqueue : noncopyable {
  public:
   void clear() { _ar.clear(); }
-  void enter(const T& e, float pri) requires(Copyable<T>) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
+  void enter(const T& e, float pri) requires Copyable<T> { ASSERTX(pri >= 0.f), enter_i(e, pri); }
   void enter(T&& e, float pri) { ASSERTX(pri >= 0.f), enter_i(std::move(e), pri); }
   void reserve(int size) { _ar.reserve(size); }
   int num() const { return _ar.num(); }
@@ -35,7 +35,7 @@ template <typename T> class Pqueue : noncopyable {
   const T& min() const { return ASSERTXX(!empty()), _ar[0]._e; }
   float min_priority() const { return ASSERTXX(!empty()), _ar[0]._pri; }
   T remove_min() { return ASSERTXX(!empty()), remove_min_i(); }
-  void enter_unsorted(const T& e, float pri) requires(Copyable<T>) {
+  void enter_unsorted(const T& e, float pri) requires Copyable<T> {
     return ASSERTX(pri >= 0.f), _ar.push(Node(e, pri));
   }
   void enter_unsorted(T&& e, float pri) { ASSERTX(pri >= 0.f), _ar.push(Node(std::move(e), pri)); }
@@ -96,7 +96,7 @@ template <typename T> class Pqueue : noncopyable {
     }
     return n;
   }
-  void enter_i(const T& e, float pri) requires(Copyable<T>) {
+  void enter_i(const T& e, float pri) requires Copyable<T> {
     _ar.add(1);  // Leave this new node uninitialized.
     int j = adjust_up(num() - 1, pri);
     _ar[j]._e = e;
@@ -135,7 +135,7 @@ template <typename T> class Pqueue : noncopyable {
 };
 
 // Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in Pqueue!
-template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> requires(Copyable<T>)
+template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> requires Copyable<T>
 class HPqueue : noncopyable {
  public:
   void clear() { _ar.clear(), _m.clear(); }

@@ -93,7 +93,7 @@ template <> double Random::get_unif<double>() {
 float Random::unif() { return get_unif<float>(); }
 double Random::dunif() { return get_unif<double>(); }
 
-template <typename T> T Random::get_gauss() requires(std::floating_point<T>) {
+template <typename T> T Random::get_gauss() requires std::floating_point<T> {
   static_assert(std::is_floating_point_v<T>);
   // See experiments in test/opt/test_random.cpp   (Box-Muller transform is best)
   if (0) {

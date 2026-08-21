@@ -132,7 +132,7 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
   void reinit(type a) { *this = a; }
-  void assign(base ar) requires(Copyable<T>);
+  void assign(base ar) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
@@ -256,11 +256,7 @@ template <typename T> class Array : public ArrayView<T> {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  void push_array(type&& ar) {
-    int n = ar.num();
-    add(n);
-    for_int(i, n) _a[_n - n + i] = std::move(ar[i]);
-  }
+  void push_array(type&& ar) { push_array(std::move(ar) | std::views::as_rvalue); }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
@@ -407,7 +403,7 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(typ
 
 //----------------------------------------------------------------------------
 
-template <typename T> void ArrayView<T>::assign(base ar) requires(Copyable<T>) {
+template <typename T> void ArrayView<T>::assign(base ar) requires Copyable<T> {
   ASSERTX(_n == ar.num());
   if (ar.data() == data()) return;
   // std::memcpy() would be unsafe for general T; std::copy() uses std::memmove() when T is trivially copyable.

@@ -8,10 +8,10 @@ namespace {
 
 void show_graph(const Graph<int>& g) {
   SHOW("Graph: vertices {");
-  for (int i : sort(Array<int>(g.vertices()))) showf("  vertex %d\n", i);
+  for (int i : sort(Array(g.vertices()))) showf("  vertex %d\n", i);
   SHOW("}, edges {");
-  for (int i : sort(Array<int>(g.vertices())))
-    for (int j : sort(Array<int>(g.edges(i)))) showf(" edge (%d, %d)\n", i, j);
+  for (int i : sort(Array(g.vertices())))
+    for (int j : sort(Array(g.edges(i)))) showf(" edge (%d, %d)\n", i, j);
   SHOW("}");
 }
 

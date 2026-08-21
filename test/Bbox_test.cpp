@@ -23,6 +23,10 @@ int main() {
     SHOW(bb);
   }
   {
+    Bbox bb(V(V(9., 2.), V(4., 3.)));
+    SHOW(bb);
+  }
+  {
     Bbox<float, 2> bb;
     SHOW(bb);
     bb.infinite();

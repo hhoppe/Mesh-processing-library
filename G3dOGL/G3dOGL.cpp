@@ -1597,7 +1597,7 @@ void mesh_init(GMesh& mesh) {
       f_pnor(f) = poly.get_normal();
     }
   }
-  if (0 && strip_lines && !map_mfa.contains(&mesh)) map_mfa.enter(&mesh, Array<Face>(mesh.ordered_faces()));
+  if (0 && strip_lines && !map_mfa.contains(&mesh)) map_mfa.enter(&mesh, Array(mesh.ordered_faces()));
   if (strip_lines) {
     bool is_new;
     Array<Face>& fa = map_mfa.enter(&mesh, Array<Face>(), is_new);

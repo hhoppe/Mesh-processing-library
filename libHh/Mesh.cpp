@@ -530,7 +530,7 @@ void Mesh::collapse_edge_vertex(Edge e, Vertex vs) {
     destroy_face(he2->_face);
   }
   // Change remaining faces around vt to have vs instead
-  for (HEdge he : Array<Corner>(corners(vt))) {
+  for (HEdge he : Array(corners(vt))) {
     // ends up deleting and recreating MEdge structures, which is great.
     remove_hedge(he, he->_prev->_vert);
     remove_hedge(he->_next, he->_vert);
@@ -635,7 +635,7 @@ void Mesh::merge_vertices(Vertex vs, Vertex vt) {
   assertx(legal_vertex_merge(vs, vt));
   // We cannot introduce bogus hedges, because we intend to merge boundary edges together.
   // Change faces around vt to instead use vs.
-  for (HEdge he : Array<Corner>(corners(vt))) {
+  for (HEdge he : Array(corners(vt))) {
     ASSERTX(he->_vert == vt);
     remove_hedge(he, he->_prev->_vert);
     remove_hedge(he->_next, he->_vert);

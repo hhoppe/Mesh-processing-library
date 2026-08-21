@@ -20,7 +20,7 @@ static float cumtime = 0.f;
 
 static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
 
-template <typename RangeEdges> static void recompute_sharpe(GMesh& mesh, const RangeEdges& range_edges) {
+template <ranges::input_range R> static void recompute_sharpe(GMesh& mesh, const R& range_edges) {
   assertx(anglethresh >= 0.f);
   float vcos = std::cos(rad_from_deg(anglethresh));
   for (Edge e : range_edges) {

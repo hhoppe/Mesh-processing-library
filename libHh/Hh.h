@@ -265,17 +265,9 @@ concept Numeric = is_numeric_v<T>;
 template <typename T>
 concept Copyable = std::is_copy_assignable_v<T>;
 
-// Range whose elements are (exactly) T.
-template <typename R, typename T>
-concept input_range_of = ranges::input_range<R> && std::same_as<ranges::range_value_t<R>, T>;
-
 // Range whose elements are readable as T (accepts proxies, conversions).
 template <typename R, typename T>
 concept input_range_to = ranges::input_range<R> && std::convertible_to<ranges::range_reference_t<R>, T>;
-
-// Range of exactly T whose elements can be read and written in place.
-template <typename R, typename T>
-concept mutable_range_of = ranges::forward_range<R> && std::same_as<ranges::range_reference_t<R>, T&>;
 
 // *** Utility classes.
 
@@ -651,15 +643,6 @@ void ensure_utf8_encoding(int& argc, const char**& argv);
 // HH_REFERENCE_LIB("libHh.lib");
 
 namespace details {
-
-// Evaluates to false in boolean context for use in macro as:
-// "if (details::false_capture<int> i = stop) { HH_UNREACHABLE; } else".
-template <typename T> struct false_capture {
-  template <typename... Args> explicit false_capture(Args&&... args) : _e(args...) {}
-  operator bool() const { return false; }
-  const T& operator()() const { return _e; }
-  T _e;
-};
 
 [[nodiscard]] string forward_slash(const string& s);
 

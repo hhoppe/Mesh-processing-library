@@ -21,8 +21,8 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       _cap = n;
     }
   }
-  explicit PArray(const type& ar) requires(Copyable<T>) : PArray() { *this = ar; }
-  PArray(std::initializer_list<T> l) requires(Copyable<T>) : PArray(ranges::subrange(l.begin(), l.end())) {}
+  explicit PArray(const type& ar) requires Copyable<T> : PArray() { *this = ar; }
+  PArray(std::initializer_list<T> l) requires Copyable<T> : PArray(ranges::subrange(l.begin(), l.end())) {}
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
@@ -31,14 +31,14 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   ~PArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }
-  auto& operator=(CArrayView<T> ar) requires(Copyable<T>) {
+  auto& operator=(CArrayView<T> ar) requires Copyable<T> {
     if (!(ar.data() == _a && ar.num() == _n)) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
     }
     return *this;
   }
-  auto& operator=(const type& ar) requires(Copyable<T>) {
+  auto& operator=(const type& ar) requires Copyable<T> {
     if (&ar != this) {
       init(ar.num());
       std::copy(ar.begin(), ar.end(), _a);
@@ -132,7 +132,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     sub(1);
     return e;
   }
-  void push(const T& e) requires(Copyable<T>) {  // Avoid a.push(a[..])!
+  void push(const T& e) requires Copyable<T> {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
   }
@@ -140,34 +140,55 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = std::move(e);
   }
-  void push(CArrayView<T> ar) requires(Copyable<T>) {
-    int n = ar.num();
-    add(n);
-    for_int(i, n) _a[_n - n + i] = ar[i];
+  template <ranges::input_range R> requires std::assignable_from<T&, ranges::range_reference_t<R>>
+  void push(R&& range) {
+    if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
+      const int t = add(narrow_cast<int>(ranges::distance(range)));
+      ranges::copy(range, _a + t);
+    } else {
+      for (auto&& e : range) push(std::forward<decltype(e)>(e));
+    }
   }
-  void push(type&& ar) {
-    int n = ar.num();
-    add(n);
-    for_int(i, n) _a[_n - n + i] = std::move(ar[i]);
-  }
+  void push(type&& ar) { push(std::move(ar) | std::views::as_rvalue); }  // necessary??
+  // ??
+  // void push(CArrayView<T> ar) requires Copyable<T> {
+  //   int n = ar.num();
+  //   add(n);
+  //   for_int(i, n) _a[_n - n + i] = ar[i];
+  // }
+  // void push(type&& ar) {
+  //   int n = ar.num();
+  //   add(n);
+  //   for_int(i, n) _a[_n - n + i] = std::move(ar[i]);
+  // }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
     erase_i(0, 1);
     return e;
   }
-  void unshift(const T& e) requires(Copyable<T>) { insert_i(0, 1), _a[0] = e; }
+  void unshift(const T& e) requires Copyable<T> { insert_i(0, 1), _a[0] = e; }
   void unshift(T&& e) { insert_i(0, 1), _a[0] = std::move(e); }
-  void unshift(CArrayView<T> ar) requires(Copyable<T>) {
-    int n = ar.num();
-    insert_i(0, n);
-    for_int(i, n) _a[i] = ar[i];
+  template <ranges::input_range R> requires std::assignable_from<T&, ranges::range_reference_t<R>>
+  void unshift(R&& range) {
+    if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
+      insert_i(0, narrow_cast<int>(ranges::distance(range)));
+      ranges::copy(range, _a);
+    } else {
+      static_assert(false, "Unshifting elements one-at-a-time would be too inefficient.");
+    }
   }
-  void unshift(type&& ar) {
-    int n = ar.num();
-    insert_i(0, n);
-    for_int(i, n) _a[i] = std::move(ar[i]);
-  }
+  // ??
+  // void unshift(CArrayView<T> ar) requires Copyable<T> {
+  //   int n = ar.num();
+  //   insert_i(0, n);
+  //   for_int(i, n) _a[i] = ar[i];
+  // }
+  // void unshift(type&& ar) {
+  //   int n = ar.num();
+  //   insert_i(0, n);
+  //   for_int(i, n) _a[i] = std::move(ar[i]);
+  // }
   friend void swap(type& l, type& r) noexcept {
     if (l._cap > pcap) {
       if (r._cap > pcap) {

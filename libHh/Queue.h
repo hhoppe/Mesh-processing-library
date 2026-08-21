@@ -22,7 +22,7 @@ template <typename T> class Queue {
 
  public:
   void clear() { _dq.clear(); }
-  void enqueue(const T& e) requires(Copyable<T>) { _dq.push_back(e); }
+  void enqueue(const T& e) requires Copyable<T> { _dq.push_back(e); }
   void enqueue(T&& e) { _dq.push_back(std::move(e)); }
   T dequeue() {
     T e = std::move(front());
@@ -33,7 +33,7 @@ template <typename T> class Queue {
   const T& front() const { return ASSERTX(!empty()), _dq.front(); }
   T& rear() { return ASSERTX(!empty()), _dq.back(); }
   const T& rear() const { return ASSERTX(!empty()), _dq.back(); }
-  void insert_first(const T& e) requires(Copyable<T>) { _dq.push_front(e); }
+  void insert_first(const T& e) requires Copyable<T> { _dq.push_front(e); }
   void insert_first(T&& e) { _dq.push_front(std::move(e)); }
   bool empty() const { return _dq.empty(); }
   int length() const { return narrow_cast<int>(_dq.size()); }

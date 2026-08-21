@@ -198,7 +198,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
   base slice(int ib, int ie) const { return base::slice(ib, ie); }
-  void assign(CGridView<D, T> g) requires(Copyable<T>);
+  void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
@@ -263,23 +263,23 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   Grid() = default;
   explicit Grid(const Vec<int, D>& dims) { init(dims); }
   template <typename... A> explicit Grid(int d0, A... dr) { init(d0, dr...); }
-  explicit Grid(const Vec<int, D>& dims, const T& v) requires(Copyable<T>) { init(dims, v); }
-  explicit Grid(const type& g) requires(Copyable<T>) : Grid(g.dims()) { base::assign(g); }
-  explicit Grid(CGridView<D, T> g) requires(Copyable<T>) : Grid(g.dims()) { base::assign(g); }
+  explicit Grid(const Vec<int, D>& dims, const T& v) requires Copyable<T> { init(dims, v); }
+  explicit Grid(const type& g) requires Copyable<T> : Grid(g.dims()) { base::assign(g); }
+  explicit Grid(CGridView<D, T> g) requires Copyable<T> : Grid(g.dims()) { base::assign(g); }
   Grid(type&& g) noexcept { swap(*this, g); }  // Not "== default".
-  Grid(initializer_type l) requires(Copyable<T>) : Grid() { *this = l; }
+  Grid(initializer_type l) requires Copyable<T> : Grid() { *this = l; }
   ~Grid() { clear(); }
-  type& operator=(CGridView<D, T> g) requires(Copyable<T>) {
+  type& operator=(CGridView<D, T> g) requires Copyable<T> {
     init(g.dims());
     base::assign(g);
     return *this;
   }
-  type& operator=(const type& g) requires(Copyable<T>) {
+  type& operator=(const type& g) requires Copyable<T> {
     init(g.dims());
     base::assign(g);
     return *this;
   }
-  type& operator=(initializer_type l) requires(Copyable<T>) {
+  type& operator=(initializer_type l) requires Copyable<T> {
     init(nested_dims()(l));
     nested_retrieve()(*this, l);
     return *this;
@@ -298,7 +298,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     // if (vol != size()) { aligned_delete<T>(_a); _a = vol ? aligned_new<T>(vol) : nullptr; }
     _dims = dims;
   }
-  void init(const Vec<int, D>& dims, const T& v) requires(Copyable<T>) {
+  void init(const Vec<int, D>& dims, const T& v) requires Copyable<T> {
     init(dims);
     fill(*this, v);
   }
@@ -444,7 +444,7 @@ const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderva
   return (*this)[y][x];
 }
 
-template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requires(Copyable<T>) {
+template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requires Copyable<T> {
   assertx(same_size(*this, g));
   if (g.data() == data()) return;
   // for (const size_t i : range(size())) _a[i] = g.flat(i);

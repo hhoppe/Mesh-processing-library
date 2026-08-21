@@ -687,7 +687,7 @@ void SubMesh::triangulate_quads(Mvcvh& mconv) {
       mconv.enter(v, std::move(comb));
     }
   }
-  for (Face f : Array<Face>(_m.ordered_faces())) {
+  for (Face f : Array(_m.ordered_faces())) {
     Face forig = _mforigf.remove(f);
     _mfindex.remove(f);  // can be index 0
     Vertex v = _m.center_split_face(f);

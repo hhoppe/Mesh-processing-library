@@ -47,9 +47,12 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   Set() = default;
   explicit Set(Hashf hashf) : _set(0, hashf) {}
   explicit Set(Hashf hashf, Equalf equalf) : _set(0, hashf, equalf) {}
-  Set(std::initializer_list<T> list) requires(Copyable<T>) : _set(std::move(list)) {}
+  Set(std::initializer_list<T> list) requires Copyable<T> : _set(std::move(list)) {}
+  template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>) explicit Set(R&& range) {
+    for (const T& e : range) add(e);
+  }
   void clear() { _set.clear(); }
-  void enter(const T& e) requires(Copyable<T>) {  // Element e must be new.
+  void enter(const T& e) requires Copyable<T> {  // Element e must be new.
     const auto [_, is_new] = _set.insert(e);
     ASSERTX(is_new);
   }
@@ -57,13 +60,13 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     const auto [_, is_new] = _set.insert(std::move(e));
     ASSERTX(is_new);
   }
-  const T& enter(const T& e, bool& is_new) requires(Copyable<T>) {
+  const T& enter(const T& e, bool& is_new) requires Copyable<T> {
     const auto [it, is_new_] = _set.insert(e);
     is_new = is_new_;
     return *it;
   }
   // Omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new.
-  bool add(const T& e) requires(Copyable<T>) {  // Return: is_new.
+  bool add(const T& e) requires Copyable<T> {  // Return: is_new.
     const auto [_, is_new] = _set.insert(e);
     return is_new;
   }
@@ -153,6 +156,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
 
 template <typename T> HH_DECLARE_OSTREAM_RANGE(Set<T>);
 template <typename T> HH_DECLARE_OSTREAM_EOL(Set<T>);
+
+// Template deduction guides:
+template <ranges::input_range R> Set(R&&) -> Set<range_value_t<R>>;
 
 }  // namespace hh
 

@@ -38,8 +38,8 @@ class Random : noncopyable {
   class Implementation;
   unique_ptr<Implementation> _impl;
   template <size_t size> requires(size == 4 || size == 8) std::conditional_t<size == 4, uint32_t, uint64_t> get_int();
-  template <typename T> T get_unif() requires(std::floating_point<T>);
-  template <typename T> T get_gauss() requires(std::floating_point<T>);
+  template <typename T> T get_unif() requires std::floating_point<T>;
+  template <typename T> T get_gauss() requires std::floating_point<T>;
   static int g_init();
   static int _g_init;
 };

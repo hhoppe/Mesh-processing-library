@@ -13,7 +13,7 @@ template <typename T> T& optional_reference(const std::unique_ptr<T>& up) {
   return up ? *up : *implicit_cast<T*>(nullptr);
 }
 
-// Create a copy; make sure not to call on CArrayView, ArrayView, *View, etc. --- instead use Array<T>(v), etc.
+// Create a copy; make sure not to call on CArrayView, ArrayView, *View, etc. --- instead use Array(view), etc.
 template <typename T> std::decay_t<T> clone(T&& v) {
   // First, verify that T is default-constructible;
   //  my exotic classes like ArrayView and GridView are not default-constructible and should not be cloned.

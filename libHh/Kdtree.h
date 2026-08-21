@@ -28,7 +28,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     if (!getenv("KD_FSIZE")) _fsize = fsize;
   }
   // bb0 and bb1 are copied internally
-  void enter(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) requires(Copyable<T>) {
+  void enter(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) requires Copyable<T> {
     enter_i(id, bb0, bb1);
   }
   void enter(T&& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) { enter_i(std::move(id), bb0, bb1); }
@@ -43,7 +43,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   bool search(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, CBloc loc = 0) const {
     return search_i(bb0, bb1, cbfunc, loc);
   }
-  void print() const requires(Copyable<T>) { rec_print((!_arnode.num() ? -1 : 0), 0); }
+  void print() const requires Copyable<T> { rec_print((!_arnode.num() ? -1 : 0), 0); }
 
  private:
   const int _maxlevel;  // maximum # of subdivision on each axis
@@ -81,7 +81,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     rec_depth(n._l, stat, depth + 1);
     rec_depth(n._h, stat, depth + 1);
   }
-  void enter_i(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) requires(Copyable<T>) {
+  void enter_i(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) requires Copyable<T> {
     _arentry.push(Entry{id});
     enter_aux(bb0, bb1);
   }
@@ -191,7 +191,7 @@ template <typename T, int D> class Kdtree : noncopyable {
       }
     }
   }
-  void rec_print(int ni, int l) const requires(Copyable<T>) {
+  void rec_print(int ni, int l) const requires Copyable<T> {
     for_int(i, l) std::cerr << " ";
     if (ni < 0) {
       std::cerr << "<nil>\n";

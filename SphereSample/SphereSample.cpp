@@ -1212,7 +1212,7 @@ void internal_remesh() {
   const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .allow_off_surface = true});
 
   HH_TIMER("_resample");
-  parallel_for_chunk(Array<Vertex>(g_mesh.vertices()), [&](auto subrange) {
+  parallel_for_chunk(Array(g_mesh.vertices()), [&](auto subrange) {
     string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {
@@ -1240,7 +1240,7 @@ void internal_remesh() {
 void triangulate_short_diag() {
   HH_STIMER("_triangulate_short");
   Array<Vertex> va;
-  for (Face f : Array<Face>(g_mesh.faces())) {
+  for (Face f : Array(g_mesh.faces())) {
     g_mesh.get_vertices(f, va);
     if (va.num() == 3) continue;
     assertx(va.num() == 4);

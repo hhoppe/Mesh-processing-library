@@ -29,7 +29,7 @@ class Stat {
   explicit Stat(string name_ = "", bool print = false, bool is_static = false);
   explicit Stat(const char* name_, bool print = false, bool is_static = false);
   Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // Not "= default".
-  template <ranges::input_range R> explicit Stat(R&& range);
+  template <ranges::input_range R> requires std::is_arithmetic_v<range_value_t<R>> explicit Stat(R&& range);
   ~Stat();
   Stat& operator=(Stat&& s) noexcept;
   void set_name(string name_) { _name = std::move(name_); }
@@ -127,7 +127,7 @@ template <ranges::forward_range R> R standardize_rms(R&& range);
 
 //----------------------------------------------------------------------------
 
-template <ranges::input_range R> Stat::Stat(R&& range) : Stat{} {
+template <ranges::input_range R> requires std::is_arithmetic_v<range_value_t<R>> Stat::Stat(R&& range) : Stat{} {
   for (const auto& e : range) enter(e);
 }
 

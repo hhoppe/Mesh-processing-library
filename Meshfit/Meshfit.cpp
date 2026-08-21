@@ -957,7 +957,7 @@ void do_four1split() {
   Array<Face> arf(mesh.faces());
   Map<Edge, Vertex> menewv;  // old Edge -> Vertex
   // Create new vertices and compute their positions
-  for (Edge e : Array<Edge>(mesh.edges())) {
+  for (Edge e : Array(mesh.edges())) {
     Vertex v = mesh.create_vertex();
     menewv.enter(e, v);
     mesh.set_point(v, interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e))));

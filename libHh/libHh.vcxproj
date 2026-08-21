@@ -178,7 +178,6 @@
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Random.h" />
-    <ClInclude Include="Range.h" />
     <ClInclude Include="RangeOp.h" />
     <ClInclude Include="SGrid.h" />
     <ClInclude Include="SrMesh.h" />

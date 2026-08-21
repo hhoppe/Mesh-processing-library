@@ -1191,13 +1191,13 @@ void do_quadpullpush() {
 // *** softpullpush
 
 // Given a container of Vector4, undo the premultiplication of the alpha ([3]) channel.
-template <typename Container> auto undo_alpha(Container&& c) {
-  return transformed(c, [](const Vector4& v) { return v / (v[3] + 1e-7f); });
+template <typename Container> [[nodiscard]] auto undo_alpha(Container&& c) {
+  return transformed(std::forward<Container>(c), [](const Vector4& v) { return v / (v[3] + 1e-7f); });
 }
 
 // Given a container of Vector4, extract just the alpha channel as a new container of float.
-template <typename Container> auto just_alpha(Container&& c) {
-  return transformed(c, [](const Vector4& v) { return v[3]; });
+template <typename Container> [[nodiscard]] auto just_alpha(Container&& c) {
+  return transformed(std::forward<Container>(c), [](const Vector4& v) { return v[3]; });
 }
 
 // Pull-push from [Lumigraph 1996] but with several modifications:

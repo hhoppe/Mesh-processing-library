@@ -927,7 +927,7 @@ void load_texturemaps() {
     }
     texturemaps.push(s);
   }
-  if (any_of(texturemaps, [](const string& name) { return contains(name, ".nor"); })) texturenormal = true;
+  if (ranges::any_of(texturemaps, [](const string& name) { return contains(name, ".nor"); })) texturenormal = true;
   assertx(!g_textures.num());
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {
@@ -1503,7 +1503,7 @@ void mesh_init(GMesh& mesh) {
         }
       }
       const bool has_c_color =
-          any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "rgb"); });
+          ranges::any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "rgb"); });
       if (has_c_color) {
         if (mesh.flags(v).flag(vflag_color).set(false)) Warning("Found both vertex and corner rgb");
         mesh.gflags().flag(mflag_c_colors) = true;

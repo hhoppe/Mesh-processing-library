@@ -225,7 +225,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   void reverse_y() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
-      swap_ranges((*this)[y], (*this)[ny - 1 - y]);
+      swap_elements((*this)[y], (*this)[ny - 1 - y]);
     });
   }
   void reverse_x() requires(D == 2) {

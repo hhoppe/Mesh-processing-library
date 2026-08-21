@@ -41,18 +41,18 @@ int main() {
     SHOW(ar2 == ar2);
     SHOW(is_zero(ar1));
     SHOW(is_zero(ar1 - ar1));
-    SHOW(count(ar2, 0));
-    SHOW(count(ar2, 3));
-    SHOW(count(ar2, 99));
+    SHOW(ranges::count(ar2, 0));
+    SHOW(ranges::count(ar2, 3));
+    SHOW(ranges::count(ar2, 99));
     const auto func_gt5 = [](uchar uc) { return uc > 5; };
-    SHOW(count_if(ar2, func_gt5));
+    SHOW(ranges::count_if(ar2, func_gt5));
   }
   {
     Array<float> ar1 = {2.7f, -3.3f, 5.1f, -6.2f, 0.f};
     Array<float> ar2 = {2.7f, -3.3f, 5.2f, -6.2f, 0.f};
-    swap_ranges(ar1, ar2);
+    swap_elements(ar1, ar2);
     SHOW(ar1);
-    swap_ranges(ar1, ar2);
+    swap_elements(ar1, ar2);
     SHOW(normalize(clone(ar1)));
     SHOW(mag(normalize(clone(ar1))));
     SHOW(sort(clone(ar1)));

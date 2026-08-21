@@ -102,6 +102,7 @@ RCS/
 /test/Array_test
 /test/Atomic_test
 /test/Audio_test
+/test/Bbox_test
 /test/Buffer_test
 /test/Combination_test
 /test/Contour_test
@@ -138,6 +139,7 @@ RCS/
 /test/NetworkOrder_test
 /test/NonlinearOptimization_test
 /test/PArray_test
+/test/Parallel_test
 /test/Polygon_test
 /test/Pool_test
 /test/Postscript_test

@@ -656,7 +656,7 @@ void do_mirror(Args& args) {
 
 void do_reverse() {
   int nframes = video.nframes();
-  for_int(j, nframes / 2) swap_ranges(video[j], video[nframes - 1 - j]);
+  for_int(j, nframes / 2) swap_elements(video[j], video[nframes - 1 - j]);
   if (video.attrib().audio.size()) {
     Warning("Clearing audio");
     video.attrib().audio.clear();
@@ -1001,7 +1001,7 @@ void do_scaleinside(Args& args) {
 
 void do_flipvertical() {
   parallel_for(range(video.nframes()), [&](const int f) {
-    for_int(y, video.ysize() / 2) swap_ranges(video[f][y], video[f][video.ysize() - 1 - y]);
+    for_int(y, video.ysize() / 2) swap_elements(video[f][y], video[f][video.ysize() - 1 - y]);
   });
 }
 
@@ -1984,7 +1984,7 @@ auto get_black_border_mask(CMatrixView<Pixel> image) {
   Matrix<bool> mask(dims, false);
   for_coords(dims, [&](const Vec2<int>& yx) {
     const Pixel& pixel = image[yx];
-    const bool is_black = all_of(pixel, [](uchar value) { return value < 80; });
+    const bool is_black = ranges::all_of(pixel, [](uchar value) { return value < 80; });
     mask[yx] = is_black;
   });
   // Instead, grow BFS from all 4 images sides.

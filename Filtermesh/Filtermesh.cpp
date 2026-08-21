@@ -2992,7 +2992,7 @@ void do_swapdegendiag() {
   const auto by_decreasing_length = [&](Edge e1, Edge e2) { return mesh.length2(e1) > mesh.length2(e2); };
   sort(bad_edges, by_decreasing_length);
   for (Edge e : bad_edges)
-    if (any_of(mesh.faces(e), &is_degenerate) && assertw(mesh.legal_edge_swap(e))) mesh.swap_edge(e);
+    if (ranges::any_of(mesh.faces(e), &is_degenerate) && assertw(mesh.legal_edge_swap(e))) mesh.swap_edge(e);
 }
 
 void do_transf(Args& args) {
@@ -3620,7 +3620,7 @@ Point compute_hull_point(Vertex v, float offset) {
   }
 #if defined(HH_HAVE_SIMPLEX)
   // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0
-  int n_m1 = int(count_if(ar_lf, [](const LinearFunc& lf) { return lf.offset > 0.f; }));
+  int n_m1 = int(ranges::count_if(ar_lf, [](const LinearFunc& lf) { return lf.offset > 0.f; }));
   // Use Numerical Recipes code (converted to double precision)
   int n = 3;                                       // number of variables (x, y, z)
   int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // '<=', '>=', '==' constraints
@@ -4367,7 +4367,7 @@ void do_trimpts(Args& args) {
     showdf("Found %d vertices too far\n", nvtoofar);
     Array<Face> faces_to_destroy;
     for (Face f : mesh.faces())
-      if (any_of(mesh.vertices(f), [&](Vertex v) { return mesh.flags(v).flag(vflag_toofar); }))
+      if (ranges::any_of(mesh.vertices(f), [&](Vertex v) { return mesh.flags(v).flag(vflag_toofar); }))
         faces_to_destroy.push(f);
     showdf("Destroying %d faces\n", faces_to_destroy.num());
     for (Face f : faces_to_destroy) mesh.destroy_face(f);

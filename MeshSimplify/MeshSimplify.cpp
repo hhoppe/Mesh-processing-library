@@ -3035,7 +3035,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     // See if (v1 + v2) / 2 satisfies the constraints.  (Useful in the case of complete planarity.)
     Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
     Point pcandnew = pcand * scale + translate;
-    const bool ok = all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
+    const bool ok = ranges::all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
     if (ok) {
       Warning("Using midpoint as hull point");
       newpoint = pcand;
@@ -4105,7 +4105,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     assertx(rssa < k_bad_dih * .1f);
     rssa += dihpenalty;
     assertx(std::isfinite(float(rssa)));
-    if (any_of(ar_wi, [&](const WedgeInfo& wi) { return is_zero(wi.nor); })) {
+    if (ranges::any_of(ar_wi, [&](const WedgeInfo& wi) { return is_zero(wi.nor); })) {
       Warning("Edge collapse would introduce zero normal");
       continue;
     }

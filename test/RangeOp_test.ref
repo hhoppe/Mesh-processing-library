@@ -21,10 +21,10 @@ ar1 == ar1 = 1
 ar2 == ar2 = 1
 is_zero(ar1) = 0
 is_zero(ar1 - ar1) = 1
-count(ar2, 0) = 2
-count(ar2, 3) = 1
-count(ar2, 99) = 0
-count_if(ar2, func_gt5) = 1
+ranges::count(ar2, 0) = 2
+ranges::count(ar2, 3) = 1
+ranges::count(ar2, 99) = 0
+ranges::count_if(ar2, func_gt5) = 1
 ar1 = Array<float>(5) {
   2.7
   -3.3

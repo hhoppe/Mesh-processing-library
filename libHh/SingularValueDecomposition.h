@@ -105,9 +105,9 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
     int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;
     std::swap(S[i0], S[i1]);
-    swap_ranges(column(U, i0), column(U, i1));
-    swap_ranges(column(VT, i0), column(VT, i1));
-    // swap_ranges(VT[i0], VT[i1]);  // would be the case if we computed VT^T instead of VT
+    swap_elements(column(U, i0), column(U, i1));
+    swap_elements(column(VT, i0), column(VT, i1));
+    // swap_elements(VT[i0], VT[i1]);  // would be the case if we computed VT^T instead of VT
   }
 }
 

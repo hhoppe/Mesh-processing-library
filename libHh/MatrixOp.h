@@ -41,7 +41,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
           max_i = l;
         }
       }
-      if (max_i != i) swap_ranges(t[i], t[max_i]);
+      if (max_i != i) swap_elements(t[i], t[max_i]);
     }
     if (!t[i][i]) return false;
     parallel_for({.cycles_per_elem = uint64_t(n) * 2}, range(n), [&](const int j) {
@@ -230,7 +230,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
   const float transform_minification_threshold = getenv_float("TRANSFORM_MINIFICATION_THRESHOLD", 1.3f, true);
   const bool minification_case = max_shrinkage > transform_minification_threshold;
   const bool has_inv_convolution =
-      any_of(filterbs, [](const FilterBnd& f) { return f.filter().has_inv_convolution(); });
+      ranges::any_of(filterbs, [](const FilterBnd& f) { return f.filter().has_inv_convolution(); });
   if (minification_case && !has_inv_convolution) {
     // Special slow case to do accurate minification.
     const Vec2<KernelFunc> kernels = transformed(filterbs, [](const FilterBnd& f) { return f.filter().func(); });

@@ -243,7 +243,7 @@ bool LudLls::solve_aux() {
       }
     }
     if (imax != j) {
-      swap_ranges(a[imax], a[j]);
+      swap_elements(a[imax], a[j]);
       t[imax] = t[j];
     }
     rindx[j] = imax;

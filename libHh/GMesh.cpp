@@ -697,9 +697,9 @@ void GMesh::collapse_edge_vertex_saving_attribs(Edge e, Vertex vs) {
   Vertex v2 = opp_vertex(vs, e);
   string str;
   const bool v_has_corner_normals =
-      any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "normal"); });
+      ranges::any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "normal"); });
   const bool v_has_corner_uvs =
-      any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "uv"); });
+      ranges::any_of(corners(vs), [&](Corner c) { return GMesh::string_has_key(get_string(c), "uv"); });
   Map<Face, string> face_normal;
   Map<Face, string> face_uv;
   if (v_has_corner_normals)

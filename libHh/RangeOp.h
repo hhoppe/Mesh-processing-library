@@ -6,68 +6,21 @@
 
 namespace hh {
 
-// Set of algorithms for manipulating ranges (including containers), i.e. supporting begin() and end() functions.
-
-// Extensions of functions from C++ <algorithm> as proposed by "Ranges" TS,
-//  draft N4560 https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4560.pdf
-// See https://en.cppreference.com/w/cpp/experimental/ranges#Ranges.
-
-// Check unary predicate against elements; true if range is empty.
-template <ranges::input_range R, typename Pred> bool all_of(const R& range, Pred pred) {
-  return ranges::all_of(range, pred);
+// Swap the elements of two ranges, which must have the same number of elements.
+template <ranges::input_range R1, ranges::input_range R2>
+requires std::indirectly_swappable<ranges::iterator_t<R1>, ranges::iterator_t<R2>>
+void swap_elements(R1&& range1, R2&& range2) {
+  static_assert(std::same_as<range_value_t<R1>, range_value_t<R2>>, "ranges have different value types");
+  if constexpr (ranges::sized_range<R1> && ranges::sized_range<R2>) {
+    ASSERTX(ranges::size(range1) == ranges::size(range2));  // Detected before any swapping occurs.
+    ranges::swap_ranges(range1, range2);
+  } else {
+    const auto result = ranges::swap_ranges(range1, range2);
+    ASSERTX(result.in1 == ranges::end(range1) && result.in2 == ranges::end(range2));
+  }
 }
 
-// Check unary predicate against elements; false if range is empty.
-template <ranges::input_range R, typename Pred> bool any_of(const R& range, Pred pred) {
-  return ranges::any_of(range, pred);
-}
-
-// Check unary predicate against elements; true if range is empty.
-template <ranges::input_range R, typename Pred> bool none_of(const R& range, Pred pred) {
-  return ranges::none_of(range, pred);
-}
-
-// Apply unary functor object to each element and returns functor.
-template <ranges::input_range R, typename Func> Func for_each(R&& range, Func func) {
-  return ranges::for_each(range, std::move(func));
-}
-
-// Return the address of the first element satisfying condition, or nullptr if none.
-template <ranges::input_range R, typename Pred> auto find_if(R&& range, Pred pred) -> range_value_t<R>* {
-  auto iter = ranges::find_if(range, pred);
-  return iter == ranges::end(range) ? nullptr : &*iter;
-}
-
-// Return the address of the first element not satisfying condition, or nullptr if none.
-template <ranges::input_range R, typename Pred> auto find_if_not(R&& range, Pred pred) -> range_value_t<R> {
-  auto iter = ranges::find_if_not(range, pred);
-  return iter == ranges::end(range) ? nullptr : &*iter;
-}
-
-// Count the number of elements equal to specified one.
-template <ranges::input_range R> std::ptrdiff_t count(const R& range, const range_value_t<R>& elem) {
-  return ranges::count(range, elem);
-}
-
-// Count the number of elements matching predicate.
-template <ranges::input_range R, typename Pred> std::ptrdiff_t count_if(const R& range, Pred pred) {
-  return ranges::count_if(range, pred);
-}
-
-// Return whether two ranges are equal element-wise.
-template <ranges::input_range R1, ranges::input_range R2, typename Pred = std::equal_to<range_value_t<R1>>>
-bool equal(const R1& range1, const R2& range2, Pred pred = Pred{}) {
-  return ranges::equal(range1, range2, pred);
-}
-
-// Swap the contents of two ranges.
-template <ranges::input_range R1, ranges::input_range R2> void swap_ranges(R1&& range1, R2&& range2) {
-  auto result = ranges::swap_ranges(range1, range2);
-  // Verify they have the same number of elements.
-  ASSERTX(result.in1 == ranges::end(range1) && result.in2 == ranges::end(range2));
-}
-
-// Assign `value` to every element; returns the range for chaining.
+// Assign `value` to every element; return the range for chaining.
 template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const T& value) {
   // In the future, I could replace the return type from "R" to "R&&", to remove one move operation, and
   // similarly for all functions that apply 'std::forward<' on a '&&' parameter.
@@ -77,20 +30,20 @@ template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const 
   return std::forward<R>(range);
 }
 
-// Reverse the elements in-place in a randomly accessible range.
+// Reverse the elements in-place in a randomly accessible range; return the range for chaining.
 template <ranges::random_access_range R> R reverse(R&& range) {
   ranges::reverse(range);
   return std::forward<R>(range);
 }
 // auto reversed(const R& range) { return reverse(clone(range)); }
 
-// Rotate the elements in a randomly accessible range such that element middle becomes the new first element.
+// Rotate the elements such that element middle becomes the new first element; return the range for chaining.
 template <ranges::random_access_range R> R rotate(R&& range, ranges::iterator_t<R> middle) {
   ranges::rotate(range, middle);
   return std::forward<R>(range);
 }
 
-// Sort the elements in a range (by default using std::less(a, b)).
+// Sort the elements in a range (by default using std::less(a, b)); return the range for chaining.
 template <ranges::random_access_range R, typename Comp = std::less<>>
 requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp = Comp{}) {
   ranges::sort(range, comp);
@@ -116,12 +69,6 @@ auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
   return *iter;
 }
 
-// Number of elements in a range (could also define size(R) but for robustness that would require Concepts).
-template <ranges::input_range R>
-[[deprecated("Use ranges::size(range) or ranges::distance(range)")]] std::ptrdiff_t distance(const R& range) {
-  return std::distance(ranges::begin(range), ranges::end(range));
-}
-
 // Also from std:
 //  find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal(),
 //  is_permutation(), search(), search_n(), copy(), copy_if(), copy_backward(), move(), move_backward(),
@@ -137,51 +84,45 @@ template <ranges::input_range R>
 
 // *** My custom range operations:
 
-// Return the index of the first matching element, or die if not found.
-// template <ranges::input_range R> int index(const R& range, const range_value_t<R>& elem) {
-//   auto iter = ranges::find(range, elem);
-//   if (iter == ranges::end(range)) assertnever(make_string(elem) + " not found in range");
-//   return assert_narrow_cast<int>(std::distance(ranges::begin(range), iter));  // Avoid this cost??
-// }
+// Address of the first element satisfying `pred`, or nullptr if none.
+template <ranges::forward_range R, std::indirect_unary_predicate<ranges::iterator_t<R>> Pred>
+requires std::is_lvalue_reference_v<ranges::range_reference_t<R>>
+[[nodiscard]] auto find_if_ptr(R&& range, Pred pred) -> std::remove_reference_t<ranges::range_reference_t<R>>* {
+  const auto iter = ranges::find_if(range, pred);
+  return iter == ranges::end(range) ? nullptr : std::addressof(*iter);
+}
 
-// Return the index of the first matching element, or die if not found.
+// (Optional) index of the first matching element, or std::nullopt if not found.
+template <ranges::input_range R> std::optional<int> find_index(R&& range, const range_value_t<R>& elem) {
+  if constexpr (ranges::random_access_range<R>) {
+    const auto iter = ranges::find(range, elem);  // May lower to memchr or a vectorized search.
+    if (iter != ranges::end(range)) return narrow_cast<int>(iter - ranges::begin(range));
+    return {};
+  } else {
+    int i = 0;  // Single-pass-safe: count while traversing.
+    for (auto&& e : range) {
+      if (e == elem) return i;
+      ++i;
+    }
+    return {};
+  }
+}
+
+// Index of the first matching element, or die.
 template <ranges::input_range R> int index(R&& range, const range_value_t<R>& elem) {
-  if constexpr (ranges::random_access_range<R>) {
-    auto iter = ranges::find(range, elem);
-    if (iter != ranges::end(range)) return assert_narrow_cast<int>(iter - ranges::begin(range));
-  } else {
-    int i = 0;
-    for (auto&& e : range) {
-      if (e == elem) return i;
-      ++i;
-    }
-  }
-  assertnever(make_string(elem) + " not found in range");
+  const std::optional<int> i = find_index(range, elem);
+  if (!i) assertnever(make_string(elem) + " not found in range");
+  return *i;
 }
 
-// Return the index of the first matching element, or -1 if not found.
-template <ranges::input_range R> int maybe_index(const R& range, const range_value_t<R>& elem) {
-  if constexpr (ranges::random_access_range<R>) {
-    auto iter = ranges::find(range, elem);
-    if (iter != ranges::end(range)) return assert_narrow_cast<int>(iter - ranges::begin(range));
-  } else {
-    int i = 0;
-    for (auto&& e : range) {
-      if (e == elem) return i;
-      ++i;
-    }
-  }
-  return -1;
-}
-
-// Index of minimum value in a non-empty range.
+// Index of the minimum value in a non-empty range.
 template <ranges::input_range R> int arg_min(const R& range) {
   auto iter = ranges::min_element(range);
   ASSERTX(iter != ranges::end(range));
   return narrow_cast<int>(std::distance(ranges::begin(range), iter));
 }
 
-// Index of maximum value in a non-empty range.
+// Index of the maximum value in a non-empty range.
 template <ranges::input_range R> int arg_max(const R& range) {
   auto iter = ranges::max_element(range);
   ASSERTX(iter != ranges::end(range));
@@ -246,38 +187,33 @@ template <typename DesiredType = void, ranges::input_range R> sum_type_for_t<Des
   using SumType = sum_type_for_t<DesiredType, R>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
   return implicit_cast<SumType>(ranges::fold_left(range, SumType{}, std::plus<>{}));
-  // ??
-  // auto iter = ranges::begin(range);
-  // const auto itend = ranges::end(range);
-  // SumType v;
-  // if (iter == itend) {
-  //   v = SumType{};
-  // } else {
-  //   v = *iter;
-  //   for (++iter; iter != itend; ++iter) v += *iter;
-  // }
-  // return v;
 }
 
 // Average of values in a range.
 template <typename DesiredType = void, ranges::input_range R>
 auto mean(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
-  static_assert(std::is_trivially_default_constructible_v<MeanType>);
-  auto iter = ranges::begin(range);
-  const auto itend = ranges::end(range);
-  if (iter == itend) {
-    Warning("mean() of empty range");
-    return MeanType{};
-  }
-  MeanType v = *iter;
-  size_t num = 1;
-  for (++iter; iter != itend; ++iter) {
-    v += *iter;
-    num++;
-  }
   using FactorType = factor_type_t<range_value_t<R>>;
-  return MeanType(v * (FactorType(1) / num));
+  static_assert(std::is_trivially_default_constructible_v<MeanType>);
+  if constexpr (ranges::sized_range<R>) {
+    const auto num = ranges::size(range);
+    const auto sum_ = sum(range);
+    if (num) return MeanType(sum_ * (FactorType(1) / num));
+  } else {
+    auto iter = ranges::begin(range);
+    const auto itend = ranges::end(range);
+    if (iter != itend) {
+      MeanType sum_ = *iter;
+      size_t num = 1;
+      for (++iter; iter != itend; ++iter) {
+        sum_ += *iter;
+        num++;
+      }
+      return MeanType(sum_ * (FactorType(1) / num));
+    }
+  }
+  Warning("mean() of empty range");
+  return MeanType{};
 }
 
 // Sum of squared values in a range (or zero if empty).
@@ -309,6 +245,7 @@ auto mag(const R& range) -> mean_type_for_t<DesiredType, R> {
 template <typename DesiredType = void, ranges::input_range R>
 auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
+  using FactorType = factor_type_t<range_value_t<R>>;
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
   MeanType v{};
   size_t num = 0;
@@ -317,7 +254,6 @@ auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
     num++;
   }
   if (num) {
-    using FactorType = factor_type_t<range_value_t<R>>;
     v = sqrt(MeanType(v * (FactorType(1) / num)));
   } else {
     Warning("rms() of empty range");
@@ -329,6 +265,7 @@ auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
 template <typename DesiredType = void, ranges::input_range R>
 auto var(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
+  using FactorType = factor_type_t<range_value_t<R>>;
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
   constexpr MeanType zero{};
   MeanType v{}, v2{};
@@ -342,7 +279,6 @@ auto var(const R& range) -> mean_type_for_t<DesiredType, R> {
     Warning("var() of fewer than 2 elements");
     return zero;
   }
-  using FactorType = factor_type_t<range_value_t<R>>;
   return max(MeanType((v2 - v * v * (FactorType(1) / num)) * (FactorType(1) / (num - FactorType(1)))), zero);
 }
 
@@ -377,7 +313,7 @@ bool is_unit(const R& range, range_value_t<R> tolerance = 1e-4f) {
   return abs(mag2<SumType>(range) - 1.f) <= tolerance;
 }
 
-// Modify the range to have unit norm (or die if input has zero norm).
+// Modify the range to have unit norm (or die if input has zero norm); return the range for chaining.
 template <ranges::forward_range R> R normalize(R&& range) {
   using Value = range_value_t<R>;
   Value v = static_cast<Value>(Value{1.f} / assertx(mag(range)));
@@ -386,7 +322,7 @@ template <ranges::forward_range R> R normalize(R&& range) {
 }
 // auto normalized(const R& range) { return normalize(clone(range)); }
 
-// Round the values in a range to the nearest 1/fac increment (by default fac == 1e5f).
+// Round the values in a range to the nearest 1/fac increment (by default fac == 1e5f); return the range for chaining.
 template <ranges::forward_range R> R round_elements(R&& range, range_value_t<R> fac = 1e5f) {
   static_assert(std::is_floating_point_v<range_value_t<R>>);
   for (auto& e : range) e = round_fraction_digits(e, fac);

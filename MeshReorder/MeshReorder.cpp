@@ -532,8 +532,8 @@ void do_fixup_indices() {
       Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
       face_vertices_neighbors(f, va, fa);
       for_int(k, 3) ASSERTX(contains(va, mesh.id_vertex(ar_verts[fi * 3 + k])));
-      int ifn = !fn ? -1 : maybe_index(fa, fn);  // -1 if next face not adjacent
-      int iov1 = maybe_index(va, ov1);           // -1 if prev face not adjacent
+      int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face not adjacent
+      int iov1 = find_index(va, ov1).value_or(-1);           // -1 if prev face not adjacent
       int j;
       if (ifn >= 0) {  // have next face, so that determines order
         j = ifn;
@@ -574,7 +574,7 @@ void do_fixup_indices() {
                     // j is OK as is
       } else {      // no previous face, examine next face
         Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
-        int ifn = !fn ? -1 : maybe_index(fa, fn);  // -1 if next face not adjacent
+        int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face not adjacent
         if (ifn >= 0) {
           j = ifn;
         } else {  // no next face; anything goes

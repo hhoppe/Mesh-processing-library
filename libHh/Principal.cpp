@@ -79,7 +79,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     }
     if (imax == i) continue;
     std::swap(val[i], val[imax]);
-    swap_ranges(vec[i], vec[imax]);
+    swap_elements(vec[i], vec[imax]);
   }
   for_int(i, n) {
     float v = val[i];
@@ -223,7 +223,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
     }
     if (imax == i) continue;
     std::swap(eimag[i], eimag[imax]);
-    swap_ranges(mo[i], mo[imax]);
+    swap_elements(mo[i], mo[imax]);
   }
   // Orient eigenvectors canonically
   Array<float> all1(n, 1.f);
@@ -287,7 +287,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     }
     if (imax == i) continue;
     std::swap(vnorm[i], vnorm[imax]);
-    swap_ranges(mo[i], mo[imax]);
+    swap_elements(mo[i], mo[imax]);
   }
   // Orthogonalize the approximate eigenvectors
   for_int(i, ne) {

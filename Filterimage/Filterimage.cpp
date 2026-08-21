@@ -471,19 +471,19 @@ void do_cropmatte() {
   int l, r, t, b;
   for (l = 0; l < image.xsize(); l++) {
     const int x = l;
-    if (!all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
   }
   for (r = 0; r < image.xsize() - l; r++) {
     const int x = image.xsize() - 1 - r;
-    if (!all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
   }
   for (t = 0; t < image.ysize(); t++) {
     const int y = t;
-    if (!all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
   }
   for (b = 0; b < image.ysize() - t; b++) {
     const int y = image.ysize() - 1 - b;
-    if (!all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
   }
   Grid<2, Pixel>& grid = image;
   grid = crop(grid, V(t, l), V(b, r), g_bndrules, &gcolor);
@@ -1132,7 +1132,7 @@ template <int D> int64_t count_undef(CGridView<D, Pixel> grid) {
     assertx(pixel[3] == 0 || pixel[3] == 255);
     return pixel[3] == 0;
   };
-  return count_if(grid, is_undefined);
+  return ranges::count_if(grid, is_undefined);
 }
 
 template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
@@ -1207,8 +1207,8 @@ template <typename Container> [[nodiscard]] auto just_alpha(Container&& c) {
 template <int D> void new_pullpush(GridView<D, Vector4> grid) {
   if (!grid.size()) return;
   if (0) {
-    int64_t num_undef = count_if(grid, [](const Vector4& v) { return v[3] == 0.f; });
-    int64_t num_def = count_if(grid, [](const Vector4& v) { return v[3] == 1.f; });
+    int64_t num_undef = ranges::count_if(grid, [](const Vector4& v) { return v[3] == 0.f; });
+    int64_t num_def = ranges::count_if(grid, [](const Vector4& v) { return v[3] == 1.f; });
     int64_t n = grid.size();
     SHOW(n, num_def, num_undef, n - num_def - num_undef);
   }
@@ -1523,7 +1523,7 @@ void do_object_to_tangent_normals(Args& args) {
   const float k_max_dis = 1e-5f;
   const MeshSearch mesh_search(mesh, {.max_dis = k_max_dis});
   const int num_threads = get_max_threads();
-  // const int thread_index = 0; for_each(V(range(image.ysize())), [&](auto subrange) {
+  // const int thread_index = 0; ranges::for_each(V(range(image.ysize())), [&](auto subrange) {
   parallel_for_chunk(range(image.ysize()), num_threads, [&](int thread_index, auto subrange) {
     string str;
     Face hint_f = nullptr;
@@ -1672,7 +1672,7 @@ void do_composite(Args& args) {
   E(sub);
   E(unblend);
 #undef E
-  int op = maybe_index(ops, op_name);
+  const int op = find_index(ops, op_name).value_or(-1);
   if (op < 0) assertnever("composite operation '" + op_name + "' unrecognized");
   Image background_image(background_filename);
   assertx(same_size(background_image, image));

@@ -544,7 +544,7 @@ unique_ptr<Object> object_reading_image(const string& filename) {
     uc = narrow_cast<uchar>(40 + my_mod(uc + 40, 180));  // not threadsafe
     HH_TIMER("_read_init");
     image.init(V(3648, 5472), Pixel::gray(uc));
-  } else if (PrefetchImage* pp = find_if(g_prefetch_image, prefetch_matches_filename)) {
+  } else if (PrefetchImage* pp = find_if_ptr(g_prefetch_image, prefetch_matches_filename)) {
     std::lock_guard<std::mutex> lock(g_mutex_prefetch);
     PrefetchImage& p = *pp;
     assertx(p.filename == filename);
@@ -569,10 +569,10 @@ string next_image_in_directory(const string& filename, int increment) {
   assertx(!file_requires_pipe(filename));
   assertx(abs(increment) == 1);
   if (!file_exists(filename)) return "";
-  string directory = get_path_head(filename);
-  string filename_tail = get_path_tail(filename);
+  const string directory = get_path_head(filename);
+  const string filename_tail = get_path_tail(filename);
   CArrayView<string> filenames = get_directory_media_filenames(filename);
-  int i0 = maybe_index(filenames, filename_tail);
+  const int i0 = find_index(filenames, filename_tail).value_or(-1);
   if (!assertw(i0 >= 0)) return "";
   for (int i = i0;;) {
     i = my_mod(i + increment, filenames.num());
@@ -668,8 +668,8 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
   g_framenum = nframenum;
   o._framenum = g_framenum;
   g_frame_dims = o.spatial_dims();
-  g_frame_has_transparency = 1 && o.is_image() && o._image_attrib.zsize == 4 &&
-                             find_if(o._video[0], [](const Pixel& pixel) { return pixel[3] != 255; });
+  g_frame_has_transparency = (1 && o.is_image() && o._image_attrib.zsize == 4 &&
+                              find_if_ptr(o._video[0], [](const Pixel& pixel) { return pixel[3] != 255; }));
   if (0 && o.is_image()) g_playing = false;
   g_refresh_texture = true;
   if (1 && o.is_image() && !file_requires_pipe(o._filename)) {
@@ -679,7 +679,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
       if (filename == "") continue;
       int i = (1 - increment) / 2;  // 0 == next, 1 == prev
       std::lock_guard<std::mutex> lock(g_mutex_prefetch);
-      if (none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename == filename; })) {
+      if (ranges::none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename == filename; })) {
         if (g_verbose >= 1) SHOW("requesting_prefetch", i, filename);
         g_prefetch_image[i].filename = filename;
         g_prefetch_image[i].file_modification_time = 0;  // zero means request prefetch
@@ -932,7 +932,8 @@ bool replace_with_other_object_in_directory(int increment) {
     message("No media files in directory");
     return false;
   }
-  int i0 = maybe_index(filenames, filename0_tail);  // i0 is -1 if g_cob < 0 or if ob0 is somehow an unsaved object.
+  // i0 is -1 if g_cob < 0 or if ob0 is somehow an unsaved object.
+  int i0 = find_index(filenames, filename0_tail).value_or(-1);
   if (g_verbose >= 1) SHOW(directory, filename0_tail, i0);
   bool skip_first_advance = false;
   if (i0 < 0) {  // cannot find file, so select first file in directory
@@ -2290,7 +2291,7 @@ bool DerivedHw::key_press(string skey) {
           redraw_later();
           if (!g_use_sliders) {
             g_use_sliders = true;
-          } else if (all_of(g_sliders, [](const Slider& slider) { return *slider.pval == 1.f; })) {
+          } else if (ranges::all_of(g_sliders, [](const Slider& slider) { return *slider.pval == 1.f; })) {
             g_use_sliders = false;
             reset_sliders();
           } else {
@@ -3399,7 +3400,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
       g_initial_time = 0.;  // reset this setting
     }
   }
-  if (g_keystring[0] == '~' && !all_of(g_obs, [](const auto& ob) { return ob->loaded(); })) {
+  if (g_keystring[0] == '~' && !ranges::all_of(g_obs, [](const auto& ob) { return ob->loaded(); })) {
     // wait until all objects are loaded)
   } else {
     process_keystring(g_keystring);
@@ -3622,8 +3623,9 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         const string& filename = getob()._filename;
         if (!file_requires_pipe(filename) && file_exists(filename)) {
           CArrayView<string> filenames = get_directory_media_filenames(filename);
-          int i0 = maybe_index(filenames, get_path_tail(filename));
-          if (i0 >= 0 && filenames.num() > 1) s_dir = sform("[%d/%d]  ", i0 + 1, filenames.num());
+          if (const auto opt_i0 = find_index(filenames, get_path_tail(filename))) {
+            if (filenames.num() > 1) s_dir = sform("[%d/%d]  ", *opt_i0 + 1, filenames.num());
+          }
         }
       }
       string s_frame;  // + speed + framerate for video

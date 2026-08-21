@@ -14,7 +14,7 @@ namespace hh {
 template <typename T> class MoveToFront : noncopyable {
  public:
   int enter(const T& e) {
-    int ifound = maybe_index(_list, e);
+    int ifound = find_index(_list, e).value_or(-1);
     if (ifound < 0) {
       ifound = _list.num();
       _list.push(e);

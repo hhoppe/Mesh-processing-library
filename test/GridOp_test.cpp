@@ -251,6 +251,6 @@ int main() {
     const Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
     CGridView<3, Pixel> view = raise_grid_rank(grid);
     assertx(view.dims() == V(1, 20, 20));
-    assertx(equal(view[0], grid));
+    assertx(ranges::equal(view[0], grid));
   }
 }

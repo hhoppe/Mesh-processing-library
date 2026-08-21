@@ -333,7 +333,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
             return v_uv(vv)[0] != k_uv_undefined ? v_uv(vv) : map_c_uv.get(c);
           });
         };
-        // const bool near_a_cut = any_of(sph, [](float v) { return abs(v) < 1e-5f; });
+        // const bool near_a_cut = ranges::any_of(sph, [](float v) { return abs(v) < 1e-5f; });
         const bool near_a_cut = (abs(sph[1]) < 1e-5f || abs(sph[2]) < 1e-5f) && sph[0] > -1e-5f;
         if (!near_a_cut) {
           const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);

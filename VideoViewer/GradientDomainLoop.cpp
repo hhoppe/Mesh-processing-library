@@ -1146,7 +1146,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   // rms errors on all pixel pairs and on just on seams
   SHOW(sqrt(spatial_sum_cost / (ny * nx * 2) / nnf / 6));
   SHOW(sqrt(spatial_sum_seam_cost / spatial_nseams / 6));
-  int64_t nstatic_pixels = count(mat_period, 1);
+  int64_t nstatic_pixels = ranges::count(mat_period, 1);
   int64_t temporal_nseams = 0;
   double temporal_sum_cost = 0., temporal_sum_seam_cost = 0.;
   for_int(f, nnf - 1) {

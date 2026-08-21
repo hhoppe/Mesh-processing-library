@@ -303,7 +303,7 @@ template <typename T> struct VecBase<T, 0> {
 
 // ?? The coordinate iterators are not C++20 iterators, so range(grid.dims()) can't feed std::ranges at
 // all. difference_type = void fails std::weakly_incrementable, there's no operator==, no post-increment, and
-// no default construction. Fixing this unlocks range(dims) | std::views::filter(...), std::ranges::for_each,
+// no default construction. Fixing this unlocks range(dims) | std::views::filter(...), ranges::for_each,
 // and parallel algorithms. The idiomatic shape also removes the fake end iterator:
 //  using difference_type = std::ptrdiff_t;
 //  bool operator==(std::default_sentinel_t) const { return _u[0] >= _uU[0]; }

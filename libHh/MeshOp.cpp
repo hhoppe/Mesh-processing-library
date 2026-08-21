@@ -473,7 +473,7 @@ void split_valence(GMesh& mesh, int max_valence) {
       Array<char> key, val;
       string str;
       for_cstring_key_value(mesh.get_string(prev_faces[0]), key, val, [&] {
-        const bool all_same = all_of(prev_faces, [&](Face f) {
+        const bool all_same = ranges::all_of(prev_faces, [&](Face f) {
           const char* s = GMesh::string_key(str, mesh.get_string(f), key.data());
           return s && !strcmp(s, val.data());
         });
@@ -607,7 +607,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
   static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
   const bool hasvnor = ignore_mesh_normals ? false : parse_key_vec(mesh.get_string(v), "normal", _nor);
   const auto corner_has_normal = [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "normal"); };
-  const int ncnor = ignore_mesh_normals ? 0 : int(count_if(mesh.corners(v), corner_has_normal));
+  const int ncnor = ignore_mesh_normals ? 0 : int(ranges::count_if(mesh.corners(v), corner_has_normal));
   if (hasvnor && !ncnor) return;
   if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
 
@@ -623,7 +623,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
     Warning("Isolated vertex has undefined normal");
     return;
   }
-  const int nsharpe = int(count_if(mesh.edges(v), [&](Edge e) { return sharp(mesh, v, e); }));
+  const int nsharpe = int(ranges::count_if(mesh.edges(v), [&](Edge e) { return sharp(mesh, v, e); }));
   PArray<Face, 10> faces_visited;
   for (Face frep : mesh.faces(v)) {
     if (contains(faces_visited, frep)) continue;

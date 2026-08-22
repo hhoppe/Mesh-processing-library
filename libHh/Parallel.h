@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "libHh/Hh.h"
+#include "libHh/PArray.h"
 
 #if 0
 {
@@ -137,7 +137,9 @@ struct ParallelOptions {
 };
 
 // Divide `range` into `num_threads` chunks (i.e., subranges) and call `process_chunk(thread_index, subrange)` in
-// parallel over the different chunks using a cached thread pool.  The range must be a sized random-access range.
+// parallel over the different chunks using a cached thread pool.  The range must be a sized forward range; the
+// chunk boundaries are precomputed in O(num_threads) for a random-access range, and otherwise require a single
+// sequential traversal of the range in the calling thread.
 // If range is a mutable (non-const) range, the subranges yield non-const references and process_chunk() may
 // modify the elements in place.
 // The process_chunk function object must be const-callable, because the same object is invoked concurrently from
@@ -148,8 +150,8 @@ struct ParallelOptions {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <indexable_range R, typename ProcessChunk>
-requires std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
+template <ranges::forward_range R, typename ProcessChunk>
+requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threads,
                         const ProcessChunk& process_chunk) {
   if (num_threads < 1) assertnever(SSHOW(num_threads));
@@ -157,36 +159,51 @@ void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threa
   const auto begin_range = ranges::begin(range);
   // Note that num_elements may be larger than size_t (e.g., uint64_t on win32).
   const auto num_elements = ranges::size(range);
+  using Size = ranges::range_size_t<R>;
+  using Difference = ranges::range_difference_t<R>;
+  using Subrange = ranges::subrange<ranges::iterator_t<R>>;
   const uint64_t total_num_cycles = num_elements * options.cycles_per_elem;
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_parallel_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
       desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
-  if (!thread_pool || thread_pool->already_active()) {
+  const use_parallelism = thread_pool && !thread_pool->already_active();
+  if (!use_parallelism) {
     // Process the entire range as a single chunk.
     const int thread_index = 0;
-    process_chunk(thread_index, ranges::subrange(begin_range, begin_range + num_elements));
+    process_chunk(thread_index, Subrange(begin_range, ranges::next(begin_range, Difference(num_elements))));
   } else {
     // Process the chunks in parallel.
-    const auto chunk_size = (num_elements + num_threads - 1) / num_threads;
-    const auto func = [begin_range, num_elements, chunk_size, &process_chunk](int thread_index) {
-      const auto begin_chunk = begin_range + std::min(thread_index * chunk_size, num_elements);
-      const auto end_chunk = begin_range + std::min((thread_index + 1) * chunk_size, num_elements);
-      process_chunk(thread_index, ranges::subrange(begin_chunk, end_chunk));
+    const auto chunk_size = (num_elements + Size(num_threads) - 1) / Size(num_threads);
+    // Precompute the chunk boundaries; ranges::next() is O(1) for a random-access iterator.
+    PArray<Subrange, 64> subranges(num_threads);
+    auto iterator = begin_range;
+    Size offset = 0;
+    for_int(i, num_threads) {
+      const Size next_offset = std::min((Size(i) + 1) * chunk_size, num_elements);
+      const auto next_iterator = ranges::next(iterator, Difference(next_offset - offset));
+      subranges[i] = Subrange(iterator, next_iterator);
+      iterator = next_iterator;
+      offset = next_offset;
+    }
+    // Note: subranges lives on this thread's stack across the blocking execute(), including its serial
+    // nested-execution fallback, so capturing it by reference is safe.
+    const auto func = [&subranges, &process_chunk](int thread_index) {
+      process_chunk(thread_index, subranges[thread_index]);
     };
     thread_pool->execute(num_threads, func);
   }
 }
 
 // See previous function.
-template <indexable_range R, typename ProcessChunk>
-requires std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
+template <ranges::forward_range R, typename ProcessChunk>
+requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(R&& range, int num_threads, const ProcessChunk& process_chunk) {
   parallel_for_chunk({}, std::forward<R>(range), num_threads, process_chunk);
 }
 
 // See previous function.
-template <indexable_range R, typename ProcessChunk>
-requires std::invocable<const ProcessChunk&, ranges::subrange<ranges::iterator_t<R>>>
+template <ranges::forward_range R, typename ProcessChunk>
+requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(R&& range, const ProcessChunk& process_chunk) {
   parallel_for_chunk(std::forward<R>(range), get_max_threads(), [&](int, auto subrange) { process_chunk(subrange); });
 }
@@ -202,8 +219,8 @@ void parallel_for_chunk(R&& range, const ProcessChunk& process_chunk) {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <indexable_range R, typename ProcessElement>
-requires std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
+template <ranges::forward_range R, typename ProcessElement>
+requires ranges::sized_range<R> && std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
 void parallel_for(const ParallelOptions& options, R&& range, const ProcessElement& process_element) {
   const auto num_elements = ranges::size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   if (num_elements == 0) return;
@@ -216,8 +233,8 @@ void parallel_for(const ParallelOptions& options, R&& range, const ProcessElemen
 }
 
 // See previous function.
-template <indexable_range R, typename ProcessElement>
-requires std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
+template <ranges::forward_range R, typename ProcessElement>
+requires ranges::sized_range<R> && std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
 void parallel_for(R&& range, const ProcessElement& process_element) {
   parallel_for({}, std::forward<R>(range), process_element);
 }

@@ -271,21 +271,21 @@ void read_srmesh() {
 }
 
 void do_srout(Args& args) {
-  Vec<SrViewParams, 1> views;
-  for_int(i, views.num()) {
+  Vec<SrViewParams, 1> view_params;
+  for_int(i, view_params.num()) {
     std::istringstream iss(args.get_string());
     const ObjectFrame object_frame = FrameIO::read(iss).value();
-    views[i].set_frame(object_frame.frame);
-    views[i].set_zooms(twice(object_frame.zoom));
-    views[i].set_screen_thresh(args.get_float());
-    views[i].set_hither(0.f);
+    view_params[i].set_frame(object_frame.frame);
+    view_params[i].set_zooms(twice(object_frame.zoom));
+    view_params[i].set_screen_thresh(args.get_float());
+    view_params[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL.
   }
   HH_TIMER("_srout");
   read_srmesh();
   {
     HH_TIMER("__adapt");
-    srmesh.set_view_params(views[0]);
+    srmesh.set_view_params(view_params[0]);
     srmesh.adapt_refinement();
   }
   {
@@ -298,27 +298,27 @@ void do_srout(Args& args) {
 }
 
 void do_srgeomorph(Args& args) {
-  Vec2<SrViewParams> views;
-  for_int(i, views.num()) {
+  Vec2<SrViewParams> view_params;
+  for_int(i, view_params.num()) {
     std::istringstream iss(args.get_string());
     const ObjectFrame object_frame = FrameIO::read(iss).value();
-    views[i].set_frame(object_frame.frame);
-    views[i].set_zooms(twice(object_frame.zoom));
-    views[i].set_screen_thresh(args.get_float());
-    views[i].set_hither(0.f);
+    view_params[i].set_frame(object_frame.frame);
+    view_params[i].set_zooms(twice(object_frame.zoom));
+    view_params[i].set_screen_thresh(args.get_float());
+    view_params[i].set_hither(0.f);
     // Note: hither and yonder may be different in G3dOGL.
   }
   HH_TIMER("_srgeomorph");
   read_srmesh();
   {
     HH_TIMER("__adapt1");
-    srmesh.set_view_params(views[0]);
+    srmesh.set_view_params(view_params[0]);
     srmesh.adapt_refinement();
   }
   SrGeomorphInfo geoinfo;
   {
     HH_TIMER("__construct_geomorph");
-    srmesh.set_view_params(views[1]);
+    srmesh.set_view_params(view_params[1]);
     srmesh.construct_geomorph(geoinfo);
   }
   {

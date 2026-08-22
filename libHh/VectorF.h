@@ -13,7 +13,6 @@ namespace hh {
 template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   using type = VectorF;
   // We derive from the two Vec classes to benefit from "empty base class optimization".
-  // (A possible alternative might be to use the [[no_unique_address]] attribute in C++20.)
   static constexpr int m = n / 4;
   static constexpr int p = n % 4;
   static constexpr int max_unroll = 4;
@@ -60,97 +59,97 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   const float* data() const { return reinterpret_cast<const float*>(this); }
   void zero() { fill(0.f); }
   void fill(float v) {
-    unroll_max<m, max_unroll>([&](int j) { a()[j] = Vector4(v); });
+    local_unroll<m>([&](int j) { a()[j] = Vector4(v); });
     for_int(k, p) b()[k] = v;
   }
   friend VectorF<n> min(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = min(l.a()[j], r.a()[j]); });
+    local_unroll<m>([&](int j) { v.a()[j] = min(l.a()[j], r.a()[j]); });
     for_int(k, p) v.b()[k] = min(l.b()[k], r.b()[k]);
     return v;
   }
   friend VectorF<n> max(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = max(l.a()[j], r.a()[j]); });
+    local_unroll<m>([&](int j) { v.a()[j] = max(l.a()[j], r.a()[j]); });
     for_int(k, p) v.b()[k] = max(l.b()[k], r.b()[k]);
     return v;
   }
   VectorF<n>& operator=(const VectorF<n>& v) {
-    unroll_max<m, max_unroll>([&](int j) { a()[j] = v.a()[j]; });
+    local_unroll<m>([&](int j) { a()[j] = v.a()[j]; });
     for_int(k, p) b()[k] = v.b()[k];
     return *this;
   }
   friend VectorF<n> operator+(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = l.a()[j] + r.a()[j]; });
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] + r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] + r.b()[k];
     return v;
   }
   friend VectorF<n> operator-(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = l.a()[j] - r.a()[j]; });
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] - r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] - r.b()[k];
     return v;
   }
   friend VectorF<n> operator*(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = l.a()[j] * r.a()[j]; });
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] * r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] * r.b()[k];
     return v;
   }
   friend VectorF<n> operator/(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = l.a()[j] / r.a()[j]; });
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] / r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] / r.b()[k];
     return v;
   }
   friend VectorF<n> operator*(const VectorF<n>& l, float f) {
     VectorF<n> v;
-    unroll_max<m, max_unroll>([&](int j) { v.a()[j] = l.a()[j] * f; });
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] * f; });
     for_int(k, p) v.b()[k] = l.b()[k] * f;
     return v;
   }
   friend VectorF<n> operator/(const VectorF<n>& v, float f) { return v * (1.f / f); }
   friend float dot(const VectorF<n>& l, const VectorF<n>& r) {
     float sum1;
-    if (!m) {
+    if constexpr (!m) {
       sum1 = 0.f;
     } else {
       sum1 = dot(l.a()[0], r.a()[0]);
-      unroll_max<m - 1, max_unroll>([&](int j) { sum1 += dot(l.a()[j + 1], r.a()[j + 1]); });
+      local_unroll<m - 1>([&](int j) { sum1 += dot(l.a()[j + 1], r.a()[j + 1]); });
     }
     for_int(k, p) sum1 += l.b()[k] * r.b()[k];
     return sum1;
   }
   friend float mag2(const VectorF<n>& v) {
     float sum2;
-    if (!m) {
+    if constexpr (!m) {
       sum2 = 0.f;
     } else {
       sum2 = mag2(v.a()[0]);
-      unroll_max<m - 1, max_unroll>([&](int j) { sum2 += mag2(v.a()[j + 1]); });
+      local_unroll<m - 1>([&](int j) { sum2 += mag2(v.a()[j + 1]); });
     }
     for_int(k, p) sum2 += square(v.b()[k]);
     return sum2;
   }
   friend float dist2(const VectorF<n>& l, const VectorF<n>& r) {
     float sum2;
-    if (!m) {
+    if constexpr (!m) {
       sum2 = 0.f;
     } else {
       sum2 = dist2(l.a()[0], r.a()[0]);
-      unroll_max<m - 1, max_unroll>([&](int j) { sum2 += dist2(l.a()[j + 1], r.a()[j + 1]); });
+      local_unroll<m - 1>([&](int j) { sum2 += dist2(l.a()[j + 1], r.a()[j + 1]); });
     }
     for_int(k, p) sum2 += square(l.b()[k] - r.b()[k]);
     return sum2;
   }
   friend float sum(const VectorF<n>& v) {
     float sum1;
-    if (!m) {
+    if constexpr (!m) {
       sum1 = 0.f;
     } else {
       Vector4 vsum1 = v.a()[0];
-      unroll_max<m - 1, max_unroll>([&](int j) { vsum1 += v.a()[j + 1]; });
+      local_unroll<m - 1>([&](int j) { vsum1 += v.a()[j + 1]; });
       sum1 = sum(vsum1);
     }
     for_int(k, p) sum1 += v.b()[k];
@@ -168,6 +167,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   const Vector4* a() const noexcept { return Vec<Vector4, n / 4>::begin(); }
   float* b() noexcept { return Vec<float, n % 4>::begin(); }
   const float* b() const noexcept { return Vec<float, n % 4>::begin(); }
+  template <int count, typename Func> static void local_unroll(Func func) { unroll_max<count, max_unroll>(func); }
 };
 
 template <int n> std::ostream& operator<<(std::ostream& os, const VectorF<n>& v);

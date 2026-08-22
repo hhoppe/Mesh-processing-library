@@ -3142,9 +3142,7 @@ auto upsample_image(CMatrixView<Vector4> mat_C) {
     fill(fkernel, 0.f);
     fkernel[1] = 1.f;
   }
-  Vec2<Array<float>> fkernels;
-  fkernels[0] = fkernel;
-  fkernels[1] = reverse(clone(fkernel));
+  const auto fkernels = V(Array(fkernel), Array(fkernel | views::reverse));
   // Possible optimization: lift boundary testing outside of loops.
   parallel_for_coords({.cycles_per_elem = uint64_t(kn * kn) * 10}, mat_F.dims(), [&](const Vec2<int>& yx) {
     const Vec2<int> yxc = (yx + 1) / 2, yxodd = (yx + 1) - (yxc * 2), yxc0 = yxc - kn / 2;

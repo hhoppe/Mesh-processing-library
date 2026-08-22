@@ -149,7 +149,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  void push(type&& ar) { push(std::move(ar) | std::views::as_rvalue); }
+  void push(type&& ar) { push(std::move(ar) | views::as_rvalue); }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
@@ -195,6 +195,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       }
     }
   }
+  using owns_elements = void;  // Marker for hh::clone().
 
  private:
   using base::_a;
@@ -241,11 +242,9 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, int pcap, typename Func>
-auto transformed(const PArray<T, pcap>& c, Func func) -> PArray<decltype(func(std::declval<T>())), pcap> {
-  PArray<decltype(func(std::declval<T>())), pcap> nc(c.num());
-  for_int(i, c.num()) nc[i] = func(c[i]);
-  return nc;
+template <typename T, int pcap, typename Func> [[nodiscard]] auto transformed(const PArray<T, pcap>& c, Func func) {
+  using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
+  return PArray<ResultType, pcap>(c | views::transform(func));
 }
 
 template <typename T, int pcap> HH_DECLARE_OSTREAM_EOL(PArray<T, pcap>);  // Implemented by CArrayView<T>.

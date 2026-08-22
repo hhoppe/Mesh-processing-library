@@ -1,6 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "VideoViewer/GradientDomainLoop.h"
-#include "libHh/Advanced.h"  // clone()
 #include "libHh/Args.h"
 #include "libHh/ArrayOp.h"  // median()
 #include "libHh/ConsoleProgress.h"

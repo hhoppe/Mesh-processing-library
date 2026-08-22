@@ -5,7 +5,7 @@
 #include <process.h>  // _spawnvp()
 #endif
 
-#include "libHh/Advanced.h"
+// ?? #include "libHh/Advanced.h"
 #include "libHh/Array.h"
 #include "libHh/FileIO.h"
 #include "libHh/Geometry.h"
@@ -430,12 +430,14 @@ line2)";
     SHOW(ar);
     SHOW(sort(clone(ar)));
     SHOW(ar);
+    SHOW(sorted(ar));
+    SHOW(ar);
     SHOW(sort(ar));
     SHOW(ar);
 #if 0
     ArrayView<int> arv(ar);
-    auto arv2 = clone(arv);
-    dummy_use(arv2);  // Correctly fails static_assert.
+    auto arv2 = clone(arv);  // Correctly fails static_assert.
+    dummy_use(arv2);
 #endif
   }
   {
@@ -444,6 +446,7 @@ line2)";
       A(const A& /*unused*/) { SHOW("A copy construct"); }
       A(A&& /*unused*/) noexcept { SHOW("A move construct"); }
       ~A() { SHOW("A destruct"); }
+      using owns_elements = void;  // Marker for hh::clone().
     };
     SHOW("1");
     {
@@ -460,14 +463,17 @@ line2)";
     }
     SHOW("4");
     {
-      clone(A());
+      auto a = clone(A());
+      dummy_use(a);
     }
     SHOW("5");
     {
       A a;
-      clone(a);
+      auto b = clone(a);
+      dummy_use(b);
     }
     SHOW("6");
+    SHOW(type_name<A::owns_elements>());  // dummy_use().
   }
   {
     SHOW(type_name<sum_type_t<float>>());

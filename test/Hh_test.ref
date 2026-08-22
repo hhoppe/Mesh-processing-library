@@ -125,6 +125,20 @@ ar = Array<int>(5) {
   2
   3
 }
+sorted(ar) = Array<int>(5) {
+  1
+  2
+  3
+  4
+  5
+}
+ar = Array<int>(5) {
+  5
+  4
+  1
+  2
+  3
+}
 sort(ar) = Array<int>(5) {
   1
   2
@@ -161,6 +175,7 @@ A copy construct
 A destruct
 A destruct
 6
+type_name<A::owns_elements>() = void
 type_name<sum_type_t<float>>() = double
 type_name<sum_type_t<double>>() = double
 type_name<sum_type_t<signed char>>() = int64

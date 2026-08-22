@@ -147,6 +147,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // all these and this fails if "T - T" or "sqrt(T)" are undefined.
   // [[nodiscard]] friend constexpr T mag2(const Vec<T, n>& vec) { return dot(vec, vec); }
 
+  using owns_elements = void;  // Marker for hh::clone().
+
  private:
   // C++ requires empty classes to have nonzero size to ensure object identity.
   // Therefore, even with an empty struct, it is necessary that sizeof(Vec<T, 0>) > 0.
@@ -210,8 +212,8 @@ template <int n, typename T> [[nodiscard]] constexpr Vec<T, n> ntimes(const T& v
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, int n, typename Func> [[nodiscard]] constexpr auto transformed(const Vec<T, n>& c, Func func) {
-  using T2 = std::decay_t<std::invoke_result_t<Func, const T&>>;
-  return Vec<T2, n>::create([&](int i) { return func(c[i]); });
+  using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
+  return Vec<ResultType, n>::create([&](int i) { return func(c[i]); });
 }
 
 // Range of coordinates: Vec<int, D>: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
@@ -303,7 +305,7 @@ template <typename T> struct VecBase<T, 0> {
 
 // ?? The coordinate iterators are not C++20 iterators, so range(grid.dims()) can't feed std::ranges at
 // all. difference_type = void fails std::weakly_incrementable, there's no operator==, no post-increment, and
-// no default construction. Fixing this unlocks range(dims) | std::views::filter(...), ranges::for_each,
+// no default construction. Fixing this unlocks range(dims) | views::filter(...), ranges::for_each,
 // and parallel algorithms. The idiomatic shape also removes the fake end iterator:
 //  using difference_type = std::ptrdiff_t;
 //  bool operator==(std::default_sentinel_t) const { return _u[0] >= _uU[0]; }

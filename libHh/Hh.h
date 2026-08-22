@@ -208,6 +208,7 @@ using std::sqrt;
 
 namespace ranges = std::ranges;
 template <typename R> using range_value_t = ranges::range_value_t<R>;
+namespace views = std::views;
 
 // *** Useful type abbreviations.
 
@@ -268,6 +269,20 @@ concept Copyable = std::is_copy_assignable_v<T>;
 // Range whose elements are readable as T (accepts proxies, conversions).
 template <typename R, typename T>
 concept input_range_to = ranges::input_range<R> && std::convertible_to<ranges::range_reference_t<R>, T>;
+
+// Range that supports O(1) indexing and O(1) size.
+template <typename R>
+concept indexable_range = ranges::random_access_range<R> && ranges::sized_range<R>;
+
+// Specialize to true for a container that owns its elements, or declare a member `using owns_elements = void;`.
+template <typename T>
+inline constexpr bool enable_cloneable =
+    requires { typename T::owns_elements; } ||  // My containers opt in with this member marker.
+    requires { typename T::allocator_type; };   // Any allocator-aware container (std::vector, std::string, ...).
+
+// A type that clone() can duplicate into an object independent of the original.
+template <typename T>
+concept cloneable = std::constructible_from<T, const T&> && enable_cloneable<T>;
 
 // *** Utility classes.
 
@@ -454,7 +469,7 @@ template <typename T> using sum_type_t = typename details::sum_type<T>::type;
 
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template <typename T> [[nodiscard]] constexpr auto range(T start, T stop) {
-  return std::views::iota(start, max(start, stop));
+  return views::iota(start, max(start, stop));
 }
 
 // Range of integers as in Python range(stop):  e.g.: for (const int i : range(5)) { SHOW(i); } gives 0..4 .
@@ -465,6 +480,14 @@ template <typename T, typename... Args>
 [[nodiscard]] std::optional<T> make_optional_if(bool condition, Args&&... args) {
   if (condition) return std::make_optional<T>(std::forward<Args>(args)...);
   return {};
+}
+
+// Create an independent copy of a container, e.g. round_elements(clone(array)).
+template <typename T> [[nodiscard]] std::decay_t<T> clone(T&& v) {
+  static_assert(cloneable<std::decay_t<T>>,
+                "clone() requires a container that owns its elements; add `using owns_elements = void;` "
+                "to the class, or specialize hh::enable_cloneable.  For a view, use Array(view) instead.");
+  return std::decay_t<T>(std::forward<T>(v));  // The cast is necessary for an explicit copy constructor.
 }
 
 // *** Functions defined in Hh.cpp.

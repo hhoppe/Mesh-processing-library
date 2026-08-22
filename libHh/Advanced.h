@@ -13,40 +13,13 @@ template <typename T> T& optional_reference(const std::unique_ptr<T>& up) {
   return up ? *up : *implicit_cast<T*>(nullptr);
 }
 
-// Create a copy; make sure not to call on CArrayView, ArrayView, *View, etc. --- instead use Array(view), etc.
-template <typename T> std::decay_t<T> clone(T&& v) {
-  // First, verify that T is default-constructible;
-  //  my exotic classes like ArrayView and GridView are not default-constructible and should not be cloned.
-  static_assert(std::is_default_constructible_v<std::decay_t<T>>);  // or maybe (void(T{}));
-  // if r-value reference, return moved object;
-  // else it is an l-value reference (const or not) and return a copy.
-  // return std::is_rvalue_reference_v<T> ? std::move(v) : std::decay_t<T>(v);
-  return std::decay_t<T>(std::forward<T>(v));  // std::decay_t<T> cast is necessary for explicit constructor
-}
-// Note: the following would lead to an extra move-construction if v is an rvalue
-//    (see https://stackoverflow.com/questions/16724657/why-do-we-copy-then-move )
-// Also, std::move is redundant?  see https://vmpstr.blogspot.com/2015/12/redundant-stdmove.html
-// template <typename T> T clone(T v) { return std::move(v); }
-
 // e.g.:  unroll<6>([&](int j) { _a[j] = min(l._a[j], r._a[j]); });
-namespace details {
-template <int i, int n> struct unroll_aux {
-  template <typename Func = void(int)> void operator()(Func func) const {
-    func(i);
-    unroll_aux<i + 1, n>()(func);
-  }
-};
-template <int n> struct unroll_aux<n, n> {
-  template <typename Func = void(int)> void operator()(Func) const {}
-};
-template <int n> struct unroll_aux<n, -1> {  // awkward, avoid infinite recursive if n == -1 in addition to n == 0
-  template <typename Func = void(int)> void operator()(Func) const {}
-};
-}  // namespace details
-template <int n, typename Func = void(int)> void unroll(Func func) { details::unroll_aux<0, n>()(func); }
+template <int n, typename Func> constexpr void unroll(Func func) {
+  [&]<int... Is>(std::integer_sequence<int, Is...>) { (func(Is), ...); }(std::make_integer_sequence<int, n>());
+}
 
 template <int n, int nmax, typename Func = void(int)> void unroll_max(Func func) {
-  if (n <= nmax) {
+  if constexpr (n <= nmax) {
     unroll<n>(func);
   } else {
     for_int(i, n) func(i);
@@ -55,14 +28,6 @@ template <int n, int nmax, typename Func = void(int)> void unroll_max(Func func)
 
 // Convenience function for hashing.
 template <typename T> size_t my_hash(const T& v) { return std::hash<T>()(v); }
-
-#if 0  // Adapted from older version of boost; may be intended for 32-bit size_t.
-
-template <typename T> size_t hash_combine(size_t seed, const T& v) {
-  return seed ^ (my_hash(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2));
-}
-
-#else  // Adapted from newer version of boost.
 
 namespace details {
 
@@ -97,8 +62,6 @@ template <typename T> size_t hash_combine(size_t seed, const T& v) {
   details::boost_hash_combine_size_t(seed, my_hash(v));
   return seed;
 }
-
-#endif
 
 }  // namespace hh
 

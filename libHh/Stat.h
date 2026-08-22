@@ -214,7 +214,6 @@ template <ranges::forward_range R> R standardize(R&& range) {
   }
   return std::forward<R>(range);
 }
-// R standardized(const R& range) { return standardize(clone(range)); }
 
 template <ranges::forward_range R> R standardize_rms(R&& range) {
   Stat stat = range_stat(range);
@@ -227,7 +226,6 @@ template <ranges::forward_range R> R standardize_rms(R&& range) {
   }
   return std::forward<R>(range);
 }
-// R standardized_rms(const R& range) { return standardize_rms(clone(range)); }
 
 }  // namespace hh
 

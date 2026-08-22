@@ -148,8 +148,8 @@ struct ParallelOptions {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <ranges::random_access_range R, typename ProcessChunk>
-requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
+template <indexable_range R, typename ProcessChunk>
+requires std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threads,
                         const ProcessChunk& process_chunk) {
   if (num_threads < 1) assertnever(SSHOW(num_threads));
@@ -178,15 +178,15 @@ void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threa
 }
 
 // See previous function.
-template <ranges::random_access_range R, typename ProcessChunk>
-requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
+template <indexable_range R, typename ProcessChunk>
+requires std::invocable<const ProcessChunk&, int, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(R&& range, int num_threads, const ProcessChunk& process_chunk) {
   parallel_for_chunk({}, std::forward<R>(range), num_threads, process_chunk);
 }
 
 // See previous function.
-template <ranges::random_access_range R, typename ProcessChunk>
-requires ranges::sized_range<R> && std::invocable<const ProcessChunk&, ranges::subrange<ranges::iterator_t<R>>>
+template <indexable_range R, typename ProcessChunk>
+requires std::invocable<const ProcessChunk&, ranges::subrange<ranges::iterator_t<R>>>
 void parallel_for_chunk(R&& range, const ProcessChunk& process_chunk) {
   parallel_for_chunk(std::forward<R>(range), get_max_threads(), [&](int, auto subrange) { process_chunk(subrange); });
 }
@@ -202,8 +202,8 @@ void parallel_for_chunk(R&& range, const ProcessChunk& process_chunk) {
 // is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
 // that called parallel_for_chunk() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
-template <ranges::random_access_range R, typename ProcessElement>
-requires ranges::sized_range<R> && std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
+template <indexable_range R, typename ProcessElement>
+requires std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
 void parallel_for(const ParallelOptions& options, R&& range, const ProcessElement& process_element) {
   const auto num_elements = ranges::size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
   if (num_elements == 0) return;
@@ -216,8 +216,8 @@ void parallel_for(const ParallelOptions& options, R&& range, const ProcessElemen
 }
 
 // See previous function.
-template <ranges::random_access_range R, typename ProcessElement>
-requires ranges::sized_range<R> && std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
+template <indexable_range R, typename ProcessElement>
+requires std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
 void parallel_for(R&& range, const ProcessElement& process_element) {
   parallel_for({}, std::forward<R>(range), process_element);
 }

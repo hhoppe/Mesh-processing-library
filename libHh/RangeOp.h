@@ -6,158 +6,7 @@
 
 namespace hh {
 
-// Swap the elements of two ranges, which must have the same number of elements.
-template <ranges::input_range R1, ranges::input_range R2>
-requires std::indirectly_swappable<ranges::iterator_t<R1>, ranges::iterator_t<R2>>
-void swap_elements(R1&& range1, R2&& range2) {
-  static_assert(std::same_as<range_value_t<R1>, range_value_t<R2>>, "ranges have different value types");
-  if constexpr (ranges::sized_range<R1> && ranges::sized_range<R2>) {
-    ASSERTX(ranges::size(range1) == ranges::size(range2));  // Detected before any swapping occurs.
-    ranges::swap_ranges(range1, range2);
-  } else {
-    const auto result = ranges::swap_ranges(range1, range2);
-    ASSERTX(result.in1 == ranges::end(range1) && result.in2 == ranges::end(range2));
-  }
-}
-
-// Assign `value` to every element; return the range for chaining.
-template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const T& value) {
-  // In the future, I could replace the return type from "R" to "R&&", to remove one move operation, and
-  // similarly for all functions that apply 'std::forward<' on a '&&' parameter.
-  // However, for a few uses in GraphOp_test and Multigrid_test, this requires P2718 (range-based for loop
-  // lifetime extension) which Cygwin's gcc 14 (< 15) still lacks.
-  ranges::fill(range, value);
-  return std::forward<R>(range);
-}
-
-// Reverse the elements in-place in a randomly accessible range; return the range for chaining.
-template <ranges::random_access_range R> R reverse(R&& range) {
-  ranges::reverse(range);
-  return std::forward<R>(range);
-}
-// auto reversed(const R& range) { return reverse(clone(range)); }
-
-// Rotate the elements such that element middle becomes the new first element; return the range for chaining.
-template <ranges::random_access_range R> R rotate(R&& range, ranges::iterator_t<R> middle) {
-  ranges::rotate(range, middle);
-  return std::forward<R>(range);
-}
-
-// Sort the elements in a range (by default using std::less(a, b)); return the range for chaining.
-template <ranges::random_access_range R, typename Comp = std::less<>>
-requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp = Comp{}) {
-  ranges::sort(range, comp);
-  return std::forward<R>(range);
-}
-// auto sorted(const R& range) { return sort(clone(range)); }
-
-// Minimum value in a non-empty range (by default using std::less(a, b)).
-template <ranges::forward_range R, typename Comp = std::less<>>
-requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
-  auto iter = ranges::min_element(range, comp);
-  ASSERTXX(iter != ranges::end(range));
-  return *iter;
-}
-
-// Maximum value in a non-empty range (using std::less(a, b)).
-template <ranges::forward_range R, typename Comp = std::less<>>
-requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
-  auto iter = ranges::max_element(range, comp);
-  ASSERTXX(iter != ranges::end(range));
-  return *iter;
-}
-
-// Also from std:
-//  find(), find_end(), find_first_of(), adjacent_find(), mismatch(), equal(),
-//  is_permutation(), search(), search_n(), copy(), copy_if(), copy_backward(), move(), move_backward(),
-//  transform(), replace(), replace_if(), replace_copy(), replace_copy_if(),
-//  generate(), remove(), remove_if(), remove_copy(), remove_copy_if(), unique(), unique_copy(),
-//  reverse_copy(), rotate_copy(), shuffle(),
-//  is_partitioned(), partition(), stable_partition(), partition_copy(), partition_move(),
-//  stable_sort(), partial_sort(), partial_sort_copy(), is_sorted(), is_sorted_until(), nth_element(),
-//  lower_bound(), upper_bound(), equal_range(), binary_search(),
-//  merge(), merge_move(), inplace_merge(), includes(),
-//  set_union(), set_intersection(), set_difference(), set_symmetric_difference(), *heap*(),
-//  minmax(), minmax_element(), lexicographical_compare(), next_permutation(), prev_permutation().
-
-// *** My custom range operations:
-
-// Address of the first element satisfying `pred`, or nullptr if none.
-template <ranges::forward_range R, std::indirect_unary_predicate<ranges::iterator_t<R>> Pred>
-requires std::is_lvalue_reference_v<ranges::range_reference_t<R>>
-[[nodiscard]] auto find_if_ptr(R&& range, Pred pred) -> std::remove_reference_t<ranges::range_reference_t<R>>* {
-  const auto iter = ranges::find_if(range, pred);
-  return iter == ranges::end(range) ? nullptr : std::addressof(*iter);
-}
-
-// (Optional) index of the first matching element, or std::nullopt if not found.
-template <ranges::input_range R> std::optional<int> find_index(R&& range, const range_value_t<R>& elem) {
-  if constexpr (ranges::random_access_range<R>) {
-    const auto iter = ranges::find(range, elem);  // May lower to memchr or a vectorized search.
-    if (iter != ranges::end(range)) return narrow_cast<int>(iter - ranges::begin(range));
-    return {};
-  } else {
-    int i = 0;  // Single-pass-safe: count while traversing.
-    for (auto&& e : range) {
-      if (e == elem) return i;
-      ++i;
-    }
-    return {};
-  }
-}
-
-// Index of the first matching element, or die.
-template <ranges::input_range R> int index(R&& range, const range_value_t<R>& elem) {
-  const std::optional<int> i = find_index(range, elem);
-  if (!i) assertnever(make_string(elem) + " not found in range");
-  return *i;
-}
-
-// Index of the minimum value in a non-empty range.
-template <ranges::input_range R> int arg_min(const R& range) {
-  auto iter = ranges::min_element(range);
-  ASSERTX(iter != ranges::end(range));
-  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
-}
-
-// Index of the maximum value in a non-empty range.
-template <ranges::input_range R> int arg_max(const R& range) {
-  auto iter = ranges::max_element(range);
-  ASSERTX(iter != ranges::end(range));
-  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
-}
-
-// Minimum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
-template <ranges::input_range R> range_value_t<R> transitive_min(const R& range) {
-  auto iter = ranges::begin(range);
-  const auto itend = ranges::end(range);
-  ASSERTX(iter != itend);
-  range_value_t<R> v = *iter;
-  for (++iter; iter != itend; ++iter) v = min(v, *iter);
-  return v;
-}
-
-// Maximum over a non-empty range of values (using successive min(a, b) rather than less(a, b)).
-template <ranges::input_range R> range_value_t<R> transitive_max(const R& range) {
-  auto iter = ranges::begin(range);
-  const auto itend = ranges::end(range);
-  ASSERTX(iter != itend);
-  range_value_t<R> v = *iter;
-  for (++iter; iter != itend; ++iter) v = max(v, *iter);
-  return v;
-}
-
-// Maximum absolute value in a non-empty range.
-template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range) {
-  auto iter = ranges::begin(range);
-  const auto itend = ranges::end(range);
-  ASSERTX(iter != itend);
-  auto v = static_cast<range_value_t<R>>(abs(*iter));
-  for (++iter; iter != itend; ++iter) v = max(v, static_cast<range_value_t<R>>(abs(*iter)));
-  return v;
-}
+// *** Types:
 
 // Higher-precision type to represent the mean of a set of elements.
 template <typename T> struct mean_type {
@@ -182,10 +31,150 @@ using mean_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, mean_typ
 template <typename DesiredType, typename R>
 using sum_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, sum_type_t<range_value_t<R>>, DesiredType>;
 
+// *** Const range operations:
+
+// Check if a container contains an element.
+template <ranges::input_range R> bool contains(const R& range, const range_value_t<R>& elem) {
+  return ranges::find(range, elem) != ranges::end(range);
+}
+
+// (Optional) index of the first matching element, or std::nullopt if not found.
+template <ranges::input_range R> std::optional<int> find_index(R&& range, const range_value_t<R>& elem) {
+  if constexpr (ranges::random_access_range<R>) {
+    const auto iter = ranges::find(range, elem);  // May lower to memchr or a vectorized search.
+    if (iter != ranges::end(range)) return narrow_cast<int>(iter - ranges::begin(range));
+    return {};
+  } else {
+    ranges::range_difference_t<R> i = 0;  // Single-pass-safe: count while traversing.
+    for (auto&& e : range) {
+      if (e == elem) return narrow_cast<int>(i);
+      ++i;
+    }
+    return {};
+  }
+}
+
+// Index of the first matching element, or die.
+template <ranges::input_range R> int index(R&& range, const range_value_t<R>& elem) {
+  const std::optional<int> i = find_index(range, elem);
+  if (!i) assertnever(make_string(elem) + " not found in range");
+  return *i;
+}
+
+// Address of the first element satisfying `pred`, or nullptr if none.
+template <ranges::forward_range R, std::indirect_unary_predicate<ranges::iterator_t<R>> Pred>
+requires std::is_lvalue_reference_v<ranges::range_reference_t<R>>
+[[nodiscard]] auto find_if_ptr(R&& range, Pred pred) -> std::remove_reference_t<ranges::range_reference_t<R>>* {
+  const auto iter = ranges::find_if(range, pred);
+  return iter == ranges::end(range) ? nullptr : std::addressof(*iter);
+}
+
+// Minimum value in a non-empty range (by default using std::less(a, b)).
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
+  auto iter = ranges::min_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return *iter;
+}
+
+// Maximum value in a non-empty range (using std::less(a, b)).
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
+  auto iter = ranges::max_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return *iter;
+}
+
+// Maximum absolute value in a non-empty range.
+template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range) {
+  auto iter = ranges::begin(range);
+  const auto itend = ranges::end(range);
+  ASSERTX(iter != itend);
+  auto v = static_cast<range_value_t<R>>(abs(*iter));
+  for (++iter; iter != itend; ++iter) v = max(v, static_cast<range_value_t<R>>(abs(*iter)));
+  return v;
+}
+
+// Index of the minimum value in a non-empty range.
+template <ranges::input_range R> int arg_min(const R& range) {
+  auto iter = ranges::min_element(range);
+  ASSERTX(iter != ranges::end(range));
+  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
+}
+
+// Index of the maximum value in a non-empty range.
+template <ranges::input_range R> int arg_max(const R& range) {
+  auto iter = ranges::max_element(range);
+  ASSERTX(iter != ranges::end(range));
+  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
+}
+
+// *** Mutable range operations:
+
+// Assign `value` to every element; return the range for chaining.
+template <typename T, ranges::output_range<const T&> R> R fill(R&& range, const T& value) {
+  // In the future, I could replace the return type from "R" to "R&&", to remove one move operation, and
+  // similarly for all functions that apply 'std::forward<' on a '&&' parameter.
+  // However, for a few uses in GraphOp_test and Multigrid_test, this requires P2718 (range-based for loop
+  // lifetime extension) which Cygwin's gcc 14 (< 15) still lacks.
+  ranges::fill(range, value);
+  return std::forward<R>(range);
+}
+
+// Reverse the elements in-place in a randomly accessible range; return the range for chaining.
+template <ranges::random_access_range R> R reverse(R&& range) {
+  ranges::reverse(range);
+  return std::forward<R>(range);
+}
+
+// Rotate the elements such that element middle becomes the new first element; return the range for chaining.
+template <ranges::random_access_range R> R rotate(R&& range, ranges::iterator_t<R> middle) {
+  ranges::rotate(range, middle);
+  return std::forward<R>(range);
+}
+
+// Sort the elements in a range (by default using std::less(a, b)); return the range for chaining.
+template <ranges::random_access_range R, typename Comp = std::less<>>
+requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp = Comp{}) {
+  ranges::sort(range, comp);
+  return std::forward<R>(range);
+}
+
+// Return a sorted copy of the range (by default using std::less(a, b)), leaving the original unmodified.
+template <ranges::random_access_range R, typename Comp = std::less<>>
+requires std::sortable<ranges::iterator_t<std::decay_t<R>>, Comp>
+[[nodiscard]] auto sorted(R&& range, Comp comp = Comp{}) -> std::decay_t<R> {
+  auto result = clone(std::forward<R>(range));
+  sort(result, comp);
+  return result;  // Keep all 3 lines for NRVO.
+}
+
+// Swap the elements of two ranges, which must have the same number of elements.
+template <ranges::input_range R1, ranges::input_range R2>
+requires std::indirectly_swappable<ranges::iterator_t<R1>, ranges::iterator_t<R2>>
+void swap_elements(R1&& range1, R2&& range2) {
+  static_assert(std::same_as<range_value_t<R1>, range_value_t<R2>>, "ranges have different value types");
+  if constexpr (ranges::sized_range<R1> && ranges::sized_range<R2>) {
+    ASSERTX(ranges::size(range1) == ranges::size(range2));  // Detected before any swapping occurs.
+    ranges::swap_ranges(range1, range2);
+  } else {
+    const auto result = ranges::swap_ranges(range1, range2);
+    ASSERTX(result.in1 == ranges::end(range1) && result.in2 == ranges::end(range2));
+  }
+}
+
+// *** Arithmetic range operations:
+
 // Sum of values in a range (widening the accumulator, unless DesiredType is specified).
 template <typename DesiredType = void, ranges::input_range R> sum_type_for_t<DesiredType, R> sum(const R& range) {
   using SumType = sum_type_for_t<DesiredType, R>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
+  // This could offer a 3-4x improvement on large ranges (currently, libstdc++ only), but it may reassociate
+  // so it gives different results on floating_point:
+  // if constexpr (ranges::common_range<R>)
+  //   return implicit_cast<SumType>(std::reduce(ranges::begin(range), ranges::end(range), SumType{}));
   return implicit_cast<SumType>(ranges::fold_left(range, SumType{}, std::plus<>{}));
 }
 
@@ -224,7 +213,7 @@ auto mag2(const R& range) -> sum_type_for_t<DesiredType, R> {
   // const auto op = [](const SumType& sum, const auto& e) { return sum + square(SumType(e)); };
   // return implicit_cast<SumType>(ranges::fold_left(range, SumType{}, op));
   // Or also:
-  // const auto squared = ranges::views::transform(range, [](const auto& e) { return square(SumType(e)); });
+  // const auto squared = views::transform(range, [](const auto& e) { return square(SumType(e)); });
   // return implicit_cast<SumType>(ranges::fold_left(squared, SumType{}, std::plus<>{}));
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
@@ -320,7 +309,6 @@ template <ranges::forward_range R> R normalize(R&& range) {
   for (auto& e : range) e = static_cast<Value>(e * v);
   return std::forward<R>(range);
 }
-// auto normalized(const R& range) { return normalize(clone(range)); }
 
 // Round the values in a range to the nearest 1/fac increment (by default fac == 1e5f); return the range for chaining.
 template <ranges::forward_range R> R round_elements(R&& range, range_value_t<R> fac = 1e5f) {
@@ -330,17 +318,16 @@ template <ranges::forward_range R> R round_elements(R&& range, range_value_t<R> 
 }
 
 // Compute the sum of squared differences of corresponding elements of two ranges.
-template <typename DesiredType = void, ranges::input_range R1, ranges::input_range R2>
+template <typename DesiredType = void, indexable_range R1, indexable_range R2>
 auto dist2(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
   using SumType = sum_type_for_t<DesiredType, R1>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  auto iter1 = ranges::begin(range1);
-  const auto itend1 = ranges::end(range1);
-  auto iter2 = ranges::begin(range2);
-  const auto itend2 = ranges::end(range2);
+  const auto n = ranges::ssize(range1);
+  ASSERTX(n == ranges::ssize(range2));
+  const auto iter1 = ranges::begin(range1);  // A single induction variable enables unrolling.
+  const auto iter2 = ranges::begin(range2);
   SumType v{};
-  for (; iter1 != itend1; ++iter1, ++iter2) v += square(SumType(*iter1) - SumType(*iter2));
-  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
+  for (const auto i : range(n)) v += square(SumType(iter1[i]) - SumType(iter2[i]));
   return v;
 }
 
@@ -351,57 +338,46 @@ auto dist(const R1& range1, const R2& range2) -> mean_type_for_t<DesiredType, R1
   return sqrt(dist2<MeanType>(range1, range2));
 }
 
-// Compute the inner product of two ranges.
-template <typename DesiredType = void, ranges::input_range R1, ranges::input_range R2>
+// Compute the inner product of two ranges, which must have the same number of elements.
+template <typename DesiredType = void, indexable_range R1, indexable_range R2>
 auto dot(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
   using SumType = sum_type_for_t<DesiredType, R1>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
-  auto iter1 = ranges::begin(range1);
-  const auto itend1 = ranges::end(range1);
-  auto iter2 = ranges::begin(range2);
-  const auto itend2 = ranges::end(range2);
+  const auto n = ranges::ssize(range1);
+  ASSERTX(n == ranges::ssize(range2));
+  const auto iter1 = ranges::begin(range1);
+  const auto iter2 = ranges::begin(range2);
   SumType v{};
-  for (; iter1 != itend1; ++iter1, ++iter2) v += SumType(*iter1) * SumType(*iter2);
-  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
+  for (const auto i : range(n)) v += SumType(iter1[i]) * SumType(iter2[i]);
   return v;
 }
 
 // Compare two ranges of algebraic types lexicographically; ret -1, 0, 1 based on sign of range1 - range2.
 // Use <=> ??
-template <ranges::input_range R1, ranges::input_range R2> int compare(const R1& range1, const R2& range2) {
-  auto iter1 = ranges::begin(range1);
-  const auto itend1 = ranges::end(range1);
-  auto iter2 = ranges::begin(range2);
-  const auto itend2 = ranges::end(range2);
-  for (; iter1 != itend1; ++iter1, ++iter2) {
-    auto d = *iter1 - *iter2;
-    if (d) return d < 0 ? -1 : +1;
+template <indexable_range R1, indexable_range R2> int compare(const R1& range1, const R2& range2) {
+  const auto n = ranges::ssize(range1);
+  ASSERTX(n == ranges::ssize(range2));
+  const auto iter1 = ranges::begin(range1);
+  const auto iter2 = ranges::begin(range2);
+  for (const auto i : range(n)) {
+    if (auto d = iter1[i] - iter2[i]) return d < 0 ? -1 : +1;
   }
-  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return 0;
 }
 
 // Similar comparison, but ignore differences smaller than tolerance.
-template <ranges::input_range R1, ranges::input_range R2>
+template <indexable_range R1, indexable_range R2>
 int compare(const R1& range1, const R2& range2, const range_value_t<R1>& tolerance) {
-  auto iter1 = ranges::begin(range1);
-  const auto itend1 = ranges::end(range1);
-  auto iter2 = ranges::begin(range2);
-  const auto itend2 = ranges::end(range2);
-  for (; iter1 != itend1; ++iter1, ++iter2) {
-    auto d = *iter1 - *iter2;
+  const auto n = ranges::ssize(range1);
+  ASSERTX(n == ranges::ssize(range2));
+  const auto iter1 = ranges::begin(range1);
+  const auto iter2 = ranges::begin(range2);
+  for (const auto i : range(n)) {
+    const auto d = iter1[i] - iter2[i];
     if (d < -tolerance) return -1;
     if (d > tolerance) return +1;
   }
-  ASSERTX(iter2 == itend2);  // Verify they have the same number of elements.
   return 0;
-}
-
-// Check if a container contains an element.
-template <ranges::input_range R> bool contains(const R& range, const range_value_t<R>& elem) {
-  for (const auto& e : range)
-    if (e == elem) return true;
-  return false;
 }
 
 // For any container R (e.g. Vec, Array, PArray, Grid, SGrid) supporting transformed(R&, [](const T&) -> T):

@@ -178,7 +178,7 @@ template <typename T> class Array : public ArrayView<T> {
       size_t size = size_t(ranges::distance(range));
       _a = new T[size];
       _n = _cap = narrow_cast<int>(size);
-      ranges::copy(range, _a);  // Moves elements only if the caller opts in via std::views::as_rvalue.
+      ranges::copy(range, _a);  // Moves elements only if the caller opts in via views::as_rvalue.
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
@@ -253,12 +253,12 @@ template <typename T> class Array : public ArrayView<T> {
   void push_array(R&& range) {
     if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
       const int t = add(narrow_cast<int>(ranges::distance(range)));
-      ranges::copy(range, _a + t);  // Moves elements only if the caller opts in via std::views::as_rvalue.
+      ranges::copy(range, _a + t);  // Moves elements only if the caller opts in via views::as_rvalue.
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  void push_array(type&& ar) { push_array(std::move(ar) | std::views::as_rvalue); }
+  void push_array(type&& ar) { push_array(std::move(ar) | views::as_rvalue); }
   T shift() {
     ASSERTX(_n);
     T e = std::move(_a[0]);
@@ -270,7 +270,8 @@ template <typename T> class Array : public ArrayView<T> {
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
-  // Note that Array iterator is inherited from ArrayView.
+  using owns_elements = void;  // Marker for hh::clone().
+
  private:
   using base::_a;
   using base::_n;
@@ -292,11 +293,9 @@ template <typename T> class Array : public ArrayView<T> {
 // See also Vec.h, PArray.h, and Matrix.h.
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, typename Func>
-[[nodiscard]] auto transformed(CArrayView<T> c, Func func) -> Array<decltype(func(std::declval<T>()))> {
-  Array<decltype(func(std::declval<T>()))> nc(c.num());
-  for_int(i, c.num()) nc[i] = func(c[i]);
-  return nc;
+template <typename T, typename Func> [[nodiscard]] auto transformed(CArrayView<T> c, Func func) {
+  using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
+  return Array<ResultType>(c | views::transform(func));
 }
 
 //----------------------------------------------------------------------------

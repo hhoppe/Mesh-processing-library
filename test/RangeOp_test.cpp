@@ -4,7 +4,6 @@
 #include <list>
 #include <vector>
 
-#include "libHh/Advanced.h"  // clone()
 #include "libHh/Array.h"
 #include "libHh/Map.h"
 #include "libHh/Mesh.h"
@@ -56,7 +55,9 @@ int main() {
     SHOW(normalize(clone(ar1)));
     SHOW(mag(normalize(clone(ar1))));
     SHOW(sort(clone(ar1)));
+    SHOW(sorted(ar1));
     SHOW(reverse(sort(clone(ar1))));
+    SHOW(reverse(sorted(ar1)));
     SHOW(max_abs_element(ar1));
     SHOW(sum(ar1));
     SHOW(compare(ar1, ar2));

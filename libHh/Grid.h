@@ -262,7 +262,9 @@ template <int D, typename T> class Grid : public GridView<D, T> {
  public:
   Grid() = default;
   explicit Grid(const Vec<int, D>& dims) { init(dims); }
-  template <typename... A> explicit Grid(int d0, A... dr) { init(d0, dr...); }
+  template <typename... A> requires(std::convertible_to<A, int> && ...) explicit Grid(int d0, A... dr) {
+    init(d0, dr...);
+  }
   explicit Grid(const Vec<int, D>& dims, const T& v) requires Copyable<T> { init(dims, v); }
   explicit Grid(const type& g) requires Copyable<T> : Grid(g.dims()) { base::assign(g); }
   explicit Grid(CGridView<D, T> g) requires Copyable<T> : Grid(g.dims()) { base::assign(g); }
@@ -313,6 +315,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   // (Must declare template parameters because these functions access private _a of <D - 1, T> and <D + 1, T>.)
   template <int DD, typename TT> friend Grid<DD - 1, TT> reduce_grid_rank(Grid<DD, TT>&& grid);
   template <int DD, typename TT> friend Grid<DD + 1, TT> increase_grid_rank(Grid<DD, TT>&& grid);
+  using owns_elements = void;  // Marker for hh::clone().
 
  private:
   using base::_a;
@@ -320,12 +323,19 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   using base::reinit;  // Hide it.
 };
 
+// Construct a Grid with the given dims from a flat range of values, in raster (Grid::flat()) order.
+// E.g.: const auto grid = grid_from_flat(image.dims(), image | views::transform(to_luminance));
+template <int D, ranges::input_range R> requires(ranges::forward_range<R> || ranges::sized_range<R>)
+[[nodiscard]] auto grid_from_flat(const Vec<int, D>& dims, R&& range) -> Grid<D, range_value_t<R>> {
+  Grid<D, range_value_t<R>> grid(dims);
+  ASSERTXX(size_t(ranges::distance(range)) == grid.size());
+  ranges::copy(range, grid.begin());  // Moves elements only if the caller opts in via views::as_rvalue.
+  return grid;
+}
+
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <int D, typename T, typename Func>
-auto transformed(CGridView<D, T> c, Func func) -> Grid<D, decltype(func(std::declval<T>()))> {
-  Grid<D, decltype(func(std::declval<T>()))> nc(c.dims());
-  for (const size_t i : range(c.size())) nc.flat(i) = func(c.flat(i));
-  return nc;
+template <int D, typename T, typename Func> [[nodiscard]] auto transformed(CGridView<D, T> c, Func func) {
+  return grid_from_flat(c.dims(), c | views::transform(func));
 }
 
 //----------------------------------------------------------------------------

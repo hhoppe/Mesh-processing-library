@@ -112,7 +112,8 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
     _options.allow_local_project = false;
   }
   HH_STIMER("__meshsearch_build");
-  if (!_options.bbox) _options.bbox.emplace(transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); }));
+  if (!_options.bbox)
+    _options.bbox.emplace(_mesh.vertices() | views::transform([&](Vertex v) { return _mesh.point(v); }));
   _xform = _options.bbox->get_frame_to_small_cube();
   _trianglefaces.reserve(mesh.num_faces());
   for (Face f : _mesh.faces()) {

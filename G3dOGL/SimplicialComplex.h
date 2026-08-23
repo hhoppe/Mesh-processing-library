@@ -163,8 +163,6 @@ class SimplicialComplex : noncopyable {
     Container::iterator begin() const { return const_cast<Container&>(_simplices).begin(); }
     Container::iterator end() const { return const_cast<Container&>(_simplices).end(); }
     int size() const { return _simplices.num(); }
-
-   private:
     Container _simplices;
   };
 

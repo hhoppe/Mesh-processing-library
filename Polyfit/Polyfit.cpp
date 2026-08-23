@@ -91,7 +91,7 @@ void poly_transform(const Frame& frame) {
 
 void compute_xform() {
   assertx(pt.n == pt.co.num());
-  const Bbox bbox{concatenate(pt.co, transform(verts, [](vertex v) { return v->p; }))};
+  const Bbox bbox{concatenate(pt.co, verts | views::transform([](vertex v) { return v->p; }))};
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xform_inverse = ~xform;

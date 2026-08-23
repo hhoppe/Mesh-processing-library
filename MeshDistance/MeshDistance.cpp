@@ -145,7 +145,7 @@ void print_it(const string& s, const PStats& pstats) {
 
 void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) {
   const bool use_parallelism = !errmesh;
-  const Bbox bbox{transform(mesh_d.vertices(), [&](Vertex v) { return mesh_d.point(v); })};
+  const Bbox bbox{mesh_d.vertices() | views::transform([&](Vertex v) { return mesh_d.point(v); })};
   bbdiag = mag(bbox[0] - bbox[1]);
   // showdf("size of the diag %f\n", bbdiag);
   MeshSearch mesh_search(mesh_d, {});
@@ -213,8 +213,8 @@ void do_distance() {
     assertx(meshes[imesh].num_faces());
     maxnfaces = max(maxnfaces, meshes[imesh].num_faces());
   }
-  const Bbox bbox0{transform(meshes[0].vertices(), [&](Vertex v) { return meshes[0].point(v); })};
-  const Bbox bbox1{transform(meshes[1].vertices(), [&](Vertex v) { return meshes[1].point(v); })};
+  const Bbox bbox0{meshes[0].vertices() | views::transform([&](Vertex v) { return meshes[0].point(v); })};
+  const Bbox bbox1{meshes[1].vertices() | views::transform([&](Vertex v) { return meshes[1].point(v); })};
   const Bbox bbox = bbox_union(bbox0, bbox1);
   xform = bbox.get_frame_to_small_cube();
   g_side0 = bbox0.max_side();

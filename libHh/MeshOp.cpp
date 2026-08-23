@@ -443,14 +443,14 @@ void split_valence(GMesh& mesh, int max_valence) {
       Vector vec_majority{};
       for_int(i, va.num()) vec_majority += mesh.point(va[i]) - mesh.point(v);
       const int j =
-          arg_max(transform(va, [&](Vertex vv) { return dot(mesh.point(vv) - mesh.point(v), vec_majority); }));
+          arg_max(va | views::transform([&](Vertex vv) { return dot(mesh.point(vv) - mesh.point(v), vec_majority); }));
       vs1 = va[(j + va.num() / 3) % va.num()];
       vs2 = va[(j + va.num() - va.num() / 3) % va.num()];
       offset = Vector{};
       if (0) {
         offsetn = (mesh.point(va[j]) - mesh.point(v)) * 0.2f;
       } else {
-        const Point centroid = mean(transform(va, [&](Vertex vv) { return mesh.point(vv); }));
+        const Point centroid = mean(va | views::transform([&](Vertex vv) { return mesh.point(vv); }));
         const float frac1 = 0.7f;
         offsetn = interp(mesh.point(v), centroid, frac1) - mesh.point(v);
       }

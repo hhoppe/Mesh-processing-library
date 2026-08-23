@@ -357,7 +357,7 @@ GMesh geometric_merge(const GMesh& mo) {
   //  Vertex x 0.00504071 31.3495 30.7251
   // is irrelevant if the bbox is of size 200.
   // Thus, gmerge is always more robust than do_froma3d().
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
   GMesh mn;
   // Create new vertices.
@@ -1764,12 +1764,12 @@ void triangulate_quads(ETriType type) {
         break;
       }
       case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1][0..1] domain
-        const int maxi = arg_max(transform(range(4), uv_distance_from_center));
+        const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 1 || maxi == 3;
         break;
       }
       case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1][0..1] domain
-        const int maxi = arg_max(transform(range(4), uv_distance_from_center));
+        const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 0 || maxi == 2;
         break;
       }
@@ -2163,13 +2163,13 @@ void do_smootha3d() {
 }
 
 void do_bbox() {
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   nooutput = true;
 }
 
 void do_tobbox() {
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_cube();
   showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
@@ -2404,7 +2404,7 @@ void do_info() {
     }
   }
   {
-    const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+    const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
     showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
   }
   {
@@ -2442,7 +2442,7 @@ void do_obtusesplit() {
       break;
     }
   }
-  const float max_elen = max(transform(mesh.edges(), [&](Edge e) { return mesh.length(e); })) * 1.1f;
+  const float max_elen = max(mesh.edges() | views::transform([&](Edge e) { return mesh.length(e); })) * 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
   const float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
@@ -2723,7 +2723,7 @@ void do_reduce() {
 
 void do_normalized_maxcrit(Args& args) {
   const float value = args.get_float();
-  const float avg_elen = float(mean(transform(mesh.edges(), [](Edge e) { return mesh.length(e); })));
+  const float avg_elen = float(mean(mesh.edges() | views::transform([](Edge e) { return mesh.length(e); })));
   maxcrit = value * square(avg_elen);
 }
 
@@ -3277,7 +3277,7 @@ void do_projectimage(Args& args) {
 void do_quantizeverts(Args& args) {
   int nbits = args.get_int();
   assertx(nbits >= 1 && nbits <= 32);
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   const float scale = pow(2.f, float(nbits));
   const float eps = 1e-6f;
@@ -3307,7 +3307,8 @@ void do_procedure(Args& args) {
     for (Vertex v : mesh.vertices()) mesh.update_string(v, "original", csform(str, "%d", mesh.vertex_id(v)));
 
   } else if (name == "show_tangents") {
-    const float max_side = Bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })}.max_side();
+    const float max_side =
+        Bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })}.max_side();
     const A3dVertexColor col = A3dVertexColor(Pixel::blue());
     const float segment_length = max_side * .01f;
     for (Vertex v : mesh.vertices()) {
@@ -3548,7 +3549,7 @@ void do_signeddistcontour(Args& args) {
   int grid = args.get_int();
   assertx(grid >= 2);
   {
-    const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+    const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
     const Frame xform = bbox.get_frame_to_small_cube();
     showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform);
@@ -3583,7 +3584,7 @@ Point compute_hull_point(Vertex v, float offset) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
+    Bbox bbox{concatenate(V(v), mesh.vertices(v)) | views::transform([&](Vertex vv) { return mesh.point(vv); })};
     bbox[0] -= Vector(abs(offset), abs(offset), abs(offset));
     bbox[1] += Vector(abs(offset), abs(offset), abs(offset));
     scale = transf_size / assertx(bbox.max_side());
@@ -3752,8 +3753,8 @@ void do_alignmentframe(Args& args) {
   assertx(!cmesh.empty() && !nmesh.empty());
   assertw(cmesh.num_vertices() == nmesh.num_vertices());  // just warn
   assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
-  const Bbox cbb{transform(cmesh.vertices(), [&](Vertex v) { return cmesh.point(v); })};
-  const Bbox nbb{transform(nmesh.vertices(), [&](Vertex v) { return nmesh.point(v); })};
+  const Bbox cbb{cmesh.vertices() | views::transform([&](Vertex v) { return cmesh.point(v); })};
+  const Bbox nbb{nmesh.vertices() | views::transform([&](Vertex v) { return nmesh.point(v); })};
   // Point corig = cbb[0];
   // Point norig = nbb[0];
   Point corig = interp(cbb[0], cbb[1]);  // align centroids
@@ -3919,7 +3920,8 @@ void do_shootrays(Args& args) {
   omesh.read(RFile(filename)());
   showdf("Shooting ray to: %s\n", mesh_genus_string(omesh).c_str());
   assertx(!mesh.empty() && !omesh.empty());
-  const Bbox bbox{transform(concatenate(mesh.vertices(), omesh.vertices()), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{concatenate(mesh.vertices(), omesh.vertices()) |
+                  views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube(0.5f);
   const Frame xform_inverse = ~xform;
   Array<TriangleFace> trianglefaces;
@@ -3999,7 +4001,7 @@ void do_transferkeysfrom(Args& args) {
   assertx(!mesh.empty() && !omesh.empty());
   HashPoint hp;  // (4, 0.f, 1.f);
   Array<Vertex> arv;
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
   if (1) {
     for (Vertex v : mesh.vertices()) hp.pre_consider(mesh.point(v) * xform);
@@ -4310,7 +4312,7 @@ void do_trimpts(Args& args) {
   string filename = args.get_filename();
   float dtrim = args.get_float();
   assertx(!mesh.empty());
-  const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+  const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
   PointSpatial<int> spatial(800);
   Array<Point> points;

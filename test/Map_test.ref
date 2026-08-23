@@ -5,3 +5,23 @@ s=abcd m[s]=113
 m = hh::Map<std::string,std::string>={
   [abcd, 113]
 }
+sorted(Array(map.values())) = Array<int>(2) {
+  1
+  2
+}
+ar_tuple[0] = tuple<0, first>
+ar_tuple[1] = tuple<1, second>
+type_name<decltype(str)>() = std::string
+str = 1,2
+sort(map.values() | ranges::to<Array<int>>()) = Array<int>(2) {
+  1
+  2
+}
+sort(Array(map.keys() | views::transform([](string s) { return "<" + s + ">"; }))) = Array<std::string>(2) {
+  <first>
+  <second>
+}
+sort(PArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))) = Array<int>(2) {
+  101
+  102
+}

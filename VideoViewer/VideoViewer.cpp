@@ -3555,7 +3555,8 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     // show RGBA values and coordinates as text
     const Vec2<int> fdims = get_font_dims();
     const float eps = .01f;
-    const Bbox bbox{transform(bbox_corners(Bbox(twice(-eps), convert<float>(g_win_dims) + eps)), &get_image_yx)};
+    const Bbox bbox{bbox_corners(Bbox(twice(-eps), convert<float>(g_win_dims) + eps)) |
+                    views::transform(&get_image_yx)};
     for (const Vec2<int> tex_yx : range(bbox[0], bbox[1] + 1)) {
       if (!tex_yx.in_range(g_frame_dims)) continue;
       const Pixel pixel = get_frame_pixel(tex_yx);

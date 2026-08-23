@@ -107,9 +107,9 @@ void SimplicialComplex::copy(const SimplicialComplex& orig) {
   for_int(i, MAX_DIM + 1) {
     for (Simplex s : orig.simplices_dim(i)) {
       Simplex news = createSimplex(s->getDim(), s->getId());
-      for (auto [ci, c] : enumerate<int>(s->children())) {
+      for (auto [ci, c] : views::enumerate(s->children())) {
         Simplex this_child = getSimplex(c->getDim(), c->getId());
-        news->setChild(ci, this_child);
+        news->setChild(int(ci), this_child);
         this_child->addParent(news);
       }
       if (s->getDim() == 0) news->setPosition(s->getPosition());
@@ -189,7 +189,7 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
     news->_flags = curr->_flags;
     news->_area = curr->_area;
 
-    for (auto [ci, c] : enumerate<int>(curr->children())) {
+    for (auto [ci, c] : views::enumerate(curr->children())) {
       Simplex res_child = res.getSimplex(c->getDim(), c->getId());
       // note some children might not be ancestors of s
       if (!res_child) {
@@ -201,14 +201,14 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
         res_child->_area = c->_area;
 
         // update child pointers (all must exist)
-        for (auto [cci, cc] : enumerate<int>(c->children())) {
+        for (auto [cci, cc] : views::enumerate(c->children())) {
           Simplex res_childchild = res.getSimplex(cc->getDim(), cc->getId());
           assertx(res_childchild);  // all must exist
-          res_child->setChild(cci, res_childchild);
+          res_child->setChild(int(cci), res_childchild);
           res_childchild->addParent(res_child);
         }
       }
-      news->setChild(ci, res_child);
+      news->setChild(int(ci), res_child);
       res_child->addParent(news);
     }
   }
@@ -231,11 +231,11 @@ void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialCom
         res_news->_flags = s2_s->_flags;
         res_news->_area = s2_s->_area;
         // update its links
-        for (auto [s2_ci, s2_c] : enumerate<int>(s2_s->children())) {
+        for (auto [s2_ci, s2_c] : views::enumerate(s2_s->children())) {
           Simplex res_child = res.getSimplex(s2_c->getDim(), s2_c->getId());
           assertx(res_child);  // all children must exist
 
-          res_news->setChild(s2_ci, res_child);
+          res_news->setChild(int(s2_ci), res_child);
 
           // update p
           res_child->addParent(res_news);
@@ -551,9 +551,9 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
 void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents) {
   // remove references from children
-  for (auto [ci, c] : enumerate<int>(src->children())) {
+  for (auto [ci, c] : views::enumerate(src->children())) {
     if (!c) continue;
-    src->_child[ci] = nullptr;
+    src->_child[int(ci)] = nullptr;
     vec_remove_ordered(c->_parent, src);
   }
 
@@ -561,8 +561,8 @@ void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affect
   // and add reference to parent from tgt
   for (Simplex p : src->getParents()) {
     if (!p) continue;
-    for (auto [ci, c] : enumerate<int>(p->children()))
-      if (c == src) p->setChild(ci, tgt);
+    for (auto [ci, c] : views::enumerate(p->children()))
+      if (c == src) p->setChild(int(ci), tgt);
 
     if (!affected_parents.contains(p)) affected_parents.push(p);
     tgt->addParent(p);

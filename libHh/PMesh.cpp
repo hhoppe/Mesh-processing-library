@@ -1522,7 +1522,7 @@ PMesh::PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo) : _base_mesh(std::move(aw
   _info._full_nvertices = _base_mesh._vertices.num();
   _info._full_nwedges = _base_mesh._wedges.num();
   _info._full_nfaces = _base_mesh._faces.num();
-  _info._full_bbox = Bbox{transform(_base_mesh._vertices, [](auto& v) { return v.attrib.point; })};
+  _info._full_bbox = Bbox{_base_mesh._vertices | views::transform([](auto& v) { return v.attrib.point; })};
 }
 
 void PMesh::read(std::istream& is) {

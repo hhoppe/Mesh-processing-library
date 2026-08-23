@@ -164,7 +164,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      for (auto [ei, e] : enumerate<int>(f->children())) {
+      for (auto [ei, e] : views::enumerate(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -172,7 +172,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
           // map e to edge adjacent to vt
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
-          f->setChild(ei, newe);
+          f->setChild(int(ei), newe);
           newe->addParent(f);
         }
       }
@@ -310,7 +310,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      for (auto [ei, e] : enumerate<int>(f->children())) {
+      for (auto [ei, e] : views::enumerate(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -318,7 +318,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
           // map e to edge adjacent to vt
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
-          f->setChild(ei, newe);
+          f->setChild(int(ei), newe);
           newe->addParent(f);
         }
       }
@@ -461,7 +461,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // map from vs to vt
-      for (auto [ei, e] : enumerate<int>(f->children())) {
+      for (auto [ei, e] : views::enumerate(f->children())) {
         // vertex opposite to vs
         Simplex voppvs = e->opp_vertex(vs);
         // if such vertex exists, ie if e is not opp_edge(vs)
@@ -469,7 +469,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
           // map e to edge adjacent to vt
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
-          f->setChild(ei, newe);
+          f->setChild(int(ei), newe);
           newe->addParent(f);
         }
       }

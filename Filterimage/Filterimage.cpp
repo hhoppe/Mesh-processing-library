@@ -894,7 +894,7 @@ void do_assemble(Args& args) {
     if (images.size() >= 10) images[yx].set_silent_io_progress(true);
     images[yx].read_file(filenames[yx]);
     apply_assemble_operations(images[yx], yx, images.dims());
-  });  // we can assume that parallelism is justified
+  });
   assemble_images(images);
   image.attrib() = images[0][0].attrib();
 }
@@ -3283,9 +3283,7 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   assertw(use_lab);
   const int NCH = 3;
   for_int(ch, NCH) {
-    // ar is not parallel??
-    // const ParallelOptions parallel_options{.cycles_per_elem = square(uint64_t(window_diam)) * 20};
-    // parallel_for_coords(parallel_options, mat_s.dims(), [&](const Vec2<int>& yx) {
+    // Parallelism would require parallel_for_chunk() due to shared `ar`.
     for_coords(mat_s.dims(), [&](const Vec2<int>& yx) {
       ar.init(0);                      // (initially unsorted) pdf of color image window
       float scenterv = mat_s[yx][ch];  // value of center pixel in structure image

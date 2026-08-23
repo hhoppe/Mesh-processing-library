@@ -4,6 +4,7 @@
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/HashTuple.h"
+#include "libHh/PArray.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
@@ -140,6 +141,23 @@ int main() {
     for (const string& s : ar) SHOW(s, m[s]);
     assertx(m.remove("ab") == "14");
     SHOW(m);
+  }
+  {
+    const Map<string, int> map = {{"first", 1}, {"second", 2}};
+    SHOW(sorted(Array(map.values())));
+    Array ar_tuple(sort(Array(map.keys())) | views::enumerate);
+    SHOW(ar_tuple[0]);
+    SHOW(ar_tuple[1]);
+    const auto str = (sort(Array(map.values())) | views::transform([](int v) { return std::to_string(v); }) |
+                      views::join_with(',') | ranges::to<string>());
+    SHOW(type_name<decltype(str)>());
+    SHOW(str);
+    SHOW(sort(map.values() | ranges::to<Array<int>>()));
+  }
+  {
+    Map<string, int> map = {{"first", 1}, {"second", 2}};
+    SHOW(sort(Array(map.keys() | views::transform([](string s) { return "<" + s + ">"; }))));
+    SHOW(sort(PArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))));
   }
 }
 

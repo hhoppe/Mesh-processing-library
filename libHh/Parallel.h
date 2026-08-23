@@ -166,7 +166,7 @@ void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threa
   const bool desire_parallelism = num_threads > 1 && total_num_cycles >= k_parallel_thresh;
   details::ThreadPoolIndexedTask* const thread_pool =
       desire_parallelism ? &details::ThreadPoolIndexedTask::default_threadpool() : nullptr;
-  const use_parallelism = thread_pool && !thread_pool->already_active();
+  const bool use_parallelism = thread_pool && !thread_pool->already_active();
   if (!use_parallelism) {
     // Process the entire range as a single chunk.
     const int thread_index = 0;

@@ -1491,7 +1491,7 @@ void do_write_texture(Args& args) {
   const MeshSearch msearch_d(domain_mesh, options_d);  // Map: domain D -> sphere S (v -> v_sph(v)).
   const MeshSearch msearch_s(param_mesh, options_s);   // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
-  const Bbox tight_bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
+  const Bbox tight_bbox{param_mesh.vertices() | views::transform([&](Vertex v) { return v_domainp(v); })};
   const Bbox bbox = signal_ == "V" ? tight_bbox.enclosing_hypercube() : tight_bbox;
   const Frame rotate_frame = get_rotate_frame();
 
@@ -1572,7 +1572,7 @@ void do_write_primal_texture(Args& args) {
   const Pixel background = Pixel::white();  // Outside color.
   Image image(V(imagesize, imagesize), background);
   Image image_right_column(V(image.ysize(), 1), background);
-  const Bbox bbox{transform(g_mesh.vertices(), [&](Vertex v) { return g_mesh.point(v); })};
+  const Bbox bbox{g_mesh.vertices() | views::transform([&](Vertex v) { return g_mesh.point(v); })};
   const Frame rotate_frame = get_rotate_frame();
   for (Vertex v : g_mesh.ordered_vertices()) {  // Ordered so as to "consistently" break ties along domain edges.
     const Uv uv = v_imageuv(v);
@@ -1625,7 +1625,7 @@ void do_write_lonlat_texture(Args& args) {
   assertx(g_mesh.empty());
   const Frame rotate_frame = get_rotate_frame();
   const GMesh& param_mesh = get_map_from_sphere_to_mesh();
-  const Bbox bbox{transform(param_mesh.vertices(), [&](Vertex v) { return v_domainp(v); })};
+  const Bbox bbox{param_mesh.vertices() | views::transform([&](Vertex v) { return v_domainp(v); })};
   const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .gridn_factor = 4.f});
 
   const int imagesize = gridn;

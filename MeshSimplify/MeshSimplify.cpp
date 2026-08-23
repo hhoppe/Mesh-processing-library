@@ -1254,7 +1254,8 @@ void parse_mesh() {
   // Construct bounding spheres.
   if (bspherefac) {
     for (Vertex v : mesh.vertices()) {
-      const Bbox bbox{transform(concatenate(V(v), mesh.vertices(v)), [&](Vertex vv) { return mesh.point(vv); })};
+      const Bbox bbox{concatenate(V(v), mesh.vertices(v)) |
+                      views::transform([&](Vertex vv) { return mesh.point(vv); })};
       const Point point = interp(bbox[0], bbox[1]);
       float max_d2 = dist2(mesh.point(v), point);
       for (Vertex vv : mesh.vertices(v)) {
@@ -1597,7 +1598,7 @@ void perhaps_initialize() {
     parse_mesh();
   }
   {
-    gbbox = Bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+    gbbox = Bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
     gdiam = assertx(gbbox.max_side());
     gdiam = getenv_float("GDIAM", gdiam, true);
     gcolc = square(gdiam * colfac);
@@ -2881,7 +2882,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
     Array<Bbox<float, 3>> ar_bbox(nf);
     for_int(i, nf) {
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
-      ar_bbox[i] = Bbox{transform(mesh.vertices(f), [&](Vertex v) { return mesh.point(v); })};
+      ar_bbox[i] = Bbox{mesh.vertices(f) | views::transform([&](Vertex v) { return mesh.point(v); })};
     }
     Array<float> ar_d2(nf);
     for (fptinfo* pfpt : nn.ar_fpts) {
@@ -2995,7 +2996,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    const Bbox bbox{transform(mesh.vertices(e), [&](Vertex v) { return mesh.point(v); })};
+    const Bbox bbox{mesh.vertices(e) | views::transform([&](Vertex v) { return mesh.point(v); })};
     if (!bbox.max_side()) {
       Warning("Empty bbox");
       return false;
@@ -3455,8 +3456,8 @@ double evaluate_aps(Edge e, int ii) {
   }
 
   // Also consider the displacements at all edge-edge crossings.
-  const Array<Vertex> verts{
-      filter(mesh.vertices(v1), [&](Vertex v) { return v != v2 && !edge_sharp(mesh.edge(v1, v)); })};
+  const Array verts(mesh.vertices(v1) |
+                    views::filter([&](Vertex v) { return v != v2 && !edge_sharp(mesh.edge(v1, v)); }));
   for (Vertex v : verts) {
     const Uv& p = c_winfo(mesh.corner(v, mesh.face(v, v1))).uv;
     const Uv& p1 = c_winfo(mesh.corner(v1, mesh.face(v, v1))).uv;
@@ -4471,7 +4472,7 @@ void parallel_optimize() {
       float cost{0.f};
       int min_ii{-1};
     };
-    // Array<EdgeCost> ar_edgecost{transform(mesh.edges(), [&](Edge e) { return EdgeCost{e}; })};
+    // Array<EdgeCost> ar_edgecost{mesh.edges() | views::transform([&](Edge e) { return EdgeCost{e}; })};
     Array<EdgeCost> ar_edgecost(mesh.num_edges());
     {
       int edge_index = 0;
@@ -4831,7 +4832,8 @@ void do_removeinfo() {
 }
 
 void write_original_indices() {
-  const Array<int> base_mesh_indices{transform(mesh.ordered_vertices(), [&](Vertex v) { return mesh.vertex_id(v); })};
+  const Array<int> base_mesh_indices{mesh.ordered_vertices() |
+                                     views::transform([&](Vertex v) { return mesh.vertex_id(v); })};
   WFile fi(original_indices);
   fi() << sform("%d\n", base_mesh_indices.num() + ar_vt_indices.num());
   for (int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices))) fi() << sform("%d\n", vi);

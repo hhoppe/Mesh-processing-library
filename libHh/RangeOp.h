@@ -390,42 +390,6 @@ template <typename U, ranges::forward_range R> auto convert(const R& c) {
 
 namespace details {
 
-template <typename Iterator, typename Func> struct TransformedIterator {
-  using type = TransformedIterator<Iterator, Func>;
-  using value_type = std::decay_t<decltype(std::declval<Func>()(*std::declval<Iterator>()))>;
-  using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  Iterator _iter;
-  const Func* _func{};
-  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  decltype(auto) operator*() const { return (*_func)(*_iter); }
-  type& operator++() { return ++_iter, *this; }
-  type operator++(int) { return postfix_increment(*this); }
-};
-
-template <ranges::forward_range R, typename Func> struct TransformedRange {
-  R _range;
-  Func _func;
-  auto begin() const {
-    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
-    return TransformedIterator<Iterator, Func>{ranges::begin(_range), &_func};
-  }
-  auto end() const {
-    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
-    return TransformedIterator<Iterator, Func>{ranges::end(_range), &_func};
-  }
-  auto size() const { return ranges::size(_range); }
-};
-
-}  // namespace details
-
-// Return a view range in which all elements are mapped through a function `func`.
-// requires??
-template <ranges::forward_range R, typename Func> auto transform(R&& range, Func func = Func{}) {
-  return details::TransformedRange<R, Func>{std::forward<R>(range), std::move(func)};
-}
-
-namespace details {
-
 template <typename Iterator1, typename Iterator2> struct ConcatenatedIterator {
   using type = ConcatenatedIterator<Iterator1, Iterator2>;
   using value_type = typename std::iterator_traits<Iterator1>::value_type;
@@ -461,12 +425,15 @@ template <ranges::forward_range R1, ranges::forward_range R2> struct Concatenate
     return ConcatenatedIterator<Iterator1, Iterator2>{ranges::end(_range1), ranges::end(_range1),
                                                       ranges::end(_range2)};
   }
-  auto size() const { return ranges::size(_range1) + ranges::size(_range2); }
+  auto size() const requires ranges::sized_range<const R1> && ranges::sized_range<const R2> {
+    return ranges::size(_range1) + ranges::size(_range2);
+  }
 };
 
 }  // namespace details
 
 // Return a view range that concatenates the elements of two or more ranges.
+// C++26: replace by views::concat().
 template <ranges::forward_range R1, ranges::forward_range R2, typename... Rs>
 [[HH_NO_DANGLING]] auto concatenate(R1&& range1, R2&& range2, Rs&&... ranges_) {
   // ("Dangling" is a false positive, due to the fact that there are >=2 reference-binding parameters.)
@@ -474,86 +441,6 @@ template <ranges::forward_range R1, ranges::forward_range R2, typename... Rs>
     return details::ConcatenatedRange<R1, R2>{std::forward<R1>(range1), std::forward<R2>(range2)};
   else
     return concatenate(std::forward<R1>(range1), concatenate(std::forward<R2>(range2), std::forward<Rs>(ranges_)...));
-}
-
-namespace details {
-
-template <typename Iterator, typename Index> struct EnumeratedIterator {
-  using type = EnumeratedIterator<Iterator, Index>;
-  using value_type = typename std::iterator_traits<Iterator>::value_type;
-  using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  Iterator _iter;
-  Index _index;
-  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  // Note: "std::make_tuple(_index, *_iter)" would return a copied element.
-  // Here we allow "for (auto&& [i, e] : enumerate(array)) e = int(i);".
-  decltype(auto) operator*() const { return std::tuple<Index, decltype(*_iter)>(_index, *_iter); }
-  type& operator++() { return ++_iter, ++_index, *this; }
-  type operator++(int) { return postfix_increment(*this); }
-};
-
-template <ranges::forward_range R, typename Index> struct EnumeratedRange {
-  R _range;
-  Index _start;
-  auto begin() const {
-    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>{ranges::begin(_range), _start};
-  }
-  auto end() const {
-    using Iterator = std::decay_t<decltype(ranges::begin(_range))>;
-    return EnumeratedIterator<Iterator, Index>{ranges::end(_range), _start};
-  }
-  auto size() const { return ranges::size(_range); }
-};
-
-}  // namespace details
-
-// Return a view range containing a sequence of tuples [index, element] for all elements in `range`.
-template <std::integral Index = size_t, ranges::forward_range R> auto enumerate(R&& range, Index start = 0) {
-  return details::EnumeratedRange<R, Index>{std::forward<R>(range), start};
-}
-
-namespace details {
-
-template <typename Iterator, typename Func> struct FilteredIterator {
-  using type = FilteredIterator<Iterator, Func>;
-  using value_type = typename std::iterator_traits<Iterator>::value_type;
-  using difference_type = typename std::iterator_traits<Iterator>::difference_type;
-  Iterator _iter;
-  Iterator _end;
-  const Func* _func{};
-  bool operator==(const type& rhs) const { return _iter == rhs._iter; }
-  decltype(auto) operator*() const { return *_iter; }
-  type& operator++() {
-    ++_iter;
-    while (_iter != _end && !(*_func)(*_iter)) ++_iter;
-    return *this;
-  }
-  type operator++(int) { return postfix_increment(*this); }
-};
-
-template <ranges::forward_range R, typename Func> struct FilteredRange {
-  R _range;
-  Func _func;
-  // Type of the expression `_range` in a const member function (const does not apply if R is a reference).
-  using CRange = std::add_lvalue_reference_t<std::add_const_t<R>>;
-  using Iterator = std::decay_t<ranges::iterator_t<CRange>>;
-  auto begin() const -> FilteredIterator<Iterator, Func> {
-    auto iterator = FilteredIterator<Iterator, Func>{ranges::begin(_range), ranges::end(_range), &_func};
-    while (iterator != this->end() && !_func(*iterator)) ++iterator;
-    return iterator;
-  }
-  auto end() const -> FilteredIterator<Iterator, Func> {
-    return FilteredIterator<Iterator, Func>{ranges::end(_range), ranges::end(_range), &_func};
-  }
-  // Note that size() is unknown.
-};
-
-}  // namespace details
-
-// Return a view range that filters the elements in `range` according to a predicate `func`.
-template <ranges::forward_range R, typename Func> auto filter(R&& range, Func func = Func{}) {
-  return details::FilteredRange<R, Func>{std::forward<R>(range), std::move(func)};
 }
 
 }  // namespace hh

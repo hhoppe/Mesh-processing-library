@@ -116,10 +116,10 @@ int main() {
   }
   {
     Array<int> ar2 = {6, 4, 2};
-    for (int i : transform(ar2, [](int j) { return j * j; })) SHOW(i);
+    for (int i : views::transform(ar2, [](int j) { return j * j; })) SHOW(i);
   }
   {
-    for (int i : transform(std::vector<int>{10, 11}, [](int j) { return j * j; })) SHOW(i);
+    for (int i : views::transform(std::vector<int>{10, 11}, [](int j) { return j * j; })) SHOW(i);
   }
   {
     Array<int> result;
@@ -134,8 +134,8 @@ int main() {
     SHOW(result);
   }
   {
-    const Array<int> ar1{3, 4, 5, 6};
-    const Array<int> ar2{filter(ar1, [](int i) { return i != 3 && i != 6; })};
+    const Array ar1{3, 4, 5, 6};
+    const Array ar2(ar1 | views::filter([](int i) { return i != 3 && i != 6; }));
     SHOW(ar2);
   }
   {
@@ -145,7 +145,7 @@ int main() {
   {
     Array<int> indices;
     Array<char> chars;
-    for (const auto [i, ch] : enumerate(string("ABC"))) {
+    for (const auto [i, ch] : views::enumerate(string("ABC"))) {
       indices.push(int(i));
       chars.push(ch);
     }

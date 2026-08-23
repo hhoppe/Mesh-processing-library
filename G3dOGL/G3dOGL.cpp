@@ -2007,7 +2007,7 @@ void draw_mesh(GMesh& mesh) {
       bool is_new;
       float& mesh_radius = mesh_radii.enter(&mesh, 0.f, is_new);
       if (is_new) {
-        const Bbox bbox{transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); })};
+        const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
         mesh_radius = bbox.max_side();
         assertw(mesh_radius > 0.f);
       }

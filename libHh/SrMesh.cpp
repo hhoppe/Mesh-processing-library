@@ -589,7 +589,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   }
   // Record bbox of model.
   assertx(_vertices.num() == vgeoms.num());
-  _bbox = Bbox{transform(vgeoms, [](auto v) { return v.point; })};
+  _bbox = Bbox{vgeoms | views::transform([](auto v) { return v.point; })};
   display_hierarchy_height();
   if (k_debug) ok();
   {

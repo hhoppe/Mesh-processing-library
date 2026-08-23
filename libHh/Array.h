@@ -69,6 +69,9 @@ template <typename T> class CArrayView {
   template <typename T2> [[nodiscard]] friend constexpr bool same_size(type ar1, CArrayView<T2> ar2) {
     return ar1.num() == ar2.num();
   }
+  // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
+  // `arview = array` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
+  type& operator=(type&& a) & { return _a = a._a, _n = a._n, *this; }
   void reinit(type a) { *this = a; }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return _n; }
   [[nodiscard]] constexpr size_t size() const { return narrow_cast<size_t>(_n); }
@@ -115,7 +118,7 @@ template <typename T> class CArrayView {
     return false;
   }
   CArrayView() = default;
-  type& operator=(const type&) = default;
+  type& operator=(const type&) = default;  // Protected to prevent a no-op "grid[0] = grid[1]" on a const Grid!
 };
 
 // View of a variable-sized 1D array with modifiable data of type T, e.g. refers to a C-array,
@@ -131,6 +134,10 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   // template <int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }
+  //
+  // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
+  // `arview = array` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
+  type& operator=(type&& a) & { return _a = a._a, _n = a._n, *this; }
   void reinit(type a) { *this = a; }
   void assign(base ar) requires Copyable<T>;
   using value_type = T;
@@ -147,7 +154,7 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   using base::_n;
   using base::check;
   ArrayView() = default;
-  type& operator=(const type&) = default;
+  type& operator=(const type&) = default;  // Protected to prevent a no-op "grid[0] = grid[1]" on a mutable Grid.
 };
 
 // Create an ArrayView<T> referencing the single specified element.
@@ -564,7 +571,10 @@ TTN G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3
 
 }  // namespace hh
 
+template <typename T> inline constexpr bool std::ranges::enable_view<hh::CArrayView<T>> = true;
 template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::CArrayView<T>> = true;
+
+template <typename T> inline constexpr bool std::ranges::enable_view<hh::ArrayView<T>> = true;
 template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::ArrayView<T>> = true;
 
 #endif  // MESH_PROCESSING_LIBHH_ARRAY_H_

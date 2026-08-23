@@ -187,7 +187,7 @@ void mesh_transform(const Frame& frame) {
 }
 
 void compute_xform() {
-  const Bbox bbox{concatenate(pt.co, transform(mesh.vertices(), [&](Vertex v) { return mesh.point(v); }))};
+  const Bbox bbox{concatenate(pt.co, mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); }))};
   gdiam = bbox.max_side();
   xform = bbox.get_frame_to_small_cube();
   if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
@@ -809,8 +809,8 @@ void UPointLls::solve(double* prss0, double* prss1) {
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   int nf = ar_faces.num();
   const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
-  const auto face_bbox = [&](Face f) { return Bbox{transform(mesh.vertices(f), vertex_point)}; };
-  const Array<Bbox<float, 3>> ar_bbox{transform(ar_faces, face_bbox)};
+  const auto face_bbox = [&](Face f) { return Bbox{mesh.vertices(f) | views::transform(vertex_point)}; };
+  const Array<Bbox<float, 3>> ar_bbox{ar_faces | views::transform(face_bbox)};
   for (int pi : ar_pts) {
     const Point& p = pt.co[pi];
     static Array<float> ar_d2;

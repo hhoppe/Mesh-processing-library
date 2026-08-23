@@ -48,7 +48,6 @@ class Mesh : noncopyable {
   using MCorner = MHEdge;
   struct MEdge;
 
- public:
   using HEdge = MHEdge*;
   using Vertex = MVertex*;
   using Face = MFace*;
@@ -320,10 +319,8 @@ class Mesh : noncopyable {
 
   // Mesh Iter
 
-  class Edges_iterator {
+  struct Edges_iterator {
     using type = Edges_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
@@ -342,8 +339,7 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
+    //
     CArrayView<HEdge>::iterator _hcur{nullptr}, _hend{nullptr};  // _hcur points at current element
     Map<int, Vertex>::cvalues_iterator _vcur, _vend;             // _vcur points one vertex ahead
     void next() {
@@ -365,47 +361,40 @@ class Mesh : noncopyable {
     }
   };
 
-  struct Edges_range {
-    Edges_range(const Mesh& m) : _m(m) {}
-    using value_type = Edge;
-    Edges_iterator begin() const { return Edges_iterator(_m, true); }
-    Edges_iterator end() const { return Edges_iterator(_m, false); }
-    int size() const { return _m.num_edges(); }
-
-   private:
-    const Mesh& _m;
+  struct Edges_range : ranges::view_interface<Edges_range> {
+    explicit Edges_range(const Mesh& m) : _m(&m) {}
+    Edges_iterator begin() const { return Edges_iterator(*_m, true); }
+    Edges_iterator end() const { return Edges_iterator(*_m, false); }
+    int size() const { return _m->num_edges(); }
+    const Mesh* _m;
   };
 
-  struct OrderedVertices_range {
+  struct OrderedVertices_range {  // No view_interface because not O(1) copyable.
+    explicit OrderedVertices_range(const Mesh& mesh);
     using Container = Array<Vertex>;
-    OrderedVertices_range(const Mesh& mesh);
-    using value_type = Vertex;
-    Container::iterator begin() const { return const_cast<Container&>(_vertices).begin(); }
-    Container::iterator end() const { return const_cast<Container&>(_vertices).end(); }
+    Container::iterator begin() { return _vertices.begin(); }
+    Container::const_iterator begin() const { return _vertices.begin(); }
+    Container::iterator end() { return _vertices.end(); }
+    Container::const_iterator end() const { return _vertices.end(); }
     int size() const { return _vertices.num(); }
-
-   private:
     Container _vertices;
   };
 
-  struct OrderedFaces_range {
+  struct OrderedFaces_range {  // No view_interface because not O(1) copyable.
+    explicit OrderedFaces_range(const Mesh& mesh);
     using Container = Array<Face>;
-    OrderedFaces_range(const Mesh& mesh);
-    using value_type = Face;
-    Container::iterator begin() const { return const_cast<Container&>(_faces).begin(); }
-    Container::iterator end() const { return const_cast<Container&>(_faces).end(); }
+    Container::iterator begin() { return _faces.begin(); }
+    Container::const_iterator begin() const { return _faces.begin(); }
+    Container::iterator end() { return _faces.end(); }
+    Container::const_iterator end() const { return _faces.end(); }
     int size() const { return _faces.num(); }
-
-   private:
     Container _faces;
   };
 
   // Vertex Iter
 
-  class VV_iterator {
+  struct VV_iterator {
     using type = VV_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Vertex;
     using difference_type = std::ptrdiff_t;
@@ -423,26 +412,20 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     CArrayView<HEdge>::iterator _it{};
     Vertex _extrav{nullptr};
   };
 
-  struct VV_range {
-    VV_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
-    VV_iterator begin() const { return VV_iterator(_ar.begin()); }
-    VV_iterator end() const { return VV_iterator(_ar.end()); }
+  struct VV_range : ranges::view_interface<VV_range> {
+    VV_range(const Mesh&, Vertex v) : _v(v) {}
+    VV_iterator begin() const { return VV_iterator(_v->_arhe.begin()); }
+    VV_iterator end() const { return VV_iterator(_v->_arhe.end()); }
     // Note that size() is not trivially computable.
-
-   private:
-    CArrayView<HEdge> _ar;
+    Vertex _v;
   };
 
-  class VF_iterator {
+  struct VF_iterator {
     using type = VF_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Face;
     using difference_type = std::ptrdiff_t;
@@ -452,25 +435,19 @@ class Mesh : noncopyable {
     Face operator*() const { return (*_it)->_face; }
     type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     CArrayView<HEdge>::iterator _it{};
   };
 
-  struct VF_range {
-    VF_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
-    VF_iterator begin() const { return VF_iterator(_ar.begin()); }
-    VF_iterator end() const { return VF_iterator(_ar.end()); }
-    int size() const { return _ar.num(); }
-
-   private:
-    CArrayView<HEdge> _ar;
+  struct VF_range : ranges::view_interface<VF_range> {
+    VF_range(const Mesh&, Vertex v) : _v(v) {}
+    VF_iterator begin() const { return VF_iterator(_v->_arhe.begin()); }
+    VF_iterator end() const { return VF_iterator(_v->_arhe.end()); }
+    int size() const { return _v->_arhe.num(); }
+    Vertex _v;
   };
 
-  class VE_iterator {
+  struct VE_iterator {
     using type = VE_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
@@ -488,26 +465,20 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     CArrayView<HEdge>::iterator _it{};
     Edge _extrae{nullptr};
   };
 
-  struct VE_range {
-    VE_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
-    VE_iterator begin() const { return VE_iterator(_ar.begin()); }
-    VE_iterator end() const { return VE_iterator(_ar.end()); }
+  struct VE_range : ranges::view_interface<VE_range> {
+    VE_range(const Mesh&, Vertex v) : _v(v) {}
+    VE_iterator begin() const { return VE_iterator(_v->_arhe.begin()); }
+    VE_iterator end() const { return VE_iterator(_v->_arhe.end()); }
     // Note that size() is not trivially computable.
-
-   private:
-    CArrayView<HEdge> _ar;
+    Vertex _v;
   };
 
-  class VC_iterator {
+  struct VC_iterator {
     using type = VC_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Corner;
     using difference_type = std::ptrdiff_t;
@@ -517,27 +488,21 @@ class Mesh : noncopyable {
     Corner operator*() const { return (*_it)->_prev; }
     type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     CArrayView<HEdge>::iterator _it{};
   };
 
-  struct VC_range {
-    VC_range(const Mesh&, Vertex v) : _ar(v->_arhe) {}
-    VC_iterator begin() const { return VC_iterator(_ar.begin()); }
-    VC_iterator end() const { return VC_iterator(_ar.end()); }
-    int size() const { return _ar.num(); }
-
-   private:
-    CArrayView<HEdge> _ar;
+  struct VC_range : ranges::view_interface<VC_range> {
+    VC_range(const Mesh&, Vertex v) : _v(v) {}
+    VC_iterator begin() const { return VC_iterator(_v->_arhe.begin()); }
+    VC_iterator end() const { return VC_iterator(_v->_arhe.end()); }
+    int size() const { return _v->_arhe.num(); }
+    Vertex _v;
   };
 
   // Face Iter
 
-  class FV_iterator {
+  struct FV_iterator {
     using type = FV_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Vertex;
     using difference_type = std::ptrdiff_t;
@@ -551,26 +516,20 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     HEdge _it{};
     bool _beg{};
   };
 
-  struct FV_range {
+  struct FV_range : ranges::view_interface<FV_range> {
     FV_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FV_iterator begin() const { return FV_iterator(_herep, true); }
     FV_iterator end() const { return FV_iterator(_herep, false); }
     // Note that size() is not trivially computable.
-
-   private:
     HEdge _herep;
   };
 
-  class FF_iterator {
+  struct FF_iterator {
     using type = FF_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Face;
     using difference_type = std::ptrdiff_t;
@@ -598,26 +557,20 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     HEdge _it{};
     bool _beg{};
   };
 
-  struct FF_range {
+  struct FF_range : ranges::view_interface<FF_range> {
     FF_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FF_iterator begin() const { return FF_iterator(_herep, true); }
     FF_iterator end() const { return FF_iterator(_herep, false); }
     // Note that size() is not trivially computable.
-
-   private:
     HEdge _herep;
   };
 
-  class FE_iterator {
+  struct FE_iterator {
     using type = FE_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
@@ -631,26 +584,20 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     HEdge _it{};
     bool _beg{};
   };
 
-  struct FE_range {
+  struct FE_range : ranges::view_interface<FE_range> {
     FE_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FE_iterator begin() const { return FE_iterator(_herep, true); }
     FE_iterator end() const { return FE_iterator(_herep, false); }
     // Note that size() is not trivially computable.
-
-   private:
     HEdge _herep;
   };
 
-  class FC_iterator {
+  struct FC_iterator {
     using type = FC_iterator;
-
-   public:
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Corner;
     using difference_type = std::ptrdiff_t;
@@ -664,19 +611,15 @@ class Mesh : noncopyable {
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
-
-   private:
     HEdge _it{};
     bool _beg{};
   };
 
-  struct FC_range {
+  struct FC_range : ranges::view_interface<FC_range> {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
     FC_iterator begin() const { return FC_iterator(_herep, true); }
     FC_iterator end() const { return FC_iterator(_herep, false); }
     // Note that size() is not trivially computable.
-
-   private:
     HEdge _herep;
   };
 
@@ -750,7 +693,7 @@ class Mesh : noncopyable {
     Flags _flags;
     unique_ptr<char[]> _string;
     MEdge(HEdge herep) : _herep(herep) {}
-    HH_MAKE_POOLED_SAC(Mesh::MEdge);  // must be last entry of class!
+    HH_MAKE_POOLED_SAC(Mesh::MEdge);  // must be last entry of struct!
     friend std::ostream& operator<<(std::ostream& os, Edge e);
   };
 
@@ -761,7 +704,7 @@ class Mesh : noncopyable {
     unique_ptr<char[]> _string;
     Point _point;
     MVertex(int id) : _id(id) {}
-    HH_MAKE_POOLED_SAC(Mesh::MVertex);  // must be last entry of class!
+    HH_MAKE_POOLED_SAC(Mesh::MVertex);  // must be last entry of struct!
     friend std::ostream& operator<<(std::ostream& os, Vertex v);
   };
 
@@ -771,7 +714,7 @@ class Mesh : noncopyable {
     Flags _flags;
     unique_ptr<char[]> _string;
     MFace(int id) : _id(id) {}
-    HH_MAKE_POOLED_SAC(MFace);  // must be last entry of class!
+    HH_MAKE_POOLED_SAC(MFace);  // must be last entry of struct!
     friend std::ostream& operator<<(std::ostream& os, Face f);
   };
 
@@ -784,7 +727,7 @@ class Mesh : noncopyable {
     Edge _edge;    // Edge to which this HEdge belongs
     unique_ptr<char[]> _string;
     MHEdge() = default;
-    HH_MAKE_POOLED_SAC(MHEdge);  // must be last entry of class!
+    HH_MAKE_POOLED_SAC(MHEdge);  // must be last entry of struct!
     friend std::ostream& operator<<(std::ostream& os, HEdge he);
   };
 

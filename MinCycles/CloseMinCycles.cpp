@@ -77,7 +77,7 @@ bool difference_is_within_relative_eps(float a, float b, float eps) { return abs
 
 CloseMinCycles::CloseMinCycles(GMesh& mesh, Options options) : _mesh(mesh), _options(std::move(options)) {
   if (_options.frac_offset) {
-    const Bbox bbox{transform(_mesh.vertices(), [&](Vertex v) { return _mesh.point(v); })};
+    const Bbox bbox{_mesh.vertices() | views::transform([&](Vertex v) { return _mesh.point(v); })};
     _offset_magnitude = _options.frac_offset * bbox.max_side();
   }
 }

@@ -1046,13 +1046,8 @@ void unload_current_object() {
   }
 }
 
-// Replace by a "transformed"??
-template <ranges::forward_range R> requires std::same_as<range_value_t<R>, Pixel>
-Array<float> to_luminance(const R& range) {
-  Array<float> ar;
-  ar.reserve(int(ranges::distance(range)));
-  for (const Pixel& pixel : range) ar.push(Y_from_RGB(pixel));
-  return ar;
+inline auto luminances(auto&& range) {
+  return range | views::transform([](const Pixel& pixel) { return Y_from_RGB(pixel); });
 }
 
 // Remove the white boundary around an uncropped scanned image.
@@ -1074,7 +1069,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
         for (; w < wmax; w++) {
           int j = side == 0 ? w : wmax - 1 - w;
           auto range = grid_column(image, col_d, twice(0).with(axis, j));
-          if (rankf_element(to_luminance(range), .1) < luminance_thresh) break;
+          if (rankf_element(luminances(range), .1) < luminance_thresh) break;
         }
         borderw[side][axis] = w;
       }
@@ -1093,7 +1088,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
         const int col_d = 1 - axis;  // axis == 0 -> column;  axis == 1 -> row
         const int wmax = image.dim(axis), len = image.dim(col_d);
         auto outermost_column = grid_column(image, col_d, twice(0).with(axis, side == 0 ? 0 : wmax - 1));
-        float outermost_luminance = float(median(to_luminance(outermost_column)));
+        float outermost_luminance = median(luminances(outermost_column));
         if (outermost_luminance < luminance_thresh) continue;  // outermost column is not white enough
         Array<int> ar_w(len);
         for_int(i, len) {
@@ -1132,7 +1127,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
         for_int(w, min(30, wmax)) {
           int j = side == 0 ? w : wmax - 1 - w;
           auto range = grid_column(image, col_d, twice(0).with(axis, j));
-          ar_luminance.push(float(mean(to_luminance(range))));
+          ar_luminance.push(float(mean(luminances(range))));
         }
         if (ldebug) SHOW(ar_luminance);
         for_int(w, ar_luminance.num()) {

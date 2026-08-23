@@ -297,3 +297,20 @@ grid[0][V(0, 0)][0] = 0
 (grid[V(1, 1, 1)][1]) = 18
 (grid[1][V(1, 1, 1)]) = 18
 (grid[V(1, 1)][V(1, 1)]) = 18
+Array(CGridView<2, int>(grid) | views::transform([](int v) { return v + 100; })) = Array<int>(6) {
+  100
+  101
+  102
+  103
+  104
+  105
+}
+grid = Matrix<int>(2, 3) {
+  0 1 2
+  3 4 5
+}
+Array(grid[1] | views::transform([](int v) { return v + 100; })) = Array<int>(3) {
+  103
+  104
+  105
+}

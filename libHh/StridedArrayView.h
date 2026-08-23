@@ -27,6 +27,7 @@ template <typename T> class CStridedArrayView {
     ASSERTX(_stride > 0);  // Else <=>() uses "_stride > 0 ? _p <=> rhs._p : rhs._p <=> _p".
   }
   CStridedArrayView(const type& a) = default;
+  type& operator=(type&& a) & { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
   int num() const { return _n; }
   size_t size() const { return _n; }
   const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
@@ -88,6 +89,7 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
  public:
   explicit StridedArrayView(T* a, int n, ptrdiff_t stride) : base(a, n, stride) {}
   StridedArrayView(const type& a) = default;
+  type& operator=(type&& a) & { return base::operator=(std::move(a)), *this; }  // For view<T>.
   T& operator[](int i) { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
   const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
   T& last() { return (*this)[_n - 1]; }
@@ -151,5 +153,11 @@ template <typename T> HH_DECLARE_OSTREAM_EOL(CStridedArrayView<T>);
 template <typename T> HH_DECLARE_OSTREAM_EOL(StridedArrayView<T>);  // Implemented by CStridedArrayView<T>.
 
 }  // namespace hh
+
+template <typename T> inline constexpr bool std::ranges::enable_view<hh::CStridedArrayView<T>> = true;
+template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::CStridedArrayView<T>> = true;
+
+template <typename T> inline constexpr bool std::ranges::enable_view<hh::StridedArrayView<T>> = true;
+template <typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::StridedArrayView<T>> = true;
 
 #endif  // MESH_PROCESSING_LIBHH_STRIDEDARRAYVIEW_H_

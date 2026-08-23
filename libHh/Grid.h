@@ -97,7 +97,9 @@ template <int D, typename T> class CGridView {
   explicit CGridView(const T* a, const Vec<int, D>& dims) : _a(const_cast<T*>(a)), _dims(dims) {}
   CGridView(const type&) = default;
   explicit CGridView(CArrayView<T> ar) requires(D == 1) : CGridView(ar.data(), V(ar.num())) {}
-  // We cannot initialize from a nested_initializer_list_t because it is not a (linear) contiguous array T[].
+  // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
+  // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
+  type& operator=(type&& g) & { return _a = g._a, _dims = g._dims, *this; }
   void reinit(type g) { *this = g; }
   template <typename T2> friend bool same_size(type g1, CGridView<D, T2> g2) { return g1.dims() == g2.dims(); }
   static constexpr int ndim() { return D; }
@@ -134,6 +136,9 @@ template <int D, typename T> class CGridView {
     assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
+  auto slices() const requires(D >= 2) {
+    return range(dim(0)) | views::transform([grid = *this](int i) { return grid[i]; });
+  }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
@@ -154,16 +159,21 @@ template <int D, typename T> class CGridView {
   const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
 
  protected:
+  // See class CArrayView for a discussion of constness and protection of operator=().
   T* _a{nullptr};  // [0, _dims[0] - 1] * [0, _dims[1] - 1] * ... * [0, _dims[D - 1] - 1].
   Vec<int, D> _dims{ntimes<D>(0)};
   bool check(int r) const {
     if (r >= 0 && r < _dims[0]) return true;
-    SHOW(r, _dims);
+    if !consteval {
+      SHOW(r, _dims);
+    }
     return false;
   }
   bool check(const Vec<int, D>& u) const {
     if (ok(u)) return true;
-    SHOW(u, _dims);
+    if !consteval {
+      SHOW(u, _dims);
+    }
     return false;
   }
   CGridView() = default;
@@ -172,13 +182,16 @@ template <int D, typename T> class CGridView {
 
 // View of a contiguous D-dimensional grid with modifiable data of type T; often refers to a Grid<D, T>.
 template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridView<D, T> {
-  using type = GridView<D, T>;
   using base = CGridView<D, T>;
+  using type = GridView<D, T>;
 
  public:
   explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // Stop recursion if ArrayView == GridView.
   GridView(const type&) = default;                                     // Because it has explicit copy assignment.
   explicit GridView(ArrayView<T> ar) requires(D == 1) : GridView(ar.data(), V(ar.num())) {}
+  // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
+  // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
+  type& operator=(type&& g) & { return base::operator=(std::move(g)), *this; }
   void reinit(type g) { *this = g; }
   using base::size;
   T& flat(size_t i) { return ASSERTXX(i < size()), _a[i]; }
@@ -198,6 +211,10 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
   base slice(int ib, int ie) const { return base::slice(ib, ie); }
+  auto slices() requires(D >= 2) {
+    return range(this->dim(0)) | views::transform([grid = *this](int i) { return type(grid)[i]; });
+  }
+  auto slices() const requires(D >= 2) { return base::slices(); }
   void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;
@@ -625,7 +642,9 @@ TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
 
 }  // namespace hh
 
+template <int D, typename T> inline constexpr bool std::ranges::enable_view<hh::CGridView<D, T>> = true;
 template <int D, typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::CGridView<D, T>> = true;
+template <int D, typename T> inline constexpr bool std::ranges::enable_view<hh::GridView<D, T>> = true;
 template <int D, typename T> inline constexpr bool std::ranges::enable_borrowed_range<hh::GridView<D, T>> = true;
 
 #endif  // MESH_PROCESSING_LIBHH_GRID_H_

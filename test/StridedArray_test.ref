@@ -1,0 +1,6 @@
+Array(grid_column(matrix, 0, V(0, 1)) | views::transform([](int v) { return v * 2; })) = Array<int>(3) {
+  2
+  22
+  42
+}
+sum(grid_column(matrix, 1, V(2, 0))) = 86

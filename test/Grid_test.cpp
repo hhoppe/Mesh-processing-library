@@ -146,6 +146,34 @@ int main() {
       SHOW((grid[V(1, 1)][V(1, 1)]));
     }
   }
+  {
+    static_assert(ranges::view<CGridView<2, int>> && ranges::view<GridView<2, int>>);
+    static_assert(ranges::borrowed_range<CGridView<2, int>> && ranges::borrowed_range<GridView<2, int>>);
+    static_assert(ranges::viewable_range<CGridView<2, int>>);  // The rvalue pipes.
+    static_assert(!ranges::view<Grid<2, int>> && !ranges::borrowed_range<Grid<2, int>>);
+  }
+  {
+    // Elementwise intent must go through assign(); reseating through reinit() or an explicit std::move().
+    static_assert(!std::is_assignable_v<GridView<2, int>&, Grid<2, int>&>);      // gv = grid;
+    static_assert(!std::is_assignable_v<GridView<2, int>&, GridView<2, int>&>);  // gv = other_gv;
+    static_assert(!std::is_assignable_v<ArrayView<int>, ArrayView<int>>);        // grid[0] = grid[1];
+    static_assert(std::is_assignable_v<GridView<2, int>&, GridView<2, int>&&>);  // The one legal form.
+  }
+  {
+    // These must NOT compile (elementwise intent must go through assign(), reseating through reinit()):
+    Grid<2, int> grid;
+    GridView<2, int> gv = grid, other_gv = grid;
+    // gv = grid;
+    // gv = other_gv;
+    // grid[0] = grid[1];
+    dummy_use(grid, gv, other_gv);
+  }
+  {
+    const Grid grid = grid_from_flat(V(2, 3), range(6));
+    SHOW(Array(CGridView<2, int>(grid) | views::transform([](int v) { return v + 100; })));
+    SHOW(grid);
+    SHOW(Array(grid[1] | views::transform([](int v) { return v + 100; })));
+  }
 }
 
 template class hh::CGridView<1, unsigned>;

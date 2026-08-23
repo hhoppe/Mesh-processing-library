@@ -190,5 +190,11 @@ int main() {
       if (1) assertnever("");
     }
   }
+  {
+    static_assert(ranges::viewable_range<decltype(std::declval<const Mesh&>().vertices())>);
+    static_assert(ranges::viewable_range<decltype(std::declval<const Mesh&>().vertices(Vertex{}))>);
+    static_assert(ranges::viewable_range<decltype(std::declval<const Mesh&>().ccw_vertices(Vertex{}))>);
+    static_assert(!ranges::view<decltype(std::declval<const Mesh&>().ordered_vertices())>);
+  }
   SHOW("all ok");
 }

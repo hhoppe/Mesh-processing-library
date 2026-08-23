@@ -64,8 +64,7 @@ int parse_size(string s, int size, bool measure_neg_from_end) {
   assertx(s[0] != '-');
   int i;
   if (remove_at_end(s, "%")) {
-    float v = Args::parse_float(s);
-    i = int(v / 100.f * size + .5f);
+    i = int(Args::parse_float(s) / 100.f * size + .5f);
   } else {
     i = Args::parse_int(s);
   }
@@ -2157,27 +2156,18 @@ void do_noisegaussian(Args& args) {
 }
 
 Vector frame_median(CMatrixView<Pixel> frame) {
-  Vector vmedian;
-  Array<float> ar_tmp;
-  ar_tmp.reserve(assert_narrow_cast<int>(product(frame.dims())));
-  for_int(z, nz) {
-    ar_tmp.init(0);
-    for (const Pixel& pixel : frame) ar_tmp.push(pixel[z]);
-    vmedian[z] = float(median(ar_tmp));
-  }
-  return vmedian;
+  return Vec<float, nz>::create(
+      [&](int z) { return float(median(frame | views::transform([z](const Pixel& pixel) { return pixel[z]; }))); });
 }
 
 Vector frame_mean(CMatrixView<Pixel> frame) {
-  Array<Stat> stat_pixels(nz);
-  for (const Pixel& pixel : frame) for_int(z, nz) stat_pixels[z].enter(pixel[z]);
-  return Vector(stat_pixels[0].avg(), stat_pixels[1].avg(), stat_pixels[2].avg());
+  return Vec<float, nz>::create(
+      [&](int z) { return mean<float>(frame | views::transform([z](const Pixel& pixel) { return pixel[z]; })); });
 }
 
 void do_equalizemedians() {
-  Array<Vector> ar_medians;
-  for_int(f, video.nframes()) ar_medians.push(frame_median(video[f]));
-  Vector mean_of_medians = mean(ar_medians);
+  Array<Vector> ar_medians{video.slices() | views::transform(frame_median)};
+  const Vector mean_of_medians = mean(ar_medians);
   SHOW(mean_of_medians);
   for (auto& vec : ar_medians) vec -= mean_of_medians;
   for_int(f, video.nframes()) for (Pixel& pixel : video[f]) {
@@ -2186,9 +2176,8 @@ void do_equalizemedians() {
 }
 
 void do_equalizemeans() {
-  Array<Vector> ar_means;
-  for_int(f, video.nframes()) ar_means.push(frame_mean(video[f]));
-  Vector mean_of_means = mean(ar_means);
+  Array<Vector> ar_means{video.slices() | views::transform(frame_mean)};
+  const Vector mean_of_means = mean(ar_means);
   SHOW(mean_of_means);
   for (auto& vec : ar_means) vec -= mean_of_means;
   for_int(f, video.nframes()) for (Pixel& pixel : video[f]) {
@@ -2198,8 +2187,8 @@ void do_equalizemeans() {
 
 void do_frameinfo() {
   for_int(f, video.nframes()) {
-    Vector median = frame_median(video[f]);
-    Vector mean = frame_mean(video[f]);
+    const Vector median = frame_median(video[f]);
+    const Vector mean = frame_mean(video[f]);
     showf(" frame %-3d mean=(%6.2f %6.2f %6.2f) median=(%3g %3g %3g)\n",  //
           f, mean[0], mean[1], mean[2], median[0], median[1], median[2]);
   }

@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "libHh/ArrayOp.h"
+#include "libHh/PArray.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 using namespace hh;
@@ -227,6 +228,15 @@ int main() {
     Array<std::string> copied;
     copied.push_array(ranges::subrange(words.head(2)));
     std::println("(4) copied={},{}   words[0]='{}' (intact)", copied[0], copied[1], words[0]);
+  }
+  {
+    static_assert(ranges::view<CArrayView<int>> && ranges::view<ArrayView<int>>);
+    static_assert(ranges::borrowed_range<CArrayView<int>> && ranges::borrowed_range<ArrayView<int>>);
+    static_assert(!ranges::view<Array<int>> && !ranges::borrowed_range<Array<int>>);
+    static_assert(!ranges::view<PArray<int, 4>> && !ranges::borrowed_range<PArray<int, 4>>);
+    // Algorithms on a temporary view return a usable iterator; on an owning container, ranges::dangling.
+    static_assert(std::same_as<ranges::borrowed_iterator_t<CArrayView<int>>, const int*>);
+    static_assert(std::same_as<ranges::borrowed_iterator_t<Array<int>>, ranges::dangling>);
   }
 }
 

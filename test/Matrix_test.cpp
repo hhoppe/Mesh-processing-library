@@ -168,6 +168,9 @@ int main() {
     assertx(rotate_ccw(m, 90).dims() == V(5, 7));
     assertx(dist2(rotate_ccw(rotate_ccw(rotate_ccw(rotate_ccw(m, 90), 180), 270), 180), m) == 0);
   }
+  {
+    static_assert(ranges::view<CMatrixView<int>> && !ranges::view<Matrix<int>>);
+  }
 }
 
 // Matrix*<T> cannot be instanced because aliases for Grid*<2, T>, which however are instanced in Grid_test.cpp.

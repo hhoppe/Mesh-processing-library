@@ -159,6 +159,11 @@ int main() {
     SHOW(sort(Array(map.keys() | views::transform([](string s) { return "<" + s + ">"; }))));
     SHOW(sort(PArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))));
   }
+  {
+    static_assert(ranges::view<Map<int, int>::keys_range>);
+    static_assert(ranges::view<Map<int, int>::values_range>);
+    static_assert(ranges::view<Map<int, int>::cvalues_range>);
+  }
 }
 
 template class hh::Map<int, unsigned>;

@@ -37,7 +37,7 @@ namespace hh {
 class Args {
  public:
   explicit Args(CArrayView<string> aargs) : _args(aargs) {}
-  explicit Args(std::initializer_list<string> l) : Args(CArrayView<string>(l.begin(), narrow_cast<int>(l.size()))) {}
+  explicit Args(std::initializer_list<string> l) : _args(std::move(l)) {}
   virtual ~Args() = default;
   int num() const { return _args.num() - _iarg; }  // Number of arguments left.
   size_t size() const { return _args.size() - _iarg; }

@@ -79,7 +79,7 @@ inline char RBuffer::get_char(int bi) const { return (*this)[bi]; }
 inline int RBuffer::get_int(int bi) const {
   ASSERTX(bi >= 0 && bi + 4 <= _n);
   int32_t i;
-  std::memcpy(&i, &_ar[_beg + bi], sizeof(i));
+  std::memcpy(&i, _ar.data() + _beg + bi, sizeof(i));
   from_std(&i);
   return i;
 }
@@ -87,7 +87,7 @@ inline int RBuffer::get_int(int bi) const {
 inline short RBuffer::get_short(int bi) const {
   ASSERTX(bi >= 0 && bi + 2 <= _n);
   int16_t i;
-  std::memcpy(&i, &_ar[_beg + bi], sizeof(i));
+  std::memcpy(&i, _ar.data() + _beg + bi, sizeof(i));
   from_std(&i);
   return i;
 }
@@ -95,7 +95,7 @@ inline short RBuffer::get_short(int bi) const {
 inline float RBuffer::get_float(int bi) const {
   ASSERTX(bi >= 0 && bi + 4 <= _n);
   float f;
-  std::memcpy(&f, &_ar[_beg + bi], sizeof(f));
+  std::memcpy(&f, _ar.data() + _beg + bi, sizeof(f));
   from_std(&f);
   return f;
 }

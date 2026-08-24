@@ -4,7 +4,7 @@
 
 #include <vector>
 
-#include "libHh/Hh.h"
+#include "libHh/RangeOp.h"  // contains()
 
 #if 0
 {
@@ -16,26 +16,17 @@
 
 namespace hh {
 
-// Does a vector contain an element?
-template <typename T> bool vec_contains(const std::vector<T>& vec, const T& e) {
-  // return std::find(vec.begin(), vec.end(), e) != vec.end();
-  for (const T& ee : vec)
-    if (e == ee) return true;
-  return false;
-}
 // Remove an element from a vector; return was_there.
 template <typename T> bool vec_remove_ordered(std::vector<T>& vec, const T& e) {
-  // auto it = std::find(vec.begin(), vec.end(), e); if (it == vec.end()) return false; vec.erase(it); return true;
-  for (auto it(vec.begin()); it != vec.end(); ++it) {
-    if (*it == e) {
-      vec.erase(it);
-      return true;
-    }
-  }
-  return false;
+  auto it = ranges::find(vec, e);
+  if (it == vec.end()) return false;
+  vec.erase(it);
+  return true;
 }
+
 // Pop an element from the back of a vector.
 template <typename T> T vec_pop(std::vector<T>& vec) {
+  ASSERTX(!vec.empty());
   T e = std::move(vec.back());
   vec.pop_back();
   return e;
@@ -50,19 +41,19 @@ template <typename T> class Stack {
   void push(const T& e) requires Copyable<T> { _s.push_back(e); }
   void push(T&& e) { _s.push_back(std::move(e)); }
   T pop() { return vec_pop(_s); }
-  const T& top() const { return _s.back(); }
-  bool empty() const { return _s.empty(); }
-  int height() const { return narrow_cast<int>(_s.size()); }
-  size_t size() const { return _s.size(); }
-  bool contains(const T& e) const { return vec_contains(_s, e); }
+  [[nodiscard]] const T& top() const { return _s.back(); }
+  [[nodiscard]] bool empty() const { return _s.empty(); }
+  [[nodiscard]] int height() const { return narrow_cast<int>(_s.size()); }
+  [[nodiscard]] size_t size() const { return _s.size(); }
+  [[nodiscard]] bool contains(const T& e) const { return hh::contains(_s, e); }
   bool remove(const T& e) { return vec_remove_ordered(_s, e); }
   using value_type = T;
   using iterator = typename base::reverse_iterator;
   using const_iterator = typename base::const_reverse_iterator;
-  iterator begin() { return _s.rbegin(); }
-  const_iterator begin() const { return _s.rbegin(); }
-  iterator end() { return _s.rend(); }
-  const_iterator end() const { return _s.rend(); }
+  [[nodiscard]] iterator begin() { return _s.rbegin(); }
+  [[nodiscard]] const_iterator begin() const { return _s.rbegin(); }
+  [[nodiscard]] iterator end() { return _s.rend(); }
+  [[nodiscard]] const_iterator end() const { return _s.rend(); }
 
  private:
   base _s;

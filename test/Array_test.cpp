@@ -166,8 +166,8 @@ int main() {
   }
   {
     std::vector vec{1, 3};
-    Array ar(ranges::subrange(vec.begin(), vec.end()));
-    SHOW(ar);
+    SHOW(Array(ranges::subrange(vec.begin(), vec.end())));
+    SHOW(Array(ranges::subrange(vec)));
   }
   {
     std::vector vec{1, 2, 3};

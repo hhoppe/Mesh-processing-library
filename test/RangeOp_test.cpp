@@ -105,13 +105,15 @@ int main() {
     Array<float> ar1 = {2.7f, -3.3f, 5.1f, -6.2f, 0.f};
     {
       auto ar = clone(ar1);
-      rotate(ar, ar.begin() + 2);
+      auto& ar2 = rotate(ar, ar.begin() + 2);
       SHOW(ar);
+      assertx(&ar2 == &ar);
     }
     {
       auto ar = clone(ar1);
-      std::rotate(ar.begin(), &ar[2], ar.end());
+      auto prev_left_range = ranges::rotate(ar, ar.begin() + 2);
       SHOW(ar);
+      SHOW(Array(prev_left_range));
     }
   }
   {

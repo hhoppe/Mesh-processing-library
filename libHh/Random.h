@@ -13,7 +13,7 @@ namespace hh {
 //   most distributions, including floating-point types, is implementation-dependent.)
 class Random : noncopyable {
  public:
-  static Random G;  // can be uninitialized before main()!  any shared Random is not threadsafe.
+  static Random G;  // Can be uninitialized before main()!  Any shared Random is not threadsafe.
   explicit Random(uint32_t seedv = 0);
   ~Random();
   void seed(uint32_t seedv);
@@ -26,7 +26,6 @@ class Random : noncopyable {
   float gauss();                       // avg = 0.f, sdv = 1.f
   double dgauss();                     // avg = 0.,  sdv = 1.
   void discard(uint64_t count);
-  // https://en.cppreference.com/w/cpp/concept/UniformRandomNumberGenerator (std::*_engine classes):
   using result_type = uint32_t;
   result_type operator()();
   static_assert(std::is_integral_v<result_type>);
@@ -50,8 +49,8 @@ template <typename T> void shuffle(ArrayView<T> ar, Random& r);
 //----------------------------------------------------------------------------
 
 template <typename T> void shuffle(ArrayView<T> ar, Random& r) {
-  // std::default_random_engine e; std::shuffle(ar.begin(), ar.end(), e);  // implementation-dependent
-  // std::mt19937_64 e;            std::shuffle(ar.begin(), ar.end(), e);  // implementation-dependent
+  // std::default_random_engine e; ranges::shuffle(ar, e);  // Implementation-dependent.
+  // std::mt19937_64 e;            ranges::shuffle(ar, e);  // Implementation-dependent.
   const int n = ar.num();
   for_int(i, n - 1) {
     int j = i + r.get_unsigned(n - i);

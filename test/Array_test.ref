@@ -206,10 +206,10 @@ sort_unique(V(10, 13, 12, 13, 9, 12, 15, 10)) = Array<int>(5) {
   13
   15
 }
-median(V(10, 13, 12, 13, 9, 12, 15, 10)) = 12.5
+median(V(10, 13, 12, 13, 9, 12, 15, 10)) = 12
 median(V(8, 7, 6, 5, 4, 9, 10)) = 7
-median_two(V(10, 13, 12, 13, 9, 12, 15, 10)) = [12, 13]
-mean(median_two(V(10, 13, 12, 13, 9, 12, 15, 10))) = 12.5
+median_two(V(10, 13, 12, 13, 9, 12, 15, 10)) = [12, 12]
+mean(median_two(V(10, 13, 12, 13, 9, 12, 15, 10))) = 12
 median_two(V(8, 7, 6, 5, 4, 9, 10)) = [7, 7]
 mean(median_two(V(8, 7, 6, 5, 4, 9, 10))) = 7
 i=0 rank_element(ar, i)=4
@@ -246,7 +246,11 @@ ar = Array<int>(2) {
   1
   2
 }
-ar = Array<int>(2) {
+Array(ranges::subrange(vec.begin(), vec.end())) = Array<int>(2) {
+  1
+  3
+}
+Array(ranges::subrange(vec)) = Array<int>(2) {
   1
   3
 }

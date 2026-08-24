@@ -41,24 +41,13 @@ T1 discrete_binary_search_func(Func feval, T1 xl, T1 xh, T2 y_desired) {
   }
 }
 
-// Given xl < xh, ar[xl] <= y_desired < ar[xh], Find x such that ar[x] <= y_desired < ar[x + 1] .
+// Given xl < xh, ar[xl] <= y_desired < ar[xh], find x such that ar[x] <= y_desired < ar[x + 1] .
 template <typename T> int discrete_binary_search(CArrayView<T> ar, int xl, int xh, T y_desired) {
   assertx(xl < xh);
   assertx(ar[xl] <= y_desired && y_desired < ar[xh]);
-  // if (1) return std::lower_bound(&ar[xl], &ar[xh] + 1, y_desired)-ar.data();  // untested
-  for (;;) {
-    ASSERTX(xl < xh && ar[xl] <= y_desired && y_desired < ar[xh]);
-    if (xh - xl == 1) return xl;
-    int xm = (xl + xh) / 2;
-    if (y_desired >= ar[xm])
-      xl = xm;
-    else
-      xh = xm;
-  }
+  // Use upper_bound() to find the first index x1 in (xl, xh] for which ar[x1] > y_desired, then obtain x = x1 - 1.
+  return narrow_cast<int>(ranges::upper_bound(ar.slice(xl, xh), y_desired, std::less<>{}) - ar.begin()) - 1;
 }
-
-// See also STL function to find an element within a sorted list:
-//  bool std::binary_search(iterator ibegin, iterator iend, const T& elem);
 
 }  // namespace hh
 

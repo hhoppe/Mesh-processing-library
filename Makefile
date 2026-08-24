@@ -3,7 +3,7 @@
 #  depending on the detected platform.
 # Setting "CONFIG=all" runs the make process successively on all available configurations.
 # Examples:
-#  make -j12 demos
+#  make PEDANTIC=1 -j12 demos
 #  make -j12 Filtermesh  # Builds single program using default CONFIG (either "win" or "unix").
 #  make -j4  # Limit parallelism to 4 cores; important on a Virtual Machine.
 #  make CONFIG=mingw -j12 demos

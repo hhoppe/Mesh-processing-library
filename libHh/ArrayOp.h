@@ -22,8 +22,8 @@ Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
 template <ranges::input_range R> auto median_two(const R& range) -> Vec2<range_value_t<R>> {
   Array ar(range);
   assertx(ar.num());
-  const int median_index = ar.num() / 2;
-  ranges::nth_element(ar, &ar[median_index]);  // Place median element at median location.
+  const int median_index = (ar.num() - 1) / 2;
+  ranges::nth_element(ar, ar.begin() + median_index);  // Place median element at median location.
   const auto val0 = ar[median_index];
   // List is partially sorted about the median value, so find the min of the second half.
   const auto val1 = ar.num() % 2 == 1 ? val0 : min(ar.slice(median_index + 1, ar.num()));
@@ -40,7 +40,7 @@ template <ranges::input_range R> range_value_t<R> rank_element(const R& range, i
   Array ar(range);
   assertx(ar.num());
   assertx(ar.ok(rank));
-  ranges::nth_element(ar, &ar[rank]);  // Place rank element at rank location.
+  ranges::nth_element(ar, ar.begin() + rank);  // Place rank element at rank location.
   return ar[rank];
 }
 
@@ -51,7 +51,7 @@ template <ranges::input_range R> range_value_t<R> rankf_element(const R& range, 
   assertx(ar.num());
   int rank = int(floor(rankf * ar.num()));
   if (rank == ar.num()) rank--;
-  ranges::nth_element(ar, &ar[rank]);  // Place rank element at rank location.
+  ranges::nth_element(ar, ar.begin() + rank);  // Place rank element at rank location.
   return ar[rank];
 }
 

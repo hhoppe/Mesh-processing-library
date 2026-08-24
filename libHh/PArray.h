@@ -22,7 +22,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
   }
   explicit PArray(const type& ar) requires Copyable<T> : PArray() { *this = ar; }
-  PArray(std::initializer_list<T> l) requires Copyable<T> : PArray(ranges::subrange(l.begin(), l.end())) {}
+  PArray(std::initializer_list<T> l) requires Copyable<T> : PArray(ranges::subrange(l)) {}
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
@@ -32,17 +32,11 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }
   auto& operator=(CArrayView<T> ar) requires Copyable<T> {
-    if (!(ar.data() == _a && ar.num() == _n)) {
-      init(ar.num());
-      std::copy(ar.begin(), ar.end(), _a);
-    }
+    if (ar.data() != _a || ar.num() != _n) init(ar.num()), ranges::copy(ar, _a);
     return *this;
   }
   auto& operator=(const type& ar) requires Copyable<T> {
-    if (&ar != this) {
-      init(ar.num());
-      std::copy(ar.begin(), ar.end(), _a);
-    }
+    if (&ar != this) init(ar.num()), ranges::copy(ar, _a);
     return *this;
   }
   auto& operator=(type&& ar) noexcept {

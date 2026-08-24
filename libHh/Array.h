@@ -177,7 +177,7 @@ template <typename T> class Array : public ArrayView<T> {
   explicit Array(int n) : base(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) { ASSERTX(n >= 0); }
   explicit Array(int n, const T& v) requires Copyable<T> : Array(n) { for_int(i, n) _a[i] = v; }
   explicit Array(const type& ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
-  Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l.begin(), l.end())) {}
+  Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l)) {}
   Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit Array(R&& range) : base(nullptr, 0) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
@@ -414,8 +414,7 @@ template <typename T> [[nodiscard]] constexpr bool CArrayView<T>::operator==(typ
 template <typename T> void ArrayView<T>::assign(base ar) requires Copyable<T> {
   ASSERTX(_n == ar.num());
   if (ar.data() == data()) return;
-  // std::memcpy() would be unsafe for general T; std::copy() uses std::memmove() when T is trivially copyable.
-  std::copy(ar.begin(), ar.end(), _a);
+  ranges::copy(ar, _a);
 }
 
 //----------------------------------------------------------------------------

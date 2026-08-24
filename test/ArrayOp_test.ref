@@ -1,0 +1,40 @@
+sort_unique(array) = Array<int>(4) {
+  2
+  3
+  4
+  5
+}
+median_two(array) = [3, 4]
+median(array) = 3.5
+i=0 rank_element(array, i)=2
+i=1 rank_element(array, i)=2
+i=2 rank_element(array, i)=3
+i=3 rank_element(array, i)=4
+i=4 rank_element(array, i)=4
+i=5 rank_element(array, i)=5
+sort_unique(array) = Array<int>(4) {
+  1
+  2
+  3
+  4
+}
+median_two(array) = [2, 3]
+median(array) = 2.5
+i=0 rank_element(array, i)=1
+i=1 rank_element(array, i)=2
+i=2 rank_element(array, i)=3
+i=3 rank_element(array, i)=4
+sort_unique(array) = Array<int>(5) {
+  1
+  2
+  3
+  4
+  5
+}
+median_two(array) = [3, 3]
+median(array) = 3
+i=0 rank_element(array, i)=1
+i=1 rank_element(array, i)=2
+i=2 rank_element(array, i)=3
+i=3 rank_element(array, i)=4
+i=4 rank_element(array, i)=5

@@ -211,13 +211,13 @@ void test9() {
   for_int(k, ntests) {
     Array<int> ar1;
     for_int(i, n) ar1.push(i);
-    std::shuffle(ar1.begin(), ar1.end(), random_engine);
+    ranges::shuffle(ar1, random_engine);
     Array<float> ar2;
     for_int(i, n) ar2.push(float(i));
-    std::shuffle(ar2.begin(), ar2.end(), random_engine);
+    ranges::shuffle(ar2, random_engine);
     Array<float> ar3;
     for_int(i, n) ar3.push(float(i));
-    std::shuffle(ar3.begin(), ar3.end(), random_engine);
+    ranges::shuffle(ar3, random_engine);
     HPqueue<int> hpq;
     for_int(i, n) {
       int j = ar1[i];

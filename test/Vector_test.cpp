@@ -1,9 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/Stack.h"  // vec_contains()
-
 #include <deque>
 #include <list>
 #include <vector>
+
+#include "libHh/RangeOp.h"  // contains()
+#include "libHh/Stack.h"    // vec_pop()
 
 using namespace hh;
 
@@ -65,7 +66,7 @@ void test_stack() {
     for_int(i, 4) s.push_back(i);
     assertw(s.size() == 4);
     assertw(!s.empty());
-    assertw(vec_contains(s, 2));
+    assertw(contains(s, 2));
     assertw(s.back() == 3);
     assertw(vec_pop(s) == 3);
     assertw(vec_pop(s) == 2);
@@ -73,7 +74,7 @@ void test_stack() {
       int i = 0;
       for (int j : s) assertw(j == i++);
     }
-    assertw(!vec_contains(s, 2));
+    assertw(!contains(s, 2));
     assertw(vec_pop(s) == 1);
     assertw(vec_pop(s) == 0);
     assertw(s.empty());
@@ -158,19 +159,12 @@ void test_list() {
   assertw(l.size() == 0);
   l.push_back(1);
   l.push_back(2);
-  // l.erase(remove(l.begin(), l.end(), 77), l.end());  // remove element 77
-  // l.insert_before(1, 0);
-  l.insert(find(l.begin(), l.end(), 1), 0);
-  // l.insert_after(2, 3);
-  l.insert(++find(l.begin(), l.end(), 2), 3);
+  l.insert(ranges::find(l, 1), 0);
+  l.insert(++ranges::find(l, 2), 3);
   {
     int i = 0;
     for (int j : l) assertw(j == i++);
   }
-  // assertw(l.before(2) == 1);
-  // assertw(l.after(2) == 3);
-  // assertw(l.after(3) == 0);
-  // assertw(l.before(0) == 0);
   l.clear();
 }
 
@@ -184,4 +178,4 @@ int main() {
 
 template class std::vector<int>;
 template class std::vector<void*>;
-// template class std::vector<unique_ptr<int>>;  // Full instantiation is unsupported.
+// template class std::vector<unique_ptr<int>>;  // Full instantiation is unsupported; we cannot modify std namespace.

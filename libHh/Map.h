@@ -48,8 +48,8 @@ class Map {
   Map() = default;
   explicit Map(Hashf hashf) : _map(0, hashf) {}
   explicit Map(Hashf hashf, Equalf equalf) : _map(0, hashf, equalf) {}
-  Map(std::initializer_list<std::pair<const Key, Value>> list) requires Copyable<Key> && Copyable<Value>
-      : _map(std::move(list)) {}
+  Map(std::initializer_list<std::pair<const Key, Value>> l) requires Copyable<Key> && Copyable<Value>
+      : _map(std::move(l)) {}
   void clear() { _map.clear(); }
   void enter(const Key& key, const Value& value) requires Copyable<Key> && Copyable<Value> {  // Key must be new!
     const auto [_, is_new] = _map.emplace(key, value);

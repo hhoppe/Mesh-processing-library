@@ -321,7 +321,9 @@ class DirMediaFilenames {
       s.time_updated = cur_time;
       s.filenames = sort_dir(directory, get_files_in_directory(directory));
       const auto func_not_media = [](const string& s2) { return !filename_is_media(s2); };
-      s.filenames.erase(std::remove_if(s.filenames.begin(), s.filenames.end(), func_not_media), s.filenames.end());
+      auto range_removed = ranges::remove_if(s.filenames, func_not_media);
+      assertx(ranges::end(range_removed) == ranges::end(s.filenames));  // ?? should be true always.
+      s.filenames.erase(ranges::begin(range_removed), ranges::end(range_removed));
     }
     return s.filenames;
   }
@@ -1002,7 +1004,8 @@ Array<string> get_image_sequence(const string& filename) {
   string base = root_name.substr(0, i);
   int ndigits = narrow_cast<int>(root_name.size() - i);
   if (!ndigits) return {};
-  int val = to_int(&root_name[i]);
+  const char* p_val = &root_name[i];
+  int val = to_int(p_val);
   Array<string> ar;
   for (;;) {
     string s = base + sform("%0*d", ndigits, val) + "." + extension;
@@ -1046,7 +1049,7 @@ void unload_current_object() {
   }
 }
 
-inline auto luminances(auto&& range) {
+inline auto luminances(input_range_to<Pixel> auto&& range) {
   return range | views::transform([](const Pixel& pixel) { return Y_from_RGB(pixel); });
 }
 
@@ -1127,7 +1130,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
         for_int(w, min(30, wmax)) {
           int j = side == 0 ? w : wmax - 1 - w;
           auto range = grid_column(image, col_d, twice(0).with(axis, j));
-          ar_luminance.push(float(mean(luminances(range))));
+          ar_luminance.push(mean(luminances(range)));
         }
         if (ldebug) SHOW(ar_luminance);
         for_int(w, ar_luminance.num()) {
@@ -2986,7 +2989,7 @@ void upload_image_to_texture() {
           scale_Matrix_Pixel(view, filterbs, nullptr, image_tmp);
           view.reinit(image_tmp);
         }
-        std::copy(view.begin(), view.end(), frame.data());
+        ranges::copy(view, frame.data());
         if (!getob().is_image() || !getob()._image_is_bgra) {
           frame_format = GL_RGBA;
         } else if (!supports_BGRA) {

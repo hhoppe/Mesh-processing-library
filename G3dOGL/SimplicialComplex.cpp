@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "libHh/RangeOp.h"  // compare()
+#include "libHh/RangeOp.h"  // compare(), contains()
 #include "libHh/Set.h"
-#include "libHh/Stack.h"  // also vec_contains()
+#include "libHh/Stack.h"
 #include "libHh/StringOp.h"
 
 namespace hh {
@@ -134,7 +134,7 @@ void SimplicialComplex::ok() const {
       for (Simplex c : si->children()) {
         if (!valid(c)) std::cerr << "Simplex " << si->getDim() << " " << si->getId() << "has invalid child.\n";
 
-        if (!vec_contains(c->_parent, si))
+        if (!contains(c->_parent, si))
           std::cerr << "Simplex " << c->getDim() << " " << c->getId() << "does not know for a parent (" << si->getDim()
                     << " " << si->getId() << ") of which it is a child.\n";
       }

@@ -47,7 +47,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   Set() = default;
   explicit Set(Hashf hashf) : _set(0, hashf) {}
   explicit Set(Hashf hashf, Equalf equalf) : _set(0, hashf, equalf) {}
-  Set(std::initializer_list<T> list) requires Copyable<T> : _set(std::move(list)) {}
+  Set(std::initializer_list<T> l) requires Copyable<T> : _set(std::move(l)) {}
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>) explicit Set(R&& range) {
     for (const T& e : range) add(e);
   }

@@ -312,7 +312,8 @@ class Warnings {
         return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2)) < 0;
       }
     };
-    std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
+    const std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
+    // const std::map<const char*, int, string_less> sorted_map(std::from_range_t{}, _map);  // C++23; cygwin gcc<15
     const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
     show_local("Summary of warnings:\n");
     for (const auto& [s, n] : sorted_map) show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
@@ -597,9 +598,8 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
 unique_ptr<char[]> make_unique_c_string(const char* s) {
   if (!s) return nullptr;
   size_t size = strlen(s) + 1;
-  auto s2 = make_unique<char[]>(size);
-  // std::copy(s, s + size, s2.get());
-  std::memcpy(s2.get(), s, size);  // Safe for known element type (char).
+  auto s2 = std::make_unique_for_overwrite<char[]>(size);
+  std::memcpy(s2.get(), s, size);
   return s2;
 }
 

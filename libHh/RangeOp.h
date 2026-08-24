@@ -98,17 +98,21 @@ template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range
 }
 
 // Index of the minimum value in a non-empty range.
-template <ranges::input_range R> int arg_min(const R& range) {
-  auto iter = ranges::min_element(range);
-  ASSERTX(iter != ranges::end(range));
-  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+int arg_min(const R& range, Comp comp = Comp{}) {
+  auto iter = ranges::min_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
 }
 
 // Index of the maximum value in a non-empty range.
-template <ranges::input_range R> int arg_max(const R& range) {
-  auto iter = ranges::max_element(range);
-  ASSERTX(iter != ranges::end(range));
-  return narrow_cast<int>(std::distance(ranges::begin(range), iter));
+template <ranges::forward_range R, typename Comp = std::less<>>
+requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
+int arg_max(const R& range, Comp comp = Comp{}) {
+  auto iter = ranges::max_element(range, comp);
+  ASSERTXX(iter != ranges::end(range));
+  return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
 }
 
 // *** Mutable range operations:

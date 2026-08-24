@@ -474,9 +474,7 @@ const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderva
 template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requires Copyable<T> {
   assertx(same_size(*this, g));
   if (g.data() == data()) return;
-  // for (const size_t i : range(size())) _a[i] = g.flat(i);
-  // if (_a) std::memcpy(_a, g.begin(), (g.end() - g.begin()) * sizeof(T));  // No faster, and unsafe for general T.
-  if (_a) std::copy(g.begin(), g.end(), _a);
+  ranges::copy(g, data());
 }
 
 template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) {

@@ -2157,7 +2157,7 @@ void do_noisegaussian(Args& args) {
 
 Vector frame_median(CMatrixView<Pixel> frame) {
   return Vec<float, nz>::create(
-      [&](int z) { return float(median(frame | views::transform([z](const Pixel& pixel) { return pixel[z]; }))); });
+      [&](int z) { return median(frame | views::transform([z](const Pixel& pixel) { return pixel[z]; })); });
 }
 
 Vector frame_mean(CMatrixView<Pixel> frame) {

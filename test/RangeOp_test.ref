@@ -109,6 +109,10 @@ ar = Array<float>(5) {
   2.7
   -3.3
 }
+Array(prev_left_range) = Array<float>(2) {
+  2.7
+  -3.3
+}
 i = 36
 i = 16
 i = 4

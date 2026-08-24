@@ -45,7 +45,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
   constexpr void assign(CArrayView<T> ar) requires Copyable<T> {
     ASSERTXX(ar.num() == n);
-    std::copy(ar.data(), ar.data() + n, data());
+    ranges::copy(ar, data());
   }
   [[nodiscard]] constexpr type rev() const requires Copyable<T> { return rev_aux(std::make_index_sequence<n>()); }
   [[nodiscard]] constexpr bool in_range(const type& dims) const requires std::integral<T> {  // [c] < uU[c] for all c.

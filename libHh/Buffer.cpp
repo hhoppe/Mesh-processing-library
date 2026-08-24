@@ -30,8 +30,8 @@ constexpr int k_write_size = 8192;
 
 void Buffer::shift() {
   assertx(_beg);
-  // if (_n) std::copy(_ar.data() + _beg, _ar.data() + _beg + _n, _ar.data());  // overlap but shift is "left" so OK.
-  std::memmove(_ar.data(), _ar.data() + _beg, unsigned(_n));  // safe for known type (char); extents may overlap.
+  ranges::copy(_ar.segment(_beg, _n), _ar.data());  // Overlap is fine because the destination precedes the source.
+  // In the future: ranges::shift_left(_ar.head(_beg + _n), _beg);  // Shift the occupied prefix down to index 0.
   _beg = 0;
 }
 
@@ -135,12 +135,12 @@ RBuffer::ERefill RBuffer::refill() {
     if (_ar.num() - _beg - _n < buf_buffern && _beg) shift();
     if (_ar.num() - _beg - _n < buf_buffern) expand();
     assertx(_ar.num() - _beg - _n >= buf_buffern);
-    // std::copy(buf_buffer.data(), buf_buffer.data() + buf_buffern, &_ar[_beg + _n]);
-    std::memcpy(&_ar[_beg + _n], buf_buffer.data(), unsigned(buf_buffern));  // safe for known element type (char)
+    // std::memcpy(&_ar[_beg + _n], buf_buffer.data(), unsigned(buf_buffern));
+    ranges::copy(buf_buffer.head(buf_buffern), _ar.begin() + _beg + _n);
     buf_buffern = 0;
     assertx(SetEvent(buf_event_data_copied));
   } else {
-    nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], unsigned(ntoread));
+    nread = HH_POSIX(read)(_fd, _ar.data() + _beg + _n, unsigned(ntoread));
     if (nread < 0) {
       _err = true;
       return ERefill::other;
@@ -152,7 +152,7 @@ RBuffer::ERefill RBuffer::refill() {
   }
 #else
   for (;;) {
-    nread = HH_POSIX(read)(_fd, &_ar[_beg + _n], ntoread);
+    nread = HH_POSIX(read)(_fd, _ar.data() + _beg + _n, ntoread);
     if (nread < 0) {
       if (errno == EINTR) continue;  // for ATT UNIX (hpux)
       if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) return ERefill::no;
@@ -189,7 +189,7 @@ bool RBuffer::has_line() const {
 }
 
 bool RBuffer::extract_line(string& str) {
-  const char* par = &_ar[_beg];  // optimization
+  const char* par = _ar.data() + _beg;  // optimization
   int i = 0;
   for (; i < _n; i++)
     if (par[i] == '\n') break;
@@ -227,7 +227,7 @@ WBuffer::EFlush WBuffer::flush(int nb) {
   for (;;) {
     assertx(nb <= _n);
     if (!nb) return EFlush::all;
-    nwritten = HH_POSIX(write)(_fd, &_ar[_beg], unsigned(nb));
+    nwritten = HH_POSIX(write)(_fd, _ar.data() + _beg, unsigned(nb));
     if (nwritten < 0) {
       if (errno == EINTR) continue;
       if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) return EFlush::part;
@@ -247,8 +247,7 @@ void WBuffer::put(const void* buf, int nbytes) {
   assertx(!eof() && !err());
   if (_beg + _n + nbytes > _ar.num() && _beg) shift();
   while (_n + nbytes > _ar.num()) expand();
-  // std::copy(static_cast<const char*>(buf), static_cast<const char*>(buf) + nbytes, &_ar[_beg + _n]);
-  std::memcpy(&_ar[_beg + _n], buf, unsigned(nbytes));  // safe for known element type (char)
+  std::memcpy(_ar.data() + _beg + _n, buf, unsigned(nbytes));  // Disjoint buffers, and `buf` is a `const void*`.
   _n += nbytes;
   if (_n >= k_write_size) flush(k_write_size);
 }

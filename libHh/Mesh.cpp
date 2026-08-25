@@ -842,12 +842,13 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
 
 Edge Mesh::remove_vertex_between_edges(Vertex vr) {
   Array<Face> fa(ccw_faces(vr));
+  assertx(fa.num() <= 2);
   // Create bogus hedges if boundaries
   Array<HEdge> ar_he;
   for (Face f : fa)
     for (HEdge he : corners(f)) ar_he.push(he);
   create_bogus_hedges(ar_he);
-  Vec2<Array<Vertex>> va;  // is fa.num() <= 2 ??
+  Vec2<Array<Vertex>> va;
   for_int(i, fa.num()) {
     for (Vertex v = vr;;) {
       v = ccw_vertex(fa[i], v);

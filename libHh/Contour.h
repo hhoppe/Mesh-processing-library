@@ -318,7 +318,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       float vmin = BIGFLOAT, vmax = -BIGFLOAT;
       for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
         for (cd[d2] = 0; cd[d2] < 2; cd[d2]++) {
-          float v = na[cd[0]][cd[1]][cd[2]]->_val;
+          float v = na[cd]->_val;
           ASSERTX(v != k_not_yet_evaled);
           if (v < vmin) vmin = v;
           if (v > vmax) vmax = v;
@@ -388,7 +388,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
         // Gather 4 cube vertices in a consistent order
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
           int sw = cd[d] ^ cd[d1];  // 0 or 1
-          for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) naf[i++] = na[cd[0]][cd[1]][cd[2]];
+          for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) naf[i++] = na[cd];
         }
       }
       int nneg = 0;
@@ -643,7 +643,7 @@ class Contour2D : public ContourBase<2> {
           unsigned en = encode(ci);
           bool is_new;
           Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
-          na[cd[0]][cd[1]] = n;  // na[cd[0], cd[1]] except warning on CONFIG=win.
+          na[cd] = n;
           if (n->_val == k_not_yet_evaled) {
             n->_p = get_point(ci);
             n->_val = _eval(n->_p);
@@ -669,7 +669,7 @@ class Contour2D : public ContourBase<2> {
       cd[d] = i;
       float vmin = BIGFLOAT, vmax = -BIGFLOAT;
       for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-        float v = na[cd[0]][cd[1]]->_val;
+        float v = na[cd]->_val;
         ASSERTX(v != k_not_yet_evaled);
         if (v < vmin) vmin = v;
         if (v > vmax) vmax = v;

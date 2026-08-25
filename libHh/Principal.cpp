@@ -24,44 +24,44 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     for_int(c1, c0 + 1) {
       double sum = 0.;
       for_int(i, va.num()) sum += (va[i][c0] - avgp[c0]) * (va[i][c1] - avgp[c1]);
-      a[c0][c1] = a[c1][c0] = float(sum / va.num());
+      a[c0, c1] = a[c1, c0] = float(sum / va.num());
     }
   }
   Vec<float, n> val;
-  for_int(i, n) val[i] = a[i][i];
+  for_int(i, n) val[i] = a[i, i];
   SGrid<float, n, n> vec{{1.f, 0.f, 0.f}, {0.f, 1.f, 0.f}, {0.f, 0.f, 1.f}};
   for (int iter = 0;; iter++) {
     {
       float sum = 0.f;
-      for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i][j]);
+      for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i, j]);
       if (!sum) break;
     }
     for_int(i, n - 1) {
       for_intL(j, i + 1, n) {
-        float thresh = 1e2f * abs(a[i][j]);
+        float thresh = 1e2f * abs(a[i, j]);
         if (abs(val[i]) + thresh == abs(val[i]) && abs(val[j]) + thresh == abs(val[j])) {
-          a[i][j] = 0.f;
-        } else if (abs(a[i][j]) > 0.f) {
+          a[i, j] = 0.f;
+        } else if (abs(a[i, j]) > 0.f) {
           float vtan;
           {
             float dd = val[j] - val[i];
             if (abs(dd) + thresh == abs(dd)) {
-              vtan = a[i][j] / dd;
+              vtan = a[i, j] / dd;
             } else {
-              float theta = 0.5f * dd / a[i][j];
+              float theta = 0.5f * dd / a[i, j];
               vtan = 1.f / (abs(theta) + sqrt(1.f + square(theta)));
               if (theta < 0.f) vtan = -vtan;
             }
           }
           float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos;
           float tau = vsin / (1.f + vcos);
-          val[i] -= vtan * a[i][j];
-          val[j] += vtan * a[i][j];
-          a[i][j] = 0.f;
-          for_int(k, i) rotate(a[k][i], a[k][j], tau, vsin);
-          for_intL(k, i + 1, j) rotate(a[i][k], a[k][j], tau, vsin);
-          for_intL(k, j + 1, n) rotate(a[i][k], a[j][k], tau, vsin);
-          for_int(k, n) rotate(vec[i][k], vec[j][k], tau, vsin);
+          val[i] -= vtan * a[i, j];
+          val[j] += vtan * a[i, j];
+          a[i, j] = 0.f;
+          for_int(k, i) rotate(a[k, i], a[k, j], tau, vsin);
+          for_intL(k, i + 1, j) rotate(a[i, k], a[k, j], tau, vsin);
+          for_intL(k, j + 1, n) rotate(a[i, k], a[j, k], tau, vsin);
+          for_int(k, n) rotate(vec[i, k], vec[j, k], tau, vsin);
         }
       }
     }
@@ -113,9 +113,9 @@ void subtract_mean(MatrixView<float> mi) {
   assertx(m >= 2 && n > 0);
   for_int(j, n) {
     double sum = 0.;
-    for_int(i, m) sum += mi[i][j];  // sum across columns
+    for_int(i, m) sum += mi[i, j];  // sum across columns
     float avg = float(sum / m);
-    for_int(i, m) mi[i][j] -= avg;
+    for_int(i, m) mi[i, j] -= avg;
   }
 }
 
@@ -124,41 +124,41 @@ static void compute_eigenvectors(MatrixView<float> a, MatrixView<float> mo, Arra
   // See also the specialized version in principal_components() above, for n == 3.
   const int n = a.ysize();
   assertx(a.xsize() == n && mo.ysize() == n && mo.xsize() == n && eimag.num() == n);
-  for_int(i, n) for_int(j, n) mo[i][j] = i == j ? 1.f : 0.f;
-  for_int(i, n) eimag[i] = a[i][i];
+  for_int(i, n) for_int(j, n) mo[i, j] = i == j ? 1.f : 0.f;
+  for_int(i, n) eimag[i] = a[i, i];
   {
     auto up_timer = n > 1000 ? make_unique<Timer>("__eigenv", Timer::EMode::abbrev) : nullptr;
     for (int iter = 0;; iter++) {
       {
         float sum = 0.f;
-        for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i][j]);
+        for_int(i, n - 1) for_intL(j, i + 1, n) sum += abs(a[i, j]);
         if (!sum) break;
       }
       for_int(i, n - 1) {
         for_intL(j, i + 1, n) {
-          float thresh = 1e2f * abs(a[i][j]);
+          float thresh = 1e2f * abs(a[i, j]);
           if (abs(eimag[i]) + thresh == abs(eimag[i]) && abs(eimag[j]) + thresh == abs(eimag[j])) {
-            a[i][j] = 0.f;
-          } else if (abs(a[i][j]) > 0.f) {
+            a[i, j] = 0.f;
+          } else if (abs(a[i, j]) > 0.f) {
             float vtan;
             {
               float dd = eimag[j] - eimag[i];
               if (abs(dd) + thresh == abs(dd)) {
-                vtan = a[i][j] / dd;
+                vtan = a[i, j] / dd;
               } else {
-                float theta = 0.5f * dd / a[i][j];
+                float theta = 0.5f * dd / a[i, j];
                 vtan = 1.f / (abs(theta) + sqrt(1.f + square(theta)));
                 if (theta < 0.f) vtan = -vtan;
               }
             }
             float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos, tau = vsin / (1.f + vcos);
-            eimag[i] -= vtan * a[i][j];
-            eimag[j] += vtan * a[i][j];
-            a[i][j] = 0.f;
-            for_int(k, i) rotate(a[k][i], a[k][j], tau, vsin);
-            for_intL(k, i + 1, j) rotate(a[i][k], a[k][j], tau, vsin);
-            for_intL(k, j + 1, n) rotate(a[i][k], a[j][k], tau, vsin);
-            for_int(k, n) rotate(mo[i][k], mo[j][k], tau, vsin);
+            eimag[i] -= vtan * a[i, j];
+            eimag[j] += vtan * a[i, j];
+            a[i, j] = 0.f;
+            for_int(k, i) rotate(a[k, i], a[k, j], tau, vsin);
+            for_intL(k, i + 1, j) rotate(a[i, k], a[k, j], tau, vsin);
+            for_intL(k, j + 1, n) rotate(a[i, k], a[j, k], tau, vsin);
+            for_int(k, n) rotate(mo[i, k], mo[j, k], tau, vsin);
           }
         }
       }
@@ -186,7 +186,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
     if (1) {  // more cache-coherent
       Matrix<double> t(V(n, n), 0.);
       if (0) {  // unoptimized
-        for_int(i, m) for_int(c0, n) for_int(c1, c0 + 1) t[c0][c1] += mi[i][c0] * mi[i][c1];
+        for_int(i, m) for_int(c0, n) for_int(c1, c0 + 1) t[c0, c1] += mi[i, c0] * mi[i, c1];
       } else {
         for_int(i, m) {
           const float* mi_i = mi[i].data();
@@ -197,13 +197,13 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
           }
         }
       }
-      for_int(c0, n) for_int(c1, c0 + 1) a[c0][c1] = a[c1][c0] = float(t[c0][c1] / m);
+      for_int(c0, n) for_int(c1, c0 + 1) a[c0, c1] = a[c1, c0] = float(t[c0, c1] / m);
     } else {
       for_int(c0, n) {
         for_int(c1, c0 + 1) {
           double sum = 0.;
-          for_int(i, m) sum += mi[i][c0] * mi[i][c1];
-          a[c0][c1] = a[c1][c0] = float(sum / m);
+          for_int(i, m) sum += mi[i, c0] * mi[i, c1];
+          a[c0, c1] = a[c1, c0] = float(sum / m);
         }
       }
     }
@@ -256,22 +256,22 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
   assertx(eimag.num() == ne);
 
   auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_inc", Timer::EMode::abbrev) : nullptr;
-  for_int(i, ne) for_int(c, n) mo[i][c] = mi[i][c];
+  for_int(i, ne) for_int(c, n) mo[i, c] = mi[i, c];
   Array<float> vnorm(ne);
   for_int(i, ne) vnorm[i] = float(assertx(sqrt(mag2(mo[i]))));
   int count = 2;
   for_int(iter, niter) {
     Array<float> ar(n);  // "data"
     for_int(i, m) {
-      for_int(c, n) ar[c] = mi[i][c];
+      for_int(c, n) ar[c] = mi[i, c];
       float w1 = amnesia_factor(count);
       count++;
       for_int(j, ne) {
         float d = (1.f - w1) * float(dot(mo[j], ar)) / vnorm[j];
-        for_int(c, n) mo[j][c] = w1 * mo[j][c] + d * ar[c];
+        for_int(c, n) mo[j, c] = w1 * mo[j, c] + d * ar[c];
         vnorm[j] = float(assertx(sqrt(mag2(mo[j]))));
         d = float(dot(ar, mo[j])) / square(vnorm[j]);
-        for_int(c, n) ar[c] -= d * mo[j][c];
+        for_int(c, n) ar[c] -= d * mo[j, c];
       }
     }
   }
@@ -294,7 +294,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     for_int(j, i) {
       // vi = vi - dot(vi, vj / mag(vj)) * vj / mag(vj)  or  = vi - dot(vi, vj) / mag2(vj) * vj
       float d = float(dot(mo[i], mo[j]) / mag2(mo[j]));
-      for_int(c, n) mo[i][c] -= d * mo[j][c];
+      for_int(c, n) mo[i, c] -= d * mo[j, c];
     }
   }
   // Normalize them.

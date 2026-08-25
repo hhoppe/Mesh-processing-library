@@ -4,6 +4,7 @@
 #include "libHh/BinaryIO.h"
 #include "libHh/Buffer.h"
 #include "libHh/NetworkOrder.h"
+#include "libHh/SGrid.h"
 
 namespace hh {
 
@@ -16,7 +17,7 @@ constexpr float k_Frame_fnan = 1e30f;
 struct frame_binary_buf {
   Vec2<char> magic;
   ushort short_obn;
-  Vec4<Vec3<float>> f;
+  SGrid<float, 4, 3> f;
   float zoom;
 };
 
@@ -27,7 +28,7 @@ void decode(std::istream& is, ObjectFrame& object_frame) {
   assertx(line[0] == 'F' && line[1] == ' ');
   const char* s = line.c_str() + 2;
   object_frame.obn = int_from_chars(s);
-  for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = float_from_chars(s);
+  for_int(i, 4) for_int(j, 3) object_frame.frame[i, j] = float_from_chars(s);
   object_frame.zoom = float_from_chars(s);
   assert_no_more_chars(s);
   object_frame.binary = false;
@@ -57,8 +58,8 @@ std::optional<ObjectFrame> read(std::istream& is) {
     object_frame.obn = buf.short_obn;
     for_int(i, 4) {
       for_int(j, 3) {
-        from_std(&buf.f[i][j]);
-        object_frame.frame[i][j] = buf.f[i][j];
+        from_std(&buf.f[i, j]);
+        object_frame.frame[i, j] = buf.f[i, j];
       }
     }
     from_std(&buf.zoom);
@@ -78,7 +79,7 @@ std::optional<ObjectFrame> read(RBuffer& b) {
   if (object_frame.binary) {
     if (b.num() < 14 * 4) return {};
     object_frame.obn = b.get_short(2);
-    for_int(i, 4) for_int(j, 3) object_frame.frame[i][j] = b.get_float((1 + (i * 3) + j) * 4);
+    for_int(i, 4) for_int(j, 3) object_frame.frame[i, j] = b.get_float((1 + (i * 3) + j) * 4);
     object_frame.zoom = b.get_float(13 * 4);
     b.extract(14 * 4);
     return object_frame;
@@ -102,8 +103,8 @@ bool write(std::ostream& os, const ObjectFrame& object_frame) {
     to_std(&buf.short_obn);
     for_int(i, 4) {
       for_int(j, 3) {
-        buf.f[i][j] = object_frame.frame[i][j];
-        to_std(&buf.f[i][j]);
+        buf.f[i, j] = object_frame.frame[i, j];
+        to_std(&buf.f[i, j]);
       }
     }
     buf.zoom = object_frame.zoom;
@@ -120,7 +121,7 @@ bool write(WBuffer& b, const ObjectFrame& object_frame) {
     b.put(char{k_binary_code});
     b.put('\0');
     b.put(assert_narrow_cast<short>(object_frame.obn));
-    for_int(i, 4) for_int(j, 3) b.put(object_frame.frame[i][j]);
+    for_int(i, 4) for_int(j, 3) b.put(object_frame.frame[i, j]);
     b.put(object_frame.zoom);
   } else {
     string s = create_string(object_frame);
@@ -133,8 +134,8 @@ string create_string(const ObjectFrame& object_frame) {
   // 2014-05-02: changed from %.7g .
   const Frame& frame = object_frame.frame;
   return sform("F %d  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g\n",  //
-               object_frame.obn, frame[0][0], frame[0][1], frame[0][2], frame[1][0], frame[1][1], frame[1][2],
-               frame[2][0], frame[2][1], frame[2][2], frame[3][0], frame[3][1], frame[3][2], object_frame.zoom);
+               object_frame.obn, frame[0, 0], frame[0, 1], frame[0, 2], frame[1, 0], frame[1, 1], frame[1, 2],
+               frame[2, 0], frame[2, 1], frame[2, 2], frame[3, 0], frame[3, 1], frame[3, 2], object_frame.zoom);
 }
 
 Frame parse_frame(const string& s) {
@@ -144,11 +145,11 @@ Frame parse_frame(const string& s) {
   return object_frame->frame;
 }
 
-bool is_not_a_frame(const Frame& frame) { return frame[0][0] == k_Frame_fnan; }
+bool is_not_a_frame(const Frame& frame) { return frame[0, 0] == k_Frame_fnan; }
 
 Frame get_not_a_frame() {
   Frame frame = Frame::identity();
-  frame[0][0] = k_Frame_fnan;
+  frame[0, 0] = k_Frame_fnan;
   return frame;
 }
 

@@ -370,7 +370,7 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
       double w0 = double(i);
       double v = is_impulse ? 1. : is_magnify ? kernel_func(wcx - w0) : kernel_func((wcx - w0) * scaling) * scaling;
       if (0) SHOW(x, k, wcx, wf, pixelindex0, i, v);
-      mat_weights[x][k] = float(v);
+      mat_weights[x, k] = float(v);
       sum += v;
     }
     // HH_SSTAT(Ssum, sum);

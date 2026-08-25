@@ -7,7 +7,7 @@
 #if 0
 {
   Matrix<float> mat(ysize, xsize);
-  for_int(y, mat.ysize()) for_int(x, mat.xsize()) float e = mat[y][x];
+  for_int(y, mat.ysize()) for_int(x, mat.xsize()) float e = mat[y, x];
 }
 #endif
 
@@ -21,7 +21,7 @@ template <typename T> using Matrix = Grid<2, T>;
 
 template <typename T> Matrix<T> transpose(CMatrixView<T> m1) {
   Matrix<T> m(m1.xsize(), m1.ysize());
-  for_int(y, m.ysize()) for_int(x, m.xsize()) m[y][x] = m1[x][y];
+  for_int(y, m.ysize()) for_int(x, m.xsize()) m[y, x] = m1[x, y];
   return m;
 }
 

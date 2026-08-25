@@ -165,10 +165,10 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
         count = pixel & 0x7f;
         if (!count) break;
         if (pixel & 0x80) {
-          while (count--) image[y][x++][z] = row[i++];
+          while (count--) image[y, x++][z] = row[i++];
         } else {
           pixel = row[i++];
-          while (count--) image[y][x++][z] = uchar(pixel);
+          while (count--) image[y, x++][z] = uchar(pixel);
         }
       }
       assertt(x == image.xsize());
@@ -195,7 +195,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
       for_int(y, image.ysize()) {
         cprogress.update(frac_zy(z, y, image));
         assertt(read_raw(file, row));
-        for_int(x, image.xsize()) image[y][x][z] = row[x];
+        for_int(x, image.xsize()) image[y, x][z] = row[x];
       }
     }
   }
@@ -230,7 +230,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       cprogress.update(float(y) / image.ysize() * .333f + 0.f);
       for_int(x, image.xsize()) {
         for_int(z, image.zsize()) {
-          unsigned v = image[y][x][z];
+          unsigned v = image[y, x][z];
           rgbi.vmin = min(rgbi.vmin, v);
           rgbi.vmax = max(rgbi.vmax, v);
         }
@@ -259,7 +259,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
         cprogress.update(frac_zy(z, y, image) * .333f + .333f);
         rowstart.push(buf.num());
         int yy = image.ysize() - 1 - y;  // because *.rgb format has image origin at lower-left
-        for_int(x, image.xsize()) row[x] = image[yy][x][z];
+        for_int(x, image.xsize()) row[x] = image[yy, x][z];
         for (int x = 0; x < row.num();) {
           int xs = x;
           x += 2;
@@ -310,7 +310,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       for_int(y, image.ysize()) {
         cprogress.update(frac_zy(z, y, image) * .667f + .333f);
         int yy = image.ysize() - 1 - y;  // because *.rgb format has image origin at lower-left
-        for_int(x, image.xsize()) row[x] = image[yy][x][z];
+        for_int(x, image.xsize()) row[x] = image[yy, x][z];
         assertt(write_raw(file, row));
       }
     }
@@ -395,7 +395,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
     assertt(jpeg_read_scanlines(&cinfo, row_pointer, 1) == 1);
     uchar* p = row.data();
     for_int(x, image.xsize()) {
-      Pixel& pixel = image[y][x];
+      Pixel& pixel = image[y, x];
       for_int(z, image.zsize()) pixel[z] = *p++;
       if (image.zsize() == 1) pixel[2] = pixel[1] = pixel[0];
       if (image.zsize() < 4) pixel[3] = 255;
@@ -559,7 +559,7 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
     cprogress.update(float(cinfo.next_scanline) / cinfo.image_height);
     int y = cinfo.next_scanline;
     uchar* p = row.data();
-    for_int(x, image.xsize()) for_int(z, image.zsize()) { *p++ = image[y][x][z]; }
+    for_int(x, image.xsize()) for_int(z, image.zsize()) { *p++ = image[y, x][z]; }
     // jpeg_write_scanlines expects an array of pointers to scanlines.
     // Here the array is only one element long, but you could pass
     // more than one scanline at a time if that is more convenient.
@@ -699,7 +699,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
       switch (bmih.biBitCount) {
         case 32:
           for_int(x, image.xsize()) {
-            Pixel& pixel = image[y][x];
+            Pixel& pixel = image[y, x];
             // convert BGRA to RGBA
             for_int(z, 3) pixel[2 - z] = *p++;
             pixel[3] = *p++;
@@ -707,7 +707,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           break;
         case 24:
           for_int(x, image.xsize()) {
-            Pixel& pixel = image[y][x];
+            Pixel& pixel = image[y, x];
             // convert BGR to RGB
             for_int(z, 3) pixel[2 - z] = *p++;
             pixel[3] = 255;
@@ -720,7 +720,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
             if ((x & 0x7) == 0) bits8 = *p++;
             bool is_on = (bits8 >> 7) & 1;
             bits8 <<= 1;
-            image[y][x] = colormap[is_on];
+            image[y, x] = colormap[is_on];
           }
           break;
         }
@@ -728,7 +728,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           for_int(x, image.xsize()) {
             int index = *p++;
             assertt(index < colormap.num());
-            image[y][x] = colormap[index];
+            image[y, x] = colormap[index];
           }
           break;
         default: assertt(false);
@@ -774,7 +774,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
             int index = int(c);
             assertt(index < colormap.num());
             assertt(x < image.xsize() && y < image.ysize());
-            image[y][x] = colormap[index];
+            image[y, x] = colormap[index];
             x++;
           }
           assertt(count % 2 == i % 2);
@@ -798,7 +798,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
             y++;
           }
           assertt(x < image.xsize() && y < image.ysize());
-          image[y][x] = colormap[index];
+          image[y, x] = colormap[index];
           x++;
         }
       }
@@ -846,26 +846,26 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
       for (int x = 0; x < image.xsize(); x++) {  // Index x gets modified within loop.
         int count = 1;
         for_intL(xx, x + 1, image.xsize()) {
-          if (image[yy][xx][0] != image[yy][x][0]) break;
+          if (image[yy, xx][0] != image[yy, x][0]) break;
           count++;
           if (count == 255) break;
         }
         if (count >= 2 || (image.xsize() - x) < 3) {  // repeat pixel
           buf.push(uchar(count));
-          buf.push(image[yy][x][0]);
+          buf.push(image[yy, x][0]);
           x += count - 1;
         } else {  // sequence of literal pixels
           count = 3;
           for_intL(xx, x + 3, image.xsize()) {
-            if (xx + 2 < image.xsize() && image[yy][xx + 1][0] == image[yy][xx][0] &&
-                image[yy][xx + 2][0] == image[yy][xx][0])
+            if (xx + 2 < image.xsize() && image[yy, xx + 1][0] == image[yy, xx][0] &&
+                image[yy, xx + 2][0] == image[yy, xx][0])
               break;
             count++;
             if (count == 255) break;
           }
           buf.push(0);
           buf.push(uchar(count));
-          for_int(i, count) buf.push(image[yy][x + i][0]);
+          for_int(i, count) buf.push(image[yy, x + i][0]);
           if (count % 2) buf.push(0);
           x += count - 1;
         }
@@ -904,7 +904,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
       int yy = image.ysize() - 1 - y;  // because *.bmp format has image origin at lower-left
       int i = 0;
       for_int(x, image.xsize()) {
-        const Pixel& pixel = image[yy][x];
+        const Pixel& pixel = image[yy, x];
         // convert RGB to BGR, or RGBA to BGRA
         for_int(z, 3) row[i++] = pixel[2 - z];
         if (ncomp == 4) row[i++] = pixel[3];
@@ -949,7 +949,7 @@ void ImageLibs::read_ppm(Image& image, FILE* file) {
     assertt(read_raw(file, row));
     uchar* p = row.data();
     for_int(x, image.xsize()) {
-      Pixel& pixel = image[y][x];
+      Pixel& pixel = image[y, x];
       for_int(z, image.zsize()) pixel[z] = *p++;
       if (image.zsize() == 1) pixel[2] = pixel[1] = pixel[0];
       if (image.zsize() < 4) pixel[3] = 255;
@@ -968,7 +968,7 @@ void ImageLibs::write_ppm(const Image& image, FILE* file) {
   for_int(y, image.ysize()) {
     cprogress.update(float(y) / image.ysize());
     uchar* p = row.data();
-    for_int(x, image.xsize()) for_int(z, ncomp) { *p++ = image[y][x][z]; }
+    for_int(x, image.xsize()) for_int(z, ncomp) { *p++ = image[y, x][z]; }
     assertt(write_raw(file, row));
   }
 }
@@ -1022,7 +1022,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     parallel_for(range(image.ysize()), [&](const int y) {
       uchar* buf = row_pointers[y];
       for_int(x, image.xsize()) {
-        Pixel& pixel = image[y][x];
+        Pixel& pixel = image[y, x];
         for_int(z, ncomp) pixel[z] = *buf++;
         if (ncomp == 1) pixel[2] = pixel[1] = pixel[0];
         if (ncomp < 4) pixel[3] = 255;
@@ -1080,7 +1080,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
       png_set_gray_to_rgb(png_ptr);                // always RGB
     png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);  // always RGBA since Pixel expects it
     Array<png_bytep> row_pointers(image.ysize());
-    for_int(y, image.ysize()) row_pointers[y] = image[y][0].data();
+    for_int(y, image.ysize()) row_pointers[y] = image[y, 0].data();
     png_read_image(png_ptr, row_pointers.data());
     if (bit_depth == 1) {
       Warning("correcting for bit_depth == 1");
@@ -1088,8 +1088,8 @@ void ImageLibs::read_png(Image& image, FILE* file) {
       int nx = image.xsize();
       for_int(y, image.ysize()) for_int(x, nx) {
         int xx = nx - x;
-        image[y][xx][0] = image[y][xx / 2][(xx % 2) * 2] ? 255 : 0;
-        // image[y][x][0] = image[y][x][z] ? 255 : 0;
+        image[y, xx][0] = image[y, xx / 2][(xx % 2) * 2] ? 255 : 0;
+        // image[y, x][0] = image[y, x][z] ? 255 : 0;
       }
     }
     if (image.zsize() < 4)
@@ -1140,7 +1140,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     parallel_for(range(image.ysize()), [&](const int y) {
       row_pointers[y] = matrix[y].data();
       uchar* buf = matrix[y].data();
-      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
+      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y, x][z]; }
     });
     png_set_rows(png_ptr, info_ptr, row_pointers.data());
     int png_transforms = 0;
@@ -1154,7 +1154,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize());
       uchar* buf = buffer.data();
-      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y][x][z]; }
+      for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y, x][z]; }
       png_bytep row_pointer = buffer.data();
       png_write_row(png_ptr, row_pointer);
     }

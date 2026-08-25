@@ -174,7 +174,7 @@ void SrViewParams::set_yonder(float yonder) { _yonder = yonder; }
 
 void SrViewParams::set_screen_thresh(float screen_thresh) { _screen_thresh = screen_thresh; }
 
-bool SrViewParams::ok() const { return _frame[0][0] != BIGFLOAT && min(_zoomyx) > 0.f; }
+bool SrViewParams::ok() const { return _frame[0, 0] != BIGFLOAT && min(_zoomyx) > 0.f; }
 
 // *** SrMesh
 

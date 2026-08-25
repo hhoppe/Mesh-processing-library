@@ -80,27 +80,27 @@ std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
 // Frame origin frame.p() is ignored
 inline Quaternion::Quaternion(const Frame& frame) {
-  const float tr = frame[0][0] + frame[1][1] + frame[2][2];
+  const float tr = frame[0, 0] + frame[1, 1] + frame[2, 2];
   float s;
   if (tr > 0) {
     s = my_sqrt(tr + 1.f);
     _c[3] = s * .5f;
     s = .5f / s;
-    _c[0] = (frame[1][2] - frame[2][1]) * s;
-    _c[1] = (frame[2][0] - frame[0][2]) * s;
-    _c[2] = (frame[0][1] - frame[1][0]) * s;
+    _c[0] = (frame[1, 2] - frame[2, 1]) * s;
+    _c[1] = (frame[2, 0] - frame[0, 2]) * s;
+    _c[2] = (frame[0, 1] - frame[1, 0]) * s;
   } else {
     int i = 0, j, k;
-    if (frame[1][1] > frame[0][0]) i = 1;
-    if (frame[2][2] > frame[i][i]) i = 2;
+    if (frame[1, 1] > frame[0, 0]) i = 1;
+    if (frame[2, 2] > frame[i, i]) i = 2;
     j = mod3(i + 1);
     k = mod3(i + 2);
-    s = my_sqrt((frame[i][i] - (frame[j][j] + frame[k][k])) + 1.f);
+    s = my_sqrt((frame[i, i] - (frame[j, j] + frame[k, k])) + 1.f);
     _c[i] = s * .5f;
     s = .5f / s;
-    _c[3] = (frame[j][k] - frame[k][j]) * s;
-    _c[j] = (frame[i][j] + frame[j][i]) * s;
-    _c[k] = (frame[i][k] + frame[k][i]) * s;
+    _c[3] = (frame[j, k] - frame[k, j]) * s;
+    _c[j] = (frame[i, j] + frame[j, i]) * s;
+    _c[k] = (frame[i, k] + frame[k, i]) * s;
   }
   normalize();  // optional; just to be sure
 }

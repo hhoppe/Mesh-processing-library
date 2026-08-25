@@ -11,14 +11,14 @@ static void orthonormalize_columns(MatrixView<float> m) {
   for_int(x, m.xsize()) {
     for_int(x2, x) {
       double ddot = 0.;
-      for_int(y, m.ysize()) ddot += m[y][x] * m[y][x2];
+      for_int(y, m.ysize()) ddot += m[y, x] * m[y, x2];
       float fdot = float(ddot);
-      for_int(y, m.ysize()) m[y][x] -= m[y][x2] * fdot;
+      for_int(y, m.ysize()) m[y, x] -= m[y, x2] * fdot;
     }
     double mag2 = 0.;
-    for_int(y, m.ysize()) mag2 += square(m[y][x]);
+    for_int(y, m.ysize()) mag2 += square(m[y, x]);
     float fac = 1.f / assertx(float(sqrt(mag2)));
-    for_int(y, m.ysize()) m[y][x] *= fac;
+    for_int(y, m.ysize()) m[y, x] *= fac;
   }
 }
 
@@ -26,15 +26,15 @@ static void unused_orthonormalize_rows(MatrixView<float> m) {
   for_int(y, m.ysize()) {
     for_int(y2, y) {
       double ddot = 0.;
-      for_int(x, m.xsize()) ddot += m[y][x] * m[y2][x];  // or: = dot(m[y], m[y2])
+      for_int(x, m.xsize()) ddot += m[y, x] * m[y2, x];  // or: = dot(m[y], m[y2])
       float fdot = float(ddot);
-      for_int(x, m.xsize()) m[y][x] -= m[y2][x] * fdot;
+      for_int(x, m.xsize()) m[y, x] -= m[y2, x] * fdot;
     }
     // or: normalize(m[y])
     double mag2 = 0.;
-    for_int(x, m.xsize()) mag2 += square(m[y][x]);
+    for_int(x, m.xsize()) mag2 += square(m[y, x]);
     float fac = 1.f / assertx(float(sqrt(mag2)));
-    for_int(x, m.xsize()) m[y][x] *= fac;
+    for_int(x, m.xsize()) m[y, x] *= fac;
   }
 }
 
@@ -51,7 +51,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   // C = rand(p, k);
   Matrix<float> mc(n, ne);
   Random random;
-  for_int(i, n) for_int(c, ne) mc[i][c] = random.unif();
+  for_int(i, n) for_int(c, ne) mc[i, c] = random.unif();
   for_int(iter, niter) {
     Matrix<float> x(ne, m);
     {
@@ -83,8 +83,8 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   // xt = (CT*data)T = dataT*C = mi*mc
   for_int(r, m) for_int(c, ne) {
     double s = 0.;
-    for_int(j, n) s += mi[r][j] * mc[j][c];
-    xt[r][c] = float(s);
+    for_int(j, n) s += mi[r, j] * mc[j, c];
+    xt[r, c] = float(s);
   }
   Matrix<float> xtpc(ne, ne);
   principal_components(xt, xtpc, eimag);
@@ -92,8 +92,8 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   // mo = xevecT*CT = xtpc*CT   [ne][n] = [ne][ne]*[ne][n]
   for_int(r, ne) for_int(c, n) {
     double s = 0.;
-    for_int(j, ne) s += xtpc[r][j] * mc[c][j];
-    mo[r][c] = float(s);
+    for_int(j, ne) s += xtpc[r, j] * mc[c, j];
+    mo[r, c] = float(s);
   }
   // Orient eigenvectors canonically.
   Array<float> all1(n, 1.f);

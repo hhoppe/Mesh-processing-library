@@ -34,7 +34,7 @@ int main() {
   }
   {
     Matrix<int> matrix(V(3, 4));
-    for_int(y, 3) for_int(x, 4) matrix[y][x] = y * 10 + x;
+    for_int(y, 3) for_int(x, 4) matrix[y, x] = y * 10 + x;
     SHOW(Array(grid_column(matrix, 0, V(0, 1)) | views::transform([](int v) { return v * 2; })));
     SHOW(sum(grid_column(matrix, 1, V(2, 0))));  // Strided view consumed directly as an rvalue.  20 + 21 + 22 + 23.
   }

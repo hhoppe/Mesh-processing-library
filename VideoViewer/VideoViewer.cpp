@@ -363,7 +363,7 @@ void background_work(bool asynchronous);
 
 bool is_fullscreen() { return hw.is_fullscreen(); }
 
-bool view_has_rotation() { return g_view[0][1] || g_view[1][0]; }
+bool view_has_rotation() { return g_view[0, 1] || g_view[1, 0]; }
 
 float get_brightness_term() { return g_brightness - 1.f; }
 
@@ -738,7 +738,7 @@ Vec2<int> round_dims(Vec2<int> dims, Vec2<int> orig_dims) {
 
 // Use SVD to extract the min/max zoom values from Matrix g_view.
 Vec2<float> get_zooms() {
-  const SGrid<float, 2, 2> matrix_2d{{g_view[0][0], g_view[0][1]}, {g_view[1][0], g_view[1][1]}};
+  const SGrid<float, 2, 2> matrix_2d{{g_view[0, 0], g_view[0, 1]}, {g_view[1, 0], g_view[1, 1]}};
   SGrid<float, 2, 2> mo;
   Vec2<float> eimag;
   principal_components(matrix_2d, mo, eimag);
@@ -1074,7 +1074,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
           auto range = grid_column(image, col_d, twice(0).with(axis, j));
           if (rankf_element(luminances(range), .1) < luminance_thresh) break;
         }
-        borderw[side][axis] = w;
+        borderw[side, axis] = w;
       }
     }
     if (ldebug) SHOW(borderw);
@@ -1110,7 +1110,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
           SHOW(axis, side, wmax, len, w);
           if (0) SHOW(ar_w);
         }
-        borderw[side][axis] = w;
+        borderw[side, axis] = w;
       }
     }
     if (ldebug) SHOW(borderw);
@@ -1135,7 +1135,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
         if (ldebug) SHOW(ar_luminance);
         for_int(w, ar_luminance.num()) {
           if (ar_luminance[w] < ar_luminance.last() * 1.1f) {
-            borderw[side][axis] = w;
+            borderw[side, axis] = w;
             break;
           }
         }
@@ -1802,12 +1802,12 @@ bool DerivedHw::key_press(string skey) {
         case 'S': {  // scale (resample content to current view resolution)
           std::lock_guard<std::mutex> lock(g_mutex_obs);
           const Object& ob = check_loaded_object();
-          if (max_abs_element(V(g_view[0][1], g_view[1][0])) > 0.f) throw ob.stype() + " is rotated";
+          if (max_abs_element(V(g_view[0, 1], g_view[1, 0])) > 0.f) throw ob.stype() + " is rotated";
           Vec2<int> ndims;
-          if (abs(g_view[0][0] - g_view[1][1]) > 1e-6f) {  // anisotropic window fit
-            ndims = convert<int>(convert<float>(g_frame_dims) * V(g_view[0][0], g_view[1][1]));
+          if (abs(g_view[0, 0] - g_view[1, 1]) > 1e-6f) {  // anisotropic window fit
+            ndims = convert<int>(convert<float>(g_frame_dims) * V(g_view[0, 0], g_view[1, 1]));
           } else {
-            string s = sform("%g", g_view[0][0]);
+            string s = sform("%g", g_view[0, 0]);
             if (!query(V(20, 10), "Scale by spatial factor: ", s)) throw "";
             if (!Args::check_float(s)) throw "spatial factor is not a float";
             float fac = Args::parse_float(s);
@@ -1862,9 +1862,9 @@ bool DerivedHw::key_press(string skey) {
               Vec2<float> arzoom = convert<float>(ndims) / convert<float>(g_frame_dims);
               const int cmax = arzoom[0] > arzoom[1] ? 0 : 1;
               view = scale_2d(twice(arzoom[cmax]));
-              view[3][1 - cmax] = (ndims[1 - cmax] - g_frame_dims[1 - cmax] * arzoom[cmax]) / 2.f;
+              view[3, 1 - cmax] = (ndims[1 - cmax] - g_frame_dims[1 - cmax] * arzoom[cmax]) / 2.f;
               // align window edge with pixel edge using fmod()
-              view[3][1 - cmax] = view[3][1 - cmax] - std::fmod(view[3][1 - cmax], arzoom[cmax]);
+              view[3, 1 - cmax] = view[3, 1 - cmax] - std::fmod(view[3, 1 - cmax], arzoom[cmax]);
             }
             set_view(view);
           }
@@ -3506,8 +3506,8 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
                 SHOW_PRECISE(g_view[3][c]);
                 SHOW_PRECISE(float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c][c]));
               }
-              g_view[3][c] = clamp(g_view[3][c], float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c][c]), 0.f);
-              if (0) SHOW_PRECISE(g_view[3][c]);
+              g_view[3, c] = clamp(g_view[3, c], float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c, c]), 0.f);
+              if (0) SHOW_PRECISE((g_view[3, c]));
             }
           }
           if (g_view != old_view) g_fit_view_to_window = false;
@@ -3529,8 +3529,8 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     set_view(scale_2d(arzoom));
     if (g_fit == EFit::isotropic) {
       int cmax = arzoom[0] > arzoom[1] ? 0 : 1;
-      g_view[cmax][cmax] = arzoom[1 - cmax];
-      g_view[3][cmax] = (g_win_dims[cmax] - g_frame_dims[cmax] * arzoom[1 - cmax]) / 2.f;
+      g_view[cmax, cmax] = arzoom[1 - cmax];
+      g_view[3, cmax] = (g_win_dims[cmax] - g_frame_dims[cmax] * arzoom[1 - cmax]) / 2.f;
     }
   }
   const float min_zoom = min(get_zooms());

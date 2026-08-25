@@ -17,8 +17,8 @@ void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag
 // Same but for vectors va[].  Note that the origin frame.p() of frame frame will therefore be thrice(0.f).
 void principal_components(CArrayView<Vector> va, Frame& frame, Vec3<float>& eimag);
 
-// Given mi[m][n] (m data points of dimension n),
-//   compute mo[n][n] (n orthonormal eigenvectors rows, by decreasing eigenv.) and eigenvalues eimag[n].
+// Given mi[m, n] (m data points of dimension n),
+//   compute mo[n, n] (n orthonormal eigenvectors rows, by decreasing eigenv.) and eigenvalues eimag[n].
 // Note that the mean must be subtracted out of mi[][] if desired.
 // As shown in Principal_test.cpp test_sgesvd(), this is related to computing singular value decomposition
 //   using sgesdv_().

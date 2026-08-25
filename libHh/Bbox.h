@@ -115,8 +115,8 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     const float bnd = (1.f - cubesize) / 2.f;
     frame = frame * Frame::scaling(thrice(cubesize)) * Frame::translation(thrice(bnd));
     for_int(i, 3) {
-      if (abs(frame[i][i] - 1.f) < .05f) frame[i][i] = 1.f;
-      if (abs(frame[3][i]) < .05f) frame[3][i] = 0.f;
+      if (abs(frame[i, i] - 1.f) < .05f) frame[i, i] = 1.f;
+      if (abs(frame[3, i]) < .05f) frame[3, i] = 0.f;
     }
     return frame;
   }

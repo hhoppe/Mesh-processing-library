@@ -39,9 +39,9 @@ int main() {
     SHOW("Matrix<unique_ptr>");
     Matrix<unique_ptr<A>> m(3, 2);
     SHOW("made");
-    for_int(y, 3) for_int(x, 2) m[y][x] = make_unique<A>(y * 10 + x);
+    for_int(y, 3) for_int(x, 2) m[y, x] = make_unique<A>(y * 10 + x);
     SHOW("made some");
-    m[1][0] = make_unique<A>(66);
+    m[1, 0] = make_unique<A>(66);
     SHOW("made one more");
     m.clear();
     SHOW("cleared");
@@ -69,18 +69,18 @@ int main() {
     Matrix<Vec2f> matrix1(3, 3);
     fill(matrix1, Vec2f(1.f, BIGFLOAT));
     for_int(i, 3) fill(matrix1[i], Vec2f(1.f, 2.f));
-    matrix1[1][0] = Vec2f(4.f, 3.f);
+    matrix1[1, 0] = Vec2f(4.f, 3.f);
     Matrix<Vec2f> matrix2(V(3, 3), Vec2f(4.f, 3.f));
-    matrix2[2][1] = Vec2f(5.f, 5.f);
+    matrix2[2, 1] = Vec2f(5.f, 5.f);
     SHOW(matrix1);
     SHOW(matrix2);
     SHOW(matrix1 + matrix2);
   }
   {
     Matrix<float> matrix3(V(3, 3), 2.f);
-    matrix3[1][0] = 4.f;
+    matrix3[1, 0] = 4.f;
     Matrix<float> matrix4(V(3, 3), 5.f);
-    matrix4[2][1] = 7.f;
+    matrix4[2, 1] = 7.f;
     SHOW(matrix3);
     SHOW(matrix4);
     SHOW(matrix3 + matrix4);  // OPT1
@@ -128,8 +128,8 @@ int main() {
     Array<float> v5(4);
     mat_mul(v1, m, v5);
     SHOW(v5);
-    m[2][0] = 7;
-    m[3][3] = 11;
+    m[2, 0] = 7;
+    m[3, 3] = 11;
     SHOW(m);
     SHOW(min(m));
     SHOW(max(m));

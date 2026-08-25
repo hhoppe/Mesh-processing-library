@@ -26,36 +26,36 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   Matrix<T> t(n, 2 * n);
   for_int(i, n) {
     for_int(j, n) {
-      t[i][j] = mi[i][j];
-      t[i][n + j] = T{0};
+      t[i, j] = mi[i, j];
+      t[i, n + j] = T{0};
     }
   }
-  for_int(i, n) { t[i][n + i] = T{1}; }
+  for_int(i, n) { t[i, n + i] = T{1}; }
   for_int(i, n) {
     if (i < n - 1) {  // swap row with largest front coefficient
-      T a = abs(t[i][i]), max_a;
+      T a = abs(t[i, i]), max_a;
       int max_i = i;
       for_intL(l, i + 1, n) {
-        if ((max_a = abs(t[l][i])) > a) {
+        if ((max_a = abs(t[l, i])) > a) {
           a = max_a;
           max_i = l;
         }
       }
       if (max_i != i) swap_elements(t[i], t[max_i]);
     }
-    if (!t[i][i]) return false;
+    if (!t[i, i]) return false;
     parallel_for({.cycles_per_elem = uint64_t(n) * 2}, range(n), [&](const int j) {
       if (j == i) return;  // must be done outside the parallel loop
-      T a = -t[j][i] / t[i][i];
-      for_int(k, 2 * n) t[j][k] += a * t[i][k];
+      T a = -t[j, i] / t[i, i];
+      for_int(k, 2 * n) t[j, k] += a * t[i, k];
     });
     if (1) {
       int j = i;
-      T a = T{1} / t[i][i];
-      for_int(k, 2 * n) t[j][k] *= a;
+      T a = T{1} / t[i, i];
+      for_int(k, 2 * n) t[j, k] *= a;
     }
   }
-  for_int(i, n) for_int(j, n) mo[i][j] = t[i][n + j];
+  for_int(i, n) for_int(j, n) mo[i, j] = t[i, n + j];
   return true;
 }
 
@@ -74,8 +74,8 @@ template <typename T> void mat_mul(CMatrixView<T> m1, CMatrixView<T> m2, MatrixV
     //  however this would require a temporary double[m2.xsize()] buffer allocated per thread.
     for_int(j, m2.xsize()) {
       double sum = 0.;
-      for_int(k, m1.xsize()) sum += m1[i][k] * m2[k][j];
-      mo[i][j] = static_cast<T>(sum);
+      for_int(k, m1.xsize()) sum += m1[i, k] * m2[k, j];
+      mo[i, j] = static_cast<T>(sum);
     }
   });
 }
@@ -93,7 +93,7 @@ template <typename T> void mat_mul(CMatrixView<T> m, CArrayView<T> vi, ArrayView
   assertx(!have_overlap(vi, vo));
   parallel_for({.cycles_per_elem = uint64_t(m.xsize()) * 1}, range(m.ysize()), [&](const int i) {
     double sum = 0.;
-    for_int(j, m.xsize()) sum += m[i][j] * vi[j];
+    for_int(j, m.xsize()) sum += m[i, j] * vi[j];
     vo[i] = static_cast<T>(sum);
   });
 }
@@ -113,7 +113,7 @@ template <typename T> void mat_mul(CArrayView<T> vi, CMatrixView<T> m, ArrayView
   //  however this would require a temporary double[m.xsize()] buffer allocated per thread.
   parallel_for({.cycles_per_elem = uint64_t(m.ysize()) * 1}, range(m.xsize()), [&](const int j) {
     double sum = 0.;
-    for_int(i, m.ysize()) sum += vi[i] * m[i][j];
+    for_int(i, m.ysize()) sum += vi[i] * m[i, j];
     vo[j] = static_cast<T>(sum);
   });
 }
@@ -128,7 +128,7 @@ template <typename T> Array<T> mat_mul(CArrayView<T> vi, CMatrixView<T> m) {
 // Modify matrix mat to be the diagonal matrix whose elements are given by vector v.
 template <typename T> void diag_mat(CArrayView<T> v, MatrixView<T> mat) {
   fill(mat, T{0});
-  for_int(i, v.num()) mat[i][i] = v[i];
+  for_int(i, v.num()) mat[i, i] = v[i];
 }
 
 // Return diagonal matrix whose elements are given by vector v.
@@ -141,7 +141,7 @@ template <typename T> Matrix<T> diag_mat(CArrayView<T> v) {
 // Modify matrix mat to be an identity matrix.
 template <typename T> void identity_mat(MatrixView<T> mat) {
   fill(mat, T{0});
-  for_int(i, min(mat.dims())) { mat[i][i] = T{1}; }
+  for_int(i, min(mat.dims())) { mat[i, i] = T{1}; }
 }
 
 // Return the identity matrix with dimensions dims (yx).
@@ -156,8 +156,8 @@ template <typename T> Matrix<T> identity_mat(int n) { return identity_mat<T>(twi
 
 // Convert an affine 4x3 matrix to a 4x4 Matrix.
 inline SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
-  return V(V(frame[0][0], frame[0][1], frame[0][2], 0.f), V(frame[1][0], frame[1][1], frame[1][2], 0.f),
-           V(frame[2][0], frame[2][1], frame[2][2], 0.f), V(frame[3][0], frame[3][1], frame[3][2], 1.f));
+  return V(V(frame[0, 0], frame[0, 1], frame[0, 2], 0.f), V(frame[1, 0], frame[1, 1], frame[1, 2], 0.f),
+           V(frame[2, 0], frame[2, 1], frame[2, 2], 0.f), V(frame[3, 0], frame[3, 1], frame[3, 2], 1.f));
 }
 
 // Convert a 4x4 Matrix to an affine 4x3 matrix.
@@ -165,37 +165,37 @@ inline Frame to_Frame(CMatrixView<float> m) {
   assertx(m.ysize() == 4 && m.xsize() == 4);
   Frame frame;
   const float tolerance = 1e-5f;
-  if (abs(m[0][3]) > tolerance || abs(m[1][3]) > tolerance || abs(m[2][3]) > tolerance ||
-      abs(m[3][3] - 1.f) > tolerance) {
+  if (abs(m[0, 3]) > tolerance || abs(m[1, 3]) > tolerance || abs(m[2, 3]) > tolerance ||
+      abs(m[3, 3] - 1.f) > tolerance) {
     if (Warning("Frame matrix strange")) SHOW(m);
   }
-  for_int(i, 4) for_int(j, 3) frame[i][j] = m[i][j];
+  for_int(i, 4) for_int(j, 3) frame[i, j] = m[i, j];
   return frame;
 }
 
 // Transform a 2D vector by a frame.
 inline Vec2<float> linear_transform(const Vec2<float>& vec, const Frame& frame) {
-  ASSERTX(!frame[0][2]);
-  ASSERTX(!frame[1][2]);
-  ASSERTX(!frame[3][2]);
-  ASSERTX(!frame[2][0]);
-  ASSERTX(!frame[2][1]);
-  ASSERTX(frame[2][2] == 1.f);
+  ASSERTX(!frame[0, 2]);
+  ASSERTX(!frame[1, 2]);
+  ASSERTX(!frame[3, 2]);
+  ASSERTX(!frame[2, 0]);
+  ASSERTX(!frame[2, 1]);
+  ASSERTX(frame[2, 2] == 1.f);
   if (0) return (Vector(concat(vec, V(0.f))) * frame).head<2>();
-  return V(vec[0] * frame[0][0] + vec[1] * frame[1][0], vec[0] * frame[0][1] + vec[1] * frame[1][1]);
+  return V(vec[0] * frame[0, 0] + vec[1] * frame[1, 0], vec[0] * frame[0, 1] + vec[1] * frame[1, 1]);
 }
 
 // Transform a 2D point by a frame.
 inline Vec2<float> affine_transform(const Vec2<float>& vec, const Frame& frame) {
-  ASSERTX(!frame[0][2]);
-  ASSERTX(!frame[1][2]);
-  ASSERTX(!frame[3][2]);
-  ASSERTX(!frame[2][0]);
-  ASSERTX(!frame[2][1]);
-  ASSERTX(frame[2][2] == 1.f);
+  ASSERTX(!frame[0, 2]);
+  ASSERTX(!frame[1, 2]);
+  ASSERTX(!frame[3, 2]);
+  ASSERTX(!frame[2, 0]);
+  ASSERTX(!frame[2, 1]);
+  ASSERTX(frame[2, 2] == 1.f);
   if (0) return (Point(concat(vec, V(0.f))) * frame).head<2>();
-  return V(vec[0] * frame[0][0] + vec[1] * frame[1][0] + frame[3][0],
-           vec[0] * frame[0][1] + vec[1] * frame[1][1] + frame[3][1]);
+  return V(vec[0] * frame[0, 0] + vec[1] * frame[1, 0] + frame[3, 0],
+           vec[0] * frame[0, 1] + vec[1] * frame[1, 1] + frame[3, 1]);
 }
 
 // Given p in the unit square, apply the 2D frame transformation defined about the square center.
@@ -214,7 +214,7 @@ template <typename T>
 void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs, MatrixView<T> nm,
                const T* bordervalue = nullptr) {
   static_assert(std::is_trivially_default_constructible_v<T>);
-  assertx(frame[2][2] == 1.f);
+  assertx(frame[2, 2] == 1.f);
   const Frame frame_inv = inverse(frame);
   float max_shrinkage;
   {
@@ -279,8 +279,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           }
           dummy_use(num);
           // HH_SSTAT(Snum, num); HH_SSTAT(Ssumw, sumw);
-          nm[y][x] = val / assertx(float(sumw));
-          // SHOW(num, sumw, nm[y][x]); assertnever("");
+          nm[y, x] = val / assertx(float(sumw));
+          // SHOW(num, sumw, nm[y, x]); assertnever("");
         }
       });
     } else {
@@ -341,14 +341,14 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
   });
 }
 
-// Input: mvec[y][x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.
+// Input: mvec[y, x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.
 // Output: vectors indicating relative location of nearest seedpoint.  e.g. T = int or float
 template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec);
 
 // Compute the matrix which is the outer product of two vectors (ar1 is column vector, ar2 is row vector).
 template <typename T> Matrix<T> outer_product(CArrayView<T> ar1, CArrayView<T> ar2) {
   Matrix<T> mat(ar1.num(), ar2.num());
-  for_int(y, mat.ysize()) for_int(x, mat.xsize()) mat[y][x] = ar1[y] * ar2[x];
+  for_int(y, mat.ysize()) for_int(x, mat.xsize()) mat[y, x] = ar1[y] * ar2[x];
   return mat;
 }
 
@@ -380,9 +380,9 @@ Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, co
     for_int(x, mat.xsize()) {
       Precise v{0};
       for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {
-        v += matk[yy][xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, bordervalue)};
+        v += matk[yy, xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, bordervalue)};
       }
-      nmat[y][x] = static_cast<T>(v);
+      nmat[y, x] = static_cast<T>(v);
     }
   });
   return nmat;
@@ -391,12 +391,12 @@ Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, co
 // Convert entries of matrix mat into right-justified strings (with equal lengths per column).
 template <typename T> Matrix<string> right_justify(CMatrixView<T> mat) {
   Matrix<string> nmat(mat.dims());
-  for_int(y, mat.ysize()) for_int(x, mat.xsize()) nmat[y][x] = make_string(mat[y][x]);
+  for_int(y, mat.ysize()) for_int(x, mat.xsize()) nmat[y, x] = make_string(mat[y, x]);
   for_int(x, nmat.xsize()) {
     int maxlen = 0;
-    for_int(y, nmat.ysize()) maxlen = max(maxlen, narrow_cast<int>(nmat[y][x].size()));
+    for_int(y, nmat.ysize()) maxlen = max(maxlen, narrow_cast<int>(nmat[y, x].size()));
     for_int(y, nmat.ysize()) {
-      while (narrow_cast<int>(nmat[y][x].size()) < maxlen) nmat[y][x] = " " + nmat[y][x];  // slow but easy
+      while (narrow_cast<int>(nmat[y, x].size()) < maxlen) nmat[y, x] = " " + nmat[y, x];  // slow but easy
     }
   }
   return nmat;
@@ -445,30 +445,30 @@ template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec) {
   const auto lmag2 = [](const Vec2<T>& v) { return square(v[0]) + square(v[1]); };
   for_intL(y, 1, mvec.ysize()) {
     for_int(x, mvec.xsize()) {
-      auto vt = mvec[y - 1][x] + V(T{-1}, T{0});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y - 1, x] + V(T{-1}, T{0});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
     for_intL(x, 1, mvec.xsize()) {
-      auto vt = mvec[y][x - 1] + V(T{0}, T{-1});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y, x - 1] + V(T{0}, T{-1});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
     for (int x = mvec.xsize() - 2; x >= 0; --x) {
-      auto vt = mvec[y][x + 1] + V(T{0}, T{+1});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y, x + 1] + V(T{0}, T{+1});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
   }
   for (int y = mvec.ysize() - 2; y >= 0; --y) {
     for_int(x, mvec.xsize()) {
-      auto vt = mvec[y + 1][x] + V(T{+1}, T{0});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y + 1, x] + V(T{+1}, T{0});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
     for_intL(x, 1, mvec.xsize()) {
-      auto vt = mvec[y][x - 1] + V(T{0}, T{-1});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y, x - 1] + V(T{0}, T{-1});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
     for (int x = mvec.xsize() - 2; x >= 0; --x) {
-      auto vt = mvec[y][x + 1] + V(T{0}, T{+1});
-      if (lmag2(vt) < lmag2(mvec[y][x])) mvec[y][x] = vt;
+      auto vt = mvec[y, x + 1] + V(T{0}, T{+1});
+      if (lmag2(vt) < lmag2(mvec[y, x])) mvec[y, x] = vt;
     }
   }
 }

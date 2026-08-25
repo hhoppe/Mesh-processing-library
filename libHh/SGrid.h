@@ -57,8 +57,14 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   [[nodiscard]] static constexpr size_t size() { return vol; }
   [[nodiscard]] T& operator[](const Vec<int, D>& u) { return flat(ravel_index(dims(), u)); }
   [[nodiscard]] const T& operator[](const Vec<int, D>& u) const { return flat(ravel_index(dims(), u)); }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr slice& operator[](int r) { return ASSERTXX(check(r)), b()[r]; }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr const slice& operator[](int r) const { return ASSERTXX(check(r)), b()[r]; }
+  template <std::integral... A> [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](A... dd) {
+    static_assert(sizeof...(A) >= 1 && sizeof...(A) <= D);
+    return subscript(b(), dd...);
+  }
+  template <std::integral... A> [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](A... dd) const {
+    static_assert(sizeof...(A) >= 1 && sizeof...(A) <= D);
+    return subscript(b(), dd...);
+  }
   [[nodiscard]] T& flat(size_t i) { return ASSERTXX(i < vol), data()[i]; }
   [[nodiscard]] const T& flat(size_t i) const { return ASSERTXX(i < vol), data()[i]; }
   [[nodiscard]] bool operator==(const type& p) const;
@@ -96,12 +102,12 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   constexpr const base& b() const { return *this; }
   slice* p(int i) { return b().data() + i; }
   const slice* p(int i) const { return b().data() + i; }
-  constexpr bool check(int r) const {
-    if (r >= 0 && r < d0) return true;
-    if !consteval {
-      SHOW(r, dims());
-    }
-    return false;
+  // Successively index into the nested Vec structure; each index is bounds-checked by Vec::operator[].
+  template <typename... A> static constexpr auto& subscript(auto& v, int d, A... dd) {
+    if constexpr (sizeof...(dd) == 0)
+      return v[d];
+    else
+      return subscript(v[d], dd...);
   }
   constexpr bool check(int i, int s) const {
     if (i >= 0 && s >= 0 && i + s <= d0) return true;

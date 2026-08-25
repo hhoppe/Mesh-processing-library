@@ -278,9 +278,9 @@ void analyze_mesh(const string& s) {
   showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",  //
          s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
   showdf("  F=%g S=%g D=%g R=%g T=%g\n", edis, espr, edih, erep, etot);
-  float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0][0]), dmax2 = 0.f;
+  float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0, 0]), dmax2 = 0.f;
   for_int(i, pt.co.num()) dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i]));
-  float dmax = my_sqrt(dmax2) * xform_inverse[0][0];
+  float dmax = my_sqrt(dmax2) * xform_inverse[0, 0];
   showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
          drms, drms / gdiam * 100, dmax, dmax / gdiam * 100);
 }

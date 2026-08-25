@@ -696,7 +696,7 @@ void compute_outlier() {
     dummy_init(d2);
     for_int(j, outliern + 1)  // + 1 to include this point
         d2 = ss.next().d2;
-    float d = my_sqrt(d2) * xform_inverse[0][0];
+    float d = my_sqrt(d2) * xform_inverse[0, 0];
     HH_SSTAT(Soutlierd, d);
     if (d >= outlierd) {
       ar_is_outlier[i] = true;

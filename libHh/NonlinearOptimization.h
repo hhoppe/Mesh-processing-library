@@ -96,7 +96,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     int ic = 0;                          // index into circular buffers _as, _ay
     double f = _eval(_g);                // evaluate both the objective f and its gradient _g at _x
     int neval = 1;                       // number of times that _eval is called
-    for_int(i, _n) _as[ic][i] = -_g[i];  // initial line search direction
+    for_int(i, _n) _as[ic, i] = -_g[i];  // initial line search direction
     double alpha = 1. / mag(_g);         // initial step size
     for_int(iter, 1000) {
       _tmp.assign(_g);  // archive the current gradient
@@ -113,7 +113,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
         return true;
       }
       _as[ic] *= alpha;                             // record the search step
-      for_int(i, _n) _ay[ic][i] = _g[i] - _tmp[i];  // record the gradient difference
+      for_int(i, _n) _ay[ic, i] = _g[i] - _tmp[i];  // record the gradient difference
       const double ys = dot(_ay[ic], _as[ic]);
       const double yy = dot(_ay[ic], _ay[ic]);
       // Compute -H*_g using [Nocedal 1980].

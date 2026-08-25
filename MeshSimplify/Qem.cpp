@@ -15,7 +15,7 @@ void print_matrix(CMatrixView<double> m) {
   std::cerr << "Matrix{\n";
   for_int(i, m.ysize()) {
     std::cerr << " ";
-    for_int(j, m.xsize()) std::cerr << sform(" %-12g", m[i][j]);
+    for_int(j, m.xsize()) std::cerr << sform(" %-12g", m[i, j]);
     std::cerr << "\n";
   }
   std::cerr << "} EndMatrix\n";
@@ -319,11 +319,11 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
   {
     const T* pa = _a.data();
     for_int(i, n) {
-      a[i][i] = *pa;
+      a[i, i] = *pa;
       pa++;
       for_intL(j, i + 1, n) {
-        a[i][j] = *pa;
-        a[j][i] = *pa;
+        a[i, j] = *pa;
+        a[j, i] = *pa;
         pa++;
       }
     }
@@ -335,7 +335,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     assertx(n >= 3);
     // Note: at present only handle extremely restricted case.
     for_intL(i, 3, n) assertx(lf[i] == 0.f);
-    for_int(i, n - 1) for_int(j, n) zt[i][j] = 0.;
+    for_int(i, n - 1) for_int(j, n) zt[i, j] = 0.;
     Vec2<Vector> voa;
     {
       Vector vlf(lf[0], lf[1], lf[2]);
@@ -345,8 +345,8 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
     }
-    for_int(i, 2) for_int(c, 3) zt[i][c] = voa[i][c];
-    for_intL(i, 3, n) zt[i - 1][i] = 1.;
+    for_int(i, 2) for_int(c, 3) zt[i, c] = voa[i][c];
+    for_intL(i, 3, n) zt[i - 1, i] = 1.;
     if (0) print_matrix(zt);
   }
   static SvdDoubleLls lls(n, n, 1);
@@ -355,14 +355,14 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     for_int(j, n) {
       // row i of Z^T times column j of A
       double v = 0.;
-      for_int(k, n) v += zt[i][k] * a[k][j];
+      for_int(k, n) v += zt[i, k] * a[k, j];
       lls.enter_a_rc(i, j, float(v));
     }
   }
   for_int(i, n - 1) {
     // row i of Z^T times -b
     double v = 0.;
-    for_int(k, n) v += -zt[i][k] * _b[k];
+    for_int(k, n) v += -zt[i, k] * _b[k];
     lls.enter_b_rc(i, 0, float(v));
   }
   lls.enter_a_r(n - 1, CArrayView(lf, n));
@@ -396,15 +396,15 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   {
     const T* pa = _a.data();
     for_int(i, ngeom) {
-      c[i][i] = *pa;
+      c[i, i] = *pa;
       pa++;
       for_intL(j, i + 1, ngeom) {
-        c[i][j] = *pa;
-        c[j][i] = *pa;
+        c[i, j] = *pa;
+        c[j, i] = *pa;
         pa++;
       }
       for_int(j, nattrib) {
-        b[i][j] = *pa;
+        b[i, j] = *pa;
         pa++;
       }
     }
@@ -430,12 +430,12 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
     for_int(j, ngeom) {
       // enter C - B * B^T / al
       double x = 0.;
-      for_int(k, nattrib) x += b[i][k] * b[j][k];
-      lls.enter_a_rc(i, j, float(c[i][j] - alinv * x));
+      for_int(k, nattrib) x += b[i, k] * b[j, k];
+      lls.enter_a_rc(i, j, float(c[i, j] - alinv * x));
     }
     // enter b1 - B * b2 / al
     double x = 0.;
-    for_int(k, nattrib) x += b[i][k] * -_b[ngeom + k];
+    for_int(k, nattrib) x += b[i, k] * -_b[ngeom + k];
     lls.enter_b_rc(i, 0, float(-_b[i] - alinv * x));
     lls.enter_a_rc(ngeom, i, lf[i]);
     lls.enter_a_rc(i, ngeom, lf[i]);
@@ -446,7 +446,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   for_int(i, ngeom) minp[i] = lls.get_x_rc(i, 0);
   for_int(i, nattrib) {
     double v = -_b[ngeom + i];
-    for_int(k, ngeom) v -= b[k][i] * minp[k];
+    for_int(k, ngeom) v -= b[k, i] * minp[k];
     minp[ngeom + i] = float(alinv * v);
   }
   return true;
@@ -480,11 +480,11 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
     {
       const T* pa = qem._a.data();
       for_int(i, ngeom) {
-        msum[i][i] += *pa;
+        msum[i, i] += *pa;
         pa++;
         for_intL(j, i + 1, ngeom) {
-          msum[i][j] += *pa;
-          msum[j][i] += *pa;
+          msum[i, j] += *pa;
+          msum[j, i] += *pa;
           pa++;
         }
         for_intL(j, ngeom, n) {
@@ -506,13 +506,13 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
     for_int(i, ngeom) vsum[i] += qem._b[i];
     for_intL(i, ngeom, n) lls.enter_b_rc(inc + i, 0, float(-qem._b[i]));
   }
-  for_int(i, ngeom) for_int(j, ngeom) lls.enter_a_rc(i, j, float(msum[i][j]));
+  for_int(i, ngeom) for_int(j, ngeom) lls.enter_a_rc(i, j, float(msum[i, j]));
   for_int(i, ngeom) lls.enter_b_rc(i, 0, float(-vsum[i]));
   if (!lls.solve()) return false;
   for_int(wi, nw) {
     const int inc = nattrib * wi;
-    for_int(i, ngeom) minp[wi][i] = lls.get_x_rc(i, 0);
-    for_intL(i, ngeom, n) minp[wi][i] = lls.get_x_rc(inc + i, 0);
+    for_int(i, ngeom) minp[wi, i] = lls.get_x_rc(i, 0);
+    for_intL(i, ngeom, n) minp[wi, i] = lls.get_x_rc(inc + i, 0);
   }
   return true;
 }
@@ -540,25 +540,25 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
     {
       const T* pa = qem._a.data();
       for_int(i, ngeom) {
-        a[i][i] += *pa;
+        a[i, i] += *pa;
         pa++;
         for_intL(j, i + 1, ngeom) {
-          a[i][j] += *pa;
-          a[j][i] += *pa;
+          a[i, j] += *pa;
+          a[j, i] += *pa;
           pa++;
         }
         for_intL(j, ngeom, n) {
-          a[i][inc + j] = *pa;
-          a[inc + j][i] = *pa;
+          a[i, inc + j] = *pa;
+          a[inc + j, i] = *pa;
           pa++;
         }
       }
       for_intL(i, ngeom, n) {
-        a[inc + i][inc + i] = *pa;
+        a[inc + i, inc + i] = *pa;
         pa++;
         for_intL(j, i + 1, n) {
-          a[inc + i][inc + j] = *pa;
-          a[inc + j][inc + i] = *pa;
+          a[inc + i, inc + j] = *pa;
+          a[inc + j, inc + i] = *pa;
           pa++;
         }
       }
@@ -581,7 +581,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   SvdDoubleLls& lls = *plls;
   lls.clear();
 #if defined(DEF_LAGRANGE)
-  for_int(i, msize) for_int(j, msize) lls.enter_a_rc(i, j, float(a[i][j]));
+  for_int(i, msize) for_int(j, msize) lls.enter_a_rc(i, j, float(a[i, j]));
   for_int(i, msize) lls.enter_b_rc(i, 0, float(-b[i]));
   // At present only handle extremely restricted case.
   for_intL(i, 3, n) assertx(lf[i] == 0.f);
@@ -594,7 +594,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   {
     // Note: at present only handle extremely restricted case.
     for_intL(i, 3, n) assertx(lf[i] == 0.f);
-    for_int(i, msize - 1) for_int(j, msize) zt[i][j] = 0.f;
+    for_int(i, msize - 1) for_int(j, msize) zt[i, j] = 0.f;
     Vec2<Vector> voa;
     {
       Vector vlf(lf[0], lf[1], lf[2]);
@@ -604,21 +604,21 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
     }
-    for_int(i, 2) for_int(c, 3) zt[i][c] = voa[i][c];
-    for_intL(i, 3, msize) zt[i - 1][i] = 1.f;
+    for_int(i, 2) for_int(c, 3) zt[i, c] = voa[i][c];
+    for_intL(i, 3, msize) zt[i - 1, i] = 1.f;
   }
   for_int(i, msize - 1) {
     for_int(j, msize) {
       // row i of Z^T times column j of A
       double v = 0.;
-      for_int(k, msize) v += zt[i][k] * a[k][j];
+      for_int(k, msize) v += zt[i, k] * a[k, j];
       lls.enter_a_rc(i, j, v);
     }
   }
   for_int(i, msize - 1) {
     // row i of Z^T times -b
     double v = 0.;
-    for_int(k, msize) v += -zt[i][k] * b[k];
+    for_int(k, msize) v += -zt[i, k] * b[k];
     lls.enter_b_rc(i, 0, v);
   }
   for_int(j, ngeom) lls.enter_a_rc(msize - 1, j, lf[j]);
@@ -627,8 +627,8 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   if (!lls.solve()) return false;
   for_int(wi, nw) {
     const int inc = nattrib * wi;
-    for_int(i, ngeom) minp[wi][i] = lls.get_x_rc(i, 0);
-    for_intL(i, ngeom, n) minp[wi][i] = lls.get_x_rc(inc + i, 0);
+    for_int(i, ngeom) minp[wi, i] = lls.get_x_rc(i, 0);
+    for_intL(i, ngeom, n) minp[wi, i] = lls.get_x_rc(inc + i, 0);
   }
   return true;
 }

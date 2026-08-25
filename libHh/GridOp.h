@@ -377,7 +377,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     for_int(k, nk) {
       int ii = ar_pixelindex0[x] + k;
       const T* pvalue = map_boundaryrule_1D(ii, cx, bndrule) ? &grid[u.with(d, ii)] : bordervalue;
-      v += mat_weights[x][k] * *pvalue;
+      v += mat_weights[x, k] * *pvalue;
     }
     ngrid[u] = v;
   };

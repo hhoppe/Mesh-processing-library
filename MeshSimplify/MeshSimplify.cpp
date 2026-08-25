@@ -472,8 +472,8 @@ constexpr bool have_cnormals = true;
 float offset_cost;  // Offset zero in pqe cost.
 const bool sdebug = getenv_bool("MESHSIMPLIFY_DEBUG");
 Frame grid_frame;        // Position of grid in world.
-float inv_grid_frame00;  // 1.f / grid_frame[0][0].
-float inv_grid_frame11;  // 1.f / grid_frame[1][1].
+float inv_grid_frame00;  // 1.f / grid_frame[0, 0].
+float inv_grid_frame11;  // 1.f / grid_frame[1, 1].
 bool has_wad2 = false;
 float sqrt_neptfac;
 int qems;  // Size of QEM as supported in make_qem().
@@ -1680,7 +1680,7 @@ void perhaps_initialize() {
     showdf("Grid boundaries_first=%d\n", boundaries_first);
     // Assertions.
     {  // verify that diagonals run the right way
-      // Look for vertex at grid[1][1].
+      // Look for vertex at grid[1, 1].
       Vertex v = mesh.id_vertex(boundaries_first ? 2 * grid_dims[1] + 2 * (grid_dims[0] - 2) + 1 : grid_dims[1] + 2);
       assertx(mesh.edge(mesh.id_vertex(1), v));
     }
@@ -1718,15 +1718,15 @@ void perhaps_initialize() {
       g_gridf.init(grid_dims);
       int i = 1;
       if (boundaries_first) {
-        for_int(x, grid_dims[1]) g_gridf[0][x] = mesh.point(mesh.id_vertex(i++))[2];
-        for_int(x, grid_dims[1]) g_gridf[grid_dims[0] - 1][x] = mesh.point(mesh.id_vertex(i++))[2];
-        for_intL(y, 1, grid_dims[0] - 1) g_gridf[y][0] = mesh.point(mesh.id_vertex(i++))[2];
-        for_intL(y, 1, grid_dims[0] - 1) g_gridf[y][grid_dims[1] - 1] = mesh.point(mesh.id_vertex(i++))[2];
+        for_int(x, grid_dims[1]) g_gridf[0, x] = mesh.point(mesh.id_vertex(i++))[2];
+        for_int(x, grid_dims[1]) g_gridf[grid_dims[0] - 1, x] = mesh.point(mesh.id_vertex(i++))[2];
+        for_intL(y, 1, grid_dims[0] - 1) g_gridf[y, 0] = mesh.point(mesh.id_vertex(i++))[2];
+        for_intL(y, 1, grid_dims[0] - 1) g_gridf[y, grid_dims[1] - 1] = mesh.point(mesh.id_vertex(i++))[2];
         for_intL(y, 1, grid_dims[0] - 1) {
-          for_intL(x, 1, grid_dims[1] - 1) g_gridf[y][x] = mesh.point(mesh.id_vertex(i++))[2];
+          for_intL(x, 1, grid_dims[1] - 1) g_gridf[y, x] = mesh.point(mesh.id_vertex(i++))[2];
         }
       } else {
-        for_int(y, grid_dims[0]) for_int(x, grid_dims[1]) g_gridf[y][x] = mesh.point(mesh.id_vertex(i++))[2];
+        for_int(y, grid_dims[0]) for_int(x, grid_dims[1]) g_gridf[y, x] = mesh.point(mesh.id_vertex(i++))[2];
       }
       assertx(i == mesh.num_vertices() + 1);
     }
@@ -1735,8 +1735,8 @@ void perhaps_initialize() {
     grid_frame = Frame(Vector((gbbox[1][0] - gbbox[0][0]) / (grid_dims[1] - 1.f), 0.f, 0.f),
                        Vector(0.f, (gbbox[1][1] - gbbox[0][1]) / (grid_dims[0] - 1.f), 0.f), Vector(0.f, 0.f, 1.f),
                        Point(gbbox[0][0], gbbox[0][1], 0.f));
-    inv_grid_frame00 = 1.f / grid_frame[0][0];
-    inv_grid_frame11 = 1.f / grid_frame[1][1];
+    inv_grid_frame00 = 1.f / grid_frame[0, 0];
+    inv_grid_frame11 = 1.f / grid_frame[1, 1];
     if (1) {
       for (Vertex v : mesh.vertices()) {
         Vec2<int> npyx;

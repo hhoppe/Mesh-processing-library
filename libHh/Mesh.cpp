@@ -847,7 +847,7 @@ Edge Mesh::remove_vertex_between_edges(Vertex vr) {
   for (Face f : fa)
     for (HEdge he : corners(f)) ar_he.push(he);
   create_bogus_hedges(ar_he);
-  Vec2<Array<Vertex>> va;
+  Vec2<Array<Vertex>> va;  // is fa.num() <= 2 ??
   for_int(i, fa.num()) {
     for (Vertex v = vr;;) {
       v = ccw_vertex(fa[i], v);

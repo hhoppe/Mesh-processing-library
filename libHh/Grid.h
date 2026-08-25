@@ -13,16 +13,16 @@
   Vec2<int> u = V(y, x);                   // Array of coordinates (in Big Endian order).
   size_t i = ravel_index(grid.dims(), u);  // Index into "vectorized" flat view of grid.
   assertx(&grid[y][x] == &grid[u]);
-  assertx(&grid(y, x) == &grid[u]);
+  assertx(&grid[y, x] == &grid[u]);
   assertx(&grid.flat(i) == &grid[u]);
   assertx(i == ravel_index_list(grid.dims(), y, x));
   assertx(unravel_index(grid.dims(), i) == u);
 
   grid[18][5] = 1;
-  grid(18, 6) = 2;
+  grid[18, 6] = 2;
   grid[{18, 7}] = 3;
   grid.flat(ravel_index(grid.dims(), V(18, 8))) = 4;
-  for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y][x] *= 2;  // Iterate using individual coordinates.
+  for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) grid[y, x] *= 2;  // Iterate using individual coordinates.
   for (const auto& u : range(grid.dims())) grid[u] *= 2;            // Iterate using array of coordinate indices.
   for (const size_t i : range(grid.size())) grid.flat(i) *= 2;      // Iterate using raster order (fastest).
   for (auto& e : grid) e *= 2;                                      // Iterate over elements (also fastest).
@@ -154,7 +154,7 @@ template <int D, typename T> class CGridView {
   const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = map_inside(y, x, bndrule);
     ASSERTX(b);
-    return (*this)[y][x];
+    return (*this)[y, x];
   }
   const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
 
@@ -231,12 +231,12 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   T& inside(int y, int x, Bndrule bndrule) requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
-    return (*this)[y][x];
+    return (*this)[y, x];
   }
   const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
-    return (*this)[y][x];
+    return (*this)[y, x];
   }
   const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
   void reverse_y() requires(D == 2) {
@@ -457,7 +457,7 @@ const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderv
     ASSERTX(bordervalue);
     return *bordervalue;
   }
-  return (*this)[y][x];
+  return (*this)[y, x];
 }
 
 //----------------------------------------------------------------------------
@@ -468,7 +468,7 @@ const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* borderva
     ASSERTX(bordervalue);
     return *bordervalue;
   }
-  return (*this)[y][x];
+  return (*this)[y, x];
 }
 
 template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requires Copyable<T> {
@@ -537,10 +537,10 @@ template <int D, typename T> std::ostream& operator<<(std::ostream& os, CGridVie
     os << "Matrix<" << type_name<T>() << ">(" << ny << ", " << nx << ") {\n";
     for_int(y, ny) {
       if (has_ostream_eol_v<T>) {
-        for_int(x, nx) os << sform("  [%d, %d] = ", y, x) << g[y][x];
+        for_int(x, nx) os << sform("  [%d, %d] = ", y, x) << g[y, x];
       } else {
         os << " ";
-        for_int(x, nx) os << " " << g[y][x];
+        for_int(x, nx) os << " " << g[y, x];
         os << "\n";
       }
     }

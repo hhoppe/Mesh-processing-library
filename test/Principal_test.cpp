@@ -35,7 +35,7 @@ void read_data(Matrix<float>& mi) {
   for_int(i, 4) assertx(my_getline(fi(), line));
   const int m = 4096, n = 75;
   mi.init(m, n);
-  for_int(j, n) for_int(i, m) assertx(fi() >> mi[i][j]);
+  for_int(j, n) for_int(i, m) assertx(fi() >> mi[i, j]);
   {
     float dummy;
     fi() >> dummy;
@@ -65,7 +65,7 @@ void test_inc() {
     showf("%d %14g %14g dot=%14g\n", i, eimag1[i], eimag2[i], d);
   }
   Matrix<float> mdot(ne, ne);
-  for_int(i, ne) for_int(j, ne) mdot[i][j] = float(abs(dot(mo1[i], mo2[j])));
+  for_int(i, ne) for_int(j, ne) mdot[i, j] = float(abs(dot(mo1[i], mo2[j])));
   SHOW(mdot);
 }
 
@@ -104,7 +104,7 @@ void test_em() {
     showf("%d %14g %14g dot=%14g\n", i, eimag1[i], eimag2[i], d);
   }
   Matrix<float> mdot(ne, ne);
-  for_int(i, ne) for_int(j, ne) mdot[i][j] = float(abs(dot(mo1[i], mo2[j])));
+  for_int(i, ne) for_int(j, ne) mdot[i, j] = float(abs(dot(mo1[i], mo2[j])));
   SHOW(mdot);
 }
 

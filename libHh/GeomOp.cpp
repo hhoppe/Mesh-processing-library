@@ -245,16 +245,16 @@ Frame normalized_frame(const Frame& frame, float tolerance) {
 //      ?             ?             cos(p)cos(b)
 
 Vec3<float> euler_angles_from_frame(const Frame& frame) {
-  return V(my_atan2(frame[0][1], frame[0][0]),                            //
-           my_atan2(-frame[0][2], std::hypot(frame[0][0], frame[0][1])),  //
-           my_atan2(frame[1][2] / mag(frame[1]), frame[2][2] / mag(frame[2])));
+  return V(my_atan2(frame[0, 1], frame[0, 0]),                            //
+           my_atan2(-frame[0, 2], std::hypot(frame[0, 0], frame[0, 1])),  //
+           my_atan2(frame[1, 2] / mag(frame[1]), frame[2, 2] / mag(frame[2])));
 }
 
 Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame) {
   Frame frame = Frame::identity();  // Note: modifying local rather than prev_frame to preserve axes scale and origin.
   Vec3<float> prev_mags =
       transformed(prev_frame.head<3>(), [](const Vec3<float>& v) { return float(mag<double>(v)); });
-  for_int(c, 3) frame[c][c] = prev_mags[c];
+  for_int(c, 3) frame[c, c] = prev_mags[c];
   for_int(c, 3) frame = frame * Frame::rotation(c, ang[2 - c]);  // World Z yaw, then world Y pitch, then world X roll.
   if (1) frame = orthogonalized(frame);                          // Optional, for precision.
   frame.p() = prev_frame.p();

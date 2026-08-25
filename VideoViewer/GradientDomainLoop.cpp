@@ -322,7 +322,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
           int xl = bi.l(), xu = bi.u();
           for_intL(x, xl, min(xu + 1, nx)) apix0[x] = MG::get(video[grid_frameif[0, x], 0, x], z);
           for_intL(x, xl, xu) { asy0[x] = EType{0}; }
-          for_int(y, ny) {  // update [y][x]; apix0 has [y]; asy0 has [y] - [y-1]
+          for_int(y, ny) {  // update [y, x]; apix0 has [y]; asy0 has [y] - [y-1]
             int y1 = y + 1;
             if (y1 < ny) apix1[xl] = MG::get(video[grid_frameif[y1, xl], y1, xl], z);
             if (xl > 0 && xl < xu) {
@@ -330,12 +330,12 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               asx[xl] = .5f * (MG::get(video[fi1, y, xl], z) - MG::get(video[fi1, y, xl - 1], z) +
                                MG::get(video[fi2, y, xl], z) - MG::get(video[fi2, y, xl - 1], z));
             }
-            for_intL(x, xl, xu) {  // apix1[x] has [y1][x]; asx[xl] has [y][xl] - [y][xl - 1]
+            for_intL(x, xl, xu) {  // apix1[x] has [y1, x]; asx[xl] has [y, xl] - [y, xl - 1]
               int x1 = x + 1;
               int fi = grid_frameif[y, x];
               if (x1 < nx) {
                 if (y1 < ny) apix1[x1] = MG::get(video[grid_frameif[y1, x1], y1, x1], z);
-                // compute asx[x1] = [y][x1] - [y][x]
+                // compute asx[x1] = [y, x1] - [y, x]
                 int fi01 = grid_frameif[y, x1];
                 asx[x1] =
                     (fi01 == fi
@@ -343,7 +343,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
                          : (apix0[x1] - MG::get(video[fi01, y, x], z) + MG::get(video[fi, y, x1], z) - apix0[x]) *
                                .5f);
               }
-              if (y1 < ny) {  // compute asy1[x] = [y1][x] - [y][x]
+              if (y1 < ny) {  // compute asy1[x] = [y1, x] - [y, x]
                 int fi10 = grid_frameif[y1, x];
                 asy1[x] =
                     (fi10 == fi
@@ -352,7 +352,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               } else {
                 asy1[x] = EType{0};
               }
-              // update pixel [y][x] using asy0, asy1, asx, apix0
+              // update pixel [y, x] using asy0, asy1, asx, apix0
               EType pixv = apix0[x];
               EType vrhs(-screening_weight * pixv);
               const int period = mat_period[y, x];
@@ -867,7 +867,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               auto hmat_deltatimehy = hmat_deltatime[hy];
               auto hmat_starthy = hmat_start[hy];
               auto hmat_periodhy = hmat_period[hy];
-              auto hvideo_offsethy = hvideo_offset[f / DT][hy];
+              auto hvideo_offsethy = hvideo_offset[f / DT, hy];
               auto lvideo_nv12_Y = video_nv12.get_Y();
               auto lvideo_nv12_UV = video_nv12.get_UV();
               for_int(hx, hnx) {

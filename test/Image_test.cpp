@@ -20,7 +20,7 @@ int main() {
     Pixel gcolor(255, 255, 255, 255);
     {
       const Grid<2, Pixel>& grid = image;
-      SHOW(image[19][19]);
+      SHOW((image[19, 19]));
       Grid<2, Pixel> newgrid = crop(grid, V(0, 0), V(10, 10), twice(bndrule), &gcolor);
       SHOW(newgrid.dims());
     }

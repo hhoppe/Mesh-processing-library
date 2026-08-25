@@ -165,16 +165,16 @@ class SphereMapper::Implementation {
       if (!face_normal.normalize()) continue;
       const float face_area = sqrt(area2(triangle));
       const Point sph_center = normalized(sum(sphs));
-      for_int(i, 3) for_int(j, 3) cov[i][j] += sph_center[i] * face_normal[j] * face_area;
+      for_int(i, 3) for_int(j, 3) cov[i, j] += sph_center[i] * face_normal[j] * face_area;
     }
 
     SGrid<float, 4, 4> n;
-    const float trace = cov[0][0] + cov[1][1] + cov[2][2];
-    n[0][0] = trace;
-    n[1][0] = n[0][1] = cov[1][2] - cov[2][1];
-    n[2][0] = n[0][2] = cov[2][0] - cov[0][2];
-    n[3][0] = n[0][3] = cov[0][1] - cov[1][0];
-    for_int(i, 3) for_int(j, 3) n[i + 1][j + 1] = i == j ? (2 * cov[i][i] - trace) : (cov[i][j] + cov[j][i]);
+    const float trace = cov[0, 0] + cov[1, 1] + cov[2, 2];
+    n[0, 0] = trace;
+    n[1, 0] = n[0, 1] = cov[1, 2] - cov[2, 1];
+    n[2, 0] = n[0, 2] = cov[2, 0] - cov[0, 2];
+    n[3, 0] = n[0, 3] = cov[0, 1] - cov[1, 0];
+    for_int(i, 3) for_int(j, 3) n[i + 1, j + 1] = i == j ? (2 * cov[i, i] - trace) : (cov[i, j] + cov[j, i]);
 
     SGrid<float, 4, 4> u, vt;
     Vec4<float> s;
@@ -182,7 +182,7 @@ class SphereMapper::Implementation {
     sort_singular_values(u.view(), s.view(), vt.view());
     // (Because matrix n is symmetric, the vectors in u and vt are generally identical.)
 
-    const float q0 = u[0][0], qx = u[1][0], qy = u[2][0], qz = u[3][0];
+    const float q0 = u[0, 0], qx = u[1, 0], qy = u[2, 0], qz = u[3, 0];
     const Frame frame(
         Vector(q0 * q0 + qx * qx - qy * qy - qz * qz, 2.f * (qy * qx + q0 * qz), 2.f * (qz * qx - q0 * qy)),
         Vector(2.f * (qx * qy - q0 * qz), q0 * q0 - qx * qx + qy * qy - qz * qz, 2.f * (qz * qy + q0 * qx)),

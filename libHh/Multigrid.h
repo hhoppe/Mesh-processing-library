@@ -190,35 +190,35 @@ class Multigrid : noncopyable {
       assertx(!_periodic(0) && !_periodic(1));  // This case is handled by the non-specialized version below.
       if (ndims[0] == dims[0]) {
         for_int(y, ndims[0]) {
-          for_int(x, dims[1] / 2) ngrid[y][x] = (grid[y][x * 2 + 0] + grid[y][x * 2 + 1]) * .5f;
-          if (dims[1] % 2 == 1) ngrid[y][ndims[1] - 1] = grid[y][(ndims[1] - 1) * 2] * 1.f;  // .5f or 1.f; don't care
+          for_int(x, dims[1] / 2) ngrid[y, x] = (grid[y, x * 2 + 0] + grid[y, x * 2 + 1]) * .5f;
+          if (dims[1] % 2 == 1) ngrid[y, ndims[1] - 1] = grid[y, (ndims[1] - 1) * 2] * 1.f;  // .5f or 1.f; don't care
         }
       } else if (ndims[1] == dims[1]) {
         for_int(x, ndims[1]) {
-          for_int(y, dims[0] / 2) ngrid[y][x] = (grid[y * 2 + 0][x] + grid[y * 2 + 1][x]) * .5f;
-          if (dims[0] % 2 == 1) ngrid[ndims[0] - 1][x] = grid[(ndims[0] - 1) * 2][x] * 1.f;  // .5f or 1.f; don't care
+          for_int(y, dims[0] / 2) ngrid[y, x] = (grid[y * 2 + 0, x] + grid[y * 2 + 1, x]) * .5f;
+          if (dims[0] % 2 == 1) ngrid[ndims[0] - 1, x] = grid[(ndims[0] - 1) * 2, x] * 1.f;  // .5f or 1.f; don't care
         }
       } else {
         parallel_for({.cycles_per_elem = uint64_t(dims[1]) * 4}, range(dims[0] / 2), [&](const int y) {
           for_int(x, dims[1] / 2) {
-            ngrid[y][x] = ((grid[y * 2 + 0][x * 2 + 0] + grid[y * 2 + 0][x * 2 + 1] + grid[y * 2 + 1][x * 2 + 0] +
-                            grid[y * 2 + 1][x * 2 + 1]) *
+            ngrid[y, x] = ((grid[y * 2 + 0, x * 2 + 0] + grid[y * 2 + 0, x * 2 + 1] + grid[y * 2 + 1, x * 2 + 0] +
+                            grid[y * 2 + 1, x * 2 + 1]) *
                            .25f);
           }
         });
         if (dims[0] % 2 == 1) {
           int y = ndims[0] - 1;
           float fac = dims[0] >= dims[1] ? .25f : .5f;  // border-zero or reflected
-          for_int(x, dims[1] / 2) ngrid[y][x] = (grid[y * 2][x * 2 + 0] + grid[y * 2][x * 2 + 1]) * fac;
+          for_int(x, dims[1] / 2) ngrid[y, x] = (grid[y * 2, x * 2 + 0] + grid[y * 2, x * 2 + 1]) * fac;
         }
         if (dims[1] % 2 == 1) {
           int x = ndims[1] - 1;
           float fac = dims[1] >= dims[0] ? .25f : .5f;  // border-zero or reflected
-          for_int(y, dims[0] / 2) ngrid[y][x] = (grid[y * 2 + 0][x * 2] + grid[y * 2 + 1][x * 2]) * fac;
+          for_int(y, dims[0] / 2) ngrid[y, x] = (grid[y * 2 + 0, x * 2] + grid[y * 2 + 1, x * 2]) * fac;
         }
         if (dims[0] % 2 == 1 && dims[1] % 2 == 1) {
           int y = ndims[0] - 1, x = ndims[1] - 1;
-          ngrid[y][x] = grid[y * 2][x * 2] * .25f;  // .25f or 1.f; don't care
+          ngrid[y, x] = grid[y * 2, x * 2] * .25f;  // .25f or 1.f; don't care
         }
       }
     } else {
@@ -269,7 +269,7 @@ class Multigrid : noncopyable {
       HH_MULTIGRID_TIMER("_upsample2");
       // transpose of box filter: tensor({(1 0), (0 1)})
       parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 1}, range(ndims[0]), [&](const int y) {  //
-        for_int(x, ndims[1]) ngrid[y][x] = grid[y / 2][x / 2];
+        for_int(x, ndims[1]) ngrid[y, x] = grid[y / 2, x / 2];
       });
     } else {
       HH_MULTIGRID_TIMER("_upsample");
@@ -315,42 +315,42 @@ class Multigrid : noncopyable {
         float w, vnum = _screening_weight;  // or 0.f
         w = _metric(wL, 0);
         if (y > 0) {
-          vnei += w * grid_result[y - 1][x];
+          vnei += w * grid_result[y - 1, x];
           vnum += w;
         } else if (_periodic(0)) {
-          vnei += w * grid_result[ny - 1][x];
+          vnei += w * grid_result[ny - 1, x];
           vnum += w;
         }
         if (y < ny - 1) {
-          vnei += w * grid_result[y + 1][x];
+          vnei += w * grid_result[y + 1, x];
           vnum += w;
         } else if (_periodic(0)) {
-          vnei += w * grid_result[0][x];
+          vnei += w * grid_result[0, x];
           vnum += w;
         }
         w = _metric(wL, 1);
         if (x > 0) {
-          vnei += w * grid_result[y][x - 1];
+          vnei += w * grid_result[y, x - 1];
           vnum += w;
         } else if (_periodic(1)) {
-          vnei += w * grid_result[y][nx - 1];
+          vnei += w * grid_result[y, nx - 1];
           vnum += w;
         }
         if (x < nx - 1) {
-          vnei += w * grid_result[y][x + 1];
+          vnei += w * grid_result[y, x + 1];
           vnum += w;
         } else if (_periodic(1)) {
-          vnei += w * grid_result[y][0];
+          vnei += w * grid_result[y, 0];
           vnum += w;
         }
-        grid_result[y][x] = (vnei - grid_rhs[y][x]) / vnum;
+        grid_result[y, x] = (vnei - grid_rhs[y, x]) / vnum;
       };
       const auto func_update_interior = [&](int y, int x) {
         if (1) ASSERTX(true && b_default_metric);
-        grid_result[y][x] = (((grid_result[y - 1][x + 0] + grid_result[y + 1][x + 0] + grid_result[y + 0][x - 1] +
-                               grid_result[y + 0][x + 1]) *
+        grid_result[y, x] = (((grid_result[y - 1, x + 0] + grid_result[y + 1, x + 0] + grid_result[y + 0, x - 1] +
+                               grid_result[y + 0, x + 1]) *
                                   wL -
-                              grid_rhs[y][x]) *
+                              grid_rhs[y, x]) *
                              rwL4);  // OPT:relax2
       };
       for_int(iter, niter) {
@@ -559,41 +559,41 @@ class Multigrid : noncopyable {
         float w, vnum = _screening_weight;  // or 0.f
         w = _metric(wL, 0);
         if (y > 0) {
-          vnei += w * grid_result[y - 1][x];
+          vnei += w * grid_result[y - 1, x];
           vnum += w;
         } else if (_periodic(0)) {
-          vnei += w * grid_result[ny - 1][x];
+          vnei += w * grid_result[ny - 1, x];
           vnum += w;
         }
         if (y < ny - 1) {
-          vnei += w * grid_result[y + 1][x];
+          vnei += w * grid_result[y + 1, x];
           vnum += w;
         } else if (_periodic(0)) {
-          vnei += w * grid_result[0][x];
+          vnei += w * grid_result[0, x];
           vnum += w;
         }
         w = _metric(wL, 1);
         if (x > 0) {
-          vnei += w * grid_result[y][x - 1];
+          vnei += w * grid_result[y, x - 1];
           vnum += w;
         } else if (_periodic(1)) {
-          vnei += w * grid_result[y][nx - 1];
+          vnei += w * grid_result[y, nx - 1];
           vnum += w;
         }
         if (x < nx - 1) {
-          vnei += w * grid_result[y][x + 1];
+          vnei += w * grid_result[y, x + 1];
           vnum += w;
         } else if (_periodic(1)) {
-          vnei += w * grid_result[y][0];
+          vnei += w * grid_result[y, 0];
           vnum += w;
         }
-        grid_residual[y][x] = grid_rhs[y][x] - (vnei - vnum * grid_result[y][x]);
+        grid_residual[y, x] = grid_rhs[y, x] - (vnei - vnum * grid_result[y, x]);
       };
       const auto func_interior = [grid_result, wL, wL4, grid_rhs, &grid_residual](int y, int x) {
         if (1) ASSERTX(true && b_default_metric);
-        T vnei = (grid_result[y - 1][x + 0] + grid_result[y + 1][x + 0] + grid_result[y + 0][x - 1] +
-                  grid_result[y + 0][x + 1]);
-        grid_residual[y][x] = grid_rhs[y][x] - (wL * vnei - wL4 * grid_result[y][x]);  // OPT:resid2
+        T vnei = (grid_result[y - 1, x + 0] + grid_result[y + 1, x + 0] + grid_result[y + 0, x - 1] +
+                  grid_result[y + 0, x + 1]);
+        grid_residual[y, x] = grid_rhs[y, x] - (wL * vnei - wL4 * grid_result[y, x]);  // OPT:resid2
       };
       dummy_use(func_interior);
       // VS2012: does not inline lambda in any case; all similar; first choice is slightly better.

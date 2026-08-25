@@ -40,12 +40,12 @@ int main() {
     const int n = 5;
     Matrix<Vertex> matv(n, n);
     for_int(y, n) for_int(x, n) {
-      matv[y][x] = mesh.create_vertex();
-      mesh.set_point(matv[y][x], Point(x / (n - 1.f), y / (n - 1.f), 0.f));
+      matv[y, x] = mesh.create_vertex();
+      mesh.set_point(matv[y, x], Point(x / (n - 1.f), y / (n - 1.f), 0.f));
     }
     for_int(y, n - 1) for_int(x, n - 1) {
-      mesh.create_face(matv[y][x], matv[y + 1][x], matv[y + 1][x + 1]);
-      mesh.create_face(matv[y][x], matv[y + 1][x + 1], matv[y][x + 1]);
+      mesh.create_face(matv[y, x], matv[y + 1, x], matv[y + 1, x + 1]);
+      mesh.create_face(matv[y, x], matv[y + 1, x + 1], matv[y, x + 1]);
     }
     SHOW(mesh_genus_string(mesh));
     const MeshSearch mesh_search(mesh, {.allow_local_project = true});

@@ -134,10 +134,10 @@ void do_filename(Args& args) {
 }
 
 void initialize() {
-  if (!xform[0][0]) {
+  if (!xform[0, 0]) {
     xform = gbbox.get_frame_to_small_cube(xformsize);
     if (verb >= 2) showdf(" internal xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-    xform_scale = assertx(xform[0][0]);
+    xform_scale = assertx(xform[0, 0]);
   }
   wcrep = crep / square(xform_scale);
   wcsharp = csharp / square(xform_scale);
@@ -1211,7 +1211,7 @@ EResult try_op(Edge e, EOperation op, double& edrss) {
             : op == OP_eswa ? try_eswa(e, edrss)
             : op == OP_espl ? try_espl(e, edrss)
                             : (assertnever(""), R_success));
-  op_stat[op][result]++;
+  op_stat[int(op), int(result)]++;
   return result;
 }
 
@@ -1250,7 +1250,7 @@ void stoc_end() {
   }
   for_int(j, op_stat.dim(1)) {
     string s = sform("%20s", op_result_name[j].c_str());
-    for_int(i, op_stat.dim(0)) s += sform("%10d", op_stat[i][j]);
+    for_int(i, op_stat.dim(0)) s += sform("%10d", op_stat[i, j]);
     showdf("%s\n", s.c_str());
   }
   {

@@ -124,7 +124,7 @@ void initial_projection() {
 }
 
 void perhaps_initialize() {
-  if (xform[0][0]) return;  // already initialized
+  if (xform[0, 0]) return;  // already initialized
   assertx(pt.n && verts.num());
   assertw(spring > 0.f);  // just warn user
   compute_xform();

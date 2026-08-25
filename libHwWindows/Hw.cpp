@@ -208,7 +208,7 @@ void Hw::open() {
       uint8_t* p = static_cast<uint8_t*>(_bitmap_data);
       for_int(y, image.ysize()) {
         for_int(x, image.xsize()) {
-          for_int(z, 3) image[y][x][2 - z] = *p++;  // BGR to RGB
+          for_int(z, 3) image[y, x][2 - z] = *p++;  // BGR to RGB
         }
         while ((reinterpret_cast<uintptr_t>(p) & 3) != 0) p++;
       }
@@ -1376,7 +1376,7 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
       for_int(y, image.ysize()) {
         int yy = image.ysize() - 1 - y;  // because bmp has image origin at lower-left
         for_int(x, image.xsize()) {
-          const Pixel& pixel = image[yy][x];
+          const Pixel& pixel = image[yy, x];
           // RGBA to BGRA
           *p++ = pixel[2];
           *p++ = pixel[1];
@@ -1424,7 +1424,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         for_int(y, image.ysize()) {
           int yy = image.ysize() - 1 - y;  // flip vertically
           for_int(x, image.xsize()) {
-            Pixel& pixel = image[yy][x];
+            Pixel& pixel = image[yy, x];
             // BGRA to RGBA
             pixel[2] = *p++;
             pixel[1] = *p++;

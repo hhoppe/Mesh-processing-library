@@ -19,7 +19,7 @@ ifeq ($(plain_compiler),)
     -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-missing-noreturn \
     -Wno-unreachable-code-return -Wno-unreachable-code-break \
     -Wno-unused-macros -Wno-disabled-macro-expansion \
-    -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion
+    -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion -Wno-pragma-pack
   # -Wno-source-uses-openmp -Wno-reserved-id-macro
   ifeq ($(is_mswin),1)
     cwarnings += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier

@@ -137,7 +137,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
       const Vec3<Point> triangle = _mesh.triangle_points(f);
       const auto proj = project_point_triangle(p, triangle);
       result.d2 = proj.d2, result.bary = proj.bary, result.clp = proj.clp;
-      const float dfrac = sqrt(result.d2) * _xform[0][0];
+      const float dfrac = sqrt(result.d2) * _xform[0, 0];
       // if (!nfchanges) { HH_SSTAT(Sms_dfrac0, dfrac); }
       if (dfrac > 2e-2f) {  // Failure.
         f = nullptr;
@@ -188,7 +188,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   HH_SSTAT(Sms_local, !!f);
   if (!f) {
     const Point pbb = p * _xform;
-    const float max_dis_bb = _options.max_dis * _xform[0][0];
+    const float max_dis_bb = _options.max_dis * _xform[0, 0];
     SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb, max_dis_bb);
     if (ss.done()) {  // No triangle within max_dis;
       result.bary = thrice(NAN);

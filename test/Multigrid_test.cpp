@@ -65,12 +65,12 @@ void setup_rhs2(CGridView<2, T> grid_orig, GridView<2, T> grid_rhs, float gradie
   int ny = grid_orig.dim(0), nx = grid_orig.dim(1);
   parallel_for({.cycles_per_elem = uint64_t(nx) * 10}, range(ny), [&](const int y) {
     for_int(x, nx) {
-      T vrhs = -screening_weight * grid_orig[y][x];
-      if (y > 0) vrhs += (grid_orig[y - 1][x] - grid_orig[y][x]) * gradient_sharpening;
-      if (y < ny - 1) vrhs += (grid_orig[y + 1][x] - grid_orig[y][x]) * gradient_sharpening;
-      if (x > 0) vrhs += (grid_orig[y][x - 1] - grid_orig[y][x]) * gradient_sharpening;
-      if (x < nx - 1) vrhs += (grid_orig[y][x + 1] - grid_orig[y][x]) * gradient_sharpening;
-      grid_rhs[y][x] = vrhs;
+      T vrhs = -screening_weight * grid_orig[y, x];
+      if (y > 0) vrhs += (grid_orig[y - 1, x] - grid_orig[y, x]) * gradient_sharpening;
+      if (y < ny - 1) vrhs += (grid_orig[y + 1, x] - grid_orig[y, x]) * gradient_sharpening;
+      if (x > 0) vrhs += (grid_orig[y, x - 1] - grid_orig[y, x]) * gradient_sharpening;
+      if (x < nx - 1) vrhs += (grid_orig[y, x + 1] - grid_orig[y, x]) * gradient_sharpening;
+      grid_rhs[y, x] = vrhs;
     }
   });
 }
@@ -321,26 +321,26 @@ int main(int argc, const char** argv) {
       {
         // HH_TIMER("_setup_stitch");
         const auto func_stitch = [&](int y0, int x0, int y1, int x1, double& vrhs) {
-          int label0 = grid_labels[y0][x0];
-          int label1 = grid_labels[y1][x1];
-          if (1) vrhs += (grids[label0][y1][x1][c] - grids[label0][y0][x0][c]) * .5f;
-          if (1) vrhs += (grids[label1][y1][x1][c] - grids[label1][y0][x0][c]) * .5f;  // necessary!
+          int label0 = grid_labels[y0, x0];
+          int label1 = grid_labels[y1, x1];
+          if (1) vrhs += (grids[label0][y1, x1][c] - grids[label0][y0, x0][c]) * .5f;
+          if (1) vrhs += (grids[label1][y1, x1][c] - grids[label1][y0, x0][c]) * .5f;  // necessary!
         };
         parallel_for(range(dims[0]), [&](const int y) {
           for_int(x, dims[1]) {
-            int label = grid_labels[y][x];
-            double vrhs = -screening_weight * grids[label][y][x][c];
+            int label = grid_labels[y, x];
+            double vrhs = -screening_weight * grids[label][y, x][c];
             if (y > 0) func_stitch(y, x, y - 1, x + 0, vrhs);
             if (y < dims[0] - 1) func_stitch(y, x, y + 1, x + 0, vrhs);
             if (x > 0) func_stitch(y, x, y + 0, x - 1, vrhs);
             if (x < dims[1] - 1) func_stitch(y, x, y + 0, x + 1, vrhs);
-            multigrid.rhs()[y][x] = float(vrhs);
+            multigrid.rhs()[y, x] = float(vrhs);
           }
         });
         Array<double> sums(dims[0], 0.);
         parallel_for(range(dims[0]), [&](const int y) {
           double sum = 0.f;
-          for_int(x, dims[1]) sum += grids[grid_labels[y][x]][y][x][c];
+          for_int(x, dims[1]) sum += grids[grid_labels[y, x]][y, x][c];
           sums[y] = sum;
         });
         mean_orig = sum(sums) / grid_labels.size();
@@ -350,7 +350,7 @@ int main(int argc, const char** argv) {
       multigrid.set_screening_weight(screening_weight);
       multigrid.solve();
       for_int(y, dims[0]) for_int(x, dims[1]) {
-        image_result[y][x][c] = uint8_t(clamp(multigrid.result()[y][x], 0.f, 1.f) * 255.f + .5f);
+        image_result[y, x][c] = uint8_t(clamp(multigrid.result()[y, x], 0.f, 1.f) * 255.f + .5f);
       }
     }
     image_result.write_file("image_result.bmp");

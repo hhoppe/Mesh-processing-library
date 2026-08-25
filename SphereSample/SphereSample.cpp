@@ -236,7 +236,7 @@ Array<DomainFace> get_domain_faces() {
                                    Uv(uvo[0] + s[1], uvo[1] + s[0]), Uv(uvo[0] + 0, uvo[1] + s[0]));
     }
     const float s = sqrt(1.f / 3.f);
-    Vec<Vec4<Vec3<int>>, 6> fvcoords;
+    SGrid<int, 6, 4, 3> fvcoords;
     if (!baseball) {                                                               // Cross.
       fvcoords = V(V(V(+1, +1, -1), V(-1, +1, -1), V(-1, +1, +1), V(+1, +1, +1)),  // Y+
                    V(V(-1, +1, -1), V(-1, -1, -1), V(-1, -1, +1), V(-1, +1, +1)),  // X-
@@ -254,7 +254,7 @@ Array<DomainFace> get_domain_faces() {
                    V(V(+1, +1, -1), V(+1, -1, -1), V(-1, -1, -1), V(-1, +1, -1))   // Z-
       );
     }
-    for_int(i, 6) for_int(j, 4) domain_faces[i].poly[j] = convert<float>(fvcoords[i][j]) * Point(s, s, s);
+    for_int(i, 6) for_int(j, 4) domain_faces[i].poly[j] = convert<float>(fvcoords[i, j]) * Point(s, s, s);
   } else {
     assertnever("domain name '" + domain + "' not recognized");
   }
@@ -378,9 +378,9 @@ Point spheremap_sym_buss_fillmore(const Point& pa, const Point& pb, const Point&
       }
       ASSERTX(sin_theta != 0.f);
       for_int(k, 3) {
-        tp[v][k] = (triangle[v][k] - p[k] * cos_theta) / sin_theta;  // Unit vector perpendicular to p.
-        tp[v][k] *= theta;
-        q[k] += tp[v][k] * b[v];
+        tp[v, k] = (triangle[v][k] - p[k] * cos_theta) / sin_theta;  // Unit vector perpendicular to p.
+        tp[v, k] *= theta;
+        q[k] += tp[v, k] * b[v];
       }
     }
     // Map q back to sphere using exponential map.
@@ -710,7 +710,7 @@ void create(bool b_triangulate) {
     Matrix<Vertex> verts(gridn + 1, gridn + 1);
     for_int(i, gridn + 1) for_int(j, !quad_domain ? gridn - i + 1 : gridn + 1) {
       Vertex v = g_mesh.create_vertex();
-      verts[i][j] = v;
+      verts[i, j] = v;
       v_normal(v) = k_undefined_vector;
       v_rgb(v) = k_undefined_vector;
       Bary bary;  // For quad, bary[3] defined as 1.f - bary[0..2].
@@ -775,7 +775,7 @@ void create(bool b_triangulate) {
       // Quad rasterization.
       assertx(gridn >= 1);
       for_int(i, gridn + 1) for_int(j, gridn + 1) {
-        Vertex v = verts[i][j];
+        Vertex v = verts[i, j];
         const Uv uv(float(j) / gridn, float(i) / gridn);
         Point p;
         if (domain_interp) {
@@ -798,7 +798,7 @@ void create(bool b_triangulate) {
       for_int(ii, 2) for_int(jj, 2) {
         const int i = ii * gridn;
         const int j = jj * gridn;
-        Vertex v = verts[i][j];
+        Vertex v = verts[i, j];
         const Uv uv(float(j) / gridn, float(i) / gridn);
         const Point p = normalized(bilerp(po, uv[0], uv[1]));  // Corners.
         g_mesh.set_point(v, p);
@@ -807,22 +807,22 @@ void create(bool b_triangulate) {
       for (int s = gridn / 2; s >= 1; s /= 2) {
         for (int i = 0; i <= gridn; i += s * 2) {
           for (int j = s; j < gridn; j += s * 2) {
-            const Point p = normalized(interp(g_mesh.point(verts[i][j - s]), g_mesh.point(verts[i][j + s])));
-            g_mesh.set_point(verts[i][j], p);
+            const Point p = normalized(interp(g_mesh.point(verts[i, j - s]), g_mesh.point(verts[i, j + s])));
+            g_mesh.set_point(verts[i, j], p);
           }
         }
         for (int j = 0; j <= gridn; j += s * 2) {
           for (int i = s; i < gridn; i += s * 2) {
-            const Point p = normalized(interp(g_mesh.point(verts[i - s][j]), g_mesh.point(verts[i + s][j])));
-            g_mesh.set_point(verts[i][j], p);
+            const Point p = normalized(interp(g_mesh.point(verts[i - s, j]), g_mesh.point(verts[i + s, j])));
+            g_mesh.set_point(verts[i, j], p);
           }
         }
         for (int i = s; i < gridn; i += s * 2) {
           for (int j = s; j < gridn; j += s * 2) {
-            const Point& p00 = g_mesh.point(verts[i - s][j - s]);
-            const Point& p01 = g_mesh.point(verts[i - s][j + s]);
-            const Point& p10 = g_mesh.point(verts[i + s][j - s]);
-            const Point& p11 = g_mesh.point(verts[i + s][j + s]);
+            const Point& p00 = g_mesh.point(verts[i - s, j - s]);
+            const Point& p01 = g_mesh.point(verts[i - s, j + s]);
+            const Point& p10 = g_mesh.point(verts[i + s, j - s]);
+            const Point& p11 = g_mesh.point(verts[i + s, j + s]);
             Point p;
             if (0) {
             } else if (is_warp) {  // Centroid of 4 points.
@@ -835,7 +835,7 @@ void create(bool b_triangulate) {
               assertnever("");
             }
             p = normalized(p);
-            g_mesh.set_point(verts[i][j], p);
+            g_mesh.set_point(verts[i, j], p);
           }
         }
       }
@@ -871,7 +871,7 @@ void create(bool b_triangulate) {
           p = triangle_map(triangle, bary);
           assertx(is_unit(p));
         }
-        g_mesh.set_point(verts[i][j], p);
+        g_mesh.set_point(verts[i, j], p);
       }
     }
 
@@ -880,17 +880,17 @@ void create(bool b_triangulate) {
     } else if (!quad_domain) {
       for_int(i, gridn) for_int(j, gridn - i) {
         if (1) {
-          Face f = g_mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
+          Face f = g_mesh.create_face(verts[i + 0, j + 0], verts[i + 1, j + 0], verts[i + 0, j + 1]);
           f_domainf(f) = domainf;
         }
         if (i) {
-          Face f = g_mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
+          Face f = g_mesh.create_face(verts[i + 0, j + 0], verts[i + 0, j + 1], verts[i - 1, j + 1]);
           f_domainf(f) = domainf;
         }
       }
     } else {
       for_int(i, gridn) for_int(j, gridn) {
-        const Vec4<Vertex> va{verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i + 1][j + 1], verts[i + 1][j + 0]};
+        const Vec4<Vertex> va{verts[i + 0, j + 0], verts[i + 0, j + 1], verts[i + 1, j + 1], verts[i + 1, j + 0]};
         Face f;
         if (!b_triangulate) {
           f = g_mesh.create_face(va);
@@ -1390,11 +1390,11 @@ void apply_feathering(Image& image) {
     const int h = ny / 2;
     // Blend across the left and right sides of the image.
     if (!expecting_periodic_texturing_mode)
-      for (const int i : range(h)) blend_pixels(image[h + i][0], image[h + i][h * 2 - 1]);
+      for (const int i : range(h)) blend_pixels(image[h + i, 0], image[h + i, h * 2 - 1]);
     // Assign pixel values above the rectangle.
-    for (const int i : range(h * 2)) image[h - 1][i] = image[h][h * 2 - 1 - i];
+    for (const int i : range(h * 2)) image[h - 1, i] = image[h, h * 2 - 1 - i];
     // Blend pixel values in the lowest row of the rectangle.
-    for (const int i : range(h)) blend_pixels(image[h * 2 - 1][i], image[h * 2 - 1][h * 2 - 1 - i]);
+    for (const int i : range(h)) blend_pixels(image[h * 2 - 1, i], image[h * 2 - 1, h * 2 - 1 - i]);
 
   } else if (domain == "octa" || domain == "octaflat") {
     // For each of the four image boundaries, we must establish mirror symmetry within the pixels on the boundary.
@@ -1412,32 +1412,32 @@ void apply_feathering(Image& image) {
     assertx(ny == nx && ny % 4 == 0);
     const int q = ny / 4;
     if (!expecting_periodic_texturing_mode)
-      for (const int i : range(q)) blend_pixels(image[q * 2 + i][0], image[q * 2 + i][q * 4 - 1]);
+      for (const int i : range(q)) blend_pixels(image[q * 2 + i, 0], image[q * 2 + i, q * 4 - 1]);
     // Assign pixel values in the horizontal segment above the top of the "+" shape in the image.
-    for (const int i : range(q)) image[q - 1][q + i] = image[q * 2][q * 4 - 1 - i];
+    for (const int i : range(q)) image[q - 1, q + i] = image[q * 2, q * 4 - 1 - i];
     // Blend the horizontal segment at the base of the "+" (lowest image row) with the adjacent cube face.
-    for (const int i : range(q)) blend_pixels(image[q * 4 - 1][q + i], image[q * 3 - 1][q * 4 - 1 - i]);  // (A).
+    for (const int i : range(q)) blend_pixels(image[q * 4 - 1, q + i], image[q * 3 - 1, q * 4 - 1 - i]);  // (A).
     // Assign pixel values above the left side of the "+" shape.
-    for (const int i : range(q)) image[q * 2 - 1][i] = image[q * 2 - 1 - i][q];
+    for (const int i : range(q)) image[q * 2 - 1, i] = image[q * 2 - 1 - i, q];
     // Assign pixel values below the left side of the "+" shape.
-    for (const int i : range(q)) image[q * 3][i] = image[q * 4 - 1 - i][q];
+    for (const int i : range(q)) image[q * 3, i] = image[q * 4 - 1 - i, q];
     // Assign pixel values above the right side of the "+" shape.
-    for (const int i : range(q)) image[q * 2 - 1][q * 2 + i] = image[q * 2 - 1 - i][q * 2 - 1];
-    for (const int i : range(q)) image[q * 2 - 1][q * 3 + i] = image[q][q * 2 - 1 - i];
+    for (const int i : range(q)) image[q * 2 - 1, q * 2 + i] = image[q * 2 - 1 - i, q * 2 - 1];
+    for (const int i : range(q)) image[q * 2 - 1, q * 3 + i] = image[q, q * 2 - 1 - i];
     // Assign pixel values below the right side of the "+" shape.
-    for (const int i : range(q)) image[q * 3][q * 2 + i] = image[q * 4 - 1 - i][q * 2 - 1];
-    for (const int i : range(q)) image[q * 3][q * 3 + i] = image[q * 4 - 1][q * 2 - 1 - i];  // Already blended in (A).
+    for (const int i : range(q)) image[q * 3, q * 2 + i] = image[q * 4 - 1 - i, q * 2 - 1];
+    for (const int i : range(q)) image[q * 3, q * 3 + i] = image[q * 4 - 1, q * 2 - 1 - i];  // Already blended in (A).
     // Assign pixel values left of the top part of the "+" shape.
-    for (const int i : range(q)) image[q + i][q - 1] = image[q * 2][i];
+    for (const int i : range(q)) image[q + i, q - 1] = image[q * 2, i];
     // Assign pixel values left of the bottom part of the "+" shape.
-    for (const int i : range(q)) image[q * 3 + i][q - 1] = image[q * 3 - 1][q - 1 - i];
+    for (const int i : range(q)) image[q * 3 + i, q - 1] = image[q * 3 - 1, q - 1 - i];
     // Assign pixel values right of the top part of the "+" shape.
-    for (const int i : range(q)) image[q + i][q * 2] = image[q * 2][q * 3 - 1 - i];
+    for (const int i : range(q)) image[q + i, q * 2] = image[q * 2, q * 3 - 1 - i];
     // Assign pixel values right of the bottom part of the "+" shape.
-    for (const int i : range(q)) image[q * 3 + i][q * 2] = image[q * 3 - 1][q * 2 + i];
+    for (const int i : range(q)) image[q * 3 + i, q * 2] = image[q * 3 - 1, q * 2 + i];
     // Assign two leftover pixels.
-    image[q - 1][q - 1] = image[q * 2][q * 4 - 1];
-    image[q - 1][q * 2] = image[q * 2][q * 3];
+    image[q - 1, q - 1] = image[q * 2, q * 4 - 1];
+    image[q - 1, q * 2] = image[q * 2, q * 3];
   } else {
     assertnever("domain name '" + domain + "' not recognized");
   }
@@ -1506,7 +1506,7 @@ void do_write_texture(Args& args) {
         for_int(x, image.xsize()) {
           // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
           const int yy = image.ysize() - 1 - y;
-          Pixel& pixel = image[yy][x];
+          Pixel& pixel = image[yy, x];
           Point p_i, p_d, p_s;
           p_i = Point((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);  // Dual sampling.
           {
@@ -1530,7 +1530,7 @@ void do_write_texture(Args& args) {
           const auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
           hint_f_s = f;
           pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
-          if (anisotropic_filtering) image_surface_points[yy][x] = get_surface_point(param_mesh, f, bary);
+          if (anisotropic_filtering) image_surface_points[yy, x] = get_surface_point(param_mesh, f, bary);
         }
       }
     });
@@ -1602,15 +1602,15 @@ void do_write_primal_texture(Args& args) {
     }
     if (x == image.xsize()) {
       // Ignore last column; verify later that it equals first column.
-      image_right_column[yy][0] = pixel;
+      image_right_column[yy, 0] = pixel;
     } else {
-      image[yy][x] = pixel;
+      image[yy, x] = pixel;
     }
   }
   if (!checkern) {
     for_int(y, image.ysize()) {
-      const Pixel& pixel = image_right_column[y][0];
-      if (pixel != background) assertw(pixel == image[y][0]);
+      const Pixel& pixel = image_right_column[y, 0];
+      if (pixel != background) assertw(pixel == image[y, 0]);
     }
   }
   image.write_file(image_name);
@@ -1637,7 +1637,7 @@ void do_write_lonlat_texture(Args& args) {
       for_int(x, image.xsize()) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
         const int yy = image.ysize() - 1 - y;
-        Pixel& pixel = image[yy][x];
+        Pixel& pixel = image[yy, x];
         const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());  // Dual sampling.
         const Point sph = sph_from_lonlat(lonlat);
         const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
@@ -1661,7 +1661,7 @@ void generate_tess(const Vec3<Point>& triangle, int n, TriangleSpheremap triangl
     Vertex v = g_mesh.create_vertex();
     v_normal(v) = k_undefined_vector;
     v_rgb(v) = k_undefined_vector;
-    verts[i][j] = v;
+    verts[i, j] = v;
     v_imageuv(v) = Uv(i / float(n) + j / float(n) * .5f, j / float(n) * sqrt(3.f) / 2.f);
     const Bary bary((n - i - j) / float(n), i / float(n), j / float(n));
     const Point p = triangle_map(triangle, bary);
@@ -1670,8 +1670,8 @@ void generate_tess(const Vec3<Point>& triangle, int n, TriangleSpheremap triangl
     v_sph(v) = p;
   }
   for_int(i, n) for_int(j, n - i) {
-    if (1) g_mesh.create_face(verts[i + 0][j + 0], verts[i + 1][j + 0], verts[i + 0][j + 1]);
-    if (i) g_mesh.create_face(verts[i + 0][j + 0], verts[i + 0][j + 1], verts[i - 1][j + 1]);
+    if (1) g_mesh.create_face(verts[i + 0, j + 0], verts[i + 1, j + 0], verts[i + 0, j + 1]);
+    if (i) g_mesh.create_face(verts[i + 0, j + 0], verts[i + 0, j + 1], verts[i - 1, j + 1]);
   }
 }
 
@@ -1699,7 +1699,7 @@ void do_test_properties() {
   };
   for_int(domainf, faces.num()) {
     Vec3<Point> triangle;
-    for_int(k, 3) triangle[k] = normalized(faces[domainf][k]);
+    for_int(k, 3) triangle[k] = normalized(faces[domainf, k]);
     generate_tess(triangle, gridn, triangle_map);
   }
   {
@@ -1734,7 +1734,7 @@ void do_create_lonlat_sphere() {
   string str;
   for_int(i, gridn) for_int(j, gridn) {
     Vertex v = g_mesh.create_vertex();
-    matv[i][j] = v;
+    matv[i, j] = v;
     // We reverse the index i to obtain the correct outward orientation of the sphere.
     const Uv lonlat(j / (gridn - 1.f), (gridn - 1 - i) / (gridn - 1.f));
     const Point sph = sph_from_lonlat(lonlat);
@@ -1746,10 +1746,10 @@ void do_create_lonlat_sphere() {
   }
   for_int(i, gridn - 1) for_int(j, gridn - 1) {
     if (0) {
-      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
+      g_mesh.create_face(V(matv[i + 0, j + 0], matv[i + 1, j + 0], matv[i + 1, j + 1], matv[i + 0, j + 1]));
     } else {
-      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 0], matv[i + 1][j + 1]));
-      g_mesh.create_face(V(matv[i + 0][j + 0], matv[i + 1][j + 1], matv[i + 0][j + 1]));
+      g_mesh.create_face(V(matv[i + 0, j + 0], matv[i + 1, j + 0], matv[i + 1, j + 1]));
+      g_mesh.create_face(V(matv[i + 0, j + 0], matv[i + 1, j + 1], matv[i + 0, j + 1]));
     }
   }
 }
@@ -1782,7 +1782,7 @@ void do_create_lonlat_checker(Args& args) {
         for_int(x, image.xsize()) {
           // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
           const int yy = image.ysize() - 1 - y;
-          Pixel& pixel = image[yy][x];
+          Pixel& pixel = image[yy, x];
           const Uv lonlat((x + .5f) / image.xsize(), (y + .5f) / image.ysize());
           const Point sph = sph_from_lonlat(lonlat);
           // Because `g_mesh` has disjoint components, we get warning "assertw(f2)" in gnomonic_search_bary() for

@@ -18,12 +18,14 @@ int main() {
     SHOW(grid.size());
     fill(grid, 0);
     grid[1][0][3] = 103;
-    grid[0][2][3] = 23;
+    grid[0, 2, 3] = 23;
     SHOW(grid.flat(11));
     SHOW(grid);
     SHOW(grid[1]);
     SHOW(grid[1][0]);
+    SHOW((grid[1, 0]));
     SHOW(grid[1][0][3]);
+    SHOW((grid[1, 0, 3]));
     SHOW((grid[{1, 0, 3}]));
     fill(grid[1][2], 12);
     SHOW(grid);

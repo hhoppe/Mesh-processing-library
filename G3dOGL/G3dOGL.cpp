@@ -1023,9 +1023,9 @@ void load_texturemaps() {
     if (texturescale && texturescale != 1.f) {
       // Matrix4 m1; m1.ident();
       SGrid<float, 4, 4> m1;
-      for_int(y, 4) for_int(x, 4) m1[y][x] = x == y ? 1.f : 0.f;
-      m1[0][0] = texturescale;
-      m1[1][1] = texturescale;
+      for_int(y, 4) for_int(x, 4) m1[y, x] = x == y ? 1.f : 0.f;
+      m1[0, 0] = texturescale;
+      m1[1, 1] = texturescale;
       glMatrixMode(GL_TEXTURE);
       glLoadMatrixf(m1.data());
       glMatrixMode(GL_MODELVIEW);
@@ -1085,7 +1085,7 @@ void load_texturemaps() {
             } else if (level == 3) {
               if (x < 1) v = 128;
             }
-            etexture[0][x] = Pixel::gray(v);
+            etexture[0, x] = Pixel::gray(v);
           }
           int border = 0;
           glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border, GL_RGBA, GL_UNSIGNED_BYTE,

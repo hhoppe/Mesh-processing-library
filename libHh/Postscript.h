@@ -84,7 +84,7 @@ class Postscript : noncopyable {
               Frame::rotation(2, TAU / 4);
     }
     _os << sform("[%g %g  %g %g  %g %g] concat\n",  //
-                 frame[0][0], frame[0][1], frame[1][0], frame[1][1], frame.p()[0], frame.p()[1]);
+                 frame[0, 0], frame[0, 1], frame[1, 0], frame[1, 1], frame.p()[0], frame.p()[1]);
     _ctm = frame;
     _os << "%%EndPageSetup\n";
     _os << "% hps.c created from Postscript.h in libHh\n";

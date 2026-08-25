@@ -12,7 +12,7 @@
 namespace hh {
 
 struct MultigridPeriodicTemporally {
-  bool operator()(int d) const { return d == 0; }  // Grid[time][y][x]; only dimension-0 (time) is periodic
+  bool operator()(int d) const { return d == 0; }  // Grid[time, y, x]; only dimension-0 (time) is periodic
 };
 
 // Determine input frame based on temporal mapping function.

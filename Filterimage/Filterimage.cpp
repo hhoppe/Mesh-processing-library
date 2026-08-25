@@ -30,7 +30,7 @@ using namespace hh;
 
 namespace {
 
-Image image;  // [Y][X][0 .. 3]
+Image image;  // [Y, X][0 .. 3]
 
 ParseArgs* g_parseargs = nullptr;
 bool elevation = false;
@@ -188,13 +188,13 @@ void do_tomesh(Args& args) {
     end_yx1 = (V(bynum, bxnum) + 1) * blocks + 1;
   }
   GMesh mesh;
-  Matrix<Vertex> verts;  // [Y][X]
+  Matrix<Vertex> verts;  // [Y, X]
   const int s = step;
   verts.init(end_yx1 - beg_yx);
   const int begy = beg_yx[0], begx = beg_yx[1];
   const int endy1 = end_yx1[0], endx1 = end_yx1[1];
   for (int y = 0; y < endy1 - begy; y += s)
-    for (int x = 0; x < endx1 - begx; x += s) verts[y][x] = nullptr;
+    for (int x = 0; x < endx1 - begx; x += s) verts[y, x] = nullptr;
   const bool uniform_scaling = true;
   if (!uniform_scaling) {
     scale_yx = 1.f / convert<float>(image.dims() - 1);
@@ -209,7 +209,7 @@ void do_tomesh(Args& args) {
     for (int y = begy + s; y < endy1 - s; y += s)
       for (int x = begx + s; x < endx1 - s; x += s) assign_vertex(mesh, verts, V(y, x));
     for (int y = 0; y < endy1 - begy; y += s)
-      for (int x = 0; x < endx1 - begx; x += s) assertx(verts[y][x]);
+      for (int x = 0; x < endx1 - begx; x += s) assertx(verts[y, x]);
   } else {
     for (int y = begy; y < endy1; y += s)
       for (int x = begx; x < endx1; x += s) assign_vertex(mesh, verts, V(y, x));
@@ -220,30 +220,30 @@ void do_tomesh(Args& args) {
     for (int x = 0; x < endx1 - begx - s; x += s) {
       CMatrixView<Vertex> v(verts);
       if (quads) {
-        mesh.create_face(V(v[y][x], v[y][x + s], v[y + s][x + s], v[y + s][x]));
+        mesh.create_face(V(v[y, x], v[y, x + s], v[y + s, x + s], v[y + s, x]));
       } else if (strip_order) {
-        mesh.create_face(v[y + s][x], v[y][x], v[y + s][x + s]);
-        mesh.create_face(v[y][x], v[y][x + s], v[y + s][x + s]);
+        mesh.create_face(v[y + s, x], v[y, x], v[y + s, x + s]);
+        mesh.create_face(v[y, x], v[y, x + s], v[y + s, x + s]);
       } else if (toggle_order) {
         if (yeven) {
-          mesh.create_face(v[y + s][x], v[y][x], v[y + s][x + s]);
-          mesh.create_face(v[y][x], v[y][x + s], v[y + s][x + s]);
+          mesh.create_face(v[y + s, x], v[y, x], v[y + s, x + s]);
+          mesh.create_face(v[y, x], v[y, x + s], v[y + s, x + s]);
         } else {
-          mesh.create_face(v[y][x], v[y][x + s], v[y + s][x]);
-          mesh.create_face(v[y + s][x], v[y][x + s], v[y + s][x + s]);
+          mesh.create_face(v[y, x], v[y, x + s], v[y + s, x]);
+          mesh.create_face(v[y + s, x], v[y, x + s], v[y + s, x + s]);
         }
       } else if (best_diagonal) {
-        if (dist2(mesh.point(v[y + s][x]), mesh.point(v[y][x + s])) >
-            dist2(mesh.point(v[y][x]), mesh.point(v[y + s][x + s]))) {
-          mesh.create_face(v[y + s][x], v[y][x], v[y + s][x + s]);
-          mesh.create_face(v[y][x], v[y][x + s], v[y + s][x + s]);
+        if (dist2(mesh.point(v[y + s, x]), mesh.point(v[y, x + s])) >
+            dist2(mesh.point(v[y, x]), mesh.point(v[y + s, x + s]))) {
+          mesh.create_face(v[y + s, x], v[y, x], v[y + s, x + s]);
+          mesh.create_face(v[y, x], v[y, x + s], v[y + s, x + s]);
         } else {
-          mesh.create_face(v[y][x], v[y][x + s], v[y + s][x]);
-          mesh.create_face(v[y + s][x], v[y][x + s], v[y + s][x + s]);
+          mesh.create_face(v[y, x], v[y, x + s], v[y + s, x]);
+          mesh.create_face(v[y + s, x], v[y, x + s], v[y + s, x + s]);
         }
       } else {
-        mesh.create_face(v[y][x], v[y + s][x + s], v[y + s][x]);
-        mesh.create_face(v[y][x], v[y][x + s], v[y + s][x + s]);
+        mesh.create_face(v[y, x], v[y + s, x + s], v[y + s, x]);
+        mesh.create_face(v[y, x], v[y, x + s], v[y + s, x + s]);
       }
     }
   }
@@ -289,7 +289,7 @@ void do_tofmp(Args& args) {
     for_int(x, image.xsize()) {
       *p++ = float(x) / (image.xsize() - 1.f);
       *p++ = float(y) / (image.ysize() - 1.f);
-      float v = float(image[y][x][0]) / 255.f * scalezaxis + offsetzaxis;
+      float v = float(image[y, x][0]) / 255.f * scalezaxis + offsetzaxis;
       *p++ = v;
     }
     assertx(write_binary_raw(fi(), buf));
@@ -471,19 +471,19 @@ void do_cropmatte() {
   int l, r, t, b;
   for (l = 0; l < image.xsize(); l++) {
     const int x = l;
-    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y, x], gcolor, nz); })) break;
   }
   for (r = 0; r < image.xsize() - l; r++) {
     const int x = image.xsize() - 1 - r;
-    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.ysize()), [&](int y) { return equal(image[y, x], gcolor, nz); })) break;
   }
   for (t = 0; t < image.ysize(); t++) {
     const int y = t;
-    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y, x], gcolor, nz); })) break;
   }
   for (b = 0; b < image.ysize() - t; b++) {
     const int y = image.ysize() - 1 - b;
-    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y][x], gcolor, nz); })) break;
+    if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y, x], gcolor, nz); })) break;
   }
   Grid<2, Pixel>& grid = image;
   grid = crop(grid, V(t, l), V(b, r), g_bndrules, &gcolor);
@@ -856,9 +856,9 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
 }
 
 void assemble_images(CMatrixView<Image> images) {
-  for (const auto& yx : range(images.dims())) assertx(images[yx].zsize() == images[0][0].zsize());
+  for (const auto& yx : range(images.dims())) assertx(images[yx].zsize() == images[0, 0].zsize());
   image.init(V(0, 0));
-  image.set_zsize(images[0][0].zsize());  // attributes copied outside this function
+  image.set_zsize(images[0, 0].zsize());  // attributes copied outside this function
   image = assemble(images, gcolor);
 }
 
@@ -896,7 +896,7 @@ void do_assemble(Args& args) {
     apply_assemble_operations(images[yx], yx, images.dims());
   });
   assemble_images(images);
-  image.attrib() = images[0][0].attrib();
+  image.attrib() = images[0, 0].attrib();
 }
 
 void do_fromtxt(Args& args) {
@@ -1534,7 +1534,7 @@ void do_object_to_tangent_normals(Args& args) {
       for_int(x, image.xsize()) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
         const int yy = image.ysize() - 1 - y;
-        Pixel& pixel = image[yy][x];
+        Pixel& pixel = image[yy, x];
         Vector object_space_detail_normal = normalized(convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f);
         const Point image_uv0((x + 0.5f) / image.xsize(), (y + 0.5f) / image.ysize(), 0.f);
         const auto [f, bary, unused_clp, d2] = mesh_search.search(image_uv0, hint_f);
@@ -1607,7 +1607,7 @@ void do_tangent_to_object_normals(Args& args) {
       for_int(x, image.xsize()) {
         // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
         const int yy = image.ysize() - 1 - y;
-        Pixel& pixel = image[yy][x];
+        Pixel& pixel = image[yy, x];
         Vector detail_normal_in_tbn = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
         if (0) detail_normal_in_tbn = normalized(detail_normal_in_tbn);
         if (k_flip_green_channel) detail_normal_in_tbn[1] *= -1.f;
@@ -1806,7 +1806,7 @@ void do_homogenize(Args& args) {
   for_int(c, 2) {
     table[c].init(V(n, image.dim(c)));
     for_int(k, n) for_int(x, image.dim(c)) {
-      table[c][k][x] = (k == 0                 ? 1.0
+      table[c][k, x] = (k == 0                 ? 1.0
                         : (k == 1 && bilinear) ? (x + 0.5 - image.dim(c) / 2.)
                                                : std::cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
     }
@@ -1821,12 +1821,12 @@ void do_homogenize(Args& args) {
       Matrix<double> ar(V(n, n), 0.);
       // TODO: Parallelize by allocating Matrix ar per-thread, and then summing them.
       for (const auto& yx : range(image.dims()))
-        for_int(ky, n) for_int(kx, n) ar[ky][kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * image[yx][z];
-      ar[0][0] = 0.0;  // do not project out the DC term
+        for_int(ky, n) for_int(kx, n) ar[ky, kx] += table[0][ky, yx[0]] * table[1][kx, yx[1]] * image[yx][z];
+      ar[0, 0] = 0.0;  // do not project out the DC term
       parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 4}, image.dims(), [&](const Vec2<int>& yx) {
         double oldval = image[yx][z];
         double fitval = 0.;
-        for_int(ky, n) for_int(kx, n) fitval += ar[ky][kx] * table[0][ky][yx[0]] * table[1][kx][yx[1]];
+        for_int(ky, n) for_int(kx, n) fitval += ar[ky, kx] * table[0][ky, yx[0]] * table[1][kx, yx[1]];
         double newval = oldval - fitval;
         image[yx][z] = clamp_to_uint8(int(newval + .5));
       });
@@ -1858,11 +1858,11 @@ void do_homogenize(Args& args) {
       Array<double> arw(n2);  // column of matrix B
       for (const auto& yx : range(image.dims())) {
         if (!image[yx][3]) continue;
-        for_int(ky, n) for_int(kx, n) arw[ky * n + kx] = table[0][ky][yx[0]] * table[1][kx][yx[1]];
-        for_int(i, n2) for_int(j, i + 1) bb[i][j] += arw[i] * arw[j];  // sum into lower triangular matrix
+        for_int(ky, n) for_int(kx, n) arw[ky * n + kx] = table[0][ky, yx[0]] * table[1][kx, yx[1]];
+        for_int(i, n2) for_int(j, i + 1) bb[i, j] += arw[i] * arw[j];  // sum into lower triangular matrix
       }
     }
-    for_int(i, n2) for_intL(j, i + 1, n2) bb[i][j] = bb[j][i];  // complete the symmetric matrix
+    for_int(i, n2) for_intL(j, i + 1, n2) bb[i, j] = bb[j, i];  // complete the symmetric matrix
     Matrix<double> invbb = inverse(bb);                         // (B * B^T)^-1
     for_int(z, image.zsize()) {
       Array<double> bx(n2, 0.);  // B * x
@@ -1870,14 +1870,14 @@ void do_homogenize(Args& args) {
       for (const auto& yx : range(image.dims())) {
         if (!image[yx][3]) continue;
         double v = image[yx][z];
-        for_int(ky, n) for_int(kx, n) bx[ky * n + kx] += table[0][ky][yx[0]] * table[1][kx][yx[1]] * v;
+        for_int(ky, n) for_int(kx, n) bx[ky * n + kx] += table[0][ky, yx[0]] * table[1][kx, yx[1]] * v;
       }
       Array<double> arn = mat_mul(invbb, bx);  // (B * B^T)^-1 * B * x
-      double dc = bx[0] / bb[0][0];            // DC term
+      double dc = bx[0] / bb[0, 0];            // DC term
       parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 3}, image.dims(), [&](const Vec2<int>& yx) {
         if (!image[yx][3] && !modify_unselected_too) return;
         double v = image[yx][z];
-        for_int(ky, n) for_int(kx, n) v -= table[0][ky][yx[0]] * table[1][kx][yx[1]] * arn[ky * n + kx];
+        for_int(ky, n) for_int(kx, n) v -= table[0][ky, yx[0]] * table[1][kx, yx[1]] * arn[ky * n + kx];
         v += dc;  // reintroduce DC term
         image[yx][z] = clamp_to_uint8(int(v + .5));
       });
@@ -1977,10 +1977,10 @@ void do_istoroidal() {
       for_int(ix, matrix.xsize()) {
         float err2 = 0.f;
         for_int(z, image.zsize()) {
-          uint8_t v1 = matrix[i1][ix][z];
-          uint8_t v0a = matrix[i0][ix][z];
-          uint8_t v0b = matrix[i0][clamp(ix - 1, 0, matrix.xsize() - 1)][z];
-          uint8_t v0c = matrix[i0][clamp(ix + 1, 0, matrix.xsize() - 1)][z];
+          uint8_t v1 = matrix[i1, ix][z];
+          uint8_t v0a = matrix[i0, ix][z];
+          uint8_t v0b = matrix[i0, clamp(ix - 1, 0, matrix.xsize() - 1)][z];
+          uint8_t v0c = matrix[i0, clamp(ix + 1, 0, matrix.xsize() - 1)][z];
           uint8_t v0min = min({v0a, v0b, v0c});
           uint8_t v0max = max({v0a, v0b, v0c});
           int d = v1 < v0min ? v0min - v1 : v1 > v0max ? v1 - v0max : 0;
@@ -2269,9 +2269,9 @@ void do_poisson() {
       const float scale = 1.f / vmean / max(nx, ny) * gscale;
       const float smallw = 0.f;  // also used 1e-3f
       for_int(x, nx) for_int(y, ny - 1) {
-        // Desire matx[y + 1][x] - matx[yx] == { (image[yx][1] + image[y + 1][x][1]) / 2 , 0 }
+        // Desire matx[y + 1, x] - matx[yx] == { (image[yx][1] + image[y + 1, x][1]) / 2 , 0 }
         float w = 1.f;
-        float v = (image[y + 0][x][0] + image[y + 1][x][0]) / 2.f * scale;
+        float v = (image[y + 0, x][0] + image[y + 1, x][0]) / 2.f * scale;
         if (!v) {
           Warning("Interpreting zero input differences as unconstrained differences");
           w = smallw;
@@ -2286,9 +2286,9 @@ void do_poisson() {
         row++;
       }
       for_int(y, ny) for_int(x, nx - 1) {
-        // Desire matx[y][x + 1] - matx[yx] == { (image[yx][0] + image[y][x + 1][0]) / 2 , 0 }
+        // Desire matx[y, x + 1] - matx[yx] == { (image[yx][0] + image[y, x + 1][0]) / 2 , 0 }
         float w = 1.f;
-        float v = (image[y][x + 0][0] + image[y][x + 1][0]) / 2.f * scale;
+        float v = (image[y, x + 0][0] + image[y, x + 1][0]) / 2.f * scale;
         if (!v) {
           Warning("Interpreting zero input differences as unconstrained differences");
           w = smallw;
@@ -2305,7 +2305,7 @@ void do_poisson() {
     }
     if (conformal) {
       if (conf_L) {
-        // L-shape: penalize wconformal * mag2(rot90(mat[y][x + 1] - mat[yx]) - (mat[y + 1][x] - mat[yx]))
+        // L-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[yx]) - (mat[y + 1, x] - mat[yx]))
         float sqrtw = my_sqrt(wconformal);
         if (iter > 0) {
           Matrix<float> matconf(ny - 1, nx - 1);
@@ -2327,7 +2327,7 @@ void do_poisson() {
           }
         }
         for_int(y, ny - 1) for_int(x, nx - 1) {
-          float lw = matw[y][x] * sqrtw;
+          float lw = matw[y, x] * sqrtw;
           lls.enter_a_rc(row, ((y + 0) * nx + (x + 0)) * 2 + 0, -lw);
           lls.enter_a_rc(row, ((y + 0) * nx + (x + 1)) * 2 + 0, +lw);
           lls.enter_a_rc(row, ((y + 1) * nx + (x + 0)) * 2 + 1, -lw);
@@ -2342,7 +2342,7 @@ void do_poisson() {
           row++;
         }
       } else {
-        // +-shape: penalize wconformal * mag2(rot90(mat[y][x + 1] - mat[y][x - 1]) - (mat[y + 1][x] - mat[y - 1][x]))
+        // +-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[y, x - 1]) - (mat[y + 1, x] - mat[y - 1, x]))
         // compared to L-shape, this looks no better, or sometimes ever slightly worse.
         float sqrtw = my_sqrt(wconformal) * 0.5f;
         for_intL(y, 1, ny - 1) for_intL(x, 1, nx - 1) {
@@ -2390,14 +2390,14 @@ void do_poisson() {
     }
     assertx(row == lls.num_rows());
     for_int(y, ny) for_int(x, nx) {
-      lls.enter_xest_rc((y * nx + x) * 2 + 0, 0, matp[y][x][0]);
-      lls.enter_xest_rc((y * nx + x) * 2 + 1, 0, matp[y][x][1]);
+      lls.enter_xest_rc((y * nx + x) * 2 + 0, 0, matp[y, x][0]);
+      lls.enter_xest_rc((y * nx + x) * 2 + 1, 0, matp[y, x][1]);
     }
     assertx(lls.solve());
     timer.terminate();  // "_lls"
     for_int(y, ny) for_int(x, nx) {
-      matp[y][x][0] = lls.get_x_rc((y * nx + x) * 2 + 0, 0);
-      matp[y][x][1] = lls.get_x_rc((y * nx + x) * 2 + 1, 0);
+      matp[y, x][0] = lls.get_x_rc((y * nx + x) * 2 + 0, 0);
+      matp[y, x][1] = lls.get_x_rc((y * nx + x) * 2 + 1, 0);
     }
   }
   {
@@ -2478,8 +2478,8 @@ void do_procedure(Args& args) {
       }
     }
     Matrix<Image> images(1, 2);
-    images[0][0] = image1;
-    images[0][1] = image2;
+    images[0, 0] = image1;
+    images[0, 1] = image2;
     assemble_images(images);
 
   } else if (name == "benchmark") {
@@ -3208,10 +3208,10 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
         int yy = y - window_radius + iy;
         assertx(map_boundaryrule_1D(yy, mat_s.ysize(), k_reflected));
         for_int(x, mat_s.xsize()) {
-          Vector4 sv = mat_s[yy][x];
+          Vector4 sv = mat_s[yy, x];
           fscolsum[x] += w * sv;
           fscolsum2[x] += w * square(sv);
-          Vector4 cv = mat_c[yy][x];
+          Vector4 cv = mat_c[yy, x];
           fccolsum[x] += w * cv;
           fccolsum2[x] += w * square(cv);
         }
@@ -3253,10 +3253,10 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
       Vector4 ssdv = sqrt(max(ssum2 - square(ssum), minsvar));
       Vector4 cmean = csum;
       Vector4 csdv = sqrt(max(csum2 - square(csum), Vector4(0.f)));
-      Vector4 zscore = (mat_s[y][x] - smean) / ssdv;
-      mat_out[y][x] = cmean + zscore * csdv * zscore_scale;
+      Vector4 zscore = (mat_s[y, x] - smean) / ssdv;
+      mat_out[y, x] = cmean + zscore * csdv * zscore_scale;
       if (use_lab) zscore = Vector4(zscore[0]);  // Z score based on luminance only
-      mat_zscore[y][x] = zscore * (255.0f / 6.0f);
+      mat_zscore[y, x] = zscore * (255.0f / 6.0f);
     }
   });
   if (use_lab) mat_out = RGB_from_LAB(mat_out);

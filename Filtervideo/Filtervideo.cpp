@@ -24,7 +24,7 @@ using namespace hh;
 
 namespace {
 
-Video video;  // [frame][ypos][xpos][Z=color_channel]
+Video video;  // [frame, ypos, xpos][Z=color_channel]
 VideoNv12 video_nv12;
 
 constexpr int nz = 3;  // 3 color channels; no alpha channel
@@ -255,7 +255,7 @@ void assemble_videos(MatrixView<Video> videos) {
       const int npad = maxframes - vid.nframes();
       vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamped));
     }
-    assertw(videos[yx].nframes() == videos[0][0].nframes());
+    assertw(videos[yx].nframes() == videos[0, 0].nframes());
   }
   CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
   if (0)
@@ -294,16 +294,16 @@ void do_assemble(Args& args) {
   parallel_for_coords(videos.dims(), [&](const Vec2<int>& yx) {
     if (filenames[yx] == "") return;
     videos[yx].read_file(filenames[yx]);
-    assertw(videos[yx].attrib().framerate == videos[0][0].attrib().framerate);
+    assertw(videos[yx].attrib().framerate == videos[0, 0].attrib().framerate);
     apply_assemble_operations(videos[yx], yx, videos.dims());
   });  // we can assume that parallelism is justified
   if (0)
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   ConsoleProgress::set_all_silent(prev_silent);
   assemble_videos(videos);
-  video.attrib() = videos[0][0].attrib();  // including audio
+  video.attrib() = videos[0, 0].attrib();  // including audio
   const float recoding_allowance = 1.5f;
-  int newbitrate = int(float(videos[0][0].attrib().bitrate) / product(videos[0][0].spatial_dims()) *
+  int newbitrate = int(float(videos[0, 0].attrib().bitrate) / product(videos[0, 0].spatial_dims()) *
                            product(video.spatial_dims()) * recoding_allowance +
                        .5f);
   video.attrib().bitrate = newbitrate;
@@ -999,12 +999,12 @@ void do_scaleinside(Args& args) {
 
 void do_flipvertical() {
   parallel_for(range(video.nframes()), [&](const int f) {
-    for_int(y, video.ysize() / 2) swap_elements(video[f][y], video[f][video.ysize() - 1 - y]);
+    for_int(y, video.ysize() / 2) swap_elements(video[f, y], video[f, video.ysize() - 1 - y]);
   });
 }
 
 void do_fliphorizontal() {
-  parallel_for(range(video.nframes()), [&](const int f) { for_int(y, video.ysize()) reverse(video[f][y]); });
+  parallel_for(range(video.nframes()), [&](const int f) { for_int(y, video.ysize()) reverse(video[f, y]); });
 }
 
 void do_disassemble(Args& args) {
@@ -1248,22 +1248,22 @@ void do_savepj(Args& args) {
   std::ostream& os = fi();
   const Video& v = video;
   for_int(y, v.ysize()) {
-    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_static[y][x]);
+    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_static[y, x]);
     os << "\n";
   }
   os << "\n";
   for_int(y, v.ysize()) {
-    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_start[y][x]);
+    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_start[y, x]);
     os << "\n";
   }
   os << "\n";
   for_int(y, v.ysize()) {
-    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_period[y][x]);
+    for_int(x, v.xsize()) os << sform("%d\t", g_lp.mat_period[y, x]);
     os << "\n";
   }
   os << "\n";
   for_int(y, v.ysize()) {
-    for_int(x, v.xsize()) os << sform("%.6f\t", g_lp.mat_activation[y][x]);
+    for_int(x, v.xsize()) os << sform("%.6f\t", g_lp.mat_activation[y, x]);
     os << "\n";
   }
   assertx(os);
@@ -1357,7 +1357,7 @@ void compute_looping_regions() {
       //  pixels were to advance at different temporal rates.  ongoing initial exploration.
       Image image(video.spatial_dims() * 2 - 1, Pixel::white());
       for_int(y, video.ysize()) for_int(x, video.xsize()) {
-        image[y * 2][x * 2] = Pixel(170, 170, 255);  // nodes are colored light-blue; edges are colored below
+        image[y * 2, x * 2] = Pixel(170, 170, 255);  // nodes are colored light-blue; edges are colored below
         for_int(axis, 2) {
           int y0 = y, y1 = y, x0 = x, x1 = x;
           if (axis == 0) {
@@ -1370,8 +1370,8 @@ void compute_looping_regions() {
           float scost2 = 0.f;
           for_int(edge_direction, 2) {  // two parts (at adjacent pixels x and z) of the spatial cost term
             std::swap(y0, y1), std::swap(x0, x1);
-            int start0 = g_lp.mat_start[y0][x0], period0 = g_lp.mat_period[y0][x0];
-            int start1 = g_lp.mat_start[y1][x1], period1 = g_lp.mat_period[y1][x1];
+            int start0 = g_lp.mat_start[y0, x0], period0 = g_lp.mat_period[y0, x0];
+            int start1 = g_lp.mat_start[y1, x1], period1 = g_lp.mat_period[y1, x1];
             Vector p0sum{}, p0sum2{};
             Vector p1sum{}, p1sum2{};
             for_intL(f, start0, start0 + period0) for_int(c, 3) {
@@ -1380,7 +1380,7 @@ void compute_looping_regions() {
             }
             for_intL(f, start1, start1 + period1) for_int(c, 3) {
               p1sum[c] += to_float(video[f, y0, x0][c]);
-              p1sum2[c] += square(to_float(video[f, y0, x0][c]));  // again at same pixel [y0][x0]
+              p1sum2[c] += square(to_float(video[f, y0, x0][c]));  // again at same pixel [y0, x0]
             }
             Vector vmul = p0sum * p1sum;
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
@@ -1388,8 +1388,8 @@ void compute_looping_regions() {
             scost2 += sum<float>(vtot);
           }
           HH_SSTAT(Sscost2, scost2);
-          image[y0 + y1][x0 + x1] = Pixel::gray(clamp_to_uint8(int(255.5f - scost2 * .01f)));
-          bool both_static = g_lp.mat_period[y0][x0] == 1 && g_lp.mat_period[y1][x1] == 1;
+          image[y0 + y1, x0 + x1] = Pixel::gray(clamp_to_uint8(int(255.5f - scost2 * .01f)));
+          bool both_static = g_lp.mat_period[y0, x0] == 1 && g_lp.mat_period[y1, x1] == 1;
           if (scost2 > 6000.f || both_static) uf.unify(V(y0, x0), V(y1, x1));  // 6000.f good?
         }
       }
@@ -2088,20 +2088,20 @@ void do_procedure(Args& args) {
       Multigrid<2, Vector4> multigrid(dims);
       {
         const auto func_stitch = [&](int y0, int x0, int y1, int x1, Vector4& vrhs) {  // change to yx0, yx1
-          if (mask[y0][x0] || mask[y1][x1])
-            vrhs += grid0[y1][x1] - grid0[y0][x0];
+          if (mask[y0, x0] || mask[y1, x1])
+            vrhs += grid0[y1, x1] - grid0[y0, x0];
           else
-            vrhs += gridf[y1][x1] - gridf[y0][x0];
+            vrhs += gridf[y1, x1] - gridf[y0, x0];
         };
         const int ny = dims[0], nx = dims[1];
         parallel_for(range(ny), [&](const int y) {
           for_int(x, nx) {
-            Vector4 vrhs = -screening_weight * (mask[y][x] ? grid0 : gridf)[y][x];
+            Vector4 vrhs = -screening_weight * (mask[y, x] ? grid0 : gridf)[y, x];
             if (y > 0) func_stitch(y, x, y - 1, x + 0, vrhs);
             if (y < ny - 1) func_stitch(y, x, y + 1, x + 0, vrhs);
             if (x > 0) func_stitch(y, x, y + 0, x - 1, vrhs);
             if (x < nx - 1) func_stitch(y, x, y + 0, x + 1, vrhs);
-            multigrid.rhs()[y][x] = vrhs;
+            multigrid.rhs()[y, x] = vrhs;
           }
         });
       }

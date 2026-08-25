@@ -37,7 +37,7 @@ int main() {
   {
     Grid<2, int> grid({256, 8}, 2);
     SHOW(grid.dims());
-    for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) assertx(grid[y][x] == 2);
+    for_int(y, grid.dim(0)) for_int(x, grid.dim(1)) assertx(grid[y, x] == 2);
   }
   {
     Grid<2, int> grid{{1, 2, 3}, {4, 5, 6}};

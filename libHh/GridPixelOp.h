@@ -86,8 +86,8 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
               for_int(z, 4) sums[z] += matrixpy[x * Dyx[1] + dx][z];  // OPT:Dyx
             }
           }
-          // for_int(z, 4) nmatrixp[y][x][z] = narrow_cast<uint8_t>(sums[z] / Dyx2);
-          auto& nmatrixpyx = nmatrixp[y][x];
+          // for_int(z, 4) nmatrixp[y, x][z] = narrow_cast<uint8_t>(sums[z] / Dyx2);
+          auto& nmatrixpyx = nmatrixp[y, x];
           for_int(z, 4) nmatrixpyx[z] = narrow_cast<uint8_t>(sums[z] / Dyx2);
         }
       });

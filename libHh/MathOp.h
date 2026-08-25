@@ -13,19 +13,19 @@ class Trig {
   // compute cos(i * TAU / j)
   static float cos(int i, int j) {
     Table& table = cos_table_instance();
-    if (!table[1][0]) init();
+    if (!table[1, 0]) init();
     int ia = abs(i);
     ASSERTX(ia < j);
-    float v = j < k_size ? table[j][ia] : std::cos(ia * TAU / j);
+    float v = j < k_size ? table[j, ia] : std::cos(ia * TAU / j);
     return v;
   }
   // compute sin(i * TAU / j)
   static float sin(int i, int j) {
     Table& table = sin_table_instance();
-    if (!table[1][0]) init();
+    if (!table[1, 0]) init();
     int ia = abs(i);
     ASSERTX(ia < j);
-    float v = j < k_size ? table[j][ia] : std::sin(ia * TAU / j);
+    float v = j < k_size ? table[j, ia] : std::sin(ia * TAU / j);
     return i < 0 ? -v : v;
   }
 
@@ -43,8 +43,8 @@ class Trig {
   static void init() {
     for_intL(j, 1, k_size) {
       for_int(i, j) {
-        cos_table_instance()[j][i] = std::cos(i * TAU / j);
-        sin_table_instance()[j][i] = std::sin(i * TAU / j);
+        cos_table_instance()[j, i] = std::cos(i * TAU / j);
+        sin_table_instance()[j, i] = std::sin(i * TAU / j);
       }
     }
   }

@@ -138,7 +138,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   if (g_test_scale_accuracy) {
     Matrix<Vector4> matrix(image.dims());
     for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      matrix[y][x][z] = Random::G.unif();  // matrix of noise
+      matrix[y, x][z] = Random::G.unif();  // matrix of noise
     }
     Matrix<Vector4> omatrix(matrix);
     assertx(!bordervalue);
@@ -147,7 +147,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
     }
     assertx(same_size(omatrix, matrix));
     for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      float diff = matrix[y][x][z] - omatrix[y][x][z];
+      float diff = matrix[y, x][z] - omatrix[y, x][z];
       HH_SSTAT(Serr, diff);
     }
     exit(0);
@@ -173,8 +173,8 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
   if (0) {
     for_int(y, frame.ysize()) {
       for_int(x, frame.xsize()) {
-        frame[y][x] =
-            RGB_Pixel_from_YUV(nv12v.get_Y()[y][x], nv12v.get_UV()[y / 2][x / 2][0], nv12v.get_UV()[y / 2][x / 2][1]);
+        frame[y, x] =
+            RGB_Pixel_from_YUV(nv12v.get_Y()[y, x], nv12v.get_UV()[y / 2, x / 2][0], nv12v.get_UV()[y / 2, x / 2][1]);
       }
     }
   } else if (0) {
@@ -289,7 +289,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   // Tried other optimizations too.  Note that all the implementations take about the same elapsed time.
   if (0) {
     uint8_t* __restrict buf_Y = nv12v.get_Y().data();
-    for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = Y_from_RGB(frame[y][x]); }
+    for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = Y_from_RGB(frame[y, x]); }
     for_int(yb, frame.ysize() / 2) {
       int y = yb * 2;
       for_int(xb, frame.xsize() / 2) {
@@ -297,7 +297,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         Pixel avg;
         for_int(z, 3) {
           int sum = 0;
-          for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi][x + xi][z];
+          for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi, x + xi][z];
           avg[z] = uint8_t((sum + 2) / 4);
         }
         *buf_UV++ = U_from_RGB(avg);
@@ -327,7 +327,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         Pixel avg;
         for_int(z, 3) {
           int sum = 0;
-          for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi][x + xi][z];
+          for_int(yi, 2) for_int(xi, 2) sum += frame[y + yi, x + xi][z];
           avg[z] = uint8_t((sum + 2) / 4);
         }
         *buf_UV++ = U_from_RGB(avg);

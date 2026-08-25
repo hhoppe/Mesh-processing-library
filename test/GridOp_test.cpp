@@ -140,7 +140,7 @@ int main() {
   }
   {
     Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
-    assertx(grid[19][19] == Pixel(65, 66, 67, 72));
+    assertx(grid[19, 19] == Pixel(65, 66, 67, 72));
     Bndrule bndrule = Bndrule::reflected;
     Pixel gcolor(255, 255, 255, 255);
     grid = crop(grid, V(0, 0), V(10, 10), twice(bndrule), &gcolor);

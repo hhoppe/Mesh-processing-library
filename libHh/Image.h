@@ -14,8 +14,8 @@
 {
   Image image(V(ysize, xsize)), image2(image.dims(), Pixel(65, 66, 67, 200));
   image2.set_zsize(4);
-  Pixel& pixel = image[y][x];
-  uint8_t c = image(y, x)[z];
+  Pixel& pixel = image[y, x];
+  uint8_t c = image[y, x][z];
   // ysize() == #rows, xsize() == #columns, zsize() == #channels.
   // Valid values for zsize(): 1: grayscale image: Red == Green == Blue  (Alpha is undefined);
   //                           3: RGB image  (default)  (Alpha is undefined);
@@ -126,7 +126,7 @@ template <typename T> Image as_image(CMatrixView<T> matrix) {
   Image image(matrix.dims());
   parallel_for(range(image.ysize()), [&](const int y) {
     for_int(x, image.xsize()) {
-      image[y][x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y][x], T{0}, T{1}) * 255.f + .5f));
+      image[y, x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y, x], T{0}, T{1}) * 255.f + .5f));
     }
   });
   return image;

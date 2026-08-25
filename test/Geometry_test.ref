@@ -16,6 +16,7 @@ frame = Frame {
   p = [5, 4, 3]
 }
 frame[1][0] = 3
+(frame[1, 0]) = 3
 frame.p()[1] = 4
 frame.p() = [5, 4, 3]
 q = [14, 8, 11]

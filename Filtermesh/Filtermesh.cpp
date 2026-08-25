@@ -124,11 +124,11 @@ void do_creategrid(Args& args) {
   assertx(mesh.empty());
   Matrix<Vertex> matv(ny, nx);
   for_int(y, ny) for_int(x, nx) {
-    matv[y][x] = mesh.create_vertex();
-    mesh.set_point(matv[y][x], Point(float(x) / (nx - 1.f), float(y) / (ny - 1.f), 0.f));
+    matv[y, x] = mesh.create_vertex();
+    mesh.set_point(matv[y, x], Point(float(x) / (nx - 1.f), float(y) / (ny - 1.f), 0.f));
   }
   for_int(y, ny - 1) for_int(x, nx - 1) {
-    mesh.create_face(V(matv[y + 0][x + 0], matv[y + 0][x + 1], matv[y + 1][x + 1], matv[y + 1][x + 0]));
+    mesh.create_face(V(matv[y + 0, x + 0], matv[y + 0, x + 1], matv[y + 1, x + 1], matv[y + 1, x + 0]));
   }
 }
 
@@ -142,8 +142,8 @@ void do_fromgrid(Args& args) {
   for_int(y, ny) for_int(x, nx) {
     float val;
     assertx(fi() >> val);
-    matv[y][x] = mesh.create_vertex();
-    mesh.set_point(matv[y][x], Point(float(x) / (nx - 1.f), float(y) / (ny - 1.f), val));
+    matv[y, x] = mesh.create_vertex();
+    mesh.set_point(matv[y, x], Point(float(x) / (nx - 1.f), float(y) / (ny - 1.f), val));
   }
   if (1) {
     float dummy_val;
@@ -151,7 +151,7 @@ void do_fromgrid(Args& args) {
     assertw(!fi());
   }
   for_int(y, ny - 1) for_int(x, nx - 1) {
-    mesh.create_face(V(matv[y + 0][x + 0], matv[y + 0][x + 1], matv[y + 1][x + 1], matv[y + 1][x + 0]));
+    mesh.create_face(V(matv[y + 0, x + 0], matv[y + 0, x + 1], matv[y + 1, x + 1], matv[y + 1, x + 0]));
   }
 }
 
@@ -170,11 +170,11 @@ void do_frompointgrid(Args& args) {
     if (el.type() == A3dElem::EType::comment) continue;
     assertx(el.type() == A3dElem::EType::point);
     Point p = el[0].p;
-    matv[y][x] = mesh.create_vertex();
-    mesh.set_point(matv[y][x], p);
+    matv[y, x] = mesh.create_vertex();
+    mesh.set_point(matv[y, x], p);
   }
   for_int(y, ny - 1) for_int(x, nx - 1) {
-    mesh.create_face(V(matv[y + 0][x + 0], matv[y + 0][x + 1], matv[y + 1][x + 1], matv[y + 1][x + 0]));
+    mesh.create_face(V(matv[y + 0, x + 0], matv[y + 0, x + 1], matv[y + 1, x + 1], matv[y + 1, x + 0]));
   }
 }
 
@@ -194,7 +194,7 @@ void do_createobject(Args& args) {
     matv.init(ny, nx);
     for_int(y, ny) for_int(x, nx) {
       Vertex v = mesh.create_vertex();
-      matv[y][x] = v;
+      matv[y, x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       float ang = xf * TAU;
       mesh.set_point(v, Point(std::cos(ang), std::sin(ang), yf * (TAU / 2)));
@@ -211,7 +211,7 @@ void do_createobject(Args& args) {
     matv.init(ny, nx);
     for_int(y, ny) for_int(x, nx) {
       Vertex v = mesh.create_vertex();
-      matv[y][x] = v;
+      matv[y, x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       float ang = xf * TAU;
       float r = lerp(0.396313f, +0.249999f, yf);
@@ -225,7 +225,7 @@ void do_createobject(Args& args) {
     matv.init(ny, nx);
     for_int(y, ny) for_int(x, nx) {
       Vertex v = mesh.create_vertex();
-      matv[y][x] = v;
+      matv[y, x] = v;
       float xf = float(x) / (nx - 1.f), yf = float(y) / (ny - 1.f);
       mesh.set_point(v, Point(xf, yf, std::sin(xf * TAU * 3.f) * .05f));
       Uv uv(xf, 1.f - yf);
@@ -244,7 +244,7 @@ void do_createobject(Args& args) {
     }
     for_int(y, ny) for_int(x, nx) {
       Vertex v = mesh.create_vertex();
-      matv[y][x] = v;
+      matv[y, x] = v;
       float ang_major = x / (nx - 1.f) * TAU, ang_minor = y / (ny - 1.f) * TAU;
       float rx_minor = .7f + std::cos(ang_major) * .2f, ry_minor = rx_minor;
       float x_minor = rx_minor * std::cos(ang_minor), y_minor = ry_minor * std::sin(ang_minor);
@@ -260,7 +260,7 @@ void do_createobject(Args& args) {
     const int mody = closed ? ny - 1 : ny, modx = closed ? nx - 1 : nx;
     for_int(y, ny - 1) for_int(x, nx - 1) {
       mesh.create_face(
-          V(matv[y][x], matv[y][(x + 1) % modx], matv[(y + 1) % mody][(x + 1) % modx], matv[(y + 1) % mody][x]));
+          V(matv[y, x], matv[y, (x + 1) % modx], matv[(y + 1) % mody, (x + 1) % modx], matv[(y + 1) % mody, x]));
     }
   }
 }
@@ -1763,12 +1763,12 @@ void triangulate_quads(ETriType type) {
         other_diag = (ix + iy) % 2 == 1;
         break;
       }
-      case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1][0..1] domain
+      case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1, 0..1] domain
         const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 1 || maxi == 3;
         break;
       }
-      case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1][0..1] domain
+      case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1, 0..1] domain
         const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 0 || maxi == 2;
         break;
@@ -3393,11 +3393,11 @@ void do_procedure(Args& args) {
     for_int(i, nlat) {
       for_int(j, nlon) {
         if ((i == 0 || i == nlat - 1) && j > 0) {
-          mv[i][j] = mv[i][j - 1];
+          mv[i, j] = mv[i, j - 1];
           continue;
         }
         Vertex v = mesh.create_vertex();
-        mv[i][j] = v;
+        mv[i, j] = v;
         float anglat = float(i) / (nlat - 1.f) * (TAU / 2);
         float anglon = float(j) / (nlon - 0.f) * TAU;
         Point p(std::cos(anglon) * std::sin(anglat), std::sin(anglon) * std::sin(anglat), std::cos(anglat));
@@ -3419,15 +3419,15 @@ void do_procedure(Args& args) {
       for_int(j, nlon) {
         int j1 = (j + 1) % nlon;
         if (0) {
-        } else if (mv[i][j] == mv[i][j1]) {
-          mesh.create_face(mv[i][j1], mv[i + 1][j], mv[i + 1][j1]);
-        } else if (mv[i + 1][j] == mv[i + 1][j1]) {
-          mesh.create_face(mv[i][j], mv[i + 1][j], mv[i][j1]);
+        } else if (mv[i, j] == mv[i, j1]) {
+          mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
+        } else if (mv[i + 1, j] == mv[i + 1, j1]) {
+          mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
         } else if (!center_split) {  // 2 triangles
-          mesh.create_face(mv[i][j], mv[i + 1][j], mv[i][j1]);
-          mesh.create_face(mv[i][j1], mv[i + 1][j], mv[i + 1][j1]);
+          mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
+          mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
         } else {  // 4 triangles
-          Face f = mesh.create_face(V(mv[i][j], mv[i + 1][j], mv[i + 1][j1], mv[i][j1]));
+          Face f = mesh.create_face(V(mv[i, j], mv[i + 1, j], mv[i + 1, j1], mv[i, j1]));
           mesh.center_split_face(f);
         }
       }
@@ -3438,7 +3438,7 @@ void do_procedure(Args& args) {
     const int cutlon = 20;
     for (int j = 0; j < nlon; j += cutlon) {
       for_int(i, (nlat - 1) / 2) {
-        Edge e = mesh.edge(mv[i][j], mv[i + 1][j]);
+        Edge e = mesh.edge(mv[i, j], mv[i + 1, j]);
         mesh.set_string(e, "sharp");
       }
     }
@@ -3781,29 +3781,29 @@ auto smoothgim_subdiv(CMatrixView<Point> opoints) {
   int nn = opoints.ysize() - 1;
   Matrix<Point> npoints(nn * 2 + 1, nn * 2 + 1);
   // copy old points
-  for_int(y, nn + 1) for_int(x, nn + 1) npoints[y * 2][x * 2] = opoints[y][x];
+  for_int(y, nn + 1) for_int(x, nn + 1) npoints[y * 2, x * 2] = opoints[y, x];
   // splitting step
   for_int(y, nn + 1) {
-    for_int(x, nn) npoints[y * 2][x * 2 + 1] = interp(npoints[y * 2][x * 2 + 0], npoints[y * 2][x * 2 + 2]);
+    for_int(x, nn) npoints[y * 2, x * 2 + 1] = interp(npoints[y * 2, x * 2 + 0], npoints[y * 2, x * 2 + 2]);
   }
   for_int(y, nn) {
-    for_int(x, nn * 2 + 1) npoints[y * 2 + 1][x] = interp(npoints[y * 2 + 0][x], npoints[y * 2 + 2][x]);
+    for_int(x, nn * 2 + 1) npoints[y * 2 + 1, x] = interp(npoints[y * 2 + 0, x], npoints[y * 2 + 2, x]);
   }
   // averaging step
   nn = nn * 2;
   Matrix<Point> tpoints(nn + 1, nn + 1);
-  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
+  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y, x] = npoints[y, x];
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
-      npoints[y][x] = avg_cubic(x > 0 ? tpoints[y][x - 1] : tpoints[nn - y][x + 1], tpoints[y][x],
-                                x < nn ? tpoints[y][x + 1] : tpoints[nn - y][x - 1]);
+      npoints[y, x] = avg_cubic(x > 0 ? tpoints[y, x - 1] : tpoints[nn - y, x + 1], tpoints[y, x],
+                                x < nn ? tpoints[y, x + 1] : tpoints[nn - y, x - 1]);
     }
   }
-  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y][x] = npoints[y][x];
+  for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y, x] = npoints[y, x];
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
-      npoints[y][x] = avg_cubic(y > 0 ? tpoints[y - 1][x] : tpoints[y + 1][nn - x], tpoints[y][x],
-                                y < nn ? tpoints[y + 1][x] : tpoints[y - 1][nn - x]);
+      npoints[y, x] = avg_cubic(y > 0 ? tpoints[y - 1, x] : tpoints[y + 1, nn - x], tpoints[y, x],
+                                y < nn ? tpoints[y + 1, x] : tpoints[y - 1, nn - x]);
     }
   }
   return npoints;
@@ -3816,7 +3816,7 @@ void do_smoothgim(Args& args) {
   assertx(square(nn + 1) == mesh.num_vertices());
   Matrix<Point> points(nn + 1, nn + 1);
   // extract mesh points
-  for_int(y, nn + 1) for_int(x, nn + 1) points[y][x] = mesh.point(mesh.id_vertex(y * (nn + 1) + x + 1));
+  for_int(y, nn + 1) for_int(x, nn + 1) points[y, x] = mesh.point(mesh.id_vertex(y * (nn + 1) + x + 1));
   // respect C2 rule at side (cut) vertices
   if (1) {
     if (nn >= 4) {
@@ -3825,14 +3825,14 @@ void do_smoothgim(Args& args) {
         int y, x;
         x = i * nn;
         y = nn / 2;
-        assertx(!compare(points[y - 1][x], points[y + 1][x], 1e-6f));
-        points[y][x] =
-            interp(interp(points[y - 1][x + d], points[y + 1][x + d]), interp(points[y][x + d], points[y - 1][x]));
+        assertx(!compare(points[y - 1, x], points[y + 1, x], 1e-6f));
+        points[y, x] =
+            interp(interp(points[y - 1, x + d], points[y + 1, x + d]), interp(points[y, x + d], points[y - 1, x]));
         y = i * nn;
         x = nn / 2;
-        assertx(!compare(points[y][x - 1], points[y][x + 1], 1e-6f));
-        points[y][x] =
-            interp(interp(points[y + d][x - 1], points[y + d][x + 1]), interp(points[y + d][x], points[y][x - 1]));
+        assertx(!compare(points[y, x - 1], points[y, x + 1], 1e-6f));
+        points[y, x] =
+            interp(interp(points[y + d, x - 1], points[y + d, x + 1]), interp(points[y + d, x], points[y, x - 1]));
       }
     } else {
       Warning("Gim too small to make C2");
@@ -3844,7 +3844,7 @@ void do_smoothgim(Args& args) {
     nn = tpoints.ysize() - 1;
     points.init(0, 0);
     points.init(nn + 1, nn + 1);
-    for_int(y, nn + 1) for_int(x, nn + 1) points[y][x] = tpoints[y][x];
+    for_int(y, nn + 1) for_int(x, nn + 1) points[y, x] = tpoints[y, x];
   }
   // recreate mesh
   mesh.clear();
@@ -3853,37 +3853,37 @@ void do_smoothgim(Args& args) {
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
       Vertex v = mesh.create_vertex();
-      vertices[y][x] = v;
-      mesh.set_point(v, points[y][x]);
+      vertices[y, x] = v;
+      mesh.set_point(v, points[y, x]);
       Vector nor;
       if (0) {
       } else if (y == nn / 2 && (x == 0 || x == nn)) {
         // Are border points really just simply reflections?
-        assertx(!compare(points[y - 1][x], points[y + 1][x], 1e-6f));
+        assertx(!compare(points[y - 1, x], points[y + 1, x], 1e-6f));
         int xr = x == 0 ? x + 1 : x - 1;
-        Vector tb = points[y][xr] - points[y - 1][x];
-        Vector tc = points[y - 1][xr] - points[y + 1][xr];
+        Vector tb = points[y, xr] - points[y - 1, x];
+        Vector tc = points[y - 1, xr] - points[y + 1, xr];
         if (x == 0) tc = -tc;
         nor = cross(tb, tc);
       } else if (x == nn / 2 && (y == 0 || y == nn)) {
-        assertx(!compare(points[y][x - 1], points[y][x + 1], 1e-6f));
+        assertx(!compare(points[y, x - 1], points[y, x + 1], 1e-6f));
         int yr = y == 0 ? y + 1 : y - 1;
-        Vector tb = points[yr][x] - points[y][x - 1];
-        Vector tc = points[yr][x - 1] - points[yr][x + 1];
+        Vector tb = points[yr, x] - points[y, x - 1];
+        Vector tc = points[yr, x - 1] - points[yr, x + 1];
         if (y == nn) tc = -tc;
         nor = cross(tb, tc);
       } else {
         Vector tx =
-            ((x > 0 ? points[y][x - 1] : points[nn - y][x + 1]) - (x < nn ? points[y][x + 1] : points[nn - y][x - 1]));
+            ((x > 0 ? points[y, x - 1] : points[nn - y, x + 1]) - (x < nn ? points[y, x + 1] : points[nn - y, x - 1]));
         Vector ty =
-            ((y > 0 ? points[y - 1][x] : points[y + 1][nn - x]) - (y < nn ? points[y + 1][x] : points[y - 1][nn - x]));
+            ((y > 0 ? points[y - 1, x] : points[y + 1, nn - x]) - (y < nn ? points[y + 1, x] : points[y - 1, nn - x]));
         nor = cross(tx, ty);
       }
       assertw(nor.normalize());
       mesh.update_string(v, "normal", csform_vec(str, nor));
       if (y * x > 0)
         mesh.create_face(
-            V(vertices[y - 1][x - 1], vertices[y - 1][x - 0], vertices[y - 0][x - 0], vertices[y - 0][x - 1]));
+            V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
     }
   }
 }
@@ -3901,13 +3901,13 @@ void do_subsamplegim(Args& args) {
   for_int(y, nn + 1) {
     for_int(x, nn + 1) {
       Vertex vn = nmesh.create_vertex();
-      vertices[y][x] = vn;
+      vertices[y, x] = vn;
       Vertex vo = omesh.id_vertex(y * nsubsamp * (nn * nsubsamp + 1) + x * nsubsamp + 1);
       nmesh.set_point(vn, omesh.point(vo));
       nmesh.set_string(vn, omesh.get_string(vo));
       if (y * x > 0)
         nmesh.create_face(
-            V(vertices[y - 1][x - 1], vertices[y - 1][x - 0], vertices[y - 0][x - 0], vertices[y - 0][x - 1]));
+            V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
     }
   }
   mesh.copy(nmesh);
@@ -3942,8 +3942,8 @@ void do_shootrays(Args& args) {
   const bool show_a3d = true;
   const auto up_fi = show_a3d ? make_unique<WFile>("v.a3d") : nullptr;
   const auto up_oa3d = up_fi ? make_unique<WSA3dStream>((*up_fi)()) : nullptr;
-  const float negdisp = -1e-5f * bbox.max_side() * xform[0][0];
-  const float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0][0];
+  const float negdisp = -1e-5f * bbox.max_side() * xform[0, 0];
+  const float maxdisp = raymaxdispfrac * bbox.max_side() * xform[0, 0];
   string str;
   for (Vertex v : mesh.vertices()) {
     const Point p = mesh.point(v) * xform;
@@ -3977,7 +3977,7 @@ void do_shootrays(Args& args) {
       // mindist = .02f;  // for debugging
     } else {
       HH_SSTAT(Smindistc, mindist);
-      HH_SSTAT(Smindisto, mindist / xform[0][0]);
+      HH_SSTAT(Smindisto, (mindist / xform[0, 0]));
     }
     // Point minpint = p + nor * mindist;
     if (up_oa3d) {
@@ -3989,7 +3989,7 @@ void do_shootrays(Args& args) {
     const Point op = mesh.point(v);
     mesh.update_string(v, "Opos", csform_vec(str, op));
     mesh.set_point(v, minp * xform_inverse);
-    mesh.update_string(v, "sdisp", csform_vec(str, V(mindist / xform[0][0])));
+    mesh.update_string(v, "sdisp", csform_vec(str, V(mindist / xform[0, 0])));
   }
 }
 
@@ -4347,7 +4347,7 @@ void do_trimpts(Args& args) {
       const Vec3<Point> triangle = mesh.triangle_points(f);
       const Point pc = interp(triangle);  // Note: not really the circumcenter!
       const float circumd = dist(pc, triangle[0]);
-      const float maxd = circumd * dtrim * xform[0][0];
+      const float maxd = circumd * dtrim * xform[0, 0];
       SpatialSearch<int> ss(&spatial, pc * xform, maxd);
       if (ss.done() || ss.next().d2 > square(maxd)) faces_to_destroy.push(f);
     }
@@ -4356,7 +4356,7 @@ void do_trimpts(Args& args) {
   } else {
     const FlagMask vflag_toofar = Mesh::allocate_Vertex_flag();
     int nvtoofar = 0;
-    float maxd = dtrim * xform[0][0];
+    float maxd = dtrim * xform[0, 0];
     for (Vertex v : mesh.vertices()) {
       Point p = mesh.point(v) * xform;
       assertx(p[0] > 0.f && p[0] < 1.f && p[1] > 0.f && p[1] < 1.f && p[2] > 0.f && p[2] < 1.f);

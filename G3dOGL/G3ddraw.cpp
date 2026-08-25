@@ -43,7 +43,7 @@ void Applyq(const Frame& tq) {
   Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
     Frame xform = Frame::identity();
-    for_int(c, 3) xform[c][c] = std::exp(tq.p()[c] / ddistance);
+    for_int(c, 3) xform[c, c] = std::exp(tq.p()[c] / ddistance);
     Frame& frame = g_obs[cob].tm();
     frame = normalized_frame(Frame::translation(-vtran) * xform * Frame::translation(vtran) * frame);
     return;

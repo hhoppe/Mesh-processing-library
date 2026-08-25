@@ -665,8 +665,8 @@ void select_frel() {
   }
   assertx(oax1 != oax2 && vax1 != vax2);  // -> unique correspondence
   frel.zero();
-  frel[vax1][oax1] = float(sign1);
-  frel[vax2][oax2] = float(sign2);
+  frel[vax1, oax1] = float(sign1);
+  frel[vax2, oax2] = float(sign2);
   int a1 = min(vax1, vax2), a2 = max(vax1, vax2);
   int vax3 = a1 == 0 && a2 == 1 ? 2 : a1 == 0 && a2 == 2 ? 1 : 0;
   int dir = (vax2 == mod3(vax1 + 1)) ? 1 : -1;

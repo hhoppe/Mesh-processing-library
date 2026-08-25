@@ -44,6 +44,7 @@ int main() {
     SHOW(frame);
     q = p * frame;
     SHOW(frame[1][0]);
+    SHOW((frame[1, 0]));
     SHOW(frame.p()[1]);
     SHOW(frame.p());
     SHOW(q);
@@ -73,8 +74,8 @@ int main() {
     Array<float> p2{2.f, 3.f, 4.f, 1.f};
     SHOW(p2);
     SHOW(mat_mul(p2, hf.view()));
-    hf[1][3] = 4.f;
-    hf[3][3] = 0.f;
+    hf[1, 3] = 4.f;
+    hf[3, 3] = 0.f;
     SHOW(hf);
     SHOW(mat_mul(p2, hf.view()));
   }

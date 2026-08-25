@@ -20,7 +20,7 @@ namespace hh {
 //  the packet headers and for many higher level protocols and file formats that are designed for use over IP.
 
 // Big Endian is natural for dates/times (2014-12-22 12:34:56).
-// It is also used for grid access (matrix[y][x] == matrix[yx]; matrix.dims() == V(matrix.ysize(), matrix.xsize()))
+// It is also used for grid access (matrix[y, x] == matrix[yx]; matrix.dims() == V(matrix.ysize(), matrix.xsize()))
 //   and for screen coordinates (const Vec2<int>& yx).
 
 #if defined(__GNUC__) || defined(__clang__)

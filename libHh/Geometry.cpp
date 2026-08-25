@@ -63,9 +63,9 @@ bool Frame::invert() { return hh::invert(const_cast<const Frame&>(*this), *this)
 Frame transpose(const Frame& frame) {
   assertx(frame.p() == Point(0.f, 0.f, 0.f));
   Frame frame2 = frame;
-  std::swap(frame2[1][0], frame2[0][1]);
-  std::swap(frame2[2][0], frame2[0][2]);
-  std::swap(frame2[2][1], frame2[1][2]);
+  std::swap(frame2[1, 0], frame2[0, 1]);
+  std::swap(frame2[2, 0], frame2[0, 2]);
+  std::swap(frame2[2, 1], frame2[1, 2]);
   return frame2;
 }
 
@@ -82,25 +82,25 @@ Frame Frame::rotation(int axis, float angle) {
   if (abs(s) < 1e-6f) s = 0.f;
   switch (axis) {
     case 0:
-      frame[0][0] = 1.f;
-      frame[1][1] = c;
-      frame[1][2] = s;
-      frame[2][1] = -s;
-      frame[2][2] = c;
+      frame[0, 0] = 1.f;
+      frame[1, 1] = c;
+      frame[1, 2] = s;
+      frame[2, 1] = -s;
+      frame[2, 2] = c;
       break;
     case 1:
-      frame[1][1] = 1.f;
-      frame[2][2] = c;
-      frame[2][0] = s;
-      frame[0][2] = -s;
-      frame[0][0] = c;
+      frame[1, 1] = 1.f;
+      frame[2, 2] = c;
+      frame[2, 0] = s;
+      frame[0, 2] = -s;
+      frame[0, 0] = c;
       break;
     case 2:
-      frame[2][2] = 1.f;
-      frame[0][0] = c;
-      frame[0][1] = s;
-      frame[1][0] = -s;
-      frame[1][1] = c;
+      frame[2, 2] = 1.f;
+      frame[0, 0] = c;
+      frame[0, 1] = s;
+      frame[1, 0] = -s;
+      frame[1, 1] = c;
       break;
     default: assertnever("");
   }

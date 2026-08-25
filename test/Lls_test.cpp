@@ -84,8 +84,8 @@ void test1() {
     Array<float> b(n);
     for_int(i, n) {
       for_int(j, n) {
-        a[i][j] = 1.f + i * 3 + j + abs(2 - i) * abs(5 - j + i) * j + i * i * j * j;
-        // showf("[%d, %d]=%g\n", i, j, a[i][j]);
+        a[i, j] = 1.f + i * 3 + j + abs(2 - i) * abs(5 - j + i) * j + i * i * j * j;
+        // showf("[%d, %d]=%g\n", i, j, a[i, j]);
       }
       b[i] = float(abs(i - 4));
       // SHOW(b[i]);
@@ -96,7 +96,7 @@ void test1() {
       auto up_lls = make_lls(c, n, n, nd);
       Lls& lls = *up_lls;
       for_int(i, n) {
-        for_int(j, n) lls.enter_a_rc(i, j, a[i][j]);
+        for_int(j, n) lls.enter_a_rc(i, j, a[i, j]);
         lls.enter_b_rc(i, 0, b[i]);
         lls.enter_b_rc(i, 1, b[i] * 2);
         lls.enter_xest_rc(i, 0, 0.f);

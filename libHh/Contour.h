@@ -293,7 +293,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       unsigned en = encode(ci);
       bool is_new;
       Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
-      na[i][j][k] = n;
+      na[i, j, k] = n;
       if (n->_val == k_not_yet_evaled) {
         n->_p = get_point(ci);
         n->_val = _eval(n->_p);
@@ -303,7 +303,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       }
       if (n->_val == k_Contour_undefined) cundef = true;
     }
-    Node* n = na[0][0][0];
+    Node* n = na[0, 0, 0];
     ASSERTX(n->_cubestate == Node::ECubestate::queued);
     n->_cubestate = Node::ECubestate::visited;
     if (cundef) {
@@ -498,12 +498,12 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
   void contour_cube(const IPoint& cc, const Node222& na) {
     dummy_use(cc);
     // do Kuhn 6-to-1 triangulation of cube
-    contour_tetrahedron(V(na[0][0][0], na[0][0][1], na[1][0][1], na[0][1][0]));
-    contour_tetrahedron(V(na[0][0][0], na[1][0][1], na[1][0][0], na[0][1][0]));
-    contour_tetrahedron(V(na[1][0][1], na[1][1][0], na[1][0][0], na[0][1][0]));
-    contour_tetrahedron(V(na[0][1][0], na[0][1][1], na[0][0][1], na[1][0][1]));
-    contour_tetrahedron(V(na[1][1][1], na[0][1][1], na[0][1][0], na[1][0][1]));
-    contour_tetrahedron(V(na[1][1][1], na[0][1][0], na[1][1][0], na[1][0][1]));
+    contour_tetrahedron(V(na[0, 0, 0], na[0, 0, 1], na[1, 0, 1], na[0, 1, 0]));
+    contour_tetrahedron(V(na[0, 0, 0], na[1, 0, 1], na[1, 0, 0], na[0, 1, 0]));
+    contour_tetrahedron(V(na[1, 0, 1], na[1, 1, 0], na[1, 0, 0], na[0, 1, 0]));
+    contour_tetrahedron(V(na[0, 1, 0], na[0, 1, 1], na[0, 0, 1], na[1, 0, 1]));
+    contour_tetrahedron(V(na[1, 1, 1], na[0, 1, 1], na[0, 1, 0], na[1, 0, 1]));
+    contour_tetrahedron(V(na[1, 1, 1], na[0, 1, 0], na[1, 1, 0], na[1, 0, 1]));
   }
   void contour_tetrahedron(Vec4<Node*> n4) {
     int nposi = 0;
@@ -538,13 +538,13 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
     auto& poly = _tmp_poly;
     poly.init(3);
     for_int(i, 3) {
-      Node* np = n3[i][0];
-      Node* nn = n3[i][1];
+      Node* np = n3[i, 0];
+      Node* nn = n3[i, 1];
       poly[i] = this->template compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     Vector normal = cross(poly[0], poly[1], poly[2]);
     // swap might be unnecessary if we carefully swapped above?
-    if (dot(normal, n3[0][0]->_p - n3[0][1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
+    if (dot(normal, n3[0, 0]->_p - n3[0, 1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }
 };
@@ -643,7 +643,7 @@ class Contour2D : public ContourBase<2> {
           unsigned en = encode(ci);
           bool is_new;
           Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
-          na[cd[0]][cd[1]] = n;
+          na[cd[0]][cd[1]] = n;  // na[cd[0], cd[1]] except warning on CONFIG=win.
           if (n->_val == k_not_yet_evaled) {
             n->_p = get_point(ci);
             n->_val = _eval(n->_p);
@@ -654,7 +654,7 @@ class Contour2D : public ContourBase<2> {
           if (n->_val == k_Contour_undefined) cundef = true;
         }
       }
-      Node* n = na[0][0];
+      Node* n = na[0, 0];
       ASSERTX(n->_cubestate == Node::ECubestate::queued);
       n->_cubestate = Node::ECubestate::visited;
       if (cundef) {
@@ -696,8 +696,8 @@ class Contour2D : public ContourBase<2> {
     }
   }
   void contour_square(const Node22& na) {
-    contour_triangle(V(na[0][0], na[1][1], na[0][1]));
-    contour_triangle(V(na[0][0], na[1][0], na[1][1]));
+    contour_triangle(V(na[0, 0], na[1, 1], na[0, 1]));
+    contour_triangle(V(na[0, 0], na[1, 0], na[1, 1]));
   }
   void contour_triangle(Vec3<Node*> n3) {
     int nposi = 0;
@@ -728,13 +728,13 @@ class Contour2D : public ContourBase<2> {
     auto& poly = _tmp_poly;
     poly.init(2);
     for_int(i, 2) {
-      Node* np = n2[i][0];
-      Node* nn = n2[i][1];
+      Node* np = n2[i, 0];
+      Node* nn = n2[i, 1];
       poly[i] = compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     Vec2<float> v = poly[1] - poly[0];
     Vec2<float> normal(-v[1], v[0]);  // 90 degree rotation
-    if (dot(normal, n2[0][0]->_p - n2[0][1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
+    if (dot(normal, n2[0, 0]->_p - n2[0, 1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }
 };

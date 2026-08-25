@@ -89,7 +89,7 @@ void SparseLls::enter_a_c(int c, CArrayView<float> ar) {
 
 Array<float> SparseLls::mult_m_v(CArrayView<float> vi) const {
   Array<float> vo(_m);
-  // vo[m] = _a[m][n]*vi[n];
+  // vo[m] = _a[m, n]*vi[n];
   for_int(i, _m) {
     double sum = 0.;
     for (const Ival& ival : _rows[i]) sum += double(ival._v) * vi[ival._i];
@@ -100,7 +100,7 @@ Array<float> SparseLls::mult_m_v(CArrayView<float> vi) const {
 
 Array<float> SparseLls::mult_mt_v(CArrayView<float> vi) const {
   Array<float> vo(_n);
-  // vo[n] = uT[n][m]*vi[m];
+  // vo[n] = uT[n, m]*vi[m];
   for_int(j, _n) {
     double sum = 0.;
     for (const Ival& ival : _cols[j]) sum += double(ival._v) * vi[ival._i];
@@ -159,13 +159,13 @@ bool SparseLls::solve(double* prssb, double* prssa) {
   Array<float> x(_n), rhv(_m);
   bool success = true;
   for_int(di, _nd) {
-    for_int(i, _m) rhv[i] = _b[di][i];
-    for_int(j, _n) x[j] = _x[di][j];
+    for_int(i, _m) rhv[i] = _b[di, i];
+    for_int(j, _n) x[j] = _x[di, j];
     if (!do_cg(x, rhv, prssb, prssa)) {
       success = false;
       if (0 && _max_iter == std::numeric_limits<int>::max()) continue;
     }
-    for_int(j, _n) _x[di][j] = x[j];
+    for_int(j, _n) _x[di, j] = x[j];
   }
   return success;
 }
@@ -195,7 +195,7 @@ bool FullLls::solve(double* prssb, double* prssa) {
 
 double FullLls::get_rss() {
   double rss = 0.;
-  for_int(di, _nd) for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di][i]);
+  for_int(di, _nd) for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di, i]);
   return rss;
 }
 
@@ -208,8 +208,8 @@ bool LudLls::solve_aux() {
     for_int(i, _n) {
       for_int(j, _n) {
         double s = 0.;
-        for_int(k, _m) s += double(_a[k][i]) * _a[k][j];
-        a[i][j] = float(s);
+        for_int(k, _m) s += double(_a[k, i]) * _a[k, j];
+        a[i, j] = float(s);
       }
     }
   }
@@ -218,7 +218,7 @@ bool LudLls::solve_aux() {
   for_int(i, _n) {
     float vmax = 0.f;
     for_int(j, _n) {
-      float v = abs(a[i][j]);
+      float v = abs(a[i, j]);
       if (v > vmax) vmax = v;
     }
     if (!vmax) return false;
@@ -227,16 +227,16 @@ bool LudLls::solve_aux() {
   int imax = 0;  // undefined
   for_int(j, _n) {
     for_int(i, j) {
-      double s = a[i][j];
-      for_int(k, i) s -= double(a[i][k]) * a[k][j];
-      a[i][j] = float(s);
+      double s = a[i, j];
+      for_int(k, i) s -= double(a[i, k]) * a[k, j];
+      a[i, j] = float(s);
     }
     float vmax = 0.f;
     for_intL(i, j, _n) {
-      double s = a[i][j];
-      for_int(k, j) s -= double(a[i][k]) * a[k][j];
-      a[i][j] = float(s);
-      float v = t[i] * abs(a[i][j]);
+      double s = a[i, j];
+      for_int(k, j) s -= double(a[i, k]) * a[k, j];
+      a[i, j] = float(s);
+      float v = t[i] * abs(a[i, j]);
       if (v >= vmax) {
         vmax = v;
         imax = i;
@@ -247,19 +247,19 @@ bool LudLls::solve_aux() {
       t[imax] = t[j];
     }
     rindx[j] = imax;
-    if (!a[j][j]) return false;
+    if (!a[j, j]) return false;
     if (j < _n - 1) {
-      float v = 1.f / a[j][j];
-      for_intL(i, j + 1, _n) a[i][j] *= v;
+      float v = 1.f / a[j, j];
+      for_intL(i, j + 1, _n) a[i, j] *= v;
     }
   }
   for_int(di, _nd) {
     if (_m == _n) {
-      for_int(j, _n) t[j] = _b[di][j];
+      for_int(j, _n) t[j] = _b[di, j];
     } else {
       for_int(j, _n) {
         double s = 0.;
-        for_int(i, _m) s += double(_a[i][j]) * _b[di][i];
+        for_int(i, _m) s += double(_a[i, j]) * _b[di, i];
         t[j] = float(s);
       }
     }
@@ -269,7 +269,7 @@ bool LudLls::solve_aux() {
       double s = t[ip];
       t[ip] = t[i];
       if (ii >= 0) {
-        for_intL(j, ii, i) s -= double(a[i][j]) * t[j];
+        for_intL(j, ii, i) s -= double(a[i, j]) * t[j];
       } else if (s) {
         ii = i;
       }
@@ -277,10 +277,10 @@ bool LudLls::solve_aux() {
     }
     for (int i = _n - 1; i >= 0; --i) {
       double s = t[i];
-      for_intL(j, i + 1, _n) s -= double(a[i][j]) * t[j];
-      t[i] = float(s / a[i][i]);
+      for_intL(j, i + 1, _n) s -= double(a[i, j]) * t[j];
+      t[i] = float(s / a[i, i]);
     }
-    for_int(j, _n) _x[di][j] = t[j];
+    for_int(j, _n) _x[di, j] = t[j];
   }
   return true;
 }
@@ -292,10 +292,10 @@ bool GivensLls::solve_aux() {
   for_int(i, _n) {
     for_intL(k, i + 1, _m) {
       nposs++;
-      if (!_a[k][i]) continue;
+      if (!_a[k, i]) continue;
       ngivens++;
-      float xi = _a[i][i];
-      float xk = _a[k][i];
+      float xi = _a[i, i];
+      float xk = _a[k, i];
       float c, s;
       if (abs(xk) > abs(xi)) {
         float t = xi / xk;
@@ -307,17 +307,17 @@ bool GivensLls::solve_aux() {
         s = c * t;
       }
       for_intL(j, i, _n) {
-        float xij = _a[i][j], xkj = _a[k][j];
-        _a[i][j] = c * xij + s * xkj;
-        _a[k][j] = -s * xij + c * xkj;
+        float xij = _a[i, j], xkj = _a[k, j];
+        _a[i, j] = c * xij + s * xkj;
+        _a[k, j] = -s * xij + c * xkj;
       }
       for_int(di, _nd) {
-        float xij = _b[di][i], xkj = _b[di][k];
-        _b[di][i] = c * xij + s * xkj;
-        _b[di][k] = -s * xij + c * xkj;
+        float xij = _b[di, i], xkj = _b[di, k];
+        _b[di, i] = c * xij + s * xkj;
+        _b[di, k] = -s * xij + c * xkj;
       }
     }
-    if (!_a[i][i]) {
+    if (!_a[i, i]) {
       Warning("GivensLls solution fails");
       return false;
     }
@@ -326,10 +326,10 @@ bool GivensLls::solve_aux() {
   // Backsubstitutions
   for_int(di, _nd) {
     for (int i = _n - 1; i >= 0; --i) {
-      float sum = _b[di][i];
-      for_intL(j, i + 1, _n) sum -= _a[i][j] * _b[di][j];
-      _b[di][i] = sum / _a[i][i];
-      _x[di][i] = _b[di][i];
+      float sum = _b[di, i];
+      for_intL(j, i + 1, _n) sum -= _a[i, j] * _b[di, j];
+      _b[di, i] = sum / _a[i, i];
+      _x[di, i] = _b[di, i];
     }
   }
   return true;
@@ -359,11 +359,11 @@ SvdLls::SvdLls(int m, int n, int nd)
 bool SvdLls::solve_aux() {
   {
     float* ap = _fa.data();
-    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
+    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i, j]; }
   }
   {
     float* bp = _fb.data();
-    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d][i]; }
+    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   float rcond = 1.f / k_float_cond_max;
   if (0) rcond = -1.f;  // use machine precision to determine rank
@@ -380,7 +380,7 @@ bool SvdLls::solve_aux() {
   {
     float* bp = _fb.data();
     for_int(d, _nd) {
-      for_int(j, _n) _x[d][j] = *bp++;
+      for_int(j, _n) _x[d, j] = *bp++;
       bp += _m - _n;
     }
   }
@@ -395,11 +395,11 @@ SvdDoubleLls::SvdDoubleLls(int m, int n, int nd)
 bool SvdDoubleLls::solve_aux() {
   {
     double* ap = _fa.data();
-    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
+    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i, j]; }
   }
   {
     double* bp = _fb.data();
-    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d][i]; }
+    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   double rcond = 1. / k_double_cond_max;
   if (0) rcond = -1.;  // use machine precision to determine rank
@@ -416,7 +416,7 @@ bool SvdDoubleLls::solve_aux() {
   {
     double* bp = _fb.data();
     for_int(d, _nd) {
-      for_int(j, _n) _x[d][j] = float(*bp++);
+      for_int(j, _n) _x[d, j] = float(*bp++);
       bp += _m - _n;
     }
   }
@@ -435,11 +435,11 @@ QrdLls::QrdLls(int m, int n, int nd)
 bool QrdLls::solve_aux() {
   {
     float* ap = _fa.data();
-    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i][j]; }
+    for_int(j, _n) for_int(i, _m) { *ap++ = _a[i, j]; }
   }
   {
     float* bp = _fb.data();
-    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d][i]; }
+    for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   Array<lapack_int> jpvt(_n);
   fill(jpvt, 0);  // all columns free to pivot
@@ -462,7 +462,7 @@ bool QrdLls::solve_aux() {
   {
     float* bp = _fb.data();
     for_int(d, _nd) {
-      for_int(j, _n) _x[d][j] = *bp++;
+      for_int(j, _n) _x[d, j] = *bp++;
       bp += _m - _n;
     }
   }

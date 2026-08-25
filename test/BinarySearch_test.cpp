@@ -10,6 +10,7 @@ namespace {
 // A type providing only the comparison operators required by the binary search functions.
 struct Weight {
   float v;
+  // We omit operator<=>() because the intent is to test with !std::totally_ordered<Weight>.
   bool operator<(const Weight& w) const { return v < w.v; }
   bool operator<=(const Weight& w) const { return v <= w.v; }
   bool operator>=(const Weight& w) const { return v >= w.v; }

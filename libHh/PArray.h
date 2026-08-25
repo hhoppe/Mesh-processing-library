@@ -26,7 +26,12 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   PArray(type&& ar) : PArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
-    push(std::forward<R>(range));
+    if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
+      init(narrow_cast<int>(ranges::distance(range)));
+      ranges::copy(range, _a);
+    } else {
+      for (auto&& e : range) push(std::forward<decltype(e)>(e));
+    }
   }
   ~PArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".

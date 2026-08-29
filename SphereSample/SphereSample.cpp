@@ -1212,7 +1212,7 @@ void internal_remesh() {
   const MeshSearch mesh_search(param_mesh, {.allow_local_project = true, .allow_off_surface = true});
 
   HH_TIMER("_resample");
-  parallel_for_chunk(Array(g_mesh.vertices()), [&](auto subrange) {
+  parallel_for_chunk(g_mesh.vertices(), [&](auto subrange) {
     string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {

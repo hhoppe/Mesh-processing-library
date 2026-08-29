@@ -26,3 +26,8 @@ ar = Array<int>(3) {
   37
   43
 }
+sort(Array(set)) = Array<int>(3) {
+  1
+  4
+  5
+}

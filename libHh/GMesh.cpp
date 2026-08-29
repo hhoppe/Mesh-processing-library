@@ -544,7 +544,7 @@ void GMesh::write(std::ostream& os) const {
     assertx(os << buffer);
   }
 
-  Array<Face> ar_faces{ordered_faces()};
+  Array ar_faces(ordered_faces());
   strcpy(buffer, "Face ");
   beg = buffer + strlen(buffer);
   for (Face f : ar_faces) {

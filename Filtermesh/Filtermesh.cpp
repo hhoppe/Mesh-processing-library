@@ -345,7 +345,7 @@ void normalize_arrayv(ArrayView<Vertex> ar) {
       mini = i;
     }
   }
-  Array<Vertex> art(ar);
+  Array art(ar);
   for_int(i, ar.num()) ar[i] = art[(mini + i) % ar.num()];
 }
 
@@ -1078,9 +1078,9 @@ void do_tagmateriale() {
 void do_trisubdiv() {
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_trisubdiv");
-  Array<Vertex> arv(mesh.vertices());
-  Array<Face> arf(mesh.faces());
-  Array<Edge> are(mesh.edges());
+  Array arv(mesh.vertices());
+  Array arf(mesh.faces());
+  Array are(mesh.edges());
   Map<Edge, Vertex> menewv;
   // Create new vertices and compute their positions.
   string str;
@@ -1163,7 +1163,7 @@ void do_silsubdiv() {
   // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d - -st cat -key De
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_silsubdiv");
-  const Array<Face> arf(mesh.faces());
+  const Array arf(mesh.faces());
   // Determine which edges will be subdivided.
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : mesh.edges())
@@ -2671,7 +2671,7 @@ void do_reduce() {
   HPqueue<Edge> pqe;
   {
     HH_TIMER("__initpq");
-    Array<Edge> ar_edge(mesh.edges());
+    Array ar_edge(mesh.edges());
     Array<float> ar_cost(ar_edge.num());
     parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
     for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
@@ -2687,7 +2687,7 @@ void do_reduce() {
     const float fraction = 0.6f;
     if ((pqe.min_priority() > maxcrit || pqe.num() < max(int(mesh.num_edges() * fraction), 500)) &&
         edges_to_update.num()) {
-      Array<Edge> ar_edge(edges_to_update);
+      Array ar_edge(edges_to_update);
       Array<float> ar_cost(ar_edge.num());
       if (0) sort(ar_edge);  // No resulting improvement in memory access coherence.
       // With parallelism, 1.3x faster than original version; without parallelism, 1.6x slower.
@@ -2987,7 +2987,7 @@ void do_swapdegendiag() {
   for (Face f : mesh.faces())
     if (is_degenerate(f))
       for (Edge e : mesh.edges(f)) set_bad_edges.add(e);
-  Array<Edge> bad_edges{set_bad_edges};
+  Array bad_edges(set_bad_edges);
   showdf("swapdegendiag: found %d bad edges to swap\n", bad_edges.num());
   const auto by_decreasing_length = [&](Edge e1, Edge e2) { return mesh.length2(e1) > mesh.length2(e2); };
   sort(bad_edges, by_decreasing_length);

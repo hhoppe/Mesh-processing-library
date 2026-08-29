@@ -278,31 +278,35 @@ int main() {
       assertx(ar == V(0, 1).view());
     }
     {
-      Array<int> ar(range(1, 4));
+      Array ar(range(2));
+      assertx(ar == V(0, 1).view());
+    }
+    {
+      Array ar(range(1, 4));
       assertx(ar == V(1, 2, 3).view());
     }
     {
-      Array<int> ar(range(0));
+      Array ar(range(0));
       assertx(ar == V<int>().view());
     }
     {
-      Array<int> ar(range(-1));
+      Array ar(range(-1));
       assertx(ar == V<int>().view());
     }
     {
-      Array<int> ar(range(-2, 0));
+      Array ar(range(-2, 0));
       assertx(ar == V(-2, -1).view());
     }
     {
-      Array<int> ar(range(-2, -2));
+      Array ar(range(-2, -2));
       assertx(ar == V<int>().view());
     }
     {
-      Array<int> ar(range(0, 0));
+      Array ar(range(0, 0));
       assertx(ar == V<int>().view());
     }
     {
-      Array<int> ar(range(2, 0));
+      Array ar(range(2, 0));
       assertx(ar == V<int>().view());
     }
     {
@@ -310,15 +314,23 @@ int main() {
       assertx(ar == V(uchar{4}, uchar{5}).view());
     }
     {
+      Array ar(range(uchar{4}, uchar{6}));
+      assertx(ar == V(uchar{4}, uchar{5}).view());
+    }
+    {
       Array<uint8_t> ar(range(uint8_t{4}, uint8_t{6}));
       assertx(ar == V(uint8_t{4}, uint8_t{5}).view());
     }
     {
-      Array<short> ar(range<short>(-2, 2));
+      Array ar(range(uint8_t{4}, uint8_t{6}));
+      assertx(ar == V(uint8_t{4}, uint8_t{5}).view());
+    }
+    {
+      Array ar(range<short>(-2, 2));
       assertx(ar == convert<short>(V(-2, -1, 0, 1)).view());
     }
     {
-      Array<uint64_t> ar(range(uint64_t{3}));
+      Array ar(range(uint64_t{3}));
       assertx(ar == V<uint64_t>(0u, 1u, 2u).view());
     }
   }

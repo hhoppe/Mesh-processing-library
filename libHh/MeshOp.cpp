@@ -431,8 +431,8 @@ void split_valence(GMesh& mesh, int max_valence) {
     assertx(!mesh.is_boundary(v));  // Not implemented.
     HH_SSTAT(Sval, mesh.degree(v));
     nsplit++;
-    const Array<Face> prev_faces{mesh.faces(v)};
-    const Array<Vertex> va(mesh.ccw_vertices(v));
+    const Array prev_faces(mesh.faces(v));
+    const Array va(mesh.ccw_vertices(v));
     Vertex vs1, vs2;
     Vector offset{}, offsetn{};
     if (1) {

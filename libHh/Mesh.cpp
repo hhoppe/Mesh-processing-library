@@ -910,11 +910,11 @@ Array<Vertex> Mesh::fix_vertex(Vertex v) {
 
 bool Mesh::is_nice() const {
   std::atomic<bool> ok = true;
-  parallel_for(Array<Vertex>{vertices()}, [&](Vertex v) {
+  parallel_for(vertices(), [&](Vertex v) {
     if (!is_nice(v)) ok = false;
   });
   if (!ok) return false;
-  parallel_for(Array<Face>{faces()}, [&](Face f) {
+  parallel_for(faces(), [&](Face f) {
     if (!is_nice(f)) ok = false;
   });
   return ok;

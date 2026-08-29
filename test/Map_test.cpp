@@ -144,7 +144,7 @@ int main() {
   }
   {
     const Map<string, int> map = {{"first", 1}, {"second", 2}};
-    SHOW(sorted(Array(map.values())));
+    SHOW(sort(Array(map.values())));
     Array ar_tuple(sort(Array(map.keys())) | views::enumerate);
     SHOW(ar_tuple[0]);
     SHOW(ar_tuple[1]);

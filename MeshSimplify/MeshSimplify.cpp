@@ -735,7 +735,7 @@ void init_qem() {
   assertx(minqem);
   if (qemlocal) {
     if (qemcache) {
-      parallel_for(Array<Face>{mesh.faces()}, [&](Face f) {
+      parallel_for(mesh.faces(), [&](Face f) {
         f_qem_p(f) = make_qem();
         get_face_qem(f, f_qem(f));
       });
@@ -982,10 +982,10 @@ void clear_face_string(Face f) { mesh.set_string(f, nullptr); }
 
 // Clear all mesh strings except on faces.
 void clear_mesh_strings() {
-  parallel_for(Array<Vertex>{mesh.vertices()}, [&](Vertex v) { mesh.set_string(v, nullptr); });
-  parallel_for(Array<Edge>{mesh.edges()}, [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
+  parallel_for(mesh.vertices(), [&](Vertex v) { mesh.set_string(v, nullptr); });
+  parallel_for(mesh.edges(), [&](Edge e) { mesh.update_string(e, "sharp", nullptr); });
   // Encoded by f_matid and material_strings.
-  parallel_for(Array<Face>{mesh.faces()}, [&](Face f) {
+  parallel_for(mesh.faces(), [&](Face f) {
     clear_face_string(f);
     for (Corner c : mesh.corners(f)) mesh.set_string(c, nullptr);
   });
@@ -1048,7 +1048,7 @@ WedgeInfo construct_wi(Corner c, const Vnors& vnors) {
 void parse_mesh_material_identifiers() {
   // If matid keys present in input file, use them, else add new ones after the maximum found.
   // This is useful if the output of simplification is re-simplified.
-  Array<Face> ar_faces{mesh.faces()};
+  Array ar_faces(mesh.faces());
   Set<string> unique_strings;
   {
     const int num_threads = get_max_threads();
@@ -1092,12 +1092,11 @@ void parse_mesh_material_identifiers() {
 }
 
 void parse_mesh_wedge_identifiers() {
-  Array<Vertex> ar_vertices{mesh.vertices()};
   // If wid keys present in input file, use them, else add new ones after the maximum found.
   // This is useful if output of simplification is re-simplified.
   const int num_threads = get_max_threads();
   Array<int> chunk_max_vid(num_threads, 1), chunk_nwidfound(num_threads, 0), chunk_maxwidfound(num_threads, 0);
-  parallel_for_chunk(ar_vertices, num_threads, [&](const int thread_index, auto subrange) {
+  parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
     string str;
     int& max_vid = chunk_max_vid[thread_index];
     int& nwidfound = chunk_nwidfound[thread_index];
@@ -1121,7 +1120,7 @@ void parse_mesh_wedge_identifiers() {
   gwinfo.init(1 + (nwidfound ? maxwidfound : max_vid));  // Skip gwinfo[0] (wid start at 1).
   std::mutex mutex;
   Array<int> chunk_nccolors(num_threads, 0);
-  parallel_for_chunk(ar_vertices, num_threads, [&](const int thread_index, auto subrange) {
+  parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
     string str;
     int& nccolors = chunk_nccolors[thread_index];
     for (Vertex v : subrange) {
@@ -1347,7 +1346,7 @@ void add_edge_point(Edge e, float bary) {
 void analyze_mesh(const char* s) {
   int nv = mesh.num_vertices(), nf = mesh.num_faces(), ne = mesh.num_edges();
   std::atomic<int> nshae = 0, nbnde = 0, ndise = 0, nscae = 0;
-  parallel_for(Array<Edge>{mesh.edges()}, [&](Edge e) {
+  parallel_for(mesh.edges(), [&](Edge e) {
     if (edge_sharp(e)) nshae++;
     if (mesh.is_boundary(e)) {
       nbnde++;

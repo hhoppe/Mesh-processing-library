@@ -313,7 +313,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   }
   const MeshSearch mesh_search(mesh_uv, {.allow_off_surface = true});
 
-  parallel_for_chunk(Array<Vertex>{gmesh.vertices()}, [&](auto subrange) {
+  parallel_for_chunk(gmesh.vertices(), [&](auto subrange) {
     string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {

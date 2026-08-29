@@ -157,6 +157,10 @@ int main() {
     sort(ar);
     SHOW(ar);
   }
+  {
+    Set set(V(4, 1, 4, 5, 4, 1));
+    SHOW(sort(Array(set)));
+  }
 }
 
 template class hh::Set<unsigned>;

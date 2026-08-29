@@ -23,7 +23,7 @@
   });
   const double mean = sum(sums) / n;
 
-  parallel_for_chunk(Array(g_mesh.vertices()), [&](auto subrange) {
+  parallel_for_chunk(g_mesh.vertices(), [&](auto subrange) {
     for (Vertex v : subrange) g_mesh.set_point(v, g_mesh.point(v) + Vector(1.f, 2.f, 3.f));
   });
 }

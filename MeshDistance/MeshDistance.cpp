@@ -190,7 +190,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
     {
       const int num_threads = use_parallelism ? get_max_threads() : 1;
       Array<PStats> ar_pstats(num_threads);
-      parallel_for_chunk(Array(mesh_s.vertices()), num_threads, [&](int thread_index, auto subrange) {
+      parallel_for_chunk(mesh_s.vertices(), num_threads, [&](int thread_index, auto subrange) {
         string str;
         for (Vertex v : subrange) {
           const A3dColor pscol(0.f, 0.f, 0.f);

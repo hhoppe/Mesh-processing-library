@@ -54,6 +54,10 @@ static_assert(sizeof(ushort) == 2);
 static_assert(sizeof(int64_t) == 8);
 static_assert(sizeof(uint64_t) == 8);
 
+// Also true now that I removed 32-bit support.
+static_assert(sizeof(void*) == 8);
+static_assert(sizeof(size_t) == 8);
+
 const char* g_comment_prefix_string = "# ";  // Not `string` because cannot be destroyed before Timers destruction.
 
 int g_unoptimized_zero = 0;

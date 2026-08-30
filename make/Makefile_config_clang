@@ -1,7 +1,6 @@
 # For clang 64_bit on Windows; it defines _MSC_VER and not __GNUC__.
 
 rel ?= 1#  0=debug or 1=release (usually 1).
-x64 = 1
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
 

@@ -55,7 +55,7 @@ On Mac OS X, it is necessary to install
 
 Open the `mesh_processing.sln` file and build the solution
 (typically as a `"ReleaseMD - x64"` build).
-Executables are placed in `bin`, `bin/debug`, `bin/Win32`, or `bin/Win32/debug`,
+Executables are placed in `bin` or `bin/debug`.
 depending on the build configuration.
 
 
@@ -63,7 +63,7 @@ depending on the build configuration.
 
 The `CONFIG` environment variable determines
 which `make/Makefile_config_*` definition file is loaded.
-On Windows, `CONFIG` can be chosen among `{win, w32, cygwin, mingw, mingw32, clang}`,
+On Windows, `CONFIG` can be chosen among `{win, mingw, clang, cygwin}`,
 defaulting to `win` if undefined.
 On Unix platforms (Linux and Mac OS), `CONFIG=unix` is the unique and default setting.
 
@@ -88,7 +88,7 @@ To build all programs (into `bin/cygwin`) and run all demos using the `gcc` comp
 To clean up all files in all configurations:
 <br/>`make CONFIG=all -j deepclean`
 
-Note that additional options such as debug/release, 32-bit/64-bit, and
+Note that additional options such as debug/release and
 compiler tool paths/parameters are set in the various `make/Makefile_*` files.
 These need to be adjusted depending on the versions and installation paths of the tools.
 For instance, the line

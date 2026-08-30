@@ -32,7 +32,9 @@
 
 #if defined(_WIN32)
 // If later include <windef.h>, disable macros min and max, e.g. which interfere with std::numeric_limits<T>::max().
+#if !defined(NOMINMAX)
 #define NOMINMAX  // Prevent min() and max() macros in <windows.h>.
+#endif
 // If already defined, undefine them.
 #undef min
 #undef max
@@ -576,12 +578,6 @@ void assert_no_more_chars(const char* s);
 // Deallocate an aligned memory block previously created by aligned_malloc().  Portable std::free().
 void aligned_free(void* p);
 
-// Allocate n elements of type T, with appropriate memory alignment based on T.
-template <typename T> [[nodiscard]] T* aligned_new(size_t n);
-
-// Deallocate aligned memory.
-template <typename T> void aligned_delete(T* p);
-
 // Read a line of input (trailing '\n' is discarded).
 std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings = true);
 
@@ -825,17 +821,6 @@ inline const char* after_prefix(const char* sline, const char* prefix) {
     if (!*prefix) return sline;
     if (*sline++ != *prefix++) return nullptr;
   }
-}
-
-template <typename T> T* aligned_new(size_t n) {
-  return alignof(T) <= 8 ? new T[n] : static_cast<T*>(aligned_malloc(alignof(T), n * sizeof(T)));
-}
-
-template <typename T> void aligned_delete(T* p) {
-  if (alignof(T) <= 8)
-    delete[] p;
-  else
-    aligned_free(p);
 }
 
 }  // namespace hh

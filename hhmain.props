@@ -59,12 +59,6 @@
       <!-- <AdditionalDependencies>liblapack.lib;libF77.lib;libI77.lib;libBLAS.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
     </Link>
   </ItemDefinitionGroup>
-  <!-- x86 (32-bit) properties -->
-  <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
-    <ClCompile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-    </ClCompile>
-  </ItemDefinitionGroup>
   <!-- x64 (64-bit) properties -->
   <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <ClCompile>
@@ -112,14 +106,8 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <!-- extra -->
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32' OR '$(Configuration)|$(Platform)'=='DebugMD|Win32'">
-    <OutDir>$(ExeRoot)\bin\Win32\debug\</OutDir>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64' OR '$(Configuration)|$(Platform)'=='DebugMD|x64'">
     <OutDir>$(ExeRoot)\bin\debug\</OutDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32' OR '$(Configuration)|$(Platform)'=='ReleaseMD|Win32'">
-    <OutDir>$(ExeRoot)\bin\Win32\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' OR '$(Configuration)|$(Platform)'=='ReleaseMD|x64'">
     <OutDir>$(ExeRoot)\bin\</OutDir>

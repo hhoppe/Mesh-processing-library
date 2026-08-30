@@ -7,7 +7,6 @@ DebugMD/
 Release/
 ReleaseMD/
 x64/
-Win32/
 ipch/
 build/
 

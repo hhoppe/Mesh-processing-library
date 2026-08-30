@@ -155,13 +155,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) sum1 += v.b()[k];
     return sum1;
   }
-#if !(defined(_M_X64) || defined(__x86_64))
-  // Note that "new type[size]" does not create aligned storage -- problem for Vector4 in 32-bit model.
-  static void* operator new(size_t s) { return aligned_malloc(alignof(type), s); }
-  static void operator delete(void* pp, size_t) { aligned_free(pp); }
-  static void* operator new[](size_t s) { return aligned_malloc(alignof(type), s); }
-  static void operator delete[](void* pp, size_t) { aligned_free(pp); }
-#endif
+
  private:
   Vector4* a() noexcept { return Vec<Vector4, n / 4>::begin(); }
   const Vector4* a() const noexcept { return Vec<Vector4, n / 4>::begin(); }

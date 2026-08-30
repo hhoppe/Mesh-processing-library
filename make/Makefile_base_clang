@@ -13,21 +13,22 @@ ifeq ($(plain_compiler),)
   # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  For my test suite.
   # cxxall += -msse4.1
   # cxxall += -frtti#  optional "run-time type information", required for some examples in ./test/native
-  cwarnings += -Weverything -Wno-unknown-warning-option -Wno-c++98-compat-pedantic -Wno-comma \
+  cpedantic += -Weverything -Wno-unknown-warning-option -Wno-c++98-compat-pedantic -Wno-comma \
     -Wno-weak-vtables -Wno-padded -Wno-unsafe-buffer-usage \
     -Wno-global-constructors -Wno-exit-time-destructors \
     -Wno-covered-switch-default -Wno-switch-enum -Wno-unreachable-code -Wno-missing-noreturn \
     -Wno-unreachable-code-return -Wno-unreachable-code-break \
     -Wno-unused-macros -Wno-disabled-macro-expansion \
-    -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion -Wno-pragma-pack
+    -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion
   # -Wno-source-uses-openmp -Wno-reserved-id-macro
   ifeq ($(is_mswin),1)
-    cwarnings += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier
+    cpedantic += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier
   endif
   # Even without $(PEDANTIC):
   ccommon += -Wno-overriding-option#  Was -Wno-overriding-t-option in earlier clang version.
   ccommon += -fno-finite-math-only#  Enable NAN support even with -ffast-math.
   ccommon += -Wno-constant-logical-operand
+  ccommon += -Wno-pragma-pack#  For Filterterrain.
 endif
 
 # http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax
@@ -72,7 +73,7 @@ endif
 
 ## Neon:
 # Try Neon on imaginary ARM target, to test Vector4.h using ./test/Vector4_test.ou.
-# cxxall := $(filter-out -m32 -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1
+# cxxall := $(filter-out -march=native -mfpmath=sse -ffast-math,$(cxxall)) -target armv7a-pc-mingw32 -mfpu=neon -mfloat-abi=hard -D__NO_INLINE__=1 -D__MSVCRT__=1
 # On WSL, could try:
 # sudo apt install gcc-arm-none-eabi  # However, requires 2.5 GB disk space.
 # clang++ --target=armv7a-none-eabi -mcpu=cortex-a8 -mfpu=vfp -mfloat-abi=hard -std=c++20 -c main.cpp -o main.o

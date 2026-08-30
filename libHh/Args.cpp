@@ -468,17 +468,13 @@ void ParseArgs::fversion(Args& args) {
   str += " version=" __VERSION__;
 #endif
   str += sform(" cplusplus=%d", int(__cplusplus));
-#if defined(_M_IX86_FP)
-  str += sform(" IX86_FP=%d", _M_IX86_FP);
-#endif
 // #if defined(__DATE__) && defined(__TIME__) // Not so useful because compilation time of this particular file.
 //     str += sform(" built=[%s %s]", __DATE__, __TIME__);
 // #endif
-#if defined(__AVX__)
-  str += " AVX";
-#endif
 #if defined(__AVX2__)
   str += " AVX2";
+#elif defined(__AVX__)
+  str += " AVX";
 #endif
 #if defined(__CLR_VER)
   str += sform(" clr=%d", __CLR_VER);

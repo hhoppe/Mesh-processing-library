@@ -60,15 +60,6 @@ extern bool lod_mode;
 
 namespace {
 
-#if defined(_WIN32) && !defined(_WIN64)
-// Problem: with CONFIG=w32, restarting GL_TRIANGLES seems to require reinitializing some color state.  Examples:
-// FilterPM ~/data/simplify/cessna.pm -nf 3000 -geom_nf 5000 | ~/git/mesh_processing/bin/w32/G3dOGL -st ~/data/s3d/cessna.s3d -key ,S -
-// ~/git/mesh_processing/bin/w32/G3dOGL ~/git/mesh_processing/demos/data/standingblob.geomorphs -key PDeS -lightambient .5 -thickboundary 1
-constexpr bool force_color_update = true;
-#else
-constexpr bool force_color_update = false;
-#endif
-
 struct Slider {
   string name;
   float* val;
@@ -445,7 +436,7 @@ void update_cur_color2(const Pixel& col) {
 }
 
 inline void update_cur_color(const Pixel& col) {
-  if (col != curcol || force_color_update) update_cur_color2(col);
+  if (col != curcol) update_cur_color2(col);
 }
 
 // lit colors
@@ -487,7 +478,7 @@ inline void update_mat_color(const Color& col) {
 }
 
 inline void maybe_update_mat_diffuse(const Pixel& cd) {
-  if (cd != matcol.d || force_color_update) fast_update_mat_diffuse(cd);
+  if (cd != matcol.d) fast_update_mat_diffuse(cd);
 }
 
 // *** normal mapping
@@ -1906,10 +1897,7 @@ void draw_mesh(GMesh& mesh) {
             glEnd();
             ntriangles = 0;
           }
-          if (!ntriangles) {
-            if (0) update_mat_color(mesh_color);  // would obviate force_color_update just for this case
-            glBegin(GL_TRIANGLES);
-          }
+          if (!ntriangles) glBegin(GL_TRIANGLES);
           ntriangles++;
         } else {
           if (ntriangles) {

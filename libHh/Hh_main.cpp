@@ -256,12 +256,16 @@ string get_header_info() {
 #else
   config += "-unix";
 #endif
-#if defined(_M_X64) || defined(__x86_64)
+#if defined(_M_ARM64EC)
+  config += "-arm64ec";
+#elif defined(__riscv) && __riscv_xlen == 64
+  config += "-riscv64";
+#elif defined(__powerpc64__)
+  config += "-ppc64";
+#elif defined(_M_X64) || defined(__x86_64__)
   config += "-x64";
-#elif defined(_M_IX86) || defined(__i386)
-  config += "-x32";
-#elif defined(_M_ARM)
-  config += "-arm";
+#elif defined(_M_ARM64) || defined(__aarch64__)
+  config += "-arm64";
 #else
   config += "-?";
 #endif
@@ -304,8 +308,7 @@ bool set_fd_no_delay(int fd, bool nodelay) {
   // On SGI, setting nodelay on terminal fd may cause window closure.
   if (nodelay) assertx(!HH_POSIX(isatty)(fd));
 #endif
-  // 2014-07-04 CYGWIN64 this no longer works.  See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
-  // 2014-08-26 G3dcmp works again now.
+  // See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
 #if defined(O_NONBLOCK)
   return fcntl(fd, F_SETFL, nodelay ? O_NONBLOCK : 0) != -1;
 #elif defined(FNDELAY)

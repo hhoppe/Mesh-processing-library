@@ -1,5 +1,4 @@
 rel ?= 1#  0=debug or 1=release  (usually 1)
-x64 = 1
 
 # Strict -std=c++NN defines __STRICT_ANSI__, which hides POSIX/BSD declarations in Cygwin's headers
 # (popen, pclose, usleep, gethostname, setenv, putenv); gnu++NN keeps them visible.

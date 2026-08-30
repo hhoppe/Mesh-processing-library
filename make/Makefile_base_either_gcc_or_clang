@@ -21,16 +21,16 @@ machine_arch = -march=native#  Fastest code on the local machine.
 # LDFLAGS += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
 
 ifeq ($(plain_compiler),)
-  cwarnings = $(if $(ignore_compile_warnings:0=),,-Werror)
-  cwarnings += -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization
-  cwarnings += -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls
-  cwarnings += -Wshadow
+  cpedantic = $(if $(ignore_compile_warnings:0=),,-Werror) \
+    -Wall -Wextra -Wformat=2 -pedantic -Wswitch-default -Wdisabled-optimization \
+    -Wmissing-declarations -Wpointer-arith -Wcast-align -Wredundant-decls \
+    -Wshadow
   cxxwarnings = -Woverloaded-virtual -Winvalid-constexpr
   #  -Winline -Wconversion
   # (-pedantic-errors == -Werror -Wpedantic)
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
   ccommon += $(machine_arch) -ffast-math -mfpmath=sse
-  ccommon += $(if $(PEDANTIC:0=),$(cwarnings))
+  ccommon += $(if $(PEDANTIC:0=),$(cpedantic))
   cxxall += -fno-rtti
   cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.
   commonrel += -O3 -DNDEBUG#  -O3 enables -fomit-frame-pointer -finline-functions.  Consider -fno-trapping-math.
@@ -41,7 +41,7 @@ ifeq ($(plain_compiler),)
   cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings))
 endif
 
-ccommon += $(if $(x64:0=),-m64,-m32)
+ccommon += -m64
 cxxall += $(strip $(if $(CXX_STD),-std=$(CXX_STD)) $(ccommon))
 c-all += -std=c11 $(ccommon)#  or -std=c99
 crel += $(commonrel)

@@ -10,17 +10,13 @@ if [[ ${CONFIG+x} ]]; then
   PATH=../$CONFIG/bin:$PATH
 else # Otherwise, explicitly set the desired build directory here.
   # Add all possible build directories as fallback if not specified below.
-  PATH=../bin:../bin/debug:../bin/Win32:../bin/Win32/debug:../bin/win:../bin/w32:../bin/mingw:../bin/clang../bin/cygwin:../bin/mingw32:../bin/unix:$PATH
+  PATH=../bin:../bin/debug:../bin/win:../bin/mingw:../bin/clang../bin/cygwin:../bin/unix:$PATH
   # PATH=$PATH                    # hmake (msbuild)
   # PATH=../bin/debug:$PATH
-  # PATH=../bin/Win32:$PATH
-  # PATH=../bin/Win32/debug:$PATH    # hmake debug win32 static
   # PATH=../bin/win:$PATH
-  # PATH=../bin/w32:$PATH
   # PATH=../bin/mingw:$PATH
   # PATH=../bin/clang:$PATH
   # PATH=../bin/cygwin:$PATH
-  # PATH=../bin/mingw32:$PATH
   # PATH=../bin/unix:$PATH
   :  # empty statement in case everything above is commented
 fi

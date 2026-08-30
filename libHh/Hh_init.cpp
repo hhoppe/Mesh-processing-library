@@ -247,7 +247,7 @@ void setup_exception_hooks() {
     SetErrorMode(SetErrorMode(0) | SEM_FAILCRITICALERRORS);
     // It is not the default for Windows apps?
     // Also consider from https://stackoverflow.com/a/467652 :
-    SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);  // Yes, useful e.g. for mingw32.
+    SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
   }
   if (1) {
     LPTOP_LEVEL_EXCEPTION_FILTER v = SetUnhandledExceptionFilter(my_top_level_exception_filter);

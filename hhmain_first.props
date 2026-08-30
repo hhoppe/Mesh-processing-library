@@ -18,8 +18,14 @@
   <PropertyGroup Condition="'$(VisualStudioVersion)' == '17.0'"> <!-- VS 2022 -->
     <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(VisualStudioVersion)' == '18.0'"> <!-- VS 2025? -->
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '17.10'"> <!-- VS 2022 Update -->
     <PlatformToolset>v144</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '17.12'"> <!-- VS 2022 Update -->
+    <PlatformToolset>v144</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(VisualStudioVersion)' == '18.0'"> <!-- VS 2026 -->
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
 </Project>
 <!-- For Emacs:

@@ -29,7 +29,7 @@ endif
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
   # We place "win" last so that the last-built libraries are for the default config.
-  build_configs ?= w32 mingw clang cygwin win#  Default set for "make makeall" or "make CONFIG=all".
+  build_configs ?= mingw clang cygwin win#  Default set for "make makeall" or "make CONFIG=all".
   configs ?=       $(build_configs) $(nonworking_configs)
 else
   build_configs ?= unix
@@ -88,14 +88,15 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_EXCEPTION_HOOKS
 # cppinc += -DHH_NO_TIMERS_CLASS
 # cppinc += -DHH_NO_SSE41
-# cppinc += -DHH_NO_IMAGE_WIC#  Option for CONFIG=win/w32/clang.
-# cppinc += -DHH_IMAGE_LIBS_TOO#  Option for CONFIG=win/w32/clang; default is to just use WIC.
+# cppinc += -DHH_NO_IMAGE_WIC#  Option for CONFIG=win/clang.
+# cppinc += -DHH_IMAGE_LIBS_TOO#  Option for CONFIG=win/clang; default is to just use WIC.
 # cppinc += -DHH_NO_VECTOR4_VECTORIZATION#  Otherwise enable SSE / NEON instructions.
 # cppinc += -DHH_NO_STACKWALKER
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
 # Also update CXX_STD in clean_all (clang-tidy), LanguageStandard in hhmain.props and in LoopAPILib.vcxproj.
+# And, cmd_makedep.  And, build_and_test_using_*.sh
 # And, consider the gnu++ conversion in Makefile_config_cygwin and the c++23preview in Makefile_base_win.
 CXX_STD ?= c++23
 
@@ -185,10 +186,9 @@ endif
 dot_quoted_target = .\$$(extobj)#  This variable is cleared in ./Makefile_progs (also included in ./test/Makefile).
 make_dep ?= Makefile.dep#   This was Makefile_$(CONFIG).dep but is now independent of CONFIG.
 # We need "-march=native" to enable include of <xmmintrin.h>.
-# We need "-D_M_IX86" for vt_round.h.
 # We need "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h.
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -march=native -D_M_IX86 -DHH_NO_SSE41 -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++14 $(src_cpp) | \
+  g++ -MM -march=native -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=c++23 $(src_cpp) | \
   perl -pe 'binmode(STDOUT); s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
   || rm -f $(make.dep)
 
@@ -206,7 +206,7 @@ src ?= $(src_cpp) $(src_c)
 obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
 
 # Identify all settings that affect the compiled objects, so that changing any one forces a rebuild.
-build_variant = $(CONFIG)-$(notdir $(CC))-$(subst +,p,$(CXX_STD))-$(if $(rel:0=),release,debug)-$(if $(x64:0=),x64,x32)$(if $(wholeopt:0=),-wholeopt)$(if $(PEDANTIC:0=),-pedantic)
+build_variant = $(CONFIG)-$(notdir $(CC))-$(subst +,p,$(CXX_STD))-$(if $(rel:0=),release,debug)$(if $(wholeopt:0=),-wholeopt)$(if $(PEDANTIC:0=),-pedantic)
 
 ifeq ($(use_pch)$(win_base),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
@@ -220,7 +220,7 @@ endif
 # Problem: if we use (notdir obj), then it compiles using (notdir src), and emacs is confused,
 #         but if use full dir obj, then gmake ignores file modification times.
 #         Compilation directory tracking in emacs does not work with "-j".
-# Solution: avoid "c:" paths in makefiles; add "c:" in compiler rules for CONFIG=win/w32.
+# Solution: avoid "c:" paths in makefiles; add "c:" in compiler rules for CONFIG=win.
 
 CPPFLAGS = $(strip $(cppinc) $(includes))
 CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
@@ -234,7 +234,7 @@ else
 endif
 
 my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.
-LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,$(if $(x64:0=),x64,Win32)/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
+LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,x64/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
 
 ifneq ($(filter cygwin unix,$(CONFIG)),)  # For CONFIG = cygwin or unix.
   system_libs += $(strip $(if $(have_image_libs),jpeg png z) $(if $(have_lapack),lapack))

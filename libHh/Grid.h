@@ -314,7 +314,6 @@ template <int D, typename T> class Grid : public GridView<D, T> {
       delete[] _a;
       _a = vol ? new T[vol] : nullptr;
     }
-    // if (vol != size()) { aligned_delete<T>(_a); _a = vol ? aligned_new<T>(vol) : nullptr; }
     _dims = dims;
   }
   void init(const Vec<int, D>& dims, const T& v) requires Copyable<T> {

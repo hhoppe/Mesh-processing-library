@@ -64,7 +64,7 @@ int cpu_mhz_speed() {
     HKEY hkey;
     const char* subkey = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
     if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, subkey, 0, KEY_QUERY_VALUE, &hkey)) return;
-    int val;
+    int val = 0;
     DWORD tdword = REG_DWORD, len = 4;
     if (RegQueryValueExA(hkey, "~MHz", nullptr, &tdword, reinterpret_cast<uchar*>(&val), &len)) return;
     assertx(len == 4 && val > 0);
@@ -83,7 +83,7 @@ string timing_host() {
     const char* subkey = R"(HARDWARE\DESCRIPTION\System\CentralProcessor\0)";
     if (assertw(!RegOpenKeyExA(HKEY_LOCAL_MACHINE, subkey, 0, KEY_QUERY_VALUE, &hkey))) {
       if (rev == "") {
-        int val;
+        int val = 0;
         DWORD tdword = REG_DWORD, len = 4;
         if (!RegQueryValueExA(hkey, "~MHz", nullptr, &tdword, reinterpret_cast<uchar*>(&val), &len)) {
           assertx(len == 4 && val > 0);

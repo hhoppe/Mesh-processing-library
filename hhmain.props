@@ -43,12 +43,14 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <!-- <OpenMPSupport>true</OpenMPSupport> -->
       <UseFullPaths>true</UseFullPaths>
+      <!-- Place debug info in the .obj files rather than in vcNNN.pdb, matching -Z7 in make/Makefile_base_win.
+           There is no significant change in build time, but now it is consistent with Makefile. -->
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <TreatWarningAsError>true</TreatWarningAsError>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
-      <!-- Warning C6319: Use of the comma-operator in a tested expression causes the left argument to be ignored when it has no side-effects -->
-      <DisableSpecificWarnings Condition="'$(VisualStudioVersion)'&gt;='17.0'">6319</DisableSpecificWarnings>
+      <UseStandardConformingPreprocessor>true</UseStandardConformingPreprocessor>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,8 +114,17 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' OR '$(Configuration)|$(Platform)'=='ReleaseMD|x64'">
     <OutDir>$(ExeRoot)\bin\</OutDir>
   </PropertyGroup>
+  <Target Name="HhCleanOutDir" AfterTargets="Clean">
+    <ItemGroup>
+      <HhFileToDelete Include="$(OutDir)$(TargetName).pdb" />
+      <HhFileToDelete Include="$(OutDir)$(TargetName).ilk" />
+    </ItemGroup>
+    <Delete Files="@(HhFileToDelete)" />
+  </Target>
   <!-- precompiled headers -->
-  <!-- I give up on using a shared precompiled header across multiple projects using msbuild
+  <!-- I give up on using a shared precompiled header across multiple projects using msbuild.
+       It would be feasible by using /Z7 for debug info in *.obj files, but Claude's opinion is that
+       it is not worth it:  That's a small header set against a lot of cross-project coupling, which MSBuild fights.
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release' OR '$(Configuration)' == 'ReleaseMD'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

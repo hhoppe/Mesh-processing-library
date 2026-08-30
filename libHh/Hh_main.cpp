@@ -304,10 +304,6 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
 
 bool set_fd_no_delay(int fd, bool nodelay) {
   dummy_use(fd, nodelay);
-#if defined(__sgi)
-  // On SGI, setting nodelay on terminal fd may cause window closure.
-  if (nodelay) assertx(!HH_POSIX(isatty)(fd));
-#endif
   // See also ~/git/hh_src/native/test_cygwin_nonblocking_read.cpp .
 #if defined(O_NONBLOCK)
   return fcntl(fd, F_SETFL, nodelay ? O_NONBLOCK : 0) != -1;

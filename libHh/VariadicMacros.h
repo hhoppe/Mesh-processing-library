@@ -4,6 +4,10 @@
 
 // This file is included from Hh.h
 
+// My projects now use /Zc:preprocessor (standard-compliance) in MSVC compilation, so in principle I could simplify
+// some of these macros definitions below (very slightly), but it would decrease portability and increase the
+// number of IntelliSense issues.
+
 // Return number of arguments.
 #define HH_NUM_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_NUM_ARGS_RSEQ_N()))
 #define HH_NUM_ARGS_(tuple) HH_NUM_ARGS_B tuple
@@ -16,9 +20,10 @@
 // Return 1 if there is more than one argument (i.e. has a comma), else 0.
 #define HH_GT1_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_COMMA_SEQ_N()))
 
-// This will let macros expand before concatenating them.
+// This will let macros expand before/after concatenating them.  Some of this may be needed for MSVC.
 #define HH_PRIMITIVE_CAT(tuple) HH_PRIMITIVE_CAT_ tuple
 #define HH_PRIMITIVE_CAT_(x, y) HH_CAT(x, y)
+#define HH_EXPAND(x) x
 
 // Call a MAPPING macro on each argument passed in, and separate results by a REDUCTION.
 // Example:
@@ -26,7 +31,7 @@
 // #define F(...) HH_MAP_REDUCE((F_EACH, +, __VA_ARGS__))
 #define HH_MAP_REDUCE(tuple) HH_MAP_REDUCE_ tuple
 #define HH_MAP_REDUCE_(macro, reduction, ...) \
-  HH_PRIMITIVE_CAT((HH_MAP_REDUCE_, HH_NUM_ARGS(__VA_ARGS__)))(macro, reduction, __VA_ARGS__)
+  HH_EXPAND(HH_PRIMITIVE_CAT((HH_MAP_REDUCE_, HH_NUM_ARGS(__VA_ARGS__)))(macro, reduction, __VA_ARGS__))
 #define HH_MAP_REDUCE_1(m, r, x1) m(x1)
 #define HH_MAP_REDUCE_2(m, r, x1, x2) m(x1) r m(x2)
 #define HH_MAP_REDUCE_3(m, r, x1, x2, x3) \
@@ -110,7 +115,7 @@
 // #define F_EACH(x) unsigned(x)
 // #define F(...) HH_APPLY((F_EACH, __VA_ARGS__))
 #define HH_APPLY(tuple) HH_APPLY_ tuple
-#define HH_APPLY_(macro, ...) HH_PRIMITIVE_CAT((HH_APPLY_, HH_NUM_ARGS(__VA_ARGS__)))(macro, __VA_ARGS__)
+#define HH_APPLY_(macro, ...) HH_EXPAND(HH_PRIMITIVE_CAT((HH_APPLY_, HH_NUM_ARGS(__VA_ARGS__)))(macro, __VA_ARGS__))
 #define HH_APPLY_1(m, x1) m(x1)
 #define HH_APPLY_2(m, x1, x2) m(x1), m(x2)
 #define HH_APPLY_3(m, x1, x2, x3) m(x1), m(x2), m(x3)

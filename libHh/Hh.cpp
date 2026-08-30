@@ -27,7 +27,7 @@
 #include <regex>
 #include <unordered_map>
 #include <vector>
-#include <version>  // __cpp_lib_stacktrace
+#include <version>  // __cpp_lib_stacktrace, __cpp_multidimensional_subscript
 
 #include "libHh/StringOp.h"  // replace_all(), remove_at_start(), remove_at_end()
 

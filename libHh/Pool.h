@@ -124,7 +124,7 @@ class Pool : noncopyable {
     _chunkh = nullptr;
   }
   // allocate based on static size of class
-  void* alloc() {
+  [[nodiscard]] void* alloc() {
     if (!_h) grow();
     Link* p = _h;
     _h = p->next;
@@ -140,7 +140,7 @@ class Pool : noncopyable {
     _h = p;
   }
   // allocate based on size of first alloc_size() call
-  void* alloc_size(int align, size_t s64) {
+  [[nodiscard]] void* alloc_size(int align, size_t s64) {
     int s = narrow_cast<int>(s64);
     if (!_h) grow_size(s, align);
     Link* p = _h;

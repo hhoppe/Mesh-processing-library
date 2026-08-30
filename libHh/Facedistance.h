@@ -8,13 +8,13 @@
 namespace hh {
 
 // Find a lower bound on the distance between p and triangle (p1, p2, p3).
-float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3);
+[[nodiscard]] float lb_dist_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3);
 
 // Find a lower bound on the distance between p and a triangle.
-float lb_dist_point_triangle(const Point& p, const Vec3<Point>& triangle);
+[[nodiscard]] float lb_dist_point_triangle(const Point& p, const Vec3<Point>& triangle);
 
 // Find a lower bound on the distance between p and an axis-aligned bounding box.
-float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox);
+[[nodiscard]] float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox);
 
 struct TriangleProjectionResult {
   float d2;   // Squared distance to the closest point.
@@ -23,10 +23,11 @@ struct TriangleProjectionResult {
 };
 
 // Given point p and triangle (p1, p2, p3), return info about the point within the triangle that is closest to p.
-TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2, const Point& p3);
+[[nodiscard]] TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2,
+                                                              const Point& p3);
 
 // Given point p and a triangle, return info about the point within the triangle that is closest to p.
-TriangleProjectionResult project_point_triangle(const Point& p, const Vec3<Point>& triangle);
+[[nodiscard]] TriangleProjectionResult project_point_triangle(const Point& p, const Vec3<Point>& triangle);
 
 struct SegmentProjectionResult {
   float d2;    // Squared distance to the closest point.
@@ -35,7 +36,7 @@ struct SegmentProjectionResult {
 };
 
 // Given point p and segment (p1, p2), return info about the point within the segment that is closest to p.
-SegmentProjectionResult project_point_segment(const Point& p, const Point& p1, const Point& p2);
+[[nodiscard]] SegmentProjectionResult project_point_segment(const Point& p, const Point& p1, const Point& p2);
 
 //----------------------------------------------------------------------------
 

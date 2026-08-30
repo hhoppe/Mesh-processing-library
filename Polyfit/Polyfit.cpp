@@ -253,7 +253,7 @@ void global_fit() {
   // Suggest current solution
   for_int(i, n) lls.enter_xest_r(i, va[i]->p);
   // Solve
-  lls.solve();
+  assertx(lls.solve());
   // Update solution
   for_int(i, n) {
     Point p;

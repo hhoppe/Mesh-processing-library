@@ -13,11 +13,11 @@ class RBufferedA3dStream : public RA3dStream {  // Read from RBuffer
  public:
   explicit RBufferedA3dStream(RBuffer& b) : _buf(b) {}
   enum class ERecognize { parse_error, no, partial, yes };
-  ERecognize recognize() const;
+  [[nodiscard]] ERecognize recognize() const;
 
  private:
   RBuffer& _buf;
-  bool read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) override;
+  [[nodiscard]] bool read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) override;
 };
 
 class WBufferedA3dStream : public WA3dStream {  // Write to WBuffer

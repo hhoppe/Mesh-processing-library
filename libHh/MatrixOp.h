@@ -11,10 +11,14 @@
 namespace hh {
 
 // Create a view (CStridedArrayView) onto the column x of matrix mat.
-template <typename T> CStridedArrayView<T> column(CMatrixView<T> mat, int x) { return grid_column<0>(mat, V(0, x)); }
+template <typename T> [[nodiscard]] CStridedArrayView<T> column(CMatrixView<T> mat, int x) {
+  return grid_column<0>(mat, V(0, x));
+}
 
 // Create a view (StridedArrayView) onto the column x of matrix mat.
-template <typename T> StridedArrayView<T> column(MatrixView<T> mat, int x) { return grid_column<0>(mat, V(0, x)); }
+template <typename T> [[nodiscard]] StridedArrayView<T> column(MatrixView<T> mat, int x) {
+  return grid_column<0>(mat, V(0, x));
+}
 
 // ret: success
 template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
@@ -60,7 +64,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
 }
 
 // asserts it is invertible
-template <typename T> Matrix<T> inverse(CMatrixView<T> mi) {
+template <typename T> [[nodiscard]] Matrix<T> inverse(CMatrixView<T> mi) {
   Matrix<T> m(mi.dims());
   assertx(invert(mi, m));
   return m;
@@ -81,7 +85,7 @@ template <typename T> void mat_mul(CMatrixView<T> m1, CMatrixView<T> m2, MatrixV
 }
 
 // Multiply matrix m1 by matrix m2 and return the result m1 * m2.
-template <typename T> Matrix<T> mat_mul(CMatrixView<T> m1, CMatrixView<T> m2) {
+template <typename T> [[nodiscard]] Matrix<T> mat_mul(CMatrixView<T> m1, CMatrixView<T> m2) {
   Matrix<T> mo(m1.ysize(), m2.xsize());
   mat_mul(m1, m2, mo);
   return mo;
@@ -99,7 +103,7 @@ template <typename T> void mat_mul(CMatrixView<T> m, CArrayView<T> vi, ArrayView
 }
 
 // Multiply matrix m by column vector vi and return the resulting column vector m * vi.
-template <typename T> Array<T> mat_mul(CMatrixView<T> m, CArrayView<T> vi) {
+template <typename T> [[nodiscard]] Array<T> mat_mul(CMatrixView<T> m, CArrayView<T> vi) {
   Array<T> vo(m.ysize());
   mat_mul(m, vi, vo);
   return vo;
@@ -119,7 +123,7 @@ template <typename T> void mat_mul(CArrayView<T> vi, CMatrixView<T> m, ArrayView
 }
 
 // Multiply row vector vi by matrix m and return the resulting row vector m * vi.
-template <typename T> Array<T> mat_mul(CArrayView<T> vi, CMatrixView<T> m) {
+template <typename T> [[nodiscard]] Array<T> mat_mul(CArrayView<T> vi, CMatrixView<T> m) {
   Array<T> vo(m.xsize());
   mat_mul(vi, m, vo);
   return vo;
@@ -132,7 +136,7 @@ template <typename T> void diag_mat(CArrayView<T> v, MatrixView<T> mat) {
 }
 
 // Return diagonal matrix whose elements are given by vector v.
-template <typename T> Matrix<T> diag_mat(CArrayView<T> v) {
+template <typename T> [[nodiscard]] Matrix<T> diag_mat(CArrayView<T> v) {
   Matrix<T> mat(twice(v.num()));
   diag_mat(v, mat);
   return mat;
@@ -145,14 +149,14 @@ template <typename T> void identity_mat(MatrixView<T> mat) {
 }
 
 // Return the identity matrix with dimensions dims (yx).
-template <typename T> Matrix<T> identity_mat(const Vec2<int>& dims) {
+template <typename T> [[nodiscard]] Matrix<T> identity_mat(const Vec2<int>& dims) {
   Matrix<T> mat(dims);
   identity_mat(mat);
   return mat;
 }
 
 // Return the square identity matrix with dimensions twice(n).
-template <typename T> Matrix<T> identity_mat(int n) { return identity_mat<T>(twice(n)); }
+template <typename T> [[nodiscard]] Matrix<T> identity_mat(int n) { return identity_mat<T>(twice(n)); }
 
 // Convert an affine 4x3 matrix to a 4x4 Matrix.
 inline SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
@@ -161,7 +165,7 @@ inline SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
 }
 
 // Convert a 4x4 Matrix to an affine 4x3 matrix.
-inline Frame to_Frame(CMatrixView<float> m) {
+[[nodiscard]] inline Frame to_Frame(CMatrixView<float> m) {
   assertx(m.ysize() == 4 && m.xsize() == 4);
   Frame frame;
   const float tolerance = 1e-5f;
@@ -174,7 +178,7 @@ inline Frame to_Frame(CMatrixView<float> m) {
 }
 
 // Transform a 2D vector by a frame.
-inline Vec2<float> linear_transform(const Vec2<float>& vec, const Frame& frame) {
+[[nodiscard]] inline Vec2<float> linear_transform(const Vec2<float>& vec, const Frame& frame) {
   ASSERTX(!frame[0, 2]);
   ASSERTX(!frame[1, 2]);
   ASSERTX(!frame[3, 2]);
@@ -186,7 +190,7 @@ inline Vec2<float> linear_transform(const Vec2<float>& vec, const Frame& frame) 
 }
 
 // Transform a 2D point by a frame.
-inline Vec2<float> affine_transform(const Vec2<float>& vec, const Frame& frame) {
+[[nodiscard]] inline Vec2<float> affine_transform(const Vec2<float>& vec, const Frame& frame) {
   ASSERTX(!frame[0, 2]);
   ASSERTX(!frame[1, 2]);
   ASSERTX(!frame[3, 2]);
@@ -199,7 +203,7 @@ inline Vec2<float> affine_transform(const Vec2<float>& vec, const Frame& frame) 
 }
 
 // Given p in the unit square, apply the 2D frame transformation defined about the square center.
-inline Vec2<float> transform_about_center(Vec2<float> p, const Frame& frame) {
+[[nodiscard]] inline Vec2<float> transform_about_center(Vec2<float> p, const Frame& frame) {
   const bool center = true;
   if (center) p = p - .5f;
   Vec2<float> tp = affine_transform(p, frame);
@@ -346,7 +350,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
 template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec);
 
 // Compute the matrix which is the outer product of two vectors (ar1 is column vector, ar2 is row vector).
-template <typename T> Matrix<T> outer_product(CArrayView<T> ar1, CArrayView<T> ar2) {
+template <typename T> [[nodiscard]] Matrix<T> outer_product(CArrayView<T> ar1, CArrayView<T> ar2) {
   Matrix<T> mat(ar1.num(), ar2.num());
   for_int(y, mat.ysize()) for_int(x, mat.xsize()) mat[y, x] = ar1[y] * ar2[x];
   return mat;
@@ -354,7 +358,8 @@ template <typename T> Matrix<T> outer_product(CArrayView<T> ar1, CArrayView<T> a
 
 // Convolve array ar with convolution kernel ark; result has the same size and type as ar.
 template <typename T, typename TK>
-Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T* bordervalue = nullptr) {
+[[nodiscard]] Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule,
+                                const T* bordervalue = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel array must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(ark.num() % 2 == 1);
@@ -370,7 +375,8 @@ Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T
 
 // Convolve matrix mat with convolution kernel matk; result has the same size and type as mat.
 template <typename T, typename TK>
-Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, const T* bordervalue = nullptr) {
+[[nodiscard]] Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule,
+                                 const T* bordervalue = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel matrix must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
@@ -389,7 +395,7 @@ Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, co
 }
 
 // Convert entries of matrix mat into right-justified strings (with equal lengths per column).
-template <typename T> Matrix<string> right_justify(CMatrixView<T> mat) {
+template <typename T> [[nodiscard]] Matrix<string> right_justify(CMatrixView<T> mat) {
   Matrix<string> nmat(mat.dims());
   for_int(y, mat.ysize()) for_int(x, mat.xsize()) nmat[y, x] = make_string(mat[y, x]);
   for_int(x, nmat.xsize()) {
@@ -418,7 +424,7 @@ template <typename T> void rotate_ccw(CMatrixView<T> mat, int rot_degrees, Matri
 }
 
 // Rotate counter-clockwise by an angle which is a multiple of 90 degrees (e.g. -90, 0, +90, +180, +270).
-template <typename T> Matrix<T> rotate_ccw(CMatrixView<T> mat, int rot_degrees) {
+template <typename T> [[nodiscard]] Matrix<T> rotate_ccw(CMatrixView<T> mat, int rot_degrees) {
   assertx(my_mod(rot_degrees, 90) == 0);
   Matrix<T> nmat(my_mod(rot_degrees, 180) == 0 ? mat.dims() : mat.dims().rev());
   rotate_ccw(mat, rot_degrees, nmat);

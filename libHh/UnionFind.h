@@ -15,10 +15,10 @@ template <typename T> class UnionFind {
 
  public:
   void clear() { _m.clear(); }
-  bool unify(T e1, T e2);        // Put these two elements in the same class; returns: were_different.
-  bool equal(T e1, T e2) const;  // Are two elements in the same equivalence class?
-  T get_label(T e) const;        // Only valid until next unify().
-  void promote(T e);             // Ensure that e becomes the label for its equivalence class.
+  bool unify(T e1, T e2);                      // Put these two elements in the same class; returns: were_different.
+  [[nodiscard]] bool equal(T e1, T e2) const;  // Are two elements in the same equivalence class?
+  [[nodiscard]] T get_label(T e) const;        // Only valid until next unify().
+  void promote(T e);                           // Ensure that e becomes the label for its equivalence class.
  private:
   // Default operator=() and copy constructor are safe.
   mutable Map<T, T> _m;  // Mutable because "irep()" performs path compression.

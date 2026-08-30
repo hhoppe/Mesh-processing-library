@@ -13,21 +13,21 @@ class Filter : noncopyable {
  public:
   explicit Filter(string name_, KernelFunc func_, double radius_)
       : _name(std::move(name_)), _func(func_), _radius(radius_) {}
-  string name() const { return _name; }
-  KernelFunc func() const { return assertx(_func); }
-  double radius() const { return _radius; }
-  bool is_interpolating() const { return _is_interpolating; }
-  bool is_discontinuous() const { return _is_discontinuous; }
-  bool has_inv_convolution() const { return _has_inv_convolution; }
-  bool is_trivial_magnify() const { return _is_trivial_magnify; }  // impulse or box
-  bool is_trivial_minify() const { return _is_trivial_minify; }    // box
-  bool is_impulse() const { return _is_impulse; }
-  bool is_omoms() const { return _is_omoms; }            // omoms or justomoms
-  bool is_preprocess() const { return _is_preprocess; }  // preprocess
-  bool is_partition_of_unity() const { return _is_partition_of_unity; }
-  bool is_unit_integral() const { return _is_unit_integral; }
+  [[nodiscard]] string name() const { return _name; }
+  [[nodiscard]] KernelFunc func() const { return assertx(_func); }
+  [[nodiscard]] double radius() const { return _radius; }
+  [[nodiscard]] bool is_interpolating() const { return _is_interpolating; }
+  [[nodiscard]] bool is_discontinuous() const { return _is_discontinuous; }
+  [[nodiscard]] bool has_inv_convolution() const { return _has_inv_convolution; }
+  [[nodiscard]] bool is_trivial_magnify() const { return _is_trivial_magnify; }  // impulse or box
+  [[nodiscard]] bool is_trivial_minify() const { return _is_trivial_minify; }    // box
+  [[nodiscard]] bool is_impulse() const { return _is_impulse; }
+  [[nodiscard]] bool is_omoms() const { return _is_omoms; }            // omoms or justomoms
+  [[nodiscard]] bool is_preprocess() const { return _is_preprocess; }  // preprocess
+  [[nodiscard]] bool is_partition_of_unity() const { return _is_partition_of_unity; }
+  [[nodiscard]] bool is_unit_integral() const { return _is_unit_integral; }
 
-  [[HH_NO_DANGLING]] static const Filter& get(const string& name);
+  [[HH_NO_DANGLING]] [[nodiscard]] static const Filter& get(const string& name);
   // impulse:     (for nearest-sample minification) (does not support func())
   // box:         (nearest magnification), a.k.a. rectangle/rect func, top-hat, pi func, unit pulse, boxcar)
   // triangle:    a.k.a. linear, tent, hat, triangular func
@@ -71,12 +71,12 @@ struct LUfactorization;
 class FilterBnd {
  public:
   explicit FilterBnd(const Filter& pfilter, Bndrule pbndrule) : _filter(&pfilter) { set_bndrule(pbndrule); }
-  const Filter& filter() const { return *_filter; }
-  Bndrule bndrule() const { return _bndrule; }
+  [[nodiscard]] const Filter& filter() const { return *_filter; }
+  [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
   void set_filter(const Filter& pfilter) { _filter = &pfilter; }
   void set_bndrule(Bndrule pbndrule) { _bndrule = pbndrule, assertx(_bndrule != Bndrule::undefined); }
   // Given a filtertype, return an evaluation function and its support radius (centered about origin).
-  const LUfactorization& lu_factorization() const;
+  [[nodiscard]] const LUfactorization& lu_factorization() const;
   // Given old size cx and new size cx, for each new index i compute the interval of weights on old values
   //  starting at index ar_pixelindex0[i].  mat_weights is allocated of size [nx, nk] where nk is interval size.
   // Samples are assumed at half-integer locations (!primal) or integer locations (primal).

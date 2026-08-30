@@ -29,16 +29,16 @@ template <typename T> class Queue {
     _dq.pop_front();
     return e;
   }
-  T& front() { return ASSERTX(!empty()), _dq.front(); }
-  const T& front() const { return ASSERTX(!empty()), _dq.front(); }
-  T& rear() { return ASSERTX(!empty()), _dq.back(); }
-  const T& rear() const { return ASSERTX(!empty()), _dq.back(); }
+  [[nodiscard]] T& front() { return ASSERTX(!empty()), _dq.front(); }
+  [[nodiscard]] const T& front() const { return ASSERTX(!empty()), _dq.front(); }
+  [[nodiscard]] T& rear() { return ASSERTX(!empty()), _dq.back(); }
+  [[nodiscard]] const T& rear() const { return ASSERTX(!empty()), _dq.back(); }
   void insert_first(const T& e) requires Copyable<T> { _dq.push_front(e); }
   void insert_first(T&& e) { _dq.push_front(std::move(e)); }
-  bool empty() const { return _dq.empty(); }
-  int length() const { return narrow_cast<int>(_dq.size()); }
-  size_t size() const { return _dq.size(); }
-  bool contains(const T& e) const {
+  [[nodiscard]] bool empty() const { return _dq.empty(); }
+  [[nodiscard]] int length() const { return narrow_cast<int>(_dq.size()); }
+  [[nodiscard]] size_t size() const { return _dq.size(); }
+  [[nodiscard]] bool contains(const T& e) const {
     for (const T& v : *this)
       if (v == e) return true;
     return false;
@@ -49,10 +49,10 @@ template <typename T> class Queue {
   using value_type = T;
   using iterator = typename base::iterator;
   using const_iterator = typename base::const_iterator;
-  iterator begin() { return _dq.begin(); }
-  const_iterator begin() const { return _dq.begin(); }
-  iterator end() { return _dq.end(); }
-  const_iterator end() const { return _dq.end(); }
+  [[nodiscard]] iterator begin() { return _dq.begin(); }
+  [[nodiscard]] const_iterator begin() const { return _dq.begin(); }
+  [[nodiscard]] iterator end() { return _dq.end(); }
+  [[nodiscard]] const_iterator end() const { return _dq.end(); }
 
  private:
   base _dq;

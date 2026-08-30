@@ -29,7 +29,7 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
   explicit Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
     _pq.enter(vs, 0.f);
   }
-  bool done() { return _pq.empty(); }
+  [[nodiscard]] bool done() { return _pq.empty(); }
   T next(float& dis) {
     assertx(!_pq.empty());
     float dmin = _pq.min_priority();
@@ -64,7 +64,7 @@ template <typename T> struct MstResult {
 // Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
 // Implementation: Kruskal's algorithm, O(e log(e))  (Prim's algorithm is recommended when e=~n^2, see below.)
 template <typename T, typename Func = float(const T&, const T&)>
-auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
+[[nodiscard]] auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
   MstResult<T> result;
   Graph<T>& gnew = result.tree;
   for (const T& v : undirectedg.vertices()) gnew.enter(v);
@@ -104,7 +104,7 @@ auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
 // Returns a undirected graph that is the minimum spanning tree of the full graph
 //  between the num points, where the cost metric between two points v1 and v2 is fdist(v1, v2).
 // Implementation: Prim's algorithm, complexity O(n^2)!
-template <typename Func = float(int, int)> Graph<int> graph_mst(int num, Func fdist) {
+template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(int num, Func fdist) {
   assertx(num > 0);
   const float k_inf = 1e30f;
   Array<float> lowcost(num);
@@ -140,7 +140,7 @@ template <typename Func = float(int, int)> Graph<int> graph_mst(int num, Func fd
 // Uses modified Prim's, where only edges of length < thresh are considered.
 // Uses a HPqueue because it can no longer afford to find min in O(n) time.
 // Returns an empty graph if not connected.
-inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatial<int>& sp) {
+[[nodiscard]] inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatial<int>& sp) {
   Graph<int> gnew;
   Array<bool> inset(pa.num(), false);  // vertices already added to mst
   Array<int> closest(pa.num());        // for !inset[i], closest inset[] so far
@@ -172,7 +172,7 @@ inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatia
 // Same as graph_mst() but works specifically on an array of points and tries
 // to do it more quickly by making use of a spatial data structure.
 // Implementation: Prim's MST on series of subgraphs.
-inline Graph<int> graph_quick_emst(CArrayView<Point> pa, const PointSpatial<int>& sp) {
+[[nodiscard]] inline Graph<int> graph_quick_emst(CArrayView<Point> pa, const PointSpatial<int>& sp) {
   Graph<int> gnew;
   const float initf = .02f;
   int n = 0;
@@ -187,7 +187,8 @@ inline Graph<int> graph_quick_emst(CArrayView<Point> pa, const PointSpatial<int>
 }
 
 // Return statistics about graph edge lengths.  If undirected, edges stats are duplicated.
-template <typename T, typename Func = float(const T&, const T&)> Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
+template <typename T, typename Func = float(const T&, const T&)>
+[[nodiscard]] Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
   Stat stat;
   for (const T& v1 : g.vertices())
     for (const T& v2 : g.edges(v1)) stat.enter(fdist(v1, v2));
@@ -197,7 +198,7 @@ template <typename T, typename Func = float(const T&, const T&)> Stat graph_edge
 // Returns a newly allocated directed graph that connects each vertex to its
 // kcl closest neighbors (based on Euclidean distance).
 // Consider applying graph_symmetric_closure() !
-inline Graph<int> graph_euclidean_k_closest(CArrayView<Point> pa, int kcl, const PointSpatial<int>& sp) {
+[[nodiscard]] inline Graph<int> graph_euclidean_k_closest(CArrayView<Point> pa, int kcl, const PointSpatial<int>& sp) {
   Graph<int> gnew;
   for_int(i, pa.num()) gnew.enter(i);
   for_int(i, pa.num()) {
@@ -222,8 +223,8 @@ template <typename T> class GraphComponent : noncopyable {
     _vcur = r.begin();
     _vend = r.end();
   }
-  explicit operator bool() const { return _vcur != _vend; }
-  T operator()() const { return *_vcur; }
+  [[nodiscard]] explicit operator bool() const { return _vcur != _vend; }
+  [[nodiscard]] T operator()() const { return *_vcur; }
   void next() {
     Queue<T> queue;
     _set.enter(*_vcur);
@@ -244,7 +245,7 @@ template <typename T> class GraphComponent : noncopyable {
   Set<T> _set;
 };
 
-template <typename T> int graph_num_components(const Graph<T>& g) {
+template <typename T> [[nodiscard]] int graph_num_components(const Graph<T>& g) {
   int n = 0;
   for (GraphComponent<T> gc(&g); gc; gc.next()) n++;
   return n;

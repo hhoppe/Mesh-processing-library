@@ -25,8 +25,8 @@ HH_INITIALIZE_POOL(Combvh);
 
 class Mvcvh : public Map<Vertex, Combvh> {
  public:
-  bool is_convolution() const;               // check combination is affine
-  Combvh compose_c(const Combvh& ci) const;  // co = ci * this
+  [[nodiscard]] bool is_convolution() const;               // check combination is affine
+  [[nodiscard]] Combvh compose_c(const Combvh& ci) const;  // co = ci * this
   // compose two maps to produce one, die unless mconv.is_convolution()
   void compose(const Mvcvh& mconv);  // this = mconv * this
 };
@@ -38,10 +38,10 @@ class SubMesh {
   void clear();
   static const FlagMask vflag_variable;  // MVertex flag bit
   // mesh() may be modified if no more SubMesh operations will be done.
-  GMesh& mesh() { return _m; }
-  const GMesh& mesh() const { return _m; }
-  GMesh& orig_mesh() { return _omesh; }
-  const GMesh& orig_mesh() const { return _omesh; }
+  [[nodiscard]] GMesh& mesh() { return _m; }
+  [[nodiscard]] const GMesh& mesh() const { return _m; }
+  [[nodiscard]] GMesh& orig_mesh() { return _omesh; }
+  [[nodiscard]] const GMesh& orig_mesh() const { return _omesh; }
 
   // subdivide (makes use of refine(), create_conv(), convolve_self(), ...):
   void subdivide(float cosang = 1.f);
@@ -49,9 +49,9 @@ class SubMesh {
 
   // combinations:
   // get a combination (expressing v of mesh() in terms of orig_mesh())
-  const Combvh& combination(Vertex v) const;
+  [[nodiscard]] const Combvh& combination(Vertex v) const;
   // Compose c1 with _cmvcvh to get combination in terms of orig. verts.
-  Combvh compose_c_mvcvh(const Combvh& ci) const;
+  [[nodiscard]] Combvh compose_c_mvcvh(const Combvh& ci) const;
 
   // Update vertex positions on mesh() according to its mask:
   void update_vertex_position(Vertex v);
@@ -64,9 +64,9 @@ class SubMesh {
   }
 
   // omesh to and from mesh:
-  Face orig_face(Face f) const;
+  [[nodiscard]] Face orig_face(Face f) const;
   void orig_face_index(Face fi, Face& of, int& pindex) const;
-  Face get_face(Face of, int index) const;
+  [[nodiscard]] Face get_face(Face of, int index) const;
 
   // split and compute splitting masks:
   void refine(Mvcvh& mconv);  // 1to4 split at edge midpoints

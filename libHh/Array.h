@@ -98,9 +98,9 @@ template <typename T> class CArrayView {
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  constexpr auto begin(this auto&& self) { return self.data(); }
-  constexpr auto end(this auto&& self) { return self.data() + self.num(); }
-  constexpr const T* data() const { return _a; }
+  [[nodiscard]] constexpr auto begin(this auto&& self) { return self.data(); }
+  [[nodiscard]] constexpr auto end(this auto&& self) { return self.data() + self.num(); }
+  [[nodiscard]] constexpr const T* data() const { return _a; }
 
  protected:
   // The pointer is declared non-const even though CArrayView's elements are logically const.  This lets the derived
@@ -143,8 +143,8 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  T* data() { return _a; }
-  const T* data() const { return _a; }
+  [[nodiscard]] T* data() { return _a; }
+  [[nodiscard]] const T* data() const { return _a; }
   using base::num;
   using base::ok;
   using base::size;

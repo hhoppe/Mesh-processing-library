@@ -316,7 +316,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   // Since specify max_iter, do not solve until convergence.
   {
     HH_STIMER("____gsolve");
-    lls.solve(&rss0, &rss1);
+    static_cast<void>(lls.solve(&rss0, &rss1));
   }
   for_int(i, n) {
     Point p;

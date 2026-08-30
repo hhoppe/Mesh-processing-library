@@ -62,7 +62,7 @@ class TriangleFaceSpatial
     const TriangleFace* triangleface;
     Point pint;
   };
-  std::optional<SegmentResult> first_along_segment(const Point& p1, const Point& p2) const {
+  [[nodiscard]] std::optional<SegmentResult> first_along_segment(const Point& p1, const Point& p2) const {
     std::optional<SegmentResult> result;
     const Vector vray = p2 - p1;
     float tmin = BIGFLOAT;

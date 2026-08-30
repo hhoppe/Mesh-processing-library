@@ -552,14 +552,14 @@ TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) {
 template <typename Class>
 concept DerivedFromVec = std::is_base_of_v<Vec<typename Class::value_type, Class::Num>, Class>;
 
-template <typename T> T interp(const Vec3<T>& triple, float f1, float f2) {
+template <typename T> [[nodiscard]] T interp(const Vec3<T>& triple, float f1, float f2) {
   return interp(triple[0], triple[1], triple[2], f1, f2);
 }
-template <typename T> T interp(const Vec3<T>& triple) {  //
+template <typename T> [[nodiscard]] T interp(const Vec3<T>& triple) {  //
   return interp(triple[0], triple[1], triple[2]);
 }
 // DerivedFromVec to disambiguate from "Point interp(Point, Point)".
-template <DerivedFromVec SomeVec> SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
+template <DerivedFromVec SomeVec> [[nodiscard]] SomeVec interp(const Vec3<SomeVec>& triple, const Vec3<float>& bary) {
   return interp(triple[0], triple[1], triple[2], bary);
 }
 

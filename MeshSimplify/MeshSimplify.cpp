@@ -1774,7 +1774,7 @@ void wrap_up() {
   showff("PM: necols=%d\n", g_necols);
   analyze_mesh("FINAL");
   for (fptinfo& fpt : fpts) {
-    ASSERTX(mesh.valid(fpt.cmf));
+    ASSERTX((mesh.valid(fpt.cmf), true));
     point_change_face(&fpt, nullptr);
   }
   int nretired = 0;
@@ -1783,7 +1783,7 @@ void wrap_up() {
       nretired++;
       continue;
     }
-    ASSERTX(mesh.valid(ept.cme));
+    ASSERTX((mesh.valid(ept.cme), true));
     point_change_edge(&ept, nullptr);
   }
   if (epts.num()) showff("number of retired edge points: %d/%d\n", nretired, epts.num());
@@ -4420,7 +4420,7 @@ void consider_tvc(Edge& edefault, float costdefault) {
     assertx((wid < 0) == (owid < 0));
     if (wid < 0) continue;
     Vertex v = ce.v;
-    assertx(mesh.valid(v));
+    assertx(mesh.valid(v), true);
     for (Corner c : mesh.corners(v)) {
       if ((!tvcowid && c_wedge_id(c) == wid) || (tvcowid && c_tvc_owid(c) == owid)) {
         Face f = mesh.corner_face(c);

@@ -20,7 +20,7 @@ class HashPoint {
     for_int(c, 3) _hf[c] = make_unique<HashFloat>(nignorebits, small);
   }
   // p is copied, ret: index (first is 0)
-  int enter(const Point& p) {
+  [[nodiscard]] int enter(const Point& p) {
     Point pp;
     for_int(c, 3) pp[c] = _hf[c]->enter(p[c]);
     bool is_new;

@@ -36,13 +36,13 @@ class MeshSearch {
     Point clp;
     float d2;
   };
-  Result search(const Point& p, Face hint_f) const;
+  [[nodiscard]] Result search(const Point& p, Face hint_f) const;
 
   struct ResultOnSphere {
     Face f;
     Bary bary;
   };
-  ResultOnSphere search_on_sphere(const Point& p, Face hint_f, const Point* final_p = nullptr) const;
+  [[nodiscard]] ResultOnSphere search_on_sphere(const Point& p, Face hint_f, const Point* final_p = nullptr) const;
 
   const GMesh& mesh() const { return _mesh; }
 

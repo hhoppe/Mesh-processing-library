@@ -11,7 +11,7 @@ namespace hh {
 class Trig {
  public:
   // compute cos(i * TAU / j)
-  static float cos(int i, int j) {
+  [[nodiscard]] static float cos(int i, int j) {
     Table& table = cos_table_instance();
     if (!table[1, 0]) init();
     int ia = abs(i);
@@ -20,7 +20,7 @@ class Trig {
     return v;
   }
   // compute sin(i * TAU / j)
-  static float sin(int i, int j) {
+  [[nodiscard]] static float sin(int i, int j) {
     Table& table = sin_table_instance();
     if (!table[1, 0]) init();
     int ia = abs(i);
@@ -51,7 +51,7 @@ class Trig {
 };
 
 // Modulo operation.  (The built-in C/C++ remainder operation (a % b) returns negative remainders if a < 0).
-constexpr int my_mod(int a, int b) {
+[[nodiscard]] constexpr int my_mod(int a, int b) {
   // https://stackoverflow.com/questions/4003232/
   // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
   ASSERTX(b > 0);
@@ -62,7 +62,7 @@ constexpr int my_mod(int a, int b) {
 }
 
 // Modulo operation on floating-point values.  (In contrast, std::fmod(a, b) returns negative remainders if a < 0.f).
-template <typename T> T my_mod(T a, T b) {
+template <typename T> [[nodiscard]] T my_mod(T a, T b) {
   static_assert(std::is_floating_point_v<T>);
   ASSERTX(b > T{0});
   T ret = std::fmod(a, b);
@@ -73,43 +73,43 @@ template <typename T> T my_mod(T a, T b) {
 
 // Evaluate a B-spline function; x lies in [0, 1] which spans over all coefficients in ar.
 // The B-spline construction interpolates ar[0] at t == 0.f and ar.last() at t == 1.f.
-float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
+[[nodiscard]] float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
 
 // Evaluate a smooth-step function; x in [0, 1] -> ret: [0, 1]  (with zero derivatives at x == 0 and x == 1).
-template <typename T> constexpr T smooth_step(T x) {
+template <typename T> [[nodiscard]] constexpr T smooth_step(T x) {
   static_assert(std::is_floating_point_v<T>);
   return x * x * (T{3} - T{2} * x);
 }
 
 // Compute fractional part (as in HLSL).
-template <typename T> T frac(T f) {
+template <typename T> [[nodiscard]] T frac(T f) {
   static_assert(std::is_floating_point_v<T>);
   return f - floor(f);
 }
 
 // Evaluate a Gaussian function.
-template <typename T> T gaussian(T x, T sdv = T{1}) {
+template <typename T> [[nodiscard]] T gaussian(T x, T sdv = T{1}) {
   static_assert(std::is_floating_point_v<T>);
   return std::exp(-square(x / sdv) / T{2}) / (sqrt(T(D_TAU)) * sdv);
 }
 
 // Like std::acos() but prevent NaN's from appearing due to roundoff errors.
 // my_acos() is discouraged due to poor accuracy for small angles! see angle_between_unit_vectors().
-template <typename T> T my_acos(T a) {
+template <typename T> [[nodiscard]] T my_acos(T a) {
   return (a < T{-1}   ? (assertw(a > T{-1.001f}), std::acos(T{-1}))
           : a > T{+1} ? (assertw(a < T{+1.001f}), std::acos(T{+1}))
                       : std::acos(a));
 }
 
 // Like std::asin() but prevent NaN's from appearing due to roundoff errors.
-template <typename T> T my_asin(T a) {
+template <typename T> [[nodiscard]] T my_asin(T a) {
   return (a < T{-1}   ? (assertw(a > T{-1.001f}), std::asin(T{-1}))
           : a > T{+1} ? (assertw(a < T{+1.001f}), std::asin(T{+1}))
                       : std::asin(a));
 }
 
 // Like std::sqrt() but prevent NaN's from appearing due to roundoff errors.
-template <typename T> T my_sqrt(T a) {
+template <typename T> [[nodiscard]] T my_sqrt(T a) {
   static_assert(std::is_floating_point_v<T>);
   if (a < T{0}) {
     assertx(a > (sizeof(T) == sizeof(float) ? T{-1e-5f} : T{-1e-10f}));
@@ -119,20 +119,20 @@ template <typename T> T my_sqrt(T a) {
 }
 
 // Is the integer i an even power of two?
-constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
+[[nodiscard]] constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
 
 // Fast version of int(floor(std::log2(x))).
-inline int int_floor_log2(unsigned x) {
+[[nodiscard]] inline int int_floor_log2(unsigned x) {
   int a = 0;
   while (x >>= 1) a++;
   return a;
 }
 
 // Generalize some scalar operations on Vec.
-#define E(op)                                                      \
-  template <typename T, int n> Vec<T, n> op(const Vec<T, n>& ar) { \
-    return transformed(ar, [](T e) { return std::op(e); });        \
-  }                                                                \
+#define E(op)                                                                    \
+  template <typename T, int n> [[nodiscard]] Vec<T, n> op(const Vec<T, n>& ar) { \
+    return transformed(ar, [](T e) { return std::op(e); });                      \
+  }                                                                              \
   HH_EAT_SEMICOLON
 E(floor);
 E(ceil);

@@ -20,19 +20,19 @@ namespace FrameIO {
 
 // Read Frame objects from std::stream or RBuffer.
 enum class ERecognize { parse_error, no, partial, yes };
-ERecognize recognize(RBuffer& b);
-std::optional<ObjectFrame> read(std::istream& is);
-std::optional<ObjectFrame> read(RBuffer& b);
-Frame parse_frame(const string& s);
+[[nodiscard]] ERecognize recognize(RBuffer& b);
+[[nodiscard]] std::optional<ObjectFrame> read(std::istream& is);
+[[nodiscard]] std::optional<ObjectFrame> read(RBuffer& b);
+[[nodiscard]] Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.
 [[nodiscard]] bool write(std::ostream& os, const ObjectFrame& object_frame);  // ret is_success
 [[nodiscard]] bool write(WBuffer& b, const ObjectFrame& object_frame);        // ret is_success
-string create_string(const ObjectFrame& object_frame);
+[[nodiscard]] string create_string(const ObjectFrame& object_frame);
 
 // Detect special frames.
-bool is_not_a_frame(const Frame& frame);
-Frame get_not_a_frame();
+[[nodiscard]] bool is_not_a_frame(const Frame& frame);
+[[nodiscard]] Frame get_not_a_frame();
 
 }  // namespace FrameIO
 

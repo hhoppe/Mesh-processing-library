@@ -19,7 +19,7 @@ template <typename T> class Combination : public Map<T, float> {
   using base = Map<T, float>;
 
  public:
-  float sum() const { return hh::sum<float>(values()); }
+  [[nodiscard]] float sum() const { return hh::sum<float>(values()); }
   void shrink_to_fit() const requires Copyable<T> {  // Remove elements with zero weights.
     Combination& var_self = const_cast<Combination&>(*this);
     Array<T> ar;

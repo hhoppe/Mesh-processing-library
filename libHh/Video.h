@@ -41,12 +41,12 @@ class Video : public Grid<3, Pixel> {
   void init(const Vec3<int>& dims);
   void init(int pnframes, const Vec2<int>& sdims) { init(V(pnframes, sdims[0], sdims[1])); }
   void clear() { init(thrice(0)); }
-  int nframes() const { return dim(0); }
-  const Vec2<int>& spatial_dims() const { return dims().tail<2>(); }
-  int ysize() const { return dim(1); }
-  int xsize() const { return dim(2); }
-  const Attrib& attrib() const { return _attrib; }
-  Attrib& attrib() { return _attrib; }
+  [[nodiscard]] int nframes() const { return dim(0); }
+  [[nodiscard]] const Vec2<int>& spatial_dims() const { return dims().tail<2>(); }
+  [[nodiscard]] int ysize() const { return dim(1); }
+  [[nodiscard]] int xsize() const { return dim(2); }
+  [[nodiscard]] const Attrib& attrib() const { return _attrib; }
+  [[nodiscard]] Attrib& attrib() { return _attrib; }
   void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error.
   void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error.
 
@@ -59,17 +59,17 @@ class Video : public Grid<3, Pixel> {
     Audio audio;
   };
   friend void swap(Video& l, Video& r) noexcept;
-  static string diagnostic_string(const Vec3<int>& dims, const Attrib& attrib);
+  [[nodiscard]] static string diagnostic_string(const Vec3<int>& dims, const Attrib& attrib);
 
  private:
   Attrib _attrib;
 };
 
 // Whether filename suffix identifies it as a video.
-bool filename_is_video(const string& filename);
+[[nodiscard]] bool filename_is_video(const string& filename);
 
 // Return predicted video suffix given first byte of file, or "" if unrecognized.
-string video_suffix_for_magic_byte(uchar c);
+[[nodiscard]] string video_suffix_for_magic_byte(uchar c);
 
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12 : noncopyable {
@@ -88,14 +88,14 @@ class VideoNv12 : noncopyable {
     ok();
   }
   void clear() { init(thrice(0)); }
-  int nframes() const { return _grid_Y.dim(0); }
-  size_t size() const { return _grid_Y.size(); }
-  CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
-  Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-  GridView<3, uint8_t> get_Y() { return _grid_Y; }
-  CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
-  GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
-  CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
+  [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
+  [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
+  [[nodiscard]] GridView<3, uint8_t> get_Y() { return _grid_Y; }
+  [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
+  [[nodiscard]] GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
+  [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
   void special_reduce_dim0(int i) { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
   void read_file(const string& filename, Video::Attrib* pattrib = nullptr);    // May throw std::runtime_error.
   void write_file(const string& filename, const Video::Attrib& attrib) const;  // May throw std::runtime_error.
@@ -115,13 +115,13 @@ class VideoNv12View {
     assertx(_grid_Y.dims() == _grid_UV.dims() * V(1, 2, 2));
   }
   VideoNv12View(VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) {}
-  int nframes() const { return _grid_Y.dim(0); }
-  size_t size() const { return _grid_Y.size(); }
-  Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-  GridView<3, uint8_t> get_Y() { return _grid_Y; }
-  CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
-  GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
-  CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
+  [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
+  [[nodiscard]] GridView<3, uint8_t> get_Y() { return _grid_Y; }
+  [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
+  [[nodiscard]] GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
+  [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
 
  private:
   GridView<3, uint8_t> _grid_Y;         // Luminance
@@ -136,11 +136,11 @@ class CVideoNv12View {
     assertx(_grid_Y.dims() == _grid_UV.dims() * V(1, 2, 2));
   }
   CVideoNv12View(const VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) {}
-  int nframes() const { return _grid_Y.dim(0); }
-  size_t size() const { return _grid_Y.size(); }
-  CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
-  CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
-  CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
+  [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
+  [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
+  [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
 
  private:
   CGridView<3, uint8_t> _grid_Y;         // Luminance.
@@ -151,22 +151,22 @@ void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3, Pixel> video);
 void convert_Video_to_VideoNv12(CGridView<3, Pixel> video, VideoNv12View vnv12);
 
 // &video == &newvideo is OK.
-Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-            const Pixel* bordervalue = nullptr, Video&& newvideo = Video());
-VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-                const Pixel* bordervalue = nullptr, VideoNv12&& pnewvideo_nv12 = VideoNv12());
+[[nodiscard]] Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+                          const Pixel* bordervalue = nullptr, Video&& newvideo = Video());
+[[nodiscard]] VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+                              const Pixel* bordervalue = nullptr, VideoNv12&& pnewvideo_nv12 = VideoNv12());
 
 // Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may equal "ffmpeg" or "mf".
 class RVideo {
  public:
   explicit RVideo(string filename, bool use_nv12 = false);  // May throw std::runtime_error.
   ~RVideo();
-  const Vec3<int>& dims() const { return _dims; }  // (nframes, ysize, xsize).
-  const Video::Attrib& attrib() const { return _attrib; }
-  int nframes() const { return _dims[0]; }
-  const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }  // (ysize, xsize).
-  int ysize() const { return _dims[1]; }
-  int xsize() const { return _dims[2]; }
+  [[nodiscard]] const Vec3<int>& dims() const { return _dims; }  // (nframes, ysize, xsize).
+  [[nodiscard]] const Video::Attrib& attrib() const { return _attrib; }
+  [[nodiscard]] int nframes() const { return _dims[0]; }
+  [[nodiscard]] const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }  // (ysize, xsize).
+  [[nodiscard]] int ysize() const { return _dims[1]; }
+  [[nodiscard]] int xsize() const { return _dims[2]; }
   [[nodiscard]] bool read(MatrixView<Pixel> frame);  // frame(ysize(), xsize()).  Return false if EOF.
   [[nodiscard]] bool read(Nv12View frame);           // Return false if EOF.
   [[nodiscard]] bool discard_frame();                // Skip the next frame; Return success (false if EOF).
@@ -189,9 +189,9 @@ class WVideo {
   explicit WVideo(string filename, const Vec2<int>& spatial_dims, Video::Attrib attrib,
                   bool use_nv12 = false);  // Dims are (y, x); may throw std::runtime_error.
   ~WVideo();
-  const Vec2<int>& spatial_dims() const { return _sdims; }
-  int ysize() const { return _sdims[0]; }
-  int xsize() const { return _sdims[1]; }
+  [[nodiscard]] const Vec2<int>& spatial_dims() const { return _sdims; }
+  [[nodiscard]] int ysize() const { return _sdims[0]; }
+  [[nodiscard]] int xsize() const { return _sdims[1]; }
   void write(CMatrixView<Pixel> frame);
   void write(CNv12View frame);
   class Implementation;

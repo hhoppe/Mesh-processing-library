@@ -19,7 +19,7 @@ template <typename T> using CMatrixView = CGridView<2, T>;
 template <typename T> using MatrixView = GridView<2, T>;
 template <typename T> using Matrix = Grid<2, T>;
 
-template <typename T> Matrix<T> transpose(CMatrixView<T> m1) {
+template <typename T> [[nodiscard]] Matrix<T> transpose(CMatrixView<T> m1) {
   Matrix<T> m(m1.xsize(), m1.ysize());
   for_int(y, m.ysize()) for_int(x, m.xsize()) m[y, x] = m1[x, y];
   return m;

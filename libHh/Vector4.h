@@ -31,8 +31,8 @@
 namespace hh {
 
 class Vector4;
-Vector4 to_Vector4_norm(const uint8_t p[4]);  // Converts each uint8_t [0, 255] to [0.f, 1.f]; used in Vector4(Pixel).
-Vector4 to_Vector4_raw(const uint8_t p[4]);   // Converts each uint8_t [0, 255] to [0.f, 255.f].
+[[nodiscard]] Vector4 to_Vector4_norm(const uint8_t p[4]);  // Converts each uint8_t [0, 255] to [0.f, 1.f].
+[[nodiscard]] Vector4 to_Vector4_raw(const uint8_t p[4]);   // Converts each uint8_t [0, 255] to [0.f, 255.f].
 
 // Abstraction of a 4-float vector, hopefully accelerated by vectorized CPU instructions.
 // See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel.
@@ -48,10 +48,10 @@ class Vector4 {
   explicit Vector4(float v) { fill(v); }
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
-  size_t size() const { return 4; }
-  [[HH_GNU_PURE]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
-  [[HH_GNU_PURE]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
-  Vector4 with(int i, float f) const {
+  [[nodiscard]] size_t size() const { return 4; }
+  [[HH_GNU_PURE]] [[nodiscard]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  [[HH_GNU_PURE]] [[nodiscard]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  [[nodiscard]] Vector4 with(int i, float f) const {
     HH_CHECK_BOUNDS(i, 4);
     Vector4 v = *this;
     v[i] = f;
@@ -59,31 +59,31 @@ class Vector4 {
   }
   void raw_to_byte4(uint8_t p[4]) const;   // Maps from [0.f, 255.999f] to uint8 using truncation, without clamping.
   void norm_to_byte4(uint8_t p[4]) const;  // Maps from [0.f, 1.f]      to uint8 using rounding and clamping.
-  Pixel raw_pixel() const {
+  [[nodiscard]] Pixel raw_pixel() const {
     Pixel pixel;
     raw_to_byte4(pixel.data());
     return pixel;
   }
-  Pixel pixel() const {
+  [[nodiscard]] Pixel pixel() const {
     Pixel pixel;
     norm_to_byte4(pixel.data());
     return pixel;
   }
-  friend float mag2(const Vector4& v) { return dot(v, v); }
-  friend float dist2(const Vector4& l, const Vector4& r) { return mag2(l - r); }
-  friend float sum(const Vector4& v) { return dot(v, Vector4(1.f)); }
-  friend Vector4 operator-(const Vector4& l) { return Vector4(0.f) - l; }
+  [[nodiscard]] friend float mag2(const Vector4& v) { return dot(v, v); }
+  [[nodiscard]] friend float dist2(const Vector4& l, const Vector4& r) { return mag2(l - r); }
+  [[nodiscard]] friend float sum(const Vector4& v) { return dot(v, Vector4(1.f)); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& l) { return Vector4(0.f) - l; }
   using value_type = float;
   using iterator = const float*;
   using const_iterator = const float*;
-  const float* begin() const { return _c; }
-  const float* end() const { return _c + 4; }
-  float* data() { return _c; }
-  const float* data() const { return _c; }
+  [[nodiscard]] const float* begin() const { return _c; }
+  [[nodiscard]] const float* end() const { return _c + 4; }
+  [[nodiscard]] float* data() { return _c; }
+  [[nodiscard]] const float* data() const { return _c; }
   friend std::ostream& operator<<(std::ostream& os, const Vector4& v) {
     return os << "Vector4(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
   }
-  static bool ok(int i) { return i >= 0 && i < 4; }
+  [[nodiscard]] static bool ok(int i) { return i >= 0 && i < 4; }
   friend Vector4 to_Vector4_raw(const uint8_t p[4]);
 
 #if defined(HH_VECTOR4_SSE)
@@ -92,18 +92,19 @@ class Vector4 {
   void store_unaligned(float* pDst) const { _mm_storeu_ps(pDst, _r); }
   void load_aligned(const float* pSrc) { _r = _mm_load_ps(pSrc); }   // VT: vld1q_f32_ex(pSrc, 128);
   void store_aligned(float* pDst) const { _mm_store_ps(pDst, _r); }  // VT: vst1q_f32_ex(pDst, _r, 128);
-  friend Vector4 operator+(const Vector4& l, const Vector4& r) { return _mm_add_ps(l._r, r._r); }
-  friend Vector4 operator-(const Vector4& l, const Vector4& r) { return _mm_sub_ps(l._r, r._r); }
-  friend Vector4 operator*(const Vector4& l, const Vector4& r) { return _mm_mul_ps(l._r, r._r); }
-  friend Vector4 operator/(const Vector4& l, const Vector4& r) { return _mm_div_ps(l._r, r._r); }
-  friend Vector4 operator+(const Vector4& v, float f) { return _mm_add_ps(v._r, _mm_set_ps1(f)); }
-  friend Vector4 operator-(const Vector4& v, float f) { return _mm_sub_ps(v._r, _mm_set_ps1(f)); }
-  friend Vector4 operator*(const Vector4& v, float f) { return _mm_mul_ps(v._r, _mm_set_ps1(f)); }
-  friend Vector4 operator/(const Vector4& v, float f) { return _mm_div_ps(v._r, _mm_set_ps1(f)); }
+  [[nodiscard]] friend Vector4 operator+(const Vector4& l, const Vector4& r) { return _mm_add_ps(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& l, const Vector4& r) { return _mm_sub_ps(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator*(const Vector4& l, const Vector4& r) { return _mm_mul_ps(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& l, const Vector4& r) { return _mm_div_ps(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator+(const Vector4& v, float f) { return _mm_add_ps(v._r, _mm_set_ps1(f)); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return _mm_sub_ps(v._r, _mm_set_ps1(f)); }
+  [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return _mm_mul_ps(v._r, _mm_set_ps1(f)); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return _mm_div_ps(v._r, _mm_set_ps1(f)); }
   void fill(float v) { _r = _mm_set_ps1(v); }  // All components set to same value.
-  friend Vector4 min(const Vector4& l, const Vector4& r) { return _mm_min_ps(l._r, r._r); }  // Component-wise min.
-  friend Vector4 max(const Vector4& l, const Vector4& r) { return _mm_max_ps(l._r, r._r); }  // Component-wise max.
-  friend float dot(const Vector4& v1, const Vector4& v2) {
+  // Component-wise min/max.
+  [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) { return _mm_min_ps(l._r, r._r); }
+  [[nodiscard]] friend Vector4 max(const Vector4& l, const Vector4& r) { return _mm_max_ps(l._r, r._r); }
+  [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
 #if defined(HH_NO_SSE41)
     Vector4 v = v1 * v2;
     return v[0] + v[1] + v[2] + v[3];
@@ -116,11 +117,11 @@ class Vector4 {
     // https://stackoverflow.com/questions/6996764/fastest-way-to-do-horizontal-float-vector-sum-on-x86
 #endif
   }
-  friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist().
+  [[nodiscard]] friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist().
     // https://stackoverflow.com/questions/1528727/why-is-sse-scalar-sqrtx-slower-than-rsqrtx-x
     return _mm_sqrt_ps(v._r);
   }
-  friend Vector4 abs(const Vector4& v) {  // For use in max_abs_element().
+  [[nodiscard]] friend Vector4 abs(const Vector4& v) {  // For use in max_abs_element().
     // https://stackoverflow.com/questions/3361132/flipping-sign-on-packed-sse-floats
     static const __m128 k_sign_mask = _mm_set1_ps(-0.f);  // -0.f = 1 << 31, _mm_set1_ps() not constexpr.
     // static const __m128 k_sign_mask = _mm_castsi128_ps(_mm_set1_epi32(0x80000000));  // Not constexpr.
@@ -155,33 +156,36 @@ class Vector4 {
   }
   void load_aligned(const float* pSrc) { _r = vld1q_f32(pSrc); }
   void store_aligned(float* pDst) const { vst1q_f32(pDst, _r); }
-  friend Vector4 operator+(const Vector4& l, const Vector4& r) { return vaddq_f32(l._r, r._r); }
-  friend Vector4 operator-(const Vector4& l, const Vector4& r) { return vsubq_f32(l._r, r._r); }
-  friend Vector4 operator*(const Vector4& l, const Vector4& r) { return vmulq_f32(l._r, r._r); }
-  friend Vector4 operator/(const Vector4& l, const Vector4& r) { return vmulq_f32(l._r, recip(r._r)._r); }
-  friend Vector4 operator+(const Vector4& v, float f) { return vaddq_f32(v._r, vdupq_n_f32(f)); }
-  friend Vector4 operator-(const Vector4& v, float f) { return vsubq_f32(v._r, vdupq_n_f32(f)); }
-  friend Vector4 operator*(const Vector4& v, float f) { return vmulq_n_f32(v._r, f); }
-  friend Vector4 operator/(const Vector4& v, float f) { return vmulq_n_f32(v._r, 1.f / f); }
+  [[nodiscard]] friend Vector4 operator+(const Vector4& l, const Vector4& r) { return vaddq_f32(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& l, const Vector4& r) { return vsubq_f32(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator*(const Vector4& l, const Vector4& r) { return vmulq_f32(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& l, const Vector4& r) {
+    return vmulq_f32(l._r, recip(r._r)._r);
+  }
+  [[nodiscard]] friend Vector4 operator+(const Vector4& v, float f) { return vaddq_f32(v._r, vdupq_n_f32(f)); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return vsubq_f32(v._r, vdupq_n_f32(f)); }
+  [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return vmulq_n_f32(v._r, f); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return vmulq_n_f32(v._r, 1.f / f); }
   Vector4& operator=(const Vector4& r) {
     _r = r._r;
     return *this;
   }
   void fill(float v) { _r = vdupq_n_f32(v); }  // All components set to same value.
-  friend Vector4 min(const Vector4& l, const Vector4& r) { return vminq_f32(l._r, r._r); }  // Component-wise min.
-  friend Vector4 max(const Vector4& l, const Vector4& r) { return vmaxq_f32(l._r, r._r); }  // Component-wise max.
-  friend float dot(const Vector4& v1, const Vector4& v2) {
+  // Component-wise min/max.
+  [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) { return vminq_f32(l._r, r._r); }
+  [[nodiscard]] friend Vector4 max(const Vector4& l, const Vector4& r) { return vmaxq_f32(l._r, r._r); }
+  [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
     Vector4 v = v1 * v2;
     return v[0] + v[1] + v[2] + v[3];
   }
-  friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist().
+  [[nodiscard]] friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist().
     // return vrecpeq_f32(vrsqrteq_f32(v));  // Very approximate.
     // Maybe use vrsqrteq_f32 and vrsqrtsq_f32 as in https://rcl-rs-vvg.blogspot.com/2010/08/simd-etudes.html
     //  but unclear.
     using std::sqrt;
     return Vector4(sqrt(v[0]), sqrt(v[1]), sqrt(v[2]), sqrt(v[3]));
   }
-  friend Vector4 abs(const Vector4& v) { return vabsq_f32(v._r); }
+  [[nodiscard]] friend Vector4 abs(const Vector4& v) { return vabsq_f32(v._r); }
 
  private:
   Vector4(float32x4_t v) : _r(v) {}
@@ -189,7 +193,7 @@ class Vector4 {
     float32x4_t _r;  // This could be made public to allow mixing of above overloads and full set of Neon ops.
     float _c[4];
   };
-  static Vector4 recip(const Vector4& v) {
+  [[nodiscard]] static Vector4 recip(const Vector4& v) {
     float32x4_t estimate = vrecpeq_f32(v._r);  // Get estimate, then apply two Newton-Raphson steps.
     estimate = vmulq_f32(vrecpsq_f32(v._r, estimate), estimate);
     estimate = vmulq_f32(vrecpsq_f32(v._r, estimate), estimate);
@@ -202,43 +206,43 @@ class Vector4 {
   void store_unaligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
   void load_aligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
   void store_aligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
-  friend Vector4 operator+(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 operator+(const Vector4& l, const Vector4& r) {
     return Vector4(l[0] + r[0], l[1] + r[1], l[2] + r[2], l[3] + r[3]);
   }
-  friend Vector4 operator-(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 operator-(const Vector4& l, const Vector4& r) {
     return Vector4(l[0] - r[0], l[1] - r[1], l[2] - r[2], l[3] - r[3]);
   }
-  friend Vector4 operator*(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 operator*(const Vector4& l, const Vector4& r) {
     return Vector4(l[0] * r[0], l[1] * r[1], l[2] * r[2], l[3] * r[3]);
   }
-  friend Vector4 operator/(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 operator/(const Vector4& l, const Vector4& r) {
     return Vector4(l[0] / r[0], l[1] / r[1], l[2] / r[2], l[3] / r[3]);
   }
-  friend Vector4 operator+(const Vector4& v, float f) { return v + Vector4(f); }
-  friend Vector4 operator-(const Vector4& v, float f) { return v - Vector4(f); }
-  friend Vector4 operator*(const Vector4& v, float f) { return v * Vector4(f); }
-  friend Vector4 operator/(const Vector4& v, float f) { return v * (1.f / f); }
+  [[nodiscard]] friend Vector4 operator+(const Vector4& v, float f) { return v + Vector4(f); }
+  [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return v - Vector4(f); }
+  [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return v * Vector4(f); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return v * (1.f / f); }
   void fill(float v) { for_int(c, 4) _c[c] = v; }
-  friend Vector4 min(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) {
     return Vector4(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
   }
-  friend Vector4 max(const Vector4& l, const Vector4& r) {
+  [[nodiscard]] friend Vector4 max(const Vector4& l, const Vector4& r) {
     return Vector4(max(l[0], r[0]), max(l[1], r[1]), max(l[2], r[2]), max(l[3], r[3]));
   }
-  friend float dot(const Vector4& v1, const Vector4& v2) {
+  [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
     Vector4 v = v1 * v2;
     return v[0] + v[1] + v[2] + v[3];
   }
 
-  friend Vector4 sqrt(const Vector4& v) {
+  [[nodiscard]] friend Vector4 sqrt(const Vector4& v) {
     using std::sqrt;
     return Vector4(sqrt(v[0]), sqrt(v[1]), sqrt(v[2]), sqrt(v[3]));
   }
-  friend Vector4 abs(const Vector4& v) {
+  [[nodiscard]] friend Vector4 abs(const Vector4& v) {
     using std::abs;
     return Vector4(abs(v[0]), abs(v[1]), abs(v[2]), abs(v[3]));
   }
-  // friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1 * v2 + v3; }
+  // [[nodiscard]] friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) { return v1 * v2 + v3; }
 
  private:
   alignas(16)  // Since no __mm128 element to induce 16-byte alignment.
@@ -246,8 +250,10 @@ class Vector4 {
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)
 };
 
-inline Vector4 to_Vector4_norm(const uint8_t p[4]) { return to_Vector4_raw(p) * (1.f / 255.f); }
-inline Vector4 to_Vector4_raw(const Pixel& pixel) { return to_Vector4_raw(pixel.data()); }
+//----------------------------------------------------------------------------
+
+[[nodiscard]] inline Vector4 to_Vector4_norm(const uint8_t p[4]) { return to_Vector4_raw(p) * (1.f / 255.f); }
+[[nodiscard]] inline Vector4 to_Vector4_raw(const Pixel& pixel) { return to_Vector4_raw(pixel.data()); }
 
 float mag2(const Vector4& v);
 float dist2(const Vector4& l, const Vector4& r);

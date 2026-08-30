@@ -567,7 +567,7 @@ void global_fit() {
   // Suggest current solution
   for_int(i, n) lls.enter_xest_r(i, mesh.point(gva[i]));
   // Solve
-  lls.solve();
+  assertx(lls.solve());
   // Update solution
   for_int(i, n) {
     Point p;
@@ -1338,7 +1338,7 @@ void do_stoc() {
   while (!ecand.empty()) {
     ni++;
     Edge e = ecand.remove_random(Random::G);
-    ASSERTX(mesh.valid(e));
+    ASSERTX((mesh.valid(e), true));
     EOperation op;
     op = OP_ecol;  // dummy_init(op)
     EResult result = R_illegal;

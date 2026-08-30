@@ -50,8 +50,8 @@ class Lls : noncopyable {
     ASSERTX(ar.num() == _n);
     for_int(r, _n) ar[r] = get_x_rc(r, c);
   }
-  float get_x_rc(int r, int c) { return _x[c, r]; }  // r < _n, c < _nd
-  int num_rows() const { return _m; }
+  [[nodiscard]] float get_x_rc(int r, int c) { return _x[c, r]; }  // r < _n, c < _nd
+  [[nodiscard]] int num_rows() const { return _m; }
 
  protected:
   int _m, _n, _nd;
@@ -69,7 +69,7 @@ class SparseLls : public Lls {
   void enter_a_rc(int r, int c, float val) override;
   void enter_a_r(int r, CArrayView<float> ar) override;
   void enter_a_c(int c, CArrayView<float> ar) override;
-  bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
+  [[nodiscard]] bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
   void set_tolerance(float tolerance);  // default square(8e-7) * m  (because x is float) (was 1e-10f)
   void set_max_iter(int max_iter);      // default std::numeric_limits<int>::max()
   void set_verbose(int verb);           // default 0
@@ -103,7 +103,7 @@ class FullLls : public Lls {
     ASSERTX(ar.num() == _m);
     for_int(r, _m) _a[r, c] = ar[r];
   }
-  bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
+  [[nodiscard]] bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
 
  protected:
   Matrix<float> _a;              // [_m, _n]

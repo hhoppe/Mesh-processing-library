@@ -10,19 +10,19 @@ namespace hh {
 // For these templated functions, the caller should convert<> the inputs to obtain higher precision.
 
 // Return the vector cross-product in 2D.  The signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
-template <typename T> T cross(const Vec2<T>& v1, const Vec2<T>& v2) {
+template <typename T> [[nodiscard]] T cross(const Vec2<T>& v1, const Vec2<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   return v1[0] * v2[1] - v1[1] * v2[0];
 }
 
 // Return the vector cross-product in 3D.
-template <typename T> Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
+template <typename T> [[nodiscard]] Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   return Vec3<T>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 }
 
 // Return the Unnormalized cross-product given by three 3D points.
-template <typename T> Vec3<T> cross(const Vec3<T>& p1, const Vec3<T>& p2, const Vec3<T>& p3) {
+template <typename T> [[nodiscard]] Vec3<T> cross(const Vec3<T>& p1, const Vec3<T>& p2, const Vec3<T>& p3) {
   return cross(p2 - p1, p3 - p1);
 }
 
@@ -45,20 +45,20 @@ struct Vector : Vec3<float> {
   constexpr Vector(Vec3<float> v) : Vec3<float>(v) {}
 };
 
-inline Vector operator*(const Vector& v, const Frame& frame);    // Transform a vector by a frame.
-inline Vector operator*(const Frame& frame, const Vector& nor);  // Transform a normal by a frame.
+[[nodiscard]] inline Vector operator*(const Vector& v, const Frame& frame);    // Transform a vector by a frame.
+[[nodiscard]] inline Vector operator*(const Frame& frame, const Vector& nor);  // Transform a normal by a frame.
 inline Vector& operator*=(Vector& v, const Frame& frame) { return v = v * frame; }
 
-inline Vector normalized(Vector v) { return assertx(v.normalize()), v; }
-inline Vector ok_normalized(Vector v) { return v.normalize(), v; }
+[[nodiscard]] inline Vector normalized(Vector v) { return assertx(v.normalize()), v; }
+[[nodiscard]] inline Vector ok_normalized(Vector v) { return v.normalize(), v; }
 
 // Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
-inline float dot(const Vec3<float>& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
-inline float dot(const Vector& v1, const Vec3<float>& v2) { return dot(v1.vec(), v2.vec()); }
-inline float dot(const Vector& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
-inline float mag2(const Vector& v1) { return mag2(v1.vec()); }
-inline float mag(const Vector& v1) { return mag(v1.vec()); }
-inline bool is_unit(const Vector& v) { return is_unit(v.vec()); }
+[[nodiscard]] inline float dot(const Vec3<float>& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dot(const Vector& v1, const Vec3<float>& v2) { return dot(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dot(const Vector& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float mag2(const Vector& v1) { return mag2(v1.vec()); }
+[[nodiscard]] inline float mag(const Vector& v1) { return mag(v1.vec()); }
+[[nodiscard]] inline bool is_unit(const Vector& v) { return is_unit(v.vec()); }
 
 // *** Point
 
@@ -69,24 +69,28 @@ struct Point : Vec3<float> {
   constexpr Point(Vec3<float> p) : Vec3<float>(p) {}
 };
 
-inline Point operator*(const Point& p, const Frame& frame);  // Transform a point by a frame.
+[[nodiscard]] inline Point operator*(const Point& p, const Frame& frame);  // Transform a point by a frame.
 inline Point& operator*=(Point& p, const Frame& frame) { return p = p * frame; }
 
-inline Vector get_normal_dir(const Vec3<Point>& triangle) { return cross(triangle[0], triangle[1], triangle[2]); }
-inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
+[[nodiscard]] inline Vector get_normal_dir(const Vec3<Point>& triangle) {
+  return cross(triangle[0], triangle[1], triangle[2]);
+}
+[[nodiscard]] inline Vector get_normal(const Vec3<Point>& triangle) { return normalized(get_normal_dir(triangle)); }
 
-inline float area2(const Point& p1, const Point& p2, const Point& p3) { return .25f * mag2(cross(p1, p2, p3)); }
-inline float area2(const Vec3<Point>& triangle) { return area2(triangle[0], triangle[1], triangle[2]); }
+[[nodiscard]] inline float area2(const Point& p1, const Point& p2, const Point& p3) {
+  return .25f * mag2(cross(p1, p2, p3));
+}
+[[nodiscard]] inline float area2(const Vec3<Point>& triangle) { return area2(triangle[0], triangle[1], triangle[2]); }
 
 // Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
-inline float dist2(const Vec3<float>& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
-inline float dist2(const Point& v1, const Vec3<float>& v2) { return dist2(v1.vec(), v2.vec()); }
-inline float dist2(const Point& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
-inline float dist(const Vec3<float>& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
-inline float dist(const Point& v1, const Vec3<float>& v2) { return dist(v1.vec(), v2.vec()); }
-inline float dist(const Point& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
-inline float dot(const Point& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
-inline bool is_unit(const Point& p) { return is_unit(p.vec()); }
+[[nodiscard]] inline float dist2(const Vec3<float>& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dist2(const Point& v1, const Vec3<float>& v2) { return dist2(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dist2(const Point& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dist(const Vec3<float>& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dist(const Point& v1, const Vec3<float>& v2) { return dist(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dist(const Point& v1, const Point& v2) { return dist(v1.vec(), v2.vec()); }
+[[nodiscard]] inline float dot(const Point& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
+[[nodiscard]] inline bool is_unit(const Point& p) { return is_unit(p.vec()); }
 
 // *** Frame
 
@@ -104,34 +108,34 @@ class Frame : public SGrid<float, 4, 3> {
  public:
   Frame() = default;
   Frame(Vector v0, Vector v1, Vector v2, Point q) : base(V<Vec3<float>>(v0, v1, v2, q)) {}
-  Vector& v(int i) { return HH_CHECK_BOUNDS(i, 3), static_cast<Vector&>((*this)[i]); }
-  const Vector& v(int i) const { return HH_CHECK_BOUNDS(i, 3), static_cast<const Vector&>((*this)[i]); }
-  Point& p() { return static_cast<Point&>((*this)[3]); }
-  const Point& p() const { return static_cast<const Point&>((*this)[3]); }
+  [[nodiscard]] Vector& v(int i) { return HH_CHECK_BOUNDS(i, 3), static_cast<Vector&>((*this)[i]); }
+  [[nodiscard]] const Vector& v(int i) const { return HH_CHECK_BOUNDS(i, 3), static_cast<const Vector&>((*this)[i]); }
+  [[nodiscard]] Point& p() { return static_cast<Point&>((*this)[3]); }
+  [[nodiscard]] const Point& p() const { return static_cast<const Point&>((*this)[3]); }
   void zero() { fill(*this, 0.f); }
-  bool is_ident() const;
+  [[nodiscard]] bool is_ident() const;
   bool invert();
   void make_right_handed() {
     if (dot(cross(v(0), v(1)), v(2)) < 0.f) v(0) = -v(0);
   }
-  static Frame translation(const Vec3<float>& ar);
-  static Frame rotation(int axis, float angle);
-  static Frame scaling(const Vec3<float>& ar);
-  static Frame identity();
+  [[nodiscard]] static Frame translation(const Vec3<float>& ar);
+  [[nodiscard]] static Frame rotation(int axis, float angle);
+  [[nodiscard]] static Frame scaling(const Vec3<float>& ar);
+  [[nodiscard]] static Frame identity();
 };
 
-Frame operator*(const Frame& frame1, const Frame& frame2);  // Compose two frames (frame2 after frame1).
+[[nodiscard]] Frame operator*(const Frame& frame1, const Frame& frame2);  // Compose two frames (frame2 after frame1).
 inline Frame& operator*=(Frame& frame1, const Frame& frame2) { return frame1 = frame1 * frame2; }
 
 bool invert(const Frame& frame, Frame& frame_inv);
-inline Frame inverse(const Frame& frame) {
+[[nodiscard]] inline Frame inverse(const Frame& frame) {
   Frame frame_inv;
   assertx(invert(frame, frame_inv));
   return frame_inv;
 }
-inline Frame operator~(const Frame& frame) { return inverse(frame); }
+[[nodiscard]] inline Frame operator~(const Frame& frame) { return inverse(frame); }
 
-Frame transpose(const Frame& frame);
+[[nodiscard]] Frame transpose(const Frame& frame);
 
 std::ostream& operator<<(std::ostream& os, const Frame& frame);
 template <> HH_DECLARE_OSTREAM_EOL(Frame);
@@ -145,7 +149,7 @@ struct Bary : Vec3<float> {
   Bary() = default;
   constexpr Bary(float x, float y, float z) : Vec3<float>(x, y, z) {}
   constexpr Bary(Vec3<float> v) : Vec3<float>(v) {}
-  bool is_convex() const;
+  [[nodiscard]] bool is_convex() const;
 };
 
 // *** Uv
@@ -175,68 +179,69 @@ struct Plane {
   float d;
 };
 
-inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
+[[nodiscard]] inline Plane plane_of_triangle(const Vec3<Point>& triangle) {
   const Vector nor = normalized(get_normal_dir(triangle));
   const float d = dot(sum(triangle), nor) / 3.f;
   return {nor, d};
 }
 
 // Project v into plane orthogonal to unitdir.
-Vector project_orthogonally(const Vector& v, const Vector& unitdir);
+[[nodiscard]] Vector project_orthogonally(const Vector& v, const Vector& unitdir);
 
 // General affine combination of 4 points.  Note that interpolation domain is 3-dimensional (non-planar).
 // "bary[3]" == 1.f - bary[0] - bary[1] - bary[2].
 template <typename T, int n>
-Vec<T, n> qinterp(const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, const Vec<T, n>& a4,
-                  const Bary& bary);
+[[nodiscard]] Vec<T, n> qinterp(const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, const Vec<T, n>& a4,
+                                const Bary& bary);
 
 // Bilinear interpolation within 4 points.
 // p3 - p2   v
 //  |    |   ^
 // p0 - p1   |  ->u
 template <typename T, int n>
-Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3, float u, float v);
+[[nodiscard]] Vec<T, n> bilerp(const Vec<T, n>& a0, const Vec<T, n>& a1, const Vec<T, n>& a2, const Vec<T, n>& a3,
+                               float u, float v);
 
 // Spherical linear interpolation.  slerp(p1, p2, 1.f) == p1.
-Point slerp(const Point& p1, const Point& p2, float ba);
+[[nodiscard]] Point slerp(const Point& p1, const Point& p2, float ba);
 
 // Spherical triangle area.
-float spherical_triangle_area(const Vec3<Point>& triangle);
+[[nodiscard]] float spherical_triangle_area(const Vec3<Point>& triangle);
 
 // Determine if an oriented spherical triangle spans more than a hemisphere.
 template <typename Precision = double>
-bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance = 0.f);
+[[nodiscard]] bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance = 0.f);
 
 // Return signed area of 2D triangle (positive if counter-clockwise).
 template <typename Precision = double>
-float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
+[[nodiscard]] float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
 
 // Given a 3D point in the plane of a triangle, return whether the point lies in the triangle convex hull.
-bool point_inside(const Point& p, const Vec3<Point>& triangle);
+[[nodiscard]] bool point_inside(const Point& p, const Vec3<Point>& triangle);
 
 // Given a 2D vector and a 2D triangle, return the vector's barycentric coordinates.
-Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec);
+[[nodiscard]] Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec);
 
 // Given a 3D vector in the plane of a triangle, return the vector's barycentric coordinates.
-Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec);
+[[nodiscard]] Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec);
 
 // Given a triangle and barycentric coordinates, return the vector.
-Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary);
+[[nodiscard]] Vector vector_from_bary(const Vec3<Point>& triangle, const Bary& bary);
 
 // Convert degrees to radians.
-template <typename T> constexpr T rad_from_deg(T deg) {
+template <typename T> [[nodiscard]] constexpr T rad_from_deg(T deg) {
   static_assert(std::is_floating_point_v<T>);
   return deg * T(D_TAU / 360);
 }
 
 // Convert radians to degrees.
-template <typename T> constexpr T deg_from_rad(T rad) {
+template <typename T> [[nodiscard]] constexpr T deg_from_rad(T rad) {
   static_assert(std::is_floating_point_v<T>);
   return rad * T(360 / D_TAU);
 }
 
 // More robust than acos(dot()) for small angles.
-template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
+template <typename T> [[nodiscard]] T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   ASSERTXX(is_unit(v1) && is_unit(v2));
   const T vdot = dot(v1, v2);
@@ -251,7 +256,7 @@ template <typename T> T angle_between_unit_vectors(const Vec3<T>& v1, const Vec3
 }
 
 // More robust than acos(dot()) for small angles.
-template <typename T> T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2<T>& v2) {
+template <typename T> [[nodiscard]] T angle_between_unit_vectors(const Vec2<T>& v1, const Vec2<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   ASSERTXX(is_unit(v1) && is_unit(v2));
   const T vdot = dot(v1, v2);

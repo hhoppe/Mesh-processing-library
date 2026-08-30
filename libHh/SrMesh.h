@@ -208,17 +208,17 @@ class SrMesh {
   void set_coarsen_morph_time(int coarsen_morph_time);  // 0 = disable
   void set_view_params(const SrViewParams& vp);
   void adapt_refinement(int nvtraverse = std::numeric_limits<int>::max());
-  bool is_still_morphing() const;
-  bool is_still_adapting() const;
-  int num_vertices_refine_morphing() const;
-  int num_vertices_coarsen_morphing() const;
+  [[nodiscard]] bool is_still_morphing() const;
+  [[nodiscard]] bool is_still_adapting() const;
+  [[nodiscard]] int num_vertices_refine_morphing() const;
+  [[nodiscard]] int num_vertices_coarsen_morphing() const;
   void construct_geomorph(SrGeomorphInfo& geoinfo);
-  GMesh extract_gmesh() const;
-  GMesh extract_gmesh(const SrGeomorphInfo& geoinfo) const;
-  int num_active_vertices() const { return _num_active_vertices; }
-  int num_active_faces() const { return _num_active_faces; }
+  [[nodiscard]] GMesh extract_gmesh() const;
+  [[nodiscard]] GMesh extract_gmesh(const SrGeomorphInfo& geoinfo) const;
+  [[nodiscard]] int num_active_vertices() const { return _num_active_vertices; }
+  [[nodiscard]] int num_active_faces() const { return _num_active_faces; }
   void ok() const;
-  const Bbox<float, 3>& get_bbox() const { return _bbox; }
+  [[nodiscard]] const Bbox<float, 3>& get_bbox() const { return _bbox; }
 
   // Interface: Rendering using OpenGL:
   void ogl_render_faces_individually(bool unlit_texture);
@@ -334,22 +334,22 @@ class SrMesh {
 
 //----------------------------------------------------------------------------
 
-inline int SrMesh::get_vf_j0(const SrAVertex* v, const SrAFace* f) const {
+[[nodiscard]] inline int SrMesh::get_vf_j0(const SrAVertex* v, const SrAFace* f) const {
   ASSERTX(f->vertices[0] == v || f->vertices[1] == v || f->vertices[2] == v);  // (contains() fails on non-const.)
   return (f->vertices[1] == v) + (f->vertices[2] == v) * 2;
 }
 
-inline int SrMesh::get_vf_j1(const SrAVertex* v, const SrAFace* f) const {
+[[nodiscard]] inline int SrMesh::get_vf_j1(const SrAVertex* v, const SrAFace* f) const {
   ASSERTX(f->vertices[0] == v || f->vertices[1] == v || f->vertices[2] == v);
   return (f->vertices[0] == v) + (f->vertices[1] == v) * 2;
 }
 
-inline int SrMesh::get_vf_j2(const SrAVertex* v, const SrAFace* f) const {
+[[nodiscard]] inline int SrMesh::get_vf_j2(const SrAVertex* v, const SrAFace* f) const {
   ASSERTX(f->vertices[0] == v || f->vertices[1] == v || f->vertices[2] == v);
   return (f->vertices[2] == v) + (f->vertices[0] == v) * 2;
 }
 
-inline SrAFace*& SrMesh::get_fnei(SrAFace* f, SrAFace* fn) const {
+[[nodiscard]] inline SrAFace*& SrMesh::get_fnei(SrAFace* f, SrAFace* fn) const {
   ASSERTX(f->fnei[0] == fn || f->fnei[1] == fn || f->fnei[2] == fn);
   return f->fnei[(f->fnei[1] == fn) + (f->fnei[2] == fn) * 2];
 }

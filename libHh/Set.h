@@ -72,22 +72,22 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   }
   // Omit "bool add(T&& e)" because e could be lost if !is_new.
   bool remove(const T& e) { return remove_i(e); }  // Return: was_found.
-  bool contains(const T& e) const { return _set.find(e) != end(); }
-  int num() const { return narrow_cast<int>(_set.size()); }
-  size_t size() const { return _set.size(); }
-  bool empty() const { return _set.empty(); }
+  [[nodiscard]] bool contains(const T& e) const { return _set.find(e) != end(); }
+  [[nodiscard]] int num() const { return narrow_cast<int>(_set.size()); }
+  [[nodiscard]] size_t size() const { return _set.size(); }
+  [[nodiscard]] bool empty() const { return _set.empty(); }
   const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
-  const T& retrieve(const T& e) const {
+  [[nodiscard]] const T& retrieve(const T& e) const {
     auto it = _set.find(e);
     return it != end() ? *it : def();
   }
-  const T& get(const T& e) const {
+  [[nodiscard]] const T& get(const T& e) const {
     auto it = _set.find(e);
     ASSERTXX(it != end());
     return *it;
   }
-  const T& get_one() const { return ASSERTXX(!empty()), *begin(); }
-  const T& get_random(Random& r) const {
+  [[nodiscard]] const T& get_one() const { return ASSERTXX(!empty()), *begin(); }
+  [[nodiscard]] const T& get_random(Random& r) const {
     auto it = crand(r);
     return *it;
   }
@@ -103,10 +103,10 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     auto node = _set.extract(it);
     return std::move(node.value());
   }
-  iterator begin() { return _set.begin(); }
-  const_iterator begin() const { return _set.begin(); }
-  iterator end() { return _set.end(); }
-  const_iterator end() const { return _set.end(); }
+  [[nodiscard]] iterator begin() { return _set.begin(); }
+  [[nodiscard]] const_iterator begin() const { return _set.begin(); }
+  [[nodiscard]] iterator end() { return _set.end(); }
+  [[nodiscard]] const_iterator end() const { return _set.end(); }
   void merge(type& other) { _set.merge(other._set); }  // Elements are moved from `other` if not already in *this.
 
  private:

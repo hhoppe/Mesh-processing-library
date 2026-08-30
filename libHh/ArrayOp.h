@@ -10,7 +10,7 @@ namespace hh {
 
 // Return a sorted, uniquified array of values gathered from a range.  Caller can subsequently call shrink_to_fit().
 template <ranges::input_range R, typename Comp = std::less<>>
-Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
+[[nodiscard]] Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
   Array ar(range);
   sort(ar, comp);
   auto subspan_of_extras = ranges::unique(ar);
@@ -19,7 +19,7 @@ Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
 }
 
 // Return the two closest values to the median of a list (or the same value twice if the list length is odd).
-template <ranges::input_range R> auto median_two(const R& range) -> Vec2<range_value_t<R>> {
+template <ranges::input_range R> [[nodiscard]] auto median_two(const R& range) -> Vec2<range_value_t<R>> {
   Array ar(range);
   assertx(ar.num());
   const int median_index = (ar.num() - 1) / 2;
@@ -31,12 +31,12 @@ template <ranges::input_range R> auto median_two(const R& range) -> Vec2<range_v
 }
 
 // Return the median value of a list (or the mean of the two nearest values if the list length is even).
-template <ranges::input_range R> auto median(const R& range) -> mean_type_t<range_value_t<R>> {
+template <ranges::input_range R> [[nodiscard]] auto median(const R& range) -> mean_type_t<range_value_t<R>> {
   return mean(median_two(range));
 }
 
 // Return the element with specified rank within range (where 0 <= rank < size(range) and rank == 0 is min element).
-template <ranges::input_range R> range_value_t<R> rank_element(const R& range, int rank) {
+template <ranges::input_range R> [[nodiscard]] range_value_t<R> rank_element(const R& range, int rank) {
   Array ar(range);
   assertx(ar.num());
   assertx(ar.ok(rank));
@@ -45,7 +45,7 @@ template <ranges::input_range R> range_value_t<R> rank_element(const R& range, i
 }
 
 // Return element with fractional ranking within range (where 0. <= rankf <= 1. and rankf == 0. is min element).
-template <ranges::input_range R> range_value_t<R> rankf_element(const R& range, double rankf) {
+template <ranges::input_range R> [[nodiscard]] range_value_t<R> rankf_element(const R& range, double rankf) {
   assertx(rankf >= 0. && rankf <= 1.);
   Array ar(range);
   assertx(ar.num());

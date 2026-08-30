@@ -31,7 +31,7 @@
 
 namespace hh {
 
-inline int get_max_threads() {
+[[nodiscard]] inline int get_max_threads() {
   constexpr int k_uninitialized = -99;
   static int s_value = k_uninitialized;
   if (s_value == k_uninitialized) {
@@ -73,8 +73,8 @@ class ThreadPoolIndexedTask : noncopyable {
     }
     for (auto& thread : _threads) thread.join();
   }
-  int num_threads() const { return int(_threads.size()); }
-  bool already_active() const { return _num_remaining_tasks != 0; }  // Detect nested execution.
+  [[nodiscard]] int num_threads() const { return int(_threads.size()); }
+  [[nodiscard]] bool already_active() const { return _num_remaining_tasks != 0; }  // Detect nested execution.
   void execute(int num_tasks, const Task& task_function) {
     if (already_active()) {
       Warning("Nested execution of ThreadPoolIndexedTask is run serially");
@@ -89,7 +89,7 @@ class ThreadPoolIndexedTask : noncopyable {
       _condition_variable_main.wait(lock, [this] { return !_num_remaining_tasks; });
     }
   }
-  static ThreadPoolIndexedTask& default_threadpool() {
+  [[nodiscard]] static ThreadPoolIndexedTask& default_threadpool() {
     static unique_ptr<ThreadPoolIndexedTask> thread_pool;
     // This is safe because thread_pool is nullptr only in the main thread before any other thread is launched.
     if (!thread_pool) thread_pool = make_unique<ThreadPoolIndexedTask>();

@@ -13,8 +13,8 @@ class RFile : noncopyable {
  public:
   explicit RFile(string filename);
   ~RFile();
-  std::istream& operator()() const { return *_is; }
-  FILE* cfile() { return _file; }
+  [[nodiscard]] std::istream& operator()() const { return *_is; }
+  [[nodiscard]] FILE* cfile() { return _file; }
 
  private:
   bool _file_isstd{false};
@@ -31,8 +31,8 @@ class WFile : noncopyable {
  public:
   explicit WFile(string filename);
   ~WFile();
-  std::ostream& operator()() const { return *_os; }
-  FILE* cfile() { return _file; }
+  [[nodiscard]] std::ostream& operator()() const { return *_os; }
+  [[nodiscard]] FILE* cfile() { return _file; }
 
  private:
   bool _file_isstd{false};
@@ -51,34 +51,34 @@ inline void assert_reached_eof(std::istream& is) {
 }
 
 // Check if a file already exists.
-bool file_exists(const string& name);
+[[nodiscard]] bool file_exists(const string& name);
 
 // Check if a folder already exists.
-bool directory_exists(const string& name);
+[[nodiscard]] bool directory_exists(const string& name);
 
 // Check if filename refers to a pipe command ("command |" or "| command").
-bool is_pipe(const string& name);
+[[nodiscard]] bool is_pipe(const string& name);
 
 // Check if filename is a URL ("https://" or "http://").
-bool is_url(const string& name);
+[[nodiscard]] bool is_url(const string& name);
 
 // Check if filename would be read using a pipe stream ("-", ".Z", ".gz", "| command", "command |", "https://").
-bool file_requires_pipe(const string& name);
+[[nodiscard]] bool file_requires_pipe(const string& name);
 
 // Retrieve modification time of file or directory.
-uint64_t get_path_modification_time(const string& name);
+[[nodiscard]] uint64_t get_path_modification_time(const string& name);
 
 // Set modification time of file or directory; return: success.
 bool set_path_modification_time(const string& name, uint64_t time);
 
 // Return an unsorted list of files in a directory (prefix each by "directory + '/'" to get absolute path).
-Array<string> get_files_in_directory(const string& directory);
+[[nodiscard]] Array<string> get_files_in_directory(const string& directory);
 
 // Return an unsorted list of directories in a directory (prefix each by "directory + '/'" to get absolute path).
-Array<string> get_directories_in_directory(const string& directory);
+[[nodiscard]] Array<string> get_directories_in_directory(const string& directory);
 
 // Check if my_sh() would find this command in the current PATH.
-bool command_exists_in_path(const string& name);
+[[nodiscard]] bool command_exists_in_path(const string& name);
 
 // Return: success.
 bool remove_file(const string& name);
@@ -99,10 +99,10 @@ class TmpFile : noncopyable {
 };
 
 // For sh/bash/csh/tcsh argument.
-string quote_arg_for_sh(const string& s);
+[[nodiscard]] string quote_arg_for_sh(const string& s);
 
 // For sh/bash/csh/tcsh/cmd argument.
-string quote_arg_for_shell(const string& s);
+[[nodiscard]] string quote_arg_for_shell(const string& s);
 
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait);

@@ -14,8 +14,8 @@ namespace hh {
 class HashFloat : noncopyable {
  public:
   explicit HashFloat(int nignorebits = 8, float small = 1e-4f);
-  float enter(float f);        // ret: filtered value
-  void pre_consider(float f);  // more robust pre-pass
+  [[nodiscard]] float enter(float f);  // ret: filtered value
+  void pre_consider(float f);          // more robust pre-pass
  private:
   Map<uint32_t, float> _m;  // encoded float bucket -> float rep
   int _nignorebits;         // num of least significant bits to ignore in floating-poing representation

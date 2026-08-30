@@ -43,13 +43,12 @@ class Audio : public Grid<2, float> {
   void operator=(CGridView<2, float> audio) { base::assign(audio); }
   void init(const Vec2<int>& dims) { base::init(dims); }
   void clear() { init(twice(0)); }
-  int nchannels() const { return base::dim(0); }
-  int nsamples() const { return base::dim(1); }
-  const Attrib& attrib() const { return _attrib; }
-  Attrib& attrib() { return _attrib; }
+  [[nodiscard]] int nchannels() const { return base::dim(0); }
+  [[nodiscard]] int nsamples() const { return base::dim(1); }
+  [[nodiscard]] auto& attrib(this auto&& self) { return self._attrib; }
   void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error
   void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
-  string diagnostic_string() const;
+  [[nodiscard]] string diagnostic_string() const;
 
   // Misc:
   struct Attrib {
@@ -64,15 +63,15 @@ class Audio : public Grid<2, float> {
 };
 
 // Whether filename suffix identifies it as audio.
-bool filename_is_audio(const string& filename);
+[[nodiscard]] bool filename_is_audio(const string& filename);
 
 // Return predicted audio suffix given first byte of file, or "" if unrecognized.
-string audio_suffix_for_magic_byte(uchar c);
+[[nodiscard]] string audio_suffix_for_magic_byte(uchar c);
 
 //----------------------------------------------------------------------------
 
 // Shared for implementation in Video.cpp
-bool ffmpeg_command_exists();
+[[nodiscard]] bool ffmpeg_command_exists();
 
 }  // namespace hh
 

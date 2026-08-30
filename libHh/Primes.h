@@ -8,7 +8,7 @@
 
 namespace hh {
 
-inline int smallest_factor_gt1(int i) {
+[[nodiscard]] inline int smallest_factor_gt1(int i) {
   assertx(i > 1);
   int isqr = int(sqrt(float(i)));
   for_intL(j, 2, isqr + 1) {
@@ -17,13 +17,13 @@ inline int smallest_factor_gt1(int i) {
   return i;
 }
 
-inline bool is_prime(int i) {
+[[nodiscard]] inline bool is_prime(int i) {
   assertx(i > 0);
   if (i == 1) return false;  // according to Mathematica
   return smallest_factor_gt1(i) == i;
 }
 
-inline int next_prime(int i, int count = 1) {
+[[nodiscard]] inline int next_prime(int i, int count = 1) {
   assertx(i >= 0 && count >= 0);
   for_int(j, count) {
     i++;
@@ -32,7 +32,7 @@ inline int next_prime(int i, int count = 1) {
   return i;
 }
 
-inline int prev_prime(int i, int count = 1) {
+[[nodiscard]] inline int prev_prime(int i, int count = 1) {
   assertx(i >= 0 && count >= 0);
   for_int(j, count) {
     --i;
@@ -42,7 +42,7 @@ inline int prev_prime(int i, int count = 1) {
   return i;
 }
 
-inline int random_prime_under(int n, Random& random) {
+[[nodiscard]] inline int random_prime_under(int n, Random& random) {
   assertx(n < 100'000);
   static Array<int> primes;  // not threadsafe
   if (!primes.num()) primes.push(2);
@@ -51,7 +51,7 @@ inline int random_prime_under(int n, Random& random) {
   return primes[random.get_unsigned(i + 1)];
 }
 
-inline bool are_coprime(int i1, int i2) {
+[[nodiscard]] inline bool are_coprime(int i1, int i2) {
   assertx(i1 > 0 && i2 > 0);
   // very inefficient
   int m = min(i1, i2);

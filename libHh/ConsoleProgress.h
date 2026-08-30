@@ -45,8 +45,8 @@ class ConsoleProgress : noncopyable {
   string _task_name;
   bool _silent;
   void update_i(float f);
-  static bool& silent_instance();
-  static std::mutex& global_mutex_instance() {
+  [[nodiscard]] static bool& silent_instance();
+  [[nodiscard]] static std::mutex& global_mutex_instance() {
     static auto& mutex = *new std::mutex;
     return mutex;
   }

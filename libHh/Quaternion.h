@@ -21,9 +21,9 @@ class Quaternion {
   void zero() { _c[0] = _c[1] = _c[2] = 0.f, _c[3] = 1.f; }
   // extraction
   void angle_axis(float& angle, Vector& axis) const;
-  float angle() const;
-  Vector axis() const;  // axis will be zero vector if angle == 0
-  bool is_unit() const;
+  [[nodiscard]] float angle() const;
+  [[nodiscard]] Vector axis() const;  // axis will be zero vector if angle == 0
+  [[nodiscard]] bool is_unit() const;
   friend Quaternion operator*(const Quaternion& q1, const Quaternion& q2);
   friend Quaternion inverse(const Quaternion& qi);
   friend Frame to_Frame(const Quaternion& q);
@@ -154,7 +154,7 @@ inline Vector Quaternion::axis() const {
 }
 
 // Frame origin is set to zero!
-inline Frame to_Frame(const Quaternion& q) {
+[[nodiscard]] inline Frame to_Frame(const Quaternion& q) {
   float xs, ys, zs, wx, wy, wz, xx, xy, xz, yy, yz, zz;
   ASSERTXX(q.is_unit());
   xs = q[0] + q[0];
@@ -173,9 +173,9 @@ inline Frame to_Frame(const Quaternion& q) {
                Vector(xz + wy, yz - wx, 1 - xx - yy), Point(0.f, 0.f, 0.f));
 }
 
-inline bool Quaternion::is_unit() const { return abs(mag2(*this) - 1.f) <= 1e-6f; }
+[[nodiscard]] inline bool Quaternion::is_unit() const { return abs(mag2(*this) - 1.f) <= 1e-6f; }
 
-inline Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
+[[nodiscard]] inline Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
   ASSERTXX(q1.is_unit() && q2.is_unit());
   Quaternion q(q1[3] * q2[0] + q1[0] * q2[3] + q1[1] * q2[2] - q1[2] * q2[1],
                q1[3] * q2[1] + q1[1] * q2[3] + q1[2] * q2[0] - q1[0] * q2[2],
@@ -185,12 +185,12 @@ inline Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
   return q;
 }
 
-inline Quaternion inverse(const Quaternion& qi) {
+[[nodiscard]] inline Quaternion inverse(const Quaternion& qi) {
   ASSERTXX(qi.is_unit());
   return Quaternion(-qi[0], -qi[1], -qi[2], qi[3]);
 }
 
-inline Quaternion pow(const Quaternion& qi, float e) {
+[[nodiscard]] inline Quaternion pow(const Quaternion& qi, float e) {
   Quaternion q;
   ASSERTXX(qi.is_unit());
   if (0) {
@@ -218,13 +218,13 @@ inline Quaternion pow(const Quaternion& qi, float e) {
   return q;
 }
 
-inline Frame pow(const Frame& frame, float v) {
+[[nodiscard]] inline Frame pow(const Frame& frame, float v) {
   Frame frame2 = to_Frame(pow(Quaternion(frame), v));
   frame2.p() = frame.p() * v;
   return frame2;
 }
 
-inline Vector log(const Quaternion& qi) {
+[[nodiscard]] inline Vector log(const Quaternion& qi) {
   ASSERTXX(qi.is_unit());
   float scale = mag(qi._c.head<3>());
   assertx(scale || qi[3]);
@@ -234,7 +234,7 @@ inline Vector log(const Quaternion& qi) {
   return v;
 }
 
-inline Quaternion exp(const Vector& v) {
+[[nodiscard]] inline Quaternion exp(const Vector& v) {
   Quaternion q;
   const float theta = mag(v);
   const float scale = theta > 1e-6f ? std::sin(theta) / theta : 1.f;
@@ -243,7 +243,7 @@ inline Quaternion exp(const Vector& v) {
   return q;
 }
 
-inline Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t) {
+[[nodiscard]] inline Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t) {
   float omega, cosom, sinom, sclp, sclq;
   Quaternion q;
   ASSERTXX(q0.is_unit() && q1.is_unit());
@@ -271,13 +271,13 @@ inline Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t) {
   return q;
 }
 
-inline Quaternion squad(const Quaternion& q0, const Quaternion& a, const Quaternion& b, const Quaternion& q1,
-                        float t) {
+[[nodiscard]] inline Quaternion squad(const Quaternion& q0, const Quaternion& a, const Quaternion& b,
+                                      const Quaternion& q1, float t) {
   return slerp(slerp(q0, q1, t), slerp(a, b, t), 2 * (1 - t) * t);
 }
 
-inline Quaternion squadseg(const Quaternion* qb, const Quaternion& q0, const Quaternion& q1, const Quaternion* qa,
-                           float t) {
+[[nodiscard]] inline Quaternion squadseg(const Quaternion* qb, const Quaternion& q0, const Quaternion& q1,
+                                         const Quaternion* qa, float t) {
   Quaternion a = q0, b = q1;
   if (qb) a = q0 * exp((log(inverse(q0) * q1) + log(inverse(q0) * *qb)) * -.25f);
   if (qa) b = q1 * exp((log(inverse(q1) * *qa) + log(inverse(q1) * q0)) * -.25f);

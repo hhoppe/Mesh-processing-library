@@ -38,7 +38,7 @@ void test2() {
     assertw(pq.min_priority() == 1.f);
     pq.enter(100, 0 * 2.f);
     for_int(i, 100) {
-      pq.min();
+      assertx(pq.min() >= 0.f);
       assertw(!pq.empty());
       assertw(pq.num() == 200 - i);
       assertw(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));
@@ -60,7 +60,7 @@ void test2() {
     assertw(pq.min() == 0);
     pq.enter(100, 0 * 2.f);
     for_int(i, 100) {
-      pq.min();
+      assertx(pq.min() >= 0.f);
       assertw(!pq.empty());
       assertw(pq.num() == 200 - i);
       assertw(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));

@@ -14,7 +14,7 @@ struct BoundingSphere {
   }
 };
 
-inline BoundingSphere bsphere_union(const BoundingSphere& bsphere1, const BoundingSphere& bsphere2) {
+[[nodiscard]] inline BoundingSphere bsphere_union(const BoundingSphere& bsphere1, const BoundingSphere& bsphere2) {
   float d = dist(bsphere1.point, bsphere2.point);
   if (bsphere1.radius >= d + bsphere2.radius) {
     return bsphere1;

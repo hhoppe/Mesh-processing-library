@@ -847,17 +847,17 @@ void do_zero_vadsmall() {
     switch (ii) {
       case 2:
         diff(vspl.vad_large, va_t, va_s);
-        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
+        vspl.vad_small = PmVertexAttribD{};
         break;
       case 0:
         diff(vspl.vad_large, va_s, va_t);
-        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
+        vspl.vad_small = PmVertexAttribD{};
         break;
       case 1: {
         PmVertexAttrib va_m;
         interp(va_m, va_s, va_t, 0.5f);
         diff(vspl.vad_large, va_t, va_m);
-        diff(vspl.vad_small, va_s, va_s);  // Set to zero.
+        vspl.vad_small = PmVertexAttribD{};
         break;
       }
       default: assertnever("");
@@ -1217,6 +1217,7 @@ void do_stat() {
     int vlroffsetn1 = 0, vlroffset00 = 0;
     HH_STAT(Sresidu);
     HH_STAT(Sresidd);
+    HH_STAT(Svad_small_mag);
     for_int(vspli, nvsplits) {
       const Vsplit& vspl = pmesh._vsplits[vspli];
       unsigned code = vspl.code;
@@ -1226,6 +1227,7 @@ void do_stat() {
       if (vspl.vlr_offset1 == 1) vlroffset00++;
       Sresidu.enter(vspl.resid_uni);
       Sresidd.enter(vspl.resid_dir);
+      Svad_small_mag.enter(mag(vspl.vad_small.dpoint));
     }
     for_int(ii, 3) showdf("ii==%d: %-5d %.1f%%\n", ii, ar_ii[ii], ar_ii[ii] * 100.f / nvsplits);
     showdf("#vlr_offsetn1=%d #vlr_offsetn2=%d\n", vlroffsetn1, vlroffset00);

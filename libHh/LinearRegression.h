@@ -44,7 +44,7 @@ template <int N, int D, typename Eval = Vec<float, N>(const Vec<float, D>&)> cla
     _lls.enter_b_r(_row, V(val));
     _row++;
   }
-  Vec<float, N> get_solution() {
+  [[nodiscard]] Vec<float, N> get_solution() {
     assertx(_lls.solve());
     Vec<float, N> ar;
     _lls.get_x_c(0, ar);

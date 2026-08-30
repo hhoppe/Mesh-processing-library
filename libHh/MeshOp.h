@@ -14,28 +14,28 @@ namespace hh {
 // *** Misc
 
 // Given a mesh boundary edge, follow the boundary to construct a closed loop of edges.
-Queue<Edge> gather_boundary(const Mesh& mesh, Edge e);
+[[nodiscard]] Queue<Edge> gather_boundary(const Mesh& mesh, Edge e);
 
 // Given a mesh face, find all faces connected through Face-Edge-Face connections.
-Set<Face> gather_component(const Mesh& mesh, Face f);
+[[nodiscard]] Set<Face> gather_component(const Mesh& mesh, Face f);
 
 // Given a mesh face, find all faces connected through vertices (at least as large as gather_component).
-Set<Face> gather_component_v(const Mesh& mesh, Face f);
+[[nodiscard]] Set<Face> gather_component_v(const Mesh& mesh, Face f);
 
 // Gather all connected components (connected through Face-Edge-Face), in order of increasing size.
-Array<Set<Face>> gather_components(const Mesh& mesh);
+[[nodiscard]] Array<Set<Face>> gather_components(const Mesh& mesh);
 
 // Return statistics on number of edges in each gather_boundary() loop.
-Stat mesh_stat_boundaries(const Mesh& mesh);
+[[nodiscard]] Stat mesh_stat_boundaries(const Mesh& mesh);
 
 // Return statistics on number of faces in each gather_component() group.
-Stat mesh_stat_components(const Mesh& mesh);
+[[nodiscard]] Stat mesh_stat_components(const Mesh& mesh);
 
 // Return genus value (accounting for number of components and boundaries)
-float mesh_genus(const Mesh& mesh);
+[[nodiscard]] float mesh_genus(const Mesh& mesh);
 
 // Return string giving basic topological characteristics of mesh.
-string mesh_genus_string(const Mesh& mesh);
+[[nodiscard]] string mesh_genus_string(const Mesh& mesh);
 
 // For faces with > 3 sides, find a good triangulation of the vertices.
 // Return: success (may fail if some edges already exist).
@@ -44,25 +44,25 @@ string mesh_genus_string(const Mesh& mesh);
 // ret: cos of signed angle away from "flatness" (== exterior angle)
 // range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
 // For non-triangles, looks at average of immediate neighbors on either side.
-float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
+[[nodiscard]] float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
 
 // Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
 // (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
-float edge_signed_dihedral_angle(const GMesh& mesh, Edge e);
+[[nodiscard]] float edge_signed_dihedral_angle(const GMesh& mesh, Edge e);
 
 // Must be a nice interior vertex.
-float vertex_solid_angle(const GMesh& mesh, Vertex v);
+[[nodiscard]] float vertex_solid_angle(const GMesh& mesh, Vertex v);
 
 // Return a criterion given an edge e that is low if the edge should be collapsed.
 // Use the product of the edge length with the smallest inscribed
 // radius of the two adjacent faces (its dimension is area).
-float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii);
+[[nodiscard]] float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii);
 
 // Return change in volume, but penalize bad dihedral angles.
-float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);
+[[nodiscard]] float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);
 
 // Return memoryless QEM and penalize bad dihedral angles.
-float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
+[[nodiscard]] float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
 
 // Fill the one or more holes associated with the boundary loop containing erep.  Return the new multisided faces.
 Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep);
@@ -92,8 +92,8 @@ int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDG
                            EDGEF fadd = nullptr);
 
 // Two EDGEF functions to determine which edges to swap in retriangulate functions above.
-bool circum_radius_swap_criterion(const GMesh& mesh, Edge e);
-bool diagonal_distance_swap_criterion(const GMesh& mesh, Edge e);
+[[nodiscard]] bool circum_radius_swap_criterion(const GMesh& mesh, Edge e);
+[[nodiscard]] bool diagonal_distance_swap_criterion(const GMesh& mesh, Edge e);
 
 // *** Normal estimation
 
@@ -110,10 +110,10 @@ class Vnors {
  public:
   enum class EType { unspecified, angle, sum, area, sloan, subdiv };
   Vnors(const GMesh& mesh, Vertex v, EType nortype = EType::unspecified);
-  bool is_unique() const { return !_mfnor; }
-  const Vector& unique_nor() const { return ASSERTX(is_unique()), _nor; }
-  const Vector& face_nor(Face f) const { return ASSERTX(!is_unique()), _mfnor->get(f); }
-  const Vector& get_nor(Face f) const { return _mfnor ? _mfnor->get(f) : _nor; }  // In any case.
+  [[nodiscard]] bool is_unique() const { return !_mfnor; }
+  [[nodiscard]] const Vector& unique_nor() const { return ASSERTX(is_unique()), _nor; }
+  [[nodiscard]] const Vector& face_nor(Face f) const { return ASSERTX(!is_unique()), _mfnor->get(f); }
+  [[nodiscard]] const Vector& get_nor(Face f) const { return _mfnor ? _mfnor->get(f) : _nor; }  // In any case.
 
  private:
   unique_ptr<Map<Face, Vector>> _mfnor;  // If !_mfnor, the unique normal is stored in _nor.

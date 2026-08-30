@@ -39,9 +39,9 @@ class Args {
   explicit Args(CArrayView<string> aargs) : _args(aargs) {}
   explicit Args(std::initializer_list<string> l) : _args(std::move(l)) {}
   virtual ~Args() = default;
-  int num() const { return _args.num() - _iarg; }  // Number of arguments left.
-  size_t size() const { return _args.size() - _iarg; }
-  const string& peek_string() const { return assertx(num() > 0), _args[_iarg]; }
+  [[nodiscard]] int num() const { return _args.num() - _iarg; }  // Number of arguments left.
+  [[nodiscard]] size_t size() const { return _args.size() - _iarg; }
+  [[nodiscard]] const string& peek_string() const { return assertx(num() > 0), _args[_iarg]; }
   bool get_bool();
   char get_char();
   int get_int();
@@ -51,18 +51,18 @@ class Args {
   string get_filename();  // Check for legal characters; translate '\'; may not begin with '-' (unless equal to "-").
 
   // For misc use:
-  Args& use() && { return *this; }
-  static bool check_bool(const string& s);
-  static bool check_char(const string& s);
-  static bool check_int(const string& s);
-  static bool check_float(const string& s);
-  static bool check_double(const string& s);
-  static bool check_filename(const string& s);
-  static bool parse_bool(const string& s);      // Or die.
-  static char parse_char(const string& s);      // Or die.
-  static int parse_int(const string& s);        // Or die.
-  static float parse_float(const string& s);    // Or die.
-  static double parse_double(const string& s);  // Or die.
+  [[nodiscard]] Args& use() && { return *this; }
+  [[nodiscard]] static bool check_bool(const string& s);
+  [[nodiscard]] static bool check_char(const string& s);
+  [[nodiscard]] static bool check_int(const string& s);
+  [[nodiscard]] static bool check_float(const string& s);
+  [[nodiscard]] static bool check_double(const string& s);
+  [[nodiscard]] static bool check_filename(const string& s);
+  [[nodiscard]] static bool parse_bool(const string& s);      // Or die.
+  [[nodiscard]] static char parse_char(const string& s);      // Or die.
+  [[nodiscard]] static int parse_int(const string& s);        // Or die.
+  [[nodiscard]] static float parse_float(const string& s);    // Or die.
+  [[nodiscard]] static double parse_double(const string& s);  // Or die.
   virtual void problem(const string& s);
 
  private:
@@ -112,14 +112,14 @@ class ParseArgs : public Args {
   void other_options_ok() { _other_options_ok = true; }    // Unrecognized -* are ok.
   void disallow_prefixes() { _disallow_prefixes = true; }  // Options implicitly end with '[' if none is present.
   // Note: usually, other_options_ok() implies that disallow_prefixes() should be set too.
-  static bool special_arg(const string& s);  // True if "-?" or "--help" or "--version".
+  [[nodiscard]] static bool special_arg(const string& s);  // True if "-?" or "--help" or "--version".
   void print_help();
 
   // Perform argument parsing:
   bool parse();  // Main function; returns success (false if "-?" is found).
-  bool parse_and_extract(Array<string>& aargs);
+  [[nodiscard]] bool parse_and_extract(Array<string>& aargs);
   void copy_parse(const ParseArgs& pa);
-  string header();
+  [[nodiscard]] string header();
   void problem(const string& s) override;
 
  private:
@@ -139,11 +139,11 @@ class ParseArgs : public Args {
   const option* _curopt{nullptr};  // Option currently being parsed.
   int _icur{-1};                   // Index of current option in _args.
   Array<string> _unrecognized_args;
-  bool parse_internal();  // Returns success (false if "-?" is found).
+  [[nodiscard]] bool parse_internal();  // Returns success (false if "-?" is found).
   void common_construction();
-  string get_executable_name();
+  [[nodiscard]] string get_executable_name();
   void iadd(option o);
-  const option* match(const string& s, bool skip_options);
+  [[nodiscard]] const option* match(const string& s, bool skip_options);
   static void fbool(Args& args);
   static void fchar(Args& args);
   static void fint(Args& args);

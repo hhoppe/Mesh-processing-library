@@ -21,10 +21,10 @@ class Flags {
   void operator=(type flags) { _flags = flags; }
   operator type() const { return _flags; }
   type set(type flags) { return std::exchange(_flags, flags); }  // return previous
-  Flag flag(FlagMask fmask);
-  bool flag(FlagMask fmask) const { return (_flags & fmask) != 0; }
+  [[nodiscard]] Flag flag(FlagMask fmask);
+  [[nodiscard]] bool flag(FlagMask fmask) const { return (_flags & fmask) != 0; }
   friend void swap(Flags& l, Flags& r) noexcept { std::swap(l._flags, r._flags); }
-  static FlagMask allocate(int& counter) { return assertx(counter < max_nflags), 1u << (counter++); }
+  [[nodiscard]] static FlagMask allocate(int& counter) { return assertx(counter < max_nflags), 1u << (counter++); }
 
  private:
   type _flags{0};
@@ -42,7 +42,7 @@ class Flag {
   }
   void operator=(const Flag& flag) { *this = bool(flag); }
   Flag(const Flag&) = default;
-  operator bool() const { return (_flags._flags & _fmask) != 0; }
+  [[nodiscard]] operator bool() const { return (_flags._flags & _fmask) != 0; }
   bool set(bool bset) {  // return previous
     bool t = *this;
     *this = bset;

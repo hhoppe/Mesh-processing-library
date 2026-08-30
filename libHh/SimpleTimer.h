@@ -40,13 +40,13 @@ class SimpleTimer {
  public:
   explicit SimpleTimer(std::string name = "") : _name(std::move(name)) { _real_counter = get_precise_counter(); }
   ~SimpleTimer();
-  double elapsed() const { return (get_precise_counter() - _real_counter) * get_seconds_per_counter(); }
+  [[nodiscard]] double elapsed() const { return (get_precise_counter() - _real_counter) * get_seconds_per_counter(); }
 
  private:
   std::string _name;
   int64_t _real_counter;
-  static int64_t get_precise_counter();
-  static double get_seconds_per_counter();
+  [[nodiscard]] static int64_t get_precise_counter();
+  [[nodiscard]] static double get_seconds_per_counter();
 };
 
 }  // namespace hh

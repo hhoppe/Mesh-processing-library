@@ -26,44 +26,44 @@ template <typename T, typename Less = std::less<T>> requires Copyable<T> class S
 
  public:
   void clear() { _s.clear(); }
-  bool empty() const { return _s.empty(); }
-  int num() const { return narrow_cast<int>(_s.size()); }
-  size_t size() const { return _s.size(); }
+  [[nodiscard]] bool empty() const { return _s.empty(); }
+  [[nodiscard]] int num() const { return narrow_cast<int>(_s.size()); }
+  [[nodiscard]] size_t size() const { return _s.size(); }
   // To avoid ambiguity, e should not equal T{}.
   bool enter(const T& e) {  // ret: is_new
     const auto [it, is_new] = _s.insert(e);
     return is_new;
   }
-  const T& retrieve(const T& e) const {  // or ret=T{}
+  [[nodiscard]] const T& retrieve(const T& e) const {  // or ret=T{}
     auto it = _s.find(e);
     return it != end() ? *it : def();
   }
   bool remove(const T& e) { return _s.erase(e) > 0; }
-  const T& pred(const T& e) const {
+  [[nodiscard]] const T& pred(const T& e) const {
     auto it = _s.lower_bound(e);
     return it != begin() ? *--it : def();
   }
-  const T& succ(const T& e) const {
+  [[nodiscard]] const T& succ(const T& e) const {
     auto it = _s.upper_bound(e);
     return it != end() ? *it : def();
   }
-  const T& pred_eq(const T& e) const {
+  [[nodiscard]] const T& pred_eq(const T& e) const {
     auto it = _s.upper_bound(e);
     return it != begin() ? *--it : def();
   }
-  const T& succ_eq(const T& e) const {
+  [[nodiscard]] const T& succ_eq(const T& e) const {
     auto it = _s.lower_bound(e);
     return it != end() ? *it : def();
   }
-  const T& min() const { return ASSERTXX(!empty()), *begin(); }
-  const T& max() const { return ASSERTXX(!empty()), *--end(); }
+  [[nodiscard]] const T& min() const { return ASSERTXX(!empty()), *begin(); }
+  [[nodiscard]] const T& max() const { return ASSERTXX(!empty()), *--end(); }
   using value_type = T;
   using iterator = typename base::iterator;
   using const_iterator = typename base::const_iterator;
-  iterator begin() { return _s.begin(); }
-  const_iterator begin() const { return _s.begin(); }
-  iterator end() { return _s.end(); }
-  const_iterator end() const { return _s.end(); }
+  [[nodiscard]] iterator begin() { return _s.begin(); }
+  [[nodiscard]] const_iterator begin() const { return _s.begin(); }
+  [[nodiscard]] iterator end() { return _s.end(); }
+  [[nodiscard]] const_iterator end() const { return _s.end(); }
 
  private:
   base _s;

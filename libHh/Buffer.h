@@ -16,8 +16,8 @@ namespace hh {
 
 class Buffer : noncopyable {
  public:
-  bool eof() const;  // end of file
-  bool err() const;  // error in system call
+  [[nodiscard]] bool eof() const { return _eof; }  // end of file
+  [[nodiscard]] bool err() const { return _err; }  // error in system call
  protected:
   explicit Buffer(int fd) : _fd(fd) { assertx(_fd >= 0); }
   int _fd;  // file descriptor associated
@@ -35,18 +35,18 @@ class RBuffer : public Buffer {
  public:
   explicit RBuffer(int fd);
   enum class ERefill { no, yes, other };
-  ERefill refill();
+  [[nodiscard]] ERefill refill();
   void extract(int n);  // have read n bytes
-  int num() const;
-  size_t size() const { return num(); }
-  char operator[](int bi) const;
-  bool has_line() const;
+  [[nodiscard]] int num() const { return _n; }
+  [[nodiscard]] size_t size() const { return num(); }
+  [[nodiscard]] char operator[](int bi) const;
+  [[nodiscard]] bool has_line() const;
   // next dies if len not sufficient, includes '\n', ret success
   [[nodiscard]] bool extract_line(string& str);
-  char get_char(int bi) const;  // same as operator[]
-  int get_int(int bi) const;
-  short get_short(int bi) const;
-  float get_float(int bi) const;
+  [[nodiscard]] char get_char(int bi) const;  // same as operator[]
+  [[nodiscard]] int get_int(int bi) const;
+  [[nodiscard]] short get_short(int bi) const;
+  [[nodiscard]] float get_float(int bi) const;
   void wait_for_input();
 };
 
@@ -64,10 +64,6 @@ class WBuffer : public Buffer {
 };
 
 //----------------------------------------------------------------------------
-
-inline bool Buffer::eof() const { return _eof; }
-inline bool Buffer::err() const { return _err; }
-inline int RBuffer::num() const { return _n; }
 
 inline char RBuffer::operator[](int bi) const {
   ASSERTX(bi >= 0 && bi < _n);

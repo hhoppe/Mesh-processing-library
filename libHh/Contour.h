@@ -114,8 +114,8 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   int _nedegen{0};
   Array<DPoint> _tmp_poly;
 
-  bool cube_inbounds(const IPoint& ci) const { return ci.in_range(ntimes<D>(_gn)); }
-  DPoint get_point(const IPoint& ci) const {
+  [[nodiscard]] bool cube_inbounds(const IPoint& ci) const { return ci.in_range(ntimes<D>(_gn)); }
+  [[nodiscard]] DPoint get_point(const IPoint& ci) const {
     // Note: less strict than cube_inbounds() because ci[c] == _gn is OK for a vertex.
     // DPoint dp; for_int(c, D) { ASSERTX(ci[c] >= 0 && ci[c] <= _gn); dp[c] = min(ci[c] * _gni, 1.f); }
     DPoint dp;
@@ -126,7 +126,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     return dp;
   }
   template <bool avoid_degen, typename Eval = float(const DPoint&)>
-  DPoint compute_point(const DPoint& pp, const DPoint& pn, float vp, float vn, Eval& eval) {
+  [[nodiscard]] DPoint compute_point(const DPoint& pp, const DPoint& pn, float vp, float vn, Eval& eval) {
     DPoint pm;
     float fm;
     if (!_vertex_tol) {
@@ -210,8 +210,8 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   using typename base::DPoint;
   using typename base::IPoint;
   using typename base::Node;
-  Derived& derived() { return *down_cast<Derived*>(this); }
-  const Derived& derived() const { return *down_cast<const Derived*>(this); }
+  [[nodiscard]] Derived& derived() { return *down_cast<Derived*>(this); }
+  [[nodiscard]] const Derived& derived() const { return *down_cast<const Derived*>(this); }
 
  public:
   explicit Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) {}
@@ -227,11 +227,11 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   using Node222 = SGrid<Node*, 2, 2, 2>;
   using base::k_not_yet_evaled;
 
-  unsigned encode(const IPoint& ci) const {
+  [[nodiscard]] unsigned encode(const IPoint& ci) const {
     static_assert(k_max_gn <= 1024);
     return (((unsigned(ci[0]) << 10) | unsigned(ci[1])) << 10) | unsigned(ci[2]);
   }
-  IPoint decode(unsigned en) const {
+  [[nodiscard]] IPoint decode(unsigned en) const {
     static_assert(k_max_gn <= 1024);
     return IPoint(narrow_cast<int>(en >> 20), narrow_cast<int>((en >> 10) & ((1u << 10) - 1)),
                   narrow_cast<int>(en & ((1u << 10) - 1)));
@@ -447,7 +447,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
       }
     }
   }
-  Vertex get_vertex_onedge(Node* n1, Node* n2) {
+  [[nodiscard]] Vertex get_vertex_onedge(Node* n1, Node* n2) {
     bool is_new;
     Vertex* pv;
     {
@@ -580,11 +580,11 @@ class Contour2D : public ContourBase<2> {
   using Node22 = SGrid<Node*, 2, 2>;
   using base::k_not_yet_evaled;
 
-  unsigned encode(const IPoint& ci) const {
+  [[nodiscard]] unsigned encode(const IPoint& ci) const {
     static_assert(k_max_gn <= 65536);
     return (unsigned(ci[0]) << 16) | unsigned(ci[1]);
   }
-  IPoint decode(unsigned en) const {
+  [[nodiscard]] IPoint decode(unsigned en) const {
     static_assert(k_max_gn <= 65536);
     return IPoint(narrow_cast<int>(en >> 16), narrow_cast<int>(en & ((1u << 16) - 1)));
   }

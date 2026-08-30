@@ -86,13 +86,13 @@ class WMesh {
   void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const;
-  GMesh extract_gmesh(const PMeshInfo& pminfo) const;
+  [[nodiscard]] GMesh extract_gmesh(const PMeshInfo& pminfo) const;
   void ok() const;
-  Vec3<int> face_vertices(int f) const;
-  Vec3<Point> face_points(int f) const;
-  int get_jvf(int v, int f) const;  // get index of vertex v in face f
-  int get_wvf(int v, int f) const;
-  Array<int> gather_someface() const;  // Returns mapping: vertex index -> index of some adjacent face.
+  [[nodiscard]] Vec3<int> face_vertices(int f) const;
+  [[nodiscard]] Vec3<Point> face_points(int f) const;
+  [[nodiscard]] int get_jvf(int v, int f) const;  // get index of vertex v in face f
+  [[nodiscard]] int get_wvf(int v, int f) const;
+  [[nodiscard]] Array<int> gather_someface() const;  // Returns mapping: vertex index -> index of some adjacent face.
 
   Materials _materials;
   Array<PmVertex> _vertices;
@@ -106,7 +106,7 @@ struct Vsplit {
   void read(std::istream& is, const PMeshInfo& pminfo);
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void ok() const;
-  bool adds_two_faces() const;
+  [[nodiscard]] bool adds_two_faces() const;
   // This format provides these limits:
   // - maximum number of faces: 1ull << 32
   // - maximum vertex valence:  1u << 16
@@ -225,7 +225,7 @@ struct Vsplit {
   // ** Residual information:
   float resid_uni;
   float resid_dir;
-  int expected_wad_num(const PMeshInfo& pminfo) const;
+  [[nodiscard]] int expected_wad_num(const PMeshInfo& pminfo) const;
 };
 
 // For each face, what are its 3 neighbors?
@@ -256,11 +256,11 @@ class AWMesh : public WMesh {
 
   Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
 
-  int most_clw_face(int v, int f) const;  // negative if v is interior vertex
-  int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
-  bool is_boundary(int v, int f) const;
-  VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
-  VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
+  [[nodiscard]] int most_clw_face(int v, int f) const;  // negative if v is interior vertex
+  [[nodiscard]] int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
+  [[nodiscard]] bool is_boundary(int v, int f) const;
+  [[nodiscard]] VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
+  [[nodiscard]] VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
   // Split the edge between _faces[f].wedges[j] and _faces[f].wedges[mod3(j + 1)] with interp(v1, v2, frac1).
   void split_edge(int f, int j, float frac1);
 
@@ -362,8 +362,8 @@ class PMesh : noncopyable {
 
  private:
   static constexpr uchar k_magic_first_byte = 0xFF;  // (Network-order first byte (MSB) of int flclw is <= 127.)
-  static PMeshInfo read_header(std::istream& is);
-  static bool at_trailer(std::istream& is) { return is.peek() == k_magic_first_byte; }
+  [[nodiscard]] static PMeshInfo read_header(std::istream& is);
+  [[nodiscard]] static bool at_trailer(std::istream& is) { return is.peek() == k_magic_first_byte; }
   // const AWMesh& base_mesh const { return _base_mesh; }
 };
 
@@ -378,11 +378,11 @@ class PMeshRStream : noncopyable {
   explicit PMeshRStream(std::istream& is, PMesh* ppm_construct = nullptr);
   ~PMeshRStream();
   void read_base_mesh(AWMesh* bmesh = nullptr);  // always call this first!
-  const AWMesh& base_mesh();
-  bool is_reversible() const { return !!_pm; }
+  [[nodiscard]] const AWMesh& base_mesh();
+  [[nodiscard]] bool is_reversible() const { return !!_pm; }
   const Vsplit* next_vsplit();
-  const Vsplit* prev_vsplit();       // die if !is_reversible()
-  const Vsplit* peek_next_vsplit();  // peek without using it
+  const Vsplit* prev_vsplit();                     // die if !is_reversible()
+  [[nodiscard]] const Vsplit* peek_next_vsplit();  // peek without using it
   PMeshInfo _info;
 
  private:
@@ -404,9 +404,9 @@ class PMeshIter : public AWMesh {
   bool prev();                                    // ret: success; die if !_pmrs.is_reversible()
   bool goto_nvertices(int nv) { return goto_nvertices_ancestry(nv, nullptr); }  // ret: success
   bool goto_nfaces(int nf) { return goto_nfaces_ancestry(nf, nullptr); }        // within +- 1, favor 0 or -1
-  PMeshRStream& rstream() { return _pmrs; }
-  const PMeshRStream& rstream() const { return _pmrs; }
-  GMesh extract_gmesh() const { return AWMesh::extract_gmesh(rstream()._info); }
+  [[nodiscard]] PMeshRStream& rstream() { return _pmrs; }
+  [[nodiscard]] const PMeshRStream& rstream() const { return _pmrs; }
+  [[nodiscard]] GMesh extract_gmesh() const { return AWMesh::extract_gmesh(rstream()._info); }
 
  private:
   friend class Geomorph;
@@ -447,7 +447,7 @@ class Geomorph : public WMesh {
   // Create a geomorph from pmi's current mesh to the mesh obtained after applying n vsplits to pmi.
   // Note side-effect on pmi!
   // Ret: was_able_to_go_all_the_way; die if !empty
-  bool construct_next(PMeshIter& pmi, int nvsplits);
+  [[nodiscard]] bool construct_next(PMeshIter& pmi, int nvsplits);
   // Same up to nvertices
   // Ret: success
   bool construct_goto_nvertices(PMeshIter& pmi, int nvertices);
@@ -508,7 +508,7 @@ static_assert(std::is_trivially_copyable_v<PmSVertexAttribG>);
 class SMesh {
  public:
   explicit SMesh(const WMesh& wmesh);
-  GMesh extract_gmesh(int has_rgb, int has_uv) const;
+  [[nodiscard]] GMesh extract_gmesh(int has_rgb, int has_uv) const;
 
  public:
   Materials _materials;
@@ -525,7 +525,7 @@ class SGeomorph : public SMesh {
  public:
   explicit SGeomorph(const Geomorph& geomorph);
   void evaluate(float alpha);  // 0 <= alpha <= 1 (0 == coarse)
-  GMesh extract_gmesh(int has_rgb, int has_uv) const;
+  [[nodiscard]] GMesh extract_gmesh(int has_rgb, int has_uv) const;
 
  private:
   Array<PmSVertexAttribG> _vgattribs;

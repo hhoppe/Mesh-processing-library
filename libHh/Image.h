@@ -53,12 +53,12 @@ class Image : public Matrix<Pixel> {
   void init(const Vec2<int>& pdims) { base::init(pdims); }
   void init(const Vec2<int>& pdims, Pixel pixel);
   void clear() { init(twice(0)); }
-  const Attrib& attrib() const { return _attrib; }
-  Attrib& attrib() { return _attrib; }
+  [[nodiscard]] const Attrib& attrib() const { return _attrib; }
+  [[nodiscard]] Attrib& attrib() { return _attrib; }
   void set_zsize(int n);
-  int zsize() const { return HH_ASSUME(attrib().zsize <= 4), attrib().zsize; }
+  [[nodiscard]] int zsize() const { return HH_ASSUME(attrib().zsize <= 4), attrib().zsize; }
   void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // e.g. "jpg"; for writing '-'.
-  const string& suffix() const { return attrib().suffix; }                 // e.g. "rgb"; used for reading '-'.
+  [[nodiscard]] const string& suffix() const { return attrib().suffix; }   // e.g. "rgb"; used for reading '-'.
   void set_silent_io_progress(bool b) { _silent_io_progress = b; }
   // Filename may be "-" for std::cin;  may throw std::runtime_error.
   void read_file(const string& filename) { read_file_i(filename, false); }
@@ -98,30 +98,30 @@ class Image : public Matrix<Pixel> {
 };
 
 // Whether filename suffix identifies it as an image.
-bool filename_is_image(const string& filename);
+[[nodiscard]] bool filename_is_image(const string& filename);
 
 // Return predicted image suffix given first byte of file, or "" if unrecognized.
-string image_suffix_for_magic_byte(uchar c);
+[[nodiscard]] string image_suffix_for_magic_byte(uchar c);
 
 // &image == &newimage is OK.
-Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-            const Pixel* bordervalue = nullptr, Image&& newimage = Image());
+[[nodiscard]] Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+                          const Pixel* bordervalue = nullptr, Image&& newimage = Image());
 
-inline bool rgb_equal(const Pixel& pix1, const Pixel& pix2) {
+[[nodiscard]] inline bool rgb_equal(const Pixel& pix1, const Pixel& pix2) {
   return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
 }
 
-inline bool equal(const Pixel& pix1, const Pixel& pix2, int nz) {
+[[nodiscard]] inline bool equal(const Pixel& pix1, const Pixel& pix2, int nz) {
   ASSERTX(nz >= 3);
   return rgb_equal(pix1, pix2) && (nz < 4 || pix1[3] == pix2[3]);
 }
 
-inline int rgb_dist2(const Pixel& pix1, const Pixel& pix2) {
+[[nodiscard]] inline int rgb_dist2(const Pixel& pix1, const Pixel& pix2) {
   return square(int{pix1[0]} - pix2[0]) + square(int{pix1[1]} - pix2[1]) + square(int{pix1[2]} - pix2[2]);
 }
 
 // Convert float/double matrix (with 0.f == black and 1.f == white) to an image.
-template <typename T> Image as_image(CMatrixView<T> matrix) {
+template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
   static_assert(std::is_floating_point_v<T>, "T must be float/double");
   Image image(matrix.dims());
   parallel_for(range(image.ysize()), [&](const int y) {
@@ -133,7 +133,7 @@ template <typename T> Image as_image(CMatrixView<T> matrix) {
 }
 
 // Specialize as_image() to grid of Vector4.
-inline Image as_image(CMatrixView<Vector4> grid) {
+[[nodiscard]] inline Image as_image(CMatrixView<Vector4> grid) {
   Image image(grid.dims());
   parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {
     image[yx] = grid[yx].pixel();
@@ -144,7 +144,7 @@ inline Image as_image(CMatrixView<Vector4> grid) {
 }
 
 // Specialize as_image() to grid of Vec3<float>.
-inline Image as_image(CMatrixView<Vec3<float>> grid) {
+[[nodiscard]] inline Image as_image(CMatrixView<Vec3<float>> grid) {
   Image image(grid.dims());
   parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {  //
     image[yx] = Vector4(concat(grid[yx], V(1.f))).pixel();
@@ -153,7 +153,7 @@ inline Image as_image(CMatrixView<Vec3<float>> grid) {
 }
 
 // Specialize as_image() to grid of pixels.
-inline Image as_image(CMatrixView<Pixel> grid) {
+[[nodiscard]] inline Image as_image(CMatrixView<Pixel> grid) {
   Image image(grid.dims());
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx] = grid[yx]; });
   return image;
@@ -171,10 +171,10 @@ class Nv12 {
     _mat_UV.init(dims / 2);
     assertx(_mat_Y.dims() == _mat_UV.dims() * 2);
   }
-  MatrixView<uint8_t> get_Y() { return _mat_Y; }
-  CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
-  MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
-  CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
+  [[nodiscard]] MatrixView<uint8_t> get_Y() { return _mat_Y; }
+  [[nodiscard]] CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
+  [[nodiscard]] MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
+  [[nodiscard]] CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
 
  private:
   Matrix<uint8_t> _mat_Y;         // Luminance.
@@ -188,10 +188,10 @@ class Nv12View {
     assertx(_mat_Y.dims() == _mat_UV.dims() * 2);
   }
   Nv12View(Nv12& nv12) : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) {}
-  MatrixView<uint8_t> get_Y() { return _mat_Y; }
-  CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
-  MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
-  CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
+  [[nodiscard]] MatrixView<uint8_t> get_Y() { return _mat_Y; }
+  [[nodiscard]] CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
+  [[nodiscard]] MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
+  [[nodiscard]] CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
 
  private:
   MatrixView<uint8_t> _mat_Y;         // Luminance.
@@ -207,8 +207,8 @@ class CNv12View {
   CNv12View(const Nv12& nv12) : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) {}
   CNv12View(const Nv12View& nv12v) : _mat_Y(nv12v.get_Y()), _mat_UV(nv12v.get_UV()) {}
   void reinit(CNv12View nv12v) { _mat_Y.reinit(nv12v.get_Y()), _mat_UV.reinit(nv12v.get_UV()); }
-  CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
-  CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
+  [[nodiscard]] CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
+  [[nodiscard]] CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
 
  private:
   CMatrixView<uint8_t> _mat_Y;         // Luminance.
@@ -221,32 +221,32 @@ class CNv12View {
 // Also, it condenses Y to range [16, 235]; strange.  Thus Y_from_RGB(Pixel::gray(128)) == 126.
 
 // Convert RGB Pixel to luminance Y value.
-inline uint8_t Y_from_RGB(const Pixel& pixel) {  // LumaFromRGB_CCIR601YCbCr.
+[[nodiscard]] inline uint8_t Y_from_RGB(const Pixel& pixel) {  // LumaFromRGB_CCIR601YCbCr.
   return narrow_cast<uint8_t>((66 * int{pixel[0]} + 129 * int{pixel[1]} + 25 * int{pixel[2]} + 128 + 16 * 256) >> 8);
 }
 
 // Convert RGB Pixel to chroma U value.
-inline uint8_t U_from_RGB(const Pixel& pixel) {  // CbFromRGB_CCIR601YCbCr.
+[[nodiscard]] inline uint8_t U_from_RGB(const Pixel& pixel) {  // CbFromRGB_CCIR601YCbCr.
   return narrow_cast<uint8_t>((-38 * pixel[0] - 74 * pixel[1] + 112 * pixel[2] + 128 + 128 * 256) >> 8);
 }
 
 // Convert RGB Pixel to chroma V value.
-inline uint8_t V_from_RGB(const Pixel& pixel) {  // CrFromRGB_CCIR601YCbCr.
+[[nodiscard]] inline uint8_t V_from_RGB(const Pixel& pixel) {  // CrFromRGB_CCIR601YCbCr.
   return narrow_cast<uint8_t>((112 * pixel[0] - 94 * pixel[1] - 18 * pixel[2] + 128 + 128 * 256) >> 8);
 }
 
 // Convert {R, G, B} values to YUV Vector4i.
-inline Vector4i YUV_Vector4i_from_RGB(int r, int g, int b) {
+[[nodiscard]] inline Vector4i YUV_Vector4i_from_RGB(int r, int g, int b) {
   return ((r * Vector4i(66, -38, 112, 0) + g * Vector4i(129, -74, -94, 0) + b * Vector4i(25, 112, -18, 0) +
            Vector4i(128 + 16 * 256, 128 + 128 * 256, 128 + 128 * 256, 255 * 256)) >>
           8);
 }
 
 // Convert {R, G, B} values to YUV Pixel.
-inline Pixel YUV_Pixel_from_RGB(int r, int g, int b) { return YUV_Vector4i_from_RGB(r, g, b).pixel(); }
+[[nodiscard]] inline Pixel YUV_Pixel_from_RGB(int r, int g, int b) { return YUV_Vector4i_from_RGB(r, g, b).pixel(); }
 
 // Convert {Y, U, V} values to RGB Vector4i.
-inline Vector4i RGB_Vector4i_from_YUV(int y, int u, int v) {
+[[nodiscard]] inline Vector4i RGB_Vector4i_from_YUV(int y, int u, int v) {
   return ((y * Vector4i(298, 298, 298, 0) + u * Vector4i(0, -100, 516, 0) + v * Vector4i(409, -208, 0, 0) +
            Vector4i(128 - 298 * 16 - 409 * 128, 128 - 298 * 16 + 100 * 128 + 208 * 128, 128 - 298 * 16 - 516 * 128,
                     255 * 256)) >>
@@ -254,7 +254,7 @@ inline Vector4i RGB_Vector4i_from_YUV(int y, int u, int v) {
 }
 
 // Convert {Y, U, V} values to RGB Pixel.
-inline Pixel RGB_Pixel_from_YUV(int y, int u, int v) { return RGB_Vector4i_from_YUV(y, u, v).pixel(); }
+[[nodiscard]] inline Pixel RGB_Pixel_from_YUV(int y, int u, int v) { return RGB_Vector4i_from_YUV(y, u, v).pixel(); }
 
 // Convert 8-bit luminance plus half-spatial resolution UV chroma to RGBA image.
 void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame);

@@ -23,33 +23,38 @@
 namespace hh {
 
 // Create a view (CStridedArrayView) onto the column of the grid (along dimension COL_D) starting at position u0.
-template <int COL_D, int D, typename T> CStridedArrayView<T> grid_column(CGridView<D, T> grid, const Vec<int, D>& u0);
+template <int COL_D, int D, typename T>
+[[nodiscard]] CStridedArrayView<T> grid_column(CGridView<D, T> grid, const Vec<int, D>& u0);
 
 // Create a view (StridedArrayView) onto the column of the grid (along dimension COL_D) starting at position u0.
-template <int COL_D, int D, typename T> StridedArrayView<T> grid_column(GridView<D, T> grid, const Vec<int, D>& u0);
+template <int COL_D, int D, typename T>
+[[nodiscard]] StridedArrayView<T> grid_column(GridView<D, T> grid, const Vec<int, D>& u0);
 
 // Create a view (CStridedArrayView) onto the column of the grid (along dimension col_d) starting at position u0.
-template <int D, typename T> CStridedArrayView<T> grid_column(CGridView<D, T> grid, int col_d, const Vec<int, D>& u0);
+template <int D, typename T>
+[[nodiscard]] CStridedArrayView<T> grid_column(CGridView<D, T> grid, int col_d, const Vec<int, D>& u0);
 
 // Create a view (StridedArrayView) onto the column of the grid (along dimension col_d) starting at position u0.
-template <int D, typename T> StridedArrayView<T> grid_column(GridView<D, T> grid, int col_d, const Vec<int, D>& u0);
+template <int D, typename T>
+[[nodiscard]] StridedArrayView<T> grid_column(GridView<D, T> grid, int col_d, const Vec<int, D>& u0);
 
 // Crop the sides of a D-dimensional grid (uL/uU for lower/upper extents); any negative crop grows the grid
 //  and requires the definition of boundary rules (and border value if Bndrule::border).
 template <int D, typename T>
-Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& uL, const Vec<int, D>& uU,
-                Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined), const T* bordervalue = nullptr);
+[[nodiscard]] Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& uL, const Vec<int, D>& uU,
+                              Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined),
+                              const T* bordervalue = nullptr);
 
 enum class Alignment { left, center, right };
 
 // Merge a D-dimensional grid of D-dimensional grids into a single D-dimensional grid.
 //  (U must be derived from CGridView<D, T>).
 template <int D, typename U, typename T = typename U::value_type>
-Grid<D, T> assemble(CGridView<D, U> grids, const T& background = T{},
-                    const Vec<Alignment, D>& align = ntimes<D>(Alignment::center));
+[[nodiscard]] Grid<D, T> assemble(CGridView<D, U> grids, const T& background = T{},
+                                  const Vec<Alignment, D>& align = ntimes<D>(Alignment::center));
 
 // Recast a grid view as a next-higher-dimensional grid view with just a single slice in dimension zero.
-template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T> grid);
+template <int D, typename T> [[nodiscard]] CGridView<D + 1, T> raise_grid_rank(CGridView<D, T> grid);
 
 // Convert a grid of uint8_t pixel values into float values.
 template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gridf);
@@ -72,19 +77,21 @@ template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint
 // Rescale a grid to have new dimensions ndims (e.g., V(ny, nx) in 2D); assumes samples of old and new grids
 //  lie at locations [.5 / dim(0)...(dim(0) - .5) / dim(0)]...[.5 / dim(D - 1)...(dim(D - 1) - .5) / dim(D - 1)].
 template <int D, typename T>
-Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
-                 const T* bordervalue = nullptr, Grid<D, T>&& gr = Grid<D, T>());
+[[nodiscard]] Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
+                               const T* bordervalue = nullptr, Grid<D, T>&& gr = Grid<D, T>());
 
 // Same as scale() but assumes that samples of old and new grids
 //  lie at locations [0., 1. / (dim(0) - 1), ..., (dim(0) - 1) / (dim(0) - 1) == 1.] on each dimension.
 template <int D, typename T>
-Grid<D, T> scale_primal(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
-                        const T* bordervalue = nullptr, Grid<D, T>&& gr = Grid<D, T>());
+[[nodiscard]] Grid<D, T> scale_primal(CGridView<D, T> grid, const Vec<int, D>& ndims,
+                                      const Vec<FilterBnd, D>& filterbs, const T* bordervalue = nullptr,
+                                      Grid<D, T>&& gr = Grid<D, T>());
 
 // Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
 //  even those that are non-interpolable.
 template <int D, typename T>
-Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D, T>&& gr = Grid<D, T>());
+[[nodiscard]] Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
+                                              Grid<D, T>&& gr = Grid<D, T>());
 
 // Apply inverse convolution filter preprocess (spline | omoms) to grid; return new filter (justspline | justomoms).
 template <int D, typename T>
@@ -92,19 +99,19 @@ Vec<FilterBnd, D> inverse_convolution(GridView<D, T> grid, const Vec<FilterBnd, 
 
 // Evaluate the filter at point p of grid g, where samples lie at integers ([0, dim(0) - 1], ..., [0, dim(D - 1) - 1]).
 template <int D, typename T>
-T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
-              const T* bordervalue = nullptr);
+[[nodiscard]] T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
+                            const T* bordervalue = nullptr);
 
 // Evaluate the filter at point p of grid g, where grid domain is [0, 1]^D, and thus grid samples lie at
 // locations [.5 / dim(0) ... (dim(0) - .5) / dim(0)] ... [.5 / dim(D - 1) ... (dim(D - 1) - .5) / dim(D - 1)].
 template <int D, typename T>
-T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
-                const T* bordervalue = nullptr);
+[[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
+                              const T* bordervalue = nullptr);
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
 template <int D, bool parallel = true>
-Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
-                          const Pixel* bordervalue = nullptr);
+[[nodiscard]] Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
+                                        const Pixel* bordervalue = nullptr);
 
 //----------------------------------------------------------------------------
 

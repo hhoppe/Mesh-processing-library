@@ -15,10 +15,10 @@ struct Homogeneous : Vec4<float> {
   constexpr Homogeneous(Vec4<float> h) : Vec4<float>(std::move(h)) {}
 };
 
-Point to_Point(const Homogeneous& h);
-Vector to_Vector(const Homogeneous& h);
+[[nodiscard]] Point to_Point(const Homogeneous& h);
+[[nodiscard]] Vector to_Vector(const Homogeneous& h);
 Homogeneous& operator+=(Homogeneous& h, const Point& p);
-inline Homogeneous normalized(const Homogeneous& h) { return h / assertx(h[3]); }
+[[nodiscard]] inline Homogeneous normalized(const Homogeneous& h) { return h / assertx(h[3]); }
 
 //----------------------------------------------------------------------------
 

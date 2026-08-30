@@ -65,32 +65,30 @@ class A3dElem {
   // both A3dElem(..., nv) and init() allocate and initialize for nv
   void init(EType type, bool binary = false, int nv = 0);
   void update(EType type, bool binary = false);  // polygon<>polyline<>point
-  EType type() const { return _type; }
+  [[nodiscard]] EType type() const { return _type; }
   void set_binary(bool b) { _binary = b; }
-  bool binary() const { return _binary; }
-  static bool status_type(EType type) { return contains("dsg", char(type)); }
-  static bool command_type(EType type) {
+  [[nodiscard]] bool binary() const { return _binary; }
+  [[nodiscard]] static bool status_type(EType type) { return contains("dsg", char(type)); }
+  [[nodiscard]] static bool command_type(EType type) {
     return type == EType::endobject || type == EType::endframe || type == EType::endfile || type == EType::editobject;
   }
 
   // For EType::polygon || EType::polyline || EType::point:
-  int num() const { return _v.num(); }
-  size_t size() const { return _v.size(); }
+  [[nodiscard]] int num() const { return _v.num(); }
+  [[nodiscard]] size_t size() const { return _v.size(); }
   void push(const A3dVertex& vertex) { push_i(vertex); }
-  A3dVertex& operator[](int i) { return _v[i]; }
-  const A3dVertex& operator[](int i) const { return _v[i]; }
+  [[nodiscard]] auto& operator[](this auto&& self, int i) { return self._v[i]; }
 
   // For EType::polygon:
-  Vector pnormal() const;  // may be degenerate (zero)!
+  [[nodiscard]] Vector pnormal() const;  // may be degenerate (zero)!
   void get_polygon(Polygon& poly) const;
 
   // For TComment:
   void set_comment(string str);  // str may start with ' '
-  const string& comment() const;
+  [[nodiscard]] const string& comment() const;
 
   // For command_type():
-  Vec3<float>& f() { return assertx(command_type(_type)), _f; }
-  const Vec3<float>& f() const { return assertx(command_type(_type)), _f; }
+  [[nodiscard]] auto& f(this auto&& self) { return assertx(command_type(self._type)), self._f; }  // Vec3<float>
 
  private:
   EType _type{EType::polygon};
@@ -141,7 +139,7 @@ class RA3dStream : noncopyable {
 class RSA3dStream : public RA3dStream {  // Read from stream
  public:
   explicit RSA3dStream(std::istream& pis) : _is(pis) {}
-  std::istream& is() { return _is; }
+  [[nodiscard]] std::istream& is() { return _is; }
 
  private:
   std::istream& _is;
@@ -178,7 +176,7 @@ class WSA3dStream : public WA3dStream {  // Write to stream
   explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
   ~WSA3dStream() override { WSA3dStream::flush(); }
   void flush() override { _os.flush(); }
-  std::ostream& os() { return _os; }
+  [[nodiscard]] std::ostream& os() { return _os; }
 
  private:
   std::ostream& _os;

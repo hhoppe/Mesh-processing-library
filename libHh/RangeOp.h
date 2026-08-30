@@ -34,12 +34,12 @@ using sum_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, sum_type_
 // *** Const range operations:
 
 // Check if a container contains an element.
-template <ranges::input_range R> bool contains(const R& range, const range_value_t<R>& elem) {
+template <ranges::input_range R> [[nodiscard]] bool contains(const R& range, const range_value_t<R>& elem) {
   return ranges::find(range, elem) != ranges::end(range);
 }
 
 // (Optional) index of the first matching element, or std::nullopt if not found.
-template <ranges::input_range R> std::optional<int> find_index(R&& range, const range_value_t<R>& elem) {
+template <ranges::input_range R> [[nodiscard]] std::optional<int> find_index(R&& range, const range_value_t<R>& elem) {
   if constexpr (ranges::random_access_range<R>) {
     const auto iter = ranges::find(range, elem);  // May lower to memchr or a vectorized search.
     if (iter != ranges::end(range)) return narrow_cast<int>(iter - ranges::begin(range));
@@ -55,7 +55,7 @@ template <ranges::input_range R> std::optional<int> find_index(R&& range, const 
 }
 
 // Index of the first matching element, or die.
-template <ranges::input_range R> int index(R&& range, const range_value_t<R>& elem) {
+template <ranges::input_range R> [[nodiscard]] int index(R&& range, const range_value_t<R>& elem) {
   const std::optional<int> i = find_index(range, elem);
   if (!i) assertnever(make_string(elem) + " not found in range");
   return *i;
@@ -72,7 +72,7 @@ requires std::is_lvalue_reference_v<ranges::range_reference_t<R>>
 // Minimum value in a non-empty range (by default using std::less(a, b)).
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
+[[nodiscard]] auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
   auto iter = ranges::min_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return *iter;
@@ -81,14 +81,14 @@ auto min(const R& range, Comp comp = Comp{}) -> range_value_t<const R&> {
 // Maximum value in a non-empty range (using std::less(a, b)).
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
+[[nodiscard]] auto max(const R& range, Comp comp = Comp{}) -> range_value_t<R> {
   auto iter = ranges::max_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return *iter;
 }
 
 // Maximum absolute value in a non-empty range.
-template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range) {
+template <ranges::input_range R> [[nodiscard]] range_value_t<R> max_abs_element(const R& range) {
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
   ASSERTX(iter != itend);
@@ -100,7 +100,7 @@ template <ranges::input_range R> range_value_t<R> max_abs_element(const R& range
 // Index of the minimum value in a non-empty range.
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-int arg_min(const R& range, Comp comp = Comp{}) {
+[[nodiscard]] int arg_min(const R& range, Comp comp = Comp{}) {
   auto iter = ranges::min_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
@@ -109,7 +109,7 @@ int arg_min(const R& range, Comp comp = Comp{}) {
 // Index of the maximum value in a non-empty range.
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<const R&>>
-int arg_max(const R& range, Comp comp = Comp{}) {
+[[nodiscard]] int arg_max(const R& range, Comp comp = Comp{}) {
   auto iter = ranges::max_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
@@ -184,7 +184,7 @@ template <typename DesiredType = void, ranges::input_range R> sum_type_for_t<Des
 
 // Average of values in a range.
 template <typename DesiredType = void, ranges::input_range R>
-auto mean(const R& range) -> mean_type_for_t<DesiredType, R> {
+[[nodiscard]] auto mean(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
   using FactorType = factor_type_t<range_value_t<R>>;
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
@@ -211,7 +211,7 @@ auto mean(const R& range) -> mean_type_for_t<DesiredType, R> {
 
 // Sum of squared values in a range (or zero if empty).
 template <typename DesiredType = void, ranges::input_range R>
-auto mag2(const R& range) -> sum_type_for_t<DesiredType, R> {
+[[nodiscard]] auto mag2(const R& range) -> sum_type_for_t<DesiredType, R> {
   using SumType = sum_type_for_t<DesiredType, R>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
   // const auto op = [](const SumType& sum, const auto& e) { return sum + square(SumType(e)); };
@@ -229,14 +229,14 @@ auto mag2(const R& range) -> sum_type_for_t<DesiredType, R> {
 
 // Root sum of squared values in a range.
 template <typename DesiredType = void, ranges::input_range R>
-auto mag(const R& range) -> mean_type_for_t<DesiredType, R> {
+[[nodiscard]] auto mag(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
   return sqrt(mag2<MeanType>(range));
 }
 
 // Root mean square of values in a range.
 template <typename DesiredType = void, ranges::input_range R>
-auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
+[[nodiscard]] auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
   using FactorType = factor_type_t<range_value_t<R>>;
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
@@ -256,7 +256,7 @@ auto rms(const R& range) -> mean_type_for_t<DesiredType, R> {
 
 // Variance of values in a range.
 template <typename DesiredType = void, ranges::input_range R>
-auto var(const R& range) -> mean_type_for_t<DesiredType, R> {
+[[nodiscard]] auto var(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
   using FactorType = factor_type_t<range_value_t<R>>;
   static_assert(std::is_trivially_default_constructible_v<MeanType>);
@@ -277,7 +277,7 @@ auto var(const R& range) -> mean_type_for_t<DesiredType, R> {
 
 // Product of values in a non-empty range.
 template <typename DesiredType = void, ranges::input_range R>
-auto product(const R& range) -> sum_type_for_t<DesiredType, R> {
+[[nodiscard]] auto product(const R& range) -> sum_type_for_t<DesiredType, R> {
   using ProductType = sum_type_for_t<DesiredType, R>;
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
@@ -293,7 +293,7 @@ auto product(const R& range) -> sum_type_for_t<DesiredType, R> {
 }
 
 // Are all elements exactly zero?
-template <ranges::input_range R> bool is_zero(const R& range) {
+template <ranges::input_range R> [[nodiscard]] bool is_zero(const R& range) {
   for (const auto& e : range)
     if (e) return false;
   return true;
@@ -301,7 +301,7 @@ template <ranges::input_range R> bool is_zero(const R& range) {
 
 // Does it have unit norm?
 template <typename DesiredType = void, ranges::input_range R>
-bool is_unit(const R& range, range_value_t<R> tolerance = 1e-4f) {
+[[nodiscard]] bool is_unit(const R& range, range_value_t<R> tolerance = 1e-4f) {
   using SumType = sum_type_for_t<DesiredType, R>;
   return abs(mag2<SumType>(range) - 1.f) <= tolerance;
 }
@@ -323,7 +323,7 @@ template <ranges::forward_range R> R round_elements(R&& range, range_value_t<R> 
 
 // Compute the sum of squared differences of corresponding elements of two ranges.
 template <typename DesiredType = void, indexable_range R1, indexable_range R2>
-auto dist2(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
+[[nodiscard]] auto dist2(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
   using SumType = sum_type_for_t<DesiredType, R1>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
   const auto n = ranges::ssize(range1);
@@ -337,14 +337,14 @@ auto dist2(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1
 
 // Compute the Euclidean distance between two ranges interpreted as vectors.
 template <typename DesiredType = void, ranges::input_range R1, ranges::input_range R2>
-auto dist(const R1& range1, const R2& range2) -> mean_type_for_t<DesiredType, R1> {
+[[nodiscard]] auto dist(const R1& range1, const R2& range2) -> mean_type_for_t<DesiredType, R1> {
   using MeanType = mean_type_for_t<DesiredType, R1>;
   return sqrt(dist2<MeanType>(range1, range2));
 }
 
 // Compute the inner product of two ranges, which must have the same number of elements.
 template <typename DesiredType = void, indexable_range R1, indexable_range R2>
-auto dot(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
+[[nodiscard]] auto dot(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> {
   using SumType = sum_type_for_t<DesiredType, R1>;
   static_assert(std::is_trivially_default_constructible_v<SumType>);
   const auto n = ranges::ssize(range1);
@@ -358,7 +358,7 @@ auto dot(const R1& range1, const R2& range2) -> sum_type_for_t<DesiredType, R1> 
 
 // Compare two ranges of algebraic types lexicographically; ret -1, 0, 1 based on sign of range1 - range2.
 // Use <=> ??
-template <indexable_range R1, indexable_range R2> int compare(const R1& range1, const R2& range2) {
+template <indexable_range R1, indexable_range R2> [[nodiscard]] int compare(const R1& range1, const R2& range2) {
   const auto n = ranges::ssize(range1);
   ASSERTX(n == ranges::ssize(range2));
   const auto iter1 = ranges::begin(range1);
@@ -371,7 +371,7 @@ template <indexable_range R1, indexable_range R2> int compare(const R1& range1, 
 
 // Similar comparison, but ignore differences smaller than tolerance.
 template <indexable_range R1, indexable_range R2>
-int compare(const R1& range1, const R2& range2, const range_value_t<R1>& tolerance) {
+[[nodiscard]] int compare(const R1& range1, const R2& range2, const range_value_t<R1>& tolerance) {
   const auto n = ranges::ssize(range1);
   ASSERTX(n == ranges::ssize(range2));
   const auto iter1 = ranges::begin(range1);
@@ -388,7 +388,7 @@ int compare(const R1& range1, const R2& range2, const range_value_t<R1>& toleran
 
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2)) == V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.
-template <typename U, ranges::forward_range R> auto convert(const R& c) {
+template <typename U, ranges::forward_range R> [[nodiscard]] auto convert(const R& c) {
   return transformed(c, [](const range_value_t<R>& e) { return static_cast<U>(e); });
 }
 
@@ -439,7 +439,7 @@ template <ranges::forward_range R1, ranges::forward_range R2> struct Concatenate
 // Return a view range that concatenates the elements of two or more ranges.
 // C++26: replace by views::concat().
 template <ranges::forward_range R1, ranges::forward_range R2, typename... Rs>
-[[HH_NO_DANGLING]] auto concatenate(R1&& range1, R2&& range2, Rs&&... ranges_) {
+[[HH_NO_DANGLING]] [[nodiscard]] auto concatenate(R1&& range1, R2&& range2, Rs&&... ranges_) {
   // ("Dangling" is a false positive, due to the fact that there are >=2 reference-binding parameters.)
   if constexpr (sizeof...(Rs) == 0)
     return details::ConcatenatedRange<R1, R2>{std::forward<R1>(range1), std::forward<R2>(range2)};

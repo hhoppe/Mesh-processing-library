@@ -12,16 +12,18 @@ namespace hh {
 // }
 
 // Does string contain a substring?
-inline bool contains(const string& str, const string& substr) { return str.find(substr) != string::npos; }
+[[nodiscard]] inline bool contains(const string& str, const string& substr) {
+  return str.find(substr) != string::npos;
+}
 
 // Does string have the specified prefix string?
-inline bool starts_with(const string& s, const string& se) {
+[[nodiscard]] inline bool starts_with(const string& s, const string& se) {
   assertx(!se.empty());
   return !s.compare(0, se.size(), se);
 }
 
 // Does string have the specified suffix string?
-inline bool ends_with(const string& s, const string& se) {
+[[nodiscard]] inline bool ends_with(const string& s, const string& se) {
   if (s.size() < se.size()) return false;
   if (s.compare(s.size() - se.size(), se.size(), se)) return false;
   return true;
@@ -42,7 +44,8 @@ inline bool remove_at_end(string& s, const string& se) {
 }
 
 // Replace all instances of substring with the replacement substring.
-static inline string replace_all(const string& str, const string& substring, const string& sreplacement) {
+[[nodiscard]] static inline string replace_all(const string& str, const string& substring,
+                                               const string& sreplacement) {
   string result;
   string::size_type i = 0;
   for (;;) {
@@ -56,58 +59,58 @@ static inline string replace_all(const string& str, const string& substring, con
 }
 
 // Convert a string to lowercase.
-inline string to_lower(string s) {
+[[nodiscard]] inline string to_lower(string s) {
   // for (char& ch : s) if (std::isupper(ch)) ch += 'a' - 'A';
   std::use_facet<std::ctype<char>>(std::locale()).tolower(s.data(), s.data() + s.size());
   return s;
 }
 
 // Convert a string to uppercase.
-inline string to_upper(string s) {
+[[nodiscard]] inline string to_upper(string s) {
   // for (char& ch : s) if (std::islower(ch)) ch += 'A' - 'a';
   std::use_facet<std::ctype<char>>(std::locale()).toupper(s.data(), s.data() + s.size());
   return s;
 }
 
 // Return the directory of file path, like csh $file:h .
-inline string get_path_head(const string& s) {
+[[nodiscard]] inline string get_path_head(const string& s) {
   auto i = s.find_last_of("/\\");
   return i == string::npos ? s : s.substr(0, i);
 }
 
 // Return the local filename of file path, like csh $file:t .
-inline string get_path_tail(const string& s) {
+[[nodiscard]] inline string get_path_tail(const string& s) {
   auto i = s.find_last_of("/\\");
   return i == string::npos ? s : s.substr(i + 1);
 }
 
 // Return the root name of file path, like csh $file:r .
-inline string get_path_root(const string& s) {
+[[nodiscard]] inline string get_path_root(const string& s) {
   auto i = s.rfind(".");
   return i == string::npos ? s : s.substr(0, i);
 }
 
 // Return the file extension of file path, like csh $file:e .
-inline string get_path_extension(const string& s) {
+[[nodiscard]] inline string get_path_extension(const string& s) {
   auto i = s.rfind(".");
   return i == string::npos ? "" : s.substr(i + 1);
 }
 
 // Change directory separator characters '\\' to '/'.
-inline string get_canonical_path(const string& s) {
+[[nodiscard]] inline string get_canonical_path(const string& s) {
   string s2 = replace_all(s, "\\", "/");
   if (s2[0] && s2[1] == ':' && s2[2] == '/' && s2[0] >= 'A' && s2[0] <= 'Z') s2[0] += 'a' - 'A';
   return s2;
 }
 
-inline bool is_path_absolute(const string& s) {
+[[nodiscard]] inline bool is_path_absolute(const string& s) {
   assertx(!s.empty());
   return ((s[0] == '/' || s[0] == '\\') || (((s[0] >= 'a' && s[0] <= 'z') || (s[0] >= 'A' && s[0] <= 'Z')) &&
                                             s[1] == ':' && (s[2] == '/' || s[2] == '\\')));
 }
 
 // Convert a relative path to an absolute one if not already.
-inline string get_path_absolute(const string& s) {
+[[nodiscard]] inline string get_path_absolute(const string& s) {
   if (is_path_absolute(s)) return s;
   return get_current_directory() + "/" + s;
 }

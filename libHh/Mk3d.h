@@ -23,8 +23,8 @@ class Mk3d : noncopyable {
   void scale(float x, float y, float z);
   void scale(float v) { scale(v, v, v); }
   void apply(const Frame& t) { _ctm = t * _ctm, _ctmi = inverse(_ctm); }
-  Point transform(const Point& point) { return point * _ctm; }
-  Vector transform(const Vector& normal) { return _ctmi * normal; }
+  [[nodiscard]] Point transform(const Point& point) { return point * _ctm; }
+  [[nodiscard]] Vector transform(const Vector& normal) { return _ctmi * normal; }
   void push_color() { _stack_color.push(_cc); }
   void pop_color() { assertx(!_stack_color.empty()), _cc = _stack_color.pop(); }
   template <typename Func> void save_color(Func func) { push_color(), func(), pop_color(); }

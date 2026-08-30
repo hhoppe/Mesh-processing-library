@@ -21,11 +21,11 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   VectorF() = default;  // Was: { fill(0.f); }.
   explicit VectorF(float v) { fill(v); }
   VectorF(const VectorF<n>&) = default;
-  constexpr int num() const { return n; }
-  constexpr size_t size() const { return n; }
-  float& operator[](int i) { return HH_CHECK_BOUNDS(i, n), data()[i]; }
-  const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, n), data()[i]; }
-  static bool ok(int i) { return i >= 0 && i < n; }
+  [[nodiscard]] constexpr int num() const { return n; }
+  [[nodiscard]] constexpr size_t size() const { return n; }
+  [[nodiscard]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, n), data()[i]; }
+  [[nodiscard]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, n), data()[i]; }
+  [[nodiscard]] static bool ok(int i) { return i >= 0 && i < n; }
   void load_unaligned(const float* pSrc) {
     for_int(j, m) for_int(c, 4) a()[j][c] = *pSrc++;
     for_int(k, p) b()[k] = *pSrc++;
@@ -51,24 +51,24 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   using value_type = float;
   using iterator = float*;
   using const_iterator = const float*;
-  float* begin() { return data(); }
-  const float* begin() const { return data(); }
-  float* end() { return data() + n; }
-  const float* end() const { return data() + n; }
-  float* data() { return reinterpret_cast<float*>(this); }
-  const float* data() const { return reinterpret_cast<const float*>(this); }
+  [[nodiscard]] float* begin() { return data(); }
+  [[nodiscard]] const float* begin() const { return data(); }
+  [[nodiscard]] float* end() { return data() + n; }
+  [[nodiscard]] const float* end() const { return data() + n; }
+  [[nodiscard]] float* data() { return reinterpret_cast<float*>(this); }
+  [[nodiscard]] const float* data() const { return reinterpret_cast<const float*>(this); }
   void zero() { fill(0.f); }
   void fill(float v) {
     local_unroll<m>([&](int j) { a()[j] = Vector4(v); });
     for_int(k, p) b()[k] = v;
   }
-  friend VectorF<n> min(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> min(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = min(l.a()[j], r.a()[j]); });
     for_int(k, p) v.b()[k] = min(l.b()[k], r.b()[k]);
     return v;
   }
-  friend VectorF<n> max(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> max(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = max(l.a()[j], r.a()[j]); });
     for_int(k, p) v.b()[k] = max(l.b()[k], r.b()[k]);
@@ -79,38 +79,38 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) b()[k] = v.b()[k];
     return *this;
   }
-  friend VectorF<n> operator+(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> operator+(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] + r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] + r.b()[k];
     return v;
   }
-  friend VectorF<n> operator-(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> operator-(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] - r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] - r.b()[k];
     return v;
   }
-  friend VectorF<n> operator*(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> operator*(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] * r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] * r.b()[k];
     return v;
   }
-  friend VectorF<n> operator/(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> operator/(const VectorF<n>& l, const VectorF<n>& r) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] / r.a()[j]; });
     for_int(k, p) v.b()[k] = l.b()[k] / r.b()[k];
     return v;
   }
-  friend VectorF<n> operator*(const VectorF<n>& l, float f) {
+  [[nodiscard]] friend VectorF<n> operator*(const VectorF<n>& l, float f) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] * f; });
     for_int(k, p) v.b()[k] = l.b()[k] * f;
     return v;
   }
-  friend VectorF<n> operator/(const VectorF<n>& v, float f) { return v * (1.f / f); }
-  friend float dot(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend VectorF<n> operator/(const VectorF<n>& v, float f) { return v * (1.f / f); }
+  [[nodiscard]] friend float dot(const VectorF<n>& l, const VectorF<n>& r) {
     float sum1;
     if constexpr (!m) {
       sum1 = 0.f;
@@ -121,7 +121,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) sum1 += l.b()[k] * r.b()[k];
     return sum1;
   }
-  friend float mag2(const VectorF<n>& v) {
+  [[nodiscard]] friend float mag2(const VectorF<n>& v) {
     float sum2;
     if constexpr (!m) {
       sum2 = 0.f;
@@ -132,7 +132,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) sum2 += square(v.b()[k]);
     return sum2;
   }
-  friend float dist2(const VectorF<n>& l, const VectorF<n>& r) {
+  [[nodiscard]] friend float dist2(const VectorF<n>& l, const VectorF<n>& r) {
     float sum2;
     if constexpr (!m) {
       sum2 = 0.f;
@@ -143,7 +143,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) sum2 += square(l.b()[k] - r.b()[k]);
     return sum2;
   }
-  friend float sum(const VectorF<n>& v) {
+  [[nodiscard]] friend float sum(const VectorF<n>& v) {
     float sum1;
     if constexpr (!m) {
       sum1 = 0.f;

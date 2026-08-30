@@ -43,24 +43,24 @@ class Stat {
   void enter_multiple(float value, int factor);  // Factor may be negative.
   void remove(float value) { enter_multiple(value, -1); }
   void add(const Stat& st);
-  const string& name() const { return _name; }
-  int64_t num() const { return _n; }
-  int inum() const { return narrow_cast<int>(_n); }
-  float min() const { return _min; }
-  float max() const { return _max; }
-  float avg() const;
-  float var() const;  // Sample variance (rather than population variance).
-  float sdv() const { return sqrt(var()); }
-  float ssd() const;
-  float sum() const { return float(_sum); }
-  float rms() const;
-  float max_abs() const { return std::max(abs(min()), abs(max())); }
-  string short_string() const;  // No leading name, no trailing '\n'.
-  string name_string() const;   // Used by operator<<().
+  [[nodiscard]] const string& name() const { return _name; }
+  [[nodiscard]] int64_t num() const { return _n; }
+  [[nodiscard]] int inum() const { return narrow_cast<int>(_n); }
+  [[nodiscard]] float min() const { return _min; }
+  [[nodiscard]] float max() const { return _max; }
+  [[nodiscard]] float avg() const;
+  [[nodiscard]] float var() const;  // Sample variance (rather than population variance).
+  [[nodiscard]] float sdv() const { return sqrt(var()); }
+  [[nodiscard]] float ssd() const;
+  [[nodiscard]] float sum() const { return float(_sum); }
+  [[nodiscard]] float rms() const;
+  [[nodiscard]] float max_abs() const { return std::max(abs(min()), abs(max())); }
+  [[nodiscard]] string short_string() const;  // No leading name, no trailing '\n'.
+  [[nodiscard]] string name_string() const;   // Used by operator<<().
   friend void swap(Stat& l, Stat& r) noexcept;
   friend std::ostream& operator<<(std::ostream& os, const Stat& st) { return os << st.name_string(); }
 
-  static int show_stats() { return _s_show; }
+  [[nodiscard]] static int show_stats() { return _s_show; }
   static void set_show_stats(int val) { _s_show = val; }
 
  private:
@@ -83,7 +83,7 @@ class Stat {
 template <> HH_DECLARE_OSTREAM_EOL(Stat);
 
 // Like Stat(range), but later specialized to operate on magnitude of Vector4 elements.
-template <ranges::input_range R> Stat range_stat(const R& range);
+template <ranges::input_range R> [[nodiscard]] Stat range_stat(const R& range);
 
 // Scale and offset a range of values such that they have mean == 0 and sdv == 1.
 // This is equivalent to converting each value to its z-score in the distribution.

@@ -18,7 +18,7 @@ template <typename T> class com_ptr_ref {
   com_ptr_ref(com_ptr<T>& cp) : _cp(cp) { assertx(!_cp); }
   ~com_ptr_ref() { assertx(!_cp), _cp.reset(_p); }
   com_ptr_ref(const com_ptr_ref<T>& cp) = default;
-  operator T**() {
+  [[nodiscard]] operator T**() {
     assertx(!_num++);
     assertx(!_p);
     return &_p;
@@ -41,8 +41,8 @@ template <typename T> class com_ptr : public unique_ptr<T, void (*)(T*)> {
   com_ptr() : base(nullptr, SafeRelease) {}
   com_ptr(com_ptr<T>&& p) : base(std::move(p)) {}
   com_ptr<T>& operator=(com_ptr<T>&& p) { return base::operator=(std::move(p)), *this; }
-  operator T*() { return base::get(); }
-  com_ptr_ref<T> operator&() { return com_ptr_ref<T>(*this); }
+  [[nodiscard]] operator T*() { return base::get(); }
+  [[nodiscard]] com_ptr_ref<T> operator&() { return com_ptr_ref<T>(*this); }
 };
 
 // Helper for IID_PPV_ARGS in "com_ptr<IMFByteStream> pbs; AS(pSource->QueryInterface(IID_PPV_ARGS(&pbs)));".

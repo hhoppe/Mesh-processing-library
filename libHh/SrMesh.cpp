@@ -509,7 +509,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     bool cr2faces = creates_2faces(vspl);
 #if !defined(SR_NO_VSGEOM)
     vspl->vu_vgeom.point = vsa->vgeom.point + pm_vspl.vad_large.dpoint;
-    assertx(is_zero(pm_vspl.vad_small.dpoint));
+    if (!is_zero(pm_vspl.vad_small.dpoint)) assertnever(SSHOW(pm_vspl.vad_small.dpoint));
     assertx(pm_vspl.ar_wad.num() == 1);
     vspl->vu_vgeom.vnormal = vsa->vgeom.vnormal + pm_vspl.ar_wad[0].dnormal;
     if (b_nor001) assertx(is_zero(pm_vspl.ar_wad[0].dnormal));

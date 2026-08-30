@@ -33,23 +33,25 @@ class Spatial : noncopyable {  // abstract class
   const float _gni;  // 1.f / _gn
 
   using Ind = Vec3<int>;
-  int inbounds(int i) const { return i >= 0 && i < _gn; }
-  int indices_inbounds(const Ind& ci) const { return inbounds(ci[0]) && inbounds(ci[1]) && inbounds(ci[2]); }
-  int index_from_float(float fd) const;
-  float float_from_index(int i) const { return i * _gni; }
-  Ind indices_from_point(const Point& p) const {
+  [[nodiscard]] int inbounds(int i) const { return i >= 0 && i < _gn; }
+  [[nodiscard]] bool indices_inbounds(const Ind& ci) const {
+    return inbounds(ci[0]) && inbounds(ci[1]) && inbounds(ci[2]);
+  }
+  [[nodiscard]] int index_from_float(float fd) const;
+  [[nodiscard]] float float_from_index(int i) const { return i * _gni; }
+  [[nodiscard]] Ind indices_from_point(const Point& p) const {
     Ind ci;
     for_int(c, 3) ci[c] = index_from_float(p[c]);
     return ci;
   }
-  Point point_from_indices(const Ind& ci) const {
+  [[nodiscard]] Point point_from_indices(const Ind& ci) const {
     Point p;
     for_int(c, 3) p[c] = float_from_index(ci[c]);
     return p;
   }
-  Bbox<float, 3> bbox_of_indices(const Ind& ci) const;
-  int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied here
-  Ind decode(int en) const;
+  [[nodiscard]] Bbox<float, 3> bbox_of_indices(const Ind& ci) const;
+  [[nodiscard]] int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied
+  [[nodiscard]] Ind decode(int en) const;
 
   // for BSpatialSearch:
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
@@ -76,7 +78,7 @@ class BPointSpatial : public Spatial {
 
  private:
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
-  Univ pq_id(Univ pqe) const override;
+  [[nodiscard]] Univ pq_id(Univ pqe) const override;
   struct Node {
     Univ id;
     const Point* p;
@@ -103,7 +105,7 @@ class IPointSpatial : public Spatial {
 
  private:
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
-  Univ pq_id(Univ pqe) const override;
+  [[nodiscard]] Univ pq_id(Univ pqe) const override;
 
   const Point* _pp;
   Map<int, Array<int>> _map;  // encoded cube index -> Array of point indices
@@ -134,7 +136,7 @@ class ObjectSpatial : public Spatial {
 
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const override;
-  Univ pq_id(Univ pqe) const override { return pqe; }
+  [[nodiscard]] Univ pq_id(Univ pqe) const override { return pqe; }
 };
 
 namespace details {
@@ -144,12 +146,12 @@ class BSpatialSearch : noncopyable {
   // pmaxdis is only a request, you may get objects that lie farther
   explicit BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis = 10.f);
   ~BSpatialSearch();
-  bool done();
+  [[nodiscard]] bool done();
   struct Result {
     Univ id;
     float d2;  // Squared distance.
   };
-  Result next();
+  [[nodiscard]] Result next();
 
  private:
   friend Spatial;
@@ -182,7 +184,7 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
     T id;
     float d2;  // Squared distance
   };
-  Result next() {
+  [[nodiscard]] Result next() {
     const auto [id, d2] = BSpatialSearch::next();
     return {Conv<T>::d(id), d2};
   }

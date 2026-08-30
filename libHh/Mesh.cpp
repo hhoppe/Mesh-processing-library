@@ -1036,32 +1036,24 @@ void Mesh::ok() const {
   }
 }
 
-bool Mesh::valid(Vertex v) const {
-  assertx(v && v == _id2vertex.get(vertex_id(v)));
-  return true;
-}
+void Mesh::valid(Vertex v) const { assertx(v && v == _id2vertex.get(vertex_id(v))); }
 
-bool Mesh::valid(Face f) const {
-  assertx(f && f == _id2face.get(face_id(f)));
-  return true;
-}
+void Mesh::valid(Face f) const { assertx(f && f == _id2face.get(face_id(f))); }
 
-bool Mesh::valid(Edge e) const {
+void Mesh::valid(Edge e) const {
   assertx(e);
   valid(vertex1(e));
   valid(vertex2(e));
   valid(face1(e));
   assertx(ordered_edge(vertex1(e), vertex2(e)) == e);
-  return true;
 }
 
-bool Mesh::valid(Corner c) const {
+void Mesh::valid(Corner c) const {
   HEdge he = c;  // they are equivalent
   assertx(he && he->_next && he->_prev && he->_face && he->_vert);
   HH_ASSUME(he);
   Edge e = assertx(he->_edge);
   assertx(hedge_from_ev2(e, he->_vert) == he);
-  return true;
 }
 
 // *** Iterators

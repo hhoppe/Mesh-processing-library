@@ -35,9 +35,9 @@ namespace hh {
 // Place this node at the beginning of the struct so that the _next field is more likely in the same cache line.
 class EListNode : noncopyable {
  public:
-  bool linked() const { return _next != nullptr; }
-  EListNode* prev() const { return _prev; }
-  EListNode* next() const { return _next; }
+  [[nodiscard]] bool linked() const { return _next != nullptr; }
+  [[nodiscard]] EListNode* prev() const { return _prev; }
+  [[nodiscard]] EListNode* next() const { return _next; }
   void unlink();
   void link_after(EListNode* n);
   void link_before(EListNode* n);
@@ -62,9 +62,9 @@ class EList {
   ~EList() {
     if (delim()->next() != delim()) Warning("~EList(): not empty");
   }
-  EListNode* delim() { return &_delim; }
-  const EListNode* delim() const { return &_delim; }
-  bool empty() const { return delim()->next() == delim(); }
+  [[nodiscard]] EListNode* delim() { return &_delim; }
+  [[nodiscard]] const EListNode* delim() const { return &_delim; }
+  [[nodiscard]] bool empty() const { return delim()->next() == delim(); }
   // Use n->link_before(elist.delim()) as in: Array::push(), Queue::enqueue(), or std::vector::push_back().
   // Use n->link_after(elist.delim())  as in: Array::unshift() or Stack::push().
   struct Iter {

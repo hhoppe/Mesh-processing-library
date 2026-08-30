@@ -58,11 +58,12 @@ class Timer : noncopyable {
   void stop();
   void start();
   // For the following, the timer must be stopped.
-  double real() const;         // Elapsed time, in seconds.
-  double cpu() const;          // Simulated "single-thread" "user + system" CPU time, in seconds.
-  double parallelism() const;  // Effective number of cores that multiply cpu() to obtain the total process CPU time.
+  [[nodiscard]] double real() const;  // Elapsed time, in seconds.
+  [[nodiscard]] double cpu() const;   // Simulated "single-thread" "user + system" CPU time, in seconds.
+  // Effective number of cores that multiply cpu() to obtain the total process CPU time.
+  [[nodiscard]] double parallelism() const;
 
-  static int get_show_times();
+  [[nodiscard]] static int get_show_times();
   static void set_show_times(int val) { _s_show = val; }
 
  private:

@@ -63,28 +63,28 @@ class GMesh : public Mesh {
   Array<Vertex> fix_vertex(Vertex v) override;
 
   // ** Geometry:
-  const Point& point(Vertex v) const { return v->_point; }
+  [[nodiscard]] const Point& point(Vertex v) const { return v->_point; }
   void set_point(Vertex v, const Point& p);
   void polygon(Face f, Polygon& poly) const;
-  Vec3<Point> triangle_points(Face f) const;
-  float length2(Edge e) const;
-  float length(Edge e) const;
-  float area(Face f) const;
+  [[nodiscard]] Vec3<Point> triangle_points(Face f) const;
+  [[nodiscard]] float length2(Edge e) const;
+  [[nodiscard]] float length(Edge e) const;
+  [[nodiscard]] float area(Face f) const;
   void transform(const Frame& frame);
 
   // ** Strings:
-  const char* get_string(Vertex v) const { return v->_string.get(); }
-  const char* get_string(Face f) const { return f->_string.get(); }
-  const char* get_string(Edge e) const { return e->_string.get(); }
-  const char* get_string(Corner c) const { return c->_string.get(); }
-  unique_ptr<char[]> extract_string(Vertex v) { return std::move(v->_string); }
-  unique_ptr<char[]> extract_string(Face f) { return std::move(f->_string); }
-  unique_ptr<char[]> extract_string(Edge e) { return std::move(e->_string); }
-  unique_ptr<char[]> extract_string(Corner c) { return std::move(c->_string); }
-  static bool string_has_key(const char* ss, const char* key);
-  static const char* string_key(string& str, const char* ss, const char* key);
-  const char* corner_key(string& str, Corner c, const char* key) const;             // Corner | Vertex
-  bool parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const;  // Corner | Vertex
+  [[nodiscard]] const char* get_string(Vertex v) const { return v->_string.get(); }
+  [[nodiscard]] const char* get_string(Face f) const { return f->_string.get(); }
+  [[nodiscard]] const char* get_string(Edge e) const { return e->_string.get(); }
+  [[nodiscard]] const char* get_string(Corner c) const { return c->_string.get(); }
+  [[nodiscard]] unique_ptr<char[]> extract_string(Vertex v) { return std::move(v->_string); }
+  [[nodiscard]] unique_ptr<char[]> extract_string(Face f) { return std::move(f->_string); }
+  [[nodiscard]] unique_ptr<char[]> extract_string(Edge e) { return std::move(e->_string); }
+  [[nodiscard]] unique_ptr<char[]> extract_string(Corner c) { return std::move(c->_string); }
+  [[nodiscard]] static bool string_has_key(const char* ss, const char* key);
+  [[nodiscard]] static const char* string_key(string& str, const char* ss, const char* key);
+  [[nodiscard]] const char* corner_key(string& str, Corner c, const char* key) const;  // Corner | Vertex
+  bool parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const;     // Corner | Vertex
   // copies string
   void set_string(Vertex v, const char* s) { v->_string = make_unique_c_string(s); }
   void set_string(Face f, const char* s) { f->_string = make_unique_c_string(s); }
@@ -94,7 +94,7 @@ class GMesh : public Mesh {
   void set_string(Face f, unique_ptr<char[]> s) { f->_string = std::move(s); }
   void set_string(Edge e, unique_ptr<char[]> s) { e->_string = std::move(s); }
   void set_string(Corner c, unique_ptr<char[]> s) { c->_string = std::move(s); }
-  static string string_update(const string& s, const char* key, const char* val);
+  [[nodiscard]] static string string_update(const string& s, const char* key, const char* val);
   void update_string(Vertex v, const char* key, const char* val);
   void update_string(Face f, const char* key, const char* val);
   void update_string(Edge e, const char* key, const char* val);
@@ -104,7 +104,7 @@ class GMesh : public Mesh {
   // ** Standard I/O for my meshes (see format below):
   void read(std::istream& is);  // read a whole mesh, discard comments
   void read_line(char* s);      // no '\n' required
-  static bool recognize_line(const char* s);
+  [[nodiscard]] static bool recognize_line(const char* s);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;
   void write_face(WA3dStream& oa3d, A3dElem& el, const A3dVertexColor& col, Face f) const;
@@ -129,9 +129,9 @@ class GMesh : public Mesh {
 };
 
 // Format a vector string "(%g ... %g)".
-template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec);
+template <int n> [[nodiscard]] const char* csform_vec(string& str, const Vec<float, n>& vec);
 
-// Parse a vector from a {key=value}+ string
+// Parse a vector from a {key=value}+ string.
 bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar);
 
 // I/O Mesh Format (Vertices and Faces must fit on one line)

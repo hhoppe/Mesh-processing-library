@@ -4223,7 +4223,7 @@ void do_batch_create_loop(Args& args) {
   string input_filename = args.get_filename();
   string output_filename = args.get_string();
   if (output_filename != "") {
-    Args::check_filename(output_filename);
+    assertx(Args::check_filename(output_filename));
     output_filename = get_canonical_path(output_filename);
   }
   VideoNv12 ovideo_nv12;

@@ -9,7 +9,7 @@ namespace hh {
 // Return a reference to a unique pointer object.  This reference may be invalid if the pointer is null!
 // auto up_p = b ? make_unique<Point>(1.f, 2.f, 3.f) : nullptr;
 // Point& p = optional_reference(up_p);
-template <typename T> T& optional_reference(const std::unique_ptr<T>& up) {
+template <typename T> [[nodiscard]] T& optional_reference(const std::unique_ptr<T>& up) {
   return up ? *up : *implicit_cast<T*>(nullptr);
 }
 
@@ -27,11 +27,11 @@ template <int n, int nmax, typename Func = void(int)> void unroll_max(Func func)
 }
 
 // Convenience function for hashing.
-template <typename T> size_t my_hash(const T& v) { return std::hash<T>()(v); }
+template <typename T> [[nodiscard]] size_t my_hash(const T& v) { return std::hash<T>()(v); }
 
 namespace details {
 
-template <typename T = std::size_t> T boost_hash_mix(T x) {  // Templated only to enable "if constexpr".
+template <typename T = std::size_t> [[nodiscard]] T boost_hash_mix(T x) {  // Templated only to enable "if constexpr".
   static_assert(sizeof(std::size_t) == 4 || sizeof(std::size_t) == 8);
   if constexpr (sizeof(std::size_t) == 4) {
     uint32_t const m1 = 0x21f0aaad;
@@ -58,7 +58,7 @@ inline void boost_hash_combine_size_t(std::size_t& seed, std::size_t value) {
 
 }  // namespace details
 
-template <typename T> size_t hash_combine(size_t seed, const T& v) {
+template <typename T> [[nodiscard]] size_t hash_combine(size_t seed, const T& v) {
   details::boost_hash_combine_size_t(seed, my_hash(v));
   return seed;
 }

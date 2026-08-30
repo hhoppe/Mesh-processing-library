@@ -13,7 +13,7 @@ namespace hh {
 // Keep an ordered list of elements, and move any referenced element to the front.
 template <typename T> class MoveToFront : noncopyable {
  public:
-  int enter(const T& e) {
+  [[nodiscard]] int enter(const T& e) {
     int ifound = find_index(_list, e).value_or(-1);
     if (ifound < 0) {
       ifound = _list.num();
@@ -64,7 +64,7 @@ template <typename T> class Encoding : noncopyable {
   }
 
   // Return sum of prob to encode binary tree.
-  float huffman_cost() const {
+  [[nodiscard]] float huffman_cost() const {
     Pqueue<int> pq;
     pq.reserve(_map.num());
     for (float prob : _map.values()) pq.enter_unsorted(0, prob);
@@ -84,7 +84,7 @@ template <typename T> class Encoding : noncopyable {
     return sum;
   }
 
-  float entropy() const {
+  [[nodiscard]] float entropy() const {
     double tot_prob = sum(_map.values());
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
@@ -94,7 +94,7 @@ template <typename T> class Encoding : noncopyable {
   }
 
   // Return normalized entropy (entropy() / tot_prob).
-  float norm_entropy() const {
+  [[nodiscard]] float norm_entropy() const {
     double tot_prob = sum(_map.values());
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
@@ -104,7 +104,7 @@ template <typename T> class Encoding : noncopyable {
   }
 
   // include probability table
-  float worst_entropy() const {
+  [[nodiscard]] float worst_entropy() const {
     assertnever("not implemented");
     // Sturling's approximation: n! =~ sqrt(TAU * n) * n^n * e^-n
     //   log_2(n!) =~ (0.5 * log(TAU) + (n + 0.5) * log(n) - n) / log(2)
@@ -192,7 +192,7 @@ class DeltaEncoding {
     return total_bits;
   }
 
-  static int val_bits(float v) {
+  [[nodiscard]] static int val_bits(float v) {
     float a = abs(v);
     if (a < 1.f) return 0;
     // int vbits = int(ceil(std::log2(a)));  // Old method.
@@ -202,7 +202,7 @@ class DeltaEncoding {
     return vbits;
   }
 
-  static int val_sign(float v) { return v >= 0.f; }
+  [[nodiscard]] static int val_sign(float v) { return v >= 0.f; }
   // Enter some number of floating-point values.
   void enter_coords(CArrayView<float> ar) {
     for_int(c, ar.num()) {
@@ -239,7 +239,7 @@ class DeltaEncoding {
     if (max_nbits) for_int(c, n) enter_sign(val_sign(ar[c]));
   }
 
-  float total_entropy() const {
+  [[nodiscard]] float total_entropy() const {
     return _delta_bits + _enc_nbits.entropy() + _enc_sign[0].entropy() + _enc_sign[1].entropy();
   }
 

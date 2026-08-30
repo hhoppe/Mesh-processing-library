@@ -25,29 +25,29 @@ namespace hh {
 
 #if defined(__GNUC__) || defined(__clang__)
 
-inline uint64_t swap_8bytes(uint64_t v) { return __builtin_bswap64(v); }
-inline uint32_t swap_4bytes(uint32_t v) { return __builtin_bswap32(v); }
-inline uint16_t swap_2bytes(uint16_t v) { return __builtin_bswap16(v); }
+[[nodiscard]] inline uint64_t swap_8bytes(uint64_t v) { return __builtin_bswap64(v); }
+[[nodiscard]] inline uint32_t swap_4bytes(uint32_t v) { return __builtin_bswap32(v); }
+[[nodiscard]] inline uint16_t swap_2bytes(uint16_t v) { return __builtin_bswap16(v); }
 
 #elif defined(_MSC_VER)
 
 #include <cstdlib>
-inline uint64_t swap_8bytes(uint64_t v) { return _byteswap_uint64(v); }
-inline uint32_t swap_4bytes(uint32_t v) { return _byteswap_ulong(v); }
-inline uint16_t swap_2bytes(uint16_t v) { return _byteswap_ushort(v); }
+[[nodiscard]] inline uint64_t swap_8bytes(uint64_t v) { return _byteswap_uint64(v); }
+[[nodiscard]] inline uint32_t swap_4bytes(uint32_t v) { return _byteswap_ulong(v); }
+[[nodiscard]] inline uint16_t swap_2bytes(uint16_t v) { return _byteswap_ushort(v); }
 // also #include "immintrin.h": int _bswap(int); int64_t _bswap64(int64_t);
 
 #else
 
-inline uint64_t swap_8bytes(uint64_t v) {
+[[nodiscard]] inline uint64_t swap_8bytes(uint64_t v) {
   return (((v) >> 56) | ((v & 0x00FF'0000'0000'0000) >> 40) | ((v & 0x0000'FF00'0000'0000) >> 24) |
           ((v & 0x0000'00FF'0000'0000) >> 8) | ((v & 0x0000'0000'FF00'0000) << 8) |
           ((v & 0x0000'0000'00FF'0000) << 24) | ((v & 0x0000'0000'0000'FF00) << 40) | ((v) << 56));
 }
-inline uint32_t swap_4bytes(uint32_t v) {
+[[nodiscard]] inline uint32_t swap_4bytes(uint32_t v) {
   return (((v) >> 24) | ((v & 0x00FF'0000) >> 8) | ((v & 0x0000'FF00) << 8) | ((v) << 24));
 }
-inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
+[[nodiscard]] inline uint16_t swap_2bytes(uint16_t v) { return ((v >> 8) | (v << 8)); }
 
 #endif
 

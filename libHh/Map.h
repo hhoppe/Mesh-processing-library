@@ -75,23 +75,23 @@ class Map {
   }
   // Omit "Value& enter(const Key& key, Value&& value, bool& is_new)" because value could be lost if !is_new.
   // Note: force_enter using: { map[key] = std::move(value); }.
-  bool contains(const Key& key) const { return _map.find(key) != end(); }
-  const Value& retrieve(const Key& key, bool& present) const {
+  [[nodiscard]] bool contains(const Key& key) const { return _map.find(key) != end(); }
+  [[nodiscard]] const Value& retrieve(const Key& key, bool& present) const {
     auto it = _map.find(key);
     present = it != end();
     return present ? it->second : def();
   }
-  const Value& retrieve(const Key& key) const {
+  [[nodiscard]] const Value& retrieve(const Key& key) const {
     auto it = _map.find(key);
     if (it == end()) return def();
     return it->second;
   }
-  Value& get(const Key& key) {
+  [[nodiscard]] Value& get(const Key& key) {
     auto it = _map.find(key);
     ASSERTXX(it != end());
     return it->second;
   }
-  const Value& get(const Key& key) const {
+  [[nodiscard]] const Value& get(const Key& key) const {
     auto it = _map.find(key);
     ASSERTXX(it != end());
     return it->second;
@@ -106,27 +106,26 @@ class Map {
     return vo;
   }
   // Omit "Value replace(const Key& key, Value&& value)" because value could be lost if !present.
-  int num() const { return narrow_cast<int>(_map.size()); }
-  size_t size() const { return _map.size(); }
-  bool empty() const { return _map.empty(); }
-  Value& operator[](const Key& key) requires Copyable<Key> && Copyable<Value> {  // Introduced for Combination.
-    return _map[key];
-  }
-  const Value& operator[](const Key& key) const requires Copyable<Value> {
+  [[nodiscard]] int num() const { return narrow_cast<int>(_map.size()); }
+  [[nodiscard]] size_t size() const { return _map.size(); }
+  [[nodiscard]] bool empty() const { return _map.empty(); }
+  // Introduced for Combination:
+  [[nodiscard]] Value& operator[](const Key& key) requires Copyable<Key> && Copyable<Value> { return _map[key]; }
+  [[nodiscard]] const Value& operator[](const Key& key) const requires Copyable<Value> {
     auto it = _map.find(key);
     return it != end() ? it->second : def();
   }
-  const Key& get_one_key() const { return ASSERTXX(!empty()), begin()->first; }
-  const Value& get_one_value() const { return ASSERTXX(!empty()), begin()->second; }
-  const Key& get_random_key(Random& random) const { return crand(random)->first; }
-  const Value& get_random_value(Random& random) const { return crand(random)->second; }
-  keys_range keys() const { return keys_range(*this); }  // Keys are always constant.
-  values_range values() { return values_range(*this); }
-  cvalues_range cvalues() { return cvalues_range(*this); }
-  cvalues_range values() const { return cvalues_range(*this); }
+  [[nodiscard]] const Key& get_one_key() const { return ASSERTXX(!empty()), begin()->first; }
+  [[nodiscard]] const Value& get_one_value() const { return ASSERTXX(!empty()), begin()->second; }
+  [[nodiscard]] const Key& get_random_key(Random& random) const { return crand(random)->first; }
+  [[nodiscard]] const Value& get_random_value(Random& random) const { return crand(random)->second; }
+  [[nodiscard]] keys_range keys() const { return keys_range(*this); }  // Keys are always constant.
+  [[nodiscard]] values_range values() { return values_range(*this); }
+  [[nodiscard]] cvalues_range cvalues() { return cvalues_range(*this); }
+  [[nodiscard]] cvalues_range values() const { return cvalues_range(*this); }
   // For "for (auto& [key, value] : map)" and HH_DECLARE_OSTREAM_RANGE(Map<Key, Value>):
-  bciter begin() const { return _map.begin(); }
-  bciter end() const { return _map.end(); }
+  [[nodiscard]] bciter begin() const { return _map.begin(); }
+  [[nodiscard]] bciter end() const { return _map.end(); }
 
  public:
   struct keys_iterator {

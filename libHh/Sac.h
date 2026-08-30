@@ -37,7 +37,7 @@ class BSac : noncopyable {  // Noncopyable for safety -- could be removed if car
   static constexpr int k_dummy = 4;
   // ** per-object
   // We use reinterpret_cast to disable runtime bounds checking.
-  void* access(int k) { return reinterpret_cast<uint8_t*>(_a) + k; }
+  [[nodiscard]] void* access(int k) { return reinterpret_cast<uint8_t*>(_a) + k; }
 
  protected:
   void call_funcs(int num, int akeys[], Func afuncs[]) {
@@ -54,7 +54,7 @@ template <typename T> class Sac : public BSac {
 
  public:
   // ** static
-  template <typename T2> static int allocate() {
+  template <typename T2> [[nodiscard]] static int allocate() {
     unsigned s = sizeof(T2);
     int k = size;
     int align = alignof(T2);
@@ -82,8 +82,8 @@ template <typename T> class Sac : public BSac {
     }
     return k;
   }
-  static int get_size() { return size; }
-  static int get_max_align() { return max_align; }
+  [[nodiscard]] static int get_size() { return size; }
+  [[nodiscard]] static int get_max_align() { return max_align; }
 
   // ** per-object
   Sac() {

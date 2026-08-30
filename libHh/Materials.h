@@ -37,14 +37,14 @@ class Materials {
     _matstrings.access(matid);
     _matstrings[matid] = std::move(matstring);
   }
-  const string& get(int matid) const {
+  [[nodiscard]] const string& get(int matid) const {
     assertx(_matstrings.ok(matid));
     assertx(_matstrings[matid] != "");
     return _matstrings[matid];
   }
-  int num() const { return _matstrings.num(); }
-  size_t size() const { return _matstrings.size(); }
-  bool ok(int i) const { return _matstrings.ok(i); }
+  [[nodiscard]] int num() const { return _matstrings.num(); }
+  [[nodiscard]] size_t size() const { return _matstrings.size(); }
+  [[nodiscard]] bool ok(int i) const { return _matstrings.ok(i); }
 
  private:
   Array<string> _matstrings;

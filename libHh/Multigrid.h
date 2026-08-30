@@ -40,17 +40,17 @@ namespace hh {
 // *** Helper functions
 
 // Possibly contract a vector to a scalar value by taking its norm.
-inline float mag_e(float e) { return e; }
-inline double mag_e(double e) { return e; }
-inline float mag_e(const Vector4& e) { return sqrt(mag2(e)); }
+[[nodiscard]] inline float mag_e(float e) { return e; }
+[[nodiscard]] inline double mag_e(double e) { return e; }
+[[nodiscard]] inline float mag_e(const Vector4& e) { return sqrt(mag2(e)); }
 
 // Possibly contract a vector to a scalar value by taking its maximum coefficient value.
-inline float max_e(float e) { return e; }
-inline double max_e(double e) { return e; }
-inline float max_e(const Vector4& e) { return max(e); }
+[[nodiscard]] inline float max_e(float e) { return e; }
+[[nodiscard]] inline double max_e(double e) { return e; }
+[[nodiscard]] inline float max_e(const Vector4& e) { return max(e); }
 
 // Specialize mean() of Grid for parallelism.
-template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
+template <int D, Numeric T> [[nodiscard]] mean_type_t<T> mean(CGridView<D, T> g) {
   static_assert(std::is_trivially_default_constructible_v<T>);
   using MeanType = mean_type_t<T>;
   MeanType v{};
@@ -73,13 +73,17 @@ template <int D, Numeric T> mean_type_t<T> mean(CGridView<D, T> g) {
   }
   return v * (1. / size);
 }
-template <int D, Numeric T> mean_type_t<T> mean(GridView<D, T> g) { return mean(static_cast<CGridView<D, T>>(g)); }
-template <int D, Numeric T> mean_type_t<T> mean(const Grid<D, T>& g) { return mean(static_cast<CGridView<D, T>>(g)); }
+template <int D, Numeric T> [[nodiscard]] mean_type_t<T> mean(GridView<D, T> g) {
+  return mean(static_cast<CGridView<D, T>>(g));
+}
+template <int D, Numeric T> [[nodiscard]] mean_type_t<T> mean(const Grid<D, T>& g) {
+  return mean(static_cast<CGridView<D, T>>(g));
+}
 
 // *** Specializations for Vector4
 
 // Specialize mean() to give sufficient precision on large Grid of Vector4 -- since missing mean_type<Vector4>.
-template <int D> Vector4 mean(CGridView<D, Vector4> grid) {
+template <int D> [[nodiscard]] Vector4 mean(CGridView<D, Vector4> grid) {
   Vec4<double> v;
   fill(v, 0.);
   for (const auto& e : grid) for_int(c, 4) v[c] += e[c];
@@ -88,11 +92,15 @@ template <int D> Vector4 mean(CGridView<D, Vector4> grid) {
   for_int(c, 4) vec[c] = float(v[c]);
   return vec;
 }
-template <int D> Vector4 mean(GridView<D, Vector4> grid) { return mean(static_cast<CGridView<D, Vector4>>(grid)); }
-template <int D> Vector4 mean(const Grid<D, Vector4>& grid) { return mean(static_cast<CGridView<D, Vector4>>(grid)); }
+template <int D> [[nodiscard]] Vector4 mean(GridView<D, Vector4> grid) {
+  return mean(static_cast<CGridView<D, Vector4>>(grid));
+}
+template <int D> [[nodiscard]] Vector4 mean(const Grid<D, Vector4>& grid) {
+  return mean(static_cast<CGridView<D, Vector4>>(grid));
+}
 
 // Specialize range_stat() to operate on magnitude of Vector4 elements.
-template <int D> Stat range_stat(const Grid<D, Vector4>& range) {
+template <int D> [[nodiscard]] Stat range_stat(const Grid<D, Vector4>& range) {
   Stat stat;
   for (auto e : range) stat.enter(mag_e(e));
   return stat;
@@ -141,13 +149,13 @@ class Multigrid : noncopyable {
   }
   void set_desired_mean(const Precise& v) { _mean_desired = v, _have_mean_desired = true; }
   void set_num_vcycles(int v) { _num_vcycles = v; }
-  GridView<D, T>& rhs() { return _grid_rhs; }                  // set right-hand-side constraints
-  GridView<D, T>& initial_estimate() { return _grid_result; }  // should be set!
+  [[nodiscard]] GridView<D, T>& rhs() { return _grid_rhs; }                  // set right-hand-side constraints
+  [[nodiscard]] GridView<D, T>& initial_estimate() { return _grid_result; }  // should be set!
   void set_verbose(bool v) { _verbose = v; }
   void set_screening_weight(float v) { _screening_weight = v; }
   void solve() { run_multigrid(_grid_rhs, _grid_result); }
   void just_relax(int niter) { relax(_grid_rhs, _grid_result, niter, false); }
-  CGridView<D, T> result() { return _grid_result; }  // retrieve result
+  [[nodiscard]] CGridView<D, T> result() { return _grid_result; }  // retrieve result
  private:
   Grid<D, T> _grid_result;
   Grid<D, T> _grid_rhs;

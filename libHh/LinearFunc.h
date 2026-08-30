@@ -12,7 +12,7 @@ struct LinearFunc {
   float offset{0.f};
   LinearFunc() = default;
   LinearFunc(Vector pv, const Point& pp) : v(std::move(pv)), offset(-dot(pp, v)) {}
-  float eval(const Point& p) const { return dot(p, v) + offset; }
+  [[nodiscard]] float eval(const Point& p) const { return dot(p, v) + offset; }
   void add(const LinearFunc& lf) { v += lf.v, offset += lf.offset; }
   friend std::ostream& operator<<(std::ostream& os, const LinearFunc& lf) {
     return os << "LinearFunc(v=" << lf.v << ", offset=" << lf.offset << ")";

@@ -6,8 +6,8 @@
 # PATH=c:/windows/system32
 
 # If running from a Makefile, prefer the selected CONFIG.
-if [[ ${CONFIG+x} ]]; then
-  PATH=../$CONFIG/bin:$PATH
+if [[ -n $CONFIG ]]; then
+  PATH=../bin/$CONFIG:$PATH
 else # Otherwise, explicitly set the desired build directory here.
   # Add all possible build directories as fallback if not specified below.
   PATH=../bin:../bin/debug:../bin/win:../bin/mingw:../bin/clang../bin/cygwin:../bin/unix:$PATH

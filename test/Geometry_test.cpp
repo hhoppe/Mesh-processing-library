@@ -106,4 +106,12 @@ int main() {
     SHOW(mag2(p - q));
     SHOW(mag2(p - p));
   }
+  {
+    constexpr Frame frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f),
+                          Point(10.f, 20.f, 30.f));
+    constexpr Point p = frame[3];
+    constexpr Vector v0 = frame[0];
+    constexpr Vector v1 = frame[1];
+    SHOW(p, v0, v1);
+  }
 }

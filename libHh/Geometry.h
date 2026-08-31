@@ -107,7 +107,7 @@ class Frame : public SGrid<float, 4, 3> {
 
  public:
   Frame() = default;
-  Frame(Vector v0, Vector v1, Vector v2, Point q) : base(V<Vec3<float>>(v0, v1, v2, q)) {}
+  constexpr Frame(Vector v0, Vector v1, Vector v2, Point q) : base(V<Vec3<float>>(v0, v1, v2, q)) {}
   [[nodiscard]] Vector& v(int i) { return HH_CHECK_BOUNDS(i, 3), static_cast<Vector&>((*this)[i]); }
   [[nodiscard]] const Vector& v(int i) const { return HH_CHECK_BOUNDS(i, 3), static_cast<const Vector&>((*this)[i]); }
   [[nodiscard]] Point& p() { return static_cast<Point&>((*this)[3]); }

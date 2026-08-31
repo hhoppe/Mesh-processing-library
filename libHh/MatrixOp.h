@@ -159,7 +159,7 @@ template <typename T> [[nodiscard]] Matrix<T> identity_mat(const Vec2<int>& dims
 template <typename T> [[nodiscard]] Matrix<T> identity_mat(int n) { return identity_mat<T>(twice(n)); }
 
 // Convert an affine 4x3 matrix to a 4x4 Matrix.
-inline SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
+[[nodiscard]] constexpr SGrid<float, 4, 4> to_Matrix(const Frame& frame) {
   return V(V(frame[0, 0], frame[0, 1], frame[0, 2], 0.f), V(frame[1, 0], frame[1, 1], frame[1, 2], 0.f),
            V(frame[2, 0], frame[2, 1], frame[2, 2], 0.f), V(frame[3, 0], frame[3, 1], frame[3, 2], 1.f));
 }

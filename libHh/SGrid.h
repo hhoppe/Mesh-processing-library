@@ -32,18 +32,17 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   using type = SGrid<T, d0, od...>;
   using slice = typename details::SGrid_sslice<T, d0, od...>::type;  // Slice as Vec.
   using base = Vec<slice, d0>;
-  using initializer_type = details::nested_initializer_list_t<D, T>;
 
  public:
   SGrid() = default;
   SGrid(const type&) = default;
-  SGrid(initializer_type l) requires Copyable<T> { *this = l; }  // Not constexpr, instead use = V(V(), V(), ...).
+  constexpr SGrid(details::nested_initializer_list_t<D, T> l) requires Copyable<T> { *this = l; }
   constexpr explicit SGrid(const base& g) requires Copyable<T> : base(g) {}
   constexpr SGrid(base&& g) : base(std::move(g)) {}
   SGrid(CGridView<D, T> g) requires Copyable<T> { *this = g; }
   type& operator=(const type& g) = default;
-  type& operator=(initializer_type l) requires Copyable<T> {
-    details::nested_list_retrieve<D, T>(this->view(), l);
+  constexpr type& operator=(details::nested_initializer_list_t<D, T> l) requires Copyable<T> {
+    details::nested_list_retrieve<D, T>(b(), l);
     return *this;
   }
   type& operator=(CGridView<D, T> g) requires Copyable<T> {
@@ -142,6 +141,14 @@ template <typename T, int d0, int... od> std::ostream& operator<<(std::ostream& 
   return os << CGridView<D, T>(g);
 }
 template <typename T, int d0, int... od> HH_DECLARE_OSTREAM_EOL(SGrid<T, d0, od...>);
+
+
+// Template deduction guides:
+template <typename T, int n0> SGrid(Vec<T, n0>) -> SGrid<T, n0>;
+template <typename T, int n0, int n1> SGrid(Vec<Vec<T, n1>, n0>) -> SGrid<T, n0, n1>;
+template <typename T, int n0, int n1, int n2> SGrid(Vec<Vec<Vec<T, n2>, n1>, n0>) -> SGrid<T, n0, n1, n2>;
+template <typename T, int n0, int n1, int n2, int n3>
+SGrid(Vec<Vec<Vec<Vec<T, n3>, n2>, n1>, n0>) -> SGrid<T, n0, n1, n2, n3>;
 
 //----------------------------------------------------------------------------
 

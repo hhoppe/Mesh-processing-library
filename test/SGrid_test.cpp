@@ -63,12 +63,18 @@ int main() {
     static_assert(v11 == 23);
   }
   {
-    constexpr SGrid<int, 3, 2> grid32g{V(V(20, 21), V(22, 23), V(24, 25))};
+    constexpr SGrid grid32g{V(V(20, 21), V(22, 23), V(24, 25))};
     SHOW(grid32g);
   }
   {
-    const SGrid<int, 3, 2> grid32h{{10, 11}, {12, 13}, {14, 15}};
+    constexpr SGrid<int, 3, 2> grid32h{{10, 11}, {12, 13}, {14, 15}};
     SHOW(grid32h);
+  }
+  {
+    constexpr SGrid<int, 3, 2> grid32i{{20, 21}, {22, 23}, {24, 25}};
+    SHOW(grid32i);
+    constexpr int v11 = grid32i[1][1];
+    static_assert(v11 == 23);
   }
   {
     SHOW(sizeof(Vec<int, 0>));

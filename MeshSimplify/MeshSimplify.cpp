@@ -1167,7 +1167,8 @@ void parse_mesh_wedge_identifiers() {
             c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
             if (!c || c == crep) break;
             WedgeInfo wi2 = construct_wi(c, vnors);
-            bool diff = ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || compare_wi(wi, wi2) != 0);
+            bool diff =
+                ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || std::is_neq(compare_wi(wi, wi2)));
             if (nwidfound && sdebug) {
               int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
               assertx(diff == (wid != wid2));

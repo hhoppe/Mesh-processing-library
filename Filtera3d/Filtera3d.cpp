@@ -300,8 +300,8 @@ void pass1(const A3dElem& el) {
   if (el.num() == 4) {
     int i;
     for (i = 1; i < el.num(); i++) {
-      if (compare(el[i].n, el[0].n, 1e-6f) != 0 || el[i].c.d != el[0].c.d || compare(el[i].c.s, el[0].c.s) != 0 ||
-          el[i].c.g != el[0].c.g)
+      if (std::is_neq(compare(el[i].n, el[0].n, 1e-6f)) || el[i].c.d != el[0].c.d ||
+          std::is_neq(compare(el[i].c.s, el[0].c.s)) || el[i].c.g != el[0].c.g)
         break;
     }
     if (i == el.num()) {  // they all match

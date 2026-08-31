@@ -322,7 +322,7 @@ class DirMediaFilenames {
       s.filenames = sort_dir(directory, get_files_in_directory(directory));
       const auto func_not_media = [](const string& s2) { return !filename_is_media(s2); };
       auto range_removed = ranges::remove_if(s.filenames, func_not_media);
-      assertx(ranges::end(range_removed) == ranges::end(s.filenames));  // ?? should be true always.
+      assertx(ranges::end(range_removed) == ranges::end(s.filenames));
       s.filenames.erase(ranges::begin(range_removed), ranges::end(range_removed));
     }
     return s.filenames;

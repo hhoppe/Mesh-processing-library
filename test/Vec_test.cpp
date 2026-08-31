@@ -339,6 +339,56 @@ int main() {
     static_assert(std::is_trivially_copyable_v<Vec<float, 3>>);
     static_assert(std::is_standard_layout_v<Vec<float, 3>>);
   }
+  {
+    // The coordinate ranges are proper C++20 views over which the std::ranges adaptors and algorithms compose.
+    static_assert(std::forward_iterator<ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
+    static_assert(std::sentinel_for<std::default_sentinel_t, ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
+    static_assert(ranges::forward_range<decltype(range(Vec3<int>{}))>);
+    static_assert(ranges::view<decltype(range(Vec3<int>{}))>);
+    static_assert(ranges::viewable_range<decltype(range(Vec3<int>{}))>);
+    static_assert(ranges::borrowed_range<decltype(range(Vec3<int>{}))>);
+    static_assert(ranges::sized_range<decltype(range(Vec3<int>{}))>);
+    static_assert(ranges::forward_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(ranges::view<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(ranges::borrowed_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(std::is_same_v<ranges::range_value_t<decltype(range(Vec2<int>{}))>, Vec2<int>>);
+    static_assert(std::is_same_v<ranges::range_reference_t<decltype(range(Vec2<int>{}))>, const Vec2<int>&>);
+    static_assert(std::is_trivially_copyable_v<decltype(range(Vec2<int>{}))>);
+    // The lower bound occupies no space when it is known to be zero.
+    static_assert(sizeof(ranges::iterator_t<decltype(range(Vec3<int>{}))>) == 2 * sizeof(Vec3<int>));
+    static_assert(sizeof(ranges::iterator_t<decltype(range(Vec3<int>{}, Vec3<int>{}))>) == 3 * sizeof(Vec3<int>));
+    // The ranges are usable in constant expressions, including the collapse of any empty range.
+    static_assert(range(V(2, 3)).size() == 6);
+    static_assert(range(V(1, 2), V(4, 7)).size() == 15);
+    static_assert(range(V(2, 0, 3)).size() == 0 && range(V(2, 0, 3)).empty());
+    static_assert(range(V(1, 2), V(4, 2)).size() == 0 && range(V(1, 2), V(4, 2)).empty());
+    static_assert(!range(V(2, 3)).empty());
+  }
+  {
+    for (const auto& u : range(V(1, 2), V(3, 4))) SHOW(u);
+    for (const auto& u : range(V(2, 1, 2), V(4, 2, 3))) SHOW(u);
+    SHOW(range(V(2, 3)).size(), range(V(1, 2), V(4, 7)).size());
+    // An empty extent in any dimension makes the whole range empty.
+    for (const auto& u : range(V(3, 0))) SHOW(u);
+    for (const auto& u : range(V(1, 2), V(4, 2))) SHOW(u);
+    SHOW(range(V(3, 0)).empty(), range(V(1, 2), V(4, 2)).empty());
+    SHOW(ranges::distance(range(V(3, 4))), ranges::distance(range(V(1, 1), V(3, 4))));
+  }
+  {
+    // The iterators are forward iterators, so the ranges feed the std::ranges algorithms and adaptors.
+    SHOW(*ranges::find(range(V(3, 4)), V(1, 2)));
+    SHOW(contains(range(V(3, 4)), V(1, 3)));
+    SHOW(contains(range(V(3, 4)), V(1, 4)));
+    SHOW(ranges::count_if(range(V(3, 4)), [](const Vec2<int>& u) { return u[0] == u[1]; }));
+    ranges::for_each(range(V(2, 2)), [](const Vec2<int>& u) { SHOW(u); });
+    const auto is_diagonal = [](const Vec2<int>& u) { return u[0] == u[1]; };
+    SHOW(range(V(1, 1), V(4, 4)) | views::filter(is_diagonal) | ranges::to<Array<Vec2<int>>>());
+    SHOW(Array(range(V(2, 3)) | views::transform([](const Vec2<int>& u) { return u[0] * 10 + u[1]; })));
+    SHOW(Array(range(V(3, 3)) | views::drop(4) | views::take(2)));
+    // Because the ranges are borrowed_range, an iterator into a temporary range stays valid.
+    const auto iter = ranges::find(range(V(3, 4)), V(2, 1));
+    SHOW(*iter);
+  }
 }
 
 template class hh::Vec<int, 4>;

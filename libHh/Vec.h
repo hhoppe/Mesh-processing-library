@@ -9,8 +9,7 @@ namespace hh {
 
 namespace details {
 template <typename T, int n> struct VecBase;
-template <int D> class Vec_range;
-template <int D> class VecL_range;
+template <int D, bool has_lower_bound> class Vec_range;
 }  // namespace details
 
 // Allocated fixed-size 1D array with n elements of type T.
@@ -218,10 +217,11 @@ template <typename T, int n, typename Func> [[nodiscard]] constexpr auto transfo
 
 // Range of coordinates: Vec<int, D>: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
 //  e.g.: for (const auto& p : range(grid.dims())) grid[p] = func(p);
-template <int D> [[nodiscard]] details::Vec_range<D> range(const Vec<int, D>& uU);
+template <int D> [[nodiscard]] constexpr details::Vec_range<D, false> range(const Vec<int, D>& uU);
 
 // Range of coordinates: Vec<int, D>: uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].
-template <int D> [[nodiscard]] details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<int, D>& uU);
+template <int D>
+[[nodiscard]] constexpr details::Vec_range<D, true> range(const Vec<int, D>& uL, const Vec<int, D>& uU);
 
 // Concatenate several Vec's to create single Vec, e.g. concat(V(1, 2), V(3), V(4, 5)) == V(1, 2, 3, 4, 5).
 template <typename T, int n1, int n2, typename... A>
@@ -301,145 +301,103 @@ template <typename T> struct VecBase<T, 0> {
 
 //----------------------------------------------------------------------------
 
-// There is a way to unify Vec_range and VecL_range ??
-
-// ?? The coordinate iterators are not C++20 iterators, so range(grid.dims()) can't feed std::ranges at
-// all. difference_type = void fails std::weakly_incrementable, there's no operator==, no post-increment, and
-// no default construction. Fixing this unlocks range(dims) | views::filter(...), ranges::for_each,
-// and parallel algorithms. The idiomatic shape also removes the fake end iterator:
-//  using difference_type = std::ptrdiff_t;
-//  bool operator==(std::default_sentinel_t) const { return _u[0] >= _uU[0]; }
-// That also removes the current constraint - undocumented, and enforced only by an ASSERTXX - that iterators
-// may only be compared against end().
-
 namespace details {
 
-// Iterator for traversing coordinates: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
-template <int D> class Vec_iterator {
-  using type = Vec_iterator<D>;
+// Lower bound of a Vec_range and of its iterators.  When the bound is known to be zero, this specialization is
+// empty, so that (as an empty base class) it occupies no space and lets the compiler replace the reset step in
+// Vec_iterator::operator++() by a constant.
+template <int D, bool has_lower_bound> struct Vec_lower_bound {
+  constexpr Vec_lower_bound() = default;
+  constexpr explicit Vec_lower_bound(const Vec<int, D>& uL) : _uL(uL) {}
+  [[nodiscard]] constexpr int lower(int c) const { return _uL[c]; }
+  [[nodiscard]] constexpr const Vec<int, D>& lower() const { return _uL; }
+  Vec<int, D> _uL{};
+};
+template <int D> struct Vec_lower_bound<D, false> {
+  [[nodiscard]] static constexpr int lower(int) { return 0; }
+  [[nodiscard]] static constexpr Vec<int, D> lower() { return ntimes<D>(0); }
+};
+
+// Iterator over the coordinates uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1], in lexicographic
+// order (the last coordinate varies fastest).  It stores the bounds rather than pointing to the Vec_range, so it
+// remains valid after the range is destroyed, which lets Vec_range be a borrowed_range.
+template <int D, bool has_lower_bound> class Vec_iterator : private Vec_lower_bound<D, has_lower_bound> {
+  static_assert(D > 0);
+  using type = Vec_iterator<D, has_lower_bound>;
+  using base = Vec_lower_bound<D, has_lower_bound>;
 
  public:
-  // TODO: satisfy the std::ranges concept by defining a proper sentinel type.
-  using iterator_category = std::forward_iterator_tag;
+  using iterator_concept = std::forward_iterator_tag;
   using value_type = Vec<int, D>;
-  using difference_type = void;
-  Vec_iterator(const Vec<int, D>& u, const Vec<int, D>& uU) : _u(u), _uU(uU) {}
-  Vec_iterator(const type& iter) = default;
-  Vec_iterator() = default;
-  bool operator!=(const type& rhs) const {
-    dummy_use(rhs);
-    ASSERTXX(rhs._uU == _uU);
-    ASSERTXX(rhs._u[0] == _uU[0]);
-    return _u[0] < _uU[0];  // Quick check against usual end().
-  }
-  const Vec<int, D>& operator*() const { return ASSERTXX(_u[0] < _uU[0]), _u; }
-  type& operator++() {
-    static_assert(D > 0);
+  using difference_type = std::ptrdiff_t;
+  constexpr Vec_iterator() = default;
+  // Note `base(lower_bound)` invokes the implicit copy constructor of base, which is a no-op if !has_lower_bound.
+  constexpr Vec_iterator(const base& lower_bound, const Vec<int, D>& uU)
+      : base(lower_bound), _u(lower_bound.lower()), _uU(uU) {}
+  [[nodiscard]] constexpr const Vec<int, D>& operator*() const { return ASSERTXX(_u[0] < _uU[0]), _u; }
+  constexpr type& operator++() {
     ASSERTXX(_u[0] < _uU[0]);
-    if constexpr (D == 1) {
-      _u[0]++;
-      return *this;
-    } else if constexpr (D == 2) {  // Else VC12 does not unroll this tiny loop.
-      if (++_u[1] < _uU[1]) return *this;
-      _u[1] = 0;
-      ++_u[0];
-      return *this;
-    } else {
-      int c = D - 1;  // Here to avoid warning about loop condition in VC14 code analysis.
-      for (; c > 0; --c) {
-        if (++_u[c] < _uU[c]) return *this;
-        _u[c] = 0;
-      }
-      _u[0]++;
-      return *this;
+    for (int c = D - 1; c > 0; --c) {  // The loop is unrolled because D is a compile-time constant.
+      if (++_u[c] < _uU[c]) return *this;
+      _u[c] = this->lower(c);
     }
+    ++_u[0];
+    return *this;
   }
   type operator++(int) { return postfix_increment(*this); }
+  // Testing the first coordinate suffices because Vec_range empties it if any other dimension is empty.
+  [[nodiscard]] constexpr bool operator==(std::default_sentinel_t) const { return _u[0] >= _uU[0]; }
+  // Two iterators of the same range are equal when at the same coordinate; the end state is unique.
+  [[nodiscard]] constexpr bool operator==(const type& iter) const { return _u == iter._u; }
 
  private:
   Vec<int, D> _u{}, _uU{};
 };
 
-// Range of coordinates 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
-template <int D> class Vec_range {
+// Range of the coordinates uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1], in lexicographic order.
+// It is a view, so it can be composed with std::ranges adaptors, e.g. range(dims) | views::filter(func).
+template <int D, bool has_lower_bound>
+class Vec_range : public ranges::view_interface<Vec_range<D, has_lower_bound>>,
+                  private Vec_lower_bound<D, has_lower_bound> {
+  static_assert(D > 0);
+  using base = Vec_lower_bound<D, has_lower_bound>;
+
  public:
-  Vec_range(const Vec<int, D>& uU) : _uU(uU) {}
-  Vec_iterator<D> begin() const { return Vec_iterator<D>(ntimes<D>(0), _uU); }
-  Vec_iterator<D> end() const { return Vec_iterator<D>(_uU, _uU); }
-  size_t size() const {
+  using iterator = Vec_iterator<D, has_lower_bound>;
+  constexpr Vec_range() = default;
+  constexpr explicit Vec_range(const Vec<int, D>& uU) requires(!has_lower_bound) : _uU(uU) { empty_if_any_empty(); }
+  constexpr Vec_range(const Vec<int, D>& uL, const Vec<int, D>& uU) requires has_lower_bound : base(uL), _uU(uU) {
+    empty_if_any_empty();
+  }
+  [[nodiscard]] constexpr iterator begin() const { return iterator(static_cast<const base&>(*this), _uU); }
+  [[nodiscard]] constexpr std::default_sentinel_t end() const { return std::default_sentinel; }
+  [[nodiscard]] constexpr size_t size() const {
     size_t product = 1;
-    for_int(c, D) product *= _uU[c];
+    for_int(c, D) product *= size_t(max(0, _uU[c] - this->lower(c)));
     return product;
   }
 
  private:
-  Vec<int, D> _uU;
-};
-
-// Iterator for traversing coordinates: uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].
-template <int D> class VecL_iterator {
-  using type = VecL_iterator<D>;
-
- public:
-  using iterator_category = std::forward_iterator_tag;
-  using value_type = Vec<int, D>;
-  using difference_type = void;
-  VecL_iterator(const Vec<int, D>& uL, const Vec<int, D>& uU) : _u(uL), _uL(uL), _uU(uU) {}
-  VecL_iterator(const type& iter) = default;
-  VecL_iterator() = default;
-  bool operator!=(const type& rhs) const {
-    dummy_use(rhs);
-    ASSERTXX(rhs._uU == _uU);
-    ASSERTXX(rhs._u[0] == _uU[0]);
-    return _u[0] < _uU[0];  // Quick check against usual end().
-  }
-  const Vec<int, D>& operator*() const { return ASSERTXX(_u[0] < _uU[0]), _u; }
-  type& operator++() {
-    ASSERTXX(_u[0] < _uU[0]);
-    for (int c = D - 1; c > 0; --c) {
-      _u[c]++;
-      if (_u[c] < _uU[c]) return *this;
-      _u[c] = _uL[c];
+  Vec<int, D> _uU{};
+  // Because the iteration only tests the first coordinate, an empty dimension must empty the first one as well.
+  constexpr void empty_if_any_empty() {
+    for_intL(c, 1, D) {
+      if (_uU[c] <= this->lower(c)) {
+        _uU[0] = this->lower(0);
+        break;
+      }
     }
-    _u[0]++;
-    return *this;
   }
-  type operator++(int) { return postfix_increment(*this); }
-
- private:
-  Vec<int, D> _u{}, _uL{}, _uU{};
-};
-
-// Range of coordinates uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].
-template <int D> class VecL_range {
- public:
-  VecL_range(const Vec<int, D>& uL, const Vec<int, D>& uU) : _uL(uL), _uU(uU) {}
-  VecL_iterator<D> begin() const { return VecL_iterator<D>(_uL, _uU); }
-  VecL_iterator<D> end() const { return VecL_iterator<D>(_uU, _uU); }
-  size_t size() const {
-    size_t product = 1;
-    for_int(c, D) product *= _uU[c] - _uL[c];
-    return product;
-  }
-
- private:
-  Vec<int, D> _uL, _uU;
 };
 
 }  // namespace details
 
-template <int D> details::Vec_range<D> range(const Vec<int, D>& uU) {
-  for_int(c, D) {
-    if (uU[c] <= 0) return details::Vec_range<D>(ntimes<D>(0));
-  }
-  return details::Vec_range<D>(uU);
+template <int D> constexpr details::Vec_range<D, false> range(const Vec<int, D>& uU) {
+  return details::Vec_range<D, false>(uU);
 }
 
-template <int D> details::VecL_range<D> range(const Vec<int, D>& uL, const Vec<int, D>& uU) {
-  for_int(c, D) {
-    if (uU[c] <= uL[c]) return details::VecL_range<D>(uU, uU);
-  }
-  return details::VecL_range<D>(uL, uU);
+template <int D> constexpr details::Vec_range<D, true> range(const Vec<int, D>& uL, const Vec<int, D>& uU) {
+  return details::Vec_range<D, true>(uL, uU);
 }
 
 //----------------------------------------------------------------------------
@@ -567,6 +525,11 @@ template <DerivedFromVec SomeVec> [[nodiscard]] SomeVec interp(const Vec3<SomeVe
 template <typename T, typename... Args> Vec(T, Args...) -> Vec<T, 1 + sizeof...(Args)>;
 
 }  // namespace hh
+
+//----------------------------------------------------------------------------
+
+template <int D, bool has_lower_bound>
+inline constexpr bool std::ranges::enable_borrowed_range<hh::details::Vec_range<D, has_lower_bound>> = true;
 
 //----------------------------------------------------------------------------
 

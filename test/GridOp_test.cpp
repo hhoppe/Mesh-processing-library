@@ -218,8 +218,7 @@ int main() {
     SHOW(scale_filter_nearest(grid1.view(), V(10)));
     SHOW(scale_filter_nearest(grid1.view(), V(11)));
     // 2D
-    constexpr SGrid grid2 =
-        V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
+    constexpr SGrid grid2 = V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
     SHOW(scale_filter_nearest(grid2.view(), V(2, 3)));
     SHOW(scale_filter_nearest(grid2.view(), V(1, 8)));
     SHOW(scale_filter_nearest(grid2.view(), V(4, 10)));

@@ -7,7 +7,7 @@ include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
 
 ifeq ($(plain_compiler),)
   cpedantic += -Wtrampolines -Wlogical-op -Wvector-operation-performance -Wno-double-promotion
-  # gcc uses libstdc++ which implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
+  # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
   # so we omit -Wzero-as-null-pointer-constant in the next line.
   cxxwarnings += -Wold-style-cast -Wuseless-cast \
     -fsized-deallocation -Wsized-deallocation

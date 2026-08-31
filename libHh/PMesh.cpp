@@ -150,22 +150,24 @@ void diff(PmWedgeAttribD& ad, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) 
   ad.duv[1] = a1uv1 - a2uv1;
 }
 
-int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2) { return compare(a1.point, a2.point); }
-
-int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol) { return compare(a1.point, a2.point, tol); }
-
-int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
-  if (int r = compare(a1.normal, a2.normal); r != 0) return r;
-  if (int r = compare(a1.rgb, a2.rgb); r != 0) return r;
-  if (int r = compare(a1.uv, a2.uv); r != 0) return r;
-  return 0;
+std::partial_ordering compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2) {
+  return compare(a1.point, a2.point);
 }
 
-int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol) {
-  if (int r = compare(a1.normal, a2.normal, tol); r != 0) return r;
-  if (int r = compare(a1.rgb, a2.rgb, tol); r != 0) return r;
-  if (int r = compare(a1.uv, a2.uv, tol); r != 0) return r;
-  return 0;
+std::weak_ordering compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol) {
+  return compare(a1.point, a2.point, tol);
+}
+
+std::partial_ordering compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
+  if (auto c = compare(a1.normal, a2.normal); c != 0) return c;
+  if (auto c = compare(a1.rgb, a2.rgb); c != 0) return c;
+  return compare(a1.uv, a2.uv);
+}
+
+std::weak_ordering compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol) {
+  if (auto c = compare(a1.normal, a2.normal, tol); c != 0) return c;
+  if (auto c = compare(a1.rgb, a2.rgb, tol); c != 0) return c;
+  return compare(a1.uv, a2.uv, tol);
 }
 
 // *** WMesh
@@ -1871,12 +1873,12 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   {
     int nv = 0;
     for_int(v, ancestry._vancestry.num()) {
-      if (compare(ancestry._vancestry[v], _vertices[v].attrib)) nv++;
+      if (std::is_neq(compare(ancestry._vancestry[v], _vertices[v].attrib))) nv++;
     }
     _vgattribs.init(nv);
     nv = 0;
     for_int(v, ancestry._vancestry.num()) {
-      if (!compare(ancestry._vancestry[v], _vertices[v].attrib)) continue;
+      if (std::is_eq(compare(ancestry._vancestry[v], _vertices[v].attrib))) continue;
       _vgattribs[nv].vertex = v;
       _vgattribs[nv].attribs[0] = ancestry._vancestry[v];
       _vgattribs[nv].attribs[1] = _vertices[v].attrib;
@@ -1887,12 +1889,12 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   {
     int nw = 0;
     for_int(w, ancestry._wancestry.num()) {
-      if (compare(ancestry._wancestry[w], _wedges[w].attrib)) nw++;
+      if (std::is_neq(compare(ancestry._wancestry[w], _wedges[w].attrib))) nw++;
     }
     _wgattribs.init(nw);
     nw = 0;
     for_int(w, ancestry._wancestry.num()) {
-      if (!compare(ancestry._wancestry[w], _wedges[w].attrib)) continue;
+      if (std::is_eq(compare(ancestry._wancestry[w], _wedges[w].attrib))) continue;
       _wgattribs[nw].wedge = w;
       _wgattribs[nw].attribs[0] = ancestry._wancestry[w];
       _wgattribs[nw].attribs[1] = _wedges[w].attrib;

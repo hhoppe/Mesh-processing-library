@@ -209,8 +209,8 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
     bool in = in1 && in2;
     if (in != wasin) {
       pa.push(*cp);
-      unsigned pn = pa.num();                                         // unsigned to avoid -Werror=strict-overflow
-      if (!in && !compare(pa[pn - 2], pa[pn - 1], 1e-6f)) pa.sub(2);  // remove zero-length segment
+      unsigned pn = pa.num();  // unsigned to avoid -Werror=strict-overflow
+      if (!in && std::is_eq(compare(pa[pn - 2], pa[pn - 1], 1e-6f))) pa.sub(2);  // remove zero-length segment
     }
     wasin = in;
   }

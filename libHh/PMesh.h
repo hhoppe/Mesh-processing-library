@@ -30,8 +30,8 @@ void interp(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttrib& a
 void add(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
 void sub(PmVertexAttrib& a, const PmVertexAttrib& a1, const PmVertexAttribD& ad);
 void diff(PmVertexAttribD& ad, const PmVertexAttrib& a1, const PmVertexAttrib& a2);
-int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2);
-int compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol);
+std::partial_ordering compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2);
+std::weak_ordering compare(const PmVertexAttrib& a1, const PmVertexAttrib& a2, float tol);
 
 // Wedge attributes.
 struct PmWedgeAttrib {
@@ -53,8 +53,8 @@ void sub_noreflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAt
 void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad);
 void add_zero(PmWedgeAttrib& a, const PmWedgeAttribD& ad);
 void diff(PmWedgeAttribD& ad, const PmWedgeAttrib& a1, const PmWedgeAttrib& a2);
-int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2);
-int compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol);
+std::partial_ordering compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2);
+std::weak_ordering compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, float tol);
 
 // Face attribute is discrete: an integer material identifier that indexes into the _materials array.
 struct PmFaceAttrib {

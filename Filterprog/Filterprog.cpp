@@ -1029,12 +1029,12 @@ void process_vsplit() {
         case 2:
           vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl));
           if (verify_reflection)
-            assertx(!compare(get_wattrib(mesh.corner(save.vs, fl)), !nt ? waovtfl : waovsfl, tolerance));
+            assertx(std::is_eq(compare(get_wattrib(mesh.corner(save.vs, fl)), !nt ? waovtfl : waovsfl, tolerance)));
           break;
         case 0:
           vspl.ar_wad.push(diff(get_wattrib(mesh.corner(save.vs, fl)), !nt ? waovtfl : waovsfl));
           if (verify_reflection)
-            assertx(!compare(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl, tolerance));
+            assertx(std::is_eq(compare(get_wattrib(mesh.corner(save.vt, fl)), !ns ? waovsfl : waovtfl, tolerance)));
           break;
         case 1:
           // Added check on ns to deal with (ws=5 wt=6) case.
@@ -1042,7 +1042,7 @@ void process_vsplit() {
           if (verify_reflection) {
             PmWedgeAttrib wat;
             sub_reflect(wat, !ns ? waovsfl : waovtfl, vspl.ar_wad.last());
-            assertw(!compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance));
+            assertw(std::is_eq(compare(get_wattrib(mesh.corner(save.vs, fl)), wat, tolerance)));
           }
           break;
         default: assertnever("");

@@ -152,7 +152,7 @@ class SimplicialComplex : noncopyable {
   bool eq1simp(Simplex s1, Simplex s2) const;
   bool eq2simp(Simplex s1, Simplex s2) const;
   void replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents);
-  int compare_normal(const GMesh& mesh, Corner c1, Corner c2);
+  std::weak_ordering compare_normal(const GMesh& mesh, Corner c1, Corner c2);
 
   struct OrderedSimplices_range {
     using Container = Array<Simplex>;

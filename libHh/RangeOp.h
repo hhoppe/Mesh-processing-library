@@ -356,32 +356,34 @@ template <typename DesiredType = void, indexable_range R1, indexable_range R2>
   return v;
 }
 
-// Compare two ranges of algebraic types lexicographically; ret -1, 0, 1 based on sign of range1 - range2.
-// Use <=> ??
-template <indexable_range R1, indexable_range R2> [[nodiscard]] int compare(const R1& range1, const R2& range2) {
+// Compare two ranges lexicographically; the result compares against 0 like a <=> b would.
+template <indexable_range R1, indexable_range R2>
+[[nodiscard]] std::compare_three_way_result_t<range_value_t<R1>, range_value_t<R2>> compare(const R1& range1,
+                                                                                            const R2& range2) {
   const auto n = ranges::ssize(range1);
   ASSERTX(n == ranges::ssize(range2));
   const auto iter1 = ranges::begin(range1);
   const auto iter2 = ranges::begin(range2);
   for (const auto i : range(n)) {
-    if (auto d = iter1[i] - iter2[i]) return d < 0 ? -1 : +1;
+    if (auto c = iter1[i] <=> iter2[i]; c != 0) return c;
   }
-  return 0;
+  return std::strong_ordering::equal;
 }
 
-// Similar comparison, but ignore differences smaller than tolerance.
+// Similar comparison, but ignore differences smaller than tolerance.  Equivalence here is not transitive, so
+// the result must not be used as an ordering for sorting or for associative containers.
 template <indexable_range R1, indexable_range R2>
-[[nodiscard]] int compare(const R1& range1, const R2& range2, const range_value_t<R1>& tolerance) {
+[[nodiscard]] std::weak_ordering compare(const R1& range1, const R2& range2, const range_value_t<R1>& tolerance) {
   const auto n = ranges::ssize(range1);
   ASSERTX(n == ranges::ssize(range2));
   const auto iter1 = ranges::begin(range1);
   const auto iter2 = ranges::begin(range2);
   for (const auto i : range(n)) {
     const auto d = iter1[i] - iter2[i];
-    if (d < -tolerance) return -1;
-    if (d > tolerance) return +1;
+    if (d < -tolerance) return std::weak_ordering::less;
+    if (d > tolerance) return std::weak_ordering::greater;
   }
-  return 0;
+  return std::weak_ordering::equivalent;
 }
 
 // For any container R (e.g. Vec, Array, PArray, Grid, SGrid) supporting transformed(R&, [](const T&) -> T):

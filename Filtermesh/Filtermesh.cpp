@@ -3825,12 +3825,12 @@ void do_smoothgim(Args& args) {
         int y, x;
         x = i * nn;
         y = nn / 2;
-        assertx(!compare(points[y - 1, x], points[y + 1, x], 1e-6f));
+        assertx(std::is_eq(compare(points[y - 1, x], points[y + 1, x], 1e-6f)));
         points[y, x] =
             interp(interp(points[y - 1, x + d], points[y + 1, x + d]), interp(points[y, x + d], points[y - 1, x]));
         y = i * nn;
         x = nn / 2;
-        assertx(!compare(points[y, x - 1], points[y, x + 1], 1e-6f));
+        assertx(std::is_eq(compare(points[y, x - 1], points[y, x + 1], 1e-6f)));
         points[y, x] =
             interp(interp(points[y + d, x - 1], points[y + d, x + 1]), interp(points[y + d, x], points[y, x - 1]));
       }
@@ -3859,14 +3859,14 @@ void do_smoothgim(Args& args) {
       if (0) {
       } else if (y == nn / 2 && (x == 0 || x == nn)) {
         // Are border points really just simply reflections?
-        assertx(!compare(points[y - 1, x], points[y + 1, x], 1e-6f));
+        assertx(std::is_eq(compare(points[y - 1, x], points[y + 1, x], 1e-6f)));
         int xr = x == 0 ? x + 1 : x - 1;
         Vector tb = points[y, xr] - points[y - 1, x];
         Vector tc = points[y - 1, xr] - points[y + 1, xr];
         if (x == 0) tc = -tc;
         nor = cross(tb, tc);
       } else if (x == nn / 2 && (y == 0 || y == nn)) {
-        assertx(!compare(points[y, x - 1], points[y, x + 1], 1e-6f));
+        assertx(std::is_eq(compare(points[y, x - 1], points[y, x + 1], 1e-6f)));
         int yr = y == 0 ? y + 1 : y - 1;
         Vector tb = points[yr, x] - points[y, x - 1];
         Vector tc = points[yr, x - 1] - points[yr, x + 1];

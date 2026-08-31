@@ -781,7 +781,7 @@ void SimplicialComplex::attrReadLine(char* sline) {
 }
 #endif
 
-int SimplicialComplex::compare_normal(const GMesh& mesh, Corner c1, Corner c2) {
+std::weak_ordering SimplicialComplex::compare_normal(const GMesh& mesh, Corner c1, Corner c2) {
   // if nothing to compare
   assertx(c1 && c2);
   Vector n1, n2;

@@ -300,7 +300,7 @@ void pass1(const A3dElem& el) {
   if (el.num() == 4) {
     int i;
     for (i = 1; i < el.num(); i++) {
-      if (compare(el[i].n, el[0].n, 1e-6f) || el[i].c.d != el[0].c.d || compare(el[i].c.s, el[0].c.s) ||
+      if (compare(el[i].n, el[0].n, 1e-6f) != 0 || el[i].c.d != el[0].c.d || compare(el[i].c.s, el[0].c.s) != 0 ||
           el[i].c.g != el[0].c.g)
         break;
     }
@@ -464,7 +464,7 @@ bool loop(A3dElem& el) {
     }
   }
   for_int(i, el.num()) {
-    if (nonormals || (optnormals && !compare(el[i].n, pnor, 1e-6f))) el[i].n = Vector(0.f, 0.f, 0.f);
+    if (nonormals || (optnormals && std::is_eq(compare(el[i].n, pnor, 1e-6f)))) el[i].n = Vector(0.f, 0.f, 0.f);
     if (nocolor) el[i].c = A3dVertexColor{};
     bool validcol = false;
     if (cdiff[0] >= 0.f) {

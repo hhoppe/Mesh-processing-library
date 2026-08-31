@@ -48,6 +48,7 @@
 
 #include <algorithm>  // min(), max()
 #include <cmath>      // sqrt(), cos(), pow(), etc.
+#include <compare>    // is_eq(), weak_ordering, etc.
 #include <concepts>   // integral, convertible_to, same_as
 #include <cstdint>    // int64_t, uint64_t, int32_t, etc.
 #include <iostream>   // ostream, cout, operator<<(ostream&), etc.
@@ -398,6 +399,11 @@ template <typename... Types> std::ostream& operator<<(std::ostream& os, const st
   os << "tuple<";
   write_elements(std::index_sequence_for<Types...>());
   return os << ">";
+}
+
+// Formatted output of three-way comparison result; strong_ordering and weak_ordering convert to partial_ordering.
+inline std::ostream& operator<<(std::ostream& os, std::partial_ordering c) {
+  return os << (c == 0 ? "0" : c < 0 ? "-1" : c > 0 ? "1" : "unordered");
 }
 
 // By default, assume that types do not end their stream output with a newline character.

@@ -895,11 +895,10 @@ WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
 }
 
 // Are two wedge attributes different?
-int compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
-  if (int r = compare(wi1.col, wi2.col, k_tol); r != 0) return r;
-  if (int r = compare(wi1.nor, wi2.nor, k_tol); r != 0) return r;
-  if (int r = compare(wi1.uv, wi2.uv, k_tol); r != 0) return r;
-  return 0;
+std::weak_ordering compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
+  if (auto c = compare(wi1.col, wi2.col, k_tol); c != 0) return c;
+  if (auto c = compare(wi1.nor, wi2.nor, k_tol); c != 0) return c;
+  return compare(wi1.uv, wi2.uv, k_tol);
 }
 
 const char* generate_corner_string(Corner c, string& str) {

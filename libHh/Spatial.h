@@ -318,7 +318,7 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
     pen = encode(pci);
     p += v;
   }
-  if (!should_stop) assertw(!compare(p, p2, 1e-6f));
+  if (!should_stop) assertw(std::is_eq(compare(p, p2, 1e-6f)));
 }
 
 }  // namespace hh

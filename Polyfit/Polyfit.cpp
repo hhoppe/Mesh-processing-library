@@ -166,7 +166,7 @@ void enter_point(const Point& p, vertex v) {
 
 void initialize_poly(const Polygon& poly) {
   int num = poly.num();
-  bool closed = !compare(poly[0], poly[num - 1], 1e-6f);
+  bool closed = std::is_eq(compare(poly[0], poly[num - 1], 1e-6f));
   if (closed) --num;
   assertx(num >= (closed ? 3 : 2));
   vertex vf = nullptr, vl = nullptr;

@@ -12,7 +12,7 @@ template <> struct std::hash<hh::Vector> {
   size_t operator()(const hh::Vector& p) const { return hh::my_hash(p[0]); }
 };
 template <> struct std::equal_to<hh::Vector> {
-  bool operator()(const hh::Vector& p1, const hh::Vector& p2) const { return !hh::compare(p1, p2, 1e-4f); }
+  bool operator()(const hh::Vector& p1, const hh::Vector& p2) const { return std::is_eq(hh::compare(p1, p2, 1e-4f)); }
 };
 
 int main() {
@@ -49,7 +49,7 @@ int main() {
       size_t operator()(const Point& p) const { return my_hash(p[0]); }
     };
     struct equal_Point {
-      bool operator()(const Point& p1, const Point& p2) const { return !compare(p1, p2, 1e-4f); }
+      bool operator()(const Point& p1, const Point& p2) const { return std::is_eq(compare(p1, p2, 1e-4f)); }
     };
     Set<Point, hash_Point, equal_Point> setpoints;
     assertx(setpoints.add(Point(1.f, 2.f, 3.f)));

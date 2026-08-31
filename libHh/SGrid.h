@@ -33,7 +33,6 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   using slice = typename details::SGrid_sslice<T, d0, od...>::type;  // Slice as Vec.
   using base = Vec<slice, d0>;
   using initializer_type = details::nested_initializer_list_t<D, T>;
-  using nested_retrieve = details::nested_list_retrieve<D, T>;
 
  public:
   SGrid() = default;
@@ -44,7 +43,7 @@ class SGrid : public Vec<typename details::SGrid_sslice<T, d0, od...>::type, d0>
   SGrid(CGridView<D, T> g) requires Copyable<T> { *this = g; }
   type& operator=(const type& g) = default;
   type& operator=(initializer_type l) requires Copyable<T> {
-    nested_retrieve()(this->view(), l);
+    details::nested_list_retrieve<D, T>(this->view(), l);
     return *this;
   }
   type& operator=(CGridView<D, T> g) requires Copyable<T> {

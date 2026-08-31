@@ -57,8 +57,8 @@ template <typename T> struct nested_initializer_list<0, T> {
 };
 template <int D, typename T> using nested_initializer_list_t = typename nested_initializer_list<D, T>::type;
 
-template <int D, typename T> struct nested_list_dims;
-template <int D, typename T> struct nested_list_retrieve;
+template <int D, typename T> inline Vec<int, D> nested_list_dims(nested_initializer_list_t<D, T> l);
+template <int D, typename T> inline void nested_list_retrieve(auto grid, nested_initializer_list_t<D, T> l);
 
 }  // namespace details
 
@@ -277,8 +277,6 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   using base = GridView<D, T>;
   using type = Grid<D, T>;
   using initializer_type = details::nested_initializer_list_t<D, T>;
-  using nested_dims = details::nested_list_dims<D, T>;
-  using nested_retrieve = details::nested_list_retrieve<D, T>;
 
  public:
   Grid() = default;
@@ -303,8 +301,8 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     return *this;
   }
   type& operator=(initializer_type l) requires Copyable<T> {
-    init(nested_dims()(l));
-    nested_retrieve()(*this, l);
+    init(details::nested_list_dims<D, T>(l));
+    details::nested_list_retrieve<D, T>(base(*this), l);
     return *this;
   }
   type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }
@@ -501,32 +499,26 @@ template <int D, typename T> [[nodiscard]] Grid<D + 1, T> increase_grid_rank(Gri
 //----------------------------------------------------------------------------
 
 namespace details {
-template <int D, typename T> struct nested_list_dims {
-  Vec<int, D> operator()(nested_initializer_list_t<D, T> l) const {
-    Vec<int, D> dims;
-    dims[0] = narrow_cast<int>(l.size());
-    assertx(dims[0] > 0);
-    dims.template segment<D - 1>(1) = nested_list_dims<D - 1, T>()(l.begin()[0]);
-    return dims;
+template <int D, typename T> inline Vec<int, D> nested_list_dims(nested_initializer_list_t<D, T> l) {
+  const int n = narrow_cast<int>(l.size());
+  if constexpr (D == 1) {
+    return V(n);
+  } else {
+    assertx(n > 0);
+    return concat(V(n), nested_list_dims<D - 1, T>(l.begin()[0]));
   }
-};
-template <typename T> struct nested_list_dims<1, T> {
-  Vec<int, 1> operator()(std::initializer_list<T> l) const { return V(narrow_cast<int>(l.size())); }
-};
+}
 
-template <int D, typename T> struct nested_list_retrieve {
-  void operator()(GridView<D, T> grid, nested_initializer_list_t<D, T> l) const {
-    assertx(grid.dim(0) == narrow_cast<int>(l.size()));
-    for_int(i, narrow_cast<int>(l.size())) nested_list_retrieve<D - 1, T>()(grid[i], l.begin()[i]);
+template <int D, typename T> inline void nested_list_retrieve(auto grid, nested_initializer_list_t<D, T> l) {
+  const int n = narrow_cast<int>(l.size());
+  if constexpr (D == 1) {  // Here grid is ArrayView<T> when D + 1 was 2, else GridView<1, T>.
+    assertx(grid.size() == l.size());
+    for_int(i, n) grid[i] = l.begin()[i];
+  } else {
+    assertx(grid.dim(0) == n);
+    for_int(i, n) nested_list_retrieve<D - 1, T>(grid[i], l.begin()[i]);
   }
-  void operator()(ArrayView<T> grid, nested_initializer_list_t<1, T> l) const {  // ArrayView<T> != GridView<1, T>.
-    assertx(grid.num() == narrow_cast<int>(l.size()));
-    for_int(i, narrow_cast<int>(l.size())) grid[i] = l.begin()[i];
-  }
-};
-template <typename T> struct nested_list_retrieve<0, T> {
-  void operator()(T& gridv, const T& lv) const { gridv = lv; }
-};
+}
 }  // namespace details
 
 //----------------------------------------------------------------------------

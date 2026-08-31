@@ -320,11 +320,17 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         const int xwidth = 0 ? 600 : 100'000;  // breaking up into swaths is actually detrimental
         for (BoundedIntervals bi(nx, xwidth); *bi; ++bi) {
           int xl = bi.l(), xu = bi.u();
-          for_intL(x, xl, min(xu + 1, nx)) apix0[x] = MG::get(video[grid_frameif[0, x], 0, x], z);
+          for_intL(x, xl, min(xu + 1, nx)) {
+            const int fi = grid_frameif[0, x];
+            apix0[x] = MG::get(video[fi, 0, x], z);
+          }
           for_intL(x, xl, xu) { asy0[x] = EType{0}; }
           for_int(y, ny) {  // update [y, x]; apix0 has [y]; asy0 has [y] - [y-1]
             int y1 = y + 1;
-            if (y1 < ny) apix1[xl] = MG::get(video[grid_frameif[y1, xl], y1, xl], z);
+            if (y1 < ny) {
+              const int fi = grid_frameif[y1, xl];
+              apix1[xl] = MG::get(video[fi, y1, xl], z);
+            }
             if (xl > 0 && xl < xu) {
               int fi1 = grid_frameif[y, xl], fi2 = grid_frameif[y, xl - 1];
               asx[xl] = .5f * (MG::get(video[fi1, y, xl], z) - MG::get(video[fi1, y, xl - 1], z) +
@@ -334,7 +340,10 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               int x1 = x + 1;
               int fi = grid_frameif[y, x];
               if (x1 < nx) {
-                if (y1 < ny) apix1[x1] = MG::get(video[grid_frameif[y1, x1], y1, x1], z);
+                if (y1 < ny) {
+                  const int fi11 = grid_frameif[y1, x1];
+                  apix1[x1] = MG::get(video[fi11, y1, x1], z);
+                }
                 // compute asx[x1] = [y, x1] - [y, x]
                 int fi01 = grid_frameif[y, x1];
                 asx[x1] =
@@ -1310,7 +1319,10 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
           for_int(f, nnf) {
             auto frame = videoloop.size() ? videoloop[f] : sframe;
             parallel_for(range(ny), [&](const int y) {  //
-              for_int(x, nx) frame[y, x] = video[grid_framei[f, y, x], y, x];
+              for_int(x, nx) {
+                const int fi = grid_framei[f, y, x];
+                frame[y, x] = video[fi, y, x];
+              }
             });
             if (pwvideo) pwvideo->write(sframe);
             if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);

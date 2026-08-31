@@ -160,9 +160,9 @@ class SimplicialComplex : noncopyable {
       const auto by_increasing_id = [&](Simplex s1, Simplex s2) { return s1->getId() < s2->getId(); };
       sort(_simplices, by_increasing_id);
     }
-    Container::iterator begin() const { return const_cast<Container&>(_simplices).begin(); }
-    Container::iterator end() const { return const_cast<Container&>(_simplices).end(); }
-    int size() const { return _simplices.num(); }
+    [[nodiscard]] Container::iterator begin() const { return const_cast<Container&>(_simplices).begin(); }
+    [[nodiscard]] Container::iterator end() const { return const_cast<Container&>(_simplices).end(); }
+    [[nodiscard]] int size() const { return _simplices.num(); }
     Container _simplices;
   };
 

@@ -141,9 +141,9 @@ class Map {
   };
   struct keys_range : ranges::view_interface<keys_range> {
     explicit keys_range(const type& map) : _pmap(&map) {}
-    keys_iterator begin() const { return keys_iterator{_pmap->begin()}; }
-    keys_iterator end() const { return keys_iterator{_pmap->end()}; }
-    size_t size() const { return _pmap->size(); }
+    [[nodiscard]] keys_iterator begin() const { return keys_iterator{_pmap->begin()}; }
+    [[nodiscard]] keys_iterator end() const { return keys_iterator{_pmap->end()}; }
+    [[nodiscard]] size_t size() const { return _pmap->size(); }
     const type* _pmap;
   };
   struct cvalues_iterator {
@@ -151,17 +151,17 @@ class Map {
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
-    bool operator==(const type& rhs) const { return _it == rhs._it; }
-    const Value& operator*() const { return _it->second; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it; }
+    [[nodiscard]] const Value& operator*() const { return _it->second; }
     type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
     bciter _it{};
   };
   struct cvalues_range : ranges::view_interface<cvalues_range> {
     explicit cvalues_range(const type& map) : _pmap(&map) {}
-    cvalues_iterator begin() const { return cvalues_iterator{_pmap->begin()}; }
-    cvalues_iterator end() const { return cvalues_iterator{_pmap->end()}; }
-    size_t size() const { return _pmap->size(); }
+    [[nodiscard]] cvalues_iterator begin() const { return cvalues_iterator{_pmap->begin()}; }
+    [[nodiscard]] cvalues_iterator end() const { return cvalues_iterator{_pmap->end()}; }
+    [[nodiscard]] size_t size() const { return _pmap->size(); }
     const type* _pmap;
   };
   struct values_iterator {
@@ -169,17 +169,17 @@ class Map {
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Value;
     using difference_type = std::ptrdiff_t;
-    bool operator==(const type& rhs) const { return _it == rhs._it; }
-    Value& operator*() const { return _it->second; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it; }
+    [[nodiscard]] Value& operator*() const { return _it->second; }
     type& operator++() { return ++_it, *this; }
     type operator++(int) { return postfix_increment(*this); }
     biter _it{};
   };
   struct values_range : ranges::view_interface<values_range> {
     explicit values_range(type& map) : _pmap(&map) {}
-    values_iterator begin() const { return values_iterator{_pmap->_map.begin()}; }
-    values_iterator end() const { return values_iterator{_pmap->_map.end()}; }
-    size_t size() const { return _pmap->size(); }
+    [[nodiscard]] values_iterator begin() const { return values_iterator{_pmap->_map.begin()}; }
+    [[nodiscard]] values_iterator end() const { return values_iterator{_pmap->_map.end()}; }
+    [[nodiscard]] size_t size() const { return _pmap->size(); }
     type* _pmap;
   };
 

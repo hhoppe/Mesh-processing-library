@@ -70,8 +70,8 @@ template <typename T> class CStridedArrayView {
     friend StridedArrayView<T>;
   };
   using const_iterator = iterator;
-  iterator begin() const { return iterator(_a, _stride); }
-  iterator end() const { return iterator(_a + (_n * _stride), _stride); }
+  [[nodiscard]] iterator begin() const { return iterator(_a, _stride); }
+  [[nodiscard]] iterator end() const { return iterator(_a + (_n * _stride), _stride); }
 
  protected:
   T* _a{nullptr};
@@ -129,10 +129,10 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
     friend StridedArrayView;
   };
   using const_iterator = typename base::iterator;
-  iterator begin() { return iterator(_a, _stride); }
-  const_iterator begin() const { return const_iterator(_a, _stride); }
-  iterator end() { return iterator(_a + (_n * _stride), _stride); }
-  const_iterator end() const { return const_iterator(_a + (_n * _stride), _stride); }
+  [[nodiscard]] iterator begin() { return iterator(_a, _stride); }
+  [[nodiscard]] const_iterator begin() const { return const_iterator(_a, _stride); }
+  [[nodiscard]] iterator end() { return iterator(_a + (_n * _stride), _stride); }
+  [[nodiscard]] const_iterator end() const { return const_iterator(_a + (_n * _stride), _stride); }
 
  protected:
   using base::_a;

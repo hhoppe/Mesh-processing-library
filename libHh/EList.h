@@ -74,8 +74,8 @@ class EList {
     using difference_type = std::ptrdiff_t;
     explicit Iter(EListNode* node) : _node(node) {}
     Iter() = default;
-    bool operator==(const type& rhs) const { return _node == rhs._node; }
-    EListNode* operator*() const { return _node; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
+    [[nodiscard]] EListNode* operator*() const { return _node; }
     type& operator++() { return (_node = _node->next()), *this; }
     type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
@@ -88,18 +88,18 @@ class EList {
     using value_type = EListNode*;
     using difference_type = std::ptrdiff_t;
     ConstIter(const EListNode* node) : _node(node) {}
-    bool operator==(const type& rhs) const { return _node == rhs._node; }
-    const EListNode* operator*() const { return _node; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
+    [[nodiscard]] const EListNode* operator*() const { return _node; }
     type& operator++() { return (_node = _node->next()), *this; }
     type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
     const EListNode* _node{};
   };
-  Iter begin() { return Iter(delim()->next()); }
-  Iter end() { return Iter(delim()); }
-  ConstIter begin() const { return ConstIter(delim()->next()); }
-  ConstIter end() const { return ConstIter(delim()); }
+  [[nodiscard]] Iter begin() { return Iter(delim()->next()); }
+  [[nodiscard]] Iter end() { return Iter(delim()); }
+  [[nodiscard]] ConstIter begin() const { return ConstIter(delim()->next()); }
+  [[nodiscard]] ConstIter end() const { return ConstIter(delim()); }
   template <typename Struct, size_t offset> struct OuterIter {
     using type = OuterIter;
     using iterator_concept = std::bidirectional_iterator_tag;
@@ -107,8 +107,10 @@ class EList {
     using difference_type = std::ptrdiff_t;
     explicit OuterIter(EListNode* node) : _node(node) {}
     OuterIter() = default;
-    bool operator==(const type& rhs) const { return _node == rhs._node; }
-    Struct* operator*() const { return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset); }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
+    [[nodiscard]] Struct* operator*() const {
+      return reinterpret_cast<Struct*>(reinterpret_cast<uint8_t*>(_node) - offset);
+    }
     type& operator++() { return (_node = _node->next()), *this; }
     type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
@@ -117,8 +119,8 @@ class EList {
   };
   template <typename Struct, size_t offset> struct OuterRange : ranges::view_interface<OuterRange<Struct, offset>> {
     explicit OuterRange(const EList& list) : _list(const_cast<EList*>(&list)) {}  // Un-const right away.
-    OuterIter<Struct, offset> begin() const { return OuterIter<Struct, offset>(_list->delim()->next()); }
-    OuterIter<Struct, offset> end() const { return OuterIter<Struct, offset>(_list->delim()); }
+    [[nodiscard]] OuterIter<Struct, offset> begin() const { return OuterIter<Struct, offset>(_list->delim()->next()); }
+    [[nodiscard]] OuterIter<Struct, offset> end() const { return OuterIter<Struct, offset>(_list->delim()); }
     // Note that size() is not trivially computable.
     EList* _list;
   };

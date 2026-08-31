@@ -333,8 +333,8 @@ class Mesh : noncopyable {
       next();
     }
     Edges_iterator() = default;
-    bool operator==(const type& rhs) const { return _hcur == rhs._hcur && _vcur == rhs._vcur; }
-    Edge operator*() const { return ASSERTX(_hcur != _hend), (*_hcur)->_edge; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _hcur == rhs._hcur && _vcur == rhs._vcur; }
+    [[nodiscard]] Edge operator*() const { return ASSERTX(_hcur != _hend), (*_hcur)->_edge; }
     type& operator++() {
       ASSERTX(_hcur != _hend);
       ++_hcur;
@@ -366,31 +366,31 @@ class Mesh : noncopyable {
 
   struct Edges_range : ranges::view_interface<Edges_range> {
     explicit Edges_range(const Mesh& m) : _m(&m) {}
-    Edges_iterator begin() const { return Edges_iterator(*_m, true); }
-    Edges_iterator end() const { return Edges_iterator(*_m, false); }
-    int size() const { return _m->num_edges(); }
+    [[nodiscard]] Edges_iterator begin() const { return Edges_iterator(*_m, true); }
+    [[nodiscard]] Edges_iterator end() const { return Edges_iterator(*_m, false); }
+    [[nodiscard]] int size() const { return _m->num_edges(); }
     const Mesh* _m;
   };
 
   struct OrderedVertices_range {  // No view_interface because not O(1) copyable.
     explicit OrderedVertices_range(const Mesh& mesh);
     using Container = Array<Vertex>;
-    Container::iterator begin() { return _vertices.begin(); }
-    Container::const_iterator begin() const { return _vertices.begin(); }
-    Container::iterator end() { return _vertices.end(); }
-    Container::const_iterator end() const { return _vertices.end(); }
-    int size() const { return _vertices.num(); }
+    [[nodiscard]] Container::iterator begin() { return _vertices.begin(); }
+    [[nodiscard]] Container::const_iterator begin() const { return _vertices.begin(); }
+    [[nodiscard]] Container::iterator end() { return _vertices.end(); }
+    [[nodiscard]] Container::const_iterator end() const { return _vertices.end(); }
+    [[nodiscard]] int size() const { return _vertices.num(); }
     Container _vertices;
   };
 
   struct OrderedFaces_range {  // No view_interface because not O(1) copyable.
     explicit OrderedFaces_range(const Mesh& mesh);
     using Container = Array<Face>;
-    Container::iterator begin() { return _faces.begin(); }
-    Container::const_iterator begin() const { return _faces.begin(); }
-    Container::iterator end() { return _faces.end(); }
-    Container::const_iterator end() const { return _faces.end(); }
-    int size() const { return _faces.num(); }
+    [[nodiscard]] Container::iterator begin() { return _faces.begin(); }
+    [[nodiscard]] Container::const_iterator begin() const { return _faces.begin(); }
+    [[nodiscard]] Container::iterator end() { return _faces.end(); }
+    [[nodiscard]] Container::const_iterator end() const { return _faces.end(); }
+    [[nodiscard]] int size() const { return _faces.num(); }
     Container _faces;
   };
 
@@ -421,8 +421,8 @@ class Mesh : noncopyable {
 
   struct VV_range : ranges::view_interface<VV_range> {
     VV_range(const Mesh&, Vertex v) : _v(v) {}
-    VV_iterator begin() const { return VV_iterator(_v->_arhe.begin()); }
-    VV_iterator end() const { return VV_iterator(_v->_arhe.end()); }
+    [[nodiscard]] VV_iterator begin() const { return VV_iterator(_v->_arhe.begin()); }
+    [[nodiscard]] VV_iterator end() const { return VV_iterator(_v->_arhe.end()); }
     // Note that size() is not trivially computable.
     Vertex _v;
   };
@@ -443,9 +443,9 @@ class Mesh : noncopyable {
 
   struct VF_range : ranges::view_interface<VF_range> {
     VF_range(const Mesh&, Vertex v) : _v(v) {}
-    VF_iterator begin() const { return VF_iterator(_v->_arhe.begin()); }
-    VF_iterator end() const { return VF_iterator(_v->_arhe.end()); }
-    int size() const { return _v->_arhe.num(); }
+    [[nodiscard]] VF_iterator begin() const { return VF_iterator(_v->_arhe.begin()); }
+    [[nodiscard]] VF_iterator end() const { return VF_iterator(_v->_arhe.end()); }
+    [[nodiscard]] int size() const { return _v->_arhe.num(); }
     Vertex _v;
   };
 
@@ -474,8 +474,8 @@ class Mesh : noncopyable {
 
   struct VE_range : ranges::view_interface<VE_range> {
     VE_range(const Mesh&, Vertex v) : _v(v) {}
-    VE_iterator begin() const { return VE_iterator(_v->_arhe.begin()); }
-    VE_iterator end() const { return VE_iterator(_v->_arhe.end()); }
+    [[nodiscard]] VE_iterator begin() const { return VE_iterator(_v->_arhe.begin()); }
+    [[nodiscard]] VE_iterator end() const { return VE_iterator(_v->_arhe.end()); }
     // Note that size() is not trivially computable.
     Vertex _v;
   };
@@ -496,9 +496,9 @@ class Mesh : noncopyable {
 
   struct VC_range : ranges::view_interface<VC_range> {
     VC_range(const Mesh&, Vertex v) : _v(v) {}
-    VC_iterator begin() const { return VC_iterator(_v->_arhe.begin()); }
-    VC_iterator end() const { return VC_iterator(_v->_arhe.end()); }
-    int size() const { return _v->_arhe.num(); }
+    [[nodiscard]] VC_iterator begin() const { return VC_iterator(_v->_arhe.begin()); }
+    [[nodiscard]] VC_iterator end() const { return VC_iterator(_v->_arhe.end()); }
+    [[nodiscard]] int size() const { return _v->_arhe.num(); }
     Vertex _v;
   };
 
@@ -525,8 +525,8 @@ class Mesh : noncopyable {
 
   struct FV_range : ranges::view_interface<FV_range> {
     FV_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    FV_iterator begin() const { return FV_iterator(_herep, true); }
-    FV_iterator end() const { return FV_iterator(_herep, false); }
+    [[nodiscard]] FV_iterator begin() const { return FV_iterator(_herep, true); }
+    [[nodiscard]] FV_iterator end() const { return FV_iterator(_herep, false); }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };
@@ -566,8 +566,8 @@ class Mesh : noncopyable {
 
   struct FF_range : ranges::view_interface<FF_range> {
     FF_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    FF_iterator begin() const { return FF_iterator(_herep, true); }
-    FF_iterator end() const { return FF_iterator(_herep, false); }
+    [[nodiscard]] FF_iterator begin() const { return FF_iterator(_herep, true); }
+    [[nodiscard]] FF_iterator end() const { return FF_iterator(_herep, false); }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };
@@ -593,8 +593,8 @@ class Mesh : noncopyable {
 
   struct FE_range : ranges::view_interface<FE_range> {
     FE_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    FE_iterator begin() const { return FE_iterator(_herep, true); }
-    FE_iterator end() const { return FE_iterator(_herep, false); }
+    [[nodiscard]] FE_iterator begin() const { return FE_iterator(_herep, true); }
+    [[nodiscard]] FE_iterator end() const { return FE_iterator(_herep, false); }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };
@@ -620,8 +620,8 @@ class Mesh : noncopyable {
 
   struct FC_range : ranges::view_interface<FC_range> {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    FC_iterator begin() const { return FC_iterator(_herep, true); }
-    FC_iterator end() const { return FC_iterator(_herep, false); }
+    [[nodiscard]] FC_iterator begin() const { return FC_iterator(_herep, true); }
+    [[nodiscard]] FC_iterator end() const { return FC_iterator(_herep, false); }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };

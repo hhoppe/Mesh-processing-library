@@ -101,75 +101,77 @@ template <int D, typename T> class CGridView {
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& g) & { return _a = g._a, _dims = g._dims, *this; }
   void reinit(type g) { *this = g; }
-  template <typename T2> friend bool same_size(type g1, CGridView<D, T2> g2) { return g1.dims() == g2.dims(); }
-  static constexpr int ndim() { return D; }
-  const Vec<int, D>& dims() const { return _dims; }
-  int dim(int c) const { return _dims[c]; }
-  size_t size() const { return product_dims<D>(_dims.data()); }
-  template <std::integral... A> constexpr decltype(auto) operator[](this auto&& self, A... dd);
-  template <int n> constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
-  template <std::integral... A> const T& flat(size_t i) const { return ASSERTXX(i < size()), _a[i]; }
-  bool ok(const Vec<int, D>& u) const {
+  template <typename T2> [[nodiscard]] friend bool same_size(type g1, CGridView<D, T2> g2) {
+    return g1.dims() == g2.dims();
+  }
+  [[nodiscard]] static constexpr int ndim() { return D; }
+  [[nodiscard]] const Vec<int, D>& dims() const { return _dims; }
+  [[nodiscard]] int dim(int c) const { return _dims[c]; }
+  [[nodiscard]] size_t size() const { return product_dims<D>(_dims.data()); }
+  template <std::integral... A> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, A... dd);
+  template <int n> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
+  template <std::integral... A> [[nodiscard]] const T& flat(size_t i) const { return ASSERTXX(i < size()), _a[i]; }
+  [[nodiscard]] bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
       if (u[c] < 0 || u[c] >= _dims[c]) return false;
     }
     return true;
   }
-  template <typename... A> bool ok(A... dd) const { return ok(V(dd...)); }
+  template <typename... A> [[nodiscard]] bool ok(A... dd) const { return ok(V(dd...)); }
   bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Return false outside Border.
     for_int(c, D) {
       if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;
     }
     return true;
   }
-  const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {
     Vec<int, D> ut(u);
     assertx(map_inside(ut, bndrules));
     return (*this)[ut];
   }
-  const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
     Vec<int, D> ut(u);
     if (!map_inside(ut, bndrules)) return ASSERTX(bordervalue), *bordervalue;
     return (*this)[ut];
   }
-  type slice(int ib, int ie) const {  // View of grid truncated in 0th dimension.
+  [[nodiscard]] type slice(int ib, int ie) const {  // View of grid truncated in 0th dimension.
     assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
-  auto slices() const requires(D >= 2) {
+  [[nodiscard]] auto slices() const requires(D >= 2) {
     return range(dim(0)) | views::transform([grid = *this](int i) { return grid[i]; });
   }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  const T* begin() const { return _a; }
-  const T* end() const { return _a + size(); }
-  const T* data() const { return _a; }
-  CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] const T* begin() const { return _a; }
+  [[nodiscard]] const T* end() const { return _a + size(); }
+  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   // For implementation of Matrix (D == 2):
-  int ysize() const requires(D == 2) { return dim(0); }
-  int xsize() const requires(D == 2) { return dim(1); }
+  [[nodiscard]] int ysize() const requires(D == 2) { return dim(0); }
+  [[nodiscard]] int xsize() const requires(D == 2) { return dim(1); }
   // Return false if bndrule == Border and i is outside.
   bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
-  const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
+  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y, x];
   }
-  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
+  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
 
  protected:
   // See class CArrayView for a discussion of constness and protection of operator=().
   T* _a{nullptr};  // [0, _dims[0] - 1] * [0, _dims[1] - 1] * ... * [0, _dims[D - 1] - 1].
   Vec<int, D> _dims{ntimes<D>(0)};
-  bool check(int r) const {
+  [[nodiscard]] bool check(int r) const {
     if (r >= 0 && r < _dims[0]) return true;
     if !consteval {
       SHOW(r, _dims);
     }
     return false;
   }
-  bool check(const Vec<int, D>& u) const {
+  [[nodiscard]] bool check(const Vec<int, D>& u) const {
     if (ok(u)) return true;
     if !consteval {
       SHOW(u, _dims);
@@ -194,51 +196,53 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   type& operator=(type&& g) & { return base::operator=(std::move(g)), *this; }
   void reinit(type g) { *this = g; }
   using base::size;
-  T& flat(size_t i) { return ASSERTXX(i < size()), _a[i]; }
-  const T& flat(size_t i) const { return base::flat(i); }
-  T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) requires(D == 2) {
+  [[nodiscard]] T& flat(size_t i) { return ASSERTXX(i < size()), _a[i]; }
+  [[nodiscard]] const T& flat(size_t i) const { return base::flat(i); }
+  [[nodiscard]] T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) requires(D == 2) {
     Vec<int, D> ut(u);
     bool b = base::map_inside(ut, bndrules);
     ASSERTX(b);
     return (*this)[ut];
   }
-  const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const { return base::inside(u, bndrules); }
-  const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {
+    return base::inside(u, bndrules);
+  }
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
     return base::inside(u, bndrules, bordervalue);
   }
-  type slice(int ib, int ie) {  // View of grid truncated in 0th dimension.
+  [[nodiscard]] type slice(int ib, int ie) {  // View of grid truncated in 0th dimension.
     assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
     return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
   }
-  base slice(int ib, int ie) const { return base::slice(ib, ie); }
-  auto slices() requires(D >= 2) {
+  [[nodiscard]] base slice(int ib, int ie) const { return base::slice(ib, ie); }
+  [[nodiscard]] auto slices() requires(D >= 2) {
     return range(this->dim(0)) | views::transform([grid = *this](int i) { return type(grid)[i]; });
   }
-  auto slices() const requires(D >= 2) { return base::slices(); }
+  [[nodiscard]] auto slices() const requires(D >= 2) { return base::slices(); }
   void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  T* begin() { return _a; }
-  const T* begin() const { return _a; }
-  T* end() { return _a + size(); }
-  const T* end() const { return _a + size(); }
-  T* data() { return _a; }
-  const T* data() const { return _a; }
-  ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
-  CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] T* begin() { return _a; }
+  [[nodiscard]] const T* begin() const { return _a; }
+  [[nodiscard]] T* end() { return _a + size(); }
+  [[nodiscard]] const T* end() const { return _a + size(); }
+  [[nodiscard]] T* data() { return _a; }
+  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
   // For implementation of Matrix (D == 2):
-  T& inside(int y, int x, Bndrule bndrule) requires(D == 2) {
+  [[nodiscard]] T& inside(int y, int x, Bndrule bndrule) requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y, x];
   }
-  const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
+  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
     bool b = base::map_inside(y, x, bndrule);
     ASSERTX(b);
     return (*this)[y, x];
   }
-  const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
+  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
   void reverse_y() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
@@ -356,7 +360,7 @@ template <int D, typename T, typename Func> [[nodiscard]] auto transformed(CGrid
 
 //----------------------------------------------------------------------------
 
-template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec<int, D>& u) {
+template <int D> [[nodiscard]] constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec<int, D>& u) {
   if constexpr (D == 0) {
     return 0;
   } else {
@@ -370,7 +374,7 @@ template <int D> constexpr size_t ravel_index(const Vec<int, D>& dims, const Vec
   }
 }
 
-template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
+template <int D> [[nodiscard]] constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, size_t i) {
   static_assert(D >= 1);
   ASSERTXX(i < product_dims<D>(dims.data()));
   Vec<int, D> u;
@@ -384,7 +388,8 @@ template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, si
 }
 
 template <int D>
-constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0, std::integral auto... dd) {
+[[nodiscard]] constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0,
+                                                std::integral auto... dd) {
   static_assert(1 + sizeof...(dd) == D);
   HH_CHECK_BOUNDS(narrow_cast<int>(d0), dims[0]);
   size_t i = d0;
@@ -394,7 +399,7 @@ constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0
   return i;
 }
 
-template <int D> constexpr size_t grid_stride(const Vec<int, D>& dims, int dim) {
+template <int D> [[nodiscard]] constexpr size_t grid_stride(const Vec<int, D>& dims, int dim) {
   ASSERTXX(dim >= 0 && dim < D);
   if (dim + 1 >= D) return 1;
   size_t i = dims[dim + 1];
@@ -476,7 +481,7 @@ template <int D, typename T> void GridView<D, T>::assign(CGridView<D, T> g) requ
   ranges::copy(g, data());
 }
 
-template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) {
+template <int D, typename T> [[nodiscard]] Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) {
   assertx(grid.dim(0) == 1);  // Perhaps could be <= 1.
   Grid<D - 1, T> ngrid;
   ranges::swap(ngrid._a, grid._a);
@@ -485,7 +490,7 @@ template <int D, typename T> Grid<D - 1, T> reduce_grid_rank(Grid<D, T>&& grid) 
   return ngrid;
 }
 
-template <int D, typename T> Grid<D + 1, T> increase_grid_rank(Grid<D, T>&& grid) {
+template <int D, typename T> [[nodiscard]] Grid<D + 1, T> increase_grid_rank(Grid<D, T>&& grid) {
   Grid<D + 1, T> ngrid;
   ranges::swap(ngrid._a, grid._a);
   ngrid._dims = concat(V(1), grid._dims);

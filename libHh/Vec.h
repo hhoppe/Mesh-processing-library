@@ -591,14 +591,14 @@ TTC G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } retur
 TTC G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
 
 TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(!IsVec<T>) {
-  G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
+  G g; F { g[i] = static_cast<T>(f1 * g1[i] + (1.f - f1) * g2[i]); } return g;
 }
 TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(!IsVec<T>) {
-  G g; F { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
+  G g; F { g[i] = static_cast<T>(f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]); } return g;
 }
 TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(!IsVec<T>) {
   // Vec3<float> == Bary;  may have sum(bary) != 1.f
-  G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;
+  G g; F { g[i] = static_cast<T>(bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]); } return g;
 }
 
 // For a nested Vec, recurse rather than multiply by the float weights here, so that the leaf arithmetic is

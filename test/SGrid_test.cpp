@@ -208,8 +208,7 @@ int main() {
     constexpr SGrid<int, 2, 3> gd = 10 - ga;
     static_assert(gd[0, 0] == 9);
     SHOW(ga, gb, gc, gd);
-    SHOW(min(ga, gc), max(ga, gc));
-    // Omit "interp(ga, gc)" because it warns about conversion warning from float to int.
+    SHOW(min(ga, gc), max(ga, gc), interp(ga, gc));
     SGrid<int, 2, 3> ge = ga;
     ge *= 3;
     SHOW(ge);

@@ -4,7 +4,7 @@
 #include "libHh/BinaryIO.h"
 #include "libHh/Buffer.h"
 #include "libHh/NetworkOrder.h"
-#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

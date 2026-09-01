@@ -1233,7 +1233,7 @@ void stoc_init() {
       gdis2[i] = project_point_triangle(co[i], triangle).d2;
     }
   }
-  fill(op_stat, 0);
+  fill(op_stat.grid_view(), 0);
 }
 
 void stoc_end() {
@@ -1248,9 +1248,9 @@ void stoc_end() {
     for_int(i, op_stat.num()) s += sform("%10d", narrow_cast<int>(sum(op_stat[i])));
     showdf("%s\n", s.c_str());
   }
-  for_int(j, op_stat.dim(1)) {
+  for_int(j, op_stat.grid_dims()[1]) {
     string s = sform("%20s", op_result_name[j].c_str());
-    for_int(i, op_stat.dim(0)) s += sform("%10d", op_stat[i, j]);
+    for_int(i, op_stat.grid_dims()[0]) s += sform("%10d", op_stat[i, j]);
     showdf("%s\n", s.c_str());
   }
   {

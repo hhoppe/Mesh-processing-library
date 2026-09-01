@@ -29,10 +29,10 @@
 #include "libHh/Polygon.h"    // intersect_poly_poly()
 #include "libHh/Principal.h"  // principal_components()
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
 #include "libHh/Stat.h"      // HH_RSTAT()
 #include "libHh/StringOp.h"  // get_path_tail()
 #include "libHh/Timer.h"
+#include "libHh/Vec.h"
 #include "libHh/Video.h"
 
 #if defined(HH_HAVE_VIDEO_LOOP)
@@ -741,7 +741,7 @@ Vec2<float> get_zooms() {
   const SGrid<float, 2, 2> matrix_2d{{g_view[0, 0], g_view[0, 1]}, {g_view[1, 0], g_view[1, 1]}};
   SGrid<float, 2, 2> mo;
   Vec2<float> eimag;
-  principal_components(matrix_2d, mo, eimag);
+  principal_components(matrix_2d.const_grid_view(), mo.grid_view(), eimag);
   eimag *= sqrt(float(eimag.num()));
   return eimag;
 }
@@ -1062,7 +1062,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
     // Remove all-white borders on all sides
     const float luminance_thresh = 210.f;
     SGrid<int, 2, 2> borderw;
-    fill(borderw, 0);  // crop widths; [L == 0 | U == 1][axis]
+    fill(borderw.grid_view(), 0);  // crop widths; [L == 0 | U == 1][axis]
     for_int(axis, 2) {
       for_int(side, 2) {
         const int col_d = 1 - axis;  // axis == 0 -> column;  axis == 1 -> row
@@ -1078,11 +1078,11 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
       }
     }
     if (ldebug) SHOW(borderw);
-    if (!is_zero(borderw)) image = crop(image, borderw[0], borderw[1]);
+    if (!is_zero(borderw.const_grid_view())) image = crop(image, borderw[0], borderw[1]);
   }
   if (1) {
     SGrid<int, 2, 2> borderw;
-    fill(borderw, 0);  // crop widths; [L == 0 | U == 1][axis]
+    fill(borderw.grid_view(), 0);  // crop widths; [L == 0 | U == 1][axis]
     if (ldebug) SHOW(image.dims());
     // Remove mostly white borders on all sides
     const float luminance_thresh = 220.f;
@@ -1114,11 +1114,11 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
       }
     }
     if (ldebug) SHOW(borderw);
-    if (!is_zero(borderw)) image = crop(image, borderw[0], borderw[1]);
+    if (!is_zero(borderw.const_grid_view())) image = crop(image, borderw[0], borderw[1]);
   }
   if (1) {
     SGrid<int, 2, 2> borderw;
-    fill(borderw, 0);  // crop widths; [L == 0 | U == 1][axis]
+    fill(borderw.grid_view(), 0);  // crop widths; [L == 0 | U == 1][axis]
     if (ldebug) SHOW(image.dims());
     // Examine abnormal change in luminace on outermost columns.
     for_int(axis, 2) {
@@ -1142,7 +1142,7 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
       }
     }
     if (ldebug) SHOW(borderw);
-    if (!is_zero(borderw)) image = crop(image, borderw[0], borderw[1]);
+    if (!is_zero(borderw.const_grid_view())) image = crop(image, borderw[0], borderw[1]);
   }
   return image;
 }
@@ -3252,7 +3252,7 @@ void render_image() {
       glUniform1i(h_enable_grid, g_show_grid);
       if (0) {
         int h_somematrix = glGetUniformLocation(program_id, "somematrix");
-        glUniformMatrix4fv(h_somematrix, 1, GL_FALSE, SGrid<float, 4, 4>{}.data());
+        glUniformMatrix4fv(h_somematrix, 1, GL_FALSE, SGrid<float, 4, 4>{}.const_grid_view().data());
       }
       Array<Vec4<float>> ar_vertex;  // (xy, uv)
       for_int(i, 4) {
@@ -3318,7 +3318,7 @@ void render_image() {
       if (1) {
         glBegin(GL_LINES);
         SGrid<Point, 2, 2> gridp;
-        for (const auto& u : range(gridp.dims())) {
+        for (const auto& u : range(gridp.grid_view().dims())) {
           gridp[u] = Point(concat(convert<float>(u * g_frame_dims), V(0.f))) * g_view;
           gridp[u].head<2>() += convert<float>(u * 2 - 1) * 1.f;  // move points outwards by 1 window pixel
         }

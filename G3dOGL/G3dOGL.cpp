@@ -23,10 +23,10 @@
 #include "libHh/NetworkOrder.h"  // DEF_PLY
 #include "libHh/PMesh.h"         // DEF_PM
 #include "libHh/Polygon.h"
-#include "libHh/SGrid.h"
 #include "libHh/SrMesh.h"  // DEF_SR
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
+#include "libHh/Vec.h"
 #include "libHh/Video.h"
 
 using namespace hh;
@@ -1013,12 +1013,10 @@ void load_texturemaps() {
     }
     if (texturescale && texturescale != 1.f) {
       // Matrix4 m1; m1.ident();
-      SGrid<float, 4, 4> m1;
-      for_int(y, 4) for_int(x, 4) m1[y, x] = x == y ? 1.f : 0.f;
-      m1[0, 0] = texturescale;
-      m1[1, 1] = texturescale;
+      const auto m1 = V(V(texturescale, 0.f, 0.f, 0.f), V(0.f, texturescale, 0.f, 0.f),  //
+                        V(0.f, 0.f, 1.f, 0.f), V(0.f, 0.f, 0.f, 1.f));
       glMatrixMode(GL_TEXTURE);
-      glLoadMatrixf(m1.data());
+      glLoadMatrixf(m1.const_grid_view().data());
       glMatrixMode(GL_MODELVIEW);
     }
 
@@ -1275,10 +1273,7 @@ bool setup_ob(int i) {
   Frame fworldtomodel = ~fmodeltoworld;
   Frame fmodeltoeye = fmodeltoworld * tcami;
   Frame fmodeltoeyegl = fmodeltoeye * k_eye_to_gleye;
-  {
-    SGrid<float, 4, 4> m1 = to_Matrix(fmodeltoeyegl);
-    glLoadMatrixf(m1.data());
-  }
+  glLoadMatrixf(to_Matrix(fmodeltoeyegl).const_grid_view().data());
   // GL looks at orthonormality of f automatically (see nmode())
   feyetomodel = tcam * fworldtomodel;
   // Note: fpostomodel = inverse(fmodeltoworld*tposi);
@@ -4730,7 +4725,7 @@ void Cylinder::draw(const Point& p1, const Point& p2, float r) {
   glPushMatrix();
   {
     glTranslatef(p1[0], p1[1], p1[2]);
-    glMultMatrixf(m.data());
+    glMultMatrixf(m.const_grid_view().data());
     glScalef(r, r, D);
     draw();
   }

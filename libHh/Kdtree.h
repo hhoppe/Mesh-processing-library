@@ -4,7 +4,6 @@
 
 #include "libHh/Array.h"
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
 #include "libHh/Stack.h"
 #include "libHh/Stat.h"
 #include "libHh/Vec.h"

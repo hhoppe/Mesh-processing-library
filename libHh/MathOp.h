@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_MATHOP_H_
 
 #include "libHh/Array.h"
-#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

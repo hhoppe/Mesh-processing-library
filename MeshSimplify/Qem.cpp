@@ -4,7 +4,6 @@
 #include "libHh/Lls.h"
 #include "libHh/Polygon.h"  // orthogonal_vector()
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
 #include "libHh/Vec.h"
 
 namespace hh {
@@ -471,7 +470,7 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
   SvdDoubleLls& lls = *plls;
   lls.clear();
   SGrid<double, ngeom, ngeom> msum;
-  fill(msum, 0.);
+  fill(msum.grid_view(), 0.);
   Vec<double, ngeom> vsum;
   fill(vsum, 0.);
   for_int(wi, nw) {

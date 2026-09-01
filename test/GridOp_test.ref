@@ -81,32 +81,32 @@ Filter::get("spline").func()(2.) = 0
 Filter::get("omoms").func()(0.) = 0.619048
 Filter::get("omoms").func()(1.) = 0.190476
 Filter::get("omoms").func()(2.) = 0
-scale_filter_nearest(grid1.view(), V(1)) = Array<int>(1) {
+scale_filter_nearest(grid1.grid_view<1>(), V(1)) = Array<int>(1) {
   3
 }
-scale_filter_nearest(grid1.view(), V(2)) = Array<int>(2) {
+scale_filter_nearest(grid1.grid_view<1>(), V(2)) = Array<int>(2) {
   2
   4
 }
-scale_filter_nearest(grid1.view(), V(3)) = Array<int>(3) {
+scale_filter_nearest(grid1.grid_view<1>(), V(3)) = Array<int>(3) {
   1
   3
   5
 }
-scale_filter_nearest(grid1.view(), V(4)) = Array<int>(4) {
+scale_filter_nearest(grid1.grid_view<1>(), V(4)) = Array<int>(4) {
   1
   2
   4
   5
 }
-scale_filter_nearest(grid1.view(), V(5)) = Array<int>(5) {
+scale_filter_nearest(grid1.grid_view<1>(), V(5)) = Array<int>(5) {
   1
   2
   3
   4
   5
 }
-scale_filter_nearest(grid1.view(), V(6)) = Array<int>(6) {
+scale_filter_nearest(grid1.grid_view<1>(), V(6)) = Array<int>(6) {
   1
   2
   3
@@ -114,24 +114,11 @@ scale_filter_nearest(grid1.view(), V(6)) = Array<int>(6) {
   4
   5
 }
-scale_filter_nearest(grid1.view(), V(10)) = Array<int>(10) {
+scale_filter_nearest(grid1.grid_view<1>(), V(10)) = Array<int>(10) {
   1
   1
   2
   2
-  3
-  3
-  4
-  4
-  5
-  5
-}
-scale_filter_nearest(grid1.view(), V(11)) = Array<int>(11) {
-  1
-  1
-  2
-  2
-  3
   3
   3
   4
@@ -139,20 +126,33 @@ scale_filter_nearest(grid1.view(), V(11)) = Array<int>(11) {
   5
   5
 }
-scale_filter_nearest(grid2.view(), V(2, 3)) = Matrix<int>(2, 3) {
+scale_filter_nearest(grid1.grid_view<1>(), V(11)) = Array<int>(11) {
+  1
+  1
+  2
+  2
+  3
+  3
+  3
+  4
+  4
+  5
+  5
+}
+scale_filter_nearest(grid2.grid_view<2>(), V(2, 3)) = Matrix<int>(2, 3) {
   1 3 5
   11 13 15
 }
-scale_filter_nearest(grid2.view(), V(1, 8)) = Matrix<int>(1, 8) {
+scale_filter_nearest(grid2.grid_view<2>(), V(1, 8)) = Matrix<int>(1, 8) {
   6 6 7 8 8 9 10 10
 }
-scale_filter_nearest(grid2.view(), V(4, 10)) = Matrix<int>(4, 10) {
+scale_filter_nearest(grid2.grid_view<2>(), V(4, 10)) = Matrix<int>(4, 10) {
   1 1 2 2 3 3 4 4 5 5
   6 6 7 7 8 8 9 9 10 10
   11 11 12 12 13 13 14 14 15 15
   16 16 17 17 18 18 19 19 20 20
 }
-scale_filter_nearest(grid3.view(), V(2, 1, 5)) = Grid<int>(2, 1, 5) {
+scale_filter_nearest(grid3.grid_view<3>(), V(2, 1, 5)) = Grid<int>(2, 1, 5) {
   [0, 0, 0] = 1
   [0, 0, 1] = 2
   [0, 0, 2] = 3
@@ -164,7 +164,7 @@ scale_filter_nearest(grid3.view(), V(2, 1, 5)) = Grid<int>(2, 1, 5) {
   [1, 0, 3] = 104
   [1, 0, 4] = 105
 }
-scale_filter_nearest(grid3.view(), V(1, 2, 7)) = Grid<int>(1, 2, 7) {
+scale_filter_nearest(grid3.grid_view<3>(), V(1, 2, 7)) = Grid<int>(1, 2, 7) {
   [0, 0, 0] = 1
   [0, 0, 1] = 2
   [0, 0, 2] = 2
@@ -180,12 +180,12 @@ scale_filter_nearest(grid3.view(), V(1, 2, 7)) = Grid<int>(1, 2, 7) {
   [0, 1, 5] = 14
   [0, 1, 6] = 15
 }
-scale_filter_nearest(grid3.view(), V(1, 1, 3)) = Grid<int>(1, 1, 3) {
+scale_filter_nearest(grid3.grid_view<3>(), V(1, 1, 3)) = Grid<int>(1, 1, 3) {
   [0, 0, 0] = 1
   [0, 0, 1] = 3
   [0, 0, 2] = 5
 }
-scale_filter_nearest(grid3.view(), V(2, 2, 3)) = Grid<int>(2, 2, 3) {
+scale_filter_nearest(grid3.grid_view<3>(), V(2, 2, 3)) = Grid<int>(2, 2, 3) {
   [0, 0, 0] = 1
   [0, 0, 1] = 3
   [0, 0, 2] = 5
@@ -199,7 +199,7 @@ scale_filter_nearest(grid3.view(), V(2, 2, 3)) = Grid<int>(2, 2, 3) {
   [1, 1, 1] = 113
   [1, 1, 2] = 115
 }
-scale_filter_nearest(grid4.view(), V(2, 2, 2, 2)) = Grid<int>(2, 2, 2, 2) {
+scale_filter_nearest(grid4.grid_view<4>(), V(2, 2, 2, 2)) = Grid<int>(2, 2, 2, 2) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 2
   [0, 0, 1, 0] = 3
@@ -217,7 +217,7 @@ scale_filter_nearest(grid4.view(), V(2, 2, 2, 2)) = Grid<int>(2, 2, 2, 2) {
   [1, 1, 1, 0] = 17
   [1, 1, 1, 1] = 18
 }
-scale_filter_nearest(grid4.view(), V(2, 1, 2, 2)) = Grid<int>(2, 1, 2, 2) {
+scale_filter_nearest(grid4.grid_view<4>(), V(2, 1, 2, 2)) = Grid<int>(2, 1, 2, 2) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 2
   [0, 0, 1, 0] = 3
@@ -227,7 +227,7 @@ scale_filter_nearest(grid4.view(), V(2, 1, 2, 2)) = Grid<int>(2, 1, 2, 2) {
   [1, 0, 1, 0] = 13
   [1, 0, 1, 1] = 14
 }
-scale_filter_nearest(grid4.view(), V(2, 4, 2, 2)) = Grid<int>(2, 4, 2, 2) {
+scale_filter_nearest(grid4.grid_view<4>(), V(2, 4, 2, 2)) = Grid<int>(2, 4, 2, 2) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 2
   [0, 0, 1, 0] = 3
@@ -261,7 +261,7 @@ scale_filter_nearest(grid4.view(), V(2, 4, 2, 2)) = Grid<int>(2, 4, 2, 2) {
   [1, 3, 1, 0] = 17
   [1, 3, 1, 1] = 18
 }
-scale_filter_nearest(grid4.view(), V(1, 2, 5, 2)) = Grid<int>(1, 2, 5, 2) {
+scale_filter_nearest(grid4.grid_view<4>(), V(1, 2, 5, 2)) = Grid<int>(1, 2, 5, 2) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 2
   [0, 0, 1, 0] = 1
@@ -283,7 +283,7 @@ scale_filter_nearest(grid4.view(), V(1, 2, 5, 2)) = Grid<int>(1, 2, 5, 2) {
   [0, 1, 4, 0] = 7
   [0, 1, 4, 1] = 8
 }
-scale_filter_nearest(grid4.view(), V(6, 2, 2, 2)) = Grid<int>(6, 2, 2, 2) {
+scale_filter_nearest(grid4.grid_view<4>(), V(6, 2, 2, 2)) = Grid<int>(6, 2, 2, 2) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 2
   [0, 0, 1, 0] = 3
@@ -333,7 +333,7 @@ scale_filter_nearest(grid4.view(), V(6, 2, 2, 2)) = Grid<int>(6, 2, 2, 2) {
   [5, 1, 1, 0] = 17
   [5, 1, 1, 1] = 18
 }
-scale_filter_nearest(grid4.view(), V(3, 2, 2, 5)) = Grid<int>(3, 2, 2, 5) {
+scale_filter_nearest(grid4.grid_view<4>(), V(3, 2, 2, 5)) = Grid<int>(3, 2, 2, 5) {
   [0, 0, 0, 0] = 1
   [0, 0, 0, 1] = 1
   [0, 0, 0, 2] = 1
@@ -395,31 +395,31 @@ scale_filter_nearest(grid4.view(), V(3, 2, 2, 5)) = Grid<int>(3, 2, 2, 5) {
   [2, 1, 1, 3] = 18
   [2, 1, 1, 4] = 18
 }
-grid_column<0>(grid4.view(), V(0, 0, 0, 0)) = StridedArray<int>(2) {
+grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 0)) = StridedArray<int>(2) {
   1
   11
 }
-grid_column<0>(grid4.view(), V(0, 0, 0, 1)) = StridedArray<int>(2) {
+grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 1)) = StridedArray<int>(2) {
   2
   12
 }
-grid_column<0>(grid4.view(), V(0, 1, 1, 1)) = StridedArray<int>(2) {
+grid_column<0>(grid4.grid_view<4>(), V(0, 1, 1, 1)) = StridedArray<int>(2) {
   8
   18
 }
-grid_column<1>(grid4.view(), V(0, 0, 0, 0)) = StridedArray<int>(2) {
+grid_column<1>(grid4.grid_view<4>(), V(0, 0, 0, 0)) = StridedArray<int>(2) {
   1
   5
 }
-grid_column<1>(grid4.view(), V(0, 0, 0, 1)) = StridedArray<int>(2) {
+grid_column<1>(grid4.grid_view<4>(), V(0, 0, 0, 1)) = StridedArray<int>(2) {
   2
   6
 }
-grid_column<1>(grid4.view(), V(1, 0, 1, 1)) = StridedArray<int>(2) {
+grid_column<1>(grid4.grid_view<4>(), V(1, 0, 1, 1)) = StridedArray<int>(2) {
   14
   18
 }
-grid_column<3>(grid4.view(), V(1, 1, 1, 0)) = StridedArray<int>(2) {
+grid_column<3>(grid4.grid_view<4>(), V(1, 1, 1, 0)) = StridedArray<int>(2) {
   17
   18
 }

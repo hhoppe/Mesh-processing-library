@@ -6,9 +6,9 @@
 #include "libHh/MeshOp.h"  // triangulate_face()
 #include "libHh/PArray.h"
 #include "libHh/Queue.h"
-#include "libHh/SGrid.h"
 #include "libHh/Set.h"
 #include "libHh/Stat.h"
+#include "libHh/Vec.h"
 
 #if 0
 {

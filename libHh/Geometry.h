@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_GEOMETRY_H_
 #define MESH_PROCESSING_LIBHH_GEOMETRY_H_
 
-#include "libHh/SGrid.h"
+#include "libHh/Grid.h"
 #include "libHh/Vec.h"
 
 namespace hh {
@@ -112,7 +112,7 @@ class Frame : public SGrid<float, 4, 3> {
   [[nodiscard]] const Vector& v(int i) const { return HH_CHECK_BOUNDS(i, 3), static_cast<const Vector&>((*this)[i]); }
   [[nodiscard]] Point& p() { return static_cast<Point&>((*this)[3]); }
   [[nodiscard]] const Point& p() const { return static_cast<const Point&>((*this)[3]); }
-  void zero() { fill(*this, 0.f); }
+  void zero() { fill(grid_view(), 0.f); }
   [[nodiscard]] bool is_ident() const;
   bool invert();
   void make_right_handed() {

@@ -564,7 +564,7 @@ template <int D, typename T> Grid(CGridView<D, T>) -> Grid<D, T>;
 
 //----------------------------------------------------------------------------
 
-// Set of functions common to Vec.h, SGrid.h, Array.h, Grid.h
+// Set of functions common to Array.h, Grid.h, Vec.h.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <int D, typename T>
 #define TTN TT [[nodiscard]]

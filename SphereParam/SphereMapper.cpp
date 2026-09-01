@@ -178,8 +178,8 @@ class SphereMapper::Implementation {
 
     SGrid<float, 4, 4> u, vt;
     Vec4<float> s;
-    assertx(singular_value_decomposition(n.const_view(), u.view(), s.view(), vt.view()));
-    sort_singular_values(u.view(), s.view(), vt.view());
+    assertx(singular_value_decomposition(n.const_grid_view(), u.grid_view(), s.view(), vt.grid_view()));
+    sort_singular_values(u.grid_view(), s.view(), vt.grid_view());
     // (Because matrix n is symmetric, the vectors in u and vt are generally identical.)
 
     const float q0 = u[0, 0], qx = u[1, 0], qy = u[2, 0], qz = u[3, 0];

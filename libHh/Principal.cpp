@@ -2,9 +2,9 @@
 #include "libHh/Principal.h"
 
 #include "libHh/Homogeneous.h"
-#include "libHh/SGrid.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 

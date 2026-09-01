@@ -3,7 +3,7 @@
 
 #include "libHh/MatrixOp.h"
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 namespace {
@@ -50,12 +50,12 @@ int main() {
     SHOW(q);
     // SHOW(~frame2);
     Frame frame2inv = ~frame2;
-    truncate_small_floats(frame2inv);
+    truncate_small_floats(frame2inv.grid_view());
     SHOW(frame2inv);
     SHOW(frame2 * frame2);
     SHOW(q * inverse(frame2));
     Frame frame4 = frame3 * frame * ~frame2 * Frame::identity() * ~Frame::identity();
-    truncate_small_floats(frame4);
+    truncate_small_floats(frame4.grid_view());
     SHOW(frame4);
     Frame zero = Frame::scaling(thrice(0.f));
     SHOW(zero);
@@ -67,17 +67,17 @@ int main() {
     Frame frame(Vector(0.f, 0.f, 2.f), Vector(3.f, 0.f, 0.f), Vector(0.f, 1.f, 1.f), Point(5.f, 4.f, 3.f));
     SHOW(frame);
     SGrid<float, 4, 4> hf = to_Matrix(frame);
-    SHOW(hf);
+    SHOW(hf.const_grid_view());
     Point p1(2.f, 3.f, 4.f);
     SHOW(p1);
     SHOW(p1 * frame);
     Array<float> p2{2.f, 3.f, 4.f, 1.f};
     SHOW(p2);
-    SHOW(mat_mul(p2, hf.view()));
+    SHOW(mat_mul(p2, hf.grid_view()));
     hf[1, 3] = 4.f;
     hf[3, 3] = 0.f;
-    SHOW(hf);
-    SHOW(mat_mul(p2, hf.view()));
+    SHOW(hf.const_grid_view());
+    SHOW(mat_mul(p2, hf.grid_view()));
   }
   {
     constexpr Vector v1(1.f, 2.f, 3.f), v2(4.f, 5.f, 3.f);

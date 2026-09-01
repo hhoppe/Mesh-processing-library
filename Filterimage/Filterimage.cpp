@@ -1555,16 +1555,17 @@ void do_object_to_tangent_normals(Args& args) {
         const SGrid<float, 3, 3> tbn_non_ortho = V<Vec3<float>>(tangent, bitangent, normal);
         Vector detail_normal_in_tbn;
         if (0) {  // Simple projection, which (incorrectly) assumes that the TBN frame is orthogonal.
-          mat_mul(tbn_non_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
+          mat_mul(tbn_non_ortho.const_grid_view(), object_space_detail_normal.const_view(),
+                  detail_normal_in_tbn.view());
         } else if (0) {  // Map through the transpose of the TBN frame inverse.
-          assertx(invert(tbn_non_ortho.const_view(), tbn_inverse.view()));
-          mat_mul(object_space_detail_normal.const_view(), tbn_inverse.const_view(), detail_normal_in_tbn.view());
+          assertx(invert(tbn_non_ortho.const_grid_view(), tbn_inverse.grid_view()));
+          mat_mul(object_space_detail_normal.const_view(), tbn_inverse.const_grid_view(), detail_normal_in_tbn.view());
         } else {  // Solution suggested in https://github.com/mmikk/MikkTSpace/blob/master/mikktspace.h
           assertx(!k_renormalize_tbn_per_pixel);
           // Is it really an "exact inverse of pixel shader"?
           const SGrid<float, 3, 3> tbn_ortho =
               V<Vec3<float>>(cross(bitangent, normal), cross(normal, tangent), cross(tangent, bitangent));
-          mat_mul(tbn_ortho.const_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
+          mat_mul(tbn_ortho.const_grid_view(), object_space_detail_normal.const_view(), detail_normal_in_tbn.view());
           const float sign = dot(tangent, tbn_ortho[0]) < 0.f ? -1.f : 1.f;
           detail_normal_in_tbn = sign * detail_normal_in_tbn;
         }
@@ -1627,7 +1628,7 @@ void do_tangent_to_object_normals(Args& args) {
         const SGrid<float, 3, 3> tbn = V<Vec3<float>>(tangent, bitangent, normal);
         Vector object_space_detail_normal;
         // https://github.com/mrdoob/three.js/blob/dev/src/renderers/shaders/ShaderChunk/normal_fragment_maps.glsl.js
-        mat_mul(detail_normal_in_tbn.const_view(), tbn.const_view(), object_space_detail_normal.view());
+        mat_mul(detail_normal_in_tbn.const_view(), tbn.const_grid_view(), object_space_detail_normal.view());
         if (1) object_space_detail_normal = normalized(object_space_detail_normal);
         pixel = Vector4(concat((object_space_detail_normal + 1.f) / 2.f, V(1.f))).pixel();
       }

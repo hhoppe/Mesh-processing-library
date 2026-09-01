@@ -163,7 +163,6 @@
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="RangeOp.h" />
-    <ClInclude Include="SGrid.h" />
     <ClInclude Include="SrMesh.h" />
     <ClInclude Include="STree.h" />
     <ClInclude Include="Sac.h" />

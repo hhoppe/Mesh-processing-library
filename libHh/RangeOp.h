@@ -386,7 +386,7 @@ template <indexable_range R1, indexable_range R2>
   return std::weak_ordering::equivalent;
 }
 
-// For any container R (e.g. Vec, Array, PArray, Grid, SGrid) supporting transformed(R&, [](const T&) -> T):
+// For any container R (e.g. Vec, Array, PArray, Grid) supporting transformed(R&, [](const T&) -> T):
 
 // Convert all elements of the container to the new type U, e.g. convert<float>(V(1, 2)) == V(1.f, 2.f).
 // Be careful to possibly use floor() before convert<int>() to avoid rounding negative values towards zero.

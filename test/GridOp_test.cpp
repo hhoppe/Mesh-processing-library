@@ -5,9 +5,9 @@
 #include "libHh/MatrixOp.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
@@ -208,43 +208,44 @@ int main() {
   }
   if (1) {
     // 1D
-    constexpr SGrid grid1 = V(1, 2, 3, 4, 5);
-    SHOW(scale_filter_nearest(grid1.view(), V(1)));
-    SHOW(scale_filter_nearest(grid1.view(), V(2)));
-    SHOW(scale_filter_nearest(grid1.view(), V(3)));
-    SHOW(scale_filter_nearest(grid1.view(), V(4)));
-    SHOW(scale_filter_nearest(grid1.view(), V(5)));
-    SHOW(scale_filter_nearest(grid1.view(), V(6)));
-    SHOW(scale_filter_nearest(grid1.view(), V(10)));
-    SHOW(scale_filter_nearest(grid1.view(), V(11)));
+    constexpr SGrid<int, 5> grid1 = V(1, 2, 3, 4, 5);
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(1)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(2)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(3)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(4)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(5)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(6)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(10)));
+    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(11)));
     // 2D
-    constexpr SGrid grid2 = V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
-    SHOW(scale_filter_nearest(grid2.view(), V(2, 3)));
-    SHOW(scale_filter_nearest(grid2.view(), V(1, 8)));
-    SHOW(scale_filter_nearest(grid2.view(), V(4, 10)));
+    constexpr SGrid<int, 4, 5> grid2 =
+        V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
+    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(2, 3)));
+    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(1, 8)));
+    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(4, 10)));
     // 3D
     constexpr SGrid<int, 2, 2, 5> grid3 = {{{1, 2, 3, 4, 5}, {11, 12, 13, 14, 15}},
                                            {{101, 102, 103, 104, 105}, {111, 112, 113, 114, 115}}};
-    SHOW(scale_filter_nearest(grid3.view(), V(2, 1, 5)));
-    SHOW(scale_filter_nearest(grid3.view(), V(1, 2, 7)));
-    SHOW(scale_filter_nearest(grid3.view(), V(1, 1, 3)));
-    SHOW(scale_filter_nearest(grid3.view(), V(2, 2, 3)));
+    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(2, 1, 5)));
+    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(1, 2, 7)));
+    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(1, 1, 3)));
+    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(2, 2, 3)));
     // 4D
-    constexpr SGrid grid4 =
+    constexpr SGrid<int, 2, 2, 2, 2> grid4 =
         V(V(V(V(1, 2), V(3, 4)), V(V(5, 6), V(7, 8))), V(V(V(11, 12), V(13, 14)), V(V(15, 16), V(17, 18))));
-    SHOW(scale_filter_nearest(grid4.view(), V(2, 2, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.view(), V(2, 1, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.view(), V(2, 4, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.view(), V(1, 2, 5, 2)));
-    SHOW(scale_filter_nearest(grid4.view(), V(6, 2, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.view(), V(3, 2, 2, 5)));
-    SHOW(grid_column<0>(grid4.view(), V(0, 0, 0, 0)));
-    SHOW(grid_column<0>(grid4.view(), V(0, 0, 0, 1)));
-    SHOW(grid_column<0>(grid4.view(), V(0, 1, 1, 1)));
-    SHOW(grid_column<1>(grid4.view(), V(0, 0, 0, 0)));
-    SHOW(grid_column<1>(grid4.view(), V(0, 0, 0, 1)));
-    SHOW(grid_column<1>(grid4.view(), V(1, 0, 1, 1)));
-    SHOW(grid_column<3>(grid4.view(), V(1, 1, 1, 0)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 2, 2, 2)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 1, 2, 2)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 4, 2, 2)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(1, 2, 5, 2)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(6, 2, 2, 2)));
+    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(3, 2, 2, 5)));
+    SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 0)));
+    SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 1)));
+    SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 1, 1, 1)));
+    SHOW(grid_column<1>(grid4.grid_view<4>(), V(0, 0, 0, 0)));
+    SHOW(grid_column<1>(grid4.grid_view<4>(), V(0, 0, 0, 1)));
+    SHOW(grid_column<1>(grid4.grid_view<4>(), V(1, 0, 1, 1)));
+    SHOW(grid_column<3>(grid4.grid_view<4>(), V(1, 1, 1, 0)));
   }
   if (1) {
     const Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));

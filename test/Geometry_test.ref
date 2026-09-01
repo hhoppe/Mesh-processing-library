@@ -59,7 +59,7 @@ frame = Frame {
   v2 = [0, 1, 1]
   p = [5, 4, 3]
 }
-hf = Matrix<float>(4, 4) {
+hf.const_grid_view() = Matrix<float>(4, 4) {
   0 0 2 0
   3 0 0 0
   0 1 1 0
@@ -73,19 +73,19 @@ p2 = Array<float>(4) {
   4
   1
 }
-mat_mul(p2, hf.view()) = Array<float>(4) {
+mat_mul(p2, hf.grid_view()) = Array<float>(4) {
   14
   8
   11
   1
 }
-hf = Matrix<float>(4, 4) {
+hf.const_grid_view() = Matrix<float>(4, 4) {
   0 0 2 0
   3 0 0 4
   0 1 1 0
   5 4 3 0
 }
-mat_mul(p2, hf.view()) = Array<float>(4) {
+mat_mul(p2, hf.grid_view()) = Array<float>(4) {
   14
   8
   11

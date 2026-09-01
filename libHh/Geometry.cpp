@@ -7,7 +7,7 @@
 #include "libHh/Homogeneous.h"  // centroid
 #include "libHh/Matrix.h"
 #include "libHh/MatrixOp.h"
-#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 
@@ -53,8 +53,8 @@ Frame operator*(const Frame& frame1, const Frame& frame2) {
 bool invert(const Frame& frame, Frame& frame_inv) {
   // &frame == &frame_inv is ok
   SGrid<float, 4, 4> m = to_Matrix(frame);
-  if (!invert(m.const_view(), m.view())) return false;
-  frame_inv = to_Frame(m);
+  if (!invert(m.const_grid_view(), m.grid_view())) return false;
+  frame_inv = to_Frame(m.const_grid_view());
   return true;
 }
 

@@ -6,7 +6,7 @@
 #include "libHh/GridOp.h"
 #include "libHh/MathOp.h"  // my_mod()
 #include "libHh/Matrix.h"
-#include "libHh/SGrid.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 
@@ -228,7 +228,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
       src_vecs[i] =
           affine_transform(twice(0.f).with(i, 1.f) / convert<float>(m.dims()), frame) * convert<float>(nm.dims());
     }
-    max_shrinkage = max_abs_element(src_vecs);
+    max_shrinkage = max_abs_element(src_vecs.grid_view());
     // SHOW(src_vecs, max_shrinkage);
   }
   const float transform_minification_threshold = getenv_float("TRANSFORM_MINIFICATION_THRESHOLD", 1.3f, true);

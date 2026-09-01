@@ -24,9 +24,9 @@
 #include "libHh/Pqueue.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
-#include "libHh/SGrid.h"
 #include "libHh/Set.h"
 #include "libHh/Timer.h"
+#include "libHh/Vec.h"
 using namespace hh;
 
 #if defined(HH_HAVE_SIMPLEX)

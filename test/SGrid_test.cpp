@@ -246,6 +246,11 @@ int main() {
     SHOW(triangle, triangle.size(), triangle[1]);
     SHOW(triangle.grid_dims<2>());
   }
+  {
+    const auto g = V(V(1, 2), V(3, 4), V(5, 6));
+    SHOW(g);
+    SHOW(clamp(g, 2, 5));
+  }
 }
 
 template class hh::Vec<double*, 1>;

@@ -519,7 +519,8 @@ template <ranges::input_range R> Array(R&&) -> Array<range_value_t<R>>;
   TTN G operator OP(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] OP v; } return g; } \
   TTN G operator OP(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v OP g1[i]; } return g; } \
   TT ArrayView<T> operator OP##=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] OP##= g2[i]; } return g1; } \
-  TT ArrayView<T> operator OP##=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] OP##= v; } return g1; }
+  TT ArrayView<T> operator OP##=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] OP##= v; } return g1; } \
+  HH_EAT_SEMICOLON
 
 HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 

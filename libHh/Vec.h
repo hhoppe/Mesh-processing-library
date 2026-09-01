@@ -34,7 +34,8 @@ template <int D, typename T> struct SGridLeaf;
 //  Vec<Point, 3> would acquire an initializer_list<Point> constructor that hijacks list-initialization from the
 //  variadic constructor (losing its static_assert on arity), and Vec<Point, 3> * 2.f would silently become legal.
 template <typename T> inline constexpr bool is_vec_v = false;
-template <typename T> concept IsVec = is_vec_v<T>;
+template <typename T>
+concept IsVec = is_vec_v<T>;
 
 // The element type obtained by peeling D levels of Vec nesting from T.
 template <int D, typename T> using sgrid_leaf_t = typename details::SGridLeaf<D, T>::type;
@@ -574,12 +575,13 @@ TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2,
       requires(HH_VEC_LESS_NESTED && requires(T t, U u) { u OP t; }) {     \
     G g; F { g[i] = v OP g1[i]; } return g;                                \
   }                                                                        \
-  TTU constexpr G& operator OP##=(G & g1, const U & v)                     \
-      requires(HH_VEC_LESS_NESTED && requires(T t, U u) { t OP## = u; }) { \
-    F { g1[i] OP## = v; } return g1;                                       \
+  TTU constexpr G& operator OP##=(G& g1, const U& v)                       \
+      requires(HH_VEC_LESS_NESTED && requires(T t, U u) { t OP##= u; }) {  \
+    F { g1[i] OP##= v; } return g1;                                        \
   }                                                                        \
   TTC G operator OP(const G& g1, const G& g2) { G g; F { g[i] = g1[i] OP g2[i]; } return g; } \
-  TTA G& operator OP##=(G & g1, const G & g2) { F { g1[i] OP## = g2[i]; } return g1; }
+  TTA G& operator OP##=(G& g1, const G& g2) { F { g1[i] OP##= g2[i]; } return g1; } \
+  HH_EAT_SEMICOLON
 
 HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
@@ -588,7 +590,10 @@ TTC G operator-(const G& g1) { G g; F { g[i] = -g1[i]; } return g; }
 TTC G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return g; }
 TTC G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
 
-TTC G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
+TTU [[nodiscard]] constexpr G clamp(const G& g1, const U& vmin, const U& vmax)
+    requires(HH_VEC_LESS_NESTED && requires(T t, U u) { clamp(t, u, u); }) {
+  G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g;
+}
 
 TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(!IsVec<T>) {
   G g; F { g[i] = static_cast<T>(f1 * g1[i] + (1.f - f1) * g2[i]); } return g;

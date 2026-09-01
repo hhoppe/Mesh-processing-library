@@ -209,8 +209,8 @@ int main() {
   {
     Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // Test both ways.
     SHOW(pp);
-    SHOW((pp + V(10, 10)));
-    SHOW((Vec2<int>(10, 10) - pp));
+    SHOW((pp + V(10, 20)));
+    SHOW((Vec2<int>(10, 20) - pp));
     SHOW(-pp);
   }
   {

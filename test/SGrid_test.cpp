@@ -1,5 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 
+#include "libHh/Geometry.h"
+#include "libHh/Grid.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 using namespace hh;
@@ -174,7 +176,7 @@ int main() {
     SGrid<float> grid_no_dimensions;  // It fails to compile, which is correct.
 #endif
 #if 0
-    using Over = leaf_t<3, SGrid<Point, 2, 2>>;  // It fails to compile, which is correct.
+    using Over = sgrid_leaf_t<3, SGrid<Point, 2, 2>>;  // It fails to compile, which is correct.
 #endif
   }
   {
@@ -182,12 +184,12 @@ int main() {
     static_assert(std::is_same_v<SGrid<float, 3>, Vec<float, 3>>);
     static_assert(std::is_same_v<SGrid<float, 2, 3>, Vec<Vec<float, 3>, 2>>);
     static_assert(std::is_same_v<SGrid<float, 2, 3, 4>, Vec<Vec<Vec<float, 4>, 3>, 2>>);
-    static_assert(std::is_same_v<leaf_t<3, SGrid<float, 2, 3, 4>>, float>);
-    static_assert(std::is_same_v<leaf_t<2, SGrid<float, 2, 3, 4>>, Vec<float, 4>>);
-    static_assert(std::is_same_v<leaf_t<1, SGrid<float, 2, 3, 4>>, Vec<Vec<float, 4>, 3>>);
+    static_assert(std::is_same_v<sgrid_leaf_t<3, SGrid<float, 2, 3, 4>>, float>);
+    static_assert(std::is_same_v<sgrid_leaf_t<2, SGrid<float, 2, 3, 4>>, Vec<float, 4>>);
+    static_assert(std::is_same_v<sgrid_leaf_t<1, SGrid<float, 2, 3, 4>>, Vec<Vec<float, 4>, 3>>);
     // The nesting stops at the declared element type; Point derives from Vec but is not one.
     static_assert(is_vec_v<Vec<float, 3>> && !is_vec_v<Point> && !is_vec_v<float>);
-    static_assert(std::is_same_v<leaf_t<2, SGrid<Point, 3, 3>>, Point>);
+    static_assert(std::is_same_v<sgrid_leaf_t<2, SGrid<Point, 3, 3>>, Point>);
     // A Vec is a range over its own elements at every level, whatever the nesting.
     static_assert(SGrid<float, 2, 3, 4>().size() == 2);
     static_assert(std::is_same_v<SGrid<float, 2, 3>::value_type, Vec<float, 3>>);

@@ -514,36 +514,14 @@ template <ranges::input_range R> Array(R&&) -> Array<range_value_t<R>>;
 #define SS ASSERTXX(same_size(g1, g2))
 #define F(g) for_int(i, g.num())
 // clang-format off
+#define HH_OPERATIONS(OP) \
+  TTN G operator OP(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] OP g2[i]; } return g; } \
+  TTN G operator OP(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] OP v; } return g; } \
+  TTN G operator OP(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v OP g1[i]; } return g; } \
+  TT ArrayView<T> operator OP##=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] OP##= g2[i]; } return g1; } \
+  TT ArrayView<T> operator OP##=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] OP##= v; } return g1; }
 
-TTN G operator+(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] + g2[i]; } return g; }
-TTN G operator-(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] - g2[i]; } return g; }
-TTN G operator*(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] * g2[i]; } return g; }
-TTN G operator/(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] / g2[i]; } return g; }
-TTN G operator%(CG g1, CG g2) { SS; G g(g1.num()); F(g) { g[i] = g1[i] % g2[i]; } return g; }
-
-TTN G operator+(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] + v; } return g; }
-TTN G operator-(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] - v; } return g; }
-TTN G operator*(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] * v; } return g; }
-TTN G operator/(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] / v; } return g; }
-TTN G operator%(CG g1, const T& v) { G g(g1.num()); F(g) { g[i] = g1[i] % v; } return g; }
-
-TTN G operator+(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v + g1[i]; } return g; }
-TTN G operator-(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v - g1[i]; } return g; }
-TTN G operator*(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v * g1[i]; } return g; }
-TTN G operator/(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v / g1[i]; } return g; }
-TTN G operator%(const T& v, CG g1) { G g(g1.num()); F(g) { g[i] = v % g1[i]; } return g; }
-
-TT ArrayView<T> operator+=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] += g2[i]; } return g1; }
-TT ArrayView<T> operator-=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] -= g2[i]; } return g1; }
-TT ArrayView<T> operator*=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] *= g2[i]; } return g1; }
-TT ArrayView<T> operator/=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] /= g2[i]; } return g1; }
-TT ArrayView<T> operator%=(ArrayView<T> g1, CG g2) { SS; F(g1) { g1[i] %= g2[i]; } return g1; }
-
-TT ArrayView<T> operator+=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] += v; } return g1; }
-TT ArrayView<T> operator-=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] -= v; } return g1; }
-TT ArrayView<T> operator*=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] *= v; } return g1; }
-TT ArrayView<T> operator/=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] /= v; } return g1; }
-TT ArrayView<T> operator%=(ArrayView<T> g1, const T& v) { F(g1) { g1[i] %= v; } return g1; }
+HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
 TTN G operator-(CG g1) { G g(g1.num()); F(g1) { g[i] = -g1[i]; } return g; }
 
@@ -561,6 +539,7 @@ TTN G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3
 // TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary)  // Omit to avoid dependency on Vec.
 
 // clang-format on
+#undef HH_OPERATIONS
 #undef F
 #undef SS
 #undef CG

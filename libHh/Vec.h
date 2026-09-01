@@ -5,20 +5,7 @@
 #include "libHh/Advanced.h"  // my_hash(), hash_combine()
 #include "libHh/Array.h"     // ArrayView<>, CArrayView<>
 
-// INVARIANT: is_vec_v must never change observable behavior.  It only gates the presence of the extra grid members
-//  below; it must not alter size(), num(), begin(), end(), value_type, operator<<, has_ostream_eol, or anything
-//  else.  A Vec<T, n> is a range of exactly n elements of type T at every nesting level, without exception.
-//  The reason is that a nested Vec is not necessarily a grid: Bbox derives from Vec2<Vec<T, dim>> and is a pair of
-//  corners, Vec3<Vec2<float>> is a triangle, and Vec3<Vec3<Precision>> is three points.  The type cannot tell those
-//  apart from SGrid<float, 3, 2>, so the number of dimensions D is always supplied by the caller at the use site,
-//  never inferred.  Violating this invariant would silently reinterpret those types as grids.
-
 namespace hh {
-
-namespace details {
-template <typename T, int n> struct VecBase;
-template <int D, bool has_lower_bound> class Vec_range;
-}  // namespace details
 
 // Defined in Grid.h, which includes this header; only the declarations are needed here, because the return types
 //  and bodies of grid_view() are required complete only at instantiation -- necessarily in a translation unit
@@ -27,20 +14,36 @@ template <int D, typename T> class CGridView;
 template <int D, typename T> class GridView;
 
 namespace details {
-template <int D, typename T> struct Leaf;
+template <typename T, int n> struct VecBase;
+template <int D, typename T> struct SGridLeaf;
 }  // namespace details
 
-// True only for an exact Vec specialization, never for a class (Point, Vector, Pixel) from Vec.
-// Note that this is not what bounds the flattening depth -- details::Leaf below does that, since a partial
-//  specialization on Vec<T, n> does not match a derived class, so leaf_t<3, SGrid<Point, 2, 2>> is ill-formed
+// INVARIANT: is_vec_v must never change observable behavior.  It only gates the presence of the extra grid members
+//  below; it must not alter size(), num(), begin(), end(), value_type, operator<<, has_ostream_eol, or anything
+//  else.  A Vec<T, n> is a range of exactly n elements of type T at every nesting level, without exception.
+//  The reason is that a nested Vec is not necessarily a grid: Bbox derives from Vec2<Vec<T, dim>> and is a pair of
+//  corners, Vec3<Vec2<float>> is a triangle, and Vec3<Vec3<Precision>> is three points.  The type cannot tell those
+//  apart from SGrid<float, 3, 2>, so the number of dimensions D is always supplied by the caller at the use site,
+//  never inferred.  Violating this invariant would silently reinterpret those types as grids.
+
+// True only for an exact Vec specialization, never for a class (Point, Vector, Pixel) derived from Vec.
+// Note that this is not what bounds the flattening depth -- details::SGridLeaf below does that, since a partial
+//  specialization on Vec<T, n> does not match a derived class, so sgrid_leaf_t<3, SGrid<Point, 2, 2>> is ill-formed
 //  rather than silently reinterpreting Point as three floats.
 // The exactness matters instead because is_vec_v gates member and operator overloads: were it true for Point,
 //  Vec<Point, 3> would acquire an initializer_list<Point> constructor that hijacks list-initialization from the
 //  variadic constructor (losing its static_assert on arity), and Vec<Point, 3> * 2.f would silently become legal.
 template <typename T> inline constexpr bool is_vec_v = false;
+template <typename T> concept IsVec = is_vec_v<T>;
 
 // The element type obtained by peeling D levels of Vec nesting from T.
-template <int D, typename T> using leaf_t = typename details::Leaf<D, T>::type;
+template <int D, typename T> using sgrid_leaf_t = typename details::SGridLeaf<D, T>::type;
+
+// The grid view type (const or mutable) corresponding to an element pointer type Ptr; the analogue of array_view_t.
+template <int D, typename Ptr>
+using grid_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Ptr>>,
+                                       CGridView<D, std::remove_cv_t<std::remove_pointer_t<Ptr>>>,
+                                       GridView<D, std::remove_pointer_t<Ptr>>>;
 
 // Allocated fixed-size 1D array with n elements of type T.
 // Like std::array<T, n>, but with constructors and "empty base class optimization" support for n == 0.
@@ -66,7 +69,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // Nested brace initialization, e.g. SGrid<int, 2, 3>{{1, 2, 3}, {4, 5, 6}}; a braced-init-list is a non-deduced
   //  context, so the variadic constructor above cannot accept one.  Enabled only for nested Vec, both to leave
   //  Vec<int, 3>{1, 2, 3} on the variadic constructor and because initializer_list wins list-initialization.
-  constexpr Vec(std::initializer_list<T> l) requires(is_vec_v<T> && Copyable<T>) {
+  constexpr Vec(std::initializer_list<T> l) requires IsVec<T> && Copyable<T> {
     ASSERTX(narrow_cast<int>(l.size()) == n);
     T* p = data();
     for (const T& e : l) *p++ = e;
@@ -80,7 +83,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   }
   // Subscript by a coordinate, e.g. grid[V(i, j, k)]; recurses into the nested Vec.
   template <int D>
-  [[nodiscard]] constexpr auto& operator[](this auto&& self, const Vec<int, D>& u) requires(D == 1 || is_vec_v<T>) {
+  [[nodiscard]] constexpr auto& operator[](this auto&& self, const Vec<int, D>& u) requires(D == 1 || IsVec<T>) {
     if constexpr (D == 1)
       return self[u[0]];
     else
@@ -89,7 +92,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // Multidimensional subscript, e.g. frame[2, 0]; recurses into the nested Vec.
   template <std::integral... A>
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i, A... dd)
-      requires(is_vec_v<T> && sizeof...(A) >= 1) {
+      requires(IsVec<T> && sizeof...(A) >= 1) {
     return self[i][dd...];
   }
   [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
@@ -125,21 +128,20 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(data(), n); }
   // Grid interface, present only when the element is itself a Vec.  The number of dimensions D is always stated
   //  explicitly, because a nested Vec need not be a grid, e.g. Vec3<Vec2<float>> is a triangle.
-  template <int D = 2> [[nodiscard]] static constexpr Vec<int, D> grid_dims() requires(D == 1 || is_vec_v<T>) {
+  template <int D = 2> [[nodiscard]] static constexpr Vec<int, D> grid_dims() requires(D == 1 || IsVec<T>) {
     if constexpr (D == 1)
       return Vec<int, 1>(n);
     else
       return concat(Vec<int, 1>(n), T::template grid_dims<D - 1>());
   }
-  template <int D = 2> [[nodiscard]] GridView<D, leaf_t<D, type>> grid_view() requires(D == 1 || is_vec_v<T>) {
-    return GridView<D, leaf_t<D, type>>(reinterpret_cast<leaf_t<D, type>*>(data()), grid_dims<D>());
-  }
-  template <int D = 2> [[nodiscard]] CGridView<D, leaf_t<D, type>> grid_view() const requires(D == 1 || is_vec_v<T>) {
-    return const_grid_view<D>();
+  template <int D = 2> [[nodiscard]] auto grid_view(this auto&& self) requires(D == 1 || IsVec<T>) {
+    using Leaf = std::remove_reference_t<decltype(*self.data())>;  // Either const or mutable.
+    using LeafPtr = std::conditional_t<std::is_const_v<Leaf>, const sgrid_leaf_t<D, type>*, sgrid_leaf_t<D, type>*>;
+    return grid_view_t<D, LeafPtr>(reinterpret_cast<LeafPtr>(self.data()), grid_dims<D>());
   }
   template <int D = 2>
-  [[nodiscard]] CGridView<D, leaf_t<D, type>> const_grid_view() const requires(D == 1 || is_vec_v<T>) {
-    return CGridView<D, leaf_t<D, type>>(reinterpret_cast<const leaf_t<D, type>*>(data()), grid_dims<D>());
+  [[nodiscard]] CGridView<D, sgrid_leaf_t<D, type>> const_grid_view() const requires(D == 1 || IsVec<T>) {
+    return CGridView<D, sgrid_leaf_t<D, type>>(reinterpret_cast<const sgrid_leaf_t<D, type>*>(data()), grid_dims<D>());
   }
   [[nodiscard]] constexpr auto& vec(this auto&& self) { return as_vec(self); }
 
@@ -230,10 +232,9 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     }
     return false;
   }
-  // Deducing `this` deduces the *derived* class, so an unqualified member call on `self` can be hijacked by a
-  // same-named member declared there (e.g. SGrid::segment() hides Vec::segment()).  Member calls that must resolve
-  // to Vec's own members therefore go through as_vec().  Unqualified lookup of as_vec() finds this class member, so
-  // ADL is suppressed and the call is never itself hijacked.
+  // Deducing this deduces the derived class (Point, Frame, Bbox, ...), so member access on self would be
+  // looked up there.  Instead, as_vec() pins self to the exact Vec base so that a member added to a derived class
+  // cannot alter Vec's own behavior.
   template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) {
     return static_cast<copy_const_t<Self, type>&>(self);
   }
@@ -288,11 +289,11 @@ template <typename T, int n, typename Func> [[nodiscard]] constexpr auto transfo
 template <typename T, int n> inline constexpr bool is_vec_v<Vec<T, n>> = true;
 
 namespace details {
-template <typename T> struct Leaf<0, T> {
+template <typename T> struct SGridLeaf<0, T> {
   using type = T;
 };
-template <int D, typename T, int n> requires(D > 0) struct Leaf<D, Vec<T, n>> {
-  using type = typename Leaf<D - 1, T>::type;
+template <int D, typename T, int n> requires(D > 0) struct SGridLeaf<D, Vec<T, n>> {
+  using type = typename SGridLeaf<D - 1, T>::type;
 };
 
 template <typename T, int... ds> struct SGrid_type;
@@ -302,6 +303,7 @@ template <typename T, int d0> struct SGrid_type<T, d0> {
 template <typename T, int d0, int... od> struct SGrid_type<T, d0, od...> {
   using type = Vec<typename SGrid_type<T, od...>::type, d0>;
 };
+template <int D, bool has_lower_bound> class Vec_range;
 }  // namespace details
 
 // Readable spelling for a nested Vec: SGrid<T, n0, n1, n2> is Vec<Vec<Vec<T, n2>, n1>, n0>.
@@ -517,6 +519,9 @@ template <typename T, int n> std::ostream& operator<<(std::ostream& os, const Ve
 
 template <typename T, int n> inline constexpr bool has_ostream_eol_aux_v<Vec<T, n>> = has_ostream_eol_v<T>;
 
+template <typename T> inline constexpr int vec_depth_v = 0;
+template <typename T, int n> inline constexpr int vec_depth_v<Vec<T, n>> = 1 + vec_depth_v<T>;
+
 //----------------------------------------------------------------------------
 
 // These Vec operations may be more efficient than similar ArrayView operations because
@@ -525,13 +530,18 @@ template <typename T, int n> inline constexpr bool has_ostream_eol_aux_v<Vec<T, 
 
 #if 0
 // We could define the following:
-template <typename T, typename T2, int n> auto operator+(const Vec<T, n>& g1, const Vec<T2, n>& g2) {
-  // using ReturnType = std::common_type_t<T, T2>;
-  using ReturnType = std::decay_t<decltype(std::declval<T>() + std::declval<T2>())>;
-  Vec<ReturnType, n> ar;
-  for_int(i, n) ar[i] = g1[i] + g2[i];
+#define TT2 template <typename T1, int n, typename T2>
+TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
+    -> Vec<std::common_type_t<T1, T2>, n> requires requires(T1 a, T2 b) { a OP b; } {
+  Vec<std::common_type_t<T1, T2>, n> ar;
+  for_int(i, n) ar[i] = g1[i] OP g2[i];
   return ar;
 }
+// However, `SGrid<int, 2, 2> + Vec2<int>` would then silently add to columns rather than rows!
+// Instead, this constrained generalization would be safer:
+TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
+    -> Vec<std::common_type_t<T1, T2>, n>
+    requires(vec_depth_v<T1> == vec_depth_v<T2> && requires(T1 a, T2 b) { a OP b; }) {}
 #endif
 
 // Set of functions common to Array.h, Grid.h, Vec.h.
@@ -542,96 +552,73 @@ template <typename T, typename T2, int n> auto operator+(const Vec<T, n>& g1, co
 #define TTA TT constexpr
 #define G Vec<T, n>
 #define F for_int(i, n)
+// Scalar operations.  U is an independent parameter (rather than reusing T) for two reasons: it lets the operation
+//  recurse past the immediate element type, so that SGrid<float, 4, 3> * 2.f reaches the leaves; and the
+//  requires-expression keeps the overload SFINAE-friendly, so an inapplicable U fails overload resolution rather
+//  than erroring inside the body.
+#define TTU template <typename T, int n, typename U>
+// U must be less deeply nested than G, so that only one of the two directions applies; and U must not be a class
+//  merely derived from Vec (Point, Pixel, ...), because G would then be deduced as that class's Vec base and the
+//  scalar form would hijack Point + Point from the element-wise form.  The test is on is_class_v rather than
+//  DerivedFromVec because the latter needs U complete, and GCC then reports a changed satisfaction value when the
+//  constraint is first evaluated inside U's own definition (e.g. Frame).
+#define HH_VEC_LESS_NESTED (vec_depth_v<U> < vec_depth_v<G> && (IsVec<U> || !std::is_class_v<U>))
 // clang-format off
 
-TTC G operator+(const G& g1, const G& g2) { G g; F { g[i] = g1[i] + g2[i]; } return g; }
-TTC G operator-(const G& g1, const G& g2) { G g; F { g[i] = g1[i] - g2[i]; } return g; }
-TTC G operator*(const G& g1, const G& g2) { G g; F { g[i] = g1[i] * g2[i]; } return g; }
-TTC G operator/(const G& g1, const G& g2) { G g; F { g[i] = g1[i] / g2[i]; } return g; }
-TTC G operator%(const G& g1, const G& g2) { G g; F { g[i] = g1[i] % g2[i]; } return g; }
+#define HH_OPERATIONS(OP) \
+  TTU [[nodiscard]] constexpr G operator OP(const G& g1, const U& v)       \
+      requires(HH_VEC_LESS_NESTED && requires(T t, U u) { t OP u; }) {     \
+    G g; F { g[i] = g1[i] OP v; } return g;                                \
+  }                                                                        \
+  TTU [[nodiscard]] constexpr G operator OP(const U& v, const G& g1)       \
+      requires(HH_VEC_LESS_NESTED && requires(T t, U u) { u OP t; }) {     \
+    G g; F { g[i] = v OP g1[i]; } return g;                                \
+  }                                                                        \
+  TTU constexpr G& operator OP##=(G & g1, const U & v)                     \
+      requires(HH_VEC_LESS_NESTED && requires(T t, U u) { t OP## = u; }) { \
+    F { g1[i] OP## = v; } return g1;                                       \
+  }                                                                        \
+  TTC G operator OP(const G& g1, const G& g2) { G g; F { g[i] = g1[i] OP g2[i]; } return g; } \
+  TTA G& operator OP##=(G & g1, const G & g2) { F { g1[i] OP## = g2[i]; } return g1; }
 
-TTC G operator+(const G& g1, T v) { G g; F { g[i] = g1[i] + v; } return g; }
-TTC G operator-(const G& g1, T v) { G g; F { g[i] = g1[i] - v; } return g; }
-TTC G operator*(const G& g1, T v) { G g; F { g[i] = g1[i] * v; } return g; }
-TTC G operator/(const G& g1, T v) { G g; F { g[i] = g1[i] / v; } return g; }
-TTC G operator%(const G& g1, T v) { G g; F { g[i] = g1[i] % v; } return g; }
-
-TTC G operator+(T v, const G& g1) { G g; F { g[i] = v + g1[i]; } return g; }
-TTC G operator-(T v, const G& g1) { G g; F { g[i] = v - g1[i]; } return g; }
-TTC G operator*(T v, const G& g1) { G g; F { g[i] = v * g1[i]; } return g; }
-TTC G operator/(T v, const G& g1) { G g; F { g[i] = v / g1[i]; } return g; }
-TTC G operator%(T v, const G& g1) { G g; F { g[i] = v % g1[i]; } return g; }
-
-TTA G& operator+=(G& g1, const G& g2) { F { g1[i] += g2[i]; } return g1; }
-TTA G& operator-=(G& g1, const G& g2) { F { g1[i] -= g2[i]; } return g1; }
-TTA G& operator*=(G& g1, const G& g2) { F { g1[i] *= g2[i]; } return g1; }
-TTA G& operator/=(G& g1, const G& g2) { F { g1[i] /= g2[i]; } return g1; }
-TTA G& operator%=(G& g1, const G& g2) { F { g1[i] %= g2[i]; } return g1; }
-
-TTA G& operator+=(G& g1, const T& v) { F { g1[i] += v; } return g1; }
-TTA G& operator-=(G& g1, const T& v) { F { g1[i] -= v; } return g1; }
-TTA G& operator*=(G& g1, const T& v) { F { g1[i] *= v; } return g1; }
-TTA G& operator/=(G& g1, const T& v) { F { g1[i] /= v; } return g1; }
-TTA G& operator%=(G& g1, const T& v) { F { g1[i] %= v; } return g1; }
+HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
 TTC G operator-(const G& g1) { G g; F { g[i] = -g1[i]; } return g; }
-
-// Leaf scalars for a nested Vec: the overloads above bind v to the immediate element type, so SGrid<float, 4, 3> * 2.f
-//  needs these, which recurse until the leaf level is reached.
-#define TTL template <typename T, int n, typename U> requires(is_vec_v<T> && std::is_arithmetic_v<U>)
-#define TTLC TTL [[nodiscard]] constexpr
-#define TTLA TTL constexpr
-
-TTLC G operator+(const G& g1, U v) { G g; F { g[i] = g1[i] + v; } return g; }
-TTLC G operator-(const G& g1, U v) { G g; F { g[i] = g1[i] - v; } return g; }
-TTLC G operator*(const G& g1, U v) { G g; F { g[i] = g1[i] * v; } return g; }
-TTLC G operator/(const G& g1, U v) { G g; F { g[i] = g1[i] / v; } return g; }
-
-TTLC G operator+(U v, const G& g1) { G g; F { g[i] = v + g1[i]; } return g; }
-TTLC G operator-(U v, const G& g1) { G g; F { g[i] = v - g1[i]; } return g; }
-TTLC G operator*(U v, const G& g1) { G g; F { g[i] = v * g1[i]; } return g; }
-TTLC G operator/(U v, const G& g1) { G g; F { g[i] = v / g1[i]; } return g; }
-
-TTLA G& operator+=(G& g1, U v) { F { g1[i] += v; } return g1; }
-TTLA G& operator-=(G& g1, U v) { F { g1[i] -= v; } return g1; }
-TTLA G& operator*=(G& g1, U v) { F { g1[i] *= v; } return g1; }
-TTLA G& operator/=(G& g1, U v) { F { g1[i] /= v; } return g1; }
-
-#undef TTLA
-#undef TTLC
-#undef TTL
 
 TTC G min(const G& g1, const G& g2) { G g; F { g[i] = min(g1[i], g2[i]); } return g; }
 TTC G max(const G& g1, const G& g2) { G g; F { g[i] = max(g1[i], g2[i]); } return g; }
 
 TTC G clamp(const G& g1, T vmin, T vmax) { G g; F { g[i] = clamp(g1[i], vmin, vmax); } return g; }
 
-TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(!is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(!IsVec<T>) {
   G g; F { g[i] = f1 * g1[i] + (1.f - f1) * g2[i]; } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(!is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(!IsVec<T>) {
   G g; F { g[i] = f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]; } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(!is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(!IsVec<T>) {
   // Vec3<float> == Bary;  may have sum(bary) != 1.f
   G g; F { g[i] = bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]; } return g;
 }
 
 // For a nested Vec, recurse rather than multiply by the float weights here, so that the leaf arithmetic is
 //  float * T even when T is integral; the flat loop in the former SGrid.h did the same.
-TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(IsVec<T>) {
   G g; F { g[i] = interp(g1[i], g2[i], f1); } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(IsVec<T>) {
   G g; F { g[i] = interp(g1[i], g2[i], g3[i], f1, f2); } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(is_vec_v<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(IsVec<T>) {
   G g; F { g[i] = interp(g1[i], g2[i], g3[i], bary); } return g;
 }
 
 TTC G interp(const G& g1, const G& g2, const G& g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
 
 // clang-format on
+#undef HH_OPERATIONS
+#undef HH_VEC_LESS_NESTED
+#undef TTU
 #undef F
 #undef G
 #undef TTA

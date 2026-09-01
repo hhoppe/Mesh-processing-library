@@ -15,7 +15,7 @@ endif
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
 
 # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
-pedantic += -Wno-zero-as-null-pointer-constant
+cpedantic += -Wno-zero-as-null-pointer-constant
 
 ifeq ($(CC),gcc)
   LDFLAGS += -pthread  # Necessary with gcc for std::thread in VideoViewer.cpp.

@@ -384,7 +384,7 @@ namespace details {
 
 // Storage for Vec.  The n == 0 specialization is a truly empty class -- not merely one with a [[no_unique_address]]
 // empty member, which compilers do not agree is eligible for the empty base optimization -- so that Vec<T, 0>, and
-// anything derived from it such as SGrid<T, 0, ...>, occupies no space in a derived class.
+// SGrid<T, ..., 0, ...>, occupies no space in a derived class.
 template <typename T, int n> struct VecBase {
   T _a[n];
   friend auto operator<=>(const VecBase&, const VecBase&) = default;
@@ -529,22 +529,6 @@ template <typename T, int n> inline constexpr int vec_depth_v<Vec<T, n>> = 1 + v
 //  (1) n is known, and
 //  (2) there is no heap allocation.
 
-#if 0
-// We could define the following:
-#define TT2 template <typename T1, int n, typename T2>
-TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
-    -> Vec<std::common_type_t<T1, T2>, n> requires requires(T1 a, T2 b) { a OP b; } {
-  Vec<std::common_type_t<T1, T2>, n> ar;
-  for_int(i, n) ar[i] = g1[i] OP g2[i];
-  return ar;
-}
-// However, `SGrid<int, 2, 2> + Vec2<int>` would then silently add to columns rather than rows!
-// Instead, this constrained generalization would be safer:
-TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
-    -> Vec<std::common_type_t<T1, T2>, n>
-    requires(vec_depth_v<T1> == vec_depth_v<T2> && requires(T1 a, T2 b) { a OP b; }) {}
-#endif
-
 // Set of functions common to Array.h, Grid.h, Vec.h.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 // See also floor(), ceil(), abs() generalized to Vec<> in MathOp.h.
@@ -646,6 +630,22 @@ template <DerivedFromVec SomeVec> [[nodiscard]] SomeVec interp(const Vec3<SomeVe
 
 // Template deduction guides:
 template <typename T, typename... Args> Vec(T, Args...) -> Vec<T, 1 + sizeof...(Args)>;
+
+#if 0
+// In the above HH_OPERATIONS, we could generalize to binary operations on Vec of different types:
+#define TT2 template <typename T1, int n, typename T2>
+TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
+    -> Vec<std::common_type_t<T1, T2>, n> requires requires(T1 a, T2 b) { a OP b; } {
+  Vec<std::common_type_t<T1, T2>, n> ar;
+  for_int(i, n) ar[i] = g1[i] OP g2[i];
+  return ar;
+}
+// However, `SGrid<int, 2, 2> + Vec2<int>` would then silently add to columns rather than rows!
+// Instead, the following constrained generalization would be safer:
+TT2 [[nodiscard]] constexpr auto operator OP(const Vec<T1, n>& g1, const Vec<T2, n>& g2)
+    -> Vec<std::common_type_t<T1, T2>, n>
+    requires(vec_depth_v<T1> == vec_depth_v<T2> && requires(T1 a, T2 b) { a OP b; }) {}
+#endif
 
 }  // namespace hh
 

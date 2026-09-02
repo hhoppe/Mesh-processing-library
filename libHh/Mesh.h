@@ -56,23 +56,13 @@ class Mesh : noncopyable {
   friend void swap(Mesh& l, Mesh& r) noexcept;
 
  private:
-  using Vertices_range = Map<int, Vertex>::cvalues_range;
-  using Faces_range = Map<int, Face>::cvalues_range;
   struct Edges_range;
   struct OrderedVertices_range;
   struct OrderedFaces_range;
   struct VV_range;
-  struct VF_range;
   struct VE_range;
-  struct VC_range;
-  struct FV_range;
-  struct FF_range;
-  struct FE_range;
   struct FC_range;
-  struct EV_range;
-  struct EF_range;
   struct WV_range;
-  struct WF_range;
   struct WE_range;
   struct WC_range;
 
@@ -292,30 +282,34 @@ class Mesh : noncopyable {
 
   // ** Iterators; can crash if continued after any change in the Mesh:
   // These mesh iterators do not define an order.
-  [[nodiscard]] Vertices_range vertices() const { return _id2vertex.values(); }
-  [[nodiscard]] Faces_range faces() const { return _id2face.values(); }
+  [[nodiscard]] auto vertices() const { return _id2vertex.values(); }
+  [[nodiscard]] auto faces() const { return _id2face.values(); }
   [[nodiscard]] Edges_range edges() const { return Edges_range(*this); }
   // These mesh iterators sort by id numbers.
   [[nodiscard]] OrderedVertices_range ordered_vertices() const { return OrderedVertices_range(*this); }
   [[nodiscard]] OrderedFaces_range ordered_faces() const { return OrderedFaces_range(*this); }
+
   // These vertex iterators do not specify order, and work correctly even on non-nice vertices.
   [[nodiscard]] VV_range vertices(Vertex v) const { return VV_range(*this, v); }
-  [[nodiscard]] VF_range faces(Vertex v) const { return VF_range(*this, v); }
+  [[nodiscard]] auto faces(Vertex v) const;
   [[nodiscard]] VE_range edges(Vertex v) const { return VE_range(*this, v); }
-  [[nodiscard]] VC_range corners(Vertex v) const { return VC_range(*this, v); }
+  [[nodiscard]] auto corners(Vertex v) const;
+
   // These vertex iterators go CCW, but require nice vertices.
   [[nodiscard]] WV_range ccw_vertices(Vertex v) const { return WV_range(*this, v); }
-  [[nodiscard]] WF_range ccw_faces(Vertex v) const { return WF_range(*this, v); }
+  [[nodiscard]] auto ccw_faces(Vertex v) const;
   [[nodiscard]] WE_range ccw_edges(Vertex v) const { return WE_range(*this, v); }
   [[nodiscard]] WC_range ccw_corners(Vertex v) const { return WC_range(*this, v); }
+
   // Face iterators all go CCW
-  [[nodiscard]] FV_range vertices(Face f) const { return FV_range(*this, f); }
-  [[nodiscard]] FF_range faces(Face f) const { return FF_range(*this, f); }
-  [[nodiscard]] FE_range edges(Face f) const { return FE_range(*this, f); }
+  [[nodiscard]] auto vertices(Face f) const;
+  [[nodiscard]] auto faces(Face f) const;
+  [[nodiscard]] auto edges(Face f) const;
   [[nodiscard]] FC_range corners(Face f) const { return FC_range(*this, f); }
+
   // Edge iterators do not define an order.
-  [[nodiscard]] EV_range vertices(Edge e) const { return EV_range(*this, e); }
-  [[nodiscard]] EF_range faces(Edge e) const { return EF_range(*this, e); }
+  [[nodiscard]] Vec2<Vertex> vertices(Edge e) const;
+  [[nodiscard]] PArray<Face, 2> faces(Edge e) const;
 
  private:
   friend class GMesh;
@@ -327,24 +321,26 @@ class Mesh : noncopyable {
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Edge;
     using difference_type = std::ptrdiff_t;
-    Edges_iterator(const Mesh& m, bool beg) {
+    explicit Edges_iterator(const Mesh& m) {
+      _vcur = m._id2vertex.values().begin();
       _vend = m._id2vertex.values().end();
-      _vcur = beg ? m._id2vertex.values().begin() : _vend;
       next();
     }
     Edges_iterator() = default;
-    [[nodiscard]] bool operator==(const type& rhs) const { return _hcur == rhs._hcur && _vcur == rhs._vcur; }
+    // _hcur uniquely identifies the position, and is null exactly when exhausted.
+    [[nodiscard]] bool operator==(const type& rhs) const { return _hcur == rhs._hcur; }
+    [[nodiscard]] bool operator==(std::default_sentinel_t) const { return !_hcur; }
     [[nodiscard]] Edge operator*() const { return ASSERTX(_hcur != _hend), (*_hcur)->_edge; }
     type& operator++() {
-      ASSERTX(_hcur != _hend);
+      ASSERTX(_hcur);
       ++_hcur;
       next();
       return *this;
     }
     type operator++(int) { return postfix_increment(*this); }
     //
-    CArrayView<HEdge>::iterator _hcur{nullptr}, _hend{nullptr};  // _hcur points at current element
-    Map<int, Vertex>::cvalues_iterator _vcur, _vend;             // _vcur points one vertex ahead
+    CArrayView<HEdge>::iterator _hcur{nullptr}, _hend{nullptr};  // _hcur points at current element.
+    Map<int, Vertex>::cvalues_iterator _vcur, _vend;             // _vcur points one vertex ahead.
     void next() {
       for (;;) {
         if (_hcur != _hend) {
@@ -360,41 +356,43 @@ class Mesh : noncopyable {
         _hcur = range.begin();
         _hend = range.end();
       }
-      _hcur = _hend = nullptr;  // no element found
+      _hcur = _hend = nullptr;  // No element found.
     }
   };
 
   struct Edges_range : ranges::view_interface<Edges_range> {
     explicit Edges_range(const Mesh& m) : _m(&m) {}
-    [[nodiscard]] Edges_iterator begin() const { return Edges_iterator(*_m, true); }
-    [[nodiscard]] Edges_iterator end() const { return Edges_iterator(*_m, false); }
+    [[nodiscard]] Edges_iterator begin() const { return Edges_iterator(*_m); }
+    [[nodiscard]] std::default_sentinel_t end() const { return {}; }
     [[nodiscard]] int size() const { return _m->num_edges(); }
     const Mesh* _m;
   };
 
-  struct OrderedVertices_range {  // No view_interface because not O(1) copyable.
+  struct OrderedVertices_range {  // Do not inherit from view_interface because not O(1) copyable.
     explicit OrderedVertices_range(const Mesh& mesh);
-    using Container = Array<Vertex>;
-    [[nodiscard]] Container::iterator begin() { return _vertices.begin(); }
-    [[nodiscard]] Container::const_iterator begin() const { return _vertices.begin(); }
-    [[nodiscard]] Container::iterator end() { return _vertices.end(); }
-    [[nodiscard]] Container::const_iterator end() const { return _vertices.end(); }
+    [[nodiscard]] auto begin(this auto&& self) { return self._vertices.begin(); }
+    [[nodiscard]] auto end(this auto&& self) { return self._vertices.end(); }
     [[nodiscard]] int size() const { return _vertices.num(); }
-    Container _vertices;
+
+   private:
+    Array<Vertex> _vertices;
   };
 
-  struct OrderedFaces_range {  // No view_interface because not O(1) copyable.
+  struct OrderedFaces_range {  // Do not inherit from view_interface because not O(1) copyable.
     explicit OrderedFaces_range(const Mesh& mesh);
-    using Container = Array<Face>;
-    [[nodiscard]] Container::iterator begin() { return _faces.begin(); }
-    [[nodiscard]] Container::const_iterator begin() const { return _faces.begin(); }
-    [[nodiscard]] Container::iterator end() { return _faces.end(); }
-    [[nodiscard]] Container::const_iterator end() const { return _faces.end(); }
+    [[nodiscard]] auto begin(this auto&& self) { return self._faces.begin(); }
+    [[nodiscard]] auto end(this auto&& self) { return self._faces.end(); }
     [[nodiscard]] int size() const { return _faces.num(); }
-    Container _faces;
+
+   private:
+    Array<Face> _faces;
   };
 
   // Vertex Iter
+
+  struct VV_sentinel {
+    CArrayView<HEdge>::iterator _end{};
+  };
 
   struct VV_iterator {
     using type = VV_iterator;
@@ -403,50 +401,29 @@ class Mesh : noncopyable {
     using difference_type = std::ptrdiff_t;
     VV_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     VV_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._extrav), !_extrav && _it == rhs._it; }
-    Vertex operator*() const { return _extrav ? _extrav : (*_it)->_vert; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _extrav == rhs._extrav; }
+    [[nodiscard]] bool operator==(VV_sentinel s) const { return !_extrav && _it == s._end; }
+    [[nodiscard]] Vertex operator*() const { return _extrav ? _extrav : (*_it)->_vert; }
     type& operator++() {
-      if (_extrav) {
-        _extrav = nullptr;
-        return *this;
-      }
+      if (_extrav) return _extrav = nullptr, *this;
       if (!(*_it)->_prev->_sym) _extrav = (*_it)->_prev->_prev->_vert;
-      ++_it;
-      return *this;
+      return ++_it, *this;
     }
     type operator++(int) { return postfix_increment(*this); }
     CArrayView<HEdge>::iterator _it{};
-    Vertex _extrav{nullptr};
+    Vertex _extrav{nullptr};  // Boundary vertex to yield before advancing past *_it.
   };
 
   struct VV_range : ranges::view_interface<VV_range> {
     VV_range(const Mesh&, Vertex v) : _v(v) {}
     [[nodiscard]] VV_iterator begin() const { return VV_iterator(_v->_arhe.begin()); }
-    [[nodiscard]] VV_iterator end() const { return VV_iterator(_v->_arhe.end()); }
-    // Note that size() is not trivially computable.
+    [[nodiscard]] VV_sentinel end() const { return VV_sentinel{_v->_arhe.end()}; }
+    // Note that size() is not trivially computable (due to one extra vertex for each boundary component).
     Vertex _v;
   };
 
-  struct VF_iterator {
-    using type = VF_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Face;
-    using difference_type = std::ptrdiff_t;
-    VF_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
-    VF_iterator() = default;
-    bool operator==(const type& rhs) const { return _it == rhs._it; }
-    Face operator*() const { return (*_it)->_face; }
-    type& operator++() { return ++_it, *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    CArrayView<HEdge>::iterator _it{};
-  };
-
-  struct VF_range : ranges::view_interface<VF_range> {
-    VF_range(const Mesh&, Vertex v) : _v(v) {}
-    [[nodiscard]] VF_iterator begin() const { return VF_iterator(_v->_arhe.begin()); }
-    [[nodiscard]] VF_iterator end() const { return VF_iterator(_v->_arhe.end()); }
-    [[nodiscard]] int size() const { return _v->_arhe.num(); }
-    Vertex _v;
+  struct VE_sentinel {
+    CArrayView<HEdge>::iterator _end{};
   };
 
   struct VE_iterator {
@@ -456,147 +433,31 @@ class Mesh : noncopyable {
     using difference_type = std::ptrdiff_t;
     VE_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
     VE_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._extrae), !_extrae && _it == rhs._it; }
-    Edge operator*() const { return _extrae ? _extrae : (*_it)->_edge; }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _extrae == rhs._extrae; }
+    [[nodiscard]] bool operator==(VE_sentinel s) const { return !_extrae && _it == s._end; }
+    [[nodiscard]] Edge operator*() const { return _extrae ? _extrae : (*_it)->_edge; }
     type& operator++() {
-      if (_extrae) {
-        _extrae = nullptr;
-        return *this;
-      }
+      if (_extrae) return _extrae = nullptr, *this;
       if (!(*_it)->_prev->_sym) _extrae = (*_it)->_prev->_edge;
-      ++_it;
-      return *this;
+      return ++_it, *this;
     }
     type operator++(int) { return postfix_increment(*this); }
     CArrayView<HEdge>::iterator _it{};
-    Edge _extrae{nullptr};
+    Edge _extrae{nullptr};  // Boundary edge to yield before advancing past *_it.
   };
 
   struct VE_range : ranges::view_interface<VE_range> {
     VE_range(const Mesh&, Vertex v) : _v(v) {}
     [[nodiscard]] VE_iterator begin() const { return VE_iterator(_v->_arhe.begin()); }
-    [[nodiscard]] VE_iterator end() const { return VE_iterator(_v->_arhe.end()); }
-    // Note that size() is not trivially computable.
-    Vertex _v;
-  };
-
-  struct VC_iterator {
-    using type = VC_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Corner;
-    using difference_type = std::ptrdiff_t;
-    VC_iterator(CArrayView<HEdge>::iterator it) : _it(it) {}
-    VC_iterator() = default;
-    bool operator==(const type& rhs) const { return _it == rhs._it; }
-    Corner operator*() const { return (*_it)->_prev; }
-    type& operator++() { return ++_it, *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    CArrayView<HEdge>::iterator _it{};
-  };
-
-  struct VC_range : ranges::view_interface<VC_range> {
-    VC_range(const Mesh&, Vertex v) : _v(v) {}
-    [[nodiscard]] VC_iterator begin() const { return VC_iterator(_v->_arhe.begin()); }
-    [[nodiscard]] VC_iterator end() const { return VC_iterator(_v->_arhe.end()); }
-    [[nodiscard]] int size() const { return _v->_arhe.num(); }
+    [[nodiscard]] VE_sentinel end() const { return VE_sentinel{_v->_arhe.end()}; }
+    // Note that size() is not trivially computable (due to one extra edge for each boundary component).
     Vertex _v;
   };
 
   // Face Iter
 
-  struct FV_iterator {
-    using type = FV_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Vertex;
-    using difference_type = std::ptrdiff_t;
-    FV_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
-    FV_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    Vertex operator*() const { return _it->_vert; }
-    type& operator++() {
-      _beg = false;
-      _it = _it->_next;
-      return *this;
-    }
-    type operator++(int) { return postfix_increment(*this); }
-    HEdge _it{};
-    bool _beg{};
-  };
-
-  struct FV_range : ranges::view_interface<FV_range> {
-    FV_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    [[nodiscard]] FV_iterator begin() const { return FV_iterator(_herep, true); }
-    [[nodiscard]] FV_iterator end() const { return FV_iterator(_herep, false); }
-    // Note that size() is not trivially computable.
-    HEdge _herep;
-  };
-
-  struct FF_iterator {
-    using type = FF_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Face;
-    using difference_type = std::ptrdiff_t;
-    FF_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {
-      for (;;) {
-        if (_it->_sym) break;
-        _it = _it->_next;
-        if (_it == he) {
-          _beg = false;
-          break;
-        }
-      }
-    }
-    FF_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    Face operator*() const { return _it->_sym->_face; }
-    type& operator++() {
-      HEdge tmp = _beg ? nullptr : _it;
-      _beg = false;
-      for (;;) {
-        _it = _it->_next;
-        if (_it->_sym) break;
-        ASSERTX(_it != tmp);
-      }
-      return *this;
-    }
-    type operator++(int) { return postfix_increment(*this); }
-    HEdge _it{};
-    bool _beg{};
-  };
-
-  struct FF_range : ranges::view_interface<FF_range> {
-    FF_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    [[nodiscard]] FF_iterator begin() const { return FF_iterator(_herep, true); }
-    [[nodiscard]] FF_iterator end() const { return FF_iterator(_herep, false); }
-    // Note that size() is not trivially computable.
-    HEdge _herep;
-  };
-
-  struct FE_iterator {
-    using type = FE_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Edge;
-    using difference_type = std::ptrdiff_t;
-    FE_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
-    FE_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    Edge operator*() const { return _it->_edge; }
-    type& operator++() {
-      _beg = false;
-      _it = _it->_next;
-      return *this;
-    }
-    type operator++(int) { return postfix_increment(*this); }
-    HEdge _it{};
-    bool _beg{};
-  };
-
-  struct FE_range : ranges::view_interface<FE_range> {
-    FE_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    [[nodiscard]] FE_iterator begin() const { return FE_iterator(_herep, true); }
-    [[nodiscard]] FE_iterator end() const { return FE_iterator(_herep, false); }
-    // Note that size() is not trivially computable.
-    HEdge _herep;
+  struct FC_sentinel {
+    HEdge _herep{};
   };
 
   struct FC_iterator {
@@ -604,24 +465,22 @@ class Mesh : noncopyable {
     using iterator_concept = std::forward_iterator_tag;
     using value_type = Corner;
     using difference_type = std::ptrdiff_t;
-    FC_iterator(HEdge he, bool beg) : _it(he), _beg(beg) {}
+    explicit FC_iterator(HEdge he) : _it(he), _beg(true) {}
     FC_iterator() = default;
-    bool operator==(const type& rhs) const { return ASSERTX(!rhs._beg), !_beg && _it == rhs._it; }
-    Corner operator*() const { return _it; }
-    type& operator++() {
-      _beg = false;
-      _it = _it->_next;
-      return *this;
-    }
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _beg == rhs._beg; }
+    // The hedges form a cycle, so only the initial position distinguishes begin() from end().
+    [[nodiscard]] bool operator==(FC_sentinel s) const { return !_beg && _it == s._herep; }
+    [[nodiscard]] Corner operator*() const { return _it; }
+    type& operator++() { return _beg = false, _it = _it->_next, *this; }
     type operator++(int) { return postfix_increment(*this); }
     HEdge _it{};
-    bool _beg{};
+    bool _beg{};  // True only for begin(), to distinguish it from the end of the cycle.
   };
 
   struct FC_range : ranges::view_interface<FC_range> {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    [[nodiscard]] FC_iterator begin() const { return FC_iterator(_herep, true); }
-    [[nodiscard]] FC_iterator end() const { return FC_iterator(_herep, false); }
+    [[nodiscard]] FC_iterator begin() const { return FC_iterator(_herep); }
+    [[nodiscard]] FC_sentinel end() const { return FC_sentinel{_herep}; }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };
@@ -644,50 +503,55 @@ class Mesh : noncopyable {
     }
   };
 
-  struct WV_range : PArray<Vertex, 10> {  // ccw Vertex Iter
+  // Ccw iterators around a vertex, requiring the vertex to be nice.
+
+  struct WV_range : PArray<Vertex, 10> {  // ccw Vertex Iter; one extra Vertex if v is on a boundary.
     WV_range(const Mesh& m, Vertex v) {
-      HEdge he = m.most_clw_hedge(v), hef = he;  // return HEdges pointing to v
-      while (he) {
+      for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_vert);
         if (!he->_sym) push(he->_prev->_vert);
-        he = m.ccw_hedge(he);
-        if (he == hef) break;
       }
     }
   };
 
-  struct WF_range : PArray<Face, 10> {
-    WF_range(const Mesh& m, Vertex v) {
-      HEdge he = m.most_clw_hedge(v), hef = he;
-      while (he) {
-        push(he->_face);
-        he = m.ccw_hedge(he);
-        if (he == hef) break;
-      }
-    }
-  };
-
-  struct WE_range : PArray<Edge, 10> {
+  struct WE_range : PArray<Edge, 10> {  // ccw Edge Iter; one extra Edge if v is on a boundary.
     WE_range(const Mesh& m, Vertex v) {
-      HEdge he = m.most_clw_hedge(v), hef = he;
-      while (he) {
+      for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_edge);
         if (!he->_sym) push(he->_edge);
-        he = m.ccw_hedge(he);
-        if (he == hef) break;
       }
     }
   };
 
-  struct WC_range : PArray<Corner, 10> {
-    WC_range(const Mesh& m, Vertex v) {
-      HEdge he = m.most_clw_hedge(v), hef = he;
-      while (he) {
-        push(he);
-        he = m.ccw_hedge(he);
-        if (he == hef) break;
-      }
-    }
+  struct WC_sentinel {
+    HEdge _hef{};  // The most-clw hedge, at which a closed ring terminates.
+  };
+
+  struct WC_iterator {  // ccw Corner iterator; requires a nice Vertex.
+    using type = WC_iterator;
+    using iterator_concept = std::forward_iterator_tag;
+    using value_type = Corner;
+    using difference_type = std::ptrdiff_t;
+    WC_iterator(const Mesh& m, HEdge he) : _m(&m), _it(he), _beg(true) {}
+    WC_iterator() = default;
+    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _beg == rhs._beg; }
+    // An open ring ends at a null hedge; a closed ring returns to the initial one.
+    [[nodiscard]] bool operator==(WC_sentinel s) const { return !_it || (!_beg && _it == s._hef); }
+    [[nodiscard]] Corner operator*() const { return _it; }
+    type& operator++() { return _beg = false, _it = _m->ccw_hedge(_it), *this; }
+    type operator++(int) { return postfix_increment(*this); }
+    const Mesh* _m{nullptr};
+    HEdge _it{};
+    bool _beg{};  // True only for begin(), to distinguish it from the end of a closed ring.
+  };
+
+  struct WC_range : ranges::view_interface<WC_range> {
+    WC_range(const Mesh& m, Vertex v) : _m(&m), _hef(m.most_clw_hedge(v)) {}
+    [[nodiscard]] WC_iterator begin() const { return WC_iterator(*_m, _hef); }
+    [[nodiscard]] WC_sentinel end() const { return WC_sentinel{_hef}; }
+    // Note that size() is not trivially computable.
+    const Mesh* _m;
+    HEdge _hef;  // May be nullptr for an isolated Vertex.
   };
 
  public:  // should be private but uses Pool
@@ -821,6 +685,41 @@ HH_INITIALIZE_POOL_NESTED(Mesh::MVertex, MeshMVertex);
 HH_INITIALIZE_POOL_NESTED(Mesh::MFace, MeshFace);
 HH_INITIALIZE_POOL_NESTED(Mesh::MEdge, MeshMEdge);
 HH_INITIALIZE_POOL_NESTED(Mesh::MHEdge, MeshMHEdge);
+
+inline auto Mesh::faces(Vertex v) const {
+  return v->_arhe | views::transform([](HEdge he) { return he->_face; });
+}
+
+inline auto Mesh::corners(Vertex v) const {
+  return v->_arhe | views::transform([](HEdge he) { return he->_prev; });
+}
+
+inline auto Mesh::ccw_faces(Vertex v) const {
+  return ccw_corners(v) | views::transform([](Corner c) { return c->_face; });
+}
+
+inline auto Mesh::vertices(Face f) const {
+  return corners(f) | views::transform([](Corner c) { return c->_vert; });
+}
+
+inline auto Mesh::faces(Face f) const {
+  return corners(f) | views::filter([](Corner c) { return !!c->_sym; }) |
+    views::transform([](Corner c) { return c->_sym->_face; });
+}
+
+inline auto Mesh::edges(Face f) const {
+  return corners(f) | views::transform([](Corner c) { return c->_edge; });
+}
+
+inline Vec2<Vertex> Mesh::vertices(Edge e) const {
+  HEdge he = herep(e);
+  return V(he->_vert, he->_prev->_vert);
+}
+
+inline PArray<Face, 2> Mesh::faces(Edge e) const {
+  const HEdge he = herep(e);
+  return he->_sym ? PArray<Face, 2>{he->_face, he->_sym->_face} : PArray<Face, 2>{he->_face};
+}
 
 inline Vec3<Vertex> Mesh::triangle_vertices(Face f) const {
   Vec3<Vertex> va;

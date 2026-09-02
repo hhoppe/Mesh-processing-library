@@ -29,10 +29,8 @@ template <typename T> class Queue {
     _dq.pop_front();
     return e;
   }
-  [[nodiscard]] T& front() { return ASSERTX(!empty()), _dq.front(); }
-  [[nodiscard]] const T& front() const { return ASSERTX(!empty()), _dq.front(); }
-  [[nodiscard]] T& rear() { return ASSERTX(!empty()), _dq.back(); }
-  [[nodiscard]] const T& rear() const { return ASSERTX(!empty()), _dq.back(); }
+  [[nodiscard]] auto& front(this auto&& self) { return ASSERTX(!self.empty()), self._dq.front(); }
+  [[nodiscard]] auto& rear(this auto&& self) { return ASSERTX(!self.empty()), self._dq.back(); }
   void insert_first(const T& e) requires Copyable<T> { _dq.push_front(e); }
   void insert_first(T&& e) { _dq.push_front(std::move(e)); }
   [[nodiscard]] bool empty() const { return _dq.empty(); }
@@ -49,10 +47,8 @@ template <typename T> class Queue {
   using value_type = T;
   using iterator = typename base::iterator;
   using const_iterator = typename base::const_iterator;
-  [[nodiscard]] iterator begin() { return _dq.begin(); }
-  [[nodiscard]] const_iterator begin() const { return _dq.begin(); }
-  [[nodiscard]] iterator end() { return _dq.end(); }
-  [[nodiscard]] const_iterator end() const { return _dq.end(); }
+  [[nodiscard]] auto begin(this auto&& self) { return self._dq.begin(); }
+  [[nodiscard]] auto end(this auto&& self) { return self._dq.end(); }
 
  private:
   base _dq;

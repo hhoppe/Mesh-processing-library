@@ -177,12 +177,21 @@ int main() {
     static_assert(ranges::sized_range<decltype(mesh.edges())>);
     Vertex v = mesh.create_vertex();
     static_assert(ranges::sized_range<decltype(mesh.faces(v))>);
-    static_assert(!ranges::random_access_range<decltype(mesh.faces(v))>);
+    static_assert(ranges::random_access_range<decltype(mesh.faces(v))>);
     static_assert(!ranges::sized_range<decltype(mesh.vertices(v))>);
     static_assert(!ranges::random_access_range<decltype(mesh.vertices(v))>);
     Edge e = nullptr;
     static_assert(ranges::sized_range<decltype(mesh.vertices(e))>);
     static_assert(ranges::random_access_range<decltype(mesh.vertices(e))>);
     dummy_use(map, v, e);
+  }
+  {
+    SHOW(mean(range(20)));
+    SHOW(mean(range(20) | views::filter([](auto e) { return e != 10; })));
+  }
+  {
+    SHOW(contains(range(20), 13));
+    SHOW(contains(range(20) | views::filter([](auto e) { return e != 10; }), 13));
+    SHOW(contains(range(20) | views::filter([](auto e) { return e != 10; }), 10));
   }
 }

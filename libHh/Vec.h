@@ -177,10 +177,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  [[nodiscard]] constexpr T* begin() { return data(); }
-  [[nodiscard]] constexpr const T* begin() const { return data(); }
-  [[nodiscard]] constexpr T* end() { return data() + n; }
-  [[nodiscard]] constexpr const T* end() const { return data() + n; }
+  [[nodiscard]] constexpr auto begin(this auto&& self) { return self.data(); }
+  [[nodiscard]] constexpr auto end(this auto&& self) { return self.data() + n; }
   [[nodiscard]] constexpr T* data() {
     if constexpr (n > 0)
       return this->_a;

@@ -23,8 +23,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   VectorF(const VectorF<n>&) = default;
   [[nodiscard]] constexpr int num() const { return n; }
   [[nodiscard]] constexpr size_t size() const { return n; }
-  [[nodiscard]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, n), data()[i]; }
-  [[nodiscard]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, n), data()[i]; }
+  [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, n), self.data()[i]; }
   [[nodiscard]] static bool ok(int i) { return i >= 0 && i < n; }
   void load_unaligned(const float* pSrc) {
     for_int(j, m) for_int(c, 4) a()[j][c] = *pSrc++;
@@ -51,10 +50,8 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   using value_type = float;
   using iterator = float*;
   using const_iterator = const float*;
-  [[nodiscard]] float* begin() { return data(); }
-  [[nodiscard]] const float* begin() const { return data(); }
-  [[nodiscard]] float* end() { return data() + n; }
-  [[nodiscard]] const float* end() const { return data() + n; }
+  [[nodiscard]] auto begin(this auto&& self) { return self.data(); }
+  [[nodiscard]] auto end(this auto&& self) { return self.data() + n; }
   [[nodiscard]] float* data() { return reinterpret_cast<float*>(this); }
   [[nodiscard]] const float* data() const { return reinterpret_cast<const float*>(this); }
   void zero() { fill(0.f); }
@@ -157,10 +154,8 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   }
 
  private:
-  Vector4* a() noexcept { return Vec<Vector4, n / 4>::begin(); }
-  const Vector4* a() const noexcept { return Vec<Vector4, n / 4>::begin(); }
-  float* b() noexcept { return Vec<float, n % 4>::begin(); }
-  const float* b() const noexcept { return Vec<float, n % 4>::begin(); }
+  auto a(this auto&& self) noexcept { return self.Vec<Vector4, n / 4>::data(); }
+  auto b(this auto&& self) noexcept { return self.Vec<float, n % 4>::data(); }
   template <int count, typename Func> static void local_unroll(Func func) { unroll_max<count, max_unroll>(func); }
 };
 

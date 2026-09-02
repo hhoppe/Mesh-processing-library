@@ -151,3 +151,8 @@ chars = Array<char>(3) {
   B
   C
 }
+mean(range(20)) = 9.5
+mean(range(20) | views::filter([](auto e) { return e != 10; })) = 9.47368
+contains(range(20), 13) = 1
+contains(range(20) | views::filter([](auto e) { return e != 10; }), 13) = 1
+contains(range(20) | views::filter([](auto e) { return e != 10; }), 10) = 0

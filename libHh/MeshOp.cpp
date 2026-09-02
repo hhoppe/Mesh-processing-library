@@ -618,7 +618,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
   }
   const Point& vp = mesh.point(v);
   const bool is_cusp = mesh.flags(v).flag(GMesh::vflag_cusp);
-  const int nfaces = ranges::size(mesh.faces(v));
+  const int nfaces = narrow_cast<int>(ranges::size(mesh.faces(v)));
   if (!nfaces) {
     Warning("Isolated vertex has undefined normal");
     return;

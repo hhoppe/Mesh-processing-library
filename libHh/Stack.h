@@ -47,13 +47,8 @@ template <typename T> class Stack {
   [[nodiscard]] size_t size() const { return _s.size(); }
   [[nodiscard]] bool contains(const T& e) const { return hh::contains(_s, e); }
   bool remove(const T& e) { return vec_remove_ordered(_s, e); }
-  using value_type = T;
-  using iterator = typename base::reverse_iterator;
-  using const_iterator = typename base::const_reverse_iterator;
-  [[nodiscard]] iterator begin() { return _s.rbegin(); }
-  [[nodiscard]] const_iterator begin() const { return _s.rbegin(); }
-  [[nodiscard]] iterator end() { return _s.rend(); }
-  [[nodiscard]] const_iterator end() const { return _s.rend(); }
+  [[nodiscard]] auto begin(this auto&& self) { return self._s.rbegin(); }
+  [[nodiscard]] auto end(this auto&& self) { return self._s.rend(); }
 
  private:
   base _s;

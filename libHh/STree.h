@@ -57,13 +57,8 @@ template <typename T, typename Less = std::less<T>> requires Copyable<T> class S
   }
   [[nodiscard]] const T& min() const { return ASSERTXX(!empty()), *begin(); }
   [[nodiscard]] const T& max() const { return ASSERTXX(!empty()), *--end(); }
-  using value_type = T;
-  using iterator = typename base::iterator;
-  using const_iterator = typename base::const_iterator;
-  [[nodiscard]] iterator begin() { return _s.begin(); }
-  [[nodiscard]] const_iterator begin() const { return _s.begin(); }
-  [[nodiscard]] iterator end() { return _s.end(); }
-  [[nodiscard]] const_iterator end() const { return _s.end(); }
+  [[nodiscard]] auto begin(this auto&& self) { return self._s.begin(); }
+  [[nodiscard]] auto end(this auto&& self) { return self._s.end(); }
 
  private:
   base _s;

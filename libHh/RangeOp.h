@@ -131,7 +131,8 @@ requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<R>>
 }
 
 // Maximum absolute value in a non-empty range.
-template <ranges::input_range R> [[nodiscard]] range_value_t<R> max_abs_element(R&& range) {
+template <ranges::input_range R> [[nodiscard]] range_value_t<R> max_abs_element(const R& range_) {
+  auto&& range = iterable(range_);
   auto iter = ranges::begin(range);
   const auto itend = ranges::end(range);
   ASSERTX(iter != itend);
@@ -143,7 +144,8 @@ template <ranges::input_range R> [[nodiscard]] range_value_t<R> max_abs_element(
 // Index of the minimum value in a non-empty range.
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<R>>
-[[nodiscard]] int arg_min(R&& range, Comp comp = Comp{}) {
+[[nodiscard]] int arg_min(const R& range_, Comp comp = Comp{}) {
+  auto&& range = iterable(range_);
   auto iter = ranges::min_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
@@ -152,7 +154,8 @@ requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<R>>
 // Index of the maximum value in a non-empty range.
 template <ranges::forward_range R, typename Comp = std::less<>>
 requires std::indirect_strict_weak_order<Comp, ranges::iterator_t<R>>
-[[nodiscard]] int arg_max(R&& range, Comp comp = Comp{}) {
+[[nodiscard]] int arg_max(const R& range_, Comp comp = Comp{}) {
+  auto&& range = iterable(range_);
   auto iter = ranges::max_element(range, comp);
   ASSERTXX(iter != ranges::end(range));
   return narrow_cast<int>(ranges::distance(ranges::begin(range), iter));
@@ -275,8 +278,7 @@ template <typename DesiredType = void, ranges::input_range R>
 
 // Root sum of squared values in a range.
 template <typename DesiredType = void, ranges::input_range R>
-[[nodiscard]] auto mag(const R& range_) -> mean_type_for_t<DesiredType, R> {
-  auto&& range = iterable(range_);
+[[nodiscard]] auto mag(const R& range) -> mean_type_for_t<DesiredType, R> {
   using MeanType = mean_type_for_t<DesiredType, R>;
   return sqrt(mag2<MeanType>(range));
 }
@@ -352,8 +354,7 @@ template <ranges::input_range R> [[nodiscard]] bool is_zero(const R& range_) {
 
 // Does it have unit norm?
 template <typename DesiredType = void, ranges::input_range R>
-[[nodiscard]] bool is_unit(const R& range_, range_value_t<R> tolerance = 1e-4f) {
-  auto&& range = iterable(range_);
+[[nodiscard]] bool is_unit(const R& range, range_value_t<R> tolerance = 1e-4f) {
   using SumType = sum_type_for_t<DesiredType, R>;
   return abs(mag2<SumType>(range) - 1.f) <= tolerance;
 }

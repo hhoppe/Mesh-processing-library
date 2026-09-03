@@ -330,7 +330,7 @@ class Mesh : noncopyable {
     // _hcur uniquely identifies the position, and is null exactly when exhausted.
     [[nodiscard]] bool operator==(const type& rhs) const { return _hcur == rhs._hcur; }
     [[nodiscard]] bool operator==(std::default_sentinel_t) const { return !_hcur; }
-    [[nodiscard]] Edge operator*() const { return ASSERTX(_hcur != _hend), (*_hcur)->_edge; }
+    [[nodiscard]] Edge operator*() const { return ASSERTX(_hcur), (*_hcur)->_edge; }
     type& operator++() {
       ASSERTX(_hcur);
       ++_hcur;
@@ -457,7 +457,7 @@ class Mesh : noncopyable {
   // Face Iter
 
   struct FC_sentinel {
-    HEdge _herep{};
+    HEdge _herep{};  // The first hedge of the Face.
   };
 
   struct FC_iterator {
@@ -704,7 +704,7 @@ inline auto Mesh::vertices(Face f) const {
 
 inline auto Mesh::faces(Face f) const {
   return corners(f) | views::filter([](Corner c) { return !!c->_sym; }) |
-    views::transform([](Corner c) { return c->_sym->_face; });
+         views::transform([](Corner c) { return c->_sym->_face; });
 }
 
 inline auto Mesh::edges(Face f) const {
@@ -712,7 +712,7 @@ inline auto Mesh::edges(Face f) const {
 }
 
 inline Vec2<Vertex> Mesh::vertices(Edge e) const {
-  HEdge he = herep(e);
+  const HEdge he = herep(e);
   return V(he->_vert, he->_prev->_vert);
 }
 

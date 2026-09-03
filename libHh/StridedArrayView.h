@@ -34,17 +34,21 @@ template <typename T> class CStridedArrayView {
   [[nodiscard]] const T& last() const { return (*this)[_n - 1]; }
   [[nodiscard]] bool ok(int i) const { return i >= 0 && i < _n; }
   using value_type = T;
-  class iterator {
-    using type = iterator;
+
+  // Iterator over elements of type U, which is const T in CStridedArrayView and T in StridedArrayView.
+  template <typename U> class Iterator {
+    using type = Iterator;
 
    public:
     using iterator_concept = std::random_access_iterator_tag;
     using value_type = T;
     using difference_type = std::ptrdiff_t;
-    iterator() = default;
+    Iterator() = default;
+    template <typename U2> requires std::is_same_v<U, const U2>  // Conversion from iterator to const_iterator.
+    Iterator(const Iterator<U2>& rhs) : _p(rhs._p), _stride(rhs._stride) {}
     bool operator==(const type& rhs) const { return _p == rhs._p; }
-    const T& operator*() const { return *_p; }
-    const T* operator->() const { return _p; }
+    U& operator*() const { return *_p; }
+    U* operator->() const { return _p; }
     type& operator++() { return (_p += _stride), *this; }
     type& operator--() { return (_p -= _stride), *this; }
     type operator++(int) { return postfix_increment(*this); }
@@ -54,7 +58,7 @@ template <typename T> class CStridedArrayView {
     type operator+(std::ptrdiff_t i) const { return type(_p + i * _stride, _stride); }
     type operator-(std::ptrdiff_t i) const { return type(_p - i * _stride, _stride); }
     friend type operator+(std::ptrdiff_t i, const type& rhs) { return rhs + i; }
-    const T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
+    U& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
     std::ptrdiff_t operator-(const type& rhs) const {
       return ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride;
     }
@@ -63,12 +67,15 @@ template <typename T> class CStridedArrayView {
     }
 
    private:
-    const T* _p;
+    U* _p;
     ptrdiff_t _stride;
-    iterator(const T* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
+    Iterator(U* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
+    friend Iterator<T>;  // For the conversion from iterator to const_iterator.
     friend CStridedArrayView;
     friend StridedArrayView<T>;
   };
+
+  using iterator = Iterator<const T>;
   using const_iterator = iterator;
   [[nodiscard]] iterator begin() const { return iterator(_a, _stride); }
   [[nodiscard]] iterator end() const { return iterator(_a + (_n * _stride), _stride); }
@@ -94,41 +101,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   [[nodiscard]] const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
   [[nodiscard]] T& last() { return (*this)[_n - 1]; }
   [[nodiscard]] const T& last() const { return base::last(); }
-  class iterator {
-    using type = iterator;
-
-   public:
-    using iterator_concept = std::random_access_iterator_tag;
-    using value_type = T;
-    using difference_type = std::ptrdiff_t;
-    iterator() = default;
-    bool operator==(const type& rhs) const { return _p == rhs._p; }
-    T& operator*() const { return *_p; }
-    T* operator->() const { return _p; }
-    type& operator++() { return (_p += _stride), *this; }
-    type& operator--() { return (_p -= _stride), *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    type operator--(int) { return postfix_decrement(*this); }
-    type& operator+=(std::ptrdiff_t i) { return (_p += i * _stride), *this; }
-    type& operator-=(std::ptrdiff_t i) { return (_p -= i * _stride), *this; }
-    type operator+(std::ptrdiff_t i) const { return type(_p + i * _stride, _stride); }
-    type operator-(std::ptrdiff_t i) const { return type(_p - i * _stride, _stride); }
-    friend type operator+(std::ptrdiff_t i, const type& rhs) { return rhs + i; }
-    T& operator[](std::ptrdiff_t i) const { return _p[i * _stride]; }
-    std::ptrdiff_t operator-(const type& rhs) const {
-      return ASSERTXX((_p - rhs._p) % _stride == 0), (_p - rhs._p) / _stride;
-    }
-    std::strong_ordering operator<=>(const type& rhs) const {
-      return ASSERTXX((_p - rhs._p) % _stride == 0), _p <=> rhs._p;
-    }
-
-   private:
-    T* _p;
-    ptrdiff_t _stride;
-    iterator(T* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
-    friend StridedArrayView;
-  };
-  using const_iterator = typename base::iterator;
+  using iterator = typename base::template Iterator<T>;
+  using const_iterator = typename base::const_iterator;
   [[nodiscard]] iterator begin() { return iterator(_a, _stride); }
   [[nodiscard]] const_iterator begin() const { return const_iterator(_a, _stride); }
   [[nodiscard]] iterator end() { return iterator(_a + (_n * _stride), _stride); }

@@ -67,35 +67,28 @@ class EList {
   [[nodiscard]] bool empty() const { return delim()->next() == delim(); }
   // Use n->link_before(elist.delim()) as in: Array::push(), Queue::enqueue(), or std::vector::push_back().
   // Use n->link_after(elist.delim())  as in: Array::unshift() or Stack::push().
-  struct Iter {
-    using type = Iter;
+
+  // Iterator over Node, which is EListNode for a mutable EList and const EListNode for a const one.
+  template <typename Node> struct Iterator {
+    using type = Iterator;
     using iterator_concept = std::bidirectional_iterator_tag;
-    using value_type = EListNode*;  // The operator*() yields the pointer, not the node.
+    using value_type = Node*;  // The operator*() yields the pointer, not the node.
     using difference_type = std::ptrdiff_t;
-    explicit Iter(EListNode* node) : _node(node) {}
-    Iter() = default;
+    explicit Iterator(Node* node) : _node(node) {}
+    Iterator() = default;
+    template <typename Node2> requires(std::is_same_v<Node, const Node2>)  // Conversion Iter to ConstIter.
+    Iterator(const Iterator<Node2>& rhs) : _node(rhs._node) {}
     [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
-    [[nodiscard]] EListNode* operator*() const { return _node; }
+    [[nodiscard]] Node* operator*() const { return _node; }
     type& operator++() { return (_node = _node->next()), *this; }
     type& operator--() { return (_node = _node->prev()), *this; }
     type operator++(int) { return postfix_increment(*this); }
     type operator--(int) { return postfix_decrement(*this); }
-    EListNode* _node{};
+    Node* _node{};
   };
-  struct ConstIter {
-    using type = ConstIter;
-    using iterator_concept = std::bidirectional_iterator_tag;
-    using value_type = EListNode*;
-    using difference_type = std::ptrdiff_t;
-    ConstIter(const EListNode* node) : _node(node) {}
-    [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
-    [[nodiscard]] const EListNode* operator*() const { return _node; }
-    type& operator++() { return (_node = _node->next()), *this; }
-    type& operator--() { return (_node = _node->prev()), *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    type operator--(int) { return postfix_decrement(*this); }
-    const EListNode* _node{};
-  };
+  using Iter = Iterator<EListNode>;
+  using ConstIter = Iterator<const EListNode>;
+
   [[nodiscard]] Iter begin() { return Iter(delim()->next()); }
   [[nodiscard]] Iter end() { return Iter(delim()); }
   [[nodiscard]] ConstIter begin() const { return ConstIter(delim()->next()); }
@@ -103,7 +96,7 @@ class EList {
   template <typename Struct, size_t offset> struct OuterIter {
     using type = OuterIter;
     using iterator_concept = std::bidirectional_iterator_tag;
-    using value_type = EListNode*;
+    using value_type = Struct*;
     using difference_type = std::ptrdiff_t;
     explicit OuterIter(EListNode* node) : _node(node) {}
     OuterIter() = default;

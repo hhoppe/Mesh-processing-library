@@ -36,19 +36,6 @@ template <int D, typename T> class GridView;
 
 namespace details {
 
-template <int D, typename T> struct Grid_aux {
-  using CRet = CGridView<D - 1, T>;
-  using Ret = GridView<D - 1, T>;
-};
-template <typename T> struct Grid_aux<1, T> {
-  using CRet = const T&;
-  using Ret = T&;
-};
-template <typename T> struct Grid_aux<2, T> {
-  using CRet = CArrayView<T>;
-  using Ret = ArrayView<T>;
-};
-
 template <int D, typename T> struct nested_initializer_list {
   using type = std::initializer_list<typename nested_initializer_list<D - 1, T>::type>;
 };
@@ -71,6 +58,8 @@ template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, si
 // Do the same for a list of coordinates.
 template <int D>
 constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0, std::integral auto... dd);
+// Alternative new version.
+template <int D> constexpr size_t unused_ravel_index_list(const Vec<int, D>& dims, std::integral auto... dd);
 
 // Find stride (in number of elements) of dimension d in the grid.
 template <int D> constexpr size_t grid_stride(const Vec<int, D>& dims, int dim);
@@ -110,53 +99,60 @@ template <int D, typename T> class CGridView {
   [[nodiscard]] size_t size() const { return product_dims<D>(_dims.data()); }
   template <std::integral... A> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
-  template <std::integral... A> [[nodiscard]] const T& flat(size_t i) const { return ASSERTXX(i < size()), _a[i]; }
+  [[nodiscard]] auto& flat(this auto&& self, size_t i) { return ASSERTXX(i < self.size()), self.data()[i]; }
   [[nodiscard]] bool ok(const Vec<int, D>& u) const {
     for_int(c, D) {
       if (u[c] < 0 || u[c] >= _dims[c]) return false;
     }
     return true;
   }
-  template <typename... A> [[nodiscard]] bool ok(A... dd) const { return ok(V(dd...)); }
+  [[nodiscard]] bool ok(std::integral auto... dd) const { return ok(V(dd...)); }
   bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Return false outside Border.
     for_int(c, D) {
       if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;
     }
     return true;
   }
-  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {
+  [[nodiscard]] auto& inside(this auto&& self, const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) {
     Vec<int, D> ut(u);
-    assertx(map_inside(ut, bndrules));
-    return (*this)[ut];
+    assertx(self.map_inside(ut, bndrules));
+    return self[ut];
   }
   [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
     Vec<int, D> ut(u);
     if (!map_inside(ut, bndrules)) return ASSERTX(bordervalue), *bordervalue;
     return (*this)[ut];
   }
-  [[nodiscard]] type slice(int ib, int ie) const {  // View of grid truncated in 0th dimension.
-    assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
-    return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
+  [[nodiscard]] auto slice(this auto&& self, int ib, int ie) {  // View of grid truncated in 0th dimension.
+    const Vec<int, D>& dims = self.dims();
+    assertx(ib >= 0 && ib <= ie && ie <= dims[0]);
+    return grid_view_t<D, decltype(self.data())>(self.data() + ib * grid_stride(dims, 0), dims.with(0, ie - ib));
   }
-  [[nodiscard]] auto slices() const requires(D >= 2) {
-    return range(dim(0)) | views::transform([grid = *this](int i) { return grid[i]; });
+  [[nodiscard]] auto slices(this auto&& self) requires(D >= 2) {
+    // We capture the pointer and dims rather than a view because a captured view would be const in the lambda,
+    // and subscripting a const GridView yields a CGridView.
+    using View = grid_view_t<D, decltype(self.data())>;
+    return range(self.dim(0)) |
+           views::transform([a = self.data(), dims = self.dims()](int i) { return View(a, dims)[i]; });
   }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  [[nodiscard]] const T* begin() const { return _a; }
-  [[nodiscard]] const T* end() const { return _a + size(); }
+  [[nodiscard]] auto begin(this auto&& self) { return self.data(); }
+  [[nodiscard]] auto end(this auto&& self) { return self.data() + self.size(); }
   [[nodiscard]] const T* data() const { return _a; }
-  [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
+  [[nodiscard]] auto array_view(this auto&& self) {
+    return array_view_t<decltype(self.data())>(self.data(), narrow_cast<int>(self.size()));
+  }
   // For implementation of Matrix (D == 2):
   [[nodiscard]] int ysize() const requires(D == 2) { return dim(0); }
   [[nodiscard]] int xsize() const requires(D == 2) { return dim(1); }
   // Return false if bndrule == Border and i is outside.
   bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
-  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
-    bool b = map_inside(y, x, bndrule);
+  [[nodiscard]] auto& inside(this auto&& self, int y, int x, Bndrule bndrule) requires(D == 2) {
+    bool b = self.map_inside(y, x, bndrule);
     ASSERTX(b);
-    return (*this)[y, x];
+    return self[y, x];
   }
   [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
 
@@ -195,54 +191,12 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& g) & { return base::operator=(std::move(g)), *this; }
   void reinit(type g) { *this = g; }
-  using base::size;
-  [[nodiscard]] T& flat(size_t i) { return ASSERTXX(i < size()), _a[i]; }
-  [[nodiscard]] const T& flat(size_t i) const { return base::flat(i); }
-  [[nodiscard]] T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) requires(D == 2) {
-    Vec<int, D> ut(u);
-    bool b = base::map_inside(ut, bndrules);
-    ASSERTX(b);
-    return (*this)[ut];
-  }
-  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {
-    return base::inside(u, bndrules);
-  }
-  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
-    return base::inside(u, bndrules, bordervalue);
-  }
-  [[nodiscard]] type slice(int ib, int ie) {  // View of grid truncated in 0th dimension.
-    assertx(ib >= 0 && ib <= ie && ie <= _dims[0]);
-    return type(_a + ib * grid_stride(_dims, 0), _dims.with(0, ie - ib));
-  }
-  [[nodiscard]] base slice(int ib, int ie) const { return base::slice(ib, ie); }
-  [[nodiscard]] auto slices() requires(D >= 2) {
-    return range(this->dim(0)) | views::transform([grid = *this](int i) { return type(grid)[i]; });
-  }
-  [[nodiscard]] auto slices() const requires(D >= 2) { return base::slices(); }
   void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  [[nodiscard]] T* begin() { return _a; }
-  [[nodiscard]] const T* begin() const { return _a; }
-  [[nodiscard]] T* end() { return _a + size(); }
-  [[nodiscard]] const T* end() const { return _a + size(); }
   [[nodiscard]] T* data() { return _a; }
   [[nodiscard]] const T* data() const { return _a; }
-  [[nodiscard]] ArrayView<T> array_view() { return ArrayView<T>(data(), narrow_cast<int>(size())); }
-  [[nodiscard]] CArrayView<T> array_view() const { return CArrayView<T>(data(), narrow_cast<int>(size())); }
-  // For implementation of Matrix (D == 2):
-  [[nodiscard]] T& inside(int y, int x, Bndrule bndrule) requires(D == 2) {
-    bool b = base::map_inside(y, x, bndrule);
-    ASSERTX(b);
-    return (*this)[y, x];
-  }
-  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule) const requires(D == 2) {
-    bool b = base::map_inside(y, x, bndrule);
-    ASSERTX(b);
-    return (*this)[y, x];
-  }
-  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
   void reverse_y() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //
@@ -305,7 +259,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     return *this;
   }
   type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }
-  template <typename... A> void init(int d0, A... dr) { init(Vec<int, D>(d0, dr...)); }
+  void init(int d0, std::integral auto... dr) { init(Vec<int, D>(d0, dr...)); }
   using base::size;
   void init(const Vec<int, D>& dims) {
     if (dims == _dims) return;
@@ -396,6 +350,12 @@ template <int D>
   return i;
 }
 
+template <int D>
+[[nodiscard]] constexpr size_t unused_ravel_index_list(const Vec<int, D>& dims, std::integral auto... dd) {
+  static_assert(sizeof...(dd) == D);
+  return ravel_index(dims, Vec<int, D>(narrow_cast<int>(dd)...));
+}
+
 template <int D> [[nodiscard]] constexpr size_t grid_stride(const Vec<int, D>& dims, int dim) {
   ASSERTXX(dim >= 0 && dim < D);
   if (dim + 1 >= D) return 1;
@@ -408,14 +368,14 @@ template <int D> [[nodiscard]] constexpr size_t grid_stride(const Vec<int, D>& d
 
 namespace details {
 
-// Return type of a subscript yielding rank D over elements of type T, which may be const-qualified.
-template <int D, typename T>
-using grid_ret_t = std::conditional_t<std::is_const_v<T>, typename Grid_aux<D, std::remove_const_t<T>>::CRet,
-                                      typename Grid_aux<D, T>::Ret>;
+// Result of a subscript leaving rank R over elements of type T, which may be const-qualified.
+// (The CGridView<0, T> named in the discarded branch for R < 2 is never instantiated.)
+template <int R, typename T>
+using grid_ret_t = std::conditional_t<R == 0, T&, std::conditional_t<R == 1, array_view_t<T*>, grid_view_t<R, T*>>>;
 
 // Construct the element reference or sub-view of rank D - n at pointer p within a grid with dimensions dims.
-template <int D, int n, typename T> grid_ret_t<D - n + 1, T> grid_view_at(T* p, const Vec<int, D>& dims) {
-  using Ret = grid_ret_t<D - n + 1, T>;
+template <int D, int n, typename T> grid_ret_t<D - n, T> grid_view_at(T* p, const Vec<int, D>& dims) {
+  using Ret = grid_ret_t<D - n, T>;
   if constexpr (n == D)
     return static_cast<Ret>(*p);
   else if constexpr (n == D - 1)
@@ -455,17 +415,6 @@ template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bn
 template <int D, typename T>
 const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2) {
   if (!map_inside(y, x, bndrule)) {
-    ASSERTX(bordervalue);
-    return *bordervalue;
-  }
-  return (*this)[y, x];
-}
-
-//----------------------------------------------------------------------------
-
-template <int D, typename T>
-const T& GridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2) {
-  if (!base::map_inside(y, x, bndrule)) {
     ASSERTX(bordervalue);
     return *bordervalue;
   }
@@ -570,45 +519,32 @@ template <int D, typename T> Grid(CGridView<D, T>) -> Grid<D, T>;
 #define TTN TT [[nodiscard]]
 #define G Grid<D, T>
 #define CG CGridView<D, T>
+#define GV GridView<D, T>
 #define SS ASSERTXX(same_size(g1, g2))
 #define F(g) for (const size_t i : range(g.size()))
 #define PF(g, code) parallel_for({.cycles_per_elem = 1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 
-TTN G operator+(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + g2.flat(i); } return g; }
-TTN G operator-(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) - g2.flat(i); } return g; }
-TTN G operator*(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) * g2.flat(i); } return g; }
-TTN G operator/(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) / g2.flat(i); } return g; }
-TTN G operator%(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) % g2.flat(i); } return g; }
+#define HH_OPERATIONS(OP) \
+  TTN G operator OP(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) OP g2.flat(i); } return g; } \
+  TTN G operator OP(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) OP e; } return g; } \
+  TTN G operator OP(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e OP g1.flat(i); } return g; } \
+  TT GV operator OP##=(GV g1, const T& e) { F(g1) { g1.flat(i) OP##= e; } return g1; } \
+  HH_EAT_SEMICOLON
 
-TTN G operator+(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) + e; } return g; }
-TTN G operator-(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) - e; } return g; }
-TTN G operator*(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) * e; } return g; }
-TTN G operator/(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) / e; } return g; }
-TTN G operator%(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) % e; } return g; }
+HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
-TTN G operator+(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e + g1.flat(i); } return g; }
-TTN G operator-(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e - g1.flat(i); } return g; }
-TTN G operator*(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e * g1.flat(i); } return g; }
-TTN G operator/(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e / g1.flat(i); } return g; }
-TTN G operator%(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e % g1.flat(i); } return g; }
+TTN G operator-(CG g1) { G g(g1.dims()); F(g) { g.flat(i) = -g1.flat(i); } return g; }
 
-// Parallelized and optimized, for Multigrid<>.
-TT GridView<D, T> operator+=(GridView<D, T> g1, CG g2) {
+// The grid-grid compound assignments stay outside HH_OPERATIONS because they are not uniform: operator+= is
+// parallelized and hoists the two data pointers (both matter for Multigrid<>), and operator*= is parallelized.
+TT GV operator+=(GV g1, CG g2) {
     SS; T* a = g1.data(); const T* b = g2.data(); PF(g1, a[i] += b[i]); return g1;
 }
-TT GridView<D, T> operator-=(GridView<D, T> g1, CG g2) { SS; F(g1) { g1.flat(i) -= g2.flat(i); } return g1; }
-TT GridView<D, T> operator*=(GridView<D, T> g1, CG g2) { SS; PF(g1, g1.flat(i) *= g2.flat(i)); return g1; }
-TT GridView<D, T> operator/=(GridView<D, T> g1, CG g2) { SS; F(g1) { g1.flat(i) /= g2.flat(i); } return g1; }
-TT GridView<D, T> operator%=(GridView<D, T> g1, CG g2) { SS; F(g1) { g1.flat(i) %= g2.flat(i); } return g1; }
-
-TT GridView<D, T> operator+=(GridView<D, T> g1, const T& e) { F(g1) { g1.flat(i) += e; } return g1; }
-TT GridView<D, T> operator-=(GridView<D, T> g1, const T& e) { F(g1) { g1.flat(i) -= e; } return g1; }
-TT GridView<D, T> operator*=(GridView<D, T> g1, const T& e) { F(g1) { g1.flat(i) *= e; } return g1; }
-TT GridView<D, T> operator/=(GridView<D, T> g1, const T& e) { F(g1) { g1.flat(i) /= e; } return g1; }
-TT GridView<D, T> operator%=(GridView<D, T> g1, const T& e) { F(g1) { g1.flat(i) %= e; } return g1; }
-
-TT GridView<D, T> operator-(GridView<D, T> g1) { G g(g1.dims()); F(g) { g.flat(i) = -g1.flat(i); } return g; }
+TT GV operator-=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) -= g2.flat(i); } return g1; }
+TT GV operator*=(GV g1, CG g2) { SS; PF(g1, g1.flat(i) *= g2.flat(i)); return g1; }
+TT GV operator/=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) /= g2.flat(i); } return g1; }
+TT GV operator%=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) %= g2.flat(i); } return g1; }
 
 TTN G min(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
 TTN G max(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
@@ -634,6 +570,8 @@ TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
 #undef PF
 #undef F
 #undef SS
+#undef HH_OPERATIONS
+#undef GV
 #undef CG
 #undef G
 #undef TTN

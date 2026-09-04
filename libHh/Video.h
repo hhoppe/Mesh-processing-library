@@ -76,7 +76,7 @@ class VideoNv12 : noncopyable {
  public:
   VideoNv12() = default;
   explicit VideoNv12(const Vec3<int>& dims) { init(dims); }
-  VideoNv12(VideoNv12&& vnv12) { swap(*this, vnv12); }
+  VideoNv12(VideoNv12&& vnv12) noexcept { swap(*this, vnv12); }
   VideoNv12& operator=(VideoNv12&& v) noexcept { return clear(), swap(*this, v), *this; }
   explicit VideoNv12(Grid<3, uint8_t>&& grid_Y, Grid<3, Vec2<uint8_t>>&& grid_UV)
       : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) {

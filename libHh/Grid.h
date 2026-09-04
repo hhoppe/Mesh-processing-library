@@ -94,7 +94,7 @@ template <int D, typename T> class CGridView {
   [[nodiscard]] static constexpr int ndim() { return D; }
   [[nodiscard]] const Vec<int, D>& dims() const { return _dims; }
   [[nodiscard]] int dim(int c) const { return _dims[c]; }
-  [[nodiscard]] size_t size() const { return product_dims<D>(_dims.data()); }
+  [[nodiscard]] size_t size() const noexcept { return product_dims<D>(_dims.data()); }
   template <std::integral... A> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
   [[nodiscard]] auto& flat(this auto&& self, size_t i) { return ASSERTXX(i < self.size()), self.data()[i]; }
@@ -136,9 +136,9 @@ template <int D, typename T> class CGridView {
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  [[nodiscard]] auto begin(this auto&& self) { return self.data(); }
-  [[nodiscard]] auto end(this auto&& self) { return self.data() + self.size(); }
-  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] auto begin(this auto&& self) noexcept { return self.data(); }
+  [[nodiscard]] auto end(this auto&& self) noexcept { return self.data() + self.size(); }
+  [[nodiscard]] const T* data() const noexcept { return _a; }
   [[nodiscard]] auto array_view(this auto&& self) {
     return array_view_t<decltype(self.data())>(self.data(), narrow_cast<int>(self.size()));
   }
@@ -194,7 +194,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   using iterator = T*;
   using const_iterator = const T*;
   [[nodiscard]] T* data() { return _a; }
-  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] const T* data() const noexcept { return _a; }
   void reverse_y() requires(D == 2) {
     const int ny = this->ysize();
     parallel_for({.cycles_per_elem = uint64_t(this->xsize()) * 2}, range(ny / 2), [&](const int y) {  //

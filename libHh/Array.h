@@ -61,10 +61,10 @@ template <typename T> class CArrayView {
   using type = CArrayView<T>;
 
  public:
-  explicit CArrayView(const T* a, int n) : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n >= 0); }
+  explicit CArrayView(const T* a, int n) noexcept : _a(const_cast<T*>(a)), _n(n) { ASSERTXX(n >= 0); }
   CArrayView(const type& a) = default;
-  template <size_t n> CArrayView(const T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}  // For: const T a[n];
-  template <size_t n> CArrayView(T (&a)[n]) : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
+  template <size_t n> CArrayView(const T (&a)[n]) noexcept : CArrayView(a, narrow_cast<int>(n)) {}  // const T a[n];
+  template <size_t n> CArrayView(T (&a)[n]) noexcept : CArrayView(a, narrow_cast<int>(n)) {}        // For: T a[n];
   // template <int n> CArrayView(const Vec<T, n>&);  // Implemented as conversion operator in Vec.
   template <typename T2> [[nodiscard]] friend constexpr bool same_size(type ar1, CArrayView<T2> ar2) {
     return ar1.num() == ar2.num();
@@ -73,34 +73,34 @@ template <typename T> class CArrayView {
   // `arview = array` and `matrix[0] = matrix[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& a) & { return _a = a._a, _n = a._n, *this; }
   void reinit(type a) { *this = a; }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return _n; }
-  [[nodiscard]] constexpr size_t size() const { return narrow_cast<size_t>(_n); }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return _n; }
+  [[nodiscard]] constexpr size_t size() const noexcept { return narrow_cast<size_t>(_n); }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
   }
-  [[nodiscard]] constexpr auto& last(this auto&& self) { return self[self.num() - 1]; }
-  [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < _n; }
-  [[nodiscard]] constexpr bool ok(const T* e) const { return ok(narrow_cast<int>(e - _a)); }
+  [[nodiscard]] constexpr auto& last(this auto&& self) noexcept { return self[self.num() - 1]; }
+  [[nodiscard]] constexpr bool ok(int i) const noexcept { return i >= 0 && i < _n; }
+  [[nodiscard]] constexpr bool ok(const T* e) const noexcept { return ok(narrow_cast<int>(e - _a)); }
   [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
   [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
     return assertx(self.map_inside(i, bndrule)), self[i];
   }
   [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
-  [[nodiscard]] constexpr auto head(this auto&& self, int n) { return self.segment(0, n); }
-  [[nodiscard]] constexpr auto tail(this auto&& self, int n) { return self.segment(self.num() - n, n); }
-  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) {
+  [[nodiscard]] constexpr auto head(this auto&& self, int n) noexcept { return self.segment(0, n); }
+  [[nodiscard]] constexpr auto tail(this auto&& self, int n) noexcept { return self.segment(self.num() - n, n); }
+  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) noexcept {
     ASSERTXX(implicit_cast<const type&>(self).check(i, s));  // Access the protected check() through this base class.
     return array_view_t<decltype(self.data())>(self.data() + i, s);
   }
-  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) { return self.segment(ib, ie - ib); }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) noexcept { return self.segment(ib, ie - ib); }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
-  [[nodiscard]] constexpr auto begin(this auto&& self) { return self.data(); }
-  [[nodiscard]] constexpr auto end(this auto&& self) { return self.data() + self.num(); }
-  [[nodiscard]] constexpr const T* data() const { return _a; }
+  [[nodiscard]] constexpr auto begin(this auto&& self) noexcept { return self.data(); }
+  [[nodiscard]] constexpr auto end(this auto&& self) noexcept { return self.data() + self.num(); }
+  [[nodiscard]] constexpr const T* data() const noexcept { return _a; }
 
  protected:
   // The pointer is declared non-const even though CArrayView's elements are logically const.  This lets the derived
@@ -110,7 +110,7 @@ template <typename T> class CArrayView {
   // conversion from CArrayView<T> to ArrayView<T>.  Do not add one, and do not expose _a in a public member.
   T* _a{nullptr};
   int _n{0};
-  [[nodiscard]] constexpr bool check(int i, int s) const {
+  [[nodiscard]] constexpr bool check(int i, int s) const noexcept {
     if (i >= 0 && s >= 0 && i + s <= _n) return true;
     if !consteval {
       SHOW(i, s, _n);
@@ -128,8 +128,8 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   using type = ArrayView<T>;
 
  public:
-  explicit ArrayView(T* a, int n) : base(a, n) {}
-  template <size_t n> ArrayView(T (&a)[n]) : base(a, n) {}  // For: T a[n];
+  explicit ArrayView(T* a, int n) noexcept : base(a, n) {}
+  template <size_t n> ArrayView(T (&a)[n]) noexcept : base(a, n) {}  // For: T a[n];
   ArrayView(const type&) = default;                         // Because it has explicit copy assignment.
   // template <int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
   // ArrayView(std::vector<T>& a) : base(a) { }
@@ -143,8 +143,8 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  [[nodiscard]] T* data() { return _a; }
-  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] T* data() noexcept { return _a; }
+  [[nodiscard]] const T* data() const noexcept { return _a; }
   using base::num;
   using base::ok;
   using base::size;

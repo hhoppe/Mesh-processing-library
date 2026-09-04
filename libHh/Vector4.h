@@ -48,7 +48,7 @@ class Vector4 {
   explicit Vector4(float v) { fill(v); }
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
-  [[nodiscard]] size_t size() const { return 4; }
+  [[nodiscard]] size_t size() const noexcept { return 4; }
   [[HH_GNU_PURE]] [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, 4), self._c[i]; }
   [[nodiscard]] Vector4 with(int i, float f) const {
     HH_CHECK_BOUNDS(i, 4);

@@ -362,17 +362,17 @@ class Mesh : noncopyable {
 
   struct Edges_range : ranges::view_interface<Edges_range> {
     explicit Edges_range(const Mesh& m) : _m(&m) {}
-    [[nodiscard]] Edges_iterator begin() const { return Edges_iterator(*_m); }
-    [[nodiscard]] std::default_sentinel_t end() const { return {}; }
-    [[nodiscard]] int size() const { return _m->num_edges(); }
+    [[nodiscard]] Edges_iterator begin() const noexcept { return Edges_iterator(*_m); }
+    [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+    [[nodiscard]] int size() const noexcept { return _m->num_edges(); }
     const Mesh* _m;
   };
 
   struct OrderedVertices_range {  // Do not inherit from view_interface because not O(1) copyable.
     explicit OrderedVertices_range(const Mesh& mesh);
-    [[nodiscard]] auto begin(this auto&& self) { return self._vertices.begin(); }
-    [[nodiscard]] auto end(this auto&& self) { return self._vertices.end(); }
-    [[nodiscard]] int size() const { return _vertices.num(); }
+    [[nodiscard]] auto begin(this auto&& self) noexcept { return self._vertices.begin(); }
+    [[nodiscard]] auto end(this auto&& self) noexcept { return self._vertices.end(); }
+    [[nodiscard]] int size() const noexcept { return _vertices.num(); }
 
    private:
     Array<Vertex> _vertices;
@@ -380,9 +380,9 @@ class Mesh : noncopyable {
 
   struct OrderedFaces_range {  // Do not inherit from view_interface because not O(1) copyable.
     explicit OrderedFaces_range(const Mesh& mesh);
-    [[nodiscard]] auto begin(this auto&& self) { return self._faces.begin(); }
-    [[nodiscard]] auto end(this auto&& self) { return self._faces.end(); }
-    [[nodiscard]] int size() const { return _faces.num(); }
+    [[nodiscard]] auto begin(this auto&& self) noexcept { return self._faces.begin(); }
+    [[nodiscard]] auto end(this auto&& self) noexcept { return self._faces.end(); }
+    [[nodiscard]] int size() const noexcept { return _faces.num(); }
 
    private:
     Array<Face> _faces;
@@ -470,7 +470,7 @@ class Mesh : noncopyable {
     [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _beg == rhs._beg; }
     // The hedges form a cycle, so only the initial position distinguishes begin() from end().
     [[nodiscard]] bool operator==(FC_sentinel s) const { return !_beg && _it == s._herep; }
-    [[nodiscard]] Corner operator*() const { return _it; }
+    [[nodiscard]] Corner operator*() const noexcept { return _it; }
     type& operator++() { return _beg = false, _it = _it->_next, *this; }
     type operator++(int) { return postfix_increment(*this); }
     HEdge _it{};
@@ -479,8 +479,8 @@ class Mesh : noncopyable {
 
   struct FC_range : ranges::view_interface<FC_range> {
     FC_range(const Mesh& m, Face f) : _herep(m.herep(f)) {}
-    [[nodiscard]] FC_iterator begin() const { return FC_iterator(_herep); }
-    [[nodiscard]] FC_sentinel end() const { return FC_sentinel{_herep}; }
+    [[nodiscard]] FC_iterator begin() const noexcept { return FC_iterator(_herep); }
+    [[nodiscard]] FC_sentinel end() const noexcept { return FC_sentinel{_herep}; }
     // Note that size() is not trivially computable.
     HEdge _herep;
   };
@@ -537,7 +537,7 @@ class Mesh : noncopyable {
     [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it && _beg == rhs._beg; }
     // An open ring ends at a null hedge; a closed ring returns to the initial one.
     [[nodiscard]] bool operator==(WC_sentinel s) const { return !_it || (!_beg && _it == s._hef); }
-    [[nodiscard]] Corner operator*() const { return _it; }
+    [[nodiscard]] Corner operator*() const noexcept { return _it; }
     type& operator++() { return _beg = false, _it = _m->ccw_hedge(_it), *this; }
     type operator++(int) { return postfix_increment(*this); }
     const Mesh* _m{nullptr};
@@ -547,8 +547,8 @@ class Mesh : noncopyable {
 
   struct WC_range : ranges::view_interface<WC_range> {
     WC_range(const Mesh& m, Vertex v) : _m(&m), _hef(m.most_clw_hedge(v)) {}
-    [[nodiscard]] WC_iterator begin() const { return WC_iterator(*_m, _hef); }
-    [[nodiscard]] WC_sentinel end() const { return WC_sentinel{_hef}; }
+    [[nodiscard]] WC_iterator begin() const noexcept { return WC_iterator(*_m, _hef); }
+    [[nodiscard]] WC_sentinel end() const noexcept { return WC_sentinel{_hef}; }
     // Note that size() is not trivially computable.
     const Mesh* _m;
     HEdge _hef;  // May be nullptr for an isolated Vertex.
@@ -687,28 +687,28 @@ HH_INITIALIZE_POOL_NESTED(Mesh::MEdge, MeshMEdge);
 HH_INITIALIZE_POOL_NESTED(Mesh::MHEdge, MeshMHEdge);
 
 inline auto Mesh::faces(Vertex v) const {
-  return v->_arhe | views::transform([](HEdge he) { return he->_face; });
+  return v->_arhe | views::transform([](HEdge he) noexcept { return he->_face; });
 }
 
 inline auto Mesh::corners(Vertex v) const {
-  return v->_arhe | views::transform([](HEdge he) { return he->_prev; });
+  return v->_arhe | views::transform([](HEdge he) noexcept { return he->_prev; });
 }
 
 inline auto Mesh::ccw_faces(Vertex v) const {
-  return ccw_corners(v) | views::transform([](Corner c) { return c->_face; });
+  return ccw_corners(v) | views::transform([](Corner c) noexcept { return c->_face; });
 }
 
 inline auto Mesh::vertices(Face f) const {
-  return corners(f) | views::transform([](Corner c) { return c->_vert; });
+  return corners(f) | views::transform([](Corner c) noexcept { return c->_vert; });
 }
 
 inline auto Mesh::faces(Face f) const {
-  return corners(f) | views::filter([](Corner c) { return !!c->_sym; }) |
-         views::transform([](Corner c) { return c->_sym->_face; });
+  return corners(f) | views::filter([](Corner c) noexcept { return !!c->_sym; }) |
+         views::transform([](Corner c) noexcept { return c->_sym->_face; });
 }
 
 inline auto Mesh::edges(Face f) const {
-  return corners(f) | views::transform([](Corner c) { return c->_edge; });
+  return corners(f) | views::transform([](Corner c) noexcept { return c->_edge; });
 }
 
 inline Vec2<Vertex> Mesh::vertices(Edge e) const {

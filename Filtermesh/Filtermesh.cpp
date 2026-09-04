@@ -777,7 +777,7 @@ void do_nidrenumberv() {
   HH_TIMER("_nidrenumberv");
   Set<Vertex> setv;
   for (Vertex v : mesh.vertices()) setv.enter(v);
-  const int large = std::numeric_limits<int>::max() / 2;
+  constexpr int large = std::numeric_limits<int>::max() / 2;
   {
     int i = large;
     for (Vertex v : setv) mesh.vertex_renumber_id_private(v, i++);
@@ -2445,7 +2445,7 @@ void do_obtusesplit() {
   const float max_elen = max(mesh.edges() | views::transform([&](Edge e) { return mesh.length(e); })) * 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
-  const float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
+  constexpr float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
   HPqueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
   for (Edge e : mesh.edges()) pqe.enter_unsorted(e, max_elen - mesh.length(e));

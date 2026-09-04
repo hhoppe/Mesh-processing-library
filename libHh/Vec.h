@@ -57,12 +57,16 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   Vec() = default;
   // Include arg0 to disambiguate from default constructor.  arg0 may be either const l-value or r-value reference.
   template <typename... Args>
-  constexpr Vec(const T& arg0, Args&&... args1) noexcept requires Copyable<T>
+  constexpr Vec(const T& arg0, Args&&... args1)
+      noexcept(std::is_nothrow_copy_constructible_v<T> && (std::is_nothrow_constructible_v<T, Args&&> && ...))
+      requires Copyable<T>
       : base{{arg0, std::forward<Args>(args1)...}} {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
   template <typename... Args>
-  constexpr Vec(T&& arg0, Args&&... args1) noexcept : base{{std::move(arg0), std::forward<Args>(args1)...}} {
+  constexpr Vec(T&& arg0, Args&&... args1)
+      noexcept(std::is_nothrow_move_constructible_v<T> && (std::is_nothrow_constructible_v<T, Args&&> && ...))
+      : base{{std::move(arg0), std::forward<Args>(args1)...}} {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
 
@@ -77,9 +81,9 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   }
   // To allow class to be trivial, and to allow generation of implicit move constructor and assignment,
   //  it is safest to not include any copy-constructor, not even a default one.
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const { return n; }
-  [[nodiscard]] constexpr size_t size() const { return static_cast<size_t>(n); }
-  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) {
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return n; }
+  [[nodiscard]] constexpr size_t size() const noexcept { return static_cast<size_t>(n); }
+  [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
     return HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i];
   }
   // Subscript by a coordinate, e.g. grid[V(i, j, k)]; recurses into the nested Vec.
@@ -96,8 +100,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
       requires(IsVec<T> && sizeof...(A) >= 1) {
     return self[i][dd...];
   }
-  [[nodiscard]] constexpr auto& last(this auto&& self) { return self[n - 1]; }
-  [[nodiscard]] constexpr bool ok(int i) const { return i >= 0 && i < n; }
+  [[nodiscard]] constexpr auto& last(this auto&& self) noexcept { return self[n - 1]; }
+  [[nodiscard]] constexpr bool ok(int i) const noexcept { return i >= 0 && i < n; }
   constexpr void assign(CArrayView<T> ar) requires Copyable<T> {
     ASSERTXX(ar.num() == n);
     ranges::copy(ar, data());
@@ -123,10 +127,12 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   }
   // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
   [[nodiscard]] friend constexpr auto operator<=>(const type&, const type&) = default;
-  [[nodiscard]] constexpr operator ArrayView<T>() { return view(); }
-  [[nodiscard]] constexpr operator CArrayView<T>() const { return view(); }
-  [[nodiscard]] constexpr auto view(this auto&& self) { return array_view_t<decltype(self.data())>(self.data(), n); }
-  [[nodiscard]] constexpr CArrayView<T> const_view() const { return CArrayView<T>(data(), n); }
+  [[nodiscard]] constexpr operator ArrayView<T>() noexcept { return view(); }
+  [[nodiscard]] constexpr operator CArrayView<T>() const noexcept { return view(); }
+  [[nodiscard]] constexpr auto view(this auto&& self) noexcept {
+    return array_view_t<decltype(self.data())>(self.data(), n);
+  }
+  [[nodiscard]] constexpr CArrayView<T> const_view() const noexcept { return CArrayView<T>(data(), n); }
   // Grid interface, present only when the element is itself a Vec.  The number of dimensions D is always stated
   //  explicitly, because a nested Vec need not be a grid, e.g. Vec3<Vec2<float>> is a triangle.
   template <int D = 2> [[nodiscard]] static constexpr Vec<int, D> grid_dims() requires(D == 1 || IsVec<T>) {
@@ -152,24 +158,32 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // that address), which is also why these functions cannot be constexpr; the alternative of returning a copy would
   // lose the ability to write through the result, e.g. frame.head<3>() = ...
   // V(1, 2, 3).head<2>() == V(1, 2).
-  template <int i, int s> [[nodiscard]] auto& segment(this auto&& self) {  // V(1, 2, 3, 4).segment<1, 2>() == V(2, 3).
+  // V(1, 2, 3, 4).segment<1, 2>() == V(2, 3).
+  template <int i, int s> [[nodiscard]] auto& segment(this auto&& self) noexcept {
     static_assert(i >= 0 && s >= 0 && i + s <= n);
     return *reinterpret_cast<copy_const_t<decltype(self), Vec<T, s>>*>(self.data() + i);
   }
-  template <int s> [[nodiscard]] auto& segment(this auto&& self, int i) {  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3).
+  // V(1, 2, 3, 4).segment<2>(1) == V(2, 3).
+  template <int s> [[nodiscard]] auto& segment(this auto&& self, int i) noexcept {
     static_assert(s >= 0 && s <= n);
     ASSERTXX(as_vec(self).check(i, s));
     return *reinterpret_cast<copy_const_t<decltype(self), Vec<T, s>>*>(self.data() + i);
   }
-  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) {
+  [[nodiscard]] constexpr auto segment(this auto&& self, int i, int s) noexcept {
     return ASSERTXX(as_vec(self).check(i, s)), array_view_t<decltype(self.data())>(self.data() + i, s);
   }
-  template <int s> [[nodiscard]] auto& head(this auto&& self) { return as_vec(self).template segment<0, s>(); }
-  [[nodiscard]] constexpr auto head(this auto&& self, int s) { return as_vec(self).segment(0, s); }
+  template <int s> [[nodiscard]] auto& head(this auto&& self) noexcept {
+    return as_vec(self).template segment<0, s>();
+  }
+  [[nodiscard]] constexpr auto head(this auto&& self, int s) noexcept { return as_vec(self).segment(0, s); }
   // V(1, 2, 3).tail<2>() == V(2, 3).
-  template <int s> [[nodiscard]] auto& tail(this auto&& self) { return as_vec(self).template segment<n - s, s>(); }
-  [[nodiscard]] constexpr auto tail(this auto&& self, int s) { return as_vec(self).segment(n - s, s); }
-  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) { return as_vec(self).segment(ib, ie - ib); }
+  template <int s> [[nodiscard]] auto& tail(this auto&& self) noexcept {
+    return as_vec(self).template segment<n - s, s>();
+  }
+  [[nodiscard]] constexpr auto tail(this auto&& self, int s) noexcept { return as_vec(self).segment(n - s, s); }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) noexcept {
+    return as_vec(self).segment(ib, ie - ib);
+  }
 
   template <typename U> [[nodiscard]] constexpr Vec<U, n> cast() const {
     return transformed(*this, [](const auto& e) { return static_cast<U>(e); });
@@ -177,21 +191,22 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   using value_type = T;
   using iterator = T*;
   using const_iterator = const T*;
-  [[nodiscard]] constexpr auto begin(this auto&& self) { return self.data(); }
-  [[nodiscard]] constexpr auto end(this auto&& self) { return self.data() + n; }
-  [[nodiscard]] constexpr T* data() {
+  [[nodiscard]] constexpr auto begin(this auto&& self) noexcept { return self.data(); }
+  [[nodiscard]] constexpr auto end(this auto&& self) noexcept { return self.data() + n; }
+  [[nodiscard]] constexpr T* data() noexcept {
     if constexpr (n > 0)
       return this->_a;
     else
       return nullptr;
   }
-  [[nodiscard]] constexpr const T* data() const {
+  [[nodiscard]] constexpr const T* data() const noexcept {
     if constexpr (n > 0)
       return this->_a;
     else
       return nullptr;
   }
-  [[nodiscard]] static constexpr type all(const T& e) requires Copyable<T> {
+  [[nodiscard]] static constexpr type all(const T& e) noexcept(std::is_nothrow_copy_constructible_v<T>)
+      requires Copyable<T> {
     return all_aux(e, std::make_index_sequence<n>());
   }
   static constexpr int Num = n;
@@ -224,7 +239,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // Therefore, even with an empty struct, it is necessary that sizeof(Vec<T, 0>) > 0.
   // However, using the "empty base class optimization", a class derived from Vec<T, 0> has zero space overhead.
 
-  [[nodiscard]] constexpr bool check(int i, int s) const {
+  [[nodiscard]] constexpr bool check(int i, int s) const noexcept {
     if (i >= 0 && s >= 0 && i + s <= n) return true;
     if !consteval {
       SHOW(i, s, n);
@@ -234,14 +249,15 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   // Deducing this deduces the derived class (Point, Frame, Bbox, ...), so member access on self would be
   // looked up there.  Instead, as_vec() pins self to the exact Vec base so that a member added to a derived class
   // cannot alter Vec's own behavior.
-  template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) {
+  template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) noexcept {
     return static_cast<copy_const_t<Self, type>&>(self);
   }
   template <size_t... Is> [[nodiscard]] constexpr type rev_aux(std::index_sequence<Is...>) const requires Copyable<T> {
     return type(data()[n - 1 - Is]...);
   }
   template <size_t... Is>
-  [[nodiscard]] static constexpr type all_aux(const T& e, std::index_sequence<Is...>) requires Copyable<T> {
+  [[nodiscard]] static constexpr type all_aux(const T& e, std::index_sequence<Is...>)
+      noexcept(std::is_nothrow_copy_constructible_v<T>) requires Copyable<T> {
     return type((void(Is), e)...);
   }
   // Default operator=() and copy_constructor are safe.
@@ -278,7 +294,10 @@ template <typename T> [[nodiscard]] constexpr Vec2<T> twice(const T& v) { return
 template <typename T> [[nodiscard]] constexpr Vec3<T> thrice(const T& v) { return {v, v, v}; }
 
 // Construct an Vec with identical elements, e.g. ntimes<4>(.5f) == V(.5f, .5f, .5f, .5f).
-template <int n, typename T> [[nodiscard]] constexpr Vec<T, n> ntimes(const T& v) { return Vec<T, n>::all(v); }
+template <int n, typename T>
+[[nodiscard]] constexpr Vec<T, n> ntimes(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+  return Vec<T, n>::all(v);
+}
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, int n, typename Func> [[nodiscard]] constexpr auto transformed(const Vec<T, n>& c, Func func) {
@@ -466,7 +485,7 @@ class Vec_range : public ranges::view_interface<Vec_range<D, has_lower_bound>>,
   }
   [[nodiscard]] constexpr iterator begin() const { return iterator(static_cast<const base&>(*this), _uU); }
   [[nodiscard]] constexpr std::default_sentinel_t end() const { return std::default_sentinel; }
-  [[nodiscard]] constexpr size_t size() const {
+  [[nodiscard]] constexpr size_t size() const noexcept {
     size_t product = 1;
     for_int(c, D) product *= size_t(max(0, _uU[c] - this->lower(c)));
     return product;

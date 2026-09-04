@@ -29,7 +29,7 @@ template <typename T> class CStridedArrayView {
   CStridedArrayView(const type& a) = default;
   type& operator=(type&& a) & { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
   [[nodiscard]] int num() const { return _n; }
-  [[nodiscard]] size_t size() const { return _n; }
+  [[nodiscard]] size_t size() const noexcept { return _n; }
   [[nodiscard]] ptrdiff_t stride() const { return _stride; }
   [[nodiscard]] auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());
@@ -51,7 +51,7 @@ template <typename T> class CStridedArrayView {
     template <typename U2> requires std::is_same_v<U, const U2>  // Conversion from iterator to const_iterator.
     Iterator(const Iterator<U2>& rhs) : _p(rhs._p), _stride(rhs._stride) {}
     bool operator==(const type& rhs) const { return _p == rhs._p; }
-    U& operator*() const { return *_p; }
+    U& operator*() const noexcept { return *_p; }
     U* operator->() const { return _p; }
     type& operator++() { return (_p += _stride), *this; }
     type& operator--() { return (_p -= _stride), *this; }
@@ -79,9 +79,9 @@ template <typename T> class CStridedArrayView {
 
   using iterator = Iterator<const T>;
   using const_iterator = iterator;
-  [[nodiscard]] auto begin(this auto&& self) { return self.iterator_at(0); }
-  [[nodiscard]] auto end(this auto&& self) { return self.iterator_at(self.num()); }
-  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] auto begin(this auto&& self) noexcept { return self.iterator_at(0); }
+  [[nodiscard]] auto end(this auto&& self) noexcept { return self.iterator_at(self.num()); }
+  [[nodiscard]] const T* data() const noexcept { return _a; }
 
  protected:
   // The pointer is declared non-const even though CStridedArrayView's elements are logically const.  This lets the
@@ -115,8 +115,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   using value_type = T;
   using iterator = typename base::template Iterator<T>;
   using const_iterator = typename base::const_iterator;
-  [[nodiscard]] T* data() { return _a; }
-  [[nodiscard]] const T* data() const { return _a; }
+  [[nodiscard]] T* data() noexcept { return _a; }
+  [[nodiscard]] const T* data() const noexcept { return _a; }
 
  protected:
   using base::_a;

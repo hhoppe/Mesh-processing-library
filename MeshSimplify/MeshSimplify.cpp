@@ -452,7 +452,7 @@ bool wedge_materials = true;  // Material boundaries imply wedge boundaries; int
 string original_indices;      // Write the PM's original vertex indices in order to a file.
 
 // Failed attempt at signed_dihedral_angle():
-//  const float gmindih = -rad_from_deg(109.471);
+//  constexpr float gmindih = -rad_from_deg(109.471);
 
 constexpr float k_jitter_bary_max = 0.5f;
 
@@ -2270,7 +2270,7 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   // vertex vt is smooth, then problem occurs since resulting wedge could be assigned two different attribute values.
   // This should have been prevented earlier.
 
-  const int not_used = std::numeric_limits<int>::max();
+  constexpr int not_used = std::numeric_limits<int>::max();
 
   Corner cv1f1 = mesh.corner(mesh.vertex1(e), mesh.face1(e));
   Corner cv2f1 = mesh.ccw_face_corner(cv1f1);

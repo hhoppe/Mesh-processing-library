@@ -23,7 +23,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   }
   explicit PArray(const type& ar) requires Copyable<T> : PArray() { *this = ar; }
   PArray(std::initializer_list<T> l) requires Copyable<T> : PArray(ranges::subrange(l)) {}
-  PArray(type&& ar) : PArray() { *this = std::move(ar); }
+  PArray(type&& ar) noexcept : PArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit PArray(R&& range) : PArray() {
     if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {

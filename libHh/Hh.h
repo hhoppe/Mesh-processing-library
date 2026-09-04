@@ -25,9 +25,8 @@
 // Code analysis:
 #pragma warning(disable : 6237)   // <zero> && <expression> is always zero.
 #pragma warning(disable : 6286)   // <non-zero constant> || <expression> is always a non-zero constant.
-#pragma warning(disable : 26439)  // Declare a function noexcept.
+#pragma warning(disable : 26437)  // Do not slice.
 #pragma warning(disable : 26444)  // Avoid unnamed objects with custom construction and destruction.
-#pragma warning(disable : 26451)  // Using operator on a 4 byte value and then casting the result to a 8 byte value.
 #pragma warning(disable : 26495)  // Always initialize a member variable.
 #endif
 
@@ -316,11 +315,11 @@ extern int g_unoptimized_zero;
 #define HH_FL " in line " HH_STR2(__LINE__) " of file " __FILE__
 
 // Always abort.
-#define assertnever(...) hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL))
+#define assertnever(...) hh::details::assertnever_aux((__VA_ARGS__), HH_FL)
 
 // Always abort; omit warning about any subsequent unreachable code.
 #define assertnever_ret(...) \
-  (hh::g_unoptimized_zero ? void() : hh::details::assertx_aux2(hh::details::add_fl((__VA_ARGS__), HH_FL)))
+  (hh::g_unoptimized_zero ? void() : hh::details::assertnever_aux((__VA_ARGS__), HH_FL))
 
 // if !expr, exit program (abort); otherwise return expr.
 #define assertx(...) hh::details::assertx_aux((__VA_ARGS__), "assertx(" #__VA_ARGS__ ")" HH_FL)
@@ -339,11 +338,11 @@ extern int g_unoptimized_zero;
 #if defined(HH_DEBUG)
 #define ASSERTX(...) assertx(__VA_ARGS__)
 #define ASSERTXX(...) assertx(__VA_ARGS__)
-#define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
+#define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : hh::details::assert_bounds_aux(i, n, HH_FL))
 #elif defined(__clang_analyzer__)
 #define ASSERTX(...) (assertx(__VA_ARGS__), HH_ASSUME(__VA_ARGS__))
 #define ASSERTXX(...) (assertx(__VA_ARGS__), HH_ASSUME(__VA_ARGS__))
-#define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : assertnever(sform("bounds i=%d n=%d", i, n)))
+#define HH_CHECK_BOUNDS(i, n) ((i >= 0 && i < n) ? (void(0)) : hh::details::assert_bounds_aux(i, n, HH_FL))
 #else
 #define ASSERTX(...) ((false ? void(__VA_ARGS__) : void(0)), HH_ASSUME(__VA_ARGS__))
 #define ASSERTXX(...) (void(0))
@@ -681,13 +680,23 @@ namespace details {
 
 [[nodiscard]] string forward_slash(const string& s);
 
-[[noreturn]] void assertx_aux2(const char* s);
+[[noreturn]] void assertx_aux2(const char* s) noexcept;
 
-[[noreturn]] inline void assertx_aux2(const std::string& s) { assertx_aux2(s.c_str()); }
+[[noreturn]] inline void assertx_aux2(const std::string& s) noexcept { assertx_aux2(s.c_str()); }
 
 bool assertw_aux2(const char* s);
 
 [[nodiscard]] inline string add_fl(string s, const char* file_line) { return s + file_line; }
+
+// The message string is formed inside this noexcept function so that the caller has no exception edge.
+template <typename T> [[noreturn]] void assertnever_aux(T&& s, const char* file_line) noexcept {
+  assertx_aux2(add_fl(std::forward<T>(s), file_line));
+}
+
+// Likewise, so that bounds-checked accessors can themselves be declared noexcept.
+[[noreturn]] inline void assert_bounds_aux(int i, int n, const char* file_line) noexcept {
+  assertx_aux2(add_fl(sform("bounds i=%d n=%d", i, n), file_line));
+}
 
 template <typename T> constexpr T assertx_aux(T&& val, const char* s) {
   if (!val) assertx_aux2(s);

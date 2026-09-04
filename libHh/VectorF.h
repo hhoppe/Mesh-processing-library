@@ -22,7 +22,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   explicit VectorF(float v) { fill(v); }
   VectorF(const VectorF<n>&) = default;
   [[nodiscard]] constexpr int num() const { return n; }
-  [[nodiscard]] constexpr size_t size() const { return n; }
+  [[nodiscard]] constexpr size_t size() const noexcept { return n; }
   [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, n), self.data()[i]; }
   [[nodiscard]] static bool ok(int i) { return i >= 0 && i < n; }
   void load_unaligned(const float* pSrc) {

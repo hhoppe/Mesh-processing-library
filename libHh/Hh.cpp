@@ -333,7 +333,7 @@ void hh_at_clean_up(void (*function)()) { CleanUp::register_function(function); 
 
 void hh_clean_up() { CleanUp::flush(); }
 
-void details::assertx_aux2(const char* s) {
+void details::assertx_aux2(const char* s) noexcept {
   showf("Fatal assertion error: %s\n", details::forward_slash(s).c_str());
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
   show_possible_win32_error();

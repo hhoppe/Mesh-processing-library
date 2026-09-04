@@ -181,8 +181,7 @@ void init_output() {
 void compute_tp(int i, int& n, Frame& frame) {
   PArray<Point, 40> pa;
   SpatialSearch<int> ss(SPp.get(), co[i]);
-  for (;;) {
-    const auto [pi, d2] = ss.next();
+  for (const auto& [pi, d2] : ss) {
     if ((pa.num() >= minkintp && d2 > square(samplingd)) || pa.num() >= maxkintp) break;
     pa.push(co[pi]);
     if (pi != i && !gpcpseudo->contains(i, pi)) gpcpseudo->enter_undirected(i, pi);

@@ -29,20 +29,28 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
   explicit Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
     _pq.enter(vs, 0.f);
   }
-  [[nodiscard]] bool done() { return _pq.empty(); }
-  T next(float& dis) {
+  struct Result {
+    T vertex;
+    float dist;  // Graph distance from vs.
+  };
+  [[nodiscard]] bool done() const { return _pq.empty(); }
+  [[nodiscard]] Result next() {
     assertx(!_pq.empty());
-    float dmin = _pq.min_priority();
-    T vmin = _pq.remove_min();
+    const float dmin = _pq.min_priority();
+    const T vmin = _pq.remove_min();
     _set.enter(vmin);
     for (const T& v : _g.edges(vmin)) {
       if (_set.contains(v)) continue;
-      float pnd = dmin + _fdist(vmin, v);  // possibly smaller distance
+      const float pnd = dmin + _fdist(vmin, v);  // Possibly smaller distance.
       _pq.enter_update_if_smaller(v, pnd);
     }
-    dis = dmin;
-    return vmin;
+    return {vmin, dmin};
   }
+
+  // Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".
+  using Iterator = CursorIterator<Dijkstra, Result>;
+  [[nodiscard]] Iterator begin() { return Iterator(*this); }
+  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
 
  private:
   const Graph<T>& _g;
@@ -153,9 +161,7 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
     if (i) gnew.enter_undirected(i, closest[i]);
     inset[i] = true;
     SpatialSearch<int> ss(&sp, pa[i]);
-    for (;;) {
-      if (ss.done()) break;
-      const auto [j, d2] = ss.next();
+    for (const auto& [j, d2] : ss) {
       if (d2 > square(thresh)) break;
       if (inset[j]) continue;
       if (pq.enter_update_if_smaller(j, d2)) closest[j] = i;
@@ -203,10 +209,9 @@ template <typename T, typename Func = float(const T&, const T&)>
   for_int(i, pa.num()) gnew.enter(i);
   for_int(i, pa.num()) {
     SpatialSearch<int> ss(&sp, pa[i]);
-    for_int(nn, kcl + 1) {
-      const int j = ss.next().id;
-      if (j == i) continue;
-      gnew.enter(i, j);
+    // One extra result, because the first one is the point pa[i] itself.
+    for (const auto& [j, unused_d2] : ss | views::take(kcl + 1)) {
+      if (j != i) gnew.enter(i, j);
     }
   }
   return gnew;
@@ -223,9 +228,19 @@ template <typename T> class GraphComponent : noncopyable {
     _vcur = r.begin();
     _vend = r.end();
   }
-  [[nodiscard]] explicit operator bool() const { return _vcur != _vend; }
-  [[nodiscard]] T operator()() const { return *_vcur; }
-  void next() {
+  [[nodiscard]] bool done() {
+    if (_visit_pending) _visit_pending = false, visit_component();
+    return _vcur == _vend;
+  }
+  T next() { return ASSERTXX(!_visit_pending), _visit_pending = true, *_vcur; }
+  // Single-pass iteration: "for (const T& v : graph_component) ...".
+  using Iterator = CursorIterator<GraphComponent, T>;
+  [[nodiscard]] Iterator begin() { return Iterator(*this); }
+  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+
+ private:
+  // Mark the whole component containing *_vcur as visited, then advance _vcur to the next unvisited vertex.
+  void visit_component() {
     Queue<T> queue;
     _set.enter(*_vcur);
     queue.enqueue(*_vcur);
@@ -238,17 +253,16 @@ template <typename T> class GraphComponent : noncopyable {
       if (!_set.contains(*_vcur)) break;
   }
 
- private:
   const Graph<T>& _g;
   typename Graph<T>::vertex_iterator _vcur;
   typename Graph<T>::vertex_iterator _vend;
+  bool _visit_pending{false};
   Set<T> _set;
 };
 
 template <typename T> [[nodiscard]] int graph_num_components(const Graph<T>& g) {
-  int n = 0;
-  for (GraphComponent<T> gc(&g); gc; gc.next()) n++;
-  return n;
+  GraphComponent<T> graph_component(&g);
+  return narrow_cast<int>(ranges::distance(graph_component));
 }
 
 }  // namespace hh

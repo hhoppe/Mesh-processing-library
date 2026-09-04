@@ -21,6 +21,13 @@ Graph: edges {
 4 at dist=12
 5 at dist=13
 7 at dist=15
+2 at dist=0
+3 at dist=1
+6 at dist=4
+1 at dist=9
+4 at dist=12
+5 at dist=13
+7 at dist=15
 graph_edge_stats(g, fdist()) = (12     )           1:6            av=3.3333333      sd=1.9694639
 graph_num_components(g) = 1
 symclosure:

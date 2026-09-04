@@ -188,6 +188,11 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
     const auto [id, d2] = BSpatialSearch::next();
     return {Conv<T>::d(id), d2};
   }
+
+  // Single-pass iteration in order of increasing distance: "for (const auto& [id, d2] : ss) ...".
+  using Iterator = CursorIterator<SpatialSearch, Result>;
+  [[nodiscard]] Iterator begin() { return Iterator(*this); }
+  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
 };
 
 //----------------------------------------------------------------------------

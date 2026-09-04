@@ -1091,8 +1091,7 @@ void do_load_map(Args& args) {
     const Point& domainp = domain_mesh.point(domain_v);
     int nfaces = 0;
     SpatialSearch<Vertex> ss(&spatial, domainp * k_fdomain_to_spatialbb);
-    for (;;) {
-      const auto [vv, d2] = ss.next();
+    for (const auto& [vv, d2] : ss) {
       if (d2 > 1e-12f) break;
       nfaces++;
       assertx(g_mesh.point(vv)[0] == BIGFLOAT);

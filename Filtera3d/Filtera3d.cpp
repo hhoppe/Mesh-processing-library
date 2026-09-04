@@ -692,11 +692,9 @@ void compute_outlier() {
   int num_outliers = 0;
   for_int(i, g_outlier.pa.num()) {
     SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
-    float d2;
-    dummy_init(d2);
-    for_int(j, outliern + 1)  // + 1 to include this point
-        d2 = ss.next().d2;
-    float d = my_sqrt(d2) * xform_inverse[0, 0];
+    // The first search result is this point itself, so advancing outliern times reaches its outliern'th neighbor.
+    const float d2 = ranges::next(ss.begin(), outliern)->d2;
+    const float d = my_sqrt(d2) * xform_inverse[0, 0];
     HH_SSTAT(Soutlierd, d);
     if (d >= outlierd) {
       ar_is_outlier[i] = true;

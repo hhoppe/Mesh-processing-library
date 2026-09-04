@@ -81,11 +81,7 @@ int main() {
   }
   {
     SpatialSearch<TriangleFace*> ss(&spatial, Point(.4f, .3f, .3f));
-    for (;;) {
-      if (ss.done()) break;
-      const auto [ptriangleface, d2] = ss.next();
-      SHOW(d2, ptriangleface->triangle);
-    }
+    for (const auto& [ptriangleface, d2] : ss) SHOW(d2, ptriangleface->triangle);
   }
   test2(5);
   test2(20);

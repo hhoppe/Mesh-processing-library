@@ -256,6 +256,9 @@ class AWMesh : public WMesh {
 
   Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
 
+  // Sentinel for an absent face or wedge; every negative entry in _fnei equals this value.
+  static constexpr int k_undefined = k_debug ? std::numeric_limits<int>::min() : -1;
+
   [[nodiscard]] int most_clw_face(int v, int f) const;  // negative if v is interior vertex
   [[nodiscard]] int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
   [[nodiscard]] bool is_boundary(int v, int f) const;
@@ -272,54 +275,102 @@ class AWMesh : public WMesh {
   Array<Pixel> _ogl_mat_byte_rgba;  // size is _materials.num()
   void ogl_process_materials();
 
-  struct VF_range : PArray<int, 10> {
-    VF_range(const AWMesh& mesh, int v, int f) {
-      int ff = f, lastf, stopf;
-      do {
-        lastf = ff;
-        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // go clw.
-      } while (ff >= 0 && ff != f);
-      if (ff < 0) {
-        stopf = ff;
-        ff = lastf;
-      } else {
-        stopf = f;
-        // ff = f;
-      }
-      for (;;) {
-        push(ff);
-        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 1)];  // go ccw.
-        if (ff == stopf) break;
-      }
-    }
+  struct VF_sentinel {
+    int _stopf{k_undefined};  // The face closing the ccw cycle, or k_undefined if v lies on a boundary.
   };
 
-  struct VV_range : PArray<std::pair<int, int>, 10> {
-    VV_range(const AWMesh& mesh, int v, int f) {
+  struct VF_iterator {
+    using type = VF_iterator;
+    using iterator_concept = std::forward_iterator_tag;
+    using value_type = int;
+    using difference_type = std::ptrdiff_t;
+    VF_iterator(const AWMesh& mesh, int v, int ff) : _mesh(&mesh), _v(v), _ff(ff), _beg(true) {}
+    VF_iterator() = default;
+    [[nodiscard]] bool operator==(const type& rhs) const { return _ff == rhs._ff && _beg == rhs._beg; }
+    // The faces form a cycle, so only the initial position distinguishes begin() from the end of an interior cycle.
+    [[nodiscard]] bool operator==(VF_sentinel s) const { return !_beg && _ff == s._stopf; }
+    [[nodiscard]] int operator*() const noexcept { return ASSERTXX(_ff >= 0), _ff; }
+    type& operator++() {
+      _beg = false;
+      _ff = _mesh->_fnei[_ff].faces[mod3(_mesh->get_jvf(_v, _ff) + 1)];  // Go ccw.
+      return *this;
+    }
+    type operator++(int) { return postfix_increment(*this); }
+    const AWMesh* _mesh{};
+    int _v{};
+    int _ff{k_undefined};
+    bool _beg{};  // True only for begin(), to distinguish it from the end of the cycle.
+  };
+
+  struct VF_range : ranges::view_interface<VF_range> {
+    VF_range(const AWMesh& mesh, int v, int f) : _mesh(&mesh), _v(v) {
       int ff = f, lastf;
       do {
         lastf = ff;
-        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // go clw.
-      } while (ff >= 0 && ff != f);
-      if (ff < 0) ff = lastf;
-      int j = mesh.get_jvf(v, ff);
-      int vv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 1)]].vertex;
-      int stopv = vv;
-      int nextv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 2)]].vertex;
-      while (vv >= 0) {
-        push(std::pair{vv, ff});
-        vv = nextv;
-        lastf = ff;
-        ff = mesh._fnei[ff].faces[mod3(j + 1)];
-        if (ff < 0) {
-          nextv = -1;
-          ff = lastf;
-        } else {
-          nextv = mesh._wedges[mesh._faces[ff].wedges[mod3((j = mesh.get_jvf(v, ff)) + 2)]].vertex;
-          if (nextv == stopv) nextv = -1;
-        }
-      }
+        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // Go clw.
+      } while (ff != k_undefined && ff != f);
+      const bool is_boundary = ff == k_undefined;
+      _startf = is_boundary ? lastf : f;       // Start at the most clw face if v lies on a boundary.
+      _stopf = is_boundary ? k_undefined : f;  // On a boundary, the ccw walk instead falls off the edge.
     }
+    [[nodiscard]] VF_iterator begin() const noexcept { return VF_iterator(*_mesh, _v, _startf); }
+    [[nodiscard]] VF_sentinel end() const noexcept { return VF_sentinel{_stopf}; }
+    // Note that size() is not trivially computable.
+    const AWMesh* _mesh;
+    int _v, _startf, _stopf;
+  };
+
+  struct VV_iterator {
+    using type = VV_iterator;
+    using iterator_concept = std::forward_iterator_tag;
+    using value_type = std::pair<int, int>;
+    using difference_type = std::ptrdiff_t;
+    VV_iterator(const AWMesh& mesh, int v, int ff) : _mesh(&mesh), _v(v), _ff(ff) {
+      _j = mesh.get_jvf(v, ff);
+      _vv = mesh._wedges[mesh._faces[ff].wedges[mod3(_j + 1)]].vertex;
+      _stopv = _vv;
+      _nextv = mesh._wedges[mesh._faces[ff].wedges[mod3(_j + 2)]].vertex;
+    }
+    VV_iterator() = default;
+    [[nodiscard]] bool operator==(const type& rhs) const { return _vv == rhs._vv && _ff == rhs._ff; }
+    // The lookahead _nextv is set to k_undefined once the last neighbor has been reached.
+    [[nodiscard]] bool operator==(std::default_sentinel_t) const { return _vv == k_undefined; }
+    [[nodiscard]] std::pair<int, int> operator*() const noexcept {
+      return ASSERTXX(_vv != k_undefined), std::pair{_vv, _ff};
+    }
+    type& operator++() {
+      _vv = _nextv;
+      const int lastf = _ff;
+      _ff = _mesh->_fnei[_ff].faces[mod3(_j + 1)];  // Go ccw.
+      if (_ff == k_undefined) {
+        _nextv = k_undefined;
+        _ff = lastf;
+      } else {
+        _j = _mesh->get_jvf(_v, _ff);
+        _nextv = _mesh->_wedges[_mesh->_faces[_ff].wedges[mod3(_j + 2)]].vertex;
+        if (_nextv == _stopv) _nextv = k_undefined;  // The cycle has closed.
+      }
+      return *this;
+    }
+    type operator++(int) { return postfix_increment(*this); }
+    const AWMesh* _mesh{};
+    int _v{}, _ff{k_undefined}, _j{}, _vv{k_undefined}, _nextv{k_undefined}, _stopv{k_undefined};
+  };
+
+  struct VV_range : ranges::view_interface<VV_range> {
+    VV_range(const AWMesh& mesh, int v, int f) : _mesh(&mesh), _v(v) {
+      int ff = f, lastf;
+      do {
+        lastf = ff;
+        ff = mesh._fnei[ff].faces[mod3(mesh.get_jvf(v, ff) + 2)];  // Go clw.
+      } while (ff != k_undefined && ff != f);
+      _startf = ff == k_undefined ? lastf : f;  // Start at the most clw face if v lies on a boundary.
+    }
+    [[nodiscard]] VV_iterator begin() const noexcept { return VV_iterator(*_mesh, _v, _startf); }
+    [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+    // Note that size() is not trivially computable.
+    const AWMesh* _mesh;
+    int _v, _startf;
   };
 
  protected:

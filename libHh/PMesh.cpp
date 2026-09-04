@@ -11,7 +11,7 @@
 
 namespace hh {
 
-constexpr int k_undefined = k_debug ? std::numeric_limits<int>::min() : -1;
+constexpr int k_undefined = AWMesh::k_undefined;
 
 // *** Performance
 

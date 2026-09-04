@@ -52,10 +52,13 @@ void do_ints() {
     // Dijkstra di(&g, vs, func_fdist);  // works too
     for (;;) {
       if (di.done()) break;
-      float dis;
-      int v = di.next(dis);
+      const auto& [v, dis] = di.next();
       showf("%d at dist=%g\n", v, dis);
     }
+  }
+  {
+    Dijkstra di(&g, vs, fdist());
+    for (const auto& [v, dis] : di) showf("%d at dist=%g\n", v, dis);
   }
   SHOW(graph_edge_stats(g, fdist()));
   SHOW(graph_num_components(g));

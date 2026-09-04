@@ -40,9 +40,13 @@ class Map {
   using bciter = typename base::const_iterator;
 
  public:
-  struct keys_range;
-  struct values_range;
-  struct cvalues_range;
+  // Views of the keys and values; each holds a reference to the map, like the earlier hand-written ranges.
+  using keys_range = decltype(views::keys(std::declval<const base&>()));
+  using keys_iterator = ranges::iterator_t<keys_range>;
+  using values_range = decltype(views::values(std::declval<base&>()));
+  using values_iterator = ranges::iterator_t<values_range>;
+  using cvalues_range = decltype(views::values(std::declval<const base&>()));
+  using cvalues_iterator = ranges::iterator_t<cvalues_range>;
   using Hashf = typename base::hasher;
   using Equalf = typename base::key_equal;
   Map() = default;
@@ -119,69 +123,13 @@ class Map {
   [[nodiscard]] const Value& get_one_value() const { return ASSERTXX(!empty()), begin()->second; }
   [[nodiscard]] const Key& get_random_key(Random& random) const { return crand(random)->first; }
   [[nodiscard]] const Value& get_random_value(Random& random) const { return crand(random)->second; }
-  [[nodiscard]] keys_range keys() const { return keys_range(*this); }  // Keys are always constant.
-  [[nodiscard]] values_range values() { return values_range(*this); }
-  [[nodiscard]] cvalues_range cvalues() { return cvalues_range(*this); }
-  [[nodiscard]] cvalues_range values() const { return cvalues_range(*this); }
+  [[nodiscard]] keys_range keys() const { return views::keys(_map); }  // Keys are always constant.
+  [[nodiscard]] values_range values() { return views::values(_map); }
+  [[nodiscard]] cvalues_range cvalues() const { return views::values(_map); }
+  [[nodiscard]] cvalues_range values() const { return views::values(_map); }
   // For "for (auto& [key, value] : map)" and HH_DECLARE_OSTREAM_RANGE(Map<Key, Value>):
   [[nodiscard]] bciter begin() const { return _map.begin(); }
   [[nodiscard]] bciter end() const { return _map.end(); }
-
- public:
-  struct keys_iterator {
-    using type = keys_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Key;
-    using difference_type = std::ptrdiff_t;
-    bool operator==(const type& rhs) const { return _it == rhs._it; }
-    const Key& operator*() const { return _it->first; }
-    type& operator++() { return ++_it, *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    bciter _it{};
-  };
-  struct keys_range : ranges::view_interface<keys_range> {
-    explicit keys_range(const type& map) : _pmap(&map) {}
-    [[nodiscard]] keys_iterator begin() const { return keys_iterator{_pmap->begin()}; }
-    [[nodiscard]] keys_iterator end() const { return keys_iterator{_pmap->end()}; }
-    [[nodiscard]] size_t size() const { return _pmap->size(); }
-    const type* _pmap;
-  };
-  struct cvalues_iterator {
-    using type = cvalues_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Value;
-    using difference_type = std::ptrdiff_t;
-    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it; }
-    [[nodiscard]] const Value& operator*() const { return _it->second; }
-    type& operator++() { return ++_it, *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    bciter _it{};
-  };
-  struct cvalues_range : ranges::view_interface<cvalues_range> {
-    explicit cvalues_range(const type& map) : _pmap(&map) {}
-    [[nodiscard]] cvalues_iterator begin() const { return cvalues_iterator{_pmap->begin()}; }
-    [[nodiscard]] cvalues_iterator end() const { return cvalues_iterator{_pmap->end()}; }
-    [[nodiscard]] size_t size() const { return _pmap->size(); }
-    const type* _pmap;
-  };
-  struct values_iterator {
-    using type = values_iterator;
-    using iterator_concept = std::forward_iterator_tag;
-    using value_type = Value;
-    using difference_type = std::ptrdiff_t;
-    [[nodiscard]] bool operator==(const type& rhs) const { return _it == rhs._it; }
-    [[nodiscard]] Value& operator*() const { return _it->second; }
-    type& operator++() { return ++_it, *this; }
-    type operator++(int) { return postfix_increment(*this); }
-    biter _it{};
-  };
-  struct values_range : ranges::view_interface<values_range> {
-    explicit values_range(type& map) : _pmap(&map) {}
-    [[nodiscard]] values_iterator begin() const { return values_iterator{_pmap->_map.begin()}; }
-    [[nodiscard]] values_iterator end() const { return values_iterator{_pmap->_map.end()}; }
-    [[nodiscard]] size_t size() const { return _pmap->size(); }
-    type* _pmap;
-  };
 
  private:
   // See my experiments in ~/git/hh_src/test/misc/test_hash_buckets.cpp.

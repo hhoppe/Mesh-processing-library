@@ -71,7 +71,7 @@ void reload_textures();
 void flush();
 void beep();
 int id();
-void* escape(void* code, void* data);
+void* escape(int code, void* data);
 
 }  // namespace HB
 

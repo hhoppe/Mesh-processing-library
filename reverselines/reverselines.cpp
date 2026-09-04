@@ -113,7 +113,7 @@ int main(int argc, const char** argv) {
   }
   int len = int(llen);
   int i = len;
-  void* p = assertx(MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len)));
+  void* const p = assertx(MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len)));
   CArrayView<char> buf(static_cast<const char*>(p), len);
   int nwarnings = 0;
   while (i) {

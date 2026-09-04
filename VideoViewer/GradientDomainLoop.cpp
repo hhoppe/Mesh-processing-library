@@ -106,7 +106,7 @@ class BoundedIntervals {
   bool operator*() const { return _interv < _nintervs; }
   void operator++() { ++_interv; }
   [[nodiscard]] int l() const { return _interv * _size; }
-  [[nodiscard]] int u() const { return max((_interv + 1) * _size, _num); }
+  [[nodiscard]] int u() const { return min((_interv + 1) * _size, _num); }
 
  private:
   int _num;

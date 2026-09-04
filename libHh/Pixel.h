@@ -10,7 +10,7 @@ namespace hh {
 
 // A pixel using unsigned char for each of four channels: red, green, blue, alpha.
 // It is most often used in conjunction with class Image.
-struct Pixel : Vec4<uint8_t> {
+struct alignas(4) Pixel : Vec4<uint8_t> {
   Pixel() = default;
   constexpr Pixel(uint8_t r, uint8_t g, uint8_t b, uint8_t a) : Vec4<uint8_t>(r, g, b, a) {}
   constexpr Pixel(uint8_t r, uint8_t g, uint8_t b) : Pixel(r, g, b, 255) {}

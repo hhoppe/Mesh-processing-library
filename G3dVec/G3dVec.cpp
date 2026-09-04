@@ -1230,7 +1230,7 @@ void HB::beep() { hw.beep(); }
 
 int HB::id() { return 1000; }
 
-void* HB::escape(void* code, void* data) {
+void* HB::escape(int code, void* data) {
   dummy_use(code, data);
   return nullptr;
 }

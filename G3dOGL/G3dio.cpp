@@ -137,11 +137,11 @@ bool try_g3d_command(const string& pstr) {
     return true;
   } else if (remove_at_start(str, "lod ")) {
     float f = Args::parse_float(str);
-    HB::escape(reinterpret_cast<void*>(1), &f);
+    HB::escape(1, &f);
     return true;
   } else if (remove_at_start(str, "screen_thresh ")) {
     float f = Args::parse_float(str);
-    HB::escape(reinterpret_cast<void*>(2), &f);
+    HB::escape(2, &f);
     return true;
   }
   return false;

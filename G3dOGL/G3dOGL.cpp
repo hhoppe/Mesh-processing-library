@@ -3079,10 +3079,9 @@ void HB::beep() { hw.beep(); }
 
 int HB::id() { return 2000; }
 
-void* HB::escape(void* code, void* data) {
-  int icode = narrow_cast<int>(reinterpret_cast<intptr_t>(code));
+void* HB::escape(int code, void* data) {
   float fdata = *static_cast<float*>(data);
-  switch (icode) {
+  switch (code) {
     case 1: {
       if (fdata < 0.f) {
         if (g3d::output) std::cout << "lod -1\n" << std::flush;

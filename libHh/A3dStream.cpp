@@ -172,7 +172,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     assertx(read_binary_raw(_is, ArView(buf)));
     assertx(buf.magic[1] == 0);
     from_std(&buf.utype);
-    ctype = narrow_cast<char>(buf.utype);
+    ctype = char(narrow_cast<uint8_t>(buf.utype));
     for_int(i, 3) {
       from_std(&buf.f[i]);
       f[i] = buf.f[i];

@@ -17,6 +17,7 @@
 #if defined(_MSC_VER)
 // Disable some nitpicky level4 warnings (for -W4).
 #pragma warning(disable : 4127)  // Conditional expression is constant, e.g. "if (0)", "if (1)".
+#pragma warning(disable : 4324)  // Structure was padded due to alignment specifier.
 #pragma warning(disable : 4459)  // Flawed detection of local name hiding global name in different module.
 #pragma warning(disable : 4464)  // Allow #include paths containing ".." relative folders (e.g. "../libHh/Video.h").
 #pragma warning(disable : 4547)  // Operator before comma: false positive with __cpp_multidimensional_subscript.
@@ -125,7 +126,7 @@
 #endif
 
 #if defined(__clang__)
-#define HH_LIFETIMEBOUND clang::lifetimebound  // For clang-tidy.
+#define HH_LIFETIMEBOUND clang::lifetimebound  // Primarily for clang-tidy.
 #else
 #define HH_LIFETIMEBOUND
 #endif

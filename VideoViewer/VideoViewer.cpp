@@ -4424,43 +4424,43 @@ int main(int argc, const char** argv) {
   bool checker = true;
   ParseArgs args(aargs);
   HH_ARGSC("All non-options with recognized suffixes (images or videos) are loaded.");
-  args.p("-", do_stdin, ": load image or video from stdin");
+  args.p("-", do_stdin, "file : load image or video from stdin");
   HH_ARGSD(image, "file : load image");
-  args.p("*.jpg", do_image, ": load image (<unlisted>)");
-  args.p("*.jpeg", do_image, ": load image (<unlisted>)");
-  args.p("*.jfif", do_image, ": load image (<unlisted>)");
-  args.p("*.png", do_image, ": load image (<unlisted>)");
-  args.p("*.bmp", do_image, ": load image (<unlisted>)");
-  args.p("*.heic", do_image, ": load image (<unlisted>)");
-  args.p("*.arw", do_image, ": load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
-  args.p("*.exr", do_image, ": load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
-  args.p("*.tif", do_image, ": load image (<unlisted>)");
-  args.p("*.tiff", do_image, ": load image (<unlisted>)");
-  args.p("*.webp", do_image, ": load image (<unlisted>)");
-  args.p("*.avif", do_image, ": load image (<unlisted>)");
-  args.p("*.JPG", do_image, ": load image (<unlisted>)");
-  args.p("*.JPEG", do_image, ": load image (<unlisted>)");
-  args.p("*.PNG", do_image, ": load image (<unlisted>)");
-  args.p("*.BMP", do_image, ": load image (<unlisted>)");
-  args.p("*.HEIC", do_image, ": load image (<unlisted>)");
-  args.p("*.ARW", do_image, ": load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
-  args.p("*.EXR", do_image, ": load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
-  args.p("*.TIF", do_image, ": load image (<unlisted>)");
-  args.p("*.TIFF", do_image, ": load image (<unlisted>)");
+  args.p("*.jpg", do_image, "file : load image (<unlisted>)");
+  args.p("*.jpeg", do_image, "file : load image (<unlisted>)");
+  args.p("*.jfif", do_image, "file : load image (<unlisted>)");
+  args.p("*.png", do_image, "file : load image (<unlisted>)");
+  args.p("*.bmp", do_image, "file : load image (<unlisted>)");
+  args.p("*.heic", do_image, "file : load image (<unlisted>)");
+  args.p("*.arw", do_image, "file : load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
+  args.p("*.exr", do_image, "file : load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
+  args.p("*.tif", do_image, "file : load image (<unlisted>)");
+  args.p("*.tiff", do_image, "file : load image (<unlisted>)");
+  args.p("*.webp", do_image, "file : load image (<unlisted>)");
+  args.p("*.avif", do_image, "file : load image (<unlisted>)");
+  args.p("*.JPG", do_image, "file : load image (<unlisted>)");
+  args.p("*.JPEG", do_image, "file : load image (<unlisted>)");
+  args.p("*.PNG", do_image, "file : load image (<unlisted>)");
+  args.p("*.BMP", do_image, "file : load image (<unlisted>)");
+  args.p("*.HEIC", do_image, "file : load image (<unlisted>)");
+  args.p("*.ARW", do_image, "file : load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
+  args.p("*.EXR", do_image, "file : load image (<unlisted>)");  // Requires IMAGE_IMPLEMENTATION=ffmpeg.
+  args.p("*.TIF", do_image, "file : load image (<unlisted>)");
+  args.p("*.TIFF", do_image, "file : load image (<unlisted>)");
   HH_ARGSD(video, "file : load video");
-  args.p("*.mp4", do_video, ": load video (<unlisted>)");
-  args.p("*.wmv", do_video, ": load video (<unlisted>)");
-  args.p("*.avi", do_video, ": load video (<unlisted>)");
-  args.p("*.mov", do_video, ": load video (<unlisted>)");
-  args.p("*.gif", do_video, ": load video (<unlisted>)");
-  args.p("*.webm", do_video, ": load video (<unlisted>)");
-  args.p("*.MP4", do_video, ": load video (<unlisted>)");
-  args.p("*.WMV", do_video, ": load video (<unlisted>)");
-  args.p("*.AVI", do_video, ": load video (<unlisted>)");
-  args.p("*.MOV", do_video, ": load video (<unlisted>)");
-  args.p("*.GIF", do_video, ": load video (<unlisted>)");
-  args.p("*.WEBM", do_video, ": load video (<unlisted>)");
-  HH_ARGSD(stripe, "nf nx ny rate: create procedual video (e.g. 150 640 480 60)");
+  args.p("*.mp4", do_video, "file : load video (<unlisted>)");
+  args.p("*.wmv", do_video, "file : load video (<unlisted>)");
+  args.p("*.avi", do_video, "file : load video (<unlisted>)");
+  args.p("*.mov", do_video, "file : load video (<unlisted>)");
+  args.p("*.gif", do_video, "file : load video (<unlisted>)");
+  args.p("*.webm", do_video, "file : load video (<unlisted>)");
+  args.p("*.MP4", do_video, "file : load video (<unlisted>)");
+  args.p("*.WMV", do_video, "file : load video (<unlisted>)");
+  args.p("*.AVI", do_video, "file : load video (<unlisted>)");
+  args.p("*.MOV", do_video, "file : load video (<unlisted>)");
+  args.p("*.GIF", do_video, "file : load video (<unlisted>)");
+  args.p("*.WEBM", do_video, "file : load video (<unlisted>)");
+  HH_ARGSD(stripe, "nf nx ny rate : create procedual video (e.g. 150 640 480 60)");
   HH_ARGSD(zonal, "nx ny : create zonal-plate procedural image (e.g. 1024 1024)");
   HH_ARGSD(key, "keystring : simulate key presses (e.g. -key 'a2<enter>kk')");
   HH_ARGSP(speed, "fac : set speedup factor");
@@ -4470,7 +4470,7 @@ int main(int argc, const char** argv) {
   args.p("-verbose", g_verbose, "value : debug verbosity (0=none, 1=some, 2=more)");
   HH_ARGSC("", ":");
   HH_ARGSD(vlp, "file.vlp : load video looping parameters");
-  args.p("*.vlp", do_vlp, ": load video looping parameters");
+  args.p("*.vlp", do_vlp, "file : load video looping parameters");
   HH_ARGSD(batch_create_loop, "input_video.mp4 output_loop.mp4 : make loop without UI window");
   try {
     if (!args.parse() || !hw_success) return 1;

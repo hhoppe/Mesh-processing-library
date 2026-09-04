@@ -165,8 +165,8 @@ struct fptinfo {
   float _nordist2;  // Always 0.f if ptnor undefined.
  public:
 #else
-  Vector& ptnor() const { assertnever(""); }
-  float& nordist2() const { assertnever(""); }
+  [[nodiscard]] Vector& ptnor() const { assertnever(""); }
+  [[nodiscard]] float& nordist2() const { assertnever(""); }
 #endif
 #if defined(ENABLE_FPTCOLOR)
   [[nodiscard]] A3dColor& ptcol() { return _ptcol; }
@@ -179,12 +179,12 @@ struct fptinfo {
   float _coldist2;  // Always 0.f if ptcol undefined.
  public:
 #else
-  A3dColor& ptcol() const {
+  [[nodiscard]] A3dColor& ptcol() const {
     assertnever_ret("");
     static A3dColor t;
     return t;
   }
-  float& coldist2() const {
+  [[nodiscard]] float& coldist2() const {
     assertnever_ret("");
     static float t;
     return t;

@@ -1201,7 +1201,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   else if (k_debug)
     pwwl = reinterpret_cast<int*>(intptr_t{k_undefined});
   if (thru_l) {  // First go clw.
-    ASSERTX(ffl >= 0 && wlccw >= 0);
+    ASSERTX(ffl >= 0 && wlccw >= 0 && *pwwl == wlclw);
     for (;;) {
       *pwwl = wlccw;
       if (ffl == ffr) {

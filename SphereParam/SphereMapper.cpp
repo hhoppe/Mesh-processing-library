@@ -92,7 +92,7 @@ class SphereMapper::Implementation {
     const auto initialize_param = [](auto& param, const string& name, auto default_value) {
       param = getenv_type("spheremapper_" + name, default_value);
     };
-    assertx(_options.effort >= 0 && options.effort <= 5);
+    assertx(_options.effort >= 0 && _options.effort <= 5);
     const int effort = _options.effort;
     initialize_param(_optim_line_search_iter, "optim_line_search_iter", V(6, 8, 10, 40, 100, 200)[effort]);
     initialize_param(_optim_vsplit_vt_iter, "optim_vsplit_vt_iter", V(1, 1, 2, 3, 5, 5)[effort]);
@@ -153,7 +153,7 @@ class SphereMapper::Implementation {
     _conformal_weight = old_conformal_weight;
   }
 
-  Frame frame_aligning_sphmap_to_surface_normals() const {
+  [[nodiscard]] Frame frame_aligning_sphmap_to_surface_normals() const {
     // Compute the rotation that best aligns each faces's centroid sphere point to its surface face normal.
     // Uses Horn's closed form solution with unit quaternions.
     SGrid<float, 3, 3> cov{};  // Weighted covariance matrix.
@@ -293,7 +293,7 @@ class SphereMapper::Implementation {
     return center;
   }
 
-  bool face_flipped(int f) const {
+  [[nodiscard]] bool face_flipped(int f) const {
     const Vec3<int> vertices = _pmi.face_vertices(f);
     const Vec3<Point> triangle = transformed(vertices, [&](int v) { return _sphmap[v]; });
     if (0) return -signed_volume(triangle[0], triangle[1], triangle[2], Point(0.f, 0.f, 0.f)) < -1e-5f;  // Slower.
@@ -301,13 +301,13 @@ class SphereMapper::Implementation {
     return dot(center, cross(triangle[1] - triangle[0], triangle[2] - triangle[0])) < -1e-5f;
   }
 
-  bool any_adjacent_face_flipped(int v, int someface) const {
+  [[nodiscard]] bool any_adjacent_face_flipped(int v, int someface) const {
     for (const int f : _pmi.ccw_faces(v, someface))
       if (face_flipped(f)) return true;
     return false;
   }
 
-  auto gather_1ring_external_edges(int v, int someface) const {
+  [[nodiscard]] auto gather_1ring_external_edges(int v, int someface) const {
     PArray<Vector, 12> edge_normals;
     const auto normalized_cross = [](const Vector& vec1, const Vector& vec2) {
       return convert<float>(fast_normalized(cross(convert<double>(vec1), convert<double>(vec2))));
@@ -336,7 +336,7 @@ class SphereMapper::Implementation {
     bool is_hole;
   };
 
-  auto get_ar_faces(int v, int someface) const {
+  [[nodiscard]] auto get_ar_faces(int v, int someface) const {
     PArray<OptimizerFace, 12> ar_faces;
     for (const int ff : _pmi.ccw_faces(v, someface)) {
       const Vec3<int> vertices = _pmi.face_vertices(ff);
@@ -379,7 +379,7 @@ class SphereMapper::Implementation {
     }
   }
 
-  Point optimize_vertex_rand(int v, int someface, float rand1, float rand2) const {
+  [[nodiscard]] Point optimize_vertex_rand(int v, int someface, float rand1, float rand2) const {
     Vector x0 = _sphmap[v];
     if (v < _num_fixed_vertices) return x0;  // Hold the base vertices constant.
     auto ar_faces = get_ar_faces(v, someface);
@@ -429,7 +429,7 @@ class SphereMapper::Implementation {
     return x0;
   }
 
-  Point optimize_vertex(int v, int someface) const {
+  [[nodiscard]] Point optimize_vertex(int v, int someface) const {
     const float rand1 = Random::G.unif(), rand2 = Random::G.unif();
     return optimize_vertex_rand(v, someface, rand1, rand2);
   }
@@ -586,8 +586,9 @@ class SphereMapper::Implementation {
   }
 
   // Measure the squared stretch from the spherical domain "d" to the surface mesh "s".
-  Precision naive_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1, const Vec3<Precision>& pd2,
-                          const Vec3<Precision>& ps0, const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
+  [[nodiscard]] Precision naive_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1,
+                                        const Vec3<Precision>& pd2, const Vec3<Precision>& ps0,
+                                        const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
     // Determine a local frame on the spherical domain triangle.
     const Vec3<Precision> d_e01 = pd1 - pd0, d_e02 = pd2 - pd0;
     // Compute triangle coordinates in a canonical isometric frame: (0, 0), (d_x1, 0), (d_x2, d_y2).
@@ -624,9 +625,9 @@ class SphereMapper::Implementation {
   }
 
   // Measure the squared stretch from the surface mesh "s" to the spherical domain "d".
-  Precision naive_inverse_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1, const Vec3<Precision>& pd2,
-                                  const Vec3<Precision>& ps0, const Vec3<Precision>& ps1,
-                                  const Vec3<Precision>& ps2) const {
+  [[nodiscard]] Precision naive_inverse_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1,
+                                                const Vec3<Precision>& pd2, const Vec3<Precision>& ps0,
+                                                const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
     // Determine a local frame on the surface mesh triangle.
     const Vec3<Precision> s_e01 = ps1 - ps0, s_e02 = ps2 - ps0;
     const Precision s_x1 = mag(s_e01), recip_s_x1 = 1.f / (s_x1 + 1e-20f);
@@ -647,8 +648,8 @@ class SphereMapper::Implementation {
   }
 
   // Measure the squared stretch from the spherical domain "d" to the surface mesh "s".
-  Precision accurate_stretch_for_spherical_triangle(const Vec3<Vec3<Precision>>& pd,
-                                                    const Vec3<Vec3<Precision>>& ps) const {
+  [[nodiscard]] Precision accurate_stretch_for_spherical_triangle(const Vec3<Vec3<Precision>>& pd,
+                                                                  const Vec3<Vec3<Precision>>& ps) const {
     if (0) return naive_stretch(pd[0], pd[1], pd[2], ps[0], ps[1], ps[2]);  // "-no_perp_split" -> accordion effect.
     // Split the triangle to avoid the "accordion" effect (sliver spherical triangles not being penalized
     // because the area of the corresponding subtended linear triangle does not go to zero as it rotates).
@@ -681,7 +682,7 @@ class SphereMapper::Implementation {
     return total_stretch;
   }
 
-  Precision stretch_for_face(int f) const {
+  [[nodiscard]] Precision stretch_for_face(int f) const {
     const Vec3<int> vertices = _pmi.face_vertices(f);
     const auto pd = transformed(vertices, [&](int v) { return convert<Precision>(_sphmap[v]); });
     const auto ps = transformed(_pmi.face_points(f), [&](const Point& p) { return convert<Precision>(p); });

@@ -13,8 +13,8 @@ namespace hh {
 struct Combvh {
   Homogeneous h;  // placed first because may need 16-alignment if Vector4
   Combination<Vertex> c;
-  bool is_combination() const;
-  Point evaluate(const GMesh& mesh) const;
+  [[nodiscard]] bool is_combination() const;
+  [[nodiscard]] Point evaluate(const GMesh& mesh) const;
   HH_POOL_ALLOCATION(Combvh);
 };
 

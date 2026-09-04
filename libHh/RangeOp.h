@@ -496,7 +496,7 @@ template <ranges::forward_range R1, ranges::forward_range R2> struct Concatenate
     using Sentinel2 = decltype(ranges::end(_range2));
     return ConcatenatedSentinel<Sentinel2>{ranges::end(_range2)};
   }
-  auto size() const requires ranges::sized_range<const R1> && ranges::sized_range<const R2> {
+  [[nodiscard]] auto size() const requires ranges::sized_range<const R1> && ranges::sized_range<const R2> {
     return ranges::size(_range1) + ranges::size(_range2);
   }
 };

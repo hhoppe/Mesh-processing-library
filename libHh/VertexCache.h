@@ -16,21 +16,21 @@ class VertexCache : noncopyable {
   static unique_ptr<VertexCache> make(EType type, int nverts1, int cs);  // vertex ids begin at 1
 
   virtual ~VertexCache() = default;
-  virtual EType type() const = 0;
+  [[nodiscard]] virtual EType type() const = 0;
   virtual void init(int nverts1, int cs) = 0;    // vertex ids begin at 1
   virtual void copy(const VertexCache& vc) = 0;  // must be init'ed !
   virtual bool access_hits(int vi) = 0;
-  virtual bool contains(int vi) const = 0;
-  virtual int location(int vi) const = 0;      // -1 .. cs - 1 (0 == recent) (may be slow)
-  virtual int location_alt(int vi) const = 0;  // 0 .. cs (0 == recent) (may be slow)
-  class Iter : noncopyable {                   // ordering of vertices undefined!
+  [[nodiscard]] virtual bool contains(int vi) const = 0;
+  [[nodiscard]] virtual int location(int vi) const = 0;      // -1 .. cs - 1 (0 == recent) (may be slow)
+  [[nodiscard]] virtual int location_alt(int vi) const = 0;  // 0 .. cs (0 == recent) (may be slow)
+  class Iter : noncopyable {                                 // ordering of vertices undefined!
    public:
     virtual ~Iter() = default;
     virtual int next() = 0;  // return 0 if no more vertices
    protected:
     Iter() = default;
   };
-  virtual unique_ptr<Iter> make_iterator() const = 0;
+  [[nodiscard]] virtual unique_ptr<Iter> make_iterator() const = 0;
   friend std::ostream& operator<<(std::ostream& os, const VertexCache& vc);
 };
 
@@ -39,7 +39,7 @@ class VertexCache : noncopyable {
 class FifoVertexCache : public VertexCache {
  public:
   explicit FifoVertexCache(int nverts1, int cs) { FifoVertexCache::init(nverts1, cs); }
-  EType type() const override { return EType::fifo; }
+  [[nodiscard]] EType type() const override { return EType::fifo; }
   void init(int nverts1, int cs) override {
     assertx(nverts1 > 0 && cs >= 1);
     if (_vinqueue.num() != nverts1 || _queuev.num() != cs) {
@@ -116,11 +116,11 @@ class FifoVertexCache : public VertexCache {
     }
     return false;
   }
-  bool contains(int vi) const override {
+  [[nodiscard]] bool contains(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
     return _vinqueue[vi] >= 0;
   }
-  int location(int vi) const override {
+  [[nodiscard]] int location(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
     int qi = _vinqueue[vi];
     if (qi < 0) return -1;
@@ -129,7 +129,7 @@ class FifoVertexCache : public VertexCache {
     if (loc < 0) loc += _queuev.num();
     return loc;
   }
-  int location_alt(int vi) const override {
+  [[nodiscard]] int location_alt(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
     int qi = _vinqueue[vi];
     if (qi < 0) return _queuev.num();
@@ -138,7 +138,7 @@ class FifoVertexCache : public VertexCache {
     if (loc < 0) loc += _queuev.num();
     return loc;
   }
-  unique_ptr<VertexCache::Iter> make_iterator() const override { return make_unique<Iter>(*this); }
+  [[nodiscard]] unique_ptr<VertexCache::Iter> make_iterator() const override { return make_unique<Iter>(*this); }
 
  private:
   class Iter : public VertexCache::Iter {
@@ -173,7 +173,7 @@ class LruVertexCache : public VertexCache {
       nodee->unlink();
     }
   }
-  EType type() const override { return EType::lru; }
+  [[nodiscard]] EType type() const override { return EType::lru; }
   void init(int nverts1, int cs) override {
     assertx(nverts1 > 0 && cs >= 1);
     if (_vinlist.num() != nverts1 || _cs != cs) {
@@ -232,11 +232,11 @@ class LruVertexCache : public VertexCache {
     _vinlist[vi] = node;
     return false;
   }
-  bool contains(int vi) const override {
+  [[nodiscard]] bool contains(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     return !!_vinlist[vi];
   }
-  int location(int vi) const override {
+  [[nodiscard]] int location(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     if (!_vinlist[vi]) return -1;
     const EListNode* vinodee = &_vinlist[vi]->elist;
@@ -246,7 +246,7 @@ class LruVertexCache : public VertexCache {
     ASSERTX(num < _cs);
     return num;
   }
-  int location_alt(int vi) const override {
+  [[nodiscard]] int location_alt(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     if (!_vinlist[vi]) return _cs;
     const EListNode* vinodee = &_vinlist[vi]->elist;
@@ -256,7 +256,7 @@ class LruVertexCache : public VertexCache {
     ASSERTX(num < _cs);
     return num;
   }
-  unique_ptr<VertexCache::Iter> make_iterator() const override { return make_unique<Iter>(*this); }
+  [[nodiscard]] unique_ptr<VertexCache::Iter> make_iterator() const override { return make_unique<Iter>(*this); }
 
  private:
   class Iter : public VertexCache::Iter {

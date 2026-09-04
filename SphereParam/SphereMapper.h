@@ -49,14 +49,14 @@ class SphereMapper {
   // perform a coarse-to-fine optimization to determine the spherical parameterizations of all vertices of the
   // fully refined mesh in the PM sequence (returned as a constant view on an array of 3D sphere points).
   // As a side effect, the progressive mesh iterator `pmi` is advanced to the full-resolution mesh.
-  CArrayView<Point> compute(CArrayView<Point> base_sphmap);
+  [[nodiscard]] CArrayView<Point> compute(CArrayView<Point> base_sphmap);
 
   // Print out stretch statistics on the computed spherical parameterization.
   void show_total_stretch();
 
   // Determine a 3D rotation matrix that, when applied to the spherical coordinates, brings them into
   // (approximate) alignment with the vertex normals of the surface mesh.
-  Frame frame_aligning_sphmap_to_surface_normals() const;
+  [[nodiscard]] Frame frame_aligning_sphmap_to_surface_normals() const;
 
  private:
   class Implementation;

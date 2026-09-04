@@ -143,7 +143,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     // Test y-z or z-y order (ideally, sort on rowstart for all y and z).
     bool yzorder =
         image.ysize() && image.zsize() > 1 && rowstart[1 * image.ysize() + 0] < rowstart[0 * image.ysize() + 1];
-    int offset = k_rgb_header_length + 2 * nrows * sizeof(rowstart[0]);
+    int offset = k_rgb_header_length + 2 * size_t(nrows) * sizeof(rowstart[0]);
     Array<uchar> row;
     ConsoleProgress cprogress("Iread", image._silent_io_progress);
     int nlines = 0;
@@ -285,7 +285,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
         }
         buf.push(0);
         rowsize.push(buf.num() - rowstart.last());
-        rowstart.last() += k_rgb_header_length + 2 * nrows * sizeof(rowstart[0]);
+        rowstart.last() += k_rgb_header_length + 2 * size_t(nrows) * sizeof(rowstart[0]);
       }
     }
     assertt(rowstart.num() == nrows && rowsize.num() == nrows);

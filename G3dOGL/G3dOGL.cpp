@@ -295,7 +295,7 @@ class GxObject {
   void add(const A3dElem& el);
   void close();
   void morph(float finterp);
-  CArrayView<unique_ptr<Node>> traverse() const {
+  [[nodiscard]] CArrayView<unique_ptr<Node>> traverse() const {
     assertx(!_opened);
     return _arn;
   }
@@ -318,8 +318,8 @@ class GxObjects {
   Vec<bool, k_max_object> shading;       // shade the polygons
   Vec<bool, k_max_object> smooth;        // compute normals at vertices
   Vec<bool, k_max_object> edges;         // show polygon edges
-  int min_segn() const { return _imin; }
-  int max_segn() const { return _imax; }
+  [[nodiscard]] int min_segn() const { return _imin; }
+  [[nodiscard]] int max_segn() const { return _imax; }
   void clear(int segn);
   void open(int segn);
   void add(const A3dElem& el) {
@@ -332,8 +332,8 @@ class GxObjects {
     _segn = -1;
   }
   void make_link(int oldsegn, int newsegn);
-  bool defined(int segn) const { return !!obp(segn); }  // recursion on links not permitted
-  GxObject& operator[](int i) { return *assertx(obp(i)); }
+  [[nodiscard]] bool defined(int segn) const { return !!obp(segn); }  // recursion on links not permitted
+  [[nodiscard]] GxObject& operator[](int i) { return *assertx(obp(i)); }
 
  private:
   int _imin{k_max_object};
@@ -342,7 +342,7 @@ class GxObjects {
   Vec<int, k_max_object> _link;
   Vec<unique_ptr<GxObject>, k_max_object> _ob;
   int _segn{-1};
-  GxObject* obp(int i) const;
+  [[nodiscard]] GxObject* obp(int i) const;
 };
 
 bool GxObject::s_idraw;

@@ -177,7 +177,7 @@ class Multigrid : noncopyable {
   static constexpr int k_default_num_vcycles = 0 ? 25 : std::is_same_v<T, double> ? 12 : 5;  // 5, 12, 16, 25, 50
   static constexpr bool k_enable_specializations = b_no_periodicity && 1;
 
-  bool have_orig() const { return _grid_orig.size() > 0; }
+  [[nodiscard]] bool have_orig() const { return _grid_orig.size() > 0; }
 
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
     Vec<int, D> ar_interior_offsets;
@@ -473,7 +473,7 @@ class Multigrid : noncopyable {
             const int L2_cache_size = 4 * 1024 * 1024 / 8;  // conservatively assume 4 MiB shared among 8 threads
             const int num_grids = 3 + 1, fudge = 4;         // 3 rows of grid_result, grid_rhs, plus some extra
             const int col_width =
-                int(pow(float(L2_cache_size / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
+                int(pow(std::floor(float(L2_cache_size) / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
             col_dims = ntimes<D>(col_width).with(0, std::numeric_limits<int>::max());
           }
           // even-odd in just first dimension

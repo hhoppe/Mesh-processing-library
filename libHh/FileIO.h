@@ -92,7 +92,7 @@ class TmpFile : noncopyable {
   TmpFile(const string& suffix = "");
   TmpFile(const string& suffix, std::istream& is);  // Create the temporary file with the contents of the input stream.
   ~TmpFile();
-  string filename() const { return _filename; }
+  [[nodiscard]] string filename() const { return _filename; }
   void write_to(std::ostream& os) const;  // Write the temporary file into the output stream.
  private:
   string _filename;

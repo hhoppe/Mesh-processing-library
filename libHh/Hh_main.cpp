@@ -297,7 +297,7 @@ void ensure_utf8_encoding(int& argc, const char**& argv) {
       argv[argc] = nullptr;                 // Extra nullptr is safest.
       for_int(i, argc) argv[i] = make_unique_c_string(utf8_from_utf16(wargv[i]).c_str()).release();  // Never deleted.
     }
-    LocalFree(wargv);
+    LocalFree(static_cast<void*>(wargv));
   }
 #endif
 }

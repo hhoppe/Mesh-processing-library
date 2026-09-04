@@ -44,7 +44,7 @@ class MeshSearch {
   };
   [[nodiscard]] ResultOnSphere search_on_sphere(const Point& p, Face hint_f, const Point* final_p = nullptr) const;
 
-  const GMesh& mesh() const { return _mesh; }
+  [[nodiscard]] const GMesh& mesh() const { return _mesh; }
 
  private:
   const GMesh& _mesh;

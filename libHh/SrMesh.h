@@ -190,7 +190,7 @@ class SrViewParams {
   float _yonder{-1.f};
   float _screen_thresh{0.f};
   friend class SrMesh;
-  bool ok() const;
+  [[nodiscard]] bool ok() const;
 };
 
 // Selectively refinable progressive mesh.
@@ -272,14 +272,18 @@ class SrMesh {
 
   // Rendering: accessor functions:
   // main ones
-  const Point& get_point(const SrAVertex* va) const { return va->vgeom.point; }
-  const Vector& get_normal(const SrAVertex* va) const { return va->vgeom.vnormal; }
+  [[nodiscard]] const Point& get_point(const SrAVertex* va) const { return va->vgeom.point; }
+  [[nodiscard]] const Vector& get_normal(const SrAVertex* va) const { return va->vgeom.vnormal; }
   // auxiliary ones
-  bool splitable(const SrAVertex* va) const { return is_splitable(va->vertex); }
-  float get_uni_error_mag2(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].uni_error_mag2; }
-  float get_dir_error_mag2(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].dir_error_mag2; }
-  float get_radiusneg(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].radius_neg; }
-  float get_sin2alpha(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].sin2alpha; }
+  [[nodiscard]] bool splitable(const SrAVertex* va) const { return is_splitable(va->vertex); }
+  [[nodiscard]] float get_uni_error_mag2(const SrAVertex* va) const {
+    return _vsplits[va->vertex->vspli].uni_error_mag2;
+  }
+  [[nodiscard]] float get_dir_error_mag2(const SrAVertex* va) const {
+    return _vsplits[va->vertex->vspli].dir_error_mag2;
+  }
+  [[nodiscard]] float get_radiusneg(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].radius_neg; }
+  [[nodiscard]] float get_sin2alpha(const SrAVertex* va) const { return _vsplits[va->vertex->vspli].sin2alpha; }
 
   // Rendering using OpenGL:
   Array<Pixel> _ogl_mat_byte_rgba;  // size is _materials.num()
@@ -287,32 +291,32 @@ class SrMesh {
   void draw_vertex(const SrAVertex* v, bool use_texture) const;
   template <bool use_texture> void ogl_render_faces_strips_aux();
 
-  int get_vf_j0(const SrAVertex* v, const SrAFace* f) const;
-  int get_vf_j1(const SrAVertex* v, const SrAFace* f) const;
-  int get_vf_j2(const SrAVertex* v, const SrAFace* f) const;
-  SrAFace*& get_fnei(SrAFace* f, SrAFace* fn) const;
-  SrAFace* rotate_clw(SrAFace* f, SrAVertex* v) const;
-  SrAFace* rotate_ccw(SrAFace* f, SrAVertex* v) const;
-  const SrVertex* get_vt(int vspli) const;
-  SrVertex* get_vt(int vspli);
-  const SrFace* get_fl(int vspli) const;
-  SrFace* get_fl(int vspli);
-  int get_vspli(const SrFace* fl) const;  // slow, requires integer divide
-  bool is_splitable(const SrVertex* v) const { return v->vspli >= 0; }
-  bool has_been_created(const SrVertex* v) const;
-  bool has_been_split(const SrVertex* v) const;
-  bool is_active_f(const SrFace* f) const;
-  bool is_active_v(const SrVertex* v) const;
-  bool creates_2faces(const SrVsplit* vspl) const;
-  const SrVertexGeometry* refined_vg(const SrAVertex* va) const;
-  bool vspl_legal(const SrVertex* vs) const;
-  bool ecol_legal(const SrVertex* vt) const;  // vt left child of its parent!
+  [[nodiscard]] int get_vf_j0(const SrAVertex* v, const SrAFace* f) const;
+  [[nodiscard]] int get_vf_j1(const SrAVertex* v, const SrAFace* f) const;
+  [[nodiscard]] int get_vf_j2(const SrAVertex* v, const SrAFace* f) const;
+  [[nodiscard]] SrAFace*& get_fnei(SrAFace* f, SrAFace* fn) const;
+  [[nodiscard]] SrAFace* rotate_clw(SrAFace* f, SrAVertex* v) const;
+  [[nodiscard]] SrAFace* rotate_ccw(SrAFace* f, SrAVertex* v) const;
+  [[nodiscard]] const SrVertex* get_vt(int vspli) const;
+  [[nodiscard]] SrVertex* get_vt(int vspli);
+  [[nodiscard]] const SrFace* get_fl(int vspli) const;
+  [[nodiscard]] SrFace* get_fl(int vspli);
+  [[nodiscard]] int get_vspli(const SrFace* fl) const;  // slow, requires integer divide
+  [[nodiscard]] bool is_splitable(const SrVertex* v) const { return v->vspli >= 0; }
+  [[nodiscard]] bool has_been_created(const SrVertex* v) const;
+  [[nodiscard]] bool has_been_split(const SrVertex* v) const;
+  [[nodiscard]] bool is_active_f(const SrFace* f) const;
+  [[nodiscard]] bool is_active_v(const SrVertex* v) const;
+  [[nodiscard]] bool creates_2faces(const SrVsplit* vspl) const;
+  [[nodiscard]] const SrVertexGeometry* refined_vg(const SrAVertex* va) const;
+  [[nodiscard]] bool vspl_legal(const SrVertex* vs) const;
+  [[nodiscard]] bool ecol_legal(const SrVertex* vt) const;  // vt left child of its parent!
   void compute_bspheres(CArrayView<SrVertexGeometry> vgeoms);
   void compute_nspheres(CArrayView<SrVertexGeometry> vgeoms);
-  bool is_visible(const SrVertexGeometry* vg, const SrVsplit* vspl) const;
-  bool big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) const;
-  bool qrefine(const SrVertex* vs) const;
-  bool qcoarsen(const SrVertex* vt) const;
+  [[nodiscard]] bool is_visible(const SrVertexGeometry* vg, const SrVsplit* vspl) const;
+  [[nodiscard]] bool big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) const;
+  [[nodiscard]] bool qrefine(const SrVertex* vs) const;
+  [[nodiscard]] bool qcoarsen(const SrVertex* vt) const;
   void apply_vspl(SrVertex* vs, EListNode*& pn);
   void apply_ecol(SrVertex* vs, EListNode*& pn);
   void set_initial_view_params();
@@ -324,10 +328,10 @@ class SrMesh {
   void verify_optimality() const;
   void display_hierarchy_height() const;
   void update_vmorphs();
-  bool verify_all_faces_visited() const;
-  bool verify_all_vertices_uncached() const;
+  [[nodiscard]] bool verify_all_faces_visited() const;
+  [[nodiscard]] bool verify_all_vertices_uncached() const;
 #if defined(ANALYZE_PM_COMPRESSION_WITH_XIA_VARSHNEY)
-  int get_iflclw(SrVertex* vs) const;
+  [[nodiscard]] int get_iflclw(SrVertex* vs) const;
   void refine_in_best_dflclw_order();
 #endif
 };

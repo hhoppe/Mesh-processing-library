@@ -33,13 +33,14 @@ int main(int argc, const char** argv) {
   off_t offset = 0;
   size_t len = rlen;
   // Whenever possible, map segment of size [segsize + 1, segsize * 2].
-  while (len > segsize * 2) {
+  while (len > size_t(segsize) * 2) {
     offset += segsize;
     len -= segsize;
   }
+  void* const p = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
+  assertx(p != MAP_FAILED);
+  CArrayView<char> buf(static_cast<const char*>(p), len);
   int i = assert_narrow_cast<int>(len);  // Always points right after '\n'.
-  CArrayView<char> buf(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset)), len);
-  assertx(buf.data() != reinterpret_cast<void*>(intptr_t{-1}));
   for (;;) {
     if (!i) break;
     assertx(buf[i - 1] == '\n');
@@ -55,11 +56,11 @@ int main(int argc, const char** argv) {
       assertx(i > 0);
       assertx(!munmap(const_cast<char*>(buf.data()), len));
       offset -= segsize;
-      len = segsize * 2;
+      len = size_t(segsize) * 2;
       i += segsize;
-      buf.reinit(
-          CArrayView<char>(static_cast<const char*>(mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset)), len));
-      assertx(buf.data() != reinterpret_cast<void*>(intptr_t{-1}));
+      void* const p2 = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
+      assertx(p2 != MAP_FAILED);
+      buf.reinit(CArrayView<char>(static_cast<const char*>(p2), len));
     }
   }
   assertx(offset == 0);
@@ -102,7 +103,7 @@ int main(int argc, const char** argv) {
   HANDLE h_fmapping = CreateFileMapping(h_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
   assertx(h_fmapping != nullptr);
   HH_ASSUME(h_fmapping);
-  const unsigned segsize = 128 * 1024 * 1024;  // 128 MiB view.
+  const int64_t segsize = 128 * 1024 * 1024;  // 128 MiB view.
   int64_t offset = 0;
   int64_t llen = size;
   // Whenever possible, map segment of size [segsize + 1, segsize * 2].
@@ -112,10 +113,8 @@ int main(int argc, const char** argv) {
   }
   int len = int(llen);
   int i = len;
-  CArrayView<char> buf(static_cast<const char*>(
-                           MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len))),
-                       len);
-  assertx(buf.data());
+  void* p = assertx(MapViewOfFile(h_fmapping, FILE_MAP_READ, DWORD(offset >> 32), DWORD(offset), DWORD(len)));
+  CArrayView<char> buf(static_cast<const char*>(p), len);
   int nwarnings = 0;
   while (i) {
     assertx(buf[i - 1] == '\n');

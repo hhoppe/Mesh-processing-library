@@ -182,6 +182,7 @@ class DeltaEncoding {
   }
 
   // Return total bits based on arithmetic coding of nbits and sign.
+  // NOLINTNEXTLINE(modernize-use-nodiscard)
   int analyze(const string& s) const {
     int total_bits = int(ceil(total_entropy()));
     float enc_signs = _enc_sign[0].entropy() + _enc_sign[1].entropy();

@@ -63,12 +63,7 @@ template <typename T> void my_swap_bytes(T* p) {
   }
 }
 
-#if defined(__GNUC__)  // C++20 std::endian is not yet supported.
-#define HH_IS_BIG_ENDIAN (*reinterpret_cast<const uint16_t*>("\0\xff") < 0x100)
-static const bool k_is_big_endian = HH_IS_BIG_ENDIAN;
-#else
 constexpr bool k_is_big_endian = std::endian::native == std::endian::big;
-#endif
 
 // Convert from native to network order.
 template <typename T> void to_std(T* p) {

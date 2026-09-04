@@ -138,6 +138,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     fprintf(stderr, "Fatal uncaught C++ exception: %s\n", ex.what());
     fflush(stderr);
   } catch (...) {
+    // @INTENTIONAL: Swallow non-std::exception; this handler must not let anything escape.
   }
 #endif
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
@@ -202,7 +203,8 @@ void assign_my_signal_handler() {
 int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
   // The heap may be corrupt, so cannot do any dynamic allocation here.
   if (0) std::cerr << "my_CrtDbgHook with no debugger present\n";
-  if (strcmp(szMsg, "abort() has been called")) std::cerr << "No debugger present; failure message: " << szMsg << "\n";
+  if (strcmp(szMsg, "abort() has been called") != 0)
+    std::cerr << "No debugger present; failure message: " << szMsg << "\n";
   show_call_stack();
   if (0) std::cerr << "Now after show_call_stack()\n";
   if (0) std::cerr << "nReportType=" << nReportType << "\n";

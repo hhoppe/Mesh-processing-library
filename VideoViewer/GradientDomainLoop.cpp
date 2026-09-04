@@ -105,8 +105,8 @@ class BoundedIntervals {
   }
   bool operator*() const { return _interv < _nintervs; }
   void operator++() { ++_interv; }
-  int l() const { return _interv * _size; }
-  int u() const { return max((_interv + 1) * _size, _num); }
+  [[nodiscard]] int l() const { return _interv * _size; }
+  [[nodiscard]] int u() const { return max((_interv + 1) * _size, _num); }
 
  private:
   int _num;
@@ -1180,7 +1180,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
     }
   }
   SHOW(nstatic_pixels, float(nstatic_pixels) / (ny * nx));
-  SHOW(temporal_nseams, float(temporal_nseams) / (ny * nx - nstatic_pixels));
+  SHOW(temporal_nseams, float(temporal_nseams) / (size_t(ny) * nx - nstatic_pixels));
   SHOW(temporal_sum_cost, temporal_sum_seam_cost);
   // rms errors on all pixel pairs and on just on seams
   SHOW(sqrt(temporal_sum_cost / (ny * nx) / nnf / 6));

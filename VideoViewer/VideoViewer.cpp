@@ -145,12 +145,12 @@ struct Object {
     // _video[0].assign(image);
     ok();
   }
-  size_t size() const { return narrow_cast<size_t>(product(_dims)); }
-  int nframes() const { return _dims[0]; }
-  bool is_image() const { return _is_image; }
-  const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }
-  string stype() const { return is_image() ? "image" : "video"; }
-  bool loaded() const { return _nframes_loaded == nframes(); }
+  [[nodiscard]] size_t size() const { return narrow_cast<size_t>(product(_dims)); }
+  [[nodiscard]] int nframes() const { return _dims[0]; }
+  [[nodiscard]] bool is_image() const { return _is_image; }
+  [[nodiscard]] const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }
+  [[nodiscard]] string stype() const { return is_image() ? "image" : "video"; }
+  [[nodiscard]] bool loaded() const { return _nframes_loaded == nframes(); }
   Vec3<int> _dims;  // _dims[0] is the number of frames, which is always 1 for an image
   bool _is_image;
   Video _video;  // if is_image(), contains a single frame which is the image
@@ -289,8 +289,10 @@ struct S_Timeline {
   const float min_w = .008f;               // minimum width of handle for current frame (in case video is very long)
   const float trim_extrah = .003f;         // extra height of trim line above and below regular timeline
   const Pixel trim_color = Pixel::blue();  // color of trim line
-  float get_wcur(int nframes) const { return max(width / assertx(nframes), min_w); }  // width of current frame handle
-  bool is_on_timeline(const Vec2<float>& yx) const {
+  [[nodiscard]] float get_wcur(int nframes) const {  // width of current frame handle
+    return max(width / assertx(nframes), min_w);
+  }
+  [[nodiscard]] bool is_on_timeline(const Vec2<float>& yx) const {
     return yx[0] >= top - fudge && yx[0] <= bot + fudge && yx[1] >= left - fudge && yx[1] <= right + fudge;
   }
 } g_timeline;
@@ -2842,6 +2844,7 @@ void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dim
     // GL_STATIC_DRAW (uploaded once); GL_DYNAMIC_DRAW (used several times); GL_STREAM_DRAW (used once)
     glBufferData(GL_PIXEL_UNPACK_BUFFER, narrow_cast<size_t>(product(dims) * sizeof(Pixel)), nullptr, GL_STREAM_DRAW);
     void* ioMem = assertx(glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY));
+    assertx(reinterpret_cast<uintptr_t>(ioMem) % alignof(Pixel) == 0);
     MatrixView<Pixel> frame(reinterpret_cast<Pixel*>(ioMem), dims);  // texture buffer
     GLenum frame_format = func_copy(frame);
     assertx(glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER));

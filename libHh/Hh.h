@@ -124,6 +124,12 @@
 #define HH_GNU_PURE
 #endif
 
+#if defined(__clang__)
+#define HH_LIFETIMEBOUND clang::lifetimebound  // For clang-tidy.
+#else
+#define HH_LIFETIMEBOUND
+#endif
+
 #if defined(__cpp_lib_unreachable)
 #define HH_UNREACHABLE std::unreachable()  // C++23.
 #elif defined(_MSC_VER) && !defined(__clang__)
@@ -227,7 +233,10 @@ template <typename T> struct sum_type;
 // *** Generalized casting.
 
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
-template <typename Dest> [[nodiscard]] constexpr Dest implicit_cast(std::type_identity_t<Dest> t) { return t; }
+template <typename Dest>
+[[nodiscard]] constexpr Dest implicit_cast(std::type_identity_t<Dest> t [[HH_LIFETIMEBOUND]]) {
+  return t;
+}
 
 // For use in downcasting to a derived class.
 template <typename Dest, typename Src> [[nodiscard]] constexpr Dest down_cast(Src* f) {

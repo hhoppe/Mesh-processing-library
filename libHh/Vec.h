@@ -237,10 +237,11 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   template <typename Self> [[nodiscard]] static constexpr auto& as_vec(Self&& self) {
     return static_cast<copy_const_t<Self, type>&>(self);
   }
-  template <size_t... Is> constexpr type rev_aux(std::index_sequence<Is...>) const requires Copyable<T> {
+  template <size_t... Is> [[nodiscard]] constexpr type rev_aux(std::index_sequence<Is...>) const requires Copyable<T> {
     return type(data()[n - 1 - Is]...);
   }
-  template <size_t... Is> static constexpr type all_aux(const T& e, std::index_sequence<Is...>) requires Copyable<T> {
+  template <size_t... Is>
+  [[nodiscard]] static constexpr type all_aux(const T& e, std::index_sequence<Is...>) requires Copyable<T> {
     return type((void(Is), e)...);
   }
   // Default operator=() and copy_constructor are safe.

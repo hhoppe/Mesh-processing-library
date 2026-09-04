@@ -124,14 +124,14 @@ class object {
   void clear();  // (re)-initialize for definition
   void enter_point(const Point& p);
   void update_stats();
-  bool defined() const;
-  bool visible() const;
-  const Frame& t() const;
+  [[nodiscard]] bool defined() const;
+  [[nodiscard]] bool visible() const;
+  [[nodiscard]] const Frame& t() const;
   void set_vis(bool i);
-  Frame& tm();
-  const Point& center() const;  // mode-dependent center in world coordinates
-  const Bbox<float, 3>& bbox() const;
-  float radius() const;
+  [[nodiscard]] Frame& tm();
+  [[nodiscard]] const Point& center() const;  // mode-dependent center in world coordinates
+  [[nodiscard]] const Bbox<float, 3>& bbox() const;
+  [[nodiscard]] float radius() const;
   void update();      // update HB if necessary
   GMesh* get_mesh();  // creates if non-existent
  private:
@@ -152,8 +152,8 @@ class objects {
  public:
   static constexpr int MAX = 2048;
   objects() { for_int(i, MAX) _ob[i]._obn = i; }
-  bool legal(int obn) { return obn >= 0 && obn < MAX; }
-  object& operator[](int obn) { return assertx(legal(obn)), _ob[obn]; }
+  [[nodiscard]] bool legal(int obn) { return obn >= 0 && obn < MAX; }
+  [[nodiscard]] object& operator[](int obn) { return assertx(legal(obn)), _ob[obn]; }
   void copy(int obf, int obt);
   int first{1};  // 0 if object 0 is defined using -eyeob
   int last{0};   // last object number defined

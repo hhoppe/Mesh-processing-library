@@ -36,16 +36,16 @@ class SplitRecord {
   void applyUnify(SimplicialComplex& K) const;
 
   // access
-  CArrayView<AreaData> getAreas() { return _area; }
-  int getVs() const { return _vsid; }
-  int getVt() const { return _vtid; }
-  int vsp() const { return _pos_bit; }
-  const Point& getDeltap() const { return _deltap; }
+  [[nodiscard]] CArrayView<AreaData> getAreas() { return _area; }
+  [[nodiscard]] int getVs() const { return _vsid; }
+  [[nodiscard]] int getVt() const { return _vtid; }
+  [[nodiscard]] int vsp() const { return _pos_bit; }
+  [[nodiscard]] const Point& getDeltap() const { return _deltap; }
 
   // meaningful after applyGMSplit
-  const std::vector<Simplex>& getNewFacets() const { return new_facets; }
+  [[nodiscard]] const std::vector<Simplex>& getNewFacets() const { return new_facets; }
   // meaningful after applyCmpSplit
-  const std::vector<Simplex>& getNewSimplices() const { return new_simplices; }
+  [[nodiscard]] const std::vector<Simplex>& getNewSimplices() const { return new_simplices; }
 
   // Note that "Array<int> _outcome" below takes the union of the following enum values.
   enum { V_NOEDGE, V_EDGE };         // vertex outcomes

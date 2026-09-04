@@ -552,7 +552,7 @@ void Hw::handle_event() {
     }
     case MappingNotify:
       if (_hwdebug) SHOW("MappingNotify");
-      XRefreshKeyboardMapping(reinterpret_cast<XMappingEvent*>(&_event));
+      XRefreshKeyboardMapping(&_event.xmapping);
       break;
     // case ClientMessage:
     //    SHOWL;
@@ -616,8 +616,8 @@ void Hw::handle_key() {
   {
     Vec<char, 20> buf;
     KeySym keysym;
-    int nchar = XLookupString(reinterpret_cast<XKeyEvent*>(&_event), buf.data(), buf.num() - 1, &keysym,
-                              implicit_cast<XComposeStatus*>(nullptr));
+    int nchar =
+        XLookupString(&_event.xkey, buf.data(), buf.num() - 1, &keysym, implicit_cast<XComposeStatus*>(nullptr));
     assertx(buf.ok(nchar));
     buf[nchar] = 0;
     s = buf.data();

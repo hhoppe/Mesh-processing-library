@@ -86,7 +86,7 @@ int parse_size(string s, int size, bool measure_neg_from_end) {
 
 // ***
 
-void do_nostdin(Args& args) { dummy_use(args); }
+void do_nostdin() {}
 
 void do_create(Args& args) {
   int nx = args.get_int(), ny = args.get_int();
@@ -176,9 +176,8 @@ inline void assign_vertex(GMesh& mesh, MatrixView<Vertex> verts, const Vec2<int>
   }
 }
 
-void do_tomesh(Args& args) {
-  ParseArgs& pargs = static_cast<ParseArgs&>(args);
-  showff("%s", pargs.header().c_str());
+void do_tomesh() {
+  showff("%s", g_parseargs->header().c_str());
 
   assertx(image.zsize() == (elevation && !rg_elev ? 1 : 3));
   beg_yx = twice(0);

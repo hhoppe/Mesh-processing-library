@@ -697,7 +697,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(stoc, ": do stochastic operations");
   HH_ARGSD(lfit, "ni nli : do ni iters, each nli local fits");
   HH_ARGSD(outpoly, "file.a3d : output current poly to file");
-  HH_ARGSD(spawn, "'command': send record to popen");
+  HH_ARGSD(spawn, "'command' : send record to popen");
   HH_ARGSF(nooutput, ": don't print final poly on stdout");
   HH_ARGSP(fliter, "factor : modify # local iters done in stoc");
   HH_ARGSP(verb, "i : verbosity level (1=avg, 2=more, 3=lots, 4=huge)");

@@ -848,7 +848,6 @@ void Hw::hard_flush() {
 
 Array<string> Hw::query_open_filenames(const string& hint_filename) {
   // http://www.winprog.org/tutorial/app_two.html
-  std::wstring whint_filename = utf16_from_utf8(hint_filename);
   std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
   std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
   Array<wchar_t> buffer(64000);
@@ -893,7 +892,6 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
 
 string Hw::query_save_filename(const string& hint_filename, bool force) {
   // https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getsavefilenamea
-  std::wstring whint_filename = utf16_from_utf8(hint_filename);
   std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
   std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
   std::wstring whint_extension = utf16_from_utf8(get_path_extension(hint_filename));
@@ -1358,7 +1356,7 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
   int ncomp = image.zsize() == 4 ? 4 : 3;
   int rowsize = image.xsize() * ncomp;
   while ((rowsize & 3) != 0) rowsize++;
-  int size = sizeof(bmp_BITMAPINFOHEADER) + rowsize * image.ysize();
+  int size = sizeof(bmp_BITMAPINFOHEADER) + size_t(rowsize) * image.ysize();
   HANDLE hGlobal = assertx(GlobalAlloc(GHND | GMEM_SHARE, size));
   {
     uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal)));

@@ -84,8 +84,8 @@ class SparseLls : public Lls {
   int _max_iter{std::numeric_limits<int>::max()};
   int _verb{0};
   int _nentries{0};
-  Array<float> mult_m_v(CArrayView<float> vi) const;
-  Array<float> mult_mt_v(CArrayView<float> vi) const;
+  [[nodiscard]] Array<float> mult_m_v(CArrayView<float> vi) const;
+  [[nodiscard]] Array<float> mult_mt_v(CArrayView<float> vi) const;
   bool do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, double* prssa) const;
 };
 

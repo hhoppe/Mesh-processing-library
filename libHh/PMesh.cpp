@@ -1200,9 +1200,8 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
     pwwl = &_faces[ffl].wedges[jjl];
   else if (k_debug)
     pwwl = reinterpret_cast<int*>(intptr_t{k_undefined});
-  if (thru_l) {  // first go clw
-    ASSERTX(pwwl && *pwwl == wlclw);
-    ASSERTX(wlccw >= 0);
+  if (thru_l) {  // First go clw.
+    ASSERTX(ffl >= 0 && wlccw >= 0);
     for (;;) {
       *pwwl = wlccw;
       if (ffl == ffr) {
@@ -1548,7 +1547,7 @@ void PMesh::write(std::ostream& os) const {
   os << "PM base mesh:\n";
   _base_mesh.write(os, _info);
   for_int(i, _vsplits.num()) _vsplits[i].write(os, _info);
-  os << uchar(k_magic_first_byte);
+  os << char(k_magic_first_byte);
   os << "End of PM\n";
   assertx(os);
 }

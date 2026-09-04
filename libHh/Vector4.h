@@ -49,8 +49,7 @@ class Vector4 {
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
   [[nodiscard]] size_t size() const { return 4; }
-  [[HH_GNU_PURE]] [[nodiscard]] float& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
-  [[HH_GNU_PURE]] [[nodiscard]] const float& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  [[HH_GNU_PURE]] [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, 4), self._c[i]; }
   [[nodiscard]] Vector4 with(int i, float f) const {
     HH_CHECK_BOUNDS(i, 4);
     Vector4 v = *this;
@@ -78,8 +77,7 @@ class Vector4 {
   using const_iterator = const float*;
   [[nodiscard]] const float* begin() const { return _c; }
   [[nodiscard]] const float* end() const { return _c + 4; }
-  [[nodiscard]] float* data() { return _c; }
-  [[nodiscard]] const float* data() const { return _c; }
+  [[nodiscard]] auto* data(this auto&& self) { return self._c; }
   friend std::ostream& operator<<(std::ostream& os, const Vector4& v) {
     return os << "Vector4(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
   }

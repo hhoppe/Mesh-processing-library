@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_PIXEL_H_
 #define MESH_PROCESSING_LIBHH_PIXEL_H_
 
+#include <bit>
+
 #include "libHh/Vec.h"
 
 namespace hh {
@@ -39,8 +41,8 @@ template <input_range_to<Pixel> R> void convert_bgra_rgba(R&& range) {
 //----------------------------------------------------------------------------
 
 // Faster, specialized version of Vec<>::operator==().
-[[nodiscard]] inline bool operator==(const Pixel& pix1, const Pixel& pix2) {
-  return *reinterpret_cast<const uint32_t*>(&pix1) == *reinterpret_cast<const uint32_t*>(&pix2);
+[[nodiscard]] constexpr bool operator==(const Pixel& pix1, const Pixel& pix2) {
+  return std::bit_cast<uint32_t>(pix1) == std::bit_cast<uint32_t>(pix2);
 }
 
 }  // namespace hh

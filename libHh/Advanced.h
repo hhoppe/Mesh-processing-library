@@ -6,13 +6,6 @@
 
 namespace hh {
 
-// Return a reference to a unique pointer object.  This reference may be invalid if the pointer is null!
-// auto up_p = b ? make_unique<Point>(1.f, 2.f, 3.f) : nullptr;
-// Point& p = optional_reference(up_p);
-template <typename T> [[nodiscard]] T& optional_reference(const std::unique_ptr<T>& up) {
-  return up ? *up : *implicit_cast<T*>(nullptr);
-}
-
 // e.g.:  unroll<6>([&](int j) { _a[j] = min(l._a[j], r._a[j]); });
 template <int n, typename Func> constexpr void unroll(Func func) {
   [&]<int... Is>(std::integer_sequence<int, Is...>) { (func(Is), ...); }(std::make_integer_sequence<int, n>());

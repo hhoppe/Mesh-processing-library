@@ -25,17 +25,7 @@ void swap(Image& l, Image& r) noexcept {
 
 void Image::init(const Vec2<int>& pdims, Pixel pixel) {
   init(pdims);
-  if (0) {
-    fill(*this, pixel);
-  } else if (0) {
-    parallel_for({.cycles_per_elem = 4}, range(size()), [&](const size_t i) { flat(i) = pixel; });
-  } else {
-    const uint32_t upix = reinterpret_cast<uint32_t&>(pixel);
-    uint32_t* p = reinterpret_cast<uint32_t*>(data());
-    for (const size_t i : range(size())) p[i] = upix;
-    // Generates "rep stosd" which is like 32-bit std::memset(), but no faster than fill() because memory-limited.
-    // (Note that parallelism overhead would actually make this slower.)
-  }
+  fill(*this, pixel);  // A raw uint32_t loop (generating "rep stosd") is no faster because this is memory-limited.
 }
 
 void Image::set_zsize(int n) {
@@ -347,7 +337,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         g00 += g01;
         b00 += b01;
         uint8_t y01 = uint8_t((66 * r01 + 129 * g01 + 25 * b01 + 128 + 16 * 256) >> 8);
-        const uint8_t* __restrict buf_p1 = buf_p0 + hnx * 8;
+        const uint8_t* __restrict buf_p1 = buf_p0 + size_t(hnx) * 8;
         int r10 = buf_p1[0], g10 = buf_p1[1], b10 = buf_p1[2];
         r00 += r10;
         g00 += g10;

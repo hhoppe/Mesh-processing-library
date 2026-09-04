@@ -33,19 +33,19 @@ class ISimplex : noncopyable {
   void addParent(Simplex parent);
   void removeParent(Simplex parent);
 
-  Simplex getChild(int num) const { return _child[num]; }
-  CArrayView<Simplex> children() const { return _child.head(getDim() + 1); }
-  const std::vector<Simplex>& getParents() const { return _parent; }
+  [[nodiscard]] Simplex getChild(int num) const { return _child[num]; }
+  [[nodiscard]] CArrayView<Simplex> children() const { return _child.head(getDim() + 1); }
+  [[nodiscard]] const std::vector<Simplex>& getParents() const { return _parent; }
   // All descendents (>= 1 dim); iterates by generations children first, grandchildren next, etc.
-  Array<Simplex> all_faces() const;
+  [[nodiscard]] Array<Simplex> all_faces() const;
   // All ancestors (>= 1 dim); iterates by generations parents first, grandparents next, etc.
-  PArray<Simplex, 20> get_star() const;
-  PArray<Simplex, 20> faces_of_vertex() const;  // Faces adjacent to simplex (which must be a vertex).
-  int getDim() const { return _dim; }
-  int getId() const { return _id; }
+  [[nodiscard]] PArray<Simplex, 20> get_star() const;
+  [[nodiscard]] PArray<Simplex, 20> faces_of_vertex() const;  // Faces adjacent to simplex (which must be a vertex).
+  [[nodiscard]] int getDim() const { return _dim; }
+  [[nodiscard]] int getId() const { return _id; }
 
-  float length2() const;
-  float length() const { return sqrt(length2()); }
+  [[nodiscard]] float length2() const;
+  [[nodiscard]] float length() const { return sqrt(length2()); }
   void polygon(Polygon& p) const;
 
   // 2-simplices
@@ -68,22 +68,22 @@ class ISimplex : noncopyable {
     return _flags;
   }
 
-  const Point& getPosition() const { return _position; }
-  int getVAttribute() const { return _vattribute; }
-  float getArea() const { return _area; }
-  const Flags& flags() const {
+  [[nodiscard]] const Point& getPosition() const { return _position; }
+  [[nodiscard]] int getVAttribute() const { return _vattribute; }
+  [[nodiscard]] float getArea() const { return _area; }
+  [[nodiscard]] const Flags& flags() const {
     assertnever("no longer supported");
     return _flags;
   }
 
   // predicates
-  bool hasColor() const { return _vattribute >= 0; }
-  bool isPrincipal() const { return _parent.empty(); }
-  bool is_boundary() const { return _parent.size() == 1; }
-  bool isManifold() const { return _parent.size() == 2; }
+  [[nodiscard]] bool hasColor() const { return _vattribute >= 0; }
+  [[nodiscard]] bool isPrincipal() const { return _parent.empty(); }
+  [[nodiscard]] bool is_boundary() const { return _parent.size() == 1; }
+  [[nodiscard]] bool isManifold() const { return _parent.size() == 2; }
 
   // for gemorph
-  const char* get_string() const { return _string.get(); }
+  [[nodiscard]] const char* get_string() const { return _string.get(); }
   void set_string(const char* s) { _string = make_unique_c_string(s); }
   void update_string(const char* key, const char* val) { GMesh::update_string_ptr(_string, key, val); }
 
@@ -129,15 +129,19 @@ class SimplicialComplex : noncopyable {
   void skeleton(int dim);
 
   // access (const) functions
-  int num(int dim) const { return _simplices[dim].num(); }
-  int getMaxId(int dim) const { return _free_sid[dim]; }
-  bool valid(Simplex s) const;
-  Simplex getSimplex(Simplex s) const { return getSimplex(s->getDim(), s->getId()); }  // Convenience.
-  Simplex getSimplex(int dim, int id) const;
-  int materialNum() const { return _material_strings.num(); }
-  const char* getMaterial(int matid) const { return _material_strings[matid].c_str(); }
-  const Map<int, Simplex>::cvalues_range simplices_dim(int dim) const { return _simplices[dim].values(); }
-  OrderedSimplices_range ordered_simplices_dim(int dim) const { return OrderedSimplices_range(*this, dim); }
+  [[nodiscard]] int num(int dim) const { return _simplices[dim].num(); }
+  [[nodiscard]] int getMaxId(int dim) const { return _free_sid[dim]; }
+  [[nodiscard]] bool valid(Simplex s) const;
+  [[nodiscard]] Simplex getSimplex(Simplex s) const { return getSimplex(s->getDim(), s->getId()); }  // Convenience.
+  [[nodiscard]] Simplex getSimplex(int dim, int id) const;
+  [[nodiscard]] int materialNum() const { return _material_strings.num(); }
+  [[nodiscard]] const char* getMaterial(int matid) const { return _material_strings[matid].c_str(); }
+  [[nodiscard]] const Map<int, Simplex>::cvalues_range simplices_dim(int dim) const {
+    return _simplices[dim].values();
+  }
+  [[nodiscard]] OrderedSimplices_range ordered_simplices_dim(int dim) const {
+    return OrderedSimplices_range(*this, dim);
+  }
   void starbar(Simplex s, SimplicialComplex& result) const;
   void star(Simplex s, Array<Simplex>& ares) const;
   void ok() const;

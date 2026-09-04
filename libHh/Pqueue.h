@@ -266,7 +266,7 @@ class HPqueue : noncopyable {
     consider_shrink();
     return e;
   }
-  float retrieve_i(const T& e) const {
+  [[nodiscard]] float retrieve_i(const T& e) const {
     bool b;
     int i = _m.retrieve(e, b);
     return b ? _ar[i]._pri : -1.f;

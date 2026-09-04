@@ -850,8 +850,10 @@ bool KeyPressed(const string& ps) {
     case '=':
       if (lastch == 'w') {
         thisch = 'w';
-        for (;;)
-          if (obview == g_obs.last || g_obs[++obview].visible()) break;
+        for (;;) {
+          if (obview == g_obs.last) break;
+          if (g_obs[++obview].visible()) break;
+        }
         HB::redraw_now();
       } else {
         ddistance *= 2.f;

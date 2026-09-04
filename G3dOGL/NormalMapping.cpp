@@ -19,8 +19,8 @@ class NormalMapping_ogl2 final : public NormalMapping {
   // Great tutorial: "GLSL Tutorial von Lighthouse3D"
   // https://web.archive.org/web/20170204132401/http://zach.in.tu-clausthal.de/teaching/cg_literatur/glsl_tutorial/
 
-  string name() const override { return "ogl2"; }
-  bool is_supported() const override { return assertx(glGetString(GL_VERSION))[0] >= '2'; }
+  [[nodiscard]] string name() const override { return "ogl2"; }
+  [[nodiscard]] bool is_supported() const override { return assertx(glGetString(GL_VERSION))[0] >= '2'; }
 
   void init() override {
     USE_GL_EXT(glCreateShader, PFNGLCREATESHADERPROC);
@@ -157,8 +157,10 @@ class NormalMapping_frag1 final : public NormalMapping {
  public:
   using type = NormalMapping_frag1;
 
-  string name() const override { return "frag1"; }
-  bool is_supported() const override { return contains(gl_extensions_string(), "GL_ARB_fragment_program"); }
+  [[nodiscard]] string name() const override { return "frag1"; }
+  [[nodiscard]] bool is_supported() const override {
+    return contains(gl_extensions_string(), "GL_ARB_fragment_program");
+  }
 
   void init() override {
     USE_GL_EXT(glGenProgramsARB, PFNGLGENPROGRAMSARBPROC);
@@ -268,9 +270,9 @@ class NormalMapping_dot3 final : public NormalMapping {
  public:
   using type = NormalMapping_dot3;
 
-  string name() const override { return "dot3"; }
+  [[nodiscard]] string name() const override { return "dot3"; }
 
-  bool is_supported() const override {
+  [[nodiscard]] bool is_supported() const override {
     if (!contains(gl_extensions_string(), "GL_ARB_texture_env_dot3")) return false;
     GLint max_texture_units;
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &max_texture_units);
@@ -350,8 +352,10 @@ class NormalMapping_nvrc final : public NormalMapping {
  public:
   using type = NormalMapping_nvrc;
 
-  string name() const override { return "nvrc"; }
-  bool is_supported() const override { return contains(gl_extensions_string(), "GL_NV_register_combiners"); }
+  [[nodiscard]] string name() const override { return "nvrc"; }
+  [[nodiscard]] bool is_supported() const override {
+    return contains(gl_extensions_string(), "GL_NV_register_combiners");
+  }
 
   void init() override {
     USE_GL_EXT(glCombinerParameteriNV, PFNGLCOMBINERPARAMETERINVPROC);

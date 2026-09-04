@@ -190,7 +190,7 @@ class RVideo::Implementation {
  public:
   explicit Implementation(RVideo& rvideo) : _rvideo(rvideo) {}
   virtual ~Implementation() = default;
-  virtual string name() const = 0;
+  [[nodiscard]] virtual string name() const = 0;
   virtual bool read(MatrixView<Pixel> frame) = 0;
   virtual bool read_nv12(Nv12View frame) {  // default slow path
     const Vec2<int> sdims = _rvideo.spatial_dims();
@@ -220,7 +220,7 @@ class WVideo::Implementation {
  public:
   explicit Implementation(WVideo& wvideo) : _wvideo(wvideo) {}
   virtual ~Implementation() = default;
-  virtual string name() const = 0;
+  [[nodiscard]] virtual string name() const = 0;
   virtual void write(CMatrixView<Pixel> frame) = 0;
   virtual void write_nv12(CNv12View frame) {  // default slow path
     assertx(product(_wvideo.spatial_dims()));
@@ -239,7 +239,7 @@ class Unsupported_RVideo_Implementation : public RVideo::Implementation {
  public:
   explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
   ~Unsupported_RVideo_Implementation() override = default;
-  string name() const override { return "unsupported"; }
+  [[nodiscard]] string name() const override { return "unsupported"; }
   bool read(MatrixView<Pixel> frame) override {
     dummy_use(frame);
     assertnever("?");
@@ -250,7 +250,7 @@ class Unsupported_WVideo_Implementation : public WVideo::Implementation {
  public:
   explicit Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
   ~Unsupported_WVideo_Implementation() override = default;
-  string name() const override { return "unsupported"; }
+  [[nodiscard]] string name() const override { return "unsupported"; }
   void write(CMatrixView<Pixel> frame) override {
     dummy_use(frame);
     assertnever("?");
@@ -394,7 +394,7 @@ void retrieve_strided_BGRA(const uint8_t* pData, int stride, MatrixView<Pixel> f
   const int ny = frame.ysize(), nx = frame.xsize();
   uint8_t* pd = frame.data()->data();
   for_int(y, ny) {
-    const uint8_t* ps = pData + y * stride;
+    const uint8_t* ps = pData + size_t(y) * stride;
     for_int(x, nx) {
       // BGRA to RGBA
       pd[0] = ps[2];
@@ -414,17 +414,17 @@ void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12V
     std::memcpy(nv12v.get_Y().data(), pData, nv12v.get_Y().size());
     std::memcpy(nv12v.get_UV().data(), pData + offsetUV, nv12v.get_UV().size() * 2);
   } else if (1) {
-    for_int(y, ny) std::memcpy(nv12v.get_Y()[y].data(), pData + y * stride, nx);
-    for_int(y, ny / 2) std::memcpy(nv12v.get_UV()[y].data(), pData + offsetUV + y * stride, nx);
+    for_int(y, ny) std::memcpy(nv12v.get_Y()[y].data(), pData + size_t(y) * stride, nx);
+    for_int(y, ny / 2) std::memcpy(nv12v.get_UV()[y].data(), pData + offsetUV + size_t(y) * stride, nx);
   } else {
     uint8_t* pd = nv12v.get_Y().data();
     for_int(y, ny) {
-      const uint8_t* ps = pData + y * stride;
+      const uint8_t* ps = pData + size_t(y) * stride;
       for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;
     }
     pd = nv12v.get_UV().data()->data();
     for_int(y, ny / 2) {
-      const uint8_t* ps = pData + offsetUV + y * stride;
+      const uint8_t* ps = pData + offsetUV + size_t(y) * stride;
       for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;
     }
   }
@@ -518,7 +518,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
   ~Mf_RVideo_Implementation() override {
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
-  string name() const override { return "mf"; }
+  [[nodiscard]] string name() const override { return "mf"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();
     assertx(frame.dims() == sdims);
@@ -719,7 +719,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
     if (_pSinkWriter) AS(_pSinkWriter->Finalize());
     // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
   }
-  string name() const override { return "mf"; }
+  [[nodiscard]] string name() const override { return "mf"; }
   void write(CMatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(_wvideo.spatial_dims()));
@@ -745,7 +745,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       } else {
         // Media Foundation MP4 encoding under Win7 may have poor quality -- independent of this workaround.
         MatrixView<uint8_t> matY(pData, _wvideo.spatial_dims());
-        MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData + sdims[0] * sdims[1]),
+        MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData + size_t(sdims[0]) * sdims[1]),
                                         _wvideo.spatial_dims() / 2);
         convert_Image_to_Nv12(frame, Nv12View(matY, matUV));
       }
@@ -772,7 +772,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       if (_impl_nv12) {
         // Media Foundation MP4 encoding under Win7 may have poor quality; it is independent of this workaround
         MatrixView<uint8_t> matY(pData, _wvideo.spatial_dims());
-        MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData + sdims[0] * sdims[1]),
+        MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData + size_t(sdims[0]) * sdims[1]),
                                         _wvideo.spatial_dims() / 2);
         matY.assign(nv12v.get_Y());
         matUV.assign(nv12v.get_UV());
@@ -961,7 +961,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     _pfi = make_unique<RFile>(command);
   }
   ~Ffmpeg_RVideo_Implementation() override = default;
-  string name() const override { return "ffmpeg"; }
+  [[nodiscard]] string name() const override { return "ffmpeg"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();
     assertx(frame.dims() == sdims);
@@ -1071,7 +1071,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
     _pfi = make_unique<WFile>(command);
   }
   ~Ffmpeg_WVideo_Implementation() override = default;
-  string name() const override { return "ffmpeg"; }
+  [[nodiscard]] string name() const override { return "ffmpeg"; }
   void write(CMatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(sdims));

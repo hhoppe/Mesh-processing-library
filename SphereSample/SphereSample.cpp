@@ -1212,7 +1212,6 @@ void internal_remesh() {
 
   HH_TIMER("_resample");
   parallel_for_chunk(g_mesh.vertices(), [&](auto subrange) {
-    string str;
     Face hint_f = nullptr;
     for (Vertex v : subrange) {
       const Point& sph = g_mesh.point(v);  // Point on sphere.

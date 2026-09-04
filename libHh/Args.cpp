@@ -212,8 +212,12 @@ void ParseArgs::p(string str, PARSE_FUNC parse_func, string doc) {
 }
 
 void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
-  using voidp = void*;
-  iadd(option{std::move(str), -2, PARSE_FUNC(voidp(parse_func0)), nullptr, std::move(doc)});
+  iadd(option{std::move(str), -2, &ParseArgs::fparse_func0, nullptr, std::move(doc), parse_func0});
+}
+
+void ParseArgs::fparse_func0(Args& args) {
+  ParseArgs& pargs = static_cast<ParseArgs&>(args);
+  pargs._curopt->parse_func0();
 }
 
 bool ParseArgs::special_arg(const string& s) {
@@ -261,13 +265,13 @@ string ParseArgs::get_executable_name() {
 
 void ParseArgs::iadd(option o) {
   if (1 && o.doc != "") {  // Enforce my "conventions" to properly distinguish flags and parameters.
-    if (o.narg > 0) {
+    if (o.narg > 0 || o.narg == -1) {
       if (o.doc[0] == ':' || !contains(o.doc, ':') || o.doc[o.doc.find(':') - 1] != ' ') {
         SHOW(o.str, o.doc);
         Warning("Possibly inconsistent parameter option comment");
       }
     }
-    if (!o.narg && o.parse_func) {
+    if ((!o.narg || o.narg == -2) && o.parse_func) {
       if (o.doc[0] != ':') {
         SHOW(o.str, o.doc);
         Warning("Possibly inconsistent flag option comment");
@@ -348,13 +352,7 @@ bool ParseArgs::parse_internal() {
         problem("option not recognized");
       }
     }
-    int narg = _curopt->narg;
-    if (narg == -2) {
-      using voidp = void*;
-      PARSE_FUNC0(voidp(_curopt->parse_func))();
-    } else {
-      _curopt->parse_func(*this);
-    }
+    _curopt->parse_func(*this);
     if (arg == "-?" || arg == "--help") {
       _unrecognized_args.push(arg);
       return false;

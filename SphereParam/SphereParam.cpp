@@ -604,7 +604,6 @@ int main(int argc, const char** argv) {
   const Frame rotate_frame = get_rotate_frame(rotate_s3d);
   if (uv_map != "") {
     mesh_uv.read(RFile{uv_map}());
-    string str;
     for (Vertex v : mesh_uv.vertices()) {
       if (!parse_key_vec(mesh_uv.get_string(v), "uv", v_uv(v))) {
         v_uv(v) = twice(k_uv_undefined);

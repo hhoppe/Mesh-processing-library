@@ -321,7 +321,7 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     a3d_binary_buf buf;
     buf.magic[0] = k_a3d_binary_code;
     buf.magic[1] = 0;
-    buf.utype = narrow_cast<ushort>(ctype);
+    buf.utype = static_cast<uint8_t>(ctype);
     to_std(&buf.utype);
     for_int(c, 3) {
       buf.f[c] = f[c];

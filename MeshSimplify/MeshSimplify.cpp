@@ -155,10 +155,10 @@ struct fptinfo {
   Face cmf;
   float dist2;
 #if defined(ENABLE_FPTNOR)
-  Vector& ptnor() { return _ptnor; }
-  const Vector& ptnor() const { return _ptnor; }
-  float& nordist2() { return _nordist2; }
-  const float& nordist2() const { return _nordist2; }
+  [[nodiscard]] Vector& ptnor() { return _ptnor; }
+  [[nodiscard]] const Vector& ptnor() const { return _ptnor; }
+  [[nodiscard]] float& nordist2() { return _nordist2; }
+  [[nodiscard]] const float& nordist2() const { return _nordist2; }
 
  private:
   Vector _ptnor;    // k_undefined if undefined.
@@ -169,10 +169,10 @@ struct fptinfo {
   float& nordist2() const { assertnever(""); }
 #endif
 #if defined(ENABLE_FPTCOLOR)
-  A3dColor& ptcol() { return _ptcol; }
-  const A3dColor& ptcol() const { return _ptcol; }
-  float& coldist2() { return _coldist2; }
-  const float& coldist2() const { return _coldist2; }
+  [[nodiscard]] A3dColor& ptcol() { return _ptcol; }
+  [[nodiscard]] const A3dColor& ptcol() const { return _ptcol; }
+  [[nodiscard]] float& coldist2() { return _coldist2; }
+  [[nodiscard]] const float& coldist2() const { return _coldist2; }
 
  private:
   A3dColor _ptcol;  // k_undefined if undefined.
@@ -376,8 +376,8 @@ class LHPqueue : public HPqueue<Edge> {
     }
     return base::update(e, pri);
   }
-  double total_priority() const { return _tot; }
-  int total_num() const { return _ntot; }
+  [[nodiscard]] double total_priority() const { return _tot; }
+  [[nodiscard]] int total_num() const { return _ntot; }
 
  private:
   double _tot{0.};

@@ -4407,7 +4407,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(toa3d, ": output a3d version of mesh");
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
-  HH_ARGSD(to_obj, ": output Alias/Wavefront .obj file");
+  HH_ARGSD(to_obj, "file.mtl : output Alias/Wavefront .obj file on stdout");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");

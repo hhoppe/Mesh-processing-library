@@ -68,10 +68,10 @@ class HwBase : noncopyable {
   void fill_rectangle(const Vec2<float>& top_left, const Vec2<float>& bot_right);  // (y, x) coordinates
   void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);               // coordinates in pixel units
   void draw_point(const Vec2<float>& yx);
-  Vec2<int> window_position_yx() const { return _win_pos; }
-  virtual Vec2<int> get_max_window_dims() = 0;          // (ny, nx)
-  virtual void resize_window(const Vec2<int>& yx) = 0;  // resize to new width and height
-  virtual bool is_fullscreen() = 0;
+  [[nodiscard]] Vec2<int> window_position_yx() const { return _win_pos; }
+  [[nodiscard]] virtual Vec2<int> get_max_window_dims() = 0;  // (ny, nx)
+  virtual void resize_window(const Vec2<int>& yx) = 0;        // resize to new width and height
+  [[nodiscard]] virtual bool is_fullscreen() = 0;
   virtual void make_fullscreen(bool b) = 0;  // make the window fullscreen if b
   virtual void grab_focus() {}
 
@@ -79,13 +79,13 @@ class HwBase : noncopyable {
   virtual void clear_window() = 0;
   void process_keystring(string& keystring);  // makes calls to key_press() and clears keystring
 
-  // query user for values:
-  bool query(const Vec2<int>& yx, string prompt, string& buffer);  // ret: true with <enter>, false with <esc>
-  bool query(const Vec2<int>& yx, string prompt, float& f);
-  bool query(const Vec2<int>& yx, string prompt, int& i);
-  virtual Array<string> query_open_filenames(const string& hint_filename);
-  virtual string query_save_filename(const string& hint_filename, bool force = false);  // ret: "" if canceled
-  bool within_query() const { return _within_query; }
+  // query user for values; ret: true with <enter>, false with <esc>.
+  [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, string& buffer);
+  [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, float& f);
+  [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, int& i);
+  [[nodiscard]] virtual Array<string> query_open_filenames(const string& hint_filename);
+  [[nodiscard]] virtual string query_save_filename(const string& hint_filename, bool force = false);  // "" if canceled
+  [[nodiscard]] bool within_query() const { return _within_query; }
 
   // buffering:
   virtual void hard_flush() = 0;          // synchronize screen
@@ -98,7 +98,7 @@ class HwBase : noncopyable {
     Warning("clipboard not implemented");
     return false;
   }
-  virtual std::optional<Image> copy_clipboard_to_image() {
+  [[nodiscard]] virtual std::optional<Image> copy_clipboard_to_image() {
     Warning("clipboard not implemented");
     return {};
   }
@@ -479,14 +479,20 @@ bool gl_report_errors();  // ret: true if errors (only call after init() and bef
 // Return a string containing all the supported OpenGL extensions.
 const string& gl_extensions_string();
 
-#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc)                          \
-  using Type##func = type;                                                 \
-  static Type##func func;                                                  \
-  static bool is_init_##func;                                              \
-  if (!is_init_##func) {                                                   \
-    is_init_##func = true;                                                 \
-    func = reinterpret_cast<Type##func>(reinterpret_cast<void*>(GetProc)); \
-  }                                                                        \
+// GCC warns on casts between incompatible function pointer types, which is inherent to the wglGetProcAddress()
+// pattern; the alternative of casting through `void*` is less portable.
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wcast-function-type"
+#endif
+
+#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc) \
+  using Type##func = type;                        \
+  static Type##func func;                         \
+  static bool is_init_##func;                     \
+  if (!is_init_##func) {                          \
+    is_init_##func = true;                        \
+    func = reinterpret_cast<Type##func>(GetProc); \
+  }                                               \
   HH_EAT_SEMICOLON
 
 #if defined(_WIN32)

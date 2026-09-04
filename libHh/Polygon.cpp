@@ -94,10 +94,9 @@ std::optional<Point> Polygon::intersect_segment(const Point& p1, const Point& p2
   assertx(num() >= 3);
   Vector nor = get_normal();
   assertx(!is_zero(nor));
-  const auto pint = intersect_plane_segment(nor, get_planec(nor), p1, p2);
-  if (!pint) return {};
-  if (!point_inside(nor, *pint)) return {};
-  return *pint;
+  auto pint = intersect_plane_segment(nor, get_planec(nor), p1, p2);
+  if (pint && !point_inside(nor, *pint)) pint = {};
+  return pint;
 }
 
 std::optional<Point> Polygon::intersect_line(const Point& p, const Vector& v) const {

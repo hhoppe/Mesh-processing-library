@@ -199,22 +199,22 @@ inline SrAFace* SrMesh::rotate_ccw(SrAFace* f, SrAVertex* v) const {
 
 inline const SrVertex* SrMesh::get_vt(int vspli) const {
   ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_vt + vspli * 2;
+  return _quick_first_vt + size_t(vspli) * 2;
 }
 
 inline SrVertex* SrMesh::get_vt(int vspli) {
   ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_vt + vspli * 2;
+  return _quick_first_vt + size_t(vspli) * 2;
 }
 
 inline const SrFace* SrMesh::get_fl(int vspli) const {
   ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_fl + vspli * 2;
+  return _quick_first_fl + size_t(vspli) * 2;
 }
 
 inline SrFace* SrMesh::get_fl(int vspli) {
   ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_fl + vspli * 2;
+  return _quick_first_fl + size_t(vspli) * 2;
 }
 
 inline int SrMesh::get_vspli(const SrFace* fl) const {

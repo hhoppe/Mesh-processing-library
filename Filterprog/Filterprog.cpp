@@ -57,7 +57,7 @@ struct WedgeInfo {
 class MapWedgeInfo {
  public:
   void clear() { _map.clear(); }
-  bool contains(int wid) const {
+  [[nodiscard]] bool contains(int wid) const {
     assertx(wid);
     return _map.contains(wid);
   }
@@ -65,7 +65,7 @@ class MapWedgeInfo {
     assertx(wid);
     _map[wid] = wi;
   }
-  const WedgeInfo& get(int wid) const { return _map.get(wid); }
+  [[nodiscard]] const WedgeInfo& get(int wid) const { return _map.get(wid); }
   void copy_from(const MapWedgeInfo& mwi);
 
  private:
@@ -89,7 +89,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_owedge_id);  // Old wedge id's (for m
 //  does exist in mesh.
 class LivingAncestor {
  public:
-  int existing_id(int vid) const { return _is_active ? _mapvidvid.get(vid) : vid; }
+  [[nodiscard]] int existing_id(int vid) const { return _is_active ? _mapvidvid.get(vid) : vid; }
   void activate();
   void set_descendant(int vnew, int vold);
   void set_vertex(int vnew) {

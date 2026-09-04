@@ -174,7 +174,7 @@ class GxObject {
   void open(bool todraw);
   void add(const A3dElem& el);
   void close();
-  CArrayView<unique_ptr<Node>> traverse() const {
+  [[nodiscard]] CArrayView<unique_ptr<Node>> traverse() const {
     assertx(!_opened);
     return _arn;
   }
@@ -205,15 +205,15 @@ class GxObjects {
   Vec<bool, k_max_object> reverse_cull;
   Vec<bool, k_max_object> highlight_vertices;
   Vec<bool, k_max_object> show_sharp;
-  int min_segn() const { return _imin; }
-  int max_segn() const { return _imax; }
+  [[nodiscard]] int min_segn() const { return _imin; }
+  [[nodiscard]] int max_segn() const { return _imax; }
   void clear(int segn);
   void open(int segn);
   void add(const A3dElem& el);
   void close();
   void make_link(int oldsegn, int newsegn);
-  int defined(int segn) const;
-  GxObject& operator[](int i);
+  [[nodiscard]] bool defined(int segn) const { return !!obp(segn); }  // Recursion on links is not permitted.
+  [[nodiscard]] GxObject& operator[](int i) { return *assertx(obp(i)); }
 
  private:
   int _imin{k_max_object};
@@ -223,7 +223,7 @@ class GxObjects {
   Array<unique_ptr<GxObject>> _ob;
   int _segn{-1};
   bool _idraw;
-  GxObject* obp(int i) const;
+  [[nodiscard]] GxObject* obp(int i) const;
 };
 
 bool GxObject::s_idraw;
@@ -972,11 +972,6 @@ GxObject* GxObjects::obp(int i) const {
   if (_link[i]) return _ob[_link[i]].get();
   return nullptr;
 }
-
-// recursion on links is not permitted, only simple link allowed
-int GxObjects::defined(int segn) const { return obp(segn) ? 1 : 0; }
-
-GxObject& GxObjects::operator[](int i) { return *assertx(obp(i)); }
 
 }  // namespace
 

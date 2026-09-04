@@ -1481,7 +1481,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(pclp, ": print projections onto mesh (lines)");
   HH_ARGSD(record, ": print mesh changes on std::cout, -noout");
-  HH_ARGSD(spawn, "'command': send record to popen");
+  HH_ARGSD(spawn, "'command' : send record to popen");
   HH_ARGSF(nooutput, ": don't print final mesh on stdout");
   HH_ARGSP(verb, "i : verbosity level (1=avg, 2=more, 3=lots, 4=huge)");
   HH_ARGSC("", ":");

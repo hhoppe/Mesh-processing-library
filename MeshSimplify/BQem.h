@@ -27,9 +27,9 @@ template <typename T> class BQem : noncopyable {
   virtual bool compute_minp_constr_first(float* minp, int nfixed) const = 0;
   virtual bool compute_minp_constr_lf(float* minp, const float* lf) const = 0;
   virtual bool fast_minp_constr_lf(float* minp, const float* lf) const = 0;
-  virtual bool ar_compute_minp(CArrayView<type*> ar_q, MatrixView<float> minp) const = 0;
+  [[nodiscard]] virtual bool ar_compute_minp(CArrayView<type*> ar_q, MatrixView<float> minp) const = 0;
   virtual bool ar_compute_minp_constr_lf(CArrayView<type*> ar_q, MatrixView<float> minp, const float* lf) const = 0;
-  virtual bool check_type(int ptsize, int pn) const = 0;
+  [[nodiscard]] virtual bool check_type(int ptsize, int pn) const = 0;
   friend std::ostream& operator<<(std::ostream& os, const type& qem) {
     qem.serialize(os);
     return os;
@@ -65,7 +65,7 @@ template <typename T, int n> class DQem : public BQem<T> {
     return _q.compute_minp_constr_lf(minp, lf);
   }
   bool fast_minp_constr_lf(float* minp, const float* lf) const override { return _q.fast_minp_constr_lf(minp, lf); }
-  bool ar_compute_minp(CArrayView<base*> ar_q, MatrixView<float> minp) const override {
+  [[nodiscard]] bool ar_compute_minp(CArrayView<base*> ar_q, MatrixView<float> minp) const override {
     CArrayView<type*> ar_qv(reinterpret_cast<type* const*>(ar_q.data()), ar_q.num());
     ASSERTX(ar_qv[0] == this);
     PArray<Qem<T, n>*, 20> ar_q2(ar_q.num());
@@ -81,7 +81,7 @@ template <typename T, int n> class DQem : public BQem<T> {
     ASSERTX(ar_q2[0] == &_q);
     return _q.ar_compute_minp_constr_lf(ar_q2, minp, lf);
   }
-  bool check_type(int ptsize, int pn) const override { return ptsize == sizeof(T) && pn == n; }
+  [[nodiscard]] bool check_type(int ptsize, int pn) const override { return ptsize == sizeof(T) && pn == n; }
 
  private:
   Qem<T, n> _q;

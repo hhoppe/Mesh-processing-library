@@ -153,7 +153,7 @@ void read_video(const string& filename, bool use_nv12) {
 
 // ***
 
-void do_nostdin(Args& args) { dummy_use(args); }
+void do_nostdin() {}
 
 void do_create(Args& args) {
   int nframes = args.get_int(), nx = args.get_int(), ny = args.get_int();
@@ -2049,7 +2049,7 @@ void do_procedure(Args& args) {
     int n = 100'000;
     float samp = 10.f;
     for_int(i, n) {
-      float f = (float(i - n / 2) / (n / samp));
+      float f = (float(i) - float(n) / 2) / (n / samp);
       sum += gaussian(f, 1.f);
     }
     SHOW(sum / (n / samp));

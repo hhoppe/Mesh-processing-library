@@ -16,8 +16,7 @@ class Vector4i {
   Vector4i() = default;
   explicit Vector4i(int j) { fill(j); }
   [[nodiscard]] size_t size() const { return 4; }
-  [[nodiscard]] int& operator[](int i) { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
-  [[nodiscard]] const int& operator[](int i) const { return HH_CHECK_BOUNDS(i, 4), _c[i]; }
+  [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, 4), self._c[i]; }
   [[nodiscard]] Vector4i with(int i, int j) const {
     HH_CHECK_BOUNDS(i, 4);
     Vector4i v = *this;
@@ -30,8 +29,7 @@ class Vector4i {
   using const_iterator = const int*;
   [[nodiscard]] const int* begin() const { return _c; }
   [[nodiscard]] const int* end() const { return _c + 4; }
-  [[nodiscard]] int* data() { return _c; }
-  [[nodiscard]] const int* data() const { return _c; }
+  [[nodiscard]] auto* data(this auto&& self) { return self._c; }
   friend std::ostream& operator<<(std::ostream& os, const Vector4i& v) {
     return os << "Vector4i(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
   }

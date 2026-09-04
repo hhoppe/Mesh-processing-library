@@ -200,7 +200,7 @@ class Pool : noncopyable {
     _chunkh = chunk;
     _h = reinterpret_cast<Link*>(p);
     assertx((reinterpret_cast<uintptr_t>(p) % _ealign) == 0);
-    char* l = p + (nelem - 1) * _esize;
+    char* l = p + size_t(nelem - 1) * _esize;
     for (; p < l; p += _esize) reinterpret_cast<Link*>(p)->next = reinterpret_cast<Link*>(p + _esize);
     reinterpret_cast<Link*>(p)->next = nullptr;
     _nalloc += nelem;

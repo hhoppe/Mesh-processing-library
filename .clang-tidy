@@ -1,0 +1,82 @@
+# clang-tidy --verify-config --config-file=.clang-tidy
+# clang-tidy --dump-config --config-file=.clang-tidy libHh/Grid.cpp -- -I.
+# clang-tidy --enable-check-profile --checks='-*,bugprone-*' Filterframe/Filterframe.cpp -- -I. 1>/dev/null  # Timings.
+# clang-tidy --enable-check-profile Filterframe/Filterframe.cpp -- -I.  # Timings.
+# clang-tidy --checks='-*,modernize-use-nodiscard' Filterframe/Filterframe.cpp -- -I.
+# cd ~/git/mesh_processing; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; clang-tidy Filterimage/Filterimage.cpp -- -I.
+# ... | grep --line-buffered -E '^[^[:space:]].*:[0-9]+:[0-9]+: (warning|error|note):' | sort -u
+#
+# cd ~/git/mesh_processing; exclude1="libHwX|" exclude2="" params="-I./libHwWindows"; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})
+#
+# b 'cd ~/git/mesh_processing; exclude1="libHwWindows|" exclude2="clip.cpp|hlaunch.cpp|Filterterrain.cpp|TerrainIO.cpp|" params="-I./libHwX"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})'
+
+Checks:
+  # Default-included: - 'clang-diagnostic-*'
+  - '-clang-diagnostic-pragma-pack'
+  # Default-included: - 'clang-analyzer-*'
+  - 'modernize-use-nodiscard'
+  - 'bugprone-*'
+  - '-bugprone-easily-swappable-parameters'
+  - '-bugprone-narrowing-conversions'
+  - '-bugprone-branch-clone'
+  - '-bugprone-exception-escape'
+  - '-bugprone-unhandled-exception-at-new'
+  - '-bugprone-macro-parentheses'
+  - '-bugprone-assignment-in-if-condition'
+  - '-bugprone-crtp-constructor-accessibility'
+  - '-bugprone-unchecked-optional-access'
+  - '-bugprone-incorrect-roundings'
+  - '-bugprone-inc-dec-in-conditions'
+  # - 'performance-*'
+  # - '-performance-enum-size'
+  # - 'modernize-*'
+  # - '-modernize-use-trailing-return-type'
+  # - '-modernize-avoid-c-arrays'
+  # - '-modernize-macro-to-enum'
+  # - '-modernize-use-designated-initializers'
+  # - 'readability-*'
+  # - '-readability-identifier-length'
+  # - '-readability-identifier-naming'
+  # - '-readability-magic-numbers'
+  # - '-readability-braces-around-statements'
+  # - '-readability-implicit-bool-conversion'
+  # - '-readability-function-cognitive-complexity'
+  # - '-readability-else-after-return'
+  # - '-readability-named-parameter'
+  # - '-readability-uppercase-literal-suffix'
+CheckOptions:
+  modernize-use-nodiscard.ReplacementString: '[[nodiscard]]'
+  bugprone-sizeof-expression.WarnOnSizeOfPointerToAggregate: false
+  bugprone-empty-catch.IgnoreCatchWithKeywords: '@TODO;@FIXME;@INTENTIONAL'
+  bugprone-implicit-widening-of-multiplication-result.IgnoreConstantIntExpr: true
+HeaderFilterRegex: '.*'
+SystemHeaders: false
+ExcludeHeaderFilterRegex: '.*(glext|wglext|glxext)\.h$'
+FormatStyle: file
+ExtraArgsBefore:
+  - '-x'
+  - 'c++'
+ExtraArgs:
+  - '-std=c++23'
+  - '-march=corei7'
+  - '-msse4.1'
+  - '-ffast-math'
+  - '-fsigned-zeros'
+  - '-ftrapping-math'
+  - '-fno-associative-math'
+  - '-fno-reciprocal-math'
+  - '-fno-finite-math-only'
+  - '-frtti'
+  - '-Wno-constant-logical-operand'
+  - '-D_CRT_SECURE_NO_WARNINGS'
+  - '-DUNICODE'
+  - '-D_UNICODE'
+  - '-DHH_NO_IMAGE_IO'
+  # Raise `ipa-always-inline-size` from its default of 3 CFG basic blocks.  A callee at or below this size is deemed
+  # "small" and is inlined even after the analyzer's inline stack depth limit (5 frames) is reached.  `assertx_aux()`
+  # (an `if` plus a `[[noreturn]]` call) exceeds 3 blocks, so past depth 5 its `[[noreturn]]` is invisible and
+  # `assertx(pointer)` fails to suppress false "null dereference" reports in deep call chains.
+  - '-Xclang'
+  - '-analyzer-config'
+  - '-Xclang'
+  - 'ipa-always-inline-size=5'

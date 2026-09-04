@@ -103,7 +103,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     ASSERTX(s >= 0);
     if (_cap < s) set_capacity(s);
   }
-  int capacity() const { return _cap; }
+  [[nodiscard]] int capacity() const { return _cap; }
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
   bool remove_ordered(const T& e) {  // Return: was there.

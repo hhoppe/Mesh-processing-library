@@ -129,6 +129,7 @@ class ParseArgs : public Args {
     PARSE_FUNC parse_func;
     void* argp;
     string doc;
+    PARSE_FUNC0 parse_func0{};  // Set with parse_func == &fparse_func0 and narg == -2.
   };
   string _name;  // Name of options (e.g. "Hw").
   string _argv0;
@@ -152,6 +153,7 @@ class ParseArgs : public Args {
   static void fstring(Args& args);
   static void fquestion(Args& args);
   static void fversion(Args& args);
+  static void fparse_func0(Args& args);
   ParseArgs& operator=(const ParseArgs&) = default;  // Used in copy_parse().
   ParseArgs(const ParseArgs&) = delete;              // Not noncopyable because operator=() is defined above.
 };

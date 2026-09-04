@@ -58,8 +58,6 @@ template <int D> constexpr Vec<int, D> unravel_index(const Vec<int, D>& dims, si
 // Do the same for a list of coordinates.
 template <int D>
 constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0, std::integral auto... dd);
-// Alternative new version.
-template <int D> constexpr size_t unused_ravel_index_list(const Vec<int, D>& dims, std::integral auto... dd);
 
 // Find stride (in number of elements) of dimension d in the grid.
 template <int D> constexpr size_t grid_stride(const Vec<int, D>& dims, int dim);
@@ -338,6 +336,8 @@ template <int D> [[nodiscard]] constexpr Vec<int, D> unravel_index(const Vec<int
   return u;
 }
 
+// The loop is written out explicitly rather than delegating to ravel_index() on a Vec<int, D> temporary; the
+// temporary defeats the strength reduction that flattens a nested subscript loop into a contiguous pointer walk.
 template <int D>
 [[nodiscard]] constexpr size_t ravel_index_list(const Vec<int, D>& dims, std::integral auto d0,
                                                 std::integral auto... dd) {
@@ -348,12 +348,6 @@ template <int D>
   dummy_use(d);
   ((++d, HH_CHECK_BOUNDS(narrow_cast<int>(dd), dims[d]), i = i * dims[d] + dd), ...);
   return i;
-}
-
-template <int D>
-[[nodiscard]] constexpr size_t unused_ravel_index_list(const Vec<int, D>& dims, std::integral auto... dd) {
-  static_assert(sizeof...(dd) == D);
-  return ravel_index(dims, Vec<int, D>(narrow_cast<int>(dd)...));
 }
 
 template <int D> [[nodiscard]] constexpr size_t grid_stride(const Vec<int, D>& dims, int dim) {
@@ -525,26 +519,26 @@ template <int D, typename T> Grid(CGridView<D, T>) -> Grid<D, T>;
 #define PF(g, code) parallel_for({.cycles_per_elem = 1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 
-#define HH_OPERATIONS(OP) \
-  TTN G operator OP(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) OP g2.flat(i); } return g; } \
-  TTN G operator OP(CG g1, const T& e) { G g(g1.dims()); F(g) { g.flat(i) = g1.flat(i) OP e; } return g; } \
-  TTN G operator OP(const T& e, CG g1) { G g(g1.dims()); F(g) { g.flat(i) = e OP g1.flat(i); } return g; } \
-  TT GV operator OP##=(GV g1, const T& e) { F(g1) { g1.flat(i) OP##= e; } return g1; } \
+// Function bodies for the elementwise operations below.  NEW_* returns a new grid; MOD_* modifies g1 in place.
+// Within code, a is the destination data pointer, and b and c are the data pointers of g1 and g2.
+// The pointers are hoisted out of the loop because going through flat() prevents the compiler from vectorizing.
+#define NEW_GG(code) \
+  { SS; G g(g1.dims()); T* a = g.data(); const T* b = g1.data(); const T* c = g2.data(); PF(g, code); return g; }
+#define NEW_G(code) { G g(g1.dims()); T* a = g.data(); const T* b = g1.data(); PF(g, code); return g; }
+#define MOD_GG(code) { SS; T* a = g1.data(); const T* b = g2.data(); PF(g1, code); return g1; }
+#define MOD_G(code) { T* a = g1.data(); PF(g1, code); return g1; }
+
+#define HH_OPERATIONS(OP)                                        \
+  TTN G operator OP(CG g1, CG g2) NEW_GG(a[i] = b[i] OP c[i])    \
+  TTN G operator OP(CG g1, const T& e) NEW_G(a[i] = b[i] OP e)   \
+  TTN G operator OP(const T& e, CG g1) NEW_G(a[i] = e OP b[i])   \
+  TT GV operator OP##=(GV g1, CG g2) MOD_GG(a[i] OP##= b[i])     \
+  TT GV operator OP##=(GV g1, const T& e) MOD_G(a[i] OP##= e)    \
   HH_EAT_SEMICOLON
 
 HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
-TTN G operator-(CG g1) { G g(g1.dims()); F(g) { g.flat(i) = -g1.flat(i); } return g; }
-
-// The grid-grid compound assignments stay outside HH_OPERATIONS because they are not uniform: operator+= is
-// parallelized and hoists the two data pointers (both matter for Multigrid<>), and operator*= is parallelized.
-TT GV operator+=(GV g1, CG g2) {
-    SS; T* a = g1.data(); const T* b = g2.data(); PF(g1, a[i] += b[i]); return g1;
-}
-TT GV operator-=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) -= g2.flat(i); } return g1; }
-TT GV operator*=(GV g1, CG g2) { SS; PF(g1, g1.flat(i) *= g2.flat(i)); return g1; }
-TT GV operator/=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) /= g2.flat(i); } return g1; }
-TT GV operator%=(GV g1, CG g2) { SS; F(g1) { g1.flat(i) %= g2.flat(i); } return g1; }
+TTN G operator-(CG g1) NEW_G(a[i] = -b[i])
 
 TTN G min(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
 TTN G max(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
@@ -571,6 +565,10 @@ TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
 #undef F
 #undef SS
 #undef HH_OPERATIONS
+#undef MOD_G
+#undef MOD_GG
+#undef NEW_G
+#undef NEW_GG
 #undef GV
 #undef CG
 #undef G

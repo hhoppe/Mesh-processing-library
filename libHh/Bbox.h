@@ -14,14 +14,15 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
   using type = Bbox<T, dim>;
   using PointD = Vec<T, dim>;
 
-  Bbox() { clear(); }
-  constexpr Bbox(const PointD& pmin, const PointD& pmax) : Vec2<PointD>(pmin, pmax) {}
-  constexpr Bbox(const type& bbox) : Bbox(bbox[0], bbox[1]) {}
-  template <ranges::input_range R> requires std::convertible_to<ranges::range_reference_t<R>, PointD>
+  Bbox() noexcept { clear(); }
+  constexpr Bbox(const PointD& pmin, const PointD& pmax) noexcept : Vec2<PointD>(pmin, pmax) {}
+  // The exclusion of type is necessary because a Bbox is itself a range of two PointD, so without it this
+  // constructor would be preferred over the implicit copy constructor for a non-const lvalue Bbox.
+  template <ranges::input_range R>
+  requires(std::convertible_to<ranges::range_reference_t<R>, PointD> && !std::same_as<std::remove_cvref_t<R>, type>)
   explicit Bbox(R&& range) : Bbox() {
     for (const auto& e : range) union_with(e);
   }
-  type& operator=(const type&) = default;
 
   void clear() {
     (*this)[0] = PointD::all(std::numeric_limits<T>::max());

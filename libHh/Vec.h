@@ -16,6 +16,8 @@ template <int D, typename T> class GridView;
 namespace details {
 template <typename T, int n> struct VecBase;
 template <int D, typename T> struct SGridLeaf;
+// The element type deduced by V(); named so that it can also appear in V()'s noexcept-specifier.
+template <typename T, typename Arg0> using V_elem_t = std::conditional_t<std::is_void_v<T>, std::decay_t<Arg0>, T>;
 }  // namespace details
 
 // INVARIANT: is_vec_v must never change observable behavior.  It only gates the presence of the extra grid members
@@ -57,15 +59,15 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   Vec() = default;
   // Include arg0 to disambiguate from default constructor.  arg0 may be either const l-value or r-value reference.
   template <typename... Args>
-  constexpr Vec(const T& arg0, Args&&... args1)
-      noexcept(std::is_nothrow_copy_constructible_v<T> && (std::is_nothrow_constructible_v<T, Args&&> && ...))
+  constexpr Vec(const T& arg0, Args&&... args1) noexcept(std::is_nothrow_copy_constructible_v<T> &&
+                                                         (std::is_nothrow_constructible_v<T, Args&&> && ...))
       requires Copyable<T>
       : base{{arg0, std::forward<Args>(args1)...}} {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
   template <typename... Args>
-  constexpr Vec(T&& arg0, Args&&... args1)
-      noexcept(std::is_nothrow_move_constructible_v<T> && (std::is_nothrow_constructible_v<T, Args&&> && ...))
+  constexpr Vec(T&& arg0, Args&&... args1) noexcept(std::is_nothrow_move_constructible_v<T> &&
+                                                    (std::is_nothrow_constructible_v<T, Args&&> && ...))
       : base{{std::move(arg0), std::forward<Args>(args1)...}} {
     static_assert(sizeof...(args1) + 1 == n, "#args");
   }
@@ -121,12 +123,9 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     operator[](i) = std::move(e);
     return std::move(*this);
   }
-  [[nodiscard]] constexpr bool operator==(const type& rhs) const {
-    for_int(i, n) if (data()[i] != rhs[i]) return false;
-    return true;
-  }
+  [[nodiscard]] constexpr bool operator==(const type&) const = default;
   // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
-  [[nodiscard]] friend constexpr auto operator<=>(const type&, const type&) = default;
+  [[nodiscard]] constexpr auto operator<=>(const type&) const = default;
   [[nodiscard]] constexpr operator ArrayView<T>() noexcept { return view(); }
   [[nodiscard]] constexpr operator CArrayView<T>() const noexcept { return view(); }
   [[nodiscard]] constexpr auto view(this auto&& self) noexcept {
@@ -256,8 +255,8 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     return type(data()[n - 1 - Is]...);
   }
   template <size_t... Is>
-  [[nodiscard]] static constexpr type all_aux(const T& e, std::index_sequence<Is...>)
-      noexcept(std::is_nothrow_copy_constructible_v<T>) requires Copyable<T> {
+  [[nodiscard]] static constexpr type all_aux(const T& e, std::index_sequence<Is...>) noexcept(
+      std::is_nothrow_copy_constructible_v<T>) requires Copyable<T> {
     return type((void(Is), e)...);
   }
   // Default operator=() and copy_constructor are safe.
@@ -272,26 +271,34 @@ template <typename T> using Vec4 = Vec<T, 4>;
 // Construct a Vec from an immediate list of elements, inferring the element type (unless it is explicitly specified)
 // and the array size automatically.
 template <typename T = void, typename Arg0, typename... Args>
-[[nodiscard]] constexpr auto V(Arg0&& arg0, Args&&... args) {
-  using Elem = std::conditional_t<std::is_void_v<T>, std::decay_t<Arg0>, T>;
+[[nodiscard]] constexpr auto V(Arg0&& arg0, Args&&... args) noexcept(
+    std::is_nothrow_constructible_v<Vec<details::V_elem_t<T, Arg0>, 1 + int(sizeof...(Args))>, Arg0&&, Args&&...>) {
+  using Elem = details::V_elem_t<T, Arg0>;
   return Vec<Elem, 1 + sizeof...(Args)>(std::forward<Arg0>(arg0), std::forward<Args>(args)...);
 }
 
 // Construct a zero-length Vec.
-template <typename T> [[nodiscard]] constexpr Vec<T, 0> V() { return Vec<T, 0>(); }
+template <typename T> [[nodiscard]] constexpr Vec<T, 0> V() noexcept { return Vec<T, 0>(); }
 
 // Construct a Vec from a braced list, inferring the size (like std::to_array).
-template <typename T, size_t n> [[nodiscard]] constexpr Vec<T, int(n)> to_Vec(T (&&a)[n]) {
+template <typename T, size_t n>
+[[nodiscard]] constexpr Vec<T, int(n)> to_Vec(T (&&a)[n]) noexcept(std::is_nothrow_move_constructible_v<T>) {
   return [&]<size_t... i>(std::index_sequence<i...>) {
     return Vec<T, int(n)>(std::move(a[i])...);
   }(std::make_index_sequence<n>());
 }
 
 // Construct an Vec with two identical elements, e.g. twice(v) == V(v, v).
-template <typename T> [[nodiscard]] constexpr Vec2<T> twice(const T& v) { return {v, v}; }
+template <typename T>
+[[nodiscard]] constexpr Vec2<T> twice(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+  return {v, v};
+}
 
 // Construct an Vec with three identical elements, e.g. thrice(v) == V(v, v, v).
-template <typename T> [[nodiscard]] constexpr Vec3<T> thrice(const T& v) { return {v, v, v}; }
+template <typename T>
+[[nodiscard]] constexpr Vec3<T> thrice(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+  return {v, v, v};
+}
 
 // Construct an Vec with identical elements, e.g. ntimes<4>(.5f) == V(.5f, .5f, .5f, .5f).
 template <int n, typename T>
@@ -610,13 +617,13 @@ TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) req
 
 // For a nested Vec, recurse rather than multiply by the float weights here, so that the leaf arithmetic is
 //  float * T even when T is integral; the flat loop in the former SGrid.h did the same.
-TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires(IsVec<T>) {
+TTC G interp(const G& g1, const G& g2, float f1 = 0.5f) requires IsVec<T> {
   G g; F { g[i] = interp(g1[i], g2[i], f1); } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires(IsVec<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires IsVec<T> {
   G g; F { g[i] = interp(g1[i], g2[i], g3[i], f1, f2); } return g;
 }
-TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(IsVec<T>) {
+TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires IsVec<T> {
   G g; F { g[i] = interp(g1[i], g2[i], g3[i], bary); } return g;
 }
 

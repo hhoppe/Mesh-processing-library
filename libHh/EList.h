@@ -76,7 +76,7 @@ class EList {
     using difference_type = std::ptrdiff_t;
     explicit Iterator(Node* node) : _node(node) {}
     Iterator() = default;
-    template <typename Node2> requires(std::is_same_v<Node, const Node2>)  // Conversion Iter to ConstIter.
+    template <typename Node2> requires std::is_same_v<Node, const Node2>  // Conversion Iter to ConstIter.
     Iterator(const Iterator<Node2>& rhs) : _node(rhs._node) {}
     [[nodiscard]] bool operator==(const type& rhs) const { return _node == rhs._node; }
     [[nodiscard]] Node* operator*() const { return _node; }

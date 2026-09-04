@@ -294,7 +294,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
 
 // Construct a Grid with the given dims from a flat range of values, in raster (Grid::flat()) order.
 // E.g.: const auto grid = grid_from_flat(image.dims(), image | views::transform(to_luminance));
-template <int D, ranges::input_range R> requires(ranges::forward_range<R> || ranges::sized_range<R>)
+template <int D, ranges::input_range R> requires ranges::forward_range<R> || ranges::sized_range<R>
 [[nodiscard]] auto grid_from_flat(const Vec<int, D>& dims, R&& range) -> Grid<D, range_value_t<R>> {
   Grid<D, range_value_t<R>> grid(dims);
   ASSERTXX(size_t(ranges::distance(range)) == grid.size());

@@ -30,8 +30,12 @@ template <typename T> class CStridedArrayView {
   type& operator=(type&& a) & { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
   [[nodiscard]] int num() const { return _n; }
   [[nodiscard]] size_t size() const { return _n; }
-  [[nodiscard]] const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
-  [[nodiscard]] const T& last() const { return (*this)[_n - 1]; }
+  [[nodiscard]] ptrdiff_t stride() const { return _stride; }
+  [[nodiscard]] auto& operator[](this auto&& self, int i) {
+    HH_CHECK_BOUNDS(i, self.num());
+    return self.data()[i * self.stride()];
+  }
+  [[nodiscard]] auto& last(this auto&& self) { return self[self.num() - 1]; }
   [[nodiscard]] bool ok(int i) const { return i >= 0 && i < _n; }
   using value_type = T;
 
@@ -70,22 +74,33 @@ template <typename T> class CStridedArrayView {
     U* _p;
     ptrdiff_t _stride;
     Iterator(U* p, ptrdiff_t stride) : _p(p), _stride(stride) {}
-    friend Iterator<T>;  // For the conversion from iterator to const_iterator.
     friend CStridedArrayView;
-    friend StridedArrayView<T>;
   };
 
   using iterator = Iterator<const T>;
   using const_iterator = iterator;
-  [[nodiscard]] iterator begin() const { return iterator(_a, _stride); }
-  [[nodiscard]] iterator end() const { return iterator(_a + (_n * _stride), _stride); }
+  [[nodiscard]] auto begin(this auto&& self) { return self.iterator_at(0); }
+  [[nodiscard]] auto end(this auto&& self) { return self.iterator_at(self.num()); }
+  [[nodiscard]] const T* data() const { return _a; }
 
  protected:
+  // The pointer is declared non-const even though CStridedArrayView's elements are logically const.  This lets the
+  // derived StridedArrayView<T> expose a mutable data() without a second pointer member, so both classes share a
+  // single layout and derived-to-base conversion is free.  Const-correctness is therefore not enforced by the type of
+  // _a but by the member function signatures: CStridedArrayView never returns _a as non-const, and there is
+  // deliberately no conversion from CStridedArrayView<T> to StridedArrayView<T>.
   T* _a{nullptr};
   int _n{0};
   ptrdiff_t _stride;
   CStridedArrayView() = default;
   type& operator=(const type&) = delete;
+
+ private:
+  // The iterator at element index i.  Its element type follows the constness of self.data(), so this single
+  // definition serves begin() and end() of both CStridedArrayView (const) and StridedArrayView (const and mutable).
+  [[nodiscard]] auto iterator_at(this auto&& self, int i) {
+    return Iterator<std::remove_pointer_t<decltype(self.data())>>(self.data() + i * self.stride(), self.stride());
+  }
 };
 
 // StridedArrayView is like an ArrayView except its elements are separate by a stride (i.e. not necessarily 1).
@@ -97,21 +112,14 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   explicit StridedArrayView(T* a, int n, ptrdiff_t stride) : base(a, n, stride) {}
   StridedArrayView(const type& a) = default;
   type& operator=(type&& a) & { return base::operator=(std::move(a)), *this; }  // For view<T>.
-  [[nodiscard]] T& operator[](int i) { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
-  [[nodiscard]] const T& operator[](int i) const { return HH_CHECK_BOUNDS(i, _n), _a[i * _stride]; }
-  [[nodiscard]] T& last() { return (*this)[_n - 1]; }
-  [[nodiscard]] const T& last() const { return base::last(); }
+  using value_type = T;
   using iterator = typename base::template Iterator<T>;
   using const_iterator = typename base::const_iterator;
-  [[nodiscard]] iterator begin() { return iterator(_a, _stride); }
-  [[nodiscard]] const_iterator begin() const { return const_iterator(_a, _stride); }
-  [[nodiscard]] iterator end() { return iterator(_a + (_n * _stride), _stride); }
-  [[nodiscard]] const_iterator end() const { return const_iterator(_a + (_n * _stride), _stride); }
+  [[nodiscard]] T* data() { return _a; }
+  [[nodiscard]] const T* data() const { return _a; }
 
  protected:
   using base::_a;
-  using base::_n;
-  using base::_stride;
   StridedArrayView() = default;
   type& operator=(const type&) = delete;
 };

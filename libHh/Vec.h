@@ -123,8 +123,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
     operator[](i) = std::move(e);
     return std::move(*this);
   }
-  [[nodiscard]] constexpr bool operator==(const type&) const = default;
-  // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.
+  // Enable lexicographic ordering, e.g. to use Vec as a key in std::map or std::set.  Also creates operator==().
   [[nodiscard]] constexpr auto operator<=>(const type&) const = default;
   [[nodiscard]] constexpr operator ArrayView<T>() noexcept { return view(); }
   [[nodiscard]] constexpr operator CArrayView<T>() const noexcept { return view(); }

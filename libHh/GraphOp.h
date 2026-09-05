@@ -7,7 +7,7 @@
 #include "libHh/Graph.h"
 #include "libHh/Pqueue.h"
 #include "libHh/Queue.h"
-#include "libHh/RangeOp.h"  // fill()
+#include "libHh/RangeOp.h"  // fill(), truncate()
 #include "libHh/Set.h"
 #include "libHh/Spatial.h"
 #include "libHh/Stat.h"
@@ -210,7 +210,7 @@ template <typename T, typename Func = float(const T&, const T&)>
   for_int(i, pa.num()) {
     SpatialSearch<int> ss(&sp, pa[i]);
     // One extra result, because the first one is the point pa[i] itself.
-    for (const auto& [j, unused_d2] : ss | views::take(kcl + 1)) {
+    for (const auto& [j, unused_d2] : ss | truncate(kcl + 1)) {
       if (j != i) gnew.enter(i, j);
     }
   }

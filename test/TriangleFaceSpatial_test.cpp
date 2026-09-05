@@ -23,7 +23,7 @@ void test2(int gridn) {
     Point p;
     for_int(c, 3) p[c] = .1f + .8f * Random::G.unif();
     SpatialSearch<TriangleFace*> ss(&spatial, p);
-    const auto [ptriangleface, d2] = ss.front();
+    const auto [ptriangleface, d2] = *ss.begin();
     const TriangleFace& triangleface = *ptriangleface;
     int found_i = int(reinterpret_cast<intptr_t>(triangleface.face));
     assertx(found_i == &triangleface - trianglefaces.data());

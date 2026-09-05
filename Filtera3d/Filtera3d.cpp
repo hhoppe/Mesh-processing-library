@@ -359,7 +359,7 @@ bool compute_mindis(const Point& p) {
   static unique_ptr<PointSpatial<int>> SPp;
   if (!SPp) SPp = make_unique<PointSpatial<int>>(30);
   SpatialSearch<int> ss(SPp.get(), p, mindis);  // Look no farther than mindis.
-  if (!ss.empty() && ss.front().d2 < square(mindis)) return true;
+  if (!ranges::empty(ss) && (*ss.begin()).d2 < square(mindis)) return true;
   SPp->enter(pn++, new Point(p));  // never deleted
   return false;
 }

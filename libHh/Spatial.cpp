@@ -91,6 +91,7 @@ BSpatialSearch::BSpatialSearch(const Spatial* pspatial, const Point& p, float ma
   for_int(i, 2) for_int(c, 3) _ssi[i][c] = ci[c];
   consider(ci);
   get_closest_next_cell();
+  advance();  // Compute the closest element, so that begin() and empty() need not do any work.
 }
 
 BSpatialSearch::~BSpatialSearch() {

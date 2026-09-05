@@ -514,6 +514,64 @@ template <ranges::forward_range R1, ranges::forward_range R2, typename... Rs>
     return concatenate(std::forward<R1>(range1), concatenate(std::forward<R2>(range2), std::forward<Rs>(ranges_)...));
 }
 
+namespace details {
+
+// Like views::take(), but its iterator holds the remaining count, so operator++ on the last element does not
+// advance the underlying iterator.  (views::take() uses counted_iterator, whose operator++ always advances and
+// only then observes that the count reached zero.)
+template <ranges::view V> class TruncatedRange : public ranges::view_interface<TruncatedRange<V>> {
+  using Difference = ranges::range_difference_t<V>;
+
+ public:
+  TruncatedRange() = default;
+  constexpr TruncatedRange(V base, Difference count) : _base(std::move(base)), _count(count) {}
+
+  class Iterator {
+   public:
+    using iterator_concept = std::input_iterator_tag;
+    using value_type = ranges::range_value_t<V>;
+    using difference_type = Difference;
+    Iterator() = default;
+    constexpr Iterator(ranges::iterator_t<V> iter, ranges::sentinel_t<V> end, Difference count)
+        : _iter(std::move(iter)), _end(std::move(end)), _count(count) {}
+    [[nodiscard]] constexpr decltype(auto) operator*() const { return *_iter; }
+    [[nodiscard]] constexpr bool operator==(std::default_sentinel_t) const { return !_count || _iter == _end; }
+    constexpr Iterator& operator++() {
+      if (--_count) ++_iter;  // Advance only if a further element can still be requested.
+      return *this;
+    }
+    constexpr void operator++(int) { ++*this; }  // Single-pass, so the prior value cannot be returned.
+
+   private:
+    ranges::iterator_t<V> _iter{};
+    ranges::sentinel_t<V> _end{};
+    Difference _count{};
+  };
+
+  [[nodiscard]] constexpr Iterator begin() { return Iterator(ranges::begin(_base), ranges::end(_base), _count); }
+  [[nodiscard]] constexpr std::default_sentinel_t end() const { return {}; }
+
+ private:
+  V _base{};
+  Difference _count{};
+};
+
+template <typename V> TruncatedRange(V&&, std::ptrdiff_t) -> TruncatedRange<views::all_t<V>>;
+
+struct TruncateClosure : ranges::range_adaptor_closure<TruncateClosure> {
+  std::ptrdiff_t _count;
+  template <ranges::viewable_range R> [[nodiscard]] constexpr auto operator()(R&& range) const {
+    return TruncatedRange(views::all(std::forward<R>(range)), _count);
+  }
+};
+
+}  // namespace details
+
+// Return a view of the first count elements of range, leaving the range advanced to just past those elements.
+// Unlike views::take(), the underlying iterator is never incremented past the last element that is yielded, so a
+// single-pass source (e.g. SpatialSearch) remains positioned on its next unconsumed element and does no extra work.
+[[nodiscard]] inline constexpr auto truncate(std::ptrdiff_t count) { return details::TruncateClosure{{}, count}; }
+
 }  // namespace hh
 
 #endif  // MESH_PROCESSING_LIBHH_RANGEOP_H_

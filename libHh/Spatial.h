@@ -152,21 +152,14 @@ class BSpatialSearch : noncopyable {
   };
 
  protected:
-  // Apply any advance requested by operator++.  Deferring it means that an adaptor stopping on its own count
-  // (such as views::take) never asks for an element that is then discarded.
-  void ensure_current() {
-    if (_owed) _owed = false, advance();
-  }
-  void request_advance() { _owed = true; }
+  void advance();  // Set _result to the next closest element, or set _done.
   [[nodiscard]] bool at_end() const { return _done; }
-  [[nodiscard]] const Result& current() const { return _result; }
+  [[nodiscard]] const Result& current() const { return assertx(!_done), _result; }
 
  private:
   friend Spatial;
-  void advance();  // Set _result to the next closest element, or set _done.
   Result _result{};
   bool _done{false};
-  bool _owed{true};  // The initial element has not yet been computed.
   using Ind = Vec3<int>;
   const Spatial& _spatial;
   const Point _pcenter;
@@ -197,6 +190,8 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
     float d2;  // Squared distance
   };
   // Single-pass iteration in order of increasing distance: "for (const auto& [id, d2] : ss) ...".
+  // The search state lives in *this rather than in the iterator, so begin() is free and may be called repeatedly;
+  // "*ss.begin()" reads the closest remaining element without consuming it, and only operator++ advances.
   struct Iterator {
     using type = Iterator;
     using iterator_concept = std::input_iterator_tag;
@@ -204,21 +199,19 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
     using difference_type = std::ptrdiff_t;
     explicit Iterator(SpatialSearch& ss) : _ss(&ss) {}
     Iterator() = default;
-    [[nodiscard]] bool operator==(std::default_sentinel_t) const { return _ss->ensure_current(), _ss->at_end(); }
+    [[nodiscard]] bool operator==(std::default_sentinel_t) const { return _ss->at_end(); }
     [[nodiscard]] Result operator*() const {
-      _ss->ensure_current();
       const auto& [id, d2] = _ss->current();
       return {Conv<T>::d(id), d2};
     }
-    type& operator++() { return _ss->request_advance(), *this; }
-    void operator++(int) { _ss->request_advance(); }  // Single-pass, so the prior value cannot be returned.
+    type& operator++() { return _ss->advance(), *this; }
+    void operator++(int) { _ss->advance(); }  // Single-pass, so the prior value cannot be returned.
     SpatialSearch* _ss{};
   };
-  [[nodiscard]] Iterator begin() { return Iterator(*this); }
+  [[nodiscard]] Iterator begin() noexcept { return Iterator(*this); }
   [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
-  // Non-consuming queries on the closest remaining element.
-  [[nodiscard]] bool empty() { return ensure_current(), at_end(); }
-  [[nodiscard]] Result front() { return *begin(); }
+  // Customization point for ranges::empty(), whose begin() == end() fallback is restricted to forward ranges.
+  [[nodiscard]] bool empty() const noexcept { return at_end(); }
 };
 
 //----------------------------------------------------------------------------

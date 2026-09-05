@@ -1,0 +1,10 @@
+grid_with_boundary       nv=30    nf=40    checks=120    ok
+closed_torus             nv=42    nf=84    checks=252    ok
+small_closed             nv=12    nf=24    checks=72     ok
+tiny_with_boundary       nv=9     nf=8     checks=24     ok
+sizeof(VFR)=24 sizeof(VVR)=16
+Array(mesh.ccw_faces(5, 0) | views::filter([](int f) { return f % 2 == 0; })) = Array<int>(3) {
+  0
+  10
+  8
+}

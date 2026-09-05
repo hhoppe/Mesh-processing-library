@@ -340,17 +340,33 @@ int main() {
     static_assert(std::is_standard_layout_v<Vec<float, 3>>);
   }
   {
+    // Previously, the iterators were forward rather than input.
+    // static_assert(std::forward_iterator<ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
+    // static_assert(std::sentinel_for<std::default_sentinel_t, ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
+    // static_assert(ranges::forward_range<decltype(range(Vec3<int>{}))>);
+    // static_assert(ranges::forward_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+  }
+  {
     // The coordinate ranges are proper C++20 views over which the std::ranges adaptors and algorithms compose.
-    static_assert(std::forward_iterator<ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
-    static_assert(std::sentinel_for<std::default_sentinel_t, ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
-    static_assert(ranges::forward_range<decltype(range(Vec3<int>{}))>);
+    // The iterators are input, not forward: operator*() returns a reference to the coordinate held within the
+    // iterator, so the reference is invalidated by the next operator++(); see the discussion in Vec.h.
+    using Iter2 = ranges::iterator_t<decltype(range(Vec2<int>{}))>;
+    static_assert(std::input_iterator<Iter2> && !std::forward_iterator<Iter2>);
+    // The legacy category must be input too, else std::iterator_traits would deduce forward_iterator_tag from
+    // the lvalue-reference return type and the std:: algorithms would assume the multi-pass guarantee.
+    static_assert(std::is_same_v<std::iterator_traits<Iter2>::iterator_category, std::input_iterator_tag>);
+    static_assert(std::sentinel_for<std::default_sentinel_t, Iter2>);
+    static_assert(ranges::input_range<decltype(range(Vec3<int>{}))>);
+    static_assert(!ranges::forward_range<decltype(range(Vec3<int>{}))>);
     static_assert(ranges::view<decltype(range(Vec3<int>{}))>);
     static_assert(ranges::viewable_range<decltype(range(Vec3<int>{}))>);
     static_assert(ranges::borrowed_range<decltype(range(Vec3<int>{}))>);
     static_assert(ranges::sized_range<decltype(range(Vec3<int>{}))>);
-    static_assert(ranges::forward_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(ranges::input_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(!ranges::forward_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
     static_assert(ranges::view<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
     static_assert(ranges::borrowed_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
+    static_assert(ranges::sized_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
     static_assert(std::is_same_v<ranges::range_value_t<decltype(range(Vec2<int>{}))>, Vec2<int>>);
     static_assert(std::is_same_v<ranges::range_reference_t<decltype(range(Vec2<int>{}))>, const Vec2<int>&>);
     static_assert(std::is_trivially_copyable_v<decltype(range(Vec2<int>{}))>);
@@ -363,6 +379,11 @@ int main() {
     static_assert(range(V(2, 0, 3)).size() == 0 && range(V(2, 0, 3)).empty());
     static_assert(range(V(1, 2), V(4, 2)).size() == 0 && range(V(1, 2), V(4, 2)).empty());
     static_assert(!range(V(2, 3)).empty());
+    // Being an input_range does not lose size(): view_interface::empty() and operator bool require
+    // sized_range || forward_range (LWG 3715), so both survive, and ranges::distance() stays O(1).  Of the
+    // view_interface members, only front() is forfeited (back() and operator[] were never available anyway).
+    static_assert(bool(range(V(2, 3))) && !bool(range(V(3, 0))));
+    static_assert(bool(range(V(1, 2), V(4, 7))) && !bool(range(V(1, 2), V(4, 2))));
   }
   {
     for (const auto& u : range(V(1, 2), V(3, 4))) SHOW(u);
@@ -375,7 +396,7 @@ int main() {
     SHOW(ranges::distance(range(V(3, 4))), ranges::distance(range(V(1, 1), V(3, 4))));
   }
   {
-    // The iterators are forward iterators, so the ranges feed the std::ranges algorithms and adaptors.
+    // Although single-pass, the iterators still feed the std::ranges algorithms and adaptors.
     SHOW(*ranges::find(range(V(3, 4)), V(1, 2)));
     SHOW(contains(range(V(3, 4)), V(1, 3)));
     SHOW(contains(range(V(3, 4)), V(1, 4)));
@@ -388,6 +409,20 @@ int main() {
     // Because the ranges are borrowed_range, an iterator into a temporary range stays valid.
     const auto iter = ranges::find(range(V(3, 4)), V(2, 1));
     SHOW(*iter);
+  }
+  {
+    // The reference returned by operator*() aliases the coordinate held in the iterator, so it follows the
+    // increments; a caller that must retain a coordinate across an increment has to copy it.
+    auto iter2 = ranges::begin(range(V(2, 2)));
+    const Vec2<int>& u_ref = *iter2;
+    const Vec2<int> u_copy = *iter2;
+    ++iter2;
+    SHOW(u_ref, u_copy);
+    // Conversions needing only the element count are unaffected because the ranges remain sized_range; Array's
+    // range constructor keeps its exact-allocation path, which selects on forward_range || sized_range.
+    SHOW(ranges::distance(range(V(3, 4))), range(V(3, 4)).size());
+    SHOW(Array(range(V(2, 3))));
+    SHOW(range(V(1, 2), V(3, 4)) | ranges::to<Array<Vec2<int>>>());
   }
 }
 

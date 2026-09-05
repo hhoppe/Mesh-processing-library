@@ -441,13 +441,34 @@ template <int D> struct Vec_lower_bound<D, false> {
 // Iterator over the coordinates uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1], in lexicographic
 // order (the last coordinate varies fastest).  It stores the bounds rather than pointing to the Vec_range, so it
 // remains valid after the range is destroyed, which lets Vec_range be a borrowed_range.
+//
+// The current coordinate is stored in the iterator itself and operator*() returns a reference to it, so the
+// reference is invalidated by the next operator++().  Such a "stashing" iterator cannot be a forward_iterator:
+// [iterator.concept.forward] requires that references obtained from the iterator remain valid for as long as the
+// range does, and the older LegacyForwardIterator requirements additionally ask that equal iterators dereference
+// to the same object, whereas two copies here each dereference to their own coordinate.  The tags below therefore
+// advertise input_iterator, which promises exactly what is delivered: *iter is valid until the next increment.
+// The explicit iterator_category is needed because std::iterator_traits would otherwise deduce
+// forward_iterator_tag from the lvalue-reference return type and mislead the legacy std:: algorithms.
+//
+// The alternative is to return Vec<int, D> by value; a prvalue reference type is compatible with forward_iterator
+// (as in std::views::iota), but it makes `for (const auto& u : range(dims))` bind to a temporary at every call
+// site, which Clang reports under -Wrange-loop-bind-reference.
+//
+// Being only an input_range costs view_interface::front(), the multi-pass adaptors (views::pairwise,
+// views::adjacent, views::slide, views::split, views::chunk_by, views::cartesian_product), and the multi-pass
+// algorithms (ranges::search, ranges::find_end, ranges::unique, ranges::equal_range).  Whatever needs just the
+// element count is unaffected, because Vec_range is still a sized_range: view_interface::empty() and operator
+// bool remain available (LWG 3715), ranges::distance() remains O(1), and Array's range constructor keeps its
+// exact-allocation path (which selects on forward_range || sized_range).
 template <int D, bool has_lower_bound> class Vec_iterator : private Vec_lower_bound<D, has_lower_bound> {
   static_assert(D > 0);
   using type = Vec_iterator<D, has_lower_bound>;
   using base = Vec_lower_bound<D, has_lower_bound>;
 
  public:
-  using iterator_concept = std::forward_iterator_tag;
+  using iterator_concept = std::input_iterator_tag;
+  using iterator_category = std::input_iterator_tag;
   using value_type = Vec<int, D>;
   using difference_type = std::ptrdiff_t;
   constexpr Vec_iterator() = default;

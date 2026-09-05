@@ -318,8 +318,7 @@ extern int g_unoptimized_zero;
 #define assertnever(...) hh::details::assertnever_aux((__VA_ARGS__), HH_FL)
 
 // Always abort; omit warning about any subsequent unreachable code.
-#define assertnever_ret(...) \
-  (hh::g_unoptimized_zero ? void() : hh::details::assertnever_aux((__VA_ARGS__), HH_FL))
+#define assertnever_ret(...) (hh::g_unoptimized_zero ? void() : hh::details::assertnever_aux((__VA_ARGS__), HH_FL))
 
 // if !expr, exit program (abort); otherwise return expr.
 #define assertx(...) hh::details::assertx_aux((__VA_ARGS__), "assertx(" #__VA_ARGS__ ")" HH_FL)

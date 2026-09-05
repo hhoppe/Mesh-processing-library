@@ -130,7 +130,7 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
  public:
   explicit ArrayView(T* a, int n) noexcept : base(a, n) {}
   template <size_t n> ArrayView(T (&a)[n]) noexcept : base(a, n) {}  // For: T a[n];
-  ArrayView(const type&) = default;                         // Because it has explicit copy assignment.
+  ArrayView(const type&) = default;                                  // Because it has explicit copy assignment.
   // template <int n> ArrayView(Vec<T, n>&);  // Implemented as conversion operator in Vec.
   // ArrayView(std::vector<T>& a) : base(a) { }
   // template <size_t n> ArrayView(std::array<T, n>& a) : base(a) { }

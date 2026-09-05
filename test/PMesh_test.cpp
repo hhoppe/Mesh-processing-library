@@ -67,7 +67,8 @@ AWMesh make_mesh(int ny, int nx, bool wrap) {
   mesh._wedges.init(nv);
   for_int(v, nv) {
     mesh._wedges[v].vertex = v;
-    mesh._vertices[v].attrib.point = Point(float(v % nx), float(v / nx), 0.f);
+    const int x = v % nx, y = v / ny;
+    mesh._vertices[v].attrib.point = Point(float(x), float(y), 0.f);
   }
   const auto vid = [&](int y, int x) { return (y % ny) * nx + (x % nx); };
   const int ylim = wrap ? ny : ny - 1, xlim = wrap ? nx : nx - 1;

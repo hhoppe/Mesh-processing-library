@@ -76,7 +76,6 @@
     <ClCompile Include="Random.cpp" />
     <ClCompile Include="SrMesh.cpp" />
     <ClCompile Include="Spatial.cpp" />
-    <ClCompile Include="StackWalker.cpp" />
     <ClCompile Include="Stat.cpp" />
     <ClCompile Include="SubMesh.cpp" />
     <ClCompile Include="Timer.cpp" />
@@ -171,7 +170,6 @@
     <ClInclude Include="SingularValueDecomposition.h" />
     <ClInclude Include="Spatial.h" />
     <ClInclude Include="Stack.h" />
-    <ClInclude Include="StackWalker.h" />
     <ClInclude Include="Stat.h" />
     <ClInclude Include="StridedArrayView.h" />
     <ClInclude Include="StringOp.h" />

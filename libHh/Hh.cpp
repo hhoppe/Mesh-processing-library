@@ -33,9 +33,6 @@
 
 #if defined(__cpp_lib_stacktrace)
 #include <stacktrace>
-#elif defined(_MSC_VER) && !defined(HH_NO_STACKWALKER)
-#define HH_USE_STACKWALKER
-#include "libHh/StackWalker.h"
 #endif
 
 // *** Check required language features.
@@ -68,7 +65,7 @@ namespace {
 
 // Show the call stack of the current thread; the stacks of any other threads are not accessible.
 void show_call_stack_internal() {
-  const bool verbose = getenv_bool("STACKWALKER_VERBOSE");
+  const bool verbose = getenv_bool("STACKTRACE_VERBOSE");
   constexpr size_t max_frames = 30;  // A stack overflow would otherwise report thousands of identical frames.
   bool past_main = false;
   for (const std::stacktrace_entry& entry : std::stacktrace::current(0u, max_frames)) {
@@ -95,65 +92,6 @@ void show_call_stack_internal() {
   }
   if (std::stacktrace::current(0u, max_frames).size() == max_frames) std::cerr << "... (truncated) ...\n";
 }
-
-#elif defined(HH_USE_STACKWALKER)
-
-// StackWalk64  https://learn.microsoft.com/en-us/windows/win32/api/dbghelp/nf-dbghelp-stackwalk  complicated
-// Comment: You can find article and good example of use at:
-//  https://www.codeproject.com/Articles/11132/Walking-the-callstack-2
-// CaptureStackBackTrace() https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/bb204633(v=vs.85)
-
-// https://www.codeproject.com/Articles/11132/Walking-the-callstack-2
-// "Walking the callstack"  by Jochen Kalmbach [MVP VC++]     2005-11-14   NICE!
-//
-// The goal for this project was the following:
-// Simple interface to generate a callstack
-// C++ based to allow overwrites of several methods
-// Hiding the implementation details (API) from the class interface
-// Support of x86, x64 and IA64 architecture
-// Default output to debugger-output window (but can be customized)
-// Support of user-provided read-memory-function
-// Support of the widest range of development-IDEs (VC5-VC8)
-// Most portable solution to walk the callstack
-
-// See notes inside StackWalker.cpp with pointers to packages for Mingw.
-
-// It is difficult to find a mingw-compatible version of StackWalker.
-// Considered http://home.broadpark.no/~gvanem/misc/exc-abort.zip
-//  which was compiled in ~/git/hh_src/_other/exc-abort.zip
-// However, it does not show symbols in call stack.
-// A correct implementation would have to combine the Windows-based StackWalker with the debug symbols of gcc.
-
-// Simple implementation of an additional output to the console:
-class MyStackWalker : public StackWalker {
- public:
-  MyStackWalker() = default;
-  // MyStackWalker(DWORD dwProcessId, HANDLE hProcess) : StackWalker(dwProcessId, hProcess) {}
-  void OnOutput(LPCSTR szText) override {
-    // no heap allocation!
-    static std::array<char, 512> buf;  // Made static just in case stack is almost exhausted.
-    snprintf(buf.data(), int(buf.size() - 1), "%.*s", int(buf.size() - 6), szText);
-    std::cerr << buf.data();
-    // printf(szText);
-    // StackWalker::OnOutput(szText);
-  }
-  void OnSymInit(LPCSTR, DWORD, LPCSTR) override {}
-  void OnLoadModule(LPCSTR, LPCSTR, DWORD64, DWORD, DWORD, LPCSTR, LPCSTR, ULONGLONG) override {}
-};
-
-void show_call_stack_internal() {
-  MyStackWalker sw;
-  sw.ShowCallstack();
-}
-
-// Other possible stack-walking routines:
-
-// https://www.codeproject.com/Articles/178574/Using-PDB-files-and-symbols-to-debug-your-applicat
-//  "Using PDB files and symbols to debug your application" by Yanick Salzmann   2011-04-18   few downloads
-//  "With the help of PDB files, you are able to recover the source code as it was before compilation
-//   from the bits and bytes at runtime."
-
-// https://stackoverflow.com/questions/6205981/windows-c-stack-trace-from-a-running-app
 
 #else
 

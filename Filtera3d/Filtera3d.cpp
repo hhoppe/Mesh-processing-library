@@ -359,7 +359,7 @@ bool compute_mindis(const Point& p) {
   static unique_ptr<PointSpatial<int>> SPp;
   if (!SPp) SPp = make_unique<PointSpatial<int>>(30);
   SpatialSearch<int> ss(SPp.get(), p, mindis);  // Look no farther than mindis.
-  if (!ss.done() && ss.next().d2 < square(mindis)) return true;
+  if (!ss.empty() && ss.front().d2 < square(mindis)) return true;
   SPp->enter(pn++, new Point(p));  // never deleted
   return false;
 }
@@ -693,7 +693,7 @@ void compute_outlier() {
   for_int(i, g_outlier.pa.num()) {
     SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
     // The first search result is this point itself, so advancing outliern times reaches its outliern'th neighbor.
-    const float d2 = ranges::next(ss.begin(), outliern)->d2;
+    const auto [unused_id, d2] = *ranges::next(ss.begin(), outliern);
     const float d = my_sqrt(d2) * xform_inverse[0, 0];
     HH_SSTAT(Soutlierd, d);
     if (d >= outlierd) {

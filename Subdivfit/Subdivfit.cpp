@@ -714,7 +714,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
   for (int i : setpts) {
     if (setbadpts.contains(i)) {
       SpatialSearch<TriangleFace*> ss(&spatial, co[i] * xform);
-      TriangleFace* triangleface = ss.next().id;
+      TriangleFace* triangleface = ss.front().id;
       gscmf[i] = triangleface->face;
     } else {
       Face f = trfmm(gcmf[i], gmesh, smesh.orig_mesh());

@@ -428,7 +428,7 @@ void global_project_aux() {
     TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
     for_int(i, pt.co.num()) {
       SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
-      TriangleFace* triangleface = ss.next().id;
+      TriangleFace* triangleface = ss.front().id;
       Face f = triangleface->face;
       point_change_face(i, f);
       project_point(pt.co[i], f, dummy_bary, pt.clp[i]);

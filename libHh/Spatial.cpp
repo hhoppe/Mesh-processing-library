@@ -98,17 +98,13 @@ BSpatialSearch::~BSpatialSearch() {
   HH_SSTAT(Sssnelemsv, _nelemsv);
 }
 
-bool BSpatialSearch::done() {
+void BSpatialSearch::advance() {
   for (;;) {
-    if (!_pq.empty()) return false;
-    if (_disbv2 >= square(_maxdis)) return true;
-    expand_search_space();
-  }
-}
-
-BSpatialSearch::Result BSpatialSearch::next() {
-  for (;;) {
-    if (_pq.empty()) assertx(!done());  // Refill _pq.
+    if (_pq.empty()) {
+      if (_disbv2 >= square(_maxdis)) return void(_done = true);
+      expand_search_space();
+      continue;
+    }
     float dis2 = _pq.min_priority();
     if (dis2 > _disbv2) {
       expand_search_space();
@@ -119,7 +115,8 @@ BSpatialSearch::Result BSpatialSearch::next() {
     if (_pq.min() != u || _pq.min_priority() != dis2) continue;
     dis2 = _pq.min_priority();
     u = _pq.remove_min();
-    return {_spatial.pq_id(u), dis2};
+    _result = {_spatial.pq_id(u), dis2};
+    return;
   }
 }
 

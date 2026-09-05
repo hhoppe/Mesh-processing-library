@@ -551,7 +551,8 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
 void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents) {
   // remove references from children
-  for (auto [ci, c] : views::enumerate(src->children())) {
+  for (auto [ci, c_ref] : views::enumerate(src->children())) {
+    const Simplex c = c_ref;  // Copy, because the next line assigns through the aliased `c_ref`.
     if (!c) continue;
     src->_child[int(ci)] = nullptr;
     vec_remove_ordered(c->_parent, src);

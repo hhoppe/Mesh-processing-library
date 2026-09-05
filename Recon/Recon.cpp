@@ -521,10 +521,7 @@ float compute_unsigned(const Point& p, Point& proj) {
   SpatialSearch<int> ss(SPp.get(), p);
   Homogeneous h;
   const int k = 1;  // make a parameter?
-  for_int(i, k) {
-    const int pi = ss.next().id;
-    h += co[pi];
-  }
+  for (const auto& [pi, unused_d2] : ss | views::take(k)) h += co[pi];
   proj = to_Point(h / float(k));
   return dist(p, proj) - unsigneddis;
 }
@@ -536,7 +533,7 @@ float compute_signed(const Point& p, Point& proj) {
   int tpi;
   {
     SpatialSearch<int> ss(SPpc.get(), p);
-    tpi = ss.next().id;
+    tpi = ss.front().id;
   }
   Vector vptopc = p - pcorg[tpi];
   float dis = dot(vptopc, pcnor[tpi]);
@@ -548,12 +545,12 @@ float compute_signed(const Point& p, Point& proj) {
   if (1) {
     // check that projected point is close to a data point
     SpatialSearch<int> ss(SPp.get(), proj);
-    if (ss.next().d2 > square(samplingd)) return k_Contour_undefined;
+    if (ss.front().d2 > square(samplingd)) return k_Contour_undefined;
   }
   if (prop) {
     // check that grid point is close to a data point
     SpatialSearch<int> ss(SPp.get(), p);
-    const float d2 = ss.next().d2;
+    const float d2 = ss.front().d2;
     float grid_diagonal2 = square(1.f / gridsize) * 3.f;
     const float fudge = 1.2f;
     if (d2 > grid_diagonal2 * square(fudge)) return k_Contour_undefined;

@@ -190,12 +190,12 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
     const Point pbb = p * _xform;
     const float max_dis_bb = _options.max_dis * _xform[0, 0];
     SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb, max_dis_bb);
-    if (ss.done()) {  // No triangle within max_dis;
+    if (ss.empty()) {  // No triangle within max_dis;
       result.bary = thrice(NAN);
       result.clp = thrice(NAN);
       result.d2 = NAN;
     } else {
-      const TriangleFace& triangleface = *ss.next().id;
+      const TriangleFace& triangleface = *ss.front().id;
       f = triangleface.face;
       const Vec3<Point> triangle = _mesh.triangle_points(f);  // (Without _xform transformation.)
       const auto proj = project_point_triangle(p, triangle);

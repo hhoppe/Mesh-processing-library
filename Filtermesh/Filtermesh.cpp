@@ -4349,7 +4349,7 @@ void do_trimpts(Args& args) {
       const float circumd = dist(pc, triangle[0]);
       const float maxd = circumd * dtrim * xform[0, 0];
       SpatialSearch<int> ss(&spatial, pc * xform, maxd);
-      if (ss.done() || ss.next().d2 > square(maxd)) faces_to_destroy.push(f);
+      if (ss.empty() || ss.front().d2 > square(maxd)) faces_to_destroy.push(f);
     }
     showdf("Destroying %d faces\n", faces_to_destroy.num());
     for (Face f : faces_to_destroy) mesh.destroy_face(f);
@@ -4361,7 +4361,7 @@ void do_trimpts(Args& args) {
       Point p = mesh.point(v) * xform;
       assertx(p[0] > 0.f && p[0] < 1.f && p[1] > 0.f && p[1] < 1.f && p[2] > 0.f && p[2] < 1.f);
       SpatialSearch<int> ss(&spatial, p, maxd);
-      if (ss.done() || ss.next().d2 > square(maxd)) {
+      if (ss.empty() || ss.front().d2 > square(maxd)) {
         nvtoofar++;
         mesh.flags(v).flag(vflag_toofar) = true;
       }

@@ -18,11 +18,11 @@ int main() {
     }
     for (int i = 8; i < pa.num(); i += 7) sp.remove(i, &pa[i]);
     SpatialSearch<int> ss(&sp, Point(.7f, .2f, .8f));
-    for (const auto& [i, d2] : ss)
+    for (const auto [i, d2] : ss)
       std::cerr << sform("Found p%-3d at d2=%-9g  : ", i, d2) << pa[i] << "\n";
     {
       SpatialSearch<int> ss1(&sp, Point(.72f, .55f, .33f));
-      for (const auto& [i2, d2] : ss1 | views::take(2)) {
+      for (const auto [i2, d2] : ss1 | views::take(2)) {
         SHOW(i2);
         SHOW(round_fraction_digits(d2, 1e6f));
       }

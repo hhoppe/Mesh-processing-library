@@ -14,20 +14,35 @@ Graph: edges {
  edge (6, 2)
  edge (7, 1)
 }  (cost=40)
-2 at dist=0
-3 at dist=1
-6 at dist=4
-1 at dist=9
-4 at dist=12
-5 at dist=13
-7 at dist=15
-2 at dist=0
-3 at dist=1
-6 at dist=4
-1 at dist=9
-4 at dist=12
-5 at dist=13
-7 at dist=15
+V1: 2 at dist=0
+V1: 3 at dist=1
+V1: 6 at dist=4
+V1: 1 at dist=9
+V1: 4 at dist=12
+V1: 5 at dist=13
+V1: 7 at dist=15
+V2: 2 at dist=0
+V2: 3 at dist=1
+V2: 6 at dist=4
+V2: 1 at dist=9
+V2: 4 at dist=12
+V2: 5 at dist=13
+V2: 7 at dist=15
+V3: 2 at dist=0
+V3: 3 at dist=1
+V3: 6 at dist=4
+V3: 1 at dist=9
+V3: 4 at dist=12
+V3: 5 at dist=13
+V3: 7 at dist=15
+V4: 2 at dist=0
+V4: 3 at dist=1
+V4: 6 at dist=4
+V4: 1 at dist=9
+V4: 4 at dist=12
+V4: 5 at dist=13
+V4: 7 at dist=15
+nearest: 2 at dist=0
 graph_edge_stats(g, fdist()) = (12     )           1:6            av=3.3333333      sd=1.9694639
 graph_num_components(g) = 1
 symclosure:

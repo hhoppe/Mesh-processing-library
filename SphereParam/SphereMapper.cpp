@@ -40,9 +40,9 @@ template <typename T> T spherical_triangle_area(const Vec3<T>& pd0, const Vec3<T
 
 inline bool vertex_is_on_sharp_edge(const AWMesh& awmesh, int v, int someface, int& vl, int& vr) {
   int w_last = -1;
-  for (const auto& [_, ff] : awmesh.ccw_vertices(v, someface)) w_last = awmesh.get_wvf(v, ff);
+  for (const auto [_, ff] : awmesh.ccw_vertices(v, someface)) w_last = awmesh.get_wvf(v, ff);
   vl = vr = -1;
-  for (const auto& [vv, ff] : awmesh.ccw_vertices(v, someface)) {
+  for (const auto [vv, ff] : awmesh.ccw_vertices(v, someface)) {
     const int w = awmesh.get_wvf(v, ff);
     if (w != w_last) {
       if (vl < 0) {
@@ -315,7 +315,7 @@ class SphereMapper::Implementation {
     int f_last = -1;
     Vector v_first, v_last;
     dummy_init(v_first, v_last);
-    for (const auto& [vv, ff] : _pmi.ccw_vertices(v, someface)) {
+    for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) {
       const Vector vp = _sphmap[vv];
       if (f_last < 0) {
         v_first = vp;
@@ -458,7 +458,7 @@ class SphereMapper::Implementation {
     for_int(i, _optim_vsplit_vt_iter) _sphmap[v] = optimize_vertex(v, someface);
 
     for_int(i, _optim_vsplit_nei_iter) {
-      for (const auto& [vv, ff] : _pmi.ccw_vertices(v, someface)) _sphmap[vv] = optimize_vertex(vv, ff);
+      for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) _sphmap[vv] = optimize_vertex(vv, ff);
       _sphmap[v] = optimize_vertex(v, someface);
     }
   }
@@ -530,7 +530,7 @@ class SphereMapper::Implementation {
           const float displacement = dist(ar_sph[v], _sphmap[v]);
           _sphmap[v] = ar_sph[v];
           ar_displacement[v] = 0.f;
-          for (const auto& [vv, unused_ff] : _pmi.ccw_vertices(v, someface[v])) {
+          for (const auto [vv, unused_ff] : _pmi.ccw_vertices(v, someface[v])) {
             locked[vv] = true;
             ar_displacement[vv] += displacement * k_spatial_fade;
           }
@@ -737,7 +737,7 @@ class SphereMapper::Implementation {
     const Vector normal = average_normal_for_vertex(_pmi, vt, fnew);
     const string sinfo = string(" {normal=") + csform_vec(str, normal) + "}";
     update_visualizer_vertex_position(os, vt, sinfo.c_str());
-    for (const auto& [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) update_visualizer_vertex_position(os, vv, "");
+    for (const auto [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) update_visualizer_vertex_position(os, vv, "");
     const int nf = _pmi._faces.num();
     const int nsplits_threshold = max(1, int((nf - 1000) * .03f));
     if (++_visualizer_nsplits_since_end_frame >= nsplits_threshold) {

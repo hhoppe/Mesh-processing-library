@@ -182,7 +182,7 @@ void init_output() {
 void compute_tp(int i, int& n, Frame& frame) {
   PArray<Point, 40> pa;
   SpatialSearch<int> ss(SPp.get(), co[i]);
-  for (const auto& [pi, d2] : ss) {
+  for (const auto [pi, d2] : ss) {
     if ((pa.num() >= minkintp && d2 > square(samplingd)) || pa.num() >= maxkintp) break;
     pa.push(co[pi]);
     if (pi != i && !gpcpseudo->contains(i, pi)) gpcpseudo->enter_undirected(i, pi);
@@ -522,7 +522,7 @@ float compute_unsigned(const Point& p, Point& proj) {
   SpatialSearch<int> ss(SPp.get(), p);
   Homogeneous h;
   const int k = 1;  // make a parameter?
-  for (const auto& [pi, unused_d2] : ss | truncate(k)) h += co[pi];
+  for (const auto [pi, unused_d2] : ss | truncate(k)) h += co[pi];
   proj = to_Point(h / float(k));
   return dist(p, proj) - unsigneddis;
 }

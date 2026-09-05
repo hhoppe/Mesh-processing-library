@@ -67,7 +67,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
     const int v0 = pmi.face_vertices(f0)[0];
     int i = 0;
     base_sphmap[v0] = tetrav[i++];
-    for (const auto& [vv, unused_ff] : pmi.ccw_vertices(v0, f0)) base_sphmap[vv] = tetrav[i++];
+    for (const auto [vv, unused_ff] : pmi.ccw_vertices(v0, f0)) base_sphmap[vv] = tetrav[i++];
 
   } else if (base_param_scheme == "projection") {  // Use spherical projection.
     Array<Point> points;

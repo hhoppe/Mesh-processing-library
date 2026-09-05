@@ -23,19 +23,28 @@ template <typename T> void graph_symmetric_closure(Graph<T>& g) {
 }
 
 // Given a graph (possibly directed), return vertices in order of increasing graph distance from vs.
-// (Vertex vs itself is returned on first invocation of next().)
+// Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".  (Vertex vs itself is the first element.)
 template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
  public:
   explicit Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
     _pq.enter(vs, 0.f);
+    advance();  // Compute the first element, so that begin() and empty() need not do any work.
   }
   struct Result {
     T vertex;
     float dist;  // Graph distance from vs.
   };
-  [[nodiscard]] bool done() const { return _pq.empty(); }
-  [[nodiscard]] Result next() {
-    assertx(!_pq.empty());
+  using Iterator = CursorIterator<Dijkstra>;
+  [[nodiscard]] Iterator begin() noexcept { return Iterator(*this); }
+  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+  // Also the customization point for ranges::empty(), whose begin() == end() fallback requires a forward range.
+  [[nodiscard]] bool empty() const noexcept { return _done; }
+
+ private:
+  friend CursorIterator<Dijkstra>;
+  [[nodiscard]] const Result& current() const { return _result; }
+  void advance() {
+    if (_pq.empty()) return void(_done = true);
     const float dmin = _pq.min_priority();
     const T vmin = _pq.remove_min();
     _set.enter(vmin);
@@ -44,19 +53,15 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
       const float pnd = dmin + _fdist(vmin, v);  // Possibly smaller distance.
       _pq.enter_update_if_smaller(v, pnd);
     }
-    return {vmin, dmin};
+    _result = {vmin, dmin};
   }
 
-  // Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".
-  using Iterator = CursorIterator<Dijkstra, Result>;
-  [[nodiscard]] Iterator begin() { return Iterator(*this); }
-  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
-
- private:
   const Graph<T>& _g;
   Func_dist _fdist;
   HPqueue<T> _pq;
   Set<T> _set;
+  Result _result{};
+  bool _done{false};
 };
 
 // Template deduction guide:
@@ -161,7 +166,7 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
     if (i) gnew.enter_undirected(i, closest[i]);
     inset[i] = true;
     SpatialSearch<int> ss(&sp, pa[i]);
-    for (const auto& [j, d2] : ss) {
+    for (const auto [j, d2] : ss) {
       if (d2 > square(thresh)) break;
       if (inset[j]) continue;
       if (pq.enter_update_if_smaller(j, d2)) closest[j] = i;
@@ -210,7 +215,7 @@ template <typename T, typename Func = float(const T&, const T&)>
   for_int(i, pa.num()) {
     SpatialSearch<int> ss(&sp, pa[i]);
     // One extra result, because the first one is the point pa[i] itself.
-    for (const auto& [j, unused_d2] : ss | truncate(kcl + 1)) {
+    for (const auto [j, unused_d2] : ss | truncate(kcl + 1)) {
       if (j != i) gnew.enter(i, j);
     }
   }
@@ -219,8 +224,8 @@ template <typename T, typename Func = float(const T&, const T&)>
 
 // *** GraphComponent
 
-// Access each connected component of a graph.
-// next() returns a representative vertex of each component.
+// Access each connected component of a graph, as a representative vertex of each.
+// Single-pass iteration: "for (const T& v : graph_component) ...".
 template <typename T> class GraphComponent : noncopyable {
  public:
   explicit GraphComponent(const Graph<T>* g) : _g(*assertx(g)) {
@@ -228,19 +233,17 @@ template <typename T> class GraphComponent : noncopyable {
     _vcur = r.begin();
     _vend = r.end();
   }
-  [[nodiscard]] bool done() {
-    if (_visit_pending) _visit_pending = false, visit_component();
-    return _vcur == _vend;
-  }
-  T next() { return ASSERTXX(!_visit_pending), _visit_pending = true, *_vcur; }
-  // Single-pass iteration: "for (const T& v : graph_component) ...".
-  using Iterator = CursorIterator<GraphComponent, T>;
-  [[nodiscard]] Iterator begin() { return Iterator(*this); }
+  using Iterator = CursorIterator<GraphComponent>;
+  [[nodiscard]] Iterator begin() noexcept { return Iterator(*this); }
   [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+  // Also the customization point for ranges::empty(), whose begin() == end() fallback requires a forward range.
+  [[nodiscard]] bool empty() const { return _vcur == _vend; }
 
  private:
+  friend CursorIterator<GraphComponent>;
+  [[nodiscard]] const T& current() const { return *_vcur; }
   // Mark the whole component containing *_vcur as visited, then advance _vcur to the next unvisited vertex.
-  void visit_component() {
+  void advance() {
     Queue<T> queue;
     _set.enter(*_vcur);
     queue.enqueue(*_vcur);
@@ -256,7 +259,6 @@ template <typename T> class GraphComponent : noncopyable {
   const Graph<T>& _g;
   typename Graph<T>::vertex_iterator _vcur;
   typename Graph<T>::vertex_iterator _vend;
-  bool _visit_pending{false};
   Set<T> _set;
 };
 

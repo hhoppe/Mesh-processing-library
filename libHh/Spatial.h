@@ -151,10 +151,12 @@ class BSpatialSearch : noncopyable {
     float d2;  // Squared distance.
   };
 
+  // Also the customization point for ranges::empty(), whose begin() == end() fallback requires a forward range.
+  [[nodiscard]] bool empty() const noexcept { return _done; }
+
  protected:
   void advance();  // Set _result to the next closest element, or set _done.
-  [[nodiscard]] bool at_end() const { return _done; }
-  [[nodiscard]] const Result& current() const { return assertx(!_done), _result; }
+  [[nodiscard]] const Result& current() const { return _result; }
 
  private:
   friend Spatial;
@@ -189,29 +191,18 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
     T id;
     float d2;  // Squared distance
   };
-  // Single-pass iteration in order of increasing distance: "for (const auto& [id, d2] : ss) ...".
-  // The search state lives in *this rather than in the iterator, so begin() is free and may be called repeatedly;
-  // "*ss.begin()" reads the closest remaining element without consuming it, and only operator++ advances.
-  struct Iterator {
-    using type = Iterator;
-    using iterator_concept = std::input_iterator_tag;
-    using value_type = Result;
-    using difference_type = std::ptrdiff_t;
-    explicit Iterator(SpatialSearch& ss) : _ss(&ss) {}
-    Iterator() = default;
-    [[nodiscard]] bool operator==(std::default_sentinel_t) const { return _ss->at_end(); }
-    [[nodiscard]] Result operator*() const {
-      const auto& [id, d2] = _ss->current();
-      return {Conv<T>::d(id), d2};
-    }
-    type& operator++() { return _ss->advance(), *this; }
-    void operator++(int) { _ss->advance(); }  // Single-pass, so the prior value cannot be returned.
-    SpatialSearch* _ss{};
-  };
+  // Single-pass iteration in order of increasing distance: "for (const auto [id, d2] : ss) ...".
+  // The bindings are by value because operator*() returns a prvalue Result (the Univ id is converted).
+  using Iterator = CursorIterator<SpatialSearch>;
   [[nodiscard]] Iterator begin() noexcept { return Iterator(*this); }
   [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
-  // Customization point for ranges::empty(), whose begin() == end() fallback is restricted to forward ranges.
-  [[nodiscard]] bool empty() const noexcept { return at_end(); }
+
+ private:
+  friend CursorIterator<SpatialSearch>;
+  [[nodiscard]] Result current() const {
+    const auto& [id, d2] = BSpatialSearch::current();
+    return {Conv<T>::d(id), d2};
+  }
 };
 
 //----------------------------------------------------------------------------

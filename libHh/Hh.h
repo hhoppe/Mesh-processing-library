@@ -450,9 +450,9 @@ template <typename Iterator> Iterator postfix_decrement(Iterator& iter) {
   return --iter, old;
 }
 
-// Adapt a cursor exposing "bool done() const" and "Value next()" into a single-pass iterator whose end is
-// std::default_sentinel_t.
-template <typename Cursor, typename Value> class CursorIterator;
+// Adapt a cursor exposing "bool empty() const", "current()" and "void advance()" into a single-pass iterator
+// whose end is std::default_sentinel_t.
+template <typename Cursor> class CursorIterator;
 
 // Returns T{-1} or T{+1} based on sign of expression.
 template <typename T> [[nodiscard]] constexpr T sign(const T& e) { return e >= T{0} ? T{1} : T{-1}; }
@@ -779,41 +779,30 @@ template <typename T> struct sum_type {
 
 }  // namespace details
 
-// The cursor itself models an input_range by defining:
-//   using Iterator = CursorIterator<Cursor, Value>;
-//   Iterator begin() { return Iterator(*this); }
-//   std::default_sentinel_t end() const { return {}; }
-template <typename Cursor, typename Value> class CursorIterator {
-  using type = CursorIterator<Cursor, Value>;
+// All the traversal state lives in the cursor rather than in the iterator, so begin() is free and may be called
+// repeatedly; "*cursor.begin()" reads the current element without consuming it, and only operator++ advances.
+// The cursor models an input_range by defining, publicly:
+//   using Iterator = CursorIterator<Cursor>;
+//   Iterator begin() noexcept { return Iterator(*this); }
+//   std::default_sentinel_t end() const noexcept { return {}; }
+//   bool empty() const;  // Also the customization point for ranges::empty().
+// and, privately, "current()" and "void advance()" together with "friend CursorIterator<Cursor>;".
+template <typename Cursor> class CursorIterator {
+  using type = CursorIterator<Cursor>;
 
  public:
   using iterator_concept = std::input_iterator_tag;
-  using value_type = Value;
+  using value_type = std::remove_cvref_t<decltype(std::declval<const Cursor&>().current())>;
   using difference_type = std::ptrdiff_t;
-  explicit CursorIterator(Cursor& cursor) : _cursor(&cursor), _owed(true) {}
+  explicit CursorIterator(Cursor& cursor) : _cursor(&cursor) {}
   CursorIterator() = default;
-  // The cursor is exhausted once its done() has been observed; there is no state to compare against.
-  [[nodiscard]] bool operator==(std::default_sentinel_t) const { return advance(), !_cursor; }
-  [[nodiscard]] const Value& operator*() const { return advance(), _value; }
-  [[nodiscard]] const Value* operator->() const { return advance(), &_value; }
-  type& operator++() { return advance(), _owed = true, *this; }
-  void operator++(int) { advance(), _owed = true; }  // Single-pass, so the prior value cannot be returned.
+  [[nodiscard]] bool operator==(std::default_sentinel_t) const { return _cursor->empty(); }
+  [[nodiscard]] decltype(auto) operator*() const { return assertx(!_cursor->empty()), _cursor->current(); }
+  type& operator++() { return _cursor->advance(), *this; }
+  void operator++(int) { _cursor->advance(); }  // Single-pass, so the prior value cannot be returned.
 
  private:
-  // Advancing the cursor is deferred until the element is examined, so that an adaptor which stops on its own count
-  // (such as views::take) never asks the cursor for an element that is then discarded.  At most one advance is ever
-  // owed, because operator++ applies any earlier one before owing its own.
-  void advance() const {
-    if (!_owed || !_cursor) return;
-    _owed = false;
-    if (_cursor->done())
-      _cursor = nullptr;
-    else
-      _value = _cursor->next();
-  }
-  mutable Cursor* _cursor{};
-  mutable Value _value{};
-  mutable bool _owed{};  // An increment has been requested but not yet applied to the cursor.
+  Cursor* _cursor{};
 };
 
 template <typename Target, typename Source> constexpr Target narrow_cast(Source v) {

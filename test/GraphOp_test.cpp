@@ -16,7 +16,7 @@ struct fidist {
   float operator()(int v1, int v2) const { return float(abs(v1 - v2)); }
 };
 
-// float ffdist(const int& v1, const int& v2) { return float(abs(v1-v2)); }
+float ffdist(const int& v1, const int& v2) { return float(abs(v1 - v2)); }
 
 void show_graph(const Graph<int>& g, bool directed = false) {
   float cost = 0.f;
@@ -46,19 +46,25 @@ void do_ints() {
   int vs = 2;
   {
     Dijkstra di(&g, vs, fdist());
-    // Dijkstra<int, fdist> di(&g, vs);  // works too
-    // Dijkstra di(&g, vs, ffdist);  // works too
-    // const auto func_fdist = [&](const int& v1, const int& v2) { return float(abs(v1 - v2)); };
-    // Dijkstra di(&g, vs, func_fdist);  // works too
-    for (;;) {
-      if (di.done()) break;
-      const auto& [v, dis] = di.next();
-      showf("%d at dist=%g\n", v, dis);
-    }
+    for (const auto& [v, dis] : di) showf("V1: %d at dist=%g\n", v, dis);
   }
   {
+    Dijkstra<int, fdist> di(&g, vs);
+    for (const auto& [v, dis] : di) showf("V2: %d at dist=%g\n", v, dis);
+  }
+  {
+    Dijkstra di(&g, vs, ffdist);
+    for (const auto& [v, dis] : di) showf("V3: %d at dist=%g\n", v, dis);
+  }
+  {
+    const auto func_fdist = [&](const int& v1, const int& v2) { return float(abs(v1 - v2)); };
+    Dijkstra di(&g, vs, func_fdist);
+    for (const auto& [v, dis] : di) showf("V4: %d at dist=%g\n", v, dis);
+  }
+  {  // The nearest vertex alone, read without consuming the search.
     Dijkstra di(&g, vs, fdist());
-    for (const auto& [v, dis] : di) showf("%d at dist=%g\n", v, dis);
+    const auto& [v, dis] = *di.begin();
+    showf("nearest: %d at dist=%g\n", v, dis);
   }
   SHOW(graph_edge_stats(g, fdist()));
   SHOW(graph_num_components(g));
@@ -85,7 +91,7 @@ void do_ints() {
     SHOW(graph_num_components(g));
   }
   {
-    // EMST of 7 points 0..6 on the Real line (easy)
+    // EMST of 7 points 0..6 on the Real line (easy).
     auto gmst = graph_mst(7, fidist());
     show_graph(gmst);
   }

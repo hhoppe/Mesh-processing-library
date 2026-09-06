@@ -95,7 +95,7 @@ RCS/
 /TAGS
 
 #  Optional per-machine overrides.
-/make/Makefile_local_defs
+/Makefile_local_defs
 
 /bin/unix/*
 !/bin/unix/.gitignore

@@ -34,7 +34,7 @@
 #pragma warning(disable : 26495)  // Always initialize a member variable.
 #endif
 
-#if defined(_DEBUG) || defined(DEBUG) || (!defined(_MSC_VER) && !defined(NDEBUG))
+#if defined(_DEBUG) || defined(DEBUG) || (!(defined(_MSC_VER) && !defined(__clang__)) && !defined(NDEBUG))
 #define HH_DEBUG
 #endif
 

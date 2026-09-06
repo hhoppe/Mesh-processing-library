@@ -42,7 +42,7 @@ concept IsVec = is_vec_v<T>;
 // The element type obtained by peeling D levels of Vec nesting from T.
 template <int D, typename T> using sgrid_leaf_t = typename details::SGridLeaf<D, T>::type;
 
-// The grid view type (const or mutable) corresponding to an element pointer type Ptr; the analogue of array_view_t.
+// The grid view type (const or mutable) corresponding to an element pointer type Ptr; the analog of array_view_t.
 template <int D, typename Ptr>
 using grid_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Ptr>>,
                                        CGridView<D, std::remove_cv_t<std::remove_pointer_t<Ptr>>>,

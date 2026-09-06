@@ -4,23 +4,35 @@
 # cl.exe uses environment variables CL and INCLUDE.
 # link.exe (usually invoked from cl.exe) uses environment variables LINK, LIB, PATH, and TMP.
 
-ifeq ($(msvc),2022)
+# Discover tool paths without any $(shell) call.  Any of these may be overridden in $(MeshRoot)/Makefile_local_defs.
+vs_dir := c:/Program Files/Microsoft Visual Studio
+vs_versions ?= 18 2022#  Candidate version directories, newest first; VS 2026 uses "18", VS 2022 uses "2022".
+vs_editions ?= Enterprise Professional Community BuildTools Insiders#  Candidate editions, in preference order.
+vs_instance ?= $(firstword $(foreach v,$(vs_versions),$(foreach e,$(vs_editions),\
+  $(if $(call file_exists,$(vs_dir)/$(v)/$(e)/VC/Tools/MSVC),$(v)/$(e)))))
+$(if $(vs_instance),,$(error No Visual Studio C++ toolset found under '$(vs_dir)'.  \
+  Install the "Desktop development with C++" workload, or set vs_instance=<version>/<edition> \
+  in '$(MeshRoot)/Makefile_local_defs', e.g. "vs_instance = 18/Community" for VS 2026, \
+  or "vs_instance = 2022/Professional" for VS 2022))
+vs_version := $(firstword $(subst /, ,$(vs_instance)))
+vs_edition := $(notdir $(vs_instance))
+vs_root := $(vs_dir)/$(vs_instance)
+kit_root := c:/Program Files (x86)/Windows Kits/10
+# The version directories contain no spaces, so $(notdir $(lastword ...)) recovers them from the
+# space-containing glob result.  Do not wrap this in $(sort): a path with spaces spans several make
+# words, and sorting would reorder and de-duplicate those fragments.  ($(wildcard) with a single
+# pattern is already sorted; with several patterns, results are concatenated in pattern order.)
+msvcbuild ?= $(notdir $(lastword $(call wildcard_sp,$(vs_root)/VC/Tools/MSVC/*)))
+windowskit ?= $(notdir $(lastword $(call wildcard_sp,$(kit_root)/include/*)))
+dotnet_dir ?= $(lastword $(wildcard c:/WINDOWS/Microsoft.NET/Framework64/v4.*))
+msvc_dir := C:\Program Files\Microsoft Visual Studio\$(vs_version)\$(vs_edition)\VC\Tools\MSVC\$(msvcbuild)
+kit_dir := C:\Program Files (x86)\Windows Kits\10
 
-  # ?? I need to set these automatically.
-  # However I hope to avoid the overhead of $(shell) calls such as vswhere.exe and vcvarsall.bat .
-  # msvcbuild = 14.40.33807
-  msvcbuild = 14.44.35207
-  # windowskit = 10.0.22621.0
-  windowskit = 10.0.26100.0
-  export INCLUDE := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\include;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\ucrt;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\shared;C:\Program Files (x86)\Windows Kits\10\include\$(windowskit)\um;
-  $(call assert_prepend_PATH,c:/WINDOWS/Microsoft.NET/Framework64/v4.0.30319)
-  $(call assert_prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/$(windowskit)/x64)
-  $(call assert_prepend_PATH,c:/Program Files (x86)/Windows Kits/10/bin/x64)
-  $(call assert_prepend_PATH,c:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
-  export LIB := C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\$(msvcbuild)\lib\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\ucrt\x64;C:\Program Files (x86)\Windows Kits\10\lib\$(windowskit)\um\x64;
+export INCLUDE := $(msvc_dir)\include;$(kit_dir)\include\$(windowskit)\ucrt;$(kit_dir)\include\$(windowskit)\shared;$(kit_dir)\include\$(windowskit)\um;
 
-else
+$(call assert_prepend_PATH,$(dotnet_dir))
+$(call assert_prepend_PATH,$(kit_root)/bin/$(windowskit)/x64)
+$(call assert_prepend_PATH,$(kit_root)/bin/x64)
+$(call assert_prepend_PATH,$(vs_root)/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
 
-  $(error msvc '$(msvc)' unrecognized)
-
-endif
+export LIB := $(msvc_dir)\lib\x64;$(kit_dir)\lib\$(windowskit)\ucrt\x64;$(kit_dir)\lib\$(windowskit)\um\x64;

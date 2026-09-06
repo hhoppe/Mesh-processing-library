@@ -4,9 +4,8 @@
 
 rel ?= 1#  0=debug or 1=release  (usually 1)
 
-CYGWIN_ROOT ?= $(lastword $(sort $(wildcard /cygdrive/c/cygwin /cygdrive/c/cygwin64)))
-$(if $(call file_exists,$(CYGWIN_ROOT))/bin,,$(error No C++ compiler found for CONFIG=$(CONFIG). CYGWIN_ROOT/bin='$(CYGWIN_ROOT)/bin' not found.  Install Cygwin, or set CYGWIN_ROOT=<dir> in '$(MeshRoot)/Makefile_local_defs'))
-$(call assert_prepend_PATH,$(CYGWIN_ROOT)/bin)
+$(if $(is_cygwin:0=),,$(error Requesting CONFIG=cygwin but not running Make in Cygwin.))
+$(if $(call file_exists,/usr/bin/$(CXX)),,$(error Compiler /usr/bin/$(CXX) not found for CONFIG=$(CONFIG).))
 
 # Strict -std=c++NN defines __STRICT_ANSI__, which hides POSIX/BSD declarations in Cygwin's headers
 # (popen, pclose, usleep, gethostname, setenv, putenv); gnu++NN keeps them visible.

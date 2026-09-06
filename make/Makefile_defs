@@ -12,7 +12,10 @@ space := $() $()
 comma := ,
 # $(warning Have defined space=[$(space)] comma=[$(comma)])
 
-file_exists = $(if $(wildcard $(subst $(space),\$(space),$(1))),1)
+wildcard_sp = $(wildcard $(subst $(space),\$(space),$(1)))#  Like $(wildcard), but the pattern may contain spaces.
+file_exists = $(if $(call wildcard_sp,$(1)),1)
+
+rawdir = $(patsubst %/,%,$(dir $1))#  Remove the trailing slash.
 
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
@@ -24,7 +27,8 @@ ifeq ($(MeshRoot),)
   MeshRoot ?= ..#  If not already set, best guess is "1 directory above the project file", e.g. for libHh.
   $(warning MeshRoot variable not set; setting it to a default value of '$(MeshRoot)')
 endif
-$(if $(call file_exists $(MeshRoot)/mesh_processing.sln),,$(warn MeshRoot='$(MeshRoot)' does point to the mesh_processing repo root))
+$(if $(call file_exists,$(MeshRoot)/mesh_processing.sln),, \
+  $(warning MeshRoot='$(MeshRoot)' does not point to the mesh_processing repo root))
 
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
@@ -41,7 +45,7 @@ export CONFIG ?= $(word $(words $(build_configs)),$(build_configs))# Select the 
 $(if $(filter $(CONFIG),all $(configs)),,$(error CONFIG=$(CONFIG) is not recognized among [all $(configs)]))
 
 is_win32 ?= $(if $(and $(is_mswin:0=),$(filter-out cygwin,$(CONFIG))),1)#  Hopefully equivalent to defined(_WIN32).
-is_unix_like ?= $(if $(filter cygwin unix,$(CONFIG)),1)#  Configs where libjpeg/libpng and POSIX libraries are built-in.
+is_unix_like ?= $(if $(filter cygwin unix,$(CONFIG)),1)#  Configs where libjpeg/libpng and POSIX libs are built-in.
 
 SHELL = bash#   sh is standard ("for i in $var; do; done"); bash is necessary for "shopt nullglob", [[ ]], etc.
 
@@ -75,7 +79,8 @@ prepend = \
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
 prepend_PATH = $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin:0=)$(is_msys:0=),$(if $(is_cygwin:0=),/cygdrive)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):)
 
-assert_prepend_PATH = $(if $(call file_exists,$(1)),$(call prepend_PATH,$(1)),$(error Directory '$(1)' does not exist, so cannot be added to PATH))
+assert_prepend_PATH = $(if $(call file_exists,$(1)),$(call prepend_PATH,$(1)), \
+  $(error Directory '$(1)' does not exist, so cannot be added to PATH))
 try_prepend_PATH = $(if $(call file_exists,$(1)),$(call prepend_PATH,$(1)))
 
 MAKEFLAGS += --no-print-directory#  Because print-directory is ugly and ineffective with "-j" (see main.el).
@@ -95,7 +100,7 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_HH_INIT
 
 # Also update '-std=' in .clang-tidy, LanguageStandard in hhmain.props and LoopAPILib.vcxproj,
-# build_and_test_using_*.sh, the gnu++ conversion in Makefile_config_cygwin, and c++23latest in Makefile_base_win.
+# build_and_test_using_*.sh, the gnu++ conversion in Makefile_config_cygwin, and c++latest in Makefile_base_win.
 CXX_STD ?= c++23
 
 # PEDANTIC ?= 1
@@ -151,19 +156,21 @@ dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 # The "rm -f $@" is introduced to delete any Unix executable "$@" in the same location if building "$@.exe", to avoid
 # having that Unix executable being considered when running a *_test.script.
 % : %.cpp
-	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CXX) $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CXX) \
+	  $(LDOUTPUT) $(CXXFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
 % : %.c
-	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CC) $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
+	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(if $(is_mswin:0=),rm -f $@; )$(CC) \
+	  $(LDOUTPUT) $(CFLAGS) $(CPPFLAGS) $(cxxexe) $(TARGET_ARCH) \
 	  $(call add_drive,$(foreach f,$<,$(abspath $(f))) $(LDLIBS)) $(LDFLAGS)
 
+# Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
 ifeq ($(filter $(config_setting_goals),$(MAKECMDGOALS)),)
-  # Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
+  -include $(MeshRoot)/Makefile_local_defs
   include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
 endif
 
--include $(MeshRoot)/Makefile_local_defs
 -include $(MeshRoot)/../hh_src/Makefile_local_defs
 
 *.exe:

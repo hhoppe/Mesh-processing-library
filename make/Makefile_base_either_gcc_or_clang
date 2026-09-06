@@ -35,7 +35,8 @@ ifneq ($(want_plain_compiler),1)
   cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.
   commonrel += -O3 -DNDEBUG#  -O3 enables -fomit-frame-pointer -finline-functions.  Consider -fno-trapping-math.
   commonrel += -g1#  For stacktrace; does not affect code generation; unlike -g, -g1 omits variables.
-  commondbg += -g -D_GLIBCXX_DEBUG#  To enable checking of STL containers in libstdc++.
+  commondbg += -g
+  commondbg += -D_GLIBCXX_DEBUG#  Enable checking of containers if using libstdc++; ignored otherwise.
   cxxexe +=
   cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings))
   cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings))

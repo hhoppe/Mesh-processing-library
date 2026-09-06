@@ -6,9 +6,14 @@ rel ?= 1#  0=debug or 1=release (usually 1).
 
 include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
 
-MINGW_ROOT ?= $(lastword $(sort $(wildcard c:/mingw-w64/*/mingw64)))#  Any other useful paths to search??
-$(if $(call file_exists,$(MINGW_ROOT)/bin),,$(error No C++ compiler found for CONFIG=$(CONFIG).  MINGW_ROOT/bin='$(MINGW_ROOT)/bin' not found.  Install mingw-w64, or set MINGW_ROOT=<dir> in '$(MeshRoot)/Makefile_local_defs'))
-$(call assert_prepend_PATH,$(MINGW_ROOT)/bin)
+MINGW_CXX_PATTERNS ?= c:/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe c:/mingw64/bin/$(CXX).exe c:/Progra~1/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe
+# Possibly also: c:/winlibs/mingw64/bin/$(CXX).exe c:/tools/mingw64/bin/$(CXX).exe
+# Note that `sort` below unfortunately gives a lexicographic rather than numeric sort.
+MINGW_ROOT ?= $(call rawdir,$(call rawdir,$(lastword $(sort $(wildcard $(MINGW_CXX_PATTERNS))))))
+$(if $(and $(MINGW_ROOT),$(call file_exists,$(MINGW_ROOT)/bin/$(CXX).exe)),,$(error No $(CXX) compiler \
+  found for CONFIG=$(CONFIG) with MINGW_ROOT='$(MINGW_ROOT)' and MINGW_CXX_PATTERNS='$(MINGW_CXX_PATTERNS)'. \
+  Install mingw-w64 and/or set these variables in '$(MeshRoot)/Makefile_local_defs'))
+$(call prepend_PATH,$(MINGW_ROOT)/bin)
 
 graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 

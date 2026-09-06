@@ -59,7 +59,8 @@ endif
 
 ## Precompiled headers:
 # clang test.h -o test.h.pch
-# clang -include test.h test.c -o test  # Unlike cl and gcc, clang does not allow header to be included from the cpp file; it must appear on this command line.
+# clang -include test.h test.c -o test  # Unlike cl and gcc, clang does not allow header to be included from the cpp
+#  file; it must appear on this command line.
 
 ## Sanitize/analyze:
 # clang -O1 -g -fsanitize=address -fno-omit-frame-pointer example_UseAfterFree.cc

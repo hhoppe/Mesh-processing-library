@@ -11,7 +11,9 @@ include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_clang
 
 # Possibly consider: C:/Program Files/Microsoft Visual Studio/2022/*/VC/Tools/Llvm/x64/bin/$(CXX).exe, but full
 # compiler is an optional install and the spaces in the path are super-complicated with $(wildcard multi pattern)!
-LLVM_CXX_PATTERNS ?= c:/Progra~1/LLVM*/bin/$(CXX).exe c:/LLVM*/bin/$(CXX).exe
+LLVM_CXX_PATTERNS ?= \
+  c:/Progra~1/LLVM*/bin/$(CXX).exe \
+  c:/LLVM*/bin/$(CXX).exe
 # Note that `sort` below unfortunately gives a lexicographic rather than numeric sort.
 LLVM_ROOT ?= $(call rawdir,$(call rawdir,$(lastword $(sort $(wildcard $(LLVM_CXX_PATTERNS))))))
 $(if $(and $(LLVM_ROOT),$(call file_exists,$(LLVM_ROOT)/bin/$(CXX).exe)),,$(error No $(CXX) compiler \

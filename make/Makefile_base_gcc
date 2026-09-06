@@ -23,7 +23,8 @@ cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
 # -S omits object file, but does not allow interleaving source code.
 #	$(filter-out -c,$(COMPILE.cpp)) -S -Wa,-achln -fverbose-asm -masm=intel -g $(@:$(extasm)=cpp)
 # -g is required to interleave source code; hopefully does not modify generated code too much.
-	$(filter-out ,$(COMPILE.cpp)) -g -Wa,-acdhln -fverbose-asm -masm=intel $(@:$(extasm)=cpp) -o v.$(@:$(extasm)=$(extobj)) >$(@:$(extasm)=$(extasm))
+	$(filter-out ,$(COMPILE.cpp)) -g -Wa,-acdhln -fverbose-asm -masm=intel $(@:$(extasm)=cpp) \
+	  -o v.$(@:$(extasm)=$(extobj)) >$(@:$(extasm)=$(extasm))
 	rm -f v.$(@:$(extasm)=$(extobj))
 
 %.h.gch : %.h

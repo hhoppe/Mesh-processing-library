@@ -17,6 +17,11 @@ file_exists = $(if $(call wildcard_sp,$(1)),1)
 
 rawdir = $(patsubst %/,%,$(dir $1))#  Remove the trailing slash.
 
+# Concatenate the words of $1 with no separator; each component must be free of spaces.
+# Useful to split a long concatenation over several lines, because a backslash-newline
+#  outside a recipe always collapses to a single space.
+concat = $(subst $(space),,$(strip $1))
+
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
 is_cygwin := $(call file_exists,/cygdrive/c)#  Running under Cygwin make?
@@ -77,7 +82,19 @@ prepend = \
 # Function to prepend a directory to the current PATH.  This complicated code verifies the existence of the directory,
 #  removes any drive letter, adds a /c/ or /cygdrive/c/ prefix, and/or replaces "/" by "\".
 # e.g.: $(call prepend_PATH,c:/Program Files (x86)/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools/x64/)
-prepend_PATH = $(call prepend,PATH,$(if $(findstring :,$(1)),$(if $(is_cygwin:0=)$(is_msys:0=),$(if $(is_cygwin:0=),/cygdrive)/$(word 1,$(subst :, ,$(1)))$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))),$(subst /,\,$(wordlist 2,$(words $(subst :, ,$(1))),$(subst :, ,$(1))))),$(1)):)
+# Non-empty when the recipe shell expects POSIX-style paths (Cygwin or MSYS).
+is_posix_shell = $(is_cygwin:0=)$(is_msys:0=)
+# The drive letter of a path such as "c:/dir"; empty if the path has no drive letter.
+path_drive = $(word 1,$(subst :,$(space),$1))
+# The remainder of such a path after the drive letter, e.g. "/dir".
+path_tail = $(wordlist 2,$(words $(subst :,$(space),$1)),$(subst :,$(space),$1))
+# The path rewritten for a Cygwin or MSYS shell, e.g. "/cygdrive/c/dir" or "/c/dir".
+path_unix = $(if $(is_cygwin:0=),/cygdrive)/$(call path_drive,$1)$(call path_tail,$1)
+# The path with its drive letter dropped and its separators turned into backslashes.
+path_win = $(subst /,\,$(call path_tail,$1))
+# The path in the form expected by the PATH variable of the recipe shell.
+path_for_PATH = $(if $(findstring :,$1),$(if $(is_posix_shell),$(call path_unix,$1),$(call path_win,$1)),$1)
+prepend_PATH = $(call prepend,PATH,$(call path_for_PATH,$1):)
 
 assert_prepend_PATH = $(if $(call file_exists,$(1)),$(call prepend_PATH,$(1)), \
   $(error Directory '$(1)' does not exist, so cannot be added to PATH))
@@ -134,10 +151,19 @@ endif
 
 override_goal := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),$(if $(.DEFAULT_GOAL),$(.DEFAULT_GOAL),dummy_all))
 # $(info have CONFIG=all override_goal=$(override_goal))
+# Non-empty when the requested goals are only cleaning targets.
+cleaning = $(filter clean deepclean,$(MAKECMDGOALS))
+# The configurations to iterate over for the current goals.
+recurse_configs = $(if $(cleaning),$(configs),$(build_configs))
+# The shell text that builds one configuration and accumulates its exit status.
+# $(foreach) supplies the separating space between successive expansions.
+recurse_config = $(if $(cleaning),,echo "**** CONFIG=$1"; )$(MAKE) CONFIG=$1 $(MAKECMDGOALS); \
+  RESULT=$$((RESULT + $$?)); sleep $(if $(cleaning),0,0.8);
+
 $(override_goal):
 #	for a in $(build_configs); do echo "**** CONFIG=$$a"; make CONFIG=$$a -j $(MAKECMDGOALS); sleep 1; done
 #	$(foreach a,$(build_configs),echo "**** CONFIG=$(a)" && $(MAKE) CONFIG=$(a) -j $(MAKECMDGOALS) && sleep 1 && ) true
-	@RESULT=0; $(foreach a,$(if $(filter clean deepclean,$(MAKECMDGOALS)),$(configs),$(build_configs)),$(if $(filter clean deepclean,$(MAKECMDGOALS)),,echo "**** CONFIG=$(a)"; )$(MAKE) CONFIG=$(a) $(MAKECMDGOALS); RESULT=$$((RESULT + $$?)); sleep $(if $(filter clean deepclean,$(MAKECMDGOALS)),0,0.8); ) (exit $$RESULT)
+	@RESULT=0; $(foreach a,$(recurse_configs),$(call recurse_config,$(a))) (exit $$RESULT)
 .PHONY: $(override_goal)
 
 else  # ifeq ($(CONFIG),all)  # For the rest of this file.
@@ -211,7 +237,13 @@ src ?= $(src_cpp) $(src_c)
 obj ?= $(strip $(src_cpp:%.cpp=%.$(extobj)) $(src_c:%.c=%.$(extobj)))
 
 # Identify all settings that affect the compiled objects, so that changing any one forces a rebuild.
-build_variant = $(CONFIG)-$(notdir $(CC))-$(subst +,p,$(CXX_STD))-$(if $(rel:0=),release,debug)$(if $(wholeopt:0=),-wholeopt)$(if $(PEDANTIC:0=),-pedantic)
+build_variant = $(call concat, \
+  $(CONFIG)- \
+  $(notdir $(CC))- \
+  $(subst +,p,$(CXX_STD))- \
+  $(if $(rel:0=),release,debug) \
+  $(if $(wholeopt:0=),-wholeopt) \
+  $(if $(PEDANTIC:0=),-pedantic))
 
 ifeq ($(use_pch)$(is_win_base),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
@@ -239,7 +271,9 @@ else
 endif
 
 my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.
-LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,x64/$(if $(rel:0=),ReleaseMD,DebugMD)/)lib$(n).$(extlib))
+# Subdirectory (with trailing "/") holding the Visual Studio import libraries, else empty.
+vs_lib_subdir = $(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,x64/$(if $(rel:0=),ReleaseMD,DebugMD)/)
+LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(vs_lib_subdir)lib$(n).$(extlib))
 
 ifeq ($(is_unix_like),1)
   system_libs += $(strip $(if $(have_image_libs:0=),jpeg png z) $(if $(have_lapack:0=),lapack))

@@ -28,11 +28,14 @@ dotnet_dir ?= $(lastword $(wildcard c:/WINDOWS/Microsoft.NET/Framework64/v4.*))
 msvc_dir := C:\Program Files\Microsoft Visual Studio\$(vs_version)\$(vs_edition)\VC\Tools\MSVC\$(msvcbuild)
 kit_dir := C:\Program Files (x86)\Windows Kits\10
 
-export INCLUDE := $(msvc_dir)\include;$(kit_dir)\include\$(windowskit)\ucrt;$(kit_dir)\include\$(windowskit)\shared;$(kit_dir)\include\$(windowskit)\um;
+kit_include := $(kit_dir)\include\$(windowskit)
+kit_lib := $(kit_dir)\lib\$(windowskit)
+
+export INCLUDE := $(msvc_dir)\include;$(kit_include)\ucrt;$(kit_include)\shared;$(kit_include)\um;
 
 $(call assert_prepend_PATH,$(dotnet_dir))
 $(call assert_prepend_PATH,$(kit_root)/bin/$(windowskit)/x64)
 $(call assert_prepend_PATH,$(kit_root)/bin/x64)
 $(call assert_prepend_PATH,$(vs_root)/VC/Tools/MSVC/$(msvcbuild)/bin/HostX64/x64)
 
-export LIB := $(msvc_dir)\lib\x64;$(kit_dir)\lib\$(windowskit)\ucrt\x64;$(kit_dir)\lib\$(windowskit)\um\x64;
+export LIB := $(msvc_dir)\lib\x64;$(kit_lib)\ucrt\x64;$(kit_lib)\um\x64;

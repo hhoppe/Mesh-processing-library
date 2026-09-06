@@ -84,7 +84,10 @@ gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
 #  (set path=( c:/Program\ Files/mingw-w64/x86_64-5.2.0-posix-seh-rt_v4-rev0/mingw64/bin $path:q); gcc -### -E -march=native ~/git/mesh_processing/libHh/Hh.h |& cat)
 # hhopped old: -march:native -mcx16 -msahf -mpopcnt -msse4.2 --param l1-cache-size=32 --param l1-cache-line-size=64 \
 #   --param l2-cache-size=8192 -mtune=core2)
-# hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
-# hhoppew: -march=haswell -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mmovbe -maes -mpclmul -mpopcnt -mabm -mfma -mbmi -mbmi2 -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrdrnd -mf16c -mfsgsbase -mfxsr -mxsave -mxsaveopt --param l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=20480 -mtune=haswell
+# hhopped: -march=nehalem -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mpopcnt -msse4.2 -msse4.1 -mfxsr --param
+#  l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=8192 -mtune=nehalem
+# hhoppew: -march=haswell -mmmx -msse -msse2 -msse3 -mssse3 -mcx16 -msahf -mmovbe -maes -mpclmul -mpopcnt -mabm -mfma
+#  -mbmi -mbmi2 -mavx -mavx2 -msse4.2 -msse4.1 -mlzcnt -mrdrnd -mf16c -mfsgsbase -mfxsr -mxsave -mxsaveopt --param
+#  l1-cache-size=32 --param l1-cache-line-size=64 --param l2-cache-size=20480 -mtune=haswell
 #   -march=nehalem is not recognized even though it was used in hhopped; core2 missing SSE4; unlisted corei7 works.
 # https://gcc.gnu.org/onlinedocs/gcc-5.2.0/gcc/x86-Options.html

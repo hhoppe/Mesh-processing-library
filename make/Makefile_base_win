@@ -167,16 +167,22 @@ endif
 #   #pragma hdrstop("level2.pch")
 # The following command will build level2.pch, which can be used in further compiles:
 #   cl -c -Yu"morestuff.h" -Fplevel2.pch mysource.cpp
-# Note that we only need to put the #pragma hdrstop directive in the file that builds the second PCH; we don't have to put it in all .cpp files that use the PCH. Files that use the PCH can name the morestuff.h file in the command line (so we don't have to edit all files to use this).
+# Note that we only need to put the #pragma hdrstop directive in the file that builds the second PCH; we don't have to
+#  put it in all .cpp files that use the PCH. Files that use the PCH can name the morestuff.h file in the command line
+#  (so we don't have to edit all files to use this).
 #
 # http://msdn.microsoft.com/en-us/library/szfdksca.aspx
 # /Yc[filename] to create a precompiled header.
 # /Yu[filename] to use an existing precompiled header in the existing compilation
 # /Fp to provide an alternative name for the precompiled header.
-# /FIpathname     same effect as specifying the file with double quotation marks in an #include directive on the first line of every source file specified on the command line
+# /FIpathname     same effect as specifying the file with double quotation marks in an #include directive on the first
+#  line of every source file specified on the command line
 #
-# Although we can use only one precompiled header (.pch) file per source file, we can use multiple .pch files in a project.
-# If the options /Ycfilename and /Yu (Use Precompiled Header File)filename occur on the same command line and both reference, or imply, the same file name, /Ycfilename takes precedence. This feature simplifies the writing of makefiles.
+# Although we can use only one precompiled header (.pch) file per source file, we can use multiple .pch files in a
+#  project.
+# If the options /Ycfilename and /Yu (Use Precompiled Header File)filename occur on the same command line and both
+#  reference, or imply, the same file name, /Ycfilename takes precedence. This feature simplifies the writing of
+#  makefiles.
 #
 # Sample makefile  http://msdn.microsoft.com/en-us/library/d9b6wk21.aspx
 
@@ -185,18 +191,33 @@ endif
 # I add some variation on this line to all copies of windows.h on my machine:
 # #pragma message("Compiling windows.h - this should happen just once per project.\n")
 #
-# The useful version of Microsoft's precompiled header system relies on a header file that contains all of the preprocessing that should be put into the .pch file. This file, typically called stdafx.h or precompiled.h, must be included by every file in the project, as the first preprocessor directive. Any code - including other #includes or defines - will be silently ignored if it comes before this include. Watch out for that.
+# The useful version of Microsoft's precompiled header system relies on a header file that contains all of the
+#  preprocessing that should be put into the .pch file. This file, typically called stdafx.h or precompiled.h, must be
+#  included by every file in the project, as the first preprocessor directive. Any code - including other #includes or
+#  defines - will be silently ignored if it comes before this include. Watch out for that.
 #
-# The precompiled header file should include the big header files which slow down the builds. The most obvious candidate is windows.h, the 800 lb gorilla of the header file world. Other possible candidates are STL header files.
+# The precompiled header file should include the big header files which slow down the builds. The most obvious
+#  candidate is windows.h, the 800 lb gorilla of the header file world. Other possible candidates are STL header files.
 #
-# What we shouldn't put in here is header files from the project. Any file that is included from here will cause a total rebuild of the project when it is changed.  Our own header files should be included from an absolute bare minimum of header files in order to reduce the number of files that rebuild when we change them.
-# The one exception to this rule that I allow is my "core.h" file. This file defines a few types and macros that I like to have available in all of my projects, and putting it in the precompiled header file is a convenient way of doing this. This is an okay violation of the rule because I want all of my source code to have access to this file, and I very rarely change it.
+# What we shouldn't put in here is header files from the project. Any file that is included from here will cause a
+#  total rebuild of the project when it is changed.  Our own header files should be included from an absolute bare
+#  minimum of header files in order to reduce the number of files that rebuild when we change them.
+# The one exception to this rule that I allow is my "core.h" file. This file defines a few types and macros that I like
+#  to have available in all of my projects, and putting it in the precompiled header file is a convenient way of doing
+#  this. This is an okay violation of the rule because I want all of my source code to have access to this file, and I
+#  very rarely change it.
 #
-# If we have small header files that don't include much, there is no advantage to putting them in the precompiled header file. If we have a large header file that is only included from a few places we shouldn't put it in the precompiled header file because this will cause more total rebuilds. Finally, if we have a large header file that is needed everywhere then we need to fix the physical design of the program - and we can't do that if we are including this file from the precompiled header file.
+# If we have small header files that don't include much, there is no advantage to putting them in the precompiled
+#  header file. If we have a large header file that is only included from a few places we shouldn't put it in the
+#  precompiled header file because this will cause more total rebuilds. Finally, if we have a large header file that is
+#  needed everywhere then we need to fix the physical design of the program - and we can't do that if we are including
+#  this file from the precompiled header file.
 
 # http://www.codeproject.com/Articles/789703/StdAfx-h-for-Novices
 #
-# The *.pch file is created as a result of the stdafx.cpp file's compilation. This file is built with the "/Yc" switch that is used specifically to tell the compiler to create precompiled headers. The stdafx.cpp file can contain one line: #include "stdafx.h".
+# The *.pch file is created as a result of the stdafx.cpp file's compilation. This file is built with the "/Yc" switch
+#  that is used specifically to tell the compiler to create precompiled headers. The stdafx.cpp file can contain one
+#  line: #include "stdafx.h".
 #
 # Enable precompiled headers in all configurations for all *.cpp files. It can be done on the "Precompiled Header" tab:
 # 1. Set the value "Use (/Yu)" for the "Precompiled Header" option.
@@ -204,7 +225,8 @@ endif
 # 3. Set "$(IntDir)$(TargetName).pch" for the "Precompiled Header Output File" option.
 # The "stdafx.h" header must be the very first one to be included into the *.c/*.cpp file.
 # Instead:
-# Go to the "Advanced" settings tab. Select all configurations. In the field "Forced Included File" write the following text:
+# Go to the "Advanced" settings tab. Select all configurations. In the field "Forced Included File" write the following
+#  text:
 # StdAfx.h;%(ForcedIncludeFiles)
 
 # (RTC1==RTCsu); was -RTCcsu (25% slower) but VS2015 update2 stops support for -RTCc in C++ standard library

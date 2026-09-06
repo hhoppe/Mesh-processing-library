@@ -6,7 +6,10 @@ rel ?= 1#  0=debug or 1=release (usually 1).
 
 include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_gcc
 
-MINGW_CXX_PATTERNS ?= c:/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe c:/mingw64/bin/$(CXX).exe c:/Progra~1/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe
+MINGW_CXX_PATTERNS ?= \
+  c:/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe \
+  c:/mingw64/bin/$(CXX).exe \
+  c:/Progra~1/mingw-w64/*-posix-seh-ucrt-*/mingw64/bin/$(CXX).exe
 # Possibly also: c:/winlibs/mingw64/bin/$(CXX).exe c:/tools/mingw64/bin/$(CXX).exe
 # Note that `sort` below unfortunately gives a lexicographic rather than numeric sort.
 MINGW_ROOT ?= $(call rawdir,$(call rawdir,$(lastword $(sort $(wildcard $(MINGW_CXX_PATTERNS))))))

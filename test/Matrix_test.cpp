@@ -83,14 +83,14 @@ int main() {
     matrix4[2, 1] = 7.f;
     SHOW(matrix3);
     SHOW(matrix4);
-    SHOW(matrix3 + matrix4);  // OPT1
+    SHOW(matrix3 + matrix4);  // OPT:1
     SHOW(matrix3);
     SHOW(matrix4);
     for (auto f : matrix4) SHOW(f);
     SHOW(2.f * matrix3);
     SHOW(2.f * matrix3 + 3.f * matrix4);
     SHOW(mag2(matrix3));
-    SHOW(mat_mul(matrix3, matrix4));  // OPT2
+    SHOW(mat_mul(matrix3, matrix4));  // OPT:2
   }
   {
     // Matrix4 m;

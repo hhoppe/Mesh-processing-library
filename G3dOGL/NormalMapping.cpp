@@ -224,10 +224,6 @@ class NormalMapping_frag1 final : public NormalMapping {
 
  private:
   GLuint program_id;
-  // Unfortunately, C++ preprocessor does not like the '#' comment character as first non-whitespace.
-  // # OPTION ARB_precision_hint_fastest;
-  // # PARAM  vhalf = { 0.5, 0.5, 0.5, 0.5 };
-  // # OUTPUT oCol = result.color;
   // https://en.wikipedia.org/wiki/ARB_assembly_language
   // https://www.opengl.org/registry/specs/ARB/fragment_program.txt
   const string fragment_shader = R"(!!ARBfp1.0

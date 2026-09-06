@@ -355,11 +355,9 @@ class Multigrid : noncopyable {
       };
       const auto func_update_interior = [&](int y, int x) {
         if (1) ASSERTX(true && b_default_metric);
-        grid_result[y, x] = (((grid_result[y - 1, x + 0] + grid_result[y + 1, x + 0] + grid_result[y + 0, x - 1] +
-                               grid_result[y + 0, x + 1]) *
-                                  wL -
-                              grid_rhs[y, x]) *
-                             rwL4);  // OPT:relax2
+        const auto vsum = (grid_result[y - 1, x + 0] + grid_result[y + 1, x + 0] + grid_result[y + 0, x - 1] +
+                           grid_result[y + 0, x + 1]);
+        grid_result[y, x] = (vsum * wL - grid_rhs[y, x]) * rwL4;  // OPT:relax2
       };
       for_int(iter, niter) {
         if (0 || (grid_rhs.size() * 10 < k_parallel_thresh && 1)) {  // simple sequential version

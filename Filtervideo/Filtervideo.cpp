@@ -466,7 +466,7 @@ void do_info() {
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const Pixel& pixel = video[f][yx];
-        for_int(z, nz) framestats[f][z].enter(pixel[z]);  // OPT_info
+        for_int(z, nz) framestats[f][z].enter(pixel[z]);  // OPT:info
       }
     });
     for_int(f, video.nframes()) for_int(z, nz) stat_pixels[z].add(framestats[f][z]);

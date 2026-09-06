@@ -4,7 +4,7 @@
 
 rel ?= 1#  0=debug or 1=release (usually 1).
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_clang
 
 # 2025-10-28 LLVM-20.1.8-win64.exe from https://github.com/llvm/llvm-project/releases
 # LLVM_ROOT = C:/Program Files/LLVM
@@ -16,7 +16,7 @@ LLVM_CXX_PATTERNS ?= c:/Progra~1/LLVM*/bin/$(CXX).exe c:/LLVM*/bin/$(CXX).exe
 LLVM_ROOT ?= $(call rawdir,$(call rawdir,$(lastword $(sort $(wildcard $(LLVM_CXX_PATTERNS))))))
 $(if $(and $(LLVM_ROOT),$(call file_exists,$(LLVM_ROOT)/bin/$(CXX).exe)),,$(error No $(CXX) compiler \
   found for CONFIG=$(CONFIG) with LLVM_ROOT='$(LLVM_ROOT)' and LLVM_CXX_PATTERNS='$(LLVM_CXX_PATTERNS)'. \
-  Install mingw-w64 and/or set these variables in '$(MeshRoot)/Makefile_local_defs'))
+  Install LLVM and/or set these variables in '$(MeshRoot)/Makefile_local_defs'))
 $(call prepend_PATH,$(LLVM_ROOT)/bin)
 
 AR = llvm-ar

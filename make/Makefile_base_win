@@ -3,7 +3,7 @@ use_dll ?= 1#                   (Usually 1: DLL_runtime (-MD or -MDd), versus 0:
 use_vs_libs ?= 0#  0 or 1       (Usually 0; else use libraries generated from Visual Studio using msbuild).
 use_pch ?= 1#                   (Usually 1; use precompiled headers).
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_vc
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_vc
 
 extobj = obj
 extlib = lib

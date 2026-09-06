@@ -3,4 +3,4 @@
 
 rel ?= 0#  0=debug or 1=release (usually 0).
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_win
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_win

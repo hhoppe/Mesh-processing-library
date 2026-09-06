@@ -4,17 +4,14 @@
 
 rel ?= 1#  0=debug or 1=release  (usually 1)
 
-$(if $(is_cygwin:0=),,$(error Requesting CONFIG=cygwin but not running Make in Cygwin.))
-$(if $(call file_exists,/usr/bin/$(CXX)),,$(error Compiler /usr/bin/$(CXX) not found for CONFIG=$(CONFIG).))
-
 # Strict -std=c++NN defines __STRICT_ANSI__, which hides POSIX/BSD declarations in Cygwin's headers
 # (popen, pclose, usleep, gethostname, setenv, putenv); gnu++NN keeps them visible.
 override CXX_STD := $(CXX_STD:c++%=gnu++%)
 
 ifeq ($(CC),clang)              # make CONFIG=cygwin CC=clang ...
-  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_clang
+  include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_clang
 else                            # default is gcc compiler
-  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_gcc
+  include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_gcc
   # GCC on Cygwin has a long-standing stack alignment problem that makes AVX unusable.
   # https://stackoverflow.com/questions/55054592/avx-load-instruction-fails-on-cygwin
   # https://www.mail-archive.com/cygwin@cygwin.com/msg174673.html
@@ -23,6 +20,10 @@ else                            # default is gcc compiler
   # Hide a few false-positives (including in Filterimage.cpp) due this older gcc compiler.
   ccommon += -Wno-stringop-overflow
 endif
+
+$(if $(is_cygwin:0=),,$(error Requesting CONFIG=cygwin but not running Make in Cygwin.))
+$(if $(call file_exists,/usr/bin/$(CXX)),,$(error Compiler /usr/bin/$(CXX) not found for CONFIG=$(CONFIG).))
+$(call prepend_PATH,/usr/bin)
 
 graphics_libs ?= -lGL -lX11 -lopengl32
 

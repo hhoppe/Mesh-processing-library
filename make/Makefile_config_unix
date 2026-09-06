@@ -12,7 +12,7 @@ else
   last_libs += -lstdc++exp#  For stacktrace.
 endif
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_$(CC)
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_$(CC)
 
 # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
 cpedantic += -Wno-zero-as-null-pointer-constant

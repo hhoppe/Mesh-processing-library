@@ -7,7 +7,7 @@ ifeq ($(is_mswin),1)
   LDOUTPUT = -o $@.exe#  Otherwise we get names without extension (unlike with gcc).
 endif
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_either_gcc_or_clang
 
 ifneq ($(want_plain_compiler),1)
   # cxxall += -fno-fast-math $(gcc_safe_precise_math)#  For my test suite.

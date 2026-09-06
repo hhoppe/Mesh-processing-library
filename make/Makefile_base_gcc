@@ -3,7 +3,7 @@ CC = gcc
 AR = ar
 RANLIB = ranlib
 
-include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_base_either_gcc_or_clang
+include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_either_gcc_or_clang
 
 ifneq ($(want_plain_compiler),1)
   cpedantic += -Wtrampolines -Wlogical-op -Wvector-operation-performance -Wno-double-promotion

@@ -3,7 +3,7 @@
 # (The "Possible configuration settings" below can be adjusted.)
 
 ifeq ($(defs_loaded),1)   # An include guard; should be checked to avoid loading this file more than once.
-  $(error $(lastword $(MAKEFILE_LIST)) loaded more than once)
+  $(error This file is loaded more than once; MAKEFILE_LIST=[$(MAKEFILE_LIST)])
 endif
 defs_loaded = 1
 
@@ -19,7 +19,7 @@ rawdir = $(patsubst %/,%,$(dir $1))#  Remove the trailing slash.
 
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
-is_cygwin := $(if $(findstring :/cygdrive/,:$(PATH)),1)#  Running under Cygwin?
+is_cygwin := $(if $(call file_exists,/usr/bin/cygwin1.dll),1)#  Running under Cygwin?
 is_msys := $(if $(findstring :/c/,:$(PATH)),1)#  Running under Msys?
 is_mac := $(call file_exists,/System/Library/CoreServices/SystemVersion.plist)#  Running on macOS?
 
@@ -168,10 +168,9 @@ dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 # Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
 ifeq ($(filter $(config_setting_goals),$(MAKECMDGOALS)),)
   -include $(MeshRoot)/Makefile_local_defs
-  include $(dir $(lastword $(MAKEFILE_LIST)))/Makefile_config_$(CONFIG)
+  -include $(MeshRoot)/../hh_src/Makefile_local_defs
+  include $(MeshRoot)/make/Makefile_config_$(CONFIG)
 endif
-
--include $(MeshRoot)/../hh_src/Makefile_local_defs
 
 *.exe:
 	@echo 'Avoid *.exe "$@" as makefile target; use "$(@:%.exe=%)" instead.' && exit 1

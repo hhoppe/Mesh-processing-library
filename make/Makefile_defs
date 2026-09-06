@@ -19,8 +19,8 @@ rawdir = $(patsubst %/,%,$(dir $1))#  Remove the trailing slash.
 
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
-is_cygwin := $(if $(call file_exists,/usr/bin/cygwin1.dll),1)#  Running under Cygwin?
-is_msys := $(if $(findstring :/c/,:$(PATH)),1)#  Running under Msys?
+is_cygwin := $(call file_exists,/cygdrive/c)#  Running under Cygwin make?
+is_msys := $(call file_exists,/c/windows)#  Running under Msys make?
 is_mac := $(call file_exists,/System/Library/CoreServices/SystemVersion.plist)#  Running on macOS?
 
 ifeq ($(MeshRoot),)

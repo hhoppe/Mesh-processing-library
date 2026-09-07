@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <!-- Note: this is a manually authored file that captures many common build settings across projects. -->
+
+  <!-- See MSBuild Conditions: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions -->
+
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
@@ -9,9 +12,10 @@
   <PropertyGroup>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
-  <!-- See MSBuild Conditions: https://learn.microsoft.com/en-us/visualstudio/msbuild/msbuild-conditions -->
+
+  <!-- Assign some global properties: -->
   <PropertyGroup Condition="'$(LocalRoot)'==''">
-    <LocalRoot>..</LocalRoot> <!-- default; most of my projects live in an immediate subfolder -->
+    <LocalRoot>..</LocalRoot> <!-- default; most of my projects live in an immediate subfolder. -->
   </PropertyGroup>
   <PropertyGroup Condition="'$(MeshRoot)'==''">
     <MeshRoot>$(LocalRoot)</MeshRoot>
@@ -19,6 +23,17 @@
   <PropertyGroup Condition="'$(ExeRoot)'==''">
     <ExeRoot>$(LocalRoot)</ExeRoot>
   </PropertyGroup>
+
+  <!-- Property set to true to emit *.asm listings for select requesting source files.  Environment override using:
+       HhAssemblerOutput=true hmake  -->
+  <PropertyGroup Condition="'$(HhAssemblerOutput)'==''">
+    <HhAssemblerOutput>false</HhAssemblerOutput>
+  </PropertyGroup>
+  <PropertyGroup>
+    <HhAssemblerOutputValue>NoListing</HhAssemblerOutputValue>
+    <HhAssemblerOutputValue Condition="'$(HhAssemblerOutput)'=='true' AND '$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</HhAssemblerOutputValue>
+  </PropertyGroup>
+
   <PropertyGroup>
     <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -32,7 +47,8 @@
       <PreprocessorDefinitions>HH_IMAGE_IO_TOO;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
-  <!-- base properties -->
+
+  <!-- Base properties: -->
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -51,6 +67,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp23</LanguageStandard>
       <UseStandardConformingPreprocessor>true</UseStandardConformingPreprocessor>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -61,19 +78,21 @@
       <!-- <AdditionalDependencies>liblapack.lib;libF77.lib;libI77.lib;libBLAS.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
     </Link>
   </ItemDefinitionGroup>
-  <!-- x64 (64-bit) properties -->
+
+  <!-- x64 (64-bit) properties: -->
   <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <ClCompile>
-      <!-- Note that this option cannot be set explicitly to StreamingSIMDExtensions2 in x64 -->
-      <!-- The default (not set) on x64 is to use StreamingSIMDExtensions2 (SSE2), which is nicely portable -->
-      <!-- Setting to AdvancedVectorExtensions2 enables AVX+AVX2, but is less portable -->
+      <!-- Note that this option cannot be set explicitly to StreamingSIMDExtensions2 in x64. -->
+      <!-- The default (not set) on x64 is to use StreamingSIMDExtensions2 (SSE2), which is nicely portable. -->
+      <!-- Setting to AdvancedVectorExtensions2 enables AVX+AVX2, but is less portable. -->
       <!-- <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet> -->
     </ClCompile>
     <Link>
       <!-- #pragma referenced: mkl_intel_lp64_dll.lib mkl_intel_thread_dll.lib mkl_core_dll.lib libiomp5md.lib -->
     </Link>
   </ItemDefinitionGroup>
-  <!-- Release properties -->
+
+  <!-- Release properties: -->
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release' OR '$(Configuration)'=='ReleaseMD'">
     <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -86,7 +105,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
     </Link>
   </ItemDefinitionGroup>
-  <!-- Debug properties -->
+
+  <!-- Debug properties: -->
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='DebugMD'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
@@ -96,7 +116,8 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
     </ClCompile>
   </ItemDefinitionGroup>
-  <!-- dll (link to non-static libraries) properties -->
+
+  <!-- dll (link to non-static libraries) properties: -->
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'ReleaseMD'">
     <ClCompile>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -107,13 +128,16 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
     </ClCompile>
   </ItemDefinitionGroup>
-  <!-- extra -->
+
+  <!-- Assign executable output directory based on Debug or Release: -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64' OR '$(Configuration)|$(Platform)'=='DebugMD|x64'">
     <OutDir>$(ExeRoot)\bin\debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' OR '$(Configuration)|$(Platform)'=='ReleaseMD|x64'">
     <OutDir>$(ExeRoot)\bin\</OutDir>
   </PropertyGroup>
+
+  <!-- Include *.pdb and *.ilk in `Clean` operation: -->
   <Target Name="HhCleanOutDir" AfterTargets="Clean">
     <ItemGroup>
       <HhFileToDelete Include="$(OutDir)$(TargetName).pdb" />
@@ -121,7 +145,8 @@
     </ItemGroup>
     <Delete Files="@(HhFileToDelete)" />
   </Target>
-  <!-- precompiled headers -->
+
+  <!-- Precompiled headers: -->
   <!-- I give up on using a shared precompiled header across multiple projects using msbuild.
        It would be feasible by using /Z7 for debug info in *.obj files, but Claude's opinion is that
        it is not worth it:  That's a small header set against a lot of cross-project coupling, which MSBuild fights.
@@ -140,7 +165,9 @@
     </ClCompile>
   </ItemDefinitionGroup>
   -->
+
 </Project>
+
 <!-- For Emacs:
      Local Variables:
      nxml-child-indent: 2

@@ -34,7 +34,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Filtervideo.cpp">
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="..\VideoViewer\GradientDomainLoop.cpp" />
   </ItemGroup>

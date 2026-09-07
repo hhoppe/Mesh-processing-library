@@ -29,7 +29,7 @@
   <Import Project="$(LocalRoot)\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="Filterimage.cpp">
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

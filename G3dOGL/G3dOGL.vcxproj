@@ -33,8 +33,7 @@
     <ClCompile Include="G3devent.cpp" />
     <ClCompile Include="G3dio.cpp" />
     <ClCompile Include="G3dOGL.cpp">
-      <!-- I often comment out the following line -->
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="NormalMapping.cpp" />
     <ClCompile Include="PMesh_ogl.cpp" />

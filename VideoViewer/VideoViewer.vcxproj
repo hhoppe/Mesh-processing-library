@@ -30,7 +30,7 @@
   <ItemGroup>
     <ClCompile Include="GradientDomainLoop.cpp" />
     <ClCompile Include="VideoViewer.cpp">
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

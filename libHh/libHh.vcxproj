@@ -58,7 +58,7 @@
     <ClCompile Include="Hh_init.cpp" />
     <ClCompile Include="Hh_main.cpp" />
     <ClCompile Include="Image.cpp">
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="Image_IO.cpp" />
     <ClCompile Include="Image_libs.cpp" />
@@ -80,7 +80,7 @@
     <ClCompile Include="SubMesh.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Video.cpp">
-      <!--AssemblerOutput Condition="'$(Configuration)'=='ReleaseMD'">AssemblyAndSourceCode</AssemblerOutput-->
+      <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
     <ClCompile Include="Video_IO.cpp" />
     <ClCompile Include="precompiled_libHh.cpp">

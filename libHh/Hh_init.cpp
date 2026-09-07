@@ -212,9 +212,6 @@ int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
   possibly_sleep();
   if (0) assertnever("my_CrtDbgHook with !IsDebuggerPresent()");
   exit_immediately(1);
-  // return 0;  // Commented because exit_immediately() does not return.
-  // Return true - {Abort, Retry, Ignore} dialog will *not* be displayed.
-  // Return false - {Abort, Retry, Ignore} dialog *will* be displayed.
 }
 #endif
 

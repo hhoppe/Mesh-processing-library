@@ -20,6 +20,47 @@ extern "C" {
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()
 
+// AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
+#if defined(__SANITIZE_ADDRESS__)
+#define HH_HAS_ASAN 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define HH_HAS_ASAN 1
+#endif
+#endif
+
+#if defined(HH_HAS_ASAN)
+#include <sanitizer/lsan_interface.h>
+using LeakDisabler = __lsan::ScopedDisabler;
+#else
+struct LeakDisabler {};  // No-op unless AddressSanitizer is enabled.
+#endif
+
+#if defined(HH_HAS_ASAN)
+// Symbolizing the graphics-driver modules (libgallium, libnvwgf2umx, libnvidia-gpucomp; together
+//  a few hundred MB) costs about 90 seconds during the exit-time leak scan, which dwarfs the run
+//  itself.  symbolize is a flag shared by all the sanitizers, so this also strips source locations
+//  from AddressSanitizer error reports; re-run with ASAN_OPTIONS=symbolize=1 to recover them, which
+//  is cheap for an error because it aborts before the leak scan.  The module-name suppressions
+//  below still match without symbolization, but a function-name pattern would silently not.
+extern "C" const char* __lsan_default_options() { return "symbolize=0:print_suppressions=0"; }
+
+// Allocations made by X11, Mesa, and the graphics driver that are held until process exit and are
+//  therefore reported by LeakSanitizer.  Most are one-time initialization; the entries under
+//  glCallLists() in draw_text_ogl() instead accumulate per frame and are released only when the GLX
+//  context is destroyed, which never happens because the process exits with the window still open.
+extern "C" const char* __lsan_default_suppressions() {
+  return (
+      ""
+      // "leak:libX11.so\n"
+      // "leak:libGLX_mesa\n"
+      "leak:libgallium\n"
+      "leak:libnvwgf2umx\n"
+      // "leak:*dlerror*\n"
+  );
+}
+#endif
+
 namespace hh {
 
 namespace {
@@ -73,7 +114,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   if (_offscreen != "") iconic = true;  // less distracting; ideally window would be invisible
   g_hw = this;
 
-  _pwmhints = assertx(XAllocWMHints());  // never freed using XFree()
+  _pwmhints = assertx(XAllocWMHints());
   // _pwmhints->flags = 0;  // unnecessary
   if (iconic) {
     _pwmhints->initial_state = IconicState;
@@ -117,6 +158,17 @@ void Hw::open() {
   assertx(_state == EState::init);
   _state = EState::open;
   if (_hwdebug) SHOW("hw: open");
+
+  // The graphics driver allocates a 64 KB aligned buffer during initialization and never releases it.
+  // LeakSanitizer reports it, and no suppression can match: the allocating frame lies in an address range
+  // that is not attributed to any module, so it appears as "<unknown module>" and neither a module nor
+  // a function pattern applies.  The only pattern that would match is the interceptor frame
+  // "leak:aligned_alloc", which would also hide leaks of our own Pool chunks and Sac objects,
+  // both of which allocate through hh::aligned_malloc().  Disabling LeakSanitizer for just the initialization
+  // region is narrower: it ignores allocations made here and nowhere else.
+  // The scope must end before the event loop below, since open() does not return until exit.
+  std::optional<LeakDisabler> leak_disabler(std::in_place);
+
   Visual* visual = DefaultVisual(_display, _screen);
   unsigned border_width = 1;
 #if defined(HH_OGLX)
@@ -204,6 +256,9 @@ void Hw::open() {
     glcx = assertx(glXCreateContext(_display, visinfo, share_list, direct));
     if (_hwdebug) SHOW(glXIsDirect(_display, glcx));
     _cmap = XCreateColormap(_display, RootWindow(_display, _screen), visual, AllocNone);
+    // The XVisualInfo returned by glXChooseVisual() must be released by the caller.  Its `visual`
+    //  member, saved above, stays valid because Visual structures are owned by the Display.
+    XFree(visinfo);
     border_width = 0;
     // ? XSetErrorHandler(0);
   }
@@ -225,7 +280,7 @@ void Hw::open() {
     showf("Hw: cannot open font '%s'\n", k_font_name.c_str());
     return;
   }
-  XSizeHints* pxsh = assertx(XAllocSizeHints());  // never freed using XFree()
+  XSizeHints* pxsh = assertx(XAllocSizeHints());
   {
     pxsh->flags = PPosition | PSize | PMinSize;
     pxsh->x = 0, pxsh->y = 0;  // (the x, y, width, and height members are now obsolete)
@@ -256,7 +311,7 @@ void Hw::open() {
   Pixmap icon_pixmap = assertx(XCreateBitmapFromData(_display, _win, hw_bits, hw_width, hw_height));
   _pwmhints->flags |= IconPixmapHint;
   _pwmhints->icon_pixmap = icon_pixmap;
-  XClassHint* pxclasshint = assertx(XAllocClassHint());  // never freed using XFree()
+  XClassHint* pxclasshint = assertx(XAllocClassHint());
   pxclasshint->res_name = const_cast<char*>(_argv0.c_str());
   pxclasshint->res_class = const_cast<char*>("Hw");
   Vec2<const char*> largv = {_argv0.c_str(), nullptr};
@@ -264,6 +319,11 @@ void Hw::open() {
   string icon_name = _argv0;
   XmbSetWMProperties(_display, _win, _window_title.c_str(), icon_name.c_str(), const_cast<char**>(largv.data()), largc,
                      pxsh, _pwmhints, pxclasshint);
+  // XmbSetWMProperties() has copied these structures, so the client-side copies can be released.
+  //  (XFree() releases only the structures; the res_name and res_class strings are not owned by them.)
+  XFree(pxsh);
+  XFree(pxclasshint);
+  XFree(_pwmhints), _pwmhints = nullptr;
   XStoreName(_display, _win, _window_title.c_str());  // necessary to set window title in CYGWIN
   Cursor cursor = XCreateFontCursor(_display, XC_crosshair);
   XDefineCursor(_display, _win, cursor);
@@ -276,6 +336,7 @@ void Hw::open() {
                      SubstructureNotifyMask);
   if (_oglx) {
     // should not use X font because of double-buffering problem.
+    XFreeFont(_display, font_info);  // Unused here, so unload it rather than hold it for the process life.
   } else {
     _gc = XCreateGC(_display, _win, 0UL, &_gcvalues);
     XSetFont(_display, _gc, font_info->fid);
@@ -346,6 +407,8 @@ void Hw::open() {
       _listbase_font = assertx(glGenLists(last + 1));
       assertx(!gl_report_errors());
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
+      // glXUseXFont() copies the glyph bitmaps into the display lists, so the font is no longer needed.
+      XFreeFont(_display, font_info2);
       {
         GLenum v = glGetError();
         if (v) {
@@ -389,6 +452,7 @@ void Hw::open() {
     //  XIO:  fatal IO error 11 (Resource temporarily unavailable) on X server ":0"
     XSetIOErrorHandler(my_io_error_handler);
   }
+  leak_disabler.reset();  // Resume memory leak tracking before entering the event loop.
   if (_offscreen == "") {
     for (int i = 0;;) {
       if (loop()) break;

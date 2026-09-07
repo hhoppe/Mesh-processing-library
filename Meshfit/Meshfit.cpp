@@ -152,7 +152,7 @@ constexpr bool k_simp96 = true;                // improvements
 constexpr float k_mincos = -1.f / 3.f;         // acos(109.471) == tetrahedron angle
 const Array<float> k_spring_sched = {1e-2f, 1e-3f, 1e-4f, 1e-8f};
 constexpr int k_max_gfit_iter = 30;
-unique_ptr<WFile> file_spawn;
+std::optional<WFile> file_spawn;
 float gdiam;
 Bary dummy_bary;
 bool have_quads = false;
@@ -1021,7 +1021,7 @@ void do_record() {
 
 void do_spawn(Args& args) {
   // xform not undone!
-  file_spawn = make_unique<WFile>(args.get_filename());
+  file_spawn.emplace(args.get_filename());
   mesh.write((*file_spawn)());
   mesh.record_changes(&(*file_spawn)());
 }
@@ -1503,6 +1503,6 @@ int main(int argc, const char** argv) {
     mark_mesh();
     mesh.write(std::cout);
   }
-  file_spawn = nullptr;
+  file_spawn.reset();
   return 0;
 }

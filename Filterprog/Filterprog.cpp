@@ -27,13 +27,13 @@ bool use_area = false;        // REFINE criterion
 bool splitcorners = false;    // output meshes: split wid into vertices
 string append_old_pm;         // name of old PM file
 
-unique_ptr<RFile> pfi_prog;   // progressive file being read
-GMesh mesh;                   // current mesh
-bool record_changes = false;  // output stream of mesh changes
-bool sel_refinement = false;  // selective refinement is active
-Frame view_frame;             // if sel_refinement
-float view_zoom = 0.f;        // if sel_refinement
-Frame view_iframe;            // inverse(view_frame)
+std::optional<RFile> pfi_prog;  // progressive file being read
+GMesh mesh;                     // current mesh
+bool record_changes = false;    // output stream of mesh changes
+bool sel_refinement = false;    // selective refinement is active
+Frame view_frame;               // if sel_refinement
+float view_zoom = 0.f;          // if sel_refinement
+Frame view_iframe;              // inverse(view_frame)
 const bool sdebug = getenv_bool("FILTERPROG_DEBUG");
 
 Array<string> pm_material_strings;
@@ -673,7 +673,10 @@ void do_fbasemesh(Args& args) {
 }
 
 // Open the PM file stream.
-void do_fprogressive(Args& args) { pfi_prog = make_unique<RFile>(args.get_filename()); }
+void do_fprogressive(Args& args) {
+  assertx(!pfi_prog);
+  pfi_prog.emplace(args.get_filename());
+}
 
 // Write a sequence of morphs forming an arithmetic sequence.
 void do_arithseq(Args& args) {
@@ -1511,6 +1514,6 @@ int main(int argc, const char** argv) {
   // HH_TIMER("Filterprog");
   g_header = args.header();
   args.parse();
-  pfi_prog = nullptr;
+  pfi_prog.reset();
   return 0;
 }

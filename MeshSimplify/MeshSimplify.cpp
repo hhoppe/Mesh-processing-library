@@ -460,14 +460,14 @@ constexpr float k_tol = 1e-6f;           // Scalar attribute equality tolerance.
 constexpr float k_bad_cost = BIGFLOAT;   // Illegal cost (very high).
 constexpr float k_undefined = BIGFLOAT;  // Undefined scalar attributes.
 
-GMesh mesh;                    // Current mesh.
-Bbox<float, 3> gbbox;          // Bbox of original mesh.
-float gdiam;                   // Diameter of original mesh.
-float gcolc;                   // Constant in front of color error term.
-float gnorc;                   // Constant in front of normal error term.
-int g_necols;                  // Number of edge collapses.
-unique_ptr<WFile> wfile_prog;  // Pm stream output (may be nullptr).
-bool have_ccolors = false;     // Have color scalar attributes.
+GMesh mesh;                       // Current mesh.
+Bbox<float, 3> gbbox;             // Bbox of original mesh.
+float gdiam;                      // Diameter of original mesh.
+float gcolc;                      // Constant in front of color error term.
+float gnorc;                      // Constant in front of normal error term.
+int g_necols;                     // Number of edge collapses.
+std::optional<WFile> wfile_prog;  // Pm stream output (may be nullptr).
+bool have_ccolors = false;        // Have color scalar attributes.
 constexpr bool have_cnormals = true;
 float offset_cost;  // Offset zero in pqe cost.
 const bool sdebug = getenv_bool("MESHSIMPLIFY_DEBUG");
@@ -1270,11 +1270,8 @@ void parse_mesh() {
 // Begin recording ecol records onto PM stream.
 void do_progressive(Args& args) {
   string filename = args.get_filename();
-  if (wfile_prog) {
-    Warning("Second '-prog' ignored");
-  } else {
-    if (filename != "") wfile_prog = make_unique<WFile>(filename);
-  }
+  assertx(!wfile_prog);
+  if (filename != "") wfile_prog.emplace(filename);
 }
 
 void do_vsgeom() {
@@ -4959,7 +4956,7 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   if (!nooutput) write_mesh(std::cout);
   if (original_indices != "") write_original_indices();
-  wfile_prog = nullptr;
+  wfile_prog.reset();
   gwinfo.clear();
   if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
   return 0;

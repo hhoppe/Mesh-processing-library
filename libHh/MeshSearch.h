@@ -50,8 +50,8 @@ class MeshSearch {
   const GMesh& _mesh;
   Options _options;
   Array<TriangleFace> _trianglefaces;
-  unique_ptr<TriangleFaceSpatial> _spatial;
   Frame _xform;
+  std::optional<TriangleFaceSpatial> _spatial;
 };
 
 }  // namespace hh

@@ -68,15 +68,15 @@ string g_header;  // header to place at top of output files
 Frame xform;      // original pts -> pts in unit cube
 Frame xform_inverse;
 
-unique_ptr<PointSpatial<int>> SPp;   // spatial partition on co
-unique_ptr<PointSpatial<int>> SPpc;  // spatial partition on pcorg
-unique_ptr<Graph<int>> gpcpseudo;    // Riemannian on pc centers (based on co)
-unique_ptr<Graph<int>> gpcpath;      // path of orientation propagation
+std::optional<PointSpatial<int>> SPp;   // spatial partition on co
+std::optional<PointSpatial<int>> SPpc;  // spatial partition on pcorg
+std::optional<Graph<int>> gpcpseudo;    // Riemannian on pc centers (based on co)
+std::optional<Graph<int>> gpcpath;      // path of orientation propagation
 
 Map<Mk3d*, unique_ptr<WFile>> g_map_mk3d_wfile;
 
 GMesh mesh;
-unique_ptr<Stat> pScorr;  // correlation in orientation propagation
+std::optional<Stat> pScorr;  // correlation in orientation propagation
 
 unique_ptr<Mk3d> iod;  // lines: co[i] to pcorg[i]
 unique_ptr<Mk3d> iob;  // unoriented pc boxes (volumes)
@@ -181,7 +181,7 @@ void init_output() {
 
 void compute_tp(int i, int& n, Frame& frame) {
   PArray<Point, 40> pa;
-  SpatialSearch<int> ss(SPp.get(), co[i]);
+  SpatialSearch<int> ss(&*SPp, co[i]);
   for (const auto [pi, d2] : ss) {
     if ((pa.num() >= minkintp && d2 > square(samplingd)) || pa.num() >= maxkintp) break;
     pa.push(co[pi]);
@@ -405,7 +405,7 @@ void propagate_along_path(int i) {
 void orient_set(const Set<int>& nodes) {
   showdf("component with %d points\n", nodes.num());
   add_exterior_orientation(nodes);
-  gpcpath = make_unique<Graph<int>>();
+  gpcpath.emplace();
   {
     HH_TIMER("__graphmst");
     // must be connected here!
@@ -416,7 +416,7 @@ void orient_set(const Set<int>& nodes) {
   int nextlink = gpcpath->out_degree(num);
   if (nextlink > 1) showdf(" num_exteriorlinks_used=%d\n", nextlink);
   propagate_along_path(num);
-  gpcpath = nullptr;
+  gpcpath.reset();
   remove_exterior_orientation();
 }
 
@@ -500,9 +500,9 @@ void orient_tp() {
       for (int j : gpcpseudo->edges(i))
         if (nodes.add(j)) queue.enqueue(j);
     }
-    pScorr = make_unique<Stat>("Scorr", true);
+    pScorr.emplace("Scorr", true);
     orient_set(nodes);
-    pScorr = nullptr;
+    pScorr.reset();
   }
   for_int(i, num) assertx(pciso[i]);
   close_mk(iop);
@@ -519,7 +519,7 @@ void orient_tp() {
 
 // Find the unsigned distance to the centroid of the k nearest data points.
 float compute_unsigned(const Point& p, Point& proj) {
-  SpatialSearch<int> ss(SPp.get(), p);
+  SpatialSearch<int> ss(&*SPp, p);
   Homogeneous h;
   const int k = 1;  // make a parameter?
   for (const auto [pi, unused_d2] : ss | truncate(k)) h += co[pi];
@@ -533,7 +533,7 @@ float compute_unsigned(const Point& p, Point& proj) {
 float compute_signed(const Point& p, Point& proj) {
   int tpi;
   {
-    SpatialSearch<int> ss(SPpc.get(), p);
+    SpatialSearch<int> ss(&*SPpc, p);
     tpi = (*ss.begin()).id;
   }
   Vector vptopc = p - pcorg[tpi];
@@ -545,12 +545,12 @@ float compute_signed(const Point& p, Point& proj) {
     return k_Contour_undefined;
   if (1) {
     // check that projected point is close to a data point
-    SpatialSearch<int> ss(SPp.get(), proj);
+    SpatialSearch<int> ss(&*SPp, proj);
     if ((*ss.begin()).d2 > square(samplingd)) return k_Contour_undefined;
   }
   if (prop) {
     // check that grid point is close to a data point
-    SpatialSearch<int> ss(SPp.get(), p);
+    SpatialSearch<int> ss(&*SPp, p);
     const float d2 = (*ss.begin()).d2;
     float grid_diagonal2 = square(1.f / gridsize) * 3.f;
     const float fudge = 1.2f;
@@ -709,26 +709,26 @@ void process() {
   {
     HH_TIMER("_SPp");
     int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
-    SPp = make_unique<PointSpatial<int>>(n);
+    SPp.emplace(n);
     for_int(i, num) SPp->enter(i, &co[i]);
   }
   if (!unsigneddis) {
-    gpcpseudo = make_unique<Graph<int>>();
+    gpcpseudo.emplace();
     for_int(i, num) gpcpseudo->enter(i);
     process_principal();
     {
       HH_TIMER("_SPpc");
       int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
-      SPpc = make_unique<PointSpatial<int>>(n);
+      SPpc.emplace(n);
       for_int(i, num) SPpc->enter(i, &pcorg[i]);
     }
     orient_tp();
-    gpcpseudo = nullptr;
+    gpcpseudo.reset();
   }
   if (iol || ioc || iom) process_contour();
   if (iom && is_3D) showdf("%s\n", mesh_genus_string(mesh).c_str());
-  SPp = nullptr;
-  SPpc = nullptr;
+  SPp.reset();
+  SPpc.reset();
 }
 
 }  // namespace

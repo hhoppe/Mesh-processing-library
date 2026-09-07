@@ -104,11 +104,11 @@ bool slidermode;
 bool dbuffer;
 bool picture;
 bool inpicture;
-unique_ptr<ConsoleProgress> movie_cprogress;
+std::optional<ConsoleProgress> movie_cprogress;
 int movie_nframes;
 string movie_root_name;
 bool movie_desire_video;
-unique_ptr<Video> movie_video;
+std::optional<Video> movie_video;
 int movie_frame;
 bool cullbackedges = true;
 bool outside_frustum;
@@ -537,7 +537,7 @@ void do_movie(Args& args) {
   movie_nframes = args.get_int();
   assertx(movie_nframes >= 2);
   movie_root_name = args.get_filename();
-  movie_cprogress = make_unique<ConsoleProgress>();
+  movie_cprogress.emplace();
   movie_desire_video = false;
   if (0) use_dl = false;
 }
@@ -549,7 +549,7 @@ void do_video(Args& args) {
   movie_nframes = args.get_int();
   assertx(movie_nframes >= 2);
   movie_root_name = args.get_filename();
-  movie_cprogress = make_unique<ConsoleProgress>();
+  movie_cprogress.emplace();
   movie_desire_video = true;
   if (0) use_dl = false;
 }
@@ -2240,7 +2240,7 @@ void process_print() {
   if (movie_desire_video) {
     if (!movie_video) {
       assertx(!movie_frame);
-      movie_video = make_unique<Video>(concat(V(movie_nframes), image.dims()));
+      movie_video.emplace(concat(V(movie_nframes), image.dims()));
       movie_video->attrib().suffix = "mp4";                                             // useful default
       movie_video->attrib().framerate = 60;                                             // useful default
       movie_video->attrib().bitrate = max(1'000'000, int(product(image.dims()) * 10));  // ~20Mbps at FullHD
@@ -2818,11 +2818,11 @@ void HB::draw_space() {
         movie_frame++;
         movie_cprogress->update(float(movie_frame) / (movie_nframes - 1));
       } else {
-        movie_cprogress = nullptr;
+        movie_cprogress.reset();
         inpicture = false;
         if (movie_video) {
           movie_video->write_file(movie_root_name);
-          movie_video = nullptr;
+          movie_video.reset();
         }
         HB::quit();
       }

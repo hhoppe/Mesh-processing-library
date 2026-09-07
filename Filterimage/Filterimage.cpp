@@ -936,7 +936,7 @@ void do_invideo(Args& args) {
   string filename = args.get_filename();
   RVideo rvideo(filename);
   showf("Reading video %s\n", Video::diagnostic_string(rvideo.dims(), rvideo.attrib()).c_str());
-  unique_ptr<WVideo> pwvideo;  // not defined now because we do not yet know the frame size
+  std::optional<WVideo> wvideo;  // Not constructed yet because we do not yet know the frame size.
   ConsoleProgress cprogress("Invideo");
   for (int i = 0;; i++) {
     if (rvideo.nframes()) cprogress.update(float(i) / rvideo.nframes());
@@ -945,8 +945,8 @@ void do_invideo(Args& args) {
     ParseArgs parseargs{Array<string>{"dummy_arg0"}};
     parseargs.copy_parse(*g_parseargs);
     parseargs.parse();
-    if (!pwvideo) pwvideo = make_unique<WVideo>("-", image.dims(), rvideo.attrib());
-    pwvideo->write(image);
+    if (!wvideo) wvideo.emplace("-", image.dims(), rvideo.attrib());
+    wvideo->write(image);
   }
   while (args.num()) args.get_string();  // discard already parsed arguments
   nooutput = true;

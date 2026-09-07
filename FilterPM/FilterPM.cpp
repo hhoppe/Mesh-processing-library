@@ -34,8 +34,8 @@ bool gzip = false;
 string gfilename;
 
 PMesh pmesh;
-unique_ptr<PMeshRStream> pmrs;
-unique_ptr<PMeshIter> pmi;
+std::optional<PMeshRStream> pmrs;
+std::optional<PMeshIter> pmi;
 
 RFile* pfi = nullptr;
 SrMesh srmesh;
@@ -1567,8 +1567,8 @@ int main(int argc, const char** argv) {
       nooutput = true;
       pfi = &fi;
     } else {
-      pmrs = make_unique<PMeshRStream>(fi(), &pmesh);
-      pmi = make_unique<PMeshIter>(*pmrs);
+      pmrs.emplace(fi(), &pmesh);
+      pmi.emplace(*pmrs);
     }
     args.parse();
     if (!nooutput) ensure_pm_loaded();
@@ -1577,7 +1577,7 @@ int main(int argc, const char** argv) {
   if (!nooutput) pmesh.write(std::cout);
   if (filename == "-")  // Read entire input stream to avoid broken pipe.
     while (pmrs->next_vsplit());
-  pmi = nullptr;
-  pmrs = nullptr;
+  pmi.reset();
+  pmrs.reset();
   return 0;
 }

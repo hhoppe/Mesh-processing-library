@@ -55,8 +55,8 @@ struct S_op_stat {
 
 const Array<float> spring_sched = {1e-2f, 1e-3f, 1e-4f, 1e-8f};
 constexpr int k_max_gfit_iter = 30;
-unique_ptr<WFile> file_spawn;
-unique_ptr<WSA3dStream> a3d_spawn;
+std::optional<WFile> file_spawn;
+std::optional<WSA3dStream> a3d_spawn;
 
 float get_edis() {
   float edis = 0.f;
@@ -673,8 +673,8 @@ void do_outpoly(Args& args) {
 }
 
 void do_spawn(Args& args) {
-  file_spawn = make_unique<WFile>(args.get_filename());
-  a3d_spawn = make_unique<WSA3dStream>((*file_spawn)());
+  file_spawn.emplace(args.get_filename());
+  a3d_spawn.emplace((*file_spawn)());
   output_poly(*a3d_spawn);
 }
 
@@ -709,8 +709,8 @@ int main(int argc, const char** argv) {
     analyze_poly(0, "FINAL");
   }
   if (file_spawn) {
-    a3d_spawn = nullptr;
-    file_spawn = nullptr;
+    a3d_spawn.reset();
+    file_spawn.reset();
   }
   hh_clean_up();
   if (!nooutput) output_poly(g_oa3d);

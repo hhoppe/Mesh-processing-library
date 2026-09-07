@@ -958,7 +958,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     string command = ("ffmpeg -v panic -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
                       " -f image2pipe -pix_fmt " + pixfmt + " -vcodec rawvideo - |");
     if (ldebug) SHOW(command);
-    _pfi = make_unique<RFile>(command);
+    _pfi.emplace(command);
   }
   ~Ffmpeg_RVideo_Implementation() override = default;
   [[nodiscard]] string name() const override { return "ffmpeg"; }
@@ -1003,7 +1003,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
   static bool supported() { return ffmpeg_command_exists(); }
 
  private:
-  unique_ptr<RFile> _pfi;
+  std::optional<RFile> _pfi;
   Array<uint8_t> _ar_tmp;
   Matrix<Pixel> _frame_rgb_tmp;
 };
@@ -1055,7 +1055,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
       if (ldebug) SHOW("previously", audio.attrib().suffix);
       audio.attrib().suffix = "aac";  // or "mp3"
       // Create a temporary file containing the audio encoded as aac.
-      _tmpfile_audio = make_unique<TmpFile>(audio.attrib().suffix);
+      _tmpfile_audio.emplace(audio.attrib().suffix);
       try {
         audio.write_file(_tmpfile_audio->filename());
         str_audio = " -i " + _tmpfile_audio->filename() + sform(" -ab %d", audio.attrib().bitrate);
@@ -1068,7 +1068,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
          sform(" -s %dx%d -r %g", sdims[1], sdims[0], attrib.framerate) + " -i -" + str_audio + sfilecontainer +
          ocodec + " -pix_fmt " + opixfmt + sform(" -vb %d", attrib.bitrate) + " -y " + quote_arg_for_shell(filename));
     if (ldebug) SHOW(command);
-    _pfi = make_unique<WFile>(command);
+    _pfi.emplace(command);
   }
   ~Ffmpeg_WVideo_Implementation() override = default;
   [[nodiscard]] string name() const override { return "ffmpeg"; }
@@ -1101,8 +1101,8 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
   static bool supported() { return ffmpeg_command_exists(); }
 
  private:
-  unique_ptr<TmpFile> _tmpfile_audio;  // lifespan should be longer than _pfi
-  unique_ptr<WFile> _pfi;
+  std::optional<TmpFile> _tmpfile_audio;  // lifespan should be longer than _pfi
+  std::optional<WFile> _pfi;
   Nv12 _frame_nv12_tmp;
   Matrix<Pixel> _frame_rgb_tmp;
 };

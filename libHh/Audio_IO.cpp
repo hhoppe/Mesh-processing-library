@@ -52,7 +52,7 @@ void Audio::read_file(const string& pfilename) {
   const bool ldebug = getenv_bool("AUDIO_DEBUG");
   const bool audio_test_codec = getenv_bool("AUDIO_TEST_CODEC");
   clear();
-  unique_ptr<TmpFile> tmpfile;
+  std::optional<TmpFile> tmpfile;
   if (file_requires_pipe(filename)) {
     RFile fi(filename);
     // Documentation on prefixes for various audio containers:
@@ -65,7 +65,7 @@ void Audio::read_file(const string& pfilename) {
     if (attrib().suffix == "")
       throw std::runtime_error(
           sform("Peeked audio format (int(c)=%d) in pipe '%s' not recognized", c, filename.c_str()));
-    tmpfile = make_unique<TmpFile>(attrib().suffix, fi());
+    tmpfile.emplace(attrib().suffix, fi());
     filename = tmpfile->filename();
   }
   if (!file_exists(filename)) throw std::runtime_error("Audio file '" + filename + "' does not exist");
@@ -247,10 +247,10 @@ void Audio::write_file(const string& pfilename) const {
     const_cast<Audio&>(*this).attrib().suffix = to_lower(get_path_extension(filename));  // mutable
   if (attrib().suffix == "")
     throw std::runtime_error("Audio '" + filename + "': no filename suffix specified for writing");
-  unique_ptr<TmpFile> tmpfile;
+  std::optional<TmpFile> tmpfile;
   if (file_requires_pipe(filename)) {
     if (filename == "-") my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
-    tmpfile = make_unique<TmpFile>(attrib().suffix);
+    tmpfile.emplace(attrib().suffix);
     filename = tmpfile->filename();
   }
   if (audio_test_codec) {

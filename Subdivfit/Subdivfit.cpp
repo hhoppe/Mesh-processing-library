@@ -49,7 +49,7 @@ float spring = 0.f;
 float areafac = 0.f;
 int verb = 1;
 
-unique_ptr<WFile> wf_record;
+std::optional<WFile> wf_record;
 constexpr float k_min_cos = -1.f / 3.f;  // acos(109.471) == tetrahedron angle
 
 Array<Point> co;  // points
@@ -328,7 +328,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
 // *** main procedures
 
 void do_record(Args& args) {
-  wf_record = make_unique<WFile>(args.get_filename());
+  wf_record.emplace(args.get_filename());
   mark_mesh(gmesh);
   gmesh.write((*wf_record)());
   gmesh.record_changes(&(*wf_record)());
@@ -1432,7 +1432,7 @@ int main(int argc, const char** argv) {
   }
   if (wf_record) {
     gmesh.record_changes(nullptr);
-    wf_record = nullptr;
+    wf_record.reset();
   }
   return 0;
 }

@@ -124,7 +124,7 @@ MeshSearch::MeshSearch(const GMesh& mesh, Options options) : _mesh(mesh), _optio
   int gridn = int(sqrt(_mesh.num_faces() * .02f) * _options.gridn_factor);  // Was .05f.
   if (_options.allow_local_project) gridn /= 2;
   gridn = clamp(gridn, 10, Spatial::k_max_gn);
-  _spatial = make_unique<TriangleFaceSpatial>(_trianglefaces, gridn);
+  _spatial.emplace(_trianglefaces, gridn);
 }
 
 MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
@@ -189,7 +189,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
   if (!f) {
     const Point pbb = p * _xform;
     const float max_dis_bb = _options.max_dis * _xform[0, 0];
-    SpatialSearch<TriangleFace*> ss(_spatial.get(), pbb, max_dis_bb);
+    SpatialSearch<TriangleFace*> ss(&*_spatial, pbb, max_dis_bb);
     if (ranges::empty(ss)) {  // No triangle within max_dis;
       result.bary = thrice(NAN);
       result.clp = thrice(NAN);

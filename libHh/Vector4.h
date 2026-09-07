@@ -84,7 +84,7 @@ class Vector4 {
   [[nodiscard]] static bool ok(int i) { return i >= 0 && i < 4; }
   friend Vector4 to_Vector4_raw(const uint8_t p[4]);
 
-#if defined(HH_VECTOR4_SSE)
+#if defined(HH_VECTOR4_SSE)  // MMX + SSE + AVX + AVX-512 + 3DNow + XOP + FMA4 : Intel / AMD / x86-based.
   Vector4(float x, float y, float z, float w) { _r = _mm_set_ps(w, z, y, x); }  // Note reverse ordering.
   void load_unaligned(const float* pSrc) { _r = _mm_loadu_ps(pSrc); }
   void store_unaligned(float* pDst) const { _mm_storeu_ps(pDst, _r); }
@@ -141,7 +141,7 @@ class Vector4 {
     float _c[4];
   };
 
-#elif defined(HH_VECTOR4_NEON)
+#elif defined(HH_VECTOR4_NEON)  // Neon + SVE + SVE2 + SME : ARM-based.
   Vector4(float x, float y, float z, float w) {
     float r[4] = {x, y, z, w};
     _r = vld1q_f32(r);

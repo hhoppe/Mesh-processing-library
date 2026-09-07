@@ -179,3 +179,11 @@ int main() {
 template class std::vector<int>;
 template class std::vector<void*>;
 // template class std::vector<unique_ptr<int>>;  // Full instantiation is unsupported; we cannot modify std namespace.
+
+// This test intentionally leaks the objects marked "never deleted" above, to exercise the
+// non-owning pointer semantics; disable LeakSanitizer rather than alter the expected output.
+// Other AddressSanitizer checks remain active.
+#if __has_include(<sanitizer/lsan_interface.h>)
+#include <sanitizer/lsan_interface.h>
+extern "C" int __lsan_is_turned_off() { return 1; }
+#endif

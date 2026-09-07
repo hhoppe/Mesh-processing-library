@@ -89,3 +89,11 @@ template class hh::Stack<unsigned>;
 template class hh::Stack<double>;
 template class hh::Stack<const int*>;
 template class hh::Stack<unique_ptr<int>>;
+
+// This test intentionally leaks the objects marked "never deleted" above, to exercise the
+// non-owning pointer semantics; disable LeakSanitizer rather than alter the expected output.
+// Other AddressSanitizer checks remain active.
+#if __has_include(<sanitizer/lsan_interface.h>)
+#include <sanitizer/lsan_interface.h>
+extern "C" int __lsan_is_turned_off() { return 1; }
+#endif

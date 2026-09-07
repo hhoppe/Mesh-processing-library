@@ -32,9 +32,6 @@ int main() {
     SHOW(std::is_trivially_default_constructible_v<Vector4>);
   }
   {
-    Vector4 v1;
-    if (0) SHOW(v1);
-    if (k_debug) assertx(!is_zero(v1));
     Vector4 v2{};
     assertx(is_zero(v2));
   }

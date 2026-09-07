@@ -244,7 +244,8 @@ build_variant = $(call concat, \
   $(subst +,p,$(CXX_STD))- \
   $(if $(rel:0=),release,debug) \
   $(if $(wholeopt:0=),-wholeopt) \
-  $(if $(PEDANTIC:0=),-pedantic))
+  $(if $(PEDANTIC:0=),-pedantic) \
+  $(build_variant_extra))#  Compiler-specific axes, e.g. $(sanitize) in Makefile_base_either_gcc_or_clang.
 
 ifeq ($(use_pch)$(is_win_base),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,

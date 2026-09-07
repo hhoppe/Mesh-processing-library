@@ -36,10 +36,25 @@ ifneq ($(want_plain_compiler),1)
   commonrel += -O3 -DNDEBUG#  -O3 enables -fomit-frame-pointer -finline-functions.  Consider -fno-trapping-math.
   commonrel += -g1#  For stacktrace; does not affect code generation; unlike -g, -g1 omits variables.
   commondbg += -g
+  commondbg += -Og#  debug-friendly optimization (~ -O0.8; == -O1 on clang); ASan traces match -O0 but run ~5x faster.
   commondbg += -D_GLIBCXX_DEBUG#  Enable checking of containers if using libstdc++; ignored otherwise.
   cxxexe +=
   cxxrel += $(commonrel) $(if $(PEDANTIC:0=),$(cxxwarnings))
   cxxdbg += $(commondbg) $(if $(PEDANTIC:0=),$(cxxwarnings))
+endif
+
+# Runtime instrumentation; only gcc and clang support this, so it is defined here rather than in
+#  Makefile_defs.  Some sanitizers are mutually exclusive: at most one of address, thread, or memory,
+#  each optionally combined with undefined.  gcc lacks memory; it is available only in clang.
+# e.g. make CONFIG=unix rel=0 sanitize=address,undefined
+sanitize ?= 0#  0=none, or a -fsanitize= list such as address,undefined or thread.
+ifneq ($(sanitize:0=),)
+  # -fno-omit-frame-pointer is a no-op at -O0 but yields usable stack traces in release builds;
+  #  it helps address, thread, and memory equally, and undefined with print_stacktrace=1.
+  ccommon += -fsanitize=$(sanitize) -fno-omit-frame-pointer
+  LDFLAGS += -fsanitize=$(sanitize)
+  # Extend build_variant so that the built_ob sentinel forces a rebuild when this axis changes.
+  build_variant_extra := -san_$(subst $(comma),_,$(sanitize))
 endif
 
 ccommon += -m64

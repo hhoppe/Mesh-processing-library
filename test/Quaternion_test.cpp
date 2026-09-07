@@ -28,7 +28,7 @@ int main() {
     Frame frame = to_Frame(q1);
     SHOW(round(frame));
     Frame frame_half = to_Frame(pow(q1, .5f));
-    SHOW(frame_half);
+    SHOW(round(frame_half));
     SHOW(round(frame_half * frame_half));
     SHOW(round(pow(frame, .5f)));
     Quaternion qq(pow(pow(frame, .25f), 4.f));

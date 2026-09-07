@@ -17,6 +17,8 @@
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CONFIG=all debug  # Show the compiler paths and versions.
 #  make SHELL='bash -x -v'  # Show all executed commands.
+#  make CONFIG=unix rel=0 sanitize=address,undefined -C ~/git/mesh_processing -j12 test
+#  make CONFIG=unix rel=0 sanitize=thread -C ~/git/mesh_processing -j12 test
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 

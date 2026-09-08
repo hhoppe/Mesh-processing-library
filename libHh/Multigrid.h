@@ -482,12 +482,21 @@ class Multigrid : noncopyable {
           col_dims =
               ((dims - 1) / num_col_pairs + 1 - 1) / even_odd + 1;  // adjust col_dims for most uniform partition
           // SHOW(dims, col_dims, even_odd, num_col_pairs);
+          // The even-odd phases guarantee that concurrently relaxed columns are never adjacent, but only if the last
+          //  non-empty column along dim0 has an odd index; otherwise, it is adjacent to column 0 under periodic
+          //  boundary conditions, causing a data race.  Because col_dims[0] is rounded up, the final odd column is
+          //  usually empty, so we force an even number of columns and let the last one absorb the remaining rows.
+          const int num_cols0 = max(((dims[0] - 1) / col_dims[0] + 1) / 2 * 2, 1);
+          num_col_pairs[0] = (num_cols0 + 1) / 2;
+          // SHOW(dims, col_dims, even_odd, num_col_pairs, num_cols0);
           const bool local_iter = true;
           for (const auto& eo : range(even_odd)) {  // { 0|1, 0, 0, ... }
             // SHOW(eo);
             const auto func_relax_column = [&](const Vec<int, D>& coli) {
-              Vec<int, D> uL = general_clamp((coli * even_odd + eo + 0) * col_dims - voverlap, ntimes<D>(0), dims);
-              Vec<int, D> uU = general_clamp((coli * even_odd + eo + 1) * col_dims + voverlap, ntimes<D>(0), dims);
+              const Vec<int, D> col_index = coli * even_odd + eo;
+              Vec<int, D> uL = clamp((col_index + 0) * col_dims - voverlap, ntimes<D>(0), dims);
+              Vec<int, D> uU = clamp((col_index + 1) * col_dims + voverlap, ntimes<D>(0), dims);
+              if (col_index[0] == num_cols0 - 1) uU[0] = dims[0];  // the last column absorbs the remaining rows
               // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
               for_int(iter2, local_iter ? niter : 1) {  // implement as streaming?
                 for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);

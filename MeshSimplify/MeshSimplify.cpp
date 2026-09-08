@@ -1270,7 +1270,7 @@ void parse_mesh() {
 // Begin recording ecol records onto PM stream.
 void do_progressive(Args& args) {
   string filename = args.get_filename();
-  assertx(!wfile_prog);
+  assertw(!wfile_prog);
   if (filename != "") wfile_prog.emplace(filename);
 }
 

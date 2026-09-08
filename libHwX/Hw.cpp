@@ -162,9 +162,8 @@ void Hw::open() {
     // that is not attributed to any module, so it appears as "<unknown module>" and neither a module nor
     // a function pattern applies.  The only pattern that would match is the interceptor frame
     // "leak:aligned_alloc", which would also hide leaks of our own Pool chunks and Sac objects,
-    // both of which allocate through hh::aligned_malloc().  Disabling LeakSanitizer for just the initialization
-    // region is narrower: it ignores allocations made here and nowhere else.
-    // The scope must end before the event loop below, since open() does not return until exit.
+    // both of which allocate through hh::aligned_malloc().  We find it sufficient to disable LeakSanitizer for
+    // just the region below.
     std::optional<LeakDisabler> leak_disabler(std::in_place);
     XVisualInfo* visinfo;
     for (;;) {

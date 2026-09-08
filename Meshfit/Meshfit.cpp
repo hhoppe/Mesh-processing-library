@@ -1503,6 +1503,7 @@ int main(int argc, const char** argv) {
     mark_mesh();
     mesh.write(std::cout);
   }
+  mesh.record_changes(nullptr);
   file_spawn.reset();
   return 0;
 }
